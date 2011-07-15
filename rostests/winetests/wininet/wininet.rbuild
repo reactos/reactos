@@ -7,6 +7,7 @@
 	<library>wine</library>
 	<library>wininet</library>
 	<library>ws2_32</library>
+	<library>user32</library>
 	<library>advapi32</library>
 	<library>ntdll</library>
 	<file>ftp.c</file>

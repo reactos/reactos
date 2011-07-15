@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__ROS_LONG64__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -38,6 +36,11 @@ list(APPEND SOURCE
 
 add_executable(comctl32_winetest ${SOURCE})
 target_link_libraries(comctl32_winetest wine)
+
+if(MSVC)
+    target_link_libraries(comctl32_winetest uuid)
+endif()
+
 set_module_type(comctl32_winetest win32cui)
 add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
-add_cab_target(comctl32_winetest 7)
+add_cd_file(TARGET comctl32_winetest DESTINATION reactos/bin FOR all)

@@ -37,7 +37,7 @@
 
 static HRESULT (WINAPI *pCreateAsyncBindCtxEx)(IBindCtx *, DWORD,
                 IBindStatusCallback *, IEnumFORMATETC *, IBindCtx **, DWORD);
-
+static HRESULT (WINAPI *pCreateUri)(LPCWSTR, DWORD, DWORD_PTR, IUri**);
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 DEFINE_GUID(CLSID_IdentityUnmarshal,0x0000001b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
@@ -91,10 +91,12 @@ DEFINE_EXPECT(QueryInterface_IInternetBindInfo);
 DEFINE_EXPECT(QueryInterface_IAuthenticate);
 DEFINE_EXPECT(QueryInterface_IInternetProtocol);
 DEFINE_EXPECT(QueryInterface_IWindowForBindingUI);
+DEFINE_EXPECT(QueryInterface_IHttpSecurity);
 DEFINE_EXPECT(QueryService_IAuthenticate);
 DEFINE_EXPECT(QueryService_IInternetProtocol);
 DEFINE_EXPECT(QueryService_IInternetBindInfo);
 DEFINE_EXPECT(QueryService_IWindowForBindingUI);
+DEFINE_EXPECT(QueryService_IHttpSecurity);
 DEFINE_EXPECT(BeginningTransaction);
 DEFINE_EXPECT(OnResponse);
 DEFINE_EXPECT(QueryInterface_IHttpNegotiate2);
@@ -134,21 +136,25 @@ DEFINE_EXPECT(LockRequest);
 DEFINE_EXPECT(Terminate);
 DEFINE_EXPECT(UnlockRequest);
 DEFINE_EXPECT(Continue);
+DEFINE_EXPECT(Abort);
 DEFINE_EXPECT(CreateInstance);
 DEFINE_EXPECT(Load);
 DEFINE_EXPECT(PutProperty_MIMETYPEPROP);
 DEFINE_EXPECT(PutProperty_CLASSIDPROP);
 DEFINE_EXPECT(SetPriority);
+DEFINE_EXPECT(GetWindow_IHttpSecurity);
+DEFINE_EXPECT(GetWindow_IWindowForBindingUI);
+DEFINE_EXPECT(OnSecurityProblem);
 
-static const WCHAR TEST_URL_1[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','\0'};
-static const WCHAR TEST_PART_URL_1[] = {'/','t','e','s','t','/','\0'};
+static const WCHAR winetest_data_urlW[] =
+    {'h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g','/',
+     't','e','s','t','s','/','d','a','t','a','.','p','h','p',0};
 
-static const WCHAR WINE_ABOUT_URL[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.',
-                                       'o','r','g','/','s','i','t','e','/','a','b','o','u','t',0};
-static const WCHAR SHORT_RESPONSE_URL[] =
-        {'h','t','t','p',':','/','/','c','r','o','s','s','o','v','e','r','.',
-         'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m','/',
-         'p','o','s','t','t','e','s','t','.','p','h','p',0};
+static const WCHAR TEST_PART_URL_1[] = {'/','t','e','s','t','s','/','d','a','t','a','.','p','h','p','\0'};
+
+static const WCHAR winetest_post_urlW[] =
+        {'h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g','/',
+         't','e','s','t','s','/','p','o','s','t','.','p','h','p',0};
 static const WCHAR ABOUT_BLANK[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
 static WCHAR INDEX_HTML[MAX_PATH];
 static const WCHAR ITS_URL[] =
@@ -158,9 +164,13 @@ static const WCHAR MK_URL[] = {'m','k',':','@','M','S','I','T','S','t','o','r','
 static const WCHAR https_urlW[] =
     {'h','t','t','p','s',':','/','/','w','w','w','.','c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',
      '/','t','e','s','t','.','h','t','m','l',0};
+static const WCHAR https_invalid_cn_urlW[] =
+    {'h','t','t','p','s',':','/','/','2','0','9','.','4','6','.','2','5','.','1','3','2',
+     '/','t','e','s','t','.','h','t','m','l',0};
 static const WCHAR ftp_urlW[] = {'f','t','p',':','/','/','f','t','p','.','w','i','n','e','h','q','.','o','r','g',
     '/','p','u','b','/','o','t','h','e','r','/',
     'w','i','n','e','l','o','g','o','.','x','c','f','.','t','a','r','.','b','z','2',0};
+static const WCHAR winetest_urlW[] = {'w','i','n','e','t','e','s','t',':','t','e','s','t',0};
 
 
 static const WCHAR wszTextHtml[] = {'t','e','x','t','/','h','t','m','l',0};
@@ -176,29 +186,36 @@ static const WCHAR wszIndexHtml[] = {'i','n','d','e','x','.','h','t','m','l',0};
 static const WCHAR cache_fileW[] = {'c',':','\\','c','a','c','h','e','.','h','t','m',0};
 static const CHAR dwl_htmlA[] = "dwl.html";
 static const WCHAR dwl_htmlW[] = {'d','w','l','.','h','t','m','l',0};
-static const WCHAR test_txtW[] = {'t','e','s','t','.','t','x','t',0};
+static const CHAR test_txtA[] = "test.txt";
 static const WCHAR emptyW[] = {0};
 
 static BOOL stopped_binding = FALSE, stopped_obj_binding = FALSE, emulate_protocol = FALSE,
     data_available = FALSE, http_is_first = TRUE, bind_to_object = FALSE, filedwl_api;
-static DWORD read = 0, bindf = 0, prot_state = 0, thread_id, tymed;
+static DWORD read = 0, bindf = 0, prot_state = 0, thread_id, tymed, security_problem;
 static CHAR mime_type[512];
 static IInternetProtocolSink *protocol_sink = NULL;
 static IBinding *current_binding;
 static HANDLE complete_event, complete_event2;
 static HRESULT binding_hres;
-static BOOL have_IHttpNegotiate2, use_bscex;
-static BOOL test_redirect, use_cache_file, callback_read;
+static HRESULT onsecurityproblem_hres;
+static HRESULT abort_hres;
+static BOOL have_IHttpNegotiate2, use_bscex, is_async_prot;
+static BOOL test_redirect, use_cache_file, callback_read, no_callback, test_abort;
 static WCHAR cache_file_name[MAX_PATH];
+static BOOL only_check_prot_args = FALSE;
+static BOOL invalid_cn_accepted = FALSE;
+static BOOL abort_start = FALSE;
+static BOOL abort_progress = FALSE;
 
 static LPCWSTR urls[] = {
-    WINE_ABOUT_URL,
+    winetest_data_urlW,
     ABOUT_BLANK,
     INDEX_HTML,
     ITS_URL,
     MK_URL,
     https_urlW,
-    ftp_urlW
+    ftp_urlW,
+    winetest_urlW
 };
 
 static WCHAR file_url[INTERNET_MAX_URL_LENGTH];
@@ -210,7 +227,8 @@ static enum {
     ITS_TEST,
     MK_TEST,
     HTTPS_TEST,
-    FTP_TEST
+    FTP_TEST,
+    WINETEST_TEST
 } test_protocol;
 
 static enum {
@@ -229,6 +247,25 @@ static const char *debugstr_guid(REFIID riid)
             riid->Data4[5], riid->Data4[6], riid->Data4[7]);
 
     return buf;
+}
+
+static BOOL proxy_active(void)
+{
+    HKEY internet_settings;
+    DWORD proxy_enable;
+    DWORD size;
+
+    if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+                      0, KEY_QUERY_VALUE, &internet_settings) != ERROR_SUCCESS)
+        return FALSE;
+
+    size = sizeof(DWORD);
+    if (RegQueryValueExA(internet_settings, "ProxyEnable", NULL, NULL, (LPBYTE) &proxy_enable, &size) != ERROR_SUCCESS)
+        proxy_enable = 0;
+
+    RegCloseKey(internet_settings);
+
+    return proxy_enable != 0;
 }
 
 static BOOL is_urlmon_protocol(int prot)
@@ -263,10 +300,10 @@ static void test_CreateURLMoniker(LPCWSTR url1, LPCWSTR url2)
     if(mon1) IMoniker_Release(mon1);
 
     hr = CreateURLMoniker(NULL, url1, &mon1);
-    ok(SUCCEEDED(hr), "failed to create moniker: 0x%08x\n", hr);
-    if(SUCCEEDED(hr)) {
+    ok(hr == S_OK, "failed to create moniker: 0x%08x\n", hr);
+    if(hr == S_OK) {
         hr = CreateURLMoniker(mon1, url2, &mon2);
-        ok(SUCCEEDED(hr), "failed to create moniker: 0x%08x\n", hr);
+        ok(hr == S_OK, "failed to create moniker: 0x%08x\n", hr);
     }
     if(mon1) IMoniker_Release(mon1);
     if(mon2) IMoniker_Release(mon2);
@@ -274,7 +311,51 @@ static void test_CreateURLMoniker(LPCWSTR url1, LPCWSTR url2)
 
 static void test_create(void)
 {
-    test_CreateURLMoniker(TEST_URL_1, TEST_PART_URL_1);
+    static const WCHAR relativeW[] = {'a','/','b','.','t','x','t',0};
+    IStream *stream;
+    IMoniker *mon;
+    IBindCtx *bctx;
+    HRESULT hr;
+
+    test_CreateURLMoniker(winetest_data_urlW, TEST_PART_URL_1);
+
+    mon = (void*)0xdeadbeef;
+    hr = CreateURLMoniker(NULL, relativeW, &mon);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = CreateBindCtx(0, &bctx);
+
+    stream = (void*)0xdeadbeef;
+    hr = IMoniker_BindToStorage(mon, bctx, NULL, &IID_IStream, (void**)&stream);
+    todo_wine ok(hr == INET_E_UNKNOWN_PROTOCOL, "got 0x%08x\n", hr);
+    ok(stream == NULL, "got %p\n", stream);
+
+    hr = IMoniker_BindToStorage(mon, bctx, NULL, &IID_IStream, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    stream = (void*)0xdeadbeef;
+    hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IStream, (void**)&stream);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(stream == NULL || broken(stream == (void*)0xdeadbeef) /* starting XP SP3 it's set to null */,
+        "got %p\n", stream);
+
+    IMoniker_Release(mon);
+
+    mon = (void*)0xdaedbeef;
+    hr = CreateURLMoniker(NULL, winetest_data_urlW, &mon);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    stream = (void*)0xdeadbeef;
+    hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IStream, (void**)&stream);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(stream == NULL || broken(stream == (void*)0xdeadbeef) /* starting XP SP3 it's set to null */,
+        "got %p\n", stream);
+
+    hr = IMoniker_BindToStorage(mon, bctx, NULL, &IID_IStream, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    IMoniker_Release(mon);
+    IBindCtx_Release(bctx);
 }
 
 static HRESULT WINAPI Priority_QueryInterface(IInternetPriority *iface, REFIID riid, void **ppv)
@@ -377,51 +458,63 @@ static DWORD WINAPI thread_proc(PVOID arg)
     PROTOCOLDATA protocoldata;
     HRESULT hres;
 
-    if(bind_to_object)
-        SET_EXPECT(Obj_OnProgress_FINDINGRESOURCE);
-    else
-        SET_EXPECT(OnProgress_FINDINGRESOURCE);
+    if(!no_callback) {
+        if(bind_to_object)
+            SET_EXPECT(Obj_OnProgress_FINDINGRESOURCE);
+        else
+            SET_EXPECT(OnProgress_FINDINGRESOURCE);
+    }
     hres = IInternetProtocolSink_ReportProgress(protocol_sink,
             BINDSTATUS_FINDINGRESOURCE, wszWineHQSite);
     ok(hres == S_OK, "ReportProgress failed: %08x\n", hres);
-    WaitForSingleObject(complete_event, INFINITE);
-    if(bind_to_object)
-        CHECK_CALLED(Obj_OnProgress_FINDINGRESOURCE);
-    else
-        CHECK_CALLED(OnProgress_FINDINGRESOURCE);
+    if(!no_callback) {
+        WaitForSingleObject(complete_event, INFINITE);
+        if(bind_to_object)
+            CHECK_CALLED(Obj_OnProgress_FINDINGRESOURCE);
+        else
+            CHECK_CALLED(OnProgress_FINDINGRESOURCE);
+    }
 
-    if(bind_to_object)
-        SET_EXPECT(Obj_OnProgress_CONNECTING);
-    else
-        SET_EXPECT(OnProgress_CONNECTING);
+    if(!no_callback) {
+        if(bind_to_object)
+            SET_EXPECT(Obj_OnProgress_CONNECTING);
+        else
+            SET_EXPECT(OnProgress_CONNECTING);
+    }
     hres = IInternetProtocolSink_ReportProgress(protocol_sink,
             BINDSTATUS_CONNECTING, wszWineHQIP);
     ok(hres == S_OK, "ReportProgress failed: %08x\n", hres);
-    WaitForSingleObject(complete_event, INFINITE);
-    if(bind_to_object)
-        CHECK_CALLED(Obj_OnProgress_CONNECTING);
-    else
-        CHECK_CALLED(OnProgress_CONNECTING);
+    if(!no_callback) {
+        WaitForSingleObject(complete_event, INFINITE);
+        if(bind_to_object)
+            CHECK_CALLED(Obj_OnProgress_CONNECTING);
+        else
+            CHECK_CALLED(OnProgress_CONNECTING);
+    }
 
-    if(bind_to_object)
-        SET_EXPECT(Obj_OnProgress_SENDINGREQUEST);
-    else
-        SET_EXPECT(OnProgress_SENDINGREQUEST);
+    if(!no_callback) {
+        if(bind_to_object)
+            SET_EXPECT(Obj_OnProgress_SENDINGREQUEST);
+        else
+            SET_EXPECT(OnProgress_SENDINGREQUEST);
+    }
     hres = IInternetProtocolSink_ReportProgress(protocol_sink,
             BINDSTATUS_SENDINGREQUEST, NULL);
     ok(hres == S_OK, "ReportProgress failed: %08x\n", hres);
-    WaitForSingleObject(complete_event, INFINITE);
-    if(bind_to_object)
-        CHECK_CALLED(Obj_OnProgress_SENDINGREQUEST);
-    else
-        CHECK_CALLED(OnProgress_SENDINGREQUEST);
+    if(!no_callback) {
+        WaitForSingleObject(complete_event, INFINITE);
+        if(bind_to_object)
+            CHECK_CALLED(Obj_OnProgress_SENDINGREQUEST);
+        else
+            CHECK_CALLED(OnProgress_SENDINGREQUEST);
+    }
 
     if(test_redirect) {
         if(bind_to_object)
             SET_EXPECT(Obj_OnProgress_REDIRECTING);
         else
             SET_EXPECT(OnProgress_REDIRECTING);
-        hres = IInternetProtocolSink_ReportProgress(protocol_sink, BINDSTATUS_REDIRECTING, WINE_ABOUT_URL);
+        hres = IInternetProtocolSink_ReportProgress(protocol_sink, BINDSTATUS_REDIRECTING, winetest_data_urlW);
         ok(hres == S_OK, "ReportProgress(BINDSTATUS_REFIRECTING) failed: %08x\n", hres);
         WaitForSingleObject(complete_event, INFINITE);
         if(bind_to_object)
@@ -452,11 +545,31 @@ static DWORD WINAPI thread_proc(PVOID arg)
         CHECK_CALLED(Obj_OnProgress_ENDSYNCOPERATION);
         CHECK_CALLED(OnObjectAvailable);
         CHECK_CALLED(Obj_OnStopBinding);
-    }else {
+    }else if(!no_callback) {
         CHECK_CALLED(OnProgress_MIMETYPEAVAILABLE);
         CHECK_CALLED(OnProgress_BEGINDOWNLOADDATA);
-        CHECK_CALLED(LockRequest);
         CHECK_CALLED(OnDataAvailable);
+    }else {
+        CHECK_CALLED(LockRequest);
+    }
+
+    SET_EXPECT(Continue);
+    prot_state = 2;
+    hres = IInternetProtocolSink_Switch(protocol_sink, &protocoldata);
+    ok(hres == S_OK, "Switch failed: %08x\n", hres);
+    WaitForSingleObject(complete_event, INFINITE);
+    CHECK_CALLED(Continue);
+    if(test_abort) {
+        CHECK_CALLED(OnProgress_DOWNLOADINGDATA);
+        CHECK_CALLED(OnStopBinding);
+        SetEvent(complete_event2);
+        return 0;
+    }else {
+        CHECK_CALLED(Read);
+        if(!no_callback) {
+            CHECK_CALLED(OnProgress_DOWNLOADINGDATA);
+            CHECK_CALLED(OnDataAvailable);
+        }
     }
 
     SET_EXPECT(Continue);
@@ -466,18 +579,10 @@ static DWORD WINAPI thread_proc(PVOID arg)
     WaitForSingleObject(complete_event, INFINITE);
     CHECK_CALLED(Continue);
     CHECK_CALLED(Read);
-    CHECK_CALLED(OnProgress_DOWNLOADINGDATA);
-    CHECK_CALLED(OnDataAvailable);
-
-    SET_EXPECT(Continue);
-    prot_state = 2;
-    hres = IInternetProtocolSink_Switch(protocol_sink, &protocoldata);
-    ok(hres == S_OK, "Switch failed: %08x\n", hres);
-    WaitForSingleObject(complete_event, INFINITE);
-    CHECK_CALLED(Continue);
-    CHECK_CALLED(Read);
-    CHECK_CALLED(OnProgress_DOWNLOADINGDATA);
-    CHECK_CALLED(OnDataAvailable);
+    if(!no_callback) {
+        CHECK_CALLED(OnProgress_DOWNLOADINGDATA);
+        CHECK_CALLED(OnDataAvailable);
+    }
 
     SET_EXPECT(Continue);
     prot_state = 3;
@@ -486,9 +591,11 @@ static DWORD WINAPI thread_proc(PVOID arg)
     WaitForSingleObject(complete_event, INFINITE);
     CHECK_CALLED(Continue);
     CHECK_CALLED(Read);
-    CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
-    CHECK_CALLED(OnDataAvailable);
-    CHECK_CALLED(OnStopBinding);
+    if(!no_callback) {
+        CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
+        CHECK_CALLED(OnDataAvailable);
+        CHECK_CALLED(OnStopBinding);
+    }
 
     SET_EXPECT(Read);
 
@@ -536,13 +643,14 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     ok(bind_info & BINDF_FROMURLMON, "BINDF_FROMURLMON is not set\n");
 
-    if(filedwl_api || !is_urlmon_protocol(test_protocol) || !(bindf&BINDF_ASYNCSTORAGE) || tymed != TYMED_ISTREAM)
+    if(filedwl_api || !is_urlmon_protocol(test_protocol) || tymed != TYMED_ISTREAM ||
+       !(bindf&BINDF_ASYNCSTORAGE) || !(bindf&BINDF_PULLDATA))
         ok(bind_info & BINDF_NEEDFILE, "BINDF_NEEDFILE is not set\n");
     else
         ok(!(bind_info & BINDF_NEEDFILE), "BINDF_NEEDFILE is set\n");
 
     bind_info &= ~(BINDF_NEEDFILE|BINDF_FROMURLMON);
-    if(filedwl_api)
+    if(filedwl_api || no_callback)
         ok(bind_info == BINDF_PULLDATA, "bind_info = %x, expected BINDF_PULLDATA\n", bind_info);
     else
         ok(bind_info == (bindf & ~(BINDF_NEEDFILE|BINDF_FROMURLMON)), "bind_info = %x, expected %x\n",
@@ -562,6 +670,9 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     ok(IsEqualGUID(&bindinfo.iid, &IID_NULL), "wrong bindinfo.iid\n");
     ok(!bindinfo.pUnk, "bindinfo.pUnk = %p\n", bindinfo.pUnk);
     ok(!bindinfo.dwReserved, "bindinfo.dwReserved = %d\n", bindinfo.dwReserved);
+
+    if(only_check_prot_args)
+        return E_FAIL;
 
     switch(test_protocol) {
     case MK_TEST:
@@ -588,10 +699,11 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         break;
     }
 
-    if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
+    if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
         IServiceProvider *service_provider;
         IHttpNegotiate *http_negotiate;
         IHttpNegotiate2 *http_negotiate2;
+        IHttpSecurity *http_security;
         LPWSTR ua = (LPWSTR)0xdeadbeef, accept_mimes[256];
         LPWSTR additional_headers = (LPWSTR)0xdeadbeef;
         BYTE sec_id[100];
@@ -618,6 +730,7 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
            "GetBindString(BINDSTRING_ACCEPT_MIMES) failed: %08x\n", hres);
         ok(fetched == 1, "fetched = %d, expected 1\n", fetched);
         ok(!lstrcmpW(wszMimes, accept_mimes[0]), "unexpected mimes\n");
+        CoTaskMemFree(accept_mimes[0]);
 
         hres = IInternetBindInfo_GetBindString(pOIBindInfo, BINDSTRING_ACCEPT_MIMES,
                                                NULL, 256, &fetched);
@@ -639,12 +752,16 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         CLEAR_CALLED(QueryInterface_IHttpNegotiate); /* IE <8 */
         ok(hres == S_OK, "QueryService failed: %08x\n", hres);
 
-        SET_EXPECT(BeginningTransaction);
-        SET_EXPECT(QueryInterface_IHttpNegotiate);
+        if(!no_callback) {
+            SET_EXPECT(BeginningTransaction);
+            SET_EXPECT(QueryInterface_IHttpNegotiate);
+        }
         hres = IHttpNegotiate_BeginningTransaction(http_negotiate, urls[test_protocol],
                                                    NULL, 0, &additional_headers);
-        CHECK_CALLED_BROKEN(QueryInterface_IHttpNegotiate);
-        CHECK_CALLED(BeginningTransaction);
+        if(!no_callback) {
+            CHECK_CALLED_BROKEN(QueryInterface_IHttpNegotiate);
+            CHECK_CALLED(BeginningTransaction);
+        }
         IHttpNegotiate_Release(http_negotiate);
         ok(hres == S_OK, "BeginningTransction failed: %08x\n", hres);
         ok(additional_headers == NULL, "additional_headers=%p\n", additional_headers);
@@ -656,14 +773,30 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         ok(hres == S_OK, "QueryService failed: %08x\n", hres);
 
         size = 512;
-        SET_EXPECT(QueryInterface_IHttpNegotiate2);
-        SET_EXPECT(GetRootSecurityId);
+        if(!no_callback) {
+            SET_EXPECT(QueryInterface_IHttpNegotiate2);
+            SET_EXPECT(GetRootSecurityId);
+        }
         hres = IHttpNegotiate2_GetRootSecurityId(http_negotiate2, sec_id, &size, 0);
-        CHECK_CALLED_BROKEN(QueryInterface_IHttpNegotiate2);
-        CHECK_CALLED(GetRootSecurityId);
+        if(!no_callback) {
+            CHECK_CALLED_BROKEN(QueryInterface_IHttpNegotiate2);
+            CHECK_CALLED(GetRootSecurityId);
+        }
         IHttpNegotiate2_Release(http_negotiate2);
         ok(hres == E_FAIL, "GetRootSecurityId failed: %08x, expected E_FAIL\n", hres);
-        ok(size == 13, "size=%d\n", size);
+        ok(size == no_callback ? 512 : 13, "size=%d\n", size);
+
+        if(!no_callback) {
+            SET_EXPECT(QueryService_IHttpSecurity);
+            SET_EXPECT(QueryInterface_IHttpSecurity);
+        }
+        hres = IServiceProvider_QueryService(service_provider, &IID_IHttpSecurity,
+                &IID_IHttpSecurity, (void**)&http_security);
+        ok(hres == (no_callback ? E_NOINTERFACE : S_OK), "QueryService failed: 0x%08x\n", hres);
+        if(!no_callback) {
+            CHECK_CALLED(QueryService_IHttpSecurity);
+            CHECK_CALLED(QueryInterface_IHttpSecurity);
+        }
 
         IServiceProvider_Release(service_provider);
 
@@ -772,6 +905,11 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         hres = IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_BEGINDOWNLOADDATA, NULL);
         ok(hres == S_OK, "ReportProgress(BINDSTATUS_BEGINDOWNLOADDATA) failed: %08x\n", hres);
         CHECK_CALLED(Read);
+    }else if(!bind_to_object && test_protocol == ABOUT_TEST) {
+        SET_EXPECT(Read);
+        hres = IInternetProtocolSink_ReportData(pOIProtSink, bscf, 13, 13);
+        ok(hres == S_OK, "ReportData failed: %08x\n", hres);
+        CHECK_CALLED(Read);
     }
 
     SET_EXPECT(Terminate);
@@ -810,11 +948,15 @@ static HRESULT WINAPI Protocol_Continue(IInternetProtocol *iface,
                                              &IID_IHttpNegotiate, (void**)&http_negotiate);
         ok(hres == S_OK, "Could not get IHttpNegotiate\n");
 
-        SET_EXPECT(QueryInterface_IHttpNegotiate);
-        SET_EXPECT(OnResponse);
+        if(!no_callback) {
+            SET_EXPECT(QueryInterface_IHttpNegotiate);
+            SET_EXPECT(OnResponse);
+        }
         hres = IHttpNegotiate_OnResponse(http_negotiate, 200, header, NULL, NULL);
-        CHECK_CALLED_BROKEN(QueryInterface_IHttpNegotiate);
-        CHECK_CALLED(OnResponse);
+        if(!no_callback) {
+            CHECK_CALLED_BROKEN(QueryInterface_IHttpNegotiate);
+            CHECK_CALLED(OnResponse);
+        }
         IHttpNegotiate_Release(http_negotiate);
         ok(hres == S_OK, "OnResponse failed: %08x\n", hres);
 
@@ -844,7 +986,8 @@ static HRESULT WINAPI Protocol_Continue(IInternetProtocol *iface,
     hres = IInternetProtocolSink_ReportData(protocol_sink, bscf, 100, 400);
     ok(hres == S_OK, "ReportData failed: %08x\n", hres);
 
-    SET_EXPECT(Read);
+    if(prot_state != 2 || !test_abort)
+        SET_EXPECT(Read);
     switch(prot_state) {
     case 1:
         if(bind_to_object) {
@@ -859,32 +1002,45 @@ static HRESULT WINAPI Protocol_Continue(IInternetProtocol *iface,
             SET_EXPECT(Obj_OnProgress_ENDSYNCOPERATION);
             SET_EXPECT(OnObjectAvailable);
             SET_EXPECT(Obj_OnStopBinding);
-        }else {
+        }else if(!no_callback) {
             SET_EXPECT(OnProgress_MIMETYPEAVAILABLE);
             SET_EXPECT(OnProgress_BEGINDOWNLOADDATA);
+            SET_EXPECT(LockRequest);
+        }else {
             SET_EXPECT(LockRequest);
         }
         break;
     case 2:
-        SET_EXPECT(OnProgress_DOWNLOADINGDATA);
+        if(!no_callback)
+            SET_EXPECT(OnProgress_DOWNLOADINGDATA);
         break;
     case 3:
         SET_EXPECT(OnProgress_DOWNLOADINGDATA);
         SET_EXPECT(OnProgress_ENDDOWNLOADDATA);
     }
-    if(!bind_to_object || prot_state >= 2)
-        SET_EXPECT(OnDataAvailable);
-    if(prot_state == 3)
-        SET_EXPECT(OnStopBinding);
-
+    if(!no_callback) {
+        if((!bind_to_object || prot_state >= 2) && (!test_abort || prot_state != 2))
+            SET_EXPECT(OnDataAvailable);
+        if(prot_state == 3 || (test_abort && prot_state == 2))
+            SET_EXPECT(OnStopBinding);
+    }
     return S_OK;
 }
 
 static HRESULT WINAPI Protocol_Abort(IInternetProtocol *iface, HRESULT hrReason,
         DWORD dwOptions)
 {
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+
+    CHECK_EXPECT(Abort);
+
+    ok(hrReason == E_ABORT, "hrReason = %08x\n", hrReason);
+    ok(!dwOptions, "dwOptions = %x\n", dwOptions);
+
+    hres = IInternetProtocolSink_ReportResult(protocol_sink, E_ABORT, ERROR_SUCCESS, NULL);
+    ok(hres == S_OK, "ReportResult failed: %08x\n", hres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI Protocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)
@@ -898,6 +1054,8 @@ static HRESULT WINAPI Protocol_Terminate(IInternetProtocol *iface, DWORD dwOptio
         protocol_sink = NULL;
     }
 
+    if(no_callback)
+        SetEvent(complete_event);
     return S_OK;
 }
 
@@ -920,10 +1078,14 @@ static HRESULT WINAPI Protocol_Read(IInternetProtocol *iface, void *pv,
 
     CHECK_EXPECT2(Read);
 
-    if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
+    ok(pv != NULL, "pv == NULL\n");
+    ok(cb != 0, "cb == 0\n");
+    ok(pcbRead != NULL, "pcbRead == NULL\n");
+
+    if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
         HRESULT hres;
 
-        static BOOL pending = TRUE;
+        static int pending = TRUE;
 
         pending = !pending;
 
@@ -933,6 +1095,8 @@ static HRESULT WINAPI Protocol_Read(IInternetProtocol *iface, void *pv,
             if(pending) {
                 *pcbRead = 10;
                 memset(pv, '?', 10);
+                if(prot_state == 2 && no_callback)
+                    SetEvent(complete_event);
                 return E_PENDING;
             }else {
                 memset(pv, '?', cb);
@@ -964,16 +1128,9 @@ static HRESULT WINAPI Protocol_Read(IInternetProtocol *iface, void *pv,
         return S_FALSE;
     }
 
-    ok(pv != NULL, "pv == NULL\n");
-    ok(cb != 0, "cb == 0\n");
-    ok(pcbRead != NULL, "pcbRead == NULL\n");
-    if(pcbRead) {
-        ok(*pcbRead == 0, "*pcbRead=%d, expected 0\n", *pcbRead);
-        read += *pcbRead = sizeof(data)-1;
-    }
-    if(pv)
-        memcpy(pv, data, sizeof(data));
-
+    ok(*pcbRead == 0, "*pcbRead=%d, expected 0\n", *pcbRead);
+    read += *pcbRead = sizeof(data)-1;
+    memcpy(pv, data, sizeof(data));
     return S_OK;
 }
 
@@ -987,6 +1144,8 @@ static HRESULT WINAPI Protocol_Seek(IInternetProtocol *iface,
 static HRESULT WINAPI Protocol_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
 {
     CHECK_EXPECT(LockRequest);
+    if(no_callback)
+        SetEvent(complete_event);
     return S_OK;
 }
 
@@ -1040,7 +1199,10 @@ static ULONG WINAPI HttpNegotiate_Release(IHttpNegotiate2 *iface)
 static HRESULT WINAPI HttpNegotiate_BeginningTransaction(IHttpNegotiate2 *iface, LPCWSTR szURL,
         LPCWSTR szHeaders, DWORD dwReserved, LPWSTR *pszAdditionalHeaders)
 {
-    CHECK_EXPECT(BeginningTransaction);
+    if(onsecurityproblem_hres == S_OK)
+        CHECK_EXPECT2(BeginningTransaction);
+    else
+        CHECK_EXPECT(BeginningTransaction);
 
     ok(GetCurrentThreadId() == thread_id, "wrong thread %d\n", GetCurrentThreadId());
 
@@ -1109,6 +1271,73 @@ static IHttpNegotiate2Vtbl HttpNegotiateVtbl = {
 
 static IHttpNegotiate2 HttpNegotiate = { &HttpNegotiateVtbl };
 
+static HRESULT WINAPI HttpSecurity_QueryInterface(IHttpSecurity *iface, REFIID riid, void **ppv)
+{
+    ok(0, "Unexpected call\n");
+    *ppv = NULL;
+    if(IsEqualGUID(&IID_IHttpSecurity, riid) ||
+       IsEqualGUID(&IID_IWindowForBindingUI, riid) ||
+       IsEqualGUID(&IID_IUnknown, riid))
+    {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    ok(0, "Unexpected interface requested.\n");
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI HttpSecurity_AddRef(IHttpSecurity *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI HttpSecurity_Release(IHttpSecurity *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI HttpSecurity_GetWindow(IHttpSecurity *iface, REFGUID rguidReason, HWND *phwnd)
+{
+    if(IsEqualGUID(rguidReason, &IID_IHttpSecurity))
+        CHECK_EXPECT(GetWindow_IHttpSecurity);
+    else if(IsEqualGUID(rguidReason, &IID_IWindowForBindingUI))
+        CHECK_EXPECT2(GetWindow_IWindowForBindingUI);
+    else
+        ok(0, "Unexpected rguidReason: %s\n", debugstr_guid(rguidReason));
+
+    *phwnd = NULL;
+    return S_OK;
+}
+
+static HRESULT WINAPI HttpSecurity_OnSecurityProblem(IHttpSecurity *iface, DWORD dwProblem)
+{
+    CHECK_EXPECT(OnSecurityProblem);
+    if(!security_problem) {
+        ok(dwProblem == ERROR_INTERNET_SEC_CERT_CN_INVALID ||
+           broken(dwProblem == ERROR_INTERNET_SEC_CERT_ERRORS) /* Some versions of IE6 */,
+           "Got problem: %d\n", dwProblem);
+        security_problem = dwProblem;
+
+        if(dwProblem == ERROR_INTERNET_SEC_CERT_ERRORS)
+            binding_hres = INET_E_SECURITY_PROBLEM;
+    }else
+        ok(dwProblem == security_problem, "Got problem: %d\n", dwProblem);
+
+    return onsecurityproblem_hres;
+}
+
+static const IHttpSecurityVtbl HttpSecurityVtbl = {
+    HttpSecurity_QueryInterface,
+    HttpSecurity_AddRef,
+    HttpSecurity_Release,
+    HttpSecurity_GetWindow,
+    HttpSecurity_OnSecurityProblem
+};
+
+static IHttpSecurity HttpSecurity = { &HttpSecurityVtbl };
+
 static HRESULT WINAPI ServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
 {
     ok(0, "unexpected call\n");
@@ -1144,8 +1373,15 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface,
     }
 
     if(IsEqualGUID(&IID_IWindowForBindingUI, guidService)) {
-        CHECK_EXPECT(QueryService_IWindowForBindingUI);
-        return E_NOTIMPL;
+        CHECK_EXPECT2(QueryService_IWindowForBindingUI);
+        *ppv = &HttpSecurity;
+        return S_OK;
+    }
+
+    if(IsEqualGUID(&IID_IHttpSecurity, guidService)) {
+        CHECK_EXPECT(QueryService_IHttpSecurity);
+        *ppv = &HttpSecurity;
+        return S_OK;
     }
 
     ok(0, "unexpected service %s\n", debugstr_guid(guidService));
@@ -1162,6 +1398,51 @@ static IServiceProviderVtbl ServiceProviderVtbl = {
 static IServiceProvider ServiceProvider = { &ServiceProviderVtbl };
 
 static IBindStatusCallbackEx objbsc;
+
+static void test_WinInetHttpInfo(IWinInetHttpInfo *http_info, DWORD progress)
+{
+    DWORD status, size;
+    HRESULT hres, expect;
+
+    /* QueryInfo changes it's behavior during this request */
+    if(progress == BINDSTATUS_SENDINGREQUEST)
+        return;
+
+    if(test_protocol==FTP_TEST && download_state==BEFORE_DOWNLOAD
+            && progress!=BINDSTATUS_MIMETYPEAVAILABLE)
+        expect = E_FAIL;
+    else if(test_protocol == FTP_TEST)
+        expect = S_FALSE;
+    else
+        expect = S_OK;
+
+    size = sizeof(DWORD);
+    hres = IWinInetHttpInfo_QueryInfo(http_info, HTTP_QUERY_STATUS_CODE|HTTP_QUERY_FLAG_NUMBER,
+            &status, &size, NULL, NULL);
+    ok(hres == expect, "hres = %x, expected %x\n", hres, expect);
+    if(hres == S_OK) {
+        if(download_state==BEFORE_DOWNLOAD && progress!=BINDSTATUS_MIMETYPEAVAILABLE)
+            ok(status == 0, "status = %d\n", status);
+        else
+            ok(status == HTTP_STATUS_OK, "status = %d\n", status);
+        ok(size == sizeof(DWORD), "size = %d\n", size);
+    }
+
+    size = sizeof(DWORD);
+    hres = IWinInetHttpInfo_QueryOption(http_info, INTERNET_OPTION_HANDLE_TYPE, &status, &size);
+    if(test_protocol == FTP_TEST) {
+        if(download_state==BEFORE_DOWNLOAD && progress!=BINDSTATUS_MIMETYPEAVAILABLE)
+            ok(hres == E_FAIL, "hres = %x\n", hres);
+        else
+            ok(hres == S_OK, "hres = %x\n", hres);
+
+        if(hres == S_OK)
+            ok(status == INTERNET_HANDLE_TYPE_FTP_FILE, "status = %d\n", status);
+    } else {
+        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(status == INTERNET_HANDLE_TYPE_HTTP_REQUEST, "status = %d\n", status);
+    }
+}
 
 static HRESULT WINAPI statusclb_QueryInterface(IBindStatusCallbackEx *iface, REFIID riid, void **ppv)
 {
@@ -1228,6 +1509,11 @@ static HRESULT WINAPI statusclb_QueryInterface(IBindStatusCallbackEx *iface, REF
         CHECK_EXPECT2(QueryInterface_IWindowForBindingUI);
         return E_NOINTERFACE;
     }
+    else if(IsEqualGUID(&IID_IHttpSecurity, riid))
+    {
+        CHECK_EXPECT2(QueryInterface_IHttpSecurity);
+        return E_NOINTERFACE;
+    }
     else
     {
         ok(0, "unexpected interface %s\n", debugstr_guid(riid));
@@ -1276,6 +1562,11 @@ static HRESULT WINAPI statusclb_OnStartBinding(IBindStatusCallbackEx *iface, DWO
     hres = IBinding_QueryInterface(pib, &IID_IWinInetHttpInfo, (void**)&http_info);
     ok(hres == E_NOINTERFACE, "Could not get IID_IWinInetHttpInfo: %08x\n", hres);
 
+    if(abort_start) {
+        binding_hres = abort_hres;
+        return abort_hres;
+    }
+
     return S_OK;
 }
 
@@ -1304,7 +1595,7 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
             todo_wine CHECK_EXPECT(OnProgress_FINDINGRESOURCE);
         else
             CHECK_EXPECT(OnProgress_FINDINGRESOURCE);
-        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST))
+        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST))
             SetEvent(complete_event);
         break;
     case BINDSTATUS_CONNECTING:
@@ -1312,9 +1603,11 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
             CHECK_EXPECT(Obj_OnProgress_CONNECTING);
         else if(test_protocol == FTP_TEST)
             todo_wine CHECK_EXPECT(OnProgress_CONNECTING);
+        else if(onsecurityproblem_hres == S_OK)
+            CHECK_EXPECT2(OnProgress_CONNECTING);
         else
             CHECK_EXPECT(OnProgress_CONNECTING);
-        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST))
+        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST))
             SetEvent(complete_event);
         break;
     case BINDSTATUS_REDIRECTING:
@@ -1322,9 +1615,9 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
             CHECK_EXPECT(Obj_OnProgress_REDIRECTING);
         else
             CHECK_EXPECT(OnProgress_REDIRECTING);
-        ok(!lstrcmpW(szStatusText, WINE_ABOUT_URL), "unexpected status text %s\n",
+        ok(!lstrcmpW(szStatusText, winetest_data_urlW), "unexpected status text %s\n",
            wine_dbgstr_w(szStatusText));
-        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST)
+        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST)
                 && (!bind_to_object || iface == &objbsc))
             SetEvent(complete_event);
         break;
@@ -1335,8 +1628,15 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
             CHECK_EXPECT2(OnProgress_SENDINGREQUEST);
         else
             CHECK_EXPECT(OnProgress_SENDINGREQUEST);
-        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST))
+        if(emulate_protocol && (test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST))
             SetEvent(complete_event);
+
+        if(abort_progress) {
+            if(filedwl_api)
+                binding_hres = E_ABORT;
+            return E_ABORT;
+        }
+
         break;
     case BINDSTATUS_MIMETYPEAVAILABLE:
         if(iface == &objbsc)
@@ -1371,6 +1671,19 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
         ok(iface != &objbsc, "unexpected call\n");
         ok(download_state == DOWNLOADING, "Download state was %d, expected DOWNLOADING\n",
            download_state);
+        if(test_abort) {
+            HRESULT hres;
+
+            SET_EXPECT(Abort);
+            hres = IBinding_Abort(current_binding);
+            ok(hres == S_OK, "Abort failed: %08x\n", hres);
+            CHECK_CALLED(Abort);
+
+            hres = IBinding_Abort(current_binding);
+            ok(hres == E_FAIL, "Abort failed: %08x\n", hres);
+
+            binding_hres = E_ABORT;
+        }
         break;
     case BINDSTATUS_ENDDOWNLOADDATA:
         if(iface == &objbsc)
@@ -1390,7 +1703,7 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
         download_state = END_DOWNLOAD;
         break;
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
-        if(test_protocol != HTTP_TEST && test_protocol != HTTPS_TEST) {
+        if(test_protocol != HTTP_TEST && test_protocol != HTTPS_TEST && test_protocol != WINETEST_TEST) {
             if(iface == &objbsc)
                 CHECK_EXPECT(Obj_OnProgress_CACHEFILENAMEAVAILABLE);
             else
@@ -1410,10 +1723,8 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
         HRESULT hr;
         if(iface != &objbsc)
             ok(0, "unexpected call\n");
-        else if(1||emulate_protocol)
-            CHECK_EXPECT(Obj_OnProgress_CLASSIDAVAILABLE);
         else
-            todo_wine CHECK_EXPECT(Obj_OnProgress_CLASSIDAVAILABLE);
+            CHECK_EXPECT(Obj_OnProgress_CLASSIDAVAILABLE);
         hr = CLSIDFromString((LPCOLESTR)szStatusText, &clsid);
         ok(hr == S_OK, "CLSIDFromString failed with error 0x%08x\n", hr);
         ok(IsEqualCLSID(&clsid, &CLSID_HTMLDocument),
@@ -1447,9 +1758,10 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
         HRESULT hres;
 
         hres = IBinding_QueryInterface(current_binding, &IID_IWinInetHttpInfo, (void**)&http_info);
-        if(!emulate_protocol && test_protocol != FILE_TEST && is_urlmon_protocol(test_protocol))
+        if(!emulate_protocol && test_protocol != FILE_TEST && is_urlmon_protocol(test_protocol)) {
             ok(hres == S_OK, "Could not get IWinInetHttpInfo iface: %08x\n", hres);
-        else
+            test_WinInetHttpInfo(http_info, ulStatusCode);
+        } else
             ok(hres == E_NOINTERFACE,
                "QueryInterface(IID_IWinInetHttpInfo) returned: %08x, expected E_NOINTERFACE\n", hres);
         if(SUCCEEDED(hres))
@@ -1471,17 +1783,27 @@ static HRESULT WINAPI statusclb_OnStopBinding(IBindStatusCallbackEx *iface, HRES
 
     ok(GetCurrentThreadId() == thread_id, "wrong thread %d\n", GetCurrentThreadId());
 
+    if(only_check_prot_args) {
+        todo_wine ok(hresult == S_OK, "Got %08x\n", hresult);
+        return S_OK;
+    }
+
     /* ignore DNS failure */
     if (hresult == HRESULT_FROM_WIN32(ERROR_INTERNET_NAME_NOT_RESOLVED))
         return S_OK;
 
-    if(filedwl_api)
-        ok(SUCCEEDED(hresult), "binding failed: %08x\n", hresult);
-    else
+    if(filedwl_api) {
+        if(!abort_progress && !abort_start)
+            ok(SUCCEEDED(hresult), "binding failed: %08x\n", hresult);
+        else if(abort_start && abort_hres == E_NOTIMPL)
+            todo_wine ok(hresult == S_FALSE, "binding failed: %08x, expected S_FALSE\n", hresult);
+        else
+            ok(hresult == E_ABORT, "binding failed: %08x, expected E_ABORT\n", hresult);
+    } else
         ok(hresult == binding_hres, "binding failed: %08x, expected %08x\n", hresult, binding_hres);
     ok(szError == NULL, "szError should be NULL\n");
 
-    if((test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) && emulate_protocol) {
+    if((test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) && emulate_protocol) {
         SetEvent(complete_event);
         if(iface != &objbsc)
             WaitForSingleObject(complete_event2, INFINITE);
@@ -1529,12 +1851,16 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallbackEx *iface, DW
        download_state);
     data_available = TRUE;
 
+    if(bind_to_object && !is_async_prot)
+        ok(grfBSCF == (BSCF_FIRSTDATANOTIFICATION|BSCF_LASTDATANOTIFICATION), "grfBSCF = %x\n", grfBSCF);
+
     ok(pformatetc != NULL, "pformatetx == NULL\n");
     if(pformatetc) {
         if (mime_type[0]) {
+            INT ret;
             clipfmt[0] = 0;
-            ok(GetClipboardFormatName(pformatetc->cfFormat, clipfmt, sizeof(clipfmt)-1),
-               "GetClipboardFormatName failed, error %d\n", GetLastError());
+            ret = GetClipboardFormatName(pformatetc->cfFormat, clipfmt, sizeof(clipfmt)-1);
+            ok(ret, "GetClipboardFormatName failed, error %d\n", GetLastError());
             ok(!lstrcmp(clipfmt, mime_type), "clipformat %x != mime_type, \"%s\" != \"%s\"\n",
                pformatetc->cfFormat, clipfmt, mime_type);
         } else {
@@ -1553,6 +1879,8 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallbackEx *iface, DW
     switch(pstgmed->tymed) {
     case TYMED_ISTREAM:
         if(grfBSCF & BSCF_FIRSTDATANOTIFICATION) {
+            STATSTG stat;
+
             hres = IStream_Write(U(*pstgmed).pstm, buf, 10, NULL);
             ok(hres == STG_E_ACCESSDENIED,
                "Write failed: %08x, expected STG_E_ACCESSDENIED\n", hres);
@@ -1562,6 +1890,30 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallbackEx *iface, DW
 
             hres = IStream_Revert(U(*pstgmed).pstm);
             ok(hres == E_NOTIMPL, "Revert failed: %08x, expected E_NOTIMPL\n", hres);
+
+            hres = IStream_Stat(U(*pstgmed).pstm, NULL, STATFLAG_NONAME);
+            ok(hres == E_FAIL, "hres = %x\n", hres);
+            if(use_cache_file && emulate_protocol) {
+                hres = IStream_Stat(U(*pstgmed).pstm, &stat, STATFLAG_DEFAULT);
+                ok(hres == S_OK, "hres = %x\n", hres);
+                ok(!lstrcmpW(stat.pwcsName, cache_file_name),
+                        "stat.pwcsName = %s, cache_file_name = %s\n",
+                        wine_dbgstr_w(stat.pwcsName), wine_dbgstr_w(cache_file_name));
+                CoTaskMemFree(stat.pwcsName);
+                ok(U(stat.cbSize).LowPart == (bindf&BINDF_ASYNCHRONOUS?0:6500),
+                        "stat.cbSize.LowPart = %u\n", U(stat.cbSize).LowPart);
+            } else {
+                hres = IStream_Stat(U(*pstgmed).pstm, &stat, STATFLAG_NONAME);
+                ok(hres == S_OK, "hres = %x\n", hres);
+                ok(!stat.pwcsName || broken(stat.pwcsName!=NULL),
+                        "stat.pwcsName = %s\n", wine_dbgstr_w(stat.pwcsName));
+            }
+            ok(stat.type == STGTY_STREAM, "stat.type = %x\n", stat.type);
+            ok(U(stat.cbSize).HighPart == 0, "stat.cbSize.HighPart != 0\n");
+            ok(stat.grfMode == (U(stat.cbSize).LowPart?GENERIC_READ:0), "stat.grfMode = %x\n", stat.grfMode);
+            ok(stat.grfLocksSupported == 0, "stat.grfLocksSupported = %x\n", stat.grfLocksSupported);
+            ok(stat.grfStateBits == 0, "stat.grfStateBits = %x\n", stat.grfStateBits);
+            ok(stat.reserved == 0, "stat.reserved = %x\n", stat.reserved);
         }
 
         ok(U(*pstgmed).pstm != NULL, "U(*pstgmed).pstm == NULL\n");
@@ -1586,7 +1938,7 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallbackEx *iface, DW
             ok(pstgmed->u.lpszFileName != NULL, "lpszFileName == NULL\n");
     }
 
-    if((test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST)
+    if((test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST)
        && emulate_protocol && prot_state < 4 && (!bind_to_object || prot_state > 1))
         SetEvent(complete_event);
 
@@ -1635,6 +1987,7 @@ static const IBindStatusCallbackExVtbl BindStatusCallbackVtbl = {
 };
 
 static IBindStatusCallbackEx bsc = { &BindStatusCallbackVtbl };
+static IBindStatusCallbackEx bsc2 = { &BindStatusCallbackVtbl };
 static IBindStatusCallbackEx objbsc = { &BindStatusCallbackVtbl };
 
 static HRESULT WINAPI MonikerProp_QueryInterface(IMonikerProp *iface, REFIID riid, void **ppv)
@@ -1879,6 +2232,43 @@ static const IClassFactoryVtbl ClassFactoryVtbl = {
 
 static IClassFactory mime_cf = { &ClassFactoryVtbl };
 
+static HRESULT WINAPI ProtocolCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IClassFactory, riid)) {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    if(IsEqualGUID(&IID_IInternetProtocolInfo, riid))
+        return E_NOINTERFACE;
+
+    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ProtocolCF_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(&IID_IInternetProtocolInfo, riid))
+        return E_NOINTERFACE;
+
+    todo_wine ok(outer != NULL, "outer == NULL\n");
+    todo_wine ok(IsEqualGUID(&IID_IUnknown, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    *ppv = &Protocol;
+    return S_OK;
+}
+
+static const IClassFactoryVtbl ProtocolCFVtbl = {
+    ProtocolCF_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ProtocolCF_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory protocol_cf = { &ProtocolCFVtbl };
+
 static void test_CreateAsyncBindCtx(void)
 {
     IBindCtx *bctx = (IBindCtx*)0x0ff00ff0;
@@ -1901,7 +2291,7 @@ static void test_CreateAsyncBindCtx(void)
 
     bindopts.cbStruct = sizeof(bindopts);
     hres = IBindCtx_GetBindOptions(bctx, &bindopts);
-    ok(SUCCEEDED(hres), "IBindCtx_GetBindOptions failed: %08x\n", hres);
+    ok(hres == S_OK, "IBindCtx_GetBindOptions failed: %08x\n", hres);
     ok(bindopts.grfFlags == BIND_MAYBOTHERUSER,
                 "bindopts.grfFlags = %08x, expected: BIND_MAYBOTHERUSER\n", bindopts.grfFlags);
     ok(bindopts.grfMode == (STGM_READWRITE | STGM_SHARE_EXCLUSIVE),
@@ -1942,7 +2332,7 @@ static void test_CreateAsyncBindCtxEx(void)
     if(SUCCEEDED(hres)) {
         bindopts.cbStruct = sizeof(bindopts);
         hres = IBindCtx_GetBindOptions(bctx, &bindopts);
-        ok(SUCCEEDED(hres), "IBindCtx_GetBindOptions failed: %08x\n", hres);
+        ok(hres == S_OK, "IBindCtx_GetBindOptions failed: %08x\n", hres);
         ok(bindopts.grfFlags == BIND_MAYBOTHERUSER,
                 "bindopts.grfFlags = %08x, expected: BIND_MAYBOTHERUSER\n", bindopts.grfFlags);
         ok(bindopts.grfMode == (STGM_READWRITE | STGM_SHARE_EXCLUSIVE),
@@ -1961,7 +2351,7 @@ static void test_CreateAsyncBindCtxEx(void)
     if(SUCCEEDED(hres)) {
         bindopts.cbStruct = sizeof(bindopts);
         hres = IBindCtx_GetBindOptions(bctx, &bindopts);
-        ok(SUCCEEDED(hres), "IBindCtx_GetBindOptions failed: %08x\n", hres);
+        ok(hres == S_OK, "IBindCtx_GetBindOptions failed: %08x\n", hres);
         ok(bindopts.grfFlags == BIND_MAYBOTHERUSER,
                 "bindopts.grfFlags = %08x, expected: BIND_MAYBOTHERUSER\n", bindopts.grfFlags);
         ok(bindopts.grfMode == (STGM_READWRITE | STGM_SHARE_EXCLUSIVE),
@@ -2189,7 +2579,7 @@ static BOOL test_bscholder(IBindStatusCallback *holder)
 
 static BOOL test_RegisterBindStatusCallback(void)
 {
-    IBindStatusCallback *prevbsc, *clb;
+    IBindStatusCallback *prevbsc, *clb, *prev_clb;
     IBindCtx *bindctx;
     BOOL ret = TRUE;
     IUnknown *unk;
@@ -2247,17 +2637,55 @@ static BOOL test_RegisterBindStatusCallback(void)
     hres = RevokeBindStatusCallback(bindctx, NULL);
     ok(hres == E_INVALIDARG, "RevokeBindStatusCallback failed: %08x\n", hres);
 
+    SET_EXPECT(QueryInterface_IServiceProvider);
+    prevbsc = (void*)0xdeadbeef;
+    hres = RegisterBindStatusCallback(bindctx, (IBindStatusCallback*)&bsc, &prevbsc, 0);
+    ok(hres == S_OK, "RegisterBindStatusCallback failed: %08x\n", hres);
+    ok(!prevbsc, "prevbsc=%p\n", prevbsc);
+    CHECK_CALLED(QueryInterface_IServiceProvider);
+
+    hres = IBindCtx_GetObjectParam(bindctx, BSCBHolder, &unk);
+    ok(hres == S_OK, "GetObjectParam failed: %08x\n", hres);
+
+    hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)&prev_clb);
+    IUnknown_Release(unk);
+    ok(hres == S_OK, "QueryInterface(IID_IBindStatusCallback) failed: %08x\n", hres);
+    ok(prev_clb != (IBindStatusCallback*)&bsc, "bsc == clb\n");
+
+    SET_EXPECT(QueryInterface_IServiceProvider);
+    prevbsc = (void*)0xdeadbeef;
+    hres = RegisterBindStatusCallback(bindctx, (IBindStatusCallback*)&bsc2, &prevbsc, 0);
+    ok(hres == S_OK, "RegisterBindStatusCallback failed: %08x\n", hres);
+    ok(prevbsc == (IBindStatusCallback*)&bsc, "prevbsc != bsc\n");
+    CHECK_CALLED(QueryInterface_IServiceProvider);
+
+    hres = IBindCtx_GetObjectParam(bindctx, BSCBHolder, &unk);
+    ok(hres == S_OK, "GetObjectParam failed: %08x\n", hres);
+
+    hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)&clb);
+    IUnknown_Release(unk);
+    ok(hres == S_OK, "QueryInterface(IID_IBindStatusCallback) failed: %08x\n", hres);
+    ok(prev_clb  == clb, "bsc != clb\n");
+
+    IBindStatusCallback_Release(clb);
+    IBindStatusCallback_Release(prev_clb);
+
     IBindCtx_Release(bindctx);
     return ret;
 }
 
-#define BINDTEST_EMULATE       0x0001
-#define BINDTEST_TOOBJECT      0x0002
-#define BINDTEST_FILEDWLAPI    0x0004
-#define BINDTEST_HTTPRESPONSE  0x0008
-#define BINDTEST_REDIRECT      0x0010
-#define BINDTEST_USE_CACHE     0x0020
-#define BINDTEST_NO_CALLBACK_READ  0x0040
+#define BINDTEST_EMULATE            0x0001
+#define BINDTEST_TOOBJECT           0x0002
+#define BINDTEST_FILEDWLAPI         0x0004
+#define BINDTEST_HTTPRESPONSE       0x0008
+#define BINDTEST_REDIRECT           0x0010
+#define BINDTEST_USE_CACHE          0x0020
+#define BINDTEST_NO_CALLBACK_READ   0x0040
+#define BINDTEST_NO_CALLBACK        0x0080
+#define BINDTEST_ABORT              0x0100
+#define BINDTEST_INVALID_CN         0x0200
+#define BINDTEST_ABORT_START        0x0400
+#define BINDTEST_ABORT_PROGRESS     0x0800
 
 static void init_bind_test(int protocol, DWORD flags, DWORD t)
 {
@@ -2273,12 +2701,21 @@ static void init_bind_test(int protocol, DWORD flags, DWORD t)
     tymed = t;
     filedwl_api = (flags & BINDTEST_FILEDWLAPI) != 0;
     if(flags & BINDTEST_HTTPRESPONSE)
-        urls[HTTP_TEST] = SHORT_RESPONSE_URL;
+        urls[HTTP_TEST] = winetest_post_urlW;
     else
-        urls[HTTP_TEST] = WINE_ABOUT_URL;
+        urls[HTTP_TEST] = winetest_data_urlW;
+    if(flags & BINDTEST_INVALID_CN)
+        urls[HTTPS_TEST] = https_invalid_cn_urlW;
+    else
+        urls[HTTPS_TEST] = https_urlW;
     test_redirect = (flags & BINDTEST_REDIRECT) != 0;
     use_cache_file = (flags & BINDTEST_USE_CACHE) != 0;
     callback_read = !(flags & BINDTEST_NO_CALLBACK_READ);
+    no_callback = (flags & BINDTEST_NO_CALLBACK) != 0;
+    test_abort = (flags & BINDTEST_ABORT) != 0;
+    abort_start = (flags & BINDTEST_ABORT_START) != 0;
+    abort_progress = (flags & BINDTEST_ABORT_PROGRESS) != 0;
+    is_async_prot = protocol == HTTP_TEST || protocol == HTTPS_TEST || protocol == FTP_TEST || protocol == WINETEST_TEST;
 }
 
 static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
@@ -2286,7 +2723,7 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
     IMoniker *mon;
     HRESULT hres;
     LPOLESTR display_name;
-    IBindCtx *bctx;
+    IBindCtx *bctx = NULL;
     MSG msg;
     IBindStatusCallback *previousclb;
     IUnknown *unk = (IUnknown*)0x00ff00ff;
@@ -2294,27 +2731,30 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
 
     init_bind_test(protocol, flags, t);
 
-    SET_EXPECT(QueryInterface_IServiceProvider);
-    hres = CreateAsyncBindCtx(0, (IBindStatusCallback*)&bsc, NULL, &bctx);
-    ok(hres == S_OK, "CreateAsyncBindCtx failed: %08x\n\n", hres);
-    CHECK_CALLED(QueryInterface_IServiceProvider);
-    if(FAILED(hres))
-        return;
+    if(no_callback) {
+        hres = CreateBindCtx(0, &bctx);
+        ok(hres == S_OK, "CreateBindCtx failed: %08x\n", hres);
+    }else {
+        SET_EXPECT(QueryInterface_IServiceProvider);
+        hres = CreateAsyncBindCtx(0, (IBindStatusCallback*)&bsc, NULL, &bctx);
+        ok(hres == S_OK, "CreateAsyncBindCtx failed: %08x\n\n", hres);
+        CHECK_CALLED(QueryInterface_IServiceProvider);
+        if(FAILED(hres))
+            return;
 
-    SET_EXPECT(QueryInterface_IServiceProvider);
-    hres = RegisterBindStatusCallback(bctx, (IBindStatusCallback*)&bsc, &previousclb, 0);
-    ok(hres == S_OK, "RegisterBindStatusCallback failed: %08x\n", hres);
-    ok(previousclb == (IBindStatusCallback*)&bsc, "previousclb(%p) != sclb(%p)\n", previousclb, &bsc);
-    CHECK_CALLED(QueryInterface_IServiceProvider);
-    if(previousclb)
-        IBindStatusCallback_Release(previousclb);
+        SET_EXPECT(QueryInterface_IServiceProvider);
+        hres = RegisterBindStatusCallback(bctx, (IBindStatusCallback*)&bsc, &previousclb, 0);
+        ok(hres == S_OK, "RegisterBindStatusCallback failed: %08x\n", hres);
+        ok(previousclb == (IBindStatusCallback*)&bsc, "previousclb(%p) != sclb(%p)\n", previousclb, &bsc);
+        CHECK_CALLED(QueryInterface_IServiceProvider);
+        if(previousclb)
+            IBindStatusCallback_Release(previousclb);
+    }
 
     hres = CreateURLMoniker(NULL, test_protocol == FILE_TEST ? file_url : urls[test_protocol], &mon);
-    ok(SUCCEEDED(hres), "failed to create moniker: %08x\n", hres);
-    if(FAILED(hres)) {
-        IBindCtx_Release(bctx);
+    ok(hres == S_OK, "failed to create moniker: %08x\n", hres);
+    if(FAILED(hres))
         return;
-    }
 
     hres = IMoniker_QueryInterface(mon, &IID_IBinding, (void**)&bind);
     ok(hres == E_NOINTERFACE, "IMoniker should not have IBinding interface\n");
@@ -2329,51 +2769,80 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
 
     if(tymed == TYMED_FILE && (test_protocol == ABOUT_TEST || test_protocol == ITS_TEST))
         binding_hres = INET_E_DATA_NOT_AVAILABLE;
+    if((flags & BINDTEST_INVALID_CN) && !invalid_cn_accepted &&
+       (onsecurityproblem_hres != S_OK || security_problem == ERROR_INTERNET_SEC_CERT_ERRORS)) {
+        if(security_problem == ERROR_INTERNET_SEC_CERT_ERRORS)
+            binding_hres = INET_E_SECURITY_PROBLEM;
+        else
+            binding_hres = INET_E_INVALID_CERTIFICATE;
+    }
 
-    SET_EXPECT(QueryInterface_IBindStatusCallbackEx);
-    SET_EXPECT(GetBindInfo);
-    SET_EXPECT(QueryInterface_IInternetProtocol);
-    if(!emulate_protocol)
-        SET_EXPECT(QueryService_IInternetProtocol);
-    SET_EXPECT(OnStartBinding);
+
+    if(only_check_prot_args)
+        SET_EXPECT(OnStopBinding);
+    if(!no_callback) {
+        SET_EXPECT(QueryInterface_IBindStatusCallbackEx);
+        SET_EXPECT(GetBindInfo);
+        SET_EXPECT(QueryInterface_IInternetProtocol);
+        if(!emulate_protocol)
+            SET_EXPECT(QueryService_IInternetProtocol);
+        SET_EXPECT(OnStartBinding);
+    }
     if(emulate_protocol) {
         if(is_urlmon_protocol(test_protocol))
             SET_EXPECT(SetPriority);
         SET_EXPECT(Start);
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST)
+        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST)
             SET_EXPECT(Terminate);
         if(tymed != TYMED_FILE || (test_protocol != ABOUT_TEST && test_protocol != ITS_TEST))
             SET_EXPECT(UnlockRequest);
     }else {
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
+        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
             SET_EXPECT(QueryInterface_IInternetBindInfo);
             SET_EXPECT(QueryService_IInternetBindInfo);
-            SET_EXPECT(QueryInterface_IHttpNegotiate);
+            if(!abort_start)
+                SET_EXPECT(QueryInterface_IHttpNegotiate);
             SET_EXPECT(QueryInterface_IWindowForBindingUI);
             SET_EXPECT(QueryService_IWindowForBindingUI);
-            SET_EXPECT(BeginningTransaction);
-            SET_EXPECT(QueryInterface_IHttpNegotiate2);
-            SET_EXPECT(GetRootSecurityId);
-            SET_EXPECT(OnProgress_FINDINGRESOURCE);
-            SET_EXPECT(OnProgress_CONNECTING);
+            SET_EXPECT(GetWindow_IWindowForBindingUI);
+            if(!abort_start) {
+                SET_EXPECT(BeginningTransaction);
+                SET_EXPECT(QueryInterface_IHttpNegotiate2);
+                SET_EXPECT(GetRootSecurityId);
+                if(http_is_first)
+                    SET_EXPECT(OnProgress_FINDINGRESOURCE);
+                SET_EXPECT(OnProgress_CONNECTING);
+            }
+            if(flags & BINDTEST_INVALID_CN) {
+                SET_EXPECT(QueryInterface_IHttpSecurity);
+                SET_EXPECT(QueryService_IHttpSecurity);
+                SET_EXPECT(OnSecurityProblem);
+                if(SUCCEEDED(onsecurityproblem_hres))
+                    SET_EXPECT(GetWindow_IHttpSecurity);
+            }
         }
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FTP_TEST
-           || test_protocol == FILE_TEST)
-            SET_EXPECT(OnProgress_SENDINGREQUEST);
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
-            SET_EXPECT(QueryInterface_IHttpNegotiate);
-            SET_EXPECT(OnResponse);
+        if(!no_callback) {
+            if((test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FTP_TEST
+               || test_protocol == FILE_TEST || test_protocol == WINETEST_TEST) && !abort_start)
+                SET_EXPECT(OnProgress_SENDINGREQUEST);
+            if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
+                SET_EXPECT(QueryInterface_IHttpNegotiate);
+                SET_EXPECT(OnResponse);
+            }
+            if(!abort_start) {
+                SET_EXPECT(OnProgress_MIMETYPEAVAILABLE);
+                SET_EXPECT(OnProgress_BEGINDOWNLOADDATA);
+            }
+            if(test_protocol == FILE_TEST)
+                SET_EXPECT(OnProgress_CACHEFILENAMEAVAILABLE);
+            if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FTP_TEST || test_protocol == WINETEST_TEST)
+                SET_EXPECT(OnProgress_DOWNLOADINGDATA);
+            if(!abort_start)
+                SET_EXPECT(OnProgress_ENDDOWNLOADDATA);
+            if((tymed != TYMED_FILE || test_protocol != ABOUT_TEST) && !abort_start)
+                SET_EXPECT(OnDataAvailable);
+            SET_EXPECT(OnStopBinding);
         }
-        SET_EXPECT(OnProgress_MIMETYPEAVAILABLE);
-        SET_EXPECT(OnProgress_BEGINDOWNLOADDATA);
-        if(test_protocol == FILE_TEST)
-            SET_EXPECT(OnProgress_CACHEFILENAMEAVAILABLE);
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FTP_TEST)
-            SET_EXPECT(OnProgress_DOWNLOADINGDATA);
-        SET_EXPECT(OnProgress_ENDDOWNLOADDATA);
-        if(tymed != TYMED_FILE || test_protocol != ABOUT_TEST)
-            SET_EXPECT(OnDataAvailable);
-        SET_EXPECT(OnStopBinding);
     }
 
     hres = IMoniker_BindToStorage(mon, bctx, NULL, tymed == TYMED_ISTREAM ? &IID_IStream : &IID_IUnknown, (void**)&unk);
@@ -2384,7 +2853,19 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
         return;
     }
 
-    if(!(bindf & BINDF_ASYNCHRONOUS) && tymed == TYMED_FILE) {
+    if(only_check_prot_args) {
+        ok(hres == E_FAIL, "Got %08x\n", hres);
+        CHECK_CALLED(OnStopBinding);
+    } else if(abort_start)
+        ok(hres == abort_hres, "IMoniker_BindToStorage failed: %08x, expected %08x\n", hres, abort_hres);
+    else if(abort_progress)
+        ok(hres == MK_S_ASYNCHRONOUS, "IMoniker_BindToStorage failed: %08x\n", hres);
+    else if(no_callback) {
+        if(emulate_protocol)
+            WaitForSingleObject(complete_event2, INFINITE);
+        ok(hres == S_OK, "IMoniker_BindToStorage failed: %08x\n", hres);
+        ok(unk != NULL, "unk == NULL\n");
+    }else if(!(bindf & BINDF_ASYNCHRONOUS) && tymed == TYMED_FILE) {
         ok(hres == S_OK, "IMoniker_BindToStorage failed: %08x\n", hres);
         ok(unk == NULL, "unk != NULL\n");
     }else if(((bindf & BINDF_ASYNCHRONOUS) && !data_available)
@@ -2395,33 +2876,56 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
         ok(hres == INET_E_DATA_NOT_AVAILABLE,
            "IMoniker_BindToStorage failed: %08x, expected INET_E_DATA_NOT_AVAILABLE\n", hres);
         ok(unk == NULL, "istr should be NULL\n");
+    }else if((flags & BINDTEST_INVALID_CN) && binding_hres != S_OK) {
+        ok(hres == binding_hres, "Got %08x\n", hres);
+        ok(unk == NULL, "Got %p\n", unk);
+    }else if((flags & BINDTEST_INVALID_CN) && invalid_cn_accepted) {
+        ok(hres == S_OK, "IMoniker_BindToStorage failed: %08x\n", hres);
+        ok(unk != NULL, "unk == NULL\n");
+        if(unk == NULL) {
+            ok(0, "Expected security problem to be ignored.\n");
+            invalid_cn_accepted = FALSE;
+            binding_hres = INET_E_INVALID_CERTIFICATE;
+        }
     }else {
         ok(hres == S_OK, "IMoniker_BindToStorage failed: %08x\n", hres);
         ok(unk != NULL, "unk == NULL\n");
     }
-    if(unk && callback_read)
+    if(unk && callback_read && !no_callback) {
         IUnknown_Release(unk);
-
-    if(FAILED(hres))
-        return;
-
-    while((bindf & BINDF_ASYNCHRONOUS) &&
-          !stopped_binding && GetMessage(&msg,NULL,0,0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        unk = NULL;
     }
 
-    CLEAR_CALLED(QueryInterface_IBindStatusCallbackEx); /* IE 8 */
-    CHECK_CALLED(GetBindInfo);
-    CHECK_CALLED(QueryInterface_IInternetProtocol);
-    if(!emulate_protocol)
-        CHECK_CALLED(QueryService_IInternetProtocol);
-    CHECK_CALLED(OnStartBinding);
+    if(FAILED(hres) && !(flags & BINDTEST_INVALID_CN) && !(flags & BINDTEST_ABORT_START))
+        return;
+
+    if((bindf & BINDF_ASYNCHRONOUS) && !no_callback) {
+        while(!stopped_binding && GetMessage(&msg,NULL,0,0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    if(!no_callback) {
+        CLEAR_CALLED(QueryInterface_IBindStatusCallbackEx); /* IE 8 */
+        CHECK_CALLED(GetBindInfo);
+        if(abort_start)
+            todo_wine CHECK_CALLED(QueryInterface_IInternetProtocol);
+        else
+            CHECK_CALLED(QueryInterface_IInternetProtocol);
+        if(!emulate_protocol) {
+            if(abort_start)
+                todo_wine CHECK_CALLED(QueryService_IInternetProtocol);
+            else
+                CHECK_CALLED(QueryService_IInternetProtocol);
+        }
+        CHECK_CALLED(OnStartBinding);
+    }
     if(emulate_protocol) {
         if(is_urlmon_protocol(test_protocol))
             CHECK_CALLED(SetPriority);
         CHECK_CALLED(Start);
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
+        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
             if(tymed == TYMED_FILE)
                 CLEAR_CALLED(Read);
             CHECK_CALLED(Terminate);
@@ -2429,54 +2933,91 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
         if(tymed != TYMED_FILE || (test_protocol != ABOUT_TEST && test_protocol != ITS_TEST))
             CHECK_CALLED(UnlockRequest);
     }else {
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
+        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
             CLEAR_CALLED(QueryInterface_IInternetBindInfo);
             CLEAR_CALLED(QueryService_IInternetBindInfo);
-            CHECK_CALLED(QueryInterface_IHttpNegotiate);
+            if(!abort_start)
+                CHECK_CALLED(QueryInterface_IHttpNegotiate);
             CLEAR_CALLED(QueryInterface_IWindowForBindingUI);
             CLEAR_CALLED(QueryService_IWindowForBindingUI);
-            CHECK_CALLED(BeginningTransaction);
-            if (have_IHttpNegotiate2)
+            CLEAR_CALLED(GetWindow_IWindowForBindingUI);
+            if(!abort_start)
+                CHECK_CALLED(BeginningTransaction);
+            if (have_IHttpNegotiate2 && !abort_start)
             {
                 CHECK_CALLED(QueryInterface_IHttpNegotiate2);
                 CHECK_CALLED(GetRootSecurityId);
             }
-            if(http_is_first || test_protocol == HTTPS_TEST) {
-                CHECK_CALLED(OnProgress_FINDINGRESOURCE);
-                CHECK_CALLED(OnProgress_CONNECTING);
-            }else todo_wine {
-                CHECK_NOT_CALLED(OnProgress_FINDINGRESOURCE);
+            if(http_is_first) {
+                if (! proxy_active())
+                {
+                    CHECK_CALLED(OnProgress_FINDINGRESOURCE);
+                    CHECK_CALLED(OnProgress_CONNECTING);
+                }
+                else
+                {
+                    CLEAR_CALLED(OnProgress_FINDINGRESOURCE);
+                    CLEAR_CALLED(OnProgress_CONNECTING);
+                }
+            }else if(!abort_start) {
                 /* IE7 does call this */
                 CLEAR_CALLED(OnProgress_CONNECTING);
             }
+            if((flags & BINDTEST_INVALID_CN) && !invalid_cn_accepted)  {
+                CHECK_CALLED(QueryInterface_IHttpSecurity);
+                CHECK_CALLED(QueryService_IHttpSecurity);
+                CHECK_CALLED(OnSecurityProblem);
+            }else {
+                CHECK_NOT_CALLED(QueryInterface_IHttpSecurity);
+                CHECK_NOT_CALLED(QueryService_IHttpSecurity);
+                CHECK_NOT_CALLED(OnSecurityProblem);
+            }
         }
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FILE_TEST)
-            CHECK_CALLED(OnProgress_SENDINGREQUEST);
-        else if(test_protocol == FTP_TEST)
-            todo_wine CHECK_CALLED(OnProgress_SENDINGREQUEST);
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST) {
-            CLEAR_CALLED(QueryInterface_IHttpNegotiate);
-            CHECK_CALLED(OnResponse);
+        if(!no_callback) {
+            if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FILE_TEST || test_protocol == WINETEST_TEST) {
+                if(flags & BINDTEST_INVALID_CN)
+                    CLEAR_CALLED(OnProgress_SENDINGREQUEST);
+                else if(!abort_start)
+                    CHECK_CALLED(OnProgress_SENDINGREQUEST);
+            } else if(test_protocol == FTP_TEST)
+                todo_wine CHECK_CALLED(OnProgress_SENDINGREQUEST);
+            if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == WINETEST_TEST) {
+                CLEAR_CALLED(QueryInterface_IHttpNegotiate);
+                if((!(flags & BINDTEST_INVALID_CN) || (binding_hres == S_OK)) && !abort_start) {
+                    CHECK_CALLED(OnResponse);
+                }
+            }
+            if((!(flags & BINDTEST_INVALID_CN) || binding_hres == S_OK) && !abort_start) {
+                CHECK_CALLED(OnProgress_MIMETYPEAVAILABLE);
+                CHECK_CALLED(OnProgress_BEGINDOWNLOADDATA);
+                CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
+            }
+            if(test_protocol == FILE_TEST)
+                CHECK_CALLED(OnProgress_CACHEFILENAMEAVAILABLE);
+            if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FTP_TEST  || test_protocol == WINETEST_TEST)
+                CLEAR_CALLED(OnProgress_DOWNLOADINGDATA);
+            if((flags & BINDTEST_INVALID_CN)) {
+                if(binding_hres == S_OK)
+                    CHECK_CALLED(OnDataAvailable);
+                else
+                    CHECK_NOT_CALLED(OnDataAvailable);
+            }else if((tymed != TYMED_FILE || test_protocol != ABOUT_TEST) && !abort_start)
+                CHECK_CALLED(OnDataAvailable);
+            CHECK_CALLED(OnStopBinding);
         }
-        CHECK_CALLED(OnProgress_MIMETYPEAVAILABLE);
-        CHECK_CALLED(OnProgress_BEGINDOWNLOADDATA);
-        if(test_protocol == FILE_TEST)
-            CHECK_CALLED(OnProgress_CACHEFILENAMEAVAILABLE);
-        if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FTP_TEST)
-            CLEAR_CALLED(OnProgress_DOWNLOADINGDATA);
-        CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
-        if(tymed != TYMED_FILE || test_protocol != ABOUT_TEST)
-            CHECK_CALLED(OnDataAvailable);
-        CHECK_CALLED(OnStopBinding);
     }
 
     ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
-    ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
+    if(bctx)
+        ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
 
     if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST)
         http_is_first = FALSE;
 
-    if(!callback_read) {
+    if((flags & BINDTEST_INVALID_CN) && onsecurityproblem_hres == S_OK && security_problem != ERROR_INTERNET_SEC_CERT_ERRORS)
+        invalid_cn_accepted = TRUE;
+
+    if(unk) {
         BYTE buf[512];
         DWORD readed;
         IStream *stream;
@@ -2518,13 +3059,13 @@ static void test_BindToObject(int protocol, DWORD flags)
 
     SET_EXPECT(QueryInterface_IServiceProvider);
     hres = CreateAsyncBindCtx(0, (IBindStatusCallback*)&objbsc, NULL, &bctx);
-    ok(SUCCEEDED(hres), "CreateAsyncBindCtx failed: %08x\n\n", hres);
+    ok(hres == S_OK, "CreateAsyncBindCtx failed: %08x\n\n", hres);
     CHECK_CALLED(QueryInterface_IServiceProvider);
     if(FAILED(hres))
         return;
 
     hres = CreateURLMoniker(NULL, test_protocol == FILE_TEST ? file_url : urls[test_protocol], &mon);
-    ok(SUCCEEDED(hres), "failed to create moniker: %08x\n", hres);
+    ok(hres == S_OK, "failed to create moniker: %08x\n", hres);
     if(FAILED(hres)) {
         IBindCtx_Release(bctx);
         return;
@@ -2538,6 +3079,7 @@ static void test_BindToObject(int protocol, DWORD flags)
     hres = IMoniker_GetDisplayName(mon, bctx, NULL, &display_name);
     ok(hres == S_OK, "GetDisplayName failed %08x\n", hres);
     ok(!lstrcmpW(display_name, urls[test_protocol]), "GetDisplayName got wrong name\n");
+    CoTaskMemFree(display_name);
 
     SET_EXPECT(QueryInterface_IBindStatusCallbackEx);
     SET_EXPECT(Obj_GetBindInfo);
@@ -2560,10 +3102,12 @@ static void test_BindToObject(int protocol, DWORD flags)
             SET_EXPECT(BeginningTransaction);
             SET_EXPECT(QueryInterface_IHttpNegotiate2);
             SET_EXPECT(GetRootSecurityId);
-            SET_EXPECT(Obj_OnProgress_FINDINGRESOURCE);
+            if(http_is_first)
+                SET_EXPECT(Obj_OnProgress_FINDINGRESOURCE);
             SET_EXPECT(Obj_OnProgress_CONNECTING);
             SET_EXPECT(QueryInterface_IWindowForBindingUI);
             SET_EXPECT(QueryService_IWindowForBindingUI);
+            SET_EXPECT(GetWindow_IWindowForBindingUI);
         }
         if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FILE_TEST)
             SET_EXPECT(Obj_OnProgress_SENDINGREQUEST);
@@ -2642,16 +3186,16 @@ static void test_BindToObject(int protocol, DWORD flags)
             if(http_is_first) {
                 CHECK_CALLED(Obj_OnProgress_FINDINGRESOURCE);
                 CHECK_CALLED(Obj_OnProgress_CONNECTING);
-            }else todo_wine {
-                CHECK_NOT_CALLED(Obj_OnProgress_FINDINGRESOURCE);
+            }else {
                 /* IE7 does call this */
                 CLEAR_CALLED(Obj_OnProgress_CONNECTING);
             }
             CLEAR_CALLED(QueryInterface_IWindowForBindingUI);
             CLEAR_CALLED(QueryService_IWindowForBindingUI);
+            CLEAR_CALLED(GetWindow_IWindowForBindingUI);
         }
         if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FILE_TEST) {
-            if(urls[test_protocol] == SHORT_RESPONSE_URL)
+            if(urls[test_protocol] == winetest_post_urlW)
                 CLEAR_CALLED(Obj_OnProgress_SENDINGREQUEST);
             else
                 CHECK_CALLED(Obj_OnProgress_SENDINGREQUEST);
@@ -2674,13 +3218,11 @@ static void test_BindToObject(int protocol, DWORD flags)
         CHECK_CALLED(Obj_OnStopBinding);
     }
 
-    if(test_protocol != HTTP_TEST || emulate_protocol || !(bindf & BINDF_ASYNCHRONOUS)) {
-        ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
+    ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
+    if(test_protocol != HTTP_TEST || emulate_protocol || !(bindf & BINDF_ASYNCHRONOUS))
         ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
-    }else {
-        todo_wine ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
+    else
         IBindCtx_Release(bctx);
-    }
 
     if(emulate_protocol)
         CoRevokeClassObject(regid);
@@ -2792,6 +3334,113 @@ static void test_URLDownloadToFile(DWORD prot, BOOL emul)
     ok(res, "DeleteFile failed: %u\n", GetLastError());
 }
 
+static void test_URLDownloadToFile_abort(void)
+{
+    HRESULT hres;
+
+    init_bind_test(HTTP_TEST, BINDTEST_FILEDWLAPI|BINDTEST_ABORT_PROGRESS, TYMED_FILE);
+
+    SET_EXPECT(GetBindInfo);
+    SET_EXPECT(QueryInterface_IInternetProtocol);
+    SET_EXPECT(QueryInterface_IServiceProvider);
+    SET_EXPECT(QueryService_IInternetProtocol);
+    SET_EXPECT(OnStartBinding);
+    SET_EXPECT(QueryInterface_IHttpNegotiate);
+    SET_EXPECT(QueryInterface_IHttpNegotiate2);
+    SET_EXPECT(BeginningTransaction);
+    SET_EXPECT(GetRootSecurityId);
+    SET_EXPECT(QueryInterface_IWindowForBindingUI);
+    SET_EXPECT(OnProgress_CONNECTING);
+    SET_EXPECT(OnProgress_SENDINGREQUEST);
+    SET_EXPECT(OnStopBinding);
+
+    hres = URLDownloadToFileW(NULL, urls[HTTP_TEST], dwl_htmlW, 0, (IBindStatusCallback*)&bsc);
+    ok(hres == E_ABORT, "URLDownloadToFile failed: %08x, expected E_ABORT\n", hres);
+
+    CHECK_CALLED(GetBindInfo);
+    CHECK_CALLED(QueryInterface_IInternetProtocol);
+    CHECK_CALLED(QueryInterface_IServiceProvider);
+    CHECK_CALLED(QueryService_IInternetProtocol);
+    CHECK_CALLED(OnStartBinding);
+    CHECK_CALLED(QueryInterface_IHttpNegotiate);
+    CHECK_CALLED(QueryInterface_IHttpNegotiate2);
+    CHECK_CALLED(BeginningTransaction);
+    CHECK_CALLED(GetRootSecurityId);
+    CLEAR_CALLED(QueryInterface_IWindowForBindingUI);
+    CHECK_CALLED(OnProgress_SENDINGREQUEST);
+    CLEAR_CALLED(OnProgress_CONNECTING);
+    CHECK_CALLED(OnStopBinding);
+
+    init_bind_test(HTTP_TEST, BINDTEST_FILEDWLAPI|BINDTEST_ABORT_START, TYMED_FILE);
+
+    SET_EXPECT(GetBindInfo);
+    SET_EXPECT(QueryInterface_IInternetProtocol);
+    SET_EXPECT(QueryInterface_IServiceProvider);
+    SET_EXPECT(QueryService_IInternetProtocol);
+    SET_EXPECT(OnStartBinding);
+    SET_EXPECT(OnStopBinding);
+
+    abort_hres = E_ABORT;
+    hres = URLDownloadToFileW(NULL, urls[HTTP_TEST], dwl_htmlW, 0, (IBindStatusCallback*)&bsc);
+    ok(hres == E_ABORT, "URLDownloadToFile failed: %08x, expected E_ABORT\n", hres);
+
+    CHECK_CALLED(GetBindInfo);
+    todo_wine CHECK_CALLED(QueryInterface_IInternetProtocol);
+    todo_wine CHECK_CALLED(QueryInterface_IServiceProvider);
+    todo_wine CHECK_CALLED(QueryService_IInternetProtocol);
+    CHECK_CALLED(OnStartBinding);
+    CHECK_CALLED(OnStopBinding);
+
+    init_bind_test(HTTP_TEST, BINDTEST_FILEDWLAPI|BINDTEST_ABORT_START, TYMED_FILE);
+
+    SET_EXPECT(GetBindInfo);
+    SET_EXPECT(QueryInterface_IInternetProtocol);
+    SET_EXPECT(QueryInterface_IServiceProvider);
+    SET_EXPECT(QueryService_IInternetProtocol);
+    SET_EXPECT(OnStartBinding);
+    SET_EXPECT(QueryInterface_IHttpNegotiate);
+    SET_EXPECT(QueryInterface_IHttpNegotiate2);
+    SET_EXPECT(BeginningTransaction);
+    SET_EXPECT(GetRootSecurityId);
+    SET_EXPECT(QueryInterface_IWindowForBindingUI);
+    SET_EXPECT(OnResponse);
+    SET_EXPECT(OnProgress_CONNECTING);
+    SET_EXPECT(OnProgress_SENDINGREQUEST);
+    SET_EXPECT(OnProgress_MIMETYPEAVAILABLE);
+    SET_EXPECT(OnProgress_BEGINDOWNLOADDATA);
+    SET_EXPECT(OnProgress_DOWNLOADINGDATA);
+    SET_EXPECT(OnProgress_ENDDOWNLOADDATA);
+    SET_EXPECT(OnStopBinding);
+
+    /* URLDownloadToFile doesn't abort if E_NOTIMPL is returned from the
+     * IBindStatusCallback's OnStartBinding function.
+     */
+    abort_hres = E_NOTIMPL;
+    hres = URLDownloadToFileW(NULL, urls[HTTP_TEST], dwl_htmlW, 0, (IBindStatusCallback*)&bsc);
+    ok(hres == S_OK, "URLDownloadToFile failed: %08x\n", hres);
+
+    CHECK_CALLED(GetBindInfo);
+    CHECK_CALLED(QueryInterface_IInternetProtocol);
+    CHECK_CALLED(QueryInterface_IServiceProvider);
+    CHECK_CALLED(QueryService_IInternetProtocol);
+    CHECK_CALLED(OnStartBinding);
+    CHECK_CALLED(QueryInterface_IHttpNegotiate);
+    CHECK_CALLED(QueryInterface_IHttpNegotiate2);
+    CHECK_CALLED(BeginningTransaction);
+    CHECK_CALLED(GetRootSecurityId);
+    CLEAR_CALLED(QueryInterface_IWindowForBindingUI);
+    CHECK_CALLED(OnResponse);
+    CLEAR_CALLED(OnProgress_CONNECTING);
+    CHECK_CALLED(OnProgress_SENDINGREQUEST);
+    CHECK_CALLED(OnProgress_MIMETYPEAVAILABLE);
+    CHECK_CALLED(OnProgress_BEGINDOWNLOADDATA);
+    CHECK_CALLED(OnProgress_DOWNLOADINGDATA);
+    CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
+    CHECK_CALLED(OnStopBinding);
+
+    DeleteFileA(dwl_htmlA);
+}
+
 static void set_file_url(char *path)
 {
     CHAR file_urlA[INTERNET_MAX_URL_LENGTH];
@@ -2831,11 +3480,11 @@ static void create_file(void)
 
 static void create_cache_file(void)
 {
-    char buf[6500];
+    char buf[6500], curdir[MAX_PATH];
     HANDLE file;
     DWORD size;
 
-    file = CreateFileW(test_txtW, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+    file = CreateFileA(test_txtA, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL, NULL);
     ok(file != INVALID_HANDLE_VALUE, "CreateFile failed\n");
     if(file == INVALID_HANDLE_VALUE)
@@ -2845,9 +3494,12 @@ static void create_cache_file(void)
     WriteFile(file, buf, sizeof(buf), &size, NULL);
     CloseHandle(file);
 
-    size = GetCurrentDirectoryW(MAX_PATH, cache_file_name);
-    cache_file_name[size] = '\\';
-    memcpy(cache_file_name+size+1, test_txtW, sizeof(test_txtW));
+    memset(curdir, 0, sizeof(curdir));
+    GetCurrentDirectoryA(MAX_PATH, curdir);
+    lstrcatA(curdir, "\\");
+    lstrcatA(curdir, test_txtA);
+
+    MultiByteToWideChar(CP_ACP, 0, curdir, -1, cache_file_name, MAX_PATH);
 }
 
 static void test_ReportResult(HRESULT exhres)
@@ -2912,9 +3564,11 @@ static void test_BindToStorage_fail(void)
     hres = pCreateAsyncBindCtxEx(NULL, 0, NULL, NULL, &bctx, 0);
     ok(hres == S_OK, "CreateAsyncBindCtxEx failed: %08x\n", hres);
 
+    unk = (void*)0xdeadbeef;
     hres = IMoniker_BindToStorage(mon, bctx, NULL, &IID_IStream, (void**)&unk);
     ok(hres == MK_E_SYNTAX || hres == INET_E_DATA_NOT_AVAILABLE,
        "hres=%08x, expected MK_E_SYNTAX or INET_E_DATA_NOT_AVAILABLE\n", hres);
+    ok(unk == NULL, "got %p\n", unk);
 
     IBindCtx_Release(bctx);
 
@@ -2944,7 +3598,42 @@ static void test_StdURLMoniker(void)
     hres = IMoniker_GetDisplayName(mon, NULL, NULL, &display_name);
     ok(hres == E_OUTOFMEMORY, "GetDisplayName failed: %08x, expected E_OUTOFMEMORY\n", hres);
 
+    if(pCreateUri) {
+      IUriContainer *uri_container;
+      IUri *uri;
+
+      hres = IMoniker_QueryInterface(mon, &IID_IUriContainer, (void**)&uri_container);
+      ok(hres == S_OK, "Coud not get IUriMoniker iface: %08x\n", hres);
+
+
+      uri = (void*)0xdeadbeef;
+      hres = IUriContainer_GetIUri(uri_container, &uri);
+      ok(hres == S_FALSE, "GetIUri failed: %08x\n", hres);
+      ok(!uri, "uri = %p, expected NULL\n", uri);
+
+      IUriContainer_Release(uri_container);
+    }
+
     IMoniker_Release(mon);
+}
+
+static void register_protocols(void)
+{
+    IInternetSession *session;
+    HRESULT hres;
+
+    static const WCHAR winetestW[] = {'w','i','n','e','t','e','s','t',0};
+
+    hres = CoInternetGetSession(0, &session, 0);
+    ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
+    if(FAILED(hres))
+        return;
+
+    hres = IInternetSession_RegisterNameSpace(session, &protocol_cf, &IID_NULL,
+            winetestW, 0, NULL, 0);
+    ok(hres == S_OK, "RegisterNameSpace failed: %08x\n", hres);
+
+    IInternetSession_Release(session);
 }
 
 START_TEST(url)
@@ -2954,11 +3643,21 @@ START_TEST(url)
     hurlmon = GetModuleHandle("urlmon.dll");
     pCreateAsyncBindCtxEx = (void*) GetProcAddress(hurlmon, "CreateAsyncBindCtxEx");
 
+    if(!GetProcAddress(hurlmon, "CompareSecurityIds")) {
+        win_skip("Too old IE\n");
+        return;
+    }
+
+    pCreateUri = (void*) GetProcAddress(hurlmon, "CreateUri");
+    if(!pCreateUri)
+        win_skip("IUri not supported\n");
+
     complete_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     complete_event2 = CreateEvent(NULL, FALSE, FALSE, NULL);
     thread_id = GetCurrentThreadId();
     create_file();
     create_cache_file();
+    register_protocols();
 
     test_create();
 
@@ -3008,7 +3707,31 @@ START_TEST(url)
         trace("synchronous file test (to object)...\n");
         test_BindToObject(FILE_TEST, 0);
 
+        trace("file test (no callback)...\n");
+        test_BindToStorage(FILE_TEST, BINDTEST_NO_CALLBACK, TYMED_ISTREAM);
+
+        trace("synchronous https test (invalid CN, dialog)\n");
+        onsecurityproblem_hres = S_FALSE;
+        http_is_first = TRUE;
+        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+
+        trace("synchronous https test (invalid CN, fail)\n");
+        onsecurityproblem_hres = E_FAIL;
+        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+
+        trace("synchronous https test (invalid CN, accept)\n");
+        onsecurityproblem_hres = S_OK;
+        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+
+        trace("asynchronous https test (invalid CN, dialog 2)\n");
+        onsecurityproblem_hres = S_FALSE;
+        test_BindToStorage(HTTPS_TEST, BINDTEST_INVALID_CN, TYMED_ISTREAM);
+        invalid_cn_accepted = FALSE;
+
         bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA;
+
+        trace("about test (no read)...\n");
+        test_BindToStorage(ABOUT_TEST, BINDTEST_NO_CALLBACK_READ, TYMED_ISTREAM);
 
         trace("http test...\n");
         test_BindToStorage(HTTP_TEST, 0, TYMED_ISTREAM);
@@ -3020,11 +3743,21 @@ START_TEST(url)
         test_BindToObject(HTTP_TEST, 0);
 
         trace("http test (short response)...\n");
-        http_is_first = TRUE;
         test_BindToStorage(HTTP_TEST, BINDTEST_HTTPRESPONSE, TYMED_ISTREAM);
 
         trace("http test (short response, to object)...\n");
         test_BindToObject(HTTP_TEST, 0);
+
+        trace("http test (abort start binding E_NOTIMPL)...\n");
+        abort_hres = E_NOTIMPL;
+        test_BindToStorage(HTTP_TEST, BINDTEST_ABORT_START, TYMED_FILE);
+
+        trace("http test (abort start binding E_ABORT)...\n");
+        abort_hres = E_ABORT;
+        test_BindToStorage(HTTP_TEST, BINDTEST_ABORT_START, TYMED_FILE);
+
+        trace("http test (abort progress)...\n");
+        test_BindToStorage(HTTP_TEST, BINDTEST_ABORT_PROGRESS, TYMED_FILE);
 
         trace("emulated http test...\n");
         test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
@@ -3044,7 +3777,11 @@ START_TEST(url)
         trace("emulated http test (with cache)...\n");
         test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE|BINDTEST_USE_CACHE, TYMED_ISTREAM);
 
+        trace("winetest test (no callback)...\n");
+        test_BindToStorage(WINETEST_TEST, BINDTEST_EMULATE|BINDTEST_NO_CALLBACK|BINDTEST_USE_CACHE, TYMED_ISTREAM);
+
         trace("asynchronous https test...\n");
+        http_is_first = TRUE;
         test_BindToStorage(HTTPS_TEST, 0, TYMED_ISTREAM);
 
         trace("emulated https test...\n");
@@ -3104,6 +3841,12 @@ START_TEST(url)
         trace("test URLDownloadToFile for http protocol...\n");
         test_URLDownloadToFile(HTTP_TEST, FALSE);
 
+        trace("test URLDownloadToFile abort...\n");
+        test_URLDownloadToFile_abort();
+
+        trace("test emulated http abort...\n");
+        test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE|BINDTEST_ABORT, TYMED_ISTREAM);
+
         bindf |= BINDF_NOWRITECACHE;
 
         trace("ftp test...\n");
@@ -3111,10 +3854,16 @@ START_TEST(url)
 
         trace("test failures...\n");
         test_BindToStorage_fail();
+
+        bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE;
+        only_check_prot_args = TRUE; /* Fail after checking arguments to Protocol_Start */
+
+        trace("check emulated http protocol arguments...\n");
+        test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
     }
 
     DeleteFileA(wszIndexHtmlA);
-    DeleteFileW(test_txtW);
+    DeleteFileA(test_txtA);
     CloseHandle(complete_event);
     CloseHandle(complete_event2);
     CoUninitialize();

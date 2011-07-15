@@ -1,8 +1,8 @@
 
 
-HANDLE test_NtGdiDdCreateDirectDrawObject();
+HANDLE test_NtGdiDdCreateDirectDrawObject(void);
 void test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal);
-void test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal);
+void test_NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal);
 void test_NtGdiDdGetScanLine(HANDLE hDirectDrawLocal);
 void test_NtGdiDdWaitForVerticalBlank(HANDLE hDirectDrawLocal);
 void test_NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal);

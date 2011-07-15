@@ -1,8 +1,7 @@
 
 add_definitions(
     -D__ROS_LONG64__
-    -D_CRT_NONSTDC_NO_DEPRECATE
-    -D_DLL -D__USE_CRTIMP)
+    -D_CRT_NONSTDC_NO_DEPRECATE)
 
 list(APPEND SOURCE
     cpp.c
@@ -22,6 +21,11 @@ list(APPEND SOURCE
     time.c)
 
 add_executable(msvcrt_winetest ${SOURCE})
+
+if(MSVC)
+    target_link_libraries(msvcrt_winetest oldnames)
+endif()
+
 set_module_type(msvcrt_winetest win32cui)
 add_importlibs(msvcrt_winetest msvcrt kernel32 ntdll)
-add_cab_target(msvcrt_winetest 7)
+add_cd_file(TARGET msvcrt_winetest DESTINATION reactos/bin FOR all)

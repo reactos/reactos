@@ -74,7 +74,10 @@ static HRESULT (WINAPI *pFindMimeFromData)(LPBC, LPCWSTR, LPVOID, DWORD, LPCWSTR
 static HRESULT (WINAPI *pObtainUserAgentString)(DWORD, LPSTR, DWORD*);
 static HRESULT (WINAPI *pReleaseBindInfo)(BINDINFO*);
 static HRESULT (WINAPI *pUrlMkGetSessionOption)(DWORD, LPVOID, DWORD, DWORD *, DWORD);
-
+static HRESULT (WINAPI *pCompareSecurityIds)(BYTE*,DWORD,BYTE*,DWORD,DWORD);
+static HRESULT (WINAPI *pCoInternetIsFeatureEnabled)(INTERNETFEATURELIST,DWORD);
+static HRESULT (WINAPI *pCoInternetSetFeatureEnabled)(INTERNETFEATURELIST,DWORD,BOOL);
+static HRESULT (WINAPI *pIEInstallScope)(DWORD*);
 
 static void test_CreateFormatEnum(void)
 {
@@ -270,7 +273,8 @@ static const WCHAR url9[] =
      '/','s','i','t','e','/','a','b','o','u','t',0};
 static const WCHAR url10[] = {'f','i','l','e',':','/','/','s','o','m','e','%','2','0','f','i','l','e',
         '.','j','p','g',0};
-
+static const WCHAR url11[] = {'h','t','t','p',':','/','/','g','o','o','g','l','e','.','*','.',
+        'c','o','m',0};
 static const WCHAR url4e[] = {'f','i','l','e',':','s','o','m','e',' ','f','i','l','e',
         '.','j','p','g',0};
 
@@ -282,10 +286,13 @@ static const WCHAR wszFile[] = {'f','i','l','e',0};
 static const WCHAR wszHttp[] = {'h','t','t','p',0};
 static const WCHAR wszAbout[] = {'a','b','o','u','t',0};
 static const WCHAR wszEmpty[] = {0};
+static const WCHAR wszGoogle[] = {'g','o','o','g','l','e','.','*','.','c','o','m',0};
 
 static const WCHAR wszWineHQ[] = {'w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
 static const WCHAR wszHttpWineHQ[] = {'h','t','t','p',':','/','/','w','w','w','.',
     'w','i','n','e','h','q','.','o','r','g',0};
+static const WCHAR wszHttpGoogle[] = {'h','t','t','p',':','/','/','g','o','o','g','l','e',
+    '.','*','.','c','o','m',0};
 
 struct parse_test {
     LPCWSTR url;
@@ -307,6 +314,7 @@ static const struct parse_test parse_tests[] = {
     {url4, E_FAIL, url4e, S_OK, path4,        wszFile, wszEmpty, S_OK, NULL, E_FAIL},
     {url5, E_FAIL, url5,  E_INVALIDARG, NULL, wszHttp, wszWineHQ, S_OK, wszHttpWineHQ, S_OK},
     {url6, S_OK,   url6,  E_INVALIDARG, NULL, wszAbout, NULL, E_FAIL, NULL, E_FAIL},
+    {url11, E_FAIL, url11, E_INVALIDARG,        NULL, wszHttp, wszGoogle, S_OK, wszHttpGoogle, S_OK}
 };
 
 static void test_CoInternetParseUrl(void)
@@ -316,10 +324,6 @@ static void test_CoInternetParseUrl(void)
     int i;
 
     static WCHAR buf[4096];
-
-    if (!pCoInternetParseUrl) {
-        return;
-    }
 
     memset(buf, 0xf0, sizeof(buf));
     hres = pCoInternetParseUrl(parse_tests[0].url, PARSE_SCHEMA, 0, buf,
@@ -380,10 +384,6 @@ static void test_CoInternetCompareUrl(void)
 {
     HRESULT hres;
 
-    if (!pCoInternetCompareUrl) {
-        return;
-    }
-
     hres = pCoInternetCompareUrl(url1, url1, 0);
     ok(hres == S_OK, "CoInternetCompareUrl failed: %08x\n", hres);
 
@@ -413,10 +413,6 @@ static void test_CoInternetQueryInfo(void)
     BYTE buf[100];
     DWORD cb, i;
     HRESULT hres;
-
-    if (!pCoInternetQueryInfo) {
-        return;
-    }
 
     for(i=0; i < sizeof(query_info_tests)/sizeof(query_info_tests[0]); i++) {
         cb = 0xdeadbeef;
@@ -665,10 +661,6 @@ static void test_FindMimeFromData(void)
     LPWSTR mime;
     int i;
 
-    if (!pFindMimeFromData) {
-        return;
-    }
-
     for(i=0; i<sizeof(mime_tests)/sizeof(mime_tests[0]); i++) {
         mime = (LPWSTR)0xf0f0f0f0;
         hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, NULL, 0, &mime, 0);
@@ -769,10 +761,6 @@ static void register_protocols(void)
     HRESULT hres;
 
     static const WCHAR wszAbout[] = {'a','b','o','u','t',0};
-
-    if (!pCoInternetGetSession) {
-        return;
-    }
 
     hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
@@ -947,10 +935,6 @@ static void test_NameSpace(void)
 
     static const WCHAR wszTest[] = {'t','e','s','t',0};
 
-    if (!pCoInternetGetSession || !pCoInternetParseUrl) {
-        return;
-    }
-
     hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
     if(FAILED(hres))
@@ -1105,10 +1089,6 @@ static void test_MimeFilter(void)
 
     static const WCHAR mimeW[] = {'t','e','s','t','/','m','i','m','e',0};
 
-    if (!pCoInternetGetSession) {
-        return;
-    }
-
     hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
     if(FAILED(hres))
@@ -1146,10 +1126,6 @@ static void test_ReleaseBindInfo(void)
     BINDINFO bi;
     IUnknown unk = { &unk_vtbl };
 
-    if (!pReleaseBindInfo) {
-        return;
-    }
-
     pReleaseBindInfo(NULL); /* shouldn't crash */
 
     memset(&bi, 0, sizeof(bi));
@@ -1183,11 +1159,6 @@ static void test_CopyStgMedium(void)
 
     static WCHAR fileW[] = {'f','i','l','e',0};
 
-    if (!pCopyStgMedium) {
-        return;
-    }
-
-
     memset(&src, 0xf0, sizeof(src));
     memset(&dst, 0xe0, sizeof(dst));
     memset(&empty, 0xf0, sizeof(empty));
@@ -1219,6 +1190,7 @@ static void test_CopyStgMedium(void)
     ok(dst.u.lpszFileName && dst.u.lpszFileName != fileW, "lpszFileName=%p\n", dst.u.lpszFileName);
     ok(!lstrcmpW(dst.u.lpszFileName, fileW), "wrong file name\n");
     ok(!dst.pUnkForRelease, "pUnkForRelease=%p, expected NULL\n", dst.pUnkForRelease);
+    ReleaseStgMedium(&dst);
 
     hres = pCopyStgMedium(&src, NULL);
     ok(hres == E_POINTER, "CopyStgMedium failed: %08x, expected E_POINTER\n", hres);
@@ -1230,11 +1202,6 @@ static void test_UrlMkGetSessionOption(void)
 {
     DWORD encoding, size;
     HRESULT hres;
-
-
-    if (!pUrlMkGetSessionOption) {
-        return;
-    }
 
     size = encoding = 0xdeadbeef;
     hres = pUrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
@@ -1280,10 +1247,6 @@ static void test_user_agent(void)
     LPSTR str2 = NULL;
     HRESULT hres;
     DWORD size, saved;
-
-    if (!pObtainUserAgentString || !pUrlMkGetSessionOption) {
-        return;
-    }
 
     hres = pObtainUserAgentString(0, NULL, NULL);
     ok(hres == E_INVALIDARG, "ObtainUserAgentString failed: %08x\n", hres);
@@ -1498,16 +1461,246 @@ static void test_MkParseDisplayNameEx(void)
 static void test_IsValidURL(void)
 {
     HRESULT hr;
+    IBindCtx *bctx = NULL;
 
     hr = IsValidURL(NULL, 0, 0);
     ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+
+    hr = IsValidURL(NULL, wszHttpWineHQ, 0);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    CreateBindCtx(0, &bctx);
+
+    hr = IsValidURL(bctx, wszHttpWineHQ, 0);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    IBindCtx_Release(bctx);
+}
+
+static const struct {
+    INTERNETFEATURELIST feature;
+    DWORD               get_flags;
+    HRESULT             expected;
+    BOOL                todo;
+} default_feature_tests[] = {
+    {FEATURE_OBJECT_CACHING,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_ZONE_ELEVATION,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_MIME_HANDLING,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_MIME_SNIFFING,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_WINDOW_RESTRICTIONS,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_WEBOC_POPUPMANAGEMENT,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_BEHAVIORS,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_DISABLE_MK_PROTOCOL,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_LOCALMACHINE_LOCKDOWN,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_SECURITYBAND,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_RESTRICT_ACTIVEXINSTALL,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_VALIDATE_NAVIGATE_URL,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_RESTRICT_FILEDOWNLOAD,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_ADDON_MANAGEMENT,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_PROTOCOL_LOCKDOWN,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_HTTP_USERNAME_PASSWORD_DISABLE,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_SAFE_BINDTOOBJECT,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_UNC_SAVEDFILECHECK,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_GET_URL_DOM_FILEPATH_UNENCODED,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_TABBED_BROWSING,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_SSLUX,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_DISABLE_NAVIGATION_SOUNDS,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_DISABLE_LEGACY_COMPRESSION,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_FORCE_ADDR_AND_STATUS,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_XMLHTTP,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_DISABLE_TELNET_PROTOCOL,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_FEEDS,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_BLOCK_INPUT_PROMPTS,GET_FEATURE_FROM_PROCESS,S_FALSE}
+};
+
+static void test_internet_feature_defaults(void) {
+    HRESULT hres;
+    DWORD i;
+
+    for(i = 0; i < sizeof(default_feature_tests)/sizeof(default_feature_tests[0]); ++i) {
+        hres = pCoInternetIsFeatureEnabled(default_feature_tests[i].feature, default_feature_tests[i].get_flags);
+        if(default_feature_tests[i].todo) {
+            todo_wine
+            ok(hres == default_feature_tests[i].expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
+                hres, default_feature_tests[i].expected, i);
+        } else {
+            ok(hres == default_feature_tests[i].expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
+                hres, default_feature_tests[i].expected, i);
+        }
+    }
+}
+
+/* With older versions of IE (IE 7 and earlier), urlmon caches
+ * the FeatureControl values from the registry when it's loaded
+ * into memory. Newer versions of IE conditionally cache the
+ * the FeatureControl registry values (i.e. When a call to
+ * CoInternetIsFeatureEnabled and a corresponding CoInternetSetFeatureEnabled
+ * call hasn't already been made for the specified Feature). Because of
+ * this we skip these tests on IE 7 and earlier.
+ */
+static void test_internet_features_registry(void) {
+    HRESULT hres;
+    DWORD res;
+    char module[MAX_PATH];
+    char *name;
+    HKEY feature_control;
+    HKEY feature;
+    DWORD value;
+    BOOL delete_feature_key = TRUE;
+    BOOL delete_feature_control_key = FALSE;
+
+    static const char* szFeatureControlKey = "Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl";
+    static const char* szFeatureBehaviorsKey = "FEATURE_BEHAVIORS";
+    static const char* szFeatureZoneElevationKey = "FEATURE_ZONE_ELEVATION";
+
+    if(!pIEInstallScope) {
+        win_skip("Skipping internet feature registry tests, IE is too old...\n");
+        return;
+    }
+
+    res = GetModuleFileNameA(NULL, module, sizeof(module));
+    ok(res, "GetModuleFileName failed: %d\n", GetLastError());
+
+    name = strrchr(module, '\\')+1;
+
+    /* Some Windows machines don't have a FeatureControl key in HKCU. */
+    res = RegOpenKeyA(HKEY_CURRENT_USER, szFeatureControlKey, &feature_control);
+    if(res != ERROR_SUCCESS) {
+        res = RegCreateKeyA(HKEY_CURRENT_USER, szFeatureControlKey, &feature_control);
+        ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
+        delete_feature_control_key = TRUE;
+    }
+
+    res = RegOpenKeyA(feature_control, szFeatureBehaviorsKey, &feature);
+    if(res == ERROR_SUCCESS)
+        /* FEATURE_BEHAVIORS already existed, so don't delete it when we're done. */
+        delete_feature_key = FALSE;
+    else {
+        res = RegCreateKeyA(feature_control, szFeatureBehaviorsKey, &feature);
+        ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
+    }
+
+    value = 0;
+    res = RegSetValueExA(feature, name, 0, REG_DWORD, (BYTE*)&value, sizeof(DWORD));
+    ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %d\n", res);
+
+    hres = pCoInternetIsFeatureEnabled(FEATURE_BEHAVIORS, GET_FEATURE_FROM_PROCESS);
+    ok(hres == S_FALSE, "CoInternetIsFeatureEnabled returned %08x, expected S_FALSE\n", hres);
+
+    if(delete_feature_key) {
+        RegCloseKey(feature);
+        RegDeleteKeyA(feature_control, szFeatureBehaviorsKey);
+    } else {
+        RegDeleteValue(feature, name);
+        RegCloseKey(feature);
+    }
+
+    /* IE's feature control cached the value it got from the registry earlier. */
+    hres = pCoInternetIsFeatureEnabled(FEATURE_BEHAVIORS, GET_FEATURE_FROM_PROCESS);
+    ok(hres == S_FALSE, "CoInternetIsFeatureEnabled returned %08x, expected S_FALSE\n", hres);
+
+    /* Restore this feature back to its default value. */
+    hres = pCoInternetSetFeatureEnabled(FEATURE_BEHAVIORS, SET_FEATURE_ON_PROCESS, TRUE);
+    ok(hres == S_OK, "CoInternetSetFeatureEnabled failed: %08x\n", hres);
+
+    RegCloseKey(feature_control);
+    if(delete_feature_control_key)
+        RegDeleteKeyA(HKEY_CURRENT_USER, szFeatureControlKey);
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, szFeatureControlKey, &feature_control);
+    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
+
+    res = RegOpenKeyA(feature_control, szFeatureZoneElevationKey, &feature);
+    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
+
+    value = 1;
+    res = RegSetValueExA(feature, "*", 0, REG_DWORD, (BYTE*)&value, sizeof(DWORD));
+    ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %d\n", res);
+
+    hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
+    ok(hres == S_OK, "CoInternetIsFeatureEnabled returned %08x, expected S_OK\n", hres);
+
+    RegDeleteValueA(feature, "*");
+    RegCloseKey(feature);
+    RegCloseKey(feature_control);
+
+    /* Value is still cached from last time. */
+    hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
+    ok(hres == S_OK, "CoInternetIsFeatureEnabled returned %08x, expected S_OK\n", hres);
+
+    hres = pCoInternetSetFeatureEnabled(FEATURE_ZONE_ELEVATION, SET_FEATURE_ON_PROCESS, FALSE);
+    ok(hres == S_OK, "CoInternetSetFeatureEnabled failed: %08x\n", hres);
+
+    test_internet_feature_defaults();
+}
+
+static void test_CoInternetIsFeatureEnabled(void) {
+    HRESULT hres;
+
+    hres = pCoInternetIsFeatureEnabled(FEATURE_ENTRY_COUNT, GET_FEATURE_FROM_PROCESS);
+    ok(hres == E_FAIL, "CoInternetIsFeatureEnabled returned %08x, expected E_FAIL\n", hres);
+}
+
+static const struct {
+    INTERNETFEATURELIST feature;
+    DWORD               set_flags;
+    BOOL                enable;
+    HRESULT             set_expected;
+    BOOL                set_todo;
+    DWORD               get_flags;
+    HRESULT             get_expected;
+    BOOL                get_todo;
+} internet_feature_tests[] = {
+    {FEATURE_OBJECT_CACHING,SET_FEATURE_ON_PROCESS,FALSE,S_OK,FALSE,GET_FEATURE_FROM_PROCESS,S_FALSE},
+    {FEATURE_WEBOC_POPUPMANAGEMENT,SET_FEATURE_ON_PROCESS,TRUE,S_OK,FALSE,GET_FEATURE_FROM_PROCESS,S_OK},
+    {FEATURE_LOCALMACHINE_LOCKDOWN,SET_FEATURE_ON_PROCESS,TRUE,S_OK,FALSE,GET_FEATURE_FROM_PROCESS,S_OK}
+};
+
+static void test_CoInternetSetFeatureEnabled(void) {
+    HRESULT hres;
+    DWORD i;
+
+    hres = pCoInternetSetFeatureEnabled(FEATURE_ENTRY_COUNT,SET_FEATURE_ON_PROCESS,TRUE);
+    ok(hres == E_FAIL, "CoInternetSetFeatureEnabled returned %08x, expected E_FAIL\n", hres);
+
+    for(i = 0; i < sizeof(internet_feature_tests)/sizeof(internet_feature_tests[0]); ++i) {
+        hres = pCoInternetSetFeatureEnabled(internet_feature_tests[i].feature, internet_feature_tests[i].set_flags,
+                                            internet_feature_tests[i].enable);
+        if(internet_feature_tests[i].set_todo) {
+            todo_wine
+            ok(hres == internet_feature_tests[i].set_expected, "CoInternetSetFeatureEnabled returned %08x, expected %08x on test %d\n",
+                hres, internet_feature_tests[i].set_expected, i);
+        } else {
+            ok(hres == internet_feature_tests[i].set_expected, "CoInternetSetFeatureEnabled returned %08x, expected %08x on test %d\n",
+                hres, internet_feature_tests[i].set_expected, i);
+        }
+
+        hres = pCoInternetIsFeatureEnabled(internet_feature_tests[i].feature, internet_feature_tests[i].set_flags);
+        if(internet_feature_tests[i].get_todo) {
+            todo_wine
+            ok(hres == internet_feature_tests[i].get_expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
+                hres, internet_feature_tests[i].get_expected, i);
+        } else {
+            ok(hres == internet_feature_tests[i].get_expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
+                hres, internet_feature_tests[i].get_expected, i);
+        }
+    }
+}
+
+static void test_internet_features(void) {
+    if(!pCoInternetIsFeatureEnabled || !pCoInternetSetFeatureEnabled) {
+        win_skip("Skipping internet feature tests, IE is too old\n");
+        return;
+    }
+
+    test_internet_features_registry();
+    test_CoInternetIsFeatureEnabled();
+    test_CoInternetSetFeatureEnabled();
 }
 
 START_TEST(misc)
 {
     HMODULE hurlmon;
-
-    OleInitialize(NULL);
 
     hurlmon = GetModuleHandle("urlmon.dll");
     pCoInternetCompareUrl = (void *) GetProcAddress(hurlmon, "CoInternetCompareUrl");
@@ -1520,11 +1713,18 @@ START_TEST(misc)
     pObtainUserAgentString = (void*) GetProcAddress(hurlmon, "ObtainUserAgentString");
     pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");
     pUrlMkGetSessionOption = (void*) GetProcAddress(hurlmon, "UrlMkGetSessionOption");
+    pCompareSecurityIds = (void*) GetProcAddress(hurlmon, "CompareSecurityIds");
+    pCoInternetIsFeatureEnabled = (void*) GetProcAddress(hurlmon, "CoInternetIsFeatureEnabled");
+    pCoInternetSetFeatureEnabled = (void*) GetProcAddress(hurlmon, "CoInternetSetFeatureEnabled");
+    pIEInstallScope = (void*) GetProcAddress(hurlmon, "IEInstallScope");
 
     if (!pCoInternetCompareUrl || !pCoInternetGetSecurityUrl ||
-        !pCoInternetGetSession || !pCoInternetParseUrl) {
-        win_skip("Various needed functions not present in IE 4.0\n");
+        !pCoInternetGetSession || !pCoInternetParseUrl || !pCompareSecurityIds) {
+        win_skip("Various needed functions not present, too old IE\n");
+        return;
     }
+
+    OleInitialize(NULL);
 
     register_protocols();
 
@@ -1542,6 +1742,7 @@ START_TEST(misc)
     test_user_agent();
     test_MkParseDisplayNameEx();
     test_IsValidURL();
+    test_internet_features();
 
     OleUninitialize();
 }

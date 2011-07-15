@@ -3,7 +3,7 @@
 #include <d3dhal.h>
 
 
-int StartupHAL ();
+int StartupHAL (VOID);
 extern HDC hdc;
 extern   DDRAWI_DIRECTDRAW_GBL mDDrawGlobal;
   extern DDRAWI_DIRECTDRAW_LCL mDDrawLocal;

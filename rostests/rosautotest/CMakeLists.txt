@@ -19,12 +19,10 @@ list(APPEND SOURCE
     shutdown.cpp
     tools.cpp)
 
-add_executable(rosautotest 
-#${CMAKE_CURRENT_BINARY_DIR}/rosautotest_precomp.h.gch 
-${SOURCE})
+add_executable(rosautotest ${SOURCE})
 
-#add_pch(rosautotest ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 set_module_type(rosautotest win32cui)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)
+add_pch(rosautotest precomp.h)
 
-add_cab_target(rosautotest 1)
+add_cd_file(TARGET rosautotest DESTINATION reactos/system32 FOR all)

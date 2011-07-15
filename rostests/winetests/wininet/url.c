@@ -106,30 +106,76 @@ typedef struct {
     int path_len;
     int extra_off;
     int extra_len;
+    const char *exp_scheme;
+    const char *exp_hostname;
+    const char *exp_username;
+    const char *exp_password;
+    const char *exp_urlpath;
+    const char *exp_extrainfo;
 } crack_url_test_t;
 
 static const crack_url_test_t crack_url_tests[] = {
     {"http://www.winehq.org/site/about#hi",
-        0, 4, INTERNET_SCHEME_HTTP, 7, 14, -1, 80, -1, 0, -1, 0, 21, 11, 32, 3},
+        0, 4, INTERNET_SCHEME_HTTP, 7, 14, -1, 80, -1, 0, -1, 0, 21, 11, 32, 3,
+        "http", "www.winehq.org", "", "", "/site/about", "#hi"},
     {"http://www.myserver.com/myscript.php?arg=1",
-        0, 4, INTERNET_SCHEME_HTTP, 7, 16, -1, 80, -1, 0, -1, 0, 23, 13, 36, 6},
+        0, 4, INTERNET_SCHEME_HTTP, 7, 16, -1, 80, -1, 0, -1, 0, 23, 13, 36, 6,
+        "http", "www.myserver.com", "", "", "/myscript.php", "?arg=1"},
     {"http://www.winehq.org?test=123",
-        0, 4, INTERNET_SCHEME_HTTP, 7, 14, 23, 80, -1, 0, -1, 0, 21, 0, 21, 9},
+        0, 4, INTERNET_SCHEME_HTTP, 7, 14, 23, 80, -1, 0, -1, 0, 21, 0, 21, 9,
+        "http", "www.winehq.org", "", "", "", "?test=123"},
     {"file:///C:/Program%20Files/Atmel/AVR%20Tools/STK500/STK500.xml",
-        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 55, -1, 0},
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 55, -1, 0,
+        "file", "", "", "", "C:\\Program Files\\Atmel\\AVR Tools\\STK500\\STK500.xml", ""},
     {"fide:///C:/Program%20Files/Atmel/AVR%20Tools/STK500/STK500.xml",
-        0, 4, INTERNET_SCHEME_UNKNOWN, 7, 0, -1, 0, -1, 0, -1, 0, 7, 55, -1, 0},
+        0, 4, INTERNET_SCHEME_UNKNOWN, 7, 0, -1, 0, -1, 0, -1, 0, 7, 55, -1, 0,
+        "fide", "", "", "", "/C:/Program%20Files/Atmel/AVR%20Tools/STK500/STK500.xml", ""},
     {"file://C:/Program%20Files/Atmel/AVR%20Tools/STK500/STK500.xml",
-        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 54, -1, 0},
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 54, -1, 0,
+        "file", "", "", "", "C:\\Program%20Files\\Atmel\\AVR%20Tools\\STK500\\STK500.xml", ""},
+    {"file://C:/Program%20Files/Atmel/..",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 27, -1, 0,
+        "file", "", "", "", "C:\\Program%20Files\\Atmel\\..\\", ""},
+    {"file://C:/Program%20Files/Atmel/../Asdf.xml",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 36, -1, 0,
+        "file", "", "", "", "C:\\Program%20Files\\Atmel\\..\\Asdf.xml", ""},
+    {"file:///C:/Program%20Files/Atmel/..",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 28, -1, 0,
+        "file", "", "", "", "C:\\Program Files\\Atmel\\..\\", ""},
+    {"file:///C:/Program%20Files/Atmel/../Asdf.xml",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 37, -1, 0,
+        "file", "", "", "", "C:\\Program Files\\Atmel\\..\\Asdf.xml", ""},
+    {"file://C:/Program%20Files/Atmel/.",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 26, -1, 0,
+        "file", "", "", "", "C:\\Program%20Files\\Atmel\\.\\", ""},
+    {"file://C:/Program%20Files/Atmel/./Asdf.xml",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 35, -1, 0,
+        "file", "", "", "", "C:\\Program%20Files\\Atmel\\.\\Asdf.xml", ""},
+    {"file:///C:/Program%20Files/Atmel/.",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 27, -1, 0,
+        "file", "", "", "", "C:\\Program Files\\Atmel\\.\\", ""},
+    {"file:///C:/Program%20Files/Atmel/./Asdf.xml",
+        0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 36, -1, 0,
+        "file", "", "", "", "C:\\Program Files\\Atmel\\.\\Asdf.xml", ""},
 };
+
+static const WCHAR *w_str_of(const char *str)
+{
+    static WCHAR buf[512];
+    MultiByteToWideChar(CP_ACP, 0, str, -1, buf, sizeof(buf)/sizeof(buf[0]));
+    return buf;
+}
 
 static void test_crack_url(const crack_url_test_t *test)
 {
     WCHAR buf[INTERNET_MAX_URL_LENGTH];
     URL_COMPONENTSW urlw;
     URL_COMPONENTSA url;
+    char scheme[32], hostname[1024], username[1024];
+    char password[1024], extrainfo[1024], urlpath[1024];
     BOOL b;
 
+    /* test InternetCrackUrlA with NULL buffers */
     zero_compsA(&url, 1, 1, 1, 1, 1, 1);
 
     b = InternetCrackUrlA(test->url, strlen(test->url), 0, &url);
@@ -191,6 +237,7 @@ static void test_crack_url(const crack_url_test_t *test)
     ok(url.dwExtraInfoLength == test->extra_len, "[%s] url.lpszExtraInfoLength = %d, expected %d\n",
        test->url, url.dwExtraInfoLength, test->extra_len);
 
+    /* test InternetCrackUrlW with NULL buffers */
     memset(&urlw, 0, sizeof(URL_COMPONENTSW));
     urlw.dwStructSize = sizeof(URL_COMPONENTSW);
     urlw.dwSchemeLength = 1;
@@ -271,6 +318,116 @@ static void test_crack_url(const crack_url_test_t *test)
         ok(urlw.dwExtraInfoLength == test->extra_len, "[%s] urlw.lpszExtraInfoLength = %d, expected %d\n",
            test->url, urlw.dwExtraInfoLength, test->extra_len);
     }
+
+    /* test InternetCrackUrlA with valid buffers */
+    memset(&url, 0, sizeof(URL_COMPONENTSA));
+    url.dwStructSize = sizeof(URL_COMPONENTSA);
+    url.lpszScheme = scheme;
+    url.dwSchemeLength = sizeof(scheme);
+    url.lpszHostName = hostname;
+    url.dwHostNameLength = sizeof(hostname);
+    url.lpszUserName = username;
+    url.dwUserNameLength = sizeof(username);
+    url.lpszPassword = password;
+    url.dwPasswordLength = sizeof(password);
+    url.lpszUrlPath = urlpath;
+    url.dwUrlPathLength = sizeof(urlpath);
+    url.lpszExtraInfo = extrainfo;
+    url.dwExtraInfoLength = sizeof(extrainfo);
+
+    b = InternetCrackUrlA(test->url, strlen(test->url), 0, &url);
+    ok(b, "InternetCrackUrlA failed with error %d\n", GetLastError());
+
+    ok(url.dwSchemeLength == strlen(test->exp_scheme), "[%s] Got wrong scheme length: %d\n",
+            test->url, url.dwSchemeLength);
+    ok(!strcmp(scheme, test->exp_scheme), "[%s] Got wrong scheme, expected: %s, got: %s\n",
+            test->url, test->exp_scheme, scheme);
+
+    ok(url.nScheme == test->scheme, "[%s] Got wrong nScheme, expected: %d, got: %d\n",
+            test->url, test->scheme, url.nScheme);
+
+    ok(url.dwHostNameLength == strlen(test->exp_hostname), "[%s] Got wrong hostname length: %d\n",
+            test->url, url.dwHostNameLength);
+    ok(!strcmp(hostname, test->exp_hostname), "[%s] Got wrong hostname, expected: %s, got: %s\n",
+            test->url, test->exp_hostname, hostname);
+
+    ok(url.nPort == test->port, "[%s] Got wrong port, expected: %d, got: %d\n",
+            test->url, test->port, url.nPort);
+
+    ok(url.dwUserNameLength == strlen(test->exp_username), "[%s] Got wrong username length: %d\n",
+            test->url, url.dwUserNameLength);
+    ok(!strcmp(username, test->exp_username), "[%s] Got wrong username, expected: %s, got: %s\n",
+            test->url, test->exp_username, username);
+
+    ok(url.dwPasswordLength == strlen(test->exp_password), "[%s] Got wrong password length: %d\n",
+            test->url, url.dwPasswordLength);
+    ok(!strcmp(password, test->exp_password), "[%s] Got wrong password, expected: %s, got: %s\n",
+            test->url, test->exp_password, password);
+
+    ok(url.dwUrlPathLength == strlen(test->exp_urlpath), "[%s] Got wrong urlpath length: %d\n",
+            test->url, url.dwUrlPathLength);
+    ok(!strcmp(urlpath, test->exp_urlpath), "[%s] Got wrong urlpath, expected: %s, got: %s\n",
+            test->url, test->exp_urlpath, urlpath);
+
+    ok(url.dwExtraInfoLength == strlen(test->exp_extrainfo), "[%s] Got wrong extrainfo length: %d\n",
+            test->url, url.dwExtraInfoLength);
+    ok(!strcmp(extrainfo, test->exp_extrainfo), "[%s] Got wrong extrainfo, expected: %s, got: %s\n",
+            test->url, test->exp_extrainfo, extrainfo);
+
+    /* test InternetCrackUrlW with valid buffers */
+    memset(&urlw, 0, sizeof(URL_COMPONENTSW));
+    urlw.dwStructSize = sizeof(URL_COMPONENTSW);
+    urlw.lpszScheme = (WCHAR*)scheme;
+    urlw.dwSchemeLength = sizeof(scheme) / sizeof(WCHAR);
+    urlw.lpszHostName = (WCHAR*)hostname;
+    urlw.dwHostNameLength = sizeof(hostname) / sizeof(WCHAR);
+    urlw.lpszUserName = (WCHAR*)username;
+    urlw.dwUserNameLength = sizeof(username) / sizeof(WCHAR);
+    urlw.lpszPassword = (WCHAR*)password;
+    urlw.dwPasswordLength = sizeof(password) / sizeof(WCHAR);
+    urlw.lpszUrlPath = (WCHAR*)urlpath;
+    urlw.dwUrlPathLength = sizeof(urlpath) / sizeof(WCHAR);
+    urlw.lpszExtraInfo = (WCHAR*)extrainfo;
+    urlw.dwExtraInfoLength = sizeof(extrainfo) / sizeof(WCHAR);
+
+    b = InternetCrackUrlW(buf, lstrlenW(buf), 0, &urlw);
+    ok(b, "InternetCrackUrlW failed with error %d\n", GetLastError());
+
+    ok(urlw.dwSchemeLength == strlen(test->exp_scheme), "[%s] Got wrong scheme length: %d\n",
+            test->url, urlw.dwSchemeLength);
+    ok(!lstrcmpW((WCHAR*)scheme, w_str_of(test->exp_scheme)), "[%s] Got wrong scheme, expected: %s, got: %s\n",
+            test->url, test->exp_scheme, wine_dbgstr_w((WCHAR*)scheme));
+
+    ok(urlw.nScheme == test->scheme, "[%s] Got wrong nScheme, expected: %d, got: %d\n",
+            test->url, test->scheme, urlw.nScheme);
+
+    ok(urlw.dwHostNameLength == strlen(test->exp_hostname), "[%s] Got wrong hostname length: %d\n",
+            test->url, urlw.dwHostNameLength);
+    ok(!lstrcmpW((WCHAR*)hostname, w_str_of(test->exp_hostname)), "[%s] Got wrong hostname, expected: %s, got: %s\n",
+            test->url, test->exp_hostname, wine_dbgstr_w((WCHAR*)hostname));
+
+    ok(urlw.nPort == test->port, "[%s] Got wrong port, expected: %d, got: %d\n",
+            test->url, test->port, urlw.nPort);
+
+    ok(urlw.dwUserNameLength == strlen(test->exp_username), "[%s] Got wrong username length: %d\n",
+            test->url, urlw.dwUserNameLength);
+    ok(!lstrcmpW((WCHAR*)username, w_str_of(test->exp_username)), "[%s] Got wrong username, expected: %s, got: %s\n",
+            test->url, test->exp_username, wine_dbgstr_w((WCHAR*)username));
+
+    ok(urlw.dwPasswordLength == strlen(test->exp_password), "[%s] Got wrong password length: %d\n",
+            test->url, urlw.dwPasswordLength);
+    ok(!lstrcmpW((WCHAR*)password, w_str_of(test->exp_password)), "[%s] Got wrong password, expected: %s, got: %s\n",
+            test->url, test->exp_password, wine_dbgstr_w((WCHAR*)password));
+
+    ok(urlw.dwUrlPathLength == strlen(test->exp_urlpath), "[%s] Got wrong urlpath length: %d\n",
+            test->url, urlw.dwUrlPathLength);
+    ok(!lstrcmpW((WCHAR*)urlpath, w_str_of(test->exp_urlpath)), "[%s] Got wrong urlpath, expected: %s, got: %s\n",
+            test->url, test->exp_urlpath, wine_dbgstr_w((WCHAR*)urlpath));
+
+    ok(urlw.dwExtraInfoLength == strlen(test->exp_extrainfo), "[%s] Got wrong extrainfo length: %d\n",
+            test->url, urlw.dwExtraInfoLength);
+    ok(!lstrcmpW((WCHAR*)extrainfo, w_str_of(test->exp_extrainfo)), "[%s] Got wrong extrainfo, expected: %s, got: %s\n",
+            test->url, test->exp_extrainfo, wine_dbgstr_w((WCHAR*)extrainfo));
 }
 
 static void InternetCrackUrl_test(void)
@@ -308,21 +465,21 @@ static void InternetCrackUrl_test(void)
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
   ok(ret==firstret && (GLE==firstGLE), "InternetCrackUrl returned %d with GLE=%d (expected to return %d)\n",
-    ret, GetLastError(), firstret);
+    ret, GLE, firstret);
 
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 0, 1024, 2048, 1024);
   SetLastError(0xdeadbeef);
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
   ok(ret==firstret && (GLE==firstGLE), "InternetCrackUrl returned %d with GLE=%d (expected to return %d)\n",
-    ret, GetLastError(), firstret);
+    ret, GLE, firstret);
 
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 0, 2048, 1024);
   SetLastError(0xdeadbeef);
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
   ok(ret==firstret && (GLE==firstGLE), "InternetCrackUrl returned %d with GLE=%d (expected to return %d)\n",
-    ret, GetLastError(), firstret);
+    ret, GLE, firstret);
 
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 0, 1024);
   SetLastError(0xdeadbeef);
@@ -945,6 +1102,11 @@ static void InternetCreateUrlA_test(void)
 START_TEST(url)
 {
     int i;
+
+    if(!GetProcAddress(GetModuleHandleA("wininet.dll"), "InternetGetCookieExW")) {
+        win_skip("Too old IE (older than 6.0)\n");
+        return;
+    }
 
     for(i=0; i < sizeof(crack_url_tests)/sizeof(*crack_url_tests); i++)
         test_crack_url(crack_url_tests+i);

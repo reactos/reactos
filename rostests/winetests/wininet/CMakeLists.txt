@@ -15,5 +15,5 @@ list(APPEND SOURCE
 add_executable(wininet_winetest ${SOURCE})
 target_link_libraries(wininet_winetest wine)
 set_module_type(wininet_winetest win32cui)
-add_importlibs(wininet_winetest wininet ws2_32 advapi32 msvcrt kernel32 ntdll)
-add_cab_target(wininet_winetest 7)
+add_importlibs(wininet_winetest wininet ws2_32 user32 advapi32 msvcrt kernel32 ntdll)
+add_cd_file(TARGET wininet_winetest DESTINATION reactos/bin FOR all)
