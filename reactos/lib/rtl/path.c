@@ -1158,7 +1158,7 @@ RtlDoesFileExists_UEx(IN PCWSTR FileName,
     if (NT_SUCCESS(RtlInitUnicodeStringEx(&NameString, FileName)))
     {
         /* Call the unicode function */
-        return NT_SUCCESS(RtlDoesFileExists_UstrEx(&NameString, SucceedIfBusy));
+        return RtlDoesFileExists_UstrEx(&NameString, SucceedIfBusy);
     }
 
     /* Fail */
