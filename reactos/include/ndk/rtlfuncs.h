@@ -2323,7 +2323,7 @@ RtlDetermineDosPathNameType_U(
 );
 
 NTSYSAPI
-ULONG
+RTL_PATH_TYPE
 NTAPI
 RtlDetermineDosPathNameType_Ustr(
     IN PCUNICODE_STRING Path
