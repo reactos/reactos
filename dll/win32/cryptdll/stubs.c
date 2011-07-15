@@ -1,7 +1,7 @@
 
 #include <windows.h>
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 void WINAPI
 CDBuildIntegrityVect(DWORD Unknown1, DWORD Unknown2)

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <debug.h>
+#include <reactos/debug.h>
 
 typedef PVOID PSESSION;
 

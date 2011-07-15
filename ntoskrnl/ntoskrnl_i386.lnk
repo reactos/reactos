@@ -44,6 +44,13 @@ SECTIONS
   {
     *(.edata)
   }
+  /DISCARD/ :
+  {
+    *(.debug$S)
+    *(.debug$T)
+    *(.debug$F)
+    *(.drectve)
+  }
 
   .idata BLOCK(__section_alignment__) :
   {
@@ -80,41 +87,13 @@ SECTIONS
      /* These zeroes mark the end of the reloc section.  */
      LONG (0); LONG (0); LONG (0); LONG (0); LONG (0);
   }
-  .debug_aranges BLOCK(__section_alignment__) :
+  .stab BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.debug_aranges)
+    [ .stab ]
   }
-  .debug_abbrev BLOCK(__section_alignment__) :
+  .stabstr BLOCK(__section_alignment__) (NOLOAD) :
   {
-    *(.debug_abbrev)
-  }
-  .debug_frame BLOCK(__section_alignment__) :
-  {
-    *(.debug_frame)
-  }
-  .debug_info BLOCK(__section_alignment__) :
-  {
-    *(.debug_info)
-  }
-  .debug_line BLOCK(__section_alignment__) :
-  {
-    *(.debug_line)
-  }
-  .debug_loc BLOCK(__section_alignment__) :
-  {
-    *(.debug_loc)
-  }
-  .debug_pubnames BLOCK(__section_alignment__) :
-  {
-	*(.debug_pubnames)
-  }
-  .debug_ranges BLOCK(__section_alignment__) :
-  {
-	*(.debug_ranges)
-  }
-  .debug_str BLOCK(__section_alignment__) :
-  {
-    *(.debug_str)
+    [ .stabstr ]
   }
   INIT BLOCK(__section_alignment__) :
   {

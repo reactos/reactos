@@ -10,19 +10,15 @@
 #define NTOSAPI
 #include <ntddk.h>
 #include <reactos/rossym.h>
-#include <ntimage.h>
+#include "rossympriv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-#include "rossympriv.h"
-#include "pe.h"
-#include "dwarf.h"
-
 VOID
 RosSymDelete(PROSSYM_INFO RosSymInfo)
 {
-	dwarfclose(RosSymInfo);
+  RosSymFreeMem(RosSymInfo);
 }
 
 /* EOF */

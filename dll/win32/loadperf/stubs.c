@@ -1,7 +1,7 @@
 
 #include <windows.h>
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 #define LOADPERF_FUNCTION DWORD WINAPI
 

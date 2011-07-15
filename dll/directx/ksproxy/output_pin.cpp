@@ -8,9 +8,6 @@
  */
 #include "precomp.h"
 
-extern const GUID IID_IKsPin;
-extern const GUID IID_IKsInterfaceHandler;
-
 class COutputPin : public IPin,
                    public IKsObject,
                    public IKsPropertySet,
@@ -1684,7 +1681,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         if (GetSupportedSets(&pGuid, &NumGuids))
         {
             // load all proxy plugins
-            if (FAILED(LoadProxyPlugins(pGuid, NumGuids)))
+            if (FAILED(LoadProxyPlugins(pGuid, NumGuids)));
             {
 #ifdef KSPROXY_TRACE
                 OutputDebugStringW(L"COutputPin::Connect LoadProxyPlugins failed\n");

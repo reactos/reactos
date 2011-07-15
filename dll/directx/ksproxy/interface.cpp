@@ -10,8 +10,6 @@
 
 const GUID IID_IKsObject           = {0x423c13a2, 0x2070, 0x11d0, {0x9e, 0xf7, 0x00, 0xaa, 0x00, 0xa2, 0x16, 0xa1}};
 
-extern const GUID IID_IKsInterfaceHandler;
-
 class CKsInterfaceHandler : public IKsInterfaceHandler
 {
 public:

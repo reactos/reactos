@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <debug.h>
+#include <reactos/debug.h>
 
 #define ATLAPI_(x) x WINAPI
 #define ATLAPI ATLAPI_(HRESULT)
@@ -31,7 +31,7 @@ AtlSetErrorInfo(
 	return E_NOTIMPL;
 }
 
-ATLAPI_(LPDEVMODEA) 
+ATLAPI_(LPDEVMODEA)
 AtlDevModeW2A(LPDEVMODEA lpDevModeA, LPDEVMODEW lpDevModeW)
 {
     UNIMPLEMENTED;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Direct3D state management
  *
  * Copyright 2002 Lionel Ulmer
