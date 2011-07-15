@@ -44,6 +44,21 @@ static const UNICODE_STRING _nul = RTL_CONSTANT_STRING(L"NUL");
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RtlReleaseRelativeName(IN PRTL_RELATIVE_NAME_U RelativeName)
+{
+    /* Check if a directory reference was grabbed */
+    if (RelativeName->CurDirRef)
+    {
+        /* FIXME: Not yet supported */
+        UNIMPLEMENTED;
+        RelativeName->CurDirRef = NULL;
+    }
+}
 
 /*
  * @implemented
@@ -903,49 +918,130 @@ RtlDosSearchPath_U(PCWSTR paths,
     return len;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+RtlDoesFileExists_UstrEx(IN PCUNICODE_STRING FileName,
+                         IN BOOLEAN SucceedIfBusy)
+{
+    BOOLEAN Result;
+    RTL_RELATIVE_NAME_U RelativeName;
+    UNICODE_STRING NtPathName;
+    PVOID Buffer;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    FILE_BASIC_INFORMATION BasicInformation;
+
+#if 0
+    /* Get the NT Path */
+    Result = RtlDosPathNameToRelativeNtPathName_Ustr(FileName,
+                                                     &NtPathName,
+                                                     NULL,
+                                                     &RelativeName);
+#else
+    /* FIXME: Use the old API for now */
+    Result = RtlDosPathNameToNtPathName_U(FileName->Buffer,
+                                          &NtPathName,
+                                          NULL,
+                                          &RelativeName);
+#endif
+    if (!Result) return FALSE;
+
+    /* Save the buffer */
+    Buffer = NtPathName.Buffer;
+
+    /* Check if we have a relative name */
+    if (RelativeName.RelativeName.Length)
+    {
+        /* Use it */
+        NtPathName = RelativeName.RelativeName;
+    }
+    else
+    {
+        /* Otherwise ignore it */
+        RelativeName.ContainingDirectory = NULL;
+    }
+
+    /* Initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathName,
+                               OBJ_CASE_INSENSITIVE,
+                               RelativeName.ContainingDirectory,
+                               NULL);
+
+    /* Query the attributes and free the buffer now */
+    Status = ZwQueryAttributesFile(&ObjectAttributes, &BasicInformation);
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Check if we failed because the file is in use */
+        if ((Status == STATUS_SHARING_VIOLATION) ||
+            (Status == STATUS_ACCESS_DENIED))
+        {
+            /* Check if the caller wants this to be considered OK */
+            Result = SucceedIfBusy ? TRUE : FALSE;
+        }
+        else
+        {
+            /* A failure because the file didn't exist */
+            Result = FALSE;
+        }
+    }
+    else
+    {
+        /* The file exists */
+        Result = TRUE;
+    }
+
+    /* Return the result */
+    return Result;
+}
+
+BOOLEAN
+NTAPI
+RtlDoesFileExists_UStr(IN PUNICODE_STRING FileName)
+{
+    /* Call the updated API */
+    return RtlDoesFileExists_UstrEx(FileName, TRUE);
+}
 
 /*
  * @implemented
  */
-BOOLEAN NTAPI
-RtlDoesFileExists_U(IN PCWSTR FileName)
+BOOLEAN
+BOOLEAN
+NTAPI
+RtlDoesFileExists_UEx(IN PCWSTR FileName,
+                      IN BOOLEAN SucceedIfBusy)
 {
-	UNICODE_STRING NtFileName;
-	OBJECT_ATTRIBUTES Attr;
-    FILE_BASIC_INFORMATION Info;
-	NTSTATUS Status;
-	RTL_RELATIVE_NAME_U RelativeName;
+    UNICODE_STRING NameString;
 
-	if (!RtlDosPathNameToNtPathName_U (FileName,
-	                                   &NtFileName,
-	                                   NULL,
-	                                   &RelativeName))
-		return FALSE;
+    /* Create the unicode name*/
+    if (NT_SUCCESS(RtlInitUnicodeStringEx(&NameString, FileName)))
+    {
+        /* Call the unicode function */
+        return NT_SUCCESS(RtlDoesFileExists_UstrEx(&NameString, SucceedIfBusy));
+    }
 
-	if (RelativeName.RelativeName.Length)
-		NtFileName = RelativeName.RelativeName;
-	else
-		RelativeName.ContainingDirectory = 0;
-
-	InitializeObjectAttributes (&Attr,
-	                            &NtFileName,
-	                            OBJ_CASE_INSENSITIVE,
-	                            RelativeName.ContainingDirectory,
-	                            NULL);
-
-	Status = ZwQueryAttributesFile (&Attr, &Info);
-
-    RtlFreeUnicodeString(&NtFileName);
-
-
-	if (NT_SUCCESS(Status) ||
-	    Status == STATUS_SHARING_VIOLATION ||
-	    Status == STATUS_ACCESS_DENIED)
-		return TRUE;
-
-	return FALSE;
+    /* Fail */
+    return FALSE;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+RtlDoesFileExists_U(IN PCWSTR FileName)
+{
+    /* Call the new function */
+    return RtlDoesFileExists_UEx(FileName, TRUE);
+}
 
 /*
  * @unimplemented
@@ -959,16 +1055,6 @@ RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
     DPRINT1("RtlDosPathNameToRelativeNtPathName_U(0x%p, 0x%p, 0x%p, 0x%p) UNIMPLEMENTED!\n",
             Unknown1, Unknown2, Unknown3, Unknown4);
     return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID NTAPI
-RtlReleaseRelativeName(PVOID Unknown)
-{
-    DPRINT1("RtlReleaseRelativeName(0x%p) UNIMPLEMENTED\n", Unknown);
 }
 
 NTSTATUS NTAPI
