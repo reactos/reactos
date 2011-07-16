@@ -62,15 +62,6 @@ static NTSTATUS SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
 
     IPAddr = (PTA_IP_ADDRESS)&ListenReceive->Address;
 
-    if( !IPAddr ) {
-	if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
-	Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	Irp->IoStatus.Information = 0;
-        (void)IoSetCancelRoutine(Irp, NULL);
-	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-        return STATUS_NO_MEMORY;
-    }
-
     AFD_DbgPrint(MID_TRACE,("IPAddr->TAAddressCount %d\n",
                             IPAddr->TAAddressCount));
     AFD_DbgPrint(MID_TRACE,("IPAddr->Address[0].AddressType %d\n",
@@ -236,7 +227,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( FCB->State != SOCKET_STATE_BOUND ) {
 	Status = STATUS_INVALID_PARAMETER;
-	AFD_DbgPrint(MID_TRACE,("Could not listen an unbound socket\n"));
+	AFD_DbgPrint(MIN_TRACE,("Could not listen an unbound socket\n"));
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     }
 
@@ -316,7 +307,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	SocketStateUnlock( FCB );
 	return Status;
     } else if (FCB->NonBlocking) {
-        AFD_DbgPrint(MID_TRACE,("No connection ready on a non-blocking socket\n"));
+        AFD_DbgPrint(MIN_TRACE,("No connection ready on a non-blocking socket\n"));
         
         return UnlockAndMaybeComplete(FCB, STATUS_CANT_WAIT, Irp, 0);
     } else {
@@ -388,6 +379,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    return Status;
 	}
     }
+    
+    AFD_DbgPrint(MIN_TRACE,("No connection waiting\n"));
 
     return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp, 0 );
 }

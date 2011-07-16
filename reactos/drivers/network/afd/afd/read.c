@@ -362,7 +362,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
             
 			if( DatagramRecv->Address->TAAddressCount != 1 ) {
 				AFD_DbgPrint
-                (MID_TRACE,
+                (MIN_TRACE,
                  ("Wierd address count %d\n",
                   DatagramRecv->Address->TAAddressCount));
 			}
@@ -443,7 +443,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS) &&
         FCB->State != SOCKET_STATE_CONNECTED &&
         FCB->State != SOCKET_STATE_CONNECTING ) {
-        AFD_DbgPrint(MID_TRACE,("Called recv on wrong kind of socket (s%x)\n",
+        AFD_DbgPrint(MIN_TRACE,("Called recv on wrong kind of socket (s%x)\n",
                                 FCB->State));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
 									   Irp, 0 );
@@ -487,6 +487,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 
                 UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, FALSE );
                 
+                AFD_DbgPrint(MIN_TRACE,("Partial datagram not read\n"));
+                
                 return UnlockAndMaybeComplete
 				( FCB, Status, Irp, Irp->IoStatus.Information );
             } else {
@@ -513,7 +515,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				( FCB, Status, Irp, Irp->IoStatus.Information );
             }
         } else if( (RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
-            AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+            AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
             Status = STATUS_CANT_WAIT;
             FCB->PollState &= ~AFD_EVENT_RECEIVE;
             UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, FALSE );
@@ -536,7 +538,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( Status == STATUS_PENDING &&
         ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)) ) {
-        AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+        AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         TotalBytesCopied = 0;
         RemoveEntryList( &Irp->Tail.Overlay.ListEntry );
@@ -660,6 +662,7 @@ PacketSocketRecvComplete(
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, CheckUnlockExtraBuffers(FCB, NextIrpSp) );
             if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
                         (void)IoSetCancelRoutine(NextIrp, NULL);
+            AFD_DbgPrint(MIN_TRACE,("Partial datagram failed\n"));
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		} else {
 			AFD_DbgPrint(MID_TRACE,("Satisfying\n"));
@@ -723,8 +726,11 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid socket state\n"));
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
+    }
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_NO_MEMORY, Irp, 0 );
@@ -761,6 +767,8 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
+            
+            AFD_DbgPrint(MIN_TRACE,("Partial datagram failed\n"));
 
 			return UnlockAndMaybeComplete
 				( FCB, Status, Irp, Irp->IoStatus.Information );
@@ -788,7 +796,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				( FCB, Status, Irp, Irp->IoStatus.Information );
 		}
     } else if( (RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
-		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+		AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );

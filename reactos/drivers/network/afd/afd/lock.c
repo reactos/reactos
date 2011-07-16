@@ -48,6 +48,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
                 } _SEH2_END;
                 
                 if( LockFailed ) {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
                     IoFreeMdl( Irp->MdlAddress );
                     Irp->MdlAddress = NULL;
                     return NULL;
@@ -74,6 +75,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
                 } _SEH2_END;
                 
                 if( LockFailed ) {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
                     IoFreeMdl( Irp->MdlAddress );
                     Irp->MdlAddress = NULL;
                     return NULL;
@@ -166,6 +168,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
 
 		if( LockFailed ) {
+            AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
 		    IoFreeMdl( MapBuf[i].Mdl );
 		    MapBuf[i].Mdl = NULL;
 		    ExFreePool( NewBuf );
@@ -227,7 +230,10 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	}
 
         if( !NT_SUCCESS(Status) )
+        {
+            AFD_DbgPrint(MIN_TRACE,("Failed to reference handles (0x%x)\n", Status));
             FileObjects[i].Handle = 0;
+        }
     }
 
     if( !NT_SUCCESS(Status) ) {

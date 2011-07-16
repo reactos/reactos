@@ -299,8 +299,11 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         /* Check that the socket is bound */
         if( FCB->State != SOCKET_STATE_BOUND || !FCB->RemoteAddress )
+        {
+            AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
                                            0 );
+        }
 
         if( !(SendReq = LockRequest( Irp, IrpSp )) )
             return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
@@ -349,12 +352,14 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     
     if (FCB->DisconnectPending && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
     {
+        AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
         /* We're pending a send shutdown so don't accept anymore sends */
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
     
     if (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT))
     {
+        AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
         if (FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
         {
             /* This is a local send shutdown or a graceful remote disconnect */
@@ -385,7 +390,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( FCB->State != SOCKET_STATE_CONNECTED ) {
 		if( (SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
-			AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+			AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
 			UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 			return UnlockAndMaybeComplete
 				( FCB, STATUS_CANT_WAIT, Irp, 0 );
@@ -476,7 +481,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     {
         FCB->PollState &= ~AFD_EVENT_SEND;
         if( (SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
-            AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+            AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
             UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
             return UnlockAndMaybeComplete
 			( FCB, STATUS_CANT_WAIT, Irp, 0 );
@@ -503,8 +508,11 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND &&
         FCB->State != SOCKET_STATE_CREATED)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid socket state\n"));
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
+    }
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_NO_MEMORY, Irp, 0 );

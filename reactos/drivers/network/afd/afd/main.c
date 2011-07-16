@@ -21,7 +21,7 @@
 
 /* See debug.h for debug/trace constants */
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
-DWORD DebugTraceLevel = 0;
+DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
@@ -52,7 +52,10 @@ AfdGetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->DisconnectOptionsSize == 0)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+    }
 
     ASSERT(FCB->DisconnectOptions);
 
@@ -116,7 +119,10 @@ AfdSetDisconnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (BufferSize < sizeof(UINT))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if (FCB->DisconnectOptions)
     {
@@ -144,7 +150,10 @@ AfdGetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->DisconnectDataSize == 0)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+    }
 
     ASSERT(FCB->DisconnectData);
 
@@ -208,7 +217,10 @@ AfdSetDisconnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (BufferSize < sizeof(UINT))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if (FCB->DisconnectData)
     {
@@ -241,7 +253,10 @@ AfdGetTdiHandles(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ULONG) ||
         IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(*HandleData))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if ((*HandleFlags) & AFD_ADDRESS_HANDLE)
         HandleData->TdiAddressHandle = FCB->AddressFile.Handle;
@@ -675,8 +690,11 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
     {
         if( !FCB->ConnectCallInfo )
+        {
+            AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
                                            Irp, 0 );
+        }
 
         if (FCB->DisconnectPending)
         {
@@ -730,7 +748,10 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         if (!(Flags & TDI_DISCONNECT_RELEASE))
         {
             if (!FCB->RemoteAddress)
+            {
+                AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
                 return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+            }
         
             ExFreePool(FCB->RemoteAddress);
         

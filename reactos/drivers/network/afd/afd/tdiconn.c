@@ -170,7 +170,10 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
 
 	TdiAddressSize = TaLengthOfTransportAddressByType(Type);
 	if (!TdiAddressSize)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
 		return STATUS_INVALID_PARAMETER;
+    }
 
 	RtlZeroMemory(ConnInfo,
 				  sizeof(TDI_CONNECTION_INFORMATION) +
@@ -203,6 +206,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 
 	TdiAddressSize = TaLengthOfTransportAddressByType(Type);
 	if (!TdiAddressSize) {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
 		*ConnectionInfo = NULL;
 		return STATUS_INVALID_PARAMETER;
 	}

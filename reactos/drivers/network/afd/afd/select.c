@@ -293,7 +293,10 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					    NULL );
 
 	if( !NT_SUCCESS(Status) )
+    {
+        AFD_DbgPrint(MIN_TRACE,("Failed reference event (0x%x)\n", Status));
 	    FCB->EventSelect = NULL;
+    }
 	else
 	    FCB->EventSelectTriggers = EventSelectInfo->Events;
     } else {

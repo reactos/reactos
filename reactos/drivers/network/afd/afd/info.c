@@ -88,13 +88,13 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         break;
 
 	default:
-	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",
+	    AFD_DbgPrint(MIN_TRACE,("Unknown info id %x\n",
 				    InfoReq->InformationClass));
 	    Status = STATUS_INVALID_PARAMETER;
 	    break;
 	}
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	AFD_DbgPrint(MID_TRACE,("Exception executing GetInfo\n"));
+	AFD_DbgPrint(MIN_TRACE,("Exception executing GetInfo\n"));
 	Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
@@ -183,6 +183,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
           break;
       }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      AFD_DbgPrint(MIN_TRACE,("Exception executing SetInfo\n"));
       Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
@@ -245,6 +246,7 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if (FCB->RemoteAddress == NULL || FCB->Connection.Object == NULL) {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
 
@@ -279,7 +281,10 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(ConnInfo->RemoteAddress))
                         RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress(ConnInfo->RemoteAddress));
                     else
+                    {
                         Status = STATUS_BUFFER_TOO_SMALL;
+                        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
+                    }
                 }
             }
          }
