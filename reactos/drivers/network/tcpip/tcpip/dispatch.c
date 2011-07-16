@@ -759,51 +759,45 @@ NTSTATUS DispTdiQueryInformation(
 
     case TDI_QUERY_CONNECTION_INFO:
       {
-        PTDI_CONNECTION_INFORMATION AddressInfo;
-        PADDRESS_FILE AddrFile;
-        PCONNECTION_ENDPOINT Endpoint = NULL;
+        PTDI_CONNECTION_INFO ConnectionInfo;
+        PCONNECTION_ENDPOINT Endpoint;
 
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
-             sizeof(PVOID))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+        if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*ConnectionInfo)) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
           return STATUS_BUFFER_TOO_SMALL;
         }
 
-        AddressInfo = (PTDI_CONNECTION_INFORMATION)
+        ConnectionInfo = (PTDI_CONNECTION_INFO)
           MmGetSystemAddressForMdl(Irp->MdlAddress);
 
         switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-          case TDI_TRANSPORT_ADDRESS_FILE:
-            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-            Endpoint = AddrFile ? AddrFile->Connection : NULL;
-            break;
-
           case TDI_CONNECTION_FILE:
             Endpoint =
               (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-            break;
+            RtlZeroMemory(ConnectionInfo, sizeof(*ConnectionInfo));
+            return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
             return STATUS_INVALID_PARAMETER;
         }
-
-        if (!Endpoint) {
-          TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
-          return STATUS_INVALID_PARAMETER;
-        }
-
-        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
       }
 
       case TDI_QUERY_MAX_DATAGRAM_INFO:
       {
-         PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
+          PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;
+          
+          if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*MaxDatagramInfo)) {
+              TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+              return STATUS_BUFFER_TOO_SMALL;
+          }
+          
+          MaxDatagramInfo = (PTDI_MAX_DATAGRAM_INFO)
+            MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-         MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
+          MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
 
-         return STATUS_SUCCESS;
+          return STATUS_SUCCESS;
      }
   }
 
