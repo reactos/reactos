@@ -2412,6 +2412,12 @@ RtlQueryEnvironmentVariable_U(
     PUNICODE_STRING Value
 );
 
+VOID
+NTAPI
+RtlReleaseRelativeName(
+    IN PRTL_RELATIVE_NAME_U RelativeName
+);
+
 NTSYSAPI
 NTSTATUS
 NTAPI

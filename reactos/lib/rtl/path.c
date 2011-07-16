@@ -38,101 +38,115 @@ const UNICODE_STRING RtlpDosCONDevice = RTL_CONSTANT_STRING(L"CON");
 const UNICODE_STRING RtlpDosSlashCONDevice = RTL_CONSTANT_STRING(L"\\\\.\\CON");
 const UNICODE_STRING RtlpDosNULDevice = RTL_CONSTANT_STRING(L"NUL");
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
-/*
- * @implemented
- */
-VOID
+BOOLEAN
 NTAPI
-RtlReleaseRelativeName(IN PRTL_RELATIVE_NAME_U RelativeName)
+RtlDoesFileExists_UstrEx(IN PCUNICODE_STRING FileName,
+                         IN BOOLEAN SucceedIfBusy)
 {
-    /* Check if a directory reference was grabbed */
-    if (RelativeName->CurDirRef)
+    BOOLEAN Result;
+    RTL_RELATIVE_NAME_U RelativeName;
+    UNICODE_STRING NtPathName;
+    PVOID Buffer;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    FILE_BASIC_INFORMATION BasicInformation;
+
+#if 0
+    /* Get the NT Path */
+    Result = RtlDosPathNameToRelativeNtPathName_Ustr(FileName,
+                                                     &NtPathName,
+                                                     NULL,
+                                                     &RelativeName);
+#else
+    /* FIXME: Use the old API for now */
+    Result = RtlDosPathNameToNtPathName_U(FileName->Buffer,
+                                          &NtPathName,
+                                          NULL,
+                                          &RelativeName);
+#endif
+    if (!Result) return FALSE;
+
+    /* Save the buffer */
+    Buffer = NtPathName.Buffer;
+
+    /* Check if we have a relative name */
+    if (RelativeName.RelativeName.Length)
     {
-        /* FIXME: Not yet supported */
-        UNIMPLEMENTED;
-        RelativeName->CurDirRef = NULL;
-    }
-}
-
-/*
- * @implemented
- */
-ULONG
-NTAPI
-RtlGetLongestNtPathLength(VOID)
-{
-    /*
-     * The longest NT path is a DOS path that actually sits on a UNC path (ie:
-     * a mapped network drive), which is accessed through the DOS Global?? path.
-     * This is, and has always been equal to, 269 characters, except in Wine
-     * which claims this is 277. Go figure.
-     */
-    return (MAX_PATH + _unc.Length + sizeof(ANSI_NULL));
-}
-
-
-/*
- * @implemented
- */
-ULONG
-NTAPI
-RtlDetermineDosPathNameType_U(IN PCWSTR Path)
-{
-    DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
-    ASSERT(Path != NULL);
-
-    /* Unlike the newer RtlDetermineDosPathNameType_U we assume 4 characters */
-    if (IS_PATH_SEPARATOR(Path[0]))
-    {
-        if (!IS_PATH_SEPARATOR(Path[1])) return RtlPathTypeRooted;                /* \x             */
-        if ((Path[2] != L'.') && (Path[2] != L'?')) return RtlPathTypeUncAbsolute;/* \\x            */
-        if (IS_PATH_SEPARATOR(Path[3])) return RtlPathTypeLocalDevice;            /* \\.\x or \\?\x */
-        if (Path[3]) return RtlPathTypeUncAbsolute;                               /* \\.x or \\?x   */
-        return RtlPathTypeRootLocalDevice;                                        /* \\. or \\?     */
+        /* Use it */
+        NtPathName = RelativeName.RelativeName;
     }
     else
     {
-        if (!(Path[0]) || (Path[1] != L':')) return RtlPathTypeRelative;          /* x              */
-        if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;          /* x:\            */
-        return RtlPathTypeDriveRelative;                                          /* x:             */
+        /* Otherwise ignore it */
+        RelativeName.ContainingDirectory = NULL;
     }
-}
 
-/*
- * @implemented
- */
-RTL_PATH_TYPE
-NTAPI
-RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
-{
-    PWCHAR Path = PathString->Buffer;
-    ULONG Chars = PathString->Length / sizeof(WCHAR);
+    /* Initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathName,
+                               OBJ_CASE_INSENSITIVE,
+                               RelativeName.ContainingDirectory,
+                               NULL);
 
-    /*
-     * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
-     * actually check for the path length before touching the characters
-     */
-    if ((Chars < 1) || (IS_PATH_SEPARATOR(Path[0])))
+    /* Query the attributes and free the buffer now */
+    Status = ZwQueryAttributesFile(&ObjectAttributes, &BasicInformation);
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
     {
-        if ((Chars < 2) || !(IS_PATH_SEPARATOR(Path[1]))) return RtlPathTypeRooted;                /* \x             */
-        if ((Chars < 3) || ((Path[2] != L'.') && (Path[2] != L'?'))) return RtlPathTypeUncAbsolute;/* \\x            */
-        if ((Chars >= 4) && (IS_PATH_SEPARATOR(Path[3]))) return RtlPathTypeLocalDevice;           /* \\.\x or \\?\x */
-        if (Chars != 3) return RtlPathTypeUncAbsolute;                                             /* \\.x or \\?x   */
-        return RtlPathTypeRootLocalDevice;                                                         /* \\. or \\?     */
+        /* Check if we failed because the file is in use */
+        if ((Status == STATUS_SHARING_VIOLATION) ||
+            (Status == STATUS_ACCESS_DENIED))
+        {
+            /* Check if the caller wants this to be considered OK */
+            Result = SucceedIfBusy ? TRUE : FALSE;
+        }
+        else
+        {
+            /* A failure because the file didn't exist */
+            Result = FALSE;
+        }
     }
     else
     {
-        if ((Chars < 2) || (!(Path[0]) || (Path[1] != L':'))) return RtlPathTypeRelative;          /* x              */
-        if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
-        return RtlPathTypeDriveRelative;                                                           /* x:             */
+        /* The file exists */
+        Result = TRUE;
     }
+
+    /* Return the result */
+    return Result;
 }
 
-/*
- * @implemented
- */
+BOOLEAN
+NTAPI
+RtlDoesFileExists_UStr(IN PUNICODE_STRING FileName)
+{
+    /* Call the updated API */
+    return RtlDoesFileExists_UstrEx(FileName, TRUE);
+}
+
+BOOLEAN
+NTAPI
+RtlDoesFileExists_UEx(IN PCWSTR FileName,
+                      IN BOOLEAN SucceedIfBusy)
+{
+    UNICODE_STRING NameString;
+
+    /* Create the unicode name*/
+    if (NT_SUCCESS(RtlInitUnicodeStringEx(&NameString, FileName)))
+    {
+        /* Call the unicode function */
+        return RtlDoesFileExists_UstrEx(&NameString, SucceedIfBusy);
+    }
+
+    /* Fail */
+    return FALSE;
+}
+
 ULONG
 NTAPI
 RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
@@ -286,6 +300,94 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
     return 0;
 }
 
+RTL_PATH_TYPE
+NTAPI
+RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
+{
+    PWCHAR Path = PathString->Buffer;
+    ULONG Chars = PathString->Length / sizeof(WCHAR);
+
+    /*
+     * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
+     * actually check for the path length before touching the characters
+     */
+    if ((Chars < 1) || (IS_PATH_SEPARATOR(Path[0])))
+    {
+        if ((Chars < 2) || !(IS_PATH_SEPARATOR(Path[1]))) return RtlPathTypeRooted;                /* \x             */
+        if ((Chars < 3) || ((Path[2] != L'.') && (Path[2] != L'?'))) return RtlPathTypeUncAbsolute;/* \\x            */
+        if ((Chars >= 4) && (IS_PATH_SEPARATOR(Path[3]))) return RtlPathTypeLocalDevice;           /* \\.\x or \\?\x */
+        if (Chars != 3) return RtlPathTypeUncAbsolute;                                             /* \\.x or \\?x   */
+        return RtlPathTypeRootLocalDevice;                                                         /* \\. or \\?     */
+    }
+    else
+    {
+        if ((Chars < 2) || (!(Path[0]) || (Path[1] != L':'))) return RtlPathTypeRelative;          /* x              */
+        if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
+        return RtlPathTypeDriveRelative;                                                           /* x:             */
+    }
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RtlReleaseRelativeName(IN PRTL_RELATIVE_NAME_U RelativeName)
+{
+    /* Check if a directory reference was grabbed */
+    if (RelativeName->CurDirRef)
+    {
+        /* FIXME: Not yet supported */
+        UNIMPLEMENTED;
+        RelativeName->CurDirRef = NULL;
+    }
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlGetLongestNtPathLength(VOID)
+{
+    /*
+     * The longest NT path is a DOS path that actually sits on a UNC path (ie:
+     * a mapped network drive), which is accessed through the DOS Global?? path.
+     * This is, and has always been equal to, 269 characters, except in Wine
+     * which claims this is 277. Go figure.
+     */
+    return (MAX_PATH + _unc.Length + sizeof(ANSI_NULL));
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlDetermineDosPathNameType_U(IN PCWSTR Path)
+{
+    DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
+    ASSERT(Path != NULL);
+
+    /* Unlike the newer RtlDetermineDosPathNameType_U we assume 4 characters */
+    if (IS_PATH_SEPARATOR(Path[0]))
+    {
+        if (!IS_PATH_SEPARATOR(Path[1])) return RtlPathTypeRooted;                /* \x             */
+        if ((Path[2] != L'.') && (Path[2] != L'?')) return RtlPathTypeUncAbsolute;/* \\x            */
+        if (IS_PATH_SEPARATOR(Path[3])) return RtlPathTypeLocalDevice;            /* \\.\x or \\?\x */
+        if (Path[3]) return RtlPathTypeUncAbsolute;                               /* \\.x or \\?x   */
+        return RtlPathTypeRootLocalDevice;                                        /* \\. or \\?     */
+    }
+    else
+    {
+        if (!(Path[0]) || (Path[1] != L':')) return RtlPathTypeRelative;          /* x              */
+        if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;          /* x:\            */
+        return RtlPathTypeDriveRelative;                                          /* x:             */
+    }
+}
+
 /*
  * @implemented
  */
@@ -295,12 +397,12 @@ RtlIsDosDeviceName_U(IN PWSTR Path)
 {
     UNICODE_STRING PathString;
     NTSTATUS Status;
-    
+
     /* Build the string */
     Status = RtlInitUnicodeStringEx(&PathString, Path);
     if (!NT_SUCCESS(Status)) return 0;
-    
-    /* 
+
+    /*
      * Returns 0 if name is not valid DOS device name, or DWORD with
      * offset in bytes to DOS device name from beginning of buffer in high word
      * and size in bytes of DOS device name in low word
@@ -973,196 +1075,154 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 	return TRUE;
 }
 
-
 /*
  * @implemented
- */
-/******************************************************************
- *		RtlDosSearchPath_U
- *
- * Searches a file of name 'name' into a ';' separated list of paths
- * (stored in paths)
- * Doesn't seem to search elsewhere than the paths list
- * Stores the result in buffer (file_part will point to the position
- * of the file name in the buffer)
- * FIXME:
- * - how long shall the paths be ??? (MAX_PATH or larger with \\?\ constructs ???)
  */
 ULONG
 NTAPI
-RtlDosSearchPath_U(PCWSTR paths,
-                   PCWSTR search,
-                   PCWSTR ext,
-                   ULONG buffer_size,
-                   PWSTR buffer,
-                   PWSTR* file_part)
+RtlDosSearchPath_U(IN PCWSTR Path,
+                   IN PCWSTR FileName,
+                   IN PCWSTR Extension,
+                   IN ULONG Size,
+                   IN PWSTR Buffer,
+                   OUT PWSTR *PartName)
 {
-    RTL_PATH_TYPE type = RtlDetermineDosPathNameType_U(search);
-    ULONG len = 0;
-
-    if (type == RtlPathTypeRelative)
-    {
-        ULONG allocated = 0, needed, filelen;
-        WCHAR *name = NULL;
-
-        filelen = 1 /* for \ */ + wcslen(search) + 1 /* \0 */;
-
-        /* Windows only checks for '.' without worrying about path components */
-        if (wcschr( search, '.' )) ext = NULL;
-        if (ext != NULL) filelen += wcslen(ext);
-
-        while (*paths)
-        {
-            LPCWSTR ptr;
-
-            for (needed = 0, ptr = paths; *ptr != 0 && *ptr++ != ';'; needed++);
-            if (needed + filelen > allocated)
-            {
-                if (!name) name = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                                                  (needed + filelen) * sizeof(WCHAR));
-                else
-                {
-                    WCHAR *newname = RtlReAllocateHeap(RtlGetProcessHeap(), 0, name,
-                                                       (needed + filelen) * sizeof(WCHAR));
-                    if (!newname) RtlFreeHeap(RtlGetProcessHeap(), 0, name);
-                    name = newname;
-                }
-                if (!name) return 0;
-                allocated = needed + filelen;
-            }
-            memmove(name, paths, needed * sizeof(WCHAR));
-            /* append '\\' if none is present */
-            if (needed > 0 && name[needed - 1] != '\\') name[needed++] = '\\';
-            wcscpy(&name[needed], search);
-            if (ext) wcscat(&name[needed], ext);
-            if (RtlDoesFileExists_U(name))
-            {
-                len = RtlGetFullPathName_U(name, buffer_size, buffer, file_part);
-                break;
-            }
-            paths = ptr;
-        }
-        RtlFreeHeap(RtlGetProcessHeap(), 0, name);
-    }
-    else if (RtlDoesFileExists_U(search))
-    {
-        len = RtlGetFullPathName_U(search, buffer_size, buffer, file_part);
-    }
-
-    return len;
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-RtlDoesFileExists_UstrEx(IN PCUNICODE_STRING FileName,
-                         IN BOOLEAN SucceedIfBusy)
-{
-    BOOLEAN Result;
-    RTL_RELATIVE_NAME_U RelativeName;
-    UNICODE_STRING NtPathName;
-    PVOID Buffer;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
-    FILE_BASIC_INFORMATION BasicInformation;
+    WCHAR c;
+    ULONG ExtensionLength, Length, FileNameLength, PathLength;
+    UNICODE_STRING TempString;
+    PWCHAR NewBuffer, BufferStart;
 
-#if 0
-    /* Get the NT Path */
-    Result = RtlDosPathNameToRelativeNtPathName_Ustr(FileName,
-                                                     &NtPathName,
-                                                     NULL,
-                                                     &RelativeName);
-#else
-    /* FIXME: Use the old API for now */
-    Result = RtlDosPathNameToNtPathName_U(FileName->Buffer,
-                                          &NtPathName,
-                                          NULL,
-                                          &RelativeName);
-#endif
-    if (!Result) return FALSE;
-
-    /* Save the buffer */
-    Buffer = NtPathName.Buffer;
-
-    /* Check if we have a relative name */
-    if (RelativeName.RelativeName.Length)
+    /* Check if this is an absolute path */
+    if (RtlDetermineDosPathNameType_U(FileName) != RtlPathTypeRelative)
     {
-        /* Use it */
-        NtPathName = RelativeName.RelativeName;
+        /* Check if the file exists */
+        if (RtlDoesFileExists_UEx(FileName, TRUE))
+        {
+            /* Get the full name, which does the DOS lookup */
+            return RtlGetFullPathName_U(FileName, Size, Buffer, PartName);
+        }
+
+        /* Doesn't exist, so fail */
+        return 0;
+    }
+
+    /* Scan the filename */
+    c = *FileName;
+    while (c)
+    {
+        /* Looking for an extension */
+        if (c == '.')
+        {
+            /* No extension string needed -- it's part of the filename */
+            Extension = NULL;
+            break;
+        }
+
+        /* Next character */
+        c = *++FileName;
+    }
+
+    /* Do we have an extension? */
+    if (!Extension)
+    {
+        /* Nope, don't worry about one */
+        ExtensionLength = 0;
     }
     else
     {
-        /* Otherwise ignore it */
-        RelativeName.ContainingDirectory = NULL;
+        /* Build a temporary string to get the extension length */
+        Status = RtlInitUnicodeStringEx(&TempString, Extension);
+        if (!NT_SUCCESS(Status)) return 0;
+        ExtensionLength = TempString.Length;
     }
 
-    /* Initialize the object attributes */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &NtPathName,
-                               OBJ_CASE_INSENSITIVE,
-                               RelativeName.ContainingDirectory,
-                               NULL);
+    /* Build a temporary string to get the path length */
+    Status = RtlInitUnicodeStringEx(&TempString, Path);
+    if (!NT_SUCCESS(Status)) return 0;
+    PathLength = TempString.Length;
 
-    /* Query the attributes and free the buffer now */
-    Status = ZwQueryAttributesFile(&ObjectAttributes, &BasicInformation);
-    RtlReleaseRelativeName(&RelativeName);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    /* Build a temporary string to get the filename length */
+    Status = RtlInitUnicodeStringEx(&TempString, FileName);
+    if (!NT_SUCCESS(Status)) return 0;
+    FileNameLength = TempString.Length;
 
-    /* Check if we failed */
-    if (!NT_SUCCESS(Status))
+    /* Allocate the buffer for the new string name */
+    NewBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                0,
+                                FileNameLength +
+                                ExtensionLength +
+                                PathLength +
+                                3 * sizeof(WCHAR));
+    if (!NewBuffer)
     {
-        /* Check if we failed because the file is in use */
-        if ((Status == STATUS_SHARING_VIOLATION) ||
-            (Status == STATUS_ACCESS_DENIED))
+        /* Fail the call */
+        DbgPrint("%s: Failing due to out of memory (RtlAllocateHeap failure)\n",
+                 __FUNCTION__);
+        return 0;
+    }
+
+    /* Final loop to build the path */
+    while (TRUE)
+    {
+        /* Check if we have a valid character */
+        c = *Path;
+        BufferStart = NewBuffer;
+        if (c)
         {
-            /* Check if the caller wants this to be considered OK */
-            Result = SucceedIfBusy ? TRUE : FALSE;
+            /* Loop as long as there's no semicolon */
+            while (c != ';')
+            {
+                /* Copy the next character */
+                *BufferStart++ = c;
+                c = *++Path;
+                if (!c) break;
+            }
+
+            /* We found a semi-colon, to stop path processing on this loop */
+            if (c == ';') ++Path;
+        }
+
+        /* Add a terminating slash if needed */
+        if ((BufferStart != NewBuffer) && (BufferStart[-1] != '\\'))
+        {
+            *BufferStart++ = '\\';
+        }
+
+        /* Bail out if we reached the end */
+        if (!c) Path = NULL;
+
+        /* Copy the file name and check if an extension is needed */
+        RtlCopyMemory(BufferStart, FileName, FileNameLength);
+        if (ExtensionLength)
+        {
+            /* Copy the extension too */
+            RtlCopyMemory((PCHAR)BufferStart + FileNameLength,
+                          Extension,
+                          ExtensionLength + sizeof(WCHAR));
         }
         else
         {
-            /* A failure because the file didn't exist */
-            Result = FALSE;
+            /* Just NULL-terminate */
+            *(PWCHAR)((PCHAR)BufferStart + FileNameLength) = UNICODE_NULL;
         }
-    }
-    else
-    {
-        /* The file exists */
-        Result = TRUE;
-    }
 
-    /* Return the result */
-    return Result;
-}
+        /* Now, does this file exist? */
+        if (RtlDoesFileExists_UEx(NewBuffer, FALSE))
+        {
+            /* Call the full-path API to get the length */
+            Length = RtlGetFullPathName_U(NewBuffer, Size, Buffer, PartName);
+            break;
+        }
 
-BOOLEAN
-NTAPI
-RtlDoesFileExists_UStr(IN PUNICODE_STRING FileName)
-{
-    /* Call the updated API */
-    return RtlDoesFileExists_UstrEx(FileName, TRUE);
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-RtlDoesFileExists_UEx(IN PCWSTR FileName,
-                      IN BOOLEAN SucceedIfBusy)
-{
-    UNICODE_STRING NameString;
-
-    /* Create the unicode name*/
-    if (NT_SUCCESS(RtlInitUnicodeStringEx(&NameString, FileName)))
-    {
-        /* Call the unicode function */
-        return RtlDoesFileExists_UstrEx(&NameString, SucceedIfBusy);
+        /* If we got here, path doesn't exist, so fail the call */
+        Length = 0;
+        if (!Path) break;
     }
 
-    /* Fail */
-    return FALSE;
+    /* Free the allocation and return the length */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
+    return Length;
 }
 
 /*
@@ -1190,6 +1250,9 @@ RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
     return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS NTAPI
 RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
@@ -1197,6 +1260,9 @@ RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS NTAPI
 RtlNtPathNameToDosPathName(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 {
