@@ -912,7 +912,6 @@ ULONG NTAPI RtlGetFullPathName_U(
     return reqsize;
 }
 
-
 /*
  * @implemented
  */
@@ -1076,6 +1075,30 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 }
 
 /*
+ * @unimplemented
+ */
+BOOLEAN NTAPI
+RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
+                                     PVOID Unknown2,
+                                     PVOID Unknown3,
+                                     PVOID Unknown4)
+{
+    DPRINT1("RtlDosPathNameToRelativeNtPathName_U(0x%p, 0x%p, 0x%p, 0x%p) UNIMPLEMENTED!\n",
+            Unknown1, Unknown2, Unknown3, Unknown4);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS NTAPI
+RtlNtPathNameToDosPathName(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
+{
+    DPRINT1("RtlNtPathNameToDosPathName: stub\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
  * @implemented
  */
 ULONG
@@ -1234,40 +1257,6 @@ RtlDoesFileExists_U(IN PCWSTR FileName)
 {
     /* Call the new function */
     return RtlDoesFileExists_UEx(FileName, TRUE);
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN NTAPI
-RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
-                                     PVOID Unknown2,
-                                     PVOID Unknown3,
-                                     PVOID Unknown4)
-{
-    DPRINT1("RtlDosPathNameToRelativeNtPathName_U(0x%p, 0x%p, 0x%p, 0x%p) UNIMPLEMENTED!\n",
-            Unknown1, Unknown2, Unknown3, Unknown4);
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
-{
-    DPRINT1("RtlpEnsureBufferSize: stub\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-RtlNtPathNameToDosPathName(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
-{
-    DPRINT1("RtlNtPathNameToDosPathName: stub\n");
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */
