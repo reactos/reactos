@@ -303,7 +303,6 @@ NTSTATUS NTAPI ReceiveComplete
     FCB->Recv.BytesUsed = 0;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
-        AFD_DbgPrint(MIN_TRACE,("!!! CLOSING SOCK GOT A RECEIVE COMPLETE !!!\n"));
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
@@ -515,7 +514,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				( FCB, Status, Irp, Irp->IoStatus.Information );
             }
         } else if( (RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
-            AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
+            AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
             Status = STATUS_CANT_WAIT;
             FCB->PollState &= ~AFD_EVENT_RECEIVE;
             UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, FALSE );
@@ -538,7 +537,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( Status == STATUS_PENDING &&
         ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)) ) {
-        AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
+        AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         TotalBytesCopied = 0;
         RemoveEntryList( &Irp->Tail.Overlay.ListEntry );
@@ -796,7 +795,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				( FCB, Status, Irp, Irp->IoStatus.Information );
 		}
     } else if( (RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
-		AFD_DbgPrint(MIN_TRACE,("Nonblocking\n"));
+		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
