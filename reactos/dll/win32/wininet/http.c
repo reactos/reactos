@@ -31,6 +31,7 @@
 #include "wine/port.h"
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
+#define WIN32_NO_STATUS
 #include <ws2tcpip.h>
 #endif
 
@@ -57,7 +58,7 @@
 #include "winbase.h"
 #include "wininet.h"
 #include "winerror.h"
-#include "winternl.h"
+#include "ntndk.h"
 #define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_STRFCNS

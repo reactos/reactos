@@ -69,8 +69,8 @@
 @ stub SecpFreeMemory
 @ stub SecpTranslateName
 @ stub SecpTranslateNameEx
-@ stub SetContextAttributesA
-@ stub SetContextAttributesW
+@ stdcall SetContextAttributesA(ptr long ptr long)
+@ stdcall SetContextAttributesW(ptr long ptr long)
 @ stub SetCredentialsAttributesA
 @ stub SetCredentialsAttributesW
 @ stdcall TranslateNameA(str long long ptr ptr)
