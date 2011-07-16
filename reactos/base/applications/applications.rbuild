@@ -55,6 +55,9 @@
 	<directory name="mscutils">
 		<xi:include href="mscutils/directory.rbuild" />
 	</directory>
+	<directory name="mspaint">
+		<xi:include href="mspaint/mspaint.rbuild" />
+	</directory>
 	<directory name="mstsc">
 		<xi:include href="mstsc/mstsc.rbuild" />
 	</directory>
@@ -63,9 +66,6 @@
 	</directory>
 	<directory name="notepad">
 		<xi:include href="notepad/notepad.rbuild" />
-	</directory>
-	<directory name="paint">
-		<xi:include href="paint/paint.rbuild" />
 	</directory>
 	<directory name="regedit">
 		<xi:include href="regedit/regedit.rbuild" />

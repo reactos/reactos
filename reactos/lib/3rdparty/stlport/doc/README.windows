@@ -1,0 +1,55 @@
+Note for Windows users:
+
+  It is highly recommended to declare the Windows OS version you are
+targetting when building the library as well as when using it. You can do so
+thanks to the well known Microsoft macros WINVER, _WIN32_WINDOWS or
+_WIN32_WINNT, see your platform SDK documentation for a description
+of those macros and how to use them. To define it when building the
+library, use the configure script --extra-cxxflag option. Here is the
+configuration to build STLport using Visual Studio 2005 and targetting
+Windows XP:
+
+configure -c msvc8 --extra-cxxflag "/D_WIN32_WINNT=0x0501"
+
+  If you do not declare it at build time STLport will adapt to the PSDK in
+use, windows.h gives a default value to WINVER. However, when using the
+library, windows.h is not necessarily included, at least not by STLport
+internally, so none of the macros are defined which will result in an
+inconsistency in the build process which most of time will generate undefined
+behavior at runtime.
+
+  Here is the main reason for following this advise, the Windows 95
+compatibility issue:
+
+  Because of a modification in the behavior of the Win32 API functions
+InterlockedIncrement and InterlockedDecrement after Windows 95, STLport
+libraries built for Windows 95 cannot be used to generate an application
+built for Windows XP for instance. So, if you build STLport with a Windows
+95 PSDK, STLport will be ready for Windows 95. If you then use it without
+defining _WIN32_WINDOWS to signal Windows 95 compatibility, STLport will
+consider that it can use latest Windows OS features like the new
+InterlockedIncrement and InterlockedDecrement functions which change the
+memory footprint of some internal STLport objects making it incompatible
+with the libraries built for Windows 95.
+
+  Normally, doing so wouldn't generate any compilation or link error, you
+would only experiment undefined behavior at runtime. In order to make this
+problem more obvious STLport forces a link time error in debug mode (_DEBUG
+macro defined).
+
+Unresolved symbol will be:
+  - 'building_for_at_least_windows98_but_library_built_for_windows95'
+  if you are trying to use STLport libraries built for Windows 98 or later
+  to generate an application targetting the Windows 95 platform.
+  - 'building_for_windows95_but_library_built_for_at_least_windows98'
+  if you are trying to use STLport libraries built for Windows 95 to generate
+  an appliation targetting the
+  
+  Windows XP platform for instance.
+
+  Of course, targetting the latest Windows OS versions will give you the best
+performance from STLport. This is why when none of the platform macros are
+defined STLport consider that there is no minimum OS requirement and will
+use the latest API functions. There is only one exception to this behavior,
+the SwitchToThread function that is used only if you define _WIN32_WINNT to a
+value higher or equal to 0X0400.

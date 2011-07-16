@@ -8,6 +8,7 @@
 	<include base="jscript" root="intermediate" compiler="rc">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_USE_MATH_DEFINES" />
 	<define name="RPC_NO_WINDOWS_H" />
 	<dependency>jsglobal</dependency>
 	<library>wine</library>

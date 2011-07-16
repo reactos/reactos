@@ -150,6 +150,32 @@ NtUserGetThreadState(
    return ret;
 }
 
+DWORD
+APIENTRY
+NtUserSetThreadState(
+   DWORD Set,
+   DWORD Flags)
+{
+   PTHREADINFO pti;
+   DWORD Ret = 0;
+   // Test the only flags user can change.
+   if (Set & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;
+   if (Flags & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;   
+   UserEnterExclusive();
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->MessageQueue)
+   {
+      Ret = pti->MessageQueue->QF_flags;    // Get the queue flags.
+      if (Set)
+         pti->MessageQueue->QF_flags |= (Set&Flags); // Set the queue flags.
+      else
+      {
+         if (Flags) pti->MessageQueue->QF_flags &= ~Flags; // Clr the queue flags.
+      }
+   }
+   UserLeave();
+   return Ret;
+}
 
 UINT
 APIENTRY
@@ -179,7 +205,9 @@ NtUserGetGUIThreadInfo(
    GUITHREADINFO SafeGui;
    PDESKTOP Desktop;
    PUSER_MESSAGE_QUEUE MsgQueue;
+   PTHREADINFO W32Thread;
    PETHREAD Thread = NULL;
+
    DECLARE_RETURN(BOOLEAN);
 
    DPRINT("Enter NtUserGetGUIThreadInfo\n");
@@ -198,7 +226,7 @@ NtUserGetGUIThreadInfo(
       RETURN( FALSE);
    }
 
-   if(idThread)
+   if (idThread)
    {
       Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if(!NT_SUCCESS(Status))
@@ -206,24 +234,17 @@ NtUserGetGUIThreadInfo(
          EngSetLastError(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
-      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk;
+      W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
+      Desktop = W32Thread->rpdesk;
    }
    else
-   {
-      /* get the foreground thread */
-      PTHREADINFO W32Thread = (PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread;
+   {  /* get the foreground thread */
+      Thread = PsGetCurrentThread();
+      W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
       Desktop = W32Thread->rpdesk;
-      if(Desktop)
-      {
-         MsgQueue = Desktop->ActiveMessageQueue;
-         if(MsgQueue)
-         {
-            Thread = MsgQueue->Thread;
-         }
-      }
    }
 
-   if(!Thread || !Desktop)
+   if (!Thread || !Desktop )
    {
       if(idThread && Thread)
          ObDereferenceObject(Thread);
@@ -231,13 +252,21 @@ NtUserGetGUIThreadInfo(
       RETURN( FALSE);
    }
 
-   MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
+   if ( W32Thread->MessageQueue )
+      MsgQueue = W32Thread->MessageQueue;
+   else
+   {
+      if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+   }
+
    CaretInfo = MsgQueue->CaretInfo;
 
    SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
-   if(MsgQueue->MenuOwner)
+
+   if (MsgQueue->MenuOwner)
       SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
-   if(MsgQueue->MoveSize)
+
+   if (MsgQueue->MoveSize)
       SafeGui.flags |= GUI_INMOVESIZE;
 
    /* FIXME add flag GUI_16BITTASK */
@@ -254,7 +283,7 @@ NtUserGetGUIThreadInfo(
    SafeGui.rcCaret.right = SafeGui.rcCaret.left + CaretInfo->Size.cx;
    SafeGui.rcCaret.bottom = SafeGui.rcCaret.top + CaretInfo->Size.cy;
 
-   if(idThread)
+   if (idThread)
       ObDereferenceObject(Thread);
 
    Status = MmCopyToCaller(lpgui, &SafeGui, sizeof(GUITHREADINFO));

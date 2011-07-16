@@ -29,11 +29,6 @@
  *
  * TODO:
  *
- * Messages:
- *    -- PBM_GETSTEP
- *    -- PBM_SETSTATE
- *    -- PBM_GETSTATE
- *
  * Styles:
  *    -- PBS_SMOOTHREVERSE
  *
@@ -380,8 +375,7 @@ static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
     if (pdi.theme)
     {
         GetWindowRect( infoPtr->Self, &pdi.bgRect );
-        ScreenToClient( infoPtr->Self, (POINT*)&pdi.bgRect );
-        ScreenToClient( infoPtr->Self, (POINT*)&pdi.bgRect.right );
+        MapWindowPoints( infoPtr->Self, 0, (POINT*)&pdi.bgRect, 2 );
     }
 
     if (!barSmooth)
@@ -663,6 +657,9 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
         return oldStep;
     }
 
+    case PBM_GETSTEP:
+        return infoPtr->Step;
+
     case PBM_STEPIT:
     {
 	INT oldVal;
@@ -707,6 +704,14 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 
     case PBM_GETBKCOLOR:
 	return infoPtr->ColorBk;
+
+    case PBM_SETSTATE:
+        if(wParam != PBST_NORMAL)
+            FIXME("state %04lx not yet handled\n", wParam);
+        return PBST_NORMAL;
+
+    case PBM_GETSTATE:
+        return PBST_NORMAL;
 
     case PBM_SETMARQUEE:
 	if(wParam != 0)

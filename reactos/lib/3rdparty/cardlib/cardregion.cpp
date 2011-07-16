@@ -46,6 +46,7 @@ CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, i
     AddCallback      = 0;
     RemoveCallback   = 0;
     ClickCallback    = 0;
+    ClickReleaseCallback = 0;
     DblClickCallback = 0;
 
     uDragRule = CS_DRAG_ALL;
@@ -185,6 +186,11 @@ bool CardRegion::SetDropRule(UINT uDropType, pCanDropProc proc)
 void CardRegion::SetClickProc(pClickProc proc)
 {
     ClickCallback = proc;
+}
+
+void CardRegion::SetClickReleaseProc(pClickProc proc)
+{
+    ClickReleaseCallback = proc;
 }
 
 void CardRegion::SetDblClickProc(pClickProc proc)

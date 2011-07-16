@@ -77,7 +77,6 @@ IntCallLowLevelHook( PHOOK Hook,
        case WH_KEYBOARD:
           uTimeout = 200;
           Block = TRUE;
-          Size = sizeof(KBDLLHOOKSTRUCT);
           break;
     }
 
@@ -1004,6 +1003,10 @@ co_HOOK_CallHooks( INT HookId,
 
        ClientInfo = pti->pClientInfo;
        SaveHook = pti->sphkCurrent;
+       /* Note: Setting pti->sphkCurrent will also lock the next hook to this
+        *       hook ID. So, the CallNextHookEx will only call to that hook ID
+        *       chain anyway. For Thread Hooks....
+        */
 
        /* Load it for the next call. */
        pti->sphkCurrent = Hook;

@@ -24,8 +24,7 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 
 .code64
 .text

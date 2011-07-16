@@ -97,6 +97,35 @@ IntClientShutdown(
    return lResult;
 }
 
+LRESULT FASTCALL
+DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+   LRESULT lResult = 0;
+   BOOL Hook = FALSE;
+
+   if (ISITHOOKED(WH_CBT) || (pWnd->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)))
+   {
+      Hook = TRUE;
+      lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
+      
+      if (lResult) return lResult;
+   }
+
+   switch (wParam & 0xfff0)
+   {
+      case SC_SCREENSAVE:
+        DPRINT1("Screensaver Called!\n");
+        UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
+        break;
+
+      default:
+   // We do not support anything else here so we should return normal even when sending a hook.
+        return 0;
+   }
+
+   return(Hook ? 1 : 0); // Don't call us again from user space.
+}
+
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -117,7 +146,7 @@ IntDefWindowProc(
       case WM_SYSCOMMAND:
       {
          DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
-         lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
+         lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
       case WM_SHOWWINDOW:
@@ -142,6 +171,12 @@ IntDefWindowProc(
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
 
+      case WM_GETHOTKEY:
+         return DefWndGetHotKey(UserHMGetHandle(Wnd));                
+      case WM_SETHOTKEY:
+         return DefWndSetHotKey(Wnd, wParam);
+
+      /* ReactOS only. */
       case WM_CBT:
       {
          switch (wParam)
@@ -180,5 +215,207 @@ IntDefWindowProc(
    return lResult;
 }
 
+static HICON NC_IconForWindow( PWND pWnd )
+{
+   HICON hIcon = 0;
+
+   if (!pWnd->pcls || pWnd->fnid == FNID_DESKTOP) return hIcon;
+   if (!hIcon) hIcon = pWnd->pcls->hIconSm;
+   if (!hIcon) hIcon = pWnd->pcls->hIcon;
+
+   if (!hIcon && pWnd->style & DS_MODALFRAME)
+   { // Fake it out for now, we use it as a test.
+      hIcon = (HICON)1;
+   /* FIXME: Need to setup Registry System Cursor & Icons via Callbacks at init time! */
+      if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
+      if (!hIcon) hIcon = gpsi->hIcoWindows;    // Reg size.
+   }
+   return hIcon;
+}
+
+DWORD FASTCALL
+GetNCHitEx(PWND pWnd, POINT pt)
+{
+   RECT rcWindow, rcClient;
+   DWORD Style, ExStyle;
+
+   if (!pWnd) return HTNOWHERE;
+
+   rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
+   rcWindow.right = pWnd->rcWindow.right;
+   rcWindow.bottom = pWnd->rcWindow.bottom;
+   rcClient.right = pWnd->rcClient.right;
+   rcClient.bottom = pWnd->rcClient.bottom;
+
+   if (!IntPtInRect(&rcWindow, pt)) return HTNOWHERE;
+
+   Style = pWnd->style;
+   ExStyle = pWnd->ExStyle;
+
+   if (Style & WS_MINIMIZE) return HTCAPTION;
+
+   if (IntPtInRect( &rcClient, pt )) return HTCLIENT;
+
+   /* Check borders */
+   if (HAS_THICKFRAME( Style, ExStyle ))
+   {
+      RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
+      if (!IntPtInRect(&rcWindow, pt))
+      {
+            /* Check top sizing border */
+            if (pt.y < rcWindow.top)
+            {
+                if (pt.x < rcWindow.left+UserGetSystemMetrics(SM_CXSIZE)) return HTTOPLEFT;
+                if (pt.x >= rcWindow.right-UserGetSystemMetrics(SM_CXSIZE)) return HTTOPRIGHT;
+                return HTTOP;
+            }
+            /* Check bottom sizing border */
+            if (pt.y >= rcWindow.bottom)
+            {
+                if (pt.x < rcWindow.left+UserGetSystemMetrics(SM_CXSIZE)) return HTBOTTOMLEFT;
+                if (pt.x >= rcWindow.right-UserGetSystemMetrics(SM_CXSIZE)) return HTBOTTOMRIGHT;
+                return HTBOTTOM;
+            }
+            /* Check left sizing border */
+            if (pt.x < rcWindow.left)
+            {
+                if (pt.y < rcWindow.top+UserGetSystemMetrics(SM_CYSIZE)) return HTTOPLEFT;
+                if (pt.y >= rcWindow.bottom-UserGetSystemMetrics(SM_CYSIZE)) return HTBOTTOMLEFT;
+                return HTLEFT;
+            }
+            /* Check right sizing border */
+            if (pt.x >= rcWindow.right)
+            {
+                if (pt.y < rcWindow.top+UserGetSystemMetrics(SM_CYSIZE)) return HTTOPRIGHT;
+                if (pt.y >= rcWindow.bottom-UserGetSystemMetrics(SM_CYSIZE)) return HTBOTTOMRIGHT;
+                return HTRIGHT;
+            }
+        }
+    }
+    else  /* No thick frame */
+    {
+        if (HAS_DLGFRAME( Style, ExStyle ))
+            RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
+        else if (HAS_THINFRAME( Style, ExStyle ))
+            RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+        if (!IntPtInRect( &rcWindow, pt )) return HTBORDER;
+    }
+
+    /* Check caption */
+
+    if ((Style & WS_CAPTION) == WS_CAPTION)
+    {
+        if (ExStyle & WS_EX_TOOLWINDOW)
+            rcWindow.top += UserGetSystemMetrics(SM_CYSMCAPTION) - 1;
+        else
+            rcWindow.top += UserGetSystemMetrics(SM_CYCAPTION) - 1;
+        if (!IntPtInRect( &rcWindow, pt ))
+        {
+            BOOL min_or_max_box = (Style & WS_MAXIMIZEBOX) ||
+                                  (Style & WS_MINIMIZEBOX);
+            if (ExStyle & WS_EX_LAYOUTRTL)
+            {
+                /* Check system menu */
+                if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW) && NC_IconForWindow(pWnd))
+                {
+                    rcWindow.right -= UserGetSystemMetrics(SM_CYCAPTION) - 1;
+                    if (pt.x > rcWindow.right) return HTSYSMENU;
+                }
+
+                /* Check close button */
+                if (Style & WS_SYSMENU)
+                {
+                    rcWindow.left += UserGetSystemMetrics(SM_CYCAPTION);
+                    if (pt.x < rcWindow.left) return HTCLOSE;
+                }
+
+                /* Check maximize box */
+                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
+                {
+                    rcWindow.left += UserGetSystemMetrics(SM_CXSIZE);
+                    if (pt.x < rcWindow.left) return HTMAXBUTTON;
+                }
+
+                /* Check minimize box */
+                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
+                {
+                    rcWindow.left += UserGetSystemMetrics(SM_CXSIZE);
+                    if (pt.x < rcWindow.left) return HTMINBUTTON;
+                }
+            }
+            else
+            {
+                /* Check system menu */
+                if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW) && NC_IconForWindow(pWnd))
+                {
+                    rcWindow.left += UserGetSystemMetrics(SM_CYCAPTION) - 1;
+                    if (pt.x < rcWindow.left) return HTSYSMENU;
+                }
+
+                /* Check close button */
+                if (Style & WS_SYSMENU)
+                {
+                    rcWindow.right -= UserGetSystemMetrics(SM_CYCAPTION);
+                    if (pt.x > rcWindow.right) return HTCLOSE;
+                }
+
+                /* Check maximize box */
+                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
+                {
+                    rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
+                    if (pt.x > rcWindow.right) return HTMAXBUTTON;
+                }
+
+                /* Check minimize box */
+                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
+                {
+                    rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
+                    if (pt.x > rcWindow.right) return HTMINBUTTON;
+                }
+            }
+            return HTCAPTION;
+        }
+    }
+
+      /* Check menu bar */
+
+    if (HAS_MENU( pWnd, Style ) && (pt.y < rcClient.top) &&
+        (pt.x >= rcClient.left) && (pt.x < rcClient.right))
+        return HTMENU;
+
+      /* Check vertical scroll bar */
+
+    if (ExStyle & WS_EX_LAYOUTRTL) ExStyle ^= WS_EX_LEFTSCROLLBAR;
+    if (Style & WS_VSCROLL)
+    {
+        if((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+            rcClient.left -= UserGetSystemMetrics(SM_CXVSCROLL);
+        else
+            rcClient.right += UserGetSystemMetrics(SM_CXVSCROLL);
+        if (IntPtInRect( &rcClient, pt )) return HTVSCROLL;
+    }
+
+      /* Check horizontal scroll bar */
+
+    if (Style & WS_HSCROLL)
+    {
+        rcClient.bottom += UserGetSystemMetrics(SM_CYHSCROLL);
+        if (IntPtInRect( &rcClient, pt ))
+        {
+            /* Check size box */
+            if ((Style & WS_VSCROLL) &&
+                ((((ExStyle & WS_EX_LEFTSCROLLBAR) != 0) && (pt.x <= rcClient.left + UserGetSystemMetrics(SM_CXVSCROLL))) ||
+                (((ExStyle & WS_EX_LEFTSCROLLBAR) == 0) && (pt.x >= rcClient.right - UserGetSystemMetrics(SM_CXVSCROLL)))))
+                return HTSIZE;
+            return HTHSCROLL;
+        }
+    }
+
+    /* Has to return HTNOWHERE if nothing was found
+       Could happen when a window has a customized non client area */
+    return HTNOWHERE;
+}
 
 /* EOF */

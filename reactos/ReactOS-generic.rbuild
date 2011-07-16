@@ -81,10 +81,7 @@
 	<include root="intermediate">include/reactos/mc</include>
 	<include>include/reactos/libs</include>
 
-	<include host="true">include</include>
-	<include host="true" root="intermediate">include</include>
-	<include host="true">include/reactos</include>
-	<include host="true">include/reactos/wine</include>
+	<include host="true">include/host</include>
 
 	<group compilerset="gcc">
 		<compilerflag>-Wall</compilerflag>

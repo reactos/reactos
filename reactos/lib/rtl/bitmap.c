@@ -152,11 +152,11 @@ RtlFindMostSignificantBit(ULONGLONG Value)
 
     if (BitScanReverse(&Position, Value >> 32))
     {
-        return Position + 32;
+        return (CCHAR)(Position + 32);
     }
     else if (BitScanReverse(&Position, (ULONG)Value))
     {
-        return Position;
+        return (CCHAR)Position;
     }
 
     return -1;
@@ -170,11 +170,11 @@ RtlFindLeastSignificantBit(ULONGLONG Value)
 
     if (BitScanForward(&Position, (ULONG)Value))
     {
-        return Position;
+        return (CCHAR)Position;
     }
     else if (BitScanForward(&Position, Value >> 32))
     {
-        return Position + 32;
+        return (CCHAR)(Position + 32);
     }
 
     return -1;
@@ -187,9 +187,6 @@ RtlInitializeBitMap(
     IN PULONG BitMapBuffer,
     IN ULONG SizeOfBitMap)
 {
-    // FIXME: some bugger here!
-    //ASSERT(SizeOfBitMap > 0);
-
     /* Setup the bitmap header */
     BitMapHeader->SizeOfBitMap = SizeOfBitMap;
     BitMapHeader->Buffer = BitMapBuffer;
@@ -212,7 +209,7 @@ RtlSetAllBits(
     IN OUT PRTL_BITMAP BitMapHeader)
 {
     ULONG LengthInUlongs;
-    
+
     LengthInUlongs = (BitMapHeader->SizeOfBitMap + 31) >> 5;
     RtlFillMemoryUlong(BitMapHeader->Buffer, LengthInUlongs << 2, ~0);
 }
@@ -481,7 +478,7 @@ RtlFindSetBits(
     IN ULONG NumberToFind,
     IN ULONG HintIndex)
 {
-    ULONG CurrentBit, CurrentLength;
+    ULONG CurrentBit, Margin, CurrentLength;
 
     /* Check for valid parameters */
     if (!BitMapHeader || NumberToFind > BitMapHeader->SizeOfBitMap)
@@ -495,12 +492,15 @@ RtlFindSetBits(
         return HintIndex;
     }
 
+    /* First margin is end of bitmap */
+    Margin = BitMapHeader->SizeOfBitMap;
+
+retry:
     /* Start with hint index, length is 0 */
     CurrentBit = HintIndex;
-    CurrentLength = 0;
 
     /* Loop until something is found or the end is reached */
-    while (CurrentBit + NumberToFind <= BitMapHeader->SizeOfBitMap)
+    while (CurrentBit + NumberToFind <= Margin)
     {
         /* Search for the next set run, by skipping a clear run */
         CurrentBit += RtlpGetLengthOfRunClear(BitMapHeader,
@@ -520,6 +520,15 @@ RtlFindSetBits(
         }
 
         CurrentBit += CurrentLength;
+    }
+
+    /* Did we start at a hint? */
+    if (HintIndex)
+    {
+        /* Retry at the start */
+        Margin = min(HintIndex + NumberToFind, BitMapHeader->SizeOfBitMap);
+        HintIndex = 0;
+        goto retry;
     }
 
     /* Nothing found */
@@ -695,7 +704,7 @@ RtlFindClearRuns(
     for (Run = 0; Run < SizeOfRunArray; Run++)
     {
         /* Look for a run */
-        NumberOfBits = RtlFindNextForwardRunClear(BitMapHeader, 
+        NumberOfBits = RtlFindNextForwardRunClear(BitMapHeader,
                                                   FromIndex,
                                                   &StartingIndex);
 
@@ -726,7 +735,7 @@ RtlFindClearRuns(
     while (1)
     {
         /* Look for a run */
-        NumberOfBits = RtlFindNextForwardRunClear(BitMapHeader, 
+        NumberOfBits = RtlFindNextForwardRunClear(BitMapHeader,
                                                   FromIndex,
                                                   &StartingIndex);
 
@@ -770,7 +779,7 @@ RtlFindLongestRunClear(
     while (1)
     {
         /* Look for a run */
-        NumberOfBits = RtlFindNextForwardRunClear(BitMapHeader, 
+        NumberOfBits = RtlFindNextForwardRunClear(BitMapHeader,
                                                   FromIndex,
                                                   &Index);
 
@@ -803,7 +812,7 @@ RtlFindLongestRunSet(
     while (1)
     {
         /* Look for a run */
-        NumberOfBits = RtlFindNextForwardRunSet(BitMapHeader, 
+        NumberOfBits = RtlFindNextForwardRunSet(BitMapHeader,
                                                 FromIndex,
                                                 &Index);
 

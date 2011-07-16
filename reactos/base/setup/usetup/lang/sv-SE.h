@@ -1,3 +1,9 @@
+/*
+ * PROJECT:         ReactOS Setup
+ * FILE:            \base\setup\usetup\lang\sv-SE.h  
+ * PURPOSE:         Swedish resource file
+ * Translation:     Jaix Bly plus perhaps GreatLord if blame and translate.reactos.se is consulted.
+ */
 #pragma once
 
 MUI_LAYOUTS svSELayouts[] =
@@ -30,7 +36,7 @@ static MUI_ENTRY svSELanguagePageEntries[] =
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Then Tryck ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -42,7 +48,7 @@ static MUI_ENTRY svSELanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   ENTER = Fortsätt  F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -796,43 +802,43 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "Lista nedan visar befintliga partitioner och oanvändt",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "diskutrymme för nya partitioner.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  Tryck UPP eller NER tangenten för att välja i listan.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  Tryck ENTER för att installerara ReactOS till vald partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Tryck C för att skapa en ny partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  Tryck D för att ta bort en befintlig partititon.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
+        "   Var Vänlig Vänta...",
         TEXT_TYPE_STATUS
     },
     {
@@ -854,19 +860,19 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     {
         6,
         8,
-        "Format partition",
+        "Formatera partition",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        "Partitionen kommer nu att formaters Tryck ENTER för att fortsätta.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Fortsätt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -888,37 +894,37 @@ static MUI_ENTRY svSEInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        "ReactOS installeras till vald partition. Välj en",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        "mapp som du vill installera ReactOS till.:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "För att ändra den föreslagna mappen, tryck BACKSTEG för att radera",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "bokstäver och skriv sedan in mappen dit du vill att ReactOS ska bli",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "installerad.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Fortsätt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -940,25 +946,25 @@ static MUI_ENTRY svSEFileCopyEntries[] =
     {
         11,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "Var vänlig vänta medans ReactOS Setup kopieras till din ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         30,
         13,
-        "installation folder.",
+        "installationsmapp.",
         TEXT_STYLE_NORMAL
     },
     {
         20,
         14,
-        "This may take several minutes to complete.",
+        "Detta kan ta flera minuter att fullfölja.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 Please wait...    ",
+        "                                                           \xB3 Var Vänlig Vänta...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -980,37 +986,37 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Setup installerar boot-loadern",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Installera bootloadern till harddisken (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Installera bootloadern till hårddisken (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Install bootloader on a floppy disk.",
+        "Installera bootloadern till en diskett.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Skip install bootloader.",
+        "Skippa installation av bootloader.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Fortsätt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1032,37 +1038,37 @@ static MUI_ENTRY svSEKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        "Du vill ändra tangentbordstyp som ska intealleras.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  Tryck UP eller NER tangenten för att välja önskat tangentbordstyp.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Tryck sedan ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Tryck ESC tangenten för att återgå till förra sidan utan att ändra något.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "   tangentbordstyp.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Fortsätt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1084,37 +1090,37 @@ static MUI_ENTRY svSELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Var vänlig och välj layout du vill installera som standard.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  Tryck UPP eller NER tangenten för att välja önskad",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    tangentbordslayout. Tryck sedan ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Tryck ESC tangenten för att återgå till förra sidan utan att ändra",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "   tangentbordslayout.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Fortsätt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1137,13 +1143,13 @@ static MUI_ENTRY svSEPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Setup förbereder din dator för kopiering av ReactOS filer. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Building the file copy list...",
+        "   Sammanställer filkopieringslistan...",
         TEXT_TYPE_STATUS
     },
     {
@@ -1166,31 +1172,31 @@ static MUI_ENTRY svSESelectFSEntries[] =
     {
         6,
         17,
-        "Select a file system from the list below.",
+        "Välj ett filsystem i listan nedan.",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  Tryck UPP or NER tangenten för att välja filsystem.",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  Tryck ENTER för att formatera partitionen.",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  Tryck ESC för att välja en annan partition.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Fortsätt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
 
@@ -1213,31 +1219,31 @@ static MUI_ENTRY svSEDeletePartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "Du har valt att ta bort partitionen",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Tryck D för att ta bort partitionen.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "VARNING: Alla data på denna partition kommer att förloras!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  Tryck ESC för att avbryta.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "   D = Tar bort Partitionen   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {
@@ -1259,13 +1265,13 @@ static MUI_ENTRY svSERegistryEntries[] =
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Setup uppdaterar systemkonfigurationen. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Creating registry hives...",
+        "   Skapar regististerdatafiler...",
         TEXT_TYPE_STATUS
     },
     {
@@ -1281,212 +1287,212 @@ MUI_ERROR svSEErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-        "computer. If you quit Setup now, you will need to\n"
-        "run Setup again to install ReactOS.\n"
+        "ReactOS installerades inte fullständigt på din\n"
+        "dator. Om du avslutar Setup nu, kommer du att behöva\n"
+        "köra Setup igen för att installera ReactOS.\n"
         "\n"
-        "  \x07  Press ENTER to continue Setup.\n"
-        "  \x07  Press F3 to quit Setup.",
-        "F3= Quit  ENTER = Continue"
+        "  \x07  Tryck ENTER för att fortsätta Setup.\n"
+        "  \x07  Tryck F3 för att avsluta Setup.",
+        "F3= Avsluta  ENTER = Fortsätta"
     },
     {
         //ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        "Setup kunde inte hitta någon hårddisk.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        "Setup kunde inte hitta sin källdisk.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att läsa in filen TXTSETUP.SIF.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup fann en korrupt TXTSETUP.SIF.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup hittade en ogiltig signatur i TXTSETUP.SIF.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        "Setup kunde inte läsa in informationen om systemenheten.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades installera FAT bootkod på systempartitionen.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att läsa datortypslistan.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att läsa in skärminställningslistan.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att läsa in tangentbordstypslistan.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att läsa in tangentbordslayoutslistan.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup found that at least one harddisk contains an incompatible\n"
-        "partition table that can not be handled properly!\n"
+        "Setup fann att minst en hårdisk innehåller en partitionstabell\n"
+        "inte är kompatibel och inte kan hanteras korrekt!\n"
         "\n"
-        "Creating or deleting partitions can destroy the partiton table.\n"
+        "Skapa eller ta bort partitioner kan förstöra partitionstabellen.\n"
         "\n"
-        "  \x07  Press F3 to quit Setup."
-        "  \x07  Press ENTER to continue.",
-        "F3= Quit  ENTER = Continue"
+        "  \x07  Tryck F3 för att avsluta Setup."
+        "  \x07  Tryck ENTER för att fortsätta.",
+        "F3= Avsluta  ENTER = Fortsätt"
     },
     {
         //ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        "Du kan inte skapa en partition inuti\n"
+        "en redat befintlig partition!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Tryck valfri tangent för att fortsätta.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "Du kan inte ta bort opartitionerrat diskutrymme!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Tryck valfri tangent för att fortsätta.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att installera FAT bootkoden på systempartitionen.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        "Ingen disk i enhet A:.",
+        "ENTER = Fortsätt"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att updatera inställninarna för tangentbordslayout.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att uppdatera skärmregisterinställningen.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att improterea en registerdatafil.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att hitta registerdatafilerna.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att skapa registerdatafilerna.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att initialisera registret.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        "Kabinettet has inen giltig inf fil.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        "Kabinettet hittades inte.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        "Kabinettet har inget installationsskript.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att öppna filkopierningskön.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
-        "ENTER = Reboot computer"
+        "Setup kunnde inte skapa installationsmapparna.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att hitta 'Directories' sektionen\n"
+        "i TXTSETUP.SIF.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att hitta 'Directories' sektionen\n"
+        "i kabinettet.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
-        "ENTER = Reboot computer"
+        "Setup kunnde inte skapa installationsmappen.",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup misslyckades att hitta 'SetupData' sektionen\n"
+        "i TXTSETUP.SIF.\n",
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
-        "ENTER = Reboot computer"
+        "Setup misslyckades att skriva partitionstabellen.\n"
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "Setup misslyckades att lägga till vald codepage till registret.\n"
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        "Setup kunnde inte ställa in 'system locale'.\n"
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Setup misslyckades att lägga till tangentbordslayouten till registret.\n"
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Setup kunde inte stalla int 'geo id'.\n"
+        "ENTER = Starta om datorn"
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        "Inte tillräckligt mycket fritt utrymme på den valda partitionen.\n"
+        "  * Tryck valfri tangent för att fortsätta.",
         NULL
     },
     {
@@ -1598,103 +1604,103 @@ MUI_PAGE svSEPages[] =
 MUI_STRING svSEStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Please wait..."},
+     "   Var vänlig vänta..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+     "   ENTER = Installera   C = Skapa Partition   F3 = Avsluta"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+     "   ENTER = Installera   D = Ta bort Partition   F3 = Avsluta"},
     {STRING_PARTITIONSIZE,
-     "Size of new partition:"},
+     "Storlek på den nya partitionen:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a new partition on"},
+     "Du har valt att skapa en ny partiton på"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    "Vänligen skriv in storleken av den nya partitionen i megabytes."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+     "   ENTER = Skapa Partition   ESC = Avbryt   F3 = Avsluta"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    "Denna Partition kommer att bli formaterad härnäst."},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    "Du valde att installera ReactOS på en oformaterad partition."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Setup installerar ReactOS till Partitionen"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    "Setup undersöker nu den valda partitionen."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3= Avsluta  ENTER = Fortsätt"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reboot computer"},
+    "ENTER = Starta om datorn"},
     {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    "Setup misslyckades att hitta '%S' sektionen\ni TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "   Copying file: %S"},
+     "   Kopierar fil: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Setup is copying files..."},
+     "Setup kopierar filer..."},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   Uppdaterar registerdatafiler..."},
     {STRING_IMPORTFILE,
-    "   Importing %S..."},
+    "   Importerar %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   Uppdaterar skärmregisterinställningar..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   Uppdaterar lokala inställningar..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   Uppdaterar tangentbordslayoutinställningar..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Lägger till information om codepage till registret..."},
     {STRING_DONE,
-    "   Done..."},
+    "   Färdigt..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reboot computer"},
+    "   ENTER = Starta om datorn"},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\n\n"},
+    "Det går inte öppna Konsollen\n\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "Den vanligaste orsaken till detta är att ett USB tangentbord används\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\n"},
+    "USB tangentbord är itne helt stött än\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "Setup formaterar din disk"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "Setup underöker din disk"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " Formaterar partition som %S filsystem (snabbformatering) "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " Formaterar partition som %S filsystem "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
+    " Behåll nuvarande filsystem (inga förändringar) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "%I64u %s  Hårddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) på %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "%I64u %s  Hårddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Typ %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "on %I64u %s  Hårddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) på %wZ."},
     {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "on %I64u %s  Hårddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "Hårddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Type %lu    %I64u %s"},
+    "%c%c  Typ %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "på Hårddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c  Typ %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
+    "%6lu %s  Hårddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) på %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  Hårddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
+    "Setup skapade en ny partition på"},
     {STRING_UNPSPACE,
-    "    Unpartitioned space              %6lu %s"},
+    "    Opartitionerat utrymme              %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    "Ny (Oformaterad)"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "Oanvänt"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "Okänd"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1702,6 +1708,6 @@ MUI_STRING svSEStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Lägger till tangentbordslayouter"},
     {0, 0}
 };

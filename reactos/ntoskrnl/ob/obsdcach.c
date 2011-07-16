@@ -67,7 +67,7 @@ ObpInitSdCache(VOID)
     {
         /* Initialize the lock and the list */
         InitializeListHead(&ObsSecurityDescriptorCache[i].Head);
-        ExInitializePushLock((PULONG_PTR)&ObsSecurityDescriptorCache[i].PushLock);
+        ExInitializePushLock(&ObsSecurityDescriptorCache[i].PushLock);
     }
 
     /* Return success */
@@ -132,7 +132,7 @@ ObpCreateCacheEntry(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     
     /* Calculate the memory we'll need to allocate and allocate it */
     CacheSize = Length + (sizeof(SECURITY_DESCRIPTOR_HEADER) - sizeof(QUAD));
-    SdHeader = ExAllocatePoolWithTag(PagedPool, CacheSize, 'cSbO');
+    SdHeader = ExAllocatePoolWithTag(PagedPool, CacheSize, TAG_OB_SD_CACHE);
     if (!SdHeader) return NULL;
     
     /* Setup the header */
@@ -419,7 +419,7 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
         {
             /* Increment its reference count */
             InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, RefBias);
-                                              
+            
             /* Release the lock */
             ObpSdReleaseLockShared(CacheEntry);
             

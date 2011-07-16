@@ -5,6 +5,7 @@
 #include <stdio.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <netevent.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <services/services.h>
@@ -123,6 +124,9 @@ BOOL ScmLockDatabaseExclusive(VOID);
 BOOL ScmLockDatabaseShared(VOID);
 VOID ScmUnlockDatabase(VOID);
 
+VOID ScmInitNamedPipeCriticalSection(VOID);
+VOID ScmDeleteNamedPipeCriticalSection(VOID);
+
 
 /* driver.c */
 
@@ -148,6 +152,9 @@ VOID ScmStartRpcServer(VOID);
 /* services.c */
 
 VOID PrintString(LPCSTR fmt, ...);
+VOID ScmLogError(DWORD dwEventId,
+                 WORD wStrings,
+                 LPCWSTR *lpStrings);
 
 /* EOF */
 

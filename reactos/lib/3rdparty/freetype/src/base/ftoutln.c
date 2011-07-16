@@ -990,7 +990,8 @@
 
     int             i;
     FT_Pos          ray_y[3];
-    FT_Orientation  result[3];
+    FT_Orientation  result[3] =
+      { FT_ORIENTATION_NONE, FT_ORIENTATION_NONE, FT_ORIENTATION_NONE };
 
 
     if ( !outline || outline->n_points <= 0 )

@@ -41,7 +41,7 @@ typedef struct _VideoMode {
   unsigned char  Attrib[21];
 } VideoMode;
 
-VOID vgaPreCalc();
+VOID vgaPreCalc(VOID);
 VOID vgaPutPixel(INT x, INT y, UCHAR c);
 VOID vgaPutByte(INT x, INT y, UCHAR c);
 VOID vgaGetByte(ULONG offset,

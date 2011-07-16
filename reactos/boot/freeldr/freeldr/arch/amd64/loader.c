@@ -27,7 +27,6 @@ extern ULONG_PTR KernelBase;
 ULONG_PTR GdtBase, IdtBase, TssBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
-PPAGE_DIRECTORY_AMD64 pPML4;
 PVOID pIdt, pGdt;
 
 /* FUNCTIONS *****************************************************************/

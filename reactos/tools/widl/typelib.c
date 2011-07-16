@@ -35,7 +35,7 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 #include "widl.h"
 #include "utils.h"

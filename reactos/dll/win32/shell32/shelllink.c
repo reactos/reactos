@@ -187,9 +187,13 @@ static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWor
 /* strdup on the process heap */
 static LPWSTR __inline HEAP_strdupAtoW( HANDLE heap, DWORD flags, LPCSTR str)
 {
+    INT len;
+    LPWSTR p; 
+
     assert(str);
-    INT len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-    LPWSTR p = HeapAlloc( heap, flags, len*sizeof (WCHAR) );
+
+    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    p = HeapAlloc( heap, flags, len*sizeof (WCHAR) );
     if( !p )
         return p;
     MultiByteToWideChar( CP_ACP, 0, str, -1, p, len );

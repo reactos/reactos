@@ -3,7 +3,9 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
+#define sinf _dummy_sinf
 #include <math.h>
+#undef sinf
 
 float sinf(float _X)
 {

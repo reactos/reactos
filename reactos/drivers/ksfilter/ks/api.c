@@ -1332,7 +1332,7 @@ KopDispatchClose(
 
     /* complete request */
     Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_SUCCESS;
 }
@@ -1416,7 +1416,7 @@ KopDispatchCreate(
     IoStack->FileObject->FsContext2 = (PVOID)Header;
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 
@@ -1429,7 +1429,7 @@ cleanup:
         FreeItem(Header);
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 
@@ -1703,7 +1703,7 @@ KsCompletePendingRequest(
     if (IoStack->MajorFunction != IRP_MJ_CLOSE)
     {
         /* can be completed immediately */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return;
     }
 
@@ -1711,7 +1711,7 @@ KsCompletePendingRequest(
     if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
         /* closing failed, complete irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return;
     }
 
@@ -1723,135 +1723,7 @@ KsCompletePendingRequest(
 
 }
 
-/*
-    @implemented
-*/
-KSDDKAPI
 NTSTATUS
-NTAPI
-KsCreateBusEnumObject(
-    IN PWCHAR BusIdentifier,
-    IN PDEVICE_OBJECT BusDeviceObject,
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN PDEVICE_OBJECT PnpDeviceObject OPTIONAL,
-    IN REFGUID InterfaceGuid OPTIONAL,
-    IN PWCHAR ServiceRelativePath OPTIONAL)
-{
-    ULONG Length;
-    NTSTATUS Status = STATUS_SUCCESS;
-    UNICODE_STRING ServiceKeyPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\");
-    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
-    PDEVICE_EXTENSION DeviceExtension;
-
-    /* calculate sizeof bus enum device extension */
-    Length = wcslen(BusIdentifier) * sizeof(WCHAR);
-    Length += sizeof(BUS_ENUM_DEVICE_EXTENSION);
-
-    BusDeviceExtension = AllocateItem(NonPagedPool, Length);
-    if (!BusDeviceExtension)
-    {
-        /* not enough memory */
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* zero device extension */
-    RtlZeroMemory(BusDeviceExtension, sizeof(BUS_ENUM_DEVICE_EXTENSION));
-
-    /* initialize bus device extension */
-    wcscpy(BusDeviceExtension->BusIdentifier, BusIdentifier);
-
-    /* allocate service path string */
-    Length = ServiceKeyPath.MaximumLength;
-    Length += BusDeviceObject->DriverObject->DriverExtension->ServiceKeyName.MaximumLength;
-
-    if (ServiceRelativePath)
-    {
-        /* relative path for devices */
-        Length += wcslen(ServiceRelativePath) + 2 * sizeof(WCHAR);
-    }
-
-    BusDeviceExtension->ServicePath.Length = 0;
-    BusDeviceExtension->ServicePath.MaximumLength = Length;
-    BusDeviceExtension->ServicePath.Buffer = AllocateItem(NonPagedPool, Length);
-
-    if (!BusDeviceExtension->ServicePath.Buffer)
-    {
-        /* not enough memory */
-        FreeItem(BusDeviceExtension);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlAppendUnicodeStringToString(&BusDeviceExtension->ServicePath, &ServiceKeyPath);
-    RtlAppendUnicodeStringToString(&BusDeviceExtension->ServicePath, &BusDeviceObject->DriverObject->DriverExtension->ServiceKeyName);
-
-    if (ServiceRelativePath)
-    {
-        RtlAppendUnicodeToString(&BusDeviceExtension->ServicePath, L"\\");
-        RtlAppendUnicodeToString(&BusDeviceExtension->ServicePath, ServiceRelativePath);
-    }
-
-    if (InterfaceGuid)
-    {
-        /* register an device interface */
-        Status = IoRegisterDeviceInterface(PhysicalDeviceObject, InterfaceGuid, NULL, &BusDeviceExtension->SymbolicLinkName);
-
-        /* check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            FreeItem(BusDeviceExtension->ServicePath.Buffer);
-            FreeItem(BusDeviceExtension);
-            return Status;
-        }
-
-        /* now enable device interface */
-        Status = IoSetDeviceInterfaceState(&BusDeviceExtension->SymbolicLinkName, TRUE);
-
-        if (!NT_SUCCESS(Status))
-        {
-            FreeItem(BusDeviceExtension->ServicePath.Buffer);
-            FreeItem(BusDeviceExtension);
-            return Status;
-        }
-
-        /* set state enabled */
-        BusDeviceExtension->Enabled = TRUE;
-    }
-
-    /* store device objects */
-    BusDeviceExtension->BusDeviceObject = BusDeviceObject;
-    BusDeviceExtension->PnpDeviceObject = PnpDeviceObject;
-    BusDeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
-
-    if (!PnpDeviceObject)
-    {
-        BusDeviceExtension->PnpDeviceObject = IoAttachDeviceToDeviceStack(BusDeviceObject, PhysicalDeviceObject);
-
-        if (!BusDeviceExtension->PnpDeviceObject)
-        {
-            /* failed to attach device */
-            if (BusDeviceExtension->Enabled)
-            {
-                IoSetDeviceInterfaceState(&BusDeviceExtension->SymbolicLinkName, FALSE);
-                RtlFreeUnicodeString(&BusDeviceExtension->SymbolicLinkName);
-            }
-
-            /* free device extension */
-            FreeItem(BusDeviceExtension->ServicePath.Buffer);
-            FreeItem(BusDeviceExtension);
-
-            return STATUS_DEVICE_REMOVED;
-        }
-    }
-
-    /* attach device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)BusDeviceObject->DeviceExtension;
-    DeviceExtension->DeviceHeader = (PKSIDEVICE_HEADER)BusDeviceExtension;
-
-    /* FIXME scan bus and invalidate device relations */
-    return Status;
-}
-
- NTSTATUS
 NTAPI
 KspSetGetBusDataCompletion(
     IN PDEVICE_OBJECT  DeviceObject,
@@ -1979,47 +1851,6 @@ KsDeviceRegisterAdapterObject(
 
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsGetBusEnumIdentifier(
-    IN PIRP Irp)
-{
-    UNIMPLEMENTED
-
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsGetBusEnumParentFDOFromChildPDO(
-    IN PDEVICE_OBJECT DeviceObject,
-    OUT PDEVICE_OBJECT *FunctionalDeviceObject)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsGetBusEnumPnpDeviceObject(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PDEVICE_OBJECT *PnpDeviceObject)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
 
 /*
     @implemented
@@ -2059,33 +1890,6 @@ KsGetNextSibling(
            BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
     return (PVOID)BasicHeader->Next.Pin;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsInstallBusEnumInterface(
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsIsBusEnumChildDevice(
-    IN PDEVICE_OBJECT DeviceObject,
-    OUT PBOOLEAN ChildDevice)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
 }
 
 ULONG
@@ -2597,104 +2401,6 @@ cleanup:
 
     return STATUS_INSUFFICIENT_RESOURCES;
 }
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsServiceBusEnumCreateRequest(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN OUT PIRP Irp)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
-
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsServiceBusEnumPnpRequest(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN OUT PIRP Irp)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-KspRemoveBusInterface(
-    PVOID Ctx)
-{
-    PKSREMOVE_BUS_INTERFACE_CTX Context =(PKSREMOVE_BUS_INTERFACE_CTX)Ctx;
-
-    /* TODO
-     * get SWENUM_INSTALL_INTERFACE struct
-     * open device key and delete the keys
-     */
-
-    UNIMPLEMENTED
-
-    /* set status */
-    Context->Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-
-
-    /* signal completion */
-    KeSetEvent(&Context->Event, IO_NO_INCREMENT, FALSE);
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI 
-NTSTATUS
-NTAPI
-KsRemoveBusEnumInterface(
-    IN PIRP Irp)
-{
-    KPROCESSOR_MODE Mode;
-    LUID luid;
-    KSREMOVE_BUS_INTERFACE_CTX Ctx;
-    WORK_QUEUE_ITEM WorkItem;
-
-    /* get previous mode */
-    Mode = ExGetPreviousMode();
-
-    /* convert to luid */
-    luid = RtlConvertUlongToLuid(SE_LOAD_DRIVER_PRIVILEGE);
-
-    /* perform access check */
-    if (!SeSinglePrivilegeCheck(luid, Mode))
-    {
-        /* insufficient privileges */
-        return STATUS_PRIVILEGE_NOT_HELD;
-    }
-    /* initialize event */
-    KeInitializeEvent(&Ctx.Event, NotificationEvent, FALSE);
-
-    /* store irp in ctx */
-    Ctx.Irp = Irp;
-
-    /* initialize work item */
-    ExInitializeWorkItem(&WorkItem, KspRemoveBusInterface, (PVOID)&Ctx);
-
-    /* now queue the work item */
-    ExQueueWorkItem(&WorkItem, DelayedWorkQueue);
-
-    /* wait for completion */
-    KeWaitForSingleObject(&Ctx.Event, Executive, KernelMode, FALSE, NULL);
-
-    /* return result */
-    return Ctx.Irp->IoStatus.Status;
-
-}
-
 
 /*
     @unimplemented

@@ -2032,9 +2032,19 @@ REGION_AllocRgnWithHandle(INT nReg)
     HRGN hReg;
     PROSRGNDATA pReg;
 
-    pReg = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
-    if(!pReg)
+    pReg = (PROSRGNDATA)GDIOBJ_AllocateObject(GDIObjType_RGN_TYPE,
+                                              sizeof(REGION),
+                                              BASEFLAG_LOOKASIDE);
+    if (!pReg)
     {
+        DPRINT1("Could not allocate a palette.\n");
+        return NULL;
+    }
+
+    if (!GDIOBJ_hInsertObject(&pReg->BaseObject, GDI_OBJ_HMGR_POWNED))
+    {
+        DPRINT1("Could not insert palette into handle table.\n");
+        GDIOBJ_vFreeObject(&pReg->BaseObject);
         return NULL;
     }
 
@@ -2051,8 +2061,8 @@ REGION_AllocRgnWithHandle(INT nReg)
         pReg->Buffer = ExAllocatePoolWithTag(PagedPool, nReg * sizeof(RECT), TAG_REGION);
         if (!pReg->Buffer)
         {
-            RGNOBJAPI_Unlock(pReg);
-            GDIOBJ_FreeObjByHandle(hReg, GDI_OBJECT_TYPE_REGION);
+            DPRINT1("Could not allocate region buffer\n");
+            GDIOBJ_vDeleteObject(&pReg->BaseObject);
             return NULL;
         }
     }
@@ -2061,9 +2071,35 @@ REGION_AllocRgnWithHandle(INT nReg)
     pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
     pReg->rdh.nCount = nReg;
     pReg->rdh.nRgnSize = nReg * sizeof(RECT);
+    pReg->prgnattr = &pReg->rgnattr;
 
     return pReg;
 }
+
+BOOL
+NTAPI
+REGION_bAllocRgnAttr(PREGION prgn)
+{
+    PPROCESSINFO ppi;
+    PRGN_ATTR prgnattr;
+
+    ppi = PsGetCurrentProcessWin32Process();
+    ASSERT(ppi);
+
+    prgnattr = GdiPoolAllocate(ppi->pPoolRgnAttr);
+    if (!prgnattr)
+    {
+        DPRINT1("Could not allocate RGN attr\n");
+        return FALSE;
+    }
+
+    /* Set the object attribute in the handle table */
+    prgn->prgnattr = prgnattr;
+    GDIOBJ_vSetObjectAttr(&prgn->BaseObject, prgnattr);
+
+    return TRUE;
+}
+
 
 //
 // Allocate User Space Region Handle.
@@ -2072,49 +2108,42 @@ PROSRGNDATA
 FASTCALL
 REGION_AllocUserRgnWithHandle(INT nRgn)
 {
-    PROSRGNDATA pRgn;
-    INT Index;
-    PGDI_TABLE_ENTRY Entry;
+    PREGION prgn;
 
-    pRgn = REGION_AllocRgnWithHandle(nRgn);
-    if (pRgn)
+    prgn = REGION_AllocRgnWithHandle(nRgn);
+    if (!prgn)
     {
-       Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
-       Entry = &GdiHandleTable->Entries[Index];
-       Entry->UserData = AllocateObjectAttr();
+        return NULL;
     }
-    return pRgn;
+
+    if (!REGION_bAllocRgnAttr(prgn))
+    {
+        ASSERT(FALSE);
+    }
+
+    return prgn;
 }
 
-PROSRGNDATA
-FASTCALL
-RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
+VOID
+NTAPI
+REGION_vSyncRegion(PREGION pRgn)
 {
-  INT Index;
-  PGDI_TABLE_ENTRY Entry;
-  PROSRGNDATA pRgn;
-  PRGN_ATTR pRgn_Attr;
-  HANDLE pid;
+  PRGN_ATTR pRgn_Attr = NULL;
 
-  pRgn = REGION_LockRgn(hRgn);
-
-  if (pRgn)
+  if (pRgn && pRgn->prgnattr != &pRgn->rgnattr)
   {
-     Index = GDI_HANDLE_GET_INDEX(hRgn);
-     Entry = &GdiHandleTable->Entries[Index];
-     pRgn_Attr = Entry->UserData;
-     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+     pRgn_Attr = GDIOBJ_pvGetObjectAttr(&pRgn->BaseObject);
 
-     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
-          pRgn_Attr )
+     if ( pRgn_Attr )
      {
         _SEH2_TRY
         {
-           if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) &&
-                 pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
+           if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) )
            {
-              switch (pRgn_Attr->Flags)
+              if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
               {
+                 switch (pRgn_Attr->Flags)
+                 {
                   case NULLREGION:
                      EMPTY_REGION( pRgn );
                      break;
@@ -2126,24 +2155,33 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
                                         pRgn_Attr->Rect.right,
                                         pRgn_Attr->Rect.bottom );
                      break;
+                 }
+                 pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY;
               }
-              pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY;
            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
         }
         _SEH2_END;
-
-        if (ppRgn_Attr)
-           *ppRgn_Attr = pRgn_Attr;
-     }
-     else
-     {
-        if (ppRgn_Attr)
-           *ppRgn_Attr = NULL;
      }
   }
+
+}
+
+PROSRGNDATA
+FASTCALL
+RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
+{
+  PROSRGNDATA pRgn = NULL;
+
+  pRgn = REGION_LockRgn(hRgn);
+
+  REGION_vSyncRegion(pRgn);
+
+  if (ppRgn_Attr)
+     *ppRgn_Attr = pRgn->prgnattr;
+
   return pRgn;
 }
 
@@ -2151,20 +2189,13 @@ VOID
 FASTCALL
 RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
 {
-  INT Index;
-  PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
-  HANDLE pid;
 
-  if (pRgn)
+  if (pRgn && GreGetObjectOwner(pRgn->BaseObject.hHmgr) == GDI_OBJ_HMGR_POWNED)
   {
-     Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
-     Entry = &GdiHandleTable->Entries[Index];
-     pRgn_Attr = Entry->UserData;
-     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+     pRgn_Attr = GDIOBJ_pvGetObjectAttr(&pRgn->BaseObject);
 
-     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
-          pRgn_Attr )
+     if ( pRgn_Attr )
      {
         _SEH2_TRY
         {
@@ -2198,42 +2229,69 @@ PROSRGNDATA
 FASTCALL
 IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
-  PROSRGNDATA pRgn;
+    PREGION prgn;
 
-  pRgn = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
-  if (!pRgn)
-  {
-     return NULL;
-  }
-  pRgn->Buffer = &pRgn->rdh.rcBound;
-  REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
-  REGION_UnlockRgn(pRgn);
-  return pRgn;
+    /* Allocate a region, witout a handle */
+    prgn = (PREGION)GDIOBJ_AllocateObject(GDIObjType_RGN_TYPE, sizeof(REGION), 0);
+    if (!prgn)
+    {
+        return NULL;
+    }
+
+    /* Initialize it */
+    prgn->Buffer = &prgn->rdh.rcBound;
+    prgn->prgnattr = &prgn->rgnattr;
+    REGION_SetRectRgn(prgn, LeftRect, TopRect, RightRect, BottomRect);
+
+    return prgn;
 }
 
 HRGN
 FASTCALL
 IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
-  PROSRGNDATA pRgn = IntSysCreateRectpRgn(LeftRect,TopRect,RightRect,BottomRect);
-  return (pRgn ? pRgn->BaseObject.hHmgr : NULL);
+    PREGION prgn;
+    HRGN hrgn;
+
+    /* Allocate a region, witout a handle */
+    prgn = (PREGION)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION, sizeof(REGION));
+    if (!prgn)
+    {
+        return NULL;
+    }
+
+    /* Initialize it */
+    prgn->Buffer = &prgn->rdh.rcBound;
+    REGION_SetRectRgn(prgn, LeftRect, TopRect, RightRect, BottomRect);
+    hrgn = prgn->BaseObject.hHmgr;
+    prgn->prgnattr = &prgn->rgnattr;
+
+    REGION_UnlockRgn(prgn);
+
+    return hrgn;
 }
 
 BOOL INTERNAL_CALL
 REGION_Cleanup(PVOID ObjectBody)
 {
     PROSRGNDATA pRgn = (PROSRGNDATA)ObjectBody;
+    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+    ASSERT(ppi);
+
+    ASSERT(pRgn->prgnattr);
+    if (pRgn->prgnattr != &pRgn->rgnattr)
+        GdiPoolFree(ppi->pPoolRgnAttr, pRgn->prgnattr);
+
     if (pRgn->Buffer && pRgn->Buffer != &pRgn->rdh.rcBound)
         ExFreePoolWithTag(pRgn->Buffer, TAG_REGION);
     return TRUE;
 }
 
-// use REGION_FreeRgnByHandle(hRgn); for systems regions.
 VOID FASTCALL
 REGION_Delete(PROSRGNDATA pRgn)
 {
   if ( pRgn == prgnDefault) return;
-  REGION_FreeRgn(pRgn);
+  GDIOBJ_vDeleteObject(&pRgn->BaseObject);
 }
 
 VOID FASTCALL
@@ -2293,6 +2351,33 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
   }
 }
 
+BOOL
+FASTCALL
+IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
+{
+    PREGION prgn;
+    PRGN_ATTR prgnattr;
+    PPROCESSINFO ppi;
+
+    prgn = REGION_LockRgn(hRgn);
+    if (!prgn)
+    {
+        return FALSE;
+    }
+
+    prgnattr = GDIOBJ_pvGetObjectAttr(&prgn->BaseObject);
+    if (prgnattr)
+    {
+        GDIOBJ_vSetObjectAttr(&prgn->BaseObject, NULL);
+        prgn->prgnattr = NULL;
+        ppi = PsGetCurrentProcessWin32Process();
+        GdiPoolFree(ppi->pPoolRgnAttr, prgnattr);
+    }
+    RGNOBJAPI_Unlock(prgn);
+
+     return GreSetObjectOwner(hRgn, OwnerMask);
+}
+
 INT
 FASTCALL
 IntGdiCombineRgn(PROSRGNDATA destRgn,
@@ -2337,6 +2422,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
            {
               DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
               EngSetLastError(ERROR_INVALID_HANDLE);
+              ASSERT(FALSE);
            }
         }
      }
@@ -2418,7 +2504,7 @@ IntGdiPaintRgn(
     if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) ||
          NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
-        REGION_FreeRgnByHandle(tmpVisRgn);
+        GreDeleteObject(tmpVisRgn);
         return FALSE;
     }
 
@@ -2427,7 +2513,7 @@ IntGdiPaintRgn(
     visrgn = RGNOBJAPI_Lock(tmpVisRgn, NULL);
     if (visrgn == NULL)
     {
-        REGION_FreeRgnByHandle(tmpVisRgn);
+        GreDeleteObject(tmpVisRgn);
         return FALSE;
     }
 
@@ -2448,7 +2534,7 @@ IntGdiPaintRgn(
                        0xFFFF);//FIXME:don't know what to put here
 
     RGNOBJAPI_Unlock(visrgn);
-    REGION_FreeRgnByHandle(tmpVisRgn);
+    GreDeleteObject(tmpVisRgn);
 
     // Fill the region
     return bRet;
@@ -3216,51 +3302,81 @@ IntCreatePolyPolygonRgn(
     return hrgn;
 }
 
+BOOL
+FASTCALL
+IntRectInRegion(
+    HRGN  hRgn,
+    LPRECTL rc
+)
+{
+    PROSRGNDATA Rgn;
+    BOOL Ret;
+
+    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
+    {
+        return ERROR;
+    }
+
+    Ret = REGION_RectInRegion(Rgn, rc);
+    RGNOBJAPI_Unlock(Rgn);
+    return Ret;
+}
+
+
 //
 // NtGdi Exported Functions
 //
 INT
 APIENTRY
-NtGdiCombineRgn(HRGN  hDest,
-                HRGN  hSrc1,
-                HRGN  hSrc2,
-                INT  CombineMode)
+NtGdiCombineRgn(
+    IN HRGN hrgnDst,
+    IN HRGN hrgnSrc1,
+    IN HRGN hrgnSrc2,
+    IN INT iMode)
 {
-  INT result = ERROR;
-  PROSRGNDATA destRgn, src1Rgn, src2Rgn = NULL;
+    HRGN ahrgn[3];
+    PREGION aprgn[3];
+    INT iResult;
 
-  if ( CombineMode > RGN_COPY && CombineMode < RGN_AND)
-  {
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     return ERROR;
-  }
+    if (iMode < RGN_AND || iMode > RGN_COPY)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return ERROR;
+    }
 
-  destRgn = RGNOBJAPI_Lock(hDest, NULL);
-  if (!destRgn)
-  {
-     EngSetLastError(ERROR_INVALID_HANDLE);
-     return ERROR;
-  }
+    if (!hrgnDst || !hrgnSrc1 || (iMode != RGN_COPY && !hrgnSrc2))
+    {
+        DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
+                hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return ERROR;
+    }
 
-  src1Rgn = RGNOBJAPI_Lock(hSrc1, NULL);
-  if (!src1Rgn)
-  {
-     RGNOBJAPI_Unlock(destRgn);
-     EngSetLastError(ERROR_INVALID_HANDLE);
-     return ERROR;
-  }
+    /* Lock all regions */
+    ahrgn[0] = hrgnDst;
+    ahrgn[1] = hrgnSrc1;
+    ahrgn[2] = iMode != RGN_COPY ? hrgnSrc2 : NULL;
+    if (!GDIOBJ_bLockMultipleObjects(3, ahrgn, (PVOID*)aprgn, GDIObjType_RGN_TYPE))
+    {
+        DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
+                hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return ERROR;
+    }
 
-  if (hSrc2)
-     src2Rgn = RGNOBJAPI_Lock(hSrc2, NULL);
+    /* HACK: Sync usermode attributes */
+    REGION_vSyncRegion(aprgn[0]);
+    REGION_vSyncRegion(aprgn[1]);
+    if (aprgn[2]) REGION_vSyncRegion(aprgn[2]);
 
-  result = IntGdiCombineRgn( destRgn, src1Rgn, src2Rgn, CombineMode);
+    /* Call the internal function */
+    iResult = IntGdiCombineRgn(aprgn[0], aprgn[1], aprgn[2], iMode);
 
-  if (src2Rgn)
-     RGNOBJAPI_Unlock(src2Rgn);
-  RGNOBJAPI_Unlock(src1Rgn);
-  RGNOBJAPI_Unlock(destRgn);
-
-  return result;
+    /* Cleanup and return */
+    REGION_UnlockRgn(aprgn[0]);
+    REGION_UnlockRgn(aprgn[1]);
+    if (aprgn[2]) REGION_UnlockRgn(aprgn[2]);
+    return iResult;
 }
 
 HRGN
@@ -3628,13 +3744,13 @@ NtGdiFrameRgn(
     }
     if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
     {
-        REGION_FreeRgnByHandle(FrameRgn);
+        GreDeleteObject(FrameRgn);
         return FALSE;
     }
 
     Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
 
-    REGION_FreeRgnByHandle(FrameRgn);
+    GreDeleteObject(FrameRgn);
     return Ret;
 }
 
@@ -3777,15 +3893,8 @@ NtGdiRectInRegion(
     LPRECTL unsaferc
 )
 {
-    PROSRGNDATA Rgn;
     RECTL rc = {0};
-    BOOL Ret;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
-    {
-        return ERROR;
-    }
 
     _SEH2_TRY
     {
@@ -3800,15 +3909,12 @@ NtGdiRectInRegion(
 
     if (!NT_SUCCESS(Status))
     {
-        RGNOBJAPI_Unlock(Rgn);
         SetLastNtError(Status);
         DPRINT1("NtGdiRectInRegion: bogus rc\n");
         return ERROR;
     }
 
-    Ret = REGION_RectInRegion(Rgn, &rc);
-    RGNOBJAPI_Unlock(Rgn);
-    return Ret;
+    return IntRectInRegion(hRgn, &rc);
 }
 
 BOOL

@@ -2,8 +2,9 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "ReactOS bilde og Faks Viser"
+    IDS_APPTITLE    "ReactOS bilde og Faks Viser"
     IDS_SETASDESKBG "Sett som skrivebord bakgrunn"
+    IDS_PREVIEW     "Skriv ut"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Neste bilde"

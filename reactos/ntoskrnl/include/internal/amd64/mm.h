@@ -128,6 +128,7 @@ MiPteToAddress(PMMPTE PointerPte)
     /* Use signed math */
     return (PVOID)(((LONG64)PointerPte << 25) >> 16);
 }
+#define MiPdeToAddress MiPteToAddress
 
 PVOID
 FORCEINLINE
@@ -162,6 +163,9 @@ MiIsPdeForAddressValid(PVOID Address)
             (MiAddressToPde(Address)->u.Hard.Valid));
 }
 
+#define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
+#define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
+
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG_PTR)(v)) / (512 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
 #define ADDR_TO_PTE_OFFSET(v)  ((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE)
@@ -178,8 +182,6 @@ VOID
 MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
                       IN PMMPTE PointerPte)
 {
-    ULONG_PTR Offset;
-
     /* Store the Address */
     NewPte->u.Long = (ULONG64)PointerPte;
 
@@ -221,9 +223,11 @@ MmInitGlobalKernelPageDirectory(VOID)
 // FIXME, only copied from x86
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)
+#define MI_MAKE_ACCESSED_PAGE(x)   ((x)->u.Hard.Accessed = 1)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.CacheDisable = 1)
 #define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.WriteThrough = 1)
 #define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.WriteThrough = 0)
+#define MI_IS_PAGE_LARGE(x)        ((x)->u.Hard.LargePage == 1)
 #if !defined(CONFIG_SMP)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
 #else
@@ -255,8 +259,13 @@ MmInitGlobalKernelPageDirectory(VOID)
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
 #define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
                                              MI_HYPERSPACE_PTES * PAGE_SIZE)
-#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
-                                             PAGE_SIZE)
+#define MI_DUMMY_PTE                        (PMMPTE)(MI_MAPPING_RANGE_END + \
+	                                              PAGE_SIZE)
+#define MI_VAD_BITMAP                       (PMMPTE)(MI_DUMMY_PTE + \
+	                                              PAGE_SIZE)
+#define MI_WORKING_SET_LIST                 (PMMPTE)(MI_VAD_BITMAP + \
+	                                              PAGE_SIZE)
+
 
 /* On x86, these two are the same */
 #define MMPDE MMPTE

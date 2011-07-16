@@ -20,6 +20,9 @@ Description = Der Off-By-One-Browser ist ein sehr kleiner und schneller Webbrows
 [Section.040a]
 Description = Es un pequeño y rápido navegador web con completo soporte HTML 3.2.
 
+[Section.040c]
+Description = Le navigateur Off By One est un navigateur internet très petit et rapide avec un support complet de HTML 3.2.
+
 [Section.0415]
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.
 

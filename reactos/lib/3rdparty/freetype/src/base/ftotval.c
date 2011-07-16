@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for validating OpenType tables (body).                  */
 /*                                                                         */
-/*  Copyright 2004, 2006, 2008 by                                          */
+/*  Copyright 2004, 2006, 2008, 2010 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,8 +74,13 @@
   FT_OpenType_Free( FT_Face   face,
                     FT_Bytes  table )
   {
-    FT_Memory  memory = FT_FACE_MEMORY( face );
+    FT_Memory  memory;
 
+
+    if ( !face )
+      return;
+
+    memory = FT_FACE_MEMORY( face );
 
     FT_FREE( table );
   }

@@ -862,24 +862,90 @@ EnumDependentServicesW(SC_HANDLE hService,
 /**********************************************************************
  *  EnumServiceGroupW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-WINAPI
-EnumServiceGroupW(
-    SC_HANDLE               hSCManager,
-    DWORD                   dwServiceType,
-    DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUSW  lpServices,
-    DWORD                   cbBufSize,
-    LPDWORD                 pcbBytesNeeded,
-    LPDWORD                 lpServicesReturned,
-    LPDWORD                 lpResumeHandle,
-    LPCWSTR                 lpGroup)
+BOOL WINAPI
+EnumServiceGroupW(SC_HANDLE hSCManager,
+                  DWORD dwServiceType,
+                  DWORD dwServiceState,
+                  LPENUM_SERVICE_STATUSW lpServices,
+                  DWORD cbBufSize,
+                  LPDWORD pcbBytesNeeded,
+                  LPDWORD lpServicesReturned,
+                  LPDWORD lpResumeHandle,
+                  LPCWSTR lpGroup)
 {
-    FIXME("EnumServiceGroupW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LPENUM_SERVICE_STATUSW lpStatusPtr;
+    DWORD dwError;
+    DWORD dwCount;
+
+    TRACE("EnumServiceGroupW() called\n");
+
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    RpcTryExcept
+    {
+        if (lpGroup == NULL)
+        {
+            dwError = REnumServicesStatusW((SC_RPC_HANDLE)hSCManager,
+                                           dwServiceType,
+                                           dwServiceState,
+                                           (LPBYTE)lpServices,
+                                           cbBufSize,
+                                           pcbBytesNeeded,
+                                           lpServicesReturned,
+                                           lpResumeHandle);
+        }
+        else
+        {
+            dwError = REnumServiceGroupW((SC_RPC_HANDLE)hSCManager,
+                                         dwServiceType,
+                                         dwServiceState,
+                                         (LPBYTE)lpServices,
+                                         cbBufSize,
+                                         pcbBytesNeeded,
+                                         lpServicesReturned,
+                                         lpResumeHandle,
+                                         lpGroup);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
+    {
+        lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+            if (lpStatusPtr->lpDisplayName)
+               lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        TRACE("REnumServiceGroupW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    TRACE("EnumServiceGroupW() done\n");
+
+    return TRUE;
 }
 
 
@@ -2372,7 +2438,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        TRACE("RStartServiceA() failed (Error %lu)\n", dwError);
+        ERR("RStartServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2407,7 +2473,7 @@ StartServiceW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        TRACE("RStartServiceW() failed (Error %lu)\n", dwError);
+        ERR("RStartServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

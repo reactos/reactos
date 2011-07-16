@@ -104,7 +104,7 @@ MSICOMPONENT* get_loaded_component( MSIPACKAGE* package, LPCWSTR Component )
 
     LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
-        if (lstrcmpW(Component,comp->Component)==0)
+        if (!strcmpW( Component, comp->Component ))
             return comp;
     }
     return NULL;
@@ -116,7 +116,7 @@ MSIFEATURE* get_loaded_feature(MSIPACKAGE* package, LPCWSTR Feature )
 
     LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
-        if (lstrcmpW( Feature, feature->Feature )==0)
+        if (!strcmpW( Feature, feature->Feature ))
             return feature;
     }
     return NULL;
@@ -128,7 +128,7 @@ MSIFILE* get_loaded_file( MSIPACKAGE* package, LPCWSTR key )
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        if (lstrcmpW( key, file->File )==0)
+        if (!strcmpW( key, file->File ))
             return file;
     }
     return NULL;
@@ -141,7 +141,7 @@ int track_tempfile( MSIPACKAGE *package, LPCWSTR path )
     TRACE("%s\n", debugstr_w(path));
 
     LIST_FOR_EACH_ENTRY( temp, &package->tempfiles, MSITEMPFILE, entry )
-        if (!lstrcmpW( path, temp->Path ))
+        if (!strcmpW( path, temp->Path ))
             return 0;
 
     temp = msi_alloc_zero( sizeof (MSITEMPFILE) );
@@ -160,7 +160,7 @@ MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir )
 
     LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
     {
-        if (lstrcmpW( dir, folder->Directory )==0)
+        if (!strcmpW( dir, folder->Directory ))
             return folder;
     }
     return NULL;
@@ -232,8 +232,7 @@ LPWSTR resolve_file_source(MSIPACKAGE *package, MSIFILE *file)
     if (file->IsCompressed)
         return NULL;
 
-    p = resolve_folder(package, file->Component->Directory,
-                       TRUE, FALSE, TRUE, NULL);
+    p = resolve_source_folder( package, file->Component->Directory, NULL );
     path = build_directory_name(2, p, file->ShortName);
 
     if (file->LongName &&
@@ -245,24 +244,18 @@ LPWSTR resolve_file_source(MSIPACKAGE *package, MSIFILE *file)
 
     msi_free(p);
 
-    TRACE("file %s source resolves to %s\n", debugstr_w(file->File),
-          debugstr_w(path));
-
+    TRACE("file %s source resolves to %s\n", debugstr_w(file->File), debugstr_w(path));
     return path;
 }
 
-LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
-                      BOOL set_prop, BOOL load_prop, MSIFOLDER **folder)
+LPWSTR resolve_source_folder( MSIPACKAGE *package, LPCWSTR name, MSIFOLDER **folder )
 {
     MSIFOLDER *f;
     LPWSTR p, path = NULL, parent;
 
-    TRACE("Working to resolve %s\n",debugstr_w(name));
+    TRACE("working to resolve %s\n", debugstr_w(name));
 
-    if (!name)
-        return NULL;
-
-    if (!lstrcmpW(name,cszSourceDir))
+    if (!strcmpW( name, cszSourceDir ))
         name = cszTargetDir;
 
     f = get_loaded_folder( package, name );
@@ -270,7 +263,58 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         return NULL;
 
     /* special resolving for Target and Source root dir */
-    if (!strcmpW(name,cszTargetDir))
+    if (!strcmpW( name, cszTargetDir ))
+    {
+        if (!f->ResolvedSource)
+            f->ResolvedSource = get_source_root( package );
+    }
+
+    if (folder)
+        *folder = f;
+
+    if (f->ResolvedSource)
+    {
+        path = strdupW( f->ResolvedSource );
+        TRACE("   already resolved to %s\n", debugstr_w(path));
+        return path;
+    }
+
+    if (!f->Parent)
+        return path;
+
+    parent = f->Parent;
+    TRACE(" ! parent is %s\n", debugstr_w(parent));
+
+    p = resolve_source_folder( package, parent, NULL );
+
+    if (package->WordCount & msidbSumInfoSourceTypeCompressed)
+        path = get_source_root( package );
+    else if (package->WordCount & msidbSumInfoSourceTypeSFN)
+        path = build_directory_name( 3, p, f->SourceShortPath, NULL );
+    else
+        path = build_directory_name( 3, p, f->SourceLongPath, NULL );
+
+    TRACE("-> %s\n", debugstr_w(path));
+    f->ResolvedSource = strdupW( path );
+    msi_free( p );
+
+    return path;
+}
+
+LPWSTR resolve_target_folder( MSIPACKAGE *package, LPCWSTR name, BOOL set_prop, BOOL load_prop,
+                              MSIFOLDER **folder )
+{
+    MSIFOLDER *f;
+    LPWSTR p, path = NULL, parent;
+
+    TRACE("working to resolve %s\n", debugstr_w(name));
+
+    f = get_loaded_folder( package, name );
+    if (!f)
+        return NULL;
+
+    /* special resolving for Target and Source root dir */
+    if (!strcmpW( name, cszTargetDir ))
     {
         if (!f->ResolvedTarget && !f->Property)
         {
@@ -286,45 +330,33 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
             /* correct misbuilt target dir */
             path = build_directory_name(2, check_path, NULL);
             clean_spaces_from_path( path );
-            if (strcmpiW(path,check_path)!=0)
+            if (strcmpiW( path, check_path ))
                 msi_set_property( package->db, cszTargetDir, path );
             msi_free(check_path);
 
             f->ResolvedTarget = path;
         }
-
-        if (!f->ResolvedSource)
-            f->ResolvedSource = get_source_root( package );
     }
 
     if (folder)
         *folder = f;
 
-    if (!source && f->ResolvedTarget)
+    if (f->ResolvedTarget)
     {
         path = strdupW( f->ResolvedTarget );
-        TRACE("   already resolved to %s\n",debugstr_w(path));
+        TRACE("   already resolved to %s\n", debugstr_w(path));
         return path;
     }
 
-    if (source && f->ResolvedSource)
-    {
-        path = strdupW( f->ResolvedSource );
-        TRACE("   (source)already resolved to %s\n",debugstr_w(path));
-        return path;
-    }
-
-    if (!source && f->Property)
+    if (f->Property)
     {
         path = build_directory_name( 2, f->Property, NULL );
-
-        TRACE("   internally set to %s\n",debugstr_w(path));
-        if (set_prop)
-            msi_set_property( package->db, name, path );
+        TRACE("   internally set to %s\n", debugstr_w(path));
+        if (set_prop) msi_set_property( package->db, name, path );
         return path;
     }
 
-    if (!source && load_prop && (path = msi_dup_property( package->db, name )))
+    if (load_prop && (path = msi_dup_property( package->db, name )))
     {
         f->ResolvedTarget = strdupW( path );
         TRACE("   property set to %s\n", debugstr_w(path));
@@ -336,35 +368,18 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
 
     parent = f->Parent;
 
-    TRACE(" ! Parent is %s\n", debugstr_w(parent));
+    TRACE(" ! parent is %s\n", debugstr_w(parent));
 
-    p = resolve_folder(package, parent, source, set_prop, load_prop, NULL);
-    if (!source)
-    {
-        TRACE("   TargetDefault = %s\n", debugstr_w(f->TargetDefault));
+    p = resolve_target_folder( package, parent, set_prop, load_prop, NULL );
 
-        path = build_directory_name( 3, p, f->TargetDefault, NULL );
-        clean_spaces_from_path( path );
-        f->ResolvedTarget = strdupW( path );
-        TRACE("target -> %s\n", debugstr_w(path));
-        if (set_prop)
-            msi_set_property( package->db, name, path );
-    }
-    else
-    {
-        path = NULL;
+    TRACE("   TargetDefault = %s\n", debugstr_w(f->TargetDefault));
+    path = build_directory_name( 3, p, f->TargetDefault, NULL );
+    clean_spaces_from_path( path );
+    f->ResolvedTarget = strdupW( path );
 
-        if (package->WordCount & msidbSumInfoSourceTypeCompressed)
-            path = get_source_root( package );
-        else if (package->WordCount & msidbSumInfoSourceTypeSFN)
-            path = build_directory_name( 3, p, f->SourceShortPath, NULL );
-        else
-            path = build_directory_name( 3, p, f->SourceLongPath, NULL );
-
-        TRACE("source -> %s\n", debugstr_w(path));
-        f->ResolvedSource = strdupW( path );
-    }
-    msi_free(p);
+    TRACE("-> %s\n", debugstr_w(path));
+    if (set_prop) msi_set_property( package->db, name, path );
+    msi_free( p );
 
     return path;
 }
@@ -479,6 +494,8 @@ LPWSTR build_directory_name(DWORD count, ...)
         if( ((i+1)!=count) && dir[strlenW(dir)-1]!='\\')
             strcatW(dir, szBackSlash);
     }
+    va_end(va);
+
     return dir;
 }
 
@@ -561,7 +578,7 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     MSIRECORD * row = 0;
     DWORD size;
 
-    if (!package->LastAction || strcmpW(package->LastAction,action))
+    if (!package->LastAction || strcmpW(package->LastAction, action))
     {
         row = MSI_QueryGetRecord(package->db, Query_t, action);
         if (!row)
@@ -639,15 +656,10 @@ LPWSTR create_component_advertise_string(MSIPACKAGE* package,
 }
 
 /* update component state based on a feature change */
-void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
+void ACTION_UpdateComponentStates( MSIPACKAGE *package, MSIFEATURE *feature )
 {
     INSTALLSTATE newstate;
-    MSIFEATURE *feature;
     ComponentList *cl;
-
-    feature = get_loaded_feature(package,szFeature);
-    if (!feature)
-        return;
 
     newstate = feature->ActionRequest;
 
@@ -658,15 +670,17 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
     {
         MSICOMPONENT* component = cl->component;
     
+        if (!component->Enabled) continue;
+
         TRACE("MODIFYING(%i): Component %s (Installed %i, Action %i, Request %i)\n",
             newstate, debugstr_w(component->Component), component->Installed, 
             component->Action, component->ActionRequest);
         
-        if (!component->Enabled)
-            continue;
- 
         if (newstate == INSTALLSTATE_LOCAL)
-            msi_component_set_state(package, component, INSTALLSTATE_LOCAL);
+        {
+            component->Action = INSTALLSTATE_LOCAL;
+            component->ActionRequest = INSTALLSTATE_LOCAL;
+        }
         else 
         {
             ComponentList *clist;
@@ -674,9 +688,10 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
 
             component->hasLocalFeature = FALSE;
 
-            msi_component_set_state(package, component, newstate);
+            component->Action = newstate;
+            component->ActionRequest = newstate;
 
-            /*if any other feature wants is local we need to set it local*/
+            /* if any other feature wants it local we need to set it local */
             LIST_FOR_EACH_ENTRY( f, &package->features, MSIFEATURE, entry )
             {
                 if ( f->ActionRequest != INSTALLSTATE_LOCAL &&
@@ -697,14 +712,26 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
                         if (component->Attributes & msidbComponentAttributesOptional)
                         {
                             if (f->Attributes & msidbFeatureAttributesFavorSource)
-                                msi_component_set_state(package, component, INSTALLSTATE_SOURCE);
+                            {
+                                component->Action = INSTALLSTATE_SOURCE;
+                                component->ActionRequest = INSTALLSTATE_SOURCE;
+                            }
                             else
-                                msi_component_set_state(package, component, INSTALLSTATE_LOCAL);
+                            {
+                                component->Action = INSTALLSTATE_LOCAL;
+                                component->ActionRequest = INSTALLSTATE_LOCAL;
+                            }
                         }
                         else if (component->Attributes & msidbComponentAttributesSourceOnly)
-                            msi_component_set_state(package, component, INSTALLSTATE_SOURCE);
+                        {
+                            component->Action = INSTALLSTATE_SOURCE;
+                            component->ActionRequest = INSTALLSTATE_SOURCE;
+                        }
                         else
-                            msi_component_set_state(package, component, INSTALLSTATE_LOCAL);
+                        {
+                            component->Action = INSTALLSTATE_LOCAL;
+                            component->ActionRequest = INSTALLSTATE_LOCAL;
+                        }
                     }
                 }
             }
@@ -747,7 +774,7 @@ BOOL check_unique_action(const MSIPACKAGE *package, LPCWSTR action)
         return FALSE;
 
     for (i = 0; i < package->script->UniqueActionsCount; i++)
-        if (!strcmpW(package->script->UniqueActions[i],action))
+        if (!strcmpW(package->script->UniqueActions[i], action))
             return TRUE;
 
     return FALSE;

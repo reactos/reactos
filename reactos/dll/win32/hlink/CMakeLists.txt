@@ -1,0 +1,31 @@
+
+add_definitions(-D__WINESRC__)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
+spec2def(hlink.dll hlink.spec)
+
+list(APPEND SOURCE
+    browse_ctx.c
+    extserv.c
+    hlink_main.c
+    link.c
+    ${CMAKE_CURRENT_BINARY_DIR}/hlink_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
+
+add_library(hlink SHARED ${SOURCE})
+
+set_module_type(hlink win32dll)
+
+target_link_libraries(hlink uuid wine)
+
+add_importlibs(hlink
+    shell32
+    ole32
+    advapi32
+    urlmon
+    msvcrt
+    kernel32
+    ntdll)
+
+add_importlib_target(hlink.spec)
+add_cd_file(TARGET hlink DESTINATION reactos/system32 FOR all)

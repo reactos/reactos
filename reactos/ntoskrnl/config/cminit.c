@@ -137,11 +137,11 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     ExInitializeResourceLite(Hive->FlusherLock);
 
     /* Setup hive locks */
-    ExInitializePushLock((PULONG_PTR)&Hive->HiveLock);
+    ExInitializePushLock(&Hive->HiveLock);
     Hive->HiveLockOwner = NULL;
-    ExInitializePushLock((PULONG_PTR)&Hive->WriterLock);
+    ExInitializePushLock(&Hive->WriterLock);
     Hive->WriterLockOwner = NULL;
-    ExInitializePushLock((PULONG_PTR)&Hive->SecurityLock);
+    ExInitializePushLock(&Hive->SecurityLock);
     Hive->HiveSecurityLockOwner = NULL;
 
     /* Clear file names */

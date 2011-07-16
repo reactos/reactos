@@ -18,7 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef __ASM__
 #pragma once
+#endif
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
@@ -29,9 +31,6 @@
 /* Long mode selectors */
 #define LMODE_CS	0x10
 #define LMODE_DS	0x18
-#define RMODE_CS	0x20	/* RMode code selector, base 0 limit 64k */
-#define RMODE_DS	0x28	/* RMode data selector, base 0 limit 64k */
-#define CMODE_CS    0x30
 
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
@@ -49,17 +48,12 @@
 
 #define APIC_PHYS_BASE              0xfee00000
 
-#define NUM_PAGES_KERNEL 
+#define NUM_PAGES_KERNEL
 
 #ifndef ASM
-typedef struct _PAGE_DIRECTORY_AMD64
-{
-    HARDWARE_PTE Pde[512];
-} PAGE_DIRECTORY_AMD64, *PPAGE_DIRECTORY_AMD64;
 
-
-VOID FrLdrSetupGdtIdt();
-
+VOID FrLdrSetupGdtIdt(VOID);
+#define MachInit PcMachInit
 #endif
 
 /* EOF */

@@ -27,10 +27,16 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock);
 /* GLOBALS *****************************************************************/
 
 /* Template PTE and PDE for a kernel page */
-MMPTE ValidKernelPde = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
-MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
-MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
-MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | 0xFFFFF000};
+MMPTE ValidKernelPde = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPte = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+
+/* Template PDE for a demand-zero page */
+MMPDE DemandZeroPde  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
+MMPTE DemandZeroPte  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
+
+/* Template PTE for prototype page */
+MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
+                      PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)}};
 
 /* Sizes */
 ///SIZE_T MmSessionSize = MI_SESSION_SIZE;
@@ -413,7 +419,7 @@ MiInitializePageTable()
     TmplPte.u.Flush.Write = 1;
     HyperTemplatePte = TmplPte;
 
-    /* Create PDPTs (72 KB) for shared system address space, 
+    /* Create PDPTs (72 KB) for shared system address space,
      * skip page tables and hyperspace */
 
     /* Loop the PXEs */
@@ -492,7 +498,7 @@ MiBuildNonPagedPool(VOID)
 
     /* Page-align the nonpaged pool size */
     MmSizeOfNonPagedPoolInBytes &= ~(PAGE_SIZE - 1);
-    
+
     /* Now, check if there was a registry size for the maximum size */
     if (!MmMaximumNonPagedPoolInBytes)
     {
@@ -501,7 +507,7 @@ MiBuildNonPagedPool(VOID)
         MmMaximumNonPagedPoolInBytes += (MmNumberOfPhysicalPages - 1024) /
                                          256 * MmMaxAdditionNonPagedPoolPerMb;
     }
-    
+
     /* Don't let the maximum go too high */
     if (MmMaximumNonPagedPoolInBytes > MI_MAX_NONPAGED_POOL_SIZE)
     {
@@ -517,7 +523,7 @@ MiBuildNonPagedPool(VOID)
     {
         /* Put non paged pool after the PFN database */
         MmNonPagedPoolStart = (PCHAR)MmPfnDatabase + MxPfnSizeInBytes;
-        MmMaximumNonPagedPoolInBytes = (ULONG64)MmNonPagedPoolEnd - 
+        MmMaximumNonPagedPoolInBytes = (ULONG64)MmNonPagedPoolEnd -
                                        (ULONG64)MmNonPagedPoolStart;
     }
 
@@ -688,7 +694,7 @@ MiBuildPagedPool_x(VOID)
     PMMPTE Pte;
     MMPTE TmplPte;
     ULONG Size, BitMapSize;
-    
+
     /* Default size for paged pool is 4 times non paged pool */
     MmSizeOfPagedPoolInBytes = 4 * MmMaximumNonPagedPoolInBytes;
 
@@ -767,7 +773,7 @@ MiBuildPagedPool_x(VOID)
     // Allocate the allocation bitmap, which tells us which regions have not yet
     // been mapped into memory
 
-    MmPagedPoolInfo.PagedPoolAllocationMap = 
+    MmPagedPoolInfo.PagedPoolAllocationMap =
         ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
     ASSERT(MmPagedPoolInfo.PagedPoolAllocationMap);
 
@@ -783,7 +789,7 @@ MiBuildPagedPool_x(VOID)
     // Given the allocation bitmap and a base address, we can therefore figure
     // out which page is the last page of that allocation, and thus how big the
     // entire allocation is.
-    MmPagedPoolInfo.EndOfPagedPoolBitmap = 
+    MmPagedPoolInfo.EndOfPagedPoolBitmap =
         ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
     ASSERT(MmPagedPoolInfo.EndOfPagedPoolBitmap);
 
@@ -859,7 +865,7 @@ MmArmInitSystem_x(IN ULONG Phase,
         //MmPagedPoolSize = MM_PAGED_POOL_SIZE;
         //ASSERT((PCHAR)MmPagedPoolBase + MmPagedPoolSize < (PCHAR)MmNonPagedSystemStart);
 
-        
+
         HalInitializeBios(0, LoaderBlock);
     }
 
@@ -871,7 +877,7 @@ FASTCALL
 MiSyncARM3WithROS(IN PVOID AddressStart,
                   IN PVOID AddressEnd)
 {
-    
+
 }
 
 NTSTATUS

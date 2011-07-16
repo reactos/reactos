@@ -2,48 +2,48 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 246
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Общие"
+CAPTION "РћР±С‰РёРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-	LTEXT "Подключение через:", -1, 9, 9, 217, 8
+	LTEXT "РџРѕРґРєР»СЋС‡РµРЅРёРµ С‡РµСЂРµР·:", -1, 9, 9, 217, 8
 	EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_DISABLED | WS_TABSTOP
-	PUSHBUTTON "&Настроить...", IDC_CONFIGURE, 174, 38, 65, 14
-	LTEXT "Отмеченые компоненты используются этим подключением:", -1, 9, 59, 217, 8
-	PUSHBUTTON "&Установить...", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-	PUSHBUTTON "&Удалить", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-	PUSHBUTTON "&Свойства", IDC_PROPERTIES, 174, 130, 65, 14
-	GROUPBOX "Описание", -1, 9, 153, 230, 46, BS_GROUPBOX
-	LTEXT "Свойства компонента перечислены ниже...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-	CHECKBOX "Отображать значек в трее при установленом соединении", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-	CHECKBOX "Оповещать в случае разрыва соединения", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+	PUSHBUTTON "&РќР°СЃС‚СЂРѕРёС‚СЊ...", IDC_CONFIGURE, 174, 38, 65, 14
+	LTEXT "РћС‚РјРµС‡РµРЅС‹Рµ РєРѕРјРїРѕРЅРµРЅС‚С‹ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ СЌС‚РёРј РїРѕРґРєР»СЋС‡РµРЅРёРµРј:", -1, 9, 59, 217, 8
+	PUSHBUTTON "&РЈСЃС‚Р°РЅРѕРІРёС‚СЊ...", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+	PUSHBUTTON "&РЈРґР°Р»РёС‚СЊ", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+	PUSHBUTTON "&РЎРІРѕР№СЃС‚РІР°", IDC_PROPERTIES, 174, 130, 65, 14
+	GROUPBOX "РћРїРёСЃР°РЅРёРµ", -1, 9, 153, 230, 46, BS_GROUPBOX
+	LTEXT "РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р° РїРµСЂРµС‡РёСЃР»РµРЅС‹ РЅРёР¶Рµ...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+	CHECKBOX "РћС‚РѕР±СЂР°Р¶Р°С‚СЊ Р·РЅР°С‡РµРє РІ С‚СЂРµРµ РїСЂРё СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕРј СЃРѕРµРґРёРЅРµРЅРёРё", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+	CHECKBOX "РћРїРѕРІРµС‰Р°С‚СЊ РІ СЃР»СѓС‡Р°Рµ СЂР°Р·СЂС‹РІР° СЃРѕРµРґРёРЅРµРЅРёСЏ", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Свойства"
+CAPTION "РЎРІРѕР№СЃС‚РІР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
 IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 216, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Общие"
+CAPTION "РћР±С‰РёРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Подключение", -1, 9, 8, 198, 58, BS_GROUPBOX
-	LTEXT "Состояние:", -1, 19, 20, 60, 8
-	LTEXT "Длительность:", -1, 19, 34, 60, 8
-	LTEXT "Скорость:", -1, 19, 48, 60, 8
-	GROUPBOX "Активность", -1, 9, 74, 198, 70, BS_GROUPBOX
-	RTEXT "Отправлено", -1, 20, 90, 60, 8
+	GROUPBOX "РџРѕРґРєР»СЋС‡РµРЅРёРµ", -1, 9, 8, 198, 58, BS_GROUPBOX
+	LTEXT "РЎРѕСЃС‚РѕСЏРЅРёРµ:", -1, 19, 20, 60, 8
+	LTEXT "Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ:", -1, 19, 34, 60, 8
+	LTEXT "РЎРєРѕСЂРѕСЃС‚СЊ:", -1, 19, 48, 60, 8
+	GROUPBOX "РђРєС‚РёРІРЅРѕСЃС‚СЊ", -1, 9, 74, 198, 70, BS_GROUPBOX
+	RTEXT "РћС‚РїСЂР°РІР»РµРЅРѕ", -1, 20, 90, 60, 8
         ICON "", IDC_NETSTAT, 110, 85, 32, 32
-	LTEXT "Принято", -1, 158, 90, 37, 8
-	LTEXT "Байт:", -1, 17, 115, 32, 8
+	LTEXT "РџСЂРёРЅСЏС‚Рѕ", -1, 158, 90, 37, 8
+	LTEXT "Р‘Р°Р№С‚:", -1, 17, 115, 32, 8
 	RTEXT "000.000.000", IDC_SEND, 54, 115, 44, 8
 	RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 46, 8
-	PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-	PUSHBUTTON "&Отключить", IDC_ENDISABLE, 66, 150, 50, 14
+	PUSHBUTTON "&РЎРІРѕР№СЃС‚РІР°", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
+	PUSHBUTTON "&РћС‚РєР»СЋС‡РёС‚СЊ", IDC_ENDISABLE, 66, 150, 50, 14
 	RTEXT "", IDC_STATUS, 100, 20, 98, 8
 	RTEXT "", IDC_DURATION, 100, 34, 98, 8
 	RTEXT "", IDC_SPEED, 100, 48, 98, 8
@@ -51,75 +51,75 @@ END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Поддежка"
+CAPTION "РџРѕРґРґРµР¶РєР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Статус подключения", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Тип адреса:", -1, 22, 20, 80, 8
- LTEXT "IP адрес:", -1, 22, 34, 80, 8
- LTEXT "Маска подсети:", -1, 22, 48, 80, 8
- LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
+ GROUPBOX "РЎС‚Р°С‚СѓСЃ РїРѕРґРєР»СЋС‡РµРЅРёСЏ", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "РўРёРї Р°РґСЂРµСЃР°:", -1, 22, 20, 80, 8
+ LTEXT "IP Р°РґСЂРµСЃ:", -1, 22, 34, 80, 8
+ LTEXT "РњР°СЃРєР° РїРѕРґСЃРµС‚Рё:", -1, 22, 48, 80, 8
+ LTEXT "РЁР»СЋР· РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ:", -1, 22, 62, 80, 8
 
- RTEXT "н/а", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "РЅ/Р°", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
 
- PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
+ PUSHBUTTON "&РџРѕРґСЂРѕР±РЅРѕСЃС‚Рё...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200, 172
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Детали сетевого подключения"
+CAPTION "Р”РµС‚Р°Р»Рё СЃРµС‚РµРІРѕРіРѕ РїРѕРґРєР»СЋС‡РµРЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "&Дополнительные сведения о сети:", -1, 5, 4, 170, 12
+ LTEXT "&Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ СЃРІРµРґРµРЅРёСЏ Рѕ СЃРµС‚Рё:", -1, 5, 4, 170, 12
  CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 5, 17, 190, 130
- PUSHBUTTON "&Закрыть", IDC_CLOSE, 132, 153, 62, 14
+ PUSHBUTTON "&Р—Р°РєСЂС‹С‚СЊ", IDC_CLOSE, 132, 153, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_PHYSICAL_ADDRESS        "Физический адрес"
-	IDS_IP_ADDRESS              "IP-адрес"
-	IDS_SUBNET_MASK             "Маска подсети"
-	IDS_DEF_GATEWAY             "Основной шлюз"
-	IDS_DHCP_SERVER             "DHCP-сервер"
-	IDS_LEASE_OBTAINED          "Аренда получена"
-	IDS_LEASE_EXPIRES           "Аренда истекает"
-	IDS_DNS_SERVERS             "DNS-серверы"
-	IDS_WINS_SERVERS            "WINS-сервер"
-	IDS_PROPERTY                "Свойство"
-	IDS_VALUE                   "Значение"
-	IDS_NETWORKCONNECTION       "Сетевые подключения"
-	IDS_SHV_COLUMN_NAME         "Имя"
-	IDS_SHV_COLUMN_TYPE         "Тип"
-	IDS_SHV_COLUMN_STATE        "Состояние"
-	IDS_SHV_COLUMN_DEVNAME      "Имя устройства"
-	IDS_SHV_COLUMN_PHONE        "Номер телефона или адрес узла"
-	IDS_SHV_COLUMN_OWNER        "Владелец"
-	IDS_TYPE_ETHERNET           "ЛВС или высокоскоростной Интернет"
-	IDS_STATUS_NON_OPERATIONAL  "Отключено"
-	IDS_STATUS_UNREACHABLE      "Отключено"
-	IDS_STATUS_DISCONNECTED     "Сетевой кабель не подключен"
-	IDS_STATUS_CONNECTING       "Получение сетевого адреса"
-	IDS_STATUS_CONNECTED        "Подключено"
-	IDS_STATUS_OPERATIONAL      "Подключено"
+	IDS_PHYSICAL_ADDRESS        "Р¤РёР·РёС‡РµСЃРєРёР№ Р°РґСЂРµСЃ"
+	IDS_IP_ADDRESS              "IP-Р°РґСЂРµСЃ"
+	IDS_SUBNET_MASK             "РњР°СЃРєР° РїРѕРґСЃРµС‚Рё"
+	IDS_DEF_GATEWAY             "РћСЃРЅРѕРІРЅРѕР№ С€Р»СЋР·"
+	IDS_DHCP_SERVER             "DHCP-СЃРµСЂРІРµСЂ"
+	IDS_LEASE_OBTAINED          "РђСЂРµРЅРґР° РїРѕР»СѓС‡РµРЅР°"
+	IDS_LEASE_EXPIRES           "РђСЂРµРЅРґР° РёСЃС‚РµРєР°РµС‚"
+	IDS_DNS_SERVERS             "DNS-СЃРµСЂРІРµСЂС‹"
+	IDS_WINS_SERVERS            "WINS-СЃРµСЂРІРµСЂ"
+	IDS_PROPERTY                "РЎРІРѕР№СЃС‚РІРѕ"
+	IDS_VALUE                   "Р—РЅР°С‡РµРЅРёРµ"
+	IDS_NETWORKCONNECTION       "РЎРµС‚РµРІС‹Рµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ"
+	IDS_SHV_COLUMN_NAME         "РРјСЏ"
+	IDS_SHV_COLUMN_TYPE         "РўРёРї"
+	IDS_SHV_COLUMN_STATE        "РЎРѕСЃС‚РѕСЏРЅРёРµ"
+	IDS_SHV_COLUMN_DEVNAME      "РРјСЏ СѓСЃС‚СЂРѕР№СЃС‚РІР°"
+	IDS_SHV_COLUMN_PHONE        "РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РёР»Рё Р°РґСЂРµСЃ СѓР·Р»Р°"
+	IDS_SHV_COLUMN_OWNER        "Р’Р»Р°РґРµР»РµС†"
+	IDS_TYPE_ETHERNET           "Р›Р’РЎ РёР»Рё РІС‹СЃРѕРєРѕСЃРєРѕСЂРѕСЃС‚РЅРѕР№ РРЅС‚РµСЂРЅРµС‚"
+	IDS_STATUS_NON_OPERATIONAL  "РћС‚РєР»СЋС‡РµРЅРѕ"
+	IDS_STATUS_UNREACHABLE      "РћС‚РєР»СЋС‡РµРЅРѕ"
+	IDS_STATUS_DISCONNECTED     "РЎРµС‚РµРІРѕР№ РєР°Р±РµР»СЊ РЅРµ РїРѕРґРєР»СЋС‡РµРЅ"
+	IDS_STATUS_CONNECTING       "РџРѕР»СѓС‡РµРЅРёРµ СЃРµС‚РµРІРѕРіРѕ Р°РґСЂРµСЃР°"
+	IDS_STATUS_CONNECTED        "РџРѕРґРєР»СЋС‡РµРЅРѕ"
+	IDS_STATUS_OPERATIONAL      "РџРѕРґРєР»СЋС‡РµРЅРѕ"
 
-	IDS_NET_ACTIVATE            "Включить"
-	IDS_NET_DEACTIVATE          "Отключить"
-	IDS_NET_STATUS              "Состояние"
-	IDS_NET_REPAIR              "Исправить"
-	IDS_NET_CREATELINK          "Создать ярлык"
-	IDS_NET_DELETE              "Удалить"
-	IDS_NET_PROPERTIES          "Свойства"
+	IDS_NET_ACTIVATE            "Р’РєР»СЋС‡РёС‚СЊ"
+	IDS_NET_DEACTIVATE          "РћС‚РєР»СЋС‡РёС‚СЊ"
+	IDS_NET_STATUS              "РЎРѕСЃС‚РѕСЏРЅРёРµ"
+	IDS_NET_REPAIR              "РСЃРїСЂР°РІРёС‚СЊ"
+	IDS_NET_CREATELINK          "РЎРѕР·РґР°С‚СЊ СЏСЂР»С‹Рє"
+	IDS_NET_DELETE              "РЈРґР°Р»РёС‚СЊ"
+	IDS_NET_PROPERTIES          "РЎРІРѕР№СЃС‚РІР°"
 
-	IDS_FORMAT_BIT              "%u бит/с"
-	IDS_FORMAT_KBIT             "%u Кбит/с"
-	IDS_FORMAT_MBIT             "%u Мбит/с"
-	IDS_FORMAT_GBIT             "%u Гбит/с"
-	IDS_DURATION_DAY            "%d день %s"
-	IDS_DURATION_DAYS           "%d дней %s"
-	IDS_ASSIGNED_DHCP           "Присвоен DHCP"
-	IDS_ASSIGNED_MANUAL         "Настроен вручную"
+	IDS_FORMAT_BIT              "%u Р±РёС‚/СЃ"
+	IDS_FORMAT_KBIT             "%u РљР±РёС‚/СЃ"
+	IDS_FORMAT_MBIT             "%u РњР±РёС‚/СЃ"
+	IDS_FORMAT_GBIT             "%u Р“Р±РёС‚/СЃ"
+	IDS_DURATION_DAY            "%d РґРµРЅСЊ %s"
+	IDS_DURATION_DAYS           "%d РґРЅРµР№ %s"
+	IDS_ASSIGNED_DHCP           "РџСЂРёСЃРІРѕРµРЅ DHCP"
+	IDS_ASSIGNED_MANUAL         "РќР°СЃС‚СЂРѕРµРЅ РІСЂСѓС‡РЅСѓСЋ"
 END

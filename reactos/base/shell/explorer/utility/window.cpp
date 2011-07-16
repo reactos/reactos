@@ -39,7 +39,7 @@ WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)
 	style = style_;
 	hInstance = g_Globals._hInstance;
 	hCursor = LoadCursor(0, IDC_ARROW);
-
+	this->hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
 	lpszClassName = classname;
 	lpfnWndProc = wndproc;
 

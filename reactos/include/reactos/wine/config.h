@@ -457,12 +457,6 @@
 /* Define to 1 if you have the <openssl/ssl.h> header file. */
 /* #undef HAVE_OPENSSL_SSL_H */
 
-/* Define to 1 if you have the `z' library (-lz). */
-#define HAVE_ZLIB 1
-
-/* Define to 1 if you have the <zlib.h> header file. */
-#define HAVE_ZLIB_H 1
-
 /* Define to 1 if you have the `pclose' function. */
 #define HAVE_PCLOSE 1
 
@@ -777,7 +771,9 @@
 /* #undef HAVE_SYS_TIMES_H */
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#define HAVE_SYS_TIME_H 1
+#ifndef _MSC_VER
+  #define HAVE_SYS_TIME_H 1
+#endif
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
@@ -1018,10 +1014,14 @@
 #define __ASM_CFI(str) str
 
 /* Define to a macro to define an assembly function */
+#ifndef _MSC_VER
 #ifndef NO_UNDERSCORE_PREFIX
 #define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl _" #name suffix "\n\t.def _" #name suffix "; .scl 2; .type 32; .endef\n_" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
 #else
 #define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.def " #name suffix "; .scl 2; .type 32; .endef\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
+#endif
+#else
+#define __ASM_DEFINE_FUNC(name,suffix,code)
 #endif
 
 /* Define to a macro to generate an assembly function directive */
@@ -1043,7 +1043,9 @@
 
 /* Define to a macro to generate an assembly function with stdcall calling
    convention */
+#ifndef _MSC_VER
 #define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(name,__ASM_STDCALL(args),code)
+#endif
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

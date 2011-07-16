@@ -1,7 +1,9 @@
-/* translated by Caemyr - Olaf Siejka (Jan, 2008)
- * Use ReactOS forum PM or IRC to contact me
- * http://www.reactos.org
- * IRC: irc.freenode.net #reactos-pl;
+/*     
+ *      translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *      Use ReactOS forum PM or IRC to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl;
+ *      UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -14,15 +16,15 @@ BEGIN
   GROUPBOX "Typ monitora", -1, 7, 3, 237, 52
   LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
   LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
-  PUSHBUTTON "&W³aœciwoœci", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+  PUSHBUTTON "&WÅ‚aÅ›ciwoÅ›ci", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
   GROUPBOX "Ustawienia monitora", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-  LTEXT "&Czêstotliwoœæi odœwie¿ania ekranu:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+  LTEXT "&CzÄ™stotliwoÅ›Ä‡i odÅ›wieÅ¼ania ekranu:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
   COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-  AUTOCHECKBOX "&Ukryj tryby których monitor n ie mo¿e wyœwietliæ", IDC_PRUNINGCHECK, 13, 106, 225, 10
+  AUTOCHECKBOX "&Ukryj tryby ktÃ³rych monitor nie moÅ¼e wyÅ›wietliÄ‡", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-  IDS_USEDEFFRQUENCY "U¿yj domyœlnych ustawieñ sprzêtu"
-  IDS_FREQFMT "%u Herców"
+  IDS_USEDEFFRQUENCY "UÅ¼yj domyÅ›lnych ustawieÅ„ sprzÄ™tu"
+  IDS_FREQFMT "%u HercÃ³w"
 END

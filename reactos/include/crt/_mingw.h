@@ -187,7 +187,7 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #endif
 #endif
 
-#ifdef _WIN64
+#if defined(_WIN64) && !defined(_MSC_VER)
 #undef USE_MINGW_SETJMP_TWO_ARGS
 #define USE_MINGW_SETJMP_TWO_ARGS
 #endif

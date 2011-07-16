@@ -65,6 +65,8 @@ typedef struct _DESKTOPINFO
     HWND hProgmanWindow;
     HWND hShellWindow;
 
+    PPROCESSINFO ppiShellProcess;
+
     union
     {
         UINT Dummy;
@@ -230,6 +232,10 @@ typedef struct _CLIENTINFO
 C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
+
+#define HRGN_NULL    ( (HRGN) 0) // NULL empty region
+#define HRGN_WINDOW  ( (HRGN) 1) // region from window rcWindow
+#define HRGN_MONITOR ( (HRGN) 2) // region from monitor region.
 
 /* Menu Item fType. */
 #define MFT_RTOL 0x6000
@@ -1458,7 +1464,7 @@ NtUserCreateLocalMemHandle(
 HWND
 NTAPI
 NtUserCreateWindowEx(
-  DWORD dwExStyle, // |= 0x80000000 == Ansi used to set WNDS_ANSICREATOR
+  DWORD dwExStyle,
   PLARGE_STRING plstrClassName,
   PLARGE_STRING plstrClsVersion,
   PLARGE_STRING plstrWindowName,
@@ -1477,9 +1483,9 @@ NtUserCreateWindowEx(
 HWINSTA
 NTAPI
 NtUserCreateWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
+  POBJECT_ATTRIBUTES ObjectAttributes,
   ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
+  DWORD Unknown2,
   DWORD Unknown3,
   DWORD Unknown4,
   DWORD Unknown5,
@@ -1627,10 +1633,10 @@ NtUserEnableScrollBar(
   UINT wSBflags,
   UINT wArrows);
 
-DWORD
+BOOL
 NTAPI
 NtUserEndDeferWindowPosEx(
-  DWORD Unknown0,
+  HDWP WinPosInfo,
   DWORD Unknown1);
 
 BOOL NTAPI
@@ -1760,15 +1766,8 @@ NtUserGetClassInfo(HINSTANCE hInstance,
 INT
 NTAPI
 NtUserGetClassName(HWND hWnd,
-		   PUNICODE_STRING ClassName,
-                   BOOL Ansi);
-#if 0 // Real NtUserGetClassName
-INT
-NTAPI
-NtUserGetClassName(HWND hWnd,
                    BOOL Real, // 0 GetClassNameW, 1 RealGetWindowClassA/W
                    PUNICODE_STRING ClassName);
-#endif
 
 HANDLE
 NTAPI
@@ -2297,9 +2296,9 @@ NtUserOpenClipboard(
 HDESK
 NTAPI
 NtUserOpenDesktop(
-  PUNICODE_STRING lpszDesktopName,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess);
+   POBJECT_ATTRIBUTES ObjectAttributes,
+   DWORD dwFlags,
+   ACCESS_MASK dwDesiredAccess);
 
 HDESK
 NTAPI
@@ -2311,7 +2310,7 @@ NtUserOpenInputDesktop(
 HWINSTA
 NTAPI
 NtUserOpenWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
+  POBJECT_ATTRIBUTES ObjectAttributes,
   ACCESS_MASK dwDesiredAccess);
 
 BOOL
@@ -2407,28 +2406,28 @@ NtUserQueryWindow(
   HWND hWnd,
   DWORD Index);
 
-DWORD
+BOOL
 NTAPI
 NtUserRealInternalGetMessage(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6);
+    LPMSG lpMsg,
+    HWND hWnd,
+    UINT wMsgFilterMin,
+    UINT wMsgFilterMax,
+    UINT wRemoveMsg,
+    BOOL bGMSG);
 
-DWORD
+HWND
 NTAPI
 NtUserRealChildWindowFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+    HWND Parent,
+    LONG x,
+    LONG y);
 
-DWORD
+BOOL
 NTAPI
 NtUserRealWaitMessageEx(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    DWORD dwWakeMask,
+    UINT uTimeout);
 
 BOOL
 NTAPI
@@ -3126,8 +3125,6 @@ typedef struct tagKMDDELPARAM
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0xfffe0048 // use ONEPARAM_ or TWOPARAM routine ?
-#define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 // user mode
-#define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049 // user mode
 #define TWOPARAM_ROUTINE_SETMENUBARHEIGHT   0xfffd0050
 #define TWOPARAM_ROUTINE_SETGUITHRDHANDLE   0xfffd0052
   #define MSQ_STATE_CAPTURE	0x1
@@ -3149,23 +3146,12 @@ NtUserBuildMenuItemList(
  ULONG nBufSize,
  DWORD Reserved);
 
-
-/* Should be done in usermode and use NtUserGetCPD. */
-ULONG_PTR
-NTAPI
-NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
-
 UINT
 NTAPI
 NtUserGetMenuDefaultItem(
   HMENU hMenu,
   UINT fByPos,
   UINT gmdiFlags);
-
-BOOL
-NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
 
 BOOL
 NTAPI

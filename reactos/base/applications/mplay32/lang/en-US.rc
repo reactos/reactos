@@ -26,4 +26,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "Seek Forward"
 	IDS_TOOLTIP_FORWARD "Skip Forward"
 	IDS_APPTITLE "ReactOS Multimedia Player"
+	IDS_PLAY "Play"
 END

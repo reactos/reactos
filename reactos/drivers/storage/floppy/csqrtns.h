@@ -38,22 +38,21 @@ extern LIST_ENTRY IrpQueue;
 extern KSPIN_LOCK IrpQueueLock;
 extern KSEMAPHORE QueueSemaphore;
 
-VOID NTAPI CsqInsertIrp(PIO_CSQ Csq,
-                        PIRP Irp);
+VOID NTAPI
+CsqInsertIrp(PIO_CSQ Csq, PIRP Irp);
 
-VOID NTAPI CsqRemoveIrp(PIO_CSQ Csq,
-                        PIRP Irp);
+VOID NTAPI
+CsqRemoveIrp(PIO_CSQ Csq, PIRP Irp);
 
-PIRP NTAPI CsqPeekNextIrp(PIO_CSQ Csq,
-                          PIRP Irp,
-                          PVOID PeekContext);
+PIRP NTAPI
+CsqPeekNextIrp(PIO_CSQ Csq, PIRP Irp, PVOID PeekContext);
 
-VOID NTAPI CsqAcquireLock(PIO_CSQ Csq,
-                          PKIRQL Irql);
+VOID NTAPI
+CsqAcquireLock(PIO_CSQ Csq, PKIRQL Irql);
 
-VOID NTAPI CsqReleaseLock(PIO_CSQ Csq,
-                          KIRQL Irql);
+VOID NTAPI
+CsqReleaseLock(PIO_CSQ Csq, KIRQL Irql);
 
-VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ Csq,
-                                  PIRP Irp);
+VOID NTAPI
+CsqCompleteCanceledIrp(PIO_CSQ Csq, PIRP Irp);
 

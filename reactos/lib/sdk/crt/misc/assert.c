@@ -32,7 +32,7 @@ void _assert(const char *exp, const char *file, unsigned line)
 
     /* Get MessageBoxA function pointer */
     hmodUser32 = LoadLibrary("user32.dll");
-    pMessageBoxA = GetProcAddress(hmodUser32, "MessageBoxA");
+    pMessageBoxA = (PVOID)GetProcAddress(hmodUser32, "MessageBoxA");
     if (!pMessageBoxA)
     {
         abort();

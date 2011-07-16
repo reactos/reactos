@@ -30,13 +30,12 @@ static const MEMORY_DESCRIPTOR_INT MemoryDescriptors[] =
     { { MemoryFirmwareTemporary, 0x80, 0x10 }, 4, }, // File system read buffer. FILESYSBUFFER
     { { MemoryFirmwareTemporary, 0x90, 0x10 }, 5, }, // Disk read buffer for int 13h. DISKREADBUFFER
     { { MemoryFirmwarePermanent, 0xA0, 0x60 }, 6, }, // ROM / Video
-    { { MemorySpecialMemory, 0xFFF, 1 }, 7, }, // unusable memory
 #elif __arm__ // This needs to be done per-platform specific way
 
 #endif
 };
-MEMORY_DESCRIPTOR*
-ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
+const MEMORY_DESCRIPTOR*
+ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
 {
     MEMORY_DESCRIPTOR_INT* CurrentDescriptor;
     BIOS_MEMORY_MAP BiosMemoryMap[32];
@@ -55,7 +54,8 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
         //
         RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
         BiosMemoryMapEntryCount = MachVtbl.GetMemoryMap(BiosMemoryMap,
-            sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
+                                                        sizeof(BiosMemoryMap) /
+                                                        sizeof(BIOS_MEMORY_MAP));
 
         //
         // Copy the entries to our structure
@@ -77,8 +77,8 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             // Copy this memory descriptor
             //
             BiosMemoryDescriptors[j].m.MemoryType = MemoryFree;
-            BiosMemoryDescriptors[j].m.BasePage = BiosMemoryMap[i].BaseAddress / MM_PAGE_SIZE;
-            BiosMemoryDescriptors[j].m.PageCount = BiosMemoryMap[i].Length / MM_PAGE_SIZE;
+            BiosMemoryDescriptors[j].m.BasePage = (ULONG)(BiosMemoryMap[i].BaseAddress / MM_PAGE_SIZE);
+            BiosMemoryDescriptors[j].m.PageCount = (ULONG)(BiosMemoryMap[i].Length / MM_PAGE_SIZE);
             BiosMemoryDescriptors[j].Index = j;
             BiosMemoryDescriptors[j].GeneratedDescriptor = TRUE;
             j++;
@@ -114,7 +114,7 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             //
             // Return first fixed memory descriptor
             //
-            return (MEMORY_DESCRIPTOR*)&MemoryDescriptors[0].m;
+            return &MemoryDescriptors[0].m;
         }
         else
         {
@@ -141,7 +141,7 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             //
             // Return first fixed memory descriptor
             //
-            return (MEMORY_DESCRIPTOR*)&MemoryDescriptors[0].m;
+            return &MemoryDescriptors[0].m;
         }
         else
         {
@@ -161,7 +161,7 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             //
             // Return next fixed descriptor
             //
-            return (MEMORY_DESCRIPTOR*)&MemoryDescriptors[CurrentDescriptor->Index + 1].m;
+            return &MemoryDescriptors[CurrentDescriptor->Index + 1].m;
         }
         else
         {

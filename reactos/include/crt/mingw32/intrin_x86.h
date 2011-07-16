@@ -911,7 +911,7 @@ __INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 __INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
-	__asm__("rorb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rorb %b[shift], %b[retval]" : [retval] "=qm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
@@ -1126,6 +1126,39 @@ __INTRIN_INLINE void __outwordstring(unsigned short const Port, const unsigned s
 __INTRIN_INLINE void __outdwordstring(unsigned short const Port, const unsigned long * const Buffer, const unsigned long Count)
 {
 	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+}
+
+__INTRIN_INLINE int _inp(unsigned short Port)
+{
+	return __inbyte(Port);
+}
+
+__INTRIN_INLINE unsigned short _inpw(unsigned short Port)
+{
+	return __inword(Port);
+}
+
+__INTRIN_INLINE unsigned long _inpd(unsigned short Port)
+{
+	return __indword(Port);
+}
+
+__INTRIN_INLINE int _outp(unsigned short Port, int databyte)
+{
+	__outbyte(Port, databyte);
+	return databyte;
+}
+
+__INTRIN_INLINE unsigned short _outpw(unsigned short Port, unsigned short dataword)
+{
+	__outword(Port, dataword);
+	return dataword;
+}
+
+__INTRIN_INLINE unsigned long _outpd(unsigned short Port, unsigned long dataword)
+{
+	__outdword(Port, dataword);
+	return dataword;
 }
 
 

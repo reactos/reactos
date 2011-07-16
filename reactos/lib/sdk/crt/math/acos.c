@@ -21,6 +21,9 @@
 
 #include <math.h>
 
+#ifdef _MSC_VER
+#pragma function(acos)
+#endif
 
 double acos(double __x)
 {

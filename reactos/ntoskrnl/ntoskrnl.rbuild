@@ -10,4 +10,8 @@
 	<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" baseaddress="${BASEADDRESS_NTOSKRNL}" >
 		<xi:include href="ntoskrnl-generic.rbuild" />
 	</module>
+	<module name="ntdllsys" type="staticlibrary">
+		<include base="ntoskrnl">include</include>
+		<file>ntdll.S</file>
+	</module>
 </group>

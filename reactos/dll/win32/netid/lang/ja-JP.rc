@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "コンピュータの説明:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "フル コンピュータ名:", IDC_STATIC, 6, 68, 85, 9
-    LTEXT       "(既定値)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "ワークグループ:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(なし)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "ネットワーク ID ウィザードを使ってドメインへの参加およびローカル ユーザーの作成を行うには、[ネットワーク ID] をクリックしてください。", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "ネットワーク ID(&N)...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "コンピュータ名を変更したりドメインに参加したりするには [変更] をクリックしてください。", IDC_STATIC, 6, 149, 170, 17

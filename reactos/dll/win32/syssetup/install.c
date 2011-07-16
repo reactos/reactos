@@ -477,15 +477,22 @@ EnableUserModePnpManager(VOID)
     SC_HANDLE hService = NULL;
     BOOL ret = FALSE;
 
-    hSCManager = OpenSCManager(NULL, NULL, 0);
+    hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
+    {
+        DPRINT1("Unable to open the service control manager.\n");
+        DPRINT1("Last Error %d\n", GetLastError());
         goto cleanup;
+    }
 
     hService = OpenServiceW(hSCManager,
                             L"PlugPlay",
                             SERVICE_CHANGE_CONFIG | SERVICE_START);
     if (hService == NULL)
+    {
+        DPRINT1("Unable to open PlugPlay service\n");
         goto cleanup;
+    }
 
     ret = ChangeServiceConfigW(hService,
                                SERVICE_NO_CHANGE,
@@ -494,11 +501,17 @@ EnableUserModePnpManager(VOID)
                                NULL, NULL, NULL,
                                NULL, NULL, NULL, NULL);
     if (!ret)
+    {
+        DPRINT1("Unable to change the service configuration\n");
         goto cleanup;
+    }
 
     ret = StartServiceW(hService, 0, NULL);
-    if (!ret)
+    if ((!ret) && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
+    {
+        DPRINT1("Unable to start service\n");
         goto cleanup;
+    }
 
     ret = TRUE;
 
@@ -780,7 +793,7 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_PAINT, _T("%SystemRoot%\\system32\\paint.exe"), IDS_CMT_PAINT, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_PAINT, _T("%SystemRoot%\\system32\\mspaint.exe"), IDS_CMT_PAINT, TRUE);
     }
 
     /* Create System Tools subfolder and fill if the exe is available */

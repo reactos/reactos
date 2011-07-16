@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  31-05-2010
+ * LAST CHANGE:  27-03-2011
  */   
 
 /*
@@ -131,7 +131,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Verzia " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Verzia "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "T·to verzia systÈmu ReactOS je registrovan· pre:", IDC_STATIC, 35, 115, 180, 10
@@ -176,7 +176,7 @@ BEGIN
 	LTEXT "Typ cieæa:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "Umiestnenie cieæa:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "&Cieæ:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "Z&aËaù v prieËinku:", 14010, 8, 96, 57, 10
@@ -215,13 +215,13 @@ BEGIN
 	LTEXT "Typ:", 14004, 8, 35, 50, 10
 	LTEXT "PrieËinok", 14005, 68, 35, 160, 10
 	LTEXT "Umiestnenie:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Veækosù:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Obsahuje:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Vytvoren˝:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "&Iba na ËÌtanie", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Skryt˝", 14022, 126, 150, 50, 10
 END
@@ -236,17 +236,17 @@ BEGIN
 	LTEXT "Typ s˙boru:", 14004, 8, 35, 50, 10
 	LTEXT "S˙bor", 14005, 68, 35, 160, 10
 	LTEXT "Otvoriù programom:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Umiestnenie:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Veækosù:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Vytvoren˝:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Zmenen˝:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Otvoren˝:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Atrib˙ty:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Iba na ËÌtanie", 14021, 58, 189, 67, 10
 	CHECKBOX "&Skryt˝", 14022, 126, 189, 50, 10
@@ -259,11 +259,11 @@ CAPTION "Verzia"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Verzia s˙boru: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Popis: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "AutorskÈ pr·va: ", 14004, 10, 46, 66, 10 //Copyright
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "InÈ inform·cie o verzii: ", 14006, 6, 70, 222, 115
 	LTEXT "N·zov poloûky: ", 14007, 13, 82, 50, 10
 	LTEXT "Hodnota: ", 14008, 112, 82, 45, 10
@@ -278,24 +278,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Typ:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "SystÈm s˙borov:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "VyuûitÈ miesto:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "VoænÈ miesto:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Kapacita:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -336,7 +336,7 @@ BEGIN
 	LTEXT "KtorÈ pouûÌvateæskÈ konto chcete pouûiù k spusteniu tohto programu?", -1, 10, 20, 220, 20
 	CHECKBOX "Aktu·lny pouûÌvateæ %s", 14000, 10, 45, 150, 10
 	LTEXT "Chr·niù poËÌtaË a ˙daje pred neopr·vnen˝mi aktivitami programu", -1, 25, 57, 200, 10, WS_DISABLED
-	CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "T·to moûnosù mÙûe zabr·niù poËÌtaËov˝m vÌrusom aby poökodili poËÌtaË alebo osobnÈ ˙daje, ale jej zvolenie mÙûe spÙsobiù, ûe program nebude spr·vne fungovaù.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "Nasleduj˙ci pouûÌvateæ:", 14002, 10, 100, 90, 10
 	LTEXT "Meno pouûÌvateæa:", -1, 20, 118, 54, 10
 	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -430,7 +430,7 @@ LTEXT "Opens with:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Zmeniù...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -661,10 +661,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Poloûka '%1' nemÙûe byù odoslan· do koöa. Chcete ju namiesto toho vymazaù?"
 	IDS_OVERWRITEFILE_TEXT      "Tento prieËinok uû obsahuje s˙bor s n·zvom '%1'.\n\nChcete ho nahradiù?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdenie prepÌsania s˙boru"
-	IDS_OVERWRITEFOLDER_TEXT    "Tento prieËinok uû obsahuje prieËinok s n·zvom '%1'.\n\n"\
-		"Ak bud˙ maù s˙bory v cieæovom prieËinku rovnakÈ n·zvy ako s˙bory\n"\
-		"vo vybranom prieËinku, tak bud˙ nahradenÈ. St·le chcete presun˙ù\n"\
-		"alebo skopÌrovaù prieËinok?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tento prieËinok uû obsahuje prieËinok s n·zvom '%1'.\n\nAk bud˙ maù s˙bory v cieæovom prieËinku rovnakÈ n·zvy ako s˙bory\nvo vybranom prieËinku, tak bud˙ nahradenÈ. St·le chcete presun˙ù\nalebo skopÌrovaù prieËinok?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reötartovaù"
@@ -673,6 +670,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Naozaj chcete vypn˙ù poËÌtaË?"
 	IDS_LOGOFF_TITLE            "Odhl·siù"
 	IDS_LOGOFF_PROMPT           "Naozaj sa chcete odhl·siù?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Nemoûno zobraziù dialogovÈ okno Spustiù s˙bor (vn˙torn· chyba)"
+	IDS_RUNDLG_BROWSE_ERROR     "Nemoûno zobraziù dialogovÈ okno Prehæad·vaù (vn˙torn· chyba)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Prehæad·vaù"
+	IDS_RUNDLG_BROWSE_FILTER    "SpustiteænÈ s˙bory (*.exe)\0*.exe\0Vöetky s˙bory (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Ponuka ätart\\Programy"
@@ -723,10 +726,10 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ miesto"
 	IDS_EMPTY_BITBUCKET         "Vypr·zdniù KÙö"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "S˙bory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "S˙bory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Vöetky s˙bory (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory (*.exe)\0*.exe\0Vöetky s˙bory (*.*)\0*.*\0"
 	IDS_DIRECTORY               "PrieËinok"
-	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
+	IDS_VIRTUAL_DRIVER          "Ovl·daË virtu·lneho zariadenia"
 	IDS_BAT_FILE                "D·vkov˝ s˙bor systÈmu ReactOS"
 	IDS_CMD_FILE                "PrÌkazov˝ skript systÈmu ReactOS"
 	IDS_COM_FILE                "DOS aplik·cia"
@@ -743,12 +746,11 @@ BEGIN
 	IDS_SYS_FILE                "SystÈmov˝ s˙bor"
 
 	IDS_OPEN_VERB               "Otvoriù"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Spustiù ako "
 	IDS_EDIT_VERB               "Upraviù"
 	IDS_FIND_VERB               "Find" //N·jsù, Hæadaù, Vyhæadaù ???
 	IDS_PRINT_VERB              "TlaËiù"
-	IDS_PLAY_VERB               "Prehraù"
-	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
 
 	IDS_FILE_FOLDER             "s˙bory: %u, prieËinky: %u"
 	IDS_PRINTERS                "TlaËiarne"
@@ -761,4 +763,9 @@ BEGIN
   // There is no Windows program configured to open this type of file.  
 	IDS_SHLEXEC_NOASSOC         "Neexistuje ûiadny program nakonfigurovan˝ tak, aby otv·ral tento typ s˙borov."
                           //   Na otv·ranie tohto typu s˙boru nie je nakonfigurovan˝ ûiadny program systÈmu Windows.
+	
+	IDS_FILE_DETAILS            "Details for '%s' extension"
+	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

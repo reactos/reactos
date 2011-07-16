@@ -46,8 +46,8 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
                  OUT PANSI_STRING FirstPart,
                  OUT PANSI_STRING RemainingPart)
 {
-    ULONG FirstPosition, i;
-    ULONG SkipFirstSlash = 0;
+    USHORT FirstPosition, i;
+    USHORT SkipFirstSlash = 0;
     PAGED_CODE();
 
     /* Zero the strings before continuing */
@@ -116,7 +116,7 @@ BOOLEAN
 NTAPI
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Check every character */
@@ -160,7 +160,7 @@ NTAPI
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, StarFound = MAXUSHORT;
     PAGED_CODE();
 
     ASSERT(Name->Length);
@@ -169,34 +169,74 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
 
     while (NamePosition < Name->Length && ExpressionPosition < Expression->Length)
     {
-        if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[NamePosition]) ||
-            (Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
-            (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
+        if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[NamePosition]))
         {
             NamePosition++;
             ExpressionPosition++;
         }
+        else if (StarFound != MAXUSHORT && (Expression->Buffer[StarFound + 1] == '*' ||
+                 Expression->Buffer[StarFound + 1] == '?' || Expression->Buffer[StarFound + 1] == ANSI_DOS_DOT))
+        {
+            ExpressionPosition = StarFound + 1;
+            switch (Expression->Buffer[ExpressionPosition])
+            {
+                case '*':
+                    StarFound = MAXUSHORT;
+                    break;
+
+                case '?':
+                    if (++ExpressionPosition == Expression->Length)
+                    {
+                        NamePosition = Name->Length;
+                        break;
+                    }
+
+                    MatchingChars = NamePosition;
+                    while (NamePosition < Name->Length &&
+                           Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
+                    {
+                        NamePosition++;
+                    }
+
+                    if (NamePosition - MatchingChars > 0)
+                    {
+                        StarFound = MAXUSHORT;
+                    }
+                    break;
+
+                case ANSI_DOS_DOT:
+                    while (NamePosition < Name->Length && Name->Buffer[NamePosition] != '.')
+                    {
+                        NamePosition++;
+                    }
+                    ExpressionPosition++;
+                    StarFound = MAXUSHORT;
+                    break;
+
+                default:
+                    /* Should never happen */
+                    ASSERT(FALSE);                   
+            }
+        }
+        else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
+                 (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
+        {
+            NamePosition++;
+            ExpressionPosition++;
+            StarFound = MAXUSHORT;
+        }
         else if (Expression->Buffer[ExpressionPosition] == '*')
         {
-            if (ExpressionPosition < (Expression->Length - 1))
-            {
-                if (Expression->Buffer[ExpressionPosition+1] != '*' && Expression->Buffer[ExpressionPosition+1] != '?' &&
-                    Expression->Buffer[ExpressionPosition+1] != ANSI_DOS_DOT &&
-                    Expression->Buffer[ExpressionPosition+1] != ANSI_DOS_QM &&
-                    Expression->Buffer[ExpressionPosition+1] != ANSI_DOS_STAR)
-                {
-                    while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition+1] &&
-                           NamePosition < Name->Length) NamePosition++;
-                }
-            }
-            else
+            StarFound = ExpressionPosition++;
+            if (ExpressionPosition == Expression->Length)
             {
                 NamePosition = Name->Length;
+                break;
             }
-            ExpressionPosition++;
         }
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
         {
+            StarFound = MAXUSHORT;
             MatchingChars = NamePosition;
             while (MatchingChars < Name->Length)
             {
@@ -208,9 +248,18 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             }
             ExpressionPosition++;
         }
+        else if (StarFound != MAXUSHORT)
+        {
+            ExpressionPosition = StarFound + 1;
+            while (NamePosition < Name->Length &&
+                   Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
+            {
+                NamePosition++;
+            }
+        }
         else
         {
-            NamePosition = Name->Length;
+            break;
         }
     }
     if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
@@ -257,7 +306,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
     BOOLEAN LastDot;
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
@@ -394,7 +443,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                      IN BOOLEAN LeadingBackslashPermissible)
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
@@ -447,7 +496,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                 i++;
             }
             /* Then check for bad characters */
-            else if (!!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
+            else if (!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
             {
                 return FALSE;
             }

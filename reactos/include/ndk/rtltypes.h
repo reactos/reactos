@@ -245,6 +245,11 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE    4
 
 //
+// RtlImageNtHeaderEx Flags
+//
+#define RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK          0x00000001
+
+//
 // Codepages
 //
 #define NLS_MB_CODE_PAGE_TAG                                NlsMbCodePageTag
@@ -1012,13 +1017,28 @@ typedef struct _CURDIR
     HANDLE Handle;
 } CURDIR, *PCURDIR;
 
-typedef struct RTL_DRIVE_LETTER_CURDIR
+typedef struct _RTLP_CURDIR_REF *PRTLP_CURDIR_REF;
+typedef struct _RTL_RELATIVE_NAME_U
+{
+    UNICODE_STRING RelativeName;
+    HANDLE ContainingDirectory;
+    PRTLP_CURDIR_REF CurDirRef;
+} RTL_RELATIVE_NAME_U, *PRTL_RELATIVE_NAME_U;
+
+typedef struct _RTL_DRIVE_LETTER_CURDIR
 {
     USHORT Flags;
     USHORT Length;
     ULONG TimeStamp;
     UNICODE_STRING DosPath;
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
+
+typedef struct _RTL_PERTHREAD_CURDIR
+{
+    PRTL_DRIVE_LETTER_CURDIR CurrentDirectories;
+    PUNICODE_STRING ImageName;
+    PVOID Environment;
+} RTL_PERTHREAD_CURDIR, *PRTL_PERTHREAD_CURDIR;
 
 //
 // Private State structure for RtlAcquirePrivilege/RtlReleasePrivilege
@@ -1284,6 +1304,18 @@ typedef struct _STACK_TRACE_DATABASE
 {
     RTL_CRITICAL_SECTION CriticalSection;
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
+
+typedef struct _RTL_TRACE_BLOCK
+{
+    ULONG Magic;
+    ULONG Count;
+    ULONG Size;
+    ULONG UserCount;
+    ULONG UserSize;
+    PVOID UserContext;
+    struct _RTL_TRACE_BLOCK *Next;
+    PVOID *Trace;
+} RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
 
 #ifndef NTOS_MODE_USER
 

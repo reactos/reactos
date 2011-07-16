@@ -463,7 +463,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the first PTE in expansion space
             //
             PointerPde = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
-            BaseVa = MiPdeToAddress(PointerPde);
+            BaseVa = MiPdeToPte(PointerPde);
             BaseVaStart = BaseVa;
 
             //
@@ -497,7 +497,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                                MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
 
                 /* Write the actual PDE now */
-                MI_WRITE_VALID_PDE(PointerPde, TempPde);
+//                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #endif
                 //
                 // Move on to the next expansion address
@@ -864,7 +864,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // Clear the allocation and free bits
         //
-        RtlClearBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, i);
+        RtlClearBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, End);
         RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap, i, NumberOfPages);
 
         //

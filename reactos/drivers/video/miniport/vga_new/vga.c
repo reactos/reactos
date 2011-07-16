@@ -93,7 +93,7 @@ VgaSetPaletteReg(
     PVIDEO_PALETTE_DATA PaletteBuffer,
     ULONG PaletteBufferSize
     );
-    
+
 VP_STATUS
 VgaSetColorLookup(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
@@ -846,10 +846,10 @@ Return Value:
 
     case IOCTL_VIDEO_QUERY_PUBLIC_ACCESS_RANGES:
         {
-            VideoDebugPrint((2, "VgaStartIO - Query Public Address Ranges\n"));
-        
             PVIDEO_PUBLIC_ACCESS_RANGES portAccess;
             ULONG physicalPortLength;
+
+            VideoDebugPrint((2, "VgaStartIO - Query Public Address Ranges\n"));
 
             if (RequestPacket->OutputBufferLength <
                 sizeof(VIDEO_PUBLIC_ACCESS_RANGES))
@@ -882,7 +882,7 @@ Return Value:
 // eVb: 1.17 [END]
             VideoDebugPrint((2, "VgaStartIO - mapping ports to (%x)\n", portAccess->VirtualAddress));
         }
-        
+
         break;
 
     case IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES:
@@ -891,7 +891,7 @@ Return Value:
 
         status = ERROR_INVALID_FUNCTION;
         break;
-        
+
     //
     // if we get here, an invalid IoControlCode was specified.
     //
@@ -1371,7 +1371,7 @@ Return Value:
 {
     PVIDEOMODE CurrentMode = HwDeviceExtension->CurrentMode;
     USHORT i;
-    
+
     //
     // Check if the size of the data in the input buffer is large enough.
     //
@@ -1400,9 +1400,9 @@ Return Value:
     //
     // Check SVGA mode
     //
-    
+
     if (CurrentMode->bitsPerPlane >= 8) return VbeSetColorLookup(HwDeviceExtension, ClutBuffer);
-// eVb: 1.14 [END]    
+// eVb: 1.14 [END]
     //
     // Path for VGA mode
     //
@@ -1507,11 +1507,11 @@ VgaAcquireResources(
 {
     VP_STATUS Status = NO_ERROR;
     ULONG Ranges, i;
-    
+
     //
     // Try exclusive ranges (vga + ati)
     //
-    
+
     Ranges = NUM_VGA_ACCESS_RANGES;
     for (i = 0; i < Ranges; i++) VgaAccessRange[i].RangeShareable = FALSE;
     if (VideoPortVerifyAccessRanges(DeviceExtension, Ranges, VgaAccessRange) != NO_ERROR)
@@ -1519,14 +1519,14 @@ VgaAcquireResources(
         //
         // Not worked, try vga only
         //
-        
+
         Ranges = 3;
         if (VideoPortVerifyAccessRanges(DeviceExtension, Ranges, VgaAccessRange) != NO_ERROR)
         {
             //
             // Still not, try shared ranges
             //
-            
+
             for (i = 0; i < Ranges; i++) VgaAccessRange[i].RangeShareable = TRUE;
             Status = VideoPortVerifyAccessRanges(DeviceExtension, Ranges, VgaAccessRange);
             if (Status == NO_ERROR)
@@ -1534,7 +1534,7 @@ VgaAcquireResources(
                 //
                 // It did work
                 //
-                
+
                 VideoPortVerifyAccessRanges(DeviceExtension, 0, 0);
                 Status = NO_ERROR;
             }
@@ -1546,7 +1546,7 @@ VgaAcquireResources(
         //
         // Worked with exclusive, also try shared
         //
-        
+
         for (i = 0; i < Ranges; i++) VgaAccessRange[i].RangeShareable = TRUE;
         Status = VideoPortVerifyAccessRanges(DeviceExtension, Ranges, VgaAccessRange);
     }

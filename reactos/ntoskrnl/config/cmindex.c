@@ -1166,7 +1166,7 @@ CmpSplitLeaf(IN PHHIVE Hive,
     PCM_KEY_INDEX IndexKey, LeafKey, NewKey;
     PCM_KEY_FAST_INDEX FastLeaf;
     HCELL_INDEX LeafCell, NewCell;
-    ULONG FirstHalf, LastHalf;
+    USHORT FirstHalf, LastHalf;
     ULONG EntrySize, TotalSize;
 
     /* Get the cell */
@@ -1290,7 +1290,7 @@ CmpSplitLeaf(IN PHHIVE Hive,
     }
 
     /* Shift the data inside the root key */
-    if (RootSelect < (IndexKey->Count - 1))
+    if ((RootSelect + 1) < IndexKey->Count)
     {
         RtlMoveMemory(&IndexKey->List[RootSelect + 2],
                       &IndexKey->List[RootSelect + 1],
@@ -1425,7 +1425,7 @@ CmpSelectLeaf(IN PHHIVE Hive,
                 }
 
                 /* No, it doesn't fit, check the next adjacent leaf */
-                if (SubKeyIndex < (IndexKey->Count - 1))
+                if ((SubKeyIndex + 1) < IndexKey->Count)
                 {
                     /* Yes, there is space */
                     LeafCell = IndexKey->List[SubKeyIndex + 1];

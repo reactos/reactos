@@ -46,6 +46,8 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   BOOL UsesSource = ROP4_USES_SOURCE(ROP);
   BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
 
+  ASSERT(IS_VALID_ROP4(ROP));
+
   fnDest_GetPixel = DibFunctionsForBitmapFormat[DestSurf->iBitmapFormat].DIB_GetPixel;
   fnDest_PutPixel = DibFunctionsForBitmapFormat[DestSurf->iBitmapFormat].DIB_PutPixel;
 
@@ -122,7 +124,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
       {
         sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
         if (sx < 0 || sy < 0 ||
-          MaskSurf->sizlBitmap.cx < sx || MaskSurf->sizlBitmap.cy < sy || 
+          MaskSurf->sizlBitmap.cx < sx || MaskSurf->sizlBitmap.cy < sy ||
           fnMask_GetPixel(MaskSurf, sx, sy) != 0)
         {
           CanDraw = FALSE;
@@ -137,10 +139,10 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
         {
           Source = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, sx, sy));
         }
-        else 
+        else
         {
           Source = 0;
-          CanDraw = (ROP3_TO_ROP4(SRCCOPY) != ROP);
+          CanDraw = ((ROP & 0xFF) != R3_OPINDEX_SRCCOPY);
         }
       }
 

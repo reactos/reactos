@@ -6334,6 +6334,12 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
   else if (is_attr(attrs, ATTR_UUID) && !is_attr(attrs, ATTR_PUBLIC))
     attrs = append_attr( attrs, make_attr(ATTR_PUBLIC) );
 
+  /* Append the SWITCHTYPE attribute to a non-encapsulated union if it does not already have it.  */
+  if (type_get_type_detect_alias(type) == TYPE_UNION &&
+      is_attr(attrs, ATTR_SWITCHTYPE) &&
+      !is_attr(type->attrs, ATTR_SWITCHTYPE))
+    type->attrs = append_attr(type->attrs, make_attrp(ATTR_SWITCHTYPE, get_attrp(attrs, ATTR_SWITCHTYPE)));
+
   LIST_FOR_EACH_ENTRY( decl, decls, const declarator_t, entry )
   {
 

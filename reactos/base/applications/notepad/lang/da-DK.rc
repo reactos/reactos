@@ -86,7 +86,7 @@ BEGIN
         MENUITEM "&Søg efter hjælp om...", CMD_HELP_SEARCH
         MENUITEM "&Brug af Hjælp",         CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About"                  CMD_ABOUT
+        MENUITEM "&About",                 CMD_ABOUT
         MENUITEM "&Om Notesblok",          CMD_ABOUT_WINE
     END
 END

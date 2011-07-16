@@ -950,7 +950,7 @@ static BOOL SQL_MarkPrimaryKeys( column_info **cols,
         found = FALSE;
         for( c = *cols, idx = 0; c && !found; c = c->next, idx++ )
         {
-            if( lstrcmpW( k->column, c->column ) )
+            if( strcmpW( k->column, c->column ) )
                 continue;
             c->type |= MSITYPE_KEY;
             found = TRUE;

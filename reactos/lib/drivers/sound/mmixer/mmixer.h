@@ -47,7 +47,7 @@ typedef MIXER_STATUS(*PMIXER_CLOSE)(
 typedef MIXER_STATUS(*PMIXER_CLOSEKEY)(
     IN HANDLE hKey);
 
-typedef VOID (*PMIXER_EVENT)(
+typedef VOID (CALLBACK *PMIXER_EVENT)(
     IN PVOID MixerEventContext,
     IN HANDLE hMixer,
     IN ULONG NotificationType,
@@ -149,7 +149,8 @@ MMixerOpen(
 MIXER_STATUS
 MMixerGetLineInfo(
     IN PMIXER_CONTEXT MixerContext,
-    IN  HANDLE MixerHandle,
+    IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN  ULONG Flags,
     OUT LPMIXERLINEW MixerLine);
 
@@ -157,6 +158,7 @@ MIXER_STATUS
 MMixerGetLineControls(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERLINECONTROLSW MixerLineControls);
 
@@ -164,6 +166,7 @@ MIXER_STATUS
 MMixerSetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
 
@@ -171,6 +174,7 @@ MIXER_STATUS
 MMixerGetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
 
@@ -201,6 +205,12 @@ MMixerSetWaveStatus(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE PinHandle,
     IN KSSTATE State);
+
+MIXER_STATUS
+MMixerSetWaveResetState(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    IN ULONG bBegin);
 
 MIXER_STATUS
 MMixerGetWaveDevicePath(

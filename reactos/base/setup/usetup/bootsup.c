@@ -494,11 +494,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
 #if DBG
+#ifndef _WINKD_
     /* ReactOS_KdSerial */
     CreateFreeLoaderEntry(IniCache, IniSection,
         L"ReactOS_KdSerial", L"\"ReactOS (RosDbg)\"",
         L"Windows2003", ArcPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
+#endif
 
     /* ReactOS_LogFile */
     CreateFreeLoaderEntry(IniCache, IniSection,
@@ -512,18 +514,6 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
         L"ReactOS", L"ramdisk(0)\\ReactOS",
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
 #endif
-
-    /* ReactOS_old */
-    CreateFreeLoaderEntry(IniCache, IniSection,
-        L"ReactOS_old", L"\"ReactOS (old boot method)\"",
-        L"ReactOS", ArcPath,
-        L"");
-
-    /* ReactOS_Debug_old */
-    CreateFreeLoaderEntry(IniCache, IniSection,
-        L"ReactOS_Debug_old", L"\"ReactOS (Debug, old boot method)\"",
-        L"ReactOS", ArcPath,
-        L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);
@@ -2251,7 +2241,7 @@ InstallVBRToPartition(PUNICODE_STRING SystemRootPath,
                                              DestinationArcPath,
                                              PartitionType);
     }
-    
+
     return STATUS_UNSUCCESSFUL;
 }
 

@@ -135,7 +135,7 @@
     { \
         if ( ! (parameter_condition) ) \
         { \
-            SND_ERR(L"FAILED parameter check: %hS\n", #parameter_condition); \
+            SND_ERR(L"FAILED parameter check: %hS at File %S Line %lu\n", #parameter_condition, __FILE__, __LINE__); \
             return MMSYSERR_INVALPARAM; \
         } \
     }
@@ -185,8 +185,8 @@ typedef struct _SOUND_OVERLAPPED
     PWAVEHDR Header;
     BOOL PerformCompletion;
 
-    DWORD OriginalBufferSize;
     LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+    PVOID CompletionContext;
 
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
 
@@ -199,10 +199,10 @@ typedef MMRESULT (*WAVE_COMMIT_FUNC)(
 
 typedef MMRESULT (*MMMIXERQUERY_FUNC) (
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);
-
 
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
     IN  struct _SOUND_DEVICE* Device,
@@ -366,6 +366,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hStopEvent;
     HANDLE hResetEvent;
     BOOL ResetInProgress;
+    BOOL bPaused;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -381,10 +382,10 @@ typedef struct _WAVEHDR_EXTENSION
 */
 
 MMRESULT
-InitEntrypointMutexes();
+InitEntrypointMutexes(VOID);
 
 VOID
-CleanupEntrypointMutexes();
+CleanupEntrypointMutexes(VOID);
 
 VOID
 AcquireEntrypointMutex(
@@ -501,7 +502,7 @@ UnlistSoundDevices(
     IN  MMDEVICE_TYPE DeviceType);
 
 VOID
-UnlistAllSoundDevices();
+UnlistAllSoundDevices(VOID);
 
 MMRESULT
 GetSoundDevice(
@@ -607,7 +608,7 @@ FreeMemory(
     IN  PVOID Pointer);
 
 UINT
-GetMemoryAllocationCount();
+GetMemoryAllocationCount(VOID);
 
 UINT
 GetDigitCount(
@@ -702,6 +703,9 @@ MMRESULT
 StopStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
+VOID
+InitiateSoundStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
 /*
     kernel.c

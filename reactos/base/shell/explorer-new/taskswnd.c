@@ -1725,8 +1725,9 @@ TaskSwitchWnd_HandleTaskItemRightClick(IN OUT PTASK_SWITCH_WND This,
 
     if (hmenu) {
         POINT pt;
+        int cmd;
         GetCursorPos(&pt);
-        int cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, This->hWndToolbar, NULL);
+        cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, This->hWndToolbar, NULL);
         if (cmd) {
             SetForegroundWindow(TaskItem->hWnd);	// reactivate window after the context menu has closed
             PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
@@ -1756,19 +1757,19 @@ TaskSwitchWnd_HandleButtonRightClick(IN OUT PTASK_SWITCH_WND This,
             TaskSwitchWnd_HandleTaskGroupRightClick(This,
                                                TaskGroup);
             return TRUE;
-        }		
+        }
     }
 
     TaskItem = FindTaskItemByIndex(This,
                                    (INT)wIndex);
-						   
+
     if (TaskItem != NULL)
     {
         TaskSwitchWnd_HandleTaskItemRightClick(This,
                                           TaskItem);
         return TRUE;
     }
-    
+
     return FALSE;
 }
 

@@ -2224,7 +2224,7 @@ interface ITravelLogClient : IUnknown
  * ITravelLog interface
  */
 [
-    uuid(02BA3B52-0547-11D1-B833-00C04FC9B31F),
+    uuid(66A9CB08-4802-11d2-A561-00A0C92DBFE8),
     object,
     pointer_default(unique),
     local

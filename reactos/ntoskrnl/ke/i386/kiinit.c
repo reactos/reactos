@@ -690,10 +690,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
-#if !defined(_X86_)   
-    /* Check if we are being booted from FreeLDR */
-    if (!((ULONG_PTR)LoaderBlock & 0x80000000)) KiRosPrepareForSystemStartup((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
-#endif
+
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;

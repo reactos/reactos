@@ -339,6 +339,10 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
 #endif
+#ifdef _M_IX86
+                if (!FileData[DeviceId].FileFuncTable)
+                    FileData[DeviceId].FileFuncTable = PxeMount(DeviceId);
+#endif
                 if (!FileData[DeviceId].FileFuncTable)
                 {
                     /* Error, unable to detect file system */

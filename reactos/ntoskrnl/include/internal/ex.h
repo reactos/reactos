@@ -480,7 +480,7 @@ ULONG
 ExGetCountFastReference(IN EX_FAST_REF FastRef)
 {
     /* Return the reference count */
-    return FastRef.RefCnt;
+    return (ULONG)FastRef.RefCnt;
 }
 
 FORCEINLINE
@@ -887,10 +887,10 @@ ExWaitForUnblockPushLock(
  *--*/
 FORCEINLINE
 VOID
-_ExInitializePushLock(IN PULONG_PTR PushLock)
+_ExInitializePushLock(OUT PEX_PUSH_LOCK PushLock)
 {
     /* Set the value to 0 */
-    *PushLock = 0;
+    PushLock->Ptr = 0;
 }
 #define ExInitializePushLock _ExInitializePushLock
 
@@ -1143,7 +1143,7 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
     /* Unlock the pushlock */
     OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock,
-                                                 -(SIZE_T)EX_PUSH_LOCK_LOCK);
+                                                 -(SSIZE_T)EX_PUSH_LOCK_LOCK);
 
     /* Sanity checks */
     ASSERT(OldValue.Locked);

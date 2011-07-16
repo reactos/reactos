@@ -39,6 +39,7 @@
 /* Strings */
 #define IDS_APPTITLE     100
 #define IDS_SETASDESKBG  101
+#define IDS_PREVIEW 550
 
 /* Tooltips strings */
 #define IDS_TOOLTIP_NEXT_PIC     300

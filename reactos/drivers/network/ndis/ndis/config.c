@@ -841,7 +841,7 @@ NdisOpenConfigurationKeyByIndex(
 
     /* should i fail instead if the passed-in string isn't long enough? */
     wcsncpy(KeyName->Buffer, KeyInformation->Name, KeyName->MaximumLength/sizeof(WCHAR));
-    KeyName->Length = (USHORT)KeyInformation->NameLength;
+    KeyName->Length = (USHORT)min(KeyInformation->NameLength, KeyName->MaximumLength);
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, NULL);
 

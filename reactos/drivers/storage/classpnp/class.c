@@ -2485,7 +2485,7 @@ ClassIoComplete(
             retry = TRUE;
         }
 
-        if (retry && (irpStack->Parameters.Others.Argument4--)) {
+        if (retry && ((*(PCHAR*)&irpStack->Parameters.Others.Argument4)--)) {
 
             //
             // Retry request.

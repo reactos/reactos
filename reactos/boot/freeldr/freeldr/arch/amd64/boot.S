@@ -23,9 +23,6 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
-
 PUBLIC ChainLoadBiosBootSectorCode
 ChainLoadBiosBootSectorCode:
 	.code64

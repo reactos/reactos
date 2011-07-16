@@ -45,7 +45,7 @@ static LONG ThreadPoolIOWorkerThreads;
 static LONG ThreadPoolIOWorkerThreadsRequests;
 static LONG ThreadPoolIOWorkerThreadsLongRequests;
 
-#define IsThreadPoolInitialized() ((volatile LONG)ThreadPoolInitialized == 1)
+#define IsThreadPoolInitialized() (*((volatile LONG*)&ThreadPoolInitialized) == 1)
 
 static NTSTATUS
 RtlpInitializeThreadPool(VOID)
@@ -55,7 +55,7 @@ RtlpInitializeThreadPool(VOID)
 
     do
     {
-        InitStatus = _InterlockedCompareExchange(&ThreadPoolInitialized,
+        InitStatus = InterlockedCompareExchange(&ThreadPoolInitialized,
                                                  2,
                                                  0);
         if (InitStatus == 0)
@@ -91,7 +91,7 @@ RtlpInitializeThreadPool(VOID)
 
 Finish:
             /* Initialization done */
-            _InterlockedExchange(&ThreadPoolInitialized,
+            InterlockedExchange(&ThreadPoolInitialized,
                                  1);
             break;
         }
@@ -223,11 +223,11 @@ RtlpExecuteWorkItem(IN OUT PVOID NormalContext,
     }
 
     /* update the requests counter */
-    _InterlockedDecrement(&ThreadPoolWorkerThreadsRequests);
+    InterlockedDecrement(&ThreadPoolWorkerThreadsRequests);
 
     if (WorkItem.Flags & WT_EXECUTELONGFUNCTION)
     {
-        _InterlockedDecrement(&ThreadPoolWorkerThreadsLongRequests);
+        InterlockedDecrement(&ThreadPoolWorkerThreadsLongRequests);
     }
 }
 
@@ -237,11 +237,11 @@ RtlpQueueWorkerThread(IN OUT PRTLP_WORKITEM WorkItem)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    _InterlockedIncrement(&ThreadPoolWorkerThreadsRequests);
+    InterlockedIncrement(&ThreadPoolWorkerThreadsRequests);
 
     if (WorkItem->Flags & WT_EXECUTELONGFUNCTION)
     {
-        _InterlockedIncrement(&ThreadPoolWorkerThreadsLongRequests);
+        InterlockedIncrement(&ThreadPoolWorkerThreadsLongRequests);
     }
 
     if (WorkItem->Flags & WT_EXECUTEINPERSISTENTTHREAD)
@@ -270,11 +270,11 @@ RtlpQueueWorkerThread(IN OUT PRTLP_WORKITEM WorkItem)
 
     if (!NT_SUCCESS(Status))
     {
-        _InterlockedDecrement(&ThreadPoolWorkerThreadsRequests);
+        InterlockedDecrement(&ThreadPoolWorkerThreadsRequests);
 
         if (WorkItem->Flags & WT_EXECUTELONGFUNCTION)
         {
-            _InterlockedDecrement(&ThreadPoolWorkerThreadsLongRequests);
+            InterlockedDecrement(&ThreadPoolWorkerThreadsLongRequests);
         }
     }
 
@@ -351,11 +351,11 @@ RtlpExecuteIoWorkItem(IN OUT PVOID NormalContext,
     }
 
     /* update the requests counter */
-    _InterlockedDecrement(&ThreadPoolIOWorkerThreadsRequests);
+    InterlockedDecrement(&ThreadPoolIOWorkerThreadsRequests);
 
     if (WorkItem.Flags & WT_EXECUTELONGFUNCTION)
     {
-        _InterlockedDecrement(&ThreadPoolIOWorkerThreadsLongRequests);
+        InterlockedDecrement(&ThreadPoolIOWorkerThreadsLongRequests);
     }
 }
 
@@ -461,14 +461,14 @@ RtlpQueueIoWorkerThread(IN OUT PRTLP_WORKITEM WorkItem)
 
     ASSERT(IoThread != NULL);
 
-    _InterlockedIncrement(&ThreadPoolIOWorkerThreadsRequests);
+    InterlockedIncrement(&ThreadPoolIOWorkerThreadsRequests);
 
     if (WorkItem->Flags & WT_EXECUTELONGFUNCTION)
     {
         /* We're about to queue a long function, mark the thread */
         IoThread->Flags |= WT_EXECUTELONGFUNCTION;
 
-        _InterlockedIncrement(&ThreadPoolIOWorkerThreadsLongRequests);
+        InterlockedIncrement(&ThreadPoolIOWorkerThreadsLongRequests);
     }
 
     /* It's time to queue the work item */
@@ -480,11 +480,11 @@ RtlpQueueIoWorkerThread(IN OUT PRTLP_WORKITEM WorkItem)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to queue APC for work item 0x%p\n", WorkItem->Function);
-        _InterlockedDecrement(&ThreadPoolIOWorkerThreadsRequests);
+        InterlockedDecrement(&ThreadPoolIOWorkerThreadsRequests);
 
         if (WorkItem->Flags & WT_EXECUTELONGFUNCTION)
         {
-            _InterlockedDecrement(&ThreadPoolIOWorkerThreadsLongRequests);
+            InterlockedDecrement(&ThreadPoolIOWorkerThreadsLongRequests);
         }
     }
 
@@ -543,7 +543,7 @@ RtlpIoWorkerThreadProc(IN PVOID Parameter)
     BOOLEAN Terminate;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (_InterlockedIncrement(&ThreadPoolIOWorkerThreads) > MAX_WORKERTHREADS)
+    if (InterlockedIncrement(&ThreadPoolIOWorkerThreads) > MAX_WORKERTHREADS)
     {
         /* Oops, too many worker threads... */
         goto InitFailed;
@@ -562,10 +562,10 @@ RtlpIoWorkerThreadProc(IN PVOID Parameter)
         DPRINT1("Failed to create handle to own thread! Status: 0x%x\n", Status);
 
 InitFailed:
-        _InterlockedDecrement(&ThreadPoolIOWorkerThreads);
+        InterlockedDecrement(&ThreadPoolIOWorkerThreads);
 
         /* Signal initialization completion */
-        _InterlockedExchange((PLONG)Parameter,
+        InterlockedExchange((PLONG)Parameter,
                             1);
 
         RtlExitUserThread(Status);
@@ -579,7 +579,7 @@ InitFailed:
                    (PLIST_ENTRY)&ThreadInfo.ListEntry);
 
     /* Signal initialization completion */
-    _InterlockedExchange((PLONG)Parameter,
+    InterlockedExchange((PLONG)Parameter,
                          1);
 
     for (;;)
@@ -614,8 +614,8 @@ Wait:
             /* FIXME - figure out an effective method to determine if it's appropriate to
                        lower the number of threads. For now let's always terminate if there's
                        at least one thread and no queued items. */
-            Terminate = ((volatile LONG)ThreadPoolIOWorkerThreads - (volatile LONG)ThreadPoolIOWorkerThreadsLongRequests >= WORKERTHREAD_CREATION_THRESHOLD) &&
-                        ((volatile LONG)ThreadPoolIOWorkerThreadsRequests == 0);
+            Terminate = (*((volatile LONG*)&ThreadPoolIOWorkerThreads) - *((volatile LONG*)&ThreadPoolIOWorkerThreadsLongRequests) >= WORKERTHREAD_CREATION_THRESHOLD) &&
+                        (*((volatile LONG*)&ThreadPoolIOWorkerThreadsRequests) == 0);
 
             if (Terminate)
             {
@@ -626,7 +626,7 @@ Wait:
             if (Terminate)
             {
                 /* Rundown the thread and unlink it from the list */
-                _InterlockedDecrement(&ThreadPoolIOWorkerThreads);
+                InterlockedDecrement(&ThreadPoolIOWorkerThreads);
                 RemoveEntryList((PLIST_ENTRY)&ThreadInfo.ListEntry);
             }
 
@@ -663,10 +663,10 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
     PKNORMAL_ROUTINE ApcRoutine;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (_InterlockedIncrement(&ThreadPoolWorkerThreads) > MAX_WORKERTHREADS)
+    if (InterlockedIncrement(&ThreadPoolWorkerThreads) > MAX_WORKERTHREADS)
     {
         /* Signal initialization completion */
-        _InterlockedExchange((PLONG)Parameter,
+        InterlockedExchange((PLONG)Parameter,
                              1);
 
         /* Oops, too many worker threads... */
@@ -675,7 +675,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
     }
 
     /* Signal initialization completion */
-    _InterlockedExchange((PLONG)Parameter,
+    InterlockedExchange((PLONG)Parameter,
                          1);
 
     for (;;)
@@ -718,7 +718,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
             {
                 /* FIXME - we might want to optimize this */
                 if (TimeoutCount++ > 2 &&
-                    (volatile LONG)ThreadPoolWorkerThreads - (volatile LONG)ThreadPoolWorkerThreadsLongRequests >= WORKERTHREAD_CREATION_THRESHOLD)
+                    *((volatile LONG*)&ThreadPoolWorkerThreads) - *((volatile LONG*)&ThreadPoolWorkerThreadsLongRequests) >= WORKERTHREAD_CREATION_THRESHOLD)
                 {
                     Terminate = TRUE;
                 }
@@ -736,7 +736,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
 
             if (Terminate)
             {
-                _InterlockedDecrement(&ThreadPoolWorkerThreads);
+                InterlockedDecrement(&ThreadPoolWorkerThreads);
                 Status = STATUS_SUCCESS;
                 break;
             }
@@ -819,7 +819,7 @@ RtlQueueWorkItem(IN WORKERCALLBACKFUNC Function,
                 /* Grow the thread pool */
                 Status = RtlpStartWorkerThread(RtlpIoWorkerThreadProc);
 
-                if (!NT_SUCCESS(Status) && (volatile LONG)ThreadPoolIOWorkerThreads != 0)
+                if (!NT_SUCCESS(Status) && *((volatile LONG*)&ThreadPoolIOWorkerThreads) != 0)
                 {
                     /* We failed to create the thread, but there's at least one there so
                        we can at least queue the request */
@@ -846,7 +846,7 @@ RtlQueueWorkItem(IN WORKERCALLBACKFUNC Function,
                 /* Grow the thread pool */
                 Status = RtlpStartWorkerThread(RtlpWorkerThreadProc);
 
-                if (!NT_SUCCESS(Status) && (volatile LONG)ThreadPoolWorkerThreads != 0)
+                if (!NT_SUCCESS(Status) && *((volatile LONG*)&ThreadPoolWorkerThreads) != 0)
                 {
                     /* We failed to create the thread, but there's at least one there so
                        we can at least queue the request */

@@ -30,17 +30,17 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 // REGISTRY
 //
-IDR_ADDRESSBAND          REGISTRY                "res\\addressband.rgs"
-IDR_ADDRESSEDITBOX       REGISTRY                "res\\addresseditbox.rgs"
-IDR_ACLMULTI             REGISTRY                "res\\autocompletecontainer.rgs"
-IDR_BANDPROXY            REGISTRY                "res\\bandproxy.rgs"
-IDR_BANDSITE             REGISTRY                "res\\rebarbandsite.rgs"
-IDR_BANDSITEMENU         REGISTRY                "res\\bandsitemenu.rgs"
-IDR_BRANDBAND            REGISTRY                "res\\brandband.rgs"
-IDR_COMMONBROWSER        REGISTRY                "res\\commonbrowser.rgs"
-IDR_GLOBALFOLDERSETTINGS REGISTRY                "res\\globalfoldersettings.rgs"
-IDR_INTERNETTOOLBAR      REGISTRY                "res\\internettoolbar.rgs"
-IDR_REGTREEOPTIONS       REGISTRY                "res\\regtreeoptions.rgs"
+IDR_ADDRESSBAND          REGISTRY                "res/addressband.rgs"
+IDR_ADDRESSEDITBOX       REGISTRY                "res/addresseditbox.rgs"
+IDR_ACLMULTI             REGISTRY                "res/autocompletecontainer.rgs"
+IDR_BANDPROXY            REGISTRY                "res/bandproxy.rgs"
+IDR_BANDSITE             REGISTRY                "res/rebarbandsite.rgs"
+IDR_BANDSITEMENU         REGISTRY                "res/bandsitemenu.rgs"
+IDR_BRANDBAND            REGISTRY                "res/brandband.rgs"
+IDR_COMMONBROWSER        REGISTRY                "res/commonbrowser.rgs"
+IDR_GLOBALFOLDERSETTINGS REGISTRY                "res/globalfoldersettings.rgs"
+IDR_INTERNETTOOLBAR      REGISTRY                "res/internettoolbar.rgs"
+IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 
 
 /*
@@ -63,7 +63,6 @@ IDR_REGTREEOPTIONS       REGISTRY                "res\\regtreeoptions.rgs"
 //#include "lang/ko-KR.rc"
 //#include "lang/nl-NL.rc"
 //#include "lang/no-NO.rc"
-//#include "lang/pl-PL.rc"
 //#include "lang/pt-BR.rc"
 //#include "lang/pt-PT.rc"
 //#include "lang/ro-RO.rc"
@@ -72,9 +71,10 @@ IDR_REGTREEOPTIONS       REGISTRY                "res\\regtreeoptions.rgs"
 //#include "lang/sk-SK.rc"
 //#include "lang/sv-SE.rc"
 //#include "lang/tr-TR.rc"
-#include "lang/uk-UA.rc"
 //#include "lang/zh-CN.rc"
 //#include "lang/zh-TW.rc"
 
 /* UTF-8 */
 #include "lang/bg-BG.rc"
+#include "lang/pl-PL.rc"
+#include "lang/uk-UA.rc"

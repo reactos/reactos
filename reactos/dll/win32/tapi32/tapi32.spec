@@ -100,7 +100,7 @@
 @ stub lineGetCountryW
 @ stdcall lineGetDevCaps(long long long long ptr) lineGetDevCapsA
 @ stdcall lineGetDevCapsA(long long long long ptr)
-@ stub lineGetDevCapsW
+@ stdcall lineGetDevCapsW(ptr long long long ptr)
 @ stdcall lineGetDevConfig(long ptr str) lineGetDevConfigA
 @ stdcall lineGetDevConfigA(long ptr str)
 @ stub lineGetDevConfigW
@@ -108,7 +108,7 @@
 @ stub lineGetGroupListW
 @ stdcall lineGetID(long long long long ptr str) lineGetIDA
 @ stdcall lineGetIDA(long long long long ptr str)
-@ stub lineGetIDW
+@ stdcall lineGetIDW(ptr long ptr long ptr ptr)
 @ stdcall lineGetIcon(long str ptr) lineGetIconA
 @ stdcall lineGetIconA(long str ptr)
 @ stub lineGetIconW
@@ -120,7 +120,7 @@
 @ stdcall lineGetNumRings(long long ptr)
 @ stdcall lineGetProviderList(long ptr) lineGetProviderListA
 @ stdcall lineGetProviderListA(long ptr)
-@ stub lineGetProviderListW
+@ stdcall lineGetProviderListW(long ptr)
 @ stub lineGetProxyStatus
 @ stub lineGetQueueInfo
 @ stub lineGetQueueInfoA
@@ -141,7 +141,7 @@
 @ stub lineInitializeExW
 @ stdcall lineMakeCall(long ptr str long ptr) lineMakeCallA
 @ stdcall lineMakeCallA(long ptr str long ptr)
-@ stub lineMakeCallW
+@ stdcall lineMakeCallW(ptr ptr ptr long ptr)
 @ stdcall lineMonitorDigits(long long)
 @ stdcall lineMonitorMedia(long long)
 @ stdcall lineMonitorTones(long ptr long)

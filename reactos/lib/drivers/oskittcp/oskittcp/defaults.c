@@ -194,7 +194,11 @@ int bcmp(const void *b1, const void *b2, size_t len)
 	return RtlCompareMemory(b1, b2, len);
 }
 
+#ifndef _MSC_VER
+
 int memcmp(const void *b1, const void *b2, size_t len)
 {
 	return RtlCompareMemory(b1, b2, len);
 }
+
+#endif

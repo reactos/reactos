@@ -134,6 +134,7 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
 
 BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s)
 {
+    TCHAR szTitle[256], szText[256];
     switch (action)
     {
     case ACTION_ADD:
@@ -162,6 +163,10 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s)
             }
             import_registry_file(fp);
             get_file_name(&s, filename);
+            LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
+            LoadString(hInst, IDS_IMPORTED_OK, szText, sizeof(szTitle));
+            /* show successful import */
+            MessageBox(NULL, szText, szTitle, MB_OK);
         }
         break;
     }
@@ -311,9 +316,18 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
     }
 
     if (*s && action == ACTION_UNDEF)
-        action = ACTION_ADD;
-
-    if (action == ACTION_UNDEF)
+	    {
+         TCHAR szTitle[256], szText[256];
+         LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
+         LoadString(hInst, IDS_IMPORT_PROMPT, szText, sizeof(szTitle));	
+         /* request import confirmation */
+	     if (MessageBox(NULL, szText, szTitle, MB_YESNO) == IDYES) 
+	     {
+          action = ACTION_ADD;
+         }
+		 else return TRUE;
+        }
+	if (action == ACTION_UNDEF)
         return FALSE;
 
     return PerformRegAction(action, s);

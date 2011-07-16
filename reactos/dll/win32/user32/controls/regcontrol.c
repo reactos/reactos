@@ -87,8 +87,23 @@ LRESULT
 WINAPI
 MsgWindowProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hwnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hwnd, FNID_MESSAGEWND);
+       }
+    }
+
     if (message == WM_NCCREATE) return TRUE;
-    return 0;
+
+    if (message == WM_DESTROY)
+       NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+
+    return DefWindowProc(hwnd, message, wParam, lParam );
 }
 
 LRESULT
@@ -116,8 +131,8 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientW.pfnDefWindowProc         = DefWindowProcW;
   pfnClientA.pfnMessageWindowProc     = MsgWindowProc;
   pfnClientW.pfnMessageWindowProc     = MsgWindowProc;
-  pfnClientA.pfnSwitchWindowProc      = DefWindowProcA;
-  pfnClientW.pfnSwitchWindowProc      = DefWindowProcW;
+  pfnClientA.pfnSwitchWindowProc      = SwitchWndProcA;
+  pfnClientW.pfnSwitchWindowProc      = SwitchWndProcW;
   pfnClientA.pfnButtonWndProc         = ButtonWndProcA;
   pfnClientW.pfnButtonWndProc         = ButtonWndProcW;
   pfnClientA.pfnComboBoxWndProc       = ComboWndProcA;

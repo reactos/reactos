@@ -59,6 +59,7 @@ static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
 
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
+static const WCHAR* VAL_SCRNSV = L"SCRNSAVE.EXE";
 static const WCHAR* VAL_SCRACT = L"ScreenSaveActive";
 static const WCHAR* VAL_GRID = L"GridGranularity";
 static const WCHAR* VAL_DRAG = L"DragFullWindows";
@@ -134,6 +135,20 @@ SpiLoadUserPrefMask(DWORD dValue)
         return dValue;
     }
     return Result;
+}
+
+static
+DWORD
+SpiLoadTimeOut(VOID)
+{   // Must have the string!
+    WCHAR szApplicationName[MAX_PATH];
+    RtlZeroMemory(&szApplicationName, sizeof(szApplicationName));
+    if (!RegReadUserSetting(KEY_DESKTOP, VAL_SCRNSV, REG_SZ, &szApplicationName, sizeof(szApplicationName)))
+    {
+        return 0;
+    }
+    if (wcslen(szApplicationName) == 0) return 0;
+    return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 0);
 }
 
 static
@@ -280,7 +295,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
 
-    gspv.iScrSaverTimeout = 10;
+    gspv.iScrSaverTimeout = SpiLoadTimeOut();
     gspv.bScrSaverActive = FALSE;
     gspv.bScrSaverRunning = FALSE;
 #if(WINVER >= 0x0600)
@@ -634,7 +649,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         }
 
         /* Try to get the size of the wallpaper */
-        if(!(psurfBmp = SURFACE_LockSurface(hbmp)))
+        if(!(psurfBmp = SURFACE_ShareLockSurface(hbmp)))
         {
             GreDeleteObject(hbmp);
             return 0;
@@ -644,10 +659,10 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         gpwinstaCurrent->cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
         gpwinstaCurrent->WallpaperMode = wmCenter;
 
-        SURFACE_UnlockSurface(psurfBmp);
+        SURFACE_ShareUnlockSurface(psurfBmp);
 
         /* Change the bitmap's ownership */
-        GDIOBJ_SetOwnership(hbmp, NULL);
+        GreSetObjectOwner(hbmp, GDI_OBJ_HMGR_PUBLIC);
 
         /* Yes, Windows really loads the current setting from the registry. */
         ulTile = SpiLoadInt(KEY_DESKTOP, L"TileWallpaper", 0);
@@ -677,7 +692,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     if(hOldBitmap != NULL)
     {
         /* Delete the old wallpaper */
-        GDIOBJ_SetOwnership(hOldBitmap, PsGetCurrentProcess());
+        GreSetObjectOwner(hOldBitmap, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(hOldBitmap);
     }
 
@@ -907,7 +922,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETWORKAREA:
         {
-            /*FIXME: we should set the work area of the monitor 
+            /*FIXME: we should set the work area of the monitor
                      that contains the specified rectangle*/
             PMONITOR pmonitor = IntGetPrimaryMonitor();
             RECT rcWorkArea;

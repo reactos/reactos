@@ -117,7 +117,7 @@ IntEngWndUpdateClipObj(
     {
       DPRINT1("Warning: Couldn't lock visible region of window DC\n");
     }
-    REGION_FreeRgnByHandle(hVisRgn);
+    GreDeleteObject(hVisRgn);
   }
   else
   {

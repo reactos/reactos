@@ -29,6 +29,7 @@ MmeSetState(
     PMMFUNCTION_TABLE FunctionTable;
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    BOOL OldState;
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
@@ -52,6 +53,20 @@ MmeSetState(
     }
     /* Try change state */
     Result = FunctionTable->SetState(SoundDeviceInstance, bStart);
+
+    if ( MMSUCCESS(Result) )
+    {
+        /* Get old audio stream state */
+        OldState = SoundDeviceInstance->bPaused;
+
+        /* Store audio stream pause state */
+        SoundDeviceInstance->bPaused = !bStart;
+
+        if (SoundDeviceInstance->bPaused == FALSE && OldState == TRUE)
+        {
+            InitiateSoundStreaming(SoundDeviceInstance);
+        }
+    }
 
     return Result;
 }
@@ -130,11 +145,11 @@ MmeOpenDevice(
     UINT Message;
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
-    LPWAVEFORMATEX Format;
+    LPWAVEFORMATEX Format = NULL;
 
     SND_TRACE(L"Opening device");
 
-    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );    /* FIXME? wave in too? */
+    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) || IS_MIXER_DEVICE_TYPE(DeviceType) || IS_MIDI_DEVICE_TYPE(DeviceType) );    /* FIXME? wave in too? */
     VALIDATE_MMSYS_PARAMETER( OpenParameters );
 
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);

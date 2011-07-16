@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 /* NAND Image Sizes */
 #define NAND_PAGE_SIZE  (2 * 1024)                              // 2 KB

@@ -3,7 +3,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -13,23 +12,23 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDC_FDEBUG MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Соединение", IDM_FILE_CONNECT
-        MENUITEM "&Отключение", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&РЎРѕРµРґРёРЅРµРЅРёРµ", IDM_FILE_CONNECT
+        MENUITEM "&РћС‚РєР»СЋС‡РµРЅРёРµ", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "О&чистить экран", IDM_FILE_CLEARDISPLAY
+        MENUITEM "Рћ&С‡РёСЃС‚РёС‚СЊ СЌРєСЂР°РЅ", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Начать захват", IDM_FILE_STARTCAPTURE
-        MENUITEM "Ос&тановить захват", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&РќР°С‡Р°С‚СЊ Р·Р°С…РІР°С‚", IDM_FILE_STARTCAPTURE
+        MENUITEM "РћСЃ&С‚Р°РЅРѕРІРёС‚СЊ Р·Р°С…РІР°С‚", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Локальный ответ", IDM_FILE_LOCALECHO
+        MENUITEM "&Р›РѕРєР°Р»СЊРЅС‹Р№ РѕС‚РІРµС‚", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDM_EXIT
+        MENUITEM "&Р’С‹С…РѕРґ", IDM_EXIT
     END
-    POPUP "&Справка"
+    POPUP "&РЎРїСЂР°РІРєР°"
     BEGIN
-        MENUITEM "&О программе...", IDM_ABOUT
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ...", IDM_ABOUT
     END
 END
 
@@ -117,10 +116,10 @@ END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе Отладчик FreeLoader"
+CAPTION "Рћ РїСЂРѕРіСЂР°РјРјРµ РћС‚Р»Р°РґС‡РёРє FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Отладчик FreeLoader v1.0\nАвторские права (C) 2003\nБраин Палмер (brianp@reactos.org)",
+    CONTROL         "РћС‚Р»Р°РґС‡РёРє FreeLoader v1.0\nРђРІС‚РѕСЂСЃРєРёРµ РїСЂР°РІР° (C) 2003\nР‘СЂР°РёРЅ РџР°Р»РјРµСЂ (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
@@ -131,28 +130,28 @@ END
 
 IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройки соединения"
+CAPTION "РќР°СЃС‚СЂРѕР№РєРё СЃРѕРµРґРёРЅРµРЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Введите COM-порт (e.g. COM1):",IDC_STATIC,7,7,108,8
+    LTEXT           "Р’РІРµРґРёС‚Рµ COM-РїРѕСЂС‚ (e.g. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Введите скорость передачи (e.g. 115200):",IDC_STATIC,7,38,114,
+    LTEXT           "Р’РІРµРґРёС‚Рµ СЃРєРѕСЂРѕСЃС‚СЊ РїРµСЂРµРґР°С‡Рё (e.g. 115200):",IDC_STATIC,7,38,114,
                     8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,100,79,50,14
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL,100,79,50,14
 END
 
 IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Файл захвата"
+CAPTION "Р¤Р°Р№Р» Р·Р°С…РІР°С‚Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Название файла захвата:",IDC_STATIC,7,17,62,8
+    LTEXT           "РќР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р° Р·Р°С…РІР°С‚Р°:",IDC_STATIC,7,17,62,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Обзор",IDC_BROWSE,194,26,50,14
+    PUSHBUTTON      "&РћР±Р·РѕСЂ",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "OK",IDOK,139,74,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,194,74,50,14
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL,194,74,50,14
 END
 
 
@@ -164,13 +163,13 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "fdebug"
-    IDS_HELLO               "Привет мир!"
+    IDS_HELLO               "РџСЂРёРІРµС‚ РјРёСЂ!"
     IDC_FDEBUG              "FDEBUG"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE             "Эта программа является свободным программным обеспечением; Вы можете распространять и/или изменять ее в соответствии с лицензией GNU General Public License версии 2 или более поздней, опубликованной Free Software Foundation.\r\n\r\nЭта программа распространяется с надеждой, что она может быть полезна, но БЕЗ ВСЯКОЙ ГАРАНТИИ; не подразумевается даже РАБОТОСПОСОБНОСТЬ или ПРИГОДНОСТЬ ДЛЯ ВЫПОЛНЕНИЯ НЕОБХОДИМЫХ ЗАДАЧ. См. GNU General Public License для получения дополнительных сведений.\r\n\r\nВы должны получить копию лицензии GNU вместе с этой программой, в противном случае обращайтесь в Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE             "Р­С‚Р° РїСЂРѕРіСЂР°РјРјР° СЏРІР»СЏРµС‚СЃСЏ СЃРІРѕР±РѕРґРЅС‹Рј РїСЂРѕРіСЂР°РјРјРЅС‹Рј РѕР±РµСЃРїРµС‡РµРЅРёРµРј; Р’С‹ РјРѕР¶РµС‚Рµ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏС‚СЊ Рё/РёР»Рё РёР·РјРµРЅСЏС‚СЊ РµРµ РІ СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРё СЃ Р»РёС†РµРЅР·РёРµР№ GNU General Public License РІРµСЂСЃРёРё 2 РёР»Рё Р±РѕР»РµРµ РїРѕР·РґРЅРµР№, РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅРѕР№ Free Software Foundation.\r\n\r\nР­С‚Р° РїСЂРѕРіСЂР°РјРјР° СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ СЃ РЅР°РґРµР¶РґРѕР№, С‡С‚Рѕ РѕРЅР° РјРѕР¶РµС‚ Р±С‹С‚СЊ РїРѕР»РµР·РЅР°, РЅРѕ Р‘Р•Р— Р’РЎРЇРљРћР™ Р“РђР РђРќРўРР; РЅРµ РїРѕРґСЂР°Р·СѓРјРµРІР°РµС‚СЃСЏ РґР°Р¶Рµ Р РђР‘РћРўРћРЎРџРћРЎРћР‘РќРћРЎРўР¬ РёР»Рё РџР РР“РћР”РќРћРЎРўР¬ Р”Р›РЇ Р’Р«РџРћР›РќР•РќРРЇ РќР•РћР‘РҐРћР”РРњР«РҐ Р—РђР”РђР§. РЎРј. GNU General Public License РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… СЃРІРµРґРµРЅРёР№.\r\n\r\nР’С‹ РґРѕР»Р¶РЅС‹ РїРѕР»СѓС‡РёС‚СЊ РєРѕРїРёСЋ Р»РёС†РµРЅР·РёРё GNU РІРјРµСЃС‚Рµ СЃ СЌС‚РѕР№ РїСЂРѕРіСЂР°РјРјРѕР№, РІ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РѕР±СЂР°С‰Р°Р№С‚РµСЃСЊ РІ Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 #endif

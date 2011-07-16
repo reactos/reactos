@@ -75,9 +75,7 @@ TdiCopyMdlToBuffer (
  */
 VOID
 NTAPI
-TdiInitialize (
-	PVOID	Unknown0
-	)
+TdiInitialize ()
 {
 }
 

@@ -488,7 +488,7 @@ const char *wine_dbgstr_wn( const WCHAR *str, int n )
         case '\\': *dst++ = '\\'; *dst++ = '\\'; break;
         default:
             if (c >= ' ' && c <= 126)
-                *dst++ = c;
+                *dst++ = (char)c;
             else
             {
                 *dst++ = '\\';
@@ -609,5 +609,8 @@ int main( int argc, char **argv )
 }
 
 #endif  /* STANDALONE */
+
+// hack for ntdll winetest (this is defined in excpt.h)
+#undef exception_info
 
 #endif  /* __WINE_WINE_TEST_H */

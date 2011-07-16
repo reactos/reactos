@@ -654,8 +654,12 @@ MDIShellBrowserChild::MDIShellBrowserChild(HWND hwnd, const ShellChildWndInfo& i
 
 MDIShellBrowserChild* MDIShellBrowserChild::create(const ShellChildWndInfo& info)
 {
-	ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
-		WINDOW_CREATOR_INFO(MDIShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL, info._pos.showCmd==SW_SHOWMAXIMIZED? WS_MAXIMIZE: 0);
+	ChildWindow* child = ChildWindow::create(info, 
+		                                     info._pos.rcNormalPosition,
+		                                     WINDOW_CREATOR_INFO(MDIShellBrowserChild,ShellChildWndInfo), 
+											 CLASSNAME_CHILDWND, 
+											 NULL, 
+											 WS_CLIPCHILDREN | (info._pos.showCmd==SW_SHOWMAXIMIZED? WS_MAXIMIZE: 0));
 
 	return static_cast<MDIShellBrowserChild*>(child);
 }
@@ -696,6 +700,12 @@ LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return super::WndProc(nmsg, wparam, lparam);
 		}
 		return TRUE;}
+
+	  case WM_SYSCOLORCHANGE:
+		/* Forward WM_SYSCOLORCHANGE to common controls */
+		SendMessage(_left_hwnd, WM_SYSCOLORCHANGE, 0, 0);
+		SendMessage(_right_hwnd, WM_SYSCOLORCHANGE, 0, 0);
+		break;
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);

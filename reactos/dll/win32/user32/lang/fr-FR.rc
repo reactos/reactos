@@ -13,7 +13,7 @@ SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Sélectionnez la fenêtre"
+CAPTION "SÃ©lectionnez la fenÃªtre"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -36,7 +36,7 @@ BEGIN
     MENUITEM "C&oller", WM_PASTE
     MENUITEM "&Supprimer", WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "&Tout sélectionner", EM_SETSEL
+    MENUITEM "&Tout sÃ©lectionner", EM_SETSEL
   END
 END
 
@@ -44,9 +44,9 @@ END
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   MENUITEM "&Restaurer", SC_RESTORE
-  MENUITEM "&Déplacer", SC_MOVE
+  MENUITEM "&DÃ©placer", SC_MOVE
   MENUITEM "&Taille", SC_SIZE
-  MENUITEM "Ré&duire", SC_MINIMIZE
+  MENUITEM "RÃ©&duire", SC_MINIMIZE
   MENUITEM "A&grandir", SC_MAXIMIZE
   MENUITEM SEPARATOR
   MENUITEM "&Fermer\tAlt-F4", SC_CLOSE
@@ -63,7 +63,7 @@ BEGIN
   IDS_OK,       "OK"
   IDS_CANCEL,   "Annuler"
   IDS_ABORT,    "&Abandonner"
-  IDS_RETRY,    "&Réessayer"
+  IDS_RETRY,    "&RÃ©essayer"
   IDS_IGNORE,   "&Ignorer"
   IDS_YES,      "&Oui"
   IDS_NO,       "&Non"
@@ -74,6 +74,6 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "Nouvelle &fenêtre..."
+  IDS_MDI_MOREWINDOWS, "Nouvelle &fenÃªtre..."
 END
 

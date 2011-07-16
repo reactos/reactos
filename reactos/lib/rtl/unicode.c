@@ -33,13 +33,23 @@ extern USHORT NlsUnicodeDefaultChar;
 */
 WCHAR
 NTAPI
-RtlAnsiCharToUnicodeChar(IN PUCHAR *AnsiChar)
+RtlAnsiCharToUnicodeChar(IN OUT PUCHAR *AnsiChar)
 {
     ULONG Size;
     NTSTATUS Status;
     WCHAR UnicodeChar = L' ';
 
-    Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
+    PAGED_CODE_RTL();
+
+    if (NlsLeadByteInfo)
+    {
+        Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
+    }
+    else
+    {
+        DPRINT("HACK::Shouldn't have happened! Consider fixing Usetup and registry entries it creates on install\n");
+        Size = 1;
+    }
 
     Status = RtlMultiByteToUnicodeN(&UnicodeChar,
                                     sizeof(WCHAR),
@@ -76,7 +86,14 @@ RtlAnsiStringToUnicodeString(
 
     PAGED_CODE_RTL();
 
-    Length = RtlAnsiStringToUnicodeSize(AnsiSource);
+    if (NlsMbCodePageTag == FALSE)
+    {
+        Length = AnsiSource->Length * 2 + sizeof(WCHAR);
+    }
+    else
+    {
+        Length = RtlxAnsiStringToUnicodeSize(AnsiSource);
+    }
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
     UniDest->Length = (USHORT)Length - sizeof(WCHAR);
 
@@ -90,6 +107,9 @@ RtlAnsiStringToUnicodeString(
     {
         return STATUS_BUFFER_OVERFLOW;
     }
+
+    /* UniDest->MaximumLength must be even due to sizeof(WCHAR) being 2 */
+    ASSERT(!(UniDest->MaximumLength & 1) && UniDest->Length <= UniDest->MaximumLength);
 
     Status = RtlMultiByteToUnicodeN(UniDest->Buffer,
                                     UniDest->Length,
@@ -122,6 +142,8 @@ NTAPI
 RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
 {
     ULONG Size;
+
+    PAGED_CODE_RTL();
 
     /* Convert from Mb String to Unicode Size */
     RtlMultiByteToUnicodeSize(&Size,
@@ -963,7 +985,16 @@ RtlUnicodeStringToAnsiString(
 
     PAGED_CODE_RTL();
 
-    Length = RtlUnicodeStringToAnsiSize(UniSource);
+    ASSERT(!(UniSource->Length & 1));
+
+    if (NlsMbCodePageTag == FALSE)
+    {
+        Length = (UniSource->Length + sizeof(WCHAR)) / sizeof(WCHAR);
+    }
+    else
+    {
+        Length = RtlxUnicodeStringToAnsiSize(UniSource);
+    }
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
     AnsiDest->Length = (USHORT)Length - sizeof(CHAR);
@@ -1952,6 +1983,10 @@ NTAPI
 RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
 {
     ULONG Size;
+
+    PAGED_CODE_RTL();
+
+    ASSERT(!(UnicodeString->Length & 1));
 
     /* Convert the Unicode String to Mb Size */
     RtlUnicodeToMultiByteSize(&Size,

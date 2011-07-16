@@ -25,19 +25,19 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE            "ReactOS - Ласкаво просимо"
+    IDS_APPTITLE            "ReactOS - Р›Р°СЃРєР°РІРѕ РїСЂРѕСЃРёРјРѕ"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Ласкаво просимо до операційної системи ReactOS.\n\nКлацніть по темі ліворуч"
-//    IDS_CHECKTEXT           "Показувати цей діалог знов"
-//    IDS_CLOSETEXT           "Вихід"
+    IDS_DEFAULTTOPICDESC    "Р›Р°СЃРєР°РІРѕ РїСЂРѕСЃРёРјРѕ РґРѕ РѕРїРµСЂР°С†С–Р№РЅРѕС— СЃРёСЃС‚РµРјРё ReactOS.\n\nРљР»Р°С†РЅС–С‚СЊ РїРѕ С‚РµРјС– Р»С–РІРѕСЂСѓС‡"
+//    IDS_CHECKTEXT           "РџРѕРєР°Р·СѓРІР°С‚Рё С†РµР№ РґС–Р°Р»РѕРі Р·РЅРѕРІ"
+//    IDS_CLOSETEXT           "Р’РёС…С–Рґ"
 END
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICBUTTON0        "Встановлення ReactOS"
-    IDS_TOPICBUTTON1        "Огляд цього CD"
-    IDS_TOPICBUTTON2        "Вихід"
+    IDS_TOPICBUTTON0        "Р’СЃС‚Р°РЅРѕРІР»РµРЅРЅСЏ ReactOS"
+    IDS_TOPICBUTTON1        "РћРіР»СЏРґ С†СЊРѕРіРѕ CD"
+    IDS_TOPICBUTTON2        "Р’РёС…С–Рґ"
 //    IDS_TOPICBUTTON3        "Empty Topic 3"
 //    IDS_TOPICBUTTON4        "Empty Topic 4"
 //    IDS_TOPICBUTTON5        "Empty Topic 5"
@@ -50,9 +50,9 @@ END
 /* Topic titles */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICTITLE0         "Встановлення ReactOS"
-    IDS_TOPICTITLE1         "Огляд цього CD"
-    IDS_TOPICTITLE2         "Вихід"
+    IDS_TOPICTITLE0         "Р’СЃС‚Р°РЅРѕРІР»РµРЅРЅСЏ ReactOS"
+    IDS_TOPICTITLE1         "РћРіР»СЏРґ С†СЊРѕРіРѕ CD"
+    IDS_TOPICTITLE2         "Р’РёС…С–Рґ"
 //    IDS_TOPICTITLE3         "Empty Topic Title 3"
 //    IDS_TOPICTITLE4         "Empty Topic Title 4"
 //    IDS_TOPICTITLE5         "Empty Topic Title 5"
@@ -65,9 +65,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Створення нової інсталяції ReactOS на Вашому комп'ютері чи оновлення існуючої інсталяції."
-    IDS_TOPICDESC1          "Проглянути CD."
-    IDS_TOPICDESC2          "Натисніть для виходу з цієї програми."
+    IDS_TOPICDESC0          "РЎС‚РІРѕСЂРµРЅРЅСЏ РЅРѕРІРѕС— С–РЅСЃС‚Р°Р»СЏС†С–С— ReactOS РЅР° Р’Р°С€РѕРјСѓ РєРѕРјРї'СЋС‚РµСЂС– С‡Рё РѕРЅРѕРІР»РµРЅРЅСЏ С–СЃРЅСѓСЋС‡РѕС— С–РЅСЃС‚Р°Р»СЏС†С–С—."
+    IDS_TOPICDESC1          "РџСЂРѕРіР»СЏРЅСѓС‚Рё CD."
+    IDS_TOPICDESC2          "РќР°С‚РёСЃРЅС–С‚СЊ РґР»СЏ РІРёС…РѕРґСѓ Р· С†С–С”С— РїСЂРѕРіСЂР°РјРё."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."

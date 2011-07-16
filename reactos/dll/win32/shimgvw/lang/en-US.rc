@@ -2,8 +2,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "ReactOS Picture and Fax Viewer"
+    IDS_APPTITLE    "ReactOS Picture and Fax Viewer"
     IDS_SETASDESKBG "Set as Desktop Background"
+    IDS_PREVIEW     "Preview"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Next Picture"

@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <group>
 <module name="psdk" type="idlheader">
+	<dependency>bugcodes</dependency>
 	<file>activaut.idl</file>
 	<file>activdbg.idl</file>
 	<file>activscp.idl</file>

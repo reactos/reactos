@@ -144,6 +144,32 @@ __sgdt(OUT PVOID Descriptor)
         sgdt [eax]
     }
 }
+
+FORCEINLINE
+VOID
+__fxsave(OUT PFX_SAVE_AREA SaveArea)
+{
+    __asm mov eax, SaveArea
+    __asm fxsave [eax]
+}
+
+FORCEINLINE
+VOID
+__fxrstor(IN PFX_SAVE_AREA SaveArea)
+{
+    __asm mov eax, SaveArea
+    __asm fxrstor [eax]
+}
+
+FORCEINLINE
+VOID
+__fnsave(OUT PFLOATING_SAVE_AREA SaveArea)
+{
+    __asm mov eax, SaveArea
+    __asm fnsave [eax]
+    __asm wait;
+}
+
 #define Ke386GetGlobalDescriptorTable __sgdt
 
 FORCEINLINE
@@ -267,6 +293,28 @@ Ke386SetGs(IN USHORT Value)
     __asm mov ax, Value;
     __asm mov gs, ax;
 }
+
+extern ULONG KeI386FxsrPresent;
+
+FORCEINLINE
+VOID
+Ke386SaveFpuState(IN PVOID SaveArea)
+{
+    if (KeI386FxsrPresent)
+    {
+        __fxsave(SaveArea);
+    }
+    else
+    {
+        __fnsave(SaveArea);
+    }
+}
+
+#define Ke386FnSave __fnsave
+#define Ke386FxSave __fxsave
+// The name suggest, that the original author didn't understand what frstor means
+#define Ke386FxStore __fxrstor
+
 
 #else
 #error Unknown compiler for inline assembler

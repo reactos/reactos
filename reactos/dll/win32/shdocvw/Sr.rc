@@ -41,7 +41,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Ново"
         {
-            MENUITEM "&Прозор"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Прозор",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Отвори...",                    ID_BROWSE_OPEN
         MENUITEM "&Сачувај",                       ID_BROWSE_SAVE
@@ -58,13 +58,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Алатнице"
         {
-            MENUITEM "&Стандардна трака"            ID_BROWSE_BAR_STD
-            MENUITEM "&Трака за навигацију"             ID_BROWSE_BAR_ADDR
+            MENUITEM "&Стандардна трака",           ID_BROWSE_BAR_STD
+            MENUITEM "&Трака за навигацију",            ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Омиљено"
     {
-        MENUITEM "&Додај у омиљене..."         ID_BROWSE_ADDFAV
+        MENUITEM "&Додај у омиљене...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Помоћ"
@@ -108,7 +108,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Novo"
         {
-            MENUITEM "&Prozor"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Prozor",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Otvori...",                    ID_BROWSE_OPEN
         MENUITEM "&Sačuvaj",                       ID_BROWSE_SAVE
@@ -125,13 +125,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Alatnice"
         {
-            MENUITEM "&Standardna traka"            ID_BROWSE_BAR_STD
-            MENUITEM "&Traka za navigaciju"             ID_BROWSE_BAR_ADDR
+            MENUITEM "&Standardna traka",           ID_BROWSE_BAR_STD
+            MENUITEM "&Traka za navigaciju",            ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Omiljeno"
     {
-        MENUITEM "&Dodaj u omiljene..."         ID_BROWSE_ADDFAV
+        MENUITEM "&Dodaj u omiljene...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Pomoć"

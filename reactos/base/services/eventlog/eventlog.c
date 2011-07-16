@@ -135,6 +135,71 @@ ServiceInit(VOID)
 }
 
 
+static VOID
+ReportProductInfoEvent(VOID)
+{
+    OSVERSIONINFOW versionInfo;
+    WCHAR szBuffer[512];
+    DWORD dwLength;
+    HKEY hKey;
+    DWORD dwValueLength;
+    DWORD dwType;
+    LONG lResult = ERROR_SUCCESS;
+
+    ZeroMemory(&versionInfo, sizeof(OSVERSIONINFO));
+    versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+    /* Get version information */
+    if (!GetVersionExW(&versionInfo))
+        return;
+
+    ZeroMemory(szBuffer, 512 * sizeof(WCHAR));
+
+    /* Write version into the buffer */
+    dwLength = swprintf(szBuffer,
+                        L"%lu.%lu",
+                        versionInfo.dwMajorVersion,
+                        versionInfo.dwMinorVersion) + 1;
+
+    /* Write build number into the buffer */
+    dwLength += swprintf(&szBuffer[dwLength],
+                         L"%lu",
+                         versionInfo.dwBuildNumber) + 1;
+
+    /* Write service pack info into the buffer */
+    wcscpy(&szBuffer[dwLength], versionInfo.szCSDVersion);
+    dwLength += wcslen(versionInfo.szCSDVersion) + 1;
+
+    /* Read 'CurrentType' from the registry and write it into the buffer */
+    lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hKey);
+    if (lResult == ERROR_SUCCESS)
+    {
+        dwValueLength = 512 - dwLength;
+        lResult = RegQueryValueEx(hKey,
+                                  L"CurrentType",
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)&szBuffer[dwLength],
+                                  &dwValueLength);
+
+        RegCloseKey(hKey);
+    }
+
+    /* Log the product information */
+    LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                    0,
+                    EVENT_EventLogProductInfo,
+                    4,
+                    szBuffer,
+                    0,
+                    NULL);
+}
+
+
 static VOID CALLBACK
 ServiceMain(DWORD argc,
             LPWSTR *argv)
@@ -168,18 +233,27 @@ ServiceMain(DWORD argc,
     {
         DPRINT("Service started\n");
         UpdateServiceStatus(SERVICE_RUNNING);
+
+        ReportProductInfoEvent();
+
+        LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                        0,
+                        EVENT_EventlogStarted,
+                        0,
+                        NULL,
+                        0,
+                        NULL);
     }
 
     DPRINT("ServiceMain() done\n");
 }
 
 
-BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
+PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 {
     DWORD MaxValueLen, ValueLen, Type, ExpandedLen;
     WCHAR *Buf = NULL, *Expanded = NULL;
     LONG Result;
-    BOOL ret = TRUE;
     PLOGFILE pLogf;
 
     DPRINT("LoadLogFile: %S\n", LogName);
@@ -188,11 +262,10 @@ BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
                     NULL, NULL, &MaxValueLen, NULL, NULL);
 
     Buf = HeapAlloc(MyHeap, 0, MaxValueLen);
-
     if (!Buf)
     {
         DPRINT1("Can't allocate heap!\n");
-        return FALSE;
+        return NULL;
     }
 
     ValueLen = MaxValueLen;
@@ -203,29 +276,27 @@ BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
                              &Type,
                              (LPBYTE) Buf,
                              &ValueLen);
-
     if (Result != ERROR_SUCCESS)
     {
         DPRINT1("RegQueryValueEx failed: %d\n", GetLastError());
         HeapFree(MyHeap, 0, Buf);
-        return FALSE;
+        return NULL;
     }
 
     if (Type != REG_EXPAND_SZ && Type != REG_SZ)
     {
         DPRINT1("%S\\File - value of wrong type %x.\n", LogName, Type);
         HeapFree(MyHeap, 0, Buf);
-        return FALSE;
+        return NULL;
     }
 
     ExpandedLen = ExpandEnvironmentStrings(Buf, NULL, 0);
     Expanded = HeapAlloc(MyHeap, 0, ExpandedLen * sizeof(WCHAR));
-
     if (!Expanded)
     {
         DPRINT1("Can't allocate heap!\n");
         HeapFree(MyHeap, 0, Buf);
-        return FALSE;
+        return NULL;
     }
 
     ExpandEnvironmentStrings(Buf, Expanded, ExpandedLen);
@@ -237,12 +308,11 @@ BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
     if (pLogf == NULL)
     {
         DPRINT1("Failed to create %S!\n", Expanded);
-        ret = FALSE;
     }
 
     HeapFree(MyHeap, 0, Buf);
     HeapFree(MyHeap, 0, Expanded);
-    return ret;
+    return pLogf;
 }
 
 BOOL LoadLogFiles(HKEY eventlogKey)
@@ -251,6 +321,7 @@ BOOL LoadLogFiles(HKEY eventlogKey)
     DWORD MaxLognameLen, LognameLen;
     WCHAR *Buf = NULL;
     INT i;
+    PLOGFILE pLogFile;
 
     RegQueryInfoKey(eventlogKey,
                     NULL, NULL, NULL, NULL,
@@ -288,10 +359,16 @@ BOOL LoadLogFiles(HKEY eventlogKey)
             return FALSE;
         }
 
-        if (!LoadLogFile(SubKey, Buf))
-            DPRINT1("Failed to load %S\n", Buf);
-        else
+        pLogFile = LoadLogFile(SubKey, Buf);
+        if (pLogFile != NULL)
+        {
             DPRINT("Loaded %S\n", Buf);
+            LoadEventSources(SubKey, pLogFile);
+        }
+        else
+        {
+            DPRINT1("Failed to load %S\n", Buf);
+        }
 
         RegCloseKey(SubKey);
         LognameLen = MaxLognameLen;
@@ -310,6 +387,7 @@ INT wmain()
     HKEY elogKey;
 
     LogfListInitialize();
+    InitEventSourceList();
 
     MyHeap = HeapCreate(0, 1024 * 256, 0);
 
@@ -385,7 +463,7 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime, DWORD * pEventTime)
 
     SystemTimeToFileTime(pSystemTime, &Time.ft);
     SystemTimeToFileTime(&st1970, &u1970.ft);
-    *pEventTime = (Time.ll - u1970.ll) / 10000000;
+    *pEventTime = (DWORD)((Time.ll - u1970.ll) / 10000000ull);
 }
 
 VOID PRINT_HEADER(PEVENTLOGHEADER header)

@@ -1126,10 +1126,6 @@ MmIsDirtyPageRmap(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_NUMBER Page);
-
-NTSTATUS
-NTAPI
 MmPageOutPhysicalAddress(PFN_NUMBER Page);
 
 /* freelist.c **********************************************************/
@@ -1145,7 +1141,7 @@ MiGetPfnEntry(IN PFN_NUMBER Pfn)
     if (Pfn > MmHighestPhysicalPage) return NULL;
     
     /* Make sure this page actually has a PFN entry */
-    if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, Pfn))) return NULL;
+    if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, (ULONG)Pfn))) return NULL;
 
     /* Get the entry */
     Page = &MmPfnDatabase[Pfn];

@@ -43,7 +43,7 @@
 158 stdcall -noname SHRestricted2A(long str long)
 159 stdcall -noname SHRestricted2W(long wstr long)
 160 stub -noname SHIsRestricted2W
-161 stub @ # CSearchAssistantOC::OnDraw
+161 stub shdocvw_161 # CSearchAssistantOC::OnDraw
 162 stub -noname CDDEAuto_Navigate
 163 stub SHAddSubscribeFavorite
 164 stub -noname ResetProfileSharing
@@ -66,7 +66,7 @@
 185 stub -noname FireEvent_Quit
 187 stub -noname SHDGetPageLocation
 188 stub -noname SHIEErrorMsgBox
-189 stub @ # FIXME: same as ordinal 148
+189 stub shdocvw_189 # FIXME: same as ordinal 148
 190 stub -noname SHRunIndirectRegClientCommandForward
 191 stub -noname SHIsRegisteredClient
 192 stub -noname SHGetHistoryPIDL
@@ -75,7 +75,7 @@
 196 stub -noname IEDDE_WindowDestroyed
 197 stub -noname IEDDE_NewWindow
 198 stub -noname IsErrorUrl
-199 stub @
+199 stub shdocvw_199
 200 stub -noname SHGetViewStream
 203 stub -noname NavToUrlUsingIEA
 204 stub -noname NavToUrlUsingIEW
@@ -91,7 +91,7 @@
 217 stub -noname GetDefaultInternetSearchUrlA
 218 stdcall -noname IEParseDisplayNameWithBCW(long wstr ptr ptr)
 219 stub -noname IEILIsEqual
-220 stub @
+220 stub shdocvw_220
 221 stub -noname IECreateFromPathCPWithBCA
 222 stub -noname IECreateFromPathCPWithBCW
 223 stub -noname ResetWebSettings

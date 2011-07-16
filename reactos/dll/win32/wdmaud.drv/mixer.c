@@ -421,7 +421,7 @@ MixerCompletionRoutine(
     PSOUND_OVERLAPPED Overlap = (PSOUND_OVERLAPPED)lpOverlapped;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, Overlap->OriginalBufferSize, lpOverlapped);
+    Overlap->OriginalCompletionRoutine(dwErrorCode, PtrToUlong(Overlap->CompletionContext), lpOverlapped);
 }
 
 MMRESULT
@@ -527,7 +527,7 @@ WriteFileEx_Remixer(
     DeviceInfo.Header.PresentationTime.Numerator = 1;
     DeviceInfo.Header.PresentationTime.Denominator = 1;
 
-    Overlap->OriginalBufferSize = Length;
+    Overlap->CompletionContext = UlongToPtr(Length);
     Overlap->OriginalCompletionRoutine = CompletionRoutine;
 
     Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);

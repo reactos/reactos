@@ -319,6 +319,7 @@ FreeEventData(IN PVOID EventData)
 }
 
 VOID
+CALLBACK
 EventCallback(
     IN PVOID MixerEventContext,
     IN HANDLE hMixer,
@@ -474,7 +475,7 @@ WdmAudGetControlDetails(
     DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     /* query mmixer library */
-    Status = MMixerGetControlDetails(&MixerContext, DeviceInfo->hDevice, DeviceInfo->Flags, &DeviceInfo->u.MixDetails);
+    Status = MMixerGetControlDetails(&MixerContext, DeviceInfo->hDevice, DeviceInfo->DeviceIndex, DeviceInfo->Flags, &DeviceInfo->u.MixDetails);
 
     if (Status == MM_STATUS_SUCCESS)
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
@@ -496,7 +497,7 @@ WdmAudGetLineInfo(
     DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     /* query mixer library */
-    Status = MMixerGetLineInfo(&MixerContext, DeviceInfo->hDevice, DeviceInfo->Flags, &DeviceInfo->u.MixLine);
+    Status = MMixerGetLineInfo(&MixerContext, DeviceInfo->hDevice, DeviceInfo->DeviceIndex, DeviceInfo->Flags, &DeviceInfo->u.MixLine);
 
     if (Status == MM_STATUS_SUCCESS)
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
@@ -518,7 +519,7 @@ WdmAudGetLineControls(
     DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     /* query mixer library */
-    Status = MMixerGetLineControls(&MixerContext, DeviceInfo->hDevice, DeviceInfo->Flags, &DeviceInfo->u.MixControls);
+    Status = MMixerGetLineControls(&MixerContext, DeviceInfo->hDevice, DeviceInfo->DeviceIndex, DeviceInfo->Flags, &DeviceInfo->u.MixControls);
 
     if (Status == MM_STATUS_SUCCESS)
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
@@ -542,7 +543,7 @@ WdmAudSetControlDetails(
     DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     /* query mixer library */
-    Status = MMixerSetControlDetails(&MixerContext, DeviceInfo->hDevice, DeviceInfo->Flags, &DeviceInfo->u.MixDetails);
+    Status = MMixerSetControlDetails(&MixerContext, DeviceInfo->hDevice, DeviceInfo->DeviceIndex, DeviceInfo->Flags, &DeviceInfo->u.MixDetails);
 
     if (Status == MM_STATUS_SUCCESS)
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));

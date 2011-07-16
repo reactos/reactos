@@ -42,7 +42,7 @@ int CDECL MSVCRT_I10_OUTPUT(long double ld, int prec, int flag, struct _I10_OUTP
     } else
         data->sign = ' ';
 
-    if(isinf(d)) {
+    if(!_finite(d)) {
         data->pos = 1;
         data->len = 5;
         memcpy(data->str, inf_str, sizeof(inf_str));
@@ -50,7 +50,7 @@ int CDECL MSVCRT_I10_OUTPUT(long double ld, int prec, int flag, struct _I10_OUTP
         return 0;
     }
 
-    if(isnan(d)) {
+    if(_isnan(d)) {
         data->pos = 1;
         data->len = 6;
         memcpy(data->str, nan_str, sizeof(nan_str));

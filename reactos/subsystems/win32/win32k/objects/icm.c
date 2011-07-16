@@ -50,9 +50,10 @@ IntGdiDeleteColorSpace(
 {
   BOOL Ret = FALSE;
 
-  if ( hColorSpace != hStockColorSpace )
+  if ( hColorSpace != hStockColorSpace &&
+      GDI_HANDLE_GET_TYPE(hColorSpace) == GDILoObjType_LO_ICMLCS_TYPE)
   {
-     Ret = COLORSPACEOBJ_FreeCSByHandle(hColorSpace);
+     Ret = GreDeleteObject(hColorSpace);
      if ( !Ret ) EngSetLastError(ERROR_INVALID_PARAMETER);
   }
   return Ret;
@@ -216,7 +217,7 @@ NtGdiSetColorSpace(IN HDC hdc,
 
   if (pDC->dclevel.pColorSpace)
   {
-     GDIOBJ_ShareUnlockObjByPtr((POBJ) pDC->dclevel.pColorSpace);
+     GDIOBJ_vDereferenceObject((POBJ) pDC->dclevel.pColorSpace);
   }
 
   pDC->dclevel.pColorSpace = pCS;
@@ -251,7 +252,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
 
      if (!(pGDev->flFlags & PDEV_GAMMARAMP_TABLE)) return FALSE;
 
-     palGDI = PALETTE_LockPalette(pGDev->devinfo.hpalDefault);
+     palGDI = PALETTE_ShareLockPalette(pGDev->devinfo.hpalDefault);
      if(!palGDI) return FALSE;
      palPtr = (PALOBJ*) palGDI;
 
@@ -272,7 +273,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
                                                           0,
                                           palGDI->NumColors);
      }
-     PALETTE_UnlockPalette(palGDI);
+     PALETTE_ShareUnlockPalette(palGDI);
      return Ret;
   }
   else

@@ -53,4 +53,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "Seite nach unten"
   IDS_SCROLLUP "Nach oben scrollen"
   IDS_SCROLLDOWN "Nach unten scrollen"
+
+  IDS_COMMAND_PROMPT "Eingabeaufforderung"
 END

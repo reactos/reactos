@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Simple MRU list-cache (specification).                               */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2005, 2006 by                         */
+/*  Copyright 2000-2001, 2003, 2004, 2005, 2006, 2010 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -166,7 +166,7 @@ FT_BEGIN_HEADER
     FTC_MruNode              _first, _node;                                 \
                                                                             \
                                                                             \
-    error  = 0;                                                             \
+    error  = FTC_Err_Ok;                                                    \
     _first = *(_pfirst);                                                    \
     _node  = NULL;                                                          \
                                                                             \

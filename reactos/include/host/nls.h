@@ -9,7 +9,7 @@
 #ifndef _HOST_NLS_H
 #define _HOST_NLS_H
 
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 typedef DWORD LCID;
 

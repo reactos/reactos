@@ -75,9 +75,9 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, LPCWSTR table_name, UINT *n
                                          NULL, &haystack_table_name );
         if( r != ERROR_SUCCESS )
             return r;
-        x = lstrcmpW( name, col_name );
+        x = strcmpW( name, col_name );
         if( table_name )
-            x |= lstrcmpW( table_name, haystack_table_name );
+            x |= strcmpW( table_name, haystack_table_name );
         msi_free( col_name );
         msi_free( haystack_table_name );
         if( !x )

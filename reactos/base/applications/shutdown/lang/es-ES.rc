@@ -1,0 +1,14 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Utilización: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  Ningún argumento o -?\tMuestra este mensaje\n\
+  -l\t\t\tDesconectarse\n\
+  -s\t\t\tApagar el equipo\n\
+  -r\t\t\tApagar y reiniciar el equipo\n\
+  -f\t\t\tObliga las aplicaciones en curso de ejecución a apagarse sin advertencias\n\
+    \t\t\tSi no especifica algún otro parámetro, esta opción\n\
+    \t\t\tprovocará también una desconexión"
+END

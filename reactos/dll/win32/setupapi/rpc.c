@@ -79,17 +79,17 @@ PnpGetLocalHandles(RPC_BINDING_HANDLE *BindingHandle,
         return TRUE;
     }
 
-    LocalStringTable = StringTableInitialize();
+    LocalStringTable = pSetupStringTableInitialize();
     if (LocalStringTable == NULL)
         return FALSE;
 
     if (PnpBindRpc(NULL, &LocalBindingHandle) != RPC_S_OK)
     {
-        StringTableDestroy(LocalStringTable);
+        pSetupStringTableDestroy(LocalStringTable);
         return FALSE;
     }
 
-    StringTableAddString(LocalStringTable, L"PLT", 1);
+    pSetupStringTableAddString(LocalStringTable, L"PLT", 1);
 
     if (BindingHandle != NULL)
         *BindingHandle = LocalBindingHandle;
@@ -104,7 +104,7 @@ PnpGetLocalHandles(RPC_BINDING_HANDLE *BindingHandle,
 RPC_STATUS
 PnpUnbindLocalBindingHandle(VOID)
 {
-    StringTableDestroy(LocalStringTable);
+    pSetupStringTableDestroy(LocalStringTable);
     LocalStringTable = NULL;
     return PnpUnbindRpc(&LocalBindingHandle);
 }

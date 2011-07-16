@@ -2218,48 +2218,54 @@ NdisIDispatchPnp(
               NDIS_DbgPrint(MIN_TRACE, ("Lower driver failed device start\n"));
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        break;
+        return Status;
 
       case IRP_MN_STOP_DEVICE:
-        Status = NdisIForwardIrpAndWait(Adapter, Irp);
-        if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
-          {
-            Status = NdisIPnPStopDevice(DeviceObject, Irp);
-          }
-          else
-            NDIS_DbgPrint(MIN_TRACE, ("Lower driver failed device stop\n"));
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        Status = NdisIPnPStopDevice(DeviceObject, Irp);
+        if (!NT_SUCCESS(Status))
+            NDIS_DbgPrint(MIN_TRACE, ("WARNING: Ignoring halt device failure! Passing the IRP down anyway\n"));
+        Irp->IoStatus.Status = STATUS_SUCCESS;
         break;
 
       case IRP_MN_QUERY_REMOVE_DEVICE:
       case IRP_MN_QUERY_STOP_DEVICE:
         Status = NdisIPnPQueryStopDevice(DeviceObject, Irp);
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        if (Status != STATUS_SUCCESS)
+        {
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            NDIS_DbgPrint(MIN_TRACE, ("Failing miniport halt request\n"));
+            return Status;
+        }
         break;
 
       case IRP_MN_CANCEL_REMOVE_DEVICE:
       case IRP_MN_CANCEL_STOP_DEVICE:
-        Status = NdisIPnPCancelStopDevice(DeviceObject, Irp);
+        Status = NdisIForwardIrpAndWait(Adapter, Irp);
+        if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
+        {
+            Status = NdisIPnPCancelStopDevice(DeviceObject, Irp);
+        }
+        else
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("Lower driver failed cancel stop/remove request\n"));
+        }
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        break;
+        return Status;
 
       case IRP_MN_QUERY_PNP_DEVICE_STATE:
         Status = NDIS_STATUS_SUCCESS;
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information |= Adapter->NdisMiniportBlock.PnPFlags;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
 
       default:
-        IoSkipCurrentIrpStackLocation(Irp);
-        Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
         break;
     }
 
-  return Status;
+  IoSkipCurrentIrpStackLocation(Irp);
+  return IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
 }
 
 

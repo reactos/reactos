@@ -835,7 +835,7 @@ WSAImpersonateSocketPeer(
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
-WSARevertImpersonation();
+WSARevertImpersonation(VOID);
 
 #endif /* _SECURE_SOCKET_TYPES_DEFINED_ */
 #endif /* (_WIN32_WINNT >= 0x0600) */

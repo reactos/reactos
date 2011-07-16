@@ -12,7 +12,6 @@
 typedef struct _TABLE_ENTRY_HEADER
 {
     RTL_BALANCED_LINKS BalancedLinks;
-    LIST_ENTRY ListEntry;
     LONGLONG UserData;
 } TABLE_ENTRY_HEADER, *PTABLE_ENTRY_HEADER;
 

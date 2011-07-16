@@ -18,19 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
-#define UNICODE
-#define _UNICODE
-#define COBJMACROS
-#include <windows.h>
-#include <ndk/ntndk.h>
-#include <fmifs/fmifs.h>
-#include <largeint.h>
-
 #include <precomp.h>
+
+#define MAX_PROPERTY_SHEET_PAGE 32
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -668,7 +658,7 @@ AddPropSheetPageProc(HPROPSHEETPAGE hpage, LPARAM lParam)
     PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
     if (ppsh != NULL && ppsh->nPages < MAX_PROPERTY_SHEET_PAGE)
     {
-        ppsh->phpage[ppsh->nPages++] = hpage;
+        ppsh->u3.phpage[ppsh->nPages++] = hpage;
         return TRUE;
     }
     return FALSE;
@@ -691,8 +681,8 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
    psh.dwSize = sizeof(PROPSHEETHEADERW);
    //psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE;
    psh.hwndParent = NULL;
-   psh.nStartPage = 0;
-   psh.phpage = hpsp;
+   psh.u2.nStartPage = 0;
+   psh.u3.phpage = hpsp;
 
    if (GetVolumeInformationW(drive, szName, sizeof(szName)/sizeof(WCHAR), NULL, &dwMaxComponent,
                              &dwFileSysFlags, NULL, 0))

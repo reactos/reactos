@@ -709,14 +709,14 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    {
       return FALSE;
    }
-   if( lpmii->fType & ~fTypeMask)
+   if (lpmii->fType & ~fTypeMask)
    {
      DbgPrint("IntSetMenuItemInfo invalid fType flags %x\n", lpmii->fType & ~fTypeMask);
      lpmii->fMask &= ~(MIIM_TYPE | MIIM_FTYPE);
    }
-   if(lpmii->fMask &  MIIM_TYPE)
+   if (lpmii->fMask &  MIIM_TYPE)
    {
-      if(lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
+      if (lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
       {
          DbgPrint("IntSetMenuItemInfo: Invalid combination of fMask bits used\n");
          /* this does not happen on Win9x/ME */
@@ -1467,6 +1467,83 @@ UserInsertMenuItem(
    return FALSE;
 }
 
+UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags)
+{
+   PMENU_OBJECT MenuObject, SubMenu;
+   PMENU_ITEM mi;
+
+   if (!(MenuObject = UserGetMenuObject(hMenu)))
+   {
+      return (UINT)-1;
+   }
+
+   if (IntGetMenuItemByFlag(MenuObject, uId, uFlags, &SubMenu, &mi, NULL))
+   {
+      if (mi->hSubMenu)
+      {
+         if (SubMenu)
+         {
+            UINT nSubItems = SubMenu->MenuInfo.MenuItemCount;
+            return (nSubItems << 8) | ((mi->fState | mi->fType) & 0xff);
+         }
+         else
+            return (UINT)-1;
+      }
+      return (mi->fType | mi->fState);
+   }
+   return (UINT)-1;
+}
+
+HMENU FASTCALL IntGetSubMenu( HMENU hMenu, int nPos)
+{
+   PMENU_OBJECT MenuObject, SubMenu;
+
+   if (!(MenuObject = UserGetMenuObject(hMenu)))
+   {
+      return NULL;
+   }
+   if (IntGetMenuItemByFlag(MenuObject, nPos, MF_BYPOSITION, &SubMenu, NULL, NULL))
+   {
+      return SubMenu ? UserHMGetHandle(SubMenu) : NULL;
+   }
+   return NULL;
+}
+
+UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget )
+{
+   PMENU_OBJECT MenuObject;
+   PMENU_ITEM mi;
+   UINT i;
+
+   if ( (*hMenu) == (HMENU)0xffff || !(MenuObject = UserGetMenuObject(*hMenu)) )
+      return NO_SELECTED_ITEM;
+
+   for (i = 0; i < MenuObject->MenuInfo.MenuItemCount; i++)
+   {
+       if (!IntGetMenuItemByFlag(MenuObject, i, MF_BYPOSITION, NULL, &mi, NULL))
+       {
+          return NO_SELECTED_ITEM;
+       }
+
+       if (!(mi->fType & MF_POPUP)) continue;
+
+       if (mi->hSubMenu == hSubTarget)
+       {
+          return i;
+       }
+       else
+       {
+          HMENU hsubmenu = mi->hSubMenu;
+          UINT pos = IntFindSubMenu(&hsubmenu, hSubTarget );
+          if (pos != NO_SELECTED_ITEM)
+          {
+             *hMenu = hsubmenu;
+             return pos;
+          }
+       }
+   }
+   return NO_SELECTED_ITEM;
+}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1787,8 +1864,8 @@ NtUserGetMenuBarInfo(
                 }
               Rect.left = Offset.x;
               Rect.right = Offset.x + MenuObject->MenuInfo.Width;
-              Rect.top = Offset.y;
-              Rect.bottom = Offset.y + MenuObject->MenuInfo.Height;
+              Rect.bottom = Offset.y;
+              Rect.top = Offset.y - MenuObject->MenuInfo.Height;
               kmbi.rcBar = Rect;
               DPRINT("Rect top = %d bottom = %d left = %d right = %d \n",
                        Rect.top, Rect.bottom, Rect.left, Rect.right);
@@ -1973,7 +2050,6 @@ NtUserGetMenuItemRect(
    UINT uItem,
    PRECTL lprcItem)
 {
-   ROSMENUINFO mi;
    PWND ReferenceWnd;
    LONG XMove, YMove;
    RECTL Rect;
@@ -1997,15 +2073,12 @@ NtUserGetMenuItemRect(
 
    if(!hWnd)
    {
-      if(!UserMenuInfo(Menu, &mi, FALSE))
-         RETURN( FALSE);
-      if(mi.Wnd == 0)
-         RETURN( FALSE);
+       hWnd = Menu->MenuInfo.Wnd;
    }
 
    if (lprcItem == NULL) RETURN( FALSE);
 
-   if (!(ReferenceWnd = UserGetWindowObject(mi.Wnd))) RETURN( FALSE);
+   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
 
    if(MenuItem->fType & MF_POPUP)
    {
@@ -2056,11 +2129,13 @@ NtUserHiliteMenuItem(
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       RETURN(FALSE);
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
+      EngSetLastError(ERROR_INVALID_MENU_HANDLE);
       RETURN(FALSE);
    }
 
@@ -2228,6 +2303,9 @@ UserMenuItemInfo(
                             NULL, &MenuItem, NULL) < 0)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
+// This will crash menu (line 80) correct_behavior test!
+// "NT4 and below can't handle a bigger MENUITEMINFO struct" 
+      //EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
       return( FALSE);
    }
 

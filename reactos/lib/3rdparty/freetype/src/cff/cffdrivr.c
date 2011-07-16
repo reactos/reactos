@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,7 +23,6 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
 #include FT_SERVICE_CID_H
-#include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_TT_CMAP_H
@@ -228,16 +228,13 @@
                       FT_Pointer  buffer,
                       FT_UInt     buffer_max )
   {
-    CFF_Font            font   = (CFF_Font)face->extra.data;
-    FT_Memory           memory = FT_FACE_MEMORY( face );
-    FT_String*          gname;
-    FT_UShort           sid;
-    FT_Service_PsCMaps  psnames;
-    FT_Error            error;
+    CFF_Font    font   = (CFF_Font)face->extra.data;
+    FT_String*  gname;
+    FT_UShort   sid;
+    FT_Error    error;
 
 
-    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
-    if ( !psnames )
+    if ( !font->psnames )
     {
       FT_ERROR(( "cff_get_glyph_name:"
                  " cannot get glyph name from CFF & CEF fonts\n"
@@ -251,12 +248,11 @@
     sid = font->charset.sids[glyph_index];
 
     /* now, lookup the name itself */
-    gname = cff_index_get_sid_string( &font->string_index, sid, psnames );
+    gname = cff_index_get_sid_string( font, sid );
 
     if ( gname )
       FT_STRCPYN( buffer, gname, buffer_max );
 
-    FT_FREE( gname );
     error = CFF_Err_Ok;
 
   Exit:
@@ -271,11 +267,9 @@
     CFF_Font            cff;
     CFF_Charset         charset;
     FT_Service_PsCMaps  psnames;
-    FT_Memory           memory = FT_FACE_MEMORY( face );
     FT_String*          name;
     FT_UShort           sid;
     FT_UInt             i;
-    FT_Int              result;
 
 
     cff     = (CFF_FontRec *)face->extra.data;
@@ -290,19 +284,14 @@
       sid = charset->sids[i];
 
       if ( sid > 390 )
-        name = cff_index_get_name( &cff->string_index, sid - 391 );
+        name = cff_index_get_string( cff, sid - 391 );
       else
         name = (FT_String *)psnames->adobe_std_strings( sid );
 
       if ( !name )
         continue;
 
-      result = ft_strcmp( glyph_name, name );
-
-      if ( sid > 390 )
-        FT_FREE( name );
-
-      if ( !result )
+      if ( !ft_strcmp( glyph_name, name ) )
         return i;
     }
 
@@ -333,35 +322,29 @@
                         PS_FontInfoRec*  afont_info )
   {
     CFF_Font  cff   = (CFF_Font)face->extra.data;
-    FT_Error  error = FT_Err_Ok;
+    FT_Error  error = CFF_Err_Ok;
 
 
     if ( cff && cff->font_info == NULL )
     {
-      CFF_FontRecDict     dict    = &cff->top_font.font_dict;
-      PS_FontInfoRec     *font_info;
-      FT_Memory           memory  = face->root.memory;
-      FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
+      CFF_FontRecDict  dict   = &cff->top_font.font_dict;
+      PS_FontInfoRec  *font_info;
+      FT_Memory        memory = face->root.memory;
 
 
       if ( FT_ALLOC( font_info, sizeof ( *font_info ) ) )
         goto Fail;
 
-      font_info->version     = cff_index_get_sid_string( &cff->string_index,
-                                                         dict->version,
-                                                         psnames );
-      font_info->notice      = cff_index_get_sid_string( &cff->string_index,
-                                                         dict->notice,
-                                                         psnames );
-      font_info->full_name   = cff_index_get_sid_string( &cff->string_index,
-                                                         dict->full_name,
-                                                         psnames );
-      font_info->family_name = cff_index_get_sid_string( &cff->string_index,
-                                                         dict->family_name,
-                                                         psnames );
-      font_info->weight      = cff_index_get_sid_string( &cff->string_index,
-                                                         dict->weight,
-                                                         psnames );
+      font_info->version     = cff_index_get_sid_string( cff,
+                                                         dict->version );
+      font_info->notice      = cff_index_get_sid_string( cff,
+                                                         dict->notice );
+      font_info->full_name   = cff_index_get_sid_string( cff,
+                                                         dict->full_name );
+      font_info->family_name = cff_index_get_sid_string( cff,
+                                                         dict->family_name );
+      font_info->weight      = cff_index_get_sid_string( cff,
+                                                         dict->weight );
       font_info->italic_angle        = dict->italic_angle;
       font_info->is_fixed_pitch      = dict->is_fixed_pitch;
       font_info->underline_position  = (FT_Short)dict->underline_position;
@@ -467,8 +450,7 @@
 
     if ( cff )
     {
-      CFF_FontRecDict     dict    = &cff->top_font.font_dict;
-      FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
+      CFF_FontRecDict  dict = &cff->top_font.font_dict;
 
 
       if ( dict->cid_registry == 0xFFFFU )
@@ -480,18 +462,16 @@
       if ( registry )
       {
         if ( cff->registry == NULL )
-          cff->registry = cff_index_get_sid_string( &cff->string_index,
-                                                    dict->cid_registry,
-                                                    psnames );
+          cff->registry = cff_index_get_sid_string( cff,
+                                                    dict->cid_registry );
         *registry = cff->registry;
       }
       
       if ( ordering )
       {
         if ( cff->ordering == NULL )
-          cff->ordering = cff_index_get_sid_string( &cff->string_index,
-                                                    dict->cid_ordering,
-                                                    psnames );
+          cff->ordering = cff_index_get_sid_string( cff,
+                                                    dict->cid_ordering );
         *ordering = cff->ordering;
       }
 

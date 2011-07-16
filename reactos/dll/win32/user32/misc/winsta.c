@@ -12,6 +12,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winsta);
 
 
 /*
@@ -58,12 +59,50 @@ CreateWindowStationW(LPCWSTR lpwinsta,
 		     LPSECURITY_ATTRIBUTES lpsa)
 {
   UNICODE_STRING WindowStationName;
+  UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE hWindowStationsDir;
+  NTSTATUS Status;
+  HWINSTA hwinsta;
+
+  /* Open WindowStations directory */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &WindowStationsDir,
+                             OBJ_CASE_INSENSITIVE,
+                             0,
+                             0);
+
+  Status = NtOpenDirectoryObject(&hWindowStationsDir, 
+                                 DIRECTORY_CREATE_OBJECT, 
+                                 &ObjectAttributes);
+  if(!NT_SUCCESS(Status))
+  {
+      ERR("Failed to open WindowStations directory\n");
+      return NULL;
+  }
 
   RtlInitUnicodeString(&WindowStationName, lpwinsta);
 
-  return NtUserCreateWindowStation(&WindowStationName,
-				   dwDesiredAccess,
-				   lpsa, 0, 0, 0, 0);
+  /* Create the window station object */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &WindowStationName,
+                             OBJ_CASE_INSENSITIVE,
+                             hWindowStationsDir,
+                             0);
+
+  /* Check if the handle should be inheritable */
+  if (lpsa && lpsa->bInheritHandle)
+  { 
+      ObjectAttributes.Attributes |= OBJ_INHERIT;
+  }
+
+  hwinsta = NtUserCreateWindowStation(&ObjectAttributes,
+                                      dwDesiredAccess,
+                                      0, 0, 0, 0, 0);
+
+  NtClose(hWindowStationsDir);
+
+  return hwinsta;
 }
 
 /*
@@ -299,14 +338,51 @@ OpenWindowStationA(LPCSTR lpszWinSta,
  */
 HWINSTA WINAPI
 OpenWindowStationW(LPCWSTR lpszWinSta,
-		   BOOL fInherit,
-		   ACCESS_MASK dwDesiredAccess)
+                   BOOL fInherit,
+                   ACCESS_MASK dwDesiredAccess)
 {
   UNICODE_STRING WindowStationName;
+  UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE hWindowStationsDir;
+  NTSTATUS Status;
+  HWINSTA hwinsta;
 
+  /* Open WindowStations directory */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &WindowStationsDir,
+                             OBJ_CASE_INSENSITIVE,
+                             0,
+                             0);
+
+  Status = NtOpenDirectoryObject(&hWindowStationsDir, 
+                                 DIRECTORY_TRAVERSE, 
+                                 &ObjectAttributes);
+  if(!NT_SUCCESS(Status))
+  {
+      ERR("Failed to open WindowStations directory\n");
+      return NULL;
+  }
+
+  /* Open the window station object */
   RtlInitUnicodeString(&WindowStationName, lpszWinSta);
 
-  return NtUserOpenWindowStation(&WindowStationName, dwDesiredAccess);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &WindowStationName,
+                             OBJ_CASE_INSENSITIVE,
+                             hWindowStationsDir,
+                             0);
+
+  if( fInherit == TRUE )
+  {
+      ObjectAttributes.Attributes |= OBJ_INHERIT;
+  }
+
+  hwinsta = NtUserOpenWindowStation(&ObjectAttributes, dwDesiredAccess);
+
+  NtClose(hWindowStationsDir);
+
+  return hwinsta;
 }
 
 

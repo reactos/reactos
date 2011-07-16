@@ -17,6 +17,8 @@
 
 #ifndef _WINKD_
 #define KdpDprintf DPRINT
+#elif defined(NDEBUG)
+#define KdpDprintf(...)
 #endif
 
 /* GLOBALS ********************************************************************/
@@ -148,6 +150,8 @@ MmDbgCopyMemory(IN ULONG64 Address,
 {
     NTSTATUS Status;
     PVOID TargetAddress;
+    ULONG64 PhysicalAddress;
+    PMMPTE PointerPte;
 
     //
     // No local kernel debugging support yet, so don't worry about locking
@@ -236,34 +240,30 @@ MmDbgCopyMemory(IN ULONG64 Address,
         // No session space support yet
         //
         ASSERT(MmIsSessionAddress(TargetAddress) == FALSE);
-    }
 
-    //
-    // If we are going to write to the address then make sure it is writeable too
-    //
-    if ((Flags & MMDBG_COPY_WRITE) &&
-        (!MI_IS_PAGE_WRITEABLE(MiAddressToPte(TargetAddress))))
-    {
-        //
-        // Check if we mapped anything
-        //
-        if (Flags & MMDBG_COPY_PHYSICAL)
+        /* If we are going to write to the address, then check if its writable */
+        PointerPte = MiAddressToPte(TargetAddress);
+        if ((Flags & MMDBG_COPY_WRITE) && !MI_IS_PAGE_WRITEABLE(PointerPte))
         {
-            //
-            // Get rid of the mapping
-            //
-            MiDbgUnTranslatePhysicalAddress();
-        }
+            /* Not writable, we need to do a physical copy */
+            Flags |= MMDBG_COPY_PHYSICAL;
 
-        //
-        // Fail
-        //
-        // FIXME: We should attempt to override the write protection instead of
-        // failing here
-        //
-        KdpDprintf("MmDbgCopyMemory: Failing Write for Protected Address 0x%p\n",
-                   TargetAddress);
-        return STATUS_UNSUCCESSFUL;
+            /* Calculate the physical address */
+            PhysicalAddress = PointerPte->u.Hard.PageFrameNumber << PAGE_SHIFT;
+            PhysicalAddress += BYTE_OFFSET(Address);
+
+            /* Translate the physical address */
+            TargetAddress = MiDbgTranslatePhysicalAddress(PhysicalAddress, Flags);
+
+            /* Check if translation failed */
+            if (!TargetAddress)
+            {
+                /* Fail */
+                KdpDprintf("MmDbgCopyMemory: Failed to translate for write "
+                           "%I64x (%I64x)\n", PhysicalAddress, Address);
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
     }
 
     //

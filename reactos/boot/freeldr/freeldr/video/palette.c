@@ -24,7 +24,7 @@ VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 
 	for (Color=0; Color<ColorCount; Color++)
 	{
-		MachVideoGetPaletteColor(Color, &Palette[Color].Red, &Palette[Color].Green, &Palette[Color].Blue);
+		MachVideoGetPaletteColor((UCHAR)Color, &Palette[Color].Red, &Palette[Color].Green, &Palette[Color].Blue);
 	}
 }
 
@@ -36,7 +36,7 @@ VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 
 	for (Color=0; Color<ColorCount; Color++)
 	{
-		MachVideoSetPaletteColor(Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
+		MachVideoSetPaletteColor((UCHAR)Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
 	}
 }
 #endif

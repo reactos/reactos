@@ -130,6 +130,14 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_EXECUTE_READWRITE   0x2 // Not worrying about NX yet
 #define PTE_EXECUTE_WRITECOPY   0x200
 #define PTE_PROTOTYPE           0x400
+
+//
+// State Flags
+//
+#define PTE_VALID               0x1
+#define PTE_ACCESSED            0x20
+#define PTE_DIRTY               0x40
+
 //
 // Cache flags
 //
@@ -238,7 +246,7 @@ extern const ULONG MmProtectToValue[32];
 // Returns the color of a page
 //
 #define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
-#define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
 #ifndef _M_AMD64

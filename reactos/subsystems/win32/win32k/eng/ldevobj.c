@@ -103,7 +103,7 @@ LDEVOBJ_vFreeLDEV(PLDEVOBJ pldev)
     ASSERT(pldev && pldev->pGdiDriverInfo == NULL);
 
     /* Free the memory */
-    ExFreePoolWithTag(pldev, TAG_LDEV);
+    ExFreePoolWithTag(pldev, GDITAG_LDEV);
 }
 
 PDEVMODEINFO
@@ -145,7 +145,7 @@ LDEVOBJ_pdmiGetModes(
     {
         /* Could not get modes */
         DPRINT1("returned size %ld(%ld)\n", cbSize, pdminfo->cbdevmode);
-        ExFreePool(pdminfo);
+        ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
         pdminfo = NULL;
     }
 
@@ -192,7 +192,7 @@ LDEVOBJ_bLoadImage(
                 pstrPathName->Buffer, Status);
 
         /* Free the allocated memory */
-        ExFreePoolWithTag(pDriverInfo, TAG_LDEV);
+        ExFreePoolWithTag(pDriverInfo, GDITAG_LDEV);
         return FALSE;
     }
 

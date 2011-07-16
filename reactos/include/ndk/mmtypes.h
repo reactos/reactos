@@ -711,7 +711,7 @@ typedef struct _MMVAD
 //
 // Long VAD used in section and private allocations
 //
-typedef struct _MMVAD_LONG 
+typedef struct _MMVAD_LONG
 {
     union
     {

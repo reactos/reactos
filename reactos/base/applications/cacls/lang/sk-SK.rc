@@ -1,44 +1,47 @@
-//Slovak language file by M†rio Kaüm†r aka Kario (kario@szm.sk) 16-01-2008
+/*
+ * Slovak language file by M√°rio Kaƒçm√°r aka Kario (kario@szm.sk) 16-01-2008
+ * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
+ */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Zobraz° alebo zmen° zoznamy pr°stupovÏch pr†v (Access Control List) s£borov.\n\n\
-CACLS n†zov_s£boru [/T] [/E] [/C] [/G pouß°vateñ:povolenia [...]]\n\
-                   [/R pouß°vateñ [...]] [/P pouß°vateñ:povolenia [...]]\n\
-                   [/D pouß°vateñ [...]]\n\
-    n†zov_s£boru   Zobraz° zoznamy ACL.\n\
-    /T             Zmen° zoznamy ACL ÁpecifikovanÏch s£borov\n\
-                   v aktu†lnom adres†ri a vo vÁetkÏch podadres†roch.\n\
-    /E             Uprav° zoznam ACL namiesto jeho nahradenia.\n\
-    /C             Pokraüovanie pri chyb†ch odmietnutia pr°stupu.\n\
-    /G pouß°vateñ:povolenia\n\
-                   Udel° ÁpecifikovanÇmu pouß°vateñovi pr°stupovÇ pr†va.\n\
-                   Povolenia mìßu byú: R  ü°tanie\n\
-                                       W  z†pis\n\
-                                       C  zmena (z†pis)\n\
-                                       F  £plnÏ pr°stup\n\
-    /R pouß°vateñ  Odoberie ÁpecifikovanÏm pouß°vateñom pr°stupovÇ pr†va\n\
-                   (platnÇ iba s prep°naüom /E).\n\
-    /P pouß°vateñ:povolenia\n\
-                   Nahrad° ÁpecifikovanÏm pouß°vateñom pr°stupovÇ pr†va.\n\
-                   Povolenia mìßu byú: N  ßiadne\n\
-                                       R  ü°tanie\n\
-                                       W  z†pis\n\
-                                       C  zmena (z†pis)\n\
-                                       F  £plnÏ pr°stup\n\
-    /D pouß°vateñ  Odoprie ÁpecifikovanÇmu pouß°vateñovi pr°stup.\n\
-N†hradnÇ znaky sa daj£ poußiú na Ápecifikovanie viacerÏch s£borov v jednom\n\
-pr°kaze. Rovnako mìßete Ápecifikovaú aj viacerÏch pouß°vateñov v pr°kaze.\n\n\
+IDS_HELP, "Zobraz√≠ alebo zmen√≠ zoznamy pr√≠stupov√Ωch pr√°v (Access Control List) s√∫borov.\n\n\
+CACLS n√°zov_s√∫boru [/T] [/E] [/C] [/G pou≈æ√≠vateƒæ:povolenia [...]]\n\
+                   [/R pou≈æ√≠vateƒæ [...]] [/P pou≈æ√≠vateƒæ:povolenia [...]]\n\
+                   [/D pou≈æ√≠vateƒæ [...]]\n\
+    n√°zov_s√∫boru   Zobraz√≠ zoznamy ACL.\n\
+    /T             Zmen√≠ zoznamy ACL ≈°pecifikovan√Ωch s√∫borov\n\
+                   v aktu√°lnom adres√°ri a vo v≈°etk√Ωch podadres√°roch.\n\
+    /E             Uprav√≠ zoznam ACL namiesto jeho nahradenia.\n\
+    /C             Pokraƒçovanie pri chyb√°ch odmietnutia pr√≠stupu.\n\
+    /G pou≈æ√≠vateƒæ:povolenia\n\
+                   Udel√≠ ≈°pecifikovan√©mu pou≈æ√≠vateƒæovi pr√≠stupov√© pr√°va.\n\
+                   Povolenia m√¥≈æu by≈•: R  ƒç√≠tanie\n\
+                                       W  z√°pis\n\
+                                       C  zmena (z√°pis)\n\
+                                       F  √∫pln√Ω pr√≠stup\n\
+    /R pou≈æ√≠vateƒæ  Odoberie ≈°pecifikovan√Ωm pou≈æ√≠vateƒæom pr√≠stupov√© pr√°va\n\
+                   (platn√© iba s prep√≠naƒçom /E).\n\
+    /P pou≈æ√≠vateƒæ:povolenia\n\
+                   Nahrad√≠ ≈°pecifikovan√Ωm pou≈æ√≠vateƒæom pr√≠stupov√© pr√°va.\n\
+                   Povolenia m√¥≈æu by≈•: N  ≈æiadne\n\
+                                       R  ƒç√≠tanie\n\
+                                       W  z√°pis\n\
+                                       C  zmena (z√°pis)\n\
+                                       F  √∫pln√Ω pr√≠stup\n\
+    /D pou≈æ√≠vateƒæ  Odoprie ≈°pecifikovan√©mu pou≈æ√≠vateƒæovi pr√≠stup.\n\
+N√°hradn√© znaky sa daj√∫ pou≈æi≈• na ≈°pecifikovanie viacer√Ωch s√∫borov v jednom\n\
+pr√≠kaze. Rovnako m√¥≈æete ≈°pecifikova≈• aj viacer√Ωch pou≈æ√≠vateƒæov v pr√≠kaze.\n\n\
 Skratky:\n\
-    CI - KontajnerovÇ dedenie.\n\
-         ACE bude zdedenÇ po adres†roch.\n\
-    OI - ObjektovÇ dedenie.\n\
-         ACE bude zdedenÇ po s£boroch.\n\
-    IO - Iba zdediú.\n\
-         ACE sa neaplikuje na aktu†lny s£bor alebo adres†r.\n"
+    CI - Kontajnerov√© dedenie.\n\
+         ACE bude zdeden√© po adres√°roch.\n\
+    OI - Objektov√© dedenie.\n\
+         ACE bude zdeden√© po s√∫boroch.\n\
+    IO - Iba zdedi≈•.\n\
+         ACE sa neaplikuje na aktu√°lny s√∫bor alebo adres√°r.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -50,7 +53,7 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(DENY)"
-IDS_SPECIAL_ACCESS, "(Ápeci†lny pr°stup:)"
+IDS_SPECIAL_ACCESS, "(≈°peci√°lny pr√≠stup:)"
 IDS_GENERIC_READ, "GENERIC_READ"
 IDS_GENERIC_WRITE, "GENERIC_WRITE"
 IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"

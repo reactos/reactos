@@ -11,6 +11,12 @@ URLSite = http://www.mono-project.com/Main_Page
 URLDownload = http://ftp.novell.com/pub/mono/archive/2.8.2/windows-installer/1/mono-2.8.2-gtksharp-2.12.10-win32-1.exe
 CDPath = none
 
+[Section.040a]
+Description = Versión open-source de .NET Framework
+
+[Section.040c]
+Description = Framework .net open source.
+
 [Section.0415]
 Description = Pakiet Mono .net Framework dla Programistów.
 

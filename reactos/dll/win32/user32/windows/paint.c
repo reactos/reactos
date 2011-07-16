@@ -107,19 +107,19 @@ GetUpdateRect(
   pWnd = ValidateHwnd(Wnd);
   if (!pWnd)
      return FALSE;
-/*
+
   if ( pWnd->hrgnUpdate ||
        pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
-  {*/
+  {
      return NtUserGetUpdateRect(Wnd, Rect, Erase);
-/*  }
+  }
 
   if (Rect)
   { // Did the Rgn update? No! Back set and shutup!
      Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
   }
   return FALSE;  // msdn: "If there is no update region, the return value is zero."
-*/
+
 }
 
 
@@ -144,14 +144,14 @@ GetUpdateRgn(
   pWnd = ValidateHwnd(hWnd);
   if (!pWnd)
      return ERROR;
-/*
+
   if ( pWnd->hrgnUpdate ||
        pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
-  {*/
+  {
      return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
-/*  }
+  }
   SetRectRgn(hRgn, 0, 0, 0, 0);
-  return NULLREGION;*/
+  return NULLREGION;
 }
 
 
@@ -239,14 +239,14 @@ UpdateWindow(
 
   if (!pWnd)
      return FALSE;
-/*
+
   if ( pWnd->hrgnUpdate ||
        pWnd->state & WNDS_INTERNALPAINT ||
        pWnd->spwndChild )
-  {*/
+  {
      return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
-/*  }
-  return TRUE;*/
+  }
+  return TRUE;
 }
 
 /*
@@ -278,21 +278,19 @@ GetWindowRgn(
 
   pWnd = ValidateHwnd(hWnd);
 
-  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+  if (!pWnd || !pWnd->hrgnClip || pWnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
      return ERROR;
-/*
+
   Ret = CombineRgn(hRgn, pWnd->hrgnClip, NULL, RGN_COPY);
 
   if (!Ret)
      return ERROR;
 
-  if (pWnd->fnid != FNID_DESKTOP)
+  if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      Ret = OffsetRgn(hRgn, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
 
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorRgn(hWnd, hRgn);
-*/
-  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 
   return Ret;
 }
@@ -314,21 +312,19 @@ GetWindowRgnBox(
 
   pWnd = ValidateHwnd(hWnd);
 
-  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+  if (!pWnd || !pWnd->hrgnClip || pWnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
      return ERROR;
-/*
+
   Ret = GetRgnBox(pWnd->hrgnClip, lprc);
 
   if (!Ret)
      return ERROR;
 
-  if (pWnd->fnid != FNID_DESKTOP)
-     Ret = OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
+  if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
+     OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
 
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorWindowRect(pWnd, lprc);
-*/
-  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
 
   return Ret;
 }

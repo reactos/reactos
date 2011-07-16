@@ -234,6 +234,8 @@ CreateBrushIndirect(
         break;
 
     case BS_SOLID:
+/*        hBrush = hGetPEBHandle(hctBrushHandle, LogBrush->lbColor);
+        if (!hBrush)*/
         hBrush = NtGdiCreateSolidBrush(LogBrush->lbColor, 0);
         break;
 

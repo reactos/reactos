@@ -1,41 +1,43 @@
 /*
- *Korean translation by manatails007(www.manatails007.org)
+ * Korean translation by manatails007 (www.manatails007.org)
+ * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
+
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "¾×¼¼½º ÄÁÆ®·Ñ ¸®½ºÆ®(ACLs)º¸±â, ¼öÁ¤\n\n\
-CACLS ÆÄÀÏ¸í [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
+IDS_HELP, "ì•¡ì„¸ìŠ¤ ì»¨íŠ¸ë¡¤ ë¦¬ìŠ¤íŠ¸(ACLs)ë³´ê¸°, ìˆ˜ì •\n\n\
+CACLS íŒŒì¼ëª… [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
-   ÆÄÀÏ¸í      ACL Ç¥½Ã\n\
-   /T            ÆÄÀÏÀÇ ACL ´ëÃ¼\n\
-                 Çö µğ·ºÅä¸®¿Í ÇÏÀ§ µğ·ºÅä¸®±îÁö Æ÷ÇÔ\n\
-   /E            ´ëÃ¼ÇÏ´Â ´ë½Å ACL ¼öÁ¤\n\
-   /C            ±ÇÇÑ ¾øÀ½ ¿¡·¯ ¹ß»ı½Ã ¹«½Ã\n\
-   /G user:perm  À¯Àú¿¡°Ô ¾×¼¼½º ±ÇÇÑ ÁÖ±â\n\
-                 Perm Àº: R  ÀĞ±âÀü¿ë\n\
-                              W  ¾²±â\n\
-                              C  ¼öÁ¤\n\
-                              F  ¸ğµç ±ÇÇÑ\n\
-   /R user       À¯ÀúÀÇ ±ÇÇÑ »¯±â (/E¿Í °°ÀÌ »ç¿ë).\n\
-   /P user:perm  ±ÇÇÑ ´ëÃ¼\n\
-                 Perm Àº: N  ¾øÀ½\n\
-                              R  ÀĞ±â\n\
-                              W  ¾²±â\n\
-                              C  ¼öÁ¤(¾²±â)\n\
-                              F  ¸ğµç±ÇÇÑ\n\
-   /D user       ¾×¼¼½º Á¦ÇÑ\n\
-ÇÏ³ª ÀÌ»óÀÇ ÆÄÀÏÀ» ¿­±â À§ÇØ ¿ÍÀÏµåÄ«µå »ç¿ë °¡´É\n\
-º¹¼öÀ¯Àú µ¿½Ã »ç¿ë°¡´É\n\n\
-´ÜÃàÅ°:\n\
+   íŒŒì¼ëª…      ACL í‘œì‹œ\n\
+   /T            íŒŒì¼ì˜ ACL ëŒ€ì²´\n\
+                 í˜„ ë””ë ‰í† ë¦¬ì™€ í•˜ìœ„ ë””ë ‰í† ë¦¬ê¹Œì§€ í¬í•¨\n\
+   /E            ëŒ€ì²´í•˜ëŠ” ëŒ€ì‹  ACL ìˆ˜ì •\n\
+   /C            ê¶Œí•œ ì—†ìŒ ì—ëŸ¬ ë°œìƒì‹œ ë¬´ì‹œ\n\
+   /G user:perm  ìœ ì €ì—ê²Œ ì•¡ì„¸ìŠ¤ ê¶Œí•œ ì£¼ê¸°\n\
+                 Perm ì€: R  ì½ê¸°ì „ìš©\n\
+                              W  ì“°ê¸°\n\
+                              C  ìˆ˜ì •\n\
+                              F  ëª¨ë“  ê¶Œí•œ\n\
+   /R user       ìœ ì €ì˜ ê¶Œí•œ ëºê¸° (/Eì™€ ê°™ì´ ì‚¬ìš©).\n\
+   /P user:perm  ê¶Œí•œ ëŒ€ì²´\n\
+                 Perm ì€: N  ì—†ìŒ\n\
+                              R  ì½ê¸°\n\
+                              W  ì“°ê¸°\n\
+                              C  ìˆ˜ì •(ì“°ê¸°)\n\
+                              F  ëª¨ë“ ê¶Œí•œ\n\
+   /D user       ì•¡ì„¸ìŠ¤ ì œí•œ\n\
+í•˜ë‚˜ ì´ìƒì˜ íŒŒì¼ì„ ì—´ê¸° ìœ„í•´ ì™€ì¼ë“œì¹´ë“œ ì‚¬ìš© ê°€ëŠ¥\n\
+ë³µìˆ˜ìœ ì € ë™ì‹œ ì‚¬ìš©ê°€ëŠ¥\n\n\
+ë‹¨ì¶•í‚¤:\n\
    CI - Container Inherit.\n\
-        ACE¸¦ µğ·ºÅä¸®¿¡ Àû¿ë\n\
+        ACEë¥¼ ë””ë ‰í† ë¦¬ì— ì ìš©\n\
    OI - Object Inherit.\n\
-        ACE¸¦ ÆÄÀÏ¿¡ Àû¿ë\n\
+        ACEë¥¼ íŒŒì¼ì— ì ìš©\n\
    IO - Inherit Only.\n\
-        ACEÀû¿ë ¾ÈÇÔ\n"
+        ACEì ìš© ì•ˆí•¨\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

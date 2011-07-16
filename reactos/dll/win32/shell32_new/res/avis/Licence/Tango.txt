@@ -1,0 +1,10 @@
+The following avi's use icons from the Tango project and are 
+released under Creative Commons Attribution-ShareAlike 2.5 License.
+Please see COPYING for details
+
+160+161+167+168.avi
+162.avi
+163.avi
+164+169.avi
+170.avi
+

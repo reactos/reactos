@@ -40,8 +40,8 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include <host/typedefs.h>
-#include <host/nls.h>
+#include <typedefs.h>
+#include <nls.h>
 
 #include "widl.h"
 #include "typelib.h"
@@ -909,7 +909,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -947,7 +947,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & VT_TYPEMASK) | VT_ARRAY;
 	    } else {
@@ -1129,7 +1129,7 @@ static int encode_var(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -1548,7 +1548,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
     }
 
     /* update the index data */
-    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id; 
+    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id;
     typeinfo->func_offsets[typeinfo->typeinfo->cElement & 0xffff] = offset;
     typeinfo->func_names[typeinfo->typeinfo->cElement & 0xffff] = name_offset;
 
@@ -1605,7 +1605,7 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     INT *typedata;
     int var_datawidth;
     int var_alignment;
-    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */; 
+    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */;
     int alignment;
     int varflags = 0;
     const attr_t *attr;
@@ -2551,8 +2551,8 @@ int create_msft_typelib(typelib_t *typelib)
     time_t cur_time;
     char *time_override;
     unsigned int version = 5 << 24 | 1 << 16 | 164; /* 5.01.0164 */
-    GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
-    GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
+    GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}};
+    GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}};
 
     pointer_size = (typelib_kind == SYS_WIN64) ? 8 : 4;
 
@@ -2594,7 +2594,7 @@ int create_msft_typelib(typelib_t *typelib)
     set_help_context(msft);
     set_help_string_dll(msft);
     set_help_string_context(msft);
-    
+
     /* midl adds two sets of custom data to the library: the current unix time
        and midl's version number */
     time_override = getenv( "WIDL_TIME_OVERRIDE");

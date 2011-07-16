@@ -932,10 +932,10 @@ static void InitInstance(HINSTANCE hInstance)
 	g_Globals._hframeClass = IconWindowClass(CLASSNAME_FRAME,IDI_EXPLORER);
 
 	 // register child window class
-	WindowClass(CLASSNAME_CHILDWND, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
+	WindowClass(CLASSNAME_CHILDWND, CS_CLASSDC|CS_DBLCLKS).Register();
 
 	 // register tree window class
-	WindowClass(CLASSNAME_WINEFILETREE, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
+	WindowClass(CLASSNAME_WINEFILETREE, CS_CLASSDC|CS_DBLCLKS).Register();
 #endif
 
 	g_Globals._cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);
@@ -968,7 +968,9 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdShow)
 	}
 #endif
 
-	return Window::MessageLoop();
+	Window::MessageLoop();
+	
+	return 1;
 }
 
 

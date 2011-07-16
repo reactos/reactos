@@ -43,5 +43,6 @@
 	<file>toolsband.cpp</file>
 	<file>travellog.cpp</file>
 	<file>utility.cpp</file>
+	<file>dllinstall.c</file>
 	<file>browseui.rc</file>
 </module>

@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <group>
-	<module name="ntsys" type="staticlibrary">
-		<importlibrary definition="def/ntsys.pspec" dllname="ntdll.dll" root="intermediate" />
-	</module>
 	<module name="ntdll" type="nativedll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
 		<importlibrary definition="def/ntdll.pspec" />
@@ -50,9 +47,10 @@
 			<pch>ntdll.h</pch>
 		</directory>
 		<directory name="ldr">
-			<file>startup.c</file>
-			<file>utils.c</file>
-			<file>actctx.c</file>
+			<file>ldrapi.c</file>
+			<file>ldrinit.c</file>
+			<file>ldrpe.c</file>
+			<file>ldrutils.c</file>
 		</directory>
 		<directory name="rtl">
 			<file>libsupp.c</file>

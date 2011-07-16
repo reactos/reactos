@@ -511,7 +511,19 @@ typedef struct
   DWORD NumberOfHistoryBuffers;
   DWORD dwFlags;
 } CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
-  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;
+  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;;
+
+typedef struct
+{
+  UINT UniqueID;
+} CSRSS_GET_TEMP_FILE, *PCSRSS_GET_TEMP_FILE;
+
+typedef struct
+{
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING TargetName;
+    DWORD dwFlags;
+} CSRSS_DEFINE_DOS_DEVICE, *PCSRSS_DEFINE_DOS_DEVICE;
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
@@ -592,6 +604,8 @@ typedef struct
 #define SET_HISTORY_NUMBER_COMMANDS   (0x45)
 #define GET_HISTORY_INFO              (0x46)
 #define SET_HISTORY_INFO              (0x47)
+#define GET_TEMP_FILE                 (0x48)
+#define DEFINE_DOS_DEVICE			  (0X49)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -673,6 +687,8 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
         CSRSS_GET_HISTORY_INFO GetHistoryInfo;
         CSRSS_SET_HISTORY_INFO SetHistoryInfo;
+        CSRSS_GET_TEMP_FILE GetTempFile;
+        CSRSS_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

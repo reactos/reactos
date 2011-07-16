@@ -61,7 +61,7 @@ cpp_quote("#define AMDSS_PRIMARY (AMDDS_DCIPS | AMDDS_PS)")
 
 [
     object,
-    /* uuid(36d39eb0-dd75-11ce-bf0e-00aa0055595a)  conflicts with uuids.h */
+    uuid(36d39eb0-dd75-11ce-bf0e-00aa0055595a),
     pointer_default(unique),
     local
 ]
@@ -87,7 +87,7 @@ interface IDirectDrawVideo : IUnknown
 
 [
     object,
-    /* uuid(1bd0ecb0-f8e2-11ce-aac6-0020af0b99a3)  conflicts with uuids.h */
+    uuid(1bd0ecb0-f8e2-11ce-aac6-0020af0b99a3),
     pointer_default(unique),
     local
 ]
@@ -103,7 +103,7 @@ interface IQualProp : IUnknown
 
 [
     object,
-    /* uuid(dd1d7110-7836-11cf-bf47-00aa0055595a)  conflicts with uuids.h */
+    uuid(dd1d7110-7836-11cf-bf47-00aa0055595a),
     pointer_default(unique)
 ]
 interface IFullScreenVideo : IUnknown
@@ -129,7 +129,7 @@ interface IFullScreenVideo : IUnknown
 
 [
     object,
-    /* uuid(53479470-f1dd-11cf-bc42-00aa00ac74f6)  conflicts with uuids.h */
+    uuid(53479470-f1dd-11cf-bc42-00aa00ac74f6),
     pointer_default(unique),
     local
 ]
@@ -144,7 +144,7 @@ interface IFullScreenVideoEx : IFullScreenVideo
 
 [
     object,
-    /* uuid(61ded640-e912-11ce-a099-00aa00479a58)  conflicts with uuids.h */
+    uuid(61ded640-e912-11ce-a099-00aa00479a58),
     pointer_default(unique),
     local
 ]

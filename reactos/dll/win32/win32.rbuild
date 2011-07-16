@@ -169,6 +169,9 @@
 <directory name="inseng">
 	<xi:include href="inseng/inseng.rbuild" />
 </directory>
+<directory name="iologmsg">
+	<xi:include href="iologmsg/iologmsg.rbuild" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
@@ -291,6 +294,9 @@
 </directory>
 <directory name="msnet32">
 	<xi:include href="msnet32/msnet32.rbuild" />
+</directory>
+<directory name="msports">
+	<xi:include href="msports/msports.rbuild" />
 </directory>
 <directory name="msrle32">
 	<xi:include href="msrle32/msrle32.rbuild" />
@@ -561,6 +567,9 @@
 </directory>
 <directory name="ufatx">
 	<xi:include href="ufatx/ufatx.rbuild" />
+</directory>
+<directory name="unicows">
+	<xi:include href="unicows/unicows.rbuild" />
 </directory>
 <directory name="untfs">
 	<xi:include href="untfs/untfs.rbuild" />

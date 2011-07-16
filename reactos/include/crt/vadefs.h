@@ -90,9 +90,9 @@ extern "C" {
 #define _PTRSIZEOF(n) ((sizeof(n) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 #define _ISSTRUCT(t) ((sizeof(t) > sizeof(void*)) || (sizeof(t) & (sizeof(t)-1)) != 0)
 #define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _PTRSIZEOF(l)))
-#define _crt_va_arg(v,t)	_ISSTRUCT(t) ? \
+#define _crt_va_arg(v,t)	(_ISSTRUCT(t) ? \
                             (**(t**)(((v) += sizeof(void*)) - sizeof(void*))) : \
-                            (*(t*)(((v) += sizeof(void*)) - sizeof(void*)))
+                            (*(t*)(((v) += sizeof(void*)) - sizeof(void*))))
 #define _crt_va_end(v)	((void)((v) = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
 #else //if defined(_M_IA64) || defined(_M_CEE)

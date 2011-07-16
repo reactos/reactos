@@ -41,7 +41,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Naujas"
         {
-            MENUITEM "&Langas"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Langas",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Atverti...",                 ID_BROWSE_OPEN
         MENUITEM "&Išsaugoti",                  ID_BROWSE_SAVE
@@ -58,13 +58,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Įrankių juosta"
         {
-            MENUITEM "Į&prastinė juosta"        ID_BROWSE_BAR_STD
-            MENUITEM "&Adreso juosta"           ID_BROWSE_BAR_ADDR
+            MENUITEM "Į&prastinė juosta",       ID_BROWSE_BAR_STD
+            MENUITEM "&Adreso juosta",          ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Adresynas"
     {
-        MENUITEM "Į&rašyti į adresyną..."       ID_BROWSE_ADDFAV
+        MENUITEM "Į&rašyti į adresyną...",      ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Žinynas"

@@ -18,8 +18,56 @@ SwDispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    NTSTATUS Status, PnpStatus;
+    BOOLEAN ChildDevice;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT PnpDeviceObject = NULL;
 
-    UNIMPLEMENTED;
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* check if the device object is a child device */
+    Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
+
+    /* get bus enum pnp object */
+    PnpStatus = KsGetBusEnumPnpDeviceObject(DeviceObject, &PnpDeviceObject);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(PnpStatus))
+    {
+        /* start next power irp */
+        PoStartNextPowerIrp(Irp);
+
+        /* just complete the irp */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        /* complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        /* done */
+        return STATUS_SUCCESS;
+    }
+
+    if (IoStack->MinorFunction == IRP_MN_SET_POWER || IoStack->MinorFunction == IRP_MN_QUERY_POWER)
+    {
+        /* fake success */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+    }
+
+    if (!ChildDevice)
+    {
+        /* forward to pnp device object */
+        PoStartNextPowerIrp(Irp);
+
+        /* skip current location */
+        IoSkipCurrentIrpStackLocation(Irp);
+
+        /* done */
+        return PoCallDriver(PnpDeviceObject, Irp);
+    }
+
+    /* start next power irp */
+    PoStartNextPowerIrp(Irp);
 
     /* just complete the irp */
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -29,7 +77,6 @@ SwDispatchPower(
 
     /* done */
     return STATUS_SUCCESS;
-
 }
 
 NTSTATUS
@@ -43,6 +90,9 @@ SwDispatchPnp(
     PIO_STACK_LOCATION IoStack;
     PDEVICE_OBJECT PnpDeviceObject = NULL;
 
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     /* check if the device object is a child device */
     Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
 
@@ -55,10 +105,30 @@ SwDispatchPnp(
         return Status;
     }
 
+    DPRINT("SwDispatchPnp ChildDevice %u Request %x\n", ChildDevice, IoStack->MinorFunction);
+
     /* let ks handle it */
     Status = KsServiceBusEnumPnpRequest(DeviceObject, Irp);
 
-    if (!NT_SUCCESS(Status))
+    /* check if the request was for a pdo */
+    if (!ChildDevice)
+    {
+        if (Status != STATUS_NOT_SUPPORTED)
+        {
+            /* store result */
+            Irp->IoStatus.Status = Status;
+        }
+
+        /* complete request */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        /* done */
+        return Status;
+    }
+
+    DPRINT("SwDispatchPnp KsServiceBusEnumPnpRequest Status %x\n", Status);
+
+    if (NT_SUCCESS(Status))
     {
         /* invalid request or not supported */
         Irp->IoStatus.Status = Status;
@@ -68,6 +138,8 @@ SwDispatchPnp(
 
     /* get bus enum pnp object */
     Status = KsGetBusEnumPnpDeviceObject(DeviceObject, &PnpDeviceObject);
+
+    DPRINT("SwDispatchPnp KsGetBusEnumPnpDeviceObject Status %x\n", Status);
 
     /* check for success */
     if (!NT_SUCCESS(Status))
@@ -89,11 +161,49 @@ SwDispatchPnp(
         /* delete the device */
         IoDeleteDevice(DeviceObject);
     }
+    else
+    {
+        if (IoStack->MinorFunction == IRP_MN_QUERY_RESOURCES || IoStack->MinorFunction == IRP_MN_QUERY_RESOURCE_REQUIREMENTS)
+        {
+            /* no resources required */
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
 
-    /* skip current location */
-    IoSkipCurrentIrpStackLocation(Irp);
-    /* call the pnp device object */
-    return IoCallDriver(PnpDeviceObject, Irp);
+            /* skip current location */
+            IoSkipCurrentIrpStackLocation(Irp);
+
+            /* call the pnp device object */
+            return IoCallDriver(PnpDeviceObject, Irp);
+        }
+
+        if (IoStack->MajorFunction == IRP_MN_QUERY_PNP_DEVICE_STATE)
+        {
+            /* device cannot be disabled */
+            Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            /* skip current location */
+            IoSkipCurrentIrpStackLocation(Irp);
+
+            /* call the pnp device object */
+            return IoCallDriver(PnpDeviceObject, Irp);
+        }
+
+        if (Status == STATUS_NOT_SUPPORTED)
+        {
+            /* skip current location */
+            IoSkipCurrentIrpStackLocation(Irp);
+
+            /* call the pnp device object */
+            return IoCallDriver(PnpDeviceObject, Irp);
+        }
+    }
+
+    /* complete the request */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
 }
 
 NTSTATUS
@@ -149,7 +259,7 @@ SwDispatchDeviceControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -158,16 +268,25 @@ SwDispatchDeviceControl(
     {
         /* install interface */
         Status = KsInstallBusEnumInterface(Irp);
+        DPRINT("SwDispatchDeviceControl IOCTL_SWENUM_INSTALL_INTERFACE %x\n", Status);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SWENUM_REMOVE_INTERFACE)
     {
         /* remove interface */
         Status = KsRemoveBusEnumInterface(Irp);
+        DPRINT("SwDispatchDeviceControl IOCTL_SWENUM_REMOVE_INTERFACE %x\n", Status);
+
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SWENUM_GET_BUS_ID)
     {
         /* get bus id */
-        return KsGetBusEnumIdentifier(Irp);
+        Status = KsGetBusEnumIdentifier(Irp);
+        DPRINT("SwDispatchDeviceControl IOCTL_SWENUM_GET_BUS_ID %x\n", Status);
+    }
+    else
+    {
+        DPRINT("SwDispatchDeviceControl Unknown IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+        Status = STATUS_INVALID_PARAMETER;
     }
 
     /* store result */
@@ -193,6 +312,8 @@ SwDispatchCreate(
     /* check if the device object is a child device */
     Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
 
+    DPRINT("SwDispatchCreate %x\n", Status);
+
     /* check for success */
     if (NT_SUCCESS(Status))
     {
@@ -205,6 +326,7 @@ SwDispatchCreate(
         }
         /* perform the create request */
         Status = KsServiceBusEnumCreateRequest(DeviceObject, Irp);
+        DPRINT("SwDispatchCreate %x\n", Status);
     }
 
     /* check the irp is pending */
@@ -245,6 +367,7 @@ SwAddDevice(
     NTSTATUS Status;
     PDEVICE_OBJECT FunctionalDeviceObject;
 
+    DPRINT("SWENUM AddDevice\n");
     /* create the device */
     Status = IoCreateDevice(DriverObject, sizeof(KSDEVICE_HEADER), NULL, FILE_DEVICE_BUS_EXTENDER, 0, FALSE, &FunctionalDeviceObject);
 
@@ -303,7 +426,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = SwDispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = SwDispatchSystemControl;
 
-
+    DPRINT("SWENUM loaded\n");
     return STATUS_SUCCESS;
 }
 

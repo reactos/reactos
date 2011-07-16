@@ -302,9 +302,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     PSECTION_OBJECT SectionObject;
     ULONG ViewSize = 0;
     LARGE_INTEGER SectionSize;
-#if 0 // Wine code
-    FT_Fixed XScale, YScale;
-#endif
     UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
     /* Open the font file */
@@ -395,22 +392,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     RtlCopyMemory(FontGDI->Filename, FileName->Buffer, FileName->Length);
     FontGDI->Filename[FileName->Length / sizeof(WCHAR)] = L'\0';
     FontGDI->face = Face;
-
-    /* FIXME: Complete text metrics */
-#if 0 /* This (Wine) code doesn't seem to work correctly for us */
-    XScale = Face->size->metrics.x_scale;
-    YScale = Face->size->metrics.y_scale;
-    FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) -
-                                     FT_MulFix(Face->descender, YScale)) >> 6;
-#else
-    FontGDI->TextMetric.tmAscent  = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
-    FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
-    FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender - Face->size->metrics.descender) >> 6;
-#endif
-
-
 
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
     DPRINT("Num glyphs: %u\n", Face->num_glyphs);
@@ -856,14 +837,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     Otm->otmSize = Needed;
 
-//  FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-    if (!(FontGDI->flRealizedType & FDM_TYPE_TEXT_METRIC))
-    {
-        FillTM(&FontGDI->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-        FontGDI->flRealizedType |= FDM_TYPE_TEXT_METRIC;
-    }
-
-    RtlCopyMemory(&Otm->otmTextMetrics, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+    FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
     Otm->otmFiller = 0;
     RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
@@ -882,8 +856,8 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     Otm->otmrcFontBox.right = (FT_MulFix(FontGDI->face->bbox.xMax, XScale) + 32) >> 6;
     Otm->otmrcFontBox.top = (FT_MulFix(FontGDI->face->bbox.yMax, YScale) + 32) >> 6;
     Otm->otmrcFontBox.bottom = (FT_MulFix(FontGDI->face->bbox.yMin, YScale) + 32) >> 6;
-    Otm->otmMacAscent = FontGDI->TextMetric.tmAscent;
-    Otm->otmMacDescent = -FontGDI->TextMetric.tmDescent;
+    Otm->otmMacAscent = Otm->otmTextMetrics.tmAscent;
+    Otm->otmMacDescent = -Otm->otmTextMetrics.tmDescent;
     Otm->otmMacLineGap = Otm->otmLineGap;
     Otm->otmusMinimumPPEM = 0; /* TT Header */
     Otm->otmptSubscriptSize.x = (FT_MulFix(pOS2->ySubscriptXSize, XScale) + 32) >> 6;
@@ -1078,12 +1052,16 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 
     ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
-    wcsncpy(Info->EnumLogFontEx.elfLogFont.lfFaceName, FaceName, LF_FACESIZE);
-    wcsncpy(Info->EnumLogFontEx.elfFullName, FaceName, LF_FULLFACESIZE);
+    RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
+                     sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
+                     FaceName);
+    RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
+                     sizeof(Info->EnumLogFontEx.elfFullName),
+                     FaceName);
     RtlInitAnsiString(&StyleA, FontGDI->face->style_name);
-    RtlAnsiStringToUnicodeString(&StyleW, &StyleA, TRUE);
-    wcsncpy(Info->EnumLogFontEx.elfStyle, StyleW.Buffer, LF_FACESIZE);
-    RtlFreeUnicodeString(&StyleW);
+    StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
+    StyleW.MaximumLength = sizeof(Info->EnumLogFontEx.elfStyle);
+    RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
 
     Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
     Info->EnumLogFontEx.elfScript[0] = L'\0';
@@ -1267,8 +1245,10 @@ FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
             if (InfoContext->Count < InfoContext->Size)
             {
                 InfoContext->Info[InfoContext->Count] = InfoContext->Info[Existing];
-                wcsncpy(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName,
-                        RegistryName.Buffer, LF_FACESIZE);
+                RtlStringCbCopyNW(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName,
+                                  sizeof(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName),
+                                  RegistryName.Buffer,
+                                  RegistryName.Length);
             }
             InfoContext->Count++;
             return STATUS_SUCCESS;
@@ -1589,8 +1569,8 @@ ftGdiGetGlyphOutline(
 //  FT_Set_Pixel_Sizes(ft_face,
 //                     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
     /* FIXME should set character height if neg */
-//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-//                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+//                      dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -2185,9 +2165,8 @@ TextIntGetTextExtentPoint(PDC dc,
     error = FT_Set_Pixel_Sizes(face,
                                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                                /* FIXME should set character height if neg */
-                               (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                                - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                               (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+							   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
     {
         DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -2248,7 +2227,8 @@ TextIntGetTextExtentPoint(PDC dc,
     IntUnLockFreeType;
 
     Size->cx = (TotalWidth + 32) >> 6;
-    Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
+    Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+	            dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
     Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
 
     return TRUE;
@@ -2472,9 +2452,8 @@ ftGdiGetTextMetricsW(
         Error = FT_Set_Pixel_Sizes(Face,
                                    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                                    /* FIXME should set character height if neg */
-                                   (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                                    - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                                    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                                   (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                                   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
         IntUnLockFreeType;
         if (0 != Error)
         {
@@ -2506,13 +2485,8 @@ ftGdiGetTextMetricsW(
 
             if (NT_SUCCESS(Status))
             {
-                if (!(FontGDI->flRealizedType & FDM_TYPE_TEXT_METRIC))
-                {
-                    FillTM(&FontGDI->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-                    FontGDI->flRealizedType |= FDM_TYPE_TEXT_METRIC;
-                }
+                FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
-                RtlCopyMemory(&ptmwi->TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
                 /* FIXME: Fill Diff member */
                 RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
@@ -2643,7 +2617,7 @@ FindBestFontFromList(FONTOBJ **FontObj, UINT *MatchScore, LOGFONTW *LogFont,
     PFONT_ENTRY CurrentEntry;
     FONTGDI *FontGDI;
     UINT Score;
-
+ASSERT(FontObj && MatchScore && LogFont && FaceName && Head);
     Entry = Head->Flink;
     while (Entry != Head)
     {
@@ -2808,7 +2782,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         TextObj->Font->iUniq = 1; // Now it can be cached.
         IntFontType(FontGdi);
         FontGdi->flType = TextObj->Font->flFontType;
-        FontGdi->flRealizedType = 0;
         FontGdi->Underline = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfUnderline ? 0xff : 0;
         FontGdi->StrikeOut = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfStrikeOut ? 0xff : 0;
         TextObj->fl |= TEXTOBJECT_INIT;
@@ -3248,8 +3221,6 @@ GreExtTextOutW(
         DestRect.right  = lprc->right;
         DestRect.bottom = lprc->bottom;
 
-        IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
-
         DestRect.left   += dc->ptlDCOrig.x;
         DestRect.top    += dc->ptlDCOrig.y;
         DestRect.right  += dc->ptlDCOrig.x;
@@ -3271,7 +3242,7 @@ GreExtTextOutW(
             &SourcePoint,
             &dc->eboBackground.BrushObject,
             &BrushOrigin,
-            ROP3_TO_ROP4(PATCOPY));
+            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
         DC_vFinishBlit(dc, NULL);
     }
@@ -3332,9 +3303,8 @@ GreExtTextOutW(
                 face,
                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                 /* FIXME should set character height if neg */
-                (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                 - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
     {
         DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -3424,13 +3394,13 @@ GreExtTextOutW(
 
         previous = 0;
 
-        if (pdcattr->lTextAlign & TA_RIGHT)
+        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
         {
-            RealXStart -= TextWidth;
+            RealXStart -= TextWidth / 2;
         }
         else
         {
-            RealXStart -= TextWidth / 2;
+            RealXStart -= TextWidth;
         }
     }
 
@@ -3516,7 +3486,7 @@ GreExtTextOutW(
                 &SourcePoint,
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
-                ROP3_TO_ROP4(PATCOPY));
+                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
             MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
 
@@ -3871,8 +3841,8 @@ NtGdiGetCharABCWidthsW(
     FT_Set_Pixel_Sizes(face,
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                        /* FIXME should set character height if neg */
-                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                       dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -4038,9 +4008,8 @@ NtGdiGetCharWidthW(
     FT_Set_Pixel_Sizes(face,
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                        /* FIXME should set character height if neg */
-                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                        - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                       dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {

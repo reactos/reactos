@@ -1371,6 +1371,109 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 static VOID
+GuiConsoleCopy(HWND hWnd, PCSRSS_CONSOLE Console)
+{
+    if (OpenClipboard(hWnd) == TRUE)
+    {
+        HANDLE hData;
+        PBYTE ptr;
+        LPSTR data, dstPos;
+        ULONG selWidth, selHeight;
+        ULONG xPos, yPos, size;
+
+        selWidth = Console->Selection.srSelection.Right - Console->Selection.srSelection.Left + 1;
+        selHeight = Console->Selection.srSelection.Bottom - Console->Selection.srSelection.Top + 1;
+        DPRINT("Selection is (%d|%d) to (%d|%d)\n",
+               Console->Selection.srSelection.Left,
+               Console->Selection.srSelection.Top,
+               Console->Selection.srSelection.Right,
+               Console->Selection.srSelection.Bottom);
+
+        /* Basic size for one line and termination */
+        size = selWidth + 1;
+        if (selHeight > 0)
+        {
+            /* Multiple line selections have to get \r\n appended */
+            size += ((selWidth + 2) * (selHeight - 1));
+        }
+
+        /* Allocate memory, it will be passed to the system and may not be freed here */
+        hData = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
+        if (hData == NULL)
+        {
+            CloseClipboard();
+            return;
+        }
+        data = GlobalLock(hData);
+        if (data == NULL)
+        {
+            CloseClipboard();
+            return;
+        }
+
+        DPRINT("Copying %dx%d selection\n", selWidth, selHeight);
+        dstPos = data;
+
+        for (yPos = 0; yPos < selHeight; yPos++)
+        {
+            ptr = ConioCoordToPointer(Console->ActiveBuffer, 
+                                      Console->Selection.srSelection.Left,
+                                      yPos + Console->Selection.srSelection.Top);
+            /* Copy only the characters, leave attributes alone */
+            for (xPos = 0; xPos < selWidth; xPos++)
+            {
+                dstPos[xPos] = ptr[xPos * 2];
+            }
+            dstPos += selWidth;
+            if (yPos != (selHeight - 1))
+            {
+                strcat(data, "\r\n");
+                dstPos += 2;
+            }
+        }
+
+        DPRINT("Setting data <%s> to clipboard\n", data);
+        GlobalUnlock(hData);
+
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hData);
+        CloseClipboard();
+    }
+}
+
+static VOID
+GuiConsolePaste(HWND hWnd, PCSRSS_CONSOLE Console)
+{
+    if (OpenClipboard(hWnd) == TRUE)
+    {
+        HANDLE hData;
+        LPSTR str;
+        size_t len;
+
+        hData = GetClipboardData(CF_TEXT);
+        if (hData == NULL)
+        {
+            CloseClipboard();
+            return;
+        }
+
+        str = GlobalLock(hData);
+        if (str == NULL)
+        {
+            CloseClipboard();
+            return;
+        }
+        DPRINT("Got data <%s> from clipboard\n", str);
+        len = strlen(str);
+
+        ConioWriteConsole(Console, Console->ActiveBuffer, str, len, TRUE);
+
+        GlobalUnlock(hData);
+        CloseClipboard();
+    }
+}
+
+static VOID
 GuiConsoleRightMouseDown(HWND hWnd)
 {
     PCSRSS_CONSOLE Console;
@@ -1381,12 +1484,13 @@ GuiConsoleRightMouseDown(HWND hWnd)
 
     if (!(Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
     {
-        /* FIXME - paste text from clipboard */
+        GuiConsolePaste(hWnd, Console);
     }
     else
     {
-        /* FIXME - copy selection to clipboard */
+        GuiConsoleCopy(hWnd, Console);
 
+        /* Clear the selection */
         GuiConsoleUpdateSelection(Console, NULL);
     }
 
@@ -1466,18 +1570,41 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
     CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
 }
 static LRESULT
-GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam, PGUI_CONSOLE_DATA GuiData)
+GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Ret = TRUE;
+    PCSRSS_CONSOLE Console;
+    PGUI_CONSOLE_DATA GuiData;
+    COORD bottomRight = { 0, 0 };
+
+    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
     switch(wParam)
     {
     case ID_SYSTEM_EDIT_MARK:
+        DPRINT1("Marking not handled yet\n");
+        break;
+
     case ID_SYSTEM_EDIT_COPY:
+        GuiConsoleCopy(hWnd, Console);
+        break;
+
     case ID_SYSTEM_EDIT_PASTE:
+        GuiConsolePaste(hWnd, Console);
+        break;
+
     case ID_SYSTEM_EDIT_SELECTALL:
+        bottomRight.X = Console->Size.X - 1;
+        bottomRight.Y = Console->Size.Y - 1;
+        GuiConsoleUpdateSelection(Console, &bottomRight);
+        break;
+
     case ID_SYSTEM_EDIT_SCROLL:
+        DPRINT1("Scrolling is not handled yet\n");
+        break;
+
     case ID_SYSTEM_EDIT_FIND:
+        DPRINT1("Finding is not handled yet\n");
         break;
 
     case ID_SYSTEM_DEFAULTS:
@@ -1895,7 +2022,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
     case WM_SYSCOMMAND:
-        Result = GuiConsoleHandleSysMenuCommand(hWnd, wParam, lParam, GuiData);
+        Result = GuiConsoleHandleSysMenuCommand(hWnd, wParam, lParam);
         break;
     case WM_HSCROLL:
     case WM_VSCROLL:

@@ -83,8 +83,10 @@ typedef struct
   BYTE   extra[1];  /* Space for caller supplied info, variable size */
 } TAB_ITEM;
 
-/* The size of a tab item depends on how much extra data is requested */
-#define TAB_ITEM_SIZE(infoPtr) (FIELD_OFFSET(TAB_ITEM, extra[(infoPtr)->cbInfo]))
+/* The size of a tab item depends on how much extra data is requested.
+   TCM_INSERTITEM always stores at least LPARAM sized data. */
+#define EXTRA_ITEM_SIZE(infoPtr) (max((infoPtr)->cbInfo, sizeof(LPARAM)))
+#define TAB_ITEM_SIZE(infoPtr) FIELD_OFFSET(TAB_ITEM, extra[EXTRA_ITEM_SIZE(infoPtr)])
 
 typedef struct
 {
@@ -1163,14 +1165,14 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
   if (!(infoPtr->fHeightSet))
   {
     int item_height;
-    int icon_height = 0;
+    INT icon_height = 0, cx;
 
     /* Use the current font to determine the height of a tab. */
     GetTextMetricsW(hdc, &fontMetrics);
 
     /* Get the icon height */
     if (infoPtr->himl)
-      ImageList_GetIconSize(infoPtr->himl, 0, &icon_height);
+      ImageList_GetIconSize(infoPtr->himl, &cx, &icon_height);
 
     /* Take the highest between font or icon */
     if (fontMetrics.tmHeight > icon_height)
@@ -1195,7 +1197,9 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
   /* Get the icon width */
   if (infoPtr->himl)
   {
-    ImageList_GetIconSize(infoPtr->himl, &icon_width, 0);
+    INT cy;
+
+    ImageList_GetIconSize(infoPtr->himl, &icon_width, &cy);
 
     if (infoPtr->dwStyle & TCS_FIXEDWIDTH)
       icon_width += 4;
@@ -1726,7 +1730,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
   /*
    * if owner draw, tell the owner to draw
    */
-  if ((infoPtr->dwStyle & TCS_OWNERDRAWFIXED) && GetParent(infoPtr->hwnd))
+  if ((infoPtr->dwStyle & TCS_OWNERDRAWFIXED) && IsWindow(infoPtr->hwndNotify))
   {
     DRAWITEMSTRUCT dis;
     UINT id;
@@ -1739,14 +1743,9 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
         drawRect->left += 1;
     }
 
-    /*
-     * get the control id
-     */
     id = (UINT)GetWindowLongPtrW( infoPtr->hwnd, GWLP_ID );
 
-    /*
-     * put together the DRAWITEMSTRUCT
-     */
+    /* fill DRAWITEMSTRUCT */
     dis.CtlType    = ODT_TAB;
     dis.CtlID      = id;
     dis.itemID     = iItem;
@@ -1759,11 +1758,18 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     dis.hwndItem = infoPtr->hwnd;
     dis.hDC      = hdc;
     CopyRect(&dis.rcItem,drawRect);
-    dis.itemData = (ULONG_PTR)TAB_GetItem(infoPtr, iItem)->extra;
 
-    /*
-     * send the draw message
-     */
+    /* when extra data fits ULONG_PTR, store it directly */
+    if (infoPtr->cbInfo > sizeof(LPARAM))
+        dis.itemData =  (ULONG_PTR) TAB_GetItem(infoPtr, iItem)->extra;
+    else
+    {
+        /* this could be considered broken on 64 bit, but that's how it works -
+           only first 4 bytes are copied */
+        memcpy(&dis.itemData, (ULONG_PTR*)TAB_GetItem(infoPtr, iItem)->extra, 4);
+    }
+
+    /* draw notification */
     SendMessageW( infoPtr->hwndNotify, WM_DRAWITEM, id, (LPARAM)&dis );
   }
   else
@@ -2620,7 +2626,7 @@ static inline LRESULT TAB_Paint (TAB_INFO *infoPtr, HDC hdcPaint)
 }
 
 static LRESULT
-TAB_InsertItemT (TAB_INFO *infoPtr, INT iItem, TCITEMW *pti, BOOL bUnicode)
+TAB_InsertItemT (TAB_INFO *infoPtr, INT iItem, const TCITEMW *pti, BOOL bUnicode)
 {
   TAB_ITEM *item;
   RECT rect;
@@ -2684,10 +2690,10 @@ TAB_InsertItemT (TAB_INFO *infoPtr, INT iItem, TCITEMW *pti, BOOL bUnicode)
     item->iImage = -1;
 
   if (pti->mask & TCIF_PARAM)
-    memcpy(item->extra, &pti->lParam, infoPtr->cbInfo);
+    memcpy(item->extra, &pti->lParam, EXTRA_ITEM_SIZE(infoPtr));
   else
-    memset(item->extra, 0, infoPtr->cbInfo);
-  
+    memset(item->extra, 0, EXTRA_ITEM_SIZE(infoPtr));
+
   TAB_SetItemBounds(infoPtr);
   if (infoPtr->uNumItem > 1)
     TAB_InvalidateTabArea(infoPtr);
@@ -3188,15 +3194,8 @@ TAB_SetItemExtra (TAB_INFO *infoPtr, INT cbInfo)
 {
   TRACE("(%p %d)\n", infoPtr, cbInfo);
 
-  if (cbInfo <= 0)
-    return FALSE;
+  if (cbInfo < 0 || infoPtr->uNumItem) return FALSE;
 
-  if (infoPtr->uNumItem)
-  {
-    /* FIXME: MSDN says this is not allowed, but this hasn't been verified */
-    return FALSE;
-  }
-    
   infoPtr->cbInfo = cbInfo;
   return TRUE;
 }

@@ -8,12 +8,12 @@
 
 #pragma once
 
+//#define KDDEBUG /* uncomment to enable debugging this dll */
+
 #define NOEXTAPI
 #include <ntifs.h>
 #define NDEBUG
 #include <halfuncs.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <debug.h>
 #include "arc/arc.h"
 #include "windbgkd.h"
@@ -21,10 +21,14 @@
 #include <wdbgexts.h>
 #include <ioaccess.h> /* port intrinsics */
 
+long atol(const char *str);
+
 typedef UCHAR BYTE, *PBYTE;
 
 typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
 extern PFNDBGPRNT KdpDbgPrint;
+extern BOOLEAN KdpPhase1Complete;
+extern ULONG KdpStallScaleFactor;
 
 typedef enum
 {
@@ -70,7 +74,7 @@ KdpReceiveByte(OUT PBYTE OutByte);
 
 KDP_STATUS
 NTAPI
-KdpPollBreakIn();
+KdpPollBreakIn(VOID);
 
 
 #if 0

@@ -172,7 +172,7 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
         len = strlenW(lpszServerName);
 
     sz = WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, NULL, 0, NULL, NULL );
-    if (!(name = HeapAlloc( GetProcessHeap(), 0, sz + 1 ))) return FALSE;
+    if (!(name = heap_alloc(sz + 1))) return FALSE;
     WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, name, sz, NULL, NULL );
     name[sz] = 0;
 
@@ -320,7 +320,7 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
         case INTERNET_STATUS_NAME_RESOLVED:
         case INTERNET_STATUS_CONNECTING_TO_SERVER:
         case INTERNET_STATUS_CONNECTED_TO_SERVER:
-            lpvNewInfo = HeapAlloc(GetProcessHeap(), 0, strlen(lpvStatusInfo) + 1);
+            lpvNewInfo = heap_alloc(strlen(lpvStatusInfo) + 1);
             if (lpvNewInfo) strcpy(lpvNewInfo, lpvStatusInfo);
             break;
         case INTERNET_STATUS_RESOLVING_NAME:
@@ -379,7 +379,7 @@ void SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
 
 	if (lpvStatusInfo)
 	{
-	    lpvStatusInfo_copy = HeapAlloc(GetProcessHeap(), 0, dwStatusInfoLength);
+	    lpvStatusInfo_copy = heap_alloc(dwStatusInfoLength);
 	    memcpy(lpvStatusInfo_copy, lpvStatusInfo, dwStatusInfoLength);
 	}
 

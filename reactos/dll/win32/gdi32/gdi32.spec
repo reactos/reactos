@@ -102,7 +102,7 @@
 @ stdcall DdEntry27(ptr long) NtGdiDdFlipToGDISurface
 @ stdcall DdEntry28(ptr ptr) NtGdiDdGetAvailDriverMemory
 @ stdcall DdEntry29(ptr ptr) NtGdiDdGetBltStatus
-@ stdcall DdEntry2(ptr)NtGdiD3dContextDestroy
+@ stdcall DdEntry2(ptr) NtGdiD3dContextDestroy
 @ stdcall DdEntry30(ptr ptr) NtGdiDdGetDC
 @ stdcall DdEntry31(ptr ptr) NtGdiDdGetDriverInfo
 @ stdcall DdEntry32(ptr ptr long) NtGdiDdGetDxHandle
@@ -125,7 +125,7 @@
 @ stdcall DdEntry48(ptr ptr) NtGdiDdSetExclusiveMode
 @ stdcall DdEntry49(ptr ptr ptr) NtGdiDdSetGammaRamp
 @ stdcall DdEntry4(ptr) NtGdiD3dValidateTextureStageState
-@ stdcall DdEntry50(ptr ptr long)NtGdiDdCreateSurfaceEx
+@ stdcall DdEntry50(ptr ptr long) NtGdiDdCreateSurfaceEx
 @ stdcall DdEntry51(ptr ptr ptr) NtGdiDdSetOverlayPosition
 @ stdcall DdEntry52(ptr ptr) NtGdiDdUnattachSurface
 @ stdcall DdEntry53(ptr ptr) NtGdiDdUnlock

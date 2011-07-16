@@ -1,7 +1,3 @@
-;
-; kernel32.mc MESSAGE resources for kernel32.dll
-;
-
 MessageIdTypedef=ULONG
 
 SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
@@ -16,13 +12,6 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
               )
 
 LanguageNames=(English=0x409:MSG00409)
-
-
-;
-; message definitions
-;
-
-; Facility=System
 
 MessageId=0
 Severity=Success
@@ -17173,8 +17162,6 @@ ERROR_EVT_CHANNEL_PATH_TOO_GENERAL - The specified channel path selects more tha
 .
 
 
-; Facility=WIN32
-
 MessageId=0x000E
 Severity=Warning
 Facility=WIN32
@@ -17207,8 +17194,6 @@ Language=English
 E_ACCESSDENIED - WIN32 access denied error
 .
 
-
-; Facility=ITF
 
 MessageId=0x0000
 Severity=Warning
@@ -17489,5 +17474,3 @@ SymbolicName=CLASS_E_NOTLICENSED
 Language=English
 CLASS_E_NOTLICENSED - Class is not licensed for use
 .
-
-; EOF

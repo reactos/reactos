@@ -23,11 +23,8 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 
-.code64
-.text
 
 /*
  * U32 PnpBiosSupported(VOID);
@@ -148,7 +145,7 @@ EXTERN(PnpBiosGetDeviceNodeCount)
 	movzx ecx, ax
 	mov _pnp_result, ecx
 
-	call [x86_16_SwitchToLong_ptr]
+	call	x86_16_SwitchToLong
 	.code64
 
 	mov esi, [rbp + 0x08]
@@ -200,7 +197,7 @@ EXTERN(PnpBiosGetDeviceNode)
 	mov al, [rsi]
 	mov _pnp_node_number, al
 
-	/* convert pointer to node buffer to segment/offset */ 
+	/* convert pointer to node buffer to segment/offset */
 	mov eax, [rbp + 0x0C]
 	shr eax, 4
 	and eax, 0xf000
@@ -216,7 +213,7 @@ EXTERN(PnpBiosGetDeviceNode)
 	mov ax, _pnp_bios_data_segment
 	push ax
 
-	/* push control flag */	
+	/* push control flag */
 	push 0x0001
 
 	/* push pointer to node buffer (segment/offset) */
@@ -240,7 +237,7 @@ EXTERN(PnpBiosGetDeviceNode)
 	movzx ecx, ax
 	mov _pnp_result, ecx
 
-	call [x86_16_SwitchToLong_ptr]
+	call x86_16_SwitchToLong
 	.code64
 
 	/* update node number */
@@ -258,9 +255,6 @@ EXTERN(PnpBiosGetDeviceNode)
 	mov eax, _pnp_result
 
 	ret
-
-x86_16_SwitchToLong_ptr:
-    .quad x86_16_SwitchToLong
 
 END
 /* EOF */

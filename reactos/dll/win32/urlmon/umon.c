@@ -32,18 +32,22 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
-    const IMonikerVtbl *lpIMonikerVtbl;
+    IMoniker      IMoniker_iface;
+    IUriContainer IUriContainer_iface;
 
     LONG ref;
 
     LPOLESTR URLName; /* URL string identified by this URLmoniker */
 } URLMoniker;
 
-#define MONIKER_THIS(iface) DEFINE_THIS(URLMoniker, IMoniker, iface)
+static inline URLMoniker *impl_from_IMoniker(IMoniker *iface)
+{
+    return CONTAINING_RECORD(iface, URLMoniker, IMoniker_iface);
+}
 
 static HRESULT WINAPI URLMoniker_QueryInterface(IMoniker *iface, REFIID riid, void **ppv)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
 
     if(!ppv)
 	return E_INVALIDARG;
@@ -63,6 +67,9 @@ static HRESULT WINAPI URLMoniker_QueryInterface(IMoniker *iface, REFIID riid, vo
     }else if(IsEqualIID(&IID_IAsyncMoniker, riid)) {
         TRACE("(%p)->(IID_IAsyncMoniker %p)\n", This, ppv);
         *ppv = iface;
+    }else if(IsEqualIID(&IID_IUriContainer, riid)) {
+        TRACE("(%p)->(IID_IUriContainer %p)\n", This, ppv);
+        *ppv = &This->IUriContainer_iface;
     }else {
         WARN("(%p)->(%s,%p)\n", This, debugstr_guid(riid), ppv);
         *ppv = NULL;
@@ -75,7 +82,7 @@ static HRESULT WINAPI URLMoniker_QueryInterface(IMoniker *iface, REFIID riid, vo
 
 static ULONG WINAPI URLMoniker_AddRef(IMoniker *iface)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%u\n",This, refCount);
@@ -85,7 +92,7 @@ static ULONG WINAPI URLMoniker_AddRef(IMoniker *iface)
 
 static ULONG WINAPI URLMoniker_Release(IMoniker *iface)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%u\n",This, refCount);
@@ -102,7 +109,7 @@ static ULONG WINAPI URLMoniker_Release(IMoniker *iface)
 
 static HRESULT WINAPI URLMoniker_GetClassID(IMoniker *iface, CLSID *pClassID)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p)\n", This, pClassID);
 
@@ -116,7 +123,7 @@ static HRESULT WINAPI URLMoniker_GetClassID(IMoniker *iface, CLSID *pClassID)
 
 static HRESULT WINAPI URLMoniker_IsDirty(IMoniker *iface)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -128,7 +135,7 @@ static HRESULT WINAPI URLMoniker_IsDirty(IMoniker *iface)
 
 static HRESULT WINAPI URLMoniker_Load(IMoniker* iface,IStream* pStm)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     HRESULT res;
     ULONG size;
     ULONG got;
@@ -164,7 +171,7 @@ static HRESULT WINAPI URLMoniker_Load(IMoniker* iface,IStream* pStm)
 
 static HRESULT WINAPI URLMoniker_Save(IMoniker *iface, IStream* pStm, BOOL fClearDirty)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     HRESULT res;
     ULONG size;
 
@@ -184,7 +191,7 @@ static HRESULT WINAPI URLMoniker_Save(IMoniker *iface, IStream* pStm, BOOL fClea
 
 static HRESULT WINAPI URLMoniker_GetSizeMax(IMoniker* iface, ULARGE_INTEGER *pcbSize)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p)\n",This,pcbSize);
 
@@ -198,7 +205,7 @@ static HRESULT WINAPI URLMoniker_GetSizeMax(IMoniker* iface, ULARGE_INTEGER *pcb
 static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IMoniker *pmkToLeft,
         REFIID riid, void **ppv)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     IRunningObjectTable *obj_tbl;
     IUri *uri;
     HRESULT hres;
@@ -224,11 +231,15 @@ static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IM
 static HRESULT WINAPI URLMoniker_BindToStorage(IMoniker* iface, IBindCtx* pbc,
         IMoniker* pmkToLeft, REFIID riid, void **ppvObject)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     IUri *uri;
     HRESULT hres;
 
     TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObject);
+
+    if(ppvObject) *ppvObject = NULL;
+
+    if(!pbc || !ppvObject) return E_INVALIDARG;
 
     if(pmkToLeft)
         FIXME("Unsupported pmkToLeft\n");
@@ -246,8 +257,8 @@ static HRESULT WINAPI URLMoniker_BindToStorage(IMoniker* iface, IBindCtx* pbc,
 static HRESULT WINAPI URLMoniker_Reduce(IMoniker *iface, IBindCtx *pbc,
         DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
-    
+    URLMoniker *This = impl_from_IMoniker(iface);
+
     TRACE("(%p,%p,%d,%p,%p)\n", This, pbc, dwReduceHowFar, ppmkToLeft, ppmkReduced);
 
     if(!ppmkReduced)
@@ -261,14 +272,14 @@ static HRESULT WINAPI URLMoniker_Reduce(IMoniker *iface, IBindCtx *pbc,
 static HRESULT WINAPI URLMoniker_ComposeWith(IMoniker *iface, IMoniker *pmkRight,
         BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     FIXME("(%p)->(%p,%d,%p): stub\n",This,pmkRight,fOnlyIfNotGeneric,ppmkComposite);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI URLMoniker_Enum(IMoniker *iface, BOOL fForward, IEnumMoniker **ppenumMoniker)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%d,%p)\n", This, fForward, ppenumMoniker);
 
@@ -282,7 +293,7 @@ static HRESULT WINAPI URLMoniker_Enum(IMoniker *iface, BOOL fForward, IEnumMonik
 
 static HRESULT WINAPI URLMoniker_IsEqual(IMoniker *iface, IMoniker *pmkOtherMoniker)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     CLSID clsid;
     LPOLESTR urlPath;
     IBindCtx* bind;
@@ -316,7 +327,7 @@ static HRESULT WINAPI URLMoniker_IsEqual(IMoniker *iface, IMoniker *pmkOtherMoni
 
 static HRESULT WINAPI URLMoniker_Hash(IMoniker *iface, DWORD *pdwHash)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     int  h = 0,i,skip,len;
     int  off = 0;
     LPOLESTR val;
@@ -347,7 +358,7 @@ static HRESULT WINAPI URLMoniker_Hash(IMoniker *iface, DWORD *pdwHash)
 static HRESULT WINAPI URLMoniker_IsRunning(IMoniker* iface, IBindCtx* pbc,
         IMoniker *pmkToLeft, IMoniker *pmkNewlyRunning)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     FIXME("(%p)->(%p,%p,%p): stub\n",This,pbc,pmkToLeft,pmkNewlyRunning);
     return E_NOTIMPL;
 }
@@ -355,28 +366,28 @@ static HRESULT WINAPI URLMoniker_IsRunning(IMoniker* iface, IBindCtx* pbc,
 static HRESULT WINAPI URLMoniker_GetTimeOfLastChange(IMoniker *iface,
         IBindCtx *pbc, IMoniker *pmkToLeft, FILETIME *pFileTime)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     FIXME("(%p)->(%p,%p,%p): stub\n", This, pbc, pmkToLeft, pFileTime);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI URLMoniker_Inverse(IMoniker *iface, IMoniker **ppmk)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     TRACE("(%p,%p)\n",This,ppmk);
     return MK_E_NOINVERSE;
 }
 
 static HRESULT WINAPI URLMoniker_CommonPrefixWith(IMoniker *iface, IMoniker *pmkOther, IMoniker **ppmkPrefix)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     FIXME("(%p)->(%p,%p): stub\n",This,pmkOther,ppmkPrefix);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI URLMoniker_RelativePathTo(IMoniker *iface, IMoniker *pmOther, IMoniker **ppmkRelPath)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     FIXME("(%p)->(%p,%p): stub\n",This,pmOther,ppmkRelPath);
     return E_NOTIMPL;
 }
@@ -384,7 +395,7 @@ static HRESULT WINAPI URLMoniker_RelativePathTo(IMoniker *iface, IMoniker *pmOth
 static HRESULT WINAPI URLMoniker_GetDisplayName(IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft,
         LPOLESTR *ppszDisplayName)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     int len;
     
     TRACE("(%p,%p,%p,%p)\n", This, pbc, pmkToLeft, ppszDisplayName);
@@ -409,14 +420,14 @@ static HRESULT WINAPI URLMoniker_GetDisplayName(IMoniker *iface, IBindCtx *pbc, 
 static HRESULT WINAPI URLMoniker_ParseDisplayName(IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft,
         LPOLESTR pszDisplayName, ULONG *pchEaten, IMoniker **ppmkOut)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
     FIXME("(%p)->(%p,%p,%p,%p,%p): stub\n",This,pbc,pmkToLeft,pszDisplayName,pchEaten,ppmkOut);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI URLMoniker_IsSystemMoniker(IMoniker *iface, DWORD *pwdMksys)
 {
-    URLMoniker *This = MONIKER_THIS(iface);
+    URLMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p)\n",This,pwdMksys);
 
@@ -454,6 +465,46 @@ static const IMonikerVtbl URLMonikerVtbl =
     URLMoniker_IsSystemMoniker
 };
 
+static inline URLMoniker *impl_from_IUriContainer(IUriContainer *iface)
+{
+    return CONTAINING_RECORD(iface, URLMoniker, IUriContainer_iface);
+}
+
+static HRESULT WINAPI UriContainer_QueryInterface(IUriContainer *iface, REFIID riid, void **ppv)
+{
+    URLMoniker *This = impl_from_IUriContainer(iface);
+    return IMoniker_QueryInterface(&This->IMoniker_iface, riid, ppv);
+}
+
+static ULONG WINAPI UriContainer_AddRef(IUriContainer *iface)
+{
+    URLMoniker *This = impl_from_IUriContainer(iface);
+    return IMoniker_AddRef(&This->IMoniker_iface);
+}
+
+static ULONG WINAPI UriContainer_Release(IUriContainer *iface)
+{
+    URLMoniker *This = impl_from_IUriContainer(iface);
+    return IMoniker_Release(&This->IMoniker_iface);
+}
+
+static HRESULT WINAPI UriContainer_GetIUri(IUriContainer *iface, IUri **ppIUri)
+{
+    URLMoniker *This = impl_from_IUriContainer(iface);
+
+    FIXME("(%p)->(%p)\n", This, ppIUri);
+
+    *ppIUri = NULL;
+    return S_FALSE;
+}
+
+static const IUriContainerVtbl UriContainerVtbl = {
+    UriContainer_QueryInterface,
+    UriContainer_AddRef,
+    UriContainer_Release,
+    UriContainer_GetIUri
+};
+
 static URLMoniker *alloc_moniker(void)
 {
     URLMoniker *ret;
@@ -462,7 +513,8 @@ static URLMoniker *alloc_moniker(void)
     if(!ret)
         return NULL;
 
-    ret->lpIMonikerVtbl = &URLMonikerVtbl;
+    ret->IMoniker_iface.lpVtbl = &URLMonikerVtbl;
+    ret->IUriContainer_iface.lpVtbl = &UriContainerVtbl;
     ret->ref = 1;
     ret->URLName = NULL;
 
@@ -557,8 +609,8 @@ HRESULT WINAPI CreateURLMonikerEx(IMoniker *pmkContext, LPCWSTR szURL, IMoniker 
     hres = URLMoniker_Init(obj, lefturl, szURL);
     CoTaskMemFree(lefturl);
     if(SUCCEEDED(hres))
-	hres = URLMoniker_QueryInterface((IMoniker*)obj, &IID_IMoniker, (void**)ppmk);
-    IMoniker_Release((IMoniker*)obj);
+        hres = URLMoniker_QueryInterface(&obj->IMoniker_iface, &IID_IMoniker, (void**)ppmk);
+    IMoniker_Release(&obj->IMoniker_iface);
     return hres;
 }
 

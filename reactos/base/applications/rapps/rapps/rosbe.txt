@@ -20,6 +20,9 @@ Description = Erlaubt es Ihnen den ReactOS Source Code zu kompilieren. Im ReactO
 [Section.040a]
 Description = Te permite compilar el código de ReactOS. Para más instrucciones consulta la wiki de ReactOS.
 
+[Section.040c]
+Description = Vous permet de compiler le code source de ReactOS. Pour plus d'instruction, reportez-vous au wiki ReactOS.
+
 [Section.0415]
 Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej informacji na Wiki ReactOS.
 

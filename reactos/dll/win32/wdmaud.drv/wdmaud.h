@@ -15,19 +15,16 @@
 #include <debug.h>
 
 BOOL
-WdmAudInitUserModeMixer();
+WdmAudInitUserModeMixer(VOID);
 
 ULONG
-WdmAudGetWaveOutCount();
+WdmAudGetWaveOutCount(VOID);
 
 ULONG
-WdmAudGetWaveInCount();
+WdmAudGetWaveInCount(VOID);
 
 ULONG
-WdmAudGetMixerCount();
-
-MMRESULT
-WdmAudOpenSoundDeviceByLegacy();
+WdmAudGetMixerCount(VOID);
 
 MMRESULT
 WdmAudGetNumWdmDevsByMMixer(
@@ -70,24 +67,28 @@ WdmAudCloseSoundDeviceByMMixer(
 MMRESULT
 WdmAudGetLineInfo(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINEW MixLine,
     IN ULONG Flags);
 
 MMRESULT
 WdmAudGetLineControls(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINECONTROLSW MixControls,
     IN ULONG Flags);
 
 MMRESULT
 WdmAudSetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags);
 
 MMRESULT
 WdmAudGetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags);
 
@@ -116,6 +117,7 @@ WdmAudSetMixerDeviceFormatByMMixer(
 MMRESULT
 WdmAudQueryMixerInfoByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);
@@ -145,12 +147,12 @@ WdmAudCommitWaveBufferByMMixer(
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 MMRESULT
-WdmAudCleanupByMMixer();
+WdmAudCleanupByMMixer(VOID);
 
 /* legacy.c */
 
 MMRESULT
-WdmAudCleanupByLegacy();
+WdmAudCleanupByLegacy(VOID);
 
 MMRESULT
 WdmAudGetCapabilitiesByLegacy(
@@ -160,7 +162,10 @@ WdmAudGetCapabilitiesByLegacy(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy();
+WdmAudOpenSoundDeviceByLegacy(
+    IN PSOUND_DEVICE SoundDevice,
+    OUT PVOID *Handle
+);
 
 MMRESULT
 WdmAudCloseSoundDeviceByLegacy(
@@ -185,6 +190,7 @@ WdmAudSetMixerDeviceFormatByLegacy(
 MMRESULT
 WdmAudQueryMixerInfoByLegacy(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);

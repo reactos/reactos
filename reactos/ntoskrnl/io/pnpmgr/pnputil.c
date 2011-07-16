@@ -178,7 +178,7 @@ PnpRegSzToString(IN PWCHAR RegSzData,
     for (p = RegSzData; p < pp; p++) if (!*p) break;
     
     /* Return it */
-    if (StringLength) *StringLength = p - RegSzData;
+    if (StringLength) *StringLength = (p - RegSzData) * sizeof(WCHAR);
     return TRUE;
 }
 

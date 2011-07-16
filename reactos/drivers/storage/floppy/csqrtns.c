@@ -56,9 +56,9 @@ KSEMAPHORE QueueSemaphore;
  * CSQ Callbacks
  */
 
-
-VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq,
-                        PIRP Irp)
+
+VOID NTAPI
+CsqRemoveIrp(PIO_CSQ UnusedCsq, PIRP Irp)
 /*
  * FUNCTION: Remove an IRP from the queue
  * ARGUMENTS:
@@ -68,15 +68,14 @@ VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq,
  *     - Called under the protection of the queue lock
  */
 {
-  UNREFERENCED_PARAMETER(UnusedCsq);
-  TRACE_(FLOPPY, "CSQ: Removing IRP 0x%p\n", Irp);
-  RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+    UNREFERENCED_PARAMETER(UnusedCsq);
+    TRACE_(FLOPPY, "CSQ: Removing IRP 0x%p\n", Irp);
+    RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 }
 
-
-PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq,
-                          PIRP Irp,
-                          PVOID PeekContext)
+
+PIRP NTAPI
+CsqPeekNextIrp(PIO_CSQ UnusedCsq, PIRP Irp, PVOID PeekContext)
 /*
  * FUNCTION: Find the next matching IRP in the queue
  * ARGUMENTS:
@@ -90,22 +89,22 @@ PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq,
  *     - Called under the protection of the queue lock
  */
 {
-  UNREFERENCED_PARAMETER(UnusedCsq);
-  UNREFERENCED_PARAMETER(PeekContext);
-  TRACE_(FLOPPY, "CSQ: Peeking for next IRP\n");
+    UNREFERENCED_PARAMETER(UnusedCsq);
+    UNREFERENCED_PARAMETER(PeekContext);
+    TRACE_(FLOPPY, "CSQ: Peeking for next IRP\n");
 
-  if(Irp)
-    return CONTAINING_RECORD(&Irp->Tail.Overlay.ListEntry.Flink, IRP, Tail.Overlay.ListEntry);
+    if(Irp)
+        return CONTAINING_RECORD(&Irp->Tail.Overlay.ListEntry.Flink, IRP, Tail.Overlay.ListEntry);
 
-  if(IsListEmpty(&IrpQueue))
-    return NULL;
+    if(IsListEmpty(&IrpQueue))
+        return NULL;
 
-  return CONTAINING_RECORD(IrpQueue.Flink, IRP, Tail.Overlay.ListEntry);
+    return CONTAINING_RECORD(IrpQueue.Flink, IRP, Tail.Overlay.ListEntry);
 }
 
-
-VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq,
-                          PKIRQL Irql)
+
+VOID NTAPI
+CsqAcquireLock(PIO_CSQ UnusedCsq, PKIRQL Irql)
 /*
  * FUNCTION: Acquire the queue lock
  * ARGUMENTS:
@@ -113,14 +112,14 @@ VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq,
  *     Irql: Pointer to a variable to store the old irql into
  */
 {
-  UNREFERENCED_PARAMETER(UnusedCsq);
-  INFO_(FLOPPY, "CSQ: Acquiring spin lock\n");
-  KeAcquireSpinLock(&IrpQueueLock, Irql);
+    UNREFERENCED_PARAMETER(UnusedCsq);
+    INFO_(FLOPPY, "CSQ: Acquiring spin lock\n");
+    KeAcquireSpinLock(&IrpQueueLock, Irql);
 }
 
-
-VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq,
-                          KIRQL Irql)
+
+VOID NTAPI
+CsqReleaseLock(PIO_CSQ UnusedCsq, KIRQL Irql)
 /*
  * FUNCTION: Release the queue lock
  * ARGUMENTS:
@@ -128,14 +127,14 @@ VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq,
  *     Irql: IRQL to lower to on release
  */
 {
-  UNREFERENCED_PARAMETER(UnusedCsq);
-  INFO_(FLOPPY, "CSQ: Releasing spin lock\n");
-  KeReleaseSpinLock(&IrpQueueLock, Irql);
+    UNREFERENCED_PARAMETER(UnusedCsq);
+    INFO_(FLOPPY, "CSQ: Releasing spin lock\n");
+    KeReleaseSpinLock(&IrpQueueLock, Irql);
 }
 
-
-VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq,
-                                  PIRP Irp)
+
+VOID NTAPI
+CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq, PIRP Irp)
 /*
  * FUNCTION: Complete a canceled IRP
  * ARGUMENTS:
@@ -146,16 +145,16 @@ VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq,
  *    - MS misspelled CANCELLED... sigh...
  */
 {
-  UNREFERENCED_PARAMETER(UnusedCsq);
-  TRACE_(FLOPPY, "CSQ: Canceling irp 0x%p\n", Irp);
-  Irp->IoStatus.Status = STATUS_CANCELLED;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    UNREFERENCED_PARAMETER(UnusedCsq);
+    TRACE_(FLOPPY, "CSQ: Canceling irp 0x%p\n", Irp);
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
-
-VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
-                        PIRP Irp)
+
+VOID NTAPI
+CsqInsertIrp(PIO_CSQ UnusedCsq, PIRP Irp)
 /*
  * FUNCTION: Queue an IRP
  * ARGUMENTS:
@@ -171,9 +170,9 @@ VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
  *       that at least one IRP is canceled at some point
  */
 {
-  UNREFERENCED_PARAMETER(UnusedCsq);
-  TRACE_(FLOPPY, "CSQ: Inserting IRP 0x%p\n", Irp);
-  InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
-  KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);
+    UNREFERENCED_PARAMETER(UnusedCsq);
+    TRACE_(FLOPPY, "CSQ: Inserting IRP 0x%p\n", Irp);
+    InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
+    KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);
 }
 

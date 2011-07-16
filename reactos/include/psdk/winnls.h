@@ -1,5 +1,5 @@
-#ifndef _WINNLS_H
-#define _WINNLS_H
+#ifndef _WINNLS_
+#define _WINNLS_
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,6 +131,9 @@ extern "C" {
 #endif
 #define LOCALE_SYSTEM_DEFAULT	0x800
 #define LOCALE_USER_DEFAULT	0x400
+
+#define LOCALE_IREADINGLAYOUT       0x0070
+#define LOCALE_INEUTRAL             0x0071
 
 #define LOCALE_IDEFAULTUNIXCODEPAGE   0x1030 /* Wine extension */
 

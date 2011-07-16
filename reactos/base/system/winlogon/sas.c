@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 #define HK_CTRL_ALT_DEL   0
 #define HK_CTRL_SHIFT_ESC 1
 
-extern BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
+static BOOL inScrn = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -56,6 +56,37 @@ StartTaskManager(
 	DestroyEnvironmentBlock(lpEnvironment);
 	return ret;
 }
+
+static BOOL
+StartUserShell(
+	IN OUT PWLSESSION Session)
+{
+	LPVOID lpEnvironment = NULL;
+	BOOLEAN Old;
+	BOOL ret;
+
+	/* Create environment block for the user */
+	if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
+	{
+		WARN("WL: CreateEnvironmentBlock() failed\n");
+		return FALSE;
+	}
+
+	/* Get privilege */
+	/* FIXME: who should do it? winlogon or gina? */
+	/* FIXME: reverting to lower privileges after creating user shell? */
+	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
+
+	ret = Session->Gina.Functions.WlxActivateUserShell(
+				Session->Gina.Context,
+				L"Default",
+				NULL, /* FIXME */
+				lpEnvironment);
+
+	DestroyEnvironmentBlock(lpEnvironment);
+	return ret;
+}
+
 
 BOOL
 SetDefaultLanguage(
@@ -169,8 +200,6 @@ HandleLogon(
 	IN OUT PWLSESSION Session)
 {
 	PROFILEINFOW ProfileInfo;
-	LPVOID lpEnvironment = NULL;
-	BOOLEAN Old;
 	BOOL ret = FALSE;
 
 	/* Loading personal settings */
@@ -213,13 +242,6 @@ HandleLogon(
 		goto cleanup;
 	}
 
-	/* Create environment block for the user */
-	if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
-	{
-		WARN("WL: CreateEnvironmentBlock() failed\n");
-		goto cleanup;
-	}
-
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
 	UpdatePerUserSystemParameters(0, TRUE);
 
@@ -230,16 +252,7 @@ HandleLogon(
 		goto cleanup;
 	}
 
-	/* Get privilege */
-	/* FIXME: who should do it? winlogon or gina? */
-	/* FIXME: reverting to lower privileges after creating user shell? */
-	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
-
-	if (!Session->Gina.Functions.WlxActivateUserShell(
-		Session->Gina.Context,
-		L"Default",
-		NULL, /* FIXME */
-		lpEnvironment))
+	if (!StartUserShell(Session))
 	{
 		//WCHAR StatusMsg[256];
 		WARN("WL: WlxActivateUserShell() failed\n");
@@ -266,8 +279,6 @@ cleanup:
 	{
 		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
 	}
-	if (lpEnvironment)
-		DestroyEnvironmentBlock(lpEnvironment);
 	RemoveStatusMessage(Session);
 	if (!ret)
 	{
@@ -843,6 +854,40 @@ CheckForShutdownPrivilege(
 	return STATUS_SUCCESS;
 }
 
+BOOL
+WINAPI
+HandleMessageBeep(UINT uType)
+{
+	LPWSTR EventName;
+
+	switch(uType)
+	{
+	case 0xFFFFFFFF:
+		EventName = NULL;
+		break;
+	case MB_OK:
+		EventName = L"SystemDefault";
+		break;
+	case MB_ICONASTERISK:
+		EventName = L"SystemAsterisk";
+		break;
+	case MB_ICONEXCLAMATION:
+		EventName = L"SystemExclamation";
+		break;
+	case MB_ICONHAND:
+		EventName = L"SystemHand";
+		break;
+	case MB_ICONQUESTION:
+		EventName = L"SystemQuestion";
+		break;
+	default:
+		WARN("Unhandled type %d\n", uType);
+		EventName = L"SystemDefault";
+	}
+
+	return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+}
+
 static LRESULT CALLBACK
 SASWindowProc(
 	IN HWND hwndDlg,
@@ -902,6 +947,61 @@ SASWindowProc(
 			}
 			return TRUE;
 		}
+        case WM_LOGONNOTIFY:
+        {
+            switch(wParam)
+            {
+                case LN_MESSAGE_BEEP:
+                {
+                    return HandleMessageBeep(lParam);
+                }
+                case LN_SHELL_EXITED:
+                {
+                    /* lParam is the exit code */
+                    if(lParam != 1)
+                    {
+                        SetTimer(hwndDlg, 1, 1000, NULL);
+                    }
+                    break;
+                }
+                case LN_START_SCREENSAVE:
+                {
+                    BOOL bSecure = FALSE;
+
+                    if (inScrn)
+                       break;
+
+                    inScrn = TRUE;
+
+                    // lParam 1 == Secure
+                    if (lParam)
+                    {
+                       if (Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
+                       {
+                          if (bSecure) DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
+		       }
+                    }
+
+                    StartScreenSaver(Session);
+                    inScrn = FALSE;
+                    break;
+                }
+                default:
+                {
+                    ERR("WM_LOGONNOTIFY case %d is unimplemented\n", wParam);
+                }
+            }
+            return 0;
+        }
+        case WM_TIMER:
+        {
+            if (wParam == 1)
+            {
+                KillTimer(hwndDlg, 1);
+                StartUserShell(Session);
+            }
+            break;
+        }
 		case WLX_WM_SAS:
 		{
 			DispatchSAS(Session, (DWORD)wParam);

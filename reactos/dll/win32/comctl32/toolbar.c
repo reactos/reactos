@@ -2900,13 +2900,27 @@ TOOLBAR_AddStringW (TOOLBAR_INFO *infoPtr, HINSTANCE hInstance, LPARAM lParam)
     BOOL fFirstString = (infoPtr->nNumStrings == 0);
     INT nIndex = infoPtr->nNumStrings;
 
-    if (hInstance && IS_INTRESOURCE(lParam)) {
+    TRACE("%p, %lx\n", hInstance, lParam);
+
+    if (IS_INTRESOURCE(lParam)) {
 	WCHAR szString[MAX_RESOURCE_STRING_LENGTH];
 	WCHAR delimiter;
 	WCHAR *next_delim;
+        HRSRC hrsrc;
 	WCHAR *p;
 	INT len;
-	TRACE("adding string from resource!\n");
+
+	TRACE("adding string from resource\n");
+
+        if (!hInstance) return -1;
+
+        hrsrc = FindResourceW( hInstance, MAKEINTRESOURCEW((LOWORD(lParam) >> 4) + 1),
+                               (LPWSTR)RT_STRING );
+        if (!hrsrc)
+        {
+            TRACE("string not found in resources\n");
+            return -1;
+        }
 
         len = LoadStringW (hInstance, (UINT)lParam,
                              szString, MAX_RESOURCE_STRING_LENGTH);
@@ -2915,7 +2929,7 @@ TOOLBAR_AddStringW (TOOLBAR_INFO *infoPtr, HINSTANCE hInstance, LPARAM lParam)
         if (len == 0 || len == 1)
             return nIndex;
 
-        TRACE("Delimiter: 0x%x\n", *szString);
+        TRACE("delimiter: 0x%x\n", *szString);
         delimiter = *szString;
         p = szString + 1;
 
@@ -2941,7 +2955,7 @@ TOOLBAR_AddStringW (TOOLBAR_INFO *infoPtr, HINSTANCE hInstance, LPARAM lParam)
 
 	if (p == NULL)
 	    return -1;
-	TRACE("adding string(s) from array!\n");
+	TRACE("adding string(s) from array\n");
 	while (*p) {
             len = strlenW (p);
 
@@ -2968,14 +2982,16 @@ TOOLBAR_AddStringA (TOOLBAR_INFO *infoPtr, HINSTANCE hInstance, LPARAM lParam)
     INT nIndex;
     INT len;
 
-    if (hInstance && IS_INTRESOURCE(lParam))  /* load from resources */
+    TRACE("%p, %lx\n", hInstance, lParam);
+
+    if (IS_INTRESOURCE(lParam))  /* load from resources */
         return TOOLBAR_AddStringW(infoPtr, hInstance, lParam);
 
     p = (LPSTR)lParam;
     if (p == NULL)
         return -1;
 
-    TRACE("adding string(s) from array!\n");
+    TRACE("adding string(s) from array\n");
     nIndex = infoPtr->nNumStrings;
     while (*p) {
         len = strlen (p);
@@ -3033,7 +3049,7 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
         if ((infoPtr->dwStyle & CCS_BOTTOM) == CCS_NOMOVEY)
         {
             GetWindowRect(infoPtr->hwndSelf, &window_rect);
-            ScreenToClient(parent, (LPPOINT)&window_rect.left);
+            MapWindowPoints( 0, parent, (POINT *)&window_rect, 2 );
             y = window_rect.top;
         }
         if ((infoPtr->dwStyle & CCS_BOTTOM) == CCS_BOTTOM)

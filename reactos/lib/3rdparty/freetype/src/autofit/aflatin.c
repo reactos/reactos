@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (body).                */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009 by                  */
+/*  Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by            */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -77,7 +77,7 @@
 
       af_glyph_hints_rescale( hints, (AF_ScriptMetrics)dummy );
 
-      error = af_glyph_hints_reload( hints, &face->glyph->outline, 0 );
+      error = af_glyph_hints_reload( hints, &face->glyph->outline );
       if ( error )
         goto Exit;
 
@@ -1534,21 +1534,18 @@
 
 
         /* compare to standard width */
-        if ( axis->width_count > 0 )
+        delta = dist - axis->widths[0].cur;
+
+        if ( delta < 0 )
+          delta = -delta;
+
+        if ( delta < 40 )
         {
-          delta = dist - axis->widths[0].cur;
+          dist = axis->widths[0].cur;
+          if ( dist < 48 )
+            dist = 48;
 
-          if ( delta < 0 )
-            delta = -delta;
-
-          if ( delta < 40 )
-          {
-            dist = axis->widths[0].cur;
-            if ( dist < 48 )
-              dist = 48;
-
-            goto Done_Width;
-          }
+          goto Done_Width;
         }
 
         if ( dist < 3 * 64 )
@@ -2105,7 +2102,7 @@
     int       dim;
 
 
-    error = af_glyph_hints_reload( hints, outline, 1 );
+    error = af_glyph_hints_reload( hints, outline );
     if ( error )
       goto Exit;
 

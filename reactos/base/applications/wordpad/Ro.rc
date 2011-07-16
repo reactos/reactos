@@ -82,9 +82,9 @@ BEGIN
     POPUP "F&ormat"
     BEGIN
         MENUITEM "&Font...",                            ID_FONTSETTINGS
-        MENUITEM "Punct &bulină"                        ID_BULLET
-        MENUITEM "&Paragraf..."                         ID_PARAFORMAT
-        MENUITEM "&Taburi..."                           ID_TABSTOPS
+        MENUITEM "Punct &bulină",                       ID_BULLET
+        MENUITEM "&Paragraf...",                        ID_PARAFORMAT
+        MENUITEM "&Taburi...",                          ID_TABSTOPS
         POPUP "Fun&dal"
         BEGIN
             MENUITEM "&Sistem\tCtrl+1",                 ID_BACK_1
@@ -93,7 +93,7 @@ BEGIN
     END
     POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Despre Wine Wordpad"                 ID_ABOUT
+        MENUITEM "&Despre Wine Wordpad",                ID_ABOUT
     END
 END
 
@@ -105,8 +105,8 @@ BEGIN
         MENUITEM "&Copiază",            ID_EDIT_COPY
         MENUITEM "&Lipește",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Punct &bulină"        ID_BULLET
-        MENUITEM "&Paragraf..."         ID_PARAFORMAT
+        MENUITEM "Punct &bulină",       ID_BULLET
+        MENUITEM "&Paragraf...",        ID_PARAFORMAT
     END
 END
 
@@ -117,20 +117,20 @@ BEGIN
         MENUITEM "Negru",               ID_COLOR_BLACK
         MENUITEM "Maro",                ID_COLOR_MAROON
         MENUITEM "Verde",               ID_COLOR_GREEN
-        MENUITEM "Oliv"                 ID_COLOR_OLIVE
-        MENUITEM "Bleumarin"            ID_COLOR_NAVY
-        MENUITEM "Violet"               ID_COLOR_PURPLE
-        MENUITEM "Verde-albăstrui"      ID_COLOR_TEAL
-        MENUITEM "Gri"                  ID_COLOR_GRAY
-        MENUITEM "Argintiu"             ID_COLOR_SILVER
-        MENUITEM "Roșu"                 ID_COLOR_RED
-        MENUITEM "Lămâie verde"         ID_COLOR_LIME
-        MENUITEM "Galben"               ID_COLOR_YELLOW
-        MENUITEM "Albastru"             ID_COLOR_BLUE
-        MENUITEM "Fuchsia"              ID_COLOR_FUCHSIA
-        MENUITEM "Culoarea apei"        ID_COLOR_AQUA
-        MENUITEM "Alb"                  ID_COLOR_WHITE
-        MENUITEM "Automatic"            ID_COLOR_AUTOMATIC
+        MENUITEM "Oliv",                ID_COLOR_OLIVE
+        MENUITEM "Bleumarin",           ID_COLOR_NAVY
+        MENUITEM "Violet",              ID_COLOR_PURPLE
+        MENUITEM "Verde-albăstrui",     ID_COLOR_TEAL
+        MENUITEM "Gri",                 ID_COLOR_GRAY
+        MENUITEM "Argintiu",            ID_COLOR_SILVER
+        MENUITEM "Roșu",                ID_COLOR_RED
+        MENUITEM "Lămâie verde",        ID_COLOR_LIME
+        MENUITEM "Galben",              ID_COLOR_YELLOW
+        MENUITEM "Albastru",            ID_COLOR_BLUE
+        MENUITEM "Fuchsia",             ID_COLOR_FUCHSIA
+        MENUITEM "Culoarea apei",       ID_COLOR_AQUA
+        MENUITEM "Alb",                 ID_COLOR_WHITE
+        MENUITEM "Automatic",           ID_COLOR_AUTOMATIC
     END
 END
 
@@ -158,7 +158,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Format paragraf"
+CAPTION "Format paragraf"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Indentare", -1, 10, 10, 120, 68
@@ -176,7 +176,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Taburi"
+CAPTION "Taburi"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Spațiere tab", -1, 10, 10, 120, 90
@@ -190,7 +190,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Despărțire rânduri", -1, 10, 10, 130, 85

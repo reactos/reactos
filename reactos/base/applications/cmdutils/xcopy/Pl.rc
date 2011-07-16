@@ -70,7 +70,7 @@ Gdzie:\n\
 [/U]  Kopiuje tylko pliki, które ju¿ istniej¹ w miejscu docelowym\n\
 [/R]  Zastêpuje pliki tylko do odczytu\n\
 [/H]  Kopiuje równie¿ pliki ukryte i systemowe\n\
-[/C]  Kontynuuje nawet je¿eli podczas kopiowania wystêpi³y b³êdy\n\
+[/C]  Kontynuuje nawet je¿eli podczas kopiowania wyst¹pi³y b³êdy\n\
 [/A]  Kopiuje tylko pliki z atrybutem archiwalny\n\
 [/M]  Kopiuje tylko pliki z atrybutem archiwalny i usuwa ten atrybut\n\
 [/D | /D:m-d-y] Kopiuje tylko nowe pliki lub te zmodifikowane po podanej dacie.\n\

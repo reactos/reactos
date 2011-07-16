@@ -549,7 +549,7 @@ IoAllocateIrp(IN CCHAR StackSize,
     if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
 
     /* FIXME: Implement Lookaside Floats */
-    
+
     /* Figure out which Lookaside List to use */
     if ((StackSize <= 8) && (ChargeQuota == FALSE))
     {
@@ -1832,7 +1832,7 @@ NTAPI
 IoIs32bitProcess(
     IN PIRP Irp OPTIONAL)
 {
-#pragma message IoIs32bitProcess is hardcoded to FALSE
+#pragma message "IoIs32bitProcess is hardcoded to FALSE"
     return FALSE;
 }
 #endif

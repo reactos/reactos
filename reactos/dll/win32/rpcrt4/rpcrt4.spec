@@ -53,7 +53,7 @@
 @ stub I_RpcIfInqTransferSyntaxes
 @ stub I_RpcLogEvent
 @ stdcall I_RpcMapWin32Status(long)
-@ stub I_RpcNegotiateTransferSyntax # wxp
+@ stdcall I_RpcNegotiateTransferSyntax(ptr) # wxp
 @ stub I_RpcNsBindingSetEntryName
 @ stub I_RpcNsBindingSetEntryNameA
 @ stub I_RpcNsBindingSetEntryNameW
@@ -194,7 +194,7 @@
 @ stdcall NdrFullPointerQueryPointer(ptr ptr long ptr)
 @ stdcall NdrFullPointerQueryRefId(ptr long long ptr)
 @ stdcall NdrFullPointerXlatFree(ptr)
-@ stdcall NdrFullPointerXlatInit(long long) 
+@ stdcall NdrFullPointerXlatInit(long long)
 @ stdcall NdrGetBuffer(ptr long ptr)
 @ stub NdrGetDcomProtocolVersion
 @ stub NdrGetPartialBuffer
@@ -265,7 +265,7 @@
 @ stdcall NdrRangeUnmarshall(ptr ptr ptr long)
 @ stub NdrRpcSmClientAllocate
 @ stub NdrRpcSmClientFree
-@ stub NdrRpcSmSetClientToOsf
+@ stdcall NdrRpcSmSetClientToOsf(ptr)
 @ stub NdrRpcSsDefaultAllocate
 @ stub NdrRpcSsDefaultFree
 @ stub NdrRpcSsDisableAllocate

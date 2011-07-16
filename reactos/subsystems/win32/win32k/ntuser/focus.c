@@ -77,7 +77,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (WindowPrev) UserRefObjectCo(WindowPrev, &RefPrev);
 
       /* Send palette messages */
-      if (co_IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
          UserSendNotifyMessage( HWND_BROADCAST,
                                 WM_PALETTEISCHANGING,
@@ -166,7 +166,7 @@ co_IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
    if (hWndPrev)
    {
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessageNoWait(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      co_IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
@@ -177,7 +177,7 @@ co_IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
    {
       PWND pWnd = UserGetWindowObject(hWnd);
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, pWnd, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessageNoWait(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
+      co_IntPostOrSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
 
@@ -534,32 +534,29 @@ CLEANUP:
    END_CLEANUP;
 }
 
-/*
- * @implemented
- */
-HWND APIENTRY
-NtUserSetCapture(HWND hWnd)
+
+HWND FASTCALL
+co_UserSetCapture(HWND hWnd)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PWND Window, pWnd;
    HWND hWndPrev;
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
-   UserEnterExclusive();
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if((Window = UserGetWindowObject(hWnd)))
+   if (ThreadQueue->QF_flags & QF_CAPTURELOCKED)
+      return NULL;
+
+   if ((Window = UserGetWindowObject(hWnd)))
    {
-      if(Window->head.pti->MessageQueue != ThreadQueue)
+      if (Window->head.pti->MessageQueue != ThreadQueue)
       {
-         RETURN(NULL);
+         return NULL;
       }
    }
-
+   
    hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
 
    if (hWndPrev)
@@ -569,20 +566,70 @@ NtUserSetCapture(HWND hWnd)
          IntNotifyWinEvent(EVENT_SYSTEM_CAPTUREEND, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
 
-   /* also remove other windows if not capturing anymore */
-   if (hWnd == NULL)
-   {
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
-   }
-
    if (Window)
       IntNotifyWinEvent(EVENT_SYSTEM_CAPTURESTART, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
 
-   co_IntSendMessageNoWait(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   if (hWndPrev && hWndPrev != hWnd)
+   {
+      if (ThreadQueue->MenuOwner && Window) ThreadQueue->QF_flags |= QF_CAPTURELOCKED;
+
+      co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+
+      ThreadQueue->QF_flags &= ~QF_CAPTURELOCKED;
+   }
+
    ThreadQueue->CaptureWindow = hWnd;
 
-   RETURN( hWndPrev);
+   if (hWnd == NULL) // Release mode.
+   {
+      MOUSEINPUT mi;
+   /// These are hacks!
+      /* also remove other windows if not capturing anymore */
+      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
+      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
+   ///
+      /* Somebody may have missed some mouse movements */
+      mi.dx = 0;
+      mi.dy = 0;
+      mi.mouseData = 0;
+      mi.dwFlags = MOUSEEVENTF_MOVE;
+      mi.time = 0;
+      mi.dwExtraInfo = 0;      
+      IntMouseInput(&mi,FALSE);
+   }
+   return hWndPrev;
+}
+
+BOOL
+FASTCALL
+IntReleaseCapture(VOID)
+{
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+
+   // Can not release inside WM_CAPTURECHANGED!!
+   if (ThreadQueue->QF_flags & QF_CAPTURELOCKED) return FALSE;
+
+   co_UserSetCapture(NULL);
+
+   return TRUE;
+}
+
+/*
+ * @implemented
+ */
+HWND APIENTRY
+NtUserSetCapture(HWND hWnd)
+{
+   DECLARE_RETURN(HWND);
+
+   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
+   UserEnterExclusive();
+
+   RETURN( co_UserSetCapture(hWnd));
 
 CLEANUP:
    DPRINT("Leave NtUserSetCapture, ret=%i\n",_ret_);

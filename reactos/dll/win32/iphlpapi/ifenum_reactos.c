@@ -40,9 +40,6 @@
 #include "ifenum.h"
 #include <assert.h>
 
-//#define NDEBUG
-#include "debug.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
 /* Functions */

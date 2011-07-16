@@ -88,7 +88,7 @@ VOID
 );
 
 typedef
-BOOLEAN
+NTSTATUS
 (NTAPI *pHalAllocateMapRegisters)(
     IN PADAPTER_OBJECT AdapterObject,
     IN ULONG Unknown,
@@ -282,6 +282,11 @@ extern NTSYSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 // HAL Exports
 //
 extern PUCHAR NTHALAPI KdComPortInUse;
+
+//
+// HAL Constants
+//
+#define HAL_IRQ_TRANSLATOR_VERSION 0x0
 
 #endif
 #endif

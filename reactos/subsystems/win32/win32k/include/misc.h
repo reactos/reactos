@@ -77,3 +77,63 @@ RegWriteUserSetting(
 VOID FASTCALL
 SetLastNtError(
   NTSTATUS Status);
+
+typedef struct _GDI_POOL *PGDI_POOL;
+
+PGDI_POOL
+NTAPI
+GdiPoolCreate(
+    ULONG cjAllocSize,
+    ULONG ulTag);
+
+VOID
+NTAPI
+GdiPoolDestroy(PGDI_POOL pPool);
+
+PVOID
+NTAPI
+GdiPoolAllocate(
+    PGDI_POOL pPool);
+
+VOID
+NTAPI
+GdiPoolFree(
+    PGDI_POOL pPool,
+    PVOID pvAlloc);
+
+FORCEINLINE
+VOID
+ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
+{
+    /* Try acquiring the lock */
+    if (InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V))
+    {
+        /* Someone changed it, use the slow path */
+        ExfAcquirePushLockExclusive(PushLock);
+    }
+}
+
+FORCEINLINE
+VOID
+ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue;
+
+    /* Unlock the pushlock */
+    OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock,
+                                                 -(SSIZE_T)EX_PUSH_LOCK_LOCK);
+    /* Check if anyone is waiting on it and it's not already waking */
+    if ((OldValue.Waiting) && !(OldValue.Waking))
+    {
+        /* Wake it up */
+        ExfTryToWakePushLock(PushLock);
+    }
+}
+
+FORCEINLINE
+VOID
+_ExInitializePushLock(PEX_PUSH_LOCK Lock)
+{
+    *(PULONG_PTR)Lock = 0;
+}
+#define ExInitializePushLock _ExInitializePushLock

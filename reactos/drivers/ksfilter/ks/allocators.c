@@ -163,7 +163,7 @@ IKsAllocator_fnDeviceIoControl(
 
         /* complete and forget irps */
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
 
         return STATUS_NOT_IMPLEMENTED;
    }
@@ -172,7 +172,7 @@ IKsAllocator_fnDeviceIoControl(
     {
         /* invalid request */
         Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
 
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -190,7 +190,7 @@ IKsAllocator_fnDeviceIoControl(
                 Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 Irp->IoStatus.Information = sizeof(KSSTREAMALLOCATOR_FUNCTIONTABLE);
                 /* complete and forget irp */
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                CompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_BUFFER_TOO_SMALL;
             }
             if (!(Property->Flags & KSPROPERTY_TYPE_GET))
@@ -198,7 +198,7 @@ IKsAllocator_fnDeviceIoControl(
                 /* only support retrieving the property */
                 Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                 /* complete and forget irp */
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                CompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_UNSUCCESSFUL;
             }
 
@@ -212,7 +212,7 @@ IKsAllocator_fnDeviceIoControl(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = sizeof(KSSTREAMALLOCATOR_FUNCTIONTABLE);
             /* complete request */
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            CompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
         }
         else if (Property->Id == KSPROPERTY_STREAMALLOCATOR_STATUS)
@@ -223,7 +223,7 @@ IKsAllocator_fnDeviceIoControl(
                 Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 Irp->IoStatus.Information = sizeof(KSPROPERTY_STREAMALLOCATOR_STATUS);
                 /* complete and forget irp */
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                CompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_BUFFER_TOO_SMALL;
             }
             if (!(Property->Flags & KSPROPERTY_TYPE_GET))
@@ -231,7 +231,7 @@ IKsAllocator_fnDeviceIoControl(
                 /* only support retrieving the property */
                 Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                 /* complete and forget irp */
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                CompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_UNSUCCESSFUL;
             }
 
@@ -246,14 +246,14 @@ IKsAllocator_fnDeviceIoControl(
             Irp->IoStatus.Information = sizeof(KSSTREAMALLOCATOR_STATUS);
 
             /* complete request */
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            CompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
         }
     }
 
     /* unhandled request */
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_NOT_SUPPORTED;
 }
@@ -501,7 +501,7 @@ IKsAllocator_DispatchDeviceIoControl(
 
     /* complete request */
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }
@@ -523,7 +523,7 @@ IKsAllocator_DispatchClose(
 
     /* complete request */
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }

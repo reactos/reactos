@@ -80,7 +80,22 @@ NTAPI
 DC_AllocDcWithHandle()
 {
     PDC pdc;
-    pdc = (PDC)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_DC_TYPE);
+
+    pdc = (PDC)GDIOBJ_AllocateObject(GDIObjType_DC_TYPE,
+                                     sizeof(DC),
+                                     BASEFLAG_LOOKASIDE);
+    if (!pdc)
+    {
+        DPRINT1("Could not allocate a DC.\n");
+        return NULL;
+    }
+
+    if (!GDIOBJ_hInsertObject(&pdc->BaseObject, GDI_OBJ_HMGR_POWNED))
+    {
+        DPRINT1("Could not insert DC into handle table.\n");
+        GDIOBJ_vFreeObject(&pdc->BaseObject);
+        return NULL;
+    }
 
     pdc->pdcattr = &pdc->dcattr;
 
@@ -232,7 +247,6 @@ DC_vInitDc(
     /* Allocate a Vis region */
     pdc->prgnVis = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
 	ASSERT(pdc->prgnVis);
-	GDIOBJ_CopyOwnership(pdc->BaseObject.hHmgr, pdc->prgnVis->BaseObject.hHmgr);
 
     /* Setup palette */
     pdc->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
@@ -354,12 +368,16 @@ DC_Cleanup(PVOID ObjectBody)
     EBRUSHOBJ_vCleanup(&pdc->eboBackground);
 
     /*  Free regions */
-    if (pdc->rosdc.hClipRgn)
+    if (pdc->rosdc.hClipRgn && GreIsHandleValid(pdc->rosdc.hClipRgn))
         GreDeleteObject(pdc->rosdc.hClipRgn);
     if (pdc->prgnVis)
-        REGION_FreeRgnByHandle(pdc->prgnVis->BaseObject.hHmgr);
-    if (pdc->rosdc.hGCClipRgn)
+    {
+        REGION_Delete(pdc->prgnVis);
+    }
+    if (pdc->rosdc.hGCClipRgn && GreIsHandleValid(pdc->rosdc.hGCClipRgn))
+    {
         GreDeleteObject(pdc->rosdc.hGCClipRgn);
+    }
     if (NULL != pdc->rosdc.CombinedClip)
         IntEngDeleteClipRegion(pdc->rosdc.CombinedClip);
 
@@ -373,72 +391,64 @@ DC_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
-BOOL
-FASTCALL
-DC_SetOwnership(HDC hDC, PEPROCESS Owner)
+VOID
+NTAPI
+DC_vSetOwner(PDC pdc, ULONG ulOwner)
 {
-    INT Index;
-    PGDI_TABLE_ENTRY Entry;
-    PDC pDC;
-    BOOL ret = FALSE;
 
-    if (!GDIOBJ_SetOwnership(hDC, Owner))
+    if (pdc->rosdc.hClipRgn)
     {
-        DPRINT1("GDIOBJ_SetOwnership failed\n");
-        return FALSE;
+        IntGdiSetRegionOwner(pdc->rosdc.hClipRgn, ulOwner);
     }
 
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
+    if (pdc->rosdc.hGCClipRgn)
     {
-        DPRINT1("Could not lock DC\n");
-        return FALSE;
+        IntGdiSetRegionOwner(pdc->rosdc.hGCClipRgn, ulOwner);
     }
 
-    /*
-       System Regions:
-          These regions do not use attribute sections and when allocated, use
-          gdiobj level functions.
-    */
-    if (pDC->rosdc.hClipRgn)
-    {   // FIXME! HAX!!!
-        Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
-        Entry = &GdiHandleTable->Entries[Index];
-        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-        Entry->UserData = NULL;
-        //
-        if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) goto leave;
-    }
-    if (pDC->prgnVis)
-    {   // FIXME! HAX!!!
-        Index = GDI_HANDLE_GET_INDEX(pDC->prgnVis->BaseObject.hHmgr);
-        Entry = &GdiHandleTable->Entries[Index];
-        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-        Entry->UserData = NULL;
-        //
-        if (!GDIOBJ_SetOwnership(pDC->prgnVis->BaseObject.hHmgr, Owner)) goto leave;
-    }
-    if (pDC->rosdc.hGCClipRgn)
-    {   // FIXME! HAX!!!
-        Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
-        Entry = &GdiHandleTable->Entries[Index];
-        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-        Entry->UserData = NULL;
-        //
-        if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) goto leave;
-    }
-    if (pDC->dclevel.hPath)
+    if (pdc->dclevel.hPath)
     {
-        if (!GDIOBJ_SetOwnership(pDC->dclevel.hPath, Owner)) goto leave;
+        GreSetObjectOwner(pdc->dclevel.hPath, ulOwner);
     }
-    ret = TRUE;
 
-leave:
-    DC_UnlockDc(pDC);
+    IntGdiSetBrushOwner(pdc->dclevel.pbrFill, ulOwner);
+    IntGdiSetBrushOwner(pdc->dclevel.pbrLine, ulOwner);
 
-    return ret;
+    /* Allocate or free DC attribute */
+    if (ulOwner == GDI_OBJ_HMGR_PUBLIC || ulOwner == GDI_OBJ_HMGR_NONE)
+    {
+        if (pdc->pdcattr != &pdc->dcattr)
+            DC_vFreeDcAttr(pdc);
+    }
+    else if (ulOwner == GDI_OBJ_HMGR_POWNED)
+    {
+        if (pdc->pdcattr == &pdc->dcattr)
+            DC_bAllocDcAttr(pdc);
+    }
+
+    /* Set the DC's ownership */
+    GDIOBJ_vSetObjectOwner(&pdc->BaseObject, ulOwner);
 }
 
+BOOL
+NTAPI
+GreSetDCOwner(HDC hdc, ULONG ulOwner)
+{
+    PDC pdc;
+
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        DPRINT1("GreSetDCOwner: Could not lock DC\n");
+        return FALSE;
+    }
+
+    /* Call the internal DC function */
+    DC_vSetOwner(pdc, ulOwner);
+
+    DC_UnlockDc(pdc);
+    return TRUE;
+}
 
 int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc);
@@ -480,6 +490,15 @@ DC_vPrepareDCsForBlit(PDC pdc1,
 {
     PDC pdcFirst, pdcSecond;
     PRECT prcFirst, prcSecond;
+
+    /* Update brushes */
+    if (pdc1->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc1);
+    if (pdc1->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(pdc1);
+    if(pdc1->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(pdc1);
+
     /* Lock them in good order */
     if(pdc2)
     {
@@ -502,7 +521,8 @@ DC_vPrepareDCsForBlit(PDC pdc1,
     {
         pdcFirst = pdc1 ;
         prcFirst = &rc1;
-        pdcSecond = NULL ;
+        pdcSecond = NULL;
+        prcSecond = NULL;
     }
 
     if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)
@@ -599,7 +619,7 @@ GreOpenDCW(
     /* FIXME: HACK! */
     DC_InitHack(pdc);
 
-    DC_AllocDcAttr(pdc);
+    DC_bAllocDcAttr(pdc);
 
     DC_UnlockDc(pdc);
 
@@ -679,17 +699,17 @@ NtGdiOpenDCW(
     /* Call the internal function */
     hdc = GreOpenDCW(pustrDevice ? &ustrDevice : NULL,
                      pdmInit ? &dmInit : NULL,
-                     NULL, // fixme pwszLogAddress
+                     NULL, // FIXME: pwszLogAddress
                      iType,
                      bDisplay,
                      hspool,
-                     NULL, //FIXME: pDriverInfo2
+                     NULL, // FIXME: pDriverInfo2
                      pUMdhpdev ? &dhpdev : NULL);
 
     /* If we got a HDC and a UM dhpdev is requested,... */
     if (hdc && pUMdhpdev)
     {
-        /* Copy dhpdev to caller (FIXME: use dhpdev?? */
+        /* Copy dhpdev to caller (FIXME: use dhpdev?) */
         _SEH2_TRY
         {
             /* Pointer was already probed */
@@ -762,7 +782,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
     DC_InitHack(pdcNew);
 
     /* Allocate a dc attribute */
-    DC_AllocDcAttr(pdcNew);
+    DC_bAllocDcAttr(pdcNew);
 
     // HACK!
     DC_vSelectSurface(pdcNew, psurfDefaultBitmap);
@@ -815,9 +835,9 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
     DC_UnlockDc(DCToDelete);
 
-    if (!IsObjectDead(hDC))
+    if (GreIsHandleValid(hDC))
     {
-        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
+        if (!GreDeleteObject(hDC))
         {
             DPRINT1("DC_FreeDC failed\n");
         }
@@ -826,31 +846,30 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     {
         DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n", hDC);
     }
-    
+
     return TRUE;
 }
 
 BOOL
 APIENTRY
-NtGdiDeleteObjectApp(HANDLE DCHandle)
+NtGdiDeleteObjectApp(HANDLE hobj)
 {
     /* Complete all pending operations */
-    NtGdiFlushUserBatch();
+    NtGdiFlushUserBatch(); // FIXME: we shouldn't need this
 
-    if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
+    if (GDI_HANDLE_IS_STOCKOBJ(hobj)) return TRUE;
 
-    if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
-        return GreDeleteObject((HGDIOBJ) DCHandle);
-
-    if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
-
-    if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
+    if (GreGetObjectOwner(hobj) != GDI_OBJ_HMGR_POWNED)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
-    return IntGdiDeleteDC(DCHandle, FALSE);
+    if (GDI_HANDLE_GET_TYPE(hobj) != GDI_OBJECT_TYPE_DC)
+        return GreDeleteObject(hobj);
+
+    // FIXME: everything should be callback based
+    return IntGdiDeleteDC(hobj, FALSE);
 }
 
 BOOL

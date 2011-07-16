@@ -367,12 +367,14 @@ static BOOL UnloadHive(HWND hWnd)
     TCHAR Caption[128];
     LPCTSTR pszKeyPath;
     HKEY hRootKey;
+    LONG regUnloadResult;
+
     /* get the item key to unload */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* load and set the caption and flags for dialog */
     LoadString(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
     /* now unload the hive */
-    LONG regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
+    regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
     if(regUnloadResult == ERROR_SUCCESS)
     {
         /* refresh tree and list views */
@@ -391,7 +393,7 @@ static BOOL UnloadHive(HWND hWnd)
 static BOOL ImportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
-    TCHAR Caption[128];
+    TCHAR Caption[128], szTitle[256], szText[256];
     LPCTSTR pszKeyPath;
     HKEY hRootKey;
 
@@ -412,6 +414,10 @@ static BOOL ImportRegistryFile(HWND hWnd)
                 fclose(fp);
             return FALSE;
         }
+        LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
+        LoadString(hInst, IDS_IMPORTED_OK, szText, sizeof(szTitle));
+        /* show successful import */
+        MessageBox(NULL, szText, szTitle, MB_OK);
         fclose(fp);
     }
     else
@@ -1174,6 +1180,11 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
     case WM_MENUSELECT:
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
+        break;
+    case WM_SYSCOLORCHANGE:
+        /* Forward WM_SYSCOLORCHANGE to common controls */
+        SendMessage(g_pChildWnd->hListWnd, WM_SYSCOLORCHANGE, 0, 0);
+        SendMessage(g_pChildWnd->hTreeWnd, WM_SYSCOLORCHANGE, 0, 0);
         break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);

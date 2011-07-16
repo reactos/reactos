@@ -16,6 +16,7 @@ typedef struct
 
     IKsControlVtbl *lpVtblKsControl;
     IKsFilterFactory * FilterFactory;
+    IKsProcessingObjectVtbl * lpVtblKsProcessingObject;
     LONG ref;
 
     PKSIOBJECT_HEADER ObjectHeader;
@@ -25,6 +26,9 @@ typedef struct
     KMUTEX ControlMutex;
     KMUTEX ProcessingMutex;
 
+    PKSWORKER Worker;
+    WORK_QUEUE_ITEM WorkItem;
+    KSGATE Gate;
 
     PFNKSFILTERPOWER Sleep;
     PFNKSFILTERPOWER Wake;
@@ -70,6 +74,196 @@ KSPROPERTY_SET FilterPropertySet[] =
     }
 };
 
+NTSTATUS
+NTAPI
+IKsProcessingObject_fnQueryInterface(
+    IKsProcessingObject * iface,
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->Header.OuterUnknown;
+        _InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+ULONG
+NTAPI
+IKsProcessingObject_fnAddRef(
+    IKsProcessingObject * iface)
+{
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    return InterlockedIncrement(&This->ref);
+}
+
+ULONG
+NTAPI
+IKsProcessingObject_fnRelease(
+    IKsProcessingObject * iface)
+{
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    InterlockedDecrement(&This->ref);
+
+    /* Return new reference count */
+    return This->ref;
+}
+
+VOID
+NTAPI
+IKsProcessingObject_fnProcessingObjectWork(
+    IKsProcessingObject * iface)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER TimeOut;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    DPRINT1("processing object\n");
+    /* first check if running at passive level */
+    if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+    {
+        /* acquire processing mutex */
+        KeWaitForSingleObject(&This->ControlMutex, Executive, KernelMode, FALSE, NULL);
+    }
+    else
+    {
+        /* dispatch level processing */
+        if (KeReadStateMutex(&This->ControlMutex) == 0)
+        {
+            /* some thread was faster */
+            DPRINT1("processing object too slow\n");
+            return;
+        }
+
+        /* acquire processing mutex */
+        TimeOut.QuadPart = 0LL;
+        Status = KeWaitForSingleObject(&This->ControlMutex, Executive, KernelMode, FALSE, &TimeOut);
+
+        if (Status == STATUS_TIMEOUT)
+        {
+            /* some thread was faster */
+            DPRINT1("processing object too slow\n");
+            return;
+        }
+    }
+
+    do
+    {
+
+        /* check if the and-gate has been enabled again */
+        if (&This->Gate.Count != 0)
+        {
+            /* gate is open */
+            DPRINT1("processing object gate open\n");
+            break;
+        }
+
+        DPRINT1("IKsProcessingObject_fnProcessingObjectWork not implemented\n");
+        ASSERT(0);
+
+    }while(TRUE);
+
+    /* release process mutex */
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
+}
+
+PKSGATE
+NTAPI
+IKsProcessingObject_fnGetAndGate(
+    IKsProcessingObject * iface)
+{
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    /* return and gate */
+    return &This->Gate;
+}
+
+VOID
+NTAPI
+IKsProcessingObject_fnProcess(
+    IKsProcessingObject * iface,
+    IN BOOLEAN Asynchronous)
+{
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    /* should the action be asynchronous */
+    if (Asynchronous)
+    {
+        /* queue work item */
+        KsQueueWorkItem(This->Worker, &This->WorkItem);
+DPRINT1("queueing\n");
+        /* done */
+        return;
+    }
+
+    /* does the filter require explicit deferred processing */
+    if ((This->Filter.Descriptor->Flags & (KSFILTER_FLAG_DISPATCH_LEVEL_PROCESSING | KSFILTER_FLAG_CRITICAL_PROCESSING | KSFILTER_FLAG_HYPERCRITICAL_PROCESSING)) && 
+         KeGetCurrentIrql() > PASSIVE_LEVEL)
+    {
+        /* queue work item */
+        KsQueueWorkItem(This->Worker, &This->WorkItem);
+DPRINT1("queueing\n");
+        /* done */
+        return;
+    }
+DPRINT1("invoke\n");
+    /* call worker routine directly */
+    iface->lpVtbl->ProcessingObjectWork(iface);
+}
+
+VOID
+NTAPI
+IKsProcessingObject_fnReset(
+    IKsProcessingObject * iface)
+{
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtblKsProcessingObject);
+
+    /* acquire processing mutex */
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* check if the filter supports dispatch routines */
+    if (This->Filter.Descriptor->Dispatch)
+    {
+        /* has the filter a reset routine */
+        if (This->Filter.Descriptor->Dispatch->Reset)
+        {
+            /* reset filter */
+            This->Filter.Descriptor->Dispatch->Reset(&This->Filter);
+        }
+    }
+
+    /* release process mutex */
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
+}
+
+VOID
+NTAPI
+IKsProcessingObject_fnTriggerNotification(
+    IKsProcessingObject * iface)
+{
+
+}
+
+static IKsProcessingObjectVtbl vt_IKsProcessingObject =
+{
+    IKsProcessingObject_fnQueryInterface,
+    IKsProcessingObject_fnAddRef,
+    IKsProcessingObject_fnRelease,
+    IKsProcessingObject_fnProcessingObjectWork,
+    IKsProcessingObject_fnGetAndGate,
+    IKsProcessingObject_fnProcess,
+    IKsProcessingObject_fnReset,
+    IKsProcessingObject_fnTriggerNotification
+};
+
+
+//---------------------------------------------------------------------------------------------------------
 NTSTATUS
 NTAPI
 IKsControl_fnQueryInterface(
@@ -485,7 +679,7 @@ IKsFilter_GetFilterFromIrp(
         Irp->IoStatus.Status = Status;
 
         /* complete and forget irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
     return Status;
@@ -522,7 +716,7 @@ IKsFilter_DispatchClose(
         /* save the result */
         Irp->IoStatus.Status = Status;
         /* complete irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
 
         /* remove our instance from the filter factory */
         IKsFilter_RemoveFilterFromFilterFactory(This, This->Factory);
@@ -535,7 +729,7 @@ IKsFilter_DispatchClose(
         /* complete and forget */
         Irp->IoStatus.Status = Status;
         /* complete irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -881,7 +1075,7 @@ IKsFilter_DispatchDeviceIoControl(
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -1227,7 +1421,7 @@ IKsFilter_DispatchCreatePin(
     {
         /* complete request */
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -1243,7 +1437,7 @@ IKsFilter_DispatchCreateNode(
 {
     UNIMPLEMENTED
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1356,6 +1550,20 @@ IKsFilter_RemoveFilterFromFilterFactory(
     }while(TRUE);
 }
 
+VOID
+NTAPI
+IKsFilter_FilterCentricWorker(
+    IN PVOID Ctx)
+{
+    IKsProcessingObject * Object = (IKsProcessingObject*)Ctx;
+
+    /* sanity check */
+    ASSERT(Object);
+
+    /* perform work */
+    Object->lpVtbl->ProcessingObjectWork(Object);
+}
+
 NTSTATUS
 NTAPI
 KspCreateFilter(
@@ -1377,17 +1585,27 @@ KspCreateFilter(
     /* get the filter factory */
     Factory = iface->lpVtbl->GetStruct(iface);
 
-    if (!Factory || !Factory->FilterDescriptor || !Factory->FilterDescriptor->Dispatch || !Factory->FilterDescriptor->Dispatch->Create)
+    if (!Factory || !Factory->FilterDescriptor)
     {
         /* Sorry it just will not work */
         return STATUS_UNSUCCESSFUL;
+    }
+
+    if (Factory->FilterDescriptor->Flags & KSFILTER_FLAG_DENY_USERMODE_ACCESS)
+    {
+        if (Irp->RequestorMode == UserMode)
+        {
+            /* filter not accessible from user mode */
+            DPRINT1("Access denied\n");
+            return STATUS_UNSUCCESSFUL;
+        }
     }
 
     /* allocate filter instance */
     This = AllocateItem(NonPagedPool, sizeof(IKsFilterImpl));
     if (!This)
     {
-        DPRINT("KspCreateFilter OutOfMemory\n");
+        DPRINT1("KspCreateFilter OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1397,7 +1615,7 @@ KspCreateFilter(
     {
         /* no memory */
         FreeItem(This);
-        DPRINT("KspCreateFilter OutOfMemory\n");
+        DPRINT1("KspCreateFilter OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->BasicHeader.OuterUnknown;
@@ -1424,11 +1642,9 @@ KspCreateFilter(
         /* no memory */
         FreeItem(This->Filter.Bag);
         FreeItem(This);
-        DPRINT("KspCreateFilter OutOfMemory\n");
+        DPRINT1("KspCreateFilter OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    DPRINT("KspCreateFilter Flags %lx\n", Factory->FilterDescriptor->Flags);
 
     /* initialize pin create item */
     CreateItem[0].Create = IKsFilter_DispatchCreatePin;
@@ -1446,11 +1662,13 @@ KspCreateFilter(
     This->ref = 1;
     This->Header.OuterUnknown = (PUNKNOWN)&vt_IKsFilter;
     This->lpVtblKsControl = &vt_IKsControl;
+    This->lpVtblKsProcessingObject = &vt_IKsProcessingObject;
 
     This->Factory = Factory;
     This->FilterFactory = iface;
     This->FileObject = IoStack->FileObject;
     KeInitializeMutex(&This->ProcessingMutex, 0);
+
     /* initialize basic header */
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
@@ -1460,16 +1678,38 @@ KspCreateFilter(
     InitializeListHead(&This->Header.EventList);
     KeInitializeSpinLock(&This->Header.EventListLock);
 
+    /* initialize and gate */
+    KsGateInitializeAnd(&This->Gate, NULL);
+
+    /* FIXME initialize and gate based on pin flags */
+
+    /* initialize work item */
+    ExInitializeWorkItem(&This->WorkItem, IKsFilter_FilterCentricWorker, (PVOID)This->lpVtblKsProcessingObject);
+
+    /* allocate counted work item */
+    Status = KsRegisterCountedWorker(HyperCriticalWorkQueue, &This->WorkItem, &This->Worker);
+    if (!NT_SUCCESS(Status))
+    {
+        /* what can go wrong, goes wrong */
+        DPRINT1("KsRegisterCountedWorker failed with %lx\n", Status);
+        FreeItem(This);
+        FreeItem(CreateItem);
+        return Status;
+    }
+
     /* allocate the stream descriptors */
     Status = IKsFilter_CreateDescriptors(This, (PKSFILTER_DESCRIPTOR)Factory->FilterDescriptor);
     if (!NT_SUCCESS(Status))
     {
         /* what can go wrong, goes wrong */
+        DPRINT1("IKsFilter_CreateDescriptors failed with %lx\n", Status);
+        KsUnregisterWorker(This->Worker);
         FreeItem(This);
         FreeItem(CreateItem);
-        DPRINT("IKsFilter_CreateDescriptors failed with %lx\n", Status);
         return Status;
     }
+
+
 
     /* does the filter have a filter dispatch */
     if (Factory->FilterDescriptor->Dispatch)
@@ -1489,6 +1729,7 @@ KspCreateFilter(
                 DPRINT1("Driver: Status %x\n", Status);
 
                 /* free filter instance */
+                KsUnregisterWorker(This->Worker);
                 FreeItem(This);
                 FreeItem(CreateItem);
                 return Status;
@@ -1515,7 +1756,7 @@ KspCreateFilter(
     IKsFilter_AttachFilterToFilterFactory(This, This->Header.Parent.KsFilterFactory);
 
     /* completed initialization */
-    DPRINT("KspCreateFilter done %lx KsDevice %p\n", Status, This->Header.KsDevice);
+    DPRINT1("KspCreateFilter done %lx KsDevice %p\n", Status, This->Header.KsDevice);
     return Status;
 }
 
@@ -1599,7 +1840,7 @@ KsFilterAddTopologyConnections (
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1608,7 +1849,20 @@ KsFilterAttemptProcessing(
     IN PKSFILTER Filter,
     IN BOOLEAN Asynchronous)
 {
-    UNIMPLEMENTED
+    PKSGATE Gate;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    /* get gate */
+    Gate = This->lpVtblKsProcessingObject->GetAndGate((IKsProcessingObject*)This->lpVtblKsProcessingObject);
+
+    if (!KsGateCaptureThreshold(Gate))
+    {
+        /* filter control gate is closed */
+        return;
+    }
+DPRINT1("processing\n");
+    /* try initiate processing */
+    This->lpVtblKsProcessingObject->Process((IKsProcessingObject*)This->lpVtblKsProcessingObject, Asynchronous);
 }
 
 /*
@@ -1710,8 +1964,10 @@ NTAPI
 KsFilterGetAndGate(
     IN PKSFILTER Filter)
 {
-    UNIMPLEMENTED
-    return NULL;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    /* return and-gate */
+    return &This->Gate;
 }
 
 /*

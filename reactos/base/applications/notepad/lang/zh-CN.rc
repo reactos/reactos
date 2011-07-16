@@ -86,7 +86,7 @@ BEGIN
         MENUITEM "搜索(&S)...",      CMD_HELP_SEARCH
         MENUITEM "如何使用帮助(&H)", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "关于(&A)"          CMD_ABOUT
+        MENUITEM "关于(&A)",         CMD_ABOUT
         MENUITEM "资料信息(&O)...",  CMD_ABOUT_WINE
     END
 END

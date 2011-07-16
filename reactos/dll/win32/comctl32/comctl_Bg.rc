@@ -68,24 +68,3 @@ BEGIN
   LTEXT         "&Бутони на лентата с инструменти:", -1,192,5,78,10 /* 182 -> 192 ? */
   LISTBOX       IDC_TOOLBARBTN_LBOX, 192,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP /* 182 -> 192 ? */
 END
-
-STRINGTABLE
-{
-    IDS_CLOSE    "Затвори"
-}
-
-STRINGTABLE
-{
-    IDM_TODAY    "Днес:"
-    IDM_GOTODAY  "Иди на днес"
-}
-
-STRINGTABLE
-{
-    IDS_SEPARATOR "Разделител"
-}
-
-STRINGTABLE
-{
-    HKY_NONE "Нищо"
-}

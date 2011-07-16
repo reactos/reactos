@@ -1,0 +1,17 @@
+
+add_subdirectory(autochk)
+add_subdirectory(bootok)
+add_subdirectory(expand)
+add_subdirectory(format)
+add_subdirectory(lsass)
+if(NOT MSVC)
+    add_subdirectory(msiexec) # FIXME: msvc build.
+endif()
+add_subdirectory(regsvr32)
+add_subdirectory(rundll32)
+add_subdirectory(runonce)
+add_subdirectory(services)
+add_subdirectory(smss)
+add_subdirectory(subst)
+add_subdirectory(userinit)
+add_subdirectory(winlogon)

@@ -564,13 +564,22 @@ OpenDesktopW(
   ACCESS_MASK dwDesiredAccess)
 {
   UNICODE_STRING DesktopName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
 
   RtlInitUnicodeString(&DesktopName, lpszDesktop);
 
-  return NtUserOpenDesktop(
-    &DesktopName,
-    dwFlags,
-    dwDesiredAccess);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &DesktopName,
+                             OBJ_CASE_INSENSITIVE,
+                             GetProcessWindowStation(),
+                             0);
+
+  if( fInherit == TRUE )
+  {
+      ObjectAttributes.Attributes |= OBJ_INHERIT;
+  }
+
+  return NtUserOpenDesktop(&ObjectAttributes, dwFlags, dwDesiredAccess);
 }
 
 

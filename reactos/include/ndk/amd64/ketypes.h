@@ -80,6 +80,7 @@ Author:
 #define CR4_PGE                 0x80
 #define CR4_FXSR                0x200
 #define CR4_XMMEXCPT            0x400
+#define CR4_CHANNELS            0x800
 
 //
 // EFlags
@@ -102,6 +103,39 @@ Author:
 #define EFLAGS_VIP              0x100000
 #define EFLAGS_ID               0x200000
 #define EFLAGS_USER_SANITIZE    0x3F4DD7
+#define EFLAGS_TF_MASK          0x0100
+#define EFLAGS_TF_SHIFT         0x0008
+#define EFLAGS_ID_MASK          0x200000
+#define EFLAGS_IF_MASK          0x0200
+#define EFLAGS_IF_SHIFT         0x0009
+
+//
+// Machine Specific Registers
+//
+#define MSR_EFER         0xC0000080
+#define MSR_STAR         0xC0000081
+#define MSR_LSTAR        0xC0000082
+#define MSR_CSTAR        0xC0000083
+#define MSR_SYSCALL_MASK 0xC0000084
+#define MSR_FS_BASE      0xC0000100
+#define MSR_GS_BASE      0xC0000101
+#define MSR_GS_SWAP      0xC0000102
+#define MSR_MCG_STATUS   0x017A
+#define MSR_AMD_ACCESS   0x9C5A203A
+
+//
+// Flags in MSR_EFER
+//
+#define MSR_LMA                 0x0400
+#define MSR_LME                 0x0100
+#define MSR_SCE                 0x0001
+#define MSR_NXE                 0x0800
+#define MSR_PAT                 0x0277
+#define MSR_DEGUG_CTL           0x01D9
+#define MSR_LAST_BRANCH_FROM    0x01DB
+#define MSR_LAST_BRANCH_TO      0x01DC
+#define MSR_LAST_EXCEPTION_FROM 0x01DD
+#define MSR_LAST_EXCEPTION_TO   0x01DE
 
 //
 // IPI Types
@@ -118,6 +152,15 @@ Author:
 #define PRCB_MAJOR_VERSION      1
 #define PRCB_BUILD_DEBUG        1
 #define PRCB_BUILD_UNIPROCESSOR 2
+
+//
+// Service Table
+//
+#define NUMBER_SERVICE_TABLES 2
+#define SERVICE_NUMBER_MASK 0xFFF
+#define SERVICE_TABLE_SHIFT 7
+#define SERVICE_TABLE_MASK 0x20
+#define SERVICE_TABLE_TEST 0x20
 
 //
 // HAL Variables
@@ -147,6 +190,8 @@ Author:
 #else
 #define SYNCH_LEVEL             (IPI_LEVEL - 2)
 #endif
+
+#define NMI_STACK_SIZE 0x2000
 
 //
 // Trap Frame Definition
@@ -866,6 +911,58 @@ typedef struct _KEXCEPTION_FRAME
     UINT64 R15;
     UINT64 Return;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+
+typedef struct _DISPATCHER_CONTEXT
+{
+    ULONG64 ControlPc;
+    PVOID ImageBase;
+    PVOID FunctionEntry;
+    PVOID EstablisherFrame;
+    ULONG64 TargetIp;
+    PVOID ContextRecord;
+    PVOID LanguageHandler;
+    PVOID HandlerData;
+    PVOID HistoryTable;
+    ULONG ScopeIndex;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
+
+typedef struct _KSTART_FRAME
+{
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5Home;
+    ULONG64 Return;
+} KSTART_FRAME, *PKSTART_FRAME;
+
+typedef struct _KSWITCH_FRAME
+{
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5Home;
+    ULONG64 ApcBypass;
+    ULONG64 Rbp;
+    ULONG64 Return;
+} KSWITCH_FRAME, *PKSWITCH_FRAME;
+
+#if 0
+typedef struct _KTIMER_TABLE_ENTRY
+{
+    ULONG_PTR Lock;
+    LIST_ENTRY Entry;
+    ULARGE_INTEGER Time;
+} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
+typedef struct _KTIMER_TABLE
+{
+    KTIMER* TimerExpiry[64];
+    KTIMER_TABLE_ENTRY TimerEntries[256];
+} KTIMER_TABLE, *PKTIMER_TABLE;
+#endif
 
 //
 // Inline function to get current KPRCB

@@ -10,7 +10,6 @@
 
 HWND hMainWnd;
 HINSTANCE hInst;
-HIMAGELIST hImageListView = NULL;
 HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
@@ -144,8 +143,11 @@ EnumAvailableAppProc(APPLICATION_INFO Info)
     PAPPLICATION_INFO ItemInfo;
     INT Index;
 
-    if (!IsInstalledApplication(Info.szRegName, FALSE) &&
-        !IsInstalledApplication(Info.szRegName, TRUE))
+    /* Only add a ListView entry if...
+         - no RegName was supplied (so we cannot determine whether the application is installed or not) or
+         - a RegName was supplied and the application is not installed
+    */
+    if (!*Info.szRegName || (!IsInstalledApplication(Info.szRegName, FALSE) && !IsInstalledApplication(Info.szRegName, TRUE)))
     {
         ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_INFO));
         if (!ItemInfo) return FALSE;
@@ -165,8 +167,8 @@ UpdateApplicationsList(INT EnumType)
 {
     WCHAR szBuffer1[MAX_STR_LEN], szBuffer2[MAX_STR_LEN];
     HICON hIcon;
+    HIMAGELIST hImageListView;
 
-    if (hImageListView) ImageList_Destroy(hImageListView);
     (VOID) ListView_DeleteAllItems(hListView);
 
     /* Create image list */
@@ -205,7 +207,11 @@ UpdateApplicationsList(INT EnumType)
     }
 
     /* Set image list for ListView */
-    (VOID) ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
+    hImageListView = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
+
+    /* Destroy old image list */
+    if (hImageListView)
+		ImageList_Destroy(hImageListView);
 
     SelectedEnumType = EnumType;
 
@@ -711,6 +717,16 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             return TRUE;
         }
 
+        case WM_SYSCOLORCHANGE:
+        {
+            /* Forward WM_SYSCOLORCHANGE to common controls */
+            SendMessage(hListView, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessage(hTreeView, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessage(hToolBar, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessageW(hRichEdit, EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+        }
+        break;
+
         case WM_DESTROY:
         {
             ShowWindow(hwnd, SW_HIDE);
@@ -722,7 +738,6 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 FreeAvailableAppList();
             if (IS_INSTALLED_ENUM(SelectedEnumType))
                 FreeInstalledAppList();
-            if (hImageListView) ImageList_Destroy(hImageListView);
             if (hImageTreeView) ImageList_Destroy(hImageTreeView);
 
             PostQuitMessage(0);
@@ -779,7 +794,6 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = MainWindowProc;
     WndClass.hInstance     = hInstance;
-    WndClass.style         = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
     WndClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
     WndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);

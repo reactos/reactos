@@ -896,17 +896,17 @@ DWORD LogfGetCurrentRecord(PLOGFILE LogFile)
 
 BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile, ULONG ulNumber)
 {
-    int i;
+    DWORD i;
 
     if (ulNumber != LogFile->OffsetInfo[0].EventNumber)
     {
         return FALSE;
     }
 
-    for (i=0;i<LogFile->OffsetInfoNext-1; i++)
+    for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
     {
-        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i+1].EventNumber;
-        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i+1].EventOffset;
+        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
+        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
     }
     LogFile->OffsetInfoNext--;
     return TRUE;
@@ -1048,4 +1048,58 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     *lpRecSize = dwRecSize;
     return Buffer;
+}
+
+
+VOID
+LogfReportEvent(WORD wType,
+                WORD wCategory,
+                DWORD dwEventId,
+                WORD wNumStrings,
+                WCHAR *lpStrings,
+                DWORD dwDataSize,
+                LPVOID lpRawData)
+{
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    PEVENTSOURCE pEventSource = NULL;
+    PBYTE logBuffer;
+    DWORD lastRec;
+    DWORD recSize;
+    DWORD dwError;
+
+    if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
+    {
+        szComputerName[0] = 0;
+    }
+
+    pEventSource = GetEventSourceByName(L"EventLog");
+    if (pEventSource == NULL)
+    {
+        return;
+    }
+
+    lastRec = LogfGetCurrentRecord(pEventSource->LogFile);
+
+    logBuffer = LogfAllocAndBuildNewRecord(&recSize,
+                                           lastRec,
+                                           wType,
+                                           wCategory,
+                                           dwEventId,
+                                           pEventSource->szName,
+                                           (LPCWSTR)szComputerName,
+                                           0,
+                                           NULL,
+                                           wNumStrings,
+                                           lpStrings,
+                                           dwDataSize,
+                                           lpRawData);
+
+    dwError = LogfWriteData(pEventSource->LogFile, recSize, logBuffer);
+    if (!dwError)
+    {
+        DPRINT1("ERROR WRITING TO EventLog %S\n", pEventSource->LogFile->FileName);
+    }
+
+    LogfFreeRecord(logBuffer);
 }

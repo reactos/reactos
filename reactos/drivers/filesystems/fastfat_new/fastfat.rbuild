@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="fastfatn" type="kernelmodedriver" installbase="system32/drivers" installname="fastfatn.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="fastfatn">.</include>
 	<include base="ReactOS">include/reactos/libs/fullfat</include>
 	<library>fullfat</library>

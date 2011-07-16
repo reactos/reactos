@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for validating TrueTyepGX/AAT tables (body).            */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004, 2005, 2006, 2010 by                                    */
 /*  Masatake YAMATO, Redhat K.K,                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -73,8 +73,13 @@
   FT_TrueTypeGX_Free( FT_Face   face,
                       FT_Bytes  table )
   {
-    FT_Memory  memory = FT_FACE_MEMORY( face );
+    FT_Memory  memory;
 
+
+    if ( !face )
+      return;
+
+    memory = FT_FACE_MEMORY( face );
 
     FT_FREE( table );
   }
@@ -119,7 +124,13 @@
   FT_ClassicKern_Free( FT_Face   face,
                        FT_Bytes  table )
   {
-    FT_Memory  memory = FT_FACE_MEMORY( face );
+    FT_Memory  memory;
+
+
+    if ( !face )
+      return;
+
+    memory = FT_FACE_MEMORY( face );
 
 
     FT_FREE( table );

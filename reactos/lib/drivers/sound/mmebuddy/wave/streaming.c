@@ -60,7 +60,7 @@ DoWaveStreaming(
     }
 
     while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
-            ( Header ) )
+            ( Header ) && SoundDeviceInstance->ResetInProgress == FALSE)
     {
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
@@ -176,8 +176,6 @@ CompleteIO(
     WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
     SND_ASSERT( WaveHdr );
 
-    SND_ASSERT( ERROR_SUCCESS == dwErrorCode );
-
     HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
     SND_ASSERT( HdrExtension );
 
@@ -232,6 +230,8 @@ CompleteIO(
 
 	}while(dwNumberOfBytesTransferred);
 
+    // AUDIO-BRANCH DIFF
+    // completion callback is performed in a thread
     DoWaveStreaming(SoundDeviceInstance);
 
     //CompleteWavePortion(SoundDeviceInstance, dwNumberOfBytesTransferred);
@@ -277,8 +277,62 @@ StopStreamingInSoundThread(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
-    /* TODO */
-    return MMSYSERR_NOTSUPPORTED;
+    MMDEVICE_TYPE DeviceType;
+    PMMFUNCTION_TABLE FunctionTable;
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+
+    /* set state reset in progress */
+    SoundDeviceInstance->ResetInProgress = TRUE;
+
+    /* Get sound device */
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Obtain the function table */
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Obtain device instance type */
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Check if reset function is supported */
+    if (FunctionTable->ResetStream)
+    {
+         /* cancel all current audio buffers */
+         FunctionTable->ResetStream(SoundDeviceInstance, DeviceType, TRUE);
+    }
+    while(SoundDeviceInstance->OutstandingBuffers)
+    {
+        SND_TRACE(L"StopStreamingInSoundThread OutStandingBufferCount %lu\n", SoundDeviceInstance->OutstandingBuffers);
+        /* wait until pending i/o has completed */
+        SleepEx(10, TRUE);
+    }
+
+    /* complete all current headers */
+    while( SoundDeviceInstance->HeadWaveHeader )
+    {
+        SND_TRACE(L"StopStreamingInSoundThread: Completing Header %p\n", SoundDeviceInstance->HeadWaveHeader);
+        CompleteWaveHeader( SoundDeviceInstance, SoundDeviceInstance->HeadWaveHeader );
+    }
+
+    /* there should be no oustanding buffers now */
+    SND_ASSERT(SoundDeviceInstance->OutstandingBuffers == 0);
+
+
+    /* Check if reset function is supported */
+    if (FunctionTable->ResetStream)
+    {
+        /* finish the reset */
+        FunctionTable->ResetStream(SoundDeviceInstance, DeviceType, FALSE);
+    }
+
+    /* clear state reset in progress */
+    SoundDeviceInstance->ResetInProgress = FALSE;
+
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
@@ -306,4 +360,38 @@ StopStreaming(
     return CallSoundThread(SoundDeviceInstance,
                            StopStreamingInSoundThread,
                            NULL);
+}
+
+MMRESULT
+PerformWaveStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    DoWaveStreaming(SoundDeviceInstance);
+
+    return MMSYSERR_NOERROR;
+}
+
+DWORD
+WINAPI
+WaveActivateSoundStreaming(
+    IN PVOID lpParameter)
+{
+    CallSoundThread((PSOUND_DEVICE_INSTANCE)lpParameter,
+                    PerformWaveStreaming,
+                    NULL);
+
+    ExitThread(0);
+}
+
+VOID
+InitiateSoundStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    HANDLE hThread;
+
+    hThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
+
+    if (hThread != NULL)
+        CloseHandle(hThread);
 }

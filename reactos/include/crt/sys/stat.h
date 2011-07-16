@@ -187,9 +187,9 @@ extern "C" {
     _Stat->st_gid = _Stat64.st_gid;
     _Stat->st_rdev = _Stat64.st_rdev;
     _Stat->st_size = _Stat64.st_size;
-    _Stat->st_atime = _Stat64.st_atime;
-    _Stat->st_mtime = _Stat64.st_mtime;
-    _Stat->st_ctime = _Stat64.st_ctime;
+    _Stat->st_atime = (__time32_t)_Stat64.st_atime;
+    _Stat->st_mtime = (__time32_t)_Stat64.st_mtime;
+    _Stat->st_ctime = (__time32_t)_Stat64.st_ctime;
     return ret;
   }
   __CRT_INLINE int __cdecl _fstat32i64(int _FileDes, struct _stat32i64 *_Stat)
@@ -204,9 +204,9 @@ extern "C" {
     _Stat->st_gid = _Stat64.st_gid;
     _Stat->st_rdev = _Stat64.st_rdev;
     _Stat->st_size = _Stat64.st_size;
-    _Stat->st_atime = _Stat64.st_atime;
-    _Stat->st_mtime = _Stat64.st_mtime;
-    _Stat->st_ctime = _Stat64.st_ctime;
+    _Stat->st_atime = (__time32_t)_Stat64.st_atime;
+    _Stat->st_mtime = (__time32_t)_Stat64.st_mtime;
+    _Stat->st_ctime = (__time32_t)_Stat64.st_ctime;
     return ret;
   }
 #endif /* _USE_32BIT_TIME_T */

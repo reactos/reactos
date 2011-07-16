@@ -452,7 +452,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     PLIST_ENTRY ListHead;
     PPOOL_HEADER Entry, NextEntry, FragmentEntry;
     KIRQL OldIrql;
-    ULONG BlockSize, i;
+    USHORT BlockSize, i;
 
     //
     // Some sanity checks
@@ -495,7 +495,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     // request would've been treated as a POOL_MAX_ALLOC earlier and resulted in
     // the direct allocation of pages.
     //
-    i = (NumberOfBytes + sizeof(POOL_HEADER) + (POOL_BLOCK_SIZE - 1)) / POOL_BLOCK_SIZE;
+    i = (USHORT)((NumberOfBytes + sizeof(POOL_HEADER) + (POOL_BLOCK_SIZE - 1))
+                 / POOL_BLOCK_SIZE);
 
     //
     // Loop in the free lists looking for a block if this size. Start with the
@@ -736,7 +737,7 @@ ExAllocatePool(POOL_TYPE PoolType,
     //
     // Use a default tag of "None"
     //
-    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, 'enoN');
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_NONE);
 }
 
 /*
@@ -748,7 +749,7 @@ ExFreePoolWithTag(IN PVOID P,
                   IN ULONG TagToFree)
 {
     PPOOL_HEADER Entry, NextEntry;
-    ULONG BlockSize;
+    USHORT BlockSize;
     KIRQL OldIrql;
     POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;
@@ -787,6 +788,15 @@ ExFreePoolWithTag(IN PVOID P,
     // Acquire the pool lock
     //
     OldIrql = ExLockPool(PoolDesc);
+
+    //
+    // Check block tag
+    //
+    if (TagToFree && TagToFree != Entry->PoolTag)
+    {
+    	DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Entry->PoolTag);
+    	KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Entry->PoolTag, TagToFree);
+    }
 
     //
     // Check if the next allocation is at the end of the page

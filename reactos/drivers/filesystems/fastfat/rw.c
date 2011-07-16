@@ -537,7 +537,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    PERESOURCE Resource = NULL;
    LARGE_INTEGER ByteOffset;
    PVOID Buffer;
-   PDEVICE_OBJECT DeviceToVerify;
    ULONG BytesPerSector;
 
    ASSERT(IrpContext);
@@ -697,22 +696,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
         }
 
       Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);
-/**/
-      if (Status == STATUS_VERIFY_REQUIRED)
-      {
-         DPRINT("VfatReadFile returned STATUS_VERIFY_REQUIRED\n");
-         DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
-         IoSetDeviceToVerify(PsGetCurrentThread(), DeviceToVerify);
-         Status = IoVerifyVolume (DeviceToVerify, FALSE);
-
-         if (NT_SUCCESS(Status))
-         {
-            Status = VfatReadFileData(IrpContext, Length,
-                                      ByteOffset, &ReturnedLength);
-         }
-
-      }
-/**/
       if (NT_SUCCESS(Status))
       {
          IrpContext->Irp->IoStatus.Information = ReturnedLength;

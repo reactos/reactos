@@ -226,14 +226,16 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
  */
 NTSTATUS NTAPI
 RtlMultiByteToUnicodeN(
-   IN PWCHAR UnicodeString,
+   OUT PWCHAR UnicodeString,
    IN ULONG UnicodeSize,
-   IN PULONG ResultSize,
+   OUT PULONG ResultSize,
    IN PCSTR MbString,
    IN ULONG MbSize)
 {
    ULONG Size = 0;
    ULONG i;
+
+   PAGED_CODE_RTL();
 
    if (NlsMbCodePageTag == FALSE)
    {
@@ -284,7 +286,7 @@ RtlMultiByteToUnicodeN(
          *ResultSize = i * sizeof(WCHAR);
    }
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 
@@ -299,6 +301,8 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
                           ULONG MbSize)
 {
     ULONG Length = 0;
+
+    PAGED_CODE_RTL();
 
     if (!NlsMbCodePageTag)
     {
@@ -503,6 +507,8 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
 {
    ULONG Size = 0;
    ULONG i;
+
+   PAGED_CODE_RTL();
 
    if (NlsMbCodePageTag == FALSE)
    {

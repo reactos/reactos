@@ -24,6 +24,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -117,7 +118,7 @@ static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
         iv->sv->ops->get_column_info(iv->sv, i, &a, NULL, NULL, NULL);
         iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL, NULL);
 
-        res = lstrcmpW(a, b);
+        res = strcmpW( a, b );
         msi_free(a);
         msi_free(b);
 
@@ -168,7 +169,7 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
             if (r != ERROR_SUCCESS)
                 goto err;
 
-            res = lstrcmpW(a, b);
+            res = strcmpW( a, b );
             msi_free(b);
 
             if (res == 0)

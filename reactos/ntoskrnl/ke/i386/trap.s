@@ -32,6 +32,8 @@ EXTERN _KiTrap02:PROC
 .data
 ASSUME nothing
 
+.align 16
+
 PUBLIC _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
@@ -155,5 +157,25 @@ KiTrapExitStub KiSystemCallTrapReturn,    (KI_RESTORE_EAX OR KI_RESTORE_FS OR KI
 KiTrapExitStub KiEditedTrapReturn,        (KI_RESTORE_VOLATILES OR KI_RESTORE_EFLAGS OR KI_EDITED_FRAME OR KI_EXIT_RET)
 KiTrapExitStub KiTrapReturn,              (KI_RESTORE_VOLATILES OR KI_RESTORE_SEGMENTS OR KI_EXIT_IRET)
 KiTrapExitStub KiTrapReturnNoSegments,    (KI_RESTORE_VOLATILES OR KI_EXIT_IRET)
+
+#ifdef _MSC_VER
+EXTERN _PsConvertToGuiThread@0:PROC
+
+PUBLIC _KiConvertToGuiThread@0
+_KiConvertToGuiThread@0:
+    /* Calculate the stack frame offset in ebx */
+    mov ebx, ebp
+    sub ebx, esp
+
+    /* Call the worker function */
+    call _PsConvertToGuiThread@0
+
+    /* Adjust ebp to the new stack */
+    mov ebp, esp
+    add ebp, ebx
+
+    /* return to the caller */
+    ret
+#endif
 
 END
