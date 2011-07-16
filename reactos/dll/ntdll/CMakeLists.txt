@@ -40,6 +40,7 @@ set_entrypoint(ntdll 0)
 
 if(MSVC)
 target_link_libraries(ntdll rtl)
+add_linkerflag(ntdll /RELEASE)
 else()
 target_link_libraries(ntdll -Wl,--whole-archive rtl -Wl,--no-whole-archive)
 endif()
