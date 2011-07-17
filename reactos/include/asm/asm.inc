@@ -327,3 +327,10 @@ ENDM
 #define NUL "\0"
 
 #endif
+
+/* Common definitions for FPO macro
+   see http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+#define FRAME_FPO 0
+#define FRAME_TRAP 1
+#define FRAME_TSS 2
+#define FRAME_NONFPO 3

@@ -216,8 +216,6 @@ MACRO(KiCallHandler, Handler)
     nop
 ENDM
 
-#define FRAME_TRAP 1
-
 MACRO(TRAP_ENTRY, Trap, Flags)
     EXTERN @&Trap&Handler@4 :PROC
     PUBLIC _&Trap
