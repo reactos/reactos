@@ -35,15 +35,15 @@ typedef LRESULT (CALLBACK* THEMING_SUBCLASSPROC)(HWND, UINT, WPARAM, LPARAM,
     ULONG_PTR);
 
 extern LRESULT CALLBACK THEMING_ButtonSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                    ULONG_PTR);
+                                                    ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ComboSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                   ULONG_PTR);
+                                                   ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_DialogSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                    ULONG_PTR);
+                                                    ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_EditSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                  ULONG_PTR);
+                                                  ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                     ULONG_PTR);
+                                                     ULONG_PTR) DECLSPEC_HIDDEN;
 
 static const WCHAR dialogClass[] = {'#','3','2','7','7','0',0};
 static const WCHAR comboLboxClass[] = {'C','o','m','b','o','L','b','o','x',0};

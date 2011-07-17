@@ -6,7 +6,7 @@
  * Copyright 1999 Chris Morgan <cmorgan@wpi.edu> and
  *		  James Abbatiello <abbeyj@wpi.edu>
  * Copyright 2000 Uwe Bonnes <bon@elektron.ikp.physik.tu-darmstadt.de>
- * Copyright 2009, 2010 Nikolay Sivov
+ * Copyright 2009-2011 Nikolay Sivov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,6 @@
  * 
  * TODO:
  *    -- MCM_[GS]ETUNICODEFORMAT
- *    -- MONTHCAL_GetMonthRange
  *    -- handle resources better (doesn't work now); 
  *    -- take care of internationalization.
  *    -- keyboard handling.
@@ -77,6 +76,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(monthcal);
 /* convert from days to 100 nanoseconds unit - used as FILETIME unit */
 #define DAYSTO100NSECS(days) (((ULONGLONG)(days))*24*60*60*10000000)
 
+enum CachedPen
+{
+    PenRed = 0,
+    PenText,
+    PenLast
+};
+
+enum CachedBrush
+{
+    BrushTitle = 0,
+    BrushMonth,
+    BrushBackground,
+    BrushLast
+};
+
 /* single calendar data */
 typedef struct _CALENDAR_INFO
 {
@@ -96,6 +110,8 @@ typedef struct
     DWORD	dwStyle; /* cached GWL_STYLE */
 
     COLORREF    colors[MCSC_TRAILINGTEXT+1];
+    HBRUSH      brushes[BrushLast];
+    HPEN        pens[PenLast];
 
     HFONT	hFont;
     HFONT	hBoldFont;
@@ -143,8 +159,8 @@ static const WCHAR themeClass[] = { 'S','c','r','o','l','l','b','a','r',0 };
 /* empty SYSTEMTIME const */
 static const SYSTEMTIME st_null;
 /* valid date limits */
-static const SYSTEMTIME max_allowed_date = { 9999, 12, 0, 31, 0, 0, 0, 0 };
-static const SYSTEMTIME min_allowed_date = { 1752, 9, 0, 14, 0, 0, 0, 0 };
+static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDay = 31 };
+static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9,  .wDay = 14 };
 
 /* Prev/Next buttons */
 enum nav_direction
@@ -449,7 +465,7 @@ int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace)
   return st.wDayOfWeek;
 }
 
-/* add/substract 'months' from date */
+/* add/subtract 'months' from date */
 static inline void MONTHCAL_GetMonth(SYSTEMTIME *date, INT months)
 {
   INT length, m = date->wMonth + months;
@@ -636,28 +652,31 @@ static BOOL MONTHCAL_SetDayFocus(MONTHCAL_INFO *infoPtr, const SYSTEMTIME *st)
   return TRUE;
 }
 
+/* draw today boundary box for specified rectangle */
+static void MONTHCAL_Circle(const MONTHCAL_INFO *infoPtr, HDC hdc, const RECT *r)
+{
+  HPEN old_pen = SelectObject(hdc, infoPtr->pens[PenRed]);
+  HBRUSH old_brush;
+
+  old_brush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+  Rectangle(hdc, r->left, r->top, r->right, r->bottom);
+
+  SelectObject(hdc, old_brush);
+  SelectObject(hdc, old_pen);
+}
+
 /* Draw today day mark rectangle
  *
- * [I] hdc : context to draw in
- * [I] day : day to mark with rectangle
+ * [I] hdc  : context to draw in
+ * [I] date : day to mark with rectangle
  *
  */
 static void MONTHCAL_CircleDay(const MONTHCAL_INFO *infoPtr, HDC hdc,
                                const SYSTEMTIME *date)
 {
-  HPEN hRedPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-  HPEN hOldPen2 = SelectObject(hdc, hRedPen);
-  HBRUSH hOldBrush;
   RECT day_rect;
-
   MONTHCAL_CalcPosFromDay(infoPtr, date, &day_rect);
-
-  hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-  Rectangle(hdc, day_rect.left, day_rect.top, day_rect.right, day_rect.bottom);
-
-  SelectObject(hdc, hOldBrush);
-  DeleteObject(hRedPen);
-  SelectObject(hdc, hOldPen2);
+  MONTHCAL_Circle(infoPtr, hdc, &day_rect);
 }
 
 static void MONTHCAL_DrawDay(const MONTHCAL_INFO *infoPtr, HDC hdc, const SYSTEMTIME *st,
@@ -666,46 +685,39 @@ static void MONTHCAL_DrawDay(const MONTHCAL_INFO *infoPtr, HDC hdc, const SYSTEM
   static const WCHAR fmtW[] = { '%','d',0 };
   WCHAR buf[10];
   RECT r, r_temp;
-  static BOOL bold_selected;
-  BOOL selected_day = FALSE;
-  HBRUSH hbr;
   COLORREF oldCol = 0;
   COLORREF oldBk  = 0;
+  INT old_bkmode, selection;
 
-/* No need to check styles: when selection is not valid, it is set to zero.
- * 1<day<31, so everything is OK.
- */
-
+  /* no need to check styles: when selection is not valid, it is set to zero.
+     1 < day < 31, so everything is OK */
   MONTHCAL_CalcPosFromDay(infoPtr, st, &r);
   if(!IntersectRect(&r_temp, &(ps->rcPaint), &r)) return;
 
   if ((MONTHCAL_CompareDate(st, &infoPtr->minSel) >= 0) &&
-      (MONTHCAL_CompareDate(st, &infoPtr->maxSel) <= 0)) {
+      (MONTHCAL_CompareDate(st, &infoPtr->maxSel) <= 0))
+  {
 
     TRACE("%d %d %d\n", st->wDay, infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
     TRACE("%s\n", wine_dbgstr_rect(&r));
     oldCol = SetTextColor(hdc, infoPtr->colors[MCSC_MONTHBK]);
     oldBk = SetBkColor(hdc, infoPtr->colors[MCSC_TRAILINGTEXT]);
-    hbr = GetSysColorBrush(COLOR_HIGHLIGHT);
-    FillRect(hdc, &r, hbr);
+    FillRect(hdc, &r, infoPtr->brushes[BrushTitle]);
 
-    selected_day = TRUE;
+    selection = 1;
   }
+  else
+    selection = 0;
 
-  if(bold && !bold_selected) {
-    SelectObject(hdc, infoPtr->hBoldFont);
-    bold_selected = TRUE;
-  }
-  if(!bold && bold_selected) {
-    SelectObject(hdc, infoPtr->hFont);
-    bold_selected = FALSE;
-  }
+  SelectObject(hdc, bold ? infoPtr->hBoldFont : infoPtr->hFont);
 
-  SetBkMode(hdc,TRANSPARENT);
+  old_bkmode = SetBkMode(hdc, TRANSPARENT);
   wsprintfW(buf, fmtW, st->wDay);
   DrawTextW(hdc, buf, -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+  SetBkMode(hdc, old_bkmode);
 
-  if(selected_day) {
+  if (selection)
+  {
     SetTextColor(hdc, oldCol);
     SetBkColor(hdc, oldBk);
   }
@@ -755,13 +767,10 @@ static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRU
   RECT *title = &infoPtr->calendars[calIdx].title;
   const SYSTEMTIME *st = &infoPtr->calendars[calIdx].month;
   WCHAR buf_month[80], buf_fmt[80];
-  HBRUSH hbr;
   SIZE sz;
 
   /* fill header box */
-  hbr = CreateSolidBrush(infoPtr->colors[MCSC_TITLEBK]);
-  FillRect(hdc, title, hbr);
-  DeleteObject(hbr);
+  FillRect(hdc, title, infoPtr->brushes[BrushTitle]);
 
   /* month/year string */
   SetBkColor(hdc, infoPtr->colors[MCSC_TITLEBK]);
@@ -793,7 +802,7 @@ static void MONTHCAL_PaintWeeknumbers(const MONTHCAL_INFO *infoPtr, HDC hdc, con
   INT i, prev_month;
   SYSTEMTIME st;
   WCHAR buf[80];
-  HBRUSH hbr;
+  HPEN old_pen;
   RECT r;
 
   if (!(infoPtr->dwStyle & MCS_WEEKNUMBERS)) return;
@@ -865,9 +874,8 @@ static void MONTHCAL_PaintWeeknumbers(const MONTHCAL_INFO *infoPtr, HDC hdc, con
   r = infoPtr->calendars[calIdx].weeknums;
 
   /* erase whole week numbers area */
-  hbr = CreateSolidBrush(infoPtr->colors[MCSC_MONTHBK]);
-  FillRect(hdc, &r, hbr);
-  DeleteObject(hbr);
+  FillRect(hdc, &r, infoPtr->brushes[BrushTitle]);
+  SetTextColor(hdc, infoPtr->colors[MCSC_TITLEBK]);
 
   /* reduce rectangle to one week number */
   r.bottom = r.top + infoPtr->height_increment;
@@ -890,43 +898,50 @@ static void MONTHCAL_PaintWeeknumbers(const MONTHCAL_INFO *infoPtr, HDC hdc, con
   }
 
   /* line separator for week numbers column */
+  old_pen = SelectObject(hdc, infoPtr->pens[PenText]);
   MoveToEx(hdc, infoPtr->calendars[calIdx].weeknums.right, infoPtr->calendars[calIdx].weeknums.top + 3 , NULL);
   LineTo(hdc,   infoPtr->calendars[calIdx].weeknums.right, infoPtr->calendars[calIdx].weeknums.bottom);
+  SelectObject(hdc, old_pen);
 }
 
 /* bottom today date */
 static void MONTHCAL_PaintTodayTitle(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
 {
-  if(!(infoPtr->dwStyle & MCS_NOTODAY))  {
+  static const WCHAR fmt_todayW[] = { '%','s',' ','%','s',0 };
+  WCHAR buf_todayW[30], buf_dateW[20], buf[80];
+  RECT text_rect, box_rect;
+  HFONT old_font;
+  INT col;
+
+  if(infoPtr->dwStyle & MCS_NOTODAY) return;
+
+  if (!LoadStringW(COMCTL32_hModule, IDM_TODAY, buf_todayW, countof(buf_todayW)))
+  {
     static const WCHAR todayW[] = { 'T','o','d','a','y',':',0 };
-    static const WCHAR fmt_todayW[] = { '%','s',' ','%','s',0 };
-    WCHAR buf_todayW[30], buf_dateW[20], buf[80];
-    RECT rtoday;
-
-    if(!(infoPtr->dwStyle & MCS_NOTODAYCIRCLE)) {
-      SYSTEMTIME fake_st;
-
-      MONTHCAL_GetMaxDate(infoPtr, &fake_st);
-      /* this is always safe cause next month will never fully fit calendar */
-      fake_st.wDay += 1;
-      MONTHCAL_CircleDay(infoPtr, hdc, &fake_st);
-    }
-    if (!LoadStringW(COMCTL32_hModule, IDM_TODAY, buf_todayW, countof(buf_todayW)))
-    {
-	WARN("Can't load resource\n");
-	strcpyW(buf_todayW, todayW);
-    }
-    MONTHCAL_CalcDayRect(infoPtr, &rtoday, 1, 6);
-    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &infoPtr->todaysDate, NULL,
-                                                        buf_dateW, countof(buf_dateW));
-    SelectObject(hdc, infoPtr->hBoldFont);
-
-    wsprintfW(buf, fmt_todayW, buf_todayW, buf_dateW);
-    DrawTextW(hdc, buf, -1, &rtoday, DT_CALCRECT | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    DrawTextW(hdc, buf, -1, &rtoday, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-
-    SelectObject(hdc, infoPtr->hFont);
+    WARN("Can't load resource\n");
+    strcpyW(buf_todayW, todayW);
   }
+
+  col = infoPtr->dwStyle & MCS_NOTODAYCIRCLE ? 0 : 1;
+  if (infoPtr->dwStyle & MCS_WEEKNUMBERS) col--;
+  MONTHCAL_CalcDayRect(infoPtr, &text_rect, col, 6);
+  box_rect = text_rect;
+
+  GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &infoPtr->todaysDate, NULL,
+                                                      buf_dateW, countof(buf_dateW));
+  old_font = SelectObject(hdc, infoPtr->hBoldFont);
+  SetTextColor(hdc, infoPtr->colors[MCSC_TEXT]);
+
+  wsprintfW(buf, fmt_todayW, buf_todayW, buf_dateW);
+  DrawTextW(hdc, buf, -1, &text_rect, DT_CALCRECT | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+  DrawTextW(hdc, buf, -1, &text_rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+  if(!(infoPtr->dwStyle & MCS_NOTODAYCIRCLE)) {
+    OffsetRect(&box_rect, -infoPtr->width_increment, 0);
+    MONTHCAL_Circle(infoPtr, hdc, &box_rect);
+  }
+
+  SelectObject(hdc, old_font);
 }
 
 /* today mark + focus */
@@ -947,15 +962,53 @@ static void MONTHCAL_PaintFocusAndCircle(const MONTHCAL_INFO *infoPtr, HDC hdc, 
   }
 }
 
+/* months before first calendar month and after last calendar month */
+static void MONTHCAL_PaintLeadTrailMonths(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
+{
+  INT mask, length;
+  SYSTEMTIME st_max, st;
+
+  if (infoPtr->dwStyle & MCS_NOTRAILINGDATES) return;
+
+  SetTextColor(hdc, infoPtr->colors[MCSC_TRAILINGTEXT]);
+
+  /* draw prev month */
+  MONTHCAL_GetMinDate(infoPtr, &st);
+  mask = 1 << (st.wDay-1);
+  /* December and January both 31 days long, so no worries if wrapped */
+  length = MONTHCAL_MonthLength(infoPtr->calendars[0].month.wMonth - 1,
+                                infoPtr->calendars[0].month.wYear);
+  while(st.wDay <= length)
+  {
+      MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[0] & mask, ps);
+      mask <<= 1;
+      st.wDay++;
+  }
+
+  /* draw next month */
+  st = infoPtr->calendars[infoPtr->cal_num-1].month;
+  st.wDay = 1;
+  MONTHCAL_GetNextMonth(&st);
+  MONTHCAL_GetMaxDate(infoPtr, &st_max);
+  mask = 1;
+
+  while(st.wDay <= st_max.wDay)
+  {
+      MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[2] & mask, ps);
+      mask <<= 1;
+      st.wDay++;
+  }
+}
+
 /* paint a calendar area */
 static void MONTHCAL_PaintCalendar(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps, INT calIdx)
 {
   const SYSTEMTIME *date = &infoPtr->calendars[calIdx].month;
-  INT prev_month, i, j, length;
+  INT i, j, length;
   RECT r, fill_bk_rect;
   SYSTEMTIME st;
   WCHAR buf[80];
-  HBRUSH hbr;
+  HPEN old_pen;
   int mask;
 
   /* fill whole days area - from week days area to today note rectangle */
@@ -963,26 +1016,23 @@ static void MONTHCAL_PaintCalendar(const MONTHCAL_INFO *infoPtr, HDC hdc, const 
   fill_bk_rect.bottom = infoPtr->calendars[calIdx].days.bottom +
                           (infoPtr->todayrect.bottom - infoPtr->todayrect.top);
 
-  hbr = CreateSolidBrush(infoPtr->colors[MCSC_MONTHBK]);
-  FillRect(hdc, &fill_bk_rect, hbr);
-  DeleteObject(hbr);
+  FillRect(hdc, &fill_bk_rect, infoPtr->brushes[BrushMonth]);
 
   /* draw line under day abbreviations */
+  old_pen = SelectObject(hdc, infoPtr->pens[PenText]);
   MoveToEx(hdc, infoPtr->calendars[calIdx].days.left + 3,
                 infoPtr->calendars[calIdx].title.bottom + infoPtr->textHeight + 1, NULL);
   LineTo(hdc, infoPtr->calendars[calIdx].days.right - 3,
               infoPtr->calendars[calIdx].title.bottom + infoPtr->textHeight + 1);
-
-  prev_month = date->wMonth - 1;
-  if (prev_month == 0) prev_month = 12;
+  SelectObject(hdc, old_pen);
 
   infoPtr->calendars[calIdx].wdays.left = infoPtr->calendars[calIdx].days.left =
       infoPtr->calendars[calIdx].weeknums.right;
 
-  /* 1. draw day abbreviations */
+  /* draw day abbreviations */
   SelectObject(hdc, infoPtr->hFont);
   SetBkColor(hdc, infoPtr->colors[MCSC_MONTHBK]);
-  SetTextColor(hdc, infoPtr->colors[MCSC_TRAILINGTEXT]);
+  SetTextColor(hdc, infoPtr->colors[MCSC_TITLEBK]);
   /* rectangle to draw a single day abbreviation within */
   r = infoPtr->calendars[calIdx].wdays;
   r.right = r.left + infoPtr->width_increment;
@@ -994,47 +1044,7 @@ static void MONTHCAL_PaintCalendar(const MONTHCAL_INFO *infoPtr, HDC hdc, const 
     OffsetRect(&r, infoPtr->width_increment, 0);
   }
 
-  /* 2. previous and next months */
-  if (!(infoPtr->dwStyle & MCS_NOTRAILINGDATES) && (calIdx == 0 || calIdx == infoPtr->cal_num - 1))
-  {
-    SYSTEMTIME st_max;
-
-    SetTextColor(hdc, infoPtr->colors[MCSC_TRAILINGTEXT]);
-
-    /* draw prev month */
-    if (calIdx == 0)
-    {
-      MONTHCAL_GetMinDate(infoPtr, &st);
-      mask = 1 << (st.wDay-1);
-      length = MONTHCAL_MonthLength(prev_month, date->wYear);
-
-      while(st.wDay <= length)
-      {
-        MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[0] & mask, ps);
-        mask <<= 1;
-        st.wDay++;
-      }
-    }
-
-    /* draw next month */
-    if (calIdx == infoPtr->cal_num - 1)
-    {
-      st = *date;
-      st.wDay = 1;
-      MONTHCAL_GetNextMonth(&st);
-      MONTHCAL_GetMaxDate(infoPtr, &st_max);
-      mask = 1;
-
-      while(st.wDay <= st_max.wDay)
-      {
-        MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[2] & mask, ps);
-        mask <<= 1;
-        st.wDay++;
-      }
-    }
-  }
-
-  /* 3. current month */
+  /* draw current month */
   SetTextColor(hdc, infoPtr->colors[MCSC_TEXT]);
   st = *date;
   st.wDay = 1;
@@ -1075,6 +1085,9 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT 
     /* week numbers */
     MONTHCAL_PaintWeeknumbers(infoPtr, hdc, ps, i);
   }
+
+  /* partially visible months */
+  MONTHCAL_PaintLeadTrailMonths(infoPtr, hdc, ps);
 
   /* focus and today rectangle */
   MONTHCAL_PaintFocusAndCircle(infoPtr, hdc, ps);
@@ -1125,6 +1138,7 @@ MONTHCAL_GetColor(const MONTHCAL_INFO *infoPtr, UINT index)
 static LRESULT
 MONTHCAL_SetColor(MONTHCAL_INFO *infoPtr, UINT index, COLORREF color)
 {
+  enum CachedBrush type;
   COLORREF prev;
 
   TRACE("%p, %d: color %08x\n", infoPtr, index, color);
@@ -1133,6 +1147,35 @@ MONTHCAL_SetColor(MONTHCAL_INFO *infoPtr, UINT index, COLORREF color)
 
   prev = infoPtr->colors[index];
   infoPtr->colors[index] = color;
+
+  /* update cached brush */
+  switch (index)
+  {
+  case MCSC_BACKGROUND:
+    type = BrushBackground;
+    break;
+  case MCSC_TITLEBK:
+    type = BrushTitle;
+    break;
+  case MCSC_MONTHBK:
+    type = BrushMonth;
+    break;
+  default:
+    type = BrushLast;
+  }
+
+  if (type != BrushLast)
+  {
+    DeleteObject(infoPtr->brushes[type]);
+    infoPtr->brushes[type] = CreateSolidBrush(color);
+  }
+
+  /* update cached pen */
+  if (index == MCSC_TEXT)
+  {
+    DeleteObject(infoPtr->pens[PenText]);
+    infoPtr->pens[PenText] = CreatePen(PS_SOLID, 1, infoPtr->colors[index]);
+  }
 
   InvalidateRect(infoPtr->hwndSelf, NULL, index == MCSC_BACKGROUND ? TRUE : FALSE);
   return prev;
@@ -1265,8 +1308,6 @@ MONTHCAL_GetMonthRange(const MONTHCAL_INFO *infoPtr, DWORD flag, SYSTEMTIME *st)
     }
     case GMR_DAYSTATE:
     {
-        /*FIXME: currently multicalendar feature isn't implemented,
-                 min date from previous month and max date from next one returned */
         MONTHCAL_GetMinDate(infoPtr, &st[0]);
         MONTHCAL_GetMaxDate(infoPtr, &st[1]);
         break;
@@ -1727,7 +1768,7 @@ MONTHCAL_HitTest(const MONTHCAL_INFO *infoPtr, MCHITTESTINFO *lpht)
       {
 	  htinfo.uHit = MCHT_CALENDARDATEPREV;
 	  MONTHCAL_GetPrevMonth(&htinfo.st);
-	  htinfo.st.wDay = MONTHCAL_MonthLength(lpht->st.wMonth, lpht->st.wYear) + day;
+	  htinfo.st.wDay = MONTHCAL_MonthLength(htinfo.st.wMonth, htinfo.st.wYear) + day;
       }
       else if (day > MONTHCAL_MonthLength(ht_month.wMonth, ht_month.wYear))
       {
@@ -2237,15 +2278,11 @@ MONTHCAL_Paint(MONTHCAL_INFO *infoPtr, HDC hdc_paint)
 static LRESULT
 MONTHCAL_EraseBkgnd(const MONTHCAL_INFO *infoPtr, HDC hdc)
 {
-  HBRUSH hbr;
   RECT rc;
 
   if (!GetClipBox(hdc, &rc)) return FALSE;
 
-  /* fill background */
-  hbr = CreateSolidBrush (infoPtr->colors[MCSC_BACKGROUND]);
-  FillRect(hdc, &rc, hbr);
-  DeleteObject(hbr);
+  FillRect(hdc, &rc, infoPtr->brushes[BrushBackground]);
 
   return TRUE;
 }
@@ -2520,7 +2557,7 @@ MONTHCAL_Create(HWND hwnd, LPCREATESTRUCTW lpcs)
   MONTHCAL_SetFont(infoPtr, GetStockObject(DEFAULT_GUI_FONT), FALSE);
 
   /* initialize info structure */
-  /* FIXME: calculate systemtime ->> localtime(substract timezoneinfo) */
+  /* FIXME: calculate systemtime ->> localtime(subtract timezoneinfo) */
 
   GetLocalTime(&infoPtr->todaysDate);
   MONTHCAL_SetFirstDayOfWeek(infoPtr, -1);
@@ -2537,6 +2574,13 @@ MONTHCAL_Create(HWND hwnd, LPCREATESTRUCTW lpcs)
   infoPtr->colors[MCSC_TITLETEXT]    = comctl32_color.clrWindow;
   infoPtr->colors[MCSC_MONTHBK]      = comctl32_color.clrWindow;
   infoPtr->colors[MCSC_TRAILINGTEXT] = comctl32_color.clrGrayText;
+
+  infoPtr->brushes[BrushBackground]  = CreateSolidBrush(infoPtr->colors[MCSC_BACKGROUND]);
+  infoPtr->brushes[BrushTitle]       = CreateSolidBrush(infoPtr->colors[MCSC_TITLEBK]);
+  infoPtr->brushes[BrushMonth]       = CreateSolidBrush(infoPtr->colors[MCSC_MONTHBK]);
+
+  infoPtr->pens[PenRed]  = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+  infoPtr->pens[PenText] = CreatePen(PS_SOLID, 1, infoPtr->colors[MCSC_TEXT]);
 
   infoPtr->minSel = infoPtr->todaysDate;
   infoPtr->maxSel = infoPtr->todaysDate;
@@ -2564,13 +2608,18 @@ fail:
 static LRESULT
 MONTHCAL_Destroy(MONTHCAL_INFO *infoPtr)
 {
+  INT i;
+
   /* free month calendar info data */
   Free(infoPtr->monthdayState);
   Free(infoPtr->calendars);
   SetWindowLongPtrW(infoPtr->hwndSelf, 0, 0);
 
   CloseThemeData (GetWindowTheme (infoPtr->hwndSelf));
-  
+
+  for (i = 0; i < BrushLast; i++) DeleteObject(infoPtr->brushes[i]);
+  for (i = 0; i < PenLast; i++) DeleteObject(infoPtr->pens[i]);
+
   Free(infoPtr);
   return 0;
 }

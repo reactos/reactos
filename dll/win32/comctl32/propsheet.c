@@ -2490,7 +2490,7 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   {
     SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
     SetFocus(hwndFinish);
-  }
+}
   else if (dwFlags & PSWIZB_NEXT)
   {
     SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);

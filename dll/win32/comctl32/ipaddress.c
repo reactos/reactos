@@ -384,15 +384,16 @@ static void IPADDRESS_SetFocusToField (const IPADDRESS_INFO *infoPtr, INT index)
 
 static BOOL IPADDRESS_ConstrainField (const IPADDRESS_INFO *infoPtr, int currentfield)
 {
-    const IPPART_INFO *part = &infoPtr->Part[currentfield];
-    WCHAR field[10];
     static const WCHAR fmt[] = { '%', 'd', 0 };
+    const IPPART_INFO *part;
     int curValue, newValue;
+    WCHAR field[10];
 
     TRACE("(currentfield=%d)\n", currentfield);
 
     if (currentfield < 0 || currentfield > 3) return FALSE;
 
+    part = &infoPtr->Part[currentfield];
     if (!GetWindowTextW (part->EditHwnd, field, 4)) return FALSE;
 
     curValue = atoiW(field);

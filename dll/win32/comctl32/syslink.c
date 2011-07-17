@@ -529,7 +529,7 @@ static PDOC_ITEM SYSLINK_GetFocusLink (const SYSLINK_INFO *infoPtr, int *LinkId)
 
     while(Current != NULL)
     {
-        if((Current->Type == slLink))
+        if(Current->Type == slLink)
         {
             if(Current->u.Link.state & LIS_FOCUSED)
             {
@@ -1564,7 +1564,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     infoPtr = (SYSLINK_INFO *)GetWindowLongPtrW(hwnd, 0);
 
     if (!infoPtr && message != WM_CREATE)
-        goto HandleDefaultMessage;
+        return DefWindowProcW(hwnd, message, wParam, lParam);
 
     switch(message) {
     case WM_PRINTCLIENT:
@@ -1588,8 +1588,8 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
             SetCursor(LoadCursorW(0, (LPCWSTR)IDC_HAND));
             return TRUE;
         }
-        /* let the default window proc handle this message */
-        goto HandleDefaultMessage;
+
+        return DefWindowProcW(hwnd, message, wParam, lParam);
     }
 
     case WM_SIZE:
@@ -1615,7 +1615,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     case WM_SETTEXT:
         SYSLINK_SetText(infoPtr, (LPWSTR)lParam);
-        goto HandleDefaultMessage;
+        return DefWindowProcW(hwnd, message, wParam, lParam);
 
     case WM_LBUTTONDOWN:
     {
@@ -1645,8 +1645,9 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
             SYSKEY_SelectNextPrevLink(infoPtr, shift);
             return 0;
         }
+        default:
+            return DefWindowProcW(hwnd, message, wParam, lParam);
         }
-        goto HandleDefaultMessage;
     }
     
     case WM_GETDLGCODE:
@@ -1777,7 +1778,6 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         return 0;
 
     default:
-HandleDefaultMessage:
         if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
         {
             ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
