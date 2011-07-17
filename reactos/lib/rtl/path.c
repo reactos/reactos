@@ -29,7 +29,6 @@ static const UNICODE_STRING _condev = RTL_CONSTANT_STRING(L"\\\\.\\CON");
 static const UNICODE_STRING _unc = RTL_CONSTANT_STRING(L"\\??\\UNC\\");
 
 const UNICODE_STRING DeviceRootString = RTL_CONSTANT_STRING(L"\\\\.\\");
-
 const UNICODE_STRING RtlpDosLPTDevice = RTL_CONSTANT_STRING(L"LPT");
 const UNICODE_STRING RtlpDosCOMDevice = RTL_CONSTANT_STRING(L"COM");
 const UNICODE_STRING RtlpDosPRNDevice = RTL_CONSTANT_STRING(L"PRN");
@@ -325,6 +324,135 @@ RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
         if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
         return RtlPathTypeDriveRelative;                                                           /* x:             */
     }
+}
+
+NTSTATUS
+NTAPI
+RtlpCheckDeviceName(IN PUNICODE_STRING FileName,
+                    IN ULONG Length,
+                    OUT PBOOLEAN NameInvalid)
+{
+    PWCHAR Buffer;
+    NTSTATUS Status;
+
+    /* Allocate a large enough buffer */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, FileName->Length);
+    if (Buffer)
+    {
+        /* Assume failure */
+        *NameInvalid = TRUE;
+
+        /* Copy the filename */
+        RtlCopyMemory(Buffer, FileName->Buffer, FileName->Length);
+
+        /* And add a dot at the end */
+        Buffer[Length / sizeof(WCHAR)] = L'.';
+        Buffer[(Length / sizeof(WCHAR)) + 1] = UNICODE_NULL;
+
+        /* Check if the file exists or not */
+        *NameInvalid = RtlDoesFileExists_U(Buffer) ? FALSE: TRUE;
+
+        /* Get rid of the buffer now */
+        Status = RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    }
+    else
+    {
+        /* Assume the name is ok, but fail the call */
+        *NameInvalid = FALSE;
+        Status = STATUS_NO_MEMORY;
+    }
+
+    /* Return the status */
+    return Status;
+}
+
+ULONG
+NTAPI
+RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
+                        IN ULONG Size,
+                        IN PWSTR Buffer,
+                        OUT PCWSTR *ShortName,
+                        OUT PBOOLEAN InvalidName,
+                        OUT RTL_PATH_TYPE *PathType)
+{
+    PWCHAR FileNameBuffer;
+    ULONG FileNameLength, FileNameChars, DosLength, DosLengthOffset, FullLength;
+    WCHAR c;
+    NTSTATUS Status;
+
+    /* For now, assume the name is valid */
+    if (InvalidName) *InvalidName = FALSE;
+
+    /* Handle initial path type and failure case */
+    *PathType = RtlPathTypeUnknown;
+    if (!(Size) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
+
+    /* Break filename into component parts */
+    FileNameBuffer = FileName->Buffer;
+    FileNameLength = FileName->Length;
+    FileNameChars = FileNameLength / sizeof(WCHAR);
+
+    /* Kill trailing spaces */
+    c = FileNameBuffer[FileNameChars - 1];
+    while ((FileNameLength) && (c != L' '))
+    {
+        /* Keep going, ignoring the spaces */
+        FileNameLength -= sizeof(WCHAR);
+        if (FileNameLength) c = FileNameBuffer[FileNameLength / sizeof(WCHAR) - 1];
+    }
+
+    /* Check if anything is left */
+    if (!FileNameLength ) return 0;
+
+    /* Check if this is a DOS name */
+    DosLength = RtlIsDosDeviceName_Ustr(FileName);
+    if (DosLength)
+    {
+        /* Zero out the short name */
+        if (ShortName) *ShortName = NULL;
+
+        /* See comment for RtlIsDosDeviceName_Ustr if this is confusing... */
+        DosLengthOffset = DosLength >> 16;
+        DosLength = DosLength & 0xFFFF;
+
+        /* Do we have a DOS length, and does the caller want validity? */
+        if ((InvalidName) && (DosLengthOffset))
+        {
+            /* Do the check */
+            Status = RtlpCheckDeviceName(FileName, DosLengthOffset, InvalidName);
+
+            /* If the check failed, or the name is invalid, fail here */
+            if (!NT_SUCCESS(Status)) return 0;
+            if (*InvalidName) return 0;
+        }
+
+        /* Add the size of the device root and check if it fits in the size */
+        FullLength = DosLength + DeviceRootString.Length;
+        if (FullLength < Size)
+        {
+            /* Add the device string */
+            RtlMoveMemory(Buffer, DeviceRootString.Buffer, DeviceRootString.Length);
+
+            /* Now add the DOS device name */
+            RtlMoveMemory((PCHAR)Buffer + DeviceRootString.Length,
+                          (PCHAR)FileNameBuffer + DosLengthOffset,
+                          DosLength);
+
+            /* Null terminate */
+            *(PWCHAR)((ULONG_PTR)Buffer + FullLength) = UNICODE_NULL;
+            return FullLength;
+        }
+
+        /* Otherwise, there's no space, so return the buffer size needed */
+        if ((FullLength + sizeof(UNICODE_NULL)) > UNICODE_STRING_MAX_BYTES) return 0;
+        return FullLength + sizeof(UNICODE_NULL);
+    }
+
+    /* This should work well enough for our current needs */
+    *PathType = RtlDetermineDosPathNameType_U(FileNameBuffer);
+
+    /* This is disgusting... but avoids re-writing everything */
+    return RtlGetFullPathName_U(FileNameBuffer, Size, Buffer, (PWSTR*)ShortName);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -1111,11 +1239,10 @@ RtlDosSearchPath_U(IN PCWSTR Path,
                    OUT PWSTR *PartName)
 {
     NTSTATUS Status;
-    WCHAR c;
     ULONG ExtensionLength, Length, FileNameLength, PathLength;
     UNICODE_STRING TempString;
     PWCHAR NewBuffer, BufferStart;
-    PCWSTR TempPtr;
+    PCWSTR p;
 
     /* Check if this is an absolute path */
     if (RtlDetermineDosPathNameType_U(FileName) != RtlPathTypeRelative)
@@ -1132,20 +1259,19 @@ RtlDosSearchPath_U(IN PCWSTR Path,
     }
 
     /* Scan the filename */
-    TempPtr = FileName;
-    c = *TempPtr;
-    while (c)
+    p = FileName;
+    while (*p)
     {
         /* Looking for an extension */
-        if (c == '.')
+        if (*p == '.')
         {
             /* No extension string needed -- it's part of the filename */
             Extension = NULL;
             break;
         }
-
+        
         /* Next character */
-        c = *++TempPtr;
+        p++;
     }
 
     /* Do we have an extension? */
@@ -1191,21 +1317,19 @@ RtlDosSearchPath_U(IN PCWSTR Path,
     while (TRUE)
     {
         /* Check if we have a valid character */
-        c = *Path;
         BufferStart = NewBuffer;
-        if (c)
+        if (*Path)
         {
             /* Loop as long as there's no semicolon */
-            while (c != ';')
+            while (*Path != ';')
             {
                 /* Copy the next character */
-                *BufferStart++ = c;
-                c = *++Path;
-                if (!c) break;
+                *BufferStart++ = *Path++;
+                if (!*Path) break;
             }
 
             /* We found a semi-colon, to stop path processing on this loop */
-            if (c == ';') ++Path;
+            if (*Path == ';') ++Path;
         }
 
         /* Add a terminating slash if needed */
@@ -1215,7 +1339,7 @@ RtlDosSearchPath_U(IN PCWSTR Path,
         }
 
         /* Bail out if we reached the end */
-        if (!c) Path = NULL;
+        if (!*Path) Path = NULL;
 
         /* Copy the file name and check if an extension is needed */
         RtlCopyMemory(BufferStart, FileName, FileNameLength);
