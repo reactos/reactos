@@ -1612,19 +1612,6 @@ IntTrackMouseEvent(
    if (!(pWnd = UserGetWindowObject(lpEventTrack->hwndTrack)))
       return FALSE;
 
-   if ( pDesk->spwndTrack != pWnd ||
-       (pDesk->htEx != HTCLIENT) ^ !!(lpEventTrack->dwFlags & TME_NONCLIENT) )
-   {
-      if ( lpEventTrack->dwFlags & TME_LEAVE && !(lpEventTrack->dwFlags & TME_CANCEL) )
-      {
-         UserPostMessage( lpEventTrack->hwndTrack,
-                          lpEventTrack->dwFlags & TME_NONCLIENT ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
-                          0, 0);
-      }
-      DPRINT("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack,pWnd);
-      return TRUE;
-   }
-
    /* Tracking spwndTrack same as pWnd */
    if ( lpEventTrack->dwFlags & TME_CANCEL ) // Canceled mode.
    {
@@ -1642,6 +1629,7 @@ IntTrackMouseEvent(
    }
    else // Not Canceled.
    {
+       pDesk->spwndTrack = pWnd;
       if ( lpEventTrack->dwFlags & TME_LEAVE )
          pDesk->dwDTFlags |= DF_TME_LEAVE;
 
@@ -1657,6 +1645,7 @@ IntTrackMouseEvent(
          IntSetTimer( pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, pDesk->dwMouseHoverTime, SystemTimerProc, TMRF_SYSTEM);
          // Get windows thread message points.
          point = pWnd->head.pti->ptLast;
+         DPRINT1("point: %d, %d\n", point.x, point.y);
          // Set desktop mouse hover from the system default hover rectangle.
          RECTL_vSetRect(&pDesk->rcMouseHover,
                          point.x - gspv.iMouseHoverWidth  / 2,
