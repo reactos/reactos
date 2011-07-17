@@ -1810,13 +1810,13 @@ WSPGetSockName(IN SOCKET Handle,
 
     if (NT_SUCCESS(Status))
     {
-        if (*NameLength >= SocketAddress->Address[0].AddressLength)
+        if (*NameLength >= Socket->SharedData.SizeOfLocalAddress)
         {
             Name->sa_family = SocketAddress->Address[0].AddressType;
             RtlCopyMemory (Name->sa_data,
                            SocketAddress->Address[0].Address, 
                            SocketAddress->Address[0].AddressLength);
-            *NameLength = 2 + SocketAddress->Address[0].AddressLength;
+            *NameLength = Socket->SharedData.SizeOfLocalAddress;
             AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port));
@@ -1882,7 +1882,7 @@ WSPGetPeerName(IN SOCKET s,
     }
 
     /* Allocate a buffer for the address */
-    TdiAddressSize = sizeof(TRANSPORT_ADDRESS) + *NameLength;
+    TdiAddressSize = sizeof(TRANSPORT_ADDRESS) + Socket->SharedData.SizeOfRemoteAddress;
     SocketAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
 
     if ( SocketAddress == NULL )
@@ -1915,13 +1915,13 @@ WSPGetPeerName(IN SOCKET s,
 
     if (NT_SUCCESS(Status))
     {
-        if (*NameLength >= SocketAddress->Address[0].AddressLength)
+        if (*NameLength >= Socket->SharedData.SizeOfRemoteAddress)
         {
             Name->sa_family = SocketAddress->Address[0].AddressType;
             RtlCopyMemory (Name->sa_data,
                            SocketAddress->Address[0].Address, 
                            SocketAddress->Address[0].AddressLength);
-            *NameLength = 2 + SocketAddress->Address[0].AddressLength;
+            *NameLength = Socket->SharedData.SizeOfRemoteAddress;
             AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %s Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port));
