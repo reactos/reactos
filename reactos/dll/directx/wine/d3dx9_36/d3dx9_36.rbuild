@@ -12,7 +12,6 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>msvcrt</library>
-	<library>wined3d</library>
 
 	<file>core.c</file>
 	<file>d3dx9_36_main.c</file>
