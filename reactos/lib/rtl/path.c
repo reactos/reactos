@@ -1115,6 +1115,7 @@ RtlDosSearchPath_U(IN PCWSTR Path,
     ULONG ExtensionLength, Length, FileNameLength, PathLength;
     UNICODE_STRING TempString;
     PWCHAR NewBuffer, BufferStart;
+    PCWSTR TempPtr;
 
     /* Check if this is an absolute path */
     if (RtlDetermineDosPathNameType_U(FileName) != RtlPathTypeRelative)
@@ -1131,7 +1132,8 @@ RtlDosSearchPath_U(IN PCWSTR Path,
     }
 
     /* Scan the filename */
-    c = *FileName;
+    TempPtr = FileName;
+    c = *TempPtr;
     while (c)
     {
         /* Looking for an extension */
@@ -1143,7 +1145,7 @@ RtlDosSearchPath_U(IN PCWSTR Path,
         }
 
         /* Next character */
-        c = *++FileName;
+        c = *++TempPtr;
     }
 
     /* Do we have an extension? */
