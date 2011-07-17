@@ -1,3 +1,4 @@
+#include <osenv.h>
 #include <oskittcp.h>
 #include <sys/callout.h>
 #include <oskitfreebsd.h>

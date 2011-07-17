@@ -56,8 +56,8 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
         if (ClientInfo.Unlocked)
             LockObjectAtDpcLevel(Connection);
 
-        TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
-                               Connection, Connection->SocketContext));
+        TI_DbgPrint(MID_TRACE,("Handling signalled state on %x\n",
+                               Connection));
 
         /* Things that can happen when we try the initial connection */
         if( Connection->SignalState & (SEL_CONNECT | SEL_FIN | SEL_ERROR) ) {
@@ -68,7 +68,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                if (Connection->SignalState & SEL_ERROR)
                {
-                   Bucket->Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+                   Bucket->Status = TCPTranslateError(OskitTCPGetSocketError(Connection));
                }
                else if (Connection->SignalState & SEL_FIN)
                {
@@ -107,7 +107,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                if (Connection->SignalState & SEL_ERROR)
                {
-                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection));
                }
                else if (Connection->SignalState & SEL_FIN)
                {
@@ -161,15 +161,11 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                            ("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
 
                TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
-               TI_DbgPrint
-                   (DEBUG_TCP,
-                    ("Connection->SocketContext: %x\n",
-                     Connection->SocketContext));
                TI_DbgPrint(DEBUG_TCP, ("RecvBuffer: %x\n", RecvBuffer));
 
                if (Connection->SignalState & SEL_ERROR)
                {
-                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection));
                }
                else if (Connection->SignalState & SEL_FIN)
                {
@@ -178,7 +174,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                }
                else
                {
-                   Status = TCPTranslateError(OskitTCPRecv(Connection->SocketContext,
+                   Status = TCPTranslateError(OskitTCPRecv(Connection,
                                                            RecvBuffer,
                                                            RecvLen,
                                                            &Received,
@@ -227,14 +223,10 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                            ("Writing %d bytes to %x\n", SendLen, SendBuffer));
 
                TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
-               TI_DbgPrint
-                (DEBUG_TCP,
-                 ("Connection->SocketContext: %x\n",
-                  Connection->SocketContext));
 
                if (Connection->SignalState & SEL_ERROR)
                {
-                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection));
                }
                else if (Connection->SignalState & SEL_FIN)
                {
@@ -243,7 +235,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                }
                else
                {
-                   Status = TCPTranslateError(OskitTCPSend(Connection->SocketContext,
+                   Status = TCPTranslateError(OskitTCPSend(Connection,
                                                            SendBuffer,
                                                            SendLen,
                                                            &Sent,
@@ -275,7 +267,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
             if (Connection->SignalState & SEL_ERROR)
             {
-                Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+                Status = TCPTranslateError(OskitTCPGetSocketError(Connection));
             }
             else if (Connection->SignalState & SEL_FIN)
             {
@@ -288,7 +280,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                 if (IsListEmpty(&Connection->SendRequest))
                 {
                     /* Send queue is empty so we're good to go */
-                    Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE));
+                    Status = TCPTranslateError(OskitTCPShutdown(Connection, FWRITE));
                 }
                 else
                 {
@@ -341,7 +333,7 @@ DisconnectTimeoutDpc(PKDPC Dpc,
     LockObjectAtDpcLevel(Connection);
     
     /* We timed out waiting for pending sends so force it to shutdown */
-    OskitTCPShutdown(Connection->SocketContext, FWRITE);
+    OskitTCPShutdown(Connection, FWRITE);
     
     while (!IsListEmpty(&Connection->SendRequest))
     {
@@ -438,9 +430,6 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
                                                 Proto ) );
 
     ASSERT_KM_POINTER(Connection->SocketContext);
-
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-                           Connection->SocketContext));
 
     UnlockObject(Connection, OldIrql);
 
@@ -781,7 +770,7 @@ NTSTATUS TCPConnect
         AddressToBind.sin_port = Connection->AddressFile->Port;
         
         /* Perform an explicit bind */
-        Status = TCPTranslateError(OskitTCPBind(Connection->SocketContext,
+        Status = TCPTranslateError(OskitTCPBind(Connection,
                                                 &AddressToBind,
                                                 sizeof(AddressToBind)));
     }
@@ -800,7 +789,7 @@ NTSTATUS TCPConnect
             AddressToConnect.sin_port = RemotePort;
             
             Status = TCPTranslateError
-            ( OskitTCPConnect( Connection->SocketContext,
+            ( OskitTCPConnect( Connection,
                               &AddressToConnect,
                               sizeof(AddressToConnect) ) );
 
@@ -874,7 +863,7 @@ NTSTATUS TCPDisconnect
         if (IsListEmpty(&Connection->SendRequest))
         {
             /* Send queue is empty so we're good to go */
-            Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE));
+            Status = TCPTranslateError(OskitTCPShutdown(Connection, FWRITE));
             
             UnlockObject(Connection, OldIrql);
             
@@ -884,7 +873,7 @@ NTSTATUS TCPDisconnect
         /* Check if the timeout was 0 */
         if (Timeout && Timeout->QuadPart == 0)
         {
-            OskitTCPShutdown(Connection->SocketContext, FWRITE);
+            OskitTCPShutdown(Connection, FWRITE);
             
             while (!IsListEmpty(&Connection->SendRequest))
             {
@@ -947,7 +936,7 @@ NTSTATUS TCPDisconnect
         }
         
         /* An abort never pends; we just drop everything and complete */
-        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
+        Status = TCPTranslateError(OskitTCPShutdown(Connection, FWRITE | FREAD));
             
         UnlockObject(Connection, OldIrql);
             
@@ -991,41 +980,21 @@ NTSTATUS TCPClose
 ( PCONNECTION_ENDPOINT Connection )
 {
     KIRQL OldIrql;
-    NTSTATUS Status;
-    PVOID Socket;
 
     LockObject(Connection, &OldIrql);
-    Socket = Connection->SocketContext;
-    Connection->SocketContext = NULL;
 
     /* We should not be associated to an address file at this point */
     ASSERT(!Connection->AddressFile);
 
-    /* Don't try to close again if the other side closed us already */
-    if (Socket)
-    {
-       /* We need to close here otherwise oskit will never indicate
-        * SEL_FIN and we will never fully close the connection */
-       Status = TCPTranslateError( OskitTCPClose( Socket ) );
+    OskitTCPClose(Connection);
 
-       if (!NT_SUCCESS(Status))
-       {
-           Connection->SocketContext = Socket;
-           UnlockObject(Connection, OldIrql);
-           return Status;
-       }
-    }
-    else
-    {
-       /* We are already closed by the other end so return success */
-       Status = STATUS_SUCCESS;
-    }
+    Connection->SocketContext = NULL;
 
     UnlockObject(Connection, OldIrql);
 
     DereferenceObject(Connection);
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS TCPReceiveData
@@ -1042,9 +1011,6 @@ NTSTATUS TCPReceiveData
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
 
-    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
-                           ReceiveLength, Connection->SocketContext));
-
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
     TI_DbgPrint(DEBUG_TCP,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
@@ -1053,7 +1019,7 @@ NTSTATUS TCPReceiveData
 
     Status = TCPTranslateError
         ( OskitTCPRecv
-          ( Connection->SocketContext,
+          ( Connection,
             DataBuffer,
             DataLen,
             &Received,
@@ -1104,15 +1070,10 @@ NTSTATUS TCPSendData
 
     LockObject(Connection, &OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
-                           SendLength, Connection->SocketContext));
-
     TI_DbgPrint(DEBUG_TCP,("Connection = %x\n", Connection));
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
-                           Connection->SocketContext));
 
     Status = TCPTranslateError
-        ( OskitTCPSend( Connection->SocketContext,
+        ( OskitTCPSend( Connection,
                         (OSK_PCHAR)BufferData, SendLength,
                         &Sent, 0 ) );
 
@@ -1173,7 +1134,7 @@ NTSTATUS TCPGetSockAddress
 
     LockObject(Connection, &OldIrql);
 
-    Status = TCPTranslateError(OskitTCPGetAddress(Connection->SocketContext,
+    Status = TCPTranslateError(OskitTCPGetAddress(Connection,
                                                   &LocalAddress, &LocalPort,
                                                   &RemoteAddress, &RemotePort));
 

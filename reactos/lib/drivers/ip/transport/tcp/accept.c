@@ -28,7 +28,7 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     Request->ReturnConnectionInformation;
 
     Status = TCPTranslateError
-    ( OskitTCPAccept( Listener->SocketContext,
+    ( OskitTCPAccept( Listener,
               &Connection->SocketContext,
               Connection,
               &OutAddr,
@@ -75,9 +75,6 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-    Connection->SocketContext));
-
     if (Connection->AddressFile->Port)
     {
         AddressToBind.sin_family = AF_INET;
@@ -88,7 +85,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
         TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
         /* Perform an explicit bind */
-        Status = TCPTranslateError(OskitTCPBind(Connection->SocketContext,
+        Status = TCPTranslateError(OskitTCPBind(Connection,
                                                 &AddressToBind,
                                                 sizeof(AddressToBind)));
     }
@@ -99,7 +96,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     }
 
     if (NT_SUCCESS(Status))
-        Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
+        Status = TCPTranslateError( OskitTCPListen( Connection, Backlog ) );
     
     if (NT_SUCCESS(Status))
     {

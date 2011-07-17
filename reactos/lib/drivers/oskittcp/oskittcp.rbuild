@@ -10,6 +10,7 @@
 	<include base="oskittcp">include/freebsd/dev/include</include>
 	<include base="oskittcp">include/freebsd/net/include</include>
 	<include base="oskittcp">include</include>
+	<include base="tcpip">include</include>
 	<directory name="oskittcp">
 		<file>defaults.c</file>
 		<file>in.c</file>
