@@ -723,15 +723,6 @@ DWORD RControlService(
     if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
         dwError = ERROR_DEPENDENT_SERVICES_RUNNING;
 
-    if (dwError == ERROR_SUCCESS &&
-        dwControl == SERVICE_CONTROL_STOP && 
-        lpServiceStatus->dwCurrentState == SERVICE_STOPPED)
-    {
-        lpService->ProcessId = 0; /* FIXME */
-        lpService->ThreadId = 0;
-    }
-
-
     return dwError;
 }
 
@@ -4897,7 +4888,7 @@ DWORD RQueryServiceStatusEx(
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
 
-    lpStatus->dwProcessId = lpService->ProcessId;	/* FIXME */
+    lpStatus->dwProcessId = (lpService->lpImage != NULL) ? lpService->lpImage->dwProcessId : 0; /* FIXME */
     lpStatus->dwServiceFlags = 0;			/* FIXME */
 
     /* Unlock the service database */
@@ -5282,7 +5273,8 @@ DWORD REnumServicesStatusExW(
             memcpy(&lpStatusPtr->ServiceStatusProcess,
                    &CurrentService->Status,
                    sizeof(SERVICE_STATUS));
-            lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->ProcessId; /* FIXME */
+            lpStatusPtr->ServiceStatusProcess.dwProcessId =
+                (CurrentService->lpImage != NULL) ? CurrentService->lpImage->dwProcessId : 0; /* FIXME */
             lpStatusPtr->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
 
             lpStatusPtr++;
