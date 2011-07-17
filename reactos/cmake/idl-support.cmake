@@ -103,10 +103,10 @@ macro(add_rpcproxy_files)
 
     # Extra pass to generate dlldata
     if(MSVC)
-        #nobody told how to generate it, so mark it as generated
+        #touch it, so we're sure it's older than its dependencies
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-            COMMAND echo test
+            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
             DEPENDS ${DLLDATA_DEPENDENCIES})
         set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES GENERATED TRUE)
     else()
