@@ -43,8 +43,6 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
         return EINVAL;
     }
 
-    DbgPrint("[IP, TCPSendDataCallback] Set packet local and remore adresses\n");
-
     if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
     {
         DbgPrint("[IP, TCPSendDataCallback] FAIL EINVAL 2\n");
@@ -65,8 +63,6 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
         ASSERT(p1);
         RtlCopyMemory(((PUCHAR)Packet.Header) + i, p1->payload, p1->len);
     }
-
-    DbgPrint("[IP, TCPSendDataCallback] Allocated NDIS packet and set data\n");
     
     Packet.HeaderSize = sizeof(IPv4_HEADER);
     Packet.TotalSize = p->tot_len;
@@ -79,8 +75,6 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
         FreeNdisPacket(Packet.NdisPacket);
         return EINVAL;
     }
-
-    DbgPrint("[IP, TCPSendDataCallback] Leaving\n");
     
     return 0;
 }

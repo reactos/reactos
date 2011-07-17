@@ -482,7 +482,7 @@ LibTCPSend(struct tcp_pcb *pcb, void *const dataptr, const u16_t len, const int 
             else
                 ret = ERR_CLSD;
         
-            DbgPrint("LibTCPSend(0x%x)\n", pcb);
+            DbgPrint("[lwIP, LibTCPSend] pcb = 0x%x\n", pcb);
         
             ExFreePool(msg);
         
@@ -599,13 +599,15 @@ LibTCPShutdown(struct tcp_pcb *pcb, const int shut_rx, const int shut_tx)
     struct shutdown_callback_msg *msg;
     err_t ret;
     
-    DbgPrint("[lwIP, LibTCPShutdown] Called\n");
+    DbgPrint("[lwIP, LibTCPShutdown] Called on pcb = 0x%x\n", pcb);
     
     if (!pcb)
     {
         DbgPrint("[lwIP, LibTCPShutdown] Done... NO pcb\n");
         return ERR_CLSD;
     }
+
+    DbgPrint("[lwIP, LibTCPClose] pcb->state = %s\n", tcp_state_str[pcb->state]);
     
     msg = ExAllocatePool(NonPagedPool, sizeof(struct shutdown_callback_msg));
     if (msg)
@@ -624,8 +626,6 @@ LibTCPShutdown(struct tcp_pcb *pcb, const int shut_rx, const int shut_tx)
             ret = ERR_CLSD;
         
         ExFreePool(msg);
-        
-        DbgPrint("[lwIP, LibTCPShutdown] pcb = 0x%x\n", pcb);
         
         DbgPrint("[lwIP, LibTCPShutdown] Done\n");
         
@@ -658,12 +658,14 @@ LibTCPCloseCallback(void *arg)
         DbgPrint("[lwIP, LibTCPCloseCallback] Closing a listener\n");
         msg->Error = tcp_close(msg->Pcb);
     }
-    else
+    else if (msg->Pcb->state != LAST_ACK && msg->Pcb->state != CLOSED)
     {
         DbgPrint("[lwIP, LibTCPCloseCallback] Aborting a connection\n");
         tcp_abort(msg->Pcb);
         msg->Error = ERR_OK;
     }
+    else
+        msg->Error = ERR_OK;
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -681,8 +683,6 @@ LibTCPClose(struct tcp_pcb *pcb, const int safe)
         return ERR_CLSD;
     }
 
-    DbgPrint("[lwIP, LibTCPClose] Removing pcb callbacks\n");
-
     DbgPrint("[lwIP, LibTCPClose] pcb->state = %s\n", tcp_state_str[pcb->state]);
 
     tcp_arg(pcb, NULL);
@@ -694,13 +694,11 @@ LibTCPClose(struct tcp_pcb *pcb, const int safe)
     if (pcb->state != LISTEN)
     {
         tcp_recv(pcb, NULL);
-        tcp_sent(pcb, NULL);
-        tcp_err(pcb, NULL);
+        //tcp_sent(pcb, NULL);
+        //tcp_err(pcb, NULL);
     }
 
     tcp_accept(pcb, NULL);
-
-    DbgPrint("[lwIP, LibTCPClose] Attempting to allocate memory for msg\n");
 
     /*  
         If  we're being called from a handler it means we're in the conetxt of teh tcpip
@@ -714,12 +712,14 @@ LibTCPClose(struct tcp_pcb *pcb, const int safe)
             DbgPrint("[lwIP, LibTCPClose] Closing a listener\n");
             ret = tcp_close(pcb);
         }
-        else
+        else if (pcb->state != LAST_ACK && pcb->state != CLOSED)
         {
             DbgPrint("[lwIP, LibTCPClose] Aborting a connection\n");
             tcp_abort(pcb);
             ret = ERR_OK;
         }
+        else
+            ret = ERR_OK;
 
         return ret;
     }
@@ -730,13 +730,9 @@ LibTCPClose(struct tcp_pcb *pcb, const int safe)
         msg = ExAllocatePool(NonPagedPool, sizeof(struct close_callback_msg));
         if (msg)
         {
-            DbgPrint("[lwIP, LibTCPClose] Initializing msg->Event\n");
             KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
 
-            DbgPrint("[lwIP, LibTCPClose] Initializing msg->pcb = 0x%x\n", pcb);
             msg->Pcb = pcb;
-
-            DbgPrint("[lwIP, LibTCPClose] Attempting to call LibTCPCloseCallback\n");
         
             tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
         
@@ -746,8 +742,6 @@ LibTCPClose(struct tcp_pcb *pcb, const int safe)
                 ret = ERR_CLSD;
         
             ExFreePool(msg);
-        
-            DbgPrint("[lwIP, LibTCPClose] pcb = 0x%x\n", pcb);
 
             DbgPrint("[lwIP, LibTCPClose] Done\n");
         

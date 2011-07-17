@@ -97,7 +97,7 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
 
     // FIXME:   This is a hack to increase the throughput. Once this is done
     //          the right way it should definately be removed.
-    timeout = 5;
+    //timeout = 5;
 
     Status = KeWaitForMultipleObjects(2,
                                       WaitObjects,

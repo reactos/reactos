@@ -70,7 +70,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
     
     ReferenceObject(Connection);
     
-    DbgPrint("[IP, FlushAllQueues] Flushing recv/all with status: 0x%x fox Connection = 0x%x\n", Status, Connection);
+    DbgPrint("[IP, FlushAllQueues] Flushing recv/all with status: 0x%x for Connection = 0x%x\n", Status, Connection);
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
@@ -86,9 +86,9 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         CompleteBucket(Connection, Bucket, FALSE);
     }
 
-    /* Calling with Status == STATUS_SUCCESS means that we got a graceful closure
-     * so we don't want to kill everything else since send is still valid in this state
-     */
+    // Calling with Status == STATUS_SUCCESS means that we got a graceful closure
+    // so we don't want to kill everything else since send is still valid in this state
+    //
     if (Status == STATUS_SUCCESS)
     {
         DbgPrint("[IP, FlushAllQueues] Flushed recv only after graceful closure\n");

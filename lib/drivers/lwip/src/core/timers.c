@@ -427,7 +427,7 @@ sys_timeouts_mbox_fetch(sys_mbox_t *mbox, void **msg)
     time_needed = sys_arch_mbox_fetch(mbox, msg, 0);
   } else {
     if (next_timeout->time > 0) {
-      time_needed = sys_arch_mbox_fetch(mbox, msg, next_timeout->time);
+      time_needed = sys_arch_mbox_fetch(mbox, msg, 5);//next_timeout->time);
     } else {
       time_needed = SYS_ARCH_TIMEOUT;
     }

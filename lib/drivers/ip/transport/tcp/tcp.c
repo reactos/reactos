@@ -127,14 +127,14 @@ NTSTATUS TCPClose
 
         DbgPrint("[IP, TCPClose] Socket (pcb) = 0x%x\n", Socket);
 
-        LibTCPClose(Socket);
+        LibTCPClose(Socket, FALSE);
     }
+
+    DbgPrint("[IP, TCPClose] Leaving. Connection->RefCount = %d\n", Connection->RefCount);
 
     UnlockObject(Connection, OldIrql);
 
     DereferenceObject(Connection);
-
-    DbgPrint("[IP, TCPClose] Leaving. Connection->RefCount = %d\n", Connection->RefCount);
 
     return STATUS_SUCCESS;
 }
@@ -466,7 +466,8 @@ NTSTATUS TCPSendData
 
     Status = TCPTranslateError(LibTCPSend(Connection->SocketContext,
                                           BufferData,
-                                          SendLength));
+                                          SendLength,
+                                          FALSE));
     
     DbgPrint("[IP, TCPSendData] LibTCPSend: 0x%x\n", Status);
 
