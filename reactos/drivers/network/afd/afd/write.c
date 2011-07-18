@@ -561,7 +561,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check the size of the Address given ... */
 
     if( NT_SUCCESS(Status) ) {
-        FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
+        FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
 		FCB->PollState &= ~AFD_EVENT_SEND;
 
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
