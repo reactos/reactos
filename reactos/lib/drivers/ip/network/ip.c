@@ -265,6 +265,11 @@ BOOLEAN IPRegisterInterface(
 
     IF->Index = ChosenIndex;
 
+    if (!AddrIsUnspecified(&IF->Unicast))
+    {
+        IPAddInterfaceRoute(IF);
+    }
+
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,
 				   &IF->ListEntry,
