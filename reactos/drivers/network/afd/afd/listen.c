@@ -367,13 +367,16 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
 	    ExFreePool( PendingConnObj );
+        
+        FCB->EventSelectDisabled &= ~AFD_EVENT_ACCEPT;
 
-	    if( !IsListEmpty( &FCB->PendingConnections ) ) {
-		FCB->PollState |= AFD_EVENT_ACCEPT;
-                FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
+	    if( !IsListEmpty( &FCB->PendingConnections ) )
+        {
+            FCB->PollState |= AFD_EVENT_ACCEPT;
+            FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
 	        PollReeval( FCB->DeviceExt, FCB->FileObject );
-            } else
-                FCB->PollState &= ~AFD_EVENT_ACCEPT;
+        } else
+            FCB->PollState &= ~AFD_EVENT_ACCEPT;
 
 	    SocketStateUnlock( FCB );
 	    return Status;

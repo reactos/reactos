@@ -193,6 +193,7 @@ typedef struct _AFD_FCB {
     KMUTEX Mutex;
     PKEVENT EventSelect;
     DWORD EventSelectTriggers;
+    DWORD EventSelectDisabled;
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;

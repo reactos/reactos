@@ -305,8 +305,15 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = STATUS_SUCCESS;
     }
 
-    if( FCB->EventSelect && (FCB->PollState & FCB->EventSelectTriggers) ) {
+    if((FCB->EventSelect) &&
+       (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled)))
+    {
         AFD_DbgPrint(MID_TRACE,("Setting event %x\n", FCB->EventSelect));
+        
+        /* Disable the events that triggered the select until the reenabling function is called */
+        FCB->EventSelectDisabled |= (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled));
+
+        /* Set the application's event */
         KeSetEvent( FCB->EventSelect, IO_NETWORK_INCREMENT, FALSE );
     }
 
@@ -408,8 +415,15 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
 
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
-    if( FCB->EventSelect && (FCB->PollState & FCB->EventSelectTriggers) ) {
+    if((FCB->EventSelect) &&
+       (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled)))
+    {
         AFD_DbgPrint(MID_TRACE,("Setting event %x\n", FCB->EventSelect));
+        
+        /* Disable the events that triggered the select until the reenabling function is called */
+        FCB->EventSelectDisabled |= (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled));
+        
+        /* Set the application's event */
         KeSetEvent( FCB->EventSelect, IO_NETWORK_INCREMENT, FALSE );
     }
 

@@ -322,6 +322,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Status = TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
         if( NT_SUCCESS(Status) ) {
+            FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
             FCB->PollState &= ~AFD_EVENT_SEND;
             
             Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
@@ -437,6 +438,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         TotalBytesCopied += SendReq->BufferArray[i].len;
         SpaceAvail -= SendReq->BufferArray[i].len;
     }
+    
+    FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
     
     if( TotalBytesCopied == 0 ) {
         AFD_DbgPrint(MID_TRACE,("Empty send\n"));
@@ -558,6 +561,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check the size of the Address given ... */
 
     if( NT_SUCCESS(Status) ) {
+        FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
 		FCB->PollState &= ~AFD_EVENT_SEND;
 
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
