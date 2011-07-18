@@ -593,14 +593,17 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
             PCURDIR cd;
             UNICODE_STRING us;
             cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
-            RtlInitUnicodeString(&us, Buffer);
-            if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
+            if (cd->Handle)
             {
-                Length = ((cd->DosPath.Length / sizeof(WCHAR)) - PrefixCut) + ((InputPathType == 1) ? 8 : 4);
-                RelativeName->RelativeName.Buffer = NewBuffer + Length;
-                RelativeName->RelativeName.Length = NtName->Length - (Length * sizeof(WCHAR));
-                RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
-                RelativeName->ContainingDirectory = cd->Handle;
+                RtlInitUnicodeString(&us, Buffer);
+                if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
+                {
+                    Length = ((cd->DosPath.Length / sizeof(WCHAR)) - PrefixCut) + ((InputPathType == 1) ? 8 : 4);
+                    RelativeName->RelativeName.Buffer = NewBuffer + Length;
+                    RelativeName->RelativeName.Length = NtName->Length - (Length * sizeof(WCHAR));
+                    RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
+                    RelativeName->ContainingDirectory = cd->Handle;
+                }
             }
         }
     }
