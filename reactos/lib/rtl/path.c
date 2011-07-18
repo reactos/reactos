@@ -449,7 +449,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     CapturedDosName = *DosName;
 
     /* Check for \\?\\ form */
-    if ((CapturedDosName.Length <= RtlpWin32NtRootSlash.Length) |
+    if ((CapturedDosName.Length <= RtlpWin32NtRootSlash.Length) ||
         (CapturedDosName.Buffer[0] != RtlpWin32NtRootSlash.Buffer[0]) ||
         (CapturedDosName.Buffer[1] != RtlpWin32NtRootSlash.Buffer[1]) ||
         (CapturedDosName.Buffer[2] != RtlpWin32NtRootSlash.Buffer[2]) ||
@@ -589,11 +589,19 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
         /* Check if the input path itself was relative */
         if (InputPathType == RtlPathTypeRelative)
         {
-            /* Don't handle this yet */
-            DPRINT1("UNIMPLEMENTED CORNER CASE\n");
-            RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
-            RtlReleasePebLock();
-            return STATUS_NOT_IMPLEMENTED;
+            /* FIXME: HACK: Old code */
+            PCURDIR cd;
+            UNICODE_STRING us;
+            cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
+            RtlInitUnicodeString(&us, Buffer);
+            if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
+            {
+                Length = ((cd->DosPath.Length / sizeof(WCHAR)) - PrefixCut) + ((InputPathType == 1) ? 8 : 4);
+                RelativeName->RelativeName.Buffer = NewBuffer + Length;
+                RelativeName->RelativeName.Length = NtName->Length - (Length * sizeof(WCHAR));
+                RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
+                RelativeName->ContainingDirectory = cd->Handle;
+            }
         }
     }
 
