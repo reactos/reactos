@@ -945,6 +945,54 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (Status);
 }
 
+BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp)
+{
+    if (FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
+    {
+        if (IrpSp->MajorFunction == IRP_MJ_READ || IrpSp->MajorFunction == IRP_MJ_WRITE)
+        {
+            /* read()/write() call - no extra buffers */
+            return FALSE;
+        }
+        else if (IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL)
+        {
+            if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV_DATAGRAM)
+            {
+                /* recvfrom() call - extra buffers */
+                return TRUE;
+            }
+            else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV)
+            {
+                /* recv() call - no extra buffers */
+                return FALSE;
+            }
+            else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND ||
+                     IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND_DATAGRAM)
+            {
+                /* send()/sendto() call - no extra buffers */
+                return FALSE;
+            }
+            else
+            {
+                /* Unknown IOCTL */
+                ASSERT(FALSE);
+                return FALSE;
+            }
+        }
+        else
+        {
+            /* Unknown IRP_MJ code */
+            ASSERT(FALSE);
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Connection-oriented never has extra buffers */
+        return FALSE;
+    }
+}
+
 VOID
 CleanupPendingIrp(PAFD_FCB FCB, PIRP Irp, PIO_STACK_LOCATION IrpSp, PAFD_ACTIVE_POLL Poll)
 {
@@ -956,14 +1004,13 @@ CleanupPendingIrp(PAFD_FCB FCB, PIRP Irp, PIO_STACK_LOCATION IrpSp, PAFD_ACTIVE_
         IrpSp->MajorFunction == IRP_MJ_READ)
     {
         RecvReq = GetLockedData(Irp, IrpSp);
-        UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
+        UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
     }
     else if ((IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND ||
-              IrpSp->MajorFunction == IRP_MJ_WRITE) &&
-             !(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
+              IrpSp->MajorFunction == IRP_MJ_WRITE))
     {
         SendReq = GetLockedData(Irp, IrpSp);
-        UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+        UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
     }
     else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SELECT)
     {

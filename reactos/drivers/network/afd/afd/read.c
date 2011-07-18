@@ -46,48 +46,6 @@ static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
 	(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT));
 }
 
-static BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp)
-{
-    if (FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
-    {
-        if (IrpSp->MajorFunction == IRP_MJ_READ)
-        {
-            /* read() call - no extra buffers */
-            return FALSE;
-        }
-        else if (IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL)
-        {
-            if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV_DATAGRAM)
-            {
-                /* recvfrom() call - extra buffers */
-                return TRUE;
-            }
-            else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV)
-            {
-                /* recv() call - no extra buffers */
-                return FALSE;
-            }
-            else
-            {
-                /* Unknown IOCTL */
-                ASSERT(FALSE);
-                return FALSE;
-            }
-        }
-        else
-        {
-            /* Unknown IRP_MJ code */
-            ASSERT(FALSE);
-            return FALSE;
-        }
-    }
-    else
-    {
-        /* Connection-oriented never has extra buffers */
-        return FALSE;
-    }
-}
-
 static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
 	if( !FCB->ReceiveIrp.InFlightRequest &&
         !(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT)) ) {
@@ -343,10 +301,11 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     GetLockedData(Irp, IrpSp);
     UINT BytesToCopy = 0, BytesAvailable = DatagramRecv->Len, AddrLen = 0;
     PAFD_MAPBUF Map;
+    BOOLEAN ExtraBuffers = CheckUnlockExtraBuffers(FCB, IrpSp);
     
     Map = (PAFD_MAPBUF)(RecvReq->BufferArray +
 						RecvReq->BufferCount +
-						EXTRA_LOCK_BUFFERS);
+						(ExtraBuffers ? EXTRA_LOCK_BUFFERS : 0));
     
     BytesToCopy =
     MIN( RecvReq->BufferArray[0].len, BytesAvailable );
@@ -356,7 +315,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     
     if( Map[0].Mdl ) {
 		/* Copy the address */
-		if( Map[1].Mdl && Map[2].Mdl ) {
+		if( ExtraBuffers && Map[1].Mdl && Map[2].Mdl ) {
 			AFD_DbgPrint(MID_TRACE,("Checking TAAddressCount\n"));
             
 			if( DatagramRecv->Address->TAAddressCount != 1 ) {
@@ -491,7 +450,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                &DatagramRecv->ListEntry);
             }
 
-            if (IsListEmpty(&FCB->DatagramList))
+            if (!IsListEmpty(&FCB->DatagramList))
             {
                 FCB->PollState |= AFD_EVENT_RECEIVE;
                 FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
@@ -748,7 +707,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                            &DatagramRecv->ListEntry);
         }
         
-        if (IsListEmpty(&FCB->DatagramList))
+        if (!IsListEmpty(&FCB->DatagramList))
         {
             FCB->PollState |= AFD_EVENT_RECEIVE;
             FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
@@ -757,7 +716,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         else
             FCB->PollState &= ~AFD_EVENT_RECEIVE;
         
-        UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
+        UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, TRUE);
         
         return UnlockAndMaybeComplete(FCB, Status, Irp, Irp->IoStatus.Information);
     }
@@ -766,7 +725,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
-        UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, FALSE );
+        UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     }
     else
