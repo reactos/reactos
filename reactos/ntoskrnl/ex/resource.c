@@ -1159,7 +1159,7 @@ TryAcquire:
     {
         /* Release the lock and return */
         ExReleaseResourceLock(Resource, &LockHandle);
-        return TRUE;
+        return FALSE;
     }
 
     /* Check if we have a shared waiters semaphore */
@@ -1276,7 +1276,7 @@ TryAcquire:
             {
                 /* So bail out if we're not allowed */
                 ExReleaseResourceLock(Resource, &LockHandle);
-                return TRUE;
+                return FALSE;
             }
 
             /* Check if we have a shared waiters semaphore */
@@ -1359,7 +1359,7 @@ TryAcquire:
     {
         /* So bail out if we're not allowed */
         ExReleaseResourceLock(Resource, &LockHandle);
-        return TRUE;
+        return FALSE;
     }
 
     /* Check if we have a shared waiters semaphore */
