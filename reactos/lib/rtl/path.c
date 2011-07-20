@@ -596,6 +596,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
             if (cd->Handle)
             {
                 RtlInitUnicodeString(&us, Buffer);
+                us.Length = (cd->DosPath.Length < us.Length) ? cd->DosPath.Length : us.Length;
                 if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
                 {
                     Length = ((cd->DosPath.Length / sizeof(WCHAR)) - PrefixCut) + ((InputPathType == 1) ? 8 : 4);
