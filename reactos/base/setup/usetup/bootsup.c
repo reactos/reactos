@@ -850,8 +850,8 @@ InstallFat16BootCodeToFile(
     /* Adjust bootsector (copy a part of the FAT BPB) */
     memcpy(&NewBootSector->OemName,
            &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
+           FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
+           FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1369,8 +1369,8 @@ InstallFat16BootCodeToDisk(
     /* Adjust bootsector (copy a part of the FAT16 BPB) */
     memcpy(&NewBootSector->OemName,
            &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
+           FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
+           FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
 
     PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
     NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
