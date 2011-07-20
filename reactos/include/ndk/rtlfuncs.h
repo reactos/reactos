@@ -171,6 +171,17 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->MaximumLength = BufferSize;
     UnicodeString->Buffer = Buffer;
 }
+    
+FORCEINLINE
+VOID
+RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
+                       IN PSTR Buffer,
+                       IN USHORT BufferSize)
+{
+    AnsiString->Length = 0;
+    AnsiString->MaximumLength = BufferSize;
+    AnsiString->Buffer = Buffer;
+}
 
 //
 // LUID Macros
@@ -3046,12 +3057,21 @@ LdrRelocateImageWithBias(
 // Activation Context Functions
 //
 #ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlActivateActivationContextEx(
+    IN ULONG Flags,
+    IN PTEB Teb,
+    IN PVOID Context,
+    IN PULONG_PTR Cookie
+);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlActivateActivationContext(
-    IN ULONG Unknown,
+    IN ULONG Flags,
     IN HANDLE Handle,
     OUT PULONG_PTR Cookie
 );
@@ -3062,7 +3082,6 @@ NTAPI
 RtlAddRefActivationContext(
     PVOID Context
 );
-
 
 NTSYSAPI
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME

@@ -117,7 +117,6 @@ Author:
 #define PSP_LONG_QUANTUMS                       16
 
 #ifndef NTOS_MODE_USER
-
 //
 // Thread Access Types
 //
@@ -149,6 +148,7 @@ Author:
 #define PROCESS_ALL_ACCESS                      (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  0xFFF)
+#endif
 
 //
 // Thread Base Priorities
@@ -162,7 +162,6 @@ Author:
 // TLS Slots
 //
 #define TLS_MINIMUM_AVAILABLE                   64
-#endif
 
 //
 // Job Access Types
@@ -194,7 +193,6 @@ Author:
 #define JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK    0x1000
 #define JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE      0x2000
 
-
 //
 // Cross Thread Flags
 //
@@ -223,9 +221,7 @@ Author:
 #define STA_LPC_EXIT_THREAD_CALLED_BIT          0x2
 #define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #define STA_OWNS_WORKING_SET_BITS               0x1F8
-#endif
 
-#define TLS_EXPANSION_SLOTS                     1024
 //
 // Process Flags
 //
@@ -261,8 +257,22 @@ Author:
 // Vista Process Flags
 //
 #define PSF2_PROTECTED_BIT                      0x800
+#endif
+
+//
+// TLS/FLS Defines
+//
+#define TLS_EXPANSION_SLOTS                     1024
 
 #ifdef NTOS_MODE_USER
+//
+// Thread Native Base Priorities
+//
+#define LOW_PRIORITY                            0
+#define LOW_REALTIME_PRIORITY                   16
+#define HIGH_PRIORITY                           31
+#define MAXIMUM_PRIORITY                        32
+
 //
 // Current Process/Thread built-in 'special' handles
 //

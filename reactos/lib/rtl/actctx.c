@@ -2370,25 +2370,31 @@ RtlReleaseActivationContext( HANDLE handle )
 }
 
 NTSTATUS
-NTAPI RtlActivateActivationContext( ULONG unknown, HANDLE handle, PULONG_PTR cookie )
+NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
-
+    
     if (!(frame = RtlAllocateHeap( RtlGetProcessHeap(), 0, sizeof(*frame) )))
         return STATUS_NO_MEMORY;
-
-    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    
+    frame->Previous = tebAddress->ActivationContextStackPointer->ActiveFrame;
     frame->ActivationContext = handle;
     frame->Flags = 0;
-
-    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+    
+    tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
-
+    
     *cookie = (ULONG_PTR)frame;
     DPRINT( "%p cookie=%lx\n", handle, *cookie );
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
+{
+    return RtlActivateActivationContextEx(flags, NtCurrentTeb(), handle, cookie);
+}
 
 NTSTATUS
 NTAPI

@@ -3302,6 +3302,21 @@ typedef struct _QUOTA_LIMITS {
   SIZE_T PagefileLimit;
   LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
+    
+typedef struct _QUOTA_LIMITS_EX {
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
+  SIZE_T Reserved1;
+  SIZE_T Reserved2;
+  SIZE_T Reserved3;
+  SIZE_T Reserved4;
+  ULONG Flags;
+  ULONG Reserved5;
+} QUOTA_LIMITS_EX, *PQUOTA_LIMITS_EX;
 
 typedef struct _IO_COUNTERS {
   ULONGLONG ReadOperationCount;
