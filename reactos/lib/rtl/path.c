@@ -210,6 +210,9 @@ RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
     Path = PathString->Buffer;
     Chars = PathString->Length / sizeof(WCHAR);
 
+    /* Return if there are no characters */
+    if (!Chars) return RtlPathTypeUnknown;
+
     /*
      * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
      * actually check for the path length before touching the characters
@@ -291,7 +294,8 @@ RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
 
     /* Handle initial path type and failure case */
     *PathType = RtlPathTypeUnknown;
-    if (!(Size) || !(Buffer) || !(FileName) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
+    if (!(Size) || !(Buffer) || !(FileName) ||
+        !(FileName->Length) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
 
     /* Break filename into component parts */
     FileNameBuffer = FileName->Buffer;
