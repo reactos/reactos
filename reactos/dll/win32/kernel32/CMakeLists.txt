@@ -13,7 +13,7 @@ spec2def(kernel32.dll kernel32.spec)
 list(APPEND SOURCE
     client/debugger.c
     client/except.c
-    client/file/ackup.c
+    client/file/backup.c
     client/file/bintype.c
     client/file/cnotify.c
     client/file/copy.c
