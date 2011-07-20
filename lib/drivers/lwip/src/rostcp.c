@@ -60,6 +60,8 @@ InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, const u16_t space)
 {
     DbgPrint("[lwIP, InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
         arg, pcb, (unsigned int)space);
+
+    ASSERT(pcb->sent != 0);
     
     /* Make sure the socket didn't get closed */
     if (!arg) return ERR_OK;
@@ -79,6 +81,8 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, const e
 
     DbgPrint("[lwIP, InternalRecvEventHandler] RecvEvent (0x%x, pcb = 0x%x, pbuf = 0x%x, err = %d)\n",
         arg, pcb, p, (unsigned int)err);
+
+    ASSERT(pcb->recv != NULL);
     
     /* Make sure the socket didn't get closed */
     if (!arg)
@@ -588,7 +592,12 @@ LibTCPShutdownCallback(void *arg)
 {
     struct shutdown_callback_msg *msg = arg;
 
-    if (msg->Pcb->state == ESTABLISHED || msg->Pcb->state == SYN_RCVD)
+    /*
+        We check here if the pcb is in state ESTABLISHED or SYN_RECV because otherwise
+        it means lwIP will take care of it anyway and if it does so before us it will
+        cause memory corruption.
+    */
+    if ((msg->Pcb->state == ESTABLISHED) || (msg->Pcb->state == SYN_RCVD))
     {
         msg->Error = tcp_shutdown(msg->Pcb, msg->shut_rx, msg->shut_tx);
     }
@@ -604,7 +613,7 @@ LibTCPShutdown(struct tcp_pcb *pcb, const int shut_rx, const int shut_tx)
     struct shutdown_callback_msg *msg;
     err_t ret;
     
-    DbgPrint("[lwIP, LibTCPShutdown] Called on pcb = 0x%x with rx = %d, tx = %d\n", pcb, shut_rx, shut_tx);
+    DbgPrint("[lwIP, LibTCPShutdown] Called on pcb = 0x%x, rx = %d, tx = %d\n", pcb, shut_rx, shut_tx);
     
     if (!pcb)
     {
@@ -658,6 +667,12 @@ LibTCPCloseCallback(void *arg)
 {
     struct close_callback_msg *msg = arg;
     
+    if (msg->Pcb->state == CLOSED)
+    {
+        DbgPrint("[lwIP, LibTCPCloseCallback] Connection was closed on us\n");
+        msg->Error = ERR_OK;
+    }
+
     if (msg->Pcb->state == LISTEN)
     {
         DbgPrint("[lwIP, LibTCPCloseCallback] Closing a listener\n");
