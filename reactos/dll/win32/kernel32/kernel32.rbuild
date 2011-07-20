@@ -72,6 +72,7 @@
 			<file>actctx.c</file>
 			<file>atom.c</file>
 			<file>comm.c</file>
+			<file>commdcb.c</file>
 			<file>computername.c</file>
 			<file>dllmain.c</file>
 			<file>env.c</file>

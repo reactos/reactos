@@ -50,6 +50,7 @@ list(APPEND SOURCE
     client/misc/actctx.c
     client/misc/atom.c
     client/misc/comm.c
+    client/misc/commdcb.c
     client/misc/computername.c
     client/misc/dllmain.c
     client/misc/env.c
