@@ -5,7 +5,7 @@
  * PURPOSE:         STDCALL Interlocked Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
- 
+
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
@@ -26,8 +26,8 @@
 
 /*PLIST_ENTRY
  *NTAPI
- *ExInterlockedAddLargeInteger(IN PLIST_ENTRY ListHead,
- *                             IN PLIST_ENTRY ListEntry,
+ *ExInterlockedAddLargeInteger(IN PLARGE_INTEGER Addend,
+ *                             IN LARGE_INTEGER Increment,
  *                             IN PKSPIN_LOCK Lock)
  */
 PUBLIC _ExInterlockedAddLargeInteger@16
@@ -92,9 +92,9 @@ _ExInterlockedAddLargeInteger@16:
 
 /*PLIST_ENTRY
  *NTAPI
- *ExInterlockedInsertHeadList(IN PLIST_ENTRY ListHead,
- *                            IN PLIST_ENTRY ListEntry,
- *                            IN PKSPIN_LOCK Lock)
+ *ExInterlockedAddUlong(IN PULONG Addend,
+ *                      IN ULONG Increment,
+ *                      IN PKSPIN_LOCK Lock)
  */
 PUBLIC _ExInterlockedAddUlong@12
 _ExInterlockedAddUlong@12:
@@ -471,14 +471,18 @@ _ExInterlockedDecrementLong@8:
 PUBLIC _ExInterlockedExchangeUlong@12
 _ExInterlockedExchangeUlong@12:
 
+#ifdef CONFIG_SMP
     /* Get pointers */
     mov edx, [esp+4]
     mov eax, [esp+8]
 
-#ifdef CONFIG_SMP
     /* On MP, do the exchange */
     xchg [edx], eax
 #else
+    /* Get pointers */
+    mov edx, [esp+4]
+    mov ecx, [esp+8]
+
     /* On UP, disable interrupts and save flags */
     pushfd
     cli
@@ -494,8 +498,7 @@ _ExInterlockedExchangeUlong@12:
 
 /*INTERLOCKED_RESULT
  *NTAPI
- *Exi386InterlockedIncrementLong(IN PLONG Addend,
- *                               IN PKSPIN_LOCK Lock)
+ *Exi386InterlockedIncrementLong(IN PLONG Addend)
  */
 PUBLIC _Exi386InterlockedIncrementLong@4
 _Exi386InterlockedIncrementLong@4:
@@ -513,8 +516,7 @@ _Exi386InterlockedIncrementLong@4:
 
 /*INTERLOCKED_RESULT
  *NTAPI
- *Exi386InterlockedDecrementLong(IN PLONG Addend,
- *                               IN PKSPIN_LOCK Lock)
+ *Exi386InterlockedDecrementLong(IN PLONG Addend)
  */
 PUBLIC _Exi386InterlockedDecrementLong@4
 _Exi386InterlockedDecrementLong@4:
@@ -528,25 +530,28 @@ _Exi386InterlockedDecrementLong@4:
     /* Return */
     lahf
     and eax, EFLAG_SELECT
-    ret 8
+    ret 4
 
 /*ULONG
  *NTAPI
  *Exi386InterlockedExchangeUlong(IN PULONG Target,
- *                               IN ULONG Value,
- *                               IN PKSPIN_LOCK Lock)
+ *                               IN ULONG Value)
  */
-PUBLIC _Exi386InterlockedExchangeUlong@12
-_Exi386InterlockedExchangeUlong@12:
+PUBLIC _Exi386InterlockedExchangeUlong@8
+_Exi386InterlockedExchangeUlong@8:
 
+#ifdef CONFIG_SMP
     /* Get pointers */
     mov edx, [esp+4]
     mov eax, [esp+8]
 
-#ifdef CONFIG_SMP
     /* On MP, do the exchange */
     xchg [edx], eax
 #else
+    /* Get pointers */
+    mov edx, [esp+4]
+    mov ecx, [esp+8]
+
     /* On UP, disable interrupts and save flags */
     pushfd
     cli

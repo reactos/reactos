@@ -155,8 +155,8 @@ PUBLIC @ExfInterlockedInsertHeadList@12
 /*PLIST_ENTRY
  *FASTCALL
  *ExfInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
- *                            IN PLIST_ENTRY ListEntry,
- *                            IN PKSPIN_LOCK Lock)
+ *                             IN PLIST_ENTRY ListEntry,
+ *                             IN PKSPIN_LOCK Lock)
  */
 PUBLIC @ExfInterlockedInsertTailList@12
 @ExfInterlockedInsertTailList@12:
@@ -537,7 +537,7 @@ PUBLIC @Exfi386InterlockedDecrementLong@4
 
 /*ULONG
  *FASTCALL
- *Exfi386InterlockedExchangeUlong(IN PULONG Taget,
+ *Exfi386InterlockedExchangeUlong(IN PULONG Target,
  *                                IN ULONG Value)
  */
 PUBLIC @Exfi386InterlockedExchangeUlong@8
@@ -591,16 +591,16 @@ PUBLIC @ExfInterlockedCompareExchange64@12
 
 /*PVOID
  *FASTCALL
- *ExfInterlockedCompareExchange64(IN PLONGLONG Destination,
- *                                IN PLONGLONG Exchange,
- *                                IN PLONGLONG Comperand,
- *                                IN PKSPIN_LOCK Lock)
+ *ExInterlockedCompareExchange64(IN PLONGLONG Destination,
+ *                               IN PLONGLONG Exchange,
+ *                               IN PLONGLONG Comperand,
+ *                               IN PKSPIN_LOCK Lock)
  */
 PUBLIC @ExInterlockedCompareExchange64@16
 @ExInterlockedCompareExchange64@16:
 
     /* Save registers */
-    push ebp
+    push ebx
     push ebp
 
     /* Get destination pointer, exchange value and comperand value/address */
