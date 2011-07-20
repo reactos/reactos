@@ -567,7 +567,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
         if (NT_SUCCESS(Status))
         {
             /* Set the partial name */
-            *PartName = &NewBuffer[LengthChars - PartNameString.Length];
+            *PartName = &NewBuffer[LengthChars - (PartNameString.Length / sizeof(WCHAR))];
         }
         else
         {
