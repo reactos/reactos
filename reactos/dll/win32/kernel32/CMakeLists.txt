@@ -13,11 +13,20 @@ spec2def(kernel32.dll kernel32.spec)
 list(APPEND SOURCE
     client/debugger.c
     client/except.c
+    client/fiber.c
+    client/heapmem.c
+    client/job.c
+    client/proc.c
+    client/session.c
+    client/synch.c
+    client/thread.c
+    client/virtmem.c
+    client/vista.c
     client/file/backup.c
     client/file/bintype.c
     client/file/cnotify.c
     client/file/copy.c
-	client/file/console.c
+    client/file/console.c
     client/file/create.c
     client/file/curdir.c
     client/file/delete.c
@@ -25,7 +34,7 @@ list(APPEND SOURCE
     client/file/dir.c
     client/file/dosdev.c
     client/file/file.c
-	client/file/filemap.c
+    client/file/filemap.c
     client/file/find.c
     client/file/hardlink.c
     client/file/iocompl.c
@@ -38,8 +47,6 @@ list(APPEND SOURCE
     client/file/rw.c
     client/file/tape.c
     client/file/volume.c
-    client/heapmem.c
-    client/virtmem.c
     client/misc/actctx.c
     client/misc/atom.c
     client/misc/comm.c
@@ -53,9 +60,8 @@ list(APPEND SOURCE
     client/misc/perfcnt.c
     client/misc/power.c
     client/misc/profile.c
-    client/misc/recovery.c
     client/misc/res.c
-	client/misc/resntfy.c
+    client/misc/resntfy.c
     client/misc/stubs.c
     client/misc/sysinfo.c
     client/misc/time.c
@@ -63,9 +69,6 @@ list(APPEND SOURCE
     client/misc/toolhelp.c
     client/misc/utils.c
     client/misc/version.c
-    client/job.c
-    client/proc.c
-    client/session.c
     winnls/string/casemap.c
     winnls/string/chartype.c
     winnls/string/collation.c
@@ -76,10 +79,6 @@ list(APPEND SOURCE
     winnls/string/lstring.c
     winnls/string/nls.c
     winnls/string/sortkey.c
-    client/synch.c
-    client/vista.c
-    client/fiber.c
-    client/thread.c
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
