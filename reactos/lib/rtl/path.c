@@ -51,6 +51,9 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
     USHORT ReturnOffset = 0, ReturnLength;
     WCHAR c;
 
+    /* Validate the input */
+    if (!PathString) return 0;
+
     /* Check what type of path this is */
     switch (RtlDetermineDosPathNameType_Ustr(PathString))
     {
@@ -198,8 +201,14 @@ RTL_PATH_TYPE
 NTAPI
 RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
 {
-    PWCHAR Path = PathString->Buffer;
-    ULONG Chars = PathString->Length / sizeof(WCHAR);
+    PWCHAR Path;
+    ULONG Chars;
+
+    /* Validate the input */
+    if (!PathString) return RtlPathTypeUnknown;
+
+    Path = PathString->Buffer;
+    Chars = PathString->Length / sizeof(WCHAR);
 
     /*
      * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
@@ -282,7 +291,7 @@ RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
 
     /* Handle initial path type and failure case */
     *PathType = RtlPathTypeUnknown;
-    if (!(Size) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
+    if (!(Size) || !(Buffer) || !(FileName) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
 
     /* Break filename into component parts */
     FileNameBuffer = FileName->Buffer;
@@ -358,12 +367,15 @@ RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
 NTSTATUS
 NTAPI
 RtlpWin32NTNameToNtPathName_U(IN PUNICODE_STRING DosPath,
-                              IN PUNICODE_STRING NtPath,
+                              OUT PUNICODE_STRING NtPath,
                               OUT PCWSTR *PartName,
                               OUT PRTL_RELATIVE_NAME_U RelativeName)
 {
     ULONG DosLength;
     PWSTR NewBuffer, p;
+
+    /* Validate the input */
+    if (!DosPath) return STATUS_OBJECT_NAME_INVALID;
 
     /* Validate the DOS length */
     DosLength = DosPath->Length;
@@ -444,6 +456,9 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     DPRINT("Relative: %lx DosName: %wZ NtName: %wZ, PartName: %p, RelativeName: %p\n",
             HaveRelative, DosName, NtName, PartName, RelativeName);
     MaxLength = sizeof(BigBuffer);
+
+    /* Validate the input */
+    if (!DosName) return STATUS_OBJECT_NAME_INVALID;
 
     /* Capture input string */
     CapturedDosName = *DosName;
@@ -670,6 +685,9 @@ RtlDoesFileExists_UstrEx(IN PCUNICODE_STRING FileName,
     NTSTATUS Status;
     FILE_BASIC_INFORMATION BasicInformation;
 
+    /* Validate the input */
+    if (!FileName) return FALSE;
+
     /* Get the NT Path */
     Result = RtlDosPathNameToRelativeNtPathName_Ustr(FileName,
                                                      &NtPathName,
@@ -798,7 +816,9 @@ NTAPI
 RtlDetermineDosPathNameType_U(IN PCWSTR Path)
 {
     DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
-    ASSERT(Path != NULL);
+
+    /* Validate the input */
+    if (!Path) return RtlPathTypeUnknown;
 
     /* Unlike the newer RtlDetermineDosPathNameType_U we assume 4 characters */
     if (IS_PATH_SEPARATOR(Path[0]))
@@ -1442,6 +1462,9 @@ RtlDosSearchPath_U(IN PCWSTR Path,
     UNICODE_STRING TempString;
     PWCHAR NewBuffer, BufferStart;
     PCWSTR p;
+
+    /* Validate the input */
+    if (!(Path) || !(FileName)) return 0;
 
     /* Check if this is an absolute path */
     if (RtlDetermineDosPathNameType_U(FileName) != RtlPathTypeRelative)
