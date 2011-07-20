@@ -788,13 +788,13 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
   UNICODE_STRING Name;
   HANDLE FileHandle;
   NTSTATUS Status;
-  PUCHAR OrigBootSector;
-  PUCHAR NewBootSector;
+  PFAT_BOOTSECTOR OrigBootSector;
+  PFAT_BOOTSECTOR NewBootSector;
 
   /* Allocate buffer for original bootsector */
-  OrigBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					   0,
-					   SECTORSIZE);
+  OrigBootSector = RtlAllocateHeap(ProcessHeap,
+                                   0,
+                                   SECTORSIZE);
   if (OrigBootSector == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
 
@@ -836,11 +836,10 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
     return(Status);
   }
 
-
   /* Allocate buffer for new bootsector */
-  NewBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					  0,
-					  SECTORSIZE);
+  NewBootSector = RtlAllocateHeap(ProcessHeap,
+                                  0,
+                                  SECTORSIZE);
   if (NewBootSector == NULL)
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -888,7 +887,10 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
   }
 
   /* Adjust bootsector (copy a part of the FAT BPB) */
-  memcpy((NewBootSector + 11), (OrigBootSector + 11), 51 /*fat BPB length*/);
+  memcpy(&NewBootSector->OemName,
+         &OrigBootSector->OemName,
+         FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
+         FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -951,14 +953,14 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
   UNICODE_STRING Name;
   HANDLE FileHandle;
   NTSTATUS Status;
-  PUCHAR OrigBootSector;
-  PUCHAR NewBootSector;
+  PFAT32_BOOTSECTOR OrigBootSector;
+  PFAT32_BOOTSECTOR NewBootSector;
   LARGE_INTEGER FileOffset;
 
   /* Allocate buffer for original bootsector */
-  OrigBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					   0,
-					   SECTORSIZE);
+  OrigBootSector = RtlAllocateHeap(ProcessHeap,
+                                   0,
+                                   SECTORSIZE);
   if (OrigBootSector == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
 
@@ -1001,9 +1003,9 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
   }
 
   /* Allocate buffer for new bootsector (2 sectors) */
-  NewBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					  0,
-					  2 * SECTORSIZE);
+  NewBootSector = RtlAllocateHeap(ProcessHeap,
+                                  0,
+                                  2 * SECTORSIZE);
   if (NewBootSector == NULL)
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1051,13 +1053,13 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
   }
 
   /* Adjust bootsector (copy a part of the FAT32 BPB) */
-  memcpy((NewBootSector + 3),
-	 (OrigBootSector + 3),
-	 87); /* FAT32 BPB length */
+  memcpy(&NewBootSector->OemName,
+         &OrigBootSector->OemName,
+         FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
+         FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
   /* Disable the backup boot sector */
-  NewBootSector[0x32] = 0x00;
-  NewBootSector[0x33] = 0x00;
+  NewBootSector->BackupBootSector = 0;
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1416,9 +1418,10 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
   }
 
   /* Adjust bootsector (copy a part of the FAT16 BPB) */
-  memcpy(&NewBootSector->BytesPerSector,
-         &OrigBootSector->BytesPerSector,
-         51); /* FAT16 BPB length */
+  memcpy(&NewBootSector->OemName,
+         &OrigBootSector->OemName,
+         FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
+         FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
   PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
   NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
@@ -1582,9 +1585,10 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
   }
 
   /* Adjust bootsector (copy a part of the FAT32 BPB) */
-  memcpy(&NewBootSector->BytesPerSector,
-         &OrigBootSector->BytesPerSector,
-         79); /* FAT32 BPB length */
+  memcpy(&NewBootSector->OemName,
+         &OrigBootSector->OemName,
+         FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
+         FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
   PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
   NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
