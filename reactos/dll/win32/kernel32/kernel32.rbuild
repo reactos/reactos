@@ -19,7 +19,6 @@
 	</group>
 	<directory name="debug">
 		<file>debugger.c</file>
-		<file>output.c</file>
 	</directory>
 	<directory name="except">
 		<file>except.c</file>
@@ -29,6 +28,7 @@
 		<file>bintype.c</file>
 		<file>cnotify.c</file>
 		<file>copy.c</file>
+		<file>console.c</file>
 		<file>create.c</file>
 		<file>curdir.c</file>
 		<file>delete.c</file>
@@ -36,6 +36,7 @@
 		<file>dir.c</file>
 		<file>dosdev.c</file>
 		<file>file.c</file>
+		<file>filemap.c</file>
 		<file>find.c</file>
 		<file>hardlink.c</file>
 		<file>iocompl.c</file>
@@ -50,79 +51,59 @@
 		<file>volume.c</file>
 	</directory>
 	<directory name="mem">
-		<file>global.c</file>
 		<file>heap.c</file>
-		<file>isbad.c</file>
-		<file>local.c</file>
-		<file>procmem.c</file>
-		<file>resnotify.c</file>
-		<file>section.c</file>
 		<file>virtual.c</file>
 	</directory>
 	<directory name="misc">
 		<file>actctx.c</file>
 		<file>atom.c</file>
-		<file>chartype.c</file>
-		<file>collation.c</file>
-		<file>casemap.c</file>
 		<file>comm.c</file>
-		<file>commdcb.c</file>
 		<file>computername.c</file>
-		<file>console.c</file>
 		<file>dllmain.c</file>
 		<file>env.c</file>
-		<file>error.c</file>
-		<file>fold.c</file>
-		<file>format_msg.c</file>
 		<file>handle.c</file>
-		<file>lang.c</file>
 		<file>ldr.c</file>
 		<file>lzexpand.c</file>
 		<file>muldiv.c</file>
-		<file>nls.c</file>
 		<file>perfcnt.c</file>
 		<file>power.c</file>
-		<file>recovery.c</file>
+		<file>resntfy.c</file>
 		<file>res.c</file>
-		<file>sortkey.c</file>
 		<file>stubs.c</file>
 		<file>sysinfo.c</file>
 		<file>time.c</file>
 		<file>timerqueue.c</file>
 		<file>toolhelp.c</file>
 		<file>version.c</file>
+		<file>profile.c</file>
+		<file>utils.c</file>
 	</directory>
 	<directory name="process">
-		<file>cmdline.c</file>
-		<file>procsup.c</file>
 		<file>job.c</file>
 		<file>proc.c</file>
 		<file>session.c</file>
 	</directory>
 	<directory name="string">
+		<file>chartype.c</file>
+		<file>collation.c</file>
+		<file>casemap.c</file>
+		<file>fold.c</file>
+		<file>format_msg.c</file>
+		<file>lang.c</file>
 		<file>lstring.c</file>
+		<file>lcformat.c</file>
+		<file>nls.c</file>
+		<file>sortkey.c</file>
+	</directory>
+	<directory name="vista">
+		<file>vista.c</file>
 	</directory>
 	<directory name="synch">
-		<file>condvar.c</file>
-		<file>critical.c</file>
-		<file>event.c</file>
-		<file>mutex.c</file>
-		<file>sem.c</file>
-		<file>timer.c</file>
-		<file>wait.c</file>
+		<file>synch.c</file>
 	</directory>
 	<directory name="thread">
 		<file>fiber.c</file>
-		<file>fls.c</file>
 		<file>thread.c</file>
-		<file>tls.c</file>
-	</directory>
-	<directory name="misc">
-		<file>lcformat.c</file>
-		<file>profile.c</file>
-		<file>utils.c</file>
-	</directory>
-	<directory name="thread">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>fiber.S</file>
@@ -135,9 +116,6 @@
 				<file>thread.S</file>
 			</directory>
 		</if>
-	</directory>
-	<directory name="misc">
-		<file>icustubs.cpp</file>
 	</directory>
 	<file>kernel32.rc</file>
 </module>

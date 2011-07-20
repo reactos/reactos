@@ -53,54 +53,7 @@ DosPathToSessionPathA(DWORD SessionId,
     return 0;
 }
 
-/*
- * @implemented
- */
-BOOL
-WINAPI
-ProcessIdToSessionId(IN DWORD dwProcessId,
-                     OUT DWORD *pSessionId)
-{
-    PROCESS_SESSION_INFORMATION SessionInformation;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    CLIENT_ID ClientId;
-    HANDLE ProcessHandle;
-    NTSTATUS Status;
 
-    if (IsBadWritePtr(pSessionId, sizeof(DWORD)))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    ClientId.UniqueProcess = UlongToHandle(dwProcessId);
-    ClientId.UniqueThread = 0;
-
-    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-
-    Status = NtOpenProcess(&ProcessHandle,
-                           PROCESS_QUERY_INFORMATION,
-                           &ObjectAttributes,
-                           &ClientId);
-    if (NT_SUCCESS(Status))
-    {
-        Status = NtQueryInformationProcess(ProcessHandle,
-                                           ProcessSessionInformation,
-                                           &SessionInformation,
-                                           sizeof(SessionInformation),
-                                           NULL);
-        NtClose(ProcessHandle);
-
-        if (NT_SUCCESS(Status))
-        {
-            *pSessionId = SessionInformation.SessionId;
-            return TRUE;
-        }
-    }
-
-    SetLastErrorByStatus(Status);
-    return FALSE;
-}
 
 /*
  * @implemented

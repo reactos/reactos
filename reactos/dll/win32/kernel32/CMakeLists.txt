@@ -12,12 +12,12 @@ spec2def(kernel32.dll kernel32.spec)
 
 list(APPEND SOURCE
     debug/debugger.c
-    debug/output.c
     except/except.c
     file/backup.c
     file/bintype.c
     file/cnotify.c
     file/copy.c
+	file/console.c
     file/create.c
     file/curdir.c
     file/delete.c
@@ -25,6 +25,7 @@ list(APPEND SOURCE
     file/dir.c
     file/dosdev.c
     file/file.c
+	file/filemap.c
     file/find.c
     file/hardlink.c
     file/iocompl.c
@@ -37,41 +38,24 @@ list(APPEND SOURCE
     file/rw.c
     file/tape.c
     file/volume.c
-    mem/global.c
     mem/heap.c
-    mem/isbad.c
-    mem/local.c
-    mem/procmem.c
-    mem/resnotify.c
-    mem/section.c
     mem/virtual.c
     misc/actctx.c
     misc/atom.c
-    misc/casemap.c
-    misc/chartype.c
-    misc/collation.c
     misc/comm.c
-    misc/commdcb.c
     misc/computername.c
-    misc/console.c
     misc/dllmain.c
     misc/env.c
-    misc/error.c
-    misc/fold.c
-    misc/format_msg.c
     misc/handle.c
-    misc/lang.c
-    misc/lcformat.c
     misc/ldr.c
     misc/lzexpand.c
     misc/muldiv.c
-    misc/nls.c
     misc/perfcnt.c
     misc/power.c
     misc/profile.c
     misc/recovery.c
     misc/res.c
-    misc/sortkey.c
+	misc/resntfy.c
     misc/stubs.c
     misc/sysinfo.c
     misc/time.c
@@ -79,23 +63,23 @@ list(APPEND SOURCE
     misc/toolhelp.c
     misc/utils.c
     misc/version.c
-    process/cmdline.c
-    process/procsup.c
     process/job.c
     process/proc.c
     process/session.c
+    string/casemap.c
+    string/chartype.c
+    string/collation.c
+    string/fold.c
+    string/format_msg.c
+    string/lang.c
+    string/lcformat.c
     string/lstring.c
-    synch/condvar.c
-    synch/critical.c
-    synch/event.c
-    synch/mutex.c
-    synch/sem.c
-    synch/timer.c
-    synch/wait.c
+    string/nls.c
+    string/sortkey.c
+    synch/synch.c
+    vista/vista.c
     thread/fiber.c
-    thread/fls.c
     thread/thread.c
-    thread/tls.c
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 

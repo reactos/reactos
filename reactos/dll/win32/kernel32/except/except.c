@@ -16,91 +16,7 @@
 #include <debug.h>
 
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = NULL;
-
-UINT
-WINAPI
-GetErrorMode(VOID)
-{
-    NTSTATUS Status;
-    UINT ErrMode;
-
-    /* Query the current setting */
-    Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                       ProcessDefaultHardErrorMode,
-                                       (PVOID)&ErrMode,
-                                       sizeof(ErrMode),
-                                       NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail if we couldn't query */
-        SetLastErrorByStatus(Status);
-        return 0;
-    }
-
-    /* Check if NOT failing critical errors was requested */
-    if (ErrMode & SEM_FAILCRITICALERRORS)
-    {
-        /* Mask it out, since the native API works differently */
-        ErrMode &= ~SEM_FAILCRITICALERRORS;
-    }
-    else
-    {
-        /* OR it if the caller didn't, due to different native semantics */
-        ErrMode |= SEM_FAILCRITICALERRORS;
-    }
-
-    /* Return the mode */
-    return ErrMode;
-}
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-SetErrorMode(IN UINT uMode)
-{
-    UINT PrevErrMode, NewMode;
-    NTSTATUS Status;
-
-    /* Get the previous mode */
-    PrevErrMode = GetErrorMode();
-    NewMode = uMode;
-
-    /* Check if failing critical errors was requested */
-    if (NewMode & SEM_FAILCRITICALERRORS)
-    {
-        /* Mask it out, since the native API works differently */
-        NewMode &= ~SEM_FAILCRITICALERRORS;
-    }
-    else
-    {
-        /* OR it if the caller didn't, due to different native semantics */
-        NewMode |= SEM_FAILCRITICALERRORS;
-    }
-
-    /* Set the new mode */
-    Status = NtSetInformationProcess(NtCurrentProcess(),
-                                     ProcessDefaultHardErrorMode,
-                                     (PVOID)&NewMode,
-                                     sizeof(NewMode));
-    if(!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
-
-    /* Return the previous mode */
-    return PrevErrMode;
-}
-
-/*
- * @implemented
- */
-LPTOP_LEVEL_EXCEPTION_FILTER
-WINAPI
-SetUnhandledExceptionFilter(
-    IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
-{
-    return InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
-                                      lpTopLevelExceptionFilter);
-}
+DWORD g_dwLastErrorToBreakOn;
 
 /*
  * Private helper function to lookup the module name from a given address.
@@ -272,6 +188,42 @@ PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
 #endif
 }
 
+UINT
+WINAPI
+GetErrorMode(VOID)
+{
+    NTSTATUS Status;
+    UINT ErrMode;
+
+    /* Query the current setting */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDefaultHardErrorMode,
+                                       (PVOID)&ErrMode,
+                                       sizeof(ErrMode),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail if we couldn't query */
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+
+    /* Check if NOT failing critical errors was requested */
+    if (ErrMode & SEM_FAILCRITICALERRORS)
+    {
+        /* Mask it out, since the native API works differently */
+        ErrMode &= ~SEM_FAILCRITICALERRORS;
+    }
+    else
+    {
+        /* OR it if the caller didn't, due to different native semantics */
+        ErrMode |= SEM_FAILCRITICALERRORS;
+    }
+
+    /* Return the mode */
+    return ErrMode;
+}
+
 /*
  * @implemented
  */
@@ -433,6 +385,316 @@ RaiseException(IN DWORD dwExceptionCode,
 
     /* Raise the exception */
     RtlRaiseException(&ExceptionRecord);
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+SetErrorMode(IN UINT uMode)
+{
+    UINT PrevErrMode, NewMode;
+    NTSTATUS Status;
+
+    /* Get the previous mode */
+    PrevErrMode = GetErrorMode();
+    NewMode = uMode;
+
+    /* Check if failing critical errors was requested */
+    if (NewMode & SEM_FAILCRITICALERRORS)
+    {
+        /* Mask it out, since the native API works differently */
+        NewMode &= ~SEM_FAILCRITICALERRORS;
+    }
+    else
+    {
+        /* OR it if the caller didn't, due to different native semantics */
+        NewMode |= SEM_FAILCRITICALERRORS;
+    }
+
+    /* Set the new mode */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessDefaultHardErrorMode,
+                                     (PVOID)&NewMode,
+                                     sizeof(NewMode));
+    if(!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+
+    /* Return the previous mode */
+    return PrevErrMode;
+}
+
+/*
+ * @implemented
+ */
+LPTOP_LEVEL_EXCEPTION_FILTER
+WINAPI
+SetUnhandledExceptionFilter(
+    IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
+{
+    return InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
+                                      lpTopLevelExceptionFilter);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+IsBadReadPtr(IN LPCVOID lp,
+             IN UINT_PTR ucb)
+{
+    ULONG PageSize;
+    BOOLEAN Result = FALSE;
+    volatile CHAR *Current;
+    PCHAR Last;
+
+    /* Quick cases */
+    if (!ucb) return FALSE;
+    if (!lp) return TRUE;
+
+    /* Get the page size */
+    PageSize = BaseCachedSysInfo.PageSize;
+
+    /* Calculate the last page */
+    Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
+
+    /* Another quick failure case */
+    if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
+
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile CHAR*)lp;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            *Current;
+            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
+        } while (Current <= Last);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH2_END
+
+    /* Return exception status */
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+IsBadHugeReadPtr(LPCVOID lp,
+                 UINT_PTR ucb)
+{
+    /* Implementation is the same on 32-bit */
+    return IsBadReadPtr(lp, ucb);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+IsBadCodePtr(FARPROC lpfn)
+{
+    /* Executing has the same privileges as reading */
+    return IsBadReadPtr((LPVOID)lpfn, 1);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+IsBadWritePtr(LPVOID lp,
+              UINT_PTR ucb)
+{
+    ULONG PageSize;
+    BOOLEAN Result = FALSE;
+    volatile CHAR *Current;
+    PCHAR Last;
+
+    /* Quick cases */
+    if (!ucb) return FALSE;
+    if (!lp) return TRUE;
+
+    /* Get the page size */
+    PageSize = BaseCachedSysInfo.PageSize;
+
+    /* Calculate the last page */
+    Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
+
+    /* Another quick failure case */
+    if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
+
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile CHAR*)lp;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            *Current = *Current;
+            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
+        } while (Current <= Last);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH2_END
+
+    /* Return exception status */
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+IsBadHugeWritePtr(LPVOID lp,
+                  UINT_PTR ucb)
+{
+    /* Implementation is the same on 32-bit */
+    return IsBadWritePtr(lp, ucb);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+IsBadStringPtrW(IN LPCWSTR lpsz,
+                UINT_PTR ucchMax)
+{
+    BOOLEAN Result = FALSE;
+    volatile WCHAR *Current;
+    PWCHAR Last;
+    WCHAR Char;
+
+    /* Quick cases */
+    if (!ucchMax) return FALSE;
+    if (!lpsz) return TRUE;
+
+    /* Calculate the last page */
+    Last = (PWCHAR)((ULONG_PTR)lpsz + (ucchMax * 2) - 2);
+
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile WCHAR*)lpsz;
+        Last = (PWCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            Char = *Current;
+            Current++;
+        } while (Char && (Current != Last + 1));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH2_END
+
+    /* Return exception status */
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+IsBadStringPtrA(IN LPCSTR lpsz,
+                UINT_PTR ucchMax)
+{
+    BOOLEAN Result = FALSE;
+    volatile CHAR *Current;
+    PCHAR Last;
+    CHAR Char;
+
+    /* Quick cases */
+    if (!ucchMax) return FALSE;
+    if (!lpsz) return TRUE;
+
+    /* Calculate the last page */
+    Last = (PCHAR)((ULONG_PTR)lpsz + ucchMax - 1);
+
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile CHAR*)lpsz;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            Char = *Current;
+            Current++;
+        } while (Char && (Current != Last + 1));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH2_END
+
+    /* Return exception status */
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+SetLastError(
+    IN DWORD dwErrCode)
+{
+    if (g_dwLastErrorToBreakOn)
+    {
+        /* If we have error to break on and if current matches, break */
+        if (g_dwLastErrorToBreakOn == dwErrCode)
+        {
+            DbgBreakPoint();
+        }
+    }
+
+    /* Set last error */
+    NtCurrentTeb()->LastErrorValue = dwErrCode;
+}
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+BaseSetLastNTError(
+    IN NTSTATUS Status)
+{
+    SetLastError(RtlNtStatusToDosError(Status));
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetLastError()
+{
+    return NtCurrentTeb()->LastErrorValue;
 }
 
 /* EOF */

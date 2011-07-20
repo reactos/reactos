@@ -26,6 +26,32 @@ typedef struct _FIBER                                      /* Field offsets:  */
     PVOID ActivationContextStack;                          /*   0x2E8         */
 } FIBER, *PFIBER;
 
+__declspec(noreturn)
+VOID
+WINAPI
+BaseFiberStartup(VOID)
+{
+#ifdef _M_IX86
+    PFIBER Fiber = GetCurrentFiber();
+
+    /* Call the Thread Startup Routine */
+    DPRINT("Starting Fiber\n");
+    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
+                      (LPVOID)Fiber->Context.Ebx);
+#elif defined(_M_AMD64)
+    PFIBER Fiber = GetFiberData();
+
+    /* Call the Thread Startup Routine */
+    DPRINT1("Starting Fiber\n");
+    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Rax,
+                      (LPVOID)Fiber->Context.Rbx);
+#else
+#warning Unknown architecture
+    UNIMPLEMENTED;
+    DbgBreakPoint();
+#endif
+}
+
 /*
  * @implemented
  */
@@ -245,31 +271,108 @@ IsThreadAFiber(VOID)
     return NtCurrentTeb()->HasFiberData;
 }
 
-
-__declspec(noreturn)
-VOID
+/*
+ * @unimplemented
+ */
+DWORD
 WINAPI
-BaseFiberStartup(VOID)
+FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
 {
-#ifdef _M_IX86
-    PFIBER Fiber = GetCurrentFiber();
+   (void)lpCallback;
 
-    /* Call the Thread Startup Routine */
-    DPRINT("Starting Fiber\n");
-    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
-                      (LPVOID)Fiber->Context.Ebx);
-#elif defined(_M_AMD64)
-    PFIBER Fiber = GetFiberData();
+   UNIMPLEMENTED;
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   return FLS_OUT_OF_INDEXES;
+}
 
-    /* Call the Thread Startup Routine */
-    DPRINT1("Starting Fiber\n");
-    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Rax,
-                      (LPVOID)Fiber->Context.Rbx);
-#else
-#warning Unknown architecture
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+FlsFree(DWORD dwFlsIndex)
+{
+    (void)dwFlsIndex;
+
     UNIMPLEMENTED;
-    DbgBreakPoint();
-#endif
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+PVOID
+WINAPI
+FlsGetValue(DWORD dwFlsIndex)
+{
+    PVOID *ppFlsSlots;
+    PVOID pRetVal;
+
+    if(dwFlsIndex >= 128) goto l_InvalidParam;
+
+    ppFlsSlots = NtCurrentTeb()->FlsData;
+
+    if(ppFlsSlots == NULL) goto l_InvalidParam;
+
+    SetLastError(0);
+    pRetVal = ppFlsSlots[dwFlsIndex + 2];
+
+    return pRetVal;
+
+l_InvalidParam:
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return NULL;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
+{
+    PVOID *ppFlsSlots;
+    TEB *pTeb = NtCurrentTeb();
+
+    if(dwFlsIndex >= 128) goto l_InvalidParam;
+
+    ppFlsSlots = pTeb->FlsData;
+
+    if (ppFlsSlots == NULL)
+    {
+        PEB *pPeb = pTeb->ProcessEnvironmentBlock;
+
+        ppFlsSlots = RtlAllocateHeap(pPeb->ProcessHeap,
+                                     HEAP_ZERO_MEMORY,
+                                     (128 + 2) * sizeof(PVOID));
+        if(ppFlsSlots == NULL) goto l_OutOfMemory;
+
+        pTeb->FlsData = ppFlsSlots;
+
+        RtlAcquirePebLock();
+
+        /* TODO: initialization */
+
+        RtlReleasePebLock();
+    }
+
+    ppFlsSlots[dwFlsIndex + 2] = lpFlsData;
+
+    return TRUE;
+
+l_OutOfMemory:
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    goto l_Fail;
+
+l_InvalidParam:
+    SetLastError(ERROR_INVALID_PARAMETER);
+
+l_Fail:
+    return FALSE;
 }
 
 /* EOF */

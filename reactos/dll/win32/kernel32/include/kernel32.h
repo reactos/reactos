@@ -100,6 +100,8 @@ extern PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+
 /* FUNCTION PROTOTYPES *******************************************************/
 
 BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
