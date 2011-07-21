@@ -3,7 +3,7 @@
  *
  * Copyright 1995 Martin von Loewis
  * Copyright 1998 David Lee Lambert
- * Copyright 2000 Julio C�sar G�zquez
+ * Copyright 2000 Julio C√©sar G√°zquez
  * Copyright 2003 Jon Griffiths
  * Copyright 2005 Dmitry Timoshkov
  *
@@ -22,17 +22,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
- * Whole file ripped from Wine's dlls\kernel\lcformat.c, rev 1.7 and is
- * unchanged except that includes are different. I thought about adding
- * @implemeted to each exported function, but this might make merging harder?
- * -Gunnar
- */
+//#include "config.h"
+//#include "wine/port.h"
 
-#include <k32.h>
-#define NDEBUG
-#include <debug.h>
-DEBUG_CHANNEL(resource);
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "winternl.h"
+
+#define CRITICAL_SECTION RTL_CRITICAL_SECTION
+#define CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG
+
+WINE_DEFAULT_DEBUG_CHANNEL(nls);
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
 #define TIME_TIMEVARSONLY 0x0200  /* only time stuff: hHmst */
@@ -77,15 +84,15 @@ typedef struct _NLS_FORMAT_NODE
 #define GetShortMonth(fmt,mth)    fmt->lppszStrings[42 + mth]
 
 /* Write access to the cache is protected by this critical section */
-static RTL_CRITICAL_SECTION NLS_FormatsCS;
-static RTL_CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
+static CRITICAL_SECTION NLS_FormatsCS;
+static CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
 {
     0, 0, &NLS_FormatsCS,
     { &NLS_FormatsCS_debug.ProcessLocksList,
       &NLS_FormatsCS_debug.ProcessLocksList },
-      0, 0, 0, 0, 0
+      0, 0, 0
 };
-static RTL_CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
+static CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
 
 /**************************************************************************
  * NLS_GetLocaleNumber <internal>
@@ -1044,10 +1051,8 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
   TRACE("(0x%04x,0x%08x,%s,%p,%p,%d)\n", lcid, dwFlags, debugstr_w(lpszValue),
         lpFormat, lpNumberStr, cchOut);
 
-  lcid = ConvertDefaultLocale(lcid);
-
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpNumberStr) ||
-      !IsValidLocale(lcid, LCID_INSTALLED) ||
+      !IsValidLocale(lcid, 0) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep)))
   {
     goto error;
@@ -1417,10 +1422,8 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
   TRACE("(0x%04x,0x%08x,%s,%p,%p,%d)\n", lcid, dwFlags, debugstr_w(lpszValue),
         lpFormat, lpCurrencyStr, cchOut);
 
-  lcid = ConvertDefaultLocale(lcid);
-
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpCurrencyStr) ||
-      !IsValidLocale(lcid, LCID_INSTALLED) ||
+      !IsValidLocale(lcid, 0) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep ||
       !lpFormat->lpCurrencySymbol || lpFormat->NegativeOrder > 15 ||
       lpFormat->PositiveOrder > 3)))

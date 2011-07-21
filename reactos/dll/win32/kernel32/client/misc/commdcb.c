@@ -21,7 +21,7 @@
 */
 
 /* Parses a mode string for a serial port, in the same syntax as the mode.com command */
-
+#if 0
 #if defined(__REACTOS__) && defined(_KERNEL32_)
 #include <k32.h>
 
@@ -671,3 +671,4 @@ DCB_BuildCommDCBW(LPCWSTR lpDef, LPDCB lpDCB)
 }
 
 /* EOF */
+#endif

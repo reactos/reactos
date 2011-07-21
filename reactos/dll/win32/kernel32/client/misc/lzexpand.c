@@ -33,18 +33,29 @@
  *   o Check whether the return values are correct
  *
  */
-
-//#include "config.h"
-
-#include <k32.h>
-#define NDEBUG
-#include <debug.h>
-#include "lzexpand.h"
-
+//#include <k32.h>
 #define HFILE_ERROR ((HFILE)-1)
 
+//#include "config.h"
+#include <string.h>
+#include <ctype.h>
+#include <sys/types.h>
+#include <stdarg.h>
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "lzexpand.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(file);
+   
 /* The readahead length of the decompressor. Reading single bytes
- * using _hread() would be SLOW.
+ * using _lread() would be SLOW.
  */
 #define	GETLEN	2048
 
@@ -101,7 +112,7 @@ _lzget(struct lzstate *lzs,BYTE *b) {
 		*b		= lzs->get[lzs->getcur++];
 		return		1;
 	} else {
-		int ret = _hread(lzs->realfd,lzs->get,GETLEN);
+		int ret = _lread(lzs->realfd,lzs->get,GETLEN);
 		if (ret==HFILE_ERROR)
 			return HFILE_ERROR;
 		if (ret==0)
@@ -128,7 +139,7 @@ static INT read_header(HFILE fd,struct lzfileheader *head)
 	/* We can't directly read the lzfileheader struct due to
 	 * structure element alignment
 	 */
-	if (_hread(fd,buf,LZ_HEADER_LEN)<LZ_HEADER_LEN)
+	if (_lread(fd,buf,LZ_HEADER_LEN)<LZ_HEADER_LEN)
 		return 0;
 	memcpy(head->magic,buf,LZ_MAGIC_LEN);
 	memcpy(&(head->compressiontype),buf+LZ_MAGIC_LEN,1);
@@ -150,7 +161,7 @@ static INT read_header(HFILE fd,struct lzfileheader *head)
  */
 INT WINAPI LZStart(void)
 {
-    DPRINT("(void)\n");
+    TRACE("(void)\n");
     return 1;
 }
 
@@ -171,9 +182,9 @@ HFILE WINAPI LZInit( HFILE hfSrc )
 
 	struct	lzfileheader	head;
 	struct	lzstate		*lzs;
-    int	i, ret;
+	int	i, ret;
 
-	DPRINT("(%d)\n",hfSrc);
+	TRACE("(%d)\n",hfSrc);
 	ret=read_header(hfSrc,&head);
 	if (ret<=0) {
 		_llseek(hfSrc,0,SEEK_SET);
@@ -181,19 +192,19 @@ HFILE WINAPI LZInit( HFILE hfSrc )
 	}
         for (i = 0; i < MAX_LZSTATES; i++) if (!lzstates[i]) break;
         if (i == MAX_LZSTATES) return LZERROR_GLOBALLOC;
-	lzstates[i] = lzs = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct lzstate) );
+	lzstates[i] = lzs = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lzs) );
 	if(lzs == NULL) return LZERROR_GLOBALLOC;
 
 	lzs->realfd	= hfSrc;
 	lzs->lastchar	= head.lastchar;
 	lzs->reallength = head.reallength;
 
-	lzs->get	= RtlAllocateHeap( GetProcessHeap(), 0, GETLEN );
+	lzs->get	= HeapAlloc( GetProcessHeap(), 0, GETLEN );
 	lzs->getlen	= 0;
 	lzs->getcur	= 0;
 
 	if(lzs->get == NULL) {
-		RtlFreeHeap(GetProcessHeap(), 0, lzs);
+		HeapFree(GetProcessHeap(), 0, lzs);
 		lzstates[i] = NULL;
 		return LZERROR_GLOBALLOC;
 	}
@@ -211,7 +222,7 @@ HFILE WINAPI LZInit( HFILE hfSrc )
  */
 void WINAPI LZDone(void)
 {
-    DPRINT("(void)\n");
+    TRACE("(void)\n");
 }
 
 
@@ -234,7 +245,7 @@ INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
 	INT		fnislowercased,ret,len;
 	LPSTR		s,t;
 
-	DPRINT("(%s)\n",in);
+	TRACE("(%s)\n",in);
 	fd=OpenFile(in,&ofs,OF_READ);
 	if (fd==HFILE_ERROR)
 		return (INT)(INT16)LZERROR_BADINHANDLE;
@@ -256,7 +267,7 @@ INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
 	/* now mangle the basename */
 	if (!*s) {
 		/* FIXME: hmm. shouldn't happen? */
-		DPRINT("Specified a directory or what? (%s)\n",in);
+		WARN("Specified a directory or what? (%s)\n",in);
 		_lclose(fd);
 		return 1;
 	}
@@ -299,23 +310,14 @@ INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
 INT WINAPI GetExpandedNameW( LPWSTR in, LPWSTR out )
 {
     INT ret;
-    DWORD len;
-    char *xin, *xout;
-    len = WideCharToMultiByte( CP_ACP, 0, in, -1, NULL, 0, NULL, NULL );
-    xin = RtlAllocateHeap( RtlGetProcessHeap(), 0, len );
-    if (xin == NULL)
-        return LZERROR_BADVALUE;
-    xout = RtlAllocateHeap( RtlGetProcessHeap(), 0, len+3 );
-    if (xout == NULL)
-    {
-        RtlFreeHeap( RtlGetProcessHeap(), 0, xin );
-        return LZERROR_BADVALUE;
-    }
+    DWORD len = WideCharToMultiByte( CP_ACP, 0, in, -1, NULL, 0, NULL, NULL );
+    char *xin = HeapAlloc( GetProcessHeap(), 0, len );
+    char *xout = HeapAlloc( GetProcessHeap(), 0, len+3 );
     WideCharToMultiByte( CP_ACP, 0, in, -1, xin, len, NULL, NULL );
     if ((ret = GetExpandedNameA( xin, xout )) > 0)
-        MultiByteToWideChar( CP_ACP, 0, xout, -1, out, wcslen(in)+4 );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, xin );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, xout );
+        MultiByteToWideChar( CP_ACP, 0, xout, -1, out, strlenW(in)+4 );
+    HeapFree( GetProcessHeap(), 0, xin );
+    HeapFree( GetProcessHeap(), 0, xout );
     return ret;
 }
 
@@ -330,9 +332,9 @@ INT WINAPI LZRead( HFILE fd, LPSTR vbuf, INT toread )
 	struct	lzstate	*lzs;
 
 	buf=(LPBYTE)vbuf;
-	DPRINT("(%d,%p,%d)\n",fd,buf,toread);
+	TRACE("(%d,%p,%d)\n",fd,buf,toread);
 	howmuch=toread;
-	if (!(lzs = GET_LZ_STATE(fd))) return _hread(fd,buf,toread);
+	if (!(lzs = GET_LZ_STATE(fd))) return _lread(fd,buf,toread);
 
 /* The decompressor itself is in a define, cause we need it twice
  * in this function. (the decompressed byte will be in b)
@@ -419,7 +421,7 @@ LONG WINAPI LZSeek( HFILE fd, LONG off, INT type )
 	struct	lzstate	*lzs;
 	LONG	newwanted;
 
-	DPRINT("(%d,%ld,%d)\n",fd,off,type);
+	TRACE("(%d,%d,%d)\n",fd,off,type);
 	/* not compressed? just use normal _llseek() */
         if (!(lzs = GET_LZ_STATE(fd))) return _llseek(fd,off,type);
 	newwanted = lzs->realwanted;
@@ -454,9 +456,9 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 {
 	int	usedlzinit = 0, ret, wret;
 	LONG	len;
- 	HFILE	oldsrc = src, srcfd;
- 	FILETIME filetime;
- 	struct	lzstate	*lzs;
+	HFILE	oldsrc = src, srcfd;
+	FILETIME filetime;
+	struct	lzstate	*lzs;
 #define BUFLEN	1000
 	CHAR	buf[BUFLEN];
 	/* we need that weird typedef, for i can't seem to get function pointer
@@ -466,7 +468,7 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 
 	_readfun	xread;
 
-	DPRINT("(%d,%d)\n",src,dest);
+	TRACE("(%d,%d)\n",src,dest);
 	if (!IS_LZ_HANDLE(src)) {
 		src = LZInit(src);
                 if ((INT)src <= 0) return 0;
@@ -489,17 +491,17 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 			return ret;
 		}
 		len    += ret;
-		wret	= _hwrite(dest,buf,ret);
+		wret	= _lwrite(dest,buf,ret);
 		if (wret!=ret)
 			return LZERROR_WRITE;
 	}
 
- 	/* Maintain the timestamp of source file to destination file */
- 	srcfd = (!(lzs = GET_LZ_STATE(src))) ? src : lzs->realfd;
- 	GetFileTime( LongToHandle(srcfd), NULL, NULL, &filetime );
- 	SetFileTime( LongToHandle(dest), NULL, NULL, &filetime );
+	/* Maintain the timestamp of source file to destination file */
+	srcfd = (!(lzs = GET_LZ_STATE(src))) ? src : lzs->realfd;
+	GetFileTime( LongToHandle(srcfd), NULL, NULL, &filetime );
+	SetFileTime( LongToHandle(dest), NULL, NULL, &filetime );
 
- 	/* close handle */
+	/* close handle */
 	if (usedlzinit)
 		LZClose(src);
 	return len;
@@ -510,7 +512,7 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 static LPSTR LZEXPAND_MangleName( LPCSTR fn )
 {
     char *p;
-    char *mfn = RtlAllocateHeap( GetProcessHeap(), 0, strlen(fn) + 3 ); /* "._" and \0 */
+    char *mfn = HeapAlloc( GetProcessHeap(), 0, strlen(fn) + 3 ); /* "._" and \0 */
     if(mfn == NULL) return NULL;
     strcpy( mfn, fn );
     if (!(p = strrchr( mfn, '\\' ))) p = mfn;
@@ -534,14 +536,14 @@ HFILE WINAPI LZOpenFileA( LPSTR fn, LPOFSTRUCT ofs, WORD mode )
 {
 	HFILE	fd,cfd;
 
-	DPRINT("(%s,%p,%d)\n",fn,ofs,mode);
+	TRACE("(%s,%p,%d)\n",fn,ofs,mode);
 	/* 0x70 represents all OF_SHARE_* flags, ignore them for the check */
 	fd=OpenFile(fn,ofs,mode);
 	if (fd==HFILE_ERROR)
         {
             LPSTR mfn = LZEXPAND_MangleName(fn);
             fd = OpenFile(mfn,ofs,mode);
-            RtlFreeHeap( GetProcessHeap(), 0, mfn );
+            HeapFree( GetProcessHeap(), 0, mfn );
 	}
 	if ((mode&~0x70)!=OF_READ)
 		return fd;
@@ -560,10 +562,10 @@ HFILE WINAPI LZOpenFileW( LPWSTR fn, LPOFSTRUCT ofs, WORD mode )
 {
     HFILE ret;
     DWORD len = WideCharToMultiByte( CP_ACP, 0, fn, -1, NULL, 0, NULL, NULL );
-    LPSTR xfn = RtlAllocateHeap( GetProcessHeap(), 0, len );
+    LPSTR xfn = HeapAlloc( GetProcessHeap(), 0, len );
     WideCharToMultiByte( CP_ACP, 0, fn, -1, xfn, len, NULL, NULL );
     ret = LZOpenFileA(xfn,ofs,mode);
-    RtlFreeHeap( GetProcessHeap(), 0, xfn );
+    HeapFree( GetProcessHeap(), 0, xfn );
     return ret;
 }
 
@@ -575,14 +577,13 @@ void WINAPI LZClose( HFILE fd )
 {
 	struct lzstate *lzs;
 
-	DPRINT("(%d)\n",fd);
+	TRACE("(%d)\n",fd);
         if (!(lzs = GET_LZ_STATE(fd))) _lclose(fd);
         else
         {
-            if (lzs->get) RtlFreeHeap( GetProcessHeap(), 0, lzs->get );
+            HeapFree( GetProcessHeap(), 0, lzs->get );
             CloseHandle( LongToHandle(lzs->realfd) );
             lzstates[fd - LZ_MIN_HANDLE] = NULL;
-            RtlFreeHeap( GetProcessHeap(), 0, lzs );
+            HeapFree( GetProcessHeap(), 0, lzs );
         }
 }
-

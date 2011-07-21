@@ -19,10 +19,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <k32.h>
-#define NDEBUG
-#include <debug.h>
-DEBUG_CHANNEL(resource);
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winternl.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+extern HMODULE kernel32_handle;
+
+WINE_DEFAULT_DEBUG_CHANNEL(resource);
 
 struct format_args
 {
@@ -30,8 +44,6 @@ struct format_args
     __ms_va_list *list;
     int           last;
 };
-
-static const WCHAR kernel32W[] = {'k','e','r','n','e','l','3','2',0};
 
 /* Messages used by FormatMessage
  *
@@ -63,7 +75,7 @@ static const WCHAR FMTWSTR[] = { '%','s',0 };
  */
 static LPWSTR load_message( HMODULE module, UINT id, WORD lang )
 {
-    PMESSAGE_RESOURCE_ENTRY mre;
+    const MESSAGE_RESOURCE_ENTRY *mre;
     WCHAR *buffer;
     NTSTATUS status;
 
@@ -389,7 +401,6 @@ DWORD WINAPI FormatMessageA(
     DWORD	destlength;
     LPWSTR	from;
     DWORD	width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
-    HMODULE kernel32_handle = GetModuleHandleW(kernel32W);
 
     TRACE("(0x%x,%p,%d,0x%x,%p,%d,%p)\n",
           dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
@@ -496,7 +507,6 @@ DWORD WINAPI FormatMessageW(
     DWORD talloced;
     LPWSTR from;
     DWORD width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
-    HMODULE kernel32_handle = GetModuleHandleW(kernel32W);
 
     TRACE("(0x%x,%p,%d,0x%x,%p,%d,%p)\n",
           dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);

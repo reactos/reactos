@@ -1669,6 +1669,185 @@ static INT WideCharToUtf7(LPCWSTR pszWide, INT cchWide, LPSTR pszUtf7, INT cchUt
     return c;
 }
 
+static BOOL
+GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
+{
+    HRSRC hrsrc;
+    LCID lcid;
+    LANGID langId;
+    DWORD dwId;
+
+    if (dwResId == 37)
+        dwId = dwResId * 100;
+    else
+        dwId = dwResId;
+
+    lcid = GetUserDefaultLCID();
+    lcid = ConvertDefaultLocale(lcid);
+
+    langId = LANGIDFROMLCID(lcid);
+
+    if (PRIMARYLANGID(langId) == LANG_NEUTRAL)
+        langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+
+    hrsrc = FindResourceExW(hCurrentModule,
+                            (LPWSTR)RT_STRING,
+                            MAKEINTRESOURCEW((dwId >> 4) + 1),
+                            langId);
+    if (hrsrc)
+    {
+        HGLOBAL hmem = LoadResource(hCurrentModule, hrsrc);
+
+        if (hmem)
+        {
+            const WCHAR *p;
+            unsigned int i;
+
+            p = LockResource(hmem);
+            for (i = 0; i < (dwId & 0x0f); i++) p += *p + 1;
+
+            memcpy(lpszDest, p + 1, *p * sizeof(WCHAR));
+            lpszDest[*p] = '\0';
+
+            return TRUE;
+        }
+    }
+
+    DPRINT1("Could not get codepage name. dwResId = %ld\n", dwResId);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetCPInfo(UINT CodePage,
+          LPCPINFO CodePageInfo)
+{
+    PCODEPAGE_ENTRY CodePageEntry;
+
+    if (!CodePageInfo)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    CodePageEntry = IntGetCodePageEntry(CodePage);
+    if (CodePageEntry == NULL)
+    {
+        switch(CodePage)
+        {
+            case CP_UTF7:
+            case CP_UTF8:
+                CodePageInfo->DefaultChar[0] = 0x3f;
+                CodePageInfo->DefaultChar[1] = 0;
+                CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
+                CodePageInfo->MaxCharSize = (CodePage == CP_UTF7) ? 5 : 4;
+                return TRUE;
+        }
+
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
+    if (CodePageEntry->CodePageTable.DefaultChar & 0xff00)
+    {
+        CodePageInfo->DefaultChar[0] = (CodePageEntry->CodePageTable.DefaultChar & 0xff00) >> 8;
+        CodePageInfo->DefaultChar[1] = CodePageEntry->CodePageTable.DefaultChar & 0x00ff;
+    }
+    else
+    {
+        CodePageInfo->DefaultChar[0] = CodePageEntry->CodePageTable.DefaultChar & 0xff;
+        CodePageInfo->DefaultChar[1] = 0;
+    }
+
+    if ((CodePageInfo->MaxCharSize = CodePageEntry->CodePageTable.MaximumCharacterSize) == 2)
+        memcpy(CodePageInfo->LeadByte, CodePageEntry->CodePageTable.LeadByte, sizeof(CodePageInfo->LeadByte));
+    else
+        CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetCPInfoExW(UINT CodePage,
+             DWORD dwFlags,
+             LPCPINFOEXW lpCPInfoEx)
+{
+    if (!GetCPInfo(CodePage, (LPCPINFO) lpCPInfoEx))
+        return FALSE;
+
+    switch(CodePage)
+    {
+        case CP_UTF7:
+        {
+            lpCPInfoEx->CodePage = CP_UTF7;
+            lpCPInfoEx->UnicodeDefaultChar = 0x3f;
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+        }
+        break;
+
+        case CP_UTF8:
+        {
+            lpCPInfoEx->CodePage = CP_UTF8;
+            lpCPInfoEx->UnicodeDefaultChar = 0x3f;
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+        }
+
+        default:
+        {
+            PCODEPAGE_ENTRY CodePageEntry;
+
+            CodePageEntry = IntGetCodePageEntry(CodePage);
+            if (CodePageEntry == NULL)
+            {
+                DPRINT1("Could not get CodePage Entry! CodePageEntry = 0\n");
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return FALSE;
+            }
+
+            lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
+            lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+        }
+        break;
+    }
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetCPInfoExA(UINT CodePage,
+             DWORD dwFlags,
+             LPCPINFOEXA lpCPInfoEx)
+{
+    CPINFOEXW CPInfo;
+
+    if (!GetCPInfoExW(CodePage, dwFlags, &CPInfo))
+        return FALSE;
+
+    /* the layout is the same except for CodePageName */
+    memcpy(lpCPInfoEx, &CPInfo, sizeof(CPINFOEXA));
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        CPInfo.CodePageName,
+                        -1,
+                        lpCPInfoEx->CodePageName,
+                        sizeof(lpCPInfoEx->CodePageName),
+                        NULL,
+                        NULL);
+    return TRUE;
+}
+
 /**
  * @name WideCharToMultiByte
  *

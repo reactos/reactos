@@ -19,6 +19,7 @@
  */
 #include "wine/unicode.h"
 
+#define get_char_typeW(x) iswctype((x) >> 8, (x) & 0xFF)
 extern int get_decomposition(WCHAR src, WCHAR *dst, unsigned int dstlen);
 extern const unsigned int collation_table[];
 
@@ -52,7 +53,7 @@ int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dst
                  * and skips white space and punctuation characters for
                  * NORM_IGNORESYMBOLS.
                  */
-                if ((flags & NORM_IGNORESYMBOLS) && (iswctype(wch, _SPACE | _PUNCT)))
+                if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
                     continue;
 
                 if (flags & NORM_IGNORECASE) wch = tolowerW(wch);
@@ -110,7 +111,7 @@ int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dst
                  * and skips white space and punctuation characters for
                  * NORM_IGNORESYMBOLS.
                  */
-                if ((flags & NORM_IGNORESYMBOLS) && (iswctype(wch, _SPACE | _PUNCT)))
+                if ((flags & NORM_IGNORESYMBOLS) && (get_char_typeW(wch) & (C1_PUNCT | C1_SPACE)))
                     continue;
 
                 if (flags & NORM_IGNORECASE) wch = tolowerW(wch);
@@ -171,13 +172,13 @@ static inline int compare_unicode_weights(int flags, const WCHAR *str1, int len1
         {
             int skip = 0;
             /* FIXME: not tested */
-            if (iswctype(*str1, _SPACE | _PUNCT))
+            if (get_char_typeW(*str1) & (C1_PUNCT | C1_SPACE))
             {
                 str1++;
                 len1--;
                 skip = 1;
             }
-            if (iswctype(*str2, _SPACE | _PUNCT))
+            if (get_char_typeW(*str2) & (C1_PUNCT | C1_SPACE))
             {
                 str2++;
                 len2--;
@@ -242,13 +243,13 @@ static inline int compare_diacritic_weights(int flags, const WCHAR *str1, int le
         {
             int skip = 0;
             /* FIXME: not tested */
-            if (iswctype(*str1, _SPACE | _PUNCT))
+            if (get_char_typeW(*str1) & (C1_PUNCT | C1_SPACE))
             {
                 str1++;
                 len1--;
                 skip = 1;
             }
-            if (iswctype(*str2, _SPACE | _PUNCT))
+            if (get_char_typeW(*str2) & (C1_PUNCT | C1_SPACE))
             {
                 str2++;
                 len2--;
@@ -291,13 +292,13 @@ static inline int compare_case_weights(int flags, const WCHAR *str1, int len1,
         {
             int skip = 0;
             /* FIXME: not tested */
-            if (iswctype(*str1, _SPACE | _PUNCT))
+            if (get_char_typeW(*str1) & (C1_PUNCT | C1_SPACE))
             {
                 str1++;
                 len1--;
                 skip = 1;
             }
-            if (iswctype(*str2, _SPACE | _PUNCT))
+            if (get_char_typeW(*str2) & (C1_PUNCT | C1_SPACE))
             {
                 str2++;
                 len2--;
