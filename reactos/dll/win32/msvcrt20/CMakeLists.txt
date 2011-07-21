@@ -8,6 +8,7 @@ spec2def(msvcrt20.dll msvcrt20.spec)
 
 list(APPEND SOURCE
     msvcrt20.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20.def)
 
 add_library(msvcrt20 SHARED ${SOURCE})

@@ -8,6 +8,7 @@ spec2def(msvcrt40.dll msvcrt40.spec)
 
 list(APPEND SOURCE
     msvcrt40.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt40_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt40.def)
 
 add_library(msvcrt40 SHARED ${SOURCE})

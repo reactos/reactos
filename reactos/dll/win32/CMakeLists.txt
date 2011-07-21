@@ -108,8 +108,8 @@ add_subdirectory(mssign32)
 add_subdirectory(mssip32)
 add_subdirectory(mstask)
 add_subdirectory(msvcrt)
-#add_subdirectory(msvcrt20) FIX spec2def
-#add_subdirectory(msvcrt40) FIX spec2def
+add_subdirectory(msvcrt20)
+add_subdirectory(msvcrt40)
 add_subdirectory(msvfw32)
 add_subdirectory(msvidc32)
 add_subdirectory(mswsock)
