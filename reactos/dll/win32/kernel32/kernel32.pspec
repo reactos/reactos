@@ -544,7 +544,6 @@
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
 @ stdcall GetLocaleInfoW(long long ptr long)
-@ stdcall GetLocaleInfoEx(wstr long wstr long) ; Vista+
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
