@@ -483,7 +483,7 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 
 	/* not compressed? just copy */
         if (!IS_LZ_HANDLE(src))
-		xread=_lread;
+		xread=(_readfun)_hread; // ROSHACK
 	else
 		xread=(_readfun)LZRead;
 	len=0;
