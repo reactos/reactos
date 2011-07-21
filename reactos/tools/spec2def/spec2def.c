@@ -348,7 +348,7 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     {
         /* C++ stubs are forwarded to C stubs */
         fprintf(fileDest, "=");
-        fprintf(fileDest, "stub_function%d(", pexp->nNumber);
+        fprintf(fileDest, "stub_function%d", pexp->nNumber);
     }
     else if ((giArch == ARCH_X86) && gbKillAt && !gbMSComp &&
              (pexp->nCallingConvention == CC_STDCALL ||
