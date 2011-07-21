@@ -80,7 +80,6 @@
 		<directory name="misc">
 			<file>actctx.c</file>
 			<file>comm.c</file>
-			<file>commdcb.c</file>
 			<file>lzexpand.c</file>
 			<file>muldiv.c</file>
 			<file>profile.c</file>

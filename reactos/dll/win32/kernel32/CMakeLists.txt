@@ -62,7 +62,6 @@ list(APPEND SOURCE
     client/file/volume.c
     client/misc/actctx.c
     client/misc/comm.c
-    client/misc/commdcb.c
     client/misc/lzexpand.c
     client/misc/muldiv.c
     client/misc/profile.c
