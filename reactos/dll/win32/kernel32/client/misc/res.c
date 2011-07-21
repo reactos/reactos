@@ -37,6 +37,9 @@
 #include "wine/unicode.h"
 #include "wine/list.h"
 
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
 WINE_DEFAULT_DEBUG_CHANNEL(resource);
 
 /* we don't want to include winuser.h just for this */

@@ -34,6 +34,9 @@
 #include "wine/library.h"
 #include "wine/debug.h"
 
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
 WINE_DEFAULT_DEBUG_CHANNEL(profile);
 
 static const char bom_utf8[] = {0xEF,0xBB,0xBF};

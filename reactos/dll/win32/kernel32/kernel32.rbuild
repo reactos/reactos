@@ -10,7 +10,6 @@
 	<library>wine</library>
 	<library>ntdll</library>
 	<define name="_KERNEL32_" />
-	<redefine name="_WIN32_WINNT">0x0600</redefine>
 	<dependency>errcodes</dependency>
 	<pch>k32.h</pch>
 	<directory name="client">

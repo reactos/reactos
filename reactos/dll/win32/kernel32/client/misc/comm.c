@@ -59,6 +59,9 @@ typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 
 #include "wine/debug.h"
 
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
 WINE_DEFAULT_DEBUG_CHANNEL(comm);
 
 /***********************************************************************

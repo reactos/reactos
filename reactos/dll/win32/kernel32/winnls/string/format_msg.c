@@ -36,6 +36,9 @@
 
 extern HMODULE kernel32_handle;
 
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
 WINE_DEFAULT_DEBUG_CHANNEL(resource);
 
 struct format_args

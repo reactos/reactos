@@ -186,10 +186,8 @@
 @ stdcall CreateSemaphoreExW(ptr long long wstr long long)
 @ stdcall CreateSemaphoreW(ptr long long wstr)
 @ stdcall CreateSocketHandle()
-@ stdcall CreateSymbolicLinkA(str str long)
 ;@ stdcall CreateSymbolicLinkTransactedA ; Win 7
 ;@ stdcall CreateSymbolicLinkTransactedW ; Win 7
-@ stdcall CreateSymbolicLinkW(wstr wstr long)
 @ stdcall CreateTapePartition(long long long long)
 @ stdcall CreateThread(ptr long ptr long long ptr)
 ;@ stdcall CreateThreadpool ; Win 7
@@ -441,7 +439,6 @@
 @ stdcall GetConsoleFontInfo(long long long ptr)
 @ stdcall GetConsoleFontSize(long long)
 @ stdcall GetConsoleHardwareState(long long ptr)
-@ stdcall GetConsoleHistoryInfo(ptr)
 @ stdcall GetConsoleInputExeNameA(long ptr)
 @ stdcall GetConsoleInputExeNameW(long ptr)
 @ stdcall GetConsoleInputWaitHandle()
@@ -514,7 +511,6 @@
 ;@ stdcall GetFileAttributesTransactedA ; Win 7
 ;@ stdcall GetFileAttributesTransactedW ; Win 7
 @ stdcall GetFileAttributesW(wstr)
-@ stdcall GetFileBandwidthReservation(long ptr ptr ptr ptr ptr)
 @ stdcall GetFileInformationByHandle(long ptr)
 ;@ stdcall GetFileInformationByHandleEx ; Win 7
 ;@ stdcall GetFileMUIInfo ; Win 7
@@ -523,8 +519,6 @@
 @ stdcall GetFileSizeEx(long ptr)
 @ stdcall GetFileTime(long ptr ptr ptr)
 @ stdcall GetFileType(long)
-@ stdcall GetFinalPathNameByHandleA(long str long long)
-@ stdcall GetFinalPathNameByHandleW(long wstr long long)
 @ stdcall GetFirmwareEnvironmentVariableA(str str ptr long)
 @ stdcall GetFirmwareEnvironmentVariableW(wstr wstr ptr long)
 @ stdcall GetFullPathNameA(str long ptr ptr)
@@ -693,7 +687,7 @@
 @ stdcall GetThreadTimes(long ptr ptr ptr ptr)
 ;@ stdcall GetThreadUILanguage ; Win 7
 @ stdcall GetTickCount()
-@ stdcall -ret64 GetTickCount64()
+@ stdcall GetTickCount64() ; FOR WINE
 @ stdcall GetTimeFormatA(long long ptr str ptr long)
 ;@ stdcall GetTimeFormatEx ; Win 7
 @ stdcall GetTimeFormatW(long long ptr wstr ptr long)
@@ -1144,7 +1138,6 @@
 @ stdcall SetConsoleDisplayMode(long long ptr)
 @ stdcall SetConsoleFont(long long)
 @ stdcall SetConsoleHardwareState(long long long)
-@ stdcall SetConsoleHistoryInfo(ptr)
 @ stdcall SetConsoleIcon(ptr)
 @ stdcall SetConsoleInputExeNameA(ptr)
 @ stdcall SetConsoleInputExeNameW(ptr)

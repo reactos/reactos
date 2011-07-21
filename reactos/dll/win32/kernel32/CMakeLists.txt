@@ -1,13 +1,6 @@
 
 add_definitions(-D_KERNEL32_)
 
-add_definitions(-DHeapAlloc=RtlAllocateHeap)
-add_definitions(-DHeapFree=RtlFreeHeap)
-add_definitions(-DGetProcessHeap=RtlGetProcessHeap)
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 set_rc_compiler()

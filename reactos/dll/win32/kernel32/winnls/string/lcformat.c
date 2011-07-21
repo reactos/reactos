@@ -40,6 +40,10 @@
 #define CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG
 #define CALINFO_MAX_YEAR 2029
 
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
+
 WINE_DEFAULT_DEBUG_CHANNEL(nls);
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */

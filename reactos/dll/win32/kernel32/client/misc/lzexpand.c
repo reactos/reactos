@@ -52,6 +52,10 @@
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
+#include "winternl.h"
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
 WINE_DEFAULT_DEBUG_CHANNEL(file);
    
 /* The readahead length of the decompressor. Reading single bytes

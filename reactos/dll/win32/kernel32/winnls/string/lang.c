@@ -55,6 +55,9 @@ static inline unsigned short get_char_typeW( WCHAR ch )
     return wine_wctype_table[wine_wctype_table[ch >> 8] + (ch & 0xff)];
 }
 
+#define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
+#define HeapFree RtlFreeHeap
 WINE_DEFAULT_DEBUG_CHANNEL(nls);
 
 extern HMODULE kernel32_handle;

@@ -9,6 +9,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#if _WIN32_WINNT >= 0x600
+
 /* FIXME: Move these RTL declarations to the NDK */
 NTSTATUS
 NTAPI
@@ -306,4 +308,564 @@ RegisterApplicationRestart(IN PCWSTR pwzCommandline  OPTIONAL,
     UNIMPLEMENTED;
     return E_FAIL;
 }
+
+/*
+ * @implemented
+ */
+ULONGLONG
+WINAPI
+GetTickCount64(VOID)
+{
+    ULARGE_INTEGER TickCount;
+    
+    while (TRUE)
+    {
+        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
+        TickCount.LowPart = SharedUserData->TickCount.LowPart;
+
+        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time) break;
+
+        YieldProcessor();
+     }
+     
+     return (UInt32x32To64(TickCount.LowPart, SharedUserData->TickCountMultiplier) >> 24) +
+            (UInt32x32To64(TickCount.HighPart, SharedUserData->TickCountMultiplier) << 8);
+}
+
+/*--------------------------------------------------------------
+ *  GetConsoleHistoryInfo
+ *
+ * @implemented
+ */
+BOOL
+WINAPI
+GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
+{
+    CSR_API_MESSAGE Request;
+    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
+    NTSTATUS Status;
+    if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    lpConsoleHistoryInfo->HistoryBufferSize      = Request.Data.GetHistoryInfo.HistoryBufferSize;
+    lpConsoleHistoryInfo->NumberOfHistoryBuffers = Request.Data.GetHistoryInfo.NumberOfHistoryBuffers;
+    lpConsoleHistoryInfo->dwFlags                = Request.Data.GetHistoryInfo.dwFlags;
+    return TRUE;
+}
+
+
+/*--------------------------------------------------------------
+ *  SetConsoleHistoryInfo
+ *
+ * @implemented
+ */
+BOOL
+WINAPI
+SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
+{
+    CSR_API_MESSAGE Request;
+    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
+    NTSTATUS Status;
+    if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    Request.Data.SetHistoryInfo.HistoryBufferSize      = lpConsoleHistoryInfo->HistoryBufferSize;
+    Request.Data.SetHistoryInfo.NumberOfHistoryBuffers = lpConsoleHistoryInfo->NumberOfHistoryBuffers;
+    Request.Data.SetHistoryInfo.dwFlags                = lpConsoleHistoryInfo->dwFlags;
+    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetConsoleOriginalTitleW
+ *
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
+                         IN DWORD nSize)
+{
+    DPRINT1("GetConsoleOriginalTitleW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpConsoleTitle, nSize);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetConsoleOriginalTitleA
+ *
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
+                         IN DWORD nSize)
+{
+    DPRINT1("GetConsoleOriginalTitleA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpConsoleTitle, nSize);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetConsoleScreenBufferInfoEx
+ *
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
+                             OUT PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
+{
+    DPRINT1("GetConsoleScreenBufferInfoEx(0x%p, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, lpConsoleScreenBufferInfoEx);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*--------------------------------------------------------------
+ *  SetConsoleScreenBufferInfoEx
+ *
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
+                             IN PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
+{
+    DPRINT1("SetConsoleScreenBufferInfoEx(0x%p, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, lpConsoleScreenBufferInfoEx);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetCurrentConsoleFontEx
+ *
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetCurrentConsoleFontEx(IN HANDLE hConsoleOutput,
+                        IN BOOL bMaximumWindow,
+                        OUT PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx)
+{
+    DPRINT1("GetCurrentConsoleFontEx(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, bMaximumWindow, lpConsoleCurrentFontEx);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOLEAN
+WINAPI
+CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
+                    IN LPCWSTR lpTargetFileName,
+                    IN DWORD dwFlags)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hSymlink = NULL;
+    UNICODE_STRING SymlinkFileName = { 0, 0, NULL };
+    UNICODE_STRING TargetFileName = { 0, 0, NULL };
+    BOOLEAN bAllocatedTarget = FALSE, bRelativePath = FALSE;
+    LPWSTR lpTargetFullFileName = NULL;
+    SIZE_T cbPrintName;
+    SIZE_T cbReparseData;
+    PREPARSE_DATA_BUFFER pReparseData = NULL;
+    PBYTE pBufTail;
+    NTSTATUS Status;
+    ULONG dwCreateOptions;
+    DWORD dwErr;
+
+    if(!lpSymlinkFileName || !lpTargetFileName || (dwFlags | SYMBOLIC_LINK_FLAG_DIRECTORY) != SYMBOLIC_LINK_FLAG_DIRECTORY)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if(dwFlags & SYMBOLIC_LINK_FLAG_DIRECTORY)
+        dwCreateOptions = FILE_DIRECTORY_FILE;
+    else
+        dwCreateOptions = FILE_NON_DIRECTORY_FILE;
+
+    switch(RtlDetermineDosPathNameType_U(lpTargetFileName))
+    {
+    case RtlPathTypeUnknown:
+    case RtlPathTypeRooted:
+    case RtlPathTypeRelative:
+        bRelativePath = TRUE;
+        RtlInitUnicodeString(&TargetFileName, lpTargetFileName);
+        break;
+
+    case RtlPathTypeDriveRelative:
+        {
+            LPWSTR FilePart;
+            SIZE_T cchTargetFullFileName;
+
+            cchTargetFullFileName = GetFullPathNameW(lpTargetFileName, 0, NULL, &FilePart);
+
+            if(cchTargetFullFileName == 0)
+            {
+                dwErr = GetLastError();
+                goto Cleanup;
+            }
+
+            lpTargetFullFileName = RtlAllocateHeap(RtlGetProcessHeap(), 0, cchTargetFullFileName * sizeof(WCHAR));
+
+            if(lpTargetFullFileName == NULL)
+            {
+                dwErr = ERROR_NOT_ENOUGH_MEMORY;
+                goto Cleanup;
+            }
+
+            if(GetFullPathNameW(lpTargetFileName, cchTargetFullFileName, lpTargetFullFileName, &FilePart) == 0)
+            {
+                dwErr = GetLastError();
+                goto Cleanup;
+            }
+        }
+
+        lpTargetFileName = lpTargetFullFileName;
+
+        // fallthrough
+
+    case RtlPathTypeUncAbsolute:
+    case RtlPathTypeDriveAbsolute:
+    case RtlPathTypeLocalDevice:
+    case RtlPathTypeRootLocalDevice:
+    default:
+        if(!RtlDosPathNameToNtPathName_U(lpTargetFileName, &TargetFileName, NULL, NULL))
+        {
+            bAllocatedTarget = TRUE;
+            dwErr = ERROR_INVALID_PARAMETER;
+            goto Cleanup;
+        }
+    }
+
+    cbPrintName = wcslen(lpTargetFileName) * sizeof(WCHAR);
+    cbReparseData = FIELD_OFFSET(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) + TargetFileName.Length + cbPrintName;
+    pReparseData = RtlAllocateHeap(RtlGetProcessHeap(), 0, cbReparseData);
+
+    if(pReparseData == NULL)
+    {
+        dwErr = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
+    }
+
+    pBufTail = (PBYTE)(pReparseData->SymbolicLinkReparseBuffer.PathBuffer);
+
+    pReparseData->ReparseTag = (ULONG)IO_REPARSE_TAG_SYMLINK;
+    pReparseData->ReparseDataLength = (USHORT)cbReparseData - REPARSE_DATA_BUFFER_HEADER_SIZE;
+    pReparseData->Reserved = 0;
+
+    pReparseData->SymbolicLinkReparseBuffer.SubstituteNameOffset = 0;
+    pReparseData->SymbolicLinkReparseBuffer.SubstituteNameLength = TargetFileName.Length;
+    pBufTail += pReparseData->SymbolicLinkReparseBuffer.SubstituteNameOffset;
+    RtlCopyMemory(pBufTail, TargetFileName.Buffer, TargetFileName.Length);
+
+    pReparseData->SymbolicLinkReparseBuffer.PrintNameOffset = pReparseData->SymbolicLinkReparseBuffer.SubstituteNameLength;
+    pReparseData->SymbolicLinkReparseBuffer.PrintNameLength = (USHORT)cbPrintName;
+    pBufTail += pReparseData->SymbolicLinkReparseBuffer.PrintNameOffset;
+    RtlCopyMemory(pBufTail, lpTargetFileName, cbPrintName);
+
+    pReparseData->SymbolicLinkReparseBuffer.Flags = 0;
+
+    if(bRelativePath)
+        pReparseData->SymbolicLinkReparseBuffer.Flags |= 1; // TODO! give this lone flag a name
+
+    if(!RtlDosPathNameToNtPathName_U(lpSymlinkFileName, &SymlinkFileName, NULL, NULL))
+    {
+        dwErr = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes, &SymlinkFileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    Status = NtCreateFile
+    (
+        &hSymlink,
+        FILE_WRITE_ATTRIBUTES | DELETE | SYNCHRONIZE,
+        &ObjectAttributes,
+        &IoStatusBlock,
+        NULL,
+        FILE_ATTRIBUTE_NORMAL,
+        0,
+        FILE_CREATE,
+        FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_REPARSE_POINT | dwCreateOptions,
+        NULL,
+        0
+    );
+
+    if(!NT_SUCCESS(Status))
+    {
+        dwErr = RtlNtStatusToDosError(Status);
+        goto Cleanup;
+    }
+
+    Status = NtFsControlFile
+    (
+        hSymlink,
+        NULL,
+        NULL,
+        NULL,
+        &IoStatusBlock,
+        FSCTL_SET_REPARSE_POINT,
+        pReparseData,
+        cbReparseData,
+        NULL,
+        0
+    );
+
+    if(!NT_SUCCESS(Status))
+    {
+        FILE_DISPOSITION_INFORMATION DispInfo;
+        DispInfo.DeleteFile = TRUE;
+        NtSetInformationFile(hSymlink, &IoStatusBlock, &DispInfo, sizeof(DispInfo), FileDispositionInformation);
+
+        dwErr = RtlNtStatusToDosError(Status);
+        goto Cleanup;
+    }
+
+    dwErr = NO_ERROR;
+
+Cleanup:
+    if(hSymlink)
+        NtClose(hSymlink);
+
+    RtlFreeUnicodeString(&SymlinkFileName);
+    if (bAllocatedTarget)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    TargetFileName.Buffer);
+    }
+
+    if(lpTargetFullFileName)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, lpTargetFullFileName);
+
+    if(pReparseData)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pReparseData);
+
+    if(dwErr)
+    {
+        SetLastError(dwErr);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+CreateSymbolicLinkA(IN LPCSTR lpSymlinkFileName,
+                    IN LPCSTR lpTargetFileName,
+                    IN DWORD dwFlags)
+{
+    PWCHAR SymlinkW, TargetW;
+    BOOLEAN Ret;
+
+    if(!lpSymlinkFileName || !lpTargetFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!(SymlinkW = FilenameA2W(lpSymlinkFileName, FALSE)))
+        return FALSE;
+
+    if (!(TargetW = FilenameA2W(lpTargetFileName, TRUE)))
+        return FALSE;
+
+    Ret = CreateSymbolicLinkW(SymlinkW,
+                              TargetW,
+                              dwFlags);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, SymlinkW);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TargetW);
+
+    return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetFinalPathNameByHandleW(IN HANDLE hFile,
+                          OUT LPWSTR lpszFilePath,
+                          IN DWORD cchFilePath,
+                          IN DWORD dwFlags)
+{
+    if (dwFlags & ~(VOLUME_NAME_DOS | VOLUME_NAME_GUID | VOLUME_NAME_NT |
+                    VOLUME_NAME_NONE | FILE_NAME_NORMALIZED | FILE_NAME_OPENED))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetFinalPathNameByHandleA(IN HANDLE hFile,
+                          OUT LPSTR lpszFilePath,
+                          IN DWORD cchFilePath,
+                          IN DWORD dwFlags)
+{
+    WCHAR FilePathW[MAX_PATH];
+    UNICODE_STRING FilePathU;
+    DWORD PrevLastError;
+    DWORD Ret = 0;
+
+    if (cchFilePath != 0 &&
+        cchFilePath > sizeof(FilePathW) / sizeof(FilePathW[0]))
+    {
+        FilePathU.Length = 0;
+        FilePathU.MaximumLength = (USHORT)cchFilePath * sizeof(WCHAR);
+        FilePathU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           FilePathU.MaximumLength);
+        if (FilePathU.Buffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+    }
+    else
+    {
+        FilePathU.Length = 0;
+        FilePathU.MaximumLength = sizeof(FilePathW);
+        FilePathU.Buffer = FilePathW;
+    }
+
+    /* save the last error code */
+    PrevLastError = GetLastError();
+    SetLastError(ERROR_SUCCESS);
+
+    /* call the unicode version that does all the work */
+    Ret = GetFinalPathNameByHandleW(hFile,
+                                    FilePathU.Buffer,
+                                    cchFilePath,
+                                    dwFlags);
+
+    if (GetLastError() == ERROR_SUCCESS)
+    {
+        /* no error, restore the last error code and convert the string */
+        SetLastError(PrevLastError);
+
+        Ret = FilenameU2A_FitOrFail(lpszFilePath,
+                                    cchFilePath,
+                                    &FilePathU);
+    }
+
+    /* free allocated memory if necessary */
+    if (FilePathU.Buffer != FilePathW)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    FilePathU.Buffer);
+    }
+
+    return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFileBandwidthReservation(IN HANDLE hFile,
+                            IN DWORD nPeriodMilliseconds,
+                            IN DWORD nBytesPerPeriod,
+                            IN BOOL bDiscardable,
+                            OUT LPDWORD lpTransferSize,
+                            OUT LPDWORD lpNumOutstandingRequests)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetFileBandwidthReservation(IN HANDLE hFile,
+                            OUT LPDWORD lpPeriodMilliseconds,
+                            OUT LPDWORD lpBytesPerPeriod,
+                            OUT LPBOOL pDiscardable,
+                            OUT LPDWORD lpTransferSize,
+                            OUT LPDWORD lpNumOutstandingRequests)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFileCompletionNotificationModes(IN HANDLE FileHandle,
+                                   IN UCHAR Flags)
+{
+    if (Flags & ~(FILE_SKIP_COMPLETION_PORT_ON_SUCCESS | FILE_SKIP_SET_EVENT_ON_HANDLE))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+OpenFileById(IN HANDLE hFile,
+             IN LPFILE_ID_DESCRIPTOR lpFileID,
+             IN DWORD dwDesiredAccess,
+             IN DWORD dwShareMode,
+             IN LPSECURITY_ATTRIBUTES lpSecurityAttributes  OPTIONAL,
+             IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return INVALID_HANDLE_VALUE;
+}
+
+#endif
 
