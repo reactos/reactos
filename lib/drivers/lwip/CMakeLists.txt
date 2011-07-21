@@ -1,3 +1,8 @@
+include_directories(
+    BEFORE include
+	${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
 
 include_directories(
     src/include

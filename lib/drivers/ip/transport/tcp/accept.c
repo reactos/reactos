@@ -67,7 +67,7 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
     
     AddressToBind.addr = Connection->AddressFile->Address.Address.IPv4Address;
 
-    Status = TCPTranslateError(LibTCPBind(Connection->SocketContext,
+    Status = TCPTranslateError(LibTCPBind(Connection,
                                           &AddressToBind,
                                           Connection->AddressFile->Port));
 
@@ -91,7 +91,7 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
 
     if (NT_SUCCESS(Status))
     {
-        Connection->SocketContext = LibTCPListen(Connection->SocketContext, Backlog);
+        Connection->SocketContext = LibTCPListen(Connection, Backlog);
         if (!Connection->SocketContext)
             Status = STATUS_UNSUCCESSFUL;
     }

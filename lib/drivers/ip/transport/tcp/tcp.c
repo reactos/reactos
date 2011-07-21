@@ -115,19 +115,19 @@ NTSTATUS TCPClose
     DbgPrint("[IP, TCPClose] Called for Connection( 0x%x )->SocketConext( 0x%x )\n", Connection, Connection->SocketContext);
 
     Socket = Connection->SocketContext;
-    Connection->SocketContext = NULL;
+    //Connection->SocketContext = NULL;
 
     /* We should not be associated to an address file at this point */
     ASSERT(!Connection->AddressFile);
 
     /* Don't try to close again if the other side closed us already */
-    if (Socket)
+    if (Connection->SocketContext)
     {
         FlushAllQueues(Connection, STATUS_CANCELLED);
 
         DbgPrint("[IP, TCPClose] Socket (pcb) = 0x%x\n", Socket);
 
-        LibTCPClose(Socket, FALSE);
+        LibTCPClose(Connection, FALSE);
     }
 
     DbgPrint("[IP, TCPClose] Leaving. Connection->RefCount = %d\n", Connection->RefCount);
@@ -299,7 +299,7 @@ NTSTATUS TCPConnect
         bindaddr.addr = Connection->AddressFile->Address.Address.IPv4Address;
     }
 
-    Status = TCPTranslateError(LibTCPBind(Connection->SocketContext,
+    Status = TCPTranslateError(LibTCPBind(Connection,
                                           &bindaddr,
                                           Connection->AddressFile->Port));
     
@@ -338,7 +338,7 @@ NTSTATUS TCPConnect
 			
             InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
         
-            Status = TCPTranslateError(LibTCPConnect(Connection->SocketContext,
+            Status = TCPTranslateError(LibTCPConnect(Connection,
                                                      &connaddr,
                                                      RemotePort));
         
@@ -372,12 +372,12 @@ NTSTATUS TCPDisconnect
     {
         if (Flags & TDI_DISCONNECT_RELEASE)
         {
-            Status = TCPTranslateError(LibTCPShutdown(Connection->SocketContext, 0, 1));
+            Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
         }
 
         if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
         {
-            Status = TCPTranslateError(LibTCPShutdown(Connection->SocketContext, 1, 1));
+            Status = TCPTranslateError(LibTCPShutdown(Connection, 1, 1));
         }
     }
     else
@@ -464,7 +464,7 @@ NTSTATUS TCPSendData
                            Connection->SocketContext));
     DbgPrint("[IP, TCPSendData] Called\n");
 
-    Status = TCPTranslateError(LibTCPSend(Connection->SocketContext,
+    Status = TCPTranslateError(LibTCPSend(Connection,
                                           BufferData,
                                           SendLength,
                                           FALSE));
