@@ -771,7 +771,6 @@
 ;@ stdcall InitializeConditionVariable ntdll.RtlInitializeConditionVariable ; Win 7
 @ stdcall InitializeCriticalSection(ptr) ; FIXME: ntdll.RtlInitializeCriticalSection
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
-@ stdcall InitializeCriticalSectionEx(ptr long long)
 ;@ stdcall InitializeExtendedContext ; Win 7
 ;@ stdcall InitializeProcThreadAttributeList api-ms-win-core-processthreads-l1-1-0.InitializeProcThreadAttributeList ; Win 7
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
@@ -969,8 +968,6 @@
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
-@ stdcall QueryFullProcessImageNameA(ptr long str ptr) ; Vista and later
-@ stdcall QueryFullProcessImageNameW(ptr long wstr ptr) ; Vista and later
 ;@ stdcall QueryIdleProcessorCycleTime ; Win 7
 ;@ stdcall QueryIdleProcessorCycleTimeEx ; Win 7
 @ stdcall QueryInformationJobObject(long long ptr long ptr)
@@ -1051,7 +1048,6 @@
 ;@ stdcall RegUnLoadKeyA ; Win 7
 ;@ stdcall RegUnLoadKeyW ; Win 7
 ;@ stdcall RegisterApplicationRecoveryCallback ; Win 7
-@ stdcall RegisterApplicationRestart(wstr long)
 @ stdcall RegisterConsoleIME(ptr ptr)
 @ stdcall RegisterConsoleOS2(long)
 @ stdcall RegisterConsoleVDM(long long long long long long long long long long long)

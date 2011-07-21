@@ -56,6 +56,8 @@
 #define HeapAlloc RtlAllocateHeap
 #define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
+#define _lread(a, b, c)  (long)(_hread(a, b, (long)c))
+#define _lwrite(a, b, c) (long)(_hwrite(a, b, (long)c))
 WINE_DEFAULT_DEBUG_CHANNEL(file);
    
 /* The readahead length of the decompressor. Reading single bytes
