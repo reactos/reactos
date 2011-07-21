@@ -60,7 +60,6 @@
 #define snprintfW _snwprintf
 #define vsnprintfW _vsnwprintf
 #define isprintW iswprint
-#define get_char_typeW(x) iswctype((x) >> 8, (x) & 0xFF)
 
 static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
