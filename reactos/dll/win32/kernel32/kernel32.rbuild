@@ -7,16 +7,12 @@
 	<include base="kernel32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<library>pseh</library>
-	<library>normalize</library>
+	<library>wine</library>
 	<library>ntdll</library>
 	<define name="_KERNEL32_" />
 	<redefine name="_WIN32_WINNT">0x0600</redefine>
 	<dependency>errcodes</dependency>
 	<pch>k32.h</pch>
-	<group compilerset="gcc">
-		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
-		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
-	</group>
 	<directory name="client">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -30,17 +26,30 @@
 				<file>thread.S</file>
 			</directory>
 		</if>
+		<file>atom.c</file>
+		<file>compname.c</file>
 		<file>debugger.c</file>
+		<file>dllmain.c</file>
+		<file>environ.c</file>
 		<file>except.c</file>
-		<file>vista.c</file>
-		<file>synch.c</file>
 		<file>fiber.c</file>
-		<file>thread.c</file>
+		<file>handle.c</file>
 		<file>heapmem.c</file>
-		<file>virtmem.c</file>
 		<file>job.c</file>
+		<file>loader.c</file>
+		<file>perfcnt.c</file>
+		<file>power.c</file>
 		<file>proc.c</file>
+		<file>resntfy.c</file>
 		<file>session.c</file>
+		<file>synch.c</file>
+		<file>sysinfo.c</file>
+		<file>timerqueue.c</file>
+		<file>thread.c</file>
+		<file>utils.c</file>
+		<file>version.c</file>
+		<file>virtmem.c</file>
+		<file>vista.c</file>
 		<directory name="file">
 			<file>backup.c</file>
 			<file>bintype.c</file>
@@ -70,28 +79,15 @@
 		</directory>
 		<directory name="misc">
 			<file>actctx.c</file>
-			<file>atom.c</file>
 			<file>comm.c</file>
 			<file>commdcb.c</file>
-			<file>computername.c</file>
-			<file>dllmain.c</file>
-			<file>env.c</file>
-			<file>handle.c</file>
-			<file>ldr.c</file>
 			<file>lzexpand.c</file>
 			<file>muldiv.c</file>
-			<file>perfcnt.c</file>
-			<file>power.c</file>
-			<file>resntfy.c</file>
+			<file>profile.c</file>
 			<file>res.c</file>
 			<file>stubs.c</file>
-			<file>sysinfo.c</file>
 			<file>time.c</file>
-			<file>timerqueue.c</file>
 			<file>toolhelp.c</file>
-			<file>version.c</file>
-			<file>profile.c</file>
-			<file>utils.c</file>
 		</directory>
 	</directory>
 	<directory name="winnls">

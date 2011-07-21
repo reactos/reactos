@@ -11,15 +11,28 @@ set_rc_compiler()
 spec2def(kernel32.dll kernel32.spec)
 
 list(APPEND SOURCE
+	client/atom.c
+	client/compname.c
     client/debugger.c
+	client/dllmain.c
+	client/environ.c
     client/except.c
     client/fiber.c
+	client/handle.c
     client/heapmem.c
     client/job.c
+	client/loader.c
+	client/perfcnt.c
+	client/power.c
     client/proc.c
+	client/resntfy.c
     client/session.c
     client/synch.c
+	client/sysinfo.c
+	client/timerqueue.c
+	client/utils.c
     client/thread.c
+	client/version.c
     client/virtmem.c
     client/vista.c
     client/file/backup.c
@@ -48,28 +61,15 @@ list(APPEND SOURCE
     client/file/tape.c
     client/file/volume.c
     client/misc/actctx.c
-    client/misc/atom.c
     client/misc/comm.c
     client/misc/commdcb.c
-    client/misc/computername.c
-    client/misc/dllmain.c
-    client/misc/env.c
-    client/misc/handle.c
-    client/misc/ldr.c
     client/misc/lzexpand.c
     client/misc/muldiv.c
-    client/misc/perfcnt.c
-    client/misc/power.c
     client/misc/profile.c
     client/misc/res.c
-    client/misc/resntfy.c
     client/misc/stubs.c
-    client/misc/sysinfo.c
     client/misc/time.c
-    client/misc/timerqueue.c
     client/misc/toolhelp.c
-    client/misc/utils.c
-    client/misc/version.c
     winnls/string/casemap.c
     winnls/string/chartype.c
     winnls/string/collation.c
@@ -98,7 +98,7 @@ add_library(kernel32 SHARED ${SOURCE})
 set_entrypoint(kernel32 DllMain@12)
 set_image_base(kernel32 ${baseaddress_kernel32})
 
-target_link_libraries(kernel32 chkstk ${PSEH_LIB})
+target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h)

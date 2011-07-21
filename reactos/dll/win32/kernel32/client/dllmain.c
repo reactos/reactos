@@ -26,6 +26,7 @@ WCHAR BaseDefaultPathBuffer[6140];
 
 HANDLE hProcessHeap = NULL;
 HMODULE hCurrentModule = NULL;
+HMODULE kernel32_handle = NULL;
 HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
@@ -323,7 +324,7 @@ DllMain(HANDLE hDll,
         RtlInitializeHandleTable(0xFFFF,
                                  sizeof(BASE_HEAP_HANDLE_ENTRY),
                                  &BaseHeapHandleTable);
-        hCurrentModule = hDll;
+        kernel32_handle = hCurrentModule = hDll;
         DPRINT("Heap: %p\n", hProcessHeap);
 
         /*
