@@ -541,7 +541,6 @@
 @ stdcall GetLinguistLangSize(ptr) ; missing in Win 7
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
-@ stdcall GetLocaleInfoEx(wstr long wstr long) ; Vista+
 @ stdcall GetLocaleInfoW(long long ptr long)
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
@@ -851,7 +850,6 @@
 ;@ stdcall K32InitializeProcessForWsWatch ; Win 7
 ;@ stdcall K32QueryWorkingSet ; Win 7
 ;@ stdcall K32QueryWorkingSetEx ; Win 7
-@ stdcall LCIDToLocaleName(long wstr long long) ; needed for wine gecko; missing in XP SP3
 @ stdcall LCMapStringA(long long str long ptr long)
 ;@ stdcall LCMapStringEx ; Win 7
 @ stdcall LCMapStringW(long long wstr long ptr long)
@@ -994,7 +992,6 @@
 ;@ stdcall QueryThreadpoolStackInformation ; Win 7
 ;@ stdcall -arch=x86_64 QueryUmsThreadInformation
 ;@ stdcall QueryUnbiasedInterruptTime ; Win 7
-@ stdcall QueryWin31IniFilesMappedToRegistry(long long long long) ; missing in Win 7
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
 @ stdcall RaiseException(long long long ptr)
