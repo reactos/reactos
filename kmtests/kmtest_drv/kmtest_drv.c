@@ -6,6 +6,8 @@
  */
 
 #include <ntddk.h>
+#include <ntifs.h>
+#include <ndk/ketypes.h>
 #include <ntstrsafe.h>
 #include <limits.h>
 #include <pseh/pseh2.h>
@@ -49,12 +51,17 @@ DriverEntry(
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING DeviceName;
     PKMT_DEVICE_EXTENSION DeviceExtension;
+    PKPRCB Prcb;
 
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
     DPRINT("DriverEntry\n");
+
+    Prcb = KeGetCurrentPrcb();
+    KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
+    KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
 
     RtlInitUnicodeString(&DeviceName, KMTEST_DEVICE_DRIVER_PATH);
     Status = IoCreateDevice(DriverObject, sizeof(KMT_DEVICE_EXTENSION),

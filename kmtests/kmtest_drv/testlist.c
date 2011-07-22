@@ -23,6 +23,7 @@ KMT_TESTFUNC Test_KeApc;
 KMT_TESTFUNC Test_KeDpc;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
+KMT_TESTFUNC Test_KernelType;
 KMT_TESTFUNC Test_ObCreate;
 
 const KMT_TEST TestList[] =
@@ -42,6 +43,7 @@ const KMT_TEST TestList[] =
     { "KeDpc",                              Test_KeDpc },
     { "KeIrql",                             Test_KeIrql },
     { "KeProcessor",                        Test_KeProcessor },
+    { "KernelType",                         Test_KernelType },
     { "ObCreate",                           Test_ObCreate },
     { NULL,                                 NULL }
 };

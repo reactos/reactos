@@ -79,6 +79,11 @@ typedef struct
     PKMT_RESULTBUFFER ResultBuffer;
     PMDL Mdl;
 } KMT_DEVICE_EXTENSION, *PKMT_DEVICE_EXTENSION;
+
+extern BOOLEAN KmtIsCheckedBuild;
+extern BOOLEAN KmtIsMultiProcessorBuild;
+
+VOID KmtSetIrql(IN KIRQL NewIrql);
 #elif defined KMT_USER_MODE
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
@@ -146,9 +151,22 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
                                              FILE_ANY_ACCESS)
 
 #if defined KMT_DEFINE_TEST_FUNCTIONS
-PKMT_RESULTBUFFER ResultBuffer = NULL;
 
-#if defined KMT_USER_MODE
+#if defined KMT_KERNEL_MODE
+BOOLEAN KmtIsCheckedBuild;
+BOOLEAN KmtIsMultiProcessorBuild;
+
+VOID KmtSetIrql(IN KIRQL NewIrql)
+{
+    KIRQL Irql = KeGetCurrentIrql();
+    if (Irql > NewIrql)
+        KeLowerIrql(NewIrql);
+    else if (Irql < NewIrql)
+        KeRaiseIrql(NewIrql, &Irql);
+}
+
+INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
+#elif defined KMT_USER_MODE
 static PKMT_RESULTBUFFER KmtAllocateResultBuffer(SIZE_T LogBufferMaxLength)
 {
     PKMT_RESULTBUFFER Buffer = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LogBufferMaxLength]));
@@ -166,7 +184,11 @@ static VOID KmtFreeResultBuffer(PKMT_RESULTBUFFER Buffer)
 {
     HeapFree(GetProcessHeap(), 0, Buffer);
 }
+
+#define KmtVSNPrintF vsnprintf
 #endif /* defined KMT_USER_MODE */
+
+PKMT_RESULTBUFFER ResultBuffer = NULL;
 
 static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Length)
 {
@@ -190,12 +212,6 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
 
     memcpy(&Buffer->LogBuffer[OldLength], String, Length);
 }
-
-#ifdef KMT_KERNEL_MODE
-INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
-#elif defined KMT_USER_MODE
-#define KmtVSNPrintF vsnprintf
-#endif /* defined KMT_USER_MODE */
 
 KMT_FORMAT(ms_printf, 5, 0)
 static SIZE_T KmtXVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR FileAndLine, PCSTR Prepend, PCSTR Format, va_list Arguments)

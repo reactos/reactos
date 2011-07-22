@@ -14,6 +14,7 @@ list(APPEND KMTEST_DRV_SOURCE
     kmtest_drv/testlist.c
 
     example/Example.c
+    example/KernelType.c
     ntos_ex/ExHardError.c
     ntos_ex/ExInterlocked.c
     ntos_ex/ExPools.c

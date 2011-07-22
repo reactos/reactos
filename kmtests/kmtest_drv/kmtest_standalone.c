@@ -6,6 +6,8 @@
  */
 
 #include <ntddk.h>
+#include <ntifs.h>
+#include <ndk/ketypes.h>
 
 #define KMT_DEFINE_TEST_FUNCTIONS
 #include <kmt_test.h>
@@ -104,10 +106,15 @@ DriverEntry(
     PCWSTR DeviceNameSuffix;
     INT Flags = 0;
     int i;
+    PKPRCB Prcb;
 
     PAGED_CODE();
 
     DPRINT("DriverEntry\n");
+
+    Prcb = KeGetCurrentPrcb();
+    KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
+    KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
 
     /* get the Kmtest device, so that we get a ResultBuffer pointer */
     RtlInitUnicodeString(&KmtestDeviceName, KMTEST_DEVICE_DRIVER_PATH);

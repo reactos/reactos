@@ -12,6 +12,7 @@
 	</directory>
 	<directory name="example">
 		<file>Example.c</file>
+		<file>KernelType.c</file>
 	</directory>
 	<directory name="ntos_ex">
 		<file>ExHardError.c</file>
