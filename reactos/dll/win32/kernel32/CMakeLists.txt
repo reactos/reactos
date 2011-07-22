@@ -27,7 +27,9 @@ list(APPEND SOURCE
     client/session.c
     client/synch.c
 	client/sysinfo.c
+	client/time.c
 	client/timerqueue.c
+	client/toolhelp.c
 	client/utils.c
     client/thread.c
 	client/vdm.c
@@ -65,8 +67,7 @@ list(APPEND SOURCE
     client/misc/muldiv.c
     client/misc/profile.c
     client/misc/res.c
-    client/misc/time.c
-    client/misc/toolhelp.c
+    client/misc/timezone.c
     winnls/string/casemap.c
     winnls/string/chartype.c
     winnls/string/collation.c

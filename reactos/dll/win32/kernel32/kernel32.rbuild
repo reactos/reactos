@@ -44,8 +44,10 @@
 		<file>session.c</file>
 		<file>synch.c</file>
 		<file>sysinfo.c</file>
+		<file>time.c</file>
 		<file>timerqueue.c</file>
 		<file>thread.c</file>
+		<file>toolhelp.c</file>
 		<file>utils.c</file>
 		<file>vdm.c</file>
 		<file>version.c</file>
@@ -85,8 +87,7 @@
 			<file>muldiv.c</file>
 			<file>profile.c</file>
 			<file>res.c</file>
-			<file>time.c</file>
-			<file>toolhelp.c</file>
+			<file>timezone.c</file>
 		</directory>
 	</directory>
 	<directory name="winnls">
