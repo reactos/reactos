@@ -23,18 +23,12 @@ START_TEST(KeIrql)
 
     PrevIrql = KeGetCurrentIrql();
 
-    // SYNCH_LEVEL is different for UP/MP
-    if (KeGetCurrentPrcb()->BuildType & PRCB_BUILD_UNIPROCESSOR)
-    {
-        trace("This is a Uniprocessor kernel\n");
-        SynchIrql = DISPATCH_LEVEL;
-    }
-    else
-    {
-        trace("This is a Multiprocessor kernel\n");
+    /* SYNCH_LEVEL is different for UP/MP */
+    if (KmtIsMultiProcessorBuild)
         SynchIrql = IPI_LEVEL - 2;
-    }
-    
+    else
+        SynchIrql = DISPATCH_LEVEL;
+
     /* some Irqls MUST work */
     {
     const KIRQL Irqls[] = { LOW_LEVEL, PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL,
@@ -128,6 +122,17 @@ START_TEST(KeIrql)
     ok_irql(SynchIrql);
     ok_eq_uint(Irql, SynchIrql);
     KeLowerIrql(PASSIVE_LEVEL);
+
+    /* these bugcheck on a checked build but run fine on free! */
+    if (!KmtIsCheckedBuild)
+    {
+        KeRaiseIrql(HIGH_LEVEL, &Irql);
+        KeRaiseIrql(APC_LEVEL, &Irql);
+        ok_irql(APC_LEVEL);
+        KeLowerIrql(HIGH_LEVEL);
+        ok_irql(HIGH_LEVEL);
+        KeLowerIrql(PASSIVE_LEVEL);
+    }
 
     /* make sure we exit gracefully */
     ok_irql(PASSIVE_LEVEL);

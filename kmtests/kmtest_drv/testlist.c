@@ -43,7 +43,7 @@ const KMT_TEST TestList[] =
     { "KeDpc",                              Test_KeDpc },
     { "KeIrql",                             Test_KeIrql },
     { "KeProcessor",                        Test_KeProcessor },
-    { "KernelType",                         Test_KernelType },
+    { "-KernelType",                        Test_KernelType },
     { "ObCreate",                           Test_ObCreate },
     { NULL,                                 NULL }
 };
