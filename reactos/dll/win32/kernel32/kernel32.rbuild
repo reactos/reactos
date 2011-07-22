@@ -25,6 +25,7 @@
 				<file>thread.S</file>
 			</directory>
 		</if>
+		<file>appcache.c</file>
 		<file>atom.c</file>
 		<file>compname.c</file>
 		<file>debugger.c</file>
@@ -46,6 +47,7 @@
 		<file>timerqueue.c</file>
 		<file>thread.c</file>
 		<file>utils.c</file>
+		<file>vdm.c</file>
 		<file>version.c</file>
 		<file>virtmem.c</file>
 		<file>vista.c</file>
@@ -83,7 +85,6 @@
 			<file>muldiv.c</file>
 			<file>profile.c</file>
 			<file>res.c</file>
-			<file>stubs.c</file>
 			<file>time.c</file>
 			<file>toolhelp.c</file>
 		</directory>

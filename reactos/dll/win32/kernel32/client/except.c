@@ -697,4 +697,17 @@ GetLastError()
     return NtCurrentTeb()->LastErrorValue;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+WINAPI
+RestoreLastError(
+    DWORD dwErrCode
+    )
+{
+    STUB;
+}
+
+
 /* EOF */

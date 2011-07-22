@@ -8,6 +8,7 @@ set_rc_compiler()
 spec2def(kernel32.dll kernel32.spec)
 
 list(APPEND SOURCE
+	client/appcache.c
 	client/atom.c
 	client/compname.c
     client/debugger.c
@@ -29,6 +30,7 @@ list(APPEND SOURCE
 	client/timerqueue.c
 	client/utils.c
     client/thread.c
+	client/vdm.c
 	client/version.c
     client/virtmem.c
     client/vista.c
@@ -63,7 +65,6 @@ list(APPEND SOURCE
     client/misc/muldiv.c
     client/misc/profile.c
     client/misc/res.c
-    client/misc/stubs.c
     client/misc/time.c
     client/misc/toolhelp.c
     winnls/string/casemap.c

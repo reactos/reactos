@@ -1330,4 +1330,229 @@ Cleanup2:
     return Result;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint,
+    LPCWSTR lpszVolumeName
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+DeleteVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+FindFirstVolumeMountPointA(
+    LPCSTR lpszRootPathName,
+    LPSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+FindNextVolumeA(HANDLE handle,
+                LPSTR volume,
+                DWORD len)
+{
+    WCHAR *buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, len * sizeof(WCHAR));
+    BOOL ret;
+
+    if (!buffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    if ((ret = FindNextVolumeW( handle, buffer, len )))
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL )) ret = FALSE;
+    }
+
+    HeapFree( GetProcessHeap(), 0, buffer );
+    return ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+FindNextVolumeMountPointA(
+    HANDLE hFindVolumeMountPoint,
+    LPSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetVolumePathNamesForVolumeNameA(
+    LPCSTR lpszVolumeName,
+    LPSTR lpszVolumePathNames,
+    DWORD cchBufferLength,
+    PDWORD lpcchReturnLength
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPCSTR lpszVolumeName
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+FindVolumeMountPointClose(
+    HANDLE hFindVolumeMountPoint
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+DeleteVolumeMountPointW(
+    LPCWSTR lpszVolumeMountPoint
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+FindFirstVolumeMountPointW(
+    LPCWSTR lpszRootPathName,
+    LPWSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+FindNextVolumeW(
+	HANDLE handle,
+	LPWSTR volume,
+	DWORD len
+    )
+{
+    MOUNTMGR_MOUNT_POINTS *data = handle;
+
+    while (data->Size < data->NumberOfMountPoints)
+    {
+        static const WCHAR volumeW[] = {'\\','?','?','\\','V','o','l','u','m','e','{',};
+        WCHAR *link = (WCHAR *)((char *)data + data->MountPoints[data->Size].SymbolicLinkNameOffset);
+        DWORD size = data->MountPoints[data->Size].SymbolicLinkNameLength;
+        data->Size++;
+        /* skip non-volumes */
+        if (size < sizeof(volumeW) || memcmp( link, volumeW, sizeof(volumeW) )) continue;
+        if (size + sizeof(WCHAR) >= len * sizeof(WCHAR))
+        {
+            SetLastError( ERROR_FILENAME_EXCED_RANGE );
+            return FALSE;
+        }
+        memcpy( volume, link, size );
+        volume[1] = '\\';  /* map \??\ to \\?\ */
+        volume[size / sizeof(WCHAR)] = '\\';  /* Windows appends a backslash */
+        volume[size / sizeof(WCHAR) + 1] = 0;
+        DPRINT( "returning entry %u %s\n", data->Size - 1, volume );
+        return TRUE;
+    }
+    SetLastError( ERROR_NO_MORE_FILES );
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+FindNextVolumeMountPointW(
+    HANDLE hFindVolumeMountPoint,
+    LPWSTR lpszVolumeMountPoint,
+    DWORD cchBufferLength
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetVolumePathNamesForVolumeNameW(
+    LPCWSTR lpszVolumeName,
+    LPWSTR lpszVolumePathNames,
+    DWORD cchBufferLength,
+    PDWORD lpcchReturnLength
+    )
+{
+    STUB;
+    return 0;
+}
+
+
 /* EOF */

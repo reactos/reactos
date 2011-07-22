@@ -795,4 +795,16 @@ GetSystemTimes(LPFILETIME lpIdleTime,
     return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetClientTimeZoneInformation(
+    CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
+{
+    STUB;
+    return 0;
+}
+
 /* EOF */

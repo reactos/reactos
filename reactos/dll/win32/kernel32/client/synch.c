@@ -1351,4 +1351,152 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
     return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+VOID WINAPI
+Sleep(DWORD dwMilliseconds)
+{
+  SleepEx(dwMilliseconds, FALSE);
+  return;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+SleepEx(DWORD dwMilliseconds,
+	BOOL bAlertable)
+{
+  LARGE_INTEGER Interval;
+  NTSTATUS errCode;
+
+  if (dwMilliseconds != INFINITE)
+    {
+      /*
+       * System time units are 100 nanoseconds (a nanosecond is a billionth of
+       * a second).
+       */
+      Interval.QuadPart = -((LONGLONG)dwMilliseconds * 10000);
+    }
+  else
+    {
+      /* Approximately 292000 years hence */
+      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
+    }
+
+dowait:
+  errCode = NtDelayExecution ((BOOLEAN)bAlertable, &Interval);
+  if ((bAlertable) && (errCode == STATUS_ALERTED)) goto dowait;
+  return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+RegisterWaitForSingleObject(
+    PHANDLE phNewWaitObject,
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    )
+{
+    NTSTATUS Status = RtlRegisterWait(phNewWaitObject,
+                                      hObject,
+                                      Callback,
+                                      Context,
+                                      dwMilliseconds,
+                                      dwFlags);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+RegisterWaitForSingleObjectEx(
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID Context,
+    ULONG dwMilliseconds,
+    ULONG dwFlags
+    )
+{
+    NTSTATUS Status;
+    HANDLE hNewWaitObject;
+
+    Status = RtlRegisterWait(&hNewWaitObject,
+                             hObject,
+                             Callback,
+                             Context,
+                             dwMilliseconds,
+                             dwFlags);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
+
+    return hNewWaitObject;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+UnregisterWait(
+    HANDLE WaitHandle
+    )
+{
+    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+UnregisterWaitEx(
+    HANDLE WaitHandle,
+    HANDLE CompletionEvent
+    )
+{
+    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, CompletionEvent);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /* EOF */

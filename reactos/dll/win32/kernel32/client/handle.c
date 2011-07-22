@@ -215,4 +215,31 @@ UINT WINAPI SetHandleCount(UINT nCount)
    return(nCount);
 }
 
+/*
+ * @unimplemented
+ */
+DWORD WINAPI GetHandleContext(HANDLE hnd)
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE WINAPI CreateSocketHandle(VOID)
+{
+    STUB;
+    return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI SetHandleContext(HANDLE hnd,DWORD context)
+{
+    STUB;
+    return 0;
+}
+
 /* EOF */

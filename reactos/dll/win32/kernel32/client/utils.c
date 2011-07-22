@@ -488,3 +488,39 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     DPRINT("Section: %lx for file: %lx\n", *hSection, hFile);
     return Status;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BaseCheckRunApp(IN DWORD Unknown1,
+                IN DWORD Unknown2,
+                IN DWORD Unknown3,
+                IN DWORD Unknown4,
+                IN DWORD Unknown5,
+                IN DWORD Unknown6,
+                IN DWORD Unknown7,
+                IN DWORD Unknown8,
+                IN DWORD Unknown9,
+                IN DWORD Unknown10)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BasepCheckWinSaferRestrictions(IN DWORD Unknown1,
+                               IN DWORD Unknown2,
+                               IN DWORD Unknown3,
+                               IN DWORD Unknown4,
+                               IN DWORD Unknown5,
+                               IN DWORD Unknown6)
+{
+    STUB;
+    return FALSE;
+}

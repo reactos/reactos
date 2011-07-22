@@ -558,4 +558,77 @@ DnsHostnameToComputerNameW(LPCWSTR hostname,
     return TRUE;
 }
 
+DWORD
+WINAPI
+AddLocalAlternateComputerNameA(LPSTR lpName, PNTSTATUS Status)
+{
+    STUB;
+    return 0;
+}
+
+DWORD
+WINAPI
+AddLocalAlternateComputerNameW(LPWSTR lpName, PNTSTATUS Status)
+{
+    STUB;
+    return 0;
+}
+
+DWORD
+WINAPI
+EnumerateLocalComputerNamesA(PVOID pUnknown, DWORD Size, LPSTR lpBuffer, LPDWORD lpnSize)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD
+WINAPI
+EnumerateLocalComputerNamesW(PVOID pUnknown, DWORD Size, LPWSTR lpBuffer, LPDWORD lpnSize)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD
+WINAPI
+RemoveLocalAlternateComputerNameA(LPSTR lpName, DWORD Unknown)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD
+WINAPI
+RemoveLocalAlternateComputerNameW(LPWSTR lpName, DWORD Unknown)
+{
+    STUB;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetLocalPrimaryComputerNameA(IN DWORD Unknown1,
+                             IN DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetLocalPrimaryComputerNameW(IN DWORD Unknown1,
+                             IN DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+
 /* EOF */

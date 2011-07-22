@@ -431,4 +431,18 @@ TerminateJobObject(HANDLE hJob,
     return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+CreateJobSet (
+    ULONG NumJob,
+    PJOB_SET_ARRAY UserJobSet,
+    ULONG Flags)
+{
+    STUB;
+    return 0;
+}
+
 /* EOF */

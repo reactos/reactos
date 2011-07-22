@@ -42,4 +42,8 @@
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
+#define STUB \
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
+  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+
 #endif

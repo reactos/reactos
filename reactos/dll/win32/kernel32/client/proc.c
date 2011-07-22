@@ -2144,6 +2144,29 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
     return FALSE;
 }
 
+BOOL
+WINAPI
+SetProcessWorkingSetSizeEx(IN HANDLE hProcess,
+                           IN SIZE_T dwMinimumWorkingSetSize,
+                           IN SIZE_T dwMaximumWorkingSetSize,
+                           IN DWORD Flags)
+{
+    STUB;
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
+GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
+                           OUT PSIZE_T lpMinimumWorkingSetSize,
+                           OUT PSIZE_T lpMaximumWorkingSetSize,
+                           OUT PDWORD Flags)
+{
+    STUB;
+    return FALSE;
+}
+
 /*
  * @implemented
  */

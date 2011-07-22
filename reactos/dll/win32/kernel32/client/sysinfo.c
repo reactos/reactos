@@ -268,3 +268,160 @@ GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
 
     return TRUE;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetNumaHighestNodeNumber(
+    PULONG HighestNodeNumber
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetNumaNodeProcessorMask(
+    UCHAR Node,
+    PULONGLONG ProcessorMask
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetNumaProcessorNode(
+    UCHAR Processor,
+    PUCHAR NodeNumber
+    )
+{
+    STUB;
+    return 0;
+}
+
+BOOL
+WINAPI
+GetNumaAvailableMemoryNode(IN UCHAR Node,
+                           OUT PULONGLONG AvailableBytes)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableW(
+    LPCWSTR lpName,
+    LPCWSTR lpGuid,
+    PVOID   pBuffer,
+    DWORD    nSize
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableW(
+    LPCWSTR lpName,
+    LPCWSTR lpGuid,
+    PVOID    pValue,
+    DWORD    nSize
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpGuid,
+    PVOID   pBuffer,
+    DWORD    nSize
+    )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpGuid,
+    PVOID    pValue,
+    DWORD    nSize
+    )
+{
+    STUB;
+    return 0;
+}
+
+UINT
+WINAPI
+EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
+                         OUT PVOID pFirmwareTableBuffer,
+                         IN DWORD BufferSize)
+{
+    STUB;
+    return 0;
+}
+
+UINT
+WINAPI
+GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
+                       IN DWORD FirmwareTableID,
+                       OUT PVOID pFirmwareTableBuffer,
+                       IN DWORD BufferSize)
+{
+    STUB;
+    return 0;
+}
+
+BOOL
+WINAPI
+GetSystemFileCacheSize(OUT PSIZE_T lpMinimumFileCacheSize,
+                       OUT PSIZE_T lpMaximumFileCacheSize,
+                       OUT PDWORD lpFlags)
+{
+    STUB;
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
+SetSystemFileCacheSize(IN SIZE_T MinimumFileCacheSize,
+                       IN SIZE_T MaximumFileCacheSize,
+                       IN DWORD Flags)
+{
+    STUB;
+    return FALSE;
+}
+

@@ -4195,4 +4195,143 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
     return Ret;
 }
 
+BOOL
+WINAPI
+GetConsoleCharType(HANDLE hConsole, COORD Coord, PDWORD Type)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetConsoleCursorMode(HANDLE hConsole, PBOOL pUnknown1, PBOOL pUnknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetConsoleNlsMode(HANDLE hConsole, LPDWORD lpMode)
+{
+    STUB;
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
+ReadConsoleInputExA(HANDLE hConsole, LPVOID lpBuffer, DWORD dwLen, LPDWORD Unknown1, DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+ReadConsoleInputExW(HANDLE hConsole, LPVOID lpBuffer, DWORD dwLen, LPDWORD Unknown1, DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+RegisterConsoleIME(HWND hWnd, LPDWORD ThreadId)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+RegisterConsoleOS2(BOOL bUnknown)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleCursorMode(HANDLE hConsole, BOOL Unknown1, BOOL Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleNlsMode(HANDLE hConsole, DWORD dwMode)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleOS2OemFormat(BOOL bUnknown)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+UnregisterConsoleIME(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI GetConsoleKeyboardLayoutNameA(LPSTR name)
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI GetConsoleKeyboardLayoutNameW(LPWSTR name)
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetLastConsoleEventActive(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetConsoleCommandHistoryMode(IN DWORD dwMode)
+{
+    STUB;
+    return FALSE;
+}
+
+
 /* EOF */

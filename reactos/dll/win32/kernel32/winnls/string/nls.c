@@ -2031,4 +2031,71 @@ IsDBCSLeadByte(BYTE TestByte)
     return IntIsLeadByte(&AnsiCodePage.CodePageTable, TestByte);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS WINAPI CreateNlsSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,ULONG Size,ULONG AccessMask)
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI IsValidUILanguage(LANGID langid)
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID WINAPI NlsConvertIntegerToString(ULONG Value,ULONG Base,ULONG strsize, LPWSTR str, ULONG strsize2)
+{
+    STUB;
+}
+
+/*
+ * @unimplemented
+ */
+UINT WINAPI SetCPGlobal(UINT CodePage)
+{
+    STUB;
+    return 0;
+}
+
+BOOL
+WINAPI
+NlsResetProcessLocale(VOID)
+{
+    STUB;
+    return TRUE;
+}
+
+VOID
+WINAPI
+GetDefaultSortkeySize(LPVOID lpUnknown)
+{
+    STUB;
+    lpUnknown = NULL;
+}
+
+VOID
+WINAPI
+GetLinguistLangSize(LPVOID lpUnknown)
+{
+    STUB;
+    lpUnknown = NULL;
+}
+
+ULONG
+WINAPI
+NlsGetCacheUpdateCount(VOID)
+{
+    STUB;
+    return 0;
+}
+
 /* EOF */

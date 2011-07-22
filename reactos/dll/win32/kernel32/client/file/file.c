@@ -2020,4 +2020,143 @@ Cleanup:
     return Ret;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ReadFileScatter(HANDLE hFile,
+                FILE_SEGMENT_ELEMENT aSegmentArray[],
+                DWORD nNumberOfBytesToRead,
+                LPDWORD lpReserved,
+                LPOVERLAPPED lpOverlapped)
+{
+    PIO_STATUS_BLOCK pIOStatus;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    DPRINT("(%p %p %u %p)\n", hFile, aSegmentArray, nNumberOfBytesToRead, lpOverlapped);
+
+    Offset.LowPart  = lpOverlapped->Offset;
+    Offset.HighPart = lpOverlapped->OffsetHigh;
+    pIOStatus = (PIO_STATUS_BLOCK) lpOverlapped;
+    pIOStatus->Status = STATUS_PENDING;
+    pIOStatus->Information = 0;
+
+    Status = NtReadFileScatter(hFile,
+                               NULL,
+                               NULL,
+                               NULL,
+                               pIOStatus,
+                               aSegmentArray,
+                               nNumberOfBytesToRead,
+                               &Offset,
+                               NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+WriteFileGather(HANDLE hFile,
+                FILE_SEGMENT_ELEMENT aSegmentArray[],
+                DWORD nNumberOfBytesToWrite,
+                LPDWORD lpReserved,
+                LPOVERLAPPED lpOverlapped)
+{
+    PIO_STATUS_BLOCK IOStatus;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    DPRINT("%p %p %u %p\n", hFile, aSegmentArray, nNumberOfBytesToWrite, lpOverlapped);
+
+    Offset.LowPart = lpOverlapped->Offset;
+    Offset.HighPart = lpOverlapped->OffsetHigh;
+    IOStatus = (PIO_STATUS_BLOCK) lpOverlapped;
+    IOStatus->Status = STATUS_PENDING;
+    IOStatus->Information = 0;
+
+    Status = NtWriteFileGather(hFile,
+                               NULL,
+                               NULL,
+                               NULL,
+                               IOStatus,
+                               aSegmentArray,
+                               nNumberOfBytesToWrite,
+                               &Offset,
+                               NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL
+WINAPI
+OpenDataFile(HANDLE hFile, DWORD dwUnused)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+PrivMoveFileIdentityW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+ReOpenFile(IN HANDLE hOriginalFile,
+           IN DWORD dwDesiredAccess,
+           IN DWORD dwShareMode,
+           IN DWORD dwFlags)
+{
+   STUB;
+   return INVALID_HANDLE_VALUE;
+}
+
+BOOLEAN
+WINAPI
+Wow64EnableWow64FsRedirection (BOOLEAN Wow64EnableWow64FsRedirection)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+Wow64DisableWow64FsRedirection (VOID ** pv)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+Wow64RevertWow64FsRedirection (VOID * pv)
+{
+    STUB;
+    return FALSE;
+}
+
+
 /* EOF */

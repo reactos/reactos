@@ -1168,4 +1168,33 @@ LoadModule(LPCSTR lpModuleName,
     return GetLastError();
 }
 
+/*
+ * @unimplemented
+ */
+FARPROC WINAPI DelayLoadFailureHook(LPCSTR pszDllName, LPCSTR pszProcName)
+{
+    STUB;
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
+                        LPSTR lpszInitName, LPSTR lpszProcName,
+                        FARPROC *ppfn32Thunk, FARPROC pfnUT32CallBack,
+                        LPVOID lpBuff )
+{
+    STUB;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID WINAPI UTUnRegister( HMODULE hModule )
+{
+    STUB;
+}
+
 /* EOF */

@@ -192,27 +192,29 @@ CancelIo(HANDLE hFile)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-CancelIoEx(IN HANDLE hFile,
-           IN LPOVERLAPPED lpOverlapped)
+BindIoCompletionCallback(HANDLE FileHandle,
+                         LPOVERLAPPED_COMPLETION_ROUTINE Function,
+                         ULONG Flags)
 {
-    UNIMPLEMENTED;
-    return FALSE;
-}
+    NTSTATUS Status = 0;
 
+    DPRINT("(%p, %p, %d)\n", FileHandle, Function, Flags);
 
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-CancelSynchronousIo(IN HANDLE hThread)
-{
-    UNIMPLEMENTED;
-    return FALSE;
+    Status = RtlSetIoCompletionCallback(FileHandle,
+                                        (PIO_APC_ROUTINE)Function,
+                                        Flags);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */
