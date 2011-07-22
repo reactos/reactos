@@ -74,6 +74,33 @@ OutputError(
 }
 
 /**
+ * @name CompareTestNames
+ *
+ * strcmp that skips a leading '-' on either string if present
+ *
+ * @param Str1
+ * @param Str2
+ * @return see strcmp
+ */
+static
+INT
+CompareTestNames(
+    IN PCSTR Str1,
+    IN PCSTR Str2)
+{
+    if (*Str1 == '-')
+        ++Str1;
+    if (*Str2 == '-')
+        ++Str2;
+    while (*Str1 && *Str1 == *Str2)
+    {
+        ++Str1;
+        ++Str2;
+    }
+    return *Str1 - *Str2;
+}
+
+/**
  * @name ListTests
  *
  * Output the list of tests to the console.
@@ -118,7 +145,7 @@ ListTests(
         }
         else
         {
-            int Result = strcmp(TestEntry->TestName, TestName);
+            INT Result = CompareTestNames(TestEntry->TestName, TestName);
 
             if (Result == 0)
             {

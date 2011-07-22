@@ -27,13 +27,13 @@ KMT_TESTFUNC Test_ObCreate;
 
 const KMT_TEST TestList[] =
 {
-    { "Example",                            Test_Example },
     { "ExHardError",                        Test_ExHardError },
     { "-ExHardErrorInteractive",            Test_ExHardErrorInteractive },
     { "ExInterlocked",                      Test_ExInterlocked },
     { "ExPools",                            Test_ExPools },
     { "ExResource",                         Test_ExResource },
     { "ExTimer",                            Test_ExTimer },
+    { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoIrp",                              Test_IoIrp },

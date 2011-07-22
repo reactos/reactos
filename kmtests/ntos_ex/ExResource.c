@@ -5,8 +5,6 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntddk.h>
 #include <ntifs.h>
 #include <ndk/extypes.h>

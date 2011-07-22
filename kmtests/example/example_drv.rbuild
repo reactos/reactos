@@ -1,4 +1,4 @@
-<module name="example_drv" type="kernelmodedriver" installbase="system32/drivers" installname="example_drv.sys">
+<module name="example_drv" type="kernelmodedriver" installbase="bin" installname="example_drv.sys">
 	<include base="kmtest_drv">include</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

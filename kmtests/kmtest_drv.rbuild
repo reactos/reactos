@@ -1,10 +1,11 @@
-<module name="kmtest_drv" type="kernelmodedriver" installbase="system32/drivers" installname="kmtest_drv.sys">
+<module name="kmtest_drv" type="kernelmodedriver" installbase="bin" installname="kmtest_drv.sys">
 	<include base="kmtest_drv">include</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>pseh</library>
 	<library>kmtest_printf</library>
 	<define name="KMT_KERNEL_MODE" />
+	<define name="NTDDI_VERSION">NTDDI_WS03SP1</define>
 	<directory name="kmtest_drv">
 		<file>kmtest_drv.c</file>
 		<file>testlist.c</file>

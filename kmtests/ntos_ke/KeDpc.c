@@ -30,8 +30,7 @@ DpcHandler(
     IN PVOID SystemArgument1,
     IN PVOID SystemArgument2)
 {
-    PKPCR Pcr = KeGetPcr();
-    PKPRCB Prcb = Pcr->Prcb;
+    PKPRCB Prcb = KeGetCurrentPrcb();
 
     ok_irql(DISPATCH_LEVEL);
     InterlockedIncrement(&DpcCount);
@@ -58,7 +57,7 @@ DpcHandler(
     ok_eq_pointer(Dpc->SystemArgument1, SystemArgument1);
     ok_eq_pointer(Dpc->SystemArgument2, SystemArgument2);
     ok_eq_pointer(Dpc->DpcData, NULL);
-    
+
     ok_eq_uint(Prcb->DpcRoutineActive, 1);
     /* this DPC is not in the list anymore, but it was at the head! */
     ok_eq_pointer(Prcb->DpcData[DPC_NORMAL].DpcListHead.Flink, Dpc->DpcListEntry.Flink);

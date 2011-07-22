@@ -36,9 +36,9 @@ add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)
 target_link_libraries(kmtest_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
-set_property(TARGET kmtest_drv PROPERTY COMPILE_DEFINITIONS KMT_KERNEL_MODE)
+set_property(TARGET kmtest_drv PROPERTY COMPILE_DEFINITIONS KMT_KERNEL_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 
-add_cd_file(TARGET kmtest_drv DESTINATION reactos/system32/drivers FOR all)
+add_cd_file(TARGET kmtest_drv DESTINATION reactos/bin FOR all)
 
 add_library(kmtest_printf
     kmtest_drv/printf_stubs.c

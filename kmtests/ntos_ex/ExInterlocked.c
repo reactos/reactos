@@ -25,8 +25,6 @@ __declspec(dllimport)   int             __stdcall   ExInterlockedDecrementLong(l
 __declspec(dllimport)   int             __stdcall   Exi386InterlockedIncrementLong(long *);
 __declspec(dllimport)   int             __stdcall   Exi386InterlockedDecrementLong(long *);
 
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntddk.h>
 #include <pseh/pseh2.h>
 
@@ -213,7 +211,7 @@ TestInterlockedFunctional(VOID)
     PKSPIN_LOCK pSpinLock = &SpinLock;
     PROCESSOR_STATE OldState, NewState;
 
-    /* on x86, most of these are supported intrinsicly and don't need a spinlock! */
+    /* on x86, most of these are supported intrinsically and don't need a spinlock! */
 #if defined _M_IX86 || defined _M_AMD64
     pSpinLock = NULL;
 #endif
