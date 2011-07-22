@@ -32,22 +32,16 @@ CreateNamedPipeA(LPCSTR lpName,
                  DWORD nDefaultTimeOut,
                  LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-    PUNICODE_STRING NameU = &NtCurrentTeb()->StaticUnicodeString;
-    ANSI_STRING NameA;
-
-    /* Initialize the string as ANSI_STRING and convert to Unicode */
-    RtlInitAnsiString(&NameA, (LPSTR)lpName);
-    RtlAnsiStringToUnicodeString(NameU, &NameA, FALSE);
-
-    /* Call the Unicode API */
-    return CreateNamedPipeW(NameU->Buffer,
-                            dwOpenMode,
-                            dwPipeMode,
-                            nMaxInstances,
-                            nOutBufferSize,
-                            nInBufferSize,
-                            nDefaultTimeOut,
-                            lpSecurityAttributes);
+    /* Call the W(ide) function */
+    ConvertWin32AnsiChangeApiToUnicodeApi(CreateNamedPipe,
+                                          lpName,
+                                          dwOpenMode,
+                                          dwPipeMode,
+                                          nMaxInstances,
+                                          nOutBufferSize,
+                                          nInBufferSize,
+                                          nDefaultTimeOut,
+                                          lpSecurityAttributes);
 }
 
 
