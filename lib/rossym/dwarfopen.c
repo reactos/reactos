@@ -30,8 +30,7 @@ dwarfopen(Pe *pe)
 	if(pe->loadsection(pe, ".debug_abbrev", &d->abbrev) < 0
 	|| pe->loadsection(pe, ".debug_aranges", &d->aranges) < 0
 	|| pe->loadsection(pe, ".debug_line", &d->line) < 0
-	|| pe->loadsection(pe, ".debug_info", &d->info) < 0
-    || pe->loadsection(pe, ".debug_loc", &d->loc) < 0)
+	|| pe->loadsection(pe, ".debug_info", &d->info) < 0)
 		goto err;
 	pe->loadsection(pe, ".debug_pubnames", &d->pubnames);
 	pe->loadsection(pe, ".debug_frame", &d->frame);
@@ -41,7 +40,6 @@ dwarfopen(Pe *pe)
 	return d;
 
 err:
-	DPRINT("Failed to open dwarf\n");
 	free(d->abbrev.data);
 	free(d->aranges.data);
 	free(d->frame.data);
@@ -50,7 +48,6 @@ err:
 	free(d->ranges.data);
 	free(d->str.data);
 	free(d->info.data);
-    free(d->loc.data);
 	free(d);
 	return nil;
 }

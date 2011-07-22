@@ -75,14 +75,15 @@ KdbSymProcessSymbols(
 
 BOOLEAN
 KdbSymPrintAddress(
-    IN PVOID Address,
-    IN PKTRAP_FRAME Context);
+    IN PVOID Address);
 
 NTSTATUS
 KdbSymGetAddressInformation(
     IN PROSSYM_INFO  RosSymInfo,
     IN ULONG_PTR  RelativeAddress,
-	IN PROSSYM_LINEINFO RosSymLineInfo
+    OUT PULONG LineNumber  OPTIONAL,
+    OUT PCH FileName  OPTIONAL,
+    OUT PCH FunctionName  OPTIONAL
 );
 #endif
 

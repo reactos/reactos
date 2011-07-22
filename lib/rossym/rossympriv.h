@@ -9,15 +9,12 @@
 
 #pragma once
 
-#define HIGHBIT 0x80000000
-
 extern ROSSYM_CALLBACKS RosSymCallbacks;
 
 #define RosSymAllocMem(Size) (*RosSymCallbacks.AllocMemProc)(Size)
 #define RosSymFreeMem(Area) (*RosSymCallbacks.FreeMemProc)(Area)
 #define RosSymReadFile(FileContext, Buffer, Size) (*RosSymCallbacks.ReadFileProc)((FileContext), (Buffer), (Size))
 #define RosSymSeekFile(FileContext, Position) (*RosSymCallbacks.SeekFileProc)((FileContext), (Position))
-#define RosSymGetMem(TargetAddress, Address, Size) (*RosSymCallbacks.MemGetProc)((TargetAddress), (Address), (Size))
 
 extern BOOLEAN RosSymZwReadFile(PVOID FileContext, PVOID Buffer, ULONG Size);
 extern BOOLEAN RosSymZwSeekFile(PVOID FileContext, ULONG_PTR Position);

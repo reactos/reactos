@@ -78,7 +78,7 @@ KdbpMemoryError(int Status, unsigned int Addr,
 static void
 KdbpPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
 {
-    if (!KdbSymPrintAddress((void*)Addr, NULL))
+  if (!KdbSymPrintAddress((void*)Addr))
     {
       DbgPrint("<%08x>", Addr);
     }

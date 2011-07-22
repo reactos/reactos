@@ -6,8 +6,6 @@ typedef struct DwarfBlock DwarfBlock;
 typedef struct DwarfBuf DwarfBuf;
 typedef struct DwarfExpr DwarfExpr;
 typedef struct DwarfSym DwarfSym;
-typedef struct DwarfStack DwarfStack;
-typedef struct DwarfParam DwarfParam;
 typedef union DwarfVal DwarfVal;
 
 enum
@@ -205,16 +203,6 @@ struct DwarfBlock
 	ulong len;
 };
 
-struct DwarfParam
-{
-	char *name;
-	ulong unit;
-	ulong type;
-    ulong loctype;
-	ulong fde, len;
-    ulong value;
-};
-
 /* not for consumer use */
 struct DwarfBuf
 {
@@ -264,7 +252,7 @@ struct DwarfAttrs
 		uchar	framebase;
 		uchar	friend;
 		uchar	highpc;
-		uchar   entrypc;
+        uchar   entrypc;
 		uchar	identifiercase;
 		uchar	import;
 		uchar	inlined;
@@ -327,7 +315,7 @@ struct DwarfAttrs
 	DwarfVal	framebase;
 	ulong	friend;
 	ulong	highpc;
-	ulong   entrypc;
+    ulong   entrypc;
 	ulong	identifiercase;
 	ulong	import;
 	ulong	inlined;
@@ -384,15 +372,18 @@ struct DwarfExpr
 
 struct DwarfSym
 {
-    DwarfAttrs attrs;
-    
+	DwarfAttrs attrs;
+
 /* not for consumer use... */
-    uint num;
-    DwarfBuf b;
-    int depth;
-    ulong unit, childoff, nextunit;
-    ulong aoff;
+	DwarfBuf b;
+	ulong unit;
+	uint uoff;
+	ulong aoff;
+	int depth;
+	int allunits;
+	ulong nextunit;
 };
+
 
 struct _Pe;
 Dwarf *dwarfopen(struct _Pe *elf);
@@ -407,11 +398,9 @@ int dwarfenumunit(Dwarf*, ulong, DwarfSym*);
 int dwarfseeksym(Dwarf*, ulong, ulong, DwarfSym*);
 int dwarfenum(Dwarf*, DwarfSym*);
 int dwarfnextsym(Dwarf*, DwarfSym*);
-int dwarfnextsymat(Dwarf*, DwarfSym *parent, DwarfSym *child);
-int dwarfpctoline(Dwarf*, DwarfSym *proc, ulong, char**, char**, ulong *);
-int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *locbuf, ulong cfa, PROSSYM_REGISTERS registers, ulong *value);
-int dwarfgettype(Dwarf *d, DwarfSym *param, DwarfSym *type);
-
+int dwarfnextsymat(Dwarf*, DwarfSym*, int);
+int dwarfpctoline(Dwarf*, ulong, char**, char**, char**, char **, ulong*, ulong*, ulong*);
+int dwarfunwind(Dwarf*, ulong, DwarfExpr*, DwarfExpr*, DwarfExpr*, int);
 ulong dwarfget1(DwarfBuf*);
 ulong dwarfget2(DwarfBuf*);
 ulong dwarfget4(DwarfBuf*);
@@ -422,10 +411,7 @@ ulong dwarfgetaddr(DwarfBuf*);
 int dwarfgetn(DwarfBuf*, uchar*, int);
 uchar *dwarfgetnref(DwarfBuf*, ulong);
 char *dwarfgetstring(DwarfBuf*);
-int dwarfcomputecfa(Dwarf *d, DwarfExpr *cfa, PROSSYM_REGISTERS registers, ulong *cfaLocation);
-int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGISTERS registers);
-int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTERS registers, DwarfParam *parameters);
-int dwarfgetparams(Dwarf *d, DwarfSym *s, ulong pc, int pnum, DwarfParam *paramblocks);
+
 
 typedef struct DwarfAbbrev DwarfAbbrev;
 typedef struct DwarfAttr DwarfAttr;
@@ -463,7 +449,6 @@ struct Dwarf
 	DwarfBlock pubtypes;
 	DwarfBlock ranges;
 	DwarfBlock str;
-	DwarfBlock loc;
 
 	/* little cache */
 	struct {
@@ -473,15 +458,14 @@ struct Dwarf
 	} acache;
 };
 
-struct DwarfStack
-{
-    ulong storage[16]; // own storage
-    ulong *data;
-    ulong length, max;
-};
-
 DwarfAbbrev *dwarfgetabbrev(Dwarf*, ulong, ulong);
 
 int dwarfgetinfounit(Dwarf*, ulong, DwarfBlock*);
 
+extern int dwarf386nregs;
+extern char *dwarf386regs[];
+extern char *dwarf386fp;
+
+#define SYMBOL_SIZE 18
 #define MAXIMUM_DWARF_NAME_SIZE 64
+#define MAXIMUM_COFF_SYMBOL_LENGTH 256

@@ -99,7 +99,6 @@ MiSimpleRead
  PLARGE_INTEGER FileOffset,
  PVOID Buffer, 
  ULONG Length,
- BOOLEAN Paging,
  PIO_STATUS_BLOCK ReadStatus)
 {
     NTSTATUS Status;
@@ -128,7 +127,7 @@ MiSimpleRead
 		 Length);
 
     KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
-
+    
     Irp = IoBuildAsynchronousFsdRequest
 		(IRP_MJ_READ,
 		 DeviceObject,
@@ -142,7 +141,7 @@ MiSimpleRead
 		return STATUS_NO_MEMORY;
     }
     
-    Irp->Flags |= (Paging ? IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE : 0) | IRP_SYNCHRONOUS_API;
+    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
     
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -151,8 +150,7 @@ MiSimpleRead
 	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
-    ObReferenceObject(FileObject);
-
+    
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {

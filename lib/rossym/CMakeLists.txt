@@ -5,6 +5,7 @@ else()
 add_definitions(-D_NTSYSTEM_)
 list(APPEND SOURCE
     delete.c
+    dwarf386.c
     dwarfabbrev.c
     dwarfaranges.c
     dwarfcfa.c
@@ -16,6 +17,7 @@ list(APPEND SOURCE
     find.c
     fromfile.c
     init.c
+    initkm.c
     initum.c
     pe.c
     zwfile.c)

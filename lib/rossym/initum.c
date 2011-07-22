@@ -7,13 +7,9 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#define WIN32_NO_STATUS
 #include <windows.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <pseh/pseh.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -21,19 +17,13 @@
 static PVOID
 RosSymAllocMemUM(ULONG_PTR Size)
 {
-  return RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+  return HeapAlloc(GetProcessHeap(), 0, Size);
 }
 
 static VOID
 RosSymFreeMemUM(PVOID Area)
 {
-  RtlFreeHeap(RtlGetProcessHeap(), 0, Area);
-}
-
-static BOOLEAN
-RosSymGetMemUM(ULONG_PTR *Target, PVOID SourceMem, ULONG Size)
-{
-  return FALSE;
+  HeapFree(GetProcessHeap(), 0, Area);
 }
 
 VOID
@@ -44,8 +34,7 @@ RosSymInitUserMode(VOID)
       RosSymAllocMemUM,
       RosSymFreeMemUM,
       RosSymZwReadFile,
-      RosSymZwSeekFile,
-	  RosSymGetMemUM
+      RosSymZwSeekFile
     };
 
   RosSymInit(&KmCallbacks);
