@@ -603,12 +603,13 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(CurrentIrp, IO_NETWORK_INCREMENT );
     }
     
-    if (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE)
-        FCB->PollState |= AFD_EVENT_DISCONNECT;
-    else
+    if (!(FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
+    {
+        /* Signal complete connection closure immediately */
         FCB->PollState |= AFD_EVENT_ABORT;
-    FCB->PollStatus[FD_CLOSE_BIT] = Irp->IoStatus.Status;
-    PollReeval(FCB->DeviceExt, FCB->FileObject);
+        FCB->PollStatus[FD_CLOSE_BIT] = Irp->IoStatus.Status;
+        PollReeval(FCB->DeviceExt, FCB->FileObject);
+    }
     
     SocketStateUnlock(FCB);
     
@@ -721,6 +722,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->DisconnectFlags = Flags;
         FCB->DisconnectTimeout = DisReq->Timeout;
         FCB->DisconnectPending = TRUE;
+        FCB->SendClosed = TRUE;
         
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_DISCONNECT);
         if (Status == STATUS_PENDING)

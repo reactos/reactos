@@ -32,8 +32,8 @@ static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information
 	{
         FCB->TdiReceiveClosed = TRUE;
 
-        /* Signal unexpected termination immediately */
-		FCB->PollState |= AFD_EVENT_ABORT;
+        /* Signal complete connection failure immediately */
+		FCB->PollState |= AFD_EVENT_CLOSE;
 		FCB->PollStatus[FD_CLOSE_BIT] = Status;
 
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -232,13 +232,12 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
     else if (CantReadMore(FCB) &&
-             !(FCB->PollState & (AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) &&
-             IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]))
+             !(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT)))
     {
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
-        /* Signal delayed close event */
-        FCB->PollState |= AFD_EVENT_ABORT;
+        /* Signal graceful receive shutdown */
+        FCB->PollState |= AFD_EVENT_DISCONNECT;
 		FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
 		
 		PollReeval( FCB->DeviceExt, FCB->FileObject );

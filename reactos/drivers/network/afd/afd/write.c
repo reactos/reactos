@@ -351,26 +351,28 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
     }
     
-    if (FCB->DisconnectPending && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
+    if (FCB->PollState & AFD_EVENT_CLOSE)
     {
-        AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
-        /* We're pending a send shutdown so don't accept anymore sends */
-        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+        AFD_DbgPrint(MIN_TRACE,("Connection reset by remote peer\n"));
+
+        /* This is an unexpected remote disconnect */
+        return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
     }
     
-    if (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT))
+    if (FCB->PollState & AFD_EVENT_ABORT)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Connection aborted\n"));
+        
+        /* This is an abortive socket closure on our side */
+        return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
+    }
+    
+    if (FCB->SendClosed)
     {
         AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
-        if (FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
-        {
-            /* This is a local send shutdown or a graceful remote disconnect */
-            return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
-        }
-        else
-        {
-            /* This is an unexpected remote disconnect */
-            return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
-        }
+
+        /* This is a graceful send closure */
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
