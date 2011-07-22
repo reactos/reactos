@@ -104,7 +104,15 @@ GetComPlusPackageInstallStatus(VOID)
     return NULL;
 }
 
-/*
+BOOL
+WINAPI
+SetComPlusPackageInstallStatus(LPVOID lpInfo)
+{ 
+   STUB;
+   return FALSE;
+}
+ 
+ /*
  * @unimplemented
  */
 VOID
