@@ -231,7 +231,9 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
-    else if (CantReadMore(FCB) && !(FCB->PollState & (AFD_EVENT_ABORT | AFD_EVENT_CLOSE)))
+    else if (CantReadMore(FCB) &&
+             !(FCB->PollState & (AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) &&
+             IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]))
     {
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
