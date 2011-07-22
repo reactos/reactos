@@ -28,27 +28,32 @@
 
 static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
 {
-	if( ( Status == STATUS_SUCCESS && !Information ) ||
-	   ( !NT_SUCCESS( Status ) ) )
+	if (Status != STATUS_SUCCESS)
 	{
-		/* The socket has been closed by the remote side */
+        FCB->TdiReceiveClosed = TRUE;
+
+        /* Signal unexpected termination immediately */
 		FCB->PollState |= AFD_EVENT_ABORT;
 		FCB->PollStatus[FD_CLOSE_BIT] = Status;
-		
+
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
 	}
+    else if (Status == STATUS_SUCCESS && !Information)
+    {
+        /* Wait to signal graceful close until all data is read */
+        FCB->TdiReceiveClosed = TRUE;
+    }
 }
 
 static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
     UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
 	
-    return !BytesAvailable &&
-	(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT));
+    return !BytesAvailable && FCB->TdiReceiveClosed;
 }
 
 static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
 	if( !FCB->ReceiveIrp.InFlightRequest &&
-        !(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT)) ) {
+        !FCB->TdiReceiveClosed ) {
 		AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
 
 		TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
@@ -225,8 +230,21 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
-    } else
+    }
+    else if (CantReadMore(FCB) && !(FCB->PollState & (AFD_EVENT_ABORT | AFD_EVENT_CLOSE)))
+    {
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
+
+        /* Signal delayed close event */
+        FCB->PollState |= AFD_EVENT_ABORT;
+		FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
+		
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
+    else
+    {
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
+    }
 
     AFD_DbgPrint(MID_TRACE,("RetStatus for irp %x is %x\n", Irp, RetStatus));
 
