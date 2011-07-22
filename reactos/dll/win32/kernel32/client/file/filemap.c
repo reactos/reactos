@@ -27,38 +27,14 @@ CreateFileMappingA(IN HANDLE hFile,
                    IN DWORD dwMaximumSizeLow,
                    IN LPCSTR lpName)
 {
-    NTSTATUS Status;
-    ANSI_STRING AnsiName;
-    PUNICODE_STRING UnicodeCache;
-    LPCWSTR UnicodeName = NULL;
-
-    /* Check for a name */
-    if (lpName)
-    {
-        /* Use TEB Cache */
-        UnicodeCache = &NtCurrentTeb()->StaticUnicodeString;
-
-        /* Convert to unicode */
-        RtlInitAnsiString(&AnsiName, lpName);
-        Status = RtlAnsiStringToUnicodeString(UnicodeCache, &AnsiName, FALSE);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Conversion failed */
-            SetLastErrorByStatus(Status);
-            return NULL;
-        }
-
-        /* Otherwise, save the buffer */
-        UnicodeName = (LPCWSTR)UnicodeCache->Buffer;
-    }
-
-    /* Call the Unicode version */
-    return CreateFileMappingW(hFile,
-                              lpFileMappingAttributes,
-                              flProtect,
-                              dwMaximumSizeHigh,
-                              dwMaximumSizeLow,
-                              UnicodeName);
+    /* Call the W(ide) function */
+    ConvertWin32AnsiObjectApiToUnicodeApi(FileMapping,
+                                          lpName,
+                                          hFile,
+                                          lpFileMappingAttributes,
+                                          flProtect,
+                                          dwMaximumSizeHigh,
+                                          dwMaximumSizeLow);
 }
 
 /*

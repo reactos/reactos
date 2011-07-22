@@ -21,6 +21,10 @@
 #define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
 #define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
 
+#define STUB \
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
+  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+
 #define debugstr_a  
 #define debugstr_w
 #define wine_dbgstr_w  
