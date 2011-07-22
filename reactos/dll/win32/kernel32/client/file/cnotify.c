@@ -43,26 +43,11 @@ FindFirstChangeNotificationA(IN LPCSTR lpPathName,
                              IN BOOL bWatchSubtree,
                              IN DWORD dwNotifyFilter)
 {
-    NTSTATUS Status;
-    ANSI_STRING PathNameString;
-
-    RtlInitAnsiString(&PathNameString, lpPathName);
-    Status = RtlAnsiStringToUnicodeString(&(NtCurrentTeb()->StaticUnicodeString), &PathNameString, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        if (Status != STATUS_BUFFER_OVERFLOW)
-        {
-            SetLastError(ERROR_FILENAME_EXCED_RANGE);
-        }
-        else
-        {
-            BaseSetLastNTError(Status);
-        }
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return FindFirstChangeNotificationW(NtCurrentTeb()->StaticUnicodeString.Buffer,
-                                        bWatchSubtree, dwNotifyFilter);
+    /* Call the W(ide) function */
+    ConvertWin32AnsiChangeApiToUnicodeApi(FindFirstChangeNotification,
+                                          lpPathName,
+                                          bWatchSubtree,
+                                          dwNotifyFilter);
 }
 
 

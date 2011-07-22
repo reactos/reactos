@@ -50,3 +50,13 @@
     if (NT_SUCCESS(Status)) return Create##obj##W(args, UnicodeCache->Buffer);  \
     ConvertAnsiToUnicodeEpilogue
 
+//
+// This macro uses the ConvertAnsiToUnicode macros above to convert a FindFirst*A
+// Win32 API into its equivalent FindFirst*W API.
+//
+#define ConvertWin32AnsiChangeApiToUnicodeApi(obj, name, args...)               \
+    ConvertAnsiToUnicodePrologue                                                \
+    ConvertAnsiToUnicodeBody(name)                                              \
+    if (NT_SUCCESS(Status)) return obj##W(UnicodeCache->Buffer, args);          \
+    ConvertAnsiToUnicodeEpilogue
+
