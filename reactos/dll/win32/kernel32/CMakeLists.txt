@@ -61,13 +61,13 @@ list(APPEND SOURCE
     client/file/rw.c
     client/file/tape.c
     client/file/volume.c
-    client/misc/actctx.c
-    client/misc/comm.c
-    client/misc/lzexpand.c
-    client/misc/muldiv.c
-    client/misc/profile.c
-    client/misc/res.c
-    client/misc/timezone.c
+    wine/actctx.c
+    wine/comm.c
+    wine/lzexpand.c
+    wine/muldiv.c
+    wine/profile.c
+    wine/res.c
+    wine/timezone.c
     winnls/string/casemap.c
     winnls/string/chartype.c
     winnls/string/collation.c

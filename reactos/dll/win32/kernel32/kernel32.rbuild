@@ -80,15 +80,15 @@
 			<file>tape.c</file>
 			<file>volume.c</file>
 		</directory>
-		<directory name="misc">
-			<file>actctx.c</file>
-			<file>comm.c</file>
-			<file>lzexpand.c</file>
-			<file>muldiv.c</file>
-			<file>profile.c</file>
-			<file>res.c</file>
-			<file>timezone.c</file>
-		</directory>
+	</directory>
+	<directory name="wine">
+		<file>actctx.c</file>
+		<file>comm.c</file>
+		<file>lzexpand.c</file>
+		<file>muldiv.c</file>
+		<file>profile.c</file>
+		<file>res.c</file>
+		<file>timezone.c</file>
 	</directory>
 	<directory name="winnls">
 		<directory name="string">
