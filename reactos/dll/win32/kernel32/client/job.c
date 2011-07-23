@@ -27,32 +27,8 @@ WINAPI
 CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
                  LPCSTR lpName)
 {
-    HANDLE hJob;
-    ANSI_STRING AnsiName;
-    UNICODE_STRING UnicodeName;
-
-    if (lpName != NULL)
-    {
-        NTSTATUS Status;
-
-        RtlInitAnsiString(&AnsiName, lpName);
-        Status = RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
-        if (!NT_SUCCESS(Status))
-        {
-            SetLastErrorByStatus(Status);
-            return FALSE;
-        }
-    }
-
-    hJob = CreateJobObjectW(lpJobAttributes,
-                            ((lpName != NULL) ? UnicodeName.Buffer : NULL));
-
-    if (lpName != NULL)
-    {
-        RtlFreeUnicodeString(&UnicodeName);
-    }
-
-    return hJob;
+    /* Call the W(ide) function */
+    ConvertWin32AnsiObjectApiToUnicodeApi(JobObject, lpName, lpJobAttributes);
 }
 
 
