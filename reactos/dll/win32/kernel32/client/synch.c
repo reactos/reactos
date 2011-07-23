@@ -7,8 +7,6 @@
  */
 
 /* INCLUDES *****************************************************************/
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x600
 #include <k32.h>
 
 #define NDEBUG
@@ -687,103 +685,144 @@ dowait:
  */
 BOOL
 WINAPI
-RegisterWaitForSingleObject(
-    PHANDLE phNewWaitObject,
-    HANDLE hObject,
-    WAITORTIMERCALLBACK Callback,
-    PVOID Context,
-    ULONG dwMilliseconds,
-    ULONG dwFlags
-    )
+RegisterWaitForSingleObject(OUT PHANDLE phNewWaitObject,
+                            IN HANDLE hObject,
+                            IN WAITORTIMERCALLBACK Callback,
+                            IN PVOID Context,
+                            IN ULONG dwMilliseconds,
+                            IN ULONG dwFlags)
 {
-    NTSTATUS Status = RtlRegisterWait(phNewWaitObject,
-                                      hObject,
-                                      Callback,
-                                      Context,
-                                      dwMilliseconds,
-                                      dwFlags);
+    NTSTATUS Status;
 
+    /* Get real handle */
+    hObject = TranslateStdHandle(hObject);
+
+    /* Check for console handle */
+    if ((IsConsoleHandle(hObject)) && (VerifyConsoleIoHandle(hObject)))
+    {
+        /* Get the real wait handle */
+        hObject = GetConsoleInputWaitHandle();
+    }
+
+    /* Register the wait now */
+    Status = RtlRegisterWait(phNewWaitObject,
+                             hObject,
+                             Callback,
+                             Context,
+                             dwMilliseconds,
+                             dwFlags);
     if (!NT_SUCCESS(Status))
     {
+        /* Return failure */
         SetLastErrorByStatus(Status);
         return FALSE;
     }
+
+    /* All good */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-RegisterWaitForSingleObjectEx(
-    HANDLE hObject,
-    WAITORTIMERCALLBACK Callback,
-    PVOID Context,
-    ULONG dwMilliseconds,
-    ULONG dwFlags
-    )
+RegisterWaitForSingleObjectEx(IN HANDLE hObject,
+                              IN WAITORTIMERCALLBACK Callback,
+                              IN PVOID Context,
+                              IN ULONG dwMilliseconds,
+                              IN ULONG dwFlags)
 {
     NTSTATUS Status;
     HANDLE hNewWaitObject;
 
+    /* Get real handle */
+    hObject = TranslateStdHandle(hObject);
+
+    /* Check for console handle */
+    if ((IsConsoleHandle(hObject)) && (VerifyConsoleIoHandle(hObject)))
+    {
+        /* Get the real wait handle */
+        hObject = GetConsoleInputWaitHandle();
+    }
+
+    /* Register the wait */
     Status = RtlRegisterWait(&hNewWaitObject,
                              hObject,
                              Callback,
                              Context,
                              dwMilliseconds,
                              dwFlags);
-
     if (!NT_SUCCESS(Status))
     {
+        /* Return failure */
         SetLastErrorByStatus(Status);
         return NULL;
     }
 
+    /* Return the object */
     return hNewWaitObject;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-UnregisterWait(
-    HANDLE WaitHandle
-    )
+UnregisterWait(IN HANDLE WaitHandle)
 {
-    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, NULL);
+    NTSTATUS Status;
 
-    if (!NT_SUCCESS(Status))
+    /* Check for invalid handle */
+    if (!WaitHandle)
     {
+        /* Fail */
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* Deregister the wait and check status */
+    Status = RtlDeregisterWaitEx(WaitHandle, NULL);
+    if (!(NT_SUCCESS(Status)) || (Status == STATUS_PENDING))
+    {
+        /* Failure or non-blocking call */
         SetLastErrorByStatus(Status);
         return FALSE;
     }
 
+    /* All good */
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-UnregisterWaitEx(
-    HANDLE WaitHandle,
-    HANDLE CompletionEvent
-    )
+UnregisterWaitEx(IN HANDLE WaitHandle,
+                 IN HANDLE CompletionEvent)
 {
-    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, CompletionEvent);
+    NTSTATUS Status;
 
-    if (!NT_SUCCESS(Status))
+    /* Check for invalid handle */
+    if (!WaitHandle)
     {
+        /* Fail */
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* Deregister the wait and check status */
+    Status = RtlDeregisterWaitEx(WaitHandle, CompletionEvent);
+    if (!(NT_SUCCESS(Status)) ||
+        ((CompletionEvent != INVALID_HANDLE_VALUE) && (Status == STATUS_PENDING)))
+    {
+        /* Failure or non-blocking call */
         SetLastErrorByStatus(Status);
         return FALSE;
     }
 
+    /* All good */
     return TRUE;
 }
 
