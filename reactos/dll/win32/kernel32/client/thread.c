@@ -621,13 +621,15 @@ GetThreadPriority(HANDLE hThread)
         return THREAD_PRIORITY_ERROR_RETURN;
     }
 
-    /* Do some conversions for out of boundary values */
-    if (ThreadBasic.BasePriority > THREAD_BASE_PRIORITY_MAX)
+    /* Do some conversions for saturation values */
+    if (ThreadBasic.BasePriority == ((HIGH_PRIORITY + 1) / 2))
     {
+        /* Win32 calls this "time critical" */
         ThreadBasic.BasePriority = THREAD_PRIORITY_TIME_CRITICAL;
     }
-    else if (ThreadBasic.BasePriority < THREAD_BASE_PRIORITY_MIN)
+    else if (ThreadBasic.BasePriority == -((HIGH_PRIORITY + 1) / 2))
     {
+        /* Win32 calls this "idle" */
         ThreadBasic.BasePriority = THREAD_PRIORITY_IDLE;
     }
 
