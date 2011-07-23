@@ -74,7 +74,11 @@
 //
 #define ConvertOpenWin32AnsiObjectApiToUnicodeApi(obj, acc, inh, name)          \
     ConvertAnsiToUnicodePrologue                                                \
-    if (!name) SetLastError(ERROR_INVALID_PARAMETER); return NULL;              \
+    if (!name)                                                                  \
+    {                                                                           \
+        SetLastError(ERROR_INVALID_PARAMETER);                                  \
+        return NULL;                                                            \
+    }                                                                           \
     ConvertAnsiToUnicodeBody(name)                                              \
     if (NT_SUCCESS(Status)) return Open##obj##W(acc, inh, UnicodeCache->Buffer);\
     ConvertAnsiToUnicodeEpilogue
@@ -132,7 +136,11 @@
 //
 #define OpenNtObjectFromWin32Api(ntobj, acc, inh, name)                         \
     CreateNtObjectFromWin32ApiPrologue                                          \
-    if (!name) SetLastErrorByStatus(STATUS_INVALID_PARAMETER); return NULL;     \
+    if (!name)                                                                  \
+    {                                                                           \
+        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);                         \
+        return NULL;                                                            \
+    }                                                                           \
     RtlInitUnicodeString(&ObjectName, name);                                    \
     InitializeObjectAttributes(ObjectAttributes,                                \
                                &ObjectName,                                     \
@@ -140,7 +148,11 @@
                                hBaseDir,                                        \
                                NULL);                                           \
     Status = NtOpen##ntobj(&Handle, acc, ObjectAttributes);                     \
-    if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status); return NULL;         \
+    if (!NT_SUCCESS(Status))                                                    \
+    {                                                                           \
+        SetLastErrorByStatus(Status);                                           \
+        return NULL;                                                            \
+    }                                                                           \
     return Handle;                                                              \
 }
 
