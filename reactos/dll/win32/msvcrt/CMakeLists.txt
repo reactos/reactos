@@ -33,8 +33,11 @@ set_image_base(msvcrt ${baseaddress_msvcrt})
 
 target_link_libraries(msvcrt
     crt
-    wine
-    ${PSEH_LIB})
+    wine)
+
+if(NOT MSVC)
+  target_link_libraries(msvcrt pseh)
+endif()
 
 add_pch(msvcrt precomp.h)
 add_importlibs(msvcrt kernel32 ntdll)
