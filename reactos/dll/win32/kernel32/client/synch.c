@@ -49,18 +49,8 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
         hHandle = GetConsoleInputWaitHandle();
     }
 
-    /* Check if this is an infinite wait */
-    if (dwMilliseconds == INFINITE)
-    {
-        /* Under NT, this means no timer argument */
-        TimePtr = NULL;
-    }
-    else
-    {
-        /* Otherwise, convert the time to NT Format */
-        Time.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
-        TimePtr = &Time;
-    }
+    /* Convert the timeout */
+    TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
 
     /* Start wait loop */
     do
@@ -151,18 +141,8 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
         }
     }
 
-    /* Check if this is an infinite wait */
-    if (dwMilliseconds == INFINITE)
-    {
-        /* Under NT, this means no timer argument */
-        TimePtr = NULL;
-    }
-    else
-    {
-        /* Otherwise, convert the time to NT Format */
-        Time.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
-        TimePtr = &Time;
-    }
+    /* Convert the timeout */
+    TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
 
     /* Start wait loop */
     do
@@ -217,18 +197,8 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
         hObjectToWaitOn = GetConsoleInputWaitHandle();
     }
 
-    /* Check if this is an infinite wait */
-    if (dwMilliseconds == INFINITE)
-    {
-        /* Under NT, this means no timer argument */
-        TimePtr = NULL;
-    }
-    else
-    {
-        /* Otherwise, convert the time to NT Format */
-        Time.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
-        TimePtr = &Time;
-    }
+    /* Convert the timeout */
+    TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
 
     /* Start wait loop */
     do
@@ -637,48 +607,51 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
-VOID WINAPI
-Sleep(DWORD dwMilliseconds)
+VOID
+WINAPI
+Sleep(IN DWORD dwMilliseconds)
 {
-  SleepEx(dwMilliseconds, FALSE);
-  return;
+    /* Call the new API */
+    SleepEx(dwMilliseconds, FALSE);
 }
 
 
 /*
  * @implemented
  */
-DWORD WINAPI
-SleepEx(DWORD dwMilliseconds,
-	BOOL bAlertable)
+DWORD
+WINAPI
+SleepEx(IN DWORD dwMilliseconds,
+        IN BOOL bAlertable)
 {
-  LARGE_INTEGER Interval;
-  NTSTATUS errCode;
+    LARGE_INTEGER Time;
+    PLARGE_INTEGER TimePtr;
+    NTSTATUS errCode;
 
-  if (dwMilliseconds != INFINITE)
+    /* Convert the timeout */
+    TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
+    if (!TimePtr)
     {
-      /*
-       * System time units are 100 nanoseconds (a nanosecond is a billionth of
-       * a second).
-       */
-      Interval.QuadPart = -((LONGLONG)dwMilliseconds * 10000);
-    }
-  else
-    {
-      /* Approximately 292000 years hence */
-      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
+        /* Turn an infinite wait into a really long wait */
+        Time.LowPart = 0;
+        Time.HighPart = 0x80000000;
+        TimePtr = &Time;
     }
 
-dowait:
-  errCode = NtDelayExecution ((BOOLEAN)bAlertable, &Interval);
-  if ((bAlertable) && (errCode == STATUS_ALERTED)) goto dowait;
-  return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;
+    /* Loop the delay while APCs are alerting us */
+    do
+    {
+        /* Do the delay */
+        errCode = NtDelayExecution((BOOLEAN)bAlertable, TimePtr);
+    }
+    while ((bAlertable) && (errCode == STATUS_ALERTED));
+    
+    /* Return the correct code */
+    return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;
 }
-
 
 /*
  * @implemented

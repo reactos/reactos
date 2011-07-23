@@ -117,6 +117,19 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
     }
 }
 
+PLARGE_INTEGER
+WINAPI
+BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
+                  IN DWORD dwMilliseconds)
+{
+    /* Check if this is an infinite wait, which means no timeout argument */
+    if (dwMilliseconds == INFINITE) return NULL;
+
+    /* Otherwise, convert the time to NT Format */
+    Timeout->QuadPart = UInt32x32To64(dwMilliseconds, -10000);
+    return Timeout;
+}
+
 /*
  * Converts lpSecurityAttributes + Object Name into ObjectAttributes.
  */

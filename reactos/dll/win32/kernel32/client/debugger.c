@@ -654,18 +654,8 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
     DBGUI_WAIT_STATE_CHANGE WaitStateChange;
     NTSTATUS Status;
 
-    /* Check if this is an infinite wait */
-    if (dwMilliseconds == INFINITE)
-    {
-        /* Under NT, this means no timer argument */
-        Timeout = NULL;
-    }
-    else
-    {
-        /* Otherwise, convert the time to NT Format */
-        WaitTime.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
-        Timeout = &WaitTime;
-    }
+    /* Convert to NT Timeout */
+    Timeout = BaseFormatTimeOut(&WaitTime, dwMilliseconds);
 
     /* Loop while we keep getting interrupted */
     do

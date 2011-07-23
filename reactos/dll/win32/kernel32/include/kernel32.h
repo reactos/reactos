@@ -137,6 +137,11 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapFree RtlFreeHeap
 #define _lread  (_readfun)_hread
 
+PLARGE_INTEGER
+WINAPI
+BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
+                  IN DWORD dwMilliseconds);
+
 POBJECT_ATTRIBUTES
 WINAPI
 BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,

@@ -103,24 +103,23 @@ GetQueuedCompletionStatus(
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatus;
    ULONG_PTR CompletionKey;
-   LARGE_INTEGER Interval;
+   LARGE_INTEGER Time;
+   PLARGE_INTEGER TimePtr;
 
    if (!lpNumberOfBytesTransferred || !lpCompletionKey || !lpOverlapped)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
-
-   if (dwMilliseconds != INFINITE)
-   {
-      Interval.QuadPart = (-(MILLIS_TO_100NS(dwMilliseconds)));
-   }
+   
+   /* Convert the timeout */
+   TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
 
    errCode = NtRemoveIoCompletion(CompletionHandle,
                                   (PVOID*)&CompletionKey,
                                   (PVOID*)lpOverlapped,
                                   &IoStatus,
-                                  dwMilliseconds == INFINITE ? NULL : &Interval);
+                                  TimePtr);
 
    if (!NT_SUCCESS(errCode) || errCode == STATUS_TIMEOUT) {
       *lpOverlapped = NULL;
