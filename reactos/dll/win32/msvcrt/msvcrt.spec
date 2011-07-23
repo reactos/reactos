@@ -196,10 +196,10 @@
 @ cdecl -arch=i386 __p__mbcasemap()
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
-@ cdecl -arch=i386 __p__pctype() __pctype_func
+@ cdecl -arch=i386 __p__pctype()
 @ cdecl -arch=i386 __p__pgmptr()
 @ cdecl -arch=i386 __p__pwctype()
-@ cdecl -arch=i386 __p__timezone() __p__timezone
+@ cdecl -arch=i386 __p__timezone()
 @ cdecl -arch=i386 __p__tzname()
 @ cdecl -arch=i386 __p__wcmdln()
 @ cdecl -arch=i386 __p__wenviron()
@@ -207,9 +207,9 @@
 @ cdecl -arch=i386 __p__winminor()
 @ cdecl -arch=i386 __p__winver()
 @ cdecl -arch=i386 __p__wpgmptr()
-@ cdecl __pctype_func() __pctype_func
-@ extern __pioinfo __pioinfo
-# stub __pwctype_func
+@ cdecl __pctype_func()
+@ extern __pioinfo
+@ cdecl __pwctype_func()
 @ cdecl __pxcptinfoptrs()
 @ cdecl __set_app_type(long)
 @ extern __setlc_active
@@ -247,7 +247,7 @@
 @ cdecl -arch=i386 _adj_fprem1()
 @ cdecl -arch=i386 _adj_fptan()
 @ extern -arch=i386 _adjust_fdiv
-# extern _aexit_rtn
+@ extern _aexit_rtn
 @ cdecl _aligned_free(ptr)
 # stub _aligned_free_dbg
 @ cdecl _aligned_malloc(long long)
@@ -466,7 +466,7 @@
 @ cdecl _heapchk()
 @ cdecl _heapmin()
 @ cdecl _heapset(long)
-# @ stub _heapused #(ptr ptr) # not in XP / 7
+@ cdecl _heapused(ptr ptr) # not in XP / 
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl _i64toa(long long ptr long)
@@ -492,7 +492,7 @@
 # stub _islower_l
 @ cdecl _ismbbalnum(long)
 # stub _ismbbalnum_l
-@ stub _ismbbalpha #(long)
+@ cdecl _ismbbalpha(long)
 # stub _ismbbalpha_l
 @ cdecl _ismbbgraph(long)
 # stub _ismbbgraph_l
@@ -506,7 +506,7 @@
 # stub _ismbbkpunct_l
 @ cdecl _ismbblead(long)
 # stub _ismbblead_l
-@ stub _ismbbprint #(long)
+@ cdecl _ismbbprint(long)
 # stub _ismbbprint_l
 @ cdecl _ismbbpunct(long)
 # stub _ismbbpunct_l
@@ -569,9 +569,9 @@
 # stub _itoa_s
 @ cdecl _itow(long ptr long)
 # stub _itow_s
-#@ cdecl _j0(double)
-#@ cdecl _j1(double)
-#@ cdecl _jn(long double)
+@ cdecl _j0(double)
+@ cdecl _j1(double)
+@ cdecl _jn(long double)
 @ cdecl _kbhit()
 @ cdecl _lfind(ptr ptr ptr long ptr)
 # stub _lfind_s
@@ -1145,9 +1145,9 @@
 @ cdecl _wutime(wstr ptr)
 @ cdecl _wutime32(wstr ptr)
 @ cdecl _wutime64(wstr ptr)
-#@ cdecl _y0(double)
-#@ cdecl _y1(double)
-#@ cdecl _yn(long double )
+@ cdecl _y0(double)
+@ cdecl _y1(double)
+@ cdecl _yn(long double )
 @ cdecl abort()
 @ cdecl abs(long)
 @ cdecl acos(double)

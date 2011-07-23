@@ -41,6 +41,11 @@ int _ismbbkprint(
     return 0;
 }
 
+size_t _heapused( size_t *pUsed, size_t *pCommit )
+{
+    UNIMPLEMENTED;
+    return( 0 );
+}
 
 int MSVCRT__inp(
    unsigned short port)
