@@ -206,40 +206,55 @@ BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle,
    return TRUE;
 }
 
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+SetHandleCount(UINT nCount)
+{
+   return nCount;
+}
 
 /*
  * @implemented
  */
-UINT WINAPI SetHandleCount(UINT nCount)
+DWORD
+WINAPI
+GetHandleContext(IN HANDLE Handle)
 {
-   return(nCount);
+    /* This is Windows behavior, not a ReactOS Stub */
+    DbgPrintEx(0, 0, "Unsupported API - kernel32!GetHandleContext() called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD WINAPI GetHandleContext(HANDLE hnd)
+HANDLE
+WINAPI
+CreateSocketHandle(VOID)
 {
-    STUB;
-    return 0;
+    /* This is Windows behavior, not a ReactOS Stub */
+    DbgPrintEx(0, 0, "Unsupported API - kernel32!CreateSocketHandle() called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-HANDLE WINAPI CreateSocketHandle(VOID)
+BOOL
+WINAPI
+SetHandleContext(IN HANDLE Handle,
+                 IN DWORD Context)
 {
-    STUB;
-    return INVALID_HANDLE_VALUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI SetHandleContext(HANDLE hnd,DWORD context)
-{
-    STUB;
-    return 0;
+    /* This is Windows behavior, not a ReactOS Stub */
+    DbgPrintEx(0, 0, "Unsupported API - kernel32!SetHandleContext() called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /* EOF */
