@@ -49,7 +49,7 @@ CreateMemoryResourceNotification(IN MEMORY_RESOURCE_NOTIFICATION_TYPE Notificati
                          &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -82,7 +82,7 @@ QueryMemoryResourceNotification(IN HANDLE ResourceNotificationHandle,
             return TRUE;
         }
 
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
     }
     else
     {

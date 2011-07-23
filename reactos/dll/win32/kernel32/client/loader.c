@@ -786,7 +786,7 @@ GetModuleHandleForUnicodeString(PUNICODE_STRING ModuleName)
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Failure acquiring DLL module '%wZ' handle, Status 0x%08X\n", ModuleName, Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         Module = 0;
     }
 
@@ -816,7 +816,7 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             if (phModule) *phModule = 0;
             return Status;
         }
@@ -869,7 +869,7 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
 
     /* Set last error in case of failure */
     if (!NT_SUCCESS(Status))
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
 
 quickie:
     /* Unlock loader lock if it was acquired */

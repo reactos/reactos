@@ -71,8 +71,6 @@
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
   
-#define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
-
 typedef struct _CODEPAGE_ENTRY
 {
    LIST_ENTRY Entry;

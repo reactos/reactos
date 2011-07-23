@@ -71,7 +71,7 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
         if (!NT_SUCCESS(Status))
         {
             /* The wait failed */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
@@ -182,7 +182,7 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
         if (!NT_SUCCESS(Status))
         {
             /* Wait failed */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
@@ -251,7 +251,7 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
         if (!NT_SUCCESS(Status))
         {
             /* The wait failed */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
@@ -339,7 +339,7 @@ SetWaitableTimer(IN HANDLE hTimer,
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -357,7 +357,7 @@ CancelWaitableTimer(IN HANDLE hTimer)
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -431,7 +431,7 @@ ReleaseSemaphore(IN HANDLE hSemaphore,
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -500,7 +500,7 @@ ReleaseMutex(IN HANDLE hMutex)
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -572,7 +572,7 @@ PulseEvent(IN HANDLE hEvent)
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -590,7 +590,7 @@ ResetEvent(IN HANDLE hEvent)
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -608,7 +608,7 @@ SetEvent(IN HANDLE hEvent)
     if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -642,7 +642,7 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
     if (!NT_SUCCESS(Status))
     {
         /* Set failure code */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -744,7 +744,7 @@ RegisterWaitForSingleObject(OUT PHANDLE phNewWaitObject,
     if (!NT_SUCCESS(Status))
     {
         /* Return failure */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -786,7 +786,7 @@ RegisterWaitForSingleObjectEx(IN HANDLE hObject,
     if (!NT_SUCCESS(Status))
     {
         /* Return failure */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -816,7 +816,7 @@ UnregisterWait(IN HANDLE WaitHandle)
     if (!(NT_SUCCESS(Status)) || (Status == STATUS_PENDING))
     {
         /* Failure or non-blocking call */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -848,7 +848,7 @@ UnregisterWaitEx(IN HANDLE WaitHandle,
         ((CompletionEvent != INVALID_HANDLE_VALUE) && (Status == STATUS_PENDING)))
     {
         /* Failure or non-blocking call */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

@@ -562,7 +562,7 @@ Heap32First(LPHEAPENTRY32 lphe, DWORD th32ProcessID, DWORD th32HeapID)
 
   if (!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -652,7 +652,7 @@ Heap32Next(LPHEAPENTRY32 lphe)
 
   if (!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -710,7 +710,7 @@ Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -764,7 +764,7 @@ Heap32ListNext(HANDLE hSnapshot, LPHEAPLIST32 lphl)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -851,7 +851,7 @@ Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -938,7 +938,7 @@ Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -1027,7 +1027,7 @@ Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -1114,7 +1114,7 @@ Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -1168,7 +1168,7 @@ Thread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -1222,7 +1222,7 @@ Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
     return Ret;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -1276,7 +1276,7 @@ CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
                               &ProcThrdInfoSize);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return NULL;
   }
 
@@ -1300,7 +1300,7 @@ CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return NULL;
   }
 

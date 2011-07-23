@@ -108,7 +108,7 @@ LockFileEx(HANDLE hFile,
 
     if ( !NT_SUCCESS(errCode) )
     {
-        SetLastErrorByStatus(errCode);
+        BaseSetLastNTError(errCode);
         return FALSE;
     }
 
@@ -180,7 +180,7 @@ UnlockFileEx(HANDLE hFile,
 
     if ( !NT_SUCCESS(errCode) )
     {
-        SetLastErrorByStatus(errCode);
+        BaseSetLastNTError(errCode);
         return FALSE;
     }
 

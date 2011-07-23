@@ -953,7 +953,7 @@ GetProcessAffinityMask(HANDLE hProcess,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -964,7 +964,7 @@ GetProcessAffinityMask(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -991,7 +991,7 @@ SetProcessAffinityMask(HANDLE hProcess,
                                      sizeof(DWORD));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1018,7 +1018,7 @@ GetProcessShutdownParameters(LPDWORD lpdwLevel,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1051,7 +1051,7 @@ SetProcessShutdownParameters(DWORD dwLevel,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1078,7 +1078,7 @@ GetProcessWorkingSetSize(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1110,7 +1110,7 @@ SetProcessWorkingSetSize(HANDLE hProcess,
                                      sizeof(QUOTA_LIMITS));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1139,7 +1139,7 @@ GetProcessTimes(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1210,7 +1210,7 @@ GetExitCodeProcess(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1237,7 +1237,7 @@ GetProcessId(HANDLE Process)
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -1274,7 +1274,7 @@ OpenProcess(DWORD dwDesiredAccess,
                             &ClientId);
     if (!NT_SUCCESS(errCode))
     {
-        SetLastErrorByStatus(errCode);
+        BaseSetLastNTError(errCode);
         return NULL;
     }
 
@@ -1472,7 +1472,7 @@ FlushInstructionCache(HANDLE hProcess,
                                      dwSize);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1538,7 +1538,7 @@ TerminateProcess(HANDLE hProcess,
         return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -1646,7 +1646,7 @@ GetPriorityClass(HANDLE hProcess)
     }
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -1701,7 +1701,7 @@ SetPriorityClass(HANDLE hProcess,
                                      sizeof(PROCESS_PRIORITY_CLASS));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1789,7 +1789,7 @@ GetProcessVersion(DWORD ProcessId)
 Error:
             if (!NT_SUCCESS(Status))
             {
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
             }
         }
     }
@@ -1820,7 +1820,7 @@ GetProcessIoCounters(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1850,7 +1850,7 @@ GetProcessPriorityBoost(HANDLE hProcess,
         return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -1872,7 +1872,7 @@ SetProcessPriorityBoost(HANDLE hProcess,
                                      sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1902,7 +1902,7 @@ GetProcessHandleCount(HANDLE hProcess,
       return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -1979,7 +1979,7 @@ ReadProcessMemory(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return FALSE;
     }
 
@@ -2039,7 +2039,7 @@ WriteProcessMemory(IN HANDLE hProcess,
             if (!NT_SUCCESS(Status))
             {
                 /* We failed */
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
                 return FALSE;
             }
 
@@ -2058,7 +2058,7 @@ WriteProcessMemory(IN HANDLE hProcess,
                                        &RegionSize,
                                        OldValue,
                                        &OldValue);
-                SetLastErrorByStatus(STATUS_ACCESS_VIOLATION);
+                BaseSetLastNTError(STATUS_ACCESS_VIOLATION);
                 return FALSE;
             }
 
@@ -2078,7 +2078,7 @@ WriteProcessMemory(IN HANDLE hProcess,
             if (!NT_SUCCESS(Status))
             {
                 /* We failed */
-                SetLastErrorByStatus(STATUS_ACCESS_VIOLATION);
+                BaseSetLastNTError(STATUS_ACCESS_VIOLATION);
                 return FALSE;
             }
 
@@ -2090,7 +2090,7 @@ WriteProcessMemory(IN HANDLE hProcess,
     else
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 }
@@ -2140,7 +2140,7 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
         }
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -2460,13 +2460,13 @@ GetAppName:
                 {
                     /* Fake the error */
                     CloseHandle(hFile);
-                    SetLastErrorByStatus(STATUS_OBJECT_NAME_NOT_FOUND);
+                    BaseSetLastNTError(STATUS_OBJECT_NAME_NOT_FOUND);
                 }
             }
             else
             {
                 /* Immediately set the error */
-                SetLastErrorByStatus(STATUS_OBJECT_NAME_NOT_FOUND);
+                BaseSetLastNTError(STATUS_OBJECT_NAME_NOT_FOUND);
             }
 
             /* Did we already fail once? */
@@ -2625,7 +2625,7 @@ GetAppName:
 
             case STATUS_OBJECT_NAME_NOT_FOUND:
             case STATUS_OBJECT_PATH_NOT_FOUND:
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
                 goto Cleanup;
 
             default:
@@ -2654,7 +2654,7 @@ GetAppName:
     if(!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to get SectionImageInformation, status 0x%x\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         goto Cleanup;
     }
 
@@ -2705,7 +2705,7 @@ GetAppName:
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to connect to DbgUI!\n");
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             goto Cleanup;
         }
 
@@ -2731,7 +2731,7 @@ GetAppName:
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to create process, status 0x%x\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         goto Cleanup;
     }
 
@@ -2745,7 +2745,7 @@ GetAppName:
         if(!NT_SUCCESS(Status))
         {
             DPRINT1("Unable to set new process priority, status 0x%x\n", Status);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             goto Cleanup;
         }
     }
@@ -2888,7 +2888,7 @@ GetAppName:
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not initialize Process Environment\n");
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         goto Cleanup;
     }
 
@@ -2934,7 +2934,7 @@ GetAppName:
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSR Notification Failed");
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         goto Cleanup;
     }
     

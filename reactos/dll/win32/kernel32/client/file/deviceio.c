@@ -86,7 +86,7 @@ Beep (DWORD dwFreq, DWORD dwDuration)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return FALSE;
     }
 
@@ -177,7 +177,7 @@ DeviceIoControl(IN HANDLE hDevice,
         if (!(NT_SUCCESS(Status)) || (Status == STATUS_PENDING))
         {
             /* Fail */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -233,7 +233,7 @@ DeviceIoControl(IN HANDLE hDevice,
             if (!NT_ERROR(Status)) *lpBytesReturned = Iosb.Information;
 
             /* Return a failure */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -296,7 +296,7 @@ GetOverlappedResult(IN HANDLE hFile,
     if (!NT_SUCCESS(lpOverlapped->Internal))
     {
         /* Set the error and fail */
-        SetLastErrorByStatus(lpOverlapped->Internal);
+        BaseSetLastNTError(lpOverlapped->Internal);
         return FALSE;
     }
 

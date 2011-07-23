@@ -88,7 +88,7 @@ GetSystemPowerStatus(LPSYSTEM_POWER_STATUS PowerStatus)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -146,7 +146,7 @@ SetSystemPowerState(BOOL fSuspend, BOOL fForce)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -176,7 +176,7 @@ GetDevicePowerState(HANDLE hDevice, BOOL *pfOn)
         return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -193,7 +193,7 @@ RequestDeviceWakeup(HANDLE hDevice)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -213,7 +213,7 @@ RequestWakeupLatency(LATENCY_TIME latency)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -233,7 +233,7 @@ CancelDeviceWakeupRequest(HANDLE hDevice)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -277,7 +277,7 @@ SetThreadExecutionState(EXECUTION_STATE esFlags)
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 

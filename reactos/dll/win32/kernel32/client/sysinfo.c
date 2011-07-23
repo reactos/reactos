@@ -53,7 +53,7 @@ GetSystemInfo (
 			);
 	if (STATUS_SUCCESS != Status)
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return;
 	}
 	Status = NtQuerySystemInformation (
@@ -64,7 +64,7 @@ GetSystemInfo (
 			);
 	if (STATUS_SUCCESS != Status)
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return;
 	}
 	/*
@@ -213,7 +213,7 @@ GetSystemRegistryQuota(PDWORD pdwQuotaAllowed,
       return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -260,7 +260,7 @@ GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
          * When NtQuerySystemInformation says STATUS_INFO_LENGTH_MISMATCH,
          * return ERROR_INSUFFICIENT_BUFFER instead of ERROR_BAD_LENGTH.
          */
-        SetLastErrorByStatus(Status == STATUS_INFO_LENGTH_MISMATCH
+        BaseSetLastNTError(Status == STATUS_INFO_LENGTH_MISMATCH
                              ? STATUS_BUFFER_TOO_SMALL
                              : Status);
         return FALSE;

@@ -90,7 +90,7 @@ DeleteFileW (
 	if (!NT_SUCCESS(Status))
 	{
 		WARN("Status 0x%08x\n", Status);
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return FALSE;
 	}
 
@@ -105,7 +105,7 @@ DeleteFileW (
 	{
 		WARN("Status 0x%08x\n", Status);
 		NtClose (FileHandle);
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return FALSE;
 	}
 
@@ -113,7 +113,7 @@ DeleteFileW (
 	if (!NT_SUCCESS (Status))
 	{
 		WARN("Status 0x%08x\n", Status);
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return FALSE;
 	}
 

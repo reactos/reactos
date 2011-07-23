@@ -88,7 +88,7 @@ IsProcessInJob(HANDLE ProcessHandle,
         return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -106,7 +106,7 @@ AssignProcessToJobObject(HANDLE hJob,
     Status = NtAssignProcessToJobObject(hJob, hProcess);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -191,7 +191,7 @@ QueryInformationJobObject(HANDLE hJob,
         return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -286,7 +286,7 @@ SetInformationJobObject(HANDLE hJob,
                                        cbJobObjectInformationLength);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -307,7 +307,7 @@ TerminateJobObject(HANDLE hJob,
     Status = NtTerminateJobObject(hJob, uExitCode);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

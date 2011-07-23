@@ -260,7 +260,7 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return TIME_ZONE_ID_INVALID;
     }
 
@@ -283,7 +283,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlSetTimeZoneInformation() failed (Status %lx)\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -293,7 +293,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetSystemInformation() failed (Status %lx)\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

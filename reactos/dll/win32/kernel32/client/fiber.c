@@ -177,7 +177,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -205,7 +205,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
         //RtlFreeActivationContextStack(&ActivationContextStack);
 
         /* Failure */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 

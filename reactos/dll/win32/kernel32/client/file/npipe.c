@@ -224,7 +224,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     {
         /* Failed to create it */
         WARN("NtCreateNamedPipe failed (Status %x)!\n", Status);
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return INVALID_HANDLE_VALUE;
     }
 
@@ -344,7 +344,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         {
             /* The name is invalid */
             WARN("Invalid name!\n");
-            SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
+            BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
             return FALSE;
         }
 
@@ -353,7 +353,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     else
     {
         WARN("Invalid path type\n");
-        SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
+        BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
         return FALSE;
     }
 
@@ -386,7 +386,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Fail; couldn't open */
         WARN("Status: %lx\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         RtlFreeUnicodeString(&NamedPipeName);
         RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
         return FALSE;
@@ -445,7 +445,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Failure to wait on the pipe */
         WARN("Status: %lx\n", Status);
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return FALSE;
      }
 
@@ -489,7 +489,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         RtlFreeUnicodeString(&NamedPipeName);
         return FALSE;
     }
@@ -532,7 +532,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         RtlFreeUnicodeString(&NamedPipeName);
         return FALSE;
     }
@@ -574,7 +574,7 @@ ConnectNamedPipe(IN HANDLE hNamedPipe,
         /* return FALSE in case of failure and pending operations! */
         if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -607,7 +607,7 @@ ConnectNamedPipe(IN HANDLE hNamedPipe,
 
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -650,7 +650,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
                                       FilePipeInformation);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -670,7 +670,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
                                             FilePipeRemoteInformation);
             if (!NT_SUCCESS(Status))
             {
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
                 return FALSE;
             }
         }
@@ -694,7 +694,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
                                       FilePipeRemoteInformation);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -837,7 +837,7 @@ DisconnectNamedPipe(HANDLE hNamedPipe)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -872,7 +872,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
                                         FilePipeInformation);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -891,7 +891,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
                                         FilePipeLocalInformation);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -909,7 +909,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
                                         FilePipeRemoteInformation);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -983,7 +983,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
         Status = RtlUnicodeStringToAnsiString(&UserNameA, &UserNameW, FALSE);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             Ret = FALSE;
         }
     }
@@ -1019,7 +1019,7 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
                                     FilePipeLocalInformation);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1102,7 +1102,7 @@ PeekNamedPipe(HANDLE hNamedPipe,
     {
         /* Free the buffer and return failure */
         RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1183,7 +1183,7 @@ TransactNamedPipe(IN HANDLE hNamedPipe,
                                  nOutBufferSize);
         if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -1225,7 +1225,7 @@ TransactNamedPipe(IN HANDLE hNamedPipe,
         }
         else
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 #else /* Workaround while FSCTL_PIPE_TRANSCEIVE not available */

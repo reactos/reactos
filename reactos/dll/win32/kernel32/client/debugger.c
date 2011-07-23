@@ -386,7 +386,7 @@ ProcessIdToHandle(IN DWORD dwProcessId)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -429,7 +429,7 @@ CheckRemoteDebuggerPresent(IN HANDLE hProcess,
     }
 
     /* Otherwise, fail */
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -454,7 +454,7 @@ ContinueDebugEvent(IN DWORD dwProcessId,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -479,7 +479,7 @@ DebugActiveProcess(IN DWORD dwProcessId)
     Status = DbgUiConnectToDbg();
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -498,7 +498,7 @@ DebugActiveProcess(IN DWORD dwProcessId)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -554,7 +554,7 @@ DebugBreakProcess(IN HANDLE Process)
     if(!NT_SUCCESS(Status))
     {
         /* Failure */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -578,7 +578,7 @@ DebugSetProcessKillOnExit(IN BOOL KillOnExit)
     if (!Handle)
     {
         /* Fail */
-        SetLastErrorByStatus(STATUS_INVALID_HANDLE);
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -592,7 +592,7 @@ DebugSetProcessKillOnExit(IN BOOL KillOnExit)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -637,7 +637,7 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
     if (!(NT_SUCCESS(Status)) || (Status == DBG_UNABLE_TO_PROVIDE_HANDLE))
     {
         /* Set the error code and quit */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -654,7 +654,7 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
     if (!NT_SUCCESS(Status))
     {
         /* Set the error code and quit */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

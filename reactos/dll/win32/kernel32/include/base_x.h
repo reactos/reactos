@@ -43,7 +43,7 @@
     if (Status == STATUS_BUFFER_OVERFLOW)                                       \
         SetLastError(ERROR_FILENAME_EXCED_RANGE);                               \
     else                                                                        \
-        SetLastErrorByStatus(Status);                                           \
+        BaseSetLastNTError(Status);                                           \
     return FALSE;                                                               \
 }
 
@@ -113,7 +113,7 @@
             SetLastError(ERROR_SUCCESS);                                        \
         return Handle;                                                          \
     }                                                                           \
-    SetLastErrorByStatus(Status);                                               \
+    BaseSetLastNTError(Status);                                               \
     return NULL;                                                                \
 }
 
@@ -138,7 +138,7 @@
     CreateNtObjectFromWin32ApiPrologue                                          \
     if (!name)                                                                  \
     {                                                                           \
-        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);                         \
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);                         \
         return NULL;                                                            \
     }                                                                           \
     RtlInitUnicodeString(&ObjectName, name);                                    \
@@ -150,7 +150,7 @@
     Status = NtOpen##ntobj(&Handle, acc, ObjectAttributes);                     \
     if (!NT_SUCCESS(Status))                                                    \
     {                                                                           \
-        SetLastErrorByStatus(Status);                                           \
+        BaseSetLastNTError(Status);                                           \
         return NULL;                                                            \
     }                                                                           \
     return Handle;                                                              \

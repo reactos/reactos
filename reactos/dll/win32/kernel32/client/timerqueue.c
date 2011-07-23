@@ -37,7 +37,7 @@ IntCreateDefaultTimerQueue(VOID)
   Status = RtlCreateTimerQueue(&DefaultTimerQueue);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     DPRINT1("Unable to create the default timer queue!\n");
     return FALSE;
   }
@@ -81,7 +81,7 @@ CancelTimerQueueTimer(HANDLE TimerQueue,
 
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -122,7 +122,7 @@ ChangeTimerQueueTimer(HANDLE TimerQueue,
   Status = RtlUpdateTimer(TimerQueue, Timer, DueTime, Period);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -143,7 +143,7 @@ CreateTimerQueue(VOID)
   Status = RtlCreateTimerQueue(&Handle);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return NULL;
   }
 
@@ -191,7 +191,7 @@ CreateTimerQueueTimer(PHANDLE phNewTimer,
                           Period, Flags);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -249,7 +249,7 @@ DeleteTimerQueueEx(HANDLE TimerQueue,
        else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
        We also handle all other failures the same way. */
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -298,7 +298,7 @@ DeleteTimerQueueTimer(HANDLE TimerQueue,
        else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
        We also handle all other failures the same way. */
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -349,7 +349,7 @@ SetTimerQueueTimer(HANDLE TimerQueue,
                           Period, (PreferIo ? WT_EXECUTEINIOTHREAD : WT_EXECUTEDEFAULT));
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return NULL;
   }
 

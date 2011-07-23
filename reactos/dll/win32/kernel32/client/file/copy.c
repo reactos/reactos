@@ -233,7 +233,7 @@ CopyFileExW (
 	if (!NT_SUCCESS(errCode))
 	  {
 	     TRACE("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
-	     SetLastErrorByStatus(errCode);
+	     BaseSetLastNTError(errCode);
 	  }
 	else
 	  {
@@ -244,7 +244,7 @@ CopyFileExW (
 	     if (!NT_SUCCESS(errCode))
 	       {
 		  TRACE("Status 0x%08x obtaining FileBasicInformation for source\n", errCode);
-		  SetLastErrorByStatus(errCode);
+		  BaseSetLastNTError(errCode);
 	       }
 	     else
 	       {
@@ -266,7 +266,7 @@ CopyFileExW (
 					  &KeepDestOnError);
 		       if (!NT_SUCCESS(errCode))
 			 {
-			    SetLastErrorByStatus(errCode);
+			    BaseSetLastNTError(errCode);
 			 }
 		       else
 			 {
@@ -276,7 +276,7 @@ CopyFileExW (
 			    errCode = SetLastWriteTime(FileHandleDest, t);
 			    if (!NT_SUCCESS(errCode))
 			      {
-				 SetLastErrorByStatus(errCode);
+				 BaseSetLastNTError(errCode);
 			      }
 			    else
 			      {

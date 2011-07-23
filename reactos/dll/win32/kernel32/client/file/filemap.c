@@ -124,7 +124,7 @@ CreateFileMappingW(HANDLE hFile,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -191,7 +191,7 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -233,7 +233,7 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -266,7 +266,7 @@ OpenFileMappingA(DWORD dwDesiredAccess,
         if (!NT_SUCCESS(Status))
         {
             /* Conversion failed */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return NULL;
         }
     }
@@ -323,7 +323,7 @@ OpenFileMappingW(DWORD dwDesiredAccess,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -355,7 +355,7 @@ FlushViewOfFile(LPCVOID lpBaseAddress,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

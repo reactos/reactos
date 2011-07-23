@@ -47,7 +47,7 @@ InternalAddAtom(BOOLEAN Local,
         if (Atom >= MAXINTATOM)
         {
             /* Fail, atom number too large */
-            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
             return INVALID_ATOM;
         }
 
@@ -93,7 +93,7 @@ InternalAddAtom(BOOLEAN Local,
         /* Check for failure */
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return Atom;
         }
     }
@@ -115,7 +115,7 @@ InternalAddAtom(BOOLEAN Local,
     }
 
     /* Check for failure */
-    if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     /* Check if we were non-static ANSI */
     if (!(Unicode) && (AtomNameString == &UnicodeString))
@@ -148,7 +148,7 @@ InternalFindAtom(BOOLEAN Local,
         if (Atom >= MAXINTATOM)
         {
             /* Fail, atom number too large */
-            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
             DPRINT1("Invalid atom\n");
         }
 
@@ -195,7 +195,7 @@ InternalFindAtom(BOOLEAN Local,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed\n");
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return Atom;
         }
     }
@@ -227,7 +227,7 @@ InternalFindAtom(BOOLEAN Local,
     }
 
     /* Check for failure */
-    if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     /* Check if we were non-static ANSI */
     if (!(Unicode) && (AtomNameString == &UnicodeString))
@@ -266,7 +266,7 @@ InternalDeleteAtom(BOOLEAN Local,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return INVALID_ATOM;
         }
     }
@@ -299,12 +299,12 @@ InternalGetAtomName(BOOLEAN Local,
     /* Make sure it's valid too */
     if (!Size)
     {
-        SetLastErrorByStatus(STATUS_BUFFER_OVERFLOW);
+        BaseSetLastNTError(STATUS_BUFFER_OVERFLOW);
         return 0;
     }
     if (!Atom)
     {
-        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
         return 0;
     }
 
@@ -347,7 +347,7 @@ InternalGetAtomName(BOOLEAN Local,
 
         if (!AtomInfo)
         {
-            SetLastErrorByStatus(STATUS_NO_MEMORY);
+            BaseSetLastNTError(STATUS_NO_MEMORY);
             return 0;
         }
 
@@ -417,7 +417,7 @@ InternalGetAtomName(BOOLEAN Local,
     {
         /* Fail */
         DPRINT("Failed: %lx\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
     }
 
     /* Return length */

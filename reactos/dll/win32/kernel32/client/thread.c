@@ -144,7 +144,7 @@ CreateRemoteThread(HANDLE hProcess,
                               &InitialTeb);
     if(!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -172,7 +172,7 @@ CreateRemoteThread(HANDLE hProcess,
     if(!NT_SUCCESS(Status))
     {
         BasepFreeStack(hProcess, &InitialTeb);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -322,7 +322,7 @@ OpenThread(DWORD dwDesiredAccess,
                           &ClientId);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -380,7 +380,7 @@ GetThreadTimes(HANDLE hThread,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return(FALSE);
     }
 
@@ -404,7 +404,7 @@ GetThreadContext(HANDLE hThread,
     Status = NtGetContextThread(hThread, lpContext);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -424,7 +424,7 @@ SetThreadContext(HANDLE hThread,
     Status = NtSetContextThread(hThread, (PCONTEXT)lpContext);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -449,7 +449,7 @@ GetExitCodeThread(HANDLE hThread,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return(FALSE);
     }
 
@@ -470,7 +470,7 @@ ResumeThread(HANDLE hThread)
     Status = NtResumeThread(hThread, &PreviousResumeCount);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return -1;
     }
 
@@ -496,7 +496,7 @@ TerminateThread(HANDLE hThread,
     Status = NtTerminateThread(hThread, dwExitCode);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -516,7 +516,7 @@ SuspendThread(HANDLE hThread)
     Status = NtSuspendThread(hThread, &PreviousSuspendCount);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return -1;
     }
 
@@ -544,7 +544,7 @@ SetThreadAffinityMask(HANDLE hThread,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -554,7 +554,7 @@ SetThreadAffinityMask(HANDLE hThread,
                                     sizeof(KAFFINITY));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         ThreadBasic.AffinityMask = 0;
     }
 
@@ -590,7 +590,7 @@ SetThreadPriority(HANDLE hThread,
     if (!NT_SUCCESS(Status))
     {
         /* Failure */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -617,7 +617,7 @@ GetThreadPriority(HANDLE hThread)
     if (!NT_SUCCESS(Status))
     {
         /* Failure */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return THREAD_PRIORITY_ERROR_RETURN;
     }
 
@@ -655,7 +655,7 @@ GetThreadPriorityBoost(IN HANDLE hThread,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -682,7 +682,7 @@ SetThreadPriorityBoost(IN HANDLE hThread,
                                     sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -712,7 +712,7 @@ GetThreadSelectorEntry(IN HANDLE hThread,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -741,7 +741,7 @@ SetThreadIdealProcessor(HANDLE hThread,
                                     sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return -1;
     }
 
@@ -764,7 +764,7 @@ GetProcessIdOfThread(HANDLE Thread)
                                     NULL);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return 0;
   }
 
@@ -787,7 +787,7 @@ GetThreadId(HANDLE Thread)
                                     NULL);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return 0;
   }
 
@@ -823,7 +823,7 @@ QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
                             (PVOID)dwData, NULL);
   if (!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return 0;
   }
 
@@ -866,7 +866,7 @@ GetThreadIOPendingFlag(HANDLE hThread,
     return TRUE;
   }
 
-  SetLastErrorByStatus(Status);
+  BaseSetLastNTError(Status);
   return FALSE;
 }
 
@@ -938,7 +938,7 @@ QueueUserWorkItem(
                     0,
                     WorkItemContext);
 
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -991,7 +991,7 @@ TlsAlloc(VOID)
             /* Fail */
             RtlClearBits(Peb->TlsExpansionBitmap, Index, 1);
             Index = 0xFFFFFFFF;
-            SetLastErrorByStatus(STATUS_NO_MEMORY);
+            BaseSetLastNTError(STATUS_NO_MEMORY);
         }
         else
         {
@@ -1003,7 +1003,7 @@ TlsAlloc(VOID)
     else
     {
         /* Fail */
-        SetLastErrorByStatus(STATUS_NO_MEMORY);
+        BaseSetLastNTError(STATUS_NO_MEMORY);
     }
 
     /* Release the lock and return */
@@ -1036,7 +1036,7 @@ TlsFree(IN DWORD Index)
         if (TlsIndex >= TLS_EXPANSION_SLOTS)
         {
             /* It's invalid */
-            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
             RtlReleasePebLock();
             return FALSE;
         }
@@ -1064,7 +1064,7 @@ TlsFree(IN DWORD Index)
                                         sizeof(DWORD));
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
             return FALSE;
         }
 
@@ -1074,7 +1074,7 @@ TlsFree(IN DWORD Index)
     else
     {
         /* Fail */
-        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -1106,7 +1106,7 @@ TlsGetValue(IN DWORD Index)
     if (Index >= TLS_EXPANSION_SLOTS + TLS_MINIMUM_AVAILABLE)
     {
         /* Fail */
-        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
         return NULL;
     }
 
@@ -1142,7 +1142,7 @@ TlsSetValue(IN DWORD Index,
     if (TlsIndex >= TLS_EXPANSION_SLOTS)
     {
         /* Fail */
-        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -1162,7 +1162,7 @@ TlsSetValue(IN DWORD Index,
             {
                 /* Fail */
                 RtlReleasePebLock();
-                SetLastErrorByStatus(STATUS_NO_MEMORY);
+                BaseSetLastNTError(STATUS_NO_MEMORY);
                 return FALSE;
             }
         }

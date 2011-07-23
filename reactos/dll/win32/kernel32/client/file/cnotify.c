@@ -26,7 +26,7 @@ FindCloseChangeNotification (HANDLE hChangeHandle)
    NTSTATUS Status = NtClose(hChangeHandle);
    if(!NT_SUCCESS(Status))
    {
-     SetLastErrorByStatus(Status);
+     BaseSetLastNTError(Status);
      return FALSE;
    }
 
@@ -73,7 +73,7 @@ FindFirstChangeNotificationW (
                                           NULL,
                                           NULL))
    {
-      SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
+      BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
       return INVALID_HANDLE_VALUE;
    }
 
@@ -100,7 +100,7 @@ FindFirstChangeNotificationW (
 
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return INVALID_HANDLE_VALUE;
    }
 
@@ -116,7 +116,7 @@ FindFirstChangeNotificationW (
    if (!NT_SUCCESS(Status))
    {
       NtClose(hDir);
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return INVALID_HANDLE_VALUE;
    }
 
@@ -149,7 +149,7 @@ FindNextChangeNotification (
 
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return FALSE;
    }
 
@@ -237,7 +237,7 @@ ReadDirectoryChangesW(
 
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return FALSE;
    }
 

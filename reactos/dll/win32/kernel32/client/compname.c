@@ -62,7 +62,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return FALSE;
     }
 
@@ -115,7 +115,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
 
 failed:
     RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -382,7 +382,7 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -397,7 +397,7 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
     if (!NT_SUCCESS(Status))
     {
         ZwClose(KeyHandle);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

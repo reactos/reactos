@@ -71,7 +71,7 @@ InternalOpenDirW(LPCWSTR DirName,
 
     if (!NT_SUCCESS(errCode))
     {
-	SetLastErrorByStatus (errCode);
+	BaseSetLastNTError (errCode);
 	return INVALID_HANDLE_VALUE;
     }
     return hFile;
@@ -174,7 +174,7 @@ GetLogicalDrives(VOID)
 	/* Return the Drive Map */
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus(Status);
+		BaseSetLastNTError(Status);
 		return 0;
 	}
 
@@ -253,7 +253,7 @@ GetDiskFreeSpaceW(
     if (!NT_SUCCESS(errCode))
     {
         CloseHandle(hFile);
-        SetLastErrorByStatus (errCode);
+        BaseSetLastNTError (errCode);
         return FALSE;
     }
 
@@ -382,7 +382,7 @@ GetDiskFreeSpaceExW(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return FALSE;
     }
 
@@ -452,7 +452,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 	if (!NT_SUCCESS(errCode))
 	{
 		CloseHandle(hFile);
-		SetLastErrorByStatus (errCode);
+		BaseSetLastNTError (errCode);
 		return 0;
 	}
 	CloseHandle(hFile);
@@ -676,7 +676,7 @@ GetVolumeInformationW(
     {
       WARN("Status: %x\n", errCode);
       CloseHandle(hFile);
-      SetLastErrorByStatus (errCode);
+      BaseSetLastNTError (errCode);
       return FALSE;
     }
 
@@ -709,7 +709,7 @@ GetVolumeInformationW(
   if (!NT_SUCCESS(errCode))
     {
       WARN("Status: %x\n", errCode);
-      SetLastErrorByStatus (errCode);
+      BaseSetLastNTError (errCode);
       return FALSE;
     }
 
@@ -827,7 +827,7 @@ SetVolumeLabelW(
      {
 	WARN("Status: %x\n", Status);
 	CloseHandle(hFile);
-	SetLastErrorByStatus(Status);
+	BaseSetLastNTError(Status);
 	return FALSE;
      }
 
@@ -910,7 +910,7 @@ GetVolumeNameForVolumeMountPointW(
    RtlFreeUnicodeString(&NtFileName);
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return FALSE;
    }
 
@@ -939,7 +939,7 @@ GetVolumeNameForVolumeMountPointW(
          else
          {
             NtClose(FileHandle);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
          }
       }
@@ -973,7 +973,7 @@ GetVolumeNameForVolumeMountPointW(
                        FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoint);
       return FALSE;
    }
@@ -1007,7 +1007,7 @@ GetVolumeNameForVolumeMountPointW(
             RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoint);
             RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
             NtClose(FileHandle);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
          }
       }

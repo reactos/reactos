@@ -74,7 +74,7 @@ GetHandleInformation (HANDLE hObject,
   }
   else
   {
-    SetLastErrorByStatus (Status);
+    BaseSetLastNTError (Status);
     return FALSE;
   }
 }
@@ -112,7 +112,7 @@ SetHandleInformation (HANDLE hObject,
 				     sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION));
     if(!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return FALSE;
     }
 
@@ -120,7 +120,7 @@ SetHandleInformation (HANDLE hObject,
   }
   else
   {
-    SetLastErrorByStatus (Status);
+    BaseSetLastNTError (Status);
     return FALSE;
   }
 }
@@ -150,7 +150,7 @@ BOOL WINAPI CloseHandle(HANDLE  hObject)
    Status = NtClose(hObject);
    if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus (Status);
+	BaseSetLastNTError (Status);
 	return FALSE;
      }
 
@@ -199,7 +199,7 @@ BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle,
 			      dwOptions);
    if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus (Status);
+	BaseSetLastNTError (Status);
 	return FALSE;
      }
 

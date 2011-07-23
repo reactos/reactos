@@ -98,7 +98,7 @@ CreatePipe(PHANDLE hReadPipe,
     {
         /* Convert error and fail */
         WARN("Status: %lx\n", Status);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -114,7 +114,7 @@ CreatePipe(PHANDLE hReadPipe,
         /* Convert error and fail */
         WARN("Status: %lx\n", Status);
         NtClose(ReadPipeHandle);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

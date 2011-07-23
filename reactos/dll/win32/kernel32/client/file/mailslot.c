@@ -121,7 +121,7 @@ CreateMailslotW(LPCWSTR lpName,
    if (!NT_SUCCESS(Status))
      {
 	WARN("NtCreateMailslot failed (Status %x)!\n", Status);
-	SetLastErrorByStatus (Status);
+	BaseSetLastNTError (Status);
 	return(INVALID_HANDLE_VALUE);
      }
 
@@ -151,7 +151,7 @@ GetMailslotInfo(HANDLE hMailslot,
    if (!NT_SUCCESS(Status))
      {
 	WARN("NtQueryInformationFile failed (Status %x)!\n", Status);
-	SetLastErrorByStatus (Status);
+	BaseSetLastNTError (Status);
 	return(FALSE);
      }
 
@@ -213,7 +213,7 @@ SetMailslotInfo(HANDLE hMailslot,
    if (!NT_SUCCESS(Status))
      {
 	WARN("NtSetInformationFile failed (Status %x)!\n", Status);
-	SetLastErrorByStatus (Status);
+	BaseSetLastNTError (Status);
 	return(FALSE);
      }
 

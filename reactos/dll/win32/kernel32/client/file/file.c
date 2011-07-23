@@ -50,7 +50,7 @@ FilenameA2W(LPCSTR NameA, BOOL alloc)
     if (Status== STATUS_BUFFER_OVERFLOW)
         SetLastError( ERROR_FILENAME_EXCED_RANGE );
     else
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
 
     return NULL;
 }
@@ -388,7 +388,7 @@ OpenFile(LPCSTR lpFileName,
 
 	if (!NT_SUCCESS(errCode))
 	{
-		SetLastErrorByStatus (errCode);
+		BaseSetLastNTError (errCode);
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
 
@@ -476,7 +476,7 @@ SetFilePointer(HANDLE hFile,
     {
       if (lpDistanceToMoveHigh != NULL)
           *lpDistanceToMoveHigh = -1;
-      SetLastErrorByStatus(errCode);
+      BaseSetLastNTError(errCode);
       return INVALID_SET_FILE_POINTER;
     }
     break;
@@ -492,7 +492,7 @@ SetFilePointer(HANDLE hFile,
     {
       if (lpDistanceToMoveHigh != NULL)
           *lpDistanceToMoveHigh = -1;
-      SetLastErrorByStatus(errCode);
+      BaseSetLastNTError(errCode);
       return INVALID_SET_FILE_POINTER;
     }
     break;
@@ -528,7 +528,7 @@ SetFilePointer(HANDLE hFile,
        if (lpDistanceToMoveHigh != NULL)
            *lpDistanceToMoveHigh = -1;
 
-       SetLastErrorByStatus(errCode);
+       BaseSetLastNTError(errCode);
        return INVALID_SET_FILE_POINTER;
      }
 
@@ -612,7 +612,7 @@ SetFilePointerEx(HANDLE hFile,
 				  FilePositionInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return FALSE;
      }
 
@@ -651,7 +651,7 @@ GetFileType(HANDLE hFile)
 					FileFsDeviceInformation);
   if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return FILE_TYPE_UNKNOWN;
     }
 
@@ -704,7 +704,7 @@ GetFileSize(HANDLE hFile,
 				    FileStandardInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	if ( lpFileSizeHigh == NULL )
 	  {
 	     return -1;
@@ -742,7 +742,7 @@ GetFileSizeEx(
 				    FileStandardInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return FALSE;
      }
    if (lpFileSize)
@@ -801,7 +801,7 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return INVALID_FILE_SIZE;
      }
 
@@ -846,7 +846,7 @@ GetFileInformationByHandle(HANDLE hFile,
 				    FileBasicInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return FALSE;
      }
 
@@ -868,7 +868,7 @@ GetFileInformationByHandle(HANDLE hFile,
 				    FileInternalInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return FALSE;
      }
 
@@ -882,7 +882,7 @@ GetFileInformationByHandle(HANDLE hFile,
 					  FileFsVolumeInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return FALSE;
      }
 
@@ -895,7 +895,7 @@ GetFileInformationByHandle(HANDLE hFile,
 				    FileStandardInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
+	BaseSetLastNTError(errCode);
 	return FALSE;
      }
 
@@ -956,7 +956,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   if (!NT_SUCCESS (Status))
     {
       WARN ("NtQueryFullAttributesFile() failed (Status %lx)\n", Status);
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return FALSE;
     }
 
@@ -1058,7 +1058,7 @@ GetFileAttributesByHandle(IN HANDLE hFile,
         return TRUE;
     }
 
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
 }
 
@@ -1101,7 +1101,7 @@ SetFileAttributesByHandle(IN HANDLE hFile,
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1172,7 +1172,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
   if (!NT_SUCCESS (Status))
     {
       WARN ("NtOpenFile() failed (Status %lx)\n", Status);
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return FALSE;
     }
 
@@ -1185,7 +1185,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
     {
       WARN ("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", Status);
       NtClose (FileHandle);
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return FALSE;
     }
 
@@ -1199,7 +1199,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
   if (!NT_SUCCESS(Status))
     {
       WARN ("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", Status);
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return FALSE;
     }
 
@@ -1553,7 +1553,7 @@ SetEndOfFile(HANDLE hFile)
 					);
 
 	if (!NT_SUCCESS(Status)){
-		SetLastErrorByStatus(Status);
+		BaseSetLastNTError(Status);
 		return FALSE;
 	}
 
@@ -1576,7 +1576,7 @@ SetEndOfFile(HANDLE hFile)
 						);
 
 	if (!NT_SUCCESS(Status)){
-		SetLastErrorByStatus(Status);
+		BaseSetLastNTError(Status);
 		return FALSE;
 	}
 
@@ -1592,7 +1592,7 @@ SetEndOfFile(HANDLE hFile)
 						);
 
 	if (!NT_SUCCESS(Status)){
-		SetLastErrorByStatus(Status);
+		BaseSetLastNTError(Status);
 		return FALSE;
 	}
 
@@ -1626,7 +1626,7 @@ SetFileValidData(
 						);
 
 	if (!NT_SUCCESS(Status)){
-		SetLastErrorByStatus(Status);
+		BaseSetLastNTError(Status);
 		return FALSE;
 	}
 
@@ -1683,7 +1683,7 @@ SetFileShortNameW(
   RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInfo);
   if(!NT_SUCCESS(Status))
   {
-    SetLastErrorByStatus(Status);
+    BaseSetLastNTError(Status);
     return FALSE;
   }
 
@@ -1803,7 +1803,7 @@ CheckNameLegalDOS8Dot3A(
 
     if(!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return FALSE;
     }
 

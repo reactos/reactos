@@ -204,7 +204,7 @@ GetErrorMode(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail if we couldn't query */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -261,7 +261,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
                                        &DebugPort, sizeof(HANDLE), NULL);
    if (!NT_SUCCESS(ErrCode) && ErrCode != STATUS_NOT_IMPLEMENTED)
    {
-      SetLastErrorByStatus(ErrCode);
+      BaseSetLastNTError(ErrCode);
       return EXCEPTION_EXECUTE_HANDLER;
    }
 
@@ -418,7 +418,7 @@ SetErrorMode(IN UINT uMode)
                                      ProcessDefaultHardErrorMode,
                                      (PVOID)&NewMode,
                                      sizeof(NewMode));
-    if(!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+    if(!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     /* Return the previous mode */
     return PrevErrMode;

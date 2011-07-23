@@ -38,7 +38,7 @@ VirtualAllocEx(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
@@ -86,7 +86,7 @@ VirtualFreeEx(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* We failed */
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -94,7 +94,7 @@ VirtualFreeEx(IN HANDLE hProcess,
         return TRUE;
     }
 
-    SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+    BaseSetLastNTError(STATUS_INVALID_PARAMETER);
     return FALSE;
 }
 
@@ -154,7 +154,7 @@ VirtualProtectEx(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -182,7 +182,7 @@ VirtualLock(IN LPVOID lpAddress,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -229,7 +229,7 @@ VirtualQueryEx(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -257,7 +257,7 @@ VirtualUnlock(IN LPVOID lpAddress,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -291,7 +291,7 @@ GetWriteWatch(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return -1;
     }
 
@@ -316,7 +316,7 @@ ResetWriteWatch(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return -1;
     }
 
@@ -342,7 +342,7 @@ AllocateUserPhysicalPages(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -368,7 +368,7 @@ FreeUserPhysicalPages(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -394,7 +394,7 @@ MapUserPhysicalPages(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -420,7 +420,7 @@ MapUserPhysicalPagesScatter(
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

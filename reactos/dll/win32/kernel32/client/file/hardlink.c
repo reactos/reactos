@@ -125,7 +125,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
                       }
                       else
                       {
-                        SetLastErrorByStatus(Status);
+                        BaseSetLastNTError(Status);
                       }
 
                       RtlFreeHeap(RtlGetProcessHeap(), 0, LinkInformation);
@@ -144,7 +144,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
                 else
                 {
                   WARN("Unable to open link destination \"%wZ\"!\n", &LinkTarget);
-                  SetLastErrorByStatus(Status);
+                  BaseSetLastNTError(Status);
                 }
               }
               else
@@ -157,7 +157,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
             }
             else
             {
-              SetLastErrorByStatus(Status);
+              BaseSetLastNTError(Status);
             }
           }
           else

@@ -300,7 +300,7 @@ AddConsoleAliasW(LPCWSTR lpSource,
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         RtlFreeHeap(GetProcessHeap(), 0, Request);
         return FALSE;
     }
@@ -359,7 +359,7 @@ DuplicateConsoleHandle(HANDLE hConsole,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status=Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
 
@@ -394,7 +394,7 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
     CsrFreeCaptureBuffer(CaptureBuffer);
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     return TRUE;
@@ -499,7 +499,7 @@ GetConsoleAliasW(LPWSTR lpSource,
     {
         RtlFreeHeap(GetProcessHeap(), 0, Request);
         CsrFreeCaptureBuffer(CaptureBuffer);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -614,7 +614,7 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         CsrFreeCaptureBuffer(CaptureBuffer);
         return 0;
     }
@@ -676,7 +676,7 @@ GetConsoleAliasExesLengthW(VOID)
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -735,7 +735,7 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -800,7 +800,7 @@ GetConsoleAliasesLengthW(LPWSTR lpExeName)
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -866,7 +866,7 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -941,7 +941,7 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
     CsrFreeCaptureBuffer(CaptureBuffer);
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
     return Request.Data.GetCommandHistoryLength.Length;
@@ -1042,7 +1042,7 @@ GetConsoleHardwareState(HANDLE hConsole,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1070,7 +1070,7 @@ GetConsoleInputWaitHandle(VOID)
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -1171,7 +1171,7 @@ OpenConsoleW(LPCWSTR wsName,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
 
@@ -1253,7 +1253,7 @@ SetConsoleHardwareState(HANDLE hConsole,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1334,7 +1334,7 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
     CsrFreeCaptureBuffer(CaptureBuffer);
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     return TRUE;
@@ -1419,7 +1419,7 @@ VerifyConsoleIoHandle(HANDLE Handle)
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1479,7 +1479,7 @@ CloseConsoleHandle(HANDLE Handle)
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1621,7 +1621,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
         if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -1744,7 +1744,7 @@ IntReadConsole(HANDLE hConsoleInput,
         {
             DPRINT1("CSR returned error in ReadConsole\n");
             CsrFreeCaptureBuffer(CaptureBuffer);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
     }
@@ -1827,7 +1827,7 @@ AllocConsole(VOID)
     if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
     {
         DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
-        SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS);
+        BaseSetLastNTError (STATUS_OBJECT_NAME_EXISTS);
         return FALSE;
     }
 
@@ -1840,7 +1840,7 @@ AllocConsole(VOID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1880,7 +1880,7 @@ FreeConsole(VOID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1909,7 +1909,7 @@ GetConsoleScreenBufferInfo(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     *lpConsoleScreenBufferInfo = Request.Data.ScreenBufferInfoRequest.Info;
@@ -1938,7 +1938,7 @@ SetConsoleCursorPosition(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1978,7 +1978,7 @@ IntFillConsoleOutputCharacter(HANDLE hConsoleOutput,
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -2102,7 +2102,7 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     {
         /* Error out */
        *lpNumberOfEventsRead = 0;
-       SetLastErrorByStatus(Request.Status);
+       BaseSetLastNTError(Request.Status);
     }
 
     /* Release the capture buffer */
@@ -2181,7 +2181,7 @@ IntReadConsoleInput(HANDLE hConsoleInput,
             if (Read == 0)
             {
                 /* we couldn't read a single record, fail */
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
                 return FALSE;
             }
             else
@@ -2197,7 +2197,7 @@ IntReadConsoleInput(HANDLE hConsoleInput,
                 Status = NtWaitForSingleObject(Request.Data.ReadInputRequest.Event, FALSE, 0);
                 if (!NT_SUCCESS(Status))
                 {
-                    SetLastErrorByStatus(Status);
+                    BaseSetLastNTError(Status);
                     break;
                 }
             }
@@ -2331,7 +2331,7 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
     {
         /* Error out */
         *lpNumberOfEventsWritten = 0;
-        SetLastErrorByStatus(Request.Status);
+        BaseSetLastNTError(Request.Status);
     }
 
     /* Release the capture buffer */
@@ -2452,7 +2452,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     else
     {
         /* Error out */
-        SetLastErrorByStatus(Request.Status);
+        BaseSetLastNTError(Request.Status);
     }
 
     /* Return the read region */
@@ -2565,7 +2565,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
     if (!NT_SUCCESS(Request.Status))
     {
         /* Error out */
-        SetLastErrorByStatus(Request.Status);
+        BaseSetLastNTError(Request.Status);
     }
 
     /* Return the read region */
@@ -2673,7 +2673,7 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
         if (!NT_SUCCESS(Status) || !NT_SUCCESS(Request->Status))
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             break;
         }
 
@@ -2795,7 +2795,7 @@ ReadConsoleOutputAttribute(HANDLE hConsoleOutput,
         if (!NT_SUCCESS(Status) || !NT_SUCCESS(Request->Status))
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -2864,7 +2864,7 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
         if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return FALSE;
         }
 
@@ -2980,7 +2980,7 @@ WriteConsoleOutputAttribute(HANDLE hConsoleOutput,
         if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-            SetLastErrorByStatus (Status);
+            BaseSetLastNTError (Status);
             return FALSE;
         }
         nLength -= Size;
@@ -3020,7 +3020,7 @@ FillConsoleOutputAttribute(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus ( Status );
+        BaseSetLastNTError ( Status );
         return FALSE;
     }
 
@@ -3051,7 +3051,7 @@ GetConsoleMode(HANDLE hConsoleHandle,
     Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus ( Status );
+        BaseSetLastNTError ( Status );
         return FALSE;
     }
     *lpMode = Request.Data.GetConsoleModeRequest.ConsoleMode;
@@ -3086,7 +3086,7 @@ GetNumberOfConsoleInputEvents(HANDLE hConsoleInput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3143,7 +3143,7 @@ GetConsoleCursorInfo(HANDLE hConsoleOutput,
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     *lpConsoleCursorInfo = Request.Data.GetCursorInfoRequest.Info;
@@ -3188,7 +3188,7 @@ SetConsoleMode(HANDLE hConsoleHandle,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus ( Status );
+        BaseSetLastNTError ( Status );
         return FALSE;
     }
 
@@ -3215,7 +3215,7 @@ SetConsoleActiveScreenBuffer(HANDLE hConsoleOutput)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3242,7 +3242,7 @@ FlushConsoleInputBuffer(HANDLE hConsoleInput)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3271,7 +3271,7 @@ SetConsoleScreenBufferSize(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3299,7 +3299,7 @@ SetConsoleCursorInfo(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3345,7 +3345,7 @@ IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3435,7 +3435,7 @@ SetConsoleTextAttribute(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3569,7 +3569,7 @@ GenerateConsoleCtrlEvent(DWORD dwCtrlEvent,
                                  sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request.Status)))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3605,7 +3605,7 @@ IntGetConsoleTitle(LPVOID lpConsoleTitle, DWORD nSize, BOOL bUnicode)
     if (!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request.Status)))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
@@ -3698,7 +3698,7 @@ SetConsoleTitleW(LPCWSTR lpConsoleTitle)
     CsrFreeCaptureBuffer(CaptureBuffer);
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3766,7 +3766,7 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
     return Request.Data.CreateScreenBufferRequest.OutputHandle;
@@ -3790,7 +3790,7 @@ GetConsoleCP(VOID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return 0;
     }
 
@@ -3817,7 +3817,7 @@ SetConsoleCP(UINT wCodePageID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
     }
 
     return NT_SUCCESS(Status);
@@ -3841,7 +3841,7 @@ GetConsoleOutputCP(VOID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return 0;
     }
 
@@ -3867,7 +3867,7 @@ SetConsoleOutputCP(UINT wCodePageID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
     }
 
     return NT_SUCCESS(Status);
@@ -3916,7 +3916,7 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         nProcesses = 0;
     }
     else
@@ -3948,7 +3948,7 @@ GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
     NTSTATUS Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -3988,7 +3988,7 @@ GetConsoleWindow(VOID)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status ) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return (HWND) NULL;
     }
 
@@ -4015,7 +4015,7 @@ SetConsoleIcon(HICON hicon)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -4100,7 +4100,7 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
     }
     else
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         Ret = FALSE;
     }
 

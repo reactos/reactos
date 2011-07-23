@@ -192,7 +192,7 @@ DefineDosDeviceW(
         {
             WARN("CsrClientCallServer() failed (Status %lx)\n",
                 Status);
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             Result = FALSE;
         }
         else
@@ -359,7 +359,7 @@ QueryDosDeviceW(
   if (!NT_SUCCESS (Status))
   {
     WARN ("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
-    SetLastErrorByStatus (Status);
+    BaseSetLastNTError (Status);
     return 0;
   }
 
@@ -382,7 +382,7 @@ QueryDosDeviceW(
     {
       WARN ("NtOpenSymbolicLinkObject() failed (Status %lx)\n", Status);
       NtClose (DirectoryHandle);
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return 0;
     }
 
@@ -400,7 +400,7 @@ QueryDosDeviceW(
     if (!NT_SUCCESS (Status))
     {
       WARN ("NtQuerySymbolicLinkObject() failed (Status %lx)\n", Status);
-      SetLastErrorByStatus (Status);
+      BaseSetLastNTError (Status);
       return 0;
     }
 
@@ -418,7 +418,7 @@ QueryDosDeviceW(
     else
     {
       TRACE ("Buffer is too small\n");
-      SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+      BaseSetLastNTError (STATUS_BUFFER_TOO_SMALL);
       return 0;
     }
   }
@@ -452,7 +452,7 @@ QueryDosDeviceW(
 	{
 	  Length = 0;
 	}
-	SetLastErrorByStatus (Status);
+	BaseSetLastNTError (Status);
 	break;
       }
 
@@ -464,7 +464,7 @@ QueryDosDeviceW(
 	if (Length + NameLength + 1 >= ucchMax)
 	{
 	  Length = 0;
-	  SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+	  BaseSetLastNTError (STATUS_BUFFER_TOO_SMALL);
 	  break;
 	}
 

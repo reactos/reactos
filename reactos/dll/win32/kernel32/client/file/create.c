@@ -349,7 +349,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
       }
       else
       {
-         SetLastErrorByStatus (Status);
+         BaseSetLastNTError (Status);
       }
 
       return INVALID_HANDLE_VALUE;

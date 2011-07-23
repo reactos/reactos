@@ -71,7 +71,7 @@ WriteFile(IN HANDLE hFile,
         /* return FALSE in case of failure and pending operations! */
         if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
           {
-             SetLastErrorByStatus(Status);
+             BaseSetLastNTError(Status);
              return FALSE;
           }
 
@@ -115,7 +115,7 @@ WriteFile(IN HANDLE hFile,
           }
         else
           {
-             SetLastErrorByStatus(Status);
+             BaseSetLastNTError(Status);
              return FALSE;
           }
      }
@@ -200,7 +200,7 @@ ReadFile(IN HANDLE hFile,
                   *lpNumberOfBytesRead = 0;
                }
 
-             SetLastErrorByStatus(Status);
+             BaseSetLastNTError(Status);
              return FALSE;
           }
 
@@ -253,7 +253,7 @@ ReadFile(IN HANDLE hFile,
           }
         else
           {
-             SetLastErrorByStatus(Status);
+             BaseSetLastNTError(Status);
              return FALSE;
           }
      }
@@ -307,7 +307,7 @@ WriteFileEx(IN HANDLE hFile,
 
    if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus(Status);
+	BaseSetLastNTError(Status);
 	return FALSE;
      }
 
@@ -344,7 +344,7 @@ ReadFileEx(IN HANDLE hFile,
 
    if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus(Status);
+	BaseSetLastNTError(Status);
 	return FALSE;
      }
 

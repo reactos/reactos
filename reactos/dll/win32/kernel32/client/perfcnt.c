@@ -30,7 +30,7 @@ QueryPerformanceCounter(OUT PLARGE_INTEGER lpPerformanceCount)
     
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -52,7 +52,7 @@ QueryPerformanceFrequency(OUT PLARGE_INTEGER lpFrequency)
     
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

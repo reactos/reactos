@@ -85,7 +85,7 @@ GetEnvironmentVariableA (
 		/* free unicode variable name string */
 		RtlFreeUnicodeString (&VarNameU);
 
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
 			return (VarValueU.Length / sizeof(WCHAR)) + 1;
@@ -155,7 +155,7 @@ GetEnvironmentVariableW (
 		}
 		else
 		{
-			SetLastErrorByStatus (Status);
+			BaseSetLastNTError (Status);
 			return 0;
 		}
 	}
@@ -219,7 +219,7 @@ SetEnvironmentVariableA (
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return FALSE;
 	}
 
@@ -255,7 +255,7 @@ SetEnvironmentVariableW (
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return FALSE;
 	}
 
@@ -413,7 +413,7 @@ ExpandEnvironmentStringsA (
 	                                       TRUE);
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus (Status);
+            BaseSetLastNTError (Status);
             return 0;
         }
 
@@ -446,7 +446,7 @@ ExpandEnvironmentStringsA (
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		if (Status != STATUS_BUFFER_TOO_SMALL)
 		{
 			RtlFreeHeap (RtlGetProcessHeap (),
@@ -501,7 +501,7 @@ ExpandEnvironmentStringsW (
 	                                        &Length);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		if (Status != STATUS_BUFFER_TOO_SMALL)
 			return 0;
 	}

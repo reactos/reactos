@@ -177,7 +177,7 @@ HeapExtend(HANDLE hHeap,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -224,7 +224,7 @@ HeapSummary(HANDLE hHeap,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -251,7 +251,7 @@ HeapUsage(HANDLE hHeap,
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     else if (Status == STATUS_MORE_ENTRIES)
@@ -307,7 +307,7 @@ HeapQueryInformation(HANDLE HeapHandle,
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -333,7 +333,7 @@ HeapSetInformation(HANDLE HeapHandle,
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

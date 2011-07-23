@@ -121,7 +121,7 @@ SetCurrentDirectoryW (
 	Status = RtlSetCurrentDirectory_U (&UnicodeString);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (Status);
+		BaseSetLastNTError (Status);
 		return FALSE;
 	}
 

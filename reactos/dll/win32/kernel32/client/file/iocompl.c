@@ -54,7 +54,7 @@ CreateIoCompletionPort(
 
       if (!NT_SUCCESS(errCode) )
       {
-         SetLastErrorByStatus (errCode);
+         BaseSetLastNTError (errCode);
          return FALSE;
       }
 
@@ -78,7 +78,7 @@ CreateIoCompletionPort(
             NtClose(CompletionPort);
          }
 
-         SetLastErrorByStatus (errCode);
+         BaseSetLastNTError (errCode);
          return FALSE;
       }
    }
@@ -123,7 +123,7 @@ GetQueuedCompletionStatus(
 
    if (!NT_SUCCESS(errCode) || errCode == STATUS_TIMEOUT) {
       *lpOverlapped = NULL;
-      SetLastErrorByStatus(errCode);
+      BaseSetLastNTError(errCode);
       return FALSE;
    }
 
@@ -132,7 +132,7 @@ GetQueuedCompletionStatus(
 
    if (!NT_SUCCESS(IoStatus.Status)){
       //failed io operation
-      SetLastErrorByStatus(IoStatus.Status);
+      BaseSetLastNTError(IoStatus.Status);
       return FALSE;
    }
 
@@ -162,7 +162,7 @@ PostQueuedCompletionStatus(
 
    if ( !NT_SUCCESS(errCode) )
    {
-      SetLastErrorByStatus (errCode);
+      BaseSetLastNTError (errCode);
       return FALSE;
    }
    return TRUE;
@@ -182,7 +182,7 @@ CancelIo(HANDLE hFile)
 			  &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
+      BaseSetLastNTError(Status);
       return(FALSE);
     }
 

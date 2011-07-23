@@ -226,7 +226,7 @@ NeedMoreData:
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus (Status);
+        BaseSetLastNTError (Status);
         return FALSE;
     }
     else if (FoundFile == NULL)
@@ -379,7 +379,7 @@ InternalFindFirstFile (
 	       return FIND_DEVICE_HANDLE;
 	   }
 
-	   SetLastErrorByStatus (Status);
+	   BaseSetLastNTError (Status);
 	   return INVALID_HANDLE_VALUE;
 	}
 
@@ -933,7 +933,7 @@ Cleanup:
                         IHeader);
         }
 
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
 

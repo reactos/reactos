@@ -81,7 +81,7 @@ Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
     /* Handle failure */
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -507,7 +507,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open file\n");
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return Status;
     }
     

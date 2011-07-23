@@ -369,7 +369,7 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -400,7 +400,7 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
                                     sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION));
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -427,7 +427,7 @@ GetSystemTimes(LPFILETIME lpIdleTime,
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 /*

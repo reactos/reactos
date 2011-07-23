@@ -134,7 +134,7 @@ CreateDirectoryW (
         if (!NT_SUCCESS(Status))
         {
                 WARN("NtCreateFile failed with Status %lx\n", Status);
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
                 return FALSE;
         }
 
@@ -481,7 +481,7 @@ CleanupNoNtPath:
 
         if (!NT_SUCCESS(Status))
         {
-                SetLastErrorByStatus(Status);
+                BaseSetLastNTError(Status);
                 return FALSE;
         }
 
@@ -556,7 +556,7 @@ RemoveDirectoryW (
         if (!NT_SUCCESS(Status))
         {
                 WARN("Status 0x%08x\n", Status);
-                SetLastErrorByStatus (Status);
+                BaseSetLastNTError (Status);
                 return FALSE;
         }
 
@@ -571,7 +571,7 @@ RemoveDirectoryW (
 
         if (!NT_SUCCESS(Status))
         {
-                SetLastErrorByStatus (Status);
+                BaseSetLastNTError (Status);
                 return FALSE;
         }
 
@@ -954,7 +954,7 @@ Cleanup:
 
         if (!NT_SUCCESS(Status))
         {
-            SetLastErrorByStatus(Status);
+            BaseSetLastNTError(Status);
             return 0;
         }
 

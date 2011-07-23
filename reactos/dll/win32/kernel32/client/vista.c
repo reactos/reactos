@@ -53,7 +53,7 @@ SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
 #endif
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -89,7 +89,7 @@ SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
 #endif
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -115,7 +115,7 @@ BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection
     if (!NT_SUCCESS(Status))
     {
         /* Set failure code */
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -151,7 +151,7 @@ QueryFullProcessImageNameW(HANDLE hProcess,
         DynamicBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Needed + sizeof(WCHAR));
         if (!DynamicBuffer)
         {
-            SetLastErrorByStatus(STATUS_NO_MEMORY);
+            BaseSetLastNTError(STATUS_NO_MEMORY);
             return FALSE;
         }
 
@@ -181,7 +181,7 @@ Cleanup:
 
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
     }
 
     return !Status;
@@ -207,7 +207,7 @@ QueryFullProcessImageNameA(HANDLE hProcess,
                                  *pdwSize * sizeof(WCHAR));
     if (!lpExeNameW)
     {
-        SetLastErrorByStatus(STATUS_NO_MEMORY);
+        BaseSetLastNTError(STATUS_NO_MEMORY);
         return FALSE;
     }
 
@@ -329,7 +329,7 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     lpConsoleHistoryInfo->HistoryBufferSize      = Request.Data.GetHistoryInfo.HistoryBufferSize;
@@ -362,7 +362,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
     Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        SetLastErrorByStatus(Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
     return TRUE;
