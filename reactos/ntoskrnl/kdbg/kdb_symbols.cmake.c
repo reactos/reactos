@@ -199,8 +199,11 @@ KdbSymPrintAddress(
 
     if (Context)
     {
+#if 0
+        // Disable arguments for now
         DPRINT("Has Context %x (EBP %x)\n", Context, Context->Ebp);
         LineInfo.Flags = ROSSYM_LINEINFO_HAS_REGISTERS;
+#endif
 
         for (i = 0; i < sizeof(regmap) / sizeof(regmap[0]); i++) {
             memcpy
@@ -224,7 +227,7 @@ KdbSymPrintAddress(
     {
         DbgPrint("<%wZ:%x (%s:%d (%s))>",
             &LdrEntry->BaseDllName, RelativeAddress, LineInfo.FileName, LineInfo.LineNumber, LineInfo.FunctionName);
-        if (Context)
+        if (Context && LineInfo.NumParams)
         {
             int i;
             char *comma = "";
@@ -249,8 +252,10 @@ KdbSymPrintAddress(
 		{
 			goto end;
 		}
+
 		SectionObject = MemoryArea->Data.SectionData.Section;
 		if (!(SectionObject->AllocationAttributes & SEC_IMAGE)) goto end;
+#if 0
 		if (MemoryArea->StartingAddress != (PVOID)KdbpImageBase)
 		{
 			if (KdbpRosSymInfo)
@@ -287,7 +292,7 @@ KdbSymPrintAddress(
 					 LineInfo.LineNumber,
 					 LineInfo.FunctionName);
 
-                if (Context)
+                if (Context && LineInfo.NumParams)
                 {
                     int i;
                     char *comma = "";
@@ -306,6 +311,7 @@ KdbSymPrintAddress(
 				return TRUE;
 			}
 		}
+#endif
 	}
 
 end:
