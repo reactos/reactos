@@ -1,19 +1,27 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/kernel32/thread/i386/fiber.S
- * PURPOSE:     Fiber context switch code for the x86 architecture
- * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
- *              KJK::Hyperion <noog@libero.it>
+ * FILE:        dll/win32//kernel32/client/amd64/fiber.S
+ * PURPOSE:     Fiber context switch code for the amd64 architecture
+ * PROGRAMMER:
  */
 
 #include <asm.inc>
+
+PUBLIC BaseFiberStartup
+.PROC BaseFiberStartup
+    UNIMPLEMENTED BaseFiberStartup
+    /* FIXME: TODO */
+    ret
+
+.ENDP BaseFiberStartup
 
 
 PUBLIC SwitchToFiber
 
 SwitchToFiber:
+    UNIMPLEMENTED BaseFiberStartup
     /* FIXME: TODO */
-    ret 4
+    ret
 
 END
