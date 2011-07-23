@@ -52,22 +52,34 @@ WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter)
 {
-    volatile UINT uExitCode = 0;
-
     /* Attempt to call the Thread Start Address */
     _SEH2_TRY
     {
+        /* Legacy check which is still used today for Win32 threads */
+        if (NtCurrentTeb()->NtTib.Version == (30 << 8)) // OS/2 V3.0 ("Cruiser")
+        {
+            /* This registers the termination port with CSRSS */
+            if (!BaseRunningInServerProcess) CsrNewThread();
+        }
+
         /* Get the exit code from the Thread Start */
-        uExitCode = (lpStartAddress)((PVOID)lpParameter);
+        ExitThread((lpStartAddress)((PVOID)lpParameter));
     }
     _SEH2_EXCEPT(BaseThreadExceptionFilter(_SEH2_GetExceptionInformation()))
     {
         /* Get the Exit code from the SEH Handler */
-        uExitCode = _SEH2_GetExceptionCode();
-    } _SEH2_END;
-
-    /* Exit the Thread */
-    ExitThread(uExitCode);
+        if (!BaseRunningInServerProcess)
+        {
+            /* Kill the whole process, usually */
+            ExitProcess(_SEH2_GetExceptionCode());
+        }
+        else
+        {
+            /* If running inside CSRSS, kill just this thread */
+            ExitThread(_SEH2_GetExceptionCode());
+        }
+    }
+    _SEH2_END;
 }
 
 /*

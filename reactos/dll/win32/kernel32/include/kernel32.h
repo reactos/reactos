@@ -106,6 +106,8 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
 extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
 
+extern BOOLEAN BaseRunningInServerProcess;
+
 /* FUNCTION PROTOTYPES *******************************************************/
 
 BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);

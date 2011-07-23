@@ -22,6 +22,8 @@
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
+BOOLEAN BaseRunningInServerProcess;
+
 WCHAR BaseDefaultPathBuffer[6140];
 
 HANDLE hProcessHeap = NULL;
@@ -258,7 +260,6 @@ DllMain(HANDLE hDll,
         LPVOID lpReserved)
 {
     NTSTATUS Status;
-    BOOLEAN IsServer;
     ULONG Dummy;
     ULONG DummySize = sizeof(Dummy);
     WCHAR SessionDir[256];
@@ -304,7 +305,7 @@ DllMain(HANDLE hDll,
                                           InWindows ? 1 : 0,
                                           &Dummy,
                                           &DummySize,
-                                          &IsServer);
+                                          &BaseRunningInServerProcess);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
@@ -313,7 +314,7 @@ DllMain(HANDLE hDll,
         }
 
         /* Check if we are running a CSR Server */
-        if (!IsServer)
+        if (!BaseRunningInServerProcess)
         {
             /* Set the termination port for the thread */
             DPRINT("Creating new thread for CSR\n");
