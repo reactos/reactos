@@ -134,8 +134,6 @@
 ;@ stdcall CreateDirectoryTransactedW ; Win 7
 @ stdcall CreateDirectoryW(wstr ptr)
 @ stdcall CreateEventA(ptr long long str)
-@ stdcall CreateEventExA(ptr str long long)
-@ stdcall CreateEventExW(ptr wstr long long)
 @ stdcall CreateEventW(ptr long long wstr)
 @ stdcall CreateFiber(long ptr ptr)
 @ stdcall CreateFiberEx(long long long ptr ptr)
@@ -160,8 +158,6 @@
 @ stdcall CreateMailslotW(ptr long long ptr)
 @ stdcall CreateMemoryResourceNotification(long)
 @ stdcall CreateMutexA(ptr long str)
-@ stdcall CreateMutexExA(ptr str long long)
-@ stdcall CreateMutexExW(ptr wstr long long)
 @ stdcall CreateMutexW(ptr long wstr)
 @ stdcall CreateNamedPipeA(str long long long long long long ptr)
 @ stdcall CreateNamedPipeW(wstr long long long long long long ptr)
@@ -177,8 +173,6 @@
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
 ;@ stdcall CreateRemoteThreadEx api-ms-win-core-processthreads-l1-1-0.CreateRemoteThreadEx ; Win 7
 @ stdcall CreateSemaphoreA(ptr long long str)
-@ stdcall CreateSemaphoreExA(ptr long long str long long)
-@ stdcall CreateSemaphoreExW(ptr long long wstr long long)
 @ stdcall CreateSemaphoreW(ptr long long wstr)
 @ stdcall CreateSocketHandle()
 ;@ stdcall CreateSymbolicLinkTransactedA ; Win 7
@@ -198,8 +192,6 @@
 ;@ stdcall arch=x86_64 CreateUmsThreadContext
 @ stdcall CreateVirtualBuffer(long long long) ; missing in Win 7
 @ stdcall CreateWaitableTimerA(ptr long str)
-@ stdcall CreateWaitableTimerExA(ptr str long long)
-@ stdcall CreateWaitableTimerExW(ptr wstr long long)
 @ stdcall CreateWaitableTimerW(ptr long wstr)
 @ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
