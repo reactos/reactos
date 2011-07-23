@@ -26,20 +26,16 @@ _SwitchToFiber@4:
     mov [eax+FIBER_CONTEXT_EDI], edi
     mov [eax+FIBER_CONTEXT_EBP], ebp
 
-    /* Save the return address */
-    mov ebx, [esp]
-    mov [eax+FIBER_CONTEXT_EIP], ebx
-
     /* Check if we're to save FPU State */
     cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL OR CONTEXT_FLOATING_POINT
     jnz NoFpuStateSave
     
     /* Save the FPU State (Status and Control)*/
     fstsw [eax+FIBER_CONTEXT_FLOAT_SAVE_STATUS_WORD]
-    fstcw [eax+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
+    fnstcw [eax+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
     
     /* Check if the CPU supports SIMD MXCSR State Save */
-    cmp byte ptr ds:[PROCESSOR_FEATURE_FXSR], 0
+    cmp byte ptr ds:[PROCESSOR_FEATURE_FXSR], 1
     jnz NoFpuStateSave
     stmxcsr [eax+FIBER_CONTEXT_DR6]
     
@@ -103,7 +99,7 @@ StatusWordChanged:
 ControlWordEqual:
 
     /* Load the new one */
-    cmp byte ptr ds:[PROCESSOR_FEATURE_FXSR], 0
+    cmp byte ptr ds:[PROCESSOR_FEATURE_FXSR], 1
     jnz NoFpuStateRestore
     ldmxcsr [ecx+FIBER_CONTEXT_DR6]
     
@@ -121,7 +117,8 @@ NoFpuStateRestore:
     mov [edx+TEB_FLS_DATA], eax
 
     /* Jump to new fiber */
-    jmp dword ptr [ecx+FIBER_CONTEXT_EIP]
-
+    mov esp, [ecx+FIBER_CONTEXT_ESP]
+    ret 4
 END
+
 /* EOF */
