@@ -251,15 +251,14 @@ IsSystemResumeAutomatic(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-SetMessageWaitingIndicator(HANDLE hMsgIndicator,
-                           ULONG ulMsgCount)
+SetMessageWaitingIndicator(IN HANDLE hMsgIndicator,
+                           IN ULONG ulMsgCount)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    DPRINT1("SetMessageWaitingIndicator is UNIMPLEMENTED!\n");
     return 0;
 }
 
