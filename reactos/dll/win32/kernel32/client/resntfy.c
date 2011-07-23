@@ -1,49 +1,42 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
- * FILE:                 lib/kernel32/mem/resnotify.c
- * PURPOSE:              Memory Resource Notification
+ * PROJECT:              ReactOS Win32 Base API
+ * FILE:                 dll/win32/kernel32/client/resnotify.c
+ * PURPOSE:              Memory Resource Notifications
  * PROGRAMMER:           Thomas Weidenmueller <w3seek@reactos.com>
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-CreateMemoryResourceNotification(
-    MEMORY_RESOURCE_NOTIFICATION_TYPE NotificationType
-    )
+CreateMemoryResourceNotification(IN MEMORY_RESOURCE_NOTIFICATION_TYPE NotificationType)
 {
     UNICODE_STRING EventName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hEvent;
     NTSTATUS Status;
-
-    switch(NotificationType)
+    
+    if (NotificationType > HighMemoryResourceNotification)
     {
-      case LowMemoryResourceNotification:
-        RtlInitUnicodeString(&EventName, L"\\KernelObjects\\LowMemoryCondition");
-        break;
-
-      case HighMemoryResourceNotification:
-        RtlInitUnicodeString(&EventName, L"\\KernelObjects\\HighMemoryCondition");
-        break;
-
-      default:
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
+    
+    RtlInitUnicodeString(&EventName,
+                         NotificationType ?
+                         L"\\KernelObjects\\HighMemoryCondition" :
+                         L"\\KernelObjects\\LowMemoryCondition");
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &EventName,
@@ -54,47 +47,46 @@ CreateMemoryResourceNotification(
     Status = NtOpenEvent(&hEvent,
                          EVENT_QUERY_STATE | SYNCHRONIZE,
                          &ObjectAttributes);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-      SetLastErrorByStatus(Status);
-      return NULL;
+        SetLastErrorByStatus(Status);
+        return NULL;
     }
 
     return hEvent;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-QueryMemoryResourceNotification(
-    HANDLE ResourceNotificationHandle,
-    PBOOL  ResourceState
-    )
+QueryMemoryResourceNotification(IN HANDLE ResourceNotificationHandle,
+                                OUT PBOOL ResourceState)
 {
-    EVENT_BASIC_INFORMATION ebi;
+    EVENT_BASIC_INFORMATION EventInfo;
     NTSTATUS Status;
 
-    if(ResourceState != NULL)
+    if ((ResourceNotificationHandle) &&
+        (ResourceNotificationHandle != INVALID_HANDLE_VALUE) &&
+        (ResourceState))
     {
-      Status = NtQueryEvent(ResourceNotificationHandle,
-                            EventBasicInformation,
-                            &ebi,
-                            sizeof(ebi),
-                            NULL);
-      if(NT_SUCCESS(Status))
-      {
-        *ResourceState = ebi.EventState;
-        return TRUE;
-      }
+        Status = NtQueryEvent(ResourceNotificationHandle,
+                              EventBasicInformation,
+                              &EventInfo,
+                              sizeof(EventInfo),
+                              NULL);
+        if (NT_SUCCESS(Status))
+        {
+            *ResourceState = (EventInfo.EventState == 1);
+            return TRUE;
+        }
 
-      SetLastErrorByStatus(Status);
+        SetLastErrorByStatus(Status);
     }
-    else /* ResourceState == NULL */
+    else
     {
-      SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_PARAMETER);
     }
 
     return FALSE;
