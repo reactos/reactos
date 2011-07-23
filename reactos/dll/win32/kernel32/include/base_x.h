@@ -51,21 +51,21 @@
 // This macro uses the ConvertAnsiToUnicode macros above to convert a CreateXxxA
 // Win32 API into its equivalent CreateXxxW API.
 //
-#define ConvertWin32AnsiObjectApiToUnicodeApi(obj, name, args...)               \
+#define ConvertWin32AnsiObjectApiToUnicodeApi(obj, name, ...)                   \
     ConvertAnsiToUnicodePrologue                                                \
-    if (!name) return Create##obj##W(args, NULL);                               \
+    if (!name) return Create##obj##W(__VA_ARGS__, NULL);                        \
     ConvertAnsiToUnicodeBody(name)                                              \
-    if (NT_SUCCESS(Status)) return Create##obj##W(args, UnicodeCache->Buffer);  \
+    if (NT_SUCCESS(Status)) return Create##obj##W(__VA_ARGS__, UnicodeCache->Buffer);  \
     ConvertAnsiToUnicodeEpilogue
 
 //
 // This macro uses the ConvertAnsiToUnicode macros above to convert a FindFirst*A
 // Win32 API into its equivalent FindFirst*W API.
 //
-#define ConvertWin32AnsiChangeApiToUnicodeApi(obj, name, args...)               \
+#define ConvertWin32AnsiChangeApiToUnicodeApi(obj, name, ...)                   \
     ConvertAnsiToUnicodePrologue                                                \
     ConvertAnsiToUnicodeBody(name)                                              \
-    if (NT_SUCCESS(Status)) return obj##W(UnicodeCache->Buffer, args);          \
+    if (NT_SUCCESS(Status)) return obj##W(UnicodeCache->Buffer, ##__VA_ARGS__); \
     ConvertAnsiToUnicodeEpilogue
 
 //
@@ -87,8 +87,8 @@
     ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,           \
                                                     sec,                        \
                                                     name ? &ObjectName : NULL);
-#define CreateNtObjectFromWin32ApiBody(ntobj, access, args...)                  \
-    Status = NtCreate##ntobj(&Handle, access, ObjectAttributes, args);
+#define CreateNtObjectFromWin32ApiBody(ntobj, access, ...)                      \
+    Status = NtCreate##ntobj(&Handle, access, ObjectAttributes, ##__VA_ARGS__);
 #define CreateNtObjectFromWin32ApiEpilogue                                      \
     if (NT_SUCCESS(Status))                                                     \
     {                                                                           \
@@ -111,8 +111,8 @@
 // be improved to support caller-specified access masks, as the underlying macro
 // above does support this.
 //
-#define CreateNtObjectFromWin32Api(obj, ntobj, capsobj, sec, name, args...)     \
+#define CreateNtObjectFromWin32Api(obj, ntobj, capsobj, sec, name, ...)         \
     CreateNtObjectFromWin32ApiPrologue(sec, name);                              \
-    CreateNtObjectFromWin32ApiBody(ntobj, capsobj##_ALL_ACCESS, args);          \
+    CreateNtObjectFromWin32ApiBody(ntobj, capsobj##_ALL_ACCESS, ##__VA_ARGS__); \
     CreateNtObjectFromWin32ApiEpilogue
 

@@ -18,72 +18,29 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
-                 LPCSTR lpName)
+CreateJobObjectA(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 IN LPCSTR lpName)
 {
     /* Call the W(ide) function */
     ConvertWin32AnsiObjectApiToUnicodeApi(JobObject, lpName, lpJobAttributes);
 }
 
-
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
-                 LPCWSTR lpName)
+CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 IN LPCWSTR lpName)
 {
-    UNICODE_STRING JobName;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG Attributes = 0;
-    PVOID SecurityDescriptor;
-    HANDLE hJob;
-    NTSTATUS Status;
-
-    if (lpName != NULL)
-    {
-        RtlInitUnicodeString(&JobName, lpName);
-    }
-
-    if (lpJobAttributes != NULL)
-    {
-        if (lpJobAttributes->bInheritHandle)
-        {
-            Attributes |= OBJ_INHERIT;
-        }
-
-        SecurityDescriptor = lpJobAttributes->lpSecurityDescriptor;
-    }
-    else
-    {
-        SecurityDescriptor = NULL;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               ((lpName != NULL) ? &JobName : NULL),
-                               Attributes,
-                               NULL,
-                               SecurityDescriptor);
-
-    Status = NtCreateJobObject(&hJob,
-                               JOB_OBJECT_ALL_ACCESS,
-                               &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastErrorByStatus(Status);
-        return NULL;
-    }
-
-    return hJob;
+    /* Create the NT object */
+    CreateNtObjectFromWin32Api(JobObject, JobObject, JOB, lpJobAttributes, lpName);
 }
-
 
 /*
  * @implemented
