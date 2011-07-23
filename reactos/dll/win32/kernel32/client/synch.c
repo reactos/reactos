@@ -38,6 +38,17 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
     PLARGE_INTEGER TimePtr;
     LARGE_INTEGER Time;
     NTSTATUS Status;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
+    
+    /* APCs must execute with the default activation context */
+    if (bAlertable)
+    {
+        /* Setup the frame */
+        RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
+        RtlActivateActivationContextUnsafeFast(&ActCtx, NULL);
+    }
 
     /* Get real handle */
     hHandle = TranslateStdHandle(hHandle);
@@ -60,10 +71,13 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
         if (!NT_SUCCESS(Status))
         {
             /* The wait failed */
-            SetLastErrorByStatus (Status);
-            return WAIT_FAILED;
+            SetLastErrorByStatus(Status);
+            Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
+    
+    /* Cleanup the activation context */
+    if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 
     /* Return wait status */
     return Status;
@@ -104,6 +118,17 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
     HANDLE Handle[8];
     DWORD i;
     NTSTATUS Status;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
+    
+    /* APCs must execute with the default activation context */
+    if (bAlertable)
+    {
+        /* Setup the frame */
+        RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
+        RtlActivateActivationContextUnsafeFast(&ActCtx, NULL);
+    }
 
     /* Check if we have more handles then we locally optimize */
     if (nCount > 8)
@@ -116,6 +141,7 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
         {
             /* No buffer, fail the wait */
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
             return WAIT_FAILED;
         }
     }
@@ -156,8 +182,8 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
         if (!NT_SUCCESS(Status))
         {
             /* Wait failed */
-            SetLastErrorByStatus (Status);
-            return WAIT_FAILED;
+            SetLastErrorByStatus(Status);
+            Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
 
@@ -168,6 +194,9 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
         RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
     }
 
+    /* Cleanup the activation context */
+    if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+    
     /* Return wait status */
     return Status;
 }
@@ -185,7 +214,18 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
     PLARGE_INTEGER TimePtr;
     LARGE_INTEGER Time;
     NTSTATUS Status;
-
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
+    
+    /* APCs must execute with the default activation context */
+    if (bAlertable)
+    {
+        /* Setup the frame */
+        RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
+        RtlActivateActivationContextUnsafeFast(&ActCtx, NULL);
+    }
+    
     /* Get real handle */
     hObjectToWaitOn = TranslateStdHandle(hObjectToWaitOn);
 
@@ -211,11 +251,14 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
         if (!NT_SUCCESS(Status))
         {
             /* The wait failed */
-            SetLastErrorByStatus (Status);
-            return WAIT_FAILED;
+            SetLastErrorByStatus(Status);
+            Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
 
+    /* Cleanup the activation context */
+    if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+    
     /* Return wait status */
     return Status;
 }
@@ -630,6 +673,17 @@ SleepEx(IN DWORD dwMilliseconds,
     LARGE_INTEGER Time;
     PLARGE_INTEGER TimePtr;
     NTSTATUS errCode;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
+    
+    /* APCs must execute with the default activation context */
+    if (bAlertable)
+    {
+        /* Setup the frame */
+        RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
+        RtlActivateActivationContextUnsafeFast(&ActCtx, NULL);
+    }
 
     /* Convert the timeout */
     TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
