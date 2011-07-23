@@ -300,11 +300,12 @@ WINAPI
 RemoveHandles(IN DWORD dwProcessId,
               IN DWORD dwThreadId)
 {
-    PDBGSS_THREAD_DATA ThreadData, ThisData;
+    PDBGSS_THREAD_DATA *ThreadData;
+    PDBGSS_THREAD_DATA ThisData;
 
     /* Loop all thread data events */
-    ThreadData = DbgSsGetThreadData();
-    for (ThisData = ThreadData; ThisData; ThisData = ThisData->Next)
+    ThreadData = (PDBGSS_THREAD_DATA*)NtCurrentTeb()->DbgSsReserved;
+    for (ThisData = *ThreadData; ThisData; ThisData = ThisData->Next)
     {
         /* Check if this one matches */
         if ((ThisData->HandleMarked) &&
@@ -315,7 +316,7 @@ RemoveHandles(IN DWORD dwProcessId,
             if (ThisData->ProcessHandle) CloseHandle(ThisData->ProcessHandle);
 
             /* Unlink the thread data */
-            ThreadData->Next = ThisData->Next;
+            *ThreadData = ThisData->Next;
 
             /* Free it*/
             RtlFreeHeap(RtlGetProcessHeap(), 0, ThisData);
@@ -323,7 +324,7 @@ RemoveHandles(IN DWORD dwProcessId,
         else
         {
             /* Move to the next one */
-            ThreadData = ThisData;
+            ThreadData = &ThisData->Next;
         }
     }
 }
@@ -332,11 +333,12 @@ VOID
 WINAPI
 CloseAllProcessHandles(IN DWORD dwProcessId)
 {
-    PDBGSS_THREAD_DATA ThreadData, ThisData;
+    PDBGSS_THREAD_DATA *ThreadData;
+    PDBGSS_THREAD_DATA ThisData;
 
     /* Loop all thread data events */
-    ThreadData = DbgSsGetThreadData();
-    for (ThisData = ThreadData; ThisData; ThisData = ThisData->Next)
+    ThreadData = (PDBGSS_THREAD_DATA*)NtCurrentTeb()->DbgSsReserved;
+    for (ThisData = *ThreadData; ThisData; ThisData = ThisData->Next)
     {
         /* Check if this one matches */
         if (ThisData->ProcessId == dwProcessId)
@@ -346,7 +348,7 @@ CloseAllProcessHandles(IN DWORD dwProcessId)
             if (ThisData->ProcessHandle) CloseHandle(ThisData->ProcessHandle);
 
             /* Unlink the thread data */
-            ThreadData->Next = ThisData->Next;
+            *ThreadData = ThisData->Next;
 
             /* Free it*/
             RtlFreeHeap(RtlGetProcessHeap(), 0, ThisData);
@@ -354,7 +356,7 @@ CloseAllProcessHandles(IN DWORD dwProcessId)
         else
         {
             /* Move to the next one */
-            ThreadData = ThisData;
+            ThreadData = &ThisData->Next;
         }
     }
 }
