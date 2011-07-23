@@ -90,10 +90,10 @@
 #define CreateNtObjectFromWin32ApiPrologue                                      \
 {                                                                               \
     NTSTATUS Status;                                                            \
-    POBJECT_ATTRIBUTES ObjectAttributes;                                        \
     HANDLE Handle;                                                              \
     UNICODE_STRING ObjectName;                                                  \
-    OBJECT_ATTRIBUTES LocalAttributes;
+    OBJECT_ATTRIBUTES LocalAttributes;                                          \
+    POBJECT_ATTRIBUTES ObjectAttributes = &LocalAttributes;
 #define CreateNtObjectFromWin32ApiBody(ntobj, sec, name, access, ...)           \
     if (name) RtlInitUnicodeString(&ObjectName, name);                          \
     ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,           \
@@ -132,15 +132,14 @@
 //
 #define OpenNtObjectFromWin32Api(ntobj, acc, inh, name)                         \
     CreateNtObjectFromWin32ApiPrologue                                          \
-    UNREFERENCED_PARAMETER(ObjectAttributes)                                    \
     if (!name) SetLastErrorByStatus(STATUS_INVALID_PARAMETER); return NULL;     \
     RtlInitUnicodeString(&ObjectName, name);                                    \
-    InitializeObjectAttributes(&LocalAttributes,                                \
+    InitializeObjectAttributes(ObjectAttributes,                                \
                                &ObjectName,                                     \
                                inh ? OBJ_INHERIT : 0,                           \
                                hBaseDir,                                        \
                                NULL);                                           \
-    Status = NtOpen##ntobj(&Handle, acc, &LocalAttributes);                     \
+    Status = NtOpen##ntobj(&Handle, acc, ObjectAttributes);                     \
     if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status); return NULL;         \
     return Handle;                                                              \
 }
