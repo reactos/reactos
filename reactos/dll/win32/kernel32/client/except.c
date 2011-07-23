@@ -660,20 +660,13 @@ IsBadStringPtrA(IN LPCSTR lpsz,
  */
 VOID
 WINAPI
-SetLastError(
-    IN DWORD dwErrCode)
+SetLastError(IN DWORD dwErrCode)
 {
-    if (g_dwLastErrorToBreakOn)
-    {
-        /* If we have error to break on and if current matches, break */
-        if (g_dwLastErrorToBreakOn == dwErrCode)
-        {
-            DbgBreakPoint();
-        }
-    }
+    /* Break if a debugger requested checking for this error code */
+    if ((g_dwLastErrorToBreakOn) && (g_dwLastErrorToBreakOn == dwErrCode)) DbgBreakPoint();
 
-    /* Set last error */
-    NtCurrentTeb()->LastErrorValue = dwErrCode;
+    /* Set last error if it's a new error */
+    if (NtCurrentTeb()->LastErrorValue != dwErrCode) NtCurrentTeb()->LastErrorValue = dwErrCode;
 }
 
 /*
@@ -681,9 +674,9 @@ SetLastError(
  */
 VOID
 WINAPI
-BaseSetLastNTError(
-    IN NTSTATUS Status)
+BaseSetLastNTError(IN NTSTATUS Status)
 {
+    /* Convert from NT to Win32, then set */
     SetLastError(RtlNtStatusToDosError(Status));
 }
 
@@ -692,22 +685,10 @@ BaseSetLastNTError(
  */
 DWORD
 WINAPI
-GetLastError()
+GetLastError(VOID)
 {
+    /* Return the current value */
     return NtCurrentTeb()->LastErrorValue;
 }
-
-/*
- * @unimplemented
- */
-VOID
-WINAPI
-RestoreLastError(
-    DWORD dwErrCode
-    )
-{
-    STUB;
-}
-
 
 /* EOF */
