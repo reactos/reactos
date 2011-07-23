@@ -1321,8 +1321,7 @@ InitializeCriticalSection(OUT LPCRITICAL_SECTION lpCriticalSection)
     NTSTATUS Status;
 
     /* Initialize the critical section and raise an exception if we failed */
-    Status = RtlInitializeCriticalSection(
-        (PRTL_CRITICAL_SECTION)lpCriticalSection);
+    Status = RtlInitializeCriticalSection((PVOID)lpCriticalSection);
     if (!NT_SUCCESS(Status)) RtlRaiseStatus(Status);
 }
 
@@ -1337,9 +1336,8 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
     NTSTATUS Status;
 
     /* Initialize the critical section */
-    Status = RtlInitializeCriticalSectionAndSpinCount(
-        (PRTL_CRITICAL_SECTION)lpCriticalSection,
-        dwSpinCount);
+    Status = RtlInitializeCriticalSectionAndSpinCount((PVOID)lpCriticalSection,
+                                                      dwSpinCount);
     if (!NT_SUCCESS(Status))
     {
         /* Set failure code */
