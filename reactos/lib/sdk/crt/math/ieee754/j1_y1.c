@@ -352,9 +352,9 @@ static double ps2[5] = {
 #endif
 {
 #ifdef __STDC__
-	const double *p,*q;
+	const double *p = 0,*q = 0;
 #else
-	double *p,*q;
+	double *p = 0,*q = 0;
 #endif
 	double z,r,s,r1,r2,r3,s1,s2,s3,z2,z4;
         int32_t ix;
@@ -500,9 +500,9 @@ static double qs2[6] = {
 #endif
 {
 #ifdef __STDC__
-	const double *p,*q;
+	const double *p = 0,*q = 0;
 #else
-	double *p,*q;
+	double *p = 0,*q = 0;
 #endif
 	double  s,r,z,r1,r2,r3,s1,s2,s3,z2,z4,z6;
 	int32_t ix;
