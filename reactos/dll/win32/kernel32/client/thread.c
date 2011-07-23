@@ -230,7 +230,7 @@ CreateRemoteThread(HANDLE hProcess,
     {
         ASSERT(FALSE);
     }
-    
+
     /* Success */
     if(lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
 
@@ -939,51 +939,61 @@ WINAPI
 TlsAlloc(VOID)
 {
     ULONG Index;
+    PTEB Teb;
+    PPEB Peb;
 
+    /* Get the PEB and TEB, lock the PEB */
+    Teb = NtCurrentTeb();
+    Peb = Teb->ProcessEnvironmentBlock;
     RtlAcquirePebLock();
 
-    /* Try to get regular TEB slot. */
-    Index = RtlFindClearBitsAndSet(NtCurrentPeb()->TlsBitmap, 1, 0);
-    if (Index == ~0U)
+    /* Try to get regular TEB slot */
+    Index = RtlFindClearBitsAndSet(Peb->TlsBitmap, 1, 0);
+    if (Index != 0xFFFFFFFF)
     {
-        /* If it fails, try to find expansion TEB slot. */
-        Index = RtlFindClearBitsAndSet(NtCurrentPeb()->TlsExpansionBitmap, 1, 0);
-        if (Index != ~0U)
-        {
-            if (NtCurrentTeb()->TlsExpansionSlots == NULL)
-            {
-                NtCurrentTeb()->TlsExpansionSlots = HeapAlloc(GetProcessHeap(),
-                                                              HEAP_ZERO_MEMORY,
-                                                              TLS_EXPANSION_SLOTS *
-                                                              sizeof(PVOID));
-            }
+        /* Clear the value. */
+        Teb->TlsSlots[Index] = 0;
+        RtlReleasePebLock();
+        return Index;
+    }
 
-            if (NtCurrentTeb()->TlsExpansionSlots == NULL)
-            {
-                RtlClearBits(NtCurrentPeb()->TlsExpansionBitmap, Index, 1);
-                Index = ~0;
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            }
-            else
-            {
-                /* Clear the value. */
-                NtCurrentTeb()->TlsExpansionSlots[Index] = 0;
-                Index += TLS_MINIMUM_AVAILABLE;
-            }
+    /* If it fails, try to find expansion TEB slot. */
+    Index = RtlFindClearBitsAndSet(Peb->TlsExpansionBitmap, 1, 0);
+    if (Index != 0xFFFFFFFF)
+    {
+        /* Is there no expansion slot yet? */
+        if (!Teb->TlsExpansionSlots)
+        {
+            /* Allocate an array */
+            Teb->TlsExpansionSlots = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                     HEAP_ZERO_MEMORY,
+                                                     TLS_EXPANSION_SLOTS *
+                                                     sizeof(PVOID));
+        }
+
+        /* Did we get an array? */
+        if (!Teb->TlsExpansionSlots)
+        {
+            /* Fail */
+            RtlClearBits(Peb->TlsExpansionBitmap, Index, 1);
+            Index = 0xFFFFFFFF;
+            SetLastErrorByStatus(STATUS_NO_MEMORY);
         }
         else
         {
-            SetLastError(ERROR_NO_MORE_ITEMS);
+            /* Clear the value. */
+            Teb->TlsExpansionSlots[Index] = 0;
+            Index += TLS_MINIMUM_AVAILABLE;
         }
     }
     else
     {
-        /* Clear the value. */
-        NtCurrentTeb()->TlsSlots[Index] = 0;
+        /* Fail */
+        SetLastErrorByStatus(STATUS_NO_MEMORY);
     }
 
+    /* Release the lock and return */
     RtlReleasePebLock();
-
     return Index;
 }
 
@@ -992,52 +1002,70 @@ TlsAlloc(VOID)
  */
 BOOL
 WINAPI
-TlsFree(DWORD Index)
+TlsFree(IN DWORD Index)
 {
     BOOL BitSet;
+    PPEB Peb;
+    ULONG TlsIndex;
+    PVOID TlsBitmap;
+    NTSTATUS Status;
 
-    if (Index >= TLS_EXPANSION_SLOTS + TLS_MINIMUM_AVAILABLE)
+    /* Acquire the PEB lock and grab the PEB */
+    Peb = NtCurrentPeb();
+    RtlAcquirePebLock();
+
+    /* Check if the index is too high */
+    if (Index >= TLS_MINIMUM_AVAILABLE)
     {
+        /* Check if it can fit in the expansion slots */
+        TlsIndex = Index - TLS_MINIMUM_AVAILABLE;
+        if (TlsIndex >= TLS_EXPANSION_SLOTS)
+        {
+            /* It's invalid */
+            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            RtlReleasePebLock();
+            return FALSE;
+        }
+        else
+        {
+            /* Use the expansion bitmap */
+            TlsBitmap = Peb->TlsExpansionBitmap;
+            Index = TlsIndex;
+        }
+    }
+    else
+    {
+        /* Use the normal bitmap */
+        TlsBitmap = Peb->TlsBitmap;
+    }
+
+    /* Check if the index was set */
+    BitSet = RtlAreBitsSet(TlsBitmap, Index, 1);
+    if (BitSet)
+    {
+        /* Tell the kernel to free the TLS cells */
+        Status = NtSetInformationThread(NtCurrentThread(),
+                                        ThreadZeroTlsCell,
+                                        &Index,
+                                        sizeof(DWORD));
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        /* Clear the bit */
+        RtlClearBits(TlsBitmap, Index, 1);
+    }
+    else
+    {
+        /* Fail */
         SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
-    RtlAcquirePebLock();
-
-    if (Index >= TLS_MINIMUM_AVAILABLE)
-    {
-        BitSet = RtlAreBitsSet(NtCurrentPeb()->TlsExpansionBitmap,
-                               Index - TLS_MINIMUM_AVAILABLE,
-                               1);
-
-       if (BitSet)
-           RtlClearBits(NtCurrentPeb()->TlsExpansionBitmap,
-                        Index - TLS_MINIMUM_AVAILABLE,
-                        1);
-    }
-    else
-    {
-        BitSet = RtlAreBitsSet(NtCurrentPeb()->TlsBitmap, Index, 1);
-        if (BitSet)
-            RtlClearBits(NtCurrentPeb()->TlsBitmap, Index, 1);
-    }
-
-    if (BitSet)
-    {
-        /* Clear the TLS cells (slots) in all threads of the current process. */
-        NtSetInformationThread(NtCurrentThread(),
-                               ThreadZeroTlsCell,
-                               &Index,
-                               sizeof(DWORD));
-    }
-    else
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
-
-    RtlReleasePebLock();
-
-    return BitSet;
+    /* Done! */
+    return TRUE;
 }
 
 /*
@@ -1045,27 +1073,35 @@ TlsFree(DWORD Index)
  */
 LPVOID
 WINAPI
-TlsGetValue(DWORD Index)
+TlsGetValue(IN DWORD Index)
 {
+    PTEB Teb;
+
+    /* Get the TEB and clear the last error */
+    Teb = NtCurrentTeb();
+    Teb->LastErrorValue = 0;
+
+    /* Check for simple TLS index */
+    if (Index < TLS_MINIMUM_AVAILABLE)
+    {
+        /* Return it */
+        return Teb->TlsSlots[Index];
+    }
+
+    /* Check for valid index */
     if (Index >= TLS_EXPANSION_SLOTS + TLS_MINIMUM_AVAILABLE)
     {
+        /* Fail */
         SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
         return NULL;
     }
 
-    SetLastError(NO_ERROR);
+    /* The expansion slots are allocated on demand, so check for it. */
+    Teb->LastErrorValue = 0;
+    if (!Teb->TlsExpansionSlots) return NULL;
 
-    if (Index >= TLS_MINIMUM_AVAILABLE)
-    {
-        /* The expansion slots are allocated on demand, so check for it. */
-        if (NtCurrentTeb()->TlsExpansionSlots == NULL)
-            return NULL;
-        return NtCurrentTeb()->TlsExpansionSlots[Index - TLS_MINIMUM_AVAILABLE];
-    }
-    else
-    {
-        return NtCurrentTeb()->TlsSlots[Index];
-    }
+    /* Return the value from the expansion slots */
+    return Teb->TlsExpansionSlots[Index - TLS_MINIMUM_AVAILABLE];
 }
 
 /*
@@ -1073,39 +1109,60 @@ TlsGetValue(DWORD Index)
  */
 BOOL
 WINAPI
-TlsSetValue(DWORD Index,
-            LPVOID Value)
+TlsSetValue(IN DWORD Index,
+            IN LPVOID Value)
 {
-    if (Index >= TLS_EXPANSION_SLOTS + TLS_MINIMUM_AVAILABLE)
+    DWORD TlsIndex;
+    PTEB Teb = NtCurrentTeb();
+
+    /* Check for simple TLS index */
+    if (Index < TLS_MINIMUM_AVAILABLE)
     {
+        /* Return it */
+        Teb->TlsSlots[Index] = Value;
+        return TRUE;
+    }
+
+    /* Check if this is an expansion slot */
+    TlsIndex = Index - TLS_MINIMUM_AVAILABLE;
+    if (TlsIndex >= TLS_EXPANSION_SLOTS)
+    {
+        /* Fail */
         SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
-    if (Index >= TLS_MINIMUM_AVAILABLE)
+    /* Do we not have expansion slots? */
+    if (!Teb->TlsExpansionSlots)
     {
-        if (NtCurrentTeb()->TlsExpansionSlots == NULL)
+        /* Get the PEB lock to see if we still need them */
+        RtlAcquirePebLock();
+        if (!Teb->TlsExpansionSlots)
         {
-            NtCurrentTeb()->TlsExpansionSlots = HeapAlloc(GetProcessHeap(),
-                                                          HEAP_ZERO_MEMORY,
-                                                          TLS_EXPANSION_SLOTS *
-                                                          sizeof(PVOID));
-
-            if (NtCurrentTeb()->TlsExpansionSlots == NULL)
+            /* Allocate them */
+            Teb->TlsExpansionSlots = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                     HEAP_ZERO_MEMORY,
+                                                     TLS_EXPANSION_SLOTS *
+                                                     sizeof(PVOID));
+            if (!Teb->TlsExpansionSlots)
             {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                /* Fail */
+                RtlReleasePebLock();
+                SetLastErrorByStatus(STATUS_NO_MEMORY);
                 return FALSE;
             }
         }
 
-        NtCurrentTeb()->TlsExpansionSlots[Index - TLS_MINIMUM_AVAILABLE] = Value;
-    }
-    else
-    {
-        NtCurrentTeb()->TlsSlots[Index] = Value;
+        /* Release the lock */
+        RtlReleasePebLock();
     }
 
+    /* Write the value */
+    Teb->TlsExpansionSlots[TlsIndex] = Value;
+
+    /* Success */
     return TRUE;
 }
+
 
 /* EOF */

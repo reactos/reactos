@@ -39,7 +39,7 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
     LARGE_INTEGER Time;
     NTSTATUS Status;
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
-    
+
     /* APCs must execute with the default activation context */
     if (bAlertable)
     {
@@ -75,7 +75,7 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
             Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
-    
+
     /* Cleanup the activation context */
     if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 
@@ -119,7 +119,7 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
     DWORD i;
     NTSTATUS Status;
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
-    
+
     /* APCs must execute with the default activation context */
     if (bAlertable)
     {
@@ -196,7 +196,7 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
 
     /* Cleanup the activation context */
     if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
-    
+
     /* Return wait status */
     return Status;
 }
@@ -215,7 +215,7 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
     LARGE_INTEGER Time;
     NTSTATUS Status;
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
-    
+
     /* APCs must execute with the default activation context */
     if (bAlertable)
     {
@@ -225,7 +225,7 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
         ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
         RtlActivateActivationContextUnsafeFast(&ActCtx, NULL);
     }
-    
+
     /* Get real handle */
     hObjectToWaitOn = TranslateStdHandle(hObjectToWaitOn);
 
@@ -258,7 +258,7 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
 
     /* Cleanup the activation context */
     if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
-    
+
     /* Return wait status */
     return Status;
 }
@@ -674,7 +674,7 @@ SleepEx(IN DWORD dwMilliseconds,
     PLARGE_INTEGER TimePtr;
     NTSTATUS errCode;
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActCtx;
-    
+
     /* APCs must execute with the default activation context */
     if (bAlertable)
     {
@@ -702,7 +702,7 @@ SleepEx(IN DWORD dwMilliseconds,
         errCode = NtDelayExecution((BOOLEAN)bAlertable, TimePtr);
     }
     while ((bAlertable) && (errCode == STATUS_ALERTED));
-    
+
     /* Return the correct code */
     return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;
 }
