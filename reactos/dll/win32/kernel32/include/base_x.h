@@ -69,6 +69,17 @@
     ConvertAnsiToUnicodeEpilogue
 
 //
+// This macro uses the ConvertAnsiToUnicode macros above to convert a OpenXxxA
+// Win32 API into its equivalent OpenXxxW API.
+//
+#define ConvertOpenWin32AnsiObjectApiToUnicodeApi(obj, acc, inh, name)          \
+    ConvertAnsiToUnicodePrologue                                                \
+    if (!name) SetLastError(ERROR_INVALID_PARAMETER); return NULL;              \
+    ConvertAnsiToUnicodeBody(name)                                              \
+    if (NT_SUCCESS(Status)) return Open##obj##W(acc, inh, UnicodeCache->Buffer);\
+    ConvertAnsiToUnicodeEpilogue
+
+//
 // This macro (split it up in 3 pieces to allow for intermediary code in between)
 // wraps the usual code path required to create an NT object based on a Unicode
 // (Wide) Win32 object creation API.

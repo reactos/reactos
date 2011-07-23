@@ -92,31 +92,8 @@ OpenJobObjectA(DWORD dwDesiredAccess,
                BOOL bInheritHandle,
                LPCSTR lpName)
 {
-    ANSI_STRING AnsiName;
-    UNICODE_STRING UnicodeName;
-    HANDLE hJob;
-    NTSTATUS Status;
-
-    if (lpName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
-    RtlInitAnsiString(&AnsiName, lpName);
-    Status = RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastErrorByStatus(Status);
-        return FALSE;
-    }
-
-    hJob = OpenJobObjectW(dwDesiredAccess,
-                          bInheritHandle,
-                          UnicodeName.Buffer);
-
-    RtlFreeUnicodeString(&UnicodeName);
-    return hJob;
+    /* Call the W(ide) function */
+    ConvertOpenWin32AnsiObjectApiToUnicodeApi(JobObject, dwDesiredAccess, bInheritHandle, lpName);
 }
 
 
