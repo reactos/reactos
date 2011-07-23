@@ -8,14 +8,19 @@ spec2def(msvcrt20.dll msvcrt20.spec)
 
 list(APPEND SOURCE
     msvcrt20.c
+    stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20.def)
 
 add_library(msvcrt20 SHARED ${SOURCE})
 set_entrypoint(msvcrt20 0)
 
-target_link_libraries(msvcrt20 wine)
+target_link_libraries(msvcrt20 crt wine)
 
-add_importlibs(msvcrt20 msvcrt kernel32 ntdll)
+if(NOT MSVC)
+  target_link_libraries(msvcrt20 pseh)
+endif()
+
+add_importlibs(msvcrt20 kernel32 ntdll)
 add_dependencies(msvcrt20 psdk)
 add_cd_file(TARGET msvcrt20 DESTINATION reactos/system32 FOR all)
