@@ -1,73 +1,62 @@
-/* $Id$ */
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/perfcnt.c
- * PURPOSE:         Performance counter
- * PROGRAMMER:      Eric Kohl
+ * COPYRIGHT:            See COPYING in the top level directory
+ * PROJECT:              ReactOS Win32 Base API
+ * FILE:                 dll/win32/kernel32/client/perfcnt.c
+ * PURPOSE:              Performance Counter
+ * PROGRAMMER:           Eric Kohl
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
-
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
  */
-BOOL WINAPI
-QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
+BOOL
+WINAPI
+QueryPerformanceCounter(OUT PLARGE_INTEGER lpPerformanceCount)
 {
-  LARGE_INTEGER Frequency;
-  NTSTATUS Status;
+    LARGE_INTEGER Frequency;
+    NTSTATUS Status;
 
-  Status = NtQueryPerformanceCounter(lpPerformanceCount,
-				     &Frequency);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return(FALSE);
-  }
+    Status = NtQueryPerformanceCounter(lpPerformanceCount, &Frequency);
+    if (!Frequency.QuadPart) Status = STATUS_NOT_IMPLEMENTED;
+    
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
 
-  if (Frequency.QuadPart == 0ULL)
-  {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return(FALSE);
-  }
-
-  return(TRUE);
+    return TRUE;
 }
 
-
 /*
  * @implemented
  */
-BOOL WINAPI
-QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
+BOOL
+WINAPI
+QueryPerformanceFrequency(OUT PLARGE_INTEGER lpFrequency)
 {
-  LARGE_INTEGER Count;
-  NTSTATUS Status;
+    LARGE_INTEGER Count;
+    NTSTATUS Status;
 
-  Status = NtQueryPerformanceCounter(&Count,
-				     lpFrequency);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return(FALSE);
-  }
+    Status = NtQueryPerformanceCounter(&Count, lpFrequency);
+    if (!Count.QuadPart) Status = STATUS_NOT_IMPLEMENTED;
+    
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
 
-  if (lpFrequency->QuadPart == 0ULL)
-  {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return(FALSE);
-  }
-
-  return(TRUE);
+    return TRUE;
 }
 
 /* EOF */
