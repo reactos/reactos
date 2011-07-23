@@ -264,8 +264,7 @@ MarkThreadHandle(IN DWORD dwThreadId)
     PDBGSS_THREAD_DATA ThreadData;
 
     /* Loop all thread data events */
-    ThreadData = DbgSsGetThreadData();
-    while (ThreadData)
+    for (ThreadData = DbgSsGetThreadData(); ThreadData; ThreadData = ThreadData->Next)
     {
         /* Check if this one matches */
         if (ThreadData->ThreadId == dwThreadId)
@@ -274,9 +273,6 @@ MarkThreadHandle(IN DWORD dwThreadId)
             ThreadData->HandleMarked = TRUE;
             break;
         }
-
-        /* Move to the next one */
-        ThreadData = ThreadData->Next;
     }
 }
 
@@ -287,23 +283,15 @@ MarkProcessHandle(IN DWORD dwProcessId)
     PDBGSS_THREAD_DATA ThreadData;
 
     /* Loop all thread data events */
-    ThreadData = DbgSsGetThreadData();
-    while (ThreadData)
+    for (ThreadData = DbgSsGetThreadData(); ThreadData; ThreadData = ThreadData->Next)
     {
         /* Check if this one matches */
-        if (ThreadData->ProcessId == dwProcessId)
+        if ((ThreadData->ProcessId == dwProcessId) && !(ThreadData->ThreadId))
         {
-            /* Make sure the thread ID is empty */
-            if (!ThreadData->ThreadId)
-            {
-                /* Mark the structure and break out */
-                ThreadData->HandleMarked = TRUE;
-                break;
-            }
+            /* Mark the structure and break out */
+            ThreadData->HandleMarked = TRUE;
+            break;
         }
-
-        /* Move to the next one */
-        ThreadData = ThreadData->Next;
     }
 }
 
@@ -312,46 +300,31 @@ WINAPI
 RemoveHandles(IN DWORD dwProcessId,
               IN DWORD dwThreadId)
 {
-    PDBGSS_THREAD_DATA ThreadData;
+    PDBGSS_THREAD_DATA ThreadData, ThisData;
 
     /* Loop all thread data events */
     ThreadData = DbgSsGetThreadData();
-    while (ThreadData)
+    for (ThisData = ThreadData; ThisData; ThisData = ThisData->Next)
     {
         /* Check if this one matches */
-        if (ThreadData->ProcessId == dwProcessId)
+        if ((ThisData->HandleMarked) &&
+            ((ThisData->ProcessId == dwProcessId) || (ThisData->ThreadId == dwThreadId)))
         {
-            /* Make sure the thread ID matches too */
-            if (ThreadData->ThreadId == dwThreadId)
-            {
-                /* Check if we have a thread handle */
-                if (ThreadData->ThreadHandle)
-                {
-                    /* Close it */
-                    CloseHandle(ThreadData->ThreadHandle);
-                }
+            /* Close open handles */
+            if (ThisData->ThreadHandle) CloseHandle(ThisData->ThreadHandle);
+            if (ThisData->ProcessHandle) CloseHandle(ThisData->ProcessHandle);
 
-                /* Check if we have a process handle */
-                if (ThreadData->ProcessHandle)
-                {
-                    /* Close it */
-                    CloseHandle(ThreadData->ProcessHandle);
-                }
+            /* Unlink the thread data */
+            ThreadData->Next = ThisData->Next;
 
-                /* Unlink the thread data */
-                DbgSsSetThreadData(ThreadData->Next);
-
-                /* Free it*/
-                RtlFreeHeap(RtlGetProcessHeap(), 0, ThreadData);
-
-                /* Move to the next structure */
-                ThreadData = DbgSsGetThreadData();
-                continue;
-            }
+            /* Free it*/
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ThisData);
         }
-
-        /* Move to the next one */
-        ThreadData = ThreadData->Next;
+        else
+        {
+            /* Move to the next one */
+            ThreadData = ThisData;
+        }
     }
 }
 
@@ -359,42 +332,30 @@ VOID
 WINAPI
 CloseAllProcessHandles(IN DWORD dwProcessId)
 {
-    PDBGSS_THREAD_DATA ThreadData;
+    PDBGSS_THREAD_DATA ThreadData, ThisData;
 
     /* Loop all thread data events */
     ThreadData = DbgSsGetThreadData();
-    while (ThreadData)
+    for (ThisData = ThreadData; ThisData; ThisData = ThisData->Next)
     {
         /* Check if this one matches */
-        if (ThreadData->ProcessId == dwProcessId)
+        if (ThisData->ProcessId == dwProcessId)
         {
-            /* Check if we have a thread handle */
-            if (ThreadData->ThreadHandle)
-            {
-                /* Close it */
-                CloseHandle(ThreadData->ThreadHandle);
-            }
-
-            /* Check if we have a process handle */
-            if (ThreadData->ProcessHandle)
-            {
-                /* Close it */
-                CloseHandle(ThreadData->ProcessHandle);
-            }
+            /* Close open handles */
+            if (ThisData->ThreadHandle) CloseHandle(ThisData->ThreadHandle);
+            if (ThisData->ProcessHandle) CloseHandle(ThisData->ProcessHandle);
 
             /* Unlink the thread data */
-            DbgSsSetThreadData(ThreadData->Next);
+            ThreadData->Next = ThisData->Next;
 
             /* Free it*/
-            RtlFreeHeap(RtlGetProcessHeap(), 0, ThreadData);
-
-            /* Move to the next structure */
-            ThreadData = DbgSsGetThreadData();
-            continue;
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ThisData);
         }
-
-        /* Move to the next one */
-        ThreadData = ThreadData->Next;
+        else
+        {
+            /* Move to the next one */
+            ThreadData = ThisData;
+        }
     }
 }
 
@@ -415,7 +376,9 @@ ProcessIdToHandle(IN DWORD dwProcessId)
     ClientId.UniqueProcess = UlongToHandle(dwProcessId);
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
     Status = NtOpenProcess(&Handle,
-                           PROCESS_ALL_ACCESS,
+                           PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION |
+                           PROCESS_VM_WRITE | PROCESS_VM_READ |
+                           PROCESS_SUSPEND_RESUME | PROCESS_QUERY_INFORMATION,
                            &ObjectAttributes,
                            &ClientId);
     if (!NT_SUCCESS(Status))
@@ -459,7 +422,7 @@ CheckRemoteDebuggerPresent(IN HANDLE hProcess,
     if (NT_SUCCESS(Status))
     {
         /* Return the current state */
-        *pbDebuggerPresent = (DebugPort) ? TRUE : FALSE;
+        *pbDebuggerPresent = DebugPort != NULL;
         return TRUE;
     }
 
@@ -507,7 +470,7 @@ BOOL
 WINAPI
 DebugActiveProcess(IN DWORD dwProcessId)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, Status1;
     HANDLE Handle;
 
     /* Connect to the debugger */
@@ -524,7 +487,10 @@ DebugActiveProcess(IN DWORD dwProcessId)
 
     /* Now debug the process */
     Status = DbgUiDebugActiveProcess(Handle);
-    NtClose(Handle);
+    
+    /* Close the handle since we're done */
+    Status1 = NtClose(Handle);
+    ASSERT(NT_SUCCESS(Status1));
 
     /* Check if debugging worked */
     if (!NT_SUCCESS(Status))
@@ -545,7 +511,7 @@ BOOL
 WINAPI
 DebugActiveProcessStop(IN DWORD dwProcessId)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, Status1;
     HANDLE Handle;
 
     /* Get the process handle */
@@ -557,7 +523,8 @@ DebugActiveProcessStop(IN DWORD dwProcessId)
 
     /* Now stop debgging the process */
     Status = DbgUiStopDebugging(Handle);
-    NtClose(Handle);
+    Status1 = NtClose(Handle);
+    ASSERT(NT_SUCCESS(Status1));
 
     /* Check for failure */
     if (!NT_SUCCESS(Status))
@@ -614,7 +581,7 @@ DebugSetProcessKillOnExit(IN BOOL KillOnExit)
     }
 
     /* Now set the kill-on-exit state */
-    State = KillOnExit;
+    State = KillOnExit != 0;
     Status = NtSetInformationDebugObject(Handle,
                                          DebugObjectKillProcessOnExitInformation,
                                          &State,
@@ -711,15 +678,14 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
             /* Setup the thread data */
             SaveThreadHandle(lpDebugEvent->dwProcessId,
                              lpDebugEvent->dwThreadId,
-                             lpDebugEvent->u.CreateThread.hThread);
+                             lpDebugEvent->u.CreateProcessInfo.hThread);
             break;
 
         /* Process was exited */
         case EXIT_PROCESS_DEBUG_EVENT:
 
-            /* Mark the thread data as such */
+            /* Mark the thread data as such and fall through */
             MarkProcessHandle(lpDebugEvent->dwProcessId);
-            break;
 
         /* Thread was exited */
         case EXIT_THREAD_DEBUG_EVENT:
@@ -727,10 +693,18 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
             /* Mark the thread data */
             MarkThreadHandle(lpDebugEvent->dwThreadId);
             break;
-
-        /* Nothing to do for anything else */
-        default:
+    
+        /* Nothing to do */
+        case EXCEPTION_DEBUG_EVENT:
+        case LOAD_DLL_DEBUG_EVENT:
+        case UNLOAD_DLL_DEBUG_EVENT:
+        case OUTPUT_DEBUG_STRING_EVENT:
+        case RIP_EVENT:
             break;
+
+        /* Fail anything else */
+        default:
+            return FALSE;
     }
 
     /* Return success */
@@ -957,29 +931,24 @@ OutputDebugStringA(IN LPCSTR _OutputString)
  */
 VOID
 WINAPI
-OutputDebugStringW(IN LPCWSTR _OutputString)
+OutputDebugStringW(IN LPCWSTR OutputString)
 {
-    UNICODE_STRING wstrOut;
-    ANSI_STRING strOut;
-    NTSTATUS nErrCode;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
 
     /* convert the string in ANSI */
-    RtlInitUnicodeString(&wstrOut, _OutputString);
-    nErrCode = RtlUnicodeStringToAnsiString(&strOut, &wstrOut, TRUE);
+    RtlInitUnicodeString(&UnicodeString, OutputString);
+    Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
 
-    if(!NT_SUCCESS(nErrCode))
-    {
-		/* Microsoft's kernel32.dll always prints something, even in case the conversion fails */
-		OutputDebugStringA("");
-	}
-	else
-	{
-		/* output the converted string */
-		OutputDebugStringA(strOut.Buffer);
+    /* OutputDebugStringW always prints something, even if conversion fails */
+    if (!NT_SUCCESS(Status)) AnsiString.Buffer = "";
 
-		/* free the converted string */
-		RtlFreeAnsiString(&strOut);
-	}
+    /* Output the converted string */
+    OutputDebugStringA(AnsiString.Buffer);
+
+    /* free the converted string */
+    if (NT_SUCCESS(Status)) RtlFreeAnsiString(&AnsiString);
 }
 
 /* EOF */
