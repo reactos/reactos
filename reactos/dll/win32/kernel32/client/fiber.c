@@ -59,24 +59,27 @@ BOOL
 WINAPI
 ConvertFiberToThread(VOID)
 {
-    PTEB pTeb = NtCurrentTeb();
+    PTEB Teb;
+    PFIBER FiberData;
     DPRINT1("Converting Fiber to Thread\n");
 
-    /* the current thread isn't running a fiber: failure */
-    if (!pTeb->HasFiberData)
+    /* Check if the thread is already not a fiber */
+    Teb = NtCurrentTeb();
+    if (!Teb->HasFiberData)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        /* Fail */
+        SetLastError(ERROR_ALREADY_THREAD);
         return FALSE;
     }
 
     /* this thread won't run a fiber anymore */
-    pTeb->HasFiberData = FALSE;
+    Teb->HasFiberData = FALSE;
+    FiberData = Teb->NtTib.FiberData;
+    Teb->NtTib.FiberData = NULL;
 
-    /* free the fiber */
-    if(pTeb->NtTib.FiberData != NULL)
-    {
-        RtlFreeHeap(GetProcessHeap(), 0, pTeb->NtTib.FiberData);
-    }
+    /* Free the fiber */
+    ASSERT(FiberData != NULL);
+    RtlFreeHeap(GetProcessHeap(), 0, FiberData);
 
     /* success */
     return TRUE;
