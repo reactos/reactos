@@ -702,6 +702,9 @@ SleepEx(IN DWORD dwMilliseconds,
         errCode = NtDelayExecution((BOOLEAN)bAlertable, TimePtr);
     }
     while ((bAlertable) && (errCode == STATUS_ALERTED));
+    
+    /* Cleanup the activation context */
+    if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 
     /* Return the correct code */
     return (errCode == STATUS_USER_APC) ? WAIT_IO_COMPLETION : 0;

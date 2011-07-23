@@ -2832,7 +2832,10 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
     frame = &Frame->Frame;
 
     if (!frame)
+    {
+        DPRINT1("No top frame!\n");
         RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
+    }
 
     /* pop everything up to and including frame */
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
