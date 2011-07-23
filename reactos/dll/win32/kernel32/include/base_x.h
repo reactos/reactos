@@ -87,18 +87,18 @@
 // It makes use of BasepConvertObjectAttributes and allows for a custom access
 // mode to be used, and also sets the correct error codes in case of a collision
 //
-#define CreateNtObjectFromWin32ApiPrologue(sec, name)                           \
+#define CreateNtObjectFromWin32ApiPrologue                                      \
 {                                                                               \
     NTSTATUS Status;                                                            \
-    OBJECT_ATTRIBUTES LocalAttributes;                                          \
     POBJECT_ATTRIBUTES ObjectAttributes;                                        \
     HANDLE Handle;                                                              \
     UNICODE_STRING ObjectName;                                                  \
+    OBJECT_ATTRIBUTES LocalAttributes;
+#define CreateNtObjectFromWin32ApiBody(ntobj, sec, name, access, ...)           \
     if (name) RtlInitUnicodeString(&ObjectName, name);                          \
     ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,           \
                                                     sec,                        \
-                                                    name ? &ObjectName : NULL);
-#define CreateNtObjectFromWin32ApiBody(ntobj, access, ...)                      \
+                                                    name ? &ObjectName : NULL); \
     Status = NtCreate##ntobj(&Handle, access, ObjectAttributes, ##__VA_ARGS__);
 #define CreateNtObjectFromWin32ApiEpilogue                                      \
     if (NT_SUCCESS(Status))                                                     \
@@ -123,7 +123,25 @@
 // above does support this.
 //
 #define CreateNtObjectFromWin32Api(obj, ntobj, capsobj, sec, name, ...)         \
-    CreateNtObjectFromWin32ApiPrologue(sec, name);                              \
-    CreateNtObjectFromWin32ApiBody(ntobj, capsobj##_ALL_ACCESS, ##__VA_ARGS__); \
+    CreateNtObjectFromWin32ApiPrologue                                          \
+    CreateNtObjectFromWin32ApiBody(ntobj, sec, name, capsobj##_ALL_ACCESS, ##__VA_ARGS__); \
     CreateNtObjectFromWin32ApiEpilogue
+
+//
+// This macro opens an NT object based on the Win32 API settings.
+//
+#define OpenNtObjectFromWin32Api(ntobj, acc, inh, name)                         \
+    CreateNtObjectFromWin32ApiPrologue                                          \
+    UNREFERENCED_PARAMETER(ObjectAttributes)                                    \
+    if (!name) SetLastErrorByStatus(STATUS_INVALID_PARAMETER); return NULL;     \
+    RtlInitUnicodeString(&ObjectName, name);                                    \
+    InitializeObjectAttributes(&LocalAttributes,                                \
+                               &ObjectName,                                     \
+                               inh ? OBJ_INHERIT : 0,                           \
+                               hBaseDir,                                        \
+                               NULL);                                           \
+    Status = NtOpen##ntobj(&Handle, acc, &LocalAttributes);                     \
+    if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status); return NULL;         \
+    return Handle;                                                              \
+}
 

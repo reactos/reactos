@@ -51,35 +51,8 @@ OpenJobObjectW(DWORD dwDesiredAccess,
                BOOL bInheritHandle,
                LPCWSTR lpName)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING JobName;
-    HANDLE hJob;
-    NTSTATUS Status;
-
-    if (lpName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
-    RtlInitUnicodeString(&JobName, lpName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &JobName,
-                               (bInheritHandle ? OBJ_INHERIT : 0),
-                               NULL,
-                               NULL);
-
-    Status = NtOpenJobObject(&hJob,
-                             dwDesiredAccess,
-                             &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastErrorByStatus(Status);
-        return NULL;
-    }
-
-    return hJob;
+    /* Open the NT object */
+    OpenNtObjectFromWin32Api(JobObject, dwDesiredAccess, bInheritHandle, lpName);
 }
 
 
