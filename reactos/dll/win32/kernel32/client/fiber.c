@@ -223,11 +223,8 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     Fiber->ActivationContextStack = ActivationContextStack;
     Fiber->Context.ContextFlags = CONTEXT_FULL;
 
-    /* Save FPU State if requsted */
-    if (dwFlags & FIBER_FLAG_FLOAT_SWITCH)
-    {
-        Fiber->Context.ContextFlags |= CONTEXT_FLOATING_POINT;
-    }
+    /* Save FPU State if requested */
+    Fiber->Context.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ? CONTEXT_FLOATING_POINT : 0;
 
     /* initialize the context for the fiber */
     BasepInitializeContext(&Fiber->Context,

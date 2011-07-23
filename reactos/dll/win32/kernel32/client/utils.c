@@ -336,8 +336,9 @@ BasepInitializeContext(IN PCONTEXT Context,
                        IN ULONG ContextType)
 {
 #ifdef _M_IX86
+    ULONG ContextFlags;
     DPRINT("BasepInitializeContext: %p\n", Context);
-    
+
     /* Setup the Initial Win32 Thread Context */
     Context->Eax = (ULONG)StartAddress;
     Context->Ebx = (ULONG)Parameter;
@@ -352,30 +353,53 @@ BasepInitializeContext(IN PCONTEXT Context,
     Context->SegSs = KGDT_R3_DATA | RPL_MASK;
     Context->SegGs = 0;
 
+    /* Set the Context Flags */
+    ContextFlags = Context->ContextFlags;
+    Context->ContextFlags = CONTEXT_FULL;
+
+    /* Give it some room for the Parameter */
+    Context->Esp -= sizeof(PVOID);
+
     /* Set the EFLAGS */
     Context->EFlags = 0x3000; /* IOPL 3 */
 
-    if (ContextType == 1)      /* For Threads */
+    /* What kind of context is being created? */
+    if (ContextType == 1)
     {
+        /* For Threads */
         Context->Eip = (ULONG)BaseThreadStartupThunk;
     }
-    else if (ContextType == 2) /* For Fibers */
+    else if (ContextType == 2)
     {
-        Context->Eip = (ULONG)BaseFiberStartup;
+        /* This is a fiber: make space for the return address */
+        Context->Esp -= sizeof(PVOID);
+        *((PVOID*)Context->Esp) = BaseFiberStartup;
+
+        /* Is FPU state required? */
+        Context->ContextFlags |= ContextFlags;
+        if (ContextFlags == CONTEXT_FLOATING_POINT)
+        {
+            /* Set an initial state */
+            Context->FloatSave.ControlWord = 0x27F;
+            Context->FloatSave.StatusWord = 0;
+            Context->FloatSave.TagWord = 0xFFFF;
+            Context->FloatSave.ErrorOffset = 0;
+            Context->FloatSave.ErrorSelector = 0;
+            Context->FloatSave.DataOffset = 0;
+            Context->FloatSave.DataSelector = 0;
+            if (SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE])
+                Context->Dr6 = 0x1F80;
+        }
     }
-    else                       /* For first thread in a Process */
+    else
     {
+        /* For first thread in a Process */
         Context->Eip = (ULONG)BaseProcessStartThunk;
     }
-    
-    /* Set the Context Flags */
-    Context->ContextFlags = CONTEXT_FULL;
-    
-    /* Give it some room for the Parameter */
-    Context->Esp -= sizeof(PVOID);
+
 #elif defined(_M_AMD64)
     DPRINT("BasepInitializeContext: %p\n", Context);
-    
+
     /* Setup the Initial Win32 Thread Context */
     Context->Rax = (ULONG_PTR)StartAddress;
     Context->Rbx = (ULONG_PTR)Parameter;
@@ -405,10 +429,10 @@ BasepInitializeContext(IN PCONTEXT Context,
     {
         Context->Rip = (ULONG_PTR)BaseProcessStartThunk;
     }
-    
+
     /* Set the Context Flags */
     Context->ContextFlags = CONTEXT_FULL;
-    
+
     /* Give it some room for the Parameter */
     Context->Rsp -= sizeof(PVOID);
 #else

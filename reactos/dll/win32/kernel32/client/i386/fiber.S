@@ -35,7 +35,7 @@ _SwitchToFiber@4:
     fnstcw [eax+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
     
     /* Check if the CPU supports SIMD MXCSR State Save */
-    cmp byte ptr ds:[PROCESSOR_FEATURE_FXSR], 1
+    cmp byte ptr ds:[PF_XMMI_INSTRUCTIONS_AVAILABLE], 1
     jnz NoFpuStateSave
     stmxcsr [eax+FIBER_CONTEXT_DR6]
     
@@ -99,7 +99,7 @@ StatusWordChanged:
 ControlWordEqual:
 
     /* Load the new one */
-    cmp byte ptr ds:[PROCESSOR_FEATURE_FXSR], 1
+    cmp byte ptr ds:[PF_XMMI_INSTRUCTIONS_AVAILABLE], 1
     jnz NoFpuStateRestore
     ldmxcsr [ecx+FIBER_CONTEXT_DR6]
     
