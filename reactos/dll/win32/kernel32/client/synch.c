@@ -791,7 +791,7 @@ CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
              IN BOOL bInitialOwner,
              IN LPCSTR lpName  OPTIONAL)
 {
-    CreateNtObjectFromWin32Api(Mutex, lpMutexAttributes, bInitialOwner, lpName);
+    ConvertWin32AnsiObjectApiToUnicodeApi(Mutex, lpName, lpMutexAttributes, bInitialOwner);
 }
 
 /*
@@ -803,10 +803,10 @@ CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
              IN BOOL bInitialOwner,
              IN LPCWSTR lpName  OPTIONAL)
 {
-    CreateNtObjectFromWin32ApiW(Mutex, Mutant, MUTEX,
-                                lpMutexAttributes,
-                                bInitialOwner,
-                                lpName);
+    CreateNtObjectFromWin32Api(Mutex, Mutant, MUTEX,
+                               lpMutexAttributes,
+                               lpName,
+                               bInitialOwner);
 }
 
 /*
@@ -818,7 +818,7 @@ OpenMutexA(IN DWORD dwDesiredAccess,
            IN BOOL bInheritHandle,
            IN LPCSTR lpName)
 {
-    OpenNtObjectFromWin32Api(Mutex, dwDesiredAccess, bInheritHandle, lpName);
+    ConvertOpenWin32AnsiObjectApiToUnicodeApi(Mutex, dwDesiredAccess, bInheritHandle, lpName);
 }
 
 /*
@@ -830,7 +830,7 @@ OpenMutexW(IN DWORD dwDesiredAccess,
            IN BOOL bInheritHandle,
            IN LPCWSTR lpName)
 {
-    OpenNtObjectFromWin32ApiW(Mutant, dwDesiredAccess, bInheritHandle, lpName);
+    OpenNtObjectFromWin32Api(Mutant, dwDesiredAccess, bInheritHandle, lpName);
 }
 
 /*
