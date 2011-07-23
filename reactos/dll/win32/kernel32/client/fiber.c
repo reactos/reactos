@@ -36,32 +36,6 @@ BaseRundownFls(IN PVOID FlsData)
     
 }
 
-__declspec(noreturn)
-VOID
-WINAPI
-BaseFiberStartup(VOID)
-{
-#ifdef _M_IX86
-    PFIBER Fiber = GetCurrentFiber();
-
-    /* Call the Thread Startup Routine */
-    DPRINT("Starting Fiber\n");
-    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
-                      (LPVOID)Fiber->Context.Ebx);
-#elif defined(_M_AMD64)
-    PFIBER Fiber = GetFiberData();
-
-    /* Call the Thread Startup Routine */
-    DPRINT1("Starting Fiber\n");
-    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Rax,
-                      (LPVOID)Fiber->Context.Rbx);
-#else
-#warning Unknown architecture
-    UNIMPLEMENTED;
-    DbgBreakPoint();
-#endif
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
