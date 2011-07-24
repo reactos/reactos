@@ -1156,7 +1156,7 @@
 @ cdecl asin(double)
 @ cdecl atan(double)
 @ cdecl atan2(double double)
-@ cdecl atexit(ptr)
+@ extern atexit # <-- keep this as an extern, thank you
 @ cdecl atof(str)
 @ cdecl atoi(str)
 @ cdecl atol(str)

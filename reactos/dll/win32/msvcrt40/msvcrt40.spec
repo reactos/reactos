@@ -975,7 +975,7 @@
 @ cdecl asin(double) 
 @ cdecl atan(double) 
 @ cdecl atan2(double double) 
-@ cdecl atexit(ptr) 
+@ extern atexit # <-- changing this will kill your cat, understand?
 @ cdecl atof(str) 
 @ cdecl atoi(str) 
 @ cdecl atol(str) 
