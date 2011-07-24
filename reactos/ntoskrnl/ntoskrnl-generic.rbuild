@@ -218,7 +218,7 @@
 	<directory name="ex">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>interlck_asm.S</file>
+				<file>interlocked.c</file>
 				<file>fastinterlck_asm.S</file>
 				<file>ioport.S</file>
 			</directory>
