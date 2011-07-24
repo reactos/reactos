@@ -49,8 +49,8 @@ extern const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
 
 static int __proc_attached = 0;
 
-extern _PVFV *__onexitbegin;
-extern _PVFV *__onexitend;
+//extern _PVFV *__onexitbegin;
+//extern _PVFV *__onexitend;
 
 extern int mingw_app_type;
 
@@ -65,7 +65,7 @@ _CRTALLOC(".CRT$XIAA") _PIFV pcinit = pre_c_init;
 static int
 pre_c_init (void)
 {
-  _PVFV *onexitbegin;
+/*  _PVFV *onexitbegin;
 
   onexitbegin = (_PVFV *) malloc (32 * sizeof (_PVFV));
   __onexitend = __onexitbegin = (_PVFV *) _encode_pointer (onexitbegin);
@@ -73,7 +73,8 @@ pre_c_init (void)
   if (onexitbegin == NULL)
     return 1;
   *onexitbegin = (_PVFV) NULL;
-  return 0;
+  return 0;*/
+  return 1;
 }
 
 WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
@@ -135,7 +136,7 @@ WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	  _amsg_exit (31);
 	}
       else
-	{
+	{/*
 	  _PVFV * onexitbegin = (_PVFV *) _decode_pointer (__onexitbegin);
 	  if (onexitbegin)
 	    {
@@ -145,7 +146,7 @@ WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 		  (**onexitend) ();
 	      free (onexitbegin);
 	      __onexitbegin = __onexitend = (_PVFV *) NULL;
-	    }
+	    }*/
 	  __native_startup_state = __uninitialized;
 	  (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
 	}
