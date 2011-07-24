@@ -446,6 +446,16 @@ GetSystemTimes(LPFILETIME lpIdleTime,
     return TRUE;
 }
 
-
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+IsTimeZoneRedirectionEnabled(VOID)
+{
+    /* To be implemented soon */
+    //return (BaseStaticServerData->TermsrvClientTimeZoneId != TIME_ZONE_ID_INVALID);
+    return FALSE;
+}
 
 /* EOF */

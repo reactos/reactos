@@ -2066,6 +2066,20 @@ UINT WINAPI SetCPGlobal(UINT CodePage)
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+ValidateLCType(int a1, unsigned int a2, int a3, int a4)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
 BOOL
 WINAPI
 NlsResetProcessLocale(VOID)
@@ -2074,6 +2088,9 @@ NlsResetProcessLocale(VOID)
     return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 WINAPI
 GetDefaultSortkeySize(LPVOID lpUnknown)
@@ -2082,6 +2099,9 @@ GetDefaultSortkeySize(LPVOID lpUnknown)
     lpUnknown = NULL;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 WINAPI
 GetLinguistLangSize(LPVOID lpUnknown)
@@ -2090,6 +2110,20 @@ GetLinguistLangSize(LPVOID lpUnknown)
     lpUnknown = NULL;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+ValidateLocale(IN ULONG LocaleId)
+{
+    STUB;
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
 ULONG
 WINAPI
 NlsGetCacheUpdateCount(VOID)
@@ -2098,4 +2132,32 @@ NlsGetCacheUpdateCount(VOID)
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+IsNLSDefinedString(IN NLS_FUNCTION Function,
+                   IN DWORD dwFlags,
+                   IN LPNLSVERSIONINFO lpVersionInformation,
+                   IN LPCWSTR lpString,
+                   IN INT cchStr)
+{
+    STUB;
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetNLSVersion(IN NLS_FUNCTION Function,
+              IN LCID Locale,
+              IN OUT LPNLSVERSIONINFO lpVersionInformation)
+{
+    STUB;
+    return TRUE;
+}
+    
 /* EOF */

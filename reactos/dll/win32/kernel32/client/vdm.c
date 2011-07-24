@@ -30,23 +30,6 @@ CmdBatNotification (
     return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-CreateVirtualBuffer (
-    DWORD   Unknown0,
-    DWORD   Unknown1,
-    DWORD   Unknown2
-    )
-{
-    STUB;
-    return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -59,35 +42,6 @@ ExitVDM (
 {
     STUB;
     return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-ExtendVirtualBuffer (
-    DWORD   Unknown0,
-    DWORD   Unknown1
-    )
-{
-    STUB;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-FreeVirtualBuffer (
-    HANDLE  hVirtualBuffer
-    )
-{
-    STUB;
-    return FALSE;
 }
 
 
@@ -186,21 +140,6 @@ SetVDMCurrentDirectories (
     return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-TrimVirtualBuffer (
-    DWORD   Unknown0
-    )
-{
-    STUB;
-    return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -223,21 +162,6 @@ DWORD
 WINAPI
 VDMOperationStarted (
     DWORD   Unknown0
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-VirtualBufferExceptionHandler (
-    DWORD   Unknown0,
-    DWORD   Unknown1,
-    DWORD   Unknown2
     )
 {
     STUB;
