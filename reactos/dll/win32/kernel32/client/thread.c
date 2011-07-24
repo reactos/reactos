@@ -1065,6 +1065,7 @@ TlsFree(IN DWORD Index)
         if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+            RtlReleasePebLock();
             return FALSE;
         }
 
@@ -1075,10 +1076,12 @@ TlsFree(IN DWORD Index)
     {
         /* Fail */
         BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        RtlReleasePebLock();
         return FALSE;
     }
 
     /* Done! */
+    RtlReleasePebLock();
     return TRUE;
 }
 
