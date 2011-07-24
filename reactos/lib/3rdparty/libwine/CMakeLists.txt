@@ -6,7 +6,7 @@ list(APPEND SOURCE
     config.c
     debug_ros.c
     loader.c
-    string.c)
+#    string.c)
 
 add_library(wine ${SOURCE})
 
