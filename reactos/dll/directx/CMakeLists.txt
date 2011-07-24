@@ -1,12 +1,13 @@
-
 if (NOT MSVC)
 add_subdirectory(amstream)
 add_subdirectory(d3d8thk)
 endif()
 #add_subdirectory(bdaplgin) #disabled in trunk
-#add_subdirectory(d3d8) #disabled in trunk
-#add_subdirectory(d3d9) #disabled in trunk
-#add_subdirectory(ddraw) #disabled in trunk
+if(REACTX)
+  add_subdirectory(d3d8)
+  add_subdirectory(d3d9)
+  add_subdirectory(ddraw)
+endif()
 add_subdirectory(devenum)
 add_subdirectory(dinput)
 add_subdirectory(dinput8)
