@@ -18,6 +18,7 @@ Author:
 
 #ifndef _POFUNCS_H
 #define _POFUNCS_H
+#ifndef _PO_DDK_
 
 //
 // Dependencies
@@ -57,7 +58,7 @@ NtSetSystemPowerState(
     IN ULONG Flags
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetDevicePowerState(
@@ -65,19 +66,19 @@ NtGetDevicePowerState(
     IN PDEVICE_POWER_STATE PowerState
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestWakeupLatency(
     IN LATENCY_TIME latency
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 BOOLEAN
 NTAPI
 NtIsSystemResumeAutomatic(VOID);
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetThreadExecutionState(
@@ -85,7 +86,7 @@ NtSetThreadExecutionState(
     OUT EXECUTION_STATE *PreviousFlags
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtInitiatePowerAction(
@@ -95,21 +96,21 @@ NtInitiatePowerAction(
     IN BOOLEAN Asynchronous
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestDeviceWakeup(
     IN HANDLE Device
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCancelDeviceWakeupRequest(
     IN HANDLE Device
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction(
@@ -119,7 +120,7 @@ ZwInitiatePowerAction(
     BOOLEAN Asynchronous
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
@@ -130,7 +131,7 @@ ZwPowerInformation(
     ULONG OutputBufferLength
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetSystemPowerState(
@@ -138,4 +139,5 @@ ZwSetSystemPowerState(
     IN SYSTEM_POWER_STATE MinSystemState,
     IN ULONG Flags
 );
+#endif
 #endif
