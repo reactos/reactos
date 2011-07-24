@@ -16,5 +16,6 @@ add_library(bzip2 SHARED ${SOURCE})
 
 set_module_type(bzip2 kernelmodedriver)
 add_importlibs(bzip2 ntoskrnl)
+target_link_libraries(bzip2 libcntpr)
 
 set_target_properties(bzip2 PROPERTIES OUTPUT_NAME "unbzip2")

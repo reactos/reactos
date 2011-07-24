@@ -19,6 +19,19 @@ typedef long long s64int;
 typedef ulong size_t;
 #endif
 
+DECLSPEC_NORETURN
+NTSYSAPI
+VOID
+NTAPI
+RtlRaiseStatus(IN NTSTATUS Status);
+
+#undef assert
+#define assert(x) do { \
+    if (!(x)) { \
+        werrstr("(%s:%d) assertion " #x " failed\n", __FILE__, __LINE__); \
+        RtlRaiseStatus(STATUS_ASSERTION_FAILURE); \
+    } \
+    } while (0)
 #define offsetof(x,y) FIELD_OFFSET(x,y)
 #define nil (0)
 
@@ -32,7 +45,13 @@ void *RosSymRealloc(void *mem, ulong newsize);
 void xfree(void *v);
 
 #define werrstr(str, ...) DPRINT(str "\n" ,##__VA_ARGS__)
-//#define werrstr(x, ...) printf("(%s:%d) " x "\n",__FILE__,__LINE__,##__VA_ARGS__)
+#if 0
+#ifdef NDEBUG
+#define werrstr(x, ...)
+#else
+#define werrstr(x, ...) printf("(%s:%d) " x "\n",__FILE__,__LINE__,##__VA_ARGS__)
+#endif
+#endif
 
 #define malloc(x) RosSymAllocMem(x)
 #define mallocz(x,y) RosSymAllocMemZero(x,y)

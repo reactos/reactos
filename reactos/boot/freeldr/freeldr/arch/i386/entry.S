@@ -58,9 +58,8 @@ ContinueAddress:
 _FrldrStartup:
 
     /* Store BootDrive and BootPartition */
-    xor eax, eax
-    mov al, dl
-	mov dword ptr ds:[_FrldrBootDrive], eax
+	mov byte ptr ds:[_FrldrBootDrive], dl
+	xor eax, eax
     mov al, dh
 	mov dword ptr ds:[_FrldrBootPartition], eax
 
@@ -294,7 +293,7 @@ i386idtptr:
 
 PUBLIC _FrldrBootDrive
 _FrldrBootDrive:
-    .long 0
+    .byte 0
 
 PUBLIC _FrldrBootPartition
 _FrldrBootPartition:

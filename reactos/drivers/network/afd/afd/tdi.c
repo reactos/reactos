@@ -30,7 +30,7 @@ static VOID DisplayBuffer(
         return;
     }
 
-    AFD_DbgPrint(MIN_TRACE, ("Displaying buffer at (0x%X)  Size (%d).\n", Buffer, Size));
+    AFD_DbgPrint(MID_TRACE, ("Displaying buffer at (0x%X)  Size (%d).\n", Buffer, Size));
 
     p = (PCHAR)Buffer;
     for (i = 0; i < Size; i++) {
@@ -236,6 +236,7 @@ NTSTATUS TdiQueryMaxDatagramLength(
 
     if (!NT_SUCCESS(Status))
     {
+        AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
         IoFreeMdl(Mdl);
         ExFreePool(Buffer);
         return Status;
@@ -1005,9 +1006,9 @@ NTSTATUS TdiReceive(
     }
 
     _SEH2_TRY {
-        AFD_DbgPrint(MIN_TRACE, ("probe and lock\n"));
+        AFD_DbgPrint(MID_TRACE, ("probe and lock\n"));
         MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
-        AFD_DbgPrint(MIN_TRACE, ("probe and lock done\n"));
+        AFD_DbgPrint(MID_TRACE, ("probe and lock done\n"));
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 		IoFreeMdl(Mdl);

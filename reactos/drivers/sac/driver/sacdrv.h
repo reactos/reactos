@@ -21,6 +21,105 @@
 		DbgPrint(__VA_ARGS__);				\
 	}
 
+#define CHECK_PARAMETER_WITH_STATUS(Parameter, Status)	\
+{	\
+	ASSERT((Parameter)); \
+	if (!Parameter)	\
+	{	\
+		return Status; \
+	}	\
+}
+#define CHECK_PARAMETER(x)		\
+	CHECK_PARAMETER_WITH_STATUS(x, STATUS_INVALID_PARAMETER)
+#define CHECK_PARAMETER1(x)		\
+	CHECK_PARAMETER_WITH_STATUS(x, STATUS_INVALID_PARAMETER_1)
+#define CHECK_PARAMETER2(x)		\
+	CHECK_PARAMETER_WITH_STATUS(x, STATUS_INVALID_PARAMETER_2)
+#define CHECK_PARAMETER3(x)		\
+	CHECK_PARAMETER_WITH_STATUS(x, STATUS_INVALID_PARAMETER_3)
+#define CHECK_ALLOCATION(x)		\
+	CHECK_PARAMETER_WITH_STATUS(x, STATUS_OUT_OF_MEMORY)
+	
+#define SacAllocatePool(Length, Tag)	\
+	MyAllocatePool(Length, Tag, __FILE__, __LINE__)
+
+#define ChannelLock(Channel, x)	\
+{	\
+	KeWaitForSingleObject(	\
+		&(Channel)->x.Lock,	\
+		Executive,	\
+		KernelMode,	\
+		FALSE,	\
+		NULL);	\
+	ASSERT((Channel)->x.RefCount == 0);	\
+	InterlockedIncrement(&(Channel)->x.RefCount);	\
+}
+
+#define ChannelUnlock(Channel, x)	\
+{	\
+	ASSERT((Channel)->x.RefCount == 1);	\
+	InterlockedDecrement(&(Channel)->x.RefCount);	\
+	KeReleaseSemaphore(	\
+		&(Channel)->x.Lock,	\
+		SEMAPHORE_INCREMENT,	\
+		1,	\
+		FALSE);	\
+}
+
+#define ChannelLockOBuffer(Channel)			ChannelLock(Channel, ChannelOBufferLock);
+#define ChannelUnlockOBuffer(Channel)		ChannelUnlock(Channel, ChannelOBufferLock);
+#define ChannelLockIBuffer(Channel)			ChannelLock(Channel, ChannelIBufferLock);
+#define ChannelUnlockIBuffer(Channel)		ChannelUnlock(Channel, ChannelIBufferLock);
+#define ChannelLockAttributes(Channel)		ChannelLock(Channel, ChannelAttributesLock);
+#define ChannelUnlockAttributes(Channel)	ChannelUnlock(Channel, ChannelAttributesLock);
+
+#define ChannelInitializeEvent(Channel, Attributes, x)	\
+{	\
+	PVOID Object, WaitObject;	\
+	if (Attributes->x)	\
+	{	\
+		if (!VerifyEventWaitable(Attributes->x, &Object, &WaitObject))	\
+		{	\
+			goto FailChannel;	\
+		} \
+		Channel->x = Attributes->x;	\
+		Channel->x##ObjectBody = Object;	\
+		Channel->x##WaitObjectBody = WaitObject;	\
+	}	\
+}
+
+#define ChannelSetEvent(Channel, x)	\
+{	\
+	ASSERT(Channel->x);	\
+	ASSERT(Channel->x##ObjectBody);	\
+	ASSERT(Channel->x##WaitObjectBody);	\
+	if (Channel->x)	\
+	{	\
+		KeSetEvent(Channel->x, EVENT_INCREMENT, FALSE);	\
+		Status = STATUS_SUCCESS;	\
+	}	\
+	else	\
+	{	\
+		Status = STATUS_UNSUCCESSFUL;	\
+	}	\
+}
+
+#define ChannelClearEvent(Channel, x)	\
+{	\
+	ASSERT(Channel->x);	\
+	ASSERT(Channel->x##ObjectBody);	\
+	ASSERT(Channel->x##WaitObjectBody);	\
+	if (Channel->x)	\
+	{	\
+		KeClearEvent(Channel->x);	\
+		Status = STATUS_SUCCESS;	\
+	}	\
+	else	\
+	{	\
+		Status = STATUS_UNSUCCESSFUL;	\
+	}	\
+}
+
 //Rcp? - sacdrv.sys - SAC Driver (Headless)
 //RcpA - sacdrv.sys -     Internal memory mgr alloc block
 //RcpI - sacdrv.sys -     Internal memory mgr initial heap block
@@ -35,6 +134,13 @@
 #define GLOBAL_MEMORY_SIGNATURE	'DAEH'
 
 #define SAC_MEMORY_LIST_SIZE	(1 * 1024 * 1024)
+
+#define SAC_OBUFFER_SIZE		(2 * 1024)
+
+#define SAC_CHANNEL_FLAG_CLOSE_EVENT		0x2
+#define SAC_CHANNEL_FLAG_HAS_NEW_DATA_EVENT	0x4
+#define SAC_CHANNEL_FLAG_LOCK_EVENT			0x8
+#define SAC_CHANNEL_FLAG_REDRAW_EVENT		0x10
 
 typedef struct _SAC_MEMORY_ENTRY
 {
@@ -73,8 +179,89 @@ typedef struct _SAC_CHANNEL_ID
 typedef struct _SAC_CHANNEL_LOCK
 {
 	LONG RefCount;
-	KSEMAPHORE Semaphore;
+	KSEMAPHORE Lock;
 } SAC_CHANNEL_LOCK, *PSAC_CHANNEL_LOCK;
+
+struct _SAC_CHANNEL;
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_CREATE)(
+	IN struct _SAC_CHANNEL* Channel
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_DESTROY)(
+	IN struct _SAC_CHANNEL* Channel
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_OREAD)(
+	IN struct _SAC_CHANNEL* Channel,
+	IN PCHAR Buffer,
+	IN ULONG BufferSize,
+	OUT PULONG ByteCount
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_OECHO)(
+	IN struct _SAC_CHANNEL* Channel,
+	IN PWCHAR String,
+	IN ULONG Length
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_OFLUSH)(
+	IN struct _SAC_CHANNEL* Channel
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_OWRITE)(
+	IN struct _SAC_CHANNEL* Channel,
+	IN PWCHAR String,
+	IN ULONG Length
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_IREAD)(
+	IN struct _SAC_CHANNEL* Channel,
+	IN PWCHAR Buffer,
+	IN ULONG BufferSize,
+	IN PULONG ReturnBufferSize
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_IBUFFER_FULL)(
+	IN struct _SAC_CHANNEL* Channel,
+	OUT PBOOLEAN BufferStatus
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_IBUFFER_LENGTH)(
+	IN struct _SAC_CHANNEL* Channel
+	);
+
+typedef
+CHAR
+(*PSAC_CHANNEL_IREAD_LAST)(
+	IN struct _SAC_CHANNEL* Channel
+	);
+
+typedef
+NTSTATUS
+(*PSAC_CHANNEL_IWRITE)(
+	IN struct _SAC_CHANNEL* Channel,
+	IN PCHAR Buffer,
+	IN ULONG BufferSize
+	);
 
 typedef struct _SAC_CHANNEL
 {
@@ -112,20 +299,20 @@ typedef struct _SAC_CHANNEL
 	ULONG OBufferIndex;
 	ULONG OBufferFirstGoodIndex;
 	BOOLEAN ChannelHasNewOBufferData;
-	//PSAC_CHANNEL_CREATE ChannelCreate;
-	//PSAC_CHANNEL_DESTROY ChannelDestroy;
-	//PSAC_CHANNEL_OFLUSH ChannelOutputFlush;
-	//PSAC_CHANNEL_OECHO ChannelOutputEcho;
-	//PSAC_CHANNEL_OWRITE ChannelOutputWrite;
-	//PSAC_CHANNEL_OREAD ChannelOutputRead;
-	//PSAC_CHANNEL_OWRITE ChannelInputWrite;
-	//PSAC_CHANNEL_IREAD ChannelInputRead;
-	//PSAC_CHANNEL_IREAD_LAST ChannelInputReadLast;
-	//PSAC_CHANNEL_IBUFFER_FULL ChannelInputBufferIsFull;
-	//PSAC_CHANNEL_IBUFFER_LENGTH IBufferLength;
+	PSAC_CHANNEL_CREATE ChannelCreate;
+	PSAC_CHANNEL_DESTROY ChannelDestroy;
+	PSAC_CHANNEL_OFLUSH OBufferFlush;
+	PSAC_CHANNEL_OECHO OBufferEcho;
+	PSAC_CHANNEL_OWRITE OBufferWrite;
+	PSAC_CHANNEL_OREAD OBufferRead;
+	PSAC_CHANNEL_OWRITE IBufferWrite;
+	PSAC_CHANNEL_IREAD IBufferRead;
+	PSAC_CHANNEL_IREAD_LAST IBufferReadLast;
+	PSAC_CHANNEL_IBUFFER_FULL IBufferIsFull;
+	PSAC_CHANNEL_IBUFFER_LENGTH IBufferLength;
 	SAC_CHANNEL_LOCK ChannelAttributeLock;
 	SAC_CHANNEL_LOCK ChannelOBufferLock;
-	SAC_CHANNEL_LOCK ChannelBufferLock;
+	SAC_CHANNEL_LOCK ChannelIBufferLock;
 } SAC_CHANNEL, *PSAC_CHANNEL;
 
 typedef struct _SAC_DEVICE_EXTENSION

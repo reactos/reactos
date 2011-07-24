@@ -71,24 +71,42 @@ MACRO(MAKE_LABEL, Name, Stackbytes)
     PUBLIC _&Name&@&Stackbytes
     _&Name&@&Stackbytes:
 ENDM
+MACRO(START_PROC, Name, Stackbytes)
+    PUBLIC _&Name&@&Stackbytes
+    .PROC &Name&@&Stackbytes
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
+ENDM
+MACRO(END_PROC, Name, Stackbytes)
+    .ENDP &Name&@&Stackbytes
+ENDM
 #else
 MACRO(MAKE_LABEL, Name, Stackbytes)
     PUBLIC &Name
     &Name:
+ENDM
+MACRO(START_PROC, Name, Stackbytes)
+    PUBLIC &Name
+    .PROC &Name
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
+ENDM
+MACRO(END_PROC, Name, Stackbytes)
+    .ENDP &Name
 ENDM
 #endif
 
 MACRO(STUB_U, Name, ArgCount)
     Stackbytes = 4 * &ArgCount
     MAKE_LABEL Zw&Name, %Stackbytes
-    MAKE_LABEL Nt&Name, %Stackbytes
+    START_PROC Nt&Name, %Stackbytes
     STUBCODE_U SyscallId, %Stackbytes
+    END_PROC Nt&Name, %Stackbytes
     SyscallId = SyscallId + 1
 ENDM
 
 MACRO(STUB_K, Name, ArgCount)
     Stackbytes = 4 * &ArgCount
-    MAKE_LABEL Zw&Name, %Stackbytes
+    START_PROC Zw&Name, %Stackbytes
     STUBCODE_K SyscallId, %Stackbytes
+    END_PROC Zw&Name, %Stackbytes
     SyscallId = SyscallId + 1
 ENDM

@@ -178,7 +178,7 @@
 @ fastcall -arch=i386 Exfi386InterlockedExchangeUlong(ptr long)
 @ fastcall -arch=i386 Exfi386InterlockedIncrementLong(ptr)
 @ stdcall -arch=i386 Exi386InterlockedDecrementLong(ptr)
-@ stdcall -arch=i386 Exi386InterlockedExchangeUlong(ptr long long)
+@ stdcall -arch=i386 Exi386InterlockedExchangeUlong(ptr long)
 @ stdcall -arch=i386 Exi386InterlockedIncrementLong(ptr)
 @ fastcall -arch=i386 ExiAcquireFastMutex(ptr) ExAcquireFastMutex
 @ fastcall -arch=i386 ExiReleaseFastMutex(ptr) ExReleaseFastMutex

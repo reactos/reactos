@@ -14,7 +14,7 @@ PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 ULONG RemotePacketId = 0;
 BOOLEAN KdpPhase1Complete = FALSE;
-ULONG KdpStallScaleFactor = 1000;
+ULONG KdpStallScaleFactor = 10000;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/

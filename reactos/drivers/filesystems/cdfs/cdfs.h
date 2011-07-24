@@ -143,7 +143,7 @@ typedef struct _CDINFO
   ULONG RootStart;
   ULONG RootSize;
   WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
-  ULONG VolumeLabelLength;
+  USHORT VolumeLabelLength;
   ULONG SerialNumber;
 } CDINFO, *PCDINFO;
 

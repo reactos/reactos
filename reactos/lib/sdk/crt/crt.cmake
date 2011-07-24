@@ -45,6 +45,12 @@ list(APPEND CRT_SOURCE
     math/frexp.c
     math/huge_val.c
     math/hypot.c
+    math/ieee754/j0_y0.c
+    math/ieee754/j1_y1.c
+    math/ieee754/jn_yn.c
+    math/j0_y0.c
+    math/j1_y1.c
+    math/jn_yn.c
     math/ldiv.c
     math/logf.c
     math/modf.c

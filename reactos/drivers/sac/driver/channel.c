@@ -19,7 +19,7 @@ ChannelIsValidType(
 	IN SAC_CHANNEL_TYPE ChannelType
 	)
 {
-	return FALSE;
+	return ((ChannelType >= VtUtf8) && (ChannelType <= Raw));
 }
 
 BOOLEAN
@@ -28,7 +28,9 @@ ChannelIsEqual(
 	IN PSAC_CHANNEL_ID ChannelId
 	)
 {
-	return FALSE;
+	return IsEqualGUIDAligned(
+		&Channel->ChannelId.ChannelGuid,
+		&ChannelId->ChannelGuid);
 }
 
 NTSTATUS
@@ -52,7 +54,9 @@ ChannelDestroy(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	CHECK_PARAMETER(Channel);
+	
+	return ChannelDereferenceHandles(Channel);
 }
 
 NTSTATUS
@@ -62,7 +66,17 @@ ChannelOWrite(
 	IN ULONG BufferSize
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+	
+	CHECK_PARAMETER3(BufferSize < SAC_OBUFFER_SIZE);
+
+	ChannelLockOBuffer(Channel);
+
+	Status = Channel->OBufferWrite(Channel, Buffer, BufferSize);
+	
+	ChannelUnlockOBuffer(Channel);
+	
+	return Status;
 }
 
 NTSTATUS
@@ -70,7 +84,15 @@ ChannelOFlush(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+	
+	ChannelLockOBuffer(Channel);
+
+	Status = Channel->OBufferFlush(Channel);
+	
+	ChannelUnlockOBuffer(Channel);
+	
+	return Status;
 }
 
 NTSTATUS
@@ -80,7 +102,15 @@ ChannelIWrite(
 	IN ULONG BufferSize
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+
+	ChannelLockIBuffer(Channel);
+
+	Status = Channel->IBufferWrite(Channel, Buffer, BufferSize);
+	
+	ChannelUnlockIBuffer(Channel);
+	
+	return Status;
 }
 
 ULONG 
@@ -91,7 +121,15 @@ ChannelIRead(
 	OUT PULONG ResultBufferSize
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+	
+	ChannelLockIBuffer(Channel);
+
+	Status = Channel->IBufferRead(Channel, Buffer, BufferSize, ResultBufferSize);
+	
+	ChannelUnlockIBuffer(Channel);
+	
+	return Status;
 }
 
 NTSTATUS
@@ -99,7 +137,15 @@ ChannelIReadLast(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+
+	ChannelLockIBuffer(Channel);
+
+	Status = Channel->IBufferReadLast(Channel);
+	
+	ChannelUnlockIBuffer(Channel);
+	
+	return Status;
 }
 
 ULONG
@@ -107,7 +153,15 @@ ChannelIBufferLength(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Length;
+
+	ChannelLockOBuffer(Channel);
+
+	Length = Channel->IBufferLength(Channel);
+	
+	ChannelUnlockOBuffer(Channel);
+	
+	return Length;
 }
 
 NTSTATUS
@@ -179,7 +233,11 @@ ChannelSetLockEvent(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+	
+	ChannelSetEvent(Channel, LockEvent);
+	
+	return Status;
 }
 
 NTSTATUS
@@ -188,7 +246,11 @@ ChannelSetRedrawEvent(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+
+	ChannelSetEvent(Channel, RedrawEvent);
+
+	return Status;
 }
 
 NTSTATUS
@@ -196,7 +258,11 @@ ChannelClearRedrawEvent(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS Status;
+	
+	ChannelClearEvent(Channel, RedrawEvent);
+	
+	return Status;
 }
 
 NTSTATUS
@@ -205,7 +271,12 @@ ChannelHasRedrawEvent(
 	OUT PBOOLEAN Present
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	CHECK_PARAMETER1(Channel);
+	CHECK_PARAMETER2(Present);
+	
+	*Present = Channel->Flags & SAC_CHANNEL_FLAG_REDRAW_EVENT;
+	
+	return STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -213,7 +284,11 @@ ChannelIsActive(
 	IN PSAC_CHANNEL Channel
 	)
 {
-	return FALSE;
+	SAC_CHANNEL_STATUS ChannelStatus;
+
+	if (!NT_SUCCESS(ChannelGetStatus(Channel, &ChannelStatus))) return FALSE;
+
+	return (ChannelStatus == Active);
 }
 
 BOOLEAN

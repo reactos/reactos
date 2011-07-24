@@ -1,3 +1,4 @@
+#include <osenv.h>
 #include <oskittcp.h>
 #include <oskitdebug.h>
 #include <net/raw_cb.h>
@@ -117,7 +118,7 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 void InitializeSocketFlags(struct socket *so)
 {
     so->so_state |= SS_NBIO;
-    so->so_options |= SO_DONTROUTE | SO_REUSEPORT;
+    so->so_options |= SO_DONTROUTE;
     so->so_snd.sb_flags |= SB_SEL;
     so->so_rcv.sb_flags |= SB_SEL;
 }
@@ -136,34 +137,25 @@ int OskitTCPSocket( void *context,
     OSKLock();
     error = socreate(domain, &so, type, proto);
     if( !error ) {
+    *aso = so;
 	so->so_connection = context;
     InitializeSocketFlags(so);
-	*aso = so;
     }
     OSKUnlock();
 
     return error;
 }
 
-int OskitTCPRecv( void *connection,
+int OskitTCPRecv( PCONNECTION_ENDPOINT connection,
 		  OSK_PCHAR Data,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
-		  OSK_UINT Flags ) {
-    struct socket *so = connection;
+		  OSK_UINT Flags )
+{
     struct uio uio = { 0 };
     struct iovec iov = { 0 };
     int error = 0;
     int tcp_flags = 0;
-    
-    if (!connection)
-        return OSK_ESHUTDOWN;
-    
-    if (so->so_state & SS_CANTRCVMORE)
-        return OSK_ESHUTDOWN;
-
-    OS_DbgPrint(OSK_MID_TRACE,
-                ("so->so_state %x\n", so->so_state));
 
     if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
@@ -179,11 +171,16 @@ int OskitTCPRecv( void *connection,
     uio.uio_rw = UIO_READ;
     uio.uio_procp = NULL;
 
-    OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
-
     OSKLock();
-    error = soreceive( connection, NULL, &uio, NULL, NULL /* SCM_RIGHTS */,
-		       &tcp_flags );
+    if (connection->SocketContext)
+    {
+        OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
+        error = soreceive(connection->SocketContext, NULL, &uio, NULL, NULL, &tcp_flags);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     if (error == 0) *OutLen = Len - uio.uio_resid;
@@ -191,17 +188,13 @@ int OskitTCPRecv( void *connection,
     return error;
 }
 
-int OskitTCPBind( void *socket,
-		  void *nam, OSK_UINT namelen ) {
-    int error = EFAULT;
-    struct socket *so = socket;
+int OskitTCPBind(PCONNECTION_ENDPOINT connection, void *nam, OSK_UINT namelen)
+{
+    int error;
     struct mbuf sabuf;
     struct sockaddr addr;
 
-    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
-
-    if (!socket)
-        return OSK_ESHUTDOWN;
+    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", connection));
 
     if( nam )
 	addr = *((struct sockaddr *)nam);
@@ -214,23 +207,27 @@ int OskitTCPBind( void *socket,
     addr.sa_len = sizeof(struct sockaddr);
 
     OSKLock();
-    error = sobind(so, &sabuf);
+    if (connection->SocketContext)
+    {
+        error = sobind(connection->SocketContext, &sabuf);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
     return (error);
 }
 
-int OskitTCPConnect( void *socket, void *nam, OSK_UINT namelen ) {
-    struct socket *so = socket;
-    int error = EFAULT;
+int OskitTCPConnect( PCONNECTION_ENDPOINT connection, void *nam, OSK_UINT namelen )
+{
+    int error;
     struct mbuf sabuf;
     struct sockaddr addr;
 
-    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
-    
-    if (!socket)
-        return OSK_ESHUTDOWN;
+    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", connection));
 
     OS_DbgPrint(OSK_MIN_TRACE,("Nam: %x\n", nam));
 
@@ -245,67 +242,78 @@ int OskitTCPConnect( void *socket, void *nam, OSK_UINT namelen ) {
     addr.sa_len = sizeof(struct sockaddr);
 
     OSKLock();
-    error = soconnect(so, &sabuf);
+    if (connection->SocketContext)
+    {
+        error = soconnect(connection->SocketContext, &sabuf);
+        if (!error) error = OSK_EINPROGRESS;
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
-
-    if (error == 0) error = OSK_EINPROGRESS;
 
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
     return (error);
 }
 
-int OskitTCPDisconnect(void *socket)
+int OskitTCPDisconnect(PCONNECTION_ENDPOINT connection)
 {
     int error;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
-    error = sodisconnect(socket);
+    if (connection->SocketContext)
+    {
+        error = sodisconnect(connection->SocketContext);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     return error;
 }
 
-int OskitTCPShutdown( void *socket, int disconn_type ) {
+int OskitTCPShutdown(PCONNECTION_ENDPOINT connection, int disconn_type) {
     int error;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
-    error = soshutdown( socket, disconn_type );
+    if (connection->SocketContext)
+    {
+        error = soshutdown(connection->SocketContext, disconn_type);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     return error;
 }
 
-int OskitTCPClose( void *socket ) {
+int OskitTCPClose( PCONNECTION_ENDPOINT connection ) {
     int error;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
-    error = soclose( socket );
+    if (connection->SocketContext)
+    {
+        error = soclose(connection->SocketContext);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     return error;
 }
 
-int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
+int OskitTCPSend( PCONNECTION_ENDPOINT connection, OSK_PCHAR Data, OSK_UINT Len,
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
-    struct socket *so = socket;
     int error;
     struct uio uio;
     struct iovec iov;
-
-    if (!socket)
-        return OSK_ESHUTDOWN;
-    
-    if (so->so_state & SS_CANTSENDMORE)
-        return OSK_ESHUTDOWN;
 
     iov.iov_len = Len;
     iov.iov_base = (char *)Data;
@@ -318,32 +326,35 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     uio.uio_procp = NULL;
 
     OSKLock();
-    error = sosend( socket, NULL, &uio, NULL, NULL, 0 );
+    if (connection->SocketContext)
+    {
+        error = sosend( connection->SocketContext, NULL, &uio, NULL, NULL, 0 );
+        if (!error) *OutLen = Len - uio.uio_resid;
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
-
-    if (error == 0) *OutLen = Len - uio.uio_resid;
 
     return error;
 }
 
-int OskitTCPAccept( void *socket,
+int OskitTCPAccept( PCONNECTION_ENDPOINT connection,
 		    void **new_socket,
 		    void *context,
 		    void *AddrOut,
 		    OSK_UINT AddrLen,
 		    OSK_UINT *OutAddrLen,
 		    OSK_UINT FinishAccepting ) {
-    struct socket *head = (void *)socket;
+    struct socket *head;
     struct sockaddr *name = (struct sockaddr *)AddrOut;
     struct socket **newso = (struct socket **)new_socket;
-    struct socket *so = socket;
+    struct socket *so;
     struct sockaddr_in sa;
     struct mbuf mnam;
     struct inpcb *inp;
     int namelen = 0, error = 0, s;
-
-    if (!socket)
-        return OSK_ESHUTDOWN;
 
     if (!new_socket)
         return OSK_EINVAL;
@@ -356,8 +367,14 @@ int OskitTCPAccept( void *socket,
 	namelen = *OutAddrLen;
 
     OSKLock();
-
     s = splnet();
+    
+    head = connection->SocketContext;
+    if (!head)
+    {
+        error = OSK_ESHUTDOWN;
+        goto out;
+    }
 
     if ((head->so_options & SO_ACCEPTCONN) == 0) {
 	OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: head->so_options = %x, wanted bit %x\n",
@@ -457,7 +474,7 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
     /* The buffer Ip is freed by tcp_input */
 }
 
-int OskitTCPSetSockOpt(void *socket,
+int OskitTCPSetSockOpt(PCONNECTION_ENDPOINT connection,
                        int level,
                        int optname,
                        char *buffer,
@@ -466,32 +483,36 @@ int OskitTCPSetSockOpt(void *socket,
     struct mbuf *m;
     int error;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     if (size >= MLEN)
         return OSK_EINVAL;
 
     OSKLock();
-    m = m_get(M_WAIT, MT_SOOPTS);
-    if (!m)
+    if (connection->SocketContext)
     {
-        OSKUnlock();
-        return OSK_ENOMEM;
+        m = m_get(M_WAIT, MT_SOOPTS);
+        if (!m)
+        {
+            OSKUnlock();
+            return OSK_ENOMEM;
+        }
+        
+        m->m_len = size;
+        
+        memcpy(m->m_data, buffer, size);
+        
+        /* m is freed by sosetopt */
+        error = sosetopt(connection->SocketContext, level, optname, m);
     }
-
-    m->m_len = size;
-
-    memcpy(m->m_data, buffer, size);
-
-    /* m is freed by sosetopt */
-    error = sosetopt(socket, level, optname, m);
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     return error;
 }   
 
-int OskitTCPGetSockOpt(void *socket,
+int OskitTCPGetSockOpt(PCONNECTION_ENDPOINT connection,
                        int level,
                        int optname,
                        char *buffer,
@@ -500,41 +521,49 @@ int OskitTCPGetSockOpt(void *socket,
     int error, oldsize = *size;
     struct mbuf *m;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
-    error = sogetopt(socket, level, optname, &m);
-    if (!error)
+    if (connection->SocketContext)
     {
-        *size = m->m_len;
-
-        if (!buffer || oldsize < m->m_len)
+        error = sogetopt(connection->SocketContext, level, optname, &m);
+        if (!error)
         {
+            *size = m->m_len;
+            
+            if (!buffer || oldsize < m->m_len)
+            {
+                m_freem(m);
+                OSKUnlock();
+                return OSK_EINVAL;
+            }
+            
+            memcpy(buffer, m->m_data, m->m_len);
+            
             m_freem(m);
-            OSKUnlock();
-            return OSK_EINVAL;
         }
-
-        memcpy(buffer, m->m_data, m->m_len);
-
-        m_freem(m);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
     }
     OSKUnlock();
 
     return error;
 }
 
-int OskitTCPListen( void *socket, int backlog ) {
+int OskitTCPListen( PCONNECTION_ENDPOINT connection, int backlog ) {
     int error;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
-    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
+    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", connection));
 
     OSKLock();
-    error = solisten( socket, backlog );
+    if (connection->SocketContext)
+    {
+        error = solisten(connection->SocketContext, backlog);
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
@@ -542,19 +571,29 @@ int OskitTCPListen( void *socket, int backlog ) {
     return error;
 }
 
-int OskitTCPSetAddress( void *socket,
+int OskitTCPSetAddress( PCONNECTION_ENDPOINT connection,
 			 OSK_UINT LocalAddress,
 			 OSK_UI16 LocalPort,
 			 OSK_UINT RemoteAddress,
 			 OSK_UI16 RemotePort ) {
-    struct socket *so = socket;
+    struct socket *so;
     struct inpcb *inp;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
+    so = connection->SocketContext;
+    if (!so)
+    {
+        OSKUnlock();
+        return OSK_ESHUTDOWN;
+    }
+    
     inp = (struct inpcb *)so->so_pcb;
+    if (!inp)
+    {
+        OSKUnlock();
+        return OSK_ESHUTDOWN;
+    }
+
     inp->inp_laddr.s_addr = LocalAddress;
     inp->inp_lport = LocalPort;
     inp->inp_faddr.s_addr = RemoteAddress;
@@ -564,19 +603,29 @@ int OskitTCPSetAddress( void *socket,
     return 0;
 }
 
-int OskitTCPGetAddress( void *socket,
+int OskitTCPGetAddress( PCONNECTION_ENDPOINT connection,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort ) {
-    struct socket *so = socket;
+    struct socket *so;
     struct inpcb *inp;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
+    so = connection->SocketContext;
+    if (!so)
+    {
+        OSKUnlock();
+        return OSK_ESHUTDOWN;
+    }
+    
     inp = (struct inpcb *)so->so_pcb;
+    if (!inp)
+    {
+        OSKUnlock();
+        return OSK_ESHUTDOWN;
+    }
+
     *LocalAddress = inp->inp_laddr.s_addr;
     *LocalPort = inp->inp_lport;
     *RemoteAddress = inp->inp_faddr.s_addr;
@@ -586,15 +635,20 @@ int OskitTCPGetAddress( void *socket,
     return 0;
 }
 
-int OskitTCPGetSocketError(void *socket) {
-    struct socket *so = socket;
+int OskitTCPGetSocketError(PCONNECTION_ENDPOINT connection) {
+    struct socket *so;
     int error;
 
-    if (!socket)
-        return OSK_ESHUTDOWN;
-
     OSKLock();
-    error = so->so_error;
+    so = connection->SocketContext;
+    if (so)
+    {
+        error = so->so_error;
+    }
+    else
+    {
+        error = OSK_ESHUTDOWN;
+    }
     OSKUnlock();
 
     return error;

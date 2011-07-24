@@ -144,9 +144,9 @@ BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 }
 #endif
 
-ULONG DriveMapGetBiosDriveNumber(PCSTR DeviceName)
+UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 {
-	ULONG		BiosDriveNumber = 0;
+	UCHAR		BiosDriveNumber = 0;
 
 	// If they passed in a number string then just
 	// convert it to decimal and return it

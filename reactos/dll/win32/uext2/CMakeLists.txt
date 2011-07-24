@@ -10,5 +10,5 @@ add_library(uext2 SHARED ${SOURCE})
 
 set_module_type(uext2 win32dll)
 target_link_libraries(uext2 ext2lib)
-add_importlibs(uext2 msvcrt kernel32 ntdll)
+add_importlibs(uext2 ntdll)
 add_cd_file(TARGET uext2 DESTINATION reactos/system32 FOR all)

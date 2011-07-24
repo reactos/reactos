@@ -28,7 +28,7 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     Request->ReturnConnectionInformation;
 
     Status = TCPTranslateError
-    ( OskitTCPAccept( Listener->SocketContext,
+    ( OskitTCPAccept( Listener,
               &Connection->SocketContext,
               Connection,
               &OutAddr,
@@ -65,31 +65,55 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     NTSTATUS Status = STATUS_SUCCESS;
     SOCKADDR_IN AddressToBind;
     KIRQL OldIrql;
+    TA_IP_ADDRESS LocalAddress;
 
     ASSERT(Connection);
-    ASSERT_KM_POINTER(Connection->AddressFile);
 
     LockObject(Connection, &OldIrql);
+    
+    ASSERT_KM_POINTER(Connection->AddressFile);
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-    Connection->SocketContext));
+    if (Connection->AddressFile->Port)
+    {
+        AddressToBind.sin_family = AF_INET;
+        memcpy( &AddressToBind.sin_addr,
+               &Connection->AddressFile->Address.Address.IPv4Address,
+               sizeof(AddressToBind.sin_addr) );
+        AddressToBind.sin_port = Connection->AddressFile->Port;
+        TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
-    AddressToBind.sin_family = AF_INET;
-    memcpy( &AddressToBind.sin_addr,
-        &Connection->AddressFile->Address.Address.IPv4Address,
-        sizeof(AddressToBind.sin_addr) );
-    AddressToBind.sin_port = Connection->AddressFile->Port;
-
-    TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
-
-    Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
-                        &AddressToBind,
-                        sizeof(AddressToBind) ) );
+        /* Perform an explicit bind */
+        Status = TCPTranslateError(OskitTCPBind(Connection,
+                                                &AddressToBind,
+                                                sizeof(AddressToBind)));
+    }
+    else
+    {
+        /* An implicit bind will be performed */
+        Status = STATUS_SUCCESS;
+    }
 
     if (NT_SUCCESS(Status))
-        Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
+        Status = TCPTranslateError( OskitTCPListen( Connection, Backlog ) );
+    
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if we had an unspecified port */
+        if (!Connection->AddressFile->Port)
+        {
+            /* We did, so we need to copy back the port */
+            if (NT_SUCCESS(TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE)))
+            {
+                /* Allocate the port in the port bitmap */
+                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                
+                /* This should never fail */
+                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+            }
+        }
+    }
 
     UnlockObject(Connection, OldIrql);
 

@@ -5,7 +5,8 @@ include_directories(
     include/freebsd/sys/include
     include/freebsd/dev/include
     include/freebsd/net/include
-    include)
+    include
+    ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include)
 
 add_definitions(
     -D__NTDRIVER__

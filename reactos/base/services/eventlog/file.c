@@ -896,17 +896,17 @@ DWORD LogfGetCurrentRecord(PLOGFILE LogFile)
 
 BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile, ULONG ulNumber)
 {
-    int i;
+    DWORD i;
 
     if (ulNumber != LogFile->OffsetInfo[0].EventNumber)
     {
         return FALSE;
     }
 
-    for (i=0;i<LogFile->OffsetInfoNext-1; i++)
+    for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
     {
-        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i+1].EventNumber;
-        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i+1].EventOffset;
+        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
+        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
     }
     LogFile->OffsetInfoNext--;
     return TRUE;

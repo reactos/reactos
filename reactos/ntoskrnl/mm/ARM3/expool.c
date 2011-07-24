@@ -452,7 +452,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     PLIST_ENTRY ListHead;
     PPOOL_HEADER Entry, NextEntry, FragmentEntry;
     KIRQL OldIrql;
-    ULONG BlockSize, i;
+    USHORT BlockSize, i;
 
     //
     // Some sanity checks
@@ -495,7 +495,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     // request would've been treated as a POOL_MAX_ALLOC earlier and resulted in
     // the direct allocation of pages.
     //
-    i = (NumberOfBytes + sizeof(POOL_HEADER) + (POOL_BLOCK_SIZE - 1)) / POOL_BLOCK_SIZE;
+    i = (USHORT)((NumberOfBytes + sizeof(POOL_HEADER) + (POOL_BLOCK_SIZE - 1))
+                 / POOL_BLOCK_SIZE);
 
     //
     // Loop in the free lists looking for a block if this size. Start with the
@@ -748,7 +749,7 @@ ExFreePoolWithTag(IN PVOID P,
                   IN ULONG TagToFree)
 {
     PPOOL_HEADER Entry, NextEntry;
-    ULONG BlockSize;
+    USHORT BlockSize;
     KIRQL OldIrql;
     POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;

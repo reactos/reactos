@@ -417,14 +417,16 @@ VOID DeleteSocketStructure( SOCKET Handle );
 int GetSocketInformation(
 	PSOCKET_INFORMATION Socket,
 	ULONG				AfdInformationClass,
-	PULONG Ulong		OPTIONAL,
+    PBOOLEAN            Boolean      OPTIONAL,
+	PULONG              Ulong        OPTIONAL,
 	PLARGE_INTEGER		LargeInteger OPTIONAL
 );
 
 int SetSocketInformation(
 	PSOCKET_INFORMATION Socket,
 	ULONG				AfdInformationClass,
-	PULONG				Ulong		OPTIONAL,
+    PBOOLEAN            Boolean      OPTIONAL,
+	PULONG				Ulong		 OPTIONAL,
 	PLARGE_INTEGER		LargeInteger OPTIONAL
 );
 

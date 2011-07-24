@@ -87,7 +87,7 @@ PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
 // This function is in arch/i386/i386disk.c
 //BOOLEAN DiskReadLogicalSectors(ULONG DriveNumber, U64 SectorNumber, ULONG SectorCount, PVOID Buffer)
 
-BOOLEAN DiskIsDriveRemovable(ULONG DriveNumber)
+BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber)
 {
 	// Hard disks use drive numbers >= 0x80
 	// So if the drive number indicates a hard disk
@@ -188,6 +188,6 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 //VOID DiskStopFloppyMotor(VOID)
 
 // This function is in arch/i386/i386disk.c
-//ULONG DiskGetCacheableBlockCount(ULONG DriveNumber)
+//ULONG DiskGetCacheableBlockCount(UCHAR DriveNumber)
 
 #endif

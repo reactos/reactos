@@ -2,7 +2,6 @@
  * FILE:             base/applications/cacls/lang/cs-CZ.rc
  * TRANSLATOR:       Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:          2008-02-29
- * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

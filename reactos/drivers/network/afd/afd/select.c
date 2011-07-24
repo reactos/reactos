@@ -286,20 +286,35 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( EventSelectInfo->EventObject && EventSelectInfo->Events ) {
 	Status = ObReferenceObjectByHandle( (PVOID)EventSelectInfo->
 					    EventObject,
-					    FILE_ALL_ACCESS,
+					    EVENT_ALL_ACCESS,
 					    ExEventObjectType,
 					    UserMode,
 					    (PVOID *)&FCB->EventSelect,
 					    NULL );
 
 	if( !NT_SUCCESS(Status) )
+    {
+        AFD_DbgPrint(MIN_TRACE,("Failed reference event (0x%x)\n", Status));
 	    FCB->EventSelect = NULL;
+    }
 	else
 	    FCB->EventSelectTriggers = EventSelectInfo->Events;
     } else {
         FCB->EventSelect = NULL;
         FCB->EventSelectTriggers = 0;
 	Status = STATUS_SUCCESS;
+    }
+
+    if((FCB->EventSelect) &&
+       (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled)))
+    {
+        AFD_DbgPrint(MID_TRACE,("Setting event %x\n", FCB->EventSelect));
+        
+        /* Disable the events that triggered the select until the reenabling function is called */
+        FCB->EventSelectDisabled |= (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled));
+
+        /* Set the application's event */
+        KeSetEvent( FCB->EventSelect, IO_NETWORK_INCREMENT, FALSE );
     }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
@@ -400,8 +415,15 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
 
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
-    if( FCB->EventSelect && (FCB->PollState & FCB->EventSelectTriggers) ) {
+    if((FCB->EventSelect) &&
+       (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled)))
+    {
         AFD_DbgPrint(MID_TRACE,("Setting event %x\n", FCB->EventSelect));
+        
+        /* Disable the events that triggered the select until the reenabling function is called */
+        FCB->EventSelectDisabled |= (FCB->PollState & (FCB->EventSelectTriggers & ~FCB->EventSelectDisabled));
+        
+        /* Set the application's event */
         KeSetEvent( FCB->EventSelect, IO_NETWORK_INCREMENT, FALSE );
     }
 

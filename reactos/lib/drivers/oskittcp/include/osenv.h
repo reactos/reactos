@@ -11,4 +11,12 @@ void oskit_bufio_map(void *srcbuf, void**dstbuf, int off, int len);
 
 #define osenv_sleeprec_t void*
 
+/* We can do this safely because SocketContext will always
+ * be the first member in the real CONNECTION_ENDPOINT struct
+ */
+typedef struct _FAKE_CONNECTION_ENDPOINT
+{
+    void *SocketContext;
+} *PCONNECTION_ENDPOINT;
+
 #endif

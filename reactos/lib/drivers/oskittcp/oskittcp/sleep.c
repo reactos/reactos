@@ -1,3 +1,4 @@
+#include <osenv.h>
 #include <oskittcp.h>
 #include <sys/callout.h>
 #include <oskitfreebsd.h>
@@ -31,15 +32,19 @@ void wakeup( struct socket *so, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket accepting q\n"));
 	flags |= SEL_ACCEPT;
     }
-    if( so->so_rcv.sb_cc > 0 && !(so->so_state & SS_CANTRCVMORE) &&
-        (so->so_state & SS_ISCONNECTED) ) {
+    if( (so->so_rcv.sb_cc > 0 && (so->so_state & SS_ISCONNECTED)) ||
+         (so->so_state & SS_CANTRCVMORE)) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));
 	flags |= SEL_READ;
     }
-    if( 0 < sbspace(&so->so_snd) && !(so->so_state & SS_CANTSENDMORE) &&
-        (so->so_state & SS_ISCONNECTED) ) {
+    if( (0 < sbspace(&so->so_snd) && (so->so_state & SS_ISCONNECTED)) ||
+         (so->so_state & SS_CANTSENDMORE)) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket writeable\n"));
 	flags |= SEL_WRITE;
+    }
+    if (so->so_error) {
+    OS_DbgPrint(OSK_MID_TRACE,("Socket error\n"));
+    flags |= SEL_ERROR;
     }
     if (!so->so_pcb) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket dying\n"));

@@ -418,7 +418,7 @@
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
 @ stdcall RtlAcquireSRWLockShared(ptr)
 @ stdcall RtlActivateActivationContext(long ptr ptr)
-//@ stdcall RtlActivateActivationContextEx
+@ stdcall RtlActivateActivationContextEx(long ptr ptr ptr)
 @ fastcall RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
@@ -691,7 +691,7 @@
 @ stdcall RtlIdentifierAuthoritySid(ptr)
 @ stdcall RtlImageDirectoryEntryToData(long long long ptr)
 @ stdcall RtlImageNtHeader(long)
-//@ stdcall RtlImageNtHeaderEx
+@ stdcall RtlImageNtHeaderEx(long ptr double ptr)
 @ stdcall RtlImageRvaToSection(ptr long long)
 @ stdcall RtlImageRvaToVa(ptr long long ptr)
 @ stdcall RtlImpersonateSelf(long)

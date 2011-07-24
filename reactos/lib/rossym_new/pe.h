@@ -12,6 +12,7 @@ typedef struct _Pe {
 	u32int (*e4)(const unsigned char *data);
 	u64int (*e8)(const unsigned char *data);
 	ulong imagebase, imagesize, loadbase;
+    ulong codestart, datastart;
 	int (*loadsection)(struct _Pe *pe, char *name, struct DwarfBlock *b);
 	int nsections;
 	struct _IMAGE_SECTION_HEADER *sect;

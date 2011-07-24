@@ -23,7 +23,10 @@ AfdGetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->ConnectOptionsSize == 0)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+    }
 
     ASSERT(FCB->ConnectOptions);
 
@@ -60,7 +63,8 @@ AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     FCB->ConnectOptions = ExAllocatePool(PagedPool, ConnectOptionsSize);
-    if (!FCB->ConnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    if (!FCB->ConnectOptions)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     RtlCopyMemory(FCB->ConnectOptions,
                   ConnectOptions,
@@ -87,7 +91,10 @@ AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (BufferSize < sizeof(UINT))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if (FCB->ConnectOptions)
     {
@@ -115,7 +122,10 @@ AfdGetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->ConnectDataSize == 0)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+    }
 
     ASSERT(FCB->ConnectData);
 
@@ -179,7 +189,10 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
     
     if (BufferSize < sizeof(UINT))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+    }
 
     if (FCB->ConnectData)
     {
@@ -201,7 +214,7 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     NTSTATUS Status;
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
-        AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+        AFD_DbgPrint(MIN_TRACE,("Null Device\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
 
@@ -223,26 +236,33 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
     ASSERT(!FCB->Recv.Window);
     ASSERT(!FCB->Send.Window);
 
-    Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
-                                       &FCB->Send.Size);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    if (!FCB->Recv.Size)
+    {
+        Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
+                                           &FCB->Recv.Size);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
 
-    FCB->Recv.Size = FCB->Send.Size;
+    if (!FCB->Send.Size)
+    {
+        Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
+                                           &FCB->Send.Size);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
 
     /* Allocate the receive area and start receiving */
-    FCB->Recv.Window =
-	ExAllocatePool( PagedPool, FCB->Recv.Size );
+    if (!FCB->Recv.Window)
+    {
+        FCB->Recv.Window = ExAllocatePool( PagedPool, FCB->Recv.Size );
+        if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
+    }
 
-    if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
-
-    FCB->Send.Window =
-	ExAllocatePool( PagedPool, FCB->Send.Size );
-
-    if( !FCB->Send.Window ) {
-	ExFreePool( FCB->Recv.Window );
-	FCB->Recv.Window = NULL;
-	return STATUS_NO_MEMORY;
+    if (!FCB->Send.Window)
+    {
+        FCB->Send.Window = ExAllocatePool( PagedPool, FCB->Send.Size );
+        if( !FCB->Send.Window ) return STATUS_NO_MEMORY;
     }
 
     FCB->State = SOCKET_STATE_CONNECTED;
@@ -494,7 +514,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	break;
 
     default:
-	AFD_DbgPrint(MID_TRACE,("Inappropriate socket state %d for connect\n",
+	AFD_DbgPrint(MIN_TRACE,("Inappropriate socket state %d for connect\n",
 				FCB->State));
 	break;
     }

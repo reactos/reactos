@@ -70,8 +70,6 @@
 ;@ stdcall CallbackMayRunLong ; Win 7
 @ stdcall CancelDeviceWakeupRequest(long)
 @ stdcall CancelIo(long)
-@ stdcall CancelIoEx(long ptr)
-@ stdcall CancelSynchronousIo(long)
 ;@ stdcall CancelThreadpoolIo(ptr) ntdll.TpCancelAsyncIoOperation; Win 7
 @ stdcall CancelTimerQueueTimer(long long)
 @ stdcall CancelWaitableTimer(long)
@@ -136,8 +134,6 @@
 ;@ stdcall CreateDirectoryTransactedW ; Win 7
 @ stdcall CreateDirectoryW(wstr ptr)
 @ stdcall CreateEventA(ptr long long str)
-@ stdcall CreateEventExA(ptr str long long)
-@ stdcall CreateEventExW(ptr wstr long long)
 @ stdcall CreateEventW(ptr long long wstr)
 @ stdcall CreateFiber(long ptr ptr)
 @ stdcall CreateFiberEx(long long long ptr ptr)
@@ -162,8 +158,6 @@
 @ stdcall CreateMailslotW(ptr long long ptr)
 @ stdcall CreateMemoryResourceNotification(long)
 @ stdcall CreateMutexA(ptr long str)
-@ stdcall CreateMutexExA(ptr str long long)
-@ stdcall CreateMutexExW(ptr wstr long long)
 @ stdcall CreateMutexW(ptr long wstr)
 @ stdcall CreateNamedPipeA(str long long long long long long ptr)
 @ stdcall CreateNamedPipeW(wstr long long long long long long ptr)
@@ -175,19 +169,14 @@
 ;@ stdcall CreateProcessAsUserW ; Win 7
 @ stdcall CreateProcessInternalA(ptr str str ptr ptr long long ptr str ptr ptr long)
 @ stdcall CreateProcessInternalW(ptr wstr wstr ptr ptr long long ptr wstr ptr ptr long)
-@ stdcall CreateProcessInternalWSecure() ; missing in Win 7
 @ stdcall CreateProcessW(wstr wstr ptr ptr long long ptr wstr ptr ptr)
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
 ;@ stdcall CreateRemoteThreadEx api-ms-win-core-processthreads-l1-1-0.CreateRemoteThreadEx ; Win 7
 @ stdcall CreateSemaphoreA(ptr long long str)
-@ stdcall CreateSemaphoreExA(ptr long long str long long)
-@ stdcall CreateSemaphoreExW(ptr long long wstr long long)
 @ stdcall CreateSemaphoreW(ptr long long wstr)
 @ stdcall CreateSocketHandle()
-@ stdcall CreateSymbolicLinkA(str str long)
 ;@ stdcall CreateSymbolicLinkTransactedA ; Win 7
 ;@ stdcall CreateSymbolicLinkTransactedW ; Win 7
-@ stdcall CreateSymbolicLinkW(wstr wstr long)
 @ stdcall CreateTapePartition(long long long long)
 @ stdcall CreateThread(ptr long ptr long long ptr)
 ;@ stdcall CreateThreadpool ; Win 7
@@ -203,8 +192,6 @@
 ;@ stdcall arch=x86_64 CreateUmsThreadContext
 @ stdcall CreateVirtualBuffer(long long long) ; missing in Win 7
 @ stdcall CreateWaitableTimerA(ptr long str)
-@ stdcall CreateWaitableTimerExA(ptr str long long)
-@ stdcall CreateWaitableTimerExW(ptr wstr long long)
 @ stdcall CreateWaitableTimerW(ptr long wstr)
 @ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
@@ -439,7 +426,6 @@
 @ stdcall GetConsoleFontInfo(long long long ptr)
 @ stdcall GetConsoleFontSize(long long)
 @ stdcall GetConsoleHardwareState(long long ptr)
-@ stdcall GetConsoleHistoryInfo(ptr)
 @ stdcall GetConsoleInputExeNameA(long ptr)
 @ stdcall GetConsoleInputExeNameW(long ptr)
 @ stdcall GetConsoleInputWaitHandle()
@@ -512,7 +498,6 @@
 ;@ stdcall GetFileAttributesTransactedA ; Win 7
 ;@ stdcall GetFileAttributesTransactedW ; Win 7
 @ stdcall GetFileAttributesW(wstr)
-@ stdcall GetFileBandwidthReservation(long ptr ptr ptr ptr ptr)
 @ stdcall GetFileInformationByHandle(long ptr)
 ;@ stdcall GetFileInformationByHandleEx ; Win 7
 ;@ stdcall GetFileMUIInfo ; Win 7
@@ -521,8 +506,6 @@
 @ stdcall GetFileSizeEx(long ptr)
 @ stdcall GetFileTime(long ptr ptr ptr)
 @ stdcall GetFileType(long)
-@ stdcall GetFinalPathNameByHandleA(long str long long)
-@ stdcall GetFinalPathNameByHandleW(long wstr long long)
 @ stdcall GetFirmwareEnvironmentVariableA(str str ptr long)
 @ stdcall GetFirmwareEnvironmentVariableW(wstr wstr ptr long)
 @ stdcall GetFullPathNameA(str long ptr ptr)
@@ -541,7 +524,6 @@
 @ stdcall GetLinguistLangSize(ptr) ; missing in Win 7
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
-@ stdcall GetLocaleInfoEx(wstr long wstr long) ; Vista+
 @ stdcall GetLocaleInfoW(long long ptr long)
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
@@ -577,14 +559,12 @@
 ;@ stdcall -arch=x86_64 GetNextUmsListItem
 @ stdcall GetNextVDMCommand(long)
 @ stdcall GetNlsSectionName(long long long str str long) ; missing in Win 7
-@ stdcall GetNumaAvailableMemory(ptr long ptr) ; missing in Win 7
 @ stdcall GetNumaAvailableMemoryNode(long ptr)
 ;@ stdcall GetNumaAvailableMemoryNodeEx ; Win 7
 @ stdcall GetNumaHighestNodeNumber(ptr)
 ;@ stdcall GetNumaNodeNumberFromHandle ; Win 7
 @ stdcall GetNumaNodeProcessorMask(long ptr)
 ;@ stdcall GetNumaNodeProcessorMaskEx ; Win 7
-@ stdcall GetNumaProcessorMap(ptr long ptr) ; missing in Win 7
 @ stdcall GetNumaProcessorNode(long ptr)
 ;@ stdcall GetNumaProcessorNodeEx ; Win 7
 ;@ stdcall GetNumaProximityNode ; Win 7
@@ -692,7 +672,7 @@
 @ stdcall GetThreadTimes(long ptr ptr ptr ptr)
 ;@ stdcall GetThreadUILanguage ; Win 7
 @ stdcall GetTickCount()
-@ stdcall -ret64 GetTickCount64()
+@ stdcall GetTickCount64() ; FOR WINE
 @ stdcall GetTimeFormatA(long long ptr str ptr long)
 ;@ stdcall GetTimeFormatEx ; Win 7
 @ stdcall GetTimeFormatW(long long ptr wstr ptr long)
@@ -778,7 +758,6 @@
 ;@ stdcall InitializeConditionVariable ntdll.RtlInitializeConditionVariable ; Win 7
 @ stdcall InitializeCriticalSection(ptr) ; FIXME: ntdll.RtlInitializeCriticalSection
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
-@ stdcall InitializeCriticalSectionEx(ptr long long)
 ;@ stdcall InitializeExtendedContext ; Win 7
 ;@ stdcall InitializeProcThreadAttributeList api-ms-win-core-processthreads-l1-1-0.InitializeProcThreadAttributeList ; Win 7
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
@@ -851,7 +830,6 @@
 ;@ stdcall K32InitializeProcessForWsWatch ; Win 7
 ;@ stdcall K32QueryWorkingSet ; Win 7
 ;@ stdcall K32QueryWorkingSetEx ; Win 7
-@ stdcall LCIDToLocaleName(long wstr long long) ; needed for wine gecko; missing in XP SP3
 @ stdcall LCMapStringA(long long str long ptr long)
 ;@ stdcall LCMapStringEx ; Win 7
 @ stdcall LCMapStringW(long long wstr long ptr long)
@@ -928,7 +906,6 @@
 ;@ stdcall NotifyMountMgr ; Win 7
 ;@ stub NotifyNLSUserCache ; missing in XP SP3 and win 7
 ;@ stdcall NotifyUILanguageChange ; Win 7
-@ stdcall NumaVirtualQueryNode(long long long long) ; missing in win 7
 @ stdcall OpenConsoleW(wstr long long long)
 @ stdcall OpenDataFile(long long) ; missing in Win 7
 @ stdcall OpenEventA(long long str)
@@ -977,8 +954,6 @@
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
-@ stdcall QueryFullProcessImageNameA(ptr long str ptr) ; Vista and later
-@ stdcall QueryFullProcessImageNameW(ptr long wstr ptr) ; Vista and later
 ;@ stdcall QueryIdleProcessorCycleTime ; Win 7
 ;@ stdcall QueryIdleProcessorCycleTimeEx ; Win 7
 @ stdcall QueryInformationJobObject(long long ptr long ptr)
@@ -994,7 +969,6 @@
 ;@ stdcall QueryThreadpoolStackInformation ; Win 7
 ;@ stdcall -arch=x86_64 QueryUmsThreadInformation
 ;@ stdcall QueryUnbiasedInterruptTime ; Win 7
-@ stdcall QueryWin31IniFilesMappedToRegistry(long long long long) ; missing in Win 7
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
 @ stdcall RaiseException(long long long ptr)
@@ -1060,7 +1034,6 @@
 ;@ stdcall RegUnLoadKeyA ; Win 7
 ;@ stdcall RegUnLoadKeyW ; Win 7
 ;@ stdcall RegisterApplicationRecoveryCallback ; Win 7
-@ stdcall RegisterApplicationRestart(wstr long)
 @ stdcall RegisterConsoleIME(ptr ptr)
 @ stdcall RegisterConsoleOS2(long)
 @ stdcall RegisterConsoleVDM(long long long long long long long long long long long)
@@ -1145,7 +1118,6 @@
 @ stdcall SetConsoleDisplayMode(long long ptr)
 @ stdcall SetConsoleFont(long long)
 @ stdcall SetConsoleHardwareState(long long long)
-@ stdcall SetConsoleHistoryInfo(ptr)
 @ stdcall SetConsoleIcon(ptr)
 @ stdcall SetConsoleInputExeNameA(ptr)
 @ stdcall SetConsoleInputExeNameW(ptr)

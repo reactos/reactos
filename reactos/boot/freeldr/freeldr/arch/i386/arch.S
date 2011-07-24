@@ -47,9 +47,8 @@ EXTERN(_RealEntryPoint)
 
 	.code32
 
-	/* Zero BootDrive and BootPartition */
+	/* Zero BootPartition */
 	xor eax, eax
-	mov dword ptr [_FrldrBootDrive], eax
 	mov dword ptr [_FrldrBootPartition], eax
 
 	/* Store the boot drive */
@@ -498,7 +497,7 @@ cmdline:
 	.fill	CMDLINE_SIZE, 1, 0
 
 EXTERN(_FrldrBootDrive)
-    .long 0
+    .byte 0
 
 EXTERN(_FrldrBootPartition)
     .long 0

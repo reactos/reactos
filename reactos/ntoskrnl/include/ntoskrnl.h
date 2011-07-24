@@ -38,9 +38,7 @@
 #define TEXT(s) L##s
 #include <regstr.h>
 #include <ntstrsafe.h>
-
-/* FIXME: Temporary until Winldr is used */
-#include <rosldr.h>
+#include <ntpoapi.h>
 
 /* C Headers */
 #include <stdlib.h>

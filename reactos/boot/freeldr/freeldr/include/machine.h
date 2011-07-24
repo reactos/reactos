@@ -47,7 +47,7 @@ typedef struct tagMACHVTBL
   VIDEODISPLAYMODE (*VideoSetDisplayMode)(char *DisplayMode, BOOLEAN Init);
   VOID (*VideoGetDisplaySize)(PULONG Width, PULONG Height, PULONG Depth);
   ULONG (*VideoGetBufferSize)(VOID);
-  VOID (*VideoSetTextCursorPosition)(ULONG X, ULONG Y);
+  VOID (*VideoSetTextCursorPosition)(UCHAR X, UCHAR Y);
   VOID (*VideoHideShowTextCursor)(BOOLEAN Show);
   VOID (*VideoPutChar)(int Ch, UCHAR Attr, unsigned X, unsigned Y);
   VOID (*VideoCopyOffScreenBufferToVRAM)(PVOID Buffer);
@@ -62,9 +62,9 @@ typedef struct tagMACHVTBL
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
-  BOOLEAN (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-  BOOLEAN (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
-  ULONG (*DiskGetCacheableBlockCount)(ULONG DriveNumber);
+  BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+  BOOLEAN (*DiskGetDriveGeometry)(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
+  ULONG (*DiskGetCacheableBlockCount)(UCHAR DriveNumber);
 
   TIMEINFO* (*GetTime)(VOID);
   ULONG (*GetRelativeTime)(VOID);
@@ -83,7 +83,7 @@ VOID MachVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE MachVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
 VOID MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG MachVideoGetBufferSize(VOID);
-VOID MachVideoSetTextCursorPosition(ULONG X, ULONG Y);
+VOID MachVideoSetTextCursorPosition(UCHAR X, UCHAR Y);
 VOID MachVideoHideShowTextCursor(BOOLEAN Show);
 VOID MachVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
 VOID MachVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
@@ -94,9 +94,9 @@ VOID MachVideoSync(VOID);
 VOID MachBeep(VOID);
 BOOLEAN MachDiskGetBootPath(char *BootPath, unsigned Size);
 BOOLEAN MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
-BOOLEAN MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOLEAN MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
-ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
+BOOLEAN MachDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN MachDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
+ULONG MachDiskGetCacheableBlockCount(UCHAR DriveNumber);
 VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 
 #define MachConsPutChar(Ch)			MachVtbl.ConsPutChar(Ch)

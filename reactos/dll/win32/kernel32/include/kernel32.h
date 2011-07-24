@@ -21,6 +21,10 @@
 #define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
 #define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
 
+#define STUB \
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
+  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+
 #define debugstr_a  
 #define debugstr_w
 #define wine_dbgstr_w  
@@ -67,8 +71,6 @@
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
   
-#define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
-
 typedef struct _CODEPAGE_ENTRY
 {
    LIST_ENTRY Entry;
@@ -100,6 +102,10 @@ extern PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+
+extern BOOLEAN BaseRunningInServerProcess;
+
 /* FUNCTION PROTOTYPES *******************************************************/
 
 BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
@@ -130,6 +136,11 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
 #define _lread  (_readfun)_hread
+
+PLARGE_INTEGER
+WINAPI
+BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
+                  IN DWORD dwMilliseconds);
 
 POBJECT_ATTRIBUTES
 WINAPI

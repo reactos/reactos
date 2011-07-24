@@ -12,6 +12,10 @@
 
 #define ROSSYM_SECTION_NAME ".rossym"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _ROSSYM_HEADER {
   unsigned long SymbolsOffset;
   unsigned long SymbolsLength;
@@ -86,6 +90,18 @@ typedef struct _ROSSYM_LINEINFO {
   ROSSYM_PARAMETER Parameters[16];
 } ROSSYM_LINEINFO, *PROSSYM_LINEINFO;
 
+typedef struct _ROSSYM_AGGREGATE_MEMBER {
+    PCHAR Name, Type;
+    ULONG BaseOffset, Size;
+    ULONG FirstBit, Bits;
+    ULONG TypeId;
+} ROSSYM_AGGREGATE_MEMBER, *PROSSYM_AGGREGATE_MEMBER;
+
+typedef struct _ROSSYM_AGGREGATE {
+    ULONG NumElements;
+    PROSSYM_AGGREGATE_MEMBER Elements;
+} ROSSYM_AGGREGATE, *PROSSYM_AGGREGATE;
+
 typedef struct _ROSSYM_CALLBACKS {
   PVOID (*AllocMemProc)(ULONG_PTR Size);
   VOID (*FreeMemProc)(PVOID Area);
@@ -132,6 +148,13 @@ BOOLEAN RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
 #endif
 VOID RosSymFreeInfo(PROSSYM_LINEINFO RosSymLineInfo);
 VOID RosSymDelete(PROSSYM_INFO RosSymInfo);
+BOOLEAN
+RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate);
+VOID RosSymFreeAggregate(PROSSYM_AGGREGATE Aggregate);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REACTOS_ROSSYM_H_INCLUDED */
 

@@ -35,7 +35,7 @@ VOID PcVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
 VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG PcVideoGetBufferSize(VOID);
-VOID PcVideoSetTextCursorPosition(ULONG X, ULONG Y);
+VOID PcVideoSetTextCursorPosition(UCHAR X, UCHAR Y);
 VOID PcVideoHideShowTextCursor(BOOLEAN Show);
 VOID PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
 VOID PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
@@ -49,10 +49,10 @@ VOID PcPrepareForReactOS(IN BOOLEAN Setup);
 ULONG PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
 BOOLEAN PcDiskGetBootPath(char *BootPath, unsigned Size);
-BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOLEAN PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
-ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
+BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN PcDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
+ULONG PcDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
 TIMEINFO* PcGetTime(VOID);
 

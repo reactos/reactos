@@ -2382,6 +2382,19 @@ RtlValidateUnicodeString(IN ULONG Flags,
   }
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS NTAPI
+RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
+{
+    DPRINT1("RtlpEnsureBufferSize: stub\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RtlFindCharInUnicodeString(IN ULONG Flags,

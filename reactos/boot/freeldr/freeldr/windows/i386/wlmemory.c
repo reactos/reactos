@@ -277,7 +277,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	GDTIDT GdtDesc, IdtDesc, OldIdt;
 	PKGDTENTRY	pGdt;
 	PKIDTENTRY	pIdt;
-	ULONG Ldt = 0;
+	USHORT Ldt = 0;
 	//ULONG i;
 
 	DPRINTM(DPRINT_WINDOWS, "GDtIdt %p, Pcr %p, Tss 0x%08X\n",

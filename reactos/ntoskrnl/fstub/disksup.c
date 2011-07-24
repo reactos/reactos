@@ -398,7 +398,7 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
         /* Read the partition table */
         Status = IoReadPartitionTable(DeviceObject,
             DiskGeometry.BytesPerSector,
-            FALSE,
+            TRUE,
             LayoutInfo);
     }
 

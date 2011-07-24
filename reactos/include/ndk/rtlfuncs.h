@@ -171,6 +171,17 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->MaximumLength = BufferSize;
     UnicodeString->Buffer = Buffer;
 }
+    
+FORCEINLINE
+VOID
+RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
+                       IN PSTR Buffer,
+                       IN USHORT BufferSize)
+{
+    AnsiString->Length = 0;
+    AnsiString->MaximumLength = BufferSize;
+    AnsiString->Buffer = Buffer;
+}
 
 //
 // LUID Macros
@@ -2323,7 +2334,7 @@ RtlDetermineDosPathNameType_U(
 );
 
 NTSYSAPI
-ULONG
+RTL_PATH_TYPE
 NTAPI
 RtlDetermineDosPathNameType_Ustr(
     IN PCUNICODE_STRING Path
@@ -2348,7 +2359,7 @@ RtlDosPathNameToNtPathName_U(
     IN PCWSTR DosPathName,
     OUT PUNICODE_STRING NtPathName,
     OUT PCWSTR *NtFileNamePart,
-    OUT CURDIR *DirectoryInfo
+    OUT PRTL_RELATIVE_NAME_U DirectoryInfo
 );
 
 NTSYSAPI
@@ -2382,18 +2393,6 @@ RtlGetFullPathName_U(
 NTSYSAPI
 ULONG
 NTAPI
-RtlGetFullPathName_Ustr(
-    IN PUNICODE_STRING FileName,
-    IN ULONG Size,
-    IN PWSTR Buffer,
-    OUT PWSTR *ShortName,
-    OUT PBOOLEAN InvalidName,
-    OUT RTL_PATH_TYPE *PathType
-);
-
-NTSYSAPI
-ULONG
-NTAPI
 RtlIsDosDeviceName_U(
     IN PWSTR Name
 );
@@ -2422,6 +2421,12 @@ RtlQueryEnvironmentVariable_U(
     PWSTR Environment,
     PUNICODE_STRING Name,
     PUNICODE_STRING Value
+);
+
+VOID
+NTAPI
+RtlReleaseRelativeName(
+    IN PRTL_RELATIVE_NAME_U RelativeName
 );
 
 NTSYSAPI
@@ -3052,12 +3057,21 @@ LdrRelocateImageWithBias(
 // Activation Context Functions
 //
 #ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlActivateActivationContextEx(
+    IN ULONG Flags,
+    IN PTEB Teb,
+    IN PVOID Context,
+    IN PULONG_PTR Cookie
+);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlActivateActivationContext(
-    IN ULONG Unknown,
+    IN ULONG Flags,
     IN HANDLE Handle,
     OUT PULONG_PTR Cookie
 );
@@ -3068,7 +3082,6 @@ NTAPI
 RtlAddRefActivationContext(
     PVOID Context
 );
-
 
 NTSYSAPI
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME

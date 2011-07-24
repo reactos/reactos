@@ -128,9 +128,11 @@ dwarflookupnameinunit(Dwarf *d, ulong unit, char *name, DwarfSym *s)
     DwarfSym compunit = { };
     if(dwarfenumunit(d, unit, &compunit) < 0)
         return -1;
-    while(dwarfnextsymat(d, &compunit, s) == 1)
+    while(dwarfnextsymat(d, &compunit, s) == 0) {
+        werrstr("got %s looking for %s\n", s->attrs.name, name);
         if(s->attrs.name && strcmp(s->attrs.name, name) == 0)
             return 0;
+    }
     werrstr("symbol '%s' not found", name);
     return -1;
 }
@@ -188,7 +190,10 @@ dwarfseeksym(Dwarf *d, ulong unit, ulong off, DwarfSym *s)
     DwarfSym compunit = { };
     if(dwarfenumunit(d, unit, &compunit) < 0)
         return -1;
+    werrstr("dwarfseeksym: unit %x off %x\n", unit, off);
+    s->b.d = d;
     s->b.p = d->info.data + unit + off;
+    s->b.ep = compunit.b.ep;
     if(dwarfnextsymat(d, &compunit, s) == -1)
         return -1;
     werrstr("dwarfseeksym: unit %x off %x, tag %x", unit, off, s->attrs.tag);
@@ -238,7 +243,7 @@ dwarfenumunit(Dwarf *d, ulong unit, DwarfSym *s)
         return -1;
     }
     s->b.ep = s->b.p+len;
-    if((i=dwarfget2(&s->b)) != 2)
+    if((i=dwarfget2(&s->b)) > 4)
         goto badheader;
     aoff = dwarfget4(&s->b);
     s->b.addrsize = dwarfget1(&s->b);
@@ -258,15 +263,19 @@ dwarfnextsym(Dwarf *d, DwarfSym *s)
     ulong num;
     DwarfAbbrev *a;
 
+    werrstr("sym at %x (left %x)\n", s->b.p - d->info.data, s->b.ep - s->b.p);
+
     num = dwarfget128(&s->b);
+    werrstr("abbrev num %x\n", num);
     s->num = num;
     if(num == 0){
         return -1;
     }
 
     a = dwarfgetabbrev(d, s->aoff, num);
+    werrstr("a %p\n", a);
     if(a == nil){
-        werrstr("getabbrev %ud %ud for %ud,%ud", s->aoff, num, s->unit);
+        werrstr("getabbrev %x %x for %x", s->aoff, num, s->unit);
         return -1;
     }
 
@@ -277,6 +286,7 @@ dwarfnextsym(Dwarf *d, DwarfSym *s)
     if (s->attrs.haskids) {
         DwarfSym childSkip = { };
         s->childoff = s->b.p - d->info.data;
+        werrstr("Set childoff at %x\n", s->childoff);
         int r = dwarfnextsymat(d, s, &childSkip);
         while (r == 0) {
             r = dwarfnextsym(d, &childSkip);
@@ -316,6 +326,7 @@ dwarfnextsymat(Dwarf *d, DwarfSym *parent, DwarfSym *child)
     if (!child->b.d) {
         child->b = parent->b;
         child->b.p = parent->childoff + parent->b.d->info.data;
+        werrstr("Rewound to childoff %x\n", parent->childoff);
     }
 
     return dwarfnextsym(d, child);
@@ -323,76 +334,78 @@ dwarfnextsymat(Dwarf *d, DwarfSym *parent, DwarfSym *child)
 
 typedef struct Parse Parse;
 struct Parse {
+    const char *namestr;
     int name;
     int off;
     int haveoff;
     int type;
 };
 
+#define ATTR(x) (#x)+9, x
 #define OFFSET(x) offsetof(DwarfAttrs, x), offsetof(DwarfAttrs, have.x)
 
 static Parse plist[] = {	/* Font Tab 4 */
-    { DwarfAttrAbstractOrigin,	OFFSET(abstractorigin),		TReference },
-    { DwarfAttrAccessibility,	OFFSET(accessibility),		TConstant },
-    { DwarfAttrAddrClass, 		OFFSET(addrclass), 			TConstant },
-    { DwarfAttrArtificial,		OFFSET(isartificial), 		TFlag },
-    { DwarfAttrBaseTypes,		OFFSET(basetypes),			TReference },
-    { DwarfAttrBitOffset,		OFFSET(bitoffset),			TConstant },
-    { DwarfAttrBitSize,		OFFSET(bitsize),			TConstant },
-    { DwarfAttrByteSize,		OFFSET(bytesize),			TConstant },
-    { DwarfAttrCalling,		OFFSET(calling),			TConstant },
-    { DwarfAttrCommonRef,		OFFSET(commonref),			TReference },
-    { DwarfAttrCompDir,		OFFSET(compdir),			TString },
-    { DwarfAttrConstValue,		OFFSET(constvalue),			TString|TConstant|TBlock },
-    { DwarfAttrContainingType,	OFFSET(containingtype),		TReference },
-    { DwarfAttrCount,			OFFSET(count),				TConstant|TReference },
-    { DwarfAttrDataMemberLoc,	OFFSET(datamemberloc),		TBlock|TConstant|TReference },
-    { DwarfAttrDeclColumn,		OFFSET(declcolumn),			TConstant },
-    { DwarfAttrDeclFile,		OFFSET(declfile),			TConstant },
-    { DwarfAttrDeclLine,		OFFSET(declline),			TConstant },
-    { DwarfAttrDeclaration,	OFFSET(isdeclaration),		TFlag },
-    { DwarfAttrDefaultValue,	OFFSET(defaultvalue),		TReference },
-    { DwarfAttrDiscr,			OFFSET(discr),				TReference },
-    { DwarfAttrDiscrList,		OFFSET(discrlist),			TBlock },
-    { DwarfAttrDiscrValue,		OFFSET(discrvalue),			TConstant },
-    { DwarfAttrEncoding,		OFFSET(encoding),			TConstant },
-    { DwarfAttrExternal,		OFFSET(isexternal),			TFlag },
-    { DwarfAttrFrameBase,		OFFSET(framebase),			TBlock|TConstant },
-    { DwarfAttrFriend,			OFFSET(friend),				TReference },
-    { DwarfAttrHighpc,			OFFSET(highpc),				TAddress },
-    { DwarfAttrEntrypc,         OFFSET(entrypc),            TAddress },
-    { DwarfAttrIdentifierCase,	OFFSET(identifiercase),		TConstant },
-    { DwarfAttrImport,			OFFSET(import),				TReference },
-    { DwarfAttrInline,			OFFSET(inlined),			TConstant },
-    { DwarfAttrIsOptional,		OFFSET(isoptional),			TFlag },
-    { DwarfAttrLanguage,		OFFSET(language),			TConstant },
-    { DwarfAttrLocation,		OFFSET(location),			TReference|TBlock },
-    { DwarfAttrLowerBound,		OFFSET(lowerbound),			TConstant|TReference },
-    { DwarfAttrLowpc,			OFFSET(lowpc),				TAddress },
-    { DwarfAttrMacroInfo,		OFFSET(macroinfo),			TConstant },
-    { DwarfAttrName,			OFFSET(name),				TString },
-    { DwarfAttrNamelistItem,	OFFSET(namelistitem),		TBlock },
-    { DwarfAttrOrdering, 		OFFSET(ordering),			TConstant },
-    { DwarfAttrPriority,		OFFSET(priority),			TReference },
-    { DwarfAttrProducer,		OFFSET(producer),			TString },
-    { DwarfAttrPrototyped,		OFFSET(isprototyped),		TFlag },
-    { DwarfAttrRanges,			OFFSET(ranges),				TReference },
-    { DwarfAttrReturnAddr,		OFFSET(returnaddr),			TBlock|TConstant },
-    { DwarfAttrSegment,		OFFSET(segment),			TBlock|TConstant },
-    { DwarfAttrSibling,		OFFSET(sibling),			TReference },
-    { DwarfAttrSpecification,	OFFSET(specification),		TReference },
-    { DwarfAttrStartScope,		OFFSET(startscope),			TConstant },
-    { DwarfAttrStaticLink,		OFFSET(staticlink),			TBlock|TConstant },
-    { DwarfAttrStmtList,		OFFSET(stmtlist),			TConstant },
-    { DwarfAttrStrideSize,		OFFSET(stridesize),			TConstant },
-    { DwarfAttrStringLength,	OFFSET(stringlength),		TBlock|TConstant },
-    { DwarfAttrType,			OFFSET(type),				TReference },
-    { DwarfAttrUpperBound,		OFFSET(upperbound),			TConstant|TReference },
-    { DwarfAttrUseLocation,	OFFSET(uselocation),		TBlock|TConstant },
-    { DwarfAttrVarParam,		OFFSET(isvarparam),			TFlag },
-    { DwarfAttrVirtuality,		OFFSET(virtuality),			TConstant },
-    { DwarfAttrVisibility,		OFFSET(visibility),			TConstant },
-    { DwarfAttrVtableElemLoc,	OFFSET(vtableelemloc),		TBlock|TReference },
+    { ATTR(DwarfAttrAbstractOrigin),	OFFSET(abstractorigin),		TReference },
+    { ATTR(DwarfAttrAccessibility),	OFFSET(accessibility),		TConstant },
+    { ATTR(DwarfAttrAddrClass), 		OFFSET(addrclass), 			TConstant },
+    { ATTR(DwarfAttrBaseTypes),		OFFSET(basetypes),			TReference },
+    { ATTR(DwarfAttrBitOffset),		OFFSET(bitoffset),			TConstant },
+    { ATTR(DwarfAttrBitSize),		OFFSET(bitsize),			TConstant },
+    { ATTR(DwarfAttrByteSize),		OFFSET(bytesize),			TConstant },
+    { ATTR(DwarfAttrCalling),		OFFSET(calling),			TConstant },
+    { ATTR(DwarfAttrCommonRef),		OFFSET(commonref),			TReference },
+    { ATTR(DwarfAttrCompDir),		OFFSET(compdir),			TString },
+    { ATTR(DwarfAttrConstValue),		OFFSET(constvalue),			TString|TConstant|TBlock },
+    { ATTR(DwarfAttrContainingType),	OFFSET(containingtype),		TReference },
+    { ATTR(DwarfAttrCount),			OFFSET(count),				TConstant|TReference },
+    { ATTR(DwarfAttrDataMemberLoc),	OFFSET(datamemberloc),		TBlock|TConstant|TReference },
+    { ATTR(DwarfAttrDeclColumn),		OFFSET(declcolumn),			TConstant },
+    { ATTR(DwarfAttrDeclFile),		OFFSET(declfile),			TConstant },
+    { ATTR(DwarfAttrDeclLine),		OFFSET(declline),			TConstant },
+    { ATTR(DwarfAttrDefaultValue),	OFFSET(defaultvalue),		TReference },
+    { ATTR(DwarfAttrDiscr),			OFFSET(discr),				TReference },
+    { ATTR(DwarfAttrDiscrList),		OFFSET(discrlist),			TBlock },
+    { ATTR(DwarfAttrDiscrValue),		OFFSET(discrvalue),			TConstant },
+    { ATTR(DwarfAttrEncoding),		OFFSET(encoding),			TConstant },
+    { ATTR(DwarfAttrFrameBase),		OFFSET(framebase),			TBlock|TConstant },
+    { ATTR(DwarfAttrFriend),			OFFSET(friend),				TReference },
+    { ATTR(DwarfAttrHighpc),			OFFSET(highpc),				TAddress },
+    { ATTR(DwarfAttrEntrypc),         OFFSET(entrypc),            TAddress },
+    { ATTR(DwarfAttrIdentifierCase),	OFFSET(identifiercase),		TConstant },
+    { ATTR(DwarfAttrImport),			OFFSET(import),				TReference },
+    { ATTR(DwarfAttrInline),			OFFSET(inlined),			TConstant },
+    { ATTR(DwarfAttrArtificial),		OFFSET(isartificial), 		TFlag },
+    { ATTR(DwarfAttrDeclaration),	    OFFSET(isdeclaration),		TFlag },
+    { ATTR(DwarfAttrExternal),		OFFSET(isexternal),			TFlag },
+    { ATTR(DwarfAttrIsOptional),		OFFSET(isoptional),			TFlag },
+    { ATTR(DwarfAttrPrototyped),		OFFSET(isprototyped),		TFlag },
+    { ATTR(DwarfAttrVarParam),		OFFSET(isvarparam),			TFlag },
+    { ATTR(DwarfAttrLanguage),		OFFSET(language),			TConstant },
+    { ATTR(DwarfAttrLocation),		OFFSET(location),			TReference|TBlock },
+    { ATTR(DwarfAttrLowerBound),		OFFSET(lowerbound),			TConstant|TReference },
+    { ATTR(DwarfAttrLowpc),			OFFSET(lowpc),				TAddress },
+    { ATTR(DwarfAttrMacroInfo),		OFFSET(macroinfo),			TConstant },
+    { ATTR(DwarfAttrName),			OFFSET(name),				TString },
+    { ATTR(DwarfAttrNamelistItem),	OFFSET(namelistitem),		TBlock },
+    { ATTR(DwarfAttrOrdering), 		OFFSET(ordering),			TConstant },
+    { ATTR(DwarfAttrPriority),		OFFSET(priority),			TReference },
+    { ATTR(DwarfAttrProducer),		OFFSET(producer),			TString },
+    { ATTR(DwarfAttrRanges),			OFFSET(ranges),				TReference },
+    { ATTR(DwarfAttrReturnAddr),		OFFSET(returnaddr),			TBlock|TConstant },
+    { ATTR(DwarfAttrSegment),		OFFSET(segment),			TBlock|TConstant },
+    { ATTR(DwarfAttrSibling),		OFFSET(sibling),			TReference },
+    { ATTR(DwarfAttrSpecification),	OFFSET(specification),		TReference },
+    { ATTR(DwarfAttrStartScope),		OFFSET(startscope),			TConstant },
+    { ATTR(DwarfAttrStaticLink),		OFFSET(staticlink),			TBlock|TConstant },
+    { ATTR(DwarfAttrStmtList),		OFFSET(stmtlist),			TConstant },
+    { ATTR(DwarfAttrStrideSize),		OFFSET(stridesize),			TConstant },
+    { ATTR(DwarfAttrStringLength),	OFFSET(stringlength),		TBlock|TConstant },
+    { ATTR(DwarfAttrType),			OFFSET(type),				TReference },
+    { ATTR(DwarfAttrUpperBound),		OFFSET(upperbound),			TConstant|TReference },
+    { ATTR(DwarfAttrUseLocation),	OFFSET(uselocation),		TBlock|TConstant },
+    { ATTR(DwarfAttrVirtuality),		OFFSET(virtuality),			TConstant },
+    { ATTR(DwarfAttrVisibility),		OFFSET(visibility),			TConstant },
+    { ATTR(DwarfAttrVtableElemLoc),	OFFSET(vtableelemloc),		TBlock|TReference },
     { }
 };
 
@@ -417,6 +430,7 @@ parseattrs(Dwarf *d, DwarfBuf *b, ulong tag, ulong unit, DwarfAbbrev *a, DwarfAt
     for(i=0; i<a->nattr; i++){
         n = a->attr[i].name;
         f = a->attr[i].form;
+        werrstr("struct: (@%x) n %x f %x (%d %d)\n", b->p - d->info.data, n, f, ptab[n].haveoff, ptab[n].off);
         if(n < 0 || n >= DwarfAttrMax || ptab[n].name==0) {
             if (skipform(d, b, f) < 0) {
                 if(++nbad == 1)
@@ -436,11 +450,12 @@ parseattrs(Dwarf *d, DwarfBuf *b, ulong tag, ulong unit, DwarfAbbrev *a, DwarfAt
             got = TFlag;
         else if((ptab[n].type&TString) && getstring(d, b, f, v) >= 0)
             got = TString;
-        else if((ptab[n].type&TBlock) && getblock(b, f, v) >= 0)
+        else if((ptab[n].type&TBlock) && getblock(b, f, v) >= 0) {
             got = TBlock;
-        else {
+        } else {
+            werrstr("Skipping form %x\n", f);
             if(skipform(d, b, f) < 0){
-                if(++nbad == 1)
+                //if(++nbad == 1)
                     werrstr("dwarf parse attrs: cannot skip form %d", f);
                 return -1;
             }
@@ -451,6 +466,10 @@ parseattrs(Dwarf *d, DwarfBuf *b, ulong tag, ulong unit, DwarfAbbrev *a, DwarfAt
 #endif
         *((uchar*)attrs+ptab[n].haveoff) = got;
     }
+
+    if (attrs->have.name)
+        werrstr("%s: tag %x kids %d (last %x)\n", attrs->name, attrs->tag, attrs->haskids, b->p - b->d->info.data);
+
     return 0;
 }
 
@@ -651,6 +670,7 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
     int ret = 0;
     DwarfStack stack = { };
     stackinit(&stack);
+    stackpush(&stack, cfa);
     while (buf->p < buf->ep) {
         int opcode = dwarfget1(buf);
         werrstr("opcode %x", opcode);
@@ -949,6 +969,25 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
         return -1;
     
     return 0;
+}
+
+void
+dwarfdumpsym(Dwarf *d, DwarfSym *s)
+{
+    int i, j;
+    werrstr("tag %x\n", s->attrs.tag);
+    for (j = 0; plist[j].name; j++) {
+        char *have = ((char*)&s->attrs) + plist[j].haveoff;
+        char *attr = ((char*)&s->attrs) + plist[j].off;
+        if (*have == TString) {
+            char *str = *((char **)attr);
+            werrstr("%s: %s\n", plist[j].namestr, str);
+        } else if (*have == TReference) {
+            DwarfVal *val = ((DwarfVal*)attr);
+            werrstr("%s: %x:%x\n", plist[j].namestr, val->b.data, val->b.len);
+        } else if (*have)
+            werrstr("%s: (%x)\n", plist[j].namestr, *have);
+    }
 }
 
 int

@@ -2495,7 +2495,6 @@ WritePartitionsToDisk (PPARTLIST List)
   PDRIVE_LAYOUT_INFORMATION DriveLayout;
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK Iosb;
-  WCHAR SrcPath[MAX_PATH];
   WCHAR DstPath[MAX_PATH];
   UNICODE_STRING Name;
   HANDLE FileHandle;
@@ -2689,30 +2688,6 @@ WritePartitionsToDisk (PPARTLIST List)
                    DriveLayout);
 
       NtClose (FileHandle);
-
-      /* Install MBR code if the disk is new */
-      if (DiskEntry1->NewDisk == TRUE &&
-          DiskEntry1->BiosDiskNumber == 0)
-      {
-        wcscpy (SrcPath, SourceRootPath.Buffer);
-        wcscat (SrcPath, L"\\loader\\dosmbr.bin");
-
-        DPRINT ("Install MBR bootcode: %S ==> %S\n",
-                SrcPath, DstPath);
-
-        /* Install MBR bootcode */
-        Status = InstallMbrBootCodeToDisk (SrcPath,
-                                           DstPath);
-        if (!NT_SUCCESS (Status))
-        {
-          DPRINT1 ("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
-                   Status);
-          return FALSE;
-        }
-
-        DiskEntry1->NewDisk = FALSE;
-        DiskEntry1->NoMbr = FALSE;
-      }
     }
 
     Entry1 = Entry1->Flink;

@@ -173,8 +173,8 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
-    BOOLEAN Locked, Critical, Overread;
-    UINT State, Flags, BlockingMode, GroupID, GroupType;
+    BOOLEAN Locked, Critical, Overread, NonBlocking, OobInline, TdiReceiveClosed, SendClosed;
+    UINT State, Flags, GroupID, GroupType;
     KIRQL OldIrql;
     UINT LockCount;
     PVOID CurrentThread;
@@ -184,6 +184,7 @@ typedef struct _AFD_FCB {
     UINT ConnSeq;
     USHORT DisconnectFlags;
     BOOLEAN DisconnectPending;
+    LARGE_INTEGER DisconnectTimeout;
     PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
     PTDI_CONNECTION_INFORMATION AddressFrom, ConnectCallInfo, ConnectReturnInfo;
     AFD_TDI_OBJECT AddressFile, Connection;
@@ -192,6 +193,7 @@ typedef struct _AFD_FCB {
     KMUTEX Mutex;
     PKEVENT EventSelect;
     DWORD EventSelectTriggers;
+    DWORD EventSelectDisabled;
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;
@@ -314,6 +316,7 @@ VOID DestroySocket( PAFD_FCB FCB );
 VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp);
 VOID RetryDisconnectCompletion(PAFD_FCB FCB);
+BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp);
 
 /* read.c */
 

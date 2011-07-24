@@ -46,7 +46,10 @@ AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, sizeof(ULONG));
+    }
 
     RtlCopyMemory(Irp->UserBuffer,
                   &FCB->ContextSize,

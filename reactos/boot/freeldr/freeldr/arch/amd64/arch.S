@@ -28,9 +28,8 @@ RealEntryPoint:
 	/* Setup a real mode stack */
 	mov	sp, stack16
 
-	/* Zero BootDrive and BootPartition */
+	/* Zero BootPartition */
 	xor eax, eax
-	mov FrldrBootDrive, eax
 	mov FrldrBootPartition, eax
 
 	/* Store the boot drive */
@@ -408,7 +407,7 @@ gdtptr:
 
 .global FrldrBootDrive
 FrldrBootDrive:
-    .long 0
+    .byte 0
 
 .global FrldrBootPartition
 FrldrBootPartition:

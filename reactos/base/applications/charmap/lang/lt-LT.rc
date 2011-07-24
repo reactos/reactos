@@ -5,7 +5,6 @@
  * PURPOSE:     Lithuanian Language File
  * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
  * DATE:        2007-09-23
- * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
