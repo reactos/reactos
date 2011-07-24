@@ -6,6 +6,7 @@ add_library(dxg SHARED
     ddhmg.c
     eng.c
     historic.c
+    stub.c
     dxg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dxg.def)
 
