@@ -8,8 +8,9 @@
 	<define name="__WINESRC__" />
 	<define name="CRTDLL" />
 	<file>msvcrt20.c</file>
+    <file>stubs.c</file>
 	<library>wine</library>
-	<library>msvcrt</library>
-	<library>ntdll</library>
+    <library>crt</library>
+    <library>pseh</library>
 </module>
 </group>
