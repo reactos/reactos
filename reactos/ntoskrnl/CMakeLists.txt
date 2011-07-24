@@ -276,8 +276,8 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/i386/interlck_asm.S
         ex/i386/fastinterlck_asm.S
+        ex/i386/interlocked.c
         ex/i386/ioport.S
         ke/i386/abios.c
         ke/i386/cpu.c
