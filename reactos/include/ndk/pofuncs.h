@@ -60,6 +60,58 @@ NtSetSystemPowerState(
 NTSYSAPI
 NTSTATUS
 NTAPI
+NtGetDevicePowerState(
+    IN HANDLE Device,
+    IN PDEVICE_POWER_STATE PowerState
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtRequestWakeupLatency(
+    IN LATENCY_TIME latency
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+NtIsSystemResumeAutomatic(VOID);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetThreadExecutionState(
+    IN EXECUTION_STATE esFlags,
+    OUT EXECUTION_STATE *PreviousFlags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtInitiatePowerAction(
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOLEAN Asynchronous
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtRequestDeviceWakeup(
+    IN HANDLE Device
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtCancelDeviceWakeupRequest(
+    IN HANDLE Device
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 ZwInitiatePowerAction(
     POWER_ACTION SystemAction,
     SYSTEM_POWER_STATE MinSystemState,
