@@ -109,7 +109,7 @@ NTAPI
 NtCancelDeviceWakeupRequest(
     IN HANDLE Device
 );
-
+#endif
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -139,5 +139,4 @@ ZwSetSystemPowerState(
     IN SYSTEM_POWER_STATE MinSystemState,
     IN ULONG Flags
 );
-#endif
 #endif
