@@ -305,7 +305,7 @@ DbgDumpLockedGdiHandles()
 
 VOID
 NTAPI
-DbgLogEvent(PSLIST_HEADER pslh, EVENT_TYPE nEventType, LPARAM lParam)
+DbgLogEvent(PSLIST_HEADER pslh, LOG_EVENT_TYPE nEventType, LPARAM lParam)
 {
     PLOGENTRY pLogEntry;
 
