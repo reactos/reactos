@@ -75,8 +75,8 @@ extern _CRTALLOC(".CRT$XCZ") _PVFV __xc_z[];
 /* TLS initialization hook.  */
 extern const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
 
-extern _PVFV *__onexitbegin;
-extern _PVFV *__onexitend;
+//extern _PVFV *__onexitbegin;
+//extern _PVFV *__onexitend;
 
 extern int mingw_app_type;
 
@@ -128,7 +128,7 @@ pre_c_init (void)
     __set_app_type(_GUI_APP);
   else
     __set_app_type (_CONSOLE_APP);
-  __onexitbegin = __onexitend = (_PVFV *) _encode_pointer ((_PVFV *)(-1));
+//  __onexitbegin = __onexitend = (_PVFV *) _encode_pointer ((_PVFV *)(-1));
 
   * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
   * __MINGW_IMP_SYMBOL(_commode) = _commode;
