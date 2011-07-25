@@ -85,7 +85,7 @@ ExInterlockedAddLargeInteger(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the old value */
+    /* Return the old value */
     return OldValue;
 }
 
@@ -111,7 +111,7 @@ ExInterlockedAddUlong(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the old value */
+    /* Return the old value */
     return OldValue;
 }
 
@@ -137,8 +137,8 @@ ExInterlockedInsertHeadList(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the first entry */
-    return FirstEntry;
+    /* Return the old first entry or NULL for empty list */
+    return (FirstEntry == ListHead) ? NULL : FirstEntry;
 }
 
 PLIST_ENTRY
@@ -163,8 +163,8 @@ ExInterlockedInsertTailList(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the last entry */
-    return LastEntry;
+    /* Return the old last entry or NULL for empty list */
+    return (LastEntry == ListHead) ? NULL : LastEntry;
 }
 
 PLIST_ENTRY
@@ -179,13 +179,22 @@ ExInterlockedRemoveHeadList(
     /* Disable interrupts and acquire the spinlock */
     LockHandle = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
 
-    /* Remove the first entry from the list head */
-    ListEntry = RemoveHeadList(ListHead);
+    /* Check if the list is empty */
+    if (IsListEmpty(ListHead))
+    {
+        /* Return NULL */
+        ListEntry = NULL;
+    }
+    else
+    {
+        /* Remove the first entry from the list head */
+        ListEntry = RemoveHeadList(ListHead);
+    }
 
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the entry */
+    /* Return the entry */
     return ListEntry;
 }
 
@@ -207,7 +216,7 @@ ExInterlockedPopEntryList(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the entry */
+    /* Return the entry */
     return ListEntry;
 }
 
@@ -233,7 +242,7 @@ ExInterlockedPushEntryList(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the entry */
+    /* Return the entry */
     return OldListEntry;
 }
 
@@ -299,7 +308,7 @@ ExfInterlockedAddUlong(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the old value */
+    /* Return the old value */
     return OldValue;
 }
 
@@ -325,8 +334,8 @@ ExfInterlockedInsertHeadList(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the first entry */
-    return FirstEntry;
+    /* Return the old first entry or NULL for empty list */
+    return (FirstEntry == ListHead) ? NULL : FirstEntry;
 }
 
 PLIST_ENTRY
@@ -351,8 +360,8 @@ ExfInterlockedInsertTailList(
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, LockHandle);
 
-    /* return the last entry */
-    return LastEntry;
+    /* Return the old last entry or NULL for empty list */
+    return (LastEntry == ListHead) ? NULL : LastEntry;
 }
 
 
