@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/ke/i386/usercall.c
  * PURPOSE:         User-mode Callout Mechanisms (APC and Win32K Callbacks)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -208,8 +209,9 @@ KeUserModeCallback(IN ULONG RoutineIndex,
     return CallbackStatus;
 }
 
-/* Stack layout:
- *
+
+/* 
+ * Stack layout for KiUserModeCallout:
  * ----------------------------------
  * KCALLOUT_FRAME.ResultLength    <= 2nd Parameter to KiCallUserMode
  * KCALLOUT_FRAME.Result          <= 1st Parameter to KiCallUserMode
@@ -271,8 +273,8 @@ KiUserModeCallout(PKCALLOUT_FRAME CalloutFrame)
     }
 #endif
 
-    /* Align stack on 16-byte boundary */
-    InitialStack = (ULONG_PTR)CalloutFrame & ~15;
+    /* Align stack on a 16-byte boundary */
+    InitialStack = ALIGN_DOWN_BY(CalloutFrame, 16);
 
     /* Check if we have enough space on the stack */
     if ((InitialStack - KERNEL_STACK_SIZE) < CurrentThread->StackLimit)
@@ -322,20 +324,20 @@ KiUserModeCallout(PKCALLOUT_FRAME CalloutFrame)
     Pcr = KeGetPcr();
 
     /* Update the exception list */
-    CallbackTrapFrame->ExceptionList = Pcr->Used_ExceptionList;
+    CallbackTrapFrame->ExceptionList = Pcr->NtTib.ExceptionList;
 
     /* Get TSS */
     Tss = Pcr->TSS;
 
-    /* Bias the stack for V86 mode */
+    /* Check for V86 mode */
     if (CallbackTrapFrame->EFlags & EFLAGS_V86_MASK)
     {
-        /* Set new stack address in TSS */
+        /* Set new stack address in TSS (full trap frame) */
         Tss->Esp0 = (ULONG_PTR)(CallbackTrapFrame + 1);
     }
     else
     {
-        /* Set new stack address in TSS */
+        /* Set new stack address in TSS (non-V86 trap frame) */
         Tss->Esp0 = (ULONG_PTR)&CallbackTrapFrame->V86Es;
     }
 
