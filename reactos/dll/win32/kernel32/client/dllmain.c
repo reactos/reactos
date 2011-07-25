@@ -264,7 +264,6 @@ BasepFakeStaticServerData(VOID)
     UNICODE_STRING SystemRootString;
     UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
     UNICODE_STRING BaseSrvCSDString;
-    ULONG BaseSrvCSDNumber;
     RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[] =
     {
         {
@@ -272,16 +271,6 @@ BasepFakeStaticServerData(VOID)
             RTL_QUERY_REGISTRY_DIRECT,
             L"CSDVersion",
             &BaseSrvCSDString
-        },
-        {0}
-    };
-    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable1[] =
-    {
-        {
-            NULL,
-            RTL_QUERY_REGISTRY_DIRECT,
-            L"CSDVersion",
-            &BaseSrvCSDNumber
         },
         {0}
     };
@@ -298,6 +287,7 @@ BasepFakeStaticServerData(VOID)
                                            &UnexpandedSystemRootString,
                                            &SystemRootString,
                                            NULL);
+    DPRINT1("Status: %lx. Root: %wZ\n", Status, &SystemRootString);
     ASSERT(NT_SUCCESS(Status));
 
     Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
@@ -322,23 +312,16 @@ BasepFakeStaticServerData(VOID)
         ASSERT(FALSE);
     }
     
-    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(BaseStaticServerData->CSDVersion));
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
-                                    L"",
-                                    BaseServerRegistryConfigurationTable1,
-                                    NULL,
-                                    NULL);
-    if (NT_SUCCESS(Status))
-    {
-        BaseStaticServerData->CSDNumber = (USHORT)(BaseSrvCSDNumber & 0xFFFF);
-        BaseStaticServerData->RCNumber = (USHORT)(BaseSrvCSDNumber >> 16);
-    }
-    else
-    {
-        BaseStaticServerData->CSDNumber = 0;
-        BaseStaticServerData->RCNumber = 0;
-    }
+    /*
+     * Confirmed that in Windows, CSDNumber and RCNumber are actually Length
+     * and MaximumLength of the CSD String, since the same UNICODE_STRING is
+     * being queried twice, the first time as a ULONG!
+     *
+     * Somehow, in Windows this doesn't cause a buffer overflow, but it might
+     * in ReactOS, so this code is disabled until someone figures out WTF.
+     */ 
+    BaseStaticServerData->CSDNumber = 0;
+    BaseStaticServerData->RCNumber = 0;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
                                     L"",
@@ -347,6 +330,7 @@ BasepFakeStaticServerData(VOID)
                                     NULL);
     if (NT_SUCCESS(Status))
     {
+        DPRINT1("CSD String: %wZ\n", BaseSrvCSDString);
         wcsncpy(BaseStaticServerData->CSDVersion,
                 BaseSrvCSDString.Buffer,
                 BaseSrvCSDString.Length / sizeof(WCHAR));
@@ -446,6 +430,7 @@ DllMain(HANDLE hDll,
         }
         
         /* Get the server data */
+        DPRINT1("Server data: %p\n", Peb->ReadOnlyStaticServerData);
         if (!Peb->ReadOnlyStaticServerData)
         {
             /* Build fake one for ReactOS */
@@ -462,6 +447,7 @@ DllMain(HANDLE hDll,
         
         /* Get the server data */
         BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
+        DPRINT1("Static data: %p\n", BaseStaticServerData);
         ASSERT(BaseStaticServerData);
 
         /* Check if we are running a CSR Server */
