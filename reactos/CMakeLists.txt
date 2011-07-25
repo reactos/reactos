@@ -77,6 +77,11 @@ else()
 
     #useful stuff!
     include(CMakeParseArguments)
+    
+    if(ENABLE_CCACHE)
+        set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
+        set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
+    endif()
 
     # Do some cleanup
     file(REMOVE
