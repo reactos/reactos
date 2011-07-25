@@ -333,7 +333,7 @@ BasepFakeStaticServerData(VOID)
                                     NULL);
     if (NT_SUCCESS(Status))
     {
-        DPRINT1("CSD String: %wZ\n", BaseSrvCSDString);
+        DPRINT1("CSD String: %wZ\n", &BaseSrvCSDString);
         wcsncpy(BaseStaticServerData->CSDVersion,
                 BaseSrvCSDString.Buffer,
                 BaseSrvCSDString.Length / sizeof(WCHAR));
@@ -361,13 +361,11 @@ BasepFakeStaticServerData(VOID)
                                       NULL);
     ASSERT(NT_SUCCESS(Status));
     
-    DPRINT1("ReactOS Base API Connected: %wZ %wZ %wZ %S (%lx.%lx) %d KB\n",
-            BaseStaticServerData->WindowsDirectory,
-            BaseStaticServerData->WindowsSystemDirectory,
-            BaseStaticServerData->NamedObjectDirectory,
+    DPRINT1("ReactOS Base API Connected: %wZ %wZ %wZ %S %d KB\n",
+            &BaseStaticServerData->WindowsDirectory,
+            &BaseStaticServerData->WindowsSystemDirectory,
+            &BaseStaticServerData->NamedObjectDirectory,
             BaseStaticServerData->CSDVersion,
-            BaseStaticServerData->CSDNumber,
-            BaseStaticServerData->RCNumber,
             BaseStaticServerData->SysInfo.PageSize *
             BaseStaticServerData->SysInfo.NumberOfPhysicalPages / 1024);
 }
