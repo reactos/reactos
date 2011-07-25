@@ -846,4 +846,11 @@ Ki386PerfEnd(VOID)
              KeGetContextSwitches(KeGetCurrentPrcb()));
 }
 
+FORCEINLINE
+PULONG
+KiGetUserModeStackAddress(void)
+{
+    return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
+}
+
 #endif

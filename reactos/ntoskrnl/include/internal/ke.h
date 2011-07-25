@@ -164,7 +164,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define TIMER_WAIT_BLOCK 0x3L
 
 #ifdef _M_ARM // FIXME: remove this once our headers are cleaned up
-// 
+//
 // A system call ID is formatted as such:
 // .________________________________________________________________.
 // | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
@@ -187,7 +187,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 //
 // NB. From assembly code, the table number must be computed as an offset into
 //     the service descriptor table.
-//     
+//
 //     Each entry into the table is 16 bytes long on 32-bit architectures, and
 //     32 bytes long on 64-bit architectures.
 //
@@ -864,7 +864,7 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
-                              
+
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID);
@@ -1018,12 +1018,6 @@ NTAPI
 KiCallUserMode(
     IN PVOID *OutputBuffer,
     IN PULONG OutputLength
-);
-
-PULONG
-NTAPI
-KiGetUserModeStackAddress(
-    VOID
 );
 
 VOID
