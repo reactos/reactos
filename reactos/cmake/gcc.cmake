@@ -199,14 +199,6 @@ elseif(ARCH MATCHES amd64)
     set(IDL_FLAGS -m64 --win64)
 endif()
 
-set(IDL_HEADER_ARG -h -o) #.h
-set(IDL_TYPELIB_ARG -t -o) #.tlb
-set(IDL_SERVER_ARG -s -S) #.c for server library
-set(IDL_CLIENT_ARG -c -C) #.c for stub client library
-set(IDL_PROXY_ARG -p -P)
-set(IDL_INTERFACE_ARG -u -o)
-set(IDL_DLLDATA_ARG --dlldata-only -o)
-
 macro(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
         target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}_delayed.a)
