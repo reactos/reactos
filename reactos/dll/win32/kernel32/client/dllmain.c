@@ -322,7 +322,7 @@ BasepFakeStaticServerData(VOID)
         ASSERT(FALSE);
     }
     
-    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
+    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(BaseStaticServerData->CSDVersion));
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
                                     L"",
