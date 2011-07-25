@@ -29,6 +29,7 @@ BOOLEAN BaseRunningInServerProcess;
 
 WCHAR BaseDefaultPathBuffer[6140];
 
+HANDLE BaseNamedObjectDirectory;
 HANDLE hProcessHeap = NULL;
 HMODULE hCurrentModule = NULL;
 HMODULE kernel32_handle = NULL;
@@ -36,7 +37,7 @@ HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
-
+UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
 static BOOL DllInitialized = FALSE;
 
 BOOL WINAPI
@@ -68,34 +69,28 @@ DuplicateConsoleHandle(HANDLE hConsole,
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
 
-SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 WINAPI
-OpenBaseDirectory(PHANDLE DirHandle)
+BaseGetNamedObjectDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
     NTSTATUS Status;
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &BaseStaticServerData->NamedObjectDirectory,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
-    Status = NtOpenDirectoryObject(DirHandle,
+    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
                                    DIRECTORY_ALL_ACCESS &
                                    ~(DELETE | WRITE_DAC | WRITE_OWNER),
                                    &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
-    DPRINT("Opened BNO: %lx\n", *DirHandle);
+    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
     return Status;
 }
 
@@ -144,8 +139,8 @@ BasepInitConsole(VOID)
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT("BasepInitConsole for : %S\n", lpTest);
-    DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n", 
-           Parameters->ConsoleHandle, Parameters->StandardInput, 
+    DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n",
+           Parameters->ConsoleHandle, Parameters->StandardInput,
            Parameters->StandardOutput, Parameters->StandardError);
 
     /* We have nothing to do if this isn't a console app... */
@@ -204,7 +199,7 @@ BasepInitConsole(VOID)
     ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
     if (ExeName)
         SetConsoleInputExeNameW(ExeName + 1);
-    
+
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
 
@@ -216,7 +211,7 @@ BasepInitConsole(VOID)
      */
     CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
     Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
-    Status = CsrClientCallServer(&Request, 
+    Status = CsrClientCallServer(&Request,
                                  NULL,
                                  CsrRequest,
                                  sizeof(CSR_API_MESSAGE));
@@ -226,7 +221,7 @@ BasepInitConsole(VOID)
         /* We're lying here, so at least the process can load... */
         return TRUE;
     }
-    
+
     if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
@@ -247,7 +242,7 @@ BasepInitConsole(VOID)
         }
     }
 
-    DPRINT("Console setup: %lx, %lx, %lx, %lx\n", 
+    DPRINT("Console setup: %lx, %lx, %lx, %lx\n",
             Parameters->ConsoleHandle,
             Parameters->StandardInput,
             Parameters->StandardOutput,
@@ -274,7 +269,7 @@ BasepFakeStaticServerData(VOID)
         },
         {0}
     };
-    
+
     /* Allocate the fake data */
     BaseStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
                                            HEAP_ZERO_MEMORY,
@@ -305,13 +300,13 @@ BasepFakeStaticServerData(VOID)
         Status = RtlCreateUnicodeString(&BaseStaticServerData->NamedObjectDirectory,
                                         L"\\BaseNamedObjects");
         ASSERT(NT_SUCCESS(Status));
-    } 
+    }
     else
     {
         /* Hopefully we'll fix CSRSS Before we add multiple sessions... */
         ASSERT(FALSE);
     }
-    
+
     /*
      * Confirmed that in Windows, CSDNumber and RCNumber are actually Length
      * and MaximumLength of the CSD String, since the same UNICODE_STRING is
@@ -319,10 +314,10 @@ BasepFakeStaticServerData(VOID)
      *
      * Somehow, in Windows this doesn't cause a buffer overflow, but it might
      * in ReactOS, so this code is disabled until someone figures out WTF.
-     */ 
+     */
     BaseStaticServerData->CSDNumber = 0;
     BaseStaticServerData->RCNumber = 0;
-    
+
     /* Initialize the CSD string */
     RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
 
@@ -333,7 +328,6 @@ BasepFakeStaticServerData(VOID)
                                     NULL);
     if (NT_SUCCESS(Status))
     {
-        DPRINT1("CSD String: %wZ\n", &BaseSrvCSDString);
         wcsncpy(BaseStaticServerData->CSDVersion,
                 BaseSrvCSDString.Buffer,
                 BaseSrvCSDString.Length / sizeof(WCHAR));
@@ -348,7 +342,7 @@ BasepFakeStaticServerData(VOID)
                                       sizeof(BaseStaticServerData->SysInfo),
                                       NULL);
     ASSERT(NT_SUCCESS(Status));
-    
+
     BaseStaticServerData->DefaultSeparateVDM = FALSE;
     BaseStaticServerData->IsWowTaskReady = FALSE;
     BaseStaticServerData->LUIDDeviceMapsEnabled = FALSE;
@@ -360,14 +354,6 @@ BasepFakeStaticServerData(VOID)
                                       sizeof(BaseStaticServerData->TimeOfDay),
                                       NULL);
     ASSERT(NT_SUCCESS(Status));
-    
-    DPRINT1("ReactOS Base API Connected: %wZ %wZ %wZ %S %d KB\n",
-            &BaseStaticServerData->WindowsDirectory,
-            &BaseStaticServerData->WindowsSystemDirectory,
-            &BaseStaticServerData->NamedObjectDirectory,
-            BaseStaticServerData->CSDVersion,
-            BaseStaticServerData->SysInfo.PageSize *
-            BaseStaticServerData->SysInfo.NumberOfPhysicalPages / 1024);
 }
 
 BOOL
@@ -429,26 +415,24 @@ DllMain(HANDLE hDll,
             ZwTerminateProcess(NtCurrentProcess(), Status);
             return FALSE;
         }
-        
+
         /* Get the server data */
-        DPRINT1("Server data: %p\n", Peb->ReadOnlyStaticServerData);
         if (!Peb->ReadOnlyStaticServerData)
         {
             /* Build fake one for ReactOS */
             BasepFakeStaticServerData();
-            
+
             /* Allocate the array */
             Peb->ReadOnlyStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
                                                             HEAP_ZERO_MEMORY,
                                                             4 * sizeof(PVOID));
-                                                            
+
             /* Set the data for the BASESRV DLL Index */
             Peb->ReadOnlyStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
         }
-        
+
         /* Get the server data */
         BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
-        DPRINT1("Static data: %p\n", BaseStaticServerData);
         ASSERT(BaseStaticServerData);
 
         /* Check if we are running a CSR Server */
@@ -459,30 +443,21 @@ DllMain(HANDLE hDll,
             CsrNewThread();
         }
 
+        /* Initialize heap handle table */
         hProcessHeap = RtlGetProcessHeap();
         RtlInitializeHandleTable(0xFFFF,
                                  sizeof(BASE_HEAP_HANDLE_ENTRY),
                                  &BaseHeapHandleTable);
-        kernel32_handle = hCurrentModule = hDll;
         DPRINT("Heap: %p\n", hProcessHeap);
 
-        /*
-         * Initialize WindowsDirectory and SystemDirectory
-         */
-        DPRINT("NtSystemRoot: %S\n", SharedUserData->NtSystemRoot);
-        RtlCreateUnicodeString (&WindowsDirectory, SharedUserData->NtSystemRoot);
-        SystemDirectory.MaximumLength = WindowsDirectory.MaximumLength + 18;
-        SystemDirectory.Length = WindowsDirectory.Length + 18;
-        SystemDirectory.Buffer = RtlAllocateHeap(hProcessHeap,
-                                                 0,
-                                                 SystemDirectory.MaximumLength);
-        if(SystemDirectory.Buffer == NULL)
-        {
-           DPRINT1("Failure allocating SystemDirectory buffer\n");
-           return FALSE;
-        }
-        wcscpy(SystemDirectory.Buffer, WindowsDirectory.Buffer);
-        wcscat(SystemDirectory.Buffer, L"\\System32");
+        /* Set HMODULE for our DLL */
+        kernel32_handle = hCurrentModule = hDll;
+
+        /* Set the directories */
+        BaseWindowsDirectory = BaseStaticServerData->WindowsDirectory;
+        BaseWindowsSystemDirectory = BaseStaticServerData->WindowsSystemDirectory;
+        SystemDirectory = BaseWindowsSystemDirectory;
+        WindowsDirectory = BaseWindowsDirectory;
 
         /* Construct the default path (using the static buffer) */
         _snwprintf(BaseDefaultPathBuffer, sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
@@ -501,7 +476,8 @@ DllMain(HANDLE hDll,
         InitCommandLines();
 
         /* Open object base directory */
-        Status = OpenBaseDirectory(&hBaseDir);
+        Status = BaseGetNamedObjectDirectory();
+        hBaseDir = BaseNamedObjectDirectory;
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to open object base directory (Status %lx)\n", Status);
@@ -522,17 +498,6 @@ DllMain(HANDLE hDll,
         if (!BasepInitConsole())
         {
             DPRINT1("Failure to set up console\n");
-            return FALSE;
-        }
-
-        /* Cache static system information */
-        Status = ZwQuerySystemInformation(SystemBasicInformation,
-                                          &BaseCachedSysInfo,
-                                          sizeof(BaseCachedSysInfo),
-                                          NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failure to get system information\n");
             return FALSE;
         }
 
@@ -559,9 +524,6 @@ DllMain(HANDLE hDll,
 
                 /* Close object base directory */
                 NtClose(hBaseDir);
-
-                RtlFreeUnicodeString (&SystemDirectory);
-                RtlFreeUnicodeString (&WindowsDirectory);
             }
             break;
 

@@ -38,7 +38,7 @@ HeapCreate(DWORD flOptions,
     /* Check if heap is growable and ensure max size is correct */
     if (dwMaximumSize == 0)
         Flags |= HEAP_GROWABLE;
-    else if (dwMaximumSize < BaseCachedSysInfo.PageSize &&
+    else if (dwMaximumSize < BaseStaticServerData->SysInfo.PageSize &&
             dwInitialSize > dwMaximumSize)
     {
         /* Max size is non-zero but less than page size which can't be correct.
@@ -1204,18 +1204,18 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
                              NULL);
 
     /* Calculate memory load */
-    lpBuffer->dwMemoryLoad = ((DWORD)(BaseCachedSysInfo.NumberOfPhysicalPages -
+    lpBuffer->dwMemoryLoad = ((DWORD)(BaseStaticServerData->SysInfo.NumberOfPhysicalPages -
                                       PerformanceInfo.AvailablePages) * 100) /
-                                      BaseCachedSysInfo.NumberOfPhysicalPages;
+                                      BaseStaticServerData->SysInfo.NumberOfPhysicalPages;
 
     /* Save physical memory */
-    PhysicalMemory = BaseCachedSysInfo.NumberOfPhysicalPages *
-                     BaseCachedSysInfo.PageSize;
+    PhysicalMemory = BaseStaticServerData->SysInfo.NumberOfPhysicalPages *
+                     BaseStaticServerData->SysInfo.PageSize;
     lpBuffer->ullTotalPhys = PhysicalMemory;
 
     /* Now save available physical memory */
     PhysicalMemory = PerformanceInfo.AvailablePages *
-                     BaseCachedSysInfo.PageSize;
+                     BaseStaticServerData->SysInfo.PageSize;
     lpBuffer->ullAvailPhys = PhysicalMemory;
 
     /* Query VM and Quota Limits */
@@ -1241,11 +1241,11 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     lpBuffer->ullAvailPageFile = min(PageFile,
                                      QuotaLimits.PagefileLimit -
                                      VmCounters.PagefileUsage);
-    lpBuffer->ullAvailPageFile *= BaseCachedSysInfo.PageSize;
+    lpBuffer->ullAvailPageFile *= BaseStaticServerData->SysInfo.PageSize;
 
     /* Now calculate the total virtual space */
-    lpBuffer->ullTotalVirtual = (BaseCachedSysInfo.MaximumUserModeAddress -
-                                 BaseCachedSysInfo.MinimumUserModeAddress) + 1;
+    lpBuffer->ullTotalVirtual = (BaseStaticServerData->SysInfo.MaximumUserModeAddress -
+                                 BaseStaticServerData->SysInfo.MinimumUserModeAddress) + 1;
 
     /* And finally the avilable virtual space */
     lpBuffer->ullAvailVirtual = lpBuffer->ullTotalVirtual -
