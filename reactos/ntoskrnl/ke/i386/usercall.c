@@ -215,7 +215,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
  * KCALLOUT_FRAME.Result          <= 1st Parameter to KiCallUserMode
  * KCALLOUT_FRAME.ReturnAddress   <= Return address of KiCallUserMode
  * KCALLOUT_FRAME.Ebp             \
- * KCALLOUT_FRAME.Ebx              | = volatile registers, pushed
+ * KCALLOUT_FRAME.Ebx              | = non-volatile registers, pushed
  * KCALLOUT_FRAME.Esi              |   by KiCallUserMode
  * KCALLOUT_FRAME.Edi             /
  * KCALLOUT_FRAME.CallbackStack

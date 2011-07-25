@@ -49,7 +49,7 @@ EXTERN @KiUserModeCallout@4:PROC
 PUBLIC _KiCallUserMode@8
 _KiCallUserMode@8:
 
-    /* Push volatile registers on the stack.
+    /* Push non-volatile registers on the stack.
        This is part of the KCALLOUT_FRAME */
     push ebp
     push ebx
