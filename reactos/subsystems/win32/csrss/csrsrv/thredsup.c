@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSR Sub System
- * FILE:            subsys/csr/csrsrv/procsup.c
+ * FILE:            subsystems/win32/csrss/csrsrv/thredsup.c
  * PURPOSE:         CSR Process Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu

@@ -1,5 +1,5 @@
 /*
- * reactos/subsys/csrss/api/process.c
+ * subsystems/win32/csrss/csrsrv/api/process.c
  *
  * "\windows\ApiPort" port process management functions
  *

@@ -1,6 +1,6 @@
 /* $Id$
  *
- * reactos/subsys/csrss/api/wapi.c
+ * subsystems/win32/csrss/csrsrv/api/wapi.c
  *
  * CSRSS port message processing
  *

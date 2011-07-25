@@ -58,7 +58,6 @@ extern KSPIN_LOCK MiSectionPageTableLock;
 /* GLOBALS *******************************************************************/
 
 ULONG_PTR MmSubsectionBase;
-BOOLEAN MmAllocationFragment;
 
 NTSTATUS
 NTAPI

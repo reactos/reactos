@@ -34,7 +34,6 @@ VOID WINAPI
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
 UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
-UNICODE_STRING BaseDefaultPath;
 PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 #define CMD_STRING L"cmd /c "

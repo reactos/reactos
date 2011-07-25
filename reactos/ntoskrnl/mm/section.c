@@ -124,8 +124,6 @@ MM_SECTION_PAGEOUT_CONTEXT;
 
 POBJECT_TYPE MmSectionObjectType = NULL;
 
-SIZE_T MmAllocationFragment;
-
 ULONG_PTR MmSubsectionBase;
 
 static ULONG SectionCharacteristicsToProtect[16] =
