@@ -127,11 +127,19 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
     PCSRSS_PROCESS_DATA ProcessData = NULL;
     REMOTE_PORT_VIEW LpcRead;
     CLIENT_ID ClientId;
+    PCSR_CONNECTION_INFO ConnectInfo;
     LpcRead.Length = sizeof(LpcRead);
     ServerPort = NULL;
 
     DPRINT("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
 
+    ConnectInfo = (PCSR_CONNECTION_INFO)(Request + 1);
+    DPRINT1("CSR Connect Info: %p\n", ConnectInfo);
+    
+    /* Save the process ID */
+    RtlZeroMemory(ConnectInfo, sizeof(CSR_CONNECTION_INFO));
+    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
+    
     Status = NtAcceptConnectPort(&ServerPort,
                                  NULL,
                                  Request,
