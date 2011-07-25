@@ -28,6 +28,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeDpc.c
     ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
+    ntos_ke/KeSpinLock.c
     ntos_ob/ObCreate.c
 
     kmtest_drv/kmtest_drv.rc)

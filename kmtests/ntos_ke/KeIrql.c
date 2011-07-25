@@ -5,6 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+__declspec(dllimport) void __stdcall KeRaiseIrql(unsigned char, unsigned char *);
+__declspec(dllimport) void __stdcall KeLowerIrql(unsigned char);
+
 #include <ntddk.h>
 #include <ntifs.h>
 #include <ndk/ntndk.h>
@@ -133,6 +136,14 @@ START_TEST(KeIrql)
         ok_irql(HIGH_LEVEL);
         KeLowerIrql(PASSIVE_LEVEL);
     }
+
+    /* try the actual exports, not only the fastcall versions */
+    ok_irql(PASSIVE_LEVEL);
+    (KeRaiseIrql)(HIGH_LEVEL, &Irql);
+    ok_irql(HIGH_LEVEL);
+    ok_eq_uint(Irql, PASSIVE_LEVEL);
+    (KeLowerIrql)(Irql);
+    ok_irql(PASSIVE_LEVEL);
 
     /* make sure we exit gracefully */
     ok_irql(PASSIVE_LEVEL);

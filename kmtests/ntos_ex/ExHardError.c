@@ -15,20 +15,6 @@
 /* TODO: don't require user interaction, test Io* routines,
  *       test NTSTATUS values with special handling */
 
-/* TODO: this belongs in ndk/exfuncs.h?! */
-NTSTATUS
-NTAPI
-ExRaiseHardError(IN NTSTATUS ErrorStatus,
-                 IN ULONG NumberOfParameters,
-                 IN ULONG UnicodeStringParameterMask,
-                 IN PULONG_PTR Parameters,
-                 IN ULONG ValidResponseOptions,
-                 OUT PULONG Response);
-
-/* TODO: this belongs in HARDERROR_RESPONSE_OPTION in ndk/extypes.h */
-#define OptionBalloonNotification 7
-#define OptionCancelTryAgainContinue 8
-
 static
 VOID
 SetParameters(
@@ -107,125 +93,125 @@ TestHardError(
 
     if (InteractivePart1)
     {
-    CheckHardError(0x40000000,                  0, OptionOk,                     STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a box :|
-    CheckHardError(0x40000001,                  0, OptionOk,                     STATUS_SUCCESS,            ResponseOk,             4, 1, 2, 3, 4);                 // outputs a box :|
-    CheckHardError(0x40000002,                  0, OptionOk,                     STATUS_SUCCESS,            ResponseOk,             5, 1, 2, 3, 4, 5);              // outputs a box :|
+    CheckHardError(0x40000000,                  0, OptionOk,                STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a box :|
+    CheckHardError(0x40000001,                  0, OptionOk,                STATUS_SUCCESS,            ResponseOk,             4, 1, 2, 3, 4);                 // outputs a box :|
+    CheckHardError(0x40000002,                  0, OptionOk,                STATUS_SUCCESS,            ResponseOk,             5, 1, 2, 3, 4, 5);              // outputs a box :|
     }
-    CheckHardError(0x40000003,                  0, OptionOk,                     STATUS_SUCCESS,            ResponseNotHandled,     6, 1, 2, 3, 4, 5, 6);
+    CheckHardError(0x40000003,                  0, OptionOk,                STATUS_SUCCESS,            ResponseNotHandled,     6, 1, 2, 3, 4, 5, 6);
 
-    CheckHardError(0x40000004,                  0, OptionShutdownSystem,         STATUS_PRIVILEGE_NOT_HELD, ResponseNotHandled,     0, 0);
-    CheckHardError(0x40000005,                  0, OptionBalloonNotification,    STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
-    CheckHardError(0x4000000f,                  0, OptionBalloonNotification,    STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
+    CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseNotHandled,     0, 0);
+    CheckHardError(0x40000005,                  0, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
+    CheckHardError(0x4000000f,                  0, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
     if (InteractivePart1)
     {
-    CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,       STATUS_SUCCESS,            ResponseAbort,          0, 0);                          // outputs a box :|
-    CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,       STATUS_SUCCESS,            ResponseRetry,          0, 0);                          // outputs a box :|
-    CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,       STATUS_SUCCESS,            ResponseIgnore,         0, 0);                          // outputs a box :|
-    CheckHardError(0x40000008,                  0, OptionCancelTryAgainContinue, STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
-    CheckHardError(0x40000008,                  0, OptionCancelTryAgainContinue, STATUS_SUCCESS,            ResponseTryAgain,       0, 0);                          // outputs a box :|
-    CheckHardError(0x40000008,                  0, OptionCancelTryAgainContinue, STATUS_SUCCESS,            ResponseContinue,       0, 0);                          // outputs a box :|
-    CheckHardError(0x40000010,                  0, OptionOkCancel,               STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a box :|
-    CheckHardError(0x40000010,                  0, OptionOkCancel,               STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
-    CheckHardError(0x40000011,                  0, OptionRetryCancel,            STATUS_SUCCESS,            ResponseRetry,          0, 0);                          // outputs a box :|
-    CheckHardError(0x40000011,                  0, OptionRetryCancel,            STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
-    CheckHardError(0x40000012,                  0, OptionYesNo,                  STATUS_SUCCESS,            ResponseYes,            0, 0);                          // outputs a box :|
-    CheckHardError(0x40000012,                  0, OptionYesNo,                  STATUS_SUCCESS,            ResponseNo,             0, 0);                          // outputs a box :|
-    CheckHardError(0x40000013,                  0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            0, 0);                          // outputs a box :|
-    CheckHardError(0x40000013,                  0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             0, 0);                          // outputs a box :|
-    CheckHardError(0x40000013,                  0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
+    CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,  STATUS_SUCCESS,            ResponseAbort,          0, 0);                          // outputs a box :|
+    CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,  STATUS_SUCCESS,            ResponseRetry,          0, 0);                          // outputs a box :|
+    CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,  STATUS_SUCCESS,            ResponseIgnore,         0, 0);                          // outputs a box :|
+    CheckHardError(0x40000008,                  0, OptionCancelTryContinue, STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
+    CheckHardError(0x40000008,                  0, OptionCancelTryContinue, STATUS_SUCCESS,            ResponseTryAgain,       0, 0);                          // outputs a box :|
+    CheckHardError(0x40000008,                  0, OptionCancelTryContinue, STATUS_SUCCESS,            ResponseContinue,       0, 0);                          // outputs a box :|
+    CheckHardError(0x40000010,                  0, OptionOkCancel,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a box :|
+    CheckHardError(0x40000010,                  0, OptionOkCancel,          STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
+    CheckHardError(0x40000011,                  0, OptionRetryCancel,       STATUS_SUCCESS,            ResponseRetry,          0, 0);                          // outputs a box :|
+    CheckHardError(0x40000011,                  0, OptionRetryCancel,       STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
+    CheckHardError(0x40000012,                  0, OptionYesNo,             STATUS_SUCCESS,            ResponseYes,            0, 0);                          // outputs a box :|
+    CheckHardError(0x40000012,                  0, OptionYesNo,             STATUS_SUCCESS,            ResponseNo,             0, 0);                          // outputs a box :|
+    CheckHardError(0x40000013,                  0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            0, 0);                          // outputs a box :|
+    CheckHardError(0x40000013,                  0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             0, 0);                          // outputs a box :|
+    CheckHardError(0x40000013,                  0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
     }
-    CheckHardError(0x40000009,                  0, 9,                            STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000a,                  0, 10,                           STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000b,                  0, 11,                           STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000c,                  0, 12,                           STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000d,                  0, MAXULONG / 2 + 1,             STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000d,                  0, MAXULONG,                     STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x40000009,                  0, 9,                       STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x4000000a,                  0, 10,                      STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x4000000b,                  0, 11,                      STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x4000000c,                  0, 12,                      STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x4000000d,                  0, MAXULONG / 2 + 1,        STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x4000000d,                  0, MAXULONG,                STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
 
     if (InteractivePart2)
     {
     /* try a message with one parameter */
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            1, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            1, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
     /* give too many parameters */
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        2, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            4, &String1, &String2, 0, 0);   // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        2, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            4, &String1, &String2, 0, 0);   // outputs a box :|
     /* try with stuff that's not a UNICODE_STRING */
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             1, &String1Ansi);               // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             1, L"Parameter1");              // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             1, "Parameter1");               // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, 1234);                       // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);                       // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, &String1Ansi);               // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, L"Parameter1");              // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, "Parameter1");               // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, 1234);                       // outputs a box :|
-    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, NULL);                       // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             1, &String1Ansi);               // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             1, L"Parameter1");              // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             1, "Parameter1");               // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, 1234);                       // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);                       // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, &String1Ansi);               // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, L"Parameter1");              // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, "Parameter1");               // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, 1234);                       // outputs a box :|
+    CheckHardError(STATUS_DLL_NOT_FOUND,        0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, NULL);                       // outputs a box :|
     }
     if (InteractivePart3)
     {
     /* try a message with one parameter */
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     0, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     0, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     0, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     0, &String1);                   // outputs a box :|
     /* give too many parameters */
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 2, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseOk,             3, &String1, &String2, 0);      // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseOk,             4, &String1, &String2, 0, 0);   // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionBalloonNotification,    STATUS_SUCCESS,            ResponseOk,             4, &String1, &String2, 0, 0);   // outputs a balloon notification
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 2, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseOk,             3, &String1, &String2, 0);      // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseOk,             4, &String1, &String2, 0, 0);   // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 3, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             4, &String1, &String2, 0, 0);   // outputs a balloon notification
     /* try with stuff that's not a UNICODE_STRING */
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, &String1Ansi);               // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, L"Parameter1");              // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, "Parameter1");               // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, 1234);                       // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);                       // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, &String1Ansi);               // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, L"Parameter1");              // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, "Parameter1");               // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, 1234);                       // outputs a box :|
-    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNotHandled,     1, NULL);                       // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, &String1Ansi);               // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, L"Parameter1");              // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, "Parameter1");               // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, 1234);                       // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);                       // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, &String1Ansi);               // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, L"Parameter1");              // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, "Parameter1");               // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, 1234);                       // outputs a box :|
+    CheckHardError(STATUS_SERVICE_NOTIFICATION, 0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNotHandled,     1, NULL);                       // outputs a box :|
     }
     if (InteractivePart4)
     {
     /* try a message with one parameter */
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            1, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            1, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         0, &String1);                   // outputs a box :|
     /* give too many parameters */
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       2, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       3, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseYes,            4, &String1, &String2, 0, 0);   // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       2, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            2, &String1, &String2);         // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       3, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseYes,            4, &String1, &String2, 0, 0);   // outputs a box :|
     /* try with stuff that's not a UNICODE_STRING */
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             1, &String1Ansi);               // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             1, L"Parameter1");              // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseNo,             1, "Parameter1");               // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, 1234);                       // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);                       // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, &String1Ansi);               // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, L"Parameter1");              // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, "Parameter1");               // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, 1234);                       // outputs a box :|
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseCancel,         1, NULL);                       // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             1, &String1Ansi);               // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             1, L"Parameter1");              // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             1, "Parameter1");               // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, 1234);                       // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);                       // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, &String1Ansi);               // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, L"Parameter1");              // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, "Parameter1");               // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, 1234);                       // outputs a box :|
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, NULL);                       // outputs a box :|
     }
 
-    CheckInformationalHardError(STATUS_WAIT_0,               NULL,     NULL, STATUS_SUCCESS, TRUE);                                                                 // outputs a balloon notification
-    CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        &String1, NULL, STATUS_SUCCESS, TRUE);                                                                 // outputs a balloon notification
-    CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        NULL,     NULL, STATUS_SUCCESS, TRUE);                                                                 // outputs a balloon notification
+    CheckInformationalHardError(STATUS_WAIT_0,               NULL,     NULL, STATUS_SUCCESS, TRUE);                                                            // outputs a balloon notification
+    CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        &String1, NULL, STATUS_SUCCESS, TRUE);                                                            // outputs a balloon notification
+    CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        NULL,     NULL, STATUS_SUCCESS, TRUE);                                                            // outputs a balloon notification
     CheckInformationalHardError(STATUS_SERVICE_NOTIFICATION, &String1, NULL, STATUS_SUCCESS, FALSE);
 
     ok_bool_true(IoSetThreadHardErrorMode(TRUE), "IoSetThreadHardErrorMode returned");
     ok_bool_true(IoSetThreadHardErrorMode(FALSE), "IoSetThreadHardErrorMode returned");
     ok_bool_false(IoSetThreadHardErrorMode(FALSE), "IoSetThreadHardErrorMode returned");
-    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,            STATUS_SUCCESS,            ResponseReturnToCaller, 0, 0);
-    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,            STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);
+    CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseReturnToCaller, 0, 0);
+    CheckHardError(STATUS_FATAL_APP_EXIT,       1, OptionYesNoCancel,       STATUS_ACCESS_VIOLATION,   NoResponse,             1, NULL);
     CheckInformationalHardError(STATUS_WAIT_0,               NULL,     NULL, STATUS_SUCCESS, FALSE);
     CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        &String1, NULL, STATUS_SUCCESS, FALSE);
     CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        NULL,     NULL, STATUS_SUCCESS, FALSE);

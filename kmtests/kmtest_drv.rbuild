@@ -34,6 +34,7 @@
 		<file>KeDpc.c</file>
 		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>
+		<file>KeSpinLock.c</file>
 	</directory>
 	<directory name="ntos_ob">
 		<file>ObCreate.c</file>
