@@ -2,13 +2,13 @@
 
 [Section]
 Name = VLC media player
-Version = 1.1.8
+Version = 1.1.11
 Licence = GPL
 Description = A media player.
-Size = 19.6MB
+Size = 20.1MB
 Category = 1
 URLSite = http://www.videolan.org/vlc/
-URLDownload = http://kent.dl.sourceforge.net/project/vlc/1.1.8/win32/vlc-1.1.8-win32.exe
+URLDownload = http://kent.dl.sourceforge.net/project/vlc/1.1.11/win32/vlc-1.1.11-win32.exe
 CDPath = none
 
 [Section.0407]

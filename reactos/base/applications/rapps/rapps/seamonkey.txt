@@ -2,36 +2,41 @@
 
 [Section]
 Name = Mozilla SeaMonkey
-Version = 2.0.13
+Version = 2.2
 Licence = MPL/GPL/LGPL
 Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
-Size = 10.2MB
+Size = 16.0MB
 Category = 5
 URLSite = http://www.seamonkey-project.org/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.0.13/win32/en-US/SeaMonkey%20Setup%202.0.13.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/en-US/SeaMonkey%20Setup%202.2.exe
 CDPath = none
 
 [Section.0407]
 Description = Mozilla Suite lebt. Dies ist das einzige Browser-, Mail-, Chat- and Composerwerkzeug-Bundle welches Sie benötigen.
-Size = 10.1MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.0.13/win32/de/SeaMonkey%20Setup%202.0.13.exe
+Size = 16.0MB
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/de/SeaMonkey%20Setup%202.2.exe
 
 [Section.040a]
 Description = La suite de Mozilla está viva. Es el primero y único navegador web, gestor de correo, lector de noticias, Chat y editor HTML que necesitarás.
-Size = 10.1MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.0.13/win32/es-ES/SeaMonkey%20Setup%202.0.13.exe
+Size = 15.9MB
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/es-ES/SeaMonkey%20Setup%202.2.exe
 
 [Section.040c]
 Description = La suite Mozilla est en vie. Ceci est le seul et l'unique package navigateur, client mail, client chat et composer dont vous aurez besoin.
-Size = 10.1MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.0.13/win32/fr/SeaMonkey%20Setup%202.0.13.exe
+Size = 16.3MB
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/fr/SeaMonkey%20Setup%202.2.exe
 
 [Section.0415]
 Description = Pakiet Mozilla żyje. W zestawie: przeglądarka, klient poczty, IRC oraz Edytor HTML - wszystko, czego potrzebujesz.
-Size = 11.0MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.0.13/win32/pl/SeaMonkey%20Setup%202.0.13.exe
+Size = 16.8MB
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/pl/SeaMonkey%20Setup%202.2.exe
 
 [Section.0419]
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
-Size = 10.5MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.0.13/win32/ru/SeaMonkey%20Setup%202.0.13.exe
+Size = 16.4MB
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/ru/SeaMonkey%20Setup%202.2.exe
+
+[Section.0422]
+Description = Продовження Mozilla Suite. Включає в себе браузер, поштовий клієнт, IRC-клієнт та HTML-редактор.
+Size = 16.4MB
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/2.2/win32/ru/SeaMonkey%20Setup%202.2.exe
