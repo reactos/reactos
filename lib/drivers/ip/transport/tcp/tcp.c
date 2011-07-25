@@ -25,7 +25,7 @@ PORT_SET TCPPorts;
 
 VOID ConnectionFree(PVOID Object)
 {
-    PCONNECTION_ENDPOINT Connection = Object;
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)Object;
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_TCP, ("Freeing TCP Endpoint\n"));
@@ -41,7 +41,7 @@ VOID ConnectionFree(PVOID Object)
 
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext )
 {
-    PCONNECTION_ENDPOINT Connection =
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)
         ExAllocatePoolWithTag(NonPagedPool, sizeof(CONNECTION_ENDPOINT),
                               CONN_ENDPT_TAG);
     if (!Connection)
@@ -58,6 +58,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext )
     InitializeListHead(&Connection->ReceiveRequest);
     InitializeListHead(&Connection->SendRequest);
     InitializeListHead(&Connection->ShutdownRequest);
+    InitializeListHead(&Connection->PacketQueue);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
@@ -407,6 +408,9 @@ NTSTATUS TCPReceiveData
 {
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
+    PUCHAR DataBuffer;
+    UINT DataLen, Received;
+    NTSTATUS Status;
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Called for %d bytes (on socket %x)\n",
                            ReceiveLength, Connection->SocketContext));
@@ -414,29 +418,38 @@ NTSTATUS TCPReceiveData
     DbgPrint("[IP, TCPReceiveData] Called for %d bytes (on Connection->SocketContext = 0x%x)\n",
                            ReceiveLength, Connection->SocketContext);
 
-    LockObject(Connection, &OldIrql);
+    NdisQueryBuffer(Buffer, &DataBuffer, &DataLen);
     
-    /* Freed in TCPSocketState */
-    Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-    if( !Bucket )
+    Status = LibTCPGetDataFromConnectionQueue(Connection, DataBuffer, DataLen, &Received);
+
+    if (Status == STATUS_PENDING)
     {
-        TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
+        LockObject(Connection, &OldIrql);
+    
+        /* Freed in TCPSocketState */
+        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+        if( !Bucket )
+        {
+            TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
+            UnlockObject(Connection, OldIrql);
+
+            return STATUS_NO_MEMORY;
+        }
+    
+        Bucket->Request.RequestNotifyObject = Complete;
+        Bucket->Request.RequestContext = Context;
+        *BytesReceived = 0;
+    
+        InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
+        TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Queued read irp\n"));
+
         UnlockObject(Connection, OldIrql);
 
-        return STATUS_NO_MEMORY;
+        TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
     }
-    
-    Bucket->Request.RequestNotifyObject = Complete;
-    Bucket->Request.RequestContext = Context;
-    *BytesReceived = 0;
-    
-    InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
-    TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Queued read irp\n"));
 
-    UnlockObject(Connection, OldIrql);
-
-    TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
-    DbgPrint("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n");
+    DbgPrint("[IP, TCPReceiveData] Leaving. Status = %s\n",
+        Status == STATUS_PENDING? "STATUS_PENDING" : "STATUS_SUCCESS");
 
     return STATUS_PENDING;
 }

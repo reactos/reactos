@@ -30,6 +30,93 @@ static const char * const tcp_state_str[] = {
 extern KEVENT TerminationEvent;
 
 static
+void
+LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
+{
+    PLIST_ENTRY Entry;
+    PQUEUE_ENTRY qp = NULL;
+
+    ReferenceObject(Connection);
+
+    
+    while (!IsListEmpty(&Connection->PacketQueue))
+    {
+        DbgPrint("[lwIP, LibTCPEmptyQueue] Removed packet off queue++++\n");
+
+        Entry = RemoveHeadList(&Connection->PacketQueue);
+        qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
+        
+        // reenable this later
+        //pbuf_free(qp->p);
+
+        ExFreePoolWithTag(qp, LWIP_TAG);
+    }
+
+    DereferenceObject(Connection);
+}
+
+void LibTCPEnqueuePacket(PCONNECTION_ENDPOINT Connection, struct pbuf *p)
+{
+    PQUEUE_ENTRY qp;
+
+    qp = (PQUEUE_ENTRY)ExAllocatePoolWithTag(NonPagedPool, sizeof(QUEUE_ENTRY), LWIP_TAG);
+    qp->p = p;
+
+    ExInterlockedInsertTailList(&Connection->PacketQueue, &qp->ListEntry, &Connection->Lock);
+}
+
+PQUEUE_ENTRY LibTCPDequeuePacket(PCONNECTION_ENDPOINT Connection)
+{
+    PLIST_ENTRY Entry;
+    PQUEUE_ENTRY qp = NULL;
+
+    Entry = ExInterlockedRemoveHeadList(&Connection->PacketQueue, &Connection->Lock);
+    
+    qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
+
+    return qp;
+}
+
+NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHAR RecvBuffer, UINT RecvLen, UINT *Received)
+{
+    PQUEUE_ENTRY qp;
+    struct pbuf* p;
+    NTSTATUS Status = STATUS_PENDING;
+
+    if (!IsListEmpty(&Connection->PacketQueue))
+    {
+        DbgPrint("[lwIP, LibTCPGetDataFromConnectionQueue] Getting packet off the queue\n");
+
+        qp = LibTCPDequeuePacket(Connection);
+        p = qp->p;
+
+        RecvLen = MIN(p->tot_len, RecvLen);
+
+        for ((*Received) = 0; (*Received) < RecvLen; *Received += p->len, p = p->next)
+        {
+            DbgPrint("[lwIP, LibTCPGetDataFromConnectionQueue] 0x%x: Copying %d bytes to 0x%x from 0x%x\n",
+                p, p->len, ((PUCHAR)RecvBuffer) + (*Received), p->payload);
+            
+            RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
+        }
+
+        // reenable this later
+        //pbuf_free(qp->p);
+        ExFreePoolWithTag(qp, LWIP_TAG);
+
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        DbgPrint("[lwIP, LibTCPGetPacketFromQueue] Queue is EMPTY\n");
+
+        Status = STATUS_PENDING;
+    }
+
+    return Status;
+}
+
+static
 BOOLEAN
 WaitForEventSafely(PRKEVENT Event)
 {
@@ -56,7 +143,7 @@ WaitForEventSafely(PRKEVENT Event)
 
 static
 err_t
-InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, const u16_t space)
+InternalSendEventHandler(void *arg, PTCP_PCB pcb, const u16_t space)
 {
     DbgPrint("[lwIP, InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
         arg, pcb, (unsigned int)space);
@@ -75,7 +162,7 @@ InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, const u16_t space)
 
 static
 err_t
-InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, const err_t err)
+InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t err)
 {
     u32_t len;
 
@@ -125,8 +212,13 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, const e
         else
         {
             /* We want lwIP to store the pbuf on its queue for later */
-            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_TIMEOUT\n");
-            return ERR_TIMEOUT;
+            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_TIMEOUT queuing pbuf\n");
+
+            LibTCPEnqueuePacket((PCONNECTION_ENDPOINT)arg, p);
+
+            tcp_recved(pcb, p->tot_len);
+
+            return ERR_OK;//ERR_TIMEOUT;//
         }
     }
     else if (err == ERR_OK)
@@ -145,7 +237,7 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, const e
 
 static
 err_t
-InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, const err_t err)
+InternalAcceptEventHandler(void *arg, PTCP_PCB newpcb, const err_t err)
 {
     DbgPrint("[lwIP, InternalAcceptEventHandler] AcceptEvent arg = 0x%x, newpcb = 0x%x, err = %d\n",
         arg, newpcb, (unsigned int)err);
@@ -168,7 +260,7 @@ InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, const err_t err)
 
 static
 err_t
-InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, const err_t err)
+InternalConnectEventHandler(void *arg, PTCP_PCB pcb, const err_t err)
 {
     DbgPrint("[lwIP, InternalConnectEventHandler] ConnectEvent (0x%x, pcb = 0x%x, err = %d)\n",
         arg, pcb, (unsigned int)err);
@@ -686,8 +778,8 @@ CloseCallbacks(struct tcp_pcb *pcb)
     if (pcb->state != LISTEN)
     {
         tcp_recv(pcb, NULL);
-        //tcp_sent(pcb, NULL);
-        //tcp_err(pcb, NULL);
+        tcp_sent(pcb, NULL);
+        tcp_err(pcb, NULL);
     }
 
     tcp_accept(pcb, NULL);
@@ -705,13 +797,15 @@ LibTCPCloseCallback(void *arg)
     {
         DbgPrint("[lwIP, LibTCPCloseCallback] NULL pcb...bail, bail!!!\n");
         
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
 
         msg->Error = ERR_OK;
         return;
     }
 
     CloseCallbacks((PTCP_PCB)msg->Connection->SocketContext);
+
+    LibTCPEmptyQueue(msg->Connection);
 
     if (((PTCP_PCB)msg->Connection->SocketContext)->state == LISTEN)
     {
@@ -752,6 +846,9 @@ LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe)
     if (safe)
     {
         CloseCallbacks((PTCP_PCB)Connection->SocketContext);
+        
+        LibTCPEmptyQueue(Connection);
+
         if ( ((PTCP_PCB)Connection->SocketContext)->state == LISTEN )
         {
             DbgPrint("[lwIP, LibTCPClose] Closing a listener\n");

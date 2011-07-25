@@ -6,7 +6,19 @@
 #include "lwip/ip_addr.h"
 #include "tcpip.h"
 
+#ifndef LWIP_TAG
+    #define LWIP_TAG 'PIwl'
+#endif
+
 typedef struct tcp_pcb* PTCP_PCB;
+
+typedef struct _QUEUE_ENTRY
+{
+    struct pbuf *p;
+    LIST_ENTRY ListEntry;
+} QUEUE_ENTRY, *PQUEUE_ENTRY;
+
+NTSTATUS    LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHAR RecvBuffer, UINT RecvLen, UINT *Received);
 
 /* External TCP event handlers */
 extern void TCPConnectEventHandler(void *arg, const err_t err);
