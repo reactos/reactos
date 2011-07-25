@@ -22,6 +22,9 @@
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
+
+PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+
 BOOLEAN BaseRunningInServerProcess;
 
 WCHAR BaseDefaultPathBuffer[6140];
@@ -252,6 +255,135 @@ BasepInitConsole(VOID)
     return TRUE;
 }
 
+VOID
+WINAPI
+BasepFakeStaticServerData(VOID)
+{
+    NTSTATUS Status;
+    WCHAR Buffer[MAX_PATH];
+    UNICODE_STRING SystemRootString;
+    UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
+    UNICODE_STRING BaseSrvCSDString;
+    ULONG BaseSrvCSDNumber;
+    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"CSDVersion",
+            &BaseSrvCSDString
+        },
+        {0}
+    };
+    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable1[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"CSDVersion",
+            &BaseSrvCSDNumber
+        },
+        {0}
+    };
+    
+    /* Allocate the fake data */
+    BaseStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(BASE_STATIC_SERVER_DATA));
+    ASSERT(BaseStaticServerData != NULL);
+
+    /* Get the Windows directory */
+    RtlInitEmptyUnicodeString(&SystemRootString, Buffer, sizeof(Buffer));
+    Status = RtlExpandEnvironmentStrings_U(NULL,
+                                           &UnexpandedSystemRootString,
+                                           &SystemRootString,
+                                           NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsDirectory,
+                                    SystemRootString.Buffer);
+    ASSERT(NT_SUCCESS(Status));
+
+    wcscat(SystemRootString.Buffer, L"\\system32");
+    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsSystemDirectory,
+                                    SystemRootString.Buffer);
+    ASSERT(NT_SUCCESS(Status));
+
+    if (!SessionId)
+    {
+        Status = RtlCreateUnicodeString(&BaseStaticServerData->NamedObjectDirectory,
+                                        L"\\BaseNamedObjects");
+        ASSERT(NT_SUCCESS(Status));
+    } 
+    else
+    {
+        /* Hopefully we'll fix CSRSS Before we add multiple sessions... */
+        ASSERT(FALSE);
+    }
+    
+    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                    L"",
+                                    BaseServerRegistryConfigurationTable1,
+                                    NULL,
+                                    NULL);
+    if (NT_SUCCESS(Status))
+    {
+        BaseStaticServerData->CSDNumber = (USHORT)(BaseSrvCSDNumber & 0xFFFF);
+        BaseStaticServerData->RCNumber = (USHORT)(BaseSrvCSDNumber >> 16);
+    }
+    else
+    {
+        BaseStaticServerData->CSDNumber = 0;
+        BaseStaticServerData->RCNumber = 0;
+    }
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                    L"",
+                                    BaseServerRegistryConfigurationTable,
+                                    NULL,
+                                    NULL);
+    if (NT_SUCCESS(Status))
+    {
+        wcsncpy(BaseStaticServerData->CSDVersion,
+                BaseSrvCSDString.Buffer,
+                BaseSrvCSDString.Length / sizeof(WCHAR));
+    }
+    else
+    {
+        BaseStaticServerData->CSDVersion[0] = UNICODE_NULL;
+    }
+
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &BaseStaticServerData->SysInfo,
+                                      sizeof(BaseStaticServerData->SysInfo),
+                                      NULL);
+    ASSERT(NT_SUCCESS(Status));
+    
+    BaseStaticServerData->DefaultSeparateVDM = FALSE;
+    BaseStaticServerData->IsWowTaskReady = FALSE;
+    BaseStaticServerData->LUIDDeviceMapsEnabled = FALSE;
+    BaseStaticServerData->TermsrvClientTimeZoneId = TIME_ZONE_ID_INVALID;
+    BaseStaticServerData->TermsrvClientTimeZoneChangeNum = 0;
+
+    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                      &BaseStaticServerData->TimeOfDay,
+                                      sizeof(BaseStaticServerData->TimeOfDay),
+                                      NULL);
+    ASSERT(NT_SUCCESS(Status));
+    
+    DPRINT1("ReactOS Base API Connected: %wZ %wZ %wZ %S (%lx.%lx) %d KB\n",
+            BaseStaticServerData->WindowsDirectory,
+            BaseStaticServerData->WindowsSystemDirectory,
+            BaseStaticServerData->NamedObjectDirectory,
+            BaseStaticServerData->CSDVersion,
+            BaseStaticServerData->CSDNumber,
+            BaseStaticServerData->RCNumber,
+            BaseStaticServerData->SysInfo.PageSize *
+            BaseStaticServerData->SysInfo.NumberOfPhysicalPages / 1024);
+}
 
 BOOL
 WINAPI
@@ -312,6 +444,25 @@ DllMain(HANDLE hDll,
             ZwTerminateProcess(NtCurrentProcess(), Status);
             return FALSE;
         }
+        
+        /* Get the server data */
+        if (!Peb->ReadOnlyStaticServerData)
+        {
+            /* Build fake one for ReactOS */
+            BasepFakeStaticServerData();
+            
+            /* Allocate the array */
+            Peb->ReadOnlyStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                            HEAP_ZERO_MEMORY,
+                                                            4 * sizeof(PVOID));
+                                                            
+            /* Set the data for the BASESRV DLL Index */
+            Peb->ReadOnlyStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
+        }
+        
+        /* Get the server data */
+        BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
+        ASSERT(BaseStaticServerData);
 
         /* Check if we are running a CSR Server */
         if (!BaseRunningInServerProcess)
