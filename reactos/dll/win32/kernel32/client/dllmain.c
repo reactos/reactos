@@ -264,7 +264,7 @@ BasepFakeStaticServerData(VOID)
     UNICODE_STRING SystemRootString;
     UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
     UNICODE_STRING BaseSrvCSDString;
-    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[] =
+    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[2] =
     {
         {
             NULL,
@@ -322,6 +322,9 @@ BasepFakeStaticServerData(VOID)
      */ 
     BaseStaticServerData->CSDNumber = 0;
     BaseStaticServerData->RCNumber = 0;
+    
+    /* Initialize the CSD string */
+    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
                                     L"",
