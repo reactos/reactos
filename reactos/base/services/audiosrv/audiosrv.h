@@ -6,6 +6,15 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
+#include <windows.h>
+#include <assert.h>
+#include <winuser.h>
+#include <setupapi.h>
+#include <ks.h>
+#include <ksmedia.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <dbt.h>
 #include <audiosrv/audiosrv.h>
 
