@@ -67,6 +67,13 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         PRTL_USER_PROCESS_PARAMETERS pParams = NULL;
         NTSTATUS Status;
         extern PSECTION_OBJECT GlobalUserHeapSection;
+
+#ifdef DBG
+        DbgInitDebugChannels();
+#endif
+
+        TRACE_PPI(Win32Process, UserProcess,"Allocated ppi for PID:%d\n", Process->UniqueProcessId);
+
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
         /* map the global heap into the process */

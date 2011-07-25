@@ -14,9 +14,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#define TRACE DPRINT
-#define WARN DPRINT1
-#define ERR DPRINT1
 
 static
 VOID
@@ -1732,7 +1729,7 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("DO %p\n");
+    DPRINT("DO %p\n");
 
     CurrentWin32Process = PsGetCurrentProcessWin32Process();
     PrevLink = &CurrentWin32Process->HeapMappings.Next;
