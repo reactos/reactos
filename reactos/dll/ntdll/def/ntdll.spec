@@ -411,6 +411,7 @@
 ;@ stdcall RtlAbortRXact
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAcquirePebLock()
+@ stdcall RtlAdjustPrivilege(long long long ptr)
 @ stdcall RtlAcquireResourceExclusive(ptr long)
 @ stdcall RtlAcquireResourceShared(ptr long)
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
@@ -846,6 +847,7 @@
 @ stdcall RtlReleaseActivationContext(ptr)
 ;@ stdcall RtlReleaseMemoryStream
 @ stdcall RtlReleasePebLock()
+@ stdcall RtlReleasePrivilege(ptr)
 @ stdcall RtlReleaseResource(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockShared(ptr)
