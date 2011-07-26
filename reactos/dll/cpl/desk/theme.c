@@ -63,7 +63,7 @@ const int g_SizeMetric[NUM_SIZES] =
 {
 	SM_CXBORDER,        /* 00: SIZE_BORDER_X */
 	SM_CYBORDER,        /* 01: SIZE_BORDER_Y */
-	SM_CYCAPTION,       /* 02: SIZE_CAPTION_Y */
+	SM_CYSIZE,          /* 02: SIZE_CAPTION_Y */
 	SM_CXICON,          /* 03: SIZE_ICON_X */
 	SM_CYICON,          /* 04: SIZE_ICON_Y */
 	SM_CXICONSPACING,   /* 05: SIZE_ICON_SPC_X */
@@ -72,7 +72,7 @@ const int g_SizeMetric[NUM_SIZES] =
 	SM_CYMENU,          /* 08: SIZE_MENU_Y */
 	SM_CXVSCROLL,       /* 09: SIZE_SCROLL_X */
 	SM_CYHSCROLL,       /* 10: SIZE_SCROLL_Y */
-	SM_CYSMCAPTION,     /* 11: SIZE_SMCAPTION_Y */
+	SM_CYSMSIZE,        /* 11: SIZE_SMCAPTION_Y */
 	SM_CXEDGE,          /* 12: SIZE_EDGE_X */
 	SM_CYEDGE,          /* 13: SIZE_EDGE_Y */
 	SM_CYSIZEFRAME,     /* 14: SIZE_FRAME_Y */
@@ -190,13 +190,16 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 				for (i = 0; i < NUM_SIZES; i++)
 				{
 					wsprintf(strValueName, TEXT("Size #%d"), i);
+					UINT64 iSize;
 					dwLength = sizeof(UINT64);
-					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&theme->Size[i], &dwLength) != ERROR_SUCCESS ||
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&iSize, &dwLength) != ERROR_SUCCESS ||
 						dwType != REG_QWORD || dwLength != sizeof(UINT64))
 					{
 						/* Failed to read registry value, initialize with current setting for now */
-						theme->Size[i] = GetSystemMetrics(g_SizeMetric[i]);
+						theme->Size[i] = GetSystemMetrics(g_SizeMetric[i]); if(i == SIZE_CAPTION_Y) OutputDebugStringA("GetSystemMetrics!\n");
 					}
+					else
+						theme->Size[i] = (INT)iSize;
 				}
 				RegCloseKey(hkScheme);
 			}
