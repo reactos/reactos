@@ -1,5 +1,4 @@
-#include <windows.h>
-#include <tchar.h>
+
 #include "magnifier.h"
 
 int iZoom = 3;
