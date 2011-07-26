@@ -616,7 +616,8 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    MouseHistoryOfMoves[gcur_count].y = Msg->pt.y;
    MouseHistoryOfMoves[gcur_count].time = Msg->time;
    MouseHistoryOfMoves[gcur_count].dwExtraInfo = dwExtraInfo;
-   if (gcur_count++ == 64) gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
+   if (++gcur_count == ARRAYSIZE(MouseHistoryOfMoves))
+      gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
 }
 
 //
