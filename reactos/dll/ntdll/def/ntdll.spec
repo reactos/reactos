@@ -411,6 +411,7 @@
 ;@ stdcall RtlAbortRXact
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAcquirePebLock()
+@ stdcall RtlAcquirePrivilege(ptr long long ptr)
 @ stdcall RtlAcquireResourceExclusive(ptr long)
 @ stdcall RtlAcquireResourceShared(ptr long)
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
@@ -723,7 +724,7 @@
 @ stdcall RtlInt64ToUnicodeString(double long ptr)
 @ stdcall RtlIntegerToChar(long long long ptr)
 @ stdcall RtlIntegerToUnicodeString(long long ptr)
-;@ stdcall RtlInterlockedCompareExchange64
+@ stdcall -arch=win32 -ret64 RtlInterlockedCompareExchange64(ptr double double)
 @ stdcall -arch=i386,x86_64 RtlInterlockedFlushSList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPopEntrySList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPushEntrySList(ptr ptr)
