@@ -1,19 +1,19 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/mem/virtual.c
+ * FILE:            dll/win32/kernel32/client/virtmem.c
  * PURPOSE:         Handles virtual memory APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -27,14 +27,34 @@ VirtualAllocEx(IN HANDLE hProcess,
                IN DWORD flProtect)
 {
     NTSTATUS Status;
-
-    /* Allocate the memory */
-    Status = NtAllocateVirtualMemory(hProcess,
-                                     (PVOID *)&lpAddress,
-                                     0,
-                                     &dwSize,
-                                     flAllocationType,
-                                     flProtect);
+    
+    /* Make sure the address is within the granularity of the system (64K) */
+    if ((lpAddress) &&
+        (lpAddress < (PVOID)BaseStaticServerData->SysInfo.AllocationGranularity))
+    {
+        /* Fail the call */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    
+    /* Handle any possible exceptions */
+    _SEH2_TRY
+    {
+        /* Allocate the memory */
+        Status = NtAllocateVirtualMemory(hProcess,
+                                         &lpAddress,
+                                         0,
+                                         &dwSize,
+                                         flAllocationType,
+                                         flProtect);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    
+    /* Check for status */
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -76,12 +96,13 @@ VirtualFreeEx(IN HANDLE hProcess,
 {
     NTSTATUS Status;
 
-    if (dwSize == 0 || !(dwFreeType & MEM_RELEASE))
+    /* Validate size and flags */
+    if (!(dwSize) || !(dwFreeType & MEM_RELEASE))
     {
         /* Free the memory */
         Status = NtFreeVirtualMemory(hProcess,
-                                     (PVOID *)&lpAddress,
-                                     (PULONG)&dwSize,
+                                     &lpAddress,
+                                     &dwSize,
                                      dwFreeType);
         if (!NT_SUCCESS(Status))
         {
@@ -94,6 +115,7 @@ VirtualFreeEx(IN HANDLE hProcess,
         return TRUE;
     }
 
+    /* Invalid combo */
     BaseSetLastNTError(STATUS_INVALID_PARAMETER);
     return FALSE;
 }
@@ -270,14 +292,12 @@ VirtualUnlock(IN LPVOID lpAddress,
  */
 UINT
 WINAPI
-GetWriteWatch(
-    DWORD  dwFlags,
-    PVOID  lpBaseAddress,
-    SIZE_T dwRegionSize,
-    PVOID *lpAddresses,
-    PULONG_PTR lpdwCount,
-    PULONG lpdwGranularity
-    )
+GetWriteWatch(IN DWORD dwFlags,
+              IN PVOID lpBaseAddress,
+              IN SIZE_T dwRegionSize,
+              IN PVOID *lpAddresses,
+              OUT PULONG_PTR lpdwCount,
+              OUT PULONG lpdwGranularity)
 {
     NTSTATUS Status;
 
@@ -288,7 +308,6 @@ GetWriteWatch(
                              lpAddresses,
                              lpdwCount,
                              lpdwGranularity);
-
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -303,17 +322,14 @@ GetWriteWatch(
  */
 UINT
 WINAPI
-ResetWriteWatch(
-    LPVOID lpBaseAddress,
-    SIZE_T dwRegionSize
-    )
+ResetWriteWatch(IN LPVOID lpBaseAddress,
+                IN SIZE_T dwRegionSize)
 {
     NTSTATUS Status;
 
     Status = NtResetWriteWatch(NtCurrentProcess(),
                                lpBaseAddress,
                                dwRegionSize);
-
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -328,18 +344,13 @@ ResetWriteWatch(
  */
 BOOL
 WINAPI
-AllocateUserPhysicalPages(
-    HANDLE hProcess,
-    PULONG_PTR NumberOfPages,
-    PULONG_PTR UserPfnArray
-    )
+AllocateUserPhysicalPages(IN HANDLE hProcess,
+                          IN PULONG_PTR NumberOfPages,
+                          OUT PULONG_PTR UserPfnArray)
 {
     NTSTATUS Status;
 
-    Status = NtAllocateUserPhysicalPages(hProcess,
-                                         NumberOfPages,
-                                         UserPfnArray);
-
+    Status = NtAllocateUserPhysicalPages(hProcess, NumberOfPages, UserPfnArray);
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -354,18 +365,13 @@ AllocateUserPhysicalPages(
  */
 BOOL
 WINAPI
-FreeUserPhysicalPages(
-    HANDLE hProcess,
-    PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
-    )
+FreeUserPhysicalPages(IN HANDLE hProcess,
+                      IN PULONG_PTR NumberOfPages,
+                      IN PULONG_PTR PageArray)
 {
     NTSTATUS Status;
 
-    Status = NtFreeUserPhysicalPages(hProcess,
-                                     NumberOfPages,
-                                     PageArray);
-
+    Status = NtFreeUserPhysicalPages(hProcess, NumberOfPages, PageArray);
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -380,18 +386,13 @@ FreeUserPhysicalPages(
  */
 BOOL
 WINAPI
-MapUserPhysicalPages(
-    PVOID VirtualAddress,
-    ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray  OPTIONAL
-    )
+MapUserPhysicalPages(IN PVOID VirtualAddress,
+                     IN ULONG_PTR NumberOfPages,
+                     OUT PULONG_PTR PageArray OPTIONAL)
 {
     NTSTATUS Status;
 
-    Status = NtMapUserPhysicalPages(VirtualAddress,
-                                    NumberOfPages,
-                                    PageArray);
-
+    Status = NtMapUserPhysicalPages(VirtualAddress, NumberOfPages, PageArray);
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -406,18 +407,15 @@ MapUserPhysicalPages(
  */
 BOOL
 WINAPI
-MapUserPhysicalPagesScatter(
-    PVOID *VirtualAddresses,
-    ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray  OPTIONAL
-    )
+MapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
+                            IN ULONG_PTR NumberOfPages,
+                            OUT PULONG_PTR PageArray OPTIONAL)
 {
     NTSTATUS Status;
 
     Status = NtMapUserPhysicalPagesScatter(VirtualAddresses,
                                            NumberOfPages,
                                            PageArray);
-
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
