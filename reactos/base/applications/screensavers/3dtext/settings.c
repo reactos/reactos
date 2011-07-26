@@ -20,8 +20,6 @@
 
 //////////////////////////////////////////////////////////////////
 
-#include <windows.h>
-#include <tchar.h>
 #include "3dtext.h"
 
 TCHAR m_Text[MAX_PATH];
