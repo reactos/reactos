@@ -10,11 +10,13 @@
 #include <windows.h>
 #include <kmt_test.h>
 
-VOID Test_Example(VOID);
+KMT_TESTFUNC Test_Example;
+KMT_TESTFUNC Test_RtlMemory;
 
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
 {
     { "Example",            Test_Example },
+    { "RtlMemory",          Test_RtlMemory },
     { NULL,                 NULL },
 };

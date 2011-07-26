@@ -41,6 +41,9 @@
 	<directory name="ntos_ob">
 		<file>ObCreate.c</file>
 	</directory>
+	<directory name="rtl">
+		<file>RtlMemory.c</file>
+	</directory>
 </module>
 <module name="kmtest_printf" type="staticlibrary">
 	<include base="crt">include</include>

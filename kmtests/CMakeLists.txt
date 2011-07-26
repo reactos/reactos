@@ -32,6 +32,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
     ntos_ob/ObCreate.c
+    rtl/RtlMemory.c
 
     kmtest_drv/kmtest_drv.rc)
 
@@ -62,6 +63,7 @@ list(APPEND KMTEST_SOURCE
     kmtest/testlist.c
 
     example/Example_user.c
+    rtl/RtlMemory.c
 
     kmtest/kmtest.rc)
 

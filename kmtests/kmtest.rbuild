@@ -11,4 +11,7 @@
 	<directory name="example">
 		<file>Example_user.c</file>
 	</directory>
+	<directory name="rtl">
+		<file>RtlMemory.c</file>
+	</directory>
 </module>
