@@ -411,7 +411,6 @@
 ;@ stdcall RtlAbortRXact
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAcquirePebLock()
-@ stdcall RtlAdjustPrivilege(long long long ptr)
 @ stdcall RtlAcquireResourceExclusive(ptr long)
 @ stdcall RtlAcquireResourceShared(ptr long)
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
