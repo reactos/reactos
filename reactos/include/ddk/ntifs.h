@@ -9615,7 +9615,7 @@ ZwFlushBuffersFile(
 
 #if (VER_PRODUCTBUILD >= 2195)
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction (
