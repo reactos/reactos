@@ -41,10 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-#include <string.h>
-#include "tnclass.h"
-#include "tnmisc.h"
+#include "precomp.h"
 
 // Mingw32 needs these (Paul Brannan 9/4/98)
 #ifndef ICON_SMALL
