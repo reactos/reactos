@@ -6,9 +6,6 @@
  * COPYRIGHT:   Copyright 2009 Lucas Suggs <lucas.suggs@gmail.com>
  */
 
-#include <windows.h>
-#include <tchar.h>
-#include <stdio.h>
 #include "nslookup.h"
 
 BOOL SendRequest( PCHAR pInBuffer,
