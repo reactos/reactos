@@ -428,7 +428,7 @@ NTSTATUS TCPReceiveData
     
         /* Freed in TCPSocketState */
         Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-        if( !Bucket )
+        if (!Bucket)
         {
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
             UnlockObject(Connection, OldIrql);
@@ -438,20 +438,25 @@ NTSTATUS TCPReceiveData
     
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
-        *BytesReceived = 0;
-    
+
         InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Queued read irp\n"));
 
         UnlockObject(Connection, OldIrql);
 
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
+
+        (*BytesReceived) = 0;
+    }
+    else
+    {
+        (*BytesReceived) = Received;
     }
 
     DbgPrint("[IP, TCPReceiveData] Leaving. Status = %s\n",
         Status == STATUS_PENDING? "STATUS_PENDING" : "STATUS_SUCCESS");
 
-    return STATUS_PENDING;
+    return Status;
 }
 
 NTSTATUS TCPSendData

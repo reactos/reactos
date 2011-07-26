@@ -47,7 +47,7 @@ LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
         qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
         
         // reenable this later
-        //pbuf_free(qp->p);
+        pbuf_free(qp->p);
 
         ExFreePoolWithTag(qp, LWIP_TAG);
     }
@@ -92,7 +92,7 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 
         RecvLen = MIN(p->tot_len, RecvLen);
 
-        for ((*Received) = 0; (*Received) < RecvLen; *Received += p->len, p = p->next)
+        for ((*Received) = 0; (*Received) < RecvLen; (*Received) += p->len, p = p->next)
         {
             DbgPrint("[lwIP, LibTCPGetDataFromConnectionQueue] 0x%x: Copying %d bytes to 0x%x from 0x%x\n",
                 p, p->len, ((PUCHAR)RecvBuffer) + (*Received), p->payload);
@@ -101,7 +101,7 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
         }
 
         // reenable this later
-        //pbuf_free(qp->p);
+        pbuf_free(qp->p);
         ExFreePoolWithTag(qp, LWIP_TAG);
 
         Status = STATUS_SUCCESS;

@@ -46,7 +46,6 @@ BucketCompletionWorker(PVOID Context)
     ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
 }
 
-static
 VOID
 CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, BOOLEAN Synchronous)
 {
@@ -149,22 +148,10 @@ TCPFinEventHandler(void *arg, err_t err)
     DbgPrint("[IP, TCPFinEventHandler] Called for Connection( 0x%x )-> SocketContext = pcb (0x%x)\n", Connection, Connection->SocketContext);
 
     /* Only clear the pointer if the shutdown was caused by an error */
-    if ((err != ERR_OK))// && (status != STATUS_REMOTE_DISCONNECT))
+    if ((err != ERR_OK))
     {
         /* We're already closed by the error so we don't want to call lwip_close */
         DbgPrint("[IP, TCPFinEventHandler] MAKING Connection( 0x%x )-> SocketContext = pcb (0x%x) NULL\n", Connection, Connection->SocketContext);
-
-        // close all possible callbacks
-        /*tcp_arg((PTCP_PCB)Connection->SocketContext, NULL);
-
-        if (((PTCP_PCB)Connection->SocketContext)->state != LISTEN)
-        {
-            tcp_recv((PTCP_PCB)Connection->SocketContext, NULL);
-            tcp_sent((PTCP_PCB)Connection->SocketContext, NULL);
-            tcp_err((PTCP_PCB)Connection->SocketContext, NULL);
-        }
-
-        tcp_accept((PTCP_PCB)Connection->SocketContext, NULL);*/
 
         Connection->SocketContext = NULL;
     }
