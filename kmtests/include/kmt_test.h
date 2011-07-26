@@ -84,6 +84,7 @@ extern BOOLEAN KmtIsCheckedBuild;
 extern BOOLEAN KmtIsMultiProcessorBuild;
 
 VOID KmtSetIrql(IN KIRQL NewIrql);
+BOOLEAN KmtAreInterruptsEnabled(VOID);
 #elif defined KMT_USER_MODE
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
@@ -163,6 +164,11 @@ VOID KmtSetIrql(IN KIRQL NewIrql)
         KeLowerIrql(NewIrql);
     else if (Irql < NewIrql)
         KeRaiseIrql(NewIrql, &Irql);
+}
+
+BOOLEAN KmtAreInterruptsEnabled(VOID)
+{
+    return (__readeflags() & (1 << 9)) != 0;
 }
 
 INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);

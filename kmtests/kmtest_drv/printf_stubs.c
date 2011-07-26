@@ -12,7 +12,7 @@
 
 int __cdecl KmtWcToMb(char *mbchar, wchar_t wchar)
 {
-    *mbchar = wchar;
+    *mbchar = (char)wchar;
     return 1;
 }
 
