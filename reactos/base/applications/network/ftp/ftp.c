@@ -21,33 +21,9 @@
 #ifndef lint
 static char sccsid[] = "@(#)ftp.c	5.28 (Berkeley) 4/20/89";
 #endif /* not lint */
-#include <io.h>
 
-#include <sys/stat.h>
+#include "precomp.h"
 
-#ifndef _WIN32
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <arpa/ftp.h>
-#include <arpa/telnet.h>
-#include <pwd.h>
-#include <varargs.h>
-#include <netdb.h>
-#else
-#include <winsock.h>
-#endif
-
-#include <stdio.h>
-#include <signal.h>
-#include <errno.h>
-#include <fcntl.h>
-
-#include "ftp_var.h"
-#include "prototypes.h"
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64
 #endif
