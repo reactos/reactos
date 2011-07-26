@@ -77,8 +77,6 @@ typedef struct
 	TCHAR strLegacyName[MAX_TEMPLATENAMELENTGH];
 } THEME_PRESET;
 
-extern const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH];
-extern const INT g_SizeMetric[NUM_SIZES];
 extern THEME_PRESET g_ThemeTemplates[MAX_TEMPLATES];
 
 /* prototypes for theme.c */
