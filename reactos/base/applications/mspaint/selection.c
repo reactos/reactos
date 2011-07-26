@@ -8,14 +8,7 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
-#include <commctrl.h>
-#include <tchar.h>
-#include "globalvar.h"
-#include "drawing.h"
-#include "history.h"
-#include "mouse.h"
-#include "dib.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 

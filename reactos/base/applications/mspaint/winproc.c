@@ -9,19 +9,8 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
-#include <commctrl.h>
 //#include <htmlhelp.h>
-#include <stdio.h>
-#include <tchar.h>
-#include "definitions.h"
-#include "globalvar.h"
-#include "dialogs.h"
-#include "dib.h"
-#include "drawing.h"
-#include "history.h"
-#include "mouse.h"
-#include "registry.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 

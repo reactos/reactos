@@ -8,8 +8,7 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
-#include "globalvar.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 
