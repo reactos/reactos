@@ -164,6 +164,31 @@ typedef struct _KV8086_STACK_FRAME
     KV86_FRAME V86Frame;
 } KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
 
+/* Diable interrupts and return whether they were enabled before */
+FORCEINLINE
+BOOLEAN
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags;
+    BOOLEAN Return;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Flags = __readeflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
+/* Restore previous interrupt state */
+FORCEINLINE
+VOID
+KeRestoreInterrupts(BOOLEAN WereEnabled)
+{
+    if (WereEnabled) _enable();
+}
+
 //
 // Registers an interrupt handler with an IDT vector
 //

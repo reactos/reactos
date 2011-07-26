@@ -1033,12 +1033,6 @@ VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable);
 
-BOOLEAN
-NTAPI
-KeDisableInterrupts(
-    VOID
-);
-
 VOID
 FASTCALL
 KeAcquireQueuedSpinLockAtDpcLevel(

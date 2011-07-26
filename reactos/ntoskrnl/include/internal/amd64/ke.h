@@ -134,6 +134,31 @@ extern ULONG KeI386CpuStep;
 #define KeGetTrapFrameInterruptState(TrapFrame) \
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
 
+/* Diable interrupts and return whether they were enabled before */
+BOOLEAN
+NTAPI
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags;
+    BOOLEAN Return;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Flags = __readeflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
+/* Restore previous interrupt state */
+FORCEINLINE
+VOID
+KeRestoreInterrupts(BOOLEAN WereEnabled)
+{
+    if (WereEnabled) _enable();
+}
+
 //
 // Invalidates the TLB entry for a specified address
 //
