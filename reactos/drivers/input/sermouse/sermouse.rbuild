@@ -11,4 +11,5 @@
 	<file>readmouse.c</file>
 	<file>sermouse.c</file>
 	<file>sermouse.rc</file>
+	<pch>sermouse.h</pch>
 </module>
