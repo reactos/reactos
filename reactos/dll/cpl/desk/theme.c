@@ -120,8 +120,8 @@ VOID LoadCurrentTheme(THEME* theme)
 	/* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
 	 * Just keep them in sync for now:
 	 */
-	theme->Effects.bTooltipAnimation  = theme->Effects.bMenuAnimation;
-	theme->Effects.bTooltipFade	   = theme->Effects.bMenuFade;
+	theme->Effects.bTooltipAnimation = theme->Effects.bMenuAnimation;
+	theme->Effects.bTooltipFade	= theme->Effects.bMenuFade;
 
 	/* show content of windows during dragging */
 	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &theme->Effects.bDragFullWindows, 0);
@@ -138,6 +138,7 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 	TCHAR strValueName[10];
 	HKEY hkNewSchemes, hkScheme, hkSize;
 	DWORD dwType, dwLength;
+	UINT64 iSize;
 	BOOL Ret = FALSE;
 
 	if (!g_PresetLoaded)
@@ -190,7 +191,6 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 				for (i = 0; i < NUM_SIZES; i++)
 				{
 					wsprintf(strValueName, TEXT("Size #%d"), i);
-					UINT64 iSize;
 					dwLength = sizeof(UINT64);
 					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&iSize, &dwLength) != ERROR_SUCCESS ||
 						dwType != REG_QWORD || dwLength != sizeof(UINT64))

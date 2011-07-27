@@ -33,7 +33,6 @@
 #define NUM_SIZES 20
 #define NUM_COLORS 31
 #define MAX_TEMPLATES 50
-#define MAX_COLORNAMELENGTH 30
 #define MAX_TEMPLATENAMELENTGH 80
 
 /* Some typedefs for theme */
