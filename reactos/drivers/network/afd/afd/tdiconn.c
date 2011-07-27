@@ -8,9 +8,6 @@
  * 20040708 Created
  */
 #include <afd.h>
-#include <pseh/pseh2.h>
-#include "debug.h"
-#include "tdiconn.h"
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
     switch( AddressType ) {

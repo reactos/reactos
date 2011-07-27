@@ -8,10 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
-#include "pseh/pseh2.h"
 
 PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
