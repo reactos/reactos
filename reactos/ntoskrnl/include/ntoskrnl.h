@@ -51,7 +51,6 @@
 #include <pseh/pseh2.h>
 
 /* ReactOS Headers */
-#include <reactos/buildno.h>
 #include <reactos/bugcodes.h>
 
 /* SetupLDR Support */
