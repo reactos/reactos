@@ -38,9 +38,6 @@
  *     - this assumes a 32-bit machine
  */
 
-#include <ndis.h>
-#include "pci.h"
-#include "pcnethw.h"
 #include "pcnet.h"
 
 #define NDEBUG
