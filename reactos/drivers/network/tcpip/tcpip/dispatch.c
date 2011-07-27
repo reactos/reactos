@@ -10,8 +10,6 @@
  */
 
 #include "precomp.h"
-#include <pseh/pseh2.h>
-
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     KIRQL OldIrql;
