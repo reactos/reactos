@@ -37,7 +37,7 @@ endif()
 add_compiler_flags(-fno-strict-aliasing)
 
 if(ARCH MATCHES i386)
-    add_compiler_flags(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+    add_compiler_flags(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer)
     if(OPTIMIZE STREQUAL "1")
         add_compiler_flags(-ftracer -momit-leaf-frame-pointer)
     endif()
