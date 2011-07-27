@@ -759,13 +759,12 @@ KiConvertToGuiThread(VOID)
      */
     __asm__ __volatile__
     (
-        "movl %%ebp, %1\n"
-        "subl %%esp, %1\n"
-        "call _PsConvertToGuiThread@0\n"
-        "addl %%esp, %1\n"
-        "movl %1, %%ebp\n"
-        "movl %%eax, %0\n"
-        : "=r"(Result), "=r"(StackFrame)
+        "movl %%ebp, %1\n\t"
+        "subl %%esp, %1\n\t"
+        "call _PsConvertToGuiThread@0\n\t"
+        "addl %%esp, %1\n\t"
+        "movl %1, %%ebp"
+        : "=a"(Result), "=r"(StackFrame)
         :
         : "%esp", "%ecx", "%edx", "memory"
     );
