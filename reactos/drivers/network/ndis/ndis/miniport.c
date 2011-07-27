@@ -12,9 +12,6 @@
  */
 
 #include "ndissys.h"
-#include "efilter.h"
-
-#include <buffer.h>
 
 /*
  * Define to 1 to get a debugger breakpoint at the end of NdisInitializeWrapper

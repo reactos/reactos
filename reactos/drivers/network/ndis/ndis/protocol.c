@@ -11,7 +11,6 @@
  */
 
 #include "ndissys.h"
-#include <buffer.h>
 
 #define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 #define LINKAGE_KEY  L"\\Linkage"
