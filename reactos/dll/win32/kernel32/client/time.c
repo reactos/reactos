@@ -380,6 +380,7 @@ SetLocalTime(IN CONST SYSTEMTIME *lpSystemTime)
     NewSystemTime.QuadPart += TimeZoneBias.QuadPart;
 
     Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
+    Status = STATUS_SUCCESS;
     if (NT_SUCCESS(Status))
     {
         Status = NtSetSystemTime(&NewSystemTime, NULL);
@@ -423,6 +424,7 @@ SetSystemTime(IN CONST SYSTEMTIME *lpSystemTime)
     }
 
     Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
+    Status = STATUS_SUCCESS;
     if (NT_SUCCESS(Status))
     {
         Status = NtSetSystemTime(&NewSystemTime, NULL);
