@@ -8,7 +8,6 @@
  *   CSH 27/08-2000 Created
  */
 #include <ne2000.h>
-#include <debug.h>
 
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
 ULONG_PTR ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };

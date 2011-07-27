@@ -5,8 +5,6 @@
  * PURPOSE:     NE2000 driver definitions
  */
 
-#pragma once
-
 #define NDIS_MINIPORT_DRIVER 1
 #define NDIS_LEGACY_MINIPORT 1
 #define NDIS51_MINIPORT 1
