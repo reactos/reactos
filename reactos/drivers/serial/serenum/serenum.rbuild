@@ -9,4 +9,5 @@
 	<file>pdo.c</file>
 	<file>serenum.c</file>
 	<file>serenum.rc</file>
+	<pch>serenum.h</pch>
 </module>
