@@ -2,7 +2,7 @@
  *
  */
 
-#include <ntddk.h>
+#include "precomp.h"
 
 /*
  * @unimplemented
@@ -10,7 +10,7 @@
 VOID
 NTAPI
 TdiMapBuffer (
-	ULONG	Unknown0
+	IN PMDL MdlChain
 	)
 {
 	/* This function is absolete */
@@ -23,7 +23,7 @@ TdiMapBuffer (
 VOID
 NTAPI
 TdiUnmapBuffer (
-	ULONG	Unknown0
+	IN PMDL MdlChain
 	)
 {
 	/* This function is obsolete */
