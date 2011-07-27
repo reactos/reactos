@@ -12,13 +12,13 @@ URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/en-US
 CDPath = none
 
 [Section.0407]
-Description = Der popul�rste und einer der besten freien Webbrowser.
+Description = Der populärste und einer der besten freien Webbrowser.
 Size = 12.9M
 URLSite = http://www.mozilla-europe.org/de/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/de/Firefox%20Setup%205.0.1.exe
 
 [Section.040a]
-Description = El m�s popular y uno de los mejores navegadores web gratuitos que hay.
+Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
 Size = 12.9M
 URLSite = http://www.mozilla-europe.org/es/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/es-ES/Firefox%20Setup%205.0.1.exe
@@ -30,31 +30,31 @@ URLSite = http://www.mozilla-europe.org/fr/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/fr/Firefox%20Setup%205.0.1.exe
 
 [Section.0414]
-Description = Mest popul�re og best ogs� gratis nettleserene der ute.
+Description = Mest populære og best også gratis nettleserene der ute.
 Size = 12.9M
 URLSite = http://www.mozilla-europe.org/no/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/nb-NO/Firefox%20Setup%205.0.1.exe
 
 [Section.0415]
-Description = Najpopularniejsza i jedna z najlepszych darmowych przegladarek internetowych.
+Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 13.7M
 URLSite = http://www.mozilla-europe.org/pl/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/pl/Firefox%20Setup%205.0.1.exe
 
 [Section.0419]
-Description = ???? ?? ????? ?????????? ? ?????? ?????????? ?????????.
+Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 13.3M
 URLSite = http://www.mozilla-europe.org/ru/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/ru/Firefox%20Setup%205.0.1.exe
 
 [Section.041b] 
-Description = Najpopul�rnej�� a jeden z najlep��ch slobodn� webov�ch prehliadacov.
+Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
 Size = 13.6MB
 URLSite = http://www.mozilla-europe.org/sk/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/sk/Firefox%20Setup%205.0.1.exe
 
 [Section.0422]
-Description = ??????????????? ?? ???? ? ?????? ?????????? ???-?????????.
+Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 Size = 13.3M
 URLSite = http://www.mozilla-europe.org/uk/
 URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/5.0.1/win32/uk/Firefox%20Setup%205.0.1.exe
