@@ -113,7 +113,4 @@
 		<file>quad.c</file>
 		<file>registry.c</file>
 	</directory>
-	<directory name="include">
-		<pch>gluos.h</pch>
-	</directory>
 </module>
