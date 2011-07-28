@@ -1,5 +1,3 @@
-#pragma once
-
 #define COBJMACROS
 #include <windows.h>
 #include <commctrl.h>
