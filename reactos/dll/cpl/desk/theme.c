@@ -8,7 +8,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
 
 static BOOL g_PresetLoaded = FALSE;
 static INT g_TemplateCount = 0;

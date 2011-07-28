@@ -9,9 +9,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "preview.h"
-#include "appearance.h"
 
 /******************************************************************************/
 

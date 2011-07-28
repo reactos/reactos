@@ -9,7 +9,6 @@
  */
 
 #include "desk.h"
-#include "monslctl.h"
 
 typedef struct _DATA
 {
