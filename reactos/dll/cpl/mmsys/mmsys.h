@@ -1,4 +1,16 @@
-#pragma once
+#include <windows.h>
+#include <commctrl.h>
+#include <cpl.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <initguid.h>
+#include <cfgmgr32.h>
+#include <setupapi.h>
+#include <devguid.h>
+#include <debug.h>
+#include <shlwapi.h>
+
+#include "resource.h"
 
 //typedef LONG (CALLBACK *APPLET_PROC)(VOID);
 
