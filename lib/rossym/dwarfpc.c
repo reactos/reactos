@@ -50,7 +50,7 @@ dwarfpctoline(Dwarf *d, ulong pc, char **cdir, char **dir, char **file, char **f
 {
 	uchar *prog, *opcount, *end, *dirs;
 	ulong off, unit, len, vers, x, start, lastline;
-	int i, first, firstline, op, a, l, quantum, isstmt, linebase, linerange, opcodebase, nf;
+	int i, first, op, a, l, quantum, isstmt, linebase, linerange, opcodebase, nf;
 	char *files, *s;
 	DwarfBuf b;
 	DwarfSym sym;
@@ -150,7 +150,6 @@ dwarfpctoline(Dwarf *d, ulong pc, char **cdir, char **dir, char **file, char **f
 	if(trace) werrstr("program @ %lu ... %.*H opbase = %d\n", b.p - d->line.data, b.ep-b.p, b.p, opcodebase);
 	first = 1;
 	while(b.p != nil){
-		firstline = 0;
 		op = dwarfget1(&b);
 		if(trace) werrstr("\tline %lu, addr 0x%x, op %d %.10H", cur.line, cur.addr, op, b.p);
 		if(op >= opcodebase){
@@ -163,16 +162,12 @@ dwarfpctoline(Dwarf *d, ulong pc, char **cdir, char **dir, char **file, char **f
 			if(first){
 				if(cur.addr > pc){
 					werrstr("found wrong line mapping 0x%x for pc 0x%x", cur.addr, pc);
-					/* This is an overzealous check.  gcc can produce discontiguous ranges
-					   and reorder statements, so it's possible for a future line to start
-					   ahead of pc and still find a matching one. */
-					/*goto out;*/
-					firstline = 1;
+					goto out;
 				}
 				first = 0;
 				start = cur.addr;
 			}
-			if(cur.addr > pc && !firstline)
+			if(cur.addr > pc)
 				break;
 			if(b.p == nil){
 				werrstr("buffer underflow in line mapping");

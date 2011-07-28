@@ -366,7 +366,7 @@ static Parse plist[] = {	/* Font Tab 4 */
 	{ DwarfAttrFrameBase,		OFFSET(framebase),			TBlock|TConstant },
 	{ DwarfAttrFriend,			OFFSET(friend),				TReference },
 	{ DwarfAttrHighpc,			OFFSET(highpc),				TAddress },
-	{ DwarfAttrEntrypc,         OFFSET(entrypc),            TAddress },
+    { DwarfAttrEntrypc,         OFFSET(entrypc),            TAddress },
 	{ DwarfAttrIdentifierCase,	OFFSET(identifiercase),		TConstant },
 	{ DwarfAttrImport,			OFFSET(import),				TReference },
 	{ DwarfAttrInline,			OFFSET(inlined),			TConstant },

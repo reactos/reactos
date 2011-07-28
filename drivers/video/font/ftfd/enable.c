@@ -43,6 +43,9 @@ FtfdEnableDriver(
 
     TRACE("FtfdEnableDriver()\n");
 
+//__debugbreak();
+
+
     /* Check parameter */
     if (cj < sizeof(DRVENABLEDATA))
     {

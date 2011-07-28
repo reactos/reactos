@@ -20,8 +20,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern NTSTATUS RosSymStatus;
-
 BOOLEAN
 RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
 {
@@ -32,14 +30,10 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
   unsigned SymbolTable, NumSymbols;
 
   /* Load DOS header */
-  if (! RosSymSeekFile(FileContext, 0))
-    {
-	  DPRINT1("Could not rewind file\n");
-	  return FALSE;
-	}
+  DPRINT("About to read file\n");
   if (! RosSymReadFile(FileContext, &DosHeader, sizeof(IMAGE_DOS_HEADER)))
     {
-	  DPRINT1("Failed to read DOS header %x\n", RosSymStatus);
+      DPRINT1("Failed to read DOS header\n");
       return FALSE;
     }
   if (! ROSSYM_IS_VALID_DOS_HEADER(&DosHeader))
@@ -83,7 +77,6 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
       DPRINT1("Failed seeking to section headers\n");
       return FALSE;
     }
-  DPRINT("Alloc section headers\n");
   SectionHeaders = RosSymAllocMem(NtHeaders.FileHeader.NumberOfSections
                                   * sizeof(IMAGE_SECTION_HEADER));
   if (NULL == SectionHeaders)
@@ -192,9 +185,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
   pe->imagebase = pe->loadbase = NtHeaders.OptionalHeader.ImageBase;
   pe->imagesize = NtHeaders.OptionalHeader.SizeOfImage;
   pe->loadsection = loaddisksection;
-  DPRINT("do dwarfopen\n");
   *RosSymInfo = dwarfopen(pe);
-  DPRINT("done %x\n", *RosSymInfo);
 
   return TRUE;
 

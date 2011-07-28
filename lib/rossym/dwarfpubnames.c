@@ -66,7 +66,8 @@ _dwarfnametounit(Dwarf *d, char *name, DwarfBlock *bl, DwarfSym *s)
 int
 dwarflookupname(Dwarf *d, char *name, DwarfSym *sym)
 {
-	return _dwarfnametounit(d, name, &d->pubnames, sym);
+    if (!d->pubnames.data) return -1;
+    else return _dwarfnametounit(d, name, &d->pubnames, sym);
 }
 
 /*

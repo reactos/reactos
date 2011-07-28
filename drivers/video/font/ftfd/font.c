@@ -316,7 +316,7 @@ FtfdInitGlyphSet(
 
     /* Initialize FD_GLYPHSET */
     pGlyphSet->cjThis = cjSize;
-    pGlyphSet->flAccel = 0;
+    pGlyphSet->flAccel = GS_16BIT_HANDLES;
     pGlyphSet->cGlyphsSupported = pface->cMappings;
     pGlyphSet->cRuns = pface->cRuns;
 
@@ -641,6 +641,35 @@ error:
     return HFF_INVALID;
 }
 
+LONG
+APIENTRY
+FtfdQueryFontFile(
+    ULONG_PTR diFile,
+    ULONG ulMode,
+    ULONG cjBuf,
+    ULONG *pulBuf)
+{
+    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
+
+    TRACE("FtfdQueryFontFile(ulMode=%ld)\n", ulMode);
+
+    switch (ulMode)
+    {
+        case QFF_DESCRIPTION:
+        {
+            WARN("QFF_DESCRIPTION unimplemented\n");
+            return 0;
+        }
+
+        case QFF_NUMFACES:
+            /* return the number of faces in the file */
+            return pfile->cNumFaces;
+
+    }
+
+    return FD_ERROR;
+}
+
 PIFIMETRICS
 APIENTRY
 FtfdQueryFont(
@@ -732,35 +761,6 @@ FtfdUnloadFontFile(
     EngFreeMem(pfile);
 
     return TRUE;
-}
-
-LONG
-APIENTRY
-FtfdQueryFontFile(
-    ULONG_PTR diFile,
-    ULONG ulMode,
-    ULONG cjBuf,
-    ULONG *pulBuf)
-{
-    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
-
-    TRACE("FtfdQueryFontFile(ulMode=%ld)\n", ulMode);
-
-    switch (ulMode)
-    {
-        case QFF_DESCRIPTION:
-        {
-            WARN("QFF_DESCRIPTION unimplemented\n");
-            return 0;
-        }
-
-        case QFF_NUMFACES:
-            /* return the number of faces in the file */
-            return pfile->cNumFaces;
-
-    }
-
-    return FD_ERROR;
 }
 
 LONG

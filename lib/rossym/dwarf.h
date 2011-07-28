@@ -252,7 +252,7 @@ struct DwarfAttrs
 		uchar	framebase;
 		uchar	friend;
 		uchar	highpc;
-		uchar   entrypc;
+        uchar   entrypc;
 		uchar	identifiercase;
 		uchar	import;
 		uchar	inlined;
@@ -315,7 +315,7 @@ struct DwarfAttrs
 	DwarfVal	framebase;
 	ulong	friend;
 	ulong	highpc;
-	ulong   entrypc;
+    ulong   entrypc;
 	ulong	identifiercase;
 	ulong	import;
 	ulong	inlined;

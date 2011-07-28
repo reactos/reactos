@@ -19,9 +19,6 @@ extern ROSSYM_CALLBACKS RosSymCallbacks;
 extern BOOLEAN RosSymZwReadFile(PVOID FileContext, PVOID Buffer, ULONG Size);
 extern BOOLEAN RosSymZwSeekFile(PVOID FileContext, ULONG_PTR Position);
 
-extern BOOLEAN RosSymIoReadFile(PVOID FileContext, PVOID Buffer, ULONG Size);
-extern BOOLEAN RosSymIoSeekFile(PVOID FileContext, ULONG_PTR Position);
-
 #define ROSSYM_IS_VALID_DOS_HEADER(DosHeader) (IMAGE_DOS_SIGNATURE == (DosHeader)->e_magic \
                                                && 0L != (DosHeader)->e_lfanew)
 #define ROSSYM_IS_VALID_NT_HEADERS(NtHeaders) (IMAGE_NT_SIGNATURE == (NtHeaders)->Signature \
