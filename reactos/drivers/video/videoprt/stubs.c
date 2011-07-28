@@ -21,7 +21,6 @@
 
 
 #include "videoprt.h"
-#include <wdmguid.h>
 
 VP_STATUS
 NTAPI

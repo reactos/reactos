@@ -17,11 +17,7 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#define WIN32_NO_STATUS
-#include <windows.h>
 #include <ndk/ntndk.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */

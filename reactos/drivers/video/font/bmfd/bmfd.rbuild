@@ -6,4 +6,5 @@
 	<file>enable.c</file>
 	<file>font.c</file>
 	<file>glyph.c</file>
+	<pch>bmfd.h</pch>
 </module>

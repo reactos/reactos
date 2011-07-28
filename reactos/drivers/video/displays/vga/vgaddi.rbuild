@@ -21,4 +21,5 @@
 		<file>vgavideo.c</file>
 	</directory>
 	<file>vgaddi.rc</file>
+	<pch>vgaddi.h</pch>
 </module>
