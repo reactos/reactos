@@ -12,6 +12,7 @@
 	<file>hiveinit.c</file>
 	<file>hivesum.c</file>
 	<file>hivewrt.c</file>
+	<pch>cmlib.h</pch>
 </module>
 <module name="cmlibhost" type="hoststaticlibrary">
 	<include base="cmlibhost">.</include>

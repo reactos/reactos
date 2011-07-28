@@ -10,4 +10,5 @@
 	<file>sup.c</file>
 	<file>wave.c</file>
 	<file>topology.c</file>
+	<pch>priv.h</pch>
 </module>
