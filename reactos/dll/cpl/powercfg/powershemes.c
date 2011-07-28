@@ -10,13 +10,7 @@
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-#include "resource.h"
 #include "powercfg.h"
-#include "stdio.h"
 
 UINT Sec[]=
 {
