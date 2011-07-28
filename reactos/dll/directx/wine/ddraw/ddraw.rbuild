@@ -34,6 +34,7 @@
 	<file>version.rc</file>
 	<file>vertexbuffer.c</file>
 	<file>viewport.c</file>
+	<pch>ddraw_private.h</pch>
 
 	<dependency>wineheaders</dependency>
 </module>
