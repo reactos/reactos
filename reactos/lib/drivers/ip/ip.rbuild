@@ -41,4 +41,5 @@
 			<file>udp.c</file>
 		</directory>
 	</directory>
+	<pch>precomp.h</pch>
 </module>
