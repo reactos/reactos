@@ -121,5 +121,6 @@ add_importlibs(glu32
     kernel32
     ntdll)
 
+add_pch(glu32 include/gluos.h)
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(glu32.spec)
