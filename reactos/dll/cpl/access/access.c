@@ -8,12 +8,6 @@
  *                  Copyright 2007 Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include "resource.h"
 #include "access.h"
 
 #define NUM_APPLETS	(1)
