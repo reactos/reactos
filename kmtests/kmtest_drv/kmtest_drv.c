@@ -314,9 +314,10 @@ DriverIoControl(
         {
             PKMT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
-            DPRINT("DriverIoControl. IOCTL_KMTEST_SET_RESULTBUFFER, inlen=%lu, outlen=%lu\n",
-                     IoStackLocation->Parameters.DeviceIoControl.InputBufferLength,
-                     IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength);
+            DPRINT("DriverIoControl. IOCTL_KMTEST_SET_RESULTBUFFER, buffer=%p, inlen=%lu, outlen=%lu\n",
+                    IoStackLocation->Parameters.DeviceIoControl.Type3InputBuffer,
+                    IoStackLocation->Parameters.DeviceIoControl.InputBufferLength,
+                    IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength);
 
             if (DeviceExtension->Mdl)
             {
@@ -342,7 +343,7 @@ DriverIoControl(
 
             _SEH2_TRY
             {
-                MmProbeAndLockPages(DeviceExtension->Mdl, KernelMode, IoModifyAccess);
+                MmProbeAndLockPages(DeviceExtension->Mdl, UserMode, IoModifyAccess);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

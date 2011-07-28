@@ -24,8 +24,7 @@
 #define SERVICE_PATH        L"kmtest_drv.sys"
 #define SERVICE_DESCRIPTION L"ReactOS Kernel-Mode Test Suite Driver"
 
-#define LOGBUFFER_SIZE      16364
-#define RESULTBUFFER_SIZE   FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE])
+#define RESULTBUFFER_SIZE   (1024 * 1024)
 
 typedef enum
 {
@@ -255,9 +254,14 @@ RunTest(
 
     assert(TestName != NULL);
 
-    ResultBuffer = KmtAllocateResultBuffer(LOGBUFFER_SIZE);
-    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_SET_RESULTBUFFER, ResultBuffer, RESULTBUFFER_SIZE, NULL, 0, &BytesRead, NULL))
-        error_goto(Error, cleanup);
+    if (!ResultBuffer)
+    {
+        ResultBuffer = KmtAllocateResultBuffer(RESULTBUFFER_SIZE);
+        if (!ResultBuffer)
+            error_goto(Error, cleanup);
+        if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_SET_RESULTBUFFER, ResultBuffer, RESULTBUFFER_SIZE, NULL, 0, &BytesRead, NULL))
+            error_goto(Error, cleanup);
+    }
 
     // check test list
     TestFunction = FindTest(TestName);
@@ -274,8 +278,6 @@ RunTest(
 cleanup:
     if (!Error)
         Error = OutputResult(TestName);
-
-    KmtFreeResultBuffer(ResultBuffer);
 
     return Error;
 }
@@ -366,6 +368,9 @@ main(
 cleanup:
     if (KmtestHandle)
         CloseHandle(KmtestHandle);
+
+    if (ResultBuffer)
+        KmtFreeResultBuffer(ResultBuffer);
 
     KmtCloseService(&KmtestServiceHandle);
 

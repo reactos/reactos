@@ -173,15 +173,17 @@ BOOLEAN KmtAreInterruptsEnabled(VOID)
 
 INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
 #elif defined KMT_USER_MODE
-static PKMT_RESULTBUFFER KmtAllocateResultBuffer(SIZE_T LogBufferMaxLength)
+static PKMT_RESULTBUFFER KmtAllocateResultBuffer(SIZE_T ResultBufferSize)
 {
-    PKMT_RESULTBUFFER Buffer = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LogBufferMaxLength]));
+    PKMT_RESULTBUFFER Buffer = HeapAlloc(GetProcessHeap(), 0, ResultBufferSize);
+    if (!Buffer)
+        return NULL;
 
     Buffer->Successes = 0;
     Buffer->Failures = 0;
     Buffer->Skipped = 0;
     Buffer->LogBufferLength = 0;
-    Buffer->LogBufferMaxLength = LogBufferMaxLength;
+    Buffer->LogBufferMaxLength = ResultBufferSize - FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer);
 
     return Buffer;
 }
