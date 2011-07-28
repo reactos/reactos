@@ -27,12 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-#include <commctrl.h>
-#include <setupapi.h>
-
-#include "globals.h"
-
+#include "precomp.h"
 
 /* GLOBALS *******************************************************************/
 

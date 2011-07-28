@@ -9,26 +9,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-#include <string.h>
-#include <setupapi.h>
-#include <pseh/pseh2.h>
-#include <shlobj.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <time.h>
-
-#include <syssetup/syssetup.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "globals.h"
-#include "resource.h"
 
 #define VMWINST
 
