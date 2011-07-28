@@ -8,11 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-
-#include <mmebuddy.h>
+#include "precomp.h"
 
 static HANDLE ProcessHeapHandle = NULL;
 static UINT   CurrentAllocations = 0;

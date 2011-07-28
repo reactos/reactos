@@ -10,10 +10,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <mmebuddy.h>
+#include "precomp.h"
 
 /*
     Attaches a function table to a sound device. Any NULL entries in this

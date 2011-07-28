@@ -7,11 +7,11 @@
 	<file>devicelist.c</file>
 	<file>deviceinstance.c</file>
 	<file>functiontable.c</file>
-    <file>mmewrap.c</file>
+	<file>mmewrap.c</file>
 	<file>reentrancy.c</file>
 	<file>utility.c</file>
 	<file>kernel.c</file>
-    <file>thread.c</file>
+	<file>thread.c</file>
 	<directory name="wave">
 		<file>widMessage.c</file>
 		<file>wodMessage.c</file>
@@ -29,4 +29,5 @@
 	<directory name="auxiliary">
 		<file>auxMessage.c</file>
 	</directory>
+	<pch>precomp.h</pch>
 </module>
