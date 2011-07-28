@@ -66,4 +66,5 @@ add_importlibs(browseui
     kernel32
     ntdll)
 
+add_pch(browseui precomp.h)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)

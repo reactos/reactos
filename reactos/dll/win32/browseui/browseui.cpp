@@ -18,26 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <shlwapi.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include <wine/debug.h>
-#include "resource.h"
-#include "aclmulti.h"
-#include "addressband.h"
-#include "addresseditbox.h"
-#include "bandproxy.h"
-#include "bandsite.h"
-#include "bandsitemenu.h"
-#include "brandband.h"
-#include "internettoolbar.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 

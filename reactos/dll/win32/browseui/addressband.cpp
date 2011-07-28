@@ -21,17 +21,7 @@
 /*
 Implements the navigation band of the cabinet window
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "addressband.h"
+#include "precomp.h"
 
 /*
 TODO:
