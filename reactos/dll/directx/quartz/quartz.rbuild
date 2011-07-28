@@ -53,6 +53,7 @@
 	<file>control.c</file>
 	<file>avisplit.c</file>
 	<file>version.rc</file>
+	<pch>quartz_private.h</pch>
 </module>
 <module name="quartz_proxy" type="rpcproxy" allowwarnings="true">
 	<define name="__WINESRC__" />
