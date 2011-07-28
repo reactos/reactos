@@ -24,13 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 #define POSITIVE_EXAMPLE   _T("123456789.00")
 #define NEGATIVE_EXAMPLE   _T("-123456789.00")

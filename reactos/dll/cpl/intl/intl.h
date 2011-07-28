@@ -1,6 +1,14 @@
-#pragma once
-
+#include <windows.h>
 #include <cpl.h>
+#include <commctrl.h>
+#include <setupapi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <tchar.h>
+#include <prsht.h>
+#include <malloc.h>
+
+#include "resource.h"
 
 #define DECIMAL_RADIX          10
 
