@@ -2213,7 +2213,13 @@ DefWindowProcA(HWND hWnd,
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)
+   {
       msgOverride = IsMsgOverride(Msg, &guah.DefWndProcArray);
+      if(msgOverride == FALSE)
+      {
+          EndUserApiHook();
+      }
+   }
 
    /* Bypass SEH and go direct. */
    if (!Hook || !msgOverride)
@@ -2246,7 +2252,13 @@ DefWindowProcW(HWND hWnd,
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)
+   {
       msgOverride = IsMsgOverride(Msg, &guah.DefWndProcArray);
+      if(msgOverride == FALSE)
+      {
+          EndUserApiHook();
+      }
+   }
 
    /* Bypass SEH and go direct. */
    if (!Hook || !msgOverride)
