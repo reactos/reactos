@@ -26,4 +26,5 @@
 	<file>instrument.c</file>
 	<file>port.c</file>
 	<file>regsvr.c</file>
+	<pch>dmusic_private.h</pch>
 </module>
