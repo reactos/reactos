@@ -5,5 +5,6 @@
 		<file>drivers.c</file>
 		<file>modules.c</file>
 		<file>processes.c</file>
+		<pch>precomp.h</pch>
 	</directory>
 </module>
