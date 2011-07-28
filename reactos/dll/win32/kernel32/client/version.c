@@ -8,106 +8,62 @@
  */
 
 #include <k32.h>
-#include <reactos/buildno.h>
+
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32ver);
-
-#define UNICODIZE1(x) L##x
-#define UNICODIZE(x) UNICODIZE1(x)
-
-static UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
-static UNICODE_STRING ValName = RTL_CONSTANT_STRING(L"ReportAsWorkstation");
 
 /* FUNCTIONS ******************************************************************/
 
-
-static VOID
-SetRosSpecificInfo(LPOSVERSIONINFOW lpVersionInformation)
+VOID
+NTAPI
+SetRosSpecificInfo(IN LPOSVERSIONINFOEXW VersionInformation)
 {
-    PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = NULL;
+    CHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD)];
+    PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = (PVOID)Buffer;
     OBJECT_ATTRIBUTES ObjectAttributes;
     DWORD ReportAsWorkstation = 0;
     HANDLE hKey;
     DWORD dwSize;
-    INT ln, maxlen;
     NTSTATUS Status;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
+    UNICODE_STRING ValName = RTL_CONSTANT_STRING(L"ReportAsWorkstation");
 
-    TRACE("Setting Ros Specific version info\n");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-    if (!lpVersionInformation)
-        return;
-
-    /* Only the EX version has a product type */
-    if (lpVersionInformation->dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
+    /* Don't change anything if the key doesn't exist */
+    Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
     {
-        /* Allocate memory for our reg query */
-        dwSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD);
-        kvpInfo = (PKEY_VALUE_PARTIAL_INFORMATION)HeapAlloc(GetProcessHeap(), 0, dwSize);
-        if (!kvpInfo)
-            return;
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-
-        /* Don't change anything if the key doesn't exist */
-        Status = NtOpenKey(&hKey,
-                           KEY_READ,
-                           &ObjectAttributes);
-        if (NT_SUCCESS(Status))
+        /* Get the value from the registry and make sure it's a 32-bit value */
+        Status = NtQueryValueKey(hKey,
+                                 &ValName,
+                                 KeyValuePartialInformation,
+                                 kvpInfo,
+                                 sizeof(Buffer),
+                                 &dwSize);
+        if ((NT_SUCCESS(Status)) &&
+            (kvpInfo->Type == REG_DWORD) &&
+            (kvpInfo->DataLength == sizeof(DWORD)))
         {
-            /* Get the value from the registry */
-            Status = NtQueryValueKey(hKey,
-                                     &ValName,
-                                     KeyValuePartialInformation,
-                                     kvpInfo,
-                                     dwSize,
-                                     &dwSize);
-            if (NT_SUCCESS(Status))
+            /* Is the value set? */
+            ReportAsWorkstation = *(PULONG)kvpInfo->Data;
+            if ((VersionInformation->wProductType == VER_NT_SERVER) &&
+                (ReportAsWorkstation))
             {
-                /* It should be a DWORD */
-                if (kvpInfo->Type == REG_DWORD)
-                {
-                    /* Copy the value for ease of use */
-                    RtlMoveMemory(&ReportAsWorkstation,
-                                  kvpInfo->Data,
-                                  kvpInfo->DataLength);
-
-                    /* Is the value set? */
-                    if (((LPOSVERSIONINFOEXW)lpVersionInformation)->wProductType == VER_NT_SERVER  &&
-                        ReportAsWorkstation)
-                    {
-                        /* It is, modify the product type to report a workstation */
-                        ((LPOSVERSIONINFOEXW)lpVersionInformation)->wProductType = VER_NT_WORKSTATION;
-                        TRACE("We modified the reported OS from NtProductServer to NtProductWinNt\n");
-                    }
-                }
+                /* It is, modify the product type to report a workstation */
+                VersionInformation->wProductType = VER_NT_WORKSTATION;
+                DPRINT1("We modified the reported OS from NtProductServer to NtProductWinNt\n");
             }
+        }
 
-            NtClose(hKey);
-         }
-
-        HeapFree(GetProcessHeap(), 0, kvpInfo);
-    }
-
-
-    /* Append a reactos specific string to the szCSDVersion string ... very hackish ... */
-    /* FIXME: Does anything even use this??? I think not.... - Ged */
-    ln = wcslen(lpVersionInformation->szCSDVersion) + 1;
-    maxlen = (sizeof(lpVersionInformation->szCSDVersion) / sizeof(lpVersionInformation->szCSDVersion[0]) - 1);
-    if(maxlen > ln)
-    {
-        PWCHAR szVer = lpVersionInformation->szCSDVersion + ln;
-        RtlZeroMemory(szVer, (maxlen - ln + 1) * sizeof(WCHAR));
-        wcsncpy(szVer,
-                L"ReactOS " UNICODIZE(KERNEL_VERSION_STR) L" (Build " UNICODIZE(KERNEL_VERSION_BUILD_STR) L")",
-                maxlen - ln);
-    }
+        /* Close the handle */
+        NtClose(hKey);
+     }
 }
-
 
 /*
  * @implemented
@@ -116,20 +72,13 @@ DWORD
 WINAPI
 GetVersion(VOID)
 {
-    PPEB pPeb = NtCurrentPeb();
-    DWORD nVersion;
+    PPEB Peb = NtCurrentPeb();
+    DWORD Result;
 
-    nVersion = MAKEWORD(pPeb->OSMajorVersion, pPeb->OSMinorVersion);
-
-     /* behave consistently when posing as another operating system build number */
-    if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_WINDOWS)
-        nVersion |= ((DWORD)(pPeb->OSBuildNumber)) << 16;
-
-    /* non-NT platform flag */
-    if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_NT)
-        nVersion |= 0x80000000;
-
-    return nVersion;
+    Result = MAKELONG(MAKEWORD(Peb->OSMajorVersion, Peb->OSMinorVersion),
+                      (Peb->OSPlatformId ^ 2) << 14);
+    Result |= LOWORD(Peb->OSBuildNumber) << 16;
+    return Result;
 }
 
 /*
@@ -137,100 +86,28 @@ GetVersion(VOID)
  */
 BOOL
 WINAPI
-GetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
+GetVersionExW(IN LPOSVERSIONINFOW lpVersionInformation)
 {
     NTSTATUS Status;
+    LPOSVERSIONINFOEXW lpVersionInformationEx;
 
-    if(lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOW) &&
-       lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOEXW))
+    if ((lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOW)) &&
+        (lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOEXW)))
     {
-        /* for some reason win sets ERROR_INSUFFICIENT_BUFFER even if it is large
-           enough but doesn't match the exact sizes supported, ERROR_INVALID_PARAMETER
-           would've been much more appropriate... */
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
 
     Status = RtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation);
-    if(NT_SUCCESS(Status))
+    if (Status == STATUS_SUCCESS)
     {
-        /* ReactOS specific changes */
-        SetRosSpecificInfo(lpVersionInformation);
-
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-GetVersionExA(LPOSVERSIONINFOA lpVersionInformation)
-{
-    OSVERSIONINFOEXW viw;
-
-    RtlZeroMemory(&viw, sizeof(viw));
-
-    switch(lpVersionInformation->dwOSVersionInfoSize)
-    {
-        case sizeof(OSVERSIONINFOA):
-            viw.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-            break;
-
-        case sizeof(OSVERSIONINFOEXA):
-            viw.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
-            break;
-
-     default:
-        /* for some reason win sets ERROR_INSUFFICIENT_BUFFER even if it is large
-           enough but doesn't match the exact sizes supported, ERROR_INVALID_PARAMETER
-           would've been much more appropriate... */
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
-    }
-
-    if(GetVersionExW((LPOSVERSIONINFOW)&viw))
-    {
-        ANSI_STRING CSDVersionA;
-        UNICODE_STRING CSDVersionW;
-
-        /* copy back fields that match both supported structures */
-        lpVersionInformation->dwMajorVersion = viw.dwMajorVersion;
-        lpVersionInformation->dwMinorVersion = viw.dwMinorVersion;
-        lpVersionInformation->dwBuildNumber = viw.dwBuildNumber;
-        lpVersionInformation->dwPlatformId = viw.dwPlatformId;
-
-        /* convert the win version string */
-        RtlInitUnicodeString(&CSDVersionW, viw.szCSDVersion);
-
-        CSDVersionA.Length = 0;
-        CSDVersionA.MaximumLength = sizeof(lpVersionInformation->szCSDVersion);
-        CSDVersionA.Buffer = lpVersionInformation->szCSDVersion;
-
-        RtlUnicodeStringToAnsiString(&CSDVersionA, &CSDVersionW, FALSE);
-
-        /* convert the ReactOS version string */
-        CSDVersionW.Buffer = viw.szCSDVersion + CSDVersionW.Length / sizeof(WCHAR) + 1;
-        CSDVersionW.MaximumLength = sizeof(viw.szCSDVersion) - (CSDVersionW.Length + sizeof(WCHAR));
-        CSDVersionW.Length = wcslen(CSDVersionW.Buffer) * sizeof(WCHAR);
-        CSDVersionA.Buffer = lpVersionInformation->szCSDVersion + CSDVersionA.Length + 1;
-        CSDVersionA.MaximumLength = sizeof(lpVersionInformation->szCSDVersion) - (CSDVersionA.Length + 1);
-        CSDVersionA.Length = 0;
-
-        RtlUnicodeStringToAnsiString(&CSDVersionA, &CSDVersionW, FALSE);
-
-        /* copy back the extended fields */
-        if(viw.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
+        if (lpVersionInformation->dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
         {
-            ((LPOSVERSIONINFOEXA)lpVersionInformation)->wServicePackMajor = viw.wServicePackMajor;
-            ((LPOSVERSIONINFOEXA)lpVersionInformation)->wServicePackMinor = viw.wServicePackMinor;
-            ((LPOSVERSIONINFOEXA)lpVersionInformation)->wSuiteMask = viw.wSuiteMask;
-            ((LPOSVERSIONINFOEXA)lpVersionInformation)->wProductType = viw.wProductType;
-            ((LPOSVERSIONINFOEXA)lpVersionInformation)->wReserved = viw.wReserved;
+            lpVersionInformationEx = (PVOID)lpVersionInformation;
+            lpVersionInformationEx->wReserved = 0;
+
+            /* ReactOS specific changes */
+            SetRosSpecificInfo(lpVersionInformationEx);
         }
 
         return TRUE;
@@ -239,65 +116,108 @@ GetVersionExA(LPOSVERSIONINFOA lpVersionInformation)
     return FALSE;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetVersionExA(IN LPOSVERSIONINFOA lpVersionInformation)
+{
+    OSVERSIONINFOEXW VersionInformation;
+    LPOSVERSIONINFOEXA lpVersionInformationEx;
+    UNICODE_STRING CsdVersionW;
+    NTSTATUS Status;
+    ANSI_STRING CsdVersionA;
+
+    if ((lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOA)) &&
+        (lpVersionInformation->dwOSVersionInfoSize != sizeof(OSVERSIONINFOEXA)))
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    VersionInformation.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+
+    if (!GetVersionExW((LPOSVERSIONINFOW)&VersionInformation)) return FALSE;
+
+    /* Copy back fields that match both supported structures */
+    lpVersionInformation->dwMajorVersion = VersionInformation.dwMajorVersion;
+    lpVersionInformation->dwMinorVersion = VersionInformation.dwMinorVersion;
+    lpVersionInformation->dwBuildNumber = VersionInformation.dwBuildNumber;
+    lpVersionInformation->dwPlatformId = VersionInformation.dwPlatformId;
+
+    if (lpVersionInformation->dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXA))
+    {
+        lpVersionInformationEx = (PVOID)lpVersionInformation;
+        lpVersionInformationEx->wServicePackMajor = VersionInformation.wServicePackMajor;
+        lpVersionInformationEx->wServicePackMinor = VersionInformation.wServicePackMinor;
+        lpVersionInformationEx->wSuiteMask = VersionInformation.wSuiteMask;
+        lpVersionInformationEx->wProductType = VersionInformation.wProductType;
+        lpVersionInformationEx->wReserved = VersionInformation.wReserved;
+    }
+
+    /* Convert the CSD string */
+    RtlInitEmptyAnsiString(&CsdVersionA,
+                           lpVersionInformation->szCSDVersion,
+                           sizeof(lpVersionInformation->szCSDVersion));
+    RtlInitUnicodeString(&CsdVersionW, VersionInformation.szCSDVersion);
+    Status = RtlUnicodeStringToAnsiString(&CsdVersionA, &CsdVersionW, FALSE);
+    return (NT_SUCCESS(Status));
+}
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-VerifyVersionInfoW(LPOSVERSIONINFOEXW lpVersionInformation,
-                   DWORD dwTypeMask,
-                   DWORDLONG dwlConditionMask)
+VerifyVersionInfoW(IN LPOSVERSIONINFOEXW lpVersionInformation,
+                   IN DWORD dwTypeMask,
+                   IN DWORDLONG dwlConditionMask)
 {
     NTSTATUS Status;
 
     Status = RtlVerifyVersionInfo((PRTL_OSVERSIONINFOEXW)lpVersionInformation,
                                   dwTypeMask,
                                   dwlConditionMask);
-    switch(Status)
+    switch (Status)
     {
         case STATUS_INVALID_PARAMETER:
             SetLastError(ERROR_BAD_ARGUMENTS);
             return FALSE;
 
         case STATUS_REVISION_MISMATCH:
-        SetLastError(ERROR_OLD_WIN_VERSION);
-        return FALSE;
+            DPRINT1("ReactOS returning version mismatch. Investigate!\n");
+            SetLastError(ERROR_OLD_WIN_VERSION);
+            return FALSE;
 
         default:
             /* RtlVerifyVersionInfo shouldn't report any other failure code! */
             ASSERT(NT_SUCCESS(Status));
-
-            /* ReactOS specific changes */
-            SetRosSpecificInfo((LPOSVERSIONINFOW)lpVersionInformation);
-
             return TRUE;
     }
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-VerifyVersionInfoA(LPOSVERSIONINFOEXA lpVersionInformation,
-                   DWORD dwTypeMask,
-                   DWORDLONG dwlConditionMask)
+VerifyVersionInfoA(IN LPOSVERSIONINFOEXA lpVersionInformation,
+                   IN DWORD dwTypeMask,
+                   IN DWORDLONG dwlConditionMask)
 {
     OSVERSIONINFOEXW viex;
 
+    /* NOTE: szCSDVersion is ignored, we don't need to convert it to Unicode */
     viex.dwOSVersionInfoSize = sizeof(viex);
     viex.dwMajorVersion = lpVersionInformation->dwMajorVersion;
     viex.dwMinorVersion = lpVersionInformation->dwMinorVersion;
     viex.dwBuildNumber = lpVersionInformation->dwBuildNumber;
     viex.dwPlatformId = lpVersionInformation->dwPlatformId;
-    /* NOTE: szCSDVersion is ignored, we don't need to convert it to unicode */
     viex.wServicePackMajor = lpVersionInformation->wServicePackMajor;
     viex.wServicePackMinor = lpVersionInformation->wServicePackMinor;
     viex.wSuiteMask = lpVersionInformation->wSuiteMask;
     viex.wProductType = lpVersionInformation->wProductType;
     viex.wReserved = lpVersionInformation->wReserved;
-
     return VerifyVersionInfoW(&viex, dwTypeMask, dwlConditionMask);
 }
