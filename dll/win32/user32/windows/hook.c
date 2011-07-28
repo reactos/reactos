@@ -438,6 +438,14 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
     ANSI_STRING InitFuncName;
     BOOL Result = FALSE;
 
+    TRACE("ClientLoadLibrary: pid: %d, strLibraryName: %S, "
+          "strInitFuncName: %S, Unload: %d, ApiHook:%d\n",
+          GetCurrentProcessId(), 
+          pstrLibName->Buffer,
+          pstrInitFunc->Buffer,
+          Unload,
+          ApiHook);
+
     /* Check if we have to load the module */
     if(Unload == FALSE)
     {
@@ -485,7 +493,14 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
         if(ApiHook == TRUE)
         {
             Result = ClearUserApiHook(ghmodUserApiHook);
-            hLibrary = Result ? ghmodUserApiHook : 0;
+            hLibrary = ghmodUserApiHook;
+            /* Check if we can we unload it now */
+            if(Result == FALSE)
+            {
+                /* Return success because we are going to free
+                   the library in EndUserApiHook*/
+                return hLibrary;
+            }
         }
         else
         {
