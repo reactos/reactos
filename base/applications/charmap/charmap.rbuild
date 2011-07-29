@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<module name="charmap" type="win32gui" installbase="system32" installname="charmap.exe" unicode="yes">
+	<include base="charmap">.</include>
+	<library>gdi32</library>
+	<library>user32</library>
+	<library>comctl32</library>
+	<file>about.c</file>
+	<file>charmap.c</file>
+	<file>lrgcell.c</file>
+	<file>map.c</file>
+	<file>charmap.rc</file>
+	<pch>precomp.h</pch>
+</module>
