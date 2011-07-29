@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D_DLL -D__USE_CRTIMP
-    -Dlint)
+add_definitions(-Dlint)
 
 add_executable(ftp
     cmds.c
@@ -15,6 +13,7 @@ add_executable(ftp
 
 set_module_type(ftp win32cui)
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
+add_pch(ftp precomp.h)
 
 if(MSVC)
     target_link_libraries(ftp oldnames)

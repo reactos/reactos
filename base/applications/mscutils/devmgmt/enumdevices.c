@@ -415,6 +415,9 @@ ListDevicesByType(HWND hTreeView,
     (void)TreeView_SortChildren(hTreeView,
                                 hRoot,
                                 0);
+
+    (void)TreeView_SelectItem(hTreeView,
+                              hRoot);
 }
 
 

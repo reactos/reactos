@@ -8,7 +8,7 @@
 
 #ifndef _M_ARM
 FORCEINLINE
-UCHAR
+KPROCESSOR_MODE
 KeGetPreviousMode(VOID)
 {
     /* Return the current mode */

@@ -62,6 +62,19 @@ IntGdiSetBrushOwner(PBRUSH pbr, ULONG ulOwner)
 }
 
 BOOL
+FASTCALL
+GreSetBrushOwner(HBRUSH hBrush, ULONG ulOwner)
+{
+    BOOL Ret;
+    PBRUSH pbrush;
+
+    pbrush = BRUSH_ShareLockBrush(hBrush);
+    Ret = IntGdiSetBrushOwner(pbrush, ulOwner);
+    BRUSH_ShareUnlockBrush(pbrush);
+    return Ret;
+}
+
+BOOL
 NTAPI
 BRUSH_bAllocBrushAttr(PBRUSH pbr)
 {

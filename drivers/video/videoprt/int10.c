@@ -60,8 +60,8 @@ IntInt10AllocateBuffer(
       return ERROR_NOT_ENOUGH_MEMORY;
    }
 
-   *Seg = (ULONG)MemoryAddress >> 4;
-   *Off = (ULONG)MemoryAddress & 0xF;
+   *Seg = (USHORT)((ULONG)MemoryAddress >> 4);
+   *Off = (USHORT)((ULONG)MemoryAddress & 0xF);
 
    INFO_(VIDEOPRT, "- Segment: %x\n", (ULONG)MemoryAddress >> 4);
    INFO_(VIDEOPRT, "- Offset: %x\n", (ULONG)MemoryAddress & 0xF);
@@ -182,8 +182,8 @@ IntInt10CallBios(
     BiosArguments->Esi = BiosContext.Esi;
     BiosArguments->Edi = BiosContext.Edi;
     BiosArguments->Ebp = BiosContext.Ebp;
-    BiosArguments->SegDs = BiosContext.SegDs;
-    BiosArguments->SegEs = BiosContext.SegEs;
+    BiosArguments->SegDs = (USHORT)BiosContext.SegDs;
+    BiosArguments->SegEs = (USHORT)BiosContext.SegEs;
 
     /* Detach and return status */
     IntDetachFromCSRSS(&CallingProcess, &ApcState);

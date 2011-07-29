@@ -32,6 +32,8 @@ EXTERN _KiTrap02:PROC
 .data
 ASSUME nothing
 
+.align 16
+
 PUBLIC _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
@@ -124,15 +126,19 @@ _KiInterruptTemplateDispatch:
 
 EXTERN @KiSystemServiceHandler@8:PROC
 PUBLIC _KiSystemService
-_KiSystemService:
+.PROC KiSystemService
+    FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_PUSH_FAKE_ERROR_CODE OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
     KiCallHandler @KiSystemServiceHandler@8
+.ENDP KiSystemService
 
 EXTERN @KiFastCallEntryHandler@8:PROC
 PUBLIC _KiFastCallEntry
-_KiFastCallEntry:
+.PROC KiFastCallEntry
+    FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
     KiCallHandler @KiFastCallEntryHandler@8
+.ENDP KiFastCallEntry
 
 PUBLIC _KiStartUnexpectedRange@0
 _KiStartUnexpectedRange@0:
@@ -155,5 +161,31 @@ KiTrapExitStub KiSystemCallTrapReturn,    (KI_RESTORE_EAX OR KI_RESTORE_FS OR KI
 KiTrapExitStub KiEditedTrapReturn,        (KI_RESTORE_VOLATILES OR KI_RESTORE_EFLAGS OR KI_EDITED_FRAME OR KI_EXIT_RET)
 KiTrapExitStub KiTrapReturn,              (KI_RESTORE_VOLATILES OR KI_RESTORE_SEGMENTS OR KI_EXIT_IRET)
 KiTrapExitStub KiTrapReturnNoSegments,    (KI_RESTORE_VOLATILES OR KI_EXIT_IRET)
+
+#ifdef _MSC_VER
+EXTERN _PsConvertToGuiThread@0:PROC
+
+PUBLIC _KiConvertToGuiThread@0
+_KiConvertToGuiThread@0:
+    /* Safe ebx */
+    push ebx
+
+    /* Calculate the stack frame offset in ebx */
+    mov ebx, ebp
+    sub ebx, esp
+
+    /* Call the worker function */
+    call _PsConvertToGuiThread@0
+
+    /* Adjust ebp to the new stack */
+    mov ebp, esp
+    add ebp, ebx
+
+    /* Restore ebx */
+    pop ebx
+
+    /* return to the caller */
+    ret
+#endif
 
 END

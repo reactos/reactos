@@ -23,9 +23,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
-/* IDirect3DCubeTexture8 IUnknown parts follow: */
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_QueryInterface(LPDIRECT3DCUBETEXTURE8 iface, REFIID riid, LPVOID *ppobj) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static inline IDirect3DCubeTexture8Impl *impl_from_IDirect3DCubeTexture8(IDirect3DCubeTexture8 *iface)
+{
+    return CONTAINING_RECORD(iface, IDirect3DCubeTexture8Impl, IDirect3DCubeTexture8_iface);
+}
+
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_QueryInterface(IDirect3DCubeTexture8 *iface,
+        REFIID riid, void **ppobj)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
 
     TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
 
@@ -43,8 +49,9 @@ static HRESULT WINAPI IDirect3DCubeTexture8Impl_QueryInterface(LPDIRECT3DCUBETEX
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirect3DCubeTexture8Impl_AddRef(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static ULONG WINAPI IDirect3DCubeTexture8Impl_AddRef(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("%p increasing refcount to %u.\n", iface, ref);
@@ -53,15 +60,16 @@ static ULONG WINAPI IDirect3DCubeTexture8Impl_AddRef(LPDIRECT3DCUBETEXTURE8 ifac
     {
         IUnknown_AddRef(This->parentDevice);
         wined3d_mutex_lock();
-        IWineD3DCubeTexture_AddRef(This->wineD3DCubeTexture);
+        wined3d_texture_incref(This->wined3d_texture);
         wined3d_mutex_unlock();
     }
 
     return ref;
 }
 
-static ULONG WINAPI IDirect3DCubeTexture8Impl_Release(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static ULONG WINAPI IDirect3DCubeTexture8Impl_Release(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("%p decreasing refcount to %u.\n", iface, ref);
@@ -69,10 +77,10 @@ static ULONG WINAPI IDirect3DCubeTexture8Impl_Release(LPDIRECT3DCUBETEXTURE8 ifa
     if (ref == 0) {
         IDirect3DDevice8 *parentDevice = This->parentDevice;
 
-        TRACE("Releasing child %p\n", This->wineD3DCubeTexture);
+        TRACE("Releasing child %p.\n", This->wined3d_texture);
 
         wined3d_mutex_lock();
-        IWineD3DCubeTexture_Release(This->wineD3DCubeTexture);
+        wined3d_texture_decref(This->wined3d_texture);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
@@ -82,9 +90,10 @@ static ULONG WINAPI IDirect3DCubeTexture8Impl_Release(LPDIRECT3DCUBETEXTURE8 ifa
 }
 
 /* IDirect3DCubeTexture8 IDirect3DResource8 Interface follow: */
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetDevice(IDirect3DCubeTexture8 *iface, IDirect3DDevice8 **device)
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetDevice(IDirect3DCubeTexture8 *iface,
+        IDirect3DDevice8 **device)
 {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
 
     TRACE("iface %p, device %p.\n", iface, device);
 
@@ -96,221 +105,275 @@ static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetDevice(IDirect3DCubeTexture8 
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_SetPrivateData(LPDIRECT3DCUBETEXTURE8 iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_SetPrivateData(IDirect3DCubeTexture8 *iface,
+        REFGUID refguid, const void *pData, DWORD SizeOfData, DWORD Flags)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     HRESULT hr;
 
     TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
             iface, debugstr_guid(refguid), pData, SizeOfData, Flags);
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_SetPrivateData(This->wineD3DCubeTexture,refguid,pData,SizeOfData,Flags);
+    hr = wined3d_texture_set_private_data(This->wined3d_texture, refguid, pData, SizeOfData, Flags);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetPrivateData(LPDIRECT3DCUBETEXTURE8 iface, REFGUID refguid, void *pData, DWORD *pSizeOfData) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetPrivateData(IDirect3DCubeTexture8 *iface,
+        REFGUID refguid, void *pData, DWORD *pSizeOfData)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     HRESULT hr;
 
     TRACE("iface %p, guid %s, data %p, data_size %p.\n",
             iface, debugstr_guid(refguid), pData, pSizeOfData);
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_GetPrivateData(This->wineD3DCubeTexture,refguid,pData,pSizeOfData);
+    hr = wined3d_texture_get_private_data(This->wined3d_texture, refguid, pData, pSizeOfData);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_FreePrivateData(LPDIRECT3DCUBETEXTURE8 iface, REFGUID refguid) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_FreePrivateData(IDirect3DCubeTexture8 *iface,
+        REFGUID refguid)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     HRESULT hr;
 
     TRACE("iface %p, guid %s.\n", iface, debugstr_guid(refguid));
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_FreePrivateData(This->wineD3DCubeTexture,refguid);
+    hr = wined3d_texture_free_private_data(This->wined3d_texture, refguid);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static DWORD WINAPI IDirect3DCubeTexture8Impl_SetPriority(LPDIRECT3DCUBETEXTURE8 iface, DWORD PriorityNew) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static DWORD WINAPI IDirect3DCubeTexture8Impl_SetPriority(IDirect3DCubeTexture8 *iface,
+        DWORD PriorityNew)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     DWORD ret;
 
     TRACE("iface %p, priority %u.\n", iface, PriorityNew);
 
     wined3d_mutex_lock();
-    ret = IWineD3DCubeTexture_SetPriority(This->wineD3DCubeTexture, PriorityNew);
+    ret = wined3d_texture_set_priority(This->wined3d_texture, PriorityNew);
     wined3d_mutex_unlock();
 
     return ret;
 }
 
-static DWORD WINAPI IDirect3DCubeTexture8Impl_GetPriority(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static DWORD WINAPI IDirect3DCubeTexture8Impl_GetPriority(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     DWORD ret;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    ret =  IWineD3DCubeTexture_GetPriority(This->wineD3DCubeTexture);
+    ret =  wined3d_texture_get_priority(This->wined3d_texture);
     wined3d_mutex_unlock();
 
     return ret;
 }
 
-static void WINAPI IDirect3DCubeTexture8Impl_PreLoad(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static void WINAPI IDirect3DCubeTexture8Impl_PreLoad(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    IWineD3DCubeTexture_PreLoad(This->wineD3DCubeTexture);
+    wined3d_texture_preload(This->wined3d_texture);
     wined3d_mutex_unlock();
 }
 
-static D3DRESOURCETYPE WINAPI IDirect3DCubeTexture8Impl_GetType(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static D3DRESOURCETYPE WINAPI IDirect3DCubeTexture8Impl_GetType(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     D3DRESOURCETYPE type;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    type = IWineD3DCubeTexture_GetType(This->wineD3DCubeTexture);
+    type = wined3d_texture_get_type(This->wined3d_texture);
     wined3d_mutex_unlock();
 
     return type;
 }
 
 /* IDirect3DCubeTexture8 IDirect3DBaseTexture8 Interface follow: */
-static DWORD WINAPI IDirect3DCubeTexture8Impl_SetLOD(LPDIRECT3DCUBETEXTURE8 iface, DWORD LODNew) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static DWORD WINAPI IDirect3DCubeTexture8Impl_SetLOD(IDirect3DCubeTexture8 *iface, DWORD LODNew)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     DWORD lod;
 
     TRACE("iface %p, lod %u.\n", iface, LODNew);
 
     wined3d_mutex_lock();
-    lod = IWineD3DCubeTexture_SetLOD(This->wineD3DCubeTexture, LODNew);
+    lod = wined3d_texture_set_lod(This->wined3d_texture, LODNew);
     wined3d_mutex_unlock();
 
     return lod;
 }
 
-static DWORD WINAPI IDirect3DCubeTexture8Impl_GetLOD(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static DWORD WINAPI IDirect3DCubeTexture8Impl_GetLOD(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     DWORD lod;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    lod = IWineD3DCubeTexture_GetLOD((LPDIRECT3DBASETEXTURE8) This);
+    lod = wined3d_texture_get_lod(This->wined3d_texture);
     wined3d_mutex_unlock();
 
     return lod;
 }
 
-static DWORD WINAPI IDirect3DCubeTexture8Impl_GetLevelCount(LPDIRECT3DCUBETEXTURE8 iface) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static DWORD WINAPI IDirect3DCubeTexture8Impl_GetLevelCount(IDirect3DCubeTexture8 *iface)
+{
+    IDirect3DCubeTexture8Impl *This = impl_from_IDirect3DCubeTexture8(iface);
     DWORD cnt;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    cnt = IWineD3DCubeTexture_GetLevelCount(This->wineD3DCubeTexture);
+    cnt = wined3d_texture_get_level_count(This->wined3d_texture);
     wined3d_mutex_unlock();
 
     return cnt;
 }
 
 /* IDirect3DCubeTexture8 Interface follow: */
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetLevelDesc(LPDIRECT3DCUBETEXTURE8 iface, UINT Level, D3DSURFACE_DESC *pDesc) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
-    HRESULT hr;
-    WINED3DSURFACE_DESC    wined3ddesc;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetLevelDesc(IDirect3DCubeTexture8 *iface,
+        UINT level, D3DSURFACE_DESC *desc)
+{
+    IDirect3DCubeTexture8Impl *texture = impl_from_IDirect3DCubeTexture8(iface);
+    struct wined3d_resource *sub_resource;
+    HRESULT hr = D3D_OK;
 
-    TRACE("iface %p, level %u, desc %p.\n", iface, Level, pDesc);
+    TRACE("iface %p, level %u, desc %p.\n", iface, level, desc);
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_GetLevelDesc(This->wineD3DCubeTexture, Level, &wined3ddesc);
-    wined3d_mutex_unlock();
-
-    if (SUCCEEDED(hr))
+    if (!(sub_resource = wined3d_texture_get_sub_resource(texture->wined3d_texture, level)))
+        hr = D3DERR_INVALIDCALL;
+    else
     {
-        pDesc->Format = d3dformat_from_wined3dformat(wined3ddesc.format);
-        pDesc->Type = wined3ddesc.resource_type;
-        pDesc->Usage = wined3ddesc.usage;
-        pDesc->Pool = wined3ddesc.pool;
-        pDesc->Size = wined3ddesc.size;
-        pDesc->MultiSampleType = wined3ddesc.multisample_type;
-        pDesc->Width = wined3ddesc.width;
-        pDesc->Height = wined3ddesc.height;
+        struct wined3d_resource_desc wined3d_desc;
+
+        wined3d_resource_get_desc(sub_resource, &wined3d_desc);
+        desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
+        desc->Type = wined3d_desc.resource_type;
+        desc->Usage = wined3d_desc.usage;
+        desc->Pool = wined3d_desc.pool;
+        desc->Size = wined3d_desc.size;
+        desc->MultiSampleType = wined3d_desc.multisample_type;
+        desc->Width = wined3d_desc.width;
+        desc->Height = wined3d_desc.height;
     }
+    wined3d_mutex_unlock();
 
     return hr;
 }
 
 static HRESULT WINAPI IDirect3DCubeTexture8Impl_GetCubeMapSurface(IDirect3DCubeTexture8 *iface,
-        D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface8 **ppCubeMapSurface)
+        D3DCUBEMAP_FACES face, UINT level, IDirect3DSurface8 **surface)
 {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
-    IWineD3DSurface *mySurface = NULL;
-    HRESULT hr;
+    IDirect3DCubeTexture8Impl *texture = impl_from_IDirect3DCubeTexture8(iface);
+    struct wined3d_resource *sub_resource;
+    UINT sub_resource_idx;
 
-    TRACE("iface %p, face %#x, level %u, surface %p.\n", iface, FaceType, Level, ppCubeMapSurface);
+    TRACE("iface %p, face %#x, level %u, surface %p.\n", iface, face, level, surface);
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_GetCubeMapSurface(This->wineD3DCubeTexture,
-            (WINED3DCUBEMAP_FACES) FaceType, Level, &mySurface);
-    if (SUCCEEDED(hr) && ppCubeMapSurface)
+    sub_resource_idx = wined3d_texture_get_level_count(texture->wined3d_texture) * face + level;
+    if (!(sub_resource = wined3d_texture_get_sub_resource(texture->wined3d_texture, sub_resource_idx)))
     {
-       *ppCubeMapSurface = IWineD3DCubeTexture_GetParent(mySurface);
-       IDirect3DSurface8_AddRef(*ppCubeMapSurface);
-       IWineD3DCubeTexture_Release(mySurface);
+        wined3d_mutex_unlock();
+        return D3DERR_INVALIDCALL;
     }
+
+    *surface = wined3d_resource_get_parent(sub_resource);
+    IDirect3DSurface8_AddRef(*surface);
     wined3d_mutex_unlock();
 
-    return hr;
+    return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_LockRect(LPDIRECT3DCUBETEXTURE8 iface, D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT *pRect, DWORD Flags) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_LockRect(IDirect3DCubeTexture8 *iface,
+        D3DCUBEMAP_FACES face, UINT level, D3DLOCKED_RECT *locked_rect, const RECT *rect,
+        DWORD flags)
+{
+    IDirect3DCubeTexture8Impl *texture = impl_from_IDirect3DCubeTexture8(iface);
+    struct wined3d_resource *sub_resource;
+    UINT sub_resource_idx;
     HRESULT hr;
 
     TRACE("iface %p, face %#x, level %u, locked_rect %p, rect %p, flags %#x.\n",
-            iface, FaceType, Level, pLockedRect, pRect, Flags);
+            iface, face, level, locked_rect, rect, flags);
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_LockRect(This->wineD3DCubeTexture, (WINED3DCUBEMAP_FACES) FaceType, Level, (WINED3DLOCKED_RECT *) pLockedRect, pRect, Flags);
+    sub_resource_idx = wined3d_texture_get_level_count(texture->wined3d_texture) * face + level;
+    if (!(sub_resource = wined3d_texture_get_sub_resource(texture->wined3d_texture, sub_resource_idx)))
+        hr = D3DERR_INVALIDCALL;
+    else
+        hr = IDirect3DSurface8_LockRect((IDirect3DSurface8 *)wined3d_resource_get_parent(sub_resource),
+                locked_rect, rect, flags);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_UnlockRect(LPDIRECT3DCUBETEXTURE8 iface, D3DCUBEMAP_FACES FaceType, UINT Level) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_UnlockRect(IDirect3DCubeTexture8 *iface,
+        D3DCUBEMAP_FACES face, UINT level)
+{
+    IDirect3DCubeTexture8Impl *texture = impl_from_IDirect3DCubeTexture8(iface);
+    struct wined3d_resource *sub_resource;
+    UINT sub_resource_idx;
     HRESULT hr;
 
-    TRACE("iface %p, face %#x, level %u.\n", iface, FaceType, Level);
+    TRACE("iface %p, face %#x, level %u.\n", iface, face, level);
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_UnlockRect(This->wineD3DCubeTexture, (WINED3DCUBEMAP_FACES) FaceType, Level);
+    sub_resource_idx = wined3d_texture_get_level_count(texture->wined3d_texture) * face + level;
+    if (!(sub_resource = wined3d_texture_get_sub_resource(texture->wined3d_texture, sub_resource_idx)))
+        hr = D3DERR_INVALIDCALL;
+    else
+        hr = IDirect3DSurface8_UnlockRect((IDirect3DSurface8 *)wined3d_resource_get_parent(sub_resource));
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture8Impl_AddDirtyRect(LPDIRECT3DCUBETEXTURE8 iface, D3DCUBEMAP_FACES FaceType, CONST RECT *pDirtyRect) {
-    IDirect3DCubeTexture8Impl *This = (IDirect3DCubeTexture8Impl *)iface;
+static HRESULT WINAPI IDirect3DCubeTexture8Impl_AddDirtyRect(IDirect3DCubeTexture8 *iface,
+        D3DCUBEMAP_FACES face, const RECT *dirty_rect)
+{
+    IDirect3DCubeTexture8Impl *texture = impl_from_IDirect3DCubeTexture8(iface);
     HRESULT hr;
 
-    TRACE("iface %p, face %#x, dirty_rect %p.\n", iface, FaceType, pDirtyRect);
+    TRACE("iface %p, face %#x, dirty_rect %s.\n",
+            iface, face, wine_dbgstr_rect(dirty_rect));
 
     wined3d_mutex_lock();
-    hr = IWineD3DCubeTexture_AddDirtyRect(This->wineD3DCubeTexture, (WINED3DCUBEMAP_FACES) FaceType, pDirtyRect);
+    if (!dirty_rect)
+        hr = wined3d_texture_add_dirty_region(texture->wined3d_texture, face, NULL);
+    else
+    {
+        WINED3DBOX dirty_region;
+
+        dirty_region.Left = dirty_rect->left;
+        dirty_region.Top = dirty_rect->top;
+        dirty_region.Right = dirty_rect->right;
+        dirty_region.Bottom = dirty_rect->bottom;
+        dirty_region.Front = 0;
+        dirty_region.Back = 1;
+        hr = wined3d_texture_add_dirty_region(texture->wined3d_texture, face, &dirty_region);
+    }
     wined3d_mutex_unlock();
 
     return hr;
@@ -358,13 +421,13 @@ HRESULT cubetexture_init(IDirect3DCubeTexture8Impl *texture, IDirect3DDevice8Imp
 {
     HRESULT hr;
 
-    texture->lpVtbl = &Direct3DCubeTexture8_Vtbl;
+    texture->IDirect3DCubeTexture8_iface.lpVtbl = &Direct3DCubeTexture8_Vtbl;
     texture->ref = 1;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateCubeTexture(device->WineD3DDevice, edge_length, levels,
+    hr = wined3d_texture_create_cube(device->wined3d_device, edge_length, levels,
             usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool, texture,
-            &d3d8_cubetexture_wined3d_parent_ops, &texture->wineD3DCubeTexture);
+            &d3d8_cubetexture_wined3d_parent_ops, &texture->wined3d_texture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
@@ -372,7 +435,7 @@ HRESULT cubetexture_init(IDirect3DCubeTexture8Impl *texture, IDirect3DDevice8Imp
         return hr;
     }
 
-    texture->parentDevice = (IDirect3DDevice8 *)device;
+    texture->parentDevice = &device->IDirect3DDevice8_iface;
     IDirect3DDevice8_AddRef(texture->parentDevice);
 
     return D3D_OK;

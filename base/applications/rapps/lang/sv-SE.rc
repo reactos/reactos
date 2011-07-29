@@ -5,8 +5,6 @@
  * Translation:     Jaix Bly
  */
 
-#pragma code_page(65001) // UTF-8
-
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -23,7 +21,7 @@ BEGIN
 		MENUITEM "&Avinstallera",ID_UNINSTALL
 		MENUITEM "&Ändra",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Ta bort frĺn Registret", ID_REGREMOVE
+		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Uppdatera",  ID_REFRESH
 	END
@@ -51,7 +49,7 @@ BEGIN
 		MENUITEM "&Avinstallera", ID_UNINSTALL
 		MENUITEM "&Ändra",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Ta bort frĺn Registret", ID_REGREMOVE
+		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Uppdatera",   ID_REFRESH
 	END
@@ -85,7 +83,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Installera frĺn disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Installera från disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
 	AUTORADIOBUTTON "&Ladda ner och installera", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -195,8 +193,8 @@ BEGIN
 	IDS_APPLICATIONS "Program"
 	IDS_CHOOSE_FOLDER_TEXT "Välj en mapp som kommer att användas för nerladdning av program:"
 	IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en ej existerande mapp! Vill du skapa den?"
-	IDS_USER_NOT_ADMIN "Du mĺste vara administratör för att starta ""ReactOS programhanterare""!"
-	IDS_APP_REG_REMOVE "Är du säker pĺ att du vill ta bort data det installerade programmets data frĺn registret?"
+	IDS_USER_NOT_ADMIN "Du måste vara administratör för att starta ""ReactOS programhanterare""!"
+	IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
 	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data frĺn registret!"
+	IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data från registret!"
 END

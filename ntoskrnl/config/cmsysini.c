@@ -1938,4 +1938,154 @@ CmShutdownSystem(VOID)
     CmpDoFlushAll(TRUE);
 }
 
+VOID
+NTAPI
+CmpSetVersionData(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    UNICODE_STRING ValueData;
+    HANDLE SoftwareKeyHandle = NULL;
+    HANDLE MicrosoftKeyHandle = NULL;
+    HANDLE WindowsNtKeyHandle = NULL;
+    HANDLE CurrentVersionKeyHandle = NULL;
+    WCHAR Buffer[128];
+    NTSTATUS Status;
+
+    /* Open the 'CurrentVersion' key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\REGISTRY\\MACHINE\\SOFTWARE");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateKey(&SoftwareKeyHandle,
+                         KEY_CREATE_SUB_KEY,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
+        return;
+    }
+
+    /* Open the 'CurrentVersion' key */
+    RtlInitUnicodeString(&KeyName,
+                         L"Microsoft");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               SoftwareKeyHandle,
+                               NULL);
+
+    Status = NtCreateKey(&MicrosoftKeyHandle,
+                         KEY_CREATE_SUB_KEY,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
+        goto done;
+    }
+
+    /* Open the 'CurrentVersion' key */
+    RtlInitUnicodeString(&KeyName,
+                         L"Windows NT");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               MicrosoftKeyHandle,
+                               NULL);
+
+    Status = NtCreateKey(&WindowsNtKeyHandle,
+                         KEY_CREATE_SUB_KEY,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
+        goto done;
+    }
+
+    /* Open the 'CurrentVersion' key */
+    RtlInitUnicodeString(&KeyName,
+                         L"CurrentVersion");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               WindowsNtKeyHandle,
+                               NULL);
+
+    Status = NtCreateKey(&CurrentVersionKeyHandle,
+                         KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
+        goto done;
+    }
+
+    /* Set the 'CurrentType' value */
+    RtlInitUnicodeString(&ValueName,
+                         L"CurrentType");
+
+#ifdef CONFIG_SMP
+    wcscpy(Buffer, L"Multiprocessor");
+#else
+    wcscpy(Buffer, L"Uniprocessor");
+#endif
+
+    wcscat(Buffer, L" ");
+
+#if (DBG == 1)
+    wcscat(Buffer, L"Checked");
+#else
+    wcscat(Buffer, L"Free");
+#endif
+
+    RtlInitUnicodeString(&ValueData,
+                         Buffer);
+
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  ValueData.Buffer,
+                  ValueData.Length + sizeof(WCHAR));
+
+done:;
+    /* Close the keys */
+    if (CurrentVersionKeyHandle != NULL)
+        NtClose(CurrentVersionKeyHandle);
+
+    if (WindowsNtKeyHandle != NULL)
+        NtClose(WindowsNtKeyHandle);
+
+    if (MicrosoftKeyHandle != NULL)
+        NtClose(MicrosoftKeyHandle);
+
+    if (SoftwareKeyHandle != NULL)
+        NtClose(SoftwareKeyHandle);
+}
+
 /* EOF */

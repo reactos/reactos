@@ -23,15 +23,13 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
 
-add_library(dhcpcsvc SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_rosdhcp.h.gch
-    ${SOURCE})
+add_library(dhcpcsvc SHARED ${SOURCE})
 
 set_module_type(dhcpcsvc win32dll)
 
 add_importlibs(dhcpcsvc ws2_32 iphlpapi advapi32 msvcrt kernel32 ntdll)
 add_importlib_target(dhcpcsvc.spec)
 
-add_pch(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/include/rosdhcp.h ${SOURCE})
+add_pch(dhcpcsvc include/rosdhcp.h)
 
 add_cd_file(TARGET dhcpcsvc DESTINATION reactos/system32 FOR all)

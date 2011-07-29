@@ -1,7 +1,7 @@
 /*
- * Translation by Vytis "CMan" Gird˛ijauskas (cman@cman.us)
+ * Translation by Vytis "CMan" Gird√æijauskas (cman@cman.us)
  */
- 
+
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@ SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Pasirinkti lang‡"
+CAPTION "Pasirinkti lang√†"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "Gerai", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -29,14 +29,14 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Ataukti", EM_UNDO
+    MENUITEM "&At√∞aukti", EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "&Ikirpti", WM_CUT
+    MENUITEM "&I√∞kirpti", WM_CUT
     MENUITEM "&Kopijuoti", WM_COPY
-    MENUITEM "¡&dÎti", WM_PASTE
+    MENUITEM "√Å&d√´ti", WM_PASTE
     MENUITEM "&Trinti", WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Pa˛ymÎti &visk‡", EM_SETSEL
+    MENUITEM "Pa√æym√´ti &visk√†", EM_SETSEL
   END
 END
 
@@ -49,7 +49,7 @@ BEGIN
   MENUITEM "Su&skleisti", SC_MINIMIZE
   MENUITEM "Pa&didint", SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&U˛verti\tAlt-F4", SC_CLOSE
+  MENUITEM "&U√æverti\tAlt-F4", SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,12 +68,12 @@ BEGIN
   IDS_YES,      "&Taip"
   IDS_NO,       "&Ne"
   IDS_HELP,     "Pagalba"
-  IDS_TRYAGAIN, "&Bandyti vÎl"
-  IDS_CONTINUE, "TÊ&sti"
+  IDS_TRYAGAIN, "&Bandyti v√´l"
+  IDS_CONTINUE, "T√¶&sti"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Daugiau lang¯..."
+  IDS_MDI_MOREWINDOWS, "&Daugiau lang√∏..."
 END
 

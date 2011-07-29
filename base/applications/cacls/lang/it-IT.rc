@@ -26,14 +26,14 @@ CACLS nomefile [/T] [/E] [/C] [/G utente:perm [...]] [/R utente [...]]\n\
                               F  Controllo completo\n\
    /D utente       Nega l'accesso all'utente indicato.\n\
 I caratteri jolly possono essere usati per indicare piu' di un file in un comando.\n\
-Si puÚ indicare piu' di un utente in un comando.\n\n\
+Si pu√≤ indicare piu' di un utente in un comando.\n\n\
 Abbreviazioni:\n\
    CI - Contenitore eredita.\n\
-        ACE verr‡ ereditato dalle cartelle.\n\
+        ACE verr√† ereditato dalle cartelle.\n\
    OI - Oggetto eredita.\n\
-        ACE verr‡ ereditato dai file.\n\
+        ACE verr√† ereditato dai file.\n\
    IO - Solo eredi.\n\
-        ACE non Ë applicato ai file/cartelle correnti.\n"
+        ACE non √® applicato ai file/cartelle correnti.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

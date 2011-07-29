@@ -84,16 +84,14 @@ RegQueryValue(
 
     cbDataSize = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
 
+    /* Note: STATUS_BUFFER_OVERFLOW is not a success */
     if (NT_SUCCESS(Status))
     {
         /* Did we get the right type */
         if (pInfo->Type == ulType)
         {
-            /* Copy the contents to the caller. Make sure strings are null terminated */
-            if (ulType == REG_SZ || ulType == REG_MULTI_SZ || ulType == REG_EXPAND_SZ)
-                RtlStringCbCopyNW((LPWSTR)pvData, *pcbValue, (LPWSTR)pInfo->Data, cbDataSize);
-            else
-                RtlCopyMemory(pvData, pInfo->Data, cbDataSize);
+            /* Copy the contents to the caller */
+            RtlCopyMemory(pvData, pInfo->Data, cbDataSize);
         }
         else
             Status = STATUS_OBJECT_TYPE_MISMATCH;

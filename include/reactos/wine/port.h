@@ -57,19 +57,19 @@
 #  endif
 #endif
 
-#ifndef HAVE_MODE_T
+#if !defined(HAVE_MODE_T) && !defined(_MODE_T)
 typedef int mode_t;
 #endif
-#ifndef HAVE_OFF_T
+#if !defined(HAVE_OFF_T) && !defined(_OFF_T)
 typedef long off_t;
 #endif
-#ifndef HAVE_PID_T
+#if !defined(HAVE_PID_T) && !defined(_PID_T)
 typedef int pid_t;
 #endif
-#ifndef HAVE_SIZE_T
+#if !defined(HAVE_SIZE_T) && !defined(_SIZE_T)
 typedef unsigned int size_t;
 #endif
-#ifndef HAVE_SSIZE_T
+#if !defined(HAVE_SSIZE_T) && !defined(_SSIZE_T)
 typedef int ssize_t;
 #endif
 //#ifndef HAVE_SOCKLEN_T
@@ -153,11 +153,7 @@ struct statfs;
 
 /* Constructor functions */
 
-#ifdef _MSC_VER // ReactOS
-#pragma message("DECL_GLOBAL_CONSTRUCTOR is not properly defined")
-# define DECL_GLOBAL_CONSTRUCTOR(func) \
-    static void func(void)
-#elif defined(__GNUC__)
+#ifdef __GNUC__
 # define DECL_GLOBAL_CONSTRUCTOR(func) \
     static void func(void) __attribute__((constructor)); \
     static void func(void)
@@ -176,6 +172,8 @@ struct statfs;
             "\tnop\n" \
             "\t.section \".text\",#alloc,#execinstr\n" ); } \
     static void func(void)
+#elif defined(_M_AMD64)
+#pragma message("You must define the DECL_GLOBAL_CONSTRUCTOR macro for amd64")
 #else
 # error You must define the DECL_GLOBAL_CONSTRUCTOR macro for your platform
 #endif
@@ -318,6 +316,17 @@ extern int spawnvp(int mode, const char *cmdname, const char * const argv[]);
 
 
 #endif  /* __i386___ && __GNUC__ */
+
+#if defined(_MSC_VER)
+__forceinline
+int
+ffs(int mask)
+{
+    long index;
+    if (_BitScanForward(&index, mask) == 0) return 0;
+    return index;
+}
+#endif
 
 #else /* NO_LIBWINE_PORT */
 

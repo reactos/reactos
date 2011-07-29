@@ -342,7 +342,7 @@ typedef struct _MMPTE
 {
     union
     {
-        ULONG Long;
+        ULONG_PTR Long;
         HARDWARE_PTE Flush;
         MMPTE_HARDWARE Hard;
         MMPTE_PROTOTYPE Proto;

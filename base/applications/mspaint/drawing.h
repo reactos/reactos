@@ -6,28 +6,28 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-void Line(HDC hdc, short x1, short y1, short x2, short y2, int color, int thickness);
+void Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness);
 
-void Rect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style);
+void Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, int thickness, int style);
 
-void Ellp(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style);
+void Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, int thickness, int style);
 
-void RRect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style);
+void RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, int thickness, int style);
 
-void Poly(HDC hdc, POINT *lpPoints, int nCount, int fg, int bg, int thickness, int style, BOOL closed);
+void Poly(HDC hdc, POINT *lpPoints, int nCount, COLORREF fg, COLORREF bg, int thickness, int style, BOOL closed);
 
-void Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, int color, int thickness);
+void Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thickness);
 
-void Fill(HDC hdc, int x, int y, int color);
+void Fill(HDC hdc, LONG x, LONG y, COLORREF color);
 
-void Erase(HDC hdc, short x1, short y1, short x2, short y2, int color, int radius);
+void Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius);
 
-void Replace(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int radius);
+void Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LONG radius);
 
-void Airbrush(HDC hdc, short x, short y, int color, int r);
+void Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r);
 
-void Brush(HDC hdc, short x1, short y1, short x2, short y2, int color, int style);
+void Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, COLORREF style);
 
-void RectSel(HDC hdc, short x1, short y1, short x2, short y2);
+void RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2);
 
-void SelectionFrame(HDC hdc, int x1, int y1, int x2, int y2);
+void SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2);

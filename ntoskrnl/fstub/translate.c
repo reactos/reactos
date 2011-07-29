@@ -40,10 +40,9 @@ FstubTranslateResource(IN OUT PVOID Context OPTIONAL,
                        IN PDEVICE_OBJECT PhysicalDeviceObject,
                        OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target)
 {
-    INT k;
     KIRQL Irql;
     KAFFINITY Affinity;
-    ULONG MinimumVector, Vector;
+    ULONG MinimumVector, Vector, k;
     PIO_RESOURCE_DESCRIPTOR Alternative;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     PAGED_CODE();

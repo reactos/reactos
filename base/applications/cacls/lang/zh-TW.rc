@@ -1,6 +1,6 @@
 /*
  *  cacls (TRADITIONAL Chinese resources)
- *  (�c�餤��귽)
+ *  (繁體中文資源)
  *  Copyright 2007 jauming <jauming.tw@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -24,36 +24,36 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "��ܩΪ̭ק��󪺳X�ݱ���� \n\n\
+IDS_HELP, "顯示或者修改文件的訪問控制表\n\n\
 CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
-   filename      ��� ACLs�C\n\
-   /T            �����e�ؿ��Ψ�Ҧ��l�ؿ���\n\
-                 ���w��� ACL�C\n\
-   /E            �s�� ACL �Ӥ������C\n\
-   /C            �b�X�{�ڵ��X�ݿ��~���~��C\n\
-   /G user:perm  �ᤩ���w�Τ�X���v���C\n\
-                 Perm �i�H�O: R  Ū�� \n\
-                              W  �g�J \n\
-                              C  ���(�g�J) \n\
-                              F  �������� \n\
-   /R user       �M�P���w�Τ᪺�X���v��(�Ȧb�O /E �@�_�ϥήɦX�k)�C\n\
-   /P user:perm  �������w�Τ᪺�X���v���C\n\
-                 Perm �i�H�O: N  �L \n\
-                              R  Ū�� \n\
-                              W  �g�J \n\
-                              C  ���(�g�J) \n\
-                              F  �������� \n\
-   /D user       �ڵ����w�Τ᪺�X�ݡC\n\
-�b�R�O���i�H�ϥγq�t�ū��w�h�Ӥ��C\n\
-�z�]�i�H�b�R�O�����w�h�ӥΤ�C\n\n\
-�Y�g: \n\
-   CI - �e���~�ӡC\n\
-        ACE�|�ѥؿ��~�ӡC\n\
-   OI - ��H�~�ӡC\n\
-        ACE �|�Ѥ���~�ӡC\n\
-   IO - �u�~�ӡC\n\
-        ACE ���A�Ω���e���/�ؿ��C\n"
+   filename      顯示 ACLs。\n\
+   /T            更改當前目錄及其所有子目錄中\n\
+                 指定文件的 ACL。\n\
+   /E            編輯 ACL 而不替換。\n\
+   /C            在出現拒絕訪問錯誤時繼續。\n\
+   /G user:perm  賦予指定用戶訪問權限。\n\
+                 Perm 可以是: R  讀取\n\
+                              W  寫入\n\
+                              C  更改(寫入)\n\
+                              F  完全控制\n\
+   /R user       撤銷指定用戶的訪問權限(僅在与 /E 一起使用時合法)。\n\
+   /P user:perm  替換指定用戶的訪問權限。\n\
+                 Perm 可以是: N  無\n\
+                              R  讀取\n\
+                              W  寫入\n\
+                              C  更改(寫入) \n\
+                              F  完全控制 \n\
+   /D user       拒絕指定用戶的訪問。\n\
+在命令中可以使用通配符指定多個文件。\n\
+您也可以在命令中指定多個用戶。\n\n\
+縮寫: \n\
+   CI - 容器繼承。\n\
+        ACE會由目錄繼承。\n\
+   OI - 對象繼承。\n\
+        ACE 會由文件繼承。\n\
+   IO - 只繼承。\n\
+        ACE 不適用於當前文件/目錄。\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

@@ -2941,7 +2941,7 @@ xmlShell(xmlDocPtr doc, char *filename, xmlShellReadlineFunc input,
 		xmlGenericError(xmlGenericErrorContext,
                         "Write command requires a filename argument\n");
 	    else
-		xmlShellWrite(ctxt, arg, NULL, NULL);
+		xmlShellWrite(ctxt, arg, ctxt->node, NULL);
 #endif /* LIBXML_OUTPUT_ENABLED */
         } else if (!strcmp(command, "grep")) {
             xmlShellGrep(ctxt, arg, ctxt->node, NULL);

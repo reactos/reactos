@@ -156,12 +156,12 @@ co_VIS_WindowLayoutChanged(
 
    ASSERT_REFS_CO(Wnd);
 
-   Temp = IntSysCreateRectRgn(0, 0, 0, 0);
-   NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
-
    Parent = Wnd->spwndParent;
    if(Parent)
    {
+      Temp = IntSysCreateRectRgn(0, 0, 0, 0);
+
+      NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
       NtGdiOffsetRgn(Temp,
                      Wnd->rcWindow.left - Parent->rcClient.left,
                      Wnd->rcWindow.top - Parent->rcClient.top);
@@ -171,8 +171,9 @@ co_VIS_WindowLayoutChanged(
                           RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                           RDW_ALLCHILDREN);
       UserDerefObjectCo(Parent);
+
+      GreDeleteObject(Temp);
    }
-   GreDeleteObject(Temp);
 }
 
 /* EOF */

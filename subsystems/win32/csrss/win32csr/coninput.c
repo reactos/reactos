@@ -323,6 +323,15 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
             }
         }
     }
+    else
+    {
+        if ((ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) || KeyState[VK_MENU] & 0x80) &&
+            (VirtualKeyCode == VK_ESCAPE || VirtualKeyCode == VK_TAB || VirtualKeyCode == VK_SPACE))
+        {
+           DefWindowProcW( msg->hwnd, msg->message, msg->wParam, msg->lParam);
+           return;
+        }
+    }
 
     if (NULL == Console)
     {
@@ -356,7 +365,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
             er.Event.KeyEvent.bKeyDown &&
             ((er.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) ||
              (er.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
-            (er.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+            (er.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyState[VK_CONTROL] & 0x80))
     {
         PCSRSS_PROCESS_DATA current;
         PLIST_ENTRY current_entry;

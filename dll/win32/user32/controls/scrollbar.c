@@ -1243,11 +1243,6 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 LRESULT WINAPI
 ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  if (! IsWindow(Wnd))
-    {
-      return 0;
-    }
-
 #ifdef __REACTOS__ // Do this now, remove after Server side is fixed.
   PWND pWnd;
 
@@ -1260,6 +1255,11 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
      }
   }    
 #endif    
+
+  if (! IsWindow(Wnd))
+    {
+      return 0;
+    }
 
   switch (Msg)
     {

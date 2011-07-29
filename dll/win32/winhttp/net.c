@@ -134,6 +134,7 @@ MAKE_FUNCPTR( ERR_free_strings );
 MAKE_FUNCPTR( ERR_get_error );
 MAKE_FUNCPTR( ERR_error_string );
 MAKE_FUNCPTR( X509_STORE_CTX_get_ex_data );
+MAKE_FUNCPTR( X509_STORE_CTX_get_chain );
 MAKE_FUNCPTR( i2d_X509 );
 MAKE_FUNCPTR( sk_value );
 MAKE_FUNCPTR( sk_num );
@@ -374,13 +375,14 @@ static int netconn_secure_verify( int preverify_ok, X509_STORE_CTX *ctx )
         X509 *cert;
         int i;
         PCCERT_CONTEXT endCert = NULL;
+        struct stack_st *chain = (struct stack_st *)pX509_STORE_CTX_get_chain( ctx );
 
         ret = TRUE;
-        for (i = 0; ret && i < psk_num((struct stack_st *)ctx->chain); i++)
+        for (i = 0; ret && i < psk_num(chain); i++)
         {
             PCCERT_CONTEXT context;
 
-            cert = (X509 *)psk_value((struct stack_st *)ctx->chain, i);
+            cert = (X509 *)psk_value(chain, i);
             if ((context = X509_to_cert_context( cert )))
             {
                 if (i == 0)
@@ -488,6 +490,7 @@ BOOL netconn_init( netconn_t *conn, BOOL secure )
     LOAD_FUNCPTR( ERR_get_error );
     LOAD_FUNCPTR( ERR_error_string );
     LOAD_FUNCPTR( X509_STORE_CTX_get_ex_data );
+    LOAD_FUNCPTR( X509_STORE_CTX_get_chain );
     LOAD_FUNCPTR( i2d_X509 );
     LOAD_FUNCPTR( sk_value );
     LOAD_FUNCPTR( sk_num );

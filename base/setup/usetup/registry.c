@@ -398,8 +398,7 @@ CreateNestedKey (PHANDLE KeyHandle,
   UNICODE_STRING LocalKeyName;
   ULONG Disposition;
   NTSTATUS Status;
-  ULONG FullNameLength;
-  ULONG Length;
+  USHORT FullNameLength;
   PWCHAR Ptr;
   HANDLE LocalKeyHandle;
 
@@ -421,7 +420,7 @@ CreateNestedKey (PHANDLE KeyHandle,
   RtlCreateUnicodeString (&LocalKeyName,
                           ObjectAttributes->ObjectName->Buffer);
   LocalObjectAttributes.ObjectName = &LocalKeyName;
-  FullNameLength = LocalKeyName.Length / sizeof(WCHAR);
+  FullNameLength = LocalKeyName.Length;
 
   /* Remove the last part of the key name and try to create the key again. */
   while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
@@ -452,10 +451,9 @@ CreateNestedKey (PHANDLE KeyHandle,
     }
 
   /* Add removed parts of the key name and create them too. */
-  Length = wcslen (LocalKeyName.Buffer);
   while (TRUE)
     {
-      if (Length == FullNameLength)
+      if (LocalKeyName.Length == FullNameLength)
         {
           Status = STATUS_SUCCESS;
           *KeyHandle = LocalKeyHandle;
@@ -463,9 +461,8 @@ CreateNestedKey (PHANDLE KeyHandle,
         }
       NtClose (LocalKeyHandle);
 
-      LocalKeyName.Buffer[Length] = L'\\';
-      Length = wcslen (LocalKeyName.Buffer);
-      LocalKeyName.Length = Length * sizeof(WCHAR);
+      LocalKeyName.Buffer[LocalKeyName.Length / sizeof(WCHAR)] = L'\\';
+      LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
 
       Status = NtCreateKey (&LocalKeyHandle,
                             KEY_ALL_ACCESS,

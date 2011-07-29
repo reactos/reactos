@@ -402,7 +402,7 @@ PciIdeXFdoPnpDispatch(
 {
 	ULONG MinorFunction;
 	PIO_STACK_LOCATION Stack;
-	ULONG_PTR Information = 0;
+	ULONG_PTR Information = Irp->IoStatus.Information;
 	NTSTATUS Status;
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -419,6 +419,12 @@ PciIdeXFdoPnpDispatch(
 				Status = PciIdeXFdoStartDevice(DeviceObject, Irp);
 			break;
 		}
+                case IRP_MN_QUERY_REMOVE_DEVICE: /* 0x01 */
+                {
+                        DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_REMOVE_DEVICE\n");
+                        Status = STATUS_UNSUCCESSFUL;
+                        break;
+                }
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* 0x07 */
 		{
 			switch (Stack->Parameters.QueryDeviceRelations.Type)
@@ -441,6 +447,13 @@ PciIdeXFdoPnpDispatch(
 			}
 			break;
 		}
+                case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
+                {
+                        DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
+                        Information |= PNP_DEVICE_NOT_DISABLEABLE;
+                        Status = STATUS_SUCCESS;
+                        break;
+                }
 		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0x0d */
 		{
 			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");

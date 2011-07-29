@@ -345,7 +345,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_GET_NOTIFYAREA:
 		return (LRESULT)(HWND)_hwndNotify;
 
-	  case WM_SYSCOLORCHANGE:OutputDebugStringA("WM_SYSCOLORCHANGE desktopbar\n");
+	  case WM_SYSCOLORCHANGE:
 		/* Forward WM_SYSCOLORCHANGE to common controls */
 #ifndef _NO_REBAR
 		SendMessage(_hwndrebar, WM_SYSCOLORCHANGE, 0, 0);

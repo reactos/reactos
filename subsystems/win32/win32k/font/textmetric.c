@@ -154,7 +154,7 @@ NtGdiGetETM(
     /* Enter SEH for buffer copy */
     _SEH2_TRY
     {
-        /* Probe and fill TMW_INTERNAL */
+        /* Probe and fill EXTTEXTMETRIC */
         ProbeForWrite(petm, sizeof(EXTTEXTMETRIC), 1);
         RFONT_vGetETM(prfnt, petm);
     }

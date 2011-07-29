@@ -583,10 +583,19 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     }
 
     //
-    // The PTE must be invalid, but not totally blank
+    // The PTE must be invalid
     //
     ASSERT(TempPte.u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Long != 0);
+
+    /* Check if the PTE is completely empty */
+    if (TempPte.u.Long == 0)
+    {
+        KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                     (ULONG_PTR)Address,
+                     StoreInstruction,
+                     (ULONG_PTR)TrapInformation,
+                     2);
+    }
 
     //
     // No prototype, transition or page file software PTEs in ARM3 yet
@@ -727,11 +736,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             // Writing to a read-only page (the stuff ARM3 works with is write,
             // so again, moot point).
             //
-            if (StoreInstruction)
-            {
-                DPRINT1("Should NEVER happen on ARM3!!!\n");
-                return STATUS_ACCESS_VIOLATION;
-            }
 
             //
             // Otherwise, the PDE was probably invalid, and all is good now
@@ -776,11 +780,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             // Writing to a read-only page (the stuff ARM3 works with is write,
             // so again, moot point.
             //
-            if (StoreInstruction)
-            {
-                DPRINT1("Should NEVER happen on ARM3!!!\n");
-                return STATUS_ACCESS_VIOLATION;
-            }
 
             /* Release the working set */
             MiUnlockWorkingSet(CurrentThread, WorkingSet);

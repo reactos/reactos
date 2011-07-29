@@ -16,9 +16,11 @@ elseif(ARCH MATCHES amd64)
     set(_filename ksamd64)
 endif()
 
+get_target_property(genincdata_dll genincdata LOCATION)
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc
-    COMMAND native-geninc ${CMAKE_CURRENT_BINARY_DIR}/genincdata.dll  ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc ${OPT_MS}
+    COMMAND native-geninc ${genincdata_dll} ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc ${OPT_MS}
     DEPENDS genincdata)
 
 add_custom_target(asm

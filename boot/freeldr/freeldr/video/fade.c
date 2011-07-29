@@ -24,7 +24,7 @@
 
 VOID VideoSetAllColorsToBlack(ULONG ColorCount)
 {
-	ULONG		Color;
+	UCHAR		Color;
 
 	MachVideoSync();
 
@@ -37,7 +37,7 @@ VOID VideoSetAllColorsToBlack(ULONG ColorCount)
 VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
 	ULONG				Index;
-	ULONG				Color;
+	UCHAR				Color;
 	PPALETTE_ENTRY	PaletteColors;
 
 	PaletteColors = MmHeapAlloc(sizeof(PALETTE_ENTRY) * ColorCount);
@@ -97,7 +97,7 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
 VOID VideoFadeOut(ULONG ColorCount)
 {
 	ULONG		Index;
-	ULONG		Color;
+	UCHAR		Color;
 	UCHAR		Red;
 	UCHAR		Green;
 	UCHAR		Blue;

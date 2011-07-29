@@ -1,5 +1,6 @@
 
 add_typelib(jsglobal jsglobal.idl)
+
 add_dependencies(jsglobal stdole2)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -8,8 +9,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D__WINESRC__
     -D_USE_MATH_DEFINES
-    -D_DLL
-    -D__USE_CRTIMP
     -Disinf=!_finite
     -Disnan=_isnan)
 

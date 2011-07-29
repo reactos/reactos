@@ -1,7 +1,5 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 IDR_MAINMENU MENU
 BEGIN
   POPUP "&Fișier"
@@ -282,5 +280,3 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Gestionarul de servicii ReactOS"
 END
-
-#pragma code_page(default)

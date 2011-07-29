@@ -16,7 +16,7 @@ UCHAR Win32kSSPT[] = {
 #include "w32ksvc.h"
 };
 
-#define MIN_SYSCALL_NUMBER    0
+#define MIN_SYSCALL_NUMBER    0x1000
 #define NUMBER_OF_SYSCALLS    (sizeof(Win32kSSPT) / sizeof(Win32kSSPT[0]))
-#define MAX_SYSCALL_NUMBER    (NUMBER_OF_SYSCALLS - 1)
+#define MAX_SYSCALL_NUMBER    0x1000 + (NUMBER_OF_SYSCALLS - 1)
 ULONG Win32kNumberOfSysCalls = NUMBER_OF_SYSCALLS;

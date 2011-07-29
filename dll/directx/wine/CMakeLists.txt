@@ -1,4 +1,5 @@
 
+if(NOT MSVC)
 add_subdirectory(d3d8)
 add_subdirectory(d3d9)
 add_subdirectory(d3dx9_24)
@@ -22,3 +23,4 @@ add_subdirectory(d3dx9_41)
 add_subdirectory(d3dx9_42)
 add_subdirectory(ddraw)
 add_subdirectory(wined3d)
+endif()

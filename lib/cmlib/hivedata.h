@@ -100,11 +100,7 @@ typedef enum
     Volatile = 1
 } HSTORAGE_TYPE;
 
-#ifdef CMLIB_HOST
-#include <host/pshpack1.h>
-#else
 #include <pshpack1.h>
-#endif
 
 /**
  * @name HBASE_BLOCK
@@ -188,11 +184,7 @@ typedef struct _HCELL
    LONG Size;
 } HCELL, *PHCELL;
 
-#ifdef CMLIB_HOST
-#include <host/poppack.h>
-#else
 #include <poppack.h>
-#endif
 
 struct _HHIVE;
 

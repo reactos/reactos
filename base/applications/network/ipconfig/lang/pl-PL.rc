@@ -1,10 +1,10 @@
 /*
  *         translated by TestamenT
- *      testament@users.sourceforge.net
- * https://sourceforge.net/projects/reactospl
- *
+ *         testament@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
-
+ 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
@@ -18,7 +18,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_OTHER   "inny  rodzaj karty"
+  IDS_OTHER   "inny rodzaj karty"
   IDS_ETH     "karta Ethernet"
   IDS_TOKEN   "karta Token Ring"
   IDS_FDDI    "karta FDDI"
@@ -31,44 +31,44 @@ STRINGTABLE DISCARDABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE
-    "\nSPOSÓB U¯YCIA:\n \
+    "\nSPOSÃ“B UÅ»YCIA:\n \
         ipconfig [/? | /all | /renew [karta] | /release [karta] |\n \
                   /flushdns | /displaydns | /registerdns \n \
                   /showclassid karta |\n \
                   /setclassid karta [identyfikator_klasy] ]\n \
     \n \
     gdzie\n \
-        karta           Nazwa po³¹czenia\n \
-                        (dozwolone symbole zastêpcze * i ?, zobacz przyk³ady)\n \
+        karta           Nazwa poÅ‚Ä…czenia\n \
+                        (dozwolone symbole zastÄ™pcze * i ?, zobacz przykÅ‚ady)\n \
     \n \
          Opcje:\n \
-           /?           Wyœwietla ten komunikat pomocy.\n \
-           /all         Wyœwietla pe³ne informacje o konfiguracji.\n \
-           /release     Zwalnia adres IP dla okreœlonej karty.\n \
-           /renew       Odnawia adres IP dla okreœlonej karty.\n \
-           /flushdns    Czyœci bufor programu rozpoznaj¹cego nazwy DNS.\n \
-           /registerdns Odœwie¿a wszystkie dzier¿awy DHCP i ponownie rejestruje nazwy DNS.\n \
-           /displaydns  Wyœwietla zawartoœæ buforu programu rozpoznaj¹cego nazwy DNS.\n \
-           /showclassid Wyœwietla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n \
+           /?           WyÅ›wietla ten komunikat pomocy.\n \
+           /all         WyÅ›wietla peÅ‚ne informacje o konfiguracji.\n \
+           /release     Zwalnia adres IP dla okreÅ›lonej karty.\n \
+           /renew       Odnawia adres IP dla okreÅ›lonej karty.\n \
+           /flushdns    CzyÅ›ci bufor programu rozpoznajÄ…cego nazwy DNS.\n \
+           /registerdns OdÅ›wieÅ¼a wszystkie dzierÅ¼awy DHCP i ponownie rejestruje nazwy DNS.\n \
+           /displaydns  WyÅ›wietla zawartoÅ›Ä‡ buforu programu rozpoznajÄ…cego nazwy DNS.\n \
+           /showclassid WyÅ›wietla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n \
            /setclassid  Modyfikuje identyfikator klasy DHCP.\n \
     \n \
-    Zachowanie domyœlne to wyœwietlanie tylko adresu IP, maski podsieci i bramy\n \
-    domyœlnej dla ka¿dej karty zwi¹zanej z protoko³em TCP/IP.\n \
+    Zachowanie domyÅ›lne to wyÅ›wietlanie tylko adresu IP, maski podsieci i bramy\n \
+    domyÅ›lnej dla kaÅ¼dej karty zwiÄ…zanej z protokoÅ‚em TCP/IP.\n \
     \n \
-    Jeœli dla prze³¹czników Release i Renew nie zostanie okreœlona nazwa karty,\n \
-    zwolnieniu lub odnowieniu ulegaj¹ dzier¿awy adresów IP dla wszystkich kart\n \
-    zwi¹zanych z protoko³em TCP/IP.\n \
+    JeÅ›li dla parametrÃ³w Release i Renew nie zostanie okreÅ›lona nazwa karty,\n \
+    zwolnieniu lub odnowieniu ulegajÄ… dzierÅ¼awy adresÃ³w IP dla wszystkich kart\n \
+    zwiÄ…zanych z protokoÅ‚em TCP/IP.\n \
     \n \
-    Jeœli dla prze³¹cznika Setclassid nie zostanie okreœlony parametr\n \
+    JeÅ›li dla parametru Setclassid nie zostanie okreÅ›lony\n \
     identyfikator_klasy, to identyfikator_klasy jest usuwany.\n \
     \n \
-    Przyk³ady:\n \
+    PrzykÅ‚ady:\n \
         > ipconfig                   ... Pokazuje informacje.\n \
-        > ipconfig /all              ... Pokazuje szczegó³owe informacje.\n \
+        > ipconfig /all              ... Pokazuje szczegÃ³Å‚owe informacje.\n \
         > ipconfig /renew            ... Odnawia wszystkie karty.\n \
-        > ipconfig /renew EL*        ... Odnawia ka¿de po³¹czenie o nazwie\n \
-                                         zaczynaj¹cej siê od EL\n \
-        > ipconfig /release *Con*    ... Zwalnia wszystkie pasuj¹ce po³¹czenia,\n \
-                                         np. ""Po³¹czenie lokalne 1"" lub\n \
-                                             ""Po³¹czenie lokalne 2""\n"
+        > ipconfig /renew EL*        ... Odnawia kaÅ¼de poÅ‚Ä…czenie o nazwie\n \
+                                         zaczynajÄ…cej siÄ™ od EL\n \
+        > ipconfig /release *PoÅ‚*    ... Zwalnia wszystkie pasujÄ…ce poÅ‚Ä…czenia,\n \
+                                         np. ""PoÅ‚Ä…czenie lokalne 1"" lub\n \
+                                             ""PoÅ‚Ä…czenie lokalne 2""\n"
 END

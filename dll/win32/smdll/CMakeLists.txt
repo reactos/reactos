@@ -12,6 +12,7 @@ list(APPEND SOURCE
 add_library(smdll SHARED ${SOURCE})
 
 target_link_libraries(smdll smlib)
+set_entrypoint(smdll DllMainCRTStartup 12)
 add_importlibs(smdll ntdll)
 add_dependencies(smdll psdk)
 add_cd_file(TARGET smdll DESTINATION reactos/system32 FOR all)

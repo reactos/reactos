@@ -13,6 +13,8 @@
 #define _NO_COM
 
 /* DDK/NDK/SDK Headers */
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntddk.h>
 #include <ntddmou.h>
 #include <ntifs.h>

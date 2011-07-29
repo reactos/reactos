@@ -2370,25 +2370,31 @@ RtlReleaseActivationContext( HANDLE handle )
 }
 
 NTSTATUS
-NTAPI RtlActivateActivationContext( ULONG unknown, HANDLE handle, PULONG_PTR cookie )
+NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
-
+    
     if (!(frame = RtlAllocateHeap( RtlGetProcessHeap(), 0, sizeof(*frame) )))
         return STATUS_NO_MEMORY;
-
-    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    
+    frame->Previous = tebAddress->ActivationContextStackPointer->ActiveFrame;
     frame->ActivationContext = handle;
     frame->Flags = 0;
-
-    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+    
+    tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
-
+    
     *cookie = (ULONG_PTR)frame;
     DPRINT( "%p cookie=%lx\n", handle, *cookie );
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
+{
+    return RtlActivateActivationContextEx(flags, NtCurrentTeb(), handle, cookie);
+}
 
 NTSTATUS
 NTAPI
@@ -2736,6 +2742,10 @@ NTAPI
 RtlAllocateActivationContextStack(IN PVOID *Context)
 {
     PACTIVATION_CONTEXT_STACK ContextStack;
+
+    /* FIXME: Check if it's already allocated */
+    //if (*Context) return STATUS_SUCCESS;
+
     ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (ACTIVATION_CONTEXT_STACK) );
     if (!ContextStack)
     {
@@ -2798,7 +2808,16 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
     /* Return pointer to the activation frame */
     return &Frame->Frame;
 #else
-    return NULL;
+
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame = &Frame->Frame;
+
+    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    frame->ActivationContext = Context;
+    frame->Flags = 0;
+
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+
+    return STATUS_SUCCESS;
 #endif
 }
 
@@ -2806,7 +2825,6 @@ PRTL_ACTIVATION_CONTEXT_STACK_FRAME
 FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-#if NEW_NTDLL_LOADER
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
     /* find the right frame */
@@ -2814,15 +2832,15 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
     frame = &Frame->Frame;
 
     if (!frame)
+    {
+        DPRINT1("No top frame!\n");
         RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
+    }
 
     /* pop everything up to and including frame */
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
 
     return frame;
-#else
-    return NULL;
-#endif
 }
 
 

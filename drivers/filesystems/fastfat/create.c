@@ -372,20 +372,6 @@ VfatOpenFile (
 			0,
 			FALSE);
 
-		if (Status == STATUS_VERIFY_REQUIRED)
-
-		{
-			PDEVICE_OBJECT DeviceToVerify;
-
-			DPRINT ("Media change detected!\n");
-			DPRINT ("Device %p\n", DeviceExt->StorageDevice);
-
-                        /* Find the device to verify and reset the thread field to empty value again. */
-			DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
-			IoSetDeviceToVerify (PsGetCurrentThread (), NULL);
-			Status = IoVerifyVolume (DeviceToVerify,
-				FALSE);
-		}
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT ("Status %lx\n", Status);
@@ -559,7 +545,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
 			ULONG Attributes;
-			Attributes = Stack->Parameters.Create.FileAttributes;
+			Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
 
 			vfatSplitPathName(&PathNameU, NULL, &FileNameU);
 			Status = VfatAddEntry (DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,

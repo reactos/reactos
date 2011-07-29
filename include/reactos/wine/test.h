@@ -96,7 +96,7 @@ extern void winetest_vskip( const char *msg, __winetest_va_list ap );
 
 #ifdef __GNUC__
 
-extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
+extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
 extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
@@ -440,13 +440,13 @@ void winetest_wait_child_process( HANDLE process )
     {
         if (exit_code > 255)
         {
-            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, (unsigned int)exit_code );
+            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, exit_code );
             InterlockedIncrement( &failures );
         }
         else
         {
             fprintf( stdout, "%s: %u failures in child process\n",
-                     current_test->name, (unsigned int)exit_code );
+                     current_test->name, exit_code );
             while (exit_code-- > 0)
                 InterlockedIncrement(&failures);
         }
@@ -488,7 +488,7 @@ const char *wine_dbgstr_wn( const WCHAR *str, int n )
         case '\\': *dst++ = '\\'; *dst++ = '\\'; break;
         default:
             if (c >= ' ' && c <= 126)
-                *dst++ = c;
+                *dst++ = (char)c;
             else
             {
                 *dst++ = '\\';
@@ -558,10 +558,10 @@ static int run_test( const char *name )
     if (winetest_debug)
     {
         fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
-                 test->name, (int)(successes + failures + todo_successes + todo_failures),
-                 (int)todo_successes, (int)(failures + todo_failures),
+                 test->name, successes + failures + todo_successes + todo_failures,
+                 todo_successes, failures + todo_failures,
                  (failures + todo_failures != 1) ? "failures" : "failure",
-                 (int)skipped );
+                 skipped );
     }
     status = (failures + todo_failures < 255) ? failures + todo_failures : 255;
     return status;
@@ -609,5 +609,8 @@ int main( int argc, char **argv )
 }
 
 #endif  /* STANDALONE */
+
+// hack for ntdll winetest (this is defined in excpt.h)
+#undef exception_info
 
 #endif  /* __WINE_WINE_TEST_H */

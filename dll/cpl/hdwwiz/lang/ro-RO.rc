@@ -1,7 +1,5 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Expertul de adăugare hardware"
@@ -147,5 +145,3 @@ BEGIN
 	IDS_SELECTWAYTITLE "Acest Expert vă poate ajuta să instalați alt hardware"
 	IDS_HDTYPESTITLE "Din lista de mai jos, alegeți dispozitivul pe care vreți să îl instalați."
 END
-
-#pragma code_page(default)

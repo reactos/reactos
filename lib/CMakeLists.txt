@@ -16,7 +16,7 @@ add_subdirectory(lsalib)
 add_subdirectory(ppcmmu)
 add_subdirectory(pseh)
 add_subdirectory(recyclebin)
-add_subdirectory(rossym)
+add_subdirectory(rossym_new)
 add_subdirectory(rtl)
 add_subdirectory(sdk)
 add_subdirectory(smlib)
@@ -24,7 +24,6 @@ add_subdirectory(tdilib)
 
 else()
 
-add_subdirectory(host/wcsfuncs)
 add_subdirectory(3rdparty/zlib)
 
 endif()

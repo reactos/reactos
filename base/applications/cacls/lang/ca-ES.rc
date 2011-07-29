@@ -3,36 +3,36 @@ LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Mostra o modifica la llista de control d'accÈs (ACLs) dels fitxers\n\n\
+IDS_HELP, "Mostra o modifica la llista de control d'acc√©s (ACLs) dels fitxers\n\n\
 CACLS fitxer [/T] [/E] [/C] [/G user:perm [...]] [/R usuari [...]]\n\
                [/P user:perm [...]] [/D usuari [...]]\n\
    fitxer        Mostra ACLs.\n\
    /T            Canvia el ACLs dels fitxers especificats al\n\
                  directori actual i tots els seus subdirectoris.\n\
    /E            Edita ACL en comptes de substituir-lo.\n\
-   /C            Continua en cas d'error d'accÈs.\n\
-   /G user:perm  Assegura els drets d'accÈs especificats per al usuari.\n\
+   /C            Continua en cas d'error d'acc√©s.\n\
+   /G user:perm  Assegura els drets d'acc√©s especificats per al usuari.\n\
                  perm pot ser: R  Lectura\n\
                                W  Escriptura\n\
-                               C  ModificaciÛ (Escriptura)\n\
+                               C  Modificaci√≥ (Escriptura)\n\
                                F  Control total\n\
-   /R usuari     Revoca els drets d'accÈs especificats per al usuari(nomÈs v‡lid amb /E).\n\
-   /P user:perm  Canvia els drets d'accÈs especificats per al usuari.\n\
+   /R usuari     Revoca els drets d'acc√©s especificats per al usuari(nom√©s v√†lid amb /E).\n\
+   /P user:perm  Canvia els drets d'acc√©s especificats per al usuari.\n\
                  perm pot ser: N  Cap\n\
                                R  Lectura\n\
                                W  Escriptura\n\
-                               C  ModificaciÛ (Escriptura)\n\
+                               C  Modificaci√≥ (Escriptura)\n\
                                F  Control total\n\
-   /D usuari     Denega els drets d'accÈs especificats per al usuari.\n\
-Es possible utilitzar comodins per especificar mÈs d'un fitxer per comanda.\n\
-Podeu especificar mÈs d'un usuari per comanda.\n\n\
+   /D usuari     Denega els drets d'acc√©s especificats per al usuari.\n\
+Es possible utilitzar comodins per especificar m√©s d'un fitxer per comanda.\n\
+Podeu especificar m√©s d'un usuari per comanda.\n\n\
 Abreviacions:\n\
    CI - Container heredat.\n\
-        ACE s'heredar‡ per directoris.\n\
+        ACE s'heredar√† per directoris.\n\
    OI - Objecte heredat.\n\
-        ACE s'heredar‡ per fitxers.\n\
-   IO - NomÈs heredat.\n\
-        ACE no s'aplicar‡ al directori/fitxer actual.\n"
+        ACE s'heredar√† per fitxers.\n\
+   IO - Nom√©s heredat.\n\
+        ACE no s'aplicar√† al directori/fitxer actual.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -44,7 +44,7 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(DENEGAT)"
-IDS_SPECIAL_ACCESS, "(accÈs especial:)"
+IDS_SPECIAL_ACCESS, "(acc√©s especial:)"
 IDS_GENERIC_READ, "GENERIC_READ"
 IDS_GENERIC_WRITE, "GENERIC_WRITE"
 IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"

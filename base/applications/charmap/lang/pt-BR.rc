@@ -43,7 +43,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE   "Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo sob os termos da  GNU General Public License conforme publicada pela Free Software Foundation; quer a versão 2  da licença, ou (conforme você escolha) qualquer versão posterior.\r\n\r\nEste programa é  distribuído com a esperança de que seja útil, mas SEM QUALQUER GARANTIA; mesmo sem a garantia  implícita de MERCANTIBILIDADE OU ADEQUAÇÃO A UM DETERMINADO PROPÓSITO. Para mais detalhes,  veja a GNU General Public License.\r\n\r\nVocê deve ter recebido uma cópia da GNU General  Public License juntamente com este programa; caso contrário, escreva para a Free Software  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
+  IDS_LICENSE   "Este programa Ã© software livre; vocÃª pode redistribuÃ­-lo e/ou modificÃ¡-lo sob os termos da  GNU General Public License conforme publicada pela Free Software Foundation; quer a versÃ£o 2  da licenÃ§a, ou (conforme vocÃª escolha) qualquer versÃ£o posterior.\r\n\r\nEste programa Ã©  distribuÃ­do com a esperanÃ§a de que seja Ãºtil, mas SEM QUALQUER GARANTIA; mesmo sem a garantia  implÃ­cita de MERCANTIBILIDADE OU ADEQUAÃ‡ÃƒO A UM DETERMINADO PROPÃ“SITO. Para mais detalhes,  veja a GNU General Public License.\r\n\r\nVocÃª deve ter recebido uma cÃ³pia da GNU General  Public License juntamente com este programa; caso contrÃ¡rio, escreva para a Free Software  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
   IDS_ABOUT     "So&bre..."
   IDS_TITLE     "Character Map"
 END

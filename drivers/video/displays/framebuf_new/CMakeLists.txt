@@ -10,7 +10,7 @@ list(APPEND SOURCE
     framebuf_new.rc
     ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new.def)
 
-add_library(framebuf_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new_driver.h.gch ${SOURCE})
+add_library(framebuf_new SHARED ${SOURCE})
 
 if(ARCH MATCHES i386)
     if(MSVC)
@@ -27,5 +27,5 @@ set_image_base(framebuf_new 0x00010000)
 target_link_libraries(framebuf_new libcntpr)
 
 add_importlibs(framebuf_new win32k)
-add_pch(framebuf_new ${CMAKE_CURRENT_SOURCE_DIR}/driver.h ${SOURCE})
+add_pch(framebuf_new driver.h)
 add_dependencies(framebuf_new psdk bugcodes)

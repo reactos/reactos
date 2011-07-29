@@ -2061,7 +2061,7 @@ ASSERT(FALSE);
         GLYPHMETRICS gm;
         DWORD dwSize;
         void *outline;
-
+#if 0
         dwSize = ftGdiGetGlyphOutline( dc,
                                        str[idx],
                                        GGO_GLYPH_INDEX | GGO_NATIVE,
@@ -2083,6 +2083,7 @@ ASSERT(FALSE);
                               outline,
                               NULL,
                               TRUE);
+#endif
 
         PATH_add_outline(dc, org.x + x + xoff, org.x + y + yoff, outline, dwSize);
 

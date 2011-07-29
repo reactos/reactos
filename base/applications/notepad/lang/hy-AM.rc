@@ -1,9 +1,7 @@
 /*
  *  Notepad (Armenian resources)
  */
-
-#pragma code_page(65001) /* Unicode only */
-
+ 
 LANGUAGE LANG_ARMENIAN, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
@@ -188,5 +186,3 @@ STRING_LF,                                      "Յունիքս"
 STRING_CR,                                      "Մակինտոշ"
 STRING_LINE_COLUMN,                             "Line %d, column %d"
 END
-
-#pragma code_page(default)

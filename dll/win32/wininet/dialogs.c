@@ -44,6 +44,8 @@
 
 #include "resource.h"
 
+#define MAX_STRING_LEN 1024
+
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 struct WININET_ErrorDlgParams
@@ -62,25 +64,25 @@ struct WININET_ErrorDlgParams
  */
 static BOOL WININET_GetProxyServer( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
 {
-    http_request_t *lpwhr;
-    http_session_t *lpwhs = NULL;
+    http_request_t *request;
+    http_session_t *session = NULL;
     appinfo_t *hIC = NULL;
     BOOL ret = FALSE;
     LPWSTR p;
 
-    lpwhr = (http_request_t*) WININET_GetObject( hRequest );
-    if (NULL == lpwhr)
+    request = (http_request_t*) get_handle_object( hRequest );
+    if (NULL == request)
         return FALSE;
 
-    lpwhs = lpwhr->lpHttpSession;
-    if (NULL == lpwhs)
+    session = request->session;
+    if (NULL == session)
         goto done;
 
-    hIC = lpwhs->lpAppInfo;
+    hIC = session->appInfo;
     if (NULL == hIC)
         goto done;
 
-    lstrcpynW(szBuf, hIC->lpszProxy, sz);
+    lstrcpynW(szBuf, hIC->proxy, sz);
 
     /* FIXME: perhaps it would be better to use InternetCrackUrl here */
     p = strchrW(szBuf, ':');
@@ -90,7 +92,7 @@ static BOOL WININET_GetProxyServer( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
     ret = TRUE;
 
 done:
-    WININET_Release( &lpwhr->hdr );
+    WININET_Release( &request->hdr );
     return ret;
 }
 
@@ -101,24 +103,24 @@ done:
  */
 static BOOL WININET_GetServer( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
 {
-    http_request_t *lpwhr;
-    http_session_t *lpwhs = NULL;
+    http_request_t *request;
+    http_session_t *session = NULL;
     BOOL ret = FALSE;
 
-    lpwhr = (http_request_t*) WININET_GetObject( hRequest );
-    if (NULL == lpwhr)
+    request = (http_request_t*) get_handle_object( hRequest );
+    if (NULL == request)
         return FALSE;
 
-    lpwhs = lpwhr->lpHttpSession;
-    if (NULL == lpwhs)
+    session = request->session;
+    if (NULL == session)
         goto done;
 
-    lstrcpynW(szBuf, lpwhs->lpszHostName, sz);
+    lstrcpynW(szBuf, session->hostName, sz);
 
     ret = TRUE;
 
 done:
-    WININET_Release( &lpwhr->hdr );
+    WININET_Release( &request->hdr );
     return ret;
 }
 
@@ -239,17 +241,17 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
 static BOOL WININET_SetAuthorization( HINTERNET hRequest, LPWSTR username,
                                       LPWSTR password, BOOL proxy )
 {
-    http_request_t *lpwhr;
-    http_session_t *lpwhs;
+    http_request_t *request;
+    http_session_t *session;
     BOOL ret = FALSE;
     LPWSTR p, q;
 
-    lpwhr = (http_request_t*) WININET_GetObject( hRequest );
-    if( !lpwhr )
+    request = (http_request_t*) get_handle_object( hRequest );
+    if( !request )
         return FALSE;
 
-    lpwhs = lpwhr->lpHttpSession;
-    if (NULL == lpwhs ||  lpwhs->hdr.htype != WH_HHTTPSESSION)
+    session = request->session;
+    if (NULL == session ||  session->hdr.htype != WH_HHTTPSESSION)
     {
         INTERNET_SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
         goto done;
@@ -268,27 +270,27 @@ static BOOL WININET_SetAuthorization( HINTERNET hRequest, LPWSTR username,
 
     if (proxy)
     {
-        appinfo_t *hIC = lpwhs->lpAppInfo;
+        appinfo_t *hIC = session->appInfo;
 
-        HeapFree(GetProcessHeap(), 0, hIC->lpszProxyUsername);
-        hIC->lpszProxyUsername = p;
+        HeapFree(GetProcessHeap(), 0, hIC->proxyUsername);
+        hIC->proxyUsername = p;
 
-        HeapFree(GetProcessHeap(), 0, hIC->lpszProxyPassword);
-        hIC->lpszProxyPassword = q;
+        HeapFree(GetProcessHeap(), 0, hIC->proxyPassword);
+        hIC->proxyPassword = q;
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, lpwhs->lpszUserName);
-        lpwhs->lpszUserName = p;
+        HeapFree(GetProcessHeap(), 0, session->userName);
+        session->userName = p;
 
-        HeapFree(GetProcessHeap(), 0, lpwhs->lpszPassword);
-        lpwhs->lpszPassword = q;
+        HeapFree(GetProcessHeap(), 0, session->password);
+        session->password = q;
     }
 
     ret = TRUE;
 
 done:
-    WININET_Release( &lpwhr->hdr );
+    WININET_Release( &request->hdr );
     return ret;
 }
 
@@ -461,6 +463,109 @@ static INT_PTR WINAPI WININET_PasswordDialog(
 }
 
 /***********************************************************************
+ *         WININET_InvalidCertificateDialog
+ */
+static INT_PTR WINAPI WININET_InvalidCertificateDialog(
+    HWND hdlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+    struct WININET_ErrorDlgParams *params;
+    HWND hitem;
+    WCHAR buf[1024];
+
+    if( uMsg == WM_INITDIALOG )
+    {
+        TRACE("WM_INITDIALOG (%08lx)\n", lParam);
+
+        /* save the parameter list */
+        params = (struct WININET_ErrorDlgParams*) lParam;
+        SetWindowLongPtrW( hdlg, GWLP_USERDATA, lParam );
+
+        switch( params->dwError )
+        {
+        case ERROR_INTERNET_INVALID_CA:
+            LoadStringW( WININET_hModule, IDS_CERT_CA_INVALID, buf, 1024 );
+            break;
+        case ERROR_INTERNET_SEC_CERT_DATE_INVALID:
+            LoadStringW( WININET_hModule, IDS_CERT_DATE_INVALID, buf, 1024 );
+            break;
+        case ERROR_INTERNET_SEC_CERT_CN_INVALID:
+            LoadStringW( WININET_hModule, IDS_CERT_CN_INVALID, buf, 1024 );
+            break;
+        case ERROR_INTERNET_SEC_CERT_ERRORS:
+            /* FIXME: We should fetch information about the
+             * certificate here and show all the relevant errors.
+             */
+            LoadStringW( WININET_hModule, IDS_CERT_ERRORS, buf, 1024 );
+            break;
+        default:
+            FIXME( "No message for error %d\n", params->dwError );
+            buf[0] = '\0';
+        }
+
+        hitem = GetDlgItem( hdlg, IDC_CERT_ERROR );
+        SetWindowTextW( hitem, buf );
+
+        return TRUE;
+    }
+
+    params = (struct WININET_ErrorDlgParams*)
+                 GetWindowLongPtrW( hdlg, GWLP_USERDATA );
+
+    switch( uMsg )
+    {
+    case WM_COMMAND:
+        if( wParam == IDOK )
+        {
+            BOOL res = TRUE;
+
+            if( params->dwFlags & FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS )
+            {
+                DWORD flags, size = sizeof(flags);
+
+                InternetQueryOptionW( params->hRequest, INTERNET_OPTION_SECURITY_FLAGS, &flags, &size );
+                switch( params->dwError )
+                {
+                case ERROR_INTERNET_INVALID_CA:
+                    flags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
+                    break;
+                case ERROR_INTERNET_SEC_CERT_DATE_INVALID:
+                    flags |= SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
+                    break;
+                case ERROR_INTERNET_SEC_CERT_CN_INVALID:
+                    flags |= SECURITY_FLAG_IGNORE_CERT_CN_INVALID;
+                    break;
+                case ERROR_INTERNET_SEC_CERT_ERRORS:
+                    FIXME("Should only add ignore flags as needed.\n");
+                    flags |= SECURITY_FLAG_IGNORE_CERT_CN_INVALID |
+                        SECURITY_FLAG_IGNORE_CERT_DATE_INVALID |
+                        SECURITY_FLAG_IGNORE_UNKNOWN_CA;
+                    /* FIXME: ERROR_INTERNET_SEC_CERT_ERRORS also
+                     * seems to set the corresponding DLG_* flags.
+                     */
+                    break;
+                }
+                res = InternetSetOptionW( params->hRequest, INTERNET_OPTION_SECURITY_FLAGS, &flags, size );
+                if(!res)
+                    WARN("InternetSetOption(INTERNET_OPTION_SECURITY_FLAGS) failed.\n");
+            }
+
+            EndDialog( hdlg, res ? ERROR_SUCCESS : ERROR_NOT_SUPPORTED );
+            return TRUE;
+        }
+        if( wParam == IDCANCEL )
+        {
+            TRACE("Pressed cancel.\n");
+
+            EndDialog( hdlg, ERROR_CANCELLED );
+            return TRUE;
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
+/***********************************************************************
  *         WININET_GetConnectionStatus
  */
 static INT WININET_GetConnectionStatus( HINTERNET hRequest )
@@ -490,10 +595,12 @@ DWORD WINAPI InternetErrorDlg(HWND hWnd, HINTERNET hRequest,
                  DWORD dwError, DWORD dwFlags, LPVOID* lppvData)
 {
     struct WININET_ErrorDlgParams params;
-    HMODULE hwininet = GetModuleHandleA( "wininet.dll" );
     INT dwStatus;
 
     TRACE("%p %p %d %08x %p\n", hWnd, hRequest, dwError, dwFlags, lppvData);
+
+    if( !hWnd && !(dwFlags & FLAGS_ERROR_UI_FLAGS_NO_UI) )
+        return ERROR_INVALID_HANDLE;
 
     params.hWnd = hWnd;
     params.hRequest = hRequest;
@@ -512,23 +619,32 @@ DWORD WINAPI InternetErrorDlg(HWND hWnd, HINTERNET hRequest,
         switch (dwStatus)
         {
         case HTTP_STATUS_PROXY_AUTH_REQ:
-            return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_PROXYDLG ),
+            return DialogBoxParamW( WININET_hModule, MAKEINTRESOURCEW( IDD_PROXYDLG ),
                                     hWnd, WININET_ProxyPasswordDialog, (LPARAM) &params );
         case HTTP_STATUS_DENIED:
-            return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_AUTHDLG ),
+            return DialogBoxParamW( WININET_hModule, MAKEINTRESOURCEW( IDD_AUTHDLG ),
                                     hWnd, WININET_PasswordDialog, (LPARAM) &params );
         default:
             WARN("unhandled status %u\n", dwStatus);
             return 0;
         }
-
-    case ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR:
-    case ERROR_INTERNET_INVALID_CA:
-    case ERROR_INTERNET_POST_IS_NON_SECURE:
+    case ERROR_INTERNET_SEC_CERT_ERRORS:
     case ERROR_INTERNET_SEC_CERT_CN_INVALID:
     case ERROR_INTERNET_SEC_CERT_DATE_INVALID:
+    case ERROR_INTERNET_INVALID_CA:
+        if( dwFlags & FLAGS_ERROR_UI_FLAGS_NO_UI )
+            return ERROR_CANCELLED;
+
+        if( dwFlags & ~FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS )
+            FIXME("%08x contains unsupported flags.\n", dwFlags);
+
+        return DialogBoxParamW( WININET_hModule, MAKEINTRESOURCEW( IDD_INVCERTDLG ),
+                                hWnd, WININET_InvalidCertificateDialog, (LPARAM) &params );
+    case ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR:
+    case ERROR_INTERNET_POST_IS_NON_SECURE:
         FIXME("Need to display dialog for error %d\n", dwError);
         return ERROR_SUCCESS;
     }
-    return ERROR_INVALID_PARAMETER;
+
+    return ERROR_NOT_SUPPORTED;
 }

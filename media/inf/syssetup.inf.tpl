@@ -16,6 +16,7 @@ ClassGUID={00000000-0000-0000-0000-000000000000}
 ; we use a separate one to keep things clean
 battery.inf
 cdrom.inf
+disk.inf
 display.inf
 fdc.inf
 hdc.inf
@@ -25,6 +26,7 @@ msmouse.inf
 NET_NIC.inf
 ports.inf
 scsi.inf
+unknown.inf
 usbport.inf
 audio.inf
 ks.inf

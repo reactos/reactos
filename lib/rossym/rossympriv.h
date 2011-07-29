@@ -9,6 +9,13 @@
 
 #pragma once
 
+typedef struct _ROSSYM_INFO {
+  PROSSYM_ENTRY Symbols;
+  ULONG SymbolsCount;
+  PCHAR Strings;
+  ULONG StringsLength;
+} ROSSYM_INFO;
+
 extern ROSSYM_CALLBACKS RosSymCallbacks;
 
 #define RosSymAllocMem(Size) (*RosSymCallbacks.AllocMemProc)(Size)

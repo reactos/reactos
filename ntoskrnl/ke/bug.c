@@ -266,7 +266,7 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
         if (p)
         {
 #ifdef KDBG
-            if (!KdbSymPrintAddress((PVOID)Addr))
+            if (!KdbSymPrintAddress((PVOID)Addr, NULL))
 #endif
             {
                 /* Print out the module name */

@@ -131,7 +131,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Verzia " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Verzia "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "T·to verzia systÈmu ReactOS je registrovan· pre:", IDC_STATIC, 35, 115, 180, 10
@@ -430,7 +430,7 @@ LTEXT "Opens with:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Zmeniù...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -661,10 +661,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Poloûka '%1' nemÙûe byù odoslan· do koöa. Chcete ju namiesto toho vymazaù?"
 	IDS_OVERWRITEFILE_TEXT      "Tento prieËinok uû obsahuje s˙bor s n·zvom '%1'.\n\nChcete ho nahradiù?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdenie prepÌsania s˙boru"
-	IDS_OVERWRITEFOLDER_TEXT    "Tento prieËinok uû obsahuje prieËinok s n·zvom '%1'.\n\n"\
-		"Ak bud˙ maù s˙bory v cieæovom prieËinku rovnakÈ n·zvy ako s˙bory\n"\
-		"vo vybranom prieËinku, tak bud˙ nahradenÈ. St·le chcete presun˙ù\n"\
-		"alebo skopÌrovaù prieËinok?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tento prieËinok uû obsahuje prieËinok s n·zvom '%1'.\n\nAk bud˙ maù s˙bory v cieæovom prieËinku rovnakÈ n·zvy ako s˙bory\nvo vybranom prieËinku, tak bud˙ nahradenÈ. St·le chcete presun˙ù\nalebo skopÌrovaù prieËinok?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reötartovaù"
@@ -766,4 +763,9 @@ BEGIN
   // There is no Windows program configured to open this type of file.  
 	IDS_SHLEXEC_NOASSOC         "Neexistuje ûiadny program nakonfigurovan˝ tak, aby otv·ral tento typ s˙borov."
                           //   Na otv·ranie tohto typu s˙boru nie je nakonfigurovan˝ ûiadny program systÈmu Windows.
+	
+	IDS_FILE_DETAILS            "Details for '%s' extension"
+	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

@@ -266,7 +266,7 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         8,
         11,
-        "oprogramowanie, b©d¥ce cz©sci¥ system ReactOS podlega wi©c",
+        "oprogramowanie, b©d¥ce cz©˜ci¥ systemu ReactOS podlega wi©c",
         TEXT_STYLE_NORMAL
     },
     {
@@ -332,7 +332,7 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         8,
         25,
-        "dotycz¥ce kopiowania w «r¢dˆach. Nie ma ¯ADNEJ gwarancji",
+        "dotycz¥ce kopiowania w «r¢dˆach. Nie ma ½ADNEJ gwarancji",
         TEXT_STYLE_NORMAL
     },
     {
@@ -717,7 +717,7 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         10,
         8,
-        "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
+        "Upewnij si© ¾e w Nap©dzie A: nie ma dyskietki i",
         TEXT_STYLE_NORMAL
     },
     {
@@ -902,7 +902,7 @@ static MUI_ENTRY plPLInstallDirectoryEntries[] =
     {
         6,
         9,
-        "katalog do kt¢rego chcesz zainstalowa† system ReactOS:",
+        "katalog, do kt¢rego chcesz zainstalowa† system ReactOS:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1334,7 +1334,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Instalator nie m¢gˆ zaˆadowa† listy typ¢w komputea\ra.\n",
+        "Instalator nie m¢gˆ zaˆadowa† listy typ¢w komputera.\n",
         "ENTER = Restart komputera"
     },
     {
@@ -1415,7 +1415,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Instalator nie byˆ w stanie ustawic inicjalizacji rejestru.",
+        "Instalator nie byˆ w stanie ustawi† inicjalizacji rejestru.",
         "ENTER = Restart komputera"
     },
     {
@@ -1617,7 +1617,7 @@ MUI_STRING plPLStrings[] =
     {STRING_CHOOSENEWPARTITION,
      "Wybrane: utworzenie nowej partycji na"},
     {STRING_HDDSIZE,
-    "Prosz© wprowadzi† rozmiar nowej partycji, w megabajtach."},
+    "Prosz© wprowadzi† rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,
      "   ENTER = Utworzenie Partycji   ESC = Anulowanie   F3 = Wyj˜cie"},
     {STRING_PARTFORMAT,
@@ -1633,7 +1633,7 @@ MUI_STRING plPLStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restart komputera"},
     {STRING_TXTSETUPFAILED,
-    "Instalator nie byˆ w stanie odnale«† sekji '%S'\nw pliku TXTSETUP.SIF.\n"},
+    "Instalator nie byˆ w stanie odnale«† sekcji '%S'\nw pliku TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1651,15 +1651,15 @@ MUI_STRING plPLStrings[] =
     {STRING_CODEPAGEINFOUPDATE,
     "   Dodawanie informacji o stronie kodowej do rejestru..."},
     {STRING_DONE,
-    "   Ukoñczone..."},
+    "   Ukoäczone..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Restart komputera"},
     {STRING_CONSOLEFAIL1,
     "Otwarcie konsoli nieudane\n\n"},
     {STRING_CONSOLEFAIL2,
-    "Najcz©stsz¥ tego przyczyn¥ jest u¾ycie klawiatury USB,\n"},
+    "Najcz©stsz¥ tego przyczyn¥ jest u¾ycie klawiatury USB.\n"},
     {STRING_CONSOLEFAIL3,
-    "kt¢re nie s¥ w peˆni obsˆugiwane.\n"},
+    "Nie s¥ obecnie w peˆni obsˆugiwane.\n"},
     {STRING_FORMATTINGDISK,
     "Instalator formatuje tw¢j dysk"},
     {STRING_CHECKINGDISK,

@@ -602,6 +602,11 @@ IopFreeDeviceNode(
 
 NTSTATUS
 NTAPI
+IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
+                           PDEVICE_CAPABILITIES DeviceCaps);
+
+NTSTATUS
+NTAPI
 IopSynchronousCall(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STACK_LOCATION IoStackLocation,
@@ -690,6 +695,11 @@ IopCreateRegistryKeyEx(
     IN ULONG CreateOptions,
     OUT PULONG Disposition OPTIONAL
 );
+
+
+NTSTATUS
+IopTraverseDeviceTree(
+    PDEVICETREE_TRAVERSE_CONTEXT Context);
 
 //
 // PnP Routines
@@ -785,6 +795,16 @@ IopStartDevice(
     IN PDEVICE_NODE DeviceNode
 );
 
+NTSTATUS
+IopStopDevice(
+    IN PDEVICE_NODE DeviceNode
+);
+
+NTSTATUS
+IopRemoveDevice(
+    IN PDEVICE_NODE DeviceNode
+);
+
 PVPB
 NTAPI
 IopCheckVpbMounted(
@@ -823,7 +843,7 @@ IopCreateVpb(
 
 VOID
 NTAPI
-IopDereferenceVpb(
+IopDereferenceVpbAndFree(
     IN PVPB Vpb
 );
 
@@ -854,8 +874,15 @@ IopDereferenceDeviceObject(
 
 NTSTATUS
 NTAPI
-IoGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
-                         OUT PDEVICE_OBJECT *DeviceObject
+IoGetRelatedTargetDevice(
+    IN PFILE_OBJECT FileObject,
+    OUT PDEVICE_OBJECT *DeviceObject
+);
+
+VOID
+NTAPI
+IopUnloadDevice(
+    IN PDEVICE_OBJECT DeviceObject
 );
 
 //

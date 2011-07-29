@@ -11,5 +11,6 @@ list(APPEND SOURCE
 add_executable(net ${SOURCE})
 
 set_module_type(net win32cui)
+add_pch(net net.h)
 add_importlibs(net ws2_32 msvcrt kernel32)
 add_cd_file(TARGET net DESTINATION reactos/system32 FOR all)

@@ -47,6 +47,11 @@ BOOL WINAPI EncryptionDisable (
 	BOOL
 	);
 
+BOOL WINAPI FileEncryptionStatus (
+	LPCTSTR,
+	LPDWORD
+	);
+
 DWORD WINAPI QueryUsersOnEncryptedFile (
 	LPCWSTR,
 	PENCRYPTION_CERTIFICATE_HASH_LIST*

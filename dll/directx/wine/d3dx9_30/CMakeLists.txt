@@ -25,7 +25,6 @@ add_importlibs(d3dx9_30
     user32
     gdi32
     advapi32
-    wined3d
     msvcrt
     kernel32
     ntdll)

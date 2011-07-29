@@ -151,7 +151,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,228,40,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Zurück",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
+    PUSHBUTTON      "ZurÃ¼ck",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,308,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -168,7 +168,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,84,24,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Zurück",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
+    PUSHBUTTON      "ZurÃ¼ck",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,164,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -245,7 +245,7 @@ BEGIN
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
-    CONTROL         "Zurück",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
+    CONTROL         "ZurÃ¼ck",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
                     BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
                     40,17
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,312,12,SS_CENTERIMAGE,
@@ -305,7 +305,7 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Über ReactOS Rechner"
+CAPTION "Ãœber ReactOS Rechner"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
@@ -344,7 +344,7 @@ BEGIN
     POPUP "Bearbeiten"
     BEGIN
         MENUITEM "Kopieren\tSTRG-C",            IDM_EDIT_COPY
-        MENUITEM "Einfügen\tSTRG-V",            IDM_EDIT_PASTE
+        MENUITEM "EinfÃ¼gen\tSTRG-V",            IDM_EDIT_PASTE
     END
     POPUP "Ansicht"
     BEGIN
@@ -355,7 +355,7 @@ BEGIN
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "Dezimal\tF6",                 IDM_VIEW_DEC, CHECKED
         MENUITEM "Oktal\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binär\tF8",                   IDM_VIEW_BIN, CHECKED
+        MENUITEM "BinÃ¤r\tF8",                   IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Degree\tF2",                  IDM_VIEW_DEG, CHECKED
         MENUITEM "Radian\tF3",                  IDM_VIEW_RAD, CHECKED
@@ -376,7 +376,7 @@ BEGIN
     POPUP "Bearbeiten"
     BEGIN
         MENUITEM "Kopieren\tSTRG-C",            IDM_EDIT_COPY
-        MENUITEM "Einfügen\tSTRG-V",            IDM_EDIT_PASTE
+        MENUITEM "EinfÃ¼gen\tSTRG-V",            IDM_EDIT_PASTE
     END
     POPUP "Ansicht"
     BEGIN
@@ -387,7 +387,7 @@ BEGIN
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "Dezimal\tF6",                 IDM_VIEW_DEC, CHECKED
         MENUITEM "Oktal\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binär\tF8",                   IDM_VIEW_BIN, CHECKED
+        MENUITEM "BinÃ¤r\tF8",                   IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
@@ -400,7 +400,7 @@ BEGIN
     BEGIN
         MENUITEM "Hilfethemen",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Über ReactOS Rechner",        IDM_HELP_ABOUT
+        MENUITEM "Ãœber ReactOS Rechner",        IDM_HELP_ABOUT
     END
 END
 
@@ -409,7 +409,7 @@ BEGIN
     POPUP "Bearbeiten"
     BEGIN
         MENUITEM "Kopieren\tSTRG-C",            IDM_EDIT_COPY
-        MENUITEM "Einfügen\tSTRG-V",            IDM_EDIT_PASTE
+        MENUITEM "EinfÃ¼gen\tSTRG-V",            IDM_EDIT_PASTE
     END
     POPUP "Ansicht"
     BEGIN
@@ -423,7 +423,7 @@ BEGIN
     BEGIN
         MENUITEM "Hilfethemen",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Über ReactOS Rechner",        IDM_HELP_ABOUT
+        MENUITEM "Ãœber ReactOS Rechner",        IDM_HELP_ABOUT
     END
 END
 
@@ -431,7 +431,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS Rechner ist freie Software, herausgegeben unter der GNU GPL Lizenz.\r\n\r\nSie können hier eine Kopie der GNU GPL Lizenz erhalten:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nSie können hier auch eine Übersetzung der GNU GPL Lizenz erhalten:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS Rechner ist freie Software, herausgegeben unter der GNU GPL Lizenz.\r\n\r\nSie kÃ¶nnen hier eine Kopie der GNU GPL Lizenz erhalten:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nSie kÃ¶nnen hier auch eine Ãœbersetzung der GNU GPL Lizenz erhalten:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Fehler"
     IDS_QUICKHELP           "Schnellhilfe"
 END
@@ -442,14 +442,14 @@ BEGIN
     IDS_CONV_POWER          "Arbeit"
     IDS_CONV_PRESSURE       "Druck"
     IDS_CONV_ENERGY         "Energie"
-    IDS_CONV_AREA           "Fläche"
+    IDS_CONV_AREA           "FlÃ¤che"
     IDS_CONV_VELOCITY       "Geschwindigkeit"
     IDS_CONV_WEIGHT         "Gewicht"
-    IDS_CONV_LENGTH         "Längenmaß"
+    IDS_CONV_LENGTH         "LÃ¤ngenmaÃŸ"
     IDS_CONV_TEMPERATURE    "Temperatur"
     IDS_CONV_CONSUMPTION    "Verbrauch (Motoren)"
     IDS_CONV_VOLUME         "Volumeneinheit"
-    IDS_CONV_CURRENCY       "Währung"
+    IDS_CONV_CURRENCY       "WÃ¤hrung"
     IDS_CONV_ANGLE          "Winkel"
     IDS_CONV_TIME           "Zeit"
 END
@@ -462,7 +462,7 @@ BEGIN
     IDS_ANGLE_RADIANS       "Radiant"
 END
 
-// FLÄCHENTYPEN
+// FLÃ„CHENTYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_AREA_ACRES                  "Acre"
@@ -485,7 +485,7 @@ BEGIN
     IDS_AREA_SQUARE_CHR             "Quadratchr"
     IDS_AREA_SQUARE_FATHOMS         "Quadratfathom"
     IDS_AREA_SQUARE_FATHOMS_HUNGARY "Quadratfathom (Ungarn)"
-    IDS_AREA_SQUARE_FEET            "Quadratfuß"
+    IDS_AREA_SQUARE_FEET            "QuadratfuÃŸ"
     IDS_AREA_SQUARE_KILOMETERS      "Quadratkilometer"
     IDS_AREA_SQUARE_LAR             "Quadratlar"
     IDS_AREA_SQUARE_METER           "Quadratmeter"
@@ -510,21 +510,21 @@ BEGIN
     IDS_CONSUMPTION_MILES_GALLON_US "Meilen/Gallone (USA)"
 END
 
-// WÄHRUNGSTYPEN
+// WÃ„HRUNGSTYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CURRENCY_BELGIAN_FRANC      "Belgische Franc"
     IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
     IDS_CURRENCY_EURO               "Euro"
     IDS_CURRENCY_FINNISH_MARKKA     "Finnische Mark"
-    IDS_CURRENCY_FRENCH_FRANC       "Französchische Franc"
+    IDS_CURRENCY_FRENCH_FRANC       "FranzÃ¶schische Franc"
     IDS_CURRENCY_GREEK_DRACHMA      "Griechische Drachme"
     IDS_CURRENCY_IRISH_POUND        "Irische Pfund"
     IDS_CURRENCY_ITALIAN_LIRA       "Italienische Lire"
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxemburgische Franc"
     IDS_CURRENCY_MALTESE_LIRA       "Maltesische Lire"
-    IDS_CURRENCY_DUTCH_GUILDER      "Niederländische Guilder"
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Österreichische Schilling"
+    IDS_CURRENCY_DUTCH_GUILDER      "NiederlÃ¤ndische Guilder"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Ã–sterreichische Schilling"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugiesische Escudo"
     IDS_CURRENCY_SLOVAK_KORUNA      "Slowakische Krone"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenische Tolar"
@@ -536,11 +536,11 @@ END
 // ENERGIETYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °C Kalorien"
+    IDS_ENERGY_15_C_CALORIES        "15 Â°C Kalorien"
     IDS_ENERGY_BTUS                 "British thermal unit"
     IDS_ENERGY_EVS                  "Elektronenvolt"
     IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_NUTRITION_CALORIES   "Ernährung Kalorien"
+    IDS_ENERGY_NUTRITION_CALORIES   "ErnÃ¤hrung Kalorien"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pound"
     IDS_ENERGY_IT_CALORIES          "International Kalorien"
     IDS_ENERGY_IT_KILOCALORIES      "International Kilokalorien"
@@ -550,10 +550,10 @@ BEGIN
     IDS_ENERGY_TH_CALORIES          "Thermochemische Kalorie"
 END
 
-// LÄNGENTYPEN
+// LÃ„NGENTYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Angströms"
+    IDS_LENGTH_ANGSTROMS            "AngstrÃ¶ms"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomische Einheiten"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
     IDS_LENGTH_CHI                  "Chi"
@@ -563,10 +563,10 @@ BEGIN
     IDS_LENGTH_FATHOMS              "Fathome"
     IDS_LENGTH_FATHOMS_HUNGARY      "Fathome (Ungarn)"
     IDS_LENGTH_FURLONGS             "Furlongs"
-    IDS_LENGTH_FEET                 "Fuß"
+    IDS_LENGTH_FEET                 "FuÃŸ"
     IDS_LENGTH_GAN                  "Gan"
     IDS_LENGTH_BARLEYCORNS          "Gerstenkorn"
-    IDS_LENGTH_HANDS                "Hände"
+    IDS_LENGTH_HANDS                "HÃ¤nde"
     IDS_LENGTH_HUNH                 "Hunh"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
@@ -609,14 +609,14 @@ BEGIN
     IDS_POWER_FPS_PER_MINUTE        "Foot-Pound pro Minute"
     IDS_POWER_KILOWATTS             "Kilowatt"
     IDS_POWER_MEGAWATTS             "Megawatt"
-    IDS_POWER_HORSEPOWER            "Pferdestärken"
+    IDS_POWER_HORSEPOWER            "PferdestÃ¤rken"
     IDS_POWER_WATTS                 "Watt"
 END
 
 // DRUCKTYPEN
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "Atmosphären"
+    IDS_PRESSURE_ATMOSPHERES        "AtmosphÃ¤ren"
     IDS_PRESSURE_BARS               "Bar"
     IDS_PRESSURE_HECTOPASCALS       "Hektopascal"
     IDS_PRESSURE_KILOPASCALS        "Kilopascal"
@@ -652,8 +652,8 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND         "Zentimeter/Sekunde"
-    IDS_VELOCITY_FEET_SECOND        "Fuß/Sekunde"
-    IDS_VELOCITY_FEET_HOUR          "Fuß/Stunde"
+    IDS_VELOCITY_FEET_SECOND        "FuÃŸ/Sekunde"
+    IDS_VELOCITY_FEET_HOUR          "FuÃŸ/Stunde"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometer/Stunde"
     IDS_VELOCITY_KNOTS              "Knoten"
     IDS_VELOCITY_MACH               "Mach"
@@ -665,9 +665,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_VOLUME_BARRELS_UK           "Barrel (UK)"
-    IDS_VOLUME_BARRELS_OIL          "Barrel Öl"
+    IDS_VOLUME_BARRELS_OIL          "Barrel Ã–l"
     IDS_VOLUME_BUN                  "Bun"
-    IDS_VOLUME_CUBIC_FEET           "Kubikfuß"
+    IDS_VOLUME_CUBIC_FEET           "KubikfuÃŸ"
     IDS_VOLUME_CUBIC_METERS         "Kubikmeter"
     IDS_VOLUME_CUBIC_YARDS          "Kubikyard"
     IDS_VOLUME_CUBIC_CENTIMETERS    "Kubikzentimeter"
@@ -676,7 +676,7 @@ BEGIN
     IDS_VOLUME_FLUID_OUNCES_UK      "Fluid Unzen (UK)"
     IDS_VOLUME_FLUID_OUNCES_US      "Fluid Unzen (USA)"
     IDS_VOLUME_GALLONS_UK           "Gallonen (UK)"
-    IDS_VOLUME_GALLONS_LIQUID_US    "Gallonen, flüssig (USA)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Gallonen, flÃ¼ssig (USA)"
     IDS_VOLUME_GALLONS_DRY_US       "Gallonen, trocken (USA)"
     IDS_VOLUME_GOU                  "Gou"
     IDS_VOLUME_HOP                  "Hop"
@@ -687,9 +687,9 @@ BEGIN
     IDS_VOLUME_MILLILITERS          "Milliliter"
     IDS_VOLUME_PINTS_UK             "Pints (UK)"
     IDS_VOLUME_PINTS_DRY_US         "Pints, trocken (USA)"
-    IDS_VOLUME_PINTS_LIQUID_US      "Pints, flüssig (USA)"
+    IDS_VOLUME_PINTS_LIQUID_US      "Pints, flÃ¼ssig (USA)"
     IDS_VOLUME_QUARTS_UK            "Quarts (UK)"
-    IDS_VOLUME_QUARTS_LIQUID_US     "Quarts, flüssig (USA)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "Quarts, flÃ¼ssig (USA)"
     IDS_VOLUME_QUARTS_DRY_US        "Quarts, trocken (USA)"
     IDS_VOLUME_BUSHELS_UK           "Scheffel (UK)"
     IDS_VOLUME_BUSHELS_US           "Scheffel (USA)"

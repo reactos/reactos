@@ -99,8 +99,9 @@ typedef struct IPADDR_ENTRY {
 #define FUNCTION_SEND                   2
 #define FUNCTION_PREACCEPT              3
 #define FUNCTION_ACCEPT                 4
-#define FUNCTION_CLOSE                  5
-#define MAX_FUNCTIONS                   6
+#define FUNCTION_DISCONNECT             5
+#define FUNCTION_CLOSE                  6
+#define MAX_FUNCTIONS                   7
 
 #define IN_FLIGHT_REQUESTS              4
 
@@ -172,23 +173,27 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
-    BOOLEAN Locked, Critical, Overread;
-    UINT State, Flags, BlockingMode, GroupID, GroupType;
+    BOOLEAN Locked, Critical, Overread, NonBlocking, OobInline, TdiReceiveClosed, SendClosed;
+    UINT State, Flags, GroupID, GroupType;
     KIRQL OldIrql;
     UINT LockCount;
     PVOID CurrentThread;
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
-    BOOLEAN DelayedAccept, NeedsNewListen;
+    BOOLEAN DelayedAccept;
     UINT ConnSeq;
+    USHORT DisconnectFlags;
+    BOOLEAN DisconnectPending;
+    LARGE_INTEGER DisconnectTimeout;
     PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
-    PTDI_CONNECTION_INFORMATION AddressFrom, ConnectInfo;
+    PTDI_CONNECTION_INFORMATION AddressFrom, ConnectCallInfo, ConnectReturnInfo;
     AFD_TDI_OBJECT AddressFile, Connection;
-    AFD_IN_FLIGHT_REQUEST ConnectIrp, ListenIrp, ReceiveIrp, SendIrp;
+    AFD_IN_FLIGHT_REQUEST ConnectIrp, ListenIrp, ReceiveIrp, SendIrp, DisconnectIrp;
     AFD_DATA_WINDOW Send, Recv;
     KMUTEX Mutex;
     PKEVENT EventSelect;
     DWORD EventSelectTriggers;
+    DWORD EventSelectDisabled;
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;
@@ -300,14 +305,18 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
+PVOID GetLockedData( PIRP Irp, PIO_STACK_LOCATION IrpSp );
+NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
+NTSTATUS QueueUserModeIrp(PAFD_FCB FCB, PIRP Irp, UINT Function);
 
 /* main.c */
 
 VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
-NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
 VOID DestroySocket( PAFD_FCB FCB );
 VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp);
+VOID RetryDisconnectCompletion(PAFD_FCB FCB);
+BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp);
 
 /* read.c */
 
@@ -358,6 +367,9 @@ NTSTATUS TdiOpenAddressFile(
 
 NTSTATUS TdiAssociateAddressFile(
   HANDLE AddressHandle,
+  PFILE_OBJECT ConnectionObject);
+
+NTSTATUS TdiDisassociateAddressFile(
   PFILE_OBJECT ConnectionObject);
 
 NTSTATUS TdiListen

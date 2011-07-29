@@ -3,6 +3,6 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "Невозможно загрузить библиотеку '%s'"
-    IDS_MissingEntry,   "Невозможно найти точку входа: %s\nв библиотеке %s"
+    IDS_DllNotLoaded,   "РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ Р±РёР±Р»РёРѕС‚РµРєСѓ '%s'"
+    IDS_MissingEntry,   "РќРµРІРѕР·РјРѕР¶РЅРѕ РЅР°Р№С‚Рё С‚РѕС‡РєСѓ РІС…РѕРґР°: %s\nРІ Р±РёР±Р»РёРѕС‚РµРєРµ %s"
 END

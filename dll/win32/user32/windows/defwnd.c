@@ -27,10 +27,6 @@ void MENU_EndMenu( HWND );
 
 /* GLOBALS *******************************************************************/
 
-/* Bits in the dwKeyData */
-#define KEYDATA_ALT             0x2000
-#define KEYDATA_PREVSTATE       0x4000
-
 static short iF10Key = 0;
 static short iMenuSysKey = 0;
 
@@ -293,8 +289,9 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
       pt.x = pt.y = 0;
       while(!hittest)
 	{
-	  if (GetMessageW(&msg, NULL, 0, 0) <= 0)
-	    break;
+          if (!GetMessageW(&msg, NULL, 0, 0)) break; //return 0;
+          if (CallMsgFilterW( &msg, MSGF_SIZE )) continue;
+
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
@@ -330,8 +327,13 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
 		  pt.y =(rectWindow.top+rectWindow.bottom)/2;
 		  break;
 		case VK_RETURN:
-		case VK_ESCAPE: return 0;
+		case VK_ESCAPE:
+		  return 0;
 		}
+            default:
+              TranslateMessage( &msg );
+              DispatchMessageW( &msg );
+              break;
 	    }
 	}
       *capturePoint = pt;
@@ -555,8 +557,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       int dx = 0, dy = 0;
 
-      if (GetMessageW(&msg, 0, 0, 0) <= 0)
-        break;
+      if (!GetMessageW(&msg, 0, 0, 0)) break;
+      if (CallMsgFilterW( &msg, MSGF_SIZE )) continue;
 
       /* Exit on button-up, Return, or Esc */
       if ((msg.message == WM_LBUTTONUP) ||
@@ -572,7 +574,11 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
         }
 
       if ((msg.message != WM_KEYDOWN) && (msg.message != WM_MOUSEMOVE))
-	continue;  /* We are not interested in other messages */
+      {
+         TranslateMessage( &msg );
+         DispatchMessageW( &msg );
+         continue;  /* We are not interested in other messages */
+      }
 
       pt = msg.pt;
 
@@ -747,6 +753,7 @@ DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
   ScrollTrackScrollBar(Wnd, ScrollBar, Pt );
 }
 
+LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
 
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -821,15 +828,16 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
       case SC_NEXTWINDOW:
       case SC_PREVWINDOW:
-        FIXME("Implement Alt-Tab!!! wParam 0x%x lParam 0x%x\n",wParam,lParam);
+        DoAppSwitch( wParam, lParam);
         break;
 
       case SC_HOTKEY:
         {
            HWND hwnd, hWndLastActive;
+           PWND pWnd;
 
            hwnd = (HWND)lParam;
-           PWND pWnd = ValidateHwnd(hwnd);
+           pWnd = ValidateHwnd(hwnd);
            if (pWnd)
            {
               hWndLastActive = GetLastActivePopup(hwnd);
@@ -921,8 +929,8 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 HBRUSH
 DefWndControlColor(HDC hDC, UINT ctlType)
 {
-  if (CTLCOLOR_SCROLLBAR == ctlType)
-    {
+  if (ctlType == CTLCOLOR_SCROLLBAR)
+  {
       HBRUSH hb = GetSysColorBrush(COLOR_SCROLLBAR);
       COLORREF bk = GetSysColor(COLOR_3DHILIGHT);
       SetTextColor(hDC, GetSysColor(COLOR_3DFACE));
@@ -932,37 +940,24 @@ DefWndControlColor(HDC hDC, UINT ctlType)
        * we better use 0x55aa bitmap brush to make scrollbar's background
        * look different from the window background.
        */
-      if (bk == GetSysColor(COLOR_WINDOW))
-	{
-          static const WORD wPattern55AA[] =
-          {
-              0x5555, 0xaaaa, 0x5555, 0xaaaa,
-              0x5555, 0xaaaa, 0x5555, 0xaaaa
-          };
-          static HBITMAP hPattern55AABitmap = NULL;
-          static HBRUSH hPattern55AABrush = NULL;
-          if (hPattern55AABrush == NULL)
-            {
-              hPattern55AABitmap = CreateBitmap(8, 8, 1, 1, wPattern55AA);
-              hPattern55AABrush = CreatePatternBrush(hPattern55AABitmap);
-            }
-          return hPattern55AABrush;
-	}
-      UnrealizeObject(hb);
+      if ( bk == GetSysColor(COLOR_WINDOW))
+          return gpsi->hbrGray;
+
+      UnrealizeObject( hb );
       return hb;
-    }
+  }
 
   SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
 
-  if ((CTLCOLOR_EDIT == ctlType) || (CTLCOLOR_LISTBOX == ctlType))
-    {
+  if ((ctlType == CTLCOLOR_EDIT) || (ctlType == CTLCOLOR_LISTBOX))
+  {
       SetBkColor(hDC, GetSysColor(COLOR_WINDOW));
-    }
+  }
   else
-    {
+  {
       SetBkColor(hDC, GetSysColor(COLOR_3DFACE));
       return GetSysColorBrush(COLOR_3DFACE);
-    }
+  }
 
   return GetSysColorBrush(COLOR_WINDOW);
 }
@@ -1413,10 +1408,10 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SYSKEYDOWN:
         {
-            if (HIWORD(lParam) & KEYDATA_ALT)
+            if (HIWORD(lParam) & KF_ALTDOWN)
             {   /* Previous state, if the key was down before this message,
                    this is a cheap way to ignore autorepeat keys. */
-                if ( !(HIWORD(lParam) & KEYDATA_PREVSTATE) )
+                if ( !(HIWORD(lParam) & KF_REPEAT) )
                 {
                    if ( ( wParam == VK_MENU  ||
                           wParam == VK_LMENU ||
@@ -1484,7 +1479,7 @@ User32DefWindowProc(HWND hWnd,
                 PostMessageW( hWnd, WM_SYSCOMMAND, SC_RESTORE, 0L );
                 break;
             }
-            if ((HIWORD(lParam) & KEYDATA_ALT) && wParam)
+            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam)
             {
                 if (wParam == VK_TAB || wParam == VK_ESCAPE) break;
                 if (wParam == VK_SPACE && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))

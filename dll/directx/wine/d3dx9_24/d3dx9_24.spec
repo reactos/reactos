@@ -26,7 +26,7 @@
 @ stdcall D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXConcatenateMeshes
 @ stdcall D3DXConvertMeshSubsetToSingleStrip(ptr long long ptr ptr) d3dx9_36.D3DXConvertMeshSubsetToSingleStrip
 @ stdcall D3DXConvertMeshSubsetToStrips(ptr long long ptr ptr ptr ptr) d3dx9_36.D3DXConvertMeshSubsetToStrips
-@ stdcall -stub D3DXCpuOptimizations(long)
+@ stub D3DXCpuOptimizations
 @ stdcall D3DXCreateAnimationController(long long long long ptr) d3dx9_36.D3DXCreateAnimationController
 @ stdcall D3DXCreateBox(ptr long long long ptr ptr) d3dx9_36.D3DXCreateBox
 @ stdcall D3DXCreateBuffer(long ptr) d3dx9_36.D3DXCreateBuffer
@@ -159,8 +159,8 @@
 @ stdcall D3DXGetShaderSamplers(ptr ptr ptr) d3dx9_36.D3DXGetShaderSamplers
 @ stdcall D3DXGetShaderSize(ptr) d3dx9_36.D3DXGetShaderSize
 @ stdcall D3DXGetShaderVersion(ptr) d3dx9_36.D3DXGetShaderVersion
-@ stdcall -stub D3DXGetTargetDescByName(long long long)
-@ stdcall -stub D3DXGetTargetDescByVersion(long long long)
+@ stub D3DXGetTargetDescByName
+@ stub D3DXGetTargetDescByVersion
 @ stdcall D3DXGetVertexShaderProfile(ptr) d3dx9_36.D3DXGetVertexShaderProfile
 @ stdcall D3DXIntersect(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr) d3dx9_36.D3DXIntersect
 @ stdcall D3DXIntersectSubset(ptr long ptr ptr ptr ptr ptr ptr ptr ptr ptr) d3dx9_36.D3DXIntersectSubset
@@ -185,7 +185,7 @@
 @ stdcall D3DXLoadSurfaceFromMemory(ptr ptr ptr ptr long long ptr ptr long long) d3dx9_36.D3DXLoadSurfaceFromMemory
 @ stdcall D3DXLoadSurfaceFromResourceA(ptr ptr ptr long ptr ptr long long ptr) d3dx9_36.D3DXLoadSurfaceFromResourceA
 @ stdcall D3DXLoadSurfaceFromResourceW(ptr ptr ptr long ptr ptr long long ptr) d3dx9_36.D3DXLoadSurfaceFromResourceW
-@ stdcall D3DXLoadSurfaceFromSurface(ptr ptr ptr ptr ptr ptr long long) d3dx9_36.D3DXLoadSurfaceFromSurface
+@ stdcall D3DXLoadSurfaceFromSurface(ptr ptr ptr ptr ptr ptr long) d3dx9_36.D3DXLoadSurfaceFromSurface
 @ stdcall D3DXLoadVolumeFromFileA(ptr ptr ptr ptr ptr long long ptr) d3dx9_36.D3DXLoadVolumeFromFileA
 @ stdcall D3DXLoadVolumeFromFileInMemory(ptr ptr ptr ptr long ptr long long ptr) d3dx9_36.D3DXLoadVolumeFromFileInMemory
 @ stdcall D3DXLoadVolumeFromFileW(ptr ptr ptr ptr ptr long long ptr) d3dx9_36.D3DXLoadVolumeFromFileW

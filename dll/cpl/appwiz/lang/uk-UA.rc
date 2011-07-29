@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Створення ярлика"
+CAPTION "РЎС‚РІРѕСЂРµРЅРЅСЏ СЏСЂР»РёРєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Text1", -1, 115, 15, 160, 24
@@ -19,7 +19,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Створення ярлика"
+CAPTION "РЎС‚РІРѕСЂРµРЅРЅСЏ СЏСЂР»РёРєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Text1",-1,10,0,225,40
@@ -29,30 +29,30 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Створення ярлика"
+CAPTION "РЎС‚РІРѕСЂРµРЅРЅСЏ СЏСЂР»РёРєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Цей майстер допомагає створити ярлик, який указує на\nлокальні або мережні програми, файли, папки, комп'ютери\nабо адреси в Інтернеті.", -1, 120, 15, 200, 30
-  LTEXT "Укажіть розташування об'єкта:", -1, 120, 50, 120, 10
+  LTEXT "Р¦РµР№ РјР°Р№СЃС‚РµСЂ РґРѕРїРѕРјР°РіР°С” СЃС‚РІРѕСЂРёС‚Рё СЏСЂР»РёРє, СЏРєРёР№ СѓРєР°Р·СѓС” РЅР°\nР»РѕРєР°Р»СЊРЅС– Р°Р±Рѕ РјРµСЂРµР¶РЅС– РїСЂРѕРіСЂР°РјРё, С„Р°Р№Р»Рё, РїР°РїРєРё, РєРѕРјРї'СЋС‚РµСЂРё\nР°Р±Рѕ Р°РґСЂРµСЃРё РІ Р†РЅС‚РµСЂРЅРµС‚С–.", -1, 120, 15, 200, 30
+  LTEXT "РЈРєР°Р¶С–С‚СЊ СЂРѕР·С‚Р°С€СѓРІР°РЅРЅСЏ РѕР±'С”РєС‚Р°:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Огляд...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Щоб продовжити установку, натисніть кнопку ""Далі"".", -1, 120, 97, 162, 10
+  PUSHBUTTON "РћРіР»СЏРґ...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT "Р©РѕР± РїСЂРѕРґРѕРІР¶РёС‚Рё СѓСЃС‚Р°РЅРѕРІРєСѓ, РЅР°С‚РёСЃРЅС–С‚СЊ РєРЅРѕРїРєСѓ ""Р”Р°Р»С–"".", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Вибір назви програми"
+CAPTION "Р’РёР±С–СЂ РЅР°Р·РІРё РїСЂРѕРіСЂР°РјРё"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Введіть ім'я ярлика:", -1, 120, 15, 150, 10
+  LTEXT "&Р’РІРµРґС–С‚СЊ С–Рј'СЏ СЏСЂР»РёРєР°:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Щоб створити ярлик, натисніть кнопку ""Готово"".", -1, 118, 97, 178, 17
+  LTEXT "Р©РѕР± СЃС‚РІРѕСЂРёС‚Рё СЏСЂР»РёРє, РЅР°С‚РёСЃРЅС–С‚СЊ РєРЅРѕРїРєСѓ ""Р“РѕС‚РѕРІРѕ"".", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Установка й видалення програм"
-	IDS_CPLSYSTEMDESCRIPTION "Встановлення програм і створення ярликів."
-    IDS_CREATE_SHORTCUT "Створити ярлик"
-    IDS_ERROR_NOT_FOUND "Файл %s не знайдений."
+	IDS_CPLSYSTEMNAME "РЈСЃС‚Р°РЅРѕРІРєР° Р№ РІРёРґР°Р»РµРЅРЅСЏ РїСЂРѕРіСЂР°Рј"
+	IDS_CPLSYSTEMDESCRIPTION "Р’СЃС‚Р°РЅРѕРІР»РµРЅРЅСЏ РїСЂРѕРіСЂР°Рј С– СЃС‚РІРѕСЂРµРЅРЅСЏ СЏСЂР»РёРєС–РІ."
+    IDS_CREATE_SHORTCUT "РЎС‚РІРѕСЂРёС‚Рё СЏСЂР»РёРє"
+    IDS_ERROR_NOT_FOUND "Р¤Р°Р№Р» %s РЅРµ Р·РЅР°Р№РґРµРЅРёР№."
 END

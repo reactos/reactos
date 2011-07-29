@@ -8,9 +8,9 @@ BEGIN
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
   PUSHBUTTON    "Aide", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
-  LTEXT         "Caractères à copier :", IDC_STATIC, 6, 188, 66, 9
+  LTEXT         "CaractÃ¨res Ã  copier :", IDC_STATIC, 6, 188, 66, 9
   CONTROL       "",IDC_TEXTBOX,RICHEDIT_CLASS,ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-  DEFPUSHBUTTON "Sélectionner", IDC_SELECT, 194, 186, 44, 13
+  DEFPUSHBUTTON "SÃ©lectionner", IDC_SELECT, 194, 186, 44, 13
   PUSHBUTTON    "Copier", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
   CONTROL       "Advanced view",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
 END
@@ -31,11 +31,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "À propos de la Table des Caractères"
+CAPTION "Ã€ propos de la Table des CaractÃ¨res"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "Table des Caractères v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  LTEXT         "Table des CaractÃ¨res v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
   PUSHBUTTON    "Fermer", IDOK, 75, 162, 44, 15
   ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -43,7 +43,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE   "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-  IDS_ABOUT     "À propos..."
+  IDS_LICENSE   "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiÃ©e par la Free Software Foundation; dans sa version 2  (ou selon votre prÃ©fÃ©rence) toute version ultÃ©rieure.\r\n\r\nCe programme est distribuÃ© dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans mÃªme une garantie implicite de COMMERCIABILITÃ‰ ou DE CONFORMITÃ‰ Ã€ UNE UTILISATION PARTICULIÃˆRE. \r\n\r\nVoir la Licence Publique GÃ©nÃ©rale GNU pour plus de dÃ©tails. Vous devriez avoir reÃ§u un exemplaire de la Licence Publique GÃ©nÃ©rale GNU avec ce programme ; si ce n'est pas le cas, Ã©crivez Ã  la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_ABOUT     "Ã€ propos..."
   IDS_TITLE     "Character Map"
 END

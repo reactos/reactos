@@ -28,7 +28,7 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     Request->ReturnConnectionInformation;
 
     Status = TCPTranslateError
-    ( OskitTCPAccept( Listener->SocketContext,
+    ( OskitTCPAccept( Listener,
               &Connection->SocketContext,
               Connection,
               &OutAddr,
@@ -39,24 +39,19 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     if( NT_SUCCESS(Status) && Status != STATUS_PENDING ) {
-    RequestAddressReturn = WhoIsConnecting->RemoteAddress;
+        RequestAddressReturn = WhoIsConnecting->RemoteAddress;
 
-    TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n",
-                   RequestAddressReturn, WhoIsConnecting));
+        TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n",
+                               RequestAddressReturn, WhoIsConnecting));
 
         RequestAddressReturn->TAAddressCount = 1;
-    RequestAddressReturn->Address[0].AddressLength = OutAddrLen;
+        RequestAddressReturn->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+        RequestAddressReturn->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+        RequestAddressReturn->Address[0].Address[0].sin_port = OutAddr.sin_port;
+        RequestAddressReturn->Address[0].Address[0].in_addr = OutAddr.sin_addr.s_addr;
+        RtlZeroMemory(RequestAddressReturn->Address[0].Address[0].sin_zero, 8);
 
-        /* BSD uses the first byte of the sockaddr struct as a length.
-         * Since windows doesn't do that we strip it */
-    RequestAddressReturn->Address[0].AddressType =
-        (OutAddr.sin_family >> 8) & 0xff;
-
-    RtlCopyMemory( &RequestAddressReturn->Address[0].Address,
-               ((PCHAR)&OutAddr) + sizeof(USHORT),
-               sizeof(RequestAddressReturn->Address[0].Address[0]) );
-
-    TI_DbgPrint(DEBUG_TCP,("Done copying\n"));
+        TI_DbgPrint(DEBUG_TCP,("Done copying\n"));
     }
 
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
@@ -70,31 +65,55 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     NTSTATUS Status = STATUS_SUCCESS;
     SOCKADDR_IN AddressToBind;
     KIRQL OldIrql;
+    TA_IP_ADDRESS LocalAddress;
 
     ASSERT(Connection);
-    ASSERT_KM_POINTER(Connection->AddressFile);
 
     LockObject(Connection, &OldIrql);
+    
+    ASSERT_KM_POINTER(Connection->AddressFile);
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-    Connection->SocketContext));
+    if (Connection->AddressFile->Port)
+    {
+        AddressToBind.sin_family = AF_INET;
+        memcpy( &AddressToBind.sin_addr,
+               &Connection->AddressFile->Address.Address.IPv4Address,
+               sizeof(AddressToBind.sin_addr) );
+        AddressToBind.sin_port = Connection->AddressFile->Port;
+        TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
-    AddressToBind.sin_family = AF_INET;
-    memcpy( &AddressToBind.sin_addr,
-        &Connection->AddressFile->Address.Address.IPv4Address,
-        sizeof(AddressToBind.sin_addr) );
-    AddressToBind.sin_port = Connection->AddressFile->Port;
-
-    TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
-
-    Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
-                        &AddressToBind,
-                        sizeof(AddressToBind) ) );
+        /* Perform an explicit bind */
+        Status = TCPTranslateError(OskitTCPBind(Connection,
+                                                &AddressToBind,
+                                                sizeof(AddressToBind)));
+    }
+    else
+    {
+        /* An implicit bind will be performed */
+        Status = STATUS_SUCCESS;
+    }
 
     if (NT_SUCCESS(Status))
-        Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
+        Status = TCPTranslateError( OskitTCPListen( Connection, Backlog ) );
+    
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if we had an unspecified port */
+        if (!Connection->AddressFile->Port)
+        {
+            /* We did, so we need to copy back the port */
+            if (NT_SUCCESS(TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE)))
+            {
+                /* Allocate the port in the port bitmap */
+                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                
+                /* This should never fail */
+                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+            }
+        }
+    }
 
     UnlockObject(Connection, OldIrql);
 

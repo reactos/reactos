@@ -982,7 +982,6 @@ co_WinPosSetWindowPos(
    int RgnType;
    HDC Dc;
    RECTL CopyRect;
-   RECTL TempRect;
    PWND Ancestor;
 
    ASSERT_REFS_CO(Window);
@@ -1008,17 +1007,17 @@ co_WinPosSetWindowPos(
 
    co_WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
-   /* Fix up the flags. */
-   if (!WinPosFixupFlags(&WinPos, Window))
-   {
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
-   }
-
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   /* Fix up the flags. */
+   if (!WinPosFixupFlags(&WinPos, Window))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
@@ -1033,17 +1032,18 @@ co_WinPosSetWindowPos(
    if (!(WinPos.flags & SWP_NOREDRAW))
    {
       /* Compute the visible region before the window position is changed */
-      if (!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
+      if (!(WinPos.flags & SWP_SHOWWINDOW) &&
            (WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
                              SWP_HIDEWINDOW | SWP_FRAMECHANGED)) !=
             (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
       {
-         VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
+         VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
+                                              (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
          VisRgn = NULL;
 
          if ( VisBefore != NULL &&
              (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisBefore, NULL)) &&
-              REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION )
+              REGION_Complexity(VisRgn) == NULLREGION )
          {
             RGNOBJAPI_Unlock(VisRgn);
             GreDeleteObject(VisBefore);
@@ -1084,8 +1084,8 @@ co_WinPosSetWindowPos(
 
    /* FIXME: Actually do something with WVR_VALIDRECTS */
 
-   if ( NewClientRect.left != OldClientRect.left ||
-        NewClientRect.top  != OldClientRect.top)
+   if (NewClientRect.left != OldClientRect.left ||
+       NewClientRect.top  != OldClientRect.top)
    {
       WinPosInternalMoveWindow(Window,
                                NewClientRect.left - OldClientRect.left,
@@ -1095,7 +1095,7 @@ co_WinPosSetWindowPos(
    Window->rcWindow = NewWindowRect;
    Window->rcClient = NewClientRect;
 
-   if (!(WinPos.flags & SWP_SHOWWINDOW) && (WinPos.flags & SWP_HIDEWINDOW))
+   if (WinPos.flags & SWP_HIDEWINDOW)
    {
       /* Clear the update region */
       co_UserRedrawWindow( Window,
@@ -1103,20 +1103,16 @@ co_WinPosSetWindowPos(
                            0,
                            RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
 
-      if ((Window->style & WS_VISIBLE) &&
-          Window->spwndParent == UserGetDesktopWindow())
-      {
+      if (Window->spwndParent == UserGetDesktopWindow())
          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)Window->head.h);
-      }
+
       Window->style &= ~WS_VISIBLE;
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-      if (!(Window->style & WS_VISIBLE) &&
-           Window->spwndParent == UserGetDesktopWindow() )
-      {
+      if (Window->spwndParent == UserGetDesktopWindow())
          co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Window->head.h);
-      }
+
       Window->style |= WS_VISIBLE;
    }
 
@@ -1132,12 +1128,13 @@ co_WinPosSetWindowPos(
    if (!(WinPos.flags & SWP_NOREDRAW))
    {
       /* Determine the new visible region */
-      VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
+      VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
+                                          (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
       VisRgn = NULL;
 
       if ( VisAfter != NULL &&
           (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisAfter, NULL)) &&
-           REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION )
+           REGION_Complexity(VisRgn) == NULLREGION )
       {
          RGNOBJAPI_Unlock(VisRgn);
          GreDeleteObject(VisAfter);
@@ -1311,15 +1308,13 @@ co_WinPosSetWindowPos(
       if (VisBefore != NULL)
       {
          ExposedRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
+         RgnType = NtGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
          NtGdiOffsetRgn( ExposedRgn,
                          OldWindowRect.left - NewWindowRect.left,
                          OldWindowRect.top  - NewWindowRect.top);
 
          if (VisAfter != NULL)
             RgnType = NtGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
-         else
-            RgnType = SIMPLEREGION;
 
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
@@ -1365,6 +1360,17 @@ co_WinPosSetWindowPos(
       PWND pWnd = UserGetWindowObject(WinPos.hwnd);
       if (pWnd)
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+   }
+
+   if(IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
+   {
+      /* Generate mouse move message */
+      MSG msg;
+      msg.message = WM_MOUSEMOVE;
+      msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
+      msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
+      msg.pt = gpsi->ptCursor;
+      co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
    }
 
    return TRUE;
@@ -1624,6 +1630,7 @@ co_WinPosSearchChildren(
                 if(pwndChild != NULL)
                 {
                     /* We found a window. Don't send any more WM_NCHITTEST messages */
+                    ExFreePool(List);
                     UserDereferenceObject(ScopeWin);
                     return pwndChild;
                 }
@@ -1793,6 +1800,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp )
                                      winpos->pos.flags);
     }
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
+    UserDereferenceObject(pDWP);
     UserDeleteObject(hdwp, otSMWP);
     return res;
 }

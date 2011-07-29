@@ -7,8 +7,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 /* Dialogs */
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
@@ -91,5 +89,3 @@ BEGIN
     VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
     VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
 END
-
-#pragma code_page(default)

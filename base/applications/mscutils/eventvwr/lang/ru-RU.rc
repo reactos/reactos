@@ -10,24 +10,24 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDC_EVENTVWR MENU
 BEGIN
-	POPUP "&Логи"
+	POPUP "&Р›РѕРіРё"
 	BEGIN
-		MENUITEM "&Приложений",               ID_LOG_APPLICATION
-		MENUITEM "&Безопасности",             ID_LOG_SECURITY
-		MENUITEM "&Системы",                  ID_LOG_SYSTEM
+		MENUITEM "&РџСЂРёР»РѕР¶РµРЅРёР№",               ID_LOG_APPLICATION
+		MENUITEM "&Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚Рё",             ID_LOG_SECURITY
+		MENUITEM "&РЎРёСЃС‚РµРјС‹",                  ID_LOG_SYSTEM
 		MENUITEM SEPARATOR
-		MENUITEM "В&ыход",                    IDM_EXIT
+		MENUITEM "Р’&С‹С…РѕРґ",                    IDM_EXIT
 	END
-	POPUP "&Вид"
+	POPUP "&Р’РёРґ"
 	BEGIN
-		MENUITEM "&Обновить",                 IDM_REFRESH
+		MENUITEM "&РћР±РЅРѕРІРёС‚СЊ",                 IDM_REFRESH
 	END
-	MENUITEM "&Настройки",                  ID_OPTIONS
-	POPUP "&Справка"
+	MENUITEM "&РќР°СЃС‚СЂРѕР№РєРё",                  ID_OPTIONS
+	POPUP "&РЎРїСЂР°РІРєР°"
 	BEGIN
-		MENUITEM "&Помощь",                   IDM_HELP
+		MENUITEM "&РџРѕРјРѕС‰СЊ",                   IDM_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&О программе",              IDM_ABOUT
+		MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ",              IDM_ABOUT
 	END
 END
 
@@ -39,85 +39,85 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе"
+CAPTION "Рћ РїСЂРѕРіСЂР°РјРјРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "Просмотр событий ReactOS. Версия 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-	LTEXT           "Авторские права (С) 2007 Марк Пиулачс (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,140,22
+	LTEXT           "РџСЂРѕСЃРјРѕС‚СЂ СЃРѕР±С‹С‚РёР№ ReactOS. Р’РµСЂСЃРёСЏ 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "РђРІС‚РѕСЂСЃРєРёРµ РїСЂР°РІР° (РЎ) 2007 РњР°СЂРє РџРёСѓР»Р°С‡СЃ (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,140,22
 	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
-CAPTION "Подождите.."
+CAPTION "РџРѕРґРѕР¶РґРёС‚Рµ.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	CTEXT           "Идет загрузка. Подождите ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+	CTEXT           "РРґРµС‚ Р·Р°РіСЂСѓР·РєР°. РџРѕРґРѕР¶РґРёС‚Рµ ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Свойства события"
+CAPTION "РЎРІРѕР№СЃС‚РІР° СЃРѕР±С‹С‚РёСЏ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-	DEFPUSHBUTTON   "&Закрыть",IDOK,14,258,55,14
-	PUSHBUTTON      "&Предыдущее",IDPREVIOUS,78,258,55,14
-	PUSHBUTTON      "С&ледующее",IDNEXT,142,258,55,14
-	PUSHBUTTON      "П&омощь",IDHELP,206,258,55,14
+	DEFPUSHBUTTON   "&Р—Р°РєСЂС‹С‚СЊ",IDOK,14,258,55,14
+	PUSHBUTTON      "&РџСЂРµРґС‹РґСѓС‰РµРµ",IDPREVIOUS,78,258,55,14
+	PUSHBUTTON      "РЎ&Р»РµРґСѓСЋС‰РµРµ",IDNEXT,142,258,55,14
+	PUSHBUTTON      "Рџ&РѕРјРѕС‰СЊ",IDHELP,206,258,55,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-	LTEXT           "Описание:",IDC_STATIC,15,70,39,8
-	LTEXT           "Дата:",IDC_STATIC,14,14,36,8
+	LTEXT           "РћРїРёСЃР°РЅРёРµ:",IDC_STATIC,15,70,39,8
+	LTEXT           "Р”Р°С‚Р°:",IDC_STATIC,14,14,36,8
 	LTEXT           "",IDC_EVENTDATESTATIC,68,14,72,8
-	LTEXT           "Время:",IDC_STATIC,14,27,36,8
+	LTEXT           "Р’СЂРµРјСЏ:",IDC_STATIC,14,27,36,8
 	LTEXT           "",IDC_EVENTTIMESTATIC,68,27,72,8
-	LTEXT           "Пользователь:",IDC_STATIC,14,41,50,8
+	LTEXT           "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ:",IDC_STATIC,14,41,50,8
 	LTEXT           "",IDC_EVENTUSERSTATIC,68,41,72,8
-	LTEXT           "Компьютер:",IDC_STATIC,14,54,45,8
+	LTEXT           "РљРѕРјРїСЊСЋС‚РµСЂ:",IDC_STATIC,14,54,45,8
 	LTEXT           "",IDC_EVENTCOMPUTERSTATIC,68,54,72,8
-	LTEXT           "Код (ID):",IDC_STATIC,143,15,45,8
+	LTEXT           "РљРѕРґ (ID):",IDC_STATIC,143,15,45,8
 	LTEXT           "",IDC_EVENTIDSTATIC,190,15,87,8
-	LTEXT           "Источник:",IDC_STATIC,143,28,36,8
+	LTEXT           "РСЃС‚РѕС‡РЅРёРє:",IDC_STATIC,143,28,36,8
 	LTEXT           "",IDC_EVENTSOURCESTATIC,190,28,127,8
-	LTEXT           "Тип:",IDC_STATIC,143,42,36,8
+	LTEXT           "РўРёРї:",IDC_STATIC,143,42,36,8
 	LTEXT           "",IDC_EVENTTYPESTATIC,190,42,87,8
-	LTEXT           "Категория:",IDC_STATIC,143,55,38,8
+	LTEXT           "РљР°С‚РµРіРѕСЂРёСЏ:",IDC_STATIC,143,55,38,8
 	LTEXT           "",IDC_EVENTCATEGORYSTATIC,190,55,87,8
 	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
-	LTEXT           "Данные:",IDC_STATIC,14,192,30,8
-	CONTROL         "&Байты",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,49,192,34,10
-	CONTROL         "&Слова",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,87,192,33,10
+	LTEXT           "Р”Р°РЅРЅС‹Рµ:",IDC_STATIC,14,192,30,8
+	CONTROL         "&Р‘Р°Р№С‚С‹",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,49,192,34,10
+	CONTROL         "&РЎР»РѕРІР°",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,87,192,33,10
 END
 
 STRINGTABLE
 BEGIN
-	IDS_APP_TITLE                  "Просмотр событий"
-	IDS_EVENTSTRINGIDNOTFOUND      "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера."
-	IDS_EVENTLOG_ERROR_TYPE        "Ошибка"
-	IDS_EVENTLOG_WARNING_TYPE      "Предупреждение"
-	IDS_EVENTLOG_INFORMATION_TYPE  "Уведомление"
-	IDS_EVENTLOG_AUDIT_SUCCESS     "Аудит успехов"
-	IDS_EVENTLOG_AUDIT_FAILURE     "Аудит отказов"
-	IDS_EVENTLOG_SUCCESS           "Успех"
-	IDS_EVENTLOG_UNKNOWN_TYPE      "Неизвестное событие"
+	IDS_APP_TITLE                  "РџСЂРѕСЃРјРѕС‚СЂ СЃРѕР±С‹С‚РёР№"
+	IDS_EVENTSTRINGIDNOTFOUND      "РќРµ РЅР°Р№РґРµРЅРѕ РѕРїРёСЃР°РЅРёРµ РґР»СЏ СЃРѕР±С‹С‚РёСЏ СЃ РєРѕРґРѕРј ( %lu ) РІ РёСЃС‚РѕС‡РЅРёРєРµ ( %s ). Р’РѕР·РјРѕР¶РЅРѕ, РЅР° Р»РѕРєР°Р»СЊРЅРѕРј РєРѕРјРїСЊСЋС‚РµСЂРµ РЅРµС‚ РЅСѓР¶РЅС‹С… РґР°РЅРЅС‹С… РІ СЂРµРµСЃС‚СЂРµ РёР»Рё С„Р°Р№Р»РѕРІ DLL СЃРѕРѕР±С‰РµРЅРёР№ РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№ СѓРґР°Р»РµРЅРЅРѕРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР°."
+	IDS_EVENTLOG_ERROR_TYPE        "РћС€РёР±РєР°"
+	IDS_EVENTLOG_WARNING_TYPE      "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ"
+	IDS_EVENTLOG_INFORMATION_TYPE  "РЈРІРµРґРѕРјР»РµРЅРёРµ"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "РђСѓРґРёС‚ СѓСЃРїРµС…РѕРІ"
+	IDS_EVENTLOG_AUDIT_FAILURE     "РђСѓРґРёС‚ РѕС‚РєР°Р·РѕРІ"
+	IDS_EVENTLOG_SUCCESS           "РЈСЃРїРµС…"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "РќРµРёР·РІРµСЃС‚РЅРѕРµ СЃРѕР±С‹С‚РёРµ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE      "Type"
-    IDS_COLUMNDATE      "Date"
-    IDS_COLUMNTIME      "Time"
-    IDS_COLUMNSOURCE    "Source"
-    IDS_COLUMNCATEGORY  "Category"
-    IDS_COLUMNEVENT     "Event"
-    IDS_COLUMNUSER      "User"
-    IDS_COLUMNCOMPUTER  "Computer"
-    IDS_COLUMNEVENTDATA "Event Data"
+    IDS_COLUMNTYPE      "РўРёРї"
+    IDS_COLUMNDATE      "Р”Р°С‚Р°"
+    IDS_COLUMNTIME      "Р’СЂРµРјСЏ"
+    IDS_COLUMNSOURCE    "РСЃС‚РѕС‡РЅРёРє"
+    IDS_COLUMNCATEGORY  "РљР°С‚РµРіРѕСЂРёСЏ"
+    IDS_COLUMNEVENT     "РЎРѕР±С‹С‚РёРµ"
+    IDS_COLUMNUSER      "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ"
+    IDS_COLUMNCOMPUTER  "РљРѕРјРїСЊСЋС‚РµСЂ"
+    IDS_COLUMNEVENTDATA "Р”Р°РЅРЅС‹Рµ СЃРѕР±С‹С‚РёСЏ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE          "None"
+    IDS_NONE          "РќРµС‚Сѓ"
     IDS_NOT_AVAILABLE "N/A"
 END

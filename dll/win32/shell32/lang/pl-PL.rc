@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * ReactOS shell32 fork translation updated by Caemyr -
- * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010)
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010, May 2011)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -133,7 +133,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Wersja " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Wersja "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Ta kopia ReactOS jest zarejestrowna na:", IDC_STATIC, 35, 115, 180, 10
@@ -432,7 +432,7 @@ LTEXT "Otwiera z:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nazwa Aplikacji", 14005, 100, 140, 40, 10
 PUSHBUTTON "Z&mieñ", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Pliki z rozszerzeniem '%s' nale¿¹ do typu: '%s'. Aby\nzmieniæ ustawienia dotycz¹ce wszystkich plików '%s', wybierz\nZaawansowane.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "Zaawa&nsowane", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -663,10 +663,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Nie mogê przenieœæ elementu '%1' do Kosza. Czy chcesz go zamiast tego usun¹æ?"
 	IDS_OVERWRITEFILE_TEXT      "Ten folder zawiera ju¿ plik o nazwie '%1'.\n\nCzy chcesz go zast¹piæ?"
 	IDS_OVERWRITEFILE_CAPTION   "PotwierdŸ zast¹pienie pliku"
-	IDS_OVERWRITEFOLDER_TEXT    "Ten folder zawiera ju¿ katalog o nazwie '%1'.\n\n"\
-		"Je¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\n"\
-		"w wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\n"\
-		"lub skopiowaæ folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Ten folder zawiera ju¿ katalog o nazwie '%1'.\n\nJe¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\nw wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\nlub skopiowaæ folder?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Uruchom ponownie"
@@ -766,4 +763,9 @@ BEGIN
 	IDS_COPY_OF                 "Kopia"
 
 	IDS_SHLEXEC_NOASSOC         "¯aden program nie jest skonfigurowany, by otwieraæ pliki tego typu."
+	
+	IDS_FILE_DETAILS            "Szczegó³y dla rozszerzenia '%s'"
+	IDS_FILE_DETAILSADV         "Pliki z rozszerzeniem '%s' s¹ typu '%s'. Aby zmieniæ ustawienia, które dotycz¹ wszystkich plików '%s', kliknij przycisk Zaawansowane."
+	IDS_FILE_TYPES              "Typy plików"
+	IDS_COLUMN_EXTENSION        "Rozszerzenia"
 END

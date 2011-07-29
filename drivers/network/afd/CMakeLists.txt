@@ -18,12 +18,12 @@ list(APPEND SOURCE
     afd/write.c
     afd.rc)
 
-add_library(afd SHARED ${CMAKE_CURRENT_BINARY_DIR}/afd_afd.h.gch ${SOURCE})
+add_library(afd SHARED ${SOURCE})
 target_link_libraries(afd ${PSEH_LIB})
 
 set_module_type(afd kernelmodedriver)
 add_importlibs(afd ntoskrnl hal)
 
-add_pch(afd ${CMAKE_CURRENT_SOURCE_DIR}/include/afd.h ${SOURCE})
+add_pch(afd include/afd.h)
 
 add_cd_file(TARGET afd DESTINATION reactos/system32/drivers FOR all)

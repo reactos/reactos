@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2010 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2011 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bm_devs.h
@@ -245,11 +245,12 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_I82801JD_AH         0x3a028086
 #define ATA_I82801JD_R1         0x3a058086
 #define ATA_I82801JD_S2         0x3a068086
+/*
 #define ATA_I82801JI_S1         0x3a208086
 #define ATA_I82801JI_AH         0x3a228086
 #define ATA_I82801JI_R1         0x3a258086
 #define ATA_I82801JI_S2         0x3a268086
-
+*/
 #define ATA_5Series_S1          0x3b208086
 #define ATA_5Series_S2          0x3b218086
 #define ATA_5Series_AH1         0x3b228086
@@ -554,7 +555,10 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_VIACX700            0x83241106
 #define ATA_VIASATAIDE          0x53241106
 #define ATA_VIAVX800            0x83531106
+#define ATA_VIASATAIDE2         0xc4091106
 #define ATA_VIAVX855            0x84091106
+#define ATA_VIASATAIDE3         0x90011106
+#define ATA_VIAVX900            0x84101106
 
 #define ATA_ITE_ID		0x1283
 #define ATA_IT8172G		0x81721283
@@ -785,20 +789,20 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2923, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2925, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
 
-    PCI_DEV_HW_SPEC_BM( 3a20, 8086, 0x00, ATA_SA300, "Intel ICH10"       , I6CH | UNIATA_SATA                      ),
-    PCI_DEV_HW_SPEC_BM( 3a26, 8086, 0x00, ATA_SA300, "Intel ICH10"       , I6CH2 | UNIATA_SATA                     ),
-    PCI_DEV_HW_SPEC_BM( 3a22, 8086, 0x00, ATA_SA300, "Intel ICH10"       , UNIATA_SATA | UNIATA_AHCI               ),
-    PCI_DEV_HW_SPEC_BM( 3a25, 8086, 0x00, ATA_SA300, "Intel ICH10"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3a20, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH | UNIATA_SATA                      ),
+    PCI_DEV_HW_SPEC_BM( 3a26, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 3a22, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3a25, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
 
-    PCI_DEV_HW_SPEC_BM( 3a00, 8086, 0x00, ATA_SA300, "Intel ICH10"       , I6CH | UNIATA_SATA                      ),
-    PCI_DEV_HW_SPEC_BM( 3a06, 8086, 0x00, ATA_SA300, "Intel ICH10"       , I6CH2 | UNIATA_SATA                     ),
-    PCI_DEV_HW_SPEC_BM( 3a02, 8086, 0x00, ATA_SA300, "Intel ICH10"       , UNIATA_SATA | UNIATA_AHCI               ),
-    PCI_DEV_HW_SPEC_BM( 3a05, 8086, 0x00, ATA_SA300, "Intel ICH10"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3a00, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH | UNIATA_SATA                      ),
+    PCI_DEV_HW_SPEC_BM( 3a06, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 3a02, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3a05, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
 /*
-    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"       , I6CH | UNIATA_SATA                      ),
-    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"       , I6CH2 | UNIATA_SATA                     ),
-    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"       , UNIATA_SATA | UNIATA_AHCI               ),
-    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH | UNIATA_SATA                      ),
+    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( ????, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
 */
     PCI_DEV_HW_SPEC_BM( 3b20, 8086, 0x00, ATA_SA300, "Intel 5 Series/3400" , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 3b21, 8086, 0x00, ATA_SA300, "Intel 5 Series/3400" , I6CH2 | UNIATA_SATA                     ),
@@ -823,16 +827,16 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 1c09, 8086, 0x00, ATA_SA300, "Intel Cougar Point"  , I6CH2 | UNIATA_SATA                     ),
 
 //    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_SA150, "Intel 31244"      , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_UDMA5, "Intel SCH"           , I1CH                                    ),
+    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_UDMA5, "Intel SCH"        , I1CH                                    ),
 
-/*
-    PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_SA300, "JMB361"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2363, 197b, 0x00, ATA_SA300, "JMB363"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_SA300, "JMB365"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_SA300, "JMB366"           , 0                                       ),
+
+    PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , UNIATA_SATA | UNIATA_AHCI               ),
+
+    PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_UDMA6, "JMB361"           , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 2363, 197b, 0x00, ATA_UDMA6, "JMB363"           , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_UDMA6, "JMB365"           , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_UDMA6, "JMB366"           , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2368, 197b, 0x00, ATA_UDMA6, "JMB368"           , 0                                       ),
-*/
 /*    
     PCI_DEV_HW_SPEC_BM( 5040, 11ab, 0x00, ATA_SA150, "Marvell 88SX5040" , UNIATA_SATA                             ),
     PCI_DEV_HW_SPEC_BM( 5041, 11ab, 0x00, ATA_SA150, "Marvell 88SX5041" , UNIATA_SATA                             ),
@@ -1072,6 +1076,12 @@ Ata_is_dev_listed(
 #define Ata_is_supported_dev(pciData) \
     ((pciData)->BaseClass == PCI_DEV_CLASS_STORAGE && \
      (pciData)->SubClass == PCI_DEV_SUBCLASS_IDE)
+
+#define Ata_is_ahci_dev(pciData) \
+    ((pciData)->BaseClass == PCI_DEV_CLASS_STORAGE && \
+     (pciData)->SubClass == PCI_DEV_SUBCLASS_SATA && \
+     (pciData)->ProgIf == PCI_DEV_PROGIF_AHCI_1_0 && \
+     ((pciData)->u.type0.BaseAddresses[5] & ~0x7))
 
 
 #endif //__IDE_BUSMASTER_H__

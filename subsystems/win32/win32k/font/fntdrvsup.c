@@ -60,6 +60,22 @@ DetachCSRSS(KAPC_STATE *pApcState)
     gbAttachedCSRSS = FALSE;
 }
 
+VOID
+NTAPI
+RFONT_vInitDeviceMetrics(
+    PRFONT prfnt)
+{
+    PFONTDEV pfntdev = (PFONTDEV)prfnt->hdevProducer;
+
+    pfntdev->pldev->pfn.QueryFontData(prfnt->dhpdev,
+                                      &prfnt->fobj,
+                                      QFD_MAXEXTENTS,
+                                      -1,
+                                      NULL,
+                                      &prfnt->fddm,
+                                      sizeof(FD_DEVICEMETRICS));
+}
+
 static void
 PFE_vInitialize(
     PPFE ppfe,

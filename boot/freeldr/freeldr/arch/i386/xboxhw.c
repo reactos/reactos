@@ -30,11 +30,11 @@ extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
 
 static PCM_PARTIAL_RESOURCE_LIST
-GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
+GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 {
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
-  EXTENDED_GEOMETRY ExtGeometry;
+  //EXTENDED_GEOMETRY ExtGeometry;
   GEOMETRY Geometry;
   ULONG Size;
 
@@ -69,7 +69,7 @@ GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
   DiskGeometry = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
 
   /* Get the disk geometry */
-  ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
+  //ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
 
   if(MachDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
@@ -101,7 +101,7 @@ GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
 
 typedef struct tagDISKCONTEXT
 {
-    ULONG DriveNumber;
+    UCHAR DriveNumber;
     ULONG SectorSize;
     ULONGLONG SectorOffset;
     ULONGLONG SectorCount;
@@ -122,7 +122,7 @@ static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 
     RtlZeroMemory(Information, sizeof(FILEINFORMATION));
     Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
-    Information->CurrentAddress.LowPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+    Information->CurrentAddress.QuadPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -130,7 +130,8 @@ static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
-    ULONG DriveNumber, DrivePartition, SectorSize;
+    ULONG DrivePartition, SectorSize;
+    UCHAR DriveNumber;
     ULONGLONG SectorOffset = 0;
     ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
@@ -233,7 +234,7 @@ static const DEVVTBL DiskVtbl = {
 
 static VOID
 GetHarddiskIdentifier(PCHAR Identifier,
-		      ULONG DriveNumber)
+		      UCHAR DriveNumber)
 {
   PMASTER_BOOT_RECORD Mbr;
   ULONG *Buffer;
@@ -274,7 +275,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
       reactos_arc_strings[reactos_disk_count];
   reactos_disk_count++;
 
-  sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(0)", DriveNumber - 0x80);
+  sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - 0x80);
   FsRegisterDevice(ArcName, &DiskVtbl);
 
   /* Add partitions */
@@ -284,7 +285,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
     {
-      sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(%lu)", DriveNumber - 0x80, i);
+      sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(%lu)", DriveNumber - 0x80, i);
       FsRegisterDevice(ArcName, &DiskVtbl);
     }
     i++;
@@ -323,9 +324,8 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
     GEOMETRY Geometry;
     PCONFIGURATION_COMPONENT_DATA DiskKey, ControllerKey;
-    ULONG DiskCount;
+    UCHAR DiskCount, i;
     ULONG Size;
-    ULONG i;
     BOOLEAN Changed;
     
     /* Count the number of visible drives */
@@ -390,8 +390,8 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         {
             Int13Drives[i].DriveSelect = 0x80 + i;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
-            Int13Drives[i].SectorsPerTrack = Geometry.Sectors;
-            Int13Drives[i].MaxHeads = Geometry.Heads - 1;
+            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
+            Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
             
             DPRINTM(DPRINT_HWDETECT,

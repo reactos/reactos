@@ -115,36 +115,36 @@
 #define ID_HEXEDIT_SELECT_ALL           32839
 #define IDS_LICENSE                     32835
 #define IDS_ERROR                       32836
-#define IDS_BAD_VALUE			32837
-#define IDS_UNSUPPORTED_TYPE		32838
-#define IDS_TOO_BIG_VALUE		32839
-#define ID_EDIT_MODIFY_BIN		32840
-#define IDS_WARNING			32841
-#define IDS_MULTI_SZ_EMPTY_STRING	32842
-#define IDS_BINARY_EMPTY		32843
-#define IDS_DEFAULT_VALUE_NAME		32844
-#define IDS_VALUE_NOT_SET		32845
-#define IDS_UNKNOWN_TYPE		32846
-#define IDS_MY_COMPUTER			32847
-#define IDS_IMPORT_REG_FILE		32848
-#define IDS_EXPORT_REG_FILE		32849
-#define IDS_INVALID_DWORD		32850
-#define IDS_QUERY_DELETE_ONE		32851
-#define IDS_QUERY_DELETE_MORE		32852
-#define IDS_QUERY_DELETE_CONFIRM	32853
-#define IDS_ERR_DELVAL_CAPTION		32854
-#define IDS_ERR_DELETEVALUE		32855
-#define IDS_ERR_RENVAL_CAPTION		32856
-#define IDS_ERR_RENVAL_TOEMPTY		32857
+#define IDS_BAD_VALUE                   32837
+#define IDS_UNSUPPORTED_TYPE            32838
+#define IDS_TOO_BIG_VALUE               32839
+#define ID_EDIT_MODIFY_BIN              32840
+#define IDS_WARNING                     32841
+#define IDS_MULTI_SZ_EMPTY_STRING       32842
+#define IDS_BINARY_EMPTY                32843
+#define IDS_DEFAULT_VALUE_NAME          32844
+#define IDS_VALUE_NOT_SET               32845
+#define IDS_UNKNOWN_TYPE                32846
+#define IDS_MY_COMPUTER                 32847
+#define IDS_IMPORT_REG_FILE             32848
+#define IDS_EXPORT_REG_FILE             32849
+#define IDS_INVALID_DWORD               32850
+#define IDS_QUERY_DELETE_ONE            32851
+#define IDS_QUERY_DELETE_MORE           32852
+#define IDS_QUERY_DELETE_CONFIRM        32853
+#define IDS_ERR_DELVAL_CAPTION          32854
+#define IDS_ERR_DELETEVALUE             32855
+#define IDS_ERR_RENVAL_CAPTION          32856
+#define IDS_ERR_RENVAL_TOEMPTY          32857
 #define IDS_BAD_KEY                     32858
-#define IDS_LOAD_HIVE           32859
-#define IDS_UNLOAD_HIVE         32860
+#define IDS_LOAD_HIVE                   32859
+#define IDS_UNLOAD_HIVE                 32860
 
 #define ID_EDIT_NEW_MULTISTRINGVALUE		32861
 #define ID_EDIT_NEW_EXPANDABLESTRINGVALUE	32862
 
 #define ID_SWITCH_PANELS                32871
-#define ID_EDIT_PERMISSIONS		32872
+#define ID_EDIT_PERMISSIONS             32872
 #define ID_TREE_DELETE                  32873
 #define ID_TREE_RENAME                  32874
 #define IDS_QUERY_DELETE_KEY_ONE        32875
@@ -155,70 +155,138 @@
 #define ID_TREE_EXPORT                  32888
 #define ID_TREE_PERMISSIONS             32889
 
-#define IDS_FLT_REGFILE         31000
-#define IDS_FLT_REGFILES		31001
-#define IDS_FLT_REGFILES_FLT		31002
-#define IDS_FLT_REGEDIT4		31003
-#define IDS_FLT_REGEDIT4_FLT		31004
-#define IDS_FLT_ALLFILES		31005
-#define IDS_FLT_ALLFILES_FLT		31006
+#define IDS_FLT_REGFILE                 31000
+#define IDS_FLT_REGFILES                31001
+#define IDS_FLT_REGFILES_FLT            31002
+#define IDS_FLT_REGEDIT4                31003
+#define IDS_FLT_REGEDIT4_FLT            31004
+#define IDS_FLT_ALLFILES                31005
+#define IDS_FLT_ALLFILES_FLT            31006
 
-#define IDS_ACCESS_FULLCONTROL		31101
-#define IDS_ACCESS_READ			31102
-#define IDS_ACCESS_QUERYVALUE		31103
-#define IDS_ACCESS_SETVALUE		31104
-#define IDS_ACCESS_CREATESUBKEY		31105
-#define IDS_ACCESS_ENUMERATESUBKEYS	31106
-#define IDS_ACCESS_NOTIFY		31107
-#define IDS_ACCESS_CREATELINK		31108
-#define IDS_ACCESS_DELETE		31109
-#define IDS_ACCESS_WRITEDAC		31110
-#define IDS_ACCESS_WRITEOWNER		31111
-#define IDS_ACCESS_READCONTROL		31112
+#define IDS_ACCESS_FULLCONTROL          31101
+#define IDS_ACCESS_READ                 31102
+#define IDS_ACCESS_QUERYVALUE           31103
+#define IDS_ACCESS_SETVALUE             31104
+#define IDS_ACCESS_CREATESUBKEY         31105
+#define IDS_ACCESS_ENUMERATESUBKEYS     31106
+#define IDS_ACCESS_NOTIFY               31107
+#define IDS_ACCESS_CREATELINK           31108
+#define IDS_ACCESS_DELETE               31109
+#define IDS_ACCESS_WRITEDAC             31110
+#define IDS_ACCESS_WRITEOWNER           31111
+#define IDS_ACCESS_READCONTROL          31112
 
-#define IDS_INHERIT_THISKEYONLY		31121
+#define IDS_INHERIT_THISKEYONLY		    31121
 #define IDS_INHERIT_THISKEYANDSUBKEYS	31122
-#define IDS_INHERIT_SUBKEYSONLY		31123
+#define IDS_INHERIT_SUBKEYSONLY		    31123
 #define IDS_EXPAND                      31124
 #define IDS_COLLAPSE                    31125
 #define IDS_NEW_KEY                     31126
 #define IDS_NEW_VALUE                   31127
 #define IDS_GOTO_SUGGESTED_KEY          31128
 
+#define IDS_IMPORT_PROMPT               31129
+#define IDS_IMPORTED_OK                 31130
 
-#define IDD_EDIT_STRING			2000
-#define IDC_VALUE_NAME			2001
-#define IDC_VALUE_DATA			2002
+#define IDS_FINISHEDFIND                31131
 
-#define IDD_EDIT_DWORD			2003
-#define IDC_FORMAT_HEX			2004
-#define IDC_FORMAT_DEC			2005
+#define IDS_BUSNUMBER                   31132
+#define IDS_INTERFACE                   31133
 
-#define IDD_EDIT_MULTI_STRING		2006
-#define IDD_EDIT_BIN_DATA		2007
+#define IDS_DMA_CHANNEL                 31134
+#define IDS_DMA_PORT                    31135
+#define IDS_INTERRUPT_VECTOR            31136
+#define IDS_INTERRUPT_LEVEL             31137
+#define IDS_INTERRUPT_AFFINITY          31138
+#define IDS_INTERRUPT_TYPE              31139
+#define IDS_MEMORY_ADDRESS              31140
+#define IDS_MEMORY_LENGTH               31141
+#define IDS_MEMORY_ACCESS               31142
+#define IDS_PORT_ADDRESS                31143
+#define IDS_PORT_LENGTH                 31144
+#define IDS_PORT_ACCESS                 31145
+#define IDS_SPECIFIC_RESERVED1          31146
+#define IDS_SPECIFIC_RESERVED2          31147
+#define IDS_SPECIFIC_DATASIZE           31148
 
-#define IDC_EXPORT_ALL          2008
-#define IDC_EXPORT_BRANCH       2009
-#define IDC_EXPORT_BRANCH_TEXT  2010
+#define IDS_PORT_PORT_IO                31149
+#define IDS_PORT_MEMORY_IO              31150
+#define IDS_INTERRUPT_EDGE_SENSITIVE    31151
+#define IDS_INTERRUPT_LEVEL_SENSITIVE   31152
+#define IDS_MEMORY_READ_ONLY            31153
+#define IDS_MEMORY_WRITE_ONLY           31154
+#define IDS_MEMORY_READ_WRITE           31155
 
-#define IDD_LOADHIVE				2500
-#define IDC_EDIT_KEY				2501
+#define IDS_BUS_UNDEFINED               31156
+#define IDS_BUS_INTERNAL                31157
+#define IDS_BUS_ISA                     31158
+#define IDS_BUS_EISA                    31159
+#define IDS_BUS_MICROCHANNEL            31160
+#define IDS_BUS_TURBOCHANNEL            31161
+#define IDS_BUS_PCIBUS                  31162
+#define IDS_BUS_VMEBUS                  31163
+#define IDS_BUS_NUBUS                   31164
+#define IDS_BUS_PCMCIABUS               31165
+#define IDS_BUS_CBUS                    31166
+#define IDS_BUS_MPIBUS                  31167
+#define IDS_BUS_MPSABUS                 31168
+#define IDS_BUS_PROCESSORINTERNAL       31169
+#define IDS_BUS_INTERNALPOWERBUS        31170
+#define IDS_BUS_PNPISABUS               31171
+#define IDS_BUS_PNPBUS                  31172
+#define IDS_BUS_UNKNOWNTYPE             31173
 
-#define IDC_FAVORITENAME                2011
-#define IDC_FAVORITESLIST               2012
-#define IDC_FINDWHAT                    2013
-#define IDC_LOOKAT_KEYS                 2014
-#define IDC_LOOKAT_VALUES               2015
-#define IDC_LOOKAT_DATA                 2016
-#define IDC_MATCHSTRING                 2017
-#define IDC_MATCHCASE                   2018
+#define IDD_EDIT_STRING                  2000
+#define IDC_VALUE_NAME                   2001
+#define IDC_VALUE_DATA                   2002
 
-#define IDS_FINISHEDFIND                2019
+#define IDD_EDIT_DWORD                   2003
+#define IDC_FORMAT_HEX                   2004
+#define IDC_FORMAT_DEC                   2005
 
-#define ID_FAVORITES_MIN                2100
-#define ID_FAVORITES_MAX                2999
+#define IDD_EDIT_MULTI_STRING            2006
+#define IDD_EDIT_BIN_DATA                2007
 
-#define ID_ACCEL                        3000
+#define IDC_EXPORT_ALL                   2008
+#define IDC_EXPORT_BRANCH                2009
+#define IDC_EXPORT_BRANCH_TEXT           2010
+
+#define IDD_LOADHIVE                     2500
+#define IDC_EDIT_KEY                     2501
+
+#define IDC_FAVORITENAME                 2011
+#define IDC_FAVORITESLIST                2012
+#define IDC_FINDWHAT                     2013
+#define IDC_LOOKAT_KEYS                  2014
+#define IDC_LOOKAT_VALUES                2015
+#define IDC_LOOKAT_DATA                  2016
+#define IDC_MATCHSTRING                  2017
+#define IDC_MATCHCASE                    2018
+
+#define IDD_EDIT_RESOURCE_LIST           2019
+#define IDC_RESOURCE_LIST                2020
+#define IDC_SHOW_RESOURCE                2021
+
+#define IDD_EDIT_RESOURCE                2022
+#define IDC_DMA_LIST                     2023
+#define IDC_IRQ_LIST                     2024
+#define IDC_MEMORY_LIST                  2025
+#define IDC_PORT_LIST                    2026
+#define IDC_DEVICE_LIST                  2027
+#define IDC_UNDETERMINED                 2028
+#define IDC_SHARED                       2029
+#define IDC_DEVICE_EXCLUSIVE             2030
+#define IDC_DRIVER_EXCLUSIVE             2031
+#define IDC_INTERFACETYPE                2032
+#define IDC_BUSNUMBER                    2033
+#define IDC_VERSION                      2034
+#define IDC_REVISION                     2035
+#define IDC_SHOW_RESOURCE_DATA           2036
+
+#define ID_FAVORITES_MIN                 2100
+#define ID_FAVORITES_MAX                 2999
+
+#define ID_ACCEL                         3000
 
 
-#define IDC_STATIC                      -1
+#define IDC_STATIC                         -1

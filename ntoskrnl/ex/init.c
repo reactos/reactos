@@ -244,7 +244,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Allocate the a new buffer since loader memory will be freed */
         ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
                                                 ExpNlsTableSize,
-                                                'iltR');
+                                                TAG_RTLI);
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
@@ -334,7 +334,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
-    ExFreePoolWithTag(ExpNlsTableBase, 'iltR');
+    ExFreePoolWithTag(ExpNlsTableBase, TAG_RTLI);
     ExpNlsTableBase = SectionBase;
 
     /* Initialize the NLS Tables */
@@ -1313,7 +1313,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     size_t Remaining;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
-    UNICODE_STRING KeyName, DebugString;
+    UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
@@ -1321,7 +1321,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
-                                       'tinI');
+                                       TAG_INIT);
     if (!InitBuffer)
     {
         /* Bugcheck */
@@ -1792,7 +1792,10 @@ Phase1InitializationDiscard(IN PVOID Context)
                                          &KeyPartialInfo,
                                          sizeof(KeyPartialInfo),
                                          &Length);
-                if (!NT_SUCCESS(Status)) AlternateShell = FALSE;
+                if (!(NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW))
+                {
+                    AlternateShell = FALSE;
+                }
             }
 
             /* Create the option key */
@@ -1901,39 +1904,37 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Initialize Power Subsystem in Phase 1*/
     if (!PoInitSystem(1)) KeBugCheck(INTERNAL_POWER_ERROR);
 
+    /* Update progress bar */
+    InbvUpdateProgressBar(90);
+
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
-
-    /* Update progress bar */
-    InbvUpdateProgressBar(85);
 
     /* Make sure nobody touches the loader block again */
     if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
     LoaderBlock = Context = NULL;
 
     /* Update progress bar */
-    InbvUpdateProgressBar(90);
+    InbvUpdateProgressBar(100);
+
+    /* Clean the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
+
+    /* Allow strings to be displayed */
+    InbvEnableDisplayString(TRUE);
 
     /* Launch initial process */
     DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
 
-    /* Update progress bar */
-    InbvUpdateProgressBar(100);
-
-    /* Allow strings to be displayed */
-    InbvEnableDisplayString(TRUE);
-
-    /* Wait 5 seconds for it to initialize */
+    /* Wait 5 seconds for initial process to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
     Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
     if (Status == STATUS_SUCCESS)
     {
         /* Failed, display error */
-        RtlInitUnicodeString(&DebugString, L"INIT: Session Manager terminated.");
-        ZwDisplayString(&DebugString);
+        DPRINT1("INIT: Session Manager terminated.\n");
 
         /* Bugcheck the system if SMSS couldn't initialize */
         KeBugCheck(SESSION5_INITIALIZATION_FAILED);
@@ -1961,7 +1962,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     ExpInitializationPhase++;
 
     /* Free the boot buffer */
-    ExFreePool(InitBuffer);
+    ExFreePoolWithTag(InitBuffer, TAG_INIT);
     DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 }
 

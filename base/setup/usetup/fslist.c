@@ -172,11 +172,11 @@ DrawFileSystemList(
 
         if (ListEntry == &List->Selected->ListEntry)
             CONSOLE_SetInvertedTextXY(List->Left,
-                                      List->Top + Index,
+                                      List->Top + (SHORT)Index,
                                       Buffer);
         else
             CONSOLE_SetTextXY(List->Left,
-                              List->Top + Index,
+                              List->Top + (SHORT)Index,
                               Buffer);
         Index++;
         ListEntry = ListEntry->Flink;

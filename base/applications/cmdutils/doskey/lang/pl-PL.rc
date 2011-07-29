@@ -1,34 +1,35 @@
 /*
- *      translated by Saibamen - Adam Stachowicz (Apr,2011)
- *      Use ReactOS forum PM, IRC or saibamenppl at gmail.com to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl
+ *         translated by Saibamen - Adam Stachowicz (Apr,2011)
+ *         Use ReactOS forum PM, IRC or saibamenppl at gmail.com to contact me
+ *          http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
- 
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Zarzπdza ustawieniami linii komend, historii i makr.\n\
+IDS_HELP, "ZarzƒÖdza ustawieniami linii komend, historii i makr.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=rozmiar]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=plik] [macroname=[tekst]]\n\
 \n\
-  /INSERT             W≥πcza tryb wstawiania tekstu.\n\
-  /OVERSTRIKE         Wy≥πcza tryb nadpisywania tekstu.\n\
-  /EXENAME=exename    Ustawia nazwÍ programu do przeglπdania/zmiany historii\n\
-                      i makra. Domyúlnie jest to cmd.exe.\n\
-  /HISTORY            Wyúwietla historiÍ komend.\n\
-  /LISTSIZE=rozmiar   Ustawia iloúÊ wyúwietlanych komend dla buforu historii.\n\
-  /REINSTALL          Czyúci historiÍ komend.\n\
-  /MACROS             Wyúwietla definicje makro.\n\
-  /MACROS:exename     Wyúwietla definicje makro dla okreúlonego programu.\n\
-  /MACROS:ALL         Wyúwietla definicje makro dla wszystkich programÛw.\n\
-  /MACROFILE=plik     £aduje definicje makro z pliku.\n\
+  /INSERT             W≈ÇƒÖcza tryb wstawiania tekstu.\n\
+  /OVERSTRIKE         Wy≈ÇƒÖcza tryb nadpisywania tekstu.\n\
+  /EXENAME=exename    Ustawia nazwƒô programu do przeglƒÖdania/zmiany historii\n\
+                      i makra. Domy≈õlnie jest to cmd.exe.\n\
+  /HISTORY            Wy≈õwietla historiƒô komend.\n\
+  /LISTSIZE=rozmiar   Ustawia ilo≈õƒá wy≈õwietlanych komend dla buforu historii.\n\
+  /REINSTALL          Czy≈õci historiƒô komend.\n\
+  /MACROS             Wy≈õwietla definicje makro.\n\
+  /MACROS:exename     Wy≈õwietla definicjƒô makro dla okre≈õlonego programu.\n\
+  /MACROS:ALL         Wy≈õwietla definicje makro dla wszystkich program√≥w.\n\
+  /MACROFILE=plik     ≈Åaduje definicjƒô makro z pliku.\n\
   macroname           Nazwa dla tworzonego makro.\n\
-  tekst               Okreúla zastÍpczy tekst dla makro.\n"
+  tekst               Okre≈õla zastƒôpczy tekst dla makro.\n"
 
-IDS_INVALID_MACRO_DEF, "Nieprawid≥owa definicja makro: %s\n"
+IDS_INVALID_MACRO_DEF, "Nieprawid≈Çowa definicja makro: %s\n"
 
 END

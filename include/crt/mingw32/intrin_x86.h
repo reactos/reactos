@@ -911,7 +911,7 @@ __INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 __INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
-	__asm__("rorb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rorb %b[shift], %b[retval]" : [retval] "=qm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 

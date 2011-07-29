@@ -33,7 +33,6 @@
 #define NUM_SIZES 20
 #define NUM_COLORS 31
 #define MAX_TEMPLATES 50
-#define MAX_COLORNAMELENGTH 30
 #define MAX_TEMPLATENAMELENTGH 80
 
 /* Some typedefs for theme */
@@ -64,7 +63,7 @@ typedef struct
 {
 	COLORREF crColor[NUM_COLORS];
 	LOGFONT lfFont[NUM_FONTS];
-	UINT64 Size[NUM_SIZES];
+	INT Size[NUM_SIZES];
 	BOOL bFlatMenus;
 	EFFECTS Effects;
 } THEME;
@@ -77,8 +76,6 @@ typedef struct
 	TCHAR strLegacyName[MAX_TEMPLATENAMELENTGH];
 } THEME_PRESET;
 
-extern const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH];
-extern const INT g_SizeMetric[NUM_SIZES];
 extern THEME_PRESET g_ThemeTemplates[MAX_TEMPLATES];
 
 /* prototypes for theme.c */

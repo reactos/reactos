@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\calc\lang\sv-SE.rc
+ * PROJECT:         ReactOS CALC
+ * FILE:            base\applications\calc\lang\sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 // Dialog
@@ -243,7 +244,7 @@ BEGIN
     LTEXT           "Kategori:",IDC_STATIC,4,20,56,8
     COMBOBOX        IDC_COMBO_FROM,4,60,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Konvertera frÂn:",IDC_STATIC,4,49,56,8
+    LTEXT           "Konvertera fr√•n:",IDC_STATIC,4,49,56,8
     COMBOBOX        IDC_COMBO_TO,4,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
     LTEXT           "Konvertera till:",IDC_STATIC,4,76,56,8
@@ -320,7 +321,7 @@ BEGIN
     LTEXT           "ReactOS Kalkylator",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
     LTEXT           "Version ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
-    LTEXT           "Skriven av Carlo Bramini, ÷vers.: Jaix Bly",IDC_STATIC,120,32,132,8,
+    LTEXT           "Skriven av Carlo Bramini, √ñvers.: Jaix Bly",IDC_STATIC,120,32,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
     GROUPBOX        "",IDC_STATIC,4,56,256,88
@@ -361,7 +362,7 @@ BEGIN
         MENUITEM "Hexadecimal\tF5",           IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6",                IDM_VIEW_DEC, CHECKED
         MENUITEM "Oktal\tF7",                  IDM_VIEW_OCT, CHECKED
-        MENUITEM "Bin‰r\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Bin√§r\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Grader\tF2",                  IDM_VIEW_DEG, CHECKED
         MENUITEM "Radianer\tF3",                IDM_VIEW_RAD, CHECKED
@@ -369,9 +370,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering",            IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hj‰lp"
+    POPUP "Hj√§lp"
     BEGIN
-        MENUITEM "Visa hj‰lp",               IDM_HELP_HELP
+        MENUITEM "Visa hj√§lp",               IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator",       IDM_HELP_ABOUT
     END
@@ -393,7 +394,7 @@ BEGIN
         MENUITEM "Hexadecimal\tF5",           IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6",                 IDM_VIEW_DEC, CHECKED
         MENUITEM "Oktal\tF7",                  IDM_VIEW_OCT, CHECKED
-        MENUITEM "Bin‰r\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Bin√§r\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
@@ -402,9 +403,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering",              IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hj‰lp"
+    POPUP "Hj√§lp"
     BEGIN
-        MENUITEM "Visa hj‰lp",               IDM_HELP_HELP
+        MENUITEM "Visa hj√§lp",               IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator",       IDM_HELP_ABOUT
     END
@@ -425,9 +426,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering",            IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hj‰lp"
+    POPUP "Hj√§lp"
     BEGIN
-        MENUITEM "Visa hj‰lp",               IDM_HELP_HELP
+        MENUITEM "Visa hj√§lp",               IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om Reactos Kalkylator",       IDM_HELP_ABOUT
     END
@@ -437,21 +438,21 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS Kalkylator ‰r gratis programvara utgivet under GNU GPL licensen.\r\n\r\nDu kan fÂ en kopia av GNU GPL licensen h‰r:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan ocksÂ fÂ en ˆvers‰ttning av GNU GPL lisensen h‰r:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS Kalkylator √§r gratis programvara utgivet under GNU GPL licensen.\r\n\r\nDu kan f√• en kopia av GNU GPL licensen h√§r:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan ocks√• f√• en √∂vers√§ttning av GNU GPL lisensen h√§r:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Fel"
-    IDS_QUICKHELP           "Snabb hj‰lp"
+    IDS_QUICKHELP           "Snabb hj√§lp"
 END
 
 // Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CONV_ANGLE          "Vinkel"
-    IDS_CONV_AREA           "OmrÂde"
-    IDS_CONV_CONSUMPTION    "Fˆrbrukning (motor)"
+    IDS_CONV_AREA           "Omr√•de"
+    IDS_CONV_CONSUMPTION    "F√∂rbrukning (motor)"
     IDS_CONV_CURRENCY       "Valuta"
     IDS_CONV_ENERGY         "Energi"
-    IDS_CONV_LENGTH         "L‰ngd"
-    IDS_CONV_POWER          "Strˆm"
+    IDS_CONV_LENGTH         "L√§ngd"
+    IDS_CONV_POWER          "Str√∂m"
     IDS_CONV_PRESSURE       "Tryck"
     IDS_CONV_TEMPERATURE    "Temperatur"
     IDS_CONV_TIME           "Tid"
@@ -519,12 +520,12 @@ END
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "÷sterriksk schilling"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "√ñsterriksk schilling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgisk franc"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypriotisk pound"
     IDS_CURRENCY_CZECH_KORUNA       "Tjeckisk koruna"
     IDS_CURRENCY_DEUTSCHE_MARK      "Tysk Mark"
-    IDS_CURRENCY_DUTCH_GUILDER      "Nederl‰nsk guilder"
+    IDS_CURRENCY_DUTCH_GUILDER      "Nederl√§nsk guilder"
     IDS_CURRENCY_EURO               "Euro"
     IDS_CURRENCY_FINNISH_MARKKA     "Finisk mark"
     IDS_CURRENCY_FRENCH_FRANC       "Fransk franc"
@@ -542,8 +543,8 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ∞C calories"
-    IDS_ENERGY_BTUS                 "Britisk v‰rme-enhet"
+    IDS_ENERGY_15_C_CALORIES        "15 ¬∞C calories"
+    IDS_ENERGY_BTUS                 "Britisk v√§rme-enhet"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_EVS                  "Electron-Volt"
     IDS_ENERGY_FOOT_POUNDS          "Fot-Pound"
@@ -552,14 +553,14 @@ BEGIN
     IDS_ENERGY_JOULES               "Joule"
     IDS_ENERGY_KILOJOULES           "Kilojoule"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowattimmar"
-    IDS_ENERGY_NUTRITION_CALORIES   "N‰ringskalorier"
+    IDS_ENERGY_NUTRITION_CALORIES   "N√§ringskalorier"
     IDS_ENERGY_TH_CALORIES          "Termokemiska kalorier"
 END
 
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "≈ngstrˆm"
+    IDS_LENGTH_ANGSTROMS            "√Öngstr√∂m"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimeter"
@@ -583,7 +584,7 @@ BEGIN
     IDS_LENGTH_KEUB                 "Keub"
     IDS_LENGTH_KILOMETERS           "Kilometer"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "Ljus Âr"
+    IDS_LENGTH_LIGHT_YEARS          "Ljus √•r"
     IDS_LENGTH_LINKS_UK             "Linker (UK)"
     IDS_LENGTH_METERS               "Meter"
     IDS_LENGTH_MICRONS              "Micron"
@@ -611,9 +612,9 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE       "Britisk v‰rme-enhet per minut"
+    IDS_POWER_BTUS_PER_MINUTE       "Britisk v√§rme-enhet per minut"
     IDS_POWER_FPS_PER_MINUTE        "Fot-pund per minut"
-    IDS_POWER_HORSEPOWER            "H‰stekrafter"
+    IDS_POWER_HORSEPOWER            "H√§stekrafter"
     IDS_POWER_KILOWATTS             "Kilowatt"
     IDS_POWER_MEGAWATTS             "Megawatt"
     IDS_POWER_WATTS                 "Watt"
@@ -622,7 +623,7 @@ END
 // TYPE OF PRESSURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "Atmosf‰r"
+    IDS_PRESSURE_ATMOSPHERES        "Atmosf√§r"
     IDS_PRESSURE_BARS               "Bar"
     IDS_PRESSURE_HECTOPASCALS       "Hectopascal"
     IDS_PRESSURE_KILOPASCALS        "Kilopascal"

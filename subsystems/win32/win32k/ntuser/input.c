@@ -18,6 +18,7 @@
 
 extern BYTE gQueueKeyStateTable[];
 extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
+extern PPROCESSINFO ppiScrnSaver;
 
 /* GLOBALS *******************************************************************/
 
@@ -27,6 +28,7 @@ PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
+static DWORD LastInputTick = 0;
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
@@ -59,49 +61,51 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 {
-	static DWORD LastInputTick = 0;
-	if (LastInputTickSetGet == TRUE)
-	{
-		LARGE_INTEGER TickCount;
-        KeQueryTickCount(&TickCount);
-        LastInputTick = TickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
-	}
-    return LastInputTick;
+   if (LastInputTickSetGet == TRUE)
+   {
+      LARGE_INTEGER TickCount;
+      KeQueryTickCount(&TickCount);
+      LastInputTick = MsqCalculateMessageTime(&TickCount);
+      if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
+   }
+   return LastInputTick;
 }
 
-BOOL
-APIENTRY
-NtUserGetLastInputInfo(PLASTINPUTINFO plii)
+
+VOID FASTCALL DoTheScreenSaver(VOID)
 {
-    BOOL ret = TRUE;
+   LARGE_INTEGER TickCount;
+   DWORD Test, TO;
 
-    UserEnterShared();
+   if (gspv.iScrSaverTimeout > 0) // Zero means Off.
+   {
+      KeQueryTickCount(&TickCount);
+      Test = MsqCalculateMessageTime(&TickCount);
+      Test = Test - LastInputTick;
+      TO = 1000 * gspv.iScrSaverTimeout;
+      if (Test > TO)
+      {
+         DPRINT("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
 
-    _SEH2_TRY
-    {
-        if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-            _SEH2_LEAVE;
-        }
-
-        ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
-
-        plii->dwTime = IntLastInputTick(FALSE);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-        ret = FALSE;
-    }
-    _SEH2_END;
-
-    UserLeave();
-
-    return ret;
+         if (ppiScrnSaver) // We are or we are not the screensaver, prevent reentry...
+         { 
+            if (!(ppiScrnSaver->W32PF_flags & W32PF_IDLESCREENSAVER))
+            {
+               ppiScrnSaver->W32PF_flags |= W32PF_IDLESCREENSAVER;
+               DPRINT1("Screensaver is Idle\n");
+            }
+         }
+         else
+         {
+            PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
+            if (ForegroundQueue && ForegroundQueue->ActiveWindow)
+               UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 1); // lParam 1 == Secure
+            else
+               UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0);
+         }
+      }
+   }
 }
-
 
 VOID FASTCALL
 ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
@@ -482,7 +486,7 @@ static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
-//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); This sends everything into a msg loop!
+//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
 }
 
 static VOID APIENTRY
@@ -769,7 +773,7 @@ KeyboardThreadMain(PVOID StartContext)
                      (KeyInput.MakeCode == LastMakeCode))
                {
                   RepeatCount++;
-                  lParam |= (1 << 30);
+                  lParam |= (KF_REPEAT << 16);
                }
                else
                {
@@ -782,7 +786,7 @@ KeyboardThreadMain(PVOID StartContext)
             {
                LastFlags = 0;
                LastMakeCode = 0; /* Should never match */
-               lParam |= (1 << 30) | (1 << 31);
+               lParam |= (KF_UP << 16) | (KF_REPEAT << 16);
             }
 
             lParam |= RepeatCount;
@@ -790,11 +794,11 @@ KeyboardThreadMain(PVOID StartContext)
             lParam |= (KeyInput.MakeCode & 0xff) << 16;
 
             if (KeyInput.Flags & KEY_E0)
-               lParam |= (1 << 24);
+               lParam |= (KF_EXTENDED << 16);
 
             if (ModifierState & MOD_ALT)
             {
-               lParam |= (1 << 29); // wine -> (HIWORD(lParam) & KEYDATA_ALT) #define KEYDATA_ALT 0x2000
+               lParam |= (KF_ALTDOWN << 16);
 
                if (!(KeyInput.Flags & KEY_BREAK))
                   msg.message = WM_SYSKEYDOWN;
@@ -821,6 +825,10 @@ KeyboardThreadMain(PVOID StartContext)
                 {
                     keyboardLayout = ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout;
                 }
+                if ( FocusQueue->QF_flags & QF_DIALOGACTIVE )
+                   lParam |= (KF_DLGMODE << 16);
+                if ( FocusQueue->MenuOwner )//FocusQueue->MenuState ) // MenuState needs a start flag...
+                   lParam |= (KF_MENUMODE << 16);
             }
             if (!keyboardLayout)
             {
@@ -859,6 +867,11 @@ KeyboardThreadMain(PVOID StartContext)
             {
                 /* There is no focused window to receive a keyboard message */
                 continue;
+            }
+            if ( msg.wParam == VK_F10 ) // Bypass this key before it is in the queue.
+            {
+               if (msg.message == WM_KEYUP) msg.message = WM_SYSKEYUP;
+               if (msg.message == WM_KEYDOWN) msg.message = WM_SYSKEYDOWN;
             }
             /*
              * Post a keyboard message.
@@ -1260,8 +1273,14 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    Msg.wParam = wVk;
    flags = LOBYTE(ki->wScan);
 
+   FocusMessageQueue = IntGetFocusMessageQueue();
+
    if (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) flags |= KF_EXTENDED;
    /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */
+   if ( FocusMessageQueue && FocusMessageQueue->QF_flags & QF_DIALOGACTIVE )
+      flags |= KF_DLGMODE;
+   if ( FocusMessageQueue && FocusMessageQueue->MenuOwner )//FocusMessageQueue->MenuState ) // MenuState needs a start flag...
+      flags |= KF_MENUMODE;
 
    /* strip left/right for menu, control, shift */
    switch (wVk)
@@ -1328,38 +1347,6 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
       Msg.lParam = MAKELPARAM(1 /* repeat count */, ki->wScan);
    }
 
-   FocusMessageQueue = IntGetFocusMessageQueue();
-
-   Msg.hwnd = 0;
-
-   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
-       Msg.hwnd = FocusMessageQueue->FocusWindow;
-
-   if (!ki->time)
-   {
-      KeQueryTickCount(&LargeTickCount);
-      Msg.time = MsqCalculateMessageTime(&LargeTickCount);
-   }
-   else
-      Msg.time = ki->time;
-
-   /* All messages have to contain the cursor point. */
-   Msg.pt = gpsi->ptCursor;
-
-   KbdHookData.vkCode = vk_hook;
-   KbdHookData.scanCode = ki->wScan;
-   KbdHookData.flags = flags >> 8;
-   if (Injected) KbdHookData.flags |= LLKHF_INJECTED;
-   KbdHookData.time = Msg.time;
-   KbdHookData.dwExtraInfo = ki->dwExtraInfo;
-   if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
-   {
-      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-             Msg.message, vk_hook, Msg.lParam);
-
-      return FALSE;
-   }
-
    if (!(ki->dwFlags & KEYEVENTF_UNICODE))
    {
       if (ki->dwFlags & KEYEVENTF_KEYUP)
@@ -1381,6 +1368,36 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
       Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
    }
 
+   Msg.hwnd = 0;
+
+   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
+       Msg.hwnd = FocusMessageQueue->FocusWindow;
+
+   if (!ki->time)
+   {
+      KeQueryTickCount(&LargeTickCount);
+      Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+   }
+   else
+      Msg.time = ki->time;
+
+   /* All messages have to contain the cursor point. */
+   Msg.pt = gpsi->ptCursor;
+
+   KbdHookData.vkCode = vk_hook;
+   KbdHookData.scanCode = ki->wScan;
+   KbdHookData.flags = (flags & (KF_EXTENDED | KF_ALTDOWN | KF_UP)) >> 8;
+   if (Injected) KbdHookData.flags |= LLKHF_INJECTED;
+   KbdHookData.time = Msg.time;
+   KbdHookData.dwExtraInfo = ki->dwExtraInfo;
+   if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
+   {
+      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+             Msg.message, vk_hook, Msg.lParam);
+
+      return FALSE;
+   }
+
    if (FocusMessageQueue == NULL)
    {
          DPRINT("No focus message queue\n");
@@ -1395,7 +1412,6 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
-         Msg.pt = gpsi->ptCursor;
       // Post to hardware queue, based on the first part of wine "some GetMessage tests"
       // in test_PeekMessage()
          MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);

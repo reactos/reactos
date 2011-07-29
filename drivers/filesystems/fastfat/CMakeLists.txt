@@ -23,11 +23,11 @@ list(APPEND SOURCE
     volume.c
     vfatfs.rc)
 
-add_library(fastfat SHARED ${CMAKE_CURRENT_BINARY_DIR}/fastfat_vfat.h.gch ${SOURCE})
+add_library(fastfat SHARED ${SOURCE})
 
 set_module_type(fastfat kernelmodedriver)
 add_importlibs(fastfat ntoskrnl hal)
 
-add_pch(fastfat ${CMAKE_CURRENT_SOURCE_DIR}/vfat.h ${SOURCE})
+add_pch(fastfat vfat.h)
 
 add_cd_file(TARGET fastfat DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/charmap/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Gird˛ijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" Gird√æijauskas (cman@cman.us)
  * DATE:        2007-09-23
  */
 
@@ -13,7 +13,7 @@ IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-  LTEXT         "–riftas:", IDC_STATIC, 6, 7, 24, 9
+  LTEXT         "√êriftas:", IDC_STATIC, 6, 7, 24, 9
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
   PUSHBUTTON    "Pagalba", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
@@ -40,12 +40,12 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "Apie simboli¯ lentelÊ"
+CAPTION "Apie simboli√∏ lentel√¶"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "Simboli¯ lentelÎ v0.1\n(C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON    "U˛verti", IDOK, 83, 161, 44, 15
+  LTEXT         "Simboli√∏ lentel√´ v0.1\n(C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "U√æverti", IDOK, 83, 161, 44, 15
   ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END

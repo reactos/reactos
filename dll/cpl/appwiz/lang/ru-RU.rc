@@ -2,7 +2,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Создания ярлыка"
+CAPTION "РЎРѕР·РґР°РЅРёСЏ СЏСЂР»С‹РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Text1", -1, 115, 15, 160, 24
@@ -11,7 +11,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Создание ярлыка"
+CAPTION "РЎРѕР·РґР°РЅРёРµ СЏСЂР»С‹РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Text1",-1,10,0,225,40
@@ -21,30 +21,30 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Создание ярлыка"
+CAPTION "РЎРѕР·РґР°РЅРёРµ СЏСЂР»С‹РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Этот мастер поможет создать ярлык для локальных или\nсетевых программ, файлов, папок, компьютеров или\nИнтернет-адресов.", -1, 120, 15, 200, 30
-  LTEXT "Выберите местоположение элемента:", -1, 120, 50, 120, 10
+  LTEXT "Р­С‚РѕС‚ РјР°СЃС‚РµСЂ РїРѕРјРѕР¶РµС‚ СЃРѕР·РґР°С‚СЊ СЏСЂР»С‹Рє РґР»СЏ Р»РѕРєР°Р»СЊРЅС‹С… РёР»Рё\nСЃРµС‚РµРІС‹С… РїСЂРѕРіСЂР°РјРј, С„Р°Р№Р»РѕРІ, РїР°РїРѕРє, РєРѕРјРїСЊСЋС‚РµСЂРѕРІ РёР»Рё\nРРЅС‚РµСЂРЅРµС‚-Р°РґСЂРµСЃРѕРІ.", -1, 120, 15, 200, 30
+  LTEXT "Р’С‹Р±РµСЂРёС‚Рµ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ СЌР»РµРјРµРЅС‚Р°:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Щелкните ""Далее"" для продолжения.", -1, 120, 97, 162, 10
+  PUSHBUTTON "РћР±Р·РѕСЂ...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT "Р©РµР»РєРЅРёС‚Рµ ""Р”Р°Р»РµРµ"" РґР»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Выбор заголовка для программы"
+CAPTION "Р’С‹Р±РѕСЂ Р·Р°РіРѕР»РѕРІРєР° РґР»СЏ РїСЂРѕРіСЂР°РјРјС‹"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Введите заголовок ярлыка:", -1, 120, 15, 150, 10
+  LTEXT "&Р’РІРµРґРёС‚Рµ Р·Р°РіРѕР»РѕРІРѕРє СЏСЂР»С‹РєР°:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Щелкните ""Завершить"" для создания ярлыка.", -1, 118, 97, 178, 17
+  LTEXT "Р©РµР»РєРЅРёС‚Рµ ""Р—Р°РІРµСЂС€РёС‚СЊ"" РґР»СЏ СЃРѕР·РґР°РЅРёСЏ СЏСЂР»С‹РєР°.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Установка и удаление программ"
-	IDS_CPLSYSTEMDESCRIPTION "Работа с программами, обновлениями и ярлыками."
-    IDS_CREATE_SHORTCUT "Создать ярлык"
-    IDS_ERROR_NOT_FOUND "Файл %s не найден."
+	IDS_CPLSYSTEMNAME "РЈСЃС‚Р°РЅРѕРІРєР° Рё СѓРґР°Р»РµРЅРёРµ РїСЂРѕРіСЂР°РјРј"
+	IDS_CPLSYSTEMDESCRIPTION "Р Р°Р±РѕС‚Р° СЃ РїСЂРѕРіСЂР°РјРјР°РјРё, РѕР±РЅРѕРІР»РµРЅРёСЏРјРё Рё СЏСЂР»С‹РєР°РјРё."
+    IDS_CREATE_SHORTCUT "РЎРѕР·РґР°С‚СЊ СЏСЂР»С‹Рє"
+    IDS_ERROR_NOT_FOUND "Р¤Р°Р№Р» %s РЅРµ РЅР°Р№РґРµРЅ."
 END

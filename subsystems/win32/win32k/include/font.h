@@ -3,6 +3,36 @@
 
 #define ENGAPI
 
+#define PENALTY_CharSet                65000
+#define PENALTY_OutputPrecision        19000
+#define PENALTY_FixedPitch             15000
+#define PENALTY_FaceName               10000
+#define PENALTY_Family                  9000
+#define PENALTY_FamilyUnknown           8000
+#define PENALTY_HeightBigger             600
+#define PENALTY_FaceNameSubst            500
+#define PENALTY_PitchVariable            350
+#define PENALTY_HeightSmaller            150
+#define PENALTY_HeightBiggerDifference   150
+#define PENALTY_FamilyUnlikely            50
+#define PENALTY_Width                     50
+#define PENALTY_SizeSynth                 50
+#define PENALTY_Aspect                    30
+#define PENALTY_IntSizeSynth              20
+#define PENALTY_UnevenSizeSynth            4
+#define PENALTY_Italic                     4
+#define PENALTY_NotTrueType                4
+#define PENALTY_Weight                     3
+#define PENALTY_Underline                  3
+#define PENALTY_StrikeOut                  3
+#define PENALTY_VectorHeightSmaller        2
+#define PENALTY_DeviceFavor                2
+#define PENALTY_ItalicSim                  1
+#define PENALTY_DefaultPitchFixed          1
+#define PENALTY_SmallPenalty               1
+#define PENALTY_VectorHeightBigger         1
+
+
 #define FD_MAX_FILES 4
 
 extern PEPROCESS gpepCSRSS;

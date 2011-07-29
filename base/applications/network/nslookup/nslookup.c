@@ -6,13 +6,6 @@
  * COPYRIGHT:   Copyright 2009 Lucas Suggs <lucas.suggs@gmail.com>
  */
 
-#include <windows.h>
-#include <windns.h>
-#include <winsock2.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iphlpapi.h>
 #include "nslookup.h"
 
 STATE   State;

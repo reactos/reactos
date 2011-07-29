@@ -1,8 +1,5 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 set_unicode()
-include_directories(.)
 set_rc_compiler()
 
 add_executable(regsvr32 regsvr32.c regsvr32.rc)

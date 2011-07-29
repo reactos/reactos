@@ -9,7 +9,10 @@
 typedef struct tagBATCHCONTEXT
 {
 	struct tagBATCHCONTEXT *prev;
-	HANDLE hBatchFile;
+	char	*mem;		 /* batchfile content in memory */
+	DWORD	memsize;	 /* size of batchfile */
+	DWORD	mempos;		 /* current position to read from */
+	BOOL	memfree;	 /* true if it need to be freed when exitbatch is called */	
 	TCHAR BatchFilePath[MAX_PATH];
 	LPTSTR params;
 	LPTSTR raw_params;   /* Holds the raw params given by the input */
@@ -47,5 +50,6 @@ LPTSTR FindArg (TCHAR, BOOL *);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch (VOID);
 INT    Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
+BOOL   BatchGetString (LPTSTR lpBuffer, INT nBufferLength);
 LPTSTR ReadBatchLine(VOID);
-VOID AddBatchRedirection(REDIRECTION **);
+VOID   AddBatchRedirection(REDIRECTION **);

@@ -1,8 +1,5 @@
 
-add_definitions(
-    -D_DLL -D__USE_CRTIMP
-    -D__WINESRC__)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(msadp32.acm msadp32.acm.spec)

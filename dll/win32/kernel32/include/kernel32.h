@@ -21,6 +21,10 @@
 #define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
 #define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
 
+#define STUB \
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
+  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+
 #define debugstr_a  
 #define debugstr_w
 #define wine_dbgstr_w  
@@ -67,8 +71,6 @@
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
   
-#define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
-
 typedef struct _CODEPAGE_ENTRY
 {
    LIST_ENTRY Entry;
@@ -77,6 +79,75 @@ typedef struct _CODEPAGE_ENTRY
    PBYTE SectionMapping;
    CPTABLEINFO CodePageTable;
 } CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
+
+typedef struct _NLS_USER_INFO
+{
+    WCHAR iCountry[80];
+    WCHAR sCountry[80];
+    WCHAR sList[80];
+    WCHAR iMeasure[80];
+    WCHAR iPaperSize[80];
+    WCHAR sDecimal[80];
+    WCHAR sThousand[80];
+    WCHAR sGrouping[80];
+    WCHAR iDigits[80];
+    WCHAR iLZero[80];
+    WCHAR iNegNumber[80];
+    WCHAR sNativeDigits[80];
+    WCHAR iDigitSubstitution[80];
+    WCHAR sCurrency[80];
+    WCHAR sMonDecSep[80];
+    WCHAR sMonThouSep[80];
+    WCHAR sMonGrouping[80];
+    WCHAR iCurrDigits[80];
+    WCHAR iCurrency[80];
+    WCHAR iNegCurr[80];
+    WCHAR sPosSign[80];
+    WCHAR sNegSign[80];
+    WCHAR sTimeFormat[80];
+    WCHAR s1159[80];
+    WCHAR s2359[80];
+    WCHAR sShortDate[80];
+    WCHAR sYearMonth[80];
+    WCHAR sLongDate[80];
+    WCHAR iCalType[80];
+    WCHAR iFirstDay[80];
+    WCHAR iFirstWeek[80];
+    WCHAR sLocale[80];
+    WCHAR sLocaleName[85];
+    LCID UserLocaleId;
+    LUID InteractiveUserLuid;
+    CHAR InteractiveUserSid[SECURITY_MAX_SID_SIZE];
+    ULONG ulCacheUpdateCount;
+} NLS_USER_INFO, *PNLS_USER_INFO;
+
+typedef struct _BASE_STATIC_SERVER_DATA
+{
+    UNICODE_STRING WindowsDirectory;
+    UNICODE_STRING WindowsSystemDirectory;
+    UNICODE_STRING NamedObjectDirectory;
+    USHORT WindowsMajorVersion;
+    USHORT WindowsMinorVersion;
+    USHORT BuildNumber;
+    USHORT CSDNumber;
+    USHORT RCNumber;
+    WCHAR CSDVersion[128];
+    SYSTEM_BASIC_INFORMATION SysInfo;
+    SYSTEM_TIMEOFDAY_INFORMATION TimeOfDay;
+    PVOID IniFileMapping;
+    NLS_USER_INFO NlsUserInfo;
+    BOOLEAN DefaultSeparateVDM;
+    BOOLEAN IsWowTaskReady;
+    UNICODE_STRING WindowsSys32x86Directory;
+    BOOLEAN fTermsrvAppInstallMode;
+    TIME_ZONE_INFORMATION tziTermsrvClientTimeZone;
+    KSYSTEM_TIME ktTermsrvClientBias;
+    ULONG TermsrvClientTimeZoneId;
+    BOOLEAN LUIDDeviceMapsEnabled;
+    ULONG TermsrvClientTimeZoneChangeNum;
+} BASE_STATIC_SERVER_DATA, *PBASE_STATIC_SERVER_DATA;
+
+extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 typedef
 DWORD
@@ -99,6 +170,10 @@ extern UNICODE_STRING BaseDefaultPathAppend;
 extern PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
+
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+
+extern BOOLEAN BaseRunningInServerProcess;
 
 /* FUNCTION PROTOTYPES *******************************************************/
 
@@ -130,6 +205,11 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
 #define _lread  (_readfun)_hread
+
+PLARGE_INTEGER
+WINAPI
+BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
+                  IN DWORD dwMilliseconds);
 
 POBJECT_ATTRIBUTES
 WINAPI

@@ -13,49 +13,87 @@
 #include "debug.h"
 #include "pseh/pseh2.h"
 
+PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    ASSERT(Irp->MdlAddress);
+    
+    return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+}
+
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     BOOLEAN LockFailed = FALSE;
-
-    ASSERT(IrpSp->Parameters.DeviceIoControl.Type3InputBuffer);
-    ASSERT(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+    
     ASSERT(!Irp->MdlAddress);
+    
+    switch (IrpSp->MajorFunction)
+    {
+        case IRP_MJ_DEVICE_CONTROL:
+        case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+            ASSERT(IrpSp->Parameters.DeviceIoControl.Type3InputBuffer);
+            ASSERT(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
 
-    Irp->MdlAddress =
-	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
-		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
-		       FALSE,
-		       FALSE,
-		       NULL );
-    if( Irp->MdlAddress ) {
-	_SEH2_TRY {
-	    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
-	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	    LockFailed = TRUE;
-	} _SEH2_END;
-
-	if( LockFailed ) {
-	    IoFreeMdl( Irp->MdlAddress );
-	    Irp->MdlAddress = NULL;
-	    return NULL;
-	}
-
-	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
-	    MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
-
-	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
-            MmUnlockPages( Irp->MdlAddress );
-	    IoFreeMdl( Irp->MdlAddress );
-	    Irp->MdlAddress = NULL;
-	    return NULL;
-	}
-
-	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-    } else return NULL;
+            
+            Irp->MdlAddress =
+            IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
+                          IrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                          FALSE,
+                          FALSE,
+                          NULL );
+            if( Irp->MdlAddress ) {
+                _SEH2_TRY {
+                    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
+                } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                    LockFailed = TRUE;
+                } _SEH2_END;
+                
+                if( LockFailed ) {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+            } else return NULL;
+            break;
+            
+        case IRP_MJ_READ:
+        case IRP_MJ_WRITE:
+            ASSERT(Irp->UserBuffer);
+            
+            Irp->MdlAddress =
+            IoAllocateMdl(Irp->UserBuffer,
+                          (IrpSp->MajorFunction == IRP_MJ_READ) ?
+                                IrpSp->Parameters.Read.Length : IrpSp->Parameters.Write.Length,
+                          FALSE,
+                          FALSE,
+                          NULL );
+            if( Irp->MdlAddress ) {
+                _SEH2_TRY {
+                    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
+                } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                    LockFailed = TRUE;
+                } _SEH2_END;
+                
+                if( LockFailed ) {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+            } else return NULL;
+            break;
+            
+        default:
+            ASSERT(FALSE);
+            return NULL;
+    }
+    
+    return GetLockedData(Irp, IrpSp);
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
 {
+    ASSERT(Irp->MdlAddress);
     MmUnlockPages( Irp->MdlAddress );
     IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
@@ -130,6 +168,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
 
 		if( LockFailed ) {
+            AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
 		    IoFreeMdl( MapBuf[i].Mdl );
 		    MapBuf[i].Mdl = NULL;
 		    ExFreePool( NewBuf );
@@ -191,7 +230,10 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	}
 
         if( !NT_SUCCESS(Status) )
+        {
+            AFD_DbgPrint(MIN_TRACE,("Failed to reference handles (0x%x)\n", Status));
             FileObjects[i].Handle = 0;
+        }
     }
 
     if( !NT_SUCCESS(Status) ) {
@@ -251,11 +293,48 @@ NTSTATUS LostSocket( PIRP Irp ) {
     return Status;
 }
 
-NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
+NTSTATUS QueueUserModeIrp(PAFD_FCB FCB, PIRP Irp, UINT Function)
+{
+    NTSTATUS Status;
+    
+    /* Add the IRP to the queue in all cases (so AfdCancelHandler will work properly) */
     InsertTailList( &FCB->PendingIrpList[Function],
-		    &Irp->Tail.Overlay.ListEntry );
-    IoMarkIrpPending(Irp);
-    (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
+                   &Irp->Tail.Overlay.ListEntry );
+    
+    /* Acquire the cancel spin lock and check the cancel bit */
+    IoAcquireCancelSpinLock(&Irp->CancelIrql);
+    if (!Irp->Cancel)
+    {
+        /* We are not cancelled; we're good to go so
+         * set the cancel routine, release the cancel spin lock,
+         * mark the IRP as pending, and
+         * return STATUS_PENDING to the caller
+         */
+        (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
+        IoMarkIrpPending(Irp);
+        Status = STATUS_PENDING;
+    }
+    else
+    {
+        /* We were already cancelled before we were able to register our cancel routine
+         * so we are to call the cancel routine ourselves right here to cancel the IRP
+         * (which handles all the stuff we do above) and return STATUS_CANCELLED to the caller
+         */
+        AfdCancelHandler(IoGetCurrentIrpStackLocation(Irp)->DeviceObject,
+                         Irp);
+        Status = STATUS_CANCELLED;
+    }
+    
+    return Status;
+}
+
+NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
+    NTSTATUS Status;
+    
+    Status = QueueUserModeIrp(FCB, Irp, Function);
+        
     SocketStateUnlock( FCB );
-    return STATUS_PENDING;
+
+    return Status;
 }

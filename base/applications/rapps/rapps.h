@@ -1,11 +1,10 @@
-#pragma once
-
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <wchar.h>
+#include <urlmon.h>
 
 #include <rappsmsg.h>
 

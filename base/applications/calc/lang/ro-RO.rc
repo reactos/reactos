@@ -1,7 +1,5 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 // Dialog
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 161
@@ -732,5 +730,3 @@ BEGIN
     IDS_WEIGHT_TONS_UK              "Tone (Marea Britanie)"
     IDS_WEIGHT_TONS_US              "Tone (SUA)"
 END
-
-#pragma code_page(default)

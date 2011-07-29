@@ -8,12 +8,12 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 
 void
-Line(HDC hdc, short x1, short y1, short x2, short y2, int color, int thickness)
+Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
 {
     HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
     MoveToEx(hdc, x1, y1, NULL);
@@ -22,7 +22,7 @@ Line(HDC hdc, short x1, short y1, short x2, short y2, int color, int thickness)
 }
 
 void
-Rect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style)
+Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
@@ -37,7 +37,7 @@ Rect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickn
 }
 
 void
-Ellp(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style)
+Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
@@ -52,7 +52,7 @@ Ellp(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickn
 }
 
 void
-RRect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style)
+RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
     LOGBRUSH logbrush;
     HBRUSH oldBrush;
@@ -67,7 +67,7 @@ RRect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thick
 }
 
 void
-Poly(HDC hdc, POINT * lpPoints, int nCount, int fg, int bg, int thickness, int style, BOOL closed)
+Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thickness, int style, BOOL closed)
 {
     LOGBRUSH logbrush;
     HBRUSH oldBrush;
@@ -85,7 +85,7 @@ Poly(HDC hdc, POINT * lpPoints, int nCount, int fg, int bg, int thickness, int s
 }
 
 void
-Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, int color, int thickness)
+Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thickness)
 {
     HPEN oldPen;
     POINT fourPoints[4];
@@ -99,7 +99,7 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, int color, int thickness
 }
 
 void
-Fill(HDC hdc, int x, int y, int color)
+Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 {
     HBRUSH oldBrush = SelectObject(hdc, CreateSolidBrush(color));
     ExtFloodFill(hdc, x, y, GetPixel(hdc, x, y), FLOODFILLSURFACE);
@@ -107,7 +107,7 @@ Fill(HDC hdc, int x, int y, int color)
 }
 
 void
-Erase(HDC hdc, short x1, short y1, short x2, short y2, int color, int radius)
+Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 {
     short a;
     HPEN oldPen;
@@ -122,9 +122,10 @@ Erase(HDC hdc, short x1, short y1, short x2, short y2, int color, int radius)
 }
 
 void
-Replace(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int radius)
+Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LONG radius)
 {
-    short a, x, y;
+    LONG a, x, y;
+    
     for(a = 0; a <= 100; a++)
         for(y = (y1 * (100 - a) + y2 * a) / 100 - radius + 1;
             y < (y1 * (100 - a) + y2 * a) / 100 + radius + 1; y++)
@@ -135,10 +136,10 @@ Replace(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int rad
 }
 
 void
-Airbrush(HDC hdc, short x, short y, int color, int r)
+Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
 {
-    short a;
-    short b;
+    LONG a, b;
+    
     for(b = -r; b <= r; b++)
         for(a = -r; a <= r; a++)
             if ((a * a + b * b <= r * r) && (rand() % 4 == 0))
@@ -146,7 +147,7 @@ Airbrush(HDC hdc, short x, short y, int color, int r)
 }
 
 void
-Brush(HDC hdc, short x1, short y1, short x2, short y2, int color, int style)
+Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, COLORREF style)
 {
     HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     HBRUSH oldBrush = SelectObject(hdc, CreateSolidBrush(color));
@@ -231,7 +232,7 @@ Brush(HDC hdc, short x1, short y1, short x2, short y2, int color, int style)
 }
 
 void
-RectSel(HDC hdc, short x1, short y1, short x2, short y2)
+RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
@@ -246,7 +247,7 @@ RectSel(HDC hdc, short x1, short y1, short x2, short y2)
 }
 
 void
-SelectionFrame(HDC hdc, int x1, int y1, int x2, int y2)
+SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;

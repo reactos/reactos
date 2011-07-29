@@ -1780,7 +1780,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
     insert = HeapAlloc(GetProcessHeap(), 0, sizeof(CyclicList));
     if(!insert)
         return E_OUTOFMEMORY;
-    insert->u.data = HeapAlloc(GetProcessHeap(), 0, sizeof(int[6])+sizeof(int[(num_defaults?4:3)])*pFuncDesc->cParams);
+    insert->u.data = HeapAlloc(GetProcessHeap(), 0, sizeof(int)*6+sizeof(int)*(num_defaults?4:3)*pFuncDesc->cParams);
     if(!insert->u.data) {
         HeapFree(GetProcessHeap(), 0, insert);
         return E_OUTOFMEMORY;

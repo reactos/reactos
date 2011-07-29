@@ -85,7 +85,7 @@ VOID LoadAndBootPartition(PCSTR OperatingSystemName)
 	CHAR			SettingValue[80];
 	ULONG			SectionId;
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
-	ULONG			DriveNumber;
+	UCHAR			DriveNumber;
 	ULONG			PartitionNumber;
 
 	// Find all the message box settings and run them
@@ -156,7 +156,7 @@ VOID LoadAndBootDrive(PCSTR OperatingSystemName)
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
 	ULONG	SectionId;
-	ULONG	DriveNumber;
+	UCHAR	DriveNumber;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);

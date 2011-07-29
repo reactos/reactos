@@ -107,13 +107,13 @@ UniataQueueRequest(
     BOOLEAN reordered = FALSE;
 #endif //QUEUE_STATISTICS
 
-    PHW_LU_EXTENSION LunExt = chan->lun[GET_LDEV(Srb) & 1];
+    PHW_LU_EXTENSION LunExt = chan->lun[GET_CDEV(Srb)];
     AtaReq->Srb = Srb;
 
 /*
 #ifdef _DEBUG
     if(!LunExt) {
-        PrintNtConsole("q: chan = %#x, dev %#x\n", chan, GET_LDEV(Srb));
+        PrintNtConsole("q: chan = %#x, dev %#x\n", chan, GET_CDEV(Srb));
         int i;
         for(i=0; i<1000; i++) {
             AtapiStallExecution(5*1000);
@@ -267,7 +267,7 @@ UniataRemoveRequest(
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
     //PHW_DEVICE_EXTENSION deviceExtension = chan->DeviceExtension;
 
-    ULONG cdev = GET_LDEV(Srb) & 1;
+    ULONG cdev = GET_CDEV(Srb);
     PHW_LU_EXTENSION LunExt = chan->lun[cdev];
 
     if(!LunExt)

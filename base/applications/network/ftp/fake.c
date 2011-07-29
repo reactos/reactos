@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <time.h>
-#include <winsock.h>
-#include "fake.h"
-#include "prototypes.h"
+#include "precomp.h"
 
 #define MAX_ASCII 100
 

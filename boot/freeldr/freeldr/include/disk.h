@@ -105,10 +105,10 @@ typedef struct _MASTER_BOOT_RECORD
 ///////////////////////////////////////////////////////////////////////////////////////
 #if defined(__i386__) || defined(_M_AMD64)
 
-BOOLEAN	DiskResetController(ULONG DriveNumber);
-BOOLEAN	DiskInt13ExtensionsSupported(ULONG DriveNumber);
+BOOLEAN	DiskResetController(UCHAR DriveNumber);
+BOOLEAN	DiskInt13ExtensionsSupported(UCHAR DriveNumber);
 //VOID	DiskStopFloppyMotor(VOID);
-BOOLEAN	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize);
+BOOLEAN	DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);
 
 #endif // defined __i386__ || defined(_M_AMD64)
 
@@ -120,11 +120,11 @@ BOOLEAN	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT B
 VOID	DiskReportError (BOOLEAN bError);
 VOID	DiskError(PCSTR ErrorString, ULONG ErrorCode);
 PCSTR	DiskGetErrorCodeString(ULONG ErrorCode);
-BOOLEAN	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
-BOOLEAN	DiskIsDriveRemovable(ULONG DriveNumber);
+BOOLEAN	DiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
+BOOLEAN	DiskIsDriveRemovable(UCHAR DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
-extern ULONG BootDrive;
-extern ULONG BootPartition;
+extern UCHAR FrldrBootDrive;
+extern ULONG FrldrBootPartition;
 
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 
@@ -134,10 +134,10 @@ BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 // Fixed Disk Partition Management Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOLEAN	DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
-BOOLEAN	DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN	DiskGetActivePartitionEntry(UCHAR DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
+BOOLEAN	DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN	DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+BOOLEAN	DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
 ULONG LoadBootDeviceDriver(VOID);

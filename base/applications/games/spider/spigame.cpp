@@ -6,13 +6,6 @@
  * PROGRAMMER:   Gregor Schneider
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <tchar.h>
-#include <stdio.h>
-
-#include "resource.h"
-#include "cardlib.h"
 #include "spider.h"
 
 #define NUM_DECK_CARDS     5

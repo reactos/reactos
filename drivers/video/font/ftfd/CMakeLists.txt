@@ -5,11 +5,10 @@ spec2def(ftfd.dll ftfd.spec)
 
 add_library(ftfd SHARED
     enable.c
-    copybits.c
     font.c
     glyph.c
-    tttables.c
     rosglue.c
+    sprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
 set_entrypoint(ftfd FtfdEnableDriver@12)

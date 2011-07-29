@@ -2,59 +2,59 @@
 
 [Section]
 Name = Mozilla Firefox 3.6
-Version = 3.6.16
+Version = 3.6.19
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
 Size = 8.2M
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/en-US/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/en-US/Firefox%20Setup%203.6.19.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
-Size = 8.1M
+Size = 8.0M
 URLSite = http://www.mozilla-europe.org/de/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/de/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/de/Firefox%20Setup%203.6.19.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
-Size = 8.1M
+Size = 8.0M
 URLSite = http://www.mozilla-europe.org/es/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/es-ES/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/es-ES/Firefox%20Setup%203.6.19.exe
 
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
-Size = 8.1M
+Size = 8.0M
 URLSite = http://www.mozilla-europe.org/fr/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/fr/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/fr/Firefox%20Setup%203.6.19.exe
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
-Size = 8.1M
+Size = 8.0M
 URLSite = http://www.mozilla-europe.org/no/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/nb-NO/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/nb-NO/Firefox%20Setup%203.6.19.exe
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 8.9M
 URLSite = http://www.mozilla-europe.org/pl/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/pl/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/pl/Firefox%20Setup%203.6.19.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 8.5M
+Size = 8.4M
 URLSite = http://www.mozilla-europe.org/ru/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/ru/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/ru/Firefox%20Setup%203.6.19.exe
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
-Size = 8,5 MB
+Size = 8,5MB
 URLSite = http://www.mozilla-europe.org/sk/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/sk/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/sk/Firefox%20Setup%203.6.19.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
-Size = 8.5M
+Size = 8.4M
 URLSite = http://www.mozilla-europe.org/uk/
-URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.16/win32/uk/Firefox%20Setup%203.6.16.exe
+URLDownload = http://mozilla.cdn.leaseweb.com/firefox/releases/3.6.19/win32/uk/Firefox%20Setup%203.6.19.exe

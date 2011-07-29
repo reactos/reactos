@@ -12,9 +12,7 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Vítejte v prùvodci instalace systému ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Tento prùvodce nainstaluje systém ReactOS na Váš poèítaè. Prùvodce "\
-          "potøebuje získat nìkteré informace o Vás a Vašem poèítaèi "\
-          "aby mohl systém správnì nastavit.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Tento prùvodce nainstaluje systém ReactOS na Váš poèítaè. Prùvodce potøebuje získat nìkteré informace o Vás a Vašem poèítaèi aby mohl systém správnì nastavit.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Kliknutím na Další pokraèujte v instalaci.", IDC_STATIC, 115, 160, 189, 31
 END
 
@@ -24,13 +22,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Vývojáøi systému ReactOS by rádi zmínili následující Open Source projekty."\
-                    "Tyto projekty (nebo jejich èásti) byly použity pøi vývoji systému ReactOS:",
+    LTEXT           "Vývojáøi systému ReactOS by rádi zmínili následující Open Source projekty. Tyto projekty (nebo jejich èásti) byly použity pøi vývoji systému ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS je licencován pod GPL. Pokud chcete systém (nebo jeho èásti) použít "\
-                    "nebo redistribuovat, musíte respektovat GPL",
+    LTEXT           "ReactOS je licencován pod GPL. Pokud chcete systém (nebo jeho èásti) použít nebo redistribuovat, musíte respektovat GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Zobrazit GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Kliknutím na Další pokraèujte v instalaci.",IDC_STATIC,15,136,
@@ -59,14 +55,12 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napište jméno Vašeho poèítaèe o délce 15 znakù nebo ménì. "\
-          "Pokud je poèítaè pøipojen k síti, musí být jeho jméno unikátní.",
+    LTEXT "Napište jméno Vašeho poèítaèe o délce 15 znakù nebo ménì. Pokud je poèítaè pøipojen k síti, musí být jeho jméno unikátní.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Jméno poèítaèe:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Instalátor vytvoøí uživatelský úèet nazvaný Administrator. "\
-          "Mùžete tento úèet použít, pokud budete potøebovat úplný pøístup k Vašemu poèítaèi.",
+    LTEXT "Instalátor vytvoøí uživatelský úèet nazvaný Administrator. Mùžete tento úèet použít, pokud budete potøebovat úplný pøístup k Vašemu poèítaèi.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Zadejte heslo úètu Administrator o délce 14 znakù nebo ménì.",
           IDC_STATIC, 54, 87, 250, 8
@@ -83,9 +77,7 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Lokalizace systému by mìla souhlasit s jazykem aplikací, "\
-          "které chcete používat. Localizace urèí jak budou zobrazena "\
-          "èísla, mìny a kalendáøní data.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Lokalizace systému by mìla souhlasit s jazykem aplikací, které chcete používat. Localizace urèí jak budou zobrazena èísla, mìny a kalendáøní data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro zmìnu lokalizace systému kliknìte na Zmìnit.",
           IDC_STATIC, 53, 60, 184, 8
@@ -135,11 +127,9 @@ CAPTION "Dokonèení instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dokonèení prùvodce instalací systému ReactOS",IDC_FINISHTITLE,115,9,195,37
-    LTEXT "Prùvodce instalací systému ReactOS byl úspìšnì dokonèen.\n\n" \
-          "Po kliknutí na Dokonèit bude poèítaè restartován.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Prùvodce instalací systému ReactOS byl úspìšnì dokonèen.\n\nPo kliknutí na Dokonèit bude poèítaè restartován.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Pokud je v mechanice instalaèní CD, vyjmìte jej. Poté kliknutím na Dokonèit "\
-          "restartujte poèítaè.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Pokud je v mechanice instalaèní CD, vyjmìte jej. Poté kliknutím na Dokonèit restartujte poèítaè.", IDC_STATIC, 115, 160, 195, 31
 END
 
 

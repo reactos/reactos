@@ -1,16 +1,6 @@
-/*
+Ôªø/*
  * Regedit resources
- *
- * Copyright 2005 Sebastian Gasiorek
- *
- * Update by Caemyr - Olaf Siejka (Dec-Jan, 2007)
- * Use ReactOS forum PM or IRC to contact me
- * http://www.reactos.org
- * IRC: irc.freenode.net #reactos-pl; 
- *
- * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
- *
- * This library is free software; you can redistribute it and/or
+  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -23,6 +13,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ *         Copyright 2005 Sebastian Gasiorek
+ *
+ *         Update by Caemyr - Olaf Siejka (Jan, 2007; May, 2011)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl; 
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -44,7 +43,7 @@ IDC_REGEDIT MENU DISCARDABLE
 BEGIN
     POPUP "&Plik"
     BEGIN
-        MENUITEM "Za&koÒcz",                       ID_REGISTRY_EXIT
+        MENUITEM "Za&ko≈Ñcz",                       ID_REGISTRY_EXIT
     END
     POPUP "Pomo&c"
     BEGIN
@@ -61,19 +60,19 @@ BEGIN
         MENUITEM "&Eksportuj plik rejestru...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "£aduj Drzewo....",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Wy≥aduj Drzewo..",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM "≈Åaduj Drzewo....",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Wy≈Çaduj Drzewo..",				ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
-        MENUITEM "&Pod≥πcz rejestr sieciowy...",
+        MENUITEM "&Pod≈ÇƒÖcz rejestr sieciowy...",
                                                    ID_REGISTRY_CONNECTNETWORKREGISTRY
 
-        MENUITEM "&Od≥πcz rejestr sieciowy...",
+        MENUITEM "&Od≈ÇƒÖcz rejestr sieciowy...",
                                                    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Drukuj\tCtrl+P",                ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Za&koÒcz",                       ID_REGISTRY_EXIT
+        MENUITEM "Za&ko≈Ñcz",                       ID_REGISTRY_EXIT
     END
     POPUP "&Edycja"
     BEGIN
@@ -83,22 +82,22 @@ BEGIN
         BEGIN
             MENUITEM "&Klucz",                     ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "WartoúÊ &ciπgu",             ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "WartoúÊ &binarna",           ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "WartoúÊ &DWORD",             ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "WartoúÊ &wielociπgu",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "WartoúÊ ciπgu &rozwijalnego",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Warto≈õƒá &ciƒÖgu",             ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Warto≈õƒá &binarna",           ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Warto≈õƒá &DWORD",             ID_EDIT_NEW_DWORDVALUE
+	    MENUITEM "Warto≈õƒá &wielociƒÖgu",			ID_EDIT_NEW_MULTISTRINGVALUE
+	    MENUITEM "Warto≈õƒá ciƒÖgu &rozwijalnego",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Uprawnienia...",		   ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "U&suÒ\tDel",                     ID_EDIT_DELETE
-        MENUITEM "Z&mieÒ nazwÍ",                   ID_EDIT_RENAME
+        MENUITEM "U&su≈Ñ\tDel",                     ID_EDIT_DELETE
+        MENUITEM "Z&mie≈Ñ nazwƒô",                   ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Kopiuj nazwÍ klucza",           ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kopiuj nazwƒô klucza",           ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Znajdü\tCtrl+F",                ID_EDIT_FIND
-        MENUITEM "Zn&ajdü nastÍpny\tF3",           ID_EDIT_FINDNEXT
+        MENUITEM "&Znajd≈∫\tCtrl+F",                ID_EDIT_FIND
+        MENUITEM "Zn&ajd≈∫ nastƒôpny\tF3",           ID_EDIT_FINDNEXT
     END
     POPUP "&Widok"
     BEGIN
@@ -106,13 +105,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Po&dziel",                       ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Odúwieø\tF5",                   ID_VIEW_REFRESH
+        MENUITEM "&Od≈õwie≈º\tF5",                   ID_VIEW_REFRESH
     END
     POPUP "Ulu&bione"
     BEGIN
         MENUITEM "&Dodaj do ulubionych",           ID_FAVOURITES_ADDTOFAVOURITES
         , GRAYED
-        MENUITEM "&UsuÒ ulubiony",                 ID_FAVOURITES_REMOVEFAVOURITE
+        MENUITEM "&Usu≈Ñ ulubiony",                 ID_FAVOURITES_REMOVEFAVOURITE
         , GRAYED
     END
     POPUP "Pomo&c"
@@ -130,8 +129,8 @@ BEGIN
 	MENUITEM "&Modyfikuj",                     ID_EDIT_MODIFY
 	MENUITEM "Modyfikuj dane &binarne",        ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
-	MENUITEM "&UsuÒ\tDel",                     ID_EDIT_DELETE
-	MENUITEM "&ZmieÒ nazwÍ",                   ID_EDIT_RENAME
+	MENUITEM "&Usu≈Ñ\tDel",                     ID_EDIT_DELETE
+	MENUITEM "&Zmie≈Ñ nazwƒô",                   ID_EDIT_RENAME
   END
   POPUP ""
   BEGIN
@@ -139,44 +138,44 @@ BEGIN
         BEGIN
             MENUITEM "&Klucz",                    ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "WartoúÊ &ciπgu",             ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "WartoúÊ &binarna",           ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "WartoúÊ &DWORD",             ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "WartoúÊ &wielociπgu",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "WartoúÊ ciπgu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Warto≈õƒá &ciƒÖgu",             ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Warto≈õƒá &binarna",           ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Warto≈õƒá &DWORD",             ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Warto≈õƒá &wielociƒÖgu",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Warto≈õƒá ciƒÖgu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
   BEGIN
-        MENUITEM "RozwiÒ/ZwiÒ",                    ID_TREE_EXPANDBRANCH
+        MENUITEM "Rozwi≈Ñ/Zwi≈Ñ",                    ID_TREE_EXPANDBRANCH
         POPUP "&Nowy"
         BEGIN
             MENUITEM "&Klucz",                     ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "WartoúÊ &ciπgu",             ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "WartoúÊ &binarna",           ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "WartoúÊ &DWORD",             ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "WartoúÊ &wielociπgu",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "WartoúÊ ciπgu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Warto≈õƒá &ciƒÖgu",             ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Warto≈õƒá &binarna",           ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Warto≈õƒá &DWORD",             ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Warto≈õƒá &wielociƒÖgu",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Warto≈õƒá ciƒÖgu &rozwijalnego",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Znajdü",                        ID_EDIT_FIND
+        MENUITEM "&Znajd≈∫",                        ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "U&suÒ",                          ID_TREE_DELETE
-        MENUITEM "Z&mieÒ nazwÍ",                   ID_TREE_RENAME
+        MENUITEM "U&su≈Ñ",                          ID_TREE_DELETE
+        MENUITEM "Z&mie≈Ñ nazwƒô",                   ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Eksportuj",                         ID_TREE_EXPORT
         MENUITEM "&Uprawnienia..",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Kopiuj nazwÍ klucza",           ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kopiuj nazwƒô klucza",           ID_EDIT_COPYKEYNAME
   END
   POPUP ""
   BEGIN
         MENUITEM "W&ytnij", ID_HEXEDIT_CUT
         MENUITEM "&Kopiuj", ID_HEXEDIT_COPY
         MENUITEM "&Wklej", ID_HEXEDIT_PASTE
-        MENUITEM "&UsuÒ", ID_HEXEDIT_DELETE
+        MENUITEM "&Usu≈Ñ", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Zaznacz &ca≥oúÊ", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "Zaznacz &ca≈Ço≈õƒá", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -186,7 +185,7 @@ END
  */
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "£aduj drzewo"
+CAPTION "≈Åaduj drzewo"
 FONT 8, "Ms Shell Dlg"
 {
     LTEXT           "&Klucz:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
@@ -198,12 +197,12 @@ FONT 8, "Ms Shell Dlg"
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edytowanie ciπgu"
+CAPTION "Edytowanie ciƒÖgu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nazwa wartoúci:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nazwa warto≈õci:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Dane wartoúci:",IDC_STATIC,6,35,161,8
+    LTEXT           "&Dane warto≈õci:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,196,64,50,14
@@ -212,12 +211,12 @@ END
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edytowanie wielociπgu"
+CAPTION "Edytowanie wielociƒÖgu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nazwa wartoúci:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nazwa warto≈õci:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Dane &wartoúci:",IDC_STATIC,6,35,161,8
+    LTEXT           "Dane &warto≈õci:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,196,154,50,14
@@ -226,12 +225,12 @@ END
 IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edytowanie wartoúci binarnej"
+CAPTION "Edytowanie warto≈õci binarnej"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nazwa wartoúci:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nazwa warto≈õci:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Dane wartoúci:",IDC_STATIC,6,35,161,8
+    LTEXT           "&Dane warto≈õci:",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
     DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,196,154,50,14
@@ -241,19 +240,66 @@ END
 IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edytowanie wartoúci DWORD"
+CAPTION "Edytowanie warto≈õci DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nazwa wartoúci:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nazwa warto≈õci:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Dane &wartoúci:",IDC_STATIC,6,35,161,8
+    LTEXT           "Dane &warto≈õci:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
     GROUPBOX        "System",IDC_STATIC,130,35,116,39
     AUTORADIOBUTTON "&Szesnastkowy",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "&DziesiÍtny",IDC_FORMAT_DEC,141,59,60,10
+    AUTORADIOBUTTON "&Dziesiƒôtny",IDC_FORMAT_DEC,141,59,60,10
     DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,196,82,50,14
 END
+
+
+IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
+      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Resource List"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+    DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
+    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+}
+
+
+IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
+      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Resources"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
+    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
+    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    LTEXT "", IDC_VERSION, 205, 240, 66, 8
+    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    LTEXT "", IDC_REVISION, 205, 250, 66, 8
+    DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
+    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+}
+
 
 /*
  * String Table
@@ -275,87 +321,87 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "Zawiera polecenia do pracy z ca≥ym rejestrem"
-    ID_EDIT_MENU            "Zawiera polecenia do edycji wartoúci lub kluczy"
+    ID_REGISTRY_MENU        "Zawiera polecenia do pracy z ca≈Çym rejestrem"
+    ID_EDIT_MENU            "Zawiera polecenia do edycji warto≈õci lub kluczy"
     ID_VIEW_MENU            "Zawiera polecenia do dostosowywania okien rejestru"
-    ID_FAVOURITES_MENU      "Zawiera polecenia dla dostÍpu do czÍsto uøywanych klawiszy"
-    ID_HELP_MENU            "Zawiera polecenia do wyúwietlania Pomocy oraz informacji o Edytorze rejestru"
-    ID_EDIT_NEW_MENU        "Zawiera polecenia do tworzenia nowych kluczy lub wartoúci"
+    ID_FAVOURITES_MENU      "Zawiera polecenia dla dostƒôpu do czƒôsto u≈ºywanych klawiszy"
+    ID_HELP_MENU            "Zawiera polecenia do wy≈õwietlania Pomocy oraz informacji o Edytorze rejestru"
+    ID_EDIT_NEW_MENU        "Zawiera polecenia do tworzenia nowych kluczy lub warto≈õci"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_EDIT_MODIFY          "Zmienia dane wartoúci"
+    ID_EDIT_MODIFY          "Zmienia dane warto≈õci"
     ID_EDIT_NEW_KEY         "Dodaje nowy klucz"
-    ID_EDIT_NEW_STRINGVALUE "Dodaje nowπ wartoúÊ ciπgu"
-    ID_EDIT_NEW_BINARYVALUE "Dodaje nowπ wartoúÊ binarnπ"
-    ID_EDIT_NEW_DWORDVALUE  "Dodaje nowπ wartoúÊ DWORD"
+    ID_EDIT_NEW_STRINGVALUE "Dodaje nowƒÖ warto≈õƒá ciƒÖgu"
+    ID_EDIT_NEW_BINARYVALUE "Dodaje nowƒÖ warto≈õƒá binarnƒÖ"
+    ID_EDIT_NEW_DWORDVALUE  "Dodaje nowƒÖ warto≈õƒá DWORD"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importuje plik do rejestru"
     ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Eksportuje ca≥oúÊ lub czÍúÊ rejestru do pliku"
+                            "Eksportuje ca≈Ço≈õƒá lub czƒô≈õƒá rejestru do pliku"
     ID_REGISTRY_LOADHIVE
-                            "£aduje plik Drzewa do rejestru"
+                            "≈Åaduje plik Drzewa do rejestru"
     ID_REGISTRY_UNLOADHIVE
-                            "Wy≥adowuje Drzewo z rejestru"
+                            "Wy≈Çadowuje Drzewo z rejestru"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Po≥πczenie z rejestrem zdalnego komputera"
+                            "Po≈ÇƒÖczenie z rejestrem zdalnego komputera"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Od≥πcza od rejestru zdalnego komputera"
-    ID_REGISTRY_PRINT       "Drukuje ca≥oúÊ lub czÍúÊ rejestru"
+                            "Od≈ÇƒÖcza od rejestru zdalnego komputera"
+    ID_REGISTRY_PRINT       "Drukuje ca≈Ço≈õƒá lub czƒô≈õƒá rejestru"
 /*    ID_HELP_HELPTOPICS      "Otwiera Pomoc Edytora rejestru" */
-    ID_HELP_ABOUT           "Wyúwietla informacje o programie, numerze wersji i prawach autorskich"
+    ID_HELP_ABOUT           "Wy≈õwietla informacje o programie, numerze wersji i prawach autorskich"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "KoÒczy dzia≥anie Edytora rejestru"
-    ID_FAVOURITES_ADDTOFAVOURITES "Dodaje klawisze do listy elementÛw ulubionych"
-    ID_FAVOURITES_REMOVEFAVOURITE "Usuwa klawisze z listy elementÛw ulubionych"
+    ID_REGISTRY_EXIT        "Ko≈Ñczy dzia≈Çanie Edytora rejestru"
+    ID_FAVOURITES_ADDTOFAVOURITES "Dodaje klawisze do listy element√≥w ulubionych"
+    ID_FAVOURITES_REMOVEFAVOURITE "Usuwa klawisze z listy element√≥w ulubionych"
     ID_VIEW_STATUSBAR       "Pokazuje lub ukrywa pasek stanu"
-    ID_VIEW_SPLIT           "Zmienia pozycjÍ podzia≥u pomiÍdzy dwoma okienkami"
-    ID_VIEW_REFRESH         "Odúwieøa okno"
+    ID_VIEW_SPLIT           "Zmienia pozycjƒô podzia≈Çu pomiƒôdzy dwoma okienkami"
+    ID_VIEW_REFRESH         "Od≈õwie≈ºa okno"
     ID_EDIT_DELETE          "Usuwa zaznaczenie"
-    ID_EDIT_RENAME          "Zmienia nazwÍ zaznaczenia"
-    ID_EDIT_COPYKEYNAME     "Kopiuje nazwÍ wybranego klucza do schowka"
-    ID_EDIT_FIND            "Znajduje ciπg tekstowy w kluczu, wartoúci lub danych"
-    ID_EDIT_FINDNEXT        "Znajduje nastÍpne wystπpienie tekstu okreúlonego przy poprzednim szukaniu"
+    ID_EDIT_RENAME          "Zmienia nazwƒô zaznaczenia"
+    ID_EDIT_COPYKEYNAME     "Kopiuje nazwƒô wybranego klucza do schowka"
+    ID_EDIT_FIND            "Znajduje ciƒÖg tekstowy w kluczu, warto≈õci lub danych"
+    ID_EDIT_FINDNEXT        "Znajduje nastƒôpne wystƒÖpienie tekstu okre≈õlonego przy poprzednim szukaniu"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "B≥πd"
-    IDS_WARNING		    "Ostrzeøenie"
-    IDS_BAD_KEY             "Nie moøna odczytaÊ klucza '%s'"
-    IDS_BAD_VALUE           "Nie moøna odczytaÊ wartoúci '%s'"
-    IDS_UNSUPPORTED_TYPE    "Nie moøna edytowaÊ kluczy tego typu (%ld)"
-    IDS_TOO_BIG_VALUE       "WartoúÊ jest za duøa (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Dane typu REG_MULTI_SZ nie mogπ zawieraÊ pustych ciπgÛw.\nPusty ciπg zosta≥ usuniÍty z listy."
-    IDS_QUERY_DELETE_KEY_ONE    "Czy na pewno chcesz usunπÊ ten klucz?"
-    IDS_QUERY_DELETE_KEY_MORE   "Czy na pewno chcesz usunπÊ te klucze?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Potwierdzanie usuniÍcia klucza"
-    IDS_QUERY_DELETE_ONE    "Czy na pewno chcesz usunπÊ tÍ wartoúÊ?"
-    IDS_QUERY_DELETE_MORE   "Czy na pewno chcesz usunπÊ te wartoúci?"
-    IDS_QUERY_DELETE_CONFIRM "Potwierdzanie usuniÍcia wartoúci"
-    IDS_ERR_DELVAL_CAPTION  "B≥πd przy usuwaniu wartoúci"
-    IDS_ERR_DELETEVALUE     "Nie moøna usunπÊ wszystkich podanych wartoúci!"
-    IDS_ERR_RENVAL_CAPTION  "B≥πd przy zmianie wartoúci"
-    IDS_ERR_RENVAL_TOEMPTY  "Nie moøna zmieniÊ nazwy %s. Okreúlona nazwa klucza jest pusta. Wpisz innπ nazwÍ i sprÛbuj ponownie."
+    IDS_ERROR		    "B≈ÇƒÖd"
+    IDS_WARNING		    "Ostrze≈ºenie"
+    IDS_BAD_KEY             "Nie mo≈ºna odczytaƒá klucza '%s'"
+    IDS_BAD_VALUE           "Nie mo≈ºna odczytaƒá warto≈õci '%s'"
+    IDS_UNSUPPORTED_TYPE    "Nie mo≈ºna edytowaƒá kluczy tego typu (%ld)"
+    IDS_TOO_BIG_VALUE       "Warto≈õƒá jest za du≈ºa (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Dane typu REG_MULTI_SZ nie mogƒÖ zawieraƒá pustych ciƒÖg√≥w.\nPusty ciƒÖg zosta≈Ç usuniƒôty z listy."
+    IDS_QUERY_DELETE_KEY_ONE    "Czy na pewno chcesz usunƒÖƒá ten klucz?"
+    IDS_QUERY_DELETE_KEY_MORE   "Czy na pewno chcesz usunƒÖƒá te klucze?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Potwierdzanie usuniƒôcia klucza"
+    IDS_QUERY_DELETE_ONE    "Czy na pewno chcesz usunƒÖƒá tƒô warto≈õƒá?"
+    IDS_QUERY_DELETE_MORE   "Czy na pewno chcesz usunƒÖƒá te warto≈õci?"
+    IDS_QUERY_DELETE_CONFIRM "Potwierdzanie usuniƒôcia warto≈õci"
+    IDS_ERR_DELVAL_CAPTION  "B≈ÇƒÖd przy usuwaniu warto≈õci"
+    IDS_ERR_DELETEVALUE     "Nie mo≈ºna usunƒÖƒá wszystkich podanych warto≈õci!"
+    IDS_ERR_RENVAL_CAPTION  "B≈ÇƒÖd przy zmianie warto≈õci"
+    IDS_ERR_RENVAL_TOEMPTY  "Nie mo≈ºna zmieniƒá nazwy %s. Okre≈õlona nazwa klucza jest pusta. Wpisz innƒÖ nazwƒô i spr√≥buj ponownie."
     IDS_NEW_KEY             "Nowy klucz #%d"
-    IDS_NEW_VALUE           "Nowa wartoúÊ #%d"
+    IDS_NEW_VALUE           "Nowa warto≈õƒá #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(wartoúÊ binarna o d≥ugoúci zero)"
-    IDS_DEFAULT_VALUE_NAME  "(domyúlna)"
-    IDS_VALUE_NOT_SET       "(wartoúÊ nie ustalona)"
+    IDS_BINARY_EMPTY	    "(warto≈õƒá binarna o d≈Çugo≈õci zero)"
+    IDS_DEFAULT_VALUE_NAME  "(domy≈õlna)"
+    IDS_VALUE_NOT_SET       "(warto≈õƒá nie ustalona)"
     IDS_UNKNOWN_TYPE        "Nieznany typ: (0x%lx)"
-    IDS_MY_COMPUTER         "MÛj komputer"
+    IDS_MY_COMPUTER         "M√≥j komputer"
     IDS_IMPORT_REG_FILE     "Importuj plik rejestru"
     IDS_EXPORT_REG_FILE     "Eksportuj plik rejestru"
-    IDS_LOAD_HIVE           "£aduj Drzewo"
-    IDS_UNLOAD_HIVE         "Wy≥aduj Drzewo"
-    IDS_INVALID_DWORD       "(niew≥aúciwa wartoúÊ DWORD)"
+    IDS_LOAD_HIVE           "≈Åaduj Drzewo"
+    IDS_UNLOAD_HIVE         "Wy≈Çaduj Drzewo"
+    IDS_INVALID_DWORD       "(niew≈Ça≈õciwa warto≈õƒá DWORD)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -371,17 +417,17 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Pe≥na kontrola"
+  IDS_ACCESS_FULLCONTROL        "Pe≈Çna kontrola"
   IDS_ACCESS_READ               "Odczyt"
-  IDS_ACCESS_QUERYVALUE         "Badanie wartoúci"
-  IDS_ACCESS_SETVALUE           "Ustawianie wartoúci"
+  IDS_ACCESS_QUERYVALUE         "Badanie warto≈õci"
+  IDS_ACCESS_SETVALUE           "Ustawianie warto≈õci"
   IDS_ACCESS_CREATESUBKEY       "Tworzenie podklucza"
   IDS_ACCESS_ENUMERATESUBKEYS   "Wyliczanie podkluczy"
   IDS_ACCESS_NOTIFY             "Powiadamianie"
-  IDS_ACCESS_CREATELINK         "Tworzenie ≥πcza"
-  IDS_ACCESS_DELETE             "UsuÒ"
+  IDS_ACCESS_CREATELINK         "Tworzenie ≈ÇƒÖcza"
+  IDS_ACCESS_DELETE             "Usu≈Ñ"
   IDS_ACCESS_WRITEDAC           "Zapisywanie DAC"
-  IDS_ACCESS_WRITEOWNER         "Zapisywanie w≥aúciciela"
+  IDS_ACCESS_WRITEOWNER         "Zapisywanie w≈Ça≈õciciela"
   IDS_ACCESS_READCONTROL        "Kontrola odczytu"
 END
 
@@ -394,10 +440,70 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_EXPAND                     "&RozwiÒ"
-  IDS_COLLAPSE                   "&ZwiÒ"
-  IDS_GOTO_SUGGESTED_KEY         "&Idü do '%s'"
-  IDS_FINISHEDFIND               "Przeszukiwanie rejestru zakoÒczone."
+  IDS_EXPAND                     "&Rozwi≈Ñ"
+  IDS_COLLAPSE                   "&Zwi≈Ñ"
+  IDS_GOTO_SUGGESTED_KEY         "&Id≈∫ do '%s'"
+  IDS_FINISHEDFIND               "Przeszukiwanie rejestru zako≈Ñczone."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_IMPORT_PROMPT             "Czy dodaƒá dane do rejestru?"
+  IDS_IMPORTED_OK               "Dane dopisane do rejestru"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BUSNUMBER                 "Bus Number"
+    IDS_INTERFACE                 "Interface"
+    IDS_DMA_CHANNEL               "Channel"
+    IDS_DMA_PORT                  "Port"
+    IDS_INTERRUPT_VECTOR          "Vector"
+    IDS_INTERRUPT_LEVEL           "Level"
+    IDS_INTERRUPT_AFFINITY        "Affinity"
+    IDS_INTERRUPT_TYPE            "Type"
+    IDS_MEMORY_ADDRESS            "Physical Address"
+    IDS_MEMORY_LENGTH             "Length"
+    IDS_MEMORY_ACCESS             "Access"
+    IDS_PORT_ADDRESS              "Physical Address"
+    IDS_PORT_LENGTH               "Length"
+    IDS_PORT_ACCESS               "Access"
+    IDS_SPECIFIC_RESERVED1        "Reserved 1"
+    IDS_SPECIFIC_RESERVED2        "Reserved 2"
+    IDS_SPECIFIC_DATASIZE         "Data Size"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PORT_PORT_IO              "Port"
+    IDS_PORT_MEMORY_IO            "Memory"
+    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
+    IDS_MEMORY_READ_ONLY          "Read Only"
+    IDS_MEMORY_WRITE_ONLY         "Write Only"
+    IDS_MEMORY_READ_WRITE         "Read / Write"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BUS_UNDEFINED             "Undefined"
+    IDS_BUS_INTERNAL              "Internal"
+    IDS_BUS_ISA                   "ISA"
+    IDS_BUS_EISA                  "EISA"
+    IDS_BUS_MICROCHANNEL          "MicroChannel"
+    IDS_BUS_TURBOCHANNEL          "TurboChannel"
+    IDS_BUS_PCIBUS                "PCI"
+    IDS_BUS_VMEBUS                "VME"
+    IDS_BUS_NUBUS                 "NuBus"
+    IDS_BUS_PCMCIABUS             "PCMCIA"
+    IDS_BUS_CBUS                  "C-Bus"
+    IDS_BUS_MPIBUS                "MPI-Bus"
+    IDS_BUS_MPSABUS               "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
+    IDS_BUS_PNPISABUS             "PnP-ISA Bus"
+    IDS_BUS_PNPBUS                "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
 END
 
 /*****************************************************************/
@@ -414,7 +520,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
    GROUPBOX "Zakres eksportu",IDC_STATIC,2,0,366,48
    CONTROL "&Wszystko",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "Wy&brana ga≥πü",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   CONTROL "Wy&brana ga≈ÇƒÖ≈∫",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
@@ -431,7 +537,7 @@ END
 
 IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "UsuÒ z ulubionych"
+CAPTION "Usu≈Ñ z ulubionych"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
@@ -443,30 +549,30 @@ END
 
 IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Znajdü"
+CAPTION "Znajd≈∫"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Znajdü &NastÍpny",IDOK,197,7,50,14
+    DEFPUSHBUTTON   "Znajd≈∫ &Nastƒôpny",IDOK,197,7,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,197,24,50,14
     GROUPBOX        "Przeszukaj",IDC_STATIC,7,25,63,51
     LTEXT           "&Szukaj:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "&Klucze",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
-    CONTROL         "&Wartoúci",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Warto≈õci",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
     CONTROL         "&Dane",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         " &tylko ca≥e ciπgi",IDC_MATCHSTRING,"Button",
+    CONTROL         " &tylko ca≈Çe ciƒÖgi",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "UwzglÍdnij wie&lkoúÊ liter",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Uwzglƒôdnij wie&lko≈õƒá liter",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
-CAPTION "Znajdü"
+CAPTION "Znajd≈∫"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
@@ -493,7 +599,7 @@ END
  *STRINGTABLE DISCARDABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Otwiera pomoc Edytora Rejestru."
- *    ID_HELP_ABOUT           "Wyúwietla informacje o programie, numerze wersji, licencji."
+ *    ID_HELP_ABOUT           "Wy≈õwietla informacje o programie, numerze wersji, licencji."
  *END
  */
 

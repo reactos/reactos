@@ -1175,22 +1175,6 @@ KiI386PentiumLockErrataFixup(VOID)
 
 BOOLEAN
 NTAPI
-KeDisableInterrupts(VOID)
-{
-    ULONG Flags;
-    BOOLEAN Return;
-
-    /* Get EFLAGS and check if the interrupt bit is set */
-    Flags = __readeflags();
-    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
-
-    /* Disable interrupts */
-    _disable();
-    return Return;
-}
-
-BOOLEAN
-NTAPI
 KeInvalidateAllCaches(VOID)
 {
     /* Only supported on Pentium Pro and higher */

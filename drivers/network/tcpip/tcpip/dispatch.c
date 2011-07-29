@@ -171,6 +171,10 @@ VOID NTAPI DispCancelRequest(
     case TDI_CONNECT:
         DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
         break;
+            
+    case TDI_DISCONNECT:
+        DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        break;
 
     default:
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
@@ -259,7 +263,7 @@ NTSTATUS DispTdiAssociateAddress(
   PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  PCONNECTION_ENDPOINT Connection;
+  PCONNECTION_ENDPOINT Connection, LastConnection;
   PFILE_OBJECT FileObject;
   PADDRESS_FILE AddrFile = NULL;
   NTSTATUS Status;
@@ -340,15 +344,22 @@ NTSTATUS DispTdiAssociateAddress(
 
   /* Add connection endpoint to the address file */
   ReferenceObject(Connection);
-  AddrFile->Connection = Connection;
+  if (AddrFile->Connection == NULL)
+      AddrFile->Connection = Connection;
+  else
+  {
+      LastConnection = AddrFile->Connection;
+      while (LastConnection->Next != NULL)
+         LastConnection = LastConnection->Next;
+      LastConnection->Next = Connection;
+  }
 
-  /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
 
   UnlockObjectFromDpcLevel(AddrFile);
   UnlockObject(Connection, OldIrql);
 
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -425,10 +436,11 @@ NTSTATUS DispTdiDisassociateAddress(
  *     Status of operation
  */
 {
-  PCONNECTION_ENDPOINT Connection;
+  PCONNECTION_ENDPOINT Connection, LastConnection;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
   KIRQL OldIrql;
+  NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -458,19 +470,42 @@ NTSTATUS DispTdiDisassociateAddress(
 
   LockObjectAtDpcLevel(Connection->AddressFile);
 
-  /* Remove this connection from the address file */
-  DereferenceObject(Connection->AddressFile->Connection);
-  Connection->AddressFile->Connection = NULL;
+  /* Unlink this connection from the address file */
+  if (Connection->AddressFile->Connection == Connection)
+  {
+      Connection->AddressFile->Connection = Connection->Next;
+      DereferenceObject(Connection);
+      Status = STATUS_SUCCESS;
+  }
+  else
+  {
+      LastConnection = Connection->AddressFile->Connection;
+      while (LastConnection->Next != Connection && LastConnection->Next != NULL)
+         LastConnection = LastConnection->Next;
+      if (LastConnection->Next == Connection)
+      {
+          LastConnection->Next = Connection->Next;
+          DereferenceObject(Connection);
+          Status = STATUS_SUCCESS;
+      }
+      else
+      {
+          Status = STATUS_INVALID_PARAMETER;
+      }
+  }
 
   UnlockObjectFromDpcLevel(Connection->AddressFile);
 
-  /* Remove the address file from this connection */
-  DereferenceObject(Connection->AddressFile);
-  Connection->AddressFile = NULL;
+  if (Status == STATUS_SUCCESS)
+  {
+      /* Remove the address file from this connection */
+      DereferenceObject(Connection->AddressFile);
+      Connection->AddressFile = NULL;
+  }
 
   UnlockObject(Connection, OldIrql);
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 
@@ -514,6 +549,7 @@ NTSTATUS DispTdiDisconnect(
   Status = TCPDisconnect(
       TranContext->Handle.ConnectionContext,
       DisReq->RequestFlags,
+      DisReq->RequestSpecific,
       DisReq->RequestConnectionInformation,
       DisReq->ReturnConnectionInformation,
       DispDataRequestComplete,
@@ -602,7 +638,6 @@ NTSTATUS DispTdiListen(
 	  Status = STATUS_NO_MEMORY;
 
       if( NT_SUCCESS(Status) ) {
-          ReferenceObject(Connection->AddressFile);
 	  Connection->AddressFile->Listener->AddressFile =
 	      Connection->AddressFile;
 
@@ -705,10 +740,16 @@ NTSTATUS DispTdiQueryInformation(
           case TDI_CONNECTION_FILE:
             Endpoint =
 				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+                
+            Address->TAAddressCount = 1;
+            Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+            Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+            Address->Address[0].Address[0].sin_port = Endpoint->AddressFile->Port;
+            Address->Address[0].Address[0].in_addr = Endpoint->AddressFile->Address.Address.IPv4Address;
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
-			return TCPGetSockAddress( Endpoint, (PTRANSPORT_ADDRESS)Address, FALSE );
+            return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
@@ -718,51 +759,45 @@ NTSTATUS DispTdiQueryInformation(
 
     case TDI_QUERY_CONNECTION_INFO:
       {
-        PTDI_CONNECTION_INFORMATION AddressInfo;
-        PADDRESS_FILE AddrFile;
-        PCONNECTION_ENDPOINT Endpoint = NULL;
+        PTDI_CONNECTION_INFO ConnectionInfo;
+        PCONNECTION_ENDPOINT Endpoint;
 
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
-             sizeof(PVOID))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+        if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*ConnectionInfo)) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
           return STATUS_BUFFER_TOO_SMALL;
         }
 
-        AddressInfo = (PTDI_CONNECTION_INFORMATION)
+        ConnectionInfo = (PTDI_CONNECTION_INFO)
           MmGetSystemAddressForMdl(Irp->MdlAddress);
 
         switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-          case TDI_TRANSPORT_ADDRESS_FILE:
-            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-            Endpoint = AddrFile ? AddrFile->Connection : NULL;
-            break;
-
           case TDI_CONNECTION_FILE:
             Endpoint =
               (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-            break;
+            RtlZeroMemory(ConnectionInfo, sizeof(*ConnectionInfo));
+            return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
             return STATUS_INVALID_PARAMETER;
         }
-
-        if (!Endpoint) {
-          TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
-          return STATUS_INVALID_PARAMETER;
-        }
-
-        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
       }
 
       case TDI_QUERY_MAX_DATAGRAM_INFO:
       {
-         PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
+          PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;
+          
+          if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*MaxDatagramInfo)) {
+              TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+              return STATUS_BUFFER_TOO_SMALL;
+          }
+          
+          MaxDatagramInfo = (PTDI_MAX_DATAGRAM_INFO)
+            MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-         MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
+          MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
 
-         return STATUS_SUCCESS;
+          return STATUS_SUCCESS;
      }
   }
 

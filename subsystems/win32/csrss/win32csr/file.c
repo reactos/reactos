@@ -98,17 +98,6 @@ CSR_API(CsrDefineDosDevice)
 
         RequestLinkTarget =
             &Request->Data.DefineDosDeviceRequest.TargetName;
-        /*
-         * Strip off any trailing '\', if we leave a trailing slash the drive remains non-accessible.
-         * So working around it for now.
-         * FIXME: Need to fix this in the object manager ObpLookupObjectName()??, and remove this when the its fixed.
-         */
-        while (RequestLinkTarget->Length >= sizeof(WCHAR) &&
-               RequestLinkTarget->Buffer[(RequestLinkTarget->Length/sizeof(WCHAR)) - 1] == L'\\')
-        {
-            RequestLinkTarget->Length -= sizeof(WCHAR);
-        }
-
         lpBuffer = (PWSTR) RtlAllocateHeap(Win32CsrApiHeap,
                                            HEAP_ZERO_MEMORY,
                                            RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));

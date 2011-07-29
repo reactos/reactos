@@ -104,67 +104,67 @@ extern void InitOskitTCP( void );
 extern void DeinitOskitTCP( void );
 extern void TimerOskitTCP( int FastTimer, int SlowTimer );
 extern void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len );
-extern int  OskitTCPShutdown( void *socket, int disconn_type );
+extern int  OskitTCPShutdown( PCONNECTION_ENDPOINT connection, int disconn_type );
 extern int  OskitTCPSocket( void *Connection, void **ConnectionContext,
 			    int Af, int Type, int Proto );
 extern void RegisterOskitTCPEventHandlers
 ( POSKITTCP_EVENT_HANDLERS EventHandlers );
 extern void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 				     OSK_UINT IpHeaderLen );
-extern int OskitTCPReceive( void *socket,
+extern int OskitTCPReceive( PCONNECTION_ENDPOINT connection,
 			    void *Addr,
 			    OSK_PCHAR Data,
 			    OSK_UINT Len,
 			    OSK_UINT *OutLen,
 			    OSK_UINT Flags );
-extern int OskitTCPSend( void *socket,
+extern int OskitTCPSend( PCONNECTION_ENDPOINT connection,
 			 OSK_PCHAR Data,
 			 OSK_UINT Len,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-extern int OskitTCPConnect( void *socket,
+extern int OskitTCPConnect( PCONNECTION_ENDPOINT connection,
 			    void *nam, OSK_UINT namelen );
-extern int OskitTCPClose( void *socket );
+extern int OskitTCPClose( PCONNECTION_ENDPOINT connection );
 
-extern int OskitTCPBind( void *socket,
+extern int OskitTCPBind( PCONNECTION_ENDPOINT connection,
 			 void *nam, OSK_UINT namelen );
 
-extern int OskitTCPAccept( void *socket, void **new_socket,
+extern int OskitTCPAccept( PCONNECTION_ENDPOINT connection, void **new_socket,
 			   void *context, void *addr_out,
 			   OSK_UINT addr_len,
 			   OSK_UINT *out_addr_len,
 			   OSK_UINT finish_accept );
 
-extern int OskitTCPListen( void *socket, int backlog );
+extern int OskitTCPListen( PCONNECTION_ENDPOINT connection, int backlog );
 
-extern int OskitTCPRecv( void *connection,
+extern int OskitTCPRecv( PCONNECTION_ENDPOINT connection,
 			 OSK_PCHAR Data,
 			 OSK_UINT Len,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-int OskitTCPGetAddress( void *socket,
+int OskitTCPGetAddress( PCONNECTION_ENDPOINT connection,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort );
 
-int OskitTCPGetSockOpt(void *socket,
+int OskitTCPGetSockOpt(PCONNECTION_ENDPOINT connection,
                        int level,
                        int optname,
                        char *buffer,
                        int *size);
 
-int OskitTCPSetSockOpt(void *socket,
+int OskitTCPSetSockOpt(PCONNECTION_ENDPOINT connection,
                        int level,
                        int optname,
                        char *buffer,
                        int size);
 
-int OskitTCPDisconnect(void *socket);
+int OskitTCPDisconnect(PCONNECTION_ENDPOINT connection);
 
-int OskitTCPGetSocketError(void *socket);
+int OskitTCPGetSocketError(PCONNECTION_ENDPOINT connection);
 
 #undef errno
 

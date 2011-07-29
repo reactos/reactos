@@ -27,9 +27,7 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bienvenue dans l'assistant d'installation de ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Cet assistant installe ReactOS sur votre ordinateur. Il a "\
-          "besoin de certaines informations sur vous et votre ordinateur "\
-          "pour configurer ReactOS correctement.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Cet assistant installe ReactOS sur votre ordinateur. Il a besoin de certaines informations sur vous et votre ordinateur pour configurer ReactOS correctement.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Appuyez sur Suivant pour continuer l'installation.", IDC_STATIC, 115, 160, 189, 31
 END
 
@@ -39,13 +37,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, "\
-                    "(ou seulement des composants) qui ont été utilisés pour créer ReactOS :",
+    LTEXT           "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, (ou seulement des composants) qui ont été utilisés pour créer ReactOS :",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS est sous license GPL, ainsi si vous voulez le réutiliser ou le redistribuer "\
-                    "(ou seulement des composants) vous devez respecter la GPL",
+    LTEXT           "ReactOS est sous license GPL, ainsi si vous voulez le réutiliser ou le redistribuer (ou seulement des composants) vous devez respecter la GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Voir la GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Cliquez sur Suivant pour continuer l'installation.",IDC_STATIC,15,136,
@@ -74,14 +70,12 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Entrez un nom pour votre ordinateur de 15 caractères ou moins. "\
-          "Si vous êtes sur un réseau, le nom saisi doit être unique.",
+    LTEXT "Entrez un nom pour votre ordinateur de 15 caractères ou moins. Si vous êtes sur un réseau, le nom saisi doit être unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nom de l'ordinateur :", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "L'assistant va créer un compte utilisateur sur votre ordinateur appelé Administrateur. "\
-          "Vous pourrez utiliser ce compte pour avoir un accès complet à votre ordinateur.",
+    LTEXT "L'assistant va créer un compte utilisateur sur votre ordinateur appelé Administrateur. Vous pourrez utiliser ce compte pour avoir un accès complet à votre ordinateur.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Entrez le mot de passe Administrateur (14 caractères ou moins).",
           IDC_STATIC, 54, 87, 250, 8
@@ -98,9 +92,7 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "La localisation système correspond à la langue souhaitée "\
-          "pour les applications. Elle contrôle la manière dont les nombres, "\
-          "monnaies et dates sont affichées.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "La localisation système correspond à la langue souhaitée pour les applications. Elle contrôle la manière dont les nombres, monnaies et dates sont affichées.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pour changer la localisation système, cliquez sur Modifier.",
           IDC_STATIC, 53, 60, 184, 8
@@ -150,11 +142,9 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "L'assistant d'installation de ReactOS est terminé.",IDC_FINISHTITLE,115,9,195,37
-    LTEXT "Vous avez installé avec succès ReactOS.\n\n" \
-          "En cliquant sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Vous avez installé avec succès ReactOS.\n\nEn cliquant sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redémarrer "\
-          "votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redémarrer votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 160, 195, 31
 END
 
 

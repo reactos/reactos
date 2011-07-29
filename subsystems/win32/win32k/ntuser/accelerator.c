@@ -35,6 +35,10 @@
 #define NDEBUG
 #include <debug.h>
 
+UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
+HMENU FASTCALL IntGetSubMenu( HMENU hMenu, int nPos);
+UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
+
 /* FUNCTIONS *****************************************************************/
 
 INIT_FUNCTION
@@ -102,16 +106,14 @@ co_IntTranslateAccelerator(
       return FALSE;
    }
 
-   DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
-          UserGetKeyState(VK_SHIFT));
-   DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
-          UserGetKeyState(VK_CONTROL));
-   DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",
-          UserGetKeyState(VK_MENU));
+   DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",UserGetKeyState(VK_CONTROL));
+   DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",UserGetKeyState(VK_MENU));
+   DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",UserGetKeyState(VK_SHIFT));
 
    if (UserGetKeyState(VK_CONTROL) & 0x8000) mask |= FCONTROL;
    if (UserGetKeyState(VK_MENU) & 0x8000) mask |= FALT;
    if (UserGetKeyState(VK_SHIFT) & 0x8000) mask |= FSHIFT;
+   DPRINT("Mask 0x%x\n",mask);
 
    if (message == WM_CHAR || message == WM_SYSCHAR)
    {
@@ -129,7 +131,7 @@ co_IntTranslateAccelerator(
                  wParam, 0xff & HIWORD(lParam));
 
          if (mask == (fVirt & (FSHIFT | FCONTROL | FALT))) goto found;
-         DPRINT("but incorrect SHIFT/CTRL/ALT-state\n");
+         DPRINT("but incorrect SHIFT/CTRL/ALT-state mask %x fVirt %x\n",mask,fVirt);
       }
       else
       {
@@ -152,20 +154,13 @@ co_IntTranslateAccelerator(
 found:
    if (message == WM_KEYUP || message == WM_SYSKEYUP)
       mesg = 1;
-   else if (IntGetCaptureWindow())
-      mesg = 2;
-   else if (Window->style & WS_DISABLED)
-      mesg = 3;
    else
    {
-#if 0
       HMENU hMenu, hSubMenu, hSysMenu;
       UINT uSysStat = (UINT)-1, uStat = (UINT)-1, nPos;
       PMENU_OBJECT MenuObject, SubMenu;
-      MENU_ITEM MenuItem;
+      PMENU_ITEM MenuItem;
 
-//      hMenu = (UserGetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ? 0 : GetMenu(hWnd);
-//      hSysMenu = get_win_sys_menu(hWnd);
       hMenu = (Window->style & WS_CHILD) ? 0 : (HMENU)Window->IDMenu;
       hSysMenu = Window->SystemMenu;
       MenuObject = IntGetMenuObject(Window->SystemMenu);
@@ -173,41 +168,8 @@ found:
       /* find menu item and ask application to initialize it */
       /* 1. in the system menu */
       hSubMenu = hSysMenu;
-//      nPos = cmd;
-//      if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
-      nPos = IntGetMenuItemByFlag( MenuObject,
-                                   cmd,
-                                   MF_BYCOMMAND,
-                                  &SubMenu,
-                                  &MenuItem,
-                                   NULL);
-
-      if (MenuItem && (nPos != (UINT)-1))
+      if (MenuObject)
       {
-         hSubMenu = MenuItem.hSubMenu;
-
-         if (IntGetCaptureWindow())
-             mesg = 2;
-         if (Window->style & WS_DISABLED)
-             mesg = 3;
-         else
-         {                                               
-            co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
-            if(hSubMenu != hSysMenu)
-            {
-               nPos = MENU_FindSubMenu(&hSysMenu, hSubMenu);
-               DPRINT("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
-               co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
-            }
-            uSysStat = GetMenuState(GetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
-         }
-      }
-      else /* 2. in the window's menu */
-      {
-         MenuObject = IntGetMenuObject(hMenu);
-         hSubMenu = hMenu;
-//         nPos = cmd;
-//         if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
          nPos = IntGetMenuItemByFlag( MenuObject,
                                       cmd,
                                       MF_BYCOMMAND,
@@ -217,24 +179,58 @@ found:
 
          if (MenuItem && (nPos != (UINT)-1))
          {
+            hSubMenu = MenuItem->hSubMenu;
+
             if (IntGetCaptureWindow())
                 mesg = 2;
             if (Window->style & WS_DISABLED)
                 mesg = 3;
             else
-            {
-               co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
-               if(hSubMenu != hMenu)
+            {                                               
+               co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
+               if (hSubMenu != hSysMenu)
                {
-                  nPos = MENU_FindSubMenu(&hMenu, hSubMenu);
-                  DPRINT("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
-                  co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
+                  nPos = IntFindSubMenu(&hSysMenu, hSubMenu);
+                  DPRINT("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
+                  co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
                }
-               uStat = GetMenuState(hMenu, cmd, MF_BYCOMMAND);
+            uSysStat = IntGetMenuState(IntGetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
+            }
+         }
+         else /* 2. in the window's menu */
+         {
+            MenuObject = IntGetMenuObject(hMenu);
+            hSubMenu = hMenu;
+            if (MenuObject)
+            {
+               nPos = IntGetMenuItemByFlag( MenuObject,
+                                            cmd,
+                                            MF_BYCOMMAND,
+                                           &SubMenu,
+                                           &MenuItem,
+                                            NULL);
+
+               if (MenuItem && (nPos != (UINT)-1))
+               {
+                  if (IntGetCaptureWindow())
+                      mesg = 2;
+                  if (Window->style & WS_DISABLED)
+                      mesg = 3;
+                  else
+                  {
+                     co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
+                     if (hSubMenu != hMenu)
+                     {
+                        nPos = IntFindSubMenu(&hMenu, hSubMenu);
+                        DPRINT("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
+                        co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
+                     }
+                     uStat = IntGetMenuState(hMenu, cmd, MF_BYCOMMAND);
+                  }
+               }
             }
          }
       }
-
       if (mesg == 0)
       {
          if (uSysStat != (UINT)-1)
@@ -264,10 +260,6 @@ found:
             }
          }
       }
-#else
-      DPRINT1("Menu search not implemented\n");
-      mesg = WM_COMMAND;
-#endif
    }
 
    if (mesg == WM_COMMAND)
@@ -291,7 +283,7 @@ found:
        *   #5: it's a menu option, but window is iconic
        *   #6: it's a menu option, but disabled
        */
-      DPRINT(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
+      DPRINT1(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
       if (mesg == 0)
       {
          DPRINT1(" unknown reason - please report!");
@@ -434,8 +426,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-
 BOOLEAN
 APIENTRY
 NtUserDestroyAcceleratorTable(
@@ -472,7 +462,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
 
 int
 APIENTRY

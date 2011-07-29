@@ -1404,7 +1404,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
     ULONGLONG m1, m2;
 
     /*  check for unpartitioned space  */
-    m1 = PartEntry->UnpartitionedLength; 
+    m1 = PartEntry->UnpartitionedLength;
     m1 = (m1 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
 
     if( m1 > RequiredPartitionDiskSpace)
@@ -2448,75 +2448,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                 PartEntry->New = FALSE;
 
                 CheckActiveBootPartition(PartitionList);
-            }
-
-            if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
-            {
-                /* FIXME: Install boot code. This is a hack! */
-                if ((PartEntry->PartInfo[PartNum].PartitionType == PARTITION_FAT32_XINT13) ||
-                    (PartEntry->PartInfo[PartNum].PartitionType == PARTITION_FAT32))
-                {
-                    wcscpy(PathBuffer, SourceRootPath.Buffer);
-                    wcscat(PathBuffer, L"\\loader\\fat32.bin");
-
-                    DPRINT("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
-                           DestinationRootPath.Buffer);
-
-                    Status = InstallFat32BootCodeToDisk(PathBuffer,
-                                                        DestinationRootPath.Buffer);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        DPRINT1("InstallFat32BootCodeToDisk() failed with status 0x%08lx\n", Status);
-                        /* FIXME: show an error dialog */
-                        DestroyFileSystemList(FileSystemList);
-                        FileSystemList = NULL;
-                        return QUIT_PAGE;
-                    }
-                }
-                else
-                {
-                    wcscpy(PathBuffer, SourceRootPath.Buffer);
-                    wcscat(PathBuffer, L"\\loader\\fat.bin");
-
-                    DPRINT("Install FAT bootcode: %S ==> %S\n", PathBuffer,
-                           DestinationRootPath.Buffer);
-
-                    Status = InstallFat16BootCodeToDisk(PathBuffer,
-                                                        DestinationRootPath.Buffer);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        DPRINT1("InstallFat16BootCodeToDisk() failed with status 0x%.08x\n", Status);
-                        /* FIXME: show an error dialog */
-                        DestroyFileSystemList(FileSystemList);
-                        FileSystemList = NULL;
-                        return QUIT_PAGE;
-                    }
-                }
-            }
-            else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
-            {
-                wcscpy(PathBuffer, SourceRootPath.Buffer);
-                wcscat(PathBuffer, L"\\loader\\ext2.bin");
-
-                DPRINT("Install EXT2 bootcode: %S ==> %S\n", PathBuffer,
-                       DestinationRootPath.Buffer);
-
-                Status = InstallFat32BootCodeToDisk(PathBuffer,
-                                                    DestinationRootPath.Buffer);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("InstallFat32BootCodeToDisk() failed with status 0x%08lx\n", Status);
-                    /* FIXME: show an error dialog */
-                    DestroyFileSystemList(FileSystemList);
-                    FileSystemList = NULL;
-                    return QUIT_PAGE;
-                }
-            }
-            else if (FileSystemList->Selected->FormatFunc)
-            {
-                DestroyFileSystemList(FileSystemList);
-                FileSystemList = NULL;
-                return QUIT_PAGE;
             }
 
 #ifndef NDEBUG
@@ -3606,10 +3537,10 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
     UCHAR PartitionType;
     NTSTATUS Status;
-    
+
     PartitionType = PartitionList->ActiveBootPartition->
                     PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
-    
+
     Status = InstallVBRToPartition(&SystemRootPath,
                                    &SourceRootPath,
                                    &DestinationArcPath,
@@ -3619,7 +3550,7 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
-    
+
     return SUCCESS_PAGE;
 }
 
@@ -3649,10 +3580,10 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     swprintf(DestinationDevicePathBuffer,
              L"\\Device\\Harddisk%d\\Partition0",
              PartitionList->ActiveBootDisk->DiskNumber);
-    
+
     wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
     wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
-        
+
     DPRINT("Install MBR bootcode: %S ==> %S\n",
             SourceMbrPathBuffer, DestinationDevicePathBuffer);
 
@@ -3936,7 +3867,7 @@ RunUSetup(VOID)
             case BOOT_LOADER_HARDDISK_MBR_PAGE:
                 Page = BootLoaderHarddiskMbrPage(&Ir);
                 break;
-                
+
             case BOOT_LOADER_HARDDISK_VBR_PAGE:
                 Page = BootLoaderHarddiskVbrPage(&Ir);
                 break;

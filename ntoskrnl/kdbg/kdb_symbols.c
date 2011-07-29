@@ -122,7 +122,8 @@ KdbpSymFindModule(
  */
 BOOLEAN
 KdbSymPrintAddress(
-    IN PVOID Address)
+    IN PVOID Address,
+    IN PKTRAP_FRAME Context)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG_PTR RelativeAddress;
@@ -248,6 +249,7 @@ KdbpSymAddCachedFile(
     IN PROSSYM_INFO RosSymInfo)
 {
     PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
+    KIRQL Irql;
 
     DPRINT("Adding symbol file: RosSymInfo = %p\n", RosSymInfo);
 
@@ -264,7 +266,9 @@ KdbpSymAddCachedFile(
     ASSERT(CacheEntry->FileName.Buffer);
     CacheEntry->RefCount = 1;
     CacheEntry->RosSymInfo = RosSymInfo;
-    InsertTailList(&SymbolFileListHead, &CacheEntry->ListEntry); /* FIXME: Lock list? */
+    KeAcquireSpinLock(&SymbolFileListLock, &Irql);
+    InsertTailList(&SymbolFileListHead, &CacheEntry->ListEntry);
+    KeReleaseSpinLock(&SymbolFileListLock, Irql);
 }
 
 /*! \brief Remove a symbol file (reference) from the cache.
@@ -401,11 +405,23 @@ KdbSymProcessSymbols(
     if (LdrEntry->PatchInformation)
         KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
 
-	/* Error loading symbol info, try to load it from file */
-	KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
+    /* Load new symbol information */
+    if (! RosSymCreateFromMem(LdrEntry->DllBase,
+        LdrEntry->SizeOfImage,
+        (PROSSYM_INFO*)&LdrEntry->PatchInformation))
+    {
+        /* Error loading symbol info, try to load it from file */
+        KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
             (PROSSYM_INFO*)&LdrEntry->PatchInformation);
 
-	/* It already added symbols to cache */
+        /* It already added symbols to cache */
+    }
+    else
+    {
+        /* Add file to cache */
+        KdbpSymAddCachedFile(&LdrEntry->FullDllName, LdrEntry->PatchInformation);
+    }
+
     DPRINT("Installed symbols: %wZ@%p-%p %p\n",
            &LdrEntry->BaseDllName,
            LdrEntry->DllBase,
@@ -510,7 +526,7 @@ KdbInitialize(
 
         RosSymInitKernelMode();
     }
-    else if (BootPhase == 3)
+    else if (BootPhase == 1)
     {
         /* Load symbols for NTOSKRNL.EXE.
            It is always the first module in PsLoadedModuleList. KeLoaderBlock can't be used here as its content is just temporary. */

@@ -1,13 +1,8 @@
 
 set_unicode()
-
 include_directories(${REACTOS_BINARY_DIR}/include/reactos)
-
 add_library(netevent SHARED netevt.rc)
-
-set_module_type(netevent win32dll)
-
-add_importlibs(netevent msvcrt kernel32)
-
+set_entrypoint(netevent 0)
+set_image_base(netevent ${baseaddress_netevent}) 
 add_dependencies(netevent neteventmsg)
 add_cd_file(TARGET netevent DESTINATION reactos/system32 FOR all)

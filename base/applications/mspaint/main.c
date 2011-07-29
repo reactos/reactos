@@ -8,25 +8,7 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-#include <stdio.h>
-#include <tchar.h>
-#include "definitions.h"
-
-#include "drawing.h"
-#include "dib.h"
-
-#include "globalvar.h"
-#include "history.h"
-#include "mouse.h"
-
-#include "winproc.h"
-#include "palette.h"
-#include "toolsettings.h"
-#include "selection.h"
-#include "sizebox.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -43,10 +25,10 @@ int undoSteps = 0;
 int redoSteps = 0;
 BOOL imageSaved = TRUE;
 
-short startX;
-short startY;
-short lastX;
-short lastY;
+LONG startX;
+LONG startY;
+LONG lastX;
+LONG lastY;
 int lineWidth = 1;
 int shapeStyle = 0;
 int brushStyle = 0;
@@ -168,8 +150,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     wincl.lpfnWndProc       = WindowProcedure;
     wincl.style             = CS_DBLCLKS;
     wincl.cbSize            = sizeof(WNDCLASSEX);
-    wincl.hIcon             = LoadIcon(NULL, IDI_APPLICATION);
-    wincl.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(500));
+    wincl.hIcon             = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wincl.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
     wincl.hCursor           = LoadCursor(NULL, IDC_ARROW);
     wincl.lpszMenuName      = NULL;
     wincl.cbClsExtra        = 0;

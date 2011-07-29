@@ -62,7 +62,7 @@ _HalpCalibrateStallExecution@0:
     sub esp, 12
 
     /* Save EFLAGS and kill interrupts */
-    pushf
+    pushfd
     cli
     
     /* Get the current interrupt mask on the PICs */

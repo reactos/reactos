@@ -61,53 +61,76 @@ DrawActiveCell(PMAP infoPtr,
 static
 VOID
 DrawGrid(PMAP infoPtr,
-         HDC hdc)
+         PAINTSTRUCT *ps)
 {
     INT x, y;
+    RECT rc;
+    PCELL Cell;
 
     for (y = 0; y < YCELLS; y++)
     for (x = 0; x < XCELLS; x++)
     {
-        Rectangle(hdc,
-                  infoPtr->Cells[y][x].CellExt.left,
-                  infoPtr->Cells[y][x].CellExt.top,
-                  infoPtr->Cells[y][x].CellExt.right,
-                  infoPtr->Cells[y][x].CellExt.bottom);
-    }
+        Cell = &infoPtr->Cells[y][x];
 
-    if (infoPtr->pActiveCell)
-        DrawActiveCell(infoPtr,
-                       hdc);
+        if (!IntersectRect(&rc,
+                           &ps->rcPaint,
+                           &Cell->CellExt))
+        {
+            continue;
+        }
+
+        Rectangle(ps->hdc,
+                  Cell->CellExt.left,
+                  Cell->CellExt.top,
+                  Cell->CellExt.right,
+                  Cell->CellExt.bottom);
+
+        if (infoPtr->pActiveCell == Cell)
+        {
+            DrawActiveCell(infoPtr, ps->hdc);
+        }
+    }
 }
 
 
 static
 VOID
 FillGrid(PMAP infoPtr,
-         HDC hdc)
+         PAINTSTRUCT *ps)
 {
     HFONT hOldFont;
     WCHAR ch;
     INT x, y;
+    RECT rc;
+    PCELL Cell;
 
-    hOldFont = SelectObject(hdc,
+    hOldFont = SelectObject(ps->hdc,
                             infoPtr->hFont);
 
     for (y = 0; y < YCELLS; y++)
     for (x = 0; x < XCELLS; x++)
     {
+        Cell = &infoPtr->Cells[y][x];
+
+        if (!IntersectRect(&rc,
+                           &ps->rcPaint,
+                           &Cell->CellExt))
+        {
+            continue;
+        }
+
         ch = (WCHAR)((XCELLS * (y + infoPtr->iYStart)) + x);
 
-        TagFontToCell(&infoPtr->Cells[y][x], ch);
+        TagFontToCell(Cell, ch);
 
-        DrawTextW(hdc,
+        DrawTextW(ps->hdc,
                   &ch,
                   1,
-                  &infoPtr->Cells[y][x].CellInt,
+                  &Cell->CellInt,
                   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
 
-    SelectObject(hdc,
+    SelectObject(ps->hdc,
                  hOldFont);
 }
 
@@ -187,6 +210,10 @@ SetFont(PMAP infoPtr,
 {
     HDC hdc;
 
+    /* Destroy Zoom window, since it was created with older font */
+    DestroyWindow(infoPtr->hLrgWnd);
+    infoPtr->hLrgWnd = NULL;
+
     if (infoPtr->hFont)
         DeleteObject(infoPtr->hFont);
 
@@ -207,6 +234,13 @@ SetFont(PMAP infoPtr,
     InvalidateRect(infoPtr->hMapWnd,
                    NULL,
                    TRUE);
+
+    /* Test if zoom window must be reopened */
+    if (infoPtr->pActiveCell != NULL &&
+        infoPtr->pActiveCell->bLarge)
+    {
+        CreateLargeCell(infoPtr);
+    }
 }
 
 
@@ -391,6 +425,11 @@ OnVScroll(PMAP infoPtr,
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
     {
+        if (infoPtr->hLrgWnd != NULL)
+        {
+            ShowWindow(infoPtr->hLrgWnd, SW_HIDE);
+        }
+
         SetScrollPos(infoPtr->hMapWnd,
                      SB_VERT,
                      infoPtr->iYStart,
@@ -416,6 +455,11 @@ OnVScroll(PMAP infoPtr,
             InvalidateRect(infoPtr->hMapWnd,
                            NULL,
                            TRUE);
+        }
+
+        if (infoPtr->hLrgWnd != NULL)
+        {
+            ShowWindow(infoPtr->hLrgWnd, SW_SHOW);
         }
     }
 }
@@ -450,11 +494,9 @@ OnPaint(PMAP infoPtr,
         }
     }
 
-    DrawGrid(infoPtr,
-             hdc);
+    DrawGrid(infoPtr, &ps);
 
-    FillGrid(infoPtr,
-             hdc);
+    FillGrid(infoPtr, &ps);
 
     if (wParam == 0)
     {

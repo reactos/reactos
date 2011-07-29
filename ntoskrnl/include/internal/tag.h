@@ -8,10 +8,20 @@
 /* formely located in include/callback.h */
 #define CALLBACK_TAG        'KBLC'
 
+/* formely located in dbg/dbgkobj.c */
+#define TAG_DEBUG_EVENT     'EgbD'
+
 /* formerly located in ex/resource.c */
 #define TAG_RESOURCE_TABLE      'aTeR'
 #define TAG_RESOURCE_EVENT      'aTeR'
 #define TAG_RESOURCE_SEMAPHORE  'aTeR'
+
+/* formerly located in ex/handle.c */
+#define TAG_OBJECT_TABLE 'btbO'
+
+/* formerly located in ex/init.c */
+#define TAG_INIT 'tinI'
+#define TAG_RTLI 'iltR'
 
 /* formerly located in fs/notify.c */
 #define FSRTL_NOTIFY_TAG 'ITON'
@@ -92,6 +102,7 @@
 #define TAG_DRIVER_MEM  'MVRD' /* drvm */
 #define TAG_MODULE_OBJECT 'omlk' /* klmo - kernel ldr module object */
 #define TAG_LDR_WSTR 'swlk' /* klws - kernel ldr wide string */
+#define TAG_LDR_IMPORTS 'klim' /* klim - kernel ldr imports */
 
 /* formerly located in lpc/connect */
 #define TAG_LPC_CONNECT_MESSAGE   'CCPL'
@@ -101,6 +112,7 @@
 
 /* formerly located in mm/marea.c */
 #define TAG_MAREA   'ERAM'
+#define TAG_MVAD    'VADM'
 
 /* formerly located in mm/pageop.c */
 #define TAG_MM_PAGEOP   'POPM'
@@ -114,6 +126,9 @@
 /* formerly located in mm/rmap.c */
 #define TAG_RMAP    'PAMR'
 
+/* formerly located in mm/ARM3/section.c */
+#define TAG_MM      '  mM'
+
 /* formerly located in mm/section.c */
 #define TAG_MM_SECTION_SEGMENT   'SSMM'
 #define TAG_SECTION_PAGE_TABLE   'TPSM'
@@ -122,6 +137,9 @@
 #define TAG_OBJECT_TYPE         'TjbO'
 #define TAG_SYMLINK_TTARGET     'TTYS'
 #define TAG_SYMLINK_TARGET      'TMYS'
+
+/* formerly located in ob/obsdcach.c */
+#define TAG_OB_SD_CACHE         'cSbO'
 
 /* Object Manager Tags */
 #define OB_NAME_TAG             'mNbO'
@@ -152,6 +170,11 @@
 
 /* formerly located in se/sd.c */
 #define TAG_SD     'dSeS'
+
+/* formerly located in se/token.c */
+#define TAG_TOKEN_USERS       'uKOT'
+#define TAG_TOKEN_PRIVILAGES  'pKOT'
+#define TAG_TOKEN_ACL         'kDOT'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE   'McpL'

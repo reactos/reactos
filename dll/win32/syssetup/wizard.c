@@ -1453,7 +1453,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
       if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
                            sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
       {
-        wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
+        wcscpy(ErrorLocalTime, L"Setup was unable to set the local time.");
       }
       MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
       return FALSE;
@@ -1469,8 +1469,6 @@ DateTimePageDlgProc(HWND hwndDlg,
                     LPARAM lParam)
 {
   PSETUPDATA SetupData;
-  WCHAR Title[64];
-  WCHAR ErrorLocalTime[256];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -1525,23 +1523,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
               case PSN_WIZNEXT:
                 {
-                  GetLocalSystemTime(hwndDlg, SetupData);
-                  SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-                                   SetupData);
-                  SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
-                  if(!SetSystemLocalTime(hwndDlg, SetupData))
-                  {
-                    if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
-                    {
-                      wcscpy(Title, L"ReactOS Setup");
-                    }
-                    if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
-                                         sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
-                    {
-                      wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
-                    }
-                    MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
-                  }
+                    WriteDateTimeSettings(hwndDlg, SetupData);
                 }
                 break;
 
@@ -1939,7 +1921,7 @@ SetInstallationCompleted(VOID)
   HKEY hKey = 0;
   DWORD InProgress = 0;
   DWORD InstallDate;
-  
+
   if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\Setup",
                      0,
@@ -1949,7 +1931,7 @@ SetInstallationCompleted(VOID)
     RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
     RegCloseKey( hKey );
   }
-  
+
   if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
                      L"Software\\Microsoft\\Windows NT\\CurrentVersion",
                      0,
@@ -2251,7 +2233,7 @@ GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
     {
         WCHAR szBuffer[MAX_PATH];
         wcscpy(szBuffer, szDrive);
-        wcscat(szBuffer, L"reactos\\ntoskrnl.exe");
+        wcscat(szBuffer, L"reactos\\system32\\ntoskrnl.exe");
         LogItem(SYSSETUP_SEVERITY_INFORMATION, szBuffer);
         if (FileExists(szBuffer, NULL))
         {
@@ -2401,7 +2383,7 @@ InstallWizard(VOID)
   hWnd = (HWND)PropertySheet(&psh);
   ShowWindow(hWnd, SW_SHOW);
 
-  while (GetMessage(&msg, NULL, 0, 0)) 
+  while (GetMessage(&msg, NULL, 0, 0))
   {
     if(!IsDialogMessage(hWnd, &msg))
     {

@@ -209,7 +209,7 @@ wmain(VOID)
 	pExpungeConsoleCommandHistoryW = (ExpungeConsoleCommandHistoryW_t)GetProcAddress( hKernel32,  "ExpungeConsoleCommandHistoryW");
 
 	assert(pGetConsoleCommandHistoryW && pGetConsoleCommandHistoryLengthW &&
-		pSetConsoleNumberOfCommandsW && pSetConsoleNumberOfCommandsW);
+		pSetConsoleNumberOfCommandsW && pExpungeConsoleCommandHistoryW);
 
     /* Skip the application name */
     GetArg(&pArgStart, &pArgEnd);

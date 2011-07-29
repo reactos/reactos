@@ -10,20 +10,20 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDM_CONSOLEROOT MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "В&ихід\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Р’&РёС…С–Рґ\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Довідка"
+    POPUP "&Р”РѕРІС–РґРєР°"
     BEGIN
-        MENUITEM "&Про консоль керування ReactOS...", ID_HELP_ABOUT
+        MENUITEM "&РџСЂРѕ РєРѕРЅСЃРѕР»СЊ РєРµСЂСѓРІР°РЅРЅСЏ ReactOS...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE "Консоль керування ReactOS"
-    IDS_CONSOLETITLE "Консоль%1!u!"
+    IDS_APPTITLE "РљРѕРЅСЃРѕР»СЊ РєРµСЂСѓРІР°РЅРЅСЏ ReactOS"
+    IDS_CONSOLETITLE "РљРѕРЅСЃРѕР»СЊ%1!u!"
 END

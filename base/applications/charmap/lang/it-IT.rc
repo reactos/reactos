@@ -43,7 +43,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE,  "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE,  "Questo programma Ã¨ software libero; puÃ² redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma Ã¨ distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se cosÃ¬ non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
   IDS_ABOUT     "&Informazioni su..."
   IDS_TITLE     "Mappa caratteri"
 END

@@ -6,6 +6,10 @@ add_definitions(
     -D__WINESRC__
     -DROS_Headers)
 
+if (MSVC)
+    add_compiler_flags(/EHa-)
+endif()
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 

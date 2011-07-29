@@ -675,7 +675,6 @@ NtGdiDrawStream                                  3
 #
 #
 #ReactOS specific syscalls
-NtGdiSetDIBits                          7
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowOrgEx                     4
 NtGdiGetFontFamilyInfo                  4
@@ -684,7 +683,6 @@ NtGdiOffsetWindowOrgEx                  4
 #
 NtUserBuildMenuItemList                 4
 NtUserGetMenuDefaultItem                3
-NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3
 NtUserGetMonitorInfo                    2
 NtUserMenuInfo                          3

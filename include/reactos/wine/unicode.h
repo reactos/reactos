@@ -1,5 +1,12 @@
-#ifndef _WINE_UNICODE_H
-#define _WINE_UNICODE_H
+/*
+ * PROJECT:    ReactOS
+ * LICENSE:    LGPL v2.1 or any later version
+ * PURPOSE:    Map Wine's Unicode functions to native wcs* functions wherever possible
+ * AUTHORS:    ?
+ */
+
+#ifndef __WINE_WINE_UNICODE_H
+#define __WINE_WINE_UNICODE_H
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -8,6 +15,14 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
+
+#ifndef WINE_UNICODE_API
+#define WINE_UNICODE_API
+#endif
+
+#ifndef WINE_UNICODE_INLINE
+#define WINE_UNICODE_INLINE static inline
+#endif
 
 #define memicmpW(s1,s2,n) _wcsnicmp((const wchar_t *)(s1),(const wchar_t *)(s2),(n))
 #define strlenW(s) wcslen((const wchar_t *)(s))
@@ -25,6 +40,7 @@
 #define strncmpiW(s1,s2,n) _wcsnicmp((const wchar_t *)(s1),(const wchar_t *)(s2),(n))
 #define strtoulW(s1,s2,b) wcstoul((const wchar_t *)(s1),(wchar_t **)(s2),(b))
 #define strspnW(str, accept) wcsspn((const wchar_t *)(str), (const wchar_t *)(accept))
+#define strpbrkW(str, accept) wcspbrk((const wchar_t *)(str), (const wchar_t *)(accept))
 #define tolowerW(n) towlower((n))
 #define toupperW(n) towupper((n))
 #define islowerW(n) iswlower((n))
@@ -44,28 +60,6 @@
 #define snprintfW _snwprintf
 #define vsnprintfW _vsnwprintf
 #define isprintW iswprint
-
-#ifndef WINE_UNICODE_API
-# if defined(_MSC_VER)
-#  define WINE_UNICODE_API __declspec(dllimport)
-# else
-#  define WINE_UNICODE_API __attribute__((dllimport))
-# endif
-#endif
-
-#ifndef __VALIST
-#ifdef __GNUC__
-#define __VALIST __gnuc_va_list
-#else
-#define __VALIST char*
-#endif
-#endif /* defined __VALIST  */
-
-static __inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
-{
-    for ( ; *str; str++) if (strchrW( accept, *str )) return (WCHAR *)str;
-    return NULL;
-}
 
 static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {

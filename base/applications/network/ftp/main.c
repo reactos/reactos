@@ -28,26 +28,7 @@ static char sccsid[] = "@(#)main.c	based on 5.13 (Berkeley) 3/14/89";
 /*
  * FTP User Program -- Command Interface.
  */
-#ifndef _WIN32
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <arpa/ftp.h>
-#include <errno.h>
-#include <pwd.h>
-#endif
-#include "ftp_var.h"
-#include "prototypes.h"
-#include <sys/types.h>
-
-#include <io.h>
-#include <fcntl.h>
-
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-
+#include "precomp.h"
 
 #if defined(sun) && !defined(FD_SET)
 typedef int uid_t;

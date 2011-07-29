@@ -12,7 +12,8 @@
 #include <setupapi.h>
 #include <commctrl.h>
 #include <ddraw.h>
-
+#include <initguid.h>
+#include <devguid.h>
 #include <mmreg.h>
 #include <wintrust.h>
 #include <softpub.h>

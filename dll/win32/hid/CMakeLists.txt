@@ -9,12 +9,10 @@ list(APPEND SOURCE
 
 spec2def(hid.dll hid.spec)
 
-add_library(hid SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/hid_precomp.h.gch
-    ${SOURCE})
+add_library(hid SHARED ${SOURCE})
 
 set_module_type(hid win32dll)
 
 add_importlibs(hid msvcrt kernel32 ntdll)
-add_pch(hid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(hid precomp.h)
 add_cd_file(TARGET hid DESTINATION reactos/system32 FOR all)

@@ -9,7 +9,7 @@ list(APPEND SOURCE
     slayer.rc
     ${CMAKE_CURRENT_BINARY_DIR}/slayer.def)
 
-add_library(slayer SHARED ${CMAKE_CURRENT_BINARY_DIR}/slayer_precomp.h.gch ${SOURCE})
+add_library(slayer SHARED ${SOURCE})
 
 set_module_type(slayer win32dll)
 
@@ -25,6 +25,6 @@ add_importlibs(slayer
     kernel32
     ntdll)
 
-add_pch(slayer ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(slayer precomp.h)
 
 add_cd_file(TARGET slayer DESTINATION reactos/system32 FOR all)

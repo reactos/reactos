@@ -1,11 +1,5 @@
 /*
  * Polish resources for SETUPAPI
- *
- * Copyright 2005 Sebastian Gasiorek
- *
- * Translation update by Caemyr (Olaf Siejka)
- * April, 2008
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -19,13 +13,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ *      Copyright 2005 Sebastian Gasiorek
+ *
+ *      Translation update by Caemyr -Olaf Siejka (April, 2008)
+ *      UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Kopiowanie plików..."
+CAPTION "Kopiowanie plikÃ³w..."
 FONT 8, "MS Shell Dlg"
 BEGIN
 	PUSHBUTTON "Anuluj", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -38,7 +37,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUERY_REBOOT_TEXT        "Twój komputer musi zostaæ zrestartowany, by ukoñczyæ instalacjê. Czy chcesz kontynuowaæ?"
+	IDS_QUERY_REBOOT_TEXT        "TwÃ³j komputer musi zostaÄ‡ zrestartowany, by ukoÅ„czyÄ‡ instalacjÄ™. Czy chcesz kontynuowaÄ‡?"
 	IDS_QUERY_REBOOT_CAPTION     "Restart"
 	IDS_INF_FILE                 "Plik Instalatora"
 END
