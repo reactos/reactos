@@ -30,8 +30,14 @@ fi
 REACTOS_BUILD_TOOLS_DIR="$PWD"
 cmake -G "Unix Makefiles" -DARCH=$ARCH "$REACTOS_SOURCE_DIR"
 
+echo Preparing reactos...
 cd ../reactos
-cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" "$REACTOS_SOURCE_DIR"
+if [ -f CMakeCache.txt ]
+then
+  rm -f CMakeCache.txt
+fi
+
+cmake -G "Unix Makefiles" -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" "$REACTOS_SOURCE_DIR"
 
 echo Configure script complete! Enter directories and execute appropriate build commands\(ex: make, makex, etc...\).
 
