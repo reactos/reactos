@@ -88,6 +88,8 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
         Status = TCPTranslateError(OskitTCPBind(Connection,
                                                 &AddressToBind,
                                                 sizeof(AddressToBind)));
+        
+        DbgPrint("Listen - Explicit bind on port %d returned 0x%x\n", Connection->AddressFile->Port, Status);
     }
     else
     {
@@ -108,6 +110,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
             {
                 /* Allocate the port in the port bitmap */
                 Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                DbgPrint("Listen - Implicit bind on port %d\n", Connection->AddressFile->Port);
                 
                 /* This should never fail */
                 ASSERT(Connection->AddressFile->Port != 0xFFFF);
