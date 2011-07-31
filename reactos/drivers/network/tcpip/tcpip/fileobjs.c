@@ -284,6 +284,7 @@ NTSTATUS FileOpenAddress(
       {
           /* The client specified an explicit port so we force a bind to this */
           AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+          DbgPrint("Bind - Explicit port %d\n", AddrFile->Port);
           
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
@@ -299,6 +300,7 @@ NTSTATUS FileOpenAddress(
       {
           /* The client is trying to bind to a local address so allocate a port now too */
           AddrFile->Port = TCPAllocatePort(0);
+          DbgPrint("Bind - Unspecified port %d\n", AddrFile->Port);
           
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
