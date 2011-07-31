@@ -670,7 +670,8 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     if ((FloppyType > 5) || (FloppyType == 0))
       continue;
 
-    DiskResetController(FloppyNumber);
+    if (!DiskResetController(FloppyNumber))
+        continue;
 
     Ptr = GetInt1eTable();
 
