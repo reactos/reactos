@@ -116,7 +116,7 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
     PLIST_ENTRY ImageEntry;
     PSERVICE_IMAGE CurrentImage;
 
-    DPRINT("ScmGetServiceImageByImagePath() called\n");
+    DPRINT("ScmGetServiceImageByImagePath(%S) called\n", lpImagePath);
 
     ImageEntry = ImageListHead.Flink;
     while (ImageEntry != &ImageListHead)
@@ -149,7 +149,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT("ScmCreateOrReferenceServiceImage()");
+    DPRINT("ScmCreateOrReferenceServiceImage(%p)\n", pService);
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -211,17 +211,20 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         /* Append service record */
         InsertTailList(&ImageListHead,
                        &pServiceImage->ImageListEntry);
-
-        pService->lpImage = pServiceImage;
     }
     else
     {
-        /* Create a new service image */
-        pService->lpImage->dwImageRunCount++;
+        /* Increment the run counter */
+        pServiceImage->dwImageRunCount++;
     }
+
+    /* Link the service image to the service */
+    pService->lpImage = pServiceImage;
 
 done:;
     RtlFreeUnicodeString(&ImagePath);
+
+    DPRINT("ScmCreateOrReferenceServiceImage() done (Error: %lu)\n", dwError);
 
     return dwError;
 }
@@ -1075,6 +1078,8 @@ ScmStartUserModeService(PSERVICE Service,
     BOOL Result;
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwProcessId;
+
+    DPRINT("ScmStartUserModeService(%p)\n", Service);
 
     StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.lpReserved = NULL;
