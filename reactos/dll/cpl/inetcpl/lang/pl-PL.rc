@@ -70,6 +70,24 @@ BEGIN
 
 END
 
+/* "Security" propsheet */
+IDD_SECURITY DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Bezpieczeństwo"
+BEGIN
+
+    CONTROL     "Listview", IDC_SEC_LISTVIEW, "SysListView32",
+                LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL,
+                4, 4, 312, 58
+    LTEXT       "", IDC_SEC_ZONE_INFO, 4, 68, 312, 20
+    GROUPBOX    "", IDC_SEC_GROUP, 4, 88, 312, 126
+    CONTROL     "trackbar", IDC_SEC_TRACKBAR, "msctls_trackbar32",
+                TBS_VERT | TBS_AUTOTICKS | TBS_BOTH | TBS_REVERSED, 8, 98, 32, 100
+    LTEXT       "", IDC_SEC_LEVEL, 48, 102, 180, 12
+    LTEXT       "", IDC_SEC_LEVEL_INFO, 48, 114, 260, 80
+END
+
 /* "Content" propsheet */
 IDD_CONTENT DIALOG  0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
