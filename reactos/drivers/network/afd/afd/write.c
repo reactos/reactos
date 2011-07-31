@@ -176,7 +176,8 @@ static NTSTATUS NTAPI SendComplete
             break;
     }
     
-    if (FCB->Send.Size - FCB->Send.BytesUsed != 0)
+    if (FCB->Send.Size - FCB->Send.BytesUsed != 0 &&
+        !FCB->SendClosed)
     {
 		FCB->PollState |= AFD_EVENT_SEND;
 		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;

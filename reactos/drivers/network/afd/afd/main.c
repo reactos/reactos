@@ -720,6 +720,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->DisconnectTimeout = DisReq->Timeout;
         FCB->DisconnectPending = TRUE;
         FCB->SendClosed = TRUE;
+        FCB->PollState &= ~AFD_EVENT_SEND;
         
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_DISCONNECT);
         if (Status == STATUS_PENDING)
@@ -755,6 +756,8 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             ExFreePool(FCB->RemoteAddress);
         
             FCB->RemoteAddress = NULL;
+        
+            FCB->PollState &= ~AFD_EVENT_SEND;
         }
     }
 
