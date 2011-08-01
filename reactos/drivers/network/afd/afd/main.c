@@ -436,6 +436,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     InFlightRequest[1] = &FCB->ReceiveIrp;
     InFlightRequest[2] = &FCB->SendIrp;
     InFlightRequest[3] = &FCB->ConnectIrp;
+    InFlightRequest[4] = &FCB->DisconnectIrp;
 
     /* Cancel our pending requests */
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
