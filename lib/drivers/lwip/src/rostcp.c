@@ -45,8 +45,7 @@ LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
 
         Entry = RemoveHeadList(&Connection->PacketQueue);
         qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
-        
-        // reenable this later
+
         pbuf_free(qp->p);
 
         ExFreePoolWithTag(qp, LWIP_TAG);
@@ -772,7 +771,7 @@ CloseCallbacks(struct tcp_pcb *pcb)
 {
     tcp_arg(pcb, NULL);
     /*  
-        if this pcb is not in LISTEN state than it has
+        if this pcb is not in LISTEN state then it has
         valid recv, send and err callbacks to cancel
     */
     if (pcb->state != LISTEN)
@@ -796,8 +795,6 @@ LibTCPCloseCallback(void *arg)
     if (!msg->Connection->SocketContext)
     {
         DbgPrint("[lwIP, LibTCPCloseCallback] NULL pcb...bail, bail!!!\n");
-        
-        //ASSERT(FALSE);
 
         msg->Error = ERR_OK;
         return;

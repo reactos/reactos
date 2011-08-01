@@ -166,11 +166,11 @@ NTSTATUS TCPSendData(
 
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
-NTSTATUS TCPTranslateError( INT8 err );
+NTSTATUS TCPTranslateError( const INT8 err );
 
-UINT TCPAllocatePort( UINT HintPort );
+UINT TCPAllocatePort( const UINT HintPort );
 
-VOID TCPFreePort( UINT Port );
+VOID TCPFreePort( const UINT Port );
 
 NTSTATUS TCPGetSockAddress
 ( PCONNECTION_ENDPOINT Connection,
@@ -192,4 +192,4 @@ VOID
 TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF);
 
 VOID
-FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status);
+FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);

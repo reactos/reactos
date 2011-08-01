@@ -122,6 +122,7 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
+    PCONNECTION_ENDPOINT Connection;
     BOOLEAN DequeuedIrp = TRUE;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
@@ -173,7 +174,16 @@ VOID NTAPI DispCancelRequest(
         break;
             
     case TDI_DISCONNECT:
+        Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+
         DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        if (DequeuedIrp)
+        {
+            if (KeCancelTimer(&Connection->DisconnectTimer))
+            {
+                DereferenceObject(Connection);
+            }
+        }
         break;
 
     default:

@@ -46,8 +46,9 @@ BucketCompletionWorker(PVOID Context)
     ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
 }
 
+static
 VOID
-CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, BOOLEAN Synchronous)
+CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEAN Synchronous)
 {
     ReferenceObject(Connection);
     Bucket->AssociatedEndpoint = Connection;
@@ -62,7 +63,7 @@ CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, BOOLEAN Sync
 }
 
 VOID
-FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
+FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
@@ -140,7 +141,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
 }
 
 VOID
-TCPFinEventHandler(void *arg, err_t err)
+TCPFinEventHandler(void *arg, const err_t err)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     const NTSTATUS status = TCPTranslateError(err);
@@ -148,7 +149,7 @@ TCPFinEventHandler(void *arg, err_t err)
     DbgPrint("[IP, TCPFinEventHandler] Called for Connection( 0x%x )-> SocketContext = pcb (0x%x)\n", Connection, Connection->SocketContext);
 
     /* Only clear the pointer if the shutdown was caused by an error */
-    if ((err != ERR_OK))
+    if (err != ERR_OK)
     {
         /* We're already closed by the error so we don't want to call lwip_close */
         DbgPrint("[IP, TCPFinEventHandler] MAKING Connection( 0x%x )-> SocketContext = pcb (0x%x) NULL\n", Connection, Connection->SocketContext);
@@ -162,7 +163,7 @@ TCPFinEventHandler(void *arg, err_t err)
 }
     
 VOID
-TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
+TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
@@ -200,13 +201,13 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         {
             DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, listen_pcb->state = %s, newpcb = 0x%x\n",
                 tcp_state_str[newpcb->state],
-                tcp_state_str[((struct tcp_pcb*)Connection->SocketContext)->state],
+                tcp_state_str[((PTCP_PCB)Connection->SocketContext)->state],
                 newpcb);
 
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
 
             /* sanity assert...this should never be in anything else but a CLOSED state */
-            ASSERT(((struct tcp_pcb*)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED);
+            ASSERT( ((PTCP_PCB)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED );
             
             /*  free socket context created in FileOpenConnection, as we're using a new one */
             LibTCPClose(Bucket->AssociatedEndpoint, TRUE);
@@ -233,7 +234,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
 VOID
 TCPSendEventHandler(void *arg, u16_t space)
 {
-    PCONNECTION_ENDPOINT Connection = arg;
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     PIRP Irp;

@@ -1,10 +1,11 @@
-
 #include "lwip/opt.h"
 
 #include "lwip/def.h"
 #include "lwip/mem.h"
 
-#define LWIP_TAG 'PIwl'
+#ifndef LWIP_TAG
+    #define LWIP_TAG 'PIwl'
+#endif
 
 void *
 malloc(mem_size_t size)
@@ -27,6 +28,7 @@ calloc(mem_size_t count, mem_size_t size)
 void
 free(void *mem)
 {
+    //DbgPrint("ROSMEM: free 0x%x\n", mem);
     ExFreePoolWithTag(mem, LWIP_TAG);
 }
 

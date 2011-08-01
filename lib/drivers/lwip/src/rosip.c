@@ -5,6 +5,8 @@
 
 #include <debug.h>
 
+typedef struct netif* PNETIF;
+
 void
 LibIPInsertPacket(void *ifarg,
                   const void *const data,
@@ -26,9 +28,7 @@ LibIPInsertPacket(void *ifarg,
             RtlCopyMemory(p1->payload, ((PUCHAR)data) + i, p1->len);
         }
 
-        DbgPrint("LibIPInsertPacket: called 0x%x\n", *((struct netif *)ifarg)->input);
-
-        ((struct netif *)ifarg)->input(p, ifarg);
+        ((PNETIF)ifarg)->input(p, (PNETIF)ifarg);
     }
 }
 

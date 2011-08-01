@@ -105,8 +105,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     return Status;
 }
 
-NTSTATUS TCPClose
-( PCONNECTION_ENDPOINT Connection )
+NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
 {
     KIRQL OldIrql;
     PVOID Socket;
@@ -116,7 +115,6 @@ NTSTATUS TCPClose
     DbgPrint("[IP, TCPClose] Called for Connection( 0x%x )->SocketConext( 0x%x )\n", Connection, Connection->SocketContext);
 
     Socket = Connection->SocketContext;
-    //Connection->SocketContext = NULL;
 
     /* We should not be associated to an address file at this point */
     ASSERT(!Connection->AddressFile);
@@ -131,7 +129,7 @@ NTSTATUS TCPClose
         LibTCPClose(Connection, FALSE);
     }
 
-    DbgPrint("[IP, TCPClose] Leaving. Connection->RefCount = %d\n", Connection->RefCount);
+    DbgPrint("[IP, TCPClose] Leaving\n");
 
     UnlockObject(Connection, OldIrql);
 
@@ -170,7 +168,7 @@ NTSTATUS TCPStartup(VOID)
     NTSTATUS Status;
 
     Status = PortsStartup( &TCPPorts, 1, 0xfffe );
-    if( !NT_SUCCESS(Status) )
+    if (!NT_SUCCESS(Status))
     {
         return Status;
     }
@@ -209,7 +207,7 @@ NTSTATUS TCPShutdown(VOID)
     return STATUS_SUCCESS;
 }
 
-NTSTATUS TCPTranslateError( err_t err )
+NTSTATUS TCPTranslateError(const err_t err)
 {
     NTSTATUS Status;
 
@@ -328,7 +326,7 @@ NTSTATUS TCPConnect
             connaddr.addr = RemoteAddress.Address.IPv4Address;
 
             Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-            if( !Bucket )
+            if (!Bucket)
             {
                 UnlockObject(Connection, OldIrql);
                 return STATUS_NO_MEMORY;
@@ -427,7 +425,7 @@ NTSTATUS TCPReceiveData
         LockObject(Connection, &OldIrql);
     
         /* Freed in TCPSocketState */
-        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+        Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
         if (!Bucket)
         {
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
@@ -492,11 +490,11 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Send: %x, %d\n", Status, SendLength));
 
     /* Keep this request around ... there was no data yet */
-    if( Status == STATUS_PENDING )
+    if (Status == STATUS_PENDING)
     {
         /* Freed in TCPSocketState */
         Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-        if( !Bucket )
+        if (!Bucket)
         {
             UnlockObject(Connection, OldIrql);
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Failed to allocate bucket\n"));
@@ -526,16 +524,15 @@ NTSTATUS TCPSendData
     return Status;
 }
 
-UINT TCPAllocatePort( UINT HintPort )
+UINT TCPAllocatePort(const UINT HintPort)
 {
-    if( HintPort )
+    if (HintPort)
     {
-        if( AllocatePort( &TCPPorts, HintPort ) )
+        if (AllocatePort(&TCPPorts, HintPort))
             return HintPort;
         else
         {
-            TI_DbgPrint
-                (MID_TRACE,("We got a hint port but couldn't allocate it\n"));
+            TI_DbgPrint(MID_TRACE,("We got a hint port but couldn't allocate it\n"));
             return (UINT)-1;
         }
     }
@@ -543,9 +540,9 @@ UINT TCPAllocatePort( UINT HintPort )
         return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
 }
 
-VOID TCPFreePort( UINT Port )
+VOID TCPFreePort(const UINT Port)
 {
-    DeallocatePort( &TCPPorts, Port );
+    DeallocatePort(&TCPPorts, Port);
 }
 
 NTSTATUS TCPGetSockAddress

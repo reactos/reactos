@@ -79,6 +79,20 @@ static void tcp_parseopt(struct tcp_pcb *pcb);
 static err_t tcp_listen_input(struct tcp_pcb_listen *pcb);
 static err_t tcp_timewait_input(struct tcp_pcb *pcb);
 
+static const char * const tcp_state_str[] = {
+  "CLOSED",      
+  "LISTEN",      
+  "SYN_SENT",    
+  "SYN_RCVD",    
+  "ESTABLISHED", 
+  "FIN_WAIT_1",  
+  "FIN_WAIT_2",  
+  "CLOSE_WAIT",  
+  "CLOSING",     
+  "LAST_ACK",    
+  "TIME_WAIT"   
+};
+
 /**
  * The initial input processing of TCP. It verifies the TCP header, demultiplexes
  * the segment between the PCBs and passes it on to tcp_process(), which implements
@@ -325,12 +339,14 @@ tcp_input(struct pbuf *p, struct netif *inp)
            end. We then call the error callback to inform the
            application that the connection is dead before we
            deallocate the PCB. */
+          DbgPrint("tcp_input: removing pcb = 0x%x in state %s with TF_RESET\n", pcb, tcp_state_str[pcb->state]);
         TCP_EVENT_ERR(pcb->errf, pcb->callback_arg, ERR_RST);
         tcp_pcb_remove(&tcp_active_pcbs, pcb);
         memp_free(MEMP_TCP_PCB, pcb);
       } else if (recv_flags & TF_CLOSED) {
         /* The connection has been closed and we will deallocate the
            PCB. */
+          DbgPrint("tcp_input: removing pcb = 0x%x with TF_CLOSED\n", pcb);
         tcp_pcb_remove(&tcp_active_pcbs, pcb);
         memp_free(MEMP_TCP_PCB, pcb);
       } else {
@@ -422,6 +438,7 @@ aborted:
     pbuf_free(p);
   }
 
+  DbgPrint("tcp_input: done\n");
   LWIP_ASSERT("tcp_input: tcp_pcbs_sane()", tcp_pcbs_sane());
   PERF_STOP("tcp_input");
 }
