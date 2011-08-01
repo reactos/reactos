@@ -294,11 +294,17 @@ int OskitTCPShutdown(PCONNECTION_ENDPOINT connection, int disconn_type) {
 
 int OskitTCPClose( PCONNECTION_ENDPOINT connection ) {
     int error;
+    struct socket *socket;
 
     OSKLock();
-    if (connection->SocketContext)
+    socket = connection->SocketContext;
+    if (socket)
     {
-        error = soclose(connection->SocketContext);
+        /* HACK: Force abortive close by changing SO_LINGER settings */
+        socket->so_options |= SO_LINGER;
+        socket->so_linger = 0;
+
+        error = soclose(socket);
     }
     else
     {
