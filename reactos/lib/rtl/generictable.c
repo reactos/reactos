@@ -213,7 +213,7 @@ RtlInsertElementGenericTableFull(IN PRTL_GENERIC_TABLE Table,
     Table->TableRoot = RtlSplay(NewNode);
 
     /* Return status */
-    if (NewElement) *NewElement = (SearchResult == TableFoundNode);
+    if (NewElement) *NewElement = (SearchResult != TableFoundNode);
 
     /* Return pointer to user data */
     return &((PTABLE_ENTRY_HEADER)NewNode)->UserData;
@@ -300,7 +300,7 @@ RtlDeleteElementGenericTable(IN PRTL_GENERIC_TABLE Table,
 
     /* Get the splay links and table search result immediately */
     Result = RtlpFindGenericTableNodeOrParent(Table, Buffer, &NodeOrParent);
-    if ((Result == TableEmptyTree) || (Result != TableFoundNode))
+    if (Result != TableFoundNode)
     {
         /* Nothing to delete */
         return FALSE;
