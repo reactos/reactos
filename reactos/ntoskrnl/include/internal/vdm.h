@@ -27,7 +27,7 @@
     if (x & VdmpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define VMTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define VMTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //

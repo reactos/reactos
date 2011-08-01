@@ -33,7 +33,7 @@
     if (x & CmpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define CMTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define CMTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //
