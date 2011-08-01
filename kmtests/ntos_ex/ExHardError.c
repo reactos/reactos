@@ -5,11 +5,6 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/exfuncs.h>
-#include <pseh/pseh2.h>
-
 #include <kmt_test.h>
 
 /* TODO: don't require user interaction, test Io* routines,

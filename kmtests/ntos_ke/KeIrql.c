@@ -8,11 +8,7 @@
 __declspec(dllimport) void __stdcall KeRaiseIrql(unsigned char, unsigned char *);
 __declspec(dllimport) void __stdcall KeLowerIrql(unsigned char);
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
 #include <kmt_test.h>
-#include <pseh/pseh2.h>
 
 #define NDEBUG
 #include <debug.h>

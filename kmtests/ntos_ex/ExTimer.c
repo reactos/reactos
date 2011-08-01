@@ -5,9 +5,6 @@
  * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>
  */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
 #include <kmt_test.h>
 
 #define NDEBUG

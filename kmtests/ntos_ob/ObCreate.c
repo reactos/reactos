@@ -7,9 +7,6 @@
 
 /* TODO: this test terminates with an access violation in Windows */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
 #include <kmt_test.h>
 
 #define NDEBUG

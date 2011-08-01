@@ -7,9 +7,6 @@
 
 /* TODO: this test doesn't process any test results; it also takes very long */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
 #include <kmt_test.h>
 
 #define NDEBUG

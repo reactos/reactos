@@ -5,9 +5,6 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define WIN32_LEAN_AND_MEAN
-#define UNICODE
-#include <windows.h>
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;

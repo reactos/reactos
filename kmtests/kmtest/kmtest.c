@@ -5,20 +5,15 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define UNICODE
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <strsafe.h>
-#include <winioctl.h>
+#define KMT_DEFINE_TEST_FUNCTIONS
+#include <kmt_test.h>
+
+#include "kmtest.h"
+#include <kmt_public.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "kmtest.h"
-#include <kmt_public.h>
-#define KMT_DEFINE_TEST_FUNCTIONS
-#include <kmt_test.h>
 
 #define SERVICE_NAME        L"Kmtest"
 #define SERVICE_PATH        L"kmtest_drv.sys"

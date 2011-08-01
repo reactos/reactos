@@ -13,6 +13,8 @@
 #ifndef _KMTEST_TEST_H_
 #define _KMTEST_TEST_H_
 
+#include <kmt_platform.h>
+
 #include <stdarg.h>
 
 typedef VOID KMT_TESTFUNC(VOID);

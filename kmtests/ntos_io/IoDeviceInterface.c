@@ -7,8 +7,6 @@
 
 /* TODO: what's with the prototypes at the top, what's with the if-ed out part? Doesn't process most results */
 
-#include <ntifs.h>
-#include <ndk/iotypes.h>
 #include <kmt_test.h>
 
 #define NDEBUG

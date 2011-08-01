@@ -7,7 +7,6 @@
 
 /* TODO: most of these calls fail the Windows checked build's !islower assertion and others */
 
-#include <ntifs.h>
 #include <kmt_test.h>
 
 #define NDEBUG

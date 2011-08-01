@@ -25,9 +25,6 @@ __declspec(dllimport)   int             __stdcall   ExInterlockedDecrementLong(l
 __declspec(dllimport)   int             __stdcall   Exi386InterlockedIncrementLong(long *);
 __declspec(dllimport)   int             __stdcall   Exi386InterlockedDecrementLong(long *);
 
-#include <ntddk.h>
-#include <pseh/pseh2.h>
-
 #include <kmt_test.h>
 
 /* TODO: There are quite some changes needed for other architectures!

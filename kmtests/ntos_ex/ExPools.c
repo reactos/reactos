@@ -7,11 +7,6 @@
 
 /* TODO: PoolsCorruption tests fail because accessing invalid memory doesn't necessarily cause an access violation */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
-/* SEH support with PSEH */
-#include <pseh/pseh2.h>
 #include <kmt_test.h>
 
 #define NDEBUG

@@ -5,16 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-/* TODO: move this to some header */
-#ifdef KMT_USER_MODE
-#   include <windows.h>
-#   define ok_irql(i)
-#   define KIRQL int
-#   define KeRaiseIrql(new, old)
-#   define KeLowerIrql(i)
-#elif KMT_KERNEL_MODE
-#   include <ntddk.h>
-#endif
+#define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
 
 START_TEST(RtlMemory)

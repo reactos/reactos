@@ -6,7 +6,6 @@
  */
 /* Based on code Copyright 2008 Etersoft (Alexander Morozov) */
 
-#include <ntddk.h>
 #include <kmt_test.h>
 
 #define NDEBUG

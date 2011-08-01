@@ -5,9 +5,6 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/ketypes.h>
 #include <kmt_test.h>
 
 #define CheckApcs(KernelApcsDisabled, SpecialApcsDisabled, AllApcsDisabled, Irql) do    \

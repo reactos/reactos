@@ -5,11 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/extypes.h>
 #include <kmt_test.h>
-#include <pseh/pseh2.h>
 
 //#define NDEBUG
 #include <debug.h>

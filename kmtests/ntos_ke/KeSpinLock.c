@@ -14,11 +14,7 @@ __declspec(dllimport) void __stdcall KeReleaseSpinLockFromDpcLevel(unsigned long
 
 /* this define makes KeInitializeSpinLock not use the inlined version */
 #define WIN9X_COMPAT_SPINLOCK
-#include <ntddk.h>
-#include <ntifs.h>
-#include <ndk/kefuncs.h>
 #include <kmt_test.h>
-#include <pseh/pseh2.h>
 #include <limits.h>
 
 //#define NDEBUG

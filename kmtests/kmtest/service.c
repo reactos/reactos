@@ -5,14 +5,10 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define UNICODE
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <strsafe.h>
+#include <kmt_test.h>
+#include "kmtest.h"
 
 #include <assert.h>
-
-#include "kmtest.h"
 
 #define SERVICE_ACCESS (SERVICE_START | SERVICE_STOP | DELETE)
 

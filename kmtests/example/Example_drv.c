@@ -5,8 +5,6 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <ntddk.h>
-
 #include <kmt_test.h>
 
 //#define NDEBUG

@@ -10,7 +10,6 @@ struct _LIST_ENTRY *__stdcall ExInterlockedInsertHeadList(struct _LIST_ENTRY *, 
 struct _LIST_ENTRY *__stdcall ExInterlockedInsertTailList(struct _LIST_ENTRY *, struct _LIST_ENTRY *, unsigned long *);
 struct _LIST_ENTRY *__stdcall ExInterlockedRemoveHeadList(struct _LIST_ENTRY *, unsigned long *);
 
-#include <ntddk.h>
 #include <kmt_test.h>
 
 LIST_ENTRY Entries[5];

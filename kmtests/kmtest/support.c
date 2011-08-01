@@ -5,17 +5,12 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define UNICODE
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <strsafe.h>
-#include <winioctl.h>
-
-#include <assert.h>
+#include <kmt_test.h>
 
 #include "kmtest.h"
 #include <kmt_public.h>
-#include <kmt_test.h>
+
+#include <assert.h>
 
 extern HANDLE KmtestHandle;
 
