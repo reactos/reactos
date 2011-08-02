@@ -1579,110 +1579,78 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-BOOL
-UserDrawSysMenuButton(
-   PWND pWnd,
-   HDC hDc,
-   RECTL *lpRc,
-   BOOL Down)
-{
-   HICON hIcon;
-   PCURICON_OBJECT pIcon;
-
-   ASSERT(pWnd && lpRc);
-
-   /* Get the icon to draw. We don't care about WM_GETICON here. */
-
-   hIcon = pWnd->pcls->hIconSm;
-
-   if(!hIcon)
-   {
-      DPRINT("Wnd class has no small icon.\n");
-      hIcon = pWnd->pcls->hIcon;
-   }
-
-   if(!hIcon)
-   {
-      DPRINT("Wnd class hasn't any icon.\n");
-      //FIXME: Draw "winlogo" icon.
-      return FALSE;
-   }
-
-   if(!(pIcon = UserGetCurIconObject(hIcon)))
-   {
-      DPRINT1("UserGetCurIconObject() failed!\n");
-      return FALSE;
-   }
-
-   return UserDrawIconEx(hDc, lpRc->left, lpRc->top, pIcon,
-                        UserGetSystemMetrics(SM_CXSMICON),
-                        UserGetSystemMetrics(SM_CYSMICON),
-                        0, NULL, DI_NORMAL);
-}
-
 BOOL
 UserDrawCaptionText(
    HDC hDc,
    const PUNICODE_STRING Text,
    const RECTL *lpRc,
-   UINT uFlags)
+   UINT uFlags,
+   HFONT hFont)
 {
-   HFONT hOldFont = NULL, hFont = NULL;
+   HFONT hOldFont = NULL;
    COLORREF OldTextColor;
    NONCLIENTMETRICSW nclm;
    NTSTATUS Status;
-   #ifndef NDEBUG
+   BOOLEAN bDeleteFont = FALSE;
+   SIZE Size;
+#ifndef NDEBUG
    INT i;
-   DPRINT("%s:", __FUNCTION__);
+   DPRINT(""); // print filename and line no.
    for(i = 0; i < Text->Length/sizeof(WCHAR); i++)
       DbgPrint("%C", Text->Buffer[i]);
    DbgPrint(", %d\n", Text->Length/sizeof(WCHAR));
-   #endif
+#endif
 
    nclm.cbSize = sizeof(nclm);
    if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS,
       sizeof(NONCLIENTMETRICS), &nclm, 0))
    {
-      DPRINT1("%s: UserSystemParametersInfo() failed!\n", __FUNCTION__);
+      DPRINT1("UserSystemParametersInfo() failed!\n");
       return FALSE;
+   }
+
+   if (!hFont)
+   {
+      if(uFlags & DC_SMALLCAP)
+         Status = TextIntCreateFontIndirect(&nclm.lfSmCaptionFont, &hFont);
+      else
+         Status = TextIntCreateFontIndirect(&nclm.lfCaptionFont, &hFont);
+
+      if(!NT_SUCCESS(Status))
+      {
+         DPRINT1("TextIntCreateFontIndirect() failed! Status: 0x%x\n", Status);
+         return FALSE;
+      }
+
+      bDeleteFont = TRUE;
    }
 
    IntGdiSetBkMode(hDc, TRANSPARENT);
 
-   if(uFlags & DC_SMALLCAP)
-      Status = TextIntCreateFontIndirect(&nclm.lfSmCaptionFont, &hFont);
-   else Status = TextIntCreateFontIndirect(&nclm.lfCaptionFont, &hFont);
-
-   if(!NT_SUCCESS(Status))
-   {
-      DPRINT1("%s: TextIntCreateFontIndirect() failed! Status: 0x%x\n",
-         __FUNCTION__, Status);
-      return FALSE;
-   }
-
    hOldFont = NtGdiSelectFont(hDc, hFont);
    if(!hOldFont)
    {
-      DPRINT1("%s: SelectFont() failed!\n", __FUNCTION__);
-      GreDeleteObject(hFont);
-      return FALSE;
+      DPRINT1("SelectFont() failed!\n");
+      /* Don't fail */
    }
 
    if(uFlags & DC_INBUTTON)
       OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(COLOR_BTNTEXT));
-   else OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
+   else
+      OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
          ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
    //FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
-
-   GreExtTextOutW(hDc, lpRc->left,
-      lpRc->top, 0, NULL, Text->Buffer,
-      Text->Length/sizeof(WCHAR), NULL, 0);
+   GreGetTextExtentW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), &Size, 0);
+   GreExtTextOutW(hDc,
+                  lpRc->left, (lpRc->top + lpRc->bottom)/2 - Size.cy/2,
+                  0, NULL, Text->Buffer, Text->Length/sizeof(WCHAR), NULL, 0);
 
    IntGdiSetTextColor(hDc, OldTextColor);
-   NtGdiSelectFont(hDc, hOldFont);
-   GreDeleteObject(hFont);
+   if (hOldFont)
+      NtGdiSelectFont(hDc, hOldFont);
+   if (bDeleteFont)
+      GreDeleteObject(hFont);
 
    return TRUE;
 }
@@ -1693,51 +1661,17 @@ BOOL UserDrawCaption(
    RECTL *lpRc,
    HFONT hFont,
    HICON hIcon,
-   const PUNICODE_STRING str,
+   const PUNICODE_STRING Str,
    UINT uFlags)
 {
    BOOL Ret = FALSE;
-   HBITMAP hMemBmp = NULL, hOldBmp = NULL;
-   HBRUSH hOldBrush = NULL;
-   HDC hMemDc = NULL;
-   ULONG Height;
-   UINT VCenter = 0, Padding = 0;
-   RECTL r = *lpRc;
-   LONG ButtonWidth, IconWidth;
+   HBRUSH hBgBrush, hOldBrush = NULL;
+   RECTL Rect = *lpRc;
    BOOL HasIcon;
 
-   //ASSERT(pWnd != NULL);
-
    RECTL_vMakeWellOrdered(lpRc);
-   hMemBmp = NtGdiCreateCompatibleBitmap(hDc,
-      lpRc->right - lpRc->left,
-      lpRc->bottom - lpRc->top);
 
-   if(!hMemBmp)
-   {
-      DPRINT1("%s: NtGdiCreateCompatibleBitmap() failed!\n", __FUNCTION__);
-      return FALSE;
-   }
-
-   hMemDc = NtGdiCreateCompatibleDC(hDc);
-   if(!hMemDc)
-   {
-      DPRINT1("%s: NtGdiCreateCompatibleDC() failed!\n", __FUNCTION__);
-      goto cleanup;
-   }
-
-   hOldBmp = NtGdiSelectBitmap(hMemDc, hMemBmp);
-   if(!hOldBmp)
-   {
-      DPRINT1("%s: NtGdiSelectBitmap() failed!\n", __FUNCTION__);
-      goto cleanup;
-   }
-
-   Height = UserGetSystemMetrics(SM_CYCAPTION) - 1;
-   VCenter = (lpRc->bottom - lpRc->top) / 2;
-   Padding = VCenter - (Height / 2);
-
-   if ((!hIcon) && (pWnd != NULL))
+   if (!hIcon && pWnd != NULL)
    {
      HasIcon = (uFlags & DC_ICON) && (pWnd->style & WS_SYSMENU)
         && !(uFlags & DC_SMALLCAP) && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME)
@@ -1746,203 +1680,114 @@ BOOL UserDrawCaption(
    else
      HasIcon = (hIcon != 0);
 
-   IconWidth = UserGetSystemMetrics(SM_CXSIZE) + Padding;
-
-   r.left = Padding;
-   r.right = r.left + (lpRc->right - lpRc->left);
-   r.top = Padding;
-   r.bottom = r.top + (Height / 2);
-
    // Draw the caption background
-   if(uFlags & DC_INBUTTON)
+   if((uFlags & DC_GRADIENT) && !(uFlags & DC_INBUTTON))
    {
-      hOldBrush = NtGdiSelectBrush(hMemDc,
-         IntGetSysColorBrush(COLOR_3DFACE));
+      static GRADIENT_RECT gcap = {0, 1};
+      TRIVERTEX Vertices[2];
+      COLORREF Colors[2];
 
-      if(!hOldBrush)
+      Colors[0] = IntGetSysColor((uFlags & DC_ACTIVE) ?
+            COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
+
+      Colors[1] = IntGetSysColor((uFlags & DC_ACTIVE) ?
+            COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
+
+      Vertices[0].x = Rect.left;
+      Vertices[0].y = Rect.top;
+      Vertices[0].Red = (WORD)Colors[0]<<8;
+      Vertices[0].Green = (WORD)Colors[0] & 0xFF00;
+      Vertices[0].Blue = (WORD)(Colors[0]>>8) & 0xFF00;
+      Vertices[0].Alpha = 0;
+
+      Vertices[1].x = Rect.right;
+      Vertices[1].y = Rect.bottom;
+      Vertices[1].Red = (WORD)Colors[1]<<8;
+      Vertices[1].Green = (WORD)Colors[1] & 0xFF00;
+      Vertices[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
+      Vertices[1].Alpha = 0;
+
+      if(!GreGradientFill(hDc, Vertices, 2, &gcap, 1, GRADIENT_FILL_RECT_H))
       {
-         DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
+         DPRINT1("GreGradientFill() failed!\n");
          goto cleanup;
       }
-
-      if(!NtGdiPatBlt(hMemDc, 0, 0,
-         lpRc->right - lpRc->left,
-         lpRc->bottom - lpRc->top,
-         PATCOPY))
-      {
-         DPRINT1("%s: NtGdiPatBlt() failed!\n", __FUNCTION__);
-         goto cleanup;
-      }
-
-      if(HasIcon) r.left+=IconWidth;
    }
    else
    {
-      r.right = (lpRc->right - lpRc->left);
-      if(uFlags & DC_SMALLCAP)
-         ButtonWidth = UserGetSystemMetrics(SM_CXSMSIZE) - 2;
-      else ButtonWidth = UserGetSystemMetrics(SM_CXSIZE) - 2;
+      if(uFlags & DC_INBUTTON)
+         hBgBrush = IntGetSysColorBrush(COLOR_3DFACE);
+      else if(uFlags & DC_ACTIVE)
+         hBgBrush = IntGetSysColorBrush(COLOR_ACTIVECAPTION);
+      else
+         hBgBrush = IntGetSysColorBrush(COLOR_INACTIVECAPTION);
 
-      hOldBrush = NtGdiSelectBrush(hMemDc,
-         IntGetSysColorBrush(uFlags & DC_ACTIVE ?
-            COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
+      hOldBrush = NtGdiSelectBrush(hDc, hBgBrush);
 
       if(!hOldBrush)
       {
-         DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
+         DPRINT1("NtGdiSelectBrush() failed!\n");
          goto cleanup;
       }
 
-      if(HasIcon && (uFlags & DC_GRADIENT))
+      if(!NtGdiPatBlt(hDc, Rect.left, Rect.top,
+         Rect.right - Rect.left,
+         Rect.bottom - Rect.top,
+         PATCOPY))
       {
-         NtGdiPatBlt(hMemDc, 0, 0,
-            IconWidth+1,
-            lpRc->bottom - lpRc->top,
-            PATCOPY);
-         r.left+=IconWidth;
+         DPRINT1("NtGdiPatBlt() failed!\n");
+         goto cleanup;
       }
-      else
-      {
-         NtGdiPatBlt(hMemDc, 0, 0,
-            lpRc->right - lpRc->left,
-            lpRc->bottom - lpRc->top,
-            PATCOPY);
-      }
-
-      if(uFlags & DC_GRADIENT)
-      {
-         static GRADIENT_RECT gcap = {0, 1};
-         TRIVERTEX vert[2];
-         COLORREF Colors[2];
-
-		 if (pWnd != NULL)
-		 {
-			 if(pWnd->style & WS_SYSMENU)
-			 {
-				r.right -= 3 + ButtonWidth;
-				if(!(uFlags & DC_SMALLCAP))
-				{
-				   if(pWnd->style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
-					  r.right -= 2 + 2 * ButtonWidth;
-				   else r.right -= 2;
-				   r.right -= 2;
-				}
-
-				//Draw buttons background
-				if(!NtGdiSelectBrush(hMemDc,
-				   IntGetSysColorBrush(uFlags & DC_ACTIVE ?
-					  COLOR_GRADIENTACTIVECAPTION:COLOR_GRADIENTINACTIVECAPTION)))
-				{
-				   DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
-				   goto cleanup;
-				}
-
-				NtGdiPatBlt(hMemDc,
-				   r.right,
-				   0,
-				   lpRc->right - lpRc->left - r.right,
-				   lpRc->bottom - lpRc->top,
-				   PATCOPY);
-			 }
-		 }
-
-         Colors[0] = IntGetSysColor((uFlags & DC_ACTIVE) ?
-            COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
-
-         Colors[1] = IntGetSysColor((uFlags & DC_ACTIVE) ?
-            COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
-
-         vert[0].x = r.left;
-         vert[0].y = 0;
-         vert[0].Red = (WORD)Colors[0]<<8;
-         vert[0].Green = (WORD)Colors[0] & 0xFF00;
-         vert[0].Blue = (WORD)(Colors[0]>>8) & 0xFF00;
-         vert[0].Alpha = 0;
-
-         vert[1].x = r.right;
-         vert[1].y = lpRc->bottom - lpRc->top;
-         vert[1].Red = (WORD)Colors[1]<<8;
-         vert[1].Green = (WORD)Colors[1] & 0xFF00;
-         vert[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
-         vert[1].Alpha = 0;
-
-         if(!GreGradientFill(hMemDc, vert, 2, &gcap,
-            1, GRADIENT_FILL_RECT_H))
-         {
-            DPRINT1("%s: IntGdiGradientFill() failed!\n", __FUNCTION__);
-         }
-
-      } //if(uFlags & DC_GRADIENT)
    }
 
-   if(HasIcon)
+   /* Draw icon */
+   if (HasIcon)
    {
-      r.top ++;
-      r.left -= --IconWidth;
-	  /* FIXME: Draw the Icon when pWnd == NULL but  hIcon is valid */
-	  if (pWnd != NULL)
-		UserDrawSysMenuButton(pWnd, hMemDc, &r, FALSE);
+      PCURICON_OBJECT pIcon = NULL;
 
-      r.left += IconWidth;
-      r.top --;
+      if (!hIcon && pWnd)
+      {
+          hIcon = pWnd->pcls->hIconSm; // FIXME: Windows does not do that
+          if(!hIcon)
+             hIcon = pWnd->pcls->hIcon;
+      }
+
+      if (hIcon)
+         pIcon = UserGetCurIconObject(hIcon);
+
+      if (pIcon)
+      {
+         LONG cx = UserGetSystemMetrics(SM_CXSMICON);
+         LONG cy = UserGetSystemMetrics(SM_CYSMICON);
+         LONG x = Rect.left - cx/2 + 1 + (Rect.bottom - Rect.left)/2;
+         LONG y = (Rect.top + Rect.bottom)/2 - cy/2; // center
+         UserDrawIconEx(hDc, x, y, pIcon, cx, cy, 0, NULL, DI_NORMAL);
+      }
    }
 
-   r.top ++;
-   r.left += 2;
-
-   r.bottom = r.top + Height;
+   if (hIcon)
+      Rect.left += Rect.bottom - Rect.top;
 
    if((uFlags & DC_TEXT))
    {
-      if(!(uFlags & DC_GRADIENT))
-      {
-         r.right = (lpRc->right - lpRc->left);
+      Rect.left += 2;
 
-         if(uFlags & DC_SMALLCAP)
-            ButtonWidth = UserGetSystemMetrics(SM_CXSMSIZE) - 2;
-         else ButtonWidth = UserGetSystemMetrics(SM_CXSIZE) - 2;
-
-         if ((pWnd != NULL) && (pWnd->style & WS_SYSMENU))
-         {
-            r.right -= 3 + ButtonWidth;
-            if(! (uFlags & DC_SMALLCAP))
-            {
-               if(pWnd->style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
-                  r.right -= 2 + 2 * ButtonWidth;
-               else r.right -= 2;
-               r.right -= 2;
-            }
-         }
-      }
-
-	  /* FIXME: hFont isn't handled */
-      if (str)
-         UserDrawCaptionText(hMemDc, str, &r, uFlags);
-      else if (pWnd != NULL)
+      if (Str)
+         UserDrawCaptionText(hDc, Str, &Rect, uFlags, hFont);
+      else if (pWnd != NULL) // FIXME: Windows does not do that
       {
          UNICODE_STRING ustr;
          ustr.Buffer = pWnd->strName.Buffer;
          ustr.Length = pWnd->strName.Length;
          ustr.MaximumLength = pWnd->strName.MaximumLength;
-         UserDrawCaptionText(hMemDc, &ustr, &r, uFlags);
+         UserDrawCaptionText(hDc, &ustr, &Rect, uFlags, hFont);
       }
-   }
-
-   if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top,
-      lpRc->right - lpRc->left, lpRc->bottom - lpRc->top,
-      hMemDc, 0, 0, SRCCOPY, 0, 0))
-   {
-      DPRINT1("%s: NtGdiBitBlt() failed!\n", __FUNCTION__);
-      goto cleanup;
    }
 
    Ret = TRUE;
 
 cleanup:
-   if (hOldBrush) NtGdiSelectBrush(hMemDc, hOldBrush);
-   if (hOldBmp) NtGdiSelectBitmap(hMemDc, hOldBmp);
-   if (hMemBmp) GreDeleteObject(hMemBmp);
-   if (hMemDc) NtGdiDeleteObjectApp(hMemDc);
+   if (hOldBrush) NtGdiSelectBrush(hDc, hOldBrush);
 
    return Ret;
 }
