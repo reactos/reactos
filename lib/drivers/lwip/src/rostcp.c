@@ -236,9 +236,6 @@ static
 void
 InternalErrorEventHandler(void *arg, const err_t err)
 {
-    DbgPrint("[lwIP, InternalErrorEventHandler] ErrorEvent(0x%x, %d)\n",
-        arg, (unsigned int)err);
-    
     /* Make sure the socket didn't get closed */
     if (!arg) return;
     

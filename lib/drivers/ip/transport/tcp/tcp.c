@@ -200,16 +200,17 @@ NTSTATUS TCPTranslateError(const err_t err)
         case ERR_BUF: Status = STATUS_BUFFER_TOO_SMALL; break; //-2
         case ERR_TIMEOUT: Status = STATUS_TIMEOUT; break; // -3
         case ERR_RTE: Status = STATUS_NETWORK_UNREACHABLE; break; //-4
-        case ERR_ABRT: Status = STATUS_LOCAL_DISCONNECT; break; //-5
-        case ERR_RST: Status = STATUS_REMOTE_DISCONNECT; break; //-6
-        case ERR_CLSD: Status = STATUS_FILE_CLOSED; break; //-7
-        case ERR_CONN: Status = STATUS_UNSUCCESSFUL; break; //-8 (FIXME)
-        case ERR_VAL: Status = STATUS_INVALID_PARAMETER; break; //-9
-        case ERR_ARG: Status = STATUS_INVALID_PARAMETER; break; //-10
-        case ERR_USE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break; //-11
-        case ERR_IF: Status = STATUS_NETWORK_UNREACHABLE; break; //-12
-        case ERR_ISCONN: Status = STATUS_UNSUCCESSFUL; break; //-13 (FIXME)
-        case ERR_INPROGRESS: Status = STATUS_PENDING; return Status; //-14
+        case ERR_INPROGRESS: Status = STATUS_PENDING; return Status; //-5
+        case ERR_VAL: Status = STATUS_INVALID_PARAMETER; break; //-6
+        case ERR_WOULDBLOCK: Status = STATUS_CANT_WAIT; break; //-7
+        case ERR_USE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break; //-8
+        case ERR_ISCONN: Status = STATUS_UNSUCCESSFUL; break; //-9 (FIXME)
+        case ERR_ABRT: Status = STATUS_LOCAL_DISCONNECT; break; //-10
+        case ERR_RST: Status = STATUS_REMOTE_DISCONNECT; break; //-11
+        case ERR_CLSD: Status = STATUS_FILE_CLOSED; break; //-12
+        case ERR_CONN: Status = STATUS_INVALID_CONNECTION; break; //-13
+        case ERR_ARG: Status = STATUS_INVALID_PARAMETER; break; //-14
+        case ERR_IF: Status = STATUS_UNEXPECTED_NETWORK_ERROR; break; //-15
         default:
             DbgPrint("Invalid error value: %d\n", err);
             ASSERT(FALSE);
