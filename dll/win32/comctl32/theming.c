@@ -118,9 +118,7 @@ void THEMING_Initialize (void)
         { 'C','C','3','2','T','h','e','m','i','n','g','S','u','b','C','l',0 };
     static const WCHAR refDataPropName[] = 
         { 'C','C','3','2','T','h','e','m','i','n','g','D','a','t','a',0 };
-
-    if (!IsThemeActive()) return;
-
+    
     atSubclassProp = GlobalAddAtomW (subclassPropName);
     atRefDataProp = GlobalAddAtomW (refDataPropName);
 
@@ -133,6 +131,8 @@ void THEMING_Initialize (void)
         GetClassInfoExW (NULL, subclasses[i].className, &class);
         originalProcs[i] = class.lpfnWndProc;
         class.lpfnWndProc = subclassProcs[i];
+        class.style |= CS_GLOBALCLASS;
+        class.hInstance = COMCTL32_hModule;
         
         if (!class.lpfnWndProc)
         {
