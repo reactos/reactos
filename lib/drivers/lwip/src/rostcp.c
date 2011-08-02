@@ -41,11 +41,10 @@ LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
     
     while (!IsListEmpty(&Connection->PacketQueue))
     {
-        DbgPrint("[lwIP, LibTCPEmptyQueue] Removed packet off queue++++\n");
-
         Entry = RemoveHeadList(&Connection->PacketQueue);
         qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
 
+        /* We're in the tcpip thread here so this is safe */
         pbuf_free(qp->p);
 
         ExFreePoolWithTag(qp, LWIP_TAG);
@@ -84,8 +83,6 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 
     if (!IsListEmpty(&Connection->PacketQueue))
     {
-        DbgPrint("[lwIP, LibTCPGetDataFromConnectionQueue] Getting packet off the queue\n");
-
         qp = LibTCPDequeuePacket(Connection);
         p = qp->p;
 
@@ -93,22 +90,18 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 
         for ((*Received) = 0; (*Received) < RecvLen; (*Received) += p->len, p = p->next)
         {
-            DbgPrint("[lwIP, LibTCPGetDataFromConnectionQueue] 0x%x: Copying %d bytes to 0x%x from 0x%x\n",
-                p, p->len, ((PUCHAR)RecvBuffer) + (*Received), p->payload);
-            
             RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
         }
 
-        // reenable this later
-        pbuf_free(qp->p);
+        /* Use this special pbuf free callback function because we're outside tcpip thread */
+        pbuf_free_callback(qp->p);
+
         ExFreePoolWithTag(qp, LWIP_TAG);
 
         Status = STATUS_SUCCESS;
     }
     else
     {
-        DbgPrint("[lwIP, LibTCPGetPacketFromQueue] Queue is EMPTY\n");
-
         Status = STATUS_PENDING;
     }
 
@@ -144,17 +137,10 @@ static
 err_t
 InternalSendEventHandler(void *arg, PTCP_PCB pcb, const u16_t space)
 {
-    DbgPrint("[lwIP, InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
-        arg, pcb, (unsigned int)space);
-
-    ASSERT(pcb->sent != 0);
-    
     /* Make sure the socket didn't get closed */
     if (!arg) return ERR_OK;
     
     TCPSendEventHandler(arg, space);
-
-    DbgPrint("[lwIP, InternalSendEventHandler] Done\n");
     
     return ERR_OK;
 }
@@ -165,35 +151,23 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
 {
     u32_t len;
 
-    DbgPrint("[lwIP, InternalRecvEventHandler] RecvEvent (0x%x, pcb = 0x%x, pbuf = 0x%x, err = %d)\n",
-        arg, pcb, p, (unsigned int)err);
-
-    ASSERT(pcb->recv != NULL);
-    
     /* Make sure the socket didn't get closed */
     if (!arg)
     {
         if (p)
             pbuf_free(p);
 
-        DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 0 - socket got closed on us\n");
-
         return ERR_OK;
     }
     
     if (p)
     {
-        DbgPrint("[lwIP, InternalRecvEventHandler] RECV - p:0x%x p->payload:0x%x p->len:%d p->tot_len:%d\n",
-            p, p->payload, p->len, p->tot_len);
-
         len = TCPRecvEventHandler(arg, p);
         if (len == p->tot_len)
         {
             tcp_recved(pcb, len);
 
             pbuf_free(p);
-
-            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 1\n");
 
             return ERR_OK;
         }
@@ -204,20 +178,16 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
             tcp_recved(pcb, len);
             
             /* Possible memory leak of pbuf here? */
-            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 2\n");
             
             return ERR_OK;
         }
         else
         {
-            /* We want lwIP to store the pbuf on its queue for later */
-            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_TIMEOUT queuing pbuf\n");
-
             LibTCPEnqueuePacket((PCONNECTION_ENDPOINT)arg, p);
 
             tcp_recved(pcb, p->tot_len);
 
-            return ERR_OK;//ERR_TIMEOUT;//
+            return ERR_OK;
         }
     }
     else if (err == ERR_OK)
@@ -228,8 +198,6 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
          */
         TCPFinEventHandler(arg, ERR_OK);
     }
-
-    DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 3\n");
     
     return ERR_OK;
 }
@@ -238,15 +206,9 @@ static
 err_t
 InternalAcceptEventHandler(void *arg, PTCP_PCB newpcb, const err_t err)
 {
-    DbgPrint("[lwIP, InternalAcceptEventHandler] AcceptEvent arg = 0x%x, newpcb = 0x%x, err = %d\n",
-        arg, newpcb, (unsigned int)err);
-    
     /* Make sure the socket didn't get closed */
     if (!arg)
         return ERR_ABRT;
-
-    DbgPrint("[lwIP, InternalAcceptEventHandler] newpcb->state = %s\n",
-                tcp_state_str[newpcb->state]);
     
     TCPAcceptEventHandler(arg, newpcb);
     
@@ -261,16 +223,11 @@ static
 err_t
 InternalConnectEventHandler(void *arg, PTCP_PCB pcb, const err_t err)
 {
-    DbgPrint("[lwIP, InternalConnectEventHandler] ConnectEvent (0x%x, pcb = 0x%x, err = %d)\n",
-        arg, pcb, (unsigned int)err);
-    
     /* Make sure the socket didn't get closed */
     if (!arg)
         return ERR_OK;
     
     TCPConnectEventHandler(arg, err);
-
-    DbgPrint("[lwIP, InternalConnectEventHandler] Done\n");
     
     return ERR_OK;
 }
@@ -307,12 +264,8 @@ LibTCPSocketCallback(void *arg)
     struct socket_callback_msg *msg = arg;
     
     ASSERT(msg);
-
-    DbgPrint("[lwIP, LibTCPSocketCallback] Called\n");
     
     msg->NewPcb = tcp_new();
-
-    DbgPrint("[lwIP, LibTCPSocketCallback] Assigned new pcb = 0x%x\n", msg->NewPcb);
     
     if (msg->NewPcb)
     {
@@ -328,8 +281,6 @@ LibTCPSocket(void *arg)
 {
     struct socket_callback_msg *msg = ExAllocatePool(NonPagedPool, sizeof(struct socket_callback_msg));
     struct tcp_pcb *ret;
-
-    DbgPrint("[lwIP, LibTCPSocket] Called\n");
     
     if (msg)
     {
@@ -343,16 +294,10 @@ LibTCPSocket(void *arg)
         else
             ret = NULL;
         
-        DbgPrint("[lwIP, LibTCPSocket] Connection( 0x%x )->SocketContext = pcb( 0x%x )\n", arg, ret);
-
-        DbgPrint("[lwIP, LibTCPSocket] Done\n");
-        
         ExFreePool(msg);
         
         return ret;
     }
-
-    DbgPrint("[lwIP, LibTCPSocket] Done\n");
     
     return NULL;
 }
@@ -379,10 +324,17 @@ LibTCPBindCallback(void *arg)
     
     ASSERT(msg);
     
+    if (!msg->Connection->SocketContext)
+    {
+        msg->Error = ERR_CLSD;
+        goto done;
+    }
+    
     msg->Error = tcp_bind((PTCP_PCB)msg->Connection->SocketContext,
                             msg->IpAddress,
                             ntohs(msg->Port));
     
+done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
@@ -391,11 +343,6 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const 
 {
     struct bind_callback_msg *msg;
     err_t ret;
-    
-    if (!Connection->SocketContext)
-        return ERR_CLSD;
-
-    DbgPrint("[lwIP, LibTCPBind] Called\n");
     
     msg = ExAllocatePool(NonPagedPool, sizeof(struct bind_callback_msg));
     if (msg)
@@ -411,10 +358,6 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const 
             ret = msg->Error;
         else
             ret = ERR_CLSD;
-        
-        DbgPrint("[lwIP, LibTCPBind] pcb = 0x%x\n", Connection->SocketContext);
-
-        DbgPrint("[lwIP, LibTCPBind] Done\n");
         
         ExFreePool(msg);
         
@@ -444,8 +387,12 @@ LibTCPListenCallback(void *arg)
     struct listen_callback_msg *msg = arg;
     
     ASSERT(msg);
-
-    DbgPrint("[lwIP, LibTCPListenCallback] Called\n");
+    
+    if (!msg->Connection->SocketContext)
+    {
+        msg->NewPcb = NULL;
+        goto done;
+    }
 
     msg->NewPcb = tcp_listen_with_backlog((PTCP_PCB)msg->Connection->SocketContext, msg->Backlog);
     
@@ -453,9 +400,8 @@ LibTCPListenCallback(void *arg)
     {
         tcp_accept(msg->NewPcb, InternalAcceptEventHandler);
     }
-
-    DbgPrint("[lwIP, LibTCPListenCallback] Done\n");
     
+done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
@@ -464,11 +410,6 @@ LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
 {
     struct listen_callback_msg *msg;
     PTCP_PCB ret;
-
-    DbgPrint("[lwIP, LibTCPListen] Called on pcb = 0x%x\n", Connection->SocketContext);
-    
-    if (!Connection->SocketContext)
-        return NULL;
     
     msg = ExAllocatePool(NonPagedPool, sizeof(struct listen_callback_msg));
     if (msg)
@@ -483,11 +424,6 @@ LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
             ret = msg->NewPcb;
         else
             ret = NULL;
-        
-        DbgPrint("[lwIP, LibTCPListen] pcb = 0x%x, newpcb = 0x%x, sizeof(pcb) = %d \n",
-            Connection->SocketContext, ret, sizeof(struct tcp_pcb));
-
-        DbgPrint("[lwIP, LibTCPListen] Done\n");
         
         ExFreePool(msg);
         
@@ -519,6 +455,12 @@ LibTCPSendCallback(void *arg)
     
     ASSERT(msg);
     
+    if (!msg->Connection->SocketContext)
+    {
+        msg->Error = ERR_CLSD;
+        goto done;
+    }
+    
     if (tcp_sndbuf((PTCP_PCB)msg->Connection->SocketContext) < msg->DataLength)
     {
         msg->Error = ERR_INPROGRESS;
@@ -533,6 +475,7 @@ LibTCPSendCallback(void *arg)
         tcp_output((PTCP_PCB)msg->Connection->SocketContext);
     }
     
+done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
@@ -540,54 +483,29 @@ err_t
 LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, const int safe)
 {
     err_t ret;
+    struct send_callback_msg *msg;
     
-    if (!Connection->SocketContext)
-        return ERR_CLSD;
-
-    /*  
-        If  we're being called from a handler it means we're in the conetxt of teh tcpip
-        main thread. Therefore we don't have to queue our request via a callback and we
-        can execute immediately.
-    */
-    if (safe)
+    msg = ExAllocatePool(NonPagedPool, sizeof(struct send_callback_msg));
+    if (msg)
     {
-        if (tcp_sndbuf((PTCP_PCB)Connection->SocketContext) < len)
-        {
-            ret = ERR_INPROGRESS;
-        }
-        else
-        {
-            ret = tcp_write((PTCP_PCB)Connection->SocketContext, dataptr, len, TCP_WRITE_FLAG_COPY);
-            tcp_output((PTCP_PCB)Connection->SocketContext);
-        }
-
-        return ret;
-    }
-    else
-    {
-        struct send_callback_msg *msg;
-
-        msg = ExAllocatePool(NonPagedPool, sizeof(struct send_callback_msg));
-        if (msg)
-        {
-            KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
-            msg->Connection = Connection;
-            msg->Data = dataptr;
-            msg->DataLength = len;
+        KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
+        msg->Connection = Connection;
+        msg->Data = dataptr;
+        msg->DataLength = len;
         
+        if (safe)
+            LibTCPSendCallback(msg);
+        else
             tcpip_callback_with_block(LibTCPSendCallback, msg, 1);
         
-            if (WaitForEventSafely(&msg->Event))
-                ret = msg->Error;
-            else
-                ret = ERR_CLSD;
+        if (WaitForEventSafely(&msg->Event))
+            ret = msg->Error;
+        else
+            ret = ERR_CLSD;
         
-            DbgPrint("[lwIP, LibTCPSend] pcb = 0x%x\n", Connection->SocketContext);
+        ExFreePool(msg);
         
-            ExFreePool(msg);
-        
-            return ret;
-        }
+        return ret;
     }
 
     return ERR_MEM;
@@ -612,10 +530,14 @@ void
 LibTCPConnectCallback(void *arg)
 {
     struct connect_callback_msg *msg = arg;
-
-    DbgPrint("[lwIP, LibTCPConnectCallback] Called\n");
     
     ASSERT(arg);
+    
+    if (!msg->Connection->SocketContext)
+    {
+        msg->Error = ERR_CLSD;
+        goto done;
+    }
     
     tcp_recv((PTCP_PCB)msg->Connection->SocketContext, InternalRecvEventHandler);
     tcp_sent((PTCP_PCB)msg->Connection->SocketContext, InternalSendEventHandler);
@@ -626,9 +548,8 @@ LibTCPConnectCallback(void *arg)
 
     msg->Error = Error == ERR_OK ? ERR_INPROGRESS : Error;
     
+done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
-
-    DbgPrint("[lwIP, LibTCPConnectCallback] Done\n");
 }
 
 err_t
@@ -636,11 +557,6 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, con
 {
     struct connect_callback_msg *msg;
     err_t ret;
-
-    DbgPrint("[lwIP, LibTCPConnect] Called\n");
-    
-    if (!Connection->SocketContext)
-        return ERR_CLSD;
     
     msg = ExAllocatePool(NonPagedPool, sizeof(struct connect_callback_msg));
     if (msg)
@@ -660,10 +576,6 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, con
             ret = ERR_CLSD;
         
         ExFreePool(msg);
-
-        DbgPrint("[lwIP, LibTCPConnect] pcb = 0x%x\n", Connection->SocketContext);
-
-        DbgPrint("[lwIP, LibTCPConnect] Done\n");
         
         return ret;
     }
@@ -690,6 +602,12 @@ void
 LibTCPShutdownCallback(void *arg)
 {
     struct shutdown_callback_msg *msg = arg;
+    
+    if (!msg->Connection->SocketContext)
+    {
+        msg->Error = ERR_CLSD;
+        goto done;
+    }
 
     /*
         We check here if the pcb is in state ESTABLISHED or SYN_RECV because otherwise
@@ -706,6 +624,7 @@ LibTCPShutdownCallback(void *arg)
     else
         msg->Error = ERR_OK;
     
+done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
@@ -714,19 +633,7 @@ LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shu
 {
     struct shutdown_callback_msg *msg;
     err_t ret;
-    
-    DbgPrint("[lwIP, LibTCPShutdown] Called on pcb = 0x%x, rx = %d, tx = %d\n",
-        Connection->SocketContext, shut_rx, shut_tx);
-    
-    if (!Connection->SocketContext)
-    {
-        DbgPrint("[lwIP, LibTCPShutdown] Done... NO pcb\n");
-        return ERR_CLSD;
-    }
 
-    DbgPrint("[lwIP, LibTCPShutdown] pcb->state = %s\n",
-        tcp_state_str[((PTCP_PCB)Connection->SocketContext)->state]);
-    
     msg = ExAllocatePool(NonPagedPool, sizeof(struct shutdown_callback_msg));
     if (msg)
     {
@@ -744,8 +651,6 @@ LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shu
             ret = ERR_CLSD;
         
         ExFreePool(msg);
-        
-        DbgPrint("[lwIP, LibTCPShutdown] Done\n");
         
         return ret;
     }
@@ -767,55 +672,29 @@ struct close_callback_msg
 
 static
 void
-CloseCallbacks(struct tcp_pcb *pcb)
-{
-    tcp_arg(pcb, NULL);
-    /*  
-        if this pcb is not in LISTEN state then it has
-        valid recv, send and err callbacks to cancel
-    */
-    if (pcb->state != LISTEN)
-    {
-        tcp_recv(pcb, NULL);
-        tcp_sent(pcb, NULL);
-        tcp_err(pcb, NULL);
-    }
-
-    tcp_accept(pcb, NULL);
-}
-
-static
-void
 LibTCPCloseCallback(void *arg)
 {
     struct close_callback_msg *msg = arg;
 
-    DbgPrint("[lwIP, LibTCPCloseCallback] pcb = 0x%x\n", (PTCP_PCB)msg->Connection->SocketContext);
-
     if (!msg->Connection->SocketContext)
     {
-        DbgPrint("[lwIP, LibTCPCloseCallback] NULL pcb...bail, bail!!!\n");
-
         msg->Error = ERR_OK;
-        return;
+        goto done;
     }
-
-    CloseCallbacks((PTCP_PCB)msg->Connection->SocketContext);
 
     LibTCPEmptyQueue(msg->Connection);
 
     if (((PTCP_PCB)msg->Connection->SocketContext)->state == LISTEN)
     {
-        DbgPrint("[lwIP, LibTCPCloseCallback] Closing a listener\n");
         msg->Error = tcp_close((PTCP_PCB)msg->Connection->SocketContext);
     }
     else
     {
-        DbgPrint("[lwIP, LibTCPCloseCallback] Aborting a connection\n");
         tcp_abort((PTCP_PCB)msg->Connection->SocketContext);
         msg->Error = ERR_OK;
     }
     
+done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
@@ -823,79 +702,36 @@ err_t
 LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe)
 {
     err_t ret;
-
-    DbgPrint("[lwIP, LibTCPClose] Called on pcb = 0x%x\n", Connection->SocketContext);
+    struct close_callback_msg *msg;
     
-    if (!Connection->SocketContext)
+    msg = ExAllocatePool(NonPagedPool, sizeof(struct close_callback_msg));
+    if (msg)
     {
-        DbgPrint("[lwIP, LibTCPClose] Done... NO pcb\n");
-        return ERR_CLSD;
-    }
-
-    DbgPrint("[lwIP, LibTCPClose] pcb->state = %s\n",
-        tcp_state_str[((PTCP_PCB)Connection->SocketContext)->state]);
-
-    /*  
-        If  we're being called from a handler it means we're in the conetxt of teh tcpip
-        main thread. Therefore we don't have to queue our request via a callback and we
-        can execute immediately.
-    */
-    if (safe)
-    {
-        CloseCallbacks((PTCP_PCB)Connection->SocketContext);
+        KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
         
-        LibTCPEmptyQueue(Connection);
-
-        if ( ((PTCP_PCB)Connection->SocketContext)->state == LISTEN )
-        {
-            DbgPrint("[lwIP, LibTCPClose] Closing a listener\n");
-            ret = tcp_close((PTCP_PCB)Connection->SocketContext);
-        }
+        msg->Connection = Connection;
+        
+        if (safe)
+            LibTCPCloseCallback(msg);
         else
-        {
-            DbgPrint("[lwIP, LibTCPClose] Aborting a connection\n");
-            tcp_abort((PTCP_PCB)Connection->SocketContext);
-            ret = ERR_OK;
-        }
-
-        return ret;
-    }
-    else
-    {
-        struct close_callback_msg *msg;
-
-        msg = ExAllocatePool(NonPagedPool, sizeof(struct close_callback_msg));
-        if (msg)
-        {
-            KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
-
-            msg->Connection = Connection;
-        
             tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
         
-            if (WaitForEventSafely(&msg->Event))
-                ret = msg->Error;
-            else
-                ret = ERR_CLSD;
+        if (WaitForEventSafely(&msg->Event))
+            ret = msg->Error;
+        else
+            ret = ERR_CLSD;
         
-            ExFreePool(msg);
-
-            DbgPrint("[lwIP, LibTCPClose] Done\n");
+        ExFreePool(msg);
         
-            return ret;
-        }
+        return ret;
     }
 
-    DbgPrint("[lwIP, LibTCPClose] Failed to allocate memory\n");
-    
     return ERR_MEM;
 }
 
 void
 LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg)
 {
-    DbgPrint("[lwIP, LibTCPAccept] Called. (pcb, arg) = (0x%x, 0x%x)\n", pcb, arg);
-    
     ASSERT(arg);
     
     tcp_arg(pcb, NULL);
@@ -905,40 +741,28 @@ LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg)
     tcp_arg(pcb, arg);
     
     tcp_accepted(listen_pcb);
-
-    DbgPrint("[lwIP, LibTCPAccept] Done\n");
 }
 
 err_t
 LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port)
 {
-    DbgPrint("[lwIP, LibTCPGetHostName] Called. pcb = (0x%x)\n", pcb);
-    
     if (!pcb)
         return ERR_CLSD;
     
     *ipaddr = pcb->local_ip;
     *port = pcb->local_port;
     
-    DbgPrint("[lwIP, LibTCPGetHostName] Got host port: %d\n", *port);
-
-    DbgPrint("[lwIP, LibTCPGetHostName] Done\n");
-    
     return ERR_OK;
 }
 
 err_t
 LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr * const ipaddr, u16_t * const port)
-{
-    DbgPrint("[lwIP, LibTCPGetPeerName] pcb = (0x%x)\n", pcb);
-    
+{    
     if (!pcb)
         return ERR_CLSD;
     
     *ipaddr = pcb->remote_ip;
     *port = pcb->remote_port;
-    
-    DbgPrint("[lwIP, LibTCPGetPeerName] Got remote port: %d\n", *port);
     
     return ERR_OK;
 }

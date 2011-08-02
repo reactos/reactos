@@ -95,10 +95,6 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
     
     KeQuerySystemTime(&PreWaitTime);
 
-    // FIXME:   This is a hack to increase the throughput. Once this is done
-    //          the right way it should definately be removed.
-    //timeout = 5;
-
     Status = KeWaitForMultipleObjects(2,
                                       WaitObjects,
                                       WaitAny,
@@ -107,16 +103,11 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
                                       FALSE,
                                       timeout != 0 ? &LargeTimeout : NULL,
                                       NULL);
-
-    //DbgPrint("[+[+[+[ sys_arch_sem_wait ]+]+]+] timeout = %d\n", timeout);
-
     if (Status == STATUS_WAIT_0)
     {
         KeQuerySystemTime(&PostWaitTime);
         TimeDiff = PostWaitTime.QuadPart - PreWaitTime.QuadPart;
         TimeDiff /= 10000;
-
-        //DbgPrint("[+[+[+[ sys_arch_sem_wait ]+]+]+] TimeDiff = %llu\n", TimeDiff);
 
         return TimeDiff;
     }
@@ -130,8 +121,6 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
         
         return 0;
     }
-
-    //DbgPrint("[+[+[+[ sys_arch_sem_wait ]+]+]+] SYS_ARCH_TIMEOUT\n");
     
     return SYS_ARCH_TIMEOUT;
 }
@@ -196,9 +185,6 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     PLIST_ENTRY Entry;
     KIRQL OldIrql;
     PVOID WaitObjects[] = {&mbox->Event, &TerminationEvent};
-
-    //timeout = 0;
-    //DbgPrint("[[[[[ sys_arch_mbox_fetch ]]]]] %d\n", timeout);
     
     LargeTimeout.QuadPart = Int32x32To64(timeout, -10000);
     
@@ -212,8 +198,6 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
                                       FALSE,
                                       timeout != 0 ? &LargeTimeout : NULL,
                                       NULL);
-
-    //DbgPrint("[ [ [ [ sys_arch_mbox_fetch ] ] ] ] timeout = %d\n", timeout);
 
     if (Status == STATUS_WAIT_0)
     {
@@ -234,8 +218,6 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         KeQuerySystemTime(&PostWaitTime);
         TimeDiff = PostWaitTime.QuadPart - PreWaitTime.QuadPart;
         TimeDiff /= 10000;
-
-        //DbgPrint("[ [ [ [ sys_arch_mbox_fetch ] ] ] ] TimeDiff = %llu\n", TimeDiff);
         
         return TimeDiff;
     }
@@ -249,8 +231,6 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         
         return 0;
     }
-
-    //DbgPrint("[ [ [ [ sys_arch_mbox_fetch ] ] ] ] SYS_ARCH_TIMEOUT\n");
     
     return SYS_ARCH_TIMEOUT;
 }
@@ -276,7 +256,7 @@ VOID
 NTAPI
 LwipThreadMain(PVOID Context)
 {
-    thread_t Container = Context;
+    thread_t Container = (thread_t)Context;
     KIRQL OldIrql;
     
     ExInterlockedInsertHeadList(&ThreadListHead, &Container->ListEntry, &ThreadListLock);
@@ -324,9 +304,8 @@ sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize
 
 void
 sys_init(void)
-{
+{   
     KeInitializeSpinLock(&ThreadListLock);
-    
     InitializeListHead(&ThreadListHead);
     
     KeQuerySystemTime(&StartTime);

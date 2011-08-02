@@ -29,8 +29,6 @@ VOID ConnectionFree(PVOID Object)
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_TCP, ("Freeing TCP Endpoint\n"));
-    
-    DbgPrint("CONNECTION ENDPOINT: Freeing 0x%x\n", Object);
 
     TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
     RemoveEntryList(&Connection->ListEntry);
@@ -85,9 +83,6 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
                            "Proto %d, sizeof(CONNECTION_ENDPOINT) = %d\n",
                            Connection, Family, Type, Proto, sizeof(CONNECTION_ENDPOINT)));
-    DbgPrint("[IP, TCPSocket] Called: Connection 0x%x, Family %d, Type %d, "
-                           "Proto %d, sizeof(CONNECTION_ENDPOINT) = %d\n",
-                           Connection, Family, Type, Proto, sizeof(CONNECTION_ENDPOINT));
 
     Connection->SocketContext = LibTCPSocket(Connection);
     if (Connection->SocketContext)
@@ -95,12 +90,9 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
-    DbgPrint("[IP, TCPSocket] Connection->SocketContext = 0x%x\n", Connection->SocketContext);
-
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status));
-    DbgPrint("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status);
 
     return Status;
 }
@@ -112,8 +104,6 @@ NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
 
     LockObject(Connection, &OldIrql);
 
-    DbgPrint("[IP, TCPClose] Called for Connection( 0x%x )->SocketConext( 0x%x )\n", Connection, Connection->SocketContext);
-
     Socket = Connection->SocketContext;
 
     /* We should not be associated to an address file at this point */
@@ -124,12 +114,8 @@ NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
     {
         FlushAllQueues(Connection, STATUS_CANCELLED);
 
-        DbgPrint("[IP, TCPClose] Socket (pcb) = 0x%x\n", Socket);
-
         LibTCPClose(Connection, FALSE);
     }
-
-    DbgPrint("[IP, TCPClose] Leaving\n");
 
     UnlockObject(Connection, OldIrql);
 
@@ -147,15 +133,11 @@ VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
  *     This is the low level interface for receiving TCP data
  */
 {
-    DbgPrint("[IP, TCPReceive] Called. Got packet from network stack\n");
-
     TI_DbgPrint(DEBUG_TCP,("Sending packet %d (%d) to lwIP\n",
                            IPPacket->TotalSize,
                            IPPacket->HeaderSize));
     
     LibIPInsertPacket(Interface->TCPContext, IPPacket->Header, IPPacket->TotalSize);
-
-    DbgPrint("[IP, TCPReceive] Leaving\n");
 }
 
 NTSTATUS TCPStartup(VOID)
@@ -217,7 +199,7 @@ NTSTATUS TCPTranslateError(const err_t err)
         case ERR_MEM: Status = STATUS_INSUFFICIENT_RESOURCES; break; //-1
         case ERR_BUF: Status = STATUS_BUFFER_TOO_SMALL; break; //-2
         case ERR_TIMEOUT: Status = STATUS_TIMEOUT; break; // -3
-        case ERR_RTE: Status = STATUS_HOST_UNREACHABLE; break; //-4
+        case ERR_RTE: Status = STATUS_NETWORK_UNREACHABLE; break; //-4
         case ERR_ABRT: Status = STATUS_LOCAL_DISCONNECT; break; //-5
         case ERR_RST: Status = STATUS_REMOTE_DISCONNECT; break; //-6
         case ERR_CLSD: Status = STATUS_FILE_CLOSED; break; //-7
@@ -302,8 +284,6 @@ NTSTATUS TCPConnect
                                           &bindaddr,
                                           Connection->AddressFile->Port));
     
-    DbgPrint("LibTCPBind: 0x%x\n", Status);
-
     if (NT_SUCCESS(Status))
     {
         /* Check if we had an unspecified port */
@@ -340,8 +320,6 @@ NTSTATUS TCPConnect
             Status = TCPTranslateError(LibTCPConnect(Connection,
                                                      &connaddr,
                                                      RemotePort));
-        
-            DbgPrint("LibTCPConnect: 0x%x\n", Status);
         }
     }
 
@@ -382,11 +360,8 @@ NTSTATUS TCPDisconnect
     else
     {
         /* We already got closed by the other side so just return success */
-        DbgPrint("[IP, TCPDisconnect] Socket was alraedy clsoed on the other side\n");
         Status = STATUS_SUCCESS;
     }
-    
-    DbgPrint("LibTCPShutdown: %x\n", Status);
 
     UnlockObject(Connection, OldIrql);
 
@@ -412,9 +387,6 @@ NTSTATUS TCPReceiveData
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Called for %d bytes (on socket %x)\n",
                            ReceiveLength, Connection->SocketContext));
-
-    DbgPrint("[IP, TCPReceiveData] Called for %d bytes (on Connection->SocketContext = 0x%x)\n",
-                           ReceiveLength, Connection->SocketContext);
 
     NdisQueryBuffer(Buffer, &DataBuffer, &DataLen);
     
@@ -451,9 +423,6 @@ NTSTATUS TCPReceiveData
         (*BytesReceived) = Received;
     }
 
-    DbgPrint("[IP, TCPReceiveData] Leaving. Status = %s\n",
-        Status == STATUS_PENDING? "STATUS_PENDING" : "STATUS_SUCCESS");
-
     return Status;
 }
 
@@ -478,15 +447,12 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Connection = %x\n", Connection));
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Connection->SocketContext = %x\n",
                            Connection->SocketContext));
-    DbgPrint("[IP, TCPSendData] Called\n");
 
     Status = TCPTranslateError(LibTCPSend(Connection,
                                           BufferData,
                                           SendLength,
                                           FALSE));
     
-    DbgPrint("[IP, TCPSendData] LibTCPSend: 0x%x\n", Status);
-
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Send: %x, %d\n", Status, SendLength));
 
     /* Keep this request around ... there was no data yet */
@@ -518,8 +484,6 @@ NTSTATUS TCPSendData
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP, ("[IP, TCPSendData] Leaving. Status = %x\n", Status));
-
-    DbgPrint("[IP, TCPSendData] Leaving. Status = %x\n", Status);
 
     return Status;
 }
@@ -577,8 +541,6 @@ NTSTATUS TCPGetSockAddress
     UnlockObject(Connection, OldIrql);
     
     AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
-
-    DbgPrint("LibTCPGetXXXName: 0x%x\n", Status);
 
     return Status;
 }

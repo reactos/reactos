@@ -28,7 +28,6 @@ calloc(mem_size_t count, mem_size_t size)
 void
 free(void *mem)
 {
-    //DbgPrint("ROSMEM: free 0x%x\n", mem);
     ExFreePoolWithTag(mem, LWIP_TAG);
 }
 

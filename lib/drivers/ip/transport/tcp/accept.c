@@ -20,8 +20,6 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
     PTA_IP_ADDRESS RemoteAddress;
     struct ip_addr ipaddr;
-
-    DbgPrint("[IP, TCPCheckPeerForAccept] Called\n");
     
     if (Request->RequestFlags & TDI_QUERY_ACCEPT)
         DbgPrint("TDI_QUERY_ACCEPT NOT SUPPORTED!!!\n");
@@ -39,8 +37,6 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
     
     RemoteAddress->Address[0].Address[0].in_addr = ipaddr.addr;
     
-    DbgPrint("[IP, TCPCheckPeerForAccept] Leaving. Status %x\n", Status);
-
     return Status;
 }
 
@@ -60,7 +56,6 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
     ASSERT_KM_POINTER(Connection->AddressFile);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Called\n"));
-    DbgPrint("[IP, TCPListen] Called\n");
 
     TI_DbgPrint(DEBUG_TCP, ("Connection->SocketContext %x\n",
         Connection->SocketContext));
@@ -99,7 +94,6 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Leaving. Status = %x\n", Status));
-    DbgPrint("[IP, TCPListen] Leaving. Status = %x\n", Status);
 
     return Status;
 }
@@ -112,8 +106,6 @@ BOOLEAN TCPAbortListenForSocket
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
     BOOLEAN Found = FALSE;
-
-    DbgPrint("[IP, TCPAbortListenForSocket] Called\n");
 
     LockObject(Listener, &OldIrql);
 
@@ -136,9 +128,6 @@ BOOLEAN TCPAbortListenForSocket
 
     UnlockObject(Listener, OldIrql);
 
-    DbgPrint("[IP, TCPAbortListenForSocket] Leaving. Status = %s\n",
-        Found == TRUE ? "TRUE" : "FALSE");
-
     return Found;
 }
 
@@ -151,8 +140,6 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
-
-    DbgPrint("[IP, TCPAccept] Called\n");
 
     LockObject(Listener, &OldIrql);
 
@@ -175,6 +162,5 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 
     UnlockObject(Listener, OldIrql);
 
-    DbgPrint("[IP, TCPAccept] Leaving. Status = %x\n", Status);
     return Status;
 }

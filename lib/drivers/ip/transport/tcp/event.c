@@ -69,9 +69,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
     PLIST_ENTRY Entry;
     
     ReferenceObject(Connection);
-    
-    DbgPrint("[IP, FlushAllQueues] Flushing recv/all with status: 0x%x for Connection = 0x%x\n", Status, Connection);
-    
+        
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
@@ -91,7 +89,6 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
     //
     if (Status == STATUS_SUCCESS)
     {
-        DbgPrint("[IP, FlushAllQueues] Flushed recv only after graceful closure\n");
         DereferenceObject(Connection);
         return;
     }
@@ -102,8 +99,6 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
         
         Bucket->Status = Status;
         Bucket->Information = 0;
-
-        DbgPrint("[IP, FlushAllQueues] Completing Listen request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
         DereferenceObject(Bucket->AssociatedEndpoint);
         CompleteBucket(Connection, Bucket, FALSE);
@@ -129,15 +124,11 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
         
         Bucket->Status = Status;
         Bucket->Information = 0;
-
-        DbgPrint("[IP, FlushAllQueues] Completing Connection request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
         CompleteBucket(Connection, Bucket, FALSE);
     }
     
     DereferenceObject(Connection);
-
-    DbgPrint("[IP, FlushAllQueues] Leaving\n");
 }
 
 VOID
@@ -146,20 +137,14 @@ TCPFinEventHandler(void *arg, const err_t err)
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     const NTSTATUS status = TCPTranslateError(err);
 
-    DbgPrint("[IP, TCPFinEventHandler] Called for Connection( 0x%x )-> SocketContext = pcb (0x%x)\n", Connection, Connection->SocketContext);
-
     /* Only clear the pointer if the shutdown was caused by an error */
     if (err != ERR_OK)
     {
-        /* We're already closed by the error so we don't want to call lwip_close */
-        DbgPrint("[IP, TCPFinEventHandler] MAKING Connection( 0x%x )-> SocketContext = pcb (0x%x) NULL\n", Connection, Connection->SocketContext);
-
+        /* We're got closed by the error so remove the PCB pointer */
         Connection->SocketContext = NULL;
     }
 
     FlushAllQueues(Connection, status);
-
-    DbgPrint("[IP, TCPFinEventHandler] Done\n");
 }
     
 VOID
@@ -171,9 +156,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
     PIRP Irp;
     NTSTATUS Status;
     KIRQL OldIrql;
-    
-    DbgPrint("[IP, TCPAcceptEventHandler] Called\n");
-    
+        
     ReferenceObject(Connection);
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
@@ -194,16 +177,9 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
         
         Bucket->Status = Status;
         Bucket->Information = 0;
-        
-        DbgPrint("[IP, TCPAcceptEventHandler] Completing accept event %x\n", Status);
-        
+                
         if (Status == STATUS_SUCCESS)
         {
-            DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, listen_pcb->state = %s, newpcb = 0x%x\n",
-                tcp_state_str[newpcb->state],
-                tcp_state_str[((PTCP_PCB)Connection->SocketContext)->state],
-                newpcb);
-
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
 
             /* sanity assert...this should never be in anything else but a CLOSED state */
@@ -217,13 +193,10 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
             
             LibTCPAccept(newpcb, (PTCP_PCB)Connection->SocketContext, Bucket->AssociatedEndpoint);
 
-            DbgPrint("[IP, TCPAcceptEventHandler] Trying to unlock Bucket->AssociatedEndpoint\n");
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
         }
         
         DereferenceObject(Bucket->AssociatedEndpoint);
-
-        DbgPrint("[IP, TCPAcceptEventHandler] Done!\n");
         
         CompleteBucket(Connection, Bucket, FALSE);
     }
@@ -240,8 +213,6 @@ TCPSendEventHandler(void *arg, u16_t space)
     PIRP Irp;
     NTSTATUS Status;
     PMDL Mdl;
-    
-    DbgPrint("[IP, TCPSendEventHandler] Called\n");
     
     ReferenceObject(Connection);
 
@@ -262,8 +233,6 @@ TCPSendEventHandler(void *arg, u16_t space)
         
         TI_DbgPrint(DEBUG_TCP,
                     ("Writing %d bytes to %x\n", SendLen, SendBuffer));
-        DbgPrint("[IP, TCPSendEventHandler] Sending out &d bytes on pcb = 0x%x\n",
-            Connection->SocketContext);
         
         TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
         TI_DbgPrint
@@ -292,16 +261,12 @@ TCPSendEventHandler(void *arg, u16_t space)
             
             Bucket->Status = Status;
             Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? SendLen : 0;
-            
-            DbgPrint("Completing send req %x\n", Status);
-            
+                        
             CompleteBucket(Connection, Bucket, FALSE);
         }
     }
     
     DereferenceObject(Connection);
-
-    DbgPrint("[IP, TCPSendEventHandler] Leaving\n");
 }
 
 u32_t
@@ -319,9 +284,7 @@ TCPRecvEventHandler(void *arg, struct pbuf *p)
     ASSERT(p);
     
     ReferenceObject(Connection);
-    
-    DbgPrint("[IP, TCPRecvEventHandler] Called\n");
-    
+        
     if ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
@@ -345,9 +308,6 @@ TCPRecvEventHandler(void *arg, struct pbuf *p)
         
         for (Received = 0; Received < RecvLen; Received += p->len, p = p->next)
         {
-            DbgPrint("[IP, TCPRecvEventHandler] 0x%x: Copying %d bytes to 0x%x from 0x%x\n",
-                p, p->len, ((PUCHAR)RecvBuffer) + Received, p->payload);
-            
             RtlCopyMemory(RecvBuffer + Received, p->payload, p->len);
         }
         
@@ -360,8 +320,6 @@ TCPRecvEventHandler(void *arg, struct pbuf *p)
     }
 
     DereferenceObject(Connection);
-
-    DbgPrint("[IP, TCPRecvEventHandler] Leaving\n");
     
     return Received;
 }
@@ -372,9 +330,7 @@ TCPConnectEventHandler(void *arg, err_t err)
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
-    
-    DbgPrint("[IP, TCPConnectEventHandler] Called\n");
-    
+        
     ReferenceObject(Connection);
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
@@ -384,13 +340,9 @@ TCPConnectEventHandler(void *arg, err_t err)
         
         Bucket->Status = TCPTranslateError(err);
         Bucket->Information = 0;
-        
-        DbgPrint("[IP, TCPConnectEventHandler] Completing connection request! (0x%x)\n", err);
-        
+                
         CompleteBucket(Connection, Bucket, FALSE);
     }
-
-    DbgPrint("[IP, TCPConnectEventHandler] Done\n");
     
     DereferenceObject(Connection);
 }

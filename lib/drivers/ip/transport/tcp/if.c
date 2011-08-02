@@ -25,8 +25,6 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     
     /* The caller frees the pbuf struct */
     
-    DbgPrint("[IP, TCPSendDataCallback] Sending data out on %c%c\n", netif->name[0], netif->name[1]);
-    
     if (((*(u8_t*)p->payload) & 0xF0) == 0x40)
     {
         Header = p->payload;
@@ -39,21 +37,18 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     }
     else 
     {
-        DbgPrint("[IP, TCPSendDataCallback] FAIL EINVAL 1\n");
-        return EINVAL;
+        return ERR_IF;
     }
 
     if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
     {
-        DbgPrint("[IP, TCPSendDataCallback] FAIL EINVAL 2\n");
-        return EINVAL;
+        return ERR_RTE;
     }
     
     NdisStatus = AllocatePacketWithBuffer(&Packet.NdisPacket, NULL, p->tot_len);
     if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
-        DbgPrint("[IP, TCPSendDataCallback] FAIL ENOBUFS\n");
-        return ENOBUFS;
+        return ERR_MEM;
     }
     
     GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.ContigSize);
@@ -71,9 +66,8 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     
     if (!NT_SUCCESS(IPSendDatagram(&Packet, NCE, TCPPacketSendComplete, NULL)))
     {
-        DbgPrint("[IP, TCPSendDataCallback] FAIL EINVAL 3\n");
         FreeNdisPacket(Packet.NdisPacket);
-        return EINVAL;
+        return ERR_IF;
     }
     
     return 0;
