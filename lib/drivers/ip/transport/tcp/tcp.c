@@ -195,7 +195,7 @@ NTSTATUS TCPTranslateError(const err_t err)
 
     switch (err)
     {
-        case ERR_OK: Status = STATUS_SUCCESS; break; //0
+        case ERR_OK: Status = STATUS_SUCCESS; return Status; //0
         case ERR_MEM: Status = STATUS_INSUFFICIENT_RESOURCES; break; //-1
         case ERR_BUF: Status = STATUS_BUFFER_TOO_SMALL; break; //-2
         case ERR_TIMEOUT: Status = STATUS_TIMEOUT; break; // -3
@@ -209,7 +209,7 @@ NTSTATUS TCPTranslateError(const err_t err)
         case ERR_USE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break; //-11
         case ERR_IF: Status = STATUS_NETWORK_UNREACHABLE; break; //-12
         case ERR_ISCONN: Status = STATUS_UNSUCCESSFUL; break; //-13 (FIXME)
-        case ERR_INPROGRESS: Status = STATUS_PENDING; break; //-14
+        case ERR_INPROGRESS: Status = STATUS_PENDING; return Status; //-14
         default:
             DbgPrint("Invalid error value: %d\n", err);
             ASSERT(FALSE);
@@ -217,8 +217,8 @@ NTSTATUS TCPTranslateError(const err_t err)
             break;
     }
     
-    DbgPrint("TCPTranslateError: %d -> %x\n", (unsigned int)err, Status);
-    
+    DbgPrint("TCP operation failed: 0x%x (%d)\n", Status, err);
+
     return Status;
 }
 

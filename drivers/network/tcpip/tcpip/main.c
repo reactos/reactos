@@ -282,8 +282,6 @@ NTSTATUS TiCloseFileObject(
     TDI_REQUEST Request;
     NTSTATUS Status;
 
-    DbgPrint("[TCPIP, TiCloseFileObject] Called\n");
-
     IrpSp   = IoGetCurrentIrpStackLocation(Irp);
     Context = IrpSp->FileObject->FsContext;
     if (!Context)
@@ -295,7 +293,6 @@ NTSTATUS TiCloseFileObject(
     switch ((ULONG_PTR)IrpSp->FileObject->FsContext2)
     {
         case TDI_TRANSPORT_ADDRESS_FILE:
-            DbgPrint("[TCPIP, TiCloseFileObject] Closing address file\n");
             Request.Handle.AddressHandle = Context->Handle.AddressHandle;
             Status = FileCloseAddress(&Request);
             break;
@@ -311,14 +308,11 @@ NTSTATUS TiCloseFileObject(
             break;
 
         default:
-            DbgPrint("Unknown type %d\n", (ULONG_PTR)IrpSp->FileObject->FsContext2);
             Status = STATUS_INVALID_PARAMETER;
             break;
     }
 
     Irp->IoStatus.Status = Status;
-
-    DbgPrint("[TCPIP, TiCloseFileObject] Leaving. Status = 0x%x\n", Status);
 
     return Irp->IoStatus.Status;
 }
