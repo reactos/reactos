@@ -325,9 +325,6 @@ tcp_abandon(struct tcp_pcb *pcb, int reset)
 #endif /* LWIP_CALLBACK_API */
   void *errf_arg;
 
-  DbgPrint("tcp_abandon: called on pcb = 0x%x\n", pcb);
-  DbgPrint("tcp_abandon: pcb->state = %s\n", tcp_state_str[pcb->state]);
-
   /* pcb->state LISTEN not allowed here */
   LWIP_ASSERT("don't call tcp_abort/tcp_abandon for listen-pcbs",
     pcb->state != LISTEN);
@@ -920,7 +917,6 @@ tcp_slowtmr(void)
         tcp_active_pcbs = pcb->next;
       }
 
-      DbgPrint("tcp_slowtmr: removing pcb 0x%x\n", pcb);
       TCP_EVENT_ERR(pcb->errf, pcb->callback_arg, ERR_ABRT);
       if (pcb_reset) {
         tcp_rst(pcb->snd_nxt, pcb->rcv_nxt, &pcb->local_ip, &pcb->remote_ip,
@@ -1434,7 +1430,6 @@ tcp_pcb_purge(struct tcp_pcb *pcb)
 void
 tcp_pcb_remove(struct tcp_pcb **pcblist, struct tcp_pcb *pcb)
 {
-    DbgPrint("tcp_pcb_remove: Removing pcb = 0x%x\n", pcb);
   TCP_RMV(pcblist, pcb);
 
   tcp_pcb_purge(pcb);
