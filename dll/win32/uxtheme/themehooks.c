@@ -29,6 +29,14 @@ BYTE gabMSGPmessages[UAHOWP_MAX_SIZE];
 static LRESULT CALLBACK
 ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {      
+    if(!IsThemeActive())
+    {
+        return user32ApiHook.DefWindowProcW(hWnd, 
+                                            Msg, 
+                                            wParam, 
+                                            lParam);
+    }
+
     return ThemeWndProc(hWnd, 
                         Msg, 
                         wParam, 
@@ -39,11 +47,32 @@ ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK
 ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+    if(!IsThemeActive())
+    {
+        return user32ApiHook.DefWindowProcA(hWnd, 
+                                            Msg, 
+                                            wParam, 
+                                            lParam);
+    }
+
     return ThemeWndProc(hWnd, 
                         Msg, 
                         wParam, 
                         lParam, 
                         user32ApiHook.DefWindowProcA);
+}
+
+static LRESULT CALLBACK
+ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR ret,PDWORD unknown)
+{
+    switch(Msg)
+    {
+        case WM_THEMECHANGED:
+            UXTHEME_LoadTheme();
+            return 0;
+    }
+
+    return 0;
 }
 
 BOOL CALLBACK 
@@ -60,6 +89,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     
     puah->DefWindowProcA = ThemeDefWindowProcA;
     puah->DefWindowProcW = ThemeDefWindowProcW;
+    puah->PreWndProc = ThemePreWindowProc;
     puah->DefWndProcArray.MsgBitArray  = gabDWPmessages;
     puah->DefWndProcArray.Size = UAHOWP_MAX_SIZE;
     puah->WndProcArray.MsgBitArray = gabMSGPmessages;
@@ -100,7 +130,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_THEMECHANGED);
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_UAHINIT);
 
-    UXTHEME_InitSystem(hDllInst);
+    UXTHEME_LoadTheme();
 
     return TRUE;
 }

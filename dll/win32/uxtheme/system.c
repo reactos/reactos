@@ -148,7 +148,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
  *
  * Set the current active theme from the registry
  */
-static void UXTHEME_LoadTheme(void)
+void UXTHEME_LoadTheme(void)
 {
     HKEY hKey;
     DWORD buffsize;
@@ -542,8 +542,6 @@ void UXTHEME_InitSystem(HINSTANCE hInst)
     atSubAppName         = GlobalAddAtomW(szSubAppName);
     atSubIdList          = GlobalAddAtomW(szSubIdList);
     atDialogThemeEnabled = GlobalAddAtomW(szDialogThemeEnabled);
-
-    UXTHEME_LoadTheme();
 }
 
 /***********************************************************************
