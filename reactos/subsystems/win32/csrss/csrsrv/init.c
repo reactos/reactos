@@ -778,9 +778,9 @@ CsrServerInitialization(ULONG ArgumentCount,
 
 BOOL
 NTAPI
-DllMainCRTStartup(HANDLE hDll,
-                  DWORD dwReason,
-                  LPVOID lpReserved)
+DllMain(HANDLE hDll,
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
     /* We don't do much */
     UNREFERENCED_PARAMETER(hDll);
