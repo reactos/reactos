@@ -218,6 +218,8 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         pServiceImage->dwImageRunCount++;
     }
 
+    DPRINT("pServiceImage->dwImageRunCount: %lu\n", pServiceImage->dwImageRunCount);
+
     /* Link the service image to the service */
     pService->lpImage = pServiceImage;
 
@@ -1080,6 +1082,13 @@ ScmStartUserModeService(PSERVICE Service,
     DWORD dwProcessId;
 
     DPRINT("ScmStartUserModeService(%p)\n", Service);
+
+    /* If the image is already running ... */
+    if (Service->lpImage->dwImageRunCount > 1)
+    {
+        /* ... just send a start command */
+        return ScmSendStartCommand(Service, argc, argv);
+    }
 
     StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.lpReserved = NULL;
