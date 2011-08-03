@@ -282,6 +282,7 @@ CsrSrvAttachSharedSection(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
     if (CsrProcess)
     {
         /* Map the sectio into this process */
+        DPRINT1("CSR Process Handle: %p. CSR Process: %p\n", CsrProcess->Process, CsrProcess);
         Status = NtMapViewOfSection(CsrSrvSharedSection,
                                     CsrProcess->Process,
                                     &CsrSrvSharedSectionBase,
@@ -437,6 +438,24 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
             DPRINT1("Unable to allocate or find data for process 0x%x\n",
                     Request->ClientId.UniqueProcess);
         }
+    }
+    
+    if (ProcessData->Process == NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   NULL);
+        DPRINT1("WARNING: CSR PROCESS WITH NO CSR PROCESS HANDLE???\n");
+        ClientId.UniqueThread = 0;
+        Status = NtOpenProcess(&ProcessData->Process,
+                               PROCESS_ALL_ACCESS,
+                               &ObjectAttributes,
+                               &Request->ClientId);
+        DPRINT1("Status: %lx. Handle: %lx\n", Status, ProcessData->Process);
     }
     
     if (ProcessData)

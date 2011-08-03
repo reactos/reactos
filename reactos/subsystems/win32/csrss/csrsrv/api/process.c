@@ -105,6 +105,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
                                 PROCESS_ALL_ACCESS,
                                 &ObjectAttributes,
                                 &ClientId);
+          DPRINT1("CSR PRocess: %p Handle: %p\n", pProcessData, pProcessData->Process);
          if (!NT_SUCCESS(Status))
          {
             ProcessData[hash] = pProcessData->next;
