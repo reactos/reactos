@@ -34,7 +34,7 @@ EngTextOut (
 }
 
 BOOL
-APIENTRY
+NTAPI
 GreExtTextOutW(
     IN HDC hDC,
     IN INT XStart,

@@ -58,6 +58,7 @@ DC_prfnt(PDC pdc)
     /* Check if font is already realized */
     if (pdc->hlfntCur != pdc->dclevel.plfnt->baseobj.hHmgr)
     {
+        __debugbreak();
         //prfnt = LFONT_prfntRealizeFont(pdc->dclevel.plfnt);
 
         /* Dereference the old RFONT */

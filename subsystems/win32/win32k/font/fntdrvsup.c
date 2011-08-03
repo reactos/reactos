@@ -30,15 +30,16 @@ BOOL gbAttachedCSRSS;
 HSEMAPHORE ghsemFontDriver;
 LIST_ENTRY gleFontDriverList = {&gleFontDriverList, &gleFontDriverList};
 
-extern HSEMAPHORE ghsemPFFList;
+extern PFT gpftPublic;
 
 BOOL FASTCALL
 InitFontSupport(VOID)
 {
     ghsemFontDriver = EngCreateSemaphore();
     if (!ghsemFontDriver) return FALSE;
-    ghsemPFFList = EngCreateSemaphore();
-    if (!ghsemPFFList) return FALSE;
+
+    if (!PFT_bInit(&gpftPublic)) return FALSE;
+
     return TRUE;
 }
 
@@ -76,7 +77,8 @@ RFONT_vInitDeviceMetrics(
                                       sizeof(FD_DEVICEMETRICS));
 }
 
-static void
+static
+VOID
 PFE_vInitialize(
     PPFE ppfe,
     PPFF ppff,
@@ -122,23 +124,72 @@ PFE_vInitialize(
 
 }
 
+static
+VOID
+CopyFileName(
+    OUT PWCHAR pwcDest,
+    ULONG cwcBufSize,
+    IN OUT PWCHAR *ppwcSource)
+{
+    PWCHAR pwcSource = *ppwcSource;
+    ULONG cwc = 0;
+    WCHAR wc;
+
+    while (++cwc < cwcBufSize)
+    {
+        wc = *pwcSource++;
+
+        if ((wc == '|') || (wc == 0)) break;
+
+        *pwcDest++ = wc;
+    }
+
+    /* Zero terminate the destination string */
+    *pwcDest = 0;
+
+    *ppwcSource = pwcSource;
+}
+
 PPFF
 NTAPI
 EngLoadFontFileFD(
-    ULONG cFiles,
-    PFONTFILEVIEW *ppffv,
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
+    IN ULONG cFiles,
     DESIGNVECTOR *pdv,
     ULONG ulCheckSum)
 {
-    PULONG_PTR piFiles = (PULONG_PTR)ppffv;
     PVOID apvView[FD_MAX_FILES];
     ULONG acjView[FD_MAX_FILES];
+    PFONTFILEVIEW apffv[FD_MAX_FILES];
+    PULONG_PTR piFiles = (PULONG_PTR)apffv;
+    WCHAR awcFileName[MAX_PATH];
+    PWCHAR pwcCurrent;
     KAPC_STATE ApcState;
     PLIST_ENTRY ple;
     PFONTDEV pfntdev = NULL;
     HFF hff = 0;
     ULONG cFaces, cjSize, i, ulLangID = 0;
     PPFF ppff = NULL;
+
+    pwcCurrent = pwszFiles;
+
+    /* Loop the files */
+    for (i = 0; i < cFiles; i++)
+    {
+        /* Extract a file name */
+        CopyFileName(awcFileName, MAX_PATH, &pwcCurrent);
+
+        /* Try to load the file */
+        apffv[i] = (PVOID)EngLoadModuleEx(awcFileName, 0, FVF_FONTFILE);
+        if (!apffv[i])
+        {
+            DPRINT1("Failed to load file: '%ls'\n", awcFileName);
+            /* Cleanup and return */
+            while (i--) EngFreeModule(apffv[i]);
+            return NULL;
+        }
+    }
 
     /* Attach to CSRSS */
     AttachCSRSS(&ApcState);
@@ -203,7 +254,7 @@ EngLoadFontFileFD(
     ppff->hff = hff;
 
     /* Copy the FONTFILEVIEW pointers */
-    for (i = 0; i < cFiles; i++) ppff->apffv[i] = ppffv[i];
+    for (i = 0; i < cFiles; i++) ppff->apffv[i] = apffv[i];
 
     /* Loop all faces in the font file */
     for (i = 0; i < cFaces; i++)
@@ -231,7 +282,7 @@ EngLoadFontDriver(
     pldev = EngLoadImageEx(pwszDriverName, LDEV_FONT);
     if (!pldev)
     {
-        DPRINT1("Failed to load freetype font driver\n");
+        DPRINT1("Failed to load font driver: %ls\n", pwszDriverName);
         return FALSE;
     }
 
@@ -292,7 +343,7 @@ GreStartupFontDrivers(VOID)
     DPRINT1("############ Started font drivers\n");
 
     // lets load some fonts
-    cFonts = GreAddFontResourceInternal(&pwszFile, 1, 0, 0, NULL);
+    cFonts = GreAddFontResourceW(pwszFile, 31, 1, 0, 0, NULL);
     ASSERT(cFonts > 0);
 
 }
