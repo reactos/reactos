@@ -497,6 +497,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
 static NTSTATUS
 CsrpCreateHeap (int argc, char ** argv, char ** envp)
 {
+    CHAR Value[] = "1024,3072,512";
     NTSTATUS Status;
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -512,7 +513,7 @@ CsrpCreateHeap (int argc, char ** argv, char ** envp)
 	}
     
     
-    Status = CsrSrvCreateSharedSection("1024,3072,512");
+    Status = CsrSrvCreateSharedSection(Value);
     DPRINT1("Status: %lx\n", Status);
     ASSERT(Status == STATUS_SUCCESS);
     

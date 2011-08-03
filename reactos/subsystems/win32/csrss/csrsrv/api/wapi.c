@@ -293,6 +293,12 @@ CsrSrvAttachSharedSection(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
                                     ViewUnmap,
                                     SEC_NO_CHANGE,
                                     PAGE_EXECUTE_READ);
+        if (Status == STATUS_CONFLICTING_ADDRESSES)
+        {
+            /* I Think our csrss tries to connect to itself... */
+            DPRINT1("Multiple mapping hack\n");
+            Status = STATUS_SUCCESS;
+        }
         if (!NT_SUCCESS(Status)) return Status;
     }
     
