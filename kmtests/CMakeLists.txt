@@ -32,7 +32,9 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
     ntos_ob/ObCreate.c
+    rtl/RtlAvlTree.c
     rtl/RtlMemory.c
+    rtl/RtlSplayTree.c
 
     kmtest_drv/kmtest_drv.rc)
 
@@ -63,13 +65,24 @@ list(APPEND KMTEST_SOURCE
     kmtest/testlist.c
 
     example/Example_user.c
+    rtl/RtlAvlTree.c
     rtl/RtlMemory.c
+    rtl/RtlSplayTree.c
 
     kmtest/kmtest.rc)
 
 add_executable(kmtest ${KMTEST_SOURCE})
 set_module_type(kmtest win32cui)
-add_importlibs(kmtest advapi32 msvcrt kernel32)
+add_importlibs(kmtest advapi32 msvcrt kernel32 ntdll)
 set_property(TARGET kmtest PROPERTY COMPILE_DEFINITIONS KMT_USER_MODE)
 
 add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
+
+#
+# Group targets
+#
+add_custom_target(kmtest_drivers)
+add_dependencies(kmtest_drivers kmtest_drv example_drv)
+
+add_custom_target(kmtest_all)
+add_dependencies(kmtest_all kmtest_drivers kmtest)

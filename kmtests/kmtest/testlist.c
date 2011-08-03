@@ -8,12 +8,16 @@
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;
+KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlMemory;
+KMT_TESTFUNC Test_RtlSplayTree;
 
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
 {
     { "Example",            Test_Example },
+    { "RtlAvlTree",         Test_RtlAvlTree },
     { "RtlMemory",          Test_RtlMemory },
+    { "RtlSplayTree",       Test_RtlSplayTree },
     { NULL,                 NULL },
 };

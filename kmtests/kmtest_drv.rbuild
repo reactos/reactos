@@ -42,7 +42,9 @@
 		<file>ObCreate.c</file>
 	</directory>
 	<directory name="rtl">
+		<file>RtlAvlTree.c</file>
 		<file>RtlMemory.c</file>
+		<file>RtlSplayTree.c</file>
 	</directory>
 </module>
 <module name="kmtest_printf" type="staticlibrary">

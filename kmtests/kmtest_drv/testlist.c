@@ -5,7 +5,6 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <ntddk.h>
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;
@@ -27,7 +26,9 @@ KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KernelType;
 KMT_TESTFUNC Test_ObCreate;
+KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlMemory;
+KMT_TESTFUNC Test_RtlSplayTree;
 
 const KMT_TEST TestList[] =
 {
@@ -50,6 +51,8 @@ const KMT_TEST TestList[] =
     { "KeProcessor",                        Test_KeProcessor },
     { "-KernelType",                        Test_KernelType },
     { "ObCreate",                           Test_ObCreate },
+    { "RtlAvlTreeKM",                       Test_RtlAvlTree },
     { "RtlMemoryKM",                        Test_RtlMemory },
+    { "RtlSplayTreeKM",                     Test_RtlSplayTree },
     { NULL,                                 NULL }
 };
