@@ -5,6 +5,7 @@ include_directories(
 # subdirectories containing special-purpose drivers
 #
 add_subdirectory(example)
+add_subdirectory(ntos_io)
 
 #
 # kmtest_drv.sys driver
@@ -65,6 +66,7 @@ list(APPEND KMTEST_SOURCE
     kmtest/testlist.c
 
     example/Example_user.c
+    ntos_io/IoDriverObject_user.c
     rtl/RtlAvlTree.c
     rtl/RtlMemory.c
     rtl/RtlSplayTree.c
@@ -82,7 +84,7 @@ add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
 # Group targets
 #
 add_custom_target(kmtest_drivers)
-add_dependencies(kmtest_drivers kmtest_drv example_drv)
+add_dependencies(kmtest_drivers kmtest_drv example_drv iodriverobject_drv)
 
 add_custom_target(kmtest_all)
 add_dependencies(kmtest_all kmtest_drivers kmtest)

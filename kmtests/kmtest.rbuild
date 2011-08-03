@@ -12,6 +12,9 @@
 	<directory name="example">
 		<file>Example_user.c</file>
 	</directory>
+	<directory name="ntos_io">
+		<file>IoDriverObject_user.c</file>
+	</directory>
 	<directory name="rtl">
 		<file>RtlAvlTree.c</file>
 		<file>RtlMemory.c</file>

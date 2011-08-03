@@ -4,6 +4,9 @@
 	<directory name="example">
 		<xi:include href="example/example_drv.rbuild" />
 	</directory>
+	<directory name="ntos_io">
+		<xi:include href="ntos_io/iodriverobject_drv.rbuild" />
+	</directory>
 	<xi:include href="kmtest.rbuild" />
 	<xi:include href="kmtest_drv.rbuild" />
 </group>
