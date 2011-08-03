@@ -437,11 +437,20 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
             DPRINT1("Unable to allocate or find data for process 0x%x\n",
                     Request->ClientId.UniqueProcess);
         }
+    }
+    
+    if (ProcessData)
+    {
+        /* Attach the Shared Section */
+        Status = CsrSrvAttachSharedSection(ProcessData, ConnectInfo);
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT1("Connection ok\n");
+            AllowConnection = TRUE;
+        }
         else
         {
-            /* Attach the Shared Section */
-            Status = CsrSrvAttachSharedSection(ProcessData, ConnectInfo);
-            if (NT_SUCCESS(Status)) AllowConnection = TRUE;
+            DPRINT1("Shared section map failed: %lx\n", Status);
         }
     }
     
