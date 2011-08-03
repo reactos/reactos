@@ -482,12 +482,22 @@ CsrpCreateBNODirectory (int argc, char ** argv, char ** envp)
     return Status;
 }
 
+
+VOID
+WINAPI
+BasepFakeStaticServerData(VOID);
+
+NTSTATUS
+NTAPI
+CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
+
 /**********************************************************************
  * CsrpCreateHeap/3
  */
 static NTSTATUS
 CsrpCreateHeap (int argc, char ** argv, char ** envp)
 {
+    NTSTATUS Status;
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
 	CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -500,6 +510,12 @@ CsrpCreateHeap (int argc, char ** argv, char ** envp)
 	{
 		return STATUS_UNSUCCESSFUL;
 	}
+    
+    
+    Status = CsrSrvCreateSharedSection("");
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    BasepFakeStaticServerData();
 	return STATUS_SUCCESS;
 }
 
