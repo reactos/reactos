@@ -153,7 +153,6 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     PPEB Peb = NtCurrentPeb();
     
     /* ReactOS Hackssss */
-    ParameterValue = "1024,3072,512";
     Status = NtQuerySystemInformation(SystemBasicInformation,
                                       &CsrNtSysInfo,
                                       sizeof(SYSTEM_BASIC_INFORMATION),
@@ -175,7 +174,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     }
     
     /* Make sure it's valid */
-    if (!*SizeValue) return(STATUS_INVALID_PARAMETER);
+    if (!*SizeValue) return STATUS_INVALID_PARAMETER;
     
     /* Convert it to an integer */
     Status = RtlCharToInteger(SizeValue, 0, &Size);
@@ -184,6 +183,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     /* Multiply by 1024 entries and round to page size */
     #define ROUND_UP(n,size)	(((ULONG)(n) + (size - 1)) & ~(size - 1)) // hax
     CsrSrvSharedSectionSize = ROUND_UP(Size * 1024, CsrNtSysInfo.PageSize);
+    DPRINT1("Size: %lx\n", CsrSrvSharedSectionSize);
     
     /* Create the Secion */
     SectionSize.LowPart = CsrSrvSharedSectionSize;

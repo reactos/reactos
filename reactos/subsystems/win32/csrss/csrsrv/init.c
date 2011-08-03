@@ -512,7 +512,8 @@ CsrpCreateHeap (int argc, char ** argv, char ** envp)
 	}
     
     
-    Status = CsrSrvCreateSharedSection("");
+    Status = CsrSrvCreateSharedSection("1024,3072,512");
+    DPRINT1("Status: %lx\n", Status);
     ASSERT(Status == STATUS_SUCCESS);
     
     BasepFakeStaticServerData();
