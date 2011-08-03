@@ -12,6 +12,21 @@
 #include <debug.h>
 
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+ESTROBJ_vInit(
+    IN ESTROBJ *pestro,
+    IN PWSTR pwsz,
+    IN ULONG cwc)
+{
+
+}
+
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
 BOOL
 APIENTRY
 STROBJ_bEnum(

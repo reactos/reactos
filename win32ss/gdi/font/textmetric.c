@@ -80,7 +80,7 @@ RFONT_vGetETM(
     petm->emDoubleLowerUnderlineWidth = 0; // FIXME
     petm->emStrikeOutOffset = 0; // FIXME
     petm->emStrikeOutWidth = 0; // FIXME
-    petm->emKernPairs = pifi->cKerningPairs;
+    petm->emKernPairs = (WORD)pifi->cKerningPairs;
     petm->emKernTracks = 0; // FIXME
 
 }
@@ -253,6 +253,46 @@ NtGdiGetTextExtent(
     return FALSE;
 }
 
+BOOL
+NTAPI
+GreGetTextExtentExW(
+    IN HDC hdc,
+    IN OPTIONAL LPWSTR lpwsz,
+    IN ULONG cwc,
+    IN ULONG dxMax,
+    OUT OPTIONAL ULONG *pcch,
+    OUT OPTIONAL PULONG pdxOut,
+    OUT LPSIZE psize,
+    IN FLONG fl)
+{
+    PDC pdc;
+    PRFONT prfnt;
+    BOOL bResult;
+    ESTROBJ estro;
+
+    DPRINT1("GreGetTextExtentExW()\n");
+
+    ESTROBJ_vInit(&estro, lpwsz, cwc);
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return FALSE;
+    }
+
+    /* Get pointer to RFONT */
+    prfnt = DC_prfnt(pdc);
+
+
+
+
+    /* Unlock the DC and return */
+    DC_UnlockDc(pdc);
+    return bResult;
+
+}
+
 W32KAPI
 BOOL
 APIENTRY
@@ -261,12 +301,102 @@ NtGdiGetTextExtentExW(
     IN OPTIONAL LPWSTR lpwsz,
     IN ULONG cwc,
     IN ULONG dxMax,
-    OUT OPTIONAL ULONG *pcCh,
+    OUT OPTIONAL ULONG *pcch,
     OUT OPTIONAL PULONG pdxOut,
     OUT LPSIZE psize,
     IN FLONG fl)
 {
-    ASSERT(FALSE);
-    return FALSE;
+    ULONG aulBuffer[100];
+    ULONG cjBufSize;
+    PVOID pvBuffer;
+    SIZEL sizel;
+    PWSTR pwszSafe;
+    PULONG pcchSafe = NULL, pdxSafe = NULL;
+    BOOL bResult = TRUE;
+
+    DPRINT1("NtGdiGetTextExtentExW(%.*ls)\n", cwc, lpwsz);
+
+    /* Check parameters */
+    if ((cwc == 0) || (cwc > 1000)) return FALSE;
+
+    /* Calculate size of the safe buffer */
+    cjBufSize = cwc * sizeof(WCHAR);
+    if (pcch) cjBufSize += cwc * sizeof(ULONG);
+    if (pdxOut) cjBufSize += cwc * sizeof(ULONG);
+
+    if (cjBufSize <= sizeof(aulBuffer))
+    {
+        pvBuffer = aulBuffer;
+    }
+    else
+    {
+        pvBuffer = ExAllocatePoolWithTag(PagedPool, cjBufSize, GDITAG_TEXT);
+        if (!pvBuffer)
+        {
+            DPRINT1("Could not allocate buffer!\n");
+            return FALSE;
+        }
+    }
+
+    pwszSafe = pvBuffer;
+    if (pcch)
+    {
+        pcchSafe = (PULONG)pvBuffer;
+        pwszSafe = (PWCHAR)(pcchSafe + cwc);
+    }
+
+    if (pdxOut)
+    {
+        pdxSafe = (PULONG)pwszSafe;
+        pwszSafe = (PWCHAR)(pdxSafe + cwc);
+    }
+
+    /* Use SEH for buffer transfer */
+    _SEH2_TRY
+    {
+        ProbeForRead(lpwsz, cwc * sizeof(WCHAR), 1);
+        if (pcch) ProbeForWrite(pcch, cwc * sizeof(ULONG), sizeof(ULONG));
+        if (pdxOut) ProbeForWrite(pdxOut, cwc * sizeof(ULONG), sizeof(ULONG));
+        RtlCopyMemory(pwszSafe, lpwsz, cwc * sizeof(WCHAR));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bResult = FALSE;
+    }
+    _SEH2_END
+
+    if (bResult)
+    {
+        /* Call the internal function */
+        bResult = GreGetTextExtentExW(hdc,
+                                      pwszSafe,
+                                      cwc,
+                                      dxMax,
+                                      pcchSafe,
+                                      pdxSafe,
+                                      &sizel,
+                                      fl);
+
+        /* Do we need to copy something back? */
+        if (bResult && (pcch || pdxOut))
+        {
+            _SEH2_TRY
+            {
+                /* Buffers are already probed */
+                if (pcch) RtlCopyMemory(pcch, pcchSafe, cwc * sizeof(ULONG));
+                if (pdxOut) RtlCopyMemory(pdxOut, pdxSafe, cwc * sizeof(ULONG));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                bResult = FALSE;
+            }
+            _SEH2_END
+        }
+    }
+
+    /* Free temp buffer, if we allocated one */
+    if (pvBuffer != aulBuffer) ExFreePoolWithTag(pvBuffer, GDITAG_TEXT);
+
+    return bResult;
 }
 

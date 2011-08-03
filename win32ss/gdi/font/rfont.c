@@ -11,12 +11,17 @@
 #define NDEBUG
 #include <debug.h>
 
+
+
+
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
 ULONG
 APIENTRY
-FONTOBJ_cGetAllGlyphHandles (
-	IN FONTOBJ  *FontObj,
-	IN HGLYPH   *Glyphs
-	)
+FONTOBJ_cGetAllGlyphHandles(
+    IN FONTOBJ *pfo,
+    IN HGLYPH *phg)
 {
     ASSERT(FALSE);
     return 0;
@@ -25,11 +30,11 @@ FONTOBJ_cGetAllGlyphHandles (
 ULONG
 APIENTRY
 FONTOBJ_cGetGlyphs(
-	IN FONTOBJ *FontObj,
-	IN ULONG    Mode,
-	IN ULONG    NumGlyphs,
-	IN HGLYPH  *GlyphHandles,
-	IN PVOID   *OutGlyphs)
+    IN FONTOBJ *pfo,
+    IN ULONG iMode,
+    IN ULONG cGlyph,
+    IN HGLYPH *phg,
+    IN PVOID *ppvGlyph)
 {
     ASSERT(FALSE);
     return 0;
@@ -37,17 +42,19 @@ FONTOBJ_cGetGlyphs(
 
 IFIMETRICS*
 APIENTRY
-FONTOBJ_pifi(IN FONTOBJ *pfo)
+FONTOBJ_pifi(
+    IN FONTOBJ *pfo)
 {
-    ASSERT(FALSE);
-    return NULL;
+    PRFONT prfnt = CONTAINING_RECORD(pfo, RFONT, fobj);
+
+    return prfnt->ppfe->pifi;
 }
 
 PVOID
 APIENTRY
 FONTOBJ_pvTrueTypeFontFile(
-	IN FONTOBJ  *FontObj,
-	IN ULONG    *FileSize)
+    IN FONTOBJ  *FontObj,
+    IN ULONG    *FileSize)
 {
     ASSERT(FALSE);
     return NULL;
@@ -58,68 +65,84 @@ WIN32KAPI
 XFORMOBJ*
 APIENTRY
 FONTOBJ_pxoGetXform(
-  IN FONTOBJ *pfo)
+    IN FONTOBJ *pfo)
 {
     ASSERT(FALSE);
     return NULL;
 }
 
-/*
- * @unimplemented
- */
+
 VOID
 APIENTRY
 FONTOBJ_vGetInfo(
-	IN  FONTOBJ   *FontObj,
-	IN  ULONG      InfoSize,
-	OUT PFONTINFO  FontInfo)
+    IN  FONTOBJ *pfo,
+    IN  ULONG cjSize,
+    OUT PFONTINFO pfi)
 {
-    ASSERT(FALSE);
+    PRFONT prfnt = CONTAINING_RECORD(pfo, RFONT, fobj);
+    FLONG flInfo = prfnt->ppfe->pifi->flInfo;
+
+    __debugbreak();
+
+    pfi->cjThis = sizeof(FONTINFO);
+    pfi->flCaps = 0;
+    if (pfo->flFontType & FO_TYPE_DEVICE) pfi->flCaps |= FO_DEVICE_FONT;
+    if (flInfo & FM_INFO_RETURNS_OUTLINES) pfi->flCaps |= FO_OUTLINE_CAPABLE;
+    pfi->cGlyphsSupported = prfnt->pfdg->cGlyphsSupported;
+
+    /* Reset all sizes to 0 */
+    pfi->cjMaxGlyph1 = 0;
+    pfi->cjMaxGlyph4 = 0;
+    pfi->cjMaxGlyph8 = 0;
+    pfi->cjMaxGlyph32 = 0;
+
+    /* Set the appropriate field */
+    switch (prfnt->cBitsPerPel)
+    {
+        case 1: pfi->cjMaxGlyph1 = prfnt->cache.cjGlyphMax; break;
+        case 4: pfi->cjMaxGlyph4 = prfnt->cache.cjGlyphMax; break;
+        case 8: pfi->cjMaxGlyph8 = prfnt->cache.cjGlyphMax; break;
+        case 32: pfi->cjMaxGlyph32 = prfnt->cache.cjGlyphMax; break;
+        default: ASSERT(FALSE); break;
+    }
+
 }
 
-/*
- * @unimplemented
- */
-FD_GLYPHSET * APIENTRY
+FD_GLYPHSET *
+APIENTRY
 FONTOBJ_pfdg(
-   IN FONTOBJ *FontObj)
+   IN FONTOBJ *pfo)
 {
    ASSERT(FALSE);
    return NULL;
 }
 
-/*
- * @unimplemented
- */
-PBYTE APIENTRY
+PBYTE
+APIENTRY
 FONTOBJ_pjOpenTypeTablePointer(
-   IN FONTOBJ *FontObj,
-   IN ULONG Tag,
-   OUT ULONG *Table)
+   IN FONTOBJ *pfo,
+   IN ULONG ulTag,
+   OUT ULONG *pcjTable)
 {
    ASSERT(FALSE);
    return NULL;
 }
 
-/*
- * @unimplemented
- */
-PFD_GLYPHATTR APIENTRY
+PFD_GLYPHATTR
+APIENTRY
 FONTOBJ_pQueryGlyphAttrs(
-   IN FONTOBJ *FontObj,
-   IN ULONG Mode)
+   IN FONTOBJ *pfo,
+   IN ULONG iMode)
 {
    ASSERT(FALSE);
    return NULL;
 }
 
-/*
- * @unimplemented
- */
-LPWSTR APIENTRY
+LPWSTR
+APIENTRY
 FONTOBJ_pwszFontFilePaths(
-   IN FONTOBJ *FontObj,
-   OUT ULONG *PathLength)
+   IN FONTOBJ *pfo,
+   OUT ULONG *pcwc)
 {
    ASSERT(FALSE);
    return NULL;

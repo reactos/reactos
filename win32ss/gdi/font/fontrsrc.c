@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-HSEMAPHORE ghsemPFFList;
+PFT gpftPublic;
 static LIST_ENTRY glePrivatePFFList = {&glePrivatePFFList, &glePrivatePFFList};
 static LIST_ENTRY glePublicPFFList = {&glePublicPFFList, &glePublicPFFList};
 
@@ -20,7 +20,7 @@ BOOL
 PFF_bCompareFiles(
     PPFF ppff,
     ULONG cFiles,
-    PFONTFILEVIEW pffv[])
+    PFONTFILEVIEW apffv[])
 {
     ULONG i;
 
@@ -31,66 +31,178 @@ PFF_bCompareFiles(
     for (i = 0; i < cFiles; i++)
     {
         /* Check if the files match */
-        if (pffv[i] != ppff->apffv[i]) return FALSE;
+        if (apffv[i] != ppff->apffv[i]) return FALSE;
     }
 
     return TRUE;
 }
 
+BOOL
+NTAPI
+PFT_bInit(
+    PFT *ppft)
+{
+
+    RtlZeroMemory(ppft, sizeof(PFT));
+
+    ppft->hsem = EngCreateSemaphore();
+    if (!ppft->hsem) return FALSE;
+
+    return TRUE;
+}
+
+static
+PPFF
+PFT_pffFindFont(
+    PFT *ppft,
+    PWSTR pwszFiles,
+    ULONG cwc,
+    ULONG cFiles,
+    ULONG iFileNameHash)
+{
+    ULONG iListIndex = iFileNameHash % MAX_FONT_LIST;
+    PPFF ppff = NULL;
+
+    /* Acquire PFT lock */
+    EngAcquireSemaphore(ppft->hsem);
+
+    /* Loop all PFFs in the slot */
+    for (ppff = ppft->apPFF[iListIndex]; ppff; ppff = ppff->pPFFNext)
+    {
+        /* Quick check */
+        if (ppff->iFileNameHash != iFileNameHash) continue;
+
+        /* Do a full check */
+        if (!wcsncmp(ppff->pwszPathname, pwszFiles, cwc)) break;
+    }
+
+    /* Release PFT lock */
+    EngReleaseSemaphore(ppft->hsem);
+
+    return ppff;
+}
+
+static
+VOID
+PFT_vInsertPFE(
+    PPFT ppft,
+    PPFE ppfe)
+{
+    UCHAR ajWinChatSet[2] = {0, DEFAULT_CHARSET};
+    UCHAR *pjCharSets;
+    PIFIMETRICS pifi = ppfe->pifi;
+
+    if (pifi->dpCharSets)
+    {
+        pjCharSets = (PUCHAR)pifi + pifi->dpCharSets;
+    }
+    else
+    {
+        ajWinChatSet[0] = pifi->jWinCharSet;
+        pjCharSets = ajWinChatSet;
+    }
+
+
+}
+
+static
+VOID
+PFT_vInsertPFF(
+    PPFT ppft,
+    PPFF ppff,
+    ULONG iFileNameHash)
+{
+    ULONG i, iListIndex = iFileNameHash % MAX_FONT_LIST;
+
+    ppff->iFileNameHash = iFileNameHash;
+
+    /* Acquire PFT lock */
+    EngAcquireSemaphore(ppft->hsem);
+
+    /* Insert the font file into the hash bucket */
+    ppff->pPFFPrev = NULL;
+    ppff->pPFFNext = ppft->apPFF[iListIndex];
+    ppft->apPFF[iListIndex] = ppff;
+
+    /* Loop all PFE's */
+    for (i = 0; i < ppff->cFonts; i++)
+    {
+        PFT_vInsertPFE(ppft, &ppff->apfe[i]);
+    }
+
+    /* Release PFT lock */
+    EngReleaseSemaphore(ppft->hsem);
+}
+
+static
+ULONG
+CalculateNameHash(PWSTR pwszName)
+{
+    ULONG iHash = 0;
+    WCHAR wc;
+
+    while ((wc = *pwszName++) != 0)
+    {
+        iHash = _rotl(iHash, 7);
+        iHash += wc;
+    }
+
+    return iHash;
+}
+
+
+
 INT
 NTAPI
-GreAddFontResourceInternal(
-    IN PWCHAR apwszFiles[],
+GreAddFontResourceW(
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
     IN ULONG cFiles,
     IN FLONG fl,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv)
 {
-    PFONTFILEVIEW apffv[FD_MAX_FILES];
+    PPFT ppft;
     PPFF ppff = NULL;
-    PLIST_ENTRY ple, pleListHead;
-    ULONG i, ulCheckSum = 0;
+    ULONG ulCheckSum = 0;
+    PPROCESSINFO ppi;
+    ULONG iFileNameHash;
 
-    /* Loop the files */
-    for (i = 0; i < cFiles; i++)
+    // HACK: only global list for now
+    fl &= ~FR_PRIVATE;
+
+    /* Add to private table? */
+    if (fl & FR_PRIVATE)
     {
-        /* Try to load the file */
-        apffv[i] = (PVOID)EngLoadModuleEx(apwszFiles[i], 0, FVF_FONTFILE);
-        if (!apffv[i])
-        {
-            DPRINT1("Failed to load file: '%ls'\n", apwszFiles[i]);
-            /* Cleanup and return */
-            while (i--) EngFreeModule(apffv[i]);
-            return 0;
-        }
+        /* Use the process owned private font table */
+        ppi = PsGetCurrentProcessWin32Process();
+        ppft = ppi->ppftPrivate;
+    }
+    else
+    {
+        /* Use the global font table */
+        ppft = &gpftPublic;
     }
 
-    pleListHead = fl & FR_PRIVATE ? &glePrivatePFFList : &glePublicPFFList;
+    /* Get a hash value for the path name */
+    iFileNameHash = CalculateNameHash(pwszFiles);
 
-    /* Acquire PFF list lock */
-    EngAcquireSemaphore(ghsemPFFList);
+    /* Try to find the font in the font table */
+    ppff = PFT_pffFindFont(ppft, pwszFiles, cwc, cFiles, iFileNameHash);
 
-    /* Loop all physical font files (PFF) */
-    for (ple = pleListHead->Flink; ple != pleListHead; ple = ple->Flink)
+    /* Did we find the font? */
+    if (ppff)
     {
-        ppff = CONTAINING_RECORD(ple, PFF, leLink);
-
-        /* Check if the files are already loaded */
-        if (PFF_bCompareFiles(ppff, cFiles, apffv)) break;
-    }
-
-    /* Release PFF list lock */
-    EngReleaseSemaphore(ghsemPFFList);
-
-    if (ple == pleListHead)
-    {
-        /* Cleanup loaded files, we don't need them anymore */
-        for (i = 0; i < cFiles; i++) EngFreeModule(apffv[i]);
+        /* Return the number of faces */
         return ppff->cFonts;
     }
 
+    // FIXME: check other list, "copy" pft if found
+
+
+
     /* Load the font file with a font driver */
-    ppff = EngLoadFontFileFD(cFiles, apffv, pdv, ulCheckSum);
+    ppff = EngLoadFontFileFD(pwszFiles, cwc, cFiles, pdv, ulCheckSum);
     if (!ppff)
     {
         DPRINT1("Failed to load font with font driver\n");
@@ -98,59 +210,10 @@ GreAddFontResourceInternal(
     }
 
     /* Insert the PFF into the list */
-    EngAcquireSemaphore(ghsemPFFList);
-    InsertTailList(pleListHead, &ppff->leLink);
-    EngReleaseSemaphore(ghsemPFFList);
+    PFT_vInsertPFF(ppft, ppff, iFileNameHash);
 
+    /* Return the number of faces */
     return ppff->cFonts;
-}
-
-static
-BOOL
-SeperateFileNames(
-    PWCHAR apwszFiles[],
-    PWCHAR pwcDest,
-    PWCHAR pwszFiles,
-    ULONG cwc,
-    ULONG cFiles)
-{
-    PWCHAR pwszEnd = pwszFiles + cwc;
-    WCHAR wc;
-    ULONG i = 0;
-
-    apwszFiles[0] = pwcDest;
-
-    /* Loop the file name string */
-    while (pwszFiles < pwszEnd)
-    {
-        wc = *pwszFiles++;
-
-        /* Must not be terminated before the end */
-        if (wc == 0) return FALSE;
-
-        /* Check for a seperator */
-        if (wc == '|')
-        {
-            /* Zero terminate current path name */
-            *pwcDest++ = 0;
-
-            /* Go to next file name and check if its too many */
-            if (++i >= cFiles) return FALSE;
-            apwszFiles[i] = pwcDest;
-        }
-        else
-        {
-            *pwcDest++ = wc;
-        }
-    }
-
-    /* Must be terminated now */
-    if (*pwszFiles != 0 || i != cFiles - 1)
-    {
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 
@@ -165,11 +228,11 @@ NtGdiAddFontResourceW(
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv)
 {
-    PVOID pvBuffer;
-    PWCHAR apwszFiles[FD_MAX_FILES];
+    PWCHAR pwszUpcase;
     ULONG cjSize;
     DESIGNVECTOR dv;
     INT iRes = 0;
+    ULONG i;
 
     /* Check parameters */
     if (cFiles == 0 || cFiles > FD_MAX_FILES ||
@@ -180,8 +243,8 @@ NtGdiAddFontResourceW(
     }
 
     /* Allocate a buffer */
-    pvBuffer = EngAllocMem(0, (cwc + 1) * sizeof(WCHAR), 'pmTG');
-    if (!pvBuffer)
+    pwszUpcase = EngAllocMem(0, (cwc + 1) * sizeof(WCHAR), 'pmTG');
+    if (!pwszUpcase)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
@@ -190,9 +253,17 @@ NtGdiAddFontResourceW(
     _SEH2_TRY
     {
         ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), 2);
-        if (!SeperateFileNames(apwszFiles, pvBuffer, pwszFiles, cwc, cFiles))
+
+        /* Verify zero termination */
+        if (pwszFiles[cwc] != 0)
         {
             _SEH2_YIELD(goto cleanup);
+        }
+
+        /* Convert the string to upper case */
+        for (i = 0; i < cwc; i++)
+        {
+            pwszUpcase[i] = RtlUpcaseUnicodeChar(pwszFiles[i]);
         }
 
         /* Check if we have a DESIGNVECTOR */
@@ -220,10 +291,10 @@ NtGdiAddFontResourceW(
     _SEH2_END
 
     /* Call the internal function */
-    iRes = GreAddFontResourceInternal(apwszFiles, cFiles, fl, dwPidTid, pdv);
+    iRes = GreAddFontResourceW(pwszUpcase, cwc, cFiles, fl, dwPidTid, pdv);
 
 cleanup:
-    EngFreeMem(pvBuffer);
+    EngFreeMem(pwszUpcase);
 
     return iRes;
 }
