@@ -101,3 +101,4 @@ typedef struct _DC *PDC;
 #endif // __cplusplus
 
 #include "gdi/ntgdi/gdidebug.h"
+//#include "gdi/font/font.h"

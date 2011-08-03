@@ -1,3 +1,4 @@
+#pragma once
 
 #define LFONT_GetObject FontGetObject
 
@@ -74,9 +75,11 @@ typedef struct _PFE
 typedef struct _PFF
 {
     ULONG sizeofThis;
-    LIST_ENTRY leLink;
+    struct _PFF *pPFFNext;
+    struct _PFF *pPFFPrev;
     PWSTR pwszPathname;
     ULONG cwc;
+    ULONG iFileNameHash;
     ULONG cFiles;
     FLONG flState;
     ULONG cLoaded;
@@ -96,6 +99,56 @@ typedef struct _PFF
     PFONTFILEVIEW apffv[FD_MAX_FILES];
     PFE apfe[1];
 } PFF, *PPFF;
+
+typedef struct _HASHBUCKET
+{
+    struct _HASHBUCKET *pbktCollision;
+   // PFELINK *ppfelEnumHead;
+   // PFELINK *ppfelEnumTail;
+    ULONG cTrueType;
+    FLONG fl;
+    struct _HASHBUCKET * pbktPrev;
+    struct _HASHBUCKET * pbktNext;
+    ULONG ulTime;
+    union
+    {
+        WCHAR wcCapName[1];
+        UNIVERSAL_FONT_ID ufi;
+    } u;
+} HASHBUCKET, *PHASHBUCKET;
+
+typedef enum _FONT_HASH_TYPE
+{
+    FHT_FAMILY = 1,
+    FHT_FACE,
+    FHT_UFI,
+} FONT_HASH_TYPE;
+
+typedef struct
+{
+    DWORD id;
+    FONT_HASH_TYPE fht;
+    ULONG cBuckets;
+    ULONG cUsed;
+    ULONG cCollisions;
+    HASHBUCKET * pbktFirst;
+    HASHBUCKET * pbktLast;
+    HASHBUCKET * apbkt[];
+} FONTHASH, *PFONTHASH;
+
+#define MAX_FONT_LIST 100
+typedef struct _PFT
+{
+    PFONTHASH  pfhFamily;
+    PFONTHASH  pfhFace;
+    PFONTHASH  pfhUFI;
+    ULONG      cBuckets;
+    ULONG      cFiles;
+    PPFF       apPFF[MAX_FONT_LIST];
+
+    /* ROS specific */
+    HSEMAPHORE hsem;
+} PFT, *PPFT;
 
 typedef struct
 {
@@ -222,6 +275,56 @@ typedef struct _LFONT
     ENUMLOGFONTEXDVW elfexw;
 } LFONT, *PLFONT;
 
+enum _ESTROBJ_FLAGS
+{
+    TO_MEM_ALLOCATED  = 0x0001,
+    TO_ALL_PTRS_VALID = 0x0002,
+    TO_VALID          = 0x0004,
+    TO_ESC_NOT_ORIENT = 0x0008,
+    TO_PWSZ_ALLOCATED = 0x0010,
+    TSIM_UNDERLINE1   = 0x0020,
+    TSIM_UNDERLINE2   = 0x0040,
+    TSIM_STRIKEOUT    = 0x0080,
+    TO_HIGHRESTEXT    = 0x0100,
+    TO_BITMAPS        = 0x0200,
+    TO_PARTITION_INIT = 0x0400,
+    TO_ALLOC_FACENAME = 0x0800,
+    TO_SYS_PARTITION  = 0x1000,
+};
+
+typedef struct _ESTROBJ
+{
+    STROBJ    stro; // Text string object header.
+    ULONG     cgposCopied;
+    ULONG     cgposPositionsEnumerated;
+    PRFONT    prfnt;
+    FLONG     flTO;
+    PGLYPHPOS pgpos;
+    POINTFIX  ptfxRef;
+    POINTFIX  ptfxUpdate;
+    POINTFIX  ptfxEscapement;
+    RECTFX    rcfx;
+    FIX       fxExtent;
+    FIX       fxExtra;
+    FIX       fxBreakExtra;
+    DWORD     dwCodePage;
+    ULONG     cExtraRects;
+    RECTL     arclExtra[3];
+    RECTL     rclBackGroundSave;
+    PWCHAR    pwcPartition;
+    PLONG     plPartition;
+    PLONG     plNext;
+    PGLYPHPOS pgpNext;
+    PLONG     plCurrentFont;
+    POINTL    ptlBaseLineAdjust;
+    INT       cTTSysGlyphs;
+    INT       cSysGlyphs;
+    INT       cDefGlyphs;
+    INT       cNumFaceNameGlyphs;
+    PVOID     pacFaceNameGlyphs;
+    ULONG     acFaceNameGlyphs[8];
+} ESTROBJ, *PESTROBJ;
+
 FORCEINLINE
 PLFONT
 LFONT_ShareLockFont(HFONT hfont)
@@ -236,6 +339,17 @@ LFONT_ShareUnlockFont(PLFONT plfnt)
     GDIOBJ_vDereferenceObject(&plfnt->baseobj);
 }
 
+BOOL
+NTAPI
+PFT_bInit(
+    PFT *ppft);
+
+VOID
+NTAPI
+ESTROBJ_vInit(
+    IN ESTROBJ *pestro,
+    IN PWSTR pwsz,
+    IN ULONG cwc);
 
 HFONT
 NTAPI
@@ -253,17 +367,34 @@ DC_prfnt(PDC pdc);
 PPFF
 NTAPI
 EngLoadFontFileFD(
-    ULONG cFiles,
-    PFONTFILEVIEW *ppffv,
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
+    IN ULONG cFiles,
     DESIGNVECTOR *pdv,
     ULONG ulCheckSum);
 
 INT
 NTAPI
-GreAddFontResourceInternal(
-    IN PWCHAR apwszFiles[],
+GreAddFontResourceW(
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
     IN ULONG cFiles,
     IN FLONG fl,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv);
 
+BOOL
+NTAPI
+GreExtTextOutW(
+    IN HDC hDC,
+    IN INT XStart,
+    IN INT YStart,
+    IN UINT fuOptions,
+    IN OPTIONAL PRECTL lprc,
+    IN LPWSTR String,
+    IN INT Count,
+    IN OPTIONAL LPINT Dx,
+    IN DWORD dwCodePage);
+
+
+#define DbgDefaultChannel 0x0

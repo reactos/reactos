@@ -278,7 +278,7 @@ typedef struct _PROCESSINFO
     USERSTARTUPINFO usi;
     DWORD dwLayout;
     DWORD dwRegisteredClasses;
-
+    struct _PFT *ppftPrivate;
     /* ReactOS */
     FAST_MUTEX PrivateFontListLock;
     LIST_ENTRY PrivateFontListHead;
