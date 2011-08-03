@@ -319,9 +319,13 @@ BasepFakeStaticServerData(VOID)
 {
     NTSTATUS Status;
     WCHAR Buffer[MAX_PATH];
+    PWCHAR HeapBuffer;
     UNICODE_STRING SystemRootString;
     UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
     UNICODE_STRING BaseSrvCSDString;
+    UNICODE_STRING BaseSrvWindowsDirectory;
+    UNICODE_STRING BaseSrvWindowsSystemDirectory;
+    UNICODE_STRING BnoString;
     RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[2] =
     {
         {
@@ -333,12 +337,6 @@ BasepFakeStaticServerData(VOID)
         {0}
     };
     
-    /* Allocate the fake data */
-    BaseStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(BASE_STATIC_SERVER_DATA));
-    ASSERT(BaseStaticServerData != NULL);
-    
     /* Get the Windows directory */
     RtlInitEmptyUnicodeString(&SystemRootString, Buffer, sizeof(Buffer));
     Status = RtlExpandEnvironmentStrings_U(NULL,
@@ -348,19 +346,76 @@ BasepFakeStaticServerData(VOID)
     DPRINT1("Status: %lx. Root: %wZ\n", Status, &SystemRootString);
     ASSERT(NT_SUCCESS(Status));
     
+    /* Create the base directory */
     Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsDirectory,
+    Status = RtlCreateUnicodeString(&BaseSrvWindowsDirectory,
                                     SystemRootString.Buffer);
     ASSERT(NT_SUCCESS(Status));
     
+    /* Create the system directory */
     wcscat(SystemRootString.Buffer, L"\\system32");
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsSystemDirectory,
+    Status = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
                                     SystemRootString.Buffer);
     ASSERT(NT_SUCCESS(Status));
     
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->NamedObjectDirectory,
-                                    L"\\BaseNamedObjects");
+    /* FIXME: Check Session ID */
+    wcscpy(Buffer, L"\\BaseNamedObjects");
+    RtlInitUnicodeString(&BnoString, Buffer);
+    
+    /* Allocate the server data */
+    BaseStaticServerData = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(BASE_STATIC_SERVER_DATA));
+    ASSERT(BaseStaticServerData != NULL);
+    
+    /* Process timezone information */
+    BaseStaticServerData->TermsrvClientTimeZoneId = TIME_ZONE_ID_INVALID;
+    BaseStaticServerData->TermsrvClientTimeZoneChangeNum = 0;
+    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                      &BaseStaticServerData->TimeOfDay,
+                                      sizeof(BaseStaticServerData->TimeOfDay),
+                                      NULL);
     ASSERT(NT_SUCCESS(Status));
+    
+    /* Make a shared heap copy of the Windows directory */
+    BaseStaticServerData->WindowsDirectory = BaseSrvWindowsDirectory;
+    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                 0,
+                                 BaseSrvWindowsDirectory.MaximumLength);
+    ASSERT(HeapBuffer);
+    RtlCopyMemory(HeapBuffer,
+                  BaseStaticServerData->WindowsDirectory.Buffer,
+                  BaseSrvWindowsDirectory.MaximumLength);
+    BaseStaticServerData->WindowsDirectory.Buffer = HeapBuffer;
+    
+    /* Make a shared heap copy of the System directory */
+    BaseStaticServerData->WindowsSystemDirectory = BaseSrvWindowsSystemDirectory;
+    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                 0,
+                                 BaseSrvWindowsSystemDirectory.MaximumLength);
+    ASSERT(HeapBuffer);
+    RtlCopyMemory(HeapBuffer,
+                  BaseStaticServerData->WindowsSystemDirectory.Buffer,
+                  BaseSrvWindowsSystemDirectory.MaximumLength);
+    BaseStaticServerData->WindowsSystemDirectory.Buffer = HeapBuffer;
+    
+    /* This string is not used */
+    RtlInitEmptyUnicodeString(&BaseStaticServerData->WindowsSys32x86Directory,
+                              NULL,
+                              0);
+    
+    /* Make a shared heap copy of the BNO directory */
+    BaseStaticServerData->NamedObjectDirectory = BnoString;
+    BaseStaticServerData->NamedObjectDirectory.MaximumLength = BnoString.Length +
+                                                               sizeof(UNICODE_NULL);
+    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                 0,
+                                 BaseStaticServerData->NamedObjectDirectory.MaximumLength);
+    ASSERT(HeapBuffer);
+    RtlCopyMemory(HeapBuffer,
+                  BaseStaticServerData->NamedObjectDirectory.Buffer,
+                  BaseStaticServerData->NamedObjectDirectory.MaximumLength);
+    BaseStaticServerData->NamedObjectDirectory.Buffer = HeapBuffer;
     
     /*
      * Confirmed that in Windows, CSDNumber and RCNumber are actually Length
@@ -373,9 +428,8 @@ BasepFakeStaticServerData(VOID)
     BaseStaticServerData->CSDNumber = 0;
     BaseStaticServerData->RCNumber = 0;
     
-    /* Initialize the CSD string */
+    /* Initialize the CSD string and query its value from the registry */
     RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
-    
     Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
                                     L"",
                                     BaseServerRegistryConfigurationTable,
@@ -383,33 +437,32 @@ BasepFakeStaticServerData(VOID)
                                     NULL);
     if (NT_SUCCESS(Status))
     {
+        /* Copy into the shared buffer */
         wcsncpy(BaseStaticServerData->CSDVersion,
                 BaseSrvCSDString.Buffer,
                 BaseSrvCSDString.Length / sizeof(WCHAR));
     }
     else
     {
+        /* NULL-terminate to indicate nothing is there */
         BaseStaticServerData->CSDVersion[0] = UNICODE_NULL;
     }
     
+    /* Cache the system information */
     Status = NtQuerySystemInformation(SystemBasicInformation,
                                       &BaseStaticServerData->SysInfo,
                                       sizeof(BaseStaticServerData->SysInfo),
                                       NULL);
     ASSERT(NT_SUCCESS(Status));
     
+    /* FIXME: Should query the registry for these */
     BaseStaticServerData->DefaultSeparateVDM = FALSE;
     BaseStaticServerData->IsWowTaskReady = FALSE;
     BaseStaticServerData->LUIDDeviceMapsEnabled = FALSE;
-    BaseStaticServerData->TermsrvClientTimeZoneId = TIME_ZONE_ID_INVALID;
-    BaseStaticServerData->TermsrvClientTimeZoneChangeNum = 0;
+
+    /* FIXME: Symlinks */
     
-    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
-                                      &BaseStaticServerData->TimeOfDay,
-                                      sizeof(BaseStaticServerData->TimeOfDay),
-                                      NULL);
-    ASSERT(NT_SUCCESS(Status));
-    
+    /* Finally, set the pointer */
     CsrSrvSharedStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
 }
 
