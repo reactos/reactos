@@ -692,7 +692,6 @@ typedef struct _CSR_API_MESSAGE
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 
-
 typedef struct _NLS_USER_INFO
 {
     WCHAR iCountry[80];
@@ -730,7 +729,7 @@ typedef struct _NLS_USER_INFO
     WCHAR sLocaleName[85];
     LCID UserLocaleId;
     LUID InteractiveUserLuid;
-    CHAR InteractiveUserSid[SECURITY_MAX_SID_SIZE];
+    CHAR InteractiveUserSid[68]; // SECURITY_MAX_SID_SIZE to make ros happy
     ULONG ulCacheUpdateCount;
 } NLS_USER_INFO, *PNLS_USER_INFO;
 
