@@ -22,7 +22,6 @@
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
-
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 BOOLEAN BaseRunningInServerProcess;
@@ -250,112 +249,6 @@ BasepInitConsole(VOID)
     return TRUE;
 }
 
-VOID
-WINAPI
-BasepFakeStaticServerData(VOID)
-{
-    NTSTATUS Status;
-    WCHAR Buffer[MAX_PATH];
-    UNICODE_STRING SystemRootString;
-    UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
-    UNICODE_STRING BaseSrvCSDString;
-    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[2] =
-    {
-        {
-            NULL,
-            RTL_QUERY_REGISTRY_DIRECT,
-            L"CSDVersion",
-            &BaseSrvCSDString
-        },
-        {0}
-    };
-
-    /* Allocate the fake data */
-    BaseStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(BASE_STATIC_SERVER_DATA));
-    ASSERT(BaseStaticServerData != NULL);
-
-    /* Get the Windows directory */
-    RtlInitEmptyUnicodeString(&SystemRootString, Buffer, sizeof(Buffer));
-    Status = RtlExpandEnvironmentStrings_U(NULL,
-                                           &UnexpandedSystemRootString,
-                                           &SystemRootString,
-                                           NULL);
-    DPRINT1("Status: %lx. Root: %wZ\n", Status, &SystemRootString);
-    ASSERT(NT_SUCCESS(Status));
-
-    Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
-
-    wcscat(SystemRootString.Buffer, L"\\system32");
-    Status = RtlCreateUnicodeString(&BaseStaticServerData->WindowsSystemDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
-
-    if (!SessionId)
-    {
-        Status = RtlCreateUnicodeString(&BaseStaticServerData->NamedObjectDirectory,
-                                        L"\\BaseNamedObjects");
-        ASSERT(NT_SUCCESS(Status));
-    }
-    else
-    {
-        /* Hopefully we'll fix CSRSS Before we add multiple sessions... */
-        ASSERT(FALSE);
-    }
-
-    /*
-     * Confirmed that in Windows, CSDNumber and RCNumber are actually Length
-     * and MaximumLength of the CSD String, since the same UNICODE_STRING is
-     * being queried twice, the first time as a ULONG!
-     *
-     * Somehow, in Windows this doesn't cause a buffer overflow, but it might
-     * in ReactOS, so this code is disabled until someone figures out WTF.
-     */
-    BaseStaticServerData->CSDNumber = 0;
-    BaseStaticServerData->RCNumber = 0;
-
-    /* Initialize the CSD string */
-    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
-                                    L"",
-                                    BaseServerRegistryConfigurationTable,
-                                    NULL,
-                                    NULL);
-    if (NT_SUCCESS(Status))
-    {
-        wcsncpy(BaseStaticServerData->CSDVersion,
-                BaseSrvCSDString.Buffer,
-                BaseSrvCSDString.Length / sizeof(WCHAR));
-    }
-    else
-    {
-        BaseStaticServerData->CSDVersion[0] = UNICODE_NULL;
-    }
-
-    Status = NtQuerySystemInformation(SystemBasicInformation,
-                                      &BaseStaticServerData->SysInfo,
-                                      sizeof(BaseStaticServerData->SysInfo),
-                                      NULL);
-    ASSERT(NT_SUCCESS(Status));
-
-    BaseStaticServerData->DefaultSeparateVDM = FALSE;
-    BaseStaticServerData->IsWowTaskReady = FALSE;
-    BaseStaticServerData->LUIDDeviceMapsEnabled = FALSE;
-    BaseStaticServerData->TermsrvClientTimeZoneId = TIME_ZONE_ID_INVALID;
-    BaseStaticServerData->TermsrvClientTimeZoneChangeNum = 0;
-
-    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
-                                      &BaseStaticServerData->TimeOfDay,
-                                      sizeof(BaseStaticServerData->TimeOfDay),
-                                      NULL);
-    ASSERT(NT_SUCCESS(Status));
-}
-
 BOOL
 WINAPI
 DllMain(HANDLE hDll,
@@ -417,21 +310,7 @@ DllMain(HANDLE hDll,
         }
 
         /* Get the server data */
-        if (!Peb->ReadOnlyStaticServerData)
-        {
-            /* Build fake one for ReactOS */
-            BasepFakeStaticServerData();
-
-            /* Allocate the array */
-            Peb->ReadOnlyStaticServerData = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                            HEAP_ZERO_MEMORY,
-                                                            4 * sizeof(PVOID));
-
-            /* Set the data for the BASESRV DLL Index */
-            Peb->ReadOnlyStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
-        }
-
-        /* Get the server data */
+        ASSERT(Peb->ReadOnlyStaticServerData);
         BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
         ASSERT(BaseStaticServerData);
 
