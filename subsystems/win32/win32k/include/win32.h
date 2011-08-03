@@ -192,7 +192,7 @@ typedef struct _PROCESSINFO
   struct _GDI_POOL *pPoolDcAttr;
   struct _GDI_POOL *pPoolBrushAttr;
   struct _GDI_POOL *pPoolRgnAttr;
-
+  struct _PFT *ppftPrivate;
 #ifdef DBG
   BYTE DbgChannelLevel[DbgChCount];
 #endif

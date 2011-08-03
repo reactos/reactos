@@ -95,3 +95,4 @@
 #include <include/mapping.h>
 #include <dib/dib.h>
 #include <include/gdidebug.h>
+//#include <include/font.h>
