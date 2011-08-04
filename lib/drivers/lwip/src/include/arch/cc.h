@@ -2,8 +2,6 @@
 
 #include <wdm.h>
 
-#define LWIP_PROVIDE_ERRNO
-
 /* ROS-specific mem defs */
 void *
 malloc(size_t size);
