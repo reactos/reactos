@@ -1,48 +1,77 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * PURPOSE:         Timer Queue functions
- * FILE:            dll/win32/kernel32/misc/timerqueue.c
- * PROGRAMER:       Thomas Weidenmueller <w3seek@reactos.com>
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         See COPYING in the top level directory
+ * FILE:            dll/win32/kernel32/client/timerqueue.c
+ * PURPOSE:         Timer Queue Functions
+ * PROGRAMMERS:     Thomas Weidenmueller <w3seek@reactos.com>
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
 
-/* FUNCTIONS *****************************************************************/
+HANDLE BasepDefaultTimerQueue = NULL;
 
-HANDLE DefaultTimerQueue = NULL;
+/* PRIVATE FUNCTIONS **********************************************************/
+
+/* FIXME - make this thread safe */
+BOOL
+WINAPI
+BasepCreateDefaultTimerQueue(VOID)
+{
+    NTSTATUS Status;
+
+    /* Create the timer queue */
+    Status = RtlCreateTimerQueue(&BasepDefaultTimerQueue);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        DPRINT1("Unable to create the default timer queue!\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
 
 /*
- * Create the default timer queue for the current process. This function is only
- * called if CreateTimerQueueTimer() or SetTimerQueueTimer() is called.
- * However, ChangeTimerQueueTimer() fails with ERROR_INVALID_PARAMETER if the
- * default timer queue has not been created, because it assumes there has to be
- * a timer queue with a timer if it want's to be changed.
+ * @implemented
  */
-static BOOL
-IntCreateDefaultTimerQueue(VOID)
+BOOL
+WINAPI
+CancelTimerQueueTimer(IN HANDLE TimerQueue,
+                      IN HANDLE Timer)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  /* FIXME - make this thread safe */
+    if (!TimerQueue)
+    {
+        /* Use the default timer queue */
+        TimerQueue = BasepDefaultTimerQueue;
+        if (!TimerQueue)
+        {
+            /* A timer is being cancelled before one was created... fail */
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+    }
 
-  /* create the timer queue */
-  Status = RtlCreateTimerQueue(&DefaultTimerQueue);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    DPRINT1("Unable to create the default timer queue!\n");
-    return FALSE;
-  }
+    /* Delete the timer */
+    Status = RtlDeleteTimer(TimerQueue, Timer, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 /*
@@ -50,83 +79,34 @@ IntCreateDefaultTimerQueue(VOID)
  */
 BOOL
 WINAPI
-CancelTimerQueueTimer(HANDLE TimerQueue,
-                      HANDLE Timer)
+ChangeTimerQueueTimer(IN HANDLE TimerQueue,
+                      IN HANDLE Timer,
+                      IN ULONG DueTime,
+                      IN ULONG Period)
 {
-  /* Since this function is not documented in PSDK and apparently does nothing
-     but delete the timer, we just do the same as DeleteTimerQueueTimer(), without
-     passing a completion event. */
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  if(TimerQueue == NULL)
-  {
-    /* let's use the process' default timer queue. We assume the default timer
-       queue has been created with a previous call to CreateTimerQueueTimer() or
-       SetTimerQueueTimer(), otherwise this call wouldn't make much sense. */
-    if(!(TimerQueue = DefaultTimerQueue))
+    if (!TimerQueue)
     {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
+        /* Use the default timer queue */
+        TimerQueue = BasepDefaultTimerQueue;
+        if (!TimerQueue)
+        {
+            /* A timer is being cancelled before one was created... fail */
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
     }
-  }
 
-  if(Timer == NULL)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  /* delete the timer */
-  Status = RtlDeleteTimer(TimerQueue, Timer, NULL);
-
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-ChangeTimerQueueTimer(HANDLE TimerQueue,
-                      HANDLE Timer,
-                      ULONG DueTime,
-                      ULONG Period)
-{
-  NTSTATUS Status;
-
-  if(TimerQueue == NULL)
-  {
-    /* let's use the process' default timer queue. We assume the default timer
-       queue has been created with a previous call to CreateTimerQueueTimer() or
-       SetTimerQueueTimer(), otherwise this call wouldn't make much sense. */
-    if(!(TimerQueue = DefaultTimerQueue))
+    /* Delete the timer */
+    Status = RtlUpdateTimer(TimerQueue, Timer, DueTime, Period);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
+        BaseSetLastNTError(Status);
+        return FALSE;
     }
-  }
 
-  if(Timer == NULL)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  /* update the timer */
-  Status = RtlUpdateTimer(TimerQueue, Timer, DueTime, Period);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return FALSE;
-  }
-
-  return TRUE;
+    return TRUE;
 }
 
 /*
@@ -136,18 +116,18 @@ HANDLE
 WINAPI
 CreateTimerQueue(VOID)
 {
-  HANDLE Handle;
-  NTSTATUS Status;
+    HANDLE Handle;
+    NTSTATUS Status;
 
-  /* create the timer queue */
-  Status = RtlCreateTimerQueue(&Handle);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return NULL;
-  }
+    /* Create the timer queue */
+    Status = RtlCreateTimerQueue(&Handle);
+    if(!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return NULL;
+    }
 
-  return Handle;
+    return Handle;
 }
 
 /*
@@ -155,47 +135,47 @@ CreateTimerQueue(VOID)
  */
 BOOL
 WINAPI
-CreateTimerQueueTimer(PHANDLE phNewTimer,
-                      HANDLE TimerQueue,
-                      WAITORTIMERCALLBACK Callback,
-                      PVOID Parameter,
-                      DWORD DueTime,
-                      DWORD Period,
-                      ULONG Flags)
+CreateTimerQueueTimer(OUT PHANDLE phNewTimer,
+                      IN HANDLE TimerQueue,
+                      IN WAITORTIMERCALLBACK Callback,
+                      IN PVOID Parameter,
+                      IN DWORD DueTime,
+                      IN DWORD Period,
+                      IN ULONG Flags)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  /* windows seems not to test this parameter at all, so we'll try to clear it here
-     so we don't crash somewhere inside ntdll */
-  *phNewTimer = NULL;
+    /* Parameter is not optional -- clear it now */
+    *phNewTimer = NULL;
 
-  if(TimerQueue == NULL)
-  {
-    /* the default timer queue is requested, try to create it if it hasn't been already */
-    if(!(TimerQueue = DefaultTimerQueue))
+    /* Check if no queue was given */
+    if (!TimerQueue)
     {
-      if(!IntCreateDefaultTimerQueue())
-      {
-        /* IntCreateDefaultTimerQueue() set the last error code already, just fail */
+        /* Create the queue if it didn't already exist */
+        if (!(BasepDefaultTimerQueue) && !(BasepCreateDefaultTimerQueue()))
+        {
+            return FALSE;
+        }
+
+        /* Use the default queue */
+        TimerQueue = BasepDefaultTimerQueue;
+    }
+
+    /* Create the timer. Note that no parameter checking is done here */
+    Status = RtlCreateTimer(TimerQueue,
+                            phNewTimer,
+                            Callback,
+                            Parameter,
+                            DueTime,
+                            Period,
+                            Flags);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
         return FALSE;
-      }
-      TimerQueue = DefaultTimerQueue;
     }
-  }
 
-  /* !!! Win doesn't even check if Callback == NULL, so we don't, too! That'll
-         raise a nice exception later... */
-
-  /* create the timer */
-  Status = RtlCreateTimer(TimerQueue, phNewTimer, Callback, Parameter, DueTime,
-                          Period, Flags);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return FALSE;
-  }
-
-  return TRUE;
+    return TRUE;
 }
 
 /*
@@ -203,106 +183,94 @@ CreateTimerQueueTimer(PHANDLE phNewTimer,
  */
 BOOL
 WINAPI
-DeleteTimerQueue(HANDLE TimerQueue)
+DeleteTimerQueue(IN HANDLE TimerQueue)
 {
-  NTSTATUS Status;
-
-  /* We don't allow the user to delete the default timer queue */
-  if(TimerQueue == NULL)
-  {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-
-  /* delete the timer queue */
-  Status = RtlDeleteTimerQueue(TimerQueue);
-  return NT_SUCCESS(Status);
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-DeleteTimerQueueEx(HANDLE TimerQueue,
-                   HANDLE CompletionEvent)
-{
-  NTSTATUS Status;
-
-  /* We don't allow the user to delete the default timer queue */
-  if(TimerQueue == NULL)
-  {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-
-  /* delete the queue */
-  Status = RtlDeleteTimerQueueEx(TimerQueue, CompletionEvent);
-
-  if((CompletionEvent != INVALID_HANDLE_VALUE && Status == STATUS_PENDING) ||
-     !NT_SUCCESS(Status))
-  {
-    /* In case CompletionEvent == NULL, RtlDeleteTimerQueueEx() returns before
-       all callback routines returned. We set the last error code to STATUS_PENDING
-       and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only
-       can get here if another error occured. In case CompletionEvent is something
-       else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
-       We also handle all other failures the same way. */
-
-    BaseSetLastNTError(Status);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-DeleteTimerQueueTimer(HANDLE TimerQueue,
-                      HANDLE Timer,
-                      HANDLE CompletionEvent)
-{
-  NTSTATUS Status;
-
-  if(TimerQueue == NULL)
-  {
-    /* let's use the process' default timer queue. We assume the default timer
-       queue has been created with a previous call to CreateTimerQueueTimer() or
-       SetTimerQueueTimer(), otherwise this call wouldn't make much sense. */
-    if(!(TimerQueue = DefaultTimerQueue))
+    /* We don't allow the user to delete the default timer queue */
+    if (!TimerQueue)
     {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
     }
-  }
 
-  if(Timer == NULL)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    /* Delete the timer queue */
+    RtlDeleteTimerQueueEx(TimerQueue, 0);
+    return TRUE;
+}
 
-  /* delete the timer */
-  Status = RtlDeleteTimer(TimerQueue, Timer, CompletionEvent);
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+DeleteTimerQueueEx(IN HANDLE TimerQueue,
+                   IN HANDLE CompletionEvent)
+{
+    NTSTATUS Status;
 
-  if((CompletionEvent != INVALID_HANDLE_VALUE && Status == STATUS_PENDING) ||
-     !NT_SUCCESS(Status))
-  {
-    /* In case CompletionEvent == NULL, RtlDeleteTimer() returns before
-       the callback routine returned. We set the last error code to STATUS_PENDING
-       and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only
-       can get here if another error occured. In case CompletionEvent is something
-       else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
-       We also handle all other failures the same way. */
+    /* We don't allow the user to delete the default timer queue */
+    if (!TimerQueue)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
-    BaseSetLastNTError(Status);
-    return FALSE;
-  }
+    /* Delete the timer queue */
+    Status = RtlDeleteTimerQueueEx(TimerQueue, CompletionEvent);
+    if (((CompletionEvent != INVALID_HANDLE_VALUE) && (Status == STATUS_PENDING)) ||
+        !(NT_SUCCESS(Status)))
+    {
+        /* In case CompletionEvent == NULL, RtlDeleteTimerQueueEx() returns before
+           all callback routines returned. We set the last error code to STATUS_PENDING
+           and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only
+           can get here if another error occured. In case CompletionEvent is something
+           else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
+           We also handle all other failures the same way. */
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+DeleteTimerQueueTimer(IN HANDLE TimerQueue,
+                      IN HANDLE Timer,
+                      IN HANDLE CompletionEvent)
+{
+    NTSTATUS Status;
+
+    if (!TimerQueue)
+    {
+        /* Use the default timer queue */
+        TimerQueue = BasepDefaultTimerQueue;
+        if (!TimerQueue)
+        {
+            /* A timer is being cancelled before one was created... fail */
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    /* Delete the timer */
+    Status = RtlDeleteTimer(TimerQueue, Timer, CompletionEvent);
+    if (((CompletionEvent != INVALID_HANDLE_VALUE) && (Status == STATUS_PENDING)) ||
+        !(NT_SUCCESS(Status)))
+    {
+        /* In case CompletionEvent == NULL, RtlDeleteTimerQueueEx() returns before
+           all callback routines returned. We set the last error code to STATUS_PENDING
+           and return FALSE. In case CompletionEvent == INVALID_HANDLE_VALUE we only
+           can get here if another error occured. In case CompletionEvent is something
+           else, we get here and fail, even though it isn't really an error (if Status == STATUS_PENDING).
+           We also handle all other failures the same way. */
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -310,50 +278,44 @@ DeleteTimerQueueTimer(HANDLE TimerQueue,
  */
 HANDLE
 WINAPI
-SetTimerQueueTimer(HANDLE TimerQueue,
-                   WAITORTIMERCALLBACK Callback,
-                   PVOID Parameter,
-                   DWORD DueTime,
-                   DWORD Period,
-                   BOOL PreferIo)
+SetTimerQueueTimer(IN HANDLE TimerQueue,
+                   IN WAITORTIMERCALLBACK Callback,
+                   IN PVOID Parameter,
+                   IN DWORD DueTime,
+                   IN DWORD Period,
+                   IN BOOL PreferIo)
 {
-  /* Since this function is not documented in PSDK and apparently does nothing
-     but create a timer, we just do the same as CreateTimerQueueTimer(). Unfortunately
-     I don't really know what PreferIo is supposed to be, it propably just affects the
-     Flags parameter of CreateTimerQueueTimer(). Looking at the PSDK documentation of
-     CreateTimerQueueTimer() there's only one flag (WT_EXECUTEINIOTHREAD) that causes
-     the callback function queued to an I/O worker thread. I guess it uses this flag
-     if PreferIo == TRUE, otherwise let's just use WT_EXECUTEDEFAULT. We should
-     test this though, this is only guess work and I'm too lazy to do further
-     investigation. */
+    HANDLE Timer;
+    NTSTATUS Status;
 
-  HANDLE Timer;
-  NTSTATUS Status;
-
-  if(TimerQueue == NULL)
-  {
-    /* the default timer queue is requested, try to create it if it hasn't been already */
-    if(!(TimerQueue = DefaultTimerQueue))
+    /* Check if no queue was given */
+    if (!TimerQueue)
     {
-      if(!IntCreateDefaultTimerQueue())
-      {
-        /* IntCreateDefaultTimerQueue() set the last error code already, just fail */
-        return FALSE;
-      }
-      TimerQueue = DefaultTimerQueue;
+        /* Create the queue if it didn't already exist */
+        if (!(BasepDefaultTimerQueue) && !(BasepCreateDefaultTimerQueue()))
+        {
+            return FALSE;
+        }
+
+        /* Use the default queue */
+        TimerQueue = BasepDefaultTimerQueue;
     }
-  }
 
-  /* create the timer */
-  Status = RtlCreateTimer(TimerQueue, &Timer, Callback, Parameter, DueTime,
-                          Period, (PreferIo ? WT_EXECUTEINIOTHREAD : WT_EXECUTEDEFAULT));
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return NULL;
-  }
+    /* Create the timer */
+    Status = RtlCreateTimer(TimerQueue,
+                            &Timer,
+                            Callback,
+                            Parameter,
+                            DueTime,
+                            Period,
+                            PreferIo ? WT_EXECUTEINIOTHREAD : WT_EXECUTEDEFAULT);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return NULL;
+    }
 
-  return Timer;
+    return Timer;
 }
 
 /* EOF */
