@@ -611,7 +611,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         if (PreviousMode != KernelMode)
         {
             /* Save the mask */
-            KeGetCurrentThread()->DispatcherHeader.DebugActive = DrMask;
+            KeGetCurrentThread()->DispatcherHeader.DebugActive = (DrMask != 0);
         }
     }
 

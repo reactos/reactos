@@ -24,19 +24,7 @@ Used by the address band to dispatch navigation changes to the main browser obje
 TODO:
 
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <perhist.h>
-#include <exdisp.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "bandproxy.h"
+#include "precomp.h"
 
 CBandProxy::CBandProxy()
 {

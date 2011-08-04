@@ -561,7 +561,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                         if (!LdrpShutdownInProgress)
                         {
                             /* Call TLS */
-                            LdrpTlsCallback(LdrEntry->DllBase, DLL_THREAD_ATTACH);
+                            LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_ATTACH);
                         }
                     }
 
@@ -571,7 +571,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                         /* Call the Entrypoint */
                         DPRINT("%wZ - Calling entry point at %x for thread attaching\n",
                                 &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
-                        LdrpCallDllEntry(LdrEntry->EntryPoint,
+                        LdrpCallInitRoutine(LdrEntry->EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_THREAD_ATTACH,
                                          NULL);
@@ -600,7 +600,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                                                LdrpImageEntry->EntryPointActivationContext);
 
         /* Do TLS callbacks */
-        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_THREAD_ATTACH);
+        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_ATTACH);
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -796,7 +796,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             if (LdrEntry->TlsIndex && Context)
             {
                 /* Call TLS */
-                LdrpTlsCallback(LdrEntry->DllBase, DLL_PROCESS_ATTACH);
+                LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_ATTACH);
             }
 
             /* Call the Entrypoint */
@@ -805,7 +805,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                 DPRINT1("%wZ - Calling entry point at %p for DLL_PROCESS_ATTACH\n",
                         &LdrEntry->BaseDllName, EntryPoint);
             }
-            DllStatus = LdrpCallDllEntry(EntryPoint,
+            DllStatus = LdrpCallInitRoutine(EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_PROCESS_ATTACH,
                                          Context);
@@ -859,7 +859,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                                                LdrpImageEntry->EntryPointActivationContext);
 
         /* Do TLS callbacks */
-        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_PROCESS_ATTACH);
+        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_ATTACH);
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -956,13 +956,13 @@ LdrShutdownProcess(VOID)
                 if (LdrEntry->TlsIndex)
                 {
                     /* Call TLS */
-                    LdrpTlsCallback(LdrEntry->DllBase, DLL_PROCESS_DETACH);
+                    LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_DETACH);
                 }
 
                 /* Call the Entrypoint */
                 DPRINT("%wZ - Calling entry point at %x for thread detaching\n",
                         &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
-                LdrpCallDllEntry(EntryPoint,
+                LdrpCallInitRoutine(EntryPoint,
                                  LdrEntry->DllBase,
                                  DLL_PROCESS_DETACH,
                                  (PVOID)1);
@@ -986,7 +986,7 @@ LdrShutdownProcess(VOID)
                                                LdrpImageEntry->EntryPointActivationContext);
 
         /* Do TLS callbacks */
-        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -1067,7 +1067,7 @@ LdrShutdownThread(VOID)
                         if (!LdrpShutdownInProgress)
                         {
                             /* Call TLS */
-                            LdrpTlsCallback(LdrEntry->DllBase, DLL_THREAD_DETACH);
+                            LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_DETACH);
                         }
                     }
 
@@ -1077,7 +1077,7 @@ LdrShutdownThread(VOID)
                         /* Call the Entrypoint */
                         DPRINT("%wZ - Calling entry point at %x for thread detaching\n",
                                 &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
-                        LdrpCallDllEntry(EntryPoint,
+                        LdrpCallInitRoutine(EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_THREAD_DETACH,
                                          NULL);
@@ -1103,7 +1103,7 @@ LdrShutdownThread(VOID)
                                                LdrpImageEntry->EntryPointActivationContext);
 
         /* Do TLS callbacks */
-        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_THREAD_DETACH);
+        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_DETACH);
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -1358,6 +1358,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     PLDR_DATA_TABLE_ENTRY NtLdrEntry;
     PWCHAR Current;
     ULONG ExecuteOptions = 0;
+    PVOID ViewBase;
 
     /* Set a NULL SEH Filter */
     RtlSetUnhandledExceptionFilter(NULL);
@@ -1624,16 +1625,10 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                                    &ObjectAttributes);
 
     /* Check if it exists */
-    if (!NT_SUCCESS(Status))
-    {
-        /* It doesn't, so assume System32 */
-        LdrpKnownDllObjectDirectory = NULL;
-        RtlInitUnicodeString(&LdrpKnownDllPath, StringBuffer);
-        LdrpKnownDllPath.Length -= sizeof(WCHAR);
-    }
-    else
+    if (NT_SUCCESS(Status))
     {
         /* Open the Known DLLs Path */
+        RtlInitUnicodeString(&KnownDllString, L"KnownDllPath");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KnownDllString,
                                    OBJ_CASE_INSENSITIVE,
@@ -1656,6 +1651,15 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                 return Status;
             }
         }
+    }
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Aassume System32 */
+        LdrpKnownDllObjectDirectory = NULL;
+        RtlInitUnicodeString(&LdrpKnownDllPath, StringBuffer);
+        LdrpKnownDllPath.Length -= sizeof(WCHAR);
     }
 
     /* If we have process parameters, get the default path and current path */
@@ -1855,13 +1859,37 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if relocation is needed */
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
     {
-        DPRINT("LDR: Performing relocations\n");
-        Status = LdrPerformRelocations(NtHeader, Peb->ImageBaseAddress);
+        DPRINT1("LDR: Performing EXE relocation\n");
+        
+        /* Change the protection to prepare for relocation */
+        ViewBase = Peb->ImageBaseAddress;
+        Status = LdrpSetProtection(ViewBase, FALSE);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Do the relocation */
+        Status = LdrRelocateImageWithBias(ViewBase,
+                                          0LL,
+                                          NULL,
+                                          STATUS_SUCCESS,
+                                          STATUS_CONFLICTING_ADDRESSES,
+                                          STATUS_INVALID_IMAGE_FORMAT);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("LdrPerformRelocations() failed\n");
+            DPRINT1("LdrRelocateImageWithBias() failed\n");
+            return Status;
+        }
+        
+        /* Check if a start context was provided */
+        if (Context)
+        {
+            DPRINT1("WARNING: Relocated EXE Context");
+            UNIMPLEMENTED; // We should support this
             return STATUS_INVALID_IMAGE_FORMAT;
         }
+        
+        /* Restore the protection */
+        Status = LdrpSetProtection(ViewBase, TRUE);
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Lock the DLLs */

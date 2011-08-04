@@ -42,4 +42,7 @@
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
+/* Base Macros */
+#include "include/base_x.h"
+
 #endif

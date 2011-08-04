@@ -18,7 +18,6 @@
  */
 
 #include <precomp.h>
-#include <tchar.h>
 
 #ifdef INCLUDE_CMD_ASSOC
 

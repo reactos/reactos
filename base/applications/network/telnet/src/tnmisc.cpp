@@ -1,7 +1,4 @@
-#include <windows.h>
-#include <stdio.h>
-
-#include "tnmisc.h"
+#include "precomp.h"
 
 // from the PVAX (http://www.ccas.ru/~posp/popov/spawn.htm)
 // Create a process with pipes to stdin/out/err

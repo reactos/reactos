@@ -252,6 +252,9 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
 
     Shell_NotifyIconW(NIM_MODIFY, &nid);
 
+    if (nid.uFlags & NIF_ICON)
+        DestroyIcon(nid.hIcon);
+
     pContext->dwInOctets = IfEntry.dwInOctets;
     pContext->dwOutOctets = IfEntry.dwOutOctets;
 
@@ -1002,7 +1005,7 @@ InitializeNetTaskbarNotifications(
                 ZeroMemory(&nid, sizeof(nid));
                 nid.cbSize = sizeof(nid);
                 nid.uID = Index++;
-                nid.uFlags = NIF_ICON | NIF_MESSAGE;
+                nid.uFlags = NIF_MESSAGE;
                 nid.u.uVersion = 3;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
@@ -1022,6 +1025,8 @@ InitializeNetTaskbarNotifications(
                     else if (pProps->Status == NCS_CONNECTED)
                         nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
 
+                    if (nid.hIcon)
+                        nid.uFlags |= NIF_ICON;
 
                     wcscpy(nid.szTip, pProps->pszwName);
                     nid.uFlags |= NIF_TIP;
@@ -1043,6 +1048,9 @@ InitializeNetTaskbarNotifications(
                 {
                     CoTaskMemFree(pItem);
                 }
+
+                if (nid.uFlags & NIF_ICON)
+                    DestroyIcon(nid.hIcon);
             }
         }
     }while(hr == S_OK);

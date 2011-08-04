@@ -27,8 +27,14 @@ typedef struct _SERVICE_GROUP
 
 typedef struct _SERVICE_IMAGE
 {
-    DWORD dwServiceRefCount;  // Number of running services of this image
-    DWORD Dummy;
+    LIST_ENTRY ImageListEntry;
+    DWORD dwImageRunCount;
+
+    HANDLE hControlPipe;
+    HANDLE hProcess;
+    DWORD dwProcessId;
+
+    WCHAR szImagePath[1];
 } SERVICE_IMAGE, *PSERVICE_IMAGE;
 
 
@@ -54,10 +60,6 @@ typedef struct _SERVICE
 
     BOOLEAN ServiceVisited;
 
-    HANDLE ControlPipeHandle;
-    ULONG ProcessId;
-    ULONG ThreadId;
-
     WCHAR szServiceName[1];
 } SERVICE, *PSERVICE;
 
@@ -66,6 +68,7 @@ typedef struct _SERVICE
 
 extern LIST_ENTRY ServiceListHead;
 extern LIST_ENTRY GroupListHead;
+extern LIST_ENTRY ImageListHead;
 extern BOOL ScmShutdown;
 
 

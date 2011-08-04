@@ -8,10 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <mmebuddy.h>
+#include "precomp.h"
 
 /*
     Restrain ourselves from flooding the kernel device!

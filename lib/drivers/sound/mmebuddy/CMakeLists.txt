@@ -26,4 +26,5 @@ list(APPEND SOURCE
     wave/streaming.c)
 
 add_library(mmebuddy ${SOURCE})
+add_pch(mmebuddy precomp.h)
 add_dependencies(mmebuddy psdk)

@@ -142,3 +142,24 @@ BOOL WINAPI SfcGetNextProtectedFile(HANDLE RpcHandle, PPROTECTED_FILE_DATA ProtF
     return FALSE;
 }
 
+/******************************************************************
+ *              SfcFileException     [sfc_os.@]
+ *
+ * Disable the protection for the given file during one minute
+ *
+ * PARAMS
+ *  dwUnknown0    [I] Set to 0
+ *  pwszFile      [I] Name of the file to unprotect
+ *  dwUnknown1    [I] Set to -1
+ *
+ * RETURNS
+ *  Failure: 1;
+ *  Success: 0;
+ *
+ */
+DWORD WINAPI SfcFileException(DWORD dwUnknown0, PWCHAR pwszFile, DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    /* Always return success */
+    return 0;
+}

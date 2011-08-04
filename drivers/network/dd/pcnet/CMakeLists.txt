@@ -11,8 +11,7 @@ list(APPEND SOURCE
     pcnet.rc)
 
 add_library(pcnet SHARED ${SOURCE})
-
+add_pch(pcnet pcnet.h)
 set_module_type(pcnet kernelmodedriver)
 add_importlibs(pcnet ndis ntoskrnl hal)
-
 add_cd_file(TARGET pcnet DESTINATION reactos/system32/drivers FOR all)

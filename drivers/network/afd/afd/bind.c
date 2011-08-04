@@ -9,9 +9,6 @@
  */
 
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
     NTSTATUS Status;
@@ -20,11 +17,11 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                             FCB->LocalAddress->Address[0].AddressType));
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
-        AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+        AFD_DbgPrint(MIN_TRACE,("Null Device\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
     if( !FCB->LocalAddress ) {
-        AFD_DbgPrint(MID_TRACE,("No local address\n"));
+        AFD_DbgPrint(MIN_TRACE,("No local address\n"));
         return STATUS_INVALID_PARAMETER;
     }
 

@@ -24,12 +24,14 @@
 #define vi_progid(str)
 #endif
 
+#ifndef __midl
 [
     helpstring("URL Moniker"),
     threading(apartment),
     uuid(79eac9e0-baf9-11ce-8c82-00aa004ba90b)
 ]
 coclass StdURLMoniker { interface IMoniker; }
+#endif
 
 [
     helpstring("http: Asynchronous Pluggable Protocol Handler"),
@@ -66,12 +68,14 @@ coclass HttpsProtocol { interface IInternetProtocolEx; interface IInternetPriori
 ]
 coclass MkProtocol { interface IInternetProtocolEx; interface IInternetPriority; }
 
+#ifndef __midl
 [
     helpstring("file:, local: Asynchronous Pluggable Protocol Handler"),
     threading(apartment),
     uuid(79eac9e7-baf9-11ce-8c82-00aa004ba90b)
 ]
 coclass FileProtocol { interface IInternetProtocolEx; interface IInternetPriority; }
+#endif
 
 [
     helpstring("CDL: Asynchronous Pluggable Protocol Handler"),

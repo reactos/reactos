@@ -83,12 +83,12 @@ list(APPEND SOURCE
     ex/event.c
     ex/evtpair.c
     ex/exintrin.c
-    ex/fastinterlck.c
     ex/fmutex.c
     ex/handle.c
     ex/harderr.c
     ex/hdlsterm.c
     ex/init.c
+    ex/interlocked.c
     ex/keyedevt.c
     ex/locale.c
     ex/lookas.c
@@ -276,7 +276,6 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/i386/interlck_asm.S
         ex/i386/fastinterlck_asm.S
         ex/i386/ioport.S
         ke/i386/abios.c
@@ -305,7 +304,6 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/amd64/fastinterlck.c
         ke/amd64/boot.S
         ke/amd64/context.c
         ke/amd64/cpu.c

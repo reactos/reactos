@@ -15,13 +15,10 @@ list(APPEND SOURCE
     csr/capture.c
     csr/connect.c
     dbg/dbgui.c
-	ldr/actctx.c
 	ldr/ldrapi.c
 	ldr/ldrinit.c
 	ldr/ldrpe.c
 	ldr/ldrutils.c
-    ldr/startup.c
-    ldr/utils.c
     rtl/libsupp.c
     rtl/version.c
     def/ntdll.rc
@@ -43,6 +40,7 @@ set_entrypoint(ntdll 0)
 
 if(MSVC)
 target_link_libraries(ntdll rtl)
+add_linkerflag(ntdll /RELEASE)
 else()
 target_link_libraries(ntdll -Wl,--whole-archive rtl -Wl,--no-whole-archive)
 endif()

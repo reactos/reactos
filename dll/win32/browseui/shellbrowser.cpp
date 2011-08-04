@@ -18,23 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <shlwapi.h>
-#include <shlwapi_undoc.h>
-#include <htiframe.h>
-#include <tchar.h>
-#include <perhist.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include <exdisp.h>
-#include <exdispid.h>
-#include "resource.h"
-#include "newatlinterfaces.h"
+#include "precomp.h"
 
 /*
 TODO:

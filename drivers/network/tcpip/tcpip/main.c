@@ -680,14 +680,14 @@ DriverEntry(
   EntityMax   = MAX_TDI_ENTITIES;
 
   /* Allocate NDIS packet descriptors */
-  NdisAllocatePacketPool(&NdisStatus, &GlobalPacketPool, 100, sizeof(PACKET_CONTEXT));
+  NdisAllocatePacketPoolEx(&NdisStatus, &GlobalPacketPool, 500, 1500, sizeof(PACKET_CONTEXT));
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
   /* Allocate NDIS buffer descriptors */
-  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 100);
+  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 2000);
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;

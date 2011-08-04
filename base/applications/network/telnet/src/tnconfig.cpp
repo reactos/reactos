@@ -30,14 +30,7 @@
 // This is a class designed for use with Brad Johnson's Console Telnet
 // see the file tnconfig.h for more information
 
-#include <stdlib.h>
-#include <string.h>
-#include <locale.h>
-#include <memory.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include "tnconfig.h"
+#include "precomp.h"
 
 // Turn off the "forcing value to bool 'true' or 'false'" warning
 #ifdef _MSC_VER

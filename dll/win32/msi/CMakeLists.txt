@@ -68,6 +68,7 @@ if(MSVC)
 endif()
 
 add_library(msi SHARED ${SOURCE})
+add_pch(msi msipriv.h)
 
 add_idl_Headers(msi_idlheader msiserver.idl)
 add_typelib(msi_tlb msiserver.idl)

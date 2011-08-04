@@ -15,6 +15,7 @@ list(APPEND SOURCE
 if(CMAKE_CROSSCOMPILING)
     add_library(cmlib ${SOURCE})
     add_dependencies(cmlib bugcodes)
+    add_pch(cmlib cmlib.h)
 else()
     add_definitions(
         -D__NO_CTYPE_INLINES

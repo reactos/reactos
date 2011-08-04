@@ -9,14 +9,7 @@
 */
 
 #define NDEBUG
-
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <sndtypes.h>
-#include <mmebuddy.h>
-#include <mment4.h>
+#include "precomp.h"
 
 /*
     Convenience routine for getting the path of a device and opening it.

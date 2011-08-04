@@ -22,15 +22,7 @@
 Base bar that contains a vertical or horizontal explorer band. It also
 provides resizing abilities.
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
+#include "precomp.h"
 
 /*
 TODO:

@@ -2,13 +2,13 @@
 
 [Section]
 Name = Fox Audio Player
-Version = 0.8.3
+Version = 0.8.8
 Licence = GPL
 Description = Simple and lightweight audio player.
 Size = 1.85MB
 Category = 1
 URLSite = http://foxaudioplayer.sourceforge.net/
-URLDownload = http://svn.reactos.org/packages/fap-0.8.3-win32-bin.exe
+URLDownload = http://svn.reactos.org/packages/fap-0.8.8-win32-bin.exe
 CDPath = none
 
 [Section.0407]

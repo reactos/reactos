@@ -1,6 +1,5 @@
 /*
  * Slovak language file by Mário Kačmár aka Kario (kario@szm.sk) 16-01-2008
- * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT

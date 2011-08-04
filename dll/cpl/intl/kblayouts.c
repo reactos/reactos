@@ -5,13 +5,7 @@
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
-#include <setupapi.h>
-#include <tchar.h>
-#include <stdio.h>
-
 #include "intl.h"
-#include "resource.h"
 
 /* Character Count of a layout ID like "00000409" */
 #define CCH_LAYOUT_ID    8

@@ -13,4 +13,5 @@ list(APPEND SOURCE
     mixer.c)
 
 add_library(soundblaster ${SOURCE})
+add_pch(soundblaster precomp.h)
 add_dependencies(soundblaster bugcodes)

@@ -6,6 +6,7 @@
 
 struct _EPROCESS;
 
+extern PMMSUPPORT MmKernelAddressSpace;
 extern PFN_NUMBER MiFreeSwapPages;
 extern PFN_NUMBER MiUsedSwapPages;
 extern SIZE_T MmTotalPagedPoolQuota;
@@ -1121,10 +1122,6 @@ MmIsDirtyPageRmap(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_NUMBER Page);
-
-NTSTATUS
-NTAPI
 MmPageOutPhysicalAddress(PFN_NUMBER Page);
 
 /* freelist.c **********************************************************/
@@ -1138,7 +1135,7 @@ MiGetPfnEntry(IN PFN_NUMBER Pfn)
 
     /* Make sure the PFN number is valid */
     if (Pfn > MmHighestPhysicalPage) return NULL;
-    
+
     /* Make sure this page actually has a PFN entry */
     if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, (ULONG)Pfn))) return NULL;
 
@@ -1342,7 +1339,7 @@ MmRawDeleteVirtualMapping(PVOID Address);
 VOID
 NTAPI
 MmGetPageFileMapping(
-	struct _EPROCESS *Process, 
+	struct _EPROCESS *Process,
 	PVOID Address,
 	SWAPENTRY* SwapEntry);
 
@@ -1739,7 +1736,15 @@ MmCallDllInitialize(
     IN PLIST_ENTRY ListHead
 );
 
-extern PMMSUPPORT MmKernelAddressSpace;
+
+/* procsup.c *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmGrowKernelStack(
+    IN PVOID StackPointer
+);
+
 
 FORCEINLINE
 VOID

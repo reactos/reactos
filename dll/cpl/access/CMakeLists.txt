@@ -24,4 +24,5 @@ add_importlibs(access
     comctl32
     kernel32)
 
+add_pch(access access.h)
 add_cd_file(TARGET access DESTINATION reactos/system32 FOR all)

@@ -9,7 +9,6 @@
  */
 
 #include "desk.h"
-#include "preview.h"
 
 #define NUM_APPLETS	(1)
 

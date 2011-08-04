@@ -45,4 +45,5 @@ add_importlibs(desk
     kernel32
     ntdll)
 
+add_pch(desk desk.h)
 add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

@@ -11,5 +11,6 @@ add_executable(audiosrv
     audiosrv.rc)
 
 set_module_type(audiosrv win32cui)
+add_pch(audiosrv audiosrv.h)
 add_importlibs(audiosrv advapi32 user32 setupapi msvcrt kernel32)
 add_cd_file(TARGET audiosrv DESTINATION reactos/system32 FOR all)

@@ -293,6 +293,9 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Continueing assembly.\n"));
     /* We have a reassembly structure */
     TcpipAcquireSpinLock(&IPDR->Lock, &OldIrql);
+      
+    /* Reset the timeout since we received a fragment */
+    IPDR->TimeoutCount = 0;
   } else {
     TI_DbgPrint(DEBUG_IP, ("Starting new assembly.\n"));
 

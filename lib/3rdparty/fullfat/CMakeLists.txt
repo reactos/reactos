@@ -18,3 +18,5 @@ list(APPEND SOURCE
     ff_time.c)
 
 add_library(fullfat ${SOURCE})
+
+add_dependencies(fullfat bugcodes)

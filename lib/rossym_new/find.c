@@ -128,4 +128,136 @@ RosSymGetAddressInformation
     return TRUE;
 }
 
+VOID
+RosSymFreeAggregate(PROSSYM_AGGREGATE Aggregate)
+{
+    int i;
+    for (i = 0; i < Aggregate->NumElements; i++) {
+        free(Aggregate->Elements[i].Name);
+        free(Aggregate->Elements[i].Type);
+    }
+    free(Aggregate->Elements);
+}
+
+BOOLEAN
+RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate)
+{
+    char *tchar;
+    ulong unit, typeoff = 0;
+    DwarfSym type = { };
+    // Get the first unit
+    if (dwarfaddrtounit(RosSymInfo, RosSymInfo->pe->codestart + RosSymInfo->pe->imagebase, &unit) == -1)
+        return FALSE;
+
+    if (Type[0] == '#') {
+        for (tchar = Type + 1; *tchar; tchar++) {
+            typeoff *= 10;
+            typeoff += *tchar - '0';
+        }
+        if (dwarfseeksym(RosSymInfo, unit, typeoff, &type) == -1)
+            return FALSE;
+    } else if (dwarflookupnameinunit(RosSymInfo, unit, Type, &type) != 0 ||
+        (type.attrs.tag != TagStructType && type.attrs.tag != TagUnionType))
+        return FALSE;
+    
+    DwarfSym element = { }, inner = { };
+    int count = 0;
+    
+    werrstr("type %s (want %s) type %x\n", type.attrs.name, Type, type.attrs.type);
+    
+    if (type.attrs.have.type) {
+        if (dwarfseeksym(RosSymInfo, unit, type.attrs.type, &inner) == -1)
+            return FALSE;
+        type = inner;
+    }
+    
+    werrstr("finding members %d\n", type.attrs.haskids);
+    while (dwarfnextsymat(RosSymInfo, &type, &element) != -1) {
+        if (element.attrs.have.name)
+            werrstr("%x %s\n", element.attrs.tag, element.attrs.name);
+        if (element.attrs.tag == TagMember) count++;
+    }
+    
+    werrstr("%d members\n", count);
+    
+    if (!count) return FALSE;
+    memset(&element, 0, sizeof(element));
+    Aggregate->NumElements = count;
+    Aggregate->Elements = malloc(sizeof(ROSSYM_AGGREGATE_MEMBER) * count);
+    count = 0;
+    werrstr("Enumerating %s\n", Type);
+    while (dwarfnextsymat(RosSymInfo, &type, &element) != -1) {
+        memset(&Aggregate->Elements[count], 0, sizeof(*Aggregate->Elements));
+        if (element.attrs.tag == TagMember) {
+            if (element.attrs.have.name) {
+                Aggregate->Elements[count].Name = malloc(strlen(element.attrs.name) + 1);
+                strcpy(Aggregate->Elements[count].Name, element.attrs.name);
+            }
+            Aggregate->Elements[count].TypeId = element.attrs.type;
+            // Seek our range in loc
+            DwarfBuf locbuf;
+            DwarfBuf instream = { };
+            
+            locbuf.d = RosSymInfo;
+            locbuf.addrsize = RosSymInfo->addrsize;
+
+            if (element.attrs.have.datamemberloc) {
+                instream = locbuf;
+                instream.p = element.attrs.datamemberloc.b.data;
+                instream.ep = element.attrs.datamemberloc.b.data + element.attrs.datamemberloc.b.len;
+                werrstr("datamemberloc type %x %p:%x\n", 
+                        element.attrs.have.datamemberloc,
+                        element.attrs.datamemberloc.b.data, element.attrs.datamemberloc.b.len);
+            }
+
+            if (dwarfgetarg(RosSymInfo, element.attrs.name, &instream, 0, NULL, &Aggregate->Elements[count].BaseOffset) == -1)
+                Aggregate->Elements[count].BaseOffset = -1;
+            werrstr("tag %x name %s base %x type %x\n", 
+                    element.attrs.tag, element.attrs.name, 
+                    Aggregate->Elements[count].BaseOffset,
+                    Aggregate->Elements[count].TypeId);
+            count++;
+        }
+    }
+    for (count = 0; count < Aggregate->NumElements; count++) {
+        memset(&type, 0, sizeof(type));
+        memset(&inner, 0, sizeof(inner));
+        werrstr("seeking type %x (%s) from %s\n", 
+                Aggregate->Elements[count].TypeId,
+                Aggregate->Elements[count].Type,
+                Aggregate->Elements[count].Name);
+        dwarfseeksym(RosSymInfo, unit, Aggregate->Elements[count].TypeId, &type);
+        while (type.attrs.have.type && type.attrs.tag != TagPointerType) {
+            if (dwarfseeksym(RosSymInfo, unit, type.attrs.type, &inner) == -1)
+                return FALSE;
+            type = inner;
+        }
+        //dwarfdumpsym(RosSymInfo, &type);
+        if (type.attrs.have.name) {
+            Aggregate->Elements[count].Type = malloc(strlen(type.attrs.name) + 1);
+            strcpy(Aggregate->Elements[count].Type, type.attrs.name);
+        } else {
+            char strbuf[128] = {'#'}, *bufptr = strbuf + 1;
+            ulong idcopy = Aggregate->Elements[count].TypeId;
+            ulong mult = 1;
+            while (mult * 10 < idcopy) mult *= 10;
+            while (mult > 0) {
+                *bufptr++ = '0' + ((idcopy / mult) % 10);
+                mult /= 10;
+            }
+            Aggregate->Elements[count].Type = malloc(strlen(strbuf) + 1);
+            strcpy(Aggregate->Elements[count].Type, strbuf);
+        }
+        if (type.attrs.tag == TagPointerType)
+            Aggregate->Elements[count].Size = RosSymInfo->addrsize;
+        else
+            Aggregate->Elements[count].Size = type.attrs.bytesize;
+        if (type.attrs.have.bitsize)
+            Aggregate->Elements[count].Bits = type.attrs.bitsize;
+        if (type.attrs.have.bitoffset)
+            Aggregate->Elements[count].FirstBit = type.attrs.bitoffset;
+    }
+    return TRUE;
+}
+
 /* EOF */

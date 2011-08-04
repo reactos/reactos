@@ -15,5 +15,6 @@ list(APPEND SOURCE
     topology.c)
 
 add_library(mmixer ${SOURCE})
+add_pch(mmixer priv.h)
 add_dependencies(mmixer bugcodes)
 

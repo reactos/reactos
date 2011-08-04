@@ -30,7 +30,7 @@ typedef struct _LOGENTRY
 
 #if DBG_ENABLE_EVENT_LOGGING
 VOID NTAPI DbgDumpEventList(PSLIST_HEADER pslh);
-VOID NTAPI DbgLogEvent(PSLIST_HEADER pslh, EVENT_TYPE nEventType, LPARAM lParam);
+VOID NTAPI DbgLogEvent(PSLIST_HEADER pslh, LOG_EVENT_TYPE nEventType, LPARAM lParam);
 VOID NTAPI DbgCleanupEventList(PSLIST_HEADER pslh);
 #define DBG_LOGEVENT(pslh, type, val) DbgLogEvent(pslh, type, (ULONG_PTR)val)
 #define DBG_INITLOG(pslh) InitializeSListHead(pslh)
@@ -43,27 +43,11 @@ VOID NTAPI DbgCleanupEventList(PSLIST_HEADER pslh);
 #define DBG_CLEANUP_EVENT_LIST(pslh)
 #endif
 
-extern ULONG gulLogUnique;
-
-extern ULONG gulDebugChannels;
-
-enum _DEBUGCHANNELS
-{
-    DbgCustom = 1,
-    DbgObjects = 2,
-    DbgBitBlt = 4,
-    DbgXlate = 8,
-    DbgModeSwitch = 16,
-};
 
 VOID NTAPI DbgDumpGdiHandleTable(VOID);
 ULONG NTAPI DbgCaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture);
 BOOL NTAPI DbgGdiHTIntegrityCheck(VOID);
 VOID NTAPI DbgDumpLockedGdiHandles(VOID);
-
-#define DBGENABLE(ch) gulDebugChannels |= (ch);
-#define DBGDISABLE(ch) gulDebugChannels &= ~(ch);
-#define DPRINTCH(ch) if (gulDebugChannels & (ch)) DbgPrint
 
 #define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);

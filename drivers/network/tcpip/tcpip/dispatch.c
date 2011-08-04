@@ -10,8 +10,6 @@
  */
 
 #include "precomp.h"
-#include <pseh/pseh2.h>
-
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     KIRQL OldIrql;
@@ -555,14 +553,22 @@ NTSTATUS DispTdiDisconnect(
     Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
+    
+  Status = DispPrepareIrpForCancel
+    (TranContext->Handle.ConnectionContext,
+     Irp,
+     (PDRIVER_CANCEL)DispCancelRequest);
 
-  Status = TCPDisconnect(
-      TranContext->Handle.ConnectionContext,
-      DisReq->RequestFlags,
-      DisReq->RequestConnectionInformation,
-      DisReq->ReturnConnectionInformation,
-      DispDataRequestComplete,
-      Irp );
+  if (NT_SUCCESS(Status))
+  {
+      Status = TCPDisconnect(TranContext->Handle.ConnectionContext,
+                             DisReq->RequestFlags,
+                             DisReq->RequestSpecific,
+                             DisReq->RequestConnectionInformation,
+                             DisReq->ReturnConnectionInformation,
+                             DispDataRequestComplete,
+                             Irp);
+  }
 
 done:
    if (Status != STATUS_PENDING) {

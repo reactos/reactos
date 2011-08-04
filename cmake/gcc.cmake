@@ -37,7 +37,7 @@ endif()
 add_compiler_flags(-fno-strict-aliasing)
 
 if(ARCH MATCHES i386)
-    add_compiler_flags(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+    add_compiler_flags(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer)
     if(OPTIMIZE STREQUAL "1")
         add_compiler_flags(-ftracer -momit-leaf-frame-pointer)
     endif()
@@ -78,7 +78,7 @@ set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS
 
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
-set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import")
+set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import -Wl,--disable-stdcall-fixup")
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
@@ -165,6 +165,7 @@ macro(set_module_type MODULE TYPE)
         add_dependencies(${MODULE} bugcodes)
     elseif(${TYPE} MATCHES nativedll)
         set_subsystem(${MODULE} native)
+		set_entrypoint(${MODULE} DllMain 12)
     else()
         message(FATAL_ERROR "Unknown module type : ${TYPE}")
     endif()
@@ -198,14 +199,6 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     set(IDL_FLAGS -m64 --win64)
 endif()
-
-set(IDL_HEADER_ARG -h -o) #.h
-set(IDL_TYPELIB_ARG -t -o) #.tlb
-set(IDL_SERVER_ARG -s -S) #.c for server library
-set(IDL_CLIENT_ARG -c -C) #.c for stub client library
-set(IDL_PROXY_ARG -p -P)
-set(IDL_INTERFACE_ARG -u -o)
-set(IDL_DLLDATA_ARG --dlldata-only -o)
 
 macro(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
@@ -293,44 +286,69 @@ endmacro()
 set(PSEH_LIB "pseh")
 
 # Macros
-macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
-    # Add the precompiled header to the build
-    get_filename_component(_FILE ${_header_filename} NAME)
-    set(_gch_filename "${_FILE}.gch")
-    list(APPEND ${_out_compile_flags} -c ${_header_filename} -o ${_gch_filename})
+if(PCH)
+    macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
+        # Add the precompiled header to the build
+        get_filename_component(_FILE ${_header_filename} NAME)
+        set(_gch_filename "${_FILE}.gch")
+        list(APPEND ${_out_compile_flags} -c ${_header_filename} -o ${_gch_filename})
 
-    # This gets us our includes
-    get_directory_property(DIRINC INCLUDE_DIRECTORIES)
-    foreach(item ${DIRINC})
-        list(APPEND ${_out_compile_flags} -I${item})
-    endforeach()
-
-    # This our definitions
-    get_directory_property(_compiler_flags DEFINITIONS)
-    list(APPEND ${_out_compile_flags} ${_compiler_flags})
-
-    # This gets any specific definitions that were added with set-target-property
-    get_target_property(_target_defs ${_target_name} COMPILE_DEFINITIONS)
-    if (_target_defs)
-        foreach(item ${_target_defs})
-            list(APPEND ${_out_compile_flags} -D${item})
+        # This gets us our includes
+        get_directory_property(DIRINC INCLUDE_DIRECTORIES)
+        foreach(item ${DIRINC})
+            list(APPEND ${_out_compile_flags} -I${item})
         endforeach()
-    endif()
 
-	separate_arguments(${_out_compile_flags})
-endmacro()
+        # This our definitions
+        get_directory_property(_compiler_flags DEFINITIONS)
+        list(APPEND ${_out_compile_flags} ${_compiler_flags})
 
-macro(add_pch _target_name _FILE)
-	#set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
-	#get_filename_component(_basename ${_FILE} NAME)
-    #set(_gch_filename ${_basename}.gch)
-    #_PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+        # This gets any specific definitions that were added with set-target-property
+        get_target_property(_target_defs ${_target_name} COMPILE_DEFINITIONS)
+        if (_target_defs)
+            foreach(item ${_target_defs})
+                list(APPEND ${_out_compile_flags} -D${item})
+            endforeach()
+        endif()
 
-    #add_custom_command(OUTPUT ${_gch_filename} COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args} DEPENDS ${_header_filename})
-	#get_target_property(_src_files ${_target_name} SOURCES)
-	#set_source_files_properties(${_src_files} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" #OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
-	#add_linkerflag(${_target_name} "${_gch_filename}")
-endmacro()
+        if(IS_CPP)
+            list(APPEND ${_out_compile_flags} ${CMAKE_CXX_FLAGS})
+        else()
+            list(APPEND ${_out_compile_flags} ${CMAKE_C_FLAGS})
+        endif()
+
+        separate_arguments(${_out_compile_flags})
+    endmacro()
+
+    macro(add_pch _target_name _FILE)
+        set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
+        get_filename_component(_basename ${_FILE} NAME)
+        set(_gch_filename ${_basename}.gch)
+        _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+
+        if(IS_CPP)
+            set(__lang CXX)
+            set(__compiler ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1})
+        else()
+            set(__lang C)
+            set(__compiler ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1})
+        endif()
+
+        add_custom_command(OUTPUT ${_gch_filename} COMMAND ${__compiler} ${_args} IMPLICIT_DEPENDS ${__lang} ${_header_filename})
+        get_target_property(_src_files ${_target_name} SOURCES)
+        foreach(_item in ${_src_files})
+            get_source_file_property(__src_lang ${_item} LANGUAGE)
+            if(__src_lang STREQUAL __lang)
+                set_source_files_properties(${_item} PROPERTIES COMPILE_FLAGS "-fpch-preprocess" OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
+            endif()
+        endforeach()
+        #set dependency checking : depends on precompiled header only whixh already depends on deeper header
+        set_target_properties(${_target_name} PROPERTIES IMPLICIT_DEPENDS_INCLUDE_TRANSFORM "\"${_basename}\"=;<${_basename}>=")
+    endmacro()
+else()
+    macro(add_pch _target_name _FILE)
+    endmacro()
+endif()
 
 macro(CreateBootSectorTarget _target_name _asm_file _object_file _base_address)
     get_filename_component(OBJECT_PATH ${_object_file} PATH)

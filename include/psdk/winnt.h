@@ -284,6 +284,8 @@ typedef LONGLONG USN;
 #endif
 #define ANSI_NULL ((CHAR)0)
 #define UNICODE_NULL ((WCHAR)0)
+#define UNICODE_STRING_MAX_BYTES ((USHORT) 65534)
+#define UNICODE_STRING_MAX_CHARS (32767)
 typedef BYTE BOOLEAN,*PBOOLEAN;
 #endif
 typedef BYTE FCHAR;
@@ -311,6 +313,22 @@ typedef DWORD FLONG;
 #define ERROR_SEVERITY_INFORMATIONAL 0x40000000
 #define ERROR_SEVERITY_WARNING       0x80000000
 #define ERROR_SEVERITY_ERROR         0xC0000000
+
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
+extern "C++" { \
+    inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)|((int)b)); } \
+    inline ENUMTYPE operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+    inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)&((int)b)); } \
+    inline ENUMTYPE operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+    inline ENUMTYPE operator ~ (ENUMTYPE a) { return (ENUMTYPE)(~((int)a)); } \
+    inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)^((int)b)); } \
+    inline ENUMTYPE operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
+#endif
+
 /* also in ddk/ntifs.h */
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -3300,6 +3318,21 @@ typedef struct _QUOTA_LIMITS {
   SIZE_T PagefileLimit;
   LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
+    
+typedef struct _QUOTA_LIMITS_EX {
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
+  SIZE_T Reserved1;
+  SIZE_T Reserved2;
+  SIZE_T Reserved3;
+  SIZE_T Reserved4;
+  ULONG Flags;
+  ULONG Reserved5;
+} QUOTA_LIMITS_EX, *PQUOTA_LIMITS_EX;
 
 typedef struct _IO_COUNTERS {
   ULONGLONG ReadOperationCount;

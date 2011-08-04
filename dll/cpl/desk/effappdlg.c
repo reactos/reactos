@@ -9,8 +9,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "appearance.h"
 
 /* Update all the controls with the current values for the selected screen element */
 static VOID

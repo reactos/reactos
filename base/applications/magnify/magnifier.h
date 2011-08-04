@@ -20,6 +20,12 @@
 
 //////////////////////////////////////////////////////////////////
 
+#include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
+#include <shellapi.h>
+#include "resource.h"
+
 extern int iZoom;
 
 extern BOOL bShowWarning;

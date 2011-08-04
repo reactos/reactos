@@ -19,7 +19,7 @@
 static char sccsid[] = "@(#)cmdtab.c	5.9 (Berkeley) 3/21/89";
 #endif /* not lint */
 
-#include "ftp_var.h"
+#include "precomp.h"
 
 /*
  * User FTP -- Command Tables.

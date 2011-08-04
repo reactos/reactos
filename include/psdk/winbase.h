@@ -222,6 +222,7 @@ extern "C" {
 #define SETRTS 3
 #define SETXOFF 1
 #define SETXON 2
+#define RESETDEV 7
 #define SETBREAK 8
 #define CLRBREAK 9
 #define STILL_ACTIVE 0x103

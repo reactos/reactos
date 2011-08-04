@@ -23,8 +23,7 @@ Revision History:
 
 --*/
 
-#include <ntddk.h>
-#include <classpnp.h>
+#include "classp.h"
 
 #define DICTIONARY_SIGNATURE 'dsig'
 

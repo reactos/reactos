@@ -1,0 +1,17 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FINDSTR: 输出某文件中包含指定字符串的所有行。\n\n\
+  FINDSTR [ /C ] [ /I ] [ /N ] [ /V ] ""字符串"" [ 文件... ]\n\
+    /C  计算包含该字符串的行数\n\
+    /I  忽略大小写\n\
+    /N  从 1 开始为显示的行编号\n\
+    /V  输出不包含该指定字符串的行"
+
+IDS_NO_SUCH_FILE, "FINDSTR: %s: 没有这个文件\n"
+
+IDS_CANNOT_OPEN, "FINDSTR: %s: 无法打开文件\n"
+
+END

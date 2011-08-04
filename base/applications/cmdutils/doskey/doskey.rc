@@ -15,3 +15,4 @@
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"

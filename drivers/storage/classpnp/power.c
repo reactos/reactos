@@ -21,12 +21,7 @@ Revision History:
 
 --*/
 
-#include "stddef.h"
-#include "ntddk.h"
-#include "scsi.h"
 #include "classp.h"
-
-#include <stdarg.h>
 
 #define CLASS_TAG_POWER     'WLcS'
 

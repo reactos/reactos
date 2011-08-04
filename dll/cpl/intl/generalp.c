@@ -26,13 +26,7 @@
  *                  Aleksey Bragin
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <tchar.h>
-#include <stdio.h>
-
 #include "intl.h"
-#include "resource.h"
 
 #define SAMPLE_NUMBER   _T("123456789")
 #define NO_FLAG         0

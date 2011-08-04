@@ -28,8 +28,7 @@
 // Written by Paul Brannan <pbranna@clemson.edu>
 // Last modified 7/12/98
 
-#include <string.h>
-#include "tnclip.h"
+#include "precomp.h"
 
 Tnclip::Tnclip(HWND W, TNetwork &RefNetwork): Network(RefNetwork) {
 	Window = W;

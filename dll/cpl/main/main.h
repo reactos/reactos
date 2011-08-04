@@ -1,4 +1,19 @@
-#pragma once
+#include <windows.h>
+#include <initguid.h>
+#include <cplext.h>
+#include <winuser.h>
+#include <tchar.h>
+#include <math.h>
+#include <limits.h>
+#include <stdio.h>
+#include <devguid.h>
+#include <commctrl.h>
+#include <prsht.h>
+#include <shlobj.h>
+#include <cpl.h>
+#include <regstr.h>
+
+#include "resource.h"
 
 typedef enum
 {

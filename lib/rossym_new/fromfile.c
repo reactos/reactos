@@ -146,6 +146,8 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
     pe->sect = SectionHeaders;
     pe->imagebase = pe->loadbase = NtHeaders.OptionalHeader.ImageBase;
     pe->imagesize = NtHeaders.OptionalHeader.SizeOfImage;
+    pe->codestart = NtHeaders.OptionalHeader.BaseOfCode;
+    pe->datastart = NtHeaders.OptionalHeader.BaseOfData;
     pe->loadsection = loaddisksection;
     *RosSymInfo = dwarfopen(pe);
 

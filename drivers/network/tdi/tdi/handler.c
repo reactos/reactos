@@ -2,9 +2,7 @@
  *
  * DESCRIPTION: Default TDI event handlers.
  */
-#include <ntddk.h>
-#include <tdi.h>
-
+#include "precomp.h"
 
 /*
  * ClientEventChainedReceiveDatagram

@@ -424,7 +424,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
              OUT PHANDLE hSection,
              IN PUNICODE_STRING ApplicationName)
 {
-    CURDIR RelativeName;
+    RTL_RELATIVE_NAME_U RelativeName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
     HANDLE hFile = NULL;
@@ -433,7 +433,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     DPRINT("BasepMapFile\n");
     
     /* Zero out the Relative Directory */
-    RelativeName.Handle = NULL;
+    RelativeName.ContainingDirectory = NULL;
 
     /* Find the application name */
     if (!RtlDosPathNameToNtPathName_U(lpApplicationName,
@@ -445,19 +445,19 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     }
 
     DPRINT("ApplicationName %wZ\n", ApplicationName);
-    DPRINT("RelativeName %wZ\n", &RelativeName.DosPath);
+    DPRINT("RelativeName %wZ\n", &RelativeName.RelativeName);
     
     /* Did we get a relative name? */
-    if (RelativeName.DosPath.Length)
+    if (RelativeName.RelativeName.Length)
     {
-        ApplicationName = &RelativeName.DosPath;
+        ApplicationName = &RelativeName.RelativeName;
     }
 
     /* Initialize the Object Attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                ApplicationName,
                                OBJ_CASE_INSENSITIVE,
-                               RelativeName.Handle,
+                               RelativeName.ContainingDirectory,
                                NULL);
 
     /* Try to open the executable */

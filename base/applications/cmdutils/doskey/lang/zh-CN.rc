@@ -1,0 +1,31 @@
+/*
+ * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "管理命令行编辑设置、历史记录和宏。\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=大小]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=文件] [宏名=[文本]]\n\
+\n\
+  /INSERT             开启插入模式。\n\
+  /OVERSTRIKE         \n\
+  /EXENAME=exename    设置要查看或改变历史记录和宏的程序名。\n\
+                      默认为 cmd.exe。\n\
+  /HISTORY            显示命令历史。\n\
+  /LISTSIZE=size      设置每个历史记录缓存记录的命令数。\n\
+  /REINSTALL          清空命令历史记录。\n\
+  /MACROS             显示定义的宏。\n\
+  /MACROS:exename     显示为指定程序定义的宏。\n\
+  /MACROS:ALL         显示为所有程序定义的宏。\n\
+  /MACROFILE=file     从文件载入宏定义。\n\
+  宏名                指定要创建的宏名。\n\
+  文本                指定要替换该宏的文本。\n"
+
+IDS_INVALID_MACRO_DEF, "无效的宏定义：%s\n"
+
+END

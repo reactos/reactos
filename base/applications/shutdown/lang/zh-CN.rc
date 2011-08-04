@@ -1,0 +1,18 @@
+/*
+ * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "用法: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  没有参数或 -?\t显示这个消息\n\
+  -l\t\t\t注销\n\
+  -s\t\t\t关闭计算机\n\
+  -r\t\t\t重新启动计算机\n\
+  -f\t\t\t毫无警告地强行关闭正在运行的程序\n\
+    \t\t\t如果您没有指定其他任何参数，这个选项\n\
+    \t\t\t也会引起注销"
+END

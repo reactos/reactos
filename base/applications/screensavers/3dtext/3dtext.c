@@ -18,14 +18,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <windows.h>
-#include <scrnsave.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <tchar.h>
-
-#include "resource.h"
 #include "3dtext.h"
 
 static HGLRC hRC;       // Permanent Rendering Context

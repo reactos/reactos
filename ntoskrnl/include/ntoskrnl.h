@@ -38,9 +38,7 @@
 #define TEXT(s) L##s
 #include <regstr.h>
 #include <ntstrsafe.h>
-
-/* FIXME: Temporary until Winldr is used */
-#include <rosldr.h>
+#include <ntpoapi.h>
 
 /* C Headers */
 #include <stdlib.h>
@@ -53,7 +51,6 @@
 #include <pseh/pseh2.h>
 
 /* ReactOS Headers */
-#include <reactos/buildno.h>
 #include <reactos/bugcodes.h>
 
 /* SetupLDR Support */
