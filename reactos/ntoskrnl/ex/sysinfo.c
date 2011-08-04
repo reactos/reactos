@@ -1777,11 +1777,15 @@ QSI_DEF(SystemInvalidInfoClass4)
 /* Class 50 - System range start address */
 QSI_DEF(SystemRangeStartInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemRangeStartInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
+    /* Check user buffer's size */
+    if (Size != sizeof(ULONG_PTR)) return STATUS_INFO_LENGTH_MISMATCH;
 
+    *(PULONG_PTR)Buffer = (ULONG_PTR)MmSystemRangeStart;
+    
+    if (ReqSize) *ReqSize = sizeof(ULONG_PTR);
+    
+    return STATUS_SUCCESS;
+}
 
 /* Class 51 - Driver verifier information */
 QSI_DEF(SystemVerifierInformation)
