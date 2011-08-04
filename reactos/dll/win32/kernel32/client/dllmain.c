@@ -29,7 +29,6 @@ BOOLEAN BaseRunningInServerProcess;
 WCHAR BaseDefaultPathBuffer[6140];
 
 HANDLE BaseNamedObjectDirectory;
-HANDLE hProcessHeap = NULL;
 HMODULE hCurrentModule = NULL;
 HMODULE kernel32_handle = NULL;
 HANDLE hBaseDir = NULL;
@@ -57,13 +56,6 @@ extern ULONG NrAllocatedHandlers;
 extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
 BOOLEAN InWindows = FALSE;
-
-HANDLE
-WINAPI
-DuplicateConsoleHandle(HANDLE hConsole,
-                       DWORD dwDesiredAccess,
-                       BOOL	bInheritHandle,
-                       DWORD dwOptions);
 
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
@@ -323,11 +315,7 @@ DllMain(HANDLE hDll,
         }
 
         /* Initialize heap handle table */
-        hProcessHeap = RtlGetProcessHeap();
-        RtlInitializeHandleTable(0xFFFF,
-                                 sizeof(BASE_HEAP_HANDLE_ENTRY),
-                                 &BaseHeapHandleTable);
-        DPRINT("Heap: %p\n", hProcessHeap);
+        BaseDllInitializeMemoryManager();
 
         /* Set HMODULE for our DLL */
         kernel32_handle = hCurrentModule = hDll;
