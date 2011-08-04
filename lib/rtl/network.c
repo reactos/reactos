@@ -105,7 +105,7 @@ NTSTATUS
 NTAPI
 RtlIpv4StringToAddressW(IN PCWSTR String,
                         IN BOOLEAN Strict,
-                        OUT LPTSTR *Terminator,
+                        OUT LPWSTR *Terminator,
                         OUT struct in_addr *Addr)
 {
     UNIMPLEMENTED;
