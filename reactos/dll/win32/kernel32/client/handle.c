@@ -197,7 +197,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                                dwDesiredAccess,
                                bInheritHandle ? OBJ_INHERIT : 0,
                                dwOptions);
-    if (NT_SUCCESS(Status)) return Status;
+    if (NT_SUCCESS(Status)) return TRUE;
 
     BaseSetLastNTError(Status);
     return FALSE;
