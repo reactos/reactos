@@ -10,8 +10,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
+#include <win32k/callback.h>
+
 #define NDEBUG
 #include <debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -25,11 +28,14 @@ BOOLEAN LdrpInLdrInit;
 LONG LdrpProcessInitialized;
 BOOLEAN LdrpLoaderLockInit;
 BOOLEAN LdrpLdrDatabaseIsSetup;
+BOOLEAN LdrpShutdownInProgress;
+HANDLE LdrpShutdownThreadId;
 
 BOOLEAN LdrpDllValidation;
 
 PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 PUNICODE_STRING LdrpTopLevelDllBeingLoaded;
+WCHAR StringBuffer[156];
 extern PTEB LdrpTopLevelDllBeingLoadedTeb; // defined in rtlsupp.c!
 PLDR_DATA_TABLE_ENTRY LdrpCurrentDllInitializer;
 PLDR_DATA_TABLE_ENTRY LdrpNtDllDataTableEntry;
@@ -68,6 +74,7 @@ RTL_CRITICAL_SECTION FastPebLock;
 BOOLEAN ShowSnaps;
 
 ULONG LdrpFatalHardErrorCount;
+ULONG LdrpActiveUnloadCount;
 
 //extern LIST_ENTRY RtlCriticalSectionList;
 
@@ -78,10 +85,12 @@ extern BOOLEAN RtlpPageHeapEnabled;
 extern ULONG RtlpDphGlobalFlags;
 
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
-NTSTATUS NTAPI
-LdrpInitializeProcess_(PCONTEXT Context,
-                      PVOID SystemArgument1);
 
+#ifdef _WIN64
+#define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
+#else
+#define DEFAULT_SECURITY_COOKIE 0xBB40E64E
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -414,8 +423,7 @@ LdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
     Cookie = (PVOID)ConfigDir->SecurityCookie;
 
     /* Check this cookie */
-    if (Cookie == NULL ||
-        (PCHAR)Cookie <= (PCHAR)BaseAddress ||
+    if ((PCHAR)Cookie <= (PCHAR)BaseAddress ||
         (PCHAR)Cookie >= (PCHAR)BaseAddress + SizeOfImage)
     {
         Cookie = NULL;
@@ -429,18 +437,176 @@ PVOID
 NTAPI
 LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    PVOID Cookie;
+    PULONG_PTR Cookie;
+    LARGE_INTEGER Counter;
+    //ULONG NewCookie;
 
     /* Fetch address of the cookie */
     Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
 
     if (Cookie)
     {
-        UNIMPLEMENTED;
-        Cookie = NULL;
+        /* Check if it's a default one */
+        if (*Cookie == DEFAULT_SECURITY_COOKIE ||
+            *Cookie == 0xBB40)
+        {
+            /* We need to initialize it */
+
+            NtQueryPerformanceCounter(&Counter, NULL);
+#if 0
+            GetSystemTimeAsFileTime (&systime.ft_struct);
+#ifdef _WIN64
+            cookie = systime.ft_scalar;
+#else
+            cookie = systime.ft_struct.dwLowDateTime;
+            cookie ^= systime.ft_struct.dwHighDateTime;
+#endif
+
+            cookie ^= GetCurrentProcessId ();
+            cookie ^= GetCurrentThreadId ();
+            cookie ^= GetTickCount ();
+
+            QueryPerformanceCounter (&perfctr);
+#ifdef _WIN64
+            cookie ^= perfctr.QuadPart;
+#else
+            cookie ^= perfctr.LowPart;
+            cookie ^= perfctr.HighPart;
+#endif
+
+#ifdef _WIN64
+            cookie &= 0x0000ffffffffffffll;
+#endif
+#endif
+            *Cookie = Counter.LowPart;
+
+            //Cookie = NULL;
+        }
     }
 
     return Cookie;
+}
+
+VOID
+NTAPI
+LdrpInitializeThread(IN PCONTEXT Context)
+{
+    PPEB Peb = NtCurrentPeb();
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry, ListHead;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
+    NTSTATUS Status;
+    PVOID EntryPoint;
+
+    DPRINT("LdrpInitializeThread() called for %wZ\n",
+            &LdrpImageEntry->BaseDllName);
+
+    /* Allocate an Activation Context Stack */
+    /* FIXME: This is a hack for Wine's actctx stuff */
+    DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
+    if (!(NtCurrentTeb()->ActivationContextStackPointer))
+    {
+        Status = RtlAllocateActivationContextStack((PVOID*)&NtCurrentTeb()->ActivationContextStackPointer);
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
+            DPRINT("ActiveFrame %p\n", ((PACTIVATION_CONTEXT_STACK)NtCurrentTeb()->ActivationContextStackPointer)->ActiveFrame);
+            NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NULL;
+        }
+        else
+            DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
+    }
+
+    /* Make sure we are not shutting down */
+    if (LdrpShutdownInProgress) return;
+
+    /* Allocate TLS */
+    LdrpAllocateTls();
+
+    /* Start at the beginning */
+    ListHead = &Peb->Ldr->InMemoryOrderModuleList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
+
+        /* Make sure it's not ourselves */
+        if (Peb->ImageBaseAddress != LdrEntry->DllBase)
+        {
+            /* Check if we should call */
+            if (!(LdrEntry->Flags & LDRP_DONT_CALL_FOR_THREADS))
+            {
+                /* Get the entrypoint */
+                EntryPoint = LdrEntry->EntryPoint;
+
+                /* Check if we are ready to call it */
+                if ((EntryPoint) && 
+                    (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
+                    (LdrEntry->Flags & LDRP_IMAGE_DLL))
+                {
+                    /* Set up the Act Ctx */
+                    ActCtx.Size = sizeof(ActCtx);
+                    ActCtx.Format = 1;
+                    RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+                    /* Activate the ActCtx */
+                    RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                                           LdrEntry->EntryPointActivationContext);
+
+                    /* Check if it has TLS */
+                    if (LdrEntry->TlsIndex)
+                    {
+                        /* Make sure we're not shutting down */
+                        if (!LdrpShutdownInProgress)
+                        {
+                            /* Call TLS */
+                            LdrpTlsCallback(LdrEntry->DllBase, DLL_THREAD_ATTACH);
+                        }
+                    }
+
+                    /* Make sure we're not shutting down */
+                    if (!LdrpShutdownInProgress)
+                    {
+                        /* Call the Entrypoint */
+                        DPRINT("%wZ - Calling entry point at %x for thread attaching\n",
+                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                        LdrpCallDllEntry(LdrEntry->EntryPoint,
+                                         LdrEntry->DllBase,
+                                         DLL_THREAD_ATTACH,
+                                         NULL);
+                    }
+
+                    /* Deactivate the ActCtx */
+                    RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+                }
+            }
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check for TLS */
+    if (LdrpImageHasTls && !LdrpShutdownInProgress)
+    {
+        /* Set up the Act Ctx */
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = 1;
+        RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+        /* Activate the ActCtx */
+        RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                               LdrpImageEntry->EntryPointActivationContext);
+
+        /* Do TLS callbacks */
+        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_THREAD_ATTACH);
+
+        /* Deactivate the ActCtx */
+        RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+    }
+
+    DPRINT("LdrpInitializeThread() done\n");
 }
 
 NTSTATUS
@@ -715,6 +881,267 @@ Quickie:
     return Status;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrShutdownProcess(VOID)
+{
+    PPEB Peb = NtCurrentPeb();
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry, ListHead;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
+    PVOID EntryPoint;
+
+    DPRINT("LdrShutdownProcess() called for %wZ\n", &LdrpImageEntry->BaseDllName);
+    if (LdrpShutdownInProgress) return STATUS_SUCCESS;
+
+    /* Tell the Shim Engine */
+    //if (ShimsEnabled)
+    //{
+        /* FIXME */
+    //}
+
+    /* Tell the world */
+    if (ShowSnaps)
+    {
+        DPRINT1("\n");
+    }
+
+    /* Set the shutdown variables */
+    LdrpShutdownThreadId = NtCurrentTeb()->RealClientId.UniqueThread;
+    LdrpShutdownInProgress = TRUE;
+
+    /* Enter the Loader Lock */
+    RtlEnterCriticalSection(&LdrpLoaderLock);
+
+    /* Cleanup trace logging data (Etw) */
+    if (SharedUserData->TraceLogging)
+    {
+        /* FIXME */
+        DPRINT1("We don't support Etw yet.\n");
+    }
+
+    /* Start at the end */
+    ListHead = &Peb->Ldr->InInitializationOrderModuleList;
+    NextEntry = ListHead->Blink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        NextEntry = NextEntry->Blink;
+
+        /* Make sure it's not ourselves */
+        if (Peb->ImageBaseAddress != LdrEntry->DllBase)
+        {
+            /* Get the entrypoint */
+            EntryPoint = LdrEntry->EntryPoint;
+
+            /* Check if we are ready to call it */
+            if (EntryPoint && 
+                (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
+                LdrEntry->Flags)
+            {
+                /* Set up the Act Ctx */
+                ActCtx.Size = sizeof(ActCtx);
+                ActCtx.Format = 1;
+                RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+                /* Activate the ActCtx */
+                RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                                       LdrEntry->EntryPointActivationContext);
+
+                /* Check if it has TLS */
+                if (LdrEntry->TlsIndex)
+                {
+                    /* Call TLS */
+                    LdrpTlsCallback(LdrEntry->DllBase, DLL_PROCESS_DETACH);
+                }
+
+                /* Call the Entrypoint */
+                DPRINT("%wZ - Calling entry point at %x for thread detaching\n",
+                        &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                LdrpCallDllEntry(EntryPoint,
+                                 LdrEntry->DllBase,
+                                 DLL_PROCESS_DETACH,
+                                 (PVOID)1);
+
+                /* Deactivate the ActCtx */
+                RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+            }
+        }
+    }
+
+    /* Check for TLS */
+    if (LdrpImageHasTls)
+    {
+        /* Set up the Act Ctx */
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = 1;
+        RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+        /* Activate the ActCtx */
+        RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                               LdrpImageEntry->EntryPointActivationContext);
+
+        /* Do TLS callbacks */
+        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+
+        /* Deactivate the ActCtx */
+        RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+    }
+
+    /* FIXME: Do Heap detection and Etw final shutdown */
+
+    /* Release the lock */
+    RtlLeaveCriticalSection(&LdrpLoaderLock);
+    DPRINT("LdrpShutdownProcess() done\n");
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrShutdownThread(VOID)
+{
+    PPEB Peb = NtCurrentPeb();
+    PTEB Teb = NtCurrentTeb();
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry, ListHead;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
+    PVOID EntryPoint;
+
+    DPRINT("LdrShutdownThread() called for %wZ\n",
+            &LdrpImageEntry->BaseDllName);
+
+    /* Cleanup trace logging data (Etw) */
+    if (SharedUserData->TraceLogging)
+    {
+        /* FIXME */
+        DPRINT1("We don't support Etw yet.\n");
+    }
+
+    /* Get the Ldr Lock */
+    RtlEnterCriticalSection(&LdrpLoaderLock);
+
+    /* Start at the end */
+    ListHead = &Peb->Ldr->InInitializationOrderModuleList;
+    NextEntry = ListHead->Blink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        NextEntry = NextEntry->Blink;
+
+        /* Make sure it's not ourselves */
+        if (Peb->ImageBaseAddress != LdrEntry->DllBase)
+        {
+            /* Check if we should call */
+            if (!(LdrEntry->Flags & LDRP_DONT_CALL_FOR_THREADS) &&
+                (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
+                (LdrEntry->Flags & LDRP_IMAGE_DLL))
+            {
+                /* Get the entrypoint */
+                EntryPoint = LdrEntry->EntryPoint;
+
+                /* Check if we are ready to call it */
+                if (EntryPoint)
+                {
+                    /* Set up the Act Ctx */
+                    ActCtx.Size = sizeof(ActCtx);
+                    ActCtx.Format = 1;
+                    RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+                    /* Activate the ActCtx */
+                    RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                                           LdrEntry->EntryPointActivationContext);
+
+                    /* Check if it has TLS */
+                    if (LdrEntry->TlsIndex)
+                    {
+                        /* Make sure we're not shutting down */
+                        if (!LdrpShutdownInProgress)
+                        {
+                            /* Call TLS */
+                            LdrpTlsCallback(LdrEntry->DllBase, DLL_THREAD_DETACH);
+                        }
+                    }
+
+                    /* Make sure we're not shutting down */
+                    if (!LdrpShutdownInProgress)
+                    {
+                        /* Call the Entrypoint */
+                        DPRINT("%wZ - Calling entry point at %x for thread detaching\n",
+                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                        LdrpCallDllEntry(EntryPoint,
+                                         LdrEntry->DllBase,
+                                         DLL_THREAD_DETACH,
+                                         NULL);
+                    }
+
+                    /* Deactivate the ActCtx */
+                    RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+                }
+            }
+        }
+    }
+
+    /* Check for TLS */
+    if (LdrpImageHasTls)
+    {
+        /* Set up the Act Ctx */
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Format = 1;
+        RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+        /* Activate the ActCtx */
+        RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                               LdrpImageEntry->EntryPointActivationContext);
+
+        /* Do TLS callbacks */
+        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_THREAD_DETACH);
+
+        /* Deactivate the ActCtx */
+        RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+    }
+
+    /* Free TLS */
+    LdrpFreeTls();
+    RtlLeaveCriticalSection(&LdrpLoaderLock);
+
+    /* Check for expansion slots */
+    if (Teb->TlsExpansionSlots)
+    {
+        /* Free expansion slots */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Teb->TlsExpansionSlots);
+    }
+
+    /* Check for FLS Data */
+    if (Teb->FlsData)
+    {
+        /* FIXME */
+        DPRINT1("We don't support FLS Data yet\n");
+    }
+
+    /* Check for Fiber data */
+    if (Teb->HasFiberData)
+    {
+        /* Free Fiber data*/
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Teb->NtTib.FiberData);
+        Teb->NtTib.FiberData = NULL;
+    }
+
+    /* Free the activation context stack */
+    RtlFreeThreadActivationContextStack();
+    DPRINT("LdrShutdownThread() done\n");
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 LdrpInitializeTls(VOID)
@@ -879,10 +1306,10 @@ LdrpFreeTls(VOID)
 
 NTSTATUS
 NTAPI
-LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PULONG Options)
+LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
 {
     UNIMPLEMENTED;
-    *Options = 0;
+    *OptionsKey = NULL;
     return STATUS_SUCCESS;
 }
 
@@ -915,7 +1342,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     //LPWSTR ImagePathBuffer;
     ULONG ConfigSize;
     UNICODE_STRING CurrentDirectory;
-    ULONG ExecuteOptions;
+    HKEY OptionsKey;
     ULONG HeapFlags;
     PIMAGE_NT_HEADERS NtHeader;
     LPWSTR NtDllName = NULL;
@@ -928,9 +1355,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     ULONG i;
     PWSTR ImagePath;
     ULONG DebugProcessHeapOnly = 0;
-    WCHAR FullNtDllPath[MAX_PATH];
     PLDR_DATA_TABLE_ENTRY NtLdrEntry;
     PWCHAR Current;
+    ULONG ExecuteOptions = 0;
 
     /* Set a NULL SEH Filter */
     RtlSetUnhandledExceptionFilter(NULL);
@@ -954,7 +1381,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     NtHeader = RtlImageNtHeader(Peb->ImageBaseAddress);
 
     /* Get the execution options */
-    Status = LdrpInitializeExecutionOptions(&ImagePathName, Peb, &ExecuteOptions);
+    Status = LdrpInitializeExecutionOptions(&ImagePathName, Peb, &OptionsKey);
 
     /* Check if this is a .NET executable */
     if (RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
@@ -1040,7 +1467,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Check if verbose debugging (ShowSnaps) was requested */
-    ShowSnaps = TRUE;//Peb->NtGlobalFlag & FLG_SHOW_LDR_SNAPS;
+    ShowSnaps = Peb->NtGlobalFlag & FLG_SHOW_LDR_SNAPS;
 
     /* Start verbose debugging messages right now if they were requested */
     if (ShowSnaps)
@@ -1091,9 +1518,11 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Initialize the Loader Lock */
+    // FIXME: What's the point of initing it manually, if two lines lower
+    //        a call to RtlInitializeCriticalSection() is being made anyway?
     //InsertTailList(&RtlCriticalSectionList, &LdrpLoaderLock.DebugInfo->ProcessLocksList);
     //LdrpLoaderLock.DebugInfo->CriticalSection = &LdrpLoaderLock;
-    UNIMPLEMENTED;
+    RtlInitializeCriticalSection(&LdrpLoaderLock);
     LdrpLoaderLockInit = TRUE;
 
     /* Check if User Stack Trace Database support was requested */
@@ -1134,19 +1563,30 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         return STATUS_NO_MEMORY;
     }
 
+    // FIXME: Is it located properly?
+    /* Initialize table of callbacks for the kernel. */
+    Peb->KernelCallbackTable = RtlAllocateHeap(RtlGetProcessHeap(),
+                                               0,
+                                               sizeof(PVOID) *
+                                                (USER32_CALLBACK_MAXIMUM + 1));
+    if (!Peb->KernelCallbackTable)
+    {
+        DPRINT1("Failed to create callback table\n");
+        ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
+    }
+
     /* Allocate an Activation Context Stack */
     Status = RtlAllocateActivationContextStack((PVOID *)&Teb->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status)) return Status;
 
     // FIXME: Loader private heap is missing
-    DPRINT1("Loader private heap is missing\n");
+    //DPRINT1("Loader private heap is missing\n");
 
     /* Check for Debug Heap */
-    DPRINT1("Check for a debug heap is missing\n");
-    if (FALSE)
+    if (OptionsKey)
     {
         /* Query the setting */
-        Status = LdrQueryImageFileKeyOption(NULL,//hKey
+        Status = LdrQueryImageFileKeyOption(OptionsKey,
                                             L"DebugProcessHeapOnly",
                                             REG_DWORD,
                                             &DebugProcessHeapOnly,
@@ -1165,9 +1605,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Build the NTDLL Path */
-    FullPath.Buffer = FullNtDllPath;
+    FullPath.Buffer = StringBuffer;
     FullPath.Length = 0;
-    FullPath.MaximumLength = sizeof(FullNtDllPath);
+    FullPath.MaximumLength = sizeof(StringBuffer);
     RtlInitUnicodeString(&NtSystemRoot, SharedUserData->NtSystemRoot);
     RtlAppendUnicodeStringToString(&FullPath, &NtSystemRoot);
     RtlAppendUnicodeToString(&FullPath, L"\\System32\\");
@@ -1188,7 +1628,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         /* It doesn't, so assume System32 */
         LdrpKnownDllObjectDirectory = NULL;
-        RtlInitUnicodeString(&LdrpKnownDllPath, FullPath.Buffer);
+        RtlInitUnicodeString(&LdrpKnownDllPath, StringBuffer);
         LdrpKnownDllPath.Length -= sizeof(WCHAR);
     }
     else
@@ -1230,6 +1670,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         else
         {
             /* We need a valid path */
+            DPRINT1("No valid DllPath was given!\n");
             LdrpInitFailure(STATUS_INVALID_PARAMETER);
         }
 
@@ -1246,6 +1687,11 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                                                       0,
                                                       3 * sizeof(WCHAR) +
                                                       sizeof(UNICODE_NULL));
+            if (!CurrentDirectory.Buffer)
+            {
+                DPRINT1("LDR: LdrpInitializeProcess - unable to allocate current working directory buffer\n");
+                // FIXME: And what?
+            }
 
             /* Copy the drive of the system root */
             RtlMoveMemory(CurrentDirectory.Buffer,
@@ -1256,12 +1702,12 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             CurrentDirectory.MaximumLength = CurrentDirectory.Length + sizeof(WCHAR);
 
             FreeCurDir = TRUE;
+            DPRINT("Using dynamically allocd curdir\n");
         }
         else
         {
             /* Use the local buffer */
-            CurrentDirectory.Length = NtSystemRoot.Length;
-            CurrentDirectory.Buffer = NtSystemRoot.Buffer;
+            DPRINT("Using local system root\n");
         }
     }
 
@@ -1280,8 +1726,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     NtLdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(NtLdrEntry->DllBase);
     NtLdrEntry->LoadCount = -1;
     NtLdrEntry->EntryPointActivationContext = 0;
-    NtLdrEntry->FullDllName.Length = ImageFileName.Length;
-    NtLdrEntry->FullDllName.Buffer = ImageFileName.Buffer;
+    NtLdrEntry->FullDllName = ImageFileName;
+
     if (IsDotNetImage)
         NtLdrEntry->Flags = LDRP_COR_IMAGE;
     else
@@ -1291,7 +1737,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (!ImageFileName.Buffer[0])
     {
         /* Use the same Base name */
-        NtLdrEntry->BaseDllName = NtLdrEntry->BaseDllName;
+        NtLdrEntry->BaseDllName = NtLdrEntry->FullDllName;
     }
     else
     {
@@ -1332,13 +1778,15 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     NtLdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(NtLdrEntry->DllBase);
     NtLdrEntry->LoadCount = -1;
     NtLdrEntry->EntryPointActivationContext = 0;
-    //NtLdrEntry->BaseDllName.Length = NtSystemRoot.Length;
-    //RtlAppendUnicodeStringToString(&NtSystemRoot, &NtDllString);
+
+    NtLdrEntry->FullDllName.Length = FullPath.Length;
+    NtLdrEntry->FullDllName.MaximumLength = FullPath.MaximumLength;
+    NtLdrEntry->FullDllName.Buffer = StringBuffer;
+    RtlAppendUnicodeStringToString(&NtLdrEntry->FullDllName, &NtDllString);
+
     NtLdrEntry->BaseDllName.Length = NtDllString.Length;
     NtLdrEntry->BaseDllName.MaximumLength = NtDllString.MaximumLength;
     NtLdrEntry->BaseDllName.Buffer = NtDllString.Buffer;
-
-    // FIXME: Full DLL name?!
 
     /* Processing done, insert it */
     LdrpNtDllDataTableEntry = NtLdrEntry;
@@ -1510,7 +1958,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     ///* Close the key if we have one opened */
     //if (hKey) NtClose(hKey);
-DbgBreakPoint();
+
     /* Return status */
     return Status;
 }
@@ -1596,7 +2044,7 @@ LdrpInit(PCONTEXT Context,
         _SEH2_TRY
         {
             /* Initialize the Process */
-            LoaderStatus = LdrpInitializeProcess_(Context,
+            LoaderStatus = LdrpInitializeProcess(Context,
                                                  SystemArgument1);
 
             /* Check for success and if MinimumStackCommit was requested */
