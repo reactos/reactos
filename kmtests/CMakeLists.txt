@@ -75,6 +75,7 @@ list(APPEND KMTEST_SOURCE
 
 add_executable(kmtest ${KMTEST_SOURCE})
 set_module_type(kmtest win32cui)
+target_link_libraries(kmtest ${PSEH_LIB})
 add_importlibs(kmtest advapi32 msvcrt kernel32 ntdll)
 set_property(TARGET kmtest PROPERTY COMPILE_DEFINITIONS KMT_USER_MODE)
 

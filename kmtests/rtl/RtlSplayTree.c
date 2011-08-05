@@ -11,17 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* HACK: missing in rtlfuncs.h */
-#if defined KMT_USER_MODE && !defined RTL_USE_AVL_TABLES
-NTSYSAPI VOID NTAPI RtlInitializeGenericTable(OUT PRTL_GENERIC_TABLE Table, IN PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine, IN PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine, IN PRTL_GENERIC_FREE_ROUTINE FreeRoutine, IN PVOID TableContext OPTIONAL);
-NTSYSAPI PVOID NTAPI RtlInsertElementGenericTable(IN PRTL_GENERIC_TABLE Table, IN PVOID Buffer, IN CLONG BufferSize, OUT PBOOLEAN NewElement OPTIONAL);
-NTSYSAPI BOOLEAN NTAPI RtlDeleteElementGenericTable(IN PRTL_GENERIC_TABLE Table, IN PVOID Buffer);
-NTSYSAPI PVOID NTAPI RtlLookupElementGenericTable(IN PRTL_GENERIC_TABLE Table, IN PVOID Buffer);
-NTSYSAPI PVOID NTAPI RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table, IN BOOLEAN Restart);
-NTSYSAPI PVOID NTAPI RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table, IN ULONG I);
-NTSYSAPI ULONG NTAPI RtlNumberGenericTableElements(IN PRTL_GENERIC_TABLE Table);
-#endif
-
 static LIST_ENTRY Allocations;
 
 static RTL_GENERIC_COMPARE_RESULTS NTAPI

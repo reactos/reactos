@@ -2,6 +2,7 @@
 	<include base="kmtest">include</include>
 	<library>advapi32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<define name="KMT_USER_MODE" />
 	<directory name="kmtest">
 		<file>kmtest.c</file>

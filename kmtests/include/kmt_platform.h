@@ -30,6 +30,8 @@
 #elif !defined __GNUC__
 #define KIRQL int
 #endif /* !defined __GNUC__ */
+typedef const UCHAR CUCHAR, *PCUCHAR;
+typedef ULONG LOGICAL, *PLOGICAL;
 
 #undef KeRaiseIrql
 #define KeRaiseIrql(new, old)
@@ -39,10 +41,13 @@
 #define ExAllocatePoolWithTag(type, size, tag)  HeapAlloc(GetProcessHeap(), 0, size)
 #define ExFreePool(p)                           HeapFree(GetProcessHeap(), 0, p)
 #define ExFreePoolWithTag(p, tag)               HeapFree(GetProcessHeap(), 0, p)
+#define RtlCopyMemoryNonTemporal(d, s, l)
+#define RtlPrefetchMemoryNonTemporal(s, l)
 #endif /* defined KMT_EMULATE_KERNEL */
 
 #endif /* defined KMT_USER_MODE */
 
 #include <pseh/pseh2.h>
+#include <limits.h>
 
 #endif /* !defined _KMTEST_PLATFORM_H_ */
