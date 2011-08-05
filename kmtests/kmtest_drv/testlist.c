@@ -9,6 +9,7 @@
 
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_ExDoubleList;
+KMT_TESTFUNC Test_ExFastMutex;
 KMT_TESTFUNC Test_ExHardError;
 KMT_TESTFUNC Test_ExHardErrorInteractive;
 KMT_TESTFUNC Test_ExInterlocked;
@@ -22,6 +23,7 @@ KMT_TESTFUNC Test_IoIrp;
 KMT_TESTFUNC Test_IoMdl;
 KMT_TESTFUNC Test_KeApc;
 KMT_TESTFUNC Test_KeDpc;
+KMT_TESTFUNC Test_KeEvent;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KernelType;
@@ -33,6 +35,7 @@ KMT_TESTFUNC Test_RtlSplayTree;
 const KMT_TEST TestList[] =
 {
     { "ExDoubleList",                       Test_ExDoubleList },
+    { "ExFastMutex",                        Test_ExFastMutex },
     { "ExHardError",                        Test_ExHardError },
     { "-ExHardErrorInteractive",            Test_ExHardErrorInteractive },
     { "ExInterlocked",                      Test_ExInterlocked },
@@ -47,6 +50,7 @@ const KMT_TEST TestList[] =
     { "IoMdl",                              Test_IoMdl },
     { "KeApc",                              Test_KeApc },
     { "KeDpc",                              Test_KeDpc },
+    { "KeEvent",                            Test_KeEvent },
     { "KeIrql",                             Test_KeIrql },
     { "KeProcessor",                        Test_KeProcessor },
     { "-KernelType",                        Test_KernelType },

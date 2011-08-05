@@ -16,6 +16,7 @@
 	</directory>
 	<directory name="ntos_ex">
 		<file>ExDoubleList.c</file>
+		<file>ExFastMutex.c</file>
 		<file>ExHardError.c</file>
 		<file>ExInterlocked.c</file>
 		<file>ExPools.c</file>
@@ -34,6 +35,7 @@
 	<directory name="ntos_ke">
 		<file>KeApc.c</file>
 		<file>KeDpc.c</file>
+		<file>KeEvent.c</file>
 		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>
 		<file>KeSpinLock.c</file>

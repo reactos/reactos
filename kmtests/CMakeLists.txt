@@ -17,6 +17,7 @@ list(APPEND KMTEST_DRV_SOURCE
     example/Example.c
     example/KernelType.c
     ntos_ex/ExDoubleList.c
+    ntos_ex/ExFastMutex.c
     ntos_ex/ExHardError.c
     ntos_ex/ExInterlocked.c
     ntos_ex/ExPools.c
@@ -29,6 +30,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoMdl.c
     ntos_ke/KeApc.c
     ntos_ke/KeDpc.c
+    ntos_ke/KeEvent.c
     ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
