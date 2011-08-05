@@ -345,6 +345,10 @@ tcp_input(struct pbuf *p, struct netif *inp)
       } else if (recv_flags & TF_CLOSED) {
         /* The connection has been closed and we will deallocate the
            PCB. */
+        TCP_EVENT_CLOSED(pcb, err);
+        if (err == ERR_ABRT) {
+          goto aborted;
+        }
         tcp_pcb_remove(&tcp_active_pcbs, pcb);
         memp_free(MEMP_TCP_PCB, pcb);
       } else {

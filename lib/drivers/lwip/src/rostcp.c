@@ -599,27 +599,25 @@ void
 LibTCPShutdownCallback(void *arg)
 {
     struct shutdown_callback_msg *msg = arg;
-    
+    PTCP_PCB pcb = msg->Connection->SocketContext;
+
     if (!msg->Connection->SocketContext)
     {
         msg->Error = ERR_CLSD;
         goto done;
     }
 
-    /*
-        We check here if the pcb is in state ESTABLISHED or SYN_RECV because otherwise
-        it means lwIP will take care of it anyway and if it does so before us it will
-        cause memory corruption.
-    */
-    if ((((PTCP_PCB)msg->Connection->SocketContext)->state == ESTABLISHED) ||
-        (((PTCP_PCB)msg->Connection->SocketContext)->state == SYN_RCVD))
+    if (pcb->state == CLOSE_WAIT)
     {
-        msg->Error = 
-            tcp_shutdown((PTCP_PCB)msg->Connection->SocketContext,
-                msg->shut_rx, msg->shut_tx);
+        /* This case actually results in a socket closure later (lwIP bug?) */
+        msg->Connection->SocketContext = NULL;
     }
-    else
-        msg->Error = ERR_OK;
+
+    msg->Error = tcp_shutdown(pcb, msg->shut_rx, msg->shut_tx);
+    if (msg->Error)
+    {
+        msg->Connection->SocketContext = pcb;
+    }
     
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
@@ -662,6 +660,7 @@ struct close_callback_msg
     
     /* Input */
     PCONNECTION_ENDPOINT Connection;
+    int Callback;
     
     /* Output */
     err_t Error;
@@ -672,6 +671,8 @@ void
 LibTCPCloseCallback(void *arg)
 {
     struct close_callback_msg *msg = arg;
+    PTCP_PCB pcb = msg->Connection->SocketContext;
+    int state;
 
     if (!msg->Connection->SocketContext)
     {
@@ -681,22 +682,43 @@ LibTCPCloseCallback(void *arg)
 
     LibTCPEmptyQueue(msg->Connection);
 
-    if (((PTCP_PCB)msg->Connection->SocketContext)->state == LISTEN)
+    /* Clear the PCB pointer */
+    msg->Connection->SocketContext = NULL;
+
+    /* Save the old PCB state */
+    state = pcb->state;
+
+    msg->Error = tcp_close(pcb);
+    if (!msg->Error)
     {
-        msg->Error = tcp_close((PTCP_PCB)msg->Connection->SocketContext);
+        if (msg->Callback)
+        {
+            /* Call the FIN handler in the cases where it will not be called by lwIP */
+            switch (state)
+            {
+                case CLOSED:
+                case LISTEN:
+                case SYN_SENT:
+                   TCPFinEventHandler(msg->Connection, ERR_OK);
+                   break;
+
+                default:
+                   break;
+            }
+        }
     }
     else
     {
-        tcp_abort((PTCP_PCB)msg->Connection->SocketContext);
-        msg->Error = ERR_OK;
+        /* Restore the PCB pointer */
+        msg->Connection->SocketContext = pcb;
     }
-    
+
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
 err_t
-LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe)
+LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback)
 {
     err_t ret;
     struct close_callback_msg *msg;
@@ -707,6 +729,7 @@ LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe)
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
         
         msg->Connection = Connection;
+        msg->Callback = callback;
         
         if (safe)
             LibTCPCloseCallback(msg);

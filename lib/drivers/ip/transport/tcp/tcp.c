@@ -106,15 +106,12 @@ NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
 
     Socket = Connection->SocketContext;
 
-    /* We should not be associated to an address file at this point */
-    ASSERT(!Connection->AddressFile);
-
     /* Don't try to close again if the other side closed us already */
     if (Connection->SocketContext)
     {
         FlushAllQueues(Connection, STATUS_CANCELLED);
 
-        LibTCPClose(Connection, FALSE);
+        LibTCPClose(Connection, FALSE, TRUE);
     }
 
     UnlockObject(Connection, OldIrql);

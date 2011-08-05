@@ -63,7 +63,7 @@ CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEA
 }
 
 VOID
-FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
+FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
 {
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
@@ -84,13 +84,35 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
         CompleteBucket(Connection, Bucket, FALSE);
     }
 
-    // Calling with Status == STATUS_SUCCESS means that we got a graceful closure
-    // so we don't want to kill everything else since send is still valid in this state
-    //
+    DereferenceObject(Connection);
+}
+
+VOID
+FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
+{
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
+        
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
+    {
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        TI_DbgPrint(DEBUG_TCP,
+                    ("Completing Receive request: %x %x\n",
+                     Bucket->Request, Status));
+        
+        Bucket->Status = Status;
+        Bucket->Information = 0;
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+
+    /* We completed the reads successfully but we need to return failure now */
     if (Status == STATUS_SUCCESS)
     {
-        DereferenceObject(Connection);
-        return;
+        Status = STATUS_FILE_CLOSED;
     }
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
@@ -134,17 +156,61 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
 VOID
 TCPFinEventHandler(void *arg, const err_t err)
 {
-    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
-    const NTSTATUS status = TCPTranslateError(err);
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg, LastConnection;
+    const NTSTATUS Status = TCPTranslateError(err);
+    KIRQL OldIrql;
 
-    /* Only clear the pointer if the shutdown was caused by an error */
-    if (err != ERR_OK)
+    ASSERT(Connection->AddressFile);
+
+    /* Check if this was a partial socket closure */
+    if (err == ERR_OK && Connection->SocketContext)
     {
-        /* We're got closed by the error so remove the PCB pointer */
-        Connection->SocketContext = NULL;
+        /* Just flush the receive queue and get out of here */
+        FlushReceiveQueue(Connection, STATUS_SUCCESS);
     }
+    else
+    {
+        /* First off all, remove the PCB pointer */
+        Connection->SocketContext = NULL;
 
-    FlushAllQueues(Connection, status);
+        /* Complete all outstanding requests now */
+        FlushAllQueues(Connection, Status);
+
+        LockObject(Connection, &OldIrql);
+
+        LockObjectAtDpcLevel(Connection->AddressFile);
+
+        /* Unlink this connection from the address file */
+        if (Connection->AddressFile->Connection == Connection)
+        {
+            Connection->AddressFile->Connection = Connection->Next;
+            DereferenceObject(Connection);
+        }
+        else if (Connection->AddressFile->Listener == Connection)
+        {
+            Connection->AddressFile->Listener = NULL;
+            DereferenceObject(Connection);
+        }
+        else
+        {
+            LastConnection = Connection->AddressFile->Connection;
+            while (LastConnection->Next != Connection && LastConnection->Next != NULL)
+                LastConnection = LastConnection->Next;
+            if (LastConnection->Next == Connection)
+            {
+                LastConnection->Next = Connection->Next;
+                DereferenceObject(Connection);
+            }
+        }
+
+        UnlockObjectFromDpcLevel(Connection->AddressFile);
+
+        /* Remove the address file from this connection */
+        DereferenceObject(Connection->AddressFile);
+        Connection->AddressFile = NULL;
+
+        UnlockObject(Connection, OldIrql);
+    }
 }
     
 VOID
@@ -186,7 +252,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
             ASSERT( ((PTCP_PCB)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED );
             
             /*  free socket context created in FileOpenConnection, as we're using a new one */
-            LibTCPClose(Bucket->AssociatedEndpoint, TRUE);
+            LibTCPClose(Bucket->AssociatedEndpoint, TRUE, FALSE);
 
             /* free previously created socket context (we don't use it, we use newpcb) */
             Bucket->AssociatedEndpoint->SocketContext = newpcb;

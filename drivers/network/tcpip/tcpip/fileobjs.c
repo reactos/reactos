@@ -409,7 +409,6 @@ NTSTATUS FileCloseAddress(
   /* We have to close this listener because we started it */
   if( AddrFile->Listener )
   {
-      AddrFile->Listener->AddressFile = NULL;
       TCPClose( AddrFile->Listener );
   }
 
