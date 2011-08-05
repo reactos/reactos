@@ -296,13 +296,13 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_INIT_OBJECT_ATTRIBUTES(n, a)                        \
     RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
 
-#else
+#else /* NTOS_MODE_USER */
 //
 // Message Resource Flag
 //
 #define MESSAGE_RESOURCE_UNICODE                            0x0001
 
-#endif
+#endif /* !NTOS_MODE_USER */
 #define MAXIMUM_LEADBYTES                                   12
 
 //
@@ -350,7 +350,7 @@ extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
     (__SOURCE_STRING__)                                         \
 }
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 #ifdef NTOS_MODE_USER
 
@@ -372,7 +372,7 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 //
 // RTL Path Types
@@ -425,7 +425,7 @@ typedef VOID
     IN PVOID Context
 );
 
-#else
+#else /* !NTOS_MODE_USER */
 
 //
 // Handler during regular RTL Exceptions
@@ -462,7 +462,7 @@ extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
 extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 //
 // Callback for RTL Heap Enumeration
@@ -497,52 +497,76 @@ struct _RTL_RANGE;
 //
 // Routines and callbacks for the RTL AVL/Generic Table package
 //
-#if defined(NTOS_MODE_USER) || (!defined(NTOS_MODE_USER) && !defined(_NTIFS_))
+#ifdef NTOS_MODE_USER
 typedef NTSTATUS
-(NTAPI *PRTL_AVL_MATCH_FUNCTION)(
+(NTAPI RTL_AVL_MATCH_FUNCTION)(
     struct _RTL_AVL_TABLE *Table,
     PVOID UserData,
     PVOID MatchData
 );
+typedef RTL_AVL_MATCH_FUNCTION *PRTL_AVL_MATCH_FUNCTION;
 
 typedef RTL_GENERIC_COMPARE_RESULTS
-(NTAPI *PRTL_AVL_COMPARE_ROUTINE) (
+(NTAPI RTL_AVL_COMPARE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
     PVOID FirstStruct,
     PVOID SecondStruct
 );
+typedef RTL_AVL_COMPARE_ROUTINE *PRTL_AVL_COMPARE_ROUTINE;
 
 typedef RTL_GENERIC_COMPARE_RESULTS
-(NTAPI *PRTL_GENERIC_COMPARE_ROUTINE) (
+(NTAPI RTL_GENERIC_COMPARE_ROUTINE) (
     struct _RTL_GENERIC_TABLE *Table,
     PVOID FirstStruct,
     PVOID SecondStruct
 );
+typedef RTL_GENERIC_COMPARE_ROUTINE *PRTL_GENERIC_COMPARE_ROUTINE;
 
 typedef PVOID
-(NTAPI *PRTL_GENERIC_ALLOCATE_ROUTINE) (
+(NTAPI RTL_GENERIC_ALLOCATE_ROUTINE) (
     struct _RTL_GENERIC_TABLE *Table,
     CLONG ByteSize
 );
-
-typedef VOID
-(NTAPI *PRTL_GENERIC_FREE_ROUTINE) (
-    struct _RTL_GENERIC_TABLE *Table,
-    PVOID Buffer
-);
+typedef RTL_GENERIC_ALLOCATE_ROUTINE *PRTL_GENERIC_ALLOCATE_ROUTINE;
 
 typedef PVOID
-(NTAPI *PRTL_AVL_ALLOCATE_ROUTINE) (
+(NTAPI RTL_AVL_ALLOCATE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
     CLONG ByteSize
 );
+typedef RTL_AVL_ALLOCATE_ROUTINE *PRTL_AVL_ALLOCATE_ROUTINE;
 
 typedef VOID
-(NTAPI *PRTL_AVL_FREE_ROUTINE) (
+(NTAPI RTL_GENERIC_FREE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID Buffer
+);
+typedef RTL_GENERIC_FREE_ROUTINE *PRTL_GENERIC_FREE_ROUTINE;
+
+typedef VOID
+(NTAPI RTL_AVL_FREE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
     PVOID Buffer
 );
-#endif
+typedef RTL_AVL_FREE_ROUTINE *PRTL_AVL_FREE_ROUTINE;
+
+#ifdef RTL_USE_AVL_TABLES
+#undef  RTL_GENERIC_COMPARE_ROUTINE
+#undef PRTL_GENERIC_COMPARE_ROUTINE
+#undef  RTL_GENERIC_ALLOCATE_ROUTINE
+#undef PRTL_GENERIC_ALLOCATE_ROUTINE
+#undef  RTL_GENERIC_FREE_ROUTINE
+#undef PRTL_GENERIC_FREE_ROUTINE
+
+#define  RTL_GENERIC_COMPARE_ROUTINE     RTL_AVL_COMPARE_ROUTINE
+#define PRTL_GENERIC_COMPARE_ROUTINE    PRTL_AVL_COMPARE_ROUTINE
+#define  RTL_GENERIC_ALLOCATE_ROUTINE    RTL_AVL_ALLOCATE_ROUTINE
+#define PRTL_GENERIC_ALLOCATE_ROUTINE   PRTL_AVL_ALLOCATE_ROUTINE
+#define  RTL_GENERIC_FREE_ROUTINE        RTL_AVL_FREE_ROUTINE
+#define PRTL_GENERIC_FREE_ROUTINE       PRTL_AVL_FREE_ROUTINE
+#endif /* RTL_USE_AVL_TABLES */
+
+#endif /* NTOS_MODE_USER */
 
 //
 // RTL Query Registry callback
@@ -659,6 +683,7 @@ typedef struct _RTL_BALANCED_LINKS
 //
 // RTL Avl/Generic Tables
 //
+#ifndef RTL_USE_AVL_TABLES
 typedef struct _RTL_GENERIC_TABLE
 {
     PRTL_SPLAY_LINKS TableRoot;
@@ -671,6 +696,7 @@ typedef struct _RTL_GENERIC_TABLE
     PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
     PVOID TableContext;
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
+#endif /* !RTL_USE_AVL_TABLES */
 
 typedef struct _RTL_AVL_TABLE
 {
@@ -686,6 +712,14 @@ typedef struct _RTL_AVL_TABLE
     PRTL_AVL_FREE_ROUTINE FreeRoutine;
     PVOID TableContext;
 } RTL_AVL_TABLE, *PRTL_AVL_TABLE;
+
+#ifdef RTL_USE_AVL_TABLES
+#undef  RTL_GENERIC_TABLE
+#undef PRTL_GENERIC_TABLE
+
+#define  RTL_GENERIC_TABLE  RTL_AVL_TABLE
+#define PRTL_GENERIC_TABLE PRTL_AVL_TABLE
+#endif /* RTL_USE_AVL_TABLES */
 
 //
 // RTL Compression Buffer
@@ -805,7 +839,7 @@ typedef struct _ACTIVATION_CONTEXT_STACK
 } ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
 #endif
 
-#endif
+#endif /* NTOS_MODE_USER */
 
 //
 // ACE Structure
@@ -1091,7 +1125,7 @@ typedef struct _RTL_CRITICAL_SECTION
     ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
 
-#endif
+#endif /* !NTOS_MODE_USER */
 
 //
 // RTL Private Heap Structures
@@ -1260,7 +1294,7 @@ typedef struct _TIME_ZONE_INFORMATION
     SYSTEMTIME DaylightDate;
     LONG DaylightBias;
 } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
-#endif
+#endif /* !_WINBASE_ */
 
 //
 // Native version of Timezone Structure
@@ -1354,5 +1388,5 @@ typedef struct _MESSAGE_RESOURCE_DATA
     MESSAGE_RESOURCE_BLOCK Blocks[ANYSIZE_ARRAY];
 } MESSAGE_RESOURCE_DATA, *PMESSAGE_RESOURCE_DATA;
 
-#endif
-#endif
+#endif /* !NTOS_MODE_USER */
+#endif /* !_RTLTYPES_H */
