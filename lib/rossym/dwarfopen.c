@@ -31,8 +31,7 @@ dwarfopen(Pe *pe)
 	|| pe->loadsection(pe, ".debug_aranges", &d->aranges) < 0
 	|| pe->loadsection(pe, ".debug_line", &d->line) < 0
 	|| pe->loadsection(pe, ".debug_pubnames", &d->pubnames) < 0
-	|| pe->loadsection(pe, ".debug_info", &d->info) < 0
-    || pe->loadsection(pe, ".debug_loc", &d->loc) < 0)
+	|| pe->loadsection(pe, ".debug_info", &d->info) < 0)
 		goto err;
 	pe->loadsection(pe, ".debug_frame", &d->frame);
 	pe->loadsection(pe, ".debug_ranges", &d->ranges);
@@ -50,7 +49,6 @@ err:
 	free(d->ranges.data);
 	free(d->str.data);
 	free(d->info.data);
-    free(d->loc.data);
 	free(d);
 	return nil;
 }

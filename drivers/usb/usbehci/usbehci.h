@@ -96,7 +96,8 @@ typedef struct _COMMON_DEVICE_EXTENSION
 typedef struct _FDO_DEVICE_EXTENSION
 {
     COMMON_DEVICE_EXTENSION Common;
-
+    PDRIVER_OBJECT DriverObject;
+    PDEVICE_OBJECT DeviceObject;
     PDEVICE_OBJECT LowerDevice;
     PDEVICE_OBJECT Pdo;
     ULONG DeviceState;

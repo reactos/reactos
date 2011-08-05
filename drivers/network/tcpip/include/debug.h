@@ -33,15 +33,13 @@
 #define DEBUG_INFO     0x02000000
 #define DEBUG_ULTRA    0x7FFFFFFF
 
-#define DBG 1
-
 #if DBG
 
 #define REMOVE_PARENS(...) __VA_ARGS__
 #define TI_DbgPrint(_t_, _x_) \
     DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) | DPFLTR_MASK, "(%s:%d) ", __FILE__, __LINE__), \
     DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) | DPFLTR_MASK, REMOVE_PARENS _x_)
-    //DbgPrint(REMOVE_PARENS _x_)
+
 #else /* DBG */
 
 #define TI_DbgPrint(_t_, _x_)

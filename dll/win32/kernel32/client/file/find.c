@@ -364,7 +364,7 @@ InternalFindFirstFile (
 
 	if (!NT_SUCCESS(Status))
 	{
-	   RtlFreeHeap (hProcessHeap,
+	   RtlFreeHeap (RtlGetProcessHeap(),
 	                0,
 	                NtPathBuffer);
 
@@ -387,20 +387,20 @@ InternalFindFirstFile (
 	{
 	    /* No file part?! */
 	    NtClose(hDirectory);
-	    RtlFreeHeap (hProcessHeap,
+	    RtlFreeHeap (RtlGetProcessHeap(),
 	                 0,
 	                 NtPathBuffer);
 	    SetLastError(ERROR_FILE_NOT_FOUND);
 	    return INVALID_HANDLE_VALUE;
 	}
 
-	IHeader = RtlAllocateHeap (hProcessHeap,
+	IHeader = RtlAllocateHeap (RtlGetProcessHeap(),
 	                           HEAP_ZERO_MEMORY,
 	                               sizeof(KERNEL32_FIND_DATA_HEADER) +
 	                               sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
 	if (NULL == IHeader)
 	{
-	    RtlFreeHeap (hProcessHeap,
+	    RtlFreeHeap (RtlGetProcessHeap(),
 	                 0,
 	                 NtPathBuffer);
 	    NtClose(hDirectory);
@@ -431,7 +431,7 @@ InternalFindFirstFile (
 	                               &PathFileName,
 	                               lpFindFileData);
 
-	RtlFreeHeap (hProcessHeap,
+	RtlFreeHeap (RtlGetProcessHeap(),
 	             0,
 	             NtPathBuffer);
 
@@ -596,7 +596,7 @@ FindClose (
 			PKERNEL32_FIND_STREAM_DATA IData = (PKERNEL32_FIND_STREAM_DATA)(IHeader + 1);
 			if (IData->pFileStreamInfo != NULL)
 			{
-				RtlFreeHeap (hProcessHeap, 0, IData->pFileStreamInfo);
+				RtlFreeHeap (RtlGetProcessHeap(), 0, IData->pFileStreamInfo);
 			}
 			break;
 		}
@@ -606,7 +606,7 @@ FindClose (
 			return FALSE;
 	}
 
-	RtlFreeHeap (hProcessHeap, 0, IHeader);
+	RtlFreeHeap (RtlGetProcessHeap(), 0, IHeader);
 
 	return TRUE;
 }
@@ -835,7 +835,7 @@ FindFirstStreamW(IN LPCWSTR lpFileName,
     }
 
     /* create the search context */
-    IHeader = RtlAllocateHeap(hProcessHeap,
+    IHeader = RtlAllocateHeap(RtlGetProcessHeap(),
                               0,
                               sizeof(KERNEL32_FIND_DATA_HEADER) +
                                   sizeof(KERNEL32_FIND_STREAM_DATA));
@@ -859,7 +859,7 @@ FindFirstStreamW(IN LPCWSTR lpFileName,
 
         if (IData->pFileStreamInfo == NULL)
         {
-            IData->pFileStreamInfo = RtlAllocateHeap(hProcessHeap,
+            IData->pFileStreamInfo = RtlAllocateHeap(RtlGetProcessHeap(),
                                                      0,
                                                      BufferSize);
             if (IData->pFileStreamInfo == NULL)
@@ -872,7 +872,7 @@ FindFirstStreamW(IN LPCWSTR lpFileName,
         {
             PFILE_STREAM_INFORMATION pfsi;
 
-            pfsi = RtlReAllocateHeap(hProcessHeap,
+            pfsi = RtlReAllocateHeap(RtlGetProcessHeap(),
                                      0,
                                      IData->pFileStreamInfo,
                                      BufferSize);
@@ -923,12 +923,12 @@ Cleanup:
         {
             if (IData->pFileStreamInfo != NULL)
             {
-                RtlFreeHeap(hProcessHeap,
+                RtlFreeHeap(RtlGetProcessHeap(),
                             0,
                             IData->pFileStreamInfo);
             }
 
-            RtlFreeHeap(hProcessHeap,
+            RtlFreeHeap(RtlGetProcessHeap(),
                         0,
                         IHeader);
         }

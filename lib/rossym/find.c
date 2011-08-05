@@ -42,90 +42,107 @@
 #define NDEBUG
 #include <debug.h>
 
-#include "rossym.h"
-#include "dwarf.h"
-#include "pe.h"
+static PROSSYM_ENTRY
+FindEntry(IN PROSSYM_INFO RosSymInfo, IN ULONG_PTR RelativeAddress)
+{
+  /*
+   * Perform a binary search.
+   *
+   * The code below is a bit sneaky.  After a comparison fails, we
+   * divide the work in half by moving either left or right. If lim
+   * is odd, moving left simply involves halving lim: e.g., when lim
+   * is 5 we look at item 2, so we change lim to 2 so that we will
+   * look at items 0 & 1.  If lim is even, the same applies.  If lim
+   * is odd, moving right again involes halving lim, this time moving
+   * the base up one item past p: e.g., when lim is 5 we change base
+   * to item 3 and make lim 2 so that we will look at items 3 and 4.
+   * If lim is even, however, we have to shrink it by one before
+   * halving: e.g., when lim is 4, we still looked at item 2, so we
+   * have to make lim 3, then halve, obtaining 1, so that we will only
+   * look at item 3.
+   */
+  PROSSYM_ENTRY Base = RosSymInfo->Symbols;
+  ULONG Lim;
+  PROSSYM_ENTRY Mid, Low;
+
+  if (RelativeAddress < Base->Address)
+    {
+      return NULL;
+    }
+
+  Low = Base;
+  for (Lim = RosSymInfo->SymbolsCount; Lim != 0; Lim >>= 1)
+    {
+      Mid = Base + (Lim >> 1);
+      if (RelativeAddress == Mid->Address)
+        {
+          return Mid;
+        }
+      if (Mid->Address < RelativeAddress)  /* key > mid: move right */
+        {
+          Low = Mid;
+          Base = Mid + 1;
+          Lim--;
+        }               /* else move left */
+    }
+
+  return Low;
+}
+
 
 BOOLEAN
-RosSymGetAddressInformation
-(PROSSYM_INFO RosSymInfo,
- ULONG_PTR RelativeAddress,
- PROSSYM_LINEINFO RosSymLineInfo)
+RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
+                            ULONG_PTR RelativeAddress,
+                            ULONG *LineNumber,
+                            char *FileName,
+                            char *FunctionName)
 {
-    ROSSYM_REGISTERS registers;
-    DwarfParam params[sizeof(RosSymLineInfo->Parameters)/sizeof(RosSymLineInfo->Parameters[0])];
-    DwarfSym proc = { };
-    int i;
-	int res = dwarfpctoline
-		(RosSymInfo, 
-         &proc,
-		 RelativeAddress + RosSymInfo->pe->imagebase, 
-		 &RosSymLineInfo->FileName,
-		 &RosSymLineInfo->FunctionName,
-		 &RosSymLineInfo->LineNumber);
-	if (res == -1) {
-        werrstr("Could not get basic function info");
-		return FALSE;
+  PROSSYM_ENTRY RosSymEntry;
+
+  DPRINT("RelativeAddress = 0x%08x\n", RelativeAddress);
+
+  if (RosSymInfo->Symbols == NULL || RosSymInfo->SymbolsCount == 0 ||
+      RosSymInfo->Strings == NULL || RosSymInfo->StringsLength == 0)
+    {
+      DPRINT1("Uninitialized RosSymInfo\n");
+      return FALSE;
     }
 
-    if (!(RosSymLineInfo->Flags & ROSSYM_LINEINFO_HAS_REGISTERS))
-        return TRUE;
+  ASSERT(LineNumber || FileName || FunctionName);
 
-    registers = RosSymLineInfo->Registers;
+  /* find symbol entry for function */
+  RosSymEntry = FindEntry(RosSymInfo, RelativeAddress);
 
-    DwarfExpr cfa = { };
-    ulong cfaLocation;
-    if (dwarfregunwind
-        (RosSymInfo, 
-         RelativeAddress + RosSymInfo->pe->imagebase, 
-         proc.attrs.framebase.c, 
-         &cfa,
-         &registers) == -1) {
-        werrstr("Can't get cfa location for %s", RosSymLineInfo->FunctionName);
-        return TRUE;
+  if (NULL == RosSymEntry)
+    {
+      DPRINT("None of the requested information was found!\n");
+      return FALSE;
     }
 
-    res = dwarfgetparams
-        (RosSymInfo,
-         &proc,
-         RelativeAddress + RosSymInfo->pe->imagebase,
-         sizeof(params)/sizeof(params[0]),
-         params);
-
-    if (res == -1) {
-        werrstr("%s: could not get params at all", RosSymLineInfo->FunctionName);
-        RosSymLineInfo->NumParams = 0;
-        return TRUE;
+  if (LineNumber != NULL)
+    {
+      *LineNumber = RosSymEntry->SourceLine;
+    }
+  if (FileName != NULL)
+    {
+      PCSTR Name = "";
+      if (RosSymEntry->FileOffset != 0)
+        {
+          Name = (PCHAR) RosSymInfo->Strings + RosSymEntry->FileOffset;
+        }
+      strcpy(FileName, Name);
+    }
+  if (FunctionName != NULL)
+    {
+      PCSTR Name = "";
+      if (RosSymEntry->FunctionOffset != 0)
+        {
+          Name = (PCHAR) RosSymInfo->Strings + RosSymEntry->FunctionOffset;
+        }
+      strcpy(FunctionName, Name);
     }
 
-    werrstr("%s: res %d", RosSymLineInfo->FunctionName, res);
-    RosSymLineInfo->NumParams = res;
-
-    res = dwarfcomputecfa(RosSymInfo, &cfa, &registers, &cfaLocation);
-    if (res == -1) {
-        werrstr("%s: could not get our own cfa", RosSymLineInfo->FunctionName);
-        return TRUE;
-    }
-
-    for (i = 0; i < RosSymLineInfo->NumParams; i++) {
-        werrstr("Getting arg %s, unit %x, type %x", 
-                params[i].name, params[i].unit, params[i].type);
-        res = dwarfargvalue
-            (RosSymInfo, 
-             &proc, 
-             RelativeAddress + RosSymInfo->pe->imagebase,
-             cfaLocation,
-             &registers,
-             &params[i]);
-        if (res == -1) { RosSymLineInfo->NumParams = i; return TRUE; }
-        werrstr("%s: %x", params[i].name, params[i].value);
-        RosSymLineInfo->Parameters[i].ValueName = malloc(strlen(params[i].name)+1);
-        strcpy(RosSymLineInfo->Parameters[i].ValueName, params[i].name);
-        free(params[i].name);
-        RosSymLineInfo->Parameters[i].Value = params[i].value;
-    }
-
-    return TRUE;
+  return TRUE;
 }
 
 /* EOF */

@@ -242,8 +242,7 @@ UniataSataEvent(
     return FALSE;
 } // end UniataSataEvent()
 
-ULONG 
-NTAPI
+ULONG
 NTAPI
 UniataSataReadPort4(
     IN PHW_CHANNEL chan,

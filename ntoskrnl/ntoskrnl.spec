@@ -305,7 +305,7 @@
 @ extern HalDispatchTable _HalDispatchTable
 @ fastcall HalExamineMBR(ptr long long ptr)
 @ extern HalPrivateDispatchTable
-;HeadlessDispatch
+@ stdcall HeadlessDispatch(long ptr long ptr ptr)
 @ stdcall InbvAcquireDisplayOwnership()
 @ stdcall InbvCheckDisplayOwnership()
 @ stdcall InbvDisplayString(str)

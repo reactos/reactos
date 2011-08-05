@@ -1877,7 +1877,6 @@ NdisIPnPStartDevice(
   {
       NDIS_DbgPrint(MIN_TRACE, ("Failed to open configuration key\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
-      NdisCloseConfiguration(ConfigHandle);
       return NdisStatus;
   }
 
