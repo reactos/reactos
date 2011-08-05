@@ -1997,6 +1997,19 @@ RtlFillMemoryUlong(
     IN ULONG Fill
 );
 
+NTSYSAPI
+SIZE_T
+NTAPI
+RtlCompareMemoryUlong(
+    IN PVOID Source,
+    IN SIZE_T Length,
+    IN ULONG Pattern
+);
+
+#define RtlCopyBytes RtlCopyMemory
+#define RtlFillBytes RtlFillMemory
+#define RtlZeroBytes RtlZeroMemory
+
 #endif
 
 NTSYSAPI
