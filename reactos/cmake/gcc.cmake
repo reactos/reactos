@@ -233,14 +233,14 @@ macro(add_importlib_target _exports_file)
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
 
         # Delayed importlib creation
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
             COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
 
     elseif(${_extension} STREQUAL ".def")
         message("Use of def files for import libs is deprecated: ${_exports_file}")
@@ -272,7 +272,7 @@ macro(spec2def _dllname _spec_file)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
@@ -385,7 +385,7 @@ macro(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
         OUTPUT ${_binary_file}
         COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
         # COMMAND objcopy --output-target binary --image-base 0x${_base_address} ${_object_file} ${_binary_file}
-        DEPENDS ${_object_file})
+        DEPENDS ${_object_file} native-obj2bin)
 
     set_source_files_properties(${_object_file} ${_binary_file} PROPERTIES GENERATED TRUE)
 

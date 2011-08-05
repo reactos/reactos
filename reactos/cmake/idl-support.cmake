@@ -16,6 +16,7 @@ if(MSVC)
     else()
         set(IDL_FLAGS "")
     endif()
+    set(IDL_DEPENDS "")
 else()
     set(IDL_COMPILER native-widl)
     set(IDL_HEADER_ARG -h -o) #.h
@@ -32,6 +33,7 @@ else()
     else()
         set(IDL_FLAGS "")
     endif()
+    set(IDL_DEPENDS native-widl)
 endif()
 
 
@@ -59,7 +61,7 @@ macro(add_typelib TARGET)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.tlb
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_TYPELIB_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.tlb ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${IDL_DEPENDS})
         list(APPEND OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.tlb)
     endforeach()
     add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
@@ -74,7 +76,7 @@ macro(add_idl_headers TARGET)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${IDL_DEPENDS})
         list(APPEND HEADERS ${HEADER})
     endforeach()
     add_custom_target(${TARGET} ALL DEPENDS ${HEADERS})
@@ -98,7 +100,7 @@ macro(add_rpcproxy_files)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${IDL_DEPENDS})
     endforeach()
 
     # Extra pass to generate dlldata
@@ -113,7 +115,7 @@ macro(add_rpcproxy_files)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} --dlldata-only -o ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c ${IDLS}
-            DEPENDS ${IDLS})
+            DEPENDS ${IDLS} ${IDL_DEPENDS})
     endif()
 endmacro()
 
@@ -125,13 +127,13 @@ macro(add_rpc_library TARGET)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${IDL_DEPENDS})
         list(APPEND server_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c)
 
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${IDL_DEPENDS})
         list(APPEND client_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c)
     endforeach()
     add_library(${TARGET} ${client_SOURCES} ${server_SOURCES})
@@ -151,7 +153,7 @@ macro(generate_idl_iids IDL_FILE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
         COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_INTERFACE_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
-        DEPENDS ${IDL_FILE_FULL})
+        DEPENDS ${IDL_FILE_FULL} ${IDL_DEPENDS})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
 endmacro()
 
