@@ -275,8 +275,6 @@ NTSTATUS TCPConnect
         }
 
         bindaddr.addr = NCE->Interface->Unicast.Address.IPv4Address;
-        
-        DbgPrint("Connect - Explicit bind on port %d returned 0x%x\n", Connection->AddressFile->Port, Status);
     }
     else
     {
