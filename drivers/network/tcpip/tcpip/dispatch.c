@@ -518,7 +518,7 @@ NTSTATUS DispTdiDisconnect(
   {
       Status = TCPDisconnect(TranContext->Handle.ConnectionContext,
                              DisReq->RequestFlags,
-                             //DisReq->RequestSpecific, /* FIXME */
+                             DisReq->RequestSpecific,
                              DisReq->RequestConnectionInformation,
                              DisReq->ReturnConnectionInformation,
                              DispDataRequestComplete,

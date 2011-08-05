@@ -141,6 +141,7 @@ NTSTATUS TCPConnect(
 NTSTATUS TCPDisconnect(
   PCONNECTION_ENDPOINT Connection,
   UINT Flags,
+  PLARGE_INTEGER Timeout,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
@@ -192,4 +193,21 @@ VOID
 TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF);
 
 VOID
-FlushAllQueues(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
+FlushListenQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
+
+VOID
+FlushConnectQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
+
+VOID
+FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+
+VOID
+FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+
+VOID
+FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+
+VOID
+FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status);
+
+VOID CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEAN Synchronous);

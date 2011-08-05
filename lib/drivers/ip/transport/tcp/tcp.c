@@ -23,6 +23,51 @@ PORT_SET TCPPorts;
 
 #include "rosip.h"
 
+VOID NTAPI
+DisconnectTimeoutDpc(PKDPC Dpc,
+                     PVOID DeferredContext,
+                     PVOID SystemArgument1,
+                     PVOID SystemArgument2)
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)DeferredContext;
+    PLIST_ENTRY Entry;
+    PTDI_BUCKET Bucket;
+    NTSTATUS Status;
+    
+    LockObjectAtDpcLevel(Connection);
+    
+    /* We timed out waiting for pending sends so force it to shutdown */
+    Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+    
+    while (!IsListEmpty(&Connection->SendRequest))
+    {
+        Entry = RemoveHeadList(&Connection->SendRequest);
+        
+        Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+        
+        Bucket->Information = 0;
+        Bucket->Status = STATUS_FILE_CLOSED;
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+    
+    while (!IsListEmpty(&Connection->ShutdownRequest))
+    {
+        Entry = RemoveHeadList( &Connection->ShutdownRequest );
+        
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Bucket->Status = STATUS_TIMEOUT;
+        Bucket->Information = 0;
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+    
+    UnlockObjectFromDpcLevel(Connection);
+    
+    DereferenceObject(Connection);
+}
+
 VOID ConnectionFree(PVOID Object)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)Object;
@@ -57,6 +102,10 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext )
     InitializeListHead(&Connection->SendRequest);
     InitializeListHead(&Connection->ShutdownRequest);
     InitializeListHead(&Connection->PacketQueue);
+
+    /* Initialize disconnect timer */
+    KeInitializeTimer(&Connection->DisconnectTimer);
+    KeInitializeDpc(&Connection->DisconnectDpc, DisconnectTimeoutDpc, Connection);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
@@ -331,13 +380,16 @@ NTSTATUS TCPConnect
 NTSTATUS TCPDisconnect
 ( PCONNECTION_ENDPOINT Connection,
   UINT Flags,
+  PLARGE_INTEGER Timeout,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context )
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    PTDI_BUCKET Bucket;
     KIRQL OldIrql;
+    LARGE_INTEGER ActualTimeout;
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPDisconnect] Called\n"));
 
@@ -347,11 +399,57 @@ NTSTATUS TCPDisconnect
     {
         if (Flags & TDI_DISCONNECT_RELEASE)
         {
-            Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+            if (IsListEmpty(&Connection->SendRequest))
+            {
+                Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+            }
+            else if (Timeout && Timeout->QuadPart == 0)
+            {
+                FlushSendQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+                TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+                Status = STATUS_TIMEOUT;
+            }
+            else 
+            {
+                /* Use the timeout specified or 1 second if none was specified */
+                if (Timeout)
+                {
+                    ActualTimeout = *Timeout;
+                }
+                else
+                {
+                    ActualTimeout.QuadPart = -1000000;
+                }
+
+                /* We couldn't complete the request now because we need to wait for outstanding I/O */
+                Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
+                if (!Bucket)
+                {
+                    UnlockObject(Connection, OldIrql);
+                    return STATUS_NO_MEMORY;
+                }
+    
+                Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+                Bucket->Request.RequestContext = Context;
+
+                InsertTailList(&Connection->ShutdownRequest, &Bucket->Entry);
+
+                ReferenceObject(Connection);
+                if (KeCancelTimer(&Connection->DisconnectTimer))
+                {
+                    DereferenceObject(Connection);
+                }
+                KeSetTimer(&Connection->DisconnectTimer, ActualTimeout, &Connection->DisconnectDpc);
+
+                Status = STATUS_PENDING;
+            }
         }
 
         if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
         {
+            FlushReceiveQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+            FlushSendQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+            FlushShutdownQueue(Connection, STATUS_FILE_CLOSED, FALSE);
             Status = TCPTranslateError(LibTCPShutdown(Connection, 1, 1));
         }
     }

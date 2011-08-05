@@ -4,6 +4,8 @@
 #include "lwip/pbuf.h"
 #include "lwip/err.h"
 
+#include "rosip.h"
+
 #include <debug.h>
 
 static LIST_ENTRY ThreadListHead;
