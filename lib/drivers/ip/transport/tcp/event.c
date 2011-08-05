@@ -228,10 +228,7 @@ FlushListenQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
 
 VOID
 FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
-{
-    PTDI_BUCKET Bucket;
-    PLIST_ENTRY Entry;
-    
+{    
     ReferenceObject(Connection);
     
     // flush receive queue
