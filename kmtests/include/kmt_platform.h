@@ -41,7 +41,7 @@ typedef ULONG LOGICAL, *PLOGICAL;
 #define ExAllocatePoolWithTag(type, size, tag)  HeapAlloc(GetProcessHeap(), 0, size)
 #define ExFreePool(p)                           HeapFree(GetProcessHeap(), 0, p)
 #define ExFreePoolWithTag(p, tag)               HeapFree(GetProcessHeap(), 0, p)
-#define RtlCopyMemoryNonTemporal(d, s, l)
+#define RtlCopyMemoryNonTemporal                RtlCopyMemory
 #define RtlPrefetchMemoryNonTemporal(s, l)
 #endif /* defined KMT_EMULATE_KERNEL */
 
