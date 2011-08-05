@@ -514,9 +514,12 @@ CsrpCreateHeap (int argc, char ** argv, char ** envp)
     
     
     Status = CsrSrvCreateSharedSection(Value);
-    DPRINT1("Status: %lx\n", Status);
-    ASSERT(Status == STATUS_SUCCESS);
-    
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("CsrSrvCreateSharedSection failed with status 0x%08lx\n", Status);
+        ASSERT(FALSE);
+    }
+
     BasepFakeStaticServerData();
 	return STATUS_SUCCESS;
 }

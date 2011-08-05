@@ -13,8 +13,6 @@
 #include <srv.h>
 
 #define NDEBUG
-
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -181,7 +179,6 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     if (!NT_SUCCESS(Status)) return Status;
     
     /* Multiply by 1024 entries and round to page size */
-    #define ROUND_UP(n,size)	(((ULONG)(n) + (size - 1)) & ~(size - 1)) // hax
     CsrSrvSharedSectionSize = ROUND_UP(Size * 1024, CsrNtSysInfo.PageSize);
     DPRINT1("Size: %lx\n", CsrSrvSharedSectionSize);
     

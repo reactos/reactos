@@ -1996,9 +1996,11 @@ NTAPI
 LdrpInitFailure(NTSTATUS Status)
 {
     ULONG Response;
+    PPEB Peb = NtCurrentPeb();
 
     /* Print a debug message */
-    DPRINT1("LDR: Process initialization failure; NTSTATUS = %08lx\n", Status);
+    DPRINT1("LDR: Process initialization failure for %wZ; NTSTATUS = %08lx\n",
+            &Peb->ProcessParameters->ImagePathName, Status);
 
     /* Raise a hard error */
     if (!LdrpFatalHardErrorCount)
