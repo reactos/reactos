@@ -18,6 +18,72 @@ typedef struct _QUEUE_ENTRY
     LIST_ENTRY ListEntry;
 } QUEUE_ENTRY, *PQUEUE_ENTRY;
 
+struct lwip_callback_msg
+{
+    /* Synchronization */
+    KEVENT Event;
+    
+    /* Input */
+    union {
+        struct {
+            PVOID Arg;
+        } Socket;
+        struct {
+            PCONNECTION_ENDPOINT Connection;
+            struct ip_addr *IpAddress;
+            u16_t Port;
+        } Bind;
+        struct {
+            PCONNECTION_ENDPOINT Connection;
+            u8_t Backlog;
+        } Listen;
+        struct {
+            PCONNECTION_ENDPOINT Connection;
+            void *Data;
+            u16_t DataLength;
+        } Send;
+        struct {
+            PCONNECTION_ENDPOINT Connection;
+            struct ip_addr *IpAddress;
+            u16_t Port;
+        } Connect;
+        struct {
+            PCONNECTION_ENDPOINT Connection;
+            int shut_rx;
+            int shut_tx;
+        } Shutdown;
+        struct {
+            PCONNECTION_ENDPOINT Connection;
+            int Callback;
+        } Close;
+    } Input;
+    
+    /* Output */
+    union {
+        struct {
+            struct tcp_pcb *NewPcb;
+        } Socket;
+        struct {
+            err_t Error;
+        } Bind;
+        struct {
+            struct tcp_pcb *NewPcb;
+        } Listen;
+        struct {
+            err_t Error;
+        } Send;
+        struct {
+            err_t Error;
+        } Connect;
+        struct {
+            err_t Error;
+        } Shutdown;
+        struct {
+            err_t Error;
+        } Close;
+    } Output;
+};
+
 NTSTATUS    LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHAR RecvBuffer, UINT RecvLen, UINT *Received);
 
 /* External TCP event handlers */

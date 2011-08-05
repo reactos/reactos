@@ -10,6 +10,8 @@ static LIST_ENTRY ThreadListHead;
 static KSPIN_LOCK ThreadListLock;
 
 KEVENT TerminationEvent;
+NPAGED_LOOKASIDE_LIST MessageLookasideList;
+NPAGED_LOOKASIDE_LIST QueueEntryLookasideList;
 
 static LARGE_INTEGER StartTime;
 
@@ -311,6 +313,22 @@ sys_init(void)
     KeQuerySystemTime(&StartTime);
     
     KeInitializeEvent(&TerminationEvent, NotificationEvent, FALSE);
+    
+    ExInitializeNPagedLookasideList(&MessageLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(struct lwip_callback_msg),
+                                    LWIP_TAG,
+                                    0);
+    
+    ExInitializeNPagedLookasideList(&QueueEntryLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(QUEUE_ENTRY),
+                                    LWIP_TAG,
+                                    0);
 }
 
 void
@@ -338,4 +356,7 @@ sys_shutdown(void)
             ZwClose(Container->Handle);
         }
     }
+    
+    ExDeleteNPagedLookasideList(&MessageLookasideList);
+    ExDeleteNPagedLookasideList(&QueueEntryLookasideList);
 }
