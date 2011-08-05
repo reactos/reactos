@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="lwip" type="staticlibrary">
+<module name="lwip" type="staticlibrary" allowwarnings="true">
 	<include base="lwip">src/include</include>
 	<include base="lwip">src/include/ipv4</include>
+	<include base="tcpip">include</include>
 	<directory name="src">
 		<file>rosip.c</file>
 		<file>rostcp.c</file>
