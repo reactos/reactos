@@ -1,4 +1,5 @@
 
+set_unicode()
 spec2def(netid.dll netid.spec)
 set_rc_compiler()
 

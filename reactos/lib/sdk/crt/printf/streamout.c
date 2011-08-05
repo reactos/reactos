@@ -540,7 +540,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
                 if ((__int64)val64 < 0)
                 {
-                    val64 = -val64;
+                    val64 = -(__int64)val64;
                     prefix = _T("-");
                 }
                 else if (flags & FLAG_FORCE_SIGN)

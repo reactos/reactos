@@ -15,6 +15,7 @@
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
+NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PUNICODE_STRING RegistryPath
