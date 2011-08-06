@@ -69,6 +69,8 @@ PQUEUE_ENTRY LibTCPDequeuePacket(PCONNECTION_ENDPOINT Connection)
     PLIST_ENTRY Entry;
     PQUEUE_ENTRY qp = NULL;
 
+    if (IsListEmpty(&Connection->PacketQueue)) return NULL;
+
     Entry = RemoveHeadList(&Connection->PacketQueue);
     
     qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
@@ -81,23 +83,34 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
     PQUEUE_ENTRY qp;
     struct pbuf* p;
     NTSTATUS Status = STATUS_PENDING;
+    UINT ReadLength, ExistingDataLength;
+
+    (*Received) = 0;
 
     if (!IsListEmpty(&Connection->PacketQueue))
     {
-        qp = LibTCPDequeuePacket(Connection);
-        p = qp->p;
-
-        RecvLen = MIN(p->tot_len, RecvLen);
-
-        for ((*Received) = 0; (*Received) < RecvLen; (*Received) += p->len, p = p->next)
+        while ((qp = LibTCPDequeuePacket(Connection)) != NULL)
         {
-            RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
+            p = qp->p;
+            ExistingDataLength = (*Received);
+
+            ReadLength = MIN(p->tot_len, RecvLen);
+
+            for (; (*Received) < ReadLength + ExistingDataLength; (*Received) += p->len, p = p->next)
+            {
+                RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
+            }
+
+            RecvLen -= ReadLength;
+
+            /* Use this special pbuf free callback function because we're outside tcpip thread */
+            pbuf_free_callback(qp->p);
+
+            ExFreeToNPagedLookasideList(&QueueEntryLookasideList, qp);
+
+            if (!RecvLen)
+                break;
         }
-
-        /* Use this special pbuf free callback function because we're outside tcpip thread */
-        pbuf_free_callback(qp->p);
-
-        ExFreeToNPagedLookasideList(&QueueEntryLookasideList, qp);
 
         Status = STATUS_SUCCESS;
     }
@@ -107,8 +120,6 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
             Status = STATUS_SUCCESS;
         else
             Status = STATUS_PENDING;
-
-        (*Received) = 0;
     }
 
     return Status;
