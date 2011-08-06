@@ -460,17 +460,18 @@ LibTCPSendCallback(void *arg)
         goto done;
     }
     
-    if (tcp_sndbuf((PTCP_PCB)msg->Input.Send.Connection->SocketContext) < msg->Input.Send.DataLength)
+    msg->Output.Send.Error = tcp_write((PTCP_PCB)msg->Input.Send.Connection->SocketContext,
+                                       msg->Input.Send.Data,
+                                       msg->Input.Send.DataLength,
+                                       TCP_WRITE_FLAG_COPY);
+    if (msg->Output.Send.Error == ERR_MEM)
     {
+        /* No buffer space so return pending */
         msg->Output.Send.Error = ERR_INPROGRESS;
     }
-    else
+    else if (msg->Output.Send.Error == ERR_OK)
     {
-        msg->Output.Send.Error = tcp_write((PTCP_PCB)msg->Input.Send.Connection->SocketContext,
-                                           msg->Input.Send.Data,
-                                           msg->Input.Send.DataLength,
-                                           TCP_WRITE_FLAG_COPY);
-        
+        /* Queued successfully so try to send it */   
         tcp_output((PTCP_PCB)msg->Input.Send.Connection->SocketContext);
     }
     
@@ -643,13 +644,14 @@ LibTCPCloseCallback(void *arg)
     PTCP_PCB pcb = msg->Input.Close.Connection->SocketContext;
     int state;
 
+    /* Empty the queue even if we're already "closed" */
+    LibTCPEmptyQueue(msg->Input.Close.Connection);
+
     if (!msg->Input.Close.Connection->SocketContext)
     {
         msg->Output.Close.Error = ERR_OK;
         goto done;
     }
-
-    LibTCPEmptyQueue(msg->Input.Close.Connection);
 
     /* Clear the PCB pointer */
     msg->Input.Close.Connection->SocketContext = NULL;

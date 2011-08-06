@@ -155,13 +155,9 @@ NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
 
     Socket = Connection->SocketContext;
 
-    /* Don't try to close again if the other side closed us already */
-    if (Connection->SocketContext)
-    {
-        FlushAllQueues(Connection, STATUS_CANCELLED);
+    FlushAllQueues(Connection, STATUS_CANCELLED);
 
-        LibTCPClose(Connection, FALSE, TRUE);
-    }
+    LibTCPClose(Connection, FALSE, TRUE);
 
     UnlockObject(Connection, OldIrql);
 
