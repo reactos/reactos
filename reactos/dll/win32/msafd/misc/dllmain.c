@@ -2366,9 +2366,6 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         InfoData.Information.Boolean = *Boolean;
     }
 
-    AFD_DbgPrint(MID_TRACE,("XXX Info %x (Data %x)\n",
-        AfdInformationClass, *Ulong));
-
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,
                                    SockEvent,
