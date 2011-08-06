@@ -47,6 +47,11 @@ GreHfontCreate(
     plfnt->fl = fl;
     plfnt->elfexw = *pelfw;
 
+    /* Upcase the font name */
+    UpcaseString(plfnt->awchFace,
+                 pelfw->elfEnumLogfontEx.elfLogFont.lfFaceName,
+                 LF_FACESIZE);
+
     /* Set client data */
     GDIOBJ_vSetObjectAttr(&plfnt->baseobj, pvCliData);
 

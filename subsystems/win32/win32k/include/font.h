@@ -97,43 +97,50 @@ typedef struct _PFF
     ULONG cFonts;
     void *pPvtDataHead;
     PFONTFILEVIEW apffv[FD_MAX_FILES];
-    PFE apfe[1];
+    PFE apfe[];
 } PFF, *PPFF;
+
+typedef struct _PFELINK
+{
+    struct _PFELINK *ppfelNext;
+    PPFE ppfe;
+} PFELINK, *PPFELINK;
 
 typedef struct _HASHBUCKET
 {
     struct _HASHBUCKET *pbktCollision;
-   // PFELINK *ppfelEnumHead;
-   // PFELINK *ppfelEnumTail;
+    PFELINK *ppfelEnumHead;
+    PFELINK *ppfelEnumTail;
     ULONG cTrueType;
+    ULONG iHashValue;
     FLONG fl;
     struct _HASHBUCKET * pbktPrev;
     struct _HASHBUCKET * pbktNext;
     ULONG ulTime;
     union
     {
-        WCHAR wcCapName[1];
+        WCHAR wcCapName[LF_FACESIZE]; // LF_FULLFACESIZE? dynamic?
         UNIVERSAL_FONT_ID ufi;
     } u;
 } HASHBUCKET, *PHASHBUCKET;
 
 typedef enum _FONT_HASH_TYPE
 {
+    FHT_FACE = 0,
     FHT_FAMILY = 1,
-    FHT_FACE,
-    FHT_UFI,
+    FHT_UFI = 2,
 } FONT_HASH_TYPE;
 
-typedef struct
+typedef struct _FONTHASH
 {
     DWORD id;
     FONT_HASH_TYPE fht;
     ULONG cBuckets;
     ULONG cUsed;
     ULONG cCollisions;
-    HASHBUCKET * pbktFirst;
-    HASHBUCKET * pbktLast;
-    HASHBUCKET * apbkt[];
+    PHASHBUCKET pbktFirst;
+    PHASHBUCKET pbktLast;
+    PHASHBUCKET apbkt[];
 } FONTHASH, *PFONTHASH;
 
 #define MAX_FONT_LIST 100
@@ -150,7 +157,7 @@ typedef struct _PFT
     HSEMAPHORE hsem;
 } PFT, *PPFT;
 
-typedef struct
+typedef struct _RFONTLINK
 {
     PRFONT prfntPrev;
     PRFONT prfntNext;
@@ -325,6 +332,13 @@ typedef struct _ESTROBJ
     ULONG     acFaceNameGlyphs[8];
 } ESTROBJ, *PESTROBJ;
 
+VOID
+NTAPI
+UpcaseString(
+    OUT PWSTR pwszDest,
+    IN PWSTR pwszSource,
+    IN ULONG cwc);
+
 FORCEINLINE
 PLFONT
 LFONT_ShareLockFont(HFONT hfont)
@@ -398,3 +412,8 @@ GreExtTextOutW(
 
 
 #define DbgDefaultChannel 0x0
+
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    IN HSEMAPHORE hsem);

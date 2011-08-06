@@ -358,6 +358,8 @@ DC_Cleanup(PVOID ObjectBody)
     DC_vSelectLineBrush(pdc, NULL);
     DC_vSelectPalette(pdc, NULL);
 
+    GDIOBJ_vDereferenceObject((PVOID)pdc->dclevel.plfnt);
+
     /* Cleanup the dc brushes */
     EBRUSHOBJ_vCleanup(&pdc->eboFill);
     EBRUSHOBJ_vCleanup(&pdc->eboLine);

@@ -2061,6 +2061,8 @@ ASSERT(FALSE);
         GLYPHMETRICS gm;
         DWORD dwSize;
         void *outline;
+
+        __debugbreak();
 #if 0
         dwSize = ftGdiGetGlyphOutline( dc,
                                        str[idx],

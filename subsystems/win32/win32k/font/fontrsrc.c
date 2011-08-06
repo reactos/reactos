@@ -12,30 +12,265 @@
 #include <debug.h>
 
 PFT gpftPublic;
-static LIST_ENTRY glePrivatePFFList = {&glePrivatePFFList, &glePrivatePFFList};
-static LIST_ENTRY glePublicPFFList = {&glePublicPFFList, &glePublicPFFList};
+ULONG gulHashBucketId = 0;
+
+VOID
+NTAPI
+UpcaseString(
+    OUT PWSTR pwszDest,
+    IN PWSTR pwszSource,
+    IN ULONG cwc)
+{
+    WCHAR wc;
+
+    while (--cwc)
+    {
+        wc = *pwszSource++;
+        if (wc == 0) break;
+        *pwszDest++ = RtlUpcaseUnicodeChar(wc);
+    }
+
+    *pwszDest = 0;
+}
+
+
+static
+ULONG
+CalculateNameHash(PWSTR pwszName)
+{
+    ULONG iHash = 0;
+    WCHAR wc;
+
+    while ((wc = *pwszName++) != 0)
+    {
+        iHash = _rotl(iHash, 7);
+        iHash += wc;
+    }
+
+    return iHash;
+}
+
+
+static
+PHASHBUCKET
+HASHBUCKET_Allocate(void)
+{
+    PHASHBUCKET pbkt;
+
+
+    pbkt = ExAllocatePoolWithTag(PagedPool,
+                                 sizeof(HASHBUCKET),
+                                 GDITAG_PFE_HASHBUCKET);
+    if (!pbkt) return NULL;
+
+    RtlZeroMemory(pbkt, sizeof(HASHBUCKET));
+    pbkt->ulTime = InterlockedIncrement((LONG*)gulHashBucketId);
+
+    return pbkt;
+}
 
 static
 BOOL
-PFF_bCompareFiles(
-    PPFF ppff,
-    ULONG cFiles,
-    PFONTFILEVIEW apffv[])
+HASHBUCKET_bLinkPFE(
+    IN PHASHBUCKET pbkt,
+    IN PPFE ppfe)
 {
-    ULONG i;
+    PPFELINK ppfel;
 
-    /* Check if number of files matches */
-    if (ppff->cFiles != cFiles) return FALSE;
-
-    /* Loop all files */
-    for (i = 0; i < cFiles; i++)
+    ppfel = ExAllocatePoolWithTag(PagedPool, sizeof(PFELINK), GDITAG_PFE_LINK);
+    if (!ppfel)
     {
-        /* Check if the files match */
-        if (apffv[i] != ppff->apffv[i]) return FALSE;
+        return FALSE;
     }
+
+    ppfel->ppfe = ppfe;
+
+    ppfel->ppfelNext = pbkt->ppfelEnumHead;
+    pbkt->ppfelEnumHead = ppfel;
+    if (!ppfel->ppfelNext) pbkt->ppfelEnumTail = ppfel;
 
     return TRUE;
 }
+
+static
+VOID
+HASHBUCKET_vUnlinkPFE(
+    IN PHASHBUCKET pbkt,
+    IN PPFE ppfe)
+{
+    PPFELINK ppfel, ppfelPrev;
+
+    /* List must not be empty */
+    ASSERT(pbkt->ppfelEnumHead);
+    ASSERT(pbkt->ppfelEnumTail);
+
+    /* First check the list head */
+    ppfel = pbkt->ppfelEnumHead;
+    if (ppfel->ppfe == ppfe)
+    {
+        pbkt->ppfelEnumHead = ppfel->ppfelNext;
+        ppfelPrev = NULL;
+    }
+    else
+    {
+        /* Loop through the rest of the list */
+        while (TRUE)
+        {
+            ppfelPrev = ppfel;
+            ppfel = ppfel->ppfelNext;
+
+            if (!ppfel)
+            {
+                DPRINT1("PFE not found!\n");
+                ASSERT(FALSE);
+            }
+
+            if (ppfel && (ppfel->ppfe == ppfe))
+            {
+                ppfelPrev->ppfelNext = ppfel->ppfelNext;
+                break;
+            }
+        }
+    }
+
+    /* Check list tail */
+    if (ppfel == pbkt->ppfelEnumTail) pbkt->ppfelEnumTail = ppfelPrev;
+
+    /* Free the PFELINK */
+    ExFreePoolWithTag(ppfel, GDITAG_PFE_LINK);
+}
+
+static
+PFONTHASH
+FONTHASH_Allocate(
+    FONT_HASH_TYPE fht,
+    ULONG cBuckets)
+{
+    PFONTHASH pfh;
+
+    pfh = ExAllocatePoolWithTag(PagedPool,
+                                sizeof(FONTHASH) + cBuckets * sizeof(PVOID),
+                                GDITAG_PFE_HASHTABLE);
+
+    if (!pfh) return NULL;
+
+    pfh->id = 'HSAH';
+    pfh->fht = fht;
+    pfh->cBuckets = cBuckets;
+    pfh->cUsed = 0;
+    pfh->cCollisions = 0;
+    pfh->pbktFirst = NULL;
+    pfh->pbktLast = NULL;
+    RtlZeroMemory(pfh->apbkt, cBuckets * sizeof(PVOID));
+
+    return pfh;
+}
+
+
+static
+VOID
+FONTHASH_vInsertBucket(
+    PFONTHASH pfh,
+    PHASHBUCKET pbkt,
+    ULONG iHashValue)
+{
+    ULONG iHashIndex = iHashValue % pfh->cBuckets;
+
+    pbkt->iHashValue = iHashValue;
+
+    /* Insert the bucket into the list */
+    pbkt->pbktPrev = pfh->pbktLast;
+    pbkt->pbktNext = NULL;
+    pfh->pbktLast = pbkt;
+    if (!pfh->pbktFirst) pfh->pbktFirst = pbkt;
+
+    /* Insert the bucket into the slot */
+    pbkt->pbktCollision = pfh->apbkt[iHashIndex];
+    pfh->apbkt[iHashIndex] = pbkt;
+
+    /* Update counter */
+    if (pbkt->pbktCollision) pfh->cCollisions++;
+    else pfh->cUsed++;
+}
+
+
+
+static
+PHASHBUCKET
+FONTHASH_pbktFindBucketByName(
+    PFONTHASH pfh,
+    PWSTR pwszCapName,
+    ULONG iHashValue)
+{
+    ULONG iHashIndex = iHashValue % pfh->cBuckets;
+    PHASHBUCKET pbkt;
+
+    /* Loop all colliding hash buckets */
+    for (pbkt = pfh->apbkt[iHashIndex]; pbkt; pbkt = pbkt->pbktCollision)
+    {
+        /* Quick check */
+        if (pbkt->iHashValue != iHashValue) continue;
+
+        /* Compare the font name */
+        if (wcsncmp(pbkt->u.wcCapName, pwszCapName, LF_FACESIZE) == 0) break;
+    }
+
+    return pbkt;
+}
+
+static
+VOID
+FONTHASH_vInsertPFE(
+    PFONTHASH pfh,
+    PPFE ppfe)
+{
+    PIFIMETRICS pifi = ppfe->pifi;
+    PWSTR pwszName;
+    WCHAR awcCapName[LF_FACESIZE];
+    ULONG iHashValue;
+    PHASHBUCKET pbkt;
+
+
+    if (pfh->fht == FHT_UFI)
+    {
+        ASSERT(FALSE);
+    }
+    else
+    {
+        if (pfh->fht == FHT_FACE)
+            pwszName = (PWSTR)((PUCHAR)pifi + pifi->dpwszFaceName);
+        else
+            pwszName = (PWSTR)((PUCHAR)pifi + pifi->dpwszFamilyName);
+
+        UpcaseString(awcCapName, pwszName, LF_FACESIZE);
+        iHashValue = CalculateNameHash(awcCapName);
+
+        pbkt = FONTHASH_pbktFindBucketByName(pfh, awcCapName, iHashValue);
+    }
+
+    if (!pbkt)
+    {
+        pbkt = HASHBUCKET_Allocate();
+
+        if (!pbkt)
+        {
+            ASSERT(FALSE);
+        }
+
+        RtlCopyMemory(pbkt->u.wcCapName, awcCapName, sizeof(awcCapName));
+
+        FONTHASH_vInsertBucket(pfh, pbkt, iHashValue);
+    }
+
+    /* Finally add the PFE to the HASHBUCKET */
+    if (!HASHBUCKET_bLinkPFE(pbkt, ppfe))
+    {
+        ASSERT(FALSE);
+    }
+
+
+}
+
 
 BOOL
 NTAPI
@@ -46,9 +281,26 @@ PFT_bInit(
     RtlZeroMemory(ppft, sizeof(PFT));
 
     ppft->hsem = EngCreateSemaphore();
-    if (!ppft->hsem) return FALSE;
+    if (!ppft->hsem) goto failed;
+
+    ppft->cBuckets = MAX_FONT_LIST;
+
+    ppft->pfhFace = FONTHASH_Allocate(FHT_FACE, MAX_FONT_LIST);
+    if (!ppft->pfhFace) goto failed;
+
+    ppft->pfhFamily = FONTHASH_Allocate(FHT_FAMILY, MAX_FONT_LIST);
+    if (!ppft->pfhFace) goto failed;
+
+    ppft->pfhUFI = FONTHASH_Allocate(FHT_UFI, MAX_FONT_LIST);
+    if (!ppft->pfhFace) goto failed;
 
     return TRUE;
+
+failed:
+    // FIXME: cleanup
+    ASSERT(FALSE);
+
+    return FALSE;
 }
 
 static
@@ -60,11 +312,11 @@ PFT_pffFindFont(
     ULONG cFiles,
     ULONG iFileNameHash)
 {
-    ULONG iListIndex = iFileNameHash % MAX_FONT_LIST;
+    ULONG iListIndex = iFileNameHash % ppft->cBuckets;
     PPFF ppff = NULL;
 
-    /* Acquire PFT lock */
-    EngAcquireSemaphore(ppft->hsem);
+    /* Acquire PFT lock for reading */
+    EngAcquireSemaphoreShared(ppft->hsem);
 
     /* Loop all PFFs in the slot */
     for (ppff = ppft->apPFF[iListIndex]; ppff; ppff = ppff->pPFFNext)
@@ -82,28 +334,6 @@ PFT_pffFindFont(
     return ppff;
 }
 
-static
-VOID
-PFT_vInsertPFE(
-    PPFT ppft,
-    PPFE ppfe)
-{
-    UCHAR ajWinChatSet[2] = {0, DEFAULT_CHARSET};
-    UCHAR *pjCharSets;
-    PIFIMETRICS pifi = ppfe->pifi;
-
-    if (pifi->dpCharSets)
-    {
-        pjCharSets = (PUCHAR)pifi + pifi->dpCharSets;
-    }
-    else
-    {
-        ajWinChatSet[0] = pifi->jWinCharSet;
-        pjCharSets = ajWinChatSet;
-    }
-
-
-}
 
 static
 VOID
@@ -112,7 +342,7 @@ PFT_vInsertPFF(
     PPFF ppff,
     ULONG iFileNameHash)
 {
-    ULONG i, iListIndex = iFileNameHash % MAX_FONT_LIST;
+    ULONG i, iHashIndex = iFileNameHash % ppft->cBuckets;
 
     ppff->iFileNameHash = iFileNameHash;
 
@@ -121,34 +351,23 @@ PFT_vInsertPFF(
 
     /* Insert the font file into the hash bucket */
     ppff->pPFFPrev = NULL;
-    ppff->pPFFNext = ppft->apPFF[iListIndex];
-    ppft->apPFF[iListIndex] = ppff;
+    ppff->pPFFNext = ppft->apPFF[iHashIndex];
+    ppft->apPFF[iHashIndex] = ppff;
+
+    ppft->cFiles++;
 
     /* Loop all PFE's */
     for (i = 0; i < ppff->cFonts; i++)
     {
-        PFT_vInsertPFE(ppft, &ppff->apfe[i]);
+        FONTHASH_vInsertPFE(ppft->pfhFace, &ppff->apfe[i]);
+        FONTHASH_vInsertPFE(ppft->pfhFamily, &ppff->apfe[i]);
+        //FONTHASH_vInsertPFE(ppft->pfhUFI, &ppff->apfe[i]);
     }
 
     /* Release PFT lock */
     EngReleaseSemaphore(ppft->hsem);
 }
 
-static
-ULONG
-CalculateNameHash(PWSTR pwszName)
-{
-    ULONG iHash = 0;
-    WCHAR wc;
-
-    while ((wc = *pwszName++) != 0)
-    {
-        iHash = _rotl(iHash, 7);
-        iHash += wc;
-    }
-
-    return iHash;
-}
 
 
 
@@ -232,7 +451,6 @@ NtGdiAddFontResourceW(
     ULONG cjSize;
     DESIGNVECTOR dv;
     INT iRes = 0;
-    ULONG i;
 
     /* Check parameters */
     if (cFiles == 0 || cFiles > FD_MAX_FILES ||
@@ -261,10 +479,7 @@ NtGdiAddFontResourceW(
         }
 
         /* Convert the string to upper case */
-        for (i = 0; i < cwc; i++)
-        {
-            pwszUpcase[i] = RtlUpcaseUnicodeChar(pwszFiles[i]);
-        }
+        UpcaseString(pwszUpcase, pwszFiles, cwc);
 
         /* Check if we have a DESIGNVECTOR */
         if (pdv)
