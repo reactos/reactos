@@ -204,7 +204,7 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
             /* This function returns TRUE if the BAR was 64-bit, handle this */
             ASSERT((i + 1) < PCI_TYPE0_ADDRESSES);
             i++;
-            (&Limit[i])->Type == CmResourceTypeNull;
+            Limit[i].Type = CmResourceTypeNull;
         }
     }
 

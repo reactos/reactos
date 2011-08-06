@@ -4016,7 +4016,7 @@ RegQueryValueExA(HKEY hkeyorg,
     static const int info_size = offsetof( KEY_VALUE_PARTIAL_INFORMATION, Data );
 
     TRACE("(%p,%s,%p,%p,%p,%p=%d)\n",
-          hkey, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
+          hkeyorg, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
 
     if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
     status = MapDefaultKey(&hkey, hkeyorg);

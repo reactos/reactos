@@ -748,7 +748,8 @@ FASTCALL
 IntGetGlobalHookHandles(PDESKTOP pdo, int HookId)
 {
     PLIST_ENTRY pLastHead, pElem;
-    unsigned i, cHooks;
+    unsigned i = 0;
+    unsigned cHooks = 0;
     HHOOK *pList;
     PHOOK pHook;
 
