@@ -570,11 +570,13 @@ NTSTATUS TCPSendData
         InsertTailList( &Connection->SendRequest, &Bucket->Entry );
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Queued write irp\n"));
     }
+    else if (Status == STATUS_SUCCESS)
+    {
+        *BytesSent = SendLength;
+    }
     else
     {
-        TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Got status %x, bytes %d\n",
-                    Status, SendLength));
-        *BytesSent = SendLength;
+        *BytesSent = 0;
     }
 
     UnlockObject(Connection, OldIrql);
