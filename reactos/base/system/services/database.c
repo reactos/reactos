@@ -1289,18 +1289,26 @@ ScmAutoStartServices(VOID)
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
-      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+        CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
         /* Build the safe boot path */
         wcscpy(szSafeBootServicePath,
                L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
-        switch(GetSystemMetrics(SM_CLEANBOOT))
+
+        switch (GetSystemMetrics(SM_CLEANBOOT))
         {
             /* NOTE: Assumes MINIMAL (1) and DSREPAIR (3) load same items */
             case 1:
-            case 3: wcscat(szSafeBootServicePath, L"\\Minimal\\"); break;
-            case 2: wcscat(szSafeBootServicePath, L"\\Network\\"); break;
+            case 3:
+                wcscat(szSafeBootServicePath, L"\\Minimal\\");
+                break;
+
+            case 2:
+                wcscat(szSafeBootServicePath, L"\\Network\\");
+                break;
         }
-        if(GetSystemMetrics(SM_CLEANBOOT))
+
+        if (GetSystemMetrics(SM_CLEANBOOT))
         {
             /* If key does not exist then do not assume safe mode */
             dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -1308,20 +1316,22 @@ ScmAutoStartServices(VOID)
                                     0,
                                     KEY_READ,
                                     &hKey);
-            if(dwError == ERROR_SUCCESS)
+            if (dwError == ERROR_SUCCESS)
             {
                 RegCloseKey(hKey);
+
                 /* Finish Safe Boot path off */
                 wcsncat(szSafeBootServicePath,
                         CurrentService->lpServiceName,
                         MAX_PATH - wcslen(szSafeBootServicePath));
+
                 /* Check that the key is in the Safe Boot path */
                 dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                         szSafeBootServicePath,
                                         0,
                                         KEY_READ,
                                         &hKey);
-                if(dwError != ERROR_SUCCESS)
+                if (dwError != ERROR_SUCCESS)
                 {
                     /* Mark service as visited so it is not auto-started */
                     CurrentService->ServiceVisited = TRUE;
@@ -1339,7 +1349,8 @@ ScmAutoStartServices(VOID)
                 CurrentService->ServiceVisited = FALSE;
             }
         }
-      ServiceEntry = ServiceEntry->Flink;
+
+        ServiceEntry = ServiceEntry->Flink;
     }
 
     /* Start all services which are members of an existing group */
