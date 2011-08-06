@@ -131,6 +131,7 @@ tcp_send_fin(struct tcp_pcb *pcb)
     if ((TCPH_FLAGS(last_unsent->tcphdr) & (TCP_SYN | TCP_FIN | TCP_RST)) == 0) {
       /* no SYN/FIN/RST flag in the header, we can add the FIN flag */
       TCPH_SET_FLAG(last_unsent->tcphdr, TCP_FIN);
+      pcb->flags |= TF_FIN;
       return ERR_OK;
     }
   }
@@ -949,6 +950,7 @@ tcp_output(struct tcp_pcb *pcb)
   }
 #endif /* TCP_CWND_DEBUG */
   /* data available and window allows it to be sent? */
+  if (seg) DbgPrint("%d <= %d\n", (ntohl(seg->tcphdr->seqno) - pcb->lastack + seg->len), wnd);
   while (seg != NULL &&
          ntohl(seg->tcphdr->seqno) - pcb->lastack + seg->len <= wnd) {
     LWIP_ASSERT("RST not expected here!", 
@@ -962,6 +964,7 @@ tcp_output(struct tcp_pcb *pcb)
      */
     if((tcp_do_output_nagle(pcb) == 0) &&
       ((pcb->flags & (TF_NAGLEMEMERR | TF_FIN)) == 0)){
+      DbgPrint("-----------------> NOT SENDING DUE TO NAGLE %d\n", tcp_do_output_nagle(pcb));
       break;
     }
 #if TCP_CWND_DEBUG
