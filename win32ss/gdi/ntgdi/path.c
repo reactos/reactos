@@ -2390,6 +2390,8 @@ ASSERT(FALSE);
         DWORD dwSize;
         void *outline;
 
+        __debugbreak();
+#if 0
         dwSize = ftGdiGetGlyphOutline(dc,
                                       str[idx],
                                       ggo_flags,
@@ -2425,6 +2427,7 @@ ASSERT(FALSE);
                                  outline,
                                  &identity,
                                  TRUE);
+#endif
 
             PATH_add_outline(dc, pPath, x + offset.x, y + offset.y, outline, dwSize);
 
