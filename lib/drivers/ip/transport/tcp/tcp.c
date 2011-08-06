@@ -486,11 +486,12 @@ NTSTATUS TCPReceiveData
 
     NdisQueryBuffer(Buffer, &DataBuffer, &DataLen);
     
+    LockObject(Connection, &OldIrql);
+
     Status = LibTCPGetDataFromConnectionQueue(Connection, DataBuffer, DataLen, &Received);
 
     if (Status == STATUS_PENDING)
     {
-        LockObject(Connection, &OldIrql);
     
         /* Freed in TCPSocketState */
         Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
@@ -508,8 +509,6 @@ NTSTATUS TCPReceiveData
         InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Queued read irp\n"));
 
-        UnlockObject(Connection, OldIrql);
-
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
 
         (*BytesReceived) = 0;
@@ -518,6 +517,8 @@ NTSTATUS TCPReceiveData
     {
         (*BytesReceived) = Received;
     }
+    
+    UnlockObject(Connection, OldIrql);
 
     return Status;
 }

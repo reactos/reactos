@@ -69,7 +69,7 @@ PQUEUE_ENTRY LibTCPDequeuePacket(PCONNECTION_ENDPOINT Connection)
     PLIST_ENTRY Entry;
     PQUEUE_ENTRY qp = NULL;
 
-    Entry = ExInterlockedRemoveHeadList(&Connection->PacketQueue, &Connection->Lock);
+    Entry = RemoveHeadList(&Connection->PacketQueue);
     
     qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
 
@@ -103,7 +103,12 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
     }
     else
     {
-        Status = STATUS_PENDING;
+        if (Connection->ReceiveShutdown)
+            Status = STATUS_SUCCESS;
+        else
+            Status = STATUS_PENDING;
+
+        (*Received) = 0;
     }
 
     return Status;
@@ -150,6 +155,7 @@ static
 err_t
 InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t err)
 {
+    PCONNECTION_ENDPOINT Connection = arg;
     u32_t len;
 
     /* Make sure the socket didn't get closed */
@@ -184,7 +190,7 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
         }
         else
         {
-            LibTCPEnqueuePacket((PCONNECTION_ENDPOINT)arg, p);
+            LibTCPEnqueuePacket(Connection, p);
 
             tcp_recved(pcb, p->tot_len);
 
@@ -197,6 +203,7 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
          * but note that send is still possible in this state so we don't close the
          * whole socket here (by calling tcp_close()) as that would violate TCP specs
          */
+        Connection->ReceiveShutdown = TRUE;
         TCPFinEventHandler(arg, ERR_OK);
     }
 
@@ -406,6 +413,12 @@ LibTCPSendCallback(void *arg)
         goto done;
     }
     
+    if (msg->Input.Send.Connection->SendShutdown)
+    {
+        msg->Output.Send.Error = ERR_CLSD;
+        goto done;
+    }
+    
     if (tcp_sndbuf((PTCP_PCB)msg->Input.Send.Connection->SocketContext) < msg->Input.Send.DataLength)
     {
         msg->Output.Send.Error = ERR_INPROGRESS;
@@ -537,6 +550,14 @@ LibTCPShutdownCallback(void *arg)
     if (msg->Output.Shutdown.Error)
     {
         msg->Input.Shutdown.Connection->SocketContext = pcb;
+    }
+    else
+    {
+        if (msg->Input.Shutdown.shut_rx)
+            msg->Input.Shutdown.Connection->ReceiveShutdown = TRUE;
+        
+        if (msg->Input.Shutdown.shut_tx)
+            msg->Input.Shutdown.Connection->SendShutdown = TRUE;
     }
     
 done:
