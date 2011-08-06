@@ -1,4 +1,6 @@
 
+set_rc_compiler()
+
 add_executable(findstr findstr.c findstr.rc)
 
 set_module_type(findstr win32cui)

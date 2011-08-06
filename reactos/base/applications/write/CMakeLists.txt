@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_executable(write write.c rsrc.rc)
 set_module_type(write win32gui)

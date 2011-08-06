@@ -2,6 +2,7 @@
 add_subdirectory(notifyhook)
 
 set_unicode()
+set_rc_compiler()
 
 #NOTE : explorer doesn't follow standard c++, and so doesn't compile with stlport headers
 #I'm not willing to do it if explorer_new is hanging around.
