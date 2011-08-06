@@ -27,7 +27,9 @@ KMT_TESTFUNC Test_KeEvent;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KernelType;
-KMT_TESTFUNC Test_ObCreate;
+KMT_TESTFUNC Test_ObType;
+KMT_TESTFUNC Test_ObTypeClean;
+KMT_TESTFUNC Test_ObTypeNoClean;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlSplayTree;
@@ -54,7 +56,9 @@ const KMT_TEST TestList[] =
     { "KeIrql",                             Test_KeIrql },
     { "KeProcessor",                        Test_KeProcessor },
     { "-KernelType",                        Test_KernelType },
-    { "ObCreate",                           Test_ObCreate },
+    { "ObType",                             Test_ObType },
+    { "-ObTypeClean",                       Test_ObTypeClean },
+    { "-ObTypeNoClean",                     Test_ObTypeNoClean },
     { "RtlAvlTreeKM",                       Test_RtlAvlTree },
     { "RtlMemoryKM",                        Test_RtlMemory },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },

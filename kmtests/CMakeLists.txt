@@ -34,7 +34,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
-    ntos_ob/ObCreate.c
+    ntos_ob/ObType.c
     rtl/RtlAvlTree.c
     rtl/RtlMemory.c
     rtl/RtlSplayTree.c
