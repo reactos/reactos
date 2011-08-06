@@ -476,7 +476,6 @@ NTSTATUS TCPReceiveData
   PVOID Context )
 {
     PTDI_BUCKET Bucket;
-    KIRQL OldIrql;
     PUCHAR DataBuffer;
     UINT DataLen, Received;
     NTSTATUS Status;
@@ -485,8 +484,6 @@ NTSTATUS TCPReceiveData
                            ReceiveLength, Connection->SocketContext));
 
     NdisQueryBuffer(Buffer, &DataBuffer, &DataLen);
-    
-    LockObject(Connection, &OldIrql);
 
     Status = LibTCPGetDataFromConnectionQueue(Connection, DataBuffer, DataLen, &Received);
 
@@ -498,7 +495,6 @@ NTSTATUS TCPReceiveData
         if (!Bucket)
         {
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
-            UnlockObject(Connection, OldIrql);
 
             return STATUS_NO_MEMORY;
         }
@@ -506,7 +502,7 @@ NTSTATUS TCPReceiveData
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
 
-        InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
+        ExInterlockedInsertTailList( &Connection->ReceiveRequest, &Bucket->Entry, &Connection->Lock );
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Queued read irp\n"));
 
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
@@ -517,8 +513,6 @@ NTSTATUS TCPReceiveData
     {
         (*BytesReceived) = Received;
     }
-    
-    UnlockObject(Connection, OldIrql);
 
     return Status;
 }

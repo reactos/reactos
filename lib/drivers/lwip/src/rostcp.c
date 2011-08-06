@@ -83,9 +83,13 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
     PQUEUE_ENTRY qp;
     struct pbuf* p;
     NTSTATUS Status = STATUS_PENDING;
-    UINT ReadLength, ExistingDataLength;
+    UINT ReadLength, ExistingDataLength, SpaceLeft;
+    KIRQL OldIrql;
 
     (*Received) = 0;
+    SpaceLeft = RecvLen;
+
+    LockObject(Connection, &OldIrql);
 
     if (!IsListEmpty(&Connection->PacketQueue))
     {
@@ -94,14 +98,37 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
             p = qp->p;
             ExistingDataLength = (*Received);
 
-            ReadLength = MIN(p->tot_len, RecvLen);
+            Status = STATUS_SUCCESS;
 
+            ReadLength = MIN(p->tot_len, SpaceLeft);
+            if (ReadLength != p->tot_len)
+            {
+                if (ExistingDataLength)
+                {
+                    /* The packet was too big but we used some data already so give it another shot later */
+                    InsertHeadList(&Connection->PacketQueue, &qp->ListEntry);
+                    break;
+                }
+                else
+                {
+                    /* The packet is just too big to fit fully in our buffer, even when empty so
+                     * return an informative status but still copy all the data we can fit.
+                     */
+                    Status = STATUS_BUFFER_OVERFLOW;
+                }
+            }
+
+            UnlockObject(Connection, OldIrql);
+
+            /* Return to a lower IRQL because the receive buffer may be pageable memory */
             for (; (*Received) < ReadLength + ExistingDataLength; (*Received) += p->len, p = p->next)
             {
                 RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
             }
 
-            RecvLen -= ReadLength;
+            LockObject(Connection, &OldIrql);
+
+            SpaceLeft -= ReadLength;
 
             /* Use this special pbuf free callback function because we're outside tcpip thread */
             pbuf_free_callback(qp->p);
@@ -110,9 +137,10 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 
             if (!RecvLen)
                 break;
-        }
 
-        Status = STATUS_SUCCESS;
+            if (Status != STATUS_SUCCESS)
+                break;
+        }
     }
     else
     {
@@ -121,6 +149,8 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
         else
             Status = STATUS_PENDING;
     }
+
+    UnlockObject(Connection, OldIrql);
 
     return Status;
 }
