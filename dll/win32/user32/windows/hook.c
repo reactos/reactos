@@ -492,8 +492,8 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
         /* Cleanup user api hook before unloading */
         if(ApiHook == TRUE)
         {
-            Result = ClearUserApiHook(ghmodUserApiHook);
             hLibrary = ghmodUserApiHook;
+            Result = ClearUserApiHook(ghmodUserApiHook);
             /* Check if we can we unload it now */
             if(Result == FALSE)
             {

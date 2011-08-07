@@ -199,7 +199,7 @@ ClearUserApiHook(HINSTANCE hInstance)
   if ( ghmodUserApiHook == hInstance )
   {
      pfn1 = gpfnInitUserApi;
-     if ( --gcLoadUserApiHook == 1 )
+     if ( --gcLoadUserApiHook == 0 )
      {
         gfUserApiHook = 0;
         ResetUserApiHook(&guah);
@@ -227,7 +227,7 @@ ClearUserApiHook(HINSTANCE hInstance)
      RtlEnterCriticalSection(&gcsUserApiHook);
      pfn1 = gpfnInitUserApi;
 
-     if ( --gcLoadUserApiHook == 1 )
+     if ( --gcLoadUserApiHook == 0 )
      {
         if ( gcCallUserApiHook )
         {
