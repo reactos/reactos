@@ -130,8 +130,6 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_THEMECHANGED);
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_UAHINIT);
 
-    UXTHEME_LoadTheme();
-
     return TRUE;
 }
 
@@ -143,6 +141,7 @@ ThemeHooksInstall()
 {
     PVOID lpFunc;
     OSVERSIONINFO osvi;
+    BOOL ret;
 
     lpFunc = GetProcAddress(GetModuleHandle("user32.dll"), "RegisterUserApiHook");
 
@@ -153,7 +152,7 @@ ThemeHooksInstall()
     if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1)
     {
         PREGISTER_UAH_WINXP lpfuncxp = (PREGISTER_UAH_WINXP)lpFunc;
-        return lpfuncxp(hDllInst, ThemeInitApiHook);
+        ret = lpfuncxp(hDllInst, ThemeInitApiHook);
     }
     else if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2)
     {
@@ -166,13 +165,17 @@ ThemeHooksInstall()
         uah.m_dllname2 = NULL;
         uah.m_funname2 = NULL;
 
-        return lpfunc2003(&uah);
+        ret = lpfunc2003(&uah);
     }
     else
     {
         UNIMPLEMENTED;
-        return FALSE;
+        ret = FALSE;
     }
+
+    UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+
+    return ret;
 }
 
 BOOL WINAPI

@@ -79,7 +79,7 @@ static BOOL CALLBACK UXTHEME_broadcast_msg_enumchild (HWND hWnd, LPARAM msg)
 }
 
 /* Broadcast a message to *all* windows, including children */
-static BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
+BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
 {
     if (hWnd == NULL)
     {
