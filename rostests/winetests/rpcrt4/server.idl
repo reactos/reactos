@@ -31,9 +31,7 @@ typedef int fnprintf(const char *format, ...);
 
 [
   uuid(00000000-4114-0704-2301-000000000000),
-#ifndef __midl
   implicit_handle(handle_t IServer_IfHandle)
-#endif
 ]
 interface IServer
 {
@@ -81,6 +79,13 @@ cpp_quote("#endif")
   int int_return(void);
   int square(int x);
   int sum(int x, int y);
+  signed char sum_char(signed char x, signed char y);
+  short sum_short(short x, short y);
+  int sum_float(float x, float y);
+  int sum_double_int(int x, double y);
+  hyper sum_hyper(hyper x, hyper y);
+  int sum_hyper_int(hyper x, hyper y);
+  int sum_char_hyper(signed char x, hyper y);
   void square_out(int x, [out] int *y);
   void square_ref([in, out] int *x);
   int str_length([string] const char *s);
@@ -157,7 +162,7 @@ cpp_quote("#endif")
   int sum_cs(cs_t *cs);
   int sum_cps(cps_t *cps);
   int sum_cpsc(cpsc_t *cpsc);
-  int sum_complex_array(int n, refpint_t pi[n]);
+  int sum_complex_array(int n, [size_is(n)] refpint_t pi[]);
 
   typedef [wire_marshal(int)] void *puint_t;
   int square_puint(puint_t p);
@@ -311,7 +316,7 @@ cpp_quote("#endif")
   typedef [unique] user_bstr_t *wire_bstr_t;
   typedef [wire_marshal(wire_bstr_t)] short *bstr_t;
   unsigned hash_bstr(bstr_t s);
-
+  void get_a_bstr([out]bstr_t *s);
   typedef struct
   {
     [string, size_is(size)] char *name;

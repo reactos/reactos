@@ -88,50 +88,77 @@ xstrdup(const char *s)
   return d;
 }
 
-int
-s_int_return(void)
+int __cdecl s_int_return(void)
 {
   return INT_CODE;
 }
 
-int
-s_square(int x)
+int __cdecl s_square(int x)
 {
   return x * x;
 }
 
-int
-s_sum(int x, int y)
+int __cdecl s_sum(int x, int y)
 {
   return x + y;
 }
 
-void
-s_square_out(int x, int *y)
+signed char __cdecl s_sum_char(signed char x, signed char y)
+{
+    return x + y;
+}
+
+short __cdecl s_sum_short(short x, short y)
+{
+    return x + y;
+}
+
+int __cdecl s_sum_float(float x, float y)
+{
+    return x + y;
+}
+
+int __cdecl s_sum_double_int(int x, double y)
+{
+    return x + y;
+}
+
+hyper __cdecl s_sum_hyper(hyper x, hyper y)
+{
+    return x + y;
+}
+
+int __cdecl s_sum_hyper_int(hyper x, hyper y)
+{
+    return x + y;
+}
+
+int __cdecl s_sum_char_hyper(signed char x, hyper y)
+{
+    return x + y;
+}
+
+void __cdecl s_square_out(int x, int *y)
 {
   *y = s_square(x);
 }
 
-void
-s_square_ref(int *x)
+void __cdecl s_square_ref(int *x)
 {
   *x = s_square(*x);
 }
 
-int
-s_str_length(const char *s)
+int __cdecl s_str_length(const char *s)
 {
   return strlen(s);
 }
 
-int
-s_str_t_length(str_t s)
+int __cdecl s_str_t_length(str_t s)
 {
   return strlen(s);
 }
 
-int
-s_cstr_length(const char *s, int n)
+int __cdecl s_cstr_length(const char *s, int n)
 {
   int len = 0;
   while (0 < n-- && *s++)
@@ -139,65 +166,55 @@ s_cstr_length(const char *s, int n)
   return len;
 }
 
-int
-s_dot_self(vector_t *v)
+int __cdecl s_dot_self(vector_t *v)
 {
   return s_square(v->x) + s_square(v->y) + s_square(v->z);
 }
 
-double
-s_square_half(double x, double *y)
+double __cdecl s_square_half(double x, double *y)
 {
   *y = x / 2.0;
   return x * x;
 }
 
-float
-s_square_half_float(float x, float *y)
+float __cdecl s_square_half_float(float x, float *y)
 {
   *y = x / 2.0f;
   return x * x;
 }
 
-LONG
-s_square_half_long(LONG x, LONG *y)
+LONG __cdecl s_square_half_long(LONG x, LONG *y)
 {
   *y = x / 2;
   return x * x;
 }
 
-int
-s_sum_fixed_array(int a[5])
+int __cdecl s_sum_fixed_array(int a[5])
 {
   return a[0] + a[1] + a[2] + a[3] + a[4];
 }
 
-int
-s_pints_sum(pints_t *pints)
+int __cdecl s_pints_sum(pints_t *pints)
 {
   return *pints->pi + **pints->ppi + ***pints->pppi;
 }
 
-double
-s_ptypes_sum(ptypes_t *pt)
+double __cdecl s_ptypes_sum(ptypes_t *pt)
 {
   return *pt->pc + *pt->ps + *pt->pl + *pt->pf + *pt->pd;
 }
 
-int
-s_dot_pvectors(pvectors_t *p)
+int __cdecl s_dot_pvectors(pvectors_t *p)
 {
   return p->pu->x * (*p->pv)->x + p->pu->y * (*p->pv)->y + p->pu->z * (*p->pv)->z;
 }
 
-int
-s_sum_sp(sp_t *sp)
+int __cdecl s_sum_sp(sp_t *sp)
 {
   return sp->x + sp->s->x;
 }
 
-double
-s_square_sun(sun_t *su)
+double __cdecl s_square_sun(sun_t *su)
 {
   switch (su->s)
   {
@@ -210,16 +227,14 @@ s_square_sun(sun_t *su)
   }
 }
 
-int
-s_test_list_length(test_list_t *list)
+int __cdecl s_test_list_length(test_list_t *list)
 {
   return (list->t == TL_LIST
           ? 1 + s_test_list_length(list->u.tail)
           : 0);
 }
 
-int
-s_sum_fixed_int_3d(int m[2][3][4])
+int __cdecl s_sum_fixed_int_3d(int m[2][3][4])
 {
   int i, j, k;
   int sum = 0;
@@ -232,8 +247,7 @@ s_sum_fixed_int_3d(int m[2][3][4])
   return sum;
 }
 
-int
-s_sum_conf_array(int x[], int n)
+int __cdecl s_sum_conf_array(int x[], int n)
 {
   int *p = x, *end = p + n;
   int sum = 0;
@@ -244,8 +258,7 @@ s_sum_conf_array(int x[], int n)
   return sum;
 }
 
-int
-s_sum_conf_ptr_by_conf_ptr(int n1, int *n2_then_x1, int *x2)
+int __cdecl s_sum_conf_ptr_by_conf_ptr(int n1, int *n2_then_x1, int *x2)
 {
   int i;
   int sum = 0;
@@ -261,20 +274,17 @@ s_sum_conf_ptr_by_conf_ptr(int n1, int *n2_then_x1, int *x2)
   return sum;
 }
 
-int
-s_sum_unique_conf_array(int x[], int n)
+int __cdecl s_sum_unique_conf_array(int x[], int n)
 {
   return s_sum_conf_array(x, n);
 }
 
-int
-s_sum_unique_conf_ptr(int *x, int n)
+int __cdecl s_sum_unique_conf_ptr(int *x, int n)
 {
   return x ? s_sum_conf_array(x, n) : 0;
 }
 
-int
-s_sum_var_array(int x[20], int n)
+int __cdecl s_sum_var_array(int x[20], int n)
 {
   ok(0 <= n, "RPC sum_var_array\n");
   ok(n <= 20, "RPC sum_var_array\n");
@@ -282,8 +292,7 @@ s_sum_var_array(int x[20], int n)
   return s_sum_conf_array(x, n);
 }
 
-int
-s_sum_complex_array(int n, refpint_t pi[])
+int __cdecl s_sum_complex_array(int n, refpint_t pi[])
 {
   int total = 0;
   for (; n > 0; n--)
@@ -291,28 +300,24 @@ s_sum_complex_array(int n, refpint_t pi[])
   return total;
 }
 
-int
-s_dot_two_vectors(vector_t vs[2])
+int __cdecl s_dot_two_vectors(vector_t vs[2])
 {
   return vs[0].x * vs[1].x + vs[0].y * vs[1].y + vs[0].z * vs[1].z;
 }
 
-void
-s_get_number_array(int x[20], int *n)
+void __cdecl s_get_number_array(int x[20], int *n)
 {
   int c[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   memcpy(x, c, sizeof(c));
   *n = sizeof(c)/sizeof(c[0]);
 }
 
-int
-s_sum_cs(cs_t *cs)
+int __cdecl s_sum_cs(cs_t *cs)
 {
   return s_sum_conf_array(cs->ca, cs->n);
 }
 
-int
-s_sum_cps(cps_t *cps)
+int __cdecl s_sum_cps(cps_t *cps)
 {
   int sum = 0;
   int i;
@@ -326,8 +331,7 @@ s_sum_cps(cps_t *cps)
   return sum;
 }
 
-int
-s_sum_cpsc(cpsc_t *cpsc)
+int __cdecl s_sum_cpsc(cpsc_t *cpsc)
 {
   int sum = 0;
   int i;
@@ -336,15 +340,13 @@ s_sum_cpsc(cpsc_t *cpsc)
   return sum;
 }
 
-int
-s_square_puint(puint_t p)
+int __cdecl s_square_puint(puint_t p)
 {
   int n = atoi(p);
   return n * n;
 }
 
-int
-s_sum_puints(puints_t *p)
+int __cdecl s_sum_puints(puints_t *p)
 {
   int sum = 0;
   int i;
@@ -353,8 +355,7 @@ s_sum_puints(puints_t *p)
   return sum;
 }
 
-int
-s_sum_cpuints(cpuints_t *p)
+int __cdecl s_sum_cpuints(cpuints_t *p)
 {
   int sum = 0;
   int i;
@@ -363,21 +364,18 @@ s_sum_cpuints(cpuints_t *p)
   return sum;
 }
 
-int
-s_dot_copy_vectors(vector_t u, vector_t v)
+int __cdecl s_dot_copy_vectors(vector_t u, vector_t v)
 {
   return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
-int
-s_square_test_us(test_us_t *tus)
+int __cdecl s_square_test_us(test_us_t *tus)
 {
   int n = atoi(tus->us.x);
   return n * n;
 }
 
-double
-s_square_encu(encu_t *eu)
+double __cdecl s_square_encu(encu_t *eu)
 {
   switch (eu->t)
   {
@@ -388,8 +386,7 @@ s_square_encu(encu_t *eu)
   }
 }
 
-double
-s_square_unencu(int t, unencu_t *eu)
+double __cdecl s_square_unencu(int t, unencu_t *eu)
 {
   switch (t)
   {
@@ -400,20 +397,17 @@ s_square_unencu(int t, unencu_t *eu)
   }
 }
 
-void
-s_check_se2(se_t *s)
+void __cdecl s_check_se2(se_t *s)
 {
   ok(s->f == E2, "check_se2\n");
 }
 
-int
-s_sum_parr(int *a[3])
+int __cdecl s_sum_parr(int *a[3])
 {
   return s_sum_pcarr(a, 3);
 }
 
-int
-s_sum_pcarr(int *a[], int n)
+int __cdecl s_sum_pcarr(int *a[], int n)
 {
   int i, s = 0;
   for (i = 0; i < n; ++i)
@@ -421,8 +415,7 @@ s_sum_pcarr(int *a[], int n)
   return s;
 }
 
-int
-s_enum_ord(e_t e)
+int __cdecl s_enum_ord(e_t e)
 {
   switch (e)
   {
@@ -435,8 +428,7 @@ s_enum_ord(e_t e)
   }
 }
 
-double
-s_square_encue(encue_t *eue)
+double __cdecl s_square_encue(encue_t *eue)
 {
   switch (eue->t)
   {
@@ -447,8 +439,7 @@ s_square_encue(encue_t *eue)
   }
 }
 
-int
-s_sum_toplev_conf_2n(int *x, int n)
+int __cdecl s_sum_toplev_conf_2n(int *x, int n)
 {
   int sum = 0;
   int i;
@@ -457,8 +448,7 @@ s_sum_toplev_conf_2n(int *x, int n)
   return sum;
 }
 
-int
-s_sum_toplev_conf_cond(int *x, int a, int b, int c)
+int __cdecl s_sum_toplev_conf_cond(int *x, int a, int b, int c)
 {
   int sum = 0;
   int n = c ? a : b;
@@ -468,26 +458,22 @@ s_sum_toplev_conf_cond(int *x, int a, int b, int c)
   return sum;
 }
 
-double
-s_sum_aligns(aligns_t *a)
+double __cdecl s_sum_aligns(aligns_t *a)
 {
   return a->c + a->i + a->s + a->d;
 }
 
-int
-s_sum_padded(padded_t *p)
+int __cdecl s_sum_padded(padded_t *p)
 {
   return p->i + p->c;
 }
 
-int
-s_sum_padded2(padded_t ps[2])
+int __cdecl s_sum_padded2(padded_t ps[2])
 {
   return s_sum_padded(&ps[0]) + s_sum_padded(&ps[1]);
 }
 
-int
-s_sum_padded_conf(padded_t *ps, int n)
+int __cdecl s_sum_padded_conf(padded_t *ps, int n)
 {
   int sum = 0;
   int i;
@@ -496,32 +482,27 @@ s_sum_padded_conf(padded_t *ps, int n)
   return sum;
 }
 
-int
-s_sum_bogus(bogus_t *b)
+int __cdecl s_sum_bogus(bogus_t *b)
 {
   return *b->h.p1 + *b->p2 + *b->p3 + b->c;
 }
 
-void
-s_check_null(int *null)
+void __cdecl s_check_null(int *null)
 {
   ok(!null, "RPC check_null\n");
 }
 
-int
-s_str_struct_len(str_struct_t *s)
+int __cdecl s_str_struct_len(str_struct_t *s)
 {
   return lstrlenA(s->s);
 }
 
-int
-s_wstr_struct_len(wstr_struct_t *s)
+int __cdecl s_wstr_struct_len(wstr_struct_t *s)
 {
   return lstrlenW(s->s);
 }
 
-int
-s_sum_doub_carr(doub_carr_t *dc)
+int __cdecl s_sum_doub_carr(doub_carr_t *dc)
 {
   int i, j;
   int sum = 0;
@@ -531,8 +512,7 @@ s_sum_doub_carr(doub_carr_t *dc)
   return sum;
 }
 
-void
-s_make_pyramid_doub_carr(unsigned char n, doub_carr_t **dc)
+void __cdecl s_make_pyramid_doub_carr(unsigned char n, doub_carr_t **dc)
 {
   doub_carr_t *t;
   int i, j;
@@ -549,8 +529,7 @@ s_make_pyramid_doub_carr(unsigned char n, doub_carr_t **dc)
   *dc = t;
 }
 
-unsigned
-s_hash_bstr(bstr_t b)
+unsigned __cdecl s_hash_bstr(bstr_t b)
 {
   short n = b[-1];
   short *s = b;
@@ -561,8 +540,16 @@ s_hash_bstr(bstr_t b)
   return hash;
 }
 
-void
-s_get_name(name_t *name)
+void __cdecl s_get_a_bstr(bstr_t *b)
+{
+  bstr_t bstr;
+  short str[] = {5, 'W', 'i', 'n', 'e', 0};
+  bstr = HeapAlloc(GetProcessHeap(), 0, sizeof(str));
+  memcpy(bstr, str, sizeof(str));
+  *b = bstr + 1;
+}
+
+void __cdecl s_get_name(name_t *name)
 {
   const char bossman[] = "Jeremy White";
   memcpy(name->name, bossman, min(name->size, sizeof(bossman)));
@@ -571,14 +558,12 @@ s_get_name(name_t *name)
     name->name[name->size - 1] = 0;
 }
 
-int
-s_sum_pcarr2(int n, int **pa)
+int __cdecl s_sum_pcarr2(int n, int **pa)
 {
   return s_sum_conf_array(*pa, n);
 }
 
-int
-s_sum_L1_norms(int n, vector_t *vs)
+int __cdecl s_sum_L1_norms(int n, vector_t *vs)
 {
   int i;
   int sum = 0;
@@ -587,8 +572,7 @@ s_sum_L1_norms(int n, vector_t *vs)
   return sum;
 }
 
-s123_t *
-s_get_s123(void)
+s123_t * __cdecl s_get_s123(void)
 {
   s123_t *s = MIDL_user_allocate(sizeof *s);
   s->f1 = 1;
@@ -597,24 +581,22 @@ s_get_s123(void)
   return s;
 }
 
-str_t
-s_get_filename(void)
+str_t __cdecl s_get_filename(void)
 {
     return (char *)__FILE__;
 }
 
-int s_echo_ranged_int(int n)
+int __cdecl s_echo_ranged_int(int n)
 {
     return n;
 }
 
-void s_get_ranged_enum(renum_t *re)
+void __cdecl s_get_ranged_enum(renum_t *re)
 {
     *re = RE3;
 }
 
-void
-s_context_handle_test(void)
+void __cdecl s_context_handle_test(void)
 {
     NDR_SCONTEXT h;
     RPC_BINDING_HANDLE binding;
@@ -714,8 +696,7 @@ s_context_handle_test(void)
     }
 }
 
-void
-s_get_numbers(int length, int size, pints_t n[])
+void __cdecl s_get_numbers(int length, int size, pints_t n[])
 {
     int i;
     for (i = 0; i < length; i++)
@@ -727,8 +708,7 @@ s_get_numbers(int length, int size, pints_t n[])
     }
 }
 
-void
-s_get_numbers_struct(numbers_struct_t **ns)
+void __cdecl s_get_numbers_struct(numbers_struct_t **ns)
 {
     int i;
     *ns = midl_user_allocate(FIELD_OFFSET(numbers_struct_t, numbers[5]));
@@ -745,23 +725,20 @@ s_get_numbers_struct(numbers_struct_t **ns)
     *(*ns)->numbers[0].pi = 5;
 }
 
-void
-s_full_pointer_test(int *a, int *b)
+void __cdecl s_full_pointer_test(int *a, int *b)
 {
     ok(*a == 42, "Expected *a to be 42 instead of %d\n", *a);
     ok(*b == 42, "Expected *b to be 42 instead of %d\n", *a);
     ok(a == b, "Expected a (%p) to point to the same memory as b (%p)\n", a, b);
 }
 
-void
-s_full_pointer_null_test(int *a, int *b)
+void __cdecl s_full_pointer_null_test(int *a, int *b)
 {
     ok(*a == 42, "Expected *a to be 42 instead of %d\n", *a);
     ok(b == NULL, "Expected b to be NULL instead of %p\n", b);
 }
 
-void
-s_stop(void)
+void __cdecl s_stop(void)
 {
   ok(RPC_S_OK == RpcMgmtStopServerListening(NULL), "RpcMgmtStopServerListening\n");
   ok(RPC_S_OK == RpcServerUnregisterIf(NULL, NULL, FALSE), "RpcServerUnregisterIf\n");
@@ -815,6 +792,7 @@ basic_tests(void)
   short h;
   char c;
   int x;
+  hyper y;
   str_struct_t ss = {string};
   wstr_struct_t ws = {wstring};
   str_t str;
@@ -824,7 +802,22 @@ basic_tests(void)
   ok(int_return() == INT_CODE, "RPC int_return\n");
 
   ok(square(7) == 49, "RPC square\n");
-  ok(sum(23, -4) == 19, "RPC sum\n");
+  x = sum(23, -4);
+  ok(x == 19, "RPC sum got %d\n", x);
+  c = sum_char(-23, 50);
+  ok(c == 27, "RPC sum_char got %d\n", (int)c);
+  h = sum_short(1122, -344);
+  ok(h == 778, "RPC sum_short got %d\n", (int)h);
+  x = sum_float(123.45, -32.2);
+  ok(x == 91, "RPC sum_float got %d\n", x);
+  x = sum_double_int(-78, 148.46);
+  ok(x == 70, "RPC sum_double_int got %d\n", x);
+  y = sum_hyper((hyper)0x12345678 << 16, (hyper)0x33557799 << 16);
+  ok(y == (hyper)0x4589ce11 << 16, "RPC hyper got %x%08x\n", (DWORD)(y >> 32), (DWORD)y);
+  x = sum_hyper_int((hyper)0x24242424 << 16, -((hyper)0x24241212 << 16));
+  ok(x == 0x12120000, "RPC hyper_int got 0x%x\n", x);
+  x = sum_char_hyper( 12, ((hyper)0x42424242 << 32) | 0x33334444 );
+  ok(x == 0x33334450, "RPC char_hyper got 0x%x\n", x);
 
   x = 0;
   square_out(11, &x);
@@ -1119,7 +1112,7 @@ pointer_tests(void)
   puints_t pus;
   cpuints_t cpus;
   short bstr_data[] = { 5, 'H', 'e', 'l', 'l', 'o' };
-  bstr_t bstr = &bstr_data[1];
+  bstr_t bstr = &bstr_data[1], bstr2;
   name_t name;
   void *buffer;
   int *pa2;
@@ -1166,6 +1159,12 @@ pointer_tests(void)
   ok(sum_pcarr(pa, 4) == 10, "RPC sum_pcarr\n");
 
   ok(hash_bstr(bstr) == s_hash_bstr(bstr), "RPC hash_bstr_data\n");
+
+  get_a_bstr(&bstr);
+  s_get_a_bstr(&bstr2);
+  ok(!lstrcmpW((LPCWSTR)bstr, (LPCWSTR)bstr2), "bstr mismatch\n");
+  HeapFree(GetProcessHeap(), 0, bstr - 1);
+  HeapFree(GetProcessHeap(), 0, bstr2 - 1);
 
   free_list(list);
 
@@ -1350,6 +1349,69 @@ array_tests(void)
   pi[4] = -4; rpi[4] = &pi[4];
   ok(sum_complex_array(5, rpi) == 1, "RPC sum_complex_array\n");
   HeapFree(GetProcessHeap(), 0, pi);
+}
+
+void __cdecl s_authinfo_test(unsigned int protseq, int secure)
+{
+    RPC_BINDING_HANDLE binding;
+    RPC_STATUS status;
+    ULONG level, authnsvc;
+    RPC_AUTHZ_HANDLE privs;
+    unsigned char *principal;
+
+    binding = I_RpcGetCurrentCallHandle();
+    ok(binding != NULL, "I_RpcGetCurrentCallHandle returned NULL\n");
+
+    level = authnsvc = 0xdeadbeef;
+    privs = (RPC_AUTHZ_HANDLE)0xdeadbeef;
+    principal = (unsigned char *)0xdeadbeef;
+
+    if (secure || protseq == RPC_PROTSEQ_LRPC)
+    {
+        status = RpcBindingInqAuthClientA(binding, &privs, &principal, &level, &authnsvc, NULL);
+        if (status == RPC_S_CANNOT_SUPPORT)
+        {
+            win_skip("RpcBindingInqAuthClientA not supported\n");
+            return;
+        }
+        ok(status == RPC_S_OK, "expected RPC_S_OK got %u\n", status);
+        ok(privs != (RPC_AUTHZ_HANDLE)0xdeadbeef, "privs unchanged\n");
+        ok(principal != (unsigned char *)0xdeadbeef, "principal unchanged\n");
+        if (protseq != RPC_PROTSEQ_LRPC)
+        {
+            todo_wine
+            ok(principal != NULL, "NULL principal\n");
+        }
+        if (protseq == RPC_PROTSEQ_LRPC && principal && pGetUserNameExA)
+        {
+            int len;
+            char *spn;
+
+            len = WideCharToMultiByte(CP_ACP, 0, (const WCHAR *)privs, -1, NULL, 0, NULL, NULL);
+            spn = HeapAlloc( GetProcessHeap(), 0, len );
+            WideCharToMultiByte(CP_ACP, 0, (const WCHAR *)privs, -1, spn, len, NULL, NULL);
+
+            ok(!strcmp(domain_and_user, spn), "expected %s got %s\n", domain_and_user, spn);
+            HeapFree( GetProcessHeap(), 0, spn );
+        }
+        ok(level == RPC_C_AUTHN_LEVEL_PKT_PRIVACY, "level unchanged\n");
+        ok(authnsvc == RPC_C_AUTHN_WINNT, "authnsvc unchanged\n");
+
+        status = RpcImpersonateClient(NULL);
+        ok(status == RPC_S_OK, "expected RPC_S_OK got %u\n", status);
+        status = RpcRevertToSelf();
+        ok(status == RPC_S_OK, "expected RPC_S_OK got %u\n", status);
+
+    }
+    else
+    {
+        status = RpcBindingInqAuthClientA(binding, &privs, &principal, &level, &authnsvc, NULL);
+        ok(status == RPC_S_BINDING_HAS_NO_AUTH, "expected RPC_S_BINDING_HAS_NO_AUTH got %u\n", status);
+        ok(privs == (RPC_AUTHZ_HANDLE)0xdeadbeef, "got %p\n", privs);
+        ok(principal == (unsigned char *)0xdeadbeef, "got %s\n", principal);
+        ok(level == 0xdeadbeef, "got %u\n", level);
+        ok(authnsvc == 0xdeadbeef, "got %u\n", authnsvc);
+    }
 }
 
 static void

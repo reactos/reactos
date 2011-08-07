@@ -691,9 +691,14 @@ static IUnknownVtbl create_stub_test_fail_vtbl =
 
 struct dummy_unknown
 {
-    const IUnknownVtbl *vtbl;
+    IUnknown IUnknown_iface;
     LONG ref;
 };
+
+static inline struct dummy_unknown *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, struct dummy_unknown, IUnknown_iface);
+}
 
 static HRESULT WINAPI dummy_QueryInterface(IUnknown *This, REFIID iid, void **ppv)
 {
@@ -703,13 +708,13 @@ static HRESULT WINAPI dummy_QueryInterface(IUnknown *This, REFIID iid, void **pp
 
 static ULONG WINAPI dummy_AddRef(LPUNKNOWN iface)
 {
-    struct dummy_unknown *this = (struct dummy_unknown *)iface;
+    struct dummy_unknown *this = impl_from_IUnknown(iface);
     return InterlockedIncrement( &this->ref );
 }
 
 static ULONG WINAPI dummy_Release(LPUNKNOWN iface)
 {
-    struct dummy_unknown *this = (struct dummy_unknown *)iface;
+    struct dummy_unknown *this = impl_from_IUnknown(iface);
     return InterlockedDecrement( &this->ref );
 }
 
@@ -719,7 +724,7 @@ static IUnknownVtbl dummy_unknown_vtbl =
     dummy_AddRef,
     dummy_Release
 };
-static struct dummy_unknown dummy_unknown = { &dummy_unknown_vtbl, 0 };
+static struct dummy_unknown dummy_unknown = { { &dummy_unknown_vtbl }, 0 };
 
 static void create_proxy_test( IPSFactoryBuffer *ppsf, REFIID iid, const void *expected_vtbl )
 {
@@ -737,7 +742,8 @@ static void create_proxy_test( IPSFactoryBuffer *ppsf, REFIID iid, const void *e
     ok( count == 0, "wrong refcount %u\n", count );
 
     dummy_unknown.ref = 4;
-    r = IPSFactoryBuffer_CreateProxy(ppsf, (IUnknown *)&dummy_unknown, iid, &proxy, (void **)&iface);
+    r = IPSFactoryBuffer_CreateProxy(ppsf, &dummy_unknown.IUnknown_iface, iid, &proxy,
+            (void **)&iface);
     ok( r == S_OK, "IPSFactoryBuffer_CreateProxy failed %x\n", r );
     ok( dummy_unknown.ref == 5, "wrong refcount %u\n", dummy_unknown.ref );
     ok( *(void **)iface == expected_vtbl, "wrong iface pointer %p/%p\n", *(void **)iface, expected_vtbl );
@@ -775,6 +781,7 @@ static void test_CreateStub(IPSFactoryBuffer *ppsf)
 
     vtbl = &create_stub_test_fail_vtbl;
     pstub = create_stub(ppsf, &IID_if1, obj, E_NOINTERFACE);
+    ok(pstub == S_OK, "create_stub failed: %u\n", GetLastError());
 
 }
 
@@ -892,6 +899,7 @@ static void test_Connect(IPSFactoryBuffer *ppsf)
 
     obj = (IUnknown*)&new_vtbl;
     r = IRpcStubBuffer_Connect(pstub, obj);
+    ok(r == S_OK, "r %08x\n", r);
     ok(connect_test_base_Connect_called == 1, "connect_test_bsae_Connect called %d times\n",
        connect_test_base_Connect_called);
     ok(connect_test_orig_release_called == 3, "release called %d\n", connect_test_orig_release_called);
