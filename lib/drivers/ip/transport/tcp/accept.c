@@ -12,6 +12,8 @@
 
 #include "rosip.h"
 
+extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
+
 NTSTATUS TCPCheckPeerForAccept(PVOID Context,
                                PTDI_REQUEST_KERNEL Request)
 {
@@ -118,7 +120,7 @@ BOOLEAN TCPAbortListenForSocket
         {
             DereferenceObject(Bucket->AssociatedEndpoint);
             RemoveEntryList( &Bucket->Entry );
-            ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+            ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
             Found = TRUE;
             break;
         }
@@ -143,9 +145,7 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 
     LockObject(Listener, &OldIrql);
 
-    Bucket = (PTDI_BUCKET)ExAllocatePoolWithTag(NonPagedPool,
-                                    sizeof(*Bucket),
-                                    TDI_BUCKET_TAG );
+    Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
     
     if (Bucket)
     {
