@@ -11,12 +11,12 @@ _call_stubless_func:
     mov ecx,[esp+4]        /* This Pointer */
     mov ecx,[ecx]          /* This->lpVtbl */
     mov ecx,[ecx-8]        /* MIDL_STUBLESS_PROXY_INFO */
-    mov edx,[ecx-8]        /* Info->FormatStringOffset */
-    xor edx, edx
-    mov dx,[edx+eax*2]    /* FormatStringOffset[index] */
+    mov edx,[ecx+8]        /* Info->FormatStringOffset */
+    mov edx,[edx+eax*2]    /* FormatStringOffset[index] */
+    and edx, 0000FFFFh
     add edx,[ecx+4]        /* info->ProcFormatString + offset */
-    xor eax, eax
-    mov ax, [edx+8]       /* arguments size */
+    mov eax, [edx+8]       /* arguments size */
+    and eax, 0000FFFFh
     push eax
     lea eax, [esp+8]       /* &This */
     push eax
