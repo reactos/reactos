@@ -1,5 +1,6 @@
 
 function(add_compiler_flags)
+    set(flags_list "")
     # Adds the compiler flag to both CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
     foreach(flag ${ARGN})
         set(flags_list "${flags_list} ${flag}")

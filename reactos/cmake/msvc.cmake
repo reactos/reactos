@@ -156,6 +156,7 @@ macro(add_importlib_target _exports_file)
 
     # Add neccessary importlibs for redirections
     set(_libraries "")
+    set(_dependencies "")
     foreach(_lib ${ARGN})
         list(APPEND _libraries "${CMAKE_BINARY_DIR}/importlibs/${_lib}.lib")
         list(APPEND _dependencies ${_lib})
