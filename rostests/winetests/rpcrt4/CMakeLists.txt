@@ -6,7 +6,8 @@ add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
 
-add_rpc_library(serverrpc server.idl)
+add_rpc_files(client server.idl)
+add_rpc_files(server server.idl)
 
 list(APPEND SOURCE
     cstub.c
@@ -16,13 +17,14 @@ list(APPEND SOURCE
     rpc_async.c
     rpc_protseq.c
     server.c
-    testlist.c)
+    testlist.c
+    ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/server_s.c)
 
 add_executable(rpcrt4_winetest ${SOURCE})
 target_link_libraries(rpcrt4_winetest
     uuid
     wine
-    serverrpc
     ${PSEH_LIB})
 
 set_module_type(rpcrt4_winetest win32cui)
