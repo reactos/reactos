@@ -23,6 +23,8 @@ PORT_SET TCPPorts;
 
 #include "rosip.h"
 
+NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
+
 VOID NTAPI
 DisconnectTimeoutDpc(PKDPC Dpc,
                      PVOID DeferredContext,
@@ -85,8 +87,8 @@ VOID ConnectionFree(PVOID Object)
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext )
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)
-        ExAllocatePoolWithTag(NonPagedPool, sizeof(CONNECTION_ENDPOINT),
-                              CONN_ENDPT_TAG);
+        ExAllocatePoolWithTag(NonPagedPool, sizeof(CONNECTION_ENDPOINT), CONN_ENDPT_TAG);
+
     if (!Connection)
         return Connection;
 
@@ -196,6 +198,14 @@ NTSTATUS TCPStartup(VOID)
     {
         return Status;
     }
+
+    ExInitializeNPagedLookasideList(&TdiBucketLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(TDI_BUCKET),
+                                    TDI_BUCKET_TAG,
+                                    0);
     
     /* Initialize our IP library */
     LibIPInitialize();
@@ -218,6 +228,8 @@ NTSTATUS TCPShutdown(VOID)
 {
     if (!TCPInitialized)
         return STATUS_SUCCESS;
+
+    ExDeleteNPagedLookasideList(&TdiBucketLookasideList);
     
     LibIPShutdown();
 
@@ -348,7 +360,7 @@ NTSTATUS TCPConnect
         {
             connaddr.addr = RemoteAddress.Address.IPv4Address;
 
-            Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+            Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
             if (!Bucket)
             {
                 UnlockObject(Connection, OldIrql);
@@ -418,13 +430,13 @@ NTSTATUS TCPDisconnect
                 }
 
                 /* We couldn't complete the request now because we need to wait for outstanding I/O */
-                Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
+                Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
                 if (!Bucket)
                 {
                     UnlockObject(Connection, OldIrql);
                     return STATUS_NO_MEMORY;
                 }
-    
+
                 Bucket->Request.RequestNotifyObject = (PVOID)Complete;
                 Bucket->Request.RequestContext = Context;
 
@@ -487,7 +499,7 @@ NTSTATUS TCPReceiveData
     {
     
         /* Freed in TCPSocketState */
-        Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
+        Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
         if (!Bucket)
         {
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
@@ -546,7 +558,7 @@ NTSTATUS TCPSendData
     if (Status == STATUS_PENDING)
     {
         /* Freed in TCPSocketState */
-        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+        Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
         if (!Bucket)
         {
             UnlockObject(Connection, OldIrql);
@@ -660,7 +672,7 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp )
             if( Bucket->Request.RequestContext == Irp )
             {
                 RemoveEntryList( &Bucket->Entry );
-                ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+                ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
                 Found = TRUE;
                 break;
             }
