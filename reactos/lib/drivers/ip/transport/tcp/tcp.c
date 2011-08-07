@@ -485,8 +485,6 @@ NTSTATUS TCPReceiveData
 
     if (Status == STATUS_PENDING)
     {
-    
-        /* Freed in TCPSocketState */
         Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
         if (!Bucket)
         {
