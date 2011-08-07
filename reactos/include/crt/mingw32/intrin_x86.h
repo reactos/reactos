@@ -1497,7 +1497,7 @@ __INTRIN_INLINE void __sidt(void *Destination)
 
 __INTRIN_INLINE void _mm_pause(void)
 {
-	__asm__ __volatile__("pause");
+	__asm__ __volatile__("pause" : : : "memory");
 }
 
 #ifdef __cplusplus
