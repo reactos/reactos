@@ -334,7 +334,10 @@ if(PCH)
             set(__compiler ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1})
         endif()
 
-        add_custom_command(OUTPUT ${_gch_filename} COMMAND ${__compiler} ${_args} IMPLICIT_DEPENDS ${__lang} ${_header_filename})
+        add_custom_command(OUTPUT ${_gch_filename}
+            COMMAND ${__compiler} ${_args}
+            IMPLICIT_DEPENDS ${__lang} ${_header_filename}
+            DEPENDS ${_header_filename} ${ARGN})
         get_target_property(_src_files ${_target_name} SOURCES)
         foreach(_item in ${_src_files})
             get_source_file_property(__src_lang ${_item} LANGUAGE)
