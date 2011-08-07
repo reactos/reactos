@@ -202,7 +202,6 @@ else()
 
     add_subdirectory(include/psdk)
     add_subdirectory(include/dxsdk)
-    add_subdirectory(include/reactos/idl)
     add_subdirectory(include/reactos/wine)
     add_subdirectory(include/reactos/mc)
     add_subdirectory(include/asm)

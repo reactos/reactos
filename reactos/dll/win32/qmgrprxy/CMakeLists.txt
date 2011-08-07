@@ -9,14 +9,14 @@ generate_idl_iids(qmgrprxy.idl)
 
 spec2def(qmgrprxy.dll qmgrprxy.spec)
 
+add_rpcproxy_files(qmgrprxy.idl)
+
 list(APPEND SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy.def)
-
-add_rpcproxy_files(qmgrprxy.idl)
 
 add_library(qmgrprxy SHARED ${SOURCE})
 
