@@ -705,6 +705,14 @@ i8042Pnp(
             Status = Irp->IoStatus.Status;
             break;
         }
+        case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
+            /* Nothing much to tell */
+            Information = 0;
+            Status = STATUS_SUCCESS;
+            break;
+        }
         default:
         {
             ERR_(I8042PRT, "IRP_MJ_PNP / unknown minor function 0x%x\n", MinorFunction);
