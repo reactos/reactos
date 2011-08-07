@@ -138,6 +138,7 @@ function(add_rpc_files __type)
         if(NOT IS_ABSOLUTE ${FILE})
             set(FILE ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         endif()
+        file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h ${__server_client} ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${FILE}
