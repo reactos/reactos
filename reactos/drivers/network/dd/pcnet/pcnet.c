@@ -246,16 +246,14 @@ MiQueryCard(
   if(Status != 4)
     {
       Status =  NDIS_STATUS_FAILURE;
-      DPRINT("NdisReadPciSlotInformation failed\n");
-      BREAKPOINT;
+      DPRINT1("NdisReadPciSlotInformation failed\n");
       return Status;
     }
 
   if(buf32 != PCI_ID)
     {
       Status = NDIS_STATUS_ADAPTER_NOT_FOUND;
-      DPRINT("card in slot isn't our: 0x%x\n", 0, buf32);
-      BREAKPOINT;
+      DPRINT1("card in slot isn't our: 0x%x\n", 0, buf32);
       return Status;
     }
 
@@ -269,14 +267,13 @@ MiQueryCard(
   if(Status != 4)
     {
       Status = NDIS_STATUS_FAILURE;
-      DPRINT("NdisReadPciSlotInformation failed\n");
-      BREAKPOINT;
+      DPRINT1("NdisReadPciSlotInformation failed\n");
       return Status;
     }
 
   if(!buf32)
     {
-      DPRINT("No base i/o address set\n");
+      DPRINT1("No base i/o address set\n");
       return NDIS_STATUS_FAILURE;
     }
 
@@ -291,7 +288,6 @@ MiQueryCard(
     {
       Status = NDIS_STATUS_FAILURE;
       DPRINT1("NdisReadPciSlotInformation failed\n");
-      BREAKPOINT;
       return Status;
     }
 
@@ -325,14 +321,12 @@ MiAllocateSharedMemory(
   if(!Adapter->InitializationBlockVirt)
     {
       DPRINT1("insufficient resources\n");
-      BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->InitializationBlockVirt & 0x00000003) != 0)
     {
-      DPRINT("address 0x%x not dword-aligned\n", Adapter->InitializationBlockVirt);
-      BREAKPOINT;
+      DPRINT1("address 0x%x not dword-aligned\n", Adapter->InitializationBlockVirt);
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -345,14 +339,12 @@ MiAllocateSharedMemory(
   if(!Adapter->TransmitDescriptorRingVirt)
     {
       DPRINT1("insufficient resources\n");
-      BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->TransmitDescriptorRingVirt & 0x00000003) != 0)
     {
-      DPRINT("address 0x%x not dword-aligned\n", Adapter->TransmitDescriptorRingVirt);
-      BREAKPOINT;
+      DPRINT1("address 0x%x not dword-aligned\n", Adapter->TransmitDescriptorRingVirt);
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -366,14 +358,12 @@ MiAllocateSharedMemory(
   if(!Adapter->ReceiveDescriptorRingVirt)
     {
       DPRINT1("insufficient resources\n");
-      BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->ReceiveDescriptorRingVirt & 0x00000003) != 0)
     {
-      DPRINT("address 0x%x not dword-aligned\n", Adapter->ReceiveDescriptorRingVirt);
-      BREAKPOINT;
+      DPRINT1("address 0x%x not dword-aligned\n", Adapter->ReceiveDescriptorRingVirt);
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -387,14 +377,12 @@ MiAllocateSharedMemory(
   if(!Adapter->TransmitBufferPtrVirt)
     {
       DPRINT1("insufficient resources\n");
-      BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->TransmitBufferPtrVirt & 0x00000003) != 0)
     {
-      DPRINT("address 0x%x not dword-aligned\n", Adapter->TransmitBufferPtrVirt);
-      BREAKPOINT;
+      DPRINT1("address 0x%x not dword-aligned\n", Adapter->TransmitBufferPtrVirt);
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -408,14 +396,12 @@ MiAllocateSharedMemory(
   if(!Adapter->ReceiveBufferPtrVirt)
     {
       DPRINT1("insufficient resources\n");
-      BREAKPOINT;
       return NDIS_STATUS_RESOURCES;
     }
 
   if(((ULONG)Adapter->ReceiveBufferPtrVirt & 0x00000003) != 0)
     {
-      DPRINT("address 0x%x not dword-aligned\n", Adapter->ReceiveBufferPtrVirt);
-      BREAKPOINT;
+      DPRINT1("address 0x%x not dword-aligned\n", Adapter->ReceiveBufferPtrVirt);
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -874,7 +860,6 @@ MiniportInitialize(
     {
       Status = NDIS_STATUS_UNSUPPORTED_MEDIA;
       DPRINT1("unsupported media\n");
-      BREAKPOINT;
       *OpenErrorStatus = Status;
       return Status;
     }
@@ -887,7 +872,6 @@ MiniportInitialize(
     {
       Status =  NDIS_STATUS_RESOURCES;
       DPRINT1("Insufficient resources\n");
-      BREAKPOINT;
       *OpenErrorStatus = Status;
       return Status;
     }
@@ -907,7 +891,6 @@ MiniportInitialize(
         {
           DPRINT1("MiQueryCard failed\n");
           Status = NDIS_STATUS_ADAPTER_NOT_FOUND;
-          BREAKPOINT;
           break;
         }
 
@@ -917,7 +900,6 @@ MiniportInitialize(
       if(Status != NDIS_STATUS_SUCCESS)
         {
           DPRINT1("NdisMRegisterIoPortRange failed: 0x%x\n", Status);
-          BREAKPOINT
           break;
         }
 
@@ -927,7 +909,6 @@ MiniportInitialize(
       if(Status != NDIS_STATUS_SUCCESS)
         {
           DPRINT1("NdisMAllocateMapRegisters failed: 0x%x\n", Status);
-          BREAKPOINT
           break;
         }
 
@@ -936,8 +917,7 @@ MiniportInitialize(
           Adapter->InterruptVector, TRUE, TRUE, NdisInterruptLevelSensitive);
       if(Status != NDIS_STATUS_SUCCESS)
         {
-          DPRINT("NdisMRegisterInterrupt failed: 0x%x\n", Status);
-          BREAKPOINT
+          DPRINT1("NdisMRegisterInterrupt failed: 0x%x\n", Status);
           break;
         }
 
@@ -948,8 +928,7 @@ MiniportInitialize(
       if(Status != NDIS_STATUS_SUCCESS)
         {
           Status = NDIS_STATUS_RESOURCES;
-          DPRINT("MiAllocateSharedMemory failed", Status);
-          BREAKPOINT
+          DPRINT1("MiAllocateSharedMemory failed", Status);
           break;
         }
 
