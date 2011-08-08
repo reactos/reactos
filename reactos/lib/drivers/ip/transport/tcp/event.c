@@ -30,6 +30,8 @@ static const char * const tcp_state_str[] = {
   "TIME_WAIT"   
 };
 
+extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
+
 static
 VOID
 BucketCompletionWorker(PVOID Context)
@@ -43,7 +45,7 @@ BucketCompletionWorker(PVOID Context)
     
     DereferenceObject(Bucket->AssociatedEndpoint);
 
-    ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+    ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
 }
 
 VOID
