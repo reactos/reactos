@@ -6,17 +6,17 @@
 #include <debug.h>
 
 static const char * const tcp_state_str[] = {
-  "CLOSED",      
-  "LISTEN",      
-  "SYN_SENT",    
-  "SYN_RCVD",    
-  "ESTABLISHED", 
-  "FIN_WAIT_1",  
-  "FIN_WAIT_2",  
-  "CLOSE_WAIT",  
-  "CLOSING",     
-  "LAST_ACK",    
-  "TIME_WAIT"   
+  "CLOSED",
+  "LISTEN",
+  "SYN_SENT",
+  "SYN_RCVD",
+  "ESTABLISHED",
+  "FIN_WAIT_1",
+  "FIN_WAIT_2",
+  "CLOSE_WAIT",
+  "CLOSING",
+  "LAST_ACK",
+  "TIME_WAIT"
 };
 
 /* The way that lwIP does multi-threading is really not ideal for our purposes but
@@ -39,7 +39,7 @@ LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
     PQUEUE_ENTRY qp = NULL;
 
     ReferenceObject(Connection);
-    
+
     while (!IsListEmpty(&Connection->PacketQueue))
     {
         Entry = RemoveHeadList(&Connection->PacketQueue);
@@ -72,7 +72,7 @@ PQUEUE_ENTRY LibTCPDequeuePacket(PCONNECTION_ENDPOINT Connection)
     if (IsListEmpty(&Connection->PacketQueue)) return NULL;
 
     Entry = RemoveHeadList(&Connection->PacketQueue);
-    
+
     qp = CONTAINING_RECORD(Entry, QUEUE_ENTRY, ListEntry);
 
     return qp;
@@ -160,7 +160,7 @@ BOOLEAN
 WaitForEventSafely(PRKEVENT Event)
 {
     PVOID WaitObjects[] = {Event, &TerminationEvent};
-    
+
     if (KeWaitForMultipleObjects(2,
                                  WaitObjects,
                                  WaitAny,
@@ -186,9 +186,9 @@ InternalSendEventHandler(void *arg, PTCP_PCB pcb, const u16_t space)
 {
     /* Make sure the socket didn't get closed */
     if (!arg) return ERR_OK;
-    
+
     TCPSendEventHandler(arg, space);
-    
+
     return ERR_OK;
 }
 
@@ -207,7 +207,7 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
 
         return ERR_OK;
     }
-    
+
     if (p)
     {
         len = TCPRecvEventHandler(arg, p);
@@ -222,11 +222,11 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
         else if (len != 0)
         {
             DbgPrint("UNTESTED CASE: NOT ALL DATA TAKEN! EXTRA DATA MAY BE LOST!\n");
-            
+
             tcp_recved(pcb, len);
-            
+
             /* Possible memory leak of pbuf here? */
-            
+
             return ERR_OK;
         }
         else
@@ -315,7 +315,7 @@ LibTCPSocket(void *arg)
 {
     struct lwip_callback_msg *msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     struct tcp_pcb *ret;
-    
+
     if (msg)
     {
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
@@ -327,12 +327,12 @@ LibTCPSocket(void *arg)
             ret = msg->Output.Socket.NewPcb;
         else
             ret = NULL;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
-    
+
     return NULL;
 }
 
@@ -353,7 +353,7 @@ LibTCPBindCallback(void *arg)
     msg->Output.Bind.Error = tcp_bind((PTCP_PCB)msg->Input.Bind.Connection->SocketContext,
                                       msg->Input.Bind.IpAddress,
                                       ntohs(msg->Input.Bind.Port));
-    
+
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -363,7 +363,7 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const 
 {
     struct lwip_callback_msg *msg;
     err_t ret;
-    
+
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
     {
@@ -371,19 +371,19 @@ LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const 
         msg->Input.Bind.Connection = Connection;
         msg->Input.Bind.IpAddress = ipaddr;
         msg->Input.Bind.Port = port;
-        
+
         tcpip_callback_with_block(LibTCPBindCallback, msg, 1);
-        
+
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Bind.Error;
         else
             ret = ERR_CLSD;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
-    
+
     return ERR_MEM;
 }
 
@@ -392,9 +392,9 @@ void
 LibTCPListenCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
-    
+
     ASSERT(msg);
-    
+
     if (!msg->Input.Listen.Connection->SocketContext)
     {
         msg->Output.Listen.NewPcb = NULL;
@@ -402,12 +402,12 @@ LibTCPListenCallback(void *arg)
     }
 
     msg->Output.Listen.NewPcb = tcp_listen_with_backlog((PTCP_PCB)msg->Input.Listen.Connection->SocketContext, msg->Input.Listen.Backlog);
-    
+
     if (msg->Output.Listen.NewPcb)
     {
         tcp_accept(msg->Output.Listen.NewPcb, InternalAcceptEventHandler);
     }
-    
+
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -417,23 +417,23 @@ LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog)
 {
     struct lwip_callback_msg *msg;
     PTCP_PCB ret;
-    
+
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
     {
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
         msg->Input.Listen.Connection = Connection;
         msg->Input.Listen.Backlog = backlog;
-        
+
         tcpip_callback_with_block(LibTCPListenCallback, msg, 1);
-        
+
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Listen.NewPcb;
         else
             ret = NULL;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
 
@@ -445,21 +445,21 @@ void
 LibTCPSendCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
-    
+
     ASSERT(msg);
-    
+
     if (!msg->Input.Send.Connection->SocketContext)
     {
         msg->Output.Send.Error = ERR_CLSD;
         goto done;
     }
-    
+
     if (msg->Input.Send.Connection->SendShutdown)
     {
         msg->Output.Send.Error = ERR_CLSD;
         goto done;
     }
-    
+
     msg->Output.Send.Error = tcp_write((PTCP_PCB)msg->Input.Send.Connection->SocketContext,
                                        msg->Input.Send.Data,
                                        msg->Input.Send.DataLength,
@@ -471,10 +471,10 @@ LibTCPSendCallback(void *arg)
     }
     else if (msg->Output.Send.Error == ERR_OK)
     {
-        /* Queued successfully so try to send it */   
+        /* Queued successfully so try to send it */
         tcp_output((PTCP_PCB)msg->Input.Send.Connection->SocketContext);
     }
-    
+
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -484,7 +484,7 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
 {
     err_t ret;
     struct lwip_callback_msg *msg;
-    
+
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
     {
@@ -492,19 +492,19 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
         msg->Input.Send.Connection = Connection;
         msg->Input.Send.Data = dataptr;
         msg->Input.Send.DataLength = len;
-        
+
         if (safe)
             LibTCPSendCallback(msg);
         else
             tcpip_callback_with_block(LibTCPSendCallback, msg, 1);
-        
+
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Send.Error;
         else
             ret = ERR_CLSD;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
 
@@ -516,24 +516,25 @@ void
 LibTCPConnectCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
-    
+    err_t Error;
+
     ASSERT(arg);
-    
+
     if (!msg->Input.Connect.Connection->SocketContext)
     {
         msg->Output.Connect.Error = ERR_CLSD;
         goto done;
     }
-    
+
     tcp_recv((PTCP_PCB)msg->Input.Connect.Connection->SocketContext, InternalRecvEventHandler);
     tcp_sent((PTCP_PCB)msg->Input.Connect.Connection->SocketContext, InternalSendEventHandler);
 
-    err_t Error = tcp_connect((PTCP_PCB)msg->Input.Connect.Connection->SocketContext,
-                                msg->Input.Connect.IpAddress, ntohs(msg->Input.Connect.Port),
-                                InternalConnectEventHandler);
+    Error = tcp_connect((PTCP_PCB)msg->Input.Connect.Connection->SocketContext,
+                        msg->Input.Connect.IpAddress, ntohs(msg->Input.Connect.Port),
+                        InternalConnectEventHandler);
 
     msg->Output.Connect.Error = Error == ERR_OK ? ERR_INPROGRESS : Error;
-    
+
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -543,7 +544,7 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, con
 {
     struct lwip_callback_msg *msg;
     err_t ret;
-    
+
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
     {
@@ -551,21 +552,21 @@ LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, con
         msg->Input.Connect.Connection = Connection;
         msg->Input.Connect.IpAddress = ipaddr;
         msg->Input.Connect.Port = port;
-        
+
         tcpip_callback_with_block(LibTCPConnectCallback, msg, 1);
-        
+
         if (WaitForEventSafely(&msg->Event))
         {
             ret = msg->Output.Connect.Error;
         }
         else
             ret = ERR_CLSD;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
-    
+
     return ERR_MEM;
 }
 
@@ -597,11 +598,11 @@ LibTCPShutdownCallback(void *arg)
     {
         if (msg->Input.Shutdown.shut_rx)
             msg->Input.Shutdown.Connection->ReceiveShutdown = TRUE;
-        
+
         if (msg->Input.Shutdown.shut_tx)
             msg->Input.Shutdown.Connection->SendShutdown = TRUE;
     }
-    
+
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -616,23 +617,23 @@ LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shu
     if (msg)
     {
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
-        
+
         msg->Input.Shutdown.Connection = Connection;
         msg->Input.Shutdown.shut_rx = shut_rx;
         msg->Input.Shutdown.shut_tx = shut_tx;
-                
+
         tcpip_callback_with_block(LibTCPShutdownCallback, msg, 1);
-        
+
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Shutdown.Error;
         else
             ret = ERR_CLSD;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
-    
+
     return ERR_MEM;
 }
 
@@ -693,27 +694,27 @@ LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback)
 {
     err_t ret;
     struct lwip_callback_msg *msg;
-    
+
     msg = ExAllocateFromNPagedLookasideList(&MessageLookasideList);
     if (msg)
     {
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
-        
+
         msg->Input.Close.Connection = Connection;
         msg->Input.Close.Callback = callback;
-        
+
         if (safe)
             LibTCPCloseCallback(msg);
         else
             tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
-        
+
         if (WaitForEventSafely(&msg->Event))
             ret = msg->Output.Close.Error;
         else
             ret = ERR_CLSD;
-        
+
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
-        
+
         return ret;
     }
 
@@ -724,13 +725,13 @@ void
 LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg)
 {
     ASSERT(arg);
-    
+
     tcp_arg(pcb, NULL);
     tcp_recv(pcb, InternalRecvEventHandler);
     tcp_sent(pcb, InternalSendEventHandler);
     tcp_err(pcb, InternalErrorEventHandler);
     tcp_arg(pcb, arg);
-    
+
     tcp_accepted(listen_pcb);
 }
 
@@ -739,21 +740,21 @@ LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port)
 {
     if (!pcb)
         return ERR_CLSD;
-    
+
     *ipaddr = pcb->local_ip;
     *port = pcb->local_port;
-    
+
     return ERR_OK;
 }
 
 err_t
 LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr * const ipaddr, u16_t * const port)
-{    
+{
     if (!pcb)
         return ERR_CLSD;
-    
+
     *ipaddr = pcb->remote_ip;
     *port = pcb->remote_port;
-    
+
     return ERR_OK;
 }
