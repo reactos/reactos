@@ -92,11 +92,10 @@ As a result, IntLoadHookModule will be called for all the threads that
 will receive the special purpose internal message.
 */
 BOOL
-IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook, BOOL Block)
+IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
 {
     PTHREADINFO ptiCurrent;
     PLIST_ENTRY ListEntry;
-    ULONG_PTR Result;
     PPROCESSINFO ppiCsr;
     
     DPRINT1("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
@@ -117,15 +116,15 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook, BOOL Block)
             if(ptiCurrent->ppi->W32PF_flags & W32PF_APIHOOKLOADED)
             {
                 DPRINT("IntHookModuleUnloaded: sending message to PID %d, ppi=0x%x\n", PsGetProcessId(ptiCurrent->ppi->peProcess), ptiCurrent->ppi);
-                co_MsqSendMessage( ptiCurrent->MessageQueue,
-                                   0,
-                                   iHookID,
-                                   TRUE,
-                                   (LPARAM)hHook,
-                                   0,
-                                   Block,
-                                   MSQ_INJECTMODULE,
-                                   &Result);
+                co_MsqSendMessageAsync( ptiCurrent,
+                                        0,
+                                        iHookID,
+                                        TRUE,
+                                        (LPARAM)hHook,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        MSQ_INJECTMODULE);
             }
         }
         ListEntry = ListEntry->Flink;
@@ -151,7 +150,6 @@ UserRegisterUserApiHook(
     HWND *List;
     PWND DesktopWindow, pwndCurrent;
     ULONG i;
-    ULONG_PTR Result;
     PPROCESSINFO ppiCsr;
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -194,19 +192,15 @@ UserRegisterUserApiHook(
                 continue;
             }
 
-            co_MsqSendMessage( ptiCurrent->MessageQueue,
-                               0,
-                               WH_APIHOOK,
-                               FALSE,   /* load the module */
-                               0,
-                               0,
-                               TRUE,
-                               MSQ_INJECTMODULE,
-                               &Result);
-            if(Result == FALSE)
-            {
-                DPRINT1("Failed to inject module to process %d\n", PsGetProcessId(ptiCurrent->ppi->peProcess));
-            }
+            co_MsqSendMessageAsync( ptiCurrent,
+                                    0,
+                                    WH_APIHOOK,
+                                    FALSE,   /* load the module */
+                                    0,
+                                    NULL,
+                                    0,
+                                    FALSE,
+                                    MSQ_INJECTMODULE);
         }
         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
     }
@@ -243,7 +237,7 @@ UserUnregisterUserApiHook(BOOL Block)
     ReleaseCapturedUnicodeString(&strUahInitFunc, UserMode);
 
     /* Notify all applications that the api hook module must be unloaded */
-    return IntHookModuleUnloaded(pti->rpdesk, WH_APIHOOK, 0, TRUE);
+    return IntHookModuleUnloaded(pti->rpdesk, WH_APIHOOK, 0);
 }
 
 static

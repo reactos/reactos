@@ -1025,6 +1025,58 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
    }
 }
 
+BOOL FASTCALL
+co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
+                       HWND hwnd,
+                       UINT Msg,
+                       WPARAM wParam,
+                       LPARAM lParam,
+                       SENDASYNCPROC CompletionCallback,
+                       ULONG_PTR CompletionCallbackContext,
+                       BOOL HasPackedLParam,
+                       INT HookMessage)
+{
+
+    PTHREADINFO ptiSender;
+    PUSER_SENT_MESSAGE Message;
+
+    if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+    {
+        DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
+        return FALSE;
+    }
+
+    ptiSender = PsGetCurrentThreadWin32Thread();
+
+    IntReferenceMessageQueue(ptiReceiver->MessageQueue);
+    /* Take reference on this MessageQueue if its a callback. It will be released
+       when message is processed or removed from target hwnd MessageQueue */
+    if (CompletionCallback)
+       IntReferenceMessageQueue(ptiSender->MessageQueue);
+
+    Message->Msg.hwnd = hwnd;
+    Message->Msg.message = Msg;
+    Message->Msg.wParam = wParam;
+    Message->Msg.lParam = lParam;
+    Message->CompletionEvent = NULL;
+    Message->Result = 0;
+    Message->lResult = 0;
+    Message->SenderQueue = NULL;
+    Message->CallBackSenderQueue = ptiSender->MessageQueue;
+    Message->DispatchingListEntry.Flink = NULL;
+    Message->CompletionCallback = CompletionCallback;
+    Message->CompletionCallbackContext = CompletionCallbackContext;
+    Message->HookMessage = HookMessage;
+    Message->HasPackedLParam = HasPackedLParam;
+    Message->QS_Flags = QS_SENDMESSAGE;
+
+    InsertTailList(&ptiReceiver->MessageQueue->SentMessagesListHead, &Message->ListEntry);
+    MsqWakeQueue(ptiReceiver->MessageQueue, QS_SENDMESSAGE, TRUE);
+    IntDereferenceMessageQueue(ptiReceiver->MessageQueue);
+
+    return TRUE;
+}
+
 NTSTATUS FASTCALL
 co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,

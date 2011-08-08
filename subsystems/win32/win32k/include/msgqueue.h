@@ -152,6 +152,18 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, INT HookMessage,
                ULONG_PTR *uResult);
+
+BOOL FASTCALL
+co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
+                       HWND hwnd,
+                       UINT Msg,
+                       WPARAM wParam,
+                       LPARAM lParam,
+                       SENDASYNCPROC CompletionCallback,
+                       ULONG_PTR CompletionCallbackContext,
+                       BOOL HasPackedLParam,
+                       INT HookMessage);
+
 PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL
