@@ -693,23 +693,19 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         /* Mark that we can't issue another receive request */
         FCB->TdiReceiveClosed = TRUE;
 
-        /* These are only for connection-oriented sockets */
-        if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
-        {
-            /* Try to cancel a pending TDI receive IRP if there was one in progress */
-            if (FCB->ReceiveIrp.InFlightRequest)
-                IoCancelIrp(FCB->ReceiveIrp.InFlightRequest);
+        /* Try to cancel a pending TDI receive IRP if there was one in progress */
+        if (FCB->ReceiveIrp.InFlightRequest)
+            IoCancelIrp(FCB->ReceiveIrp.InFlightRequest);
 
-            /* Discard any pending data */
-            FCB->Recv.Content = 0;
-            FCB->Recv.BytesUsed = 0;
+        /* Discard any pending data */
+        FCB->Recv.Content = 0;
+        FCB->Recv.BytesUsed = 0;
 
-            /* Mark us as overread to complete future reads with an error */
-            FCB->Overread = TRUE;
+        /* Mark us as overread to complete future reads with an error */
+        FCB->Overread = TRUE;
 
-            /* Set a successful close status to indicate a shutdown on overread */
-            FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
-        }
+        /* Set a successful close status to indicate a shutdown on overread */
+        FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
 
         /* Clear the receive event */
         FCB->PollState &= ~AFD_EVENT_RECEIVE;

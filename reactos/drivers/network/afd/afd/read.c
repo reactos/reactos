@@ -588,6 +588,12 @@ PacketSocketRecvComplete(
         return Irp->IoStatus.Status;
     }
 
+    if (FCB->TdiReceiveClosed)
+    {
+        SocketStateUnlock(FCB);
+        return STATUS_FILE_CLOSED;
+    }
+
     DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
 
     if( DatagramRecv ) {
