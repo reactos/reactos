@@ -670,7 +670,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_DISCONNECT_INFO DisReq;
     NTSTATUS Status = STATUS_SUCCESS;
-    USHORT Flags = 0;
+    USHORT Flags;
     PLIST_ENTRY CurrentEntry;
     PIRP CurrentIrp;
 
@@ -680,11 +680,38 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0 );
     
-    if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
-	    Flags |= TDI_DISCONNECT_RELEASE;
-    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
-       DisReq->DisconnectType & AFD_DISCONNECT_ABORT )
-	    Flags |= TDI_DISCONNECT_ABORT;
+    /* Shutdown(SD_SEND) */
+    if ((DisReq->DisconnectType & AFD_DISCONNECT_SEND) &&
+        !(DisReq->DisconnectType & AFD_DISCONNECT_RECV))
+    {
+        /* Perform a controlled disconnect */
+        Flags = TDI_DISCONNECT_RELEASE;
+    }
+    /* Shutdown(SD_RECEIVE) */
+    else if (DisReq->DisconnectType & AFD_DISCONNECT_RECV)
+    {
+        /* Mark that we can't issue another receive request */
+        FCB->TdiReceiveClosed = TRUE;
+
+        /* Discard any pending data */
+        FCB->Recv.Content = 0;
+        FCB->Recv.BytesUsed = 0;
+
+        /* Mark us as overread to complete future reads with an error */
+        FCB->Overread = TRUE;
+
+        /* Clear the receive event */
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
+
+        /* We're done (no need to tell the TDI transport driver) */
+        return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0 );
+    }
+    /* Shutdown(SD_BOTH) */
+    else
+    {
+        /* Perform an abortive disconnect */
+        Flags = TDI_DISCONNECT_ABORT;
+    }
 
     if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
     {
