@@ -688,7 +688,8 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Flags = TDI_DISCONNECT_RELEASE;
     }
     /* Shutdown(SD_RECEIVE) */
-    else if (DisReq->DisconnectType & AFD_DISCONNECT_RECV)
+    else if ((DisReq->DisconnectType & AFD_DISCONNECT_RECV) &&
+             !(DisReq->DisconnectType & AFD_DISCONNECT_SEND))
     {
         /* Mark that we can't issue another receive request */
         FCB->TdiReceiveClosed = TRUE;
