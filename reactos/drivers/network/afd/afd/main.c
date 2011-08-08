@@ -680,38 +680,52 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0 );
     
-    /* Shutdown(SD_SEND) */
+    /* Send direction only */
     if ((DisReq->DisconnectType & AFD_DISCONNECT_SEND) &&
         !(DisReq->DisconnectType & AFD_DISCONNECT_RECV))
     {
         /* Perform a controlled disconnect */
         Flags = TDI_DISCONNECT_RELEASE;
     }
-    /* Shutdown(SD_RECEIVE) */
-    else if ((DisReq->DisconnectType & AFD_DISCONNECT_RECV) &&
-             !(DisReq->DisconnectType & AFD_DISCONNECT_SEND))
+    /* Receive direction or both */
+    else
     {
         /* Mark that we can't issue another receive request */
         FCB->TdiReceiveClosed = TRUE;
 
-        /* Discard any pending data */
-        FCB->Recv.Content = 0;
-        FCB->Recv.BytesUsed = 0;
+        /* These are only for connection-oriented sockets */
+        if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
+        {
+            /* Try to cancel a pending TDI receive IRP if there was one in progress */
+            if (FCB->ReceiveIrp.InFlightRequest)
+                IoCancelIrp(FCB->ReceiveIrp.InFlightRequest);
 
-        /* Mark us as overread to complete future reads with an error */
-        FCB->Overread = TRUE;
+            /* Discard any pending data */
+            FCB->Recv.Content = 0;
+            FCB->Recv.BytesUsed = 0;
+
+            /* Mark us as overread to complete future reads with an error */
+            FCB->Overread = TRUE;
+
+            /* Set a successful close status to indicate a shutdown on overread */
+            FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
+        }
 
         /* Clear the receive event */
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
-        /* We're done (no need to tell the TDI transport driver) */
-        return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0 );
-    }
-    /* Shutdown(SD_BOTH) */
-    else
-    {
-        /* Perform an abortive disconnect */
-        Flags = TDI_DISCONNECT_ABORT;
+        /* Receive direction only */
+        if ((DisReq->DisconnectType & AFD_DISCONNECT_RECV) &&
+            !(DisReq->DisconnectType & AFD_DISCONNECT_SEND))
+        {
+            /* No need to tell the transport driver for receive direction only */
+            return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0 );
+        }
+        else
+        {
+            /* Perform an abortive disconnect */
+            Flags = TDI_DISCONNECT_ABORT;
+        }
     }
 
     if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
@@ -785,9 +799,10 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             ExFreePool(FCB->RemoteAddress);
         
             FCB->RemoteAddress = NULL;
-        
-            FCB->PollState &= ~AFD_EVENT_SEND;
         }
+        
+        FCB->PollState &= ~AFD_EVENT_SEND;
+        FCB->SendClosed = TRUE;
     }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );

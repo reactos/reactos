@@ -27,8 +27,13 @@ static VOID HandleReceiveComplete( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Info
 {
     FCB->Recv.BytesUsed = 0;
 
+    /* We got closed while the receive was in progress */
+    if (FCB->TdiReceiveClosed)
+    {
+        FCB->Recv.Content = 0;
+    }
     /* Receive successful with new data */
-    if (Status == STATUS_SUCCESS && Information)
+    else if (Status == STATUS_SUCCESS && Information)
     {
         FCB->Recv.Content = Information;
     }
@@ -693,6 +698,13 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
+
+    if (FCB->TdiReceiveClosed)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Receive closed\n"));
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+    }
+
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_NO_MEMORY, Irp, 0 );
