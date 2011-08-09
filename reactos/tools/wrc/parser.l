@@ -106,7 +106,9 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 #include <errno.h>
 #include <limits.h>
 
-#ifndef HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#else
 #define YY_NO_UNISTD_H
 #endif
 
@@ -395,9 +397,12 @@ static unsigned long xstrtoul(const char *nptr, char **endptr, int base)
 \{			return tBEGIN;
 \}			return tEND;
 
-[0-9]+[lL]?		{ parser_lval.num = xstrtoul(yytext,  0, 10); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
-0[xX][0-9A-Fa-f]+[lL]?	{ parser_lval.num = xstrtoul(yytext,  0, 16); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
-0[oO][0-7]+[lL]?	{ parser_lval.num = xstrtoul(yytext+2, 0, 8); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+[0-9]+[lL]?		{ parser_lval.num = xstrtoul(yytext,  0, 10);
+                          return (yytext[yyleng-1] == 'L' || yytext[yyleng-1] == 'l') ? tLNUMBER : tNUMBER; }
+0[xX][0-9A-Fa-f]+[lL]?	{ parser_lval.num = xstrtoul(yytext,  0, 16);
+                          return (yytext[yyleng-1] == 'L' || yytext[yyleng-1] == 'l') ? tLNUMBER : tNUMBER; }
+0[oO][0-7]+[lL]?	{ parser_lval.num = xstrtoul(yytext+2, 0, 8);
+                          return (yytext[yyleng-1] == 'L' || yytext[yyleng-1] == 'l') ? tLNUMBER : tNUMBER; }
 
 	/*
 	 * The next two rules scan identifiers and filenames.
@@ -465,7 +470,11 @@ L\"			{
 <tklstr>\\r		addwchar('\r');
 <tklstr>\\t		addwchar('\t');
 <tklstr>\\v		addwchar('\v');
-<tklstr>\\.		addwchar(yytext[1]);
+<tklstr>\\.		{
+			    if (yytext[1] & 0x80)
+                                parser_error("Invalid char %u in wide string", (unsigned char)yytext[1]);
+			    addwchar(yytext[1]);
+			}
 <tklstr>\\\r\n		addwchar(yytext[2]); line_number++; char_number = 1;
 <tklstr>\"\"		addwchar('\"');		/* "bla""bla"  -> "bla\"bla" */
 <tklstr>\\\"\"		addwchar('\"');		/* "bla\""bla" -> "bla\"bla" */
@@ -473,7 +482,11 @@ L\"			{
 <tklstr>[^\\\n\"]+	{
 				char *yptr = yytext;
 				while(*yptr)	/* FIXME: codepage translation */
-					addwchar(*yptr++ & 0xff);
+                                {
+                                    if (*yptr & 0x80)
+                                        parser_error("Invalid char %u in wide string", (unsigned char)*yptr);
+                                    addwchar(*yptr++ & 0xff);
+                                }
 			}
 <tklstr>\n		parser_error("Unterminated string");
 
@@ -586,7 +599,6 @@ L\"			{
                                              isprint((unsigned char)*yytext) ? *yytext : '.', *yytext, YY_START);
 			}
 
-<<EOF>>			current_codepage = -1; yyterminate();
 %%
 
 /* These dup functions copy the enclosed '\0' from
@@ -638,7 +650,7 @@ static string_t *get_buffered_cstring(void)
             parser_error("String %s does not convert identically to Unicode and back in codepage %d. "
                     "Try using a Unicode string instead", str->str.cstr, current_codepage );
         if (check_valid_utf8( str, current_codepage ))
-            parser_warning( "string \"%s\" seems to be UTF-8 but codepage %u is in use.",
+            parser_warning( "string \"%s\" seems to be UTF-8 but codepage %u is in use.\n",
                             str->str.cstr, current_codepage );
         free_string( str );
         return str_w;

@@ -35,7 +35,8 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include <typedefs.h>
+#include "windef.h"
+#include "winbase.h"
 
 #include "widl.h"
 #include "utils.h"
@@ -254,9 +255,7 @@ unsigned short get_type_vt(type_t *t)
 void start_typelib(typelib_t *typelib_type)
 {
     if (!do_typelib) return;
-
     typelib = typelib_type;
-    typelib->filename = xstrdup(typelib_name);
 }
 
 void end_typelib(void)

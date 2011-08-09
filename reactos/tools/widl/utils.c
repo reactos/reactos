@@ -253,6 +253,13 @@ unsigned char *output_buffer;
 size_t output_buffer_pos;
 size_t output_buffer_size;
 
+static struct resource
+{
+    unsigned char *data;
+    size_t         size;
+} resources[16];
+static unsigned int nb_resources;
+
 static void check_output_buffer_space( size_t size )
 {
     if (output_buffer_pos + size >= output_buffer_size)
@@ -276,6 +283,93 @@ void flush_output_buffer( const char *name )
     if (write( fd, output_buffer, output_buffer_pos ) != output_buffer_pos)
         error( "Error writing to %s\n", name );
     close( fd );
+    free( output_buffer );
+}
+
+static inline void put_resource_id( const char *str )
+{
+    if (str[0] != '#')
+    {
+        while (*str)
+        {
+            unsigned char ch = *str++;
+            put_word( toupper(ch) );
+        }
+        put_word( 0 );
+    }
+    else
+    {
+        put_word( 0xffff );
+        put_word( atoi( str + 1 ));
+    }
+}
+
+void add_output_to_resources( const char *type, const char *name )
+{
+    size_t data_size = output_buffer_pos;
+    size_t header_size = 5 * sizeof(unsigned int) + 2 * sizeof(unsigned short);
+
+    assert( nb_resources < sizeof(resources)/sizeof(resources[0]) );
+
+    if (type[0] != '#') header_size += (strlen( type ) + 1) * sizeof(unsigned short);
+    else header_size += 2 * sizeof(unsigned short);
+    if (name[0] != '#') header_size += (strlen( name ) + 1) * sizeof(unsigned short);
+    else header_size += 2 * sizeof(unsigned short);
+
+    header_size = (header_size + 3) & ~3;
+    align_output( 4 );
+    check_output_buffer_space( header_size );
+    resources[nb_resources].size = header_size + output_buffer_pos;
+    memmove( output_buffer + header_size, output_buffer, output_buffer_pos );
+
+    output_buffer_pos = 0;
+    put_dword( data_size );    /* ResSize */
+    put_dword( header_size );  /* HeaderSize */
+    put_resource_id( type );   /* ResType */
+    put_resource_id( name );   /* ResName */
+    align_output( 4 );
+    put_dword( 0 );            /* DataVersion */
+    put_word( 0 );             /* Memory options */
+    put_word( 0 );             /* Language */
+    put_dword( 0 );            /* Version */
+    put_dword( 0 );            /* Characteristics */
+
+    resources[nb_resources++].data = output_buffer;
+    init_output_buffer();
+}
+
+void flush_output_resources( const char *name )
+{
+    int fd;
+    unsigned int i;
+
+    /* all output must have been saved with add_output_to_resources() first */
+    assert( !output_buffer_pos );
+
+    put_dword( 0 );      /* ResSize */
+    put_dword( 32 );     /* HeaderSize */
+    put_word( 0xffff );  /* ResType */
+    put_word( 0x0000 );
+    put_word( 0xffff );  /* ResName */
+    put_word( 0x0000 );
+    put_dword( 0 );      /* DataVersion */
+    put_word( 0 );       /* Memory options */
+    put_word( 0 );       /* Language */
+    put_dword( 0 );      /* Version */
+    put_dword( 0 );      /* Characteristics */
+
+    fd = open( name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666 );
+    if (fd == -1) error( "Error creating %s\n", name );
+    if (write( fd, output_buffer, output_buffer_pos ) != output_buffer_pos)
+        error( "Error writing to %s\n", name );
+    for (i = 0; i < nb_resources; i++)
+    {
+        if (write( fd, resources[i].data, resources[i].size ) != resources[i].size)
+            error( "Error writing to %s\n", name );
+        free( resources[i].data );
+    }
+    close( fd );
+    nb_resources = 0;
     free( output_buffer );
 }
 

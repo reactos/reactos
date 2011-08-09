@@ -66,11 +66,19 @@ extern char *regscript_name;
 extern char *regscript_token;
 extern const char *prefix_client;
 extern const char *prefix_server;
-extern size_t pointer_size;
+extern unsigned int pointer_size;
 extern time_t now;
 
 extern int line_number;
 extern int char_number;
+
+enum stub_mode
+{
+    MODE_Os,  /* inline stubs */
+    MODE_Oi,  /* old-style interpreted stubs */
+    MODE_Oif  /* new-style fully interpreted stubs */
+};
+extern enum stub_mode get_stub_mode(void);
 
 extern void write_header(const statement_list_t *stmts);
 extern void write_id_data(const statement_list_t *stmts);
@@ -78,6 +86,7 @@ extern void write_proxies(const statement_list_t *stmts);
 extern void write_client(const statement_list_t *stmts);
 extern void write_server(const statement_list_t *stmts);
 extern void write_regscript(const statement_list_t *stmts);
+extern void output_typelib_regscript( const typelib_t *typelib );
 extern void write_local_stubs(const statement_list_t *stmts);
 extern void write_dlldata(const statement_list_t *stmts);
 

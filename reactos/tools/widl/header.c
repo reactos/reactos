@@ -36,13 +36,11 @@
 #include "expr.h"
 #include "typetree.h"
 
-typedef struct _user_type_t generic_handle_t;
-
 static int indentation = 0;
 static int is_object_interface = 0;
 user_type_list_t user_type_list = LIST_INIT(user_type_list);
-static context_handle_list_t context_handle_list = LIST_INIT(context_handle_list);
-static struct list generic_handle_list = LIST_INIT(generic_handle_list);
+context_handle_list_t context_handle_list = LIST_INIT(context_handle_list);
+generic_handle_list_t generic_handle_list = LIST_INIT(generic_handle_list);
 
 static void write_type_def_or_decl(FILE *f, type_t *t, int field, const char *name);
 
@@ -129,6 +127,28 @@ void write_guid(FILE *f, const char *guid_prefix, const char *name, const UUID *
         guid_prefix, name, uuid->Data1, uuid->Data2, uuid->Data3, uuid->Data4[0],
         uuid->Data4[1], uuid->Data4[2], uuid->Data4[3], uuid->Data4[4], uuid->Data4[5],
         uuid->Data4[6], uuid->Data4[7]);
+}
+
+static void write_uuid_decl(FILE *f, const char *name, const UUID *uuid)
+{
+  fprintf(f, "#ifdef __CRT_UUID_DECL\n");
+  fprintf(f, "__CRT_UUID_DECL(%s, 0x%08x, 0x%04x, 0x%04x, 0x%02x,0x%02x, 0x%02x,"
+        "0x%02x,0x%02x,0x%02x,0x%02x,0x%02x)\n",
+        name, uuid->Data1, uuid->Data2, uuid->Data3, uuid->Data4[0], uuid->Data4[1],
+        uuid->Data4[2], uuid->Data4[3], uuid->Data4[4], uuid->Data4[5], uuid->Data4[6],
+        uuid->Data4[7]);
+  fprintf(f, "#endif\n");
+}
+
+static const char *uuid_string(const UUID *uuid)
+{
+  static char buf[37];
+
+  sprintf(buf, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+        uuid->Data1, uuid->Data2, uuid->Data3, uuid->Data4[0], uuid->Data4[1], uuid->Data4[2],
+        uuid->Data4[3], uuid->Data4[4], uuid->Data4[5], uuid->Data4[6], uuid->Data4[7]);
+
+  return buf;
 }
 
 const char *get_name(const var_t *v)
@@ -441,6 +461,46 @@ static int generic_handle_registered(const char *name)
   return 0;
 }
 
+unsigned int get_context_handle_offset( const type_t *type )
+{
+    context_handle_t *ch;
+    unsigned int index = 0;
+
+    while (!is_attr( type->attrs, ATTR_CONTEXTHANDLE ))
+    {
+        if (type_is_alias( type )) type = type_alias_get_aliasee( type );
+        else if (is_ptr( type )) type = type_pointer_get_ref( type );
+        else error( "internal error: %s is not a context handle\n", type->name );
+    }
+    LIST_FOR_EACH_ENTRY( ch, &context_handle_list, context_handle_t, entry )
+    {
+        if (!strcmp( type->name, ch->name )) return index;
+        index++;
+    }
+    error( "internal error: %s is not registered as a context handle\n", type->name );
+    return index;
+}
+
+unsigned int get_generic_handle_offset( const type_t *type )
+{
+    generic_handle_t *gh;
+    unsigned int index = 0;
+
+    while (!is_attr( type->attrs, ATTR_HANDLE ))
+    {
+        if (type_is_alias( type )) type = type_alias_get_aliasee( type );
+        else if (is_ptr( type )) type = type_pointer_get_ref( type );
+        else error( "internal error: %s is not a generic handle\n", type->name );
+    }
+    LIST_FOR_EACH_ENTRY( gh, &generic_handle_list, generic_handle_t, entry )
+    {
+        if (!strcmp( type->name, gh->name )) return index;
+        index++;
+    }
+    error( "internal error: %s is not registered as a generic handle\n", type->name );
+    return index;
+}
+
 /* check for types which require additional prototypes to be generated in the
  * header */
 void check_for_additional_prototype_types(const var_list_t *list)
@@ -617,23 +677,6 @@ static void write_library(FILE *header, const typelib_t *typelib)
 }
 
 
-const var_t* get_explicit_handle_var(const var_t *func)
-{
-    const var_t* var;
-
-    if (!type_get_function_args(func->type))
-        return NULL;
-
-    LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
-    {
-        const type_t *type = var->type;
-        if (type_get_type(type) == TYPE_BASIC && type_basic_get_type(type) == TYPE_BASIC_HANDLE)
-            return var;
-    }
-
-    return NULL;
-}
-
 const type_t* get_explicit_generic_handle_type(const var_t* var)
 {
     const type_t *t;
@@ -646,31 +689,44 @@ const type_t* get_explicit_generic_handle_type(const var_t* var)
     return NULL;
 }
 
-const var_t* get_explicit_generic_handle_var(const var_t *func)
+const var_t *get_func_handle_var( const type_t *iface, const var_t *func,
+                                  unsigned char *explicit_fc, unsigned char *implicit_fc )
 {
-    const var_t* var;
+    const var_t *var;
+    const var_list_t *args = type_get_function_args( func->type );
 
-    if (!type_get_function_args(func->type))
-        return NULL;
-
-    LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
-        if (get_explicit_generic_handle_type(var))
+    *explicit_fc = *implicit_fc = 0;
+    if (args) LIST_FOR_EACH_ENTRY( var, args, const var_t, entry )
+    {
+        if (!is_attr( var->attrs, ATTR_IN ) && is_attr( var->attrs, ATTR_OUT )) continue;
+        if (type_get_type( var->type ) == TYPE_BASIC && type_basic_get_type( var->type ) == TYPE_BASIC_HANDLE)
+        {
+            *explicit_fc = RPC_FC_BIND_PRIMITIVE;
             return var;
-
-    return NULL;
-}
-
-const var_t* get_context_handle_var(const var_t *func)
-{
-    const var_t* var;
-
-    if (!type_get_function_args(func->type))
-        return NULL;
-
-    LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
-        if (is_attr(var->attrs, ATTR_IN) && is_context_handle(var->type))
+        }
+        if (get_explicit_generic_handle_type( var ))
+        {
+            *explicit_fc = RPC_FC_BIND_GENERIC;
             return var;
+        }
+        if (is_context_handle( var->type ))
+        {
+            *explicit_fc = RPC_FC_BIND_CONTEXT;
+            return var;
+        }
+    }
 
+    if ((var = get_attrp( iface->attrs, ATTR_IMPLICIT_HANDLE )))
+    {
+        if (type_get_type( var->type ) == TYPE_BASIC &&
+            type_basic_get_type( var->type ) == TYPE_BASIC_HANDLE)
+            *implicit_fc = RPC_FC_BIND_PRIMITIVE;
+        else
+            *implicit_fc = RPC_FC_BIND_GENERIC;
+        return var;
+    }
+
+    *implicit_fc = RPC_FC_AUTO_HANDLE;
     return NULL;
 }
 
@@ -960,10 +1016,10 @@ static void write_function_proto(FILE *header, const type_t *iface, const var_t 
 {
   const char *callconv = get_attrp(fun->type->attrs, ATTR_CALLCONV);
 
+  if (!callconv) callconv = "__cdecl";
   /* FIXME: do we need to handle call_as? */
   write_type_decl_left(header, type_function_get_rettype(fun->type));
-  fprintf(header, " ");
-  if (callconv) fprintf(header, "%s ", callconv);
+  fprintf(header, " %s ", callconv);
   fprintf(header, "%s%s(\n", prefix, get_name(fun));
   if (type_get_function_args(fun->type))
     write_args(header, type_get_function_args(fun->type), iface->name, 0, TRUE);
@@ -980,24 +1036,6 @@ static void write_forward(FILE *header, type_t *iface)
   fprintf(header, "#endif\n\n" );
 }
 
-static void write_iface_guid(FILE *header, const type_t *iface)
-{
-  const UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
-  write_guid(header, "IID", iface->name, uuid);
-} 
-
-static void write_dispiface_guid(FILE *header, const type_t *iface)
-{
-  const UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
-  write_guid(header, "DIID", iface->name, uuid);
-}
-
-static void write_coclass_guid(FILE *header, const type_t *cocl)
-{
-  const UUID *uuid = get_attrp(cocl->attrs, ATTR_UUID);
-  write_guid(header, "CLSID", cocl->name, uuid);
-}
-
 static void write_com_interface_start(FILE *header, const type_t *iface)
 {
   int dispinterface = is_attr(iface->attrs, ATTR_DISPINTERFACE);
@@ -1011,21 +1049,26 @@ static void write_com_interface_start(FILE *header, const type_t *iface)
 static void write_com_interface_end(FILE *header, type_t *iface)
 {
   int dispinterface = is_attr(iface->attrs, ATTR_DISPINTERFACE);
-  if (dispinterface)
-    write_dispiface_guid(header, iface);
-  else
-    write_iface_guid(header, iface);
+  const UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
+
+  if (uuid)
+      write_guid(header, dispinterface ? "DIID" : "IID", iface->name, uuid);
+
   /* C++ interface */
   fprintf(header, "#if defined(__cplusplus) && !defined(CINTERFACE)\n");
+  if (uuid)
+      fprintf(header, "MIDL_INTERFACE(\"%s\")\n", uuid_string(uuid));
+  else
+      fprintf(header, "interface ");
   if (type_iface_get_inherit(iface))
   {
-    fprintf(header, "interface %s : public %s\n", iface->name,
+    fprintf(header, "%s : public %s\n", iface->name,
             type_iface_get_inherit(iface)->name);
     fprintf(header, "{\n");
   }
   else
   {
-    fprintf(header, "interface %s\n", iface->name);
+    fprintf(header, "%s\n", iface->name);
     fprintf(header, "{\n");
     fprintf(header, "    BEGIN_INTERFACE\n");
     fprintf(header, "\n");
@@ -1041,6 +1084,8 @@ static void write_com_interface_end(FILE *header, type_t *iface)
   if (!type_iface_get_inherit(iface))
     fprintf(header, "    END_INTERFACE\n");
   fprintf(header, "};\n");
+  if (uuid)
+      write_uuid_decl(header, iface->name, uuid);
   fprintf(header, "#else\n");
   /* C interface */
   fprintf(header, "typedef struct %sVtbl {\n", iface->name);
@@ -1080,14 +1125,19 @@ static void write_com_interface_end(FILE *header, type_t *iface)
 static void write_rpc_interface_start(FILE *header, const type_t *iface)
 {
   unsigned int ver = get_attrv(iface->attrs, ATTR_VERSION);
-  const char *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
+  const var_t *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
 
   fprintf(header, "/*****************************************************************************\n");
   fprintf(header, " * %s interface (v%d.%d)\n", iface->name, MAJORVERSION(ver), MINORVERSION(ver));
   fprintf(header, " */\n");
   fprintf(header,"#ifndef __%s_INTERFACE_DEFINED__\n", iface->name);
   fprintf(header,"#define __%s_INTERFACE_DEFINED__\n\n", iface->name);
-  if (var) fprintf(header, "extern handle_t %s;\n", var);
+  if (var)
+  {
+      fprintf(header, "extern ");
+      write_type_decl( header, var->type, var->name );
+      fprintf(header, ";\n");
+  }
   if (old_names)
   {
       fprintf(header, "extern RPC_IF_HANDLE %s%s_ClientIfHandle;\n", prefix_client, iface->name);
@@ -1109,10 +1159,24 @@ static void write_rpc_interface_end(FILE *header, const type_t *iface)
 
 static void write_coclass(FILE *header, type_t *cocl)
 {
+  const UUID *uuid = get_attrp(cocl->attrs, ATTR_UUID);
+
   fprintf(header, "/*****************************************************************************\n");
   fprintf(header, " * %s coclass\n", cocl->name);
   fprintf(header, " */\n\n");
-  write_coclass_guid(header, cocl);
+  if (uuid)
+      write_guid(header, "CLSID", cocl->name, uuid);
+  fprintf(header, "\n#ifdef __cplusplus\n");
+  if (uuid)
+  {
+      fprintf(header, "class DECLSPEC_UUID(\"%s\") %s;\n", uuid_string(uuid), cocl->name);
+      write_uuid_decl(header, cocl->name, uuid);
+  }
+  else
+  {
+      fprintf(header, "class %s;\n", cocl->name);
+  }
+  fprintf(header, "#endif\n");
   fprintf(header, "\n");
 }
 
@@ -1225,7 +1289,7 @@ static void write_header_stmts(FILE *header, const statement_list_t *stmts, cons
             write_header_stmts(header, type_iface_get_stmts(iface), iface, FALSE);
             write_rpc_interface_end(header, iface);
           }
-          if (is_object(iface)) is_object_interface++;
+          if (is_object(iface)) is_object_interface--;
         }
         else if (type_get_type(stmt->u.type) == TYPE_COCLASS)
           write_coclass(header, stmt->u.type);
@@ -1298,6 +1362,11 @@ void write_header(const statement_list_t *stmts)
   fprintf(header, "/*** Autogenerated by WIDL %s from %s - Do not edit ***/\n\n", PACKAGE_VERSION, input_name);
   fprintf(header, "#include <rpc.h>\n" );
   fprintf(header, "#include <rpcndr.h>\n\n" );
+
+  fprintf(header, "#if !defined(COM_NO_WINDOWS_H) && !defined(__WINESRC__)\n");
+  fprintf(header, "#include <windows.h>\n");
+  fprintf(header, "#include <ole2.h>\n");
+  fprintf(header, "#endif\n\n");
 
   fprintf(header, "#ifndef __WIDL_%s\n", header_token);
   fprintf(header, "#define __WIDL_%s\n\n", header_token);
