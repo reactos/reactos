@@ -373,7 +373,7 @@ MiAllocateSharedMemory(
   /* allocate transmit buffers */
   Adapter->TransmitBufferLength = BUFFER_SIZE * NUMBER_OF_BUFFERS;
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength,
-      FALSE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &PhysicalAddress);
+      TRUE, (PVOID *)&Adapter->TransmitBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->TransmitBufferPtrVirt)
     {
       DPRINT1("insufficient resources\n");
@@ -392,7 +392,7 @@ MiAllocateSharedMemory(
   /* allocate receive buffers */
   Adapter->ReceiveBufferLength = BUFFER_SIZE * NUMBER_OF_BUFFERS;
   NdisMAllocateSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength,
-      FALSE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &PhysicalAddress);
+      TRUE, (PVOID *)&Adapter->ReceiveBufferPtrVirt, &PhysicalAddress);
   if(!Adapter->ReceiveBufferPtrVirt)
     {
       DPRINT1("insufficient resources\n");
