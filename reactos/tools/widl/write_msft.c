@@ -40,10 +40,8 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
+#include <typedefs.h>
+#include <nls.h>
 
 #include "widl.h"
 #include "typelib.h"

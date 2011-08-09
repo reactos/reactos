@@ -21,9 +21,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
+#include <nls.h>
 
 #include "widltypes.h"
 #include "hash.h"
