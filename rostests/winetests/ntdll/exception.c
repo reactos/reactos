@@ -1390,6 +1390,12 @@ static void test_virtual_unwind(void)
 
 START_TEST(exception)
 {
+
+    if(!winetest_interactive) {
+        skip("ReactOS Bug 6404: ntdll_winetest:exception enters kdbg on the int3 exception test.\n");
+        return;
+    }
+
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
 
     code_mem = VirtualAlloc(NULL, 65536, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
