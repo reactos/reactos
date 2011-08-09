@@ -81,24 +81,6 @@ extern "C" {
 
 /*** Memory barriers ***/
 
-#ifdef _x86_64
-__INTRIN_INLINE void __faststorefence(void)
-{
-    long local;
-	__asm__ __volatile__("lock; orl $0, %0;" : : "m"(local));
-}
-#endif
-
-__INTRIN_INLINE void _mm_lfence(void)
-{
-	__asm__ __volatile__("lfence");
-}
-
-__INTRIN_INLINE void _mm_sfence(void)
-{
-	__asm__ __volatile__("sfence");
-}
-
 __INTRIN_INLINE void _ReadWriteBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
@@ -107,6 +89,34 @@ __INTRIN_INLINE void _ReadWriteBarrier(void)
 /* GCC only supports full barriers */
 #define _ReadBarrier _ReadWriteBarrier
 #define _WriteBarrier _ReadWriteBarrier
+
+__INTRIN_INLINE void _mm_mfence(void)
+{
+	__asm__ __volatile__("mfence" : : : "memory");
+}
+
+__INTRIN_INLINE void _mm_lfence(void)
+{
+	_ReadBarrier();
+	__asm__ __volatile__("lfence");
+	_ReadBarrier();
+}
+
+__INTRIN_INLINE void _mm_sfence(void)
+{
+	_WriteBarrier();
+	__asm__ __volatile__("sfence");
+	_WriteBarrier();
+}
+
+#ifdef _x86_64
+__INTRIN_INLINE void __faststorefence(void)
+{
+    long local;
+	__asm__ __volatile__("lock; orl $0, %0;" : : "m"(local));
+}
+#endif
+
 
 /*** Atomic operations ***/
 
@@ -1438,7 +1448,7 @@ __INTRIN_INLINE void __writedr(unsigned reg, unsigned int value)
 
 __INTRIN_INLINE void __invlpg(void * const Address)
 {
-	__asm__("invlpg %[Address]" : : [Address] "m" (*((unsigned char *)(Address))));
+	__asm__("invlpg %[Address]" : : [Address] "m" (*((unsigned char *)(Address))) : "memory");
 }
 
 
@@ -1482,7 +1492,7 @@ __INTRIN_INLINE unsigned long __segmentlimit(const unsigned long a)
 
 __INTRIN_INLINE void __wbinvd(void)
 {
-	__asm__ __volatile__("wbinvd");
+	__asm__ __volatile__("wbinvd" : : : "memory");
 }
 
 __INTRIN_INLINE void __lidt(void *Source)
