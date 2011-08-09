@@ -52,17 +52,23 @@
 
 #define TCP_QUEUE_OOSEQ                 1
 
-#define TCP_MSS                         1024
+/* FIXME: These MSS and TCP Window definitions assume an MTU
+ * of 1500. We need to add some code to lwIP which would allow us
+ * to change these values based upon the interface we are 
+ * using. Currently ReactOS only supports Ethernet so we're
+ * fine for now but it does need to be fixed later when we
+ * add support for other transport mediums */
+#define TCP_MSS                         1460
 
-#define TCP_SND_BUF                     (TCP_MSS * 8)
+#define TCP_WND                         (TCP_MSS * 6)
 
-#define TCP_SND_QUEUELEN                (8 * (TCP_SND_BUF / TCP_MSS))
+#define TCP_SND_BUF                     TCP_WND
+
+#define TCP_SND_QUEUELEN                (TCP_SND_BUF / TCP_MSS)
 
 #define TCP_SNDLOWAT                    TCP_MSS
 
-#define TCP_WND                         0xFFFF
-
-#define TCP_MAXRTX                      12
+#define TCP_MAXRTX                      8
 
 #define TCP_SYNMAXRTX                   4
 
