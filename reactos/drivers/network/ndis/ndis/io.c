@@ -898,6 +898,51 @@ NdisMRegisterIoPortRange(
   return NDIS_STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisMDeregisterIoPortRange(IN  NDIS_HANDLE MiniportAdapterHandle,
+                           IN  UINT        InitialPort,
+                           IN  UINT        NumberOfPorts,
+                           IN  PVOID       PortOffset)
+/*
+ * FUNCTION: Releases a register mapping to I/O ports
+ * ARGUMENTS:
+ *     MiniportAdapterHandle = Specifies handle input to MiniportInitialize
+ *     InitialPort           = Bus-relative base port address of a range to be mapped
+ *     NumberOfPorts         = Specifies number of ports to be mapped
+ *     PortOffset            = Pointer to mapped base port address
+ */
+{
+    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
+    PHYSICAL_ADDRESS PortAddress = RtlConvertUlongToLargeInteger(InitialPort);
+    PHYSICAL_ADDRESS TranslatedAddress;
+    ULONG AddressSpace = 1;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called - InitialPort 0x%x, NumberOfPorts 0x%x, Port Offset 0x%x\n", InitialPort, NumberOfPorts, PortOffset));
+
+    /* Translate the initial port again to find the address space of the translated address */
+    if(!HalTranslateBusAddress(Adapter->NdisMiniportBlock.BusType, Adapter->NdisMiniportBlock.BusNumber,
+                               PortAddress, &AddressSpace, &TranslatedAddress))
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Unable to translate address\n"));
+        return;
+    }
+
+    /* Make sure we got the same translation as last time */
+    ASSERT(TranslatedAddress.QuadPart == (ULONG_PTR)PortOffset);
+
+    /* Check if we're in memory space */
+    if (!AddressSpace)
+    {
+        NDIS_DbgPrint(MAX_TRACE, ("Calling MmUnmapIoSpace\n"));
+
+        /* Unmap the memory */
+        MmUnmapIoSpace(PortOffset, NumberOfPorts);
+    }
+}
 
 /*
  * @implemented

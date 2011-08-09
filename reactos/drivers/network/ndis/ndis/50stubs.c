@@ -523,26 +523,3 @@ NdisPacketPoolUsage(
 
     return 0;
 }
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMDeregisterIoPortRange(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  UINT        InitialPort,
-    IN  UINT        NumberOfPorts,
-    IN  PVOID       PortOffset)
-/*
- * FUNCTION: Releases a register mapping to I/O ports
- * ARGUMENTS:
- *     MiniportAdapterHandle = Specifies handle input to MiniportInitialize
- *     InitialPort           = Bus-relative base port address of a range to be mapped
- *     NumberOfPorts         = Specifies number of ports to be mapped
- *     PortOffset            = Pointer to mapped base port address
- */
-{
-   UNIMPLEMENTED
-}

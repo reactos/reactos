@@ -844,7 +844,7 @@ MiniportInitialize(
   UINT i = 0;
   PADAPTER Adapter = 0;
   NDIS_STATUS Status = NDIS_STATUS_FAILURE;
-  BOOLEAN InterruptRegistered = FALSE;
+  BOOLEAN InterruptRegistered = FALSE, MapRegistersAllocated = FALSE;
   NDIS_HANDLE ConfigurationHandle;
   UINT *RegNetworkAddress = 0;
   UINT RegNetworkAddressLength = 0;
@@ -912,6 +912,8 @@ MiniportInitialize(
           break;
         }
 
+      MapRegistersAllocated = TRUE;
+
       /* set up the interrupt */
       Status = NdisMRegisterInterrupt(&Adapter->InterruptObject, Adapter->MiniportAdapterHandle, Adapter->InterruptVector,
           Adapter->InterruptVector, TRUE, TRUE, NdisInterruptLevelSensitive);
@@ -928,7 +930,7 @@ MiniportInitialize(
       if(Status != NDIS_STATUS_SUCCESS)
         {
           Status = NDIS_STATUS_RESOURCES;
-          DPRINT1("MiAllocateSharedMemory failed", Status);
+          DPRINT1("MiAllocateSharedMemory failed\n", Status);
           break;
         }
 
@@ -969,15 +971,16 @@ MiniportInitialize(
     {
       DPRINT("Error; freeing stuff\n");
 
-      NdisMFreeMapRegisters(Adapter->MiniportAdapterHandle); /* doesn't hurt to free if we never alloc'd? */
+      MiFreeSharedMemory(Adapter);
+
+      if(MapRegistersAllocated)
+        NdisMFreeMapRegisters(Adapter->MiniportAdapterHandle);
 
       if(Adapter->PortOffset)
         NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, (PVOID)Adapter->PortOffset);
 
       if(InterruptRegistered)
         NdisMDeregisterInterrupt(&Adapter->InterruptObject);
-
-      MiFreeSharedMemory(Adapter);
 
       NdisFreeMemory(Adapter, 0, 0);
     }
