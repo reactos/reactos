@@ -97,6 +97,10 @@ typedef struct _ADAPTER
   PCHAR ReceiveBufferPtrVirt;
   PCHAR ReceiveBufferPtrPhys;
 
+  /* buffer count */
+  ULONG BufferCount;
+  ULONG LogBufferCount;
+
   ADAPTER_STATS Statistics;
 } ADAPTER, *PADAPTER;
 
