@@ -435,10 +435,10 @@ interface svcctl
     /* Function 17 */
     DWORD RQueryServiceConfigW(
         [in] SC_RPC_HANDLE hService,
-        [out, size_is(cbBufSize), unique] LPBYTE lpServiceConfig,
+        [in, out, size_is(cbBufSize), unique] LPBYTE lpServiceConfig,
         /* FIXME: should be [out] LPQUERY_SERVICE_CONFIGW lpServiceConfig, */
         [in, range(0, 1024*8)] DWORD cbBufSize,
-        [out, unique] LPBOUNDED_DWORD_8K pcbBytesNeeded);
+        [in, out, unique] LPBOUNDED_DWORD_8K pcbBytesNeeded);
 
     /* Function 18 */
     DWORD RQueryServiceLockStatusW(
@@ -547,10 +547,10 @@ interface svcctl
     /* Function 29 */
     DWORD RQueryServiceConfigA(
         [in] SC_RPC_HANDLE hService,
-        [out, size_is(cbBufSize), unique] LPBYTE lpServiceConfig,
+        [in, out, size_is(cbBufSize), unique] LPBYTE lpServiceConfig,
         /* FIXME: should be [out] LPQUERY_SERVICE_CONFIGA lpServiceConfig, */
         [in, range(0, 1024*8)] DWORD cbBufSize,
-        [out, unique] LPBOUNDED_DWORD_8K pcbBytesNeeded);
+        [in, out, unique] LPBOUNDED_DWORD_8K pcbBytesNeeded);
 
     /* Function 30 */
     DWORD RQueryServiceLockStatusA(
