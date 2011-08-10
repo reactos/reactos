@@ -140,14 +140,14 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
     {                                                                               \
         ok_eq_bool(Ret, (Value) == 0);                                              \
         if (SpinLock)                                                               \
-            ok_eq_pointer((PVOID)*(SpinLock),                                       \
-                        (Value) ? (PVOID)((ULONG_PTR)Thread | 1) : 0);              \
+            ok_eq_ulongptr(*(SpinLock),                                             \
+                        (Value) ? (ULONG_PTR)Thread | 1 : 0);                       \
     }                                                                               \
     else                                                                            \
     {                                                                               \
         ok_bool_true(Ret, "KeTestSpinLock returned");                               \
         if (SpinLock)                                                               \
-            ok_eq_pointer((PVOID)*(SpinLock), NULL);                                \
+            ok_eq_ulongptr(*(SpinLock), 0);                                         \
     }                                                                               \
     ok_eq_uint((CheckData)->Irql, (CheckData)->OriginalIrql);                       \
 } while (0)
@@ -165,7 +165,7 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
     {                                                                               \
         ok_eq_bool(Ret, (Value) == 0);                                              \
         if (SpinLock)                                                               \
-            ok_eq_pointer((PVOID)*(SpinLock),                                       \
+            ok_eq_ulongptr(*(SpinLock),                                             \
                         (Value) ? &(CheckData)->QueueHandle : 0);                   \
         ok_eq_pointer((CheckData)->QueueHandle.LockQueue.Next, NULL);               \
         ok_eq_pointer((CheckData)->QueueHandle.LockQueue.Lock,                      \
@@ -175,7 +175,7 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
     {                                                                               \
         ok_bool_true(Ret, "KeTestSpinLock returned");                               \
         if (SpinLock)                                                               \
-            ok_eq_pointer((PVOID)*(SpinLock), NULL);                                \
+            ok_eq_ulongptr(*(SpinLock), 0);                                         \
         ok_eq_pointer((CheckData)->QueueHandle.LockQueue.Next, (CheckData)->UntouchedValue);                \
         ok_eq_pointer((CheckData)->QueueHandle.LockQueue.Lock, (CheckData)->UntouchedValue);                \
     }                                                                               \
@@ -219,7 +219,7 @@ TestSpinLock(
     ok_irql(CheckData->OriginalIrql);
 
     if (SpinLock)
-        ok_eq_pointer((PVOID)*SpinLock, NULL);
+        ok_eq_ulongptr(*SpinLock, 0);
     CheckData->Acquire(SpinLock, CheckData);
     CheckSpinLock(SpinLock, CheckData, 1);
     CheckData->Release(SpinLock, CheckData);
@@ -312,7 +312,7 @@ START_TEST(KeSpinLock)
     /* KeInitializeSpinLock */
     memset(&SpinLock, 0x55, sizeof SpinLock);
     KeInitializeSpinLock(&SpinLock);
-    ok_eq_pointer((PVOID)SpinLock, NULL);
+    ok_eq_ulongptr(SpinLock, 0);
 
     /* KeTestSpinLock */
     ok_bool_true(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");

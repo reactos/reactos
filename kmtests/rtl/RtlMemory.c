@@ -156,11 +156,11 @@ START_TEST(RtlMemory)
 {
     NTSTATUS Status;
     UCHAR Buffer[513];
-    const INT Size = 512;
-    const INT HalfSize = Size / 2;
+    const SIZE_T Size = 512;
+    const SIZE_T HalfSize = Size / 2;
     SIZE_T RetSize;
     KIRQL Irql;
-    INT i;
+    ULONG i;
 
     KeRaiseIrql(HIGH_LEVEL, &Irql);
     /* zero everything behind 'Size'. Tests will check that this wasn't changed.
@@ -308,7 +308,7 @@ START_TEST(RtlMemory)
         RetSize = RtlCompareMemory(Buffer, Buffer + HalfSize - 7, SIZE_MAX);
         ok_eq_size(RetSize, HalfSize - 8 + 1);
         RetSize = RtlCompareMemory(NULL, NULL, 0);
-        ok_eq_size(RetSize, 0LU);
+        ok_eq_size(RetSize, 0);
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         Status = _SEH2_GetExceptionCode();
     } _SEH2_END;
@@ -318,31 +318,31 @@ START_TEST(RtlMemory)
     /* RtlCompareMemoryUlong */
     MakeBuffer(Buffer, 8, 0x55, Size - 4, 0, 0);
     RetSize = RtlCompareMemoryUlong(Buffer, sizeof(ULONG), 0x55555555LU);
-    ok_eq_size(RetSize, 4LU);
+    ok_eq_size(RetSize, 4);
     RetSize = RtlCompareMemoryUlong(Buffer + 1, sizeof(ULONG), 0x55555555LU);
-    ok_eq_size(RetSize, 4LU);
+    ok_eq_size(RetSize, 4);
     RetSize = RtlCompareMemoryUlong(Buffer + 2, sizeof(ULONG), 0x55555555LU);
-    ok_eq_size(RetSize, 4LU);
+    ok_eq_size(RetSize, 4);
     RetSize = RtlCompareMemoryUlong(Buffer + 3, sizeof(ULONG), 0x55555555LU);
-    ok_eq_size(RetSize, 4LU);
+    ok_eq_size(RetSize, 4);
     RetSize = RtlCompareMemoryUlong(Buffer + 5, sizeof(ULONG), 0x55555555LU);
-    ok_eq_size(RetSize, 0LU);
+    ok_eq_size(RetSize, 0);
     RetSize = RtlCompareMemoryUlong(Buffer + 5, sizeof(ULONG), 0x00555555LU);
-    ok_eq_size(RetSize, 4LU);
+    ok_eq_size(RetSize, 4);
     RetSize = RtlCompareMemoryUlong(Buffer, 1, 0x55555555LU);
-    ok_eq_size(RetSize, 0LU);
+    ok_eq_size(RetSize, 0);
     RetSize = RtlCompareMemoryUlong(Buffer, 2, 0x55555555LU);
-    ok_eq_size(RetSize, 0LU);
+    ok_eq_size(RetSize, 0);
     RetSize = RtlCompareMemoryUlong(Buffer, 3, 0x55555555LU);
-    ok_eq_size(RetSize, 0LU);
+    ok_eq_size(RetSize, 0);
     RetSize = RtlCompareMemoryUlong(Buffer, 5, 0x55555555LU);
-    ok_eq_size(RetSize, 4LU);
+    ok_eq_size(RetSize, 4);
 
     KeLowerIrql(Irql);
     Status = STATUS_SUCCESS;
     _SEH2_TRY {
         RetSize = RtlCompareMemoryUlong(NULL, 0, 0x55555555LU);
-        ok_eq_size(RetSize, 0LU);
+        ok_eq_size(RetSize, 0);
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         Status = _SEH2_GetExceptionCode();
     } _SEH2_END;

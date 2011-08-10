@@ -100,10 +100,6 @@ DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, 
 
 extern PKMT_RESULTBUFFER ResultBuffer;
 
-#define MICROSECOND     10
-#define MILLISECOND     (1000 * MICROSECOND)
-#define SECOND          (1000 * MILLISECOND)
-
 #ifdef __GNUC__
 #define KMT_FORMAT(type, fmt, first) __attribute__((__format__(type, fmt, first)))
 #elif !defined __GNUC__
@@ -141,7 +137,15 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
 #define ok_eq_ulong(value, expected)        ok_eq_print(value, expected, "%lu")
 #define ok_eq_longlong(value, expected)     ok_eq_print(value, expected, "%I64d")
 #define ok_eq_ulonglong(value, expected)    ok_eq_print(value, expected, "%I64u")
-#define ok_eq_size(value, expected)         ok_eq_ulonglong((ULONGLONG)(value), (ULONGLONG)(expected))
+#ifndef _WIN64
+#define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), "%lu")
+#define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), "%ld")
+#define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), "%lu")
+#elif defined _WIN64
+#define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), "%I64u")
+#define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), "%I64d")
+#define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), "%I64u")
+#endif /* defined _WIN64 */
 #define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "0x%08lx")
 #define ok_bool_true(value, desc)           ok((value) == TRUE, desc " FALSE, expected TRUE\n")
 #define ok_bool_false(value, desc)          ok((value) == FALSE, desc " TRUE, expected FALSE\n")
@@ -155,6 +159,10 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
                                              0xC00 + (ControlCode),         \
                                              METHOD_BUFFERED,               \
                                              FILE_ANY_ACCESS)
+
+#define MICROSECOND     10
+#define MILLISECOND     (1000 * MICROSECOND)
+#define SECOND          (1000 * MILLISECOND)
 
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 
@@ -216,11 +224,7 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
         OldLength = Buffer->LogBufferLength;
         NewLength = OldLength + Length;
         if (NewLength > Buffer->LogBufferMaxLength)
-        {
-            /* TODO: indicate failure somehow */
-            __debugbreak();
             return;
-        }
     } while (InterlockedCompareExchange(&Buffer->LogBufferLength, NewLength, OldLength) != OldLength);
 
     memcpy(&Buffer->LogBuffer[OldLength], String, Length);
