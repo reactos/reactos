@@ -466,17 +466,17 @@ KdbpCmdEvalExpression(
  */
 static VOID
 KdbpPrintStructInternal
-(PROSSYM_INFO Info, 
- PCHAR Indent, 
- BOOLEAN DoRead, 
- PVOID BaseAddress, 
+(PROSSYM_INFO Info,
+ PCHAR Indent,
+ BOOLEAN DoRead,
+ PVOID BaseAddress,
  PROSSYM_AGGREGATE Aggregate)
 {
     ULONG i;
     ULONGLONG Result;
     PROSSYM_AGGREGATE_MEMBER Member;
     ULONG IndentLen = strlen(Indent);
-    ROSSYM_AGGREGATE MemberAggregate = { };
+    ROSSYM_AGGREGATE MemberAggregate = {0 };
 
     for (i = 0; i < Aggregate->NumElements; i++) {
         Member = &Aggregate->Elements[i];
@@ -508,7 +508,7 @@ KdbpPrintStructInternal
             default: {
                 if (Member->Size < 8) {
                     if (NT_SUCCESS(KdbpSafeReadMemory(&Result, ((PCHAR)BaseAddress) + Member->BaseOffset, Member->Size))) {
-                        int j;
+                        ULONG j;
                         for (j = 0; j < Member->Size; j++) {
                             KdbpPrint(" %02x", (int)(Result & 0xff));
                             Result >>= 8;
@@ -551,24 +551,26 @@ KdbpCmdPrintStruct(
     ULONG Argc,
     PCHAR Argv[])
 {
-    int i;
+    ULONG i;
     ULONGLONG Result = 0;
     PVOID BaseAddress = 0;
-    ROSSYM_AGGREGATE Aggregate = { };
-    UNICODE_STRING ModName = { };
-    ANSI_STRING AnsiName = { };
-    CHAR Indent[100] = { };
+    ROSSYM_AGGREGATE Aggregate = {0};
+    UNICODE_STRING ModName = {0};
+    ANSI_STRING AnsiName = {0};
+    CHAR Indent[100] = {0};
+    PROSSYM_INFO Info;
+
     if (Argc < 3) goto end;
     AnsiName.Length = AnsiName.MaximumLength = strlen(Argv[1]);
     AnsiName.Buffer = Argv[1];
     RtlAnsiStringToUnicodeString(&ModName, &AnsiName, TRUE);
-    PROSSYM_INFO Info = KdbpSymFindCachedFile(&ModName);
+    Info = KdbpSymFindCachedFile(&ModName);
 
     if (!Info || !RosSymAggregate(Info, Argv[2], &Aggregate)) {
         DPRINT1("Could not get aggregate\n");
         goto end;
     }
-    
+
     // Get an argument for location if it was given
     if (Argc > 3) {
         ULONG len;
@@ -579,7 +581,7 @@ KdbpCmdPrintStruct(
             len = strlen(Argv[i]);
             Argv[i][len] = ' ';
         }
-        
+
         /* Evaluate the expression */
         DPRINT1("Arg: %s\n", ArgStart);
         if (KdbpEvaluateExpression(ArgStart, strlen(ArgStart), &Result)) {
@@ -1330,7 +1332,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
         if (strcmp(Argv[i+1], "IF") == 0) /* IF found */
         {
             ConditionArgIndex = i + 2;
-            if (ConditionArgIndex >= Argc)
+            if ((ULONG)ConditionArgIndex >= Argc)
             {
                 KdbpPrint("%s: IF requires condition expression.\n", Argv[0]);
                 return TRUE;
@@ -2605,6 +2607,7 @@ CountOnePageUp(PCHAR Buffer, ULONG BufLength, PCHAR pCurPos)
         p = p0;
     for (j = KdbNumberOfRowsTerminal; j--; )
     {
+        int linesCnt;
         p1 = memrchr(p0, '\n', p-p0);
         prev_p = p;
         p = p1;
@@ -2615,7 +2618,7 @@ CountOnePageUp(PCHAR Buffer, ULONG BufLength, PCHAR pCurPos)
                 p = p0;
             break;
         }
-        int linesCnt = (KdbNumberOfColsTerminal+prev_p-p-2) / KdbNumberOfColsTerminal;
+        linesCnt = (KdbNumberOfColsTerminal+prev_p-p-2) / KdbNumberOfColsTerminal;
         if (linesCnt > 1)
             j -= linesCnt-1;
     }
@@ -3528,7 +3531,7 @@ KdpPrompt(IN LPSTR InString,
                 KdbpTryGetCharKeyboard(&DummyScanCode, 5);
             }
 
-            /* 
+            /*
              * Null terminate the output string -- documentation states that
              * DbgPrompt does not null terminate, but it does
              */
@@ -3536,7 +3539,7 @@ KdpPrompt(IN LPSTR InString,
 
             /* Print a new line */
             KdPortPutByteEx(&SerialPortInfo, '\r');
-            KdPortPutByteEx(&SerialPortInfo, '\n');         
+            KdPortPutByteEx(&SerialPortInfo, '\n');
 
             /* Release spinlock */
             KiReleaseSpinLock(&KdpSerialSpinLock);
