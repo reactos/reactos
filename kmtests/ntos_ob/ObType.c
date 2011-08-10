@@ -6,21 +6,21 @@
  *                  Thomas Faber <thfabba@gmx.de>
  */
 
-/* TODO: split this into multiple tests! ObLifetime, ObHandle, ObName, ... */
+/* TODO: split this into multiple tests! ObLife, ObHandle, ObName, ... */
 
 #include <kmt_test.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
-#define CheckObject(Handle, PCount, HCount) do                      \
+#define CheckObject(Handle, Pointers, Handles) do                   \
 {                                                                   \
     PUBLIC_OBJECT_BASIC_INFORMATION ObjectInfo;                     \
     Status = ZwQueryObject(Handle, ObjectBasicInformation,          \
                             &ObjectInfo, sizeof ObjectInfo, NULL);  \
     ok_eq_hex(Status, STATUS_SUCCESS);                              \
-    ok_eq_ulong(ObjectInfo.PointerCount, PCount);                   \
-    ok_eq_ulong(ObjectInfo.HandleCount, HCount);                    \
+    ok_eq_ulong(ObjectInfo.PointerCount, Pointers);                 \
+    ok_eq_ulong(ObjectInfo.HandleCount, Handles);                   \
 } while (0)
 
 #define NUM_OBTYPES 5
@@ -45,11 +45,19 @@ static OBJECT_ATTRIBUTES       ObDirectoryAttributes;
 static OBJECT_ATTRIBUTES       ObAttributes[NUM_OBTYPES];
 static PVOID                   ObBody[NUM_OBTYPES];
 static HANDLE                  ObHandle1[NUM_OBTYPES];
-static HANDLE                  ObHandle2[NUM_OBTYPES];
 static HANDLE                  DirectoryHandle;
 
-static USHORT                  DumpCount, OpenCount, CloseCount, DeleteCount,
-                               ParseCount, OkayToCloseCount, QueryNameCount;
+typedef struct _COUNTS
+{
+    USHORT Dump;
+    USHORT Open;
+    USHORT Close;
+    USHORT Delete;
+    USHORT Parse;
+    USHORT OkayToClose;
+    USHORT QueryName;
+} COUNTS, *PCOUNTS;
+static COUNTS Counts;
 
 static
 VOID
@@ -59,7 +67,7 @@ DumpProc(
     IN POB_DUMP_CONTROL DumpControl)
 {
     DPRINT("DumpProc() called\n");
-    DumpCount++;
+    ++Counts.Dump;
 }
 
 static
@@ -74,7 +82,7 @@ OpenProc(
 {
     DPRINT("OpenProc() 0x%p, OpenReason %d, HandleCount %lu, AccessMask 0x%lX\n",
         Object, OpenReason, HandleCount, GrantedAccess);
-    OpenCount++;
+    ++Counts.Open;
     return STATUS_SUCCESS;
 }
 
@@ -90,7 +98,7 @@ CloseProc(
 {
     DPRINT("CloseProc() 0x%p, ProcessHandleCount %lu, SystemHandleCount %lu, AccessMask 0x%lX\n",
         Object, ProcessHandleCount, SystemHandleCount, GrantedAccess);
-    CloseCount++;
+    ++Counts.Close;
 }
 
 static
@@ -100,7 +108,7 @@ DeleteProc(
     IN PVOID Object)
 {
     DPRINT("DeleteProc() 0x%p\n", Object);
-    DeleteCount++;
+    ++Counts.Delete;
 }
 
 static
@@ -121,11 +129,11 @@ ParseProc(
     DPRINT("ParseProc() called\n");
     *Object = NULL;
 
-    ParseCount++;
+    ++Counts.Parse;
     return STATUS_OBJECT_NAME_NOT_FOUND;//STATUS_SUCCESS;
 }
 
-#if 0
+/* TODO: this does not actually return an NTSTATUS! */
 static
 NTSTATUS
 NTAPI
@@ -137,8 +145,8 @@ OkayToCloseProc(
 {
     DPRINT("OkayToCloseProc() 0x%p, Handle 0x%p, AccessMask 0x%lX\n",
         Object, Handle, AccessMode);
-    OkayToCloseCount++;
-    return STATUS_SUCCESS;
+    ++Counts.OkayToClose;
+    return TRUE;
 }
 
 static
@@ -154,13 +162,12 @@ QueryNameProc(
 {
     DPRINT("QueryNameProc() 0x%p, HasObjectName %d, Len %lu, AccessMask 0x%lX\n",
         Object, HasObjectName, Length, AccessMode);
-    QueryNameCount++;
+    ++Counts.QueryName;
 
     ObjectNameInfo = NULL;
     ReturnLength = 0;
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
-#endif /* 0 */
 
 static
 VOID
@@ -168,13 +175,21 @@ ObtCreateObjectTypes(VOID)
 {
     INT i;
     NTSTATUS Status;
-    WCHAR Name[15];
-
-    for (i = 0; i < NUM_OBTYPES; i++)
+    struct
     {
-        Status = RtlStringCbPrintfW(Name, sizeof Name, L"MyObjectType%x", i);
+        WCHAR DirectoryName[sizeof "\\ObjectTypes\\" - 1];
+        WCHAR TypeName[15];
+    } Name = { L"\\ObjectTypes\\" };
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ObjectTypeHandle;
+    UNICODE_STRING ObjectPath;
+
+    for (i = 0; i < NUM_OBTYPES; ++i)
+    {
+        Status = RtlStringCbPrintfW(Name.TypeName, sizeof Name.TypeName, L"MyObjectType%x", i);
         ASSERT(NT_SUCCESS(Status));
-        RtlInitUnicodeString(&ObTypeName[i], Name);
+        RtlInitUnicodeString(&ObTypeName[i], Name.TypeName);
+        DPRINT("Creating object type %wZ\n", &ObTypeName[i]);
 
         RtlZeroMemory(&ObTypeInitializer[i], sizeof ObTypeInitializer[i]);
         ObTypeInitializer[i].Length = sizeof ObTypeInitializer[i];
@@ -193,12 +208,40 @@ ObtCreateObjectTypes(VOID)
         ObTypeInitializer[i].DumpProcedure = DumpProc;
         ObTypeInitializer[i].OpenProcedure = OpenProc;
         ObTypeInitializer[i].ParseProcedure = ParseProc;
-        //ObTypeInitializer[i].OkayToCloseProcedure = OkayToCloseProc;
-        //ObTypeInitializer[i].QueryNameProcedure = QueryNameProc;
+        ObTypeInitializer[i].OkayToCloseProcedure = OkayToCloseProc;
+        ObTypeInitializer[i].QueryNameProcedure = QueryNameProc;
         //ObTypeInitializer[i].SecurityProcedure = SecurityProc;
 
         Status = ObCreateObjectType(&ObTypeName[i], &ObTypeInitializer[i], NULL, &ObTypes[i]);
+        if (Status == STATUS_OBJECT_NAME_COLLISION)
+        {
+            /* as we cannot delete the object types, get a pointer if they
+             * already exist */
+            RtlInitUnicodeString(&ObjectPath, Name.DirectoryName);
+            InitializeObjectAttributes(&ObjectAttributes, &ObjectPath, OBJ_KERNEL_HANDLE, NULL, NULL);
+            Status = ObOpenObjectByName(&ObjectAttributes, NULL, KernelMode, NULL, 0, NULL, &ObjectTypeHandle);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+            ok(ObjectTypeHandle != NULL, "ObjectTypeHandle = NULL\n");
+            if (!skip(Status == STATUS_SUCCESS && ObjectTypeHandle, "No handle\n"))
+            {
+                Status = ObReferenceObjectByHandle(ObjectTypeHandle, 0, NULL, KernelMode, (PVOID)&ObTypes[i], NULL);
+                ok_eq_hex(Status, STATUS_SUCCESS);
+                if (!skip(Status == STATUS_SUCCESS && ObTypes[i], "blah\n"))
+                {
+                    ObTypes[i]->TypeInfo.CloseProcedure = CloseProc;
+                    ObTypes[i]->TypeInfo.DeleteProcedure = DeleteProc;
+                    ObTypes[i]->TypeInfo.DumpProcedure = DumpProc;
+                    ObTypes[i]->TypeInfo.OpenProcedure = OpenProc;
+                    ObTypes[i]->TypeInfo.ParseProcedure = ParseProc;
+                    ObTypes[i]->TypeInfo.OkayToCloseProcedure = OkayToCloseProc;
+                    ObTypes[i]->TypeInfo.QueryNameProcedure = QueryNameProc;
+                }
+                Status = ZwClose(ObjectTypeHandle);
+            }
+        }
+
         ok_eq_hex(Status, STATUS_SUCCESS);
+        ok(ObTypes[i] != NULL, "ObType = NULL\n");
     }
 }
 
@@ -209,31 +252,24 @@ ObtCreateDirectory(VOID)
     NTSTATUS Status;
 
     RtlInitUnicodeString(&ObDirectoryName, L"\\ObtDirectory");
-    InitializeObjectAttributes(&ObDirectoryAttributes, &ObDirectoryName, OBJ_PERMANENT | OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&ObDirectoryAttributes, &ObDirectoryName, OBJ_KERNEL_HANDLE | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = ZwCreateDirectoryObject(&DirectoryHandle, DELETE, &ObDirectoryAttributes);
     ok_eq_hex(Status, STATUS_SUCCESS);
     CheckObject(DirectoryHandle, 3LU, 1LU);
 }
 
-#define CheckCounts(Open, Close, Delete, Parse, OkayToClose, QueryName) do  \
-{                                                                           \
-    ok_eq_uint(OpenCount, Open);                                            \
-    ok_eq_uint(CloseCount, Close);                                          \
-    ok_eq_uint(DeleteCount, Delete);                                        \
-    ok_eq_uint(ParseCount, Parse);                                          \
-    ok_eq_uint(OkayToCloseCount, OkayToClose);                              \
-    ok_eq_uint(QueryNameCount, QueryName);                                  \
+#define CheckCounts(OpenCount, CloseCount, DeleteCount, ParseCount, \
+                        OkayToCloseCount, QueryNameCount) do        \
+{                                                                   \
+    ok_eq_uint(Counts.Open, OpenCount);                             \
+    ok_eq_uint(Counts.Close, CloseCount);                           \
+    ok_eq_uint(Counts.Delete, DeleteCount);                         \
+    ok_eq_uint(Counts.Parse, ParseCount);                           \
+    ok_eq_uint(Counts.OkayToClose, OkayToCloseCount);               \
+    ok_eq_uint(Counts.QueryName, QueryNameCount);                   \
 } while (0)
 
-#define SaveCounts(Open, Close, Delete, Parse, OkayToClose, QueryName) do   \
-{                                                                           \
-    Open = OpenCount;                                                       \
-    Close = CloseCount;                                                     \
-    Delete = DeleteCount;                                                   \
-    Parse = ParseCount;                                                     \
-    OkayToClose = OkayToCloseCount;                                         \
-    QueryName = QueryNameCount;                                             \
-} while (0)
+#define SaveCounts(Save) memcpy(&Save, &Counts, sizeof Counts)
 
 /* TODO: make this the same as NUM_OBTYPES */
 #define NUM_OBTYPES2 2
@@ -241,10 +277,9 @@ static
 VOID
 ObtCreateObjects(VOID)
 {
-    PVOID ObBody1[2] = { NULL };
     NTSTATUS Status;
     WCHAR Name[NUM_OBTYPES2][MAX_PATH];
-    USHORT OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave;
+    COUNTS SaveCounts;
     INT i;
     ACCESS_MASK Access[NUM_OBTYPES2] = { STANDARD_RIGHTS_ALL, GENERIC_ALL };
     ULONG ObjectSize[NUM_OBTYPES2] = { sizeof(MY_OBJECT1), sizeof(MY_OBJECT2) };
@@ -258,6 +293,7 @@ ObtCreateObjects(VOID)
         RtlInitUnicodeString(&ObName[i], Name[i]);
         InitializeObjectAttributes(&ObAttributes[i], &ObName[i], OBJ_CASE_INSENSITIVE, NULL, NULL);
     }
+    CheckObject(DirectoryHandle, 3LU, 1LU);
 
     for (i = 0; i < NUM_OBTYPES2; ++i)
     {
@@ -265,55 +301,24 @@ ObtCreateObjects(VOID)
         ok_eq_hex(Status, STATUS_SUCCESS);
     }
 
-    SaveCounts(OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
+    SaveCounts(SaveCounts);
 
     // Insert them
     for (i = 0; i < NUM_OBTYPES2; ++i)
     {
+        CheckObject(DirectoryHandle, 3LU + i, 1LU);
         Status = ObInsertObject(ObBody[i], NULL, Access[i], 0, &ObBody[i], &ObHandle1[i]);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok(ObBody[i] != NULL, "Object body = NULL\n");
         ok(ObHandle1[i] != NULL, "Handle = NULL\n");
         CheckObject(ObHandle1[i], 3LU, 1LU);
-        CheckCounts(OpenSave + 1, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
-        SaveCounts(OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
+        CheckCounts(SaveCounts.Open + 1, SaveCounts.Close, SaveCounts.Delete, SaveCounts.Parse, SaveCounts.OkayToClose, SaveCounts.QueryName);
+        SaveCounts(SaveCounts);
+        CheckObject(DirectoryHandle, 4LU + i, 1LU);
     }
 
-    // Now create an object of type 0, of the same name and expect it to fail
-    // inserting, but success creation
-    ok_eq_wstr(ObName[0].Buffer, L"\\ObtDirectory\\MyObject1");
-    RtlInitUnicodeString(&ObName[0], L"\\ObtDirectory\\MyObject1");
-    InitializeObjectAttributes(&ObAttributes[0], &ObName[0], OBJ_OPENIF, NULL, NULL);
-
-    Status = ObCreateObject(KernelMode, ObTypes[0], &ObAttributes[0], KernelMode, NULL, sizeof(MY_OBJECT1), 0L, 0L, &ObBody1[0]);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-    CheckCounts(OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
-
-    Status = ObInsertObject(ObBody1[0], NULL, GENERIC_ALL, 0, &ObBody1[1], &ObHandle2[0]);
-    ok_eq_hex(Status, STATUS_ACCESS_DENIED/*STATUS_OBJECT_NAME_EXISTS*/);
-    ok_eq_pointer(ObBody[0], ObBody1[1]);
-    ok(ObHandle2[0] != NULL, "NULL handle returned\n");
-
-    DPRINT("%d %d %d %d %d %d %d\n", DumpCount, OpenCount, CloseCount, DeleteCount, ParseCount, OkayToCloseCount, QueryNameCount);
-    CheckCounts(OpenSave + 1, CloseSave, DeleteSave + 1, ParseSave, OkayToCloseSave, QueryNameSave);
-    SaveCounts(OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
-
-    // Close its handle
-    if (!skip(ObHandle2[0] && ObHandle2[0] != INVALID_HANDLE_VALUE, "Nothing to close\n"))
-    {
-        Status = ZwClose(ObHandle2[0]);
-        ok_eq_hex(Status, STATUS_SUCCESS);
-        CheckCounts(OpenSave, CloseSave + 1, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
-        SaveCounts(OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
-    }
-
-    // Object referenced 2 times:
-    // 1) ObInsertObject
-    // 2) AdditionalReferences
-    if (ObBody1[1])
-        ObDereferenceObject(ObBody1[1]);
     //DPRINT1("%d %d %d %d %d %d %d\n", DumpCount, OpenCount, CloseCount, DeleteCount, ParseCount, OkayToCloseCount, QueryNameCount);
-    CheckCounts(OpenSave, CloseSave, DeleteSave, ParseSave, OkayToCloseSave, QueryNameSave);
+    CheckCounts(SaveCounts.Open, SaveCounts.Close, SaveCounts.Delete, SaveCounts.Parse, SaveCounts.OkayToClose, SaveCounts.QueryName);
 }
 
 static
@@ -322,8 +327,8 @@ ObtClose(
     BOOLEAN Clean,
     BOOLEAN AlternativeMethod)
 {
-    PVOID DirObject;
     NTSTATUS Status;
+    LONG_PTR Ret;
     PVOID TypeObject;
     INT i;
     UNICODE_STRING ObPathName[NUM_OBTYPES];
@@ -332,63 +337,51 @@ ObtClose(
     // Close what we have opened and free what we allocated
     for (i = 0; i < NUM_OBTYPES2; ++i)
     {
-        if (ObBody[i])
+        if (!skip(ObBody[i] != NULL, "Nothing to dereference\n"))
         {
             if (ObHandle1[i]) CheckObject(ObHandle1[i], 3LU, 1LU);
-            ObDereferenceObject(ObBody[i]);
+            Ret = ObDereferenceObject(ObBody[i]);
+            ok_eq_longptr(Ret, (LONG_PTR)1);
             if (ObHandle1[i]) CheckObject(ObHandle1[i], 2LU, 1LU);
             ObBody[i] = NULL;
         }
-        if (ObHandle1[i])
+        if (!skip(ObHandle1[i] != NULL, "Nothing to close\n"))
         {
-            ZwClose(ObHandle1[i]);
+            Status = ZwClose(ObHandle1[i]);
+            ok_eq_hex(Status, STATUS_SUCCESS);
             ObHandle1[i] = NULL;
-        }
-        if (ObHandle2[i])
-        {
-            ZwClose(ObHandle2[i]);
-            ObHandle2[i] = NULL;
         }
     }
 
-    if (!Clean)
+    if (skip(Clean, "Not cleaning up, as requested. Use ObTypeClean to clean up\n"))
         return;
 
     // Now we have to get rid of a directory object
     // Since it is permanent, we have to firstly make it temporary
     // and only then kill
     // (this procedure is described in DDK)
-    if (DirectoryHandle && DirectoryHandle != INVALID_HANDLE_VALUE)
+    if (!skip(DirectoryHandle != NULL, "No directory handle\n"))
     {
         CheckObject(DirectoryHandle, 3LU, 1LU);
-        Status = ObReferenceObjectByHandle(DirectoryHandle, 0L, NULL, KernelMode, &DirObject, NULL);
-        ok_eq_hex(Status, STATUS_SUCCESS);
-        CheckObject(DirectoryHandle, 4LU, 1LU);
 
         Status = ZwMakeTemporaryObject(DirectoryHandle);
         ok_eq_hex(Status, STATUS_SUCCESS);
-        CheckObject(DirectoryHandle, 4LU, 1LU);
-        
-        // Dereference 2 times - first for just previous referencing
-        // and 2nd time for creation of permanent object itself
-        ObDereferenceObject(DirObject);
         CheckObject(DirectoryHandle, 3LU, 1LU);
-        ObDereferenceObject(DirObject);
-        CheckObject(DirectoryHandle, 2LU, 1LU);
 
         Status = ZwClose(DirectoryHandle);
         ok_eq_hex(Status, STATUS_SUCCESS);
     }
 
-    // Now delete the last piece - object types
-    // In fact, it's weird to get rid of object types, especially the way,
-    // how it's done in the commented section below
+    /* we don't delete the object types we created. It makes Windows unstable.
+     * TODO: perhaps make it work in ROS anyway */
+    return;
     if (!AlternativeMethod)
     {
         for (i = 0; i < NUM_OBTYPES; ++i)
-            if (ObTypes[i])
+            if (!skip(ObTypes[i] != NULL, "No object type to delete\n"))
             {
-                ObDereferenceObject(ObTypes[i]);
+                Ret = ObDereferenceObject(ObTypes[i]);
+                ok_eq_longptr(Ret, (LONG_PTR)0);
                 ObTypes[i] = NULL;
             }
     }
@@ -396,14 +389,16 @@ ObtClose(
     {
         for (i = 0; i < NUM_OBTYPES; ++i)
         {
-            if (ObTypes[i])
+            if (!skip(ObTypes[i] != NULL, "No object type to delete\n"))
             {
                 Status = RtlStringCbPrintfW(Name, sizeof Name, L"\\ObjectTypes\\MyObjectType%d", i);
-                RtlInitUnicodeString(&ObPathName[0], Name);
+                RtlInitUnicodeString(&ObPathName[i], Name);
                 Status = ObReferenceObjectByName(&ObPathName[i], OBJ_CASE_INSENSITIVE, NULL, 0L, NULL, KernelMode, NULL, &TypeObject);
 
-                ObDereferenceObject(TypeObject);
-                ObDereferenceObject(TypeObject);
+                Ret = ObDereferenceObject(TypeObject);
+                ok_eq_longptr(Ret, (LONG_PTR)2);
+                Ret = ObDereferenceObject(TypeObject);
+                ok_eq_longptr(Ret, (LONG_PTR)1);
                 DPRINT("Reference Name %wZ = %p, ObTypes[%d] = %p\n",
                     ObPathName[i], TypeObject, i, ObTypes[i]);
                 ObTypes[i] = NULL;
@@ -412,73 +407,12 @@ ObtClose(
     }
 }
 
-#if 0
-static
-VOID
-ObtReferenceTests(VOID)
-{
-    INT i;
-    NTSTATUS Status;
-    UNICODE_STRING ObPathName[NUM_OBTYPES];
-
-    // Reference them by handle
-    for (i = 0; i < NUM_OBTYPES2; i++)
-    {
-        CheckObject(ObHandle1[i], 2LU, 1LU);
-        Status = ObReferenceObjectByHandle(ObHandle1[i], 0L, ObTypes[i], KernelMode, &ObBody[i], NULL);
-        ok_eq_hex(Status, STATUS_SUCCESS);
-        CheckObject(ObHandle1[i], 3LU, 1LU);
-        DPRINT("Ref by handle %lx = %p\n", ObHandle1[i], ObBody[i]);
-    }
-
-    // Reference them by pointer
-    for (i = 0; i < NUM_OBTYPES2; i++)
-    {
-        CheckObject(ObHandle1[i], 3LU, 1LU);
-        Status = ObReferenceObjectByPointer(ObBody[i], 0L, ObTypes[i], KernelMode);
-        CheckObject(ObHandle1[i], 4LU, 1LU);
-        ok_eq_hex(Status, STATUS_SUCCESS);
-    }
-
-    // Reference them by name
-    RtlInitUnicodeString(&ObPathName[0], L"\\ObtDirectory\\MyObject1");
-    RtlInitUnicodeString(&ObPathName[1], L"\\ObtDirectory\\MyObject2");
-
-#if 0
-    for (i = 0; i < NUM_OBTYPES2; i++)
-    {
-        Status = ObReferenceObjectByName(&ObPathName[i], OBJ_CASE_INSENSITIVE, NULL, 0L, ObTypes[i], KernelMode, NULL, &ObBody[i]);
-        DPRINT("Ref by name %wZ = %p\n", &ObPathName[i], ObBody[i]);
-    }
-#endif
-
-    // Dereference now all of them
-
-    for (i = 0; i < NUM_OBTYPES2; ++i)
-        if (!skip(ObBody[i] != NULL, "Object pointer is NULL\n"))
-        {
-            CheckObject(ObHandle1[i], 4LU, 1LU);
-            // For ObInsertObject, AdditionalReference
-            //ObDereferenceObject(ObBody[i]);
-            // For ByName
-            //ObDereferenceObject(ObBody[i]);
-            // For ByPointer
-            ObDereferenceObject(ObBody[i]);
-            CheckObject(ObHandle1[i], 3LU, 1LU);
-            // For ByHandle
-            ObDereferenceObject(ObBody[i]);
-            CheckObject(ObHandle1[i], 2LU, 1LU);
-        }
-}
-#endif /* 0 */
-
 static
 VOID
 TestObjectType(
     IN BOOLEAN Clean)
 {
-    DumpCount = 0; OpenCount = 0; CloseCount = 0;
-    DeleteCount = 0; ParseCount = 0;
+    RtlZeroMemory(&Counts, sizeof Counts);
 
     ObtCreateObjectTypes();
     DPRINT("ObtCreateObjectTypes() done\n");
@@ -486,10 +420,9 @@ TestObjectType(
     ObtCreateDirectory();
     DPRINT("ObtCreateDirectory() done\n");
 
-    ObtCreateObjects();
+    if (!skip(ObTypes[0] != NULL, "No object types!\n"))
+        ObtCreateObjects();
     DPRINT("ObtCreateObjects() done\n");
-
-    //ObtReferenceTests();
 
     ObtClose(Clean, FALSE);
 }
@@ -503,12 +436,10 @@ START_TEST(ObType)
 START_TEST(ObTypeNoClean)
 {
     TestObjectType(FALSE);
-    trace("Cleanup skipped as requested! Run ObTypeClean to clean up\n");
 }
 
 /* run this to clean up after ObTypeNoClean */
 START_TEST(ObTypeClean)
 {
     ObtClose(TRUE, FALSE);
-    trace("Cleanup done\n");
 }
