@@ -56,8 +56,8 @@ ULONG WINAPI RtlNtStatusToDosErrorNoTeb( NTSTATUS status )
 
     while (table->start)
     {
-        if (status < table->start) break;
-        if (status < table->end)
+        if ((ULONG)status < table->start) break;
+        if ((ULONG)status < table->end)
         {
             DWORD ret = table->table[status - table->start];
             /* unknown entries are 0 */
