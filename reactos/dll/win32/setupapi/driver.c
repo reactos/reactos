@@ -681,9 +681,9 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
             if (dwType == REG_EXPAND_SZ)
             {
                 cbData = ExpandEnvironmentStringsW(pvBuf, pvData,
-                                                   pcbData ? *pcbData : 0);
+                                                   pcbData ? (*pcbData)/sizeof(WCHAR) : 0);
                 dwType = REG_SZ;
-                if(pcbData && cbData > *pcbData)
+                if(pcbData && cbData > ((*pcbData)/sizeof(WCHAR)))
                     ret = ERROR_MORE_DATA;
             }
             else if (pcbData)
@@ -814,7 +814,7 @@ SetupDiBuildDriverInfoList(
                 KEY_QUERY_VALUE);
             if (hDriverKey == INVALID_HANDLE_VALUE)
                 goto done;
-            RequiredSize = len - strlenW(InfFileName);
+            RequiredSize = (len - strlenW(InfFileName)) * sizeof(WCHAR);
             rc = RegGetValueW(
                 hDriverKey,
                 NULL,
