@@ -1870,7 +1870,10 @@ QueryServiceConfigW(SC_HANDLE hService,
 
     TRACE("QueryServiceConfigW(%p, %p, %lu, %p)\n",
            hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
-
+           
+    if(pcbBytesNeeded)
+        *pcbBytesNeeded = 0;
+    
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
