@@ -64,10 +64,6 @@
 
 #define TCP_SND_BUF                     TCP_WND
 
-#define TCP_SND_QUEUELEN                (TCP_SND_BUF / TCP_MSS)
-
-#define TCP_SNDLOWAT                    TCP_MSS
-
 #define TCP_MAXRTX                      8
 
 #define TCP_SYNMAXRTX                   4
