@@ -15,8 +15,6 @@
 
 #include <kmt_platform.h>
 
-#include <stdarg.h>
-
 typedef VOID KMT_TESTFUNC(VOID);
 typedef KMT_TESTFUNC *PKMT_TESTFUNC;
 
@@ -101,6 +99,10 @@ DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, 
 #endif /* defined KMT_USER_MODE */
 
 extern PKMT_RESULTBUFFER ResultBuffer;
+
+#define MICROSECOND     10
+#define MILLISECOND     (1000 * MICROSECOND)
+#define SECOND          (1000 * MILLISECOND)
 
 #ifdef __GNUC__
 #define KMT_FORMAT(type, fmt, first) __attribute__((__format__(type, fmt, first)))

@@ -7,18 +7,29 @@
 
 #include <kmt_test.h>
 
-/* TODO: more thread testing, exports vs macros */
+/* TODO: why does GCC have 3 tests less than MSVC?! */
 
-#define CheckEvent(Event, ExpectedType, State, ExpectedWaitNext, Irql) do       \
+#define CheckEvent(Event, ExpectedType, State, ExpectedWaitNext,                \
+                            Irql, ThreadList, ThreadCount) do                   \
 {                                                                               \
+    INT TheIndex;                                                               \
+    PLIST_ENTRY TheEntry;                                                       \
+    PKTHREAD TheThread;                                                         \
     ok_eq_uint((Event)->Header.Type, ExpectedType);                             \
     ok_eq_uint((Event)->Header.Hand, sizeof *(Event) / sizeof(ULONG));          \
-    ok_eq_long((Event)->Header.Lock & 0xFF00FF00L, 0x55005500L);                \
+    ok_eq_hex((Event)->Header.Lock & 0xFF00FF00L, 0x55005500L);                 \
     ok_eq_long((Event)->Header.SignalState, State);                             \
-    ok_eq_pointer((Event)->Header.WaitListHead.Flink,                           \
-                    &(Event)->Header.WaitListHead);                             \
-    ok_eq_pointer((Event)->Header.WaitListHead.Blink,                           \
-                    &(Event)->Header.WaitListHead);                             \
+    TheEntry = (Event)->Header.WaitListHead.Flink;                              \
+    for (TheIndex = 0; TheIndex < (ThreadCount); ++TheIndex)                    \
+    {                                                                           \
+        TheThread = CONTAINING_RECORD(TheEntry, KTHREAD,                        \
+                                        WaitBlock[0].WaitListEntry);            \
+        ok_eq_pointer(TheThread, (ThreadList)[TheIndex]);                       \
+        ok_eq_pointer(TheEntry->Flink->Blink, TheEntry);                        \
+        TheEntry = TheEntry->Flink;                                             \
+    }                                                                           \
+    ok_eq_pointer(TheEntry, &(Event)->Header.WaitListHead);                     \
+    ok_eq_pointer(TheEntry->Flink->Blink, TheEntry);                            \
     ok_eq_long(KeReadStateEvent(Event), State);                                 \
     ok_eq_bool(Thread->WaitNext, ExpectedWaitNext);                             \
     ok_irql(Irql);                                                              \
@@ -36,46 +47,49 @@ TestEventFunctional(
 
     memset(Event, 0x55, sizeof *Event);
     KeInitializeEvent(Event, Type, FALSE);
-    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
 
     memset(Event, 0x55, sizeof *Event);
     KeInitializeEvent(Event, Type, TRUE);
-    CheckEvent(Event, Type, 1L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 1L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
 
     Event->Header.SignalState = 0x12345678L;
-    CheckEvent(Event, Type, 0x12345678L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 0x12345678L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
 
     State = KePulseEvent(Event, 0, FALSE);
-    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
     ok_eq_long(State, 0x12345678L);
 
     Event->Header.SignalState = 0x12345678L;
     KeClearEvent(Event);
-    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
 
     State = KeSetEvent(Event, 0, FALSE);
-    CheckEvent(Event, Type, 1L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 1L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
     ok_eq_long(State, 0L);
 
     State = KeResetEvent(Event);
-    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
     ok_eq_long(State, 1L);
 
     Event->Header.SignalState = 0x23456789L;
     State = KeSetEvent(Event, 0, FALSE);
-    CheckEvent(Event, Type, 1L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 1L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
     ok_eq_long(State, 0x23456789L);
 
     Event->Header.SignalState = 0x3456789AL;
     State = KeResetEvent(Event);
-    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql);
+    CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, (PVOID *)NULL, 0);
     ok_eq_long(State, 0x3456789AL);
 
-    if (OriginalIrql <= DISPATCH_LEVEL || !KmtIsCheckedBuild)
+    /* Irql is raised to DISPATCH_LEVEL here, which kills checked build,
+     * a spinlock is acquired and never released, which kills MP build */
+    if ((OriginalIrql <= DISPATCH_LEVEL || !KmtIsCheckedBuild) &&
+        !KmtIsMultiProcessorBuild)
     {
         Event->Header.SignalState = 0x456789ABL;
         State = KeSetEvent(Event, 0, TRUE);
-        CheckEvent(Event, Type, 1L, TRUE, DISPATCH_LEVEL);
+        CheckEvent(Event, Type, 1L, TRUE, DISPATCH_LEVEL, (PVOID *)NULL, 0);
         ok_eq_long(State, 0x456789ABL);
         ok_eq_uint(Thread->WaitIrql, OriginalIrql);
         /* repair the "damage" */
@@ -84,7 +98,7 @@ TestEventFunctional(
 
         Event->Header.SignalState = 0x56789ABCL;
         State = KePulseEvent(Event, 0, TRUE);
-        CheckEvent(Event, Type, 0L, TRUE, DISPATCH_LEVEL);
+        CheckEvent(Event, Type, 0L, TRUE, DISPATCH_LEVEL, (PVOID *)NULL, 0);
         ok_eq_long(State, 0x56789ABCL);
         ok_eq_uint(Thread->WaitIrql, OriginalIrql);
         /* repair the "damage" */
@@ -100,8 +114,7 @@ typedef struct
 {
     HANDLE Handle;
     PKTHREAD Thread;
-    PKEVENT Event1;
-    PKEVENT Event2;
+    PKEVENT Event;
     volatile BOOLEAN Signal;
 } THREAD_DATA, *PTHREAD_DATA;
 
@@ -116,69 +129,92 @@ WaitForEventThread(
 
     ok_irql(PASSIVE_LEVEL);
     ThreadData->Signal = TRUE;
-    Status = KeWaitForSingleObject(ThreadData->Event1, Executive, KernelMode, FALSE, NULL);
-    ok_irql(PASSIVE_LEVEL);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-    ThreadData->Signal = TRUE;
-    Status = KeWaitForSingleObject(ThreadData->Event2, Executive, KernelMode, FALSE, NULL);
-    ok_irql(PASSIVE_LEVEL);
+    Status = KeWaitForSingleObject(ThreadData->Event, Executive, KernelMode, FALSE, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_irql(PASSIVE_LEVEL);
 }
 
+typedef LONG (NTAPI *PSET_EVENT_FUNCTION)(PRKEVENT, KPRIORITY, BOOLEAN);
+
 static
 VOID
-TestEventThreads(
+TestEventConcurrent(
     IN PKEVENT Event,
     IN EVENT_TYPE Type,
-    IN KIRQL OriginalIrql)
+    IN KIRQL OriginalIrql,
+    PSET_EVENT_FUNCTION SetEvent,
+    KPRIORITY PriorityIncrement,
+    LONG ExpectedState,
+    BOOLEAN SatisfiesAll)
 {
     NTSTATUS Status;
     THREAD_DATA Threads[5];
-    LARGE_INTEGER Timeout;
+    const INT ThreadCount = sizeof Threads / sizeof Threads[0];
     KPRIORITY Priority;
-    KEVENT WaitEvent;
-    KEVENT TerminateEvent;
-    int i;
-    Timeout.QuadPart = -1000 * 10;
+    LARGE_INTEGER LongTimeout, ShortTimeout;
+    INT i;
+    KWAIT_BLOCK WaitBlock[MAXIMUM_WAIT_OBJECTS];
+    PVOID ThreadObjects[MAXIMUM_WAIT_OBJECTS];
+    LONG State;
+    PKTHREAD Thread = KeGetCurrentThread();
+
+    LongTimeout.QuadPart = -100 * MILLISECOND;
+    ShortTimeout.QuadPart = -1 * MILLISECOND;
 
     KeInitializeEvent(Event, Type, FALSE);
-    KeInitializeEvent(&WaitEvent, NotificationEvent, FALSE);
-    KeInitializeEvent(&TerminateEvent, SynchronizationEvent, FALSE);
 
-    for (i = 0; i < sizeof Threads / sizeof Threads[0]; ++i)
+    for (i = 0; i < ThreadCount; ++i)
     {
-        Threads[i].Event1 = Event;
-        Threads[i].Event2 = &TerminateEvent;
+        Threads[i].Event = Event;
         Threads[i].Signal = FALSE;
         Status = PsCreateSystemThread(&Threads[i].Handle, GENERIC_ALL, NULL, NULL, NULL, WaitForEventThread, &Threads[i]);
         ok_eq_hex(Status, STATUS_SUCCESS);
         Status = ObReferenceObjectByHandle(Threads[i].Handle, SYNCHRONIZE, PsThreadType, KernelMode, (PVOID *)&Threads[i].Thread, NULL);
         ok_eq_hex(Status, STATUS_SUCCESS);
+        ThreadObjects[i] = Threads[i].Thread;
         Priority = KeQueryPriorityThread(Threads[i].Thread);
         ok_eq_long(Priority, 8L);
         while (!Threads[i].Signal)
         {
-            Status = KeWaitForSingleObject(&WaitEvent, Executive, KernelMode, FALSE, &Timeout);
-            ok_eq_hex(Status, STATUS_TIMEOUT);
+            Status = KeDelayExecutionThread(KernelMode, FALSE, &ShortTimeout);
+            ok_eq_hex(Status, STATUS_SUCCESS);
         }
-        Threads[i].Signal = FALSE;
+        CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, ThreadObjects, i + 1);
     }
 
-    for (i = 0; i < sizeof Threads / sizeof Threads[0]; ++i)
+    /* the threads shouldn't wake up on their own */
+    Status = KeDelayExecutionThread(KernelMode, FALSE, &ShortTimeout);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    for (i = 0; i < ThreadCount; ++i)
     {
-        KeSetEvent(Event, 1, FALSE);
-        while (!Threads[i].Signal)
+        CheckEvent(Event, Type, 0L, FALSE, OriginalIrql, ThreadObjects + i, ThreadCount - i);
+        State = SetEvent(Event, PriorityIncrement + i, FALSE);
+
+        ok_eq_long(State, 0L);
+        CheckEvent(Event, Type, ExpectedState, FALSE, OriginalIrql, ThreadObjects + i + 1, SatisfiesAll ? 0 : ThreadCount - i - 1);
+        Status = KeWaitForMultipleObjects(ThreadCount, ThreadObjects, SatisfiesAll ? WaitAll : WaitAny, Executive, KernelMode, FALSE, &LongTimeout, WaitBlock);
+        ok_eq_hex(Status, STATUS_WAIT_0 + i);
+        if (SatisfiesAll)
         {
-            Status = KeWaitForSingleObject(&WaitEvent, Executive, KernelMode, FALSE, &Timeout);
-            ok_eq_hex(Status, STATUS_TIMEOUT);
+            for (; i < ThreadCount; ++i)
+            {
+                Priority = KeQueryPriorityThread(Threads[i].Thread);
+                ok_eq_long(Priority, max(min(8L + PriorityIncrement, 15L), 8L));
+            }
+            break;
         }
         Priority = KeQueryPriorityThread(Threads[i].Thread);
-        ok_eq_long(Priority, 9L);
-        KeSetEvent(&TerminateEvent, 0, FALSE);
-        Status = KeWaitForSingleObject(Threads[i].Thread, Executive, KernelMode, FALSE, NULL);
-        ok_eq_hex(Status, STATUS_SUCCESS);
+        ok_eq_long(Priority, max(min(8L + PriorityIncrement + i, 15L), 8L));
+        /* replace the thread with the current thread - which will never signal */
+        if (!skip((Status & 0x3F) < ThreadCount, "Index out of bounds"))
+            ThreadObjects[Status & 0x3F] = Thread;
+        Status = KeWaitForMultipleObjects(ThreadCount, ThreadObjects, WaitAny, Executive, KernelMode, FALSE, &ShortTimeout, WaitBlock);
+        ok_eq_hex(Status, STATUS_TIMEOUT);
+    }
 
+    for (i = 0; i < ThreadCount; ++i)
+    {
         ObDereferenceObject(Threads[i].Thread);
         Status = ZwClose(Threads[i].Handle);
         ok_eq_hex(Status, STATUS_SUCCESS);
@@ -190,17 +226,41 @@ START_TEST(KeEvent)
     KEVENT Event;
     KIRQL Irql;
     KIRQL Irqls[] = { PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL, HIGH_LEVEL };
-    int i;
+    INT i;
+    KPRIORITY PriorityIncrement;
 
     for (i = 0; i < sizeof Irqls / sizeof Irqls[0]; ++i)
     {
+        /* DRIVER_IRQL_NOT_LESS_OR_EQUAL (TODO: on MP only?) */
+        if (Irqls[i] > DISPATCH_LEVEL && KmtIsCheckedBuild)
+            return;
         KeRaiseIrql(Irqls[i], &Irql);
         TestEventFunctional(&Event, NotificationEvent, Irqls[i]);
         TestEventFunctional(&Event, SynchronizationEvent, Irqls[i]);
         KeLowerIrql(Irql);
     }
 
-    TestEventThreads(&Event, NotificationEvent, PASSIVE_LEVEL);
+    for (i = 0; i < sizeof Irqls / sizeof Irqls[0]; ++i)
+    {
+        /* creating threads above DISPATCH_LEVEL... nope */
+        if (Irqls[i] >= DISPATCH_LEVEL && KmtIsCheckedBuild)
+            continue;
+        KeRaiseIrql(Irqls[i], &Irql);
+        trace("IRQL: %u\n", Irqls[i]);
+        for (PriorityIncrement = -1; PriorityIncrement <= 8; ++PriorityIncrement)
+        {
+            trace("PriorityIncrement: %ld\n", PriorityIncrement);
+            trace("-> Checking KeSetEvent, NotificationEvent\n");
+            TestEventConcurrent(&Event, NotificationEvent, Irqls[i], KeSetEvent, PriorityIncrement, 1, TRUE);
+            trace("-> Checking KeSetEvent, SynchronizationEvent\n");
+            TestEventConcurrent(&Event, SynchronizationEvent, Irqls[i], KeSetEvent, PriorityIncrement, 0, FALSE);
+            trace("-> Checking KePulseEvent, NotificationEvent\n");
+            TestEventConcurrent(&Event, NotificationEvent, Irqls[i], KePulseEvent, PriorityIncrement, 0, TRUE);
+            trace("-> Checking KePulseEvent, SynchronizationEvent\n");
+            TestEventConcurrent(&Event, SynchronizationEvent, Irqls[i], KePulseEvent, PriorityIncrement, 0, FALSE);
+        }
+        KeLowerIrql(Irql);
+    }
 
     ok_irql(PASSIVE_LEVEL);
     KmtSetIrql(PASSIVE_LEVEL);
