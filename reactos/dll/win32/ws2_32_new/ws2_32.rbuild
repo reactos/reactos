@@ -9,6 +9,9 @@
 	<library>advapi32</library>
 	<library>dnsapi</library>
 	<library>ws2help</library>
+    <directory name="inc">
+        <pch>ws2_32.h</pch>
+    </directory>
 	<directory name="src">
 		<file>addrconv.c</file>
 		<file>addrinfo.c</file>
