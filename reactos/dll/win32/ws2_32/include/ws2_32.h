@@ -7,6 +7,7 @@
 #ifndef __WS2_32_H
 #define __WS2_32_H
 
+#include <ctype.h>
 #include <stdlib.h>
 
 #define WIN32_NO_STATUS
@@ -22,6 +23,12 @@
 #undef assert
 #include <debug.h>
 #include <windns.h> // DNS_A_DATA
+
+#include <w32api.h>
+
+#include "catalog.h"
+#include "handle.h"
+#include "upcall.h"
 
 #define EXPORT WINAPI
 
