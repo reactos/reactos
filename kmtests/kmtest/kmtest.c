@@ -219,11 +219,20 @@ OutputResult(
 {
     DWORD Error = ERROR_SUCCESS;
     DWORD BytesWritten;
+    DWORD LogBufferLength;
+    DWORD Offset = 0;
+    /* WriteConsole seems to handle at most ~32kB */
+    const DWORD BlockSize = 8 * 1024;
 
     KmtFinishTest(TestName);
 
-    if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer, ResultBuffer->LogBufferLength, &BytesWritten, NULL))
-        error(Error);
+    LogBufferLength = ResultBuffer->LogBufferLength;
+    for (Offset = 0; Offset < LogBufferLength; Offset += BlockSize)
+    {
+        DWORD Length = min(LogBufferLength - Offset, BlockSize);
+        if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer + Offset, Length, &BytesWritten, NULL))
+            error(Error);
+    }
 
     return Error;
 }
