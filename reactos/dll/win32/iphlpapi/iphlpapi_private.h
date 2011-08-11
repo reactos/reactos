@@ -31,11 +31,21 @@
 #include "resinfo.h"
 #include "wine/debug.h"
 
+#include "dhcp.h"
+#include "dhcpcsdk.h"
+#include "dhcpcapi.h"
+#include <assert.h>
+
 //#include "ntddndis.h"
 #include "tdiinfo.h"
 #include "tcpioctl.h"
 
 #include "tdilib.h"
+
+#include "ifenum.h"
+
+#include "ipstats.h"
+#include "route.h"
 
 #ifndef ETH_ALEN
 #define ETH_ALEN 6

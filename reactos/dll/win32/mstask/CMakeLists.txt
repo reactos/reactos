@@ -27,11 +27,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mstask.def)
 
 add_library(mstask SHARED ${SOURCE})
-
 set_module_type(mstask win32dll)
-
 target_link_libraries(mstask uuid wine)
-
 add_importlibs(mstask ole32 msvcrt kernel32 ntdll)
-
+add_pch(mstask mstask_private.h)
 add_cd_file(TARGET mstask DESTINATION reactos/system32 FOR all)

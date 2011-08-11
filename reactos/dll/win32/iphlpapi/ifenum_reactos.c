@@ -37,8 +37,6 @@
  *   functions into iphlpv6.c (arty)
  */
 #include "iphlpapi_private.h"
-#include "ifenum.h"
-#include <assert.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 

@@ -68,7 +68,6 @@ if(MSVC)
 endif()
 
 add_library(msi SHARED ${SOURCE})
-add_pch(msi msipriv.h)
 
 add_idl_Headers(msi_idlheader msiserver.idl)
 add_typelib(msi_tlb msiserver.idl)
@@ -94,6 +93,7 @@ add_importlibs(msi
     kernel32
     ntdll)
 
+add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)

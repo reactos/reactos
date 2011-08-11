@@ -7,10 +7,6 @@
  */
 
 #include "iphlpapi_private.h"
-#include "dhcp.h"
-#include "dhcpcsdk.h"
-#include "dhcpcapi.h"
-#include <assert.h>
 
 DWORD APIENTRY DhcpRosGetAdapterInfo(DWORD AdapterIndex,
                                      PBOOL DhcpEnabled,
