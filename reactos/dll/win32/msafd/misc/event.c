@@ -12,8 +12,6 @@
 
 #include <msafd.h>
 
-#include <debug.h>
-
 int 
 WSPAPI 
 WSPEventSelect(

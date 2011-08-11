@@ -23,6 +23,8 @@
 #include <afd/shared.h>
 #include <helpers.h>
 
+#include <debug.h>
+
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;
 extern LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
