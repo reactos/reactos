@@ -87,7 +87,11 @@ add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
 # Group targets
 #
 add_custom_target(kmtest_drivers)
-add_dependencies(kmtest_drivers kmtest_drv example_drv iodriverobject_drv)
+add_dependencies(kmtest_drivers
+    kmtest_drv
+    example_drv
+    iodriverobject_drv
+    iohelper_drv)
 
 add_custom_target(kmtest_all)
 add_dependencies(kmtest_all kmtest_drivers kmtest)

@@ -49,13 +49,14 @@ TestEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PCUNICODE_STRING RegistryPath,
     OUT PCWSTR *DeviceName,
-    OUT INT *Flags)
+    IN OUT INT *Flags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(RegistryPath);
+    UNREFERENCED_PARAMETER(Flags);
 
     DPRINT("Entry!\n");
 

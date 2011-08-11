@@ -68,7 +68,7 @@ typedef enum
     TESTENTRY_NO_REGISTER_UNLOAD = 4,
 } KMT_TESTENTRY_FLAGS;
 
-NTSTATUS TestEntry(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING RegistryPath, OUT PCWSTR *DeviceName, OUT INT *Flags);
+NTSTATUS TestEntry(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING RegistryPath, OUT PCWSTR *DeviceName, IN OUT INT *Flags);
 VOID TestUnload(IN PDRIVER_OBJECT DriverObject);
 #endif /* defined KMT_STANDALONE_DRIVER */
 
