@@ -221,7 +221,8 @@ OutputResult(
     DWORD BytesWritten;
     DWORD LogBufferLength;
     DWORD Offset = 0;
-    /* WriteConsole seems to handle at most ~32kB */
+    /* A console window can't handle a single
+     * huge block of data, so split it up */
     const DWORD BlockSize = 8 * 1024;
 
     KmtFinishTest(TestName);
@@ -230,7 +231,7 @@ OutputResult(
     for (Offset = 0; Offset < LogBufferLength; Offset += BlockSize)
     {
         DWORD Length = min(LogBufferLength - Offset, BlockSize);
-        if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer + Offset, Length, &BytesWritten, NULL))
+        if (!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer + Offset, Length, &BytesWritten, NULL))
             error(Error);
     }
 
