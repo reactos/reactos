@@ -29,13 +29,13 @@
 #include <iphlpapi.h>
 #include <shtypes.h>
 #include <setupapi.h>
+#include <initguid.h>
 #include <devguid.h>
 #include <netcon.h>
 #include <docobj.h>
 #include <netcfgx.h>
 #include <netcfgn.h>
 #include <prsht.h>
-
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
