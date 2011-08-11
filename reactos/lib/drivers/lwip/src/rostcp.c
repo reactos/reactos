@@ -207,37 +207,13 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
         return ERR_OK;
     }
 
-    ASSERT(!LibTCPDequeuePacket(Connection));
-
     if (p)
     {
-        len = TCPRecvEventHandler(arg, p);
-        if (len == p->tot_len)
-        {
-            tcp_recved(pcb, len);
+        LibTCPEnqueuePacket(Connection, p);
 
-            pbuf_free(p);
+        tcp_recved(pcb, p->tot_len);
 
-            return ERR_OK;
-        }
-        else if (len != 0)
-        {
-            DbgPrint("UNTESTED CASE: NOT ALL DATA TAKEN! EXTRA DATA MAY BE LOST!\n");
-
-            tcp_recved(pcb, len);
-
-            /* Possible memory leak of pbuf here? */
-
-            return ERR_OK;
-        }
-        else
-        {
-            LibTCPEnqueuePacket(Connection, p);
-
-            tcp_recved(pcb, p->tot_len);
-
-            return ERR_OK;
-        }
+        TCPRecvEventHandler(arg);
     }
     else if (err == ERR_OK)
     {

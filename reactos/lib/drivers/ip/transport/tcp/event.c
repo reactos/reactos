@@ -451,59 +451,46 @@ TCPSendEventHandler(void *arg, u16_t space)
     DereferenceObject(Connection);
 }
 
-u32_t
-TCPRecvEventHandler(void *arg, struct pbuf *p)
+VOID
+TCPRecvEventHandler(void *arg)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     PIRP Irp;
     PMDL Mdl;
-    UINT Received = 0;
+    UINT Received;
     UINT RecvLen;
     PUCHAR RecvBuffer;
-    
-    ASSERT(p);
-    
+    NTSTATUS Status;
+
     ReferenceObject(Connection);
-        
-    if ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
+
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
         
         Irp = Bucket->Request.RequestContext;
         Mdl = Irp->MdlAddress;
-        
-        TI_DbgPrint(DEBUG_TCP,
-                    ("[IP, TCPRecvEventHandler] Getting the user buffer from %x\n", Mdl));
-        
+
         NdisQueryBuffer( Mdl, &RecvBuffer, &RecvLen );
-        
-        TI_DbgPrint(DEBUG_TCP,
-                    ("[IP, TCPRecvEventHandler] Reading %d bytes to %x\n", RecvLen, RecvBuffer));
-        
-        TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
-        TI_DbgPrint(DEBUG_TCP, ("[IP, TCPRecvEventHandler] Connection->SocketContext: %x\n", Connection->SocketContext));
-        TI_DbgPrint(DEBUG_TCP, ("[IP, TCPRecvEventHandler] RecvBuffer: %x\n", RecvBuffer));
-        
-        RecvLen = MIN(p->tot_len, RecvLen);
-        
-        for (Received = 0; Received < RecvLen; Received += p->len, p = p->next)
+
+        Status = LibTCPGetDataFromConnectionQueue(Connection, RecvBuffer, RecvLen, &Received);
+        if (Status == STATUS_PENDING)
         {
-            RtlCopyMemory(RecvBuffer + Received, p->payload, p->len);
+            ExInterlockedInsertHeadList(&Connection->ReceiveRequest,
+                                        &Bucket->Entry,
+                                        &Connection->Lock);
+            break;
         }
-        
-        TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Received));
-        
-        Bucket->Status = STATUS_SUCCESS;
+
+        Bucket->Status = Status;
         Bucket->Information = Received;
-        
+
         CompleteBucket(Connection, Bucket, FALSE);
     }
 
     DereferenceObject(Connection);
-    
-    return Received;
 }
 
 VOID

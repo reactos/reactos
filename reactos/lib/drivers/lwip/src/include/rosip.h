@@ -91,7 +91,7 @@ extern void TCPConnectEventHandler(void *arg, const err_t err);
 extern void TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb);
 extern void TCPSendEventHandler(void *arg, const u16_t space);
 extern void TCPFinEventHandler(void *arg, const err_t err);
-extern u32_t TCPRecvEventHandler(void *arg, struct pbuf *p);
+extern void TCPRecvEventHandler(void *arg);
 
 /* TCP functions */
 PTCP_PCB    LibTCPSocket(void *arg);
