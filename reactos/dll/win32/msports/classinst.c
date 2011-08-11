@@ -6,13 +6,7 @@
  * PROGRAMMERS: Copyright 2011 Eric Kohl
  */
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <cmtypes.h>
-#include <stdio.h>
-#include <msports.h>
-#include <setupapi.h>
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msports);
 
