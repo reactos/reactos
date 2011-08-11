@@ -643,7 +643,6 @@ LibTCPCloseCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
     PTCP_PCB pcb = msg->Input.Close.Connection->SocketContext;
-    int state;
 
     /* Empty the queue even if we're already "closed" */
     LibTCPEmptyQueue(msg->Input.Close.Connection);
@@ -657,29 +656,36 @@ LibTCPCloseCallback(void *arg)
     /* Clear the PCB pointer */
     msg->Input.Close.Connection->SocketContext = NULL;
 
-    /* Save the old PCB state */
-    state = pcb->state;
-
-    msg->Output.Close.Error = tcp_close(pcb);
-    if (!msg->Output.Close.Error)
+    switch (pcb->state)
     {
-        if (msg->Input.Close.Callback)
-        {
-            /* Call the FIN handler in the cases where it will not be called by lwIP */
-            switch (state)
-            {
-                case CLOSED:
-                case LISTEN:
-                case SYN_SENT:
-                   TCPFinEventHandler(msg->Input.Close.Connection, ERR_OK);
-                   break;
+        case CLOSED:
+        case LISTEN:
+        case SYN_SENT:
+           msg->Output.Close.Error = tcp_close(pcb);
 
-                default:
-                   break;
-            }
-        }
+           if (!msg->Output.Close.Error && msg->Input.Close.Callback)
+               TCPFinEventHandler(msg->Input.Close.Connection, ERR_OK);
+           break;
+
+        default:
+           if (msg->Input.Close.Connection->SendShutdown &&
+               msg->Input.Close.Connection->ReceiveShutdown)
+           {
+               /* Abort the connection */
+               tcp_abort(pcb);
+
+               /* Aborts always succeed */
+               msg->Output.Close.Error = ERR_OK;
+           }
+           else
+           {
+               /* Start the graceful close process (or send RST for pending data) */
+               msg->Output.Close.Error = tcp_close(pcb);
+           }
+           break;
     }
-    else
+
+    if (msg->Output.Close.Error)
     {
         /* Restore the PCB pointer */
         msg->Input.Close.Connection->SocketContext = pcb;
