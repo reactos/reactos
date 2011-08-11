@@ -1,12 +1,6 @@
 
 add_rpc_files(client epm.idl)
 
-# HACK!!!!!!
-if(MSVC)
-    set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> /nologo <DEFINES> /Fo<OBJECT> /Fd<TARGET_PDB> -c <SOURCE> <FLAGS>")
-    set_source_files_properties(rpc_transport.c PROPERTIES COMPILE_FLAGS "/link /DELAYLOAD:wininet.dll")
-endif()
-
 list(APPEND SOURCE
     cproxy.c
     cpsf.c
@@ -43,7 +37,7 @@ add_definitions(
     -D_RPCRT4_
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
-    
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(rpcrt4.dll rpcrt4.spec)
@@ -56,16 +50,9 @@ target_link_libraries(rpcrt4
     wine
     uuid
     ${PSEH_LIB})
-    
-if(NOT MSVC)
-    add_delay_importlibs(rpcrt4 wininet)
-else()
-    add_importlibs(rpcrt4 wininet)
-    add_linkerflag(rpcrt4 "/DELAYLOAD:wininet.dll")
-    target_link_libraries(rpcrt4 delayimp)
-endif()
-    
 
 add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 ntdll)
+add_delay_importlibs(rpcrt4 wininet)
+
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
 add_importlib_target(rpcrt4.spec)

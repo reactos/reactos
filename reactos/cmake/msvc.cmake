@@ -177,8 +177,12 @@ function(add_importlib_target _exports_file)
 endfunction()
 
 macro(add_delay_importlibs MODULE)
-    # TODO. For now forward to normal import libs
-    add_importlibs(${MODULE} ${ARGN})
+    foreach(LIB ${ARGN})
+        add_linkerflag(${MODULE} "/DELAYLOAD:${LIB}.dll")
+        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.LIB)
+        add_dependencies(${MODULE} lib${LIB})
+    endforeach()
+    target_link_libraries(${MODULE} delayimp)
 endmacro()
 
 function(spec2def _dllname _spec_file)
