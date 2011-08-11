@@ -83,11 +83,10 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
     PQUEUE_ENTRY qp;
     struct pbuf* p;
     NTSTATUS Status = STATUS_PENDING;
-    UINT ReadLength, ExistingDataLength, SpaceLeft;
+    UINT ReadLength, ExistingDataLength;
     KIRQL OldIrql;
 
     (*Received) = 0;
-    SpaceLeft = RecvLen;
 
     LockObject(Connection, &OldIrql);
 
@@ -100,7 +99,7 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 
             Status = STATUS_SUCCESS;
 
-            ReadLength = MIN(p->tot_len, SpaceLeft);
+            ReadLength = MIN(p->tot_len, RecvLen);
             if (ReadLength != p->tot_len)
             {
                 if (ExistingDataLength)
@@ -128,7 +127,7 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 
             LockObject(Connection, &OldIrql);
 
-            SpaceLeft -= ReadLength;
+            RecvLen -= ReadLength;
 
             /* Use this special pbuf free callback function because we're outside tcpip thread */
             pbuf_free_callback(qp->p);
@@ -207,6 +206,8 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
 
         return ERR_OK;
     }
+
+    ASSERT(!LibTCPDequeuePacket(Connection));
 
     if (p)
     {
