@@ -18,6 +18,9 @@
 #include "resource.h"
 #include <prsht.h>
 
+#include <initguid.h>
+#include <devguid.h>
+
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {
     REFIID riid;
