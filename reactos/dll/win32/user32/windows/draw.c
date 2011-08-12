@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ReactOS User32 Library
  * - Various drawing functions
  *
@@ -1276,6 +1276,8 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
                     return FALSE;
                 s.cx = bm.bmWidth;
                 s.cy = bm.bmHeight;
+                DeleteObject(ici.hbmMask);
+                DeleteObject(ici.hbmColor);
                 break;
 
             case DST_BITMAP:
