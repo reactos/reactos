@@ -31,6 +31,10 @@ list(APPEND SOURCE
     ks.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
 
+if(MSVC)
+    list(APPEND SOURCE msvc.S)
+endif()
+
 add_library(ks SHARED ${SOURCE})
 
 set_target_properties(ks PROPERTIES SUFFIX ".sys")
