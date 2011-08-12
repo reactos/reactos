@@ -314,6 +314,10 @@ if(ARCH MATCHES i386)
         float/i386/logb.c
         float/i386/statfp.c
         setjmp/i386/setjmp.s)
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/i386/cpp.s)
+    endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
         except/amd64/seh.s
