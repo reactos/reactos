@@ -183,5 +183,12 @@ ThemeHooksInstall()
 BOOL WINAPI
 ThemeHooksRemove()
 {
-    return UnregisterUserApiHook();
+    BOOL ret;
+
+    ret = UnregisterUserApiHook();
+
+    if(IsThemeActive())
+        UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+
+    return ret;
 }
