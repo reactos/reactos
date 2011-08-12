@@ -1731,6 +1731,150 @@ HRESULT WINAPI GetThemeBackgroundExtent(HTHEME hTheme, HDC hdc, int iPartId,
     return S_OK;
 }
 
+
+static HBITMAP UXTHEME_DrawThemePartToDib(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect)
+{
+    HDC hdcMem;
+    BITMAPINFO bmi = {0};
+    HBITMAP hbmp, hbmpOld;
+    HBRUSH hbrBack;
+
+    hdcMem = CreateCompatibleDC(0);
+
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = pRect->right;
+    bmi.bmiHeader.biHeight = -pRect->bottom;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    hbmp = CreateDIBSection(hdcMem, &bmi, DIB_RGB_COLORS , NULL, 0, 0);
+
+    hbmpOld = (HBITMAP)SelectObject(hdcMem, hbmp);
+    
+    /* FIXME: use an internal function that doesn't do transparent blt */
+    hbrBack = CreateSolidBrush(RGB(255,0,255));
+
+    FillRect(hdcMem, pRect, hbrBack);
+
+    DrawThemeBackground(hTheme, hdcMem, iPartId, iStateId, pRect, NULL);
+
+    DeleteObject(hbrBack);
+    SelectObject(hdcMem, hbmpOld);
+    DeleteObject(hdcMem);
+
+    return hbmp;
+}
+
+#define PT_IN_RECT(lprc,x,y) ( x >= lprc->left && x < lprc->right && \
+                               y >= lprc->top  && y < lprc->bottom)
+
+static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent, LPCRECT pRect)
+{
+    int x, y, xstart;
+    int cMaxRgnRects, cRgnDataSize, cRgnRects;
+    RECT* prcCurrent;
+    PRGNDATA prgnData;
+    ULONG clrTransparent, *pclrCurrent;
+    HRGN hrgnRet;
+
+    pclrCurrent = (PULONG)pBuffer;
+    clrTransparent = *(PULONG)pclrTransparent;
+
+    /* Create a region and pre-allocate memory enough for 3 spaces in one row*/
+    cRgnRects = 0;
+    cMaxRgnRects = 4* (pRect->bottom-pRect->top);
+    cRgnDataSize = sizeof(RGNDATA) + cMaxRgnRects * sizeof(RECT);
+
+    /* Allocate the region data */
+    prgnData = (PRGNDATA)HeapAlloc(GetProcessHeap(), 0, cRgnDataSize);
+
+    prcCurrent = (PRECT)prgnData->Buffer;
+    
+    /* Calculate the region rects */
+    y=0;
+    /* Scan each line of the bitmap */
+    while(y<pRect->bottom)
+    {
+        x=0;
+        /* Scan each pixel */
+        while (x<pRect->right)
+        {
+            /* Check if the pixel is not transparent and it is in the requested rect */
+            if(*pclrCurrent != clrTransparent && PT_IN_RECT(pRect,x,y))
+            {
+                xstart = x;
+                /* Find the end of the opaque row of pixels */
+                while (x<pRect->right)
+                {
+                    if(*pclrCurrent == clrTransparent || !PT_IN_RECT(pRect,x,y))
+                        break;
+                    x++;
+                    pclrCurrent++;
+                }
+
+                /* Add the scaned line to the region */
+                SetRect(prcCurrent, xstart, y,x,y+1);
+                prcCurrent++;
+                cRgnRects++;
+
+                /* Increase the size of the buffer if it is full */
+                if(cRgnRects == cMaxRgnRects)
+                {
+                    cMaxRgnRects *=2;
+                    cRgnDataSize = sizeof(RGNDATA) + cMaxRgnRects * sizeof(RECT);
+                    prgnData = (PRGNDATA)HeapReAlloc(GetProcessHeap(), 
+                                                     0, 
+                                                     prgnData, 
+                                                     cRgnDataSize);
+                    prcCurrent = (RECT*)prgnData->Buffer + cRgnRects;
+                }
+            }
+            else
+            {
+                x++;
+                pclrCurrent++;
+            }
+        }
+        y++;
+    }
+
+    /* Fill the region data header */
+    prgnData->rdh.dwSize = sizeof(prgnData->rdh);
+    prgnData->rdh.iType = RDH_RECTANGLES;
+    prgnData->rdh.nCount = cRgnRects;
+    prgnData->rdh.nRgnSize = cRgnDataSize;
+    prgnData->rdh.rcBound = *pRect;
+
+    /* Create the region*/
+    hrgnRet = ExtCreateRegion (NULL, cRgnDataSize, prgnData);
+
+    /* Free the region data*/
+    HeapFree(GetProcessHeap(),0,prgnData);
+
+    /* return the region*/
+    return hrgnRet;
+}
+
+HRESULT UXTHEME_GetImageBackBackgroundRegion(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, HRGN *pRegion)
+{
+    HBITMAP hbmp;
+    DIBSECTION dib;
+    RGBQUAD clrTransparent = {0xFF,0x0, 0xFF,0x0};
+
+    /* Draw the theme part to a dib */
+    hbmp = UXTHEME_DrawThemePartToDib(hTheme, hdc, iPartId, iStateId, pRect);
+
+    /* Retrieve the info of the dib section */
+    GetObject(hbmp, sizeof (DIBSECTION), &dib);
+
+    /* Convert the bits of the dib section to a region */
+    *pRegion = UXTHEME_RegionFromDibBits((RGBQUAD*)dib.dsBm.bmBits, &clrTransparent, pRect);
+
+    /* Free the temp bitmap */
+    DeleteObject(hbmp);
+
+    return S_OK;
+}
+
 /***********************************************************************
  *      GetThemeBackgroundRegion                            (UXTHEME.@)
  *
@@ -1752,8 +1896,7 @@ HRESULT WINAPI GetThemeBackgroundRegion(HTHEME hTheme, HDC hdc, int iPartId,
 
     GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_BGTYPE, &bgtype);
     if(bgtype == BT_IMAGEFILE) {
-        FIXME("Images not handled yet\n");
-        hr = ERROR_CALL_NOT_IMPLEMENTED;
+        hr = UXTHEME_GetImageBackBackgroundRegion(hTheme, hdc, iPartId, iStateId, pRect, pRegion);
     }
     else if(bgtype == BT_BORDERFILL) {
         *pRegion = CreateRectRgn(pRect->left, pRect->top, pRect->right, pRect->bottom);
