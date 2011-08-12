@@ -208,6 +208,9 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
              SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
                            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
+
+        DeleteObject(info.hbmMask);
+        if (info.hbmColor) DeleteObject(info.hbmColor);
     }
     return prevIcon;
 }
