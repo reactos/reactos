@@ -202,6 +202,8 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
             }
         }
 
+        tdiFreeThingSet(entIDSet);
+
         if (NT_SUCCESS(status)) {
             *infoSet = infoSetInt;
             *numInterfaces = curInterf;
@@ -285,12 +287,12 @@ DWORD getNthInterfaceEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
     TRACE("Index %d is entity #%d - %04x:%08x\n", index, i,
            entitySet[i].tei_entity, entitySet[i].tei_instance );
 
+    tdiFreeThingSet( entitySet );
+
     if( numInterfaces == index && i < numEntities ) {
         memcpy( ent, &entitySet[i], sizeof(*ent) );
-        tdiFreeThingSet( entitySet );
         return STATUS_SUCCESS;
     } else {
-        tdiFreeThingSet( entitySet );
         return STATUS_UNSUCCESSFUL;
     }
 }
@@ -302,6 +304,7 @@ NTSTATUS getInterfaceInfoByIndex( HANDLE tcpFile, DWORD index, IFInfo *info ) {
     int i;
 
     if( NT_SUCCESS(status) )
+    {
         for( i = 0; i < numInterfaces; i++ ) {
             if( ifInfo[i].if_info.ent.if_index == index ) {
                 memcpy( info, &ifInfo[i], sizeof(*info) );
@@ -309,10 +312,12 @@ NTSTATUS getInterfaceInfoByIndex( HANDLE tcpFile, DWORD index, IFInfo *info ) {
             }
         }
 
-    if( NT_SUCCESS(status) )
+        HeapFree(GetProcessHeap(), 0, ifInfo);
+
         return i < numInterfaces ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-    else
-        return status;
+    }
+
+    return status;
 }
 
 NTSTATUS getInterfaceInfoByName( HANDLE tcpFile, char *name, IFInfo *info ) {
@@ -322,6 +327,7 @@ NTSTATUS getInterfaceInfoByName( HANDLE tcpFile, char *name, IFInfo *info ) {
     NTSTATUS status = getInterfaceInfoSet( tcpFile, &ifInfo, &numInterfaces );
 
     if( NT_SUCCESS(status) )
+    {
         for( i = 0; i < numInterfaces; i++ ) {
             if( !strcmp((PCHAR)ifInfo[i].if_info.ent.if_descr, name) ) {
                 memcpy( info, &ifInfo[i], sizeof(*info) );
@@ -329,10 +335,12 @@ NTSTATUS getInterfaceInfoByName( HANDLE tcpFile, char *name, IFInfo *info ) {
             }
         }
 
-    if( NT_SUCCESS(status) )
+        HeapFree(GetProcessHeap(), 0,ifInfo);
+
         return i < numInterfaces ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-    else
-        return status;
+    }
+
+    return status;
 }
 
 /* Note that the result of this operation must be freed later */
