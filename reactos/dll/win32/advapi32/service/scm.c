@@ -1835,17 +1835,32 @@ QueryServiceConfigA(SC_HANDLE hService,
                     DWORD cbBufSize,
                     LPDWORD pcbBytesNeeded)
 {
+    QUERY_SERVICE_CONFIGA ServiceConfig;
+    LPQUERY_SERVICE_CONFIGA lpConfigPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceConfigA(%p, %p, %lu, %p)\n",
            hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
 
+    if (lpServiceConfig == NULL ||
+        cbBufSize < sizeof(QUERY_SERVICE_CONFIGA))
+    {
+        lpConfigPtr = &ServiceConfig;
+        dwBufferSize = sizeof(QUERY_SERVICE_CONFIGA);
+    }
+    else
+    {
+        lpConfigPtr = lpServiceConfig;
+        dwBufferSize = cbBufSize;
+    }
+
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceConfigA((SC_RPC_HANDLE)hService,
-                                       (LPBYTE)lpServiceConfig,
-                                       cbBufSize,
+                                       (LPBYTE)lpConfigPtr,
+                                       dwBufferSize,
                                        pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1862,30 +1877,30 @@ QueryServiceConfigA(SC_HANDLE hService,
     }
 
     /* Adjust the pointers */
-    if (lpServiceConfig->lpBinaryPathName)
-        lpServiceConfig->lpBinaryPathName =
-            (LPSTR)((ULONG_PTR)lpServiceConfig +
-                    (ULONG_PTR)lpServiceConfig->lpBinaryPathName);
+    if (lpConfigPtr->lpBinaryPathName)
+        lpConfigPtr->lpBinaryPathName =
+            (LPSTR)((ULONG_PTR)lpConfigPtr +
+                    (ULONG_PTR)lpConfigPtr->lpBinaryPathName);
 
-    if (lpServiceConfig->lpLoadOrderGroup)
-        lpServiceConfig->lpLoadOrderGroup =
-            (LPSTR)((ULONG_PTR)lpServiceConfig +
-                    (ULONG_PTR)lpServiceConfig->lpLoadOrderGroup);
+    if (lpConfigPtr->lpLoadOrderGroup)
+        lpConfigPtr->lpLoadOrderGroup =
+            (LPSTR)((ULONG_PTR)lpConfigPtr +
+                    (ULONG_PTR)lpConfigPtr->lpLoadOrderGroup);
 
-    if (lpServiceConfig->lpDependencies)
-        lpServiceConfig->lpDependencies =
-            (LPSTR)((ULONG_PTR)lpServiceConfig +
-                    (ULONG_PTR)lpServiceConfig->lpDependencies);
+    if (lpConfigPtr->lpDependencies)
+        lpConfigPtr->lpDependencies =
+            (LPSTR)((ULONG_PTR)lpConfigPtr +
+                    (ULONG_PTR)lpConfigPtr->lpDependencies);
 
-    if (lpServiceConfig->lpServiceStartName)
-        lpServiceConfig->lpServiceStartName =
-            (LPSTR)((ULONG_PTR)lpServiceConfig +
-                    (ULONG_PTR)lpServiceConfig->lpServiceStartName);
+    if (lpConfigPtr->lpServiceStartName)
+        lpConfigPtr->lpServiceStartName =
+            (LPSTR)((ULONG_PTR)lpConfigPtr +
+                    (ULONG_PTR)lpConfigPtr->lpServiceStartName);
 
-    if (lpServiceConfig->lpDisplayName)
-        lpServiceConfig->lpDisplayName =
-           (LPSTR)((ULONG_PTR)lpServiceConfig +
-                   (ULONG_PTR)lpServiceConfig->lpDisplayName);
+    if (lpConfigPtr->lpDisplayName)
+        lpConfigPtr->lpDisplayName =
+           (LPSTR)((ULONG_PTR)lpConfigPtr +
+                   (ULONG_PTR)lpConfigPtr->lpDisplayName);
 
     TRACE("QueryServiceConfigA() done\n");
 
@@ -1904,20 +1919,32 @@ QueryServiceConfigW(SC_HANDLE hService,
                     DWORD cbBufSize,
                     LPDWORD pcbBytesNeeded)
 {
+    QUERY_SERVICE_CONFIGW ServiceConfig;
+    LPQUERY_SERVICE_CONFIGW lpConfigPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceConfigW(%p, %p, %lu, %p)\n",
            hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
-           
-    if(pcbBytesNeeded)
-        *pcbBytesNeeded = 0;
-    
+
+    if (lpServiceConfig == NULL ||
+        cbBufSize < sizeof(QUERY_SERVICE_CONFIGW))
+    {
+        lpConfigPtr = &ServiceConfig;
+        dwBufferSize = sizeof(QUERY_SERVICE_CONFIGW);
+    }
+    else
+    {
+        lpConfigPtr = lpServiceConfig;
+        dwBufferSize = cbBufSize;
+    }
+
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceConfigW((SC_RPC_HANDLE)hService,
-                                       (LPBYTE)lpServiceConfig,
-                                       cbBufSize,
+                                       (LPBYTE)lpConfigPtr,
+                                       dwBufferSize,
                                        pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1934,30 +1961,30 @@ QueryServiceConfigW(SC_HANDLE hService,
     }
 
     /* Adjust the pointers */
-    if (lpServiceConfig->lpBinaryPathName)
-        lpServiceConfig->lpBinaryPathName =
-            (LPWSTR)((ULONG_PTR)lpServiceConfig +
-                     (ULONG_PTR)lpServiceConfig->lpBinaryPathName);
+    if (lpConfigPtr->lpBinaryPathName)
+        lpConfigPtr->lpBinaryPathName =
+            (LPWSTR)((ULONG_PTR)lpConfigPtr +
+                     (ULONG_PTR)lpConfigPtr->lpBinaryPathName);
 
-    if (lpServiceConfig->lpLoadOrderGroup)
-        lpServiceConfig->lpLoadOrderGroup =
-            (LPWSTR)((ULONG_PTR)lpServiceConfig +
-                     (ULONG_PTR)lpServiceConfig->lpLoadOrderGroup);
+    if (lpConfigPtr->lpLoadOrderGroup)
+        lpConfigPtr->lpLoadOrderGroup =
+            (LPWSTR)((ULONG_PTR)lpConfigPtr +
+                     (ULONG_PTR)lpConfigPtr->lpLoadOrderGroup);
 
-    if (lpServiceConfig->lpDependencies)
-        lpServiceConfig->lpDependencies =
-            (LPWSTR)((ULONG_PTR)lpServiceConfig +
-                     (ULONG_PTR)lpServiceConfig->lpDependencies);
+    if (lpConfigPtr->lpDependencies)
+        lpConfigPtr->lpDependencies =
+            (LPWSTR)((ULONG_PTR)lpConfigPtr +
+                     (ULONG_PTR)lpConfigPtr->lpDependencies);
 
-    if (lpServiceConfig->lpServiceStartName)
-        lpServiceConfig->lpServiceStartName =
-            (LPWSTR)((ULONG_PTR)lpServiceConfig +
-                     (ULONG_PTR)lpServiceConfig->lpServiceStartName);
+    if (lpConfigPtr->lpServiceStartName)
+        lpConfigPtr->lpServiceStartName =
+            (LPWSTR)((ULONG_PTR)lpConfigPtr +
+                     (ULONG_PTR)lpConfigPtr->lpServiceStartName);
 
-    if (lpServiceConfig->lpDisplayName)
-        lpServiceConfig->lpDisplayName =
-           (LPWSTR)((ULONG_PTR)lpServiceConfig +
-                    (ULONG_PTR)lpServiceConfig->lpDisplayName);
+    if (lpConfigPtr->lpDisplayName)
+        lpConfigPtr->lpDisplayName =
+           (LPWSTR)((ULONG_PTR)lpConfigPtr +
+                    (ULONG_PTR)lpConfigPtr->lpDisplayName);
 
     TRACE("QueryServiceConfigW() done\n");
 
