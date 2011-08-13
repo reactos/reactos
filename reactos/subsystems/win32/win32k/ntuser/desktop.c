@@ -182,10 +182,10 @@ IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
     if( Parameters->Handle == pti->ppi->hdeskStartup ||
         Parameters->Handle == pti->hdesk)
     {
-        return FALSE;
+        return STATUS_ACCESS_DENIED;
     }
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/

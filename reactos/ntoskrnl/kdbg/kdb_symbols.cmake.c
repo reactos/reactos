@@ -35,8 +35,8 @@ typedef struct _ROSSYM_KM_OWN_CONTEXT {
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
-static PROSSYM_INFO KdbpRosSymInfo;
-static ULONG_PTR KdbpImageBase;
+//static PROSSYM_INFO KdbpRosSymInfo;
+//static ULONG_PTR KdbpImageBase;
 BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
@@ -178,7 +178,9 @@ KdbSymPrintAddress(
 	PMEMORY_AREA MemoryArea = NULL;
 	PROS_SECTION_OBJECT SectionObject;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+#if 0
     PROSSYM_KM_OWN_CONTEXT FileContext;
+#endif
     ULONG_PTR RelativeAddress;
     NTSTATUS Status;
 	ROSSYM_LINEINFO LineInfo = {0};
@@ -599,7 +601,7 @@ KdbSymProcessSymbols(
         UNICODE_STRING ModuleNameCopy;
         RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot\\system32\\Drivers\\");
         ModuleNameCopy.Length = 0;
-        ModuleNameCopy.MaximumLength = 
+        ModuleNameCopy.MaximumLength =
             LdrEntry->BaseDllName.MaximumLength + SystemRoot.MaximumLength;
         ModuleNameCopy.Buffer = ExAllocatePool(NonPagedPool, SystemRoot.MaximumLength + LdrEntry->BaseDllName.MaximumLength);
         RtlCopyUnicodeString(&ModuleNameCopy, &SystemRoot);

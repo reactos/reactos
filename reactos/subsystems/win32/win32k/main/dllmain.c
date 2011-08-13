@@ -203,6 +203,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         GdiPoolDestroy(Win32Process->pPoolDcAttr);
         GdiPoolDestroy(Win32Process->pPoolBrushAttr);
         GdiPoolDestroy(Win32Process->pPoolRgnAttr);
+
+        /* Ftee the PROCESSINFO */
+        PsSetProcessWin32Process(Process, NULL);
+        ExFreePoolWithTag(Win32Process, USERTAG_PROCESSINFO);
     }
 
     RETURN( STATUS_SUCCESS);
@@ -418,10 +422,18 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
         IntSetThreadDesktop(NULL, TRUE);
 
-        /* Decrement thread count */
+        /* Decrement thread count and check if its 0 */
         ppiCurrent->cThreads--;
+        if (ppiCurrent->cThreads == 0)
+        {
+            /* UGLY: Prevent this function from being called later
+               when we don't have a THREADINFO anymore. */
+            UserSetCursor(NULL, TRUE);
+        }
 
+        /* Free the THREADINFO */
         PsSetThreadWin32Thread(Thread, NULL);
+        ExFreePoolWithTag(ptiCurrent, USERTAG_THREADINFO);
     }
 
     Status = STATUS_SUCCESS;

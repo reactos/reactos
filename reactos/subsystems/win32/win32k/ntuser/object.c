@@ -261,31 +261,7 @@ void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT
    return entry->ptr;
 }
 
-/* return the next user handle after 'handle' that is of a given type */
-PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type )
-{
-   PUSER_HANDLE_ENTRY entry;
 
-   if (!*handle)
-      entry = ht->handles;
-   else
-   {
-      int index = (((unsigned int)*handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
-      if (index < 0 || index >= ht->nb_handles)
-         return NULL;
-      entry = ht->handles + index + 1;  /* start from the next one */
-   }
-   while (entry < ht->handles + ht->nb_handles)
-   {
-      if (!type || entry->type == type)
-      {
-         *handle = entry_to_handle(ht, entry );
-         return entry->ptr;
-      }
-      entry++;
-   }
-   return NULL;
-}
 
 BOOL FASTCALL UserCreateHandleTable(VOID)
 {
@@ -383,7 +359,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
         case otMenu:
         case otCallProc:
             ((PPROCDESKHEAD)Object)->rpdesk = rpdesk;
-            ((PPROCDESKHEAD)Object)->pSelf = Object;            
+            ((PPROCDESKHEAD)Object)->pSelf = Object;
             break;
 
         case otCursorIcon:
@@ -469,7 +445,7 @@ FASTCALL
 UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
 {
    PVOID body = UserGetObject(gHandleTable, h, type);
-   
+
    if (!body) return FALSE;
 
    ASSERT( ((PHEAD)body)->cLockObj >= 1);
