@@ -744,18 +744,31 @@ EnumDependentServicesA(SC_HANDLE hService,
                        LPDWORD pcbBytesNeeded,
                        LPDWORD lpServicesReturned)
 {
+    ENUM_SERVICE_STATUSA ServiceStatus;
     LPENUM_SERVICE_STATUSA lpStatusPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServicesStatusA() called\n");
+    TRACE("EnumDependentServicesA() called\n");
+
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSA))
+    {
+        lpStatusPtr = &ServiceStatus;
+        dwBufferSize = sizeof(ENUM_SERVICE_STATUSA);
+    }
+    else
+    {
+        lpStatusPtr = lpServices;
+        dwBufferSize = cbBufSize;
+    }
 
     RpcTryExcept
     {
         dwError = REnumDependentServicesA((SC_RPC_HANDLE)hService,
                                           dwServiceState,
-                                          (LPBYTE)lpServices,
-                                          cbBufSize,
+                                          (LPBYTE)lpStatusPtr,
+                                          dwBufferSize,
                                           pcbBytesNeeded,
                                           lpServicesReturned);
     }
@@ -767,18 +780,20 @@ EnumDependentServicesA(SC_HANDLE hService,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
-        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        if (*lpServicesReturned > 0)
         {
-            if (lpStatusPtr->lpServiceName)
-                lpStatusPtr->lpServiceName =
-                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+            {
+                if (lpStatusPtr->lpServiceName)
+                    lpStatusPtr->lpServiceName =
+                        (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-            if (lpStatusPtr->lpDisplayName)
-                lpStatusPtr->lpDisplayName =
-                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+                if (lpStatusPtr->lpDisplayName)
+                    lpStatusPtr->lpDisplayName =
+                        (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-            lpStatusPtr++;
+                lpStatusPtr++;
+            }
         }
     }
 
@@ -808,18 +823,31 @@ EnumDependentServicesW(SC_HANDLE hService,
                        LPDWORD pcbBytesNeeded,
                        LPDWORD lpServicesReturned)
 {
+    ENUM_SERVICE_STATUSW ServiceStatus;
     LPENUM_SERVICE_STATUSW lpStatusPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServicesStatusW() called\n");
+    TRACE("EnumDependentServicesW() called\n");
+
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSW))
+    {
+        lpStatusPtr = &ServiceStatus;
+        dwBufferSize = sizeof(ENUM_SERVICE_STATUSW);
+    }
+    else
+    {
+        lpStatusPtr = lpServices;
+        dwBufferSize = cbBufSize;
+    }
 
     RpcTryExcept
     {
         dwError = REnumDependentServicesW((SC_RPC_HANDLE)hService,
                                           dwServiceState,
-                                          (LPBYTE)lpServices,
-                                          cbBufSize,
+                                          (LPBYTE)lpStatusPtr,
+                                          dwBufferSize,
                                           pcbBytesNeeded,
                                           lpServicesReturned);
     }
@@ -831,18 +859,20 @@ EnumDependentServicesW(SC_HANDLE hService,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
-        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        if (*lpServicesReturned > 0)
         {
-            if (lpStatusPtr->lpServiceName)
-                lpStatusPtr->lpServiceName =
-                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+            {
+                if (lpStatusPtr->lpServiceName)
+                    lpStatusPtr->lpServiceName =
+                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-            if (lpStatusPtr->lpDisplayName)
-                lpStatusPtr->lpDisplayName =
-                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+                if (lpStatusPtr->lpDisplayName)
+                    lpStatusPtr->lpDisplayName =
+                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-            lpStatusPtr++;
+                lpStatusPtr++;
+            }
         }
     }
 
