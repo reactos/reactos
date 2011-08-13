@@ -2082,9 +2082,6 @@ NtUserSetWindowRgn(
 
    if (hrgnCopy)
    {
-      if (Window->fnid != FNID_DESKTOP)
-         NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
-
       /* Set public ownership */
       IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
    }
