@@ -175,7 +175,7 @@ IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
     if( pti == NULL)
     {
         /* This happens when we leak desktop handles */
-        return TRUE;
+        return STATUS_SUCCESS;
     }
 
     /* Do not allow the current desktop or the initial desktop to be closed */
