@@ -640,6 +640,9 @@ NTSTATUS TCPGetSockAddress
     UnlockObject(Connection, OldIrql);
     
     AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
+    
+    RtlZeroMemory(&AddressIP->Address[0].Address[0].sin_zero,
+                  sizeof(AddressIP->Address[0].Address[0].sin_zero));
 
     return Status;
 }
