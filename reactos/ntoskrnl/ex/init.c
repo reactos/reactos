@@ -1918,9 +1918,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Update progress bar */
     InbvUpdateProgressBar(100);
 
-    /* Clean the screen */
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
-
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
 
@@ -1958,6 +1955,9 @@ Phase1InitializationDiscard(IN PVOID Context)
                         (PVOID*)&ProcessParameters,
                         &Size,
                         MEM_RELEASE);
+
+    /* Clean the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
 
     /* Increase init phase */
     ExpInitializationPhase++;
