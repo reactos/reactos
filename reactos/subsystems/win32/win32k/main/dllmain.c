@@ -368,32 +368,28 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     }
     else
     {
-        PTHREADINFO pti;
+        PTHREADINFO *ppti;
         PSINGLE_LIST_ENTRY psle;
+        PPROCESSINFO ppiCurrent;
 
         DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
+        ppiCurrent = ptiCurrent->ppi;
         ptiCurrent->TIF_flags |= TIF_INCLEANUP;
-        pti = ptiCurrent->ppi->ptiList;
-        if (pti == ptiCurrent)
+
+        /* Find the THREADINFO in the PROCESSINFO's list */
+        ppti = &ppiCurrent->ptiList;
+        while (*ppti != NULL && *ppti != ptiCurrent)
         {
-           ptiCurrent->ppi->ptiList = ptiCurrent->ptiSibling;
-           ptiCurrent->ppi->cThreads--;
+            ppti = &((*ppti)->ptiSibling);
         }
-        else
-        {
-           do
-           {
-               if (pti->ptiSibling == ptiCurrent)
-               {
-                  pti->ptiSibling = ptiCurrent->ptiSibling;
-                  ptiCurrent->ppi->cThreads--;
-                  break;
-               }
-               pti = pti->ptiSibling;
-           }
-           while (pti);
-        }
+
+        /* we must have found it */
+        ASSERT(*ppti == ptiCurrent);
+
+        /* Remove it from the list */
+        *ppti = ptiCurrent->ptiSibling;
+
         DceFreeThreadDCE(ptiCurrent);
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
@@ -421,6 +417,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         }
 
         IntSetThreadDesktop(NULL, TRUE);
+
+        /* Decrement thread count */
+        ppiCurrent->cThreads--;
 
         PsSetThreadWin32Thread(Thread, NULL);
     }
