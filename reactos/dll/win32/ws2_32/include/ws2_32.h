@@ -9,6 +9,7 @@
 
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #include <winsock2.h>
@@ -16,7 +17,7 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 
 #include <wsahelp.h>
 
