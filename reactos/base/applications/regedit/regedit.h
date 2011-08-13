@@ -6,7 +6,7 @@
 #include <windows.h>
 
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/cmtypes.h>
 
 #include <commctrl.h>
 #include <shellapi.h>
@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <limits.h>
 #include <accctrl.h>
-#include <objbase.h>
 #include <unknwn.h>
 #include <aclapi.h>
 #include <commdlg.h>
