@@ -749,7 +749,7 @@ DWORD PNP_GetDeviceRegProp(
         RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                              pDeviceID);
         PlugPlayData.Buffer = Buffer;
-        PlugPlayData.BufferSize = *pulTransferLen;
+        PlugPlayData.BufferSize = *pulLength;
 
         switch (ulProperty)
         {
@@ -829,7 +829,7 @@ DWORD PNP_GetDeviceRegProp(
         }
     }
 
-done:;
+done:
     *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
     if (hKey != NULL)
