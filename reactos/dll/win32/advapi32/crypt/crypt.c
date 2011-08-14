@@ -25,10 +25,6 @@
   */
 
 #include <advapi32.h>
-#include "crypt.h"
-
-#include <wine/unicode.h>
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 
