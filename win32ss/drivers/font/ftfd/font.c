@@ -111,6 +111,8 @@ FtfdInitIfiMetrics(
         pifi->flInfo |= FM_INFO_NOT_CONTIGUOUS;
     if (pface->ulFontFormat != FMT_FNT)
         pifi->flInfo |= /*FM_INFO_RETURNS_OUTLINES |*/ FM_INFO_ARB_XFORMS;
+    if (ftface->face_flags & FT_FACE_FLAG_FIXED_WIDTH)
+        pifi->flInfo |= FM_INFO_OPTICALLY_FIXED_PITCH;
     pifi->flInfo |= FM_INFO_RIGHT_HANDED; // FIXME: how to determine?
 
     /* Font resolution */

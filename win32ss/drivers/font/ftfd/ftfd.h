@@ -141,7 +141,7 @@ typedef struct _POINTEF
     FLOATOBJ y;
 } POINTEF, *PPOINTEF;
 
-typedef struct
+typedef struct _FTFD_FONT
 {
     FONTOBJ *pfo;
     PFTFD_FILE pfile;
