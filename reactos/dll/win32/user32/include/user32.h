@@ -22,8 +22,11 @@
 #include <winuser.h>
 #include <windowsx.h>
 #include <winnls32.h>
-#include <ndk/ntndk.h>
-#include <ntstatus.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/umfuncs.h>
 
 /* CSRSS Headers */
 #include <csrss/csrss.h>

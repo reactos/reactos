@@ -1,7 +1,9 @@
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <accctrl.h>
 #include <aclapi.h>
 #include <winsvc.h>

@@ -11,7 +11,10 @@
 #include <windows.h>
 #include <ntsecapi.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/lpctypes.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
 
 #include <string.h>
 

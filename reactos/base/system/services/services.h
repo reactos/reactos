@@ -8,7 +8,6 @@
 #include <netevent.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
-#include <ndk/obtypes.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <services/services.h>

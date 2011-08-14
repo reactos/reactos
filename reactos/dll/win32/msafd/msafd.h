@@ -15,7 +15,10 @@
 #include <windows.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 /* This includes ntsecapi.h so it needs to come after the NDK */
 #include <wsahelp.h>

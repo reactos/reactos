@@ -44,7 +44,7 @@
 #include <ntquery.h>
 #include <recyclebin.h>
 #include <shtypes.h>
-#include <ndk/ntndk.h>
+#include <ndk/umtypes.h>
 #include <fmifs/fmifs.h>
 #include <largeint.h>
 #include <sddl.h>

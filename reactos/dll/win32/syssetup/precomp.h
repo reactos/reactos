@@ -3,7 +3,9 @@
 #include <windowsx.h>
 
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #include <setupapi.h>
 #include <commctrl.h>
