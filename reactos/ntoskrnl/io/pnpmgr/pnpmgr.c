@@ -3467,6 +3467,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status = STATUS_BUFFER_TOO_SMALL;
     GUID BusTypeGuid;
     POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
+    BOOLEAN NullTerminate = FALSE;
+
     DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
 
     /* Assume failure */
@@ -3517,7 +3519,10 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             /* Get the name from the path */
             EnumeratorNameEnd = wcschr(DeviceInstanceName, OBJ_NAME_PATH_SEPARATOR);
             ASSERT(EnumeratorNameEnd);
-            
+
+            /* This string needs to be NULL-terminated */
+            NullTerminate = TRUE;
+
             /* This is the format of the returned data */
             PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
                             DeviceInstanceName);
@@ -3567,7 +3572,10 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
                 /* It's up to the caller to try again */
                 Status = STATUS_BUFFER_TOO_SMALL;
             }
-            
+
+            /* This string needs to be NULL-terminated */
+            NullTerminate = TRUE;
+
             /* Return if successful */
             if (NT_SUCCESS(Status)) PIP_RETURN_DATA(ObjectNameInfo->Name.Length,
                                                     ObjectNameInfo->Name.Buffer);
@@ -3633,15 +3641,14 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     else if (NT_SUCCESS(Status))
     {
         /* We know up-front how much data to expect, check the caller's buffer */
-        *ResultLength = ReturnLength;
-        if (ReturnLength <= BufferLength)
+        *ResultLength = ReturnLength + (NullTerminate ? sizeof(UNICODE_NULL) : 0);
+        if (*ResultLength <= BufferLength)
         {
             /* Buffer is all good, copy the data */
             RtlCopyMemory(PropertyBuffer, Data, ReturnLength);
 
-            /* Check for properties that require a null-terminated string */
-            if ((DeviceProperty == DevicePropertyEnumeratorName) ||
-                (DeviceProperty == DevicePropertyPhysicalDeviceObjectName))
+            /* Check if we need to NULL-terminate the string */
+            if (NullTerminate)
             {
                 /* Terminate the string */
                 ((PWCHAR)PropertyBuffer)[ReturnLength / sizeof(WCHAR)] = UNICODE_NULL;
