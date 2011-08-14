@@ -9,6 +9,7 @@
 #include <precomp.h>
 
 #define NDEBUG
+#include <debug.h>
 
 static int parseabbrevs(Dwarf*, ulong, DwarfAbbrev*, DwarfAttr*, int*, int*);
 DwarfAbbrev *dwarfgetabbrev(Dwarf*, ulong, ulong);

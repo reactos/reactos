@@ -5,6 +5,7 @@
 #include <precomp.h>
 
 #define NDEBUG
+#include <debug.h>
 
 ulong
 dwarfget1(DwarfBuf *b)

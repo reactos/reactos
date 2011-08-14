@@ -16,6 +16,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <debug.h>
 
 #define TAG_ROSSYM 'MYSR'
 

@@ -5,6 +5,7 @@
 #include <precomp.h>
 
 #define NDEBUG
+#include <debug.h>
 
 int
 dwarfaddrtounit(Dwarf *d, ulong addr, ulong *unit)

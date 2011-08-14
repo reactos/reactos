@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <debug.h>
 
 BOOLEAN
 RosSymCreateFromRaw(PVOID RawData, ULONG_PTR DataSize, PROSSYM_INFO *RosSymInfo)

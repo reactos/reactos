@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <debug.h>
 
 NTSTATUS RosSymStatus;
 

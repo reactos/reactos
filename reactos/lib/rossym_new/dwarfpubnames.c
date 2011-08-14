@@ -1,6 +1,7 @@
 
 #include <precomp.h>
 #define NDEBUG
+#include <debug.h>
 
 static int
 _dwarfnametounit(Dwarf *d, char *name, DwarfBlock *bl, DwarfSym *s)

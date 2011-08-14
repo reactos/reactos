@@ -1,6 +1,7 @@
 
 #include <precomp.h>
 #define NDEBUG
+#include <debug.h>
 
 /* Adapted for PE */
 

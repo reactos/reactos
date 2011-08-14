@@ -16,6 +16,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <debug.h>
 
 #include "dwarf.h"
 #include "pe.h"
