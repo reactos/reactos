@@ -2543,7 +2543,7 @@ RegEnumKeyExA(HKEY hKey,
             if (KeyInfo->Node.NameLength > NameLength ||
                 KeyInfo->Node.ClassLength > ClassLength)
             {
-				ErrorCode = ERROR_BUFFER_OVERFLOW;
+                ErrorCode = ERROR_BUFFER_OVERFLOW;
             }
             else
             {
