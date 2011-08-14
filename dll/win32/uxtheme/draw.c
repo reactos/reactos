@@ -1771,8 +1771,12 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
 {
     int x, y, xstart;
     int cMaxRgnRects, cRgnDataSize, cRgnRects;
+#ifdef EXTCREATEREGION_WORKS
     RECT* prcCurrent;
     PRGNDATA prgnData;
+#else
+    HRGN hrgnTemp;
+#endif
     ULONG clrTransparent, *pclrCurrent;
     HRGN hrgnRet;
 
@@ -1784,10 +1788,14 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
     cMaxRgnRects = 4* (pRect->bottom-pRect->top);
     cRgnDataSize = sizeof(RGNDATA) + cMaxRgnRects * sizeof(RECT);
 
+#ifdef EXTCREATEREGION_WORKS
     /* Allocate the region data */
     prgnData = (PRGNDATA)HeapAlloc(GetProcessHeap(), 0, cRgnDataSize);
 
     prcCurrent = (PRECT)prgnData->Buffer;
+#else
+    hrgnRet = CreateRectRgn(0,0,0,0);
+#endif
     
     /* Calculate the region rects */
     y=0;
@@ -1811,6 +1819,7 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
                     pclrCurrent++;
                 }
 
+#ifdef EXTCREATEREGION_WORKS
                 /* Add the scaned line to the region */
                 SetRect(prcCurrent, xstart, y,x,y+1);
                 prcCurrent++;
@@ -1827,6 +1836,11 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
                                                      cRgnDataSize);
                     prcCurrent = (RECT*)prgnData->Buffer + cRgnRects;
                 }
+#else
+                hrgnTemp = CreateRectRgn(xstart, y,x,y+1);
+                CombineRgn(hrgnRet, hrgnRet, hrgnTemp, RGN_OR );
+                DeleteObject(hrgnTemp);
+#endif
             }
             else
             {
@@ -1837,6 +1851,7 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
         y++;
     }
 
+#ifdef EXTCREATEREGION_WORKS
     /* Fill the region data header */
     prgnData->rdh.dwSize = sizeof(prgnData->rdh);
     prgnData->rdh.iType = RDH_RECTANGLES;
@@ -1849,6 +1864,7 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
 
     /* Free the region data*/
     HeapFree(GetProcessHeap(),0,prgnData);
+#endif
 
     /* return the region*/
     return hrgnRet;
