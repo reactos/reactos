@@ -1,10 +1,4 @@
-/* Can't use precomp.h because these weren't stubbed properly */
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
-#include <windows.h>
-#include <windns.h>
-#include <ndk/ntndk.h>
-
+#include "precomp.h"
 #include <debug.h>
 
 DNS_STATUS WINAPI

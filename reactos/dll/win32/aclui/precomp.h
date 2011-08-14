@@ -1,8 +1,8 @@
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
 #define _ACLUI_
+#define WIN32_NO_STATUS
 #include <windows.h>
-#include <ndk/ntndk.h>
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
 #include <commctrl.h>
 #include <oleauto.h>
 #include <objsel.h>

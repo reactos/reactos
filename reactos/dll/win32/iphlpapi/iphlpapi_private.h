@@ -4,6 +4,7 @@
 #define NtCurrentTeb NtXCurrentTeb
 
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #ifdef HAVE_NETINET_IN_H
@@ -24,7 +25,9 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <nspapi.h>
 #include <iptypes.h>
 #include "iphlpapi.h"

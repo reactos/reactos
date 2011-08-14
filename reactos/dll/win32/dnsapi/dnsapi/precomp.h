@@ -15,7 +15,7 @@
 #include <windows.h>
 #include <winerror.h>
 #include <windns.h>
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 
 /* Internal DNSAPI Headers */
 #include <internal/windns.h>
