@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         GDI font driver for bitmap fonts
+ * PURPOSE:         GDI font driver based on freetype
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -9,22 +9,28 @@
 
 static DRVFN gadrvfn[] =
 {
-    {INDEX_DrvEnablePDEV,		(PFN)FtfdEnablePDEV},
-    {INDEX_DrvCompletePDEV,		(PFN)FtfdCompletePDEV},
-    {INDEX_DrvDisablePDEV,		(PFN)FtfdDisablePDEV},
-    {INDEX_DrvLoadFontFile,		(PFN)FtfdLoadFontFile},
-    {INDEX_DrvUnloadFontFile,	(PFN)FtfdUnloadFontFile},
-    {INDEX_DrvQueryFontFile,	(PFN)FtfdQueryFontFile},
-    {INDEX_DrvQueryFontCaps,	(PFN)FtfdQueryFontCaps},
-    {INDEX_DrvQueryFontTree,	(PFN)FtfdQueryFontTree},
-    {INDEX_DrvQueryFont,		(PFN)FtfdQueryFont},
-    {INDEX_DrvFree,				(PFN)FtfdFree},
-    {INDEX_DrvQueryGlyphAttrs,	(PFN)FtfdQueryGlyphAttrs},
-    {INDEX_DrvQueryFontData,	(PFN)FtfdQueryFontData},
+    {INDEX_DrvEnablePDEV,           (PFN)FtfdEnablePDEV},
+    {INDEX_DrvCompletePDEV,         (PFN)FtfdCompletePDEV},
+    {INDEX_DrvDisablePDEV,          (PFN)FtfdDisablePDEV},
+    {INDEX_DrvLoadFontFile,         (PFN)FtfdLoadFontFile},
+    {INDEX_DrvUnloadFontFile,       (PFN)FtfdUnloadFontFile},
+    {INDEX_DrvQueryFontFile,        (PFN)FtfdQueryFontFile},
+    {INDEX_DrvQueryFontCaps,        (PFN)FtfdQueryFontCaps},
+    {INDEX_DrvQueryFontTree,        (PFN)FtfdQueryFontTree},
+    {INDEX_DrvQueryFont,            (PFN)FtfdQueryFont},
+    {INDEX_DrvDestroyFont,          (PFN)FtfdDestroyFont},
+//    {INDEX_DrvFree,                 (PFN)FtfdFree},
+    {INDEX_DrvQueryGlyphAttrs,      (PFN)FtfdQueryGlyphAttrs},
+    {INDEX_DrvQueryFontData,        (PFN)FtfdQueryFontData},
+    {INDEX_DrvQueryAdvanceWidths,   (PFN)FtfdQueryAdvanceWidths},
+    {INDEX_DrvQueryTrueTypeOutline, (PFN)FtfdQueryTrueTypeOutline},
+    {INDEX_DrvQueryTrueTypeTable,   (PFN)FtfdQueryTrueTypeTable},
+    {INDEX_DrvEscape,               (PFN)FtfdEscape},
+    {INDEX_DrvFontManagement,       (PFN)FtfdFontManagement},
+    {INDEX_DrvGetTrueTypeFile,      (PFN)FtfdGetTrueTypeFile},
 };
 
 FT_Library gftlibrary;
-
 
 BOOL
 APIENTRY
@@ -33,9 +39,12 @@ FtfdEnableDriver(
     ULONG cj,
     PDRVENABLEDATA pded)
 {
-    FT_Error fterror; 
+    FT_Error fterror;
 
-    DbgPrint("FtfdEnableDriver()\n");
+    TRACE("FtfdEnableDriver()\n");
+
+//__debugbreak();
+
 
     /* Check parameter */
     if (cj < sizeof(DRVENABLEDATA))
@@ -47,7 +56,7 @@ FtfdEnableDriver(
     fterror = FT_Init_FreeType(&gftlibrary);
     if (fterror)
     {
-        DbgPrint("an error occurred during library initialization: %ld.\n", fterror);
+        WARN("Failed to initialize freetype library: %ld.\n", fterror);
         return FALSE;
     }
 
@@ -76,9 +85,7 @@ FtfdEnablePDEV(
     IN LPWSTR pwszDeviceName,
     IN HANDLE hDriver)
 {
-    DbgPrint("FtfdEnablePDEV(hdev=%p)\n", hdev);
-    __debugbreak();
-
+    TRACE("FtfdEnablePDEV(hdev=%p)\n", hdev);
 
     /* Return a dummy DHPDEV */
     return (PVOID)1;
@@ -91,7 +98,7 @@ FtfdCompletePDEV(
     IN DHPDEV dhpdev,
     IN HDEV hdev)
 {
-    DbgPrint("FtfdCompletePDEV()\n");
+    TRACE("FtfdCompletePDEV()\n");
     /* Nothing to do */
 }
 
@@ -101,6 +108,22 @@ APIENTRY
 FtfdDisablePDEV(
     IN DHPDEV dhpdev)
 {
-    DbgPrint("FtfdDisablePDEV()\n");
+    TRACE("FtfdDisablePDEV()\n");
     /* Nothing to do */
 }
+
+ULONG
+APIENTRY
+FtfdEscape(
+    SURFOBJ *pso,
+    ULONG iEsc,
+    ULONG cjIn,
+    PVOID pvIn,
+    ULONG cjOut,
+    PVOID pvOut)
+{
+    TRACE("FtfdEscape\n");
+    __debugbreak();
+    return 0;
+}
+
