@@ -9,12 +9,6 @@
  */
 
 #include "precomp.h"
-#include <ddraw.h>
-#include <ddrawi.h>
-#include <ddrawint.h>
-#include <ddrawgdi.h>
-#include <ntgdi.h>
-#include <d3dhal.h>
 
 /*
  * @implemented
