@@ -9,6 +9,9 @@
 
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 #define SYMBOL_SIZE 18
 
 extern NTSTATUS RosSymStatus;
