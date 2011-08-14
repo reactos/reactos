@@ -1,4 +1,3 @@
-#include <stdarg.h>
 #include "rosdhcp.h"
 
 #define NDEBUG
