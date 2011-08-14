@@ -2073,6 +2073,9 @@ NtUserSetWindowRgn(
       hrgnCopy = NULL;
    }
 
+   /* Delete the region passed by the caller */
+   GreDeleteObject(hRgn);
+
    if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
