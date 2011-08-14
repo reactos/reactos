@@ -4,7 +4,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#include <debug.h>
 
 BOOLEAN
 RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
