@@ -122,6 +122,7 @@ HWND WINAPI GetProgmanWindow(VOID);
 //
 
 typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
+typedef int (WINAPI *SETWINDOWRGN)(HWND hWnd, HRGN hRgn, BOOL bRedraw);
 
 typedef struct _UAHOWP
 {
@@ -143,7 +144,7 @@ typedef struct tagUSERAPIHOOK
   FARPROC     SetScrollInfo;
   FARPROC     EnableScrollBar;
   FARPROC     AdjustWindowRectEx;
-  FARPROC     SetWindowRgn;
+  SETWINDOWRGN SetWindowRgn;
   WNDPROC_OWP PreWndProc;
   WNDPROC_OWP PostWndProc;
   UAHOWP      WndProcArray;
