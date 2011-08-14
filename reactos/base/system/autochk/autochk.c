@@ -15,9 +15,7 @@
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
-#include <ndk/obtypes.h>
 #include <ndk/obfuncs.h>
-#include <ndk/pstypes.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/umfuncs.h>

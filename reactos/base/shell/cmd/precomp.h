@@ -26,7 +26,6 @@
 #include <assert.h>
 
 #define NTOS_MODE_USER
-#include <ndk/pstypes.h>
 #include <ndk/rtlfuncs.h>
 
 #include "resource.h"
