@@ -2,19 +2,8 @@
  * Dwarf info parse and search.
  */
 
-#define NTOSAPI
-#include <ntifs.h>
-#include <ndk/ntndk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include <ntimage.h>
-
+#include <precomp.h>
 #define NDEBUG
-#include <debug.h>
-
-#include "dwarf.h"
-#include "pe.h"
-#include <windef.h>
 
 enum
 {

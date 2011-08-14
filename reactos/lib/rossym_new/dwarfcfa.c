@@ -8,17 +8,9 @@
  * the same encoding.
  */
 
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include <ntimage.h>
+#include <precomp.h>
 
 #define NDEBUG
-#include <debug.h>
-
-#include "pe.h"
-#include "dwarf.h"
 
 #define trace 1
 
