@@ -305,6 +305,34 @@ FtfdGetFontInstance(
     return pfont;
 }
 
+static
+BOOL
+FtfdLoadGlyph(
+    PFTFD_FONT pfont,
+    HGLYPH hg,
+    ULONG iFormat) // 0 = bitmap, 1 = outline
+{
+    FT_Error fterror;
+
+    /* Check if the glyph needs to be updated */
+    if (pfont->hgSelected != hg)
+    {
+        /* Load the glyph into the freetype face slot */
+        fterror = FT_Load_Glyph(pfont->ftface, hg, 0);
+        if (fterror)
+        {
+            WARN("Couldn't load glyph 0x%lx\n", hg);
+            pfont->hgSelected = -1;
+            return FALSE;
+        }
+
+        /* Update the selected glyph */
+        pfont->hgSelected = hg;
+    }
+
+    return TRUE;
+}
+
 ULONG
 NTAPI
 FtfdQueryMaxExtents(
@@ -331,11 +359,28 @@ FtfdQueryMaxExtents(
         /* Accelerator flags (ignored atm) */
         pfddm->flRealizedType = 0;
 
-        /* Set fixed width advance */
+        /* Check for fixed width font */
         if (FT_IS_FIXED_WIDTH(ftface))
-            pfddm->lD = ftface->max_advance_width;
+        {
+            /* Make sure a glyph is loaded */
+            if ((pfont->hgSelected != -1) ||
+                FtfdLoadGlyph(pfont, 0, 0))
+            {
+                /* Convert advance from 26.6 fixpoint to pixel format */
+                pfddm->lD = pface->ftface->glyph->advance.x >> 6;
+            }
+            else
+            {
+                /* Fall back to dynamic pitch */
+                WARN("Couldn't load a glyph\n");
+                pfddm->lD = 0;
+            }
+        }
         else
+        {
+            /* Variable pitch */
             pfddm->lD = 0;
+        }
 
         /* Copy some values from the font structure */
         pfddm->fxMaxAscender = pfont->metrics.fxMaxAscender;
@@ -380,33 +425,6 @@ FtfdQueryMaxExtents(
     return sizeof(FD_DEVICEMETRICS);
 }
 
-static
-BOOL
-FtfdLoadGlyph(
-    PFTFD_FONT pfont,
-    HGLYPH hg,
-    ULONG iFormat) // 0 = bitmap, 1 = outline
-{
-    FT_Error fterror;
-
-    /* Check if the glyph needs to be updated */
-    if (pfont->hgSelected != hg)
-    {
-        /* Load the glyph into the freetype face slot */
-        fterror = FT_Load_Glyph(pfont->ftface, hg, 0);
-        if (fterror)
-        {
-            WARN("Couldn't load glyph 0x%lx\n", hg);
-            pfont->hgSelected = -1;
-            return FALSE;
-        }
-
-        /* Update the selected glyph */
-        pfont->hgSelected = hg;
-    }
-
-    return TRUE;
-}
 
 static
 VOID
@@ -436,8 +454,8 @@ FtfdQueryGlyphData(
         pgd->fxAB = pgd->fxA + ftglyph->metrics.height;
     }
 
-    /* D is the glyph advance width */
-    pgd->fxD = ftglyph->advance.x / 4; // FIXME: should be projected on the x-axis
+    /* D is the glyph advance width. Convert it from 26.6 to 28.4 fixpoint format */
+    pgd->fxD = ftglyph->advance.x >> 2; // FIXME: should be projected on the x-axis
 
     /* Get the bitnmap size */
     sizlBitmap.cx = ftglyph->bitmap.width;
