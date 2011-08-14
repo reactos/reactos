@@ -549,7 +549,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
           {
               MSG msgMouseLeave;
 
-              DPRINT1("co_MsqInsertMouseMessage: generating WM_MOUSELEAVE\n");
+              DPRINT("co_MsqInsertMouseMessage: generating WM_MOUSELEAVE\n");
 
               msgMouseLeave.hwnd = UserHMGetHandle(pDesk->spwndTrack);
               msgMouseLeave.message = WM_MOUSELEAVE;
@@ -1393,7 +1393,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         {
             MSG msgMouseLeave;
 
-            DPRINT1("co_IntProcessMouseMessage: generating WM_MOUSELEAVE\n");
+            DPRINT("co_IntProcessMouseMessage: generating WM_MOUSELEAVE\n");
 
             msgMouseLeave.hwnd = UserHMGetHandle(pDesk->spwndTrack);
             msgMouseLeave.message = WM_MOUSELEAVE;

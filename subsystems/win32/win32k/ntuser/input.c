@@ -1645,7 +1645,6 @@ IntTrackMouseEvent(
          IntSetTimer( pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, pDesk->dwMouseHoverTime, SystemTimerProc, TMRF_SYSTEM);
          // Get windows thread message points.
          point = pWnd->head.pti->ptLast;
-         DPRINT1("point: %d, %d\n", point.x, point.y);
          // Set desktop mouse hover from the system default hover rectangle.
          RECTL_vSetRect(&pDesk->rcMouseHover,
                          point.x - gspv.iMouseHoverWidth  / 2,
