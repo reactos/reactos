@@ -91,7 +91,7 @@ static GENERIC_MAPPING
 ScmServiceMapping = {SERVICE_READ,
                      SERVICE_WRITE,
                      SERVICE_EXECUTE,
-                     SC_MANAGER_ALL_ACCESS};
+                     SERVICE_ALL_ACCESS};
 
 
 /* FUNCTIONS ***************************************************************/
