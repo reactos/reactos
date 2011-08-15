@@ -91,15 +91,17 @@ DefaultLayout    = 00000409
 DefaultLanguage  = 00000409
 
 [Computer]
-pci_up = "Standard-PC"
-pci_mp = "Standard-PC Multiprocessor"
-acpi = "ACPI PC"
+pci_up = "Standard PC Uniprocessor"
+pci_mp = "Standard PC Multiprocessor"
+acpi_up = "ACPI PC Uniprocessor"
+acpi_mp = "ACPI PC Multiprocessor"
 
 [Map.Computer]
 ;<id> = <pnp id string>
 pci_up = "PC UP"
 pci_mp = "PC MP"
-acpi = "ACPI"
+acpi_up = "ACPI UP"
+acpi_mp = "ACPI MP"
 
 [Files.pci_up]
 ntoskrnl.exe=,,,,,,,,,,,,2
@@ -109,8 +111,12 @@ hal.dll=,,,,,,,,,,,,2
 ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
 halmps.dll=,,,,,,,,,,hal.dll,,2
 
-[Files.acpi]
+[Files.acpi_up]
 ntoskrnl.exe=,,,,,,,,,,,,2
+halacpi.dll=,,,,,,,,,,hal.dll,,2
+
+[Files.acpi_mp]
+ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
 halacpi.dll=,,,,,,,,,,hal.dll,,2
 
 [Display]
