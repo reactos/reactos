@@ -84,7 +84,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->FunctionalDeviceObject = DeviceObject;
     
     /* FDO is done initializing */
-    DeviceObject->Flags &= DO_DEVICE_INITIALIZING;
+    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     
     /* Attach to the physical device object (the bus) */
     AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject, TargetDevice);
@@ -126,14 +126,14 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     if (!Wdrt)
     {
         /* None exists, there is nothing to do more */
-        PdoDeviceObject->Flags &= DO_DEVICE_INITIALIZING;
+        PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
         FdoExtension->ChildPdoList = PdoExtension;
     }
     else
     {
         /* FIXME: TODO */
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
-        PdoDeviceObject->Flags &= DO_DEVICE_INITIALIZING;
+        PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
         FdoExtension->ChildPdoList = PdoExtension;
     }
 
