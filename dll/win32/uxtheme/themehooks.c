@@ -12,6 +12,9 @@
 #include "vfwmsgs.h"
 #include "uxtheme.h"
 #include "uxthemedll.h"
+#include "ncthm.h"
+#include "tmschema.h"
+
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
@@ -25,6 +28,163 @@ LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam,
 USERAPIHOOK user32ApiHook;
 BYTE gabDWPmessages[UAHOWP_MAX_SIZE];
 BYTE gabMSGPmessages[UAHOWP_MAX_SIZE];
+
+
+PWND_CONTEXT ThemeGetWndContext(HWND hWnd)
+{
+    PWND_CONTEXT pcontext;
+
+    pcontext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext));
+    if(pcontext == NULL)
+    {
+        pcontext = HeapAlloc(GetProcessHeap(), 
+                            HEAP_ZERO_MEMORY, 
+                            sizeof(WND_CONTEXT));
+        if(pcontext == NULL)
+        {
+            return NULL;
+        }
+        
+        SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext), pcontext);
+    }
+
+    return pcontext;
+}
+
+void ThemeDetroyWndContext(HWND hWnd)
+{
+    PWND_CONTEXT pContext;
+    DWORD ProcessId;
+
+    /*Do not destroy WND_CONTEXT of a window that belong to another process */
+    GetWindowThreadProcessId(hWnd, &ProcessId);
+    if(ProcessId != GetCurrentProcessId())
+    {
+        return;
+    }
+
+    pContext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext));
+    if(pContext == NULL)
+    {
+        return;
+    }
+
+    if(pContext->HasThemeRgn)
+    {
+        user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
+    }
+    
+    HeapFree(GetProcessHeap(), 0, pContext);
+
+    SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext), NULL);
+}
+
+static BOOL CALLBACK ThemeCleanupChildWndContext (HWND hWnd, LPARAM msg)
+{
+    ThemeDetroyWndContext(hWnd);
+    return TRUE;
+}
+
+static BOOL CALLBACK ThemeCleanupWndContext(HWND hWnd, LPARAM msg)
+{
+    if (hWnd == NULL)
+    {
+        EnumWindows (ThemeCleanupWndContext, 0);
+    }
+    else
+    {
+        ThemeDetroyWndContext(hWnd);
+        EnumChildWindows (hWnd, ThemeCleanupChildWndContext, 0);
+    }
+
+    return TRUE;
+}
+
+void SetThemeRegion(HWND hWnd, PWND_CONTEXT pcontext)
+{
+    HTHEME hTheme;
+    RECT rcWindow;
+    HRGN hrgn, hrgn1;
+    int CaptionHeight, iPart;
+    WINDOWINFO wi;
+
+    if(!IsAppThemed())
+    {
+        if(pcontext->HasThemeRgn)
+        {
+            pcontext->HasThemeRgn = FALSE;
+            user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
+        }
+        return;
+    }
+
+    wi.cbSize = sizeof(wi);
+
+    GetWindowInfo(hWnd, &wi);
+            
+    if((wi.dwStyle & WS_CAPTION)!=WS_CAPTION)
+    {
+        return;
+    }
+
+    /* Get the caption part id */
+    if (wi.dwExStyle & WS_EX_TOOLWINDOW)
+        iPart = WP_SMALLCAPTION;
+    else if (wi.dwStyle & WS_MAXIMIZE)
+        iPart = WP_MAXCAPTION;
+    else
+        iPart = WP_CAPTION;
+
+    pcontext->HasThemeRgn = TRUE;
+
+    CaptionHeight = wi.cyWindowBorders;
+    CaptionHeight += GetSystemMetrics(wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
+
+    GetWindowRect(hWnd, &rcWindow);
+    rcWindow.right -= rcWindow.left;
+    rcWindow.bottom = CaptionHeight;
+    rcWindow.top = 0;
+    rcWindow.left = 0;
+
+    hTheme = OpenThemeData (hWnd, L"WINDOW");
+
+    GetThemeBackgroundRegion(hTheme, 0, iPart, FS_ACTIVE, &rcWindow, &hrgn);
+
+    CloseThemeData(hTheme);
+
+    GetWindowRect(hWnd, &rcWindow);
+    rcWindow.right -= rcWindow.left;
+    rcWindow.bottom -= rcWindow.top;
+    rcWindow.top = CaptionHeight;
+    rcWindow.left = 0;
+    hrgn1 = CreateRectRgnIndirect(&rcWindow);
+
+    CombineRgn(hrgn, hrgn, hrgn1, RGN_OR );
+
+    DeleteObject(hrgn1);
+
+    user32ApiHook.SetWindowRgn(hWnd, hrgn, TRUE);
+}
+
+int OnPostWinPosChanged(HWND hWnd)
+{
+    PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
+
+    if(pcontext &&
+        pcontext->HasAppDefinedRgn == FALSE && 
+        pcontext->UpdatingRgn == FALSE)
+    {
+        pcontext->UpdatingRgn = TRUE;
+        SetThemeRegion(hWnd, pcontext);
+        pcontext = ThemeGetWndContext(hWnd);
+        pcontext->UpdatingRgn = FALSE;
+    }
+    return 0;
+}
+
+/**********************************************************************
+ *      Hook Functions
+ */
 
 static LRESULT CALLBACK
 ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -75,12 +235,50 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
     return 0;
 }
 
+
+static LRESULT CALLBACK
+ThemePostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR ret,PDWORD unknown)
+{
+    switch(Msg)
+    {
+        case WM_WINDOWPOSCHANGED:
+        {
+            return OnPostWinPosChanged(hWnd);
+        }
+        case WM_DESTROY:
+        {
+            ThemeDetroyWndContext(hWnd);
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
+{
+    PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
+    if(pcontext)
+    {
+        pcontext->HasAppDefinedRgn = TRUE;
+        pcontext->HasThemeRgn = FALSE;
+    }
+
+    return user32ApiHook.SetWindowRgn(hWnd, hRgn, bRedraw);
+}
+
+/**********************************************************************
+ *      Exports
+ */
+
 BOOL CALLBACK 
 ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
 {
     /* Sanity checks for the caller */
     if (!puah || State != uahLoadInit)
     {
+        UXTHEME_LoadTheme(FALSE);
+        ThemeCleanupWndContext(NULL, 0);
         return TRUE;
     }
 
@@ -90,10 +288,17 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     puah->DefWindowProcA = ThemeDefWindowProcA;
     puah->DefWindowProcW = ThemeDefWindowProcW;
     puah->PreWndProc = ThemePreWindowProc;
+    puah->PostWndProc = ThemePostWindowProc;
+    puah->PreDefDlgProc = ThemePreWindowProc;
+    puah->PostDefDlgProc = ThemePostWindowProc;
     puah->DefWndProcArray.MsgBitArray  = gabDWPmessages;
     puah->DefWndProcArray.Size = UAHOWP_MAX_SIZE;
     puah->WndProcArray.MsgBitArray = gabMSGPmessages;
     puah->WndProcArray.Size = UAHOWP_MAX_SIZE;
+    puah->DlgProcArray.MsgBitArray = gabMSGPmessages;
+    puah->DlgProcArray.Size = UAHOWP_MAX_SIZE;
+
+    puah->SetWindowRgn = ThemeSetWindowRgn;
 
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCPAINT);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCACTIVATE);
@@ -130,7 +335,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_THEMECHANGED);
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_UAHINIT);
 
-    UXTHEME_LoadTheme();
+    UXTHEME_LoadTheme(TRUE);
 
     return TRUE;
 }
@@ -187,8 +392,7 @@ ThemeHooksRemove()
 
     ret = UnregisterUserApiHook();
 
-    if(IsThemeActive())
-        UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+    UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
 
     return ret;
 }

@@ -1,4 +1,11 @@
 
+typedef struct _WND_CONTEXT
+{
+    BOOL HasAppDefinedRgn;
+    BOOL HasThemeRgn;
+    BOOL UpdatingRgn;
+} WND_CONTEXT, *PWND_CONTEXT;
+
 typedef struct _DRAW_CONTEXT
 {
     HWND hWnd;
@@ -91,5 +98,9 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
 void
 ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);
 
+PWND_CONTEXT 
+ThemeGetWndContext(HWND hWnd);
 
 extern ATOM atWindowTheme;
+extern ATOM atWndContrext;
+

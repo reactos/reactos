@@ -34,6 +34,7 @@
 
 #include "uxthemedll.h"
 #include "msstyles.h"
+#include "ncthm.h"
 
 #include "wine/debug.h"
 
@@ -64,6 +65,7 @@ static DWORD dwThemeAppProperties = STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS;
 ATOM atWindowTheme;
 static ATOM atSubAppName;
 static ATOM atSubIdList;
+ATOM atWndContrext;
 
 static BOOL bThemeActive = FALSE;
 static WCHAR szCurrentTheme[MAX_PATH];
@@ -148,7 +150,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
  *
  * Set the current active theme from the registry
  */
-void UXTHEME_LoadTheme(void)
+void UXTHEME_LoadTheme(BOOL bLoad)
 {
     HKEY hKey;
     DWORD buffsize;
@@ -156,29 +158,36 @@ void UXTHEME_LoadTheme(void)
     WCHAR tmp[10];
     PTHEME_FILE pt;
 
-    /* Get current theme configuration */
-    if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
-        TRACE("Loading theme config\n");
-        buffsize = sizeof(tmp)/sizeof(tmp[0]);
-        if(!RegQueryValueExW(hKey, szThemeActive, NULL, NULL, (LPBYTE)tmp, &buffsize)) {
-            bThemeActive = (tmp[0] != '0');
+    if(bLoad == TRUE) 
+    {
+        /* Get current theme configuration */
+        if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
+            TRACE("Loading theme config\n");
+            buffsize = sizeof(tmp)/sizeof(tmp[0]);
+            if(!RegQueryValueExW(hKey, szThemeActive, NULL, NULL, (LPBYTE)tmp, &buffsize)) {
+                bThemeActive = (tmp[0] != '0');
+            }
+            else {
+                bThemeActive = FALSE;
+                TRACE("Failed to get ThemeActive: %d\n", GetLastError());
+            }
+            buffsize = sizeof(szCurrentColor)/sizeof(szCurrentColor[0]);
+            if(RegQueryValueExW(hKey, szColorName, NULL, NULL, (LPBYTE)szCurrentColor, &buffsize))
+                szCurrentColor[0] = '\0';
+            buffsize = sizeof(szCurrentSize)/sizeof(szCurrentSize[0]);
+            if(RegQueryValueExW(hKey, szSizeName, NULL, NULL, (LPBYTE)szCurrentSize, &buffsize))
+                szCurrentSize[0] = '\0';
+            if (query_reg_path (hKey, szDllName, szCurrentTheme))
+                szCurrentTheme[0] = '\0';
+            RegCloseKey(hKey);
         }
-        else {
-            bThemeActive = FALSE;
-            TRACE("Failed to get ThemeActive: %d\n", GetLastError());
-        }
-        buffsize = sizeof(szCurrentColor)/sizeof(szCurrentColor[0]);
-        if(RegQueryValueExW(hKey, szColorName, NULL, NULL, (LPBYTE)szCurrentColor, &buffsize))
-            szCurrentColor[0] = '\0';
-        buffsize = sizeof(szCurrentSize)/sizeof(szCurrentSize[0]);
-        if(RegQueryValueExW(hKey, szSizeName, NULL, NULL, (LPBYTE)szCurrentSize, &buffsize))
-            szCurrentSize[0] = '\0';
-        if (query_reg_path (hKey, szDllName, szCurrentTheme))
-            szCurrentTheme[0] = '\0';
-        RegCloseKey(hKey);
+        else
+            TRACE("Failed to open theme registry key\n");
     }
     else
-        TRACE("Failed to open theme registry key\n");
+    {
+        bThemeActive = FALSE;
+    }
 
     if(bThemeActive) {
         /* Make sure the theme requested is actually valid */
@@ -542,6 +551,7 @@ void UXTHEME_InitSystem(HINSTANCE hInst)
     atSubAppName         = GlobalAddAtomW(szSubAppName);
     atSubIdList          = GlobalAddAtomW(szSubIdList);
     atDialogThemeEnabled = GlobalAddAtomW(szDialogThemeEnabled);
+    atWndContrext        = GlobalAddAtomW(L"ux_WndContext");
 }
 
 /***********************************************************************
