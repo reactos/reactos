@@ -669,6 +669,7 @@ PdoQueryResources(
     }
 
     if ((PciConfig.u.type0.InterruptPin != 0) &&
+        (PciConfig.u.type0.InterruptLine != 0) &&
         (PciConfig.u.type0.InterruptLine != 0xFF))
       ResCount++;
   }
@@ -769,6 +770,7 @@ PdoQueryResources(
 
     /* Add interrupt resource */
     if ((PciConfig.u.type0.InterruptPin != 0) &&
+        (PciConfig.u.type0.InterruptLine != 0) &&
         (PciConfig.u.type0.InterruptLine != 0xFF))
     {
       Descriptor->Type = CmResourceTypeInterrupt;
