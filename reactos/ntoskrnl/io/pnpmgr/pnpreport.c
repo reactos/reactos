@@ -248,7 +248,8 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
     /* Open a handle to the instance path key */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    /* REG_OPTION_VOLATILE is a HACK!!! */
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_VOLATILE, &InstanceKey);
     if (!NT_SUCCESS(Status))
         return Status;
 
