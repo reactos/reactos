@@ -186,7 +186,11 @@ macro(add_delay_importlibs MODULE)
 endmacro()
 
 function(spec2def _dllname _spec_file)
-    get_filename_component(_file ${_spec_file} NAME_WE)
+    if(${ARGC} GREATER 2)
+        set(_file ${ARGV2})
+    else()
+        get_filename_component(_file ${_spec_file} NAME_WE)
+    endif()
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}

@@ -268,7 +268,13 @@ function(add_importlib_target _exports_file)
 endfunction()
 
 function(spec2def _dllname _spec_file)
-    get_filename_component(_file ${_spec_file} NAME_WE)
+
+    if(${ARGC} GREATER 2)
+        set(_file ${ARGV2})
+    else()
+        get_filename_component(_file ${_spec_file} NAME_WE)
+    endif()
+
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}

@@ -47,6 +47,8 @@ list(APPEND HAL_GENERIC_ACPI_SOURCE
     generic/legacy/bus/pcibus.c)
 
 if(ARCH MATCHES i386)
+    list(APPEND HAL_GENERIC_ACPI_SOURCE
+        generic/halinit.c)
 
     list(APPEND HAL_GENERIC_UP_SOURCE
         generic/spinlock.c
@@ -101,6 +103,24 @@ if(ARCH MATCHES i386)
     target_link_libraries(hal libcntpr)
 
     add_cd_file(TARGET hal DESTINATION reactos/system32 NO_CAB FOR all)
+
+    # hal acpi
+    spec2def(halacpi.dll ../hal.spec halacpi)
+    add_library(halacpi SHARED
+        ${HAL_GENERIC_SOURCE}
+        ${HAL_GENERIC_ACPI_SOURCE}
+        ${HAL_GENERIC_UP_SOURCE}
+        up/halinit_up.c
+        up/halup.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/halacpi.def)
+    add_dependencies(halacpi psdk bugcodes)
+    set_entrypoint(halacpi HalInitSystem@8)
+    set_subsystem(halacpi native)
+    set_image_base(halacpi 0x00010000)
+    add_importlibs(halacpi ntoskrnl)
+    target_link_libraries(halacpi libcntpr)
+    set_property(TARGET halacpi PROPERTY COMPILE_DEFINITIONS CONFIG_ACPI)
+    add_cd_file(TARGET halacpi DESTINATION reactos/system32 NO_CAB FOR all)
 
     # mini_hal
     add_library(mini_hal ${MINI_HAL_SOURCE})
