@@ -166,6 +166,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         if (Fadt)
         {
             /* Grab the DSDT address and assume 2 pages */
+            PhysicalAddress.HighPart = 0;
             PhysicalAddress.LowPart = Fadt->dsdt;
             TableLength = 2 * PAGE_SIZE;
             
@@ -263,6 +264,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             {
                 /* Read the 32-bit physical address */
                 PhysicalAddress.LowPart = Rsdt->Tables[CurrentEntry];
+                PhysicalAddress.HighPart = 0;
             }
             else
             {
@@ -603,6 +605,7 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PageCount = BYTES_TO_PAGES(NodeLength);
 
     /* Allocate the memory */
+    PhysicalAddress.HighPart = 0;
     PhysicalAddress.LowPart = HalpAllocPhysicalMemory(LoaderBlock,
                                                       0x1000000,
                                                       PageCount,
@@ -652,12 +655,13 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Find the RSDT */
     Status = HalpAcpiFindRsdtPhase0(LoaderBlock, &AcpiMultiNode);
     if (!NT_SUCCESS(Status)) return Status;
+
+    PhysicalAddress.QuadPart = AcpiMultiNode->RsdtAddress.QuadPart;
    
     /* Map the RSDT */
     if (LoaderBlock)
     {
         /* Phase0: Use HAL Heap to map the RSDT, we assume it's about 2 pages */
-        PhysicalAddress.QuadPart = AcpiMultiNode->RsdtAddress.QuadPart;
         MappedAddress = HalpMapPhysicalMemory64(PhysicalAddress, 2);
     }
     else
