@@ -142,7 +142,7 @@ PnpRootCreateDevice(
     UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
     ULONG NextInstance;
     UNICODE_STRING EnumKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM);
-    HANDLE EnumHandle, DeviceKeyHandle = INVALID_HANDLE_VALUE;
+    HANDLE EnumHandle, DeviceKeyHandle = INVALID_HANDLE_VALUE, InstanceKeyHandle;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     OBJECT_ATTRIBUTES ObjectAttributes;
 
@@ -240,6 +240,18 @@ tryagain:
         Status = STATUS_NO_MEMORY;
         goto cleanup;
     }
+
+    /* Finish creating the instance path in the registry */
+    InitializeObjectAttributes(&ObjectAttributes, &Device->InstanceID, OBJ_CASE_INSENSITIVE, DeviceKeyHandle, NULL);
+    Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create instance path (0x%x)\n", Status);
+        goto cleanup;
+    }
+
+    /* Just close the handle */
+    ZwClose(InstanceKeyHandle);
 
     if (FullInstancePath)
     {
