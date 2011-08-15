@@ -463,9 +463,10 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
 {
     PPDO_EXTENSION PdoExtension;
     PDO_TYPE PdoType;
-    PWCHAR Id;
+    PWCHAR CurrentId;
+    WCHAR Id[100];
     NTSTATUS Status;
-    ULONG Length;
+    ULONG Length = 0;
     PWCHAR Buffer;
 
     /* Get the PDO type */
@@ -482,13 +483,25 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             /* What kind of PDO is this? */
             if (PdoType == AcpiPdo)
             {
-                /* PCI ID */
-                Id = L"ACPI_HAL\\PNP0C08";
+                /* ACPI ID */
+                CurrentId = L"ACPI_HAL\\PNP0C08";
+                RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+
+                CurrentId = L"*PNP0C08";
+                RtlCopyMemory(&Id[wcslen(Id) + 1], CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             }
             else if (PdoType == WdPdo)
             {
                 /* WatchDog ID */
-                Id = L"ACPI_HAL\\PNP0C18";
+                CurrentId = L"ACPI_HAL\\PNP0C18";
+                RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+
+                CurrentId = L"*PNP0C18";
+                RtlCopyMemory(&Id[wcslen(Id) + 1], CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             }
             else
             {
@@ -498,9 +511,11 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             break;
             
         case BusQueryInstanceID:
-                    
-            /* And our instance ID */
-            Id = L"0";
+
+            /* Instance ID */
+            CurrentId = L"0";
+            RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+            Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             break;
             
         case BusQueryCompatibleIDs:
@@ -509,9 +524,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
-    
-    /* Calculate the length */
-    Length = (wcslen(Id) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+   
     
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -815,7 +828,6 @@ HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
     DbgPrint("HAL: PnP Driver Power!\n");
-    while (TRUE);
     return STATUS_SUCCESS;   
 }
 
