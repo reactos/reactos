@@ -137,6 +137,9 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
         FdoExtension->ChildPdoList = PdoExtension;
     }
 
+    /* Invalidate device relations since we added a new device */
+    IoInvalidateDeviceRelations(TargetDevice, BusRelations);
+
     /* Return status */
     DPRINT1("Device added %lx\n", Status);
     return Status;
