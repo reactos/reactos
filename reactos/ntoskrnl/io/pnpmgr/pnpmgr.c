@@ -95,6 +95,10 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       DriverObject, DeviceNode->PhysicalDeviceObject);
    if (!NT_SUCCESS(Status))
    {
+      DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n", 
+              &DriverObject->DriverName,
+              &DeviceNode->InstancePath,
+              Status);
       IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
       return Status;
    }
@@ -393,9 +397,13 @@ IopStopDevice(
    DPRINT("Stopping device: %wZ\n", &DeviceNode->InstancePath);
 
    Status = IopQueryStopDevice(DeviceNode->PhysicalDeviceObject);
-   if (!NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
    {
        IopSendStopDevice(DeviceNode->PhysicalDeviceObject);
+
+       DeviceNode->Flags &= ~(DNF_STARTED | DNF_START_REQUEST_PENDING);
+       DeviceNode->Flags |= DNF_STOPPED;
+
        return STATUS_SUCCESS;
    }
 
@@ -490,7 +498,7 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
    if (DeviceCaps->NoDisplayInUI)
        DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
    else
-       DeviceNode->UserFlags &= DNUF_DONT_SHOW_IN_UI;
+       DeviceNode->UserFlags &= ~DNUF_DONT_SHOW_IN_UI;
 
    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
    if (NT_SUCCESS(Status))
@@ -3720,12 +3728,13 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
     {
         /* Stop for resource rebalance */
         
-        if (NT_SUCCESS(IopQueryStopDevice(PhysicalDeviceObject)))
+        Status = IopStopDevice(DeviceNode);
+        if (!NT_SUCCESS(Status))
         {
-            IopSendStopDevice(PhysicalDeviceObject);
+            DPRINT1("Failed to stop device for rebalancing\n");
 
-            DeviceNode->Flags &= ~(DNF_STARTED | DNF_START_REQUEST_PENDING);
-            DeviceNode->Flags |= DNF_STOPPED;
+            /* Stop failed so don't rebalance */
+            PnPFlags &= ~PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED;
         }
     }
     
