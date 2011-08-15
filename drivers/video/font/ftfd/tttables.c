@@ -10,12 +10,6 @@
 #include "ftfd.h"
 #include "tttables.h"
 
-ULONG test_GETD(PVOID pv)
-{
-    PUSHORT pus = pv;
-    return (ULONG)_byteswap_ushort(pus[0]) << 16 | _byteswap_ushort(pus[1]);
-}
-
 static
 ULONG
 CalcTableChecksum(PVOID pvTable, ULONG cjTable)
@@ -385,7 +379,7 @@ FtfdInitKerningPairs(
 
                 /* Windows wants WCHARs, convert them */
                 pKernPair->wcFirst = pface->pwcReverseTable[hgLeft];
-                pKernPair->wcSecond = pface->pwcReverseTable[hgLeft];
+                pKernPair->wcSecond = pface->pwcReverseTable[hgRight];
                 pKernPair->fwdKern = GETW(&pSubTable->format0.akernpair[j].fwdValue);
                 pKernPair++;
             }

@@ -227,9 +227,12 @@ FtfdInitIfiMetrics(
         pifi->jWinPitchAndFamily = FF_SCRIPT;
     else if (pifi->panose.bFamilyType == PAN_FAMILY_DECORATIVE)
         pifi->jWinPitchAndFamily = FF_DECORATIVE;
-    else if (pifi->panose.bProportion == PAN_PROP_MODERN)
+    else if ((pifi->panose.bProportion == PAN_PROP_MODERN) ||
+             (pifi->panose.bProportion == PAN_PROP_MONOSPACED))
         pifi->jWinPitchAndFamily = FF_MODERN;
-    else if (pifi->panose.bSerifStyle <= PAN_SERIF_ROUNDED)
+    else if ((pifi->panose.bSerifStyle == PAN_SERIF_NORMAL_SANS) ||
+             (pifi->panose.bSerifStyle == PAN_SERIF_OBTUSE_SANS) ||
+             (pifi->panose.bSerifStyle == PAN_SERIF_PERP_SANS))
         pifi->jWinPitchAndFamily = FF_SWISS;
     else
         pifi->jWinPitchAndFamily = FF_ROMAN;
@@ -291,7 +294,36 @@ FtfdInitGlyphSet(
 
     TRACE("FtfdInitGlyphSet()\n");
 
-    /* Allocate an array of WCHARs */
+    /* Set char bias, FIXME: use lCharBias? other encodings? */
+   // if (pface->ulEncoding == FT_ENCODING_MS_SYMBOL) return FtfdInitSymbolGlyphSet(pface);
+
+    /* Start with 0 runs and 0 mappings */
+    pface->cMappings = 0;
+    pface->cRuns = 0;
+
+    /* Loop through all character mappings */
+    wcPrev = wcCurrent = (WCHAR)FT_Get_First_Char(ftface, &index);
+    pface->ifiex.ifi.wcFirstChar = wcCurrent - pface->wcCharBias;;
+    while (index)
+    {
+        /* Count the mapping */
+        pface->cMappings++;
+
+        /* If character is not subsequent, count a new run */
+        if (wcCurrent != wcPrev + 1) pface->cRuns++;
+        wcPrev = wcCurrent;
+
+        /* Get the next charcode and index */
+        wcCurrent = (WCHAR)FT_Get_Next_Char(ftface, wcCurrent, &index);
+    }
+
+    /* If we have symbol encoding, duplicate the glyphset */
+    if (pface->ulEncoding == FT_ENCODING_MS_SYMBOL) pface->cRuns *= 2;
+
+    /* Save the last character */
+    pface->ifiex.ifi.wcLastChar = wcPrev;;
+
+    /* Allocate an array for HGLYPH to WCHAR mapping */
     cjSize = pface->cGlyphs * sizeof(WCHAR);
     pwcReverseTable = EngAllocMem(0, cjSize, 'dftF');
     if (!pwcReverseTable)
@@ -353,9 +385,27 @@ FtfdInitGlyphSet(
         wcCurrent = (WCHAR)FT_Get_Next_Char(ftface, wcCurrent, &index);
     }
 
+    /* Check if we have symbol encoding */
+    if (pface->ulEncoding == FT_ENCODING_MS_SYMBOL)
+    {
+        /* Loop all previous runs again */
+        for (i = 0; i < cRuns; i++)
+        {
+            /* Copy the run */
+            pGlyphSet->awcrun[cRuns + i] = pGlyphSet->awcrun[i];
+
+            /* Use the original unoffsetted value */
+            pGlyphSet->awcrun[cRuns + i].wcLow += pface->wcCharBias;
+        }
+
+        /* We have twice as much now */
+        pGlyphSet->cGlyphsSupported *= 2;
+    }
+
     TRACE("Done with font tree, %d runs\n", pGlyphSet->cRuns);
     pface->pGlyphSet = pGlyphSet;
     pface->pwcReverseTable = pwcReverseTable;
+
     return pGlyphSet;
 }
 
@@ -409,8 +459,6 @@ FtfdCreateFace(
     PFTFD_FACE pface;
     FT_Error fterror;
     ULONG ulEncoding, ulAccumCharWidth = 0;
-    WCHAR wcCurrent, wcPrev;
-    FT_UInt index;
 
     /* Try to load a unicode charmap */
     ulEncoding = FT_ENCODING_UNICODE;
@@ -451,39 +499,16 @@ FtfdCreateFace(
     pface->ulEncoding = ulEncoding;
 
     /* Set char bias, FIXME: use lCharBias? other encodings? */
-    pface->wcCharBias = ulEncoding == FT_ENCODING_MS_SYMBOL ? 0xf000 : 0;
+    pface->wcCharBias = (ulEncoding == FT_ENCODING_MS_SYMBOL) ? 0xf000 : 0;
 
     /* Get the font format */
     pface->ulFontFormat = FtfdGetFontFormat(ftface);
 
-    /* Start with 0 runs and 0 mappings */
-    pface->cMappings = 0;
-    pface->cRuns = 0;
-
-    /* Loop through all character mappings */
-    wcPrev = wcCurrent = (WCHAR)FT_Get_First_Char(ftface, &index);
-    pface->ifiex.ifi.wcFirstChar = wcCurrent - pface->wcCharBias;;
-    while (index)
-    {
-        /* Count the mapping */
-        pface->cMappings++;
-
-        /* If character is not subsequent, count a new run */
-        if (wcCurrent != wcPrev + 1) pface->cRuns++;
-        wcPrev = wcCurrent;
-
-        /* Get the next charcode and index */
-        wcCurrent = (WCHAR)FT_Get_Next_Char(ftface, wcCurrent, &index);
-    }
-
-    /* Save the last character */
-    pface->ifiex.ifi.wcLastChar = wcPrev - pface->wcCharBias;;
+    /* Initialize glyphset */
+    FtfdInitGlyphSet(pface);
 
     /* Initialize IFIMETRICS */
     FtfdInitIfiMetrics(pface);
-
-    /* Initialize glyphset */
-    FtfdInitGlyphSet(pface);
 
     /* Initialize kerning pairs */
     FtfdInitKerningPairs(pface);
