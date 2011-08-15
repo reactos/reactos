@@ -29,25 +29,25 @@ AppearancePage_OnInit(HWND hwndDlg)
 
 	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
 
-	LoadCurrentTheme(&g->Theme);
-	g->ThemeAdv = g->Theme;
+	LoadCurrentScheme(&g->Scheme);
+	g->SchemeAdv = g->Scheme;
 	g->bHasChanged = FALSE;
 	g->hBoldFont = g->hItalicFont = NULL;
 	g->hbmpColor[0] = g->hbmpColor[1] = g->hbmpColor[2] = NULL;
 	g->bInitializing = FALSE;
 
-	TemplateCount = LoadThemePresetEntries(strSelectedStyle);
+	TemplateCount = LoadSchemePresetEntries(strSelectedStyle);
 
 	hwndCombo = GetDlgItem(hwndDlg, IDC_APPEARANCE_COLORSCHEME);
-	g->ThemeId = -1;
+	g->SchemeId = -1;
 	g->bInitializing = TRUE;
 	for(i = 0; i < TemplateCount; i++)
 	{
-		iListIndex = SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)g_ThemeTemplates[i].strLegacyName);
+		iListIndex = SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)g_ColorSchemes[i].strLegacyName);
 		SendMessage(hwndCombo, CB_SETITEMDATA, iListIndex, i);
-		if (lstrcmp(g_ThemeTemplates[i].strKeyName, strSelectedStyle) == 0)
+		if (lstrcmp(g_ColorSchemes[i].strKeyName, strSelectedStyle) == 0)
 		{
-			g->ThemeId = i;
+			g->SchemeId = i;
 			SendMessage(hwndCombo, CB_SETCURSEL, (WPARAM)iListIndex, 0);
 		}
 	}
@@ -100,13 +100,13 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									   hwndDlg, EffAppearanceDlgProc, (LPARAM)g) == IDOK)
 					{
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-						g->Theme = g->ThemeAdv;
+						g->Scheme = g->SchemeAdv;
 						g->bHasChanged = TRUE;
 						// Effects dialog doesn't change the color scheme, therefore the following lines are commented out, until fixed finally
-						//g->ThemeId = -1;	/* Customized */
+						//g->SchemeId = -1;	/* Customized */
 						//SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_SETCURSEL, (WPARAM)-1, 0);
 						//SetDlgItemText(hwndDlg, IDC_APPEARANCE_COLORSCHEME, TEXT(""));
-						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Scheme);
 					}
 					break;
 
@@ -116,30 +116,30 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					{
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 						g->bHasChanged = TRUE;
-						g->Theme = g->ThemeAdv;
-						g->ThemeId = -1;	/* Customized */
-						g_GlobalData.desktop_color = g->Theme.crColor[COLOR_DESKTOP];
+						g->Scheme = g->SchemeAdv;
+						g->SchemeId = -1;	/* Customized */
+						g_GlobalData.desktop_color = g->Scheme.crColor[COLOR_DESKTOP];
 
 						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_SETCURSEL, (WPARAM)-1, 0);
 						SetDlgItemText(hwndDlg, IDC_APPEARANCE_COLORSCHEME, TEXT(""));
 
-						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Scheme);
 					}
 					break;
 
 				case IDC_APPEARANCE_COLORSCHEME:
 					if (HIWORD(wParam) == CBN_SELCHANGE && !g->bInitializing)
 					{
-						THEME Theme;
-						INT ThemeId = GetSelectedThemeId(hwndDlg);
+						COLOR_SCHEME Scheme;
+						INT SchemeId = GetSelectedThemeId(hwndDlg);
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 						g->bHasChanged = TRUE;
-						if (ThemeId != -1 && LoadThemeFromReg(&Theme, ThemeId))
+						if (SchemeId != -1 && LoadSchemeFromReg(&Scheme, SchemeId))
 						{
-							g->Theme = Theme;
-							g->ThemeId = ThemeId;
-							g_GlobalData.desktop_color = g->Theme.crColor[COLOR_DESKTOP];
-							SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&Theme);
+							g->Scheme = Scheme;
+							g->SchemeId = SchemeId;
+							g_GlobalData.desktop_color = g->Scheme.crColor[COLOR_DESKTOP];
+							SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&Scheme);
 						}
 					}
 					break;
@@ -153,10 +153,10 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case PSN_APPLY:
 					if (g->bHasChanged)
 					{
-						INT ThemeId = GetSelectedThemeId(hwndDlg);
-						ApplyTheme(&g->Theme, ThemeId);
-						g->ThemeId = ThemeId;
-						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
+						INT SchemeId = GetSelectedThemeId(hwndDlg);
+						ApplyScheme(&g->Scheme, SchemeId);
+						g->SchemeId = SchemeId;
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Scheme);
 						g->bHasChanged = FALSE;
 					}
 					SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, (LONG_PTR)PSNRET_NOERROR);
@@ -167,10 +167,10 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					return TRUE;
 
 				case PSN_SETACTIVE:
-					if (g->Theme.crColor[COLOR_DESKTOP] != g_GlobalData.desktop_color)
+					if (g->Scheme.crColor[COLOR_DESKTOP] != g_GlobalData.desktop_color)
 					{
-						g->Theme.crColor[COLOR_DESKTOP] = g_GlobalData.desktop_color;
-						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
+						g->Scheme.crColor[COLOR_DESKTOP] = g_GlobalData.desktop_color;
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Scheme);
 					}
 					break;
 			}

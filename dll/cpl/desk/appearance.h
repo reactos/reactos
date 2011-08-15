@@ -5,9 +5,9 @@
    or by passing hwnd and getting the pointer by GetWindowLongPtr */
 typedef struct tagGLOBALS
 {
-	INT ThemeId;	/* Theme is customized if ThemeId == -1 */
-	THEME Theme;
-	THEME ThemeAdv;
+	INT SchemeId;	/* Theme is customized if SchemeId == -1 */
+	COLOR_SCHEME Scheme;
+	COLOR_SCHEME SchemeAdv;
 	BOOL bHasChanged;
 	HBITMAP hbmpColor[3];
 	INT CurrentElement;

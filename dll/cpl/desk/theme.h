@@ -67,7 +67,7 @@ typedef struct
 	INT Size[NUM_SIZES];
 	BOOL bFlatMenus;
 	EFFECTS Effects;
-} THEME;
+} COLOR_SCHEME;
 
 typedef struct
 {
@@ -75,15 +75,15 @@ typedef struct
 	TCHAR strSizeName[4];
 	TCHAR strDisplayName[MAX_TEMPLATENAMELENTGH];
 	TCHAR strLegacyName[MAX_TEMPLATENAMELENTGH];
-} THEME_PRESET;
+} SCHEME_PRESET;
 
 extern const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH];
 extern const INT g_SizeMetric[NUM_SIZES];
-extern THEME_PRESET g_ThemeTemplates[MAX_TEMPLATES];
+extern SCHEME_PRESET g_ColorSchemes[MAX_TEMPLATES];
 
 /* prototypes for theme.c */
-VOID LoadCurrentTheme(THEME* theme);
-BOOL LoadThemeFromReg(THEME* theme, INT ThemeId);
-VOID ApplyTheme(THEME* theme, INT ThemeId);
-BOOL SaveTheme(THEME* theme, LPCTSTR strLegacyName);
-INT LoadThemePresetEntries(LPTSTR pszSelectedStyle);
+VOID LoadCurrentScheme(COLOR_SCHEME* scheme);
+BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId);
+VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId);
+BOOL SaveScheme(COLOR_SCHEME* scheme, LPCTSTR strLegacyName);
+INT LoadSchemePresetEntries(LPTSTR pszSelectedStyle);

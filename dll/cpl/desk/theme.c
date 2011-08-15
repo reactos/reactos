@@ -21,7 +21,7 @@ static const TCHAR g_SelectedStyle[] = TEXT("SelectedStyle");
 
 /******************************************************************************/
 
-THEME_PRESET g_ThemeTemplates[MAX_TEMPLATES];
+SCHEME_PRESET g_ColorSchemes[MAX_TEMPLATES];
 
 /* This is the list of names for the colors stored in the registry */
 const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH] =
@@ -85,7 +85,7 @@ const int g_SizeMetric[NUM_SIZES] =
 
 /******************************************************************************/
 
-VOID LoadCurrentTheme(THEME* theme)
+VOID LoadCurrentScheme(COLOR_SCHEME* scheme)
 {
 	INT i;
 	NONCLIENTMETRICS NonClientMetrics;
@@ -94,43 +94,43 @@ VOID LoadCurrentTheme(THEME* theme)
 	for (i = 0; i < NUM_COLORS; i++)
 	{
 		g_ColorList[i] = i;
-		theme->crColor[i] = (COLORREF)GetSysColor(i);
+		scheme->crColor[i] = (COLORREF)GetSysColor(i);
 	}
 
 	/* Load sizes */
 	for (i = 0; i < NUM_SIZES; i++)
 	{
-		theme->Size[i] = GetSystemMetrics(g_SizeMetric[i]);
+		scheme->Size[i] = GetSystemMetrics(g_SizeMetric[i]);
 	}
 
 	/* Load fonts */
 	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-	theme->lfFont[FONT_CAPTION] = NonClientMetrics.lfCaptionFont;
-	theme->lfFont[FONT_SMCAPTION] = NonClientMetrics.lfSmCaptionFont;
-	theme->lfFont[FONT_MENU] = NonClientMetrics.lfMenuFont;
-	theme->lfFont[FONT_INFO] = NonClientMetrics.lfStatusFont;
-	theme->lfFont[FONT_DIALOG] = NonClientMetrics.lfMessageFont;
-	SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &theme->lfFont[FONT_ICON], 0);
+	scheme->lfFont[FONT_CAPTION] = NonClientMetrics.lfCaptionFont;
+	scheme->lfFont[FONT_SMCAPTION] = NonClientMetrics.lfSmCaptionFont;
+	scheme->lfFont[FONT_MENU] = NonClientMetrics.lfMenuFont;
+	scheme->lfFont[FONT_INFO] = NonClientMetrics.lfStatusFont;
+	scheme->lfFont[FONT_DIALOG] = NonClientMetrics.lfMessageFont;
+	SystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &scheme->lfFont[FONT_ICON], 0);
 
 	/* Effects */
 	/* "Use the following transition effect for menus and tooltips" */
-	SystemParametersInfo(SPI_GETMENUANIMATION, sizeof(BOOL), &theme->Effects.bMenuAnimation, 0);
-	SystemParametersInfo(SPI_GETMENUFADE, sizeof(BOOL), &theme->Effects.bMenuFade, 0);
+	SystemParametersInfo(SPI_GETMENUANIMATION, sizeof(BOOL), &scheme->Effects.bMenuAnimation, 0);
+	SystemParametersInfo(SPI_GETMENUFADE, sizeof(BOOL), &scheme->Effects.bMenuFade, 0);
 	/* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
 	 * Just keep them in sync for now:
 	 */
-	theme->Effects.bTooltipAnimation  = theme->Effects.bMenuAnimation;
-	theme->Effects.bTooltipFade	   = theme->Effects.bMenuFade;
+	scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
+	scheme->Effects.bTooltipFade	   = scheme->Effects.bMenuFade;
 
 	/* show content of windows during dragging */
-	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &theme->Effects.bDragFullWindows, 0);
+	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &scheme->Effects.bDragFullWindows, 0);
 
 	/* "Hide underlined letters for keyboard navigation until I press the Alt key" */
-	SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &theme->Effects.bKeyboardCues, 0);
+	SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &scheme->Effects.bKeyboardCues, 0);
 }
 
-BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
+BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId)
 {
 	INT i;
 	TCHAR strSelectedStyle[4];
@@ -141,37 +141,37 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 	BOOL Ret = FALSE;
 
 	if (!g_PresetLoaded)
-		LoadThemePresetEntries(strSelectedStyle);
+		LoadSchemePresetEntries(strSelectedStyle);
 
-	if (ThemeId == -1)
+	if (SchemeId == -1)
 		return FALSE;
 
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, g_CPANewSchemes, 0, KEY_READ, &hkNewSchemes) == ERROR_SUCCESS)
 	{
-		if (RegOpenKeyEx(hkNewSchemes, g_ThemeTemplates[ThemeId].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
+		if (RegOpenKeyEx(hkNewSchemes, g_ColorSchemes[SchemeId].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
 		{
-			lstrcpyn(&strSizeName[6], g_ThemeTemplates[ThemeId].strSizeName, 3);
+			lstrcpyn(&strSizeName[6], g_ColorSchemes[SchemeId].strSizeName, 3);
 			if (RegOpenKeyEx(hkScheme, strSizeName, 0, KEY_READ, &hkSize) == ERROR_SUCCESS)
 			{
 				Ret = TRUE;
 
 				dwLength = sizeof(DWORD);
-				if (RegQueryValueEx(hkSize, TEXT("FlatMenus"), NULL, &dwType, (LPBYTE)&theme->bFlatMenus, &dwLength) != ERROR_SUCCESS ||
+				if (RegQueryValueEx(hkSize, TEXT("FlatMenus"), NULL, &dwType, (LPBYTE)&scheme->bFlatMenus, &dwLength) != ERROR_SUCCESS ||
 					dwType != REG_DWORD)
 				{
 					/* Failed to read registry value */
-					theme->bFlatMenus = FALSE;
+					scheme->bFlatMenus = FALSE;
 				}
 
 				for (i = 0; i < NUM_COLORS; i++)
 				{
 					wsprintf(strValueName, TEXT("Color #%d"), i);
 					dwLength = sizeof(COLORREF);
-					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&theme->crColor[i], &dwLength) != ERROR_SUCCESS ||
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&scheme->crColor[i], &dwLength) != ERROR_SUCCESS ||
 						dwType != REG_DWORD)
 					{
 						/* Failed to read registry value, initialize with current setting for now */
-						theme->crColor[i] = GetSysColor(i);
+						scheme->crColor[i] = GetSysColor(i);
 					}
 				}
 
@@ -179,7 +179,7 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 				{
 					wsprintf(strValueName, TEXT("Font #%d"), i);
 					dwLength = sizeof(LOGFONT);
-					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&theme->lfFont[i], &dwLength) != ERROR_SUCCESS ||
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&scheme->lfFont[i], &dwLength) != ERROR_SUCCESS ||
 						dwType != REG_BINARY || dwLength != sizeof(LOGFONT))
 					{
 						/* Failed to read registry value */
@@ -191,11 +191,11 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 				{
 					wsprintf(strValueName, TEXT("Size #%d"), i);
 					dwLength = sizeof(UINT64);
-					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&theme->Size[i], &dwLength) != ERROR_SUCCESS ||
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&scheme->Size[i], &dwLength) != ERROR_SUCCESS ||
 						dwType != REG_QWORD || dwLength != sizeof(UINT64))
 					{
 						/* Failed to read registry value, initialize with current setting for now */
-						theme->Size[i] = GetSystemMetrics(g_SizeMetric[i]);
+						scheme->Size[i] = GetSystemMetrics(g_SizeMetric[i]);
 					}
 				}
 				RegCloseKey(hkScheme);
@@ -215,7 +215,7 @@ _UpdateUserPref(UINT SpiGet, UINT SpiSet, BOOL *pbFlag)
 }
 #define UPDATE_USERPREF(NAME,pbFlag) _UpdateUserPref(SPI_GET ## NAME, SPI_SET ## NAME, pbFlag)
 
-VOID ApplyTheme(THEME* theme, INT ThemeId)
+VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId)
 {
 	INT i, Result;
 	HKEY hKey;
@@ -225,7 +225,7 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	ICONMETRICS IconMetrics;
 
 	/* Apply Colors from global variable */
-	SetSysColors(NUM_COLORS, g_ColorList, theme->crColor);
+	SetSysColors(NUM_COLORS, g_ColorList, scheme->crColor);
 
 	/* Save colors to registry */
 	Result = RegOpenKeyEx(HKEY_CURRENT_USER, g_CPColors, 0, KEY_ALL_ACCESS, &hKey);
@@ -239,9 +239,9 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	{
 		for (i = 0; i < NUM_COLORS; i++)
 		{
-			DWORD red   = GetRValue(theme->crColor[i]);
-			DWORD green = GetGValue(theme->crColor[i]);
-			DWORD blue  = GetBValue(theme->crColor[i]);
+			DWORD red   = GetRValue(scheme->crColor[i]);
+			DWORD green = GetGValue(scheme->crColor[i]);
+			DWORD blue  = GetBValue(scheme->crColor[i]);
 			wsprintf(clText, TEXT("%d %d %d"), red, green, blue);
 			RegSetValueEx(hKey, g_RegColorNames[i], 0, REG_SZ, (BYTE *)clText, (lstrlen(clText) + 1) * sizeof(TCHAR));
 		}
@@ -251,20 +251,20 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	/* Apply non client metrics */
 	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-	NonClientMetrics.lfCaptionFont = theme->lfFont[FONT_CAPTION];
-	NonClientMetrics.lfSmCaptionFont = theme->lfFont[FONT_SMCAPTION];
-	NonClientMetrics.lfMenuFont = theme->lfFont[FONT_MENU];
-	NonClientMetrics.lfStatusFont = theme->lfFont[FONT_INFO];
-	NonClientMetrics.lfMessageFont = theme->lfFont[FONT_DIALOG];
-	NonClientMetrics.iBorderWidth = theme->Size[SIZE_BORDER_X];
-	NonClientMetrics.iScrollWidth = theme->Size[SIZE_SCROLL_X];
-	NonClientMetrics.iScrollHeight = theme->Size[SIZE_SCROLL_Y];
-	NonClientMetrics.iCaptionWidth = theme->Size[SIZE_CAPTION_Y];
-	NonClientMetrics.iCaptionHeight = theme->Size[SIZE_CAPTION_Y];
-	NonClientMetrics.iSmCaptionWidth = theme->Size[SIZE_SMCAPTION_Y];
-	NonClientMetrics.iSmCaptionHeight = theme->Size[SIZE_SMCAPTION_Y];
-	NonClientMetrics.iMenuWidth = theme->Size[SIZE_MENU_SIZE_X];
-	NonClientMetrics.iMenuHeight = theme->Size[SIZE_MENU_Y];
+	NonClientMetrics.lfCaptionFont = scheme->lfFont[FONT_CAPTION];
+	NonClientMetrics.lfSmCaptionFont = scheme->lfFont[FONT_SMCAPTION];
+	NonClientMetrics.lfMenuFont = scheme->lfFont[FONT_MENU];
+	NonClientMetrics.lfStatusFont = scheme->lfFont[FONT_INFO];
+	NonClientMetrics.lfMessageFont = scheme->lfFont[FONT_DIALOG];
+	NonClientMetrics.iBorderWidth = scheme->Size[SIZE_BORDER_X];
+	NonClientMetrics.iScrollWidth = scheme->Size[SIZE_SCROLL_X];
+	NonClientMetrics.iScrollHeight = scheme->Size[SIZE_SCROLL_Y];
+	NonClientMetrics.iCaptionWidth = scheme->Size[SIZE_CAPTION_Y];
+	NonClientMetrics.iCaptionHeight = scheme->Size[SIZE_CAPTION_Y];
+	NonClientMetrics.iSmCaptionWidth = scheme->Size[SIZE_SMCAPTION_Y];
+	NonClientMetrics.iSmCaptionHeight = scheme->Size[SIZE_SMCAPTION_Y];
+	NonClientMetrics.iMenuWidth = scheme->Size[SIZE_MENU_SIZE_X];
+	NonClientMetrics.iMenuHeight = scheme->Size[SIZE_MENU_Y];
 	SystemParametersInfo(SPI_SETNONCLIENTMETRICS, 
 						 sizeof(NONCLIENTMETRICS), 
 						 &NonClientMetrics, 
@@ -273,9 +273,9 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	/* Apply icon metrics */
 	IconMetrics.cbSize = sizeof(ICONMETRICS);
 	SystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICS), &IconMetrics, 0);
-	IconMetrics.iHorzSpacing = theme->Size[SIZE_ICON_SPC_X];
-	IconMetrics.iVertSpacing = theme->Size[SIZE_ICON_SPC_Y];
-	IconMetrics.lfFont = theme->lfFont[FONT_ICON];
+	IconMetrics.iHorzSpacing = scheme->Size[SIZE_ICON_SPC_X];
+	IconMetrics.iVertSpacing = scheme->Size[SIZE_ICON_SPC_Y];
+	IconMetrics.lfFont = scheme->lfFont[FONT_ICON];
 	SystemParametersInfo(SPI_SETICONMETRICS, 
 						 sizeof(ICONMETRICS), 
 						 &IconMetrics, 
@@ -285,44 +285,44 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	/* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
 	 * Just keep them in sync for now.
 	 */
-	theme->Effects.bTooltipAnimation  = theme->Effects.bMenuAnimation;
-	theme->Effects.bTooltipFade	   = theme->Effects.bMenuFade;
-	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, theme->Effects.bDragFullWindows, (PVOID)&theme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-	SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(theme->Effects.bKeyboardCues), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-	//UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &theme->Effects.bActiveWindowTracking);
-	//UPDATE_USERPREF(MENUANIMATION, &theme->Effects.bMenuAnimation);
-	//UPDATE_USERPREF(COMBOBOXANIMATION, &theme->Effects.bComboBoxAnimation);
-	//UPDATE_USERPREF(LISTBOXSMOOTHSCROLLING, &theme->Effects.bListBoxSmoothScrolling);
-	//UPDATE_USERPREF(GRADIENTCAPTIONS, &theme->Effects.bGradientCaptions);
-	//UPDATE_USERPREF(ACTIVEWNDTRKZORDER, &theme->Effects.bActiveWndTrkZorder);
-	//UPDATE_USERPREF(HOTTRACKING, &theme->Effects.bHotTracking);
-	UPDATE_USERPREF(MENUFADE, &theme->Effects.bMenuFade);
-	//UPDATE_USERPREF(SELECTIONFADE, &theme->Effects.bSelectionFade);
-	UPDATE_USERPREF(TOOLTIPANIMATION, &theme->Effects.bTooltipAnimation);
-	UPDATE_USERPREF(TOOLTIPFADE, &theme->Effects.bTooltipFade);
-	//UPDATE_USERPREF(CURSORSHADOW, &theme->Effects.bCursorShadow);
-	//UPDATE_USERPREF(UIEFFECTS, &theme->Effects.bUiEffects);
+	scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
+	scheme->Effects.bTooltipFade	   = scheme->Effects.bMenuFade;
+	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, scheme->Effects.bDragFullWindows, (PVOID)&scheme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(scheme->Effects.bKeyboardCues), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	//UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &scheme->Effects.bActiveWindowTracking);
+	//UPDATE_USERPREF(MENUANIMATION, &scheme->Effects.bMenuAnimation);
+	//UPDATE_USERPREF(COMBOBOXANIMATION, &scheme->Effects.bComboBoxAnimation);
+	//UPDATE_USERPREF(LISTBOXSMOOTHSCROLLING, &scheme->Effects.bListBoxSmoothScrolling);
+	//UPDATE_USERPREF(GRADIENTCAPTIONS, &scheme->Effects.bGradientCaptions);
+	//UPDATE_USERPREF(ACTIVEWNDTRKZORDER, &scheme->Effects.bActiveWndTrkZorder);
+	//UPDATE_USERPREF(HOTTRACKING, &scheme->Effects.bHotTracking);
+	UPDATE_USERPREF(MENUFADE, &scheme->Effects.bMenuFade);
+	//UPDATE_USERPREF(SELECTIONFADE, &scheme->Effects.bSelectionFade);
+	UPDATE_USERPREF(TOOLTIPANIMATION, &scheme->Effects.bTooltipAnimation);
+	UPDATE_USERPREF(TOOLTIPFADE, &scheme->Effects.bTooltipFade);
+	//UPDATE_USERPREF(CURSORSHADOW, &scheme->Effects.bCursorShadow);
+	//UPDATE_USERPREF(UIEFFECTS, &scheme->Effects.bUiEffects);
 
-	/* Save ThemeId */
+	/* Save SchemeId */
 	Result = RegOpenKeyEx(HKEY_CURRENT_USER, g_CPANewSchemes, 0, KEY_ALL_ACCESS, &hKey);
 	if (Result == ERROR_SUCCESS)
 	{
-		if (ThemeId == -1)
+		if (SchemeId == -1)
 			clText[0] = TEXT('\0');
 		else
-			lstrcpy(clText, g_ThemeTemplates[ThemeId].strKeyName);
+			lstrcpy(clText, g_ColorSchemes[SchemeId].strKeyName);
 		RegSetValueEx(hKey, g_SelectedStyle, 0, REG_SZ, (BYTE *)clText, (lstrlen(clText) + 1) * sizeof(TCHAR));
 		RegCloseKey(hKey);
 	}
 }
 
-BOOL SaveTheme(THEME* theme, LPCTSTR strLegacyName)
+BOOL SaveScheme(COLOR_SCHEME* scheme, LPCTSTR strLegacyName)
 {
 	/* FIXME: implement */
 	return FALSE;
 }
 
-INT LoadThemePresetEntries(LPTSTR pszSelectedStyle)
+INT LoadSchemePresetEntries(LPTSTR pszSelectedStyle)
 {
 	HKEY hkNewSchemes, hkScheme, hkSizes, hkSize;
 	FILETIME ftLastWriteTime;
@@ -350,27 +350,27 @@ INT LoadThemePresetEntries(LPTSTR pszSelectedStyle)
 
 		iStyle = 0;
 		dwLength = MAX_TEMPLATENAMELENTGH;
-		while((RegEnumKeyEx(hkNewSchemes, iStyle, g_ThemeTemplates[iTemplateIndex].strKeyName, &dwLength,
+		while((RegEnumKeyEx(hkNewSchemes, iStyle, g_ColorSchemes[iTemplateIndex].strKeyName, &dwLength,
 							NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) && (iTemplateIndex < MAX_TEMPLATES))
 		{
 			/* is it really a template or one of the other entries */
 			if (dwLength <= 4)
 			{
-				if (RegOpenKeyEx(hkNewSchemes, g_ThemeTemplates[iTemplateIndex].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
+				if (RegOpenKeyEx(hkNewSchemes, g_ColorSchemes[iTemplateIndex].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
 				{
 					if (RegOpenKeyEx(hkScheme, TEXT("Sizes"), 0, KEY_READ, &hkSizes) == ERROR_SUCCESS)
 					{
 						iSize = 0;
 						dwLength = 3;
-						while((RegEnumKeyEx(hkSizes, iSize, g_ThemeTemplates[iTemplateIndex].strSizeName, &dwLength,
+						while((RegEnumKeyEx(hkSizes, iSize, g_ColorSchemes[iTemplateIndex].strSizeName, &dwLength,
 											NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) && (iSize <= 4))
 						{
-							if(RegOpenKeyEx(hkSizes, g_ThemeTemplates[iTemplateIndex].strSizeName, 0, KEY_READ, &hkSize) == ERROR_SUCCESS)
+							if(RegOpenKeyEx(hkSizes, g_ColorSchemes[iTemplateIndex].strSizeName, 0, KEY_READ, &hkSize) == ERROR_SUCCESS)
 							{
 								dwLength = MAX_TEMPLATENAMELENTGH;
-								RegQueryValueEx(hkSize, TEXT("DisplayName"), NULL, &dwType, (LPBYTE)&g_ThemeTemplates[iTemplateIndex].strDisplayName, &dwLength);
+								RegQueryValueEx(hkSize, TEXT("DisplayName"), NULL, &dwType, (LPBYTE)&g_ColorSchemes[iTemplateIndex].strDisplayName, &dwLength);
 								dwLength = MAX_TEMPLATENAMELENTGH;
-								RegQueryValueEx(hkSize, TEXT("LegacyName"), NULL, &dwType, (LPBYTE)&g_ThemeTemplates[iTemplateIndex].strLegacyName, &dwLength);
+								RegQueryValueEx(hkSize, TEXT("LegacyName"), NULL, &dwType, (LPBYTE)&g_ColorSchemes[iTemplateIndex].strLegacyName, &dwLength);
 								RegCloseKey(hkSize);
 							}
 							iSize++;
