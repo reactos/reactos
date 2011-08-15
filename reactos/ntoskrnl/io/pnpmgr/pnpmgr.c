@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-//#define ENABLE_ACPI
-
 /* GLOBALS *******************************************************************/
 
 PDEVICE_NODE IopRootDeviceNode;
@@ -2693,143 +2691,73 @@ cleanup:
 }
 
 static BOOLEAN INIT_FUNCTION
-IopIsAcpiComputer(VOID)
+IopIsFirmwareMapperDisabled(VOID)
 {
-#ifndef ENABLE_ACPI
-   return FALSE;
-#else
-   UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
-   UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
-   UNICODE_STRING AcpiBiosIdentifier = RTL_CONSTANT_STRING(L"ACPI BIOS");
+   UNICODE_STRING KeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CURRENTCONTROLSET\\Control\\Pnp");
+   UNICODE_STRING KeyNameU = RTL_CONSTANT_STRING(L"DisableFirmwareMapper");
    OBJECT_ATTRIBUTES ObjectAttributes;
-   PKEY_BASIC_INFORMATION pDeviceInformation = NULL;
-   ULONG DeviceInfoLength = sizeof(KEY_BASIC_INFORMATION) + 50 * sizeof(WCHAR);
-   PKEY_VALUE_PARTIAL_INFORMATION pValueInformation = NULL;
-   ULONG ValueInfoLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 50 * sizeof(WCHAR);
-   ULONG RequiredSize;
-   ULONG IndexDevice = 0;
-   UNICODE_STRING DeviceName, ValueName;
-   HANDLE hDevicesKey = NULL;
-   HANDLE hDeviceKey = NULL;
+   HANDLE hPnpKey;
+   PKEY_VALUE_PARTIAL_INFORMATION KeyInformation;
+   ULONG DesiredLength, Length, KeyValue;
    NTSTATUS Status;
-   BOOLEAN ret = FALSE;
 
-   InitializeObjectAttributes(&ObjectAttributes, &MultiKeyPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
-   Status = ZwOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
-   if (!NT_SUCCESS(Status))
+   InitializeObjectAttributes(&ObjectAttributes, &KeyPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+   Status = ZwOpenKey(&hPnpKey, KEY_QUERY_VALUE, &ObjectAttributes);
+   if (NT_SUCCESS(Status))
    {
-      DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
-      goto cleanup;
+       Status = ZwQueryValueKey(hPnpKey,
+                                &KeyNameU,
+                                KeyValuePartialInformation,
+                                NULL,
+                                0,
+                                &DesiredLength);
+       if ((Status == STATUS_BUFFER_TOO_SMALL) ||
+           (Status == STATUS_BUFFER_OVERFLOW))
+       {
+           Length = DesiredLength;
+           KeyInformation = ExAllocatePool(PagedPool, Length);
+           if (KeyInformation)
+           {
+               Status = ZwQueryValueKey(hPnpKey,
+                                        &KeyNameU,
+                                        KeyValuePartialInformation,
+                                        KeyInformation,
+                                        Length,
+                                        &DesiredLength);
+               if (NT_SUCCESS(Status) && KeyInformation->DataLength == sizeof(ULONG))
+               {
+                   KeyValue = (ULONG)(*KeyInformation->Data);
+               }
+               else
+               {
+                   DPRINT1("ZwQueryValueKey(%wZ%wZ) failed\n", &KeyPathU, &KeyNameU);
+                   KeyValue = 0;
+               }
+
+               ExFreePool(KeyInformation);
+           }
+           else
+           {
+               DPRINT1("Failed to allocate memory for registry query\n");
+               KeyValue = 0;
+           }
+       }
+       else
+       {
+           DPRINT1("ZwQueryValueKey(%wZ%wZ) failed with status 0x%08lx\n", &KeyPathU, &KeyNameU, Status);
+           KeyValue = 0;
+       }
+
+       ZwClose(hPnpKey);
+   }
+   else
+   {
+       DPRINT1("ZwOpenKey(%wZ) failed with status 0x%08lx\n", &KeyPathU, Status);
    }
 
-   pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
-   if (!pDeviceInformation)
-   {
-      DPRINT("ExAllocatePool() failed\n");
-      Status = STATUS_NO_MEMORY;
-      goto cleanup;
-   }
+   DPRINT1("Firmware mapper is %s\n", KeyValue != 0 ? "disabled" : "enabled");
 
-   pValueInformation = ExAllocatePool(PagedPool, ValueInfoLength);
-   if (!pDeviceInformation)
-   {
-      DPRINT("ExAllocatePool() failed\n");
-      Status = STATUS_NO_MEMORY;
-      goto cleanup;
-   }
-
-   while (TRUE)
-   {
-      Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
-      if (Status == STATUS_NO_MORE_ENTRIES)
-         break;
-      else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
-      {
-         ExFreePool(pDeviceInformation);
-         DeviceInfoLength = RequiredSize;
-         pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
-         if (!pDeviceInformation)
-         {
-            DPRINT("ExAllocatePool() failed\n");
-            Status = STATUS_NO_MEMORY;
-            goto cleanup;
-         }
-         Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
-      }
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("ZwEnumerateKey() failed with status 0x%08lx\n", Status);
-         goto cleanup;
-      }
-      IndexDevice++;
-
-      /* Open device key */
-      DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
-      DeviceName.Buffer = pDeviceInformation->Name;
-      InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_KERNEL_HANDLE, hDevicesKey, NULL);
-      Status = ZwOpenKey(
-         &hDeviceKey,
-         KEY_QUERY_VALUE,
-         &ObjectAttributes);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
-         goto cleanup;
-      }
-
-      /* Read identifier */
-      Status = ZwQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
-      {
-         ExFreePool(pValueInformation);
-         ValueInfoLength = RequiredSize;
-         pValueInformation = ExAllocatePool(PagedPool, ValueInfoLength);
-         if (!pValueInformation)
-         {
-            DPRINT("ExAllocatePool() failed\n");
-            Status = STATUS_NO_MEMORY;
-            goto cleanup;
-         }
-         Status = ZwQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      }
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("ZwQueryValueKey() failed with status 0x%08lx\n", Status);
-         goto nextdevice;
-      }
-      else if (pValueInformation->Type != REG_SZ)
-      {
-         DPRINT("Wrong registry type: got 0x%lx, expected 0x%lx\n", pValueInformation->Type, REG_SZ);
-         goto nextdevice;
-      }
-
-      ValueName.Length = ValueName.MaximumLength = pValueInformation->DataLength;
-      ValueName.Buffer = (PWCHAR)pValueInformation->Data;
-      if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
-         ValueName.Length -= sizeof(WCHAR);
-      if (RtlCompareUnicodeString(&ValueName, &AcpiBiosIdentifier, FALSE) == 0)
-      {
-         DPRINT("Found ACPI BIOS\n");
-         ret = TRUE;
-         goto cleanup;
-      }
-
-nextdevice:
-      ZwClose(hDeviceKey);
-      hDeviceKey = NULL;
-   }
-
-cleanup:
-   if (pDeviceInformation)
-      ExFreePool(pDeviceInformation);
-   if (pValueInformation)
-      ExFreePool(pValueInformation);
-   if (hDevicesKey)
-      ZwClose(hDevicesKey);
-   if (hDeviceKey)
-      ZwClose(hDeviceKey);
-   return ret;
-#endif
+   return (KeyValue != 0) ? TRUE : FALSE;
 }
 
 NTSTATUS
@@ -2840,17 +2768,9 @@ IopUpdateRootKey(VOID)
    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
    UNICODE_STRING RootPathU = RTL_CONSTANT_STRING(L"Root");
    UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
-   UNICODE_STRING DeviceDescU = RTL_CONSTANT_STRING(L"DeviceDesc");
-   UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
-   UNICODE_STRING LogConfU = RTL_CONSTANT_STRING(L"LogConf");
-   UNICODE_STRING HalAcpiDevice = RTL_CONSTANT_STRING(L"ACPI_HAL");
-   UNICODE_STRING HalAcpiId = RTL_CONSTANT_STRING(L"0000");
-   UNICODE_STRING HalAcpiDeviceDesc = RTL_CONSTANT_STRING(L"HAL ACPI");
-   UNICODE_STRING HalAcpiHardwareID = RTL_CONSTANT_STRING(L"*PNP0C08\0");
    OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE hEnum, hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
+   HANDLE hEnum, hRoot;
    NTSTATUS Status;
-   ULONG Disposition;
 
    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
    Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
@@ -2869,35 +2789,7 @@ IopUpdateRootKey(VOID)
       return Status;
    }
 
-   if (IopIsAcpiComputer())
-   {
-      InitializeObjectAttributes(&ObjectAttributes, &HalAcpiDevice, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hRoot, NULL);
-      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
-      ZwClose(hRoot);
-      if (!NT_SUCCESS(Status))
-         return Status;
-      InitializeObjectAttributes(&ObjectAttributes, &HalAcpiId, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiDevice, NULL);
-      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY | KEY_SET_VALUE, &ObjectAttributes, 0, NULL, 0, &Disposition);
-      ZwClose(hHalAcpiDevice);
-      if (!NT_SUCCESS(Status))
-          return Status;
-      if (Disposition == REG_CREATED_NEW_KEY)
-      {
-          Status = ZwSetValueKey(hHalAcpiId, &DeviceDescU, 0, REG_SZ, HalAcpiDeviceDesc.Buffer, HalAcpiDeviceDesc.MaximumLength);
-          if (NT_SUCCESS(Status))
-              Status = ZwSetValueKey(hHalAcpiId, &HardwareIDU, 0, REG_MULTI_SZ, HalAcpiHardwareID.Buffer, HalAcpiHardwareID.MaximumLength);
-      }
-      if (NT_SUCCESS(Status))
-      {
-          InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiId, NULL);
-          Status = ZwCreateKey(&hLogConf, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-          if (NT_SUCCESS(Status))
-              ZwClose(hLogConf);
-      }
-      ZwClose(hHalAcpiId);
-      return Status;
-   }
-   else
+   if (!IopIsFirmwareMapperDisabled())
    {
         Status = IopOpenRegistryKeyEx(&hEnum, NULL, &MultiKeyPathU, KEY_ENUMERATE_SUB_KEYS);
         if (!NT_SUCCESS(Status))
@@ -2915,9 +2807,16 @@ IopUpdateRootKey(VOID)
             NULL,
             0);
         ZwClose(hEnum);
-        ZwClose(hRoot);
-        return Status;
    }
+   else
+   {
+        /* Enumeration is disabled */
+        Status = STATUS_SUCCESS;
+   }
+
+   ZwClose(hRoot);
+
+   return Status;
 }
 
 NTSTATUS
