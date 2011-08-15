@@ -492,16 +492,12 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
                 /* Unknown */
                 return STATUS_NOT_SUPPORTED;
             }
-            
-            /* Static length */
-            Length = 32;
             break;
             
         case BusQueryInstanceID:
                     
             /* And our instance ID */
             Id = L"0";
-            Length = sizeof(L"0") + sizeof(UNICODE_NULL);
             break;
             
         case BusQueryCompatibleIDs:
@@ -510,6 +506,9 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
+    
+    /* Calculate the length */
+    Length = (wcslen(Id) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
     
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -556,14 +555,12 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
             
             /* This is our hardware ID */
             Id = HalHardwareIdString;
-            Length = wcslen(HalHardwareIdString) + sizeof(UNICODE_NULL);
             break;
             
         case BusQueryInstanceID:
             
             /* And our instance ID */
             Id = L"0";
-            Length = sizeof(L"0") + sizeof(UNICODE_NULL);
             break;
             
         default:
@@ -571,6 +568,9 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
+    
+    /* Calculate the length */
+    Length = (wcslen(Id) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
     
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
