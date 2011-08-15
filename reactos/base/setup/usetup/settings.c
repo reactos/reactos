@@ -293,7 +293,7 @@ CreateComputerTypeList(HINF InfFile)
         ComputerIdentifier[0] = 0;
     }
 
-    DPRINT1("Computer identifier: '%S'\n", ComputerIdentifier);
+    DPRINT("Computer identifier: '%S'\n", ComputerIdentifier);
 
     /* Search for matching device identifier */
     if (!SetupFindFirstLineW(InfFile, L"Map.Computer", NULL, &Context))
@@ -311,7 +311,7 @@ CreateComputerTypeList(HINF InfFile)
             return NULL;
         }
 
-        DPRINT1("KeyValue: %S\n", KeyValue);
+        DPRINT("KeyValue: %S\n", KeyValue);
         if (wcsstr(ComputerIdentifier, KeyValue))
         {
             if (!INF_GetDataField(&Context, 0, &KeyName))
