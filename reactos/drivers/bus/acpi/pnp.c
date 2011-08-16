@@ -193,7 +193,7 @@ Bus_FDO_PnP (
         //
 
         length = sizeof(DEVICE_RELATIONS) +
-                ((numPdosPresent + prevcount) * sizeof (PDEVICE_OBJECT)) -1;
+                (((numPdosPresent + prevcount) - 1) * sizeof (DEVICE_OBJECT));
 
         relations = (PDEVICE_RELATIONS) ExAllocatePoolWithTag (PagedPool,
                                         length, 'IPCA');
@@ -214,7 +214,7 @@ Bus_FDO_PnP (
         //
         if (prevcount) {
             RtlCopyMemory (relations->Objects, oldRelations->Objects,
-                                      prevcount * sizeof (PDEVICE_OBJECT));
+                                      prevcount * sizeof (DEVICE_OBJECT));
         }
 
         relations->Count = prevcount + numPdosPresent;
