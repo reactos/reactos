@@ -2,6 +2,7 @@
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
+    NtFreeVirtualMemory.c
     RtlInitializeBitMap.c
     ZwContinue.c
     testlist.c)

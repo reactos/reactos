@@ -3442,6 +3442,12 @@ START_TEST(protocol)
 {
     HMODULE hurlmon;
 
+    if(!winetest_interactive)
+    {
+        skip("protocol test skipped, bug 6381\n");
+        return;
+    }
+
     hurlmon = GetModuleHandle("urlmon.dll");
     pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
     pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");

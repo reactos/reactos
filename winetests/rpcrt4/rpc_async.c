@@ -25,8 +25,8 @@
 #include <rpc.h>
 #include <rpcasync.h>
 
-RPC_STATUS (RPC_ENTRY *pRpcAsyncInitializeHandle)(PRPC_ASYNC_STATE,unsigned int);
-RPC_STATUS (RPC_ENTRY *pRpcAsyncGetCallStatus)(PRPC_ASYNC_STATE);
+static RPC_STATUS (RPC_ENTRY *pRpcAsyncInitializeHandle)(PRPC_ASYNC_STATE,unsigned int);
+static RPC_STATUS (RPC_ENTRY *pRpcAsyncGetCallStatus)(PRPC_ASYNC_STATE);
 
 static void test_RpcAsyncInitializeHandle(void)
 {

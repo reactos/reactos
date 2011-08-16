@@ -1543,6 +1543,9 @@ static void test_conformant_string(void)
     my_alloc_called = 0;
     StubMsg.Buffer = StubMsg.BufferStart;
     mem = mem_orig = HeapAlloc(GetProcessHeap(), 0, sizeof(memsrc));
+    /* Windows apparently checks string length on the output buffer to determine its size... */
+    memset( mem, 'x', sizeof(memsrc) - 1 );
+    mem[sizeof(memsrc) - 1] = 0;
     NdrPointerUnmarshall( &StubMsg, &mem, fmtstr_conf_str, 0);
     ok(mem == mem_orig, "mem not alloced\n");
     ok(my_alloc_called == 0, "alloc called %d\n", my_alloc_called);

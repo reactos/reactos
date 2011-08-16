@@ -15,7 +15,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(quartz_winetest ${SOURCE})
-target_link_libraries(quartz_winetest wine)
+target_link_libraries(quartz_winetest wine uuid)
 set_module_type(quartz_winetest win32cui)
 add_importlibs(quartz_winetest ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET quartz_winetest DESTINATION reactos/bin FOR all)
