@@ -2526,6 +2526,13 @@ QueryServiceStatusEx(SC_HANDLE hService,
         return FALSE;
     }
 
+    if (cbBufSize < sizeof(SERVICE_STATUS_PROCESS))
+    {
+        *pcbBytesNeeded = sizeof(SERVICE_STATUS_PROCESS);
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
