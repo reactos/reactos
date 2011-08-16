@@ -1,6 +1,6 @@
 include_directories(
     BEFORE include
-	${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
+    ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
     ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include
     ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
 
@@ -57,4 +57,4 @@ list(APPEND SOURCE
     src/core/snmp/msg_out.c)
 
 add_library(lwip ${SOURCE})
-
+add_dependencies(lwip bugcodes)
