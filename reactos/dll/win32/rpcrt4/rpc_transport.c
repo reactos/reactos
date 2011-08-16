@@ -103,9 +103,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
-#undef ERR
-#define ERR FIXME
-
 static RPC_STATUS RPCRT4_SpawnConnection(RpcConnection** Connection, RpcConnection* OldConnection);
 
 /**** ncacn_np support ****/
@@ -225,21 +222,13 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
     if (pipe != INVALID_HANDLE_VALUE) break;
     err = GetLastError();
     if (err == ERROR_PIPE_BUSY) {
-      ERR("connection to %s failed, error=%x\n", pname, err);
+      TRACE("connection failed, error=%x\n", err);
       return RPC_S_SERVER_TOO_BUSY;
     }
-    if(wait) ERR("Waiting for pipe instance");
-    if(wait)
-    {
-      if (!WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
-        err = GetLastError();
-        ERR("connection to %s failed, error=%x, wait %x\n", pname, err, wait);
-        return RPC_S_SERVER_UNAVAILABLE;
-      }
-      else
-      {
-         ERR("Pipe Instance Ready!!!!!!!!!!!!!!!!!!\n");
-      }
+    if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
+      err = GetLastError();
+      WARN("connection failed, error=%x\n", err);
+      return RPC_S_SERVER_UNAVAILABLE;
     }
   }
 
@@ -469,6 +458,7 @@ static int rpcrt4_conn_np_write(RpcConnection *Connection,
     bytes_left -= bytes_written;
     buf += bytes_written;
   }
+  CloseHandle(ovl.hEvent);
   return ret ? count : -1;
 }
 

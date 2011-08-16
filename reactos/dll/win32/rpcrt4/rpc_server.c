@@ -1071,8 +1071,6 @@ void RPCRT4_destroy_all_protseqs(void)
     EnterCriticalSection(&server_cs);
     LIST_FOR_EACH_ENTRY_SAFE(cps, cursor2, &protseqs, RpcServerProtseq, entry)
     {
-        if (listen_count != 0)
-            RPCRT4_sync_with_server_thread(cps);
         destroy_serverprotoseq(cps);
     }
     LeaveCriticalSection(&server_cs);
