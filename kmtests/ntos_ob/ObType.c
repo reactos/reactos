@@ -133,9 +133,8 @@ ParseProc(
     return STATUS_OBJECT_NAME_NOT_FOUND;//STATUS_SUCCESS;
 }
 
-/* TODO: this does not actually return an NTSTATUS! */
 static
-NTSTATUS
+BOOLEAN
 NTAPI
 OkayToCloseProc(
     IN PEPROCESS Process OPTIONAL,
