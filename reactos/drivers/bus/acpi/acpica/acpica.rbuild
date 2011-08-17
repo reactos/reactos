@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="acpica" type="staticlibrary" allowwarnings="true">
-	<define name="ACPI_USE_LOCAL_CACHE"/>
 	<include base="acpica">include</include>
 	<directory name="dispatcher">
 		<file>dsfield.c</file>

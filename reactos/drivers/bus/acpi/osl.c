@@ -149,19 +149,6 @@ AcpiOsFree(void *ptr)
 
 #ifndef ACPI_USE_LOCAL_CACHE
 
-void*
-AcpiOsAcquireObjectHelper (
-    POOL_TYPE PoolType,
-    SIZE_T NumberOfBytes,
-    ULONG Tag)
-{
-    void* Alloc = ExAllocatePool(PoolType, NumberOfBytes);
-
-    /* acpica expects memory allocated from cache to be zeroed */
-    RtlZeroMemory(Alloc,NumberOfBytes);
-    return Alloc;
-}
-
 ACPI_STATUS
 AcpiOsCreateCache (
     char                    *CacheName,
@@ -173,7 +160,7 @@ AcpiOsCreateCache (
         ExAllocatePool(NonPagedPool,sizeof(NPAGED_LOOKASIDE_LIST));
 
     ExInitializeNPagedLookasideList(Lookaside,
-        (PALLOCATE_FUNCTION)AcpiOsAcquireObjectHelper,// custom memory allocator
+        NULL,
         NULL,
         0,
         ObjectSize,
@@ -283,7 +270,7 @@ AcpiOsInstallInterruptHandler (
         Internal,
         0,
         InterruptNumber,
-        0,
+        InterruptNumber,
         &DIrql,
         &Affinity);
 
