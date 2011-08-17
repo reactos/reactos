@@ -2714,6 +2714,7 @@ static void update_system_links(void)
 
 static BOOL init_freetype(void)
 {
+#ifdef DYNAMIC_FREETYPE
     ft_handle = LoadLibraryA("freetype.dll");
     if(!ft_handle) {
         WINE_MESSAGE(
@@ -2723,6 +2724,13 @@ static BOOL init_freetype(void)
       "http://www.freetype.org\n");
 	return FALSE;
     }
+#else
+    /* Request version so it is actually linked in */
+    FT_Version.major = FT_Version.minor = FT_Version.patch = -1;
+    FT_Library_Version(library,&FT_Version.major,&FT_Version.minor,&FT_Version.patch);
+
+    ft_handle = GetModuleHandleA("freetype.dll");
+#endif
 
 #define LOAD_FUNCPTR(f) if((p##f = (PVOID)GetProcAddress(ft_handle, #f)) == NULL){WARN("Can't find symbol %s\n", #f); goto sym_not_found;}
 
@@ -2799,7 +2807,9 @@ sym_not_found:
       "font library.  To enable Wine to use TrueType fonts please upgrade\n"
       "FreeType to at least version 2.0.5.\n"
       "http://www.freetype.org\n");
+#ifdef DYNAMIC_FREETYPE
     FreeLibrary(ft_handle);
+#endif
     ft_handle = NULL;
     return FALSE;
 }
