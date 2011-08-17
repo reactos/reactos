@@ -196,7 +196,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
             FdoRelations = ExAllocatePoolWithTag(PagedPool,
                                                  FIELD_OFFSET(DEVICE_RELATIONS,
                                                               Objects) +
-                                                 4 * PdoCount,
+                                                 sizeof(PDEVICE_OBJECT) * PdoCount,
                                                  ' laH');
             if (!FdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
             
@@ -220,7 +220,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 }
                 
                 /* Free existing structure */
-                ExFreePoolWithTag(*DeviceRelations, 0);
+                ExFreePool(*DeviceRelations);
             }
             
             /* Now check if we have a PDO list */
@@ -359,7 +359,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Fail, no memory */
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            ExFreePoolWithTag(RequirementsList, 0);
+            ExFreePoolWithTag(RequirementsList, ' laH');
             return Status;
         }
         
@@ -372,43 +372,40 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         ResourceList->List[0].InterfaceType = PNPBus;
         ResourceList->List[0].PartialResourceList.Version = 1;
         ResourceList->List[0].PartialResourceList.Revision = 1;
-        ResourceList->List[0].PartialResourceList.Count = 1;
+        ResourceList->List[0].PartialResourceList.Count = 0;
 
         /* Setup the first descriptor */
         PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
-        PartialDesc->Type = CmResourceTypeInterrupt;
 
         /* Find the requirement descriptor for the SCI */
         for (i = 0; i < RequirementsList->List[0].Count; i++)
         {
             /* Get this descriptor */
             Descriptor = &RequirementsList->List[0].Descriptors[i];
-            if (Descriptor->Type == CmResourceTypeInterrupt) break;
-            Descriptor = NULL;
+            if (Descriptor->Type == CmResourceTypeInterrupt)
+            {
+                /* Copy requirements descriptor into resource descriptor */
+                PartialDesc->Type = CmResourceTypeInterrupt;
+                PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
+                PartialDesc->Flags = Descriptor->Flags;
+                ASSERT(Descriptor->u.Interrupt.MinimumVector ==
+                       Descriptor->u.Interrupt.MaximumVector);
+                PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
+                PartialDesc->u.Interrupt.Level = Descriptor->u.Interrupt.MinimumVector;
+                PartialDesc->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+                ResourceList->List[0].PartialResourceList.Count++;
+
+                break;
+            }
         }
-        
-        /* Make sure we found the descriptor */
-        if (Descriptor)
-        { 
-            /* Copy requirements descriptor into resource descriptor */
-            PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
-            PartialDesc->Flags = Descriptor->Flags;
-            ASSERT(Descriptor->u.Interrupt.MinimumVector ==
-                   Descriptor->u.Interrupt.MaximumVector);
-            PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
-            PartialDesc->u.Interrupt.Level = Descriptor->u.Interrupt.MinimumVector;
-            PartialDesc->u.Interrupt.Affinity = 0xFFFFFFFF;
-            
-            /* Return resources and success */
-            *Resources = ResourceList;
-            ExFreePoolWithTag(RequirementsList, 0);
-            return STATUS_SUCCESS;
-        }
-        
-        /* Free memory and fail */
-        ExFreePoolWithTag(RequirementsList, 0);
-        ExFreePoolWithTag(ResourceList, 0);
-        Status = STATUS_NOT_FOUND;
+
+        /* Return resources and success */
+        *Resources = ResourceList;
+
+        ExFreePoolWithTag(RequirementsList, ' laH');
+
+        return STATUS_SUCCESS;
     }
     else if (DeviceExtension->PdoType == WdPdo)
     {
@@ -420,9 +417,6 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* This shouldn't happen */
         return STATUS_UNSUCCESSFUL;
     }
-    
-    /* Return the status */
-    return Status;
 }
 
 NTSTATUS
@@ -450,9 +444,6 @@ HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
         /* This shouldn't happen */
         return STATUS_UNSUCCESSFUL;
     }
-    
-    /* Return the status */
-    return Status;
 }
 
 NTSTATUS

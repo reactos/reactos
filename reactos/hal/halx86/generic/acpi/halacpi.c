@@ -1002,7 +1002,7 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
         else
         {
             /* Fail */
-            ExFreePoolWithTag(RequirementsList, 0);
+            ExFreePoolWithTag(RequirementsList, ' laH');
             Status = STATUS_NO_SUCH_DEVICE;
         }
     }
