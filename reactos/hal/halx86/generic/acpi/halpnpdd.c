@@ -425,14 +425,13 @@ HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
                               OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requirements)
 {
     PPDO_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    NTSTATUS Status;
     PAGED_CODE();
     
     /* Only the ACPI PDO has requirements */
     if (DeviceExtension->PdoType == AcpiPdo)
     {
         /* Query ACPI requirements */
-        Status = HalpQueryAcpiResourceRequirements(Requirements);
+        return HalpQueryAcpiResourceRequirements(Requirements);
     }
     else if (DeviceExtension->PdoType == WdPdo)
     {
