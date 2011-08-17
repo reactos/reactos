@@ -99,6 +99,68 @@ FtfdCopyBits_S1D4(
     }
 }
 
+#define CT_OPAQUE 0x2a
+
+static
+VOID
+FtfdCopyBits_S1D8(
+    GLYPHBITS *pgb,
+    FT_Bitmap *ftbitmap)
+{
+    ULONG ulRows, ulSrcDelta;
+    PBYTE pjDstLine, pjSrcLine;
+
+    pjDstLine = pgb->aj;
+
+    pjSrcLine = ftbitmap->buffer;
+    ulSrcDelta = abs(ftbitmap->pitch);
+
+    ulRows = pgb->sizlBitmap.cy;
+    while (ulRows--)
+    {
+        ULONG ulWidth = pgb->sizlBitmap.cx;
+        BYTE j, *pjSrc;
+        pjSrc = pjSrcLine;
+
+        /* Get 8 pixels */
+        j = (*pjSrc++);
+
+        while (ulWidth >= 8)
+        {
+            /* Set 8 pixels */
+            *pjDstLine++ = (j & 128) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 64) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 32) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 16) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 8) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 4) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 2) ? CT_OPAQUE : 0;
+            *pjDstLine++ = (j & 1) ? CT_OPAQUE : 0;
+
+            /* Next 8 pixels */
+            j = (*pjSrc++);
+            ulWidth -= 8;
+        }
+
+        /* Set remaining pixels (max 7) */
+        switch (ulWidth)
+        {
+            case 7: pjDstLine[6] = (j & 2) ? CT_OPAQUE : 0;
+            case 6: pjDstLine[5] = (j & 4) ? CT_OPAQUE : 0;
+            case 5: pjDstLine[4] = (j & 8) ? CT_OPAQUE : 0;
+            case 4: pjDstLine[3] = (j & 16) ? CT_OPAQUE : 0;
+            case 3: pjDstLine[2] = (j & 32) ? CT_OPAQUE : 0;
+            case 2: pjDstLine[1] = (j & 64) ? CT_OPAQUE : 0;
+            case 1: pjDstLine[0] = (j & 128) ? CT_OPAQUE : 0;
+        }
+
+        pjDstLine += ulWidth;
+
+        /* Go to the next source line */
+        pjSrcLine += ulSrcDelta;
+    }
+}
+
 static
 VOID
 FtfdCopyBits_S8D4(
@@ -137,6 +199,47 @@ FtfdCopyBits_S8D4(
     }
 }
 
+static
+VOID
+FtfdCopyBits_LCD_X(
+    GLYPHBITS *pgb,
+    FT_Bitmap *ftbitmap)
+{
+    ULONG ulRows, ulDstDelta, ulSrcDelta;
+    PBYTE pjDstLine, pjSrcLine;
+
+    pjDstLine = pgb->aj;
+    ulDstDelta = pgb->sizlBitmap.cx;
+
+    pjSrcLine = ftbitmap->buffer;
+    ulSrcDelta = abs(ftbitmap->pitch);
+
+    ulRows = pgb->sizlBitmap.cy;
+    while (ulRows--)
+    {
+        ULONG ulWidth = ulDstDelta;
+        BYTE *pjSrc;
+
+        pjSrc = pjSrcLine;
+        while (ulWidth--)
+        {
+            /* Get the pixel */
+            *pjDstLine++ = (*pjSrc++);
+        }
+
+        /* Go to the next source line */
+        pjSrcLine += ulSrcDelta;
+    }
+}
+
+static
+VOID
+FtfdCopyBits_LCD_Y(
+    GLYPHBITS *pgb,
+    FT_Bitmap *ftbitmap)
+{
+}
+
 VOID
 NTAPI
 FtfdCopyBits(
@@ -157,8 +260,8 @@ FtfdCopyBits(
         {
             FtfdCopyBits_S1D1(pgb, ftbitmap);
         }
-        else if (ftbitmap->pixel_mode == FT_PIXEL_MODE_GRAY &&
-                 ftbitmap->num_grays == 256)
+        else if ((ftbitmap->pixel_mode == FT_PIXEL_MODE_GRAY) &&
+                 (ftbitmap->num_grays == 256))
         {
             FtfdCopyBits_S8D1(pgb, ftbitmap);
         }
@@ -167,7 +270,6 @@ FtfdCopyBits(
             WARN("Unsupported pixel format\n");
             __debugbreak();
         }
-
     }
     else if (jBppDst == 4)
     {
@@ -179,6 +281,26 @@ FtfdCopyBits(
                  ftbitmap->num_grays == 256)
         {
             FtfdCopyBits_S8D4(pgb, ftbitmap);
+        }
+        else
+        {
+            WARN("Unsupported pixel format\n");
+            __debugbreak();
+        }
+    }
+    else if (jBppDst == 8)
+    {
+        if (ftbitmap->pixel_mode == FT_PIXEL_MODE_LCD)
+        {
+            FtfdCopyBits_LCD_X(pgb, ftbitmap);
+        }
+        else if (ftbitmap->pixel_mode == FT_PIXEL_MODE_LCD_V)
+        {
+            FtfdCopyBits_LCD_Y(pgb, ftbitmap);
+        }
+        else if (ftbitmap->pixel_mode == FT_PIXEL_MODE_MONO)
+        {
+            FtfdCopyBits_S1D8(pgb, ftbitmap);
         }
         else
         {
