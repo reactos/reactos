@@ -115,8 +115,11 @@ FtfdCreateFontInstance(
 
     pfont->ftface = ftface;
 
-    /* Set requested number of bits per pixel */
-    pfont->jBpp = pfo->flFontType & FO_GRAY16 ? 4 : 1;
+    /* Set requested number of bits per pixel of the target */
+    if (pfo->flFontType & FO_CLEARTYPE_X) pfont->jBpp = 8;
+    else if (pfo->flFontType & FO_CLEARTYPE_Y) pfont->jBpp = 8;
+    else if (pfo->flFontType & FO_GRAY16) pfont->jBpp = 4;
+    else pfont->jBpp = 1;
 
     /* Get the XFORMOBJ from the font */
     pxo = FONTOBJ_pxoGetXform(pfo);
@@ -549,7 +552,13 @@ FtRenderGlyphBitmap(
     FT_Error fterror;
     FT_Render_Mode mode;
 
-    mode = pfont->jBpp == 1 ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL;
+    /* Determine the right render mode */
+    if (pfont->jBpp == 1) mode = FT_RENDER_MODE_MONO;
+    else if (pfont->pfo->flFontType & FO_CLEARTYPE_X) mode = FT_RENDER_MODE_LCD;
+    else if (pfont->pfo->flFontType & FO_CLEARTYPE_Y) mode = FT_RENDER_MODE_LCD_V;
+    else mode = FT_RENDER_MODE_NORMAL;
+
+    /* Render the glyph */
     fterror = FT_Render_Glyph(pfont->ftface->glyph, mode);
     if (fterror)
     {
