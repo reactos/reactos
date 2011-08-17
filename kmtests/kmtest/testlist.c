@@ -8,7 +8,7 @@
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;
-KMT_TESTFUNC Test_IoDriverObject;
+KMT_TESTFUNC Test_IoDeviceObject;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlSplayTree;
@@ -17,7 +17,7 @@ KMT_TESTFUNC Test_RtlSplayTree;
 const KMT_TEST TestList[] =
 {
     { "Example",            Test_Example },
-    { "IoDriverObject",     Test_IoDriverObject },
+    { "IoDeviceObject",     Test_IoDeviceObject },
     { "RtlAvlTree",         Test_RtlAvlTree },
     { "RtlMemory",          Test_RtlMemory },
     { "RtlSplayTree",       Test_RtlSplayTree },

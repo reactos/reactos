@@ -7,9 +7,9 @@
 
 #include <kmt_test.h>
 
-START_TEST(IoDriverObject)
+START_TEST(IoDeviceObject)
 {
-    KmtLoadDriver(L"IoDriverObject", FALSE);
+    KmtLoadDriver(L"IoDeviceObject", FALSE);
     KmtOpenDriver();
     KmtCloseDriver();
     KmtUnloadDriver();

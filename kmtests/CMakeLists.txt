@@ -68,7 +68,7 @@ list(APPEND KMTEST_SOURCE
     kmtest/testlist.c
 
     example/Example_user.c
-    ntos_io/IoDriverObject_user.c
+    ntos_io/IoDeviceObject_user.c
     rtl/RtlAvlTree.c
     rtl/RtlMemory.c
     rtl/RtlSplayTree.c
@@ -90,7 +90,7 @@ add_custom_target(kmtest_drivers)
 add_dependencies(kmtest_drivers
     kmtest_drv
     example_drv
-    iodriverobject_drv
+    iodeviceobject_drv
     iohelper_drv)
 
 add_custom_target(kmtest_all)

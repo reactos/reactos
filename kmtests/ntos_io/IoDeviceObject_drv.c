@@ -39,7 +39,7 @@ TestEntry(
     UNREFERENCED_PARAMETER(RegistryPath);
     UNREFERENCED_PARAMETER(Flags);
 
-    *DeviceName = L"IoDriverObject";
+    *DeviceName = L"IoDeviceObject";
 
     KmtRegisterIrpHandler(IRP_MJ_CREATE, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_CLOSE, NULL, TestIrpHandler);

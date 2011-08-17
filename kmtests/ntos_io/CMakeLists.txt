@@ -2,20 +2,20 @@ include_directories(
     ../include)
 
 #
-# IoDriverObject
+# IoDeviceObject
 #
-list(APPEND IODRIVEROBJECT_DRV_SOURCE
+list(APPEND IODEVICEOBJECT_DRV_SOURCE
     ../kmtest_drv/kmtest_standalone.c
-    IoDriverObject_drv.c)
+    IoDeviceObject_drv.c)
 
-add_library(iodriverobject_drv SHARED ${IODRIVEROBJECT_DRV_SOURCE})
+add_library(iodeviceobject_drv SHARED ${IODEVICEOBJECT_DRV_SOURCE})
 
-set_module_type(iodriverobject_drv kernelmodedriver)
-target_link_libraries(iodriverobject_drv kmtest_printf ${PSEH_LIB})
-add_importlibs(iodriverobject_drv ntoskrnl hal)
-set_property(TARGET iodriverobject_drv PROPERTY COMPILE_DEFINITIONS KMT_STANDALONE_DRIVER)
+set_module_type(iodeviceobject_drv kernelmodedriver)
+target_link_libraries(iodeviceobject_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(iodeviceobject_drv ntoskrnl hal)
+set_property(TARGET iodeviceobject_drv PROPERTY COMPILE_DEFINITIONS KMT_STANDALONE_DRIVER)
 
-add_cd_file(TARGET iodriverobject_drv DESTINATION reactos/bin FOR all)
+add_cd_file(TARGET iodeviceobject_drv DESTINATION reactos/bin FOR all)
 
 #
 # IoHelper
