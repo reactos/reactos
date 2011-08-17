@@ -422,7 +422,7 @@ HalpAcpiGetTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             else
             {
                 /* Phase 1, use Mm */
-                MmUnmapIoSpace(TableAddress, PageCount << 12);
+                MmUnmapIoSpace(TableAddress, PageCount << PAGE_SHIFT);
             }
             
             /* Cache the bios copy */
