@@ -4,7 +4,16 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <winnt.h>
-#include <ndk/lpctypes.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/ldrfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
+#include <ndk/umfuncs.h>
 
 /* CSR Header */
 //#include <csr/server.h>
