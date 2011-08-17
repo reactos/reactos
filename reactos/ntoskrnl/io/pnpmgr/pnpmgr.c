@@ -1392,6 +1392,13 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       return STATUS_UNSUCCESSFUL;
    }
 
+   /* Skip processing if it was already completed before */
+   if (DeviceNode->Flags & DNF_PROCESSED)
+   {
+       /* Nothing to do */
+       return STATUS_SUCCESS;
+   }
+
    /* Get Locale ID */
    Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
    if (!NT_SUCCESS(Status))
@@ -1988,7 +1995,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       return STATUS_UNSUCCESSFUL;
    }
 
-   if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
+   if (!(DeviceNode->Flags & (DNF_DISABLED | DNF_STARTED | DNF_ADDED)))
    {
       WCHAR RegKeyBuffer[MAX_PATH];
       UNICODE_STRING RegKey;
