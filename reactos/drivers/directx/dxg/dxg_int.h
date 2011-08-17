@@ -1,9 +1,4 @@
-/* DDK/NDK/SDK Headers */
-#include <ntddk.h>
-#include <ntddmou.h>
 #include <ntifs.h>
-#include <tvout.h>
-#include <ntndk.h>
 
 /* Win32 Headers */
 #define WINBASEAPI
@@ -12,13 +7,10 @@
 #define INTERNAL_CALL NTAPI
 #define NT_BUILD_ENVIRONMENT
 
-#include <stdarg.h>
 #include <windef.h>
 #include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>
-#include <prntfont.h>
-#include <dde.h>
 
 /* DXG treats this as opaque */
 typedef PVOID PDC;
@@ -109,4 +101,3 @@ PVOID FASTCALL DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned);
 #define drvDxEngUnlockDC        gpEngFuncs[DXENG_INDEX_DxEngUnlockDC]
 #define drvDxEngUnlockHdev      gpEngFuncs[DXENG_INDEX_DxEngUnlockHdev]
 #define drvDxEngLockHdev        gpEngFuncs[DXENG_INDEX_DxEngLockHdev]
-
