@@ -5,14 +5,10 @@
 /* FAT32, VFAT, Atari format support, and various fixes additions May 1998
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
-
 #include "vfatlib.h"
-#include <time.h>
 
 #define NDEBUG
 #include <debug.h>
-
-
 
 static DOS_FILE *root;
 
