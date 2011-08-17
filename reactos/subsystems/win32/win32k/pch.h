@@ -19,7 +19,14 @@
 #include <ntddmou.h>
 #include <ntifs.h>
 #include <tvout.h>
-#include <ntndk.h>
+#include <ndk/exfuncs.h>
+#include <ndk/kdfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
 
 /* Win32 Headers */

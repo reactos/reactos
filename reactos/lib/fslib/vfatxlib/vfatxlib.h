@@ -6,7 +6,10 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 
 #include <pshpack1.h>

@@ -4,7 +4,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <winnt.h>
-#include <ndk/ntndk.h>
+#include <ndk/lpctypes.h>
 
 /* CSR Header */
 //#include <csr/server.h>
