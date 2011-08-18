@@ -475,7 +475,7 @@ MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon
 		vert[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
 		vert[1].Alpha = 0;
 
-		GradientFill(hdc, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
+		GdiGradientFill(hdc, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
 	}
 	else
 	{

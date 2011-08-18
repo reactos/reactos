@@ -649,14 +649,14 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
         }
     }
 
-    TransparentBlt(draw->hDC,
-                   draw->rcItem.left, draw->rcItem.top,
-                   draw->rcItem.right-draw->rcItem.left+1,
-                   draw->rcItem.bottom-draw->rcItem.top+1,
-                   hDC,
-                   0, 0,
-                   pData->cxSource, pData->cySource,
-                   0xFF00FF);
+    GdiTransparentBlt(draw->hDC,
+                      draw->rcItem.left, draw->rcItem.top,
+                      draw->rcItem.right-draw->rcItem.left+1,
+                      draw->rcItem.bottom-draw->rcItem.top+1,
+                      hDC,
+                      0, 0,
+                      pData->cxSource, pData->cySource,
+                      0xFF00FF);
 
     SelectObject(hDC, hOldObj);
     DeleteDC(hDC);

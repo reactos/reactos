@@ -41,7 +41,6 @@ add_importlibs(desk
     ole32
     setupapi
     shell32
-    msimg32
     kernel32
     ntdll)
 
