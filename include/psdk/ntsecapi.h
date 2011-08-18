@@ -141,11 +141,11 @@ extern "C" {
 #define SCESTATUS_NO_MAPPING          18L
 #define SCESTATUS_TRUST_FAIL          19L
 
-#if !defined(_NTDEF_)
+#if !defined(_NTDEF_) && !defined(__WINE_WINTERNL_H)
 typedef LONG NTSTATUS, *PNTSTATUS;
 #endif
 
-#if defined (_NTDEF_)
+#if defined (_NTDEF_) || defined(__WINE_WINTERNL_H)
 typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
 typedef STRING LSA_STRING, *PLSA_STRING;
 typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;

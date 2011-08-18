@@ -16,6 +16,8 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>secur32</library>
+	<library delayimport="true">wininet</library>
+	<library>delayimp</library>
 	<library>iphlpapi</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>

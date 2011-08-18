@@ -20,8 +20,6 @@
  */
 
 #include "videoprt.h"
-#include <initguid.h>
-#include <wdmguid.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

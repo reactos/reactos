@@ -5,8 +5,6 @@
  *            Copyright 2001 - 2005 Eric Kohl
  */
 
-#pragma once
-
 //
 // Debug support switch
 //

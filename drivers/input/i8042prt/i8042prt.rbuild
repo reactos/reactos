@@ -15,4 +15,5 @@
 	<file>registry.c</file>
 	<file>setup.c</file>
 	<file>i8042prt.rc</file>
+	<pch>i8042prt.h</pch>
 </module>

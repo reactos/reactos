@@ -14,7 +14,6 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG LdrpFatalHardErrorCount;
 PVOID LdrpManifestProberRoutine;
 ULONG LdrpNormalSnap;
 

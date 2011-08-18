@@ -23,8 +23,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/tdi.def)
 
 add_library(tdi SHARED ${SOURCE})
-
+add_pch(tdi precomp.h)
 set_module_type(tdi kernelmodedriver)
 add_importlibs(tdi ntoskrnl hal)
-
 add_cd_file(TARGET tdi DESTINATION reactos/system32/drivers FOR all)

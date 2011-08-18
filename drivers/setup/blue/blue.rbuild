@@ -8,4 +8,5 @@
 	<file>blue.c</file>
 	<file>font.c</file>
 	<file>blue.rc</file>
+	<pch>blue.h</pch>
 </module>

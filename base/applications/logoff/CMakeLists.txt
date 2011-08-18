@@ -1,4 +1,6 @@
 
+set_rc_compiler()
+
 list(APPEND SOURCE
     misc.c
     logoff.c

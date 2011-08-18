@@ -5,4 +5,5 @@
 	<file>extensions.c</file>
 	<file>stubs.c</file>
 	<file>mswsock.rc</file>
+	<pch>precomp.h</pch>
 </module>

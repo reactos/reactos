@@ -19,6 +19,7 @@ cdrom.inf
 disk.inf
 display.inf
 fdc.inf
+hal.inf
 hdc.inf
 keyboard.inf
 machine.inf

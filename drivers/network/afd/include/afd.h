@@ -28,6 +28,11 @@
 #include <windef.h>
 #include <winsock2.h>
 #include <afd/shared.h>
+#include <pseh/pseh2.h>
+
+#include "tdi_proto.h"
+#include "tdiconn.h"
+#include "debug.h"
 
 #ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))
@@ -103,7 +108,7 @@ typedef struct IPADDR_ENTRY {
 #define FUNCTION_CLOSE                  6
 #define MAX_FUNCTIONS                   7
 
-#define IN_FLIGHT_REQUESTS              4
+#define IN_FLIGHT_REQUESTS              5
 
 #define EXTRA_LOCK_BUFFERS              2 /* Number of extra buffers needed
 					   * for ancillary data on packet
@@ -173,7 +178,7 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
-    BOOLEAN Locked, Critical, Overread, NonBlocking, OobInline;
+    BOOLEAN Locked, Critical, Overread, NonBlocking, OobInline, TdiReceiveClosed, SendClosed;
     UINT State, Flags, GroupID, GroupType;
     KIRQL OldIrql;
     UINT LockCount;
@@ -193,6 +198,7 @@ typedef struct _AFD_FCB {
     KMUTEX Mutex;
     PKEVENT EventSelect;
     DWORD EventSelectTriggers;
+    DWORD EventSelectDisabled;
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;
@@ -315,6 +321,7 @@ VOID DestroySocket( PAFD_FCB FCB );
 VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp);
 VOID RetryDisconnectCompletion(PAFD_FCB FCB);
+BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp);
 
 /* read.c */
 

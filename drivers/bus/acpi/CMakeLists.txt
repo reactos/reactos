@@ -121,7 +121,6 @@ add_library(acpica
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c)
 
-set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
 add_dependencies(acpica bugcodes)
 
 add_library(acpi SHARED

@@ -18,10 +18,7 @@
         The I/O switches are used for muting/unmuting mic, etc.
 */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include <sbdsp.h>
+#include "precomp.h"
 
 VOID
 SbMixerReset(IN PUCHAR BasePort)

@@ -13,9 +13,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#define TRACE DPRINT
-#define WARN DPRINT1
-#define ERR DPRINT1
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
@@ -1637,7 +1634,7 @@ UserSetClassLongPtr(IN PCLS Class,
     {
         PULONG_PTR Data;
 
-        TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
+        DPRINT("SetClassLong(%d, %x)\n", Index, NewLong);
 
         if (Index + sizeof(ULONG_PTR) < Index ||
             Index + sizeof(ULONG_PTR) > Class->cbclsExtra)
@@ -1945,7 +1942,7 @@ UserRegisterSystemClasses(VOID)
         }
         else
         {
-            WARN("!!! Registering system class failed!\n");
+            DPRINT1("!!! Registering system class failed!\n");
             Ret = FALSE;
         }
     }
@@ -2270,9 +2267,9 @@ NtUserGetClassInfo(
       CapturedClassName = ProbeForReadUnicodeString(ClassName);
 
       if (CapturedClassName.Length == 0)
-         TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
+         DPRINT("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
       else
-         TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
+         DPRINT("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
 
       if (CapturedClassName.Length & 1)
       {
@@ -2300,7 +2297,7 @@ NtUserGetClassInfo(
       {
          if (!IS_ATOM(CapturedClassName.Buffer))
          {
-            ERR("NtUserGetClassInfo() got ClassName instead of Atom!\n");
+            DPRINT1("NtUserGetClassInfo() got ClassName instead of Atom!\n");
             EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
             _SEH2_LEAVE;
@@ -2464,7 +2461,7 @@ NtUserGetWOWClass(HINSTANCE hInstance,
      {
         if (!IS_ATOM(ClassName->Buffer))
         {
-           ERR("NtUserGetWOWClass() got ClassName instead of Atom!\n");
+           DPRINT1("NtUserGetWOWClass() got ClassName instead of Atom!\n");
            Hit = TRUE;
         }
         else

@@ -172,6 +172,17 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->Buffer = Buffer;
 }
 
+FORCEINLINE
+VOID
+RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
+                       IN PSTR Buffer,
+                       IN USHORT BufferSize)
+{
+    AnsiString->Length = 0;
+    AnsiString->MaximumLength = BufferSize;
+    AnsiString->Buffer = Buffer;
+}
+
 //
 // LUID Macros
 //
@@ -233,6 +244,107 @@ RtlConvertUlongToLuid(ULONG Ulong)
 //
 // RTL Splay Tree Functions
 //
+#ifndef RTL_USE_AVL_TABLES
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTable(
+    OUT PRTL_GENERIC_TABLE Table,
+    IN PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
+    IN PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
+    IN PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
+    IN PVOID TableContext OPTIONAL
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN CLONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN CLONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL,
+    IN PVOID NodeOrParent,
+    IN TABLE_SEARCH_RESULT SearchResult
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    OUT PVOID *NodeOrParent,
+    OUT TABLE_SEARCH_RESULT *SearchResult
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN BOOLEAN Restart
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplaying(
+    IN PRTL_GENERIC_TABLE Table,
+    IN OUT PVOID *RestartKey
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlGetElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN ULONG I
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberGenericTableElements(
+    IN PRTL_GENERIC_TABLE Table
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmpty(
+    IN PRTL_GENERIC_TABLE Table
+);
+
+#endif /* !RTL_USE_AVL_TABLES */
+
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
@@ -243,7 +355,8 @@ RtlSplay(
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlDelete(IN PRTL_SPLAY_LINKS Links
+RtlDelete(
+    IN PRTL_SPLAY_LINKS Links
 );
 
 NTSYSAPI
@@ -328,7 +441,7 @@ RtlRealPredecessor(
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
-    
+
 //
 // RTL AVL Tree Functions
 //
@@ -450,8 +563,24 @@ NTAPI
 RtlIsGenericTableEmptyAvl(
     IN PRTL_AVL_TABLE Table
 );
-  
-#endif
+
+#ifdef RTL_USE_AVL_TABLES
+
+#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
+#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
+#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
+#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
+#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
+#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
+#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
+#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
+#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
+#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
+#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
+
+#endif /* RTL_USE_AVL_TABLES */
+
+#endif /* NTOS_MODE_USER */
 
 //
 // Error and Exception Functions
@@ -1868,6 +1997,19 @@ RtlFillMemoryUlong(
     IN ULONG Fill
 );
 
+NTSYSAPI
+SIZE_T
+NTAPI
+RtlCompareMemoryUlong(
+    IN PVOID Source,
+    IN SIZE_T Length,
+    IN ULONG Pattern
+);
+
+#define RtlCopyBytes RtlCopyMemory
+#define RtlFillBytes RtlFillMemory
+#define RtlZeroBytes RtlZeroMemory
+
 #endif
 
 NTSYSAPI
@@ -2323,7 +2465,7 @@ RtlDetermineDosPathNameType_U(
 );
 
 NTSYSAPI
-ULONG
+RTL_PATH_TYPE
 NTAPI
 RtlDetermineDosPathNameType_Ustr(
     IN PCUNICODE_STRING Path
@@ -2348,7 +2490,7 @@ RtlDosPathNameToNtPathName_U(
     IN PCWSTR DosPathName,
     OUT PUNICODE_STRING NtPathName,
     OUT PCWSTR *NtFileNamePart,
-    OUT CURDIR *DirectoryInfo
+    OUT PRTL_RELATIVE_NAME_U DirectoryInfo
 );
 
 NTSYSAPI
@@ -2382,18 +2524,6 @@ RtlGetFullPathName_U(
 NTSYSAPI
 ULONG
 NTAPI
-RtlGetFullPathName_Ustr(
-    IN PUNICODE_STRING FileName,
-    IN ULONG Size,
-    IN PWSTR Buffer,
-    OUT PWSTR *ShortName,
-    OUT PBOOLEAN InvalidName,
-    OUT RTL_PATH_TYPE *PathType
-);
-
-NTSYSAPI
-ULONG
-NTAPI
 RtlIsDosDeviceName_U(
     IN PWSTR Name
 );
@@ -2422,6 +2552,12 @@ RtlQueryEnvironmentVariable_U(
     PWSTR Environment,
     PUNICODE_STRING Name,
     PUNICODE_STRING Value
+);
+
+VOID
+NTAPI
+RtlReleaseRelativeName(
+    IN PRTL_RELATIVE_NAME_U RelativeName
 );
 
 NTSYSAPI
@@ -2800,7 +2936,7 @@ NTAPI
 RtlInitializeRangeList(
     IN OUT PRTL_RANGE_LIST RangeList
 );
-    
+
 NTSYSAPI
 VOID
 NTAPI
@@ -3052,12 +3188,21 @@ LdrRelocateImageWithBias(
 // Activation Context Functions
 //
 #ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlActivateActivationContextEx(
+    IN ULONG Flags,
+    IN PTEB Teb,
+    IN PVOID Context,
+    IN PULONG_PTR Cookie
+);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlActivateActivationContext(
-    IN ULONG Unknown,
+    IN ULONG Flags,
     IN HANDLE Handle,
     OUT PULONG_PTR Cookie
 );
@@ -3068,7 +3213,6 @@ NTAPI
 RtlAddRefActivationContext(
     PVOID Context
 );
-
 
 NTSYSAPI
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME

@@ -903,6 +903,7 @@ NtGdiPatBlt(
     if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
+        DPRINT1("NtGdiPatBlt on info DC!\n");
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }

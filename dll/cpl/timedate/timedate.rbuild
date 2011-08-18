@@ -17,4 +17,5 @@
 	<file>timedate.c</file>
 	<file>timezone.c</file>
 	<file>timedate.rc</file>
+	<pch>timedate.h</pch>
 </module>

@@ -18,4 +18,5 @@ set_module_type(lpk win32dll)
 
 add_importlib_target(lpk.spec)
 add_importlibs(lpk user32 usp10 msvcrt kernel32 ntdll)
+add_pch(lpk ros_lpk.h)
 add_cd_file(TARGET lpk DESTINATION reactos/system32 FOR all)

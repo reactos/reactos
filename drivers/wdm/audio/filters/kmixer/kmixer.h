@@ -1,5 +1,3 @@
-#pragma once
-
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>

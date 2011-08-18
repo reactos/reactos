@@ -8,9 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 static NTSTATUS NTAPI SendComplete
 ( PDEVICE_OBJECT DeviceObject,
@@ -179,7 +176,8 @@ static NTSTATUS NTAPI SendComplete
             break;
     }
     
-    if (FCB->Send.Size - FCB->Send.BytesUsed != 0)
+    if (FCB->Send.Size - FCB->Send.BytesUsed != 0 &&
+        !FCB->SendClosed)
     {
 		FCB->PollState |= AFD_EVENT_SEND;
 		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
@@ -299,8 +297,11 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         /* Check that the socket is bound */
         if( FCB->State != SOCKET_STATE_BOUND || !FCB->RemoteAddress )
+        {
+            AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
                                            0 );
+        }
 
         if( !(SendReq = LockRequest( Irp, IrpSp )) )
             return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
@@ -319,6 +320,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Status = TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
         if( NT_SUCCESS(Status) ) {
+            FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
             FCB->PollState &= ~AFD_EVENT_SEND;
             
             Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
@@ -347,24 +349,28 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
     }
     
-    if (FCB->DisconnectPending && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
+    if (FCB->PollState & AFD_EVENT_CLOSE)
     {
-        /* We're pending a send shutdown so don't accept anymore sends */
-        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+        AFD_DbgPrint(MIN_TRACE,("Connection reset by remote peer\n"));
+
+        /* This is an unexpected remote disconnect */
+        return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
     }
     
-    if (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT))
+    if (FCB->PollState & AFD_EVENT_ABORT)
     {
-        if (FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
-        {
-            /* This is a local send shutdown or a graceful remote disconnect */
-            return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
-        }
-        else
-        {
-            /* This is an unexpected remote disconnect */
-            return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
-        }
+        AFD_DbgPrint(MIN_TRACE,("Connection aborted\n"));
+        
+        /* This is an abortive socket closure on our side */
+        return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
+    }
+    
+    if (FCB->SendClosed)
+    {
+        AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
+
+        /* This is a graceful send closure */
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
@@ -432,6 +438,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         TotalBytesCopied += SendReq->BufferArray[i].len;
         SpaceAvail -= SendReq->BufferArray[i].len;
     }
+    
+    FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
     
     if( TotalBytesCopied == 0 ) {
         AFD_DbgPrint(MID_TRACE,("Empty send\n"));
@@ -503,8 +511,18 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND &&
         FCB->State != SOCKET_STATE_CREATED)
+    {
+        AFD_DbgPrint(MIN_TRACE,("Invalid socket state\n"));
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
+    }
+
+    if (FCB->SendClosed)
+    {
+        AFD_DbgPrint(MIN_TRACE,("No more sends\n"));
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+    }
+
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete
 			( FCB, STATUS_NO_MEMORY, Irp, 0 );
@@ -550,6 +568,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check the size of the Address given ... */
 
     if( NT_SUCCESS(Status) ) {
+        FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
 		FCB->PollState &= ~AFD_EVENT_SEND;
 
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);

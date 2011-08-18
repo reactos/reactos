@@ -26,6 +26,7 @@ include_directories(
 set_rc_compiler()
 
 add_executable(rapps ${SOURCE})
+add_pch(rapps rapps.h)
 set_module_type(rapps win32gui)
 target_link_libraries(rapps uuid)
 

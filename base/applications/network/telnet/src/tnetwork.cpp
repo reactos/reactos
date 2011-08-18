@@ -35,7 +35,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tnetwork.h"
+#include "precomp.h"
 
 void TNetwork::SetSocket(SOCKET s) {
 	socket = s;

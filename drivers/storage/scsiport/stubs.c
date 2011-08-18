@@ -8,8 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
-#include <srb.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

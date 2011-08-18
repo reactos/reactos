@@ -8,8 +8,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "draw.h"
 
 #define MENU_BAR_ITEMS_SPACE (12)
 

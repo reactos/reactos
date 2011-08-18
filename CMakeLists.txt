@@ -77,6 +77,11 @@ else()
 
     #useful stuff!
     include(CMakeParseArguments)
+    
+    if(ENABLE_CCACHE)
+        set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
+        set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
+    endif()
 
     # Do some cleanup
     file(REMOVE
@@ -197,7 +202,6 @@ else()
 
     add_subdirectory(include/psdk)
     add_subdirectory(include/dxsdk)
-    add_subdirectory(include/reactos/idl)
     add_subdirectory(include/reactos/wine)
     add_subdirectory(include/reactos/mc)
     add_subdirectory(include/asm)

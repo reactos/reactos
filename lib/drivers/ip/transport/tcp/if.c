@@ -1,117 +1,168 @@
-/*
- * Copyright (c) 1997-1998 University of Utah and the Flux Group.
- * All rights reserved.
- *
- * This file is part of the Flux OSKit.  The OSKit is free software, also known
- * as "open source;" you can redistribute it and/or modify it under the terms
- * of the GNU General Public License (GPL), version 2, as published by the Free
- * Software Foundation (FSF).  To explore alternate licensing terms, contact
- * the University of Utah at csl-dist@cs.utah.edu or +1-801-585-3271.
- *
- * The OSKit is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GPL for more details.  You should have
- * received a copy of the GPL along with the OSKit; see the file COPYING.  If
- * not, write to the FSF, 59 Temple Place #330, Boston, MA 02111-1307, USA.
- */
 
 #include "precomp.h"
 
-int if_index = 0;
-struct ifaddr **ifnet_addrs;
+#include "lwip/pbuf.h"
+#include "lwip/netifapi.h"
+#include "lwip/ip.h"
+#include "lwip/api.h"
+#include "lwip/tcpip.h"
 
-int	ifqmaxlen = OSK_IFQ_MAXLEN;
-struct	ifnet *ifnet;
-
-/*
- * Network interface utility routines.
- *
- * Routines with ifa_ifwith* names take sockaddr *'s as
- * parameters.
- */
-
-POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
-    NTSTATUS Status;
-    POSK_IFADDR ifaddr = IF->TCPContext;
-    struct sockaddr_in *addr_in;
-    struct sockaddr_in *dstaddr_in;
-    struct sockaddr_in *netmask_in;
-    ASSERT(ifaddr);
-
-    RtlZeroMemory(ifaddr, sizeof(OSK_IFADDR) + 3 * sizeof( struct sockaddr_in ));
-
-    addr_in = (struct sockaddr_in *)&ifaddr[1];
-    dstaddr_in = (struct sockaddr_in *)&addr_in[1];
-    netmask_in = (struct sockaddr_in *)&dstaddr_in[1];
-
-    TI_DbgPrint(DEBUG_TCPIF,("Called\n"));
-
-    ifaddr->ifa_addr = (struct sockaddr *)addr_in;
-    Status = GetInterfaceIPv4Address( IF,
-                      ADE_UNICAST,
-                      (PULONG)&addr_in->sin_addr.s_addr );
-
-    ASSERT(NT_SUCCESS(Status));
-
-    ifaddr->ifa_dstaddr = (struct sockaddr *)dstaddr_in;
-    Status = GetInterfaceIPv4Address(IF,
-                                     ADE_POINTOPOINT,
-                                     (PULONG)&dstaddr_in->sin_addr.s_addr );
-
-    ASSERT(NT_SUCCESS(Status));
-    
-    ifaddr->ifa_netmask = (struct sockaddr *)netmask_in;
-    Status = GetInterfaceIPv4Address(IF,
-                                     ADE_ADDRMASK,
-                                     (PULONG)&netmask_in->sin_addr.s_addr );
-    
-    ASSERT(NT_SUCCESS(Status));
-
-    TI_DbgPrint(DEBUG_TCPIF,("interface %x : addr %x\n",
-               IF, addr_in->sin_addr.s_addr));
-
-    ifaddr->ifa_flags = 0;
-    ifaddr->ifa_refcnt = 0; /* Anachronistic */
-    ifaddr->ifa_metric = 1; /* We can get it like in ninfo.c, if we want */
-    ifaddr->ifa_mtu = IF->MTU;
-
-    TI_DbgPrint(DEBUG_TCPIF,("Leaving\n"));
-
-    return ifaddr;
+void TCPPacketSendComplete(PVOID Context, PNDIS_PACKET NdisPacket, NDIS_STATUS NdisStatus)
+{
+    FreeNdisPacket(NdisPacket);
 }
 
-POSK_IFADDR TCPFindInterface( void *ClientData,
-                  OSK_UINT AddrType,
-                  OSK_UINT FindType,
-                  OSK_SOCKADDR *ReqAddr,
-                  OSK_IFADDR *Interface ) {
+err_t
+TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
+{
+    NDIS_STATUS NdisStatus;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    IP_ADDRESS Destination;
-    struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
-    POSK_IFADDR InterfaceData;
-
-    TI_DbgPrint(DEBUG_TCPIF,("called for type %d\n", FindType));
-
-    if( !ReqAddr ) {
-    TI_DbgPrint(DEBUG_TCPIF,("no addr or no ifaddr (%x)\n", ReqAddr));
-    return NULL;
+    IP_PACKET Packet = { 0 };
+    IP_ADDRESS RemoteAddress, LocalAddress;
+    PIPv4_HEADER Header;
+    UINT i;
+    struct pbuf *p1;
+    
+    /* The caller frees the pbuf struct */
+    
+    if (((*(u8_t*)p->payload) & 0xF0) == 0x40)
+    {
+        Header = p->payload;
+        
+        LocalAddress.Type = IP_ADDRESS_V4;
+        LocalAddress.Address.IPv4Address = Header->SrcAddr;
+        
+        RemoteAddress.Type = IP_ADDRESS_V4;
+        RemoteAddress.Address.IPv4Address = Header->DstAddr;
+    }
+    else 
+    {
+        return ERR_IF;
     }
 
-    Destination.Type = IP_ADDRESS_V4;
-    Destination.Address.IPv4Address = addr_in->sin_addr.s_addr;
-
-    TI_DbgPrint(DEBUG_TCPIF,("Address is %x\n", addr_in->sin_addr.s_addr));
-
-    NCE = RouteGetRouteToDestination(&Destination);
-    if (!NCE) return NULL;
-
-    InterfaceData = TCPGetInterfaceData(NCE->Interface);
-
-    addr_in = (struct sockaddr_in *)
-    InterfaceData->ifa_addr;
-
-    TI_DbgPrint(DEBUG_TCPIF,("returning addr %x\n", addr_in->sin_addr.s_addr));
-
-    return InterfaceData;
+    if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
+    {
+        return ERR_RTE;
+    }
+    
+    NdisStatus = AllocatePacketWithBuffer(&Packet.NdisPacket, NULL, p->tot_len);
+    if (NdisStatus != NDIS_STATUS_SUCCESS)
+    {
+        return ERR_MEM;
+    }
+    
+    GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.ContigSize);
+    
+    for (i = 0, p1 = p; i < p->tot_len; i += p1->len, p1 = p1->next)
+    {
+        ASSERT(p1);
+        RtlCopyMemory(((PUCHAR)Packet.Header) + i, p1->payload, p1->len);
+    }
+    
+    Packet.HeaderSize = sizeof(IPv4_HEADER);
+    Packet.TotalSize = p->tot_len;
+    Packet.SrcAddr = LocalAddress;
+    Packet.DstAddr = RemoteAddress;
+    
+    if (!NT_SUCCESS(IPSendDatagram(&Packet, NCE, TCPPacketSendComplete, NULL)))
+    {
+        FreeNdisPacket(Packet.NdisPacket);
+        return ERR_IF;
+    }
+    
+    return 0;
 }
 
+VOID
+TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF)
+{
+#if 0
+    ULONG OperationalStatus;
+    
+    GetInterfaceConnectionStatus(IF, &OperationalStatus);
+    
+    if (OperationalStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
+        netif_set_link_up(IF->TCPContext);
+    else
+        netif_set_link_down(IF->TCPContext);
+#endif
+}
+
+err_t
+TCPInterfaceInit(struct netif *netif)
+{
+    PIP_INTERFACE IF = netif->state;
+    
+    netif->hwaddr_len = IF->AddressLength;
+    RtlCopyMemory(netif->hwaddr, IF->Address, netif->hwaddr_len);
+
+    netif->output = TCPSendDataCallback;
+    netif->mtu = IF->MTU;
+    
+    netif->name[0] = 'e';
+    netif->name[1] = 'n';
+    
+    netif->flags |= NETIF_FLAG_BROADCAST;
+    
+    TCPUpdateInterfaceLinkStatus(IF);
+    
+    TCPUpdateInterfaceIPInformation(IF);
+
+    return 0;
+}
+
+VOID
+TCPRegisterInterface(PIP_INTERFACE IF)
+{
+    struct ip_addr ipaddr;
+    struct ip_addr netmask;
+    struct ip_addr gw;
+    
+    gw.addr = 0;
+    ipaddr.addr = 0;
+    netmask.addr = 0;
+    
+    IF->TCPContext = netif_add(IF->TCPContext, 
+                               &ipaddr,
+                               &netmask,
+                               &gw,
+                               IF,
+                               TCPInterfaceInit,
+                               tcpip_input);
+}
+
+VOID
+TCPUnregisterInterface(PIP_INTERFACE IF)
+{
+    netif_remove(IF->TCPContext);
+}
+
+VOID
+TCPUpdateInterfaceIPInformation(PIP_INTERFACE IF)
+{
+    struct ip_addr ipaddr;
+    struct ip_addr netmask;
+    struct ip_addr gw;
+    
+    gw.addr = 0;
+    
+    GetInterfaceIPv4Address(IF,
+                            ADE_UNICAST,
+                            (PULONG)&ipaddr.addr);
+    
+    GetInterfaceIPv4Address(IF,
+                            ADE_ADDRMASK,
+                            (PULONG)&netmask.addr);
+    
+    netif_set_addr(IF->TCPContext, &ipaddr, &netmask, &gw);
+    
+    if (ipaddr.addr != 0)
+    {
+        netif_set_up(IF->TCPContext);
+        netif_set_default(IF->TCPContext);
+    }
+    else
+    {
+        netif_set_down(IF->TCPContext);
+    }
+}    

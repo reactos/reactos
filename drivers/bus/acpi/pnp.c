@@ -193,7 +193,7 @@ Bus_FDO_PnP (
         //
 
         length = sizeof(DEVICE_RELATIONS) +
-                ((numPdosPresent + prevcount) * sizeof (PDEVICE_OBJECT)) -1;
+                (((numPdosPresent + prevcount) - 1) * sizeof (PDEVICE_OBJECT));
 
         relations = (PDEVICE_RELATIONS) ExAllocatePoolWithTag (PagedPool,
                                         length, 'IPCA');

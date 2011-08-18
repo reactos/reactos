@@ -93,8 +93,8 @@ add_importlibs(shell32
     devmgr
     winspool
     winmm
-    kernel32
     msvcrt
+    kernel32
     ntdll)
 
 add_pch(shell32 precomp.h)

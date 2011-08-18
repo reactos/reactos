@@ -4,7 +4,7 @@
 #define WIN32_NO_STATUS
 #include <winsock2.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 #include <iprtrmib.h>
 #include <iphlpapi.h>
 #include <dhcpcsdk.h>

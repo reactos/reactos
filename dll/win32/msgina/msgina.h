@@ -1,8 +1,9 @@
-#pragma once
-
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>
+
+#include <wine/debug.h>
+
 #include "resource.h"
 
 /* Values for GINA_CONTEXT.AutoLogonState */

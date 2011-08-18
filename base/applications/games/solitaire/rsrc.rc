@@ -23,6 +23,7 @@ IDI_SOLITAIRE ICON DISCARDABLE "solitaire.ico"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
 #include "lang/sk-SK.rc"
+#include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/zh-CN.rc"
 

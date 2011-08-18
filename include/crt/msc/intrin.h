@@ -13,14 +13,25 @@ void * _AddressOfReturnAddress(void);
 unsigned int __getcallerseflags(void);
 #pragma intrinsic(__getcallerseflags)
 
-/*** Atomic operations ***/
+/*** Memory barriers ***/
 void _ReadWriteBarrier(void);
 #pragma intrinsic(_ReadWriteBarrier)
 void _ReadBarrier(void);
 #pragma intrinsic(_ReadBarrier)
 void _WriteBarrier(void);
 #pragma intrinsic(_WriteBarrier)
+void _mm_mfence(void);
+#pragma intrinsic(_mm_mfence)
+void _mm_lfence(void);
+#pragma intrinsic(_mm_lfence)
+void _mm_sfence(void);
+#pragma intrinsic(_mm_sfence)
+#ifdef _M_AMD64
+void __faststorefence(void);
+#pragma intrinsic(__faststorefence)
+#endif
 
+/*** Atomic operations ***/
 long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 #pragma intrinsic(_InterlockedCompareExchange)
 long _InterlockedExchange(volatile long * const Target, const long Value);
@@ -296,6 +307,23 @@ void __writedr(unsigned reg, unsigned int value);
 
 void __invlpg(void * const Address);
 #pragma intrinsic(__invlpg)
+
+// This intrinsic is broken and generates wrong opcodes,
+// when optimization is enabled!
+#pragma warning(push)
+#pragma warning(disable:4711)
+void  __forceinline __invlpg_fixed(void * const Address)
+{
+    _ReadWriteBarrier();
+   __asm
+   {
+       mov eax, Address
+       invlpg [eax]
+   }
+    _ReadWriteBarrier();
+}
+#pragma warning(pop)
+#define __invlpg __invlpg_fixed
 
 /*** System operations ***/
 unsigned __int64 __readmsr(const int reg);

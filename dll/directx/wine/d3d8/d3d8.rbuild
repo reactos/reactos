@@ -27,6 +27,7 @@
 	<file>volume.c</file>
 	<file>volumetexture.c</file>
 	<file>version.rc</file>
+	<pch>d3d8_private.h</pch>
 
 	<dependency>wineheaders</dependency>
 </module>

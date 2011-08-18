@@ -46,10 +46,10 @@ add_importlibs(shlwapi
     winmm
     version
     shell32
+    msvcrt
     kernel32
     userenv
     wininet
-    msvcrt
     ntdll)
 
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)

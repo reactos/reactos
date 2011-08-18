@@ -8,7 +8,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
 
 static BOOL g_PresetLoaded = FALSE;
 static INT g_TemplateCount = 0;
@@ -24,7 +23,7 @@ static const TCHAR g_SelectedStyle[] = TEXT("SelectedStyle");
 SCHEME_PRESET g_ColorSchemes[MAX_TEMPLATES];
 
 /* This is the list of names for the colors stored in the registry */
-const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH] =
+static const TCHAR *g_RegColorNames[NUM_COLORS] =
 	{TEXT("Scrollbar"),				/* 00 = COLOR_SCROLLBAR */
 	TEXT("Background"),				/* 01 = COLOR_DESKTOP */
 	TEXT("ActiveTitle"),			/* 02 = COLOR_ACTIVECAPTION  */
@@ -59,11 +58,11 @@ const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH] =
 };
 
 /* This is the list of used metrics and their numbers */
-const int g_SizeMetric[NUM_SIZES] =
+static const int g_SizeMetric[NUM_SIZES] =
 {
 	SM_CXBORDER,        /* 00: SIZE_BORDER_X */
 	SM_CYBORDER,        /* 01: SIZE_BORDER_Y */
-	SM_CYCAPTION,       /* 02: SIZE_CAPTION_Y */
+	SM_CYSIZE,          /* 02: SIZE_CAPTION_Y */
 	SM_CXICON,          /* 03: SIZE_ICON_X */
 	SM_CYICON,          /* 04: SIZE_ICON_Y */
 	SM_CXICONSPACING,   /* 05: SIZE_ICON_SPC_X */
@@ -72,7 +71,7 @@ const int g_SizeMetric[NUM_SIZES] =
 	SM_CYMENU,          /* 08: SIZE_MENU_Y */
 	SM_CXVSCROLL,       /* 09: SIZE_SCROLL_X */
 	SM_CYHSCROLL,       /* 10: SIZE_SCROLL_Y */
-	SM_CYSMCAPTION,     /* 11: SIZE_SMCAPTION_Y */
+	SM_CYSMSIZE,        /* 11: SIZE_SMCAPTION_Y */
 	SM_CXEDGE,          /* 12: SIZE_EDGE_X */
 	SM_CYEDGE,          /* 13: SIZE_EDGE_Y */
 	SM_CYSIZEFRAME,     /* 14: SIZE_FRAME_Y */
@@ -120,8 +119,8 @@ VOID LoadCurrentScheme(COLOR_SCHEME* scheme)
 	/* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
 	 * Just keep them in sync for now:
 	 */
-	scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
-	scheme->Effects.bTooltipFade	   = scheme->Effects.bMenuFade;
+	scheme->Effects.bTooltipAnimation = scheme->Effects.bMenuAnimation;
+	scheme->Effects.bTooltipFade = scheme->Effects.bMenuFade;
 
 	/* show content of windows during dragging */
 	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &scheme->Effects.bDragFullWindows, 0);
@@ -134,10 +133,11 @@ BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId)
 {
 	INT i;
 	TCHAR strSelectedStyle[4];
-	TCHAR strSizeName[20] = {TEXT("Sizes\\0")};
+	TCHAR strSizeName[20] = TEXT("Sizes\\0");
 	TCHAR strValueName[10];
 	HKEY hkNewSchemes, hkScheme, hkSize;
 	DWORD dwType, dwLength;
+	UINT64 iSize;
 	BOOL Ret = FALSE;
 
 	if (!g_PresetLoaded)
@@ -191,12 +191,14 @@ BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId)
 				{
 					wsprintf(strValueName, TEXT("Size #%d"), i);
 					dwLength = sizeof(UINT64);
-					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&scheme->Size[i], &dwLength) != ERROR_SUCCESS ||
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&iSize, &dwLength) != ERROR_SUCCESS ||
 						dwType != REG_QWORD || dwLength != sizeof(UINT64))
 					{
 						/* Failed to read registry value, initialize with current setting for now */
 						scheme->Size[i] = GetSystemMetrics(g_SizeMetric[i]);
 					}
+					else
+						scheme->Size[i] = (INT)iSize;
 				}
 				RegCloseKey(hkScheme);
 			}
@@ -208,18 +210,10 @@ BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId)
 	return Ret;
 }
 
-static VOID
-_UpdateUserPref(UINT SpiGet, UINT SpiSet, BOOL *pbFlag)
-{
-	SystemParametersInfo(SpiSet, 0, (PVOID)pbFlag, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-}
-#define UPDATE_USERPREF(NAME,pbFlag) _UpdateUserPref(SPI_GET ## NAME, SPI_SET ## NAME, pbFlag)
-
 VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId)
 {
 	INT i, Result;
 	HKEY hKey;
-	DWORD dwDisposition;
 	TCHAR clText[16];
 	NONCLIENTMETRICS NonClientMetrics;
 	ICONMETRICS IconMetrics;
@@ -228,13 +222,7 @@ VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId)
 	SetSysColors(NUM_COLORS, g_ColorList, scheme->crColor);
 
 	/* Save colors to registry */
-	Result = RegOpenKeyEx(HKEY_CURRENT_USER, g_CPColors, 0, KEY_ALL_ACCESS, &hKey);
-	if (Result != ERROR_SUCCESS)
-	{
-		/* Could not open the key, try to create it */
-		Result = RegCreateKeyEx(HKEY_CURRENT_USER, g_CPColors, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition);
-	}
-
+	Result = RegCreateKeyEx(HKEY_CURRENT_USER, g_CPColors, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, NULL);
 	if (Result == ERROR_SUCCESS)
 	{
 		for (i = 0; i < NUM_COLORS; i++)
@@ -286,22 +274,22 @@ VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId)
 	 * Just keep them in sync for now.
 	 */
 	scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
-	scheme->Effects.bTooltipFade	   = scheme->Effects.bMenuFade;
+	scheme->Effects.bTooltipFade = scheme->Effects.bMenuFade;
 	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, scheme->Effects.bDragFullWindows, (PVOID)&scheme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 	SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(scheme->Effects.bKeyboardCues), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-	//UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &scheme->Effects.bActiveWindowTracking);
-	//UPDATE_USERPREF(MENUANIMATION, &scheme->Effects.bMenuAnimation);
-	//UPDATE_USERPREF(COMBOBOXANIMATION, &scheme->Effects.bComboBoxAnimation);
-	//UPDATE_USERPREF(LISTBOXSMOOTHSCROLLING, &scheme->Effects.bListBoxSmoothScrolling);
-	//UPDATE_USERPREF(GRADIENTCAPTIONS, &scheme->Effects.bGradientCaptions);
-	//UPDATE_USERPREF(ACTIVEWNDTRKZORDER, &scheme->Effects.bActiveWndTrkZorder);
-	//UPDATE_USERPREF(HOTTRACKING, &scheme->Effects.bHotTracking);
-	UPDATE_USERPREF(MENUFADE, &scheme->Effects.bMenuFade);
-	//UPDATE_USERPREF(SELECTIONFADE, &scheme->Effects.bSelectionFade);
-	UPDATE_USERPREF(TOOLTIPANIMATION, &scheme->Effects.bTooltipAnimation);
-	UPDATE_USERPREF(TOOLTIPFADE, &scheme->Effects.bTooltipFade);
-	//UPDATE_USERPREF(CURSORSHADOW, &scheme->Effects.bCursorShadow);
-	//UPDATE_USERPREF(UIEFFECTS, &scheme->Effects.bUiEffects);
+	//SystemParametersInfo(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)&scheme->Effects.bActiveWindowTracking, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)&scheme->Effects.bMenuAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETCOMBOBOXANIMATION, 0, (PVOID)&scheme->Effects.bComboBoxAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETLISTBOXSMOOTHSCROLLING, 0, (PVOID)&scheme->Effects.bListBoxSmoothScrolling, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETGRADIENTCAPTIONS, 0, (PVOID)&scheme->Effects.bGradientCaptions, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETACTIVEWNDTRKZORDER, 0, (PVOID)&scheme->Effects.bActiveWndTrkZorder, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETHOTTRACKING, 0, (PVOID)&scheme->Effects.bHotTracking, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	SystemParametersInfo(SPI_SETMENUFADE, 0, (PVOID)&scheme->Effects.bMenuFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETSELECTIONFADE, 0, (PVOID)&scheme->Effects.bSelectionFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	SystemParametersInfo(SPI_SETTOOLTIPANIMATION, 0, (PVOID)&scheme->Effects.bTooltipAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	SystemParametersInfo(SPI_SETTOOLTIPFADE, 0, (PVOID)&scheme->Effects.bTooltipFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETCURSORSHADOW, 0, (PVOID)&scheme->Effects.bCursorShadow, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	//SystemParametersInfo(SPI_SETUIEFFECTS, 0, (PVOID)&scheme->Effects.bUiEffects, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
 
 	/* Save SchemeId */
 	Result = RegOpenKeyEx(HKEY_CURRENT_USER, g_CPANewSchemes, 0, KEY_ALL_ACCESS, &hKey);

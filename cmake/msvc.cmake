@@ -59,23 +59,23 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 macro(add_pch _target_name _FILE)
 endmacro()
 
-macro(set_entrypoint MODULE ENTRYPOINT)
+function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
         add_linkerflag(${MODULE} "/NOENTRY")
     else()
         add_linkerflag(${MODULE} "/ENTRY:${ENTRYPOINT}")
     endif()
-endmacro()
+endfunction()
 
-macro(set_subsystem MODULE SUBSYSTEM)
+function(set_subsystem MODULE SUBSYSTEM)
     add_linkerflag(${MODULE} "/subsystem:${SUBSYSTEM}")
-endmacro()
+endfunction()
 
-macro(set_image_base MODULE IMAGE_BASE)
+function(set_image_base MODULE IMAGE_BASE)
     add_linkerflag(${MODULE} "/BASE:${IMAGE_BASE}")
-endmacro()
+endfunction()
 
-macro(set_module_type MODULE TYPE)
+function(set_module_type MODULE TYPE)
     add_dependencies(${MODULE} psdk)
     if(${TYPE} MATCHES nativecui)
         set_subsystem(${MODULE} native)
@@ -118,15 +118,19 @@ macro(set_module_type MODULE TYPE)
         set_image_base(${MODULE} 0x00010000)
         add_linkerflag(${MODULE} "/DRIVER")
         add_dependencies(${MODULE} bugcodes)
+    elseif(${TYPE} MATCHES nativedll)
+        set_subsystem(${MODULE} native)
+    else()
+        message(FATAL_ERROR "Unknown module type : ${TYPE}")
     endif()
-endmacro()
+endfunction()
 
-macro(set_rc_compiler)
+function(set_rc_compiler)
 # dummy, this workaround is only needed in mingw due to lack of RC support in cmake
-endmacro()
+endfunction()
 
 # Thanks MS for creating a stupid linker
-macro(add_importlib_target _exports_file)
+function(add_importlib_target _exports_file)
     get_filename_component(_name ${_exports_file} NAME_WE)
     get_target_property(_suffix ${_name} SUFFIX)
     if(${_suffix} STREQUAL "_suffix-NOTFOUND")
@@ -142,7 +146,7 @@ macro(add_importlib_target _exports_file)
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_name}${_suffix} -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
 
     # Assemble the stub file
     add_custom_command(
@@ -152,6 +156,7 @@ macro(add_importlib_target _exports_file)
 
     # Add neccessary importlibs for redirections
     set(_libraries "")
+    set(_dependencies "")
     foreach(_lib ${ARGN})
         list(APPEND _libraries "${CMAKE_BINARY_DIR}/importlibs/${_lib}.lib")
         list(APPEND _dependencies ${_lib})
@@ -169,22 +174,30 @@ macro(add_importlib_target _exports_file)
         DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib)
 
     add_dependencies(lib${_name} asm ${_dependencies})
-endmacro()
+endfunction()
 
 macro(add_delay_importlibs MODULE)
-    # TODO. For now forward to normal import libs
-    add_importlibs(${MODULE} ${ARGN})
+    foreach(LIB ${ARGN})
+        add_linkerflag(${MODULE} "/DELAYLOAD:${LIB}.dll")
+        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.LIB)
+        add_dependencies(${MODULE} lib${LIB})
+    endforeach()
+    target_link_libraries(${MODULE} delayimp)
 endmacro()
 
-macro(spec2def _dllname _spec_file)
-    get_filename_component(_file ${_spec_file} NAME_WE)
+function(spec2def _dllname _spec_file)
+    if(${ARGC} GREATER 2)
+        set(_file ${ARGV2})
+    else()
+        get_filename_component(_file ${_spec_file} NAME_WE)
+    endif()
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         PROPERTIES GENERATED TRUE)
-endmacro()
+endfunction()
 
 macro(macro_mc FILE)
     set(COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
@@ -195,7 +208,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 #pseh workaround
 set(PSEH_LIB "pseh")
 
-macro(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
+function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
 
     set(_object_file ${_binary_file}.obj)
     set(_temp_file ${_binary_file}.tmp)
@@ -213,9 +226,9 @@ macro(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
     add_custom_command(
         OUTPUT ${_binary_file}
         COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
-        DEPENDS ${_object_file})
+        DEPENDS ${_object_file} native-obj2bin)
 
     set_source_files_properties(${_object_file} ${_temp_file} ${_binary_file} PROPERTIES GENERATED TRUE)
 
     add_custom_target(${_target_name} ALL DEPENDS ${_binary_file})
-endmacro()
+endfunction()

@@ -20,10 +20,12 @@
 
 #include <stdarg.h>
 
-#include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ntndk.h>
+#define NTOS_MODE_USER
+#include <ndk/pofuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
 #include <powrprof.h>
 #include <wchar.h>
 #include <stdio.h>

@@ -1,6 +1,4 @@
 #include "rosdhcp.h"
-#include "dhcpd.h"
-#include "stdint.h"
 
 size_t strlcpy(char *d, const char *s, size_t bufsize)
 {

@@ -13,4 +13,5 @@
 	<file>main.c</file>
 	<file>pin.c</file>
 	<file>sysaudio.rc</file>
+	<pch>sysaudio.h</pch>
 </module>

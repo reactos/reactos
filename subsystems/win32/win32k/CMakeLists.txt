@@ -22,7 +22,8 @@ list(APPEND GENDIB_FILES
 
 add_custom_command(
     OUTPUT ${GENDIB_FILES}
-    COMMAND native-gendib ${CMAKE_CURRENT_BINARY_DIR}/dib)
+    COMMAND native-gendib ${CMAKE_CURRENT_BINARY_DIR}/dib
+    DEPENDS native-gendib)
 
 list(APPEND SOURCE
     dib/alphablend.c

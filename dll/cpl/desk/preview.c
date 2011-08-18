@@ -7,9 +7,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "preview.h"
-#include "draw.h"
 
 static const TCHAR szPreviewWndClass[] = TEXT("PreviewWndClass");
 

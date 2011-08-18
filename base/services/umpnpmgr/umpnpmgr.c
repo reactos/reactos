@@ -749,7 +749,7 @@ DWORD PNP_GetDeviceRegProp(
         RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                              pDeviceID);
         PlugPlayData.Buffer = Buffer;
-        PlugPlayData.BufferSize = *pulTransferLen;
+        PlugPlayData.BufferSize = *pulLength;
 
         switch (ulProperty)
         {
@@ -829,7 +829,7 @@ DWORD PNP_GetDeviceRegProp(
         }
     }
 
-done:;
+done:
     *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
     if (hKey != NULL)
@@ -3043,6 +3043,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("  SERVICE_CONTROL_STOP received\n");
+            /* Stop listening to RPC Messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 

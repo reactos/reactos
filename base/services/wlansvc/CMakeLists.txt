@@ -1,10 +1,18 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl)
+
+add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/wlansvc.idl)
+
 set_unicode()
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
 
-add_executable(wlansvc wlansvc.c rpcserver.c)
+add_executable(wlansvc
+    wlansvc.c
+    rpcserver.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wlansvc_s.c)
 
-target_link_libraries(wlansvc wlansvcrpc ${PSEH_LIB})
+if(NOT MSVC)
+    target_link_libraries(wlansvc pseh)
+endif()
 
 set_module_type(wlansvc win32cui)
 add_importlibs(wlansvc advapi32 rpcrt4 iphlpapi msvcrt kernel32 ntdll)

@@ -4,8 +4,6 @@
 
 #include "vfatlib.h"
 
-#include <limits.h> // for INT_MAX definition
-
 #define NDEBUG
 #include <debug.h>
 

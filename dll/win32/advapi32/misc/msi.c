@@ -9,7 +9,6 @@
 
 #include <advapi32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 #ifndef _UNICODE
 #define debugstr_aw debugstr_a

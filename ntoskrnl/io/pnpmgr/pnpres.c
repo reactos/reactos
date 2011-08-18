@@ -217,6 +217,7 @@ IopCreateResourceListFromRequirements(
       for (ii = 0; ii < ResList->Count; ii++)
       {
          PIO_RESOURCE_DESCRIPTOR ReqDesc = &ResList->Descriptors[ii];
+         BOOLEAN FoundResource = TRUE;
 
          /* FIXME: Handle alternate ranges */
          if (ReqDesc->Option == IO_RESOURCE_ALTERNATIVE)
@@ -240,6 +241,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -256,6 +259,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -272,6 +277,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -288,6 +295,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -303,16 +312,22 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
             default:
               DPRINT1("Unsupported resource type: %x\n", ReqDesc->Type);
+              FoundResource = FALSE;
               break;
          }
 
-         (*ResourceList)->List[0].PartialResourceList.Count++;
-         ResDesc++;
+         if (FoundResource)
+         {
+             (*ResourceList)->List[0].PartialResourceList.Count++;
+             ResDesc++;
+         }
       }
    }
 

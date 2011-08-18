@@ -26,28 +26,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
-#include <commctrl.h>
-#include <stdio.h>
-#include <io.h>
-#include <tchar.h>
-#include <stdlib.h>
-
-#include <samlib/samlib.h>
-#include <syssetup/syssetup.h>
-#include <userenv.h>
-#include <setupapi.h>
-
-#include <shlobj.h>
-#include <objidl.h>
-#include <shlwapi.h>
-
-#include "globals.h"
-#include "resource.h"
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -29,12 +29,6 @@
 #define WIN32_NO_STATUS
 
 #include "rapps.h"
-#include "resource.h"
-
-#include <commctrl.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <urlmon.h>
 
 static PAPPLICATION_INFO AppInfo;
 static HICON hIcon = NULL;

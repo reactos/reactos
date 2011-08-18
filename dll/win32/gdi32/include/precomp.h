@@ -12,9 +12,11 @@
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 
+#include <stdio.h>
+
 /* SDK/DDK/NDK Headers. */
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 #include <wingdi.h>
 #include <winddi.h>
 #include <d3dnthal.h>
@@ -23,6 +25,12 @@
 #include <winspool.h>
 
 #include <pseh/pseh2.h>
+
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <ddrawint.h>
+#include <ddrawgdi.h>
+#include <d3dhal.h>
 
 /* Public Win32K Headers */
 #include <win32k/ntgdityp.h>

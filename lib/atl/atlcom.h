@@ -321,7 +321,7 @@ public:																			\
 	typedef x _ComMapClass;														\
 	HRESULT _InternalQueryInterface(REFIID iid, void **ppvObject)				\
 	{																			\
-		return InternalQueryInterface(this, _GetEntries(), iid, ppvObject);		\
+		return this->InternalQueryInterface(this, _GetEntries(), iid, ppvObject);		\
 	}																			\
 	const static ATL::_ATL_INTMAP_ENTRY *WINAPI _GetEntries()					\
 	{																			\

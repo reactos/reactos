@@ -401,9 +401,9 @@ acpi_bus_get_power_flags (
 		char		object_name[5] = {'_','P','R','0'+i,'\0'};
 
 		/* Evaluate "_PRx" to se if power resources are referenced */
-		acpi_evaluate_reference(device->handle, object_name, NULL,
+		status = acpi_evaluate_reference(device->handle, object_name, NULL,
 			&ps->resources);
-		if (ps->resources.count) {
+		if (ACPI_SUCCESS(status) && ps->resources.count) {
 			device->power.flags.power_resources = 1;
 			ps->flags.valid = 1;
 		}

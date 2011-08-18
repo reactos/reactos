@@ -41,6 +41,7 @@
 	<file>symbol.c</file>
 	<file>type.c</file>
 	<file>version.rc</file>
+	<pch>dbghelp_private.h</pch>
 	<library>wine</library>
 	<library>psapi</library>
 	<library>version</library>

@@ -137,26 +137,53 @@ static ULONG WINAPI delegating_Release(IUnknown *pUnk)
     return 1;
 }
 
-#if defined(__i386__)
-
 /* The idea here is to replace the first param on the stack
    ie. This (which will point to cstdstubbuffer_delegating_t)
    with This->stub_buffer.pvServerObject and then jump to the
    relevant offset in This->stub_buffer.pvServerObject's vtbl.
 */
+#ifdef __i386__
+
 #include "pshpack1.h"
 typedef struct {
-    DWORD mov1;    /* mov 0x4(%esp), %eax      8b 44 24 04 */
-    WORD mov2;     /* mov 0x10(%eax), %eax     8b 40 */
-    BYTE sixteen;  /*                          10   */
-    DWORD mov3;    /* mov %eax, 0x4(%esp)      89 44 24 04 */
-    WORD mov4;     /* mov (%eax), %eax         8b 00 */
-    WORD mov5;     /* mov offset(%eax), %eax   8b 80 */
-    DWORD offset;  /*                          xx xx xx xx */
-    WORD jmp;      /* jmp *%eax                ff e0 */
-    BYTE pad[3];   /* lea 0x0(%esi), %esi      8d 76 00 */
+    BYTE mov1[4];    /* mov 0x4(%esp),%eax     8b 44 24 04 */
+    BYTE mov2[3];    /* mov 0x10(%eax),%eax    8b 40 10 */
+    BYTE mov3[4];    /* mov %eax,0x4(%esp)     89 44 24 04 */
+    BYTE mov4[2];    /* mov (%eax),%eax        8b 00 */
+    BYTE mov5[2];    /* jmp *offset(%eax)      ff a0 offset */
+    DWORD offset;
+    BYTE pad[1];     /* nop                    90 */
 } vtbl_method_t;
 #include "poppack.h"
+
+static const BYTE opcodes[20] = { 0x8b, 0x44, 0x24, 0x04, 0x8b, 0x40, 0x10, 0x89, 0x44, 0x24, 0x04,
+                                  0x8b, 0x00, 0xff, 0xa0, 0, 0, 0, 0, 0x90 };
+
+#elif defined(__x86_64__)
+
+#include "pshpack1.h"
+typedef struct
+{
+    BYTE mov1[4];    /* movq 0x20(%rcx),%rcx   48 8b 49 20 */
+    BYTE mov2[3];    /* movq (%rcx),%rax       48 8b 01 */
+    BYTE jmp[2];     /* jmp *offset(%rax)      ff a0 offset */
+    DWORD offset;
+    BYTE pad[3];     /* lea 0x0(%rsi),%rsi     48 8d 36 */
+} vtbl_method_t;
+#include "poppack.h"
+
+static const BYTE opcodes[16] = { 0x48, 0x8b, 0x49, 0x20, 0x48, 0x8b, 0x01,
+                                  0xff, 0xa0, 0, 0, 0, 0, 0x48, 0x8d, 0x36 };
+#else
+
+#warning You must implement delegated proxies/stubs for your CPU
+typedef struct
+{
+    DWORD offset;
+} vtbl_method_t;
+static const BYTE opcodes[1];
+
+#endif
 
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 64  /* 64k methods should be enough for anybody */
@@ -174,17 +201,8 @@ static const vtbl_method_t *allocate_block( unsigned int num )
 
     for (i = 0; i < BLOCK_SIZE; i++)
     {
-        block[i].mov1 = 0x0424448b;
-        block[i].mov2 = 0x408b;
-        block[i].sixteen = 0x10;
-        block[i].mov3 = 0x04244489;
-        block[i].mov4 = 0x008b;
-        block[i].mov5 = 0x808b;
-        block[i].offset = (BLOCK_SIZE * num + i + 3) << 2;
-        block[i].jmp = 0xe0ff;
-        block[i].pad[0] = 0x8d;
-        block[i].pad[1] = 0x76;
-        block[i].pad[2] = 0x00;
+        memcpy( &block[i], opcodes, sizeof(opcodes) );
+        block[i].offset = (BLOCK_SIZE * num + i + 3) * sizeof(void *);
     }
     VirtualProtect( block, BLOCK_SIZE * sizeof(*block), PAGE_EXECUTE_READ, NULL );
     prev = InterlockedCompareExchangePointer( (void **)&method_blocks[num], block, NULL );
@@ -240,22 +258,6 @@ BOOL fill_delegated_proxy_table(IUnknownVtbl *vtbl, DWORD num)
     }
     return TRUE;
 }
-
-#else  /* __i386__ */
-
-static BOOL fill_delegated_stub_table(IUnknownVtbl *vtbl, DWORD num)
-{
-    ERR("delegated stubs are not supported on this architecture\n");
-    return FALSE;
-}
-
-BOOL fill_delegated_proxy_table(IUnknownVtbl *vtbl, DWORD num)
-{
-    ERR("delegated proxies are not supported on this architecture\n");
-    return FALSE;
-}
-
-#endif  /* __i386__ */
 
 static IUnknownVtbl *get_delegating_vtbl(DWORD num_methods)
 {

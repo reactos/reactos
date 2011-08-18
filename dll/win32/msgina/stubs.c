@@ -9,10 +9,8 @@
  * UPDATE HISTORY:
  *      24-11-2003  Created
  */
-#include <windows.h>
-#include <winwlx.h>
 
-#include <wine/debug.h>
+#include "msgina.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 

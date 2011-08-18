@@ -40,4 +40,5 @@
 	<file>stubs.c</file>
 	<file>rpc.c</file>
 	<file>setupapi.rc</file>
+	<pch>setupapi_private.h</pch>
 </module>

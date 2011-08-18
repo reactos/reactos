@@ -45,6 +45,12 @@ list(APPEND CRT_SOURCE
     math/frexp.c
     math/huge_val.c
     math/hypot.c
+    math/ieee754/j0_y0.c
+    math/ieee754/j1_y1.c
+    math/ieee754/jn_yn.c
+    math/j0_y0.c
+    math/j1_y1.c
+    math/jn_yn.c
     math/ldiv.c
     math/logf.c
     math/modf.c
@@ -308,6 +314,10 @@ if(ARCH MATCHES i386)
         float/i386/logb.c
         float/i386/statfp.c
         setjmp/i386/setjmp.s)
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/i386/cpp.s)
+    endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
         except/amd64/seh.s

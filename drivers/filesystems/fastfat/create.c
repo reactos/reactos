@@ -545,7 +545,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
 			ULONG Attributes;
-			Attributes = Stack->Parameters.Create.FileAttributes;
+			Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
 
 			vfatSplitPathName(&PathNameU, NULL, &FileNameU);
 			Status = VfatAddEntry (DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,

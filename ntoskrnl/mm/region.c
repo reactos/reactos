@@ -230,9 +230,6 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
          ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
       }
    }
-   
-   if(NewRegion->Length < Length)
-      return(STATUS_NO_MEMORY);
 
    return(STATUS_SUCCESS);
 }

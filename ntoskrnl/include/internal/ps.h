@@ -54,7 +54,7 @@
             __LINE__,                                       \
             OBJECT_TO_OBJECT_HEADER(x)->PointerCount)
 #else
-#define PSTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define PSTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #define PSREFTRACE(x)
 #endif
 

@@ -30,12 +30,8 @@
  *                          isolated in its own library to clear the confusion
  *                          and improve reusability
  */
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
 
-#include <epsapi/epsapi.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

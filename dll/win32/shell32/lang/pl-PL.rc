@@ -21,7 +21,7 @@
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
- * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -136,7 +136,7 @@ BEGIN
 	LTEXT "Wersja "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "Ta kopia ReactOS jest zarejestrowna na:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Ta kopia ReactOS jest zarejestrowana na:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -179,7 +179,7 @@ BEGIN
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "Lokalizacja:", 14006, 8, 58, 64, 10
 	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Element docelowy:", 14008, 8, 77, 45, 10
+	LTEXT "Element docelowy:", 14008, 8, 77, 60, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "&Uruchom w:", 14010, 8, 96, 57, 10
 	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL

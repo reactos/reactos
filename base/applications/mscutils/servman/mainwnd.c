@@ -469,7 +469,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_START:
         {
-            if (DoStart(Info))
+            if (DoStart(Info, NULL))
             {
                 UpdateServiceStatus(Info->pCurrentService);
                 ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
@@ -500,7 +500,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case ID_RESTART:
             if (DoStop(Info))
             {
-                DoStart(Info);
+                DoStart(Info, NULL);
                 UpdateServiceStatus(Info->pCurrentService);
                 ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
                 SetMenuAndButtonStates(Info);

@@ -1,5 +1,3 @@
-/* UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011) */
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224

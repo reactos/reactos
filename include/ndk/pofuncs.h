@@ -18,6 +18,7 @@ Author:
 
 #ifndef _POFUNCS_H
 #define _POFUNCS_H
+#ifndef _PO_DDK_
 
 //
 // Dependencies
@@ -57,28 +58,80 @@ NtSetSystemPowerState(
     IN ULONG Flags
 );
 
-NTSYSAPI
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtGetDevicePowerState(
+    IN HANDLE Device,
+    IN PDEVICE_POWER_STATE PowerState
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRequestWakeupLatency(
+    IN LATENCY_TIME latency
+);
+
+NTSYSCALLAPI
+BOOLEAN
+NTAPI
+NtIsSystemResumeAutomatic(VOID);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetThreadExecutionState(
+    IN EXECUTION_STATE esFlags,
+    OUT EXECUTION_STATE *PreviousFlags
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtInitiatePowerAction(
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOLEAN Asynchronous
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRequestDeviceWakeup(
+    IN HANDLE Device
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCancelDeviceWakeupRequest(
+    IN HANDLE Device
+);
+#endif
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction(
-    POWER_ACTION SystemAction,
-    SYSTEM_POWER_STATE MinSystemState,
-    ULONG Flags,
-    BOOLEAN Asynchronous
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOLEAN Asynchronous
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
-    POWER_INFORMATION_LEVEL PowerInformationLevel,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength
+    IN POWER_INFORMATION_LEVEL PowerInformationLevel,
+    IN PVOID InputBuffer OPTIONAL,
+    IN ULONG InputBufferLength,
+    OUT PVOID OutputBuffer OPTIONAL,
+    IN ULONG OutputBufferLength
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetSystemPowerState(

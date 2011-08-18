@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_executable(vmwinst vmwinst.c vmwinst.rc)
 

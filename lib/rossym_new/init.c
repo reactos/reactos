@@ -7,9 +7,7 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#include <windows.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
+#include <precomp.h>
 
 ROSSYM_CALLBACKS RosSymCallbacks;
 

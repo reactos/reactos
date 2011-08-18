@@ -8,9 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
                            PIRP Irp,
@@ -61,15 +58,6 @@ static NTSTATUS SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
 				   Qelt->ConnInfo->RemoteAddress );
 
     IPAddr = (PTA_IP_ADDRESS)&ListenReceive->Address;
-
-    if( !IPAddr ) {
-	if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
-	Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	Irp->IoStatus.Information = 0;
-        (void)IoSetCancelRoutine(Irp, NULL);
-	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-        return STATUS_NO_MEMORY;
-    }
 
     AFD_DbgPrint(MID_TRACE,("IPAddr->TAAddressCount %d\n",
                             IPAddr->TAAddressCount));
@@ -236,7 +224,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( FCB->State != SOCKET_STATE_BOUND ) {
 	Status = STATUS_INVALID_PARAMETER;
-	AFD_DbgPrint(MID_TRACE,("Could not listen an unbound socket\n"));
+	AFD_DbgPrint(MIN_TRACE,("Could not listen an unbound socket\n"));
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     }
 
@@ -316,7 +304,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	SocketStateUnlock( FCB );
 	return Status;
     } else if (FCB->NonBlocking) {
-        AFD_DbgPrint(MID_TRACE,("No connection ready on a non-blocking socket\n"));
+        AFD_DbgPrint(MIN_TRACE,("No connection ready on a non-blocking socket\n"));
         
         return UnlockAndMaybeComplete(FCB, STATUS_CANT_WAIT, Irp, 0);
     } else {
@@ -376,18 +364,23 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
 	    ExFreePool( PendingConnObj );
+        
+        FCB->EventSelectDisabled &= ~AFD_EVENT_ACCEPT;
 
-	    if( !IsListEmpty( &FCB->PendingConnections ) ) {
-		FCB->PollState |= AFD_EVENT_ACCEPT;
-                FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
+	    if( !IsListEmpty( &FCB->PendingConnections ) )
+        {
+            FCB->PollState |= AFD_EVENT_ACCEPT;
+            FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
 	        PollReeval( FCB->DeviceExt, FCB->FileObject );
-            } else
-                FCB->PollState &= ~AFD_EVENT_ACCEPT;
+        } else
+            FCB->PollState &= ~AFD_EVENT_ACCEPT;
 
 	    SocketStateUnlock( FCB );
 	    return Status;
 	}
     }
+    
+    AFD_DbgPrint(MIN_TRACE,("No connection waiting\n"));
 
     return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp, 0 );
 }

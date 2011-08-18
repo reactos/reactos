@@ -91,7 +91,7 @@ static GENERIC_MAPPING
 ScmServiceMapping = {SERVICE_READ,
                      SERVICE_WRITE,
                      SERVICE_EXECUTE,
-                     SC_MANAGER_ALL_ACCESS};
+                     SERVICE_ALL_ACCESS};
 
 
 /* FUNCTIONS ***************************************************************/
@@ -586,7 +586,7 @@ DWORD RControlService(
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n"); 
+        DPRINT1("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -722,15 +722,6 @@ DWORD RControlService(
 
     if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
         dwError = ERROR_DEPENDENT_SERVICES_RUNNING;
-
-    if (dwError == ERROR_SUCCESS &&
-        dwControl == SERVICE_CONTROL_STOP && 
-        lpServiceStatus->dwCurrentState == SERVICE_STOPPED)
-    {
-        lpService->ProcessId = 0; /* FIXME */
-        lpService->ThreadId = 0;
-    }
-
 
     return dwError;
 }
@@ -982,7 +973,7 @@ DWORD RSetServiceObjectSecurity(
                                TRUE,
                                &hToken);
     if (!NT_SUCCESS(Status))
-        return RtlNtStatusToDosError(Status); 
+        return RtlNtStatusToDosError(Status);
 
     RpcRevertToSelf();
 
@@ -1611,7 +1602,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             }
 
             /* Do a real query now */
-            LinkTarget.Length = BufferSize;
+            LinkTarget.Length = (USHORT)BufferSize;
             LinkTarget.MaximumLength = LinkTarget.Length + sizeof(WCHAR);
 
             Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
@@ -2500,7 +2491,7 @@ DWORD REnumServicesStatusW(
         dwRequiredSize += dwSize;
     }
 
-    if (dwError == 0) 
+    if (dwError == 0)
     {
         *pcbBytesNeeded = 0;
         if (lpResumeHandle) *lpResumeHandle = 0;
@@ -3714,7 +3705,7 @@ DWORD REnumServicesStatusA(
     lpStatusPtrA = (LPENUM_SERVICE_STATUSA)lpBuffer;
     lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
                   *lpServicesReturned * sizeof(ENUM_SERVICE_STATUSA));
-    lpStringPtrW = (LPWSTR)((ULONG_PTR)lpStatusPtrW + 
+    lpStringPtrW = (LPWSTR)((ULONG_PTR)lpStatusPtrW +
                   *lpServicesReturned * sizeof(ENUM_SERVICE_STATUSW));
 
     for (dwServiceCount = 0; dwServiceCount < *lpServicesReturned; dwServiceCount++)
@@ -4795,7 +4786,7 @@ DWORD RQueryServiceConfig2W(
             goto done;
         }
 
-        lpFailureActions->cActions = 0; 
+        lpFailureActions->cActions = 0;
         lpFailureActions->dwResetPeriod = 0;
         lpFailureActions->lpCommand = NULL;
         lpFailureActions->lpRebootMsg = NULL;
@@ -4897,7 +4888,7 @@ DWORD RQueryServiceStatusEx(
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
 
-    lpStatus->dwProcessId = lpService->ProcessId;	/* FIXME */
+    lpStatus->dwProcessId = (lpService->lpImage != NULL) ? lpService->lpImage->dwProcessId : 0; /* FIXME */
     lpStatus->dwServiceFlags = 0;			/* FIXME */
 
     /* Unlock the service database */
@@ -4975,7 +4966,7 @@ DWORD REnumServicesStatusExA(
     lpStatusPtrA = (LPENUM_SERVICE_STATUS_PROCESSA)lpBuffer;
     lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
                   *lpServicesReturned * sizeof(ENUM_SERVICE_STATUS_PROCESSA));
-    lpStringPtrW = (LPWSTR)((ULONG_PTR)lpStatusPtrW + 
+    lpStringPtrW = (LPWSTR)((ULONG_PTR)lpStatusPtrW +
                   *lpServicesReturned * sizeof(ENUM_SERVICE_STATUS_PROCESSW));
 
     for (dwServiceCount = 0; dwServiceCount < *lpServicesReturned; dwServiceCount++)
@@ -5282,7 +5273,8 @@ DWORD REnumServicesStatusExW(
             memcpy(&lpStatusPtr->ServiceStatusProcess,
                    &CurrentService->Status,
                    sizeof(SERVICE_STATUS));
-            lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->ProcessId; /* FIXME */
+            lpStatusPtr->ServiceStatusProcess.dwProcessId =
+                (CurrentService->lpImage != NULL) ? CurrentService->lpImage->dwProcessId : 0; /* FIXME */
             lpStatusPtr->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
 
             lpStatusPtr++;
@@ -5294,7 +5286,7 @@ DWORD REnumServicesStatusExW(
         }
     }
 
-    if (dwError == 0) 
+    if (dwError == 0)
     {
         *pcbBytesNeeded = 0;
         if (lpResumeIndex)

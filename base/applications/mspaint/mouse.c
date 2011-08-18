@@ -8,10 +8,7 @@
 
 /* INCLUDES *********************************************************/
 
-#include "globalvar.h"
-#include "dib.h"
-#include "drawing.h"
-#include "history.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 

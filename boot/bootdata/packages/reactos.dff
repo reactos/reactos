@@ -664,6 +664,7 @@ media\inf\disk.inf                                  6
 media\inf\display.inf                               6
 media\inf\font.inf                                  6
 media\inf\fdc.inf                                   6
+media\inf\hal.inf                                   6
 media\inf\hdc.inf                                   6
 media\inf\intl.inf                                  6
 media\inf\layout.inf                                6
@@ -802,6 +803,7 @@ modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   o
 modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
 modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
 modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
+modules\rostests\winetests\imagehlp\imagehlp_winetest.exe                  7   optional
 modules\rostests\winetests\imm32\imm32_winetest.exe                        7   optional
 modules\rostests\winetests\inetcomm\inetcomm_winetest.exe                  7   optional
 modules\rostests\winetests\inetmib1\inetmib1_winetest.exe                  7   optional
@@ -856,6 +858,7 @@ modules\rostests\winetests\spoolss\spoolss_winetest.exe                    7   o
 modules\rostests\winetests\twain_32\twain_32_winetest.exe                  7   optional
 modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
 modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
+modules\rostests\winetests\userenv\userenv_winetest.exe                    7   optional
 modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
 modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
 modules\rostests\winetests\version\version_winetest.exe                    7   optional
@@ -870,6 +873,7 @@ modules\rostests\winetests\xmllite\xmllite_winetest.exe                    7   o
 
 modules\rostests\apitests\dciman32\dciman32_apitest.exe                    7   optional
 modules\rostests\apitests\gdi32\gdi32_apitest.exe                          7   optional
+modules\rostests\apitests\kernel32\kernel32_apitest.exe                    7   optional
 modules\rostests\apitests\ntdll\ntdll_apitest.exe                          7   optional
 modules\rostests\apitests\user32\user32_apitest.exe                        7   optional
 modules\rostests\apitests\ws2_32\ws2_32_apitest.exe                        7   optional

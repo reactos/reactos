@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSR Sub System
- * FILE:            subsys/csr/csrsrv/init.c
+ * FILE:            subsystems/win32/csrss/csrsrv/init.c
  * PURPOSE:         CSR Server DLL Initialization
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -482,12 +482,23 @@ CsrpCreateBNODirectory (int argc, char ** argv, char ** envp)
     return Status;
 }
 
+
+VOID
+WINAPI
+BasepFakeStaticServerData(VOID);
+
+NTSTATUS
+NTAPI
+CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
+
 /**********************************************************************
  * CsrpCreateHeap/3
  */
 static NTSTATUS
 CsrpCreateHeap (int argc, char ** argv, char ** envp)
 {
+    CHAR Value[] = "1024,3072,512";
+    NTSTATUS Status;
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
 	CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -500,6 +511,16 @@ CsrpCreateHeap (int argc, char ** argv, char ** envp)
 	{
 		return STATUS_UNSUCCESSFUL;
 	}
+    
+    
+    Status = CsrSrvCreateSharedSection(Value);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("CsrSrvCreateSharedSection failed with status 0x%08lx\n", Status);
+        ASSERT(FALSE);
+    }
+
+    BasepFakeStaticServerData();
 	return STATUS_SUCCESS;
 }
 
@@ -778,9 +799,9 @@ CsrServerInitialization(ULONG ArgumentCount,
 
 BOOL
 NTAPI
-DllMainCRTStartup(HANDLE hDll,
-                  DWORD dwReason,
-                  LPVOID lpReserved)
+DllMain(HANDLE hDll,
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
     /* We don't do much */
     UNREFERENCED_PARAMETER(hDll);

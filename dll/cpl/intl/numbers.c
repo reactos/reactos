@@ -24,13 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 #define SAMPLE_NUMBER               _T("123456789")
 #define SAMPLE_NEG_NUMBER           _T("-123456789")

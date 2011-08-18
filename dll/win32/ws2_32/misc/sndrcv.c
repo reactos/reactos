@@ -8,11 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 
-#include <w32api.h>
-#include <ws2_32.h>
-#include <catalog.h>
-#include <handle.h>
-
+#include "ws2_32.h"
 
 /*
  * @implemented

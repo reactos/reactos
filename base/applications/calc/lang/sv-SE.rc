@@ -3,7 +3,6 @@
  * FILE:            base\applications\calc\lang\sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
- * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL

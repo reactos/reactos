@@ -15,6 +15,7 @@
 	<file>task_scheduler.c</file>
 	<file>task_trigger.c</file>
 	<file>rsrc.rc</file>
+	<pch>mstask_private.h</pch>
 	<library>mstask_local_interface</library>
 	<library>wine</library>
 	<library>uuid</library>

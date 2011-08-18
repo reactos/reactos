@@ -7,7 +7,8 @@
  *         IDS_CPLNAME and IDS_CPLDESCRIPTION translated by xrogers
  *         xxrogers@users.sourceforge.net
  *         https://sourceforge.net/projects/reactospl
- *         UTF-8 conversion by Caemyr (May, 2011) 
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -127,7 +128,7 @@ BEGIN
     ICON 4379, -1, 7, 8, 20, 20
     LTEXT "Wybierz takie ustawienie głośników, które najbardziej odpowiada rzeczywistemu.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "&Ustawienie głośników:", 8502, 53, 169, 55, 10
+    LTEXT "&Ustawienie głośników:", 8502, 53, 169, 73, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 

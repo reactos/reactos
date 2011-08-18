@@ -17,6 +17,7 @@ macro(inttohex INTVALUE OUTPUT_VARIABLE)
 endmacro()
 
 macro(converttohex INTVALUE OUTPUT_VARIABLE)
+    set(${OUTPUT_VARIABLE} "")
     set(REMAINING ${INTVALUE})
     while(REMAINING)
         math(EXPR REMAINDER "${REMAINING}%16")

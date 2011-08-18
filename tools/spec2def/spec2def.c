@@ -19,6 +19,7 @@ typedef struct
     int nArgCount;
     int anArgs[30];
     unsigned int uFlags;
+    int nNumber;
 } EXPORT;
 
 enum _ARCH
@@ -168,7 +169,15 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         fprintf(file, "__stdcall ");
     }
 
-    fprintf(file, "%.*s(", pexp->nNameLength, pexp->pcName);
+    /* Check for C++ */
+    if (pexp->pcName[0] == '?')
+    {
+        fprintf(file, "stub_function%d(", pexp->nNumber);
+    }
+    else
+    {
+        fprintf(file, "%.*s(", pexp->nNameLength, pexp->pcName);
+    }
 
     for (i = 0; i < pexp->nArgCount; i++)
     {
@@ -329,10 +338,25 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     }
     else if (pexp->pcRedirection)
     {
-        int fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
+        if (gbMSComp && (pexp->pcName[0] == '?'))
+        {
+            /* ignore c++ redirection, since link doesn't like that! */
+        }
+        else
+        {
+            int fDeco;
 
+            fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
+            fprintf(fileDest, "=");
+            PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
+        }
+    }
+    else if (((pexp->uFlags & FL_STUB) || (pexp->nCallingConvention == CC_STUB)) &&
+             (pexp->pcName[0] == '?'))
+    {
+        /* C++ stubs are forwarded to C stubs */
         fprintf(fileDest, "=");
-        PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
+        fprintf(fileDest, "stub_function%d", pexp->nNumber);
     }
     else if ((giArch == ARCH_X86) && gbKillAt && !gbMSComp &&
              (pexp->nCallingConvention == CC_STDCALL ||
@@ -379,12 +403,14 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
 
     /* Loop all lines */
     nLine = 1;
+    exp.nNumber = 0;
     for (pcLine = pcStart; *pcLine; pcLine = NextLine(pcLine), nLine++)
     {
         pc = pcLine;
 
         exp.nArgCount = 0;
         exp.uFlags = 0;
+        exp.nNumber++;
 
         //fprintf(stderr, "info: line %d, token:'%d, %.20s'\n",
         //        nLine, TokenLength(pcLine), pcLine);
@@ -591,7 +617,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Check for c++ mangled name */
             if (pc[0] == '?')
             {
-                printf("Found c++ mangled name...\n");
+                //printf("Found c++ mangled name...\n");
                 //
             }
             else

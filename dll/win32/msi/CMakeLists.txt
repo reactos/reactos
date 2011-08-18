@@ -93,6 +93,7 @@ add_importlibs(msi
     kernel32
     ntdll)
 
+add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)

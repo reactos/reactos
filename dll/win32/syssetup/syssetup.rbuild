@@ -20,4 +20,5 @@
 	<file>logfile.c</file>
 	<file>wizard.c</file>
 	<file>syssetup.rc</file>
+	<pch>precomp.h</pch>
 </module>

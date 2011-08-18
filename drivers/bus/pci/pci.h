@@ -1,5 +1,3 @@
-#pragma once
-
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <stdio.h>

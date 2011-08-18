@@ -148,7 +148,11 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     RtlCopyMemory(ConnectMessage + 1, ReplyMessage + 1, ConnectionInfoLength);
 
     /* At this point, if the caller refused the connection, go to cleanup */
-    if (!AcceptConnection) goto Cleanup;
+    if (!AcceptConnection)
+    {
+        DPRINT1("LPC connection was refused\n");
+        goto Cleanup;   
+    }
 
     /* Otherwise, create the actual port */
     Status = ObCreateObject(PreviousMode,
@@ -222,6 +226,11 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
         {
             /* Otherwise, quit */
             ObDereferenceObject(ServerPort);
+            DPRINT1("Client section mapping failed: %lx\n", Status);
+            DPRINT1("View base, offset, size: %lx %lx %lx\n",
+                    ServerPort->ClientSectionBase,
+                    ConnectMessage->ClientView.ViewSize,
+                    SectionOffset);
             goto Cleanup;
         }
     }

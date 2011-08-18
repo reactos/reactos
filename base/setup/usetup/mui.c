@@ -25,9 +25,6 @@
  */
 
 #include "usetup.h"
-#include "interface/consup.h"
-#include "errorcode.h"
-#include "mui.h"
 #include "muifonts.h"
 #include "muilanguages.h"
 

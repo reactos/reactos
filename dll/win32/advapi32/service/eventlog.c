@@ -22,8 +22,6 @@
  */
 
 #include <advapi32.h>
-#include "wine/debug.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 static RPC_UNICODE_STRING EmptyStringU = { 0, 0, L"" };

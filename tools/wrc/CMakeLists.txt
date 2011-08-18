@@ -3,6 +3,7 @@ list(APPEND SOURCE
     dumpres.c
     genres.c
     newstruc.c
+    po.c
     readres.c
     translation.c
     utils.c

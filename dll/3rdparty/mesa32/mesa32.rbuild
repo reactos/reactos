@@ -126,6 +126,7 @@
 		<file>texstore.c</file>
 		<file>varray.c</file>
 		<file>vtxfmt.c</file>
+		<pch>glheader.h</pch>
 	</directory>
 	<directory name="math">
 		<file>m_debug_clip.c</file>

@@ -12,4 +12,5 @@
 	<file>pcnet.c</file>
 	<file>requests.c</file>
 	<file>pcnet.rc</file>
+	<pch>pcnet.h</pch>
 </module>

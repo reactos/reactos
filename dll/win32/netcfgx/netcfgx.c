@@ -7,18 +7,13 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-
 #include "precomp.h"
-#include <initguid.h>
-#include <devguid.h>
+
 #define NDEBUG
 #include <debug.h>
 
 HINSTANCE netcfgx_hInstance;
 const GUID CLSID_TcpipConfigNotifyObject      = {0xA907657F, 0x6FDF, 0x11D0, {0x8E, 0xFB, 0x00, 0xC0, 0x4F, 0xD9, 0x12, 0xB2}};
-
-
-
 
 static INTERFACE_TABLE InterfaceTable[] =
 {

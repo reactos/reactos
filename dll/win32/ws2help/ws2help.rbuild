@@ -11,4 +11,5 @@
 	<file>handle.c</file>
 	<file>notify.c</file>
 	<file>ws2help.rc</file>
+	<pch>precomp.h</pch>
 </module>

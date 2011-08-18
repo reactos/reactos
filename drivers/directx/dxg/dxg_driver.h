@@ -1,5 +1,4 @@
 
-
 DRVFN gaDxgFuncs [] =
 {
     {DXG_INDEX_DxDxgGenericThunk, (PFN)DxDxgGenericThunk},

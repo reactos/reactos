@@ -18,12 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/ntndk.h>
-
 #include "dbghelp_private.h"
 
+ULONG __cdecl DbgPrint(IN PCCH Format, IN ...);
 #define UNIMPLEMENTED DbgPrint("DBGHELP: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 #define PDBGHELP_CREATE_USER_DUMP_CALLBACK PVOID

@@ -35,16 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include "rossym.h"
-#include "dwarf.h"
-#include "pe.h"
 
 BOOLEAN
 RosSymGetAddressInformation

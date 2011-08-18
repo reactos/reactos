@@ -33,7 +33,6 @@ PFN_NUMBER MmAvailablePages;
 PFN_NUMBER MmResidentAvailablePages;
 PFN_NUMBER MmResidentAvailableAtInit;
 
-SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommittedPages;
 SIZE_T MmSharedCommit;
 SIZE_T MmDriverCommit;

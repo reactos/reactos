@@ -10,13 +10,6 @@
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <shlobj.h>
-#include <regstr.h>
-#include <cpl.h>
-
-#include "resource.h"
 #include "powercfg.h"
 
 #define NUM_APPLETS	(1)

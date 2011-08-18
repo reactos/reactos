@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(untfs SHARED ${SOURCE})
 
-set_module_type(untfs win32dll)
+set_module_type(untfs nativedll)
 target_link_libraries(untfs ntfslib)
-add_importlibs(untfs msvcrt kernel32 ntdll)
+add_importlibs(untfs ntdll)
 add_cd_file(TARGET untfs DESTINATION reactos/system32 FOR all)

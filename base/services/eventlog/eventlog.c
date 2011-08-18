@@ -63,6 +63,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
+            /* Stop listening to incoming RPC messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 

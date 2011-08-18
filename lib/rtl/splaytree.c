@@ -13,13 +13,134 @@
 #define NDEBUG
 #include <debug.h>
 
+//#define VERIFY_SWAP_SPLAY_LINKS
+
 /* FUNCTIONS ***************************************************************/
 
+static
+VOID
+FixupChildLinks(PRTL_SPLAY_LINKS Links, BOOLEAN Root, BOOLEAN LeftChild)
+{
+    if (RtlLeftChild(Links)) {
+        RtlInsertAsLeftChild(Links, RtlLeftChild(Links));
+    }
+    if (RtlRightChild(Links)) {
+        RtlInsertAsRightChild(Links, RtlRightChild(Links));
+    }
+    if (!Root) {
+        if (LeftChild) {
+            RtlInsertAsLeftChild(RtlParent(Links), Links);
+        } else {
+            RtlInsertAsRightChild(RtlParent(Links), Links);
+        }
+    }
+}
+
+/*
+
+Given the tree:
+   D
+ B   F
+A C E G
+
+Swap(Q,S):
+
+Q S   Q.P Q.L Q.R S.P S.L S.R
+A C   S.P S.L S.R Q.P Q.L Q.R
+B A   S   S.L S.R Q.P Q   Q.R
+B C   S   S.L S.R Q.P Q.L Q
+D A   S.P S.L S.R S   Q.L Q.R
+D B   S   S.L S.R S   Q   Q.R
+D F   S   S.L S.R S   Q.L Q
+
+When Q is the immediate parent of S,
+  Set Q's parent to S, and the proper child ptr of S to Q
+When Q is the root,
+  Set S's parent to S
+ */
+
+static
 VOID
 SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
                PRTL_SPLAY_LINKS LinkB)
 {
-    DPRINT1("UNIMPLEMENTED!\n");
+    if (RtlParent(LinkA) == LinkB || RtlIsRoot(LinkB)) {
+        PRTL_SPLAY_LINKS Tmp = LinkA;
+        LinkA = LinkB;
+        LinkB = Tmp;
+    }
+
+    {
+        RTL_SPLAY_LINKS Ta = *LinkA, Tb = *LinkB;
+        BOOLEAN RootA = RtlIsRoot(LinkA), 
+            LeftA = RtlIsLeftChild(LinkA), 
+            LeftB = RtlIsLeftChild(LinkB);
+        *LinkB = Ta; *LinkA = Tb;
+
+        // A was parent of B is a special case: A->Parent is now B
+        if (RtlParent(&Tb) == LinkA) {
+            if (!RootA) {
+                if (LeftA) {
+                    RtlInsertAsLeftChild(RtlParent(&Ta), LinkB);
+                } else {
+                    RtlInsertAsRightChild(RtlParent(&Ta), LinkB);
+                }
+            }
+            if (LeftB) {
+                RtlInsertAsLeftChild(LinkB, LinkA);
+            } else {
+                RtlInsertAsRightChild(LinkB, LinkA);
+            }
+        }
+
+        FixupChildLinks(LinkA, FALSE, LeftB);
+        FixupChildLinks(LinkB, RootA, LeftA);
+
+        // A was root is a special case: B->Parent is now B
+        if (RootA)
+            RtlParent(LinkB) = LinkB;
+
+#ifdef VERIFY_SWAP_SPLAY_LINKS
+        // Verify the distinct cases of node swap
+        if (RootA) {
+            if (RtlParent(&Tb) == LinkA) {
+                // LinkA = D, LinkB = B
+                // D B   S   S.L S.R S   Q   Q.R
+                ASSERT(RtlParent(LinkA) == LinkB);
+                ASSERT(RtlLeftChild(LinkA) == RtlLeftChild(&Tb));
+                ASSERT(RtlRightChild(LinkA) == RtlRightChild(&Tb));
+                ASSERT(RtlParent(LinkB) == LinkB);
+                ASSERT(RtlLeftChild(LinkB) == (LeftB ? LinkA : RtlLeftChild(&Ta)));
+                ASSERT(RtlRightChild(LinkB) == (LeftB ? RtlRightChild(&Ta) : LinkA));
+            } else {
+                // LinkA = D, LinkB = A
+                // D A   S.P S.L S.R S   Q.L Q.R
+                ASSERT(RtlParent(LinkA) == RtlParent(&Tb));
+                ASSERT(RtlLeftChild(LinkA) == RtlLeftChild(&Tb));
+                ASSERT(RtlRightChild(LinkA) == RtlRightChild(&Tb));
+                ASSERT(RtlParent(LinkB) == LinkB);
+                ASSERT(RtlLeftChild(LinkB) == RtlLeftChild(&Ta));
+                ASSERT(RtlRightChild(LinkB) == RtlRightChild(&Ta));
+            }
+        } else {
+            if (RtlParent(&Tb) == LinkA) {
+                // LinkA = B, LinkB = A
+                // B A   S   S.L S.R Q.P Q   Q.R
+                ASSERT(RtlParent(LinkA) == LinkB);
+                ASSERT(RtlLeftChild(LinkA) == RtlLeftChild(&Tb));
+                ASSERT(RtlRightChild(LinkA) == RtlRightChild(&Tb));
+                ASSERT(RtlParent(LinkB) == RtlParent(&Ta));
+                ASSERT(RtlLeftChild(LinkB) == (LeftB ? LinkA : RtlLeftChild(&Ta)));
+                ASSERT(RtlRightChild(LinkB) == (LeftB ? RtlRightChild(&Ta) : LinkA));            
+            } else {
+                // LinkA = A, LinkB = C
+                // A C   S.P S.L S.R Q.P Q.L Q.R
+                ASSERT(!memcmp(LinkA, &Tb, sizeof(Tb)));
+                ASSERT(!memcmp(LinkB, &Ta, sizeof(Ta)));
+            }
+        }
+#endif
+    }
 }
 
 /*
@@ -513,6 +634,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
     }
 
     /* Return the root entry */
+    ASSERT(RtlIsRoot(N));
     return N;
 }
 

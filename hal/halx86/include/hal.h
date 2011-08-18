@@ -27,7 +27,13 @@
 #include <bugcodes.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
-#include <ntndk.h>
+
+#include <ndk/asm.h>
+#include <ndk/halfuncs.h>
+#include <ndk/inbvfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/rtlfuncs.h>
 
 /* Internal shared PCI and ACPI header */
 #include <drivers/pci/pci.h>

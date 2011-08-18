@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 #include <debug.h>
-#include <route.h>
 
 VOID AddEntity(ULONG EntityType, PVOID Context, ULONG Flags)
 {
