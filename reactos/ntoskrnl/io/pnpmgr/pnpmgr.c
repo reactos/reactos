@@ -311,7 +311,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
         /* Set the appropriate flag */
         DeviceNode->Flags |= DNF_START_FAILED;
 
-        DPRINT1("Warning: PnP Start failed (%wZ)\n", &DeviceNode->InstancePath);
+        DPRINT1("Warning: PnP Start failed (%wZ) [Status: 0x%x]\n", &DeviceNode->InstancePath, Status);
         return;
     }
     
