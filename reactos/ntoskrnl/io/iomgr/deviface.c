@@ -1155,7 +1155,14 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+        ZwClose(SubKey);
+        ZwClose(InterfaceKey);
+        ZwClose(ClassKey);
+        ExFreePool(SubKeyName.Buffer);
+        ExFreePool(InterfaceKeyName.Buffer);
+        ExFreePool(BaseKeyName.Buffer);
         ExFreePool(SymbolicLinkName->Buffer);
+        return Status;
     }
     else
     {
@@ -1174,14 +1181,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
-        ZwClose(SubKey);
-        ZwClose(InterfaceKey);
-        ZwClose(ClassKey);
-        ExFreePool(SubKeyName.Buffer);
-        ExFreePool(InterfaceKeyName.Buffer);
-        ExFreePool(BaseKeyName.Buffer);
         ExFreePool(SymbolicLinkName->Buffer);
-        return Status;
     }
 
     ZwClose(SubKey);
