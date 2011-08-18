@@ -20,6 +20,7 @@ TestEntry(
     IN OUT INT *Flags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    INT i;
 
     PAGED_CODE();
 
@@ -27,10 +28,12 @@ TestEntry(
     UNREFERENCED_PARAMETER(RegistryPath);
     UNREFERENCED_PARAMETER(Flags);
 
+    DPRINT("TestEntry. DriverObject=%p, RegistryPath=%wZ\n", DriverObject, RegistryPath);
+
     *DeviceName = L"IoHelper";
 
-    KmtRegisterIrpHandler(IRP_MJ_CREATE, NULL, TestIrpHandler);
-    KmtRegisterIrpHandler(IRP_MJ_CLOSE, NULL, TestIrpHandler);
+    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; ++i)
+        KmtRegisterIrpHandler(i, NULL, TestIrpHandler);
 
     return Status;
 }
@@ -42,6 +45,8 @@ TestUnload(
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(DriverObject);
+
+    DPRINT("TestUnload. DriverObject=%p\n", DriverObject);
 }
 
 static
@@ -53,10 +58,9 @@ TestIrpHandler(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (IoStackLocation->MajorFunction == IRP_MJ_CREATE)
-        DPRINT("Helper Driver: Create Device %p", DeviceObject);
-    else if (IoStackLocation->MajorFunction == IRP_MJ_CLOSE)
-        DPRINT("Helper Driver: Close Device %p", DeviceObject);
+    DPRINT("TestIrpHandler. Function=%s, DeviceObject=%p\n",
+        KmtMajorFunctionNames[IoStackLocation->MajorFunction],
+        DeviceObject);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;

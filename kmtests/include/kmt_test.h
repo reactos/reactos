@@ -82,6 +82,7 @@ typedef struct
 
 extern BOOLEAN KmtIsCheckedBuild;
 extern BOOLEAN KmtIsMultiProcessorBuild;
+extern PCSTR KmtMajorFunctionNames[];
 
 VOID KmtSetIrql(IN KIRQL NewIrql);
 BOOLEAN KmtAreInterruptsEnabled(VOID);
@@ -96,7 +97,9 @@ VOID KmtCloseDriver(VOID);
 DWORD KmtSendToDriver(IN DWORD ControlCode);
 DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
 DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
-#endif /* defined KMT_USER_MODE */
+#else /* if !defined KMT_KERNEL_MODE && !defined KMT_USER_MODE */
+#error either KMT_KERNEL_MODE or KMT_USER_MODE must be defined
+#endif /* !defined KMT_KERNEL_MODE && !defined KMT_USER_MODE */
 
 extern PKMT_RESULTBUFFER ResultBuffer;
 
@@ -169,6 +172,37 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
 #if defined KMT_KERNEL_MODE
 BOOLEAN KmtIsCheckedBuild;
 BOOLEAN KmtIsMultiProcessorBuild;
+PCSTR KmtMajorFunctionNames[] =
+{
+    "Create",
+    "CreateNamedPipe",
+    "Close",
+    "Read",
+    "Write",
+    "QueryInformation",
+    "SetInformation",
+    "QueryEa",
+    "SetEa",
+    "FlushBuffers",
+    "QueryVolumeInformation",
+    "SetVolumeInformation",
+    "DirectoryControl",
+    "FileSystemControl",
+    "DeviceControl",
+    "InternalDeviceControl/Scsi",
+    "Shutdown",
+    "LockControl",
+    "Cleanup",
+    "CreateMailslot",
+    "QuerySecurity",
+    "SetSecurity",
+    "Power",
+    "SystemControl",
+    "DeviceChange",
+    "QueryQuota",
+    "SetQuota",
+    "Pnp/PnpPower"
+};
 
 VOID KmtSetIrql(IN KIRQL NewIrql)
 {

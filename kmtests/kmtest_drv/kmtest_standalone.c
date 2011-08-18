@@ -47,38 +47,6 @@ static KMT_IRP_HANDLER_ENTRY IrpHandlers[KMT_MAX_IRP_HANDLERS] = { { 0 } };
 #define KMT_MAX_MESSAGE_HANDLERS 256
 static KMT_MESSAGE_HANDLER_ENTRY MessageHandlers[KMT_MAX_MESSAGE_HANDLERS] = { { 0 } };
 
-static const char *IrpMajorFunctionNames[] =
-{
-    "Create",
-    "CreateNamedPipe",
-    "Close",
-    "Read",
-    "Write",
-    "QueryInformation",
-    "SetInformation",
-    "QueryEa",
-    "SetEa",
-    "FlushBuffers",
-    "QueryVolumeInformation",
-    "SetVolumeInformation",
-    "DirectoryControl",
-    "FileSystemControl",
-    "DeviceControl",
-    "InternalDeviceControl/Scsi",
-    "Shutdown",
-    "LockControl",
-    "Cleanup",
-    "CreateMailslot",
-    "QuerySecurity",
-    "SetSecurity",
-    "Power",
-    "SystemControl",
-    "DeviceChange",
-    "QueryQuota",
-    "SetQuota",
-    "Pnp/PnpPower"
-};
-
 /**
  * @name DriverEntry
  *
@@ -342,7 +310,7 @@ DriverDispatch(
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
     DPRINT("DriverDispatch: Function=%s, Device=%p\n",
-            IrpMajorFunctionNames[IoStackLocation->MajorFunction],
+            KmtMajorFunctionNames[IoStackLocation->MajorFunction],
             DeviceObject);
 
     for (i = 0; i < sizeof IrpHandlers / sizeof IrpHandlers[0]; ++i)

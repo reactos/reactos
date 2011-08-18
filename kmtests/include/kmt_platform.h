@@ -8,6 +8,10 @@
 #ifndef _KMTEST_PLATFORM_H_
 #define _KMTEST_PLATFORM_H_
 
+#if !defined _KMTEST_TEST_H_
+#error include kmt_test.h instead of including kmt_platform.h!
+#endif /* !defined _KMTEST_TEST_H_ */
+
 #if defined KMT_KERNEL_MODE || defined KMT_STANDALONE_DRIVER
 #include <ntddk.h>
 #include <ntifs.h>
