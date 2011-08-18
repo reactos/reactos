@@ -84,6 +84,9 @@ VOID RtlInitializeHeapManager(VOID);
 extern BOOLEAN RtlpPageHeapEnabled;
 extern ULONG RtlpDphGlobalFlags;
 
+ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
+ULONG RtlpShutdownProcessFlags; // TODO: Use it
+
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
 
 #ifdef _WIN64
@@ -1308,8 +1311,104 @@ NTSTATUS
 NTAPI
 LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
 {
-    UNIMPLEMENTED;
+    NTSTATUS Status;
+    HKEY KeyHandle;
+    ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
+
+    /* Return error if we were not provided a pointer where to save the options key handle */
+    if (!OptionsKey) return STATUS_INVALID_HANDLE;
+
+    /* Zero initialize the optinos key pointer */
     *OptionsKey = NULL;
+
+    /* Open the options key */
+    Status = LdrOpenImageFileOptionsKey(ImagePathName, 0, &KeyHandle);
+
+    /* Save it if it was opened successfully */
+    if (NT_SUCCESS(Status))
+        *OptionsKey = KeyHandle;
+
+    if (KeyHandle)
+    {
+        /* There are image specific options, read them starting with NXCOMPAT */
+        Status = LdrQueryImageFileKeyOption(KeyHandle,
+                                            L"ExecuteOptions",
+                                            4,
+                                            &ExecuteOptions,
+                                            sizeof(ExecuteOptions),
+                                            0);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* TODO: Set execution options for the process */
+            /*
+            if (ExecuteOptions == 0)
+                ExecuteOptions = 1;
+            else
+                ExecuteOptions = 2;
+            ZwSetInformationProcess(NtCurrentProcess(),
+                                    ProcessExecuteFlags,
+                                    &ExecuteOptions,
+                                    sizeof(ULONG));*/
+
+        }
+
+        /* Check if this image uses large pages */
+        if (Peb->ImageUsesLargePages)
+        {
+            /* TODO: If it does, open large page key */
+            UNIMPLEMENTED;
+        }
+
+        /* Get various option values */
+        LdrQueryImageFileKeyOption(KeyHandle,
+                                   L"DisableHeapLookaside",
+                                   REG_DWORD,
+                                   &RtlpDisableHeapLookaside,
+                                   sizeof(RtlpDisableHeapLookaside),
+                                   NULL);
+
+        LdrQueryImageFileKeyOption(KeyHandle,
+                                   L"ShutdownFlags",
+                                   REG_DWORD,
+                                   &RtlpShutdownProcessFlags,
+                                   sizeof(RtlpShutdownProcessFlags),
+                                   NULL);
+
+        LdrQueryImageFileKeyOption(KeyHandle,
+                                   L"MinimumStackCommitInBytes",
+                                   REG_DWORD,
+                                   &MinimumStackCommit,
+                                   sizeof(MinimumStackCommit),
+                                   NULL);
+
+        /* Update PEB's minimum stack commit if it's lower */
+        if (Peb->MinimumStackCommit < MinimumStackCommit)
+            Peb->MinimumStackCommit = MinimumStackCommit;
+
+        /* Set the global flag */
+        Status = LdrQueryImageFileKeyOption(KeyHandle,
+                                            L"GlobalFlag",
+                                            REG_DWORD,
+                                            &GlobalFlag,
+                                            sizeof(GlobalFlag),
+                                            NULL);
+
+        if (NT_SUCCESS(Status))
+            Peb->NtGlobalFlag = GlobalFlag;
+        else
+            GlobalFlag = 0;
+    }
+    else
+    {
+        /* There are no image-specific options, so perform global initialization */
+        if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
+        {
+            // TODO: Initialize app verifier package
+            // Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, 1, FALSE);
+        }
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -1979,13 +2078,12 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if we have a user-defined Post Process Routine */
     if (NT_SUCCESS(Status) && Peb->PostProcessInitRoutine)
     {
-        DPRINT1("CP\n");
         /* Call it */
         Peb->PostProcessInitRoutine();
     }
 
     ///* Close the key if we have one opened */
-    //if (hKey) NtClose(hKey);
+    if (OptionsKey) NtClose(OptionsKey);
 
     /* Return status */
     return Status;
