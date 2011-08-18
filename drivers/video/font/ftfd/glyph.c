@@ -152,17 +152,17 @@ FtfdCreateFontInstance(
 
     /* Calculate maximum ascender and descender */
     efTemp = efScaleY;
-    FLOATOBJ_MulLong(&efTemp, pface->ifiex.ifi.fwdWinAscender << 4);
+    FLOATOBJ_MulLong(&efTemp, ftface->bbox.yMax << 4);
     pfont->metrics.fxMaxAscender = FLOATOBJ_GetLong(&efTemp);
     efTemp = efScaleY;
-    FLOATOBJ_MulLong(&efTemp, pface->ifiex.ifi.fwdWinDescender << 4);
+    FLOATOBJ_MulLong(&efTemp, (-ftface->bbox.yMin) << 4);
     pfont->metrics.fxMaxDescender = FLOATOBJ_GetLong(&efTemp);
 
     /* The coordinate transformation given by Windows transforms from font
      * space to device space. Since we use FT_Set_Char_Size, which allows
      * higher precision than FT_Set_Pixel_Sizes, we need to convert into
-     * points. So we multiply our scaling coefficients with 72 divided by
-     * the device resolution. We also need a 26.6 fixpoint value, so we
+     * points. So we multiply our scaling coefficients with 72 and divide
+     * by the device resolution. We also need a 26.6 fixpoint value, so we
      * multiply with 64. */
     FLOATOBJ_MulLong(&efScaleX, 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72);
     FLOATOBJ_DivLong(&efScaleX, pfo->sizLogResPpi.cx);
@@ -386,8 +386,8 @@ FtfdQueryMaxExtents(
         }
 
         /* Copy some values from the font structure */
-        pfddm->fxMaxAscender = pfont->metrics.fxMaxAscender;
-        pfddm->fxMaxDescender = pfont->metrics.fxMaxDescender;
+        pfddm->fxMaxAscender = (pfont->metrics.fxMaxAscender + 15) & ~0x0f;
+        pfddm->fxMaxDescender = (pfont->metrics.fxMaxDescender + 15) & ~0x0f;
         pfddm->ptlUnderline1 = pfont->metrics.ptlUnderline1;
         pfddm->ptlStrikeout = pfont->metrics.ptlStrikeout;
         pfddm->ptlULThickness = pfont->metrics.ptlULThickness;
@@ -606,11 +606,9 @@ FtfdQueryFontData(
             }
 
             /* Return the size for a bitmap at least 1x1 pixels */
-            cx = pfont->ftface->glyph->bitmap.width;
-            cy = pfont->ftface->glyph->bitmap.rows;
-            return GLYPHBITS_SIZE(cx > 0 ? cx : 1,
-                                  cy > 0 ? cy : 1,
-                                  pfont->jBpp);
+            cx = max(1, pfont->ftface->glyph->bitmap.width);
+            cy = max(1, pfont->ftface->glyph->bitmap.rows);
+            return GLYPHBITS_SIZE(cx, cy, pfont->jBpp);
 
         case QFD_GLYPHANDOUTLINE:
             TRACE("QFD_GLYPHANDOUTLINE\n");
