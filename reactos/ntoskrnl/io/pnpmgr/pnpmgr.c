@@ -1773,7 +1773,7 @@ IopHandleDeviceRemoval(
         NextChild = Child->Sibling;
         Found = FALSE;
 
-        for (i = 0; i < DeviceRelations->Count; i++)
+        for (i = 0; DeviceRelations && i < DeviceRelations->Count; i++)
         {
             if (IopGetDeviceNode(DeviceRelations->Objects[i]) == Child)
             {
@@ -1839,18 +1839,21 @@ IopEnumerateDevice(
 
     DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
 
+    /*
+     * Send removal IRPs for devices that have disappeared
+     * NOTE: This code handles the case where no relations are specified
+     */
+    IopHandleDeviceRemoval(DeviceNode, DeviceRelations);
+
+    /* Now we bail if nothing was returned */
     if (!DeviceRelations)
     {
+        /* We're all done */
         DPRINT("No PDOs\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_SUCCESS;
     }
 
     DPRINT("Got %u PDOs\n", DeviceRelations->Count);
-    
-    /*
-     * Send removal IRPs for devices that have disappeared
-     */
-    IopHandleDeviceRemoval(DeviceNode, DeviceRelations);
 
     /*
      * Create device nodes for all discovered devices
