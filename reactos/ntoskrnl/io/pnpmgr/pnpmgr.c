@@ -885,6 +885,14 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = IoStatusBlock.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = IoStatusBlock.Information = 0;
     
+    /* Special case for IRP_MN_FILTER_RESOURCE_REQUIREMENTS */
+    if (IoStackLocation->MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
+    {
+        /* Copy the resource requirements list into the IOSB */
+        Irp->IoStatus.Information =
+        IoStatusBlock.Information = (ULONG_PTR)IoStackLocation->Parameters.FilterResourceRequirements.IoResourceRequirementList;
+    }
+    
     /* Initialize the event */
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
     
