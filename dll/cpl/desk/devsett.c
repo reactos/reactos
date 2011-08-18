@@ -181,19 +181,19 @@ pCDevSettings_GetDeviceInstanceId(const WCHAR *pszDevice)
                             CM_LOCATE_DEVNODE_NORMAL);
     if (cr == CR_SUCCESS)
     {
-        DbgPrint("Success1\n");
+        DPRINT1("Success1\n");
         cr = CM_Get_Device_ID_Size(&BufLen,
                                    DevInst,
                                    0);
         if (cr == CR_SUCCESS)
         {
-            DbgPrint("Success2\n");
+            DPRINT1("Success2\n");
             lpDevInstId = LocalAlloc(LMEM_FIXED,
                                      (BufLen + 1) * sizeof(WCHAR));
 
             if (lpDevInstId != NULL)
             {
-                DbgPrint("Success3\n");
+                DPRINT1("Success3\n");
                 cr = CM_Get_Device_IDW(DevInst,
                                        lpDevInstId,
                                        BufLen,
@@ -204,7 +204,7 @@ pCDevSettings_GetDeviceInstanceId(const WCHAR *pszDevice)
                     LocalFree((HLOCAL)lpDevInstId);
                     lpDevInstId = NULL;
                 }
-                DbgPrint("instance id: %ws\n", lpDevInstId);
+                DPRINT1("instance id: %ws\n", lpDevInstId);
             }
         }
     }
