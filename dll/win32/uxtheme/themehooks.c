@@ -228,7 +228,7 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
     switch(Msg)
     {
         case WM_THEMECHANGED:
-            UXTHEME_LoadTheme();
+            UXTHEME_LoadTheme(TRUE);
             return 0;
     }
 
