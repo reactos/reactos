@@ -12,7 +12,6 @@
 #include <dll/desk/deskcplx.h>
 #include <cfgmgr32.h>
 
-#include "theme.h"
 #include "appearance.h"
 #include "preview.h"
 #include "draw.h"
