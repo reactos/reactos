@@ -1257,6 +1257,13 @@ static HRESULT MSSTYLES_GetFont (LPCWSTR lpCur, LPCWSTR lpEnd,
         *lpValEnd = lpCur;
         return E_PROP_ID_UNSUPPORTED;
     }
+    if(pointSize > 0)
+    {
+        HDC hdc = GetDC(0);
+        pointSize = -MulDiv(pointSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        ReleaseDC(0, hdc);
+    }
+
     pFont->lfHeight = pointSize;
     pFont->lfWeight = FW_REGULAR;
     pFont->lfCharSet = DEFAULT_CHARSET;
