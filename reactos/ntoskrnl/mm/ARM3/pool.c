@@ -626,7 +626,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             if (MmProtectFreedNonPagedPool)
             {
                 /* We need to be able to touch this page, unprotect it */
-                MiUnProtectFreeNonPagedPool(NextEntry, 1);
+                MiUnProtectFreeNonPagedPool(NextEntry, 0);
             }
 
             //
@@ -946,7 +946,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         if (MmProtectFreedNonPagedPool)
         {
             /* The freed block will be merged, it must be made accessible */
-            MiUnProtectFreeNonPagedPool(MiPteToAddress(PointerPte), 1);
+            MiUnProtectFreeNonPagedPool(MiPteToAddress(PointerPte), 0);
         }
 
         //
@@ -1020,7 +1020,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         if (MmProtectFreedNonPagedPool)
         {
             /* The freed block will be merged, it must be made accessible */
-            MiUnProtectFreeNonPagedPool(MiPteToAddress(PointerPte), 1);
+            MiUnProtectFreeNonPagedPool(MiPteToAddress(PointerPte), 0);
         }
 
         /* Check if this is valid pool, or a guard page */
@@ -1058,7 +1058,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         if (MmProtectFreedNonPagedPool)
         {
             /* The freed block will be merged, it must be made accessible */
-            MiUnProtectFreeNonPagedPool(FreeEntry, 1);
+            MiUnProtectFreeNonPagedPool(FreeEntry, 0);
         }
 
         //
