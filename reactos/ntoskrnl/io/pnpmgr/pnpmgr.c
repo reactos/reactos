@@ -2118,7 +2118,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
     * Make sure this device node is a direct child of the parent device node
     * that is given as an argument
     */
-#if 0
+
    if (DeviceNode->Parent != ParentDeviceNode)
    {
       /*
@@ -2127,7 +2127,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       DPRINT("Stop\n");
       return STATUS_UNSUCCESSFUL;
    }
-#endif
+
    if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
        IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) ||
        IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
