@@ -101,6 +101,7 @@ base\services\svchost\svchost.exe                   1
 base\services\tcpsvcs\tcpsvcs.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\telnetd\telnetd.exe                   1
+base\services\thmsvc\thmsvc.exe                     1
 base\services\umpnpmgr\umpnpmgr.exe                 1
 base\services\wlansvc\wlansvc.exe                   1
 
