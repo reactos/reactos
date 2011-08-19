@@ -82,6 +82,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->ExtensionType = FdoExtensionType;
     FdoExtension->PhysicalDeviceObject = TargetDevice;
     FdoExtension->FunctionalDeviceObject = DeviceObject;
+    FdoExtension->ChildPdoList = NULL;
     
     /* FDO is done initializing */
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -115,26 +116,24 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     
     /* Setup the PDO device extension */
     PdoExtension = PdoDeviceObject->DeviceExtension;
-    PdoExtension->Next = NULL;
     PdoExtension->ExtensionType = PdoExtensionType;
     PdoExtension->PhysicalDeviceObject = PdoDeviceObject;
     PdoExtension->ParentFdoExtension = FdoExtension;
     PdoExtension->PdoType = AcpiPdo;
+    
+    /* Add the PDO to the head of the list */
+    PdoExtension->Next = FdoExtension->ChildPdoList;
+    FdoExtension->ChildPdoList = PdoExtension;
+    
+    /* Initialization is finished */
+    PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* Find the ACPI watchdog table */
     Wdrt = HalAcpiGetTable(0, 'TRDW');
-    if (!Wdrt)
-    {
-        /* None exists, there is nothing to do more */
-        PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-        FdoExtension->ChildPdoList = PdoExtension;
-    }
-    else
+    if (Wdrt)
     {
         /* FIXME: TODO */
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
-        PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-        FdoExtension->ChildPdoList = PdoExtension;
     }
 
     /* Invalidate device relations since we added a new device */
@@ -191,7 +190,13 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 PdoExtension = PdoExtension->Next;
                 PdoCount++;
             }
-            
+
+            /* Add the PDOs that already exist in the device relations */
+            if (*DeviceRelations)
+            {
+                PdoCount += (*DeviceRelations)->Count;
+            }
+
             /* Allocate our structure */
             FdoRelations = ExAllocatePoolWithTag(PagedPool,
                                                  FIELD_OFFSET(DEVICE_RELATIONS,
