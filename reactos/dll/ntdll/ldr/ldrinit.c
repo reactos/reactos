@@ -1311,15 +1311,16 @@ NTSTATUS
 NTAPI
 LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
 {
-    NTSTATUS Status;
-    HKEY KeyHandle;
-    ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
+    //NTSTATUS Status;
+    //HKEY KeyHandle;
+    //ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
     if (!OptionsKey) return STATUS_INVALID_HANDLE;
 
     /* Zero initialize the optinos key pointer */
     *OptionsKey = NULL;
+#if 0
 
     /* Open the options key */
     Status = LdrOpenImageFileOptionsKey(ImagePathName, 0, &KeyHandle);
@@ -1408,7 +1409,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY Op
             // Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, 1, FALSE);
         }
     }
-
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -2082,7 +2083,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         Peb->PostProcessInitRoutine();
     }
 
-    ///* Close the key if we have one opened */
+    /* Close the key if we have one opened */
     if (OptionsKey) NtClose(OptionsKey);
 
     /* Return status */
