@@ -981,7 +981,7 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
  *     Success: S_OK
  *     Failure: HRESULT error-code
  */
-HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, EnumThemeProc callback,
+HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, ENUMTHEMEPROC callback,
                           LPVOID lpData)
 {
     WCHAR szDir[MAX_PATH];
@@ -1179,7 +1179,7 @@ HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
  * any other purpose
  */
 HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,
-                                 ParseThemeIniFileProc callback, LPVOID lpData)
+                                 PARSETHEMEINIFILEPROC callback, LPVOID lpData)
 {
     FIXME("%s %s: stub\n", debugstr_w(pszIniFileName), debugstr_w(pszUnknown));
     return ERROR_CALL_NOT_IMPLEMENTED;
