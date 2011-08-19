@@ -259,16 +259,16 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
                          L"DETECTED%ls\\%wZ",
                          IfString,
                          &ServiceName);
-    HardwareId[IdLength++] = UNICODE_NULL;
+    IdLength++;
 
     /* Add DETECTED\DriverName */
     IdLength += swprintf(&HardwareId[IdLength],
                          L"DETECTED\\%wZ",
                          &ServiceName);
-    HardwareId[IdLength++] = UNICODE_NULL;
+    IdLength++;
 
     /* Terminate the string with another null */
-    HardwareId[IdLength] = UNICODE_NULL;
+    HardwareId[IdLength++] = UNICODE_NULL;
 
     /* Store the value for CompatibleIDs */
     RtlInitUnicodeString(&ValueName, L"CompatibleIDs");
@@ -290,10 +290,12 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
                             L"DETECTED%ls\\%wZ",
                             IfString,
                             &ServiceName);
-       HardwareId[++IdLength] = UNICODE_NULL;
+       IdLength++;
+
+       HardwareId[IdLength++] = UNICODE_NULL;
 
        /* Write the value to the registry */
-       Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_SZ, HardwareId, IdLength * sizeof(WCHAR));
+       Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_MULTI_SZ, HardwareId, IdLength * sizeof(WCHAR));
        if (!NT_SUCCESS(Status))
        {
           DPRINT("Failed to write the hardware ID: 0x%x\n", Status);
