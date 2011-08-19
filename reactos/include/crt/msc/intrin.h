@@ -308,6 +308,7 @@ void __writedr(unsigned reg, unsigned int value);
 void __invlpg(void * const Address);
 #pragma intrinsic(__invlpg)
 
+#ifdef _M_IX86
 // This intrinsic is broken and generates wrong opcodes,
 // when optimization is enabled!
 #pragma warning(push)
@@ -324,6 +325,7 @@ void  __forceinline __invlpg_fixed(void * const Address)
 }
 #pragma warning(pop)
 #define __invlpg __invlpg_fixed
+#endif
 
 /*** System operations ***/
 unsigned __int64 __readmsr(const int reg);
