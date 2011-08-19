@@ -14,10 +14,13 @@
 
 /* FUNCTIONS *****************************************************************/
 
-#undef RtlUlonglongByteSwap
-#undef RtlUlongByteSwap
+/* HACK: ld is too stupid to understand that we need the functions
+   when we export them, so we force it to be linked this way. */
+#ifdef __GNUC__
 #undef RtlUshortByteSwap
-
+USHORT FASTCALL RtlUshortByteSwap(USHORT Source);
+PVOID Dummy = RtlUshortByteSwap;
+#endif
 
 /*
  * @implemented
