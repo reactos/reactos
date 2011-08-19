@@ -983,8 +983,8 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
     HalpAcpiDetectResourceListSize(&Count);
     
     /* Compute size of the list and allocate it */
-    ListSize = sizeof(IO_RESOURCE_LIST) * (Count - 1) +
-               sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+    ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors) +
+               ((Count - 1) * sizeof(IO_RESOURCE_DESCRIPTOR));
     RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, ' laH');
     if (RequirementsList)
     {
