@@ -136,14 +136,14 @@ Large(
 }
 
 #define CheckInterlockedCmpXchg(Function, Type, Print, Val, Cmp, Xchg,      \
-                                ExpectedValue, ExpectedRet, ...) do         \
+                                ExpectedValue, ExpectedRet) do              \
 {                                                                           \
     Type Ret##Type = 0;                                                     \
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
         SaveState(OldState);                                                \
-        Ret##Type = Function(&Value##Type, Xchg, Cmp, ##__VA_ARGS__);       \
+        Ret##Type = Function(&Value##Type, Xchg, Cmp);                      \
         SaveState(NewState);                                                \
         CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
@@ -236,13 +236,13 @@ Large(
 } while (0)
 
 #define CheckInterlockedOpLargeNoRet(Function, Type, Print, Val, Op,        \
-                                ExpectedValue, ...) do                      \
+                                ExpectedValue) do                           \
 {                                                                           \
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
         SaveState(OldState);                                                \
-        Function(&Value##Type, Op, ##__VA_ARGS__);                          \
+        Function(&Value##Type, Op);                                         \
         SaveState(NewState);                                                \
         CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
@@ -305,7 +305,7 @@ TestInterlockedFunctional(VOID)
 
     /* Exchange */
     CheckInterlockedOp(InterlockedExchange, LONG, "%ld", 5, 8, 8L, 5L);
-    CheckInterlockedOp(InterlockedExchangePointer, PVOID, "%p", (PVOID)700, (PVOID)93, (PVOID)93, (PVOID)700);
+    CheckInterlockedOpNoArg(InterlockedExchangePointer, PVOID, "%p", (PVOID)700, (PVOID)93, (PVOID)700, (PVOID)93);
 #undef InterlockedExchange
 #ifdef _M_IX86
     CheckInterlockedOp(InterlockedExchange, LONG, "%ld", 5, 8, 8L, 5L);

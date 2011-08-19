@@ -178,10 +178,12 @@ ObtCreateObjectTypes(VOID)
     {
         WCHAR DirectoryName[sizeof "\\ObjectTypes\\" - 1];
         WCHAR TypeName[15];
-    } Name = { L"\\ObjectTypes\\" };
+    } Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ObjectTypeHandle;
     UNICODE_STRING ObjectPath;
+
+    RtlCopyMemory(&Name.DirectoryName, L"\\ObjectTypes\\", sizeof Name.DirectoryName);
 
     for (i = 0; i < NUM_OBTYPES; ++i)
     {

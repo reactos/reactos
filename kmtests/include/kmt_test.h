@@ -104,7 +104,8 @@ DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, 
 extern PKMT_RESULTBUFFER ResultBuffer;
 
 #ifdef __GNUC__
-#define KMT_FORMAT(type, fmt, first) __attribute__((__format__(type, fmt, first)))
+/* TODO: GCC doesn't understand %wZ :( */
+#define KMT_FORMAT(type, fmt, first) /*__attribute__((__format__(type, fmt, first)))*/
 #elif !defined __GNUC__
 #define KMT_FORMAT(type, fmt, first)
 #endif /* !defined __GNUC__ */

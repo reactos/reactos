@@ -25,9 +25,6 @@ typedef struct _ERESOURCE_2K3 {
   ULONG ContentionCount;
   USHORT NumberOfSharedWaiters;
   USHORT NumberOfExclusiveWaiters;
-#if defined(_WIN64)
-  PVOID Reserved2; /* TODO: not sure if this should be in here for 2k3 */
-#endif
   _ANONYMOUS_UNION union {
     PVOID Address;
     ULONG_PTR CreatorBackTraceIndex;
@@ -51,7 +48,6 @@ typedef struct _ERESOURCE_2K3 {
     ok_eq_ulong((Res)->ContentionCount, 0LU);                                                                   \
     ok_eq_uint((Res)->NumberOfSharedWaiters, 0);                                                                \
     ok_eq_uint((Res)->NumberOfExclusiveWaiters, 0);                                                             \
-    /* ok_eq_pointer((Res)->Reserved2, NULL); */                                                                \
     ok_eq_pointer((Res)->Address, NULL);                                                                        \
     ok_eq_ulongptr((Res)->SpinLock, 0);                                                                         \
 } while (0)

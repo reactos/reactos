@@ -108,8 +108,11 @@ DEFINE_RELEASE(ReleaseExpNoLower,     FALSE, (KeReleaseSpinLockFromDpcLevel)(Spi
 DEFINE_ACQUIRE(AcquireInStackNoRaise, FALSE, KeAcquireInStackQueuedSpinLockAtDpcLevel(SpinLock, &CheckData->QueueHandle))
 DEFINE_RELEASE(ReleaseInStackNoRaise, FALSE, KeReleaseInStackQueuedSpinLockFromDpcLevel(&CheckData->QueueHandle))
 
+/* TODO: test these functions. They behave weirdly, though */
+#if 0
 DEFINE_ACQUIRE(AcquireForDpc,         TRUE,  CheckData->Irql = KeAcquireSpinLockForDpc(SpinLock))
 DEFINE_RELEASE(ReleaseForDpc,         TRUE,  KeReleaseSpinLockForDpc(SpinLock, CheckData->Irql))
+#endif
 
 DEFINE_ACQUIRE(AcquireInStackForDpc,  FALSE, KeAcquireInStackQueuedSpinLockForDpc(SpinLock, &CheckData->QueueHandle))
 DEFINE_RELEASE(ReleaseInStackForDpc,  FALSE, KeReleaseInStackQueuedSpinLockForDpc(&CheckData->QueueHandle))

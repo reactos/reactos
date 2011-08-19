@@ -29,18 +29,14 @@
 
 #ifdef KMT_EMULATE_KERNEL
 #define ok_irql(i)
-#ifdef __GNUC__
-#define KIRQL __attribute__((__unused__)) int
-#elif !defined __GNUC__
 #define KIRQL int
-#endif /* !defined __GNUC__ */
 typedef const UCHAR CUCHAR, *PCUCHAR;
 typedef ULONG LOGICAL, *PLOGICAL;
 
 #undef KeRaiseIrql
-#define KeRaiseIrql(new, old)
+#define KeRaiseIrql(new, old) *(old) = 123
 #undef KeLowerIrql
-#define KeLowerIrql(i)
+#define KeLowerIrql(i) (void)(i)
 #define ExAllocatePool(type, size)              HeapAlloc(GetProcessHeap(), 0, size)
 #define ExAllocatePoolWithTag(type, size, tag)  HeapAlloc(GetProcessHeap(), 0, size)
 #define ExFreePool(p)                           HeapFree(GetProcessHeap(), 0, p)
