@@ -187,19 +187,20 @@ IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
     return STATUS_OBJECT_TYPE_MISMATCH;
 }
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
 {
     PPROCESSINFO ppi;
 
     ppi = PsGetCurrentProcessWin32Process();
 
-    if(Parameters->Handle == ppi->hwinsta)
+    if(ppi && (Parameters->Handle == ppi->hwinsta))
     {
-        return FALSE;
+        return STATUS_ACCESS_DENIED;
     }
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -974,7 +975,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
    /*
     * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
     */
-   
+
    PsSetProcessWindowStation(ppi->peProcess, hWindowStation);
 
    ppi->prpwinsta = NewWinSta;

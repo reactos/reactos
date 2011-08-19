@@ -11,7 +11,8 @@
 
 static BOOL
 DoStartService(PMAIN_WND_INFO Info,
-               HWND hProgress)
+               HWND hProgress,
+               LPWSTR lpStartParams)
 {
     SC_HANDLE hSCManager;
     SC_HANDLE hService;
@@ -22,6 +23,66 @@ DoStartService(PMAIN_WND_INFO Info,
     DWORD dwWaitTime;
     DWORD dwMaxWait;
     BOOL bRet = FALSE;
+
+    BOOL bWhiteSpace = TRUE;
+    LPWSTR lpChar;
+    DWORD dwArgsCount = 0;
+    LPCWSTR *lpArgsVector = NULL;
+
+    if (lpStartParams != NULL)
+    {
+        /* Count the number of arguments */
+        lpChar = lpStartParams;
+        while (*lpChar != 0)
+        {
+            if (iswspace(*lpChar))
+            {
+                bWhiteSpace = TRUE;
+            }
+            else
+            {
+                if (bWhiteSpace == TRUE)
+                {
+                    dwArgsCount++;
+                    bWhiteSpace = FALSE;
+                }
+            }
+
+            lpChar++;
+        }
+
+        /* Allocate the arguments vector and add one for the service name */
+        lpArgsVector = LocalAlloc(LMEM_FIXED, (dwArgsCount + 1) * sizeof(LPCWSTR));
+        if (!lpArgsVector)
+            return FALSE;
+
+        /* Make the service name the first argument */
+        lpArgsVector[0] = Info->pCurrentService->lpServiceName;
+
+        /* Fill the arguments vector */
+        dwArgsCount = 1;
+        bWhiteSpace = TRUE;
+        lpChar = lpStartParams;
+        while (*lpChar != 0)
+        {
+            if (iswspace(*lpChar))
+            {
+                *lpChar = 0;
+                bWhiteSpace = TRUE;
+            }
+            else
+            {
+                if (bWhiteSpace == TRUE)
+                {
+                    lpArgsVector[dwArgsCount] = lpChar;
+                    dwArgsCount++;
+                    bWhiteSpace = FALSE;
+                }
+            }
+
+            lpChar++;
+        }
+    }
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
@@ -41,8 +102,8 @@ DoStartService(PMAIN_WND_INFO Info,
 
             /* Start the service */
             bRet = StartService(hService,
-                                0,
-                                NULL);
+                                dwArgsCount,
+                                lpArgsVector);
             if (!bRet && GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
             {
                 /* If it's already running, just return TRUE */
@@ -121,11 +182,14 @@ DoStartService(PMAIN_WND_INFO Info,
         CloseServiceHandle(hSCManager);
     }
 
+    if (lpArgsVector)
+        LocalFree(lpArgsVector);
+
     return bRet;
 }
 
 BOOL
-DoStart(PMAIN_WND_INFO Info)
+DoStart(PMAIN_WND_INFO Info, LPWSTR lpStartParams)
 {
     HWND hProgress;
     BOOL bRet = FALSE;
@@ -139,7 +203,7 @@ DoStart(PMAIN_WND_INFO Info)
         InitializeProgressDialog(hProgress, Info->pCurrentService->lpServiceName);
 
         /* Start the requested service */
-        bRet = DoStartService(Info, hProgress);
+        bRet = DoStartService(Info, hProgress, lpStartParams);
 
         /* Complete and destroy the progress bar */
         DestroyProgressDialog(hProgress, bRet);

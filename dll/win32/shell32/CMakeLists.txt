@@ -15,8 +15,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/atl
     ${REACTOS_SOURCE_DIR})
 
-generate_idl_iids(shobjidl_local.idl)
-
 spec2def(shell32.dll shell32.spec)
 
 list(APPEND SOURCE
@@ -73,13 +71,8 @@ list(APPEND SOURCE
     shv_item_new.cpp
     folder_options.cpp
     shell32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shobjidl_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
-
-# FIXME
-#add_pch(shell32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-#add_library(shell32 SHARED ${CMAKE_CURRENT_BINARY_DIR}/shell32_precomp.h.gch ${SOURCE})
 
 add_library(shell32 SHARED ${SOURCE})
 
@@ -103,9 +96,11 @@ add_importlibs(shell32
     devmgr
     winspool
     winmm
-    kernel32
     msvcrt
+    kernel32
     ntdll)
+
+add_pch(shell32 precomp.h)
 
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(shell32.spec)

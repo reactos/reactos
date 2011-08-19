@@ -23,16 +23,22 @@
 #define VIDEOPRT_H
 
 #include <stdio.h>
-#include <ntddk.h>
+
+#include <ntifs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/halfuncs.h>
+#include <ndk/inbvfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/rtlfuncs.h>
+
 #define __BROKEN__
 #include <miniport.h>
 #include <video.h>
-#include <ntddvdeo.h>
 #include <ntagp.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
 #include <dderror.h>
 #include <windef.h>
+#include <initguid.h>
+#include <wdmguid.h>
 
 #include <debug.h>
 
@@ -116,7 +122,7 @@ NTSTATUS
 IopInitiatePnpIrp(
   PDEVICE_OBJECT DeviceObject,
   PIO_STATUS_BLOCK IoStatusBlock,
-  ULONG MinorFunction,
+  UCHAR MinorFunction,
   PIO_STACK_LOCATION Stack OPTIONAL);
 
 NTSTATUS NTAPI

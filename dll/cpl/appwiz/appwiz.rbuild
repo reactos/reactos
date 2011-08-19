@@ -12,4 +12,5 @@
 	<file>appwiz.c</file>
 	<file>createlink.c</file>
 	<file>appwiz.rc</file>
+	<pch>appwiz.h</pch>
 </module>

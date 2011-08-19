@@ -8,7 +8,8 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <netcfgx.h>
 #include <setupapi.h>
 #include <stdio.h>
@@ -17,6 +18,9 @@
 #include <netcfgn.h>
 #include "resource.h"
 #include <prsht.h>
+
+#include <initguid.h>
+#include <devguid.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {

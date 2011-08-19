@@ -53,7 +53,7 @@ static ULONG WINAPI IDirect3DVertexDeclaration8Impl_AddRef(IDirect3DVertexDeclar
     if (ref_count == 1)
     {
         wined3d_mutex_lock();
-        IWineD3DVertexDeclaration_AddRef(This->wined3d_vertex_declaration);
+        wined3d_vertex_declaration_incref(This->wined3d_vertex_declaration);
         wined3d_mutex_unlock();
     }
 
@@ -69,7 +69,7 @@ static ULONG WINAPI IDirect3DVertexDeclaration8Impl_Release(IDirect3DVertexDecla
 
     if (!ref_count) {
         wined3d_mutex_lock();
-        IWineD3DVertexDeclaration_Release(This->wined3d_vertex_declaration);
+        wined3d_vertex_declaration_decref(This->wined3d_vertex_declaration);
         wined3d_mutex_unlock();
     }
 
@@ -199,7 +199,7 @@ size_t parse_token(const DWORD* pToken)
     return tokenlen;
 }
 
-void load_local_constants(const DWORD *d3d8_elements, IWineD3DVertexShader *wined3d_vertex_shader)
+void load_local_constants(const DWORD *d3d8_elements, struct wined3d_shader *wined3d_vertex_shader)
 {
     const DWORD *token = d3d8_elements;
 
@@ -224,7 +224,8 @@ void load_local_constants(const DWORD *d3d8_elements, IWineD3DVertexShader *wine
                             *(const float *)(token + i * 4 + 4));
                 }
             }
-            hr = IWineD3DVertexShader_SetLocalConstantsF(wined3d_vertex_shader, constant_idx, (const float *)token+1, count);
+            hr = wined3d_shader_set_local_constants_float(wined3d_vertex_shader,
+                    constant_idx, (const float *)token + 1, count);
             if (FAILED(hr)) ERR("Failed setting shader constants\n");
         }
 
@@ -308,7 +309,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
     WINED3DVERTEXELEMENT *element;
     D3DVSD_TOKENTYPE token_type;
     unsigned int element_count = 0;
-    DWORD stream = 0;
+    WORD stream = 0;
     int offset = 0;
 
     TRACE("d3d8_elements %p, wined3d_elements %p\n", d3d8_elements, wined3d_elements);
@@ -399,7 +400,7 @@ HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration8Impl *declaration,
     memcpy(declaration->elements, elements, declaration->elements_size);
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, wined3d_elements, wined3d_element_count,
+    hr = wined3d_vertex_declaration_create(device->wined3d_device, wined3d_elements, wined3d_element_count,
             declaration, &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     wined3d_mutex_unlock();
     HeapFree(GetProcessHeap(), 0, wined3d_elements);
@@ -424,7 +425,7 @@ HRESULT vertexdeclaration_init_fvf(IDirect3DVertexDeclaration8Impl *declaration,
     declaration->elements_size = 0;
     declaration->shader_handle = fvf;
 
-    hr = IWineD3DDevice_CreateVertexDeclarationFromFVF(device->WineD3DDevice, fvf, declaration,
+    hr = wined3d_vertex_declaration_create_from_fvf(device->wined3d_device, fvf, declaration,
             &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     if (FAILED(hr))
     {

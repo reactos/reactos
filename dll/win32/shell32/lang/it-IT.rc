@@ -126,7 +126,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Versione " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Versione "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Questa versione di ReactOS è registrata a nome di:", IDC_STATIC, 35, 115, 180, 10
@@ -666,10 +666,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "L'elemento '%1' non può essere spostato nel cestino. Volete cancellarlo?"
 	IDS_OVERWRITEFILE_TEXT      "Questa cartella contiene già un file con nome '%1'.\n\nVolete sostituirlo?"
 	IDS_OVERWRITEFILE_CAPTION   "Confermare la sovrascrittura del File"
-	IDS_OVERWRITEFOLDER_TEXT    "Questa cartella contiene già una cartella con nome '%1'.\n\n"\
-		"Se i file nella cartella di destinazione hanno gli stessi nomi di quelli della \n"\
-		"cartella selezionata saranno sovrascritti. Volete procedere comunque?\n"\
-		""
+	IDS_OVERWRITEFOLDER_TEXT    "Questa cartella contiene già una cartella con nome '%1'.\n\nSe i file nella cartella di destinazione hanno gli stessi nomi di quelli della \ncartella selezionata saranno sovrascritti. Volete procedere comunque?\n"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Riavvia"

@@ -30,6 +30,7 @@
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
 		<compilerflag compiler="cc,cxx">-fno-set-stack-executable</compilerflag>
 		<compilerflag compiler="cc,cxx">-fno-optimize-sibling-calls</compilerflag>
+		<compilerflag compiler="cc,cxx">-fno-omit-frame-pointer</compilerflag>
 		<compilerflag compiler="as">-gstabs+</compilerflag>
 	</group>
 

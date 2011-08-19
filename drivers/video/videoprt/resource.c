@@ -79,7 +79,7 @@ IntVideoPortMapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
    IN PHYSICAL_ADDRESS IoAddress,
    IN ULONG NumberOfUchars,
-   IN UCHAR InIoSpace,
+   IN ULONG InIoSpace,
    IN HANDLE ProcessHandle,
    OUT VP_STATUS *Status)
 {

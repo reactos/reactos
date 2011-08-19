@@ -1,8 +1,7 @@
 
 add_definitions(
     -D__NTDRIVER__
-    -DFT2_BUILD_LIBRARY
-    -DTT_CONFIG_OPTION_BYTECODE_INTERPRETER)
+    -DFT2_BUILD_LIBRARY)
 
 include_directories(include)
 

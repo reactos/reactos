@@ -10,29 +10,29 @@ CACLS archivo  [/T] [/E] [/C] [/G user:perm [...]] [/R usuario [...]]\n\
    /T            Cambia ACLs de los archivos especificados en\n\
                  el directorio actual y todos sus subdirectorios.\n\
    /E            Edita la ACL en lugar de reemplazarla.\n\
-   /C            Contin˙a en caso de errores de acceso.\n\
+   /C            Contin√∫a en caso de errores de acceso.\n\
    /G user:perm  Da los derechos de acceso al usuario especificado.\n\
                  Perm puede ser: R  Lectura\n\
                                  W  Escritura\n\
-                                 C  ModificaciÛn (Escritura)\n\
+                                 C  Modificaci√≥n (Escritura)\n\
                                  F  Control total\n\
-   /R usuario    Revoca los derechos de acceso al usuario especificado (unicamente v·lido con /E).\n\
+   /R usuario    Revoca los derechos de acceso al usuario especificado (unicamente v√°lido con /E).\n\
    /P user:perm  Reemplaza los derechos de acceso del usuario especificado.\n\
                  Perm puede ser: N  Nada\n\
                                  R  Lectura\n\
                                  W  Escritura\n\
-                                 C  ModificaciÛn (Escritura)\n\
+                                 C  Modificaci√≥n (Escritura)\n\
                                  F  Control total\n\
    /D usuario    Revoca el acceso al usuario especificado.\n\
-Es posible usar comodines para especificar m·s de un archivo por comando.\n\
-Se puede especificar m·s de un usuario por comando.\n\n\
+Es posible usar comodines para especificar m√°s de un archivo por comando.\n\
+Se puede especificar m√°s de un usuario por comando.\n\n\
 Abreviaciones:\n\
    CI - Herencia del contenedor.\n\
-        ACE ser· heredado a los directorios.\n\
+        ACE ser√° heredado a los directorios.\n\
    OI - Herencia del objeto.\n\
         ACE sera heredado a los archivos.\n\
    IO - Herencia sola.\n\
-        ACE no se aplicar· al archivo/directorio actual.\n"
+        ACE no se aplicar√° al archivo/directorio actual.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

@@ -86,7 +86,7 @@ MachVideoGetBufferSize(VOID)
 }
 
 VOID
-MachVideoSetTextCursorPosition(ULONG X, ULONG Y)
+MachVideoSetTextCursorPosition(UCHAR X, UCHAR Y)
 {
   MachVtbl.VideoSetTextCursorPosition(X, Y);
 }
@@ -152,19 +152,19 @@ MachDiskGetBootPath(char *BootPath, unsigned Size)
 }
 
 BOOLEAN
-MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+MachDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
   return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
 }
 
 BOOLEAN
-MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry)
+MachDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry)
 {
   return MachVtbl.DiskGetDriveGeometry(DriveNumber, DriveGeometry);
 }
 
 ULONG
-MachDiskGetCacheableBlockCount(ULONG DriveNumber)
+MachDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
   return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
 }

@@ -1,11 +1,9 @@
 
+add_definitions(-D_WIN32)
+
 set_unicode()
-
-add_definitions(
-    -D_WIN32
-    -D_DLL -D__USE_CRTIMP)
-
 set_rc_compiler()
+
 spec2def(desk.cpl desk.spec)
 
 add_library(desk SHARED
@@ -47,4 +45,5 @@ add_importlibs(desk
     kernel32
     ntdll)
 
+add_pch(desk desk.h)
 add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

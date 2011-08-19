@@ -58,7 +58,6 @@ extern KSPIN_LOCK MiSectionPageTableLock;
 /* GLOBALS *******************************************************************/
 
 ULONG_PTR MmSubsectionBase;
-BOOLEAN MmAllocationFragment;
 
 NTSTATUS
 NTAPI
@@ -307,7 +306,7 @@ MmFinalizeSegment(PMM_CACHE_SECTION_SEGMENT Segment)
 		MmUnlockCacheSectionSegment(Segment);		
 	}
 	DPRINTC("Segment %x destroy\n", Segment);
-	ExFreePool(Segment);
+	ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
 }
 
 NTSTATUS

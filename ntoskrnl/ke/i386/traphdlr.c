@@ -42,7 +42,7 @@ UCHAR KiTrapIoTable[] =
     0xEE,                      /* OUT                                  */
     0xEF,                      /* OUT                                  */
     0x6E,                      /* OUTS                                 */
-    0x6F,                      /* OUTS                                 */    
+    0x6F,                      /* OUTS                                 */
 };
 
 PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
@@ -143,7 +143,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
     KiCommonExit(TrapFrame, 0);
     
     /* Restore previous mode */
-    KeGetCurrentThread()->PreviousMode = TrapFrame->PreviousPreviousMode;
+    KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
 
     /* Check for user mode exit */
     if (TrapFrame->SegCs & MODE_MASK)
@@ -174,7 +174,7 @@ KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
     KiCommonExit(TrapFrame, 0);
     
     /* Restore previous mode */
-    KeGetCurrentThread()->PreviousMode = TrapFrame->PreviousPreviousMode;
+    KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
     
     /* Check if this was a V8086 trap */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiTrapReturnNoSegments(TrapFrame);
@@ -213,7 +213,7 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
                                      Parameter1,
                                      Parameter2,
                                      Parameter3,
-                                     TrapFrame); 
+                                     TrapFrame);
 }
 
 DECLSPEC_NORETURN
@@ -463,7 +463,7 @@ KiTrap02(VOID)
     //
     // Note that in reality, we are already on the NMI tss -- we just need to
     // update the PCR to reflect this
-    //      
+    //
     PCR->TSS = NmiTss;
     __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
     TssGdt->HighWord.Bits.Dpl = 0;
@@ -527,7 +527,7 @@ KiTrap02(VOID)
     // Although the CPU disabled NMIs, we just did a BIOS Call, which could've
     // totally changed things.
     //
-    // We have to make sure we're still in our original NMI -- a nested NMI 
+    // We have to make sure we're still in our original NMI -- a nested NMI
     // will point back to the NMI TSS, and in that case we're hosed.
     //
     if (PCR->TSS->Backlink != KGDT_NMI_TSS)
@@ -652,7 +652,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
         {
             /* Should only happen in VDM mode */
             UNIMPLEMENTED;
-            while (TRUE);   
+            while (TRUE);
         }
         
         /* Bring IRQL back */
@@ -910,7 +910,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         {
             /* Should only happen in VDM mode */
             UNIMPLEMENTED;
-            while (TRUE);   
+            while (TRUE);
         }
         
         /* Bring IRQL back */
@@ -933,7 +933,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         /* Enable interrupts and check error code */
         _enable();
         if (!TrapFrame->ErrCode)
-        {            
+        {
             /* FIXME: Use SEH */
             Instructions = (PUCHAR)TrapFrame->Eip;
             
@@ -1047,7 +1047,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
                                  TrapFrame);
     }
 
-    /* 
+    /*
      * Check for a fault during checking of the user instruction.
      *
      * Note that the SEH handler will catch invalid EIP, but we could be dealing
@@ -1059,7 +1059,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     {
         /* Not implemented */
         UNIMPLEMENTED;
-        while (TRUE);   
+        while (TRUE);
     }
     
     /*
@@ -1100,7 +1100,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     if (Instructions[0] == 0xCF)
     {
         /*
-         * Some evil shit is going on here -- this is not the SS:ESP you're 
+         * Some evil shit is going on here -- this is not the SS:ESP you're
          * looking for! Instead, this is actually CS:EIP you're looking at!
          * Why? Because part of the trap frame actually corresponds to the IRET
          * stack during the trap exit!
@@ -1121,8 +1121,8 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
      
      /* So since we're not dealing with the above case, check for RDMSR/WRMSR */
     if ((Instructions[0] == 0xF) &&            // 2-byte opcode
-        (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
-         ((Instructions[2] >> 8) == 0x32)))         // WRMSR
+        ((Instructions[1] == 0x32) ||        // RDMSR
+         (Instructions[1] == 0x30)))         // WRMSR
     {
         /* Unknown CPU MSR, so raise an access violation */
         KiDispatchException0Args(STATUS_ACCESS_VIOLATION,
@@ -1199,20 +1199,41 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 #endif
     }
 
+    /* Check for S-LIST fault in kernel mode */
+    if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
+    {
+        PSLIST_HEADER SListHeader;
+
+        /* Sanity check that the assembly is correct:
+           This must be mov ebx, [eax]
+           Followed by cmpxchg8b [ebp] */
+        ASSERT((((UCHAR*)TrapFrame->Eip)[0] == 0x8B) &&
+               (((UCHAR*)TrapFrame->Eip)[1] == 0x18) &&
+               (((UCHAR*)TrapFrame->Eip)[2] == 0x0F) &&
+               (((UCHAR*)TrapFrame->Eip)[3] == 0xC7) &&
+               (((UCHAR*)TrapFrame->Eip)[4] == 0x4D) &&
+               (((UCHAR*)TrapFrame->Eip)[5] == 0x00));
+
+        /* Get the pointer to the SLIST_HEADER */
+        SListHeader = (PSLIST_HEADER)TrapFrame->Ebp;
+
+        /* Check if the Next member of the SLIST_HEADER was changed */
+        if (SListHeader->Next.Next != (PSLIST_ENTRY)TrapFrame->Eax)
+        {
+            /* Restart the operation */
+            TrapFrame->Eip = (ULONG_PTR)ExpInterlockedPopEntrySListResume;
+
+            /* Continue execution */
+            KiEoiHelper(TrapFrame);
+        }
+    }
+
     /* Call the access fault handler */
     Status = MmAccessFault(TrapFrame->ErrCode & 1,
                            (PVOID)Cr2,
                            TrapFrame->SegCs & MODE_MASK,
                            TrapFrame);
     if (NT_SUCCESS(Status)) KiEoiHelper(TrapFrame);
-    
-    /* Check for S-LIST fault */
-    if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
-    {
-        /* Not yet implemented */
-        UNIMPLEMENTED;
-        while (TRUE);   
-    }
     
     /* Check for syscall fault */
 #if 0
@@ -1496,7 +1517,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
     /* Save previous mode */
     TrapFrame->PreviousPreviousMode = Thread->PreviousMode;
 
-    /* Save the SEH chain and terminate it for now */    
+    /* Save the SEH chain and terminate it for now */
     TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
     KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
 
@@ -1533,7 +1554,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
             goto ExitCall;
         }
 
-        /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */        
+        /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */
         Result = KiConvertToGuiThread();
         if (!NT_SUCCESS(Result))
         {
@@ -1541,7 +1562,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
             //SetLastWin32Error(RtlNtStatusToDosError(Result));
             goto ExitCall;
         }
-            
+        
         /* Reload trap frame and descriptor table pointer from new stack */
         TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
         DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);

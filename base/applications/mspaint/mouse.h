@@ -8,14 +8,14 @@
 
 void placeSelWin(void);
 
-void startPaintingL(HDC hdc, short x, short y, int fg, int bg);
+void startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);
 
-void whilePaintingL(HDC hdc, short x, short y, int fg, int bg);
+void whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);
 
-void endPaintingL(HDC hdc, short x, short y, int fg, int bg);
+void endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);
 
-void startPaintingR(HDC hdc, short x, short y, int fg, int bg);
+void startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);
 
-void whilePaintingR(HDC hdc, short x, short y, int fg, int bg);
+void whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);
 
-void endPaintingR(HDC hdc, short x, short y, int fg, int bg);
+void endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);

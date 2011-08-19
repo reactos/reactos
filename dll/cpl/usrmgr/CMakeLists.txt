@@ -30,5 +30,5 @@ add_importlibs(usrmgr
     kernel32
     ntdll)
 
-
+add_pch(usrmgr usrmgr.h)
 add_cd_file(TARGET usrmgr DESTINATION reactos/system32 FOR all)

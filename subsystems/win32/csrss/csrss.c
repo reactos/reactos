@@ -11,7 +11,6 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ndk/ntndk.h>
 #include <api.h>
 #define NDEBUG
 #include <debug.h>

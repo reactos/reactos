@@ -126,6 +126,13 @@ KeAcquireQueuedSpinLockRaiseToSynch(
     IN KSPIN_LOCK_QUEUE_NUMBER LockNumber
 );
 
+BOOLEAN
+FASTCALL
+KeTryToAcquireQueuedSpinLockRaiseToSynch(
+    IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+    IN PKIRQL OldIrql
+);
+
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockRaiseToSynch(

@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/ke/i386/usercall.c
  * PURPOSE:         User-mode Callout Mechanisms (APC and Win32K Callbacks)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -207,5 +208,148 @@ KeUserModeCallback(IN ULONG RoutineIndex,
     *UserEsp = OldStack;
     return CallbackStatus;
 }
+
+
+/* 
+ * Stack layout for KiUserModeCallout:
+ * ----------------------------------
+ * KCALLOUT_FRAME.ResultLength    <= 2nd Parameter to KiCallUserMode
+ * KCALLOUT_FRAME.Result          <= 1st Parameter to KiCallUserMode
+ * KCALLOUT_FRAME.ReturnAddress   <= Return address of KiCallUserMode
+ * KCALLOUT_FRAME.Ebp             \
+ * KCALLOUT_FRAME.Ebx              | = non-volatile registers, pushed
+ * KCALLOUT_FRAME.Esi              |   by KiCallUserMode
+ * KCALLOUT_FRAME.Edi             /
+ * KCALLOUT_FRAME.CallbackStack
+ * KCALLOUT_FRAME.TrapFrame
+ * KCALLOUT_FRAME.InitialStack    <= CalloutFrame points here
+ * ----------------------------------
+ * ~~ optional alignment ~~
+ * ----------------------------------
+ * FX_SAVE_AREA
+ * ----------------------------------
+ * KTRAP_FRAME
+ * ----------------------------------
+ * ~~ begin of stack frame for KiUserModeCallout ~~
+ *
+ */
+
+NTSTATUS
+FASTCALL
+KiUserModeCallout(PKCALLOUT_FRAME CalloutFrame)
+{
+    PKTHREAD CurrentThread;
+    PKTRAP_FRAME TrapFrame, CallbackTrapFrame;
+    PFX_SAVE_AREA FxSaveArea, OldFxSaveArea;
+    PKPCR Pcr;
+    PKTSS Tss;
+    ULONG_PTR InitialStack;
+    NTSTATUS Status;
+
+    /* Get the current thread */
+    CurrentThread = KeGetCurrentThread();
+
+#if DBG
+    /* Check if we are at pasive level */
+    if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+    {
+        /* We're not, bugcheck */
+        KeBugCheckEx(IRQL_GT_ZERO_AT_SYSTEM_SERVICE,
+                     0,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Check if we are attached or APCs are disabled */
+    if ((CurrentThread->ApcStateIndex != OriginalApcEnvironment) ||
+        (CurrentThread->CombinedApcDisable > 0))
+    {
+        KeBugCheckEx(APC_INDEX_MISMATCH,
+                     0,
+                     CurrentThread->ApcStateIndex,
+                     CurrentThread->CombinedApcDisable,
+                     0);
+    }
+#endif
+
+    /* Align stack on a 16-byte boundary */
+    InitialStack = ALIGN_DOWN_BY(CalloutFrame, 16);
+
+    /* Check if we have enough space on the stack */
+    if ((InitialStack - KERNEL_STACK_SIZE) < CurrentThread->StackLimit)
+    {
+        /* We don't, we'll have to grow our stack */
+        Status = MmGrowKernelStack((PVOID)InitialStack);
+
+        /* Quit if we failed */
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    /* Save the current callback stack and initial stack */
+    CalloutFrame->CallbackStack = (ULONG_PTR)CurrentThread->CallbackStack;
+    CalloutFrame->InitialStack = (ULONG_PTR)CurrentThread->InitialStack;
+
+    /* Get and save the trap frame */
+    TrapFrame = CurrentThread->TrapFrame;
+    CalloutFrame->TrapFrame = (ULONG_PTR)TrapFrame;
+
+    /* Set the new callback stack */
+    CurrentThread->CallbackStack = CalloutFrame;
+
+    /* Set destination and origin NPX Areas */
+    OldFxSaveArea = (PVOID)(CalloutFrame->InitialStack - sizeof(FX_SAVE_AREA));
+    FxSaveArea = (PVOID)(InitialStack - sizeof(FX_SAVE_AREA));
+
+    /* Disable interrupts so we can fill the NPX State */
+    _disable();
+
+    /* Now copy the NPX State */
+    FxSaveArea->U.FnArea.ControlWord = OldFxSaveArea->U.FnArea.ControlWord;
+    FxSaveArea->U.FnArea.StatusWord = OldFxSaveArea->U.FnArea.StatusWord;
+    FxSaveArea->U.FnArea.TagWord = OldFxSaveArea->U.FnArea.TagWord;
+    FxSaveArea->U.FnArea.DataSelector = OldFxSaveArea->U.FnArea.DataSelector;
+    FxSaveArea->Cr0NpxState = OldFxSaveArea->Cr0NpxState;
+
+    /* Set the stack address */
+    CurrentThread->InitialStack = (PVOID)InitialStack;
+
+    /* Locate the trap frame on the callback stack */
+    CallbackTrapFrame = (PVOID)((ULONG_PTR)FxSaveArea - sizeof(KTRAP_FRAME));
+
+    /* Copy the trap frame to the new location */
+    *CallbackTrapFrame = *TrapFrame;
+
+    /* Get PCR */
+    Pcr = KeGetPcr();
+
+    /* Update the exception list */
+    CallbackTrapFrame->ExceptionList = Pcr->NtTib.ExceptionList;
+
+    /* Get TSS */
+    Tss = Pcr->TSS;
+
+    /* Check for V86 mode */
+    if (CallbackTrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        /* Set new stack address in TSS (full trap frame) */
+        Tss->Esp0 = (ULONG_PTR)(CallbackTrapFrame + 1);
+    }
+    else
+    {
+        /* Set new stack address in TSS (non-V86 trap frame) */
+        Tss->Esp0 = (ULONG_PTR)&CallbackTrapFrame->V86Es;
+    }
+
+    /* Set user-mode dispatcher address as EIP */
+    CallbackTrapFrame->Eip = (ULONG_PTR)KeUserCallbackDispatcher;
+
+    /* Bring interrupts back */
+    _enable();
+
+    /* Exit to user-mode */
+    KiServiceExit(CallbackTrapFrame, 0);
+}
+
 
 /* EOF */

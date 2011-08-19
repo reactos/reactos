@@ -1,20 +1,21 @@
 /*
- *Korean translation by manatails007(www.manatails007.org)
+ * Korean translation by manatails007(www.manatails007.org)
  */
+
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-  LTEXT         "±€≤√:", IDC_STATIC, 6, 7, 24, 9
+  LTEXT         "Í∏ÄÍº¥:", IDC_STATIC, 6, 7, 24, 9
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
-  PUSHBUTTON    "µµøÚ∏ª", IDC_CMHELP, 249, 5, 35, 13
+  PUSHBUTTON    "ÎèÑÏõÄÎßê", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
-  LTEXT         "∫πªÁ«“ πÆ¿⁄:", IDC_STATIC, 6, 188, 66, 9
+  LTEXT         "Î≥µÏÇ¨Ìï† Î¨∏Ïûê:", IDC_STATIC, 6, 188, 66, 9
   CONTROL       "",IDC_TEXTBOX,RICHEDIT_CLASS,ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-  DEFPUSHBUTTON "º±≈√", IDC_SELECT, 194, 186, 44, 13
-  PUSHBUTTON    "∫πªÁ", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+  DEFPUSHBUTTON "ÏÑ†ÌÉù", IDC_SELECT, 194, 186, 44, 13
+  PUSHBUTTON    "Î≥µÏÇ¨", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
   CONTROL       "Advanced view",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
 END
 
@@ -34,7 +35,7 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "πÆ¿⁄«•ø° ¥Î«œø©"
+CAPTION "Î¨∏ÏûêÌëúÏóê ÎåÄÌïòÏó¨"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -47,6 +48,6 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE   "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-  IDS_ABOUT     "¡§∫∏(&A)"
+  IDS_ABOUT     "Ï†ïÎ≥¥(&A)"
   IDS_TITLE     "Character Map"
 END

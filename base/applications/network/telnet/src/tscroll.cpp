@@ -38,13 +38,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <windows.h>
-#include <string.h>
-#include <ctype.h>
-#include "tscroll.h"
-#include "tncon.h"
-#include "tconsole.h"
-#include "tnconfig.h"
+#include "precomp.h"
 
 enum {
 	HEX,

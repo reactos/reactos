@@ -125,7 +125,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "バージョン " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "バージョン "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "このReactOSのバージョンは次の方に登録されています:", IDC_STATIC, 35, 115, 180, 10
@@ -655,10 +655,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "項目 '%1' はごみ箱に送れません。 代わりに削除してもよろしいですか?"
 	IDS_OVERWRITEFILE_TEXT      "このフォルダには既にファイル'%1'が含まれています。\n\n置き換えてもよろしいですか?"
 	IDS_OVERWRITEFILE_CAPTION   "ファイル上書きの確認"
-	IDS_OVERWRITEFOLDER_TEXT    "このフォルダには既にフォルダ'%1'が含まれています。\n\n"\
-		"ディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\n"\
-		"と同じ時は置き換えられます。それでも、フォルダを移動または\n"\
-		"コピーしますか?"
+	IDS_OVERWRITEFOLDER_TEXT    "このフォルダには既にフォルダ'%1'が含まれています。\n\nディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\nと同じ時は置き換えられます。それでも、フォルダを移動または\nコピーしますか?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "再起動"

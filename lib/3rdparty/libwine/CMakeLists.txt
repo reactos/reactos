@@ -6,7 +6,8 @@ list(APPEND SOURCE
     config.c
     debug_ros.c
     loader.c
-    string.c)
+#    string.c implements _stricmp, already shipped with crt
+)
 
 add_library(wine ${SOURCE})
 

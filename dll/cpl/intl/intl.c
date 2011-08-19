@@ -23,15 +23,8 @@
  * PURPOSE:         Property sheet code
  * PROGRAMMER:      Eric Kohl
  */
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <setupapi.h>
-#include <tchar.h>
 
 #include "intl.h"
-#include "resource.h"
-
 
 #define NUM_APPLETS    (1)
 

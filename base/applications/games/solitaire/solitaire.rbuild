@@ -8,4 +8,5 @@
 	<file>solgame.cpp</file>
 	<file>solitaire.cpp</file>
 	<file>rsrc.rc</file>
+	<pch>solitaire.h</pch>
 </module>

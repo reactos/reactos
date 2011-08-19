@@ -3,8 +3,6 @@ set_unicode()
 
 spec2def(user32.dll user32.spec)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
@@ -67,9 +65,7 @@ list(APPEND SOURCE
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
-add_library(user32 SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/user32_user32.h.gch
-    ${SOURCE})
+add_library(user32 SHARED ${SOURCE})
 
 set_module_type(user32 win32dll)
 
@@ -79,7 +75,7 @@ target_link_libraries(user32
     win32ksys
     ${PSEH_LIB})
 
-add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
 add_importlibs(user32 gdi32 advapi32 imm32 msvcrt kernel32 ntdll)
+add_pch(user32 include/user32.h)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(user32.spec)

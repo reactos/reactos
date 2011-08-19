@@ -13,11 +13,7 @@
         Functions documented in sbdsp.h
 */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include <time.h>
-#include <sbdsp.h>
+#include "precomp.h"
 
 NTSTATUS
 SbDspReset(

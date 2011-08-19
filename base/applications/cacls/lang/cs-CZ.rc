@@ -1,6 +1,7 @@
-/* FILE:        applications/cacls/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-29
+/* 
+ * FILE:             base/applications/cacls/lang/cs-CZ.rc
+ * TRANSLATOR:       Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:          2008-02-29
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -8,37 +9,37 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Zobrazí nebo zmìní seznamy øízení pøístupu (ACL) k souborùm\n\n\
-CACLS názvu [/T] [/E] [/C] [/G uivatel:oprávnìní [...]] [/R uivatel [...]]\n\
-               [/P uivatel:oprávnìní [...]] [/D uivatel [...]]\n\
-   názvu_soubori Zobrazí ACL.\n\
-   /T            Zmìní ACL urèenıch souborù\n\
-                 v aktuálním adresáøi a všech podadresáøích.\n\
-   /E            Místo nahrazení ACL jej upraví.\n\
-   /C            Pøi chybách odmítnutí pøístupu pokraèuje.\n\
-   /G uivatel:oprávnìní  Udìlí urèenému uivateli pøístupová oprávnìní.\n\
-                 Oprávnìní mùe bıt: R  Èíst\n\
+IDS_HELP, "ZobrazÃ­ nebo zmÃ¬nÃ­ seznamy Ã¸Ã­zenÃ­ pÃ¸Ã­stupu (ACL) k souborÃ¹m\n\n\
+CACLS nÃ¡zvu [/T] [/E] [/C] [/G uÅ¾ivatel:oprÃ¡vnÃ¬nÃ­ [...]] [/R uÅ¾ivatel [...]]\n\
+               [/P uÅ¾ivatel:oprÃ¡vnÃ¬nÃ­ [...]] [/D uÅ¾ivatel [...]]\n\
+   nÃ¡zvu_soubori ZobrazÃ­ ACL.\n\
+   /T            ZmÃ¬nÃ­ ACL urÃ¨enÃ½ch souborÃ¹\n\
+                 v aktuÃ¡lnÃ­m adresÃ¡Ã¸i a vÅ¡ech podadresÃ¡Ã¸Ã­ch.\n\
+   /E            MÃ­sto nahrazenÃ­ ACL jej upravÃ­.\n\
+   /C            PÃ¸i chybÃ¡ch odmÃ­tnutÃ­ pÃ¸Ã­stupu pokraÃ¨uje.\n\
+   /G uÅ¾ivatel:oprÃ¡vnÃ¬nÃ­  UdÃ¬lÃ­ urÃ¨enÃ©mu uÅ¾ivateli pÃ¸Ã­stupovÃ¡ oprÃ¡vnÃ¬nÃ­.\n\
+                 OprÃ¡vnÃ¬nÃ­ mÃ¹Å¾e bÃ½t: R  ÃˆÃ­st\n\
                                      W  Zapisovat\n\
-                                     C  Mìnit (zapisovat)\n\
-                                     F  Úplné øízení\n\
-   /R uivatel   Odvolá pøístupová oprávnìní urèeného uivatele\n\
-                 (platné pouze s parametrem /E).\n\
-   /P uivatel:oprávnìní  Nahradí pøístupová oprávnìní urèeného uivatele.\n\
-                 Oprávnìní mùe bıt: N  ádné\n\
-                                     R  Èíst\n\
+                                     C  MÃ¬nit (zapisovat)\n\
+                                     F  ÃšplnÃ© Ã¸Ã­zenÃ­\n\
+   /R uÅ¾ivatel   OdvolÃ¡ pÃ¸Ã­stupovÃ¡ oprÃ¡vnÃ¬nÃ­ urÃ¨enÃ©ho uÅ¾ivatele\n\
+                 (platnÃ© pouze s parametrem /E).\n\
+   /P uÅ¾ivatel:oprÃ¡vnÃ¬nÃ­  NahradÃ­ pÃ¸Ã­stupovÃ¡ oprÃ¡vnÃ¬nÃ­ urÃ¨enÃ©ho uÅ¾ivatele.\n\
+                 OprÃ¡vnÃ¬nÃ­ mÃ¹Å¾e bÃ½t: N  Å½Ã¡dnÃ©\n\
+                                     R  ÃˆÃ­st\n\
                                      W  Zapisovat\n\
-                                     C  Mìnit (zapisovat)\n\
-                                     F  Úplné øízení\n\
-   /D uivatel   Odepøe pøístup urèenému uivateli.\n\
-Pro urèení více ne jednoho souboru mohou bıt v pøíkazu pouity zástupné znaky.\n\
-V pøíkazu mùete urèit více ne jednoho uivatele.\n\n\
+                                     C  MÃ¬nit (zapisovat)\n\
+                                     F  ÃšplnÃ© Ã¸Ã­zenÃ­\n\
+   /D uÅ¾ivatel   OdepÃ¸e pÃ¸Ã­stup urÃ¨enÃ©mu uÅ¾ivateli.\n\
+Pro urÃ¨enÃ­ vÃ­ce neÅ¾ jednoho souboru mohou bÃ½t v pÃ¸Ã­kazu pouÅ¾ity zÃ¡stupnÃ© znaky.\n\
+V pÃ¸Ã­kazu mÃ¹Å¾ete urÃ¨it vÃ­ce neÅ¾ jednoho uÅ¾ivatele.\n\n\
 Zkratky:\n\
-   CI - Dìdit kontejner.\n\
-        ACE bude dìdìno adresáøi.\n\
-   OI - Dìdit objekt.\n\
-        ACE bude dìdìno soubory.\n\
-   IO - Pouze dìdit.\n\
-        ACE se nepouije na aktuální adresáø èi soubor.\n"
+   CI - DÃ¬dit kontejner.\n\
+        ACE bude dÃ¬dÃ¬no adresÃ¡Ã¸i.\n\
+   OI - DÃ¬dit objekt.\n\
+        ACE bude dÃ¬dÃ¬no soubory.\n\
+   IO - Pouze dÃ¬dit.\n\
+        ACE se nepouÅ¾ije na aktuÃ¡lnÃ­ adresÃ¡Ã¸ Ã¨i soubor.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -50,7 +51,7 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(DENY)"
-IDS_SPECIAL_ACCESS, "(zvláštní pøístup:)"
+IDS_SPECIAL_ACCESS, "(zvlÃ¡Å¡tnÃ­ pÃ¸Ã­stup:)"
 IDS_GENERIC_READ, "GENERIC_READ"
 IDS_GENERIC_WRITE, "GENERIC_WRITE"
 IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"

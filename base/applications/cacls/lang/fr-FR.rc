@@ -3,36 +3,36 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Affiche ou change la liste des contrôles d'accès (ACLs) de fichiers\n\n\
+IDS_HELP, "Affiche ou change la liste des contrÃ´les d'accÃ¨s (ACLs) de fichiers\n\n\
 CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
    nomfichier    Affiche les ACLs du fichier.\n\
-   /T            Change les ACLs des fichiers spécifiés dans\n\
-                 le répertoire en cours et tous les sous-répertoires.\n\
-   /E            Édite les ACL au lieu de les remplacer.\n\
-   /C            Continuer en cas de refus d'accès.\n\
-   /G user:perm  Accorder des droits d'accès à l'utilisateur spécifié.\n\
+   /T            Change les ACLs des fichiers spÃ©cifiÃ©s dans\n\
+                 le rÃ©pertoire en cours et tous les sous-rÃ©pertoires.\n\
+   /E            Ã‰dite les ACL au lieu de les remplacer.\n\
+   /C            Continuer en cas de refus d'accÃ¨s.\n\
+   /G user:perm  Accorder des droits d'accÃ¨s Ã  l'utilisateur spÃ©cifiÃ©.\n\
                  Perm peut valoir : R  Lecture\n\
-                                    W  Écriture\n\
-                                    C  Modification (Écriture)\n\
-                                    F  Contrôle total\n\
-   /R user       Supprime les droits d'accès de l'utilisateur spécifié (valide uniquement avec /E).\n\
-   /P user:perm  Remplace les droits d'accès de l'utilisateur spécifié.\n\
+                                    W  Ã‰criture\n\
+                                    C  Modification (Ã‰criture)\n\
+                                    F  ContrÃ´le total\n\
+   /R user       Supprime les droits d'accÃ¨s de l'utilisateur spÃ©cifiÃ© (valide uniquement avec /E).\n\
+   /P user:perm  Remplace les droits d'accÃ¨s de l'utilisateur spÃ©cifiÃ©.\n\
                  Perm peut valoir : N  Aucun \n\
                                     R  Lecture\n\
-                                    W  Écriture\n\
-                                    C  Modification (Écriture)\n\
-                                    F  Contrôle total\n\
-   /D user       Interdit l'accès à l'utilisateur spécifié.\n\
-Il est possible d'utiliser des caractères joker pour sélectionner plus d'un fichier avec une commande.\n\
-Il est possible de spécifier plus d'un utilisateur dans une commande.\n\n\
-Abréviations:\n\
-   CI - Héritage du conteneur.\n\
-        Le ACE sera appliqué aux répertoires.\n\
-   OI - Héritage de l'objet.\n\
-        Le ACE sera appliqué aux fichiers.\n\
-   IO - Héritage seul.\n\
-        Le ACE ne sera pas appliqué au fichier/répertoire actuel.\n"
+                                    W  Ã‰criture\n\
+                                    C  Modification (Ã‰criture)\n\
+                                    F  ContrÃ´le total\n\
+   /D user       Interdit l'accÃ¨s Ã  l'utilisateur spÃ©cifiÃ©.\n\
+Il est possible d'utiliser des caractÃ¨res joker pour sÃ©lectionner plus d'un fichier avec une commande.\n\
+Il est possible de spÃ©cifier plus d'un utilisateur dans une commande.\n\n\
+AbrÃ©viations:\n\
+   CI - HÃ©ritage du conteneur.\n\
+        Le ACE sera appliquÃ© aux rÃ©pertoires.\n\
+   OI - HÃ©ritage de l'objet.\n\
+        Le ACE sera appliquÃ© aux fichiers.\n\
+   IO - HÃ©ritage seul.\n\
+        Le ACE ne sera pas appliquÃ© au fichier/rÃ©pertoire actuel.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -44,7 +44,7 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(REFUS)"
-IDS_SPECIAL_ACCESS, "(Accès Spécial:)"
+IDS_SPECIAL_ACCESS, "(AccÃ¨s SpÃ©cial:)"
 IDS_GENERIC_READ, "GENERIC_READ"
 IDS_GENERIC_WRITE, "GENERIC_WRITE"
 IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"

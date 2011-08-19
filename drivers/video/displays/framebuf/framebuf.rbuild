@@ -10,4 +10,5 @@
 	<file>screen.c</file>
 	<file>surface.c</file>
 	<file>framebuf.rc</file>
+	<pch>framebuf.h</pch>
 </module>

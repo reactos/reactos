@@ -7,4 +7,5 @@
 	<file>spigame.cpp</file>
 	<file>spider.cpp</file>
 	<file>rsrc.rc</file>
+	<pch>spider.h</pch>
 </module>

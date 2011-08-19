@@ -14,12 +14,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
-add_pch(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_library(fmifs SHARED ${CMAKE_CURRENT_BINARY_DIR}/fmifs_precomp.h.gch ${SOURCE})
-
+add_library(fmifs SHARED ${SOURCE})
 set_entrypoint(fmifs InitializeFmIfs@12)
-
 add_importlibs(fmifs kernel32 ntdll)
+add_pch(fmifs precomp.h)
 add_dependencies(fmifs psdk)
 add_cd_file(TARGET fmifs DESTINATION reactos/system32 FOR all)
 add_importlib_target(fmifs.spec)

@@ -47,6 +47,38 @@ PrintString(LPCSTR fmt, ...)
 }
 
 
+VOID
+ScmLogError(DWORD dwEventId,
+            WORD wStrings,
+            LPCWSTR *lpStrings)
+{
+    HANDLE hLog;
+
+    hLog = RegisterEventSourceW(NULL,
+                                L"Service Control Manager");
+    if (hLog == NULL)
+    {
+        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %d\n", GetLastError());
+        return;
+    }
+
+    if (!ReportEventW(hLog,
+                      EVENTLOG_ERROR_TYPE,
+                      0,
+                      dwEventId,
+                      NULL, // Sid,
+                      wStrings,
+                      0,
+                      lpStrings,
+                      NULL))
+    {
+        DPRINT1("ScmLogEvent: ReportEventW failed %d\n", GetLastError());
+    }
+
+    DeregisterEventSource(hLog);
+}
+
+
 BOOL
 ScmCreateStartEvent(PHANDLE StartEvent)
 {

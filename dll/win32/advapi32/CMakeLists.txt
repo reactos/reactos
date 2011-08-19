@@ -1,6 +1,4 @@
 
-set_unicode()
-
 spec2def(advapi32.dll advapi32.spec)
 
 add_definitions(-D_ADVAPI32_)
@@ -8,7 +6,16 @@ add_definitions(-D_ADVAPI32_)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl
+    ${CMAKE_CURRENT_BINARY_DIR})
+
+add_rpc_files(client
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/eventlogrpc.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
+    
+set_unicode()
 
 list(APPEND SOURCE
     crypt/crypt.c
@@ -43,23 +50,23 @@ list(APPEND SOURCE
     token/token.c
     advapi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def
+    ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c)
 
-add_library(advapi32 SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/advapi32_advapi32.h.gch
-    ${SOURCE})
+add_library(advapi32 SHARED ${SOURCE})
 
 set_module_type(advapi32 win32dll)
 
 target_link_libraries(advapi32
-    svcctlrpc
-    lsarpc
-    eventlogrpc
     wine
     ${PSEH_LIB})
 
-add_importlibs(advapi32 rpcrt4 kernel32 ntdll msvcrt)
+add_importlibs(advapi32 rpcrt4 msvcrt kernel32 ntdll)
 
-add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
+add_pch(advapi32 advapi32.h
+    ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.h
+    ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.h)
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(advapi32.spec)

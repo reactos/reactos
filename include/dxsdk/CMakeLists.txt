@@ -1,4 +1,6 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/include/psdk)
+
 list(APPEND SOURCE
     amstream.idl
     amvideo.idl

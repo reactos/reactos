@@ -25,7 +25,6 @@ Revision History:
 
 --*/
 
-
 #include <stddef.h>
 #include <stdarg.h>
 #include <ntddk.h>
@@ -41,6 +40,8 @@ Revision History:
 #include <mountdev.h>
 #include <ioevent.h>
 #include <pseh/pseh2.h>
+
+#include "wmistr.h"
 
 extern CLASSPNP_SCAN_FOR_SPECIAL_INFO ClassBadItems[];
 

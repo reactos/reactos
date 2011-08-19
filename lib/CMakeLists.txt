@@ -24,7 +24,6 @@ add_subdirectory(tdilib)
 
 else()
 
-add_subdirectory(host/wcsfuncs)
 add_subdirectory(3rdparty/zlib)
 
 endif()

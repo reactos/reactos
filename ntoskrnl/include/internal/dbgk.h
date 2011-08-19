@@ -43,7 +43,7 @@
     }
 #endif
 #else
-#define DBGKTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define DBGKTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 VOID

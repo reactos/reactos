@@ -9,9 +9,6 @@
  */
 
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
     NTSTATUS Status;
@@ -20,11 +17,11 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                             FCB->LocalAddress->Address[0].AddressType));
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
-        AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+        AFD_DbgPrint(MIN_TRACE,("Null Device\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
     if( !FCB->LocalAddress ) {
-        AFD_DbgPrint(MID_TRACE,("No local address\n"));
+        AFD_DbgPrint(MIN_TRACE,("No local address\n"));
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -37,13 +34,33 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 
     if (FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
     {
-        Status = TdiQueryMaxDatagramLength(FCB->AddressFile.Object,
-                                           &FCB->Recv.Size);
-        if (NT_SUCCESS(Status))
+        if (!FCB->Recv.Size)
+        {
+            Status = TdiQueryMaxDatagramLength(FCB->AddressFile.Object,
+                                               &FCB->Recv.Size);
+        }
+
+        if (NT_SUCCESS(Status) && !FCB->Recv.Window)
         {
             FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
             if (!FCB->Recv.Window)
                 Status = STATUS_NO_MEMORY;
+        }
+        
+        if (NT_SUCCESS(Status))
+        {
+            Status = TdiReceiveDatagram(&FCB->ReceiveIrp.InFlightRequest,
+                                        FCB->AddressFile.Object,
+                                        0,
+                                        FCB->Recv.Window,
+                                        FCB->Recv.Size,
+                                        FCB->AddressFrom,
+                                        &FCB->ReceiveIrp.Iosb,
+                                        PacketSocketRecvComplete,
+                                        FCB);
+            
+            /* We don't want to wait for this read to complete. */
+            if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
         }
     }
 
@@ -77,27 +94,6 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( NT_SUCCESS(Status) )
 	Status = WarmSocketForBind( FCB );
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
-
-    if( !NT_SUCCESS(Status) )
-        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
-
-    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
-	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
-
-	Status = TdiReceiveDatagram
-	    ( &FCB->ReceiveIrp.InFlightRequest,
-	      FCB->AddressFile.Object,
-	      0,
-	      FCB->Recv.Window,
-	      FCB->Recv.Size,
-	      FCB->AddressFrom,
-	      &FCB->ReceiveIrp.Iosb,
-	      PacketSocketRecvComplete,
-	      FCB );
-
-	/* We don't want to wait for this read to complete. */
-	if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
-    }
 
     if (NT_SUCCESS(Status))
         FCB->State = SOCKET_STATE_BOUND;

@@ -6,6 +6,10 @@ add_definitions(
     -D__WINESRC__
     -DROS_Headers)
 
+if (MSVC)
+    add_compiler_flags(/EHa-)
+endif()
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -62,4 +66,5 @@ add_importlibs(browseui
     kernel32
     ntdll)
 
+add_pch(browseui precomp.h)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)

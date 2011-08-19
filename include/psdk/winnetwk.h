@@ -1,5 +1,5 @@
-#ifndef _WINNETWK_H
-#define _WINNETWK_H
+#ifndef _WINNETWK_
+#define _WINNETWK_
 
 #ifdef __cplusplus
 extern "C" {

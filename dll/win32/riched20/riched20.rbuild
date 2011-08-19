@@ -28,6 +28,7 @@
 	<file>wrap.c</file>
 	<file>writer.c</file>
 	<file>version.rc</file>
+	<pch>editor.h</pch>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

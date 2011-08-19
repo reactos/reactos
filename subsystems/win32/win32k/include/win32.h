@@ -192,4 +192,8 @@ typedef struct _PROCESSINFO
   struct _GDI_POOL *pPoolDcAttr;
   struct _GDI_POOL *pPoolBrushAttr;
   struct _GDI_POOL *pPoolRgnAttr;
+
+#ifdef DBG
+  BYTE DbgChannelLevel[DbgChCount];
+#endif
 } PROCESSINFO;

@@ -2,28 +2,28 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX DISCARDABLE  0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершение программы - "
+CAPTION "Р—Р°РІРµСЂС€РµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹ - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Завершение программы... Пажалуйста подождите",IDC_STATIC,7,7,186,11
+    LTEXT           "Р—Р°РІРµСЂС€РµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹... РџР°Р¶Р°Р»СѓР№СЃС‚Р° РїРѕРґРѕР¶РґРёС‚Рµ",IDC_STATIC,7,7,186,11
     CONTROL         "Progress",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "Если вы завершите программу сейчас, то вы можете потерять несохраненные данные. Чтобы завешить программу сейчас нажмите ""Завершить""",
+    LTEXT           "Р•СЃР»Рё РІС‹ Р·Р°РІРµСЂС€РёС‚Рµ РїСЂРѕРіСЂР°РјРјСѓ СЃРµР№С‡Р°СЃ, С‚Рѕ РІС‹ РјРѕР¶РµС‚Рµ РїРѕС‚РµСЂСЏС‚СЊ РЅРµСЃРѕС…СЂР°РЅРµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ. Р§С‚РѕР±С‹ Р·Р°РІРµС€РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ СЃРµР№С‡Р°СЃ РЅР°Р¶РјРёС‚Рµ ""Р—Р°РІРµСЂС€РёС‚СЊ""",
                     IDC_STATIC,7,40,186,26
-    DEFPUSHBUTTON   "&Завешить",IDC_END_NOW,150,71,43,17
+    DEFPUSHBUTTON   "&Р—Р°РІРµС€РёС‚СЊ",IDC_END_NOW,150,71,43,17
 END
 
 IDD_NOT_RESPONDING DIALOGEX DISCARDABLE 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершение программы - "
+CAPTION "Р—Р°РІРµСЂС€РµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹ - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Отмена",IDCANCEL,142,98,43,17
-    PUSHBUTTON      "&Завершить",IDC_END_NOW,78,98,43,17
-    LTEXT           "Эта программа не отвечает",IDC_STATIC,7,7,178,8
-    LTEXT           "Для возврата в ReactOS и сохранения данных нажмите ""Отмена""",
+    DEFPUSHBUTTON   "РћС‚РјРµРЅР°",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Р—Р°РІРµСЂС€РёС‚СЊ",IDC_END_NOW,78,98,43,17
+    LTEXT           "Р­С‚Р° РїСЂРѕРіСЂР°РјРјР° РЅРµ РѕС‚РІРµС‡Р°РµС‚",IDC_STATIC,7,7,178,8
+    LTEXT           "Р”Р»СЏ РІРѕР·РІСЂР°С‚Р° РІ ReactOS Рё СЃРѕС…СЂР°РЅРµРЅРёСЏ РґР°РЅРЅС‹С… РЅР°Р¶РјРёС‚Рµ ""РћС‚РјРµРЅР°""",
                     IDC_STATIC,7,26,178,16
-    LTEXT           "Если вы завершите программу сейчас, то вы можете потерять несохраненные данные. Чтобы завешить программу сейчас нажмите ""Завершить""",
+    LTEXT           "Р•СЃР»Рё РІС‹ Р·Р°РІРµСЂС€РёС‚Рµ РїСЂРѕРіСЂР°РјРјСѓ СЃРµР№С‡Р°СЃ, С‚Рѕ РІС‹ РјРѕР¶РµС‚Рµ РїРѕС‚РµСЂСЏС‚СЊ РЅРµСЃРѕС…СЂР°РЅРµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ. Р§С‚РѕР±С‹ Р·Р°РІРµС€РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ СЃРµР№С‡Р°СЃ РЅР°Р¶РјРёС‚Рµ ""Р—Р°РІРµСЂС€РёС‚СЊ""",
                     IDC_STATIC,7,53,178,26
 END
 
@@ -37,21 +37,21 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_EDIT "Изменить"
-  IDS_MARK "Пометить"
-  IDS_COPY "Копировать\tEnter"
-  IDS_PASTE "Вставить"
-  IDS_SELECTALL "Выделить все"
-  IDS_SCROLL "Прокрутить"
-  IDS_FIND "Искать..."
-  IDS_DEFAULTS "Умолчания"
-  IDS_PROPERTIES "Свойства"
+  IDS_EDIT "РР·РјРµРЅРёС‚СЊ"
+  IDS_MARK "РџРѕРјРµС‚РёС‚СЊ"
+  IDS_COPY "РљРѕРїРёСЂРѕРІР°С‚СЊ\tEnter"
+  IDS_PASTE "Р’СЃС‚Р°РІРёС‚СЊ"
+  IDS_SELECTALL "Р’С‹РґРµР»РёС‚СЊ РІСЃРµ"
+  IDS_SCROLL "РџСЂРѕРєСЂСѓС‚РёС‚СЊ"
+  IDS_FIND "РСЃРєР°С‚СЊ..."
+  IDS_DEFAULTS "РЈРјРѕР»С‡Р°РЅРёСЏ"
+  IDS_PROPERTIES "РЎРІРѕР№СЃС‚РІР°"
   IDS_SCROLLHERE "Scroll Here"
   IDS_SCROLLTOP "Scroll Top"
-  IDS_SCROLLBOTTOM "Прокрутить вниз"
-  IDS_SCROLLPAGE_UP "Вверх страницы"
-  IDS_SCROLLPAGE_DOWN "Вниз страницы"
-  IDS_SCROLLUP "Прокрутить вверх"
+  IDS_SCROLLBOTTOM "РџСЂРѕРєСЂСѓС‚РёС‚СЊ РІРЅРёР·"
+  IDS_SCROLLPAGE_UP "Р’РІРµСЂС… СЃС‚СЂР°РЅРёС†С‹"
+  IDS_SCROLLPAGE_DOWN "Р’РЅРёР· СЃС‚СЂР°РЅРёС†С‹"
+  IDS_SCROLLUP "РџСЂРѕРєСЂСѓС‚РёС‚СЊ РІРІРµСЂС…"
   IDS_SCROLLDOWN "Scroll Down"
 
   IDS_COMMAND_PROMPT "Command Prompt"

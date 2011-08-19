@@ -2,8 +2,7 @@
 add_definitions(
     -DRESOLVE_3D_TEXTURE_SUPPORT
     -DBUILD_GL32
-    -DLIBRARYBUILD
-    -D_DLL -D__USE_CRTIMP)
+    -DLIBRARYBUILD)
 
 include_directories(
     include
@@ -111,7 +110,9 @@ add_library(glu32 SHARED ${SOURCE})
 
 set_entrypoint(glu32 0)
 
-target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 -lcoldname)
+if(NOT MSVC)
+    target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 oldnames)
+endif()
 
 add_importlibs(glu32
     opengl32

@@ -34,6 +34,143 @@
 /* FUNCTIONS ****************************************************************/
 
 static BOOLEAN
+IsAcpiComputer(VOID)
+{
+   UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
+   UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
+   UNICODE_STRING AcpiBiosIdentifier = RTL_CONSTANT_STRING(L"ACPI BIOS");
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   PKEY_BASIC_INFORMATION pDeviceInformation = NULL;
+   ULONG DeviceInfoLength = sizeof(KEY_BASIC_INFORMATION) + 50 * sizeof(WCHAR);
+   PKEY_VALUE_PARTIAL_INFORMATION pValueInformation = NULL;
+   ULONG ValueInfoLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 50 * sizeof(WCHAR);
+   ULONG RequiredSize;
+   ULONG IndexDevice = 0;
+   UNICODE_STRING DeviceName, ValueName;
+   HANDLE hDevicesKey = NULL;
+   HANDLE hDeviceKey = NULL;
+   NTSTATUS Status;
+   BOOLEAN ret = FALSE;
+
+   InitializeObjectAttributes(&ObjectAttributes, &MultiKeyPathU, OBJ_CASE_INSENSITIVE, NULL, NULL);
+   Status = NtOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("NtOpenKey() failed with status 0x%08lx\n", Status);
+      goto cleanup;
+   }
+
+   pDeviceInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, DeviceInfoLength);
+   if (!pDeviceInformation)
+   {
+      DPRINT("RtlAllocateHeap() failed\n");
+      Status = STATUS_NO_MEMORY;
+      goto cleanup;
+   }
+
+   pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
+   if (!pDeviceInformation)
+   {
+      DPRINT("RtlAllocateHeap() failed\n");
+      Status = STATUS_NO_MEMORY;
+      goto cleanup;
+   }
+
+   while (TRUE)
+   {
+      Status = NtEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+      if (Status == STATUS_NO_MORE_ENTRIES)
+         break;
+      else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+      {
+         RtlFreeHeap(RtlGetProcessHeap(), 0, pDeviceInformation);
+         DeviceInfoLength = RequiredSize;
+         pDeviceInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, DeviceInfoLength);
+         if (!pDeviceInformation)
+         {
+            DPRINT("RtlAllocateHeap() failed\n");
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+         }
+         Status = NtEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+      }
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("NtEnumerateKey() failed with status 0x%08lx\n", Status);
+         goto cleanup;
+      }
+      IndexDevice++;
+
+      /* Open device key */
+      DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
+      DeviceName.Buffer = pDeviceInformation->Name;
+      InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_CASE_INSENSITIVE, hDevicesKey, NULL);
+      Status = NtOpenKey(
+         &hDeviceKey,
+         KEY_QUERY_VALUE,
+         &ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("NtOpenKey() failed with status 0x%08lx\n", Status);
+         goto cleanup;
+      }
+
+      /* Read identifier */
+      Status = NtQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
+      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+      {
+         RtlFreeHeap(RtlGetProcessHeap(), 0, pValueInformation);
+         ValueInfoLength = RequiredSize;
+         pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
+         if (!pValueInformation)
+         {
+            DPRINT("RtlAllocateHeap() failed\n");
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+         }
+         Status = NtQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
+      }
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("NtQueryValueKey() failed with status 0x%08lx\n", Status);
+         goto nextdevice;
+      }
+      else if (pValueInformation->Type != REG_SZ)
+      {
+         DPRINT("Wrong registry type: got 0x%lx, expected 0x%lx\n", pValueInformation->Type, REG_SZ);
+         goto nextdevice;
+      }
+
+      ValueName.Length = ValueName.MaximumLength = pValueInformation->DataLength;
+      ValueName.Buffer = (PWCHAR)pValueInformation->Data;
+      if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+         ValueName.Length -= sizeof(WCHAR);
+      if (RtlCompareUnicodeString(&ValueName, &AcpiBiosIdentifier, FALSE) == 0)
+      {
+         DPRINT("Found ACPI BIOS\n");
+         ret = TRUE;
+         goto cleanup;
+      }
+
+nextdevice:
+      NtClose(hDeviceKey);
+      hDeviceKey = NULL;
+   }
+
+cleanup:
+   if (pDeviceInformation)
+      RtlFreeHeap(RtlGetProcessHeap(), 0, pDeviceInformation);
+   if (pValueInformation)
+      RtlFreeHeap(RtlGetProcessHeap(), 0, pValueInformation);
+   if (hDevicesKey)
+      NtClose(hDevicesKey);
+   if (hDeviceKey)
+      NtClose(hDeviceKey);
+   return ret;
+}
+
+
+static BOOLEAN
 GetComputerIdentifier(PWSTR Identifier,
                       ULONG IdentifierLength)
 {
@@ -98,15 +235,31 @@ GetComputerIdentifier(PWSTR Identifier,
         return FALSE;
     }
 
-    if (pFullInfo->SubKeys == 1)
+    if (IsAcpiComputer())
     {
-        /* Computer is mono-CPU */
-        ComputerIdentifier = L"PC UP";
+        if (pFullInfo->SubKeys == 1)
+        {
+            /* Computer is mono-CPU */
+            ComputerIdentifier = L"ACPI UP";
+        }
+        else
+        {
+            /* Computer is multi-CPUs */
+            ComputerIdentifier = L"ACPI MP";
+        }
     }
     else
     {
-        /* Computer is multi-CPUs */
-        ComputerIdentifier = L"PC MP";
+        if (pFullInfo->SubKeys == 1)
+        {
+            /* Computer is mono-CPU */
+            ComputerIdentifier = L"PC UP";
+        }
+        else
+        {
+            /* Computer is multi-CPUs */
+            ComputerIdentifier = L"PC MP";
+        }
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);

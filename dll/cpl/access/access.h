@@ -1,4 +1,12 @@
-#pragma once
+#include <windows.h>
+#include <commctrl.h>
+#include <cpl.h>
+#include <prsht.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <tchar.h>
+
+#include "resource.h"
 
 typedef LONG (CALLBACK *APPLET_INITPROC)(VOID);
 

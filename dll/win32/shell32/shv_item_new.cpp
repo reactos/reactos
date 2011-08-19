@@ -20,12 +20,6 @@
  */
 
 #include <precomp.h>
-#include <shlwapi_undoc.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "shv_item_new.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

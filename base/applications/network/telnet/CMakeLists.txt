@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D_CRT_NONSTDC_NO_DEPRECATE
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
 
 set_cpp()
 
@@ -28,5 +26,6 @@ add_executable(telnet
     telnet.rc)
 
 set_module_type(telnet win32cui)
+add_pch(telnet src/precomp.h)
 add_importlibs(telnet ws2_32 user32 msvcrt kernel32)
 add_cd_file(TARGET telnet DESTINATION reactos/system32 FOR all)

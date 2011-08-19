@@ -65,6 +65,31 @@
 //
 //#define KeGetTrapFrameInterruptState(TrapFrame)
 
+FORCEINLINE
+BOOLEAN
+KeDisableInterrupts(VOID)
+{
+    ARM_STATUS_REGISTER Flags;
+
+    //
+    // Get current interrupt state and disable interrupts
+    //
+    Flags = KeArmStatusRegisterGet();
+    _disable();
+
+    //
+    // Return previous interrupt state
+    //
+    return Flags.IrqDisable;
+}
+
+FORCEINLINE
+VOID
+KeRestoreInterrupts(BOOLEAN WereEnabled)
+{
+    if (WereEnabled) _enable();
+}
+
 //
 // Invalidates the TLB entry for a specified address
 //

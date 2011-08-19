@@ -49,11 +49,6 @@ TODO:
 */
 
 #include <precomp.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "shlwapi_undoc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

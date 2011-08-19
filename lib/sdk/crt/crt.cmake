@@ -45,6 +45,12 @@ list(APPEND CRT_SOURCE
     math/frexp.c
     math/huge_val.c
     math/hypot.c
+    math/ieee754/j0_y0.c
+    math/ieee754/j1_y1.c
+    math/ieee754/jn_yn.c
+    math/j0_y0.c
+    math/j1_y1.c
+    math/jn_yn.c
     math/ldiv.c
     math/logf.c
     math/modf.c
@@ -298,7 +304,6 @@ list(APPEND CRT_SOURCE
 
 if(ARCH MATCHES i386)
     list(APPEND CRT_SOURCE
-        except/i386/chkstk_asm.s
         except/i386/prolog.s
         except/i386/seh.s
         except/i386/seh_prolog.s
@@ -309,9 +314,12 @@ if(ARCH MATCHES i386)
         float/i386/logb.c
         float/i386/statfp.c
         setjmp/i386/setjmp.s)
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/i386/cpp.s)
+    endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
-        except/amd64/chkstk_asm.s
         except/amd64/seh.s
         float/i386/clearfp.c
         float/i386/cntrlfp.c
@@ -431,8 +439,8 @@ if(ARCH MATCHES amd64)
         math/amd64/tan.S)
 endif()
 
-add_library(crt ${CMAKE_CURRENT_BINARY_DIR}/crt_precomp.h.gch ${CRT_SOURCE})
-
+add_library(crt ${CRT_SOURCE})
+target_link_libraries(crt chkstk)
 set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
-add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
+add_pch(crt precomp.h)
 add_dependencies(crt psdk asm)

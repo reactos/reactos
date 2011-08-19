@@ -28,7 +28,6 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE
 IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
 
 typedef struct _ROSSYM_KM_OWN_CONTEXT {
-    ROSSYM_OWN_FILECONTEXT Rossym;
     LARGE_INTEGER FileOffset;
     PFILE_OBJECT FileObject;
 } ROSSYM_KM_OWN_CONTEXT, *PROSSYM_KM_OWN_CONTEXT;
@@ -36,8 +35,8 @@ typedef struct _ROSSYM_KM_OWN_CONTEXT {
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
-static PROSSYM_INFO KdbpRosSymInfo;
-static ULONG_PTR KdbpImageBase;
+//static PROSSYM_INFO KdbpRosSymInfo;
+//static ULONG_PTR KdbpImageBase;
 BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
@@ -65,7 +64,7 @@ KdbpReadSymFile(PVOID FileContext, PVOID Buffer, ULONG Length)
     return NT_SUCCESS(Status);
 }
 
-static PROSSYM_OWN_FILECONTEXT
+static PROSSYM_KM_OWN_CONTEXT
 KdbpCaptureFileForSymbols(PFILE_OBJECT FileObject)
 {
     PROSSYM_KM_OWN_CONTEXT Context = ExAllocatePool(NonPagedPool, sizeof(*Context));
@@ -73,15 +72,12 @@ KdbpCaptureFileForSymbols(PFILE_OBJECT FileObject)
     ObReferenceObject(FileObject);
     Context->FileOffset.QuadPart = 0;
     Context->FileObject = FileObject;
-    Context->Rossym.ReadFileProc = KdbpReadSymFile;
-    Context->Rossym.SeekFileProc = KdbpSeekSymFile;
-    return &Context->Rossym;
+    return Context;
 }
 
 static VOID
-KdbpReleaseFileForSymbols(PROSSYM_OWN_FILECONTEXT FileContext)
+KdbpReleaseFileForSymbols(PROSSYM_KM_OWN_CONTEXT Context)
 {
-    PROSSYM_KM_OWN_CONTEXT Context = (PROSSYM_KM_OWN_CONTEXT)FileContext;
     ObDereferenceObject(Context->FileObject);
     ExFreePool(Context);
 }
@@ -175,31 +171,80 @@ KdbpSymFindModule(
  */
 BOOLEAN
 KdbSymPrintAddress(
-    IN PVOID Address)
+    IN PVOID Address,
+    IN PKTRAP_FRAME Context)
 {
+    int i;
 	PMEMORY_AREA MemoryArea = NULL;
 	PROS_SECTION_OBJECT SectionObject;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PROSSYM_OWN_FILECONTEXT FileContext;
+#if 0
+    PROSSYM_KM_OWN_CONTEXT FileContext;
+#endif
     ULONG_PTR RelativeAddress;
     NTSTATUS Status;
-    ULONG LineNumber;
-    CHAR FileName[256];
-    CHAR FunctionName[256];
+	ROSSYM_LINEINFO LineInfo = {0};
+
+    struct {
+        enum _ROSSYM_REGNAME regname;
+        size_t ctx_offset;
+    } regmap[] = {
+        { ROSSYM_X86_EDX, FIELD_OFFSET(KTRAP_FRAME, Edx) },
+        { ROSSYM_X86_EAX, FIELD_OFFSET(KTRAP_FRAME, Eax) },
+        { ROSSYM_X86_ECX, FIELD_OFFSET(KTRAP_FRAME, Ecx) },
+        { ROSSYM_X86_EBX, FIELD_OFFSET(KTRAP_FRAME, Ebx) },
+        { ROSSYM_X86_ESI, FIELD_OFFSET(KTRAP_FRAME, Esi) },
+        { ROSSYM_X86_EDI, FIELD_OFFSET(KTRAP_FRAME, Edi) },
+        { ROSSYM_X86_EBP, FIELD_OFFSET(KTRAP_FRAME, Ebp) },
+        { ROSSYM_X86_ESP, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp) }
+    };
+
+    if (Context)
+    {
+#if 0
+        // Disable arguments for now
+        DPRINT("Has Context %x (EBP %x)\n", Context, Context->Ebp);
+        LineInfo.Flags = ROSSYM_LINEINFO_HAS_REGISTERS;
+#endif
+
+        for (i = 0; i < sizeof(regmap) / sizeof(regmap[0]); i++) {
+            memcpy
+                (&LineInfo.Registers.Registers[regmap[i].regname],
+                 ((PCHAR)Context)+regmap[i].ctx_offset,
+                 sizeof(ULONG_PTR));
+            DPRINT("DWARF REG[%d] -> %x\n", regmap[i].regname, LineInfo.Registers.Registers[regmap[i].regname]);
+        }
+    }
 
     if (!KdbpSymbolsInitialized || !KdbpSymFindModule(Address, NULL, -1, &LdrEntry))
         return FALSE;
 
     RelativeAddress = (ULONG_PTR)Address - (ULONG_PTR)LdrEntry->DllBase;
-    Status = KdbSymGetAddressInformation(LdrEntry->PatchInformation,
-                                         RelativeAddress,
-                                         &LineNumber,
-                                         FileName,
-                                         FunctionName);
+    Status = KdbSymGetAddressInformation
+		(LdrEntry->PatchInformation,
+		 RelativeAddress,
+		 &LineInfo);
+
     if (NT_SUCCESS(Status))
     {
         DbgPrint("<%wZ:%x (%s:%d (%s))>",
-            &LdrEntry->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
+            &LdrEntry->BaseDllName, RelativeAddress, LineInfo.FileName, LineInfo.LineNumber, LineInfo.FunctionName);
+        if (Context && LineInfo.NumParams)
+        {
+            int i;
+            char *comma = "";
+            DbgPrint("(");
+            for (i = 0; i < LineInfo.NumParams; i++) {
+                DbgPrint
+                    ("%s%s=%llx",
+                     comma,
+                     LineInfo.Parameters[i].ValueName,
+                     LineInfo.Parameters[i].Value);
+                comma = ",";
+            }
+            DbgPrint(")");
+        }
+
 		return TRUE;
     }
 	else if (Address < MmSystemRangeStart)
@@ -209,8 +254,10 @@ KdbSymPrintAddress(
 		{
 			goto end;
 		}
+
 		SectionObject = MemoryArea->Data.SectionData.Section;
 		if (!(SectionObject->AllocationAttributes & SEC_IMAGE)) goto end;
+#if 0
 		if (MemoryArea->StartingAddress != (PVOID)KdbpImageBase)
 		{
 			if (KdbpRosSymInfo)
@@ -232,21 +279,41 @@ KdbSymPrintAddress(
 		if (KdbpRosSymInfo)
 		{
 			RelativeAddress = (ULONG_PTR)Address - KdbpImageBase;
+			RosSymFreeInfo(&LineInfo);
 			Status = KdbSymGetAddressInformation
 				(KdbpRosSymInfo,
 				 RelativeAddress,
-				 &LineNumber,
-				 FileName,
-				 FunctionName);
+				 &LineInfo);
 			if (NT_SUCCESS(Status))
 			{
 				DbgPrint
 					("<%wZ:%x (%s:%d (%s))>",
 					 &SectionObject->FileObject->FileName,
-					 RelativeAddress, FileName, LineNumber, FunctionName);
+					 RelativeAddress,
+					 LineInfo.FileName,
+					 LineInfo.LineNumber,
+					 LineInfo.FunctionName);
+
+                if (Context && LineInfo.NumParams)
+                {
+                    int i;
+                    char *comma = "";
+                    DbgPrint("(");
+                    for (i = 0; i < LineInfo.NumParams; i++) {
+                        DbgPrint
+                            ("%s%s=%llx",
+                             comma,
+                             LineInfo.Parameters[i].ValueName,
+                             LineInfo.Parameters[i].Value);
+                        comma = ",";
+                    }
+                    DbgPrint(")");
+                }
+
 				return TRUE;
 			}
 		}
+#endif
 	}
 
 end:
@@ -276,13 +343,11 @@ NTSTATUS
 KdbSymGetAddressInformation(
     IN PROSSYM_INFO RosSymInfo,
     IN ULONG_PTR RelativeAddress,
-    OUT PULONG LineNumber  OPTIONAL,
-    OUT PCH FileName  OPTIONAL,
-    OUT PCH FunctionName  OPTIONAL)
+	IN PROSSYM_LINEINFO LineInfo)
 {
     if (!KdbpSymbolsInitialized ||
         !RosSymInfo ||
-        !RosSymGetAddressInformation(RosSymInfo, RelativeAddress, LineNumber, FileName, FunctionName))
+        !RosSymGetAddressInformation(RosSymInfo, RelativeAddress, LineInfo))
     {
         return STATUS_UNSUCCESSFUL;
     }
@@ -302,7 +367,7 @@ KdbSymGetAddressInformation(
  *
  * \sa KdbpSymAddCachedFile
  */
-static PROSSYM_INFO
+PROSSYM_INFO
 KdbpSymFindCachedFile(
     IN PUNICODE_STRING FileName)
 {
@@ -348,7 +413,7 @@ KdbpSymAddCachedFile(
 {
     PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
 
-    DPRINT("Adding symbol file: RosSymInfo = %p\n", RosSymInfo);
+    DPRINT("Adding symbol file: %wZ RosSymInfo = %p\n", FileName, RosSymInfo);
 
     /* allocate entry */
     CacheEntry = ExAllocatePoolWithTag(NonPagedPool, sizeof (IMAGE_SYMBOL_INFO_CACHE), TAG_KDBS);
@@ -359,6 +424,7 @@ KdbpSymAddCachedFile(
     CacheEntry->FileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                         FileName->Length,
                                                         TAG_KDBS);
+    CacheEntry->FileName.MaximumLength = FileName->Length;
     RtlCopyUnicodeString(&CacheEntry->FileName, FileName);
     ASSERT(CacheEntry->FileName.Buffer);
     CacheEntry->RefCount = 1;
@@ -419,7 +485,7 @@ KdbpSymRemoveCachedFile(
  *
  * \sa KdbpSymUnloadModuleSymbols
  */
-static VOID
+VOID
 KdbpSymLoadModuleSymbols(
     IN PUNICODE_STRING FileName,
     OUT PROSSYM_INFO *RosSymInfo)
@@ -429,7 +495,7 @@ KdbpSymLoadModuleSymbols(
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     PFILE_OBJECT FileObject;
-    PROSSYM_OWN_FILECONTEXT FileContext;
+    PROSSYM_KM_OWN_CONTEXT FileContext;
 
     /* Allow KDB to break on module load */
     KdbModuleLoaded(FileName);
@@ -451,7 +517,7 @@ KdbpSymLoadModuleSymbols(
     /*  Open the file  */
     InitializeObjectAttributes(&ObjectAttributes,
                                FileName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE|OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -462,10 +528,10 @@ KdbpSymLoadModuleSymbols(
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ|FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
+                        FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Could not open image file: %wZ\n", FileName);
+        DPRINT("Could not open image file(%x): %wZ\n", Status, FileName);
         return;
     }
 
@@ -491,8 +557,17 @@ KdbpSymLoadModuleSymbols(
         if (RosSymCreateFromFile(FileContext, RosSymInfo))
         {
             /* add file to cache */
-            KdbpSymAddCachedFile(FileName, *RosSymInfo);
-            DPRINT("Installed symbols: %wZ %p\n", FileName, *RosSymInfo);
+            int i;
+            UNICODE_STRING TruncatedName = *FileName;
+            for (i = (TruncatedName.Length / sizeof(WCHAR)) - 1; i >= 0; i--)
+                if (TruncatedName.Buffer[i] == '\\') {
+                    TruncatedName.Buffer += i+1;
+                    TruncatedName.Length -= (i+1)*sizeof(WCHAR);
+                    TruncatedName.MaximumLength -= (i+1)*sizeof(WCHAR);
+                    break;
+                }
+            KdbpSymAddCachedFile(&TruncatedName, *RosSymInfo);
+            DPRINT("Installed symbols: %wZ %p\n", &TruncatedName, *RosSymInfo);
         }
         KdbpReleaseFileForSymbols(FileContext);
     }
@@ -512,12 +587,44 @@ KdbSymProcessSymbols(
     }
 
     /* Remove symbol info if it already exists */
-    if (LdrEntry->PatchInformation)
+    if (LdrEntry->PatchInformation) {
         KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
+    }
 
 	/* Error loading symbol info, try to load it from file */
 	KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
             (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+
+    if (!LdrEntry->PatchInformation) {
+        // HACK: module dll names don't identify the real files
+        UNICODE_STRING SystemRoot;
+        UNICODE_STRING ModuleNameCopy;
+        RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot\\system32\\Drivers\\");
+        ModuleNameCopy.Length = 0;
+        ModuleNameCopy.MaximumLength =
+            LdrEntry->BaseDllName.MaximumLength + SystemRoot.MaximumLength;
+        ModuleNameCopy.Buffer = ExAllocatePool(NonPagedPool, SystemRoot.MaximumLength + LdrEntry->BaseDllName.MaximumLength);
+        RtlCopyUnicodeString(&ModuleNameCopy, &SystemRoot);
+        RtlCopyMemory
+            (ModuleNameCopy.Buffer + ModuleNameCopy.Length / sizeof(WCHAR),
+             LdrEntry->BaseDllName.Buffer,
+             LdrEntry->BaseDllName.Length);
+        ModuleNameCopy.Length += LdrEntry->BaseDllName.Length;
+        KdbpSymLoadModuleSymbols(&ModuleNameCopy,
+                                 (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+        if (!LdrEntry->PatchInformation) {
+            SystemRoot.Length -= strlen("Drivers\\") * sizeof(WCHAR);
+            RtlCopyUnicodeString(&ModuleNameCopy, &SystemRoot);
+            RtlCopyMemory
+                (ModuleNameCopy.Buffer + ModuleNameCopy.Length / sizeof(WCHAR),
+                 LdrEntry->BaseDllName.Buffer,
+                 LdrEntry->BaseDllName.Length);
+            ModuleNameCopy.Length += LdrEntry->BaseDllName.Length;
+            KdbpSymLoadModuleSymbols(&ModuleNameCopy,
+                                     (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+        }
+        RtlFreeUnicodeString(&ModuleNameCopy);
+    }
 
 	/* It already added symbols to cache */
     DPRINT("Installed symbols: %wZ@%p-%p %p\n",
@@ -536,6 +643,26 @@ KdbDebugPrint(
     /* Nothing here */
 }
 
+static PVOID KdbpSymAllocMem(ULONG_PTR size)
+{
+	return ExAllocatePoolWithTag(NonPagedPool, size, 'RSYM');
+}
+
+static VOID KdbpSymFreeMem(PVOID Area)
+{
+	return ExFreePool(Area);
+}
+
+static BOOLEAN KdbpSymReadMem(PVOID FileContext, PVOID TargetDebug, PVOID SourceMem, ULONG Size)
+{
+	return NT_SUCCESS(KdbpSafeReadMemory(TargetDebug, SourceMem, Size));
+}
+
+static ROSSYM_CALLBACKS KdbpRosSymCallbacks = {
+	KdbpSymAllocMem, KdbpSymFreeMem,
+	KdbpReadSymFile, KdbpSeekSymFile,
+	KdbpSymReadMem
+};
 
 /*! \brief Initializes the KDB symbols implementation.
  *
@@ -621,7 +748,7 @@ KdbInitialize(
             p1 = p2;
         }
 
-        RosSymInitKernelMode();
+        RosSymInit(&KdbpRosSymCallbacks);
     }
     else if (BootPhase == 3)
     {

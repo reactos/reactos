@@ -132,7 +132,7 @@ ObpCreateCacheEntry(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     
     /* Calculate the memory we'll need to allocate and allocate it */
     CacheSize = Length + (sizeof(SECURITY_DESCRIPTOR_HEADER) - sizeof(QUAD));
-    SdHeader = ExAllocatePoolWithTag(PagedPool, CacheSize, 'cSbO');
+    SdHeader = ExAllocatePoolWithTag(PagedPool, CacheSize, TAG_OB_SD_CACHE);
     if (!SdHeader) return NULL;
     
     /* Setup the header */

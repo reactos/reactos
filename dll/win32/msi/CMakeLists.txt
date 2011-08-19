@@ -1,4 +1,6 @@
 
+if(NOT MSVC)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
 
@@ -14,7 +16,7 @@ list(APPEND SOURCE
     action.c
     alter.c
     appsearch.c
-	assembly.c
+    assembly.c
     automation.c
     classes.c
     cond.tab.c
@@ -68,13 +70,9 @@ endif()
 add_library(msi SHARED ${SOURCE})
 
 add_idl_Headers(msi_idlheader msiserver.idl)
-
 add_typelib(msi_tlb msiserver.idl)
-
 set_module_type(msi win32dll)
-
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
-
 add_dependencies(msi msi_idlheader msi_tlb)
 
 add_importlibs(msi
@@ -95,5 +93,9 @@ add_importlibs(msi
     kernel32
     ntdll)
 
+add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
+
+endif(NOT MSVC)
+
 add_importlib_target(msi.spec)

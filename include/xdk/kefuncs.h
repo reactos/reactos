@@ -161,7 +161,7 @@ KeQuerySystemTime(
   OUT PLARGE_INTEGER CurrentTime);
 #endif /* !_M_AMD64 */
 
-#if !defined(_X86_)
+#if !defined(_X86_) && !defined(_M_ARM)
 NTKERNELAPI
 KIRQL
 NTAPI

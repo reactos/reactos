@@ -125,7 +125,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Versjon " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Versjon "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Denne ReactOS versjonen er registert til:", IDC_STATIC, 35, 115, 180, 10
@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Elementet «%1» kan ikke legges i papirkurven. Vil du slette det i stedet?"
 	IDS_OVERWRITEFILE_TEXT      "Denne mapppen innholder allerede en fil som heter '%1'.\n\nVil du overskrive denne?"
 	IDS_OVERWRITEFILE_CAPTION   "Bekreft overskriving av fil"
-	IDS_OVERWRITEFOLDER_TEXT    "Denne mappen inneholder allerede en mappe som heter '%1'.\n\n"\
-		"Hvis filene i destinasjon mappen har samme navn filer i \n"\
-		"valgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \n"\
-		"denne mappen?"
+	IDS_OVERWRITEFOLDER_TEXT    "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i \nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \ndenne mappen?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Starte på nytt"

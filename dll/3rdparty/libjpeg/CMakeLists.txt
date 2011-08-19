@@ -4,8 +4,7 @@ add_definitions(
     -D_WINDOWS
     -D_MBCS
     -DJPEG_DLL
-    -Dmain=mainptr
-    -D_DLL -D__USE_CRTIMP)
+    -Dmain=mainptr)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
@@ -60,9 +59,6 @@ add_library(libjpeg SHARED
     jmemnobs.c)
 
 set_entrypoint(libjpeg 0)
-
 add_importlibs(libjpeg msvcrt kernel32)
-
 add_dependencies(libjpeg psdk)
-
 add_cd_file(TARGET libjpeg DESTINATION reactos/system32 FOR all)

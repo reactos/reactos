@@ -1,5 +1,5 @@
 /*
- *  German language file by Daniel Reimer <EmuandCo> 2006-06-15
+ * German language file by Daniel Reimer <EmuandCo> 2006-06-15
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -7,30 +7,30 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Ändert Datei-ACLs (Access Control List) oder zeigt sie an.\n\n\
+IDS_HELP, "Ã„ndert Datei-ACLs (Access Control List) oder zeigt sie an.\n\n\
 CACLS Dateiname [/T] [/E] [/C] [/G Benutzer:Zugriff] [/R Benutzer [...]]\n\
                 [/P Benutzer:Zugriff [...]] [/D Benutzer [...]]\n\
-  Dateiname            ACLs für angegebene Datei anzeigen.\n\
+  Dateiname            ACLs fÃ¼r angegebene Datei anzeigen.\n\
   /T                   ACLs der angegebenen Datei im aktuellen Verzeichnis\n\
-                       und allen Unterverzeichnissen ändern.\n\
+                       und allen Unterverzeichnissen Ã¤ndern.\n\
   /E                   ACL bearbeiten anstatt sie zu ersetzen.\n\
-  /C                   Ändern der ACLs bei Zugriffsverletzung fortsetzen.\n\
+  /C                   Ã„ndern der ACLs bei Zugriffsverletzung fortsetzen.\n\
   /G Benutzer:Zugriff  Angegebene Zugriffsarten zulassen.\n\
                        Zugriff kann sein: R  Lesen\n\
                                           W  Schreiben\n\
-                                          C  Ändern (Schreiben)\n\
+                                          C  Ã„ndern (Schreiben)\n\
                                           F  Vollzugriff\n\
-  /R Benutzer          Zugriffsrechte des Benutzers aufheben (gültig mit /E).\n\
+  /R Benutzer          Zugriffsrechte des Benutzers aufheben (gÃ¼ltig mit /E).\n\
   /P Benutzer:Zugriff  Zugriffsrechte des Benutzers ersetzen.\n\
                        Zugriff kann sein: N  Kein\n\
                                           R  Lesen\n\
                                           W  Schreiben\n\
-                                          C  Ändern (Schreiben)\n\
+                                          C  Ã„ndern (Schreiben)\n\
                                           F  Vollzugriff\n\
-   /D Benutzer         Zugriff für Benutzer verweigern.\n\
-Platzhalterzeichen (Wildcards) werden für Dateiname unterstützt.\n\
-Mehrere Benutzer können in einem Befehl angegeben werden.\n\n\
-Abkürzungen:\n\
+   /D Benutzer         Zugriff fÃ¼r Benutzer verweigern.\n\
+Platzhalterzeichen (Wildcards) werden fÃ¼r Dateiname unterstÃ¼tzt.\n\
+Mehrere Benutzer kÃ¶nnen in einem Befehl angegeben werden.\n\n\
+AbkÃ¼rzungen:\n\
    CI - Containervererbung.\n\
         Der ACE-Eintrag wird von Verzeichnissen geerbt.\n\
    OI - Objektvererbung.\n\

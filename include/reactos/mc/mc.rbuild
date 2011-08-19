@@ -24,4 +24,8 @@
 	<module name="ntiologc" type="messageheader">
 		<file>ntiologc.mc</file>
 	</module>
+	
+	<module name="sacmsg" type="messageheader">
+		<file>sacmsg.mc</file>
+	</module>
 </group>

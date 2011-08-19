@@ -1,6 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 list(APPEND SOURCE
@@ -10,4 +8,5 @@ list(APPEND SOURCE
     lookupss.c)
     
 add_library(smlib ${SOURCE})
+add_pch(smlib precomp.h)
 add_dependencies(smlib psdk)

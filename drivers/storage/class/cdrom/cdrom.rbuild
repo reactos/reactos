@@ -10,4 +10,5 @@
 	<file>cdrom.c</file>
 	<file>findscsi.c</file>
 	<file>cdrom.rc</file>
+	<pch>precomp.h</pch>
 </module>

@@ -12,13 +12,6 @@ typedef void (*func_ptr) (void);
 extern func_ptr __CTOR_LIST__[];
 extern func_ptr __DTOR_LIST__[];
 
-static HMODULE hMsvcrt = NULL;
-static int free_Msvcrt = 0;
-
-typedef void __cdecl flongjmp(jmp_buf _Buf,int _Value);
-
-flongjmp *fctMsvcrtLongJmp = NULL;
-
 void __do_global_dtors (void);
 void __do_global_ctors (void);
 void __main (void);
@@ -33,12 +26,6 @@ __do_global_dtors (void)
       (*(p)) ();
       p++;
     }
-  if (free_Msvcrt && hMsvcrt)
-    {
-      free_Msvcrt = 0;
-      FreeLibrary (hMsvcrt);
-      hMsvcrt = NULL;
-    }
 }
 
 void
@@ -46,19 +33,6 @@ __do_global_ctors (void)
 {
   unsigned long nptrs = (unsigned long) (ptrdiff_t) __CTOR_LIST__[0];
   unsigned long i;
-
-  if (!hMsvcrt) {
-    hMsvcrt = GetModuleHandleA ("msvcr80.dll");
-    if (!hMsvcrt)
-      hMsvcrt = GetModuleHandleA ("msvcr70.dll");
-    if (!hMsvcrt)
-      hMsvcrt = GetModuleHandleA ("msvcrt.dll");
-    if (!hMsvcrt) {
-      hMsvcrt = LoadLibraryA ("msvcrt.dll");
-      free_Msvcrt = 1;
-    }
-    fctMsvcrtLongJmp = (flongjmp *) GetProcAddress( hMsvcrt, "longjmp");
-  }
 
   if (nptrs == (unsigned long) -1)
     {

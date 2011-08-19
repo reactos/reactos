@@ -40,16 +40,7 @@ TODO:
     Implement Revert
 
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <perhist.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
+#include "precomp.h"
 
 class CTravelEntry :
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,

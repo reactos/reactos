@@ -10,12 +10,12 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDC_MAGNIFIER MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "В&ихід",                      IDM_EXIT
-        MENUITEM "П&араметри",                  IDM_OPTIONS
+        MENUITEM "Р’&РёС…С–Рґ",                      IDM_EXIT
+        MENUITEM "Рџ&Р°СЂР°РјРµС‚СЂРё",                  IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Про програму ...",           IDM_ABOUT
+        MENUITEM "&РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ ...",           IDM_ABOUT
     END
 END
 
@@ -27,46 +27,46 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Про програму"
+CAPTION "РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON            IDI_ICON,IDC_MYICON,14,9,20,20
-    LTEXT           "Екранна лупа Версія 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Р•РєСЂР°РЅРЅР° Р»СѓРїР° Р’РµСЂСЃС–СЏ 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
     PUSHBUTTON      "OK",IDOK,162,48,50,14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Параметри екранної лупи"
+CAPTION "РџР°СЂР°РјРµС‚СЂРё РµРєСЂР°РЅРЅРѕС— Р»СѓРїРё"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Вихід",IDOK,96,161,50,14
-    PUSHBUTTON      "Довідка",IDC_BUTTON_HELP,38,161,50,14
-    LTEXT           "Збільшення:",IDC_STATIC,6,8,68,8
+    DEFPUSHBUTTON   "Р’РёС…С–Рґ",IDOK,96,161,50,14
+    PUSHBUTTON      "Р”РѕРІС–РґРєР°",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "Р—Р±С–Р»СЊС€РµРЅРЅСЏ:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Відстеження",IDC_STATIC,7,25,139,59
-    GROUPBOX        "Подання",IDC_STATIC,7,87,139,57
-    CONTROL         "Відстежувати вказівник миші",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
-    CONTROL         "Відстежувати фокус вводу",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
-    CONTROL         "Відстежувати редагування тексту",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
-    CONTROL         "Обернути кольори",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
-    CONTROL         "Запустити у згорнутому вигляді",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
-    CONTROL         "Показувати вікно екранної лупи",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+    GROUPBOX        "Р’С–РґСЃС‚РµР¶РµРЅРЅСЏ",IDC_STATIC,7,25,139,59
+    GROUPBOX        "РџРѕРґР°РЅРЅСЏ",IDC_STATIC,7,87,139,57
+    CONTROL         "Р’С–РґСЃС‚РµР¶СѓРІР°С‚Рё РІРєР°Р·С–РІРЅРёРє РјРёС€С–",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "Р’С–РґСЃС‚РµР¶СѓРІР°С‚Рё С„РѕРєСѓСЃ РІРІРѕРґСѓ",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "Р’С–РґСЃС‚РµР¶СѓРІР°С‚Рё СЂРµРґР°РіСѓРІР°РЅРЅСЏ С‚РµРєСЃС‚Сѓ",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "РћР±РµСЂРЅСѓС‚Рё РєРѕР»СЊРѕСЂРё",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
+    CONTROL         "Р—Р°РїСѓСЃС‚РёС‚Рё Сѓ Р·РіРѕСЂРЅСѓС‚РѕРјСѓ РІРёРіР»СЏРґС–",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "РџРѕРєР°Р·СѓРІР°С‚Рё РІС–РєРЅРѕ РµРєСЂР°РЅРЅРѕС— Р»СѓРїРё",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
 END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Екранна лупа ReactOS"
+CAPTION "Р•РєСЂР°РЅРЅР° Р»СѓРїР° ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Екранна лупа надає лише мінімальний обсяг можливостей для людей із порушенням зору. Більшості таких користувачів доцільно застосовувати спеціальні програми з більш широкими можливостями.",IDC_STATIC,36,7,207,33
-    CONTROL         "Більше не показувати це повідомлення",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+    LTEXT           "Р•РєСЂР°РЅРЅР° Р»СѓРїР° РЅР°РґР°С” Р»РёС€Рµ РјС–РЅС–РјР°Р»СЊРЅРёР№ РѕР±СЃСЏРі РјРѕР¶Р»РёРІРѕСЃС‚РµР№ РґР»СЏ Р»СЋРґРµР№ С–Р· РїРѕСЂСѓС€РµРЅРЅСЏРј Р·РѕСЂСѓ. Р‘С–Р»СЊС€РѕСЃС‚С– С‚Р°РєРёС… РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ РґРѕС†С–Р»СЊРЅРѕ Р·Р°СЃС‚РѕСЃРѕРІСѓРІР°С‚Рё СЃРїРµС†С–Р°Р»СЊРЅС– РїСЂРѕРіСЂР°РјРё Р· Р±С–Р»СЊС€ С€РёСЂРѕРєРёРјРё РјРѕР¶Р»РёРІРѕСЃС‚СЏРјРё.",IDC_STATIC,36,7,207,33
+    CONTROL         "Р‘С–Р»СЊС€Рµ РЅРµ РїРѕРєР°Р·СѓРІР°С‚Рё С†Рµ РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Екранна лупа"
+    IDS_APP_TITLE           "Р•РєСЂР°РЅРЅР° Р»СѓРїР°"
 END

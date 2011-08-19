@@ -24,4 +24,6 @@
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
 	</directory>
+
+	<pch>stdafx.h</pch>
 </module>

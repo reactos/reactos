@@ -63,6 +63,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
+            /* Stop listening to incoming RPC messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -463,7 +465,7 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime, DWORD * pEventTime)
 
     SystemTimeToFileTime(pSystemTime, &Time.ft);
     SystemTimeToFileTime(&st1970, &u1970.ft);
-    *pEventTime = (Time.ll - u1970.ll) / 10000000;
+    *pEventTime = (DWORD)((Time.ll - u1970.ll) / 10000000ull);
 }
 
 VOID PRINT_HEADER(PEVENTLOGHEADER header)

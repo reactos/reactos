@@ -10,7 +10,6 @@ ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
 
-echo ARCH $ARCH ROS $ROS_ARCH
 if [ "$REACTOS_SOURCE_DIR" == "$PWD" ]
 then
   echo Creating directories in $REACTOS_OUTPUT_PATH
@@ -31,8 +30,14 @@ fi
 REACTOS_BUILD_TOOLS_DIR="$PWD"
 cmake -G "Unix Makefiles" -DARCH=$ARCH "$REACTOS_SOURCE_DIR"
 
+echo Preparing reactos...
 cd ../reactos
-cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" "$REACTOS_SOURCE_DIR"
+if [ -f CMakeCache.txt ]
+then
+  rm -f CMakeCache.txt
+fi
 
-echo Configure script complete! Enter directories and execute appropriate build commands(ex: make, makex, etc...).
+cmake -G "Unix Makefiles" -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" "$REACTOS_SOURCE_DIR"
+
+echo Configure script complete! Enter directories and execute appropriate build commands\(ex: make, makex, etc...\).
 

@@ -17,4 +17,5 @@
 	<file>mmixer.c</file>
 	<file>sup.c</file>
 	<file>wdmaud.rc</file>
+	<pch>wdmaud.h</pch>
 </module>

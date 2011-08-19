@@ -6,46 +6,46 @@ IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-  LTEXT         "Шрифт:", IDC_STATIC, 6, 7, 27, 9
+  LTEXT         "РЁСЂРёС„С‚:", IDC_STATIC, 6, 7, 27, 9
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
-  PUSHBUTTON    "Справка", IDC_CMHELP, 249, 5, 35, 13
+  PUSHBUTTON    "РЎРїСЂР°РІРєР°", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
-  LTEXT         "Копировать символ:", IDC_STATIC, 6, 188, 95, 9
+  LTEXT         "РљРѕРїРёСЂРѕРІР°С‚СЊ СЃРёРјРІРѕР»:", IDC_STATIC, 6, 188, 95, 9
   CONTROL       "",IDC_TEXTBOX,RICHEDIT_CLASS,ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-  DEFPUSHBUTTON "Выбрать", IDC_SELECT, 194, 186, 44, 13
-  PUSHBUTTON    "Копировать", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
-  CONTROL       "Расширенный вид",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
+  DEFPUSHBUTTON "Р’С‹Р±СЂР°С‚СЊ", IDC_SELECT, 194, 186, 44, 13
+  PUSHBUTTON    "РљРѕРїРёСЂРѕРІР°С‚СЊ", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+  CONTROL       "Р Р°СЃС€РёСЂРµРЅРЅС‹Р№ РІРёРґ",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
 END
 
 IDD_ADVANCED DIALOGEX  0, 0, 292, 64
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT         "Набор символов:",IDC_STATIC,8,8,55,8
+  LTEXT         "РќР°Р±РѕСЂ СЃРёРјРІРѕР»РѕРІ:",IDC_STATIC,8,8,55,8
   COMBOBOX      IDC_COMBO_CHARSET,72,4,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT         "Группировать за:",IDC_STATIC,8,28,50,8
+  LTEXT         "Р“СЂСѓРїРїРёСЂРѕРІР°С‚СЊ Р·Р°:",IDC_STATIC,8,28,50,8
   COMBOBOX      IDC_COMBO_GROUPBY,72,24,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  PUSHBUTTON    "Найти",IDC_BUTTON_SEARCH,200,44,50,14
+  PUSHBUTTON    "РќР°Р№С‚Рё",IDC_BUTTON_SEARCH,200,44,50,14
   EDITTEXT      IDC_EDIT_SEARCH,72,44,116,14,ES_AUTOHSCROLL
-  LTEXT         "Искать:",IDC_STATIC,8,48,42,8
-  LTEXT         "Юникод:",IDC_STATIC,200,8,30,8
+  LTEXT         "РСЃРєР°С‚СЊ:",IDC_STATIC,8,48,42,8
+  LTEXT         "Р®РЅРёРєРѕРґ:",IDC_STATIC,200,8,30,8
   EDITTEXT      IDC_EDIT_UNICODE,236,4,28,12,ES_AUTOHSCROLL
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "О Таблице символов"
+CAPTION "Рћ РўР°Р±Р»РёС†Рµ СЃРёРјРІРѕР»РѕРІ"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "Таблица символов v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON    "Закрыть", IDOK, 75, 162, 44, 15
+  LTEXT         "РўР°Р±Р»РёС†Р° СЃРёРјРІРѕР»РѕРІ v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "Р—Р°РєСЂС‹С‚СЊ", IDOK, 75, 162, 44, 15
   ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE   "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-  IDS_ABOUT     "&О программе..."
-  IDS_TITLE     "Таблица символов"
+  IDS_LICENSE   "Р­С‚Р° РїСЂРѕРіСЂР°РјРјР° СЏРІР»СЏРµС‚СЃСЏ СЃРІРѕР±РѕРґРЅРѕ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕР№; Р’С‹ РјРѕР¶РµС‚Рµ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏС‚СЊ РµРµ РїРѕРІС‚РѕСЂРЅРѕ Рё (РёР»Рё) РёР·РјРµРЅСЏС‚СЊ, СЃРѕР±Р»СЋРґР°СЏ СѓСЃР»РѕРІРёСЏ РћС‚РєСЂС‹С‚РѕРіРѕ Р»РёС†РµРЅР·РёРѕРЅРЅРѕРіРѕ СЃРѕРіР»Р°С€РµРЅРёСЏ GNU, РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅРѕРіРѕ Р¤РѕРЅРґРѕРј СЃРІРѕР±РѕРґРЅРѕ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕРіРѕ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ; Р»РёР±Рѕ СЂРµРґР°РєС†РёРё 2 РЎРѕРіР»Р°С€РµРЅРёСЏ, Р»РёР±Рѕ (РЅР° РІР°С€Рµ СѓСЃРјРѕС‚СЂРµРЅРёРµ) Р»СЋР±РѕР№ СЂРµРґР°РєС†РёРё, РІС‹РїСѓС‰РµРЅРЅРѕР№ РїРѕР·Р¶Рµ.\r\n\r\nР­С‚Р° РїСЂРѕРіСЂР°РјРјР° СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ РІ РЅР°РґРµР¶РґРµ РЅР° С‚Рѕ, С‡С‚Рѕ РѕРЅР° РѕРєР°Р¶РµС‚СЃСЏ РїРѕР»РµР·РЅРѕР№, РЅРѕ Р‘Р•Р— РљРђРљРРҐ-Р›РР‘Рћ Р“РђР РђРќРўРР™, РІРєР»СЋС‡Р°СЏ РїРѕРґСЂР°Р·СѓРјРµРІР°РµРјСѓСЋ РіР°СЂР°РЅС‚РёСЋ РљРђР§Р•РЎРўР’Рђ Р»РёР±Рѕ РџР РР“РћР”РќРћРЎРўР Р”Р›РЇ РћРџР Р•Р”Р•Р›Р•РќРќР«РҐ Р¦Р•Р›Р•Р™. РџРѕРґСЂРѕР±РЅРѕСЃС‚Рё СЃРѕРґРµСЂР¶Р°С‚СЃСЏ РІ РћС‚РєСЂС‹С‚РѕРј Р»РёС†РµРЅР·РёРѕРЅРЅРѕРј СЃРѕРіР»Р°С€РµРЅРёРё GNU.\r\n\r\nР’РјРµСЃС‚Рµ СЃ СЌС‚РѕР№ РїСЂРѕРіСЂР°РјРјРѕР№ РґРѕР»Р¶РµРЅ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏС‚СЊСЃСЏ СЌРєР·РµРјРїР»СЏСЂ РћС‚РєСЂС‹С‚РѕРіРѕ Р»РёС†РµРЅР·РёРѕРЅРЅРѕРіРѕ СЃРѕРіР»Р°С€РµРЅРёСЏ GNU, РµСЃР»Рё РѕРЅ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚, СЃРѕРѕР±С‰РёС‚Рµ РѕР± СЌС‚РѕРј РІ Р¤РѕРЅРґ СЃРІРѕР±РѕРґРЅРѕ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕРіРѕ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_ABOUT     "&Рћ РїСЂРѕРіСЂР°РјРјРµ..."
+  IDS_TITLE     "РўР°Р±Р»РёС†Р° СЃРёРјРІРѕР»РѕРІ"
 END

@@ -1,6 +1,5 @@
 
-#include <windows.h>
-#include "utility.h"
+#include "precomp.h"
 
 void *operator new(size_t size)
 {

@@ -1,5 +1,5 @@
-#ifndef _WINNLS_H
-#define _WINNLS_H
+#ifndef _WINNLS_
+#define _WINNLS_
 
 #ifdef __cplusplus
 extern "C" {

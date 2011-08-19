@@ -24,7 +24,7 @@ list(APPEND SOURCE
     volume.c
     fastfat.rc)
 
-add_library(fastfat_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/fastfat_new_fastfat.h.gch ${SOURCE})
+add_library(fastfat_new SHARED ${SOURCE})
 
 set_module_type(fastfat_new kernelmodedriver)
 
@@ -34,4 +34,4 @@ target_link_libraries(fastfat_new
 
 add_importlibs(fastfat_new ntoskrnl hal)
 
-add_pch(fastfat_new ${CMAKE_CURRENT_SOURCE_DIR}/fastfat.h ${SOURCE})
+add_pch(fastfat_new fastfat.h)

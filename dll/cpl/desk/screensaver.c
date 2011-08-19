@@ -460,6 +460,7 @@ static VOID
 SetScreenSaver(HWND hwndDlg, PDATA pData)
 {
     HKEY regKey;
+    BOOL DeleteMode = FALSE;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER,
                      _T("Control Panel\\Desktop"),
@@ -486,6 +487,7 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
         {
             /* Windows deletes the value if no screensaver is set */
             RegDeleteValue(regKey, _T("SCRNSAVE.EXE"));
+            DeleteMode = TRUE;
         }
 
         /* set the screensaver time delay */
@@ -505,6 +507,10 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
                       REG_SZ,
                       (PBYTE)szTime,
                       _tcslen(szTime) * sizeof(TCHAR));
+
+        if (DeleteMode) Time = 0;
+
+        SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, Time, 0, SPIF_SENDCHANGE);
 
         /* set the secure value */
         Ret = SendDlgItemMessage(hwndDlg,

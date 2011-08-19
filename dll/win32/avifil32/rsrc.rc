@@ -45,7 +45,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "avifile_Pl.rc"
 #include "avifile_Sv.rc"
 #include "avifile_Tr.rc"
-#include "avifile_Uk.rc"
 
 /* UTF-8 */
 #include "avifile_Da.rc"
@@ -58,5 +57,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "avifile_Ro.rc"
 #include "avifile_Ru.rc"
 #include "avifile_Si.rc"
+#include "avifile_Uk.rc"
 #include "avifile_Zh.rc"
 #include "avifile_Bg.rc"

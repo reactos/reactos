@@ -20,7 +20,7 @@
 #include <tchar.h>
 #include <sect_attribs.h>
 #include <locale.h>
-#include <intrin.h>
+#include <malloc.h>
 
 #ifndef __winitenv
 extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
@@ -33,7 +33,7 @@ extern char *** __MINGW_IMP_SYMBOL(__initenv);
 #endif
 
 /* Hack, for bug in ld.  Will be removed soon.  */
-#ifndef _MSC_VER
+#if defined(__GNUC__)
 #define __ImageBase __MINGW_LSYMBOL(_image_base__)
 #endif
 
@@ -49,6 +49,8 @@ __declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *)
 extern int * __MINGW_IMP_SYMBOL(_fmode);
 extern int * __MINGW_IMP_SYMBOL(_commode);
 
+#undef _fmode
+extern int _fmode;
 extern int * __MINGW_IMP_SYMBOL(_commode);
 #define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;
@@ -58,7 +60,9 @@ int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
 #else
 int __declspec(selectany) _MINGW_INSTALL_DEBUG_MATHERR = 0;
 #endif
+
 extern int __defaultmatherr;
+
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
 
 static int __cdecl check_managed_app (void);
@@ -81,8 +85,13 @@ _TCHAR *__mingw_winmain_lpCmdLine;
 DWORD __mingw_winmain_nShowCmd;
 
 static int argc;
-#ifdef WPRFLAG
+
+#if defined(__GNUC__)
 extern void __main(void);
+extern void _pei386_runtime_relocator (void);
+#endif
+
+#ifdef WPRFLAG
 static wchar_t **argv;
 static wchar_t **envp;
 #else
@@ -95,10 +104,10 @@ static int mainret=0;
 static int managedapp;
 static int has_cctor = 0;
 static _startupinfo startinfo;
-static LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler = NULL;
+extern LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler;
 
-extern void _pei386_runtime_relocator (void);
-static long CALLBACK _gnu_exception_handler (EXCEPTION_POINTERS * exception_data);
+
+long CALLBACK _gnu_exception_handler (EXCEPTION_POINTERS * exception_data);
 #ifdef WPRFLAG
 static void duplicate_ppstrings (int ac, wchar_t ***av);
 #else
@@ -131,11 +140,7 @@ pre_c_init (void)
 #endif
   if (_MINGW_INSTALL_DEBUG_MATHERR)
     {
-      if (! __defaultmatherr)
-	{
-	  __setusermatherr (_matherr);
-	  __defaultmatherr = 1;
-	}
+      __setusermatherr (_matherr);
     }
 
   if (__globallocalestatus == -1)
@@ -162,9 +167,24 @@ int WinMainCRTStartup (void);
 
 int WinMainCRTStartup (void)
 {
+  int ret = 255;
+#ifdef __SEH__
+  asm ("\t.l_startw:\n"
+    "\t.seh_handler __C_specific_handler, @except\n"
+    "\t.seh_handlerdata\n"
+    "\t.long 1\n"
+    "\t.rva .l_startw, .l_endw, _gnu_exception_handler ,.l_endw\n"
+    "\t.text"
+    );
+#endif
   mingw_app_type = 1;
   __security_init_cookie ();
-  return __tmainCRTStartup ();
+  ret = __tmainCRTStartup ();
+#ifdef __SEH__
+  asm ("\tnop\n"
+    "\t.l_endw: nop\n");
+#endif
+  return ret;
 }
 
 int mainCRTStartup (void);
@@ -175,9 +195,24 @@ int __mingw_init_ehandler (void);
 
 int mainCRTStartup (void)
 {
+  int ret = 255;
+#ifdef __SEH__
+  asm ("\t.l_start:\n"
+    "\t.seh_handler __C_specific_handler, @except\n"
+    "\t.seh_handlerdata\n"
+    "\t.long 1\n"
+    "\t.rva .l_start, .l_end, _gnu_exception_handler ,.l_end\n"
+    "\t.text"
+    );
+#endif
   mingw_app_type = 0;
   __security_init_cookie ();
-  return __tmainCRTStartup ();
+  ret = __tmainCRTStartup ();
+#ifdef __SEH__
+  asm ("\tnop\n"
+    "\t.l_end: nop\n");
+#endif
+  return ret;
 }
 
 static
@@ -188,7 +223,16 @@ __tmainCRTStartup (void)
   STARTUPINFO StartupInfo;
   WINBOOL inDoubleQuote = FALSE;
   memset (&StartupInfo, 0, sizeof (STARTUPINFO));
-  
+
+#if !defined(_WIN64) && defined(__GNUC__)
+  /* We need to make sure that this function is build with frame-pointer
+     and that we align the stack to 16 bytes for the sake of SSE ops in main
+     or in functions inlined into main.  */
+  lpszCommandLine = (_TCHAR *) alloca (32);
+  memset (lpszCommandLine, 0xcc, 32);
+  asm  __volatile__  ("andl $-16, %%esp" : : : "%esp");
+#endif
+
   if (mingw_app_type)
     GetStartupInfo (&StartupInfo);
   {
@@ -229,9 +273,11 @@ __tmainCRTStartup (void)
     if (__dyn_tls_init_callback != NULL)
       __dyn_tls_init_callback (NULL, DLL_THREAD_ATTACH, NULL);
     
+#if defined(__GNUC__)
     _pei386_runtime_relocator ();
+#endif
     __mingw_oldexcpt_handler = SetUnhandledExceptionFilter (_gnu_exception_handler);
-#ifdef _WIN64
+#if defined(_WIN64) && !defined(_MSC_VER)
     __mingw_init_ehandler ();
 #endif
     __mingw_prepare_except_for_msvcr80_and_higher ();
@@ -241,37 +287,39 @@ __tmainCRTStartup (void)
     if (mingw_app_type)
       {
 #ifdef WPRFLAG
-    lpszCommandLine = (_TCHAR *) _wcmdln;
+	lpszCommandLine = (_TCHAR *) _wcmdln;
 #else
-    lpszCommandLine = (char *) _acmdln;
+	lpszCommandLine = (char *) _acmdln;
 #endif
-    while (*lpszCommandLine > SPACECHAR || (*lpszCommandLine&&inDoubleQuote))
-      {
-	if (*lpszCommandLine == DQUOTECHAR)
-	  inDoubleQuote = !inDoubleQuote;
-#ifdef _MBCS
-	if (_ismbblead (*lpszCommandLine))
+	while (*lpszCommandLine > SPACECHAR || (*lpszCommandLine && inDoubleQuote))
 	  {
-	    if (lpszCommandLine) /* FIXME: Why this check? Should I check for *lpszCommandLine != 0 too? */
-	      lpszCommandLine++;
-	  }
+	    if (*lpszCommandLine == DQUOTECHAR)
+	      inDoubleQuote = !inDoubleQuote;
+#ifdef _MBCS
+	    if (_ismbblead (*lpszCommandLine))
+	      {
+		if (lpszCommandLine) /* FIXME: Why this check? Should I check for *lpszCommandLine != 0 too? */
+		  lpszCommandLine++;
+	      }
 #endif
-	++lpszCommandLine;
-      }
-    while (*lpszCommandLine && (*lpszCommandLine <= SPACECHAR))
-      lpszCommandLine++;
+	    ++lpszCommandLine;
+	  }
+	while (*lpszCommandLine && (*lpszCommandLine <= SPACECHAR))
+	  lpszCommandLine++;
 
-    __mingw_winmain_hInstance = (HINSTANCE) &__ImageBase;
-    __mingw_winmain_lpCmdLine = lpszCommandLine;
-    __mingw_winmain_nShowCmd = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ?
-				StartupInfo.wShowWindow : SW_SHOWDEFAULT;
-    }
+	__mingw_winmain_hInstance = (HINSTANCE) &__ImageBase;
+	__mingw_winmain_lpCmdLine = lpszCommandLine;
+	__mingw_winmain_nShowCmd = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ?
+				    StartupInfo.wShowWindow : SW_SHOWDEFAULT;
+      }
     duplicate_ppstrings (argc, &argv);
+#if defined(__GNUC__)
+    __main ();
+#endif
 #ifdef WPRFLAG
     __winitenv = envp;
     /* C++ initialization.
        gcc inserts this call automatically for a function called main, but not for wmain.  */
-    __main ();
     mainret = wmain (argc, argv, envp);
 #else
     __initenv = envp;
@@ -327,97 +375,6 @@ check_managed_app (void)
       return !! pNTHeader64->DataDirectory[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR].VirtualAddress;
     }
   return 0;
-}
-
-static long CALLBACK
-_gnu_exception_handler (EXCEPTION_POINTERS *exception_data)
-{
-  void (*old_handler) (int);
-  long action = EXCEPTION_CONTINUE_SEARCH;
-  int reset_fpu = 0;
-
-  switch (exception_data->ExceptionRecord->ExceptionCode)
-    {
-    case EXCEPTION_ACCESS_VIOLATION:
-      /* test if the user has set SIGSEGV */
-      old_handler = signal (SIGSEGV, SIG_DFL);
-      if (old_handler == SIG_IGN)
-	{
-	  /* this is undefined if the signal was raised by anything other
-	     than raise ().  */
-	  signal (SIGSEGV, SIG_IGN);
-	  action = EXCEPTION_CONTINUE_EXECUTION;
-	}
-      else if (old_handler != SIG_DFL)
-	{
-	  /* This means 'old' is a user defined function. Call it */
-	  (*old_handler) (SIGSEGV);
-	  action = EXCEPTION_CONTINUE_EXECUTION;
-	}
-      break;
-
-    case EXCEPTION_ILLEGAL_INSTRUCTION:
-    case EXCEPTION_PRIV_INSTRUCTION:
-      /* test if the user has set SIGILL */
-      old_handler = signal (SIGILL, SIG_DFL);
-      if (old_handler == SIG_IGN)
-	{
-	  /* this is undefined if the signal was raised by anything other
-	     than raise ().  */
-	  signal (SIGILL, SIG_IGN);
-	  action = EXCEPTION_CONTINUE_EXECUTION;
-	}
-      else if (old_handler != SIG_DFL)
-	{
-	  /* This means 'old' is a user defined function. Call it */
-	  (*old_handler) (SIGILL);
-	  action = EXCEPTION_CONTINUE_EXECUTION;
-	}
-      break;
-
-    case EXCEPTION_FLT_INVALID_OPERATION:
-    case EXCEPTION_FLT_DIVIDE_BY_ZERO:
-    case EXCEPTION_FLT_DENORMAL_OPERAND:
-    case EXCEPTION_FLT_OVERFLOW:
-    case EXCEPTION_FLT_UNDERFLOW:
-    case EXCEPTION_FLT_INEXACT_RESULT:
-      reset_fpu = 1;
-      /* fall through. */
-
-    case EXCEPTION_INT_DIVIDE_BY_ZERO:
-      /* test if the user has set SIGFPE */
-      old_handler = signal (SIGFPE, SIG_DFL);
-      if (old_handler == SIG_IGN)
-	{
-	  signal (SIGFPE, SIG_IGN);
-	  if (reset_fpu)
-	    _fpreset ();
-	  action = EXCEPTION_CONTINUE_EXECUTION;
-	}
-      else if (old_handler != SIG_DFL)
-	{
-	  /* This means 'old' is a user defined function. Call it */
-	  (*old_handler) (SIGFPE);
-	  action = EXCEPTION_CONTINUE_EXECUTION;
-	}
-      break;
-#ifdef _WIN64
-    case EXCEPTION_DATATYPE_MISALIGNMENT:
-    case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
-    case EXCEPTION_FLT_STACK_CHECK:
-    case EXCEPTION_INT_OVERFLOW:
-    case EXCEPTION_INVALID_HANDLE:
-    /*case EXCEPTION_POSSIBLE_DEADLOCK: */
-      action = EXCEPTION_CONTINUE_EXECUTION;
-      break;
-#endif
-    default:
-      break;
-    }
-
-  if (action == EXCEPTION_CONTINUE_SEARCH && __mingw_oldexcpt_handler)
-    action = (*__mingw_oldexcpt_handler)(exception_data);
-  return action;
 }
 
 #ifdef WPRFLAG
@@ -477,8 +434,8 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
 				 uintptr_t __UNUSED_PARAM(pReserved))
 {
 #ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
-   wprintf(L"Invalid parameter detected in function %s. File: %s Line: %d\n", function, file, line);
-   wprintf(L"Expression: %s\n", expression);
+  wprintf(L"Invalid parameter detected in function %s. File: %s Line: %d\n", function, file, line);
+  wprintf(L"Expression: %s\n", expression);
 #endif
 }
 

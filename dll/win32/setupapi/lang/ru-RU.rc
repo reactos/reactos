@@ -22,20 +22,20 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Копирование файлов..."
+CAPTION "РљРѕРїРёСЂРѕРІР°РЅРёРµ С„Р°Р№Р»РѕРІ..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "Отмена", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-	LTEXT "Откуда:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	LTEXT "РћС‚РєСѓРґР°:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-	LTEXT "Куда:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+	LTEXT "РљСѓРґР°:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
 	CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUERY_REBOOT_TEXT        "Ваш компьютер должен быть перезагружен, чтобы завершить установку. Продолжить?"
-	IDS_QUERY_REBOOT_CAPTION     "Перезагрузка"
-	IDS_INF_FILE                 "Информация для установки"
+	IDS_QUERY_REBOOT_TEXT        "Р’Р°С€ РєРѕРјРїСЊСЋС‚РµСЂ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїРµСЂРµР·Р°РіСЂСѓР¶РµРЅ, С‡С‚РѕР±С‹ Р·Р°РІРµСЂС€РёС‚СЊ СѓСЃС‚Р°РЅРѕРІРєСѓ. РџСЂРѕРґРѕР»Р¶РёС‚СЊ?"
+	IDS_QUERY_REBOOT_CAPTION     "РџРµСЂРµР·Р°РіСЂСѓР·РєР°"
+	IDS_INF_FILE                 "РРЅС„РѕСЂРјР°С†РёСЏ РґР»СЏ СѓСЃС‚Р°РЅРѕРІРєРё"
 END

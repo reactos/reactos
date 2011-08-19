@@ -8,7 +8,6 @@
  */
 
 #include "serenum.h"
-#include <stdarg.h>
 
 static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
 

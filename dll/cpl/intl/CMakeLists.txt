@@ -2,8 +2,6 @@
 set_unicode()
 set_rc_compiler()
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 spec2def(intl.cpl intl.spec)
 
 add_library(intl SHARED
@@ -32,4 +30,5 @@ add_importlibs(intl
     shell32
     kernel32)
 
+add_pch(intl intl.h)
 add_cd_file(TARGET intl DESTINATION reactos/system32 FOR all)

@@ -11,15 +11,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <sndnames.h>
-#include <sndtypes.h>
-
-#include <mmebuddy.h>
-#include <mment4.h>
+#include "precomp.h"
 
 /*
     This is the "nice" way to discover audio devices in NT4 - go into the

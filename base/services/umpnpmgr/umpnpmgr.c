@@ -536,13 +536,32 @@ DWORD PNP_GetDeviceRegProp(
     PLUGPLAY_CONTROL_PROPERTY_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     LPWSTR lpValueName = NULL;
-    HKEY hKey = 0;
+    HKEY hKey = NULL;
+    LONG lError;
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDeviceRegProp() called\n");
+
+    if (pulTransferLen == NULL || pulLength == NULL)
+    {
+        ret = CR_INVALID_POINTER;
+        goto done;
+    }
+
+    if (ulFlags != 0)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    /* FIXME: Check pDeviceID */
+
+    if (*pulLength < *pulTransferLen)
+        *pulLength = *pulTransferLen;
+
+    *pulTransferLen = 0;
 
     switch (ulProperty)
     {
@@ -626,8 +645,65 @@ DWORD PNP_GetDeviceRegProp(
             lpValueName = NULL;
             break;
 
+        case CM_DRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_DRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        case CM_DRP_ADDRESS:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            lpValueName = L"UINumberDescFormat";
+            break;
+
+        case CM_DRP_DEVICE_POWER_DATA:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+            lpValueName = L"RemovalPolicy";
+            break;
+
+        case CM_DRP_INSTALL_STATE:
+            lpValueName = NULL;
+            break;
+
+#if (WINVER >= _WIN32_WINNT_WS03)
+        case CM_DRP_LOCATION_PATHS:
+            lpValueName = NULL;
+            break;
+#endif
+
+#if (WINVER >= _WIN32_WINNT_WIN7)
+        case CM_DRP_BASE_CONTAINERID:
+            lpValueName = NULL;
+            break;
+#endif
+
         default:
-            return CR_INVALID_PROPERTY;
+            ret = CR_INVALID_PROPERTY;
+            goto done;
     }
 
     DPRINT("Value name: %S\n", lpValueName);
@@ -635,24 +711,37 @@ DWORD PNP_GetDeviceRegProp(
     if (lpValueName)
     {
         /* Retrieve information from the Registry */
-        if (RegOpenKeyExW(hEnumKey,
-                          pDeviceID,
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hKey))
-            return CR_INVALID_DEVNODE;
+        lError = RegOpenKeyExW(hEnumKey,
+                               pDeviceID,
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
+        if (lError != ERROR_SUCCESS)
+        {
+            hKey = NULL;
+            *pulLength = 0;
+            ret = CR_INVALID_DEVNODE;
+            goto done;
+        }
 
-        if (RegQueryValueExW(hKey,
-                             lpValueName,
-                             NULL,
-                             pulRegDataType,
-                             Buffer,
-                             pulLength))
-            ret = CR_REGISTRY_ERROR;
-
-        /* FIXME: Check buffer size */
-
-        RegCloseKey(hKey);
+        lError = RegQueryValueExW(hKey,
+                                  lpValueName,
+                                  NULL,
+                                  pulRegDataType,
+                                  Buffer,
+                                  pulLength);
+        if (lError != ERROR_SUCCESS)
+        {
+            if (lError == ERROR_MORE_DATA)
+            {
+                ret = CR_BUFFER_SMALL;
+            }
+            else
+            {
+                *pulLength = 0;
+                ret = CR_NO_SUCH_VALUE;
+            }
+        }
     }
     else
     {
@@ -660,35 +749,68 @@ DWORD PNP_GetDeviceRegProp(
         RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                              pDeviceID);
         PlugPlayData.Buffer = Buffer;
-        PlugPlayData.BufferSize = *pulTransferLen;
+        PlugPlayData.BufferSize = *pulLength;
 
         switch (ulProperty)
         {
-#if 0
             case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
-                PlugPlayData.Property = DevicePropertyPhysicalDeviceObjectName;
+                PlugPlayData.Property = 0xb; // DevicePropertyPhysicalDeviceObjectName;
                 break;
 
             case CM_DRP_UI_NUMBER:
-                PlugPlayData.Property = DevicePropertyUINumber;
+                PlugPlayData.Property = 0x11; // DevicePropertyUINumber;
                 break;
 
             case CM_DRP_BUSTYPEGUID:
-                PlugPlayData.Property = DevicePropertyBusTypeGuid;
+                PlugPlayData.Property = 0xc; // DevicePropertyBusTypeGuid;
                 break;
 
             case CM_DRP_LEGACYBUSTYPE:
-                PlugPlayData.Property = DevicePropertyLegacyBusType;
+                PlugPlayData.Property = 0xd; // DevicePropertyLegacyBusType;
                 break;
 
             case CM_DRP_BUSNUMBER:
-                PlugPlayData.Property = DevicePropertyBusNumber;
+                PlugPlayData.Property = 0xe; // DevicePropertyBusNumber;
                 break;
-#endif
 
             case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = 15; //DevicePropertyEnumeratorName;
+                PlugPlayData.Property = 0xf; // DevicePropertyEnumeratorName;
                 break;
+
+            case CM_DRP_ADDRESS:
+                PlugPlayData.Property = 0x10; // DevicePropertyAddress;
+                break;
+
+#if 0
+            /* FIXME: This property is not supported by IoGetDeviceProperty */
+            case CM_DRP_DEVICE_POWER_DATA:
+#endif
+
+            case CM_DRP_REMOVAL_POLICY:
+                PlugPlayData.Property = 0x12; // DevicePropertyRemovalPolicy
+                break;
+
+#if 0
+            /* FIXME: This property is not supported by IoGetDeviceProperty */
+            case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
+#endif
+
+            case CM_DRP_INSTALL_STATE:
+                PlugPlayData.Property = 0x12; // DevicePropertyInstallState;
+                break;
+
+#if 0
+            /* FIXME: This property is not supported by IoGetDeviceProperty */
+#if (WINVER >= _WIN32_WINNT_WS03)
+            case CM_DRP_LOCATION_PATHS:
+#endif
+#endif
+
+#if (WINVER >= _WIN32_WINNT_WIN7)
+            case CM_DRP_BASE_CONTAINERID:
+                PlugPlayData.Property = 0x16; // DevicePropertyContainerID;
+                break;
+#endif
 
             default:
                 return CR_INVALID_PROPERTY;
@@ -706,6 +828,12 @@ DWORD PNP_GetDeviceRegProp(
             ret = NtStatusToCrError(Status);
         }
     }
+
+done:
+    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
+
+    if (hKey != NULL)
+        RegCloseKey(hKey);
 
     DPRINT("PNP_GetDeviceRegProp() done (returns %lx)\n", ret);
 
@@ -791,6 +919,30 @@ DWORD PNP_SetDeviceRegProp(
             lpValueName = L"LowerFilters";
             break;
 
+        case CM_DRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_DRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            lpValueName = L"UINumberDescFormat";
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+            lpValueName = L"RemovalPolicy";
+            break;
+
         default:
             return CR_INVALID_PROPERTY;
     }
@@ -800,7 +952,7 @@ DWORD PNP_SetDeviceRegProp(
     if (RegOpenKeyExW(hEnumKey,
                       pDeviceId,
                       0,
-                      KEY_ALL_ACCESS, /* FIXME: so much? */
+                      KEY_SET_VALUE,
                       &hKey))
         return CR_INVALID_DEVNODE;
 
@@ -1085,23 +1237,213 @@ DWORD PNP_GetClassRegProp(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpValueName = NULL;
+    HKEY hInstKey = NULL;
+    HKEY hPropKey = NULL;
+    LONG lError;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetClassRegProp() called\n");
+
+    if (pulTransferLen == NULL || pulLength == NULL)
+    {
+        ret = CR_INVALID_POINTER;
+        goto done;
+    }
+
+    if (ulFlags != 0)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    if (*pulLength < *pulTransferLen)
+        *pulLength = *pulTransferLen;
+
+    *pulTransferLen = 0;
+
+    switch (ulProperty)
+    {
+        case CM_CRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_CRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_CRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_CRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        default:
+            ret = CR_INVALID_PROPERTY;
+            goto done;
+    }
+
+    DPRINT("Value name: %S\n", lpValueName);
+
+    lError = RegOpenKeyExW(hClassKey,
+                           pszClassGuid,
+                           0,
+                           KEY_READ,
+                           &hInstKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        *pulLength = 0;
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+        goto done;
+    }
+
+    lError = RegOpenKeyExW(hInstKey,
+                           L"Properties",
+                           0,
+                           KEY_READ,
+                           &hPropKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        *pulLength = 0;
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+        goto done;
+    }
+
+    lError = RegQueryValueExW(hPropKey,
+                              lpValueName,
+                              NULL,
+                              pulRegDataType,
+                              Buffer,
+                              pulLength);
+    if (lError != ERROR_SUCCESS)
+    {
+        if (lError == ERROR_MORE_DATA)
+        {
+            ret = CR_BUFFER_SMALL;
+        }
+        else
+        {
+            *pulLength = 0;
+            ret = CR_NO_SUCH_VALUE;
+        }
+    }
+
+done:;
+    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
+
+    if (hPropKey != NULL)
+        RegCloseKey(hPropKey);
+
+    if (hInstKey != NULL)
+        RegCloseKey(hInstKey);
+
+    DPRINT("PNP_GetClassRegProp() done (returns %lx)\n", ret);
+
+    return ret;
 }
 
 
 /* Function 27 */
 DWORD PNP_SetClassRegProp(
     handle_t hBinding,
-    LPWSTR *pszClassGuid,
+    LPWSTR pszClassGuid,
     DWORD ulProperty,
     DWORD ulDataType,
     BYTE *Buffer,
     PNP_PROP_SIZE ulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpValueName = NULL;
+    HKEY hInstKey = 0;
+    HKEY hPropKey = 0;
+    LONG lError;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_SetClassRegProp() called\n");
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    switch (ulProperty)
+    {
+        case CM_CRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_CRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_CRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_CRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        default:
+            return CR_INVALID_PROPERTY;
+    }
+
+    lError = RegOpenKeyExW(hClassKey,
+                           pszClassGuid,
+                           0,
+                           KEY_WRITE,
+                           &hInstKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+        goto done;
+    }
+
+    /* FIXME: Set security descriptor */
+    lError = RegCreateKeyExW(hInstKey,
+                             L"Properties",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hPropKey,
+                             NULL);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    if (ulLength == 0)
+    {
+        if (RegDeleteValueW(hPropKey,
+                            lpValueName))
+            ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        if (RegSetValueExW(hPropKey,
+                           lpValueName,
+                           0,
+                           ulDataType,
+                           Buffer,
+                           ulLength))
+            ret = CR_REGISTRY_ERROR;
+    }
+
+done:;
+    if (hPropKey != NULL)
+        RegCloseKey(hPropKey);
+
+    if (hInstKey != NULL)
+        RegCloseKey(hInstKey);
+
+    return ret;
 }
 
 
@@ -2241,8 +2583,6 @@ DWORD PNP_DeleteServiceDevices(
 static BOOL
 InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 {
-    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
-    NTSTATUS Status;
     BOOL DeviceInstalled = FALSE;
     DWORD BytesWritten;
     DWORD Value;
@@ -2251,6 +2591,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     PROCESS_INFORMATION ProcessInfo;
     STARTUPINFOW StartupInfo;
     UUID RandomUuid;
+    HKEY DeviceKey;
 
     /* The following lengths are constant (see below), they cannot overflow */
     WCHAR CommandLine[116];
@@ -2262,26 +2603,28 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 
     ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
-    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         DeviceInstance);
-    PlugPlayData.Operation = 0; /* Get status */
-
-    /* Get device status */
-    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
-                               (PVOID)&PlugPlayData,
-                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
-    if (!NT_SUCCESS(Status))
+    if (RegOpenKeyExW(hEnumKey,
+                      DeviceInstance,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &DeviceKey) == ERROR_SUCCESS)
     {
-        DPRINT1("NtPlugPlayControl('%S') failed with status 0x%08lx\n", DeviceInstance, Status);
-        return FALSE;
+        if (RegQueryValueExW(DeviceKey,
+                             L"ClassGUID",
+                             NULL,
+                             NULL,
+                             NULL,
+                             NULL) == ERROR_SUCCESS)
+        {
+            DPRINT("No need to install: %S\n", DeviceInstance);
+            RegCloseKey(DeviceKey);
+            return TRUE;
+        }
+
+        RegCloseKey(DeviceKey);
     }
 
-    if ((PlugPlayData.DeviceStatus & (DNF_STARTED | DNF_START_FAILED)) != 0)
-    {
-        /* Device is already started, or disabled due to some problem. Don't install it */
-        DPRINT("No need to install '%S'\n", DeviceInstance);
-        return TRUE;
-    }
+    DPRINT1("Installing: %S\n", DeviceInstance);
 
     /* Create a random UUID for the named pipe */
     UuidCreate(&RandomUuid);
@@ -2386,6 +2729,8 @@ cleanup:
 
     if(ProcessInfo.hThread)
         CloseHandle(ProcessInfo.hThread);
+
+    DPRINT1("Success? %d\n", DeviceInstalled);
 
     return DeviceInstalled;
 }
@@ -2595,7 +2940,7 @@ PnpEventThread(LPVOID lpParameter)
             DWORD len;
             DWORD DeviceIdLength;
 
-            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT1("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
@@ -2617,8 +2962,32 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
-            DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT1("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
             /* FIXME: ? */
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_EJECT_VETOED, &RpcStatus))
+        {
+            DPRINT1("Eject vetoed: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_KERNEL_INITIATED_EJECT, &RpcStatus))
+        {
+            DPRINT1("Kernel initiated eject: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SAFE_REMOVAL, &RpcStatus))
+        {
+            DPRINT1("Safe removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SURPRISE_REMOVAL, &RpcStatus))
+        {
+            DPRINT1("Surprise removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_REMOVAL_VETOED, &RpcStatus))
+        {
+            DPRINT1("Removal vetoed: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_REMOVE_PENDING, &RpcStatus))
+        {
+            DPRINT1("Removal pending: %S\n", PnpEvent->TargetDevice.DeviceIds);
         }
         else
         {
@@ -2674,6 +3043,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("  SERVICE_CONTROL_STOP received\n");
+            /* Stop listening to RPC Messages */
+            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 

@@ -32,10 +32,11 @@
 #include "lang/sk-SK.rc"
 // cp 1251 languages
 #include "lang/bg-BG.rc"
-#include "lang/ru-RU.rc"
-#include "lang/uk-UA.rc"
 
 // UTF-8
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
 #include "lang/ro-RO.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"

@@ -14,4 +14,5 @@
 	<file>mouse.c</file>
 	<file>sound.c</file>
 	<file>access.rc</file>
+	<pch>access.h</pch>
 </module>

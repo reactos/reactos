@@ -12,9 +12,7 @@ add_executable(sol
     rsrc.rc)
 
 target_link_libraries(sol cardlib)
-
+add_pch(sol solitaire.h)
 set_module_type(sol win32gui)
-
 add_importlibs(sol advapi32 comctl32 user32 gdi32 msvcrt kernel32)
-
 add_cd_file(TARGET sol DESTINATION reactos/system32 FOR all)

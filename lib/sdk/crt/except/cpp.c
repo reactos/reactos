@@ -710,15 +710,6 @@ __ASM_EXCEPTION_VTABLE(__non_rtti_object)
 #endif
 #endif
 
-#ifdef _MSC_VER
-#pragma message ("HAXX!")
-const vtable_ptr MSVCRT_exception_vtable;
-const vtable_ptr MSVCRT_bad_typeid_vtable;
-const vtable_ptr MSVCRT_bad_cast_vtable;
-const vtable_ptr MSVCRT___non_rtti_object_vtable;
-const vtable_ptr MSVCRT_type_info_vtable;
-#endif
-
 /* Static RTTI for exported objects */
 
 static const type_info exception_type_info =

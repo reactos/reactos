@@ -1,12 +1,7 @@
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include <ntimage.h>
 
+#include <precomp.h>
 #define NDEBUG
 #include <debug.h>
-
-#include "dwarf.h"
 
 static int
 _dwarfnametounit(Dwarf *d, char *name, DwarfBlock *bl, DwarfSym *s)

@@ -24,7 +24,7 @@
 #define GCCU(x)	x __attribute__((unused))
 #define Unused(x)
 #else
-#define GCCU(x)
+#define GCCU(x) (x) 
 #define Unused(x)	(x);
 #endif // __GNUC__
 

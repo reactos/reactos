@@ -1288,7 +1288,10 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
             SetLastError(ERROR_INVALID_MACHINENAME);
             goto cleanup;
         }
-        size += (len + 3) * sizeof(WCHAR);
+        if(len > 0)
+            size += (len + 3) * sizeof(WCHAR);
+        else
+            MachineName = NULL;
     }
 
     if (Reserved != NULL)
@@ -3022,13 +3025,19 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (DeviceInterfaceDetailData && (DeviceInterfaceDetailData->cbSize <
-            FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath) + 1 ||
-            DeviceInterfaceDetailData->cbSize > sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_A)))
+    if (DeviceInterfaceDetailData && (DeviceInterfaceDetailData->cbSize != sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_A)))
     {
         SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
+    
+    if((DeviceInterfaceDetailDataSize != 0) && 
+        (DeviceInterfaceDetailDataSize < (FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath) + sizeof(CHAR))))
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+    
     if (!DeviceInterfaceDetailData && DeviceInterfaceDetailDataSize)
     {
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -3045,10 +3054,10 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         }
+        DeviceInterfaceDetailDataW->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
     }
     if (!DeviceInterfaceDetailData || (DeviceInterfaceDetailData && DeviceInterfaceDetailDataW))
     {
-        DeviceInterfaceDetailDataW->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
         ret = SetupDiGetDeviceInterfaceDetailW(
             DeviceInfoSet,
             DeviceInterfaceData,
@@ -3060,7 +3069,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
             + FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath);
         if (RequiredSize)
             *RequiredSize = bytesNeeded;
-        if (ret && DeviceInterfaceDetailData && DeviceInterfaceDetailDataSize <= bytesNeeded)
+        if (ret && DeviceInterfaceDetailData && DeviceInterfaceDetailDataSize >= bytesNeeded)
         {
             if (!WideCharToMultiByte(
                 CP_ACP, 0,
@@ -3123,7 +3132,8 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (DeviceInterfaceDetailData != NULL && DeviceInterfaceDetailDataSize < FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath) + sizeof(WCHAR))
+    if ((DeviceInterfaceDetailData != NULL)
+        && (DeviceInterfaceDetailDataSize < (FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath)) + sizeof(WCHAR)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;

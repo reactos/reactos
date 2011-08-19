@@ -36,18 +36,18 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
  * activates the viewport using IDirect3DDevice7::SetViewport
  *
  *****************************************************************************/
-void viewport_activate(IDirect3DViewportImpl* This, BOOL ignore_lights) {
-    IDirect3DLightImpl* light;
+void viewport_activate(IDirect3DViewportImpl *This, BOOL ignore_lights)
+{
     D3DVIEWPORT7 vp;
 
-    if (!ignore_lights) {
-        /* Activate all the lights associated with this context */
-        light = This->lights;
+    if (!ignore_lights)
+    {
+        IDirect3DLightImpl *light;
 
-        while (light)
+        /* Activate all the lights associated with this context */
+        LIST_FOR_EACH_ENTRY(light, &This->light_list, IDirect3DLightImpl, entry)
         {
             light_activate(light);
-            light = light->next;
         }
     }
 
@@ -387,17 +387,12 @@ IDirect3DViewportImpl_TransformVertices(IDirect3DViewport3 *iface,
 
 
     EnterCriticalSection(&ddraw_cs);
-    IWineD3DDevice_GetTransform(This->active_device->wineD3DDevice,
-                                D3DTRANSFORMSTATE_VIEW,
-                                (WINED3DMATRIX*) &view_mat);
-
-    IWineD3DDevice_GetTransform(This->active_device->wineD3DDevice,
-                                D3DTRANSFORMSTATE_PROJECTION,
-                                (WINED3DMATRIX*) &proj_mat);
-
-    IWineD3DDevice_GetTransform(This->active_device->wineD3DDevice,
-                                WINED3DTS_WORLDMATRIX(0),
-                                (WINED3DMATRIX*) &world_mat);
+    wined3d_device_get_transform(This->active_device->wined3d_device,
+            D3DTRANSFORMSTATE_VIEW, (WINED3DMATRIX *)&view_mat);
+    wined3d_device_get_transform(This->active_device->wined3d_device,
+            D3DTRANSFORMSTATE_PROJECTION, (WINED3DMATRIX *)&proj_mat);
+    wined3d_device_get_transform(This->active_device->wined3d_device,
+            WINED3DTS_WORLDMATRIX(0), (WINED3DMATRIX *)&world_mat);
     multiply_matrix(&mat,&view_mat,&world_mat);
     multiply_matrix(&mat,&proj_mat,&mat);
 
@@ -749,8 +744,7 @@ IDirect3DViewportImpl_AddLight(IDirect3DViewport3 *iface,
     This->map_lights |= 1<<i;
 
     /* Add the light in the 'linked' chain */
-    lpDirect3DLightImpl->next = This->lights;
-    This->lights = lpDirect3DLightImpl;
+    list_add_head(&This->light_list, &lpDirect3DLightImpl->entry);
     IDirect3DLight_AddRef(lpDirect3DLight);
 
     /* Attach the light to the viewport */
@@ -782,33 +776,29 @@ IDirect3DViewportImpl_DeleteLight(IDirect3DViewport3 *iface,
                                   IDirect3DLight *lpDirect3DLight)
 {
     IDirect3DViewportImpl *This = (IDirect3DViewportImpl *)iface;
-    IDirect3DLightImpl *lpDirect3DLightImpl = (IDirect3DLightImpl *)lpDirect3DLight;
-    IDirect3DLightImpl *cur_light, *prev_light = NULL;
+    IDirect3DLightImpl *l = (IDirect3DLightImpl *)lpDirect3DLight;
 
     TRACE("iface %p, light %p.\n", iface, lpDirect3DLight);
 
     EnterCriticalSection(&ddraw_cs);
-    cur_light = This->lights;
-    while (cur_light != NULL) {
-        if (cur_light == lpDirect3DLightImpl)
-        {
-            light_deactivate(lpDirect3DLightImpl);
-            if (!prev_light) This->lights = cur_light->next;
-            else prev_light->next = cur_light->next;
-            /* Detach the light from the viewport. */
-            cur_light->active_viewport = NULL;
-            IDirect3DLight_Release((IDirect3DLight *)cur_light);
-            --This->num_lights;
-            This->map_lights &= ~(1 << lpDirect3DLightImpl->dwLightIndex);
-            LeaveCriticalSection(&ddraw_cs);
-            return D3D_OK;
-        }
-        prev_light = cur_light;
-        cur_light = cur_light->next;
+
+    if (l->active_viewport != This)
+    {
+        WARN("Light %p active viewport is %p.\n", l, l->active_viewport);
+        LeaveCriticalSection(&ddraw_cs);
+        return DDERR_INVALIDPARAMS;
     }
+
+    light_deactivate(l);
+    list_remove(&l->entry);
+    l->active_viewport = NULL;
+    IDirect3DLight_Release(lpDirect3DLight);
+    --This->num_lights;
+    This->map_lights &= ~(1 << l->dwLightIndex);
+
     LeaveCriticalSection(&ddraw_cs);
 
-    return DDERR_INVALIDPARAMS;
+    return D3D_OK;
 }
 
 /*****************************************************************************
@@ -831,7 +821,9 @@ IDirect3DViewportImpl_NextLight(IDirect3DViewport3 *iface,
                                 DWORD dwFlags)
 {
     IDirect3DViewportImpl *This = (IDirect3DViewportImpl *)iface;
-    IDirect3DLightImpl *cur_light, *prev_light = NULL;
+    IDirect3DLightImpl *l = (IDirect3DLightImpl *)lpDirect3DLight;
+    struct list *entry;
+    HRESULT hr;
 
     TRACE("iface %p, light %p, next_light %p, flags %#x.\n",
             iface, lpDirect3DLight, lplpDirect3DLight, dwFlags);
@@ -839,47 +831,50 @@ IDirect3DViewportImpl_NextLight(IDirect3DViewport3 *iface,
     if (!lplpDirect3DLight)
         return DDERR_INVALIDPARAMS;
 
-    *lplpDirect3DLight = NULL;
-
     EnterCriticalSection(&ddraw_cs);
 
-    cur_light = This->lights;
-
-    switch (dwFlags) {
+    switch (dwFlags)
+    {
         case D3DNEXT_NEXT:
-            if (!lpDirect3DLight) {
-                LeaveCriticalSection(&ddraw_cs);
-                return DDERR_INVALIDPARAMS;
+            if (!l || l->active_viewport != This)
+            {
+                if (l)
+                    WARN("Light %p active viewport is %p.\n", l, l->active_viewport);
+                entry = NULL;
             }
-            while (cur_light != NULL) {
-                if (cur_light == (IDirect3DLightImpl *)lpDirect3DLight) {
-                    *lplpDirect3DLight = (IDirect3DLight*)cur_light->next;
-                    break;
-                }
-                cur_light = cur_light->next;
-            }
+            else
+                entry = list_next(&This->light_list, &l->entry);
             break;
+
         case D3DNEXT_HEAD:
-            *lplpDirect3DLight = (IDirect3DLight*)This->lights;
+            entry = list_head(&This->light_list);
             break;
+
         case D3DNEXT_TAIL:
-            while (cur_light != NULL) {
-                prev_light = cur_light;
-                cur_light = cur_light->next;
-            }
-            *lplpDirect3DLight = (IDirect3DLight*)prev_light;
+            entry = list_tail(&This->light_list);
             break;
+
         default:
-            ERR("Unknown flag %d\n", dwFlags);
+            entry = NULL;
+            WARN("Invalid flags %#x.\n", dwFlags);
             break;
     }
 
-    if (*lplpDirect3DLight)
+    if (entry)
+    {
+        *lplpDirect3DLight = (IDirect3DLight *)LIST_ENTRY(entry, IDirect3DLightImpl, entry);
         IDirect3DLight_AddRef(*lplpDirect3DLight);
+        hr = D3D_OK;
+    }
+    else
+    {
+        *lplpDirect3DLight = NULL;
+        hr = DDERR_INVALIDPARAMS;
+    }
 
     LeaveCriticalSection(&ddraw_cs);
 
-    return *lplpDirect3DLight ? D3D_OK : DDERR_INVALIDPARAMS;
+    return hr;
 }
 
 /*****************************************************************************
@@ -1131,4 +1126,5 @@ void d3d_viewport_init(IDirect3DViewportImpl *viewport, IDirectDrawImpl *ddraw)
     viewport->ref = 1;
     viewport->ddraw = ddraw;
     viewport->use_vp2 = 0xff;
+    list_init(&viewport->light_list);
 }

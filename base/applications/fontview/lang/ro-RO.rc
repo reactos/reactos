@@ -1,7 +1,5 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUIT, "Ieșire"
@@ -13,5 +11,3 @@ BEGIN
 	IDS_ERROR_NOCLASS, "Nu s-a putut iniţializa clasa de ferestre."
 	IDS_ERROR_BADCMD, "Niciun font specificat.\nSintaxă:\n  fontview.exe <fișier font>"
 END
-
-#pragma code_page(default)

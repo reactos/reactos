@@ -547,10 +547,6 @@ FdoPnpControl(
   case IRP_MN_QUERY_REMOVE_DEVICE:
     Status = STATUS_NOT_IMPLEMENTED;
     break;
-
-  case IRP_MN_QUERY_STOP_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
 #endif
   case IRP_MN_START_DEVICE:
     DPRINT("IRP_MN_START_DEVICE received\n");
@@ -561,12 +557,17 @@ FdoPnpControl(
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
-  case IRP_MN_STOP_DEVICE:
-    /* Currently not supported */
+
+  case IRP_MN_QUERY_STOP_DEVICE:
+    /* We don't support stopping yet */
     Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
+    
+  case IRP_MN_STOP_DEVICE:
+    /* We can't fail this one so we fail the QUERY_STOP request that precedes it */
+    break;
 #if 0
   case IRP_MN_SURPRISE_REMOVAL:
     Status = STATUS_NOT_IMPLEMENTED;

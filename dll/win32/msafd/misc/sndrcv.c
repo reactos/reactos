@@ -12,8 +12,6 @@
 
 #include <msafd.h>
 
-#include <debug.h>
-
 INT
 WSPAPI
 WSPAsyncSelect(IN  SOCKET Handle,
@@ -25,7 +23,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
     PSOCKET_INFORMATION Socket = NULL;
     PASYNC_DATA                 AsyncData;
     NTSTATUS                    Status;
-    ULONG                       BlockMode;
+    BOOLEAN                     BlockMode;
 
     /* Get the Socket Structure associated to this Socket */
     Socket = GetSocketStructure(Handle);
@@ -44,8 +42,8 @@ WSPAsyncSelect(IN  SOCKET Handle,
     }
 
     /* Change the Socket to Non Blocking */
-    BlockMode = 1;
-    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL);
+    BlockMode = TRUE;
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
     Socket->SharedData.NonBlocking = TRUE;
 
     /* Deactive WSPEventSelect */
@@ -280,6 +278,20 @@ WSPRecvFrom(SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    
+    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    {
+        /* Call WSPRecv for a non-datagram socket */
+        return WSPRecv(Handle,
+                       lpBuffers,
+                       dwBufferCount,
+                       lpNumberOfBytesRead,
+                       ReceiveFlags,
+                       lpOverlapped,
+                       lpCompletionRoutine,
+                       lpThreadId,
+                       lpErrno);
+    }
 
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
                             NULL, 1, FALSE );
@@ -388,7 +400,14 @@ WSPRecvFrom(SOCKET Handle,
     }
 
     /* Re-enable Async Event */
-    SockReenableAsyncSelectEvent(Socket, FD_READ);
+    if (*ReceiveFlags & MSG_OOB)
+    {
+        SockReenableAsyncSelectEvent(Socket, FD_OOB);
+    }
+    else
+    {
+        SockReenableAsyncSelectEvent(Socket, FD_READ);
+    }
 
     return MsafdReturnWithErrno ( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
 }
@@ -552,6 +571,20 @@ WSPSendTo(SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    
+    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    {
+        /* Use WSPSend for connection-oriented sockets */
+        return WSPSend(Handle,
+                       lpBuffers,
+                       dwBufferCount,
+                       lpNumberOfBytesSent,
+                       iFlags,
+                       lpOverlapped,
+                       lpCompletionRoutine,
+                       lpThreadId,
+                       lpErrno);
+    }
 
     /* Bind us First */
     if (Socket->SharedData.State == SocketOpen)
@@ -667,8 +700,7 @@ WSPSendTo(SOCKET Handle,
         HeapFree(GlobalHeap, 0, BindAddress);
     }
 
-    if (Status != STATUS_PENDING)
-       SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
 }

@@ -694,7 +694,7 @@ ParseFromRoot:
                                               ObjectHeader)))
                 {
                     /* Either couldn't allocate the name, or insert failed */
-                    if (NewName) ExFreePool(NewName);
+                    if (NewName) ExFreePoolWithTag(NewName, OB_NAME_TAG);
 
                     /* Fail due to memory reasons */
                     Status = STATUS_INSUFFICIENT_RESOURCES;

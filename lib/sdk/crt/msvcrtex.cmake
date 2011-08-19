@@ -2,12 +2,13 @@
 include_directories(include/internal/mingw-w64)
 
 if(NOT MSVC)
-    add_definitions(-Wno-main)
+    add_compiler_flags(-Wno-main)
 endif()
 
 list(APPEND MSVCRTEX_SOURCE
     startup/crtexe.c
     startup/wcrtexe.c
+    startup/crt_handler.c
     startup/crtdll.c
     startup/_newmode.c
     startup/wildcard.c
@@ -18,8 +19,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/merr.c
     startup/atonexit.c
     startup/txtmode.c
-    startup/pseudo-reloc.c
-    startup/pseudo-reloc-list.c
+    startup/pesect.c
     startup/tlsmcrt.c
     startup/tlsthrd.c
     startup/tlsmthread.c
@@ -35,13 +35,25 @@ list(APPEND MSVCRTEX_SOURCE
     misc/ofmt_stub.c
 )
 
+if(NOT MSVC)
+list(APPEND MSVCRTEX_SOURCE
+    startup/pseudo-reloc.c
+    startup/pseudo-reloc-list.c)
+endif()
+
 if(ARCH MATCHES i386)
 list(APPEND MSVCRTEX_SOURCE
     except/i386/chkstk_asm.s
+    except/i386/chkstk_ms.s
     math/i386/ci.c
-    math/i386/ftol2_asm.S
+    math/i386/ftol2_asm.s
     math/i386/alldiv_asm.s
 )
+elseif(ARCH MATCHES amd64)
+list(APPEND MSVCRTEX_SOURCE
+    except/amd64/chkstk_asm.s
+    except/amd64/chkstk_ms.s
+    math/amd64/alldiv.S)
 endif()
 
 if(MSVC)
@@ -58,3 +70,4 @@ if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
 endif()
 
+add_dependencies(msvcrtex psdk asm)

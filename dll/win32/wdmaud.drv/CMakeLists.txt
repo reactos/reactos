@@ -31,4 +31,5 @@ target_link_libraries(wdmaud.drv
     mmixer)
 
 add_importlibs(wdmaud.drv user32 winmm advapi32 msvcrt setupapi ksuser kernel32 ntdll)
+add_pch(wdmaud.drv wdmaud.h)
 add_cd_file(TARGET wdmaud.drv DESTINATION reactos/system32 FOR all)

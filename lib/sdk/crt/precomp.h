@@ -27,7 +27,7 @@
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 
 #if !defined(_MSC_VER)
   #include <stdint.h>

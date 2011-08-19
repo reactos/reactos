@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #include <windows.h>
-#include "resource.h"
+#include "include/resource.h"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS User API Client Dll\0"

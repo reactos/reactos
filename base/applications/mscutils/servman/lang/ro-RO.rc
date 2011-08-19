@@ -280,5 +280,3 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Gestionarul de servicii ReactOS"
 END
-
-#pragma code_page(default)

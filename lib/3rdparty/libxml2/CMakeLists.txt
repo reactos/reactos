@@ -1,7 +1,5 @@
 
-include_directories(
-    .
-    include)
+include_directories(include)
 
 add_definitions(
     -D__MINGW32__

@@ -13,7 +13,12 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/umfuncs.h>
 #include <fmifs/fmifs.h>
 
 #define NDEBUG
@@ -324,7 +329,7 @@ CheckVolume(
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
                         TRUE, // Verbose
-                        FALSE, // CheckOnlyIfDirty
+                        TRUE, // CheckOnlyIfDirty
                         FALSE,// ScanDrive
                         ChkdskCallback);
 

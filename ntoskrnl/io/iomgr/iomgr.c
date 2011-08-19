@@ -52,19 +52,17 @@ extern LIST_ENTRY ShutdownListHead;
 extern LIST_ENTRY LastChanceShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
 extern POBJECT_TYPE IoAdapterObjectType;
-ERESOURCE IopDatabaseResource;
-extern ERESOURCE FileSystemListLock;
+extern ERESOURCE IopDatabaseResource;
 ERESOURCE IopSecurityResource;
-extern KGUARDED_MUTEX FsChangeNotifyListLock;
 extern KGUARDED_MUTEX PnpNotifyListLock;
-extern LIST_ENTRY IopDiskFsListHead;
-extern LIST_ENTRY IopCdRomFsListHead;
-extern LIST_ENTRY IopTapeFsListHead;
-extern LIST_ENTRY IopNetworkFsListHead;
+extern LIST_ENTRY IopDiskFileSystemQueueHead;
+extern LIST_ENTRY IopCdRomFileSystemQueueHead;
+extern LIST_ENTRY IopTapeFileSystemQueueHead;
+extern LIST_ENTRY IopNetworkFileSystemQueueHead;
 extern LIST_ENTRY DriverBootReinitListHead;
 extern LIST_ENTRY DriverReinitListHead;
 extern LIST_ENTRY PnpNotifyListHead;
-extern LIST_ENTRY FsChangeNotifyListHead;
+extern LIST_ENTRY IopFsNotifyChangeQueueHead;
 extern LIST_ENTRY IopErrorLogListHead;
 extern LIST_ENTRY IopTimerQueueHead;
 extern KDPC IopTimerDpc;
@@ -450,20 +448,18 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize all locks and lists */
     ExInitializeResource(&IopDatabaseResource);
-    ExInitializeResource(&FileSystemListLock);
     ExInitializeResource(&IopSecurityResource);
-    KeInitializeGuardedMutex(&FsChangeNotifyListLock);
     KeInitializeGuardedMutex(&PnpNotifyListLock);
-    InitializeListHead(&IopDiskFsListHead);
-    InitializeListHead(&IopCdRomFsListHead);
-    InitializeListHead(&IopTapeFsListHead);
-    InitializeListHead(&IopNetworkFsListHead);
+    InitializeListHead(&IopDiskFileSystemQueueHead);
+    InitializeListHead(&IopCdRomFileSystemQueueHead);
+    InitializeListHead(&IopTapeFileSystemQueueHead);
+    InitializeListHead(&IopNetworkFileSystemQueueHead);
     InitializeListHead(&DriverBootReinitListHead);
     InitializeListHead(&DriverReinitListHead);
     InitializeListHead(&PnpNotifyListHead);
     InitializeListHead(&ShutdownListHead);
     InitializeListHead(&LastChanceShutdownListHead);
-    InitializeListHead(&FsChangeNotifyListHead);
+    InitializeListHead(&IopFsNotifyChangeQueueHead);
     InitializeListHead(&IopErrorLogListHead);
     KeInitializeSpinLock(&IoStatisticsLock);
     KeInitializeSpinLock(&DriverReinitListLock);
@@ -484,10 +480,18 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeSetTimerEx(&IopTimer, ExpireTime, 1000, &IopTimerDpc);
 
     /* Create Object Types */
-    if (!IopCreateObjectTypes()) return FALSE;
+    if (!IopCreateObjectTypes())
+    {
+        DPRINT1("IopCreateObjectTypes failed!\n");
+        return FALSE;
+    }
 
     /* Create Object Directories */
-    if (!IopCreateRootDirectories()) return FALSE;
+    if (!IopCreateRootDirectories())
+    {
+        DPRINT1("IopCreateRootDirectories failed!\n");
+        return FALSE;
+    }
 
     /* Initialize PnP manager */
     IopInitializePlugPlayServices();
@@ -515,10 +519,19 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopLoaderBlock = NULL;
 
     /* Create ARC names for boot devices */
-    if (!NT_SUCCESS(IopCreateArcNames(LoaderBlock))) return FALSE;
+    Status = IopCreateArcNames(LoaderBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopCreateArcNames failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Mark the system boot partition */
-    if (!IopMarkBootPartition(LoaderBlock)) return FALSE;
+    if (!IopMarkBootPartition(LoaderBlock))
+    {
+        DPRINT1("IopMarkBootPartition failed!\n");
+        return FALSE;
+    }
 
     /* Initialize PnP root relations */
     IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
@@ -543,7 +556,11 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Convert SystemRoot from ARC to NT path */
     Status = IopReassignSystemRoot(LoaderBlock, &NtBootPath);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopReassignSystemRoot failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Set the ANSI_STRING for the root path */
     RootString.MaximumLength = NtSystemRoot.MaximumLength / sizeof(WCHAR);
@@ -554,7 +571,11 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Convert the path into the ANSI_STRING */
     Status = RtlUnicodeStringToAnsiString(&RootString, &NtSystemRoot, FALSE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlUnicodeStringToAnsiString failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Assign drive letters */
     IoAssignDriveLetters(LoaderBlock,
@@ -564,10 +585,19 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Update system root */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &RootString, FALSE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAnsiStringToUnicodeString failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Load the System DLL and its Entrypoints */
-    if (!NT_SUCCESS(PsLocateSystemDll())) return FALSE;
+    Status = PsLocateSystemDll();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("PsLocateSystemDll failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Return success */
     return TRUE;

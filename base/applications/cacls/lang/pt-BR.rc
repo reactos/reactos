@@ -1,40 +1,42 @@
+/* UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011) */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_HELP, "Exibe ou modifica as listas de controle de acesso (ACLs) de arquivos\n\n\
-CACLS nome-arquivo [/T] [/E] [/C] [/G usu·rio:perm] [/R usu·rio [...]]\n\
-                   [/P usu·rio:perm [...]] [/D usu·rio [...]]\n\
+CACLS nome-arquivo [/T] [/E] [/C] [/G usu√°rio:perm] [/R usu√°rio [...]]\n\
+                   [/P usu√°rio:perm [...]] [/D usu√°rio [...]]\n\
    nome-arquivo     Exibe ACLs.\n\
    /T               Altera ACLs de arquivos especificados\n\
                     na pasta atual e em todas as subpastas.\n\
-   /E               Edita ACL em vez de substituÌ-la.\n\
+   /E               Edita ACL em vez de substitu√≠-la.\n\
    /C               Continua ao encontrar erros de acesso negado.\n\
-   /G usu·rio:perm  Concede os direitos de acesso ao usu·rio especificado.\n\
+   /G usu√°rio:perm  Concede os direitos de acesso ao usu√°rio especificado.\n\
                     Perm pode ser: R  Ler\n\
                               W  Gravar\n\
                               C  Alterar (gravar)\n\
                               F  Controle total\n\
-   /R usu·rio       Revoga os direitos de acesso do usu·rio especificado\n\
-                    (v·lido somente com /E).\n\
-   /P usu·rio:perm  Substitui os direitos de acesso do usu·rio especificado.\n\
+   /R usu√°rio       Revoga os direitos de acesso do usu√°rio especificado\n\
+                    (v√°lido somente com /E).\n\
+   /P usu√°rio:perm  Substitui os direitos de acesso do usu√°rio especificado.\n\
                     Perm pode ser: N  Nenhum\n\
                               R  Ler\n\
                               W  Gravar\n\
                               C  Alterar (gravar)\n\
                               F  Controle total\n\
-   /D usu·rio       Nega o acesso ao usu·rio especificado.\n\
+   /D usu√°rio       Nega o acesso ao usu√°rio especificado.\n\
 Caracteres curinga podem ser usados para especificar mais de um arquivo\n\
 em um comando.\n\
-VocÍ pode especificar mais de um usu·rio em um comando.\n\n\
-AbreviaÁ‰es:\n\
-   CI - HeranÁa de recipiente.\n\
-        O ACE ser· herdado pelas pastas.\n\
-   OI - HeranÁa de objeto.\n\
-        O ACE ser· herdado pelos arquivos.\n\
-   IO - Somente heranÁa.\n\
-        O ACE n„o se aplica ao arquivo/pasta atual.\n"
+Voc√™ pode especificar mais de um usu√°rio em um comando.\n\n\
+Abrevia√ß√§es:\n\
+   CI - Heran√ßa de recipiente.\n\
+        O ACE ser√° herdado pelas pastas.\n\
+   OI - Heran√ßa de objeto.\n\
+        O ACE ser√° herdado pelos arquivos.\n\
+   IO - Somente heran√ßa.\n\
+        O ACE n√£o se aplica ao arquivo/pasta atual.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

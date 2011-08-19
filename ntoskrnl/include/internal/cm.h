@@ -33,7 +33,7 @@
     if (x & CmpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define CMTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define CMTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //
@@ -1568,6 +1568,13 @@ NTAPI
 CmpResolveDriverDependencies(
     IN PLIST_ENTRY DriverListHead
 );
+
+BOOLEAN
+NTAPI
+CmpIsSafe(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX SafeBootCell,
+    IN HCELL_INDEX DriverCell);
 
 //
 // Global variables accessible from all of Cm

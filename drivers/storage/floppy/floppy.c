@@ -40,14 +40,7 @@
  * TODO: Media detection based on sector 1
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "hardware.h"
-#include "csqrtns.h"
-#include "ioctl.h"
-#include "readwrite.h"
+#include "precomp.h"
 
 /*
  * Global controller info structures.  Each controller gets one.  Since the system
@@ -1189,7 +1182,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, NULL, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
+    if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, PsThreadType, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
     {
         WARN_(FLOPPY, "Unable to reference returned thread handle; failing init\n");
         return STATUS_UNSUCCESSFUL;

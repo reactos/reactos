@@ -12,6 +12,7 @@
 	<property name="BASEADDRESS_RSABASE"		value="0x35700000" />
 	<property name="BASEADDRESS_RSAENH"		value="0x35780000" />
 	<property name="BASEADDRESS_URL"		value="0x42ea0000" />
+	<property name="BASEADDRESS_INETCPL"		value="0x42eb0000" />
 	<property name="BASEADDRESS_WLANAPI"		value="0x470f0000" />
 	<property name="BASEADDRESS_PIDGEN"		value="0x473e0000" />
 	<property name="BASEADDRESS_DWMAPI"		value="0x4a3f0000" />

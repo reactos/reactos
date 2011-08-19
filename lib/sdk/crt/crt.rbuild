@@ -144,6 +144,9 @@
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
+        <file>j0_y0.c</file>
+        <file>j1_y1.c</file>
+        <file>jn_yn.c</file>
 		<file>ldiv.c</file>
 		<file>logf.c</file>
 		<file>modf.c</file>
@@ -154,6 +157,12 @@
 		<file>sinh.c</file>
 		<file>tanh.c</file>
 		<file>powl.c</file>
+        
+        <directory name="ieee754">
+            <file>j0_y0.c</file>
+            <file>j1_y1.c</file>
+            <file>jn_yn.c</file>
+        </directory>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -190,10 +199,6 @@
 				<file>ldexp.c</file>
 				<file>sqrtf.c</file>
 			</directory>
-			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
-			<!--<file>j0_y0.c</file>
-			<file>j1_y1.c</file>
-			<file>jn_yn.c</file>-->
 		</if>
 		<if property="ARCH" value="amd64">
 			<file>cos.c</file>

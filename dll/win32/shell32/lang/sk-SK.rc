@@ -131,7 +131,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Verzia " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Verzia "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Táto verzia systému ReactOS je registrovaná pre:", IDC_STATIC, 35, 115, 180, 10
@@ -661,10 +661,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Poloka '%1' nemôe by odoslaná do koša. Chcete ju namiesto toho vymaza?"
 	IDS_OVERWRITEFILE_TEXT      "Tento prieèinok u obsahuje súbor s názvom '%1'.\n\nChcete ho nahradi?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdenie prepísania súboru"
-	IDS_OVERWRITEFOLDER_TEXT    "Tento prieèinok u obsahuje prieèinok s názvom '%1'.\n\n"\
-		"Ak budú ma súbory v cie¾ovom prieèinku rovnaké názvy ako súbory\n"\
-		"vo vybranom prieèinku, tak budú nahradené. Stále chcete presunú\n"\
-		"alebo skopírova prieèinok?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tento prieèinok u obsahuje prieèinok s názvom '%1'.\n\nAk budú ma súbory v cie¾ovom prieèinku rovnaké názvy ako súbory\nvo vybranom prieèinku, tak budú nahradené. Stále chcete presunú\nalebo skopírova prieèinok?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reštartova"

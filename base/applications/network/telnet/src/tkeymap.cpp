@@ -29,7 +29,7 @@
 //     originally part of KeyTrans.cpp                 //
 /////////////////////////////////////////////////////////
 
-#include "tkeymap.h"
+#include "precomp.h"
 
 KeyMap::KeyMap(DWORD state, DWORD code): map(0,0,sizeof(TKeyDef)),
                                          key(NULL,state,code) {};

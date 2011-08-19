@@ -13,6 +13,6 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_USERINIT_FAIL, "Userinit не вдалося запустити оболонку!\n"
+STRING_USERINIT_FAIL, "Userinit РЅРµ РІРґР°Р»РѕСЃСЏ Р·Р°РїСѓСЃС‚РёС‚Рё РѕР±РѕР»РѕРЅРєСѓ!\n"
 
 END

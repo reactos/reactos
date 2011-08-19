@@ -2,17 +2,10 @@
  * Dwarf data format parsing routines.
  */
 
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include <ntimage.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include "dwarf.h"
-#include "pe.h"
 
 ulong
 dwarfget1(DwarfBuf *b)
@@ -139,7 +132,7 @@ dwarfgetaddr(DwarfBuf *b)
 		return dwarfget8(b);
 	default:
 		if(++nbad == 1)
-			werrstr("dwarf: unexpected address size %lud in dwarfgetaddr\n", b->addrsize);
+			werrstr("dwarf: unexpected address size %lud in dwarfgetaddr", b->addrsize);
 		b->p = nil;
 		return 0;
 	}
@@ -190,7 +183,7 @@ dwarfget128(DwarfBuf *b)
 	while(b->p<b->ep && *b->p&0x80)
 		b->p++;
 	if(++nbad == 1)
-		werrstr("dwarf: overflow during parsing of uleb128 integer\n");
+		werrstr("dwarf: overflow during parsing of uleb128 integer");
 	return c;
 }
 

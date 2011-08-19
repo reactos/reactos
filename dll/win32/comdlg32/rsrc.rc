@@ -55,7 +55,6 @@
 #include "cdlg_Sv.rc"
 #include "cdlg_Th.rc"
 #include "cdlg_Tr.rc"
-#include "cdlg_Uk.rc"
 
 /* UTF-8 */
 #include "cdlg_Da.rc"
@@ -71,4 +70,5 @@
 #include "cdlg_Ru.rc"
 #include "cdlg_Si.rc"
 #include "cdlg_Sr.rc"
+#include "cdlg_Uk.rc"
 #include "cdlg_Zh.rc"

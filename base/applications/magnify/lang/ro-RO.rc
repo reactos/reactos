@@ -62,5 +62,3 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Lupă"
 END
-
-#pragma code_page(default)

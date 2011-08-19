@@ -4,8 +4,8 @@
 	<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
 		<xi:include href="ntoskrnl-generic.rbuild" />
 	</module>
+	<module name="ntdllsys" type="staticlibrary">
+		<include base="ntoskrnl">include</include>
+		<file>ntdll.S</file>
+	</module>
 </group>
-<module name="ntdllsys" type="staticlibrary">
-	<include base="ntoskrnl">include</include>
-	<file>ntdll.S</file>
-</module>

@@ -40,7 +40,7 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
                          PUNICODE_STRING RelativeFileName,
                          PUNICODE_STRING AbsoluteFileName)
 {
-    ULONG Length;
+    USHORT Length;
     PFCB Fcb;
     NTSTATUS Status;
 

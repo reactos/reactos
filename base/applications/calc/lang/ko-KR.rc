@@ -1,5 +1,5 @@
 /*
- *  Korean translation by manatails007 (www.manatails007.org) Seungju Kim
+ * Korean translation by manatails007 (www.manatails007.org) Seungju Kim
  */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
@@ -8,7 +8,7 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 161
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS ∞ËªÍ±‚"
+CAPTION "ReactOS Í≥ÑÏÇ∞Í∏∞"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -164,7 +164,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 172, 127
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS ∞ËªÍ±‚"
+CAPTION "ReactOS Í≥ÑÏÇ∞Í∏∞"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -231,7 +231,7 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS ∞ËªÍ±‚ ¡§∫∏"
+CAPTION "ReactOS Í≥ÑÏÇ∞Í∏∞ Ï†ïÎ≥¥"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -309,16 +309,16 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS ∞ËªÍ±‚ ¡§∫∏"
+CAPTION "ReactOS Í≥ÑÏÇ∞Í∏∞ Ï†ïÎ≥¥"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
     CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
-    LTEXT           "ReactOS ∞ËªÍ±‚",IDC_STATIC,120,12,132,8,
+    LTEXT           "ReactOS Í≥ÑÏÇ∞Í∏∞",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
-    LTEXT           "πˆ¡Ø ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
-    LTEXT           "Carlo Braminiø° ¿««ÿ æ≤ø©¡¸",IDC_STATIC,120,32,132,8,
+    LTEXT           "Î≤ÑÏ†º ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "Carlo BraminiÏóê ÏùòÌï¥ Ïì∞Ïó¨Ïßê",IDC_STATIC,120,32,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
     GROUPBOX        "",IDC_STATIC,4,56,256,88
@@ -345,16 +345,16 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
-    POPUP "∆Ì¡˝"
+    POPUP "Ìé∏Ïßë"
     BEGIN
-        MENUITEM "∫πªÁ\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "∫Ÿø©≥÷±‚\tCTRL-V",            IDM_EDIT_PASTE
+        MENUITEM "Î≥µÏÇ¨\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Î∂ôÏó¨ÎÑ£Í∏∞\tCTRL-V",            IDM_EDIT_PASTE
     END
-    POPUP "∫∏±‚"
+    POPUP "Î≥¥Í∏∞"
     BEGIN
-        MENUITEM "¿œπ›",                        IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "∞¯«–",                        IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "¿¸»Ø",                        IDM_VIEW_CONVERSION
+        MENUITEM "ÏùºÎ∞ò",                        IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Í≥µÌïô",                        IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Ï†ÑÌôò",                        IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6",                 IDM_VIEW_DEC, CHECKED
@@ -365,28 +365,28 @@ BEGIN
         MENUITEM "Radians\tF3",                 IDM_VIEW_RAD, CHECKED
         MENUITEM "Grads\tF4",                   IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "¿⁄∏¥ºˆ ±∏∫– ¥‹¿ß",            IDM_VIEW_GROUP, CHECKED
+        MENUITEM "ÏûêÎ¶øÏàò Íµ¨Î∂Ñ Îã®ÏúÑ",            IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "µµøÚ∏ª"
+    POPUP "ÎèÑÏõÄÎßê"
     BEGIN
-        MENUITEM "µµøÚ∏ª «◊∏Ò",                 IDM_HELP_HELP
+        MENUITEM "ÎèÑÏõÄÎßê Ìï≠Î™©",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS ∞ËªÍ±‚ ¡§∫∏",         IDM_HELP_ABOUT
+        MENUITEM "ReactOS Í≥ÑÏÇ∞Í∏∞ Ï†ïÎ≥¥",         IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
 BEGIN
-    POPUP "∆Ì¡˝"
+    POPUP "Ìé∏Ïßë"
     BEGIN
-        MENUITEM "∫πªÁ\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "∫Ÿø©≥÷±‚\tCTRL-V",            IDM_EDIT_PASTE
+        MENUITEM "Î≥µÏÇ¨\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Î∂ôÏó¨ÎÑ£Í∏∞\tCTRL-V",            IDM_EDIT_PASTE
     END
-    POPUP "∫∏±‚"
+    POPUP "Î≥¥Í∏∞"
     BEGIN
-        MENUITEM "¿œπ›",                        IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "∞¯«–",                        IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "¿¸»Ø",                        IDM_VIEW_CONVERSION
+        MENUITEM "ÏùºÎ∞ò",                        IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Í≥µÌïô",                        IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Ï†ÑÌôò",                        IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6",                 IDM_VIEW_DEC, CHECKED
@@ -398,36 +398,36 @@ BEGIN
         MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
         MENUITEM "Byte\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "¿⁄∏¥ºˆ ±∏∫– ¥‹¿ß",            IDM_VIEW_GROUP, CHECKED
+        MENUITEM "ÏûêÎ¶øÏàò Íµ¨Î∂Ñ Îã®ÏúÑ",            IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "µµøÚ∏ª"
+    POPUP "ÎèÑÏõÄÎßê"
     BEGIN
-        MENUITEM "µµøÚ∏ª «◊∏Ò",                 IDM_HELP_HELP
+        MENUITEM "ÎèÑÏõÄÎßê Ìï≠Î™©",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS ∞ËªÍ±‚ ¡§∫∏",         IDM_HELP_ABOUT
+        MENUITEM "ReactOS Í≥ÑÏÇ∞Í∏∞ Ï†ïÎ≥¥",         IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU DISCARDABLE 
 BEGIN
-    POPUP "∆Ì¡˝"
+    POPUP "Ìé∏Ïßë"
     BEGIN
-        MENUITEM "∫πªÁ\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "∫Ÿø©≥÷±‚\tCTRL-V",            IDM_EDIT_PASTE
+        MENUITEM "Î≥µÏÇ¨\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Î∂ôÏó¨ÎÑ£Í∏∞\tCTRL-V",            IDM_EDIT_PASTE
     END
-    POPUP "∫∏±‚"
+    POPUP "Î≥¥Í∏∞"
     BEGIN
-        MENUITEM "¿œπ›",                        IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "∞¯«–",                        IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "¿¸»Ø",                        IDM_VIEW_CONVERSION
+        MENUITEM "ÏùºÎ∞ò",                        IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Í≥µÌïô",                        IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Ï†ÑÌôò",                        IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "¿⁄∏¥ºˆ ±∏∫– ¥‹¿ß",            IDM_VIEW_GROUP, CHECKED
+        MENUITEM "ÏûêÎ¶øÏàò Íµ¨Î∂Ñ Îã®ÏúÑ",            IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "µµøÚ∏ª"
+    POPUP "ÎèÑÏõÄÎßê"
     BEGIN
-        MENUITEM "µµøÚ∏ª «◊∏Ò",                 IDM_HELP_HELP
+        MENUITEM "ÎèÑÏõÄÎßê Ìï≠Î™©",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS ∞ËªÍ±‚ ¡§∫∏",         IDM_HELP_ABOUT
+        MENUITEM "ReactOS Í≥ÑÏÇ∞Í∏∞ Ï†ïÎ≥¥",         IDM_HELP_ABOUT
     END
 END
 
@@ -436,14 +436,14 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STRING_LICENSE      "ReactOS Calc is free software released under GNU GPL license.\r\n\r\nYou can get a copy of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nYou can also get a translation of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/translations.html"
-    IDS_MATH_ERROR          "ø°∑Ø"
-    IDS_QUICKHELP           "∫¸∏• µµøÚ∏ª"
+    IDS_MATH_ERROR          "ÏóêÎü¨"
+    IDS_QUICKHELP           "Îπ†Î•∏ ÎèÑÏõÄÎßê"
 END
 
 // Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_ANGLE          "∞¢µµ"
+    IDS_CONV_ANGLE          "Í∞ÅÎèÑ"
     IDS_CONV_AREA           "Area"
     IDS_CONV_CONSUMPTION    "Consumption (engines)"
     IDS_CONV_CURRENCY       "Currencies"
@@ -452,7 +452,7 @@ BEGIN
     IDS_CONV_POWER          "Power"
     IDS_CONV_PRESSURE       "Pressure"
     IDS_CONV_TEMPERATURE    "Temperature"
-    IDS_CONV_TIME           "∞¢µµ"
+    IDS_CONV_TIME           "Í∞ÅÎèÑ"
     IDS_CONV_VELOCITY       "Velocity"
     IDS_CONV_VOLUME         "Volume"
     IDS_CONV_WEIGHT         "Weights"
@@ -540,10 +540,10 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °∆C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 ¬∞C calories"
     IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_EVS                  "¿¸¿⁄∫º∆Æ"
+    IDS_ENERGY_EVS                  "Ï†ÑÏûêÎ≥ºÌä∏"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
     IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
@@ -557,7 +557,7 @@ END
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "øÀΩ∫∆Æ∑“"
+    IDS_LENGTH_ANGSTROMS            "ÏòπÏä§Ìä∏Î°¨"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimeters"

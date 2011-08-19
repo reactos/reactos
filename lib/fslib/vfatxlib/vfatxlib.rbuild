@@ -4,4 +4,5 @@
 	<include base="vfatxlib">.</include>
 	<file>fatx.c</file>
 	<file>vfatxlib.c</file>
+	<pch>vfatxlib.h</pch>
 </module>

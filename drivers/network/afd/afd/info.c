@@ -8,16 +8,12 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
-#include "pseh/pseh2.h"
 
 NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PLIST_ENTRY CurrentEntry;
@@ -26,6 +22,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    InfoReq ? InfoReq->InformationClass : 0));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    
+    if (!InfoReq)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     _SEH2_TRY {
 	switch( InfoReq->InformationClass ) {
@@ -45,13 +44,17 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    break;
 
 	case AFD_INFO_BLOCKING_MODE:
-	    InfoReq->Information.Ulong = FCB->BlockingMode;
+	    InfoReq->Information.Boolean = FCB->NonBlocking;
 	    break;
+            
+    case AFD_INFO_INLINING_MODE:
+        InfoReq->Information.Boolean = FCB->OobInline;
+        break;
 
     case AFD_INFO_RECEIVE_CONTENT_SIZE:
         /* Only touch InfoReq if a socket has been set up.
            Behaviour was verified under WinXP SP2. */
-        if(FCB->AddressFile.Object)
+        if(FCB->AddressFile.Object || FCB->Connection.Object)
             InfoReq->Information.Ulong = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
         break;
@@ -67,20 +70,27 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	         CurrentEntry = CurrentEntry->Flink;
 	    }
 
-	    /* Count the send in progress */
-	    if (FCB->SendIrp.InFlightRequest)
-	        InfoReq->Information.Ulong++;
-
-            break;
+        /* This needs to count too because when this is dispatched
+         * the user-mode IRP has already been completed and therefore
+         * will NOT be in our pending IRP list. We count this as one send
+         * outstanding although it could be multiple since we batch sends
+         * when waiting for the in flight request to return, so this number
+         * may not be accurate but it really doesn't matter that much since
+         * it's more or less a zero/non-zero comparison to determine whether
+         * we can shutdown the socket
+         */
+        if (FCB->SendIrp.InFlightRequest)
+            InfoReq->Information.Ulong++;
+        break;
 
 	default:
-	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",
+	    AFD_DbgPrint(MIN_TRACE,("Unknown info id %x\n",
 				    InfoReq->InformationClass));
 	    Status = STATUS_INVALID_PARAMETER;
 	    break;
 	}
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	AFD_DbgPrint(MID_TRACE,("Exception executing GetInfo\n"));
+	AFD_DbgPrint(MIN_TRACE,("Exception executing GetInfo\n"));
 	Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
@@ -93,23 +103,83 @@ NTSTATUS NTAPI
 AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    PCHAR NewBuffer;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+    
+    if (!InfoReq)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     _SEH2_TRY {
       switch (InfoReq->InformationClass) {
         case AFD_INFO_BLOCKING_MODE:
-          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Ulong));
-          FCB->BlockingMode = InfoReq->Information.Ulong;
+          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Boolean));
+          FCB->NonBlocking = InfoReq->Information.Boolean;
+          break;
+        case AFD_INFO_INLINING_MODE:
+          FCB->OobInline = InfoReq->Information.Boolean;
+          break;
+        case AFD_INFO_RECEIVE_WINDOW_SIZE:
+          NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+          if (NewBuffer)
+          {
+              if (FCB->Recv.Content > InfoReq->Information.Ulong)
+                  FCB->Recv.Content = InfoReq->Information.Ulong;
+              
+              if (FCB->Recv.Window)
+              {
+                  RtlCopyMemory(NewBuffer,
+                                FCB->Recv.Window,
+                                FCB->Recv.Content);
+                  
+                  ExFreePool(FCB->Recv.Window);
+              }
+              
+              FCB->Recv.Size = InfoReq->Information.Ulong;
+              FCB->Recv.Window = NewBuffer;
+              
+              Status = STATUS_SUCCESS;
+          }
+          else
+          {
+              Status = STATUS_NO_MEMORY;
+          }
+          break;
+        case AFD_INFO_SEND_WINDOW_SIZE:
+          NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+          if (NewBuffer)
+          {
+              if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
+                  FCB->Send.BytesUsed = InfoReq->Information.Ulong;
+                  
+              if (FCB->Send.Window)
+              {
+                  RtlCopyMemory(NewBuffer,
+                                FCB->Send.Window,
+                                FCB->Send.BytesUsed);
+                  
+                  ExFreePool(FCB->Send.Window);
+              }
+                  
+              FCB->Send.Size = InfoReq->Information.Ulong;
+              FCB->Send.Window = NewBuffer;
+                  
+              Status = STATUS_SUCCESS;
+          }
+          else
+          {
+              Status = STATUS_NO_MEMORY;
+          }
           break;
         default:
           AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
           break;
       }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      AFD_DbgPrint(MIN_TRACE,("Exception executing SetInfo\n"));
       Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
@@ -162,56 +232,27 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS NTAPI
 AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp ) {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PMDL Mdl = NULL;
-    PTDI_CONNECTION_INFORMATION ConnInfo = NULL;
 
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    if (FCB->RemoteAddress == NULL || FCB->Connection.Object == NULL) {
+    if (FCB->RemoteAddress == NULL) {
+        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
 
-    if(NT_SUCCESS(Status = TdiBuildNullConnectionInfo
-                      (&ConnInfo,
-                       FCB->RemoteAddress->Address[0].AddressType)))
+    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(FCB->RemoteAddress))
     {
-        Mdl = IoAllocateMdl(ConnInfo, 
-                            sizeof(TDI_CONNECTION_INFORMATION) + 
-                                   TaLengthOfTransportAddress(ConnInfo->RemoteAddress),
-                            FALSE,
-                            FALSE,
-                            NULL);
-
-        if (Mdl)
-        {
-            _SEH2_TRY {
-               MmProbeAndLockPages(Mdl, Irp->RequestorMode, IoModifyAccess);
-            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	       AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	       Status = _SEH2_GetExceptionCode();
-	    } _SEH2_END;
-
-            if (NT_SUCCESS(Status))
-            {
-                Status = TdiQueryInformation(FCB->Connection.Object,
-                          TDI_QUERY_CONNECTION_INFO,
-                          Mdl);
-
-                if (NT_SUCCESS(Status))
-                {
-                    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= TaLengthOfTransportAddress(ConnInfo->RemoteAddress))
-                        RtlCopyMemory(Irp->UserBuffer, ConnInfo->RemoteAddress, TaLengthOfTransportAddress(ConnInfo->RemoteAddress));
-                    else
-                        Status = STATUS_BUFFER_TOO_SMALL;
-                }
-            }
-         }
-
-         ExFreePool(ConnInfo);
+        RtlCopyMemory(Irp->UserBuffer, FCB->RemoteAddress, TaLengthOfTransportAddress(FCB->RemoteAddress));
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
+        Status = STATUS_BUFFER_TOO_SMALL;
     }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );

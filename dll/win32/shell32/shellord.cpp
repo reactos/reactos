@@ -19,61 +19,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wine/debug.h"
-#include "winnls.h"
-#include "winternl.h"
-
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-
-#include "shellapi.h"
-#include "objbase.h"
-#include "shlguid.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "shlobj.h"
-#include "shell32_main.h"
-#include "undocshell.h"
-#include "pidl.h"
-#include "shlwapi.h"
-#include "commdlg.h"
-#include "recyclebin.h"
-#include "commoncontrols.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
-/* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
-/*        !!! it is in both here and comctl32undoc.c      !!! */
-typedef struct tagCREATEMRULIST
-{
-    DWORD  cbSize;        /* size of struct */
-    DWORD  nMaxItems;     /* max no. of items in list */
-    DWORD  dwFlags;       /* see below */
-    HKEY   hKey;          /* root reg. key under which list is saved */
-    LPCSTR lpszSubKey;    /* reg. subkey */
-    PROC   lpfnCompare;   /* item compare proc */
-} CREATEMRULISTA, *LPCREATEMRULISTA;
-
+/* FIXME: !!! move flags to header file !!! */
 /* dwFlags */
 #define MRUF_STRING_LIST  0 /* list will contain strings */
 #define MRUF_BINARY_LIST  1 /* list will contain binary data */
 #define MRUF_DELAYED_SAVE 2 /* only save list order to reg. is FreeMRUList */
 
 EXTERN_C HANDLE WINAPI CreateMRUListA(LPCREATEMRULISTA lpcml);
-EXTERN_C DWORD  WINAPI FreeMRUList(HANDLE hMRUList);
 EXTERN_C INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
 EXTERN_C INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum);
 EXTERN_C INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);

@@ -1,35 +1,37 @@
 /*
-* translated by xrogers (http://rogers.cyberdusk.pl/)
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-* translation update by Olaf Siejka (Caemyr), Apr 2011
-*/
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         translation update by Olaf Siejka (Caemyr), Apr 2011
+ *         UTF-8 conversion by Caemyr (May, 2011) 
+ */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX DISCARDABLE  0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Zakoñcz program - "
+CAPTION "ZakoÅ„cz program - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Trwa zamykanie programu... Proszê czekaæ",IDC_STATIC,7,7,186,11
-    CONTROL         "Postêp",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+    LTEXT           "Trwa zamykanie programu... ProszÄ™ czekaÄ‡",IDC_STATIC,7,7,186,11
+    CONTROL         "PostÄ™p",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakoñczyæ program, wciœnij Zakoñcz teraz.",
+    LTEXT           "JeÅ›li zdecydujesz siÄ™ zamknÄ…Ä‡ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakoÅ„czyÄ‡ program, wciÅ›nij ZakoÅ„cz teraz.",
                     IDC_STATIC,7,40,186,26
-    DEFPUSHBUTTON   "&Zakoñcz teraz",IDC_END_NOW,150,71,43,17
+    DEFPUSHBUTTON   "&ZakoÅ„cz teraz",IDC_END_NOW,150,71,43,17
 END
 
 IDD_NOT_RESPONDING DIALOGEX DISCARDABLE 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Zakoñcz program - "
+CAPTION "ZakoÅ„cz program - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Anuluj",IDCANCEL,142,98,43,17
-    PUSHBUTTON      "&Zakoñcz teraz",IDC_END_NOW,78,98,43,17
+    PUSHBUTTON      "&ZakoÅ„cz teraz",IDC_END_NOW,78,98,43,17
     LTEXT           "Wybrany program nie odpowiada",IDC_STATIC,7,7,178,8
-    LTEXT           "Aby powróciæ do ReactOS i sprawdziæ status programu, kliknij Anuluj",
+    LTEXT           "Aby powrÃ³ciÄ‡ do ReactOS i sprawdziÄ‡ status programu, kliknij Anuluj",
                     IDC_STATIC,7,26,178,16
-    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakoñczyæ program, wciœnij Zakoñcz teraz.",
+    LTEXT           "JeÅ›li zdecydujesz siÄ™ zamknÄ…Ä‡ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakoÅ„czyÄ‡ program, wciÅ›nij ZakoÅ„cz teraz.",
                     IDC_STATIC,7,53,178,26
 END
 
@@ -45,20 +47,20 @@ STRINGTABLE
 BEGIN
   IDS_EDIT "Edytuj"
   IDS_MARK "Zaznacz"
-  IDS_COPY "Kopiuj\tWejdŸ"
+  IDS_COPY "Kopiuj\tWejdÅº"
   IDS_PASTE "Wklej"
   IDS_SELECTALL "Zaznacz wszystko"
-  IDS_SCROLL "Przewiñ"
-  IDS_FIND "ZnajdŸ..."
-  IDS_DEFAULTS "Ustawienia domyœlne"
-  IDS_PROPERTIES "W³aœciwoœci"
-  IDS_SCROLLHERE "Przewiñ tutaj"
-  IDS_SCROLLTOP "Przewiñ na pocz¹tek"
-  IDS_SCROLLBOTTOM "Przewiñ na koniec"
+  IDS_SCROLL "PrzewiÅ„"
+  IDS_FIND "ZnajdÅº..."
+  IDS_DEFAULTS "Ustawienia domyÅ›lne"
+  IDS_PROPERTIES "WÅ‚aÅ›ciwoÅ›ci"
+  IDS_SCROLLHERE "PrzewiÅ„ tutaj"
+  IDS_SCROLLTOP "PrzewiÅ„ na poczÄ…tek"
+  IDS_SCROLLBOTTOM "PrzewiÅ„ na koniec"
   IDS_SCROLLPAGE_UP "Poprzednia strona"
-  IDS_SCROLLPAGE_DOWN "Nastêpna strona"
-  IDS_SCROLLUP "Przewiñ do góry"
-  IDS_SCROLLDOWN "Przewiñ na dó³"
+  IDS_SCROLLPAGE_DOWN "NastÄ™pna strona"
+  IDS_SCROLLUP "PrzewiÅ„ do gÃ³ry"
+  IDS_SCROLLDOWN "PrzewiÅ„ na dÃ³Å‚"
 
   IDS_COMMAND_PROMPT "Wiersz polecenia"
 END

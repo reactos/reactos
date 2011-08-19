@@ -129,14 +129,10 @@
  #define  DEF_I64(x)     (x##I64)
 
  /* ReactOS-specific defines */
- #ifdef USE_REACTOS_DDK
- #else //USE_REACTOS_DDK
 
   #define DDKAPI          __stdcall
   #define DDKFASTAPI      __fastcall
   #define DDKCDECLAPI     _cdecl
-
- #endif  //DDKAPI
 
  #define DECLSPEC_NAKED   __declspec(naked)
 

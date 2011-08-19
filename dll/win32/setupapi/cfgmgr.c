@@ -5001,6 +5001,32 @@ CONFIGRET WINAPI CM_Run_Detection_Ex(
 
 
 /***********************************************************************
+ * CM_Set_Class_Registry_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_Class_Registry_PropertyA(
+    LPGUID ClassGuid, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %lx %p %lu %lx %p\n",
+          ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Set_Class_Registry_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_Class_Registry_PropertyW(
+    LPGUID ClassGuid, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %lx %p %lu %lx %p\n",
+          ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Set_DevNode_Problem [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Set_DevNode_Problem(
@@ -5180,6 +5206,30 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
                 ulType = REG_MULTI_SZ;
                 break;
 
+            case CM_DRP_SECURITY:
+                ulType = REG_BINARY;
+                break;
+
+            case CM_DRP_DEVTYPE:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_EXCLUSIVE:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_CHARACTERISTICS:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_UI_NUMBER_DESC_FORMAT:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+                ulType = REG_DWORD;
+                break;
+
             default:
                 return CR_INVALID_PROPERTY;
         }
@@ -5330,6 +5380,30 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
 
         case CM_DRP_LOWERFILTERS:
             ulType = REG_MULTI_SZ;
+            break;
+
+        case CM_DRP_SECURITY:
+            ulType = REG_BINARY;
+            break;
+
+        case CM_DRP_DEVTYPE:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+            ulType = REG_DWORD;
             break;
 
         default:

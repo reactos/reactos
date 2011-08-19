@@ -59,6 +59,7 @@
 #define KeReleaseGuardedMutexUnsafe _KeReleaseGuardedMutexUnsafe
 #define KeTryToAcquireGuardedMutex _KeTryToAcquireGuardedMutex
 
+#include "tag.h"
 #include "ke.h"
 #include "ob.h"
 #include "mm.h"
@@ -83,7 +84,6 @@
 #endif
 #include "dbgk.h"
 #include "spinlock.h"
-#include "tag.h"
 #include "test.h"
 #include "inbv.h"
 #include "vdm.h"

@@ -7,9 +7,9 @@
 7   stdcall  getsockopt(long long long ptr ptr) ws2_32.getsockopt
 8   stdcall  htonl(long) ws2_32.htonl
 9   stdcall  htons(long) ws2_32.htons
-10  stdcall  ioctlsocket(long long ptr) ws2_32.ioctlsocket
-11  stdcall  inet_addr(str) ws2_32.inet_addr
-12  stdcall  inet_ntoa(ptr) ws2_32.inet_ntoa
+10  stdcall  inet_addr(str) ws2_32.inet_addr
+11  stdcall  inet_ntoa(ptr) ws2_32.inet_ntoa
+12  stdcall  ioctlsocket(long long ptr) ws2_32.ioctlsocket
 13  stdcall  listen(long long) ws2_32.listen
 14  stdcall  ntohl(long) ws2_32.ntohl
 15  stdcall  ntohs(long) ws2_32.ntohs

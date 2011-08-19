@@ -42,10 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <string.h>
-#include <locale.h>
-#include "tnmain.h"
-#include "tnmisc.h"
+#include "precomp.h"
 
 int telCommandLine (Telnet &MyConnection);
 

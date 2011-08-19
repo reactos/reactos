@@ -83,12 +83,12 @@ list(APPEND SOURCE
     ex/event.c
     ex/evtpair.c
     ex/exintrin.c
-    ex/fastinterlck.c
     ex/fmutex.c
     ex/handle.c
     ex/harderr.c
     ex/hdlsterm.c
     ex/init.c
+    ex/interlocked.c
     ex/keyedevt.c
     ex/locale.c
     ex/lookas.c
@@ -276,10 +276,8 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/i386/interlck_asm.S
         ex/i386/fastinterlck_asm.S
         ex/i386/ioport.S
-        ke/freeldr.c
         ke/i386/abios.c
         ke/i386/cpu.c
         ke/i386/context.c
@@ -306,7 +304,6 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ex/amd64/fastinterlck.c
         ke/amd64/boot.S
         ke/amd64/context.c
         ke/amd64/cpu.c
@@ -421,9 +418,13 @@ else() # _WINKD_
 
 endif()
 
-add_executable(ntoskrnl ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch ${SOURCE})
+add_executable(ntoskrnl ${SOURCE})
 
-set_entrypoint(ntoskrnl KiSystemStartup@4)
+if (ARCH MATCHES i386)
+  set_entrypoint(ntoskrnl KiSystemStartup@4)
+else()
+  set_entrypoint(ntoskrnl KiSystemStartup)
+endif()
 set_subsystem(ntoskrnl native)
 
 if(MSVC)
@@ -445,11 +446,10 @@ target_link_libraries(ntoskrnl
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
 
-add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
+add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 add_importlib_target(ntoskrnl.spec)
 
 add_library(ntdllsys ntdll.S)
-set_target_properties(ntdllsys PROPERTIES LINKER_LANGUAGE C)

@@ -24,6 +24,9 @@ _flsbuf(int ch, FILE *stream)
         return EOF;
     }
 
+    /* Always reset _cnt */
+    stream->_cnt = 0;
+
     /* Check if this was a read buffer */
     if (stream->_flag & _IOREAD)
     {
@@ -31,7 +34,6 @@ _flsbuf(int ch, FILE *stream)
         if (!(stream->_flag & _IOEOF))
         {
             stream->_flag |= _IOERR;
-            stream->_cnt = 0;
             return EOF;
         }
 
@@ -43,16 +45,17 @@ _flsbuf(int ch, FILE *stream)
     stream->_flag &= ~(_IOREAD|_IOEOF);
     stream->_flag |= _IOWRT;
 
-    /* If we have no buffer, try to allocate one */
-    if (!stream->_base && stream != stdout && stream != stderr)
+    /* Check if should get a buffer */
+    if (!(stream->_flag & _IONBF) && stream != stdout && stream != stderr)
     {
-        alloc_buffer(stream);
+        /* If we have no buffer, try to allocate one */
+        if (!stream->_base) alloc_buffer(stream);
     }
 
-    /* Check if we have a buffer now */
-    if (stream->_base)
+    /* Check if we can use a buffer now */
+    if (stream->_base && !(stream->_flag & _IONBF))
     {
-        /* We have one, check if there is something to write */
+        /* We can, check if there is something to write */
         count = stream->_ptr - stream->_base;
         if (count > 0)
             written = _write(stream->_file, stream->_base, count);

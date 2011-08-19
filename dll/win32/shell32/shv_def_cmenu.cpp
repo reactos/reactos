@@ -16,11 +16,6 @@ TODO:
 */
 
 #include <precomp.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "shelllink.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 

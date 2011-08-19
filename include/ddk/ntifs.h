@@ -7344,7 +7344,7 @@ FsRtlAddBaseMcbEntry(
   IN LONGLONG SectorCount);
 
 NTKERNELAPI
-VOID
+BOOLEAN
 NTAPI
 FsRtlRemoveBaseMcbEntry(
   IN PBASE_MCB Mcb,
@@ -9615,7 +9615,7 @@ ZwFlushBuffersFile(
 
 #if (VER_PRODUCTBUILD >= 2195)
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction (

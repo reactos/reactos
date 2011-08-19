@@ -491,7 +491,7 @@ PPBridge_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
             /* Skip the next descriptor since this one is double sized */
             i++;
-            (&Limit[i])->Type == CmResourceTypeNull;
+            Limit[i].Type = CmResourceTypeNull;
         }
     }
 

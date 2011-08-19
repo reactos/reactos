@@ -8,17 +8,16 @@ add_definitions(-D_WIN32_WINNT=0x601)
 add_definitions(
     -D__WINESRC__
     -D_WINE
-    -DLIBXML_STATIC
-    -D_DLL
-    -D__USE_CRTIMP)
+    -DLIBXML_STATIC)
 
 if(MSVC)
-add_definitions(/FIwine/typeof.h)
+    add_compiler_flags(/FIwine/typeof.h /FImsvc.h)
 endif(MSVC)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(msxml3.dll msxml3.spec)
 
 list(APPEND SOURCE
@@ -52,6 +51,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
 
+if(MSVC)
+    list(APPEND SOURCE msvc_uuid.c)
+endif()
+
 add_library(msxml3 SHARED ${SOURCE})
 
 set_module_type(msxml3 win32dll)
@@ -61,6 +64,10 @@ target_link_libraries(msxml3
     uuid
     wine
     wineldr)
+
+if(MSVC)
+    target_link_libraries(msxml3 xml_uuids)
+endif()
 
 add_importlibs(msxml3
     msvcrt

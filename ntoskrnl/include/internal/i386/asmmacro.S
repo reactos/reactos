@@ -217,11 +217,18 @@ MACRO(KiCallHandler, Handler)
 ENDM
 
 MACRO(TRAP_ENTRY, Trap, Flags)
-EXTERN @&Trap&Handler@4 :PROC
+    EXTERN @&Trap&Handler@4 :PROC
     PUBLIC _&Trap
-    _&Trap:
-    KiEnterTrap Flags
-    KiCallHandler @&Trap&Handler@4
+    .PROC &Trap
+        /* Generate proper debugging symbols */
+        FPO 0, 0, 0, 0, 1, FRAME_TRAP
+
+        /* Common code to create the trap frame */
+        KiEnterTrap Flags
+
+        /* Call the C handler */
+        KiCallHandler @&Trap&Handler@4
+    .ENDP &Trap
 ENDM
 
 #define KI_RESTORE_EAX        HEX(001)
@@ -329,7 +336,7 @@ PUBLIC @&Name&@4
     if (Flags AND KI_RESTORE_EFLAGS)
 
         /* Restore EFLAGS */
-        popf
+        popfd
 
     endif
 
@@ -343,7 +350,7 @@ PUBLIC @&Name&@4
     elseif (Flags AND KI_EXIT_IRET)
 
         /* Return with iret */
-        iret
+        iretd
 
     elseif (Flags AND KI_EXIT_JMP)
 

@@ -19,15 +19,3 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <windows.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-
-
-
-

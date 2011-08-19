@@ -35,52 +35,223 @@
  * SUCH DAMAGE.
  */
 
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
 
-#include "rossym.h"
-#include "dwarf.h"
-#include "pe.h"
-
 BOOLEAN
-RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
-                            ULONG_PTR RelativeAddress,
-                            ULONG *LineNumber,
-                            char *FileName,
-                            char *FunctionName)
+RosSymGetAddressInformation
+(PROSSYM_INFO RosSymInfo,
+ ULONG_PTR RelativeAddress,
+ PROSSYM_LINEINFO RosSymLineInfo)
 {
-	char *cdir, *dir, *file, *function;
-	ulong line, mtime, length;
+    ROSSYM_REGISTERS registers;
+    DwarfParam params[sizeof(RosSymLineInfo->Parameters)/sizeof(RosSymLineInfo->Parameters[0])];
+    DwarfSym proc = { };
+    int i;
 	int res = dwarfpctoline
 		(RosSymInfo, 
+         &proc,
 		 RelativeAddress + RosSymInfo->pe->imagebase, 
-		 &cdir,
-		 &dir,
-		 &file,
-		 &function,
-		 &line,
-		 &mtime,
-		 &length);
-	if (res != -1) {
-		*LineNumber = line;
-		FileName[0] = 0;
-		if (dir) {
-			strcpy(FileName, dir);
-			strcat(FileName, "/");
-		}
-		if (file)
-			strcat(FileName, file);
-		FunctionName[0] = 0;
-		if (function)
-			strcpy(FunctionName, function);
-		return TRUE;
-	} else {
+		 &RosSymLineInfo->FileName,
+		 &RosSymLineInfo->FunctionName,
+		 &RosSymLineInfo->LineNumber);
+	if (res == -1) {
+        werrstr("Could not get basic function info");
 		return FALSE;
-	}
+    }
+
+    if (!(RosSymLineInfo->Flags & ROSSYM_LINEINFO_HAS_REGISTERS))
+        return TRUE;
+
+    registers = RosSymLineInfo->Registers;
+
+    DwarfExpr cfa = { };
+    ulong cfaLocation;
+    if (dwarfregunwind
+        (RosSymInfo, 
+         RelativeAddress + RosSymInfo->pe->imagebase, 
+         proc.attrs.framebase.c, 
+         &cfa,
+         &registers) == -1) {
+        werrstr("Can't get cfa location for %s", RosSymLineInfo->FunctionName);
+        return TRUE;
+    }
+
+    res = dwarfgetparams
+        (RosSymInfo,
+         &proc,
+         RelativeAddress + RosSymInfo->pe->imagebase,
+         sizeof(params)/sizeof(params[0]),
+         params);
+
+    if (res == -1) {
+        werrstr("%s: could not get params at all", RosSymLineInfo->FunctionName);
+        RosSymLineInfo->NumParams = 0;
+        return TRUE;
+    }
+
+    werrstr("%s: res %d", RosSymLineInfo->FunctionName, res);
+    RosSymLineInfo->NumParams = res;
+
+    res = dwarfcomputecfa(RosSymInfo, &cfa, &registers, &cfaLocation);
+    if (res == -1) {
+        werrstr("%s: could not get our own cfa", RosSymLineInfo->FunctionName);
+        return TRUE;
+    }
+
+    for (i = 0; i < RosSymLineInfo->NumParams; i++) {
+        werrstr("Getting arg %s, unit %x, type %x", 
+                params[i].name, params[i].unit, params[i].type);
+        res = dwarfargvalue
+            (RosSymInfo, 
+             &proc, 
+             RelativeAddress + RosSymInfo->pe->imagebase,
+             cfaLocation,
+             &registers,
+             &params[i]);
+        if (res == -1) { RosSymLineInfo->NumParams = i; return TRUE; }
+        werrstr("%s: %x", params[i].name, params[i].value);
+        RosSymLineInfo->Parameters[i].ValueName = malloc(strlen(params[i].name)+1);
+        strcpy(RosSymLineInfo->Parameters[i].ValueName, params[i].name);
+        free(params[i].name);
+        RosSymLineInfo->Parameters[i].Value = params[i].value;
+    }
+
+    return TRUE;
+}
+
+VOID
+RosSymFreeAggregate(PROSSYM_AGGREGATE Aggregate)
+{
+    int i;
+    for (i = 0; i < Aggregate->NumElements; i++) {
+        free(Aggregate->Elements[i].Name);
+        free(Aggregate->Elements[i].Type);
+    }
+    free(Aggregate->Elements);
+}
+
+BOOLEAN
+RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate)
+{
+    char *tchar;
+    ulong unit, typeoff = 0;
+    DwarfSym type = { };
+    // Get the first unit
+    if (dwarfaddrtounit(RosSymInfo, RosSymInfo->pe->codestart + RosSymInfo->pe->imagebase, &unit) == -1)
+        return FALSE;
+
+    if (Type[0] == '#') {
+        for (tchar = Type + 1; *tchar; tchar++) {
+            typeoff *= 10;
+            typeoff += *tchar - '0';
+        }
+        if (dwarfseeksym(RosSymInfo, unit, typeoff, &type) == -1)
+            return FALSE;
+    } else if (dwarflookupnameinunit(RosSymInfo, unit, Type, &type) != 0 ||
+        (type.attrs.tag != TagStructType && type.attrs.tag != TagUnionType))
+        return FALSE;
+    
+    DwarfSym element = { }, inner = { };
+    int count = 0;
+    
+    werrstr("type %s (want %s) type %x\n", type.attrs.name, Type, type.attrs.type);
+    
+    if (type.attrs.have.type) {
+        if (dwarfseeksym(RosSymInfo, unit, type.attrs.type, &inner) == -1)
+            return FALSE;
+        type = inner;
+    }
+    
+    werrstr("finding members %d\n", type.attrs.haskids);
+    while (dwarfnextsymat(RosSymInfo, &type, &element) != -1) {
+        if (element.attrs.have.name)
+            werrstr("%x %s\n", element.attrs.tag, element.attrs.name);
+        if (element.attrs.tag == TagMember) count++;
+    }
+    
+    werrstr("%d members\n", count);
+    
+    if (!count) return FALSE;
+    memset(&element, 0, sizeof(element));
+    Aggregate->NumElements = count;
+    Aggregate->Elements = malloc(sizeof(ROSSYM_AGGREGATE_MEMBER) * count);
+    count = 0;
+    werrstr("Enumerating %s\n", Type);
+    while (dwarfnextsymat(RosSymInfo, &type, &element) != -1) {
+        memset(&Aggregate->Elements[count], 0, sizeof(*Aggregate->Elements));
+        if (element.attrs.tag == TagMember) {
+            if (element.attrs.have.name) {
+                Aggregate->Elements[count].Name = malloc(strlen(element.attrs.name) + 1);
+                strcpy(Aggregate->Elements[count].Name, element.attrs.name);
+            }
+            Aggregate->Elements[count].TypeId = element.attrs.type;
+            // Seek our range in loc
+            DwarfBuf locbuf;
+            DwarfBuf instream = { };
+            
+            locbuf.d = RosSymInfo;
+            locbuf.addrsize = RosSymInfo->addrsize;
+
+            if (element.attrs.have.datamemberloc) {
+                instream = locbuf;
+                instream.p = element.attrs.datamemberloc.b.data;
+                instream.ep = element.attrs.datamemberloc.b.data + element.attrs.datamemberloc.b.len;
+                werrstr("datamemberloc type %x %p:%x\n", 
+                        element.attrs.have.datamemberloc,
+                        element.attrs.datamemberloc.b.data, element.attrs.datamemberloc.b.len);
+            }
+
+            if (dwarfgetarg(RosSymInfo, element.attrs.name, &instream, 0, NULL, &Aggregate->Elements[count].BaseOffset) == -1)
+                Aggregate->Elements[count].BaseOffset = -1;
+            werrstr("tag %x name %s base %x type %x\n", 
+                    element.attrs.tag, element.attrs.name, 
+                    Aggregate->Elements[count].BaseOffset,
+                    Aggregate->Elements[count].TypeId);
+            count++;
+        }
+    }
+    for (count = 0; count < Aggregate->NumElements; count++) {
+        memset(&type, 0, sizeof(type));
+        memset(&inner, 0, sizeof(inner));
+        werrstr("seeking type %x (%s) from %s\n", 
+                Aggregate->Elements[count].TypeId,
+                Aggregate->Elements[count].Type,
+                Aggregate->Elements[count].Name);
+        dwarfseeksym(RosSymInfo, unit, Aggregate->Elements[count].TypeId, &type);
+        while (type.attrs.have.type && type.attrs.tag != TagPointerType) {
+            if (dwarfseeksym(RosSymInfo, unit, type.attrs.type, &inner) == -1)
+                return FALSE;
+            type = inner;
+        }
+        //dwarfdumpsym(RosSymInfo, &type);
+        if (type.attrs.have.name) {
+            Aggregate->Elements[count].Type = malloc(strlen(type.attrs.name) + 1);
+            strcpy(Aggregate->Elements[count].Type, type.attrs.name);
+        } else {
+            char strbuf[128] = {'#'}, *bufptr = strbuf + 1;
+            ulong idcopy = Aggregate->Elements[count].TypeId;
+            ulong mult = 1;
+            while (mult * 10 < idcopy) mult *= 10;
+            while (mult > 0) {
+                *bufptr++ = '0' + ((idcopy / mult) % 10);
+                mult /= 10;
+            }
+            Aggregate->Elements[count].Type = malloc(strlen(strbuf) + 1);
+            strcpy(Aggregate->Elements[count].Type, strbuf);
+        }
+        if (type.attrs.tag == TagPointerType)
+            Aggregate->Elements[count].Size = RosSymInfo->addrsize;
+        else
+            Aggregate->Elements[count].Size = type.attrs.bytesize;
+        if (type.attrs.have.bitsize)
+            Aggregate->Elements[count].Bits = type.attrs.bitsize;
+        if (type.attrs.have.bitoffset)
+            Aggregate->Elements[count].FirstBit = type.attrs.bitoffset;
+    }
+    return TRUE;
 }
 
 /* EOF */

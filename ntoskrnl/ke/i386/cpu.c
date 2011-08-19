@@ -41,7 +41,7 @@ ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 ULONG KePrefetchNTAGranularity = 32;
-CHAR KeNumberProcessors;
+CHAR KeNumberProcessors = 0;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
@@ -1171,22 +1171,6 @@ KiI386PentiumLockErrataFixup(VOID)
 
     /* Set the first 7 entries as read-only to produce a fault */
     MmSetPageProtect(NULL, NewIdt, PAGE_READONLY);
-}
-
-BOOLEAN
-NTAPI
-KeDisableInterrupts(VOID)
-{
-    ULONG Flags;
-    BOOLEAN Return;
-
-    /* Get EFLAGS and check if the interrupt bit is set */
-    Flags = __readeflags();
-    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
-
-    /* Disable interrupts */
-    _disable();
-    return Return;
 }
 
 BOOLEAN

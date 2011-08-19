@@ -1,5 +1,6 @@
 
 include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${REACTOS_SOURCE_DIR}/lib/newinflib
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
@@ -38,4 +39,5 @@ target_link_libraries(usetup
 
 set_module_type(usetup nativecui)
 add_importlibs(usetup ntdll)
+add_pch(usetup usetup.h)
 add_cd_file(TARGET usetup DESTINATION reactos/system32 NO_CAB NAME_ON_CD smss.exe FOR bootcd regtest)

@@ -1,44 +1,45 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\cacls\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:     ReactOS CACLS
+ * FILE:        base/applications/cacls/lang/sv-SE.rc
+ * PURPOSE:     Swedish resource file
+ * TRANSLATOR:  Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Visar eller ändrar rättighets-kontroll-listor (ACL) av filer\n\n\
-CACLS filnamn  [/T] [/E] [/C] [/G användare:rättighet [...]] [/R användare [...]]\n\
-               [/P användare:rättighet [...]] [/D användare [...]]\n\
+IDS_HELP, "Visar eller Ã¤ndrar rÃ¤ttighets-kontroll-listor (ACL) av filer\n\n\
+CACLS filnamn  [/T] [/E] [/C] [/G anvÃ¤ndare:rÃ¤ttighet [...]] [/R anvÃ¤ndare [...]]\n\
+               [/P anvÃ¤ndare:rÃ¤ttighet [...]] [/D anvÃ¤ndare [...]]\n\
    filnamn       Visar ACL.\n\
-   /T            Ändrer ACL av specificerade filer i\n\
+   /T            Ã„ndrer ACL av specificerade filer i\n\
                  nuvarende katalog och alla undermapper.\n\
-   /E            Redigera ACL istället för erstätta den.\n\
-   /C            Fortsätt vid nekad åtkomst fel.\n\
-   /G användare:rättighet  Medge specificerad användar rättigheter.\n\
-                 rättighet kan vara: L  Läs\n\
+   /E            Redigera ACL istÃ¤llet fÃ¶r erstÃ¤tta den.\n\
+   /C            FortsÃ¤tt vid nekad Ã¥tkomst fel.\n\
+   /G anvÃ¤ndare:rÃ¤ttighet  Medge specificerad anvÃ¤ndar rÃ¤ttigheter.\n\
+                 rÃ¤ttighet kan vara: L  LÃ¤s\n\
                               S  Skriv\n\
-                              E  Ändra (skriv)\n\
+                              E  Ã„ndra (skriv)\n\
                               F  Full kontroll\n\
-  /R användare      Återkkalla specificerad användarrättighet (endast giltig med /E).\n\
-  /P användare:rättighet Erstätt specificerad användar rättighet.\n\
-                 rättighet kan vara: I  Ingen\n\
-                               L  Läs\n\
+  /R anvÃ¤ndare      Ã…terkkalla specificerad anvÃ¤ndarrÃ¤ttighet (endast giltig med /E).\n\
+  /P anvÃ¤ndare:rÃ¤ttighet ErstÃ¤tt specificerad anvÃ¤ndar rÃ¤ttighet.\n\
+                 rÃ¤ttighet kan vara: I  Ingen\n\
+                               L  LÃ¤s\n\
                                S  Skrive\n\
-                               E  Ändra (skriv)\n\
+                               E  Ã„ndra (skriv)\n\
                                F  Full kontroll\n\
-   /D användare     Avslå specificerad användare tillgång.\n\
-Wildcards kan användas för att specificere mer än en fil i ett kommando.\n\
-Du kan spesifisere mere enn en användare i en kommando.\n\n\
-Förkortningar:\n\
+   /D anvÃ¤ndare     AvslÃ¥ specificerad anvÃ¤ndare tillgÃ¥ng.\n\
+Wildcards kan anvÃ¤ndas fÃ¶r att specificere mer Ã¤n en fil i ett kommando.\n\
+Du kan spesifisere mere enn en anvÃ¤ndare i en kommando.\n\n\
+FÃ¶rkortningar:\n\
    CI - Container Inherit.\n\
-        ACE kommer att bli ärvd av mappar.\n\
+        ACE kommer att bli Ã¤rvd av mappar.\n\
    OI - Object Inherit.\n\
-        ACE kommer att bli ärvd av filer.\n\
+        ACE kommer att bli Ã¤rvd av filer.\n\
    IO - Inherit Only.\n\
-        ACE gäller inte nuvarende fil/katalog.\n"
+        ACE gÃ¤ller inte nuvarende fil/katalog.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"
@@ -50,31 +51,31 @@ IDS_ABBR_CHANGE, "C"
 IDS_ABBR_NONE, "N"
 IDS_ALLOW, ""
 IDS_DENY, "(NEKA)"
-IDS_SPECIAL_ACCESS, "(speciell rättighet:)"
-IDS_GENERIC_READ, "GENERISK_LÄSNING"
+IDS_SPECIAL_ACCESS, "(speciell rÃ¤ttighet:)"
+IDS_GENERIC_READ, "GENERISK_LÃ„SNING"
 IDS_GENERIC_WRITE, "GENERISK_SKRIVNING"
-IDS_GENERIC_EXECUTE, "GENERISK_KÖRNING"
+IDS_GENERIC_EXECUTE, "GENERISK_KÃ–RNING"
 IDS_GENERIC_ALL, "GENERISK_ALLT"
-IDS_FILE_GENERIC_EXECUTE, "FIL_GENERISK_KJØRE"
-IDS_FILE_GENERIC_READ, "FIL_GENERISK_LÄSNING"
+IDS_FILE_GENERIC_EXECUTE, "FIL_GENERISK_KJÃ˜RE"
+IDS_FILE_GENERIC_READ, "FIL_GENERISK_LÃ„SNING"
 IDS_FILE_GENERIC_WRITE, "FIL_GENERISK_SKRIVNING"
-IDS_FILE_READ_DATA, "FIL_LÄS_DATA"
+IDS_FILE_READ_DATA, "FIL_LÃ„S_DATA"
 IDS_FILE_WRITE_DATA, "FIL_SKRIV_DATA"
-IDS_FILE_APPEND_DATA, "FIL_TILLFÖRA_DATA"
-IDS_FILE_READ_EA, "FIL_LÄS_EA"
+IDS_FILE_APPEND_DATA, "FIL_TILLFÃ–RA_DATA"
+IDS_FILE_READ_EA, "FIL_LÃ„S_EA"
 IDS_FILE_WRITE_EA, "FIL_SKRIVA_EA"
-IDS_FILE_EXECUTE, "FIL_KÖRA"
+IDS_FILE_EXECUTE, "FIL_KÃ–RA"
 IDS_FILE_DELETE_CHILD, "FIL_RADERA_BARN"
-IDS_FILE_READ_ATTRIBUTES, "FIL_LÄSA_ATTRIBUT"
+IDS_FILE_READ_ATTRIBUTES, "FIL_LÃ„SA_ATTRIBUT"
 IDS_FILE_WRITE_ATTRIBUTES, "FIL_SKRIVA_ATTRIBUT"
-IDS_MAXIMUM_ALLOWED, "MAXIMALT_TILLÅTNA"
-IDS_ACCESS_SYSTEM_SECURITY, "TILLGÅNG_SYSTEM_SÄKERHET"
-IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIKA_RÄTTIGHETER_ALLT"
-IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RÄTTIGHETER_KRÄVS"
+IDS_MAXIMUM_ALLOWED, "MAXIMALT_TILLÃ…TNA"
+IDS_ACCESS_SYSTEM_SECURITY, "TILLGÃ…NG_SYSTEM_SÃ„KERHET"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIKA_RÃ„TTIGHETER_ALLT"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RÃ„TTIGHETER_KRÃ„VS"
 IDS_SYNCHRONIZE, "SYNKRONISERA"
-IDS_WRITE_OWNER, "SKRIVA_ÄGARE"
+IDS_WRITE_OWNER, "SKRIVA_Ã„GARE"
 IDS_WRITE_DAC, "SKRIVA_DAC"
-IDS_READ_CONTROL, "LÄSE_KONTROLL"
+IDS_READ_CONTROL, "LÃ„SE_KONTROLL"
 IDS_DELETE, "RADERA"
-IDS_STANDARD_RIGHTS_ALL, "STANDARD_RÄTTIGHETER_ALLT"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RÃ„TTIGHETER_ALLT"
 END

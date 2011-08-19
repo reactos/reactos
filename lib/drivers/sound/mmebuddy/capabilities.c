@@ -8,12 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <sndtypes.h>
-#include <mmebuddy.h>
+#include "precomp.h"
 
 /*
     Obtains the capabilities of a sound device. This routine ensures that the

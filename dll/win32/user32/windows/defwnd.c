@@ -753,6 +753,7 @@ DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
   ScrollTrackScrollBar(Wnd, ScrollBar, Pt );
 }
 
+LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
 
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -824,7 +825,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_SCREENSAVE:
         NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
         break;
-LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
+
       case SC_NEXTWINDOW:
       case SC_PREVWINDOW:
         DoAppSwitch( wParam, lParam);
@@ -833,9 +834,10 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
       case SC_HOTKEY:
         {
            HWND hwnd, hWndLastActive;
+           PWND pWnd;
 
            hwnd = (HWND)lParam;
-           PWND pWnd = ValidateHwnd(hwnd);
+           pWnd = ValidateHwnd(hwnd);
            if (pWnd)
            {
               hWndLastActive = GetLastActivePopup(hwnd);

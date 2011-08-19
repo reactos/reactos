@@ -1612,7 +1612,7 @@ SelectPartition(PPARTLIST List, ULONG DiskNumber, ULONG PartitionNumber)
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry1;
   PLIST_ENTRY Entry2;
-  ULONG i;
+  UCHAR i;
 
   /* Check for empty disks */
   if (IsListEmpty (&List->DiskListHead))
@@ -1965,7 +1965,7 @@ CreateNewPartition (PPARTLIST List,
     PartEntry->PartInfo[0].StartingOffset.QuadPart =
       PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
     PartEntry->PartInfo[0].HiddenSectors = 
-      PartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+      (ULONG)(PartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
     PartEntry->PartInfo[0].PartitionLength.QuadPart =
       PartEntry->UnpartitionedLength - DiskEntry->TrackSize;
     PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
@@ -1996,7 +1996,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2024,7 +2024,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2081,7 +2081,7 @@ CreateNewPartition (PPARTLIST List,
     NewPartEntry->PartInfo[0].StartingOffset.QuadPart =
       PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
     NewPartEntry->PartInfo[0].HiddenSectors = 
-      NewPartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+      (ULONG)(NewPartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
     NewPartEntry->PartInfo[0].PartitionLength.QuadPart =
       PartitionSize - DiskEntry->TrackSize;
     NewPartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
@@ -2112,7 +2112,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2140,7 +2140,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2495,7 +2495,6 @@ WritePartitionsToDisk (PPARTLIST List)
   PDRIVE_LAYOUT_INFORMATION DriveLayout;
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK Iosb;
-  WCHAR SrcPath[MAX_PATH];
   WCHAR DstPath[MAX_PATH];
   UNICODE_STRING Name;
   HANDLE FileHandle;
@@ -2689,30 +2688,6 @@ WritePartitionsToDisk (PPARTLIST List)
                    DriveLayout);
 
       NtClose (FileHandle);
-
-      /* Install MBR code if the disk is new */
-      if (DiskEntry1->NewDisk == TRUE &&
-          DiskEntry1->BiosDiskNumber == 0)
-      {
-        wcscpy (SrcPath, SourceRootPath.Buffer);
-        wcscat (SrcPath, L"\\loader\\dosmbr.bin");
-
-        DPRINT ("Install MBR bootcode: %S ==> %S\n",
-                SrcPath, DstPath);
-
-        /* Install MBR bootcode */
-        Status = InstallMbrBootCodeToDisk (SrcPath,
-                                           DstPath);
-        if (!NT_SUCCESS (Status))
-        {
-          DPRINT1 ("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
-                   Status);
-          return FALSE;
-        }
-
-        DiskEntry1->NewDisk = FALSE;
-        DiskEntry1->NoMbr = FALSE;
-      }
     }
 
     Entry1 = Entry1->Flink;

@@ -17,7 +17,7 @@ CAPTION "Výber okna"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "&Zruši", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Zrušiť", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -29,27 +29,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Spä",           EM_UNDO
+    MENUITEM "&Späť",           EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Vystri&hnú",     WM_CUT
-    MENUITEM "&Kopírova",      WM_COPY
-    MENUITEM "&Prilepi",       WM_PASTE
-    MENUITEM "&Odstráni",      WM_CLEAR
+    MENUITEM "Vystri&hnúť",     WM_CUT
+    MENUITEM "&Kopírovať",      WM_COPY
+    MENUITEM "&Prilepiť",       WM_PASTE
+    MENUITEM "&Odstrániť",      WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Vybra &všetko",  EM_SETSEL
+    MENUITEM "Vybrať &všetko",  EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Obnovi",          SC_RESTORE
-  MENUITEM "&Premiestni",      SC_MOVE
-  MENUITEM "&Ve¾kos",          SC_SIZE
-  MENUITEM "&Minimalizova",    SC_MINIMIZE
-  MENUITEM "M&aximalizova",    SC_MAXIMIZE
+  MENUITEM "&Obnoviť",          SC_RESTORE
+  MENUITEM "&Premiestniť",      SC_MOVE
+  MENUITEM "&Veľkosť",          SC_SIZE
+  MENUITEM "&Minimalizovať",    SC_MINIMIZE
+  MENUITEM "M&aximalizovať",    SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Zavrie\tAlt-F4",  SC_CLOSE
+  MENUITEM "&Zavrieť\tAlt-F4",  SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,15 +61,15 @@ STRINGTABLE
 BEGIN
   IDS_ERROR,    "Chyba"
   IDS_OK,       "OK"
-  IDS_CANCEL,   "Zruši"
-  IDS_ABORT,    "&Preruši"
+  IDS_CANCEL,   "Zrušiť"
+  IDS_ABORT,    "&Prerušiť"
   IDS_RETRY,    "&Znova"
-  IDS_IGNORE,   "&Ignorova"
+  IDS_IGNORE,   "&Ignorovať"
   IDS_YES,      "Án&o"
   IDS_NO,       "&Nie"
   IDS_HELP,     "Pomoc"
-  IDS_TRYAGAIN, "&Skúsi znova"
-  IDS_CONTINUE, "&Pokraèova"
+  IDS_TRYAGAIN, "&Skúsiť znova"
+  IDS_CONTINUE, "&Pokračovať"
 END
 
 STRINGTABLE

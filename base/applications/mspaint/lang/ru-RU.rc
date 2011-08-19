@@ -10,46 +10,46 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 ID_MENU MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "Созд&ать\tCtrl+N", IDM_FILENEW
-        MENUITEM "&Открыть...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&Сохранить\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Сохранить &как...", IDM_FILESAVEAS
+        MENUITEM "РЎРѕР·Рґ&Р°С‚СЊ\tCtrl+N", IDM_FILENEW
+        MENUITEM "&РћС‚РєСЂС‹С‚СЊ...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&РЎРѕС…СЂР°РЅРёС‚СЊ\tCtrl+S", IDM_FILESAVE
+        MENUITEM "РЎРѕС…СЂР°РЅРёС‚СЊ &РєР°Рє...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Сделать фоновым рисунком (&замостить)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Сделать фоновым рисунком (по ц&ентру)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Сделать фоновым рисунком (раст&януть)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "РЎРґРµР»Р°С‚СЊ С„РѕРЅРѕРІС‹Рј СЂРёСЃСѓРЅРєРѕРј (&Р·Р°РјРѕСЃС‚РёС‚СЊ)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "РЎРґРµР»Р°С‚СЊ С„РѕРЅРѕРІС‹Рј СЂРёСЃСѓРЅРєРѕРј (РїРѕ С†&РµРЅС‚СЂСѓ)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "РЎРґРµР»Р°С‚СЊ С„РѕРЅРѕРІС‹Рј СЂРёСЃСѓРЅРєРѕРј (СЂР°СЃС‚&СЏРЅСѓС‚СЊ)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "В&ыход\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Р’&С‹С…РѕРґ\tAlt+F4", IDM_FILEEXIT
     END
 
-    POPUP "&Правка"
+    POPUP "&РџСЂР°РІРєР°"
     BEGIN
-        MENUITEM "&Отменить\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Пов&торить\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&РћС‚РјРµРЅРёС‚СЊ\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "РџРѕРІ&С‚РѕСЂРёС‚СЊ\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "&Вырезать\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Копировать\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Вст&авить\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "О&чистить выделение\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Обратить в&ыделение", IDM_EDITINVERTSELECTION
-        MENUITEM "Выделить в&се\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Р’С‹СЂРµР·Р°С‚СЊ\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Р’СЃС‚&Р°РІРёС‚СЊ\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Рћ&С‡РёСЃС‚РёС‚СЊ РІС‹РґРµР»РµРЅРёРµ\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "РћР±СЂР°С‚РёС‚СЊ РІ&С‹РґРµР»РµРЅРёРµ", IDM_EDITINVERTSELECTION
+        MENUITEM "Р’С‹РґРµР»РёС‚СЊ РІ&СЃРµ\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Копироват&ь в файл...", IDM_EDITCOPYTO
-        MENUITEM "Вставить из &файла...", IDM_EDITPASTEFROM
+        MENUITEM "РљРѕРїРёСЂРѕРІР°С‚&СЊ РІ С„Р°Р№Р»...", IDM_EDITCOPYTO
+        MENUITEM "Р’СЃС‚Р°РІРёС‚СЊ РёР· &С„Р°Р№Р»Р°...", IDM_EDITPASTEFROM
     END
 
-    POPUP "&Вид"
+    POPUP "&Р’РёРґ"
     BEGIN
-        MENUITEM "Набор &инструментов\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Па&литра\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "&Строка состояния", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Панель &атрибутов текста", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "РќР°Р±РѕСЂ &РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "РџР°&Р»РёС‚СЂР°\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "&РЎС‚СЂРѕРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "РџР°РЅРµР»СЊ &Р°С‚СЂРёР±СѓС‚РѕРІ С‚РµРєСЃС‚Р°", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Мас&штаб"
+        POPUP "РњР°СЃ&С€С‚Р°Р±"
         BEGIN
-            POPUP "Выбрать"
+            POPUP "Р’С‹Р±СЂР°С‚СЊ"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,33 +60,33 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Показать сетку", IDM_VIEWSHOWGRID
-            MENUITEM "Показать эскиз", IDM_VIEWSHOWMINIATURE
+            MENUITEM "РџРѕРєР°Р·Р°С‚СЊ СЃРµС‚РєСѓ", IDM_VIEWSHOWGRID
+            MENUITEM "РџРѕРєР°Р·Р°С‚СЊ СЌСЃРєРёР·", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Полный экран\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "РџРѕР»РЅС‹Р№ СЌРєСЂР°РЅ\tCtrl+F", IDM_VIEWFULLSCREEN
     END
     
-    POPUP "&Рисунок"
+    POPUP "&Р РёСЃСѓРЅРѕРє"
     BEGIN
-        MENUITEM "&Отразить/повернуть...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Изменить размер...\tCtrl+W", IDM_IMAGECHANGESIZE
-        MENUITEM "Обре&зать", IDM_IMAGECROP
-        MENUITEM "О&братить цвета\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "&Атрибуты...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "О&чистить\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "&Непрозрачный фон", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&РћС‚СЂР°Р·РёС‚СЊ/РїРѕРІРµСЂРЅСѓС‚СЊ...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&РР·РјРµРЅРёС‚СЊ СЂР°Р·РјРµСЂ...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "РћР±СЂРµ&Р·Р°С‚СЊ", IDM_IMAGECROP
+        MENUITEM "Рћ&Р±СЂР°С‚РёС‚СЊ С†РІРµС‚Р°\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&РђС‚СЂРёР±СѓС‚С‹...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Рћ&С‡РёСЃС‚РёС‚СЊ\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&РќРµРїСЂРѕР·СЂР°С‡РЅС‹Р№ С„РѕРЅ", IDM_IMAGEDRAWOPAQUE
     END
     
-    POPUP "П&алитра"
+    POPUP "Рџ&Р°Р»РёС‚СЂР°"
     BEGIN
-        MENUITEM "&Изменить палитру...", IDM_COLORSEDITPALETTE
+        MENUITEM "&РР·РјРµРЅРёС‚СЊ РїР°Р»РёС‚СЂСѓ...", IDM_COLORSEDITPALETTE
     END
     
     POPUP "&?"
     BEGIN
-        MENUITEM "&Вызов справки", IDM_HELPHELPTOPICS
+        MENUITEM "&Р’С‹Р·РѕРІ СЃРїСЂР°РІРєРё", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&О программе...", IDM_HELPINFO
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ...", IDM_HELPINFO
     END
 END
 
@@ -115,91 +115,91 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Отражение и поворот"
+CAPTION "РћС‚СЂР°Р¶РµРЅРёРµ Рё РїРѕРІРѕСЂРѕС‚"
 BEGIN
-    GROUPBOX "Действие", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "Отразить слева направо", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "Отразить сверху вниз", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "Повернуть на угол", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    GROUPBOX "Р”РµР№СЃС‚РІРёРµ", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "РћС‚СЂР°Р·РёС‚СЊ СЃР»РµРІР° РЅР°РїСЂР°РІРѕ", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "РћС‚СЂР°Р·РёС‚СЊ СЃРІРµСЂС…Сѓ РІРЅРёР·", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "РџРѕРІРµСЂРЅСѓС‚СЊ РЅР° СѓРіРѕР»", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90В°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180В°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270В°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 125, 24, 48, 14
+    PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 125, 24, 48, 14
 END
 
 IDD_ATTRIBUTES DIALOGEX 100, 100, 210, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Атрибуты"
+CAPTION "РђС‚СЂРёР±СѓС‚С‹"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
-    LTEXT "Ширина:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
-    LTEXT "Высота:", IDD_ATTRIBUTESTEXT2, 80, 42, 30, 10
-    LTEXT "Дата сохранения:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Размер на диске:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Разрешение:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "не доступно", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "не доступно", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "не доступно", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
-    GROUPBOX "Единицы измерения", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
-    AUTORADIOBUTTON "д&юймы", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
-    AUTORADIOBUTTON "с&м", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
-    AUTORADIOBUTTON "т&очки", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
-    GROUPBOX "Палитра", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
-    AUTORADIOBUTTON "черно-белая", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "цветная", IDD_ATTRIBUTESRB5, 92, 100, 45, 10
+    LTEXT "РЁРёСЂРёРЅР°:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
+    LTEXT "Р’С‹СЃРѕС‚Р°:", IDD_ATTRIBUTESTEXT2, 80, 42, 30, 10
+    LTEXT "Р”Р°С‚Р° СЃРѕС…СЂР°РЅРµРЅРёСЏ:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Р Р°Р·РјРµСЂ РЅР° РґРёСЃРєРµ:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Р Р°Р·СЂРµС€РµРЅРёРµ:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "РЅРµ РґРѕСЃС‚СѓРїРЅРѕ", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "РЅРµ РґРѕСЃС‚СѓРїРЅРѕ", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "РЅРµ РґРѕСЃС‚СѓРїРЅРѕ", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    GROUPBOX "Р•РґРёРЅРёС†С‹ РёР·РјРµСЂРµРЅРёСЏ", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
+    AUTORADIOBUTTON "Рґ&СЋР№РјС‹", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "СЃ&Рј", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
+    AUTORADIOBUTTON "С‚&РѕС‡РєРё", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
+    GROUPBOX "РџР°Р»РёС‚СЂР°", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    AUTORADIOBUTTON "С‡РµСЂРЅРѕ-Р±РµР»Р°СЏ", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "С†РІРµС‚РЅР°СЏ", IDD_ATTRIBUTESRB5, 92, 100, 45, 10
     DEFPUSHBUTTON "OK", IDOK, 150, 8, 57, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 150, 24, 57, 14
-    PUSHBUTTON "По умо&лчанию", IDD_ATTRIBUTESSTANDARD, 150, 40, 57, 14
+    PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 150, 24, 57, 14
+    PUSHBUTTON "РџРѕ СѓРјРѕ&Р»С‡Р°РЅРёСЋ", IDD_ATTRIBUTESSTANDARD, 150, 40, 57, 14
 END
 
 IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Изменение размеров"
+CAPTION "РР·РјРµРЅРµРЅРёРµ СЂР°Р·РјРµСЂРѕРІ"
 BEGIN
-    GROUPBOX "Размер", IDD_CHANGESIZEGROUP, 6, 6, 145, 66
+    GROUPBOX "Р Р°Р·РјРµСЂ", IDD_CHANGESIZEGROUP, 6, 6, 145, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "По горизонтали:", IDD_CHANGESIZETEXT1, 39, 24, 62, 10
+    LTEXT "РџРѕ РіРѕСЂРёР·РѕРЅС‚Р°Р»Рё:", IDD_CHANGESIZETEXT1, 39, 24, 62, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 102, 23, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT2, 137, 24, 12, 10
     ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "По вертикали:", IDD_CHANGESIZETEXT3, 39, 49, 62, 10
+    LTEXT "РџРѕ РІРµСЂС‚РёРєР°Р»Рё:", IDD_CHANGESIZETEXT3, 39, 49, 62, 10
     EDITTEXT IDD_CHANGESIZEEDIT2, 102, 48, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT4, 137, 49, 12, 10
     DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 155, 24, 48, 14
+    PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 155, 24, 48, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint для ReactOS"
-    IDS_INFOTEXT, "Paint для ReactOS распространяется под лицензией GNU Lesser General Public License (LGPL) версии 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Сохранить изменения в %s?"
-    IDS_DEFAULTFILENAME, "Без_имени.bmp"
-    IDS_MINIATURETITLE, "Эскиз"
-    IDS_TOOLTIP1, "Выделение произвольной области"
-    IDS_TOOLTIP2, "Выделение"
-    IDS_TOOLTIP3, "Ластик"
-    IDS_TOOLTIP4, "Заливка"
-    IDS_TOOLTIP5, "Выбрать цвет"
-    IDS_TOOLTIP6, "Масштаб"
-    IDS_TOOLTIP7, "Карандаш"
-    IDS_TOOLTIP8, "Кисть"
-    IDS_TOOLTIP9, "Распылитель"
-    IDS_TOOLTIP10, "Текст"
-    IDS_TOOLTIP11, "Линия"
-    IDS_TOOLTIP12, "Кривая"
-    IDS_TOOLTIP13, "Прямоугольник"
-    IDS_TOOLTIP14, "Многоугольник"
-    IDS_TOOLTIP15, "Эллипс"
-    IDS_TOOLTIP16, "Скругленный прямоугольник"
-    IDS_OPENFILTER, "Точечные рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Все файлы (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24-разрядный рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_INFOTITLE, "Paint РґР»СЏ ReactOS"
+    IDS_INFOTEXT, "Paint РґР»СЏ ReactOS СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ РїРѕРґ Р»РёС†РµРЅР·РёРµР№ GNU Lesser General Public License (LGPL) РІРµСЂСЃРёРё 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ РІ %s?"
+    IDS_DEFAULTFILENAME, "Р‘РµР·_РёРјРµРЅРё.bmp"
+    IDS_MINIATURETITLE, "Р­СЃРєРёР·"
+    IDS_TOOLTIP1, "Р’С‹РґРµР»РµРЅРёРµ РїСЂРѕРёР·РІРѕР»СЊРЅРѕР№ РѕР±Р»Р°СЃС‚Рё"
+    IDS_TOOLTIP2, "Р’С‹РґРµР»РµРЅРёРµ"
+    IDS_TOOLTIP3, "Р›Р°СЃС‚РёРє"
+    IDS_TOOLTIP4, "Р—Р°Р»РёРІРєР°"
+    IDS_TOOLTIP5, "Р’С‹Р±СЂР°С‚СЊ С†РІРµС‚"
+    IDS_TOOLTIP6, "РњР°СЃС€С‚Р°Р±"
+    IDS_TOOLTIP7, "РљР°СЂР°РЅРґР°С€"
+    IDS_TOOLTIP8, "РљРёСЃС‚СЊ"
+    IDS_TOOLTIP9, "Р Р°СЃРїС‹Р»РёС‚РµР»СЊ"
+    IDS_TOOLTIP10, "РўРµРєСЃС‚"
+    IDS_TOOLTIP11, "Р›РёРЅРёСЏ"
+    IDS_TOOLTIP12, "РљСЂРёРІР°СЏ"
+    IDS_TOOLTIP13, "РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє"
+    IDS_TOOLTIP14, "РњРЅРѕРіРѕСѓРіРѕР»СЊРЅРёРє"
+    IDS_TOOLTIP15, "Р­Р»Р»РёРїСЃ"
+    IDS_TOOLTIP16, "РЎРєСЂСѓРіР»РµРЅРЅС‹Р№ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє"
+    IDS_OPENFILTER, "РўРѕС‡РµС‡РЅС‹Рµ СЂРёСЃСѓРЅРєРё (*.bmp;*.dib)\1*.bmp;*.dib\1Р’СЃРµ С„Р°Р№Р»С‹ (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24-СЂР°Р·СЂСЏРґРЅС‹Р№ СЂРёСЃСѓРЅРѕРє (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE, "%d bytes"
     IDS_PRINTRES, "%d x %d pixels per meter"
 END

@@ -22,7 +22,6 @@
 	<file>mk.c</file>
 	<file>protocol.c</file>
 	<file>protproxy.c</file>
-	<file>regsvr.c</file>
 	<file>sec_mgr.c</file>
 	<file>session.c</file>
 	<file>umon.c</file>
@@ -31,6 +30,7 @@
 	<file>urlmon_main.c</file>
 	<file>usrmarshal.c</file>
 	<file>rsrc.rc</file>
+	<pch>urlmon_main.h</pch>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>rpcrt4</library>

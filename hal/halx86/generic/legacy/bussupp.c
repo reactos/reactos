@@ -1096,7 +1096,7 @@ HalpInitializePciBus(VOID)
     HalpGetNMICrashFlag();
         
     /* Free the registry data */
-    ExFreePool(PciRegistryInfo);
+    ExFreePoolWithTag(PciRegistryInfo, TAG_HAL);
     
     /* Tell PnP if this hard supports correct decoding */
     HalpMarkChipsetDecode(ExtendedAddressDecoding);
@@ -1256,7 +1256,7 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
     if (!(Handler) || !(Handler->TranslateBusAddress))
     {
-        DPRINT1("No translator!\n");
+        DPRINT1("No translator Interface: %x, Bus: %x, Handler: %x!\n", InterfaceType, BusNumber, Handler);
         return FALSE;
     }
     

@@ -10,8 +10,7 @@
  */
 
 #include <advapi32.h>
-#define NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 extern BOOL RegInitialize(VOID);
 extern BOOL RegCleanup(VOID);

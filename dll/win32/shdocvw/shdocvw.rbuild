@@ -41,6 +41,7 @@
 	<file>view.c</file>
 	<file>webbrowser.c</file>
 	<file>shdocvw.rc</file>
+	<pch>shdocvw.h</pch>
 </module>
 <module name="shdocvw_v1" type="embeddedtypelib" allowwarnings="true">
 	<dependency>stdole2</dependency>

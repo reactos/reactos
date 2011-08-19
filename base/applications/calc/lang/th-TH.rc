@@ -9,15 +9,15 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 161
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "����ͧ�Դ�Ţ ReactOS"
+CAPTION "เครื่องคิดเลข ReactOS"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "�Ժˡ",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
-    CONTROL         "�Ժ",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
-    CONTROL         "Ỵ",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
-    CONTROL         "�ͧ",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
+    CONTROL         "สิบหก",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "สิบ",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "แปด",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "สอง",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -138,25 +138,25 @@ BEGIN
     PUSHBUTTON      "F",IDC_BUTTON_F,288,140,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     GROUPBOX        "",IDC_STATIC,140,16,172,21
-    CONTROL         "��������",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "สี่เวิร์ด",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
                     NOT WS_VISIBLE,148,24,37,10
-    CONTROL         "�ͧ�����",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "สองเวิร์ด",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
                     NOT WS_VISIBLE,188,24,37,10
-    CONTROL         "�����",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
+    CONTROL         "เวิร์ด",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,232,24,33,10
-    CONTROL         "亵�",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
+    CONTROL         "ไบต์",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,272,24,30,10
-    CONTROL         "ͧ��",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
+    CONTROL         "องศา",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
                     42,10
-    CONTROL         "����¹",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
+    CONTROL         "เรเดียน",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
                     24,42,10
-    CONTROL         "����¹",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+    CONTROL         "เกรเดียน",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
                     236,24,44,10
     PUSHBUTTON      "C",IDC_BUTTON_CANC,272,40,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,228,40,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "���໫",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
+    PUSHBUTTON      "แบ็กสเปซ",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,308,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -165,7 +165,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 172, 127
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ʶҹ�Ҿ�����"
+CAPTION "สถานภาพทั่วไป"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -173,7 +173,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,84,24,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "���໫",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
+    PUSHBUTTON      "แบ็กสเปซ",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,164,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -209,7 +209,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "+",IDC_BUTTON_ADD,118,105,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "�ҡ",IDC_BUTTON_SQRT,144,48,24,17,BS_CENTER | 
+    PUSHBUTTON      "ราก",IDC_BUTTON_SQRT,144,48,24,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "%",IDC_BUTTON_PERCENT,144,67,24,17,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -232,7 +232,7 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "����ͧ�Դ�Ţ ReactOS"
+CAPTION "เครื่องคิดเลข ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -250,7 +250,7 @@ BEGIN
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
-    CONTROL         "���໫",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
+    CONTROL         "แบ็กสเปซ",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
                     BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
                     40,17
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,312,12,SS_CENTERIMAGE,
@@ -287,7 +287,7 @@ BEGIN
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,86,24,17
     CONTROL         "+",IDC_BUTTON_ADD,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,105,24,17
-    CONTROL         "�ҡ",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER | 
+    CONTROL         "ราก",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,48,24,17
     CONTROL         "%",IDC_BUTTON_PERCENT,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,67,24,17
@@ -310,15 +310,15 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "����ǡѺ ReactOS Calc"
+CAPTION "เกี่ยวกับ ReactOS Calc"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "��ŧ",IDOK,105,148,52,16
+    DEFPUSHBUTTON   "ตกลง",IDOK,105,148,52,16
     CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
-    LTEXT           "����ͧ�Դ�Ţ ReactOS",IDC_STATIC,120,12,132,8,
+    LTEXT           "เครื่องคิดเลข ReactOS",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
-    LTEXT           "��� ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "รุ่น ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
     LTEXT           "Written by Carlo Bramini",IDC_STATIC,120,32,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
@@ -329,7 +329,7 @@ END
 
 IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "���ͧʶҹ�"
+CAPTION "กล่องสถานะ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT | 
@@ -346,89 +346,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
-    POPUP "�&���"
+    POPUP "แ&ก้ไข"
     BEGIN
-        MENUITEM "�Ѵ�͡\tCTRL-C",               IDM_EDIT_COPY
-        MENUITEM "�ҧ\tCTRL-V",                 IDM_EDIT_PASTE
+        MENUITEM "คัดลอก\tCTRL-C",               IDM_EDIT_COPY
+        MENUITEM "วาง\tCTRL-V",                 IDM_EDIT_PASTE
     END
-    POPUP "&����ͧ"
+    POPUP "&มุมมอง"
     BEGIN
-        MENUITEM "Ẻ�ҵðҹ",                  IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Ẻ�Է����ʵ��",                IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "��������¹�ŧ",               IDM_VIEW_CONVERSION
+        MENUITEM "แบบมาตรฐาน",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "แบบวิทยาศาสตร์",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "ความเปลี่ยนแปลง",               IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "�ҹ�Ժˡ\tF5",                 IDM_VIEW_HEX, CHECKED
-        MENUITEM "�ҹ�Ժ\tF6",                   IDM_VIEW_DEC, CHECKED
-        MENUITEM "�ҹỴ\tF7",                  IDM_VIEW_OCT, CHECKED
-        MENUITEM "�ҹ�ͧ\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "ฐานสิบหก\tF5",                 IDM_VIEW_HEX, CHECKED
+        MENUITEM "ฐานสิบ\tF6",                   IDM_VIEW_DEC, CHECKED
+        MENUITEM "ฐานแปด\tF7",                  IDM_VIEW_OCT, CHECKED
+        MENUITEM "ฐานสอง\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "ͧ��\tF2",                    IDM_VIEW_DEG, CHECKED
-        MENUITEM "����¹\tF3",                  IDM_VIEW_RAD, CHECKED
-        MENUITEM "����¹\tF4",                 IDM_VIEW_GRAD, CHECKED
+        MENUITEM "องศา\tF2",                    IDM_VIEW_DEG, CHECKED
+        MENUITEM "เรเดียน\tF3",                  IDM_VIEW_RAD, CHECKED
+        MENUITEM "เกรเดียน\tF4",                 IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "�ʴ���ѡ����Ţ",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "แสดงหลักตัวเลข",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&���������"
+    POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "�����Ū��������",                 IDM_HELP_HELP
+        MENUITEM "ข้อมูลช่วยเหลือ",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "����ǡѺ ReactOS Calc",         IDM_HELP_ABOUT
+        MENUITEM "เกี่ยวกับ ReactOS Calc",         IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
 BEGIN
-    POPUP "�&���"
+    POPUP "แ&ก้ไข"
     BEGIN
-        MENUITEM "�Ѵ�͡\tCTRL-C",               IDM_EDIT_COPY
-        MENUITEM "�ҧ\tCTRL-V",                 IDM_EDIT_PASTE
+        MENUITEM "คัดลอก\tCTRL-C",               IDM_EDIT_COPY
+        MENUITEM "วาง\tCTRL-V",                 IDM_EDIT_PASTE
     END
-    POPUP "&����ͧ"
+    POPUP "&มุมมอง"
     BEGIN
-        MENUITEM "Ẻ�ҵðҹ",                  IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Ẻ�Է����ʵ��",                IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "��������¹�ŧ",               IDM_VIEW_CONVERSION
+        MENUITEM "แบบมาตรฐาน",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "แบบวิทยาศาสตร์",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "ความเปลี่ยนแปลง",               IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "�ҹ�Ժˡ\tF5",                 IDM_VIEW_HEX, CHECKED
-        MENUITEM "�ҹ�Ժ\tF6",                   IDM_VIEW_DEC, CHECKED
-        MENUITEM "�ҹỴ\tF7",                  IDM_VIEW_OCT, CHECKED
-        MENUITEM "�ҹ�ͧ\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "ฐานสิบหก\tF5",                 IDM_VIEW_HEX, CHECKED
+        MENUITEM "ฐานสิบ\tF6",                   IDM_VIEW_DEC, CHECKED
+        MENUITEM "ฐานแปด\tF7",                  IDM_VIEW_OCT, CHECKED
+        MENUITEM "ฐานสอง\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "��ͷ�����\tF12",               IDM_VIEW_QWORD, CHECKED
-        MENUITEM "�Ѻ��������\tF2",               IDM_VIEW_DWORD, CHECKED
-        MENUITEM "�����\tF3",                    IDM_VIEW_WORD, CHECKED
-        MENUITEM "亵�\tF4",                     IDM_VIEW_BYTE, CHECKED
+        MENUITEM "ควอทเวิร์ด\tF12",               IDM_VIEW_QWORD, CHECKED
+        MENUITEM "ดับเบิลเวิร์ด\tF2",               IDM_VIEW_DWORD, CHECKED
+        MENUITEM "เวิร์ด\tF3",                    IDM_VIEW_WORD, CHECKED
+        MENUITEM "ไบต์\tF4",                     IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "�ʴ���ѡ����Ţ",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "แสดงหลักตัวเลข",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&���������"
+    POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "�����Ū��������",                 IDM_HELP_HELP
+        MENUITEM "ข้อมูลช่วยเหลือ",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "����ǡѺ ReactOS Calc",         IDM_HELP_ABOUT
+        MENUITEM "เกี่ยวกับ ReactOS Calc",         IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU DISCARDABLE 
 BEGIN
-    POPUP "�&���"
+    POPUP "แ&ก้ไข"
     BEGIN
-        MENUITEM "�Ѵ�͡\tCTRL-C",               IDM_EDIT_COPY
-        MENUITEM "�ҧ\tCTRL-V",                 IDM_EDIT_PASTE
+        MENUITEM "คัดลอก\tCTRL-C",               IDM_EDIT_COPY
+        MENUITEM "วาง\tCTRL-V",                 IDM_EDIT_PASTE
     END
-    POPUP "&����ͧ"
+    POPUP "&มุมมอง"
     BEGIN
-        MENUITEM "Ẻ�ҵðҹ",                  IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Ẻ�Է����ʵ��",                IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "��������¹�ŧ",               IDM_VIEW_CONVERSION
+        MENUITEM "แบบมาตรฐาน",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "แบบวิทยาศาสตร์",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "ความเปลี่ยนแปลง",               IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "�ʴ���ѡ����Ţ",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "แสดงหลักตัวเลข",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&���������"
+    POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "�����Ū��������",                 IDM_HELP_HELP
+        MENUITEM "ข้อมูลช่วยเหลือ",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "����ǡѺ ReactOS Calc",         IDM_HELP_ABOUT
+        MENUITEM "เกี่ยวกับ ReactOS Calc",         IDM_HELP_ABOUT
     END
 END
 
@@ -437,15 +437,15 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STRING_LICENSE      "ReactOS Calc is free software released under GNU GPL license.\r\n\r\nYou can get a copy of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nYou can also get a translation of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/translations.html"
-    IDS_MATH_ERROR          "�Դ��Ҵ"
-    IDS_QUICKHELP           "��觹�������� ?"
+    IDS_MATH_ERROR          "ผิดพลาด"
+    IDS_QUICKHELP           "สิ่งนี้คืออะไร ?"
 END
 
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_ANGLE          "���"
-    IDS_CONV_AREA           "��鹷��"
+    IDS_CONV_ANGLE          "มุม"
+    IDS_CONV_AREA           "พื้นที่"
     IDS_CONV_CONSUMPTION    "Consumption (engines)"
     IDS_CONV_CURRENCY       "Currencies"
     IDS_CONV_ENERGY         "Energy"
@@ -453,7 +453,7 @@ BEGIN
     IDS_CONV_POWER          "Power"
     IDS_CONV_PRESSURE       "Pressure"
     IDS_CONV_TEMPERATURE    "Temperature"
-    IDS_CONV_TIME           "����"
+    IDS_CONV_TIME           "เวลา"
     IDS_CONV_VELOCITY       "Velocity"
     IDS_CONV_VOLUME         "Volume"
     IDS_CONV_WEIGHT         "Weights"
@@ -462,9 +462,9 @@ END
 // TYPES OF ANGLES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ANGLE_DEGREES       "ͧ��"
-    IDS_ANGLE_GRADIANS      "����¹"
-    IDS_ANGLE_RADIANS       "����¹"
+    IDS_ANGLE_DEGREES       "องศา"
+    IDS_ANGLE_GRADIANS      "เกรเดียน"
+    IDS_ANGLE_RADIANS       "เรเดียน"
 END
 
 // TYPES OF AREAS
@@ -524,7 +524,7 @@ BEGIN
     IDS_CURRENCY_CZECH_KORUNA       "Czech koruna"
     IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
     IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
-    IDS_CURRENCY_EURO               "����"
+    IDS_CURRENCY_EURO               "ยูโร"
     IDS_CURRENCY_FINNISH_MARKKA     "Finnish markka"
     IDS_CURRENCY_FRENCH_FRANC       "French franc"
     IDS_CURRENCY_GREEK_DRACHMA      "Greek Drachma"
@@ -541,7 +541,7 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^0C �����"
+    IDS_ENERGY_15_C_CALORIES        "15 ^0C แคลอรี"
     IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_EVS                  "Electron-Volts"

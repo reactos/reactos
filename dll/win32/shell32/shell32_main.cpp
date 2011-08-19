@@ -20,23 +20,6 @@
  */
 
 #include <precomp.h>
-#include "shfldr_fs.h"
-#include "shfldr_mycomp.h"
-#include "shfldr_desktop.h"
-#include "shellitem.h"
-#include "shelllink.h"
-#include "dragdrophelper.h"
-#include "shfldr_cpanel.h"
-#include "autocomplete.h"
-#include "shfldr_mydocuments.h"
-#include "shfldr_netplaces.h"
-#include "shfldr_fonts.h"
-#include "shfldr_printers.h"
-#include "shfldr_admintools.h"
-#include "shfldr_recyclebin.h"
-#include "she_ocmenu.h"
-#include "shv_item_new.h"
-#include "startmenu.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

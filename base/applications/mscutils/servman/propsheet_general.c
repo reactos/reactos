@@ -48,6 +48,9 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         EnableWindow (hButton, TRUE);
     }
 
+    hButton = GetDlgItem(hwndDlg, IDC_START_PARAM);
+    EnableWindow(hButton, (State == SERVICE_STOPPED));
+
     /* set the main toolbar */
     SetMenuAndButtonStates(dlgInfo->Info);
 }
@@ -248,6 +251,27 @@ SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
 }
 
 
+static
+VOID
+OnStart(HWND hwndDlg,
+        PSERVICEPROPSHEET dlgInfo)
+{
+    WCHAR szStartParams[256];
+    LPWSTR lpStartParams = NULL;
+
+    if (GetDlgItemText(hwndDlg, IDC_START_PARAM, szStartParams, 256) > 0)
+        lpStartParams = szStartParams;
+
+    if (DoStart(dlgInfo->Info, lpStartParams))
+    {
+        UpdateServiceStatus(dlgInfo->pService);
+        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+        SetButtonStates(dlgInfo, hwndDlg);
+        SetServiceStatusText(dlgInfo, hwndDlg);
+    }
+}
+
+
 /*
  * General Property dialog callback.
  * Controls messages to the General dialog
@@ -293,13 +317,7 @@ GeneralPageProc(HWND hwndDlg,
                 break;
 
                 case IDC_START:
-                    if (DoStart(dlgInfo->Info))
-                    {
-                        UpdateServiceStatus(dlgInfo->pService);
-                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                        SetButtonStates(dlgInfo, hwndDlg);
-                        SetServiceStatusText(dlgInfo, hwndDlg);
-                    }
+                    OnStart(hwndDlg, dlgInfo);
                 break;
 
                 case IDC_STOP:

@@ -9,4 +9,5 @@
 	<file>magnifier.c</file>
 	<file>settings.c</file>
 	<file>magnify.rc</file>
+	<pch>magnifier.h</pch>
 </module>

@@ -14,4 +14,5 @@
 	<file>main.c</file>
 	<file>mouse.c</file>
 	<file>main.rc</file>
+	<pch>main.h</pch>
 </module>

@@ -9,7 +9,7 @@
 #define NTOS_MODE_USER
 
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 
 /* FIXME USP10 api that does not have prototype in any include file */
 VOID WINAPI LpkPresent(VOID);

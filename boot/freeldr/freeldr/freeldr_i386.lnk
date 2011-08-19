@@ -32,17 +32,18 @@ SECTIONS
     *(.data)
     *(.data2)
     *(SORT(.data$*))
+    *(.rdata)
+    *(SORT(.rdata$*))
+    *(.eh_frame)
     __data_end__ = . ;
     __bss_start__ = . ;
     *(.bss)
     *(COMMON)
     __bss_end__ = . ;
   }
-  .rdata BLOCK(__section_alignment__) :
+  /DISCARD/ :
   {
-    *(.rdata)
-    *(SORT(.rdata$*))
-    *(.eh_frame)
+    *(.drectve)
   }
   .stab BLOCK(__section_alignment__) (NOLOAD) :
   {

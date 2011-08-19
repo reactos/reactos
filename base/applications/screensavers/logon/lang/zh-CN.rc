@@ -1,0 +1,11 @@
+/*
+ * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "登录屏幕保护程序"
+    IDS_TEXT        "没有需要设置的选项。"
+END

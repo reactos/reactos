@@ -7,7 +7,7 @@ list(APPEND SOURCE
     vbe.c
     vga.rc)
 
-add_library(vga SHARED ${CMAKE_CURRENT_BINARY_DIR}/vga_vga.h.gch ${SOURCE})
+add_library(vga SHARED ${SOURCE})
 
 target_link_libraries(vga libcntpr)
 
@@ -20,6 +20,6 @@ endif()
 set_module_type(vga kernelmodedriver)
 add_importlibs(vga videoprt)
 
-add_pch(vga ${CMAKE_CURRENT_SOURCE_DIR}/vga.h ${SOURCE})
+add_pch(vga vga.h)
 
 add_cd_file(TARGET vga DESTINATION reactos/system32/drivers FOR all)

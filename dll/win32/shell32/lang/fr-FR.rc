@@ -129,7 +129,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Cette version de ReactOS est enregistrée à:", IDC_STATIC, 35, 115, 180, 10
@@ -659,10 +659,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "L'élément '%1' ne peut être envoyé à la Corbeille. Voulez-vous le supprimer ?"
 	IDS_OVERWRITEFILE_TEXT      "Ce dossier contient déjà un fichier nommé '%1'.\n\nVoulez-vous le remplacer ?"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmer l'écrasement du fichier"
-	IDS_OVERWRITEFOLDER_TEXT    "Ce dossier contient déjà un dossier nommé '%1'.\n\n"\
-		"Si les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\n"\
-		"dossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\n"\
-		"le dossier?"
+	IDS_OVERWRITEFOLDER_TEXT    "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\ndossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\nle dossier?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Redémarrer"

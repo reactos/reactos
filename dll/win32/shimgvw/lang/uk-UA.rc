@@ -10,17 +10,17 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "Програма перегляду зображень і факсів ReactOS"
-    IDS_SETASDESKBG "Встановити як фон робочого столу"
-    IDS_PREVIEW     "Перегляд"
+    IDS_APPTITLE    "РџСЂРѕРіСЂР°РјР° РїРµСЂРµРіР»СЏРґСѓ Р·РѕР±СЂР°Р¶РµРЅСЊ С– С„Р°РєСЃС–РІ ReactOS"
+    IDS_SETASDESKBG "Р’СЃС‚Р°РЅРѕРІРёС‚Рё СЏРє С„РѕРЅ СЂРѕР±РѕС‡РѕРіРѕ СЃС‚РѕР»Сѓ"
+    IDS_PREVIEW     "РџРµСЂРµРіР»СЏРґ"
 
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Наступне зображення"
-    IDS_TOOLTIP_PREV_PIC   "Попереднє зображення"
-    IDS_TOOLTIP_ZOOM_IN    "Збільшити (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Зменшити (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "Повернути за годинниковою стрілкою (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Повернути проти годинникової стрілки (Ctrl+L)"
-    IDS_TOOLTIP_PRINT      "Друк (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Зберегти як... (Ctrl+S)"
+    IDS_TOOLTIP_NEXT_PIC   "РќР°СЃС‚СѓРїРЅРµ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ"
+    IDS_TOOLTIP_PREV_PIC   "РџРѕРїРµСЂРµРґРЅС” Р·РѕР±СЂР°Р¶РµРЅРЅСЏ"
+    IDS_TOOLTIP_ZOOM_IN    "Р—Р±С–Р»СЊС€РёС‚Рё (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Р—РјРµРЅС€РёС‚Рё (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "РџРѕРІРµСЂРЅСѓС‚Рё Р·Р° РіРѕРґРёРЅРЅРёРєРѕРІРѕСЋ СЃС‚СЂС–Р»РєРѕСЋ (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "РџРѕРІРµСЂРЅСѓС‚Рё РїСЂРѕС‚Рё РіРѕРґРёРЅРЅРёРєРѕРІРѕС— СЃС‚СЂС–Р»РєРё (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "Р”СЂСѓРє (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Р—Р±РµСЂРµРіС‚Рё СЏРє... (Ctrl+S)"
 END

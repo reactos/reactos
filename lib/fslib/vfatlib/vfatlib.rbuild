@@ -6,6 +6,7 @@
 	<file>fat16.c</file>
 	<file>fat32.c</file>
 	<file>vfatlib.c</file>
+	<pch>vfatlib.h</pch>
 
 	<directory name="check">
 		<file>boot.c</file>

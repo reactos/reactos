@@ -66,40 +66,42 @@ Bus_PDO_PnP (
         }
 
         DeviceData->InterfaceName.Length = 0;
+        status = STATUS_SUCCESS;
 
         if (!device)
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_SYS_BUTTON,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_SYS_BUTTON,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_THERMAL_HID))
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_THERMAL_ZONE,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_THERMAL_ZONE,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_BUTTON_HID_LID))
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_LID,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_LID,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_PROCESSOR_HID))
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_PROCESSOR,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_PROCESSOR,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
 
-        if (DeviceData->InterfaceName.Length != 0)
+        /* Failure to register an interface is not a fatal failure so don't return a failure status */
+        if (NT_SUCCESS(status) && DeviceData->InterfaceName.Length != 0)
             IoSetDeviceInterfaceState(&DeviceData->InterfaceName, TRUE);
 
         state.DeviceState = PowerDeviceD0;

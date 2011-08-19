@@ -9,14 +9,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-
-#include <ntddsnd.h>
-#include <sndtypes.h>
-
-#include <mmebuddy.h>
+#include "precomp.h"
 
 #if 0
 MMRESULT HelloWorld(PSOUND_DEVICE_INSTANCE Instance, PVOID String)

@@ -20,11 +20,6 @@
  */
 
 #include <precomp.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "shfldr_mydocuments.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL (mydocs);
 

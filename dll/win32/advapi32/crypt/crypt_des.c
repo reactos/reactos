@@ -22,7 +22,6 @@
  */
 
 #include <advapi32.h>
-#include "crypt.h"
 
 static const unsigned char InitialPermuteMap[64] =
 {

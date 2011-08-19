@@ -38,11 +38,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <string.h>
-#include "ttelhndl.h"
-#include "telnet.h"
-#include "tnconfig.h"
-#include "tparams.h"
+#include "precomp.h"
 
 int naws_string(char *buf, int width, int height);
 

@@ -12,4 +12,5 @@
 	<file>ioctl.c</file>
 	<file>readwrite.c</file>
 	<file>floppy.rc</file>
+	<pch>precomp.h</pch>
 </module>

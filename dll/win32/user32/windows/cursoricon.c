@@ -2201,6 +2201,12 @@ BOOL get_icon_size(HICON hIcon, SIZE *size)
     {
         size->cy /= 2;
     }
+    else
+    {
+        DeleteObject(info.hbmColor);
+    }
+
+    DeleteObject(info.hbmMask);
 
     return TRUE;
 }

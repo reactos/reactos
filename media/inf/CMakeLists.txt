@@ -5,9 +5,11 @@ list(APPEND INF_FILES
     bda.inf
     cdrom.inf
     cpu.inf
+    disk.inf
     display.inf
     fdc.inf
     font.inf
+    hal.inf
     hdc.inf
     intl.inf
     keyboard.inf
@@ -23,6 +25,7 @@ list(APPEND INF_FILES
     nettcpip.inf
     ports.inf
     scsi.inf
+    unknown.inf
     usb.inf
     usbport.inf
     usbstor.inf

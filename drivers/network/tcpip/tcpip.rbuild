@@ -3,11 +3,12 @@
 <module name="tcpip" type="kernelmodedriver" installbase="system32/drivers" installname="tcpip.sys">
 	<importlibrary definition="tcpip.spec" />
 	<include base="tcpip">include</include>
-	<include base="oskittcp">include</include>
+	<include base="lwip">src/include</include>
+	<include base="lwip">src/include/ipv4</include>
 	<define name="NDIS40" />
 	<define name="_NTDRIVER_" />
 	<library>ip</library>
-	<library>oskittcp</library>
+	<library>lwip</library>
 	<library>ndis</library>
 	<library>pseh</library>
 	<library>chew</library>

@@ -8,6 +8,7 @@
 	<file>mmoutput.c</file>
 	<file>wnd.c</file>
 	<file>mciavi_res.rc</file>
+	<pch>private_mciavi.h</pch>
 	<library>wine</library>
 	<library>msvfw32</library>
 	<library>winmm</library>

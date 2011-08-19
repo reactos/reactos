@@ -41,7 +41,6 @@
  */
 
 #include "rosdhcp.h"
-#include "dhcpd.h"
 
 struct string_list *
 new_string_list(size_t size)

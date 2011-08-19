@@ -52,13 +52,7 @@
  * TODO: Figure out specify timings
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "csqrtns.h"
-#include "hardware.h"
-#include "readwrite.h"
+#include "precomp.h"
 
 
 static IO_ALLOCATION_ACTION NTAPI
@@ -454,7 +448,7 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
      * Check to see if the volume needs to be verified.  If so,
      * we can get out of here quickly.
      */
-    if(DeviceObject->Flags & DO_VERIFY_VOLUME && !(DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME))
+    if(DeviceObject->Flags & DO_VERIFY_VOLUME && !(Stack->Flags & SL_OVERRIDE_VERIFY_VOLUME))
     {
         INFO_(FLOPPY, "ReadWritePassive(): DO_VERIFY_VOLUME set; Completing with  STATUS_VERIFY_REQUIRED\n");
         Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;

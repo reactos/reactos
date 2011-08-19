@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSR Sub System
- * FILE:            subsys/csr/csrsrv/procsup.c
+ * FILE:            subsystems/win32/csrss/csrsrv/procsup.c
  * PURPOSE:         CSR Process Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu
@@ -26,7 +26,6 @@
 extern RTL_CRITICAL_SECTION ProcessDataLock;
 extern PCSRSS_PROCESS_DATA ProcessData[256];
 PCSRSS_PROCESS_DATA CsrRootProcess;
-LIST_ENTRY CsrThreadHashTable[256];
 SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
 {
     sizeof(SECURITY_QUALITY_OF_SERVICE),

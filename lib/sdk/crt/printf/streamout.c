@@ -73,7 +73,7 @@ enum
 #ifndef _USER32_WSPRINTF
 
 void
-#ifdef _LIBCNT
+#ifdef _LIBCNT_
 /* Due to restrictions in kernel mode regarding the use of floating point,
    we prevent it from being inlined */
 __declspec(noinline)
@@ -540,7 +540,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
                 if ((__int64)val64 < 0)
                 {
-                    val64 = -val64;
+                    val64 = -(__int64)val64;
                     prefix = _T("-");
                 }
                 else if (flags & FLAG_FORCE_SIGN)

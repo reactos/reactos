@@ -661,11 +661,11 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
   return RPC_S_OK;
 
 fail:
-  if (ObjUuid) RpcStringFreeA((unsigned char**)ObjUuid);
-  if (Protseq) RpcStringFreeA((unsigned char**)Protseq);
-  if (NetworkAddr) RpcStringFreeA((unsigned char**)NetworkAddr);
-  if (Endpoint) RpcStringFreeA((unsigned char**)Endpoint);
-  if (Options) RpcStringFreeA((unsigned char**)Options);
+  if (ObjUuid) RpcStringFreeA(ObjUuid);
+  if (Protseq) RpcStringFreeA(Protseq);
+  if (NetworkAddr) RpcStringFreeA(NetworkAddr);
+  if (Endpoint) RpcStringFreeA(Endpoint);
+  if (Options) RpcStringFreeA(Options);
   return RPC_S_INVALID_STRING_BINDING;
 }
 
@@ -798,13 +798,10 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
  */
 RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
 {
-  RPC_STATUS status;
-  unsigned long c;
+  ULONG c;
 
   TRACE("(%p)\n", BindingVector);
-  for (c=0; c<(*BindingVector)->Count; c++) {
-    status = RpcBindingFree(&(*BindingVector)->BindingH[c]);
-  }
+  for (c=0; c<(*BindingVector)->Count; c++) RpcBindingFree(&(*BindingVector)->BindingH[c]);
   HeapFree(GetProcessHeap(), 0, *BindingVector);
   *BindingVector = NULL;
   return RPC_S_OK;
@@ -815,7 +812,7 @@ RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
  */
 RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
 {
-  RpcBinding* bind = (RpcBinding*)Binding;
+  RpcBinding* bind = Binding;
 
   TRACE("(%p,%p) = %s\n", Binding, ObjectUuid, debugstr_guid(&bind->ObjectUuid));
   *ObjectUuid = bind->ObjectUuid;
@@ -827,7 +824,7 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
  */
 RPC_STATUS WINAPI RpcBindingSetObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
 {
-  RpcBinding* bind = (RpcBinding*)Binding;
+  RpcBinding* bind = Binding;
 
   TRACE("(%p,%s)\n", Binding, debugstr_guid(ObjectUuid));
   if (bind->server) return RPC_S_WRONG_KIND_OF_BINDING;
@@ -859,11 +856,11 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( RPC_CSTR StringBinding, RPC_BIND
   if (ret == RPC_S_OK)
     ret = RPCRT4_CompleteBindingA(bind, (char*)NetworkAddr, (char*)Endpoint, (char*)Options);
 
-  RpcStringFreeA((unsigned char**)&Options);
-  RpcStringFreeA((unsigned char**)&Endpoint);
-  RpcStringFreeA((unsigned char**)&NetworkAddr);
-  RpcStringFreeA((unsigned char**)&Protseq);
-  RpcStringFreeA((unsigned char**)&ObjectUuid);
+  RpcStringFreeA(&Options);
+  RpcStringFreeA(&Endpoint);
+  RpcStringFreeA(&NetworkAddr);
+  RpcStringFreeA(&Protseq);
+  RpcStringFreeA(&ObjectUuid);
 
   if (ret == RPC_S_OK) 
     *Binding = (RPC_BINDING_HANDLE)bind;
@@ -918,7 +915,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( RPC_WSTR StringBinding, RPC_BIND
 RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, RPC_CSTR *StringBinding )
 {
   RPC_STATUS ret;
-  RpcBinding* bind = (RpcBinding*)Binding;
+  RpcBinding* bind = Binding;
   RPC_CSTR ObjectUuid;
 
   TRACE("(%p,%p)\n", Binding, StringBinding);
@@ -949,7 +946,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, RPC_WS
   TRACE("(%p,%p)\n", Binding, StringBinding);
   ret = RpcBindingToStringBindingA(Binding, &str);
   *StringBinding = RPCRT4_strdupAtoW((char*)str);
-  RpcStringFreeA((unsigned char**)&str);
+  RpcStringFreeA(&str);
   return ret;
 }
 
@@ -972,7 +969,7 @@ RPC_STATUS WINAPI I_RpcBindingInqTransportType( RPC_BINDING_HANDLE Binding, unsi
  */
 RPC_STATUS WINAPI I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING_FN BlockingFn)
 {
-  RpcBinding* bind = (RpcBinding*)Binding;
+  RpcBinding* bind = Binding;
 
   TRACE( "(%p,%p): stub\n", Binding, BlockingFn );
 
@@ -989,7 +986,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
   RPC_BINDING_HANDLE* DestinationBinding)
 {
   RpcBinding *DestBinding;
-  RpcBinding *SrcBinding = (RpcBinding*)SourceBinding;
+  RpcBinding *SrcBinding = SourceBinding;
   RPC_STATUS status;
 
   TRACE("(%p, %p)\n", SourceBinding, DestinationBinding);
@@ -1052,9 +1049,17 @@ RPC_STATUS RPC_ENTRY RpcBindingReset(RPC_BINDING_HANDLE Binding)
  */
 RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
 {
-    FIXME("(%p): stub\n", BindingHandle);
-    ImpersonateSelf(SecurityImpersonation);
-    return RPC_S_OK;
+    RpcBinding *bind;
+
+    TRACE("(%p)\n", BindingHandle);
+
+    if (!BindingHandle) BindingHandle = I_RpcGetCurrentCallHandle();
+    if (!BindingHandle) return RPC_S_INVALID_BINDING;
+
+    bind = BindingHandle;
+    if (bind->FromConn)
+        return rpcrt4_conn_impersonate_client(bind->FromConn);
+    return RPC_S_WRONG_KIND_OF_BINDING;
 }
 
 /***********************************************************************
@@ -1077,8 +1082,17 @@ RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
  */
 RPC_STATUS WINAPI RpcRevertToSelfEx(RPC_BINDING_HANDLE BindingHandle)
 {
-    FIXME("(%p): stub\n", BindingHandle);
-    return RPC_S_OK;
+    RpcBinding *bind;
+
+    TRACE("(%p)\n", BindingHandle);
+
+    if (!BindingHandle) BindingHandle = I_RpcGetCurrentCallHandle();
+    if (!BindingHandle) return RPC_S_INVALID_BINDING;
+
+    bind = BindingHandle;
+    if (bind->FromConn)
+        return rpcrt4_conn_revert_to_self(bind->FromConn);
+    return RPC_S_WRONG_KIND_OF_BINDING;
 }
 
 static inline BOOL has_nt_auth_identity(ULONG AuthnLevel)
@@ -1094,11 +1108,11 @@ static inline BOOL has_nt_auth_identity(ULONG AuthnLevel)
     }
 }
 
-static RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc,
-                                     CredHandle cred, TimeStamp exp,
-                                     ULONG cbMaxToken,
-                                     RPC_AUTH_IDENTITY_HANDLE identity,
-                                     RpcAuthInfo **ret)
+RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc,
+                              CredHandle cred, TimeStamp exp,
+                              ULONG cbMaxToken,
+                              RPC_AUTH_IDENTITY_HANDLE identity,
+                              RpcAuthInfo **ret)
 {
     RpcAuthInfo *AuthInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(*AuthInfo));
     if (!AuthInfo)
@@ -1286,7 +1300,7 @@ static RPC_STATUS RpcQualityOfService_Create(const RPC_SECURITY_QOS *qos_src, BO
                     cred_dst->User = HeapAlloc(GetProcessHeap(), 0, cred_dst->UserLength * sizeof(WCHAR));
                     cred_dst->Password = HeapAlloc(GetProcessHeap(), 0, cred_dst->PasswordLength * sizeof(WCHAR));
                     cred_dst->Domain = HeapAlloc(GetProcessHeap(), 0, cred_dst->DomainLength * sizeof(WCHAR));
-                    if (!cred_dst || !cred_dst->Password || !cred_dst->Domain) goto error;
+                    if (!cred_dst->Password || !cred_dst->Domain) goto error;
                     MultiByteToWideChar(CP_ACP, 0, (char *)cred_src->User, cred_src->UserLength, cred_dst->User, cred_dst->UserLength);
                     MultiByteToWideChar(CP_ACP, 0, (char *)cred_src->Domain, cred_src->DomainLength, cred_dst->Domain, cred_dst->DomainLength);
                     MultiByteToWideChar(CP_ACP, 0, (char *)cred_src->Password, cred_src->PasswordLength, cred_dst->Password, cred_dst->PasswordLength);
@@ -1431,9 +1445,8 @@ BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQuali
  */
 RPC_STATUS WINAPI RpcRevertToSelf(void)
 {
-    FIXME("stub\n");
-    RevertToSelf();
-    return RPC_S_OK;
+    TRACE("\n");
+    return RpcRevertToSelfEx(NULL);
 }
 
 /***********************************************************************
@@ -1453,9 +1466,22 @@ RpcBindingInqAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR *ServerPrincName,
                           ULONG *AuthnSvc, RPC_AUTH_IDENTITY_HANDLE *AuthIdentity, ULONG *AuthzSvc,
                           ULONG RpcQosVersion, RPC_SECURITY_QOS *SecurityQOS )
 {
-    FIXME("%p %p %p %p %p %p %u %p\n", Binding, ServerPrincName, AuthnLevel,
+    RPC_STATUS status;
+    RPC_WSTR principal;
+
+    TRACE("%p %p %p %p %p %p %u %p\n", Binding, ServerPrincName, AuthnLevel,
           AuthnSvc, AuthIdentity, AuthzSvc, RpcQosVersion, SecurityQOS);
-    return RPC_S_INVALID_BINDING;
+
+    status = RpcBindingInqAuthInfoExW(Binding, ServerPrincName ? &principal : NULL, AuthnLevel,
+                                      AuthnSvc, AuthIdentity, AuthzSvc, RpcQosVersion, SecurityQOS);
+    if (status == RPC_S_OK && ServerPrincName)
+    {
+        *ServerPrincName = (RPC_CSTR)RPCRT4_strdupWtoA(principal);
+        RpcStringFreeW(&principal);
+        if (!*ServerPrincName) return ERROR_OUTOFMEMORY;
+    }
+
+    return status;
 }
 
 /***********************************************************************
@@ -1466,9 +1492,38 @@ RpcBindingInqAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR *ServerPrincName,
                           ULONG *AuthnSvc, RPC_AUTH_IDENTITY_HANDLE *AuthIdentity, ULONG *AuthzSvc,
                           ULONG RpcQosVersion, RPC_SECURITY_QOS *SecurityQOS )
 {
-    FIXME("%p %p %p %p %p %p %u %p\n", Binding, ServerPrincName, AuthnLevel,
+    RpcBinding *bind = Binding;
+
+    TRACE("%p %p %p %p %p %p %u %p\n", Binding, ServerPrincName, AuthnLevel,
           AuthnSvc, AuthIdentity, AuthzSvc, RpcQosVersion, SecurityQOS);
-    return RPC_S_INVALID_BINDING;
+
+    if (!bind->AuthInfo) return RPC_S_BINDING_HAS_NO_AUTH;
+
+    if (SecurityQOS)
+    {
+        FIXME("QOS not implemented\n");
+        return RPC_S_INVALID_BINDING;
+    }
+
+    if (ServerPrincName)
+    {
+        if (bind->AuthInfo->server_principal_name)
+        {
+            *ServerPrincName = RPCRT4_strdupW(bind->AuthInfo->server_principal_name);
+            if (!*ServerPrincName) return ERROR_OUTOFMEMORY;
+        }
+        else *ServerPrincName = NULL;
+    }
+    if (AuthnLevel) *AuthnLevel = bind->AuthInfo->AuthnLevel;
+    if (AuthnSvc) *AuthnSvc = bind->AuthInfo->AuthnSvc;
+    if (AuthIdentity) *AuthIdentity = bind->AuthInfo->identity;
+    if (AuthzSvc)
+    {
+        FIXME("authorization service not implemented\n");
+        *AuthzSvc = RPC_C_AUTHZ_NONE;
+    }
+
+    return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -1478,9 +1533,8 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RpcBindingInqAuthInfoA( RPC_BINDING_HANDLE Binding, RPC_CSTR *ServerPrincName, ULONG *AuthnLevel,
                         ULONG *AuthnSvc, RPC_AUTH_IDENTITY_HANDLE *AuthIdentity, ULONG *AuthzSvc )
 {
-    FIXME("%p %p %p %p %p %p\n", Binding, ServerPrincName, AuthnLevel,
-          AuthnSvc, AuthIdentity, AuthzSvc);
-    return RPC_S_INVALID_BINDING;
+    return RpcBindingInqAuthInfoExA(Binding, ServerPrincName, AuthnLevel, AuthnSvc, AuthIdentity,
+                                    AuthzSvc, 0, NULL);
 }
 
 /***********************************************************************
@@ -1490,9 +1544,78 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RpcBindingInqAuthInfoW( RPC_BINDING_HANDLE Binding, RPC_WSTR *ServerPrincName, ULONG *AuthnLevel,
                         ULONG *AuthnSvc, RPC_AUTH_IDENTITY_HANDLE *AuthIdentity, ULONG *AuthzSvc )
 {
-    FIXME("%p %p %p %p %p %p\n", Binding, ServerPrincName, AuthnLevel,
-          AuthnSvc, AuthIdentity, AuthzSvc);
-    return RPC_S_INVALID_BINDING;
+    return RpcBindingInqAuthInfoExW(Binding, ServerPrincName, AuthnLevel, AuthnSvc, AuthIdentity,
+                                    AuthzSvc, 0, NULL);
+}
+
+/***********************************************************************
+ *             RpcBindingInqAuthClientA (RPCRT4.@)
+ */
+RPCRTAPI RPC_STATUS RPC_ENTRY
+RpcBindingInqAuthClientA( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *Privs,
+                          RPC_CSTR *ServerPrincName, ULONG *AuthnLevel, ULONG *AuthnSvc,
+                          ULONG *AuthzSvc )
+{
+    return RpcBindingInqAuthClientExA(ClientBinding, Privs, ServerPrincName, AuthnLevel,
+                                      AuthnSvc, AuthzSvc, 0);
+}
+
+/***********************************************************************
+ *             RpcBindingInqAuthClientW (RPCRT4.@)
+ */
+RPCRTAPI RPC_STATUS RPC_ENTRY
+RpcBindingInqAuthClientW( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *Privs,
+                          RPC_WSTR *ServerPrincName, ULONG *AuthnLevel, ULONG *AuthnSvc,
+                          ULONG *AuthzSvc )
+{
+    return RpcBindingInqAuthClientExW(ClientBinding, Privs, ServerPrincName, AuthnLevel,
+                                      AuthnSvc, AuthzSvc, 0);
+}
+
+/***********************************************************************
+ *             RpcBindingInqAuthClientExA (RPCRT4.@)
+ */
+RPCRTAPI RPC_STATUS RPC_ENTRY
+RpcBindingInqAuthClientExA( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *Privs,
+                            RPC_CSTR *ServerPrincName, ULONG *AuthnLevel, ULONG *AuthnSvc,
+                            ULONG *AuthzSvc, ULONG Flags )
+{
+    RPC_STATUS status;
+    RPC_WSTR principal;
+
+    TRACE("%p %p %p %p %p %p 0x%x\n", ClientBinding, Privs, ServerPrincName, AuthnLevel,
+          AuthnSvc, AuthzSvc, Flags);
+
+    status = RpcBindingInqAuthClientExW(ClientBinding, Privs, ServerPrincName ? &principal : NULL,
+                                        AuthnLevel, AuthnSvc, AuthzSvc, Flags);
+    if (status == RPC_S_OK && ServerPrincName)
+    {
+        *ServerPrincName = (RPC_CSTR)RPCRT4_strdupWtoA(principal);
+        if (!*ServerPrincName && principal) status = ERROR_OUTOFMEMORY;
+        RpcStringFreeW(&principal);
+    }
+
+    return status;
+}
+
+/***********************************************************************
+ *             RpcBindingInqAuthClientExW (RPCRT4.@)
+ */
+RPCRTAPI RPC_STATUS RPC_ENTRY
+RpcBindingInqAuthClientExW( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *Privs,
+                            RPC_WSTR *ServerPrincName, ULONG *AuthnLevel, ULONG *AuthnSvc,
+                            ULONG *AuthzSvc, ULONG Flags )
+{
+    RpcBinding *bind = ClientBinding;
+
+    TRACE("%p %p %p %p %p %p 0x%x\n", ClientBinding, Privs, ServerPrincName, AuthnLevel,
+          AuthnSvc, AuthzSvc, Flags);
+
+    if (!bind->FromConn) return RPC_S_INVALID_BINDING;
+
+    return rpcrt4_conn_inquire_auth_client(bind->FromConn, Privs,
+                                           ServerPrincName, AuthnLevel,
+                                           AuthnSvc, AuthzSvc, Flags);
 }
 
 /***********************************************************************
@@ -1504,7 +1627,7 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
                           RPC_AUTH_IDENTITY_HANDLE AuthIdentity, ULONG AuthzSvr,
                           RPC_SECURITY_QOS *SecurityQos )
 {
-  RpcBinding* bind = (RpcBinding*)Binding;
+  RpcBinding* bind = Binding;
   SECURITY_STATUS r;
   CredHandle cred;
   TimeStamp exp;
@@ -1634,7 +1757,7 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
                           ULONG AuthnSvc, RPC_AUTH_IDENTITY_HANDLE AuthIdentity, ULONG AuthzSvr,
                           RPC_SECURITY_QOS *SecurityQos )
 {
-  RpcBinding* bind = (RpcBinding*)Binding;
+  RpcBinding* bind = Binding;
   SECURITY_STATUS r;
   CredHandle cred;
   TimeStamp exp;
@@ -1643,7 +1766,7 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
   PSecPkgInfoW packages;
   ULONG cbMaxToken;
 
-  TRACE("%p %s %u %u %p %u %p\n", Binding, debugstr_w((const WCHAR*)ServerPrincName),
+  TRACE("%p %s %u %u %p %u %p\n", Binding, debugstr_w(ServerPrincName),
         AuthnLevel, AuthnSvc, AuthIdentity, AuthzSvr, SecurityQos);
 
   if (SecurityQos)
@@ -1775,7 +1898,7 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RpcBindingSetAuthInfoW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, ULONG AuthnLevel,
                         ULONG AuthnSvc, RPC_AUTH_IDENTITY_HANDLE AuthIdentity, ULONG AuthzSvr )
 {
-    TRACE("%p %s %u %u %p %u\n", Binding, debugstr_w((const WCHAR*)ServerPrincName),
+    TRACE("%p %s %u %u %p %u\n", Binding, debugstr_w(ServerPrincName),
           AuthnLevel, AuthnSvc, AuthIdentity, AuthzSvr);
     return RpcBindingSetAuthInfoExW(Binding, ServerPrincName, AuthnLevel, AuthnSvc, AuthIdentity, AuthzSvr, NULL);
 }

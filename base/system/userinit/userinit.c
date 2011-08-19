@@ -274,9 +274,70 @@ VOID StartShell(VOID)
 {
     WCHAR Shell[MAX_PATH];
     TCHAR szMsg[RC_STRING_MAX_SIZE];
+    DWORD Type, Size;
+    DWORD Value = 0;
+    LONG rc;
+    HKEY hKey;
 
     TRACE("()\n");
 
+    /* Safe Mode shell run */
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option",
+                       0, KEY_QUERY_VALUE, &hKey);
+    if(rc == ERROR_SUCCESS)
+    {
+        Size = sizeof(Value);
+        rc = RegQueryValueExW(hKey, L"UseAlternateShell", NULL,
+                              &Type, (LPBYTE)&Value, &Size);
+        if(rc == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            if(Type == REG_DWORD)
+            {
+                if(Value)
+                {
+                    /* Safe Mode Alternate Shell required */
+                    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                       L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot",
+                                       0, KEY_READ, &hKey);
+                    if(rc == ERROR_SUCCESS)
+                    {
+                        Size = MAX_PATH * sizeof(WCHAR);
+                        rc = RegQueryValueExW(hKey, L"AlternateShell", NULL,
+                                              &Type, (LPBYTE)Shell, &Size);
+                        if(rc == ERROR_SUCCESS)
+                        {
+                            RegCloseKey(hKey);
+                            if ((Type == REG_SZ) || (Type == REG_EXPAND_SZ))
+                            {
+                                TRACE("Key located - %s\n", debugstr_w(Shell));
+                                /* Try to run alternate shell */
+                                if (TryToStartShell(Shell))
+                                {
+                                    TRACE("Alternate shell started (Safe Mode)\n");
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                WARN("Wrong type %lu (expected %u or %u)\n",
+                                     Type, REG_SZ, REG_EXPAND_SZ);
+                            }
+                        }
+                        else
+                        {
+                            WARN("Alternate shell in Safe Mode required but not specified.");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                WARN("Wrong type %lu (expected %u)\n", Type, REG_DWORD);
+            }
+        }
+    }
     /* Try to run shell in user key */
     if (GetShell(Shell, HKEY_CURRENT_USER) && TryToStartShell(Shell))
     {

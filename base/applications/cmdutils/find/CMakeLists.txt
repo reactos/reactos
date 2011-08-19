@@ -1,4 +1,5 @@
-add_definitions(-D_DLL -D__USE_CRTIMP)
+
+set_rc_compiler()
 
 add_executable(find find.c find.rc)
 

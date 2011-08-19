@@ -22,11 +22,6 @@
 #define MAX_PROPERTY_SHEET_PAGE 32
 
 #include <precomp.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "shfldr_recyclebin.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(CBitBucket);
 

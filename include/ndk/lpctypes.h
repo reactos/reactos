@@ -209,8 +209,11 @@ typedef struct _LPCP_PORT_OBJECT
     SECURITY_CLIENT_CONTEXT StaticSecurity;
     LIST_ENTRY LpcReplyChainHead;
     LIST_ENTRY LpcDataInfoChainHead;
-    PEPROCESS ServerProcess;
-    PEPROCESS MappingProcess;
+    union
+    {
+        PEPROCESS ServerProcess;
+        PEPROCESS MappingProcess;
+    };
     ULONG MaxMessageLength;
     ULONG MaxConnectionInfoLength;
     ULONG Flags;
