@@ -1,3 +1,4 @@
+
 list(APPEND CRT_SOURCE
     conio/cgets.c
     conio/cputs.c
@@ -313,24 +314,6 @@ if(ARCH MATCHES i386)
         float/i386/fpreset.c
         float/i386/logb.c
         float/i386/statfp.c
-        setjmp/i386/setjmp.s)
-    if(MSVC)
-        list(APPEND CRT_SOURCE
-            except/i386/cpp.s)
-    endif()
-elseif(ARCH MATCHES amd64)
-    list(APPEND CRT_SOURCE
-        except/amd64/seh.s
-        float/i386/clearfp.c
-        float/i386/cntrlfp.c
-        float/i386/fpreset.c
-        float/i386/logb.c
-        float/i386/statfp.c
-        setjmp/amd64/setjmp.s)
-endif()
-
-if(ARCH MATCHES i386)
-    list(APPEND CRT_SOURCE
         math/i386/alldiv_asm.s
         math/i386/alldvrm_asm.s
         math/i386/allmul_asm.s
@@ -366,6 +349,7 @@ if(ARCH MATCHES i386)
         mem/i386/memmove_asm.s
         mem/i386/memset_asm.s
         misc/i386/readcr4.S
+        setjmp/i386/setjmp.s
         string/i386/strcat_asm.s
         string/i386/strchr_asm.s
         string/i386/strcmp_asm.s
@@ -386,8 +370,43 @@ if(ARCH MATCHES i386)
         string/i386/wcsncpy_asm.s
         string/i386/wcsnlen_asm.s
         string/i386/wcsrchr_asm.s)
-else()
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/i386/cpp.s)
+    endif()
+elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
+        except/amd64/seh.s
+        float/amd64/clearfp.S
+        float/i386/cntrlfp.c
+        float/amd64/fpreset.S
+        float/amd64/logb.S
+        float/i386/statfp.c
+        math/amd64/alldiv.S
+        math/amd64/atan.S
+        math/amd64/atan2.S
+        math/amd64/ceil.S
+        math/amd64/ceilf.S
+        math/amd64/exp.S
+        math/amd64/fabs.S
+        math/amd64/floor.S
+        math/amd64/floorf.S
+        math/amd64/fmod.S
+        math/amd64/fmodf.S
+        math/amd64/ldexp.S
+        math/amd64/log.S
+        math/amd64/log10.S
+        math/amd64/pow.S
+        math/amd64/sqrt.S
+        math/amd64/sqrtf.S
+        math/amd64/tan.S
+        setjmp/amd64/setjmp.s)
+endif()
+
+if(NOT ARCH MATCHES i386)
+    list(APPEND CRT_SOURCE
+        math/cos.c
+        math/sin.c
         math/stubs.c
         mem/memchr.c
         mem/memcpy.c
@@ -413,30 +432,6 @@ else()
         string/wcsncpy.c
         string/wcsnlen.c
         string/wcsrchr.c)
-endif()
-
-if(ARCH MATCHES amd64)
-    list(APPEND CRT_SOURCE
-        math/cos.c
-        math/sin.c
-        math/amd64/alldiv.S
-        math/amd64/atan.S
-        math/amd64/atan2.S
-        math/amd64/ceil.S
-        math/amd64/ceilf.S
-        math/amd64/exp.S
-        math/amd64/fabs.S
-        math/amd64/floor.S
-        math/amd64/floorf.S
-        math/amd64/fmod.S
-        math/amd64/fmodf.S
-        math/amd64/ldexp.S
-        math/amd64/log.S
-        math/amd64/log10.S
-        math/amd64/pow.S
-        math/amd64/sqrt.S
-        math/amd64/sqrtf.S
-        math/amd64/tan.S)
 endif()
 
 add_library(crt ${CRT_SOURCE})

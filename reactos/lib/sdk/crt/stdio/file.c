@@ -1137,41 +1137,6 @@ int CDECL _fileno(FILE* file)
 }
 
 /*********************************************************************
- *		_futime (MSVCRT.@)
- */
-int CDECL _futime(int fd, struct _utimbuf *t)
-{
-  HANDLE hand = fdtoh(fd);
-  FILETIME at, wt;
-
-  if (hand == INVALID_HANDLE_VALUE)
-    return -1;
-
-  if (!t)
-  {
-    time_t currTime;
-    time(&currTime);
-    RtlSecondsSince1970ToTime(currTime, (LARGE_INTEGER *)&at);
-    wt = at;
-  }
-  else
-  {
-    RtlSecondsSince1970ToTime(t->actime, (LARGE_INTEGER *)&at);
-    if (t->actime == t->modtime)
-      wt = at;
-    else
-      RtlSecondsSince1970ToTime(t->modtime, (LARGE_INTEGER *)&wt);
-  }
-
-  if (!SetFileTime(hand, NULL, &at, &wt))
-  {
-    _dosmaperr(GetLastError());
-    return -1 ;
-  }
-  return 0;
-}
-
-/*********************************************************************
  *		_get_osfhandle (MSVCRT.@)
  */
 intptr_t CDECL _get_osfhandle(int fd)
@@ -1748,38 +1713,6 @@ int CDECL _umask(int umask)
   TRACE("(%d)\n",umask);
   MSVCRT_umask = umask;
   return old_umask;
-}
-
-/*********************************************************************
- *		_utime (MSVCRT.@)
- */
-int CDECL _utime(const char* path, struct _utimbuf *t)
-{
-  int fd = _open(path, _O_WRONLY | _O_BINARY);
-
-  if (fd > 0)
-  {
-    int retVal = _futime(fd, t);
-    _close(fd);
-    return retVal;
-  }
-  return -1;
-}
-
-/*********************************************************************
- *		_wutime (MSVCRT.@)
- */
-int CDECL _wutime(const wchar_t* path, struct _utimbuf *t)
-{
-  int fd = _wopen(path, _O_WRONLY | _O_BINARY);
-
-  if (fd > 0)
-  {
-    int retVal = _futime(fd, t);
-    _close(fd);
-    return retVal;
-  }
-  return -1;
 }
 
 /*********************************************************************
