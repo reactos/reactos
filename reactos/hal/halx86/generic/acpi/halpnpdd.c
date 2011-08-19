@@ -353,8 +353,9 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Query ACPI requirements */
         Status = HalpQueryAcpiResourceRequirements(&RequirementsList);
-        ASSERT(RequirementsList->AlternativeLists == 1);
         if (!NT_SUCCESS(Status)) return Status;
+        
+        ASSERT(RequirementsList->AlternativeLists == 1);
         
         /* Allocate the resourcel ist */
         ResourceList = ExAllocatePoolWithTag(PagedPool,

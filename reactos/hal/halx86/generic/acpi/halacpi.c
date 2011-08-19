@@ -948,6 +948,7 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
     ResourceList->InterfaceType = PNPBus;
     ResourceList->List[0].Version = 1;
     ResourceList->List[0].Revision = 1;
+    ResourceList->List[0].Count = 0;
     
     /* Is there a SCI? */
     if (HalpFixedAcpiDescTable.sci_int_vector)
@@ -981,10 +982,12 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
   
     /* Get ACPI resources */
     HalpAcpiDetectResourceListSize(&Count);
+    DPRINT1("Resource count: %d\n", Count);
     
     /* Compute size of the list and allocate it */
     ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors) +
                ((Count - 1) * sizeof(IO_RESOURCE_DESCRIPTOR));
+    DPRINT1("Resource list size: %d\n", ListSize);
     RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, ' laH');
     if (RequirementsList)
     {
@@ -998,6 +1001,9 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
         {
             /* It worked, return it */
             *Requirements = RequirementsList;
+            
+            /* Validate the list */
+            ASSERT(RequirementsList->List[0].Count == Count);
         }
         else
         {
