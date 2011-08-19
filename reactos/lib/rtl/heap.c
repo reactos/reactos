@@ -80,10 +80,6 @@ UCHAR FillPattern[HEAP_ENTRY_SIZE] =
     HEAP_TAIL_FILL
 };
 
-
-ULONG NTAPI
-RtlCompareMemoryUlong(PVOID Source, ULONG Length, ULONG Value);
-
 /* FUNCTIONS *****************************************************************/
 
 VOID NTAPI
