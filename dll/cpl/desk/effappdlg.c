@@ -26,7 +26,7 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
     g->SchemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? TRUE : FALSE;
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_GETCHECK, 0, 0);
     g->SchemeAdv.Effects.bDragFullWindows = (state == BST_CHECKED) ? TRUE : FALSE;
-    g->bHasChanged = TRUE;
+    g->bSchemeChanged = TRUE;
 }
 
 

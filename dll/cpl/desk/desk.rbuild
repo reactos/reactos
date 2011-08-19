@@ -14,6 +14,7 @@
 	<library>shell32</library>
 	<library>ntdll</library>
 	<library>uuid</library>
+	<library>uxtheme</library>
 	<file>advmon.c</file>
 	<file>appearance.c</file>
 	<file>background.c</file>

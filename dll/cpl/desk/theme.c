@@ -10,7 +10,7 @@
 #include "desk.h"
 
 static BOOL g_PresetLoaded = FALSE;
-static INT g_TemplateCount = 0;
+INT g_TemplateCount = 0;
 
 static INT g_ColorList[NUM_COLORS];
 
@@ -119,8 +119,8 @@ VOID LoadCurrentScheme(COLOR_SCHEME* scheme)
 	/* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
 	 * Just keep them in sync for now:
 	 */
-	scheme->Effects.bTooltipAnimation = scheme->Effects.bMenuAnimation;
-	scheme->Effects.bTooltipFade = scheme->Effects.bMenuFade;
+	scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
+	scheme->Effects.bTooltipFade	   = scheme->Effects.bMenuFade;
 
 	/* show content of windows during dragging */
 	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &scheme->Effects.bDragFullWindows, 0);
@@ -200,7 +200,7 @@ BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId)
 					else
 						scheme->Size[i] = (INT)iSize;
 				}
-				RegCloseKey(hkScheme);
+				RegCloseKey(hkSize);
 			}
 			RegCloseKey(hkScheme);
 		}
@@ -378,4 +378,161 @@ INT LoadSchemePresetEntries(LPTSTR pszSelectedStyle)
 		g_TemplateCount = iTemplateIndex;
 	}
 	return iTemplateIndex;
+}
+
+typedef HRESULT (WINAPI * ENUMTHEMESTYLE) (LPCWSTR, LPWSTR, DWORD, PTHEMENAMES);
+
+BOOL AddThemeStyles(LPCWSTR pszThemeFileName, HDSA* Styles, int* count,  ENUMTHEMESTYLE enumTheme)
+{
+    DWORD index = 0;
+    THEMENAMES names;
+    THEME_STYLE StyleName;
+
+    *Styles = DSA_Create(sizeof(THEMENAMES),1);
+    *count = 0;
+
+    while (SUCCEEDED (enumTheme (pszThemeFileName, NULL, index++, &names)))
+    {
+        StyleName.StlyeName = _wcsdup(names.szName);
+        StyleName.DisplayName = _wcsdup(names.szDisplayName);
+        (*count)++;
+        DSA_InsertItem(*Styles, *count, &StyleName);
+    }
+
+    return TRUE;
+}
+
+BOOL CALLBACK EnumThemeProc(LPVOID lpReserved, 
+                            LPCWSTR pszThemeFileName,
+                            LPCWSTR pszThemeName, 
+                            LPCWSTR pszToolTip, LPVOID lpReserved2,
+                            LPVOID lpData)
+{
+    THEME theme;
+    GLOBALS *g = (GLOBALS *) lpData;
+
+    theme.themeFileName = _wcsdup(pszThemeFileName);
+    theme.displayName = _wcsdup(pszThemeName);
+    AddThemeStyles( pszThemeFileName, &theme.Sizes, &theme.SizesCount, (ENUMTHEMESTYLE)EnumThemeSizes);
+    AddThemeStyles( pszThemeFileName, &theme.Colors, &theme.ColorsCount, (ENUMTHEMESTYLE)EnumThemeColors);
+
+    DSA_InsertItem(g->Themes, DSA_APPEND , &theme);
+    g->ThemesCount++;
+
+    return TRUE;
+}
+
+void LoadThemes(GLOBALS *g)
+{
+    WCHAR themesPath[MAX_PATH];
+    HRESULT hret;
+    THEME ClassicTheme;
+    WCHAR szThemeFileName[MAX_PATH];
+    WCHAR szColorBuff[MAX_PATH];
+    WCHAR szSizeBuff[MAX_PATH];
+
+    /* Initialize themes dsa */
+    g->Themes = DSA_Create(sizeof(THEME),5);
+
+    /* Insert the classic theme */
+    memset(&ClassicTheme, 0, sizeof(THEME));
+    ClassicTheme.displayName = _wcsdup(L"Classic Theme");
+    DSA_InsertItem(g->Themes, 0, &ClassicTheme);
+    g->ThemesCount = 1;
+
+    /* Retrieve the name of the current theme */
+    hret = GetCurrentThemeName(szThemeFileName, 
+                               MAX_PATH, 
+                               szColorBuff, 
+                               MAX_PATH, 
+                               szSizeBuff, 
+                               MAX_PATH);
+
+    if (FAILED (hret)) 
+    {
+        g->pszThemeFileName = NULL;
+        g->pszColorName = NULL;
+        g->pszSizeName = NULL;
+    }
+    else
+    {
+        /* Cache the name of the active theme */
+        g->pszThemeFileName = _wcsdup(szThemeFileName);
+        g->pszColorName = _wcsdup(szColorBuff);
+        g->pszSizeName = _wcsdup(szSizeBuff);
+    }
+    /* Get path to themes folder */
+    hret = SHGetFolderPathW (NULL, CSIDL_RESOURCES, NULL, SHGFP_TYPE_CURRENT, themesPath);
+    if (FAILED (hret)) 
+        return;
+    lstrcatW (themesPath, L"\\Themes");
+
+    /* Enumerate themes */
+    hret = EnumThemes(themesPath, EnumThemeProc, g);
+}
+
+HRESULT ActivateTheme(PTHEME pTheme, int iColor, int iSize)
+{
+    PTHEME_STYLE pThemeColor;
+    PTHEME_STYLE pThemeSize;
+    HTHEMEFILE hThemeFile = 0;
+    HRESULT hret;
+
+    if(pTheme->themeFileName)
+    {
+        pThemeColor = (PTHEME_STYLE)DSA_GetItemPtr(pTheme->Colors, iColor);
+        pThemeSize = (PTHEME_STYLE)DSA_GetItemPtr(pTheme->Sizes, iSize);
+
+        hret = OpenThemeFile(pTheme->themeFileName, 
+                             pThemeColor->StlyeName, 
+                             pThemeSize->StlyeName, 
+                             &hThemeFile, 
+                             0);
+
+        if(!SUCCEEDED(hret))
+        {
+            return hret;
+        }
+
+    }
+
+    hret = ApplyTheme(hThemeFile, "", 0);
+
+    if(pTheme->themeFileName)
+    {
+        hret = CloseThemeFile(hThemeFile);
+    }
+
+    return hret;
+}
+
+int CALLBACK CleanUpThemeStlyeCallback(void *p, void *pData)
+{
+    PTHEME_STYLE pStyle = (PTHEME_STYLE)p;
+
+    free(pStyle->DisplayName);
+    free(pStyle->StlyeName);
+
+    return TRUE;
+}
+
+int CALLBACK CleanUpThemeCallback(void *p, void *pData)
+{
+    PTHEME pTheme = (PTHEME)p;
+
+    free(pTheme->displayName);
+    free(pTheme->themeFileName);
+    DSA_DestroyCallback(pTheme->Colors, CleanUpThemeStlyeCallback, NULL);
+    DSA_DestroyCallback(pTheme->Sizes, CleanUpThemeStlyeCallback, NULL);
+
+    return TRUE;
+}
+
+void CleanupThemes(GLOBALS *g)
+{
+    free(g->pszThemeFileName);
+    free(g->pszColorName);
+    free(g->pszSizeName);
+
+    DSA_DestroyCallback(g->Themes, CleanUpThemeCallback, NULL);
 }

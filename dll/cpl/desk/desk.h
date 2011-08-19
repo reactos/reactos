@@ -11,6 +11,8 @@
 #include <cplext.h>
 #include <dll/desk/deskcplx.h>
 #include <cfgmgr32.h>
+#include <Uxtheme.h>
+#include <uxundoc.h>
 
 #include "appearance.h"
 #include "preview.h"

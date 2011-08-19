@@ -76,17 +76,46 @@ typedef struct
 	TCHAR strLegacyName[MAX_TEMPLATENAMELENTGH];
 } SCHEME_PRESET;
 
-/* Some typedefs for appearance */
+/* struct for holding theme colors and sizes */
+typedef struct _THEME_STYLE
+{
+	WCHAR* StlyeName;
+	WCHAR* DisplayName;
+} THEME_STYLE, *PTHEME_STYLE;
+
+typedef struct _THEME
+{
+	WCHAR* themeFileName;
+	WCHAR* displayName;
+	HDSA Colors;
+	int ColorsCount;
+	HDSA Sizes;
+	int SizesCount;
+
+} THEME, *PTHEME;
 
 /* This is the global structure used to store the current values.
    A pointer of this get's passed to the functions either directly
    or by passing hwnd and getting the pointer by GetWindowLongPtr */
 typedef struct tagGLOBALS
 {
+	HDSA Themes;
+	int ThemesCount;
+	BOOL bThemeActive;
+
+	INT ThemeId;
 	INT SchemeId;	/* Theme is customized if SchemeId == -1 */
+	INT SizeID;
+	TCHAR strSelectedStyle[4];
+
+	LPWSTR pszThemeFileName;
+	LPWSTR pszColorName;
+	LPWSTR pszSizeName;
+
 	COLOR_SCHEME Scheme;
 	COLOR_SCHEME SchemeAdv;
-	BOOL bHasChanged;
+	BOOL bThemeChanged;
+	BOOL bSchemeChanged;
 	HBITMAP hbmpColor[3];
 	INT CurrentElement;
 	HFONT hBoldFont;
@@ -95,6 +124,7 @@ typedef struct tagGLOBALS
 } GLOBALS;
 
 extern SCHEME_PRESET g_ColorSchemes[MAX_TEMPLATES];
+extern INT g_TemplateCount;
 
 /* prototypes for theme.c */
 VOID LoadCurrentScheme(COLOR_SCHEME* scheme);
@@ -102,6 +132,9 @@ BOOL LoadSchemeFromReg(COLOR_SCHEME* scheme, INT SchemeId);
 VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId);
 BOOL SaveScheme(COLOR_SCHEME* scheme, LPCTSTR strLegacyName);
 INT LoadSchemePresetEntries(LPTSTR pszSelectedStyle);
+VOID LoadThemes(GLOBALS *g);
+HRESULT ActivateTheme(PTHEME pTheme, int iColor, int iSize);
+void CleanupThemes(GLOBALS *g);
 
 /* prototypes for appearance.c */
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
