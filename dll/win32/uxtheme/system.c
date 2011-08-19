@@ -31,6 +31,7 @@
 #include "vfwmsgs.h"
 #include "uxtheme.h"
 #include "tmschema.h"
+#include "uxundoc.h"
 
 #include "uxthemedll.h"
 #include "msstyles.h"
