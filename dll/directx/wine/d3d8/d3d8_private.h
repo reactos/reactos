@@ -109,7 +109,6 @@ typedef struct IDirect3DCubeTexture8Impl IDirect3DCubeTexture8Impl;
 typedef struct IDirect3DIndexBuffer8Impl IDirect3DIndexBuffer8Impl;
 typedef struct IDirect3DSurface8Impl IDirect3DSurface8Impl;
 typedef struct IDirect3DSwapChain8Impl IDirect3DSwapChain8Impl;
-typedef struct IDirect3DResource8Impl IDirect3DResource8Impl;
 typedef struct IDirect3DVolume8Impl IDirect3DVolume8Impl;
 typedef struct IDirect3DVertexBuffer8Impl IDirect3DVertexBuffer8Impl;
 typedef struct IDirect3DVertexShader8Impl IDirect3DVertexShader8Impl;
@@ -132,12 +131,9 @@ extern const IDirect3D8Vtbl Direct3D8_Vtbl DECLSPEC_HIDDEN;
  */
 struct IDirect3D8Impl
 {
-    /* IUnknown fields */
-    const IDirect3D8Vtbl   *lpVtbl;
-    LONG                    ref;
-
-    /* The WineD3D device */
-    IWineD3D               *WineD3D;
+    IDirect3D8 IDirect3D8_iface;
+    LONG       ref;
+    struct wined3d *WineD3D;
 };
 
 /*****************************************************************************
@@ -178,22 +174,22 @@ struct FvfToDecl
 struct IDirect3DDevice8Impl
 {
     /* IUnknown fields */
-    const IDirect3DDevice8Vtbl   *lpVtbl;
-    const IWineD3DDeviceParentVtbl *device_parent_vtbl;
-    LONG                         ref;
-/* But what about baseVertexIndex in state blocks? hmm... it may be a better idea to pass this to wined3d */
-    IWineD3DDevice               *WineD3DDevice;
-    struct d3d8_handle_table handle_table;
+    IDirect3DDevice8        IDirect3DDevice8_iface;
+    struct wined3d_device_parent device_parent;
+    LONG                    ref;
+    struct wined3d_device *wined3d_device;
+    struct                  d3d8_handle_table handle_table;
 
     /* FVF management */
     struct FvfToDecl       *decls;
     UINT                    numConvertedDecls, declArraySize;
 
     /* Avoids recursion with nested ReleaseRef to 0 */
-    BOOL                          inDestruction;
+    BOOL                    inDestruction;
+    BOOL lost;
 };
 
-HRESULT device_init(IDirect3DDevice8Impl *device, IWineD3D *wined3d, UINT adapter,
+HRESULT device_init(IDirect3DDevice8Impl *device, struct wined3d *wined3d, UINT adapter,
         D3DDEVTYPE device_type, HWND focus_window, DWORD flags, D3DPRESENT_PARAMETERS *parameters) DECLSPEC_HIDDEN;
 
 /* ---------------- */
@@ -205,18 +201,11 @@ HRESULT device_init(IDirect3DDevice8Impl *device, IWineD3D *wined3d, UINT adapte
  */
 struct IDirect3DVolume8Impl
 {
-    /* IUnknown fields */
-    const IDirect3DVolume8Vtbl *lpVtbl;
-    LONG                        ref;
-
-    /* IDirect3DVolume8 fields */
-    IWineD3DVolume             *wineD3DVolume;
-
-    /* The volume container */
-    IUnknown                    *container;
-
-    /* If set forward refcounting to this object */
-    IUnknown                    *forwardReference;
+    IDirect3DVolume8    IDirect3DVolume8_iface;
+    LONG                ref;
+    struct wined3d_volume *wined3d_volume;
+    IUnknown *container;
+    IUnknown *forwardReference;
 };
 
 HRESULT volume_init(IDirect3DVolume8Impl *volume, IDirect3DDevice8Impl *device, UINT width, UINT height,
@@ -232,14 +221,10 @@ HRESULT volume_init(IDirect3DVolume8Impl *volume, IDirect3DDevice8Impl *device, 
 struct IDirect3DSwapChain8Impl
 {
     /* IUnknown fields */
-    const IDirect3DSwapChain8Vtbl *lpVtbl;
-    LONG                           ref;
-
-    /* IDirect3DSwapChain8 fields */
-    IWineD3DSwapChain             *wineD3DSwapChain;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8              parentDevice;
+    IDirect3DSwapChain8 IDirect3DSwapChain8_iface;
+    LONG                ref;
+    struct wined3d_swapchain *wined3d_swapchain;
+    IDirect3DDevice8 *parentDevice;
 };
 
 HRESULT swapchain_init(IDirect3DSwapChain8Impl *swapchain, IDirect3DDevice8Impl *device,
@@ -257,12 +242,8 @@ struct IDirect3DSurface8Impl
     /* IUnknown fields */
     const IDirect3DSurface8Vtbl *lpVtbl;
     LONG                         ref;
-
-    /* IDirect3DSurface8 fields */
-    IWineD3DSurface             *wineD3DSurface;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8                  parentDevice;
+    struct wined3d_surface *wined3d_surface;
+    IDirect3DDevice8 *parentDevice;
 
     /* The surface container */
     IUnknown                    *container;
@@ -274,16 +255,6 @@ struct IDirect3DSurface8Impl
 HRESULT surface_init(IDirect3DSurface8Impl *surface, IDirect3DDevice8Impl *device,
         UINT width, UINT height, D3DFORMAT format, BOOL lockable, BOOL discard, UINT level,
         DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
-
-struct IDirect3DResource8Impl
-{
-    /* IUnknown fields */
-    const IDirect3DResource8Vtbl *lpVtbl;
-    LONG                          ref;
-
-    /* IDirect3DResource8 fields */
-    IWineD3DResource             *wineD3DResource;
-};
 
 /* ---------------------- */
 /* IDirect3DVertexBuffer8 */
@@ -298,13 +269,9 @@ struct IDirect3DVertexBuffer8Impl
     const IDirect3DVertexBuffer8Vtbl *lpVtbl;
     LONG                              ref;
 
-    /* IDirect3DResource8 fields */
-    IWineD3DBuffer *wineD3DVertexBuffer;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8                 parentDevice;
-
-    DWORD                             fvf;
+    struct wined3d_buffer *wineD3DVertexBuffer;
+    IDirect3DDevice8 *parentDevice;
+    DWORD fvf;
 };
 
 HRESULT vertexbuffer_init(IDirect3DVertexBuffer8Impl *buffer, IDirect3DDevice8Impl *device,
@@ -323,12 +290,8 @@ struct IDirect3DIndexBuffer8Impl
     const IDirect3DIndexBuffer8Vtbl *lpVtbl;
     LONG                             ref;
 
-    /* IDirect3DResource8 fields */
-    IWineD3DBuffer                  *wineD3DIndexBuffer;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8                parentDevice;
-
+    struct wined3d_buffer *wineD3DIndexBuffer;
+    IDirect3DDevice8 *parentDevice;
     enum wined3d_format_id format;
 };
 
@@ -347,9 +310,7 @@ struct IDirect3DBaseTexture8Impl
     /* IUnknown fields */
     const IDirect3DBaseTexture8Vtbl *lpVtbl;
     LONG                   ref;
-
-    /* IDirect3DResource8 fields */
-    IWineD3DBaseTexture             *wineD3DBaseTexture;
+    struct wined3d_texture *wined3d_texture;
 };
 
 /* --------------------- */
@@ -361,15 +322,10 @@ struct IDirect3DBaseTexture8Impl
  */
 struct IDirect3DCubeTexture8Impl
 {
-    /* IUnknown fields */
-    const IDirect3DCubeTexture8Vtbl *lpVtbl;
-    LONG                   ref;
-
-    /* IDirect3DResource8 fields */
-    IWineD3DCubeTexture             *wineD3DCubeTexture;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8                parentDevice;
+    IDirect3DCubeTexture8   IDirect3DCubeTexture8_iface;
+    LONG                    ref;
+    struct wined3d_texture *wined3d_texture;
+    IDirect3DDevice8 *parentDevice;
 };
 
 HRESULT cubetexture_init(IDirect3DCubeTexture8Impl *texture, IDirect3DDevice8Impl *device,
@@ -384,15 +340,10 @@ HRESULT cubetexture_init(IDirect3DCubeTexture8Impl *texture, IDirect3DDevice8Imp
  */
 struct IDirect3DTexture8Impl
 {
-    /* IUnknown fields */
-    const IDirect3DTexture8Vtbl *lpVtbl;
-    LONG                   ref;
-
-    /* IDirect3DResourc8 fields */
-    IWineD3DTexture             *wineD3DTexture;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8            parentDevice;
+    IDirect3DTexture8   IDirect3DTexture8_iface;
+    LONG                ref;
+    struct wined3d_texture *wined3d_texture;
+    IDirect3DDevice8 *parentDevice;
 };
 
 HRESULT texture_init(IDirect3DTexture8Impl *texture, IDirect3DDevice8Impl *device,
@@ -407,15 +358,10 @@ HRESULT texture_init(IDirect3DTexture8Impl *texture, IDirect3DDevice8Impl *devic
  */
 struct IDirect3DVolumeTexture8Impl
 {
-    /* IUnknown fields */
-    const IDirect3DVolumeTexture8Vtbl *lpVtbl;
-    LONG                   ref;
-
-    /* IDirect3DResource8 fields */
-    IWineD3DVolumeTexture             *wineD3DVolumeTexture;
-
-    /* Parent reference */
-    LPDIRECT3DDEVICE8                  parentDevice;
+    IDirect3DVolumeTexture8 IDirect3DVolumeTexture8_iface;
+    LONG ref;
+    struct wined3d_texture *wined3d_texture;
+    IDirect3DDevice8 *parentDevice;
 };
 
 HRESULT volumetexture_init(IDirect3DVolumeTexture8Impl *texture, IDirect3DDevice8Impl *device,
@@ -455,7 +401,7 @@ typedef struct {
     DWORD *elements;
     DWORD elements_size; /* Size of elements, in bytes */
 
-    IWineD3DVertexDeclaration *wined3d_vertex_declaration;
+    struct wined3d_vertex_declaration *wined3d_vertex_declaration;
     DWORD shader_handle;
 } IDirect3DVertexDeclaration8Impl;
 
@@ -509,11 +455,10 @@ DECLARE_INTERFACE_(IDirect3DPixelShader8,IUnknown)
  */
 
 struct IDirect3DVertexShader8Impl {
-  const IDirect3DVertexShader8Vtbl *lpVtbl;
-  LONG ref;
-
-  IDirect3DVertexDeclaration8      *vertex_declaration;
-  IWineD3DVertexShader             *wineD3DVertexShader;
+  IDirect3DVertexShader8            IDirect3DVertexShader8_iface;
+  LONG                              ref;
+  IDirect3DVertexDeclaration8 *vertex_declaration;
+  struct wined3d_shader *wined3d_shader;
 };
 
 HRESULT vertexshader_init(IDirect3DVertexShader8Impl *shader, IDirect3DDevice8Impl *device,
@@ -525,11 +470,10 @@ HRESULT vertexshader_init(IDirect3DVertexShader8Impl *shader, IDirect3DDevice8Im
  * IDirect3DPixelShader implementation structure
  */
 typedef struct IDirect3DPixelShader8Impl {
-    const IDirect3DPixelShader8Vtbl *lpVtbl;
+    IDirect3DPixelShader8            IDirect3DPixelShader8_iface;
     LONG                             ref;
-
-    DWORD                            handle;
-    IWineD3DPixelShader             *wineD3DPixelShader;
+    DWORD handle;
+    struct wined3d_shader *wined3d_shader;
 } IDirect3DPixelShader8Impl;
 
 HRESULT pixelshader_init(IDirect3DPixelShader8Impl *shader, IDirect3DDevice8Impl *device,
@@ -537,7 +481,7 @@ HRESULT pixelshader_init(IDirect3DPixelShader8Impl *shader, IDirect3DDevice8Impl
 
 D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
 enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_HIDDEN;
-void load_local_constants(const DWORD *d3d8_elements, IWineD3DVertexShader *wined3d_vertex_shader) DECLSPEC_HIDDEN;
+void load_local_constants(const DWORD *d3d8_elements, struct wined3d_shader *wined3d_vertex_shader) DECLSPEC_HIDDEN;
 size_t parse_token(const DWORD *pToken) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_D3DX8_PRIVATE_H */
