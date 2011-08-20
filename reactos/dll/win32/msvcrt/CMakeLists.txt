@@ -28,7 +28,7 @@ if(NOT MSVC)
 endif()
 
 add_dependencies(msvcrt psdk)
-set_entrypoint(msvcrt DllMain@12)
+set_entrypoint(msvcrt DllMain 12)
 set_image_base(msvcrt ${baseaddress_msvcrt})
 
 target_link_libraries(msvcrt crt wine)
