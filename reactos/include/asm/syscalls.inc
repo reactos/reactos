@@ -3,12 +3,14 @@
 #define KUSER_SHARED_SYSCALL HEX(7ffe0300)
 #define KGDT_R0_CODE 8
 MACRO(STUBCODE_U, SyscallId, StackBytes)
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     mov eax, SyscallId
     mov ecx, KUSER_SHARED_SYSCALL
     call dword ptr [ecx]
     ret StackBytes
 ENDM
 MACRO(STUBCODE_K, SyscallId, StackBytes)
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
     mov eax, SyscallId
     lea edx, [esp + 4]
     pushfd
@@ -18,12 +20,14 @@ MACRO(STUBCODE_K, SyscallId, StackBytes)
 ENDM
 #elif defined(_M_AMD64)
 MACRO(STUBCODE_U, SyscallId, StackBytes)
+    .ENDPROLOG
     mov eax, SyscallId
     mov r10, rcx
     syscall
     ret StackBytes
 ENDM
 MACRO(STUBCODE_K, SyscallId, StackBytes)
+    .ENDPROLOG
     mov eax, SyscallId
     call KiSystemService
     ret StackBytes
@@ -74,7 +78,6 @@ ENDM
 MACRO(START_PROC, Name, Stackbytes)
     PUBLIC _&Name&@&Stackbytes
     .PROC &Name&@&Stackbytes
-    FPO 0, 0, 0, 0, 0, FRAME_FPO
 ENDM
 MACRO(END_PROC, Name, Stackbytes)
     .ENDP &Name&@&Stackbytes
@@ -87,7 +90,6 @@ ENDM
 MACRO(START_PROC, Name, Stackbytes)
     PUBLIC &Name
     .PROC &Name
-    FPO 0, 0, 0, 0, 0, FRAME_FPO
 ENDM
 MACRO(END_PROC, Name, Stackbytes)
     .ENDP &Name

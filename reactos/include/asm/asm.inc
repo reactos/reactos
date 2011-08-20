@@ -32,13 +32,21 @@ rip = 0
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .PROC MACRO name
+#ifdef _M_IX86
     _&name PROC
+#else
+    &name PROC FRAME
+#endif
 ENDM
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .ENDP MACRO name
+#ifdef _M_IX86
     _&name ENDP
+#else
+    &name ENDP
+#endif
 ENDM
 #define ENDFUNC .ENDP
 
