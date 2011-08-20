@@ -480,7 +480,9 @@ Win32kInitWin32Thread(PETHREAD Thread)
     return(STATUS_SUCCESS);
 }
 
+#ifdef _M_IX86
 C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
+#endif
 
 // Return on failure
 #define NT_ROF(x) \
