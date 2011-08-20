@@ -17,24 +17,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
-
-BOOLEAN
-NTAPI
-KeDisableInterrupts(VOID)
-{
-    ULONG64 Flags;
-
-    /* Get the flags */
-    Flags = __readeflags();
-
-    /* Disable interrupts */
-    _disable();
-
-    return !!(Flags & EFLAGS_INTERRUPT_MASK);
-}
-
-
 BOOLEAN
 NTAPI
 KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
