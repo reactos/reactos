@@ -2,11 +2,7 @@
 #include <sect_attribs.h>
 
 #ifdef _MSC_VER
-#ifdef _M_AMD64
-#pragma comment(linker, "/merge:.CRT=.data")
-#else
 #pragma comment(linker, "/merge:.CRT=.rdata")
-#endif
 #endif
 
 typedef void (__cdecl *_PVFV)(void);
