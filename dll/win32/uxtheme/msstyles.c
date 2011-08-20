@@ -1285,8 +1285,6 @@ HRESULT MSSTYLES_GetPropertyFont(PTHEME_PROPERTY tp, HDC hdc, LOGFONTW *pFont)
 
     ZeroMemory(pFont, sizeof(LOGFONTW));
     hr = MSSTYLES_GetFont (lpCur, lpEnd, &lpCur, pFont);
-    if (SUCCEEDED (hr))
-        pFont->lfHeight = -MulDiv(pFont->lfHeight, GetDeviceCaps(hdc, LOGPIXELSY), 72);
 
     return hr;
 }
