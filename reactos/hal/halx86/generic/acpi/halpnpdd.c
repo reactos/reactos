@@ -60,7 +60,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     PPDO_EXTENSION PdoExtension;
     PDEVICE_OBJECT DeviceObject, PdoDeviceObject, AttachedDevice;
     PDESCRIPTION_HEADER Wdrt;
-    DbgPrint("HAL: PnP Driver ADD!\n");
+    DPRINT("HAL: PnP Driver ADD!\n");
 
     /* Create the FDO */
     Status = IoCreateDevice(DriverObject,
@@ -110,7 +110,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DbgPrint("HAL: Could not create ACPI device object status=0x%08x\n", Status);
+        DPRINT1("HAL: Could not create ACPI device object status=0x%08x\n", Status);
         return Status;
     }
     
@@ -140,7 +140,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     IoInvalidateDeviceRelations(TargetDevice, BusRelations);
 
     /* Return status */
-    DPRINT1("Device added %lx\n", Status);
+    DPRINT("Device added %lx\n", Status);
     return Status;
 }
 
@@ -813,7 +813,7 @@ NTAPI
 HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
-    DbgPrint("HAL: PnP Driver WMI!\n");
+    DPRINT1("HAL: PnP Driver WMI!\n");
     while (TRUE);
     return STATUS_SUCCESS;   
 }
@@ -823,7 +823,7 @@ NTAPI
 HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
-    DbgPrint("HAL: PnP Driver Power!\n");
+    DPRINT1("HAL: PnP Driver Power!\n");
     return STATUS_SUCCESS;   
 }
 
