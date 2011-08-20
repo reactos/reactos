@@ -30,18 +30,17 @@ static struct {
     { 0xff, "5.25\" 320k floppy 2s/40tr/8sec" },
 };
 
-#if defined __alpha || defined __ia64__ || defined __s390x__ || defined __x86_64__ || defined __ppc64__
-/* Unaligned fields must first be copied byte-wise */
-#define GET_UNALIGNED_W(f)			\
-    ({						\
-	unsigned short __v;			\
-	memcpy( &__v, &f, sizeof(__v) );	\
-	CF_LE_W( *(unsigned short *)&f );	\
-    })
+#if defined __alpha || defined __ia64__ || defined __x86_64__ || defined __ppc64__
+/* Unaligned fields must first be copied byte-wise (little endian) */
+#define GET_UNALIGNED_W(u) \
+    (((unsigned char*)(&u))[0] | (((unsigned char*)&(u))[1] << 8))
+#elif defined __s390x__
+/* Unaligned fields must first be copied byte-wise (big endian) */
+#define GET_UNALIGNED_W(pu) \
+    (((unsigned char*)&(u))[1] | (((unsigned char*)&(u))[0] << 8))
 #else
 #define GET_UNALIGNED_W(f) CF_LE_W( *(unsigned short *)&f )
 #endif
-
 
 static char *get_media_descr( unsigned char media )
 {
