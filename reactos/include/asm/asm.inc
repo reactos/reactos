@@ -197,16 +197,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
+#ifdef _X86_
     _\name:
+#else
+    \name:
+#endif
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
+#define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .macro .ENDP name
     .cfi_endproc
     .endfunc
 .endm
+#define ENDFUNC .ENDP
 
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol
