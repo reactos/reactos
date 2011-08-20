@@ -377,6 +377,7 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
         except/amd64/seh.s
+        except/amd64/ehandler.c
         float/amd64/clearfp.S
         float/i386/cntrlfp.c
         float/amd64/fpreset.S
@@ -401,6 +402,10 @@ elseif(ARCH MATCHES amd64)
         math/amd64/sqrtf.S
         math/amd64/tan.S
         setjmp/amd64/setjmp.s)
+    if(MSVC)
+        list(APPEND CRT_SOURCE
+            except/amd64/cpp.s)
+    endif()
 endif()
 
 if(NOT ARCH MATCHES i386)

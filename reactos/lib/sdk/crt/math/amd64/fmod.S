@@ -13,8 +13,8 @@
 /* CODE **********************************************************************/
 .code64
 
-PUBLIC _fmod
-_fmod:
+PUBLIC fmod
+fmod:
     UNIMPLEMENTED fmod
     ret
 
