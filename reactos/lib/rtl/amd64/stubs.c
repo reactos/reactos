@@ -51,3 +51,27 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     UNIMPLEMENTED;
     return FALSE;
 }
+
+NTSYSAPI
+VOID
+RtlRestoreContext(
+    PCONTEXT ContextRecord,
+    PEXCEPTION_RECORD ExceptionRecord)
+{
+    UNIMPLEMENTED;
+}
+
+NTSYSAPI
+BOOLEAN
+RtlInstallFunctionTableCallback(
+    DWORD64 TableIdentifier,
+    DWORD64 BaseAddress,
+    DWORD Length,
+    PGET_RUNTIME_FUNCTION_CALLBACK Callback,
+    PVOID Context,
+    PCWSTR OutOfProcessCallbackDll)
+{
+    UNIMPLREMENTED;
+    return FALSE;
+}
+
