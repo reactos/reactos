@@ -71,7 +71,7 @@ RtlInstallFunctionTableCallback(
     PVOID Context,
     PCWSTR OutOfProcessCallbackDll)
 {
-    UNIMPLREMENTED;
+    UNIMPLEMENTED;
     return FALSE;
 }
 
