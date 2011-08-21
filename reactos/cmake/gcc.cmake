@@ -187,7 +187,7 @@ function(set_rc_compiler)
     #set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>" PARENT_SCOPE)
     set(CMAKE_RC_COMPILE_OBJECT
     "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${rc_result_defs} -I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} -xc -E <SOURCE> -o <OBJECT>"
-    "${WRC} -I${CMAKE_CURRENT_SOURCE_DIR} -i <OBJECT> -o <OBJECT>"
+    "${WRC} -I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} -i <OBJECT> -o <OBJECT>"
     "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>" PARENT_SCOPE)
 endfunction()
 

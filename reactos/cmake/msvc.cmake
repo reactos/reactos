@@ -132,7 +132,18 @@ function(set_module_type MODULE TYPE)
 endfunction()
 
 function(set_rc_compiler)
-# dummy, this workaround is only needed in mingw due to lack of RC support in cmake
+    get_directory_property(defines COMPILE_DEFINITIONS)
+    get_directory_property(includes INCLUDE_DIRECTORIES)
+
+    foreach(arg ${defines})
+        set(rc_result_defs "${rc_result_defs} /D${arg}")
+    endforeach()
+
+    foreach(arg ${includes})
+        set(rc_result_incs "/I${arg} ${rc_result_incs}")
+    endforeach()
+
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} /I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} /fo <OBJECT> <SOURCE>" PARENT_SCOPE)
 endfunction()
 
 # Thanks MS for creating a stupid linker
