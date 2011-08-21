@@ -82,7 +82,6 @@ VOID RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 VOID RtlInitializeHeapManager(VOID);
 extern BOOLEAN RtlpPageHeapEnabled;
-extern ULONG RtlpDphGlobalFlags;
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
@@ -1309,6 +1308,26 @@ LdrpFreeTls(VOID)
 
 NTSTATUS
 NTAPI
+LdrpInitializeApplicationVerifierPackage(PUNICODE_STRING ImagePathName, PPEB Peb, BOOLEAN SystemWide, BOOLEAN ReadAdvancedOptions)
+{
+    /* If global flags request DPH, perform some additional actions */
+    if (Peb->NtGlobalFlag & FLG_HEAP_PAGE_ALLOCS)
+    {
+        // TODO: Read advanced DPH flags from the registry if requested
+        if (ReadAdvancedOptions)
+        {
+            UNIMPLEMENTED;
+        }
+
+        /* Enable page heap */
+        RtlpPageHeapEnabled = TRUE;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
 {
     NTSTATUS Status;
@@ -1398,14 +1417,28 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY Op
             Peb->NtGlobalFlag = GlobalFlag;
         else
             GlobalFlag = 0;
+
+        /* Call AVRF if necessary */
+        if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
+        {
+            Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
+            }
+        }
     }
     else
     {
         /* There are no image-specific options, so perform global initialization */
         if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
         {
-            // TODO: Initialize app verifier package
-            // Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, 1, FALSE);
+            /* Initialize app verifier package */
+            Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
+            }
         }
     }
 
@@ -1698,7 +1731,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             /* Reset DPH if requested */
             if (RtlpPageHeapEnabled && DebugProcessHeapOnly)
             {
-                RtlpDphGlobalFlags &= ~0x40;
+                RtlpDphGlobalFlags &= ~DPH_FLAG_DLL_NOTIFY;
                 RtlpPageHeapEnabled = FALSE;
             }
         }
