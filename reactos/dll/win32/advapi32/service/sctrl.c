@@ -125,13 +125,19 @@ ScLookupServiceByServiceName(LPCWSTR lpServiceName)
 {
     DWORD i;
 
+    TRACE("ScLookupServiceByServiceName(%S) called\n", lpServiceName);
+
     for (i = 0; i < dwActiveServiceCount; i++)
     {
+        TRACE("Checking %S\n", lpActiveServices[i].ServiceName.Buffer);
         if (_wcsicmp(lpActiveServices[i].ServiceName.Buffer, lpServiceName) == 0)
         {
+            TRACE("Found!\n");
             return &lpActiveServices[i];
         }
     }
+
+    TRACE("No service found!\n");
 
     SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
 
@@ -344,23 +350,52 @@ ScStartService(PACTIVE_SERVICE lpService,
 {
     HANDLE ThreadHandle;
     DWORD ThreadId;
+    PWSTR pServiceName;
+    PWSTR Ptr;
+    DWORD dwArgumentsSize;
 
     TRACE("ScStartService() called\n");
     TRACE("Size: %lu\n", ControlPacket->dwSize);
-    TRACE("Service: %S\n", &ControlPacket->szArguments[0]);
+    TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     /* Set the service status handle */
     lpService->hServiceStatus = ControlPacket->hServiceStatus;
 
+    pServiceName = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
+
+    /* Get the service name size */
+    dwArgumentsSize = (wcslen(pServiceName) + 1) * sizeof(WCHAR);
+
+    /* Get the size of the service start arguments */
+    if (ControlPacket->dwArgumentsCount > 0 &&
+        ControlPacket->dwArgumentsOffset != 0)
+    {
+        /* FIXME */
+#if 0
+        dwArgumentSize += (wcslen(...) + 1) * sizeof(WCHAR);
+#endif
+    }
+
     lpService->Arguments = HeapAlloc(GetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
-                                     (ControlPacket->dwSize + 1) * sizeof(WCHAR));
+                                     dwArgumentsSize + sizeof(WCHAR));
     if (lpService->Arguments == NULL)
         return ERROR_OUTOFMEMORY;
 
-    memcpy(lpService->Arguments,
-           ControlPacket->szArguments,
-           ControlPacket->dwSize * sizeof(WCHAR));
+    Ptr = lpService->Arguments;
+
+    /* Add the service name as first argument */
+    wcscpy(Ptr, pServiceName);
+    Ptr += (wcslen(pServiceName) + 1);
+
+    /* Add service start arguments */
+    if (ControlPacket->dwArgumentsCount > 0 &&
+        ControlPacket->dwArgumentsOffset != 0)
+    {
+        /* FIXME */
+    }
+
+    *Ptr = 0;
 
     /* invoke the services entry point and implement the command loop */
     ThreadHandle = CreateThread(NULL,
@@ -385,7 +420,7 @@ ScControlService(PACTIVE_SERVICE lpService,
 {
     TRACE("ScControlService() called\n");
     TRACE("Size: %lu\n", ControlPacket->dwSize);
-    TRACE("Service: %S\n", &ControlPacket->szArguments[0]);
+    TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     if (lpService->HandlerFunction)
     {
@@ -446,7 +481,7 @@ ScServiceDispatcher(HANDLE hPipe,
             return FALSE;
         }
 
-        lpServiceName = &ControlPacket->szArguments[0];
+        lpServiceName = (LPWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
         TRACE("Service: %S\n", lpServiceName);
 
         lpService = ScLookupServiceByServiceName(lpServiceName);

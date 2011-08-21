@@ -918,33 +918,43 @@ ScmControlService(PSERVICE Service,
 
     DWORD dwWriteCount = 0;
     DWORD dwReadCount = 0;
-    DWORD TotalLength;
+    DWORD PacketSize;
+    PWSTR Ptr;
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmControlService() called\n");
 
     EnterCriticalSection(&ControlServiceCriticalSection);
 
-    TotalLength = wcslen(Service->lpServiceName) + 1;
+    /* Calculate the total length of the start command line */
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
 
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
                                                    HEAP_ZERO_MEMORY,
-                                                   sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)));
+                                                   PacketSize);
     if (ControlPacket == NULL)
     {
         LeaveCriticalSection(&ControlServiceCriticalSection);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
+    ControlPacket->dwSize = PacketSize;
     ControlPacket->dwControl = dwControl;
-    ControlPacket->dwSize = TotalLength;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
+
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+
+    Ptr = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
+    wcscpy(Ptr, Service->lpServiceName);
+
+    ControlPacket->dwArgumentsCount = 0;
+    ControlPacket->dwArgumentsOffset = 0;
 
     /* Send the control packet */
     WriteFile(Service->lpImage->hControlPipe,
               ControlPacket,
-              sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)),
+              PacketSize,
               &dwWriteCount,
               NULL);
 
@@ -986,9 +996,7 @@ ScmSendStartCommand(PSERVICE Service,
 {
     PSCM_CONTROL_PACKET ControlPacket;
     SCM_REPLY_PACKET ReplyPacket;
-    DWORD TotalLength;
-    DWORD ArgsLength = 0;
-    DWORD Length;
+    DWORD PacketSize;
     PWSTR Ptr;
     DWORD dwWriteCount = 0;
     DWORD dwReadCount = 0;
@@ -998,52 +1006,59 @@ ScmSendStartCommand(PSERVICE Service,
     DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
-    TotalLength = wcslen(Service->lpServiceName) + 1;
-    if (argc > 0)
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
+
+    /* Calculate the required packet size for the start arguments */
+    if (argc > 0 && argv != NULL)
     {
+        PacketSize = ALIGN_UP(PacketSize, LPWSTR);
+
+        DPRINT("Argc: %lu\n", argc);
         for (i = 0; i < argc; i++)
         {
-            DPRINT("Arg: %S\n", argv[i]);
-            Length = wcslen(argv[i]) + 1;
-            TotalLength += Length;
-            ArgsLength += Length;
+            DPRINT("Argv[%lu]: %S\n", i, argv[i]);
+            PacketSize += (wcslen(argv[i]) + 1) * sizeof(WCHAR) + sizeof(PWSTR);
         }
     }
-    TotalLength++;
-    DPRINT("ArgsLength: %ld TotalLength: %ld\n", ArgsLength, TotalLength);
 
     /* Allocate a control packet */
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
                                                    HEAP_ZERO_MEMORY,
-                                                   sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
+                                                   PacketSize);
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
+    ControlPacket->dwSize = PacketSize;
     ControlPacket->dwControl = SERVICE_CONTROL_START;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    ControlPacket->dwSize = TotalLength;
-    Ptr = &ControlPacket->szArguments[0];
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+
+    Ptr = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
     wcscpy(Ptr, Service->lpServiceName);
-    Ptr += (wcslen(Service->lpServiceName) + 1);
+
+    ControlPacket->dwArgumentsCount = 0;
+    ControlPacket->dwArgumentsOffset = 0;
 
     /* Copy argument list */
-    if (argc > 0)
+    if (argc > 0 && argv != NULL)
     {
-        UNIMPLEMENTED;
-        DPRINT1("Arguments sent to service ignored!\n");
+//        Ptr += wcslen(Service->lpServiceName) + 1;
+//        Ptr = ALIGN_UP_POINTER(Ptr, LPWSTR);
+
+//        ControlPacket->dwArgumentsOffset = (DWORD)((INT_PTR)Ptr - (INT_PTR)ControlPacket);
+
+
 #if 0
         memcpy(Ptr, Arguments, ArgsLength);
         Ptr += ArgsLength;
 #endif
     }
 
-    /* Terminate the argument list */
-    *Ptr = 0;
-
     /* Send the start command */
     WriteFile(Service->lpImage->hControlPipe,
               ControlPacket,
-              sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
+              PacketSize,
               &dwWriteCount,
               NULL);
 

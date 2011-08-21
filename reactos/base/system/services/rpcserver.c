@@ -11,7 +11,6 @@
 /* INCLUDES ****************************************************************/
 
 #include "services.h"
-#include "svcctl_s.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -2868,8 +2867,17 @@ DWORD RStartServiceW(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    DWORD i;
 
-    DPRINT("RStartServiceW() called\n");
+    DPRINT("RStartServiceW(%p %lu %p) called\n", hService, argc, argv);
+    DPRINT("  argc: %lu\n", argc);
+    if (argv != NULL)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            DPRINT("  argv[%lu]: %S\n", i, argv[i]);
+        }
+    }
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2901,13 +2909,8 @@ DWORD RStartServiceW(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    if (argv) {
-        UNIMPLEMENTED;
-        argv = NULL;
-    }
-
     /* Start the service */
-    dwError = ScmStartService(lpService, argc, (LPWSTR *)argv);
+    dwError = ScmStartService(lpService, argc, (LPWSTR*)argv);
 
     return dwError;
 }
