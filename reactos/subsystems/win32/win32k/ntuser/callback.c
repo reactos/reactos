@@ -174,6 +174,8 @@ co_IntCallWindowProc(WNDPROC Proc,
    ULONG ArgumentLength;
    LRESULT Result;
 
+   TRACE_CH(UserMsgCall,"hwnd:0x%x, msg:%d, wparam:%d, lparam:%d\n", Wnd, Message, wParam, lParam);
+
    if (0 < lParamBufferSize)
    {
       ArgumentLength = sizeof(WINDOWPROC_CALLBACK_ARGUMENTS) + lParamBufferSize;
@@ -203,8 +205,6 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    IntSetTebWndCallback (&Wnd, &pWnd);
 
-   TRACE_CH(UserMsgCall,"hwnd:0x%x, msg:%d, wparam:%d, lparam:%d\n", Wnd, Message, wParam, lParam);
-
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_WINDOWPROC,
@@ -220,6 +220,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+      ERR_CH(UserMsgCall,"Failed to copy result from user mode!\n");
       Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
@@ -230,6 +231,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    if (!NT_SUCCESS(Status))
    {
+     ERR_CH(UserMsgCall,"Call to user mode failed!\n");
       if (0 < lParamBufferSize)
       {
          IntCbFreeMemory(Arguments);
