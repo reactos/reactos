@@ -1346,10 +1346,7 @@ cleanup:
  *       Pointer to parent node to retrieve child node information for.
  *
  * Remarks
- *    We only return a status code indicating an error (STATUS_UNSUCCESSFUL)
- *    when we reach a device node which is not a direct child of the device
- *    node for which we retrieve information of child nodes for. Any errors
- *    that occur is logged instead so that all child services have a chance
+ *    Any errors that occur are logged instead so that all child services have a chance
  *    of being interrogated.
  */
 
@@ -1395,9 +1392,8 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
 
    if (DeviceNode->Parent != ParentDeviceNode)
    {
-      /* Stop the traversal immediately and indicate successful operation */
-      DPRINT("Stop\n");
-      return STATUS_UNSUCCESSFUL;
+      DPRINT("Skipping 2+ level child\n");
+      return STATUS_SUCCESS;
    }
 
    /* Skip processing if it was already completed before */
@@ -1963,10 +1959,7 @@ IopEnumerateDevice(
  *       Pointer to parent node to retrieve child node configuration for.
  *
  * Remarks
- *    We only return a status code indicating an error (STATUS_UNSUCCESSFUL)
- *    when we reach a device node which is not a direct child of the device
- *    node for which we configure child services for. Any errors that occur is
- *    logged instead so that all child services have a chance of beeing
+ *    Any errors that occur are logged instead so that all child services have a chance of beeing
  *    configured.
  */
 
@@ -1999,11 +1992,11 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
     * Make sure this device node is a direct child of the parent device node
     * that is given as an argument
     */
+
    if (DeviceNode->Parent != ParentDeviceNode)
    {
-      /* Stop the traversal immediately and indicate successful operation */
-      DPRINT("Stop\n");
-      return STATUS_UNSUCCESSFUL;
+      DPRINT("Skipping 2+ level child\n");
+      return STATUS_SUCCESS;
    }
 
    if (!(DeviceNode->Flags & (DNF_DISABLED | DNF_STARTED | DNF_ADDED)))
@@ -2096,10 +2089,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
  *
  * Remarks
  *    If the driver image for a service is not loaded and initialized
- *    it is done here too. We only return a status code indicating an
- *    error (STATUS_UNSUCCESSFUL) when we reach a device node which is
- *    not a direct child of the device node for which we initialize
- *    child services for. Any errors that occur is logged instead so
+ *    it is done here too. Any errors that occur are logged instead so
  *    that all child services have a chance of being initialized.
  */
 
@@ -2132,11 +2122,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 
    if (DeviceNode->Parent != ParentDeviceNode)
    {
-      /*
-       * Stop the traversal immediately and indicate unsuccessful operation
-       */
-      DPRINT("Stop\n");
-      return STATUS_UNSUCCESSFUL;
+      DPRINT("Skipping 2+ level child\n");
+      return STATUS_SUCCESS;
    }
 
    if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
