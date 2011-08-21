@@ -35,8 +35,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserWinsta);
 
 /* GLOBALS *******************************************************************/
 
@@ -80,7 +79,7 @@ InitWindowStationImpl(VOID)
                                     &ObjectAttributes);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Could not create \\Windows\\WindowStations directory "
+      TRACE("Could not create \\Windows\\WindowStations directory "
              "(Status 0x%X)\n", Status);
       return Status;
    }
@@ -117,7 +116,7 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
 
-   DPRINT("Deleting window station (0x%X)\n", WinSta);
+   TRACE("Deleting window station (0x%X)\n", WinSta);
 
    RtlDestroyAtomTable(WinSta->AtomTable);
 
@@ -278,7 +277,7 @@ IntValidateWindowStationHandle(
 
    if (WindowStation == NULL)
    {
-      //      DPRINT1("Invalid window station handle\n");
+      //      ERR("Invalid window station handle\n");
       EngSetLastError(ERROR_INVALID_HANDLE);
       return STATUS_INVALID_HANDLE;
    }
@@ -454,7 +453,7 @@ NtUserCreateWindowStation(
 
    if (! NT_SUCCESS(Status))
    {
-      DPRINT1("Failed reading capturing window station name\n");
+      ERR("Failed reading capturing window station name\n");
       SetLastNtError(Status);
       return NULL;
    }
@@ -507,7 +506,7 @@ NtUserCreateWindowStation(
 
    if (!IntSetupClipboard(WindowStationObject))
    {
-       DPRINT1("WindowStation: Error Setting up the clipboard!!!\n");
+       ERR("WindowStation: Error Setting up the clipboard!!!\n");
    }
 
    if (InputWindowStation == NULL)
@@ -599,7 +598,7 @@ NtUserCloseWindowStation(
    PWINSTATION_OBJECT Object;
    NTSTATUS Status;
 
-   DPRINT("About to close window station handle (0x%X)\n", hWinSta);
+   TRACE("About to close window station handle (0x%X)\n", hWinSta);
 
 	if (hWinSta == UserGetProcessWindowStation())
 	{
@@ -614,13 +613,13 @@ NtUserCloseWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n", hWinSta);
+      TRACE("Validation of window station handle (0x%X) failed\n", hWinSta);
       return FALSE;
    }
 
    ObDereferenceObject(Object);
 
-   DPRINT("Closing window station handle (0x%X)\n", hWinSta);
+   TRACE("Closing window station handle (0x%X)\n", hWinSta);
 
    Status = ObCloseHandle(hWinSta, UserMode);
    if (!NT_SUCCESS(Status))
@@ -687,7 +686,7 @@ NtUserGetObjectInformation(
    DWORD nDataSize = 0;
 
    /* try windowstation */
-   DPRINT("Trying to open window station 0x%x\n", hObject);
+   TRACE("Trying to open window station 0x%x\n", hObject);
    Status = IntValidateWindowStationHandle(
                hObject,
                UserMode,/*ExGetPreviousMode(),*/
@@ -697,7 +696,7 @@ NtUserGetObjectInformation(
 
    if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_TYPE_MISMATCH)
    {
-      DPRINT("Failed: 0x%x\n", Status);
+      TRACE("Failed: 0x%x\n", Status);
       SetLastNtError(Status);
       return FALSE;
    }
@@ -705,7 +704,7 @@ NtUserGetObjectInformation(
    if (Status == STATUS_OBJECT_TYPE_MISMATCH)
    {
       /* try desktop */
-      DPRINT("Trying to open desktop 0x%x\n", hObject);
+      TRACE("Trying to open desktop 0x%x\n", hObject);
       Status = IntValidateDesktopHandle(
                   hObject,
                   UserMode,/*ExGetPreviousMode(),*/
@@ -713,19 +712,19 @@ NtUserGetObjectInformation(
                   &DesktopObject);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("Failed: 0x%x\n", Status);
+         TRACE("Failed: 0x%x\n", Status);
          SetLastNtError(Status);
          return FALSE;
       }
    }
-   DPRINT("WinSta or Desktop opened!!\n");
+   TRACE("WinSta or Desktop opened!!\n");
 
    /* get data */
    switch (nIndex)
    {
       case UOI_FLAGS:
          Status = STATUS_NOT_IMPLEMENTED;
-         DPRINT1("UOI_FLAGS unimplemented!\n");
+         ERR("UOI_FLAGS unimplemented!\n");
          break;
 
       case UOI_NAME:
@@ -764,7 +763,7 @@ NtUserGetObjectInformation(
 
       case UOI_USER_SID:
          Status = STATUS_NOT_IMPLEMENTED;
-         DPRINT1("UOI_USER_SID unimplemented!\n");
+         ERR("UOI_USER_SID unimplemented!\n");
          break;
 
       default:
@@ -775,7 +774,7 @@ NtUserGetObjectInformation(
    /* try to copy data to caller */
    if (Status == STATUS_SUCCESS)
    {
-      DPRINT("Trying to copy data to caller (len = %d, len needed = %d)\n", nLength, nDataSize);
+      TRACE("Trying to copy data to caller (len = %d, len needed = %d)\n", nLength, nDataSize);
       *nLengthNeeded = nDataSize;
       if (nLength >= nDataSize)
          Status = MmCopyToCaller(pvInformation, pvData, nDataSize);
@@ -853,7 +852,7 @@ UserGetProcessWindowStation(VOID)
    }
    else
    {
-      DPRINT1("Should use ObFindHandleForObject\n");
+      ERR("Should use ObFindHandleForObject\n");
       pti = PsGetCurrentThreadWin32Thread();
       Status = ObOpenObjectByPointer(pti->rpdesk->rpwinstaParent,
                                      0,
@@ -865,7 +864,7 @@ UserGetProcessWindowStation(VOID)
       if (! NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         DPRINT1("Unable to open handle for CSRSSs winsta, status 0x%08x\n",
+         ERR("Unable to open handle for CSRSSs winsta, status 0x%08x\n",
                  Status);
          return NULL;
       }
@@ -950,7 +949,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
                                                  &NewWinSta);
        if (!NT_SUCCESS(Status))
        {
-          DPRINT("Validation of window station handle (0x%X) failed\n",
+          TRACE("Validation of window station handle (0x%X) failed\n",
                  hWindowStation);
           SetLastNtError(Status);
           return FALSE;
@@ -1029,12 +1028,12 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    PWINSTATION_OBJECT Object;
    NTSTATUS Status;
 
-   DPRINT("About to set process window station with handle (0x%X)\n",
+   TRACE("About to set process window station with handle (0x%X)\n",
           hWindowStation);
 
    if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
-      DPRINT1("Unauthorized process attempted to lock the window station!\n");
+      ERR("Unauthorized process attempted to lock the window station!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
@@ -1046,7 +1045,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
                &Object);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
+      TRACE("Validation of window station handle (0x%X) failed\n",
              hWindowStation);
       SetLastNtError(Status);
       return FALSE;
@@ -1074,12 +1073,12 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    NTSTATUS Status;
    BOOL Ret;
 
-   DPRINT("About to set process window station with handle (0x%X)\n",
+   TRACE("About to set process window station with handle (0x%X)\n",
           hWindowStation);
 
    if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
-      DPRINT1("Unauthorized process attempted to unlock the window station!\n");
+      ERR("Unauthorized process attempted to unlock the window station!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
@@ -1091,7 +1090,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
                &Object);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
+      TRACE("Validation of window station handle (0x%X) failed\n",
              hWindowStation);
       SetLastNtError(Status);
       return FALSE;
@@ -1199,7 +1198,7 @@ BuildWindowStationNameList(
       ReturnLength += DirEntry->Name.Length + sizeof(WCHAR);
       EntryCount++;
    }
-   DPRINT("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
+   TRACE("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
    if (NULL != pRequiredSize)
    {
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));
@@ -1316,7 +1315,7 @@ BuildDesktopNameList(
       ReturnLength += ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + sizeof(WCHAR);
       EntryCount++;
    }
-   DPRINT("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
+   TRACE("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
    if (NULL != pRequiredSize)
    {
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));

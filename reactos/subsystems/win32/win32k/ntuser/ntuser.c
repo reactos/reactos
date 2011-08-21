@@ -11,8 +11,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 BOOL InitSysParams();
 
@@ -64,14 +63,14 @@ InitUserImpl(VOID)
 
    if (!UserCreateHandleTable())
    {
-      DPRINT1("Failed creating handle table\n");
+      ERR("Failed creating handle table\n");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
    Status = InitSessionImpl();
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Error init session impl.\n");
+      ERR("Error init session impl.\n");
       return Status;
    }
 
@@ -152,7 +151,7 @@ NtUserInitialize(
 {
     NTSTATUS Status;
 
-    DPRINT1("Enter NtUserInitialize(%lx, %p, %p)\n",
+    ERR("Enter NtUserInitialize(%lx, %p, %p)\n",
             dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
 
     /* Check the Windows version */

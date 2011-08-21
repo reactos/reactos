@@ -9,8 +9,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserDefwnd);
 
 // Client Shutdown messages
 #define MCS_SHUTDOWNTIMERS  1
@@ -114,7 +113,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    switch (wParam & 0xfff0)
    {
       case SC_SCREENSAVE:
-        DPRINT1("Screensaver Called!\n");
+        ERR("Screensaver Called!\n");
         UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
         break;
 
@@ -145,7 +144,7 @@ IntDefWindowProc(
    {
       case WM_SYSCOMMAND:
       {
-         DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
+         ERR("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
          lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }

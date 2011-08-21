@@ -55,13 +55,16 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"GdiText", DbgChGdiText},
     {L"GdiXFormObj", DbgChGdiXFormObj},
     {L"UserAccel", DbgChUserAccel},
-    {L"UserCalproc", DbgChUserCalproc},
+    {L"UserCallback", DbgChUserCallback},
+    {L"UserCallProc", DbgChUserCallProc},
     {L"UserCaret", DbgChUserCaret},
     {L"UserClass", DbgChUserClass},
     {L"UserClipbrd", DbgChUserClipbrd},
     {L"UserCsr", DbgChUserCsr},
     {L"UserDce", DbgChUserDce},
+    {L"UserDefwnd", DbgChUserDefwnd},
     {L"UserDesktop", DbgChUserDesktop},
+    {L"UserDisplay",DbgChUserDisplay},
     {L"UserEvent", DbgChUserEvent},
     {L"UserFocus", DbgChUserFocus},
     {L"UserHook", DbgChUserHook},
@@ -72,20 +75,21 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"UserKbdLayout", DbgChUserKbdLayout},
     {L"UserMenu", DbgChUserMenu},
     {L"UserMetric", DbgChUserMetric},
+    {L"UserMisc", DbgChUserMisc},
     {L"UserMonitor", DbgChUserMonitor},
-    {L"UserMsgGet", DbgChUserMsgGet},
+    {L"UserMsg", DbgChUserMsg},
     {L"UserMsgQ", DbgChUserMsgQ},
-    {L"UserMsgSend", DbgChUserMsgSend},
     {L"UserObj", DbgChUserObj},
+    {L"UserPainting", DbgChUserPainting},
     {L"UserProcess", DbgChUserProcess},
     {L"UserProp", DbgChUserProp},
     {L"UserScrollbar", DbgChUserScrollbar},
-    {L"UserSysparam", DbgChUserSysparam},
+    {L"UserSysparams", DbgChUserSysparams},
     {L"UserTimer", DbgChUserTimer},
     {L"UserThread", DbgChUserThread},
+    {L"UserWinpos", DbgChUserWinpos},
     {L"UserWinsta", DbgChUserWinsta},
-    {L"UserWnd", DbgChUserWnd},
-    {L"UserWndpos", DbgChUserWndpos}
+    {L"UserWnd", DbgChUserWnd}
 };
 
 #ifdef GDI_DEBUG
@@ -590,8 +594,6 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     DBG_CHANNEL *ChannelEntry;
     UINT iLevel, iChannel;
 
-    DbgPrint("Found channel %S,level %S, operation %C\n", channel, level, op);
-
     ChannelEntry = (DBG_CHANNEL*)bsearch(channel, 
                                          DbgChannels, 
                                          DbgChCount, 
@@ -599,7 +601,6 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
                                          DbgCompareChannels);
     if(ChannelEntry == NULL)
     {
-        DbgPrint("Failed to find channel %S\n", channel);
         return FALSE;
     }
 

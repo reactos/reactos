@@ -10,9 +10,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 SHORT
 FASTCALL
@@ -56,7 +54,7 @@ IntGdiGetLanguageID(VOID)
     }
     ZwClose(KeyHandle);
   }
-  DPRINT("Language ID = %x\n",Ret);
+  TRACE("Language ID = %x\n",Ret);
   return (SHORT) Ret;
 }
 
@@ -69,7 +67,7 @@ NtUserGetThreadState(
 {
    DWORD_PTR ret = 0;
 
-   DPRINT("Enter NtUserGetThreadState\n");
+   TRACE("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
    {
        UserEnterShared();
@@ -104,7 +102,7 @@ NtUserGetThreadState(
          {
            PUSER_SENT_MESSAGE Message = 
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
-           DPRINT1("THREADSTATE_INSENDMESSAGE\n");
+           ERR("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
            if (Message)
@@ -144,7 +142,7 @@ NtUserGetThreadState(
          break;
    }
 
-   DPRINT("Leave NtUserGetThreadState, ret=%i\n", ret);
+   TRACE("Leave NtUserGetThreadState, ret=%i\n", ret);
    UserLeave();
 
    return ret;
@@ -183,13 +181,13 @@ NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
 
-   DPRINT("Enter NtUserGetDoubleClickTime\n");
+   TRACE("Enter NtUserGetDoubleClickTime\n");
    UserEnterShared();
 
    // FIXME: Check if this works on non-interactive winsta
    Result = gspv.iDblClickTime;
 
-   DPRINT("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
+   TRACE("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
    UserLeave();
    return Result;
 }
@@ -210,7 +208,7 @@ NtUserGetGUIThreadInfo(
 
    DECLARE_RETURN(BOOLEAN);
 
-   DPRINT("Enter NtUserGetGUIThreadInfo\n");
+   TRACE("Enter NtUserGetGUIThreadInfo\n");
    UserEnterShared();
 
    Status = MmCopyFromCaller(&SafeGui, lpgui, sizeof(DWORD));
@@ -296,7 +294,7 @@ NtUserGetGUIThreadInfo(
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -314,7 +312,7 @@ NtUserGetGuiResources(
    DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserGetGuiResources\n");
+   TRACE("Enter NtUserGetGuiResources\n");
    UserEnterShared();
 
    Status = ObReferenceObjectByHandle(hProcess,
@@ -362,7 +360,7 @@ NtUserGetGuiResources(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

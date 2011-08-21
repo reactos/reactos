@@ -14,8 +14,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserMsgQ);
 
 VOID FASTCALL DoTheScreenSaver(VOID);
 
@@ -61,7 +60,7 @@ IntChildrenWindowFromPoint(PWND pWndTop, INT x, INT y)
        {
            if (pWnd->state2 & WNDS2_INDESTROY || pWnd->state & WNDS_DESTROYED )
            {
-               DPRINT("The Window is in DESTROY!\n");
+               TRACE("The Window is in DESTROY!\n");
                continue;
            }
 
@@ -93,7 +92,7 @@ IntTopLevelWindowFromPoint(INT x, INT y)
     {
         if (pWnd->state2 & WNDS2_INDESTROY || pWnd->state & WNDS_DESTROYED)
         {
-            DPRINT("The Window is in DESTROY!\n");
+            TRACE("The Window is in DESTROY!\n");
             continue;
         }
 
@@ -158,7 +157,7 @@ UserSetCursor(
         {
             /* Remove the cursor */
             GreMovePointer(hdcScreen, -1, -1);
-            DPRINT("Removing pointer!\n");
+            TRACE("Removing pointer!\n");
         }
         IntGetSysCursorInfo()->CurrentCursorObject = NewCursor;
     }
@@ -204,13 +203,13 @@ int UserShowCursor(BOOL bShow)
         {
             /* Show the pointer */
             GreMovePointer(hdcScreen, gpsi->ptCursor.x, gpsi->ptCursor.y);
-            DPRINT("Showing pointer!\n");
+            TRACE("Showing pointer!\n");
         }
         else
         {
             /* Remove the pointer */
             GreMovePointer(hdcScreen, -1, -1);
-            DPRINT("Removing pointer!\n");
+            TRACE("Removing pointer!\n");
         }
         
         /* Update global info */
@@ -245,7 +244,7 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 /* change the input key state for a given key */
 static void set_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, UCHAR key, BOOL down )
 {
-    DPRINT("set_input_key_state key:%d, down:%d\n", key, down);
+    TRACE("set_input_key_state key:%d, down:%d\n", key, down);
 
     if (down)
     {
@@ -267,7 +266,7 @@ static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
     UCHAR key;
     BOOL down = 0;
 
-    DPRINT("update_input_key_state message:%d\n", msg->message);
+    TRACE("update_input_key_state message:%d\n", msg->message);
 
     switch (msg->message)
     {
@@ -349,7 +348,7 @@ IntMsqSetWakeMask(DWORD WakeMask)
       if ( (Win32Thread->pcti->fsChangeBits & LOWORD(WakeMask)) ||
            ( (dwFlags & MWMO_INPUTAVAILABLE) && (Win32Thread->pcti->fsWakeBits & LOWORD(WakeMask)) ) )
       {
-         DPRINT1("Chg 0x%x Wake 0x%x Mask 0x%x\n",Win32Thread->pcti->fsChangeBits, Win32Thread->pcti->fsWakeBits, WakeMask);
+         ERR("Chg 0x%x Wake 0x%x Mask 0x%x\n",Win32Thread->pcti->fsChangeBits, Win32Thread->pcti->fsWakeBits, WakeMask);
          KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE); // Wake it up!
          return MessageEventHandle;
       }
@@ -600,7 +599,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        }
        else
        {
-           DPRINT("Posting mouse message to hwnd=0x%x!\n", UserHMGetHandle(pwnd));
+           TRACE("Posting mouse message to hwnd=0x%x!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
        }
    }
@@ -631,7 +630,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
 
-   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
+   TRACE("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
           uMsg, wParam, lParam);
 
    // Condition may arise when calling MsqPostMessage and waiting for an event.
@@ -663,21 +662,21 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    KbdHookData.dwExtraInfo = 0;
    if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
    {
-      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+      ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, Msg.wParam, Msg.lParam);
       return;
    }
 
    if (FocusMessageQueue == NULL)
    {
-         DPRINT("No focus message queue\n");
+         TRACE("No focus message queue\n");
          return;
    }
 
    if (FocusMessageQueue->FocusWindow != (HWND)0)
    {
          Msg.hwnd = FocusMessageQueue->FocusWindow;
-         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
+         TRACE("Msg.hwnd = %x\n", Msg.hwnd);
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
@@ -686,7 +685,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    }
    else
    {
-         DPRINT("Invalid focus window handle\n");
+         TRACE("Invalid focus window handle\n");
    }
 
    return;
@@ -830,7 +829,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
          /* The message has not been processed yet, reinsert it. */
          RemoveEntryList(&Message->ListEntry);
          InsertTailList(&Message->CallBackSenderQueue->SentMessagesListHead, &Message->ListEntry);
-         DPRINT("Callback Message not processed yet. Requeuing the message\n");
+         TRACE("Callback Message not processed yet. Requeuing the message\n");
          return (FALSE);
       }
    }
@@ -958,7 +957,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
                                       ListEntry);
       if(SentMessage->Msg.hwnd == Window->head.h)
       {
-         DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
+         TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
          RemoveEntryList(&SentMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
@@ -1024,7 +1023,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
    {
-      DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
+      ERR("MsqSendMessage(): Not enough memory to allocate a message");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -1126,7 +1125,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
             Entry = Entry->Flink;
          }
 
-         DPRINT("MsqSendMessage (blocked) timed out 1\n");
+         TRACE("MsqSendMessage (blocked) timed out 1\n");
       }
       while (co_MsqDispatchOneSentMessage(ThreadQueue))
          ;
@@ -1186,7 +1185,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                Entry = Entry->Flink;
             }
 
-            DPRINT("MsqSendMessage timed out 2\n");
+            TRACE("MsqSendMessage timed out 2\n");
             break;
          }
          while (co_MsqDispatchOneSentMessage(ThreadQueue))
@@ -1302,7 +1301,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         pwndMsg = co_WinPosWindowFromPoint(pwndMsg, &msg->pt, &hittest);
     }
 
-    DPRINT("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );
+    TRACE("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );
 
     if (pwndMsg == NULL || pwndMsg->head.pti != pti)
     {
@@ -1375,7 +1374,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
         if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
         {
-            DPRINT("Message out of range!!!\n");
+            TRACE("Message out of range!!!\n");
             RETURN(FALSE);
         }
 
@@ -1386,7 +1385,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     {
         if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
         {
-            DPRINT("Message out of range!!!\n");
+            TRACE("Message out of range!!!\n");
             RETURN(FALSE);
         }
     }
@@ -1444,7 +1443,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         hook.dwExtraInfo  = 0/*extra_info*/;
         co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, message, (LPARAM)&hook );
 
-        DPRINT1("WH_MOUSE dorpped mouse message!\n");
+        ERR("WH_MOUSE dorpped mouse message!\n");
 
         /* Remove and skip message */
         *RemoveMessages = TRUE;
@@ -1513,7 +1512,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
                     if(!co_IntMouseActivateWindow(pwndMsg)) eatMsg = TRUE;
                     break;
                 default:
-                    DPRINT1( "unknown WM_MOUSEACTIVATE code %d\n", ret );
+                    ERR( "unknown WM_MOUSEACTIVATE code %d\n", ret );
                     break;
                 }
             }
@@ -1575,7 +1574,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                            HCBT_KEYSKIPPED,
                            LOWORD(Msg->wParam),
                            Msg->lParam );
-        DPRINT1("KeyboardMessage WH_CBT Call Hook return!\n");
+        ERR("KeyboardMessage WH_CBT Call Hook return!\n");
         return FALSE;
     }
     return TRUE;
@@ -1793,7 +1792,7 @@ CALLBACK
 HungAppSysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
    DoTheScreenSaver();
-   DPRINT("HungAppSysTimerProc\n");
+   TRACE("HungAppSysTimerProc\n");
    // Process list of windows that are hung and waiting.
 }
 
@@ -1872,7 +1871,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          IntDereferenceMessageQueue(CurrentSentMessage->CallBackSenderQueue);
       }
 
-      DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
+      TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
       /* Only if the message has a sender was the message in the DispatchingList */
       if ((CurrentSentMessage->SenderQueue)
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
@@ -1924,7 +1923,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
       }
 
-      DPRINT("Notify the sender, the thread has been terminated while dispatching a message!\n");
+      TRACE("Notify the sender, the thread has been terminated while dispatching a message!\n");
 
       /* wake the sender's thread */
       if (CurrentSentMessage->CompletionEvent != NULL)

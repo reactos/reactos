@@ -280,7 +280,7 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
   do { \
     if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
     { \
-      DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
+      TRACE("Free message queue 0x%x\n", (MsgQueue)); \
       if ((MsgQueue)->NewMessages != NULL) \
         ObDereferenceObject((MsgQueue)->NewMessages); \
       ExFreePoolWithTag((MsgQueue), USERTAG_Q); \

@@ -42,8 +42,7 @@ windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve noti
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserHotkey);
 
 /* GLOBALS *******************************************************************/
 
@@ -157,7 +156,7 @@ DefWndGetHotKey( HWND hwnd )
 {
    PHOT_KEY_ITEM HotKeyItem;
 
-   DPRINT1("DefWndGetHotKey\n");
+   ERR("DefWndGetHotKey\n");
 
    if (IsListEmpty(&gHotkeyList)) return 0;
 
@@ -181,7 +180,7 @@ DefWndSetHotKey( PWND pWnd, WPARAM wParam )
    BOOL HaveSameWnd = FALSE;
    INT Ret = 1;
 
-   DPRINT1("DefWndSetHotKey wParam 0x%x\n", wParam);
+   ERR("DefWndSetHotKey wParam 0x%x\n", wParam);
 
    // A hot key cannot be associated with a child window.
    if (pWnd->style & WS_CHILD) return 0;
@@ -269,7 +268,7 @@ NtUserRegisterHotKey(HWND hWnd,
    PETHREAD HotKeyThread;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserRegisterHotKey\n");
+   TRACE("Enter NtUserRegisterHotKey\n");
    UserEnterExclusive();
 
    if (hWnd == NULL)
@@ -308,7 +307,7 @@ NtUserRegisterHotKey(HWND hWnd,
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserRegisterHotKey, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRegisterHotKey, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -321,7 +320,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
    PWND Window;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserUnregisterHotKey\n");
+   TRACE("Enter NtUserUnregisterHotKey\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
@@ -343,7 +342,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
    RETURN( FALSE);
 
 CLEANUP:
-   DPRINT("Leave NtUserUnregisterHotKey, ret=%i\n",_ret_);
+   TRACE("Leave NtUserUnregisterHotKey, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

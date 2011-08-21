@@ -12,8 +12,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserMsg);
 
 BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
 
@@ -223,7 +222,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH2_GetExceptionCode());
+        ERR("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH2_GetExceptionCode());
         Size = 0;
     }
     _SEH2_END;
@@ -260,7 +259,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
 
         if (NULL == PackedNcCalcsize)
         {
-            DPRINT1("Not enough memory to pack lParam\n");
+            ERR("Not enough memory to pack lParam\n");
             return STATUS_NO_MEMORY;
         }
         RtlCopyMemory(PackedNcCalcsize, UnpackedNcCalcsize, sizeof(NCCALCSIZE_PARAMS));
@@ -285,7 +284,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         PackedCs = ExAllocatePoolWithTag(PoolType, Size, TAG_MSG);
         if (NULL == PackedCs)
         {
-            DPRINT1("Not enough memory to pack lParam\n");
+            ERR("Not enough memory to pack lParam\n");
             return STATUS_NO_MEMORY;
         }
         RtlCopyMemory(PackedCs, UnpackedCs, sizeof(CREATESTRUCTW));
@@ -331,7 +330,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         size = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
         if (!size)
         {
-           DPRINT1("No size for lParamPacked\n");
+           ERR("No size for lParamPacked\n");
            return STATUS_SUCCESS;
         }
         PackedData = ExAllocatePoolWithTag(NonPagedPool, size, TAG_MSG);
@@ -421,7 +420,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
         if (NULL == KernelMem)
         {
-            DPRINT1("Not enough memory to copy message to kernel mem\n");
+            ERR("Not enough memory to copy message to kernel mem\n");
             return STATUS_NO_MEMORY;
         }
         KernelModeMsg->lParam = (LPARAM) KernelMem;
@@ -432,7 +431,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
             Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+                ERR("Failed to copy message to kernel: invalid usermode buffer\n");
                 ExFreePoolWithTag(KernelMem, TAG_MSG);
                 return Status;
             }
@@ -477,7 +476,7 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
             Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
+                ERR("Failed to copy message from kernel: invalid usermode buffer\n");
                 ExFreePool((PVOID) KernelModeMsg->lParam);
                 return Status;
             }
@@ -520,10 +519,10 @@ IdlePing(VOID)
       }
    }
 
-   DPRINT("IdlePing ppi 0x%x\n",ppi);
+   TRACE("IdlePing ppi 0x%x\n",ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
-      DPRINT("InputIdleEvent\n");
+      TRACE("InputIdleEvent\n");
       KeSetEvent( ppi->InputIdleEvent, IO_NO_INCREMENT, FALSE);
    }
 }
@@ -533,7 +532,7 @@ IdlePong(VOID)
 {
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-   DPRINT("IdlePong ppi 0x%x\n",ppi);
+   TRACE("IdlePong ppi 0x%x\n",ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
       KeClearEvent(ppi->InputIdleEvent);
@@ -860,7 +859,7 @@ co_IntWaitMessage( PWND Window,
         if (!NT_SUCCESS(Status))
         {
             SetLastNtError(Status);
-            DPRINT1("Exit co_IntWaitMessage on error!\n");
+            ERR("Exit co_IntWaitMessage on error!\n");
             return FALSE;
         }
         if (Status == STATUS_USER_APC || Status == STATUS_TIMEOUT)
@@ -1124,13 +1123,13 @@ UserPostMessage( HWND Wnd,
         pti = Window->head.pti;
         if ( pti->TIF_flags & TIF_INCLEANUP )
         {
-            DPRINT1("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
+            ERR("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
             return FALSE;
         }
 
         if ( Window->state & WNDS_DESTROYED )
         {
-            DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
+            ERR("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
             /* FIXME - last error code? */
             return FALSE;
         }
@@ -1214,7 +1213,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            DPRINT1("Failed to pack message parameters\n");
+            ERR("Failed to pack message parameters\n");
             RETURN( FALSE);
         }
 
@@ -1234,7 +1233,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            DPRINT1("Failed to unpack message parameters\n");
+            ERR("Failed to unpack message parameters\n");
             RETURN( TRUE);
         }
 
@@ -1251,7 +1250,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME - last error? */
-        DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
         RETURN( FALSE);
     }
 
@@ -1395,7 +1394,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME - last error? */
-        DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
         RETURN(FALSE);
     }
 
@@ -1419,7 +1418,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, Window->head.pti->MessageQueue != Win32Thread->MessageQueue)))
     {
-        DPRINT1("Failed to pack message parameters\n");
+        ERR("Failed to pack message parameters\n");
         RETURN( FALSE);
     }
 
@@ -1465,14 +1464,14 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            DPRINT1("Failed to unpack message parameters\n");
+            ERR("Failed to unpack message parameters\n");
         }
         RETURN(TRUE);
     }
 
     if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
     {
-        DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
+        ERR("MsqSendMessage(): Not enough memory to allocate a message");
         RETURN( FALSE);
     }
 
@@ -1578,7 +1577,7 @@ co_IntDoSendMessage( HWND hWnd,
     /* Check for an exiting window. */
     if (Window && Window->state & WNDS_DESTROYED)
     {
-        DPRINT1("co_IntDoSendMessage Window Exiting!\n");
+        ERR("co_IntDoSendMessage Window Exiting!\n");
     }
 
     /* See if the current thread can handle the message */
@@ -1740,7 +1739,7 @@ NtUserDragDetect(
     WORD wDragWidth, wDragHeight;
     DECLARE_RETURN(BOOL);
 
-    DPRINT("Enter NtUserDragDetect(%x)\n", hWnd);
+    TRACE("Enter NtUserDragDetect(%x)\n", hWnd);
     UserEnterExclusive();
 
     wDragWidth = UserGetSystemMetrics(SM_CXDRAG);
@@ -1794,7 +1793,7 @@ NtUserDragDetect(
     RETURN( FALSE);
 
 CLEANUP:
-   DPRINT("Leave NtUserDragDetect, ret=%i\n",_ret_);
+   TRACE("Leave NtUserDragDetect, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1839,9 +1838,9 @@ NtUserWaitMessage(VOID)
     BOOL ret;
 
     UserEnterExclusive();
-    DPRINT("NtUserWaitMessage Enter\n");
+    TRACE("NtUserWaitMessage Enter\n");
     ret = co_IntWaitMessage(NULL, 0, 0);
-    DPRINT("NtUserWaitMessage Leave\n");
+    TRACE("NtUserWaitMessage Leave\n");
     UserLeave();
 
     return ret;
@@ -2165,7 +2164,7 @@ NtUserMessageCall( HWND hWnd,
             if (!(Ret = co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
                         CallBackInfo.CallBack, CallBackInfo.Context, &uResult)))
             {
-                DPRINT1("Callback failure!\n");
+                ERR("Callback failure!\n");
             }
         }
         break;
@@ -2261,7 +2260,7 @@ NtUserMessageCall( HWND hWnd,
                 CWP.message = Msg;
                 CWP.wParam  = wParam;
                 CWP.lParam  = lParam;
-                DPRINT("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
+                TRACE("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
 
                 lResult = co_IntCallHookProc( Hook->HookId,
                                               HC_ACTION,
@@ -2387,8 +2386,8 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
 
-    DPRINT("WFII: ppi 0x%x\n",W32Process);
-    DPRINT("WFII: waiting for %p\n", Handles[1] );
+    TRACE("WFII: ppi 0x%x\n",W32Process);
+    TRACE("WFII: waiting for %p\n", Handles[1] );
     do
     {
         UserLeave();
@@ -2418,17 +2417,17 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
             {
                MSG Msg;
                co_IntGetPeekMessage( &Msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE, FALSE);
-               DPRINT1("WFII: WAIT 2\n");
+               ERR("WFII: WAIT 2\n");
             }
             break;
 
         case STATUS_TIMEOUT:
-            DPRINT1("WFII: timeout\n");
+            ERR("WFII: timeout\n");
         case WAIT_FAILED:
             goto WaitExit;
 
         default:
-            DPRINT1("WFII: finished\n");
+            ERR("WFII: finished\n");
             Status = STATUS_SUCCESS;
             goto WaitExit;
         }

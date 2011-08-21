@@ -26,8 +26,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserWinpos);
 
 HRGN FASTCALL
 VIS_ComputeVisibleRegion(
@@ -68,7 +67,7 @@ VIS_ComputeVisibleRegion(
       if ( CurrentWindow->state2 & WNDS2_INDESTROY ||
            CurrentWindow->state & WNDS_DESTROYED )
       {
-         DPRINT1("ATM the Current Window or Parent is dead!\n");
+         ERR("ATM the Current Window or Parent is dead!\n");
          if (VisRgn) GreDeleteObject(VisRgn);
          return NULL;
       }

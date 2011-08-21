@@ -15,8 +15,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserHook);
 
 typedef struct _HOOKPACK
 {
@@ -31,9 +30,9 @@ static
 LRESULT
 FASTCALL
 co_IntCallLowLevelHook(PHOOK Hook,
-                       INT Code,
-                       WPARAM wParam,
-                       LPARAM lParam)
+                     INT Code,
+                     WPARAM wParam,
+                     LPARAM lParam)
 {
     NTSTATUS Status;
     PTHREADINFO pti;
@@ -99,7 +98,7 @@ co_IntCallLowLevelHook(PHOOK Hook,
                                &uResult);
     if (!NT_SUCCESS(Status))
     {
-       DPRINT1("Error Hook Call SendMsg. %d Status: 0x%x\n", Hook->HookId, Status);
+       ERR("Error Hook Call SendMsg. %d Status: 0x%x\n", Hook->HookId, Status);
        if (pHP->pHookStructs) ExFreePoolWithTag(pHP->pHookStructs, TAG_HOOK);
        ExFreePoolWithTag(pHP, TAG_HOOK);
     }
@@ -159,7 +158,7 @@ co_HOOK_CallHookNext( PHOOK Hook,
                       WPARAM wParam,
                       LPARAM lParam)
 {
-    DPRINT("Calling Next HOOK %d\n", Hook->HookId);
+    TRACE("Calling Next HOOK %d\n", Hook->HookId);
 
     return co_IntCallHookProc( Hook->HookId,
                                Code,
@@ -174,10 +173,10 @@ static
 LRESULT
 FASTCALL
 co_IntCallDebugHook(PHOOK Hook,
-                    int Code,
-                    WPARAM wParam,
-                    LPARAM lParam,
-                    BOOL Ansi)
+                  int Code,
+                  WPARAM wParam,
+                  LPARAM lParam,
+                  BOOL Ansi)
 {
     LRESULT lResult = 0;
     ULONG Size;
@@ -205,7 +204,7 @@ co_IntCallDebugHook(PHOOK Hook,
 
         if (BadChk)
         {
-            DPRINT1("HOOK WH_DEBUG read from lParam ERROR!\n");
+            ERR("HOOK WH_DEBUG read from lParam ERROR!\n");
             return lResult;
         }
     }
@@ -290,7 +289,7 @@ co_IntCallDebugHook(PHOOK Hook,
 
         if (BadChk)
         {
-            DPRINT1("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
+            ERR("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
             ExFreePool(HooklParam);
             return lResult;
         }
@@ -307,10 +306,10 @@ static
 LRESULT
 FASTCALL
 co_UserCallNextHookEx(PHOOK Hook,
-                      int Code,
-                      WPARAM wParam,
-                      LPARAM lParam,
-                      BOOL Ansi)
+                    int Code,
+                    WPARAM wParam,
+                    LPARAM lParam,
+                    BOOL Ansi)
 {
     LRESULT lResult = 0;
     BOOL BadChk = FALSE;
@@ -340,7 +339,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
             if (BadChk)
             {
-                DPRINT1("HOOK WH_MOUSE read from lParam ERROR!\n");
+                ERR("HOOK WH_MOUSE read from lParam ERROR!\n");
             }
         }
 
@@ -378,7 +377,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                 if (BadChk)
                 {
-                    DPRINT1("HOOK WH_MOUSE_LL read from lParam ERROR!\n");
+                    ERR("HOOK WH_MOUSE_LL read from lParam ERROR!\n");
                 }
             }
 
@@ -413,7 +412,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                 if (BadChk)
                 {
-                    DPRINT1("HOOK WH_KEYBORD_LL read from lParam ERROR!\n");
+                    ERR("HOOK WH_KEYBORD_LL read from lParam ERROR!\n");
                 }
             }
 
@@ -450,7 +449,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                 if (BadChk)
                 {
-                    DPRINT1("HOOK WH_XMESSAGEX read from lParam ERROR!\n");
+                    ERR("HOOK WH_XMESSAGEX read from lParam ERROR!\n");
                 }
             }
 
@@ -478,7 +477,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                     if (BadChk)
                     {
-                        DPRINT1("HOOK WH_GETMESSAGE write to lParam ERROR!\n");
+                        ERR("HOOK WH_GETMESSAGE write to lParam ERROR!\n");
                     }
                 }
             }
@@ -486,14 +485,14 @@ co_UserCallNextHookEx(PHOOK Hook,
         }
 
         case WH_CBT:
-            DPRINT("HOOK WH_CBT!\n");
+            TRACE("HOOK WH_CBT!\n");
             switch (Code)
             {
                 case HCBT_CREATEWND:
                 {
                     LPCBT_CREATEWNDW pcbtcww = (LPCBT_CREATEWNDW)lParam;
 
-                    DPRINT("HOOK HCBT_CREATEWND\n");
+                    TRACE("HOOK HCBT_CREATEWND\n");
                     _SEH2_TRY
                     {
                         if (Ansi)
@@ -543,7 +542,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                     if (BadChk)
                     {
-                        DPRINT1("HOOK HCBT_CREATEWND write ERROR!\n");
+                        ERR("HOOK HCBT_CREATEWND write ERROR!\n");
                     }
                     /* The next call handles the structures. */
                     if (!BadChk && Hook->Proc)
@@ -557,7 +556,7 @@ co_UserCallNextHookEx(PHOOK Hook,
                 {
                     RECTL rt;
 
-                    DPRINT("HOOK HCBT_MOVESIZE\n");
+                    TRACE("HOOK HCBT_MOVESIZE\n");
 
                     if (lParam)
                     {
@@ -579,7 +578,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                         if (BadChk)
                         {
-                            DPRINT1("HOOK HCBT_MOVESIZE read from lParam ERROR!\n");
+                            ERR("HOOK HCBT_MOVESIZE read from lParam ERROR!\n");
                         }
                     }
 
@@ -594,7 +593,7 @@ co_UserCallNextHookEx(PHOOK Hook,
                 {
                     CBTACTIVATESTRUCT CbAs;
 
-                    DPRINT("HOOK HCBT_ACTIVATE\n");
+                    TRACE("HOOK HCBT_ACTIVATE\n");
                     if (lParam)
                     {
                         _SEH2_TRY
@@ -615,7 +614,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                         if (BadChk)
                         {
-                            DPRINT1("HOOK HCBT_ACTIVATE read from lParam ERROR!\n");
+                            ERR("HOOK HCBT_ACTIVATE read from lParam ERROR!\n");
                         }
                     }
 
@@ -628,7 +627,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                 /* The rest just use default. */
                 default:
-                    DPRINT("HOOK HCBT_ %d\n",Code);
+                    TRACE("HOOK HCBT_ %d\n",Code);
                     lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                     break;
             }
@@ -663,7 +662,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                 if (BadChk)
                 {
-                    DPRINT1("HOOK WH_JOURNAL read from lParam ERROR!\n");
+                    ERR("HOOK WH_JOURNAL read from lParam ERROR!\n");
                 }
             }
 
@@ -691,7 +690,7 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                     if (BadChk)
                     {
-                        DPRINT1("HOOK WH_JOURNAL write to lParam ERROR!\n");
+                        ERR("HOOK WH_JOURNAL write to lParam ERROR!\n");
                     }
                 }
             }
@@ -712,7 +711,7 @@ co_UserCallNextHookEx(PHOOK Hook,
             break;
 
         default:
-            DPRINT1("Unsupported HOOK Id -> %d\n",Hook->HookId);
+            ERR("Unsupported HOOK Id -> %d\n",Hook->HookId);
             break;
     }
     return lResult; 
@@ -756,21 +755,21 @@ IntGetGlobalHookHandles(PDESKTOP pdo, int HookId)
     pLastHead = &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
     for (pElem = pLastHead->Flink; pElem != pLastHead; pElem = pElem->Flink)
       ++cHooks;
-    
+
     pList = ExAllocatePoolWithTag(PagedPool, (cHooks + 1) * sizeof(HHOOK), TAG_HOOK);
     if(!pList)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
-    }
+}
 
     for (pElem = pLastHead->Flink; pElem != pLastHead; pElem = pElem->Flink)
-    {
+{
         pHook = CONTAINING_RECORD(pElem, HOOK, Chain);
         pList[i++] = pHook->head.h;
     }
     pList[i] = NULL;
-    
+
     return pList;
 }
 
@@ -877,7 +876,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
 
    if (!pti || !pdo)
    {
-      DPRINT1("Kill Thread Hooks pti 0x%x pdo 0x%x\n",pti,pdo);
+      ERR("Kill Thread Hooks pti 0x%x pdo 0x%x\n",pti,pdo);
       return;
    }
 
@@ -904,7 +903,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
       for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
       {
          PLIST_ENTRY pGLE = &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
-         
+
          pElem = pGLE->Flink;
          while (pElem != pGLE)
          {
@@ -950,7 +949,7 @@ co_HOOK_CallHooks( INT HookId,
      */
        if ( !pti || !pdo || (!(HookId == WH_KEYBOARD_LL) && !(HookId == WH_MOUSE_LL)) )
        {
-          DPRINT("No PDO %d\n", HookId);
+          TRACE("No PDO %d\n", HookId);
           goto Exit;
        }
     }
@@ -961,19 +960,19 @@ co_HOOK_CallHooks( INT HookId,
 
     if ( pti->TIF_flags & (TIF_INCLEANUP|TIF_DISABLEHOOKS))
     {
-       DPRINT("Hook Thread dead %d\n", HookId);
+       TRACE("Hook Thread dead %d\n", HookId);
        goto Exit;
     }
 
     if ( ISITHOOKED(HookId) )
     {
-       DPRINT("Local Hooker %d\n", HookId);
+       TRACE("Local Hooker %d\n", HookId);
        Local = TRUE;
     }
 
     if ( pdo->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
     {
-       DPRINT("Global Hooker %d\n", HookId);
+       TRACE("Global Hooker %d\n", HookId);
        Global = TRUE;
     }
 
@@ -989,7 +988,7 @@ co_HOOK_CallHooks( INT HookId,
        pLastHead = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
        if (IsListEmpty(pLastHead))
        {
-          DPRINT1("No Local Hook Found!\n");
+          ERR("No Local Hook Found!\n");
           goto Exit;
        }
 
@@ -1061,7 +1060,7 @@ co_HOOK_CallHooks( INT HookId,
           Hook = (PHOOK)UserGetObject(gHandleTable, pHookHandles[i], otHook);
           if(!Hook)
           {
-              DPRINT1("Invalid hook!\n");
+              ERR("Invalid hook!\n");
               continue;
           }
           UserRefObjectCo(Hook, &Ref);
@@ -1071,7 +1070,7 @@ co_HOOK_CallHooks( INT HookId,
 
           if ( (pti->TIF_flags & TIF_DISABLEHOOKS) || (ptiHook->TIF_flags & TIF_INCLEANUP))
           {
-             DPRINT("Next Hook 0x%x, 0x%x\n", ptiHook->rpdesk, pdo);
+             TRACE("Next Hook 0x%x, 0x%x\n",ptiHook->rpdesk,pdo);
              continue;
           }
 
@@ -1085,12 +1084,13 @@ co_HOOK_CallHooks( INT HookId,
                   HookId == WH_KEYBOARD_LL     || //   0   |   300
                   HookId == WH_MOUSE_LL )         //   0   |   300
              {
-                DPRINT("\nGlobal Hook posting to another Thread! %d\n", HookId);
+                TRACE("\nGlobal Hook posting to another Thread! %d\n",HookId );
                 Result = co_IntCallLowLevelHook(Hook, Code, wParam, lParam);
              }
           }
           else
           { /* Make the direct call. */
+             TRACE("Local Hook calling to Thread! %d\n",HookId );
              Result = co_IntCallHookProc( HookId,
                                           Code,
                                           wParam,
@@ -1102,7 +1102,7 @@ co_HOOK_CallHooks( INT HookId,
           UserDerefObjectCo(Hook);
        }
        ExFreePoolWithTag(pHookHandles, TAG_HOOK);
-       DPRINT("Ret: Global HookId %d Result 0x%x\n", HookId, Result);
+       TRACE("Ret: Global HookId %d Result 0x%x\n", HookId,Result);
     }
 Exit:
     return Result;
@@ -1172,7 +1172,7 @@ NtUserCallNextHookEx( int Code,
     LRESULT lResult = 0;
     DECLARE_RETURN(LRESULT);
 
-    DPRINT("Enter NtUserCallNextHookEx\n");
+    TRACE("Enter NtUserCallNextHookEx\n");
     UserEnterExclusive();
 
     pti = GetW32ThreadInfo();
@@ -1204,7 +1204,7 @@ NtUserCallNextHookEx( int Code,
     RETURN( lResult);
 
 CLEANUP:
-    DPRINT("Leave NtUserCallNextHookEx, ret=%i\n",_ret_);
+    TRACE("Leave NtUserCallNextHookEx, ret=%i\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }
@@ -1247,7 +1247,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     PTHREADINFO pti, ptiHook = NULL;
     DECLARE_RETURN(HHOOK);
 
-    DPRINT("Enter NtUserSetWindowsHookEx\n");
+    TRACE("Enter NtUserSetWindowsHookEx\n");
     UserEnterExclusive();
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -1272,7 +1272,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
             HookId == WH_MOUSE_LL ||
             HookId == WH_SYSMSGFILTER)
        {
-           DPRINT1("Local hook installing Global HookId: %d\n",HookId);
+           ERR("Local hook installing Global HookId: %d\n",HookId);
            /* these can only be global */
            EngSetLastError(ERROR_GLOBAL_ONLY_HOOK);
            RETURN( NULL);
@@ -1280,7 +1280,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
        {
-          DPRINT1("Invalid thread id 0x%x\n", ThreadId);
+          ERR("Invalid thread id 0x%x\n", ThreadId);
           EngSetLastError(ERROR_INVALID_PARAMETER);
           RETURN( NULL);
        }
@@ -1291,7 +1291,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
        if ( ptiHook->rpdesk != pti->rpdesk) // gptiCurrent->rpdesk)
        {
-          DPRINT1("Local hook wrong desktop HookId: %d\n",HookId);
+          ERR("Local hook wrong desktop HookId: %d\n",HookId);
           EngSetLastError(ERROR_ACCESS_DENIED);
           RETURN( NULL);
        }
@@ -1308,7 +1308,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                HookId == WH_FOREGROUNDIDLE ||
                HookId == WH_CALLWNDPROCRET) )
           {
-             DPRINT1("Local hook needs hMod HookId: %d\n",HookId);
+             ERR("Local hook needs hMod HookId: %d\n",HookId);
              EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
              RETURN( NULL);
           }
@@ -1342,7 +1342,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              HookId == WH_FOREGROUNDIDLE ||
              HookId == WH_CALLWNDPROCRET) )
        {
-          DPRINT1("Global hook needs hMod HookId: %d\n",HookId);
+          ERR("Global hook needs hMod HookId: %d\n",HookId);
           EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
           RETURN( NULL);
        }
@@ -1375,7 +1375,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     Hook->Proc    = HookProc;
     Hook->Ansi    = Ansi;
 
-    DPRINT("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n", ptiHook->rpdesk, ptiHook->pDeskInfo,Hook->head.rpdesk);
+    TRACE("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n",pti->rpdesk, pti->pDeskInfo,Hook->head.rpdesk);
 
     if (ThreadId)  /* thread-local hook */
     {
@@ -1395,7 +1395,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
-                DPRINT1("Problem writing to Local ClientInfo!\n");
+                ERR("Problem writing to Local ClientInfo!\n");
              }
              _SEH2_END;
           }
@@ -1409,7 +1409,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
-                DPRINT1("Problem writing to Remote ClientInfo!\n");
+                ERR("Problem writing to Remote ClientInfo!\n");
              }
              _SEH2_END;
              KeDetachProcess();
@@ -1470,11 +1470,11 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     else
        Hook->offPfn = 0;
 
-    DPRINT("Installing: HookId %d Global %s\n", HookId, !ThreadId ? "TRUE" : "FALSE");
+    TRACE("Installing: HookId %d Global %s\n", HookId, !ThreadId ? "TRUE" : "FALSE");
     RETURN( Handle);
 
 CLEANUP:
-    DPRINT("Leave NtUserSetWindowsHookEx, ret=%i\n",_ret_);
+    TRACE("Leave NtUserSetWindowsHookEx, ret=%i\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }
@@ -1486,12 +1486,12 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
     PHOOK HookObj;
     DECLARE_RETURN(BOOL);
 
-    DPRINT("Enter NtUserUnhookWindowsHookEx\n");
+    TRACE("Enter NtUserUnhookWindowsHookEx\n");
     UserEnterExclusive();
 
     if (!(HookObj = IntGetHookObject(Hook)))
     {
-        DPRINT1("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
+        ERR("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
         /* SetLastNtError(Status); */
         RETURN( FALSE);
     }
@@ -1505,7 +1505,7 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
     RETURN( TRUE);
 
 CLEANUP:
-    DPRINT("Leave NtUserUnhookWindowsHookEx, ret=%i\n",_ret_);
+    TRACE("Leave NtUserUnhookWindowsHookEx, ret=%i\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }
