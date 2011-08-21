@@ -11,8 +11,6 @@ struct _SINGLE_LIST_ENTRY *__stdcall ExInterlockedPopEntryList(struct _SINGLE_LI
 
 #include <kmt_test.h>
 
-SINGLE_LIST_ENTRY Entries[5];
-
 #define ok_eq_free2(Value, Expected) do              \
 {                                                   \
     if (KmtIsCheckedBuild)                          \
@@ -21,107 +19,94 @@ SINGLE_LIST_ENTRY Entries[5];
         ok_eq_pointer(Value, Expected);             \
 } while (0)
 
-START_TEST(ExSingleList)
+PSINGLE_LIST_ENTRY FlushList(PSINGLE_LIST_ENTRY ListHead)
 {
-    KSPIN_LOCK SpinLock;
-    SINGLE_LIST_ENTRY ListHead;
+    PSINGLE_LIST_ENTRY Ret = ListHead->Next;
+    ListHead->Next = NULL;
+    return Ret;
+}
+
+USHORT QueryDepthList(PSINGLE_LIST_ENTRY ListHead)
+{
+    USHORT Depth = 0;
+    while (ListHead->Next)
+    {
+        ++Depth;
+        ListHead = ListHead->Next;
+    }
+    return Depth;
+}
+
+PSINGLE_LIST_ENTRY PushEntryListWrapper(PSINGLE_LIST_ENTRY ListHead, PSINGLE_LIST_ENTRY Entry, PKSPIN_LOCK Lock)
+{
     PSINGLE_LIST_ENTRY Ret;
+    UNREFERENCED_PARAMETER(Lock);
+    Ret = ListHead->Next;
+    PushEntryList(ListHead, Entry);
+    return Ret;
+}
 
-    KeInitializeSpinLock(&SpinLock);
+#define CheckListHeader(ListHead, ExpectedPointer, ExpectedDepth) do    \
+{                                                                       \
+    ok_eq_pointer((ListHead)->Next, ExpectedPointer);                   \
+    ok_eq_uint(QueryDepthList(ListHead), ExpectedDepth);                \
+    ok_irql(HIGH_LEVEL);                                                \
+    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");     \
+} while (0)
 
-    memset(Entries, 0x55, sizeof Entries);
-    ListHead.Next = NULL;
-    Ret = ExInterlockedPushEntryList(&ListHead, &Entries[0], &SpinLock);
-    ok_eq_pointer(Ret, NULL);
-    ok_eq_pointer(ListHead.Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
-
-    Ret = ExInterlockedPopEntryList(&ListHead, &SpinLock);
-    ok_eq_pointer(Ret, &Entries[0]);
-    ok_eq_pointer(ListHead.Next, NULL);
-    ok_eq_free2(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
-
-    Ret = ExInterlockedPopEntryList(&ListHead, &SpinLock);
-    ok_eq_pointer(Ret, NULL);
-    ok_eq_pointer(ListHead.Next, NULL);
-    ok_eq_free2(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
-
-    Ret = ExInterlockedPushEntryList(&ListHead, &Entries[0], &SpinLock);
-    ok_eq_pointer(Ret, NULL);
-    ok_eq_pointer(ListHead.Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
-
-    Ret = ExInterlockedPushEntryList(&ListHead, &Entries[1], &SpinLock);
-    ok_eq_pointer(Ret, &Entries[0]);
-    ok_eq_pointer(ListHead.Next, &Entries[1]);
-    ok_eq_pointer(Entries[1].Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
-
-    Ret = ExInterlockedPopEntryList(&ListHead, &SpinLock);
-    ok_eq_pointer(Ret, &Entries[1]);
-    ok_eq_pointer(ListHead.Next, &Entries[0]);
-    ok_eq_free2(Entries[1].Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
+#define PXLIST_HEADER       PSINGLE_LIST_ENTRY
+#define PXLIST_ENTRY        PSINGLE_LIST_ENTRY
+#define PushXList           ExInterlockedPushEntryList
+#define PopXList            ExInterlockedPopEntryList
+#define FlushXList          FlushList
+#define ok_free_xlist       ok_eq_free2
+#define CheckXListHeader    CheckListHeader
+#define TestXListFunctional TestListFunctional
+#include "ExXList.h"
 
 #undef ExInterlockedPushEntryList
 #undef ExInterlockedPopEntryList
-    memset(Entries, 0x55, sizeof Entries);
-    ListHead.Next = NULL;
-    Ret = ExInterlockedPushEntryList(&ListHead, &Entries[0], &SpinLock);
-    ok_eq_pointer(Ret, NULL);
-    ok_eq_pointer(ListHead.Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
+#define TestXListFunctional TestListFunctionalExports
+#include "ExXList.h"
 
-    Ret = ExInterlockedPopEntryList(&ListHead, &SpinLock);
-    ok_eq_pointer(Ret, &Entries[0]);
-    ok_eq_pointer(ListHead.Next, NULL);
-    ok_eq_free2(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
+#undef  PushXList
+#define PushXList           PushEntryListWrapper
+#undef  PopXList
+#define PopXList(h, s)      PopEntryList(h)
+#undef  ok_free_xlist
+#define ok_free_xlist       ok_eq_pointer
+#define TestXListFunctional TestListFunctionalNoInterlocked
+#include "ExXList.h"
 
-    Ret = ExInterlockedPopEntryList(&ListHead, &SpinLock);
-    ok_eq_pointer(Ret, NULL);
-    ok_eq_pointer(ListHead.Next, NULL);
-    ok_eq_free2(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
+START_TEST(ExSingleList)
+{
+    KSPIN_LOCK SpinLock;
+    PSINGLE_LIST_ENTRY ListHead;
+    PSINGLE_LIST_ENTRY Entries;
+    SIZE_T EntriesSize = 5 * sizeof *Entries;
+    PCHAR Buffer;
+    KIRQL Irql;
 
-    Ret = ExInterlockedPushEntryList(&ListHead, &Entries[0], &SpinLock);
-    ok_eq_pointer(Ret, NULL);
-    ok_eq_pointer(ListHead.Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
+    KeInitializeSpinLock(&SpinLock);
 
-    Ret = ExInterlockedPushEntryList(&ListHead, &Entries[1], &SpinLock);
-    ok_eq_pointer(Ret, &Entries[0]);
-    ok_eq_pointer(ListHead.Next, &Entries[1]);
-    ok_eq_pointer(Entries[1].Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
+    /* make sure stuff is as un-aligned as possible ;) */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, sizeof *ListHead + EntriesSize + 1, 'TLiS');
+    ListHead = (PVOID)&Buffer[1];
+    Entries = (PVOID)&ListHead[1];
+    KeRaiseIrql(HIGH_LEVEL, &Irql);
+    
+    RtlFillMemory(Entries, sizeof Entries, 0x55);
+    ListHead->Next = NULL;
+    TestListFunctional(ListHead, Entries, &SpinLock);
 
-    Ret = ExInterlockedPopEntryList(&ListHead, &SpinLock);
-    ok_eq_pointer(Ret, &Entries[1]);
-    ok_eq_pointer(ListHead.Next, &Entries[0]);
-    ok_eq_free2(Entries[1].Next, &Entries[0]);
-    ok_eq_pointer(Entries[0].Next, NULL);
-    ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");
-    ok_irql(PASSIVE_LEVEL);
-
-    KmtSetIrql(PASSIVE_LEVEL);
+    RtlFillMemory(Entries, sizeof Entries, 0x55);
+    ListHead->Next = NULL;
+    TestListFunctionalExports(ListHead, Entries, &SpinLock);
+    
+    RtlFillMemory(Entries, sizeof Entries, 0x55);
+    ListHead->Next = NULL;
+    TestListFunctionalNoInterlocked(ListHead, Entries, &SpinLock);
+    
+    KeLowerIrql(Irql);
+    ExFreePoolWithTag(Buffer, 'TLiS');
 }

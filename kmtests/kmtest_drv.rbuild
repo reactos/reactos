@@ -21,6 +21,7 @@
 		<file>ExInterlocked.c</file>
 		<file>ExPools.c</file>
 		<file>ExResource.c</file>
+		<file>ExSequencedList.c</file>
 		<file>ExSingleList.c</file>
 		<file>ExTimer.c</file>
 	</directory>

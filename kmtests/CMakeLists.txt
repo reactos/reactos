@@ -22,6 +22,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ex/ExInterlocked.c
     ntos_ex/ExPools.c
     ntos_ex/ExResource.c
+    ntos_ex/ExSequencedList.c
     ntos_ex/ExSingleList.c
     ntos_ex/ExTimer.c
     ntos_fsrtl/FsRtlExpression.c
