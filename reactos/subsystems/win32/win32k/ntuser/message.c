@@ -1182,6 +1182,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
+        ERR("UserGetWindowObject filed!\n");
         RETURN( FALSE);
     }
 
@@ -1196,6 +1197,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
+            ERR("Trying to send message to a thread in cleanup\n");
             /* Never send messages to exiting threads */
             RETURN( FALSE);
         }

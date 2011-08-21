@@ -203,6 +203,8 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    IntSetTebWndCallback (&Wnd, &pWnd);
 
+   TRACE_CH(UserMsgCall,"hwnd:0x%x, msg:%d, wparam:%d, lparam:%d\n", Wnd, Message, wParam, lParam);
+
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_WINDOWPROC,
