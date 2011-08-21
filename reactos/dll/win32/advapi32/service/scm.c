@@ -2309,16 +2309,30 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
                         DWORD cbBufSize,
                         LPDWORD pcbBytesNeeded)
 {
+    QUERY_SERVICE_LOCK_STATUSA LockStatus;
+    LPQUERY_SERVICE_LOCK_STATUSA lpStatusPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceLockStatusA() called\n");
+
+    if (lpLockStatus == NULL || cbBufSize < sizeof(QUERY_SERVICE_LOCK_STATUSA))
+    {
+        lpStatusPtr = &LockStatus;
+        dwBufferSize = sizeof(QUERY_SERVICE_LOCK_STATUSA);
+    }
+    else
+    {
+        lpStatusPtr = lpLockStatus;
+        dwBufferSize = cbBufSize;
+    }
 
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusA((SC_RPC_HANDLE)hSCManager,
-                                           lpLockStatus,
-                                           cbBufSize,
+                                           lpStatusPtr,
+                                           dwBufferSize,
                                            pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2334,10 +2348,10 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpLockStatus->lpLockOwner != NULL)
+    if (lpStatusPtr->lpLockOwner != NULL)
     {
-        lpLockStatus->lpLockOwner =
-            (LPSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
+        lpStatusPtr->lpLockOwner =
+            (LPSTR)((UINT_PTR)lpStatusPtr + (UINT_PTR)lpStatusPtr->lpLockOwner);
     }
 
     TRACE("QueryServiceLockStatusA() done\n");
@@ -2357,16 +2371,30 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
                         DWORD cbBufSize,
                         LPDWORD pcbBytesNeeded)
 {
+    QUERY_SERVICE_LOCK_STATUSW LockStatus;
+    LPQUERY_SERVICE_LOCK_STATUSW lpStatusPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceLockStatusW() called\n");
+
+    if (lpLockStatus == NULL || cbBufSize < sizeof(QUERY_SERVICE_LOCK_STATUSW))
+    {
+        lpStatusPtr = &LockStatus;
+        dwBufferSize = sizeof(QUERY_SERVICE_LOCK_STATUSW);
+    }
+    else
+    {
+        lpStatusPtr = lpLockStatus;
+        dwBufferSize = cbBufSize;
+    }
 
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusW((SC_RPC_HANDLE)hSCManager,
-                                           lpLockStatus,
-                                           cbBufSize,
+                                           lpStatusPtr,
+                                           dwBufferSize,
                                            pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2382,10 +2410,10 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpLockStatus->lpLockOwner != NULL)
+    if (lpStatusPtr->lpLockOwner != NULL)
     {
-        lpLockStatus->lpLockOwner =
-            (LPWSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
+        lpStatusPtr->lpLockOwner =
+            (LPWSTR)((UINT_PTR)lpStatusPtr + (UINT_PTR)lpStatusPtr->lpLockOwner);
     }
 
     TRACE("QueryServiceLockStatusW() done\n");
