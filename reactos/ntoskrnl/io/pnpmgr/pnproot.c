@@ -331,12 +331,16 @@ QueryStringCallback(
     UNICODE_STRING Source;
 
     if (ValueType != REG_SZ || ValueLength == 0 || ValueLength % sizeof(WCHAR) != 0)
+    {
+        Destination->Length = 0;
+        Destination->MaximumLength = 0;
+        Destination->Buffer = NULL;
         return STATUS_SUCCESS;
+    }
 
     Source.MaximumLength = Source.Length = ValueLength;
     Source.Buffer = ValueData;
-    if (Source.Length > 0 && Source.Buffer[Source.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
-        Source.Length -= sizeof(WCHAR);
+
     return RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &Source, Destination);
 }
 
@@ -914,18 +918,19 @@ PdoQueryDeviceText(
             UNICODE_STRING String;
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 
-            Status = RtlDuplicateUnicodeString(
-                RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-                &DeviceExtension->DeviceInfo->DeviceDescription,
-                &String);
-            Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
+            if (DeviceExtension->DeviceInfo->DeviceDescription.Buffer != NULL)
+            {
+                Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                                   &DeviceExtension->DeviceInfo->DeviceDescription,
+                                                   &String);
+                Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
+            }
             break;
         }
 
         case DeviceTextLocationInformation:
         {
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
-            Status = STATUS_NOT_SUPPORTED;
             break;
         }
 
