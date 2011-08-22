@@ -46,7 +46,7 @@ const KMT_TEST TestList[] =
     { "ExResource",                         Test_ExResource },
     { "ExSequencedList",                    Test_ExSequencedList },
     { "ExSingleList",                       Test_ExSingleList },
-    { "ExTimer",                            Test_ExTimer },
+    { "-ExTimer",                           Test_ExTimer },
     { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },

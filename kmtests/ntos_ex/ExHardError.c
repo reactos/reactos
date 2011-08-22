@@ -91,14 +91,15 @@ TestHardError(
     CheckHardError(0x40000000,                  0, OptionOk,                STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a box :|
     CheckHardError(0x40000001,                  0, OptionOk,                STATUS_SUCCESS,            ResponseOk,             4, 1, 2, 3, 4);                 // outputs a box :|
     CheckHardError(0x40000002,                  0, OptionOk,                STATUS_SUCCESS,            ResponseOk,             5, 1, 2, 3, 4, 5);              // outputs a box :|
+    CheckHardError(0x40000003,                  0, OptionOk,                STATUS_SUCCESS,            ResponseNotHandled,     6, 1, 2, 3, 4, 5, 6);           // TODO: interactive on ROS
     }
-    CheckHardError(0x40000003,                  0, OptionOk,                STATUS_SUCCESS,            ResponseNotHandled,     6, 1, 2, 3, 4, 5, 6);
 
     CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseNotHandled,     0, 0);
-    CheckHardError(0x40000005,                  0, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
-    CheckHardError(0x4000000f,                  0, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
     if (InteractivePart1)
     {
+    // TODO: these 2 are interactive on ROS
+    CheckHardError(0x40000005,                  0, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
+    CheckHardError(0x4000000f,                  0, OptionOkNoWait,          STATUS_SUCCESS,            ResponseOk,             0, 0);                          // outputs a balloon notification
     CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,  STATUS_SUCCESS,            ResponseAbort,          0, 0);                          // outputs a box :|
     CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,  STATUS_SUCCESS,            ResponseRetry,          0, 0);                          // outputs a box :|
     CheckHardError(0x40000006,                  0, OptionAbortRetryIgnore,  STATUS_SUCCESS,            ResponseIgnore,         0, 0);                          // outputs a box :|
@@ -195,11 +196,12 @@ TestHardError(
     CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, "Parameter1");               // outputs a box :|
     CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, 1234);                       // outputs a box :|
     CheckHardError(STATUS_FATAL_APP_EXIT,       0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         1, NULL);                       // outputs a box :|
-    }
 
+    // TODO: these 3 are interactive on ROS
     CheckInformationalHardError(STATUS_WAIT_0,               NULL,     NULL, STATUS_SUCCESS, TRUE);                                                            // outputs a balloon notification
     CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        &String1, NULL, STATUS_SUCCESS, TRUE);                                                            // outputs a balloon notification
     CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        NULL,     NULL, STATUS_SUCCESS, TRUE);                                                            // outputs a balloon notification
+    }
     CheckInformationalHardError(STATUS_SERVICE_NOTIFICATION, &String1, NULL, STATUS_SUCCESS, FALSE);
 
     ok_bool_true(IoSetThreadHardErrorMode(TRUE), "IoSetThreadHardErrorMode returned");
