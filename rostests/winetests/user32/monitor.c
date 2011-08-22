@@ -267,6 +267,14 @@ static void test_ChangeDisplaySettingsEx(void)
             ok(ClipCursor(&r1), "ClipCursor() failed\n");
             ok(GetClipCursor(&r), "GetClipCursor() failed\n");
             ok(EqualRect(&r, &r1), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            SetRect(&r1, 10, 10, 10, 10);
+            ok(ClipCursor(&r1), "ClipCursor() failed\n");
+            ok(GetClipCursor(&r), "GetClipCursor() failed\n");
+            ok(EqualRect(&r, &r1), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            SetRect(&r1, 10, 10, 10, 9);
+            ok(!ClipCursor(&r1), "ClipCursor() succeeded\n");
+            /* Windows bug: further clipping fails once an empty rect is set, so we have to reset it */
+            ClipCursor(NULL);
 
             SetRect(&r1, virt.left - 10, virt.top - 10, virt.right + 20, virt.bottom + 20);
             ok(ClipCursor(&r1), "ClipCursor() failed\n");

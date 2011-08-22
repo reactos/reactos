@@ -68,8 +68,8 @@ static void test_ClipboardOwner(void)
     ok(OpenClipboard(hWnd1), "OpenClipboard failed\n");
 
     SetLastError(0xdeadbeef);
-    ok(!OpenClipboard(hWnd2) &&
-       (GetLastError() == 0xdeadbeef || GetLastError() == ERROR_ACCESS_DENIED),
+    ret = OpenClipboard(hWnd2);
+    ok(!ret && (GetLastError() == 0xdeadbeef || GetLastError() == ERROR_ACCESS_DENIED),
        "OpenClipboard should fail without setting last error value, or with ERROR_ACCESS_DENIED, got error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -79,9 +79,9 @@ static void test_ClipboardOwner(void)
     ok(GetClipboardOwner() == hWnd1, "clipboard should be owned by %p, not by %p\n", hWnd1, GetClipboardOwner());
 
     SetLastError(0xdeadbeef);
-    ok(!OpenClipboard(hWnd2) &&
-       (GetLastError() == 0xdeadbeef || GetLastError() == ERROR_ACCESS_DENIED),
-       "OpenClipboard should fail without setting last error valuei, or with ERROR_ACCESS_DENIED, got error %d\n", GetLastError());
+    ret = OpenClipboard(hWnd2);
+    ok(!ret && (GetLastError() == 0xdeadbeef || GetLastError() == ERROR_ACCESS_DENIED),
+       "OpenClipboard should fail without setting last error value, or with ERROR_ACCESS_DENIED, got error %d\n", GetLastError());
 
     ret = CloseClipboard();
     ok( ret, "CloseClipboard error %d\n", GetLastError());
@@ -140,6 +140,7 @@ todo_wine
     atom_id = GlobalFindAtomA("my_cool_clipboard_format");
     ok(atom_id == 0, "GlobalFindAtomA should fail\n");
     test_last_error(ERROR_FILE_NOT_FOUND);
+    }
 
     for (format_id = 0; format_id < 0xffff; format_id++)
     {
@@ -147,18 +148,9 @@ todo_wine
         len = GetClipboardFormatNameA(format_id, buf, 256);
 
         if (format_id < 0xc000)
-        {
             ok(!len, "GetClipboardFormatNameA should fail, but it returned %d (%s)\n", len, buf);
-            test_last_error(ERROR_INVALID_PARAMETER);
-        }
         else
-        {
-            if (len)
-                trace("%04x: %s\n", format_id, len ? buf : "");
-            else
-                test_last_error(ERROR_INVALID_HANDLE);
-        }
-    }
+            if (len) trace("%04x: %s\n", format_id, len ? buf : "");
     }
 
     ret = OpenClipboard(0);
@@ -191,6 +183,9 @@ todo_wine
     ok(!EmptyClipboard(), "EmptyClipboard should fail if clipboard wasn't open\n");
     ok(GetLastError() == ERROR_CLIPBOARD_NOT_OPEN || broken(GetLastError() == 0xdeadbeef), /* wow64 */
        "Wrong error %u\n", GetLastError());
+
+    format_id = RegisterClipboardFormatA("#1234");
+    ok(format_id == 1234, "invalid clipboard format id %04x\n", format_id);
 }
 
 static HGLOBAL create_text(void)
@@ -216,6 +211,7 @@ static void test_synthesized(void)
     HENHMETAFILE emf;
     BOOL r;
     UINT cf;
+    HANDLE data;
 
     htext = create_text();
     emf = create_emf();
@@ -235,15 +231,21 @@ static void test_synthesized(void)
     ok(r, "gle %d\n", GetLastError());
     cf = EnumClipboardFormats(0);
     ok(cf == CF_TEXT, "cf %08x\n", cf);
+    data = GetClipboardData(cf);
+    ok(data != NULL, "couldn't get data, cf %08x\n", cf);
 
     cf = EnumClipboardFormats(cf);
     ok(cf == CF_ENHMETAFILE, "cf %08x\n", cf);
+    data = GetClipboardData(cf);
+    ok(data != NULL, "couldn't get data, cf %08x\n", cf);
 
     cf = EnumClipboardFormats(cf);
     todo_wine ok(cf == CF_LOCALE, "cf %08x\n", cf);
     if(cf == CF_LOCALE)
         cf = EnumClipboardFormats(cf);
     ok(cf == CF_OEMTEXT, "cf %08x\n", cf);
+    data = GetClipboardData(cf);
+    ok(data != NULL, "couldn't get data, cf %08x\n", cf);
 
     cf = EnumClipboardFormats(cf);
     ok(cf == CF_UNICODETEXT ||
@@ -253,6 +255,8 @@ static void test_synthesized(void)
     if(cf == CF_UNICODETEXT)
         cf = EnumClipboardFormats(cf);
     ok(cf == CF_METAFILEPICT, "cf %08x\n", cf);
+    data = GetClipboardData(cf);
+    todo_wine ok(data != NULL, "couldn't get data, cf %08x\n", cf);
 
     cf = EnumClipboardFormats(cf);
     ok(cf == 0, "cf %08x\n", cf);

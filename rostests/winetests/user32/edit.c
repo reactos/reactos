@@ -559,6 +559,7 @@ static HWND create_editcontrol (DWORD style, DWORD exstyle)
 			  style,
 			  10, 10, 300, 300,
 			  NULL, NULL, hinst, NULL);
+    ok (handle != NULL, "CreateWindow EDIT Control failed\n");
     assert (handle);
     if (winetest_interactive)
 	ShowWindow (handle, SW_SHOW);
@@ -570,12 +571,14 @@ static HWND create_child_editcontrol (DWORD style, DWORD exstyle)
     HWND parentWnd;
     HWND editWnd;
     RECT rect;
+    BOOL b;
     
     rect.left = 0;
     rect.top = 0;
     rect.right = 300;
     rect.bottom = 300;
-    assert(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE));
+    b = AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+    ok(b, "AdjustWindowRect failed\n");
     
     parentWnd = CreateWindowEx(0,
                             szEditTextPositionClass,
@@ -584,6 +587,7 @@ static HWND create_child_editcontrol (DWORD style, DWORD exstyle)
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             rect.right - rect.left, rect.bottom - rect.top,
                             NULL, NULL, hinst, NULL);
+    ok (parentWnd != NULL, "CreateWindow EDIT Test failed\n");
     assert(parentWnd);
 
     editWnd = CreateWindowEx(exstyle,
@@ -592,6 +596,7 @@ static HWND create_child_editcontrol (DWORD style, DWORD exstyle)
                             WS_CHILD | style,
                             0, 0, 300, 300,
                             parentWnd, NULL, hinst, NULL);
+    ok (editWnd != NULL, "CreateWindow EDIT Test Text failed\n");
     assert(editWnd);
     if (winetest_interactive)
         ShowWindow (parentWnd, SW_SHOW);
@@ -837,9 +842,14 @@ static void test_edit_control_3(void)
 {
     HWND hWnd;
     HWND hParent;
-    int len;
+    HDC hDC;
+    int len, dpi;
     static const char *str = "this is a long string.";
     static const char *str2 = "this is a long string.\r\nthis is a long string.\r\nthis is a long string.\r\nthis is a long string.";
+
+    hDC = GetDC(NULL);
+    dpi = GetDeviceCaps(hDC, LOGPIXELSY);
+    ReleaseDC(NULL, hDC);
 
     trace("EDIT: Test notifications\n");
 
@@ -947,7 +957,7 @@ static void test_edit_control_3(void)
               "EDIT",
               NULL,
               ES_MULTILINE,
-              10, 10, 50, 50,
+              10, 10, (50 * dpi) / 96, (50 * dpi) / 96,
               hParent, NULL, NULL, NULL);
     assert(hWnd);
 
@@ -992,7 +1002,7 @@ static void test_edit_control_3(void)
               "EDIT",
               NULL,
               ES_MULTILINE | ES_AUTOHSCROLL,
-              10, 10, 50, 50,
+              10, 10, (50 * dpi) / 96, (50 * dpi) / 96,
               hParent, NULL, NULL, NULL);
     assert(hWnd);
 
@@ -1308,9 +1318,7 @@ static void test_edit_control_limittext(void)
     ok(r == 30000, "Incorrect default text limit, expected 30000 got %u\n", r);
     SendMessage(hwEdit, EM_SETLIMITTEXT, 0, 0);
     r = SendMessage(hwEdit, EM_GETLIMITTEXT, 0, 0);
-    /* Win9x+ME: 32766; WinNT: 2147483646UL */
-    ok( (r == 32766) || (r == 2147483646UL),
-        "got limit %u (expected 32766 or 2147483646)\n", r);
+    ok( r == 2147483646, "got limit %u (expected 2147483646)\n", r);
     DestroyWindow(hwEdit);
 
     /* Test default limit for multi-line control */
@@ -1320,9 +1328,7 @@ static void test_edit_control_limittext(void)
     ok(r == 30000, "Incorrect default text limit, expected 30000 got %u\n", r);
     SendMessage(hwEdit, EM_SETLIMITTEXT, 0, 0);
     r = SendMessage(hwEdit, EM_GETLIMITTEXT, 0, 0);
-    /* Win9x+ME: 65535; WinNT: 4294967295UL */
-    ok( (r == 65535) || (r == 4294967295UL),
-        "got limit %u (expected 65535 or 4294967295)\n", r);
+    ok( r == 4294967295U, "got limit %u (expected 4294967295)\n", r);
     DestroyWindow(hwEdit);
 }
 
@@ -1527,6 +1533,7 @@ static void test_margins_font_change(void)
     ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
 
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO,EC_USEFONTINFO));
+    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
     ok(LOWORD(margins) == LOWORD(font_margins), "got %d\n", LOWORD(margins));
     ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
@@ -1566,7 +1573,7 @@ static void test_text_position_style(DWORD style)
     HDC dc;
     TEXTMETRIC metrics;
     INT b, bm, b2, b3;
-    BOOL single_line = !(style & ES_MULTILINE);
+    BOOL xb, single_line = !(style & ES_MULTILINE);
 
     b = GetSystemMetrics(SM_CYBORDER) + 1;
     b2 = 2 * b;
@@ -1574,10 +1581,13 @@ static void test_text_position_style(DWORD style)
     bm = b2 - 1;
     
     /* Get a stock font for which we can determine the metrics */
-    assert(font = GetStockObject(SYSTEM_FONT));
-    assert(dc = GetDC(NULL));
+    font = GetStockObject(SYSTEM_FONT);
+    ok (font != NULL, "GetStockObjcet SYSTEM_FONT failed\n");
+    dc = GetDC(NULL);
+    ok (dc != NULL, "GetDC() failed\n");
     oldFont = SelectObject(dc, font);
-    assert(GetTextMetrics(dc, &metrics));    
+    xb = GetTextMetrics(dc, &metrics);
+    ok (xb, "GetTextMetrics failed\n");
     SelectObject(dc, oldFont);
     ReleaseDC(NULL, dc);
     
@@ -2212,9 +2222,15 @@ static void test_fontsize(void)
 {
     HWND hwEdit;
     HFONT hfont;
+    HDC hDC;
     LOGFONT lf;
     LONG r;
     char szLocalString[MAXLEN];
+    int dpi;
+
+    hDC = GetDC(NULL);
+    dpi = GetDeviceCaps(hDC, LOGPIXELSY);
+    ReleaseDC(NULL, hDC);
 
     memset(&lf,0,sizeof(LOGFONTA));
     strcpy(lf.lfFaceName,"Arial");
@@ -2224,7 +2240,8 @@ static void test_fontsize(void)
 
     trace("EDIT: Oversized font (Multi line)\n");
     hwEdit= CreateWindow("EDIT", NULL, ES_MULTILINE|ES_AUTOHSCROLL,
-                           0, 0, 150, 50, NULL, NULL, hinst, NULL);
+                           0, 0, (150 * dpi) / 96, (50 * dpi) / 96, NULL, NULL,
+                           hinst, NULL);
 
     SendMessage(hwEdit,WM_SETFONT,(WPARAM)hfont,0);
 
@@ -2435,10 +2452,14 @@ static void test_dialogmode(void)
 
 START_TEST(edit)
 {
+    BOOL b;
+
     init_function_pointers();
 
     hinst = GetModuleHandleA(NULL);
-    assert(RegisterWindowClasses());
+    b = RegisterWindowClasses();
+    ok (b, "RegisterWindowClasses failed\n");
+    if (!b) return;
 
     test_edit_control_1();
     test_edit_control_2();

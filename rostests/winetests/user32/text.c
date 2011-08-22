@@ -114,13 +114,7 @@ static void test_DrawTextCalcRect(void)
     heightcheck = textheight = DrawTextExA(hdc, text, 0, &rect, DT_CALCRECT, NULL );
     ok( !EMPTY(rect) && !MODIFIED(rect),
         "rectangle should NOT be empty got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
-    if (textheight != 0)  /* Windows 98 */
-    {
-        win_skip("XP conformity failed, skipping XP tests. Probably win9x\n");
-        conform_xp = FALSE;
-    }
-    else
-        ok(textheight==0,"Got textheight from DrawTextExA\n");
+    ok(textheight==0,"Got textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, text, 0, &rect, DT_CALCRECT);
@@ -616,6 +610,9 @@ static void test_TabbedText(void)
 
     ret = GetTextMetricsA( hdc, &tm);
     ok( ret, "GetTextMetrics error %u\n", GetLastError());
+
+    extent = GetTabbedTextExtentA( hdc, "x", 0, 1, tabs);
+    ok( extent == 0, "GetTabbedTextExtentA returned non-zero on nCount == 0\n");
 
     extent = GetTabbedTextExtentA( hdc, "x", 1, 1, tabs);
     cx = LOWORD( extent);

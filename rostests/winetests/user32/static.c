@@ -95,9 +95,7 @@ static void test_updates(int style, int flags)
     if (flags & TODO_COUNT)
         todo_wine { expect_eq(g_nReceivedColorStatic, exp, int, "%d"); }
     else if ((style & SS_TYPEMASK) == SS_ICON || (style & SS_TYPEMASK) == SS_BITMAP)
-        ok( g_nReceivedColorStatic == exp ||
-            broken(g_nReceivedColorStatic == 0), /* win9x */
-            "expected %u got %u\n", exp, g_nReceivedColorStatic );
+        ok( g_nReceivedColorStatic == exp, "expected %u got %u\n", exp, g_nReceivedColorStatic );
     else
         expect_eq(g_nReceivedColorStatic, exp, int, "%d");
     DestroyWindow(hStatic);
