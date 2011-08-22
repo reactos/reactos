@@ -381,7 +381,7 @@ EnumerateDevices(
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM L"\\" REGSTR_KEY_ROOTENUM);
     UNICODE_STRING SubKeyName;
     WCHAR DevicePath[MAX_PATH + 1];
-    RTL_QUERY_REGISTRY_TABLE QueryTable[5];
+    RTL_QUERY_REGISTRY_TABLE QueryTable[4];
     PPNPROOT_DEVICE Device = NULL;
     HANDLE KeyHandle = INVALID_HANDLE_VALUE;
     HANDLE SubKeyHandle = INVALID_HANDLE_VALUE;
@@ -507,14 +507,14 @@ EnumerateDevices(
                 /* Fill device ID and instance ID */
                 if (!RtlCreateUnicodeString(&Device->DeviceID, DevicePath))
                 {
-                    DPRINT("RtlCreateUnicodeString() failed\n");
+                    DPRINT1("RtlCreateUnicodeString() failed\n");
                     Status = STATUS_NO_MEMORY;
                     goto cleanup;
                 }
 
                 if (!RtlCreateUnicodeString(&Device->InstanceID, SubKeyInfo->Name))
                 {
-                    DPRINT("RtlCreateUnicodeString() failed\n");
+                    DPRINT1("RtlCreateUnicodeString() failed\n");
                     Status = STATUS_NO_MEMORY;
                     goto cleanup;
                 }
@@ -523,38 +523,45 @@ EnumerateDevices(
                 Status = IopOpenRegistryKeyEx(&DeviceKeyHandle, SubKeyHandle, &Device->InstanceID, KEY_READ);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT("IopOpenRegistryKeyEx() failed with status 0x%08lx\n", Status);
+                    DPRINT1("IopOpenRegistryKeyEx() failed with status 0x%08lx\n", Status);
                     break;
                 }
 
-                /* Fill other informations */
+                /* Fill information from the device instance key */
+                RtlZeroMemory(QueryTable, sizeof(QueryTable));
+                QueryTable[0].QueryRoutine = QueryStringCallback;
+                QueryTable[0].Name = L"DeviceDesc";
+                QueryTable[0].EntryContext = &Device->DeviceDescription;
+
+                RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                       (PCWSTR)DeviceKeyHandle,
+                                       QueryTable,
+                                       NULL,
+                                       NULL);
+
+                /* Fill information from the LogConf subkey */
                 Buffer1.Data = (PVOID *)&Device->ResourceRequirementsList;
                 Buffer1.Length = NULL;
                 Buffer2.Data = (PVOID *)&Device->ResourceList;
                 Buffer2.Length = &Device->ResourceListSize;
                 RtlZeroMemory(QueryTable, sizeof(QueryTable));
-                QueryTable[0].QueryRoutine = QueryStringCallback;
-                QueryTable[0].Name = L"DeviceDesc";
-                QueryTable[0].EntryContext = &Device->DeviceDescription;
-                QueryTable[1].Flags = RTL_QUERY_REGISTRY_SUBKEY;
-                QueryTable[1].Name = L"LogConf";
+                QueryTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
+                QueryTable[0].Name = L"LogConf";
+                QueryTable[1].QueryRoutine = QueryBinaryValueCallback;
+                QueryTable[1].Name = L"BasicConfigVector";
+                QueryTable[1].EntryContext = &Buffer1;
                 QueryTable[2].QueryRoutine = QueryBinaryValueCallback;
-                QueryTable[2].Name = L"BasicConfigVector";
-                QueryTable[2].EntryContext = &Buffer1;
-                QueryTable[3].QueryRoutine = QueryBinaryValueCallback;
-                QueryTable[3].Name = L"BootConfig";
-                QueryTable[3].EntryContext = &Buffer2;
+                QueryTable[2].Name = L"BootConfig";
+                QueryTable[2].EntryContext = &Buffer2;
 
-                Status = RtlQueryRegistryValues(
-                    RTL_REGISTRY_HANDLE,
-                    (PCWSTR)DeviceKeyHandle,
-                    QueryTable,
-                    NULL,
-                    NULL);
-                if (!NT_SUCCESS(Status))
+                if (!NT_SUCCESS(RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                                       (PCWSTR)DeviceKeyHandle,
+                                                       QueryTable,
+                                                       NULL,
+                                                       NULL)))
                 {
-                    DPRINT("RtlQueryRegistryValues() failed with status 0x%08lx\n", Status);
-                    break;
+                    /* Non-fatal error */
+                    DPRINT1("Failed to read the LogConf key for %S\\%S\n", DevicePath, SubKeyInfo->Name);
                 }
 
                 ZwClose(DeviceKeyHandle);
