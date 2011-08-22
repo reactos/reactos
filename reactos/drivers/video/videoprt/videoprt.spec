@@ -47,9 +47,9 @@
 @ fastcall -arch=i386,arm VideoPortInterlockedDecrement(ptr) NTOSKRNL.InterlockedDecrement
 @ fastcall -arch=amd64 VideoPortInterlockedDecrement(ptr)
 @ fastcall -arch=i386,arm VideoPortInterlockedExchange(ptr long) NTOSKRNL.InterlockedExchange
-@ fastcall VideoPortInterlockedExchange(ptr long)
+@ fastcall -arch=amd64 VideoPortInterlockedExchange(ptr long)
 @ fastcall -arch=i386,arm VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
-@ fastcall VideoPortInterlockedIncrement(ptr)
+@ fastcall -arch=amd64 VideoPortInterlockedIncrement(ptr)
 @ stdcall VideoPortIsNoVesa()
 @ stdcall VideoPortLockBuffer(ptr ptr long long)
 @ stdcall VideoPortLockPages(ptr ptr ptr ptr long)
