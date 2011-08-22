@@ -1130,8 +1130,12 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
             add_file_to_entry(file, szCurFile);
             file->attributes = GetFileAttributesW( file->szFullPath );
             file->bExists = (file->attributes != INVALID_FILE_ATTRIBUTES);
-            if (!file->bExists) flList->bAnyDontExist = TRUE;
-            if (IsAttribDir(file->attributes)) flList->bAnyDirectories = TRUE;
+            
+            if (!file->bExists)
+                flList->bAnyDontExist = TRUE;
+            
+            if (IsAttribDir(file->attributes))
+                flList->bAnyDirectories = TRUE;
         }
 
         /* advance to the next string */
@@ -1457,7 +1461,7 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom)
             bPathExists = SHELL_DeleteDirectoryW(lpFileOp->hwnd, fileEntry->szFullPath, FALSE);
 
         if (!bPathExists)
-            return ERROR_PATH_NOT_FOUND;
+            return ERROR_FILE_NOT_FOUND;
     }
 
     return ERROR_SUCCESS;
