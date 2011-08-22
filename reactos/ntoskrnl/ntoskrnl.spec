@@ -655,7 +655,6 @@
 @ fastcall KeReleaseGuardedMutex(ptr)
 @ fastcall KeReleaseGuardedMutexUnsafe(ptr)
 @ fastcall KeReleaseInStackQueuedSpinLockForDpc(ptr)
-@ cdecl -arch=x86_64 KeReleaseInStackQueuedSpinLockForDpc(ptr)
 @ fastcall KeReleaseInStackQueuedSpinLockFromDpcLevel(ptr)
 @ stdcall KeReleaseInterruptSpinLock(ptr long)
 @ stdcall KeReleaseMutant(ptr long long long)
