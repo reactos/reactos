@@ -208,7 +208,7 @@
 
 /* ReactOS hacks */
 void DbgBreak(void);
-void DbgPrint(char *, ...);
+unsigned long __cdecl DbgPrint(const char *Format, ...); 
 #define exit(n) DbgBreak()
 #define printf DbgPrint
 
