@@ -11,7 +11,7 @@
 #include <crtdefs.h>
 #include <mmintrin.h>
 
-typedef union _CRT_ALIGN(16) __m128
+typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128
 {
     float m128_f32[4];
     unsigned __int64 m128_u64[2];

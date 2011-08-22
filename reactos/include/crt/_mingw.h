@@ -207,8 +207,10 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 
 #ifdef _MSC_VER
 #define ATTRIB_NORETURN
+#define _DECLSPEC_INTRIN_TYPE __declspec(intrin_type)
 #else
 #define ATTRIB_NORETURN DECLSPEC_NORETURN
+#define _DECLSPEC_INTRIN_TYPE
 #endif
 
 #include "_mingw_mac.h"

@@ -11,7 +11,7 @@
 #include <crtdefs.h>
 #include <xmmintrin.h>
 
-typedef struct _CRT_ALIGN(16) __m128d
+typedef struct _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128d
 {
     double m128d_f64[2];
 } __m128d;
