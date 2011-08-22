@@ -25,6 +25,7 @@ KMT_TESTFUNC Test_IoMdl;
 KMT_TESTFUNC Test_KeApc;
 KMT_TESTFUNC Test_KeDpc;
 KMT_TESTFUNC Test_KeEvent;
+KMT_TESTFUNC Test_KeGuardedMutex;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KernelType;
@@ -55,6 +56,7 @@ const KMT_TEST TestList[] =
     { "KeApc",                              Test_KeApc },
     { "KeDpc",                              Test_KeDpc },
     { "KeEvent",                            Test_KeEvent },
+    { "KeGuardedMutex",                     Test_KeGuardedMutex },
     { "KeIrql",                             Test_KeIrql },
     { "KeProcessor",                        Test_KeProcessor },
     { "-KernelType",                        Test_KernelType },

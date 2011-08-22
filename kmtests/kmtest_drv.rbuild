@@ -37,6 +37,7 @@
 		<file>KeApc.c</file>
 		<file>KeDpc.c</file>
 		<file>KeEvent.c</file>
+		<file>KeGuardedMutex.c</file>
 		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>
 		<file>KeSpinLock.c</file>
