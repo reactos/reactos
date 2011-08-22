@@ -207,12 +207,11 @@
 #define inline __inline
 
 /* ReactOS hacks */
-void DbgBreak(void);
-unsigned long __cdecl DbgPrint(const char *Format, ...); 
-#define exit(n) DbgBreak()
+void __stdcall DbgBreakPoint(void);
+unsigned long __cdecl DbgPrint(const char *Format, ...);
+#define exit(n) DbgBreakPoint()
 #define printf DbgPrint
 
-#ifdef _M_AMD64
-#define _mm_load_sd(x) __hack_hack(x) // Prevent an internal compiler error
-#pragma warning(disable:4244)
-#endif
+# ifdef _MSC_VER
+#  pragma warning(disable:4244)
+# endif /* _MSC_VER */
