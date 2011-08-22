@@ -1157,14 +1157,45 @@ NtUserFillWindow(HWND hWndPaint,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL APIENTRY
 NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
-   STUB
+   PWND pWnd;
+   FLASHWINFO finfo = {0};
+   BOOL Ret = TRUE;
 
-   return 1;
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead(pfwi, sizeof(FLASHWINFO), sizeof(ULONG));
+      RtlCopyMemory(&finfo, pfwi, sizeof(FLASHWINFO));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      Ret = FALSE;
+   }
+   _SEH2_END
+
+   if (!Ret) goto Exit;
+
+   if (!(pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+        finfo.cbSize != sizeof(FLASHWINFO) ||
+        finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      goto Exit;
+   }
+
+   //Ret = IntFlashWindowEx(pWnd, &finfo);
+
+Exit:
+   UserLeave();
+   return Ret;
 }
 
 /*

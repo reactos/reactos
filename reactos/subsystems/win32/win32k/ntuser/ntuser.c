@@ -17,9 +17,12 @@ BOOL InitSysParams();
 
 /* GLOBALS *******************************************************************/
 
+PTHREADINFO gptiCurrent = NULL;
 ERESOURCE UserLock;
 ATOM AtomMessage; // Window Message atom.
 ATOM AtomWndObj;  // Window Object atom.
+ATOM AtomLayer;   // Window Layer atom.
+ATOM AtomFlashWndState; // Window Flash State atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
@@ -46,6 +49,8 @@ InitUserAtoms(VOID)
   gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
   AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
+  AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
+  AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
 
   return STATUS_SUCCESS;
 }
@@ -222,6 +227,7 @@ VOID FASTCALL UserEnterExclusive(VOID)
    ASSERT_NOGDILOCKS();
    KeEnterCriticalRegion();
    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
+   gptiCurrent = PsGetCurrentThreadWin32Thread();
 }
 
 VOID FASTCALL UserLeave(VOID)
