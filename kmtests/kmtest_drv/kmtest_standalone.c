@@ -114,11 +114,11 @@ DriverEntry(
     RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
     DeviceName.MaximumLength = sizeof DeviceNameBuffer;
     TestEntry(DriverObject, RegistryPath, &DeviceNameSuffix, &Flags);
-    RtlAppendUnicodeToString(&DeviceName, DeviceNameSuffix);
 
     /* create test device */
     if (!(Flags & TESTENTRY_NO_CREATE_DEVICE))
     {
+        RtlAppendUnicodeToString(&DeviceName, DeviceNameSuffix);
         Status = IoCreateDevice(DriverObject, 0, &DeviceName,
                                 FILE_DEVICE_UNKNOWN,
                                 FILE_DEVICE_SECURE_OPEN | FILE_READ_ONLY_DEVICE,
