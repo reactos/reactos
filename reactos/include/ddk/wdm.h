@@ -7946,6 +7946,14 @@ KeGetCurrentThread(VOID)
 
 FORCEINLINE
 NTSTATUS
+KeSaveFloatingPointState(PVOID FloatingState)
+{
+  UNREFERENCED_PARAMETER(FloatingState);
+  return STATUS_SUCCESS;
+}
+
+FORCEINLINE
+NTSTATUS
 KeRestoreFloatingPointState(PVOID FloatingState)
 {
   UNREFERENCED_PARAMETER(FloatingState);
