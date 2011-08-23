@@ -9,7 +9,7 @@
 #include <acpiioct.h>
 #include <poclass.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS

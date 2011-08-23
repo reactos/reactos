@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 typedef enum _EXTENSION_TYPE
@@ -563,6 +563,10 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     switch (IdType)
     {
         case BusQueryDeviceID:
+            /* HACK */
+            Id = L"Root\\ACPI_HAL";
+            break;
+
         case BusQueryHardwareIDs:
             
             /* This is our hardware ID */
@@ -607,21 +611,6 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
 
     /* Return status */
     return Status;
-}
-
-NTSTATUS
-NTAPI
-HalpPassIrpFromFdoToPdo(IN PDEVICE_OBJECT DeviceObject,
-                        IN PIRP Irp)
-{
-    PFDO_EXTENSION FdoExtension;
-    
-    /* Get the extension */
-    FdoExtension = DeviceObject->DeviceExtension;
-    
-    /* Pass it to the attached device (our PDO) */
-    IoSkipCurrentIrpStackLocation(Irp);
-    return IoCallDriver(FdoExtension->AttachedDeviceObject, Irp);  
 }
 
 NTSTATUS
@@ -682,22 +671,11 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 
                 /* Pass it to the PDO */
                 DPRINT("Other IRP: %lx\n", Minor);
-                return HalpPassIrpFromFdoToPdo(DeviceObject, Irp);
+                Status = Irp->IoStatus.Status;
+                break;
         }
-        
-        /* What happpened? */
-        if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
-        {
-            /* Set the IRP status, unless this isn't understood */
-            if (Status != STATUS_NOT_SUPPORTED) Irp->IoStatus.Status = Status;
-            
-            /* Pass it on */
-            DPRINT("Passing IRP to PDO\n");
-            return HalpPassIrpFromFdoToPdo(DeviceObject, Irp);
-        }
-        
-        /* Otherwise, we failed, so set the status and complete the request */
-        DPRINT1("IRP failed with status: %lx\n", Status);
+
+        /* Nowhere for the IRP to go since we also own the PDO */
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
@@ -834,20 +812,42 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
     NTSTATUS Status;
     PDEVICE_OBJECT TargetDevice = NULL;
+
     DPRINT("HAL: PnP Driver ENTRY!\n");
 
     /* This is us */
     HalpDriverObject = DriverObject;
-    
+
     /* Set up add device */
     DriverObject->DriverExtension->AddDevice = HalpAddDevice;
-    
+
     /* Set up the callouts */
     DriverObject->MajorFunction[IRP_MJ_PNP] = HalpDispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = HalpDispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HalpDispatchWmi;
-    
-    /* Tell the PnP about us */
+
+    /* Create the PDO */
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            NULL,
+                            FILE_DEVICE_CONTROLLER,
+                            0,
+                            FALSE,
+                            &TargetDevice);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    TargetDevice->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Set up the device stack */
+    Status = HalpAddDevice(DriverObject, TargetDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(TargetDevice);
+        return Status;
+    }
+
+    /* Tell the PnP manager about us */
     Status = IoReportDetectedDevice(DriverObject,
                                     InterfaceTypeUndefined,
                                     -1,
@@ -856,9 +856,6 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
                                     NULL,
                                     FALSE,
                                     &TargetDevice);
-
-    /* Now add us */
-    if (NT_SUCCESS(Status)) Status = HalpAddDevice(DriverObject, TargetDevice);
 
     /* Return to kernel */
     return Status;

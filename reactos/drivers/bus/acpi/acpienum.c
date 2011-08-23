@@ -13,7 +13,7 @@
 #include <acpi_drivers.h>
 #include <list.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define HAS_CHILDREN(d)		((d)->children.next != &((d)->children))
