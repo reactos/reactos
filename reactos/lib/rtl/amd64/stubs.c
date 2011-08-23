@@ -61,17 +61,4 @@ RtlRestoreContext(
     UNIMPLEMENTED;
 }
 
-NTSYSAPI
-BOOLEAN
-RtlInstallFunctionTableCallback(
-    DWORD64 TableIdentifier,
-    DWORD64 BaseAddress,
-    DWORD Length,
-    PGET_RUNTIME_FUNCTION_CALLBACK Callback,
-    PVOID Context,
-    PCWSTR OutOfProcessCallbackDll)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
 

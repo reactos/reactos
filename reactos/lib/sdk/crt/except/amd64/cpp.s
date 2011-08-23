@@ -34,10 +34,10 @@ EXTERN &orig:ABS
 ALIAS <&alias> = <&orig>
 ENDM
 
-DEFINE_ALIAS ??3@YAXPAX@Z, MSVCRT_operator_delete
-DEFINE_ALIAS ??_U@YAPAXI@Z, MSVCRT_operator_new
-DEFINE_ALIAS ??_V@YAXPAX@Z, MSVCRT_operator_delete
-DEFINE_ALIAS ??2@YAPAXI@Z, MSVCRT_operator_new
+DEFINE_ALIAS ??3@YAXPEAX@Z, MSVCRT_operator_delete
+DEFINE_ALIAS ??_U@YAPEAX_K@Z, MSVCRT_operator_new
+DEFINE_ALIAS ??_V@YAXPEAX@Z, MSVCRT_operator_delete
+DEFINE_ALIAS ??2@YAPEAX_K@Z, MSVCRT_operator_new
 DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, MSVCRT__query_new_handler
 DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, MSVCRT__set_new_handler
 DEFINE_ALIAS ?set_new_handler@@YAP6AXXZP6AXXZ@Z, MSVCRT_set_new_handler
