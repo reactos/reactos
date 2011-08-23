@@ -130,6 +130,7 @@ LocateChildDevice(
 NTSTATUS
 PnpRootCreateDevice(
     IN PUNICODE_STRING ServiceName,
+    IN OPTIONAL PDRIVER_OBJECT DriverObject,
     OUT PDEVICE_OBJECT *PhysicalDeviceObject,
     OUT OPTIONAL PUNICODE_STRING FullInstancePath)
 {
@@ -271,7 +272,7 @@ tryagain:
 
     /* Initialize a device object */
     Status = IoCreateDevice(
-        PnpRootDeviceObject->DriverObject,
+        DriverObject ? DriverObject : PnpRootDeviceObject->DriverObject,
         sizeof(PNPROOT_PDO_DEVICE_EXTENSION),
         NULL,
         FILE_DEVICE_CONTROLLER,

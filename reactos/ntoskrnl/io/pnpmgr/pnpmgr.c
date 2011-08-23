@@ -690,7 +690,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
       RtlAppendUnicodeStringToString(&FullServiceName, ServiceName1);
 
-      Status = PnpRootCreateDevice(&FullServiceName, &PhysicalDeviceObject, &Node->InstancePath);
+      Status = PnpRootCreateDevice(&FullServiceName, NULL, &PhysicalDeviceObject, &Node->InstancePath);
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);

@@ -202,12 +202,12 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     if (DeviceObject && *DeviceObject)
     {
         Pdo = *DeviceObject;
-        DeviceNode = IopGetDeviceNode(*DeviceObject);
     }
     else
     {
         /* Create the PDO */
         Status = PnpRootCreateDevice(&ServiceName,
+                                     DriverObject,
                                      &Pdo,
                                      NULL);
         if (!NT_SUCCESS(Status))
@@ -215,18 +215,18 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
             DPRINT("PnpRootCreateDevice() failed (Status 0x%08lx)\n", Status);
             return Status;
         }
+    }
 
-        /* Create the device node for the new PDO */
-        Status = IopCreateDeviceNode(IopRootDeviceNode,
-                                     Pdo,
-                                     NULL,
-                                     &DeviceNode);
+    /* Create the device node for the new PDO */
+    Status = IopCreateDeviceNode(IopRootDeviceNode,
+                                 Pdo,
+                                 NULL,
+                                 &DeviceNode);
 
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
-            return Status;
-        }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     /* We don't call AddDevice for devices reported this way */
