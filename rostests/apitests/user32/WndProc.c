@@ -32,7 +32,7 @@ static LRESULT WINAPI redraw_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LP
         {
             PAINTSTRUCT ps;
             BeginPaint(hwnd, &ps);
-            EndPaint(hwnd, &ps);  
+            EndPaint(hwnd, &ps);
             return 1;
         }
    /*
@@ -43,7 +43,7 @@ static LRESULT WINAPI redraw_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LP
         asm ("movl $0, %eax\n\t"
              "leave\n\t"
              "ret");
-#else
+#elif defined(_M_IX86)
 //#ifdef _MSC_VER
         __asm
           {
@@ -51,6 +51,8 @@ static LRESULT WINAPI redraw_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LP
              leave
              ret
           }
+#else
+        trace("unimplemented\n");
 #endif
     }
     return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -64,7 +66,7 @@ static void test_wndproc(void)
    cls.style = CS_DBLCLKS;
    cls.lpfnWndProc = (WNDPROC)redraw_window_procA;
    cls.cbClsExtra = 0;
-   cls.cbWndExtra = 0;  
+   cls.cbWndExtra = 0;
    cls.hInstance = GetModuleHandleA(0);
    cls.hIcon = 0;
    cls.hCursor = LoadCursorA(0, IDC_ARROW);
