@@ -33,7 +33,9 @@ set_image_base(msvcrt ${baseaddress_msvcrt})
 
 target_link_libraries(msvcrt crt wine)
 
-if(NOT MSVC)
+if(MSVC)
+    add_linkerflag(msvcrt "/ignore:4102")
+else()
     target_link_libraries(msvcrt pseh)
 endif()
 

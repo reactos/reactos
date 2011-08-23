@@ -3,6 +3,10 @@ include_directories(
     include
     acpica/include)
 
+if(ARCH MATCHES amd64)
+    add_definitions(-DWIN64)
+endif()
+
 add_library(acpica
     acpica/dispatcher/dsfield.c
     acpica/dispatcher/dsinit.c

@@ -21,11 +21,13 @@ list(APPEND SOURCE
 
 add_library(msvcrt40 SHARED ${SOURCE})
 set_image_base(msvcrt40 ${baseaddress_msvcrt40})
-set_entrypoint(msvcrt40 DllMain@12)
+set_entrypoint(msvcrt40 DllMain 12)
 
 target_link_libraries(msvcrt40 crt wine)
 
-if(NOT MSVC)
+if(MSVC)
+    add_linkerflag(msvcrt40 "/ignore:4102")
+else()
     target_link_libraries(msvcrt40 pseh)
 endif()
 

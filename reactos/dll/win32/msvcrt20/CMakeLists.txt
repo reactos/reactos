@@ -20,13 +20,15 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20.def)
 
 add_library(msvcrt20 SHARED ${SOURCE})
-set_entrypoint(msvcrt20 DllMain@12)
+set_entrypoint(msvcrt20 DllMain 12)
 set_image_base(msvcrt20 ${baseaddress_msvcrt20})
 
 target_link_libraries(msvcrt20 crt wine)
 
-if(NOT MSVC)
-  target_link_libraries(msvcrt20 pseh)
+if(MSVC)
+    add_linkerflag(msvcrt20 "/ignore:4102")
+else()
+    target_link_libraries(msvcrt20 pseh)
 endif()
 
 add_importlibs(msvcrt20 kernel32 ntdll)

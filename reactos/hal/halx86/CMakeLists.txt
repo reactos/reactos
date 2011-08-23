@@ -96,7 +96,7 @@ if(ARCH MATCHES i386)
     add_pch(hal include/hal.h)
     add_dependencies(hal psdk bugcodes)
 
-    set_entrypoint(hal HalInitSystem@8)
+    set_entrypoint(hal HalInitSystem 8)
     set_subsystem(hal native)
     set_image_base(hal 0x00010000)
     add_importlibs(hal ntoskrnl)

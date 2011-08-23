@@ -30,7 +30,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
 if(MSVC)
-    list(APPEND SOURCE msvc-thiscall.c)
+    if (ARCH MATCHES i386)
+        list(APPEND SOURCE msvc-thiscall.c)
+    endif()
     set_source_files_properties(txthost.c txtsrv.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
 endif()
 
