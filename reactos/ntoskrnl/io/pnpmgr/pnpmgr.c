@@ -1333,6 +1333,125 @@ cleanup:
    return Status;
 }
 
+NTSTATUS
+IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
+                    HANDLE InstanceKey)
+{
+   IO_STACK_LOCATION Stack;
+   IO_STATUS_BLOCK IoStatusBlock;
+   PWSTR Ptr;
+   UNICODE_STRING ValueName;
+   NTSTATUS Status;
+   ULONG Length, TotalLength;
+
+   DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
+
+   RtlZeroMemory(&Stack, sizeof(Stack));
+   Stack.Parameters.QueryId.IdType = BusQueryHardwareIDs;
+   Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                              &IoStatusBlock,
+                              IRP_MN_QUERY_ID,
+                              &Stack);
+   if (NT_SUCCESS(Status))
+   {
+      /*
+       * FIXME: Check for valid characters, if there is invalid characters
+       * then bugcheck.
+       */
+      TotalLength = 0;
+      Ptr = (PWSTR)IoStatusBlock.Information;
+      DPRINT("Hardware IDs:\n");
+      while (*Ptr)
+      {
+         DPRINT("  %S\n", Ptr);
+         Length = wcslen(Ptr) + 1;
+
+         Ptr += Length;
+         TotalLength += Length;
+      }
+      DPRINT("TotalLength: %hu\n", TotalLength);
+      DPRINT("\n");
+
+      RtlInitUnicodeString(&ValueName, L"HardwareID");
+      Status = ZwSetValueKey(InstanceKey,
+			     &ValueName,
+			     0,
+			     REG_MULTI_SZ,
+			     (PVOID)IoStatusBlock.Information,
+			     (TotalLength + 1) * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
+      }
+   }
+   else
+   {
+      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+   }
+
+   return Status;
+}
+
+NTSTATUS
+IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
+                      HANDLE InstanceKey)
+{
+   IO_STACK_LOCATION Stack;
+   IO_STATUS_BLOCK IoStatusBlock;
+   PWSTR Ptr;
+   UNICODE_STRING ValueName;
+   NTSTATUS Status;
+   ULONG Length, TotalLength;
+
+   DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
+
+   RtlZeroMemory(&Stack, sizeof(Stack));
+   Stack.Parameters.QueryId.IdType = BusQueryCompatibleIDs;
+   Status = IopInitiatePnpIrp(
+      DeviceNode->PhysicalDeviceObject,
+      &IoStatusBlock,
+      IRP_MN_QUERY_ID,
+      &Stack);
+   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
+   {
+      /*
+      * FIXME: Check for valid characters, if there is invalid characters
+      * then bugcheck.
+      */
+      TotalLength = 0;
+      Ptr = (PWSTR)IoStatusBlock.Information;
+      DPRINT("Compatible IDs:\n");
+      while (*Ptr)
+      {
+         DPRINT("  %S\n", Ptr);
+         Length = wcslen(Ptr) + 1;
+
+         Ptr += Length;
+         TotalLength += Length;
+      }
+      DPRINT("TotalLength: %hu\n", TotalLength);
+      DPRINT("\n");
+
+      RtlInitUnicodeString(&ValueName, L"CompatibleIDs");
+      Status = ZwSetValueKey(InstanceKey,
+         &ValueName,
+         0,
+         REG_MULTI_SZ,
+         (PVOID)IoStatusBlock.Information,
+         (TotalLength + 1) * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("ZwSetValueKey() failed (Status %lx) or no Compatible ID returned\n", Status);
+      }
+   }
+   else
+   {
+      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+   }
+
+   return Status;
+}
+
 
 /*
  * IopActionInterrogateDeviceStack
@@ -1359,9 +1478,6 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    WCHAR InstancePath[MAX_PATH];
    IO_STACK_LOCATION Stack;
    NTSTATUS Status;
-   PWSTR Ptr;
-   USHORT Length;
-   USHORT TotalLength;
    ULONG RequiredLength;
    LCID LocaleId;
    HANDLE InstanceKey = NULL;
@@ -1516,94 +1632,9 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
    }
 
-   DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
+   IopQueryHardwareIds(DeviceNode, InstanceKey);
 
-   Stack.Parameters.QueryId.IdType = BusQueryHardwareIDs;
-   Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                              &IoStatusBlock,
-                              IRP_MN_QUERY_ID,
-                              &Stack);
-   if (NT_SUCCESS(Status))
-   {
-      /*
-       * FIXME: Check for valid characters, if there is invalid characters
-       * then bugcheck.
-       */
-      TotalLength = 0;
-      Ptr = (PWSTR)IoStatusBlock.Information;
-      DPRINT("Hardware IDs:\n");
-      while (*Ptr)
-      {
-         DPRINT("  %S\n", Ptr);
-         Length = wcslen(Ptr) + 1;
-
-         Ptr += Length;
-         TotalLength += Length;
-      }
-      DPRINT("TotalLength: %hu\n", TotalLength);
-      DPRINT("\n");
-
-      RtlInitUnicodeString(&ValueName, L"HardwareID");
-      Status = ZwSetValueKey(InstanceKey,
-			     &ValueName,
-			     0,
-			     REG_MULTI_SZ,
-			     (PVOID)IoStatusBlock.Information,
-			     (TotalLength + 1) * sizeof(WCHAR));
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
-      }
-   }
-   else
-   {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-   }
-
-   DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
-
-   Stack.Parameters.QueryId.IdType = BusQueryCompatibleIDs;
-   Status = IopInitiatePnpIrp(
-      DeviceNode->PhysicalDeviceObject,
-      &IoStatusBlock,
-      IRP_MN_QUERY_ID,
-      &Stack);
-   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
-   {
-      /*
-      * FIXME: Check for valid characters, if there is invalid characters
-      * then bugcheck.
-      */
-      TotalLength = 0;
-      Ptr = (PWSTR)IoStatusBlock.Information;
-      DPRINT("Compatible IDs:\n");
-      while (*Ptr)
-      {
-         DPRINT("  %S\n", Ptr);
-         Length = wcslen(Ptr) + 1;
-
-         Ptr += Length;
-         TotalLength += Length;
-      }
-      DPRINT("TotalLength: %hu\n", TotalLength);
-      DPRINT("\n");
-
-      RtlInitUnicodeString(&ValueName, L"CompatibleIDs");
-      Status = ZwSetValueKey(InstanceKey,
-         &ValueName,
-         0,
-         REG_MULTI_SZ,
-         (PVOID)IoStatusBlock.Information,
-         (TotalLength + 1) * sizeof(WCHAR));
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("ZwSetValueKey() failed (Status %lx) or no Compatible ID returned\n", Status);
-      }
-   }
-   else
-   {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-   }
+   IopQueryCompatibleIds(DeviceNode, InstanceKey);
 
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
 
