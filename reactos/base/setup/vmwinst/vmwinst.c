@@ -78,7 +78,7 @@ DetectVMware(int *Version)
 		__asm__ __volatile__("inl  %%dx, %%eax"
 			: "=a" (ver), "=b" (magic)
 			: "0" (0x564d5868), "d" (0x5658), "c" (0xa));
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_M_IX86)
 		__asm
 		{
 			push ebx
@@ -90,6 +90,9 @@ DetectVMware(int *Version)
 			mov  [magic], ebx
 			pop  ebx
 		}
+#elif defined(_MSC_VER) && defined(_M_AMD64)
+    DPRINT1("DetectVMware stub\n");
+    return FALSE;
 #else
 #error TODO
 #endif

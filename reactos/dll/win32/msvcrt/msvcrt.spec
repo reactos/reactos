@@ -43,9 +43,11 @@
 @ cdecl -i386 -norelay ??_Gbad_cast@@UAEPAXI@Z(long) __thiscall_MSVCRT_bad_cast_scalar_dtor
 @ cdecl -i386 -norelay ??_Gbad_typeid@@UAEPAXI@Z(long) __thiscall_MSVCRT_bad_typeid_scalar_dtor
 @ cdecl -i386 -norelay ??_Gexception@@UAEPAXI@Z(long) __thiscall_MSVCRT_exception_scalar_dtor
-@ cdecl ??_U@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win32 ??_U@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win64 ??_U@YAPEAX_K@Z(long) MSVCRT_operator_new
 # @ cdecl ??_U@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg
-@ cdecl ??_V@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??_V@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) MSVCRT_operator_delete
 @ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
 @ cdecl ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
 @ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
@@ -1190,7 +1192,9 @@
 @ cdecl fgetwc(ptr)
 @ cdecl fgetws(ptr long ptr)
 @ cdecl floor(double)
+@ cdecl -arch=x86_64 floorf(long)
 @ cdecl fmod(double double)
+@ cdecl -arch=x86_64 fmodf(long)
 @ cdecl fopen(str str)
 # @ cdecl fopen_s(ptr str str)
 @ varargs fprintf(ptr str)
@@ -1278,6 +1282,7 @@
 @ cdecl modf(double ptr)
 @ cdecl perror(str)
 @ cdecl pow(double double)
+@ cdecl -arch=x86_64 powf(long)
 @ varargs printf(str)
 # stub printf_s
 @ cdecl putc(long ptr)
@@ -1302,10 +1307,12 @@
 @ cdecl setvbuf(ptr str long long)
 @ cdecl signal(long long)
 @ cdecl sin(double)
+@ cdecl -arch=x86_64 sinf(long)
 @ cdecl sinh(double)
 @ varargs sprintf(ptr str)
 # @ varargs sprintf_s(ptr long str)
 @ cdecl sqrt(double)
+@ cdecl -arch=x86_64 sqrtf(long)
 @ cdecl srand(long)
 @ varargs sscanf(str str)
 # @ varargs sscanf_s(str str)

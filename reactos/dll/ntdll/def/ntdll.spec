@@ -1296,7 +1296,7 @@
 ;@ cdecl -private -arch=i386 _CIpow()
 ;@ cdecl _CIsin
 ;@ cdecl _CIsqrt
-;@ stdcall -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
+@ cdecl -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
@@ -1321,6 +1321,7 @@
 @ cdecl _itoa(long ptr long)
 @ cdecl _itow(long ptr long)
 @ cdecl _lfind(ptr ptr ptr long ptr)
+@ cdecl -arch=x86_64 _local_unwind()
 @ cdecl _ltoa(long ptr long)
 @ cdecl _ltow(long ptr long)
 @ cdecl _memccpy(ptr ptr long long)
