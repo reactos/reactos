@@ -111,6 +111,14 @@ KeGetCurrentThread(VOID)
   return (struct _KTHREAD *)__readgsqword(0x188);
 }
 
+FORCEINLINE
+NTSTATUS
+KeRestoreFloatingPointState(PVOID FloatingState)
+{
+  UNREFERENCED_PARAMETER(FloatingState);
+  return STATUS_SUCCESS;
+}
+
 /* VOID
  * KeFlushIoBuffers(
  *   IN PMDL Mdl,

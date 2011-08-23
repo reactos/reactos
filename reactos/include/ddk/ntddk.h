@@ -1919,7 +1919,7 @@ typedef VOID
 
 typedef enum _TIMER_SET_INFORMATION_CLASS {
   TimerSetCoalescableTimer,
-  MaxTimerInfoClass 
+  MaxTimerInfoClass
 } TIMER_SET_INFORMATION_CLASS;
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -5607,8 +5607,8 @@ NTSTATUS
 NTAPI
 ZwDisplayString(
   IN PUNICODE_STRING String);
-  
-NTSYSCALLAPI
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(

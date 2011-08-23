@@ -195,6 +195,14 @@ struct _KTHREAD*
 NTAPI
 KeGetCurrentThread(VOID);
 
+FORCEINLINE
+NTSTATUS
+KeRestoreFloatingPointState(PVOID FloatingState)
+{
+  UNREFERENCED_PARAMETER(FloatingState);
+  return STATUS_SUCCESS;
+}
+
 extern volatile struct _KSYSTEM_TIME KeTickCount;
 
 #ifndef YieldProcessor

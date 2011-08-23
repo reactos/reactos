@@ -5457,6 +5457,7 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define IRP_DEFER_IO_COMPLETION         0x00000800
 #define IRP_OB_QUERY_NAME               0x00001000
 #define IRP_HOLD_DEVICE_QUEUE           0x00002000
+/* The following 2 are missing in latest WDK */
 #define IRP_RETRY_IO_COMPLETION         0x00004000
 #define IRP_CLASS_CACHE_OPERATION       0x00008000
 
@@ -7941,6 +7942,14 @@ PKTHREAD
 KeGetCurrentThread(VOID)
 {
   return (struct _KTHREAD *)__readgsqword(0x188);
+}
+
+FORCEINLINE
+NTSTATUS
+KeRestoreFloatingPointState(PVOID FloatingState)
+{
+  UNREFERENCED_PARAMETER(FloatingState);
+  return STATUS_SUCCESS;
 }
 
 /* VOID
