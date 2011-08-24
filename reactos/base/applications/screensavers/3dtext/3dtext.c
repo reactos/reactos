@@ -200,6 +200,9 @@ GLvoid ReSizeGLScene(GLsizei Width, GLsizei Height)
 // Handles Rendering
 GLvoid DrawGLScene(GLvoid)
 {
+    // Save ticks count of previous frame here
+    static DWORD dwTicks = 0;
+
     // Clear The Screen And The Depth Buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -235,7 +238,9 @@ GLvoid DrawGLScene(GLvoid)
     glColor3f(0.0f, 0.0f, 1.0f);
 
     // Increase The Rotation Variable
-    rot += 0.1f;
+    if(dwTicks)
+        rot += (GetTickCount() - dwTicks) / 20.0f;
+    dwTicks = GetTickCount();
 }
 
 LRESULT CALLBACK

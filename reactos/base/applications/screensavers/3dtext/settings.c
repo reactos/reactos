@@ -22,32 +22,29 @@
 
 #include "3dtext.h"
 
-TCHAR m_Text[MAX_PATH];
+TCHAR m_Text[MAX_PATH] = _T("ReactOS Rocks!");
 
 VOID LoadSettings(VOID)
 {
 	HKEY hkey;
 	DWORD len = MAX_PATH * sizeof(TCHAR);
 
-	RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
-		_T(""), 0, KEY_READ, NULL, &hkey, NULL);
-
-	if (RegQueryValueEx(hkey, _T("DisplayString"), NULL, NULL, (LPBYTE)m_Text, &len) != ERROR_SUCCESS)
-	{
-		_tcscpy(m_Text, _TEXT("ReactOS Rocks!"));
-	}
-
-	RegCloseKey(hkey);
+	if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
+		_T(""), 0, KEY_READ, NULL, &hkey, NULL) == ERROR_SUCCESS)
+    {
+        RegQueryValueEx(hkey, _T("DisplayString"), NULL, NULL, (LPBYTE)m_Text, &len);
+        RegCloseKey(hkey);
+    }
 }
 
 VOID SaveSettings(VOID)
 {
 	HKEY hkey;
 
-	RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
-		_T(""), 0, KEY_WRITE, NULL, &hkey, NULL);
-
-	RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(TCHAR));
-
-	RegCloseKey(hkey);
+	if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
+		_T(""), 0, KEY_WRITE, NULL, &hkey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(TCHAR));
+        RegCloseKey(hkey);
+    }
 }
