@@ -107,8 +107,8 @@ if(ARCH MATCHES i386)
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
-        windows/i386/ntsetup.c
-        windows/i386/wlmemory.c
+        arch/i386/ntsetup.c
+        arch/i386/wlmemory.c
         windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
@@ -134,8 +134,8 @@ elseif(ARCH MATCHES amd64)
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c
-        windows/amd64/ntsetup.c
-        windows/amd64/wlmemory.c)
+        arch/amd64/ntsetup.c
+        arch/amd64/wlmemory.c)
 else()
 #TBD
 endif()
@@ -191,7 +191,7 @@ list(APPEND SETUPLDR_SOURCE
     inffile/inffile.c)
 
 if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
-    list(APPEND SETUPLDR_SOURCE windows/setupldr2.c)
+    list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
 if(NOT MSVC)
