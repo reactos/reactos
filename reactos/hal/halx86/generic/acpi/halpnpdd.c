@@ -667,9 +667,16 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                                         (PVOID)&Irp->IoStatus.Information);
                 break;
                 
+            case IRP_MN_QUERY_CAPABILITIES:
+                
+                /* Call the worker */
+                DPRINT("Querying the capabilities for the FDO\n");
+                Status = HalpQueryCapabilities(DeviceObject,
+                                               IoStackLocation->Parameters.DeviceCapabilities.Capabilities);
+                break;
+                
             default:
                 
-                /* Pass it to the PDO */
                 DPRINT("Other IRP: %lx\n", Minor);
                 Status = Irp->IoStatus.Status;
                 break;

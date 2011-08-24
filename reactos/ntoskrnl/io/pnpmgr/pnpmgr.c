@@ -320,7 +320,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
     }
 
     /* Invalidate device state so IRP_MN_QUERY_PNP_DEVICE_STATE is sent */
@@ -762,6 +762,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       }
 
       IopDeviceNodeSetFlag(Node, DNF_LEGACY_DRIVER);
+      IopDeviceNodeSetFlag(Node, DNF_PROCESSED);
       IopDeviceNodeSetFlag(Node, DNF_ADDED);
       IopDeviceNodeSetFlag(Node, DNF_STARTED);
    }
@@ -1523,7 +1524,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("ZwQueryDefaultLocale() failed with status 0x%lx\n", Status);
+      DPRINT1("ZwQueryDefaultLocale() failed with status 0x%lx\n", Status);
       return Status;
    }
 
@@ -1551,7 +1552,10 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    }
    else
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      DPRINT1("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+
+      /* We have to return success otherwise we abort the traverse operation */
+      return STATUS_SUCCESS;
    }
 
    DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
@@ -1559,7 +1563,10 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+      DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+
+      /* We have to return success otherwise we abort the traverse operation */
+      return STATUS_SUCCESS;
    }
 
    /* This bit is only check after enumeration */
@@ -1579,7 +1586,10 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       Status = IopGetParentIdPrefix(DeviceNode, &ParentIdPrefix);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("IopGetParentIdPrefix() failed (Status 0x%08lx)\n", Status);
+         DPRINT1("IopGetParentIdPrefix() failed (Status 0x%08lx)\n", Status);
+
+         /* We have to return success otherwise we abort the traverse operation */
+         return STATUS_SUCCESS;
       }
    }
 
@@ -1630,6 +1640,9 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
+
+      /* We have to return success otherwise we abort the traverse operation */
+      return STATUS_SUCCESS;
    }
 
    IopQueryHardwareIds(DeviceNode, InstanceKey);
@@ -2030,6 +2043,12 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       return STATUS_SUCCESS;
    }
 
+   if (!(DeviceNode->Flags & DNF_PROCESSED))
+   {
+       DPRINT1("Child not ready to be configured\n");
+       return STATUS_SUCCESS;
+   }
+
    if (!(DeviceNode->Flags & (DNF_DISABLED | DNF_STARTED | DNF_ADDED)))
    {
       WCHAR RegKeyBuffer[MAX_PATH];
@@ -2155,6 +2174,12 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    {
       DPRINT("Skipping 2+ level child\n");
       return STATUS_SUCCESS;
+   }
+
+   if (!(DeviceNode->Flags & DNF_PROCESSED))
+   {
+       DPRINT1("Child not ready to be added\n");
+       return STATUS_SUCCESS;
    }
 
    if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
