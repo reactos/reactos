@@ -462,7 +462,7 @@ NTSTATUS ElfrReportEventW(
                                            EventID,
                                            lpLogHandle->szName,
                                            ComputerName->Buffer,
-                                           sizeof(PRPC_SID),
+                                           sizeof(RPC_SID),
                                            &UserSID,
                                            NumStrings,
                                            (WCHAR*)lpStrings,
