@@ -397,6 +397,7 @@ NTSTATUS ElfrReportEventW(
     DWORD lastRec;
     DWORD recSize;
     DWORD dwStringsSize = 0;
+    DWORD dwUserSidLength = 0;
     DWORD dwError = ERROR_SUCCESS;
     WCHAR *lpStrings;
     int pos = 0;
@@ -439,10 +440,10 @@ NTSTATUS ElfrReportEventW(
                 DPRINT1("Type %hu: %wZ\n", EventType, Strings[i]);
                 break;
         }
-        dwStringsSize += (wcslen(Strings[i]->Buffer) + 1) * sizeof(WCHAR);
+        dwStringsSize += Strings[i]->Length + sizeof UNICODE_NULL;
     }
 
-    lpStrings = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, dwStringsSize * 2);
+    lpStrings = HeapAlloc(GetProcessHeap(), 0, dwStringsSize);
     if (!lpStrings)
     {
         DPRINT1("Failed to allocate heap\n");
@@ -451,10 +452,14 @@ NTSTATUS ElfrReportEventW(
 
     for (i = 0; i < NumStrings; i++)
     {
-        wcscpy((WCHAR*)(lpStrings + pos), Strings[i]->Buffer);
-        pos += (wcslen(Strings[i]->Buffer) + 1) * sizeof(WCHAR);
+        CopyMemory(lpStrings + pos, Strings[i]->Buffer, Strings[i]->Length);
+        pos += Strings[i]->Length / sizeof(WCHAR);
+        lpStrings[pos] = UNICODE_NULL;
+        pos += sizeof UNICODE_NULL / sizeof(WCHAR);
     }
 
+    if (UserSID)
+        dwUserSidLength = FIELD_OFFSET(SID, SubAuthority[UserSID->SubAuthorityCount]);
     LogBuffer = LogfAllocAndBuildNewRecord(&recSize,
                                            lastRec,
                                            EventType,
@@ -462,10 +467,10 @@ NTSTATUS ElfrReportEventW(
                                            EventID,
                                            lpLogHandle->szName,
                                            ComputerName->Buffer,
-                                           sizeof(RPC_SID),
-                                           &UserSID,
+                                           dwUserSidLength,
+                                           UserSID,
                                            NumStrings,
-                                           (WCHAR*)lpStrings,
+                                           lpStrings,
                                            DataSize,
                                            Data);
 

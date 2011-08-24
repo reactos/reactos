@@ -959,7 +959,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     PEVENTLOGRECORD pRec;
     SYSTEMTIME SysTime;
     WCHAR *str;
-    UINT i, pos, nStrings;
+    UINT i, pos;
     PBYTE Buffer;
 
     dwRecSize =
@@ -983,7 +983,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     dwRecSize += 4;
 
-    Buffer = (BYTE *) HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
+    Buffer = HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
 
     if (!Buffer)
     {
@@ -1002,7 +1002,6 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     pRec->EventID = dwEventId;
     pRec->EventType = wType;
-    pRec->NumStrings = wNumStrings;
     pRec->EventCategory = wCategory;
 
     pos = sizeof(EVENTLOGRECORD);
@@ -1024,14 +1023,13 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     }
 
     pRec->StringOffset = pos;
-    for (i = 0, str = lpStrings, nStrings = 0; i < wNumStrings; i++)
+    for (i = 0, str = lpStrings; i < wNumStrings; i++)
     {
         lstrcpyW((WCHAR *) (Buffer + pos), str);
         pos += (lstrlenW(str) + 1) * sizeof(WCHAR);
         str += lstrlenW(str) + 1;
-        nStrings++;
     }
-    pRec->NumStrings = nStrings;
+    pRec->NumStrings = wNumStrings;
 
     pRec->DataOffset = pos;
     if (dwDataSize)
