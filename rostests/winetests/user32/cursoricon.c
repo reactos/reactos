@@ -186,7 +186,7 @@ typedef struct {
               0,                         /* biClrUsed */ \
               0                          /* biClrImportant */ \
         }, \
-        { /* DIB data: left uninitialized */ } \
+        { {0}/* DIB data: left uninitialized */ } \
     } \
 }
 
