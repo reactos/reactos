@@ -975,10 +975,9 @@ SpiGetPciConfigData(
     ULONG FunctionNumber;
     CHAR VendorIdString[8];
     CHAR DeviceIdString[8];
-    PCM_RESOURCE_LIST ResourceList;
+    PCM_RESOURCE_LIST ResourceList = NULL;
     NTSTATUS Status;
 
-    RtlZeroMemory(&ResourceList, sizeof(PCM_RESOURCE_LIST));
     SlotNumber.u.AsULONG = 0;
 
     /* Loop through all devices */
