@@ -464,7 +464,7 @@ extern PVOID Ki386IopmSaveArea;
 extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
-extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
+extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR+1];
 extern KDESCRIPTOR KiIdtDescriptor;
 extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern ULONG KeI386NpxPresent;
