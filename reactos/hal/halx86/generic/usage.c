@@ -132,7 +132,7 @@ HalpBuildPartialFromIdt(IN ULONG Entry,
     RawDescriptor->u.Interrupt.Affinity = HalpActiveProcessors;
     
     /* The translated copy is identical */
-    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(TranslatedDescriptor));
+    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(PCM_PARTIAL_RESOURCE_DESCRIPTOR));
     
     /* But the vector and IRQL must be set correctly */
     TranslatedDescriptor->u.Interrupt.Vector = Entry;
@@ -180,7 +180,7 @@ HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
     }
     
     /* Make an identical copy to begin with */
-    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(TranslatedDescriptor));
+    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(PCM_PARTIAL_RESOURCE_DESCRIPTOR));
     
     /* Check what this is */
     if (RawDescriptor->Type == CmResourceTypePort)
