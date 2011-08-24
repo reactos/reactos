@@ -572,7 +572,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
                        IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
                        IN PVOID SynchronizeContext OPTIONAL)
 {
-    NTSTATUS Status;
+    BOOLEAN Success;
     KIRQL OldIrql;
     
     /* Raise IRQL */
@@ -582,7 +582,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
     
     /* Call the routine */
-    Status = SynchronizeRoutine(SynchronizeContext);
+    Success = SynchronizeRoutine(SynchronizeContext);
     
     /* Release lock */
     KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
@@ -591,7 +591,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KfLowerIrql(OldIrql);
     
     /* Return status */
-    return NT_SUCCESS(Status);
+    return Success;
 }
 
 /* EOF */
