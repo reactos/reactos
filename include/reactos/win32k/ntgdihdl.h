@@ -229,6 +229,30 @@ typedef struct _GDI_TABLE_ENTRY
     PVOID UserData;   /* pUser Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
 
+typedef struct _ENTRY
+{
+    union _EINFO
+    {
+        struct _BASEOBJECT *pobj;
+        HGDIOBJ hFree;
+    } einfo;
+
+    union _OBJECTOWNER
+    {
+        struct _OBJECTOWNER_S
+        {
+            unsigned Lock:1;
+            unsigned Pid_Shifted:31;
+        } Share;
+        ULONG ulObj;
+    } ObjectOwner;
+
+    USHORT FullUnique;
+    UCHAR Objt;
+    UCHAR Flags;
+    PVOID pUser;
+} ENTRY, *PENTRY;
+
 /*
  * User space only structure!
  */

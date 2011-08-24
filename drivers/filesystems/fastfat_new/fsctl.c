@@ -453,6 +453,7 @@ FatiFileSystemControl(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
     /* Dispatch depending on the minor function */
     switch (IrpSp->MinorFunction)
     {
+    case IRP_MN_KERNEL_CALL:
     case IRP_MN_USER_FS_REQUEST:
         Status = FatUserFsCtrl(IrpContext, Irp);
         break;

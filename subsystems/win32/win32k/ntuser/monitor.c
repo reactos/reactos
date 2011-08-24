@@ -12,6 +12,8 @@
 
 #include <win32k.h>
 
+DBG_DEFAULT_CHANNEL(UserMonitor);
+
 /* FIXME: find include file for these */
 #define MONITORINFOF_PRIMARY      1
 #define MONITOR_DEFAULTTONULL     0
@@ -33,7 +35,7 @@ NTSTATUS
 NTAPI
 InitMonitorImpl()
 {
-    DPRINT("Initializing monitor implementation...\n");
+    TRACE("Initializing monitor implementation...\n");
 
     return STATUS_SUCCESS;
 }
@@ -41,7 +43,7 @@ InitMonitorImpl()
 NTSTATUS
 CleanupMonitorImpl()
 {
-    DPRINT("Cleaning up monitor implementation...\n");
+    TRACE("Cleaning up monitor implementation...\n");
     /* FIXME: Destroy monitor objects? */
 
     return STATUS_SUCCESS;
@@ -137,53 +139,46 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
     PMONITOR Monitor;
     WCHAR Buffer[CCHDEVICENAME];
 
-    DPRINT("Attaching monitor...\n");
+    TRACE("Attaching monitor...\n");
 
     /* create new monitor object */
     Monitor = IntCreateMonitorObject();
     if (Monitor == NULL)
     {
-        DPRINT("Couldnt create monitor object\n");
+        TRACE("Couldnt create monitor object\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     _snwprintf(Buffer, CCHDEVICENAME, L"\\\\.\\DISPLAY%d", DisplayNumber + 1);
     if (!RtlCreateUnicodeString(&Monitor->DeviceName, Buffer))
     {
-        DPRINT("Couldn't duplicate monitor name!\n");
+        TRACE("Couldn't duplicate monitor name!\n");
         UserDereferenceObject(Monitor);
         UserDeleteObject(UserHMGetHandle(Monitor), otMonitor);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     Monitor->GdiDevice = pGdiDevice;
-    Monitor->rcMonitor.left  = 0;
-    Monitor->rcMonitor.top   = 0;
-    Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
-    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
-    Monitor->rcWork = Monitor->rcMonitor;
     Monitor->cWndStack = 0;
-
-    Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
-
-    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
     if (gMonitorList == NULL)
     {
-        DPRINT("Primary monitor is beeing attached\n");
+        TRACE("Primary monitor is beeing attached\n");
         Monitor->IsPrimary = TRUE;
         gMonitorList = Monitor;
     }
     else
     {
         PMONITOR p;
-        DPRINT("Additional monitor is beeing attached\n");
+        TRACE("Additional monitor is beeing attached\n");
         for (p = gMonitorList; p->Next != NULL; p = p->Next)
         {
             p->Next = Monitor;
         }
         Monitor->Prev = p;
     }
+
+    IntUpdateMonitorSize(pGdiDevice);
 
     return STATUS_SUCCESS;
 }
@@ -239,14 +234,14 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     }
 
     if (Monitor->hrgnMonitor)
-        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+        GreDeleteObject(Monitor->hrgnMonitor);
 
     IntDestroyMonitorObject(Monitor);
 
     return STATUS_SUCCESS;
 }
 
-/* IntResetMonitorSize
+/* IntUpdateMonitorSize
  *
  * Reset size of the monitor using atached device
  *
@@ -259,7 +254,7 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
  *   Returns a NTSTATUS
  */
 NTSTATUS
-IntResetMonitorSize(IN PDEVOBJ *pGdiDevice)
+IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice)
 {
 	PMONITOR Monitor;
 
@@ -282,7 +277,10 @@ IntResetMonitorSize(IN PDEVOBJ *pGdiDevice)
     Monitor->rcWork = Monitor->rcMonitor;
 
     if (Monitor->hrgnMonitor)
-        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+    {
+        GreSetObjectOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(Monitor->hrgnMonitor);
+    }
 
     Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
 
@@ -366,7 +364,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
         MonitorRect = Monitor->rcMonitor;
         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
 
-        DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
+        TRACE("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
                MonitorRect.left, MonitorRect.top, MonitorRect.right, MonitorRect.bottom);
 
         if (flags == MONITOR_DEFAULTTOPRIMARY && Monitor->IsPrimary)
@@ -417,7 +415,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
             if (monitorRectList != NULL)
                 monitorRectList[iCount] = IntersectionRect;
         }
-        
+
         /* Increase count of found monitors */
         iCount++;
     }
@@ -498,7 +496,7 @@ NtUserEnumDisplayMonitors(
         status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
         if (!NT_SUCCESS(status))
         {
-            DPRINT("MmCopyFromCaller() failed!\n");
+            TRACE("MmCopyFromCaller() failed!\n");
             SetLastNtError(status);
             return -1;
         }
@@ -513,7 +511,7 @@ NtUserEnumDisplayMonitors(
         dc = DC_LockDc(hDC);
         if (dc == NULL)
         {
-            DPRINT("DC_LockDc() failed!\n");
+            TRACE("DC_LockDc() failed!\n");
             /* FIXME: setlasterror? */
             return -1;
         }
@@ -522,7 +520,7 @@ NtUserEnumDisplayMonitors(
 
         if (regionType == 0)
         {
-            DPRINT("NtGdiGetRgnBox() failed!\n");
+            TRACE("NtGdiGetRgnBox() failed!\n");
             return -1;
         }
         if (regionType == NULLREGION)
@@ -559,7 +557,7 @@ NtUserEnumDisplayMonitors(
     if (numMonitors == 0 || listSize == 0 ||
             (hMonitorList == NULL && monitorRectList == NULL))
     {
-        DPRINT("numMonitors = %d\n", numMonitors);
+        TRACE("numMonitors = %d\n", numMonitors);
         return numMonitors;
     }
 
@@ -657,13 +655,13 @@ NtUserGetMonitorInfo(
     NTSTATUS Status;
     DECLARE_RETURN(BOOL);
 
-    DPRINT("Enter NtUserGetMonitorInfo\n");
+    TRACE("Enter NtUserGetMonitorInfo\n");
     UserEnterShared();
 
     /* get monitor object */
     if (!(Monitor = UserGetMonitorObject(hMonitor)))
     {
-        DPRINT("Couldnt find monitor 0x%lx\n", hMonitor);
+        TRACE("Couldnt find monitor 0x%lx\n", hMonitor);
         RETURN(FALSE);
     }
 
@@ -698,30 +696,27 @@ NtUserGetMonitorInfo(
     /* fill device name */
     if (MonitorInfo.cbSize == sizeof (MONITORINFOEXW))
     {
-        WCHAR nul = L'\0';
-        INT len = Monitor->DeviceName.Length;
-        if (len >= CCHDEVICENAME * sizeof (WCHAR))
-            len = (CCHDEVICENAME - 1) * sizeof (WCHAR);
-
-        memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
-        memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
+        RtlStringCbCopyNW(MonitorInfo.szDevice,
+                          sizeof(MonitorInfo.szDevice),
+                          Monitor->DeviceName.Buffer,
+                          Monitor->DeviceName.Length);
     }
 
     /* output data */
     Status = MmCopyToCaller(pMonitorInfo, &MonitorInfo, MonitorInfo.cbSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("GetMonitorInfo: MmCopyToCaller failed\n");
+        TRACE("GetMonitorInfo: MmCopyToCaller failed\n");
         SetLastNtError(Status);
         RETURN(FALSE);
     }
 
-    DPRINT("GetMonitorInfo: success\n");
+    TRACE("GetMonitorInfo: success\n");
 
     RETURN(TRUE);
 
 CLEANUP:
-    DPRINT("Leave NtUserGetMonitorInfo, ret=%i\n",_ret_);
+    TRACE("Leave NtUserGetMonitorInfo, ret=%i\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }
@@ -813,7 +808,7 @@ NtUserMonitorFromRect(
         return hMonitor;
     }
 
-    hMonitorList = ExAllocatePoolWithTag(PagedPool, 
+    hMonitorList = ExAllocatePoolWithTag(PagedPool,
                                          sizeof(HMONITOR) * numMonitors,
                                          USERTAG_MONITORRECTS);
     if (hMonitorList == NULL)
@@ -871,7 +866,7 @@ NtUserMonitorFromWindow(
     RECTL Rect;
     DECLARE_RETURN(HMONITOR);
 
-    DPRINT("Enter NtUserMonitorFromWindow\n");
+    TRACE("Enter NtUserMonitorFromWindow\n");
     UserEnterShared();
 
     if (!(Window = UserGetWindowObject(hWnd)))
@@ -892,7 +887,7 @@ NtUserMonitorFromWindow(
     RETURN(hMonitor);
 
 CLEANUP:
-    DPRINT("Leave NtUserMonitorFromWindow, ret=%i\n",_ret_);
+    TRACE("Leave NtUserMonitorFromWindow, ret=%i\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }

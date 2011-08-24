@@ -727,7 +727,7 @@ BOOL APIENTRY DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask)
 {
     DPRINT1("ReactX Calling : DxEngSetDCOwner \n");
 
-    return IntGdiSetDCOwnerEx( hObject, OwnerMask, FALSE);
+    return GreSetDCOwner(hObject, OwnerMask);
 }
 
 /************************************************************************/
@@ -743,7 +743,7 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
    if (pDC)
    {
       if (SetType == 1)
-      {   
+      {
         if ( Set )
             pDC->fs |= DC_FLAG_FULLSCREEN;
         else

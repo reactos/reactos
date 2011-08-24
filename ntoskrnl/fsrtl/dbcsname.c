@@ -46,8 +46,8 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
                  OUT PANSI_STRING FirstPart,
                  OUT PANSI_STRING RemainingPart)
 {
-    ULONG FirstPosition, i;
-    ULONG SkipFirstSlash = 0;
+    USHORT FirstPosition, i;
+    USHORT SkipFirstSlash = 0;
     PAGED_CODE();
 
     /* Zero the strings before continuing */
@@ -116,7 +116,7 @@ BOOLEAN
 NTAPI
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Check every character */
@@ -181,14 +181,19 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             switch (Expression->Buffer[ExpressionPosition])
             {
                 case '*':
-                    StarFound = ExpressionPosition++;
+                    StarFound = MAXUSHORT;
                     break;
 
                 case '?':
-                    ExpressionPosition++;
+                    if (++ExpressionPosition == Expression->Length)
+                    {
+                        NamePosition = Name->Length;
+                        break;
+                    }
+
                     MatchingChars = NamePosition;
-                    while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
-                           NamePosition < Name->Length)
+                    while (NamePosition < Name->Length &&
+                           Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
                     {
                         NamePosition++;
                     }
@@ -200,7 +205,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                     break;
 
                 case ANSI_DOS_DOT:
-                    while (Name->Buffer[NamePosition] != '.' && NamePosition < Name->Length)
+                    while (NamePosition < Name->Length && Name->Buffer[NamePosition] != '.')
                     {
                         NamePosition++;
                     }
@@ -226,6 +231,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             if (ExpressionPosition == Expression->Length)
             {
                 NamePosition = Name->Length;
+                break;
             }
         }
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
@@ -245,15 +251,15 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         else if (StarFound != MAXUSHORT)
         {
             ExpressionPosition = StarFound + 1;
-            while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
-                   NamePosition < Name->Length)
+            while (NamePosition < Name->Length &&
+                   Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
             {
                 NamePosition++;
             }
         }
         else
         {
-            NamePosition = Name->Length;
+            break;
         }
     }
     if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
@@ -300,7 +306,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
     BOOLEAN LastDot;
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
@@ -437,7 +443,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                      IN BOOLEAN LeadingBackslashPermissible)
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
@@ -490,7 +496,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                 i++;
             }
             /* Then check for bad characters */
-            else if (!!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
+            else if (!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
             {
                 return FALSE;
             }

@@ -8,8 +8,6 @@
  */
 
 #include "rosdhcp.h"
-#include <winsock2.h>
-#include <iphlpapi.h>
 
 #define NDEBUG
 #include <reactos/debug.h>

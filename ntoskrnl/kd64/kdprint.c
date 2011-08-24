@@ -35,7 +35,7 @@ KdpPrintString(IN PSTRING Output)
 
     /* Build the packet header */
     DebugIo.ApiNumber = DbgKdPrintStringApi;
-    DebugIo.ProcessorLevel = KeProcessorLevel;
+    DebugIo.ProcessorLevel = (USHORT)KeProcessorLevel;
     DebugIo.Processor = KeGetCurrentPrcb()->Number;
     DebugIo.u.PrintString.LengthOfString = Length;
     Header.Length = sizeof(DBGKD_DEBUG_IO);
@@ -76,7 +76,7 @@ KdpPromptString(IN PSTRING PromptString,
 
     /* Build the packet header */
     DebugIo.ApiNumber = DbgKdGetStringApi;
-    DebugIo.ProcessorLevel = KeProcessorLevel;
+    DebugIo.ProcessorLevel = (USHORT)KeProcessorLevel;
     DebugIo.Processor = KeGetCurrentPrcb()->Number;
     DebugIo.u.GetString.LengthOfPromptString = Length;
     DebugIo.u.GetString.LengthOfStringRead = ResponseString->MaximumLength;
@@ -115,7 +115,7 @@ KdpPromptString(IN PSTRING PromptString,
 
     /* Copy back the string and return the length */
     RtlCopyMemory(ResponseString->Buffer, KdpMessageBuffer, Length);
-    ResponseString->Length = Length;
+    ResponseString->Length = (USHORT)Length;
 
     /* Success; we don't need to resend */
     return FALSE;

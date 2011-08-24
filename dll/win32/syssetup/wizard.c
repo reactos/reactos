@@ -9,25 +9,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-#include <string.h>
-#include <setupapi.h>
-#include <pseh/pseh2.h>
-#include <shlobj.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
-#include <syssetup/syssetup.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "globals.h"
-#include "resource.h"
 
 #define VMWINST
 
@@ -563,6 +548,25 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
   return TRUE;
 }
 
+/* lpBuffer will be filled with a 15-char string (plus the null terminator) */
+static void
+GenerateComputerName(LPWSTR lpBuffer)
+{
+    static const WCHAR Chars[] = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static const unsigned cChars = sizeof(Chars) / sizeof(WCHAR) - 1;
+    unsigned i;
+
+    wcscpy(lpBuffer, L"REACTOS-");
+
+    srand(GetTickCount());
+
+    /* fill in 7 characters */
+    for (i = 8; i < 15; i++)
+        lpBuffer[i] = Chars[rand() % cChars];
+
+    lpBuffer[15] = UNICODE_NULL; /* NULL-terminate */
+}
+
 static INT_PTR CALLBACK
 ComputerPageDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -575,7 +579,6 @@ ComputerPageDlgProc(HWND hwndDlg,
   PWCHAR Password;
   WCHAR Title[64];
   WCHAR EmptyComputerName[256], NotMatchPassword[256], WrongPassword[256];
-  DWORD Length;
   LPNMHDR lpnm;
 
   if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
@@ -587,15 +590,14 @@ ComputerPageDlgProc(HWND hwndDlg,
     {
       case WM_INITDIALOG:
         {
-          /* Retrieve current computer name */
-          Length = MAX_COMPUTERNAME_LENGTH + 1;
-          GetComputerNameW(ComputerName, &Length);
+          /* Generate a new pseudo-random computer name */
+          GenerateComputerName(ComputerName);
 
           /* Display current computer name */
           SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName);
 
           /* Set text limits */
-          SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
+          SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, MAX_COMPUTERNAME_LENGTH, 0);
           SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
           SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
 
@@ -629,7 +631,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                 break;
 
               case PSN_WIZNEXT:
-                if (GetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
+                if (0 == GetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName, MAX_COMPUTERNAME_LENGTH + 1))
                 {
                   if (0 == LoadStringW(hDllInstance, IDS_WZD_COMPUTERNAME, EmptyComputerName,
                                        sizeof(EmptyComputerName) / sizeof(EmptyComputerName[0])))
@@ -1435,7 +1437,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
       if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
                            sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
       {
-        wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
+        wcscpy(ErrorLocalTime, L"Setup was unable to set the local time.");
       }
       MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
       return FALSE;
@@ -1451,8 +1453,6 @@ DateTimePageDlgProc(HWND hwndDlg,
                     LPARAM lParam)
 {
   PSETUPDATA SetupData;
-  WCHAR Title[64];
-  WCHAR ErrorLocalTime[256];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -1507,23 +1507,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
               case PSN_WIZNEXT:
                 {
-                  GetLocalSystemTime(hwndDlg, SetupData);
-                  SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-                                   SetupData);
-                  SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
-                  if(!SetSystemLocalTime(hwndDlg, SetupData))
-                  {
-                    if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
-                    {
-                      wcscpy(Title, L"ReactOS Setup");
-                    }
-                    if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
-                                         sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
-                    {
-                      wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
-                    }
-                    MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
-                  }
+                    WriteDateTimeSettings(hwndDlg, SetupData);
                 }
                 break;
 
@@ -1916,11 +1900,30 @@ ProcessPageDlgProc(HWND hwndDlg,
 
 
 static VOID
-SetupIsActive( DWORD dw )
+SetInstallationCompleted(VOID)
 {
   HKEY hKey = 0;
-  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
-    RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
+  DWORD InProgress = 0;
+  DWORD InstallDate;
+
+  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\Setup",
+                     0,
+                     KEY_WRITE,
+                     &hKey ) == ERROR_SUCCESS)
+  {
+    RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
+    RegCloseKey( hKey );
+  }
+
+  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
+                     L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                     0,
+                     KEY_WRITE,
+                     &hKey ) == ERROR_SUCCESS)
+  {
+    InstallDate = (DWORD)time(NULL);
+    RegSetValueExW( hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate) );
     RegCloseKey( hKey );
   }
 }
@@ -1951,7 +1954,7 @@ FinishDlgProc(HWND hwndDlg,
           if (SetupData->UnattendSetup)
           {
             KillTimer(hwndDlg, 1);
-            SetupIsActive(0);
+            SetInstallationCompleted();
             PostQuitMessage(0);
           }
         }
@@ -1959,7 +1962,7 @@ FinishDlgProc(HWND hwndDlg,
 
       case WM_DESTROY:
          {
-           SetupIsActive(0);
+           SetInstallationCompleted();
            PostQuitMessage(0);
            return TRUE;
          }
@@ -2214,7 +2217,7 @@ GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
     {
         WCHAR szBuffer[MAX_PATH];
         wcscpy(szBuffer, szDrive);
-        wcscat(szBuffer, L"reactos\\ntoskrnl.exe");
+        wcscat(szBuffer, L"reactos\\system32\\ntoskrnl.exe");
         LogItem(SYSSETUP_SEVERITY_INFORMATION, szBuffer);
         if (FileExists(szBuffer, NULL))
         {
@@ -2364,7 +2367,7 @@ InstallWizard(VOID)
   hWnd = (HWND)PropertySheet(&psh);
   ShowWindow(hWnd, SW_SHOW);
 
-  while (GetMessage(&msg, NULL, 0, 0)) 
+  while (GetMessage(&msg, NULL, 0, 0))
   {
     if(!IsDialogMessage(hWnd, &msg))
     {

@@ -24,29 +24,6 @@
 #include "config.h"
 #include "iphlpapi_private.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-#ifdef HAVE_ARPA_NAMESER_H
-# include <arpa/nameser.h>
-#endif
-#ifdef HAVE_RESOLV_H
-# include <resolv.h>
-#endif
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "resinfo.h"
-#include "iphlpapi.h"
-#include "wine/debug.h"
-
 #define IP_FORWARD_ADD 3
 #define IP_FORWARD_DEL 2
 

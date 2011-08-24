@@ -24,14 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <prsht.h>
-#include <cpl.h>
-
 #include "intl.h"
-#include "resource.h"
-
 
 /* Property page dialog callback */
 INT_PTR CALLBACK

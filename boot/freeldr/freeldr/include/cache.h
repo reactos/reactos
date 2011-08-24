@@ -50,7 +50,7 @@ typedef struct
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-	ULONG			DriveNumber;
+	UCHAR			DriveNumber;
 	ULONG			BytesPerSector;
 
 	ULONG			BlockSize;			// Block size (in sectors)
@@ -84,8 +84,8 @@ VOID			CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive);								// Dumps the 
 VOID			CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheBlock);	// Moves the specified block to the head of the list
 
 
-BOOLEAN	CacheInitializeDrive(ULONG DriveNumber);
+BOOLEAN	CacheInitializeDrive(UCHAR DriveNumber);
 VOID	CacheInvalidateCacheData(VOID);
-BOOLEAN	CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer);
-BOOLEAN	CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount);
+BOOLEAN	CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount, PVOID Buffer);
+BOOLEAN	CacheForceDiskSectorsIntoCache(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount);
 BOOLEAN	CacheReleaseMemory(ULONG MinimumAmountToRelease);

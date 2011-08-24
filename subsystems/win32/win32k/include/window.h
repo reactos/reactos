@@ -28,6 +28,21 @@ BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 #define HAS_THINFRAME(Style, ExStyle) \
             (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
+#define HAS_BIGFRAME(style,exStyle) \
+            (((style) & (WS_THICKFRAME | WS_DLGFRAME)) || \
+            ((exStyle) & WS_EX_DLGMODALFRAME))
+
+#define HAS_STATICOUTERFRAME(style,exStyle) \
+            (((exStyle) & (WS_EX_STATICEDGE|WS_EX_DLGMODALFRAME)) == \
+            WS_EX_STATICEDGE)
+
+#define HAS_ANYFRAME(style,exStyle) \
+            (((style) & (WS_THICKFRAME | WS_DLGFRAME | WS_BORDER)) || \
+            ((exStyle) & WS_EX_DLGMODALFRAME) || \
+            !((style) & (WS_CHILD | WS_POPUP)))
+
+#define HAS_MENU(pWnd,style)  ((((style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) && pWnd->IDMenu)
+
 #define IntIsDesktopWindow(WndObj) \
   (WndObj->spwndParent == NULL)
 
@@ -110,5 +125,8 @@ VOID FASTCALL IntNotifyWinEvent(DWORD, PWND, LONG, LONG, DWORD);
 
 PWND FASTCALL co_UserCreateWindowEx(CREATESTRUCTW*, PUNICODE_STRING, PLARGE_STRING);
 WNDPROC FASTCALL IntGetWindowProc(PWND,BOOL);
+
+BOOL FASTCALL IntEnableWindow(HWND,BOOL);
+DWORD FASTCALL GetNCHitEx(PWND pWnd, POINT pt);
 
 /* EOF */

@@ -65,7 +65,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         /* Set up the flag in the loader block */
         AcpiPresent = TRUE;
-        LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
         /* Get BIOS memory map */
         RtlZeroMemory(BiosMemoryMap, sizeof(BiosMemoryMap));

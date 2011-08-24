@@ -1,5 +1,6 @@
 /* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  29-05-2008
+ * LastChange:  12-04-2011 
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -57,4 +58,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "O str·nku niûöie"
   IDS_SCROLLUP "Rolovaù nahor"
   IDS_SCROLLDOWN "Rolovaù nadol"
+
+  IDS_COMMAND_PROMPT "PrÌkazov˝ riadok"
 END

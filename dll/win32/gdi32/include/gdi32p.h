@@ -279,7 +279,6 @@ WINAPI
 GdiSetLastError( DWORD dwErrCode );
 
 DWORD WINAPI GdiGetCodePage(HDC);
-UINT FASTCALL DIB_BitmapBitsSize( CONST BITMAPINFO* );
 
 int
 WINAPI

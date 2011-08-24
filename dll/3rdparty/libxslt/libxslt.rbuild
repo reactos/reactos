@@ -33,4 +33,5 @@
 	<file>xslt.c</file>
 	<file>xsltlocale.c</file>
 	<file>xsltutils.c</file>
+	<pch>libxslt.h</pch>
 </module>

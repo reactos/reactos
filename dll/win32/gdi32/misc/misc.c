@@ -124,38 +124,24 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
     PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-    if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
-            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
-            GDI_HANDLE_GET_TYPE(hGdiObj))
+
+    /* Check if twe have the correct type */
+    if (GDI_HANDLE_GET_TYPE(hGdiObj) != ObjectType ||
+        ((Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK) != ObjectType ||
+        (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != (ObjectType & GDI_ENTRY_BASETYPE_MASK))
     {
-        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-        if(pid == NULL || pid == CurrentProcessId)
-        {
-            //
-            // Need to test if we have Read & Write access to the VM address space.
-            //
-            BOOL Result = TRUE;
-            if(Entry->UserData)
-            {
-                volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-                _SEH2_TRY
-                {
-                    *Current = *Current;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Result = FALSE;
-                }
-                _SEH2_END
-            }
-            else
-                Result = FALSE; // Can not be zero.
-            if (Result) *UserData = Entry->UserData;
-            return Result;
-        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
+
+    /* Check if we are the owner */
+    if ((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) != CurrentProcessId)
+    {
+        return FALSE;
+    }
+
+    *UserData = Entry->UserData;
+    return TRUE;
 }
 
 PLDC
@@ -289,7 +275,7 @@ HGDIOBJ
 FASTCALL
 hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 {
-    int Number;
+    int Number, Offset, MaxNum, GdiType;
     HANDLE Lock;
     HGDIOBJ Handle = NULL;
 
@@ -301,26 +287,58 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 
     Number = GdiHandleCache->ulNumHandles[Type];
 
-    if ( Number && Number <= CACHE_REGION_ENTRIES )
+    if (Type == hctBrushHandle)
     {
-        if ( Type == hctRegionHandle)
-        {
-            PRGN_ATTR pRgn_Attr;
-            HGDIOBJ *hPtr;
-            hPtr = GdiHandleCache->Handle + CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
-            Handle = hPtr[Number - 1];
+       Offset = 0;
+       MaxNum = CACHE_BRUSH_ENTRIES;
+       GdiType = GDILoObjType_LO_BRUSH_TYPE;
+    }
+    else if (Type == hctPenHandle)
+    {
+       Offset = CACHE_BRUSH_ENTRIES;
+       MaxNum = CACHE_PEN_ENTRIES;
+       GdiType = GDILoObjType_LO_PEN_TYPE;
+    }
+    else if (Type == hctRegionHandle)
+    {
+       Offset = CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+       MaxNum = CACHE_REGION_ENTRIES;
+       GdiType = GDILoObjType_LO_REGION_TYPE;
+    }
+    else // Font is not supported here.
+    {
+       return Handle;
+    }
 
-            if (GdiGetHandleUserData( Handle, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-            {
-                if (pRgn_Attr->AttrFlags & ATTR_CACHED)
+    if ( Number && Number <= MaxNum )
+    {
+       PBRUSH_ATTR pBrush_Attr;
+       HGDIOBJ *hPtr;
+       hPtr = GdiHandleCache->Handle + Offset;
+       Handle = hPtr[Number - 1];
+
+       if (GdiGetHandleUserData( Handle, GdiType, (PVOID) &pBrush_Attr))
+       {
+          if (pBrush_Attr->AttrFlags & ATTR_CACHED)
+          {
+             DPRINT("Get Handle! Type %d Count %d PEB 0x%x\n", Type, GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
+             pBrush_Attr->AttrFlags &= ~ATTR_CACHED;
+             hPtr[Number - 1] = NULL;
+             GdiHandleCache->ulNumHandles[Type]--;
+             if ( Type == hctBrushHandle ) // Handle only brush.
+             {
+                if ( pBrush_Attr->lbColor != cr )
                 {
-                    DPRINT("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
-                    pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
-                    hPtr[Number - 1] = NULL;
-                    GdiHandleCache->ulNumHandles[Type]--;
+                   pBrush_Attr->lbColor = cr ;
+                   pBrush_Attr->AttrFlags |= ATTR_NEW_COLOR;
                 }
-            }
-        }
+             }
+          }
+       }
+       else
+       {
+          Handle = NULL;
+       }
     }
     (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
     return Handle;

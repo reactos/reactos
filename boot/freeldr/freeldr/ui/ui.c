@@ -225,14 +225,13 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 
 BOOLEAN SetupUiInitialize(VOID)
 {
-	VIDEODISPLAYMODE	UiDisplayMode;
 	CHAR	DisplayModeText[260];
 	ULONG	Depth, Length;
 
 
 	DisplayModeText[0] = '\0';
 
-	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
+	MachVideoSetDisplayMode(DisplayModeText, TRUE);
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 
 	UiVtbl = TuiVtbl;

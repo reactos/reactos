@@ -63,7 +63,7 @@ GetFunctionPointer(
         Comma++;
 
     /* W->A conversion for function name */
-    FunctionNameA = UnicodeToMultiByte(Comma, CP_ACP);
+    FunctionNameA = pSetupUnicodeToMultiByte(Comma, CP_ACP);
     if (!FunctionNameA)
     {
         rc = GetLastError();
@@ -168,7 +168,7 @@ LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
 
 
 /**************************************************************************
- * DuplicateString [SETUPAPI.@]
+ * pSetupDuplicateString [SETUPAPI.@]
  *
  * Duplicates a unicode string.
  *
@@ -182,7 +182,7 @@ LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
  * NOTES
  *     Call MyFree() to release the duplicated string.
  */
-LPWSTR WINAPI DuplicateString(LPCWSTR lpSrc)
+LPWSTR WINAPI pSetupDuplicateString(LPCWSTR lpSrc)
 {
     LPWSTR lpDst;
 
@@ -250,7 +250,7 @@ LONG WINAPI QueryRegistryValue(HKEY hKey,
 
 
 /**************************************************************************
- * MultiByteToUnicode [SETUPAPI.@]
+ * pSetupMultiByteToUnicode [SETUPAPI.@]
  *
  * Converts a multi-byte string to a Unicode string.
  *
@@ -265,7 +265,7 @@ LONG WINAPI QueryRegistryValue(HKEY hKey,
  * NOTE
  *     Use MyFree to release the returned Unicode string.
  */
-LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
+LPWSTR WINAPI pSetupMultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
 {
     LPWSTR lpUnicodeStr;
     int nLength;
@@ -296,7 +296,7 @@ LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
 
 
 /**************************************************************************
- * UnicodeToMultiByte [SETUPAPI.@]
+ * pSetupUnicodeToMultiByte [SETUPAPI.@]
  *
  * Converts a Unicode string to a multi-byte string.
  *
@@ -311,7 +311,7 @@ LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
  * NOTE
  *     Use MyFree to release the returned multi-byte string.
  */
-LPSTR WINAPI UnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage)
+LPSTR WINAPI pSetupUnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage)
 {
     LPSTR lpMultiByteStr;
     int nLength;
@@ -411,7 +411,7 @@ BOOL WINAPI DoesUserHavePrivilege(LPCWSTR lpPrivilegeName)
 
 
 /**************************************************************************
- * EnablePrivilege [SETUPAPI.@]
+ * pSetupEnablePrivilege [SETUPAPI.@]
  *
  * Enables or disables one of the current users privileges.
  *
@@ -424,7 +424,7 @@ BOOL WINAPI DoesUserHavePrivilege(LPCWSTR lpPrivilegeName)
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI EnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
+BOOL WINAPI pSetupEnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
 {
     TOKEN_PRIVILEGES Privileges;
     HANDLE hToken;
@@ -536,14 +536,14 @@ DWORD WINAPI CaptureStringArg(LPCWSTR pSrc, LPWSTR *pDst)
     if (pDst == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    *pDst = DuplicateString(pSrc);
+    *pDst = pSetupDuplicateString(pSrc);
 
     return ERROR_SUCCESS;
 }
 
 
 /**************************************************************************
- * CaptureAndConvertAnsiArg [SETUPAPI.@]
+ * pSetupCaptureAndConvertAnsiArg [SETUPAPI.@]
  *
  * Captures an ANSI string and converts it to a UNICODE string.
  *
@@ -558,19 +558,19 @@ DWORD WINAPI CaptureStringArg(LPCWSTR pSrc, LPWSTR *pDst)
  * NOTE
  *     Call MyFree to release the captured UNICODE string.
  */
-DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst)
+DWORD WINAPI pSetupCaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst)
 {
     if (pDst == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    *pDst = MultiByteToUnicode(pSrc, CP_ACP);
+    *pDst = pSetupMultiByteToUnicode(pSrc, CP_ACP);
 
     return ERROR_SUCCESS;
 }
 
 
 /**************************************************************************
- * OpenAndMapFileForRead [SETUPAPI.@]
+ * pSetupOpenAndMapFileForRead [SETUPAPI.@]
  *
  * Open and map a file to a buffer.
  *
@@ -588,11 +588,11 @@ DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst)
  * NOTE
  *     Call UnmapAndCloseFile to release the file.
  */
-DWORD WINAPI OpenAndMapFileForRead(LPCWSTR lpFileName,
-                                   LPDWORD lpSize,
-                                   LPHANDLE lpFile,
-                                   LPHANDLE lpMapping,
-                                   LPVOID *lpBuffer)
+DWORD WINAPI pSetupOpenAndMapFileForRead(LPCWSTR lpFileName,
+                                         LPDWORD lpSize,
+                                         LPHANDLE lpFile,
+                                         LPHANDLE lpMapping,
+                                         LPVOID *lpBuffer)
 {
     DWORD dwError;
 
@@ -635,7 +635,7 @@ DWORD WINAPI OpenAndMapFileForRead(LPCWSTR lpFileName,
 
 
 /**************************************************************************
- * UnmapAndCloseFile [SETUPAPI.@]
+ * pSetupUnmapAndCloseFile [SETUPAPI.@]
  *
  * Unmap and close a mapped file.
  *
@@ -648,7 +648,7 @@ DWORD WINAPI OpenAndMapFileForRead(LPCWSTR lpFileName,
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI UnmapAndCloseFile(HANDLE hFile, HANDLE hMapping, LPVOID lpBuffer)
+BOOL WINAPI pSetupUnmapAndCloseFile(HANDLE hFile, HANDLE hMapping, LPVOID lpBuffer)
 {
     TRACE("%p %p %p\n",
           hFile, hMapping, lpBuffer);
@@ -938,7 +938,7 @@ DWORD WINAPI GetSetFileTimestamp(LPCWSTR lpFileName,
 
 
 /**************************************************************************
- * MyGetFileTitle [SETUPAPI.@]
+ * pSetupGetFileTitle [SETUPAPI.@]
  *
  * Returns a pointer to the last part of a fully qualified file name.
  *
@@ -949,7 +949,7 @@ DWORD WINAPI GetSetFileTimestamp(LPCWSTR lpFileName,
  *     Pointer to a files name.
  */
 LPWSTR WINAPI
-MyGetFileTitle(LPCWSTR lpFileName)
+pSetupGetFileTitle(LPCWSTR lpFileName)
 {
     LPWSTR ptr;
     LPWSTR ret;
@@ -976,7 +976,7 @@ MyGetFileTitle(LPCWSTR lpFileName)
 
 
 /**************************************************************************
- * ConcatenatePaths [SETUPAPI.@]
+ * pSetupConcatenatePaths [SETUPAPI.@]
  *
  * Concatenates two paths.
  *
@@ -991,10 +991,10 @@ MyGetFileTitle(LPCWSTR lpFileName)
  *     Failure: FALSE
  */
 BOOL WINAPI
-ConcatenatePaths(LPWSTR lpPath,
-                 LPCWSTR lpAppend,
-                 DWORD dwBufferSize,
-                 LPDWORD lpRequiredSize)
+pSetupConcatenatePaths(LPWSTR lpPath,
+                       LPCWSTR lpAppend,
+                       DWORD dwBufferSize,
+                       LPDWORD lpRequiredSize)
 {
     DWORD dwPathSize;
     DWORD dwAppendSize;
@@ -1048,7 +1048,7 @@ ConcatenatePaths(LPWSTR lpPath,
 
 
 /**************************************************************************
- * CenterWindowRelativeToParent [SETUPAPI.@]
+ * pSetupCenterWindowRelativeToParent [SETUPAPI.@]
  *
  * Centers a window relative to its parent.
  *
@@ -1059,7 +1059,7 @@ ConcatenatePaths(LPWSTR lpPath,
  *     None
  */
 VOID WINAPI
-CenterWindowRelativeToParent(HWND hwnd)
+pSetupCenterWindowRelativeToParent(HWND hwnd)
 {
     HWND hwndOwner;
     POINT ptOrigin;
@@ -1094,7 +1094,7 @@ CenterWindowRelativeToParent(HWND hwnd)
 
 
 /**************************************************************************
- * GetVersionInfoFromImage [SETUPAPI.@]
+ * pSetupGetVersionInfoFromImage [SETUPAPI.@]
  *
  * Retrieves version information for a given file.
  *
@@ -1109,9 +1109,9 @@ CenterWindowRelativeToParent(HWND hwnd)
  *     Failure: FALSE
  */
 BOOL WINAPI
-GetVersionInfoFromImage(LPWSTR lpFileName,
-                        PULARGE_INTEGER lpFileVersion,
-                        LPWORD lpVersionVarSize)
+pSetupGetVersionInfoFromImage(LPWSTR lpFileName,
+                              PULARGE_INTEGER lpFileVersion,
+                              LPWORD lpVersionVarSize)
 {
     DWORD dwHandle;
     DWORD dwSize;
@@ -1345,7 +1345,7 @@ BOOL WINAPI SetupGetFileCompressionInfoExA( PCSTR source, PSTR name, DWORD len, 
     TRACE("%s, %p, %d, %p, %p, %p, %p\n", debugstr_a(source), name, len, required,
           source_size, target_size, type);
 
-    if (!source || !(sourceW = MultiByteToUnicode( source, CP_ACP ))) return FALSE;
+    if (!source || !(sourceW = pSetupMultiByteToUnicode( source, CP_ACP ))) return FALSE;
 
     if (name)
     {
@@ -1359,7 +1359,7 @@ BOOL WINAPI SetupGetFileCompressionInfoExA( PCSTR source, PSTR name, DWORD len, 
     ret = SetupGetFileCompressionInfoExW( sourceW, nameW, nb_chars, &nb_chars, source_size, target_size, type );
     if (ret)
     {
-        if ((nameA = UnicodeToMultiByte( nameW, CP_ACP )))
+        if ((nameA = pSetupUnicodeToMultiByte( nameW, CP_ACP )))
         {
             if (name && len >= nb_chars) lstrcpyA( name, nameA );
             else
@@ -1580,8 +1580,8 @@ DWORD WINAPI SetupDecompressOrCopyFileA( PCSTR source, PCSTR target, PUINT type 
     DWORD ret = FALSE;
     WCHAR *sourceW = NULL, *targetW = NULL;
 
-    if (source && !(sourceW = MultiByteToUnicode( source, CP_ACP ))) return FALSE;
-    if (target && !(targetW = MultiByteToUnicode( target, CP_ACP )))
+    if (source && !(sourceW = pSetupMultiByteToUnicode( source, CP_ACP ))) return FALSE;
+    if (target && !(targetW = pSetupMultiByteToUnicode( target, CP_ACP )))
     {
         MyFree( sourceW );
         return ERROR_NOT_ENOUGH_MEMORY;
@@ -1736,7 +1736,7 @@ pSetupIsGuidNull(LPGUID lpGUID)
  */
 BOOL
 WINAPI
-IsUserAdmin(VOID)
+pSetupIsUserAdmin(VOID)
 {
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
     BOOL bResult = FALSE;
@@ -1773,7 +1773,7 @@ HSPFILELOG WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)
 
     if (Flags & SPFILELOG_SYSTEMLOG)
     {
-        if (!IsUserAdmin() && !(Flags & SPFILELOG_QUERYONLY))
+        if (!pSetupIsUserAdmin() && !(Flags & SPFILELOG_QUERYONLY))
         {
             /* insufficient privileges */
             SetLastError(ERROR_ACCESS_DENIED);

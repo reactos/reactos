@@ -1,54 +1,55 @@
 /*
- * translation by xrogers
- * xxrogers@users.sourceforge.net
- * https://sourceforge.net/projects/reactospl
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
-
+ 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "SzybkoúÊ"
+CAPTION "Szybko≈õƒá"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Powtarzanie znaku", -1, 5, 5, 230, 130
   ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-  LTEXT "&OpÛünienie powtarzania:", -1, 40, 15, 50, 10
-  LTEXT "Duøe", -1, 40, 30, 20, 10
-  LTEXT "Ma≥e", -1, 200, 30, 20, 10
+  LTEXT "&Op√≥≈∫nienie powtarzania:", -1, 40, 15, 50, 10
+  LTEXT "Du≈ºe", -1, 40, 30, 20, 10
+  LTEXT "Ma≈Çe", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
   ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-  LTEXT "&CzÍstotliwoúÊ powtarzania", -1, 40, 70, 50, 10
-  LTEXT "Ma≥a", -1, 40, 85, 20, 10
-  LTEXT "Duøa", -1, 200, 85, 20, 10
+  LTEXT "&Czƒôstotliwo≈õƒá powtarzania", -1, 40, 70, 50, 10
+  LTEXT "Ma≈Ça", -1, 40, 85, 20, 10
+  LTEXT "Du≈ºa", -1, 200, 85, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-  LTEXT "&Kliknij tutaj i przytrzymaj klawisz, aby sprawdziÊ szybkoúÊ powtarzania:", -1, 15, 105, 150, 10
+  LTEXT "&Kliknij tutaj i przytrzymaj klawisz, aby sprawdziƒá szybko≈õƒá powtarzania:", -1, 15, 105, 150, 10
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "CzÍstotliwoúÊ &migania kursora", -1, 5, 145, 230, 50
+  GROUPBOX "Czƒôstotliwo≈õƒá &migania kursora", -1, 5, 145, 230, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
   LTEXT "Brak", -1, 40, 165, 30, 10
-  LTEXT "Duøa", -1, 200, 165, 30, 10
+  LTEXT "Du≈ºa", -1, 200, 165, 30, 10
   CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "SprzÍt"
+CAPTION "Sprzƒôt"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
 IDD_CLICK_LOCK DIALOGEX 0, 0, 246, 100
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Blokada KlikniÍcia"
+CAPTION "Blokada Klikniƒôcia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "KrÛtko", -1, 35,  50, 30, 10
-  LTEXT "D≥ugo", -1, 140, 50, 30, 10
+  LTEXT "Kr√≥tko", -1, 35,  50, 30, 10
+  LTEXT "D≈Çugo", -1, 140, 50, 30, 10
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
   PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Anuluj", IDCANCEL, 175, 75, 50, 15
-  LTEXT "&Dopasuj czas potrzebny do przytrzymania wciúniÍtego przycisku myszy lub urzπdzenia wskazujπcego przed Ñzablokowaniemî klikniÍcia.",-1,60,15,170,30
+  LTEXT "&Dopasuj czas potrzebny do przytrzymania wci≈õniƒôtego przycisku myszy lub urzƒÖdzenia wskazujƒÖcego przed ‚Äûzablokowaniem‚Äù klikniƒôcia.",-1,60,15,170,30
   ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
@@ -57,37 +58,37 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Przyciski"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Konfiguracja przyciskÛw", -1, 5, 5, 230, 70
-  CHECKBOX "&Prze≥πcz przycisk podstawowy i pomocniczy", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
+  GROUPBOX "Konfiguracja przycisk√≥w", -1, 5, 5, 230, 70
+  CHECKBOX "&Prze≈ÇƒÖcz przycisk podstawowy i pomocniczy", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
   CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
-  LTEXT "Zaznacz to pole wyboru, aby uøywaÊ prawego przycisku do wykonywania funkcji podstawowych, takich jak zaznaczanie i przeciπganie.", -1, 10, 30, 150, 30
-  GROUPBOX "SzybkoúÊ dwukrotnego klikniÍcia", -1, 5, 75, 230, 70
-  LTEXT "Kliknij dwukrotnie folder, aby przetestowaÊ ustawienie. Jeúli folder nie otworzy siÍ lub nie zamknie, sprÛbuj uøyÊ wolniejszego ustawienia.", -1, 10, 85, 150, 30
-  LTEXT "&SzybkoúÊ:   Wolno", -1, 10, 120, 90, 8
+  LTEXT "Zaznacz to pole wyboru, aby u≈ºywaƒá prawego przycisku do wykonywania funkcji podstawowych, takich jak zaznaczanie i przeciƒÖganie.", -1, 10, 30, 150, 30
+  GROUPBOX "Szybko≈õƒá dwukrotnego klikniƒôcia", -1, 5, 75, 230, 70
+  LTEXT "Kliknij dwukrotnie folder, aby przetestowaƒá ustawienie. Je≈õli folder nie otworzy siƒô lub nie zamknie, spr√≥buj u≈ºyƒá wolniejszego ustawienia.", -1, 10, 85, 150, 30
+  LTEXT "&Szybko≈õƒá:   Wolno", -1, 10, 120, 90, 8
   LTEXT "Szybko", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
-  GROUPBOX "Blokada KlikniÍcia", -1, 5, 150, 230, 70
-  CHECKBOX "&W≥πcz funkcjÍ Blokada KlikniÍcia", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+  GROUPBOX "Blokada Klikniƒôcia", -1, 5, 150, 230, 70
+  CHECKBOX "&W≈ÇƒÖcz funkcjƒô Blokada Klikniƒôcia", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Ustawienia...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
-  LTEXT "Umoøliwia podúwietlanie lub przeciπganie bez przytrzymywania naciúniÍtego przycisku myszy. Aby ustawiÊ, naciúnij na krÛtko przycisk myszy. Aby zwolniÊ, kliknij przycisk myszy ponownie.", -1, 10, 180, 190, 30
+  LTEXT "Umo≈ºliwia pod≈õwietlanie lub przeciƒÖganie bez przytrzymywania naci≈õniƒôtego przycisku myszy. Aby ustawiƒá, naci≈õnij na kr√≥tko przycisk myszy. Aby zwolniƒá, kliknij przycisk myszy ponownie.", -1, 10, 180, 190, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Wskaüniki"
+CAPTION "Wska≈∫niki"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "&Schemat", -1, 5, 5, 170, 45
   COMBOBOX IDC_COMBO_CURSOR_SCHEME, 10, 15, 145, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
   PUSHBUTTON "Z&apisz jako...", IDC_BUTTON_SAVEAS_SCHEME, 70, 30, 50, 15
-  PUSHBUTTON "&UsuÒ", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
+  PUSHBUTTON "&Usu≈Ñ", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
   CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
   LTEXT "&Dostosuj:", -1, 5, 60, 40, 10
   LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-  CHECKBOX "&W≥πcz cieÒ wskaünika", IDC_CHECK_CURSOR_SHADOW, 5, 200, 100, 10
-  PUSHBUTTON "Uøyj d&omyúlnego", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
-  PUSHBUTTON "&Przeglπdaj...", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
+  CHECKBOX "&W≈ÇƒÖcz cie≈Ñ wska≈∫nika", IDC_CHECK_CURSOR_SHADOW, 5, 200, 100, 10
+  PUSHBUTTON "U≈ºyj d&omy≈õlnego", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
+  PUSHBUTTON "&PrzeglƒÖdaj...", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
@@ -95,7 +96,7 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Zapisz schemat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Zapisz ten schemat kursorÛw jako:", -1, 5, 5, 100, 10
+  LTEXT "Zapisz ten schemat kursor√≥w jako:", -1, 5, 5, 100, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
   PUSHBUTTON "&Anuluj", IDCANCEL, 115, 45, 50, 15
@@ -104,41 +105,41 @@ END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Opcje wskaünika"
+CAPTION "Opcje wska≈∫nika"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Ruch", -1, 5, 5, 230, 60
-  LTEXT "&Wybierz szybkoúÊ wskaünika:", -1, 60, 15, 110, 10
+  LTEXT "&Wybierz szybko≈õƒá wska≈∫nika:", -1, 60, 15, 110, 10
   LTEXT "Wolno", -1, 60, 30, 20, 10
   CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
   LTEXT "Szybko", -1, 170, 30, 20, 10
   ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 15, 15, 15, 15
-  CHECKBOX "ZwiÍksz pr&ecyzjÍ wskaünika", IDC_CHECK_POINTER_PRECISION, 60, 50, 100, 10
-  GROUPBOX "Przyciπganie do", -1, 5, 65, 230, 40
-  CHECKBOX "&Automatycznie przenieú wskaünik na domyúlny przycisk w oknie dialogowym",
+  CHECKBOX "Zwiƒôksz pr&ecyzjƒô wska≈∫nika", IDC_CHECK_POINTER_PRECISION, 60, 50, 100, 10
+  GROUPBOX "PrzyciƒÖganie do", -1, 5, 65, 230, 40
+  CHECKBOX "&Automatycznie przenie≈õ wska≈∫nik na domy≈õlny przycisk w oknie dialogowym",
            IDC_CHECK_SNAP_TO, 60, 75, 170, 20, BS_MULTILINE | BS_TOP
   ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 15, 75, 15, 15
-  GROUPBOX "WidocznoúÊ", -1, 5, 105, 230, 95
-  CHECKBOX "&Pokaø úlady wskaünika", IDC_CHECK_POINTER_TRAIL, 60, 115, 80, 10
-  LTEXT "D≥ugo", IDC_TEXT_TRAIL_SHORT, 60, 130, 30, 10
-  LTEXT "KrÛtko", IDC_TEXT_TRAIL_LONG, 160, 130, 30, 10
+  GROUPBOX "Widoczno≈õƒá", -1, 5, 105, 230, 95
+  CHECKBOX "&Poka≈º ≈õlady wska≈∫nika", IDC_CHECK_POINTER_TRAIL, 60, 115, 80, 10
+  LTEXT "D≈Çugo", IDC_TEXT_TRAIL_SHORT, 60, 130, 30, 10
+  LTEXT "Kr√≥tko", IDC_TEXT_TRAIL_LONG, 160, 130, 30, 10
   ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 15, 115, 15, 15
   CONTROL "", IDC_SLIDER_POINTER_TRAIL ,"msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 130, 70, 17
-  CHECKBOX "&Ukryj wskaünik podczas pisania", IDC_CHECK_HIDE_POINTER, 60, 150, 90, 10
+  CHECKBOX "&Ukryj wska≈∫nik podczas pisania", IDC_CHECK_HIDE_POINTER, 60, 150, 90, 10
   ICON IDI_MOUSE_SPEED, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
-  CHECKBOX "Pokaø lokalizacjÍ wskaünika po naciúniÍciu klawisza &CTRL",
+  CHECKBOX "Poka≈º lokalizacjƒô wska≈∫nika po naci≈õniƒôciu klawisza &CTRL",
            IDC_CHECK_SHOW_POINTER, 60, 175, 170, 20, BS_MULTILINE | BS_TOP
   ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 15, 170, 15, 15
 END
 
 IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "KÛ≥ko"
+CAPTION "K√≥≈Çko"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Przewijanie", -1, 5, 5, 230, 80
   ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-  LTEXT "ObrÛcenie kÛ≥kiem o jeden skok powoduje przewiniÍcie:", -1, 60, 15, 150, 10
+  LTEXT "Obr√≥cenie k√≥≈Çkiem o jeden skok powoduje przewiniƒôcie:", -1, 60, 15, 150, 10
   RADIOBUTTON "&O tyle linii naraz:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "O jeden &ekran", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
   EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
@@ -151,28 +152,28 @@ BEGIN
   IDS_CPLDESCRIPTION_1 "Dostosowuje ustawienia myszy."
   IDS_CPLNAME_2 "Klawiatura"
   IDS_CPLDESCRIPTION_2 "Dostosowuje ustawienia klawiatury."
-  IDS_ARROW "WybÛr normalny"
-  IDS_HELP "WybÛr pomocy"
+  IDS_ARROW "Wyb√≥r normalny"
+  IDS_HELP "Wyb√≥r pomocy"
   IDS_APPSTARTING "Praca w tle"
-  IDS_WAIT "ZajÍty"
-  IDS_CROSSHAIR "WybÛr precyzyjny"
-  IDS_IBEAM "WybÛr tekstowy"
-  IDS_NWPEN "Pismo rÍczne"
-  IDS_NO "NiedostÍpny"
+  IDS_WAIT "Zajƒôty"
+  IDS_CROSSHAIR "Wyb√≥r precyzyjny"
+  IDS_IBEAM "Wyb√≥r tekstowy"
+  IDS_NWPEN "Pismo rƒôczne"
+  IDS_NO "Niedostƒôpny"
   IDS_SIZENS "Zmiana wymiaru pionowego"
   IDS_SIZEWE "Zmiana wymiaru poziomego"
-  IDS_SIZENWSE "Zmiana wymiarÛw po przekπtnej 1"
-  IDS_SIZENESW "Zmiana wymiarÛw po przekπtnej 2"
-  IDS_SIZEALL "Przenieú"
-  IDS_UPARROW "Alternatywny wybÛr"
-  IDS_HAND "WybÛr ≥πcza"
+  IDS_SIZENWSE "Zmiana wymiar√≥w po przekƒÖtnej 1"
+  IDS_SIZENESW "Zmiana wymiar√≥w po przekƒÖtnej 2"
+  IDS_SIZEALL "Przenie≈õ"
+  IDS_UPARROW "Alternatywny wyb√≥r"
+  IDS_HAND "Wyb√≥r ≈ÇƒÖcza"
   IDS_NONE "(brak)"
   IDS_SYSTEM_SCHEME "(schemat systemu)"
   IDS_BROWSE_FILTER "Kursory (*.ani, *.cur)\0*.ani;*.cur\0Animowane kusory (*.ani)\0*.ani\0Kursory statyczne (*.cur)\0*.cur\0Wszystkie pliki\0*.*\0\0"
-  IDS_BROWSE_TITLE "Przeglπdaj"
-  IDS_REMOVE_TITLE "Potwierdü usuniÍcie schematu"
-  IDS_REMOVE_TEXT "Czy na pewno chcesz usunπÊ schemat kursorÛw '%s'?"
-  IDS_OVERWRITE_TITLE "Potwierdü nadpisanie schematu kursorÛw"
-  IDS_OVERWRITE_TEXT "Wybrana nazwa schematu kursorÛw jest juø w uøyciu. Czy chcesz nadpisaÊ istniejπcy schemat?"
+  IDS_BROWSE_TITLE "PrzeglƒÖdaj"
+  IDS_REMOVE_TITLE "Potwierd≈∫ usuniƒôcie schematu"
+  IDS_REMOVE_TEXT "Czy na pewno chcesz usunƒÖƒá schemat kursor√≥w '%s'?"
+  IDS_OVERWRITE_TITLE "Potwierd≈∫ nadpisanie schematu kursor√≥w"
+  IDS_OVERWRITE_TEXT "Wybrana nazwa schematu kursor√≥w jest ju≈º w u≈ºyciu. Czy chcesz nadpisaƒá istniejƒÖcy schemat?"
   IDS_ANIMATE_CURSOR "Kursor animowany"
 END

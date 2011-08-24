@@ -1,0 +1,59 @@
+/*
+ * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
+
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 ReactOS 录音机"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SNDREC32,-1,19,14,21,20
+    LTEXT           "ReactOS 录音机，版本 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "版权所有 (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "确定",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "文件"
+    BEGIN
+        MENUITEM "新建",                       ID_NEW
+        MENUITEM "打开...",                    ID_FILE_OPEN
+        MENUITEM "保存",                       ID_FILE_SAVE, GRAYED
+        MENUITEM "另存为...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "退出",                       ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "帮助"
+    BEGIN
+        MENUITEM "关于...",                    ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "录音机"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "位置：%.2f 秒"
+    IDS_STRDUR              "长度：%.2f 秒"
+    IDS_STRBUF              "缓冲区：%.2f KiB"
+    IDS_STRFMT              "%.1f kHz %u 位"
+    IDS_STRMONO             "单声道"
+    IDS_STRSTEREO           "立体声"
+    IDS_STRCHAN             "%s"
+END

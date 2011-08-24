@@ -18,19 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <time.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wincred.h"
-#include "winternl.h"
-#include "../crypt/crypt.h"
-
-#include "wine/unicode.h"
-#include "wine/debug.h"
-
+#include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(cred);
 
 /* the size of the ARC4 key used to encrypt the password data */

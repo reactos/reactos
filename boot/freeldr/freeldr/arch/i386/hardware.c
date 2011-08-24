@@ -323,7 +323,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
 
 static PCM_PARTIAL_RESOURCE_LIST
-GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
+GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 {
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
@@ -400,7 +400,7 @@ GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
 
 typedef struct tagDISKCONTEXT
 {
-    ULONG DriveNumber;
+    UCHAR DriveNumber;
     ULONG SectorSize;
     ULONGLONG SectorOffset;
     ULONGLONG SectorCount;
@@ -421,7 +421,7 @@ static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 
     RtlZeroMemory(Information, sizeof(FILEINFORMATION));
     Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
-    Information->CurrentAddress.LowPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+    Information->CurrentAddress.QuadPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -429,7 +429,8 @@ static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
-    ULONG DriveNumber, DrivePartition, SectorSize;
+    UCHAR DriveNumber;
+    ULONG DrivePartition, SectorSize;
     ULONGLONG SectorOffset = 0;
     ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
@@ -527,7 +528,7 @@ static const DEVVTBL DiskVtbl = {
 
 static VOID
 GetHarddiskIdentifier(PCHAR Identifier,
-		      ULONG DriveNumber)
+		      UCHAR DriveNumber)
 {
   PMASTER_BOOT_RECORD Mbr;
   ULONG *Buffer;
@@ -568,7 +569,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
       reactos_arc_strings[reactos_disk_count];
   reactos_disk_count++;
 
-  sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(0)", DriveNumber - 0x80);
+  sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - 0x80);
   FsRegisterDevice(ArcName, &DiskVtbl);
 
   /* Add partitions */
@@ -578,7 +579,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
     {
-      sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(%lu)", DriveNumber - 0x80, i);
+      sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(%lu)", DriveNumber - 0x80, i);
       FsRegisterDevice(ArcName, &DiskVtbl);
     }
     i++;
@@ -609,7 +610,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   DPRINTM(DPRINT_HWDETECT, "Identifier: %s\n", Identifier);
 }
 
-static ULONG
+static UCHAR
 GetFloppyCount(VOID)
 {
   UCHAR Data;
@@ -657,7 +658,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
   CHAR Identifier[20];
   PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG Size;
-  ULONG FloppyNumber;
+  UCHAR FloppyNumber;
   UCHAR FloppyType;
   ULONG MaxDensity[6] = {0, 360, 1200, 720, 1440, 2880};
   PUCHAR Ptr;
@@ -669,12 +670,13 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     if ((FloppyType > 5) || (FloppyType == 0))
       continue;
 
-    DiskResetController(FloppyNumber);
+    if (!DiskResetController(FloppyNumber))
+        continue;
 
     Ptr = GetInt1eTable();
 
     /* Set 'Identifier' value */
-    sprintf(Identifier, "FLOPPY%ld", FloppyNumber + 1);
+    sprintf(Identifier, "FLOPPY%d", FloppyNumber + 1);
 
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	   sizeof(CM_FLOPPY_DEVICE_DATA);
@@ -736,7 +738,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
   DPRINTM(DPRINT_HWDETECT,
 	    "Floppy count: %u\n",
 	    FloppyCount);
-  
+
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
   PartialResourceList = MmHeapAlloc(Size);
@@ -804,15 +806,14 @@ DetectSystem(VOID)
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
     GEOMETRY Geometry;
-    ULONG DiskCount;
+    UCHAR DiskCount, i;
     ULONG Size;
-    ULONG i;
     BOOLEAN Changed;
-    
+
     /* Count the number of visible drives */
     DiskReportError(FALSE);
     DiskCount = 0;
-    
+
     /* There are some really broken BIOSes out there. There are even BIOSes
         * that happily report success when you ask them to read from non-existent
         * harddisks. So, we set the buffer to known contents first, then try to
@@ -838,7 +839,7 @@ DetectSystem(VOID)
     DiskReportError(TRUE);
     DPRINTM(DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
               (int)DiskCount, (DiskCount == 1) ? "": "s");
-    
+
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
@@ -849,7 +850,7 @@ DetectSystem(VOID)
                   "Failed to allocate resource descriptor\n");
         return NULL;
     }
-    
+
     /* Initialize resource descriptor */
     memset(PartialResourceList, 0, Size);
     PartialResourceList->Version = 1;
@@ -860,7 +861,7 @@ DetectSystem(VOID)
     PartialResourceList->PartialDescriptors[0].Flags = 0;
     PartialResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize =
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    
+
     /* Get harddisk Int13 geometry data */
     Int13Drives = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
     for (i = 0; i < DiskCount; i++)
@@ -869,10 +870,10 @@ DetectSystem(VOID)
         {
             Int13Drives[i].DriveSelect = 0x80 + i;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
-            Int13Drives[i].SectorsPerTrack = Geometry.Sectors;
-            Int13Drives[i].MaxHeads = Geometry.Heads - 1;
+            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
+            Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
-            
+
             DPRINTM(DPRINT_HWDETECT,
                       "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
                       0x80 + i,
@@ -899,12 +900,12 @@ DetectSystem(VOID)
     return SystemKey;
 }
 
-static ULONG
+static UCHAR
 GetDiskCount(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
     PCONFIGURATION_COMPONENT_DATA System;
     ULONG ConfigurationDataLength;
-    ULONG DiskCount = 0;
+    UCHAR DiskCount = 0;
 
     //
     // Get root component
@@ -924,8 +925,8 @@ GetDiskCount(PCONFIGURATION_COMPONENT_DATA BusKey)
     // by n entries of CM_INT13_DRIVE_PARAMETER
     //
     if (ConfigurationDataLength > 0)
-        DiskCount = (ConfigurationDataLength - sizeof(CM_PARTIAL_RESOURCE_LIST))
-            / sizeof(CM_INT13_DRIVE_PARAMETER);
+        DiskCount = (UCHAR)((ConfigurationDataLength - sizeof(CM_PARTIAL_RESOURCE_LIST))
+            / sizeof(CM_INT13_DRIVE_PARAMETER));
 
     //
     // Return number of disks
@@ -940,7 +941,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
     PCONFIGURATION_COMPONENT_DATA DiskKey, ControllerKey;
     BOOLEAN BootDriveReported = FALSE;
     ULONG i;
-    ULONG DiskCount = GetDiskCount(BusKey);
+    UCHAR DiskCount = GetDiskCount(BusKey);
     CHAR BootPath[512];
 
     FldrCreateComponentKey(BusKey,
@@ -954,20 +955,21 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
                            0,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
-    
+
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
         PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
         ULONG Size;
         CHAR Identifier[20];
+        UCHAR DriveNumber = 0x80 + (UCHAR)i;
 
-        if (BootDrive == 0x80 + i)
+        if (FrldrBootDrive == DriveNumber)
             BootDriveReported = TRUE;
 
         /* Get disk values */
-        PartialResourceList = GetHarddiskConfigurationData(0x80 + i, &Size);
-        GetHarddiskIdentifier(Identifier, 0x80 + i);
+        PartialResourceList = GetHarddiskConfigurationData(DriveNumber, &Size);
+        GetHarddiskIdentifier(Identifier, DriveNumber);
 
         /* Create disk key */
         FldrCreateComponentKey(ControllerKey,
@@ -986,15 +988,15 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
     MachDiskGetBootPath(BootPath, sizeof(BootPath));
 
     /* Add it, if it's a floppy or cdrom */
-    if ((BootDrive >= 0x80 && !BootDriveReported) ||
-        DiskIsDriveRemovable(BootDrive))
+    if ((FrldrBootDrive >= 0x80 && !BootDriveReported) ||
+        DiskIsDriveRemovable(FrldrBootDrive))
     {
         /* TODO: Check if it's really a cdrom drive */
         ULONG* Buffer;
         ULONG Checksum = 0;
 
         /* Read the MBR */
-        if (!MachDiskReadLogicalSectors(BootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
+        if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
         {
           DPRINTM(DPRINT_HWDETECT, "Reading MBR failed\n");
           return;
@@ -1020,7 +1022,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
 
 static VOID
 InitializeSerialPort(PUCHAR Port,
-		     ULONG LineControl)
+		     UCHAR LineControl)
 {
   WRITE_PORT_UCHAR(Port + 3, 0x80);  /* set DLAB on   */
   WRITE_PORT_UCHAR(Port,     0x60);  /* speed LO byte */
@@ -1746,9 +1748,9 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            Size,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: KeyboardController\\0\n");
-  
+
   MmHeapFree(PartialResourceList);
- 
+
   DetectKeyboardPeripheral(ControllerKey);
 }
 
@@ -2049,14 +2051,14 @@ PcHwDetect(VOID)
 
   /* Create the 'System' key */
   SystemKey = DetectSystem();
-  
+
   /* Detect buses */
   DetectPciBios(SystemKey, &BusNumber);
   DetectApmBios(SystemKey, &BusNumber);
   DetectPnpBios(SystemKey, &BusNumber);
   DetectIsaBios(SystemKey, &BusNumber);
   DetectAcpiBios(SystemKey, &BusNumber);
-  
+
   DPRINTM(DPRINT_HWDETECT, "DetectHardware() Done\n");
 
   return SystemKey;

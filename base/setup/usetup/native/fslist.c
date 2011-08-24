@@ -1,10 +1,5 @@
 #include "usetup.h"
 
-/* Filesystem headers */
-#include <fslib/ext2lib.h>
-#include <fslib/vfatlib.h>
-#include <fslib/vfatxlib.h>
-
 BOOLEAN
 NATIVE_CreateFileSystemList(
 	IN PFILE_SYSTEM_LIST List)

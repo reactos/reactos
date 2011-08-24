@@ -544,6 +544,14 @@ MMixerSetGetMuxControlDetails(
             ASSERT(MixerData->Topology);
             ASSERT(MixerData->MixerInfo == MixerInfo);
 
+            /* now allocate logical pin array */
+            Status = MMixerAllocateTopologyNodeArray(MixerContext, MixerData->Topology, &LogicalNodes);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                /* no memory */
+                return MM_STATUS_NO_MEMORY;
+            }
+
             /* get logical pin nodes */
             MMixerGetConnectedFromLogicalTopologyPins(MixerData->Topology, MixerControl->NodeID, &LogicalNodesCount, LogicalNodes);
 
@@ -552,7 +560,7 @@ MMixerSetGetMuxControlDetails(
             ASSERT(LogicalNodesCount == MixerControl->Control.Metrics.dwReserved[0]);
 
             Values = (LPMIXERCONTROLDETAILS_BOOLEAN)MixerControlDetails->paDetails;
-            for(Index = 0; Index < ConnectedNodesCount; Index++)
+            for(Index = 0; Index < LogicalNodesCount; Index++)
             {
                 /* getting logical pin offset */
                 MMixerGetLowestLogicalTopologyPinOffsetFromArray(LogicalNodesCount, LogicalNodes, &CurLogicalPinOffset);

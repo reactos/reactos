@@ -24,8 +24,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserObj);
 
 //int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
@@ -54,8 +53,8 @@ __inline static HANDLE entry_to_handle(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY
 __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
-
-   DPRINT("handles used %i\n",gpsi->cHandleEntries);
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+   TRACE("handles used %i\n",gpsi->cHandleEntries);
 
    if (ht->freelist)
    {
@@ -63,6 +62,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       ht->freelist = entry->ptr;
 
       gpsi->cHandleEntries++;
+      ppi->UserHandleCount++;
       return entry;
    }
 
@@ -70,9 +70,9 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
    {
 /**/
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
-          iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0;
+          iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0, iEvent = 0, iSMWP = 0;
  /**/
-      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
+      ERR("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
 //#if 0
       for(i = 0; i < ht->nb_handles; i++)
       {
@@ -105,12 +105,17 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
            case otTimer:
             iTimer++;
             break;
+           case otEvent:
+            iEvent++;
+            break;
+           case otSMWP:
+            iSMWP++;
            default:
             break;
          }
       }
-      DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d\n",
-      iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor, iTimer );
+      ERR("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d Event = %d SMWP = %d\n",
+      iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor, iTimer, iEvent, iSMWP );
 //#endif
       return NULL;
 #if 0
@@ -132,6 +137,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
    entry->generation = 1;
 
    gpsi->cHandleEntries++;
+   ppi->UserHandleCount++;
 
    return entry;
 }
@@ -147,6 +153,7 @@ VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes)
 
 __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY entry)
 {
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
    void *ret;
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
@@ -156,6 +163,7 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ht->freelist  = entry;
 
    gpsi->cHandleEntries--;
+   ppi->UserHandleCount--;
 
    return ret;
 }
@@ -177,6 +185,7 @@ UserHandleOwnerByType(USER_OBJECT_TYPE type)
         case otHook:
         case otCallProc:
         case otAccel:
+        case otSMWP:
             pi = GetW32ProcessInfo();
             break;
 
@@ -251,31 +260,7 @@ void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT
    return entry->ptr;
 }
 
-/* return the next user handle after 'handle' that is of a given type */
-PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type )
-{
-   PUSER_HANDLE_ENTRY entry;
 
-   if (!*handle)
-      entry = ht->handles;
-   else
-   {
-      int index = (((unsigned int)*handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
-      if (index < 0 || index >= ht->nb_handles)
-         return NULL;
-      entry = ht->handles + index + 1;  /* start from the next one */
-   }
-   while (entry < ht->handles + ht->nb_handles)
-   {
-      if (!type || entry->type == type)
-      {
-         *handle = entry_to_handle(ht, entry );
-         return entry->ptr;
-      }
-      entry++;
-   }
-   return NULL;
-}
 
 BOOL FASTCALL UserCreateHandleTable(VOID)
 {
@@ -286,7 +271,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
-      DPRINT1("Failed creating handle table\n");
+      ERR("Failed creating handle table\n");
       return FALSE;
    }
 
@@ -294,7 +279,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    if (gHandleTable == NULL)
    {
        UserHeapFree(mem);
-       DPRINT1("Failed creating handle table\n");
+       ERR("Failed creating handle table\n");
        return FALSE;
    }
 
@@ -373,7 +358,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
         case otMenu:
         case otCallProc:
             ((PPROCDESKHEAD)Object)->rpdesk = rpdesk;
-            ((PPROCDESKHEAD)Object)->pSelf = Object;            
+            ((PPROCDESKHEAD)Object)->pSelf = Object;
             break;
 
         case otCursorIcon:
@@ -406,7 +391,12 @@ UserDereferenceObject(PVOID object)
   {
      entry = handle_to_entry(gHandleTable, ((PHEAD)object)->h );
 
-     DPRINT("warning! Dereference to zero! Obj -> 0x%x\n", object);
+     if (!entry)
+     {
+        ERR("warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
+        return FALSE;
+     }
+     TRACE("warning! Dereference to zero! Obj -> 0x%x\n", object);
 
      ((PHEAD)object)->cLockObj = 0;
 
@@ -454,7 +444,7 @@ FASTCALL
 UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
 {
    PVOID body = UserGetObject(gHandleTable, h, type);
-   
+
    if (!body) return FALSE;
 
    ASSERT( ((PHEAD)body)->cLockObj >= 1);

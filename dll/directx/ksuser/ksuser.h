@@ -4,7 +4,9 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obtypes.h>
+#include <ndk/rtlfuncs.h>
 
 
 #include <ks.h>

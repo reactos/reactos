@@ -94,8 +94,8 @@ NTSTATUS LANRegisterProtocol(
 VOID NTAPI
 LANUnregisterProtocol(VOID);
 
-VOID LANStartup();
-VOID LANShutdown();
+VOID LANStartup(VOID);
+VOID LANShutdown(VOID);
 
 NTSTATUS TcpipLanGetDwordOid( PIP_INTERFACE Interface, NDIS_OID Oid,
                               PULONG Result );

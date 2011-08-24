@@ -1,4 +1,11 @@
-#pragma once
+
+#include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "resource.h"
+#include "cardlib.h"
 
 extern CardWindow SolWnd;
 extern TCHAR szAppName[];
@@ -16,7 +23,7 @@ extern bool fGameStarted;
 
 extern DWORD dwOptions;
 
-void CreateSol();
+void CreateSol(void);
 void NewGame(void);
 
 #define NUM_ROW_STACKS     7

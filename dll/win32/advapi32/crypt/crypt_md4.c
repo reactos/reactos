@@ -34,8 +34,6 @@
  */
 
 #include <advapi32.h>
-#include "crypt.h"
-
 
 /* The three core functions */
 

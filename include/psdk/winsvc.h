@@ -1,5 +1,5 @@
-#ifndef _WINSVC_H
-#define _WINSVC_H
+#ifndef _WINSVC_
+#define _WINSVC_
 
 #ifdef __cplusplus
 extern "C" {

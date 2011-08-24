@@ -203,7 +203,7 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                 /* Returns a string containing the requested substituted environment variable. */
                 ExpandEnvironmentStringsW((LPCWSTR)szModuleName, ExpandedName, MAX_PATH);
 
-                /* Succesfull */
+                /* Successful */
                 bReturn = TRUE;
             }
         }
@@ -267,7 +267,7 @@ GetEventCategory(IN LPCWSTR KeyName,
             }
             else
             {
-                wcscpy(CategoryName, L"None");
+                LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
             }
 
             if (hLibrary != NULL)
@@ -281,7 +281,7 @@ GetEventCategory(IN LPCWSTR KeyName,
         }
     }
 
-    wcscpy(CategoryName, L"None");
+    LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
 
     return FALSE;
 }
@@ -385,7 +385,7 @@ GetEventMessage(IN LPCWSTR KeyName,
 
         if (!bDone)
         {
-            LoadStringW(hInst, IDC_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
             swprintf(EventText, szStringIDNotFound, (DWORD)(pevlr->EventID & 0xFFFF), SourceName);
         }
 
@@ -395,7 +395,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         return bDone;
     }
 
-    LoadStringW(hInst, IDC_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
+    LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
     swprintf(EventText, szStringIDNotFound, (DWORD)(pevlr->EventID & 0xFFFF), SourceName);
 
     return FALSE;
@@ -409,25 +409,25 @@ GetEventType(IN WORD dwEventType,
     switch (dwEventType)
     {
         case EVENTLOG_ERROR_TYPE:
-            LoadStringW(hInst, IDC_EVENTLOG_ERROR_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_ERROR_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_WARNING_TYPE:
-            LoadStringW(hInst, IDC_EVENTLOG_WARNING_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_WARNING_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_INFORMATION_TYPE:
-            LoadStringW(hInst, IDC_EVENTLOG_INFORMATION_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_INFORMATION_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_AUDIT_SUCCESS:
-            LoadStringW(hInst, IDC_EVENTLOG_AUDIT_SUCCESS, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_SUCCESS, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_AUDIT_FAILURE:
-            LoadStringW(hInst, IDC_EVENTLOG_AUDIT_FAILURE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_FAILURE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_SUCCESS:
-            LoadStringW(hInst, IDC_EVENTLOG_SUCCESS, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_SUCCESS, eventTypeText, MAX_LOADSTRING);
             break;
         default:
-            LoadStringW(hInst, IDC_EVENTLOG_UNKNOWN_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_UNKNOWN_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
     }
 }
@@ -503,11 +503,12 @@ QueryEventMessages(LPWSTR lpMachineName,
     HWND hwndDlg;
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
-    DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
+    DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
     LPWSTR lpSourceName;
     LPWSTR lpComputerName;
-    LPWSTR lpData;
+    LPSTR lpData;
     BOOL bResult = TRUE; /* Read succeeded. */
+    int i;
 
     WCHAR szWindowTitle[MAX_PATH];
     WCHAR szStatusText[MAX_PATH];
@@ -519,6 +520,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     WCHAR szUsername[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_FILE_BUFFER];
     WCHAR szCategory[MAX_PATH];
+    WCHAR szData[MAX_PATH];
 
     SYSTEMTIME time;
     LVITEMW lviEventItem;
@@ -595,9 +597,9 @@ QueryEventMessages(LPWSTR lpMachineName,
 
         while (dwRead > 0)
         {
-            wcscpy(szUsername , L"N/A");
-            wcscpy(szEventText , L"N/A");
-            wcscpy(szCategory , L"None");
+            LoadStringW(hInst, IDS_NOT_AVAILABLE, szUsername, MAX_PATH);
+            LoadStringW(hInst, IDS_NOT_AVAILABLE, szEventText, MAX_PATH);
+            LoadStringW(hInst, IDS_NONE, szCategory, MAX_PATH);
 
             // Get the event source name.
             lpSourceName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
@@ -606,7 +608,7 @@ QueryEventMessages(LPWSTR lpMachineName,
             lpComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpSourceName) + 1) * sizeof(WCHAR));
 
             // This ist the data section of the current event
-            lpData = (LPWSTR)((LPBYTE)pevlr + pevlr->DataOffset);
+            lpData = (LPSTR)((LPBYTE)pevlr + pevlr->DataOffset);
 
             // Compute the event type
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
@@ -665,7 +667,13 @@ QueryEventMessages(LPWSTR lpMachineName,
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 5, szEventID);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 6, szUsername); //User
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpComputerName); //Computer
-            ListView_SetItemText(hwndListView, lviEventItem.iItem, 8, lpData); //Event Text
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                lpData,
+                                pevlr->DataLength,
+                                szData,
+                                MAX_PATH);
+            ListView_SetItemText(hwndListView, lviEventItem.iItem, 8, szData); //Event Text
 
             dwRead -= pevlr->Length;
             pevlr = (EVENTLOGRECORD *)((LPBYTE) pevlr + pevlr->Length);
@@ -678,7 +686,15 @@ QueryEventMessages(LPWSTR lpMachineName,
     // All events loaded
     EndDialog(hwndDlg, 0);
 
-    swprintf(szWindowTitle, L"%s - %s Log on \\\\%s", szTitle, lpLogName, lpComputerName);
+
+    i = swprintf(szWindowTitle, L"%s - %s Log on \\\\", szTitle, lpLogName); /* i = number of characters written */
+    /* lpComputerName can be NULL here if no records was read */
+    dwMaxLength = sizeof(szWindowTitle)/sizeof(WCHAR)-i;
+    if(!lpComputerName)
+        GetComputerNameW(szWindowTitle+i, &dwMaxLength);
+    else
+        _snwprintf(szWindowTitle+i, dwMaxLength, L"%s", lpComputerName);
+
     swprintf(szStatusText, L"%s has %d event(s)", lpLogName, dwTotalRecords);
 
     // Update the status bar
@@ -725,7 +741,7 @@ MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.style = 0;
     wcex.lpfnWndProc = WndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
@@ -763,7 +779,7 @@ InitInstance(HINSTANCE hInstance,
 
     hwndMainWindow = CreateWindowW(szWindowClass,
                                   szTitle,
-                                  WS_OVERLAPPEDWINDOW,
+                                  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                                   CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
                                   NULL,
                                   NULL,
@@ -1126,6 +1142,7 @@ DisplayEvent(HWND hDlg)
 
         SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, szDate);
         SetDlgItemTextW(hDlg, IDC_EVENTTIMESTATIC, szTime);
+
         SetDlgItemTextW(hDlg, IDC_EVENTUSERSTATIC, szUser);
         SetDlgItemTextW(hDlg, IDC_EVENTSOURCESTATIC, szSource);
         SetDlgItemTextW(hDlg, IDC_EVENTCOMPUTERSTATIC, szComputer);

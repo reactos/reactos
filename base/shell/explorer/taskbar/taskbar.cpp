@@ -202,6 +202,10 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_GET_LAST_ACTIVE:
 		return (LRESULT)(HWND)_last_foreground_wnd;
 
+	  case WM_SYSCOLORCHANGE:
+		SendMessage(_htoolbar, WM_SYSCOLORCHANGE, 0, 0);
+		break;
+
 	  default: def:
 		if (nmsg == WM_SHELLHOOK) {
 			switch(wparam) {

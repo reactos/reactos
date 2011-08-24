@@ -8,9 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 NTSTATUS NTAPI
 AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -46,7 +43,10 @@ AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Buffer too small\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, sizeof(ULONG));
+    }
 
     RtlCopyMemory(Irp->UserBuffer,
                   &FCB->ContextSize,
@@ -54,14 +54,18 @@ AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, sizeof(ULONG));
 }
-        
+
 NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    PVOID Context = LockRequest(Irp, IrpSp);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    
+    if (!Context)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if( FCB->Context ) {
 	ExFreePool( FCB->Context );
@@ -76,7 +80,7 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->ContextSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     RtlCopyMemory( FCB->Context,
-		   IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
+		   Context,
 		   FCB->ContextSize );
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp, 0 );

@@ -13,6 +13,8 @@ typedef struct _HOT_KEY_ITEM
   UINT vk;
 } HOT_KEY_ITEM, *PHOT_KEY_ITEM;
 
+#define IDHOT_REACTOS (-9)
+
 INIT_FUNCTION
 NTSTATUS
 NTAPI
@@ -33,5 +35,9 @@ UnregisterWindowHotKeys(PWND Window);
 
 VOID FASTCALL
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);
+UINT FASTCALL
+DefWndGetHotKey(HWND hwnd);
+INT FASTCALL 
+DefWndSetHotKey( PWND pWnd, WPARAM wParam);
 
 /* EOF */

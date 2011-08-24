@@ -18,12 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <shlwapi_undoc.h>
+#include "precomp.h"
 
 extern DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter);
 

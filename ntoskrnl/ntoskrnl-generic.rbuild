@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" />
 	<importlibrary definition="ntoskrnl.pspec" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -113,9 +113,6 @@
 		<file>dpc.c</file>
 		<file>eventobj.c</file>
 		<file>except.c</file>
-		<if property="ARCH" value="i386">
-			<file>freeldr.c</file>
-		</if>
 		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
@@ -221,14 +218,8 @@
 	<directory name="ex">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>interlck_asm.S</file>
 				<file>fastinterlck_asm.S</file>
 				<file>ioport.S</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="amd64">
-			<directory name="amd64">
-				<file>fastinterlck.c</file>
 			</directory>
 		</if>
 		<file>atom.c</file>
@@ -238,12 +229,12 @@
 		<file>event.c</file>
 		<file>evtpair.c</file>
 		<file>exintrin.c</file>
-		<file>fastinterlck.c</file>
 		<file>fmutex.c</file>
 		<file>handle.c</file>
 		<file>harderr.c</file>
 		<file>hdlsterm.c</file>
 		<file>init.c</file>
+		<file>interlocked.c</file>
 		<file>keyedevt.c</file>
 		<file>locale.c</file>
 		<file>lookas.c</file>
@@ -285,6 +276,7 @@
 		<file>disksup.c</file>
 		<file>fstubex.c</file>
 		<file>halstub.c</file>
+		<file>translate.c</file>
 	</directory>
 	<directory name="inbv">
 		<file>inbv.c</file>

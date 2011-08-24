@@ -135,19 +135,9 @@ struct in_addr
 #define s_impno S_un.S_un_b.s_b4
 #define s_lh    S_un.S_un_b.s_b3
 };
-struct sockaddr_in
-{
-    short sin_family;
-    u_short sin_port;
-    struct in_addr sin_addr;
-    char sin_zero[8];
-};
-typedef struct sockaddr_in SOCKADDR_IN;
-struct sockaddr
-{
-    u_short sa_family;
-    char sa_data[14];
-};
+
+#define __LWIP_INET_H__
+#include "lwip/sockets.h"
 
 /* Sufficient information to manage the entity list */
 typedef struct {

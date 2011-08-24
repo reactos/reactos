@@ -13,4 +13,5 @@
 	<file>add.c</file>
 	<file>changekeyseq.c</file>
 	<file>input.rc</file>
+	<pch>input.h</pch>
 </module>

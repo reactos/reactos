@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for color filtering of subpixel bitmap glyphs (body).   */
 /*                                                                         */
-/*  Copyright 2006, 2008, 2009 by                                          */
+/*  Copyright 2006, 2008, 2009, 2010 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -267,18 +267,31 @@
 
 
   FT_EXPORT_DEF( FT_Error )
-  FT_Library_SetLcdFilter( FT_Library     library,
-                           FT_LcdFilter   filter )
+  FT_Library_SetLcdFilterWeights( FT_Library      library,
+                                  unsigned char  *weights )
+  {
+    if ( !library || !weights )
+      return FT_Err_Invalid_Argument;
+
+    ft_memcpy( library->lcd_weights, weights, 5 );
+
+    return FT_Err_Ok;
+  }
+
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Library_SetLcdFilter( FT_Library    library,
+                           FT_LcdFilter  filter )
   {
     static const FT_Byte  light_filter[5] =
-                            { 0, 85, 86, 85, 0 };
+                            { 0x00, 0x55, 0x56, 0x55, 0x00 };
     /* the values here sum up to a value larger than 256, */
     /* providing a cheap gamma correction                 */
     static const FT_Byte  default_filter[5] =
                             { 0x10, 0x40, 0x70, 0x40, 0x10 };
 
 
-    if ( library == NULL )
+    if ( !library )
       return FT_Err_Invalid_Argument;
 
     switch ( filter )
@@ -330,10 +343,22 @@
     }
 
     library->lcd_filter = filter;
-    return 0;
+
+    return FT_Err_Ok;
   }
 
 #else /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Library_SetLcdFilterWeights( FT_Library      library,
+                                  unsigned char  *weights )
+  {
+    FT_UNUSED( library );
+    FT_UNUSED( weights );
+
+    return FT_Err_Unimplemented_Feature;
+  }
+
 
   FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdFilter( FT_Library    library,

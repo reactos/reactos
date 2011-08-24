@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="floppy" type="kernelmodedriver" installbase="system32/drivers" installname="floppy.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="floppy">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
@@ -12,4 +12,5 @@
 	<file>ioctl.c</file>
 	<file>readwrite.c</file>
 	<file>floppy.rc</file>
+	<pch>precomp.h</pch>
 </module>

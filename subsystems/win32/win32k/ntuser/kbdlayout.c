@@ -14,8 +14,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
 PKBL KBLList = NULL; // Keyboard layout list.
 
@@ -145,22 +144,22 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
 
    if(!NT_SUCCESS(Status))
    {
-      DPRINT("Can't get layout filename for %wZ. (%08lx)\n", klid, Status);
+      TRACE("Can't get layout filename for %wZ. (%08lx)\n", klid, Status);
       return FALSE;
    }
 
-   DPRINT("Read registry and got %wZ\n", &LayoutFile);
+   TRACE("Read registry and got %wZ\n", &LayoutFile);
    RtlInitUnicodeString(&FullLayoutPath, LayoutPathBuffer);
    FullLayoutPath.MaximumLength = sizeof(LayoutPathBuffer);
    RtlAppendUnicodeStringToString(&FullLayoutPath, &LayoutFile);
-   DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
+   TRACE("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
    ExFreePoolWithTag(LayoutFile.Buffer, TAG_STRING);
 
    *phModule = EngLoadImage(FullLayoutPath.Buffer);
 
    if(*phModule)
    {
-      DPRINT("Loaded %wZ\n", &FullLayoutPath);
+      TRACE("Loaded %wZ\n", &FullLayoutPath);
 
       RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
       layerDescGetFn = EngFindImageProcAddress(*phModule, "KbdLayerDescriptor");
@@ -171,19 +170,19 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
       }
       else
       {
-         DPRINT1("Error: %wZ has no KbdLayerDescriptor()\n", &FullLayoutPath);
+         ERR("Error: %wZ has no KbdLayerDescriptor()\n", &FullLayoutPath);
       }
 
       if(!layerDescGetFn || !*pKbdTables)
       {
-         DPRINT1("Failed to load the keyboard layout.\n");
+         ERR("Failed to load the keyboard layout.\n");
          EngUnloadImage(*phModule);
          return FALSE;
       }
    }
    else
    {
-      DPRINT1("Failed to load dll %wZ\n", &FullLayoutPath);
+      ERR("Failed to load dll %wZ\n", &FullLayoutPath);
       return FALSE;
    }
 
@@ -200,7 +199,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
 
    if(!NewKbl)
    {
-      DPRINT1("%s: Can't allocate memory!\n", __FUNCTION__);
+      ERR("%s: Can't allocate memory!\n", __FUNCTION__);
       return NULL;
    }
 
@@ -208,7 +207,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
 
    if(!UserLoadKbdDll(NewKbl->Name, &NewKbl->hModule, &NewKbl->KBTables))
    {
-      DPRINT("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
+      TRACE("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
       ExFreePoolWithTag(NewKbl, USERTAG_KBDLAYOUT);
       return NULL;
    }
@@ -241,21 +240,21 @@ BOOL UserInitDefaultKeyboardLayout()
    Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Could not get default locale (%08lx).\n", Status);
+      ERR("Could not get default locale (%08lx).\n", Status);
    }
    else
    {
-      DPRINT("DefaultLocale = %08lx\n", LocaleId);
+      TRACE("DefaultLocale = %08lx\n", LocaleId);
    }
 
    if(!NT_SUCCESS(Status) || !(KBLList = UserLoadDllAndCreateKbl(LocaleId)))
    {
-      DPRINT1("Trying to load US Keyboard Layout.\n");
+      ERR("Trying to load US Keyboard Layout.\n");
       LocaleId = 0x409;
 
       if(!(KBLList = UserLoadDllAndCreateKbl(LocaleId)))
       {
-         DPRINT1("Failed to load any Keyboard Layout\n");
+         ERR("Failed to load any Keyboard Layout\n");
          return FALSE;
       }
    }
@@ -323,20 +322,19 @@ PKBL W32kGetDefaultKeyLayout(VOID)
             ExFreePoolWithTag(LayoutLocaleIdString.Buffer, TAG_STRING);
          }
          else
-            DPRINT1("ReadRegistryValue failed! (%08lx).\n", Status);
+            ERR("ReadRegistryValue failed! (%08lx).\n", Status);
       }
       else
-         DPRINT1("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
+         ERR("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
 
       RtlFreeUnicodeString(&CurrentUserPath);
    }
    else
-      DPRINT1("RtlFormatCurrentUserKeyPath failed! (%08lx)\n", Status);
+      ERR("RtlFormatCurrentUserKeyPath failed! (%08lx)\n", Status);
 
    if(!LayoutLocaleId)
    {
-      // This block is only reached in case of a failure, so use DPRINT1 here
-      DPRINT1("Assuming default locale for the keyboard layout (0x409 - US)\n");
+      ERR("Assuming default locale for the keyboard layout (0x409 - US)\n");
       LayoutLocaleId = 0x409;
    }
 
@@ -351,12 +349,12 @@ PKBL W32kGetDefaultKeyLayout(VOID)
       pKbl = (PKBL) pKbl->List.Flink;
    } while(pKbl != KBLList);
 
-   DPRINT("Loading new default keyboard layout.\n");
+   TRACE("Loading new default keyboard layout.\n");
    pKbl = UserLoadDllAndCreateKbl(LayoutLocaleId);
 
    if(!pKbl)
    {
-      DPRINT("Failed to load %x!!! Returning any availableKL.\n", LayoutLocaleId);
+      TRACE("Failed to load %x!!! Returning any availableKL.\n", LayoutLocaleId);
       return KBLList;
    }
 
@@ -383,7 +381,7 @@ BOOL UserUnloadKbl(PKBL pKbl)
 
    if(pKbl->Flags & KBL_PRELOAD)
    {
-      DPRINT1("Attempted to unload preloaded keyboard layout.\n");
+      ERR("Attempted to unload preloaded keyboard layout.\n");
       return FALSE;
    }
 
@@ -654,7 +652,7 @@ NtUserActivateKeyboardLayout(
    }
    else
    {
-      DPRINT1("%s: Invalid HKL %x!\n", __FUNCTION__, hKl);
+      ERR("%s: Invalid HKL %x!\n", __FUNCTION__, hKl);
    }
 
 the_end:
@@ -678,7 +676,7 @@ NtUserUnloadKeyboardLayout(
    }
    else
    {
-      DPRINT1("%s: Invalid HKL %x!\n", __FUNCTION__, hKl);
+      ERR("%s: Invalid HKL %x!\n", __FUNCTION__, hKl);
    }
 
    UserLeave();

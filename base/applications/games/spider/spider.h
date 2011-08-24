@@ -1,4 +1,12 @@
-#pragma once
+
+#include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "resource.h"
+#include "cardlib.h"
+
 
 #define DIFFICULTY_ONE_COLOR     1
 #define DIFFICULTY_TWO_COLORS    2
@@ -25,7 +33,7 @@ extern DWORD dwDifficulty;
 extern TCHAR MsgDeal[];
 extern TCHAR MsgWin[];
 
-void CreateSpider();
+void CreateSpider(void);
 void NewGame(void);
 
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumCards);

@@ -24,7 +24,19 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/dbgkfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kdtypes.h>
+#include <ndk/kefuncs.h>
+#include <ndk/ldrfuncs.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/umfuncs.h>
 
 /* Internal NTDLL */
 #include "ntdllp.h"

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="i8042prt" type="kernelmodedriver" installbase="system32/drivers" installname="i8042prt.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>createclose.c</file>
@@ -15,4 +15,5 @@
 	<file>registry.c</file>
 	<file>setup.c</file>
 	<file>i8042prt.rc</file>
+	<pch>i8042prt.h</pch>
 </module>

@@ -24,8 +24,6 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#pragma once
-
 /* C Headers */
 #include <ctype.h>
 #include <stdio.h>
@@ -35,11 +33,21 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/mmtypes.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 
-/* VFAT */
+/* Filesystem headers */
+#include <fslib/ext2lib.h>
 #include <fslib/vfatlib.h>
+#include <fslib/vfatxlib.h>
 
 /* DDK Disk Headers */
 #include <ntddscsi.h>
@@ -50,11 +58,11 @@
 /* Internal Headers */
 #include "interface/consup.h"
 #include "partlist.h"
-#include "infros.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
 #ifdef __REACTOS__
+#include "infros.h"
 #include "filequeue.h"
 #endif
 #include "bootsup.h"
@@ -71,6 +79,12 @@
 #include "mui.h"
 #include "errorcode.h"
 
+#define INITGUID
+#include <guiddef.h>
+#include <libs/umpnpmgr/sysguid.h>
+
+#include <zlib.h>
+
 extern HANDLE ProcessHeap;
 extern UNICODE_STRING SourceRootPath;
 extern UNICODE_STRING SourceRootDir;
@@ -78,6 +92,38 @@ extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
 extern PWCHAR SelectedLanguageId;
 
+#ifdef __REACTOS__
+
+extern VOID InfSetHeap(PVOID Heap);
+extern VOID InfCloseFile(HINF InfHandle);
+extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
+                               PINFCONTEXT ContextOut);
+extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
+                                 ULONG FieldIndex,
+                                 PUCHAR ReturnBuffer,
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
+extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
+                                  ULONG FieldIndex,
+                                  PWSTR ReturnBuffer,
+                                  ULONG ReturnBufferSize,
+                                  PULONG RequiredSize);
+extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
+                                 ULONG FieldIndex,
+                                 PWSTR ReturnBuffer,
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
+
+#define SetupCloseInfFile InfCloseFile
+#define SetupFindNextLine InfFindNextLine
+#define SetupGetBinaryField InfGetBinaryField
+#define SetupGetMultiSzFieldW InfGetMultiSzField
+#define SetupGetStringFieldW InfGetStringField
+
+#endif /* __REACTOS__ */
+
+#ifndef _PAGE_NUMBER_DEFINED
+#define _PAGE_NUMBER_DEFINED
 typedef enum _PAGE_NUMBER
 {
   START_PAGE,
@@ -118,6 +164,7 @@ typedef enum _PAGE_NUMBER
   FLUSH_PAGE,
   REBOOT_PAGE,			/* virtual page */
 } PAGE_NUMBER, *PPAGE_NUMBER;
+#endif
 
 #define POPUP_WAIT_NONE    0
 #define POPUP_WAIT_ANY_KEY 1

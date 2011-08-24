@@ -20,6 +20,7 @@
 	<file>stream.c</file>
 	<file>webbrowser.c</file>
 	<file>hhctrl.rc</file>
+	<pch>hhctrl.h</pch>
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>comctl32</library>

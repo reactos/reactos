@@ -511,7 +511,19 @@ typedef struct
   DWORD NumberOfHistoryBuffers;
   DWORD dwFlags;
 } CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
-  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;
+  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;;
+
+typedef struct
+{
+  UINT UniqueID;
+} CSRSS_GET_TEMP_FILE, *PCSRSS_GET_TEMP_FILE;
+
+typedef struct
+{
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING TargetName;
+    DWORD dwFlags;
+} CSRSS_DEFINE_DOS_DEVICE, *PCSRSS_DEFINE_DOS_DEVICE;
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
@@ -592,6 +604,8 @@ typedef struct
 #define SET_HISTORY_NUMBER_COMMANDS   (0x45)
 #define GET_HISTORY_INFO              (0x46)
 #define SET_HISTORY_INFO              (0x47)
+#define GET_TEMP_FILE                 (0x48)
+#define DEFINE_DOS_DEVICE			  (0X49)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -673,8 +687,79 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
         CSRSS_GET_HISTORY_INFO GetHistoryInfo;
         CSRSS_SET_HISTORY_INFO SetHistoryInfo;
+        CSRSS_GET_TEMP_FILE GetTempFile;
+        CSRSS_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
+
+typedef struct _NLS_USER_INFO
+{
+    WCHAR iCountry[80];
+    WCHAR sCountry[80];
+    WCHAR sList[80];
+    WCHAR iMeasure[80];
+    WCHAR iPaperSize[80];
+    WCHAR sDecimal[80];
+    WCHAR sThousand[80];
+    WCHAR sGrouping[80];
+    WCHAR iDigits[80];
+    WCHAR iLZero[80];
+    WCHAR iNegNumber[80];
+    WCHAR sNativeDigits[80];
+    WCHAR iDigitSubstitution[80];
+    WCHAR sCurrency[80];
+    WCHAR sMonDecSep[80];
+    WCHAR sMonThouSep[80];
+    WCHAR sMonGrouping[80];
+    WCHAR iCurrDigits[80];
+    WCHAR iCurrency[80];
+    WCHAR iNegCurr[80];
+    WCHAR sPosSign[80];
+    WCHAR sNegSign[80];
+    WCHAR sTimeFormat[80];
+    WCHAR s1159[80];
+    WCHAR s2359[80];
+    WCHAR sShortDate[80];
+    WCHAR sYearMonth[80];
+    WCHAR sLongDate[80];
+    WCHAR iCalType[80];
+    WCHAR iFirstDay[80];
+    WCHAR iFirstWeek[80];
+    WCHAR sLocale[80];
+    WCHAR sLocaleName[85];
+    LCID UserLocaleId;
+    LUID InteractiveUserLuid;
+    CHAR InteractiveUserSid[68]; // SECURITY_MAX_SID_SIZE to make ros happy
+    ULONG ulCacheUpdateCount;
+} NLS_USER_INFO, *PNLS_USER_INFO;
+
+
+typedef struct _BASE_STATIC_SERVER_DATA
+{
+    UNICODE_STRING WindowsDirectory;
+    UNICODE_STRING WindowsSystemDirectory;
+    UNICODE_STRING NamedObjectDirectory;
+    USHORT WindowsMajorVersion;
+    USHORT WindowsMinorVersion;
+    USHORT BuildNumber;
+    USHORT CSDNumber;
+    USHORT RCNumber;
+    WCHAR CSDVersion[128];
+    SYSTEM_BASIC_INFORMATION SysInfo;
+    SYSTEM_TIMEOFDAY_INFORMATION TimeOfDay;
+    PVOID IniFileMapping;
+    NLS_USER_INFO NlsUserInfo;
+    BOOLEAN DefaultSeparateVDM;
+    BOOLEAN IsWowTaskReady;
+    UNICODE_STRING WindowsSys32x86Directory;
+    BOOLEAN fTermsrvAppInstallMode;
+    TIME_ZONE_INFORMATION tziTermsrvClientTimeZone;
+    KSYSTEM_TIME ktTermsrvClientBias;
+    ULONG TermsrvClientTimeZoneId;
+    BOOLEAN LUIDDeviceMapsEnabled;
+    ULONG TermsrvClientTimeZoneChangeNum;
+} BASE_STATIC_SERVER_DATA, *PBASE_STATIC_SERVER_DATA;
+
 
 /* Types used in the new CSR. Temporarly here for proper compile of NTDLL */
 #define CSR_SRV_SERVER 0

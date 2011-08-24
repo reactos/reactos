@@ -8,12 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <mmebuddy.h>
-#include <sndtypes.h>
+#include "precomp.h"
 
 
 /*
@@ -60,7 +55,7 @@ DoWaveStreaming(
     }
 
     while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
-            ( Header ) )
+            ( Header ) && SoundDeviceInstance->ResetInProgress == FALSE)
     {
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
@@ -175,8 +170,6 @@ CompleteIO(
 
     WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
     SND_ASSERT( WaveHdr );
-
-    SND_ASSERT( ERROR_SUCCESS == dwErrorCode );
 
     HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
     SND_ASSERT( HdrExtension );
@@ -305,6 +298,12 @@ StopStreamingInSoundThread(
          /* cancel all current audio buffers */
          FunctionTable->ResetStream(SoundDeviceInstance, DeviceType, TRUE);
     }
+    while(SoundDeviceInstance->OutstandingBuffers)
+    {
+        SND_TRACE(L"StopStreamingInSoundThread OutStandingBufferCount %lu\n", SoundDeviceInstance->OutstandingBuffers);
+        /* wait until pending i/o has completed */
+        SleepEx(10, TRUE);
+    }
 
     /* complete all current headers */
     while( SoundDeviceInstance->HeadWaveHeader )
@@ -316,12 +315,6 @@ StopStreamingInSoundThread(
     /* there should be no oustanding buffers now */
     SND_ASSERT(SoundDeviceInstance->OutstandingBuffers == 0);
 
-    while(SoundDeviceInstance->OutstandingBuffers)
-    {
-        SND_ERR("StopStreamingInSoundThread OutStandingBufferCount %lu\n", SoundDeviceInstance->OutstandingBuffers);
-        /* my hack of doom */
-        Sleep(10);
-    }
 
     /* Check if reset function is supported */
     if (FunctionTable->ResetStream)
@@ -362,4 +355,38 @@ StopStreaming(
     return CallSoundThread(SoundDeviceInstance,
                            StopStreamingInSoundThread,
                            NULL);
+}
+
+MMRESULT
+PerformWaveStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    DoWaveStreaming(SoundDeviceInstance);
+
+    return MMSYSERR_NOERROR;
+}
+
+DWORD
+WINAPI
+WaveActivateSoundStreaming(
+    IN PVOID lpParameter)
+{
+    CallSoundThread((PSOUND_DEVICE_INSTANCE)lpParameter,
+                    PerformWaveStreaming,
+                    NULL);
+
+    ExitThread(0);
+}
+
+VOID
+InitiateSoundStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    HANDLE hThread;
+
+    hThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
+
+    if (hThread != NULL)
+        CloseHandle(hThread);
 }

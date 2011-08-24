@@ -16,4 +16,5 @@
 	<file>rw.c</file>
 	<file>serial.c</file>
 	<file>serial.rc</file>
+	<pch>serial.h</pch>
 </module>

@@ -1,0 +1,186 @@
+
+==================================================
+STLport README for Microsoft Visual C++ compilers.
+==================================================
+
+by: Francois Dumont, dums@stlport.com, last edited 08/02/2005
+
+============
+Introduction
+============
+This document describes how STLport can be compiled and used with Microsoft
+Visual C++ 6 SP5. It can also be used for the MSVC++ family.
+
+For any further comments or questsion visit STLport mailing lists
+http://stlport.sourceforge.net/Maillists.shtml or forums
+https://sourceforge.net/forum/?group_id=146814
+
+=============
+Prerequisites
+=============
+To build and use STLport you will need following tools and libraries:
+ - Microsoft Visual C++ 6.0 with at least Service Pack 5 or any higher
+ version.
+
+===================
+Configuring STLport
+===================
+In a console window go to the STLport build/lib folder. Run
+
+	configure --help
+
+This command will present you the different available build options. Just follow
+the instructions to set STLport configuration according your needs. The only
+mandatory configuration is to declare what is the compiler you are going to
+use, for MSVC 6 it is:
+
+	configure -c msvc6
+
+================
+Building STLport
+================
+This is a step by step description of the actions to take in order to have
+the STLport library built:
+
+1. Open a console window. You can get it executing cmd or command depending
+on your Windows OS.
+
+2. Go to MSVC++ Bin directory with a default MSVC6 install it is
+	cd "C:\Program Files\Microsoft Visual Studio\VC98\Bin"
+
+3. Run the vcvars32.bat script. This sets the environment variables required
+to have the MSVC++ compiler run during the build process. The most important
+one is the PATH variable so that you can call the cl.exe command which is the
+MSVC++ command line compiler. [You may omit this step, if you chose 'Install paths
+to access command-line tools' during Microsoft Visual Studio installation procedure.]
+
+4. Go to the STLport build/lib folder:
+	cd C:\STLport\build\lib
+
+5. Run the following command:
+	nmake /fmsvc.mak install
+
+	nmake is the make utility from Microsoft. /f is an nmake option
+telling it which make file script to use. You have of course to grant the 
+closer make file to your effective compiler, msvc.mak in our case.
+
+	Once the command returns, you will have all the necessary libraries within
+the STLport lib folder. For a description of the generated libraries check the README
+file within the src folder.
+
+===============
+Testing STLport
+===============
+You can use the unit tests to verify STLport behaves correctly. Change into
+STLports 'build/test/unit' folder and type:
+
+  nmake /fmsvc.mak install
+
+Once the unit test is built you just need to run it. They can be found
+within the STLport bin folder.
+
+=============
+Using STLport
+=============
+Adjust your include and link paths in MSVC IDE (in 'Tools -> Options -> Directories'
+for MSVC6 IDE). In the include files add the path to STLport's 'stlport' folder. 
+Make sure it is the first directory listed there. Add STLport's 'lib' folder for
+the library files (order of paths doesn't matter here).
+
+There are some preprocessor defines that control usage of the STLport in msvc
+projects:
+
+If you don't want to use the iostreams part of the library, you can specify the
+define _STLP_NO_IOSTREAMS. In this mode there is no need to link against the
+library.
+
+STLport uses automatic linking to find the proper .lib file. If you want to see
+what import library STLport is going to use, define _STLP_VERBOSE_AUTO_LINK.
+When not using automatic linking (by specifying _STLP_DONT_USE_AUTO_LINK), you
+have to specify the proper .lib file in the Project Settings, on the "link" tab.
+The .lib names have the following syntax:
+
+   stlport[d|stld][_x,_static,_statix].<STLport-Version>.lib
+
+   d : debug build
+   stld: debug build with _STLP_DEBUG (STL safe) mode
+   _x: Build of STLport as a dll but statically link to the native runtime.
+   _static : build of a static library
+   _statix : build of a static library link dynamically to the native runtime.
+   
+Examples:
+
+   stlport_static.5.0.lib - static release version, Version 5.0.0
+   stlportd.5.0.lib - dll debug version, Version 5.0.0
+
+When using STLport together with MFC, be sure to include the MFC headers first,
+then include STLport headers, e.g. in your Stdafx.h. This way STLport correctly
+recognizes MFC usage. You also can define the macro _STLP_USE_MFC, either in
+your project settings or in stlport/stl/config/user_config.h.
+
+In order to enhance debugging with STLport you can optionally add the content of
+the etc/autoexp.dat file in the autoexp.dat file coming with your Visual Studio
+install.
+
+Now you should be ready to use STLport.
+
+============
+Known issues
+============
+
+1. InterlockedIncrement
+
+	If you experiment trouble with the InterlockedIncrement Win32 API function
+like the following message:
+
+C:\Program Files\Microsoft SDK\Include\.\winbase.h(1392) : error C2733: second C
+linkage of overloaded function 'InterlockedIncrement' not allowed
+C:\Program Files\Microsoft SDK\Include\.\winbase.h(1390) : see declaration of
+'InterlockedIncrement'
+
+	It means that you are using the new Microsoft platform SDK. There is no
+way to known it from STLport code so you have to signal it in the 
+stlport/stl/config/user_config.h file (uncomment _STLP_NEW_PLATFORM_SDK in this file).
+
+2. Native C/C++ library headers location
+
+	If you experiment trouble with location of ctime and other Standard headers
+while building or using STLport you might be using the compiler coming with a
+platform SDK. If so please uncomment _STLP_USING_PLATFORM_SDK_COMPILER in
+stlport/stl/config/user_config.h. If it still do not find native headers you will
+perhaps need to change native headers relative path used by STLport. In this case use
+_STLP_NATIVE_INCLUDE_PATH and associated macro in stlport/stl/config/host.h.
+
+4. C symbols in std namespace
+
+The compiler of MSVC++ 6 has a bug when dealing with symbols existant in both
+the global namespace and symbols imported by a using-directive or a 
+using-declaration - it will report an ambiguous call to an overloaded
+function (error C2668). Example:
+
+void function();
+namespace ns {
+   void function();
+   // or:
+   // using ::function;
+}
+
+using ns::function;
+// or:
+// using namespace ns;
+
+void call() {
+   function();
+}
+
+Since we anticipate that using-declarations or even using-directives are common
+use, STLport by default doesn't import or wrap functions that exist in both the
+global namespace and namespace std, in particular those are functions with C 
+origin like fopen() or abs(). Also, it defines additional overloads for
+functions like abs() (overloaded for int, long, float, double, long double) in
+the global namespace.
+
+In order to make STLport include them in the std namespace, you can define the
+_STLP_DO_IMPORT_CSTD_FUNCTIONS macro. Doing so, you will have to explicitely 
+scope all your functions calls like std::abs() though - otherwise you only get
+the global abs(int) from the C library.

@@ -19,18 +19,11 @@
 static char sccsid[] = "@(#)domacro.c	1.6 (Berkeley) 2/28/89";
 #endif /* not lint */
 
-#include "ftp_var.h"
-#include "prototypes.h"
-
-#include <signal.h>
-#include <stdio.h>
+#include "precomp.h"
 //#include <errno.h>
-#include <ctype.h>
 //#include <sys/ttychars.h>
 
-void domacro(argc, argv)
-	int argc;
-	const char *argv[];
+void domacro(int argc, const char *argv[])
 {
 	int i, j;
 	const char *cp1;

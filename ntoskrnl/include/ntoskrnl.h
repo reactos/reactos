@@ -17,6 +17,7 @@
 #ifdef _M_AMD64
 #define IoAllocateAdapterChannel _IoAllocateAdapterChannel
 #define KeGetCurrentThread _KeGetCurrentThread
+#define RtlFillMemoryUlong _RtlFillMemoryUlong
 #endif
 
 /* Version Data */
@@ -32,13 +33,30 @@
 #include <arc/arc.h>
 #undef NTHALAPI
 #define NTHALAPI __declspec(dllimport)
-#include <ntndk.h>
+#include <ndk/asm.h>
+#include <ndk/cctypes.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/dbgkfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/halfuncs.h>
+#include <ndk/inbvfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kdfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/ldrfuncs.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/pofuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/sefuncs.h>
+#include <ndk/vftypes.h>
 #undef TEXT
 #define TEXT(s) L##s
 #include <regstr.h>
-
-/* FIXME: Temporary until Winldr is used */
-#include <rosldr.h>
+#include <ntstrsafe.h>
+#include <ntpoapi.h>
 
 /* C Headers */
 #include <stdlib.h>
@@ -51,7 +69,6 @@
 #include <pseh/pseh2.h>
 
 /* ReactOS Headers */
-#include <reactos/buildno.h>
 #include <reactos/bugcodes.h>
 
 /* SetupLDR Support */

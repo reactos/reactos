@@ -1,6 +1,16 @@
-#pragma once
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include <windows.h>
+
+#include <commctrl.h>
+#include <cpl.h>
+#include <stdio.h>
+#include <tchar.h>
+#include <shlobj.h>
+#include <regstr.h>
 
 #include "powrprof.h"
+#include "resource.h"
 
 typedef struct
 {

@@ -10,8 +10,7 @@
 
 #include <intrin.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserDisplay);
 
 BOOL InitSysParams();
 
@@ -81,14 +80,14 @@ InitDisplayDriver(
     HKEY hkey;
     DEVMODEW dmDefault;
 
-    DPRINT1("InitDisplayDriver(%S, %S);\n",
+    ERR("InitDisplayDriver(%S, %S);\n",
             pwszDeviceName, pwszRegKey);
 
     /* Open the driver's registry key */
     Status = RegOpenKey(pwszRegKey, &hkey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open registry key: %ls\n", pwszRegKey);
+        ERR("Failed to open registry key: %ls\n", pwszRegKey);
         return NULL;
     }
 
@@ -101,7 +100,7 @@ InitDisplayDriver(
                            &cbSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Didn't find 'InstalledDisplayDrivers', status = 0x%lx\n", Status);
+        ERR("Didn't find 'InstalledDisplayDrivers', status = 0x%lx\n", Status);
         ZwClose(hkey);
         return NULL;
     }
@@ -159,7 +158,7 @@ InitVideo()
     ULONG cbValue;
     HKEY hkey;
 
-    DPRINT("----------------------------- InitVideo() -------------------------------\n");
+    TRACE("----------------------------- InitVideo() -------------------------------\n");
 
     /* Open the key for the boot command line */
     Status = RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control", &hkey);
@@ -172,7 +171,7 @@ InitVideo()
             /* Check if VGA mode is requested. */
             if (wcsstr(awcBuffer, L"/BASEVIDEO") != 0)
             {
-                DPRINT1("VGA mode requested.\n");
+                ERR("VGA mode requested.\n");
                 gbBaseVideo = TRUE;
             }
         }
@@ -184,7 +183,7 @@ InitVideo()
     Status = RegOpenKey(KEY_VIDEO, &hkey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Could not open device registry key!\n");
+        ERR("Could not open device registry key!\n");
         return Status;
     }
 
@@ -194,16 +193,16 @@ InitVideo()
     if (NT_SUCCESS(Status))
     {
         iVGACompatible = _wtoi(&awcDeviceName[13]);
-        DPRINT1("VGA adapter = %ld\n", iVGACompatible);
+        ERR("VGA adapter = %ld\n", iVGACompatible);
     }
 
     /* Get the maximum mumber of adapters */
     if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
     {
-        DPRINT1("Could not read MaxObjectNumber, defaulting to 0.\n");
+        ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
     }
 
-    DPRINT("Found %ld devices\n", ulMaxObjectNumber);
+    TRACE("Found %ld devices\n", ulMaxObjectNumber);
 
     /* Loop through all adapters */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
@@ -216,7 +215,7 @@ InitVideo()
         Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("failed to query the registry path:0x%lx\n", Status);
+            ERR("failed to query the registry path:0x%lx\n", Status);
             continue;
         }
 
@@ -229,7 +228,7 @@ InitVideo()
         {
             /* Set the VGA device as primary */
             gpVgaGraphicsDevice = pGraphicsDevice;
-            DPRINT1("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+            ERR("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
         }
 
         /* Set the first one as primary device */
@@ -243,7 +242,7 @@ InitVideo()
     /* Check if we had any success */
     if (!gpPrimaryGraphicsDevice)
     {
-        DPRINT1("No usable display driver was found.\n");
+        ERR("No usable display driver was found.\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -257,7 +256,7 @@ InitVideo()
         }
         else
         {
-            DPRINT1("Could not find VGA compatible driver. Trying normal.\n");
+            ERR("Could not find VGA compatible driver. Trying normal.\n");
         }
     }
 
@@ -284,7 +283,7 @@ UserEnumDisplayDevices(
     if (!pGraphicsDevice)
     {
         /* No device found */
-        DPRINT1("No GRAPHICS_DEVICE found\n");
+        ERR("No GRAPHICS_DEVICE found\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -293,7 +292,7 @@ UserEnumDisplayDevices(
     if (!NT_SUCCESS(Status))
     {
         /* No device found */
-        DPRINT1("Could not open reg key\n");
+        ERR("Could not open reg key\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -309,11 +308,11 @@ UserEnumDisplayDevices(
     ZwClose(hkey);
 
     /* Copy device name, device string and StateFlags */
-    wcsncpy(pdispdev->DeviceName, pGraphicsDevice->szWinDeviceName, 32);
-    wcsncpy(pdispdev->DeviceString, pGraphicsDevice->pwszDescription, 128);
+    RtlStringCbCopyW(pdispdev->DeviceName, sizeof(pdispdev->DeviceName), pGraphicsDevice->szWinDeviceName);
+    RtlStringCbCopyW(pdispdev->DeviceString, sizeof(pdispdev->DeviceString), pGraphicsDevice->pwszDescription);
     pdispdev->StateFlags = pGraphicsDevice->StateFlags;
-
     // FIXME: fill in DEVICE ID
+    pdispdev->DeviceID[0] = UNICODE_NULL;
 
     return STATUS_SUCCESS;
 }
@@ -332,14 +331,14 @@ NtUserEnumDisplayDevices(
     DISPLAY_DEVICEW dispdev;
     NTSTATUS Status;
 
-    DPRINT("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
+    TRACE("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
            pustrDevice, iDevNum);
 
     // FIXME: HACK, desk.cpl passes broken crap
     if (pustrDevice && iDevNum != 0)
         return FALSE;
 
-    dispdev.cb = sizeof(DISPLAY_DEVICEW);
+    dispdev.cb = sizeof(dispdev);
 
     if (pustrDevice)
     {
@@ -404,7 +403,7 @@ NtUserEnumDisplayDevices(
         _SEH2_END
     }
 
-    DPRINT1("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
+    ERR("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
     /* Return the result */
 //    return Status;
     return NT_SUCCESS(Status); // FIXME
@@ -423,7 +422,7 @@ UserEnumCurrentDisplaySettings(
     if (!ppdev)
     {
         /* No device found */
-        DPRINT1("No PDEV found!\n");
+        ERR("No PDEV found!\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -445,7 +444,7 @@ UserEnumDisplaySettings(
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
 
-    DPRINT("Enter UserEnumDisplaySettings('%ls', %ld)\n",
+    TRACE("Enter UserEnumDisplaySettings('%ls', %ld)\n",
             pustrDevice ? pustrDevice->Buffer : NULL, iModeNum);
 
     /* Ask gdi for the GRAPHICS_DEVICE */
@@ -454,7 +453,7 @@ UserEnumDisplaySettings(
     if (!pGraphicsDevice)
     {
         /* No device found */
-        DPRINT1("No device found!\n");
+        ERR("No device found!\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -551,7 +550,7 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    DPRINT("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
+    TRACE("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
             pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
 
     if (pustrDevice)
@@ -634,7 +633,6 @@ NtUserEnumDisplaySettings(
 
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 VOID APIENTRY UserRedrawDesktop();
-HCURSOR FASTCALL UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange);
 
 LONG
 APIENTRY
@@ -659,7 +657,7 @@ UserChangeDisplaySettings(
         Status = UserEnumRegistryDisplaySettings(pustrDevice, &dm);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Could not load registry settings\n");
+            ERR("Could not load registry settings\n");
             return DISP_CHANGE_BADPARAM;
         }
     }
@@ -671,7 +669,7 @@ UserChangeDisplaySettings(
     /* Check params */
     if ((dm.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT)) != (DM_PELSWIDTH | DM_PELSHEIGHT))
     {
-        DPRINT1("devmode doesn't specify the resolution.\n");
+        ERR("devmode doesn't specify the resolution.\n");
         return DISP_CHANGE_BADMODE;
     }
 
@@ -679,7 +677,7 @@ UserChangeDisplaySettings(
     ppdev = EngpGetPDEV(pustrDevice);
     if (!ppdev)
     {
-        DPRINT1("failed to get PDEV\n");
+        ERR("failed to get PDEV\n");
         return DISP_CHANGE_BADPARAM;
     }
 
@@ -697,7 +695,7 @@ UserChangeDisplaySettings(
     pdm = PDEVOBJ_pdmMatchDevMode(ppdev, &dm);
     if (!pdm)
     {
-        DPRINT1("Could not find a matching DEVMODE\n");
+        ERR("Could not find a matching DEVMODE\n");
         lResult = DISP_CHANGE_BADMODE;
         goto leave;
     }
@@ -723,7 +721,7 @@ UserChangeDisplaySettings(
         }
         else
         {
-            DPRINT1("Could not open registry key\n");
+            ERR("Could not open registry key\n");
             lResult = DISP_CHANGE_NOTUPDATED;
         }
     }
@@ -731,7 +729,7 @@ UserChangeDisplaySettings(
     /* Check if DEVMODE matches the current mode */
     if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
     {
-        DPRINT1("DEVMODE matches, nothing to do\n");
+        ERR("DEVMODE matches, nothing to do\n");
         goto leave;
     }
 
@@ -753,7 +751,7 @@ UserChangeDisplaySettings(
         /* Check for failure */
         if (!ulResult)
         {
-            DPRINT1("failed to set mode\n");
+            ERR("failed to set mode\n");
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
 
@@ -766,7 +764,7 @@ UserChangeDisplaySettings(
         //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
 
         /* Set new size of the monitor */
-        IntResetMonitorSize(ppdev);
+        IntUpdateMonitorSize(ppdev);
 
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
@@ -876,7 +874,7 @@ NtUserChangeDisplaySettings(
         if (dmLocal.dmDriverExtra > 0)
         {
             /* FIXME: TODO */
-            DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
+            ERR("lpDevMode->dmDriverExtra is IGNORED!\n");
             dmLocal.dmDriverExtra = 0;
         }
 

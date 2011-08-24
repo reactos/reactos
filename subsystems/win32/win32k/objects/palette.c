@@ -92,33 +92,33 @@ InitPaletteImpl()
     gpalRGB.RedMask = RGB(0xFF, 0x00, 0x00);
     gpalRGB.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalRGB.BlueMask = RGB(0x00, 0x00, 0xFF);
-    gpalRGB.BaseObject.ulShareCount = 0;
+    gpalRGB.BaseObject.ulShareCount = 1;
     gpalRGB.BaseObject.BaseFlags = 0 ;
 
     gpalBGR.flFlags = PAL_BGR;
     gpalBGR.RedMask = RGB(0x00, 0x00, 0xFF);
     gpalBGR.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalBGR.BlueMask = RGB(0xFF, 0x00, 0x00);
-    gpalBGR.BaseObject.ulShareCount = 0;
+    gpalBGR.BaseObject.ulShareCount = 1;
     gpalBGR.BaseObject.BaseFlags = 0 ;
 
     gpalRGB555.flFlags = PAL_RGB16_555 | PAL_BITFIELDS;
     gpalRGB555.RedMask = 0x7C00;
     gpalRGB555.GreenMask = 0x3E0;
     gpalRGB555.BlueMask = 0x1F;
-    gpalRGB555.BaseObject.ulShareCount = 0;
+    gpalRGB555.BaseObject.ulShareCount = 1;
     gpalRGB555.BaseObject.BaseFlags = 0 ;
 
     gpalRGB565.flFlags = PAL_RGB16_565 | PAL_BITFIELDS;
     gpalRGB565.RedMask = 0xF800;
     gpalRGB565.GreenMask = 0x7E0;
     gpalRGB565.BlueMask = 0x1F;
-    gpalRGB565.BaseObject.ulShareCount = 0;
+    gpalRGB565.BaseObject.ulShareCount = 1;
     gpalRGB565.BaseObject.BaseFlags = 0 ;
 
     memset(&gpalMono, 0, sizeof(PALETTE));
     gpalMono.flFlags = PAL_MONOCHROME;
-    gpalMono.BaseObject.ulShareCount = 0;
+    gpalMono.BaseObject.ulShareCount = 1;
     gpalMono.BaseObject.BaseFlags = 0 ;
 
     /* Initialize default surface palettes */
@@ -144,27 +144,27 @@ VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
         lpPalE[i].peFlags = PC_SYS_USED | (lpPalE[i].peFlags & 0x07);
 }
 
-HPALETTE
-FASTCALL
-PALETTE_AllocPalette(ULONG Mode,
+PPALETTE
+NTAPI
+PALETTE_AllocPalette2(ULONG Mode,
                      ULONG NumColors,
                      ULONG *Colors,
                      ULONG Red,
                      ULONG Green,
                      ULONG Blue)
 {
-    HPALETTE NewPalette;
     PPALETTE PalGDI;
 
-    PalGDI = (PPALETTE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PALETTE);
+    PalGDI = (PPALETTE)GDIOBJ_AllocateObject(GDIObjType_PAL_TYPE,
+                                             sizeof(PALETTE),
+                                             BASEFLAG_LOOKASIDE);
     if (!PalGDI)
     {
+        DPRINT1("Could not allocate a palette.\n");
         return NULL;
     }
 
-    NewPalette = PalGDI->BaseObject.hHmgr;
-
-    PalGDI->Self = NewPalette;
+    PalGDI->Self = PalGDI->BaseObject.hHmgr;
     PalGDI->flFlags = Mode;
 
     if (NULL != Colors)
@@ -174,8 +174,7 @@ PALETTE_AllocPalette(ULONG Mode,
                                                       TAG_PALETTE);
         if (NULL == PalGDI->IndexedColors)
         {
-            PALETTE_UnlockPalette(PalGDI);
-            PALETTE_FreePaletteByHandle(NewPalette);
+            GDIOBJ_vDeleteObject(&PalGDI->BaseObject);
             return NULL;
         }
         RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(PALETTEENTRY) * NumColors);
@@ -201,9 +200,35 @@ PALETTE_AllocPalette(ULONG Mode,
             PalGDI->flFlags |= PAL_RGB;
     }
 
-    PALETTE_UnlockPalette(PalGDI);
+    return PalGDI;
+}
 
-    return NewPalette;
+HPALETTE
+FASTCALL
+PALETTE_AllocPalette(ULONG Mode,
+                     ULONG NumColors,
+                     ULONG *Colors,
+                     ULONG Red,
+                     ULONG Green,
+                     ULONG Blue)
+{
+    PPALETTE ppal;
+    HPALETTE hpal;
+
+    ppal = PALETTE_AllocPalette2(Mode, NumColors, Colors, Red, Green, Blue);
+    if (!ppal) return NULL;
+
+    hpal = GDIOBJ_hInsertObject(&ppal->BaseObject, GDI_OBJ_HMGR_POWNED);
+    if (!hpal)
+    {
+        DPRINT1("Could not insert palette into handle table.\n");
+        GDIOBJ_vFreeObject(&ppal->BaseObject);
+        return NULL;
+    }
+
+    PALETTE_UnlockPalette(ppal);
+
+    return hpal;
 }
 
 HPALETTE
@@ -215,9 +240,19 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     PPALETTE PalGDI;
     UINT i;
 
-    PalGDI = (PPALETTE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PALETTE);
+    PalGDI = (PPALETTE)GDIOBJ_AllocateObject(GDIObjType_PAL_TYPE,
+                                           sizeof(PALETTE),
+                                           BASEFLAG_LOOKASIDE);
     if (!PalGDI)
     {
+        DPRINT1("Could not allocate a palette.\n");
+        return NULL;
+    }
+
+    if (!GDIOBJ_hInsertObject(&PalGDI->BaseObject, GDI_OBJ_HMGR_POWNED))
+    {
+        DPRINT1("Could not insert palette into handle table.\n");
+        GDIOBJ_vFreeObject(&PalGDI->BaseObject);
         return NULL;
     }
 
@@ -231,8 +266,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                                   TAG_PALETTE);
     if (NULL == PalGDI->IndexedColors)
     {
-        PALETTE_UnlockPalette(PalGDI);
-        PALETTE_FreePaletteByHandle(NewPalette);
+        GDIOBJ_vDeleteObject(&PalGDI->BaseObject);
         return NULL;
     }
 
@@ -390,22 +424,29 @@ ColorCorrection(PPALETTE PalGDI, PPALETTEENTRY PaletteEntry, ULONG Colors)
 HPALETTE
 APIENTRY
 EngCreatePalette(
-    ULONG Mode,
-    ULONG NumColors,
-    ULONG *Colors,
-    ULONG Red,
-    ULONG Green,
-    ULONG Blue)
+    ULONG iMode,
+    ULONG cColors,
+    ULONG *pulColors,
+    ULONG flRed,
+    ULONG flGreen,
+    ULONG flBlue)
 {
-    HPALETTE Palette;
+    PPALETTE ppal;
+    HPALETTE hpal;
 
-	Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
-    if (Palette != NULL)
+    ppal = PALETTE_AllocPalette2(iMode, cColors, pulColors, flRed, flGreen, flBlue);
+    if (!ppal) return NULL;
+
+    hpal = GDIOBJ_hInsertObject(&ppal->BaseObject, GDI_OBJ_HMGR_PUBLIC);
+    if (!hpal)
     {
-        GDIOBJ_SetOwnership(Palette, NULL);
+        DPRINT1("Could not insert palette into handle table.\n");
+        GDIOBJ_vFreeObject(&ppal->BaseObject);
+        return NULL;
     }
 
-    return Palette;
+    PALETTE_UnlockPalette(ppal);
+    return hpal;
 }
 
 /*
@@ -413,11 +454,16 @@ EngCreatePalette(
  */
 BOOL
 APIENTRY
-EngDeletePalette(IN HPALETTE Palette)
+EngDeletePalette(IN HPALETTE hpal)
 {
-    GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
+    PPALETTE ppal;
 
-    return PALETTE_FreePaletteByHandle(Palette);
+    ppal = PALETTE_ShareLockPalette(hpal);
+    if (!ppal) return FALSE;
+
+    GDIOBJ_vDeleteObject(&ppal->BaseObject);
+
+    return TRUE;
 }
 
 /*
@@ -469,11 +515,11 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
         return NULL;
     }
 
-    PalGDI = (PPALETTE) PALETTE_LockPalette(NewPalette);
+    PalGDI = (PPALETTE) PALETTE_ShareLockPalette(NewPalette);
     if (PalGDI != NULL)
     {
         PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
-        PALETTE_UnlockPalette(PalGDI);
+        PALETTE_ShareUnlockPalette(PalGDI);
     }
     else
     {
@@ -664,7 +710,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
    if (NULL != dc)
    {
       HPALETTE hpal = dc->dclevel.hpal;
-      palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
+      palGDI = PALETTE_ShareLockPalette(hpal);
       if (!palGDI)
       {
          DC_UnlockDc(dc);
@@ -691,7 +737,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
             (GetGValue(Color) >> GBits) << GBits,
             (GetBValue(Color) >> BBits) << BBits);
       }
-      PALETTE_UnlockPalette(palGDI);
+      PALETTE_ShareUnlockPalette(palGDI);
       DC_UnlockDc(dc);
    }
 
@@ -704,7 +750,7 @@ NtGdiGetNearestPaletteIndex(
     HPALETTE hpal,
     COLORREF crColor)
 {
-    PPALETTE ppal = (PPALETTE) PALETTE_LockPalette(hpal);
+    PPALETTE ppal = PALETTE_ShareLockPalette(hpal);
     UINT index  = 0;
 
     if (ppal)
@@ -715,7 +761,7 @@ NtGdiGetNearestPaletteIndex(
             index = PALETTE_ulGetNearestPaletteIndex(ppal, crColor);
         }
         // else SetLastError ?
-        PALETTE_UnlockPalette(ppal);
+        PALETTE_ShareUnlockPalette(ppal);
     }
 
     return index;
@@ -725,58 +771,39 @@ UINT
 FASTCALL
 IntGdiRealizePalette(HDC hDC)
 {
-  /*
-   * This function doesn't do any real work now and there's plenty
-   * of bugs in it.
-   */
+    UINT i, realize = 0;
+    PDC pdc;
+    PALETTE *ppalSurf, *ppalDC;
 
-  PPALETTE palGDI, sysGDI;
-  int realized = 0;
-  PDC dc;
-  HPALETTE systemPalette;
+    pdc = DC_LockDc(hDC);
+    if(!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
 
-  dc = DC_LockDc(hDC);
-  if (!dc) return 0;
+    ppalSurf = pdc->dclevel.pSurface->ppal;
+    ppalDC = pdc->dclevel.ppal;
 
-  systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-  palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
+    if(!(ppalSurf->flFlags & PAL_INDEXED))
+    {
+        // FIXME : set error?
+        goto cleanup;
+    }
 
-  if (palGDI == NULL)
-  {
-    DPRINT1("IntGdiRealizePalette(): palGDI is NULL, exiting\n");
-    DC_UnlockDc(dc);
-    return 0;
-  }
+    ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
-  sysGDI = PALETTE_LockPalette(systemPalette);
+    // FIXME : should we resize ppalSurf if it's too small?
+    realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
-  if (sysGDI == NULL)
-  {
-    DPRINT1("IntGdiRealizePalette(): sysGDI is NULL, exiting\n");
-    PALETTE_UnlockPalette(palGDI);
-    DC_UnlockDc(dc);
-    return 0;
-  }
+    for(i=0; i<realize; i++)
+    {
+        InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
+    }
 
-  // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
-  // device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device
-  // context is a display DC, the physical palette for that device is modified.
-  if(dc->dctype == DC_TYPE_MEMORY)
-  {
-    // Memory managed DC
-    DPRINT1("RealizePalette unimplemented for memory managed DCs\n");
-  } else
-  {
-    DPRINT1("RealizePalette unimplemented for device DCs\n");
-  }
-
-  // need to pass this to IntEngCreateXlate with palettes unlocked
-  PALETTE_UnlockPalette(sysGDI);
-  PALETTE_UnlockPalette(palGDI);
-
-  DC_UnlockDc(dc);
-
-  return realized;
+cleanup:
+    DC_UnlockDc(pdc);
+    return realize;
 }
 
 UINT APIENTRY
@@ -796,13 +823,13 @@ IntAnimatePalette(HPALETTE hPal,
         PWND Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
-        palPtr = (PPALETTE)PALETTE_LockPalette(hPal);
+        palPtr = PALETTE_ShareLockPalette(hPal);
         if (!palPtr) return FALSE;
 
         pal_entries = palPtr->NumColors;
         if (StartIndex >= pal_entries)
         {
-            PALETTE_UnlockPalette(palPtr);
+            PALETTE_ShareUnlockPalette(palPtr);
             return FALSE;
         }
         if (StartIndex+NumEntries > pal_entries) NumEntries = pal_entries - StartIndex;
@@ -819,7 +846,7 @@ IntAnimatePalette(HPALETTE hPal,
             }
         }
 
-        PALETTE_UnlockPalette(palPtr);
+        PALETTE_ShareUnlockPalette(palPtr);
 
         /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
@@ -850,7 +877,7 @@ IntGetPaletteEntries(
     PPALETTE palGDI;
     UINT numEntries;
 
-    palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
+    palGDI = (PPALETTE) PALETTE_ShareLockPalette(hpal);
     if (NULL == palGDI)
     {
         return 0;
@@ -865,7 +892,7 @@ IntGetPaletteEntries(
         }
         if (numEntries <= StartIndex)
         {
-            PALETTE_UnlockPalette(palGDI);
+            PALETTE_ShareUnlockPalette(palGDI);
             return 0;
         }
         memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
@@ -875,7 +902,7 @@ IntGetPaletteEntries(
         Entries = numEntries;
     }
 
-    PALETTE_UnlockPalette(palGDI);
+    PALETTE_ShareUnlockPalette(palGDI);
     return Entries;
 }
 
@@ -913,7 +940,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         return 0;
     }
 
-    palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
+    palGDI = PALETTE_ShareLockPalette(dc->dclevel.hpal);
     if (palGDI != NULL)
     {
         if (pe != NULL)
@@ -936,7 +963,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
     }
 
     if (palGDI != NULL)
-        PALETTE_UnlockPalette(palGDI);
+        PALETTE_ShareUnlockPalette(palGDI);
 
     if (dc != NULL)
         DC_UnlockDc(dc);
@@ -960,13 +987,13 @@ IntSetPaletteEntries(
     	return 0;
     }
 
-    palGDI = PALETTE_LockPalette(hpal);
+    palGDI = PALETTE_ShareLockPalette(hpal);
     if (!palGDI) return 0;
 
     numEntries = palGDI->NumColors;
     if (Start >= numEntries)
     {
-        PALETTE_UnlockPalette(palGDI);
+        PALETTE_ShareUnlockPalette(palGDI);
         return 0;
     }
     if (numEntries < Start + Entries)
@@ -974,7 +1001,7 @@ IntSetPaletteEntries(
         Entries = numEntries - Start;
     }
     memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
-    PALETTE_UnlockPalette(palGDI);
+    PALETTE_ShareUnlockPalette(palGDI);
 
     return Entries;
 }
@@ -1157,7 +1184,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
         !GDI_HANDLE_IS_TYPE(hgdiobj, GDI_OBJECT_TYPE_PALETTE) )
       return Ret;
 
-   palGDI = PALETTE_LockPalette(hgdiobj);
+   palGDI = PALETTE_ShareLockPalette(hgdiobj);
    if (!palGDI) return FALSE;
 
    // FIXME!!
@@ -1165,7 +1192,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    // Zero out Current and Old Translated pointers?
    //
    Ret = TRUE;
-   PALETTE_UnlockPalette(palGDI);
+   PALETTE_ShareUnlockPalette(palGDI);
    return Ret;
 }
 

@@ -370,7 +370,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     StackPtr->MajorFunction = IsDevIoCtl ?
                               IRP_MJ_DEVICE_CONTROL :
                               IRP_MJ_FILE_SYSTEM_CONTROL;
-    StackPtr->MinorFunction = 0;
+    StackPtr->MinorFunction = 0; /* Minor function 0 is IRP_MN_USER_FS_REQUEST */
     StackPtr->Control = 0;
     StackPtr->Flags = 0;
     StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = NULL;

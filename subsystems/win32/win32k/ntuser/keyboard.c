@@ -30,30 +30,9 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
-
-/* Lock modifiers */
-#define CAPITAL_BIT   0x80000000
-#define NUMLOCK_BIT   0x40000000
-#define MOD_BITS_MASK 0x3fffffff
-#define MOD_KCTRL     0x02
-/* Key States */
-#define KS_DOWN_MASK     0xc0
-#define KS_DOWN_BIT      0x80
-#define KS_LOCK_BIT      0x01
-/* Scan Codes */
-#define SC_KEY_UP        0x8000
-/* lParam bits */
-#define LP_EXT_BIT       (1<<24)
-/* From kbdxx.c -- Key changes with numlock */
-#define KNUMP         0x400
-
+DBG_DEFAULT_CHANNEL(UserKbd);
 
 BYTE gQueueKeyStateTable[256];
-
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -235,7 +214,7 @@ static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState )
       ModBits |= NUMLOCK_BIT;
    }
 
-   DPRINT( "Current Mod Bits: %x\n", ModBits );
+   TRACE( "Current Mod Bits: %x\n", ModBits );
 
    return ModBits;
 }
@@ -256,7 +235,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
    CapsState = ModBits & ~MOD_BITS_MASK;
    ModBits = ModBits & MOD_BITS_MASK;
 
-   DPRINT ( "TryToTranslate: %04x %x\n", wVirtKey, ModBits );
+   TRACE ( "TryToTranslate: %04x %x\n", wVirtKey, ModBits );
 
    if (ModBits > keyLayout->pCharModifiers->wMaxModBits)
    {
@@ -290,7 +269,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
             *pbLigature = vkPtr->wch[CapsMod] == WCH_LGTR;
             *pwcTranslatedChar = vkPtr->wch[CapsMod];
 
-            DPRINT("%d %04x: CapsMod %08x CapsState %08x Char %04x\n",
+            TRACE("%d %04x: CapsMod %08x CapsState %08x Char %04x\n",
                    nMod, wVirtKey,
                    CapsMod, CapsState, *pwcTranslatedChar);
 
@@ -299,8 +278,8 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
                vkPtr = (PVK_TO_WCHARS10)(((BYTE *)vkPtr) + size_this_entry);
                if( vkPtr->VirtualKey != 0xff )
                {
-                  DPRINT( "Found dead key with no trailer in the table.\n" );
-                  DPRINT( "VK: %04x, ADDR: %p\n", wVirtKey, vkPtr );
+                  TRACE( "Found dead key with no trailer in the table.\n" );
+                  TRACE( "VK: %04x, ADDR: %p\n", wVirtKey, vkPtr );
                   return FALSE;
                }
                *pwcTranslatedChar = vkPtr->wch[CapsMod];
@@ -339,7 +318,7 @@ ToUnicodeInner(UINT wVirtKey,
    {
       if( bLigature )
       {
-         DPRINT("Not handling ligature (yet)\n" );
+         TRACE("Not handling ligature (yet)\n" );
          return 0;
       }
 
@@ -353,40 +332,6 @@ ToUnicodeInner(UINT wVirtKey,
 }
 
 
-DWORD FASTCALL UserGetKeyState(DWORD key)
-{
-   DWORD ret = 0;
-
-   if( key < 0x100 )
-   {
-      ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-            (gQueueKeyStateTable[key] & KS_LOCK_BIT);
-   }
-
-   return ret;
-}
-
-
-SHORT
-APIENTRY
-NtUserGetKeyState(
-   INT key)
-{
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserGetKeyState\n");
-   UserEnterExclusive();
-
-   RETURN(UserGetKeyState(key));
-
-CLEANUP:
-   DPRINT("Leave NtUserGetKeyState, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
-
 DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
 {
    DWORD ret = 0;
@@ -395,12 +340,40 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
    {
       ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
             (gQueueKeyStateTable[key] & KS_LOCK_BIT);
+      if ( ret & 0x8000 )
+         ret |= 0xFFFF0000; // If down, windows returns 0xFFFF8000.
    }
-
+   else
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+   }
    return ret;
 }
 
+/***********************************************************************
+ *           get_key_state
+ */
+WORD FASTCALL get_key_state(void)
+{
+    WORD ret = 0;
 
+    if (gpsi->aiSysMet[SM_SWAPBUTTON])
+    {
+        if (gQueueKeyStateTable[VK_RBUTTON] & 0x80) ret |= MK_LBUTTON;
+        if (gQueueKeyStateTable[VK_LBUTTON] & 0x80) ret |= MK_RBUTTON;
+    }
+    else
+    {
+        if (gQueueKeyStateTable[VK_LBUTTON] & 0x80) ret |= MK_LBUTTON;
+        if (gQueueKeyStateTable[VK_RBUTTON] & 0x80) ret |= MK_RBUTTON;
+    }
+    if (gQueueKeyStateTable[VK_MBUTTON]  & 0x80) ret |= MK_MBUTTON;
+    if (gQueueKeyStateTable[VK_SHIFT]    & 0x80) ret |= MK_SHIFT;
+    if (gQueueKeyStateTable[VK_CONTROL]  & 0x80) ret |= MK_CONTROL;
+    if (gQueueKeyStateTable[VK_XBUTTON1] & 0x80) ret |= MK_XBUTTON1;
+    if (gQueueKeyStateTable[VK_XBUTTON2] & 0x80) ret |= MK_XBUTTON2;
+    return ret;
+}
 
 SHORT
 APIENTRY
@@ -409,13 +382,13 @@ NtUserGetAsyncKeyState(
 {
    DECLARE_RETURN(SHORT);
 
-   DPRINT("Enter NtUserGetAsyncKeyState\n");
+   TRACE("Enter NtUserGetAsyncKeyState\n");
    UserEnterExclusive();
 
    RETURN((SHORT)UserGetAsyncKeyState(key));
 
 CLEANUP:
-   DPRINT("Leave NtUserGetAsyncKeyState, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -432,9 +405,17 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    WCHAR wp[2] = { 0 };
    MSG NewMsg = { 0 };
    PKBDTABLES keyLayout;
+   PWND pWndMsg;
    BOOL Result = FALSE;
 
-   pti = PsGetCurrentThreadWin32Thread();
+   pWndMsg = UserGetWindowObject(lpMsg->hwnd);
+   if (!pWndMsg) // Must have a window!
+   {
+      ERR("No Window for Translate.\n");
+      return FALSE;
+   }
+
+   pti = pWndMsg->head.pti;
    keyLayout = pti->KeyboardLayout->KBTables;
    if( !keyLayout )
       return FALSE;
@@ -447,6 +428,8 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    /* All messages have to contain the cursor point. */
    NewMsg.pt = gpsi->ptCursor;
 
+   TRACE("IntTranslateKbdMessage %s\n", lpMsg->message == WM_SYSKEYDOWN ? "WM_SYSKEYDOWN" : "WM_KEYDOWN");
+
     switch (lpMsg->wParam)
     {
     case VK_PACKET:
@@ -458,9 +441,13 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         return TRUE;
     }
 
-   UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
-                           gQueueKeyStateTable, wp, 2, 0,
-                           keyLayout );
+   UState = ToUnicodeInner( lpMsg->wParam,
+                            HIWORD(lpMsg->lParam) & 0xff,
+                            gQueueKeyStateTable,
+                            wp,
+                            2,
+                            0,
+                            keyLayout );
 
    if (UState == 1)
    {
@@ -469,7 +456,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       {
          ULONG i;
          WCHAR first, second;
-         DPRINT("PREVIOUS DEAD CHAR: %c\n", dead_char);
+         TRACE("PREVIOUS DEAD CHAR: %c\n", dead_char);
 
          for( i = 0; keyLayout->pDeadKey[i].dwBoth; i++ )
          {
@@ -483,7 +470,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
             }
          }
 
-         DPRINT("FINAL CHAR: %c\n", wp[0]);
+         TRACE("FINAL CHAR: %c\n", wp[0]);
       }
 
       if (dead_char)
@@ -498,7 +485,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       NewMsg.hwnd = lpMsg->hwnd;
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
-      DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
+      TRACE( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
       MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
@@ -513,57 +500,8 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
-
+   TRACE("IntTranslateKbdMessage E %s\n", NewMsg.message == WM_CHAR ? "WM_CHAR" : "WM_SYSCHAR");
    return Result;
-}
-
-DWORD
-APIENTRY
-NtUserGetKeyboardState(
-   LPBYTE lpKeyState)
-{
-   BOOL Result = TRUE;
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserGetKeyboardState\n");
-   UserEnterShared();
-
-   if (lpKeyState)
-   {
-      if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, gQueueKeyStateTable, 256)))
-         Result = FALSE;
-   }
-
-   RETURN(Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetKeyboardState, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-BOOL
-APIENTRY
-NtUserSetKeyboardState(LPBYTE lpKeyState)
-{
-   BOOL Result = TRUE;
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserSetKeyboardState\n");
-   UserEnterExclusive();
-
-   if (lpKeyState)
-   {
-      if(! NT_SUCCESS(MmCopyFromCaller(gQueueKeyStateTable, lpKeyState, 256)))
-         Result = FALSE;
-   }
-
-   RETURN(Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
 }
 
 static UINT VkToScan( UINT Code, BOOL ExtCode, PKBDTABLES pkKT )
@@ -585,7 +523,7 @@ UINT ScanToVk( UINT Code, BOOL ExtKey, PKBDTABLES pkKT )
 {
    if( !pkKT )
    {
-      DPRINT("ScanToVk: No layout\n");
+      TRACE("ScanToVk: No layout\n");
       return 0;
    }
 
@@ -684,7 +622,7 @@ NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
    PKBDTABLES keyLayout;
    DECLARE_RETURN(UINT);
 
-   DPRINT("Enter NtUserMapVirtualKeyEx\n");
+   TRACE("Enter NtUserMapVirtualKeyEx\n");
    UserEnterExclusive();
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -696,7 +634,7 @@ NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
    RETURN(IntMapVirtualKeyEx( Code, Type, keyLayout ));
 
 CLEANUP:
-   DPRINT("Leave NtUserMapVirtualKeyEx, ret=%i\n",_ret_);
+   TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -719,7 +657,7 @@ NtUserToUnicodeEx(
    int ret = 0;
    DECLARE_RETURN(int);
 
-   DPRINT("Enter NtUserSetKeyboardState\n");
+   TRACE("Enter NtUserSetKeyboardState\n");
    UserEnterShared();//fixme: this syscall doesnt seem to need any locking...
 
    /* Key up? */
@@ -732,7 +670,7 @@ NtUserToUnicodeEx(
                                     lpKeyState,
                                     sizeof(KeyStateBuf))) )
    {
-      DPRINT1( "Couldn't copy key state from caller.\n" );
+      ERR( "Couldn't copy key state from caller.\n" );
       RETURN(0);
    }
    
@@ -742,7 +680,7 @@ NtUserToUnicodeEx(
       OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
       if( !OutPwszBuff )
       {
-         DPRINT1( "ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
+         ERR( "ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
          RETURN(0);
       }
       RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
@@ -763,7 +701,7 @@ NtUserToUnicodeEx(
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -790,7 +728,7 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    VSC_LPWSTR *KeyNames;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserGetKeyNameText\n");
+   TRACE("Enter NtUserGetKeyNameText\n");
    UserEnterShared();
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -869,7 +807,7 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetKeyNameText, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetKeyNameText, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -919,6 +857,8 @@ W32kKeyProcessMessage(LPMSG Msg,
     *
     * Shift and the LP_EXT_BIT cancel. */
    ScanCode = (Msg->lParam >> 16) & 0xff;
+   TRACE("ScanCode %04x\n",ScanCode);
+
    BaseMapping = Msg->wParam =
                     IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
    if( Prefix == 0 )
@@ -946,7 +886,7 @@ W32kKeyProcessMessage(LPMSG Msg,
 
       if (!VscVkTable)
       {
-          DPRINT1("somethings wrong, Prefix=0x%x", Prefix);
+          ERR("somethings wrong, Prefix=0x%x", Prefix);
           return;
       }
 
@@ -977,7 +917,7 @@ W32kKeyProcessMessage(LPMSG Msg,
       }
    }
 
-   DPRINT("Key: [%04x -> %04x]\n", BaseMapping, Msg->wParam);
+   TRACE("Key: [%04x -> %04x]\n", BaseMapping, Msg->wParam);
 
    /* Now that we have the VK, we can set the keymap appropriately
     * This is a better place for this code, as it's guaranteed to be
@@ -1019,7 +959,7 @@ UserGetKeyboardType(
       case 2:        /* Number of F-keys */
          return 12;   /* We're doing an 101 for now, so return 12 F-keys */
       default:
-         DPRINT1("Unknown type!\n");
+         ERR("Unknown type!\n");
          return 0;    /* The book says 0 here, so 0 */
    }
 }
@@ -1044,7 +984,7 @@ NtUserVkKeyScanEx(
    PKBL pkbl = NULL;
    DWORD CapsMod = 0, CapsState = 0, Ret = -1;
 
-   DPRINT("NtUserVkKeyScanEx() wChar %d, KbdLayout 0x%p\n", wChar, hKeyboardLayout);
+   TRACE("NtUserVkKeyScanEx() wChar %d, KbdLayout 0x%p\n", wChar, hKeyboardLayout);
    UserEnterShared();
 
    if (UsehKL)
@@ -1078,7 +1018,7 @@ NtUserVkKeyScanEx(
             if(vkPtr->wch[CapsState] == wChar)
             {
                CapsMod = KeyLayout->pCharModifiers->ModNumber[CapsState];
-               DPRINT("nMod %d wC %04x: CapsMod %08x CapsState %08x MaxModBits %08x\n",
+               TRACE("nMod %d wC %04x: CapsMod %08x CapsState %08x MaxModBits %08x\n",
                       nMod, wChar, CapsMod, CapsState, KeyLayout->pCharModifiers->wMaxModBits);
                Ret = ((CapsMod << 8)|(vkPtr->VirtualKey & 0xff));
                goto Exit;

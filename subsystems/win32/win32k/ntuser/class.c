@@ -11,23 +11,19 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-#define TRACE DPRINT
-#define WARN DPRINT1
-#define ERR DPRINT1
+DBG_DEFAULT_CHANNEL(UserClass);
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
-/*  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
+  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL,
     0,
     IDC_ARROW,
-    (HBRUSH)(COLOR_BACKGROUND+1),
+    (HBRUSH)(COLOR_BACKGROUND + 1),
     FNID_DESKTOP,
     ICLS_DESKTOP
-  },*/
+  },
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8003))),
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs
@@ -510,7 +506,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
             /* simply clone the class */
             RtlCopyMemory( Class, BaseClass, ClassSize);
 
-            DPRINT("Clone Class 0x%x hM 0x%x\n %S\n",Class, Class->hModule, Class->lpszClientUnicodeMenuName);
+            TRACE("Clone Class 0x%x hM 0x%x\n %S\n",Class, Class->hModule, Class->lpszClientUnicodeMenuName);
 
             /* restore module address if default user class Ref: Bug 4778 */
             if ( Class->hModule != hModClient &&
@@ -518,7 +514,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
                  Class->fnid >= FNID_BUTTON )
             {
                Class->hModule = hModClient;
-               DPRINT("Clone Class 0x%x Reset hM 0x%x\n",Class, Class->hModule);
+               TRACE("Clone Class 0x%x Reset hM 0x%x\n",Class, Class->hModule);
             }
 
             /* update some pointers and link the class */
@@ -636,7 +632,7 @@ IntDereferenceClass(IN OUT PCLS Class,
         {
             ASSERT(Class->pclsBase == Class);
 
-            DPRINT("IntDereferenceClass 0x%x\n", Class);
+            TRACE("IntDereferenceClass 0x%x\n", Class);
             /* check if there are clones of the class on other desktops,
                link the first clone in if possible. If there are no clones
                then leave the class on the desktop heap. It will get moved
@@ -674,7 +670,7 @@ IntDereferenceClass(IN OUT PCLS Class,
         }
         else
         {
-            DPRINT("IntDereferenceClass1 0x%x\n", Class);
+            TRACE("IntDereferenceClass1 0x%x\n", Class);
 
             /* locate the cloned class and unlink it */
             PrevLink = &BaseClass->pclsClone;
@@ -831,7 +827,7 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
                            &Ret);
     if (!Ret)
     {
-        DPRINT1("Failed to move process classes from desktop 0x%p to the shared heap!\n", Desktop);
+        ERR("Failed to move process classes from desktop 0x%p to the shared heap!\n", Desktop);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
 
@@ -855,13 +851,13 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     PWSTR pszMenuName = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("lpwcx=%p ClassName=%wZ MenuName=%wZ dwFlags=%08x Desktop=%p pi=%p\n",
+    TRACE("lpwcx=%p ClassName=%wZ MenuName=%wZ dwFlags=%08x Desktop=%p pi=%p\n",
         lpwcx, ClassName, MenuName, dwFlags, Desktop, pi);
 
     if (!IntRegisterClassAtom(ClassName,
                               &Atom))
     {
-        DPRINT1("Failed to register class atom!\n");
+        ERR("Failed to register class atom!\n");
         return NULL;
     }
 
@@ -951,7 +947,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                                                       FALSE);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT1("Failed to convert unicode menu name to ansi!\n");
+                    ERR("Failed to convert unicode menu name to ansi!\n");
 
                     /* life would've been much prettier if ntoskrnl exported RtlRaiseStatus()... */
                     _SEH2_LEAVE;
@@ -1010,7 +1006,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed creating the class: 0x%x\n", Status);
+            ERR("Failed creating the class: 0x%x\n", Status);
 
             SetLastNtError(Status);
 
@@ -1027,7 +1023,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     else
     {
 NoMem:
-        DPRINT1("Failed to allocate class on Desktop 0x%p\n", Desktop);
+        ERR("Failed to allocate class on Desktop 0x%p\n", Desktop);
 
         if (pszMenuName != NULL)
             UserHeapFree(pszMenuName);
@@ -1036,6 +1032,9 @@ NoMem:
 
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
+
+    TRACE("Created class 0x%x with name %wZ and proc 0x%x for atom 0x%x and hInstance 0x%x, global %d\n",
+            Class, ClassName, Class->lpfnWndProc, Atom, Class->hModule, Class->Global);
 
     return Class;
 }
@@ -1162,7 +1161,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        {  DPRINT("Step 1: 0x%x\n",Class );
+        {  TRACE("Step 1: 0x%x\n",Class );
             goto FoundClass;
         }
 
@@ -1173,7 +1172,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPublicList,
                              Link);
         if (Class != NULL)
-        { DPRINT("Step 2: 0x%x 0x%x\n",Class, Class->hModule);
+        { TRACE("Step 2: 0x%x 0x%x\n",Class, Class->hModule);
             goto FoundClass;
         }
 
@@ -1183,7 +1182,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        { DPRINT("Step 3: 0x%x\n",Class );
+        { TRACE("Step 3: 0x%x\n",Class );
             goto FoundClass;
         }
 
@@ -1196,7 +1195,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         {
             EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
             return (RTL_ATOM)0;
-        }else{DPRINT("Step 4: 0x%x\n",Class );}
+        }else{TRACE("Step 4: 0x%x\n",Class );}
 
 FoundClass:
         *BaseClass = Class;
@@ -1221,7 +1220,7 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
 
    /* Check the class. */
 
-   DPRINT("Class %wZ\n", ClassName);
+   TRACE("Finding Class %wZ for hInstance 0x%x\n", ClassName, hInstance);
 
    ClassAtom = IntGetClassAtom(ClassName,
                                hInstance,
@@ -1233,23 +1232,24 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
    {
       if (IS_ATOM(ClassName->Buffer))
       {
-         DPRINT1("Class 0x%p not found\n", (DWORD_PTR) ClassName->Buffer);
+         ERR("Class 0x%p not found\n", (DWORD_PTR) ClassName->Buffer);
       }
       else
       {
-         DPRINT1("Class \"%wZ\" not found\n", ClassName);
+         ERR("Class \"%wZ\" not found\n", ClassName);
       }
 
       EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
       return NULL;
    }
-   DPRINT("ClassAtom %x\n", ClassAtom);
+
+   TRACE("Referencing Class 0x%x with atom 0x%x\n", Class, ClassAtom);
    Class = IntReferenceClass(Class,
                              ClassLink,
                              pti->rpdesk);
    if (Class == NULL)
    {
-       DPRINT1("Failed to reference window class!\n");
+       ERR("Failed to reference window class!\n");
        return NULL;
    }
 
@@ -1288,7 +1288,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
        if (Class != NULL && !Class->Global)
        {
           // local class already exists
-          DPRINT("Local Class 0x%p does already exist!\n", ClassAtom);
+          TRACE("Local Class 0x%p does already exist!\n", ClassAtom);
           EngSetLastError(ERROR_CLASS_ALREADY_EXISTS);
           return (RTL_ATOM)0;
        }
@@ -1302,7 +1302,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
           if (Class != NULL && Class->Global)
           {
-             DPRINT("Global Class 0x%p does already exist!\n", ClassAtom);
+             TRACE("Global Class 0x%p does already exist!\n", ClassAtom);
              EngSetLastError(ERROR_CLASS_ALREADY_EXISTS);
              return (RTL_ATOM)0;
           }
@@ -1335,7 +1335,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
     }
     else
     {
-       DPRINT1("UserRegisterClass: Yes, that is right, you have no Class!\n");
+       ERR("UserRegisterClass: Yes, that is right, you have no Class!\n");
     }
 
     return Ret;
@@ -1353,7 +1353,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     pi = GetW32ProcessInfo();
 
-    DPRINT("UserUnregisterClass(%wZ, 0x%x)\n", ClassName, hInstance);
+    TRACE("UserUnregisterClass(%wZ, 0x%x)\n", ClassName, hInstance);
 
     /* NOTE: Accessing the buffer in ClassName may raise an exception! */
     ClassAtom = IntGetClassAtom(ClassName,
@@ -1363,7 +1363,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
                                 &Link);
     if (ClassAtom == (RTL_ATOM)0)
     {
-        DPRINT("UserUnregisterClass: No Class found.\n");
+        TRACE("UserUnregisterClass: No Class found.\n");
         return FALSE;
     }
 
@@ -1372,7 +1372,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
     if (Class->cWndReferenceCount != 0 ||
         Class->pclsClone != NULL)
     {
-        DPRINT("UserUnregisterClass: Class has a Window. Ct %d : Clone 0x%x\n", Class->cWndReferenceCount, Class->pclsClone);
+        TRACE("UserUnregisterClass: Class has a Window. Ct %d : Clone 0x%x\n", Class->cWndReferenceCount, Class->pclsClone);
         EngSetLastError(ERROR_CLASS_HAS_WINDOWS);
         return FALSE;
     }
@@ -1385,19 +1385,20 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     if (NT_SUCCESS(IntDeregisterClassAtom(Class->atomClassName)))
     {
-        DPRINT("Class 0x%x\n", Class);
-        DPRINT("UserUnregisterClass: Good Exit!\n");
+        TRACE("Class 0x%x\n", Class);
+        TRACE("UserUnregisterClass: Good Exit!\n");
         /* finally free the resources */
         IntDestroyClass(Class);
         return TRUE;
     }
-    DPRINT1("UserUnregisterClass: Can not deregister Class Atom.\n");
+    ERR("UserUnregisterClass: Can not deregister Class Atom.\n");
     return FALSE;
 }
 
 INT
 UserGetClassName(IN PCLS Class,
                  IN OUT PUNICODE_STRING ClassName,
+                 IN RTL_ATOM Atom,
                  IN BOOL Ansi)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1451,7 +1452,7 @@ UserGetClassName(IN PCLS Class,
 
                 /* query the class name */
                 Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                                 Class->atomClassName,
+                                                 Atom ? Atom : Class->atomClassName,
                                                  NULL,
                                                  NULL,
                                                  szTemp,
@@ -1485,7 +1486,7 @@ UserGetClassName(IN PCLS Class,
 
             /* query the atom name */
             Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                             Class->atomClassName,
+                                             Atom ? Atom : Class->atomClassName,
                                              NULL,
                                              NULL,
                                              ClassName->Buffer,
@@ -1584,7 +1585,7 @@ IntSetClassMenuName(IN PCLS Class,
             }
             else
             {
-                DPRINT1("Failed to copy class menu name!\n");
+                ERR("Failed to copy class menu name!\n");
                 UserHeapFree(strBufW);
             }
         }
@@ -1758,7 +1759,7 @@ UserSetClassLongPtr(IN PCLS Class,
             if (!IntSetClassMenuName(Class,
                                      Value))
             {
-                DPRINT1("Setting the class menu name failed!\n");
+                ERR("Setting the class menu name failed!\n");
             }
 
             /* FIXME - really return NULL? Wine does so... */
@@ -1943,7 +1944,7 @@ UserRegisterSystemClasses(VOID)
         }
         else
         {
-            WARN("!!! Registering system class failed!\n");
+            ERR("!!! Registering system class failed!\n");
             Ret = FALSE;
         }
     }
@@ -1981,14 +1982,14 @@ NtUserRegisterClassExWOW(
 
     if (Flags & ~(CSF_ANSIPROC))
     {
-        DPRINT1("NtUserRegisterClassExWOW Bad Flags!\n");
+        ERR("NtUserRegisterClassExWOW Bad Flags!\n");
         EngSetLastError(ERROR_INVALID_FLAGS);
         return Ret;
     }
 
     UserEnterExclusive();
 
-    DPRINT("NtUserRegisterClassExWOW ClsN %wZ\n",ClassName);
+    TRACE("NtUserRegisterClassExWOW ClsN %wZ\n",ClassName);
 
     if ( !(ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
     {
@@ -2000,7 +2001,7 @@ NtUserRegisterClassExWOW(
         /* Probe the parameters and basic parameter checks */
         if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
         {
-            DPRINT1("NtUserRegisterClassExWOW Wrong cbSize!\n");
+            ERR("NtUserRegisterClassExWOW Wrong cbSize!\n");
             goto InvalidParameter;
         }
 
@@ -2029,7 +2030,7 @@ NtUserRegisterClassExWOW(
              CapturedClassInfo.cbWndExtra < 0 ||
              CapturedClassInfo.hInstance == NULL)
         {
-            DPRINT1("NtUserRegisterClassExWOW Invalid Parameter Error!\n");
+            ERR("NtUserRegisterClassExWOW Invalid Parameter Error!\n");
             goto InvalidParameter;
         }
 
@@ -2043,7 +2044,7 @@ NtUserRegisterClassExWOW(
         {
             if (!IS_ATOM(CapturedName.Buffer))
             {
-                DPRINT1("NtUserRegisterClassExWOW ClassName Error!\n");
+                ERR("NtUserRegisterClassExWOW ClassName Error!\n");
                 goto InvalidParameter;
             }
         }
@@ -2057,7 +2058,7 @@ NtUserRegisterClassExWOW(
         else if (CapturedMenuName.Buffer != NULL &&
                  !IS_INTRESOURCE(CapturedMenuName.Buffer))
         {
-            DPRINT1("NtUserRegisterClassExWOW MenuName Error!\n");
+            ERR("NtUserRegisterClassExWOW MenuName Error!\n");
 InvalidParameter:
             EngSetLastError(ERROR_INVALID_PARAMETER);
             _SEH2_LEAVE;
@@ -2066,10 +2067,10 @@ InvalidParameter:
         if (IsCallProcHandle(lpwcx->lpfnWndProc))
         {// Never seen this yet, but I'm sure it's a little haxxy trick!
          // If this pops up we know what todo!
-           DPRINT1("NtUserRegisterClassExWOW WndProc is CallProc!!\n");
+           ERR("NtUserRegisterClassExWOW WndProc is CallProc!!\n");
         }
 
-        DPRINT("NtUserRegisterClassExWOW MnuN %wZ\n",&CapturedMenuName);
+        TRACE("NtUserRegisterClassExWOW MnuN %wZ\n",&CapturedMenuName);
 
         /* Register the class */
         Ret = UserRegisterClass(&CapturedClassInfo,
@@ -2080,14 +2081,14 @@ InvalidParameter:
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("NtUserRegisterClassExWOW Exception Error!\n");
+        ERR("NtUserRegisterClassExWOW Exception Error!\n");
         SetLastNtError(_SEH2_GetExceptionCode());
     }
     _SEH2_END;
 /*
     if (!Ret)
     {
-       DPRINT1("NtUserRegisterClassExWOW Null Return!\n");
+       ERR("NtUserRegisterClassExWOW Null Return!\n");
     }
  */
     UserLeave();
@@ -2268,9 +2269,13 @@ NtUserGetClassInfo(
       CapturedClassName = ProbeForReadUnicodeString(ClassName);
 
       if (CapturedClassName.Length == 0)
+      {
          TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
+      }
       else
+      {
          TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
+      }
 
       if (CapturedClassName.Length & 1)
       {
@@ -2325,7 +2330,7 @@ NtUserGetClassInfo(
 
    if (Ret)
    {
-      DPRINT("GetClassInfo(%wZ, 0x%x)\n", ClassName, hInstance);
+      TRACE("GetClassInfo(%wZ, 0x%x)\n", SafeClassName, hInstance);
       ClassAtom = IntGetClassAtom( &SafeClassName,
                                     hInstance,
                                     ppi,
@@ -2376,18 +2381,27 @@ NtUserGetClassInfo(
 
 INT APIENTRY
 NtUserGetClassName (IN HWND hWnd,
-                    OUT PUNICODE_STRING ClassName,
-                    IN BOOL Ansi)
+                    IN BOOL Real,
+                    OUT PUNICODE_STRING ClassName)
 {
     PWND Window;
     UNICODE_STRING CapturedClassName;
-    INT Ret = 0;
+    INT iCls, Ret = 0;
+    RTL_ATOM Atom = 0;
 
     UserEnterShared();
 
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
+        if (Real && Window->fnid && !(Window->fnid & FNID_DESTROY))
+        {
+           if (LookupFnIdToiCls(Window->fnid, &iCls))
+           {
+              Atom = gpsi->atomSysClass[iCls];
+           }
+        }
+
         _SEH2_TRY
         {
             ProbeForWriteUnicodeString(ClassName);
@@ -2396,7 +2410,8 @@ NtUserGetClassName (IN HWND hWnd,
             /* get the class name */
             Ret = UserGetClassName(Window->pcls,
                                    &CapturedClassName,
-                                   Ansi);
+                                   Atom,
+                                   FALSE);
 
             if (Ret != 0)
             {

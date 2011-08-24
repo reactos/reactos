@@ -106,23 +106,11 @@
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
+#define user32_module User32Instance
 extern HINSTANCE hImmInstance;
 
 /* Critical Section*/
 extern RTL_CRITICAL_SECTION User32Crit;
-
-typedef struct _USER32_TRACKINGLIST {
-    TRACKMOUSEEVENT tme;
-    POINT pos; /* center of hover rectangle */
-    UINT_PTR timer;
-} USER32_TRACKINGLIST,*PUSER32_TRACKINGLIST;
-
-typedef struct _USER32_THREAD_DATA
-{
-    USER32_TRACKINGLIST tracking_info; /* TrackMouseEvent stuff */
-} USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
-
-PUSER32_THREAD_DATA User32GetThreadData();
 
 /* FIXME: Belongs to some header. */
 BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);
@@ -225,5 +213,29 @@ PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 #define __TRY if(1)
 #define __EXCEPT_PAGE_FAULT else
 #define __ENDTRY
+
+#define STATIC_UISTATE_GWL_OFFSET (sizeof(HFONT)+sizeof(HICON))// see UISTATE_GWL_OFFSET in static.c
+
+/* Retrieve the UI state for the control */
+static __inline BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
+{
+    LONG flags, prevflags;
+
+    if (unicode)
+        flags = DefWindowProcW(hwnd, WM_QUERYUISTATE, 0, 0);
+    else
+        flags = DefWindowProcA(hwnd, WM_QUERYUISTATE, 0, 0);
+
+    prevflags = GetWindowLongW(hwnd, STATIC_UISTATE_GWL_OFFSET);
+
+    if (prevflags != flags)
+    {
+        SetWindowLongW(hwnd, STATIC_UISTATE_GWL_OFFSET, flags);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 
 /* EOF */

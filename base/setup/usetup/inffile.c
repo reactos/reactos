@@ -28,23 +28,12 @@
 
 #include "usetup.h"
 
-#ifdef __REACTOS__
-#include <infros.h>
-#endif
-
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 #ifdef __REACTOS__
-
-VOID WINAPI
-InfpCloseInfFile(
-	IN HINF InfHandle)
-{
-	InfCloseFile(InfHandle);
-}
 
 BOOL WINAPI
 InfpFindFirstLineW(
@@ -65,28 +54,6 @@ InfpFindFirstLineW(
 	return TRUE;
 }
 
-BOOL WINAPI
-InfpGetMultiSzFieldW(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	IN OUT PWSTR ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize)
-{
-	return InfGetMultiSzField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
-}
-
-BOOL WINAPI
-InfpGetStringFieldW(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	IN OUT PWSTR ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize)
-{
-	return InfGetStringField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
-}
-
 HINF WINAPI
 InfpOpenInfFileW(
 	IN PCWSTR FileName,
@@ -104,7 +71,7 @@ InfpOpenInfFileW(
 	Status = InfOpenFile(
 		&hInf,
 		&FileNameU,
-		LocaleId,
+		LANGIDFROMLCID(LocaleId),
 		&ErrorLineUL);
 	*ErrorLine = (UINT)ErrorLineUL;
 	if (!NT_SUCCESS(Status))
@@ -226,7 +193,7 @@ INF_OpenBufferedFileA(
 		&hInf,
 		FileBuffer,
 		FileSize,
-		LocaleId,
+		LANGIDFROMLCID(LocaleId),
 		&ErrorLineUL);
 	*ErrorLine = (UINT)ErrorLineUL;
 	if (!NT_SUCCESS(Status))
@@ -236,14 +203,6 @@ INF_OpenBufferedFileA(
 #else
 	return INVALID_HANDLE_VALUE;
 #endif /* !__REACTOS__ */
-}
-
-VOID INF_SetHeap(
-	IN PVOID Heap)
-{
-#ifdef __REACTOS__
-	InfSetHeap(Heap);
-#endif
 }
 
 /* EOF */

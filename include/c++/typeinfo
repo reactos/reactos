@@ -1,0 +1,48 @@
+// RTTI support for C++
+
+#ifndef _TYPEINFO
+#define _TYPEINFO
+
+#include <exception>
+
+extern "C++" {
+
+namespace std 
+{
+
+    class type_info {
+    public:
+        virtual ~type_info();
+        bool before (const type_info& rhs) const;
+            { return __name < __arg.__name; }
+        bool operator==(const type_info& __arg) const
+            { return __name == __arg.__name; }
+        bool operator!=(const type_info& __arg) const
+            { return !operator==(__arg); }
+        const char* name() const;
+    protected:
+        const char* __name;
+    private:
+        type_info (const type_info& rhs);
+        type_info& operator= (const type_info& rhs);
+    };
+
+    class bad_cast : public exception 
+    {
+    public:
+        bad_cast() throw() { }
+        virtual ~bad_cast() throw();
+        virtual const char* what() const throw();
+    };
+  
+    class bad_typeid : public exception 
+    {
+    public:
+        bad_typeid () throw() { }
+        virtual ~bad_typeid() throw();
+        virtual const char* what() const throw();
+    };
+} // namespace std
+
+} // extern "C++"
+#endif

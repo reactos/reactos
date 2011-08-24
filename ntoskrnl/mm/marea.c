@@ -378,7 +378,7 @@ MmInsertMemoryArea(
        PMMVAD Vad;
 
        ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
-       Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'Fake');
+       Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), TAG_MVAD);
        ASSERT(Vad);
        RtlZeroMemory(Vad, sizeof(MMVAD));
        Vad->StartingVpn = PAGE_ROUND_DOWN(marea->StartingAddress) >> PAGE_SHIFT;
@@ -459,7 +459,7 @@ MmFindGapBottomUp(
 {
    PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
    PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
+                            MmHighestUserAddress : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
    PMEMORY_AREA FirstNode;
@@ -777,7 +777,7 @@ MmFreeMemoryArea(
                MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
            }
            
-           ExFreePool(MemoryArea->Vad);
+           ExFreePoolWithTag(MemoryArea->Vad, TAG_MVAD);
            MemoryArea->Vad = NULL;
        }
     }

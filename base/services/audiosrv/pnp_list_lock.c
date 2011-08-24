@@ -6,9 +6,7 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
-#include <windows.h>
-#include <assert.h>
-#include <audiosrv/audiosrv.h>
+#include "audiosrv.h"
 
 static HANDLE audio_device_list_lock = NULL;
 

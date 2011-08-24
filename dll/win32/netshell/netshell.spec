@@ -1,9 +1,9 @@
 
 1 stub DoInitialCleanup
-2 stdcall DllCanUnloadNow()
-3 stdcall DllGetClassObject(ptr ptr ptr)
-4 stdcall DllRegisterServer()
-5 stdcall DllUnregisterServer()
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 6 stub HrCreateDesktopIcon
 7 stub HrGetAnswerFileParametersForNetCard
 8 stub HrGetExtendedStatusFromNCS

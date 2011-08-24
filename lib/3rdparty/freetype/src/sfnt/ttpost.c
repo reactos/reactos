@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006, 2007, 2008, 2009 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2007, 2008, 2009, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -26,6 +26,7 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_TRUETYPE_TAGS_H
 #include "ttpost.h"
@@ -153,7 +154,8 @@
 
   static FT_Error
   load_format_20( TT_Face    face,
-                  FT_Stream  stream )
+                  FT_Stream  stream,
+                  FT_Long    post_limit )
   {
     FT_Memory   memory = stream->memory;
     FT_Error    error;
@@ -230,12 +232,45 @@
         FT_UInt  len;
 
 
-        if ( FT_READ_BYTE  ( len )                    ||
-             FT_NEW_ARRAY( name_strings[n], len + 1 ) ||
-             FT_STREAM_READ  ( name_strings[n], len ) )
+        if ( FT_STREAM_POS() >= post_limit )
+          break;
+        else
+        {
+          FT_TRACE6(( "load_format_20: %d byte left in post table\n",
+                      post_limit - FT_STREAM_POS() ));
+
+          if ( FT_READ_BYTE( len ) )
+            goto Fail1;
+        }
+
+        if ( (FT_Int)len > post_limit                   ||
+             FT_STREAM_POS() > post_limit - (FT_Int)len )
+        {
+          FT_ERROR(( "load_format_20:"
+                     " exceeding string length (%d),"
+                     " truncating at end of post table (%d byte left)\n",
+                     len, post_limit - FT_STREAM_POS() ));
+          len = FT_MAX( 0, post_limit - FT_STREAM_POS() );
+        }
+
+        if ( FT_NEW_ARRAY( name_strings[n], len + 1 ) ||
+             FT_STREAM_READ( name_strings[n], len   ) )
           goto Fail1;
 
         name_strings[n][len] = '\0';
+      }
+
+      if ( n < num_names )
+      {
+        FT_ERROR(( "load_format_20:"
+                   " all entries in post table are already parsed,"
+                   " using NULL names for gid %d - %d\n",
+                    n, num_names - 1 ));
+        for ( ; n < num_names; n++ )
+          if ( FT_NEW_ARRAY( name_strings[n], 1 ) )
+            goto Fail1;
+          else
+            name_strings[n][0] = '\0';
       }
     }
 
@@ -271,13 +306,16 @@
 
   static FT_Error
   load_format_25( TT_Face    face,
-                  FT_Stream  stream )
+                  FT_Stream  stream,
+                  FT_Long    post_limit )
   {
     FT_Memory  memory = stream->memory;
     FT_Error   error;
 
     FT_Int     num_glyphs;
     FT_Char*   offset_table = 0;
+
+    FT_UNUSED( post_limit );
 
 
     /* UNDOCUMENTED!  This value appears only in the Apple TT specs. */
@@ -338,15 +376,19 @@
     FT_Stream  stream;
     FT_Error   error;
     FT_Fixed   format;
+    FT_ULong   post_len;
+    FT_Long    post_limit;
 
 
     /* get a stream for the face's resource */
     stream = face->root.stream;
 
     /* seek to the beginning of the PS names table */
-    error = face->goto_table( face, TTAG_post, stream, 0 );
+    error = face->goto_table( face, TTAG_post, stream, &post_len );
     if ( error )
       goto Exit;
+
+    post_limit = FT_STREAM_POS() + post_len;
 
     format = face->postscript.FormatType;
 
@@ -356,9 +398,9 @@
 
     /* now read postscript table */
     if ( format == 0x00020000L )
-      error = load_format_20( face, stream );
+      error = load_format_20( face, stream, post_limit );
     else if ( format == 0x00028000L )
-      error = load_format_25( face, stream );
+      error = load_format_25( face, stream, post_limit );
     else
       error = SFNT_Err_Invalid_File_Format;
 

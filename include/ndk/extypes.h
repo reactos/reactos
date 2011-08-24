@@ -175,7 +175,9 @@ typedef enum _HARDERROR_RESPONSE_OPTION
     OptionRetryCancel,
     OptionYesNo,
     OptionYesNoCancel,
-    OptionShutdownSystem
+    OptionShutdownSystem,
+    OptionOkNoWait,
+    OptionCancelTryContinue
 } HARDERROR_RESPONSE_OPTION, *PHARDERROR_RESPONSE_OPTION;
 
 typedef enum _HARDERROR_RESPONSE

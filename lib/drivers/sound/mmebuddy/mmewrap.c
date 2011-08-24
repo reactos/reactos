@@ -8,12 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <sndtypes.h>
-#include <mmebuddy.h>
+#include "precomp.h"
 
 
 /*
@@ -29,6 +24,7 @@ MmeSetState(
     PMMFUNCTION_TABLE FunctionTable;
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    BOOL OldState;
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
@@ -52,6 +48,20 @@ MmeSetState(
     }
     /* Try change state */
     Result = FunctionTable->SetState(SoundDeviceInstance, bStart);
+
+    if ( MMSUCCESS(Result) )
+    {
+        /* Get old audio stream state */
+        OldState = SoundDeviceInstance->bPaused;
+
+        /* Store audio stream pause state */
+        SoundDeviceInstance->bPaused = !bStart;
+
+        if (SoundDeviceInstance->bPaused == FALSE && OldState == TRUE)
+        {
+            InitiateSoundStreaming(SoundDeviceInstance);
+        }
+    }
 
     return Result;
 }

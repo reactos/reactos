@@ -217,6 +217,7 @@ IopCreateResourceListFromRequirements(
       for (ii = 0; ii < ResList->Count; ii++)
       {
          PIO_RESOURCE_DESCRIPTOR ReqDesc = &ResList->Descriptors[ii];
+         BOOLEAN FoundResource = TRUE;
 
          /* FIXME: Handle alternate ranges */
          if (ReqDesc->Option == IO_RESOURCE_ALTERNATIVE)
@@ -240,6 +241,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -256,6 +259,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -272,6 +277,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -288,6 +295,8 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
@@ -303,16 +312,22 @@ IopCreateResourceListFromRequirements(
                       *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
+
+                  FoundResource = FALSE;
               }
               break;
 
             default:
               DPRINT1("Unsupported resource type: %x\n", ReqDesc->Type);
+              FoundResource = FALSE;
               break;
          }
 
-         (*ResourceList)->List[0].PartialResourceList.Count++;
-         ResDesc++;
+         if (FoundResource)
+         {
+             (*ResourceList)->List[0].PartialResourceList.Count++;
+             ResDesc++;
+         }
       }
    }
 
@@ -532,10 +547,10 @@ IopFilterResourceRequirements(IN PDEVICE_NODE DeviceNode)
       &Stack);
    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_SUPPORTED)
    {
-      DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
+      DPRINT1("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
       return Status;
    }
-   else if (NT_SUCCESS(Status))
+   else if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
    }
@@ -755,8 +770,15 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Port.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
-                  DPRINT1("Failed to translate port resource (Start: 0xI64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
+                  DPRINT1("Failed to translate port resource (Start: 0x%I64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
+               }
+                
+               if (AddressSpace == 0)
+               {
+                   /* This is actually a memory resource */
+                   DescriptorRaw->Type = CmResourceTypeMemory;
+                   DescriptorTranslated->Type = CmResourceTypeMemory;
                }
                break;
             }
@@ -792,6 +814,13 @@ IopTranslateDeviceResources(
                   Status = STATUS_UNSUCCESSFUL;
                   DPRINT1("Failed to translate memory resource (Start: 0xI64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
                   goto cleanup;
+               }
+
+               if (AddressSpace != 0)
+               {
+                   /* This is actually an I/O port resource */
+                   DescriptorRaw->Type = CmResourceTypePort;
+                   DescriptorTranslated->Type = CmResourceTypePort;
                }
             }
 

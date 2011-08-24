@@ -1,3 +1,5 @@
+#include "config.h"
+
 extern "C" {
 
 #include <ntddk.h>
@@ -22,13 +24,10 @@ extern "C" {
 #ifdef ExAllocatePool
 #undef ExAllocatePool
 #endif
-
-#define TAG_UNIATA 'Uata'
-
+#define TAG_UNIATA 'ataU'
 #define ExAllocatePool(a,b) ExAllocatePoolWithTag(a,b,TAG_UNIATA)
 
 #endif //UNIATA_CORE
 
 #include "badblock.h"
-
 

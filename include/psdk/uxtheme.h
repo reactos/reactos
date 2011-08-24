@@ -96,7 +96,7 @@ HRESULT WINAPI DrawThemeText(HTHEME,HDC,int,int,LPCWSTR,int,DWORD,DWORD,const RE
 HRESULT WINAPI EnableThemeDialogTexture(HWND,DWORD);
 HRESULT WINAPI EnableTheming(BOOL);
 HRESULT WINAPI GetCurrentThemeName(LPWSTR,int,LPWSTR,int,LPWSTR,int);
-DWORD WINAPI GetThemeAppProperties();
+DWORD WINAPI GetThemeAppProperties(void);
 HRESULT WINAPI GetThemeBackgroundContentRect(HTHEME,HDC,int,int,const RECT*,RECT*);
 HRESULT WINAPI GetThemeBackgroundExtent(HTHEME,HDC,int,int,const RECT*,RECT*);
 HRESULT WINAPI GetThemeBackgroundRegion(HTHEME,HDC,int,int,const RECT*,HRGN*);
@@ -126,8 +126,8 @@ HRESULT WINAPI GetThemeTextExtent(HTHEME,HDC,int,int,LPCWSTR,int,DWORD,const REC
 HRESULT WINAPI GetThemeTextMetrics(HTHEME,HDC,int,int,TEXTMETRICW*);
 HTHEME WINAPI GetWindowTheme(HWND);
 HRESULT WINAPI HitTestThemeBackground(HTHEME,HDC,int,int,DWORD,const RECT*,HRGN,POINT,WORD*);
-BOOL WINAPI IsAppThemed();
-BOOL WINAPI IsThemeActive();
+BOOL WINAPI IsAppThemed(void);
+BOOL WINAPI IsThemeActive(void);
 BOOL WINAPI IsThemeBackgroundPartiallyTransparent(HTHEME,int,int);
 BOOL WINAPI IsThemeDialogTextureEnabled(HWND);
 BOOL WINAPI IsThemePartDefined(HTHEME,int,int);

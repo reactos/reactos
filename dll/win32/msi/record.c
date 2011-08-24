@@ -27,6 +27,7 @@
 #include "winuser.h"
 #include "winerror.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "msipriv.h"
@@ -1016,7 +1017,7 @@ BOOL MSI_RecordsAreEqual(MSIRECORD *a, MSIRECORD *b)
                 break;
 
             case MSIFIELD_WSTR:
-                if (lstrcmpW(a->fields[i].u.szwVal, b->fields[i].u.szwVal))
+                if (strcmpW(a->fields[i].u.szwVal, b->fields[i].u.szwVal))
                     return FALSE;
                 break;
 

@@ -2389,9 +2389,11 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
 		normOnTheFly);
             break;
         case XML_SCHEMAS_FLOAT:
-        case XML_SCHEMAS_DOUBLE:{
+        case XML_SCHEMAS_DOUBLE: {
                 const xmlChar *cur = value;
                 int neg = 0;
+                int digits_before = 0;
+                int digits_after = 0;
 
 		if (normOnTheFly)
 		    while IS_WSP_BLANK_CH(*cur) cur++;
@@ -2464,12 +2466,17 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
                     goto return1;
                 while ((*cur >= '0') && (*cur <= '9')) {
                     cur++;
+                    digits_before++;
                 }
                 if (*cur == '.') {
                     cur++;
-                    while ((*cur >= '0') && (*cur <= '9'))
+                    while ((*cur >= '0') && (*cur <= '9')) {
                         cur++;
+                        digits_after++;
+                    }
                 }
+                if ((digits_before == 0) && (digits_after == 0))
+                    goto return1;
                 if ((*cur == 'e') || (*cur == 'E')) {
                     cur++;
                     if ((*cur == '-') || (*cur == '+'))

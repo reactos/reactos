@@ -30,7 +30,7 @@
     if (x & PopTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define POTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define POTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 typedef struct _PO_HIBER_PERF
@@ -291,7 +291,8 @@ PoVolumeDevice(
 NTSTATUS
 NTAPI
 PopSetSystemPowerState(
-    SYSTEM_POWER_STATE PowerState
+    SYSTEM_POWER_STATE PowerState,
+    POWER_ACTION PowerAction
 );
 
 VOID

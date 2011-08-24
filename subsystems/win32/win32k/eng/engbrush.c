@@ -37,7 +37,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     ASSERT(pebo->psurfTrg->ppal);
 
     pebo->ppalSurf = pebo->psurfTrg->ppal;
-    GDIOBJ_IncrementShareCount(&pebo->ppalSurf->BaseObject);
+    GDIOBJ_vReferenceObjectByPointer(&pebo->ppalSurf->BaseObject);
 
     if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {

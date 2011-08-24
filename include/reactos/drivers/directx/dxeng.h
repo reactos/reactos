@@ -73,7 +73,7 @@ typedef enum _DXEGSHDEVDATA
 /************************************************************************/
 /* win32k.sys internal protypes for driver functions it exports         */
 /************************************************************************/
-BOOLEAN NTAPI DxEngNUIsTermSrv();
+BOOLEAN NTAPI DxEngNUIsTermSrv(VOID);
 PDC NTAPI DxEngLockDC(HDC hDC);
 BOOLEAN NTAPI DxEngUnlockDC(PDC pDC);
 DWORD_PTR NTAPI DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
@@ -82,20 +82,20 @@ BOOLEAN NTAPI DxEngLockHdev(HDEV hdev);
 BOOLEAN NTAPI DxEngUnlockHdev(HDEV hdev);
 DWORD_PTR NTAPI DxEngGetDCState(HDC hDC, DWORD type);
 BOOLEAN NTAPI DxEngReferenceHdev(HDEV hdev);
-BOOLEAN NTAPI DxEngLockShareSem();
-BOOLEAN NTAPI DxEngUnlockShareSem();
-DWORD NTAPI DxEngScreenAccessCheck();
+BOOLEAN NTAPI DxEngLockShareSem(VOID);
+BOOLEAN NTAPI DxEngUnlockShareSem(VOID);
+DWORD NTAPI DxEngScreenAccessCheck(VOID);
 BOOL NTAPI DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask);
 
 /* Prototypes for the following functions are not yet finished */
-BOOLEAN NTAPI DxEngRedrawDesktop();
-ULONG NTAPI DxEngDispUniq();
-ULONG NTAPI DxEngVisRgnUniq();
+BOOLEAN NTAPI DxEngRedrawDesktop(VOID);
+ULONG NTAPI DxEngDispUniq(VOID);
+ULONG NTAPI DxEngVisRgnUniq(VOID);
 HDEV* NTAPI DxEngEnumerateHdev(HDEV *hdev);
 BOOL NTAPI DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 BOOLEAN NTAPI DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
 BOOLEAN NTAPI DxEngCleanDC(HDC hdc);
-BOOLEAN NTAPI DxEngIncDispUniq();
+BOOLEAN NTAPI DxEngIncDispUniq(VOID);
 
 HDC NTAPI DxEngCreateMemoryDC(HDEV hDev);
 

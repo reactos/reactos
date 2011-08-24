@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="cdrom_new" type="kernelmodedriver" installbase="system32/drivers" installname="cdrom_new.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>classpnp</library>

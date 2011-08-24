@@ -12,6 +12,7 @@
 				<file>i386cpu.S</file>
 				<file>i386idt.S</file>
 				<file>i386pnp.S</file>
+				<file>i386pxe.S</file>
 				<file>i386trap.S</file>
 				<file>int386.S</file>
 				<file>linux.S</file>

@@ -408,7 +408,8 @@ IopParseDevice(IN PVOID ParseObject,
     if (!(DirectOpen) &&
         !(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&
-        ((wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
+        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
+         (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
         !(UseDummyFile))
     {
         DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
@@ -479,7 +480,7 @@ IopParseDevice(IN PVOID ParseObject,
     {
         /* Dereference the device and VPB, then fail */
         IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-        if (Vpb) IopDereferenceVpb(Vpb);
+        if (Vpb) IopDereferenceVpbAndFree(Vpb);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -577,7 +578,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Dereference the device and VPB */
             IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-            if (Vpb) IopDereferenceVpb(Vpb);
+            if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
             /* We failed, return status */
             OpenPacket->FinalStatus = Status;
@@ -687,7 +688,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Dereference the device object and VPB */
             IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-            if (Vpb) IopDereferenceVpb(Vpb);
+            if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
             /* Clear the FO and dereference it */
             FileObject->DeviceObject = NULL;
@@ -762,7 +763,7 @@ IopParseDevice(IN PVOID ParseObject,
         if (FileObject->FileName.Length)
         {
             /* Free it */
-            ExFreePool(FileObject->FileName.Buffer);
+            ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
             FileObject->FileName.Length = 0;
         }
 
@@ -783,7 +784,7 @@ IopParseDevice(IN PVOID ParseObject,
         IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
 
         /* Unless the driver cancelled the open, dereference the VPB */
-        if (!(OpenCancelled) && (Vpb)) IopDereferenceVpb(Vpb);
+        if (!(OpenCancelled) && (Vpb)) IopDereferenceVpbAndFree(Vpb);
 
         /* Set the status and return */
         OpenPacket->FinalStatus = Status;
@@ -806,7 +807,7 @@ IopParseDevice(IN PVOID ParseObject,
     if (OwnerDevice != DeviceObject)
     {
         /* We have to de-reference the VPB we had associated */
-        if (Vpb) IopDereferenceVpb(Vpb);
+        if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
         /* And re-associate with the actual one */
         Vpb = FileObject->Vpb;
@@ -868,7 +869,7 @@ IopParseDevice(IN PVOID ParseObject,
                     }
 
                     /* Free our buffer */
-                    ExFreePool(FileBasicInfo);
+                    ExFreePoolWithTag(FileBasicInfo, TAG_IO);
                 }
                 else
                 {
@@ -1331,7 +1332,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
     {
         /* Free the buffer and fail */
-        ExFreePool(LocalInfo);
+        ExFreePoolWithTag(LocalInfo, TAG_IO);
         return Status;
     }
 
@@ -1375,7 +1376,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (NT_ERROR(Status))
     {
         /* Fail on errors only, allow warnings */
-        ExFreePool(LocalInfo);
+        ExFreePoolWithTag(LocalInfo, TAG_IO);
         return Status;
     }
 
@@ -1386,7 +1387,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
         *ReturnLength += LocalFileInfo->FileNameLength;
 
         /* Free the allocated buffer and return failure */
-        ExFreePool(LocalInfo);
+        ExFreePoolWithTag(LocalInfo, TAG_IO);
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -1414,7 +1415,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
                                                  sizeof(UNICODE_NULL);
 
     /* Free buffer and return */
-    ExFreePool(LocalInfo);
+    ExFreePoolWithTag(LocalInfo, TAG_IO);
     return Status;
 }
 
@@ -1908,7 +1909,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             if (OpenPacket.FileObject->FileName.Length)
             {
                 /* It had a name, free it */
-                ExFreePool(OpenPacket.FileObject->FileName.Buffer);
+                ExFreePoolWithTag(OpenPacket.FileObject->FileName.Buffer, TAG_IO_NAME);
             }
 
             /* Clear the device object to invalidate the FO, and dereference */

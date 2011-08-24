@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ReactOS User32 Library
  * - Various drawing functions
  *
@@ -1254,7 +1254,6 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
     if(!cx || !cy)
     {
         SIZE s;
-        ICONINFO ici;
         BITMAP bm;
 
         switch(opcode)
@@ -1270,12 +1269,8 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
                 break;
 
             case DST_ICON:
-                if(!GetIconInfo((HICON)lp, &ici))
+                if(!get_icon_size((HICON)lp, &s))
                     return FALSE;
-                if(!GetObjectW(ici.hbmColor, sizeof(bm), &bm))
-                    return FALSE;
-                s.cx = bm.bmWidth;
-                s.cy = bm.bmHeight;
                 break;
 
             case DST_BITMAP:
@@ -1564,20 +1559,29 @@ FlashWindow(HWND hWnd, BOOL bInvert)
 INT WINAPI
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
-    HBRUSH prevhbr;
+    BOOL Ret;
+    HBRUSH prevhbr = NULL;
 
-    if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
+    /* Select brush if specified */
+    if (hbr)
     {
-        hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
+        /* Handle system colors */
+        if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
+            hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
+        
+        prevhbr = SelectObject(hDC, hbr);
+        if (prevhbr == NULL)
+            return (INT)FALSE;
     }
-    if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
-    {
-        return FALSE;
-    }
-    PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
-                lprc->bottom - lprc->top, PATCOPY);
-    SelectObject(hDC, prevhbr);
-    return TRUE;
+
+    Ret = PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+                 lprc->bottom - lprc->top, PATCOPY);
+
+    /* Select old brush */
+    if (prevhbr)
+        SelectObject(hDC, prevhbr);
+
+    return (INT)Ret;
 }
 
 /*

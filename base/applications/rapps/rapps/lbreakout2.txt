@@ -17,6 +17,9 @@ Description = Breakout-Klon verwendet SDL Bibliothek.
 [Section.040a]
 Description = Clon de Breakout usando las librerias SDL.
 
+[Section.040c]
+Description = Clone de casse-brique utilisant la bibliothèque SDL.
+
 [Section.0415]
 Description = Klon Breakouta/Arkanoida napisany przy użyciu biblioteki SDL.
 

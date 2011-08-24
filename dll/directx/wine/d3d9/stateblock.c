@@ -25,9 +25,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
-/* IDirect3DStateBlock9 IUnknown parts follow: */
-static HRESULT WINAPI IDirect3DStateBlock9Impl_QueryInterface(LPDIRECT3DSTATEBLOCK9 iface, REFIID riid, LPVOID* ppobj) {
-    IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+static inline IDirect3DStateBlock9Impl *impl_from_IDirect3DStateBlock9(IDirect3DStateBlock9 *iface)
+{
+    return CONTAINING_RECORD(iface, IDirect3DStateBlock9Impl, IDirect3DStateBlock9_iface);
+}
+
+static HRESULT WINAPI IDirect3DStateBlock9Impl_QueryInterface(IDirect3DStateBlock9 *iface,
+        REFIID riid, void **ppobj)
+{
+    IDirect3DStateBlock9Impl *This = impl_from_IDirect3DStateBlock9(iface);
 
     TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
 
@@ -43,8 +49,9 @@ static HRESULT WINAPI IDirect3DStateBlock9Impl_QueryInterface(LPDIRECT3DSTATEBLO
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirect3DStateBlock9Impl_AddRef(LPDIRECT3DSTATEBLOCK9 iface) {
-    IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+static ULONG WINAPI IDirect3DStateBlock9Impl_AddRef(IDirect3DStateBlock9 *iface)
+{
+    IDirect3DStateBlock9Impl *This = impl_from_IDirect3DStateBlock9(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("%p increasing refcount to %u.\n", iface, ref);
@@ -52,15 +59,16 @@ static ULONG WINAPI IDirect3DStateBlock9Impl_AddRef(LPDIRECT3DSTATEBLOCK9 iface)
     return ref;
 }
 
-static ULONG WINAPI IDirect3DStateBlock9Impl_Release(LPDIRECT3DSTATEBLOCK9 iface) {
-    IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+static ULONG WINAPI IDirect3DStateBlock9Impl_Release(IDirect3DStateBlock9 *iface)
+{
+    IDirect3DStateBlock9Impl *This = impl_from_IDirect3DStateBlock9(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
     if (ref == 0) {
         wined3d_mutex_lock();
-        IWineD3DStateBlock_Release(This->wineD3DStateBlock);
+        wined3d_stateblock_decref(This->wined3d_stateblock);
         wined3d_mutex_unlock();
 
         IDirect3DDevice9Ex_Release(This->parentDevice);
@@ -70,9 +78,10 @@ static ULONG WINAPI IDirect3DStateBlock9Impl_Release(LPDIRECT3DSTATEBLOCK9 iface
 }
 
 /* IDirect3DStateBlock9 Interface follow: */
-static HRESULT WINAPI IDirect3DStateBlock9Impl_GetDevice(IDirect3DStateBlock9 *iface, IDirect3DDevice9 **device)
+static HRESULT WINAPI IDirect3DStateBlock9Impl_GetDevice(IDirect3DStateBlock9 *iface,
+        IDirect3DDevice9 **device)
 {
-    IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+    IDirect3DStateBlock9Impl *This = impl_from_IDirect3DStateBlock9(iface);
 
     TRACE("iface %p, device %p.\n", iface, device);
 
@@ -84,27 +93,29 @@ static HRESULT WINAPI IDirect3DStateBlock9Impl_GetDevice(IDirect3DStateBlock9 *i
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3DStateBlock9Impl_Capture(LPDIRECT3DSTATEBLOCK9 iface) {
-    IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+static HRESULT WINAPI IDirect3DStateBlock9Impl_Capture(IDirect3DStateBlock9 *iface)
+{
+    IDirect3DStateBlock9Impl *This = impl_from_IDirect3DStateBlock9(iface);
     HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = IWineD3DStateBlock_Capture(This->wineD3DStateBlock);
+    hr = wined3d_stateblock_capture(This->wined3d_stateblock);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DStateBlock9Impl_Apply(LPDIRECT3DSTATEBLOCK9 iface) {
-    IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+static HRESULT WINAPI IDirect3DStateBlock9Impl_Apply(IDirect3DStateBlock9 *iface)
+{
+    IDirect3DStateBlock9Impl *This = impl_from_IDirect3DStateBlock9(iface);
     HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = IWineD3DStateBlock_Apply(This->wineD3DStateBlock);
+    hr = wined3d_stateblock_apply(This->wined3d_stateblock);
     wined3d_mutex_unlock();
 
     return hr;
@@ -124,22 +135,22 @@ static const IDirect3DStateBlock9Vtbl Direct3DStateBlock9_Vtbl =
 };
 
 HRESULT stateblock_init(IDirect3DStateBlock9Impl *stateblock, IDirect3DDevice9Impl *device,
-        D3DSTATEBLOCKTYPE type, IWineD3DStateBlock *wined3d_stateblock)
+        D3DSTATEBLOCKTYPE type, struct wined3d_stateblock *wined3d_stateblock)
 {
     HRESULT hr;
 
-    stateblock->lpVtbl = &Direct3DStateBlock9_Vtbl;
+    stateblock->IDirect3DStateBlock9_iface.lpVtbl = &Direct3DStateBlock9_Vtbl;
     stateblock->ref = 1;
 
     if (wined3d_stateblock)
     {
-        stateblock->wineD3DStateBlock = wined3d_stateblock;
+        stateblock->wined3d_stateblock = wined3d_stateblock;
     }
     else
     {
         wined3d_mutex_lock();
-        hr = IWineD3DDevice_CreateStateBlock(device->WineD3DDevice,
-                (WINED3DSTATEBLOCKTYPE)type, &stateblock->wineD3DStateBlock);
+        hr = wined3d_stateblock_create(device->wined3d_device,
+                (WINED3DSTATEBLOCKTYPE)type, &stateblock->wined3d_stateblock);
         wined3d_mutex_unlock();
         if (FAILED(hr))
         {
@@ -148,7 +159,7 @@ HRESULT stateblock_init(IDirect3DStateBlock9Impl *stateblock, IDirect3DDevice9Im
         }
     }
 
-    stateblock->parentDevice = (IDirect3DDevice9Ex *)device;
+    stateblock->parentDevice = &device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9Ex_AddRef(stateblock->parentDevice);
 
     return D3D_OK;

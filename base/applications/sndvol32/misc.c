@@ -23,7 +23,8 @@
  * FILE:        subsys/system/sndvol32/misc.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
-#include <sndvol32.h>
+#include "sndvol32.h"
+
 
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,
@@ -125,13 +126,6 @@ LoadAndFormatString(IN HINSTANCE hInstance,
     return Ret;
 }
 
-/* NOTE: do NOT modify SNDVOL_REG_LINESTATE for binary compatibility with XP! */
-typedef struct _SNDVOL_REG_LINESTATE
-{
-    DWORD Flags;
-    WCHAR LineName[MIXER_LONG_NAME_CHARS];
-} SNDVOL_REG_LINESTATE, *PSNDVOL_REG_LINESTATE;
-
 static const TCHAR AppRegSettings[] = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Volume Control");
 static const TCHAR AppOptionsKey[] = TEXT("Options");
 static const TCHAR LineStatesValue[] = TEXT("LineStates");
@@ -161,6 +155,41 @@ CloseAppConfig(VOID)
         RegCloseKey(hAppSettingsKey);
         hAppSettingsKey = NULL;
     }
+}
+
+BOOL
+WriteLineConfig(IN LPTSTR szDeviceName,
+                IN LPTSTR szLineName,
+                IN PSNDVOL_REG_LINESTATE LineState,
+                IN DWORD cbSize)
+{
+    HKEY hLineKey;
+    TCHAR szDevRegKey[MAX_PATH];
+    BOOL Ret = FALSE;
+
+    _stprintf(szDevRegKey,
+              TEXT("%s\\%s"),
+              szDeviceName,
+              szLineName);
+
+    if (RegCreateKeyEx(hAppSettingsKey,
+                       szDevRegKey,
+                       0,
+                       NULL,
+                       REG_OPTION_NON_VOLATILE,
+                       KEY_READ | KEY_WRITE,
+                       NULL,
+                       &hLineKey,
+                       NULL) == ERROR_SUCCESS)
+    {
+        /* now update line states */
+        RegSetValueEx(hLineKey, LineStatesValue, 0, REG_BINARY, (const BYTE*)LineState, cbSize);
+        Ret = TRUE;
+
+        RegCloseKey(hLineKey);
+    }
+
+    return Ret;
 }
 
 BOOL
@@ -204,7 +233,7 @@ ReadLineConfig(IN LPTSTR szDeviceName,
         }
 
         LineStates = HeapAlloc(GetProcessHeap(),
-                               0,
+                               HEAP_ZERO_MEMORY,
                                Size);
 
         if (LineStates != NULL)

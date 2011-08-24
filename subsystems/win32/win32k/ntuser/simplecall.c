@@ -10,9 +10,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* registered Logon process */
 PPROCESSINFO LogonProcess = NULL;
@@ -64,7 +62,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
    Status = co_CsrNotify(&Request);
    if (! NT_SUCCESS(Status))
    {
-      DPRINT1("Failed to register logon process with CSRSS\n");
+      ERR("Failed to register logon process with CSRSS\n");
       return FALSE;
    }
 
@@ -81,7 +79,7 @@ NtUserCallNoParam(DWORD Routine)
    DWORD_PTR Result = 0;
    DECLARE_RETURN(DWORD_PTR);
 
-   DPRINT("Enter NtUserCallNoParam\n");
+   TRACE("Enter NtUserCallNoParam\n");
    UserEnterExclusive();
 
    switch(Routine)
@@ -119,15 +117,18 @@ NtUserCallNoParam(DWORD Routine)
          RETURN( (DWORD_PTR)MAKELONG(pti->ptLast.x, pti->ptLast.y));
       }
 
+      case NOPARAM_ROUTINE_RELEASECAPTURE:
+         RETURN( (DWORD_PTR)IntReleaseCapture());
+
       default:
-         DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
+         ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
          EngSetLastError(ERROR_INVALID_PARAMETER);
          break;
    }
    RETURN(Result);
 
 CLEANUP:
-   DPRINT("Leave NtUserCallNoParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallNoParam, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -144,7 +145,7 @@ NtUserCallOneParam(
 {
    DECLARE_RETURN(DWORD_PTR);
 
-   DPRINT("Enter NtUserCallOneParam\n");
+   TRACE("Enter NtUserCallOneParam\n");
 
    UserEnterExclusive();
 
@@ -157,6 +158,40 @@ NtUserCallOneParam(
                 MsqPostQuitMessage(pti->MessageQueue, Param);
                 RETURN(TRUE);
           }
+
+      case ONEPARAM_ROUTINE_BEGINDEFERWNDPOS:
+         {
+             PSMWP psmwp;
+             HDWP hDwp = NULL;
+             INT count = (INT)Param;
+
+             if (count < 0)
+             {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                RETURN(0);
+             }
+             /* Windows allows zero count, in which case it allocates context for 8 moves */
+             if (count == 0) count = 8;
+
+             psmwp = (PSMWP) UserCreateObject( gHandleTable,
+                                               NULL,
+                                              (PHANDLE)&hDwp,
+                                               otSMWP,
+                                               sizeof(SMWP));
+             if (!psmwp) RETURN(0);
+             psmwp->acvr = ExAllocatePoolWithTag(PagedPool, count * sizeof(CVR), USERTAG_SWP);
+             if (!psmwp->acvr)
+             {
+                UserDeleteObject(hDwp, otSMWP);
+                RETURN(0);
+             }
+             RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));
+             psmwp->bHandle = TRUE;
+             psmwp->ccvr = 0;          // actualCount
+             psmwp->ccvrAlloc = count; // suggestedCount             
+             RETURN((DWORD_PTR)hDwp);
+         }
+
       case ONEPARAM_ROUTINE_SHOWCURSOR:
          RETURN( (DWORD_PTR)UserShowCursor((BOOL)Param) );
 
@@ -217,7 +252,6 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:
          {
              BOOL ret = TRUE;
-
 
             _SEH2_TRY
             {
@@ -341,14 +375,17 @@ NtUserCallOneParam(
       }
       case ONEPARAM_ROUTINE_REPLYMESSAGE:
           RETURN (co_MsqReplyMessage((LRESULT) Param));
+      case ONEPARAM_ROUTINE_MESSAGEBEEP:
+          RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
+		  /* TODO: Implement sound sentry */
    }
-   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
+   ERR("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
    EngSetLastError(ERROR_INVALID_PARAMETER);
    RETURN( 0);
 
 CLEANUP:
-   DPRINT("Leave NtUserCallOneParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallOneParam, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -364,38 +401,14 @@ NtUserCallTwoParam(
    DWORD_PTR Param2,
    DWORD Routine)
 {
-   NTSTATUS Status;
    PWND Window;
    DECLARE_RETURN(DWORD_PTR);
 
-   DPRINT("Enter NtUserCallTwoParam\n");
+   TRACE("Enter NtUserCallTwoParam\n");
    UserEnterExclusive();
 
    switch(Routine)
    {
-      case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
-         {
-            DWORD_PTR Ret;
-            RECTL rcRect;
-            Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(ERROR);
-
-            Ret = (DWORD_PTR)IntGetWindowRgnBox(Window, &rcRect);
-            Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               RETURN( ERROR);
-            }
-            RETURN( Ret);
-         }
-      case TWOPARAM_ROUTINE_GETWINDOWRGN:
-         {
-            Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(ERROR);
-
-            RETURN( (DWORD_PTR)IntGetWindowRgn(Window, (HRGN)Param2));
-         }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
             DWORD_PTR Ret;
@@ -423,8 +436,7 @@ NtUserCallTwoParam(
          }
 
       case TWOPARAM_ROUTINE_ENABLEWINDOW:
-         UNIMPLEMENTED
-         RETURN( 0);
+         RETURN( IntEnableWindow((HWND)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
       {
@@ -448,7 +460,7 @@ NtUserCallTwoParam(
       }
 
       case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
-         UNIMPLEMENTED
+         STUB
          RETURN( 0);
 
 
@@ -459,18 +471,18 @@ NtUserCallTwoParam(
          RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SETCURSORPOS:
-         RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, FALSE));
+         RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, 0, 0, FALSE));
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
    }
-   DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
+   ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
    EngSetLastError(ERROR_INVALID_PARAMETER);
    RETURN( 0);
 
 CLEANUP:
-   DPRINT("Leave NtUserCallTwoParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallTwoParam, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -490,7 +502,7 @@ NtUserCallHwndLock(
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(BOOLEAN);
 
-   DPRINT("Enter NtUserCallHwndLock\n");
+   TRACE("Enter NtUserCallHwndLock\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -508,7 +520,7 @@ NtUserCallHwndLock(
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
          {
-            DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
+            TRACE("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
             Ret = TRUE;
             if ((Window->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
                co_WinPosSetWindowPos( Window,
@@ -564,7 +576,7 @@ NtUserCallHwndLock(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserCallHwndLock, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallHwndLock, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -631,7 +643,7 @@ NtUserCallHwnd(
             return IntDeRegisterShellHookWindow(hWnd);
          return FALSE;
    }
-   UNIMPLEMENTED;
+   STUB;
 
    return 0;
 }
@@ -720,7 +732,7 @@ NtUserCallHwndParam(
       }
    }
 
-   UNIMPLEMENTED;
+   STUB;
 
    return 0;
 }
@@ -737,7 +749,7 @@ NtUserCallHwndParamLock(
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(DWORD);
 
-   DPRINT1("Enter NtUserCallHwndParamLock\n");
+   TRACE("Enter NtUserCallHwndParamLock\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -758,7 +770,7 @@ NtUserCallHwndParamLock(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT1("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 

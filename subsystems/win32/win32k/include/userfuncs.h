@@ -6,7 +6,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 { \
    LONG ref = ((PHEAD)_obj_)->cLockObj;\
    if (!(ref >= 1)){ \
-      DPRINT1("ASSERT: obj 0x%x, refs %i\n", _obj_, ref); \
+      ERR_CH(UserObj, "ASSERT: obj 0x%x, refs %i\n", _obj_, ref); \
       ASSERT(FALSE); \
    } \
 }
@@ -18,7 +18,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
    BOOL gotit=FALSE; \
    LONG ref = ((PHEAD)_obj_)->cLockObj;\
    if (!(ref >= 1)){ \
-      DPRINT1("obj 0x%x, refs %i\n", _obj_, ref); \
+      ERR_CH(UserObj, "obj 0x%x, refs %i\n", _obj_, ref); \
       ASSERT(FALSE); \
    } \
    \
@@ -33,7 +33,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 }
 #endif
 
-#define DUMP_REFS(obj) DPRINT1("obj 0x%x, refs %i\n",obj, ((PHEAD)obj)->cLockObj)
+#define DUMP_REFS(obj) TRACE_CH(UserObj,"obj 0x%x, refs %i\n",obj, ((PHEAD)obj)->cLockObj)
 
 PWND FASTCALL IntGetWindowObject(HWND hWnd);
 

@@ -28,6 +28,7 @@ typedef struct {
     LONG ref;
 
     IBindStatusCallback *callback;
+    IBinding *binding;
     LPWSTR file_name;
     LPWSTR cache_file;
 } DownloadBSC;
@@ -89,6 +90,8 @@ static ULONG WINAPI DownloadBSC_Release(IBindStatusCallback *iface)
     if(!ref) {
         if(This->callback)
             IBindStatusCallback_Release(This->callback);
+        if(This->binding)
+            IBinding_Release(This->binding);
         heap_free(This->file_name);
         heap_free(This->cache_file);
         heap_free(This);
@@ -101,13 +104,19 @@ static HRESULT WINAPI DownloadBSC_OnStartBinding(IBindStatusCallback *iface,
         DWORD dwReserved, IBinding *pbind)
 {
     DownloadBSC *This = impl_from_IBindStatusCallback(iface);
+    HRESULT hres = S_OK;
 
     TRACE("(%p)->(%d %p)\n", This, dwReserved, pbind);
 
-    if(This->callback)
-        IBindStatusCallback_OnStartBinding(This->callback, dwReserved, pbind);
+    if(This->callback) {
+        hres = IBindStatusCallback_OnStartBinding(This->callback, dwReserved, pbind);
 
-    return S_OK;
+        IBinding_AddRef(pbind);
+        This->binding = pbind;
+    }
+
+    /* Windows seems to ignore E_NOTIMPL if it's returned from the client. */
+    return hres == E_NOTIMPL ? S_OK : hres;
 }
 
 static HRESULT WINAPI DownloadBSC_GetPriority(IBindStatusCallback *iface, LONG *pnPriority)
@@ -132,6 +141,13 @@ static HRESULT on_progress(DownloadBSC *This, ULONG progress, ULONG progress_max
         return S_OK;
 
     hres = IBindStatusCallback_OnProgress(This->callback, progress, progress_max, status_code, status_text);
+    if(hres == E_ABORT) {
+        if(This->binding)
+            IBinding_Abort(This->binding);
+        else
+            FIXME("No binding, not sure what to do!\n");
+    }
+
     return hres;
 }
 
@@ -190,6 +206,11 @@ static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
 
     if(This->callback)
         IBindStatusCallback_OnStopBinding(This->callback, hresult, szError);
+
+    if(This->binding) {
+        IBinding_Release(This->binding);
+        This->binding = NULL;
+    }
 
     return S_OK;
 }
@@ -311,6 +332,7 @@ static HRESULT DownloadBSC_Create(IBindStatusCallback *callback, LPCWSTR file_na
     ret->ref = 1;
     ret->file_name = heap_strdupW(file_name);
     ret->cache_file = NULL;
+    ret->binding = NULL;
 
     if(callback)
         IBindStatusCallback_AddRef(callback);

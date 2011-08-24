@@ -10,4 +10,5 @@
 	<file>acledit.c</file>
 	<file>stubs.c</file>
 	<file>acledit.rc</file>
+	<pch>acleditint.h</pch>
 </module>

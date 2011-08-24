@@ -15,11 +15,12 @@
 .code64
 
 PUBLIC ceilf
-ceilf:
+FUNC ceilf
     sub rsp, 16
+    .ENDPROLOG
 
     /* Put parameter on the stack */
-    movss [rsp], xmm0
+    movss dword ptr [rsp], xmm0
     fld dword ptr [rsp]
 
     /* Change fpu control word to round up */
@@ -37,9 +38,10 @@ ceilf:
     fldcw [rsp + 8]
 
     fstp dword ptr [rsp]
-    movss xmm0, [rsp]
+    movss xmm0, dword ptr [rsp]
 
     add rsp, 16
     ret
+ENDFUNC ceilf
 
 END

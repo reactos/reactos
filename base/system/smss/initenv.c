@@ -227,10 +227,6 @@ SmSetEnvironmentVariables(VOID)
         goto done;
     }
 
-done:
-    NtClose(EnvironmentKey);
-
-
     /* Set the 'PROCESSOR_IDENTIFIER' system environment variable */
     RtlInitUnicodeString(&Identifier, NULL);
     RtlInitUnicodeString(&VendorIdentifier, NULL);
@@ -251,25 +247,37 @@ done:
                                     QueryTable,
                                     NULL,
                                     NULL);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("SM: szIdentifier: %wZ\n", &Identifier);
-        DPRINT("SM: szVendorIdentifier: %wZ\n", &VendorIdentifier);
-
-        swprintf(Buffer, L"%wZ, %wZ", &Identifier, &VendorIdentifier);
-
-        RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
-                              L"Session Manager\\Environment",
-                              L"PROCESSOR_IDENTIFIER",
-                              REG_SZ,
-                              Buffer,
-                              (wcslen(Buffer) + 1) * sizeof(WCHAR));
+        DPRINT1("SM: Failed to retrieve processor Identifier and/or VendorIdentifier (Status %08lx)", Status);
+        goto done;
     }
 
-    RtlFreeUnicodeString(&Identifier);
-    RtlFreeUnicodeString(&VendorIdentifier);
+    DPRINT("SM: szIdentifier: %wZ\n"      , &Identifier);
+    DPRINT("SM: szVendorIdentifier: %wZ\n", &VendorIdentifier);
 
-    return STATUS_SUCCESS;
+    RtlInitUnicodeString(&VariableName, L"PROCESSOR_IDENTIFIER");
+    swprintf(Buffer, L"%wZ, %wZ", &Identifier, &VendorIdentifier);
+    RtlFreeUnicodeString(&VendorIdentifier);
+    RtlFreeUnicodeString(&Identifier);
+
+    Status = NtSetValueKey(EnvironmentKey,
+                           &VariableName,
+                           0,
+                           REG_SZ,
+                           Buffer,
+                           (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to set the PROCESSOR_IDENTIFIER environment variable (Status %08lx)", Status);
+        goto done;
+    }
+
+done:
+    /* Close the handle */
+    NtClose(EnvironmentKey);
+
+    return Status;
 }
 
 
@@ -282,6 +290,10 @@ SmUpdateEnvironment(VOID)
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     WCHAR ValueBuffer[MAX_PATH];
     NTSTATUS Status;
+#ifndef NDEBUG
+    ULONG ii;
+    PWSTR envp;
+#endif
 
     /*
      * The following environment variables must be set prior to reading
@@ -316,6 +328,18 @@ SmUpdateEnvironment(VOID)
                                     QueryTable,
                                     &SmSystemEnvironment,
                                     SmSystemEnvironment);
+
+#ifndef NDEBUG
+    /* Print all environment varaibles */
+    ii = 0;
+    envp = SmSystemEnvironment;
+    DbgPrint("SmUpdateEnvironment:\n");
+    while (*envp)
+    {
+        DbgPrint("  %u: %S\n", ii++, envp);
+        envp += wcslen(envp) + 1;
+    }
+#endif
 
     return Status;
 }

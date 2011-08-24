@@ -48,4 +48,6 @@
 #define IDS_SCROLLUP 309
 #define IDS_SCROLLDOWN 310
 
+#define IDS_COMMAND_PROMPT 500
+
 /* EOF */

@@ -1,0 +1,154 @@
+
+==================================================
+STLport README for Borland C++ compilers.
+==================================================
+
+by: Francois Dumont, dums@stlport.com, last edited 20 May 2006
+
+============
+Introduction
+============
+This document describes how STLport can be compiled and used with
+Borland compilers.
+
+For any further comments or questions visit STLport mailing lists
+http://stlport.sourceforge.net/Maillists.shtml or forums
+https://sourceforge.net/forum/?group_id=146814
+
+=============
+Prerequisites
+=============
+To build and use STLport you will need following tools and libraries:
+ - Borland C++ compiler package 5.5.1 or higher version.
+
+    In order to build STLport the Borland compiler and linker have to
+  be correctly configurated too. That is to say:
+
+    * For the Borland compiler bcc32:
+
+    In Borland's 'bin' directory (same directory as bcc32.exe), create a 
+  bcc32.cfg file containing the compiler option giving it the path to 
+  native Borland headers:
+
+	-I%BORLAND_PATH%\BCC55\include
+
+    * For the resource compiler brcc32:
+
+    Create an environment variable INCLUDE containing path to native Borland
+    headers and especially the windows.h file
+
+	set INCLUDE=%BORLAND_PATH%\BCC55\include
+
+    * For the Borland linker ilink32:
+
+    You need to give path to both the Borland libs and Borland PSDK libs.
+    For that you have to create, in the same directory as ilink32.exe, a 
+    configuration file, ilink32.cfg, that contains:
+
+	-L%BORLAND_PATH%\BCC55\lib;%BORLAND_PATH%\BCC55\lib\PSDK
+
+ - A GNU make tool. You can get one from www.mingw.org or www.cygwin.com.
+   See README.mingw or README.cygwin for additional informations.
+
+===================
+Configuring STLport
+===================
+  This is intended to be an optional step, if you want to use default
+configuration simply jump to next chapter 'Building STLport'. Open a console
+and go to the STLport build/lib folder. Run
+
+	configure --help
+
+  This command will present you the different available build options. Just follow
+the instructions to set STLport configuration according your needs. For example,
+to set the typical configuration for most Borland compilers, run 
+
+    configure -c bcc
+
+================
+Building STLport
+================
+  This is a step by step description of the actions to take in order to build 
+and install the STLport libraries:
+
+1. Open a console, you can use a Msys, Cygwin or Windows console.
+
+2. Go to the STLport build/lib folder:
+	cd C:\STLport\build\lib
+
+3. Run the following command:
+	make -fbcc.mak install
+
+	Where 'make' is the GNU make utility you have installed. The name of
+GNU make utility may differ, such as 'mingw32-make'.  -f is a make option
+telling it which makefile to use. You have of course to choose the 
+appropriate makefile for your compiler, 'bcc.mak' in our case.
+
+	Once the command returns you will have all the necessary import libraries 
+in STLport's 'lib' folder and DLLs in STLport's 'bin' folder.  For a 
+description of the generated libraries check the FAQ file in the 'doc' folder.  
+For a quick start guide to the STLport make system, see the README file in the 
+'build/lib' folder.
+
+===============
+Testing STLport
+===============
+You can use the unit tests to verify STLport behaves correctly. Change into
+STLport's 'build/test/unit' folder and type:
+
+  make -fbcc.mak install
+
+This will build and install the unit tests with STLport dynamic libraries.
+Once the unit tests are built you just need to run them.  They can be found
+in STLport's bin, bin-g or bin-stlg folders.  To rebuild the unit tests 
+with STLport static libraries, type:
+
+  make -fbcc.mak clean
+  make -fbcc.mak install-static
+
+=============
+Using STLport
+=============
+Adjust your include and link paths in Borland IDE or in the command line config
+files. In the include files add the path to STLport's 'stlport' folder. Make sure
+it is the first directory listed there. Add STLport's 'lib' folder for the library
+files (order of paths doesn't matter here).
+
+Now you should be ready to use STLport.
+
+============
+Known limitations
+============
+
+1. If you extend a locale facet based on a Standard facet definition you will
+have to grant your own facet id defition. Ex extracted from
+test/unit/fstream_test.cpp:
+
+#include <locale>
+
+using namespace std;
+
+struct my_state {
+  char dummy;
+};
+
+struct my_traits : public char_traits<char> {
+  typedef my_state state_type;
+  typedef fpos<state_type> pos_type;
+};
+
+class my_codecvt : public codecvt<char, char, my_state>
+{};
+
+// Mandatory locale facet id definition:
+template <>
+locale::id codecvt<char, char, my_state>::id;
+
+2. If you get a linker memory error, e.g. LME351, it probably means that full
+source debugging is enabled and Borland's .TDS file has exceeded the memory 
+capacity of Borland's linker (ilink32.exe).  To resolve this error, check
+Borland's website for the latest patch for ilink32.exe.  In the alternative,
+disable full source debugging in build\Makefiles\gmake\bcc.mak by deleting 
+the -v option in the OPT settings.
+
+3. For "'uname' is not recognized . . .", see "Configuring STLport" above. 

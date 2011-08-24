@@ -1,27 +1,8 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/class.c
+ * PURPOSE:          Window accelerator
+ * FILE:             subsystems/win32/win32k/ntuser/accelerator.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -51,8 +32,11 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserAccel);
+
+UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
+HMENU FASTCALL IntGetSubMenu( HMENU hMenu, int nPos);
+UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -105,11 +89,15 @@ co_IntTranslateAccelerator(
    WORD key,
    WORD cmd)
 {
+   INT mask = 0;
    UINT mesg = 0;
+   HWND hWnd;
 
    ASSERT_REFS_CO(Window);
 
-   DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
+   hWnd = Window->head.h;
+
+   TRACE("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    if (wParam != key)
@@ -117,38 +105,32 @@ co_IntTranslateAccelerator(
       return FALSE;
    }
 
-   if (message == WM_CHAR)
+   TRACE("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",UserGetKeyState(VK_CONTROL));
+   TRACE("NtUserGetKeyState(VK_MENU) = 0x%x\n",UserGetKeyState(VK_MENU));
+   TRACE("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",UserGetKeyState(VK_SHIFT));
+
+   if (UserGetKeyState(VK_CONTROL) & 0x8000) mask |= FCONTROL;
+   if (UserGetKeyState(VK_MENU) & 0x8000) mask |= FALT;
+   if (UserGetKeyState(VK_SHIFT) & 0x8000) mask |= FSHIFT;
+   TRACE("Mask 0x%x\n",mask);
+
+   if (message == WM_CHAR || message == WM_SYSCHAR)
    {
-      if (!(fVirt & FALT) && !(fVirt & FVIRTKEY))
+      if ( !(fVirt & FVIRTKEY) && (mask & FALT) == (fVirt & FALT) )
       {
-         DPRINT("found accel for WM_CHAR: ('%c')\n", wParam & 0xff);
+         TRACE("found accel for WM_CHAR: ('%c')\n", LOWORD(wParam) & 0xff);
          goto found;
       }
    }
    else
    {
-      if ((fVirt & FVIRTKEY) > 0)
+      if (fVirt & FVIRTKEY)
       {
-         INT mask = 0;
-         DPRINT("found accel for virt_key %04x (scan %04x)\n",
-                wParam, 0xff & HIWORD(lParam));
+         TRACE("found accel for virt_key %04x (scan %04x)\n",
+                 wParam, 0xff & HIWORD(lParam));
 
-         DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
-                UserGetKeyState(VK_SHIFT));
-         DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
-                UserGetKeyState(VK_CONTROL));
-         DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",
-                UserGetKeyState(VK_MENU));
-
-         if (UserGetKeyState(VK_SHIFT) & 0x8000)
-            mask |= FSHIFT;
-         if (UserGetKeyState(VK_CONTROL) & 0x8000)
-            mask |= FCONTROL;
-         if (UserGetKeyState(VK_MENU) & 0x8000)
-            mask |= FALT;
-         if (mask == (fVirt & (FSHIFT | FCONTROL | FALT)))
-            goto found;
-         DPRINT("but incorrect SHIFT/CTRL/ALT-state\n");
+         if (mask == (fVirt & (FSHIFT | FCONTROL | FALT))) goto found;
+         TRACE("but incorrect SHIFT/CTRL/ALT-state mask %x fVirt %x\n",mask,fVirt);
       }
       else
       {
@@ -156,14 +138,14 @@ co_IntTranslateAccelerator(
          {
             if ((fVirt & FALT) && (lParam & 0x20000000))
             {                            /* ^^ ALT pressed */
-               DPRINT("found accel for Alt-%c\n", wParam & 0xff);
+               TRACE("found accel for Alt-%c\n", LOWORD(wParam) & 0xff);
                goto found;
             }
          }
       }
    }
 
-   DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
+   TRACE("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    return FALSE;
@@ -171,92 +153,122 @@ co_IntTranslateAccelerator(
 found:
    if (message == WM_KEYUP || message == WM_SYSKEYUP)
       mesg = 1;
-   else if (IntGetCaptureWindow())
-      mesg = 2;
-   else if (!IntIsWindowVisible(Window)) /* FIXME: WINE IsWindowEnabled == IntIsWindowVisible? */
-      mesg = 3;
    else
    {
-#if 0
       HMENU hMenu, hSubMenu, hSysMenu;
       UINT uSysStat = (UINT)-1, uStat = (UINT)-1, nPos;
+      PMENU_OBJECT MenuObject, SubMenu;
+      PMENU_ITEM MenuItem;
 
-      hMenu = (UserGetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ? 0 : GetMenu(hWnd);
-      hSysMenu = get_win_sys_menu(hWnd);
+      hMenu = (Window->style & WS_CHILD) ? 0 : (HMENU)Window->IDMenu;
+      hSysMenu = Window->SystemMenu;
+      MenuObject = IntGetMenuObject(Window->SystemMenu);
 
       /* find menu item and ask application to initialize it */
       /* 1. in the system menu */
       hSubMenu = hSysMenu;
-      nPos = cmd;
-      if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
+      if (MenuObject)
       {
-         co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
-         if(hSubMenu != hSysMenu)
-         {
-            nPos = MENU_FindSubMenu(&hSysMenu, hSubMenu);
-            TRACE_(accel)("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
-            co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
-         }
-         uSysStat = GetMenuState(GetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
-      }
-      else /* 2. in the window's menu */
-      {
-         hSubMenu = hMenu;
-         nPos = cmd;
-         if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
-         {
-            co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
-            if(hSubMenu != hMenu)
-            {
-               nPos = MENU_FindSubMenu(&hMenu, hSubMenu);
-               TRACE_(accel)("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
-               co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
-            }
-            uStat = GetMenuState(hMenu, cmd, MF_BYCOMMAND);
-         }
-      }
+         nPos = IntGetMenuItemByFlag( MenuObject,
+                                      cmd,
+                                      MF_BYCOMMAND,
+                                     &SubMenu,
+                                     &MenuItem,
+                                      NULL);
 
-      if (uSysStat != (UINT)-1)
-      {
-         if (uSysStat & (MF_DISABLED|MF_GRAYED))
-            mesg=4;
-         else
-            mesg=WM_SYSCOMMAND;
-      }
-      else
-      {
-         if (uStat != (UINT)-1)
+         if (MenuItem && (nPos != (UINT)-1))
          {
-            if (IsIconic(hWnd))
-               mesg=5;
+            hSubMenu = MenuItem->hSubMenu;
+
+            if (IntGetCaptureWindow())
+                mesg = 2;
+            if (Window->style & WS_DISABLED)
+                mesg = 3;
+            else
+            {                                               
+               co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
+               if (hSubMenu != hSysMenu)
+               {
+                  nPos = IntFindSubMenu(&hSysMenu, hSubMenu);
+                  TRACE("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
+                  co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
+               }
+            uSysStat = IntGetMenuState(IntGetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
+            }
+         }
+         else /* 2. in the window's menu */
+         {
+            MenuObject = IntGetMenuObject(hMenu);
+            hSubMenu = hMenu;
+            if (MenuObject)
+            {
+               nPos = IntGetMenuItemByFlag( MenuObject,
+                                            cmd,
+                                            MF_BYCOMMAND,
+                                           &SubMenu,
+                                           &MenuItem,
+                                            NULL);
+
+               if (MenuItem && (nPos != (UINT)-1))
+               {
+                  if (IntGetCaptureWindow())
+                      mesg = 2;
+                  if (Window->style & WS_DISABLED)
+                      mesg = 3;
+                  else
+                  {
+                     co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
+                     if (hSubMenu != hMenu)
+                     {
+                        nPos = IntFindSubMenu(&hMenu, hSubMenu);
+                        TRACE("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
+                        co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
+                     }
+                     uStat = IntGetMenuState(hMenu, cmd, MF_BYCOMMAND);
+                  }
+               }
+            }
+         }
+      }
+      if (mesg == 0)
+      {
+         if (uSysStat != (UINT)-1)
+         {
+            if (uSysStat & (MF_DISABLED|MF_GRAYED))
+               mesg=4;
+            else
+               mesg=WM_SYSCOMMAND;
+         }
+         else
+         {
+            if (uStat != (UINT)-1)
+            {
+               if (Window->style & WS_MINIMIZE)
+                  mesg=5;
+               else
+               {
+                  if (uStat & (MF_DISABLED|MF_GRAYED))
+                     mesg=6;
+                  else
+                     mesg=WM_COMMAND;
+               }
+            }
             else
             {
-               if (uStat & (MF_DISABLED|MF_GRAYED))
-                  mesg=6;
-               else
-                  mesg=WM_COMMAND;
+               mesg=WM_COMMAND;
             }
          }
-         else
-         {
-            mesg=WM_COMMAND;
-         }
       }
-#else
-      DPRINT1("Menu search not implemented\n");
-      mesg = WM_COMMAND;
-#endif
-
    }
 
    if (mesg == WM_COMMAND)
    {
-      DPRINT(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
+      TRACE(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
       co_IntSendMessage(Window->head.h, mesg, 0x10000 | cmd, 0L);
    }
    else if (mesg == WM_SYSCOMMAND)
    {
-      DPRINT(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
+      TRACE(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
       co_IntSendMessage(Window->head.h, mesg, cmd, 0x00010000L);
    }
    else
@@ -270,14 +282,14 @@ found:
        *   #5: it's a menu option, but window is iconic
        *   #6: it's a menu option, but disabled
        */
-      DPRINT(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
+      ERR(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
       if (mesg == 0)
       {
-         DPRINT1(" unknown reason - please report!");
+         ERR(" unknown reason - please report!");
       }
    }
 
-   DPRINT("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
+   TRACE("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    return TRUE;
@@ -299,7 +311,7 @@ NtUserCopyAcceleratorTable(
    BOOL Done = FALSE;
    DECLARE_RETURN(int);
 
-   DPRINT("Enter NtUserCopyAcceleratorTable\n");
+   TRACE("Enter NtUserCopyAcceleratorTable\n");
    UserEnterShared();
 
    Accel = UserGetAccelObject(hAccel);
@@ -333,7 +345,7 @@ NtUserCopyAcceleratorTable(
    RETURN(Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserCopyAcceleratorTable, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCopyAcceleratorTable, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -349,7 +361,7 @@ NtUserCreateAcceleratorTable(
    INT Index;
    DECLARE_RETURN(HACCEL);
 
-   DPRINT("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
+   TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
           Entries, EntriesCount);
    UserEnterExclusive();
 
@@ -407,13 +419,11 @@ NtUserCreateAcceleratorTable(
    RETURN(hAccel);
 
 CLEANUP:
-   DPRINT("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x\n",
+   TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x\n",
           Entries, EntriesCount,_ret_);
    UserLeave();
    END_CLEANUP;
 }
-
-
 
 BOOLEAN
 APIENTRY
@@ -428,7 +438,7 @@ NtUserDestroyAcceleratorTable(
    FIXME: Destroy only tables created using CreateAcceleratorTable.
     */
 
-   DPRINT("NtUserDestroyAcceleratorTable(Table %x)\n", hAccel);
+   TRACE("NtUserDestroyAcceleratorTable(Table %x)\n", hAccel);
    UserEnterExclusive();
 
    if (!(Accel = UserGetAccelObject(hAccel)))
@@ -447,11 +457,10 @@ NtUserDestroyAcceleratorTable(
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", hAccel,_ret_);
+   TRACE("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", hAccel,_ret_);
    UserLeave();
    END_CLEANUP;
 }
-
 
 int
 APIENTRY
@@ -466,7 +475,7 @@ NtUserTranslateAccelerator(
    USER_REFERENCE_ENTRY AccelRef, WindowRef;
    DECLARE_RETURN(int);
 
-   DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
+   TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
           hWnd, hAccel, Message);
    UserEnterShared();
 
@@ -507,7 +516,7 @@ NtUserTranslateAccelerator(
                                      Accel->Table[i].fVirt, Accel->Table[i].key,
                                      Accel->Table[i].cmd))
       {
-         DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
+         TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
                 hWnd, hAccel, Message, 1);
          RETURN( 1);
       }
@@ -523,7 +532,7 @@ CLEANUP:
    if (Window) UserDerefObjectCo(Window);
    if (Accel) UserDerefObjectCo(Accel);
 
-   DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
+   TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
           hWnd, hAccel, Message, 0);
    UserLeave();
    END_CLEANUP;

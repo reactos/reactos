@@ -29,7 +29,9 @@ typedef struct tagMonikerComparisonData {
 [
     uuid(7a98c254-6808-11cf-b73b-00aa00b677a8),
     version(0.2),
+#ifndef _MSC_VER
     strict_context_handle
+#endif
 ]
 interface Irot
 {

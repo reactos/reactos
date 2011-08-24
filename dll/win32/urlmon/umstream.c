@@ -32,10 +32,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct ProxyBindStatusCallback
 {
-    const IBindStatusCallbackVtbl *lpVtbl;
+    IBindStatusCallback IBindStatusCallback_iface;
 
     IBindStatusCallback *pBSC;
 } ProxyBindStatusCallback;
+
+static inline ProxyBindStatusCallback *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
+{
+    return CONTAINING_RECORD(iface, ProxyBindStatusCallback, IBindStatusCallback_iface);
+}
 
 static HRESULT WINAPI ProxyBindStatusCallback_QueryInterface(IBindStatusCallback *iface, REFIID riid, void **ppv)
 {
@@ -64,7 +69,7 @@ static ULONG WINAPI ProxyBindStatusCallback_Release(IBindStatusCallback *iface)
 static HRESULT WINAPI ProxyBindStatusCallback_OnStartBinding(IBindStatusCallback *iface, DWORD dwReserved,
                                                IBinding *pib)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_OnStartBinding(This->pBSC, dwReserved, pib);
@@ -74,7 +79,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_OnStartBinding(IBindStatusCallback
 
 static HRESULT WINAPI ProxyBindStatusCallback_GetPriority(IBindStatusCallback *iface, LONG *pnPriority)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_GetPriority(This->pBSC, pnPriority);
@@ -84,7 +89,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_GetPriority(IBindStatusCallback *i
 
 static HRESULT WINAPI ProxyBindStatusCallback_OnLowResource(IBindStatusCallback *iface, DWORD reserved)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_OnLowResource(This->pBSC, reserved);
@@ -95,7 +100,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_OnLowResource(IBindStatusCallback 
 static HRESULT WINAPI ProxyBindStatusCallback_OnProgress(IBindStatusCallback *iface, ULONG ulProgress,
                                            ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_OnProgress(This->pBSC, ulProgress,
@@ -107,7 +112,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_OnProgress(IBindStatusCallback *if
 
 static HRESULT WINAPI ProxyBindStatusCallback_OnStopBinding(IBindStatusCallback *iface, HRESULT hresult, LPCWSTR szError)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_OnStopBinding(This->pBSC, hresult, szError);
@@ -117,7 +122,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_OnStopBinding(IBindStatusCallback 
 
 static HRESULT WINAPI ProxyBindStatusCallback_GetBindInfo(IBindStatusCallback *iface, DWORD *grfBINDF, BINDINFO *pbindinfo)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_GetBindInfo(This->pBSC, grfBINDF, pbindinfo);
@@ -128,7 +133,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_GetBindInfo(IBindStatusCallback *i
 static HRESULT WINAPI ProxyBindStatusCallback_OnDataAvailable(IBindStatusCallback *iface, DWORD grfBSCF,
                                                               DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_OnDataAvailable(This->pBSC, grfBSCF, dwSize,
@@ -139,7 +144,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_OnDataAvailable(IBindStatusCallbac
 
 static HRESULT WINAPI ProxyBindStatusCallback_OnObjectAvailable(IBindStatusCallback *iface, REFIID riid, IUnknown *punk)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_OnObjectAvailable(This->pBSC, riid, punk);
@@ -170,7 +175,7 @@ static const IBindStatusCallbackVtbl BlockingBindStatusCallbackVtbl =
 
 static HRESULT WINAPI AsyncBindStatusCallback_GetBindInfo(IBindStatusCallback *iface, DWORD *grfBINDF, BINDINFO *pbindinfo)
 {
-    ProxyBindStatusCallback *This = (ProxyBindStatusCallback *)iface;
+    ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
     HRESULT hr = IBindStatusCallback_GetBindInfo(This->pBSC, grfBINDF, pbindinfo);
     *grfBINDF |= BINDF_PULLDATA | BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE;
     return hr;
@@ -276,10 +281,10 @@ HRESULT WINAPI URLOpenBlockingStreamW(LPUNKNOWN pCaller, LPCWSTR szURL,
     if (!szURL || !ppStream)
         return E_INVALIDARG;
 
-    blocking_bsc.lpVtbl = &BlockingBindStatusCallbackVtbl;
+    blocking_bsc.IBindStatusCallback_iface.lpVtbl = &BlockingBindStatusCallbackVtbl;
     blocking_bsc.pBSC = lpfnCB;
 
-    return URLStartDownload(szURL, ppStream, (IBindStatusCallback *)&blocking_bsc);
+    return URLStartDownload(szURL, ppStream, &blocking_bsc.IBindStatusCallback_iface);
 }
 
 /***********************************************************************
@@ -326,10 +331,10 @@ HRESULT WINAPI URLOpenStreamW(LPUNKNOWN pCaller, LPCWSTR szURL, DWORD dwReserved
     if (!szURL)
         return E_INVALIDARG;
 
-    async_bsc.lpVtbl = &AsyncBindStatusCallbackVtbl;
+    async_bsc.IBindStatusCallback_iface.lpVtbl = &AsyncBindStatusCallbackVtbl;
     async_bsc.pBSC = lpfnCB;
 
-    hr = URLStartDownload(szURL, &pStream, (IBindStatusCallback *)&async_bsc);
+    hr = URLStartDownload(szURL, &pStream, &async_bsc.IBindStatusCallback_iface);
     if (SUCCEEDED(hr) && pStream)
         IStream_Release(pStream);
 

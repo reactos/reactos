@@ -8,11 +8,7 @@
  * NOTES:
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <windef.h>
-#include <wingdi.h>
-#include <winddi.h>
+#include "ftfd.h"
 
 #define NDEBUG
 #include <debug.h>

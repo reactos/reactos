@@ -4,12 +4,6 @@
 	<include base="freetype">include</include>
 	<define name="__NTDRIVER__" />
 	<define name="FT2_BUILD_LIBRARY"  />
-	<if property="NSWPAT" value="0">
-		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />
-	</if>
-	<if property="NSWPAT" value="1">
-		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
-	</if>
 	<directory name="src">
 		<directory name="base">
 			<file>ftbase.c</file>

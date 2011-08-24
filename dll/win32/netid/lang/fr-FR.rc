@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Description de l'ordinateur :", IDC_STATIC, 6, 40, 70, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Nom complet de l'ordinateur :", IDC_STATIC, 6, 68, 64, 9
-    LTEXT       "(Défaut)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Groupe de travail :", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(Vide)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Pour utiliser l'Assistant Réseau, afin de rejoindre un domaine ou créer un utilisateur local, cliquez sur Identification Réseau.", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&Identification &réseau...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Pour changer le nom de cet ordinateur ou rejoindre un domaine, cliquez sur Changer.", IDC_STATIC, 6, 149, 170, 17

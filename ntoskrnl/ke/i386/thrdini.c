@@ -397,12 +397,14 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         if (!NewThread->SpecialApcDisable)
         {
             /* Request APC delivery */
-            if (SwitchFrame->ApcBypassDisable) HalRequestSoftwareInterrupt(APC_LEVEL);
-            return TRUE;
+            if (SwitchFrame->ApcBypassDisable)
+                HalRequestSoftwareInterrupt(APC_LEVEL);
+            else
+                return TRUE;
         }
     }
 
-    /* Return */
+    /* Return stating that no kernel APCs are pending*/
     return FALSE;
 }
 

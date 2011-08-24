@@ -356,7 +356,7 @@ PULONG KdComponentTable[104] =
     &Kd_ENDOFTABLE_Mask,
 };
 
-ULONG KdComponentTableSize = sizeof(KdComponentTable);
+ULONG KdComponentTableSize = sizeof(KdComponentTable) / sizeof(KdComponentTable[0]);
 
 //
 // Debugger Data

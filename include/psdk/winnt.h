@@ -284,6 +284,8 @@ typedef LONGLONG USN;
 #endif
 #define ANSI_NULL ((CHAR)0)
 #define UNICODE_NULL ((WCHAR)0)
+#define UNICODE_STRING_MAX_BYTES ((USHORT) 65534)
+#define UNICODE_STRING_MAX_CHARS (32767)
 typedef BYTE BOOLEAN,*PBOOLEAN;
 #endif
 typedef BYTE FCHAR;
@@ -311,6 +313,22 @@ typedef DWORD FLONG;
 #define ERROR_SEVERITY_INFORMATIONAL 0x40000000
 #define ERROR_SEVERITY_WARNING       0x80000000
 #define ERROR_SEVERITY_ERROR         0xC0000000
+
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
+extern "C++" { \
+    inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)|((int)b)); } \
+    inline ENUMTYPE operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+    inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)&((int)b)); } \
+    inline ENUMTYPE operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+    inline ENUMTYPE operator ~ (ENUMTYPE a) { return (ENUMTYPE)(~((int)a)); } \
+    inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)^((int)b)); } \
+    inline ENUMTYPE operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
+#endif
+
 /* also in ddk/ntifs.h */
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -1361,7 +1379,7 @@ typedef enum {
 #define SEC_RESERVE	0x04000000
 #define SEC_COMMIT	0x08000000
 #define SEC_NOCACHE	0x10000000
-#define SEC_WRITECOMBINE 0x40000000     
+#define SEC_WRITECOMBINE 0x40000000
 #define SEC_LARGE_PAGES  0x80000000
 #define SECTION_EXTEND_SIZE 16
 #define SECTION_MAP_READ 4
@@ -3301,6 +3319,21 @@ typedef struct _QUOTA_LIMITS {
   LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
 
+typedef struct _QUOTA_LIMITS_EX {
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
+  SIZE_T Reserved1;
+  SIZE_T Reserved2;
+  SIZE_T Reserved3;
+  SIZE_T Reserved4;
+  ULONG Flags;
+  ULONG Reserved5;
+} QUOTA_LIMITS_EX, *PQUOTA_LIMITS_EX;
+
 typedef struct _IO_COUNTERS {
   ULONGLONG ReadOperationCount;
   ULONGLONG WriteOperationCount;
@@ -5097,18 +5130,12 @@ typedef struct _OBJECT_TYPE_LIST {
   GUID *ObjectType;
 } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
-#if defined(__GNUC__)
-
 #if defined(_M_IX86)
-static __inline__ PVOID GetCurrentFiber(void)
+FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
-    void* ret;
-    __asm__ __volatile__ (
-        "movl	%%fs:0x10,%0"
-        : "=r" (ret) /* allow use of reg eax,ebx,ecx,edx,esi,edi */
-    );
-    return ret;
+    return (PVOID)(ULONG_PTR)__readfsdword(0x10);
 }
+
 #elif defined (_M_AMD64)
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
@@ -5118,10 +5145,11 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
   #endif
 }
+
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
-#else
-#if defined(_M_PPC)
+
+#elif defined(_M_PPC)
 static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_winnt(const unsigned long Offset)
 {
     unsigned long result;
@@ -5133,42 +5161,15 @@ static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_win
     return result;
 }
 
-#else
-#error Unknown architecture
-#endif
 static __inline__ PVOID GetCurrentFiber(void)
 {
     return __readfsdword_winnt(0x10);
 }
+#else
+#error Unknown architecture
 #endif
 
-#elif defined(__WATCOMC__)
 
-extern PVOID GetCurrentFiber(void);
-#pragma aux GetCurrentFiber = \
-        "mov	eax, dword ptr fs:0x10" \
-        value [eax] \
-        modify [eax];
-
-#elif defined(_MSC_VER)
-
-#if (_MSC_FULL_VER >= 13012035)
-
-__inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
-
-#else
-
-static __inline PVOID GetCurrentFiber(void)
-{
-    PVOID p;
-	__asm mov eax, fs:[10h]
-	__asm mov [p], eax
-    return p;
-}
-
-#endif /* _MSC_FULL_VER */
-
-#endif /* __GNUC__/__WATCOMC__/_MSC_VER */
 
 #include "inline_ntcurrentteb.h"
 
@@ -5215,10 +5216,10 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #endif
 }
 
+#endif
+
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
-
-#endif
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
@@ -5264,17 +5265,9 @@ MemoryBarrier(VOID)
 #error Unknown architecture
 #endif
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) || defined(_M_AMD64)
 
-#ifdef _MSC_VER
-#pragma intrinsic(__int2c)
-#pragma intrinsic(_mm_pause)
 #define YieldProcessor _mm_pause
-#else
-#define YieldProcessor() __asm__ __volatile__("pause");
-#define __int2c() __asm__ __volatile__("int $0x2c");
-#endif
-
 
 FORCEINLINE
 VOID
@@ -5283,13 +5276,6 @@ DbgRaiseAssertionFailure(VOID)
     __int2c();
 }
 
-#elif defined (_M_AMD64)
-#ifdef _MSC_VER
-#pragma intrinsic(_mm_pause)
-#define YieldProcessor _mm_pause
-#else
-#define YieldProcessor() __asm__ __volatile__("pause");
-#endif
 #elif defined(_M_PPC)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_MIPS)

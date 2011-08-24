@@ -8,11 +8,6 @@
  *                  Copyright 2007 Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <prsht.h>
-#include <stdlib.h>
-#include "resource.h"
 #include "access.h"
 
 

@@ -224,7 +224,7 @@ interface IWebBrowserApp : IWebBrowser
     [id(302)] HRESULT PutProperty([in] BSTR Property, [in] VARIANT vtValue);
     [id(303)] HRESULT GetProperty([in] BSTR Property, [out, retval] VARIANT *pvtValue);
     [id(0), propget] HRESULT Name([out, retval] BSTR* Name);
-    [id(DISPID_HWND), propget] HRESULT HWND([out, retval] long *pHWND);
+    [id(DISPID_HWND), propget] HRESULT HWND([out, retval] SHANDLE_PTR *pHWND);
     [id(400), propget] HRESULT FullName([out, retval] BSTR* FullName);
     [id(401), propget] HRESULT Path([out, retval] BSTR* Path);
     [id(402), propget] HRESULT Visible([out, retval] VARIANT_BOOL* pBool);

@@ -113,7 +113,7 @@ VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...
     #define DBGCHECKRETURNEDPKT(_pkt) DbgCheckReturnedPkt(_pkt)
     #define DBGGETSRBSTATUSSTR(_pSrb) DbgGetSrbStatusStr(_pSrb)
     
-    VOID ClasspInitializeDebugGlobals();
+    VOID ClasspInitializeDebugGlobals(VOID);
     char *DbgGetIoctlStr(ULONG ioctl);
     char *DbgGetScsiOpStr(PSCSI_REQUEST_BLOCK Srb);
     char *DbgGetSenseCodeStr(PSCSI_REQUEST_BLOCK Srb);

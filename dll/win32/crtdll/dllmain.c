@@ -46,6 +46,7 @@ unsigned int CRTDLL__osmajor_dll;
 unsigned int CRTDLL__osminor_dll;
 unsigned int CRTDLL__osmode_dll;
 unsigned int CRTDLL__osversion_dll;
+int _fileinfo_dll;
 
 extern char* _acmdln;        /* pointer to ascii command line */
 extern wchar_t* _wcmdln;     /* pointer to wide character command line */
@@ -140,7 +141,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         if (BlockEnvToEnvironW() < 0)
         {
-            FreeEnvironment((char**)_wenviron);
+            FreeEnvironment((char**)_environ);
             return FALSE;
         }
 

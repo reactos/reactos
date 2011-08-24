@@ -41,6 +41,12 @@ ENDM
     name ENDP
 ENDM
 
+/* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
+   and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+FPO MACRO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
+    .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
+ENDM
+
 /* MASM doesn't have an ASCII macro */
 .ASCII MACRO text
     DB text
@@ -143,16 +149,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
+#ifdef _X86_
+    _\name:
+#else
     \name:
+#endif
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
+#define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .macro .ENDP name
     .cfi_endproc
     .endfunc
 .endm
+#define ENDFUNC .ENDP
 
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol
@@ -190,6 +202,12 @@ ENDM
 
 .macro .code
     .text
+.endm
+
+/* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
+   and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+.macro FPO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
+    /* dummy */
 .endm
 
 /* Macros for x64 stack unwind OPs */
@@ -257,6 +275,17 @@ code = 1
 #define else .else
 #define elseif .elseif
 
+#define CR "\r"
+#define LF "\n"
+#define NUL "\0"
+
 #endif
+
+/* Common definitions for FPO macro
+   see http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+#define FRAME_FPO 0
+#define FRAME_TRAP 1
+#define FRAME_TSS 2
+#define FRAME_NONFPO 3
 
 #endif /* _ASM_INC_ */

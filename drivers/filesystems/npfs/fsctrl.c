@@ -98,14 +98,14 @@ NpfsConnectPipe(PIRP Irp,
     /* Fail, if the CCB is not a pipe CCB */
     if (Ccb->Type != CCB_PIPE)
     {
-        DPRINT1("Not a pipe\n");
+        DPRINT("Not a pipe\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
     /* Fail, if the CCB is not a server end CCB */
     if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
     {
-        DPRINT1("Not the server end\n");
+        DPRINT("Not the server end\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
@@ -209,14 +209,14 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     /* Fail, if the CCB is not a pipe CCB */
     if (Ccb->Type != CCB_PIPE)
     {
-        DPRINT1("Not a pipe\n");
+        DPRINT("Not a pipe\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
     /* Fail, if the CCB is not a server end CCB */
     if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
     {
-        DPRINT1("Not the server end\n");
+        DPRINT("Not the server end\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
@@ -317,9 +317,105 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     return Status;
 }
 
-
 static NTSTATUS
 NpfsWaitPipe(PIRP Irp,
+             PNPFS_CCB Ccb)
+{
+    PLIST_ENTRY current_entry;
+    PNPFS_FCB Fcb;
+    PNPFS_CCB ServerCcb;
+    PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
+    PLARGE_INTEGER TimeOut;
+    NTSTATUS Status;
+    PEXTENDED_IO_STACK_LOCATION IoStack;
+    PFILE_OBJECT FileObject;
+    PNPFS_VCB Vcb;
+
+    IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack);
+    FileObject = IoStack->FileObject;
+    ASSERT(FileObject);
+
+    DPRINT("Waiting on Pipe %wZ\n", &FileObject->FileName);
+
+    WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+
+    ASSERT(Ccb->Fcb);
+    ASSERT(Ccb->Fcb->Vcb);
+
+    /* Get the VCB */
+    Vcb = Ccb->Fcb->Vcb;
+
+    /* Lock the pipe list */
+    KeLockMutex(&Vcb->PipeListLock);
+
+    /* File a pipe with the given name */
+    Fcb = NpfsFindPipe(Vcb,
+                       &FileObject->FileName);
+
+    /* Unlock the pipe list */
+    KeUnlockMutex(&Vcb->PipeListLock);
+
+    /* Fail if not pipe was found */
+    if (Fcb == NULL)
+    {
+        DPRINT("No pipe found!\n", Fcb);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    /* search for listening server */
+    current_entry = Fcb->ServerCcbListHead.Flink;
+    while (current_entry != &Fcb->ServerCcbListHead)
+    {
+        ServerCcb = CONTAINING_RECORD(current_entry,
+                                      NPFS_CCB,
+                                      CcbListEntry);
+
+        if (ServerCcb->PipeState == FILE_PIPE_LISTENING_STATE)
+        {
+            /* found a listening server CCB */
+            DPRINT("Listening server CCB found -- connecting\n");
+
+            return STATUS_SUCCESS;
+        }
+
+        current_entry = current_entry->Flink;
+    }
+
+    /* No listening server fcb found, so wait for one */
+
+    /* If a timeout specified */
+    if (WaitPipe->TimeoutSpecified)
+    {
+        /* NMPWAIT_USE_DEFAULT_WAIT = 0 */
+        if (WaitPipe->Timeout.QuadPart == 0)
+        {
+            TimeOut = &Fcb->TimeOut;
+        }
+        else
+        {
+            TimeOut = &WaitPipe->Timeout;
+        }
+    }
+    else
+    {
+        /* Wait forever */
+        TimeOut = NULL;
+    }
+
+     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
+                                    UserRequest,
+                                    KernelMode,
+                                    TRUE,
+                                    TimeOut);
+
+    DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
+
+    return Status;
+}
+
+NTSTATUS
+NpfsWaitPipe2(PIRP Irp,
              PNPFS_CCB Ccb)
 {
     PLIST_ENTRY current_entry;
@@ -345,7 +441,9 @@ NpfsWaitPipe(PIRP Irp,
     /* Calculate the pipe name length and allocate the buffer */
     PipeName.Length = WaitPipe->NameLength + sizeof(WCHAR);
     PipeName.MaximumLength = PipeName.Length + sizeof(WCHAR);
-    PipeName.Buffer = ExAllocatePool(NonPagedPool, PipeName.MaximumLength);
+    PipeName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                            PipeName.MaximumLength,
+                                            TAG_NPFS_NAMEBLOCK);
     if (PipeName.Buffer == NULL)
     {
         DPRINT1("Could not allocate memory for the pipe name!\n");
@@ -375,7 +473,7 @@ NpfsWaitPipe(PIRP Irp,
     KeUnlockMutex(&Vcb->PipeListLock);
 
     /* Release the pipe name buffer */
-    ExFreePool(PipeName.Buffer);
+    ExFreePoolWithTag(PipeName.Buffer, TAG_NPFS_NAMEBLOCK);
 
     /* Fail if not pipe was found */
     if (Fcb == NULL)

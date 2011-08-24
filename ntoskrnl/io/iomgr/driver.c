@@ -310,51 +310,65 @@ IopLoadServiceModule(
       return STATUS_UNSUCCESSFUL;
    }
 
-   /* Open CurrentControlSet */
-   RtlInitUnicodeString(&CCSName,
-                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-   Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
-   if (!NT_SUCCESS(Status))
+   if (ExpInTextModeSetup)
    {
-       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-       return Status;
-   }
+       /* We have no registry, but luckily we know where all the drivers are */
 
-   /* Open service key */
-   Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
-   if (!NT_SUCCESS(Status))
+       /* ServiceStart < 4 is all that matters */
+       ServiceStart = 0;
+
+       /* IopNormalizeImagePath will do all of the work for us if we give it an empty string */
+       ServiceImagePath.Length = ServiceImagePath.MaximumLength = 0;
+       ServiceImagePath.Buffer = NULL;
+   }
+   else
    {
-       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       /* Open CurrentControlSet */
+       RtlInitUnicodeString(&CCSName,
+                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
+       Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           return Status;
+       }
+
+       /* Open service key */
+       Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           ZwClose(CCSKey);
+           return Status;
+       }
+
+       /*
+        * Get information about the service.
+        */
+
+       RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+       RtlInitUnicodeString(&ServiceImagePath, NULL);
+
+       QueryTable[0].Name = L"Start";
+       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+       QueryTable[0].EntryContext = &ServiceStart;
+
+       QueryTable[1].Name = L"ImagePath";
+       QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+       QueryTable[1].EntryContext = &ServiceImagePath;
+
+       Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+          (PWSTR)ServiceKey, QueryTable, NULL, NULL);
+
+       ZwClose(ServiceKey);
        ZwClose(CCSKey);
-       return Status;
-   }
 
-   /*
-    * Get information about the service.
-    */
-
-   RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-   RtlInitUnicodeString(&ServiceImagePath, NULL);
-
-   QueryTable[0].Name = L"Start";
-   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[0].EntryContext = &ServiceStart;
-
-   QueryTable[1].Name = L"ImagePath";
-   QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[1].EntryContext = &ServiceImagePath;
-
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-      (PWSTR)ServiceKey, QueryTable, NULL, NULL);
-
-   ZwClose(ServiceKey);
-   ZwClose(CCSKey);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
-      return Status;
+       if (!NT_SUCCESS(Status))
+       {
+          DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+          return Status;
+       }
    }
 
    /*
@@ -369,20 +383,24 @@ IopLoadServiceModule(
       return Status;
    }
 
-      /*
-       * Case for disabled drivers
-       */
+   /*
+    * Case for disabled drivers
+    */
 
-  if (ServiceStart >= 4)
-  {
-     /* FIXME: Check if it is the right status code */
-     Status = STATUS_PLUGPLAY_NO_DEVICE;
-  }
-  else
-  {
-     DPRINT("Loading module\n");
-     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
-  }
+   if (ServiceStart >= 4)
+   {
+      /* FIXME: Check if it is the right status code */
+      Status = STATUS_PLUGPLAY_NO_DEVICE;
+   }
+   else
+   {
+      DPRINT("Loading module\n");
+      Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
+      if (NT_SUCCESS(Status))
+      {
+          IopDisplayLoadingMessage(ServiceName);
+      }
+   }
 
    ExFreePool(ServiceImagePath.Buffer);
 
@@ -836,7 +854,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
       DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return(Status);
    }
-   DeviceNode->ServiceName = ServiceName;
 
    /*
     * Initialize the driver
@@ -1820,8 +1837,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
       cur--;
    }
 
-   IopDisplayLoadingMessage(&ServiceName);
-
    /*
     * Get service type.
     */
@@ -1868,21 +1883,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
    DPRINT("Type: %lx\n", Type);
 
-   /*
-    * Create device node
-    */
-
-   /* Use IopRootDeviceNode for now */
-   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopCreateDeviceNode() failed (Status %lx)\n", Status);
-      LoadParams->Status = Status;
-      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-      return;
-   }
-
    /* Get existing DriverObject pointer (in case the driver has
       already been loaded and initialized) */
    Status = IopGetDriverObject(
@@ -1902,23 +1902,29 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
-           IopFreeDeviceNode(DeviceNode);
            LoadParams->Status = Status;
            (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
            return;
        }
 
        /*
-        * Set a service name for the device node
-        */
-
-       RtlCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer);
-
-       /*
         * Initialize the driver module if it's loaded for the first time
         */
        if (Status != STATUS_IMAGE_ALREADY_LOADED)
        {
+           Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
+
+           if (!NT_SUCCESS(Status))
+           {
+               DPRINT("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+               MmUnloadSystemImage(ModuleObject);
+               LoadParams->Status = Status;
+               (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+               return;
+           }
+
+           IopDisplayLoadingMessage(&DeviceNode->ServiceName);
+
            Status = IopInitializeDriverModule(
                DeviceNode,
                ModuleObject,
@@ -1936,11 +1942,11 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
                (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
                return;
            }
+           
+           /* Initialize and start device */
+           IopInitializeDevice(DeviceNode, DriverObject);
+           Status = IopStartDevice(DeviceNode);
        }
-
-       /* Initialize and start device */
-       IopInitializeDevice(DeviceNode, DriverObject);
-       Status = IopStartDevice(DeviceNode);
    }
    else
    {
@@ -1948,9 +1954,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
       /* IopGetDriverObject references the DriverObject, so dereference it */
       ObDereferenceObject(DriverObject);
-
-      /* Free device node since driver loading failed */
-      IopFreeDeviceNode(DeviceNode);
    }
 
    /* Pass status to the caller and signal the event */

@@ -501,6 +501,12 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
             return 0;
         }
 
+        if ((stackptr = CardRegionFromPoint(x, y)) != 0)
+        {
+            stackptr->ClickRelease(x, y);
+            stackptr = 0;
+        }
+
         return 0;
 
     case WM_MOUSEMOVE:

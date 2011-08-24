@@ -282,8 +282,13 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
 	TRACE("%p\n",This);
 
 	dwStyle = WS_TABSTOP | WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		  LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_ALIGNLEFT | LVS_AUTOARRANGE;
+          LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_AUTOARRANGE;
         dwExStyle = WS_EX_CLIENTEDGE;
+
+    if (This->FolderSettings.fFlags & FWF_DESKTOP) 
+       dwStyle |= LVS_ALIGNLEFT;
+    else
+       dwStyle |= LVS_ALIGNTOP;
 
 	switch (This->FolderSettings.ViewMode)
 	{
@@ -324,8 +329,11 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
           * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow
           * and activate drop shadows if necessary
           */
-         if (0)
+         if (1)
+         {
            SendMessageW(This->hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
+           SendMessageW(This->hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
+         }
          else
          {
            SendMessageW(This->hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
@@ -1475,7 +1483,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 
 	  case LVN_ENDLABELEDITW:
 	    {
-	      TRACE("-- LVN_ENDLABELEDITA %p\n",This);
+	      TRACE("-- LVN_ENDLABELEDITW %p\n",This);
 	      if (lpdi->item.pszText)
 	      {
 	        HRESULT hr;
@@ -1833,7 +1841,7 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	  case WM_SHOWWINDOW:	UpdateWindow(pThis->hWndList);
 				break;
 
-	  case WM_GETDLGCODE:   return SendMessageA(pThis->hWndList,uMessage,0,0);
+	  case WM_GETDLGCODE:   return SendMessageW(pThis->hWndList,uMessage,0,0);
 
 	  case WM_DESTROY:
 	  			RevokeDragDrop(pThis->hWnd);
@@ -1843,8 +1851,14 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	  case WM_ERASEBKGND:
 	    if ((pThis->FolderSettings.fFlags & FWF_DESKTOP) ||
 	        (pThis->FolderSettings.fFlags & FWF_TRANSPARENT))
-	      return 1;
+            return SendMessageW(pThis->hWndParent, WM_ERASEBKGND, wParam, lParam); /* redirect to parent */
 	    break;
+
+      case WM_SYSCOLORCHANGE:
+        /* Forward WM_SYSCOLORCHANGE to common controls */
+        SendMessage(pThis->hWndList, WM_SYSCOLORCHANGE, 0, 0);
+        break;
+
       case CWM_GETISHELLBROWSER:
           return (LRESULT)pThis->pShellBrowser;
 	}
@@ -2101,7 +2115,7 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 	if(!GetClassInfoW(shell32_hInstance, SV_CLASS_NAME, &wc))
 	{
 	  ZeroMemory(&wc, sizeof(wc));
-	  wc.style		= CS_HREDRAW | CS_VREDRAW;
+	  wc.style		= 0;
 	  wc.lpfnWndProc	= ShellView_WndProc;
 	  wc.cbClsExtra		= 0;
 	  wc.cbWndExtra		= 0;

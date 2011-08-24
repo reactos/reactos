@@ -20,6 +20,12 @@
 
 //////////////////////////////////////////////////////////////////
 
+#include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
+#include <shellapi.h>
+#include "resource.h"
+
 extern int iZoom;
 
 extern BOOL bShowWarning;
@@ -32,5 +38,5 @@ extern BOOL bInvertColors;
 extern BOOL bStartMinimized;
 extern BOOL bShowMagnifier;
 
-void LoadSettings();
-void SaveSettings();
+void LoadSettings(void);
+void SaveSettings(void);

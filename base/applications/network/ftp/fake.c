@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <time.h>
-#include <winsock.h>
-#include "fake.h"
-#include "prototypes.h"
+#include "precomp.h"
 
 #define MAX_ASCII 100
 
@@ -35,7 +31,7 @@ void blkfree(char **av0)
         free(*av++);
 }
 
-char **glob(register char *v)
+char **glob(const char *v)
 {
    return NULL;
 }

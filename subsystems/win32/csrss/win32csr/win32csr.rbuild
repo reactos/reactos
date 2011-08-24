@@ -7,7 +7,6 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<include base="console">.</include>
-	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<library>ntdll</library>
 	<library delayimport="true">user32</library>
 	<library delayimport="true">gdi32</library>
@@ -24,11 +23,11 @@
 	<file>desktopbg.c</file>
 	<file>dllmain.c</file>
 	<file>exitros.c</file>
+	<file>file.c</file>
 	<file>guiconsole.c</file>
 	<file>handle.c</file>
 	<file>harderror.c</file>
 	<file>lineinput.c</file>
 	<file>tuiconsole.c</file>
-	<file>appswitch.c</file>
 	<file>win32csr.rc</file>
 </module>

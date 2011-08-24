@@ -9,8 +9,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserClipbrd);
 
 #define DATA_DELAYED_RENDER  0
 #define DATA_SYNTHESIZED_RENDER -1
@@ -60,7 +59,7 @@ VOID FASTCALL printChain(VOID)
     PCLIPBOARDCHAINELEMENT wce2 = WindowsChain;
     while (wce2)
     {
-        DPRINT1("chain: %p\n", wce2->window->head.h);
+        ERR("chain: %p\n", wce2->window->head.h);
         wce2 = wce2->next;
     }
 }
@@ -496,7 +495,7 @@ NtUserCloseClipboard(VOID)
         /* commented because it makes a crash in co_MsqSendMessage
         ASSERT(WindowsChain->window);
         ASSERT(WindowsChain->window->hSelf);
-        DPRINT1("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", WindowsChain->window->hSelf);
+        ERR("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", WindowsChain->window->hSelf);
         co_IntSendMessage(WindowsChain->window->hSelf, WM_DRAWCLIPBOARD, 0, 0);
         */
     }
@@ -550,7 +549,7 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 
         /* WindowsChain->window may be NULL */
         LPARAM lparam = WindowsChain->window == NULL ? 0 : (LPARAM)WindowsChain->window->head.h;
-        DPRINT1("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->head.h);
+        ERR("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->head.h);
         co_IntSendMessage(WindowsChain->window->head.h, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, lparam);
     }
 
@@ -600,7 +599,7 @@ NtUserEmptyClipboard(VOID)
 
     if (ret && ClipboardOwnerWindow)
     {
-        DPRINT("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->head.h);
+        TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->head.h);
         co_IntSendMessageNoWait( ClipboardOwnerWindow->head.h, WM_DESTROYCLIPBOARD, 0, 0);
     }
 
@@ -920,7 +919,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                 hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
                 memcpy(hCBData, hMem, size);
                 intAddFormatedData(uFormat, hCBData, size);
-                DPRINT1("Data stored\n");
+                ERR("Data stored\n");
             }
 
             sendDrawClipboardMsg = TRUE;
@@ -984,11 +983,11 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
 
 
-                    psurf = SURFACE_LockSurface(hMem);
+                    psurf = SURFACE_ShareLockSurface(hMem);
                     BITMAP_GetObject(psurf, sizeof(BITMAP), (PVOID)&bm);
                     if(psurf)
                     {
-                        SURFACE_UnlockSurface(psurf);
+                        SURFACE_ShareUnlockSurface(psurf);
                     }
 
                     bi.bmiHeader.biSize	= sizeof(BITMAPINFOHEADER);
@@ -1047,7 +1046,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
             delayedRender = TRUE;
             sendDrawClipboardMsg = TRUE;
             intAddFormatedData(uFormat, NULL, 0);
-            DPRINT1("SetClipboardData delayed format: %d\n", uFormat);
+            ERR("SetClipboardData delayed format: %d\n", uFormat);
         }
 
 
@@ -1183,7 +1182,7 @@ NtUserGetClipboardSequenceNumber(VOID)
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("No WINSTA_ACCESSCLIPBOARD access\n");
+        ERR("No WINSTA_ACCESSCLIPBOARD access\n");
         SetLastNtError(Status);
         return 0;
     }

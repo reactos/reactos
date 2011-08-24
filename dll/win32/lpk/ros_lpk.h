@@ -9,10 +9,10 @@
 #define NTOS_MODE_USER
 
 #include <windows.h>
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
 
 /* FIXME USP10 api that does not have prototype in any include file */
-VOID WINAPI LpkPresent();
+VOID WINAPI LpkPresent(VOID);
 
 /* FIXME move _LPK_LPEDITCONTROL_LIST to global place so user32 can access it */
 typedef struct _LPK_LPEDITCONTROL_LIST

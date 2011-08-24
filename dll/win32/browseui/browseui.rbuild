@@ -45,4 +45,5 @@
 	<file>utility.cpp</file>
 	<file>dllinstall.c</file>
 	<file>browseui.rc</file>
+	<pch>precomp.h</pch>
 </module>

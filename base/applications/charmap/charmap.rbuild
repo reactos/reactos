@@ -5,12 +5,10 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>comctl32</library>
-	<compilationunit name="unit.c">
-		<file>about.c</file>
-		<file>charmap.c</file>
-		<file>lrgcell.c</file>
-		<file>map.c</file>
-	</compilationunit>
+	<file>about.c</file>
+	<file>charmap.c</file>
+	<file>lrgcell.c</file>
+	<file>map.c</file>
 	<file>charmap.rc</file>
 	<pch>precomp.h</pch>
 </module>

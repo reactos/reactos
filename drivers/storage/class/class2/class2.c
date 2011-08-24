@@ -28,6 +28,14 @@
 #define INQUIRY_DATA_SIZE 2048
 #define START_UNIT_TIMEOUT  30
 
+/* Disk layout used by Windows NT4 and earlier versions. */
+#define DEFAULT_SECTORS_PER_TRACK    32
+#define DEFAULT_TRACKS_PER_CYLINDER  64
+
+/* Disk layout used by Windows 2000 and later versions. */
+//#define DEFAULT_SECTORS_PER_TRACK    63
+//#define DEFAULT_TRACKS_PER_CYLINDER 255
+
 NTSTATUS
 NTAPI
 ScsiClassCreateClose(
@@ -798,7 +806,7 @@ Retry:
         // Calculate number of cylinders.
         //
 
-        deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
+        deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(DEFAULT_SECTORS_PER_TRACK * DEFAULT_TRACKS_PER_CYLINDER));
 
         deviceExtension->PartitionLength.QuadPart =
             (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
@@ -821,16 +829,16 @@ Retry:
         }
 
         //
-        // Assume sectors per track are 32;
+        // Assume sectors per track are DEFAULT_SECTORS_PER_TRACK;
         //
 
-        deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = 32;
+        deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = DEFAULT_SECTORS_PER_TRACK;
 
         //
-        // Assume tracks per cylinder (number of heads) is 64.
+        // Assume tracks per cylinder (number of heads) is DEFAULT_TRACKS_PER_CYLINDER.
         //
 
-        deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = 64;
+        deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = DEFAULT_TRACKS_PER_CYLINDER;
     }
 
     if (status == STATUS_VERIFY_REQUIRED) {

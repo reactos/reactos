@@ -14,8 +14,9 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserTimer);
+
+WORD FASTCALL get_key_state(void);
 
 /* GLOBALS *******************************************************************/
 
@@ -82,7 +83,7 @@ RemoveTimer(PTIMER pTmr)
   {
      /* Set the flag, it will be removed when ready */
      RemoveEntryList(&pTmr->ptmrList);
-     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM)))
+     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM))) // System timers are reusable.
      {
         UINT_PTR IDEvent;
 
@@ -94,7 +95,7 @@ RemoveTimer(PTIMER pTmr)
      UserDereferenceObject(pTmr);
      Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
   }
-  if (!Ret) DPRINT1("Warning: Unable to delete timer\n");
+  if (!Ret) ERR("Warning: Unable to delete timer\n");
 
   return Ret;
 }
@@ -105,10 +106,11 @@ FindTimer(PWND Window,
           UINT_PTR nID,
           UINT flags)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr, RetTmr = NULL;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -132,10 +134,11 @@ PTIMER
 FASTCALL
 FindSystemTimer(PMSG pMsg)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr = NULL;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -156,11 +159,12 @@ FASTCALL
 ValidateTimerCallback(PTHREADINFO pti,
                       LPARAM lParam)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   BOOL Ret = FALSE;
   PTIMER pTmr;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -194,14 +198,14 @@ IntSetTimer( PWND Window,
   /* Windows NT/2k/XP behaviour */
   if (Elapse > MAX_ELAPSE_TIME)
   {
-     DPRINT("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse\n");
      Elapse = 1;
   }
 #else
   /* Windows XP SP2 and Windows Server 2003 behaviour */
   if (Elapse > MAX_ELAPSE_TIME)
   {
-     DPRINT("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse\n");
      Elapse = MAX_ELAPSE_TIME;
   }
 #endif
@@ -209,7 +213,7 @@ IntSetTimer( PWND Window,
   /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
   if (Elapse < 10)
   {
-     DPRINT("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse\n");
      Elapse = 10;
   }
 
@@ -229,7 +233,7 @@ IntSetTimer( PWND Window,
       if (IDEvent == (UINT_PTR) -1)
       {
          IntUnlockWindowlessTimerBitmap();
-         DPRINT1("Unable to find a free window-less timer id\n");
+         ERR("Unable to find a free window-less timer id\n");
          EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
          ASSERT(FALSE);
          return 0;
@@ -287,7 +291,73 @@ SystemTimerProc(HWND hwnd,
          UINT_PTR idEvent,
              DWORD dwTime)
 {
-  DPRINT( "Timer Running!\n" );
+  PDESKTOP pDesk;
+  PWND pWnd = NULL;
+
+  if (hwnd)
+  {
+     pWnd = UserGetWindowObject(hwnd);
+     if (!pWnd)
+     {
+        ERR( "System Timer Proc has invalid window handle! 0x%x Id: %d\n", hwnd, idEvent);
+        return;
+     }
+  }
+  else
+  {
+     TRACE( "Windowless Timer Running!\n" );
+     return;
+  }
+
+  switch (idEvent)
+  {
+/*
+   Used in NtUserTrackMouseEvent.
+ */
+     case ID_EVENT_SYSTIMER_MOUSEHOVER:
+       {
+          POINT Point;
+          UINT Msg;
+          WPARAM wParam;
+
+          pDesk = pWnd->head.rpdesk;
+          if ( pDesk->dwDTFlags & DF_TME_HOVER &&
+               pWnd == pDesk->spwndTrack )
+          {
+             Point = gpsi->ptCursor;
+             if ( IntPtInRect(&pDesk->rcMouseHover, Point) )
+             {
+                if (pDesk->htEx == HTCLIENT) // In a client area.
+                {
+                   wParam = get_key_state();
+                   Msg = WM_MOUSEHOVER;
+
+                   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
+                   {
+                      Point.x = pWnd->rcClient.right - Point.x - 1;
+                   }
+                   else
+                      Point.x -= pWnd->rcClient.left;
+                   Point.y -= pWnd->rcClient.top;
+                }
+                else
+                {
+                   wParam = pDesk->htEx; // Need to support all HTXYZ hits.
+                   Msg = WM_NCMOUSEHOVER;
+                }
+                UserPostMessage(hwnd, Msg, wParam, MAKELPARAM(Point.x, Point.y));
+                pDesk->dwDTFlags &= ~DF_TME_HOVER;
+                break; // Kill this timer.
+             }
+          }
+       }
+       return; // Not this window so just return.
+
+     default:
+       ERR( "System Timer Proc invalid id %d!\n", idEvent );
+       break;
+  }
+  IntKillTimer(pWnd, idEvent, TRUE);
 }
 
 VOID
@@ -296,7 +366,9 @@ StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
   // that calles Idle process so the screen savers will know to run......    
-  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
+  IntSetTimer(NULL, 0, 1000, HungAppSysTimerProc, TMRF_RIT);
+// Test Timers
+//  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
 }
 
 UINT_PTR
@@ -309,7 +381,7 @@ SystemTimerSet( PWND Window,
   if (Window && Window->head.pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
      EngSetLastError(ERROR_ACCESS_DENIED);
-     DPRINT("SysemTimerSet: Access Denied!\n");
+     TRACE("SysemTimerSet: Access Denied!\n");
      return 0;
   }
   return IntSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
@@ -319,7 +391,7 @@ BOOL
 FASTCALL
 PostTimerMessages(PWND Window)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
@@ -330,7 +402,7 @@ PostTimerMessages(PWND Window)
   ThreadQueue = pti->MessageQueue;
 
   TimerEnterExclusive();
-
+  pLE = TimersListHead.Flink;
   while(pLE != &TimersListHead)
   {
      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -347,6 +419,13 @@ PostTimerMessages(PWND Window)
            pTmr->flags &= ~TMRF_READY;
            pti->cTimersReady++;
            Hit = TRUE;
+           // Now move this entry to the end of the list so it will not be
+           // called again in the next msg loop.
+           if (pLE != &TimersListHead)
+           {
+              RemoveEntryList(&pTmr->ptmrList);
+              InsertTailList(&TimersListHead, &pTmr->ptmrList);
+           }
            break;
         }
 
@@ -364,12 +443,12 @@ ProcessTimers(VOID)
 {
   LARGE_INTEGER TickCount, DueTime;
   LONG Time;
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr;
   LONG TimerCount = 0;
 
   TimerEnterExclusive();
-
+  pLE = TimersListHead.Flink;
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
@@ -432,13 +511,13 @@ ProcessTimers(VOID)
   TimeLast = Time;
 
   TimerLeave();
-  DPRINT("TimerCount = %d\n", TimerCount);
+  TRACE("TimerCount = %d\n", TimerCount);
 }
 
 BOOL FASTCALL
 DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
 {
-   PLIST_ENTRY pLE = TimersListHead.Flink;
+   PLIST_ENTRY pLE;
    PTIMER pTmr;
    BOOL TimersRemoved = FALSE;
 
@@ -446,7 +525,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
       return FALSE;
 
    TimerEnterExclusive();
-
+   pLE = TimersListHead.Flink;
    while(pLE != &TimersListHead)
    {
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -490,17 +569,17 @@ BOOL FASTCALL
 IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTIMER pTmr = NULL;
-   DPRINT("IntKillTimer Window %x id %p systemtimer %s\n",
+   TRACE("IntKillTimer Window %x id %p systemtimer %s\n",
           Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
+   TimerEnterExclusive();
    pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0);
 
    if (pTmr)
    {
-      TimerEnterExclusive();
       RemoveTimer(pTmr);
-      TimerLeave();
    }
+   TimerLeave();
 
    return pTmr ? TRUE :  FALSE;
 }
@@ -547,7 +626,7 @@ NtUserSetTimer
    PWND Window;
    DECLARE_RETURN(UINT_PTR);
 
-   DPRINT("Enter NtUserSetTimer\n");
+   TRACE("Enter NtUserSetTimer\n");
    UserEnterExclusive();
    Window = UserGetWindowObject(hWnd);
    UserLeave();
@@ -555,7 +634,7 @@ NtUserSetTimer
    RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserSetTimer, ret=%i\n", _ret_);
 
    END_CLEANUP;
 }
@@ -572,7 +651,7 @@ NtUserKillTimer
    PWND Window;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserKillTimer\n");
+   TRACE("Enter NtUserKillTimer\n");
    UserEnterExclusive();
    Window = UserGetWindowObject(hWnd);
    UserLeave();
@@ -580,7 +659,7 @@ NtUserKillTimer
    RETURN(IntKillTimer(Window, uIDEvent, FALSE));
 
 CLEANUP:
-   DPRINT("Leave NtUserKillTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserKillTimer, ret=%i\n", _ret_);
    END_CLEANUP;
 }
 
@@ -596,12 +675,12 @@ NtUserSetSystemTimer(
 {
    DECLARE_RETURN(UINT_PTR);
 
-   DPRINT("Enter NtUserSetSystemTimer\n");
+   TRACE("Enter NtUserSetSystemTimer\n");
 
    RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
    END_CLEANUP;
 }
 

@@ -30,7 +30,8 @@ typedef struct _RPC_CLIENT_ID {
 [
     uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
     version(0.0),
-    pointer_default(unique)
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\EventLog]")
 #ifndef __midl
     ,explicit_handle
 #endif
@@ -190,24 +191,15 @@ interface eventlog
 
     /* Function 19 */
     NTSTATUS ElfrRegisterClusterSvc(
-#ifndef __midl
-        [in] handle_t BindingHandle
-#endif
-        ); /* FIXME */
+        [in] handle_t BindingHandle);
 
     /* Function 20 */
     NTSTATUS ElfrDeregisterClusterSvc(
-#ifndef __midl
-        [in] handle_t BindingHandle
-#endif
-        ); /* FIXME */
+        [in] handle_t BindingHandle);
 
     /* Function 21 */
     NTSTATUS ElfrWriteClusterEvents(
-#ifndef __midl
-        [in] handle_t BindingHandle
-#endif
-        ); /* FIXME */
+        [in] handle_t BindingHandle);
 
     /* Function 22 */
     NTSTATUS ElfrGetLogInformation(

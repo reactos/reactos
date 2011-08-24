@@ -50,8 +50,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //#include <windows.h>
-#include <string.h>
-#include "ansiprsr.h"
+#include "precomp.h"
 
 const int ANSIColors[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE};
 

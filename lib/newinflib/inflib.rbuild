@@ -9,13 +9,11 @@
 	<file>infrosgen.c</file>
 	<file>infrosget.c</file>
 	<file>infrosput.c</file>
+	<pch>inflib.h</pch>
 </module>
 <module name="newinflibhost" type="hoststaticlibrary" allowwarnings="true">
-	<define name="WINE_UNICODE_API">" "</define>
-	<include base="unicode" />
 	<include base="newinflibhost">.</include>
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="USE_HOST_WCSFUNCS" />
 	<group compilerset="gcc">
 		<compilerflag>-Wwrite-strings</compilerflag>
 		<compilerflag>-Wpointer-arith</compilerflag>

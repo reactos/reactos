@@ -54,7 +54,6 @@
  */
 
 #include "rosdhcp.h"
-#include "dhcpd.h"
 
 #define	PERIOD 0x2e
 #define	hyphenchar(c) ((c) == 0x2d)
@@ -190,7 +189,7 @@ ServiceMain(DWORD argc, LPWSTR *argv)
                                                         NULL);
     if (!ServiceStatusHandle)
     {
-        DbgPrint("DHCPCSVC: Unable to register service control handler (%x)\n", GetLastError);
+        DbgPrint("DHCPCSVC: Unable to register service control handler (%lx)\n", GetLastError());
         return;
     }
 

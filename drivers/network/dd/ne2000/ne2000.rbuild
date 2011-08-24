@@ -9,5 +9,8 @@
 		<file>8390.c</file>
 		<file>main.c</file>
 	</directory>
+	<directory name="include">
+		<pch>ne2000.h</pch>
+	</directory>
 	<file>ne2000.rc</file>
 </module>

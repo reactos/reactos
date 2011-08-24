@@ -7,18 +7,13 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-
 #include "precomp.h"
-#include <initguid.h>
-#include <devguid.h>
+
 #define NDEBUG
 #include <debug.h>
 
 HINSTANCE netcfgx_hInstance;
 const GUID CLSID_TcpipConfigNotifyObject      = {0xA907657F, 0x6FDF, 0x11D0, {0x8E, 0xFB, 0x00, 0xC0, 0x4F, 0xD9, 0x12, 0xB2}};
-
-
-
 
 static INTERFACE_TABLE InterfaceTable[] =
 {
@@ -337,6 +332,7 @@ InstallNetDevice(
 	HKEY hLinkageKey = NULL;
 	HKEY hConnectionKey = NULL;
 	DWORD dwShowIcon, dwLength, dwValue;
+	WCHAR szBuffer[300];
 
 	/* Get Instance ID */
 	if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
@@ -514,7 +510,11 @@ InstallNetDevice(
 		DPRINT("RegCreateKeyExW() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
-	rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)L"Network connection", (wcslen(L"Network connection") + 1) * sizeof(WCHAR));
+	if (!LoadStringW(netcfgx_hInstance, IDS_NET_CONNECT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+	{
+		wcscpy(szBuffer,L"Network connection");
+	}
+	rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);

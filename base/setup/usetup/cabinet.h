@@ -166,9 +166,9 @@ typedef VOID (*PCABINET_DISK_CHANGE)(PWCHAR CabinetName,
 /* Classes */
 
 /* Default constructor */
-VOID CabinetInitialize();
+VOID CabinetInitialize(VOID);
 /* Default destructor */
-VOID CabinetCleanup();
+VOID CabinetCleanup(VOID);
 /* Returns a pointer to the filename part of a fully qualified filename */
 PWCHAR CabinetGetFileName(PWCHAR Path);
 /* Removes a filename from a fully qualified filename */
@@ -176,19 +176,19 @@ VOID CabinetRemoveFileName(PWCHAR Path);
 /* Normalizes a path */
 BOOL CabinetNormalizePath(PWCHAR Path, ULONG Length);
 /* Returns name of cabinet file */
-PWCHAR CabinetGetCabinetName();
+PWCHAR CabinetGetCabinetName(VOID);
 /* Sets the name of the cabinet file */
 VOID CabinetSetCabinetName(PWCHAR FileName);
 /* Sets destination path for extracted files */
 VOID CabinetSetDestinationPath(PWCHAR DestinationPath);
 /* Returns destination path */
-PWCHAR CabinetGetDestinationPath();
+PWCHAR CabinetGetDestinationPath(VOID);
 /* Returns zero-based current disk number */
-ULONG CabinetGetCurrentDiskNumber();
+ULONG CabinetGetCurrentDiskNumber(VOID);
 /* Opens the current cabinet file */
-ULONG CabinetOpen();
+ULONG CabinetOpen(VOID);
 /* Closes the current open cabinet file */
-VOID CabinetClose();
+VOID CabinetClose(VOID);
 /* Locates the first file in the current cabinet file that matches a search criteria */
 ULONG CabinetFindFirst(PWCHAR FileName, PCAB_SEARCH Search);
 /* Locates the next file in the current cabinet file */

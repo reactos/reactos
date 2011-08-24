@@ -8,8 +8,7 @@
 
 /* Definitions native to the host on which we're building */
 
-#include <wine/unicode.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -62,7 +61,9 @@ BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 extern PVOID InfpHeap;
 
@@ -82,6 +83,6 @@ extern PVOID InfpHeap;
 
 #endif /* INFLIB_HOST */
 
-#include <host/wcsfuncs.h>
+#include <wine/unicode.h>
 
 /* EOF */

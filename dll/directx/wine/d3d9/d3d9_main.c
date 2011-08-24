@@ -36,11 +36,11 @@ void WINAPI DebugSetMute(void) {
 IDirect3D9* WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT SDKVersion) {
     IDirect3D9Impl* object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D9Impl));
 
-    object->lpVtbl = &Direct3D9_Vtbl;
+    object->IDirect3D9Ex_iface.lpVtbl = &Direct3D9_Vtbl;
     object->ref = 1;
 
     wined3d_mutex_lock();
-    object->WineD3D = WineDirect3DCreate(9, (IUnknown *)object);
+    object->WineD3D = wined3d_create(9, object);
     wined3d_mutex_unlock();
 
     TRACE("SDKVersion = %x, Created Direct3D object @ %p, WineObj @ %p\n", SDKVersion, object, object->WineD3D);
@@ -66,7 +66,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex
 
     object = (IDirect3D9Impl *) ret;
     object->extended = TRUE; /* Enables QI for extended interfaces */
-    *direct3d9ex = (IDirect3D9Ex *) object;
+    *direct3d9ex = &object->IDirect3D9Ex_iface;
     return D3D_OK;
 }
 

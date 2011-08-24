@@ -27,6 +27,22 @@ extern PATTACHINFO gpai;
 #define KBL_PRELOAD 2
 #define KBL_RESET 4
 
+/* Key States */
+#define KS_DOWN_MASK     0xc0
+#define KS_DOWN_BIT      0x80
+#define KS_LOCK_BIT      0x01
+/* Lock modifiers */
+#define CAPITAL_BIT   0x80000000
+#define NUMLOCK_BIT   0x40000000
+#define MOD_BITS_MASK 0x3fffffff
+#define MOD_KCTRL     0x02
+/* Scan Codes */
+#define SC_KEY_UP        0x8000
+/* lParam bits */
+#define LP_EXT_BIT       (1<<24)
+/* From kbdxx.c -- Key changes with numlock */
+#define KNUMP         0x400
+
 INIT_FUNCTION
 NTSTATUS
 NTAPI
@@ -42,10 +58,10 @@ VOID W32kUnregisterPrimitiveMessageQueue(VOID);
 PKBL W32kGetDefaultKeyLayout(VOID);
 VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyLayout, BYTE Prefix);
 BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
-BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi);
-BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
+BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi, BOOL Injected);
+BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected);
 
-BOOL UserInitDefaultKeyboardLayout();
+BOOL UserInitDefaultKeyboardLayout(VOID);
 PKBL UserHklToKbl(HKL hKl);
 BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
 BOOL FASTCALL IntConnectThreadInput(PTHREADINFO,PTHREADINFO*,PUSER_MESSAGE_QUEUE*);

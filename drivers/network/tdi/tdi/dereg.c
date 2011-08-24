@@ -1,5 +1,4 @@
-#include <ntddk.h>
-#include <tdikrnl.h>
+#include "precomp.h"
 
 /* De-/Register Action IDs for TdiDeRegister */
 

@@ -170,7 +170,7 @@ typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 #elif defined(_WDM_INCLUDED_)
 typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 #else
-typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
+typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #endif
 
 #ifndef DEFINE_GUIDEX
@@ -191,7 +191,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #ifdef __cplusplus
 inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 {
-    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && 
+    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) &&
              (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)) );
 }
 #else

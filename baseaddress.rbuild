@@ -12,6 +12,7 @@
 	<property name="BASEADDRESS_RSABASE"		value="0x35700000" />
 	<property name="BASEADDRESS_RSAENH"		value="0x35780000" />
 	<property name="BASEADDRESS_URL"		value="0x42ea0000" />
+	<property name="BASEADDRESS_INETCPL"		value="0x42eb0000" />
 	<property name="BASEADDRESS_WLANAPI"		value="0x470f0000" />
 	<property name="BASEADDRESS_PIDGEN"		value="0x473e0000" />
 	<property name="BASEADDRESS_DWMAPI"		value="0x4a3f0000" />
@@ -52,6 +53,7 @@
 	<property name="BASEADDRESS_NETID"		value="0x5f660000" />
 	<property name="BASEADDRESS_NTPRINT"		value="0x5f6a0000" />
 	<property name="BASEADDRESS_MSSIP32"		value="0x60430000" />
+	<property name="BASEADDRESS_MSPORTS"		value="0x60450000" />
 	<property name="BASEADDRESS_MSISIP"		value="0x60b10000" />
 	<property name="BASEADDRESS_INSENG"		value="0x61000000" />
 	<property name="BASEADDRESS_QEDIT"		value="0x611c0000" />
@@ -75,6 +77,7 @@
 	<property name="BASEADDRESS_ITSS"		value="0x66370000" />
 	<property name="BASEADDRESS_ITIRCL"		value="0x663a0000" />
 	<property name="BASEADDRESS_INETMIB1"		value="0x666f0000" />
+	<property name="BASEADDRESS_IOLOGMSG"		value="0x669a0000" />
 	<property name="BASEADDRESS_INITPKI"		value="0x66b00000" />
 	<property name="BASEADDRESS_WSHTCPIP"		value="0x677b0000" />
 	<property name="BASEADDRESS_CRYPT32"		value="0x67ab0000" />
@@ -244,13 +247,13 @@
 	<property name="BASEADDRESS_OLE32"		value="0x77a50000" />
 	<property name="BASEADDRESS_OLEPRO32"		value="0x77b20000" />
 	<property name="BASEADDRESS_ACTIVEDS"		value="0x77cb0000" />
-	<property name="BASEADDRESS_ADVAPI32"		value="0x77dc0000" />
-	<property name="BASEADDRESS_USER32"		value="0x77e50000" />
-	<property name="BASEADDRESS_GDI32"		value="0x77f70000" />
-	<property name="BASEADDRESS_DNSAPI"		value="0x77fb0000" />
-	<property name="BASEADDRESS_MSVCRT"		value="0x78000000" />
-	<property name="BASEADDRESS_MSVCRT20"		value="0x78500000" />
-	<property name="BASEADDRESS_MSVCRT40"		value="0x78700000" />
+	<property name="BASEADDRESS_ADVAPI32"		value="0x77db0000" />
+	<property name="BASEADDRESS_USER32"		value="0x77e70000" />
+	<property name="BASEADDRESS_GDI32"		value="0x77fd0000" />
+	<property name="BASEADDRESS_DNSAPI"		value="0x78020000" />
+	<property name="BASEADDRESS_MSVCRT"		value="0x78050000" />
+	<property name="BASEADDRESS_MSVCRT20"		value="0x781E0000" />
+	<property name="BASEADDRESS_MSVCRT40"		value="0x78200000" />
 	<property name="BASEADDRESS_MSCOREE"		value="0x79000000" />
 	<property name="BASEADDRESS_FUSION"		value="0x79040000" />
 	<property name="BASEADDRESS_KERNEL32"		value="0x7c700000" />

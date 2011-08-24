@@ -52,6 +52,8 @@ typedef struct _RpcPacket
   struct _RpcConnection* conn;
   RpcPktHdr* hdr;
   RPC_MESSAGE* msg;
+  unsigned char *auth_data;
+  ULONG auth_length;
 } RpcPacket;
 
 typedef struct _RpcObjTypeMap
@@ -67,6 +69,7 @@ static RpcObjTypeMap *RpcObjTypeMaps;
 /* list of type RpcServerProtseq */
 static struct list protseqs = LIST_INIT(protseqs);
 static struct list server_interfaces = LIST_INIT(server_interfaces);
+static struct list server_registered_auth_info = LIST_INIT(server_registered_auth_info);
 
 static CRITICAL_SECTION server_cs;
 static CRITICAL_SECTION_DEBUG server_cs_debug =
@@ -86,12 +89,23 @@ static CRITICAL_SECTION_DEBUG listen_cs_debug =
 };
 static CRITICAL_SECTION listen_cs = { &listen_cs_debug, -1, 0, 0, 0, 0 };
 
+static CRITICAL_SECTION server_auth_info_cs;
+static CRITICAL_SECTION_DEBUG server_auth_info_cs_debug =
+{
+    0, 0, &server_auth_info_cs,
+    { &server_auth_info_cs_debug.ProcessLocksList, &server_auth_info_cs_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": server_auth_info_cs") }
+};
+static CRITICAL_SECTION server_auth_info_cs = { &server_auth_info_cs_debug, -1, 0, 0, 0, 0 };
+
 /* whether the server is currently listening */
 static BOOL std_listen;
 /* number of manual listeners (calls to RpcServerListen) */
 static LONG manual_listen_count;
 /* total listeners including auto listeners */
 static LONG listen_count;
+/* event set once all listening is finished */
+static HANDLE listen_done_event;
 
 static UUID uuid_nil;
 
@@ -118,7 +132,8 @@ static inline UUID *LookupObjType(UUID *ObjUuid)
 }
 
 static RpcServerInterface* RPCRT4_find_interface(UUID* object,
-                                                 const RPC_SYNTAX_IDENTIFIER* if_id,
+                                                 const RPC_SYNTAX_IDENTIFIER *if_id,
+                                                 const RPC_SYNTAX_IDENTIFIER *transfer_syntax,
                                                  BOOL check_object)
 {
   UUID* MgrType = NULL;
@@ -130,6 +145,7 @@ static RpcServerInterface* RPCRT4_find_interface(UUID* object,
   EnterCriticalSection(&server_cs);
   LIST_FOR_EACH_ENTRY(cif, &server_interfaces, RpcServerInterface, entry) {
     if (!memcmp(if_id, &cif->If->InterfaceId, sizeof(RPC_SYNTAX_IDENTIFIER)) &&
+        (!transfer_syntax || !memcmp(transfer_syntax, &cif->If->TransferSyntax, sizeof(RPC_SYNTAX_IDENTIFIER))) &&
         (check_object == FALSE || UuidEqual(MgrType, &cif->MgrTypeUuid, &status)) &&
         std_listen) {
       InterlockedIncrement(&cif->CurrentCalls);
@@ -156,63 +172,196 @@ static void RPCRT4_release_server_interface(RpcServerInterface *sif)
   }
 }
 
-static RPC_STATUS process_bind_packet(RpcConnection *conn, RpcPktBindHdr *hdr, RPC_MESSAGE *msg)
+static RpcPktHdr *handle_bind_error(RpcConnection *conn, RPC_STATUS error)
+{
+    unsigned int reject_reason;
+    switch (error)
+    {
+    case RPC_S_SERVER_TOO_BUSY:
+        reject_reason = REJECT_TEMPORARY_CONGESTION;
+        break;
+    case ERROR_OUTOFMEMORY:
+    case RPC_S_OUT_OF_RESOURCES:
+        reject_reason = REJECT_LOCAL_LIMIT_EXCEEDED;
+        break;
+    case RPC_S_PROTOCOL_ERROR:
+        reject_reason = REJECT_PROTOCOL_VERSION_NOT_SUPPORTED;
+        break;
+    case RPC_S_UNKNOWN_AUTHN_SERVICE:
+        reject_reason = REJECT_UNKNOWN_AUTHN_SERVICE;
+        break;
+    case ERROR_ACCESS_DENIED:
+        reject_reason = REJECT_INVALID_CHECKSUM;
+        break;
+    default:
+        FIXME("unexpected status value %d\n", error);
+        /* fall through */
+    case RPC_S_INVALID_BOUND:
+        reject_reason = REJECT_REASON_NOT_SPECIFIED;
+        break;
+    }
+    return RPCRT4_BuildBindNackHeader(NDR_LOCAL_DATA_REPRESENTATION,
+                                      RPC_VER_MAJOR, RPC_VER_MINOR,
+                                      reject_reason);
+}
+
+static RPC_STATUS process_bind_packet_no_send(
+    RpcConnection *conn, RpcPktBindHdr *hdr, RPC_MESSAGE *msg,
+    unsigned char *auth_data, ULONG auth_length, RpcPktHdr **ack_response,
+    unsigned char **auth_data_out, ULONG *auth_length_out)
 {
   RPC_STATUS status;
-  RpcServerInterface* sif;
-  RpcPktHdr *response = NULL;
+  RpcContextElement *ctxt_elem;
+  unsigned int i;
+  RpcResult *results;
 
-  /* FIXME: do more checks! */
+  /* validate data */
+  for (i = 0, ctxt_elem = msg->Buffer;
+       i < hdr->num_elements;
+       i++, ctxt_elem = (RpcContextElement *)&ctxt_elem->transfer_syntaxes[ctxt_elem->num_syntaxes])
+  {
+      if (((char *)ctxt_elem - (char *)msg->Buffer) > msg->BufferLength ||
+          ((char *)&ctxt_elem->transfer_syntaxes[ctxt_elem->num_syntaxes] - (char *)msg->Buffer) > msg->BufferLength)
+      {
+          ERR("inconsistent data in packet - packet length %d, num elements %d\n",
+              msg->BufferLength, hdr->num_elements);
+          return RPC_S_INVALID_BOUND;
+      }
+  }
+
   if (hdr->max_tsize < RPC_MIN_PACKET_SIZE ||
       !UuidIsNil(&conn->ActiveInterface.SyntaxGUID, &status) ||
-      conn->server_binding) {
+      conn->server_binding)
+  {
     TRACE("packet size less than min size, or active interface syntax guid non-null\n");
-    sif = NULL;
-  } else {
-    /* create temporary binding */
-    if (RPCRT4_MakeBinding(&conn->server_binding, conn) == RPC_S_OK &&
-        RpcServerAssoc_GetAssociation(rpcrt4_conn_get_name(conn),
-                                      conn->NetworkAddr, conn->Endpoint,
-                                      conn->NetworkOptions,
-                                      hdr->assoc_gid,
-                                      &conn->server_binding->Assoc) == RPC_S_OK)
-      sif = RPCRT4_find_interface(NULL, &hdr->abstract, FALSE);
-    else
-      sif = NULL;
-  }
-  if (sif == NULL) {
-    TRACE("rejecting bind request on connection %p\n", conn);
-    /* Report failure to client. */
-    response = RPCRT4_BuildBindNackHeader(NDR_LOCAL_DATA_REPRESENTATION,
-                                          RPC_VER_MAJOR, RPC_VER_MINOR);
-  } else {
-    TRACE("accepting bind request on connection %p for %s\n", conn,
-          debugstr_guid(&hdr->abstract.SyntaxGUID));
 
-    /* accept. */
-    response = RPCRT4_BuildBindAckHeader(NDR_LOCAL_DATA_REPRESENTATION,
-                                         RPC_MAX_PACKET_SIZE,
-                                         RPC_MAX_PACKET_SIZE,
-                                         conn->server_binding->Assoc->assoc_group_id,
-                                         conn->Endpoint,
-                                         RESULT_ACCEPT, REASON_NONE,
-                                         &sif->If->TransferSyntax);
-
-    /* save the interface for later use */
-    conn->ActiveInterface = hdr->abstract;
-    conn->MaxTransmissionSize = hdr->max_tsize;
-
-    RPCRT4_release_server_interface(sif);
+    return RPC_S_INVALID_BOUND;
   }
 
-  if (response)
-    status = RPCRT4_Send(conn, response, NULL, 0);
+  results = HeapAlloc(GetProcessHeap(), 0,
+                      hdr->num_elements * sizeof(*results));
+  if (!results)
+    return RPC_S_OUT_OF_RESOURCES;
+
+  for (i = 0, ctxt_elem = (RpcContextElement *)msg->Buffer;
+       i < hdr->num_elements;
+       i++, ctxt_elem = (RpcContextElement *)&ctxt_elem->transfer_syntaxes[ctxt_elem->num_syntaxes])
+  {
+      RpcServerInterface* sif = NULL;
+      unsigned int j;
+
+      for (j = 0; !sif && j < ctxt_elem->num_syntaxes; j++)
+      {
+          sif = RPCRT4_find_interface(NULL, &ctxt_elem->abstract_syntax,
+                                      &ctxt_elem->transfer_syntaxes[j], FALSE);
+          if (sif)
+              break;
+      }
+      if (sif)
+      {
+          RPCRT4_release_server_interface(sif);
+          TRACE("accepting bind request on connection %p for %s\n", conn,
+                debugstr_guid(&ctxt_elem->abstract_syntax.SyntaxGUID));
+          results[i].result = RESULT_ACCEPT;
+          results[i].reason = REASON_NONE;
+          results[i].transfer_syntax = ctxt_elem->transfer_syntaxes[j];
+
+          /* save the interface for later use */
+          /* FIXME: save linked list */
+          conn->ActiveInterface = ctxt_elem->abstract_syntax;
+      }
+      else if ((sif = RPCRT4_find_interface(NULL, &ctxt_elem->abstract_syntax,
+                                            NULL, FALSE)) != NULL)
+      {
+          RPCRT4_release_server_interface(sif);
+          TRACE("not accepting bind request on connection %p for %s - no transfer syntaxes supported\n",
+                conn, debugstr_guid(&ctxt_elem->abstract_syntax.SyntaxGUID));
+          results[i].result = RESULT_PROVIDER_REJECTION;
+          results[i].reason = REASON_TRANSFER_SYNTAXES_NOT_SUPPORTED;
+          memset(&results[i].transfer_syntax, 0, sizeof(results[i].transfer_syntax));
+      }
+      else
+      {
+          TRACE("not accepting bind request on connection %p for %s - abstract syntax not supported\n",
+                conn, debugstr_guid(&ctxt_elem->abstract_syntax.SyntaxGUID));
+          results[i].result = RESULT_PROVIDER_REJECTION;
+          results[i].reason = REASON_ABSTRACT_SYNTAX_NOT_SUPPORTED;
+          memset(&results[i].transfer_syntax, 0, sizeof(results[i].transfer_syntax));
+      }
+  }
+
+  /* create temporary binding */
+  status = RPCRT4_MakeBinding(&conn->server_binding, conn);
+  if (status != RPC_S_OK)
+  {
+      HeapFree(GetProcessHeap(), 0, results);
+      return status;
+  }
+
+  status = RpcServerAssoc_GetAssociation(rpcrt4_conn_get_name(conn),
+                                         conn->NetworkAddr, conn->Endpoint,
+                                         conn->NetworkOptions,
+                                         hdr->assoc_gid,
+                                         &conn->server_binding->Assoc);
+  if (status != RPC_S_OK)
+  {
+      HeapFree(GetProcessHeap(), 0, results);
+      return status;
+  }
+
+  if (auth_length)
+  {
+      status = RPCRT4_ServerConnectionAuth(conn, TRUE,
+                                           (RpcAuthVerifier *)auth_data,
+                                           auth_length, auth_data_out,
+                                           auth_length_out);
+      if (status != RPC_S_OK)
+      {
+          HeapFree(GetProcessHeap(), 0, results);
+          return status;
+      }
+  }
+
+  *ack_response = RPCRT4_BuildBindAckHeader(NDR_LOCAL_DATA_REPRESENTATION,
+                                            RPC_MAX_PACKET_SIZE,
+                                            RPC_MAX_PACKET_SIZE,
+                                            conn->server_binding->Assoc->assoc_group_id,
+                                            conn->Endpoint, hdr->num_elements,
+                                            results);
+  HeapFree(GetProcessHeap(), 0, results);
+
+  if (*ack_response)
+      conn->MaxTransmissionSize = hdr->max_tsize;
   else
-    status = ERROR_OUTOFMEMORY;
-  RPCRT4_FreeHeader(response);
+      status = RPC_S_OUT_OF_RESOURCES;
 
   return status;
 }
+
+static RPC_STATUS process_bind_packet(RpcConnection *conn, RpcPktBindHdr *hdr,
+                                      RPC_MESSAGE *msg,
+                                      unsigned char *auth_data,
+                                      ULONG auth_length)
+{
+    RPC_STATUS status;
+    RpcPktHdr *response = NULL;
+    unsigned char *auth_data_out = NULL;
+    ULONG auth_length_out = 0;
+
+    status = process_bind_packet_no_send(conn, hdr, msg, auth_data, auth_length,
+                                         &response, &auth_data_out,
+                                         &auth_length_out);
+    if (status != RPC_S_OK)
+        response = handle_bind_error(conn, status);
+    if (response)
+        status = RPCRT4_SendWithAuth(conn, response, NULL, 0, auth_data_out, auth_length_out);
+    else
+        status = ERROR_OUTOFMEMORY;
+    RPCRT4_FreeHeader(response);
+
+    return status;
+}
+
 
 static RPC_STATUS process_request_packet(RpcConnection *conn, RpcPktRequestHdr *hdr, RPC_MESSAGE *msg)
 {
@@ -242,7 +391,7 @@ static RPC_STATUS process_request_packet(RpcConnection *conn, RpcPktRequestHdr *
     object_uuid = NULL;
   }
 
-  sif = RPCRT4_find_interface(object_uuid, &conn->ActiveInterface, TRUE);
+  sif = RPCRT4_find_interface(object_uuid, &conn->ActiveInterface, NULL, TRUE);
   if (!sif) {
     WARN("interface %s no longer registered, returning fault packet\n", debugstr_guid(&conn->ActiveInterface.SyntaxGUID));
     response = RPCRT4_BuildFaultHeader(NDR_LOCAL_DATA_REPRESENTATION,
@@ -327,25 +476,52 @@ static RPC_STATUS process_request_packet(RpcConnection *conn, RpcPktRequestHdr *
   return status;
 }
 
-static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSAGE* msg)
+static RPC_STATUS process_auth3_packet(RpcConnection *conn,
+                                       RpcPktCommonHdr *hdr,
+                                       RPC_MESSAGE *msg,
+                                       unsigned char *auth_data,
+                                       ULONG auth_length)
 {
-  RPC_STATUS status;
+    RPC_STATUS status;
 
+    if (UuidIsNil(&conn->ActiveInterface.SyntaxGUID, &status) ||
+        !auth_length || msg->BufferLength != 0)
+        status = RPC_S_PROTOCOL_ERROR;
+    else
+    {
+        status = RPCRT4_ServerConnectionAuth(conn, FALSE,
+                                             (RpcAuthVerifier *)auth_data,
+                                             auth_length, NULL, NULL);
+    }
+
+    /* FIXME: client doesn't expect a response to this message so must store
+     * status in connection so that fault packet can be returned when next
+     * packet is received */
+
+    return RPC_S_OK;
+}
+
+static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr,
+                                  RPC_MESSAGE* msg, unsigned char *auth_data,
+                                  ULONG auth_length)
+{
   msg->Handle = (RPC_BINDING_HANDLE)conn->server_binding;
 
   switch (hdr->common.ptype) {
     case PKT_BIND:
       TRACE("got bind packet\n");
-
-      status = process_bind_packet(conn, &hdr->bind, msg);
+      process_bind_packet(conn, &hdr->bind, msg, auth_data, auth_length);
       break;
 
     case PKT_REQUEST:
       TRACE("got request packet\n");
-
-      status = process_request_packet(conn, &hdr->request, msg);
+      process_request_packet(conn, &hdr->request, msg);
       break;
 
+    case PKT_AUTH3:
+      TRACE("got auth3 packet\n");
+      process_auth3_packet(conn, &hdr->common, msg, auth_data, auth_length);
+      break;
     default:
       FIXME("unhandled packet type %u\n", hdr->common.ptype);
       break;
@@ -355,57 +531,96 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
   I_RpcFree(msg->Buffer);
   RPCRT4_FreeHeader(hdr);
   HeapFree(GetProcessHeap(), 0, msg);
+  HeapFree(GetProcessHeap(), 0, auth_data);
 }
 
 static DWORD CALLBACK RPCRT4_worker_thread(LPVOID the_arg)
 {
   RpcPacket *pkt = the_arg;
-  RPCRT4_process_packet(pkt->conn, pkt->hdr, pkt->msg);
+  RPCRT4_process_packet(pkt->conn, pkt->hdr, pkt->msg, pkt->auth_data,
+                        pkt->auth_length);
   HeapFree(GetProcessHeap(), 0, pkt);
   return 0;
 }
 
 static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
 {
-  RpcConnection* conn = (RpcConnection*)the_arg;
+  RpcConnection* conn = the_arg;
   RpcPktHdr *hdr;
   RPC_MESSAGE *msg;
   RPC_STATUS status;
   RpcPacket *packet;
+  unsigned char *auth_data;
+  ULONG auth_length;
 
   TRACE("(%p)\n", conn);
 
   for (;;) {
     msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RPC_MESSAGE));
+    if (!msg) break;
 
-    status = RPCRT4_Receive(conn, &hdr, msg);
+    status = RPCRT4_ReceiveWithAuth(conn, &hdr, msg, &auth_data, &auth_length);
     if (status != RPC_S_OK) {
       WARN("receive failed with error %x\n", status);
       HeapFree(GetProcessHeap(), 0, msg);
       break;
     }
 
-    packet = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcPacket));
-    if (!packet) {
-      I_RpcFree(msg->Buffer);
-      RPCRT4_FreeHeader(hdr);
-      HeapFree(GetProcessHeap(), 0, msg);
+    switch (hdr->common.ptype) {
+    case PKT_BIND:
+      TRACE("got bind packet\n");
+
+      status = process_bind_packet(conn, &hdr->bind, msg, auth_data,
+                                   auth_length);
       break;
-    }
-    packet->conn = conn;
-    packet->hdr = hdr;
-    packet->msg = msg;
-    if (!QueueUserWorkItem(RPCRT4_worker_thread, packet, WT_EXECUTELONGFUNCTION)) {
-      ERR("couldn't queue work item for worker thread, error was %d\n", GetLastError());
-      I_RpcFree(msg->Buffer);
-      RPCRT4_FreeHeader(hdr);
-      HeapFree(GetProcessHeap(), 0, msg);
-      HeapFree(GetProcessHeap(), 0, packet);
+
+    case PKT_REQUEST:
+      TRACE("got request packet\n");
+
+      packet = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcPacket));
+      if (!packet) {
+        I_RpcFree(msg->Buffer);
+        RPCRT4_FreeHeader(hdr);
+        HeapFree(GetProcessHeap(), 0, msg);
+        HeapFree(GetProcessHeap(), 0, auth_data);
+        goto exit;
+      }
+      packet->conn = conn;
+      packet->hdr = hdr;
+      packet->msg = msg;
+      packet->auth_data = auth_data;
+      packet->auth_length = auth_length;
+      if (!QueueUserWorkItem(RPCRT4_worker_thread, packet, WT_EXECUTELONGFUNCTION)) {
+        ERR("couldn't queue work item for worker thread, error was %d\n", GetLastError());
+        HeapFree(GetProcessHeap(), 0, packet);
+        status = RPC_S_OUT_OF_RESOURCES;
+      } else {
+        continue;
+      }
+      break;
+
+    case PKT_AUTH3:
+      TRACE("got auth3 packet\n");
+
+      status = process_auth3_packet(conn, &hdr->common, msg, auth_data,
+                                    auth_length);
+      break;
+    default:
+      FIXME("unhandled packet type %u\n", hdr->common.ptype);
       break;
     }
 
-    msg = NULL;
+    I_RpcFree(msg->Buffer);
+    RPCRT4_FreeHeader(hdr);
+    HeapFree(GetProcessHeap(), 0, msg);
+    HeapFree(GetProcessHeap(), 0, auth_data);
+
+    if (status != RPC_S_OK) {
+      WARN("processing packet failed with error %u\n", status);
+      break;
+    }
   }
+exit:
   RPCRT4_DestroyConnection(conn);
   return 0;
 }
@@ -449,27 +664,23 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
 
     /* start waiting */
     res = cps->ops->wait_for_new_connection(cps, count, objs);
-    if (res == -1)
-      break;
-    else if (res == 0)
+
+    if (res == -1 || (res == 0 && !std_listen))
     {
-      if (!std_listen)
-      {
+      /* cleanup */
+      cps->ops->free_wait_array(cps, objs);
+      EnterCriticalSection(&cps->cs);
+      for (conn = cps->conn; conn; conn = conn->Next)
+        RPCRT4_CloseConnection(conn);
+      LeaveCriticalSection(&cps->cs);
+
+      if (res == 0 && !std_listen)
         SetEvent(cps->server_ready_event);
-        break;
-      }
-      set_ready_event = TRUE;
+      break;
     }
+    else if (res == 0)
+      set_ready_event = TRUE;
   }
-  cps->ops->free_wait_array(cps, objs);
-  EnterCriticalSection(&cps->cs);
-  /* close connections */
-  conn = cps->conn;
-  while (conn) {
-    RPCRT4_CloseConnection(conn);
-    conn = conn->Next;
-  }
-  LeaveCriticalSection(&cps->cs);
   return 0;
 }
 
@@ -563,6 +774,10 @@ static void RPCRT4_stop_listen(BOOL auto_listen)
       LIST_FOR_EACH_ENTRY(cps, &protseqs, RpcServerProtseq, entry)
         RPCRT4_sync_with_server_thread(cps);
 
+      EnterCriticalSection(&listen_cs);
+      if (listen_done_event) SetEvent( listen_done_event );
+      listen_done_event = 0;
+      LeaveCriticalSection(&listen_cs);
       return;
     }
     assert(listen_count >= 0);
@@ -570,11 +785,32 @@ static void RPCRT4_stop_listen(BOOL auto_listen)
   LeaveCriticalSection(&listen_cs);
 }
 
-static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps, LPSTR endpoint)
+static BOOL RPCRT4_protseq_is_endpoint_registered(RpcServerProtseq *protseq, const char *endpoint)
+{
+  RpcConnection *conn;
+  EnterCriticalSection(&protseq->cs);
+  for (conn = protseq->conn; conn; conn = conn->Next)
+  {
+    if (!endpoint || !strcmp(endpoint, conn->Endpoint))
+      break;
+  }
+  LeaveCriticalSection(&protseq->cs);
+  return (conn != NULL);
+}
+
+static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps, const char *endpoint)
 {
   RPC_STATUS status;
 
-  status = ps->ops->open_endpoint(ps, endpoint);
+  EnterCriticalSection(&ps->cs);
+
+  if (RPCRT4_protseq_is_endpoint_registered(ps, endpoint))
+    status = RPC_S_OK;
+  else
+    status = ps->ops->open_endpoint(ps, endpoint);
+
+  LeaveCriticalSection(&ps->cs);
+
   if (status != RPC_S_OK)
     return status;
 
@@ -608,11 +844,8 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
   count = 0;
   LIST_FOR_EACH_ENTRY(ps, &protseqs, RpcServerProtseq, entry) {
     EnterCriticalSection(&ps->cs);
-    conn = ps->conn;
-    while (conn) {
+    for (conn = ps->conn; conn; conn = conn->Next)
       count++;
-      conn = conn->Next;
-    }
     LeaveCriticalSection(&ps->cs);
   }
   if (count) {
@@ -624,12 +857,10 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
     count = 0;
     LIST_FOR_EACH_ENTRY(ps, &protseqs, RpcServerProtseq, entry) {
       EnterCriticalSection(&ps->cs);
-      conn = ps->conn;
-      while (conn) {
+      for (conn = ps->conn; conn; conn = conn->Next) {
        RPCRT4_MakeBinding((RpcBinding**)&(*BindingVector)->BindingH[count],
                           conn);
        count++;
-       conn = conn->Next;
       }
       LeaveCriticalSection(&ps->cs);
     }
@@ -681,7 +912,7 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpW( RPC_WSTR Protseq, UINT MaxCalls, RPC_W
  *
  * Must be called with server_cs held.
  */
-static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, char *Protseq, RpcServerProtseq **ps)
+static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, const char *Protseq, RpcServerProtseq **ps)
 {
   const struct protseq_ops *ops = rpcrt4_get_protseq_ops(Protseq);
 
@@ -695,7 +926,7 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, char *Protseq, RpcServerPr
   if (!*ps)
     return RPC_S_OUT_OF_RESOURCES;
   (*ps)->MaxCalls = MaxCalls;
-  (*ps)->Protseq = Protseq;
+  (*ps)->Protseq = RPCRT4_strdupA(Protseq);
   (*ps)->ops = ops;
   (*ps)->MaxCalls = 0;
   (*ps)->conn = NULL;
@@ -711,8 +942,19 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, char *Protseq, RpcServerPr
   return RPC_S_OK;
 }
 
+/* must be called with server_cs held */
+static void destroy_serverprotoseq(RpcServerProtseq *ps)
+{
+    RPCRT4_strfree(ps->Protseq);
+    DeleteCriticalSection(&ps->cs);
+    CloseHandle(ps->mgr_mutex);
+    CloseHandle(ps->server_ready_event);
+    list_remove(&ps->entry);
+    HeapFree(GetProcessHeap(), 0, ps);
+}
+
 /* Finds a given protseq or creates a new one if one doesn't already exist */
-static RPC_STATUS RPCRT4_get_or_create_serverprotseq(UINT MaxCalls, char *Protseq, RpcServerProtseq **ps)
+static RPC_STATUS RPCRT4_get_or_create_serverprotseq(UINT MaxCalls, const char *Protseq, RpcServerProtseq **ps)
 {
     RPC_STATUS status;
     RpcServerProtseq *cps;
@@ -741,19 +983,18 @@ static RPC_STATUS RPCRT4_get_or_create_serverprotseq(UINT MaxCalls, char *Protse
 RPC_STATUS WINAPI RpcServerUseProtseqEpExA( RPC_CSTR Protseq, UINT MaxCalls, RPC_CSTR Endpoint, LPVOID SecurityDescriptor,
                                             PRPC_POLICY lpPolicy )
 {
-  char *szps = (char*)Protseq, *szep = (char*)Endpoint;
   RpcServerProtseq* ps;
   RPC_STATUS status;
 
-  TRACE("(%s,%u,%s,%p,{%u,%u,%u})\n", debugstr_a(szps), MaxCalls,
-       debugstr_a(szep), SecurityDescriptor,
+  TRACE("(%s,%u,%s,%p,{%u,%u,%u})\n", debugstr_a((const char *)Protseq),
+       MaxCalls, debugstr_a((const char *)Endpoint), SecurityDescriptor,
        lpPolicy->Length, lpPolicy->EndpointFlags, lpPolicy->NICFlags );
 
-  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, RPCRT4_strdupA(szps), &ps);
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, (const char *)Protseq, &ps);
   if (status != RPC_S_OK)
     return status;
 
-  return RPCRT4_use_protseq(ps, szep);
+  return RPCRT4_use_protseq(ps, (const char *)Endpoint);
 }
 
 /***********************************************************************
@@ -764,13 +1005,16 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpExW( RPC_WSTR Protseq, UINT MaxCalls, RPC
 {
   RpcServerProtseq* ps;
   RPC_STATUS status;
+  LPSTR ProtseqA;
   LPSTR EndpointA;
 
   TRACE("(%s,%u,%s,%p,{%u,%u,%u})\n", debugstr_w( Protseq ), MaxCalls,
        debugstr_w( Endpoint ), SecurityDescriptor,
        lpPolicy->Length, lpPolicy->EndpointFlags, lpPolicy->NICFlags );
 
-  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, RPCRT4_strdupWtoA(Protseq), &ps);
+  ProtseqA = RPCRT4_strdupWtoA(Protseq);
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, ProtseqA, &ps);
+  RPCRT4_strfree(ProtseqA);
   if (status != RPC_S_OK)
     return status;
 
@@ -785,8 +1029,16 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpExW( RPC_WSTR Protseq, UINT MaxCalls, RPC
  */
 RPC_STATUS WINAPI RpcServerUseProtseqA(RPC_CSTR Protseq, unsigned int MaxCalls, void *SecurityDescriptor)
 {
+  RPC_STATUS status;
+  RpcServerProtseq* ps;
+
   TRACE("(Protseq == %s, MaxCalls == %d, SecurityDescriptor == ^%p)\n", debugstr_a((char*)Protseq), MaxCalls, SecurityDescriptor);
-  return RpcServerUseProtseqEpA(Protseq, MaxCalls, NULL, SecurityDescriptor);
+
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, (const char *)Protseq, &ps);
+  if (status != RPC_S_OK)
+    return status;
+
+  return RPCRT4_use_protseq(ps, NULL);
 }
 
 /***********************************************************************
@@ -794,8 +1046,34 @@ RPC_STATUS WINAPI RpcServerUseProtseqA(RPC_CSTR Protseq, unsigned int MaxCalls, 
  */
 RPC_STATUS WINAPI RpcServerUseProtseqW(RPC_WSTR Protseq, unsigned int MaxCalls, void *SecurityDescriptor)
 {
+  RPC_STATUS status;
+  RpcServerProtseq* ps;
+  LPSTR ProtseqA;
+
   TRACE("Protseq == %s, MaxCalls == %d, SecurityDescriptor == ^%p)\n", debugstr_w(Protseq), MaxCalls, SecurityDescriptor);
-  return RpcServerUseProtseqEpW(Protseq, MaxCalls, NULL, SecurityDescriptor);
+
+  ProtseqA = RPCRT4_strdupWtoA(Protseq);
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, ProtseqA, &ps);
+  RPCRT4_strfree(ProtseqA);
+  if (status != RPC_S_OK)
+    return status;
+
+  return RPCRT4_use_protseq(ps, NULL);
+}
+
+void RPCRT4_destroy_all_protseqs(void)
+{
+    RpcServerProtseq *cps, *cursor2;
+
+    if (listen_count != 0)
+        std_listen = FALSE;
+
+    EnterCriticalSection(&server_cs);
+    LIST_FOR_EACH_ENTRY_SAFE(cps, cursor2, &protseqs, RpcServerProtseq, entry)
+    {
+        destroy_serverprotoseq(cps);
+    }
+    LeaveCriticalSection(&server_cs);
 }
 
 /***********************************************************************
@@ -823,7 +1101,7 @@ RPC_STATUS WINAPI RpcServerRegisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid
 RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv,
                       UINT Flags, UINT MaxCalls, UINT MaxRpcSize, RPC_IF_CALLBACK_FN* IfCallbackFn )
 {
-  PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
+  PRPC_SERVER_INTERFACE If = IfSpec;
   RpcServerInterface* sif;
   unsigned int i;
 
@@ -876,7 +1154,7 @@ RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid,
  */
 RPC_STATUS WINAPI RpcServerUnregisterIf( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, UINT WaitForCallsToComplete )
 {
-  PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
+  PRPC_SERVER_INTERFACE If = IfSpec;
   HANDLE event = NULL;
   BOOL found = FALSE;
   BOOL completed = TRUE;
@@ -944,7 +1222,7 @@ RPC_STATUS WINAPI RpcServerUnregisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUu
  *   RPC_S_INVALID_OBJECT     The provided object (nil) is not valid
  *   RPC_S_ALREADY_REGISTERED The provided object is already registered
  *
- * Maps "Object" UUIDs to "Type" UUID's.  Passing the nil UUID as the type
+ * Maps "Object" UUIDs to "Type" UUIDs.  Passing the nil UUID as the type
  * resets the mapping for the specified object UUID to nil (the default).
  * The nil object is always associated with the nil type and cannot be
  * reassigned.  Servers can support multiple implementations on the same
@@ -996,15 +1274,114 @@ RPC_STATUS WINAPI RpcObjectSetType( UUID* ObjUuid, UUID* TypeUuid )
   return RPC_S_OK;
 }
 
+struct rpc_server_registered_auth_info
+{
+    struct list entry;
+    TimeStamp exp;
+    CredHandle cred;
+    ULONG max_token;
+    USHORT auth_type;
+};
+
+RPC_STATUS RPCRT4_ServerGetRegisteredAuthInfo(
+    USHORT auth_type, CredHandle *cred, TimeStamp *exp, ULONG *max_token)
+{
+    RPC_STATUS status = RPC_S_UNKNOWN_AUTHN_SERVICE;
+    struct rpc_server_registered_auth_info *auth_info;
+
+    EnterCriticalSection(&server_auth_info_cs);
+    LIST_FOR_EACH_ENTRY(auth_info, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
+    {
+        if (auth_info->auth_type == auth_type)
+        {
+            *cred = auth_info->cred;
+            *exp = auth_info->exp;
+            *max_token = auth_info->max_token;
+            status = RPC_S_OK;
+            break;
+        }
+    }
+    LeaveCriticalSection(&server_auth_info_cs);
+
+    return status;
+}
+
+void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
+{
+    struct rpc_server_registered_auth_info *auth_info, *cursor2;
+
+    EnterCriticalSection(&server_auth_info_cs);
+    LIST_FOR_EACH_ENTRY_SAFE(auth_info, cursor2, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
+    {
+        FreeCredentialsHandle(&auth_info->cred);
+        HeapFree(GetProcessHeap(), 0, auth_info);
+    }
+    LeaveCriticalSection(&server_auth_info_cs);
+}
+
 /***********************************************************************
  *             RpcServerRegisterAuthInfoA (RPCRT4.@)
  */
 RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG AuthnSvc, RPC_AUTH_KEY_RETRIEVAL_FN GetKeyFn,
                             LPVOID Arg )
 {
-  FIXME( "(%s,%u,%p,%p): stub\n", ServerPrincName, AuthnSvc, GetKeyFn, Arg );
-  
-  return RPC_S_UNKNOWN_AUTHN_SERVICE; /* We don't know any authentication services */
+    SECURITY_STATUS sec_status;
+    CredHandle cred;
+    TimeStamp exp;
+    ULONG package_count;
+    ULONG i;
+    PSecPkgInfoA packages;
+    ULONG max_token;
+    struct rpc_server_registered_auth_info *auth_info;
+
+    TRACE("(%s,%u,%p,%p)\n", ServerPrincName, AuthnSvc, GetKeyFn, Arg);
+
+    sec_status = EnumerateSecurityPackagesA(&package_count, &packages);
+    if (sec_status != SEC_E_OK)
+    {
+        ERR("EnumerateSecurityPackagesA failed with error 0x%08x\n",
+            sec_status);
+        return RPC_S_SEC_PKG_ERROR;
+    }
+
+    for (i = 0; i < package_count; i++)
+        if (packages[i].wRPCID == AuthnSvc)
+            break;
+
+    if (i == package_count)
+    {
+        WARN("unsupported AuthnSvc %u\n", AuthnSvc);
+        FreeContextBuffer(packages);
+        return RPC_S_UNKNOWN_AUTHN_SERVICE;
+    }
+    TRACE("found package %s for service %u\n", packages[i].Name,
+          AuthnSvc);
+    sec_status = AcquireCredentialsHandleA((SEC_CHAR *)ServerPrincName,
+                                           packages[i].Name,
+                                           SECPKG_CRED_INBOUND, NULL, NULL,
+                                           NULL, NULL, &cred, &exp);
+    max_token = packages[i].cbMaxToken;
+    FreeContextBuffer(packages);
+    if (sec_status != SEC_E_OK)
+        return RPC_S_SEC_PKG_ERROR;
+
+    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
+    if (!auth_info)
+    {
+        FreeCredentialsHandle(&cred);
+        return RPC_S_OUT_OF_RESOURCES;
+    }
+
+    auth_info->exp = exp;
+    auth_info->cred = cred;
+    auth_info->max_token = max_token;
+    auth_info->auth_type = AuthnSvc;
+
+    EnterCriticalSection(&server_auth_info_cs);
+    list_add_tail(&server_registered_auth_info, &auth_info->entry);
+    LeaveCriticalSection(&server_auth_info_cs);
+
+    return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -1013,9 +1390,63 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG Au
 RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG AuthnSvc, RPC_AUTH_KEY_RETRIEVAL_FN GetKeyFn,
                             LPVOID Arg )
 {
-  FIXME( "(%s,%u,%p,%p): stub\n", debugstr_w( ServerPrincName ), AuthnSvc, GetKeyFn, Arg );
-  
-  return RPC_S_UNKNOWN_AUTHN_SERVICE; /* We don't know any authentication services */
+    SECURITY_STATUS sec_status;
+    CredHandle cred;
+    TimeStamp exp;
+    ULONG package_count;
+    ULONG i;
+    PSecPkgInfoW packages;
+    ULONG max_token;
+    struct rpc_server_registered_auth_info *auth_info;
+
+    TRACE("(%s,%u,%p,%p)\n", debugstr_w(ServerPrincName), AuthnSvc, GetKeyFn, Arg);
+
+    sec_status = EnumerateSecurityPackagesW(&package_count, &packages);
+    if (sec_status != SEC_E_OK)
+    {
+        ERR("EnumerateSecurityPackagesW failed with error 0x%08x\n",
+            sec_status);
+        return RPC_S_SEC_PKG_ERROR;
+    }
+
+    for (i = 0; i < package_count; i++)
+        if (packages[i].wRPCID == AuthnSvc)
+            break;
+
+    if (i == package_count)
+    {
+        WARN("unsupported AuthnSvc %u\n", AuthnSvc);
+        FreeContextBuffer(packages);
+        return RPC_S_UNKNOWN_AUTHN_SERVICE;
+    }
+    TRACE("found package %s for service %u\n", debugstr_w(packages[i].Name),
+          AuthnSvc);
+    sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)ServerPrincName,
+                                           packages[i].Name,
+                                           SECPKG_CRED_INBOUND, NULL, NULL,
+                                           NULL, NULL, &cred, &exp);
+    max_token = packages[i].cbMaxToken;
+    FreeContextBuffer(packages);
+    if (sec_status != SEC_E_OK)
+        return RPC_S_SEC_PKG_ERROR;
+
+    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
+    if (!auth_info)
+    {
+        FreeCredentialsHandle(&cred);
+        return RPC_S_OUT_OF_RESOURCES;
+    }
+
+    auth_info->exp = exp;
+    auth_info->cred = cred;
+    auth_info->max_token = max_token;
+    auth_info->auth_type = AuthnSvc;
+
+    EnterCriticalSection(&server_auth_info_cs);
+    list_add_tail(&server_registered_auth_info, &auth_info->entry);
+    LeaveCriticalSection(&server_auth_info_cs);
+
+    return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -1042,7 +1473,9 @@ RPC_STATUS WINAPI RpcServerListen( UINT MinimumCallThreads, UINT MaxCalls, UINT 
  */
 RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
 {
-  RpcServerProtseq *cps;
+  HANDLE event;
+
+  TRACE("()\n");
 
   EnterCriticalSection(&listen_cs);
 
@@ -1050,17 +1483,20 @@ RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
     LeaveCriticalSection(&listen_cs);
     return RPC_S_NOT_LISTENING;
   }
-
-  do {
+  if (listen_done_event) {
     LeaveCriticalSection(&listen_cs);
-    LIST_FOR_EACH_ENTRY(cps, &protseqs, RpcServerProtseq, entry)
-      WaitForSingleObject(cps->server_ready_event, INFINITE);
-
-    EnterCriticalSection(&listen_cs);
-  } while (!std_listen);
+    return RPC_S_ALREADY_LISTENING;
+  }
+  event = CreateEventW( NULL, TRUE, FALSE, NULL );
+  listen_done_event = event;
 
   LeaveCriticalSection(&listen_cs);
 
+  TRACE( "waiting for server calls to finish\n" );
+  WaitForSingleObject( event, INFINITE );
+  TRACE( "done waiting\n" );
+
+  CloseHandle( event );
   return RPC_S_OK;
 }
 
@@ -1181,6 +1617,15 @@ RPC_STATUS WINAPI RpcMgmtIsServerListening(RPC_BINDING_HANDLE Binding)
 {
   FIXME("(%p): stub\n", Binding);
   return RPC_S_INVALID_BINDING;
+}
+
+/***********************************************************************
+ *             RpcMgmtSetAuthorizationFn (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcMgmtSetAuthorizationFn(RPC_MGMT_AUTHORIZATION_FN fn)
+{
+  FIXME("(%p): stub\n", fn);
+  return RPC_S_OK;
 }
 
 /***********************************************************************

@@ -20,7 +20,7 @@
 
 /* Shared Winsock Helper headers */
 #include <ws2help.h>
-#include <wshdrv.h>
+#include "wshdrv.h"
 
 /* Missing definition */
 #define SO_OPENTYPE 0x20

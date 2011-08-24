@@ -125,7 +125,7 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
     }
 
     /* Re-enable the interrupt and return */
-    InterruptValid = HalEnableSystemInterrupt(DeviceExtension->InterruptVector,
+    InterruptValid = HalEnableSystemInterrupt((UCHAR)DeviceExtension->InterruptVector,
                                               0,
                                               DeviceExtension->InterruptLevel);
 
@@ -162,7 +162,7 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
     }
 
     /* Disable the interrupt and return */
-    HalDisableSystemInterrupt(DeviceExtension->InterruptVector,
+    HalDisableSystemInterrupt((UCHAR)DeviceExtension->InterruptVector,
                               0);
     return NO_ERROR;
 #else

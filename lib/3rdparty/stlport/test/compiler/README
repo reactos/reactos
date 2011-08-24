@@ -1,0 +1,29 @@
+1. About this tests
+
+This is tests to check whether compiler understand or not some language
+construction. It is NOT tests for language support libraries, only tests for
+compiler!
+
+The main purposes of this tests is to help for developers to find correct
+workarounds, if compiler don't understand some (correct) language constructions.
+
+--------------------------------------------------------
+
+2. Compilation
+
+Compilation with GNU Make utility and gcc compiler:
+
+make -f gcc.mak -k
+
+
+
+--------------------------------------------------------
+
+Notes about tests.
+
+ttei1.cpp, ttei2.cpp, ttei3.cpp, ttei4.cpp, ttei5.cpp:
+
+tests for template-in-the-template explicit specialization.
+Indeed ttei3.cpp, ttei4.cpp, ttei5.cpp suggest syntax not approved by standard
+(14.7.3, paragraphs 16--18), but ttei3.cpp, ttei4.cpp accepted (recheck!) by VC6,
+while ttei5.cpp accepted by gcc before 3.4.0.

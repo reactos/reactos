@@ -11,9 +11,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
+DBG_DEFAULT_CHANNEL(UserSysparams);
 
 static BOOL Setup = FALSE;
 
@@ -23,8 +21,20 @@ BOOL
 FASTCALL
 InitMetrics(VOID)
 {
-    INT *piSysMet;
+    INT *piSysMet = gpsi->aiSysMet;
     ULONG Width, Height;
+
+    /* note: used for the SM_CLEANBOOT metric */
+    DWORD dwValue = 0;
+    HKEY hKey = 0;
+
+    /* Clean boot */
+    piSysMet[SM_CLEANBOOT] = 0; // fallback value of 0 (normal mode)
+    if(NT_SUCCESS(RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option", &hKey)))
+    {
+        if(RegReadDWORD(hKey, L"OptionValue", &dwValue)) piSysMet[SM_CLEANBOOT] = (INT)dwValue;
+        ZwClose(hKey);
+    }
 
     /* FIXME: HACK, due to missing PDEV on first init */
     if (!pPrimarySurface)
@@ -37,8 +47,6 @@ InitMetrics(VOID)
         Width = pPrimarySurface->gdiinfo.ulHorzRes;
         Height = pPrimarySurface->gdiinfo.ulVertRes;
     }
-
-    piSysMet = gpsi->aiSysMet;
 
     /* Screen sizes */
     piSysMet[SM_CXSCREEN] = Width;
@@ -70,7 +78,7 @@ InitMetrics(VOID)
 #endif
 
     /* Window sizes */
-    DPRINT("ncm.iCaptionWidth=%d,GetSystemMetrics(SM_CYSIZE)=%d,GetSystemMetrics(SM_CXFRAME)=%d,avcwCaption=%d \n",
+    TRACE("ncm.iCaptionWidth=%d,GetSystemMetrics(SM_CYSIZE)=%d,GetSystemMetrics(SM_CXFRAME)=%d,avcwCaption=%d \n",
            gspv.ncm.iCaptionWidth, piSysMet[SM_CYSIZE],piSysMet[SM_CXFRAME], gspv.tmCaptionFont.tmAveCharWidth);
 
     piSysMet[SM_CXMIN] = 3 * max(gspv.ncm.iCaptionWidth, 8) // 112
@@ -146,7 +154,6 @@ InitMetrics(VOID)
     piSysMet[SM_SLOWMACHINE] = 0;
     piSysMet[SM_SECURE] = 0;
     piSysMet[SM_DBCSENABLED] = 0;
-    piSysMet[SM_CLEANBOOT] = 0;
     piSysMet[SM_SHOWSOUNDS] = gspv.bShowSounds;
     piSysMet[SM_MIDEASTENABLED] = 0;
     piSysMet[SM_CMONITORS] = 1;
@@ -176,7 +183,7 @@ UserGetSystemMetrics(ULONG Index)
 {
     ASSERT(gpsi);
     ASSERT(Setup);
-    DPRINT("UserGetSystemMetrics(%d)\n", Index);
+    TRACE("UserGetSystemMetrics(%d)\n", Index);
 
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
@@ -197,7 +204,7 @@ UserGetSystemMetrics(ULONG Index)
             return 0; // FIXME
     }
 
-    DPRINT1("UserGetSystemMetrics() called with invalid index %d\n", Index);
+    ERR("UserGetSystemMetrics() called with invalid index %d\n", Index);
     return 0;
 }
 

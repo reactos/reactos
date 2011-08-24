@@ -11,6 +11,7 @@
 	<file>action.c</file>
 	<file>alter.c</file>
 	<file>appsearch.c</file>
+	<file>assembly.c</file>
 	<file>automation.c</file>
 	<file>classes.c</file>
 	<file>cond.tab.c</file>
@@ -53,6 +54,7 @@
 	<file>upgrade.c</file>
 	<file>where.c</file>
 	<file>msi.rc</file>
+	<pch>msipriv.h</pch>
 	<include base="msi" root="intermediate">.</include>
 	<library>wine</library>
 	<library>uuid</library>

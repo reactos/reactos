@@ -18,6 +18,9 @@ URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=de
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=es
 Description = Interfaz gráfico para Mplayer (reproductor multimedia).
 
+[Section.040a]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=fr
+
 [Section.0415]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
 Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.

@@ -17,10 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * ReactOS shell32 fork translation updated by Caemyr -
- * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010)
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010, May 2011)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
+ * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -132,10 +133,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Wersja " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Wersja "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "Ta kopia ReactOS jest zarejestrowna na:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Ta kopia ReactOS jest zarejestrowana na:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -177,8 +178,8 @@ BEGIN
 	LTEXT "Typ docelowy:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "Lokalizacja:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
-	LTEXT "Element docelowy:", 14008, 8, 77, 45, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	LTEXT "Element docelowy:", 14008, 8, 77, 60, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "&Uruchom w:", 14010, 8, 96, 57, 10
 	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
@@ -216,14 +217,14 @@ BEGIN
 	LTEXT "Rozszerzenie:", 14004, 8, 35, 50, 10
 	LTEXT "Katalog", 14005, 68, 35, 160, 10
 	LTEXT "Lokalizacja:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Rozmiar:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Zawiera:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Utworzony:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Tylko-do-odczytu", 14021, 45, 150, 67, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	AUTOCHECKBOX "&Tylko do odczytu", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Ukryty", 14022, 126, 150, 50, 10
 END
 
@@ -237,17 +238,17 @@ BEGIN
 	LTEXT "Typ pliku:", 14004, 8, 35, 50, 10
 	LTEXT "Plik", 14005, 68, 35, 160, 10
 	LTEXT "Otwierany za pomoc¹:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Lokalizacja:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Rozmiar:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Utworzony:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Zmodyfikowany:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Ostatnio u¿yty:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Atrybuty:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Tylko do odczytu", 14021, 58, 189, 67, 10
 	CHECKBOX "&Ukryty", 14022, 126, 189, 50, 10
@@ -260,11 +261,11 @@ CAPTION "Wersja"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Wersja pliku: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Opis: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Prawa autorskie: ", 14004, 10, 46, 66, 10
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "Pozosta³e informacje o wersji: ", 14006, 6, 70, 222, 115
 	LTEXT "Nazwa: ", 14007, 13, 82, 50, 10
 	LTEXT "Wartoœæ: ", 14008, 112, 82, 45, 10
@@ -279,24 +280,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Typ:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "System plików:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Zajête miejsce:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Wolne miejsce:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Pojemnoœæ:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -431,7 +432,7 @@ LTEXT "Otwiera z:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nazwa Aplikacji", 14005, 100, 140, 40, 10
 PUSHBUTTON "Z&mieñ", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Pliki z rozszerzeniem '%s' nale¿¹ do typu: '%s'. Aby\nzmieniæ ustawienia dotycz¹ce wszystkich plików '%s', wybierz\nZaawansowane.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "Zaawa&nsowane", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -445,10 +446,10 @@ BEGIN
 	PUSHBUTTON "&Nie", IDNO, 150, 122, 60, 14
 	PUSHBUTTON "Anuluj", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Ten katalog ju¿ zawiera plik o nazwie '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "Ten katalog ju¿ zawiera plik tylko do odczytu, o nazwie '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Ten katalog ju¿ zawiera plik systemowy o nazwie '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Czy chcia³byœ zast¹piæ istniej¹cy plik?", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "Ten katalog zawiera ju¿ plik o nazwie '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Ten katalog zawiera ju¿ plik tylko do odczytu, o nazwie '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Ten katalog zawiera ju¿ plik systemowy o nazwie '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Czy chcesz zast¹piæ istniej¹cy plik?", -1, 44, 35, 228, 10, SS_NOPREFIX
 	LTEXT "(data i rozmiar nieznane)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
 	LTEXT "nowym plikiem?", -1, 44, 75, 228, 10, SS_NOPREFIX
@@ -541,9 +542,9 @@ CAPTION "Zamknij ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-	LTEXT "Co chcesz by komputer zrobi³?", -1, 39, 7, 167, 10
+	LTEXT "Co chcesz, aby zrobi³ komputer?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Zachowuje sesje, utrzymuj¹c komputer w ruchu na ma³ym stopniu zasilania, z danymi wci¹¿ w pamiêci. Komputer wróci do normalnego trybu pracy przy poruszeniu myszki albo naciœniêciu klawisza.", 8225, 39, 40, 167, 37
+	LTEXT "Zachowuje sesjê, podtrzymuje komputer na niskim poziomie poboru energii. Komputer wróci do normalnego trybu po poruszeniu myszk¹ lub naciœniêciu klawisza. Dane znajduj¹ce siê w pamiêci zostan¹ zachowane.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", IDCANCEL, 75, 82, 60, 14
 	PUSHBUTTON "&Pomoc", IDHELP, 144, 82, 60, 14
@@ -660,12 +661,9 @@ BEGIN
 	IDS_TRASHFOLDER_TEXT        "Czy jesteœ pewien, ¿e chcesz umieœciæ folder '%1' i ca³¹ jego zawartoœæ w koszu"
 	IDS_TRASHMULTIPLE_TEXT      "Elementów: %1 - czy na pewno chcesz je umieœciæ w Koszu?"
 	IDS_CANTTRASH_TEXT          "Nie mogê przenieœæ elementu '%1' do Kosza. Czy chcesz go zamiast tego usun¹æ?"
-	IDS_OVERWRITEFILE_TEXT      "Ten folder ju¿ zawiera plik o nazwie '%1'.\n\nCzy chcesz go zast¹piæ?"
+	IDS_OVERWRITEFILE_TEXT      "Ten folder zawiera ju¿ plik o nazwie '%1'.\n\nCzy chcesz go zast¹piæ?"
 	IDS_OVERWRITEFILE_CAPTION   "PotwierdŸ zast¹pienie pliku"
-	IDS_OVERWRITEFOLDER_TEXT    "Ten folder ju¿ zawiera folder o nazwie '%1'.\n\n"\
-		"Je¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\n"\
-		"w wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\n"\
-		"lub skopiowaæ folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Ten folder zawiera ju¿ katalog o nazwie '%1'.\n\nJe¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\nw wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\nlub skopiowaæ folder?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Uruchom ponownie"
@@ -674,6 +672,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Czy chcesz wy³¹czyæ system?"
 	IDS_LOGOFF_TITLE            "Wyloguj"
 	IDS_LOGOFF_PROMPT           "Czy chcesz siê wylogowaæ z systemu?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Nie mogê wyœwietliæ okna Uruchom (b³¹d wewnêtrzny)"
+	IDS_RUNDLG_BROWSE_ERROR     "Nie mogê wyœwietliæ okna Przegl¹daj (b³¹d wewnêtrzny)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Przegl¹daj"
+	IDS_RUNDLG_BROWSE_FILTER    "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Start\\Programy"
@@ -724,8 +728,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Pozosta³o wolnego miejsca"
 	IDS_EMPTY_BITBUCKET         "Opró¿nij Kosz"
 	IDS_PICK_ICON_TITLE         "Wybierz ikonê"
-	IDS_PICK_ICON_FILTER        "Pliki ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Programy\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Pliki ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Wszystkie pliki (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Katalog"
 	IDS_VIRTUAL_DRIVER          "Sterownik urz¹dzenia wirtualnego"
 	IDS_BAT_FILE                "Plik wsadowy ReactOS"
@@ -744,12 +748,11 @@ BEGIN
 	IDS_SYS_FILE                "Plik systemowy"
 
 	IDS_OPEN_VERB               "Otwórz"
+	IDS_EXPLORE_VERB            "Eksploruj"
 	IDS_RUNAS_VERB              "Uruchom jako "
 	IDS_EDIT_VERB               "Edytuj"
 	IDS_FIND_VERB               "Wyszukaj"
 	IDS_PRINT_VERB              "Drukuj"
-	IDS_PLAY_VERB               "Odtwórz"
-	IDS_PREVIEW_VERB            "Podgl¹d"
 
 	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
 	IDS_PRINTERS                "Drukarki"
@@ -759,5 +762,10 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Domyœlny rozmiar jednostki alokacji"
 	IDS_COPY_OF                 "Kopia"
 
-	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	IDS_SHLEXEC_NOASSOC         "¯aden program nie jest skonfigurowany, by otwieraæ pliki tego typu."
+	
+	IDS_FILE_DETAILS            "Szczegó³y dla rozszerzenia '%s'"
+	IDS_FILE_DETAILSADV         "Pliki z rozszerzeniem '%s' s¹ typu '%s'. Aby zmieniæ ustawienia, które dotycz¹ wszystkich plików '%s', kliknij przycisk Zaawansowane."
+	IDS_FILE_TYPES              "Typy plików"
+	IDS_COLUMN_EXTENSION        "Rozszerzenia"
 END

@@ -18,8 +18,8 @@ BOOLEAN HalpGetInfoFromACPI;
 BOOLEAN HalpNMIDumpFlag;
 PUCHAR KdComPortInUse;
 PADDRESS_USAGE HalpAddressUsageList;
-IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
-IDTUsage HalpIDTUsage[MAXIMUM_IDTVECTOR];
+IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
+IDTUsage HalpIDTUsage[MAXIMUM_IDTVECTOR+1];
 
 USHORT HalpComPortIrqMapping[5][2] =
 {
@@ -43,17 +43,17 @@ ADDRESS_USAGE HalpDefaultIoSpace =
 {
     NULL, CmResourceTypePort, IDT_INTERNAL,
     {
-        {0x2000,  0xC000}, /* Everything */
-        {0xC000,  0x1000}, /* DMA 2 */
-        {0x8000,  0x1000}, /* DMA 1 */
-        {0x2000,  0x200},  /* PIC 1 */
-        {0xA000,  0x200},  /* PIC 2 */
-        {0x4000,  0x400},  /* PIT 1 */
-        {0x4800,  0x400},  /* PIT 2 */
-        {0x9200,  0x100},  /* System Control Port A */
-        {0x7000,  0x200},  /* CMOS  */
-        {0xF000,  0x1000}, /* x87 Coprocessor */
-        {0xCF800, 0x800},  /* PCI 0 */
+        {0x00,  0x20}, /* DMA 1 */
+        {0xC0,  0x20}, /* DMA 2 */
+        {0x80,  0x10}, /* DMA EPAR */
+        {0x20,  0x2},  /* PIC 1 */
+        {0xA0,  0x2},  /* PIC 2 */
+        {0x40,  0x4},  /* PIT 1 */
+        {0x48,  0x4},  /* PIT 2 */
+        {0x92,  0x1},  /* System Control Port A */
+        {0x70,  0x2},  /* CMOS  */
+        {0xF0,  0x10}, /* x87 Coprocessor */
+        {0xCF8, 0x8},  /* PCI 0 */
         {0,0},
     }
 };
@@ -132,7 +132,7 @@ HalpBuildPartialFromIdt(IN ULONG Entry,
     RawDescriptor->u.Interrupt.Affinity = HalpActiveProcessors;
     
     /* The translated copy is identical */
-    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(TranslatedDescriptor));
+    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     
     /* But the vector and IRQL must be set correctly */
     TranslatedDescriptor->u.Interrupt.Vector = Entry;
@@ -180,7 +180,7 @@ HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
     }
     
     /* Make an identical copy to begin with */
-    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(TranslatedDescriptor));
+    RtlCopyMemory(TranslatedDescriptor, RawDescriptor, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     
     /* Check what this is */
     if (RawDescriptor->Type == CmResourceTypePort)

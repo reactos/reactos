@@ -36,7 +36,7 @@ HalpAllocateArray(IN ULONG ArraySize)
     /* Allocate the array */
     Array = ExAllocatePoolWithTag(NonPagedPool,
                                   Size,
-                                  'BusH');
+                                  TAG_BUS_HANDLER);
     if (!Array) KeBugCheckEx(HAL_MEMORY_ALLOCATION, Size, 0, (ULONG_PTR)__FILE__, __LINE__);
     
     /* Initialize it */
@@ -263,7 +263,7 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     /* Allocate the bus handler */
     Bus = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(HAL_BUS_HANDLER) + ExtraData,
-                                'HsuB');
+                                TAG_BUS_HANDLER);
     if (!Bus) return STATUS_INSUFFICIENT_RESOURCES;
     
     /* Return the handler */
@@ -404,11 +404,11 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     //MmUnlockPagableImageSection(CodeHandle);
 
     /* Free all allocations */
-    if (Bus) ExFreePool(Bus);
-    if (InterfaceArray) ExFreePool(InterfaceArray);
-    if (InterfaceBusNumberArray) ExFreePool(InterfaceBusNumberArray);
-    if (ConfigArray) ExFreePool(ConfigArray);
-    if (ConfigBusNumberArray) ExFreePool(ConfigBusNumberArray);
+    if (Bus) ExFreePoolWithTag(Bus, TAG_BUS_HANDLER);
+    if (InterfaceArray) ExFreePoolWithTag(InterfaceArray, TAG_BUS_HANDLER);
+    if (InterfaceBusNumberArray) ExFreePoolWithTag(InterfaceBusNumberArray, TAG_BUS_HANDLER);
+    if (ConfigArray) ExFreePoolWithTag(ConfigArray, TAG_BUS_HANDLER);
+    if (ConfigBusNumberArray) ExFreePoolWithTag(ConfigBusNumberArray, TAG_BUS_HANDLER);
 
     /* And we're done */
     return Status;

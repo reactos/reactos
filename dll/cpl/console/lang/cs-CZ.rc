@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/console/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-27
+ * UPDATED:     2011-03-31
  */
 
 #include <commctrl.h>
@@ -34,15 +34,15 @@ END
 
 IDD_PROPPAGEFONT DIALOGEX 0, 0, 253, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Font"
+CAPTION "Písmo"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Náhled okna:", -1, 10, 10, 94, 10
 	LTEXT "Velikost:", -1, 180, 10, 36, 10
 	CONTROL "", IDC_STATIC_FONT_WINDOW_PREVIEW, "Static", SS_OWNERDRAW | SS_SUNKEN, 10, 20, 163, 74
 	LISTBOX IDC_LBOX_FONTS, 181, 20, 55, 80, LBS_DISABLENOSCROLL | WS_VSCROLL
-	LTEXT "&Font:", -1, 10, 105, 33, 10
-	CHECKBOX "&Tuèné fonty", IDC_CHECK_BOLD_FONTS, 56, 105, 60, 10
+	LTEXT "&Písmo:", -1, 10, 105, 33, 10
+	CHECKBOX "&Tuèná písma", IDC_CHECK_BOLD_FONTS, 56, 105, 60, 10
 	LISTBOX IDC_LBOX_TYPE, 10, 120, 110, 40, LBS_DISABLENOSCROLL | WS_VSCROLL
 	GROUPBOX "", IDC_GROUPBOX_FONT_NAME, 6, 156, 241, 50
 	CONTROL "", IDC_STATIC_SELECT_FONT_PREVIEW, "Static", SS_OWNERDRAW | SS_SUNKEN, 16, 165, 95, 35
@@ -141,5 +141,5 @@ BEGIN
 	IDS_CPLDESCRIPTION "Nastavit vlastnosti konzole."
 	IDS_APPLY_SHORTCUT_ALL "Zmìnit zá&stupce, který spustil toto okno"
 	IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
-	IDS_RASTERFONTS "Rastrové fonty"
+	IDS_RASTERFONTS "Rastrová písma"
 END

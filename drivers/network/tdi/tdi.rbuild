@@ -20,4 +20,5 @@
 		<file>obsolete.c</file>
 		<file>stubs.c</file>
 	</directory>
+	<pch>precomp.h</pch>
 </module>

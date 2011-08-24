@@ -50,6 +50,7 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     NTSTATUS Status;
 
+again:
     KeInitializeEvent(&Event,
         NotificationEvent,
         FALSE);
@@ -102,14 +103,19 @@ CdfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
         if (Status == STATUS_VERIFY_REQUIRED)
         {
             PDEVICE_OBJECT DeviceToVerify;
-            NTSTATUS NewStatus;
 
             DPRINT1("STATUS_VERIFY_REQUIRED\n");
             DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
             IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
 
-            NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
-            DPRINT1("IoVerifyVolume() returned (Status %lx)\n", NewStatus);
+            Status = IoVerifyVolume(DeviceToVerify, FALSE);
+            DPRINT1("IoVerifyVolume() returned (Status %lx)\n", Status);
+
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT1("Volume verify succeeded; trying request again\n");
+                goto again;
+            }
         }
 
         DPRINT("CdfsReadSectors() failed (Status %x)\n", Status);
@@ -146,6 +152,7 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
         InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize,
         OutputBufferSize ? *OutputBufferSize : 0);
 
+again:
     KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
     DPRINT("Building device I/O control request ...\n");
@@ -191,7 +198,6 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
     if (Status == STATUS_VERIFY_REQUIRED)
     {
         PDEVICE_OBJECT DeviceToVerify;
-        NTSTATUS NewStatus;
 
         DPRINT1("STATUS_VERIFY_REQUIRED\n");
         DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
@@ -199,8 +205,14 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
         if (DeviceToVerify)
         {
-            NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
-            DPRINT1("IoVerifyVolume() returned (Status %lx)\n", NewStatus);
+            Status = IoVerifyVolume(DeviceToVerify, FALSE);
+            DPRINT1("IoVerifyVolume() returned (Status %lx)\n", Status);
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT1("Volume verify succeeded; trying request again\n");
+            goto again;
         }
     }
 

@@ -45,8 +45,10 @@ unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
   /* Get fp control word */
 #if defined(__GNUC__)
   __asm__ __volatile__( "fstcw %0" : "=m" (fpword) : );
-#else
+#elif defined(_M_IX86)
   __asm fstcw [fpword];
+#else
+  #pragma message("FIXME: _control87 is halfplemented")
 #endif
 
   TRACE("Control word before : %08x\n", fpword);
@@ -98,8 +100,10 @@ unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
   /* Put fp control word */
 #if defined(__GNUC__)
   __asm__ __volatile__( "fldcw %0" : : "m" (fpword) );
-#else
+#elif defined(_M_IX86)
   __asm fldcw [fpword];
+#else
+  #pragma message("FIXME: _control87 is halfplemented")
 #endif
 
   return flags;

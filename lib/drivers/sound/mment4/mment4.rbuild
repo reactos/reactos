@@ -5,5 +5,6 @@
 	<define name="DEBUG_NT4">1</define>
 	<file>detect.c</file>
 	<file>registry.c</file>
-    <file>control.c</file>
+	<file>control.c</file>
+	<pch>precomp.h</pch>
 </module>

@@ -171,7 +171,7 @@
   {
     FT_LzwState  lzw = &zip->lzw;
     FT_ULong     count;
-    FT_Error     error   = 0;
+    FT_Error     error = LZW_Err_Ok;
 
 
     zip->cursor = zip->buffer;

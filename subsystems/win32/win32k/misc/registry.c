@@ -58,7 +58,7 @@ RegQueryValue(
     ULONG cbInfoSize, cbDataSize;
 
     /* Check if the local buffer is sufficient */
-    cbInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + *pcbValue;
+    cbInfoSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + *pcbValue;
     if (cbInfoSize <= sizeof(ajBuffer))
     {
         pInfo = (PVOID)ajBuffer;
@@ -84,13 +84,14 @@ RegQueryValue(
 
     cbDataSize = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
 
+    /* Note: STATUS_BUFFER_OVERFLOW is not a success */
     if (NT_SUCCESS(Status))
     {
         /* Did we get the right type */
         if (pInfo->Type == ulType)
         {
             /* Copy the contents to the caller */
-            RtlCopyMemory(pvData, pInfo->Data, min(*pcbValue, cbDataSize));
+            RtlCopyMemory(pvData, pInfo->Data, cbDataSize);
         }
         else
             Status = STATUS_OBJECT_TYPE_MISMATCH;

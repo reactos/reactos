@@ -10,16 +10,16 @@
 KSPIN_LOCK BootDriverLock;
 KIRQL InbvOldIrql;
 INBV_DISPLAY_STATE InbvDisplayState;
-BOOLEAN InbvBootDriverInstalled;
-BOOLEAN InbvDisplayDebugStrings;
+BOOLEAN InbvBootDriverInstalled = FALSE;
+BOOLEAN InbvDisplayDebugStrings = FALSE;
 INBV_DISPLAY_STRING_FILTER InbvDisplayFilter;
 ULONG ProgressBarLeft, ProgressBarTop;
-BOOLEAN ShowProgressBar;
+BOOLEAN ShowProgressBar = FALSE;
 INBV_PROGRESS_STATE InbvProgressState;
 INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters;
 ULONG ResourceCount;
 PUCHAR ResourceList[64];
-BOOLEAN SysThreadCreated;
+BOOLEAN SysThreadCreated = FALSE;
 ROT_BAR_TYPE RotBarSelection;
 ULONG PltRotBarStatus;
 BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
@@ -576,7 +576,7 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
 VOID
 NTAPI
 INIT_FUNCTION
-DisplayBootBitmap(IN BOOLEAN SosMode)
+DisplayBootBitmap(IN BOOLEAN TextMode)
 {
     PVOID Header, Band, Text, Screen;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
@@ -591,9 +591,9 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         InbvReleaseLock();
     }
 
-    /* Check if this is SOS mode */
+    /* Check if this is text mode */
     ShowProgressBar = FALSE;
-    if (SosMode)
+    if (TextMode)
     {
         /* Check if this is a server OS */
         if (SharedUserData->NtProductType == NtProductWinNt)
@@ -696,6 +696,9 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
           
           /* Draw the progress bar bit */
 //          if (Bar) InbvBitBlt(Bar, 0, 0);
+
+          /* Set filter which will draw text display if needed */
+          InbvInstallDisplayStringFilter(DisplayFilter);
     }
 
     /* Do we have a system thread? */
@@ -706,6 +709,30 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         RotBarSelection = TempRotBarSelection;
         //InbvRotBarInit();
         InbvReleaseLock();
+    }
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+DisplayFilter(PCHAR *String)
+{
+    /* Windows hack to skip first dots */
+    static BOOLEAN DotHack = TRUE;
+
+    /* If "." is given set *String to empty string */
+    if(DotHack && strcmp(*String, ".") == 0)
+        *String = "";
+
+    if(**String)
+    {
+        /* Remove the filter */
+        InbvInstallDisplayStringFilter(NULL);
+        
+        DotHack = FALSE;
+
+        /* Draw text screen */
+        DisplayBootBitmap(TRUE);
     }
 }
 

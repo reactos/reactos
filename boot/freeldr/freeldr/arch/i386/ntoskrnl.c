@@ -1,6 +1,9 @@
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <arch.h>
+
+/* For KeStallExecutionProcessor */
+#if defined(_M_IX86) || defined(_M_AMD64)
+#include <arch/pc/pcbios.h>
+#endif
 
 VOID
 NTAPI
@@ -75,6 +78,7 @@ NTAPI
 KeStallExecutionProcessor(
     IN ULONG MicroSeconds)
 {
+#if defined(_M_IX86) || defined(_M_AMD64)
     REGS Regs;
     ULONG usec_this;
 
@@ -111,4 +115,7 @@ KeStallExecutionProcessor(
 
         MicroSeconds -= usec_this;
     }
+#else
+    #error unimplemented
+#endif
 }

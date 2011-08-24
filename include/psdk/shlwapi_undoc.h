@@ -47,7 +47,7 @@ struct IEThreadParamBlock
 
 void WINAPI InitOCHostClass(long param8);
 long WINAPI SHOpenFolderWindow(IEThreadParamBlock *param8);
-void WINAPI SHCreateSavedWindows();
+void WINAPI SHCreateSavedWindows(void);
 long WINAPI SHCreateFromDesktop(long param8);
 long WINAPI SHExplorerParseCmdLine(LPCTSTR commandLine);
 void WINAPI UEMRegisterNotify(long param8, long paramC);
@@ -59,11 +59,11 @@ IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *param);
 long WINAPI SHParseIECommandLine(long param8, long paramC);
 void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param);
 HRESULT WINAPI SHOnCWMCommandLine(long param8);
-LPITEMIDLIST WINAPI Channel_GetFolderPidl();
+LPITEMIDLIST WINAPI Channel_GetFolderPidl(void);
 IUnknown *WINAPI ChannelBand_Create(LPITEMIDLIST pidl);
 HRESULT WINAPI Channels_SetBandInfoSFB(IUnknown *param8);
 HRESULT WINAPI IUnknown_SetBandInfoSFB(IUnknown *param8, long paramC);
-HRESULT WINAPI Channel_QuickLaunch();
+HRESULT WINAPI Channel_QuickLaunch(void);
 HRESULT WINAPI SHGetNavigateTarget(long param8, long paramC, long param10, long param14);
 HRESULT WINAPI GetInfoTip(IUnknown *param8, long paramC, LPTSTR *param10, long cchMax);
 HRESULT WINAPI SHEnumClassesOfCategories(long param8, long paramC, long param10, long param14, long param18);

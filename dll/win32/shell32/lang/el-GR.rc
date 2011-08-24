@@ -125,7 +125,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Έκδοση " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Έκδοση "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Αυτή η έκδοση του ReactOS είναι καταχωρημένη στον :", IDC_STATIC, 35, 115, 180, 10
@@ -170,7 +170,7 @@ BEGIN
 	LTEXT "Τύπος προορισμού:", 14004, 10, 25, 50, 15
 	LTEXT "", 14005, 70, 30, 150, 10
 	LTEXT "Θέση προορισμού:", 14006, 10, 40, 70, 10
-	LTEXT "", 14007, 70, 40, 150, 10
+	EDITTEXT 14007, 70, 40, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Προορισμός:", 14008, 10, 55, 45, 10
 	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
 	LTEXT "&Εκκίνηση στο:",14010, 10, 65, 57, 10
@@ -209,13 +209,13 @@ BEGIN
 	LTEXT "Type of file:", 14004, 8, 35, 50, 10
 	LTEXT "Folder", 14005, 68, 35, 160, 10
 	LTEXT "Location:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Size:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Contains:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Created:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
 END
@@ -230,17 +230,17 @@ BEGIN
 	LTEXT "Τύπος αρχείου:", 14004, 10, 30, 50, 10
 	LTEXT "Αρχείο", 14005, 70, 30, 150, 10
 	LTEXT "Ανοίγει με:", 14006, 10, 40, 50, 10
-	LTEXT "", 14007, 70, 40, 150, 10
+	EDITTEXT 14007, 70, 40, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Θέση:", 14008, 10, 55, 45, 10
-	LTEXT "", 14009, 70, 55, 200, 10
+	EDITTEXT 14009, 70, 55, 200, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Μέγεθος:",14010, 10, 65, 45, 10
-	LTEXT "", 14011, 70, 65, 150, 10
+	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Δημιουργήθηκε:", 14014, 10, 80, 65, 10
-	LTEXT "", 14015, 70, 80, 150, 10
+	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Τροποποιήθηκε:", 14016, 10, 90, 65, 10
-	LTEXT "", 14017, 70, 90, 150, 10
+	EDITTEXT 14017, 70, 90, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Προσπελάστηκε:", 14018, 10, 100, 65, 10
-	LTEXT "", 14019, 70, 100, 150, 10
+	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Χαρακτηριστικά:", 14020, 10, 115, 70, 10
 	CHECKBOX "&Μόνο για ανάγνωση", 14021, 70, 115, 75, 10
 	CHECKBOX "&Κρυφό", 14022, 150, 115, 50, 10
@@ -253,11 +253,11 @@ CAPTION "Έκδοση"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Έκδοση αρχείου: ", 14000, 10, 10, 60, 10
-	LTEXT "", 14001, 80, 10, 160, 10
+	EDITTEXT 14001, 80, 10, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Περιγραφή: ", 14002, 10, 20, 60, 10
-	LTEXT "", 14003, 80, 20, 160, 10
+	EDITTEXT 14003, 80, 20, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Πνευματικά δικαιώματα: ", 14004, 10, 30, 70, 10
-	LTEXT "", 14005, 80, 30, 160, 10
+	EDITTEXT 14005, 80, 30, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "Άλλες πληροφορίες: ", 14006, 10, 45, 220, 90
 	LTEXT "Όνομα στοιχείου: ", 14007, 20, 55, 60, 10
 	LTEXT "Τιμή: ", 14008, 130, 55, 45, 10
@@ -272,24 +272,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Τύπος:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Σύστημα αρχείων:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Δεσμευμένος χώρος:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Ελεύθερος χώρος:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Χωρητικότητα:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -424,7 +424,7 @@ LTEXT "Opens with:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -656,10 +656,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Το στοιχείο '%1' δεν μπορεί να μεταφερθεί στον κάδο ανακύκλωσης. Θέλετε να το διαγράψετε;"
 	IDS_OVERWRITEFILE_TEXT      "Αυτός ο φάκελος περιέχει ήδη ένα αρχείο με το όνομα '%1'.\n\nΘέλετε να το αντικαταστήσετε;"
 	IDS_OVERWRITEFILE_CAPTION   "Επιβεβαίωση διαγραφής αρχείου"
-	IDS_OVERWRITEFOLDER_TEXT    "Αυτός ο φάκελος περιέχει ήδη έναν φάκελο ed '%1'.\n\n"\
-		"Αν τα αρχεία στον φάκελο προορισμού έχουν ίδια ονόματα με τα αρχεία στον\n"\
-		"επιλεγμένο φάκελο θα αντικατασταθούν. Είστε σίγουροι ότι θέλετε να συνεχίσετε;\n"\
-		"the folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Αυτός ο φάκελος περιέχει ήδη έναν φάκελο ed '%1'.\n\nΑν τα αρχεία στον φάκελο προορισμού έχουν ίδια ονόματα με τα αρχεία στον\nεπιλεγμένο φάκελο θα αντικατασταθούν. Είστε σίγουροι ότι θέλετε να συνεχίσετε;\nthe folder?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Επανεκκίνηση"
@@ -668,6 +665,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Είστε σίγουροι ότι θέλετε να απενεργοποιήσετε τον υπολογιστή σας;"
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
@@ -718,8 +721,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
 	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Folder"
 	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
 	IDS_BAT_FILE                "ReactOS Batch File"
@@ -738,12 +741,11 @@ BEGIN
 	IDS_SYS_FILE                "System file"
 
 	IDS_OPEN_VERB               "Open"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Run as "
 	IDS_EDIT_VERB               "Edit"
 	IDS_FIND_VERB               "Find"
 	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
 
 	IDS_FILE_FOLDER             "%u Files, %u Folders"
 	IDS_PRINTERS                "Printers"
@@ -754,4 +756,9 @@ BEGIN
 	IDS_COPY_OF                 "Copy of"
 
 	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	
+	IDS_FILE_DETAILS            "Details for '%s' extension"
+	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

@@ -12,7 +12,8 @@
 #include <setupapi.h>
 #include <commctrl.h>
 #include <ddraw.h>
-
+#include <initguid.h>
+#include <devguid.h>
 #include <mmreg.h>
 #include <wintrust.h>
 #include <softpub.h>
@@ -43,10 +44,10 @@ INT_PTR CALLBACK NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* DirectDraw tests */
-VOID DDTests();
+VOID DDTests(VOID);
 
 /* Direct3D tests */
-VOID D3DTests();
+VOID D3DTests(VOID);
 
 /* DirectSound initialization */
 void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext);

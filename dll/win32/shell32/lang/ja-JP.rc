@@ -125,7 +125,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "バージョン " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "バージョン "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "このReactOSのバージョンは次の方に登録されています:", IDC_STATIC, 35, 115, 180, 10
@@ -170,7 +170,7 @@ BEGIN
 	LTEXT "対象の種類:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "対象の場所:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "対象:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "実行元(&S):", 14010, 8, 96, 57, 10
@@ -209,13 +209,13 @@ BEGIN
 	LTEXT "ファイルの種類:", 14004, 8, 35, 50, 10
 	LTEXT "フォルダ", 14005, 68, 35, 160, 10
 	LTEXT "場所:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "サイズ:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "収容サイズ:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "作成日時:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "読み取り専用(&R)", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "隠しファイル(&H)", 14022, 126, 150, 50, 10
 END
@@ -230,17 +230,17 @@ BEGIN
 	LTEXT "ファイルの種類:", 14004, 8, 35, 50, 10
 	LTEXT "ファイル", 14005, 68, 35, 160, 10
 	LTEXT "実行プログラム:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "場所:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "サイズ:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "作成日時:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "変更日時:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "アクセス日時:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "属性:", 14020, 8, 189, 45, 10
 	CHECKBOX "読み取り専用(&R)", 14021, 58, 189, 67, 10
 	CHECKBOX "隠しファイル(&H)", 14022, 126, 189, 50, 10
@@ -253,11 +253,11 @@ CAPTION "バージョン"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
 	LTEXT "ファイルバージョン: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "説明: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "著作権: ", 14004, 10, 46, 66, 10
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "その他のバージョン情報: ", 14006, 6, 70, 222, 115
 	LTEXT "項目名: ", 14007, 13, 82, 50, 10
 	LTEXT "値: ", 14008, 112, 82, 45, 10
@@ -272,24 +272,24 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "種類:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "ファイルシステム:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "使用領域:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "空き領域:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "容量:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -424,7 +424,7 @@ LTEXT "開くプログラム:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "アプリ名", 14005, 100, 140, 40, 10
 PUSHBUTTON "変更(&C)...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "拡張子 '%s' のファイルの種類は'%s'です。\n'%s' のファイルすべてに対する設定を変更するには\n詳細設定をクリックしてください。", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "詳細設定(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -655,10 +655,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "項目 '%1' はごみ箱に送れません。 代わりに削除してもよろしいですか?"
 	IDS_OVERWRITEFILE_TEXT      "このフォルダには既にファイル'%1'が含まれています。\n\n置き換えてもよろしいですか?"
 	IDS_OVERWRITEFILE_CAPTION   "ファイル上書きの確認"
-	IDS_OVERWRITEFOLDER_TEXT    "このフォルダには既にフォルダ'%1'が含まれています。\n\n"\
-		"ディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\n"\
-		"と同じ時は置き換えられます。それでも、フォルダを移動または\n"\
-		"コピーしますか?"
+	IDS_OVERWRITEFOLDER_TEXT    "このフォルダには既にフォルダ'%1'が含まれています。\n\nディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\nと同じ時は置き換えられます。それでも、フォルダを移動または\nコピーしますか?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "再起動"
@@ -667,6 +664,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "シャットダウンしますか?"
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "スタート メニュー\\プログラム"
@@ -717,8 +720,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "利用できる領域"
 	IDS_EMPTY_BITBUCKET         "ごみ箱を空にする"
 	IDS_PICK_ICON_TITLE         "アイコンの選択"
-	IDS_PICK_ICON_FILTER        "アイコンファイル(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "実行可能\ ファイル\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "実行可能\ ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "フォルダ"
 	IDS_VIRTUAL_DRIVER          "仮想 デバイス ドライバ"
 	IDS_BAT_FILE                "ReactOS バッチ ファイル"
@@ -737,12 +740,11 @@ BEGIN
 	IDS_SYS_FILE                "システム ファイル"
 
 	IDS_OPEN_VERB               "開く"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "別のユーザーとして実行 "
 	IDS_EDIT_VERB               "編集"
 	IDS_FIND_VERB               "検索"
 	IDS_PRINT_VERB              "印刷"
-	IDS_PLAY_VERB               "再生"
-	IDS_PREVIEW_VERB            "プレビュー"
 
 	IDS_FILE_FOLDER             "%u 個のファイル、 %u 個のフォルダ"
 	IDS_PRINTERS                "プリンタ"
@@ -752,4 +754,10 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "デフォルト アロケーション サイズ"
 	IDS_COPY_OF                 "コピー ～"
     
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	
+	IDS_FILE_DETAILS            "拡張子 '%s' の詳細"
+	IDS_FILE_DETAILSADV         "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

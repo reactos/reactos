@@ -42,8 +42,7 @@ windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve noti
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserHotkey);
 
 /* GLOBALS *******************************************************************/
 
@@ -61,7 +60,6 @@ InitHotkeyImpl(VOID)
    return STATUS_SUCCESS;
 }
 
-
 #if 0 //not used
 NTSTATUS FASTCALL
 CleanupHotKeys(VOID)
@@ -70,7 +68,6 @@ CleanupHotKeys(VOID)
    return STATUS_SUCCESS;
 }
 #endif
-
 
 BOOL FASTCALL
 GetHotKey (UINT fsModifiers,
@@ -102,7 +99,6 @@ GetHotKey (UINT fsModifiers,
    return FALSE;
 }
 
-
 VOID FASTCALL
 UnregisterWindowHotKeys(PWND Window)
 {
@@ -119,7 +115,6 @@ UnregisterWindowHotKeys(PWND Window)
 
 }
 
-
 VOID FASTCALL
 UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 {
@@ -135,7 +130,6 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
    }
 
 }
-
 
 static
 BOOL FASTCALL
@@ -154,7 +148,111 @@ IsHotKey (UINT fsModifiers, UINT vk)
    return FALSE;
 }
 
+//
+// Get/SetHotKey message support.
+//
+UINT FASTCALL
+DefWndGetHotKey( HWND hwnd )
+{
+   PHOT_KEY_ITEM HotKeyItem;
 
+   ERR("DefWndGetHotKey\n");
+
+   if (IsListEmpty(&gHotkeyList)) return 0;
+
+   LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+   {
+      if ( HotKeyItem->hWnd == hwnd &&
+           HotKeyItem->id == IDHOT_REACTOS )
+      {
+         return MAKELONG(HotKeyItem->vk, HotKeyItem->fsModifiers);
+      }
+   }
+   return 0;
+}
+
+INT FASTCALL 
+DefWndSetHotKey( PWND pWnd, WPARAM wParam )
+{
+   UINT fsModifiers, vk;
+   PHOT_KEY_ITEM HotKeyItem;
+   HWND hWnd;
+   BOOL HaveSameWnd = FALSE;
+   INT Ret = 1;
+
+   ERR("DefWndSetHotKey wParam 0x%x\n", wParam);
+
+   // A hot key cannot be associated with a child window.
+   if (pWnd->style & WS_CHILD) return 0;
+
+   // VK_ESCAPE, VK_SPACE, and VK_TAB are invalid hot keys.
+   if ( LOWORD(wParam) == VK_ESCAPE ||
+        LOWORD(wParam) == VK_SPACE ||
+        LOWORD(wParam) == VK_TAB ) return -1;
+
+   vk = LOWORD(wParam);
+   fsModifiers = HIWORD(wParam);   
+   hWnd = UserHMGetHandle(pWnd);
+
+   if (wParam)
+   {
+      LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+      {
+         if ( HotKeyItem->fsModifiers == fsModifiers &&
+              HotKeyItem->vk == vk &&
+              HotKeyItem->id == IDHOT_REACTOS )
+         {
+            if (HotKeyItem->hWnd != hWnd)
+               Ret = 2; // Another window already has the same hot key.
+            break;
+         }
+      }
+   }
+
+   LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+   {
+      if ( HotKeyItem->hWnd == hWnd &&
+           HotKeyItem->id == IDHOT_REACTOS )
+      {
+         HaveSameWnd = TRUE;
+         break;
+      }
+   }
+
+   if (HaveSameWnd)
+   {
+      if (wParam == 0)
+      { // Setting wParam to NULL removes the hot key associated with a window.
+         UnregisterWindowHotKeys(pWnd);
+      }
+      else
+      { /* A window can only have one hot key. If the window already has a hot key
+           associated with it, the new hot key replaces the old one. */
+         HotKeyItem->fsModifiers = fsModifiers;
+         HotKeyItem->vk = vk;
+      }
+   }
+   else // 
+   {
+      if (wParam == 0)
+         return 1; // Do nothing, exit.
+
+      HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), USERTAG_HOTKEY);
+      if (HotKeyItem == NULL)
+      {
+        return 0;
+      }
+
+      HotKeyItem->Thread = pWnd->head.pti->pEThread;
+      HotKeyItem->hWnd = hWnd;
+      HotKeyItem->id = IDHOT_REACTOS; // Don't care, these hot keys are unrelated to the hot keys set by RegisterHotKey.
+      HotKeyItem->fsModifiers = fsModifiers;
+      HotKeyItem->vk = vk;
+
+      InsertHeadList (&gHotkeyList, &HotKeyItem->ListEntry);
+   }
+   return Ret;
+}
 
 /* SYSCALLS *****************************************************************/
 
@@ -170,7 +268,7 @@ NtUserRegisterHotKey(HWND hWnd,
    PETHREAD HotKeyThread;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserRegisterHotKey\n");
+   TRACE("Enter NtUserRegisterHotKey\n");
    UserEnterExclusive();
 
    if (hWnd == NULL)
@@ -209,7 +307,7 @@ NtUserRegisterHotKey(HWND hWnd,
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserRegisterHotKey, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRegisterHotKey, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -222,7 +320,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
    PWND Window;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserUnregisterHotKey\n");
+   TRACE("Enter NtUserUnregisterHotKey\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
@@ -244,7 +342,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
    RETURN( FALSE);
 
 CLEANUP:
-   DPRINT("Leave NtUserUnregisterHotKey, ret=%i\n",_ret_);
+   TRACE("Leave NtUserUnregisterHotKey, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

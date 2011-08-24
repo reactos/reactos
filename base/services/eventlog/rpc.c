@@ -49,6 +49,9 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
     PLOGHANDLE lpLogHandle;
     PLOGFILE currentLogFile = NULL;
     INT i, LogsActive;
+    PEVENTSOURCE pEventSource;
+
+    DPRINT("ElfCreateEventLogHandle(Name: %S)\n", Name);
 
     lpLogHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGHANDLE)
                                   + ((wcslen(Name) + 1) * sizeof(WCHAR)));
@@ -70,19 +73,36 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
 
     /* If Creating, default to the Application Log in case we fail, as documented on MSDN */
     if (Create == TRUE)
-        lpLogHandle->LogFile = LogfListItemByName(L"Application");
+    {
+        pEventSource = GetEventSourceByName(Name);
+        DPRINT("EventSource: %p\n", pEventSource);
+        if (pEventSource)
+        {
+            DPRINT("EventSource LogFile: %p\n", pEventSource->LogFile);
+            lpLogHandle->LogFile = pEventSource->LogFile;
+        }
+        else
+        {
+            DPRINT("EventSource LogFile: Application log file\n");
+            lpLogHandle->LogFile = LogfListItemByName(L"Application");
+        }
+
+        DPRINT("LogHandle LogFile: %p\n", lpLogHandle->LogFile);
+    }
     else
+    {
         lpLogHandle->LogFile = NULL;
 
-    for (i = 1; i <= LogsActive; i++)
-    {
-        currentLogFile = LogfListItemByIndex(i);
-
-        if (_wcsicmp(Name, currentLogFile->LogName) == 0)
+        for (i = 1; i <= LogsActive; i++)
         {
-            lpLogHandle->LogFile = LogfListItemByIndex(i);
-            lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
-            break;
+            currentLogFile = LogfListItemByIndex(i);
+
+            if (_wcsicmp(Name, currentLogFile->LogName) == 0)
+            {
+                lpLogHandle->LogFile = LogfListItemByIndex(i);
+                lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
+                break;
+            }
         }
     }
 
@@ -179,6 +199,7 @@ NTSTATUS ElfrNumberOfRecords(
     DWORD *NumberOfRecords)
 {
     PLOGHANDLE lpLogHandle;
+    PLOGFILE lpLogFile;
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
@@ -186,7 +207,13 @@ NTSTATUS ElfrNumberOfRecords(
         return STATUS_INVALID_HANDLE;
     }
 
-    *NumberOfRecords = lpLogHandle->LogFile->Header.CurrentRecordNumber;
+    lpLogFile = lpLogHandle->LogFile;
+
+    if (lpLogFile->Header.OldestRecordNumber == 0)
+        *NumberOfRecords = 0;
+    else
+        *NumberOfRecords = lpLogFile->Header.CurrentRecordNumber -
+                           lpLogFile->Header.OldestRecordNumber;
 
     return STATUS_SUCCESS;
 }
@@ -267,12 +294,16 @@ NTSTATUS ElfrRegisterEventSourceW(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
+    DPRINT1("ElfrRegisterEventSourceW()\n");
+
     if ((MajorVersion != 1) || (MinorVersion != 1))
         return STATUS_INVALID_PARAMETER;
 
     /* RegModuleName must be an empty string */
     if (RegModuleName->Length > 0)
         return STATUS_INVALID_PARAMETER;
+
+    DPRINT1("ModuleName: %S\n", ModuleName->Buffer);
 
     /*FIXME: UNCServerName must specify the server or empty for local */
 
@@ -366,6 +397,7 @@ NTSTATUS ElfrReportEventW(
     DWORD lastRec;
     DWORD recSize;
     DWORD dwStringsSize = 0;
+    DWORD dwUserSidLength = 0;
     DWORD dwError = ERROR_SUCCESS;
     WCHAR *lpStrings;
     int pos = 0;
@@ -408,10 +440,10 @@ NTSTATUS ElfrReportEventW(
                 DPRINT1("Type %hu: %wZ\n", EventType, Strings[i]);
                 break;
         }
-        dwStringsSize += (wcslen(Strings[i]->Buffer) + 1) * sizeof(WCHAR);
+        dwStringsSize += Strings[i]->Length + sizeof UNICODE_NULL;
     }
 
-    lpStrings = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, dwStringsSize * 2);
+    lpStrings = HeapAlloc(GetProcessHeap(), 0, dwStringsSize);
     if (!lpStrings)
     {
         DPRINT1("Failed to allocate heap\n");
@@ -420,10 +452,14 @@ NTSTATUS ElfrReportEventW(
 
     for (i = 0; i < NumStrings; i++)
     {
-        wcscpy((WCHAR*)(lpStrings + pos), Strings[i]->Buffer);
-        pos += (wcslen(Strings[i]->Buffer) + 1) * sizeof(WCHAR);
+        CopyMemory(lpStrings + pos, Strings[i]->Buffer, Strings[i]->Length);
+        pos += Strings[i]->Length / sizeof(WCHAR);
+        lpStrings[pos] = UNICODE_NULL;
+        pos += sizeof UNICODE_NULL / sizeof(WCHAR);
     }
 
+    if (UserSID)
+        dwUserSidLength = FIELD_OFFSET(SID, SubAuthority[UserSID->SubAuthorityCount]);
     LogBuffer = LogfAllocAndBuildNewRecord(&recSize,
                                            lastRec,
                                            EventType,
@@ -431,10 +467,10 @@ NTSTATUS ElfrReportEventW(
                                            EventID,
                                            lpLogHandle->szName,
                                            ComputerName->Buffer,
-                                           sizeof(UserSID),
-                                           &UserSID,
+                                           dwUserSidLength,
+                                           UserSID,
                                            NumStrings,
-                                           (WCHAR*)lpStrings,
+                                           lpStrings,
                                            DataSize,
                                            Data);
 

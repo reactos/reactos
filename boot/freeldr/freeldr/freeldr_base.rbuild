@@ -33,6 +33,7 @@
 		<file>fs.c</file>
 		<file>iso.c</file>
 		<file>ntfs.c</file>
+		<file>pxe.c</file>
 	</directory>
 	<directory name="inifile">
 		<file>ini_init.c</file>
@@ -48,8 +49,6 @@
 		<file>arcname.c</file>
 		<file>archwsup.c</file>
 		<file>binhive.c</file>
-		<file>reactos.c</file>
-        <file>imageldr.c</file>
 	</directory>
 	<directory name="rtl">
 		<file>bget.c</file>

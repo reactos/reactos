@@ -418,9 +418,9 @@ EXLATEOBJ_vInitialize(
         else if (ppalSrc->flFlags & PAL_BITFIELDS)
         {
             PALETTE_vGetBitMasks(ppalSrc, &pexlo->ulRedMask);
-            pexlo->ulRedShift = CalculateShift(0xFF, pexlo->ulRedMask);
-            pexlo->ulGreenShift = CalculateShift(0xFF00, pexlo->ulGreenMask);
-            pexlo->ulBlueShift = CalculateShift(0xFF0000, pexlo->ulBlueMask);
+            pexlo->ulRedShift = CalculateShift(RGB(0xFF,0,0), pexlo->ulRedMask);
+            pexlo->ulGreenShift = CalculateShift(RGB(0,0xFF,0), pexlo->ulGreenMask);
+            pexlo->ulBlueShift = CalculateShift(RGB(0,0,0xFF), pexlo->ulBlueMask);
 
             pexlo->aulXlate[0] = EXLATEOBJ_iXlateShiftAndMask(pexlo, crSrcBackColor);
         }
@@ -480,18 +480,12 @@ EXLATEOBJ_vInitialize(
         }
         else
         {
-            // FIXME: use PALETTE_ulGetNearest
-            EXLATEOBJ exloTmp = *pexlo;
-            exloTmp.xlo.pulXlate = exloTmp.aulXlate;
-
-            pexlo->xlo.flXlate |= XO_TABLE;
             for (i = 0; i < pexlo->xlo.cEntries; i++)
             {
                 ulColor = RGB(ppalSrc->IndexedColors[i].peRed,
                               ppalSrc->IndexedColors[i].peGreen,
                               ppalSrc->IndexedColors[i].peBlue);
-                pexlo->xlo.pulXlate[i] =
-                    EXLATEOBJ_iXlateShiftAndMask(&exloTmp, ulColor);
+                pexlo->xlo.pulXlate[i] = PALETTE_ulGetNearestBitFieldsIndex(ppalDst, ulColor);
             }
         }
     }

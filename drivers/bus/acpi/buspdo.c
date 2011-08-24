@@ -66,40 +66,42 @@ Bus_PDO_PnP (
         }
 
         DeviceData->InterfaceName.Length = 0;
+        status = STATUS_SUCCESS;
 
         if (!device)
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_SYS_BUTTON,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_SYS_BUTTON,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_THERMAL_HID))
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_THERMAL_ZONE,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_THERMAL_ZONE,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_BUTTON_HID_LID))
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_LID,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_LID,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_PROCESSOR_HID))
         {
-            IoRegisterDeviceInterface(DeviceData->Common.Self,
-                                      &GUID_DEVICE_PROCESSOR,
-                                      NULL,
-                                      &DeviceData->InterfaceName);
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_PROCESSOR,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
         }
 
-        if (DeviceData->InterfaceName.Length != 0)
+        /* Failure to register an interface is not a fatal failure so don't return a failure status */
+        if (NT_SUCCESS(status) && DeviceData->InterfaceName.Length != 0)
             IoSetDeviceInterfaceState(&DeviceData->InterfaceName, TRUE);
 
         state.DeviceState = PowerDeviceD0;
@@ -537,9 +539,9 @@ Bus_PDO_QueryDeviceText(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-    PWCHAR  Buffer;
+    PWCHAR  Buffer, Temp;
     PIO_STACK_LOCATION   stack;
-    NTSTATUS    status;
+    NTSTATUS    status = Irp->IoStatus.Status;
     PAGED_CODE ();
 
     stack = IoGetCurrentIrpStackLocation (Irp);
@@ -550,80 +552,88 @@ Bus_PDO_QueryDeviceText(
 
         if (!Irp->IoStatus.Information) {
 		  if (wcsstr (DeviceData->HardwareIDs, L"PNP000") != 0)
-			Buffer = L"Programmable interrupt controller";
+			Temp = L"Programmable interrupt controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP010") != 0)
-			Buffer = L"System timer";
+			Temp = L"System timer";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP020") != 0)
-			Buffer = L"DMA controller";
+			Temp = L"DMA controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP03") != 0)
-			Buffer = L"Keyboard";
+			Temp = L"Keyboard";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP040") != 0)
-			Buffer = L"Parallel port";
+			Temp = L"Parallel port";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP05") != 0)
-			Buffer = L"Serial port";
+			Temp = L"Serial port";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP06") != 0)
-			Buffer = L"Disk controller";
+			Temp = L"Disk controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP07") != 0)
-			Buffer = L"Disk controller";
+			Temp = L"Disk controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP09") != 0)
-			Buffer = L"Display adapter";
+			Temp = L"Display adapter";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A0") != 0)
-			Buffer = L"Bus controller";
+			Temp = L"Bus controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0E0") != 0)
-			Buffer = L"PCMCIA controller";
+			Temp = L"PCMCIA controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0F") != 0)
-			Buffer = L"Mouse device";
+			Temp = L"Mouse device";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP8") != 0)
-			Buffer = L"Network adapter";
+			Temp = L"Network adapter";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNPA0") != 0)
-			Buffer = L"SCSI controller";
+			Temp = L"SCSI controller";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNPB0") != 0)
-			Buffer = L"Multimedia device";
+			Temp = L"Multimedia device";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNPC00") != 0)
-			Buffer = L"Modem";
+			Temp = L"Modem";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0C") != 0)
-			Buffer = L"Power Button";
+			Temp = L"Power Button";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0E") != 0)
-			Buffer = L"Sleep Button";
+			Temp = L"Sleep Button";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0D") != 0)
-			Buffer = L"Lid Switch";
+			Temp = L"Lid Switch";
 		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C09") != 0)
-			Buffer = L"ACPI Embedded Controller";
+			Temp = L"ACPI Embedded Controller";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0B") != 0)
-			Buffer = L"ACPI Fan";
+			Temp = L"ACPI Fan";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
-			Buffer = L"PCI Root Bridge";
+			Temp = L"PCI Root Bridge";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0A") != 0)
-			Buffer = L"ACPI Battery";
+			Temp = L"ACPI Battery";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0F") != 0)
-			Buffer = L"PCI Interrupt Link";
+			Temp = L"PCI Interrupt Link";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_PWR") != 0)
-			Buffer = L"ACPI Power Resource";
+			Temp = L"ACPI Power Resource";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
-			Buffer = L"Processor";
+			Temp = L"Processor";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
-			Buffer = L"ACPI Thermal Zone";
+			Temp = L"ACPI Thermal Zone";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
-			Buffer = L"Smart Battery";
+			Temp = L"Smart Battery";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0003") != 0)
-			Buffer = L"AC Adapter";
+			Temp = L"AC Adapter";
 		   /* Simply checking if AcpiHandle is NULL eliminates the need to check
 		    * for the 4 different names that ACPI knows the fixed feature button as internally
 		    */
 		   else if (!DeviceData->AcpiHandle)
-			Buffer = L"ACPI Fixed Feature Button";
+			Temp = L"ACPI Fixed Feature Button";
 		  else
-			Buffer = L"Other ACPI device";
+			Temp = L"Other ACPI device";
+
+            Buffer = ExAllocatePoolWithTag (PagedPool, (wcslen(Temp) + 1) * sizeof(WCHAR), 'IPCA');
+
+            if (!Buffer) {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            RtlCopyMemory (Buffer, Temp, (wcslen(Temp) + 1) * sizeof(WCHAR));
 
             DPRINT("\tDeviceTextDescription :%ws\n", Buffer);
 
             Irp->IoStatus.Information = (ULONG_PTR) Buffer;
-        }
             status = STATUS_SUCCESS;
+        }
         break;
 
     default:
-        status = Irp->IoStatus.Status;
         break;
     }
 

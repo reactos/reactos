@@ -14,234 +14,65 @@
 
 LONG TCP_IPIdentification = 0;
 static BOOLEAN TCPInitialized = FALSE;
-static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 PORT_SET TCPPorts;
-CLIENT_DATA ClientInfo;
 
-VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
+#include "lwip/pbuf.h"
+#include "lwip/ip.h"
+#include "lwip/init.h"
+#include "lwip/arch.h"
+
+#include "rosip.h"
+
+NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
+
+VOID NTAPI
+DisconnectTimeoutDpc(PKDPC Dpc,
+                     PVOID DeferredContext,
+                     PVOID SystemArgument1,
+                     PVOID SystemArgument2)
 {
-        PTDI_BUCKET Bucket;
-        PLIST_ENTRY Entry;
-        NTSTATUS Status;
-        PIRP Irp;
-        PMDL Mdl;
-        KIRQL OldIrql;
-        PTCP_COMPLETION_ROUTINE Complete;
-
-        if (ClientInfo.Unlocked)
-            LockObjectAtDpcLevel(Connection);
-
-        TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
-                               Connection, Connection->SocketContext));
-
-        /* Things that can happen when we try the initial connection */
-        if( Connection->SignalState & (SEL_CONNECT | SEL_FIN) ) {
-            while (!IsListEmpty(&Connection->ConnectRequest)) {
-               Entry = RemoveHeadList( &Connection->ConnectRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Bucket->Status = (Connection->SignalState & SEL_CONNECT) ? STATUS_SUCCESS : STATUS_CANCELLED;
-               Bucket->Information = 0;
-
-               InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-           }
-       }
-
-       if( Connection->SignalState & (SEL_ACCEPT | SEL_FIN) ) {
-           /* Handle readable on a listening socket --
-            * TODO: Implement filtering
-            */
-           TI_DbgPrint(DEBUG_TCP,("Accepting new connection on %x (Queue: %s)\n",
-                                  Connection,
-                                  IsListEmpty(&Connection->ListenRequest) ?
-                                  "empty" : "nonempty"));
-
-           while (!IsListEmpty(&Connection->ListenRequest)) {
-               PIO_STACK_LOCATION IrpSp;
-
-               Entry = RemoveHeadList( &Connection->ListenRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Irp = Bucket->Request.RequestContext;
-               IrpSp = IoGetCurrentIrpStackLocation( Irp );
-
-               TI_DbgPrint(DEBUG_TCP,("Getting the socket\n"));
-
-               Status = TCPServiceListeningSocket
-                   ( Connection->AddressFile->Listener,
-                     Bucket->AssociatedEndpoint,
-                     (PTDI_REQUEST_KERNEL)&IrpSp->Parameters );
-
-               TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
-
-               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
-                   InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
-                   break;
-               } else {
-                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
-                   Bucket->Information = 0;
-                   DereferenceObject(Bucket->AssociatedEndpoint);
-
-                   InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-               }
-          }
-      }
-
-      /* Things that happen after we're connected */
-      if( Connection->SignalState & (SEL_READ | SEL_FIN) ) {
-          TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
-                                 IsListEmpty(&Connection->ReceiveRequest) ?
-                                 "empty" : "nonempty"));
-
-           while (!IsListEmpty(&Connection->ReceiveRequest)) {
-               OSK_UINT RecvLen = 0, Received = 0;
-               PVOID RecvBuffer = 0;
-
-               Entry = RemoveHeadList( &Connection->ReceiveRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Irp = Bucket->Request.RequestContext;
-               Mdl = Irp->MdlAddress;
-
-               TI_DbgPrint(DEBUG_TCP,
-                           ("Getting the user buffer from %x\n", Mdl));
-
-               NdisQueryBuffer( Mdl, &RecvBuffer, &RecvLen );
-
-               TI_DbgPrint(DEBUG_TCP,
-                           ("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
-
-               TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
-               TI_DbgPrint
-                   (DEBUG_TCP,
-                    ("Connection->SocketContext: %x\n",
-                     Connection->SocketContext));
-               TI_DbgPrint(DEBUG_TCP, ("RecvBuffer: %x\n", RecvBuffer));
-
-               Status = TCPTranslateError
-                    ( OskitTCPRecv( Connection->SocketContext,
-                                    RecvBuffer,
-                                    RecvLen,
-                                    &Received,
-                                    0 ) );
-
-               TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Received));
-
-               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
-                   InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
-                   break;
-               } else {
-                   TI_DbgPrint(DEBUG_TCP,
-                               ("Completing Receive request: %x %x\n",
-                                Bucket->Request, Status));
-
-                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
-                   Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Received : 0;
-
-                   InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-               }
-           }
-       }
-       if( Connection->SignalState & (SEL_WRITE | SEL_FIN) ) {
-           TI_DbgPrint(DEBUG_TCP,("Writeable: irp list %s\n",
-                                  IsListEmpty(&Connection->SendRequest) ?
-                                  "empty" : "nonempty"));
-
-           while (!IsListEmpty(&Connection->SendRequest)) {
-               OSK_UINT SendLen = 0, Sent = 0;
-               PVOID SendBuffer = 0;
-
-               Entry = RemoveHeadList( &Connection->SendRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Irp = Bucket->Request.RequestContext;
-               Mdl = Irp->MdlAddress;
-
-               TI_DbgPrint(DEBUG_TCP,
-                           ("Getting the user buffer from %x\n", Mdl));
-
-               NdisQueryBuffer( Mdl, &SendBuffer, &SendLen );
-
-               TI_DbgPrint(DEBUG_TCP,
-                           ("Writing %d bytes to %x\n", SendLen, SendBuffer));
-
-               TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
-               TI_DbgPrint
-                (DEBUG_TCP,
-                 ("Connection->SocketContext: %x\n",
-                  Connection->SocketContext));
-
-               Status = TCPTranslateError
-                   ( OskitTCPSend( Connection->SocketContext,
-                                   SendBuffer,
-                                   SendLen,
-                                   &Sent,
-                                   0 ) );
-
-               TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Sent));
-
-               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
-                   InsertHeadList( &Connection->SendRequest, &Bucket->Entry );
-                   break;
-               } else {
-                   TI_DbgPrint(DEBUG_TCP,
-                               ("Completing Send request: %x %x\n",
-                               Bucket->Request, Status));
-
-                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
-                   Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Sent : 0;
-
-                   InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-               }
-           }
-       }
-
-       ReferenceObject(Connection);
-       if (ClientInfo.Unlocked)
-       {
-           UnlockObjectFromDpcLevel(Connection);
-           KeReleaseSpinLock(&ClientInfo.Lock, ClientInfo.OldIrql);
-       }
-       else
-       {
-           UnlockObject(Connection, Connection->OldIrql);
-       }
-
-       while ((Entry = ExInterlockedRemoveHeadList(&Connection->CompletionQueue,
-                                                   &Connection->Lock)))
-       {
-           Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
-           Complete = Bucket->Request.RequestNotifyObject;
-
-           Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-
-           ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
-       }
-
-       if (!ClientInfo.Unlocked)
-       {
-           LockObject(Connection, &OldIrql);
-       }
-       else
-       {
-           KeAcquireSpinLock(&ClientInfo.Lock, &ClientInfo.OldIrql);
-       }
-       DereferenceObject(Connection);
-
-       /* If the socket is dead, remove the reference we added for oskit */
-       if (Connection->SignalState & SEL_FIN)
-       {
-           Connection->SocketContext = NULL;
-           DereferenceObject(Connection);
-       }
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)DeferredContext;
+    PLIST_ENTRY Entry;
+    PTDI_BUCKET Bucket;
+    NTSTATUS Status;
+    
+    LockObjectAtDpcLevel(Connection);
+    
+    /* We timed out waiting for pending sends so force it to shutdown */
+    Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+    
+    while (!IsListEmpty(&Connection->SendRequest))
+    {
+        Entry = RemoveHeadList(&Connection->SendRequest);
+        
+        Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+        
+        Bucket->Information = 0;
+        Bucket->Status = STATUS_FILE_CLOSED;
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+    
+    while (!IsListEmpty(&Connection->ShutdownRequest))
+    {
+        Entry = RemoveHeadList( &Connection->ShutdownRequest );
+        
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Bucket->Status = STATUS_TIMEOUT;
+        Bucket->Information = 0;
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+    
+    UnlockObjectFromDpcLevel(Connection);
+    
+    DereferenceObject(Connection);
 }
 
-VOID ConnectionFree(PVOID Object) {
-    PCONNECTION_ENDPOINT Connection = Object;
+VOID ConnectionFree(PVOID Object)
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)Object;
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_TCP, ("Freeing TCP Endpoint\n"));
@@ -253,10 +84,11 @@ VOID ConnectionFree(PVOID Object) {
     ExFreePoolWithTag( Connection, CONN_ENDPT_TAG );
 }
 
-PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
-    PCONNECTION_ENDPOINT Connection =
-        ExAllocatePoolWithTag(NonPagedPool, sizeof(CONNECTION_ENDPOINT),
-                              CONN_ENDPT_TAG);
+PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext )
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)
+        ExAllocatePoolWithTag(NonPagedPool, sizeof(CONNECTION_ENDPOINT), CONN_ENDPT_TAG);
+
     if (!Connection)
         return Connection;
 
@@ -270,13 +102,17 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     InitializeListHead(&Connection->ListenRequest);
     InitializeListHead(&Connection->ReceiveRequest);
     InitializeListHead(&Connection->SendRequest);
-    InitializeListHead(&Connection->CompletionQueue);
+    InitializeListHead(&Connection->ShutdownRequest);
+    InitializeListHead(&Connection->PacketQueue);
+
+    /* Initialize disconnect timer */
+    KeInitializeTimer(&Connection->DisconnectTimer);
+    KeInitializeDpc(&Connection->DisconnectDpc, DisconnectTimeoutDpc, Connection);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
 
-    /* Add an extra reference for oskit */
-    Connection->RefCount = 2;
+    Connection->RefCount = 1;
     Connection->Free = ConnectionFree;
 
     /* Add connection endpoint to global list */
@@ -288,30 +124,48 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
 }
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
-                    UINT Family, UINT Type, UINT Proto ) {
+                    UINT Family, UINT Type, UINT Proto )
+{
     NTSTATUS Status;
     KIRQL OldIrql;
 
     LockObject(Connection, &OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("Called: Connection %x, Family %d, Type %d, "
-                           "Proto %d\n",
-                           Connection, Family, Type, Proto));
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
+                           "Proto %d, sizeof(CONNECTION_ENDPOINT) = %d\n",
+                           Connection, Family, Type, Proto, sizeof(CONNECTION_ENDPOINT)));
 
-    Status = TCPTranslateError( OskitTCPSocket( Connection,
-                                                &Connection->SocketContext,
-                                                Family,
-                                                Type,
-                                                Proto ) );
-
-    ASSERT_KM_POINTER(Connection->SocketContext);
-
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-                           Connection->SocketContext));
+    Connection->SocketContext = LibTCPSocket(Connection);
+    if (Connection->SocketContext)
+        Status = STATUS_SUCCESS;
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
 
     UnlockObject(Connection, OldIrql);
 
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status));
+
     return Status;
+}
+
+NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
+{
+    KIRQL OldIrql;
+    PVOID Socket;
+
+    LockObject(Connection, &OldIrql);
+
+    Socket = Connection->SocketContext;
+
+    FlushAllQueues(Connection, STATUS_CANCELLED);
+
+    LibTCPClose(Connection, FALSE, TRUE);
+
+    UnlockObject(Connection, OldIrql);
+
+    DereferenceObject(Connection);
+
+    return STATUS_SUCCESS;
 }
 
 VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
@@ -323,110 +177,11 @@ VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
  *     This is the low level interface for receiving TCP data
  */
 {
-    KIRQL OldIrql;
-
-    TI_DbgPrint(DEBUG_TCP,("Sending packet %d (%d) to oskit\n",
+    TI_DbgPrint(DEBUG_TCP,("Sending packet %d (%d) to lwIP\n",
                            IPPacket->TotalSize,
                            IPPacket->HeaderSize));
-
-    KeAcquireSpinLock(&ClientInfo.Lock, &OldIrql);
-    ClientInfo.Unlocked = TRUE;
-    ClientInfo.OldIrql = OldIrql;
-
-    OskitTCPReceiveDatagram( IPPacket->Header,
-                             IPPacket->TotalSize,
-                             IPPacket->HeaderSize );
-
-    ClientInfo.Unlocked = FALSE;
-    KeReleaseSpinLock(&ClientInfo.Lock, OldIrql);
-}
-
-/* event.c */
-int TCPSocketState( void *ClientData,
-                    void *WhichSocket,
-                    void *WhichConnection,
-                    OSK_UINT NewState );
-
-int TCPPacketSend( void *ClientData,
-                   OSK_PCHAR Data,
-                   OSK_UINT Len );
-
-POSK_IFADDR TCPFindInterface( void *ClientData,
-                              OSK_UINT AddrType,
-                              OSK_UINT FindType,
-                              OSK_SOCKADDR *ReqAddr );
-
-NTSTATUS TCPMemStartup( void );
-void *TCPMalloc( void *ClientData,
-                 OSK_UINT bytes, OSK_PCHAR file, OSK_UINT line );
-void TCPFree( void *ClientData,
-              void *data, OSK_PCHAR file, OSK_UINT line );
-void TCPMemShutdown( void );
-
-OSKITTCP_EVENT_HANDLERS EventHandlers = {
-    NULL,             /* Client Data */
-    TCPSocketState,   /* SocketState */
-    TCPPacketSend,    /* PacketSend */
-    TCPFindInterface, /* FindInterface */
-    TCPMalloc,        /* Malloc */
-    TCPFree,          /* Free */
-    NULL,             /* Sleep */
-    NULL,             /* Wakeup */
-};
-
-static KEVENT TimerLoopEvent;
-static HANDLE TimerThreadHandle;
-
-/*
- * We are running 2 timers here, one with a 200ms interval (fast) and the other
- * with a 500ms interval (slow). So we need to time out at 200, 400, 500, 600,
- * 800, 1000 and process the "fast" events at 200, 400, 600, 800, 1000 and the
- * "slow" events at 500 and 1000.
- */
-static VOID NTAPI
-TimerThread(PVOID Context)
-{
-    LARGE_INTEGER Timeout;
-    NTSTATUS Status;
-    unsigned Current, NextFast, NextSlow, Next;
-
-    Current = 0;
-    Next = 0;
-    NextFast = 0;
-    NextSlow = 0;
-    while ( 1 ) {
-        if (Next == NextFast) {
-            NextFast += 2;
-       }
-        if (Next == NextSlow) {
-            NextSlow += 5;
-        }
-        Next = min(NextFast, NextSlow);
-        Timeout.QuadPart = (LONGLONG) (Next - Current) * -1000000; /* 100 ms */
-        Status = KeWaitForSingleObject(&TimerLoopEvent, Executive, KernelMode,
-                                       FALSE, &Timeout);
-        if (Status != STATUS_TIMEOUT) {
-            PsTerminateSystemThread(Status);
-        }
-
-        TimerOskitTCP( Next == NextFast, Next == NextSlow );
-
-        Current = Next;
-        if (10 <= Current) {
-            Current = 0;
-            Next = 0;
-            NextFast = 0;
-            NextSlow = 0;
-        }
-    }
-}
-
-static VOID
-StartTimer(VOID)
-{
-    KeInitializeEvent(&TimerLoopEvent, NotificationEvent, FALSE);
-    PsCreateSystemThread(&TimerThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0,
-                         TimerThread, NULL);
+    
+    LibIPInsertPacket(Interface->TCPContext, IPPacket->Header, IPPacket->TotalSize);
 }
 
 NTSTATUS TCPStartup(VOID)
@@ -438,37 +193,26 @@ NTSTATUS TCPStartup(VOID)
 {
     NTSTATUS Status;
 
-    Status = TCPMemStartup();
-    if ( ! NT_SUCCESS(Status) ) {
-        return Status;
-    }
-
     Status = PortsStartup( &TCPPorts, 1, 0xfffe );
-    if( !NT_SUCCESS(Status) ) {
-        TCPMemShutdown();
+    if (!NT_SUCCESS(Status))
+    {
         return Status;
     }
 
-    KeInitializeSpinLock(&ClientInfo.Lock);
-    ClientInfo.Unlocked = FALSE;
-
-    RegisterOskitTCPEventHandlers( &EventHandlers );
-    InitOskitTCP();
-
+    ExInitializeNPagedLookasideList(&TdiBucketLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(TDI_BUCKET),
+                                    TDI_BUCKET_TAG,
+                                    0);
+    
+    /* Initialize our IP library */
+    LibIPInitialize();
+    
     /* Register this protocol with IP layer */
     IPRegisterProtocol(IPPROTO_TCP, TCPReceive);
-
-    ExInitializeNPagedLookasideList(
-        &TCPSegmentList,                /* Lookaside list */
-        NULL,                           /* Allocate routine */
-        NULL,                           /* Free routine */
-        0,                              /* Flags */
-        sizeof(TCP_SEGMENT),            /* Size of each entry */
-        'SPCT',                         /* Tag */
-        0);                             /* Depth */
-
-    StartTimer();
-
+    
     TCPInitialized = TRUE;
 
     return STATUS_SUCCESS;
@@ -482,59 +226,54 @@ NTSTATUS TCPShutdown(VOID)
  *     Status of operation
  */
 {
-    LARGE_INTEGER WaitForThread;
-
     if (!TCPInitialized)
         return STATUS_SUCCESS;
 
-    WaitForThread.QuadPart = -2500000; /* 250 ms */
-    KeSetEvent(&TimerLoopEvent, IO_NO_INCREMENT, FALSE);
-    ZwWaitForSingleObject(TimerThreadHandle, FALSE, &WaitForThread);
+    ExDeleteNPagedLookasideList(&TdiBucketLookasideList);
+    
+    LibIPShutdown();
 
     /* Deregister this protocol with IP layer */
     IPRegisterProtocol(IPPROTO_TCP, NULL);
 
-    ExDeleteNPagedLookasideList(&TCPSegmentList);
-
     TCPInitialized = FALSE;
 
-    DeinitOskitTCP();
-
     PortsShutdown( &TCPPorts );
-
-    TCPMemShutdown();
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS TCPTranslateError( int OskitError ) {
+NTSTATUS TCPTranslateError(const err_t err)
+{
     NTSTATUS Status;
 
-    switch( OskitError ) {
-    case 0: Status = STATUS_SUCCESS; break;
-    case OSK_EADDRNOTAVAIL: Status = STATUS_INVALID_ADDRESS; break;
-    case OSK_EADDRINUSE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break;
-    case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
-    case OSK_ECONNREFUSED: Status = STATUS_REMOTE_NOT_LISTENING; break;
-    case OSK_ECONNRESET: Status = STATUS_REMOTE_DISCONNECT; break;
-    case OSK_ECONNABORTED: Status = STATUS_LOCAL_DISCONNECT; break;
-    case OSK_EWOULDBLOCK:
-    case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
-    case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;
-    case OSK_ENOMEM:
-    case OSK_ENOBUFS: Status = STATUS_INSUFFICIENT_RESOURCES; break;
-    case OSK_ESHUTDOWN: Status = STATUS_FILE_CLOSED; break;
-    case OSK_EMSGSIZE: Status = STATUS_BUFFER_TOO_SMALL; break;
-    case OSK_ETIMEDOUT: Status = STATUS_TIMEOUT; break;
-    case OSK_ENETUNREACH: Status = STATUS_NETWORK_UNREACHABLE; break;
-    case OSK_EFAULT: Status = STATUS_ACCESS_VIOLATION; break;
-    default:
-       DbgPrint("OskitTCP returned unhandled error code: %d\n", OskitError);
-       Status = STATUS_INVALID_CONNECTION;
-       break;
+    switch (err)
+    {
+        case ERR_OK: Status = STATUS_SUCCESS; return Status; //0
+        case ERR_MEM: Status = STATUS_INSUFFICIENT_RESOURCES; break; //-1
+        case ERR_BUF: Status = STATUS_BUFFER_TOO_SMALL; break; //-2
+        case ERR_TIMEOUT: Status = STATUS_TIMEOUT; break; // -3
+        case ERR_RTE: Status = STATUS_NETWORK_UNREACHABLE; break; //-4
+        case ERR_INPROGRESS: Status = STATUS_PENDING; return Status; //-5
+        case ERR_VAL: Status = STATUS_INVALID_PARAMETER; break; //-6
+        case ERR_WOULDBLOCK: Status = STATUS_CANT_WAIT; break; //-7
+        case ERR_USE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break; //-8
+        case ERR_ISCONN: Status = STATUS_UNSUCCESSFUL; break; //-9 (FIXME)
+        case ERR_ABRT: Status = STATUS_LOCAL_DISCONNECT; break; //-10
+        case ERR_RST: Status = STATUS_REMOTE_DISCONNECT; break; //-11
+        case ERR_CLSD: Status = STATUS_FILE_CLOSED; break; //-12
+        case ERR_CONN: Status = STATUS_INVALID_CONNECTION; break; //-13
+        case ERR_ARG: Status = STATUS_INVALID_PARAMETER; break; //-14
+        case ERR_IF: Status = STATUS_UNEXPECTED_NETWORK_ERROR; break; //-15
+        default:
+            DbgPrint("Invalid error value: %d\n", err);
+            ASSERT(FALSE);
+            Status = STATUS_UNSUCCESSFUL;
+            break;
     }
+    
+    DbgPrint("TCP operation failed: 0x%x (%d)\n", Status, err);
 
-    TI_DbgPrint(DEBUG_TCP,("Error %d -> %x\n", OskitError, Status));
     return Status;
 }
 
@@ -543,23 +282,26 @@ NTSTATUS TCPConnect
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
-  PVOID Context ) {
+  PVOID Context )
+{
     NTSTATUS Status;
-    SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
+    struct ip_addr bindaddr, connaddr;
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
+    TA_IP_ADDRESS LocalAddress;
     PTDI_BUCKET Bucket;
     PNEIGHBOR_CACHE_ENTRY NCE;
     KIRQL OldIrql;
 
-    TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPConnect] Called\n"));
 
     Status = AddrBuildAddress
         ((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress,
          &RemoteAddress,
          &RemotePort);
 
-    if (!NT_SUCCESS(Status)) {
+    if (!NT_SUCCESS(Status))
+    {
         TI_DbgPrint(DEBUG_TCP, ("Could not AddrBuildAddress in TCPConnect\n"));
         return Status;
     }
@@ -569,9 +311,6 @@ NTSTATUS TCPConnect
                 ("Connecting to address %x:%x\n",
                  RemoteAddress.Address.IPv4Address,
                  RemotePort));
-
-    AddressToConnect.sin_family = AF_INET;
-    AddressToBind = AddressToConnect;
 
     LockObject(Connection, &OldIrql);
 
@@ -589,46 +328,59 @@ NTSTATUS TCPConnect
             return STATUS_NETWORK_UNREACHABLE;
         }
 
-        AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
+        bindaddr.addr = NCE->Interface->Unicast.Address.IPv4Address;
     }
     else
     {
-        AddressToBind.sin_addr.s_addr = Connection->AddressFile->Address.Address.IPv4Address;
+        bindaddr.addr = Connection->AddressFile->Address.Address.IPv4Address;
     }
 
-    Status = TCPTranslateError
-        ( OskitTCPBind( Connection->SocketContext,
-                        &AddressToBind,
-                        sizeof(AddressToBind) ) );
-
-    if (NT_SUCCESS(Status)) {
-        memcpy( &AddressToConnect.sin_addr,
-                &RemoteAddress.Address.IPv4Address,
-                sizeof(AddressToConnect.sin_addr) );
-        AddressToConnect.sin_port = RemotePort;
-
-        Status = TCPTranslateError
-            ( OskitTCPConnect( Connection->SocketContext,
-                               &AddressToConnect,
-                               sizeof(AddressToConnect) ) );
-
-        if (Status == STATUS_PENDING)
+    Status = TCPTranslateError(LibTCPBind(Connection,
+                                          &bindaddr,
+                                          Connection->AddressFile->Port));
+    
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if we had an unspecified port */
+        if (!Connection->AddressFile->Port)
         {
-            Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-            if( !Bucket )
+            /* We did, so we need to copy back the port */
+            Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
+            if (NT_SUCCESS(Status))
             {
-               UnlockObject(Connection, OldIrql);
-               return STATUS_NO_MEMORY;
+                /* Allocate the port in the port bitmap */
+                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                    
+                /* This should never fail */
+                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+            }
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            connaddr.addr = RemoteAddress.Address.IPv4Address;
+
+            Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
+            if (!Bucket)
+            {
+                UnlockObject(Connection, OldIrql);
+                return STATUS_NO_MEMORY;
             }
             
             Bucket->Request.RequestNotifyObject = (PVOID)Complete;
             Bucket->Request.RequestContext = Context;
 			
             InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
+        
+            Status = TCPTranslateError(LibTCPConnect(Connection,
+                                                     &connaddr,
+                                                     RemotePort));
         }
     }
 
     UnlockObject(Connection, OldIrql);
+
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPConnect] Leaving. Status = 0x%x\n", Status));
 
     return Status;
 }
@@ -636,84 +388,88 @@ NTSTATUS TCPConnect
 NTSTATUS TCPDisconnect
 ( PCONNECTION_ENDPOINT Connection,
   UINT Flags,
+  PLARGE_INTEGER Timeout,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
-  PVOID Context ) {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    KIRQL OldIrql;
-
-    TI_DbgPrint(DEBUG_TCP,("started\n"));
-
-    LockObject(Connection, &OldIrql);
-
-    if (Flags & TDI_DISCONNECT_RELEASE)
-        Status = TCPTranslateError(OskitTCPDisconnect(Connection->SocketContext));
-
-    if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
-        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
-
-    UnlockObject(Connection, OldIrql);
-
-    TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
-
-    return Status;
-}
-
-NTSTATUS TCPClose
-( PCONNECTION_ENDPOINT Connection )
+  PVOID Context )
 {
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    PTDI_BUCKET Bucket;
     KIRQL OldIrql;
-    NTSTATUS Status;
-    PVOID Socket;
-    PADDRESS_FILE AddressFile = NULL;
-    PCONNECTION_ENDPOINT AddressConnection = NULL;
+    LARGE_INTEGER ActualTimeout;
+
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPDisconnect] Called\n"));
 
     LockObject(Connection, &OldIrql);
-    Socket = Connection->SocketContext;
-    Connection->SocketContext = NULL;
 
-    /* Don't try to close again if the other side closed us already */
-    if (Socket)
+    if (Connection->SocketContext)
     {
-       /* We need to close here otherwise oskit will never indicate
-        * SEL_FIN and we will never fully close the connection */
-       Status = TCPTranslateError( OskitTCPClose( Socket ) );
+        if (Flags & TDI_DISCONNECT_RELEASE)
+        {
+            if (IsListEmpty(&Connection->SendRequest))
+            {
+                Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+            }
+            else if (Timeout && Timeout->QuadPart == 0)
+            {
+                FlushSendQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+                TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+                Status = STATUS_TIMEOUT;
+            }
+            else 
+            {
+                /* Use the timeout specified or 1 second if none was specified */
+                if (Timeout)
+                {
+                    ActualTimeout = *Timeout;
+                }
+                else
+                {
+                    ActualTimeout.QuadPart = -1000000;
+                }
 
-       if (!NT_SUCCESS(Status))
-       {
-           Connection->SocketContext = Socket;
-           UnlockObject(Connection, OldIrql);
-           return Status;
-       }
+                /* We couldn't complete the request now because we need to wait for outstanding I/O */
+                Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
+                if (!Bucket)
+                {
+                    UnlockObject(Connection, OldIrql);
+                    return STATUS_NO_MEMORY;
+                }
+
+                Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+                Bucket->Request.RequestContext = Context;
+
+                InsertTailList(&Connection->ShutdownRequest, &Bucket->Entry);
+
+                ReferenceObject(Connection);
+                if (KeCancelTimer(&Connection->DisconnectTimer))
+                {
+                    DereferenceObject(Connection);
+                }
+                KeSetTimer(&Connection->DisconnectTimer, ActualTimeout, &Connection->DisconnectDpc);
+
+                Status = STATUS_PENDING;
+            }
+        }
+
+        if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
+        {
+            FlushReceiveQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+            FlushSendQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+            FlushShutdownQueue(Connection, STATUS_FILE_CLOSED, FALSE);
+            Status = TCPTranslateError(LibTCPShutdown(Connection, 1, 1));
+        }
     }
     else
     {
-       /* We are already closed by the other end so return success */
-       Status = STATUS_SUCCESS;
-    }
-
-    if (Connection->AddressFile)
-    {
-        LockObjectAtDpcLevel(Connection->AddressFile);
-        if (Connection->AddressFile->Connection == Connection)
-        {
-            AddressConnection = Connection->AddressFile->Connection;
-            Connection->AddressFile->Connection = NULL;
-        }
-        UnlockObjectFromDpcLevel(Connection->AddressFile);
-
-        AddressFile = Connection->AddressFile;
-        Connection->AddressFile = NULL;
+        /* We already got closed by the other side so just return success */
+        Status = STATUS_SUCCESS;
     }
 
     UnlockObject(Connection, OldIrql);
 
-    DereferenceObject(Connection);
-    if (AddressConnection)
-        DereferenceObject(AddressConnection);
-    if (AddressFile)
-        DereferenceObject(AddressFile);
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPDisconnect] Leaving. Status = 0x%x\n", Status));
 
     return Status;
 }
@@ -725,56 +481,44 @@ NTSTATUS TCPReceiveData
   PULONG BytesReceived,
   ULONG ReceiveFlags,
   PTCP_COMPLETION_ROUTINE Complete,
-  PVOID Context ) {
-    PVOID DataBuffer;
-    UINT DataLen, Received = 0;
-    NTSTATUS Status;
+  PVOID Context )
+{
     PTDI_BUCKET Bucket;
-    KIRQL OldIrql;
+    PUCHAR DataBuffer;
+    UINT DataLen, Received;
+    NTSTATUS Status;
 
-    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Called for %d bytes (on socket %x)\n",
                            ReceiveLength, Connection->SocketContext));
 
-    NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
+    NdisQueryBuffer(Buffer, &DataBuffer, &DataLen);
 
-    TI_DbgPrint(DEBUG_TCP,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
+    Status = LibTCPGetDataFromConnectionQueue(Connection, DataBuffer, DataLen, &Received);
 
-    LockObject(Connection, &OldIrql);
+    if (Status == STATUS_PENDING)
+    {
+        Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
+        if (!Bucket)
+        {
+            TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Failed to allocate bucket\n"));
 
-    Status = TCPTranslateError
-        ( OskitTCPRecv
-          ( Connection->SocketContext,
-            DataBuffer,
-            DataLen,
-            &Received,
-            ReceiveFlags ) );
-
-    TI_DbgPrint(DEBUG_TCP,("OskitTCPReceive: %x, %d\n", Status, Received));
-
-    /* Keep this request around ... there was no data yet */
-    if( Status == STATUS_PENDING ) {
-        /* Freed in TCPSocketState */
-        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-        if( !Bucket ) {
-            TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
-            UnlockObject(Connection, OldIrql);
             return STATUS_NO_MEMORY;
         }
-
+    
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
-        *BytesReceived = 0;
 
-        InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
-        TI_DbgPrint(DEBUG_TCP,("Queued read irp\n"));
-    } else {
-        TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Received));
-        *BytesReceived = Received;
+        ExInterlockedInsertTailList( &Connection->ReceiveRequest, &Bucket->Entry, &Connection->Lock );
+        TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Queued read irp\n"));
+
+        TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
+
+        (*BytesReceived) = 0;
     }
-
-    UnlockObject(Connection, OldIrql);
-
-    TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
+    else
+    {
+        (*BytesReceived) = Received;
+    }
 
     return Status;
 }
@@ -786,35 +530,37 @@ NTSTATUS TCPSendData
   PULONG BytesSent,
   ULONG Flags,
   PTCP_COMPLETION_ROUTINE Complete,
-  PVOID Context ) {
-    UINT Sent = 0;
+  PVOID Context )
+{
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
 
     LockObject(Connection, &OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Called for %d bytes (on socket %x)\n",
                            SendLength, Connection->SocketContext));
 
-    TI_DbgPrint(DEBUG_TCP,("Connection = %x\n", Connection));
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Connection = %x\n", Connection));
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Connection->SocketContext = %x\n",
                            Connection->SocketContext));
 
-    Status = TCPTranslateError
-        ( OskitTCPSend( Connection->SocketContext,
-                        (OSK_PCHAR)BufferData, SendLength,
-                        &Sent, 0 ) );
-
-    TI_DbgPrint(DEBUG_TCP,("OskitTCPSend: %x, %d\n", Status, Sent));
+    Status = TCPTranslateError(LibTCPSend(Connection,
+                                          BufferData,
+                                          SendLength,
+                                          FALSE));
+    
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Send: %x, %d\n", Status, SendLength));
 
     /* Keep this request around ... there was no data yet */
-    if( Status == STATUS_PENDING ) {
+    if (Status == STATUS_PENDING)
+    {
         /* Freed in TCPSocketState */
-        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-        if( !Bucket ) {
+        Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
+        if (!Bucket)
+        {
             UnlockObject(Connection, OldIrql);
-            TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
+            TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Failed to allocate bucket\n"));
             return STATUS_NO_MEMORY;
         }
         
@@ -823,67 +569,88 @@ NTSTATUS TCPSendData
         *BytesSent = 0;
         
         InsertTailList( &Connection->SendRequest, &Bucket->Entry );
-        TI_DbgPrint(DEBUG_TCP,("Queued write irp\n"));
-    } else {
-        TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Sent));
-        *BytesSent = Sent;
+        TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Queued write irp\n"));
+    }
+    else if (Status == STATUS_SUCCESS)
+    {
+        *BytesSent = SendLength;
+    }
+    else
+    {
+        *BytesSent = 0;
     }
 
     UnlockObject(Connection, OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
+    TI_DbgPrint(DEBUG_TCP, ("[IP, TCPSendData] Leaving. Status = %x\n", Status));
 
     return Status;
 }
 
-UINT TCPAllocatePort( UINT HintPort ) {
-    if( HintPort ) {
-        if( AllocatePort( &TCPPorts, HintPort ) ) return HintPort;
-        else {
-            TI_DbgPrint
-                (MID_TRACE,("We got a hint port but couldn't allocate it\n"));
+UINT TCPAllocatePort(const UINT HintPort)
+{
+    if (HintPort)
+    {
+        if (AllocatePort(&TCPPorts, HintPort))
+            return HintPort;
+        else
+        {
+            TI_DbgPrint(MID_TRACE,("We got a hint port but couldn't allocate it\n"));
             return (UINT)-1;
         }
-    } else return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
+    }
+    else
+        return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
 }
 
-VOID TCPFreePort( UINT Port ) {
-    DeallocatePort( &TCPPorts, Port );
+VOID TCPFreePort(const UINT Port)
+{
+    DeallocatePort(&TCPPorts, Port);
 }
 
 NTSTATUS TCPGetSockAddress
 ( PCONNECTION_ENDPOINT Connection,
   PTRANSPORT_ADDRESS Address,
-  BOOLEAN GetRemote ) {
-    OSK_UINT LocalAddress, RemoteAddress;
-    OSK_UI16 LocalPort, RemotePort;
+  BOOLEAN GetRemote )
+{
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
+    struct ip_addr ipaddr;
     NTSTATUS Status;
     KIRQL OldIrql;
-
-    LockObject(Connection, &OldIrql);
-
-    Status = TCPTranslateError(OskitTCPGetAddress(Connection->SocketContext,
-                                                  &LocalAddress, &LocalPort,
-                                                  &RemoteAddress, &RemotePort));
-
-    UnlockObject(Connection, OldIrql);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
+    
     AddressIP->TAAddressCount = 1;
     AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
-    AddressIP->Address[0].Address[0].sin_port = GetRemote ? RemotePort : LocalPort;
-    AddressIP->Address[0].Address[0].in_addr = GetRemote ? RemoteAddress : LocalAddress;
+
+    LockObject(Connection, &OldIrql);
+
+    if (GetRemote)
+    {
+        Status = TCPTranslateError(LibTCPGetPeerName(Connection->SocketContext,
+                                    &ipaddr,
+                                    &AddressIP->Address[0].Address[0].sin_port));
+    }
+    else
+    {
+        Status = TCPTranslateError(LibTCPGetHostName(Connection->SocketContext,
+                                    &ipaddr,
+                                    &AddressIP->Address[0].Address[0].sin_port));
+    }
+
+    UnlockObject(Connection, OldIrql);
+    
+    AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
+    
+    RtlZeroMemory(&AddressIP->Address[0].Address[0].sin_zero,
+                  sizeof(AddressIP->Address[0].Address[0].sin_zero));
 
     return Status;
 }
 
-BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
+BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp )
+{
     PLIST_ENTRY Entry;
-    PLIST_ENTRY ListHead[4];
+    PLIST_ENTRY ListHead[5];
     KIRQL OldIrql;
     PTDI_BUCKET Bucket;
     UINT i = 0;
@@ -893,10 +660,11 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
     ListHead[1] = &Endpoint->ReceiveRequest;
     ListHead[2] = &Endpoint->ConnectRequest;
     ListHead[3] = &Endpoint->ListenRequest;
+    ListHead[4] = &Endpoint->ShutdownRequest;
 
     LockObject(Endpoint, &OldIrql);
 
-    for( i = 0; i < 4; i++ )
+    for( i = 0; i < 5; i++ )
     {
         for( Entry = ListHead[i]->Flink;
              Entry != ListHead[i];
@@ -906,7 +674,7 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
             if( Bucket->Request.RequestContext == Irp )
             {
                 RemoveEntryList( &Bucket->Entry );
-                ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+                ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
                 Found = TRUE;
                 break;
             }

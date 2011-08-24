@@ -84,6 +84,7 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
 
             /* Try platform driver first, then legacy */
             //PopInvokeSystemStateHandler(PowerStateShutdownReset, NULL);
+            PopSetSystemPowerState(PowerSystemShutdown, SystemAction);
             HalReturnToFirmware(HalRebootRoutine);
             break;
 
@@ -102,7 +103,7 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
             //PopInvokeSystemStateHandler(PowerStateShutdownOff, NULL);
             
             /* ReactOS Hack */
-            PopSetSystemPowerState(PowerSystemShutdown);
+            PopSetSystemPowerState(PowerSystemShutdown, SystemAction);
             PopShutdownHandler();
 
             /* If that didn't work, call the HAL */

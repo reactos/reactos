@@ -166,8 +166,6 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 	BOOLEAN Arrival;
 	ULONG Caps;
 	NTSTATUS Status;
-	UNICODE_STRING DeviceName;
-	UNICODE_STRING DeviceNamePrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
 	DPRINT("PopAddRemoveSysCapsCallback(%p %p)\n",
 		NotificationStructure, Context);
@@ -188,20 +186,10 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 	{
 		DPRINT("Arrival of %wZ\n", Notification->SymbolicLinkName);
 
-		DeviceName.Length = 0;
-		DeviceName.MaximumLength = Notification->SymbolicLinkName->MaximumLength + DeviceNamePrefix.MaximumLength;
-		DeviceName.Buffer = ExAllocatePool(PagedPool, DeviceName.MaximumLength);
-		if (!DeviceName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
-
-		RtlCopyUnicodeString(&DeviceName, &DeviceNamePrefix);
-		RtlAppendUnicodeStringToString(&DeviceName, Notification->SymbolicLinkName);
-
-		DPRINT("Opening handle to %wZ\n", &DeviceName);
-
 		/* Open the device */
 		InitializeObjectAttributes(
 			&ObjectAttributes,
-			&DeviceName,
+			Notification->SymbolicLinkName,
 			OBJ_KERNEL_HANDLE,
 			NULL,
 			NULL);
@@ -214,7 +202,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			0);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("ZwOpenFile() failed with status 0x%08lx\n", Status);
+			DPRINT1("ZwOpenFile() failed with status 0x%08lx\n", Status);
 			return Status;
 		}
 		Status = ObReferenceObjectByHandle(
@@ -226,7 +214,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			NULL);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("ObReferenceObjectByHandle() failed with status 0x%08lx\n", Status);
+			DPRINT1("ObReferenceObjectByHandle() failed with status 0x%08lx\n", Status);
 			ZwClose(FileHandle);
 			return Status;
 		}
@@ -247,7 +235,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			&IoStatusBlock);
 		if (!Irp)
 		{
-			DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+			DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
 			ZwClose(FileHandle);
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
@@ -260,7 +248,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 		}
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("Sending IOCTL_GET_SYS_BUTTON_CAPS failed with status 0x%08x\n", Status);
+			DPRINT1("Sending IOCTL_GET_SYS_BUTTON_CAPS failed with status 0x%08x\n", Status);
 			ZwClose(FileHandle);
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
@@ -277,7 +265,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 		SysButtonContext = ExAllocatePool(NonPagedPool, sizeof(SYS_BUTTON_CONTEXT));
 		if (!SysButtonContext)
 		{
-			DPRINT("ExAllocatePool() failed\n");
+			DPRINT1("ExAllocatePool() failed\n");
 			ZwClose(FileHandle);
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
@@ -287,7 +275,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 		SysButtonContext->DeviceObject = DeviceObject;
 		if (!SysButtonContext->WorkItem)
 		{
-			DPRINT("IoAllocateWorkItem() failed\n");
+			DPRINT1("IoAllocateWorkItem() failed\n");
 			ZwClose(FileHandle);
 			ExFreePool(SysButtonContext);
 			return STATUS_INSUFFICIENT_RESOURCES;

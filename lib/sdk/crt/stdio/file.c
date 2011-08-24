@@ -1137,41 +1137,6 @@ int CDECL _fileno(FILE* file)
 }
 
 /*********************************************************************
- *		_futime (MSVCRT.@)
- */
-int CDECL _futime(int fd, struct _utimbuf *t)
-{
-  HANDLE hand = fdtoh(fd);
-  FILETIME at, wt;
-
-  if (hand == INVALID_HANDLE_VALUE)
-    return -1;
-
-  if (!t)
-  {
-    time_t currTime;
-    time(&currTime);
-    RtlSecondsSince1970ToTime(currTime, (LARGE_INTEGER *)&at);
-    wt = at;
-  }
-  else
-  {
-    RtlSecondsSince1970ToTime(t->actime, (LARGE_INTEGER *)&at);
-    if (t->actime == t->modtime)
-      wt = at;
-    else
-      RtlSecondsSince1970ToTime(t->modtime, (LARGE_INTEGER *)&wt);
-  }
-
-  if (!SetFileTime(hand, NULL, &at, &wt))
-  {
-    _dosmaperr(GetLastError());
-    return -1 ;
-  }
-  return 0;
-}
-
-/*********************************************************************
  *		_get_osfhandle (MSVCRT.@)
  */
 intptr_t CDECL _get_osfhandle(int fd)
@@ -1751,38 +1716,6 @@ int CDECL _umask(int umask)
 }
 
 /*********************************************************************
- *		_utime (MSVCRT.@)
- */
-int CDECL _utime(const char* path, struct _utimbuf *t)
-{
-  int fd = _open(path, _O_WRONLY | _O_BINARY);
-
-  if (fd > 0)
-  {
-    int retVal = _futime(fd, t);
-    _close(fd);
-    return retVal;
-  }
-  return -1;
-}
-
-/*********************************************************************
- *		_wutime (MSVCRT.@)
- */
-int CDECL _wutime(const wchar_t* path, struct _utimbuf *t)
-{
-  int fd = _wopen(path, _O_WRONLY | _O_BINARY);
-
-  if (fd > 0)
-  {
-    int retVal = _futime(fd, t);
-    _close(fd);
-    return retVal;
-  }
-  return -1;
-}
-
-/*********************************************************************
  *		_write (MSVCRT.@)
  */
 int CDECL _write(int fd, const void* buf, unsigned int count)
@@ -2175,12 +2108,33 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
 /*********************************************************************
  *		fputwc (MSVCRT.@)
  */
-wint_t CDECL fputwc(wint_t wc, FILE* file)
+wint_t CDECL fputwc(wchar_t c, FILE* stream)
 {
-  wchar_t mwc=wc;
-  if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
-    return WEOF;
-  return wc;
+    /* If this is a real file stream (and not some temporary one for
+       sprintf-like functions), check whether it is opened in text mode.
+       In this case, we have to perform an implicit conversion to ANSI. */
+    if (!(stream->_flag & _IOSTRG) && fdesc[stream->_file].wxflag & WX_TEXT)
+    {
+        /* Convert to multibyte in text mode */
+        char mbc[MB_LEN_MAX];
+        int mb_return;
+
+        mb_return = wctomb(mbc, c);
+
+        if(mb_return == -1)
+            return WEOF;
+
+        /* Output all characters */
+        if (fwrite(mbc, mb_return, 1, stream) != 1)
+            return WEOF;
+    }
+    else
+    {
+        if (fwrite(&c, sizeof(c), 1, stream) != 1)
+            return WEOF;
+    }
+
+    return c;
 }
 
 /*********************************************************************

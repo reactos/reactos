@@ -164,6 +164,31 @@ typedef struct _KV8086_STACK_FRAME
     KV86_FRAME V86Frame;
 } KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
 
+/* Diable interrupts and return whether they were enabled before */
+FORCEINLINE
+BOOLEAN
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags;
+    BOOLEAN Return;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Flags = __readeflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
+/* Restore previous interrupt state */
+FORCEINLINE
+VOID
+KeRestoreInterrupts(BOOLEAN WereEnabled)
+{
+    if (WereEnabled) _enable();
+}
+
 //
 // Registers an interrupt handler with an IDT vector
 //
@@ -439,7 +464,7 @@ extern PVOID Ki386IopmSaveArea;
 extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
-extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
+extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR+1];
 extern KDESCRIPTOR KiIdtDescriptor;
 extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern ULONG KeI386NpxPresent;
@@ -457,6 +482,7 @@ extern VOID __cdecl KiTrap08(VOID);
 extern VOID __cdecl KiTrap13(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);
 extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
+extern VOID NTAPI ExpInterlockedPopEntrySListResume(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
@@ -600,13 +626,6 @@ KiDispatchException2Args(IN NTSTATUS Code,
 //
 // Performs a system call
 //
-NTSTATUS
-FORCEINLINE
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    NTSTATUS Result;
 
     /*
      * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
@@ -624,6 +643,14 @@ KiSystemCallTrampoline(IN PVOID Handler,
      *
      */
 #ifdef __GNUC__
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
+    NTSTATUS Result;
+
     __asm__ __volatile__
     (
         "subl %1, %%esp\n"
@@ -639,25 +666,32 @@ KiSystemCallTrampoline(IN PVOID Handler,
           "r"(Handler)
         : "%esp", "%esi", "%edi"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
     __asm
     {
         mov ecx, StackBytes
-        mov edx, Arguments
+        mov esi, Arguments
+        mov eax, Handler
         sub esp, ecx
         mov edi, esp
-        mov esi, edx
         shr ecx, 2
         rep movsd
-        call Handler
-        mov Result, eax
+        call eax
     }
+    /* Return with result in EAX */
+}
 #else
 #error Unknown Compiler
 #endif
 
-    return Result;
-}
 
 //
 // Checks for pending APCs
@@ -699,6 +733,7 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 //
 // Converts a base thread to a GUI thread
 //
+#ifdef __GNUC__
 NTSTATUS
 FORCEINLINE
 KiConvertToGuiThread(VOID)
@@ -722,35 +757,26 @@ KiConvertToGuiThread(VOID)
      * on its merry way.
      *
      */
-#ifdef __GNUC__
     __asm__ __volatile__
     (
-        "movl %%ebp, %1\n"
-        "subl %%esp, %1\n"
-        "call _PsConvertToGuiThread@0\n"
-        "addl %%esp, %1\n"
-        "movl %1, %%ebp\n"
-        "movl %%eax, %0\n"
-        : "=r"(Result), "=r"(StackFrame)
+        "movl %%ebp, %1\n\t"
+        "subl %%esp, %1\n\t"
+        "call _PsConvertToGuiThread@0\n\t"
+        "addl %%esp, %1\n\t"
+        "movl %1, %%ebp"
+        : "=a"(Result), "=r"(StackFrame)
         :
         : "%esp", "%ecx", "%edx", "memory"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
-    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
-    __asm
-    {
-        mov StackFrame, ebp
-        sub StackFrame, esp
-        call PsConvertToGuiThread
-        add StackFrame, esp
-        mov ebp, StackFrame
-        mov Result, eax
-    }
+NTSTATUS
+NTAPI
+KiConvertToGuiThread(VOID);
 #else
 #error Unknown Compiler
 #endif
-    return Result;
-}
 
 //
 // Switches from boot loader to initial kernel stack
@@ -803,7 +829,7 @@ KiIret(VOID)
 #elif defined(_MSC_VER)
     __asm
     {
-        iret
+        iretd
     }
 #else
 #error Unsupported compiler
@@ -842,6 +868,13 @@ Ki386PerfEnd(VOID)
              KeGetCurrentPrcb()->InterruptCount,
              KeGetCurrentPrcb()->KeSystemCalls,
              KeGetContextSwitches(KeGetCurrentPrcb()));
+}
+
+FORCEINLINE
+PULONG
+KiGetUserModeStackAddress(void)
+{
+    return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
 
 #endif

@@ -35,133 +35,94 @@ static const ULONG HatchBrushes[NB_HATCH_STYLES][8] =
     {0x7E, 0xBD, 0xDB, 0xE7, 0xE7, 0xDB, 0xBD, 0x7E}  /* HS_DIAGCROSS  */
 };
 
-
-PVOID
+BOOL
 FASTCALL
-AllocateObjectAttr(VOID)
+IntGdiSetBrushOwner(PBRUSH pbr, ULONG ulOwner)
 {
-  PTHREADINFO pti;
-  PPROCESSINFO ppi;
-  PVOID pAttr;
-  PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
-  PGDI_OBJ_ATTR_ENTRY pGdiObjAttrEntry;
-  int i;
+    // FIXME:
+    if (pbr->flAttrs & GDIBRUSH_IS_GLOBAL) return TRUE;
 
-  pti = PsGetCurrentThreadWin32Thread();
-  if (pti->pgdiBrushAttr)
-  {
-     pAttr = pti->pgdiBrushAttr; // Get the free one.
-     pti->pgdiBrushAttr = NULL;
-     return pAttr;
-  }
+    if ((ulOwner == GDI_OBJ_HMGR_PUBLIC) || ulOwner == GDI_OBJ_HMGR_NONE)
+    {
+        // Deny user access to User Data.
+        GDIOBJ_vSetObjectAttr(&pbr->BaseObject, NULL);
+        // FIXME: deallocate brush attr
+    }
 
-  ppi = PsGetCurrentProcessWin32Process();
+    if (ulOwner == GDI_OBJ_HMGR_POWNED)
+    {
+        // Allow user access to User Data.
+        GDIOBJ_vSetObjectAttr(&pbr->BaseObject, pbr->pBrushAttr);
+        // FIXME: allocate brush attr
+    }
 
-  if (!ppi->pBrushAttrList) // If set point is null, allocate new group.
-  {
-     pGdiObjAttrEntry = EngAllocUserMem(sizeof(GDI_OBJ_ATTR_ENTRY), 0);
+    GDIOBJ_vSetObjectOwner(&pbr->BaseObject, ulOwner);
 
-     if (!pGdiObjAttrEntry)
-     {
-        DPRINT1("Attr Failed User Allocation!\n");
-        return NULL;
-     }
-
-     DPRINT("AllocObjectAttr User 0x%x\n",pGdiObjAttrEntry);
-
-     pGdiObjAttrFreeList = ExAllocatePoolWithTag( PagedPool,
-                                                  sizeof(GDI_OBJ_ATTR_FREELIST),
-                                                  GDITAG_BRUSH_FREELIST);
-     if ( !pGdiObjAttrFreeList )
-     {
-        EngFreeUserMem(pGdiObjAttrEntry);
-        return NULL;
-     }
-
-     RtlZeroMemory(pGdiObjAttrFreeList, sizeof(GDI_OBJ_ATTR_FREELIST));
-
-     DPRINT("AllocObjectAttr Ex 0x%x\n",pGdiObjAttrFreeList);
-
-     InsertHeadList( &ppi->GDIBrushAttrFreeList, &pGdiObjAttrFreeList->Entry);
-
-     pGdiObjAttrFreeList->nEntries = GDIOBJATTRFREE;
-     // Start at the bottom up and set end of free list point.
-     ppi->pBrushAttrList = &pGdiObjAttrEntry->Attr[GDIOBJATTRFREE-1];
-     // Build the free attr list.
-     for ( i = 0; i < GDIOBJATTRFREE; i++)
-     {
-         pGdiObjAttrFreeList->AttrList[i] = &pGdiObjAttrEntry->Attr[i];
-     }
-  }
-
-  pAttr = ppi->pBrushAttrList;
-  pGdiObjAttrFreeList = (PGDI_OBJ_ATTR_FREELIST)ppi->GDIBrushAttrFreeList.Flink;
-
-  // Free the list when it is full!
-  if ( pGdiObjAttrFreeList->nEntries-- == 1)
-  {  // No more free entries, so yank the list.
-     RemoveEntryList( &pGdiObjAttrFreeList->Entry );
-
-     ExFreePoolWithTag( pGdiObjAttrFreeList, GDITAG_BRUSH_FREELIST );
-
-     if ( IsListEmpty( &ppi->GDIBrushAttrFreeList ) )
-     {
-        ppi->pBrushAttrList = NULL;
-        return pAttr;
-     }
-
-     pGdiObjAttrFreeList = (PGDI_OBJ_ATTR_FREELIST)ppi->GDIBrushAttrFreeList.Flink;
-  }
-
-  ppi->pBrushAttrList = pGdiObjAttrFreeList->AttrList[pGdiObjAttrFreeList->nEntries-1];
-
-  return pAttr;
+    return TRUE;
 }
+
+BOOL
+FASTCALL
+GreSetBrushOwner(HBRUSH hBrush, ULONG ulOwner)
+{
+    BOOL Ret;
+    PBRUSH pbrush;
+
+    pbrush = BRUSH_ShareLockBrush(hBrush);
+    Ret = IntGdiSetBrushOwner(pbrush, ulOwner);
+    BRUSH_ShareUnlockBrush(pbrush);
+    return Ret;
+}
+
+BOOL
+NTAPI
+BRUSH_bAllocBrushAttr(PBRUSH pbr)
+{
+    PPROCESSINFO ppi;
+    BRUSH_ATTR *pBrushAttr;
+
+    ppi = PsGetCurrentProcessWin32Process();
+    ASSERT(ppi);
+
+    pBrushAttr = GdiPoolAllocate(ppi->pPoolDcAttr);
+    if (!pBrushAttr)
+    {
+        DPRINT1("Could not allocate brush attr\n");
+        return FALSE;
+    }
+
+    /* Copy the content from the kernel mode dc attr */
+    pbr->pBrushAttr = pBrushAttr;
+    *pbr->pBrushAttr = pbr->BrushAttr;
+
+    /* Set the object attribute in the handle table */
+    GDIOBJ_vSetObjectAttr(&pbr->BaseObject, pBrushAttr);
+
+    DPRINT("BRUSH_bAllocBrushAttr: pbr=%p, pbr->pdcattr=%p\n", pbr, pbr->pBrushAttr);
+    return TRUE;
+}
+
 
 VOID
-FASTCALL
-FreeObjectAttr(PVOID pAttr)
+NTAPI
+BRUSH_vFreeBrushAttr(PBRUSH pbr)
 {
-  PTHREADINFO pti;
-  PPROCESSINFO ppi;
-  PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
+#if 0
+    PPROCESSINFO ppi;
 
-  pti = PsGetCurrentThreadWin32Thread();
+    if (pbrush->pBrushAttr == &pbrush->BrushAttr) return;
 
-  if (!pti) return;
+    /* Reset the object attribute in the handle table */
+    GDIOBJ_vSetObjectAttr(&pbr->BaseObject, NULL);
 
-  if (!pti->pgdiBrushAttr)
-  {  // If it is null, just cache it for the next time.
-     pti->pgdiBrushAttr = pAttr;
-     return;
-  }
-
-  ppi = PsGetCurrentProcessWin32Process();
-
-  pGdiObjAttrFreeList = (PGDI_OBJ_ATTR_FREELIST)ppi->GDIBrushAttrFreeList.Flink;
-
-  // We add to the list of free entries, so this will grows!
-  if ( IsListEmpty(&ppi->GDIBrushAttrFreeList) ||
-       pGdiObjAttrFreeList->nEntries == GDIOBJATTRFREE )
-  {
-     pGdiObjAttrFreeList = ExAllocatePoolWithTag( PagedPool,
-                                                  sizeof(GDI_OBJ_ATTR_FREELIST),
-                                                  GDITAG_BRUSH_FREELIST);
-     if ( !pGdiObjAttrFreeList )
-     {
-        return;
-     }
-     InsertHeadList( &ppi->GDIBrushAttrFreeList, &pGdiObjAttrFreeList->Entry);
-     pGdiObjAttrFreeList->nEntries = 0;
-  }
-  // Up count, save the entry and set end of free list point.
-  ++pGdiObjAttrFreeList->nEntries; // Top Down...
-  pGdiObjAttrFreeList->AttrList[pGdiObjAttrFreeList->nEntries-1] = pAttr;
-  ppi->pBrushAttrList = pAttr;
-
-  return;
+    /* Free memory from the process gdi pool */
+    ppi = PsGetCurrentProcessWin32Process();
+    ASSERT(ppi);
+    GdiPoolFree(ppi->pPoolBrushAttr, pbr->pBrushAttr);
+#endif
+    /* Reset to kmode brush attribute */
+    pbr->pBrushAttr = &pbr->BrushAttr;
 }
-
 
 BOOL
 INTERNAL_CALL
@@ -171,8 +132,14 @@ BRUSH_Cleanup(PVOID ObjectBody)
     if (pbrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
     {
         ASSERT(pbrush->hbmPattern);
-        GDIOBJ_SetOwnership(pbrush->hbmPattern, PsGetCurrentProcess());
+        GreSetObjectOwner(pbrush->hbmPattern, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(pbrush->hbmPattern);
+    }
+
+    /* Check if there is a usermode attribute */
+    if (pbrush->pBrushAttr != &pbrush->BrushAttr)
+    {
+        BRUSH_vFreeBrushAttr(pbrush);
     }
 
     /* Free the kmode styles array of EXTPENS */
@@ -291,9 +258,9 @@ IntGdiCreateDIBBrush(
     pbrush->hbmPattern = hPattern;
     /* FIXME: Fill in the rest of fields!!! */
 
-    GDIOBJ_SetOwnership(hPattern, NULL);
+    GreSetObjectOwner(hPattern, GDI_OBJ_HMGR_PUBLIC);
 
-    BRUSH_UnlockBrush(pbrush);
+    GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
     return hBrush;
 }
@@ -333,9 +300,9 @@ IntGdiCreateHatchBrush(
     pbrush->hbmPattern = hPattern;
     pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
 
-    GDIOBJ_SetOwnership(hPattern, NULL);
+    GreSetObjectOwner(hPattern, GDI_OBJ_HMGR_PUBLIC);
 
-    BRUSH_UnlockBrush(pbrush);
+    GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
     return hBrush;
 }
@@ -369,9 +336,9 @@ IntGdiCreatePatternBrush(
     pbrush->hbmPattern = hPattern;
     /* FIXME: Fill in the rest of fields!!! */
 
-    GDIOBJ_SetOwnership(hPattern, NULL);
+    GreSetObjectOwner(hPattern, GDI_OBJ_HMGR_PUBLIC);
 
-    BRUSH_UnlockBrush(pbrush);
+    GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
     return hBrush;
 }
@@ -394,10 +361,10 @@ IntGdiCreateSolidBrush(
 
     pbrush->flAttrs |= GDIBRUSH_IS_SOLID;
 
-    pbrush->BrushAttr.lbColor = Color;
+    pbrush->BrushAttr.lbColor = Color & 0x00FFFFFF;
     /* FIXME: Fill in the rest of fields!!! */
 
-    BRUSH_UnlockBrush(pbrush);
+    GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
     return hBrush;
 }
@@ -418,7 +385,7 @@ IntGdiCreateNullBrush(VOID)
     hBrush = pbrush->BaseObject.hHmgr;
 
     pbrush->flAttrs |= GDIBRUSH_IS_NULL;
-    BRUSH_UnlockBrush(pbrush);
+    GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
     return hBrush;
 }
@@ -429,12 +396,12 @@ IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
 {
     PBRUSH pbrush;
 
-    pbrush = BRUSH_LockBrush(hBrush);
+    pbrush = BRUSH_ShareLockBrush(hBrush);
     if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
     {
         pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
     }
-    BRUSH_UnlockBrush(pbrush);
+    BRUSH_ShareUnlockBrush(pbrush);
 }
 
 

@@ -5,7 +5,8 @@
  * PURPOSE:         Provides name parsing and other support routines for FSDs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
- *                  Pierre Schweitzer (pierre.schweitzer@reactos.org) 
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -23,9 +24,78 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
     USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, StarFound = MAXUSHORT;
+    UNICODE_STRING IntExpression;
     PAGED_CODE();
 
+    /* Check if we were given strings at all */
+    if (!Name->Length || !Expression->Length)
+    {
+        /* Return TRUE if both strings are empty, otherwise FALSE */
+        if (Name->Length == 0 && Expression->Length == 0)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    /* Check for a shortcut: just one wildcard */
+    if (Expression->Length == sizeof(WCHAR))
+    {
+        if (Expression->Buffer[0] == L'*')
+            return TRUE;
+    }
+
     ASSERT(!IgnoreCase || UpcaseTable);
+
+    /* Another shortcut, wildcard followed by some string */
+    if (Expression->Buffer[0] == L'*')
+    {
+        /* Copy Expression to our local variable */
+        IntExpression = *Expression;
+
+        /* Skip the first char */
+        IntExpression.Buffer++;
+        IntExpression.Length -= sizeof(WCHAR);
+
+        /* Continue only if the rest of the expression does NOT contain
+           any more wildcards */
+        if (!FsRtlDoesNameContainWildCards(&IntExpression))
+        {
+            /* Check for a degenerate case */
+            if (Name->Length < (Expression->Length - sizeof(WCHAR)))
+                return FALSE;
+
+            /* Calculate position */
+            NamePosition = (Name->Length - IntExpression.Length) / sizeof(WCHAR);
+
+            /* Compare */
+            if (!IgnoreCase)
+            {
+                /* We can just do a byte compare */
+                return RtlEqualMemory(IntExpression.Buffer,
+                                      Name->Buffer + NamePosition,
+                                      IntExpression.Length);
+            }
+            else
+            {
+                /* Not so easy, need to upcase and check char by char */
+                for (ExpressionPosition = 0; ExpressionPosition < (IntExpression.Length / sizeof(WCHAR)); ExpressionPosition++)
+                {
+                    /* Assert that expression is already upcased! */
+                    ASSERT(IntExpression.Buffer[ExpressionPosition] == UpcaseTable[IntExpression.Buffer[ExpressionPosition]]);
+
+                    /* Now compare upcased name char with expression */
+                    if (UpcaseTable[Name->Buffer[NamePosition + ExpressionPosition]] !=
+                        IntExpression.Buffer[ExpressionPosition])
+                    {
+                        return FALSE;
+                    }
+                }
+
+                /* It matches */
+                return TRUE;
+            }
+        }
+    }
 
     while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
     {
@@ -41,15 +111,20 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             switch (Expression->Buffer[ExpressionPosition])
             {
                 case L'*':
-                    StarFound = ExpressionPosition++;
+                    StarFound = MAXUSHORT;
                     break;
 
                 case L'?':
-                    ExpressionPosition++;
+                    if (++ExpressionPosition == Expression->Length / sizeof(WCHAR))
+                    {
+                        NamePosition = Name->Length / sizeof(WCHAR);
+                        break;
+                    }
+
                     MatchingChars = NamePosition;
-                    while ((IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                                         Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition] &&
-                           NamePosition < Name->Length / sizeof(WCHAR))
+                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                           (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                         Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
                     {
                         NamePosition++;
                     }
@@ -61,8 +136,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                     break;
 
                 case DOS_DOT:
-                    while (Name->Buffer[NamePosition] != L'.' &&
-                           NamePosition < Name->Length / sizeof(WCHAR))
+                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                           Name->Buffer[NamePosition] != L'.')
                     {
                         NamePosition++;
                     }
@@ -88,6 +163,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
             {
                 NamePosition = Name->Length / sizeof(WCHAR);
+                break;
             }
         }
         else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
@@ -107,16 +183,16 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         else if (StarFound != MAXUSHORT)
         {
             ExpressionPosition = StarFound + 1;
-            while ((IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                    Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition] &&
-                   NamePosition < Name->Length / sizeof(WCHAR))
+            while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                   (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                    Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
             {
                 NamePosition++;
             }
         }
         else
         {
-            NamePosition = Name->Length / sizeof(WCHAR);
+            break;
         }
     }
     if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
@@ -163,7 +239,7 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
     UNICODE_STRING UpcaseName1;
     UNICODE_STRING UpcaseName2;
     BOOLEAN StringsAreEqual, MemoryAllocated = FALSE;
-    ULONG i;
+    USHORT i;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -255,8 +331,8 @@ FsRtlDissectName(IN UNICODE_STRING Name,
                  OUT PUNICODE_STRING FirstPart,
                  OUT PUNICODE_STRING RemainingPart)
 {
-    ULONG FirstPosition, i;
-    ULONG SkipFirstSlash = 0;
+    USHORT FirstPosition, i;
+    USHORT SkipFirstSlash = 0;
     PAGED_CODE();
 
     /* Zero the strings before continuing */
@@ -379,7 +455,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
     if (IgnoreCase && !UpcaseTable)
     {
         Status = RtlUpcaseUnicodeString(&IntName, Name, TRUE);
-        if (Status != STATUS_SUCCESS)
+        if (!NT_SUCCESS(Status))
         {
             ExRaiseStatus(Status);
         }

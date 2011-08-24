@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
- 
+
 // Arguments for idt
 #define INT_32_DPL0                 HEX(08E00)
 #define INT_32_DPL3                 HEX(0EE00)
@@ -43,7 +43,7 @@
 #else
 #define LOCK
 #define ACQUIRE_SPINLOCK(x, y)
-#define RELEASE_SPINLOCK(x) 
+#define RELEASE_SPINLOCK(x)
 #endif
 
 //
@@ -138,7 +138,7 @@ MACRO(KiEnterTrap, Flags)
     if (Flags AND KI_DONT_SAVE_SEGS)
 
         /* Initialize TrapFrame segment registers with sane values */
-        mov eax, 0x23
+        mov eax, KGDT_R3_DATA OR 3
         mov ecx, fs
         mov [esp + KTRAP_FRAME_DS], eax
         mov [esp + KTRAP_FRAME_ES], eax
@@ -217,11 +217,18 @@ MACRO(KiCallHandler, Handler)
 ENDM
 
 MACRO(TRAP_ENTRY, Trap, Flags)
-EXTERN @&Trap&Handler@4 :PROC
+    EXTERN @&Trap&Handler@4 :PROC
     PUBLIC _&Trap
-    _&Trap:
-    KiEnterTrap Flags
-    KiCallHandler @&Trap&Handler@4
+    .PROC &Trap
+        /* Generate proper debugging symbols */
+        FPO 0, 0, 0, 0, 1, FRAME_TRAP
+
+        /* Common code to create the trap frame */
+        KiEnterTrap Flags
+
+        /* Call the C handler */
+        KiCallHandler @&Trap&Handler@4
+    .ENDP &Trap
 ENDM
 
 #define KI_RESTORE_EAX        HEX(001)
@@ -329,7 +336,7 @@ PUBLIC @&Name&@4
     if (Flags AND KI_RESTORE_EFLAGS)
 
         /* Restore EFLAGS */
-        popf
+        popfd
 
     endif
 
@@ -343,7 +350,7 @@ PUBLIC @&Name&@4
     elseif (Flags AND KI_EXIT_IRET)
 
         /* Return with iret */
-        iret
+        iretd
 
     elseif (Flags AND KI_EXIT_JMP)
 

@@ -9,6 +9,7 @@
 	<library>rpcrt4</library>
 	<library>pseh</library>
 	<file>eventlog.c</file>
+	<file>eventsource.c</file>
 	<file>logport.c</file>
 	<file>eventlog.rc</file>
 	<file>rpc.c</file>

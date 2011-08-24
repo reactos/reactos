@@ -1,5 +1,4 @@
 #include "precomp.h"
-#include <devguid.h>
 
 typedef struct
 {

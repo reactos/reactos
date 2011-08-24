@@ -540,6 +540,7 @@ NtGdiSetBoundsRect(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            DC_UnlockDc(pdc);
             _SEH2_YIELD(return 0;)
         }
         _SEH2_END;
@@ -550,6 +551,6 @@ NtGdiSetBoundsRect(
 
     if (flags & DCB_ENABLE) pdc->fs |= DC_ACCUM_APP;
     if (flags & DCB_DISABLE) pdc->fs &= ~DC_ACCUM_APP;
-    DC_UnlockDc( pdc );
+    DC_UnlockDc(pdc);
     return ret;
 }

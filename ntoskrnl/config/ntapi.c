@@ -937,8 +937,8 @@ NtInitializeRegistry(IN USHORT Flag)
     /* Initialize the hives and lazy flusher */
     CmpCmdInit(SetupBoot);
 
-    /* FIXME: Save version data */
-    //CmpSetVersionData();
+    /* Save version data */
+    CmpSetVersionData();
 
     /* Release the registry lock */
     //CmpUnlockRegistry();

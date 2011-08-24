@@ -143,6 +143,7 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
 
     /* Add the session object */
     hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_ISVISIBLE);
+    if (FAILED(hr)) goto done;
 
     /* Pass the script to the engine */
     hr = IActiveScriptParse64_ParseScriptText(pActiveScriptParse, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);

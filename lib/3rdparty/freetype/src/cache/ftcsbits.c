@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType sbits manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009 by             */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -160,7 +160,11 @@
            !CHECK_CHAR( slot->bitmap_top  ) ||
            !CHECK_CHAR( xadvance )          ||
            !CHECK_CHAR( yadvance )          )
+      {
+        FT_TRACE2(( "ftc_snode_load:"
+                    " glyph too large for small bitmap cache\n"));
         goto BadGlyph;
+      }
 
       sbit->width     = (FT_Byte)bitmap->width;
       sbit->height    = (FT_Byte)bitmap->rows;
@@ -191,7 +195,7 @@
       sbit->width  = 255;
       sbit->height = 0;
       sbit->buffer = NULL;
-      error        = 0;
+      error        = FTC_Err_Ok;
       if ( asize )
         *asize = 0;
     }
@@ -218,7 +222,7 @@
     total = clazz->family_get_count( family, cache->manager );
     if ( total == 0 || gindex >= total )
     {
-      error = FT_Err_Invalid_Argument;
+      error = FTC_Err_Invalid_Argument;
       goto Exit;
     }
 

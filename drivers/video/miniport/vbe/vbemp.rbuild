@@ -6,4 +6,5 @@
 	<file>edid.c</file>
 	<file>vbemp.c</file>
 	<file>vbemp.rc</file>
+	<pch>vbemp.h</pch>
 </module>

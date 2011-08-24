@@ -787,6 +787,7 @@ DATETIME_LButtonDown (DATETIME_INFO *infoPtr, INT x, INT y)
 
     if (infoPtr->select == DTHT_MCPOPUP) {
         RECT rcMonthCal;
+        POINT pos;
         SendMessageW(infoPtr->hMonthCal, MCM_GETMINREQRECT, 0, (LPARAM)&rcMonthCal);
 
         /* FIXME: button actually is only depressed during dropdown of the */
@@ -795,17 +796,16 @@ DATETIME_LButtonDown (DATETIME_INFO *infoPtr, INT x, INT y)
 
         /* recalculate the position of the monthcal popup */
         if(infoPtr->dwStyle & DTS_RIGHTALIGN)
-            infoPtr->monthcal_pos.x = infoPtr->calbutton.left - 
-                (rcMonthCal.right - rcMonthCal.left);
+            pos.x = infoPtr->calbutton.left - (rcMonthCal.right - rcMonthCal.left);
         else
             /* FIXME: this should be after the area reserved for the checkbox */
-            infoPtr->monthcal_pos.x = infoPtr->rcDraw.left;
+            pos.x = infoPtr->rcDraw.left;
 
-        infoPtr->monthcal_pos.y = infoPtr->rcClient.bottom;
-        ClientToScreen (infoPtr->hwndSelf, &(infoPtr->monthcal_pos));
-        SetWindowPos(infoPtr->hMonthCal, 0, infoPtr->monthcal_pos.x,
-            infoPtr->monthcal_pos.y, rcMonthCal.right - rcMonthCal.left,
-            rcMonthCal.bottom - rcMonthCal.top, 0);
+        pos.y = infoPtr->rcClient.bottom;
+        OffsetRect( &rcMonthCal, pos.x, pos.y );
+        MapWindowPoints( infoPtr->hwndSelf, 0, (POINT *)&rcMonthCal, 2 );
+        SetWindowPos(infoPtr->hMonthCal, 0, rcMonthCal.left, rcMonthCal.top,
+                     rcMonthCal.right - rcMonthCal.left, rcMonthCal.bottom - rcMonthCal.top, 0);
 
         if(IsWindowVisible(infoPtr->hMonthCal)) {
             ShowWindow(infoPtr->hMonthCal, SW_HIDE);
@@ -1368,7 +1368,7 @@ DATETIME_Destroy (DATETIME_INFO *infoPtr)
 
 
 static INT
-DATETIME_GetText (DATETIME_INFO *infoPtr, INT count, LPWSTR dst)
+DATETIME_GetText (const DATETIME_INFO *infoPtr, INT count, LPWSTR dst)
 {
     WCHAR buf[80];
     int i;

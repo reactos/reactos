@@ -98,7 +98,7 @@ DumpQueueHead(PQUEUE_HEAD QueueHead)
     DPRINT1("    PingState %x\n", QueueHead->Token.Bits.PingState);        
     DPRINT1("    SplitTransactionState %x\n", QueueHead->Token.Bits.SplitTransactionState);
     DPRINT1("    ErrorCounter %x\n", QueueHead->Token.Bits.ErrorCounter);
-    DPRINT1("    First TransferDescriptor %x\n", QueueHead->TransferDescriptor);
+    DPRINT1("    First TransferDescriptor %x\n", QueueHead->FirstTransferDescriptor);
 }
 
 VOID

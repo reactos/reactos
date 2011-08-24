@@ -31,7 +31,7 @@
     if (x & ObpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define OBTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define OBTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //
@@ -578,6 +578,7 @@ ObGetProcessHandleCount(
 //
 extern ULONG ObpTraceLevel;
 extern KEVENT ObpDefaultObject;
+extern KGUARDED_MUTEX ObpDeviceMapLock;
 extern POBJECT_TYPE ObpTypeObjectType;
 extern POBJECT_TYPE ObSymbolicLinkType;
 extern POBJECT_TYPE ObpTypeObjectType;

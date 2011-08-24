@@ -896,17 +896,17 @@ DWORD LogfGetCurrentRecord(PLOGFILE LogFile)
 
 BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile, ULONG ulNumber)
 {
-    int i;
+    DWORD i;
 
     if (ulNumber != LogFile->OffsetInfo[0].EventNumber)
     {
         return FALSE;
     }
 
-    for (i=0;i<LogFile->OffsetInfoNext-1; i++)
+    for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
     {
-        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i+1].EventNumber;
-        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i+1].EventOffset;
+        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
+        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
     }
     LogFile->OffsetInfoNext--;
     return TRUE;
@@ -959,7 +959,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     PEVENTLOGRECORD pRec;
     SYSTEMTIME SysTime;
     WCHAR *str;
-    UINT i, pos, nStrings;
+    UINT i, pos;
     PBYTE Buffer;
 
     dwRecSize =
@@ -983,7 +983,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     dwRecSize += 4;
 
-    Buffer = (BYTE *) HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
+    Buffer = HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
 
     if (!Buffer)
     {
@@ -1002,7 +1002,6 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     pRec->EventID = dwEventId;
     pRec->EventType = wType;
-    pRec->NumStrings = wNumStrings;
     pRec->EventCategory = wCategory;
 
     pos = sizeof(EVENTLOGRECORD);
@@ -1024,14 +1023,13 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     }
 
     pRec->StringOffset = pos;
-    for (i = 0, str = lpStrings, nStrings = 0; i < wNumStrings; i++)
+    for (i = 0, str = lpStrings; i < wNumStrings; i++)
     {
         lstrcpyW((WCHAR *) (Buffer + pos), str);
         pos += (lstrlenW(str) + 1) * sizeof(WCHAR);
         str += lstrlenW(str) + 1;
-        nStrings++;
     }
-    pRec->NumStrings = nStrings;
+    pRec->NumStrings = wNumStrings;
 
     pRec->DataOffset = pos;
     if (dwDataSize)
@@ -1048,4 +1046,58 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     *lpRecSize = dwRecSize;
     return Buffer;
+}
+
+
+VOID
+LogfReportEvent(WORD wType,
+                WORD wCategory,
+                DWORD dwEventId,
+                WORD wNumStrings,
+                WCHAR *lpStrings,
+                DWORD dwDataSize,
+                LPVOID lpRawData)
+{
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    PEVENTSOURCE pEventSource = NULL;
+    PBYTE logBuffer;
+    DWORD lastRec;
+    DWORD recSize;
+    DWORD dwError;
+
+    if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
+    {
+        szComputerName[0] = 0;
+    }
+
+    pEventSource = GetEventSourceByName(L"EventLog");
+    if (pEventSource == NULL)
+    {
+        return;
+    }
+
+    lastRec = LogfGetCurrentRecord(pEventSource->LogFile);
+
+    logBuffer = LogfAllocAndBuildNewRecord(&recSize,
+                                           lastRec,
+                                           wType,
+                                           wCategory,
+                                           dwEventId,
+                                           pEventSource->szName,
+                                           (LPCWSTR)szComputerName,
+                                           0,
+                                           NULL,
+                                           wNumStrings,
+                                           lpStrings,
+                                           dwDataSize,
+                                           lpRawData);
+
+    dwError = LogfWriteData(pEventSource->LogFile, recSize, logBuffer);
+    if (!dwError)
+    {
+        DPRINT1("ERROR WRITING TO EventLog %S\n", pEventSource->LogFile->FileName);
+    }
+
+    LogfFreeRecord(logBuffer);
 }

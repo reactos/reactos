@@ -2,8 +2,7 @@
 /* $Id$
  *
  */
-#include <ntddk.h>
-#include <tdi.h>
+#include "precomp.h"
 
 /*
  * @unimplemented

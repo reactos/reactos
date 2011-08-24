@@ -61,23 +61,46 @@ Author:
 //
 // Dll Characteristics for LdrLoadDll
 //
-#define LDR_IGNORE_CODE_AUTHZ_LEVEL             0x00001000
+#define LDR_IGNORE_CODE_AUTHZ_LEVEL                 0x00001000
 
 //
 // LdrAddRef Flags
 //
-#define LDR_PIN_MODULE                          0x00000001
+#define LDR_ADDREF_DLL_PIN                          0x00000001
 
 //
 // LdrLockLoaderLock Flags
 //
-#define LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS  0x00000001
-#define LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY      0x00000002
+#define LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS   0x00000001
+#define LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY          0x00000002
+
+//
+// LdrUnlockLoaderLock Flags
+//
+#define LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS 0x00000001
+
+//
+// LdrGetDllHandleEx Flags
+//
+#define LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT    0x00000001
+#define LDR_GET_DLL_HANDLE_EX_PIN                   0x00000002
+
+
+#define LDR_LOCK_LOADER_LOCK_DISPOSITION_INVALID           0
+#define LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED     1
+#define LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED 2
 
 //
 // FIXME: THIS SHOULD *NOT* BE USED!
 //
 #define IMAGE_SCN_TYPE_NOLOAD                   0x00000002
+
+//
+// Loader datafile/imagemapping macros
+//
+#define LDR_IS_DATAFILE(handle)     (((ULONG_PTR)(handle)) & (ULONG_PTR)1)
+#define LDR_IS_IMAGEMAPPING(handle) (((ULONG_PTR)(handle)) & (ULONG_PTR)2)
+#define LDR_IS_RESOURCE(handle)     (LDR_IS_IMAGEMAPPING(handle) || LDR_IS_DATAFILE(handle))
 
 //
 // Loader Data stored in the PEB
@@ -187,5 +210,21 @@ typedef struct _ALT_RESOURCE_MODULE
     ULONG ErrorCode;
 #endif
 } ALT_RESOURCE_MODULE, *PALT_RESOURCE_MODULE;
+
+//
+// Callback function for LdrEnumerateLoadedModules
+//
+typedef VOID (NTAPI LDR_ENUM_CALLBACK)(IN PLDR_DATA_TABLE_ENTRY ModuleInformation, IN PVOID Parameter, OUT BOOLEAN *Stop);
+typedef LDR_ENUM_CALLBACK *PLDR_ENUM_CALLBACK;
+
+//
+// DLL Main Routine
+//
+typedef BOOLEAN
+(NTAPI *PDLL_INIT_ROUTINE)(
+    IN PVOID DllHandle,
+    IN ULONG Reason,
+    IN PCONTEXT Context OPTIONAL
+);
 
 #endif

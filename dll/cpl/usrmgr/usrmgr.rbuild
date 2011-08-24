@@ -18,4 +18,5 @@
 	<file>users.c</file>
 	<file>usrmgr.c</file>
 	<file>usrmgr.rc</file>
+	<pch>usrmgr.h</pch>
 </module>

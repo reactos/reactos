@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ntddk.h>
+#include <usb.h>
 
 /* USB Command Register */
 #define EHCI_USBCMD         0x00
@@ -98,8 +99,9 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
         ULONG DWord;
     } Token;
     ULONG BufferPointer[5];
-    
+
     //Software
+    ULONG BufferPointerVA[5];
     ULONG PhysicalAddr;
     struct _QUEUE_TRANSFER_DESCRIPTOR *PreviousDescriptor;
     struct _QUEUE_TRANSFER_DESCRIPTOR *NextDescriptor;
@@ -167,10 +169,13 @@ typedef struct _QUEUE_HEAD
     ULONG PhysicalAddr;
     struct _QUEUE_HEAD *PreviousQueueHead;
     struct _QUEUE_HEAD *NextQueueHead;
-    PQUEUE_TRANSFER_DESCRIPTOR TransferDescriptor;
+    ULONG NumberOfTransferDescriptors;
+    PQUEUE_TRANSFER_DESCRIPTOR FirstTransferDescriptor;
+    PQUEUE_TRANSFER_DESCRIPTOR DeadDescriptor;
     PIRP IrpToComplete;
-	PMDL MdlToFree;
     PKEVENT Event;
+    PMDL Mdl;
+    BOOLEAN FreeMdl;    
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
 /* USBCMD register 32 bits */
@@ -264,14 +269,27 @@ typedef struct _EHCI_CAPS {
     UCHAR PortRoute [8];
 } EHCI_CAPS, *PEHCI_CAPS;
 
+typedef struct _EHCIPORTS
+{
+    ULONG PortNumber;
+    ULONG PortType;
+    USHORT PortStatus;
+    USHORT PortChange;
+} EHCIPORTS, *PEHCIPORTS;
+
 typedef struct _EHCI_HOST_CONTROLLER
 {
+    PDMA_ADAPTER pDmaAdapter;
+    ULONG MapRegisters;
     ULONG OpRegisters;
     EHCI_CAPS ECHICaps;
-    PVOID CommonBufferVA;
-    PHYSICAL_ADDRESS CommonBufferPA;
+    ULONG NumberOfPorts;
+    EHCIPORTS Ports[127];
+    PVOID CommonBufferVA[16];
+    PHYSICAL_ADDRESS CommonBufferPA[16];
     ULONG CommonBufferSize;
     PQUEUE_HEAD AsyncListQueue;
+    PQUEUE_HEAD CompletedListQueue;
     KSPIN_LOCK Lock;
 } EHCI_HOST_CONTROLLER, *PEHCI_HOST_CONTROLLER;
 
@@ -305,3 +323,5 @@ SetPeriodicFrameListRegister(PEHCI_HOST_CONTROLLER hcd, ULONG PhysicalAddr);
 ULONG
 GetPeriodicFrameListRegister(PEHCI_HOST_CONTROLLER hcd);
 
+BOOLEAN
+EnumControllerPorts(PEHCI_HOST_CONTROLLER hcd);

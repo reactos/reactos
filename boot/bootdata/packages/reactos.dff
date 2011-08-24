@@ -47,6 +47,7 @@ base\applications\dxdiag\dxdiag.exe                     1
 base\applications\extrac32\extrac32.exe                 1
 base\applications\findstr\findstr.exe                   1
 base\applications\fontview\fontview.exe                 1
+base\applications\iexplore\iexplore.exe                 1
 base\applications\games\solitaire\sol.exe               1
 base\applications\games\spider\spider.exe               1
 base\applications\games\winmine\winmine.exe             1
@@ -60,6 +61,7 @@ base\applications\msconfig\msconfig.exe                 1
 base\applications\mscutils\devmgmt\devmgmt.exe          1
 base\applications\mscutils\eventvwr\eventvwr.exe        1
 base\applications\mscutils\servman\servman.exe          1
+base\applications\mspaint\mspaint.exe                   1
 base\applications\mstsc\mstsc.exe                       1
 base\applications\network\arp\arp.exe                   1
 base\applications\network\dwnl\dwnl.exe                 1
@@ -75,7 +77,6 @@ base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
 base\applications\notepad\notepad.exe                   1
-base\applications\paint\paint.exe                       1
 base\applications\rapps\rapps.exe                       1
 base\applications\regedit\regedit.exe                   4
 base\applications\regedit\clb\clb.dll                   1
@@ -115,6 +116,7 @@ base\shell\explorer-new\explorer_new.exe            4   optional
 base\system\autochk\autochk.exe                     1
 base\system\bootok\bootok.exe                       1
 base\system\expand\expand.exe                       1
+base\system\subst\subst.exe                         1
 base\system\format\format.exe                       1
 base\system\lsass\lsass.exe                         1
 base\system\msiexec\msiexec.exe                     1
@@ -140,6 +142,7 @@ dll\cpl\console\console.dll                         1
 dll\cpl\desk\desk.cpl                               1
 dll\cpl\hdwwiz\hdwwiz.cpl                           1
 dll\cpl\input\input.dll                             1
+dll\cpl\inetcpl\inetcpl.cpl                         1
 dll\cpl\intl\intl.cpl                               1
 dll\cpl\joy\joy.cpl                                 1
 ;dll\cpl\liccpa\liccpa.cpl                          1
@@ -356,6 +359,7 @@ dll\win32\msimtf\msimtf.dll                         1
 dll\win32\msisip\msisip.dll                         1
 dll\win32\msisys.ocx\msisys.ocx                     1
 dll\win32\msnet32\msnet32.dll                       1
+dll\win32\msports\msports.dll                       1
 dll\win32\msrle32\msrle32.dll                       1
 dll\win32\mssign32\mssign32.dll                     1
 dll\win32\mssip32\mssip32.dll                       1
@@ -446,6 +450,7 @@ dll\win32\twain_32\twain_32.dll                     1
 dll\win32\uext2\uext2.dll                           1
 dll\win32\ufat\ufat.dll                             1
 dll\win32\ufatx\ufatx.dll                           1   optional
+dll\win32\unicows\unicows.dll                       1
 dll\win32\untfs\untfs.dll                           1
 dll\win32\updspapi\updspapi.dll                     1
 dll\win32\url\url.dll                               1
@@ -535,14 +540,14 @@ drivers\storage\ide\pciidex\pciidex.sys             2
 ;drivers\usb\miniport\usbuhci\usbuhci.sys           2
 ;drivers\usb\usbhub\usbhub.sys                      2
 ;drivers\usb\usbport\usbport.sys                    2
-drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
+;drivers\usb\nt4compat\usbdriver\usbdriver.sys      2
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1
 drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
-drivers\video\font\ftfd\ftfd.dll                   1
+drivers\video\font\ftfd\ftfd.dll                    1
 
 drivers\wdm\audio\filters\kmixer\kmixer.sys         2
 drivers\wdm\audio\sysaudio\sysaudio.sys             2
@@ -654,9 +659,11 @@ media\inf\acpi.inf                                  6
 media\inf\battery.inf                               6
 media\inf\cdrom.inf                                 6
 media\inf\cpu.inf                                   6
+media\inf\disk.inf                                  6
 media\inf\display.inf                               6
 media\inf\font.inf                                  6
 media\inf\fdc.inf                                   6
+media\inf\hal.inf                                   6
 media\inf\hdc.inf                                   6
 media\inf\intl.inf                                  6
 media\inf\layout.inf                                6
@@ -672,6 +679,7 @@ media\inf\nettcpip.inf                              6
 media\inf\ports.inf                                 6
 media\inf\scsi.inf                                  6
 media\inf\syssetup.inf                              6
+media\inf\unknown.inf                               6
 media\inf\usbport.inf                               6
 media\inf\usb.inf                                   6
 media\inf\usbstor.inf                               6
@@ -794,6 +802,7 @@ modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   o
 modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
 modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
 modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
+modules\rostests\winetests\imagehlp\imagehlp_winetest.exe                  7   optional
 modules\rostests\winetests\imm32\imm32_winetest.exe                        7   optional
 modules\rostests\winetests\inetcomm\inetcomm_winetest.exe                  7   optional
 modules\rostests\winetests\inetmib1\inetmib1_winetest.exe                  7   optional
@@ -848,6 +857,7 @@ modules\rostests\winetests\spoolss\spoolss_winetest.exe                    7   o
 modules\rostests\winetests\twain_32\twain_32_winetest.exe                  7   optional
 modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
 modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
+modules\rostests\winetests\userenv\userenv_winetest.exe                    7   optional
 modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
 modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
 modules\rostests\winetests\version\version_winetest.exe                    7   optional
@@ -862,6 +872,7 @@ modules\rostests\winetests\xmllite\xmllite_winetest.exe                    7   o
 
 modules\rostests\apitests\dciman32\dciman32_apitest.exe                    7   optional
 modules\rostests\apitests\gdi32\gdi32_apitest.exe                          7   optional
+modules\rostests\apitests\kernel32\kernel32_apitest.exe                    7   optional
 modules\rostests\apitests\ntdll\ntdll_apitest.exe                          7   optional
 modules\rostests\apitests\user32\user32_apitest.exe                        7   optional
 modules\rostests\apitests\ws2_32\ws2_32_apitest.exe                        7   optional

@@ -9,9 +9,6 @@
  */
 
 #include "desk.h"
-#include "theme.h"
-#include "preview.h"
-#include "appearance.h"
 
 /******************************************************************************/
 
@@ -115,12 +112,14 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									   hwndDlg, AdvAppearanceDlgProc, (LPARAM)g) == IDOK)
 					{
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-						g->Theme = g->ThemeAdv;
-					    g_GlobalData.desktop_color = g->Theme.crColor[COLOR_DESKTOP];
 						g->bHasChanged = TRUE;
+						g->Theme = g->ThemeAdv;
 						g->ThemeId = -1;	/* Customized */
+						g_GlobalData.desktop_color = g->Theme.crColor[COLOR_DESKTOP];
+
 						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_SETCURSEL, (WPARAM)-1, 0);
 						SetDlgItemText(hwndDlg, IDC_APPEARANCE_COLORSCHEME, TEXT(""));
+
 						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
 					}
 					break;
@@ -136,6 +135,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						{
 							g->Theme = Theme;
 							g->ThemeId = ThemeId;
+							g_GlobalData.desktop_color = g->Theme.crColor[COLOR_DESKTOP];
 							SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&Theme);
 						}
 					}

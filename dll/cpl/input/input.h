@@ -1,5 +1,3 @@
-#pragma once
-
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
@@ -9,6 +7,8 @@
 #include <stdarg.h>
 #include <tchar.h>
 #include <process.h>
+
+#include "resource.h"
 
 typedef LONG (CALLBACK *CPLAPPLET_PROC)(VOID);
 
@@ -47,7 +47,7 @@ IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
 INT_PTR CALLBACK
 KeySettingsDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 VOID
-UpdateKeySettingsList();
+UpdateKeySettingsList(VOID);
 
 /* add.c */
 INT_PTR CALLBACK

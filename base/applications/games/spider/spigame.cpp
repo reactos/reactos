@@ -6,13 +6,6 @@
  * PROGRAMMER:   Gregor Schneider
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <tchar.h>
-#include <stdio.h>
-
-#include "resource.h"
-#include "cardlib.h"
 #include "spider.h"
 
 #define NUM_DECK_CARDS     5
@@ -294,8 +287,7 @@ void CreateSpider()
     pDeck->SetPlacement(CS_XJUST_RIGHT, CS_YJUST_BOTTOM, - X_BORDER, - Y_BORDER);
     pDeck->SetDragRule(CS_DRAG_NONE, 0);
     pDeck->SetDropRule(CS_DROP_NONE, 0);
-    pDeck->SetClickProc(DeckClickProc);
-    pDeck->SetDblClickProc(DeckClickProc);
+    pDeck->SetClickReleaseProc(DeckClickProc);
 
     /* Create the row stacks */
     for (i = 0; i < NUM_STACKS; i++)

@@ -35,9 +35,6 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
 /* GLOBALS *******************************************************************/
 
 static LONG NrGuiAppsRunning = 0;
@@ -104,8 +101,6 @@ IntUserManualGuiCheck(LONG Check)
 {
    PPROCESSINFO W32Data;
 
-   DPRINT("Enter IntUserManualGuiCheck\n");
-
    W32Data = PsGetCurrentProcessWin32Process();
    if (0 == Check)
    {
@@ -125,9 +120,6 @@ IntUserManualGuiCheck(LONG Check)
          RemoveGuiApp(W32Data);
       }
    }
-
-   DPRINT("Leave IntUserManualGuiCheck\n");
-
 }
 
 INIT_FUNCTION

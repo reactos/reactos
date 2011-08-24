@@ -27,7 +27,6 @@
 	<file>main.c</file>
 	<file>material.c</file>
 	<file>palette.c</file>
-	<file>parent.c</file>
 	<file>regsvr.c</file>
 	<file>stubs.c</file>
 	<file>surface.c</file>
@@ -35,6 +34,7 @@
 	<file>version.rc</file>
 	<file>vertexbuffer.c</file>
 	<file>viewport.c</file>
+	<pch>ddraw_private.h</pch>
 
 	<dependency>wineheaders</dependency>
 </module>

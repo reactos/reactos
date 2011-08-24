@@ -11,7 +11,17 @@
 
 #define ID_ABOUT    0x1
 
+typedef struct {
+    BOOL    IsAdvancedView;
+} SETTINGS;
+
 HINSTANCE hInstance;
+HWND      hCharmapDlg;
+HWND      hAdvancedDlg;
+HWND      hStatusWnd;
+HICON     hSmIcon;
+HICON     hBgIcon;
+SETTINGS  Settings;
 
 /* Font-enumeration callback */
 static
@@ -133,129 +143,190 @@ ChangeMapFont(HWND hDlg)
     }
 }
 
+// Copy collected characters into the clipboard
+static
+void
+CopyCharacters(HWND hDlg)
+{
+    HWND hText = GetDlgItem(hDlg, IDC_TEXTBOX);
+    DWORD dwStart, dwEnd;
 
+    // Acquire selection limits
+    SendMessage(hText, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+
+    // Test if the whose text is unselected
+    if(dwStart == dwEnd) {
+        
+        // Select the whole text
+        SendMessageW(hText, EM_SETSEL, 0, -1);
+
+        // Copy text
+        SendMessageW(hText, WM_COPY, 0, 0);
+
+        // Restore previous values
+        SendMessageW(hText, EM_SETSEL, (WPARAM)dwStart, (LPARAM)dwEnd);
+
+    } else {
+
+        // Copy text
+        SendMessageW(hText, WM_COPY, 0, 0);
+    }
+}
+
+// Recover charset for the given font
+static
+BYTE
+GetFontMetrics(HWND hWnd, HFONT hFont)
+{
+    TEXTMETRIC tmFont;
+    HGDIOBJ    hOldObj;
+    HDC        hDC;
+
+    hDC = GetDC(hWnd);
+    hOldObj = SelectObject(hDC, hFont);
+    GetTextMetrics(hDC, &tmFont);
+    SelectObject(hDC, hOldObj);
+    ReleaseDC(hWnd, hDC);
+
+    return tmFont.tmCharSet;
+}
+
+// Select a new character
 static
 VOID
-AddCharToSelection(HWND hText,
-                   WCHAR ch)
+AddCharToSelection(HWND hDlg, WCHAR ch)
 {
-    LPWSTR lpText;
-    INT Len = GetWindowTextLength(hText);
+    HWND    hMap = GetDlgItem(hDlg, IDC_FONTMAP);
+    HWND    hText = GetDlgItem(hDlg, IDC_TEXTBOX);
+    HFONT   hFont;
+    LOGFONT lFont;
+    CHARFORMAT cf;
 
-    if (Len != 0)
+    // Retrieve current character selected
+    if (ch == 0)
     {
-        lpText = HeapAlloc(GetProcessHeap(),
-                           0,
-                           (Len + 2) * sizeof(WCHAR));
-
-        if (lpText)
-        {
-            LPWSTR lpStr = lpText;
-
-            SendMessageW(hText,
-                         WM_GETTEXT,
-                         Len + 1,
-                         (LPARAM)lpStr);
-
-            lpStr += Len;
-            *lpStr = ch;
-            lpStr++;
-            *lpStr = L'\0';
-
-            SendMessageW(hText,
-                         WM_SETTEXT,
-                         0,
-                         (LPARAM)lpText);
-
-            HeapFree(GetProcessHeap(),
-                     0,
-                     lpText);
-        }
+        ch = (WCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
+        if (!ch)
+            return;
     }
-    else
-    {
-        WCHAR szText[2];
 
-        szText[0] = ch;
-        szText[1] = L'\0';
+    // Retrieve current selected font
+    hFont = (HFONT)SendMessage(hMap, FM_GETHFONT, 0, 0);
 
-        SendMessageW(hText,
-                     WM_SETTEXT,
-                     0,
-                     (LPARAM)szText);
-    }
+    // Recover LOGFONT structure from hFont
+    if (!GetObject(hFont, sizeof(LOGFONT), &lFont))
+        return;
+
+    // Recover font properties of Richedit control
+    ZeroMemory(&cf, sizeof(cf));
+    cf.cbSize = sizeof(cf);
+    SendMessage(hText, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    // Apply properties of the new font
+    cf.bCharSet = GetFontMetrics(hText, hFont);
+
+    // Update font name
+    wcscpy(cf.szFaceName, lFont.lfFaceName);
+
+    // Update font properties
+    SendMessage(hText, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    // Send selected character to Richedit
+    SendMessage(hText, WM_CHAR, (WPARAM)ch, 0);
 }
 
 
 static
+void
+UpdateSettings(HWND hDlg)
+{
+    if (hDlg == hCharmapDlg)
+    {
+        Settings.IsAdvancedView =
+        SendDlgItemMessage(hDlg, IDC_CHECK_ADVANCED, BM_GETCHECK, 0, 0);
+    }
+
+    if (hDlg == hAdvancedDlg)
+    {
+    }
+}
+
+static
+void
+ChangeView(HWND hWnd)
+{
+    RECT rcCharmap;
+    RECT rcAdvanced;
+    RECT rcPanelExt;
+    RECT rcPanelInt;
+    RECT rcStatus;
+    UINT DeX, DeY;
+    UINT xPos, yPos;
+    UINT Width, Height;
+    UINT DeskTopWidth, DeskTopHeight;
+
+    GetClientRect(hCharmapDlg, &rcCharmap);
+    GetClientRect(hAdvancedDlg, &rcAdvanced);
+    GetWindowRect(hWnd, &rcPanelExt);
+    GetClientRect(hWnd, &rcPanelInt);
+    GetClientRect(hStatusWnd, &rcStatus);
+
+    DeskTopWidth = GetSystemMetrics(SM_CXFULLSCREEN);
+    DeskTopHeight = GetSystemMetrics(SM_CYFULLSCREEN);
+
+    DeX = (rcPanelExt.right - rcPanelExt.left) - rcPanelInt.right;
+    DeY = (rcPanelExt.bottom - rcPanelExt.top) - rcPanelInt.bottom;
+
+    MoveWindow(hCharmapDlg, 0, 0, rcCharmap.right, rcCharmap.bottom, FALSE);
+    MoveWindow(hAdvancedDlg, 0, rcCharmap.bottom, rcAdvanced.right, rcAdvanced.bottom, FALSE);
+
+    ShowWindow(hAdvancedDlg, (Settings.IsAdvancedView) ? SW_SHOW : SW_HIDE);
+
+    xPos = rcPanelExt.left;
+    yPos = rcPanelExt.top;
+
+    Width = DeX + rcCharmap.right;
+    Height = DeY + rcCharmap.bottom + rcStatus.bottom;
+
+    if (Settings.IsAdvancedView)
+        Height += rcAdvanced.bottom;
+
+    if ((xPos + Width) > DeskTopWidth)
+        xPos += DeskTopWidth - (xPos + Width);
+
+    if ((yPos + Height) > DeskTopHeight)
+        yPos += DeskTopHeight - (yPos + Height);
+
+    MoveWindow(hWnd,
+               xPos, yPos,
+               Width, Height,
+               TRUE);
+}
+
+static
 INT_PTR
 CALLBACK
-DlgProc(HWND hDlg,
-        UINT Message,
-        WPARAM wParam,
-        LPARAM lParam)
+CharMapDlgProc(HWND hDlg,
+               UINT Message,
+               WPARAM wParam,
+               LPARAM lParam)
 {
-    static HICON hSmIcon;
-    static HICON hBgIcon;
-    LPWSTR lpAboutText = NULL;
-
     switch(Message)
     {
         case WM_INITDIALOG:
         {
-            HMENU hSysMenu;
-
-            hSmIcon = LoadImageW(hInstance,
-                                 MAKEINTRESOURCEW(IDI_ICON),
-                                 IMAGE_ICON,
-                                 16,
-                                 16,
-                                 0);
-            if (hSmIcon)
-            {
-                 SendMessageW(hDlg,
-                              WM_SETICON,
-                              ICON_SMALL,
-                              (LPARAM)hSmIcon);
-            }
-
-            hBgIcon = LoadImageW(hInstance,
-                                 MAKEINTRESOURCEW(IDI_ICON),
-                                 IMAGE_ICON,
-                                 32,
-                                 32,
-                                 0);
-            if (hBgIcon)
-            {
-                SendMessageW(hDlg,
-                             WM_SETICON,
-                             ICON_BIG,
-                             (LPARAM)hBgIcon);
-            }
+            DWORD evMask;
 
             FillFontStyleComboList(GetDlgItem(hDlg,
                                               IDC_FONTCOMBO));
 
             ChangeMapFont(hDlg);
-            hSysMenu = GetSystemMenu(hDlg,
-                                     FALSE);
-            if (hSysMenu != NULL)
-            {
-                if (LoadStringW(hInstance,
-                                IDS_ABOUT,
-                                lpAboutText,
-                                0))
-                {
-                    AppendMenuW(hSysMenu,
-                                MF_SEPARATOR,
-                                0,
-                                NULL);
-                    AppendMenuW(hSysMenu,
-                                MF_STRING,
-                                ID_ABOUT,
-                                lpAboutText);
-                }
-            }
+
+            // Configure Richedi control for sending notification changes.
+            evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
+            evMask |= ENM_CHANGE;
+            SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_SETEVENTMASK, 0, (LPARAM)evMask);
+
             return TRUE;
         }
 
@@ -264,71 +335,67 @@ DlgProc(HWND hDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_FONTMAP:
-                {
                     switch (HIWORD(wParam))
                     {
                         case FM_SETCHAR:
-                            AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
-                                               LOWORD(lParam));
+                            AddCharToSelection(hDlg, LOWORD(lParam));
                             break;
                     }
-                }
-                break;
+                    break;
 
                 case IDC_FONTCOMBO:
-                {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         ChangeMapFont(hDlg);
                     }
-                }
-                break;
+                    break;
 
                 case IDC_SELECT:
-                {
-                    WCHAR ch;
-                    HWND hMap = GetDlgItem(hDlg, IDC_FONTMAP);
-
-                    ch = (WCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
-
-                    if (ch)
-                    {
-                        AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
-                                           ch);
-                    }
-
+                    AddCharToSelection(hDlg, 0);
                     break;
-                }
 
-                case IDOK:
-                    if (hSmIcon)
-                        DestroyIcon(hSmIcon);
-                    if (hBgIcon)
-                        DestroyIcon(hBgIcon);
-                    EndDialog(hDlg, 0);
-                break;
+                case IDC_TEXTBOX:
+                    switch (HIWORD(wParam)) {
+                    case EN_CHANGE:
+                        if (GetWindowTextLength(GetDlgItem(hDlg, IDC_TEXTBOX)) == 0)
+                            EnableWindow(GetDlgItem(hDlg, IDC_COPY), FALSE);
+                        else
+                            EnableWindow(GetDlgItem(hDlg, IDC_COPY), TRUE);
+                        break;
+                    }
+                    break;
+
+                case IDC_COPY:
+                    CopyCharacters(hDlg);
+                    break;
+
+                case IDC_CHECK_ADVANCED:
+                    UpdateSettings(hDlg);
+                    ChangeView(GetParent(hDlg));
+                    break;
             }
         }
         break;
 
-        case WM_SYSCOMMAND:
-        {
-            switch(wParam)
-            {
-                case ID_ABOUT:
-                    ShowAboutDlg(hDlg);
-                break;
-            }
-        }
-        break;
-
-        case WM_CLOSE:
-            if (hSmIcon)
-                DestroyIcon(hSmIcon);
-            if (hBgIcon)
-                DestroyIcon(hBgIcon);
-            EndDialog(hDlg, 0);
+        default:
             break;
+    }
+
+    return FALSE;
+}
+
+static
+INT_PTR
+CALLBACK
+AdvancedDlgProc(HWND hDlg,
+               UINT Message,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    switch(Message)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
 
         default:
             return FALSE;
@@ -337,6 +404,142 @@ DlgProc(HWND hDlg,
     return FALSE;
 }
 
+static int
+OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    HMENU hSysMenu;
+    WCHAR lpAboutText[256];
+
+    hCharmapDlg = CreateDialog(hInstance,
+                               MAKEINTRESOURCE(IDD_CHARMAP),
+                               hWnd,
+                               CharMapDlgProc);
+
+    hAdvancedDlg = CreateDialog(hInstance,
+                               MAKEINTRESOURCE(IDD_ADVANCED),
+                               hWnd,
+                               AdvancedDlgProc);
+
+    hStatusWnd = CreateWindow(STATUSCLASSNAME,
+                              NULL,
+                              WS_CHILD | WS_VISIBLE,
+                              0, 0, 0, 0,
+                              hWnd,
+                              (HMENU)IDD_STATUSBAR,
+                              hInstance,
+                              NULL);
+
+    // Set the status bar for multiple parts output
+    SendMessage(hStatusWnd, SB_SIMPLE, (WPARAM)FALSE, (LPARAM)0);
+
+    ChangeView(hWnd);
+
+    hSysMenu = GetSystemMenu(hWnd, FALSE);
+
+    if (hSysMenu != NULL)
+    {
+        if (LoadStringW(hInstance, IDS_ABOUT, lpAboutText, SIZEOF(lpAboutText)))
+        {
+            AppendMenuW(hSysMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuW(hSysMenu, MF_STRING, ID_ABOUT, lpAboutText);
+        }
+    }
+
+    return 0;
+}
+
+static LRESULT CALLBACK
+PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_CREATE:
+        return OnCreate(hWnd, wParam, lParam);
+
+    case WM_CLOSE:
+        DestroyWindow(hWnd);
+        return 0;
+
+    case WM_SIZE:
+        SendMessage(hStatusWnd, msg, wParam, lParam);
+        break;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+
+    case WM_SYSCOMMAND:
+        switch(wParam) {
+        case ID_ABOUT:
+            ShowAboutDlg(hWnd);
+            break;
+        }
+        break;
+
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+static HWND
+InitInstance(HINSTANCE hInst)
+{
+    WCHAR       szClass[] = L"CharMap";
+    WCHAR       szTitle[256];
+    WNDCLASSEXW wc;
+    HWND        hWnd;
+
+    LoadStringW(hInst, IDS_TITLE, szTitle, SIZEOF(szTitle));
+
+    hSmIcon = LoadImage(hInstance,
+                        MAKEINTRESOURCE(IDI_ICON),
+                        IMAGE_ICON,
+                        16,
+                        16,
+                        0);
+
+    hBgIcon = LoadImage(hInstance,
+                        MAKEINTRESOURCE(IDI_ICON),
+                        IMAGE_ICON,
+                        32,
+                        32,
+                        0);
+
+    // Create workspace
+    ZeroMemory(&wc, sizeof(wc));
+
+    wc.cbSize        = sizeof(wc);
+    wc.lpfnWndProc   = PanelWndProc;
+    wc.hInstance     = hInst;
+    wc.hIcon         = hBgIcon;
+    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
+    wc.lpszMenuName  = NULL;
+    wc.lpszClassName = szClass;
+    wc.hIconSm       = hSmIcon;
+
+    RegisterClassExW(&wc);
+
+    hWnd = CreateWindowW(
+            szClass,
+            szTitle,
+            WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            NULL,
+            NULL,
+            hInst,
+            NULL);
+
+    if (hWnd != NULL)
+    {
+        ShowWindow(hWnd, SW_SHOW);
+        UpdateWindow(hWnd);
+    }
+
+    return hWnd;
+}
 
 INT
 WINAPI
@@ -347,6 +550,8 @@ wWinMain(HINSTANCE hInst,
 {
     INITCOMMONCONTROLSEX iccx;
     INT Ret = 1;
+    HMODULE hRichEd20;
+    MSG Msg;
 
     hInstance = hInst;
 
@@ -356,11 +561,26 @@ wWinMain(HINSTANCE hInst,
 
     if (RegisterMapClasses(hInstance))
     {
-        Ret = DialogBoxW(hInstance,
-                         MAKEINTRESOURCEW(IDD_CHARMAP),
-                         NULL,
-                         DlgProc) >= 0;
+        hRichEd20 = LoadLibraryW(L"RICHED20.DLL");
 
+        if (hRichEd20 != NULL)
+        {
+            InitInstance(hInst);
+
+            for (;;)
+            {
+                if (GetMessage(&Msg, NULL, 0, 0) <= 0)
+                {
+                    Ret = Msg.wParam;
+                    break;
+                }
+
+                TranslateMessage(&Msg);
+                DispatchMessage(&Msg);
+            }
+
+            FreeLibrary(hRichEd20);
+        }
         UnregisterMapClasses(hInstance);
     }
 

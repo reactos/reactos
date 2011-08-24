@@ -33,4 +33,5 @@
 	<file>worker.c</file>
 	<file>kcom.c</file>
 	<file>swenum.c</file>
+	<pch>priv.h</pch>
 </module>

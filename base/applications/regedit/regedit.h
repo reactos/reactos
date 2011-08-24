@@ -2,7 +2,12 @@
 #define _REGEDIT_H
 
 #define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
+#define WIN32_NO_STATUS
 #include <windows.h>
+
+#define NTOS_MODE_USER
+#include <ndk/cmtypes.h>
+
 #include <commctrl.h>
 #include <shellapi.h>
 #include <shlwapi.h>
@@ -12,7 +17,6 @@
 #include <stdio.h>
 #include <limits.h>
 #include <accctrl.h>
-#include <objbase.h>
 #include <unknwn.h>
 #include <aclapi.h>
 #include <commdlg.h>

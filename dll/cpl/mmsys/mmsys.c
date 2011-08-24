@@ -9,19 +9,7 @@
  *      2005/11/23  Created
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <initguid.h>
-#include <cfgmgr32.h>
-#include <setupapi.h>
-#include <devguid.h>
-#include <cpl.h>
-#include <tchar.h>
-#include <debug.h>
-#include <shlwapi.h>
-
 #include "mmsys.h"
-#include "resource.h"
 
 typedef enum
 {

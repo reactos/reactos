@@ -8,13 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <tchar.h>
-
 #include "intl.h"
-#include "resource.h"
 
 /* GLOBALS ******************************************************************/
 

@@ -18,9 +18,11 @@
 @ cdecl -i386 -norelay ??1bad_typeid@@UAE@XZ() __thiscall_MSVCRT_bad_typeid_dtor
 @ cdecl -i386 -norelay ??1exception@@UAE@XZ() __thiscall_MSVCRT_exception_dtor
 @ cdecl -i386 -norelay ??1type_info@@UAE@XZ() __thiscall_MSVCRT_type_info_dtor
-@ cdecl ??2@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
 # @ cdecl ??2@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg
-@ cdecl ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete
 @ cdecl -i386 -norelay ??4__non_rtti_object@@QAEAAV0@ABV0@@Z(ptr) __thiscall_MSVCRT___non_rtti_object_opequals
 @ cdecl -i386 -norelay ??4bad_cast@@QAEAAV0@ABV0@@Z(ptr) __thiscall_MSVCRT_bad_cast_opequals
 @ cdecl -i386 -norelay ??4bad_typeid@@QAEAAV0@ABV0@@Z(ptr) __thiscall_MSVCRT_bad_typeid_opequals
@@ -41,9 +43,11 @@
 @ cdecl -i386 -norelay ??_Gbad_cast@@UAEPAXI@Z(long) __thiscall_MSVCRT_bad_cast_scalar_dtor
 @ cdecl -i386 -norelay ??_Gbad_typeid@@UAEPAXI@Z(long) __thiscall_MSVCRT_bad_typeid_scalar_dtor
 @ cdecl -i386 -norelay ??_Gexception@@UAEPAXI@Z(long) __thiscall_MSVCRT_exception_scalar_dtor
-@ cdecl ??_U@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win32 ??_U@YAPAXI@Z(long) MSVCRT_operator_new
+@ cdecl -arch=win64 ??_U@YAPEAX_K@Z(long) MSVCRT_operator_new
 # @ cdecl ??_U@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg
-@ cdecl ??_V@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??_V@YAXPAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) MSVCRT_operator_delete
 @ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
 @ cdecl ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
 @ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
@@ -99,12 +103,12 @@
 # stub _CrtSetReportHook
 # stub _CrtSetReportHook2
 # stub _CrtSetReportMode
-@ cdecl _CxxThrowException(long long)
+@ stdcall _CxxThrowException(long long)
 @ cdecl -i386 -norelay _EH_prolog()
 @ cdecl _Getdays()
 @ cdecl _Getmonths()
 @ cdecl _Gettnames()
-@ extern _HUGE _HUGE
+@ extern _HUGE
 @ cdecl _Strftime(str long str ptr ptr)
 @ cdecl _XcptFilter(long ptr)
 @ cdecl __CppXcptFilter(long ptr)
@@ -132,8 +136,8 @@
 # @ cdecl ___mb_cur_max_func() MSVCRT___mb_cur_max_func
 @ cdecl ___setlc_active_func()
 @ cdecl ___unguarded_readlc_active_add_func()
-@ extern __argc __argc
-@ extern __argv __argv
+@ extern __argc
+@ extern __argv
 @ extern __badioinfo __badioinfo
 @ cdecl __crtCompareStringA(long long str long str long) kernel32.CompareStringA
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
@@ -142,15 +146,15 @@
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
 @ cdecl __dllonexit(ptr ptr ptr)
-@ cdecl __doserrno() __doserrno
+@ cdecl __doserrno()
 @ cdecl __fpecode()
 @ cdecl __get_app_type()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
-@ extern __initenv __initenv
+@ extern __initenv
 @ cdecl __iob_func() __p__iob
-@ cdecl __isascii(long) __isascii
-@ cdecl __iscsym(long) __iscsym
-@ cdecl __iscsymf(long) __iscsymf
+@ cdecl __isascii(long)
+@ cdecl __iscsym(long)
+@ cdecl __iscsymf(long)
 @ extern __lc_codepage MSVCRT___lc_codepage
 # @ stub __lc_collate # not in XP / 7
 @ extern __lc_collate_cp MSVCRT___lc_collate_cp
@@ -177,7 +181,7 @@
 # stub __libm_sse2_sinf
 # stub __libm_sse2_tan
 # stub __libm_sse2_tanf
-@ extern __mb_cur_max __mb_cur_max
+@ extern __mb_cur_max
 @ cdecl -arch=i386 __p___argc()
 @ cdecl -arch=i386 __p___argv()
 @ cdecl -arch=i386 __p___initenv()
@@ -196,10 +200,10 @@
 @ cdecl -arch=i386 __p__mbcasemap()
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
-@ cdecl -arch=i386 __p__pctype() __pctype_func
+@ cdecl -arch=i386 __p__pctype()
 @ cdecl -arch=i386 __p__pgmptr()
 @ cdecl -arch=i386 __p__pwctype()
-@ cdecl -arch=i386 __p__timezone() __p__timezone
+@ cdecl -arch=i386 __p__timezone()
 @ cdecl -arch=i386 __p__tzname()
 @ cdecl -arch=i386 __p__wcmdln()
 @ cdecl -arch=i386 __p__wenviron()
@@ -207,9 +211,9 @@
 @ cdecl -arch=i386 __p__winminor()
 @ cdecl -arch=i386 __p__winver()
 @ cdecl -arch=i386 __p__wpgmptr()
-@ cdecl __pctype_func() __pctype_func
-@ extern __pioinfo __pioinfo
-# stub __pwctype_func
+@ cdecl __pctype_func()
+@ extern __pioinfo
+@ cdecl __pwctype_func()
 @ cdecl __pxcptinfoptrs()
 @ cdecl __set_app_type(long)
 @ extern __setlc_active
@@ -232,7 +236,7 @@
 # stub _abs64
 @ cdecl _access(str long)
 # stub _access_s
-@ extern _acmdln _acmdln
+@ extern _acmdln
 @ stdcall -arch=i386 _adj_fdiv_m16i(long)
 @ stdcall -arch=i386 _adj_fdiv_m32(long)
 @ stdcall -arch=i386 _adj_fdiv_m32i(long)
@@ -247,7 +251,7 @@
 @ cdecl -arch=i386 _adj_fprem1()
 @ cdecl -arch=i386 _adj_fptan()
 @ extern -arch=i386 _adjust_fdiv
-# extern _aexit_rtn
+@ extern _aexit_rtn
 @ cdecl _aligned_free(ptr)
 # stub _aligned_free_dbg
 @ cdecl _aligned_malloc(long long)
@@ -271,8 +275,8 @@
 @ cdecl _atoldbl(ptr str)
 # stub _atoldbl_l
 @ cdecl _beep(long long)
-@ cdecl _beginthread (ptr long ptr)
-@ cdecl _beginthreadex (ptr long ptr ptr long ptr)
+@ cdecl _beginthread(ptr long ptr)
+@ cdecl _beginthreadex(ptr long ptr ptr long ptr)
 @ cdecl _c_exit()
 @ cdecl _cabs(long)
 @ cdecl _callnewh(long)
@@ -335,11 +339,11 @@
 @ cdecl _difftime32(long long)
 @ cdecl _difftime64(long long)
 @ extern _dstbias
-@ cdecl _dup (long)
-@ cdecl _dup2 (long long)
+@ cdecl _dup(long)
+@ cdecl _dup2(long long)
 @ cdecl _ecvt(double long ptr ptr)
 # stub _ecvt_s
-@ cdecl _endthread ()
+@ cdecl _endthread()
 @ cdecl _endthreadex(long)
 @ extern _environ
 @ cdecl _eof(long)
@@ -355,7 +359,7 @@
 @ cdecl _execve(str ptr ptr)
 @ cdecl _execvp(str ptr)
 @ cdecl _execvpe(str ptr ptr)
-@ cdecl _exit(long) _exit
+@ cdecl _exit(long)
 @ cdecl _expand(ptr long)
 # stub _expand_dbg
 @ cdecl _fcloseall()
@@ -462,11 +466,11 @@
 # stub _gmtime32_s
 @ cdecl _gmtime64(ptr)
 # stub _gmtime64_s
-@ cdecl _heapadd (ptr long)
+@ cdecl _heapadd(ptr long)
 @ cdecl _heapchk()
 @ cdecl _heapmin()
 @ cdecl _heapset(long)
-# @ stub _heapused #(ptr ptr) # not in XP / 7
+@ cdecl _heapused(ptr ptr)
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl _i64toa(long long ptr long)
@@ -492,7 +496,7 @@
 # stub _islower_l
 @ cdecl _ismbbalnum(long)
 # stub _ismbbalnum_l
-@ stub _ismbbalpha #(long)
+@ cdecl _ismbbalpha(long)
 # stub _ismbbalpha_l
 @ cdecl _ismbbgraph(long)
 # stub _ismbbgraph_l
@@ -506,7 +510,7 @@
 # stub _ismbbkpunct_l
 @ cdecl _ismbblead(long)
 # stub _ismbblead_l
-@ stub _ismbbprint #(long)
+@ cdecl _ismbbprint(long)
 # stub _ismbbprint_l
 @ cdecl _ismbbpunct(long)
 # stub _ismbbpunct_l
@@ -569,9 +573,9 @@
 # stub _itoa_s
 @ cdecl _itow(long ptr long)
 # stub _itow_s
-#@ cdecl _j0(double)
-#@ cdecl _j1(double)
-#@ cdecl _jn(long double)
+@ cdecl _j0(double)
+@ cdecl _j1(double)
+@ cdecl _jn(long double)
 @ cdecl _kbhit()
 @ cdecl _lfind(ptr ptr ptr long ptr)
 # stub _lfind_s
@@ -584,7 +588,7 @@
 # stub _localtime64_s
 @ cdecl _lock(long)
 @ cdecl _locking(long long long)
-@ cdecl _logb( double )
+@ cdecl _logb(double)
 @ cdecl -i386 _longjmpex(ptr long) longjmp
 @ cdecl _lrotl(long long)
 @ cdecl _lrotr(long long)
@@ -607,7 +611,7 @@
 # stub _mbccpy_l
 # stub _mbccpy_s
 # stub _mbccpy_s_l
-@ cdecl _mbcjistojms (long)
+@ cdecl _mbcjistojms(long)
 # stub _mbcjistojms_l
 @ cdecl _mbcjmstojis(long)
 # stub _mbcjmstojis_l
@@ -639,11 +643,11 @@
 @ cdecl _mbscpy(ptr str)
 # stub _mbscpy_s
 # stub _mbscpy_s_l
-@ cdecl _mbscspn (str str)
+@ cdecl _mbscspn(str str)
 # stub _mbscspn_l
 @ cdecl _mbsdec(ptr ptr)
 # stub _mbsdec_l
-@ cdecl _mbsdup(str) _strdup
+@ cdecl _mbsdup(str)
 # stub _strdup_dbg
 @ cdecl _mbsicmp(str str)
 # stub _mbsicmp_l
@@ -657,7 +661,7 @@
 # stub _mbslwr_l
 # stub _mbslwr_s
 # stub _mbslwr_s_l
-@ cdecl _mbsnbcat (str str long)
+@ cdecl _mbsnbcat(str str long)
 # stub _mbsnbcat_l
 # stub _mbsnbcat_s
 # stub _mbsnbcat_s_l
@@ -755,16 +759,16 @@
 @ cdecl _onexit(ptr)
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
-@ extern _osplatform _osplatform
-@ extern _osver _osver
+@ extern _osplatform
+@ extern _osver
 @ cdecl _outp(long long) MSVCRT__outp
 @ cdecl _outpd(long long) MSVCRT__outpd
 @ cdecl _outpw(long long) MSVCRT__outpw
-@ cdecl _pclose (ptr)
-@ extern _pctype _pctype
-@ extern _pgmptr _pgmptr
-@ cdecl _pipe (ptr long long)
-@ cdecl _popen (str str)
+@ cdecl _pclose(ptr)
+@ extern _pctype
+@ extern _pgmptr
+@ cdecl _pipe(ptr long long)
+@ cdecl _popen(str str)
 # stub _printf_l
 # stub _printf_p
 # stub _printf_p_l
@@ -813,7 +817,7 @@
 # stub _set_output_format
 @ cdecl _set_sbh_threshold(long)
 @ cdecl _seterrormode(long)
-@ cdecl -arch=i386,x86_64 -norelay _setjmp(ptr ptr)
+@ cdecl -arch=i386,x86_64 -norelay _setjmp(ptr)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
 @ cdecl -arch=x86_64 -norelay _setjmpex(ptr ptr)
 @ cdecl _setmaxstdio(long)
@@ -1005,7 +1009,7 @@
 # stub _wassert
 @ cdecl _wchdir(wstr)
 @ cdecl _wchmod(wstr long)
-@ extern _wcmdln _wcmdln
+@ extern _wcmdln
 @ cdecl _wcreat(wstr long)
 # stub _wcscoll_l
 @ cdecl _wcsdup(wstr)
@@ -1084,7 +1088,7 @@
 @ extern _winminor
 # stub _winput_s
 @ extern _winver
-@ cdecl _wmakepath(wstr wstr wstr wstr wstr)
+@ cdecl _wmakepath(ptr wstr wstr wstr wstr)
 @ cdecl _wmakepath_s(ptr long wstr wstr wstr wstr)
 @ cdecl _wmkdir(wstr)
 @ cdecl _wmktemp(wstr)
@@ -1093,7 +1097,7 @@
 # stub _woutput_s
 @ cdecl _wperror(wstr)
 @ extern _wpgmptr
-@ cdecl _wpopen (wstr wstr)
+@ cdecl _wpopen(wstr wstr)
 # stub _wprintf_l
 # stub _wprintf_p
 # stub _wprintf_p_l
@@ -1109,7 +1113,7 @@
 @ cdecl _wsearchenv(wstr wstr ptr)
 # stub _wsearchenv_s
 @ cdecl _wsetlocale(long wstr)
-@ varargs _wsopen (wstr long long)
+@ varargs _wsopen(wstr long long)
 # stub _wsopen_s
 @ varargs _wspawnl(long wstr wstr)
 @ varargs _wspawnle(long wstr wstr)
@@ -1145,9 +1149,9 @@
 @ cdecl _wutime(wstr ptr)
 @ cdecl _wutime32(wstr ptr)
 @ cdecl _wutime64(wstr ptr)
-#@ cdecl _y0(double)
-#@ cdecl _y1(double)
-#@ cdecl _yn(long double )
+@ cdecl _y0(double)
+@ cdecl _y1(double)
+@ cdecl _yn(long double )
 @ cdecl abort()
 @ cdecl abs(long)
 @ cdecl acos(double)
@@ -1156,7 +1160,7 @@
 @ cdecl asin(double)
 @ cdecl atan(double)
 @ cdecl atan2(double double)
-@ extern atexit # mingw hack
+@ extern atexit # <-- keep this as an extern, thank you
 @ cdecl atof(str)
 @ cdecl atoi(str)
 @ cdecl atol(str)
@@ -1188,7 +1192,9 @@
 @ cdecl fgetwc(ptr)
 @ cdecl fgetws(ptr long ptr)
 @ cdecl floor(double)
+@ cdecl -arch=x86_64 floorf(long)
 @ cdecl fmod(double double)
+@ cdecl -arch=x86_64 fmodf(long)
 @ cdecl fopen(str str)
 # @ cdecl fopen_s(ptr str str)
 @ varargs fprintf(ptr str)
@@ -1220,7 +1226,7 @@
 @ cdecl getwc(ptr)
 @ cdecl getwchar()
 @ cdecl gmtime(ptr)
-@ cdecl is_wctype(long long)iswctype
+@ cdecl is_wctype(long long)
 @ cdecl isalnum(long)
 @ cdecl isalpha(long)
 @ cdecl iscntrl(long)
@@ -1276,6 +1282,7 @@
 @ cdecl modf(double ptr)
 @ cdecl perror(str)
 @ cdecl pow(double double)
+@ cdecl -arch=x86_64 powf(long)
 @ varargs printf(str)
 # stub printf_s
 @ cdecl putc(long ptr)
@@ -1300,10 +1307,12 @@
 @ cdecl setvbuf(ptr str long long)
 @ cdecl signal(long long)
 @ cdecl sin(double)
+@ cdecl -arch=x86_64 sinf(long)
 @ cdecl sinh(double)
 @ varargs sprintf(ptr str)
 # @ varargs sprintf_s(ptr long str)
 @ cdecl sqrt(double)
+@ cdecl -arch=x86_64 sqrtf(long)
 @ cdecl srand(long)
 @ varargs sscanf(str str)
 # @ varargs sscanf_s(str str)

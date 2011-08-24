@@ -1,0 +1,70 @@
+/*
+ * Copyright (c) 1998
+ * Silicon Graphics Computer Systems, Inc.
+ *
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+
+#ifndef _STLP_BITSET
+
+// This implementation of bitset<> has a second template parameter,
+// _WordT, which defaults to unsigned long.  *YOU SHOULD NOT USE
+// THIS FEATURE*.  It is experimental, and it may be removed in
+// future releases.
+
+// A bitset of size N, using words of type _WordT, will have
+// N % (sizeof(_WordT) * CHAR_BIT) unused bits.  (They are the high-
+// order bits in the highest word.)  It is a class invariant
+// of class bitset<> that those unused bits are always zero.
+
+// Most of the actual code isn't contained in bitset<> itself, but in the
+// base class _Base_bitset.  The base class works with whole words, not with
+// individual bits.  This allows us to specialize _Base_bitset for the
+// important special case where the bitset is only a single word.
+
+// The C++ standard does not define the precise semantics of operator[].
+// In this implementation the const version of operator[] is equivalent
+// to test(), except that it does no range checking.  The non-const version
+// returns a reference to a bit, again without doing any range checking.
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x2
+#  include <stl/_prolog.h>
+#  define _STLP_BITSET
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x2)
+#  ifndef _STLP_INTERNAL_BITSET
+#    include <stl/_bitset.h>
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID != 0x2) || defined (_STLP_IMPORT_VENDOR_STD)
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <bitset>
+#  else
+#    include _STLP_NATIVE_HEADER(bitset)
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x2 )
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#endif /* _STLP_BITSET */
+
+// Local Variables:
+// mode:C++
+// End:

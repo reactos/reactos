@@ -4,29 +4,29 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Файл"
+  POPUP "&Р¤Р°Р№Р»"
   BEGIN
-    MENUITEM "&Выход",                   IDC_EXIT
+    MENUITEM "&Р’С‹С…РѕРґ",                   IDC_EXIT
   END
-  POPUP "Действие"
+  POPUP "Р”РµР№СЃС‚РІРёРµ"
   BEGIN
-    MENUITEM "Печать",                   IDC_PRINT, GRAYED
+    MENUITEM "РџРµС‡Р°С‚СЊ",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Свойства",              IDC_PROP, GRAYED
+    MENUITEM "РЎРІРѕР№СЃС‚РІР°",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Справка",                    IDC_PROGHELP, GRAYED
+    MENUITEM "РЎРїСЂР°РІРєР°",                    IDC_PROGHELP, GRAYED
   END
-  POPUP "Вид"
+  POPUP "Р’РёРґ"
   BEGIN
-    MENUITEM "Устройства по типу",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Устройства по подключению",   IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по типу",       IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по подключению", IDC_STATIC, GRAYED
+    MENUITEM "РЈСЃС‚СЂРѕР№СЃС‚РІР° РїРѕ С‚РёРїСѓ",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "РЈСЃС‚СЂРѕР№СЃС‚РІР° РїРѕ РїРѕРґРєР»СЋС‡РµРЅРёСЋ",   IDC_STATIC, GRAYED
+    MENUITEM "Р РµСЃСѓСЂСЃС‹ РїРѕ С‚РёРїСѓ",       IDC_STATIC, GRAYED
+    MENUITEM "Р РµСЃСѓСЂСЃС‹ РїРѕ РїРѕРґРєР»СЋС‡РµРЅРёСЋ", IDC_STATIC, GRAYED
   END
-  POPUP "Справка"
+  POPUP "РЎРїСЂР°РІРєР°"
   BEGIN
-    MENUITEM "Помощь",                    IDC_PROGHELP
-    MENUITEM "О программе",                   IDC_ABOUT
+    MENUITEM "РџРѕРјРѕС‰СЊ",                    IDC_PROGHELP
+    MENUITEM "Рћ РїСЂРѕРіСЂР°РјРјРµ",                   IDC_ABOUT
   END
 END
 
@@ -34,51 +34,51 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Свойства",              IDC_PROP, GRAYED
+    MENUITEM "РЎРІРѕР№СЃС‚РІР°",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Помощь",                    IDC_PROGHELP
+    MENUITEM "РџРѕРјРѕС‰СЊ",                    IDC_PROGHELP
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "О Диспетчере устройств"
+CAPTION "Рћ Р”РёСЃРїРµС‚С‡РµСЂРµ СѓСЃС‚СЂРѕР№СЃС‚РІ"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Диспетчер устройств v0.1\nCopyright (C) 2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
-  PUSHBUTTON "Закрыть", IDOK, 75, 162, 44, 15
+  LTEXT "Р”РёСЃРїРµС‚С‡РµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІ v0.1\nCopyright (C) 2006\nРѕС‚ Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  PUSHBUTTON "Р—Р°РєСЂС‹С‚СЊ", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Р­С‚Р° РїСЂРѕРіСЂР°РјРјР° СЏРІР»СЏРµС‚СЃСЏ СЃРІРѕР±РѕРґРЅРѕ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕР№; Р’С‹ РјРѕР¶РµС‚Рµ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏС‚СЊ РµРµ РїРѕРІС‚РѕСЂРЅРѕ Рё (РёР»Рё) РёР·РјРµРЅСЏС‚СЊ, СЃРѕР±Р»СЋРґР°СЏ СѓСЃР»РѕРІРёСЏ РћС‚РєСЂС‹С‚РѕРіРѕ Р»РёС†РµРЅР·РёРѕРЅРЅРѕРіРѕ СЃРѕРіР»Р°С€РµРЅРёСЏ GNU, РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅРѕРіРѕ Р¤РѕРЅРґРѕРј СЃРІРѕР±РѕРґРЅРѕ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕРіРѕ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ; Р»РёР±Рѕ СЂРµРґР°РєС†РёРё 2 РЎРѕРіР»Р°С€РµРЅРёСЏ, Р»РёР±Рѕ (РЅР° РІР°С€Рµ СѓСЃРјРѕС‚СЂРµРЅРёРµ) Р»СЋР±РѕР№ СЂРµРґР°РєС†РёРё, РІС‹РїСѓС‰РµРЅРЅРѕР№ РїРѕР·Р¶Рµ.\r\n\r\nР­С‚Р° РїСЂРѕРіСЂР°РјРјР° СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ РІ РЅР°РґРµР¶РґРµ РЅР° С‚Рѕ, С‡С‚Рѕ РѕРЅР° РѕРєР°Р¶РµС‚СЃСЏ РїРѕР»РµР·РЅРѕР№, РЅРѕ Р‘Р•Р— РљРђРљРРҐ-Р›РР‘Рћ Р“РђР РђРќРўРР™, РІРєР»СЋС‡Р°СЏ РїРѕРґСЂР°Р·СѓРјРµРІР°РµРјСѓСЋ РіР°СЂР°РЅС‚РёСЋ РљРђР§Р•РЎРўР’Рђ Р»РёР±Рѕ РџР РР“РћР”РќРћРЎРўР Р”Р›РЇ РћРџР Р•Р”Р•Р›Р•РќРќР«РҐ Р¦Р•Р›Р•Р™. РџРѕРґСЂРѕР±РЅРѕСЃС‚Рё СЃРѕРґРµСЂР¶Р°С‚СЃСЏ РІ РћС‚РєСЂС‹С‚РѕРј Р»РёС†РµРЅР·РёРѕРЅРЅРѕРј СЃРѕРіР»Р°С€РµРЅРёРё GNU.\r\n\r\nР’РјРµСЃС‚Рµ СЃ СЌС‚РѕР№ РїСЂРѕРіСЂР°РјРјРѕР№ РґРѕР»Р¶РµРЅ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏС‚СЊСЃСЏ СЌРєР·РµРјРїР»СЏСЂ РћС‚РєСЂС‹С‚РѕРіРѕ Р»РёС†РµРЅР·РёРѕРЅРЅРѕРіРѕ СЃРѕРіР»Р°С€РµРЅРёСЏ GNU, РµСЃР»Рё РѕРЅ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚, СЃРѕРѕР±С‰РёС‚Рµ РѕР± СЌС‚РѕРј РІ Р¤РѕРЅРґ СЃРІРѕР±РѕРґРЅРѕ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕРіРѕ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Свойства"
-  IDS_TOOLTIP_REFRESH   "Обновить"
-  IDS_TOOLTIP_HELP      "Помощь"
-  IDS_TOOLTIP_EXIT      "Выход"
+  IDS_TOOLTIP_PROP      "РЎРІРѕР№СЃС‚РІР°"
+  IDS_TOOLTIP_REFRESH   "РћР±РЅРѕРІРёС‚СЊ"
+  IDS_TOOLTIP_HELP      "РџРѕРјРѕС‰СЊ"
+  IDS_TOOLTIP_EXIT      "Р’С‹С…РѕРґ"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Диспетчер устройств ReactOS"
+  IDS_APPNAME "Р”РёСЃРїРµС‚С‡РµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІ ReactOS"
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXIT         " Выход из программы."
-  IDS_HINT_REFRESH      " Обновить список."
-  IDS_HINT_PROP         " Открыть свойства для выбранного элемента."
-  IDS_HINT_HELP         " Показать окно справки."
-  IDS_HINT_ABOUT        " О ReactOS Device Manager."
+  IDS_HINT_EXIT         " Р’С‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹."
+  IDS_HINT_REFRESH      " РћР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє."
+  IDS_HINT_PROP         " РћС‚РєСЂС‹С‚СЊ СЃРІРѕР№СЃС‚РІР° РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р°."
+  IDS_HINT_HELP         " РџРѕРєР°Р·Р°С‚СЊ РѕРєРЅРѕ СЃРїСЂР°РІРєРё."
+  IDS_HINT_ABOUT        " Рћ ReactOS Device Manager."
 
-  IDS_HINT_SYS_RESTORE  " Востановить нормальный размер этого окна."
-  IDS_HINT_SYS_MOVE     " Переместить это окно."
-  IDS_HINT_SYS_SIZE     " Изменить размер этого окна."
-  IDS_HINT_SYS_MINIMIZE " Свернуть это окно в значок."
-  IDS_HINT_SYS_MAXIMIZE " Развернуть это окно на полный экран."
-  IDS_HINT_SYS_CLOSE    " Закрыть это окно."
+  IDS_HINT_SYS_RESTORE  " Р’РѕСЃС‚Р°РЅРѕРІРёС‚СЊ РЅРѕСЂРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ СЌС‚РѕРіРѕ РѕРєРЅР°."
+  IDS_HINT_SYS_MOVE     " РџРµСЂРµРјРµСЃС‚РёС‚СЊ СЌС‚Рѕ РѕРєРЅРѕ."
+  IDS_HINT_SYS_SIZE     " РР·РјРµРЅРёС‚СЊ СЂР°Р·РјРµСЂ СЌС‚РѕРіРѕ РѕРєРЅР°."
+  IDS_HINT_SYS_MINIMIZE " РЎРІРµСЂРЅСѓС‚СЊ СЌС‚Рѕ РѕРєРЅРѕ РІ Р·РЅР°С‡РѕРє."
+  IDS_HINT_SYS_MAXIMIZE " Р Р°Р·РІРµСЂРЅСѓС‚СЊ СЌС‚Рѕ РѕРєРЅРѕ РЅР° РїРѕР»РЅС‹Р№ СЌРєСЂР°РЅ."
+  IDS_HINT_SYS_CLOSE    " Р—Р°РєСЂС‹С‚СЊ СЌС‚Рѕ РѕРєРЅРѕ."
 END

@@ -73,7 +73,7 @@ CcInitializeCacheManager(VOID);
 
 VOID
 NTAPI
-CcShutdownSystem();
+CcShutdownSystem(VOID);
 
 VOID
 NTAPI

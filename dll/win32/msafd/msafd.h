@@ -15,13 +15,18 @@
 #include <windows.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 /* This includes ntsecapi.h so it needs to come after the NDK */
 #include <wsahelp.h>
 #include <tdi.h>
 #include <afd/shared.h>
 #include <helpers.h>
+
+#include <debug.h>
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;
@@ -417,14 +422,16 @@ VOID DeleteSocketStructure( SOCKET Handle );
 int GetSocketInformation(
 	PSOCKET_INFORMATION Socket,
 	ULONG				AfdInformationClass,
-	PULONG Ulong		OPTIONAL,
+    PBOOLEAN            Boolean      OPTIONAL,
+	PULONG              Ulong        OPTIONAL,
 	PLARGE_INTEGER		LargeInteger OPTIONAL
 );
 
 int SetSocketInformation(
 	PSOCKET_INFORMATION Socket,
 	ULONG				AfdInformationClass,
-	PULONG				Ulong		OPTIONAL,
+    PBOOLEAN            Boolean      OPTIONAL,
+	PULONG				Ulong		 OPTIONAL,
 	PLARGE_INTEGER		LargeInteger OPTIONAL
 );
 
@@ -488,7 +495,7 @@ MsafdReturnWithErrno(NTSTATUS Status,
     }
     else
     {
-        DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
+        DbgPrint("%s: Received invalid lpErrno pointer! %s\n", __FUNCTION__);
 
         if (ReturnedBytes)
             *ReturnedBytes = (Status == STATUS_SUCCESS) ? Received : 0;

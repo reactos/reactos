@@ -8,6 +8,8 @@
 
 #pragma once
 
+//#define KDDEBUG /* uncomment to enable debugging this dll */
+
 #define NOEXTAPI
 #include <ntifs.h>
 #define NDEBUG
@@ -25,6 +27,8 @@ typedef UCHAR BYTE, *PBYTE;
 
 typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
 extern PFNDBGPRNT KdpDbgPrint;
+extern BOOLEAN KdpPhase1Complete;
+extern ULONG KdpStallScaleFactor;
 
 typedef enum
 {
@@ -70,7 +74,7 @@ KdpReceiveByte(OUT PBYTE OutByte);
 
 KDP_STATUS
 NTAPI
-KdpPollBreakIn();
+KdpPollBreakIn(VOID);
 
 
 #if 0

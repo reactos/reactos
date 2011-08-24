@@ -134,6 +134,29 @@ extern ULONG KeI386CpuStep;
 #define KeGetTrapFrameInterruptState(TrapFrame) \
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
 
+/* Diable interrupts and return whether they were enabled before */
+FORCEINLINE
+BOOLEAN
+KeDisableInterrupts(VOID)
+{
+    ULONG_PTR Flags;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Flags = __readeflags();
+
+    /* Disable interrupts */
+    _disable();
+    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE : FALSE;
+}
+
+/* Restore previous interrupt state */
+FORCEINLINE
+VOID
+KeRestoreInterrupts(BOOLEAN WereEnabled)
+{
+    if (WereEnabled) _enable();
+}
+
 //
 // Invalidates the TLB entry for a specified address
 //
@@ -226,30 +249,30 @@ VOID
 FASTCALL
 KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
 
-VOID KiDivideErrorFault();
-VOID KiDebugTrapOrFault();
-VOID KiNmiInterrupt();
-VOID KiBreakpointTrap();
-VOID KiOverflowTrap();
-VOID KiBoundFault();
-VOID KiInvalidOpcodeFault();
-VOID KiNpxNotAvailableFault();
-VOID KiDoubleFaultAbort();
-VOID KiNpxSegmentOverrunAbort();
-VOID KiInvalidTssFault();
-VOID KiSegmentNotPresentFault();
-VOID KiStackFault();
-VOID KiGeneralProtectionFault();
-VOID KiPageFault();
-VOID KiFloatingErrorFault();
-VOID KiAlignmentFault();
-VOID KiMcheckAbort();
-VOID KiXmmException();
-VOID KiApcInterrupt();
-VOID KiRaiseAssertion();
-VOID KiDebugServiceTrap();
-VOID KiDpcInterrupt();
-VOID KiIpiInterrupt();
+VOID KiDivideErrorFault(VOID);
+VOID KiDebugTrapOrFault(VOID);
+VOID KiNmiInterrupt(VOID);
+VOID KiBreakpointTrap(VOID);
+VOID KiOverflowTrap(VOID);
+VOID KiBoundFault(VOID);
+VOID KiInvalidOpcodeFault(VOID);
+VOID KiNpxNotAvailableFault(VOID);
+VOID KiDoubleFaultAbort(VOID);
+VOID KiNpxSegmentOverrunAbort(VOID);
+VOID KiInvalidTssFault(VOID);
+VOID KiSegmentNotPresentFault(VOID);
+VOID KiStackFault(VOID);
+VOID KiGeneralProtectionFault(VOID);
+VOID KiPageFault(VOID);
+VOID KiFloatingErrorFault(VOID);
+VOID KiAlignmentFault(VOID);
+VOID KiMcheckAbort(VOID);
+VOID KiXmmException(VOID);
+VOID KiApcInterrupt(VOID);
+VOID KiRaiseAssertion(VOID);
+VOID KiDebugServiceTrap(VOID);
+VOID KiDpcInterrupt(VOID);
+VOID KiIpiInterrupt(VOID);
 
 VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
@@ -284,7 +307,7 @@ KiGetFeatureBits(VOID);
 
 VOID
 NTAPI
-KiInitializeCpuFeatures();
+KiInitializeCpuFeatures(VOID);
 
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);

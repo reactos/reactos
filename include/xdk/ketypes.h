@@ -640,11 +640,12 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
 #endif /* defined(_AMD64_) */
 
 typedef VOID
-(NTAPI *PKDEFERRED_ROUTINE)(
+(NTAPI KDEFERRED_ROUTINE)(
   IN struct _KDPC *Dpc,
   IN PVOID DeferredContext OPTIONAL,
   IN PVOID SystemArgument1 OPTIONAL,
   IN PVOID SystemArgument2 OPTIONAL);
+typedef KDEFERRED_ROUTINE *PKDEFERRED_ROUTINE;
 
 typedef enum _KDPC_IMPORTANCE {
   LowImportance,
@@ -825,8 +826,9 @@ typedef enum _LOCK_OPERATION {
 #define KTIMER_ACTUAL_LENGTH (FIELD_OFFSET(KTIMER, Period) + sizeof(LONG))
 
 typedef BOOLEAN
-(NTAPI *PKSYNCHRONIZE_ROUTINE)(
+(NTAPI KSYNCHRONIZE_ROUTINE)(
   IN PVOID SynchronizeContext);
+typedef KSYNCHRONIZE_ROUTINE *PKSYNCHRONIZE_ROUTINE;
 
 typedef enum _POOL_TYPE {
   NonPagedPool,
@@ -1006,8 +1008,9 @@ $if (_NTDDK_)
 #define NX_SUPPORT_POLICY_OPTOUT 3
 
 typedef VOID
-(NTAPI *PEXPAND_STACK_CALLOUT)(
+(NTAPI EXPAND_STACK_CALLOUT)(
   IN PVOID Parameter OPTIONAL);
+typedef EXPAND_STACK_CALLOUT *PEXPAND_STACK_CALLOUT;
 
 typedef VOID
 (NTAPI *PTIMER_APC_ROUTINE)(
@@ -1017,7 +1020,7 @@ typedef VOID
 
 typedef enum _TIMER_SET_INFORMATION_CLASS {
   TimerSetCoalescableTimer,
-  MaxTimerInfoClass 
+  MaxTimerInfoClass
 } TIMER_SET_INFORMATION_CLASS;
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)

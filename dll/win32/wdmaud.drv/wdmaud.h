@@ -1,33 +1,32 @@
 #ifndef WDMAUD_H__
 #define WDMAUD_H__
 
+#include <stdio.h>
 #include <windows.h>
 #include <ntddsnd.h>
 #include <sndtypes.h>
 #include <setupapi.h>
 #include <mmddk.h>
 #include <mmebuddy.h>
-
 #include <ks.h>
 #include <ksmedia.h>
+#include <samplerate.h>
+#include <float_cast.h>
 #include "interface.h"
 #include "mmixer.h"
 #include <debug.h>
 
 BOOL
-WdmAudInitUserModeMixer();
+WdmAudInitUserModeMixer(VOID);
 
 ULONG
-WdmAudGetWaveOutCount();
+WdmAudGetWaveOutCount(VOID);
 
 ULONG
-WdmAudGetWaveInCount();
+WdmAudGetWaveInCount(VOID);
 
 ULONG
-WdmAudGetMixerCount();
-
-MMRESULT
-WdmAudOpenSoundDeviceByLegacy();
+WdmAudGetMixerCount(VOID);
 
 MMRESULT
 WdmAudGetNumWdmDevsByMMixer(
@@ -150,12 +149,12 @@ WdmAudCommitWaveBufferByMMixer(
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 MMRESULT
-WdmAudCleanupByMMixer();
+WdmAudCleanupByMMixer(VOID);
 
 /* legacy.c */
 
 MMRESULT
-WdmAudCleanupByLegacy();
+WdmAudCleanupByLegacy(VOID);
 
 MMRESULT
 WdmAudGetCapabilitiesByLegacy(
@@ -165,7 +164,10 @@ WdmAudGetCapabilitiesByLegacy(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy();
+WdmAudOpenSoundDeviceByLegacy(
+    IN PSOUND_DEVICE SoundDevice,
+    OUT PVOID *Handle
+);
 
 MMRESULT
 WdmAudCloseSoundDeviceByLegacy(

@@ -46,8 +46,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <windows.h>
-#include "tconsole.h"
+#include "precomp.h"
 
 // argsused doesn't work on MSVC++
 #ifdef __BORLANDC__

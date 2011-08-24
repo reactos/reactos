@@ -60,7 +60,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     PPDO_EXTENSION PdoExtension;
     PDEVICE_OBJECT DeviceObject, PdoDeviceObject, AttachedDevice;
     PDESCRIPTION_HEADER Wdrt;
-    DbgPrint("HAL: PnP Driver ADD!\n");
+    DPRINT("HAL: PnP Driver ADD!\n");
 
     /* Create the FDO */
     Status = IoCreateDevice(DriverObject,
@@ -82,9 +82,10 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->ExtensionType = FdoExtensionType;
     FdoExtension->PhysicalDeviceObject = TargetDevice;
     FdoExtension->FunctionalDeviceObject = DeviceObject;
+    FdoExtension->ChildPdoList = NULL;
     
     /* FDO is done initializing */
-    DeviceObject->Flags &= DO_DEVICE_INITIALIZING;
+    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     
     /* Attach to the physical device object (the bus) */
     AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject, TargetDevice);
@@ -109,36 +110,37 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DbgPrint("HAL: Could not create ACPI device object status=0x%08x\n", Status);
+        DPRINT1("HAL: Could not create ACPI device object status=0x%08x\n", Status);
         return Status;
     }
     
     /* Setup the PDO device extension */
     PdoExtension = PdoDeviceObject->DeviceExtension;
-    PdoExtension->Next = NULL;
     PdoExtension->ExtensionType = PdoExtensionType;
     PdoExtension->PhysicalDeviceObject = PdoDeviceObject;
     PdoExtension->ParentFdoExtension = FdoExtension;
     PdoExtension->PdoType = AcpiPdo;
+    
+    /* Add the PDO to the head of the list */
+    PdoExtension->Next = FdoExtension->ChildPdoList;
+    FdoExtension->ChildPdoList = PdoExtension;
+    
+    /* Initialization is finished */
+    PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* Find the ACPI watchdog table */
     Wdrt = HalAcpiGetTable(0, 'TRDW');
-    if (!Wdrt)
-    {
-        /* None exists, there is nothing to do more */
-        PdoDeviceObject->Flags &= DO_DEVICE_INITIALIZING;
-        FdoExtension->ChildPdoList = PdoExtension;
-    }
-    else
+    if (Wdrt)
     {
         /* FIXME: TODO */
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
-        PdoDeviceObject->Flags &= DO_DEVICE_INITIALIZING;
-        FdoExtension->ChildPdoList = PdoExtension;
     }
 
+    /* Invalidate device relations since we added a new device */
+    IoInvalidateDeviceRelations(TargetDevice, BusRelations);
+
     /* Return status */
-    DPRINT1("Device added %lx\n", Status);
+    DPRINT("Device added %lx\n", Status);
     return Status;
 }
 
@@ -188,12 +190,18 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 PdoExtension = PdoExtension->Next;
                 PdoCount++;
             }
-            
+
+            /* Add the PDOs that already exist in the device relations */
+            if (*DeviceRelations)
+            {
+                PdoCount += (*DeviceRelations)->Count;
+            }
+
             /* Allocate our structure */
             FdoRelations = ExAllocatePoolWithTag(PagedPool,
                                                  FIELD_OFFSET(DEVICE_RELATIONS,
                                                               Objects) +
-                                                 4 * PdoCount,
+                                                 sizeof(PDEVICE_OBJECT) * PdoCount,
                                                  ' laH');
             if (!FdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
             
@@ -217,7 +225,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 }
                 
                 /* Free existing structure */
-                ExFreePoolWithTag(*DeviceRelations, 0);
+                ExFreePool(*DeviceRelations);
             }
             
             /* Now check if we have a PDO list */
@@ -345,8 +353,9 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Query ACPI requirements */
         Status = HalpQueryAcpiResourceRequirements(&RequirementsList);
-        ASSERT(RequirementsList->AlternativeLists == 1);
         if (!NT_SUCCESS(Status)) return Status;
+        
+        ASSERT(RequirementsList->AlternativeLists == 1);
         
         /* Allocate the resourcel ist */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
@@ -356,7 +365,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Fail, no memory */
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            ExFreePoolWithTag(RequirementsList, 0);
+            ExFreePoolWithTag(RequirementsList, ' laH');
             return Status;
         }
         
@@ -369,43 +378,40 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         ResourceList->List[0].InterfaceType = PNPBus;
         ResourceList->List[0].PartialResourceList.Version = 1;
         ResourceList->List[0].PartialResourceList.Revision = 1;
-        ResourceList->List[0].PartialResourceList.Count = 1;
+        ResourceList->List[0].PartialResourceList.Count = 0;
 
         /* Setup the first descriptor */
         PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
-        PartialDesc->Type = CmResourceTypeInterrupt;
 
         /* Find the requirement descriptor for the SCI */
         for (i = 0; i < RequirementsList->List[0].Count; i++)
         {
             /* Get this descriptor */
             Descriptor = &RequirementsList->List[0].Descriptors[i];
-            if (Descriptor->Type == CmResourceTypeInterrupt) break;
-            Descriptor = NULL;
+            if (Descriptor->Type == CmResourceTypeInterrupt)
+            {
+                /* Copy requirements descriptor into resource descriptor */
+                PartialDesc->Type = CmResourceTypeInterrupt;
+                PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
+                PartialDesc->Flags = Descriptor->Flags;
+                ASSERT(Descriptor->u.Interrupt.MinimumVector ==
+                       Descriptor->u.Interrupt.MaximumVector);
+                PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
+                PartialDesc->u.Interrupt.Level = Descriptor->u.Interrupt.MinimumVector;
+                PartialDesc->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+                ResourceList->List[0].PartialResourceList.Count++;
+
+                break;
+            }
         }
-        
-        /* Make sure we found the descriptor */
-        if (Descriptor)
-        { 
-            /* Copy requirements descriptor into resource descriptor */
-            PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
-            PartialDesc->Flags = Descriptor->Flags;
-            ASSERT(Descriptor->u.Interrupt.MinimumVector ==
-                   Descriptor->u.Interrupt.MaximumVector);
-            PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
-            PartialDesc->u.Interrupt.Level = Descriptor->u.Interrupt.MinimumVector;
-            PartialDesc->u.Interrupt.Affinity = 0xFFFFFFFF;
-            
-            /* Return resources and success */
-            *Resources = ResourceList;
-            ExFreePoolWithTag(RequirementsList, 0);
-            return STATUS_SUCCESS;
-        }
-        
-        /* Free memory and fail */
-        ExFreePoolWithTag(RequirementsList, 0);
-        ExFreePoolWithTag(ResourceList, 0);
-        Status = STATUS_NOT_FOUND;
+
+        /* Return resources and success */
+        *Resources = ResourceList;
+
+        ExFreePoolWithTag(RequirementsList, ' laH');
+
+        return STATUS_SUCCESS;
     }
     else if (DeviceExtension->PdoType == WdPdo)
     {
@@ -417,9 +423,6 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* This shouldn't happen */
         return STATUS_UNSUCCESSFUL;
     }
-    
-    /* Return the status */
-    return Status;
 }
 
 NTSTATUS
@@ -428,14 +431,13 @@ HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
                               OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requirements)
 {
     PPDO_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    NTSTATUS Status;
     PAGED_CODE();
     
     /* Only the ACPI PDO has requirements */
     if (DeviceExtension->PdoType == AcpiPdo)
     {
         /* Query ACPI requirements */
-        Status = HalpQueryAcpiResourceRequirements(Requirements);
+        return HalpQueryAcpiResourceRequirements(Requirements);
     }
     else if (DeviceExtension->PdoType == WdPdo)
     {
@@ -447,9 +449,6 @@ HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
         /* This shouldn't happen */
         return STATUS_UNSUCCESSFUL;
     }
-    
-    /* Return the status */
-    return Status;
 }
 
 NTSTATUS
@@ -460,9 +459,10 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
 {
     PPDO_EXTENSION PdoExtension;
     PDO_TYPE PdoType;
-    PWCHAR Id;
+    PWCHAR CurrentId;
+    WCHAR Id[100];
     NTSTATUS Status;
-    ULONG Length;
+    ULONG Length = 0;
     PWCHAR Buffer;
 
     /* Get the PDO type */
@@ -479,29 +479,39 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             /* What kind of PDO is this? */
             if (PdoType == AcpiPdo)
             {
-                /* PCI ID */
-                Id = L"ACPI_HAL\\PNP0C08";
+                /* ACPI ID */
+                CurrentId = L"ACPI_HAL\\PNP0C08";
+                RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+
+                CurrentId = L"*PNP0C08";
+                RtlCopyMemory(&Id[wcslen(Id) + 1], CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             }
             else if (PdoType == WdPdo)
             {
                 /* WatchDog ID */
-                Id = L"ACPI_HAL\\PNP0C18";
+                CurrentId = L"ACPI_HAL\\PNP0C18";
+                RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+
+                CurrentId = L"*PNP0C18";
+                RtlCopyMemory(&Id[wcslen(Id) + 1], CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+                Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             }
             else
             {
                 /* Unknown */
                 return STATUS_NOT_SUPPORTED;
             }
-            
-            /* Static length */
-            Length = 32;
             break;
             
         case BusQueryInstanceID:
-                    
-            /* And our instance ID */
-            Id = L"0";
-            Length = sizeof(L"0") + sizeof(UNICODE_NULL);
+
+            /* Instance ID */
+            CurrentId = L"0";
+            RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+            Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             break;
             
         case BusQueryCompatibleIDs:
@@ -510,6 +520,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
+   
     
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -552,18 +563,20 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     switch (IdType)
     {
         case BusQueryDeviceID:
+            /* HACK */
+            Id = L"Root\\ACPI_HAL";
+            break;
+
         case BusQueryHardwareIDs:
             
             /* This is our hardware ID */
             Id = HalHardwareIdString;
-            Length = wcslen(HalHardwareIdString) + sizeof(UNICODE_NULL);
             break;
             
         case BusQueryInstanceID:
             
             /* And our instance ID */
             Id = L"0";
-            Length = sizeof(L"0") + sizeof(UNICODE_NULL);
             break;
             
         default:
@@ -571,6 +584,9 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
+    
+    /* Calculate the length */
+    Length = (wcslen(Id) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
     
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -595,21 +611,6 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
 
     /* Return status */
     return Status;
-}
-
-NTSTATUS
-NTAPI
-HalpPassIrpFromFdoToPdo(IN PDEVICE_OBJECT DeviceObject,
-                        IN PIRP Irp)
-{
-    PFDO_EXTENSION FdoExtension;
-    
-    /* Get the extension */
-    FdoExtension = DeviceObject->DeviceExtension;
-    
-    /* Pass it to the attached device (our PDO) */
-    IoSkipCurrentIrpStackLocation(Irp);
-    return IoCallDriver(FdoExtension->AttachedDeviceObject, Irp);  
 }
 
 NTSTATUS
@@ -666,26 +667,22 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                                         (PVOID)&Irp->IoStatus.Information);
                 break;
                 
+            case IRP_MN_QUERY_CAPABILITIES:
+                
+                /* Call the worker */
+                DPRINT("Querying the capabilities for the FDO\n");
+                Status = HalpQueryCapabilities(DeviceObject,
+                                               IoStackLocation->Parameters.DeviceCapabilities.Capabilities);
+                break;
+                
             default:
                 
-                /* Pass it to the PDO */
                 DPRINT("Other IRP: %lx\n", Minor);
-                return HalpPassIrpFromFdoToPdo(DeviceObject, Irp);
+                Status = Irp->IoStatus.Status;
+                break;
         }
-        
-        /* What happpened? */
-        if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
-        {
-            /* Set the IRP status, unless this isn't understood */
-            if (Status != STATUS_NOT_SUPPORTED) Irp->IoStatus.Status = Status;
-            
-            /* Pass it on */
-            DPRINT("Passing IRP to PDO\n");
-            return HalpPassIrpFromFdoToPdo(DeviceObject, Irp);
-        }
-        
-        /* Otherwise, we failed, so set the status and complete the request */
-        DPRINT1("IRP failed with status: %lx\n", Status);
+
+        /* Nowhere for the IRP to go since we also own the PDO */
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
@@ -801,7 +798,7 @@ NTAPI
 HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
-    DbgPrint("HAL: PnP Driver WMI!\n");
+    DPRINT1("HAL: PnP Driver WMI!\n");
     while (TRUE);
     return STATUS_SUCCESS;   
 }
@@ -811,8 +808,7 @@ NTAPI
 HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
-    DbgPrint("HAL: PnP Driver Power!\n");
-    while (TRUE);
+    DPRINT1("HAL: PnP Driver Power!\n");
     return STATUS_SUCCESS;   
 }
 
@@ -823,20 +819,42 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
     NTSTATUS Status;
     PDEVICE_OBJECT TargetDevice = NULL;
+
     DPRINT("HAL: PnP Driver ENTRY!\n");
 
     /* This is us */
     HalpDriverObject = DriverObject;
-    
+
     /* Set up add device */
     DriverObject->DriverExtension->AddDevice = HalpAddDevice;
-    
+
     /* Set up the callouts */
     DriverObject->MajorFunction[IRP_MJ_PNP] = HalpDispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = HalpDispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HalpDispatchWmi;
-    
-    /* Tell the PnP about us */
+
+    /* Create the PDO */
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            NULL,
+                            FILE_DEVICE_CONTROLLER,
+                            0,
+                            FALSE,
+                            &TargetDevice);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    TargetDevice->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Set up the device stack */
+    Status = HalpAddDevice(DriverObject, TargetDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(TargetDevice);
+        return Status;
+    }
+
+    /* Tell the PnP manager about us */
     Status = IoReportDetectedDevice(DriverObject,
                                     InterfaceTypeUndefined,
                                     -1,
@@ -845,9 +863,6 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
                                     NULL,
                                     FALSE,
                                     &TargetDevice);
-
-    /* Now add us */
-    if (NT_SUCCESS(Status)) Status = HalpAddDevice(DriverObject, TargetDevice);
 
     /* Return to kernel */
     return Status;

@@ -182,6 +182,19 @@ typedef struct _HEAP_TUNING_PARAMETERS
     ULONG MaxPreCommittThreshold;
 } HEAP_TUNING_PARAMETERS, *PHEAP_TUNING_PARAMETERS;
 
+typedef struct _HEAP_LIST_LOOKUP
+{
+    struct _HEAP_LIST_LOOKUP *ExtendedLookup;
+    ULONG ArraySize;
+    ULONG ExtraItem;
+    ULONG ItemCount;
+    ULONG OutOfRangeItems;
+    ULONG BaseIndex;
+    PLIST_ENTRY ListHead;
+    PULONG ListsInUseUlong;
+    PLIST_ENTRY *ListHints;
+} HEAP_LIST_LOOKUP, *PHEAP_LIST_LOOKUP;
+
 typedef struct _HEAP
 {
     HEAP_ENTRY Entry;
@@ -229,10 +242,11 @@ typedef struct _HEAP
     struct _HEAP_SEGMENT *Segments[HEAP_SEGMENTS]; //FIXME: non-Vista
     USHORT AllocatorBackTraceIndex;
     ULONG NonDedicatedListLength;
-    PVOID BlocksIndex;
+    PVOID BlocksIndex; // HEAP_LIST_LOOKUP
     PVOID UCRIndex;
     PHEAP_PSEUDO_TAG_ENTRY PseudoTagEntries;
     LIST_ENTRY FreeLists[HEAP_FREELISTS]; //FIXME: non-Vista
+    //LIST_ENTRY FreeLists;
     union
     {
         ULONG FreeListsInUseUlong[HEAP_FREELISTS / (sizeof(ULONG) * 8)]; //FIXME: non-Vista
@@ -263,7 +277,6 @@ typedef struct _HEAP_SEGMENT
     USHORT SegmentAllocatorBackTraceIndex;
     USHORT Reserved;
     LIST_ENTRY UCRSegmentList;
-    PHEAP_ENTRY LastEntryInSegment; //FIXME: non-Vista
 } HEAP_SEGMENT, *PHEAP_SEGMENT;
 
 typedef struct _HEAP_UCR_DESCRIPTOR
@@ -434,6 +447,12 @@ RtlpPageHeapSetUserFlags(PVOID HeapHandle,
                          PVOID BaseAddress,
                          ULONG UserFlagsReset,
                          ULONG UserFlagsSet);
+
+BOOLEAN
+NTAPI
+RtlpDebugPageHeapValidate(PVOID HeapPtr,
+                          ULONG Flags,
+                          PVOID Block);
 
 SIZE_T NTAPI
 RtlpPageHeapSize(HANDLE HeapPtr,

@@ -33,7 +33,7 @@ NTAPI
 xHalVectorToIDTEntry(IN ULONG Vector)
 {
     /* Return the vector */
-    return Vector;
+    return (UCHAR)Vector;
 }
 
 VOID

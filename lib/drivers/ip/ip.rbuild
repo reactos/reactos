@@ -3,7 +3,8 @@
 <module name="ip" type="staticlibrary">
 	<define name="__NTDRIVER__"/>
 	<include base="tcpip">include</include>
-	<include base="oskittcp">include</include>
+	<include base="lwip">src/include</include>
+	<include base="lwip">src/include/ipv4</include>
 	<directory name="network">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -41,4 +42,5 @@
 			<file>udp.c</file>
 		</directory>
 	</directory>
+	<pch>precomp.h</pch>
 </module>

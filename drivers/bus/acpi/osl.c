@@ -67,6 +67,8 @@ AcpiOsRemoveInterruptHandler (
 ACPI_STATUS
 AcpiOsInitialize (void)
 {
+    UINT32 i;
+
     DPRINT("AcpiOsInitialize called\n");
 
 #ifndef NDEBUG
@@ -74,8 +76,6 @@ AcpiOsInitialize (void)
     AcpiDbgLevel = 0x00FFFFFF;
     AcpiDbgLayer = 0xFFFFFFFF;
 #endif
-
-    UINT32 i;
 
     for (i = 0; i < NUM_SEMAPHORES; i++)
     {
@@ -149,19 +149,6 @@ AcpiOsFree(void *ptr)
 
 #ifndef ACPI_USE_LOCAL_CACHE
 
-void*
-AcpiOsAcquireObjectHelper (
-    POOL_TYPE PoolType,
-    SIZE_T NumberOfBytes,
-    ULONG Tag)
-{
-    void* Alloc = ExAllocatePool(PoolType, NumberOfBytes);
-
-    /* acpica expects memory allocated from cache to be zeroed */
-    RtlZeroMemory(Alloc,NumberOfBytes);
-    return Alloc;
-}
-
 ACPI_STATUS
 AcpiOsCreateCache (
     char                    *CacheName,
@@ -173,7 +160,7 @@ AcpiOsCreateCache (
         ExAllocatePool(NonPagedPool,sizeof(NPAGED_LOOKASIDE_LIST));
 
     ExInitializeNPagedLookasideList(Lookaside,
-        (PALLOCATE_FUNCTION)AcpiOsAcquireObjectHelper,// custom memory allocator
+        NULL,
         NULL,
         0,
         ObjectSize,
@@ -209,10 +196,11 @@ void *
 AcpiOsAcquireObject (
     ACPI_CACHE_T            *Cache)
 {
+    void* ptr;
 	PNPAGED_LOOKASIDE_LIST List = (PNPAGED_LOOKASIDE_LIST)Cache;
+
     DPRINT("AcpiOsAcquireObject from %p\n", Cache);
-    void* ptr = 
-        ExAllocateFromNPagedLookasideList(List);
+    ptr = ExAllocateFromNPagedLookasideList(List);
     ASSERT(ptr);
 
 	RtlZeroMemory(ptr,List->L.Size);
@@ -282,7 +270,7 @@ AcpiOsInstallInterruptHandler (
         Internal,
         0,
         InterruptNumber,
-        0,
+        InterruptNumber,
         &DIrql,
         &Affinity);
 
@@ -692,8 +680,10 @@ AcpiOsExecute (
 UINT64
 AcpiOsGetTimer (void)
 {
-    DPRINT("AcpiOsGetTimer\n");
     LARGE_INTEGER Timer;
+
+    DPRINT("AcpiOsGetTimer\n");
+    
     KeQueryTickCount(&Timer);
 
     return Timer.QuadPart;
@@ -758,9 +748,10 @@ ACPI_PHYSICAL_ADDRESS
 AcpiOsGetRootPointer (
     void)
 {
-    DPRINT("AcpiOsGetRootPointer\n");
     ACPI_PHYSICAL_ADDRESS pa = 0;
 
+    DPRINT("AcpiOsGetRootPointer\n");
+    
     AcpiFindRootPointer(&pa);
     return pa;
 }

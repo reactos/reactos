@@ -6,6 +6,15 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
+#include <windows.h>
+#include <assert.h>
+#include <winuser.h>
+#include <setupapi.h>
+#include <ks.h>
+#include <ksmedia.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <dbt.h>
 #include <audiosrv/audiosrv.h>
 
@@ -29,22 +38,22 @@ BOOL
 CreateAudioDeviceList(DWORD max_size);
 
 VOID
-DestroyAudioDeviceList();
+DestroyAudioDeviceList(VOID);
 
 
 /* Plug and Play (pnp.c) */
 
 BOOL
-ProcessExistingDevices();
+ProcessExistingDevices(VOID);
 
 DWORD
 ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device);
 
 BOOL
-RegisterForDeviceNotifications();
+RegisterForDeviceNotifications(VOID);
 
 VOID
-UnregisterDeviceNotifications();
+UnregisterDeviceNotifications(VOID);
 
 DWORD
 HandleDeviceEvent(
@@ -52,7 +61,7 @@ HandleDeviceEvent(
     LPVOID lpEventData);
 
 BOOL
-StartSystemAudioServices();
+StartSystemAudioServices(VOID);
 
 /* Debugging */
 

@@ -12,24 +12,89 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG gulFirstFree;
+extern ULONG gulFirstUnused;
 
-ULONG gulDebugChannels = 0;
+ULONG gulLogUnique = 0;
+
+/* note the following values need to be sorted */
+DBG_CHANNEL DbgChannels[DbgChCount]={
+    {L"EngBlt", DbgChEngBlt},
+    {L"EngBrush", DbgChEngBrush},
+    {L"EngClip", DbgChEngClip},
+    {L"EngCursor", DbgChEngCursor},
+    {L"EngDev", DbgChEngDev},
+    {L"EngErr", DbgChEngErr},
+    {L"EngEvent", DbgChEngEvent},
+    {L"EngGrad", DbgChEngGrad},
+    {L"EngLDev", DbgChEngLDev},
+    {L"EngLine", DbgChEngLine},
+    {L"EngMapping", DbgChEngMapping},
+    {L"EngPDev", DbgChEngPDev},
+    {L"EngSurface", DbgChEngSurface},
+    {L"EngWnd", DbgChEngWnd},
+    {L"EngXlate", DbgChEngXlate},
+    {L"GdiBitmap", DbgChGdiBitmap},
+    {L"GdiBlt", DbgChGdiBlt},
+    {L"GdiBrush", DbgChGdiBrush},
+    {L"GdiClipRgn", DbgChGdiClipRgn},
+    {L"GdiCoord", DbgChGdiCoord},
+    {L"GdiDC", DbgChGdiDC},
+    {L"GdiDCAttr", DbgChGdiDCAttr},
+    {L"GdiDCState", DbgChGdiDCState},
+    {L"GdiDev", DbgChGdiDev},
+    {L"GdiDib", DbgChGdiDib},
+    {L"GdiFont", DbgChGdiFont},
+    {L"GdiLine", DbgChGdiLine},
+    {L"GdiObj", DbgChGdiObj},
+    {L"GdiPalette", DbgChGdiPalette},
+    {L"GdiPath", DbgChGdiPath},
+    {L"GdiPen", DbgChGdiPen},
+    {L"GdiPool", DbgChGdiPool},
+    {L"GdiRgn", DbgChGdiRgn},
+    {L"GdiText", DbgChGdiText},
+    {L"GdiXFormObj", DbgChGdiXFormObj},
+    {L"UserAccel", DbgChUserAccel},
+    {L"UserCallback", DbgChUserCallback},
+    {L"UserCallProc", DbgChUserCallProc},
+    {L"UserCaret", DbgChUserCaret},
+    {L"UserClass", DbgChUserClass},
+    {L"UserClipbrd", DbgChUserClipbrd},
+    {L"UserCsr", DbgChUserCsr},
+    {L"UserDce", DbgChUserDce},
+    {L"UserDefwnd", DbgChUserDefwnd},
+    {L"UserDesktop", DbgChUserDesktop},
+    {L"UserDisplay",DbgChUserDisplay},
+    {L"UserEvent", DbgChUserEvent},
+    {L"UserFocus", DbgChUserFocus},
+    {L"UserHook", DbgChUserHook},
+    {L"UserHotkey", DbgChUserHotkey},
+    {L"UserIcon", DbgChUserIcon},
+    {L"UserInput", DbgChUserInput},
+    {L"UserKbd", DbgChUserKbd},
+    {L"UserKbdLayout", DbgChUserKbdLayout},
+    {L"UserMenu", DbgChUserMenu},
+    {L"UserMetric", DbgChUserMetric},
+    {L"UserMisc", DbgChUserMisc},
+    {L"UserMonitor", DbgChUserMonitor},
+    {L"UserMsg", DbgChUserMsg},
+    {L"UserMsgCall", DbgChUserMsgCall},
+    {L"UserMsgQ", DbgChUserMsgQ},
+    {L"UserObj", DbgChUserObj},
+    {L"UserPainting", DbgChUserPainting},
+    {L"UserProcess", DbgChUserProcess},
+    {L"UserProp", DbgChUserProp},
+    {L"UserScrollbar", DbgChUserScrollbar},
+    {L"UserSysparams", DbgChUserSysparams},
+    {L"UserTimer", DbgChUserTimer},
+    {L"UserThread", DbgChUserThread},
+    {L"UserWinpos", DbgChUserWinpos},
+    {L"UserWinsta", DbgChUserWinsta},
+    {L"UserWnd", DbgChUserWnd}
+};
 
 #ifdef GDI_DEBUG
-
-#define GDI_STACK_LEVELS 20
-static ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-struct DbgOpenGDIHandle
-{
-    ULONG idx;
-    int count;
-};
-#define MAX_BACKTRACES 1024
-static struct DbgOpenGDIHandle AllocatorTable[MAX_BACKTRACES];
-
+#if 0
 static
 BOOL
 CompareBacktraces(ULONG idx1, ULONG idx2)
@@ -51,7 +116,9 @@ CompareBacktraces(ULONG idx1, ULONG idx2)
     return TRUE;
 }
 
-void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
+VOID
+NTAPI
+DbgDumpGdiHandleTable(void)
 {
     static int leak_reported = 0;
     int i, j, idx, nTraces = 0;
@@ -140,9 +207,11 @@ void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 
     ASSERT(FALSE);
 }
+#endif
 
 ULONG
-CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
+NTAPI
+DbgCaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 {
     ULONG nFrameCount;
 
@@ -161,7 +230,8 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 }
 
 BOOL
-GdiDbgHTIntegrityCheck()
+NTAPI
+DbgGdiHTIntegrityCheck()
 {
 	ULONG i, nDeleted = 0, nFree = 0, nUsed = 0;
 	PGDI_TABLE_ENTRY pEntry;
@@ -172,46 +242,44 @@ GdiDbgHTIntegrityCheck()
 	/* FIXME: check reserved entries */
 
 	/* Now go through the deleted objects */
-	i = GdiHandleTable->FirstFree;
-	if (i)
+	i = gulFirstFree & 0xffff;
+	while (i)
 	{
 		pEntry = &GdiHandleTable->Entries[i];
-		for (;;)
+		if (i > GDI_HANDLE_COUNT)
 		{
-			nDeleted++;
-
-			/* Check the entry */
-			if ((pEntry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
-			{
-				r = 0;
-				DPRINT1("Deleted Entry has a type != 0\n");
-			}
-			if ((ULONG_PTR)pEntry->KernelData >= GDI_HANDLE_COUNT)
-			{
-				r = 0;
-				DPRINT1("Deleted entries KernelPointer too big\n");
-			}
-			if (pEntry->UserData != NULL)
-			{
-				r = 0;
-				DPRINT1("Deleted entry has UserData != 0\n");
-			}
-			if (pEntry->ProcessId != 0)
-			{
-				r = 0;
-				DPRINT1("Deleted entry has ProcessId != 0\n");
-			}
-
-			i = (ULONG_PTR)pEntry->KernelData;
-			if (!i)
-			{
-				break;
-			}
-			pEntry = &GdiHandleTable->Entries[i];
+		    DPRINT1("nDeleted=%ld\n", nDeleted);
+		    ASSERT(FALSE);
 		}
-	}
 
-	for (i = GdiHandleTable->FirstUnused;
+        nDeleted++;
+
+        /* Check the entry */
+        if ((pEntry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
+        {
+            r = 0;
+            DPRINT1("Deleted Entry has a type != 0\n");
+        }
+        if ((ULONG_PTR)pEntry->KernelData >= GDI_HANDLE_COUNT)
+        {
+            r = 0;
+            DPRINT1("Deleted entries KernelPointer too big\n");
+        }
+        if (pEntry->UserData != NULL)
+        {
+            r = 0;
+            DPRINT1("Deleted entry has UserData != 0\n");
+        }
+        if (pEntry->ProcessId != 0)
+        {
+            r = 0;
+            DPRINT1("Deleted entry has ProcessId != 0\n");
+        }
+
+        i = (ULONG_PTR)pEntry->KernelData & 0xffff;
+	};
+
+	for (i = gulFirstUnused;
 	     i < GDI_HANDLE_COUNT;
 	     i++)
 	{
@@ -283,15 +351,381 @@ GdiDbgHTIntegrityCheck()
 	return r;
 }
 
-ULONG
-FASTCALL
-GDIOBJ_IncrementShareCount(POBJ Object)
+#endif /* GDI_DEBUG */
+
+VOID
+NTAPI
+DbgDumpLockedGdiHandles()
 {
-    INT cLocks = InterlockedIncrement((PLONG)&Object->ulShareCount);
-    GDIDBG_CAPTURESHARELOCKER(Object->hHmgr);
-    ASSERT(cLocks >= 1);
-    return cLocks;
+#if 0
+    ULONG i;
+
+    for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
+    {
+        PENTRY pentry = &gpentHmgr[i];
+
+        if (pentry->Objt)
+        {
+            POBJ pobj = pentry->einfo.pobj;
+            if (pobj->cExclusiveLock > 0)
+            {
+                DPRINT1("Locked object: %lx, type = %lx. allocated from:\n",
+                        i, pentry->Objt);
+                DBG_DUMP_EVENT_LIST(&pobj->slhLog);
+            }
+        }
+    }
+#endif
 }
 
-#endif /* GDI_DEBUG */
+VOID
+NTAPI
+DbgLogEvent(PSLIST_HEADER pslh, LOG_EVENT_TYPE nEventType, LPARAM lParam)
+{
+    PLOGENTRY pLogEntry;
+
+    /* Log a maximum of 100 events */
+    if (QueryDepthSList(pslh) >= 1000) return;
+
+    /* Allocate a logentry */
+    pLogEntry = EngAllocMem(0, sizeof(LOGENTRY), 'golG');
+    if (!pLogEntry) return;
+
+    /* Set type */
+    pLogEntry->nEventType = nEventType;
+    pLogEntry->ulUnique = InterlockedIncrement((LONG*)&gulLogUnique);
+    pLogEntry->dwProcessId = HandleToUlong(PsGetCurrentProcessId());
+    pLogEntry->dwThreadId = HandleToUlong(PsGetCurrentThreadId());
+    pLogEntry->lParam = lParam;
+
+    /* Capture a backtrace */
+    DbgCaptureStackBackTace(pLogEntry->apvBackTrace, 20);
+
+    switch (nEventType)
+    {
+        case EVENT_ALLOCATE:
+        case EVENT_CREATE_HANDLE:
+        case EVENT_REFERENCE:
+        case EVENT_DEREFERENCE:
+        case EVENT_LOCK:
+        case EVENT_UNLOCK:
+        case EVENT_DELETE:
+        case EVENT_FREE:
+        case EVENT_SET_OWNER:
+        default:
+            break;
+    }
+
+    /* Push it on the list */
+    InterlockedPushEntrySList(pslh, &pLogEntry->sleLink);
+}
+
+#define REL_ADDR(va) ((ULONG_PTR)va - (ULONG_PTR)&__ImageBase)
+
+VOID
+DbgPrintEvent(PLOGENTRY pLogEntry)
+{
+    PSTR pstr;
+
+    switch (pLogEntry->nEventType)
+    {
+        case EVENT_ALLOCATE: pstr = "Allocate"; break;
+        case EVENT_CREATE_HANDLE: pstr = "CreatHdl"; break;
+        case EVENT_REFERENCE: pstr = "Ref"; break;
+        case EVENT_DEREFERENCE: pstr = "Deref"; break;
+        case EVENT_LOCK: pstr = "Lock"; break;
+        case EVENT_UNLOCK: pstr = "Unlock"; break;
+        case EVENT_DELETE: pstr = "Delete"; break;
+        case EVENT_FREE: pstr = "Free"; break;
+        case EVENT_SET_OWNER: pstr = "SetOwner"; break;
+        default: pstr = "Unknown"; break;
+    }
+
+    DbgPrint("[%ld] %03x:%03x %.8s val=%p <%lx,%lx,%lx,%lx>\n",
+             pLogEntry->ulUnique,
+             pLogEntry->dwProcessId,
+             pLogEntry->dwThreadId,
+             pstr,
+             pLogEntry->lParam,
+             REL_ADDR(pLogEntry->apvBackTrace[2]),
+             REL_ADDR(pLogEntry->apvBackTrace[3]),
+             REL_ADDR(pLogEntry->apvBackTrace[4]),
+             REL_ADDR(pLogEntry->apvBackTrace[5]));
+}
+
+VOID
+NTAPI
+DbgDumpEventList(PSLIST_HEADER pslh)
+{
+    PSLIST_ENTRY psle;
+    PLOGENTRY pLogEntry;
+
+    while ((psle = InterlockedPopEntrySList(pslh)))
+    {
+        pLogEntry = CONTAINING_RECORD(psle, LOGENTRY, sleLink);
+        DbgPrintEvent(pLogEntry);
+    }
+
+}
+
+VOID
+NTAPI
+DbgCleanupEventList(PSLIST_HEADER pslh)
+{
+    PSLIST_ENTRY psle;
+    PLOGENTRY pLogEntry;
+
+    while ((psle = InterlockedPopEntrySList(pslh)))
+    {
+        pLogEntry = CONTAINING_RECORD(psle, LOGENTRY, sleLink);
+        EngFreeMem(pLogEntry);
+    }
+}
+
+void
+NTAPI
+DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
+{
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    if (pti && pti->cExclusiveLocks != 0)
+    {
+        DbgPrint("FATAL: Win32DbgPreServiceHook(0x%lx): There are %ld exclusive locks!\n",
+                 ulSyscallId, pti->cExclusiveLocks);
+        DbgDumpLockedGdiHandles();
+        ASSERT(FALSE);
+    }
+
+}
+
+ULONG_PTR
+NTAPI
+DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
+{
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    if (pti && pti->cExclusiveLocks != 0)
+    {
+        DbgPrint("FATAL: Win32DbgPostServiceHook(0x%lx): There are %ld exclusive locks!\n",
+                 ulSyscallId, pti->cExclusiveLocks);
+        DbgDumpLockedGdiHandles();
+        ASSERT(FALSE);
+    }
+    return ulResult;
+}
+
+NTSTATUS NTAPI
+QueryEnvironmentVariable(PUNICODE_STRING Name,
+                         PUNICODE_STRING Value)
+{
+   NTSTATUS Status;
+   PWSTR wcs;
+   UNICODE_STRING var;
+   PWSTR val;
+   PPEB Peb;
+   PWSTR Environment; 
+
+   /* Ugly hack for reactos system threads */
+   if(!NtCurrentTeb())
+   {
+       return(STATUS_VARIABLE_NOT_FOUND);
+   }
+
+   Peb = NtCurrentPeb();
+
+   if (Peb == NULL) 
+   {
+       return(STATUS_VARIABLE_NOT_FOUND);
+   }
+
+   Environment = Peb->ProcessParameters->Environment;
+
+   if (Environment == NULL)
+   {
+      return(STATUS_VARIABLE_NOT_FOUND);
+   }
+
+   Value->Length = 0;
+
+   wcs = Environment;
+   while (*wcs)
+   {
+      var.Buffer = wcs++;
+      wcs = wcschr(wcs, L'=');
+      if (wcs == NULL)
+      {
+         wcs = var.Buffer + wcslen(var.Buffer);
+      }
+      if (*wcs)
+      {
+         var.Length = var.MaximumLength = (wcs - var.Buffer) * sizeof(WCHAR);
+         val = ++wcs;
+         wcs += wcslen(wcs);
+
+         if (RtlEqualUnicodeString(&var, Name, TRUE))
+         {
+            Value->Length = (wcs - val) * sizeof(WCHAR);
+            if (Value->Length <= Value->MaximumLength)
+            {
+               memcpy(Value->Buffer, val,
+                      min(Value->Length + sizeof(WCHAR), Value->MaximumLength));
+               Status = STATUS_SUCCESS;
+            }
+            else
+            {
+               Status = STATUS_BUFFER_TOO_SMALL;
+            }
+
+            return(Status);
+         }
+      }
+      wcs++;
+   }
+
+   return(STATUS_VARIABLE_NOT_FOUND);
+}
+
+static int
+DbgCompareChannels(const void * a, const void * b)
+{
+    return wcscmp((WCHAR*)a, ((DBG_CHANNEL*)b)->Name);
+}
+
+static BOOL
+DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
+{
+    DBG_CHANNEL *ChannelEntry;
+    UINT iLevel, iChannel;
+
+    ChannelEntry = (DBG_CHANNEL*)bsearch(channel, 
+                                         DbgChannels, 
+                                         DbgChCount, 
+                                         sizeof(DBG_CHANNEL), 
+                                         DbgCompareChannels);
+    if(ChannelEntry == NULL)
+    {
+        return FALSE;
+    }
+
+    iChannel = ChannelEntry->Id;
+    ASSERT(iChannel >= 0 && iChannel < DbgChCount);
+
+    if(level == NULL || *level == L'\0' ||wcslen(level) == 0 )
+        iLevel = MAX_LEVEL;
+    else if(wcsncmp(level, L"err", 3) == 0)
+        iLevel = ERR_LEVEL;
+    else if(wcsncmp(level, L"fixme", 5) == 0)
+        iLevel = FIXME_LEVEL;
+    else if(wcsncmp(level, L"warn", 4) == 0)
+        iLevel = WARN_LEVEL;
+    else if (wcsncmp(level, L"trace", 4) == 0)
+        iLevel = TRACE_LEVEL;
+    else
+        return FALSE;
+    
+    if(op==L'+')
+    {
+        DBG_ENABLE_CHANNEL(ppi, iChannel, iLevel);
+    }
+    else
+    {
+        DBG_DISABLE_CHANNEL(ppi, iChannel, iLevel);
+    }
+    
+    return TRUE;
+}
+
+static BOOL 
+DbgParseDebugChannels(PPROCESSINFO ppi, PUNICODE_STRING Value)
+{
+    WCHAR *str, *separator, *c, op;
+
+    str = Value->Buffer;
+
+    do
+    {
+        separator = wcschr(str, L',');
+        if(separator != NULL)
+            *separator = L'\0';
+
+        c = wcschr(str, L'+');
+        if(c == NULL)
+            c = wcschr(str, L'-');
+
+        if(c != NULL)
+        {
+            op = *c;
+            *c = L'\0';
+            c++;
+
+            DbgAddDebugChannel(ppi, c, str, op);
+        }
+
+        str = separator + 1;
+    }while(separator != NULL);
+
+    return TRUE;
+}
+
+BOOL DbgInitDebugChannels()
+{
+    WCHAR valBuffer[100];
+    UNICODE_STRING Value;
+    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"DEBUGCHANNEL");
+    NTSTATUS Status;
+    PPROCESSINFO ppi;
+    BOOL ret;
+
+    /* Initialize all channels to ERROR */
+    ppi = PsGetCurrentProcessWin32Process();
+    RtlFillMemory( ppi->DbgChannelLevel, 
+                   sizeof(ppi->DbgChannelLevel), 
+                   ERR_LEVEL);
+
+    /* Find DEBUGCHANNEL env var */
+    Value.Buffer = valBuffer;
+    Value.Length = 0;
+    Value.MaximumLength = sizeof(valBuffer);
+    Status = QueryEnvironmentVariable(&Name, &Value);
+
+    /* It does not exist */
+    if(Status == STATUS_VARIABLE_NOT_FOUND)
+    {
+        /* There is nothing more to do */
+        return TRUE;
+    }
+
+    /* If the buffer in the stack is not enough allocate it */
+    if(Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        Value.Buffer = ExAllocatePool(PagedPool, Value.MaximumLength);
+        if(Value.Buffer == NULL)
+        {
+            return FALSE;
+        }
+
+        /* Get the env var again */
+        Status = QueryEnvironmentVariable(&Name, &Value);
+    }
+    
+   /* Check for error */
+    if(!NT_SUCCESS(Status))
+    {
+        if(Value.Buffer != valBuffer)
+        {
+            ExFreePool(Value.Buffer);
+        }
+
+        return FALSE;
+    }
+
+    /* Parse the variable */
+    ret = DbgParseDebugChannels(ppi, &Value);
+
+    /* Clean up*/
+    if(Value.Buffer != valBuffer)
+    {
+        ExFreePool(Value.Buffer);
+    }
+
+    return ret;
+}
 

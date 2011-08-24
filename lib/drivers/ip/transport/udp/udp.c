@@ -234,6 +234,8 @@ NTSTATUS UDPSendDatagram(
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
+    
+    *DataUsed = DataSize;
 
     return STATUS_SUCCESS;
 }

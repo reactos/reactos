@@ -1136,10 +1136,10 @@ DlgProc(HWND hDlg,
                                SRCCOPY);
 
                     SelectObject(hdcMem, hBmpOld);
-                    txtRc.left = bmpRc.right * 0.25;
+                    txtRc.left = bmpRc.right / 4;
                     txtRc.top = 10;
-                    txtRc.right = bmpRc.right * 0.75;
-                    txtRc.bottom = pInfo->headerbitmap.bmHeight * 0.5;
+                    txtRc.right = bmpRc.right * 3 / 4;
+                    txtRc.bottom = pInfo->headerbitmap.bmHeight / 2;
 
                     ZeroMemory(&lf, sizeof(LOGFONTW));
 
@@ -1172,10 +1172,10 @@ DlgProc(HWND hDlg,
                         }
                     }
 
-                    txtRc.left = bmpRc.right * 0.25;
+                    txtRc.left = bmpRc.right / 4;
                     txtRc.top = txtRc.bottom - 5;
-                    txtRc.right = bmpRc.right * 0.75;
-                    txtRc.bottom = pInfo->headerbitmap.bmHeight * 0.9;
+                    txtRc.right = bmpRc.right * 3 / 4;
+                    txtRc.bottom = pInfo->headerbitmap.bmHeight * 9 / 10;
 
                     if (LoadStringW(hInst,
                                     IDS_HEADERTEXT2,

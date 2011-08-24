@@ -8,12 +8,7 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <ntddsnd.h>
-#include <mmebuddy.h>
-#include <sndtypes.h>
+#include "precomp.h"
 
 
 /*
@@ -242,7 +237,11 @@ EnqueueWaveHeader(
         SoundDeviceInstance->HeadWaveHeader = WaveHeader;
         SoundDeviceInstance->TailWaveHeader = WaveHeader;
 
-        DoWaveStreaming(SoundDeviceInstance);
+        /* Only do wave streaming when the stream has not been paused */
+        if (SoundDeviceInstance->bPaused == FALSE)
+        {
+            DoWaveStreaming(SoundDeviceInstance);
+        }
     }
     else
     {
@@ -258,7 +257,11 @@ EnqueueWaveHeader(
             SoundDeviceInstance->TailWaveHeader = WaveHeader;
             DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 
-            DoWaveStreaming(SoundDeviceInstance);
+            /* Only do wave streaming when the stream has not been paused */
+            if ( SoundDeviceInstance->bPaused == FALSE )
+            {
+                DoWaveStreaming(SoundDeviceInstance);
+            }
         }
     }
 

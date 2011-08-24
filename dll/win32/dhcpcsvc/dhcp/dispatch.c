@@ -40,7 +40,7 @@
  */
 
 #include "rosdhcp.h"
-#include "dhcpd.h"
+
 //#include <sys/ioctl.h>
 
 //#include <net/if_media.h>

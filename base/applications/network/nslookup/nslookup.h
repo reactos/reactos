@@ -1,3 +1,11 @@
+#include <windows.h>
+#include <windns.h>
+#include <winsock2.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iphlpapi.h>
+
 #define TypeA       "A"
 #define TypeAAAA    "AAAA"
 #define TypeBoth    "A+AAAA"

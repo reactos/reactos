@@ -28,35 +28,16 @@ static char sccsid[] = "@(#)main.c	based on 5.13 (Berkeley) 3/14/89";
 /*
  * FTP User Program -- Command Interface.
  */
-#ifndef _WIN32
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <arpa/ftp.h>
-#include <errno.h>
-#include <pwd.h>
-#endif
-#include "ftp_var.h"
-#include "prototypes.h"
-#include <sys/types.h>
-
-#include <io.h>
-#include <fcntl.h>
-
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-
+#include "precomp.h"
 
 #if defined(sun) && !defined(FD_SET)
 typedef int uid_t;
 #endif
 
-uid_t	getuid();
-void	intr();
-void	lostpeer();
-char	*getlogin();
+uid_t	getuid(void);
+void	intr(void);
+void	lostpeer(void);
+char	*getlogin(void);
 
 short	portnum;
 
@@ -262,10 +243,8 @@ int main(int argc, const char *argv[])
 	}
 }
 
-void
-intr()
+void intr(void)
 {
-
 	longjmp(toplevel, 1);
 }
 
@@ -299,8 +278,7 @@ void lostpeer(void)
 }
 
 /*char *
-tail(filename)
-	char *filename;
+tail(char *filename)
 {
 	register char *s;
 
@@ -318,8 +296,7 @@ tail(filename)
 /*
  * Command parser.
  */
-void cmdscanner(top)
-	int top;
+void cmdscanner(int top)
 {
 	register struct cmd *c;
 
@@ -333,7 +310,7 @@ void cmdscanner(top)
 		}
 		if (gets(line) == 0) {
 			if (feof(stdin) || ferror(stdin))
-				quit();
+				quit(0, NULL);
 			break;
 		}
 		if (line[0] == 0)
@@ -367,8 +344,7 @@ void cmdscanner(top)
 }
 
 struct cmd *
-getcmd(name)
-	const char *name;
+getcmd(const char *name)
 {
 	extern struct cmd cmdtab[];
 	const char *p, *q;
@@ -402,7 +378,7 @@ getcmd(name)
 
 int slrflag;
 
-void makeargv()
+void makeargv(void)
 {
 	const char **argp;
 
@@ -421,7 +397,7 @@ void makeargv()
  * handle quoting and strings
  */
 static const char *
-slurpstring()
+slurpstring(void)
 {
 	int got_one = 0;
 	register char *sb = stringbase;
@@ -544,9 +520,7 @@ OUT1:
  * Help command.
  * Call each command handler with argc == 0 and argv[0] == name.
  */
-void help(argc, argv)
-	int argc;
-	char *argv[];
+void help(int argc, const char *argv[])
 {
 	extern struct cmd cmdtab[];
 	struct cmd *c;
@@ -594,7 +568,7 @@ void help(argc, argv)
 		return;
 	}
 	while (--argc > 0) {
-		register char *arg;
+		const char *arg;
 		arg = *++argv;
 		c = getcmd(arg);
 		if (c == (struct cmd *)-1)

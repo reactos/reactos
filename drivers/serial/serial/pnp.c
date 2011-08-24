@@ -24,8 +24,6 @@ SerialAddDeviceInternal(
 	NTSTATUS Status;
 	WCHAR DeviceNameBuffer[32];
 	UNICODE_STRING DeviceName;
-	static ULONG DeviceNumber = 0;
-	static ULONG ComPortNumber = 1;
 
 	TRACE_(SERIAL, "SerialAddDeviceInternal()\n");
 
@@ -33,7 +31,7 @@ SerialAddDeviceInternal(
 	ASSERT(Pdo);
 
 	/* Create new device object */
-	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceNumber);
+	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", IoGetConfigurationInformation()->SerialCount);
 	RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
 	Status = IoCreateDevice(DriverObject,
 	                        sizeof(SERIAL_DEVICE_EXTENSION),
@@ -59,9 +57,9 @@ SerialAddDeviceInternal(
 		goto ByeBye;
 	}
 
-	DeviceExtension->SerialPortNumber = DeviceNumber++;
+	DeviceExtension->SerialPortNumber = IoGetConfigurationInformation()->SerialCount++;
 	if (pComPortNumber == NULL)
-		DeviceExtension->ComPort = ComPortNumber++;
+		DeviceExtension->ComPort = DeviceExtension->SerialPortNumber + 1;
 	else
 		DeviceExtension->ComPort = *pComPortNumber;
 	DeviceExtension->Pdo = Pdo;
@@ -159,9 +157,7 @@ SerialPnpStartDevice(
 
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-	ASSERT(ResourceList);
 	ASSERT(DeviceExtension);
-	ASSERT(DeviceExtension->PnpState == dsStopped);
 
 	if (!ResourceList)
 	{

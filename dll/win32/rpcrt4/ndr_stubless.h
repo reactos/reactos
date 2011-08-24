@@ -85,7 +85,7 @@ typedef struct _NDR_PROC_HEADER_RPC
      * RPCF_Asynchronous = 0x4000 - [async] MIDL attribute
      * Reserved = 0x8000
      */
-    unsigned long rpc_flags;
+    unsigned int rpc_flags;
     unsigned short proc_num;
     unsigned short stack_size;
 
@@ -141,31 +141,20 @@ typedef struct _NDR_PARAM_OI_OTHER
     unsigned short type_offset;
 } NDR_PARAM_OI_OTHER;
 
-typedef struct _NDR_PARAM_OIF_BASETYPE
+typedef struct
 {
-    PARAM_ATTRIBUTES param_attributes;
-
+    PARAM_ATTRIBUTES attr;
     /* the offset on the calling stack where the parameter is located */
     unsigned short stack_offset;
-
-    /* see NDR_PARAM_OI_BASETYPE::type_format_char */
-    unsigned char type_format_char;
-
-    /* always FC_PAD */
-    unsigned char unused;
-} NDR_PARAM_OIF_BASETYPE;
-
-typedef struct _NDR_PARAM_OIF_OTHER
-{
-    PARAM_ATTRIBUTES param_attributes;
-
-    /* see NDR_PARAM_OIF_BASETYPE::stack_offset */
-    unsigned short stack_offset;
-
-    /* offset into the provided type format string where the type for this
-     * parameter starts */
-    unsigned short type_offset;
-} NDR_PARAM_OIF_OTHER;
+    union
+    {
+        /* see NDR_PARAM_OI_BASETYPE::type_format_char */
+        unsigned char type_format_char;
+        /* offset into the provided type format string where the type for this
+         * parameter starts */
+        unsigned short type_offset;
+    } u;
+} NDR_PARAM_OIF;
 
 /* explicit handle description for FC_BIND_PRIMITIVE type */
 typedef struct _NDR_EHD_PRIMITIVE
@@ -236,7 +225,24 @@ typedef struct _NDR_EHD_CONTEXT
 
 #include "poppack.h"
 
-void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
-    PFORMAT_STRING pFormat, int phase, unsigned char *args,
-    unsigned short stack_size, unsigned char *pRetVal, BOOL object_proc,
-    BOOL ignore_retval);
+enum stubless_phase
+{
+    STUBLESS_UNMARSHAL,
+    STUBLESS_INITOUT,
+    STUBLESS_CALLSERVER,
+    STUBLESS_CALCSIZE,
+    STUBLESS_GETBUFFER,
+    STUBLESS_MARSHAL,
+    STUBLESS_FREE
+};
+
+LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat,
+                                void **stack_top, void **fpu_stack ) DECLSPEC_HIDDEN;
+LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat,
+                                      void **stack_top ) DECLSPEC_HIDDEN;
+void client_do_args( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat, enum stubless_phase phase,
+                     void **fpu_args, unsigned short number_of_params, unsigned char *pRetVal ) DECLSPEC_HIDDEN;
+PFORMAT_STRING convert_old_args( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat,
+                                 unsigned int stack_size, BOOL object_proc,
+                                 void *buffer, unsigned int size, unsigned int *count ) DECLSPEC_HIDDEN;
+RPC_STATUS NdrpCompleteAsyncClientCall(RPC_ASYNC_STATE *pAsync, void *Reply) DECLSPEC_HIDDEN;

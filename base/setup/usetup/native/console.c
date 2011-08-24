@@ -1,4 +1,4 @@
-#include "host_native.h"
+#include "usetup.h"
 
 BOOLEAN
 NATIVE_InitConsole(

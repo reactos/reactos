@@ -1,5 +1,7 @@
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented
@@ -194,11 +196,9 @@ GetTextExtentExPointW(
 )
 {
 
+    /* Windows doesn't check nMaxExtent validity in unicode version */
     if(nMaxExtent < -1)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+        DPRINT("nMaxExtent is invalid: %d\n", nMaxExtent);
 
     return NtGdiGetTextExtentExW (
                hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
@@ -261,7 +261,8 @@ GetTextExtentPoint32A(
     UNICODE_STRING StringU;
     BOOL ret;
 
-    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    StringA.Buffer = (LPSTR)lpString;
+    StringA.Length = cchString;
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
     ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cchString, lpSize);
