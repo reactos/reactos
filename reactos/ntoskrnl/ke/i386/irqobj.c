@@ -591,7 +591,7 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     KfLowerIrql(OldIrql);
     
     /* Return status */
-    return Status;
+    return NT_SUCCESS(Status);
 }
 
 /* EOF */
