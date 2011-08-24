@@ -111,6 +111,6 @@ VideoPortGetAgpServices(
       return FALSE;
    }
 
-   RtlCopyMemory(AgpServices, &Interface.AgpReservePhysical, sizeof(AgpServices));
+   RtlCopyMemory(AgpServices, &Interface.AgpReservePhysical, sizeof(PVIDEO_PORT_AGP_SERVICES));
    return TRUE;
 }
