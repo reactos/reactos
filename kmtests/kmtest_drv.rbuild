@@ -30,6 +30,7 @@
 	</directory>
 	<directory name="ntos_io">
 		<file>IoDeviceInterface.c</file>
+		<file>IoInterrupt.c</file>
 		<file>IoIrp.c</file>
 		<file>IoMdl.c</file>
 	</directory>

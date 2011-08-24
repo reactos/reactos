@@ -27,6 +27,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ex/ExTimer.c
     ntos_fsrtl/FsRtlExpression.c
     ntos_io/IoDeviceInterface.c
+    ntos_io/IoInterrupt.c
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
     ntos_ke/KeApc.c

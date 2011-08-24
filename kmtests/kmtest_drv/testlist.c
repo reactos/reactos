@@ -20,6 +20,7 @@ KMT_TESTFUNC Test_ExSingleList;
 KMT_TESTFUNC Test_ExTimer;
 KMT_TESTFUNC Test_FsRtlExpression;
 KMT_TESTFUNC Test_IoDeviceInterface;
+KMT_TESTFUNC Test_IoInterrupt;
 KMT_TESTFUNC Test_IoIrp;
 KMT_TESTFUNC Test_IoMdl;
 KMT_TESTFUNC Test_KeApc;
@@ -51,6 +52,7 @@ const KMT_TEST TestList[] =
     { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
+    { "IoInterrupt",                        Test_IoInterrupt },
     { "IoIrp",                              Test_IoIrp },
     { "IoMdl",                              Test_IoMdl },
     { "KeApc",                              Test_KeApc },
