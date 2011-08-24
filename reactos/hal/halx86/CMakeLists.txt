@@ -38,6 +38,7 @@ list(APPEND HAL_GENERIC_PCAT_SOURCE
     generic/legacy/bus/pcidata.c
     generic/legacy/bus/sysbus.c
     generic/legacy/bussupp.c
+    generic/legacy/halpnpdd.c
     generic/legacy/halpcat.c)
 
 list(APPEND HAL_GENERIC_ACPI_SOURCE
