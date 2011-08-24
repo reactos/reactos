@@ -1792,7 +1792,7 @@ BOOL WINAPI
 UpdateLayeredWindowIndirect(HWND hwnd,
                             const UPDATELAYEREDWINDOWINFO *info)
 {
-  if (info && info->cbSize == sizeof(info))
+  if (info && info->cbSize == sizeof(*info))
   {
      return NtUserUpdateLayeredWindow( hwnd,
                                        info->hdcDst,
