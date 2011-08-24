@@ -18,6 +18,7 @@
     			</directory>
     		    <file>bussupp.c</file>
     	        <file>halpcat.c</file>
+				<file>halpnpdd.c</file>
     	    </directory>
 			<if property="ARCH" value="i386">
 				<file>halinit.c</file>

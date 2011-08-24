@@ -60,6 +60,7 @@ HalpIs16BitPortDecodeSupported(VOID)
     return (HalpBusType == MACHINE_TYPE_EISA) ? CM_RESOURCE_PORT_16_BIT_DECODE : 0;
 }
 
+#if 0
 NTSTATUS
 NTAPI
 INIT_FUNCTION
@@ -69,6 +70,7 @@ HaliInitPnpDriver(VOID)
     //HalpDebugPciBus();
     return STATUS_SUCCESS;
 }
+#endif
 
 /*
  * @implemented
