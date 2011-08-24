@@ -216,7 +216,7 @@ unsigned long _byteswap_ulong(unsigned long value);
 unsigned __int64 _byteswap_uint64(unsigned __int64 value);
 #pragma intrinsic(_byteswap_uint64)
 #ifdef _M_AMD64
-unsigned char _bittest64(__int64 *a, __int64 b);
+unsigned char _bittest64(__int64 const *a, __int64 b);
 #pragma intrinsic(_bittest64)
 #endif
 

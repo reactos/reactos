@@ -313,8 +313,11 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef _BUILD_STLPORT
 #define InterlockedPopEntrySList(list) reinterpret_cast<_STLP_atomic_freelist::item*>(InterlockedPopEntrySList(list))
 #define InterlockedFlushSList(list) reinterpret_cast<_STLP_atomic_freelist::item*>(InterlockedFlushSList(list))
+#endif
 
 #undef __cdecl__
 #define __cdecl__
