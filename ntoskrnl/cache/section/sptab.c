@@ -105,11 +105,11 @@ MiSectionPageTableGetOrAllocate
  PLARGE_INTEGER FileOffset)
 {
     LARGE_INTEGER SearchFileOffset;
+	CACHE_SECTION_PAGE_TABLE SectionZeroPageTable = {0};
     PCACHE_SECTION_PAGE_TABLE PageTableSlice = 
         MiSectionPageTableGet(Table, FileOffset);
     if (!PageTableSlice)
     {
-		CACHE_SECTION_PAGE_TABLE SectionZeroPageTable = { };
         SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
         SectionZeroPageTable.FileOffset = SearchFileOffset;
         SectionZeroPageTable.Refcount = 1;

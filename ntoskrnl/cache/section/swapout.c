@@ -247,6 +247,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
    PEPROCESS Process = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    MM_REQUIRED_RESOURCES Resources = { 0 };
+   ULONG RefCount;
 
    DPRINTC("Page out %x (ref ct %x)\n", Page, MmGetReferenceCountPage(Page));
 
@@ -438,7 +439,6 @@ bail:
 	   }
 
 	   // Alas, we had the last reference
-	   ULONG RefCount;
 	   if ((RefCount = InterlockedDecrementUL(&Segment->ReferenceCount)) == 0)
 		   MmFinalizeSegment(Segment);
    }

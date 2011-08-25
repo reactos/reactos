@@ -143,7 +143,7 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
     PNOCC_BCB Bcb = NULL;
 	LARGE_INTEGER LowerBound, UpperBound;
 	PLIST_ENTRY ListEntry;
-    IO_STATUS_BLOCK IOSB = { };
+    IO_STATUS_BLOCK IOSB = {0};
 
 	DPRINT("CcFlushCache (while file) (%s:%d)\n", File, Line);
 
@@ -287,7 +287,8 @@ VOID
 NTAPI
 CcShutdownSystem()
 {
-	ULONG i;
+	ULONG i, Result;
+	NTSTATUS Status;
 
 	DPRINT1("CC: Shutdown\n");
 
@@ -308,8 +309,7 @@ CcShutdownSystem()
 	}
 
 	// Evict all section pages
-	ULONG Result;
-	NTSTATUS Status = MiRosTrimCache(~0, 0, &Result);
+	Status = MiRosTrimCache(~0, 0, &Result);
 
 	DPRINT1("Done (Evicted %d, Status %x)\n", Result, Status);
 }

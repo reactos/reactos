@@ -238,6 +238,7 @@ MiCowCacheSectionPage
    PVOID PAddress;
    LARGE_INTEGER Offset;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   ULONG Entry;
     
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
@@ -269,7 +270,7 @@ MiCowCacheSectionPage
            {
                DPRINTC("file %wZ\n", &Segment->FileObject->FileName);
            }
-           ULONG Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
+           Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
            DPRINT("Entry %x\n", Entry);
            if (Entry &&
                !IS_SWAP_FROM_SSE(Entry) &&
@@ -393,6 +394,7 @@ MmpSectionAccessFaultInner
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
    MM_REQUIRED_RESOURCES Resources = { 0 };
+   WORK_QUEUE_WITH_CONTEXT Context = { 0 };
 
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -476,7 +478,6 @@ MmpSectionAccessFaultInner
 	  {
 		  if (Thread->ActiveFaultCount > 0)
 		  {
-			  WORK_QUEUE_WITH_CONTEXT Context = { };
 			  DPRINT("Already fault handling ... going to work item (%x)\n", Address);
 			  Context.AddressSpace = AddressSpace;
 			  Context.MemoryArea = MemoryArea;
@@ -586,6 +587,7 @@ MmNotPresentFaultCacheSectionInner
 	BOOLEAN Locked = FromMdl;
 	PMEMORY_AREA MemoryArea;
 	MM_REQUIRED_RESOURCES Resources = { 0 };
+	WORK_QUEUE_WITH_CONTEXT Context = { 0 };
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	if (!FromMdl)
@@ -657,7 +659,6 @@ MmNotPresentFaultCacheSectionInner
 		{
 			if (Thread->ActiveFaultCount > 2)
 			{
-				WORK_QUEUE_WITH_CONTEXT Context = { };
 				DPRINTC("Already fault handling ... going to work item (%x)\n", Address);
 				Context.AddressSpace = AddressSpace;
 				Context.MemoryArea = MemoryArea;

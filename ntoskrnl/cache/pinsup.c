@@ -310,7 +310,7 @@ CcpMapData
     /* Note: windows 2000 drivers treat this as a bool */
     //BOOLEAN Wait = (Flags & MAP_WAIT) || (Flags == TRUE);
     LARGE_INTEGER Target, EndInterval;
-	ULONG BcbHead;
+	ULONG BcbHead, SectionSize, ViewSize;
     PNOCC_BCB Bcb = NULL;
     PROS_SECTION_OBJECT SectionObject = NULL;
     NTSTATUS Status;
@@ -355,8 +355,6 @@ CcpMapData
 		goto cleanup;
 	}
 
-	ULONG SectionSize;
-	
 	DPRINT("File size %08x%08x\n", Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
 	
 	if (Map->FileSizes.ValidDataLength.QuadPart)
@@ -421,7 +419,7 @@ retry:
     }
 	
     DPRINT("Selected BCB #%x\n", BcbHead);
-	ULONG ViewSize = CACHE_STRIPE;
+	ViewSize = CACHE_STRIPE;
 
     Bcb = &CcCacheSections[BcbHead];
 	Status = MmMapCacheViewInSystemSpaceAtOffset

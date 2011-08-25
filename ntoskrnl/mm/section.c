@@ -1197,7 +1197,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Page - Variable that receives a page contains the read data.
  */
 {
-   MM_REQUIRED_RESOURCES Resources = { };
+   MM_REQUIRED_RESOURCES Resources = {0};
+   NTSTATUS Status;
   
    Resources.Context = MemoryArea->Data.SectionData.Section->FileObject;
    Resources.FileOffset.QuadPart = SegOffset + 
@@ -1205,7 +1206,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    Resources.Consumer = MC_USER;
    Resources.Amount = PAGE_SIZE;
    DPRINT("%S, offset %x, len %d, page %x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
-   NTSTATUS Status = MiReadFilePage(NULL, NULL, &Resources);
+   Status = MiReadFilePage(NULL, NULL, &Resources);
    *Page = Resources.Page[0];
    return Status;
 }
@@ -4748,6 +4749,9 @@ BOOLEAN NTAPI
 MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                      IN MMFLUSH_TYPE   FlushType)
 {
+   BOOLEAN Result = TRUE;
+   PMM_SECTION_SEGMENT Segment;
+
    switch(FlushType)
    {
       case MmFlushForDelete:
@@ -4763,10 +4767,8 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
       case MmFlushForWrite:
 	  {
 		  DPRINT("MmFlushImageSection(%d)\n", FlushType);
-		  BOOLEAN Result = TRUE;
 #ifdef NEWCC
-		  PMM_SECTION_SEGMENT Segment = 
-			  (PMM_SECTION_SEGMENT)SectionObjectPointer->DataSectionObject;
+		  Segment = (PMM_SECTION_SEGMENT)SectionObjectPointer->DataSectionObject;
 #endif
 
 		  if (SectionObjectPointer->ImageSectionObject) {
@@ -4998,7 +5000,7 @@ MmCreateSection (OUT PVOID  * Section,
 	   IO_STATUS_BLOCK Iosb;
 	   NTSTATUS Status;
 	   CHAR Buffer;
-	   LARGE_INTEGER ByteOffset = { };
+	   LARGE_INTEGER ByteOffset = {0};
 	   Status = ZwReadFile
 		   (FileHandle,
 			NULL,
