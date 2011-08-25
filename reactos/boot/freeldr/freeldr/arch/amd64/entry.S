@@ -3,10 +3,20 @@
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 
+EXTERN BootMain:PROC
+
 .code64
 
 PUBLIC RealEntryPoint
 RealEntryPoint:
+    //mov ax, LMODE_DS
+    //mov ds, ax
+    //mov word ptr [HEX(b8000)], HEX(0e00) + '1'
+
+    /* GO! */
+    xor rcx, rcx
+    call BootMain
+
 
 PUBLIC FrldrBootDrive
 FrldrBootDrive:
