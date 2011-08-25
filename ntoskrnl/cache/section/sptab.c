@@ -105,7 +105,7 @@ MiSectionPageTableGetOrAllocate
  PLARGE_INTEGER FileOffset)
 {
     LARGE_INTEGER SearchFileOffset;
-	CACHE_SECTION_PAGE_TABLE SectionZeroPageTable = {0};
+	CACHE_SECTION_PAGE_TABLE SectionZeroPageTable;
     PCACHE_SECTION_PAGE_TABLE PageTableSlice = 
         MiSectionPageTableGet(Table, FileOffset);
     if (!PageTableSlice)

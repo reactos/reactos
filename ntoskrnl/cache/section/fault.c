@@ -394,7 +394,7 @@ MmpSectionAccessFaultInner
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
    MM_REQUIRED_RESOURCES Resources = { 0 };
-   WORK_QUEUE_WITH_CONTEXT Context = { 0 };
+   WORK_QUEUE_WITH_CONTEXT Context;
 
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -587,7 +587,7 @@ MmNotPresentFaultCacheSectionInner
 	BOOLEAN Locked = FromMdl;
 	PMEMORY_AREA MemoryArea;
 	MM_REQUIRED_RESOURCES Resources = { 0 };
-	WORK_QUEUE_WITH_CONTEXT Context = { 0 };
+	WORK_QUEUE_WITH_CONTEXT Context;
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	if (!FromMdl)
