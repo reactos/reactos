@@ -18,7 +18,9 @@ add_definitions(
 
 set_rc_compiler()
 
-set(NEWCC FALSE)
+if(NOT DEFINED NEWCC)
+    set(NEWCC FALSE)
+endif(NOT DEFINED NEWCC)
 
 if(NEWCC)
     add_definitions(-DNEWCC)
@@ -29,12 +31,7 @@ if(NEWCC)
         cache/lazyrite.c
         cache/logsup.c
         cache/mdlsup.c
-        cache/pinsup.c
-        cache/section/data.c
-        cache/section/fault.c
-        cache/section/reqtools.c
-        cache/section/sptab.c
-        cache/section/swapout.c)
+        cache/pinsup.c)
 else()
     list(APPEND SOURCE
         cc/cacheman.c
@@ -47,6 +44,11 @@ endif()
 
 list(APPEND SOURCE
     cache/section/io.c
+    cache/section/data.c
+    cache/section/fault.c
+    cache/section/reqtools.c
+    cache/section/sptab.c
+    cache/section/swapout.c
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c

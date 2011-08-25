@@ -61,15 +61,6 @@ extern KSPIN_LOCK MiSectionPageTableLock;
 
 ULONG_PTR MmSubsectionBase;
 
-NTSTATUS
-NTAPI
-MiSimpleRead
-(PFILE_OBJECT FileObject, 
- PLARGE_INTEGER FileOffset,
- PVOID Buffer, 
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus);
-
 static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
 {
   ICI_SQ_SAME( sizeof(SECTION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionBasicInformation */

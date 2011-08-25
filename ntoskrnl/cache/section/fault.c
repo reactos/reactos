@@ -655,7 +655,7 @@ MmNotPresentFaultCacheSectionInner
 		}
 		else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
 		{
-			if (Thread->ActiveFaultCount > 1)
+			if (Thread->ActiveFaultCount > 2)
 			{
 				WORK_QUEUE_WITH_CONTEXT Context = { };
 				DPRINTC("Already fault handling ... going to work item (%x)\n", Address);

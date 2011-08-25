@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #include "newcc.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/

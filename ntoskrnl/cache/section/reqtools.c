@@ -148,6 +148,9 @@ MiReadFilePage
 		 FileOffset,
 		 PageBuf,
 		 RequiredResources->Amount,
+#ifdef __ROS_CMAKE__
+         TRUE,
+#endif
 		 &IOSB);
 	RtlZeroMemory
 		((PCHAR)PageBuf+RequiredResources->Amount,

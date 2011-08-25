@@ -2005,10 +2005,7 @@ NtReadFile(IN HANDLE FileHandle,
                                        PreviousMode,
                                        (PVOID*)&FileObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) {
-		DPRINT1("Status %x\n", Status);
-		return Status;
-	}
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check for event */
     if (Event)
@@ -2024,7 +2021,6 @@ NtReadFile(IN HANDLE FileHandle,
         {
             /* Fail */
             ObDereferenceObject(FileObject);
-			DPRINT1("Status %x\n", Status);
             return Status;
         }
 
@@ -2067,10 +2063,7 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) {
-		DPRINT1("Status %x\n", Status);
-		return IopCleanupFailedIrp(FileObject, NULL, NULL);
-	}
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;

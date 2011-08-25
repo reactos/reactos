@@ -166,7 +166,7 @@ MiSimpleRead
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
-		DPRINT1("KeWaitForSingleObject(&ReadWait)\n");
+		DPRINT("KeWaitForSingleObject(&ReadWait)\n");
 		if (!NT_SUCCESS
 			(KeWaitForSingleObject
 			 (&ReadWait,
@@ -215,8 +215,9 @@ _MiSimpleWrite
     ASSERT(DeviceObject);
 
     DPRINT
-		("PAGING WRITE: FileObject %x Offset %x Length %d (%s:%d)\n",
-		 &FileObject,
+		("PAGING WRITE: FileObject %x <%wZ> Offset %x Length %d (%s:%d)\n",
+		 FileObject,
+		 &FileObject->FileName,
 		 FileOffset->LowPart,
 		 Length,
 		 File,
@@ -256,7 +257,7 @@ _MiSimpleWrite
 
     if (Status == STATUS_PENDING)
     {
-		DPRINT1("KeWaitForSingleObject(&ReadWait)\n");
+		DPRINT("KeWaitForSingleObject(&ReadWait)\n");
 		if (!NT_SUCCESS
 			(KeWaitForSingleObject
 			 (&ReadWait,
@@ -302,7 +303,7 @@ _MiWriteBackPage
 	MmDeleteHyperspaceMapping(Hyperspace);
 	KeLowerIrql(OldIrql);
 
-	DPRINT1("MiWriteBackPage(%wZ,%08x%08x,%s:%d)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart, File, Line);
+	DPRINT("MiWriteBackPage(%wZ,%08x%08x,%s:%d)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart, File, Line);
 	Status = MiSimpleWrite
 		(FileObject,
 		 FileOffset,

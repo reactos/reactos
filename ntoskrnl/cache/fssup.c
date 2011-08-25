@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -335,7 +335,7 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 		{
 			ToWrite = MIN(UpperBound.QuadPart - LowerBound.QuadPart, (PAGE_SIZE - LowerBound.QuadPart) & (PAGE_SIZE - 1));
 			DPRINT("Zero last half %08x%08x %x\n", Target.u.HighPart, Target.u.LowPart, ToWrite);
-			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, &IOSB);
+			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, TRUE, &IOSB);
 			if (!NT_SUCCESS(Status)) 
 			{
 				ExFreePool(ZeroBuf);
@@ -371,7 +371,7 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 		{
 			ToWrite = UpperBound.QuadPart - Target.QuadPart;
 			DPRINT("Zero first half %08x%08x %x\n", Target.u.HighPart, Target.u.LowPart, ToWrite);
-			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, &IOSB);
+			Status = MiSimpleRead(FileObject, &Target, ZeroBuf, PAGE_SIZE, TRUE, &IOSB);
 			if (!NT_SUCCESS(Status)) 
 			{
 				ExFreePool(ZeroBuf);

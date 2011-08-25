@@ -133,8 +133,6 @@ VOID CcpDereferenceCache(ULONG Start, BOOLEAN Immediate)
 	if (Immediate)
 	{
 		PROS_SECTION_OBJECT ToDeref = Bcb->SectionObject;
-		BOOLEAN Dirty = Bcb->Dirty;
-
 		Bcb->Map = NULL;
 		Bcb->SectionObject = NULL;
 		Bcb->BaseAddress = NULL;
@@ -481,7 +479,6 @@ cleanup:
 		{
 			// Fault in the pages.  This forces reads to happen now.
 			ULONG i;
-			CHAR Dummy;
 			PCHAR FaultIn = Bcb->BaseAddress;
 			DPRINT
 				("Faulting in pages at this point: file %wZ %08x%08x:%x\n",
@@ -491,7 +488,7 @@ cleanup:
 				 Bcb->Length);
 			for (i = 0; i < Bcb->Length; i += PAGE_SIZE) 
 			{
-				Dummy = FaultIn[i];
+				FaultIn[i] ^= 0;
 			}
 		}
 		ASSERT(Bcb >= CcCacheSections && Bcb < (CcCacheSections + CACHE_NUM_SECTIONS));

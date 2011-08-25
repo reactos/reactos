@@ -305,8 +305,6 @@ PsLocateSystemDll(VOID)
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 2, 0, 0);
     }
 
-	DPRINT1("Opened %wZ @ %x\n", &PsNtDllPathName, FileHandle);
-
     /* Check if the image is valid */
     Status = MmCheckSystemImage(FileHandle, TRUE);
     if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)

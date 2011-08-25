@@ -168,9 +168,6 @@ _MmSetPageEntrySectionSegment
 		MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
 	}
     PageTable->PageEntries[PageIndex] = Entry;
-    DPRINT
-        ("MiSetPageEntrySectionSegment(%p,%08x%08x,%x=>%x) %s:%d\n",
-         Segment, Offset->u.HighPart, Offset->u.LowPart, OldEntry, Entry, file, line);
     return STATUS_SUCCESS;
 }
 
@@ -214,7 +211,8 @@ MmFreePageTablesSectionSegment
     DPRINT("MiFreePageTablesSectionSegment(%p)\n", &Segment->PageTable);
     while ((Element = RtlGetElementGenericTable(&Segment->PageTable, 0))) {
         DPRINT
-            ("Delete table for %x -> %08x%08x\n", 
+            ("Delete table for <%wZ> %x -> %08x%08x\n", 
+			 Segment->FileObject ? &Segment->FileObject->FileName : NULL,
 			 Segment,
              Element->FileOffset.u.HighPart, 
              Element->FileOffset.u.LowPart);
@@ -229,7 +227,7 @@ MmFreePageTablesSectionSegment
 				Entry = Element->PageEntries[i];
 				if (Entry && !IS_SWAP_FROM_SSE(Entry))
 				{
-					DPRINTC("Freeing page %x:%x @ %x\n", Segment, Entry, Offset.LowPart);
+					DPRINT("Freeing page %x:%x @ %x\n", Segment, Entry, Offset.LowPart);
 					FreePage(Segment, &Offset);
 				}
 			}

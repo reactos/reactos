@@ -138,16 +138,18 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
             if (!NT_SUCCESS(Status))
                 break;
 
-            ReadLen = BLOCKSIZE - (ActualReadOffset & (BLOCKSIZE - 1));
-            if (ReadLen > EndOfExtent - ActualReadOffset)
+            ReadLen = BLOCKSIZE - (ReadOffset & (BLOCKSIZE - 1));
+            if (ReadLen > EndOfExtent - ReadOffset)
             {
-                ReadLen = EndOfExtent - ActualReadOffset;
+                ReadLen = EndOfExtent - ReadOffset;
             }
 
             RtlCopyMemory(TargetRead, ReadInPage, ReadLen);
 
-            ActualReadOffset += ReadLen;
+            ActualReadOffset += BLOCKSIZE;
+            ReadOffset += ReadLen;
             TargetRead += ReadLen;	  
+            ReadInPage = PageBuf;
         }
 
         ExFreePool(PageBuf);
