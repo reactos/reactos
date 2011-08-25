@@ -4750,7 +4750,9 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                      IN MMFLUSH_TYPE   FlushType)
 {
    BOOLEAN Result = TRUE;
+#ifdef NEWCC
    PMM_SECTION_SEGMENT Segment;
+#endif
 
    switch(FlushType)
    {
@@ -5000,7 +5002,7 @@ MmCreateSection (OUT PVOID  * Section,
 	   IO_STATUS_BLOCK Iosb;
 	   NTSTATUS Status;
 	   CHAR Buffer;
-	   LARGE_INTEGER ByteOffset = {0};
+	   LARGE_INTEGER ByteOffset;
 	   Status = ZwReadFile
 		   (FileHandle,
 			NULL,
