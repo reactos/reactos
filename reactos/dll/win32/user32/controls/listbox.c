@@ -786,7 +786,7 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
 
 	TRACE("index %d (0x%04x) %s\n", index, index, debugstr_w(descr->items[index].str));
 
-        __TRY  /* hide a Delphi bug that passes a read-only buffer */
+        _SEH2_TRY  /* hide a Delphi bug that passes a read-only buffer */
         {
             if(unicode)
             {
@@ -799,13 +799,13 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
                                           (LPSTR)buffer, 0x7FFFFFFF, NULL, NULL) - 1;
             }
         }
-        __EXCEPT_PAGE_FAULT
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             WARN( "got an invalid buffer (Delphi bug?)\n" );
             SetLastError( ERROR_INVALID_PARAMETER );
-            return LB_ERR;
+            len = LB_ERR;
         }
-        __ENDTRY
+        _SEH2_END
     } else {
         if (buffer)
             *((LPDWORD)buffer)=*(LPDWORD)(&descr->items[index].data);

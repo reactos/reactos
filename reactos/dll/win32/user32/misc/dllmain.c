@@ -243,7 +243,6 @@ Init(VOID)
          {
             InitializeCriticalSection(&U32AccelCacheLock);
             GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
-            InitStockObjects();
             LoadAppInitDlls();
 
             return TRUE;

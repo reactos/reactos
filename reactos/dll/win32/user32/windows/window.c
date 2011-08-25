@@ -65,7 +65,7 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 HDWP WINAPI
 BeginDeferWindowPos(int nNumWindows)
 {
-    return (HDWP)NtUserCallOneParam((DWORD_PTR)nNumWindows, ONEPARAM_ROUTINE_BEGINDEFERWNDPOS);
+    return NtUserxBeginDeferWindowPos(nNumWindows);
 }
 
 
@@ -1668,7 +1668,7 @@ RealChildWindowFromPoint(HWND hwndParent,
 BOOL WINAPI
 SetForegroundWindow(HWND hWnd)
 {
-    return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW);
+    return NtUserxSetForegroundWindow(hWnd);
 }
 
 
@@ -1750,10 +1750,9 @@ SetWindowTextW(HWND hWnd,
  * @implemented
  */
 BOOL WINAPI
-ShowOwnedPopups(HWND hWnd,
-                BOOL fShow)
+ShowOwnedPopups(HWND hWnd, BOOL fShow)
 {
-    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
+    return NtUserxShowOwnedPopups(hWnd, fShow);
 }
 
 
@@ -1816,7 +1815,7 @@ BOOL WINAPI
 SetWindowContextHelpId(HWND hwnd,
                        DWORD dwContextHelpId)
 {
-    return NtUserSetWindowContextHelpId(hwnd, dwContextHelpId);
+    return NtUserxSetWindowContextHelpId(hwnd, dwContextHelpId);
 }
 
 /*
@@ -1825,7 +1824,7 @@ SetWindowContextHelpId(HWND hwnd,
 DWORD WINAPI
 GetWindowContextHelpId(HWND hwnd)
 {
-    return NtUserCallHwnd(hwnd, HWND_ROUTINE_GETWNDCONTEXTHLPID);
+    return NtUserxGetWindowContextHelpId(hwnd);
 }
 
 /*
@@ -1879,7 +1878,7 @@ GetRealWindowOwner(HWND hwnd)
 HWND WINAPI
 SetTaskmanWindow(HWND hWnd)
 {
-    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
+    return NtUserxSetTaskmanWindow(hWnd);
 }
 
 /*
@@ -1888,7 +1887,7 @@ SetTaskmanWindow(HWND hWnd)
 HWND WINAPI
 SetProgmanWindow(HWND hWnd)
 {
-    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETPROGMANWINDOW);
+    return NtUserxSetProgmanWindow(hWnd);
 }
 
 /*
@@ -1992,7 +1991,7 @@ IsWindowInDestroy(HWND hWnd)
 VOID WINAPI
 DisableProcessWindowsGhosting(VOID)
 {
-    NtUserEnableProcessWindowGhosting(FALSE);
+    NtUserxEnableProcessWindowGhosting(FALSE);
 }
 
 /* EOF */

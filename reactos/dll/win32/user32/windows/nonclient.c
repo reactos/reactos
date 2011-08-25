@@ -450,7 +450,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
      if (menu && !(Style & WS_CHILD))
      {
         TempRect = CurrentRect;
-        TempRect.bottom = TempRect.top + (UINT)NtUserSetMenuBarHeight(menu, 0);
+        TempRect.bottom = TempRect.top + (UINT)NtUserxSetMenuBarHeight(menu, 0);
         CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
      }
 
@@ -1104,7 +1104,7 @@ AdjustWindowRectEx(LPRECT lpRect,
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -1148,7 +1148,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

@@ -467,7 +467,7 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_SETCARETPOS:
          RETURN( (DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2));
 
-      case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
+      case TWOPARAM_ROUTINE_REGISTERLOGONPROCESS:
          RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SETCURSORPOS:

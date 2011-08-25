@@ -76,8 +76,7 @@ static
 HICON
 CreateCursorIconHandle( PICONINFO IconInfo )
 {
-	HICON hIcon = (HICON)NtUserCallOneParam(0,
-									 ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
+	HICON hIcon = NtUserxCreateEmptyCurObject(0);
 	if(!hIcon)
 		return NULL;
 
@@ -1239,24 +1238,11 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 }
 
 /***********************************************************************
- *		SetCursor (USER32.@)
- *
- * Set the cursor shape.
- *
- * RETURNS
- *	A handle to the previous cursor shape.
- */
-HCURSOR WINAPI /*DECLSPEC_HOTPATCH*/ SetCursor( HCURSOR hCursor /* [in] Handle of cursor to show */ )
-{
-    return NtUserSetCursor(hCursor);
-}
-
-/***********************************************************************
  *		ShowCursor (USER32.@)
  */
 INT WINAPI /*DECLSPEC_HOTPATCH*/ ShowCursor( BOOL bShow )
 {
-    return NtUserShowCursor(bShow);
+    return NtUserxShowCursor(bShow);
 }
 
 /***********************************************************************
@@ -1270,24 +1256,6 @@ HCURSOR WINAPI GetCursor(void)
         return ci.hCursor;
     else
         return (HCURSOR)0;
-}
-
-
-/***********************************************************************
- *		ClipCursor (USER32.@)
- */
-BOOL WINAPI /*DECLSPEC_HOTPATCH*/ ClipCursor( const RECT *rect )
-{
-    return NtUserClipCursor((RECT *)rect);
-}
-
-
-/***********************************************************************
- *		GetClipCursor (USER32.@)
- */
-BOOL WINAPI /*DECLSPEC_HOTPATCH*/ GetClipCursor( RECT *rect )
-{
-    return NtUserGetClipCursor(rect);
 }
 
 
@@ -1800,16 +1768,18 @@ HANDLE WINAPI LoadImageA( HINSTANCE hinst, LPCSTR name, UINT type,
     if (IS_INTRESOURCE(name))
         return LoadImageW(hinst, (LPCWSTR)name, type, desiredx, desiredy, loadflags);
 
-    __TRY {
+    _SEH2_TRY
+    {
         DWORD len = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
         u_name = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
         MultiByteToWideChar( CP_ACP, 0, name, -1, u_name, len );
     }
-    __EXCEPT_PAGE_FAULT {
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return 0;
+        _SEH2_YIELD(return 0);
     }
-    __ENDTRY
+    _SEH2_END
     res = LoadImageW(hinst, u_name, type, desiredx, desiredy, loadflags);
     HeapFree(GetProcessHeap(), 0, u_name);
     return res;
@@ -2133,10 +2103,9 @@ CursorIconToCursor(HICON hIcon,
  */
 BOOL
 WINAPI
-SetCursorPos(int X,
-             int Y)
+SetCursorPos(int X, int Y)
 {
-    return NtUserSetCursorPos(X,Y);
+    return NtUserxSetCursorPos(X,Y);
 }
 
 /*
@@ -2154,7 +2123,7 @@ GetCursorPos(LPPOINT lpPoint)
         return FALSE;
     }
 
-    res = NtUserGetCursorPos(lpPoint);
+    res = NtUserxGetCursorPos(lpPoint);
 
     return res;
 }

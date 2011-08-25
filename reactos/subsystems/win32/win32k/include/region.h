@@ -1,7 +1,5 @@
 #pragma once
 
-#include "gdiobj.h"
-
 /* Type definitions ***********************************************************/
 
 /* Internal region data.

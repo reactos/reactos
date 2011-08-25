@@ -154,7 +154,7 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 
             SETDLGINFO( hWnd, dlgInfo );
 
-            NtUserCallHwndParam( hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+            NtUserxSetDialogPointer( hWnd, dlgInfo );
         }
         else
         {
@@ -1157,7 +1157,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
                 NtUserSetThreadState(0,DF_DIALOGACTIVE);
-                NtUserCallHwndParam( hwnd, 0, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+                NtUserxSetDialogPointer( hwnd, 0 );
             }
              /* Window clean-up */
             return DefWindowProcA( hwnd, msg, wParam, lParam );

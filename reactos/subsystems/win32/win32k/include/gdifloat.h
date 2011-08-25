@@ -1,7 +1,5 @@
 #pragma once
 
-#include <reactos/win32k/ntgdityp.h>
-#include <reactos/win32k/ntgdihdl.h>
 #include "dc.h"
 #include "math.h"
 #include "xformobj.h"

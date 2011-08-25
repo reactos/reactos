@@ -70,6 +70,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <win32k/ntuser.h>
 #include <win32k/ntgdityp.h>
 #include <win32k/ntgdibad.h>
+#include <win32k/ntgdihdl.h>
 #include <ntgdi.h>
 
 /* Undocumented user definitions */

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <include/dc.h>
-#include <include/region.h>
-
 INT FASTCALL IntGdiGetClipBox(PDC, RECTL* rc);
 INT FASTCALL IntGdiExtSelectClipRgn (PDC, PROSRGNDATA, int);
 

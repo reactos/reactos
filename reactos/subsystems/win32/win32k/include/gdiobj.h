@@ -6,7 +6,6 @@
 #pragma once
 
 /* Public GDI Object/Handle definitions */
-#include <win32k/ntgdihdl.h>
 #include "win32.h"
 
 /* The first 10 entries are never used in windows, they are empty */
