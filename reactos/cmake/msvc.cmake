@@ -225,6 +225,13 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 #pseh workaround
 set(PSEH_LIB "pseh")
 
+# Use full path for ml when using x64 VS
+if((ARCH MATCHES amd64) AND ($ENV{VCINSTALLDIR}))
+    set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+else()
+    set(CMAKE_ASM16_COMPILER ml.exe)
+endif()
+
 function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
 
     set(_object_file ${_binary_file}.obj)
@@ -237,7 +244,7 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
 
     add_custom_command(
         OUTPUT ${_object_file}
-        COMMAND ml /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file}
+        COMMAND ${CMAKE_ASM16_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file}
         DEPENDS ${_temp_file})
 
     add_custom_command(
