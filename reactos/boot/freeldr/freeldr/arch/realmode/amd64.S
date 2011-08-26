@@ -100,14 +100,14 @@ Msg_LongModeSupported:
 Msg_SwitchToLongMode:
     .ascii "Switching to long mode....", CR, LF, NUL
 
-.align 4
+.align 8
 gdt:
 	.word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 00: NULL descriptor */
 	.word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 08:  */
 	.word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: long mode cs */
 	.word HEX(ffff), HEX(0000), HEX(f300), HEX(00cf) /* 18: long mode ds */
-	.word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 16-bit real mode CS */
-	.word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 16-bit real mode DS */
+	.word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 20: 16-bit real mode CS */
+	.word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 28: 16-bit real mode DS */
 	.word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode cs */
 
 /* GDT table pointer */
@@ -232,7 +232,20 @@ BuildPageTables:
 
 /* This is the entry point from long mode */
 RealModeEntryPoint:
+	/* Disable Protected Mode */
+	mov eax, cr0
+	and eax, HEX(0fffffffe) // ~0x00000001
+	mov cr0, eax
 
+	/* Clear prefetch queue & correct CS */
+	ljmp16 0, offset InRealMode
+
+InRealMode:
+
+    mov ax, HEX(0b800)
+    mov es, ax
+    mov word ptr es:[12], HEX(0e00) + '6'
+    jmp $
 
 
 ExitToLongMode:

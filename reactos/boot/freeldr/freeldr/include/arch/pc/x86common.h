@@ -14,6 +14,7 @@
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
 #define STACK32ADDR        HEX(98000) /* The 32-bit stack top will be at 9000:8000, or 0xA8000 */
+#define STACK64ADDR	       HEX(98000) /* The 64-bit stack top will be at 98000 */
 #define BIOSCALLBUFFER     HEX(98000) /* Buffer to store temporary data for any Int386() call */
 #define FILESYSBUFFER      HEX(80000) /* Buffer to store file system data (e.g. cluster buffer for FAT) */
 #define DISKREADBUFFER     HEX(90000) /* Buffer to store data read in from the disk via the BIOS */
@@ -21,6 +22,20 @@
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */
+
+/* Layout of the REGS structure */
+#define REGS_EAX 0
+#define REGS_EBX 4
+#define REGS_ECX 8
+#define REGS_EDX 12
+#define REGS_ESI 16
+#define REGS_EDI 20
+#define REGS_DS 24
+#define REGS_ES 26
+#define REGS_FS 28
+#define REGS_GS 30
+#define REGS_EFLAGS 32
+#define REGS_SIZE 36
 
 /* These addresses specify the realmode "BSS section" layout */
 #define BSS_RealModeEntry        (BSS_START +  0)
@@ -52,19 +67,6 @@
 #define FNID_PnpBiosGetDeviceNode 5
 #define FNID_BootLinuxKernel 6
 
-/* Layout of the REGS structure */
-#define REGS_EAX 0
-#define REGS_EBX 4
-#define REGS_ECX 8
-#define REGS_EDX 12
-#define REGS_ESI 16
-#define REGS_EDI 20
-#define REGS_DS 24
-#define REGS_ES 26
-#define REGS_FS 28
-#define REGS_GS 30
-#define REGS_EFLAGS 32
-
 /* Flag Masks */
 #define CR0_PE_SET	HEX(00000001)	/* OR this value with CR0 to enable pmode */
 #define CR0_PE_CLR	HEX(FFFFFFFE)	/* AND this value with CR0 to disable pmode */
@@ -80,6 +82,7 @@
 /* Long mode selectors */
 #define LMODE_CS HEX(10)
 #define LMODE_DS HEX(18)
+#define CMODE_CS HEX(30)
 //#endif
 
 /* Makes "x" a global variable or label */
