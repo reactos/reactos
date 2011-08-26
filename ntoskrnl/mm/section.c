@@ -3238,15 +3238,7 @@ ExeFmtpReadFile(IN PVOID File,
 
    UsedSize = 0;
 
-   Status = MiSimpleRead
-	   (FileObject,
-		&FileOffset,
-		Buffer,
-		BufferSize,
-#ifdef __ROS_CMAKE__
-        TRUE,
-#endif
-		&Iosb);
+   Status = MiSimpleRead(FileObject, &FileOffset, Buffer, BufferSize, TRUE, &Iosb);
 
    UsedSize = Iosb.Information;
 

@@ -396,6 +396,8 @@ MmpSectionAccessFaultInner
    MM_REQUIRED_RESOURCES Resources = { 0 };
    WORK_QUEUE_WITH_CONTEXT Context;
 
+   RtlZeroMemory(&Context, sizeof(WORK_QUEUE_WITH_CONTEXT));
+
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
@@ -589,6 +591,8 @@ MmNotPresentFaultCacheSectionInner
 	MM_REQUIRED_RESOURCES Resources = { 0 };
 	WORK_QUEUE_WITH_CONTEXT Context;
 	NTSTATUS Status = STATUS_SUCCESS;
+
+    RtlZeroMemory(&Context, sizeof(WORK_QUEUE_WITH_CONTEXT));
 
 	if (!FromMdl)
 	{

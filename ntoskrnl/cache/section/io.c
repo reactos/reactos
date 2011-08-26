@@ -66,43 +66,12 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
 
 NTSTATUS
 NTAPI
-MiSimpleReadComplete
-(PDEVICE_OBJECT DeviceObject,
- PIRP Irp,
- PVOID Context)
-{
-    PMDL Mdl = Irp->MdlAddress;
-
-   /* Unlock MDL Pages, page 167. */
-	DPRINT("MiSimpleReadComplete %x\n", Irp);
-    while (Mdl)
-    {
-		DPRINT("MDL Unlock %x\n", Mdl);
-		MmUnlockPages(Mdl);
-        Mdl = Mdl->Next;
-    }
-
-    /* Check if there's an MDL */
-    while ((Mdl = Irp->MdlAddress))
-    {
-        /* Clear all of them */
-        Irp->MdlAddress = Mdl->Next;
-        IoFreeMdl(Mdl);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 MiSimpleRead
 (PFILE_OBJECT FileObject,
  PLARGE_INTEGER FileOffset,
  PVOID Buffer,
  ULONG Length,
-#ifdef __ROS_CMAKE__
  BOOLEAN Paging,
-#endif
  PIO_STATUS_BLOCK ReadStatus)
 {
     NTSTATUS Status;
@@ -116,6 +85,9 @@ MiSimpleRead
     ASSERT(Buffer);
     ASSERT(ReadStatus);
 
+	// This reference is consumed when the IRP is completed below
+	// It will be consumed by line 231 of irp.c
+    ObReferenceObject(FileObject);
     DeviceObject = MmGetDeviceObjectForFile(FileObject);
 	ReadStatus->Status = STATUS_INTERNAL_ERROR;
 	ReadStatus->Information = 0;
@@ -142,26 +114,17 @@ MiSimpleRead
 
     if (!Irp)
     {
+        ObDereferenceObject(FileObject);
 		return STATUS_NO_MEMORY;
     }
 
-#ifndef __ROS_CMAKE__
-    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
-#else
     Irp->Flags |= (Paging ? IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE : 0) | IRP_SYNCHRONOUS_API;
-#endif
 
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
-	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
-    IrpSp->CompletionRoutine = MiSimpleReadComplete;
-
-#ifdef __ROS_CMAKE__
-    ObReferenceObject(FileObject);
-#endif
 
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
@@ -176,14 +139,15 @@ MiSimpleRead
 			  NULL)))
 		{
 			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
+            ObDereferenceObject(FileObject);
 			ASSERT(FALSE);
 			return Status;
 		}
     }
 
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-	Status =
-		ReadStatus->Status == STATUS_END_OF_FILE ?
+	Status = 
+		ReadStatus->Status == STATUS_END_OF_FILE ? 
 		STATUS_SUCCESS : ReadStatus->Status;
     return Status;
 }
@@ -210,6 +174,8 @@ _MiSimpleWrite
     ASSERT(Buffer);
     ASSERT(ReadStatus);
 
+	// This reference is consumed when the IRP is completed below
+	// It will be consumed by line 231 of irp.c
     ObReferenceObject(FileObject);
 	DeviceObject = MmGetDeviceObjectForFile(FileObject);
     ASSERT(DeviceObject);
@@ -232,27 +198,27 @@ _MiSimpleWrite
 		 Length,
 		 FileOffset,
 		 ReadStatus);
-
+    
     if (!Irp)
     {
 		ObDereferenceObject(FileObject);
 		return STATUS_NO_MEMORY;
     }
-
+    
     Irp->Flags = IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
-
+    
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
-	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
-    IrpSp->CompletionRoutine = MiSimpleReadComplete;
-
+    
 	DPRINT("Call Driver\n");
     Status = IoCallDriver(DeviceObject, Irp);
 	DPRINT("Status %x\n", Status);
 
+	// XXX hack: I need to find the reference that matches this one.
+	// The one above should be consumed by irp.c
 	ObDereferenceObject(FileObject);
 
     if (Status == STATUS_PENDING)
@@ -260,18 +226,19 @@ _MiSimpleWrite
 		DPRINT("KeWaitForSingleObject(&ReadWait)\n");
 		if (!NT_SUCCESS
 			(KeWaitForSingleObject
-			 (&ReadWait,
-			  Suspended,
-			  KernelMode,
-			  FALSE,
+			 (&ReadWait, 
+			  Suspended, 
+			  KernelMode, 
+			  FALSE, 
 			  NULL)))
 		{
 			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
+            ObDereferenceObject(FileObject);
 			ASSERT(FALSE);
 			return Status;
 		}
     }
-
+    
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
     return ReadStatus->Status;
 }
