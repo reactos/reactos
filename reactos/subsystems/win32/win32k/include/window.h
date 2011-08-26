@@ -14,6 +14,8 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 
 extern ATOM AtomMessage;
 extern ATOM AtomWndObj; /* WNDOBJ list */
+extern ATOM AtomLayer;
+extern ATOM AtomFlashWndState;
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 

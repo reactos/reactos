@@ -746,54 +746,6 @@ NtUserHardErrorControl(
 
 DWORD
 APIENTRY
-NtUserMinMaximize(
-    HWND hWnd,
-    UINT cmd, // Wine SW_ commands
-    BOOL Hide)
-{
-  RECTL NewPos;
-  UINT SwFlags;
-  PWND pWnd;
-
-  TRACE("Enter NtUserMinMaximize\n");
-  UserEnterExclusive();
-
-  pWnd = UserGetWindowObject(hWnd);
-  if ( !pWnd ||                          // FIXME:
-        pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
-        pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
-  {
-     goto Exit;
-  }
-
-  if ( cmd > SW_MAX || pWnd->state2 & WNDS2_INDESTROY)
-  {
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     goto Exit;
-  }
-
-  co_WinPosMinMaximize(pWnd, cmd, &NewPos);
-
-  SwFlags = Hide ? SWP_NOACTIVATE|SWP_NOZORDER|SWP_FRAMECHANGED : SWP_NOZORDER|SWP_FRAMECHANGED;
-
-  co_WinPosSetWindowPos( pWnd,
-                         NULL,
-                         NewPos.left,
-                         NewPos.top,
-                         NewPos.right,
-                         NewPos.bottom,
-                         SwFlags);
-
-  co_WinPosShowWindow(pWnd, cmd);
-
-Exit:
-  TRACE("Leave NtUserMinMaximize\n");
-  UserLeave();
-  return 0; // Always NULL?
-}
-
-DWORD
-APIENTRY
 NtUserNotifyProcessCreate(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -1055,23 +1007,6 @@ NtUserGetLayeredWindowAttributes(
     return 0;
 }
 
-BOOL
-APIENTRY
-NtUserValidateTimerCallback(
-    HWND hWnd,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-  BOOL Ret = FALSE;
-
-  UserEnterShared();
-
-  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), lParam);
-
-  UserLeave();
-  return Ret;
-}
-
 DWORD
 APIENTRY
 NtUserRemoteConnect(
@@ -1154,48 +1089,6 @@ NtUserFillWindow(HWND hWndPaint,
    STUB
 
    return 0;
-}
-
-/*
- * @implemented
- */
-BOOL APIENTRY
-NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
-{
-   PWND pWnd;
-   FLASHWINFO finfo = {0};
-   BOOL Ret = TRUE;
-
-   UserEnterExclusive();
-
-   _SEH2_TRY
-   {
-      ProbeForRead(pfwi, sizeof(FLASHWINFO), sizeof(ULONG));
-      RtlCopyMemory(&finfo, pfwi, sizeof(FLASHWINFO));
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      SetLastNtError(_SEH2_GetExceptionCode());
-      Ret = FALSE;
-   }
-   _SEH2_END
-
-   if (!Ret) goto Exit;
-
-   if (!(pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
-        finfo.cbSize != sizeof(FLASHWINFO) ||
-        finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
-   {
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      Ret = FALSE;
-      goto Exit;
-   }
-
-   //Ret = IntFlashWindowEx(pWnd, &finfo);
-
-Exit:
-   UserLeave();
-   return Ret;
 }
 
 /*
