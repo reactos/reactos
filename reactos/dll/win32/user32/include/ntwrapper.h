@@ -654,7 +654,7 @@ EXTINLINE DWORD NtUserxGetQueueStatus(UINT flags)
 
 EXTINLINE BOOL NtUserxValidateRgn(HWND hWnd, HRGN hRgn)
 {
-    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
+    return (BOOL)NtUserCallHwndParamLock(hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
 }
 
 EXTINLINE BOOL NtUserxSetCursorPos(INT x, INT y)
