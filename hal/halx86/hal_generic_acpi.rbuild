@@ -8,16 +8,16 @@
 		<define name="_NTHAL_" />
 		<define name="CONFIG_ACPI" />
 		<directory name="generic">
-    	    <directory name="acpi">
-    	        <file>halacpi.c</file>
-    	        <file>halpnpdd.c</file>
-    	        <file>busemul.c</file>
-    	    </directory>
-    	    <directory name="legacy">
-        		<directory name="bus">
-    				<file>pcibus.c</file>
-    			</directory>
-    		</directory>
+			<directory name="acpi">
+				<file>halacpi.c</file>
+				<file>halpnpdd.c</file>
+				<file>busemul.c</file>
+			</directory>
+			<directory name="legacy">
+				<directory name="bus">
+					<file>pcibus.c</file>
+				</directory>
+			</directory>
 			<if property="ARCH" value="i386">
 				<file>halinit.c</file>
 			</if>
