@@ -28,7 +28,6 @@ RealEntryPoint:
 ContinueAddress:
     .double offset FrldrStartup
 
-
 FrldrStartup:
 
     /* Store BootDrive and BootPartition */
@@ -72,7 +71,7 @@ SwitchToReal:
 	mov gs, ax
 	//mov ss, ax
 
-    mov word ptr [HEX(0b8008)], HEX(0e00) + '4'
+    //mov word ptr [HEX(0b8008)], HEX(0e00) + '4'
 
 	/* Save 64-bit stack pointer */
 	mov qword ptr [stack64], rsp
@@ -122,75 +121,22 @@ PUBLIC FrldrBootPartition
 FrldrBootPartition:
     .long 0
 
-PUBLIC PageDirectoryEnd
-PageDirectoryEnd:
-PUBLIC PageDirectoryStart
-PageDirectoryStart:
-PUBLIC PnpBiosGetDeviceNode
-PnpBiosGetDeviceNode:
-PUBLIC PnpBiosGetDeviceNodeCount
-PnpBiosGetDeviceNodeCount:
-PUBLIC PnpBiosSupported
-PnpBiosSupported:
-
-/* int Int386(int ivec<ecx>, REGS* in<rdx>, REGS* out<r8>); */
-PUBLIC Int386
-Int386:
-
-    /* Save home registers */
-    mov r11, rsp
-    mov qword ptr [r11 + 8], rcx
-    mov qword ptr [r11 + 16], rdx
-    mov qword ptr [r11 + 24], r8
-
-	/* Save non-volatile registers */
-	push rbx
-	push rbp
-	push rsi
-	push rdi
-
-    /* Alloc stack space for home registers */
-	sub rsp, 40
-    //.ENDPROLOG
-
-    mov word ptr [HEX(0b8006)], HEX(0e00) + '3'
-
-	/* Copy the int vector to shared memory */
-    mov dword ptr [BSS_IntVector], ecx
-
-    /* Copy input registers */
-    mov rsi, rdx
-    mov rdi, BSS_RegisterSet
-    mov rcx, REGS_SIZE / 4
-    rep movsd
-
-    /* Set the function ID and call real mode */
-    mov bx, FNID_Int386
-    call CallRealMode
-
-    /* Copy output registers */
-    mov rsi, BSS_RegisterSet
-    mov rdi, [r11 + 16]
-    mov rcx, REGS_SIZE / 4
-    rep movsd
-
-    /* cleanup and return */
-    add rsp, 40
-    pop rdi
-    pop rsi
-    pop rbp
-    pop rbx
-    ret
-
-
 PUBLIC PxeCallApi
 PxeCallApi:
+    xor eax, eax
+    ret
+
+//void __lgdt(void *Source);
 PUBLIC __lgdt
 __lgdt:
+    lgdt fword ptr [rcx]
+    ret
+
+//void __ltr(unsigned short Source);
 PUBLIC __ltr
 __ltr:
-
-nop
+    ltr cx
+    ret
 
 
 END

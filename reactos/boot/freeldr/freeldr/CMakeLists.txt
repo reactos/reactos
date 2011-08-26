@@ -124,7 +124,9 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND FREELDR_COMMON_SOURCE
         arch/amd64/entry.S
+        arch/amd64/int386.S
         arch/amd64/loader.c
+        arch/amd64/pnpbios.S
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c

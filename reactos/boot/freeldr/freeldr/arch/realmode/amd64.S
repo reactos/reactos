@@ -69,7 +69,7 @@ Msg_LongModeSupported:
     /* Build the startup page tables */
 	call BuildPageTables
 
-    /* Safe real mode entry point in shared memory */
+    /* Store real mode entry point in shared memory */
     mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint
 
     /* Address the image with es segment */
@@ -242,11 +242,34 @@ RealModeEntryPoint:
 
 InRealMode:
 
-    mov ax, HEX(0b800)
-    mov es, ax
-    mov word ptr es:[12], HEX(0e00) + '6'
-    jmp $
+//    mov ax, HEX(0b800)
+//    mov es, ax
+//    mov word ptr es:[12], HEX(0e00) + '6'
 
+    /* Set real mode segments */
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    /* Clear out the high 16-bits of ESP */
+    /* This is needed because I have one */
+    /* machine that hangs when booted to dos if */
+    /* anything other than 0x0000 is in the high */
+    /* 16-bits of ESP. Even though real-mode */
+    /* code should only use SP and not ESP. */
+    xor esp, esp
+
+    /* Restore real mode stack */
+    mov sp, word ptr ds:[stack16]
+
+   // sti /* These are ok now */
+
+    /* Do the callback, specified by bx */
+    shl bx, 1
+    call word ptr ds:CallbackTable[bx]
 
 ExitToLongMode:
     /* Disable interrupts */
@@ -271,7 +294,6 @@ ExitToLongMode:
 	mov edx, PML4_ADDRESS
 	mov cr3, edx
 
-
     /* Enable long mode */
 	mov ecx, MSR_EFER
 	rdmsr
@@ -287,12 +309,12 @@ ExitToLongMode:
     /* Clear prefetch queue & correct CS */
     ljmp16 LMODE_CS, InLongMode
 InLongMode:
-	DB 66h, 0B8h, 18h, 00h // mov ax, LMODE_DS
-	DB 66h, 8Eh, 0D8h // mov ds, ax
-	DB 66h, 66h, 0C7h, 04h, 25h, 00h, 80h, 0Bh, 00h, 31h, 0Eh
+	//DB 66h, 0B8h, 18h, 00h // mov ax, LMODE_DS
+	//DB 66h, 8Eh, 0D8h // mov ds, ax
+	//DB 66h, 66h, 0C7h, 04h, 25h, 00h, 80h, 0Bh, 00h, 31h, 0Eh
 	//mov word ptr [HEX(b8000)], HEX(0e00) + '1'
 
-    .byte HEX(0ff), HEX(25) // opcode of indirect jump
+    .byte HEX(0ff), HEX(25) // opcode of 64bit indirect jump
     .long 1 // relative address of LongModeEntryPoint
     nop
 LongModeEntryPoint:
@@ -301,12 +323,23 @@ LongModeEntryPoint:
     int HEX(16)
     jmp SoftReboot
 
+CallbackTable:
+    .word Int386
+    .word SoftReboot
+    .word ChainLoadBiosBootSectorCode
+    .word PxeCallApi
+    .word PnpBiosGetDeviceNodeCount
+    .word PnpBiosGetDeviceNode
+    .word 0 // BootLinuxKernel
 
     /* 16-bit stack pointer */
 stack16:
     .word STACK16ADDR
 
 
+#include "int386.inc"
+#include "pxe.inc"
+#include "pnp.inc"
 #include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE - 1)
