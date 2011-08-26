@@ -656,6 +656,11 @@ Bus_PDO_QueryResources(
 	ULONG i;
 	ULONGLONG BusNumber;
 
+    if (!DeviceData->AcpiHandle)
+    {
+        return Irp->IoStatus.Status;
+    }
+
     /* A bus number resource is not included in the list of current resources
      * for the root PCI bus so we manually query one here and if we find it
      * we create a resource list and add a bus number descriptor to it */
@@ -1103,6 +1108,10 @@ Bus_PDO_QueryResourceRequirements(
 
     PAGED_CODE ();
 
+    if (!DeviceData->AcpiHandle)
+    {
+        return Irp->IoStatus.Status;
+    }
 
     /* Get current resources */
     while (TRUE)
