@@ -1197,9 +1197,11 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Page - Variable that receives a page contains the read data.
  */
 {
-   MM_REQUIRED_RESOURCES Resources = {0};
+   MM_REQUIRED_RESOURCES Resources;
    NTSTATUS Status;
-  
+
+   RtlZeroMemory(&Resources, sizeof(MM_REQUIRED_RESOURCES));
+
    Resources.Context = MemoryArea->Data.SectionData.Section->FileObject;
    Resources.FileOffset.QuadPart = SegOffset + 
        MemoryArea->Data.SectionData.Segment->Image.FileOffset;
@@ -4995,6 +4997,7 @@ MmCreateSection (OUT PVOID  * Section,
 	   NTSTATUS Status;
 	   CHAR Buffer;
 	   LARGE_INTEGER ByteOffset;
+       RtlZeroMemory(&ByteOffset, sizeof(LARGE_INTEGER));
 	   Status = ZwReadFile
 		   (FileHandle,
 			NULL,

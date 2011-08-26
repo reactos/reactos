@@ -198,21 +198,21 @@ _MiSimpleWrite
 		 Length,
 		 FileOffset,
 		 ReadStatus);
-    
+
     if (!Irp)
     {
 		ObDereferenceObject(FileObject);
 		return STATUS_NO_MEMORY;
     }
-    
+
     Irp->Flags = IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
-    
+
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
     IrpSp->FileObject = FileObject;
-    
+
 	DPRINT("Call Driver\n");
     Status = IoCallDriver(DeviceObject, Irp);
 	DPRINT("Status %x\n", Status);

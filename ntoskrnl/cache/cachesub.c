@@ -143,7 +143,9 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
     PNOCC_BCB Bcb = NULL;
 	LARGE_INTEGER LowerBound, UpperBound;
 	PLIST_ENTRY ListEntry;
-    IO_STATUS_BLOCK IOSB = {{0}};
+    IO_STATUS_BLOCK IOSB;
+
+    RtlZeroMemory(&IOSB, sizeof(IO_STATUS_BLOCK));
 
 	DPRINT("CcFlushCache (while file) (%s:%d)\n", File, Line);
 
