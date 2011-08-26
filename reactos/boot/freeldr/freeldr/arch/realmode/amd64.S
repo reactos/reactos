@@ -25,6 +25,10 @@ Startup:
 	mov	gs, ax
 	mov ss, ax
 
+    /* Save the boot drive and partition */
+    mov byte ptr ds:[BSS_BootDrive], dl
+    mov byte ptr ds:[BSS_BootPartition], dh
+
 	/* Setup a real mode stack */
     mov sp, word ptr ds:[stack16]
 
@@ -118,6 +122,7 @@ gdtptr:
 
 CheckFor64BitSupport:
 	/* Check if CPU supports CPUID */
+	pushad
 	pushfd
 	pop eax
 	mov ebx, eax
@@ -131,6 +136,7 @@ CheckFor64BitSupport:
 
     mov si, offset .Msg_NoCpuidSupport
 	call writestr
+    popad
     xor al, al
     ret
 
@@ -147,6 +153,7 @@ CheckFor64BitSupport:
 
     mov si, offset .Msg_NoPAE
 	call writestr
+    popad
     xor al, al
     ret
 
@@ -163,6 +170,7 @@ CheckFor64BitSupport:
 
     mov si, offset .Msg_NoLongMode
 	call writestr
+    popad
     xor al, al
     ret
 
@@ -170,6 +178,7 @@ CheckFor64BitSupport:
     .ascii "Long mode is not supported.", CR, LF, NUL
 
 .Success:
+    popad
     xor al, al
     inc al
     ret
@@ -291,8 +300,8 @@ ExitToLongMode:
 	mov cr4, eax
 
     /* Point cr3 at the PML4 */
-	mov edx, PML4_ADDRESS
-	mov cr3, edx
+	mov eax, PML4_ADDRESS
+	mov cr3, eax
 
     /* Enable long mode */
 	mov ecx, MSR_EFER
@@ -302,9 +311,9 @@ ExitToLongMode:
 
     /* Activate long mode by enabling paging and protection simultaneously,
        skipping protected mode entirely */
-	mov ebx, cr0
-	or ebx, HEX(80000001)
-	mov cr0, ebx
+	mov eax, cr0
+	or eax, HEX(80000001)
+	mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
     ljmp16 LMODE_CS, InLongMode

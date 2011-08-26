@@ -56,6 +56,8 @@
 #define BSS_PnpNodeCount         (BSS_START + 96)
 #define BSS_PnpNodeNumber        (BSS_START + 100)
 #define BSS_PnpResult            (BSS_START + 104)
+#define BSS_BootDrive            (BSS_START + 108) // 1 byte
+#define BSS_BootPartition        (BSS_START + 109) // 1 byte
 
 
 /* Realmode function IDs */

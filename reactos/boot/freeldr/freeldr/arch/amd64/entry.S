@@ -31,9 +31,10 @@ ContinueAddress:
 FrldrStartup:
 
     /* Store BootDrive and BootPartition */
-    mov byte ptr [FrldrBootDrive], dl
+    mov al, byte ptr [BSS_BootDrive]
+    mov byte ptr [FrldrBootDrive], al
     xor eax, eax
-    mov al, dh
+    mov al, byte ptr [BSS_BootPartition]
     mov dword ptr [FrldrBootPartition], eax
 
     /* Patch long jump with real mode entry point */
