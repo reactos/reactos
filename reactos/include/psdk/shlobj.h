@@ -1738,7 +1738,7 @@ HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
 #define MM_SUBMENUSHAVEIDS      0x00000002L
 #define MM_DONTREMOVESEPS       0x00000004L
 
-HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
+UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
 
 
 /****************************************************************************

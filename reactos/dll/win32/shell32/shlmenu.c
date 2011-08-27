@@ -841,7 +841,7 @@ static BOOL _SHIsMenuSeparator(HMENU hm, int i)
 /*************************************************************************
  * Shell_MergeMenus				[SHELL32.67]
  */
-HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags)
+UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags)
 {	int		nItem;
 	HMENU		hmSubMenu;
 	BOOL		bAlreadySeparated;
