@@ -8,6 +8,8 @@ typedef struct _EDRIVEROBJ
     PVOID reserved;
 } EDRIVEROBJ, *PEDRIVEROBJ;
 
+typedef DRIVEROBJ *PDRIVEROBJ;
+
 /* Cleanup function */
 BOOL NTAPI DRIVEROBJ_Cleanup(PVOID pObject);
 
