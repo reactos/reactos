@@ -110,7 +110,7 @@ _Int386:
     /* Copy input registers */
     mov esi, dword ptr [Int386_regsin]
     mov edi, BSS_RegisterSet
-    mov ecx, 9
+    mov ecx, REGS_SIZE / 4
     rep movsd
 
     /* Set the function ID */
@@ -125,7 +125,7 @@ Int386_return:
     /* Copy output registers */
     mov esi, BSS_RegisterSet
     mov edi, dword ptr [Int386_regsout]
-    mov ecx, 9
+    mov ecx, REGS_SIZE / 4
     rep movsd
 
     popa

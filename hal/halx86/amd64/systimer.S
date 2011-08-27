@@ -8,21 +8,19 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
-
 #include <ksamd64.inc>
 
 /* GLOBALS *******************************************************************/
 
 .data
 
-.global MsgUnimplemented
+PUBLIC MsgUnimplemented
 MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
 
 /* FUNCTIONS *****************************************************************/
 
-.text
 .code64
 
 PUBLIC HalpCalibrateStallExecution@0
@@ -40,7 +38,7 @@ KeStallExecutionProcessor:
     jecxz Done
 
     /* Multiply by the stall factor */
-    mov eax, gs:[KPCR_STALL_SCALE_FACTOR]
+    mov eax, gs:[PcStallScaleFactor]
     mul ecx
 
     /* Align to 16 bytes */
@@ -71,14 +69,14 @@ HalpQuery8254Counter:
 
     /* Set timer data */
     mov al, 0
-    out 0x43, al
+    out HEX(43), al
     jmp $+2
 
     /* Read current timer */
-    in al, 0x40
+    in al, HEX(40)
     jmp $+2
     movzx ecx, al
-    in al, 0x40
+    in al, HEX(40)
     mov ch, al
 
     /* Return it and restore interrupt state */

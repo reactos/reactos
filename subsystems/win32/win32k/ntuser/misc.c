@@ -461,37 +461,6 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
    return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
-IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src)
-{
-   if (Src->Length + sizeof(WCHAR) <= Src->MaximumLength
-         && L'\0' == Src->Buffer[Src->Length / sizeof(WCHAR)])
-   {
-      /* The unicode_string is already nul terminated. Just reuse it. */
-      *Dest = Src->Buffer;
-      return STATUS_SUCCESS;
-   }
-
-   *Dest = ExAllocatePoolWithTag(PagedPool, Src->Length + sizeof(WCHAR), TAG_STRING);
-   if (NULL == *Dest)
-   {
-      return STATUS_NO_MEMORY;
-   }
-   RtlCopyMemory(*Dest, Src->Buffer, Src->Length);
-   (*Dest)[Src->Length / 2] = L'\0';
-
-   return STATUS_SUCCESS;
-}
-
-void FASTCALL
-IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString)
-{
-   if (NullTerminated != UnicodeString->Buffer)
-   {
-      ExFreePool(NullTerminated);
-   }
-}
-
 PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {

@@ -62,7 +62,6 @@ static const COLORREF SysColors[] =
     RGB(49, 106, 197),  /* COLOR_MENUHILIGHT  */
     RGB(236, 233, 216)  /* COLOR_MENUBAR  */
 };
-#define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
 
 // System Bitmap DC
 HDC hSystemBM;

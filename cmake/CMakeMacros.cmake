@@ -182,7 +182,7 @@ function(add_clean_target target)
     if(CMAKE_GENERATOR MATCHES "Unix Makefiles" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles")
         set(CLEAN_COMMAND make clean)
     elseif(CMAKE_GENERATOR MATCHES "NMake Makefiles")
-        set(CLEAN_COMMAND nmake clean)
+        set(CLEAN_COMMAND nmake /nologo clean)
     endif()
     add_custom_target(${target}_clean
         COMMAND ${CLEAN_COMMAND}

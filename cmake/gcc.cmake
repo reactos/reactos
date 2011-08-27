@@ -191,15 +191,6 @@ function(set_rc_compiler)
     "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>" PARENT_SCOPE)
 endfunction()
 
-#idl files support
-set(IDL_COMPILER native-widl)
-
-if(ARCH MATCHES i386)
-    set(IDL_FLAGS -m32 --win32)
-elseif(ARCH MATCHES amd64)
-    set(IDL_FLAGS -m64 --win64)
-endif()
-
 function(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
         target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}_delayed.a)

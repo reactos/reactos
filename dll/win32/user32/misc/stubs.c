@@ -129,7 +129,7 @@ UINT
 WINAPI
 UserRealizePalette ( HDC hDC )
 {
-  return NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
+  return NtUserxRealizePalette(hDC);
 }
 
 
@@ -553,7 +553,7 @@ VOID
 WINAPI
 CreateSystemThreads(DWORD dwUnknown)
 {
-    NtUserCallOneParam(dwUnknown, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    NtUserxCreateSystemThreads(dwUnknown);
 }
 
 BOOL

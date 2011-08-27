@@ -200,7 +200,7 @@ SetWindowRgn(
    BOOL Hook;
    int Ret = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -244,7 +244,7 @@ UpdateWindow(
        pWnd->state & WNDS_INTERNALPAINT ||
        pWnd->spwndChild )
   {
-     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
+     return NtUserxUpdateWindow(hWnd);
   }
   return TRUE;
 }
@@ -258,7 +258,7 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return NtUserCallHwndParamLock(hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
+  return NtUserxValidateRgn(hWnd, hRgn);
 }
 
 /*

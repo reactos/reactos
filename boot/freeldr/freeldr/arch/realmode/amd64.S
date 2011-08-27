@@ -1,8 +1,8 @@
 
 #include <asm.inc>
-#include <arch/pc/x86common.h>
+#include "../../include/arch/pc/x86common.h"
 
-#define IMAGE_DOS_HEADER_e_lfanew 36
+#define IMAGE_DOS_HEADER_e_lfanew 60
 #define IMAGE_FILE_HEADER_SIZE 20
 #define IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint 16
 
@@ -13,7 +13,7 @@
 #include "fathelp.inc"
 
 .org 512
-RealEntryPoint:
+Startup:
 
 	cli
 
@@ -25,42 +25,104 @@ RealEntryPoint:
 	mov	gs, ax
 	mov ss, ax
 
-	/* checkPoint Charlie - where it all began... */
-	mov si, offset CheckPoint0
-	call writestr
+    /* Save the boot drive and partition */
+    mov byte ptr ds:[BSS_BootDrive], dl
+    mov byte ptr ds:[BSS_BootPartition], dh
 
 	/* Setup a real mode stack */
-	mov	sp, stack16
+    mov sp, word ptr ds:[stack16]
 
-	/* Zero BootDrive and BootPartition */
-	xor eax, eax
-	mov BootDrive, eax
-	mov BootPartition, eax
+	/* Output first status */
+	mov si, offset Msg_Starting
+	call writestr
 
-	/* Store the boot drive */
-	mov BootDrive, dl
+    /* Enable A20 address line */
+    call EnableA20
 
-	/* Store the boot partition */
-	mov BootPartition, dh
+    /* Check the CPU */
+    call CheckFor64BitSupport
+    test al, al
+    jnz .LongModeSupported
+
+	/* Output failure message */
+	mov si, offset Msg_Unsupported
+	call writestr
+
+    /* Wait for a keypress */
+    int HEX(16)
+    jmp SoftReboot
+
+Msg_Unsupported:
+    .ascii "This CPU is not supported.", CR, LF
+    .ascii "Press any key to reboot...", NUL
+
+Msg_Starting:
+	.ascii "Starting FreeLoader...", CR, LF, NUL
+
+Msg_LongModeSupported:
+    .ascii "Long mode support detected.", CR, LF, NUL
+
+.LongModeSupported:
+	/* Output status */
+	mov si, offset Msg_LongModeSupported
+	call writestr
 
 	/* Load the GDT */
-	lgdt gdtptr
-	/* Load the IDT */
-//	lidt idtptr
+	lgdt fword ptr [gdtptr]
 
-	call x86_16_EnableA20
+    /* Build the startup page tables */
+	call BuildPageTables
 
-	/* checkPoint Charlie - where it all began... */
-	mov si, offset CheckPoint1
+    /* Store real mode entry point in shared memory */
+    mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint
+
+    /* Address the image with es segment */
+    mov ax, FREELDR_PE_BASE / 16
+    mov es, ax
+
+    /* Get address of optional header */
+    mov eax, dword ptr es:[IMAGE_DOS_HEADER_e_lfanew]
+    add eax, 4 + IMAGE_FILE_HEADER_SIZE
+
+    /* Get address of entry point */
+    mov eax, dword ptr es:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
+    add eax, FREELDR_PE_BASE
+
+    /* Save entry point */
+    mov dword ptr ds:[LongModeEntryPoint], eax
+
+    /* Restore es */
+    xor ax, ax
+    mov es, ax
+
+	/* Output status */
+	mov si, offset Msg_SwitchToLongMode
 	call writestr
 
-	call x86_16_BuildPageTables
+    jmp ExitToLongMode
 
-	/* checkPoint Charlie - where it all began... */
-	mov si, offset CheckPoint2
-	call writestr
+Msg_SwitchToLongMode:
+    .ascii "Switching to long mode....", CR, LF, NUL
 
+.align 8
+gdt:
+	.word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 00: NULL descriptor */
+	.word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 08:  */
+	.word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: long mode cs */
+	.word HEX(ffff), HEX(0000), HEX(f300), HEX(00cf) /* 18: long mode ds */
+	.word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 20: 16-bit real mode CS */
+	.word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 28: 16-bit real mode DS */
+	.word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode cs */
+
+/* GDT table pointer */
+gdtptr:
+	.word HEX(37) /* Limit */
+	.long offset gdt   /* Base Address */
+
+
+CheckFor64BitSupport:
 	/* Check if CPU supports CPUID */
+	pushad
 	pushfd
 	pop eax
 	mov ebx, eax
@@ -70,107 +132,101 @@ RealEntryPoint:
 	pushfd
 	pop eax
 	cmp eax,ebx
-	jz no_cpuid_support_detected
+	jnz .CheckForPAE
 
+    mov si, offset .Msg_NoCpuidSupport
+	call writestr
+    popad
+    xor al, al
+    ret
+
+.Msg_NoCpuidSupport:
+    .ascii "The system doesn't support CPUID.", CR, LF, NUL
+
+.CheckForPAE:
 	/* CPUID support detected - getting the PAE/PGE */
-
 	mov eax,1 // Fn0000_0001 - PAE in EDX[6]
 	cpuid
-	xor eax,eax
 	and edx, HEX(00a0)
-	test edx,edx // are PAE and PGE bits set?
-	jz no_x64_support_detected
+	cmp edx, HEX(00a0)
+	je .CheckForLongMode
 
-	/* PAE and PGE are here */
+    mov si, offset .Msg_NoPAE
+	call writestr
+    popad
+    xor al, al
+    ret
 
+.Msg_NoPAE:
+    .ascii "PAE or PGE not set.", CR, LF, NUL
+
+.CheckForLongMode:
 	xor edx, edx
 	mov eax, HEX(80000001)
 	cpuid
 	and edx, HEX(20000000)
 	test edx,edx
-	jz no_x64_support_detected
+	jnz .Success
 
-	/* X64 Processor */
-
-	/* checkPoint Charlie - where it all began... */
-	mov si, offset CheckPoint3
+    mov si, offset .Msg_NoLongMode
 	call writestr
+    popad
+    xor al, al
+    ret
 
-    /* Get address of optional header */
-    mov eax, dword ptr ds:[FREELDR_PE_BASE + IMAGE_DOS_HEADER_e_lfanew]
-    add eax, FREELDR_PE_BASE + 4 + IMAGE_FILE_HEADER_SIZE
+.Msg_NoLongMode:
+    .ascii "Long mode is not supported.", CR, LF, NUL
 
-    /* Get address of entry point */
-    mov eax, dword ptr ds:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
-
-    /* Store the address in the callback return variable */
-    mov dword ptr ds:[CallbackReturnAddress], eax
-
-switch64:
-    mov
-	jmp x86_16_ReturnToLong
+.Success:
+    popad
+    xor al, al
+    inc al
+    ret
 
 
-no_x64_support_detected:
-	mov  si, offset NotAnX64Processor	// Loading message
-	call writestr
-	jmp fail
-
-no_cpuid_support_detected:
-	mov  si, offset NoCPUIDSupport	// Loading message
-   	call writestr
-
-fail:
-	jmp fail
-	nop
-	nop
-
-/*
- * We define 512 2MB pages at the start of memory, so we can access the first
- * 1 GB as if paging was disabled
- */
-x86_16_BuildPageTables:
+BuildPageTables:
 	pusha
 	push es
 
-	/* Get segment of pml4 */
-	mov eax, offset pml4_startup
-	shr eax, 4
+	/* Get segment of the PML4 */
+	mov eax, PML4_ADDRESS / 16
 	mov es, ax
 	cld
 	xor di, di
 
 	/* One entry in the PML4 pointing to PDP */
-	mov eax, offset pdp_startup
-	or eax, HEX(00f)
+	mov eax, PDP_ADDRESS
+	or eax, HEX(0f)
 	stosd
+
 	/* clear rest */
 	xor eax, eax
-	mov cx, HEX(03ff)
+	mov cx, 1023
 	rep stosd
 
 	/* One entry in the PDP pointing to PD */
-	mov eax, offset pd_startup
-	or eax, HEX(00f)
+	mov eax, PD_ADDRESS
+	or eax, HEX(0f)
 	stosd
+
 	/* clear rest */
 	xor eax, eax
-	mov ecx, HEX(03ff)
+	mov ecx, 1023
 	rep stosd
 
-	/* 512 entries in the PD defining a 2MB page each */
+	/* 512 entries in the PD, each defining a 2MB page each */
 	mov ecx, 512
 	mov eax, HEX(008f)
 
-Bpt2:
+.Bpt2:
 	mov es: [di], eax
 	mov dword ptr es: [di + 4], 0
-	add eax, 512 << 12 // add 512 4k pages
+	add eax, 512 * 4096 // add 512 4k pages
 	add di, 8
 
-	/* Loop it */
+	/* Loop all PDEs */
 	dec cx
-	jnz Bpt2
+	jnz .Bpt2
 
 	/* Return */
 	pop es
@@ -178,13 +234,57 @@ Bpt2:
 	ret
 
 
+/******************************************************************************/
 
+#define MSR_EFER HEX(C0000080)
+#define LMODE_CS HEX(10)
 
+/* This is the entry point from long mode */
+RealModeEntryPoint:
+	/* Disable Protected Mode */
+	mov eax, cr0
+	and eax, HEX(0fffffffe) // ~0x00000001
+	mov cr0, eax
 
-x86_16_ReturnToLong:
+	/* Clear prefetch queue & correct CS */
+	ljmp16 0, offset InRealMode
 
-	cli
+InRealMode:
 
+//    mov ax, HEX(0b800)
+//    mov es, ax
+//    mov word ptr es:[12], HEX(0e00) + '6'
+
+    /* Set real mode segments */
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    /* Clear out the high 16-bits of ESP */
+    /* This is needed because I have one */
+    /* machine that hangs when booted to dos if */
+    /* anything other than 0x0000 is in the high */
+    /* 16-bits of ESP. Even though real-mode */
+    /* code should only use SP and not ESP. */
+    xor esp, esp
+
+    /* Restore real mode stack */
+    mov sp, word ptr ds:[stack16]
+
+   // sti /* These are ok now */
+
+    /* Do the callback, specified by bx */
+    shl bx, 1
+    call word ptr ds:CallbackTable[bx]
+
+ExitToLongMode:
+    /* Disable interrupts */
+    cli
+
+    /* Set correct segment registers */
 	xor	ax,ax
 	mov	ds,ax
 	mov	es,ax
@@ -192,34 +292,67 @@ x86_16_ReturnToLong:
 	mov	gs,ax
 	mov	ss,ax
 
-	/* Get the return address off the stack */
-	pop	word ptr code64ret
+    /* Safe current stack pointer */
+    mov word ptr ds:[stack16], sp
 
-	/* Save 16-bit stack pointer */
-	mov	stack16, sp
-
-	mov eax, 0x00a0			// Set PAE and PGE: 10100000b
+    /* Set PAE and PGE: 10100000b */
+	mov eax, HEX(00a0)
 	mov cr4, eax
 
-	mov edx, offset pml4_startup // Point cr3 at PML4
-	mov cr3, edx
+    /* Point cr3 at the PML4 */
+	mov eax, PML4_ADDRESS
+	mov cr3, eax
 
-	mov ecx, HEX(0C0000080)		// Specify EFER MSR
-
-	rdmsr					// Enable long mode
+    /* Enable long mode */
+	mov ecx, MSR_EFER
+	rdmsr
 	or eax, HEX(00000100)
 	wrmsr
 
-	mov ebx, cr0			// Activate long mode
-	or ebx, HEX(080000001)		// by enabling paging and protection simultaneously
-	mov cr0, ebx			// skipping protected mode entirely
+    /* Activate long mode by enabling paging and protection simultaneously,
+       skipping protected mode entirely */
+	mov eax, cr0
+	or eax, HEX(80000001)
+	mov cr0, eax
 
-	//jmp LMODE_CS:offset LongCat	//Load CS with 64 bit segment and flush the instruction cache
-    // Do a long jmp to the CallbackReturn address
+    /* Clear prefetch queue & correct CS */
+    ljmp16 LMODE_CS, InLongMode
+InLongMode:
+	//DB 66h, 0B8h, 18h, 00h // mov ax, LMODE_DS
+	//DB 66h, 8Eh, 0D8h // mov ds, ax
+	//DB 66h, 66h, 0C7h, 04h, 25h, 00h, 80h, 0Bh, 00h, 31h, 0Eh
+	//mov word ptr [HEX(b8000)], HEX(0e00) + '1'
+
+    .byte HEX(0ff), HEX(25) // opcode of 64bit indirect jump
+    .long 1 // relative address of LongModeEntryPoint
+    nop
+LongModeEntryPoint:
+    .long 0, 0
+
+    int HEX(16)
+    jmp SoftReboot
+
+CallbackTable:
+    .word Int386
+    .word SoftReboot
+    .word ChainLoadBiosBootSectorCode
+    .word PxeCallApi
+    .word PnpBiosGetDeviceNodeCount
+    .word PnpBiosGetDeviceNode
+    .word 0 // BootLinuxKernel
+
+    /* 16-bit stack pointer */
+stack16:
+    .word STACK16ADDR
 
 
+#include "int386.inc"
+#include "pxe.inc"
+#include "pnp.inc"
 #include "helpers.inc"
 
+.org (FREELDR_PE_BASE - FREELDR_BASE - 1)
+.byte 0
 .endcode16
 
 END

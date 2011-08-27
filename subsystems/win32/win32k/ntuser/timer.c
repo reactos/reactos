@@ -684,5 +684,22 @@ CLEANUP:
    END_CLEANUP;
 }
 
+BOOL
+APIENTRY
+NtUserValidateTimerCallback(
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+  BOOL Ret = FALSE;
+
+  UserEnterShared();
+
+  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), lParam);
+
+  UserLeave();
+  return Ret;
+}
+
 
 /* EOF */

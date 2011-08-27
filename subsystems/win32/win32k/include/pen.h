@@ -1,8 +1,5 @@
 #pragma once
 
-#include "gdiobj.h"
-#include "brush.h"
-
 /* Internal interface */
 
 #define PEN_AllocPen() ((HPEN)GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))

@@ -54,7 +54,7 @@ PcMemGetExtendedMemorySize(VOID)
   DPRINTM(DPRINT_MEMORY, "BX = 0x%x\n", RegsOut.w.bx);
   DPRINTM(DPRINT_MEMORY, "CX = 0x%x\n", RegsOut.w.cx);
   DPRINTM(DPRINT_MEMORY, "DX = 0x%x\n", RegsOut.w.dx);
-  DPRINTM(DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE");
+  DPRINTM(DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
   if (INT386_SUCCESS(RegsOut))
     {
@@ -95,7 +95,7 @@ PcMemGetExtendedMemorySize(VOID)
 
   DPRINTM(DPRINT_MEMORY, "Int15h AH=88h\n");
   DPRINTM(DPRINT_MEMORY, "AX = 0x%x\n", RegsOut.w.ax);
-  DPRINTM(DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE");
+  DPRINTM(DPRINT_MEMORY, "CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
   if (INT386_SUCCESS(RegsOut) && RegsOut.w.ax != 0)
     {
@@ -182,7 +182,7 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       DPRINTM(DPRINT_MEMORY, "EAX = 0x%x\n", Regs.x.eax);
       DPRINTM(DPRINT_MEMORY, "EBX = 0x%x\n", Regs.x.ebx);
       DPRINTM(DPRINT_MEMORY, "ECX = 0x%x\n", Regs.x.ecx);
-      DPRINTM(DPRINT_MEMORY, "CF set = %s\n", (Regs.x.eflags & I386FLAG_CF) ? "TRUE" : "FALSE");
+      DPRINTM(DPRINT_MEMORY, "CF set = %s\n", (Regs.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
       /* If the BIOS didn't return 'SMAP' in EAX then
        * it doesn't support this call */

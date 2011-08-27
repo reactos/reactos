@@ -113,7 +113,7 @@ GetSystemMetrics(int nIndex)
       return RealGetSystemMetrics(nIndex);
    }
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -336,7 +336,7 @@ SystemParametersInfoA(UINT uiAction,
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -368,7 +368,7 @@ SystemParametersInfoW(UINT uiAction,
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

@@ -128,7 +128,7 @@ IntNotifyWinEvent(
   ne.idChild  = idChild;
   ne.flags    = flags;
   if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(event))
-  NtUserCallHwndParam(hwnd, (DWORD)&ne, HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT);
+  NtUserxNotifyWinEvent(hwnd, &ne);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -300,7 +300,7 @@ BOOL
 WINAPI
 DeregisterShellHookWindow(HWND hWnd)
 {
-  return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
+  return NtUserxDeregisterShellHookWindow(hWnd);
 }
 
 /*
@@ -310,7 +310,7 @@ BOOL
 WINAPI
 RegisterShellHookWindow(HWND hWnd)
 {
-  return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
+  return NtUserxRegisterShellHookWindow(hWnd);
 }
 
 /*
@@ -320,7 +320,7 @@ BOOL
 WINAPI
 UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
 {
-  return NtUserCallTwoParam(nCode, (DWORD_PTR)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
+  return NtUserxUnhookWindowsHook(nCode, pfnFilterProc);
 }
 
 /*

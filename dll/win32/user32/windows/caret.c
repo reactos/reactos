@@ -88,7 +88,7 @@ BOOL
 WINAPI
 DestroyCaret(VOID)
 {
-    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
+    return NtUserxDestroyCaret();
 }
 
 
@@ -99,7 +99,7 @@ BOOL
 WINAPI
 SetCaretBlinkTime(UINT uMSeconds)
 {
-    return NtUserSetCaretBlinkTime(uMSeconds);
+    return NtUserxSetCaretBlinkTime(uMSeconds);
 }
 
 
@@ -108,10 +108,9 @@ SetCaretBlinkTime(UINT uMSeconds)
  */
 BOOL
 WINAPI
-SetCaretPos(int X,
-            int Y)
+SetCaretPos(int X, int Y)
 {
-    return NtUserSetCaretPos(X, Y);
+    return NtUserxSetCaretPos(X, Y);
 }
 
 /* EOF */

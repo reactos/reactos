@@ -339,7 +339,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
 #endif
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = PxeMount(DeviceId);
 #endif

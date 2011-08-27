@@ -144,14 +144,14 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
         /* Extract the name */
         SubKeyString = *SubKey;
         p1 = (PWCHAR)((ULONG_PTR)SubKeyString.Buffer + SubKeyString.Length);
-        while (SubKey->Length)
+        while (SubKeyString.Length)
         {
             if (p1[-1] == L'\\') break;
             p1--;
             SubKeyString.Length -= sizeof(*p1);
         }
         SubKeyString.Buffer = p1;
-        SubKeyString.Length = SubKeyString.MaximumLength - SubKeyString.Length - sizeof(WCHAR);
+        SubKeyString.Length = SubKey->Length - SubKeyString.Length;
 
         /* Setup the object attributes */
         InitializeObjectAttributes(&ObjectAttributes,
@@ -192,7 +192,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Query the value */
-    Status = NtQueryValueKey(KeyHandle,
+    Status = ZwQueryValueKey(KeyHandle,
                              &ValueNameString,
                              KeyValuePartialInformation,
                              KeyValueInformation,
@@ -213,7 +213,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
         }
 
         /* Try again */
-        Status = NtQueryValueKey(KeyHandle,
+        Status = ZwQueryValueKey(KeyHandle,
                                  &ValueNameString,
                                  KeyValuePartialInformation,
                                  KeyValueInformation,
@@ -326,8 +326,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
     /* Check if buffer was in heap */
     if (FreeHeap) RtlFreeHeap(RtlGetProcessHeap(), 0, KeyValueInformation);
 
-    /* Close key and return */
-    NtClose(KeyHandle);
+    /* Return status */
     return Status;
 }
 
