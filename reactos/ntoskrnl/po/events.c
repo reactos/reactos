@@ -209,7 +209,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			FileHandle,
 			FILE_READ_DATA,
 			IoFileObjectType,
-			ExGetPreviousMode(),
+			KernelMode,
 			(PVOID*)&FileObject,
 			NULL);
 		if (!NT_SUCCESS(Status))
