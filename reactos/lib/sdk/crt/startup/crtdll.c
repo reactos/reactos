@@ -199,8 +199,8 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	    goto i__leave;
 	  }
     }
-  if (dwReason == DLL_PROCESS_ATTACH)
 #if defined(__GNUC__)
+  if (dwReason == DLL_PROCESS_ATTACH)
     __main ();
 #endif
   retcode = DllMain(hDllHandle,dwReason,lpreserved);
