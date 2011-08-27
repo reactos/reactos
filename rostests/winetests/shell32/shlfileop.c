@@ -2309,8 +2309,6 @@ static void test_unicode(void)
     ok(!file_existsW(UNICODE_PATH), "The directory should have been removed\n");
 }
 
-extern HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
-
 static void
 test_shlmenu(void) {
 	HRESULT hres;
