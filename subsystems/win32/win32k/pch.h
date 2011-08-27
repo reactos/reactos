@@ -37,6 +37,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
 #include <windef.h>
+#include <math.h>
 
 /* Avoid type casting, by defining RECT to RECTL */
 #define RECT RECTL
@@ -70,10 +71,15 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <win32k/ntuser.h>
 #include <win32k/ntgdityp.h>
 #include <win32k/ntgdibad.h>
+#include <win32k/ntgdihdl.h>
 #include <ntgdi.h>
 
 /* Undocumented user definitions */
 #include <undocuser.h>
+
+/* Freetype headers*/
+#include <ft2build.h>
+#include <freetype/freetype.h>
 
 /* Internal Win32K Header */
 #include "include/win32kp.h"

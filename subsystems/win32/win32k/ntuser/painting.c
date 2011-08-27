@@ -13,8 +13,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserPainting);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -313,7 +312,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
    BOOL HadPaintMessage, HadNCPaintMessage;
    BOOL HasPaintMessage, HasNCPaintMessage;
 
-   DPRINT("IntInvalidateWindows start\n");
+   TRACE("IntInvalidateWindows start\n");
    /*
     * If the nonclient is not to be redrawn, clip the region to the client
     * rect
@@ -465,7 +464,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
       else
          MsqIncPaintCountQueue(Wnd->head.pti->MessageQueue);
    }
-   DPRINT("IntInvalidateWindows exit\n");
+   TRACE("IntInvalidateWindows exit\n");
 }
 
 /*
@@ -511,7 +510,7 @@ co_UserRedrawWindow(
    ULONG Flags)
 {
    HRGN hRgn = NULL;
-   DPRINT("co_UserRedrawWindow start\n");
+   TRACE("co_UserRedrawWindow start\n");
 
    /*
     * Step 1.
@@ -593,7 +592,7 @@ co_UserRedrawWindow(
    {
       GreDeleteObject(hRgn);
    }
-   DPRINT("co_UserRedrawWindow exit\n");
+   TRACE("co_UserRedrawWindow exit\n");
 
    return TRUE;
 }
@@ -667,7 +666,7 @@ IntGetPaintMessage(
 
    if (Message->hwnd == NULL)
    {
-      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
+      ERR("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
       /* Hack to stop spamming the debuglog ! */
       Thread->cPaintsReady = 0;
       return FALSE;
@@ -801,7 +800,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    DECLARE_RETURN(HDC);
    USER_REFERENCE_ENTRY Ref;
 
-   DPRINT("Enter NtUserBeginPaint\n");
+   TRACE("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -893,7 +892,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
 
-   DPRINT("Leave NtUserBeginPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserBeginPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 
@@ -915,7 +914,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    USER_REFERENCE_ENTRY Ref;
    HDC hdc = NULL;
 
-   DPRINT("Enter NtUserEndPaint\n");
+   TRACE("Enter NtUserEndPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -947,11 +946,52 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserEndPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEndPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
 
+/*
+ * @implemented
+ */
+BOOL APIENTRY
+NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
+{
+   PWND pWnd;
+   FLASHWINFO finfo = {0};
+   BOOL Ret = TRUE;
+
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead(pfwi, sizeof(FLASHWINFO), sizeof(ULONG));
+      RtlCopyMemory(&finfo, pfwi, sizeof(FLASHWINFO));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      Ret = FALSE;
+   }
+   _SEH2_END
+
+   if (!Ret) goto Exit;
+
+   if (!(pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+        finfo.cbSize != sizeof(FLASHWINFO) ||
+        finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      goto Exit;
+   }
+
+   //Ret = IntFlashWindowEx(pWnd, &finfo);
+
+Exit:
+   UserLeave();
+   return Ret;
+}
 
 INT FASTCALL
 co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
@@ -997,7 +1037,7 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
    INT ret;
    USER_REFERENCE_ENTRY Ref;
 
-   DPRINT("Enter NtUserGetUpdateRgn\n");
+   TRACE("Enter NtUserGetUpdateRgn\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -1012,7 +1052,7 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1034,7 +1074,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetUpdateRect\n");
+   TRACE("Enter NtUserGetUpdateRect\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -1096,7 +1136,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    RETURN(!RECTL_bIsEmptyRect(&Rect));
 
 CLEANUP:
-   DPRINT("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1122,7 +1162,7 @@ NtUserRedrawWindow(
    NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserRedrawWindow\n");
+   TRACE("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
@@ -1170,7 +1210,7 @@ NtUserRedrawWindow(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1310,7 +1350,7 @@ NtUserScrollDC(
    NTSTATUS Status = STATUS_SUCCESS;
    DWORD Result;
 
-   DPRINT("Enter NtUserScrollDC\n");
+   TRACE("Enter NtUserScrollDC\n");
    UserEnterExclusive();
 
    _SEH2_TRY
@@ -1376,7 +1416,7 @@ NtUserScrollDC(
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserScrollDC, ret=%i\n",_ret_);
+   TRACE("Leave NtUserScrollDC, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1409,7 +1449,7 @@ NtUserScrollWindowEx(
    DECLARE_RETURN(DWORD);
    USER_REFERENCE_ENTRY Ref, CaretRef;
 
-   DPRINT("Enter NtUserScrollWindowEx\n");
+   TRACE("Enter NtUserScrollWindowEx\n");
    UserEnterExclusive();
 
    Window = UserGetWindowObject(hWnd);
@@ -1574,7 +1614,7 @@ CLEANUP:
    if (Window)
       UserDerefObjectCo(Window);
 
-   DPRINT("Leave NtUserScrollWindowEx, ret=%i\n",_ret_);
+   TRACE("Leave NtUserScrollWindowEx, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1593,19 +1633,14 @@ UserDrawCaptionText(
    NTSTATUS Status;
    BOOLEAN bDeleteFont = FALSE;
    SIZE Size;
-#ifndef NDEBUG
-   INT i;
-   DPRINT(""); // print filename and line no.
-   for(i = 0; i < Text->Length/sizeof(WCHAR); i++)
-      DbgPrint("%C", Text->Buffer[i]);
-   DbgPrint(", %d\n", Text->Length/sizeof(WCHAR));
-#endif
+
+   TRACE("UserDrawCaptionText: %wZ\n", Text);
 
    nclm.cbSize = sizeof(nclm);
    if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS,
       sizeof(NONCLIENTMETRICS), &nclm, 0))
    {
-      DPRINT1("UserSystemParametersInfo() failed!\n");
+      ERR("UserSystemParametersInfo() failed!\n");
       return FALSE;
    }
 
@@ -1618,7 +1653,7 @@ UserDrawCaptionText(
 
       if(!NT_SUCCESS(Status))
       {
-         DPRINT1("TextIntCreateFontIndirect() failed! Status: 0x%x\n", Status);
+         ERR("TextIntCreateFontIndirect() failed! Status: 0x%x\n", Status);
          return FALSE;
       }
 
@@ -1630,7 +1665,7 @@ UserDrawCaptionText(
    hOldFont = NtGdiSelectFont(hDc, hFont);
    if(!hOldFont)
    {
-      DPRINT1("SelectFont() failed!\n");
+      ERR("SelectFont() failed!\n");
       /* Don't fail */
    }
 
@@ -1709,7 +1744,7 @@ BOOL UserDrawCaption(
 
       if(!GreGradientFill(hDc, Vertices, 2, &gcap, 1, GRADIENT_FILL_RECT_H))
       {
-         DPRINT1("GreGradientFill() failed!\n");
+         ERR("GreGradientFill() failed!\n");
          goto cleanup;
       }
    }
@@ -1726,7 +1761,7 @@ BOOL UserDrawCaption(
 
       if(!hOldBrush)
       {
-         DPRINT1("NtGdiSelectBrush() failed!\n");
+         ERR("NtGdiSelectBrush() failed!\n");
          goto cleanup;
       }
 
@@ -1735,7 +1770,7 @@ BOOL UserDrawCaption(
          Rect.bottom - Rect.top,
          PATCOPY))
       {
-         DPRINT1("NtGdiPatBlt() failed!\n");
+         ERR("NtGdiPatBlt() failed!\n");
          goto cleanup;
       }
    }

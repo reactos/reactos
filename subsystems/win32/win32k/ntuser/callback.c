@@ -16,8 +16,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserCallback);
 
 /* CALLBACK MEMORY MANAGEMENT ************************************************/
 
@@ -175,13 +174,15 @@ co_IntCallWindowProc(WNDPROC Proc,
    ULONG ArgumentLength;
    LRESULT Result;
 
+   TRACE_CH(UserMsgCall,"hwnd:0x%x, msg:%d, wparam:%d, lparam:%d\n", Wnd, Message, wParam, lParam);
+
    if (0 < lParamBufferSize)
    {
       ArgumentLength = sizeof(WINDOWPROC_CALLBACK_ARGUMENTS) + lParamBufferSize;
       Arguments = IntCbAllocateMemory(ArgumentLength);
       if (NULL == Arguments)
       {
-         DPRINT1("Unable to allocate buffer for window proc callback\n");
+         ERR("Unable to allocate buffer for window proc callback\n");
          return -1;
       }
       RtlMoveMemory((PVOID) ((char *) Arguments + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS)),
@@ -219,6 +220,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+      ERR_CH(UserMsgCall,"Failed to copy result from user mode!\n");
       Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
@@ -229,6 +231,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    if (!NT_SUCCESS(Status))
    {
+     ERR_CH(UserMsgCall,"Call to user mode failed!\n");
       if (0 < lParamBufferSize)
       {
          IntCbFreeMemory(Arguments);
@@ -343,7 +346,7 @@ co_IntCallHookProc(INT HookId,
    pti = PsGetCurrentThreadWin32Thread();
    if (pti->TIF_flags & TIF_INCLEANUP)
    {
-      DPRINT1("Thread is in cleanup and trying to call hook %d\n", Code);
+      ERR("Thread is in cleanup and trying to call hook %d\n", Code);
       return 0;
    }
 
@@ -352,17 +355,17 @@ co_IntCallHookProc(INT HookId,
    switch(HookId)
    {
       case WH_CBT:
-         DPRINT("WH_CBT: Code %d\n", Code);
+         TRACE("WH_CBT: Code %d\n", Code);
          switch(Code)
          {
             case HCBT_CREATEWND:
                pWnd = UserGetWindowObject((HWND) wParam);
                if (!pWnd)
                {
-                  DPRINT1("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
+                  ERR("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
                   goto Fault_Exit;
                }
-               DPRINT("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
+               TRACE("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
               // Due to KsStudio.exe, just pass the callers original pointers
               // except class which point to kernel space if not an atom.
               // Found by, Olaf Siejka
@@ -389,7 +392,7 @@ co_IntCallHookProc(INT HookId,
             case HCBT_QS:
                break;
             default:
-               DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
+               ERR("Trying to call unsupported CBT hook %d\n", Code);
                goto Fault_Exit;
          }
          break;
@@ -418,14 +421,14 @@ co_IntCallHookProc(INT HookId,
       case WH_SHELL:
          break;
       default:
-         DPRINT1("Trying to call unsupported window hook %d\n", HookId);
+         ERR("Trying to call unsupported window hook %d\n", HookId);
          goto Fault_Exit;
    }
 
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("HookProc callback failed: out of memory\n");
+      ERR("HookProc callback failed: out of memory\n");
       goto Fault_Exit;
    }
    Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Argument;
@@ -527,12 +530,12 @@ co_IntCallHookProc(INT HookId,
    }
    else
    {
-      DPRINT1("ERROR: Hook ResultPointer 0x%x ResultLength %d\n",ResultPointer,ResultLength);
+      ERR("ERROR: Hook ResultPointer 0x%x ResultLength %d\n",ResultPointer,ResultLength);
    }
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failure to make Callback! Status 0x%x",Status);
+      ERR("Failure to make Callback! Status 0x%x",Status);
       goto Fault_Exit;
    }
    /* Support write backs... SEH is in UserCallNextHookEx. */
@@ -566,7 +569,7 @@ co_IntCallHookProc(INT HookId,
 Fault_Exit:
    if (Hit)
    {
-      DPRINT1("Exception CallHookProc HookId %d Code %d\n",HookId,Code);
+      ERR("Exception CallHookProc HookId %d Code %d\n",HookId,Code);
    }
    if (Argument) IntCbFreeMemory(Argument);
 
@@ -598,7 +601,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("EventProc callback failed: out of memory\n");
+      ERR("EventProc callback failed: out of memory\n");
       return 0;
    }
    Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Argument;
@@ -655,7 +658,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("LoadMenu callback failed: out of memory\n");
+      ERR("LoadMenu callback failed: out of memory\n");
       return 0;
    }
    Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;

@@ -178,7 +178,7 @@ __CRT_INLINE errno_t _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_
  _CRTIMP time_t __cdecl _mkgmtime(struct tm *_Tm);
  _CRTIMP time_t __cdecl time(time_t *_Time);
 
-#ifndef RC_INVOKED
+#if !defined(RC_INVOKED)  && !defined(_NO_INLINING)  && !defined(_CRTBLD)
 #ifdef _USE_32BIT_TIME_T
 #if 0
 __CRT_INLINE double __cdecl difftime(time_t _Time1,time_t _Time2) { return _difftime32(_Time1,_Time2); }

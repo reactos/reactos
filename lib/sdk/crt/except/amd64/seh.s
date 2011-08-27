@@ -18,6 +18,7 @@
 /* GLOBALS *******************************************************************/
 
 PUBLIC _global_unwind2
+PUBLIC _local_unwind
 PUBLIC _local_unwind2
 PUBLIC _abnormal_termination
 PUBLIC _except_handler2
@@ -40,6 +41,11 @@ FUNC _abnormal_termination
     .endprolog
     ret
 ENDFUNC _abnormal_termination
+
+FUNC _local_unwind
+    .endprolog
+    ret
+ENDFUNC _local_unwind
 
 FUNC _local_unwind2
     .endprolog

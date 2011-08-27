@@ -13,8 +13,7 @@
 #include <win32k.h>
 #include <ntddkbd.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserInput);
 
 extern BYTE gQueueKeyStateTable[];
 extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
@@ -85,14 +84,14 @@ VOID FASTCALL DoTheScreenSaver(VOID)
       TO = 1000 * gspv.iScrSaverTimeout;
       if (Test > TO)
       {
-         DPRINT("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
+         TRACE("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
 
          if (ppiScrnSaver) // We are or we are not the screensaver, prevent reentry...
          { 
             if (!(ppiScrnSaver->W32PF_flags & W32PF_IDLESCREENSAVER))
             {
                ppiScrnSaver->W32PF_flags |= W32PF_IDLESCREENSAVER;
-               DPRINT1("Screensaver is Idle\n");
+               ERR("Screensaver is Idle\n");
             }
          }
          else
@@ -237,13 +236,13 @@ MouseThreadMain(PVOID StartContext)
    Status = Win32kInitWin32Thread(PsGetCurrentThread());
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Win32K: Failed making mouse thread a win32 thread.\n");
+      ERR("Win32K: Failed making mouse thread a win32 thread.\n");
       return; //(Status);
    }
 
    ptiMouse = PsGetCurrentThreadWin32Thread();
    ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
-   DPRINT("Mouse Thread 0x%x \n", ptiMouse);
+   TRACE("Mouse Thread 0x%x \n", ptiMouse);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -253,13 +252,13 @@ MouseThreadMain(PVOID StartContext)
       /*
        * Wait to start input.
        */
-      DPRINT("Mouse Input Thread Waiting for start event\n");
+      TRACE("Mouse Input Thread Waiting for start event\n");
       Status = KeWaitForSingleObject(&InputThreadsStart,
                                      0,
                                      KernelMode,
                                      TRUE,
                                      NULL);
-      DPRINT("Mouse Input Thread Starting...\n");
+      TRACE("Mouse Input Thread Starting...\n");
 
       /*FIXME: Does mouse attributes need to be used for anything */
       Status = NtDeviceIoControlFile(MouseDeviceHandle,
@@ -272,7 +271,7 @@ MouseThreadMain(PVOID StartContext)
                                      NULL, 0);
       if(!NT_SUCCESS(Status))
       {
-         DPRINT("Failed to get mouse attributes\n");
+         TRACE("Failed to get mouse attributes\n");
       }
 
       /*
@@ -301,10 +300,10 @@ MouseThreadMain(PVOID StartContext)
          }
          if(!NT_SUCCESS(Status))
          {
-            DPRINT1("Win32K: Failed to read from mouse.\n");
+            ERR("Win32K: Failed to read from mouse.\n");
             return; //(Status);
          }
-         DPRINT("MouseEvent\n");
+         TRACE("MouseEvent\n");
 		 IntLastInputTick(TRUE);
 
          UserEnterExclusive();
@@ -313,7 +312,7 @@ MouseThreadMain(PVOID StartContext)
 
          UserLeave();
       }
-      DPRINT("Mouse Input Thread Stopped...\n");
+      TRACE("Mouse Input Thread Stopped...\n");
    }
 }
 
@@ -469,7 +468,7 @@ IntKeyboardSendWinKeyMsg()
 
    if (!(Window = UserGetWindowObject(InputWindowStation->ShellWindow)))
    {
-      DPRINT1("Couldn't find window to send Windows key message!\n");
+      ERR("Couldn't find window to send Windows key message!\n");
       return;
    }
 
@@ -485,7 +484,7 @@ IntKeyboardSendWinKeyMsg()
 static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
-   DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
+   ERR("co_IntKeyboardSendAltKeyMsg\n");
 //   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
 }
 
@@ -538,13 +537,13 @@ KeyboardThreadMain(PVOID StartContext)
    Status = Win32kInitWin32Thread(PsGetCurrentThread());
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
+      ERR("Win32K: Failed making keyboard thread a win32 thread.\n");
       return; //(Status);
    }
 
    ptiKeyboard = PsGetCurrentThreadWin32Thread();
    ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
-   DPRINT("Keyboard Thread 0x%x \n", ptiKeyboard);
+   TRACE("Keyboard Thread 0x%x \n", ptiKeyboard);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -557,14 +556,14 @@ KeyboardThreadMain(PVOID StartContext)
       /*
        * Wait to start input.
        */
-      DPRINT( "Keyboard Input Thread Waiting for start event\n" );
+      TRACE( "Keyboard Input Thread Waiting for start event\n" );
       Status = KeWaitForSingleObject(&InputThreadsStart,
                                      0,
                                      KernelMode,
                                      TRUE,
                                      NULL);
 
-      DPRINT( "Keyboard Input Thread Starting...\n" );
+      TRACE( "Keyboard Input Thread Starting...\n" );
       /*
        * Receive and process keyboard input.
        */
@@ -580,7 +579,7 @@ KeyboardThreadMain(PVOID StartContext)
          HWND hWnd;
          int id;
 
-         DPRINT("KeyInput @ %08x\n", &KeyInput);
+         TRACE("KeyInput @ %08x\n", &KeyInput);
 
          Status = NtReadFile (KeyboardDeviceHandle,
                               NULL,
@@ -603,11 +602,11 @@ KeyboardThreadMain(PVOID StartContext)
          }
          if(!NT_SUCCESS(Status))
          {
-            DPRINT1("Win32K: Failed to read from mouse.\n");
+            ERR("Win32K: Failed to read from mouse.\n");
             return; //(Status);
          }
 
-         DPRINT("KeyRaw: %s %04x\n",
+         TRACE("KeyRaw: %s %04x\n",
                 (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
                 KeyInput.MakeCode );
 
@@ -616,7 +615,7 @@ KeyboardThreadMain(PVOID StartContext)
 
          if (!NT_SUCCESS(Status))
          {
-            DPRINT1("Win32K: Failed to read from keyboard.\n");
+            ERR("Win32K: Failed to read from keyboard.\n");
             return; //(Status);
          }
 
@@ -687,7 +686,7 @@ KeyboardThreadMain(PVOID StartContext)
                                           sizeof(KEYBOARD_INPUT_DATA),
                                           NULL,
                                           NULL);
-                     DPRINT("KeyRaw: %s %04x\n",
+                     TRACE("KeyRaw: %s %04x\n",
                             (NextKeyInput.Flags & KEY_BREAK) ? "up":"down",
                             NextKeyInput.MakeCode );
 
@@ -853,7 +852,7 @@ KeyboardThreadMain(PVOID StartContext)
             {
                if (!(KeyInput.Flags & KEY_BREAK))
                {
-                  DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
+                  TRACE("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
                   MsqPostHotKeyMessage (Thread,
                                         hWnd,
                                         (WPARAM)id,
@@ -883,7 +882,7 @@ KeyboardThreadMain(PVOID StartContext)
       }
 
 KeyboardEscape:
-      DPRINT( "KeyboardInput Thread Stopped...\n" );
+      TRACE( "KeyboardInput Thread Stopped...\n" );
    }
 }
 
@@ -916,13 +915,13 @@ RawInputThreadMain(PVOID StartContext)
   Status = Win32kInitWin32Thread(PsGetCurrentThread());
   if (!NT_SUCCESS(Status))
   {
-     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+     ERR("Win32K: Failed making Raw Input thread a win32 thread.\n");
      return; //(Status);
   }
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
   ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
-  DPRINT("Raw Input Thread 0x%x \n", ptiRawInput);
+  TRACE("Raw Input Thread 0x%x \n", ptiRawInput);
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -936,7 +935,7 @@ RawInputThreadMain(PVOID StartContext)
   //
   for(;;)
   {
-      DPRINT( "Raw Input Thread Waiting for start event\n" );
+      TRACE( "Raw Input Thread Waiting for start event\n" );
 
       Status = KeWaitForMultipleObjects( 2,
                                          Objects,
@@ -946,11 +945,11 @@ RawInputThreadMain(PVOID StartContext)
                                          TRUE,
                                          NULL,
                                          NULL);
-      DPRINT( "Raw Input Thread Starting...\n" );
+      TRACE( "Raw Input Thread Starting...\n" );
 
       ProcessTimers();
   }
-  DPRINT1("Raw Input Thread Exit!\n");
+  ERR("Raw Input Thread Exit!\n");
 }
 
 INIT_FUNCTION
@@ -965,7 +964,7 @@ InitInputImpl(VOID)
    MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), USERTAG_SYSTEM);
    if (!MasterTimer)
    {
-      DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+      ERR("Win32K: Failed making Raw Input thread a win32 thread.\n");
       ASSERT(FALSE);
       return STATUS_UNSUCCESSFUL;
    }
@@ -974,7 +973,7 @@ InitInputImpl(VOID)
    /* Initialize the default keyboard layout */
    if(!UserInitDefaultKeyboardLayout())
    {
-      DPRINT1("Failed to initialize default keyboard layout!\n");
+      ERR("Failed to initialize default keyboard layout!\n");
    }
 
    Status = PsCreateSystemThread(&RawInputThreadHandle,
@@ -986,7 +985,7 @@ InitInputImpl(VOID)
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Win32K: Failed to create raw thread.\n");
+      ERR("Win32K: Failed to create raw thread.\n");
    }
 
    Status = PsCreateSystemThread(&KeyboardThreadHandle,
@@ -998,7 +997,7 @@ InitInputImpl(VOID)
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Win32K: Failed to create keyboard thread.\n");
+      ERR("Win32K: Failed to create keyboard thread.\n");
    }
 
    Status = PsCreateSystemThread(&MouseThreadHandle,
@@ -1010,7 +1009,7 @@ InitInputImpl(VOID)
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Win32K: Failed to create mouse thread.\n");
+      ERR("Win32K: Failed to create mouse thread.\n");
    }
 
    InputThreadsRunning = TRUE;
@@ -1075,13 +1074,13 @@ NtUserBlockInput(
 {
    DECLARE_RETURN(BOOLEAN);
 
-   DPRINT("Enter NtUserBlockInput\n");
+   TRACE("Enter NtUserBlockInput\n");
    UserEnterExclusive();
 
    RETURN( IntBlockInput(PsGetCurrentThreadWin32Thread(), BlockIt));
 
 CLEANUP:
-   DPRINT("Leave NtUserBlockInput, ret=%i\n",_ret_);
+   TRACE("Leave NtUserBlockInput, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1392,7 +1391,7 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    KbdHookData.dwExtraInfo = ki->dwExtraInfo;
    if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
    {
-      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+      ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, vk_hook, Msg.lParam);
 
       return FALSE;
@@ -1400,7 +1399,7 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
 
    if (FocusMessageQueue == NULL)
    {
-         DPRINT("No focus message queue\n");
+         TRACE("No focus message queue\n");
 
          return FALSE;
    }
@@ -1408,7 +1407,7 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    if (FocusMessageQueue->FocusWindow != (HWND)0)
    {
          Msg.hwnd = FocusMessageQueue->FocusWindow;
-         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
+         TRACE("Msg.hwnd = %x\n", Msg.hwnd);
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
@@ -1418,7 +1417,7 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    }
    else
    {
-         DPRINT("Invalid focus window handle\n");
+         TRACE("Invalid focus window handle\n");
    }
 
    return TRUE;
@@ -1486,7 +1485,7 @@ NtUserSendInput(
    UINT cnt;
    DECLARE_RETURN(UINT);
 
-   DPRINT("Enter NtUserSendInput\n");
+   TRACE("Enter NtUserSendInput\n");
    UserEnterExclusive();
 
    W32Thread = PsGetCurrentThreadWin32Thread();
@@ -1546,7 +1545,7 @@ NtUserSendInput(
 #ifndef NDEBUG
 
          default:
-            DPRINT1("SendInput(): Invalid input type: 0x%x\n", SafeInput.type);
+            ERR("SendInput(): Invalid input type: 0x%x\n", SafeInput.type);
             break;
 #endif
 
@@ -1556,7 +1555,7 @@ NtUserSendInput(
    RETURN( cnt);
 
 CLEANUP:
-   DPRINT("Leave NtUserSendInput, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSendInput, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1621,7 +1620,7 @@ IntTrackMouseEvent(
                           lpEventTrack->dwFlags & TME_NONCLIENT ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
                           0, 0);
       }
-      DPRINT("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack,pWnd);
+      TRACE("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack,pWnd);
       return TRUE;
    }
 
@@ -1676,7 +1675,7 @@ NtUserTrackMouseEvent(
    TRACKMOUSEEVENT saveTME;
    BOOL Ret = FALSE;
 
-   DPRINT("Enter NtUserTrackMouseEvent\n");
+   TRACE("Enter NtUserTrackMouseEvent\n");
    UserEnterExclusive();
 
    _SEH2_TRY
@@ -1724,7 +1723,7 @@ NtUserTrackMouseEvent(
    }
    
 Exit:
-   DPRINT("Leave NtUserTrackMouseEvent, ret=%i\n",Ret);
+   TRACE("Leave NtUserTrackMouseEvent, ret=%i\n",Ret);
    UserLeave();
    return Ret;
 }
@@ -1746,7 +1745,7 @@ NtUserGetMouseMovePointsEx(
    INT Count = -1;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserGetMouseMovePointsEx\n");
+   TRACE("Enter NtUserGetMouseMovePointsEx\n");
    UserEnterExclusive();
 
    if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
@@ -1832,7 +1831,7 @@ NtUserGetMouseMovePointsEx(
    RETURN( Count);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetMouseMovePointsEx, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetMouseMovePointsEx, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

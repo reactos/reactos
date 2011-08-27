@@ -60,7 +60,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     PPDO_EXTENSION PdoExtension;
     PDEVICE_OBJECT DeviceObject, PdoDeviceObject, AttachedDevice;
     PDESCRIPTION_HEADER Wdrt;
-    DbgPrint("HAL: PnP Driver ADD!\n");
+    DPRINT("HAL: PnP Driver ADD!\n");
 
     /* Create the FDO */
     Status = IoCreateDevice(DriverObject,
@@ -82,6 +82,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->ExtensionType = FdoExtensionType;
     FdoExtension->PhysicalDeviceObject = TargetDevice;
     FdoExtension->FunctionalDeviceObject = DeviceObject;
+    FdoExtension->ChildPdoList = NULL;
     
     /* FDO is done initializing */
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -109,39 +110,37 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DbgPrint("HAL: Could not create ACPI device object status=0x%08x\n", Status);
+        DPRINT1("HAL: Could not create ACPI device object status=0x%08x\n", Status);
         return Status;
     }
     
     /* Setup the PDO device extension */
     PdoExtension = PdoDeviceObject->DeviceExtension;
-    PdoExtension->Next = NULL;
     PdoExtension->ExtensionType = PdoExtensionType;
     PdoExtension->PhysicalDeviceObject = PdoDeviceObject;
     PdoExtension->ParentFdoExtension = FdoExtension;
     PdoExtension->PdoType = AcpiPdo;
+    
+    /* Add the PDO to the head of the list */
+    PdoExtension->Next = FdoExtension->ChildPdoList;
+    FdoExtension->ChildPdoList = PdoExtension;
+    
+    /* Initialization is finished */
+    PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* Find the ACPI watchdog table */
     Wdrt = HalAcpiGetTable(0, 'TRDW');
-    if (!Wdrt)
-    {
-        /* None exists, there is nothing to do more */
-        PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-        FdoExtension->ChildPdoList = PdoExtension;
-    }
-    else
+    if (Wdrt)
     {
         /* FIXME: TODO */
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
-        PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-        FdoExtension->ChildPdoList = PdoExtension;
     }
 
     /* Invalidate device relations since we added a new device */
     IoInvalidateDeviceRelations(TargetDevice, BusRelations);
 
     /* Return status */
-    DPRINT1("Device added %lx\n", Status);
+    DPRINT("Device added %lx\n", Status);
     return Status;
 }
 
@@ -191,7 +190,13 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 PdoExtension = PdoExtension->Next;
                 PdoCount++;
             }
-            
+
+            /* Add the PDOs that already exist in the device relations */
+            if (*DeviceRelations)
+            {
+                PdoCount += (*DeviceRelations)->Count;
+            }
+
             /* Allocate our structure */
             FdoRelations = ExAllocatePoolWithTag(PagedPool,
                                                  FIELD_OFFSET(DEVICE_RELATIONS,
@@ -348,8 +353,9 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Query ACPI requirements */
         Status = HalpQueryAcpiResourceRequirements(&RequirementsList);
-        ASSERT(RequirementsList->AlternativeLists == 1);
         if (!NT_SUCCESS(Status)) return Status;
+        
+        ASSERT(RequirementsList->AlternativeLists == 1);
         
         /* Allocate the resourcel ist */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
@@ -557,6 +563,10 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     switch (IdType)
     {
         case BusQueryDeviceID:
+            /* HACK */
+            Id = L"Root\\ACPI_HAL";
+            break;
+
         case BusQueryHardwareIDs:
             
             /* This is our hardware ID */
@@ -601,21 +611,6 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
 
     /* Return status */
     return Status;
-}
-
-NTSTATUS
-NTAPI
-HalpPassIrpFromFdoToPdo(IN PDEVICE_OBJECT DeviceObject,
-                        IN PIRP Irp)
-{
-    PFDO_EXTENSION FdoExtension;
-    
-    /* Get the extension */
-    FdoExtension = DeviceObject->DeviceExtension;
-    
-    /* Pass it to the attached device (our PDO) */
-    IoSkipCurrentIrpStackLocation(Irp);
-    return IoCallDriver(FdoExtension->AttachedDeviceObject, Irp);  
 }
 
 NTSTATUS
@@ -672,26 +667,22 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                                         (PVOID)&Irp->IoStatus.Information);
                 break;
                 
+            case IRP_MN_QUERY_CAPABILITIES:
+                
+                /* Call the worker */
+                DPRINT("Querying the capabilities for the FDO\n");
+                Status = HalpQueryCapabilities(DeviceObject,
+                                               IoStackLocation->Parameters.DeviceCapabilities.Capabilities);
+                break;
+                
             default:
                 
-                /* Pass it to the PDO */
                 DPRINT("Other IRP: %lx\n", Minor);
-                return HalpPassIrpFromFdoToPdo(DeviceObject, Irp);
+                Status = Irp->IoStatus.Status;
+                break;
         }
-        
-        /* What happpened? */
-        if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
-        {
-            /* Set the IRP status, unless this isn't understood */
-            if (Status != STATUS_NOT_SUPPORTED) Irp->IoStatus.Status = Status;
-            
-            /* Pass it on */
-            DPRINT("Passing IRP to PDO\n");
-            return HalpPassIrpFromFdoToPdo(DeviceObject, Irp);
-        }
-        
-        /* Otherwise, we failed, so set the status and complete the request */
-        DPRINT1("IRP failed with status: %lx\n", Status);
+
+        /* Nowhere for the IRP to go since we also own the PDO */
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
@@ -807,7 +798,7 @@ NTAPI
 HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
-    DbgPrint("HAL: PnP Driver WMI!\n");
+    DPRINT1("HAL: PnP Driver WMI!\n");
     while (TRUE);
     return STATUS_SUCCESS;   
 }
@@ -817,7 +808,7 @@ NTAPI
 HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
-    DbgPrint("HAL: PnP Driver Power!\n");
+    DPRINT1("HAL: PnP Driver Power!\n");
     return STATUS_SUCCESS;   
 }
 
@@ -828,20 +819,42 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
     NTSTATUS Status;
     PDEVICE_OBJECT TargetDevice = NULL;
+
     DPRINT("HAL: PnP Driver ENTRY!\n");
 
     /* This is us */
     HalpDriverObject = DriverObject;
-    
+
     /* Set up add device */
     DriverObject->DriverExtension->AddDevice = HalpAddDevice;
-    
+
     /* Set up the callouts */
     DriverObject->MajorFunction[IRP_MJ_PNP] = HalpDispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = HalpDispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HalpDispatchWmi;
-    
-    /* Tell the PnP about us */
+
+    /* Create the PDO */
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            NULL,
+                            FILE_DEVICE_CONTROLLER,
+                            0,
+                            FALSE,
+                            &TargetDevice);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    TargetDevice->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Set up the device stack */
+    Status = HalpAddDevice(DriverObject, TargetDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(TargetDevice);
+        return Status;
+    }
+
+    /* Tell the PnP manager about us */
     Status = IoReportDetectedDevice(DriverObject,
                                     InterfaceTypeUndefined,
                                     -1,
@@ -850,9 +863,6 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
                                     NULL,
                                     FALSE,
                                     &TargetDevice);
-
-    /* Now add us */
-    if (NT_SUCCESS(Status)) Status = HalpAddDevice(DriverObject, TargetDevice);
 
     /* Return to kernel */
     return Status;

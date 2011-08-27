@@ -7,7 +7,7 @@
 #if defined(_MSC_VER)
 
 #if defined(_M_IA64) || defined(_M_AMD64)
-#define _ATTRIBUTES
+#define _ATTRIBUTES read
 #else
 #define _ATTRIBUTES read
 #endif

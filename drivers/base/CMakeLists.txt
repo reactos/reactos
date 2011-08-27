@@ -7,6 +7,5 @@ add_subdirectory(kddll)
 else()
 add_subdirectory(kdcom)
 endif()
-
 add_subdirectory(nmidebug)
 add_subdirectory(null)

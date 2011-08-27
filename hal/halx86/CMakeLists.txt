@@ -38,6 +38,7 @@ list(APPEND HAL_GENERIC_PCAT_SOURCE
     generic/legacy/bus/pcidata.c
     generic/legacy/bus/sysbus.c
     generic/legacy/bussupp.c
+    generic/legacy/halpnpdd.c
     generic/legacy/halpcat.c)
 
 list(APPEND HAL_GENERIC_ACPI_SOURCE
@@ -96,7 +97,7 @@ if(ARCH MATCHES i386)
     add_pch(hal include/hal.h)
     add_dependencies(hal psdk bugcodes)
 
-    set_entrypoint(hal HalInitSystem@8)
+    set_entrypoint(hal HalInitSystem 8)
     set_subsystem(hal native)
     set_image_base(hal 0x00010000)
     add_importlibs(hal ntoskrnl)
@@ -128,7 +129,36 @@ if(ARCH MATCHES i386)
     add_dependencies(mini_hal psdk bugcodes asm)
 
 elseif(ARCH MATCHES amd64)
-#TBD
+
+    spec2def(hal.dll ../hal.spec)
+
+    list(APPEND HAL_SOURCE
+        ${HAL_GENERIC_SOURCE}
+        ${HAL_GENERIC_PCAT_SOURCE}
+        ${HAL_GENERIC_UP_SOURCE}
+        up/halinit_up.c
+        up/halup.rc
+        generic/spinlock.c
+        amd64/x86bios.c
+        amd64/halinit.c
+        amd64/stubs.c
+        amd64/systimer.S
+        amd64/processor.c
+        ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
+
+    # hal
+    add_library(hal SHARED ${HAL_SOURCE})
+    add_pch(hal include/hal.h)
+    add_dependencies(hal psdk bugcodes)
+
+    set_entrypoint(hal HalInitSystem)
+    set_subsystem(hal native)
+    set_image_base(hal 0x00010000)
+    add_importlibs(hal ntoskrnl)
+    target_link_libraries(hal libcntpr)
+
+    add_cd_file(TARGET hal DESTINATION reactos/system32 NO_CAB FOR all)
+
 endif()
 
 add_importlib_target(../hal.spec)

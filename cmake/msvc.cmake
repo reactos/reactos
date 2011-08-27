@@ -59,11 +59,17 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 macro(add_pch _target_name _FILE)
 endmacro()
 
-function(set_entrypoint MODULE ENTRYPOINT)
-    if(${ENTRYPOINT} STREQUAL "0")
-        add_linkerflag(${MODULE} "/NOENTRY")
+function(set_entrypoint _module _entrypoint)
+    if(${_entrypoint} STREQUAL "0")
+        add_linkerflag(${_module} "/NOENTRY")
+    elseif(ARCH MATCHES i386)
+        set(_entrysymbol ${_entrypoint})
+        if (${ARGC} GREATER 2)
+            set(_entrysymbol ${_entrysymbol}@${ARGV2})
+        endif()
+        add_linkerflag(${_module} "/ENTRY:${_entrysymbol}")
     else()
-        add_linkerflag(${MODULE} "/ENTRY:${ENTRYPOINT}")
+        add_linkerflag(${_module} "/ENTRY:${_entrypoint}")
     endif()
 endfunction()
 
@@ -79,7 +85,7 @@ function(set_module_type MODULE TYPE)
     add_dependencies(${MODULE} psdk)
     if(${TYPE} MATCHES nativecui)
         set_subsystem(${MODULE} native)
-        set_entrypoint(${MODULE} NtProcessStartup@4)
+        set_entrypoint(${MODULE} NtProcessStartup 4)
     elseif (${TYPE} MATCHES win32gui)
         set_subsystem(${MODULE} windows)
         if(IS_UNICODE)
@@ -96,7 +102,7 @@ function(set_module_type MODULE TYPE)
         endif(IS_UNICODE)
     elseif(${TYPE} MATCHES win32dll)
         # Need this only because mingw library is broken
-        set_entrypoint(${MODULE} DllMainCRTStartup@12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})
         else()
@@ -104,16 +110,16 @@ function(set_module_type MODULE TYPE)
         endif()
         add_linkerflag(${MODULE} "/DLL")
     elseif(${TYPE} MATCHES win32ocx)
-        set_entrypoint(${MODULE} DllMainCRTStartup@12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".ocx")
         add_linkerflag(${MODULE} "/DLL")
     elseif(${TYPE} MATCHES cpl)
-        set_entrypoint(${MODULE} DllMainCRTStartup@12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
         add_linkerflag(${MODULE} "/DLL")
     elseif(${TYPE} MATCHES kernelmodedriver)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
-        set_entrypoint(${MODULE} DriverEntry@8)
+        set_entrypoint(${MODULE} DriverEntry 8)
         set_subsystem(${MODULE} native)
         set_image_base(${MODULE} 0x00010000)
         add_linkerflag(${MODULE} "/DRIVER")
@@ -126,7 +132,18 @@ function(set_module_type MODULE TYPE)
 endfunction()
 
 function(set_rc_compiler)
-# dummy, this workaround is only needed in mingw due to lack of RC support in cmake
+    get_directory_property(defines COMPILE_DEFINITIONS)
+    get_directory_property(includes INCLUDE_DIRECTORIES)
+
+    foreach(arg ${defines})
+        set(rc_result_defs "${rc_result_defs} /D${arg}")
+    endforeach()
+
+    foreach(arg ${includes})
+        set(rc_result_incs "/I${arg} ${rc_result_incs}")
+    endforeach()
+
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} /I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} /fo <OBJECT> <SOURCE>" PARENT_SCOPE)
 endfunction()
 
 # Thanks MS for creating a stupid linker
@@ -208,6 +225,13 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 #pseh workaround
 set(PSEH_LIB "pseh")
 
+# Use full path for ml when using x64 VS
+if((ARCH MATCHES amd64) AND ($ENV{VCINSTALLDIR}))
+    set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+else()
+    set(CMAKE_ASM16_COMPILER ml.exe)
+endif()
+
 function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
 
     set(_object_file ${_binary_file}.obj)
@@ -220,7 +244,7 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
 
     add_custom_command(
         OUTPUT ${_object_file}
-        COMMAND ml /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file}
+        COMMAND ${CMAKE_ASM16_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file}
         DEPENDS ${_temp_file})
 
     add_custom_command(

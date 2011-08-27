@@ -27,6 +27,7 @@ BOOL WINAPI RealMDIRedrawFrame(HWND,DWORD);
 INT WINAPI RealSetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
 BOOL WINAPI RealSystemParametersInfoA(UINT,UINT,PVOID,UINT);
 BOOL WINAPI RealSystemParametersInfoW(UINT,UINT,PVOID,UINT);
+DWORD WINAPI GetRealWindowOwner(HWND);
 
 /* GLOBALS *******************************************************************/
 
@@ -309,7 +310,7 @@ BOOL
 WINAPI
 RealMDIRedrawFrame(HWND hWnd, DWORD flags)
 {
-  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_REDRAWFRAME);
+  return NtUserxMDIRedrawFrame(hWnd);
 }
 
 BOOL
@@ -318,7 +319,7 @@ MDIRedrawFrame(HWND hWnd, DWORD flags)
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

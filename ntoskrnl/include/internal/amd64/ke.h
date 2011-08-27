@@ -135,20 +135,18 @@ extern ULONG KeI386CpuStep;
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
 
 /* Diable interrupts and return whether they were enabled before */
+FORCEINLINE
 BOOLEAN
-NTAPI
 KeDisableInterrupts(VOID)
 {
-    ULONG Flags;
-    BOOLEAN Return;
+    ULONG_PTR Flags;
 
     /* Get EFLAGS and check if the interrupt bit is set */
     Flags = __readeflags();
-    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
 
     /* Disable interrupts */
     _disable();
-    return Return;
+    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE : FALSE;
 }
 
 /* Restore previous interrupt state */

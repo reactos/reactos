@@ -14,6 +14,7 @@ list(APPEND SOURCE
     avltable.c
     bitmap.c
     bootdata.c
+    byteswap.c
     compress.c
     condvar.c
     crc32.c
@@ -80,13 +81,11 @@ elseif(ARCH MATCHES amd64)
         amd64/slist.S
         amd64/unwind.c
         amd64/stubs.c
-        mem.c
-        memgen.c)
+        mem.c)
 elseif(ARCH MATCHES arm)
     list(APPEND SOURCE
         arm/debug_asm.S
-        mem.c
-        memgen.c)
+        mem.c)
 elseif(ARCH MATCHES powerpc)
     list(APPEND SOURCE
         powerpc/debug.c

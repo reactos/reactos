@@ -30,8 +30,7 @@ BOOL
 WINAPI
 OpenClipboard(HWND hWndNewOwner)
 {
-    BOOL ret = NtUserOpenClipboard(hWndNewOwner, 0);
-    return ret;
+    return NtUserOpenClipboard(hWndNewOwner, 0);
 }
 
 /*
@@ -41,8 +40,7 @@ UINT
 WINAPI
 EnumClipboardFormats(UINT format)
 {
-    UINT ret = NtUserCallOneParam(format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS);
-    return ret;
+    return NtUserxEnumClipboardFormats(format);
 }
 
 /*

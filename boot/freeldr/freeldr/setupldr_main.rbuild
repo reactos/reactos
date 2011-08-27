@@ -9,14 +9,7 @@
 	<directory name="inffile">
 		<file>inffile.c</file>
 	</directory>
-	<if property="ARCH" value="i386">
-		<directory name="windows">
-			<file>setupldr2.c</file>
-		</directory>
-	</if>
-	<if property="ARCH" value="amd64">
-		<directory name="windows">
-			<file>setupldr2.c</file>
-		</directory>
-	</if>
+	<directory name="windows">
+		<file>setupldr.c</file>
+	</directory>
 </module>

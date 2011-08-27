@@ -1,7 +1,12 @@
 
-if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+if(ARCH MATCHES i386)
     CreateBootSectorTarget2(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
+        ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+        F800)
+elseif(ARCH MATCHES amd64)
+    CreateBootSectorTarget2(frldr16
+        ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
 endif()
@@ -107,8 +112,8 @@ if(ARCH MATCHES i386)
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
-        windows/i386/ntsetup.c
-        windows/i386/wlmemory.c
+        arch/i386/ntsetup.c
+        arch/i386/wlmemory.c
         windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
@@ -119,7 +124,9 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND FREELDR_COMMON_SOURCE
         arch/amd64/entry.S
+        arch/amd64/int386.S
         arch/amd64/loader.c
+        arch/amd64/pnpbios.S
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
@@ -134,8 +141,8 @@ elseif(ARCH MATCHES amd64)
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c
-        windows/amd64/ntsetup.c
-        windows/amd64/wlmemory.c)
+        arch/amd64/ntsetup.c
+        arch/amd64/wlmemory.c)
 else()
 #TBD
 endif()
@@ -191,7 +198,7 @@ list(APPEND SETUPLDR_SOURCE
     inffile/inffile.c)
 
 if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
-    list(APPEND SETUPLDR_SOURCE windows/setupldr2.c)
+    list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
 if(NOT MSVC)

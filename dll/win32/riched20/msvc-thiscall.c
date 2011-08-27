@@ -52,11 +52,9 @@ DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmGetContext,4)
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmReleaseContext,8)
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSelectionBarWidth,8)
 
-#define STDCALL(func) __stdcall_ ## func
 #define DEFINE_STDCALL_WRAPPER(num,func,args) \
     __declspec(naked) void __stdcall __stdcall_##func(_tag_##func p1) \
     { \
-        __asm pop eax \
         __asm pop eax \
         __asm pop ecx \
         __asm push eax \

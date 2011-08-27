@@ -20,7 +20,7 @@ list(APPEND SOURCE
 
 add_library(msacm32 SHARED ${SOURCE})
 
-set_entrypoint(msacm32 DllMain@12)
+set_entrypoint(msacm32 DllMain 12)
 set_image_base(msacm32 ${baseaddress_msacm32})
 
 target_link_libraries(msacm32 wine)

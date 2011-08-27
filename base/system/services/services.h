@@ -11,6 +11,7 @@
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <services/services.h>
+#include "svcctl_s.h"
 
 
 typedef struct _SERVICE_GROUP

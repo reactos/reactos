@@ -51,3 +51,14 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     UNIMPLEMENTED;
     return FALSE;
 }
+
+NTSYSAPI
+VOID
+RtlRestoreContext(
+    PCONTEXT ContextRecord,
+    PEXCEPTION_RECORD ExceptionRecord)
+{
+    UNIMPLEMENTED;
+}
+
+

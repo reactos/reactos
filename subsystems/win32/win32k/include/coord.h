@@ -1,8 +1,5 @@
 #pragma once
 
-#include <include/dc.h>
-#include <include/xformobj.h>
-
 #define IntLPtoDP(pdc, ppt, count) DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
 #define CoordLPtoDP(pdc, ppt) DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
 #define IntDPtoLP(pdc, ppt, count) DC_vXformDeviceToWorld(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));

@@ -62,7 +62,7 @@
 
 #define MmMapViewInSessionSpace MmMapViewInSystemSpace
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 #define InterlockedOr16 _InterlockedOr16
 #endif
 
@@ -87,7 +87,7 @@ ULONG gulFirstFree;
 ULONG gulFirstUnused;
 static PPAGED_LOOKASIDE_LIST gpaLookasideList;
 
-static BOOL INTERNAL_CALL GDIOBJ_Cleanup(PVOID ObjectBody);
+static BOOL NTAPI GDIOBJ_Cleanup(PVOID ObjectBody);
 
 static const
 GDICLEANUPPROC
@@ -130,7 +130,7 @@ apfnCleanup[] =
 /* INTERNAL FUNCTIONS ********************************************************/
 
 static
-BOOL INTERNAL_CALL
+BOOL NTAPI
 GDIOBJ_Cleanup(PVOID ObjectBody)
 {
     return TRUE;
@@ -1175,7 +1175,7 @@ NtGdiDeleteClientObj(
 
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 
-PGDIOBJ INTERNAL_CALL
+PGDIOBJ NTAPI
 GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
 {
     if (ExpectedType == GDI_OBJECT_TYPE_DONTCARE)
@@ -1187,7 +1187,7 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
 // That shouldn't be a problem, since we don't have any processes yet,
 // that could delete the handle
 BOOL
-INTERNAL_CALL
+NTAPI
 GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
 {
     PENTRY pentry;
@@ -1220,7 +1220,7 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
     return TRUE;
 }
 
-POBJ INTERNAL_CALL
+POBJ NTAPI
 GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
 {
     POBJ pobj;
@@ -1245,7 +1245,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
     return pobj;
 }
 
-PVOID INTERNAL_CALL
+PVOID NTAPI
 GDI_MapHandleTable(PEPROCESS pProcess)
 {
     PVOID pvMappedView = NULL;
@@ -1275,7 +1275,7 @@ GDI_MapHandleTable(PEPROCESS pProcess)
     return pvMappedView;
 }
 
-BOOL INTERNAL_CALL
+BOOL NTAPI
 GDI_CleanupForProcess(struct _EPROCESS *Process)
 {
     PENTRY pentry;

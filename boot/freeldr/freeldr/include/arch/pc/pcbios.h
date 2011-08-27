@@ -88,7 +88,7 @@ int		Int386(int ivec, REGS* in, REGS* out);
 
 // This macro tests the Carry Flag
 // If CF is set then the call failed (usually)
-#define INT386_SUCCESS(regs)	((regs.x.eflags & I386FLAG_CF) == 0)
+#define INT386_SUCCESS(regs)	((regs.x.eflags & EFLAGS_CF) == 0)
 
 void	EnableA20(void);
 VOID	ChainLoadBiosBootSectorCode(VOID);	// Implemented in boot.S

@@ -125,7 +125,7 @@ BRUSH_vFreeBrushAttr(PBRUSH pbr)
 }
 
 BOOL
-INTERNAL_CALL
+NTAPI
 BRUSH_Cleanup(PVOID ObjectBody)
 {
     PBRUSH pbrush = (PBRUSH)ObjectBody;

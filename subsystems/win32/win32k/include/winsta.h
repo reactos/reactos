@@ -1,8 +1,5 @@
 #pragma once
 
-#include "window.h"
-#include "clipboard.h"
-
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
 #define WINSTA_ROOT_NAME_LENGTH	23
 

@@ -865,5 +865,5 @@ extern PWCHAR HalName;
 
 extern KAFFINITY HalpDefaultInterruptAffinity;
 
-extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
+extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 

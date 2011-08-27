@@ -10,13 +10,7 @@
 
 #pragma once
 
-#include <include/window.h>
-
-HRGN FASTCALL
-VIS_ComputeVisibleRegion(PWND Window, BOOLEAN ClientArea,
-   BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
-
-VOID FASTCALL
-co_VIS_WindowLayoutChanged(PWND Window, HRGN UncoveredRgn);
+HRGN FASTCALL VIS_ComputeVisibleRegion(PWND Window, BOOLEAN ClientArea, BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
+VOID FASTCALL co_VIS_WindowLayoutChanged(PWND Window, HRGN UncoveredRgn);
 
 /* EOF */

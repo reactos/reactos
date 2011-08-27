@@ -92,7 +92,7 @@ Bus_PlugInDevice (
 							L"*%hs",
 							Device->pnp.hardware_id);
 		index++;
-		temp[index] = UNICODE_NULL;
+		temp[++index] = UNICODE_NULL;
 
 		pdoData->HardwareIDs  = ExAllocatePool(NonPagedPool, index*sizeof(WCHAR));
 

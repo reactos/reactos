@@ -1,10 +1,4 @@
 
-//#define _PDEVOBJ _PDEVOBJ2
-//#define PDEVOBJ PDEVOBJ2
-//#define PPDEVOBJ PPDEVOBJ2
-
-//typedef struct _PDEVOBJ *PPDEVOBJ;
-
 #define TAG_GDEV 'gdev'
 
 VOID
@@ -34,10 +28,6 @@ INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitDeviceImpl(VOID);
-
-BOOL
-FASTCALL
-DC_AllocDcAttr(PDC pdc);
 
 //#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl(TAG('R', 'o', 's', 'D'), (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);

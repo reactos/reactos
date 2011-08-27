@@ -1660,7 +1660,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
     {
         /* Get character */
         p = *ActualSearchPath;
-        if (!(p) && (p == ';'))
+        if (!(p) || (p == ';'))
         {
             /* FIXME: We don't have a character, or is a semicolon.*/
 

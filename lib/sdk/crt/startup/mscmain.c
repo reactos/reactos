@@ -9,6 +9,12 @@
 
 int _fltused;
 
+int __mingw_init_ehandler (void)
+{
+    /* Nothing to do */
+    return 1;
+}
+
 void
 __do_global_dtors (void)
 {

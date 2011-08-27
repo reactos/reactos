@@ -185,7 +185,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Fail if we couldn't map it */
             if (!Header)
             {
-                DbgPrint("HAL: Failed to map ACPI table.\n");
+                DPRINT1("HAL: Failed to map ACPI table.\n");
                 return NULL;
             }
             
@@ -304,7 +304,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (!Header)
             {
                 /* Game over */
-                DbgPrint("HAL: Failed to map ACPI table.\n");
+                DPRINT1("HAL: Failed to map ACPI table.\n");
                 return NULL;
             }
 
@@ -589,7 +589,7 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Make sure we found it */
     if (!ComponentEntry)
     {
-        DbgPrint("**** HalpAcpiFindRsdtPhase0: did NOT find RSDT\n");
+        DPRINT1("**** HalpAcpiFindRsdtPhase0: did NOT find RSDT\n");
         return STATUS_NOT_FOUND;
     }
     
@@ -675,7 +675,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!MappedAddress)
     {
         /* Fail, no memory */
-        DbgPrint("HAL: Failed to map RSDT\n");
+        DPRINT1("HAL: Failed to map RSDT\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
    
@@ -715,7 +715,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!MappedAddress)
         {
             /* Fail, no memory */
-            DbgPrint("HAL: Couldn't remap RSDT\n");
+            DPRINT1("HAL: Couldn't remap RSDT\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
@@ -725,7 +725,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!Rsdt)
     {
         /* Fail, no memory */
-        DbgPrint("HAL: Couldn't remap RSDT\n");
+        DPRINT1("HAL: Couldn't remap RSDT\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
@@ -790,7 +790,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PHYSICAL_ADDRESS PhysicalAddress;
 
     /* Only do this once */
-    DPRINT1("You are booting the ACPI HAL!\n");
+    DPRINT("You are booting the ACPI HAL!\n");
     if (HalpProcessedACPIPhase0) return STATUS_SUCCESS;
 
     /* Setup the ACPI table cache */
@@ -802,7 +802,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!Fadt)
     {
         /* Fail */
-        DbgPrint("HAL: Didn't find the FACP\n");
+        DPRINT1("HAL: Didn't find the FACP\n");
         return STATUS_NOT_FOUND;
     }
     
@@ -948,6 +948,7 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
     ResourceList->InterfaceType = PNPBus;
     ResourceList->List[0].Version = 1;
     ResourceList->List[0].Revision = 1;
+    ResourceList->List[0].Count = 0;
     
     /* Is there a SCI? */
     if (HalpFixedAcpiDescTable.sci_int_vector)
@@ -981,10 +982,12 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
   
     /* Get ACPI resources */
     HalpAcpiDetectResourceListSize(&Count);
+    DPRINT("Resource count: %d\n", Count);
     
     /* Compute size of the list and allocate it */
-    ListSize = sizeof(IO_RESOURCE_LIST) * (Count - 1) +
-               sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+    ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors) +
+               (Count * sizeof(IO_RESOURCE_DESCRIPTOR));
+    DPRINT("Resource list size: %d\n", ListSize);
     RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, ' laH');
     if (RequirementsList)
     {
@@ -998,6 +1001,9 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
         {
             /* It worked, return it */
             *Requirements = RequirementsList;
+            
+            /* Validate the list */
+            ASSERT(RequirementsList->List[0].Count == Count);
         }
         else
         {

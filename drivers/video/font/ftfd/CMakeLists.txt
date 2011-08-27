@@ -11,7 +11,7 @@ add_library(ftfd SHARED
     sprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
-set_entrypoint(ftfd FtfdEnableDriver@12)
+set_entrypoint(ftfd FtfdEnableDriver 12)
 set_subsystem(ftfd native)
 set_image_base(ftfd ${baseaddress_ftfd})
 

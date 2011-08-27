@@ -157,9 +157,7 @@ SerialPnpStartDevice(
 
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-	ASSERT(ResourceList);
 	ASSERT(DeviceExtension);
-	ASSERT(DeviceExtension->PnpState == dsStopped);
 
 	if (!ResourceList)
 	{

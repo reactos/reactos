@@ -547,10 +547,10 @@ IopFilterResourceRequirements(IN PDEVICE_NODE DeviceNode)
       &Stack);
    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_SUPPORTED)
    {
-      DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
+      DPRINT1("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
       return Status;
    }
-   else if (NT_SUCCESS(Status))
+   else if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
    }

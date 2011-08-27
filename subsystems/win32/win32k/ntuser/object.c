@@ -24,8 +24,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserObj);
 
 //int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
@@ -55,7 +54,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-   DPRINT("handles used %i\n",gpsi->cHandleEntries);
+   TRACE("handles used %i\n",gpsi->cHandleEntries);
 
    if (ht->freelist)
    {
@@ -73,7 +72,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
           iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0, iEvent = 0, iSMWP = 0;
  /**/
-      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
+      ERR("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
 //#if 0
       for(i = 0; i < ht->nb_handles; i++)
       {
@@ -115,7 +114,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
             break;
          }
       }
-      DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d Event = %d SMWP = %d\n",
+      ERR("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d Event = %d SMWP = %d\n",
       iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor, iTimer, iEvent, iSMWP );
 //#endif
       return NULL;
@@ -272,7 +271,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
-      DPRINT1("Failed creating handle table\n");
+      ERR("Failed creating handle table\n");
       return FALSE;
    }
 
@@ -280,7 +279,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    if (gHandleTable == NULL)
    {
        UserHeapFree(mem);
-       DPRINT1("Failed creating handle table\n");
+       ERR("Failed creating handle table\n");
        return FALSE;
    }
 
@@ -394,10 +393,10 @@ UserDereferenceObject(PVOID object)
 
      if (!entry)
      {
-        DPRINT1("warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
+        ERR("warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
         return FALSE;
      }
-     DPRINT("warning! Dereference to zero! Obj -> 0x%x\n", object);
+     TRACE("warning! Dereference to zero! Obj -> 0x%x\n", object);
 
      ((PHEAD)object)->cLockObj = 0;
 
@@ -474,4 +473,83 @@ UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
        UserReferenceObject(object);
     }
     return object;
+}
+
+/*
+ * NtUserValidateHandleSecure
+ *
+ * Status
+ *    @implemented
+ */
+
+BOOL
+APIENTRY
+NtUserValidateHandleSecure(
+   HANDLE handle,
+   BOOL Restricted)
+{
+   if(!Restricted)
+   {
+     UINT uType;
+     {
+       PUSER_HANDLE_ENTRY entry;
+       if (!(entry = handle_to_entry(gHandleTable, handle )))
+       {
+          EngSetLastError(ERROR_INVALID_HANDLE);
+          return FALSE;
+       }
+       uType = entry->type;
+     }
+     switch (uType)
+     {
+       case otWindow:
+       {
+         PWND Window;
+         if ((Window = UserGetWindowObject((HWND) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMenu:
+       {
+         PMENU_OBJECT Menu;
+         if ((Menu = UserGetMenuObject((HMENU) handle))) return TRUE;
+         return FALSE;
+       }
+       case otAccel:
+       {
+         PACCELERATOR_TABLE Accel;
+         if ((Accel = UserGetAccelObject((HACCEL) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCursorIcon:
+       {
+         PCURICON_OBJECT Cursor;
+         if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
+         return FALSE;
+       }
+       case otHook:
+       {
+         PHOOK Hook;
+         if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMonitor:
+       {
+         PMONITOR Monitor;
+         if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCallProc:
+       {
+         WNDPROC_INFO Proc;
+         return UserGetCallProcInfo( handle, &Proc );
+       }
+       default:
+         EngSetLastError(ERROR_INVALID_HANDLE);
+     }
+   }
+   else
+   { /* Is handle entry restricted? */
+     STUB
+   }
+   return FALSE;
 }

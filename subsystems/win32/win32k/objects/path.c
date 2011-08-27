@@ -60,6 +60,20 @@ VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
 /***********************************************************************
  * Internal functions
  */
+ 
+/* PATH_DestroyGdiPath
+ *
+ * Destroys a GdiPath structure (frees the memory in the arrays).
+ */
+VOID
+FASTCALL
+PATH_DestroyGdiPath ( PPATH pPath )
+{
+  ASSERT(pPath!=NULL);
+
+  if (pPath->pPoints) ExFreePoolWithTag(pPath->pPoints, TAG_PATH);
+  if (pPath->pFlags) ExFreePoolWithTag(pPath->pFlags, TAG_PATH);
+}
 
 BOOL
 FASTCALL
@@ -183,20 +197,6 @@ PATH_InitGdiPath ( PPATH pPath )
   pPath->pFlags=NULL;
   pPath->numEntriesUsed=0;
   pPath->numEntriesAllocated=0;
-}
-
-/* PATH_DestroyGdiPath
- *
- * Destroys a GdiPath structure (frees the memory in the arrays).
- */
-VOID
-FASTCALL
-PATH_DestroyGdiPath ( PPATH pPath )
-{
-  ASSERT(pPath!=NULL);
-
-  if (pPath->pPoints) ExFreePoolWithTag(pPath->pPoints, TAG_PATH);
-  if (pPath->pFlags) ExFreePoolWithTag(pPath->pFlags, TAG_PATH);
 }
 
 /* PATH_AssignGdiPath

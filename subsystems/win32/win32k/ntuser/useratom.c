@@ -26,8 +26,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 RTL_ATOM FASTCALL
 IntAddAtom(LPWSTR AtomName)
@@ -89,7 +88,7 @@ IntAddGlobalAtom(LPWSTR lpBuffer, BOOL PinAtom)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Error init Global Atom.\n");
+      ERR("Error init Global Atom.\n");
       return 0;
    }
 

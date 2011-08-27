@@ -28,8 +28,10 @@ unsigned int CDECL _statusfp(void)
   unsigned int fpword;
 #if defined(__GNUC__)
   __asm__ __volatile__( "fstsw %0" : "=m" (fpword) : );
-#else
+#elif defined(_M_IX86)
   __asm fstsw [fpword];
+#else
+  #pragma message("FIXME: _statusfp is halfplemented")
 #endif
   if (fpword & 0x1)  retVal |= _SW_INVALID;
   if (fpword & 0x2)  retVal |= _SW_DENORMAL;

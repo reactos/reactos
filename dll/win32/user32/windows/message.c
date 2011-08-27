@@ -1035,7 +1035,7 @@ LPARAM
 WINAPI
 GetMessageExtraInfo(VOID)
 {
-  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
+  return NtUserxGetMessageExtraInfo();
 }
 
 
@@ -1046,7 +1046,7 @@ DWORD
 WINAPI
 GetMessagePos(VOID)
 {
-  return NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
+  return NtUserxGetMessagePos();
 }
 
 
@@ -1100,10 +1100,9 @@ InSendMessageEx(
  */
 BOOL
 WINAPI
-ReplyMessage(
-  LRESULT lResult)
+ReplyMessage(LRESULT lResult)
 {
-  return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
+  return NtUserxReplyMessage(lResult);
 }
 
 
@@ -1115,7 +1114,7 @@ WINAPI
 SetMessageExtraInfo(
   LPARAM lParam)
 {
-  return NtUserSetMessageExtraInfo(lParam);
+  return NtUserxSetMessageExtraInfo(lParam);
 }
 
 LRESULT FASTCALL
@@ -1933,7 +1932,7 @@ WINAPI
 PostQuitMessage(
   int nExitCode)
 {
-    NtUserCallOneParam(nExitCode, ONEPARAM_ROUTINE_POSTQUITMESSAGE);
+    NtUserxPostQuitMessage(nExitCode);
 }
 
 
@@ -2495,7 +2494,7 @@ GetCapture(VOID)
 BOOL WINAPI
 ReleaseCapture(VOID)
 {
-  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
+  return NtUserxReleaseCapture();
 }
 
 
@@ -2512,7 +2511,7 @@ RealGetQueueStatus(UINT flags)
       SetLastError( ERROR_INVALID_FLAGS );
       return 0;
    }
-   return NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
+   return NtUserxGetQueueStatus(flags);
 }
 
 
@@ -2677,7 +2676,7 @@ BOOL WINAPI RegisterMessagePumpHook(MESSAGEPUMPHOOKPROC Hook)
 			return FALSE;
 		}
 	}
-	if(NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP)) {
+	if(NtUserxInitMessagePump()) {
 		LeaveCriticalSection(&gcsMPH);
 		return FALSE;
 	}
@@ -2692,7 +2691,7 @@ BOOL WINAPI UnregisterMessagePumpHook(VOID)
 {
 	EnterCriticalSection(&gcsMPH);
 	if(gcLoadMPH > 0) {
-		if(NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP)) {
+		if(NtUserxUnInitMessagePump()) {
 			gcLoadMPH--;
 			if(!gcLoadMPH) {
 				InterlockedExchange((PLONG)&gfMessagePumpHook, 0);
@@ -2767,7 +2766,7 @@ RealMsgWaitForMultipleObjectsEx(
       }
    }
 
-   MessageQueueHandle = NtUserMsqSetWakeMask(MAKELONG(dwWakeMask, dwFlags));
+   MessageQueueHandle = NtUserxMsqSetWakeMask(MAKELONG(dwWakeMask, dwFlags));
    if (MessageQueueHandle == NULL)
    {
       SetLastError(0); /* ? */
@@ -2777,7 +2776,7 @@ RealMsgWaitForMultipleObjectsEx(
    RealHandles = HeapAlloc(GetProcessHeap(), 0, (nCount + 1) * sizeof(HANDLE));
    if (RealHandles == NULL)
    {
-      NtUserMsqClearWakeMask();
+      NtUserxMsqClearWakeMask();
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return WAIT_FAILED;
    }
@@ -2790,7 +2789,7 @@ RealMsgWaitForMultipleObjectsEx(
                                      dwMilliseconds, dwFlags & MWMO_ALERTABLE);
 
    HeapFree(GetProcessHeap(), 0, RealHandles);
-   NtUserMsqClearWakeMask();
+   NtUserxMsqClearWakeMask();
    //FIXME("Result 0X%x\n",Result);
    return Result;
 }

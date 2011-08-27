@@ -1022,6 +1022,7 @@ PnpRootDriverEntry(
 NTSTATUS
 PnpRootCreateDevice(
     IN PUNICODE_STRING ServiceName,
+    IN OPTIONAL PDRIVER_OBJECT DriverObject,
     OUT PDEVICE_OBJECT *PhysicalDeviceObject,
     OUT OPTIONAL PUNICODE_STRING FullInstancePath
 );

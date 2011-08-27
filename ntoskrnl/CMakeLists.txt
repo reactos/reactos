@@ -421,7 +421,7 @@ endif()
 add_executable(ntoskrnl ${SOURCE})
 
 if (ARCH MATCHES i386)
-  set_entrypoint(ntoskrnl KiSystemStartup@4)
+  set_entrypoint(ntoskrnl KiSystemStartup 4)
 else()
   set_entrypoint(ntoskrnl KiSystemStartup)
 endif()

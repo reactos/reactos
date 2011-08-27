@@ -82,7 +82,6 @@ VOID RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 VOID RtlInitializeHeapManager(VOID);
 extern BOOLEAN RtlpPageHeapEnabled;
-extern ULONG RtlpDphGlobalFlags;
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
@@ -145,14 +144,14 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
         /* Extract the name */
         SubKeyString = *SubKey;
         p1 = (PWCHAR)((ULONG_PTR)SubKeyString.Buffer + SubKeyString.Length);
-        while (SubKey->Length)
+        while (SubKeyString.Length)
         {
             if (p1[-1] == L'\\') break;
             p1--;
             SubKeyString.Length -= sizeof(*p1);
         }
         SubKeyString.Buffer = p1;
-        SubKeyString.Length = SubKeyString.MaximumLength - SubKeyString.Length - sizeof(WCHAR);
+        SubKeyString.Length = SubKey->Length - SubKeyString.Length;
 
         /* Setup the object attributes */
         InitializeObjectAttributes(&ObjectAttributes,
@@ -193,7 +192,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Query the value */
-    Status = NtQueryValueKey(KeyHandle,
+    Status = ZwQueryValueKey(KeyHandle,
                              &ValueNameString,
                              KeyValuePartialInformation,
                              KeyValueInformation,
@@ -214,7 +213,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
         }
 
         /* Try again */
-        Status = NtQueryValueKey(KeyHandle,
+        Status = ZwQueryValueKey(KeyHandle,
                                  &ValueNameString,
                                  KeyValuePartialInformation,
                                  KeyValueInformation,
@@ -295,9 +294,9 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
                 {
                     /* OK, we know what you want... */
                     IntegerString.Buffer = (PWSTR)KeyValueInformation->Data;
-                    IntegerString.Length = KeyValueInformation->DataLength -
+                    IntegerString.Length = (USHORT)KeyValueInformation->DataLength -
                                            sizeof(WCHAR);
-                    IntegerString.MaximumLength = KeyValueInformation->DataLength;
+                    IntegerString.MaximumLength = (USHORT)KeyValueInformation->DataLength;
                     Status = RtlUnicodeStringToInteger(&IntegerString, 0, (PULONG)Buffer);
                 }
             }
@@ -327,8 +326,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
     /* Check if buffer was in heap */
     if (FreeHeap) RtlFreeHeap(RtlGetProcessHeap(), 0, KeyValueInformation);
 
-    /* Close key and return */
-    NtClose(KeyHandle);
+    /* Return status */
     return Status;
 }
 
@@ -501,8 +499,10 @@ LdrpInitializeThread(IN PCONTEXT Context)
     NTSTATUS Status;
     PVOID EntryPoint;
 
-    DPRINT("LdrpInitializeThread() called for %wZ\n",
-            &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpInitializeThread() called for %wZ (%lx/%lx)\n",
+            &LdrpImageEntry->BaseDllName,
+            NtCurrentTeb()->RealClientId.UniqueProcess,
+            NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Allocate an Activation Context Stack */
     /* FIXME: This is a hack for Wine's actctx stuff */
@@ -572,8 +572,10 @@ LdrpInitializeThread(IN PCONTEXT Context)
                     if (!LdrpShutdownInProgress)
                     {
                         /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %x for thread attaching\n",
-                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                        DPRINT("%wZ - Calling entry point at %p for thread attaching, %lx/%lx\n",
+                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint,
+                                NtCurrentTeb()->RealClientId.UniqueProcess,
+                                NtCurrentTeb()->RealClientId.UniqueThread);
                         LdrpCallInitRoutine(LdrEntry->EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_THREAD_ATTACH,
@@ -630,7 +632,10 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     PTEB OldTldTeb;
     BOOLEAN DllStatus;
 
-    DPRINT("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpRunInitializeRoutines() called for %wZ (%lx/%lx)\n",
+        &LdrpImageEntry->BaseDllName,
+        NtCurrentTeb()->RealClientId.UniqueProcess,
+        NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Check the Loader Lock */
     LdrpEnsureLoaderLockIsHeld();
@@ -1309,18 +1314,37 @@ LdrpFreeTls(VOID)
 
 NTSTATUS
 NTAPI
+LdrpInitializeApplicationVerifierPackage(PUNICODE_STRING ImagePathName, PPEB Peb, BOOLEAN SystemWide, BOOLEAN ReadAdvancedOptions)
+{
+    /* If global flags request DPH, perform some additional actions */
+    if (Peb->NtGlobalFlag & FLG_HEAP_PAGE_ALLOCS)
+    {
+        // TODO: Read advanced DPH flags from the registry if requested
+        if (ReadAdvancedOptions)
+        {
+            UNIMPLEMENTED;
+        }
+
+        /* Enable page heap */
+        RtlpPageHeapEnabled = TRUE;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
 {
-    //NTSTATUS Status;
-    //HKEY KeyHandle;
-    //ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
+    NTSTATUS Status;
+    HKEY KeyHandle;
+    ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
     if (!OptionsKey) return STATUS_INVALID_HANDLE;
 
     /* Zero initialize the optinos key pointer */
     *OptionsKey = NULL;
-#if 0
 
     /* Open the options key */
     Status = LdrOpenImageFileOptionsKey(ImagePathName, 0, &KeyHandle);
@@ -1399,17 +1423,31 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY Op
             Peb->NtGlobalFlag = GlobalFlag;
         else
             GlobalFlag = 0;
+
+        /* Call AVRF if necessary */
+        if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
+        {
+            Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
+            }
+        }
     }
     else
     {
         /* There are no image-specific options, so perform global initialization */
         if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
         {
-            // TODO: Initialize app verifier package
-            // Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, 1, FALSE);
+            /* Initialize app verifier package */
+            Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
+            }
         }
     }
-#endif
+
     return STATUS_SUCCESS;
 }
 
@@ -1466,8 +1504,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Get the image path */
     ImagePath = Peb->ProcessParameters->ImagePathName.Buffer;
 
-    /* Check if it's normalized */
-    if (Peb->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_NORMALIZED)
+    /* Check if it's not normalized */
+    if (!(Peb->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_NORMALIZED))
     {
         /* Normalize it*/
         ImagePath = (PWSTR)((ULONG_PTR)ImagePath + (ULONG_PTR)Peb->ProcessParameters);
@@ -1699,7 +1737,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             /* Reset DPH if requested */
             if (RtlpPageHeapEnabled && DebugProcessHeapOnly)
             {
-                RtlpDphGlobalFlags &= ~0x40;
+                RtlpDphGlobalFlags &= ~DPH_FLAG_DLL_NOTIFY;
                 RtlpPageHeapEnabled = FALSE;
             }
         }
@@ -2120,7 +2158,9 @@ LdrpInit(PCONTEXT Context,
     MEMORY_BASIC_INFORMATION MemoryBasicInfo;
     PPEB Peb = NtCurrentPeb();
 
-    DPRINT("LdrpInit()\n");
+    DPRINT("LdrpInit() %lx/%lx\n",
+        NtCurrentTeb()->RealClientId.UniqueProcess,
+        NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Check if we have a deallocation stack */
     if (!Teb->DeallocationStack)

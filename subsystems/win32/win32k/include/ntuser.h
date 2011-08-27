@@ -10,6 +10,7 @@
 #define UserLeaveCo UserLeave
 
 extern PSERVERINFO gpsi;
+extern PTHREADINFO gptiCurrent;
 
 INIT_FUNCTION NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);

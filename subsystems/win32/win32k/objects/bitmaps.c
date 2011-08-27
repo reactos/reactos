@@ -510,47 +510,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     return Result;
 }
 
-
-LONG APIENTRY
-IntGetBitmapBits(
-    PSURFACE psurf,
-    DWORD Bytes,
-    OUT PBYTE Bits)
-{
-    LONG ret;
-
-    ASSERT(Bits);
-
-    /* Don't copy more bytes than the buffer has */
-    Bytes = min(Bytes, psurf->SurfObj.cjBits);
-
-#if 0
-    /* FIXME: Call DDI CopyBits here if available  */
-    if (psurf->DDBitmap)
-    {
-        DPRINT("Calling device specific BitmapBits\n");
-        if (psurf->DDBitmap->funcs->pBitmapBits)
-        {
-            ret = psurf->DDBitmap->funcs->pBitmapBits(hbitmap,
-                                                      bits,
-                                                      count,
-                                                      DDB_GET);
-        }
-        else
-        {
-            ERR_(bitmap)("BitmapBits == NULL??\n");
-            ret = 0;
-        }
-    }
-    else
-#endif
-    {
-        RtlCopyMemory(Bits, psurf->SurfObj.pvBits, Bytes);
-        ret = Bytes;
-    }
-    return ret;
-}
-
 VOID
 FASTCALL
 UnsafeGetBitmapBits(

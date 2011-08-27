@@ -114,9 +114,9 @@ _STLP_IMPORT_DECLSPEC void* _STLP_STDCALL _InterlockedExchangePointer(void* vola
 /* boris : for the latest SDK, you may actually need the other version of the declaration (above)
  * even for earlier VC++ versions. There is no way to tell SDK versions apart, sorry ...
  */
-_STLP_IMPORT_DECLSPEC long _STLP_STDCALL InterlockedIncrement(long*);
-_STLP_IMPORT_DECLSPEC long _STLP_STDCALL InterlockedDecrement(long*);
-_STLP_IMPORT_DECLSPEC long _STLP_STDCALL InterlockedExchange(long*, long);
+_STLP_IMPORT_DECLSPEC long _STLP_STDCALL InterlockedIncrement(long volatile *);
+_STLP_IMPORT_DECLSPEC long _STLP_STDCALL InterlockedDecrement(long volatile *);
+_STLP_IMPORT_DECLSPEC long _STLP_STDCALL InterlockedExchange(long volatile *, long);
 #    else
 /* start of eMbedded Visual C++ specific section */
 #      include <stl/config/_native_headers.h>

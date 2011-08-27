@@ -1,7 +1,5 @@
 #pragma once
 
-#include "cursoricon.h"
-
 // create one struct
 // make usable for different users (multiple structs!)
 

@@ -2076,23 +2076,43 @@ QueryServiceConfig2A(SC_HANDLE hService,
                      DWORD cbBufSize,
                      LPDWORD pcbBytesNeeded)
 {
+    SERVICE_DESCRIPTIONA ServiceDescription;
+    SERVICE_FAILURE_ACTIONSA ServiceFailureActions;
+    LPBYTE lpTempBuffer;
+    BOOL bUseTempBuffer = FALSE;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceConfig2A(hService %p, dwInfoLevel %lu, lpBuffer %p, cbBufSize %lu, pcbBytesNeeded %p)\n",
           hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
-    if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
-        dwInfoLevel != SERVICE_CONFIG_FAILURE_ACTIONS)
-    {
-        SetLastError(ERROR_INVALID_LEVEL);
-        return FALSE;
-    }
+    lpTempBuffer = lpBuffer;
+    dwBufferSize = cbBufSize;
 
-    if ((lpBuffer == NULL && cbBufSize != 0) ||
-        pcbBytesNeeded == NULL)
+    switch (dwInfoLevel)
     {
-        SetLastError(ERROR_INVALID_ADDRESS);
-        return FALSE;
+        case SERVICE_CONFIG_DESCRIPTION:
+            if ((lpBuffer == NULL) || (cbBufSize < sizeof(SERVICE_DESCRIPTIONA)))
+            {
+                lpTempBuffer = (LPBYTE)&ServiceDescription;
+                dwBufferSize = sizeof(SERVICE_DESCRIPTIONA);
+                bUseTempBuffer = TRUE;
+            }
+            break;
+
+        case SERVICE_CONFIG_FAILURE_ACTIONS:
+            if ((lpBuffer == NULL) || (cbBufSize < sizeof(SERVICE_FAILURE_ACTIONSA)))
+            {
+                lpTempBuffer = (LPBYTE)&ServiceFailureActions;
+                dwBufferSize = sizeof(SERVICE_FAILURE_ACTIONSA);
+                bUseTempBuffer = TRUE;
+            }
+            break;
+
+        default:
+            WARN("Unknown info level 0x%lx\n", dwInfoLevel);
+            SetLastError(ERROR_INVALID_LEVEL);
+            return FALSE;
     }
 
     RpcTryExcept
@@ -2100,8 +2120,8 @@ QueryServiceConfig2A(SC_HANDLE hService,
         /* Call to services.exe using RPC */
         dwError = RQueryServiceConfig2A((SC_RPC_HANDLE)hService,
                                         dwInfoLevel,
-                                        lpBuffer,
-                                        cbBufSize,
+                                        lpTempBuffer,
+                                        dwBufferSize,
                                         pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2117,11 +2137,18 @@ QueryServiceConfig2A(SC_HANDLE hService,
         return FALSE;
     }
 
+    if (bUseTempBuffer == TRUE)
+    {
+        TRACE("RQueryServiceConfig2A() returns ERROR_INSUFFICIENT_BUFFER\n");
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
             {
-                LPSERVICE_DESCRIPTIONA lpPtr = (LPSERVICE_DESCRIPTIONA)lpBuffer;
+                LPSERVICE_DESCRIPTIONA lpPtr = (LPSERVICE_DESCRIPTIONA)lpTempBuffer;
 
                 if (lpPtr->lpDescription != NULL)
                     lpPtr->lpDescription =
@@ -2131,7 +2158,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
             {
-                LPSERVICE_FAILURE_ACTIONSA lpPtr = (LPSERVICE_FAILURE_ACTIONSA)lpBuffer;
+                LPSERVICE_FAILURE_ACTIONSA lpPtr = (LPSERVICE_FAILURE_ACTIONSA)lpTempBuffer;
 
                 if (lpPtr->lpRebootMsg != NULL)
                     lpPtr->lpRebootMsg =
@@ -2146,11 +2173,6 @@ QueryServiceConfig2A(SC_HANDLE hService,
                         (SC_ACTION*)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpsaActions);
             }
             break;
-
-        default:
-            ERR("Unknown info level 0x%lx\n", dwInfoLevel);
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
     }
 
     TRACE("QueryServiceConfig2A() done\n");
@@ -2171,23 +2193,43 @@ QueryServiceConfig2W(SC_HANDLE hService,
                      DWORD cbBufSize,
                      LPDWORD pcbBytesNeeded)
 {
+    SERVICE_DESCRIPTIONW ServiceDescription;
+    SERVICE_FAILURE_ACTIONSW ServiceFailureActions;
+    LPBYTE lpTempBuffer;
+    BOOL bUseTempBuffer = FALSE;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceConfig2W(%p, %lu, %p, %lu, %p)\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
-    if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
-        dwInfoLevel != SERVICE_CONFIG_FAILURE_ACTIONS)
-    {
-        SetLastError(ERROR_INVALID_LEVEL);
-        return FALSE;
-    }
+    lpTempBuffer = lpBuffer;
+    dwBufferSize = cbBufSize;
 
-    if ((lpBuffer == NULL && cbBufSize != 0) ||
-        pcbBytesNeeded == NULL)
+    switch (dwInfoLevel)
     {
-        SetLastError(ERROR_INVALID_ADDRESS);
-        return FALSE;
+        case SERVICE_CONFIG_DESCRIPTION:
+            if ((lpBuffer == NULL) || (cbBufSize < sizeof(SERVICE_DESCRIPTIONW)))
+            {
+                lpTempBuffer = (LPBYTE)&ServiceDescription;
+                dwBufferSize = sizeof(SERVICE_DESCRIPTIONW);
+                bUseTempBuffer = TRUE;
+            }
+            break;
+
+        case SERVICE_CONFIG_FAILURE_ACTIONS:
+            if ((lpBuffer == NULL) || (cbBufSize < sizeof(SERVICE_FAILURE_ACTIONSW)))
+            {
+                lpTempBuffer = (LPBYTE)&ServiceFailureActions;
+                dwBufferSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+                bUseTempBuffer = TRUE;
+            }
+            break;
+
+        default:
+            WARN("Unknown info level 0x%lx\n", dwInfoLevel);
+            SetLastError(ERROR_INVALID_LEVEL);
+            return FALSE;
     }
 
     RpcTryExcept
@@ -2195,8 +2237,8 @@ QueryServiceConfig2W(SC_HANDLE hService,
         /* Call to services.exe using RPC */
         dwError = RQueryServiceConfig2W((SC_RPC_HANDLE)hService,
                                         dwInfoLevel,
-                                        lpBuffer,
-                                        cbBufSize,
+                                        lpTempBuffer,
+                                        dwBufferSize,
                                         pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2212,11 +2254,18 @@ QueryServiceConfig2W(SC_HANDLE hService,
         return FALSE;
     }
 
+    if (bUseTempBuffer == TRUE)
+    {
+        TRACE("RQueryServiceConfig2W() returns ERROR_INSUFFICIENT_BUFFER\n");
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
             {
-                LPSERVICE_DESCRIPTIONW lpPtr = (LPSERVICE_DESCRIPTIONW)lpBuffer;
+                LPSERVICE_DESCRIPTIONW lpPtr = (LPSERVICE_DESCRIPTIONW)lpTempBuffer;
 
                 if (lpPtr->lpDescription != NULL)
                     lpPtr->lpDescription =
@@ -2226,7 +2275,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
             {
-                LPSERVICE_FAILURE_ACTIONSW lpPtr = (LPSERVICE_FAILURE_ACTIONSW)lpBuffer;
+                LPSERVICE_FAILURE_ACTIONSW lpPtr = (LPSERVICE_FAILURE_ACTIONSW)lpTempBuffer;
 
                 if (lpPtr->lpRebootMsg != NULL)
                     lpPtr->lpRebootMsg =
@@ -2241,11 +2290,6 @@ QueryServiceConfig2W(SC_HANDLE hService,
                         (SC_ACTION*)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpsaActions);
             }
             break;
-
-        default:
-            WARN("Unknown info level 0x%lx\n", dwInfoLevel);
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
     }
 
     TRACE("QueryServiceConfig2W() done\n");
@@ -2265,16 +2309,30 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
                         DWORD cbBufSize,
                         LPDWORD pcbBytesNeeded)
 {
+    QUERY_SERVICE_LOCK_STATUSA LockStatus;
+    LPQUERY_SERVICE_LOCK_STATUSA lpStatusPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceLockStatusA() called\n");
+
+    if (lpLockStatus == NULL || cbBufSize < sizeof(QUERY_SERVICE_LOCK_STATUSA))
+    {
+        lpStatusPtr = &LockStatus;
+        dwBufferSize = sizeof(QUERY_SERVICE_LOCK_STATUSA);
+    }
+    else
+    {
+        lpStatusPtr = lpLockStatus;
+        dwBufferSize = cbBufSize;
+    }
 
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusA((SC_RPC_HANDLE)hSCManager,
-                                           lpLockStatus,
-                                           cbBufSize,
+                                           lpStatusPtr,
+                                           dwBufferSize,
                                            pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2290,10 +2348,10 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpLockStatus->lpLockOwner != NULL)
+    if (lpStatusPtr->lpLockOwner != NULL)
     {
-        lpLockStatus->lpLockOwner =
-            (LPSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
+        lpStatusPtr->lpLockOwner =
+            (LPSTR)((UINT_PTR)lpStatusPtr + (UINT_PTR)lpStatusPtr->lpLockOwner);
     }
 
     TRACE("QueryServiceLockStatusA() done\n");
@@ -2313,16 +2371,30 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
                         DWORD cbBufSize,
                         LPDWORD pcbBytesNeeded)
 {
+    QUERY_SERVICE_LOCK_STATUSW LockStatus;
+    LPQUERY_SERVICE_LOCK_STATUSW lpStatusPtr;
+    DWORD dwBufferSize;
     DWORD dwError;
 
     TRACE("QueryServiceLockStatusW() called\n");
+
+    if (lpLockStatus == NULL || cbBufSize < sizeof(QUERY_SERVICE_LOCK_STATUSW))
+    {
+        lpStatusPtr = &LockStatus;
+        dwBufferSize = sizeof(QUERY_SERVICE_LOCK_STATUSW);
+    }
+    else
+    {
+        lpStatusPtr = lpLockStatus;
+        dwBufferSize = cbBufSize;
+    }
 
     RpcTryExcept
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusW((SC_RPC_HANDLE)hSCManager,
-                                           lpLockStatus,
-                                           cbBufSize,
+                                           lpStatusPtr,
+                                           dwBufferSize,
                                            pcbBytesNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2338,10 +2410,10 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpLockStatus->lpLockOwner != NULL)
+    if (lpStatusPtr->lpLockOwner != NULL)
     {
-        lpLockStatus->lpLockOwner =
-            (LPWSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
+        lpStatusPtr->lpLockOwner =
+            (LPWSTR)((UINT_PTR)lpStatusPtr + (UINT_PTR)lpStatusPtr->lpLockOwner);
     }
 
     TRACE("QueryServiceLockStatusW() done\n");

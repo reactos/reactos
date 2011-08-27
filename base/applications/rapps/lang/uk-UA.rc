@@ -63,7 +63,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Загальні", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "&Зберігати положення вікна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Оновлювати список наявних програм при запуску", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Оновлювати список наявних програм при запуску", IDC_UPDATE_AVLIST, 15, 29, 222, 12
 	AUTOCHECKBOX "&Вести звіт встановлення/видалення програм", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Завантаження", -1, 4, 65, 240, 51

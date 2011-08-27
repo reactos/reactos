@@ -32,29 +32,13 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserAccel);
 
 UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
 HMENU FASTCALL IntGetSubMenu( HMENU hMenu, int nPos);
 UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
 
 /* FUNCTIONS *****************************************************************/
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitAcceleratorImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS FASTCALL
-CleanupAcceleratorImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
-
 
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 {
@@ -98,7 +82,7 @@ co_IntTranslateAccelerator(
 
    hWnd = Window->head.h;
 
-   DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
+   TRACE("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    if (wParam != key)
@@ -106,20 +90,20 @@ co_IntTranslateAccelerator(
       return FALSE;
    }
 
-   DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",UserGetKeyState(VK_CONTROL));
-   DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",UserGetKeyState(VK_MENU));
-   DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",UserGetKeyState(VK_SHIFT));
+   TRACE("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",UserGetKeyState(VK_CONTROL));
+   TRACE("NtUserGetKeyState(VK_MENU) = 0x%x\n",UserGetKeyState(VK_MENU));
+   TRACE("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",UserGetKeyState(VK_SHIFT));
 
    if (UserGetKeyState(VK_CONTROL) & 0x8000) mask |= FCONTROL;
    if (UserGetKeyState(VK_MENU) & 0x8000) mask |= FALT;
    if (UserGetKeyState(VK_SHIFT) & 0x8000) mask |= FSHIFT;
-   DPRINT("Mask 0x%x\n",mask);
+   TRACE("Mask 0x%x\n",mask);
 
    if (message == WM_CHAR || message == WM_SYSCHAR)
    {
       if ( !(fVirt & FVIRTKEY) && (mask & FALT) == (fVirt & FALT) )
       {
-         DPRINT("found accel for WM_CHAR: ('%c')\n", LOWORD(wParam) & 0xff);
+         TRACE("found accel for WM_CHAR: ('%c')\n", LOWORD(wParam) & 0xff);
          goto found;
       }
    }
@@ -127,11 +111,11 @@ co_IntTranslateAccelerator(
    {
       if (fVirt & FVIRTKEY)
       {
-         DPRINT("found accel for virt_key %04x (scan %04x)\n",
+         TRACE("found accel for virt_key %04x (scan %04x)\n",
                  wParam, 0xff & HIWORD(lParam));
 
          if (mask == (fVirt & (FSHIFT | FCONTROL | FALT))) goto found;
-         DPRINT("but incorrect SHIFT/CTRL/ALT-state mask %x fVirt %x\n",mask,fVirt);
+         TRACE("but incorrect SHIFT/CTRL/ALT-state mask %x fVirt %x\n",mask,fVirt);
       }
       else
       {
@@ -139,14 +123,14 @@ co_IntTranslateAccelerator(
          {
             if ((fVirt & FALT) && (lParam & 0x20000000))
             {                            /* ^^ ALT pressed */
-               DPRINT("found accel for Alt-%c\n", LOWORD(wParam) & 0xff);
+               TRACE("found accel for Alt-%c\n", LOWORD(wParam) & 0xff);
                goto found;
             }
          }
       }
    }
 
-   DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
+   TRACE("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    return FALSE;
@@ -191,7 +175,7 @@ found:
                if (hSubMenu != hSysMenu)
                {
                   nPos = IntFindSubMenu(&hSysMenu, hSubMenu);
-                  DPRINT("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
+                  TRACE("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
                   co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
                }
             uSysStat = IntGetMenuState(IntGetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
@@ -222,7 +206,7 @@ found:
                      if (hSubMenu != hMenu)
                      {
                         nPos = IntFindSubMenu(&hMenu, hSubMenu);
-                        DPRINT("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
+                        TRACE("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
                         co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
                      }
                      uStat = IntGetMenuState(hMenu, cmd, MF_BYCOMMAND);
@@ -264,12 +248,12 @@ found:
 
    if (mesg == WM_COMMAND)
    {
-      DPRINT(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
+      TRACE(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
       co_IntSendMessage(Window->head.h, mesg, 0x10000 | cmd, 0L);
    }
    else if (mesg == WM_SYSCOMMAND)
    {
-      DPRINT(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
+      TRACE(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
       co_IntSendMessage(Window->head.h, mesg, cmd, 0x00010000L);
    }
    else
@@ -283,14 +267,14 @@ found:
        *   #5: it's a menu option, but window is iconic
        *   #6: it's a menu option, but disabled
        */
-      DPRINT1(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
+      ERR(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
       if (mesg == 0)
       {
-         DPRINT1(" unknown reason - please report!");
+         ERR(" unknown reason - please report!");
       }
    }
 
-   DPRINT("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
+   TRACE("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    return TRUE;
@@ -312,7 +296,7 @@ NtUserCopyAcceleratorTable(
    BOOL Done = FALSE;
    DECLARE_RETURN(int);
 
-   DPRINT("Enter NtUserCopyAcceleratorTable\n");
+   TRACE("Enter NtUserCopyAcceleratorTable\n");
    UserEnterShared();
 
    Accel = UserGetAccelObject(hAccel);
@@ -346,7 +330,7 @@ NtUserCopyAcceleratorTable(
    RETURN(Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserCopyAcceleratorTable, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCopyAcceleratorTable, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -362,7 +346,7 @@ NtUserCreateAcceleratorTable(
    INT Index;
    DECLARE_RETURN(HACCEL);
 
-   DPRINT("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
+   TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
           Entries, EntriesCount);
    UserEnterExclusive();
 
@@ -420,7 +404,7 @@ NtUserCreateAcceleratorTable(
    RETURN(hAccel);
 
 CLEANUP:
-   DPRINT("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x\n",
+   TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x\n",
           Entries, EntriesCount,_ret_);
    UserLeave();
    END_CLEANUP;
@@ -439,7 +423,7 @@ NtUserDestroyAcceleratorTable(
    FIXME: Destroy only tables created using CreateAcceleratorTable.
     */
 
-   DPRINT("NtUserDestroyAcceleratorTable(Table %x)\n", hAccel);
+   TRACE("NtUserDestroyAcceleratorTable(Table %x)\n", hAccel);
    UserEnterExclusive();
 
    if (!(Accel = UserGetAccelObject(hAccel)))
@@ -458,7 +442,7 @@ NtUserDestroyAcceleratorTable(
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", hAccel,_ret_);
+   TRACE("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", hAccel,_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -476,7 +460,7 @@ NtUserTranslateAccelerator(
    USER_REFERENCE_ENTRY AccelRef, WindowRef;
    DECLARE_RETURN(int);
 
-   DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
+   TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
           hWnd, hAccel, Message);
    UserEnterShared();
 
@@ -517,7 +501,7 @@ NtUserTranslateAccelerator(
                                      Accel->Table[i].fVirt, Accel->Table[i].key,
                                      Accel->Table[i].cmd))
       {
-         DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
+         TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
                 hWnd, hAccel, Message, 1);
          RETURN( 1);
       }
@@ -533,7 +517,7 @@ CLEANUP:
    if (Window) UserDerefObjectCo(Window);
    if (Accel) UserDerefObjectCo(Accel);
 
-   DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
+   TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
           hWnd, hAccel, Message, 0);
    UserLeave();
    END_CLEANUP;

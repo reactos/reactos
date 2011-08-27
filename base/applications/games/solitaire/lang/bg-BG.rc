@@ -16,7 +16,7 @@ CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 EXSTYLE DS_SHELLFONT
 BEGIN
-    GROUPBOX        "Карти", -1, 7, 7, 80, 40
+    GROUPBOX        "Карти", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Изтегли &една", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Изтегли &три", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
