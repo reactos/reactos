@@ -28,27 +28,6 @@ DBG_DEFAULT_CHANNEL(UserMonitor);
 /* list of monitors */
 static PMONITOR gMonitorList = NULL;
 
-/* INITALIZATION FUNCTIONS ****************************************************/
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitMonitorImpl()
-{
-    TRACE("Initializing monitor implementation...\n");
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-CleanupMonitorImpl()
-{
-    TRACE("Cleaning up monitor implementation...\n");
-    /* FIXME: Destroy monitor objects? */
-
-    return STATUS_SUCCESS;
-}
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /* IntCreateMonitorObject

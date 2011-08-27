@@ -172,7 +172,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         IntCleanupMenus(Process, Win32Process);
         IntCleanupCurIcons(Process, Win32Process);
-        CleanupMonitorImpl();
 
         /* no process windows should exist at this point, or the function will assert! */
         DestroyProcessClasses(Win32Process);
@@ -574,7 +573,6 @@ DriverEntry(
     CreateStockObjects();
     CreateSysColorObjects();
 
-    NT_ROF(InitXlateImpl());
     NT_ROF(InitPDEVImpl());
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());
@@ -585,11 +583,8 @@ DriverEntry(
     NT_ROF(InitDesktopImpl());
     NT_ROF(InitInputImpl());
     NT_ROF(InitKeyboardImpl());
-    NT_ROF(InitMonitorImpl());
     NT_ROF(MsqInitializeImpl());
     NT_ROF(InitTimerImpl());
-    NT_ROF(InitAcceleratorImpl());
-    NT_ROF(InitGuiCheckImpl());
 
     /* Initialize FreeType library */
     if (!InitFontSupport())

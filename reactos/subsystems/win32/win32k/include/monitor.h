@@ -31,13 +31,6 @@ typedef struct _MONITOR
     struct _MONITOR* Prev; //Blink;
 } MONITOR, *PMONITOR;
 
-/* functions */
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitMonitorImpl(VOID);
-NTSTATUS CleanupMonitorImpl(VOID);
-
 NTSTATUS IntAttachMonitor(PDEVOBJ *pGdiDevice, ULONG DisplayNumber);
 NTSTATUS IntDetachMonitor(PDEVOBJ *pGdiDevice);
 NTSTATUS IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice);

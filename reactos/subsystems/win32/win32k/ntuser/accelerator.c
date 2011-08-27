@@ -40,21 +40,6 @@ UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitAcceleratorImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS FASTCALL
-CleanupAcceleratorImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
-
-
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 {
    PACCELERATOR_TABLE Accel;
