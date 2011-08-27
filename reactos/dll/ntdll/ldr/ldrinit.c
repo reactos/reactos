@@ -294,9 +294,9 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
                 {
                     /* OK, we know what you want... */
                     IntegerString.Buffer = (PWSTR)KeyValueInformation->Data;
-                    IntegerString.Length = KeyValueInformation->DataLength -
+                    IntegerString.Length = (USHORT)KeyValueInformation->DataLength -
                                            sizeof(WCHAR);
-                    IntegerString.MaximumLength = KeyValueInformation->DataLength;
+                    IntegerString.MaximumLength = (USHORT)KeyValueInformation->DataLength;
                     Status = RtlUnicodeStringToInteger(&IntegerString, 0, (PULONG)Buffer);
                 }
             }
@@ -499,8 +499,10 @@ LdrpInitializeThread(IN PCONTEXT Context)
     NTSTATUS Status;
     PVOID EntryPoint;
 
-    DPRINT("LdrpInitializeThread() called for %wZ\n",
-            &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpInitializeThread() called for %wZ (%lx/%lx)\n",
+            &LdrpImageEntry->BaseDllName,
+            NtCurrentTeb()->RealClientId.UniqueProcess,
+            NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Allocate an Activation Context Stack */
     /* FIXME: This is a hack for Wine's actctx stuff */
@@ -570,8 +572,10 @@ LdrpInitializeThread(IN PCONTEXT Context)
                     if (!LdrpShutdownInProgress)
                     {
                         /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %x for thread attaching\n",
-                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                        DPRINT("%wZ - Calling entry point at %p for thread attaching, %lx/%lx\n",
+                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint,
+                                NtCurrentTeb()->RealClientId.UniqueProcess,
+                                NtCurrentTeb()->RealClientId.UniqueThread);
                         LdrpCallInitRoutine(LdrEntry->EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_THREAD_ATTACH,
@@ -628,7 +632,10 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     PTEB OldTldTeb;
     BOOLEAN DllStatus;
 
-    DPRINT("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpRunInitializeRoutines() called for %wZ (%lx/%lx)\n",
+        &LdrpImageEntry->BaseDllName,
+        NtCurrentTeb()->RealClientId.UniqueProcess,
+        NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Check the Loader Lock */
     LdrpEnsureLoaderLockIsHeld();
@@ -2151,7 +2158,9 @@ LdrpInit(PCONTEXT Context,
     MEMORY_BASIC_INFORMATION MemoryBasicInfo;
     PPEB Peb = NtCurrentPeb();
 
-    DPRINT("LdrpInit()\n");
+    DPRINT("LdrpInit() %lx/%lx\n",
+        NtCurrentTeb()->RealClientId.UniqueProcess,
+        NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Check if we have a deallocation stack */
     if (!Teb->DeallocationStack)

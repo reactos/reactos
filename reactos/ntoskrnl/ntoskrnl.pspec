@@ -112,7 +112,7 @@
 @ FASTCALL ExInterlockedAddLargeStatistic(ptr long)
 #endif
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
-#ifdef __x86__
+#ifdef _M_IX86
 @ FASTCALL ExInterlockedCompareExchange64(ptr ptr ptr ptr)
 @ stdcall ExInterlockedDecrementLong(ptr ptr)
 @ stdcall ExInterlockedExchangeUlong(ptr long ptr)
