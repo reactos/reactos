@@ -22,8 +22,8 @@ else()
     set(IDL_HEADER_ARG -h -o) #.h
     set(IDL_HEADER_ARG2 -h -H) #.h
     set(IDL_TYPELIB_ARG -t -o) #.tlb
-    set(IDL_SERVER_ARG -Oif -s -o) #.c for server library
-    set(IDL_CLIENT_ARG -Oif -c -o) #.c for stub client library
+    set(IDL_SERVER_ARG -s -o) #.c for server library
+    set(IDL_CLIENT_ARG -c -o) #.c for stub client library
     set(IDL_PROXY_ARG -p -o)
     set(IDL_INTERFACE_ARG -u -o)
     if(ARCH MATCHES i386)
@@ -169,6 +169,6 @@ function(add_iid_library TARGET)
         list(APPEND IID_SOURCES ${NAME}_i.c)
     endforeach()
     add_library(${TARGET} ${IID_SOURCES})
-	add_dependencies(${TARGET} psdk)
+    add_dependencies(${TARGET} psdk)
     set_target_properties(${TARGET} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
