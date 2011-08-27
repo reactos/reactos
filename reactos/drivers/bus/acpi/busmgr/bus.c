@@ -60,6 +60,7 @@ LIST_HEAD(acpi_bus_event_list);
 KEVENT AcpiEventQueue;
 KDPC event_dpc;
 
+int ProcessorCount;
 
 static int
 acpi_device_register (
@@ -1145,6 +1146,7 @@ acpi_bus_add (
 	char			*uid = NULL;
 	ACPI_DEVICE_ID_LIST *cid_list = NULL;
 	int			i = 0;
+	char			processor_uid[5];
 
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
@@ -1272,6 +1274,8 @@ acpi_bus_add (
 		break;
 	case ACPI_BUS_TYPE_PROCESSOR:
 		hid = ACPI_PROCESSOR_HID;
+		uid = processor_uid;
+		sprintf(uid, "%d", (ProcessorCount++));
 		break;
 	case ACPI_BUS_TYPE_SYSTEM:
 		hid = ACPI_SYSTEM_HID;
