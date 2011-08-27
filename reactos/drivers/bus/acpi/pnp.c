@@ -47,7 +47,7 @@ Bus_PnP (
 
 
     if (commonData->IsFDO) {
-        DPRINT("FDO %s IRP:0x%p\n",
+        DPRINT1("FDO %s IRP:0x%p\n",
                       PnPMinorFunctionString(irpStack->MinorFunction),
                       Irp);
         //
@@ -59,7 +59,7 @@ Bus_PnP (
                     irpStack,
                     (PFDO_DEVICE_DATA) commonData);
     } else {
-        DPRINT("PDO %s IRP: 0x%p\n",
+        DPRINT1("PDO %s IRP: 0x%p\n",
                       PnPMinorFunctionString(irpStack->MinorFunction),
                       Irp);
         //
