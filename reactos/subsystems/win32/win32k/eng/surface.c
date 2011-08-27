@@ -64,7 +64,7 @@ ULONG FASTCALL BitmapFormat(ULONG cBits, ULONG iCompression)
 }
 
 BOOL
-INTERNAL_CALL
+NTAPI
 SURFACE_Cleanup(PVOID ObjectBody)
 {
     PSURFACE psurf = (PSURFACE)ObjectBody;

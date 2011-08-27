@@ -1,7 +1,5 @@
 #pragma once
 
-#include <include/engobjects.h>
-
 #define TAG_FINF        'FNIF'
 //
 // EXSTROBJ flags.

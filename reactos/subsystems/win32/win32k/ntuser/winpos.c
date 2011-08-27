@@ -68,38 +68,6 @@ IntGetClientOrigin(PWND Window OPTIONAL, LPPOINT Point)
    return TRUE;
 }
 
-BOOL FASTCALL
-UserGetClientOrigin(PWND Window, LPPOINT Point)
-{
-   BOOL Ret;
-   POINT pt;
-   NTSTATUS Status;
-
-   if(!Point)
-   {
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
-   }
-
-   Ret = IntGetClientOrigin(Window, &pt);
-
-   if(!Ret)
-   {
-      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
-   }
-
-   Status = MmCopyToCaller(Point, &pt, sizeof(POINT));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      return FALSE;
-   }
-
-   return Ret;
-}
-
-
 
 /*******************************************************************
  *         can_activate_window

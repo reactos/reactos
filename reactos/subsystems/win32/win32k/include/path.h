@@ -49,11 +49,8 @@ typedef struct _EPATHOBJ
 #define PATH_IsPathOpen(dclevel) ( ((dclevel).hPath) && ((dclevel).flPath & DCPATH_ACTIVE) )
 
 BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd, INT lines);
-BOOL FASTCALL PATH_AssignGdiPath (PPATH pPathDest, const PPATH pPathSrc);
-VOID FASTCALL PATH_DestroyGdiPath (PPATH pPath);
 BOOL FASTCALL PATH_Ellipse (PDC dc, INT x1, INT y1, INT x2, INT y2);
 VOID FASTCALL PATH_EmptyPath (PPATH pPath);
-VOID FASTCALL PATH_InitGdiPath (PPATH pPath);
 BOOL FASTCALL PATH_LineTo (PDC dc, INT x, INT y);
 BOOL FASTCALL PATH_MoveTo (PDC dc);
 BOOL FASTCALL PATH_PolyBezier (PDC dc, const POINT *pts, DWORD cbPoints);

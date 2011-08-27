@@ -1771,7 +1771,7 @@ NtUserDragDetect(
                 POINT tmp;
                 tmp.x = (short)LOWORD(msg.lParam);
                 tmp.y = (short)HIWORD(msg.lParam);
-                if( !IntPtInRect( &rect, tmp ) )
+                if( !RECTL_bPointInRect( &rect, tmp.x, tmp.y ) )
                 {
                     co_UserSetCapture(NULL);
                     RETURN( TRUE);

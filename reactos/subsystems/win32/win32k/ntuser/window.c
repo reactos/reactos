@@ -16,34 +16,6 @@ DBG_DEFAULT_CHANNEL(UserWnd);
 
 #define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
 
-/* PRIVATE FUNCTIONS **********************************************************/
-
-/*
- * InitWindowImpl
- *
- * Initialize windowing implementation.
- */
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitWindowImpl(VOID)
-{
-   return STATUS_SUCCESS;
-}
-
-/*
- * CleanupWindowImpl
- *
- * Cleanup windowing implementation.
- */
-
-NTSTATUS FASTCALL
-CleanupWindowImpl(VOID)
-{
-   return STATUS_SUCCESS;
-}
-
 /* HELPER FUNCTIONS ***********************************************************/
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
@@ -945,35 +917,6 @@ IntIsChildWindow(PWND Parent, PWND BaseWindow)
 
    return(FALSE);
 }
-
-BOOL FASTCALL
-IntIsWindowVisible(PWND BaseWindow)
-{
-   PWND Window;
-
-   Window = BaseWindow;
-   while(Window)
-   {
-      if(!(Window->style & WS_CHILD))
-      {
-         break;
-      }
-      if(!(Window->style & WS_VISIBLE))
-      {
-         return FALSE;
-      }
-
-      Window = Window->spwndParent;
-   }
-
-   if(Window && Window->style & WS_VISIBLE)
-   {
-      return TRUE;
-   }
-
-   return FALSE;
-}
-
 
 /*
    link the window into siblings list
@@ -4197,85 +4140,5 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
    ExFreePool( win_array );
    return TRUE;
 }
-
-/*
- * NtUserValidateHandleSecure
- *
- * Status
- *    @implemented
- */
-
-BOOL
-APIENTRY
-NtUserValidateHandleSecure(
-   HANDLE handle,
-   BOOL Restricted)
-{
-   if(!Restricted)
-   {
-     UINT uType;
-     {
-       PUSER_HANDLE_ENTRY entry;
-       if (!(entry = handle_to_entry(gHandleTable, handle )))
-       {
-          EngSetLastError(ERROR_INVALID_HANDLE);
-          return FALSE;
-       }
-       uType = entry->type;
-     }
-     switch (uType)
-     {
-       case otWindow:
-       {
-         PWND Window;
-         if ((Window = UserGetWindowObject((HWND) handle))) return TRUE;
-         return FALSE;
-       }
-       case otMenu:
-       {
-         PMENU_OBJECT Menu;
-         if ((Menu = UserGetMenuObject((HMENU) handle))) return TRUE;
-         return FALSE;
-       }
-       case otAccel:
-       {
-         PACCELERATOR_TABLE Accel;
-         if ((Accel = UserGetAccelObject((HACCEL) handle))) return TRUE;
-         return FALSE;
-       }
-       case otCursorIcon:
-       {
-         PCURICON_OBJECT Cursor;
-         if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
-         return FALSE;
-       }
-       case otHook:
-       {
-         PHOOK Hook;
-         if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
-         return FALSE;
-       }
-       case otMonitor:
-       {
-         PMONITOR Monitor;
-         if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
-         return FALSE;
-       }
-       case otCallProc:
-       {
-         WNDPROC_INFO Proc;
-         return UserGetCallProcInfo( handle, &Proc );
-       }
-       default:
-         EngSetLastError(ERROR_INVALID_HANDLE);
-     }
-   }
-   else
-   { /* Is handle entry restricted? */
-     STUB
-   }
-   return FALSE;
-}
-
 
 /* EOF */

@@ -14,8 +14,8 @@
 
 HANDLE hModuleWin;
 
-PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
-BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
+PGDI_HANDLE_TABLE NTAPI GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
+BOOL NTAPI GDI_CleanupForProcess (struct _EPROCESS *Process);
 
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
@@ -583,8 +583,6 @@ DriverEntry(
     NT_ROF(InitHotkeyImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
-    NT_ROF(InitWindowImpl());
-    NT_ROF(InitMenuImpl());
     NT_ROF(InitInputImpl());
     NT_ROF(InitKeyboardImpl());
     NT_ROF(InitMonitorImpl());

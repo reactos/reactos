@@ -351,7 +351,7 @@ DC_vInitDc(
 }
 
 BOOL
-INTERNAL_CALL
+NTAPI
 DC_Cleanup(PVOID ObjectBody)
 {
     PDC pdc = (PDC)ObjectBody;

@@ -13,29 +13,6 @@
 
 DBG_DEFAULT_CHANNEL(UserMenu);
 
-PMENU_OBJECT FASTCALL
-IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu);
-
-
-
-/* STATIC FUNCTION ***********************************************************/
-
-static
-BOOL FASTCALL
-UserMenuItemInfo(
-   PMENU_OBJECT Menu,
-   UINT Item,
-   BOOL ByPosition,
-   PROSMENUITEMINFO UnsafeItemInfo,
-   BOOL SetOrGet);
-
-static
-BOOL FASTCALL
-UserMenuInfo(
-   PMENU_OBJECT Menu,
-   PROSMENUINFO UnsafeMenuInfo,
-   BOOL SetOrGet);
-
 /* INTERNAL ******************************************************************/
 
 /* maximum number of menu items a menu can contain */
@@ -79,25 +56,6 @@ UserMenuInfo(
   } \
 }
 
-#define InRect(r, x, y) \
-      ( ( ((r).right >=  x)) && \
-        ( ((r).left <= x)) && \
-        ( ((r).bottom >=  y)) && \
-        ( ((r).top <= y)) )
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitMenuImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS FASTCALL
-CleanupMenuImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
 {
@@ -1249,19 +1207,6 @@ co_IntTrackPopupMenu(PMENU_OBJECT Menu, PWND Window,
    return FALSE;
 }
 
-BOOL FASTCALL
-IntSetMenuItemRect(PMENU_OBJECT Menu, UINT Item, BOOL fByPos, RECTL *rcRect)
-{
-   PMENU_ITEM mi;
-   if(IntGetMenuItemByFlag(Menu, Item, (fByPos ? MF_BYPOSITION : MF_BYCOMMAND),
-                           NULL, &mi, NULL) > -1)
-   {
-      mi->Rect = *rcRect;
-      return TRUE;
-   }
-   return FALSE;
-}
-
 
 /*!
  * Internal function. Called when the process is destroyed to free the remaining menu handles.
@@ -2239,7 +2184,7 @@ NtUserMenuItemFromPoint(
    mi = Menu->MenuItemList;
    for (i = 0; NULL != mi; i++)
    {
-      if (InRect(mi->Rect, X, Y))
+      if (RECTL_bPointInRect(&(mi->Rect), X, Y))
       {
          break;
       }

@@ -7,8 +7,6 @@
  *
  */
 
-#include <include/palette.h>
-
 struct _EXLATEOBJ;
 
 typedef ULONG (FASTCALL *PFN_XLATE)(struct _EXLATEOBJ *pexlo, ULONG iColor);

@@ -1963,8 +1963,11 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    }
 
    // Clear it all out.
-   pti->pcti->fsWakeBits = 0;
-   pti->pcti->fsChangeBits = 0;
+   if(pti->pcti)
+   {
+       pti->pcti->fsWakeBits = 0;
+       pti->pcti->fsChangeBits = 0;
+   }
 
    MessageQueue->nCntsQBits[QSRosKey] = 0;
    MessageQueue->nCntsQBits[QSRosMouseMove] = 0;

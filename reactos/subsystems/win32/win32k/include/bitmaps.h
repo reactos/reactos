@@ -1,7 +1,6 @@
 #pragma once
 
 INT     APIENTRY  BITMAP_GetObject(SURFACE * bmp, INT count, LPVOID buffer);
-HBITMAP FASTCALL IntCreateBitmap(IN SIZEL Size, IN LONG Width, IN ULONG Format, IN ULONG Flags, IN PVOID Bits);
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 
 HBITMAP

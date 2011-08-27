@@ -24,7 +24,6 @@ extern HGDIOBJ StockObjects[];
 extern SHORT gusLanguageID;
 
 SHORT FASTCALL IntGdiGetLanguageID(VOID);
-DWORD APIENTRY IntGetQueueStatus(DWORD);
 VOID FASTCALL IntUserManualGuiCheck(LONG Check);
 PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
 VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);
@@ -137,3 +136,12 @@ _ExInitializePushLock(PEX_PUSH_LOCK Lock)
     *(PULONG_PTR)Lock = 0;
 }
 #define ExInitializePushLock _ExInitializePushLock
+
+NTSTATUS FASTCALL
+IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
+                         PUNICODE_STRING Source);
+
+NTSTATUS FASTCALL
+IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
+                                      PUNICODE_STRING Source);
+

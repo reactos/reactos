@@ -5,9 +5,6 @@
 
 #pragma once
 
-/* Public GDI Object/Handle definitions */
-#include "win32.h"
-
 /* The first 10 entries are never used in windows, they are empty */
 #define RESERVE_ENTRIES_COUNT 10
 
@@ -31,7 +28,7 @@ extern PGDI_HANDLE_TABLE GdiHandleTable;
 
 typedef PVOID PGDIOBJ;
 
-typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
+typedef BOOL (NTAPI *GDICLEANUPPROC)(PVOID ObjectBody);
 
 /* Every GDI Object must have this standard type of header.
  * It's for thread locking. */
@@ -175,8 +172,8 @@ NTAPI
 GDIOBJ_pvGetObjectAttr(
     POBJ pobj);
 
-BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-POBJ    INTERNAL_CALL GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize);
-PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ObjectType);
-PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
+BOOL    NTAPI GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+POBJ    NTAPI GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize);
+PGDIOBJ NTAPI GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ObjectType);
+PVOID   NTAPI GDI_MapHandleTable(PEPROCESS Process);
 

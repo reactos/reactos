@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pseh/pseh2.h>
 
 NTSTATUS _MmCopyFromCaller( PVOID Target, PVOID Source, UINT Bytes );
 NTSTATUS _MmCopyToCaller( PVOID Target, PVOID Source, UINT Bytes );

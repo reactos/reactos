@@ -2271,7 +2271,7 @@ IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     return hrgn;
 }
 
-BOOL INTERNAL_CALL
+BOOL NTAPI
 REGION_Cleanup(PVOID ObjectBody)
 {
     PROSRGNDATA pRgn = (PROSRGNDATA)ObjectBody;

@@ -474,3 +474,82 @@ UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
     }
     return object;
 }
+
+/*
+ * NtUserValidateHandleSecure
+ *
+ * Status
+ *    @implemented
+ */
+
+BOOL
+APIENTRY
+NtUserValidateHandleSecure(
+   HANDLE handle,
+   BOOL Restricted)
+{
+   if(!Restricted)
+   {
+     UINT uType;
+     {
+       PUSER_HANDLE_ENTRY entry;
+       if (!(entry = handle_to_entry(gHandleTable, handle )))
+       {
+          EngSetLastError(ERROR_INVALID_HANDLE);
+          return FALSE;
+       }
+       uType = entry->type;
+     }
+     switch (uType)
+     {
+       case otWindow:
+       {
+         PWND Window;
+         if ((Window = UserGetWindowObject((HWND) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMenu:
+       {
+         PMENU_OBJECT Menu;
+         if ((Menu = UserGetMenuObject((HMENU) handle))) return TRUE;
+         return FALSE;
+       }
+       case otAccel:
+       {
+         PACCELERATOR_TABLE Accel;
+         if ((Accel = UserGetAccelObject((HACCEL) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCursorIcon:
+       {
+         PCURICON_OBJECT Cursor;
+         if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
+         return FALSE;
+       }
+       case otHook:
+       {
+         PHOOK Hook;
+         if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMonitor:
+       {
+         PMONITOR Monitor;
+         if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCallProc:
+       {
+         WNDPROC_INFO Proc;
+         return UserGetCallProcInfo( handle, &Proc );
+       }
+       default:
+         EngSetLastError(ERROR_INVALID_HANDLE);
+     }
+   }
+   else
+   { /* Is handle entry restricted? */
+     STUB
+   }
+   return FALSE;
+}

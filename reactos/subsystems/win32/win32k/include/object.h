@@ -36,13 +36,7 @@ BOOL FASTCALL UserDereferenceObject(PVOID obj);
 PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
 BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
-HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
-BOOL FASTCALL UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
-PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
-PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 BOOL FASTCALL UserCreateHandleTable(VOID);
-VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
-
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
@@ -75,10 +69,5 @@ UserDerefObjectCo(PVOID obj)
     ASSERT(obj == UserReferenceEntry->obj);
     UserDereferenceObject(obj);
 }
-
-VOID  FASTCALL CreateStockObjects (VOID);
-VOID  FASTCALL CreateSysColorObjects (VOID);
-
-PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
 /* EOF */

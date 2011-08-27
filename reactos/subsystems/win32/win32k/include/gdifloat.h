@@ -1,11 +1,5 @@
 #pragma once
 
-#include "dc.h"
-#include "math.h"
-#include "xformobj.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
 typedef struct tagFLOAT_POINT
 {
    FLOAT x, y;

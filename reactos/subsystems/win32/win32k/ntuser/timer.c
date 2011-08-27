@@ -325,7 +325,7 @@ SystemTimerProc(HWND hwnd,
                pWnd == pDesk->spwndTrack )
           {
              Point = gpsi->ptCursor;
-             if ( IntPtInRect(&pDesk->rcMouseHover, Point) )
+             if ( RECTL_bPointInRect(&pDesk->rcMouseHover, Point.x, Point.y) )
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
                 {

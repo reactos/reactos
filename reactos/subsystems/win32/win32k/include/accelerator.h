@@ -1,9 +1,5 @@
 #pragma once
 
-#include <include/win32.h>
-#include <include/winsta.h>
-#include <include/window.h>
-
 typedef struct _ACCELERATOR_TABLE
 {
   HEAD head;
@@ -11,12 +7,6 @@ typedef struct _ACCELERATOR_TABLE
   LPACCEL Table;
 } ACCELERATOR_TABLE, *PACCELERATOR_TABLE;
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitAcceleratorImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupAcceleratorImpl(VOID);
-
+INIT_FUNCTION NTSTATUS NTAPI InitAcceleratorImpl(VOID);
+NTSTATUS FASTCALL CleanupAcceleratorImpl(VOID);
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL);

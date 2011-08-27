@@ -35,7 +35,7 @@ EngSetPointerTag(
  * FUNCTION: Notify the mouse driver that drawing is about to begin in
  * a rectangle on a particular surface.
  */
-INT INTERNAL_CALL
+INT NTAPI
 MouseSafetyOnDrawStart(
     PPDEVOBJ ppdev,
     LONG HazardX1,
@@ -91,7 +91,7 @@ MouseSafetyOnDrawStart(
 /*
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
-INT INTERNAL_CALL
+INT NTAPI
 MouseSafetyOnDrawEnd(
     PPDEVOBJ ppdev)
 {
@@ -125,7 +125,7 @@ MouseSafetyOnDrawEnd(
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
 
 VOID
-INTERNAL_CALL
+NTAPI
 IntHideMousePointer(
     PDEVOBJ *ppdev,
     SURFOBJ *psoDest)
@@ -179,7 +179,7 @@ IntHideMousePointer(
 }
 
 VOID
-INTERNAL_CALL
+NTAPI
 IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 {
     GDIPOINTER *pgp;

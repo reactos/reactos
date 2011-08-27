@@ -28,9 +28,6 @@
 
 #pragma once
 
-#include <ft2build.h>
-#include <freetype/freetype.h>
-
 /* Structure of internal gdi objects that win32k manages for ddi engine:
    |---------------------------------|
    |         Public part             |

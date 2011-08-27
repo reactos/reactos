@@ -1,10 +1,5 @@
 #pragma once
 
-#include "window.h"
-#include <include/win32.h>
-
-VOID FASTCALL IntIncrementSequenceNumber(VOID);
-
 typedef struct _ClipboardChainElement
 {
     PWND                 window;
@@ -40,12 +35,6 @@ typedef struct _CLIPBOARDSYSTEM
 
 } CLIPBOARDSYSTEM, *PCLIPBOARDSYSTEM;
 
-VOID FASTCALL
-IntClipboardFreeWindow(PWND window);
-
+VOID FASTCALL IntClipboardFreeWindow(PWND window);
 UINT APIENTRY IntEnumClipboardFormats(UINT format);
-
-/*
-UINT FASTCALL
-IntEnumClipboardFormats(UINT format);
-*/
+VOID FASTCALL IntIncrementSequenceNumber(VOID);
