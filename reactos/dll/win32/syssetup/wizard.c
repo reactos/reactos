@@ -997,7 +997,7 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	  break;
 	}
 
-      dwValueSize = 64 * sizeof(TCHAR);
+      dwValueSize = 64 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
 			  L"Display",
 			  NULL,
@@ -1009,7 +1009,7 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	  break;
 	}
 
-      dwValueSize = 32 * sizeof(TCHAR);
+      dwValueSize = 32 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
 			  L"Std",
 			  NULL,
@@ -1147,7 +1147,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
 		   &hKey))
     return FALSE;
 
-  dwValueSize = 9 * sizeof(TCHAR);
+  dwValueSize = 9 * sizeof(WCHAR);
   if (RegQueryValueExW(hKey,
 		      L"Default",
 		      NULL,
