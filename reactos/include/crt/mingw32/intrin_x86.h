@@ -1216,17 +1216,17 @@ __INTRIN_INLINE void __int2c(void)
 
 __INTRIN_INLINE void _disable(void)
 {
-	__asm__("cli");
+	__asm__("cli" : : : "memory");
 }
 
 __INTRIN_INLINE void _enable(void)
 {
-	__asm__("sti");
+	__asm__("sti" : : : "memory");
 }
 
 __INTRIN_INLINE void __halt(void)
 {
-	__asm__("hlt\n\t");
+	__asm__("hlt\n\t" : : : "memory");
 }
 
 /*** Protected memory management ***/
