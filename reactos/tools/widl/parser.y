@@ -1417,6 +1417,11 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
   array_dims_t *arr = decl ? decl->array : NULL;
   type_t *func_type = decl ? decl->func_type : NULL;
   type_t *type = decl_spec->type;
+  
+  /* In case of a range attribute, duplicate the type to keep track of
+   * the min/max values in the type format string */
+  if(is_attr(attrs, ATTR_RANGE))
+    type = duptype(type, 1);
 
   if (is_attr(type->attrs, ATTR_INLINE))
   {
