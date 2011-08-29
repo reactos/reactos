@@ -1505,9 +1505,16 @@ __INTRIN_INLINE void __sidt(void *Destination)
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
+/*** Misc operations ***/
+
 __INTRIN_INLINE void _mm_pause(void)
 {
 	__asm__ __volatile__("pause" : : : "memory");
+}
+
+__INTRIN_INLINE void __nop(void)
+{
+	__asm__ __volatile__("nop");
 }
 
 #ifdef __cplusplus
