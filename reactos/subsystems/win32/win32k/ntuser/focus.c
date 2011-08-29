@@ -166,7 +166,7 @@ co_IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
    {
       TRACE("sending WM_KILLFOCUS to hwnd 0x%x\n", hWndPrev);
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessageNoWait(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      co_IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
