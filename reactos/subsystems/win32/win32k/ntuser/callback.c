@@ -174,8 +174,6 @@ co_IntCallWindowProc(WNDPROC Proc,
    ULONG ArgumentLength;
    LRESULT Result;
 
-   TRACE_CH(UserMsgCall,"hwnd:0x%x, msg:%d, wparam:%d, lparam:%d\n", Wnd, Message, wParam, lParam);
-
    if (0 < lParamBufferSize)
    {
       ArgumentLength = sizeof(WINDOWPROC_CALLBACK_ARGUMENTS) + lParamBufferSize;
