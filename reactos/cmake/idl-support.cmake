@@ -140,7 +140,7 @@ function(add_rpc_files __type)
         endif()
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h
-            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h ${__server_client} ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${FILE}
+            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h ${__server_client} ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${FILE}
             DEPENDS ${FILE} ${IDL_DEPENDS})
     endforeach()
 endfunction()
