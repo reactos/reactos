@@ -18,6 +18,7 @@
 #define PIT_LATCH  0x00
 
 LARGE_INTEGER HalpLastPerfCounter;
+LARGE_INTEGER HalpPerfCounter;
 ULONG HalpPerfCounterCutoff;
 BOOLEAN HalpClockSetMSRate;
 ULONG HalpCurrentTimeIncrement;

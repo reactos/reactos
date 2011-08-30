@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING.ARM in the top level directory
  * FILE:            hal/halx86/amd64/stubs.c
  * PURPOSE:         HAL stubs
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES *******************************************************************/
@@ -95,3 +95,18 @@ KeQueryPerformanceCounter(
     return Result;
 }
 
+VOID
+NTAPI
+HalCalibratePerformanceCounter(IN volatile PLONG Count,
+                               IN ULONGLONG NewCount)
+{
+    UNIMPLEMENTED;
+}
+
+ULONG
+NTAPI
+HalSetTimeIncrement(IN ULONG Increment)
+{
+    UNIMPLEMENTED;
+    return 0;
+}

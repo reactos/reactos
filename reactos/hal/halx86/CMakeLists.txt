@@ -18,13 +18,13 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/profil.c
     generic/reboot.c
     generic/sysinfo.c
-    generic/timer.c
     generic/usage.c)
 
 if(ARCH MATCHES i386)
     list(APPEND HAL_GENERIC_SOURCE
         generic/bios.c
         generic/halinit.c
+        generic/timer.c
         generic/i386/portio.c
         generic/i386/systimer.S
         generic/i386/trap.S)

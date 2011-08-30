@@ -14,8 +14,6 @@
 EXTERN _HalpAcquireSystemHardwareSpinLock@0:PROC
 EXTERN _HalpReleaseCmosSpinLock@0:PROC
 EXTERN _DbgBreakPoint@0:PROC
-EXTERN _HalpCurrentRollOver:DWORD
-EXTERN _HalpPerfCounterCutoff:DWORD
 
 #define PIC1_BASE         HEX(20) /* IO base address for master PIC */
 #define PIC2_BASE         HEX(A0) /* IO base address for slave PIC */
@@ -41,14 +39,6 @@ EXTERN _HalpPerfCounterCutoff:DWORD
 
 .data
 ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
-
-PUBLIC _HalpPerfCounter
-_HalpLastPerfCounterLow:    .long 0
-_HalpLastPerfCounterHigh:   .long 0
-_HalpPerfCounter:
-_HalpPerfCounterLow:        .long 0
-_HalpPerfCounterHigh:       .long 0
-_HalpSystemHardwareFlags:   .long 0
 
 /* FUNCTIONS *****************************************************************/
 
