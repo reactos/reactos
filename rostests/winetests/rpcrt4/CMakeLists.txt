@@ -7,7 +7,7 @@ add_definitions(
     -D_DLL -D__USE_CRTIMP)
     
 if(MSVC)
-    set(IDL_FLAGS ${IDL_FLAGS} /prefix server s_)
+    set(IDL_FLAGS ${IDL_FLAGS} /prefix server s_ /app_config)
 else()
     set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 endif()
