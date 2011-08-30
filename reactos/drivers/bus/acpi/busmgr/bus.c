@@ -60,7 +60,8 @@ LIST_HEAD(acpi_bus_event_list);
 KEVENT AcpiEventQueue;
 KDPC event_dpc;
 
-int ProcessorCount;
+int ProcessorCount, PowerDeviceCount, PowerButtonCount, FixedPowerButtonCount;
+int FixedSleepButtonCount, SleepButtonCount, ThermalZoneCount;
 
 static int
 acpi_device_register (
@@ -1146,7 +1147,7 @@ acpi_bus_add (
 	char			*uid = NULL;
 	ACPI_DEVICE_ID_LIST *cid_list = NULL;
 	int			i = 0;
-	char			processor_uid[5];
+	char			static_uid_buffer[5];
 
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
@@ -1271,10 +1272,12 @@ acpi_bus_add (
 		break;
 	case ACPI_BUS_TYPE_POWER:
 		hid = ACPI_POWER_HID;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (PowerDeviceCount++));
 		break;
 	case ACPI_BUS_TYPE_PROCESSOR:
 		hid = ACPI_PROCESSOR_HID;
-		uid = processor_uid;
+		uid = static_uid_buffer;
 		sprintf(uid, "%d", (ProcessorCount++));
 		break;
 	case ACPI_BUS_TYPE_SYSTEM:
@@ -1282,18 +1285,28 @@ acpi_bus_add (
 		break;
 	case ACPI_BUS_TYPE_THERMAL:
 		hid = ACPI_THERMAL_HID;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (ThermalZoneCount++));
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTON:
 		hid = ACPI_BUTTON_HID_POWER;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (PowerButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTONF:
 		hid = ACPI_BUTTON_HID_POWERF;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (FixedPowerButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
 		hid = ACPI_BUTTON_HID_SLEEP;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (SleepButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 		hid = ACPI_BUTTON_HID_SLEEPF;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (FixedSleepButtonCount++));
 		break;
 	}
 
