@@ -1542,12 +1542,12 @@ server(void)
   if (pRpcServerRegisterIfEx)
   {
     trace("Using RpcServerRegisterIfEx\n");
-    status = pRpcServerRegisterIfEx(IServer_v0_0_s_ifspec, NULL, NULL,
+    status = pRpcServerRegisterIfEx(s_IServer_v0_0_s_ifspec, NULL, NULL,
                                     RPC_IF_ALLOW_CALLBACKS_WITH_NO_AUTH,
                                     RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
   }
   else
-    status = RpcServerRegisterIf(IServer_v0_0_s_ifspec, NULL, NULL);
+    status = RpcServerRegisterIf(s_IServer_v0_0_s_ifspec, NULL, NULL);
   ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %d\n", status);
   status = RpcServerListen(1, 20, TRUE);
   ok(status == RPC_S_OK, "RpcServerListen failed with status %d\n", status);

@@ -5,9 +5,16 @@ add_definitions(-D_WIN32_WINNT=0x500)
 add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
+    
+if(MSVC)
+    set(IDL_FLAGS ${IDL_FLAGS} /prefix server s_)
+else()
+    set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
+endif()
 
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)
+unset(IDL_FLAGS)
 
 list(APPEND SOURCE
     cstub.c
