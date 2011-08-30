@@ -253,6 +253,7 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
 {
     LARGE_INTEGER CurrentPerfCounter;
     ULONG CounterValue, ClockDelta;
+    KIRQL OldIrql;
 
     /* If caller wants performance frequency, return hardcoded value */
     if (PerformanceFrequency) PerformanceFrequency->QuadPart = PIT_FREQUENCY;
@@ -262,6 +263,10 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
 
     /* Check if interrupts are disabled */
     if(!(__readeflags() & EFLAGS_INTERRUPT_MASK)) return HalpPerfCounter;
+
+    /* Raise irql to DISPATCH_LEVEL */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < DISPATCH_LEVEL) KfRaiseIrql(DISPATCH_LEVEL);
 
     do
     {
@@ -287,12 +292,20 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
     /* Add the clock delta */
     CurrentPerfCounter.QuadPart += ClockDelta;
 
-    /* This must be true unless HalpPerfCounter has changed sign,
-       which takes approximately 245,118 years */
-    ASSERT(CurrentPerfCounter.QuadPart >= HalpLastPerfCounter.QuadPart);
+    /* Check if the value is smaller then before, this means, we somehow
+       missed an interrupt. This is a sign that the timer interrupt
+       is very inaccurate. Probably a virtual machine. */
+    if (CurrentPerfCounter.QuadPart < HalpLastPerfCounter.QuadPart)
+    {
+        /* We missed an interrupt. Assume we will receive it later */
+        CurrentPerfCounter.QuadPart += HalpCurrentRollOver;
+    }
 
     /* Update the last counter value */
     HalpLastPerfCounter = CurrentPerfCounter;
+
+    /* Restore previous irql */
+    if (OldIrql < DISPATCH_LEVEL) KfLowerIrql(OldIrql);
 
     /* Return the result */
     return CurrentPerfCounter;
