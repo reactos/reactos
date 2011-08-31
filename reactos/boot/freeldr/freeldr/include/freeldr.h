@@ -121,8 +121,4 @@
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);
 
-/* Special hack for ReactOS setup OS type */
-VOID LoadReactOSSetup(VOID);
-VOID LoadReactOSSetup2(VOID);
-
 #endif  // defined __FREELDR_H

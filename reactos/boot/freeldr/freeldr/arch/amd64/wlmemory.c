@@ -22,6 +22,9 @@
 PHARDWARE_PTE PxeBase;
 //PHARDWARE_PTE HalPageTable;
 
+PVOID GdtIdt;
+ULONG PcrBasePage;
+ULONG TssBasePage;
 
 /* FUNCTIONS **************************************************************/
 
@@ -43,8 +46,8 @@ MempAllocatePageTables()
 	/* Zero the PML4 */
 	RtlZeroMemory(PxeBase, PAGE_SIZE);
 
-	/* The page tables are located at 0xfffff68000000000 
-	 * We create a recursive self mapping through all 4 levels at 
+	/* The page tables are located at 0xfffff68000000000
+	 * We create a recursive self mapping through all 4 levels at
 	 * virtual address 0xfffff6fb7dbedf68 */
 	PxeBase[VAtoPXI(PXE_BASE)].Valid = 1;
 	PxeBase[VAtoPXI(PXE_BASE)].Write = 1;
@@ -117,7 +120,7 @@ MempIsPageMapped(PVOID VirtualAddress)
 {
 	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
     ULONG Index;
-    
+
     Index = VAtoPXI(VirtualAddress);
     if (!PxeBase[Index].Valid)
         return FALSE;
@@ -161,7 +164,7 @@ BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
 				IN ULONG NumberOfPages)
 {
-    DPRINTM(DPRINT_WINDOWS,">>> MempSetupPaging(0x%lx, %ld, %p)\n", 
+    DPRINTM(DPRINT_WINDOWS,">>> MempSetupPaging(0x%lx, %ld, %p)\n",
             StartPage, NumberOfPages, StartPage * PAGE_SIZE + KSEG0_BASE);
 
     /* Identity mapping */
@@ -247,7 +250,7 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
 }
 
 VOID
-WinLdrSetupGdt(PVOID GdtBase, ULONG64 TssBase)
+Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 {
 	PKGDTENTRY64 Entry;
 	KDESCRIPTOR GdtDesc;
@@ -295,7 +298,7 @@ WinLdrSetupGdt(PVOID GdtBase, ULONG64 TssBase)
 }
 
 VOID
-WinLdrSetupIdt(PVOID IdtBase)
+Amd64SetupIdt(PVOID IdtBase)
 {
 	KDESCRIPTOR IdtDesc, OldIdt;
 
@@ -316,9 +319,9 @@ WinLdrSetupIdt(PVOID IdtBase)
 }
 
 VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
+WinLdrSetProcessorContext(void)
 {
-    DPRINTM(DPRINT_WINDOWS, "WinLdrSetProcessorContext %p\n", Pcr);
+    DPRINTM(DPRINT_WINDOWS, "WinLdrSetProcessorContext\n");
 
 	/* Disable Interrupts */
 	_disable();
@@ -333,10 +336,10 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 	GdtIdt = (PVOID)((ULONG64)GdtIdt + KSEG0_BASE);
 
     /* Create gdt entries and load gdtr */
-    WinLdrSetupGdt(GdtIdt, Tss);
+    Amd64SetupGdt(GdtIdt, KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
     /* Copy old Idt and set idtr */
-    WinLdrSetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
+    Amd64SetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
 
     /* LDT is unused */
 //    __lldt(0);
@@ -346,6 +349,59 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 
     DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
 }
+
+WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+	ULONG TssSize;
+	ULONG_PTR KernelStack;
+	ULONG_PTR Pcr = 0;
+	ULONG_PTR Tss = 0;
+	ULONG BlockSize, NumPages;
+
+	LoaderBlock->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
+	LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
+
+	/* Allocate 2 pages for PCR */
+	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
+	PcrBasePage = Pcr >> MM_PAGE_SHIFT;
+	if (Pcr == 0)
+	{
+		UiMessageBox("Can't allocate PCR\n");
+		return;
+	}
+	RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
+
+	/* Allocate a kernel stack */
+	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
+
+	/* Allocate TSS */
+	BlockSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
+	Tss = (ULONG_PTR)MmAllocateMemoryWithType(BlockSize, LoaderMemoryData);
+	TssBasePage = Tss >> MM_PAGE_SHIFT;
+
+	/* Allocate space for new GDT + IDT */
+	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
+	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
+	*GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
+
+	if (*GdtIdt == NULL)
+	{
+		UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+		return;
+	}
+
+	/* Zero newly prepared GDT+IDT */
+	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
+
+    /* Write initial context information */
+    LoaderBlock->KernelStack = (ULONG_PTR)KernelStack;
+    LoaderBlock->KernelStack += KERNEL_STACK_SIZE;
+    LoaderBlock->Prcb = (ULONG_PTR)&Pcr->Prcb;
+    LoaderBlock->Process = (ULONG_PTR)PdrPage->InitialProcess;
+    LoaderBlock->Thread = (ULONG_PTR)PdrPage->InitialThread;
+
+}
+
 
 VOID
 MempDump()

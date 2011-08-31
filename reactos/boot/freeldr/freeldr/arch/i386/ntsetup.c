@@ -33,7 +33,7 @@ extern ULONG_PTR i386AlignmentCheck; // exc 17
 #endif
 
 /* FUNCTIONS **************************************************************/
-
+#if 0
 // Last step before going virtual
 void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
                       PVOID *GdtIdt,
@@ -81,3 +81,4 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Zero newly prepared GDT+IDT */
 	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
 }
+#endif

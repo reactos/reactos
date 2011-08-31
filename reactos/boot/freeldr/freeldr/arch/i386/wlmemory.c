@@ -13,9 +13,6 @@
 #include <ndk/asm.h>
 #include <debug.h>
 
-extern ULONG TotalNLSSize;
-extern ULONG LoaderPagesSpanned;
-
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
@@ -40,6 +37,10 @@ PUCHAR PhysicalPageTablesBuffer;
 PUCHAR KernelPageTablesBuffer;
 ULONG PhysicalPageTables;
 ULONG KernelPageTables;
+
+ULONG PcrBasePage;
+ULONG TssBasePage;
+PVOID GdtIdt;
 
 /* FUNCTIONS **************************************************************/
 
@@ -244,7 +245,7 @@ WinLdrpMapApic()
 }
 
 BOOLEAN
-WinLdrMapSpecialPages(ULONG PcrBasePage)
+WinLdrMapSpecialPages(void)
 {
 
 	//VideoDisplayString(L"Hello from VGA, going into the kernel\n");
@@ -270,15 +271,74 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
     return TRUE;
 }
 
+void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+	ULONG TssSize;
+	//ULONG TssPages;
+	ULONG_PTR Pcr = 0;
+	ULONG_PTR Tss = 0;
+	ULONG BlockSize, NumPages;
+
+	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
+	LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
+
+	/* Allocate 2 pages for PCR */
+	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
+	PcrBasePage = Pcr >> MM_PAGE_SHIFT;
+
+	if (Pcr == 0)
+	{
+		UiMessageBox("Can't allocate PCR\n");
+		return;
+	}
+
+	/* Allocate TSS */
+	TssSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
+	//TssPages = TssSize / MM_PAGE_SIZE;
+
+	Tss = (ULONG_PTR)MmAllocateMemoryWithType(TssSize, LoaderMemoryData);
+
+	TssBasePage = Tss >> MM_PAGE_SHIFT;
+
+	/* Allocate space for new GDT + IDT */
+	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
+	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
+	GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
+
+	if (GdtIdt == NULL)
+	{
+		UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+		return;
+	}
+
+	/* Zero newly prepared GDT+IDT */
+	RtlZeroMemory(GdtIdt, NumPages << MM_PAGE_SHIFT);
+
+	// Before we start mapping pages, create a block of memory, which will contain
+	// PDE and PTEs
+	if (MempAllocatePageTables() == FALSE)
+	{
+	    // FIXME: bugcheck
+	}
+
+	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
+    WinLdrMapSpecialPages();
+}
+
 
 VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
+WinLdrSetProcessorContext(void)
 {
 	GDTIDT GdtDesc, IdtDesc, OldIdt;
 	PKGDTENTRY	pGdt;
 	PKIDTENTRY	pIdt;
 	USHORT Ldt = 0;
+	ULONG Pcr;
+	ULONG Tss;
 	//ULONG i;
+
+	Pcr = KIP0PCRADDRESS;
+	Tss = KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT);
 
 	DPRINTM(DPRINT_WINDOWS, "GDtIdt %p, Pcr %p, Tss 0x%08X\n",
 		GdtIdt, Pcr, Tss);

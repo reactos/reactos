@@ -42,40 +42,10 @@ PCHAR  MemTypeDesc[]  = {
     "BBTMemory         " // == Bad
     };
 
-VOID
-WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-
-VOID
-MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
-                   ULONG Type);
-VOID
+static VOID
 WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                        IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor);
 
-VOID
-WinLdrRemoveDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR Descriptor);
-
-VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG_PTR Pcr, IN ULONG_PTR Tss);
-
-BOOLEAN
-MempAllocatePageTables();
-
-BOOLEAN
-MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages);
-
-BOOLEAN
-WinLdrMapSpecialPages(ULONG PcrBasePage);
-
-VOID
-MempUnmapPage(ULONG Page);
-
-VOID
-MempDump();
 
 /* GLOBALS ***************************************************************/
 
@@ -188,7 +158,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 		return;
 	}
-	
+
 	//
 	// Add descriptor
 	//
@@ -197,7 +167,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	//
 	// Map it (don't map low 1Mb because it was already contiguously
-	// mapped in WinLdrTurnOnPaging)
+	// mapped in WinLdrPrepareMemoryLayout)
 	//
 	if (BasePage >= 0x100)
 	{
@@ -215,10 +185,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 #endif
 
 BOOLEAN
-WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG PcrBasePage,
-                   ULONG TssBasePage,
-                   PVOID GdtIdt)
+WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 	ULONG i, PagesCount, MemoryMapSizeInPages;
 	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
@@ -248,11 +215,6 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	// Then it finds the best place for non-paged pool:
 	// StartPde C0300F70, EndPde C0300FF8, NumberOfPages C13, NextPhysPage 3AD
 	//
-
-	// Before we start mapping pages, create a block of memory, which will contain
-	// PDE and PTEs
-	if (MempAllocatePageTables() == FALSE)
-		return FALSE;
 
 	// Allocate memory for memory allocation descriptors
 	Mad = MmHeapAlloc(sizeof(MEMORY_ALLOCATION_DESCRIPTOR) * 1024);
@@ -350,15 +312,10 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return;
 	}*/
 
-	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
-	WinLdrMapSpecialPages(PcrBasePage);
-
-	//Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
-
 	// Unmap what is not needed from kernel page table
 	MempDisablePages();
 
-	// Fill the memory descriptor list and 
+	// Fill the memory descriptor list and
 	//PrepareMemoryDescriptorList();
 	DPRINTM(DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n");
 	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
@@ -366,9 +323,6 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 #if DBG
     MempDump();
 #endif
-
-	// Set processor context
-	WinLdrSetProcessorContext(GdtIdt, KIP0PCRADDRESS, KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
 	// Zero KI_USER_SHARED_DATA page
 	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
@@ -378,7 +332,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 // Two special things this func does: it sorts descriptors,
 // and it merges free ones
-VOID
+static VOID
 WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                        IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor)
 {
