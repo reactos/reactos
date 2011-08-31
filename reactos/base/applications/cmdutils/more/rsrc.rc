@@ -9,6 +9,7 @@
 #include "lang/it-IT.rc"
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
+#include "lang/ro-RO.rc"
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 

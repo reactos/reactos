@@ -1,0 +1,23 @@
+ /* 
+ * FILE:             base/applications/cmdutils/find/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea ªtefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-20  initial romanian translation
+ */
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FIND: Tipãreºte toate rândurile unui fiºier ce conþin un ºir.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""ºir"" [ fiºier... ]\n\
+    /C  Numãrã liniile ce conþin ºirul.\n\
+    /I  Ignorã diferenþele între majuscule ºi minuscule.\n\
+    /N  Numãrã rândurile afiºate, începând cu 1.\n\
+    /V  Tipãreºte rândurile ce nu conþin ºirul."
+
+IDS_NO_SUCH_FILE, "FIND: Fiºierul %s nu existã!\n"
+
+IDS_CANNOT_OPEN, "FIND: Fiºierul %s nu poate fi deschis!\n"
+
+END

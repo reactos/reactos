@@ -1,0 +1,35 @@
+/* 
+ * FILE:             base/applications/cmdutils/doskey/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea ¸tefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-20  initial romanian translation (OEM 852)
+ */
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "GestioneazÇ starea de editare a liniei de comandÇ, istoric ­i macrodefiniîii.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe]\n\
+       [/HISTORY] [/LISTSIZE=dimensiune] [/REINSTALL]\n\
+       [/MACROS[:exe | :ALL]] [/MACROFILE=fi­ier] [nume_macro=[text]]\n\
+\n\
+  /INSERT                 ActiveazÇ modul de inserîie.\n\
+  /OVERSTRIKE             DezactiveazÇ modul de inserîie.\n\
+  /EXENAME=exename        Stabile­te programul de vizualizare/modificare a\n\
+                          istoricului ­i a macrodefiniîiilor.\n\
+                          Implicit este cmd.exe.\n\
+  /HISTORY                Afi­eazÇ istoricul comenzilor.\n\
+  /LISTSIZE=dimensiune    Stabile­te numÇrul de comenzi reîinute Œn istoric.\n\
+  /REINSTALL              CurÇîÇ istoricul comenzilor.\n\
+  /MACROS                 Afi­eazÇ macrodefiniîiile.\n\
+  /MACROS:exename         Afi­eazÇ macrodefiniîiile pentru un program anume.\n\
+  /MACROS:ALL             Afi­eazÇ macrodefiniîiile pentru toate programele.\n\
+  /MACROFILE=fi­ier       ×ncarcÇ macrodefiniîiile din fi­ier.\n\
+  nume_macro              Numele macrodefiniîiei Œn curs de creare.\n\
+  text                    Textul Œnlocuitor dintr-o macrodefiniîie.\n"
+
+IDS_INVALID_MACRO_DEF, "Macrodefiniîie invalidÇ: %s\n"
+
+END

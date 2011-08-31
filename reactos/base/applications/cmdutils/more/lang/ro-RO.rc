@@ -1,0 +1,22 @@
+ /* 
+ * FILE:             base/applications/cmdutils/more/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea ªtefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-20  initial romanian translation
+ */
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_USAGE, "Afiºeazã date pe ecran, paginã-cu-paginã.\n\n\
+  MORE < [Unitate:][Cale]Nume fiºier\n\
+  Comandã | MORE \n\
+  MORE [Unitate:][Cale]Nume fiºier\n\n\
+  [Unitate:][Cale]Nume fiºier    Fiºierul al cãrui conþinut va fi afiºat.\n\
+  Comandã                        Comanda a cãrei ieºire va fi afiºatã.\n\n\
+  La vederea sugestiei ""-- Continuã --"" veþi apãsa o tastã pentru afiºarea\n\
+  urmãtoarei pagini.\n"
+
+  IDS_CONTINUE, " -- Continuã (100%) -- "
+  IDS_FILE_ACCESS, "Fiºierul %s nu poate fi accesat!"
+END

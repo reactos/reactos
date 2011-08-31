@@ -1,0 +1,764 @@
+/*
+ * FILE:         base/shell/cmd/lang/ro-RO.rc
+ *               ReactOS Project (http://www.reactos.org)
+ * AUTHOR:       Magnus Olsen, 2005
+ * TRANSLATOR:   Fulea ªtefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG:   2011-08-25  initial translation
+  */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_ASSOC_HELP,    "Modificã asocierile extensiilor de fiºiere.\n\n\
+assoc [.ext[=[tip_fiºier]]]\n\
+\n\
+assoc (afiºeazã toate asocierile)\n\
+assoc .ext (afiºeazã o anumitã asociere)\n\
+assoc .ext= (eliminã o anumitã asociere)\n\
+assoc .ext=tip_fiºier (adaugã o nouã asociere)\n"
+
+STRING_ATTRIB_HELP,    "Afiºeazã sau modificã atributele de fiºiere.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fiºier ...\n\
+       [/S [/D]]\n\n\
+  +   Consimte atributul\n\
+  -   Reprobã atributul\n\
+  R   Atributul fiºierelor protejate la scriere\n\
+  A   Atributul fiºierelor pentru arhivare\n\
+  S   Atributul fiºierelor de sistem\n\
+  H   Atributul fiºierelor ascunse\n\
+  /S  Aplicã ºi pentru fiºierele din subdirectoare\n\
+  /D  Aplicã ºi pentru directoare\n\n\
+Tastaþi ATTRIB fãrã argumente pentru afiºarea atributelor pentru\n\
+toate fiºierele.\n"
+
+STRING_ALIAS_HELP,  "Instituie, destituie sau afiºeazã alias.\n\n\
+ALIAS [alias=[comandã]]\n\n\
+  alias    Numele pentru alias.\n\
+  comandã  Textul de substituþie dintr-un alias.\n\n\
+Pentru a afiºa toate alias:\n\
+  ALIAS\n\n\
+Pentru a institui sau a înlocui un alias:\n\
+  ALIAS da=dir a:\n\n\
+Pentru a destitui un alias:\n\
+  ALIAS da=\n"
+
+STRING_BEEP_HELP, "Semnalizeazã utilizând difuzorul intern.\n\nBEEP\n"
+
+STRING_CALL_HELP, "Apeleazã un program de comenzi din interiorul unui alt program de comenzi.\n\n\
+CALL [unitate:][cale]fiºier [argument]\n\n\
+  argument      Informaþia necesarã programului de comenzi apelat,\n\
+                transmis la linia de comandã.\n"
+
+STRING_CD_HELP,   "Schimbã directorul curent sau afiºeazã numele acestuia.\n\n\
+CHDIR [/D][unitate:][cale]\n\
+CHDIR[..|.]\n\
+CD [/D][unitate:][cale]\n\
+CD[..|.]\n\n\
+  ..   directorul pãrinte\n\
+  .    directorul curent\n\
+  /D   Schimbã odatã cu directorul ºi unitatea curentã.\n\n\
+Tastaþi CD fãrã argumente pentru a afiºa unitatea ºi directorul curent.\n\
+Tastaþi CD unitate: pentru a afiºa conþinutul directorului curent\n\
+al unitãþii specificate.\n"
+
+STRING_CHCP_HELP,   "Afiºeazã sau stabileºte numãrul codificãrii curente de paginã.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Numãrul codificãrii de paginã specificat.\n\n\
+Tastaþi CHCP fãrã argumente pentru a afiºa numãrul codificãrii curente.\n"
+
+STRING_CHOICE_HELP, "Cere utilizatorului sã aleagã una din mai multe opþiuni.\n\n\
+CHOICE  [/C[:]opþiuni][/N][/S][/T[:]implicit,nn][text]\n\n\
+  /C[:]opþiuni       Specificã tastele permise. Implicit sunt D ºi N.\n\
+  /N                 Ascunde tastele permise ºi ? de la sfârºitul interogãrii.\n\
+  /S                 Distinge diferenþele între majuscule ºi minuscule.\n\
+  /T[:]implicit,nn   Alege «implicit» dupã «nn» secunde.\n\
+  text               Textul interogãrii.\n\n\
+ERRORLEVEL este calibrat pe deplasamentul tastei opþiunii alese de utilizator.\n"
+
+STRING_CLS_HELP, "Curãþã ecranul.\n\nCLS\n"
+
+STRING_CMD_HELP1, "\nComenzile interne disponibile:\n"
+
+STRING_CMD_HELP2, "\nFuncþionalitãþile disponibile:"
+
+STRING_CMD_HELP3,"  [alias]"
+
+STRING_CMD_HELP4,"  [istoric]"
+
+STRING_CMD_HELP5,"  [completarea numelui de fiºier unix]"
+
+STRING_CMD_HELP6,"  [stiva de directoare]"
+
+STRING_CMD_HELP7,"  [redirecþionãri ºi conectãri]"
+
+STRING_CMD_HELP8, "Deschide o nouã instanþã a interpretorului de comenzi ReactOS.\n\n\
+CMD [/[C|K] comandã][/P][/Q][/T:culori]\n\n\
+  /C comandã  Executã comanda specificatã, apoi închide instanþa.\n\
+  /K comandã  Executã comanda specificatã menþinând apoi instanþa deschisã.\n\
+  /P          Permanentizeazã CMD ºi executã «autoexec.bat»\n\
+              (nu poate fi închis).\n\
+  /T:culori   Stabileºte culorile pentru text ºi fundal\n\
+              (a se vedea comanda COLOR).\n"
+
+STRING_COLOR_HELP1, "Stabileºte culorile implicite pentru text ºi fundal.\n\n\
+COLOR [attr [/-F]] \n\n\
+  attr        Atributele de culoare pentru consolã\n\
+  /-F         Omite umplerea spaþiului gol al consolei\n\n\
+Existã trei moduri de formulare a atributelor de culoare:\n\
+1) nume_englez ON nume_englez\n\
+   (sunt suficiente doar primele trei litere per cuvânt)\n\
+2) cod_zecimal ON cod_zecimal\n\
+3) o combinaþie din douã caractere (coduri) hexazecimale alãturate\n\n\
+Culorile disponibile:\n\
+CULOARE            ZEC.   HEX.  NUME ENGLEZ\n\
+negru               0      0    Black\n\
+albastru naval      1      1    Blue\n\
+verde               2      2    Green\n\
+cian                3      3    Cyan\n\
+bordo               4      4    Red\n\
+purpuriu patriarh   5      5    Magenta\n\
+mãsliniu            6      6    Yellow\n\
+argintiu            7      7    White\n\
+cenuºiu             8      8    Gray (Bright black)\n\
+albastru primar     9      9    Bright Blue\n\
+verde deschis       10     A    Bright Green\n\
+aqua                11     B    Bright Cyan\n\
+roºu                12     C    Bright Red\n\
+fuchsia             13     D    Bright Magenta\n\
+galben              14     E    Bright Yellow\n\
+alb                 15     F    Bright White\n\n\
+Exemple:\n\
+COLOR green ON bright white\n\
+COLOR 0 ON 7\n\
+COLOR 8F /-F\n"
+
+STRING_COPY_HELP1,  "Suprascrieþi «%s» (Da/Nu/Toate)? "
+
+STRING_COPY_HELP2, "Copie unul sau mai multe fiºiere într-un alt loc.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] sursã [/A|/B]\n\
+     [+ sursã [/A|/B] [+ ...]] [destinaþie [/A|/B]]\n\n\
+  sursã       Fiºierul sau fiºierele de copiat.\n\
+  /A           Specificã fiºier de tip ASCII.\n\
+  /B           Specificã fiºier binar.\n\
+  destinaþie   Specificã directorul ºi/sau numele asociat pentru fiºier(e).\n\
+  /V           Verificã fiºierele copiate.\n\
+  /Y           Suprimã cererile de confimare a spurascrierilor.\n\
+  /-Y          Emite cereri de confirmare pentru suprascrieri.\n\n\
+Argumentul /Y poate fi prezent în variabila de mediu COPYCMD.\n"
+
+STRING_DATE_HELP1, "\nIntroduceþi o nouã datã (ll%czz%caaaa): "
+
+STRING_DATE_HELP2, "\nIntroduceþi o nouã datã (zz%cll%caaaa): "
+
+STRING_DATE_HELP3, "\nIntroduceþi o nouã datã (aaaa%cll%czz): "
+
+STRING_DATE_HELP4, "Afiºeazã sau stabileºte data.\n\n\
+DATE [/T][datã]\n\n\
+  /T    doar afiºeazã\n\n\
+Tastaþi DATE fãrã argumente pentru a afiºa data curentã urmatã de\n\
+cerea modificãrii ei.  Confirmaþi aceiaºi datã apãsând ENTER.\n"
+
+STRING_DEL_HELP1,  "ªterge unul sau mai multe fiºiere.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fiºier ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fiºier ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fiºier ...\n\n\
+  fiºier    Numele fiºierului (sau fiºierelor) specificat(e) pentru ºtergere.\n\n\
+  /N    Nimic.\n\
+  /P    Cere confirmare pentru ºtergerea fiecãrui fiºier.\n\
+  /T    Afiºeazã numãrul total de fiºiere ºterse.\n\
+  /Q    Suprimã orice mesaj.\n\
+  /W    Suprascrie fiºierele cu informaþii aleatoare înainte de a le ºterge.\n\
+  /Y    Preconfirmã toate ºtergerile.\n\
+  /F    ªterge ºi fiºierelor ascunse, de sistem sau protejate la scriere.\n\
+  /S    ªterge fiºierul specificat din toate subdirectoarele.\n\
+  /A    Selecteazã fiºierele dupã atribute.\n\
+        Atribute:\n\
+          R   Protejat la scriere\n\
+          S   Sistem\n\
+          A   Arhivabil\n\
+          H   Ascuns\n\
+          -   Prefix de negaþie\n"
+
+STRING_DEL_HELP2, "Toate fiºierele din director vor fi ºterse!\nConfirmaþi ºtergerea (Da/Nu)?"
+STRING_DEL_HELP3, "    %lu fiºier(e) ºters(e)\n"
+STRING_DEL_HELP4, "    %lu fiºier(e) ºters(e)\n"
+
+STRING_DELAY_HELP, "Pauzã pentru n secunde sau milisecunde.\n\
+DELAY [/m]n\n\n\
+  /m          Specificã faptul cã «n» sunt milisecunde\n\
+              altfel «n» sunt considerate secunde.\n"
+
+STRING_DIR_HELP1, "DIR [unitate:][cale][fiºier] [/A[[:]atribute]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]ordonare]] [/P] [/Q] [/S] [/T[[:]timp]] [/W] [/X] [/4]\n\n\
+  [unitate:][cale][fiºier]\n\
+              Specificã unitatea, directorul ºi/sau fiºierele de enumerat.\n\n\
+  /A          Afiºeazã fiºierele dupã atributele specificate.\n\
+  atribute      D  Directoare             R  Fiºiere protejate la scriere\n\
+                H  Fiºiere ascunse        A  Fiºiere arhivabile\n\
+                S  Fiºiere de sistem      -  Prefix pentru negaþie\n\
+  /B          Preferã format minim (fãrã sumar sau informaþii de titlu).\n\
+  /C          Foloseºte separatorul de mie pentru dimensiunile fiºierelor.\n\
+              Acest argument e implicit.  Folosiþi /-C pentru dezactivare.\n\
+  /D          La fel ca /W însã enumerarea e ordonatã dupã coloane.\n\
+  /L          Foloseºte minuscule.\n\
+  /N          Preferã formatul lung, cu numele de fiºiere în extrema dreaptã.\n\
+  /O          Enumerare ordonatã dupã numele fiºierelor/dosarelor.\n\
+  ordonare      N  Dupã nume (alfabeticã)\n\
+                S  Dupã dimensiune (de la mic la mare)\n\
+                E  Dupã extensie (alfabeticã)\n\
+                D  Dupã datã/orã (de la cele mai vechi la cele mai noi)\n\
+                G  Grupeazã mai întâi directoarele\n\
+                -  Prefix pentru inversarea ordinii\n\
+  /P          Pauzã dupã un ecran de informaþii.\n\
+  /Q          Afiºeazã posesorul fiºierului.\n\
+  /S          Afiºeazã fiºierele din directorul specificat ºi\n\
+              din toate subdirectoarele sale.\n\
+  /T          Determinã care timp este afiºat sau folosit la ordonare\n\
+  timp          C  De creare\n\
+                A  Ultimei accesãri\n\
+                W  Ultimei scrieri\n\
+  /W          Extinde enumerarea pe toatã lãþimea ecranului.\n\
+  /X          Afiºeazã nume scurte, de 8 caractere pentru nume ºi 3 caractere\n\
+              pentru extensii. Formatul este cel al argumentului /N cu numele\n\
+              scurt inclus înaintea numelui lung. Nu sunt generate nume scurte\n\
+              pentru numele lungi care se încadreazã în formatul 8.3\n\
+  /4          Afiºeazã anii pe petru cifre.\n\n\
+Aceste argumente pot fi prezente în variabila de mediu DIRCMD. Puteþi nega\n\
+argumentele curente adãugând prefixul «-».\n\
+De exemplu /-W.\n"
+
+STRING_DIR_HELP2, " Volumul unitãþii %c este etichetat ca %s\n"
+STRING_DIR_HELP3, " Volumul unitãþii %c nu este etichetat.\n"
+STRING_DIR_HELP4, " Numãrul de serie al volumului este %04X-%04X\n"
+STRING_DIR_HELP5, "\n     Numãrul de fiºiere enumerate:\n%16i fiºier(e)% 14s octeþi\n"
+STRING_DIR_HELP6, "%16i dir-re% 15s octeþi liberi\n"
+STRING_DIR_HELP7, "\n Directorul %s\n\n"
+STRING_DIR_HELP8, "%16i fiºiere% 14s octeþi\n"
+
+STRING_DIRSTACK_HELP1, "Înregistreazã directorul curent în stivã, pentru a-l accesa\n\
+ulterior prin comanda POPD, apoi schimbã directorul curent cu cel specificat.\n\n\
+PUSHD [cale | ..]\n\n\
+  cale        Specificã un alt director pentru a-l face director curent."
+
+STRING_DIRSTACK_HELP2, "Schimbã directorul curent cu cel înregistrat de comanda PUSHD.\n\nPOPD"
+
+STRING_DIRSTACK_HELP3, "Afiºeazã conþinutul stivei de directoare.\n\nDIRS"
+
+STRING_DIRSTACK_HELP4, "Stiva de directoare este goalã."
+
+STRING_ECHO_HELP1,  "Afiºeazã un mesaj în ecou, fãrã caracterele finale de sfârºit de rând ºi de\n\
+linie nouã.\n\n\
+  ECHOS mesaj"
+
+STRING_ECHO_HELP2,  "Afiºeazã un mesaj în ecou la ieºirea standard pentru erori.\n\n\
+  ECHOERR mesaj\n\
+  ECHOERR.        afiºeazã un rând gol"
+
+STRING_ECHO_HELP3, "Afiºeazã un mesaj în ecou la ieºirea standard pentru erori,\n\
+fãrã caracterele finale de sfârºit de rând ºi de linie nouã.\n\n\
+  ECHOSERR mesaj"
+
+STRING_ECHO_HELP4, "Afiºeazã mesaje în ecou sau activeazã/dezactiveazã (ON/OFF) afiºarea\n\
+comenzilor în ecou.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [mesaj]\n\
+  ECHO.             afiºeazã un rând gol\n\n\
+Tastaþi ECHO fãrã argumente pentru afiºarea stãrii curente a ecoului.\n"
+
+STRING_ECHO_HELP5, "ECHO: %s\n"
+
+STRING_EXIT_HELP, "Închide interpretorul de comenzi.\n\nEXIT [/b] [cod_de_ieºire]\n\n\
+  /B              Doar pentru ieºirea dintr-un fiºier de comenzi.  \n\
+                  Dacã este executat în afara unui fiºier de comenzi, va\n\
+                  cauza ieºirea din cmd.exe\n\
+  cod_de_ieºire   Valoare atribuitã variabilei ERRORLEVEL la ieºirea din\n\
+                  interpretorul de comenzi.\n"
+
+STRING_FOR_HELP1, "Executã o comandã pentru fiecare fiºier dintr-un grup.\n\n\
+FOR %%variablã IN (grup) DO comandã [argumente]\n\n\
+  %%variablã  Specificã un argument înlocuitor.\n\
+  (grup)     Specificã un grup de unul sau mai multe fiºiere.\n\
+             Sunt permise metacaractere.\n\
+  comandã    Specificã o comandã executatã pentru fiecare fiºier.\n\
+  argumente  Indicã argumente pentru comanda executatã.\n\n\
+Pentru utilizarea comenzii FOR într-un fiºier de comenzi,\n\
+specificaþi %%%%variabilã în loc de %%variabilã.\n"
+
+STRING_FREE_HELP1, "\nVolumul unitãþii %s este etichetat ca %-11s\n\
+Numãrul de serie este %s\n\
+  %16s octeþi pe disc în total\n\
+  %16s octeþi folosiþi\n\
+  %16s octeþi liberi\n"
+
+STRING_FREE_HELP2, "Afiºeazã informaþia unei unitãþi (de stocare).\n\nFREE [unitate: ...]\n"
+
+STRING_IF_HELP1, "Realizeazã execuþia condiþionatã a comenzilor într-un fiºier de comenzi.\n\n\
+  IF [NOT] ERRORLEVEL numãr comandã\n\
+  IF [NOT] ºir1==ºir2 comandã\n\
+  IF [NOT] EXIST fiºier comandã\n\
+  IF [NOT] DEFINED variablã comandã\n\n\
+  NOT               Specificã execuþia comenzii doar dacã\n\
+                    condiþia este nesatisfãcutã.\n\
+  ERRORLEVEL numãr  Determinã o condiþie satisfãcutã dacã ultimul\n\
+                    program executat a rãspuns la ieºire cu un\n\
+                    cod mai mare sau egal cu «numãr».\n\
+  comandã           Comanda specificatã pentru execuþie în cazul în care\n\
+                    condiþia a fost satisfãcutã.\n\
+  ºir1==ºir2        Determinã o condiþie satisfãcutã dacã ºirurile\n\
+                    specificate sunt identice.\n\
+  EXIST fiºier      Determinã o condiþie satisfãcutã în cazul existenþei\n\
+                    fiºierului specificat.\n\
+  DEFINED variablã  Determinã o condiþie satisfãcutã dacã «variabilã»\n\
+                    a fost anterior definitã.\n"
+
+STRING_GOTO_HELP1,  "Executã un salt cãtre o linie etichetatã în interiorul unui fiºier de comenzi.\n\n\
+GOTO etichetã\n\n\
+  etichetã      Specificã un ºir text utilizat ca etichetã în\n\
+                fiºierele de comenzi.\n\n\
+O etichetã se va defini pe un rând întreg, începând cu douã puncte (:)\n"
+
+STRING_LABEL_HELP1, "Afiºeazã sau modificã eticheta unei unitãþi (de stocare).\n\nLABEL [unitate:][etichetã]\n"
+
+STRING_LABEL_HELP2, "Volumul unitãþii %c: este etichetat ca %s\n"
+STRING_LABEL_HELP3, "Volumul unitãþii %c: nu este etichetat.\n"
+STRING_LABEL_HELP4, "Numãrul de serie al volumului este %04X-%04X\n"
+STRING_LABEL_HELP5, "Introduceþi eticheta unitãþii (opþionalã, de 11 caractere), apoi ENTER "
+
+STRING_LOCALE_HELP1, "Ora curentã este"
+
+STRING_MKDIR_HELP,   "Creazã un director.\n\n\
+MD [unitate:]cale\nMKDIR [unitate:]cale\n"
+
+STRING_MKLINK_HELP, "Creatã o legãturã obiect al sistemului de fiºiere.\n\n\
+MKLINK [/D | /H | /J] þinta numelui legãturii\n\n\
+  /D  Þinta legãturii simbolice este un director.\n\
+  /H  Creazã legãturã permanentã.\n\
+  /J  Creazã o joncþiune de director.\n\n\
+Dacã nu sunt specificate nici /H ºi nici /J ca argumente, va fi creatã o\n\
+legãturã simbolicã."
+
+STRING_MEMMORY_HELP1, "Afiºeazã cantitatea de memorie a sistemului.\n\nMEMORY\n"
+
+STRING_MEMMORY_HELP2, "\n  %12s%% nivel de uzilizare.\n\n\
+  %13s octeþi în total în memoria fizicã (RAM).\n\
+  %13s octeþi disponibili în memorie fizicã (RAM).\n\n\
+  %13s octeþi în total în fiºierul de paginare.\n\
+  %13s octeþi disponibili în fiºierul de paginare.\n\n\
+  %13s octeþi în total în memoria virtualã.\n\
+  %13s octeþi disponibili în memoria virtualã.\n"
+
+STRING_MISC_HELP1, "Tastaþi pentru a continua...\n"
+
+STRING_MOVE_HELP1, "Suprascrieþi «%s» (Da/Nu/Toate)? "
+
+STRING_MOVE_HELP2, "Mutã sau redenumeºte fiºiere ºi directoare.\n\n\
+Pentru a muta unul sau mai multe fiºiere:\n\
+MOVE [/N][unitate:][cale]fiºier[,...] destinaþie\n\n\
+Pentru a redenumi un director:\n\
+MOVE [/N][unitate:][cale]nume_director_1 nume_director_2\n\n\
+  [unitate:][cale]fiºier   Specicã locul ºi numele fiºierului sau fiºierelor\n\
+                           pe care doriþi sã le mutaþi.\n\
+  /N                    Nimic. Executã orice în afarã de mutarea fiºiere\n\
+                        sau directoare.\n\n\
+Limitãri curente:\n\
+  - Nu se pot muta fiºiere sau directoare de pe o unitate de stocare pe alta.\n"
+
+STRING_MSGBOX_HELP, "afiºeazã o fereastrã de dialog ºi obþine rãspunsul utilizatorului\n\n\
+MSGBOX tip ['titlu'] interogare\n\n\
+tip           butoanele afiºate\n\
+              valorile posibile sunt:\n\
+                OK - fereastrã cu un singur buton,\n\
+                OKCANCEL - fereastrã de confirmare/anulare,\n\
+                YESNO - fereastrã de aprobare/respingere,\n\
+                YESNOCANCEL - fereastrã de aprobare/respingere/anulare\n\
+titu          titlul ferestrei de dialog\n\
+interogare    textul interogãrii, afiºat în fereastra de dialog\n\n\n\
+Valoarea variabilei de mediu ERRORLEVEL este datã de rãspunsul utilizatorului:\n\n\
+YES  :  10    |  NO      :  11\n\
+OK   :  10    |  CANCEL  :  12\n"
+
+STRING_PATH_HELP1, "Afiºeazã sau stabileºte cãile cãutate pentru fiºierele executabile.\n\n\
+PATH [[unitate:]cale[;...]]\nPATH ;\n\n\
+Tastaþi PATH ; pentru a curãþa toate cãile de cãutare ºi a impune mediul de\n\
+comandã sã caute doar în directorul curent.\n\
+Tastaþi PATH fãrã argumente pentru a afiºa cãile curente.\n"
+
+STRING_PROMPT_HELP1, "Modificã aspectul liniei de comandã.\n\n\
+PROMPT [text]\n\n\
+  text    Specificã textul liniei de comandã a consolei.\n\n\
+ªirul «text» poate fi format din caractere normale plus câteva coduri speciale:\n\n\
+  $A   & (ampersand)\n\
+  $B   | (linie verticalã)\n\
+  $C   ( (parantezã stânga)\n\
+  $D   Data curentã\n\
+  $E   Codul Escape (codul ASCII nr 27)\n\
+  $F   ) (parantezã dreapta)\n\
+  $G   > (semnul mai mare decât)\n\
+  $H   Backspace (ºtergerea caracterului precedent)\n\
+  $L   < (semnul mai mic decât)\n\
+  $N   Unitatea de stocare curentã\n\
+  $P   Unitatea de stocare ºi calea curentã\n\
+  $Q   = (semnul egal)\n\
+  $T   Ora curentã\n\
+  $V   Numãrul versiunii SO\n\
+  $_   Sfârºit de linie ºi rând nou\n\
+  $$   $ (semnul dolar)\n"
+
+STRING_PAUSE_HELP1, "Opreºte execuþia unui fiºier de comenzi ºi afiºeazã urmãtorul mesaj:\n\
+«Tastaþi pentru a continua...» sau un alt mesaj definit.\n\n\
+PAUSE [mesaj]\n"
+
+STRING_PROMPT_HELP2, "  $+   Afiºeazã adâncimea curentã a stivei de directoare\n"
+
+STRING_PROMPT_HELP3, "\nTastaþi PROMPT fãrã argumente pentru a readuce consola în starea implicitã.\n"
+
+STRING_REM_HELP, "Începe o linie de comentariu într-un fiºier de comenzi.\n\nREM [comentariu]\n"
+
+STRING_RMDIR_HELP,   "ªterge un director.\n\n\
+RMDIR [unitate:]cale\nRD [unitate:]cale\n\
+  /S    ªterge toate fiºierele ºi directoarele þintã.\n\
+  /Q    Omite cererile de confirmare.\n"
+STRING_RMDIR_HELP2,	"Directorul nu este gol!\n"
+
+STRING_REN_HELP1, "Redenumeºte un fiºier/director sau fiºiere/directoare.\n\n\
+RENAME [/E /N /P /Q /S /T] nume_vechi ... nume_nou\n\
+REN [/E /N /P /Q /S /T] nume_vechi ... nume_nou\n\n\
+  /E    Fãrã mesaje de eroare.\n\
+  /N    Nimic.\n\
+  /P    Cere confirmare înaintea redenumirii fiecãrui fiºier.\n\
+        (Neimplementat încã!)\n\
+  /Q    Suprimã mesajele.\n\
+  /S    Redenumeºte subdirectoarele.\n\
+  /T    Afiºeazã numãrul total de fiºiere redenumite.\n\n\
+Reþineþi cã nu poate fi specificatã o nouã unitate sau cale pentru destinaþie.\n\
+Pentru o destinaþie diferitã utilizaþi comanda MOVE.\n"
+
+STRING_REN_HELP2, "    %lu fiºier redenumit\n"
+
+STRING_REN_HELP3, "    %lu fiºiere redenumite\n"
+
+STRING_REPLACE_HELP1, "Înlocuieºte fiºiere.\n\n\
+REPLACE [unitate1:][cale1]fiºier [unitate2:][cale2] [/A] [/P] [/R] [/W]\n\
+REPLACE [unitate1:][cale1]fiºier [unitate2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [unitate1:][cale1]fiºier Specificã fiºierul sau fiºierele sursã.\n\
+  [unitate2:][cale2]       Specificã directorul unde vor fi înlocuite fiºiere.\n\
+  /A                       Adaugã fiºiere noi în directorul destinaþie. Nu se\n\
+                           poate folosi cu argumentele /S sau /U\n\
+  /P                       Cere confirmare înaintea înlocuirii unui fiºier sau\n\
+                           a adãugãrii unui fiºier sursã.\n\
+  /R                       Înlocuieºte atât fiºierele neprotejate, cât ºi cele\n\
+                           protejate la scriere.\n\
+  /S                       Înlocuieºte fiºierele în toate subdirectoarele\n\
+                           directorului destinaþie. Nu se poate folosi cu\n\
+                           argumentul /A.\n\
+  /W                       Aºteaptã inserþia unui disc înainte de a începe.\n\
+  /U                       Înlocuieºte (actualizeazã) doar fiºierele mai vechi\n\
+                           decât fiºierele sursã. Nu se poate folosi cu /A\n"
+
+STRING_REPLACE_HELP2, "Este necesarã calea sursã\n"
+
+STRING_REPLACE_HELP3, "Nu a fost înlocuit nici un fiºier\n"
+
+STRING_REPLACE_HELP4, "A(u) fost înlocuit(e) %lu fiºier(e)\n"
+
+STRING_REPLACE_HELP5, "Înlocuire «%s»\n"
+
+STRING_REPLACE_HELP6, "Înlocuieºte «%s»\n"
+
+STRING_REPLACE_HELP7, "Nu au fost adãugate fiºiere\n"
+
+STRING_REPLACE_HELP8, "A(u) fost adãugat(e) %lu fiºier(e)\n"
+
+STRING_REPLACE_HELP9, "Adaugã «%s» (Da/Nu) "
+
+STRING_REPLACE_HELP10, "Înlocuieºte «%s» (Da/Nu) "
+
+STRING_REPLACE_HELP11, "Adãugare «%s»\n"
+
+
+STRING_SHIFT_HELP, "Modificã poziþia argumentelor înlocuibile într-un fiºier de comenzi.\n\n\
+SHIFT [DOWN]\n"
+
+STRING_SCREEN_HELP, "Mutã cursorul ºi opþional afiºeazã textul\n\n\
+SCREEN rând coloanã [text]\n\n\
+  rând        rândul la care e mutat cursorul\n\
+  coloanã     coloana la care e mutat cursorul\n"
+
+STRING_SET_HELP, "Afiºeazã, stabileºte sau eliminã variabile de mediu.\n\n\
+SET [variablã[=][ºir]]\n\n\
+  variablã  Specificã numele variabilei de mediu.\n\
+  ºir       Seria de caractere asociate variabilei.\n\n\
+Tastaþi SET fãrã argumente pentru afiºarea variabilelor curente.\n"
+
+STRING_START_HELP1, "Lanseazã o comandã.\n\n\
+START comandã\n\n\
+  comandã     Comanda specificatã pentru lansare.\n\n\
+La moment toate comenzile sunt lansate asincron.\n"
+
+STRING_TITLE_HELP, "Stabileºte titlul pentru fereastra consolei.\n\n\
+TITLE [ºir]\n\n\
+  ºir       Titlul specificat pentru fereastra consolei.\n"
+
+STRING_TIME_HELP1, "Afiºeazã sau stabileºte ora sistemului.\n\n\
+TIME [/T][orã]\n\n\
+  /T    Omite modificarea orei curente\n\n\
+Tastaþi TIME fãrã perametri pentru a afiºa ora curentã urmatã de posibilitatea\n\
+de a introduce o nouã orã. Tastaþi ENTER pentru a pãstra aceiaºi orã.\n"
+
+STRING_TIME_HELP2, "Introduceþi noua orã: "
+
+STRING_TIMER_HELP1, "S-au scurs %d msec\n"
+
+STRING_TIMER_HELP2, "S-au scurs %02d%c%02d%c%02d%c%02d\n"
+
+STRING_TIMER_HELP3, "Permite utilizarea a zece cronometre.\n\n\
+TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
+  ON     Activeazã cronometru\n\
+  OFF    Dezactiveazã cronometru\n\
+  /S     Împarte timpul. Oferã timpul împãrþit al\n\
+         cronometrului fãrã a-i schimba valoarea\n\
+  /n     Specificã numãrul cronometrului.\n\
+         Cronometrele disponibile sunt de la 0 la 9\n\
+         Dacã nu e specificat, implicit este 1\n\
+  /Fn    Formatul de ieºire\n\
+         «n» poate fi:\n\
+           0    milisecunde\n\
+           1    hh%cmm%css%czz\n\n\
+Dacã nu sunt specificate nici unul din argumentele ON, OFF sau /S\n\
+atunci comanda va schimba starea curentã de activare a cronometrului.\n"
+
+STRING_TYPE_HELP1, "Afiºeazã conþinutul de fiºiere text.\n\nTYPE [unitate:][cale]fiºier \n\n\
+  /P     Afiºare paginatã, câte un ecran de informaþie odatã.\n"
+
+STRING_VERIFY_HELP1, "Aceastã comandã e doar o machetã!!\n\
+Stabileºte dacã fiºierele vã sunt stocate corect pe disc.\n\n\
+VERIFY [ON | OFF]\n\n\
+Tastaþi VERIFY fãrã argumente pentru a afiºa starea curentã pentru VERIFY.\n"
+
+STRING_VERIFY_HELP2, "VERIFY: %s.\n"
+
+STRING_VERIFY_HELP3, "Este necesar sã specificaþi ON sau OFF."
+
+STRING_VERSION_HELP1, "Afiºeazã informaþii despre versiunea consolei de comandã.\n\n\
+VER [/C][/R][/W]\n\n\
+  /C  Afiºeazã autori.\n\
+  /R  Afiºeazã redistribuirea informaþiei.\n\
+  /W  Afiºeazã informaþii despre garanþie.\n"
+
+STRING_VERSION_HELP2, " nu vine cu ABSOLUT NICI O GARANÞIE; pentru detalii\n\
+tastaþi: «ver /w». Acesta este un soft public, redistribuþia în condiþiile\n\
+specifice este binevenitã; tastaþi «ver /r» pentru detalii. Tastaþi «ver /c»\n\
+pentru lista de autori."
+
+STRING_VERSION_HELP3, "\n Aceastã aplicaþie este distribuitã în speranþa cã va fi utilã,\n\
+ FÃRÃ însã NICI O GARANÞIE; nici mãcar cu garanþia implicitã a\n\
+ VANDABILITÃÞII sau a UTILITÃÞII ÎNTR-UN SCOP ANUME. Vedeþi\n\
+ Licenþa Publicã Generalã GNU pentru mai multe detalii."
+
+STRING_VERSION_HELP4, "\n Aceastã aplicaþie este un soft public; o puteþi redistribui ºi/sau o\n\
+ modifica în termenii Licenþei Publice Generale GNU aºa cum este publicatã\n\
+ de Free Software Foundation; fie în termenii versiunii 2 a Licenþei, sau (la\n\
+ alegerea dumneavoastrã) ai unei versiuni ulterioare.\n"
+
+STRING_VERSION_HELP5, "\nRaportaþi defectele la <ros-dev@reactos.org>.\n\
+Eventuale actualizãri se pot gãsi la: http://www.reactos.org"
+
+STRING_VERSION_HELP6, "\nVersiunea FreeDOS a fost scrisã de:\n"
+
+STRING_VERSION_HELP7, "\nVersiunea ReactOS a fost scrisã de:\n"
+
+STRING_VOL_HELP1, " Volumul unitãþii %c este etichetat ca %s\n"
+STRING_VOL_HELP2, " Volumul unitãþii %c nu este etichetat.\n"
+STRING_VOL_HELP3, " Numãrul de serie al volumului este %04X-%04X\n"
+STRING_VOL_HELP4, "Afiºeazã eticheta ºi numãrul de serie al volumului unei unitãþi de stocare.\n\nVOL [unitate:]\n"
+
+STRING_WINDOW_HELP1, "Modificã aspectul ferestrei consolei.\n\n\
+WINDOW [/POS[=]stânga,sus,lãþime,înãlþime]\n\
+              [MIN|MAX|RESTORE] ['titlu']\n\n\
+/POS        Specificã poziþionarea ºi dimensiunile.\n\
+MIN         Minimalizeazã fereastra.\n\
+MAX         Maximalizeazã fereastra.\n\
+RESTORE     Restabileºte fereastra."
+
+STRING_WINDOW_HELP2, "Modificã aspectul ferestrei consolei.\n\n\
+ACTIVATE 'fereastrã' [/POS[=]stânga,sus,lãþime,înãlþime]\n\
+                     [MIN|MAX|RESTORE] ['titlu']\n\n\
+fereastrã     Titlul ferestrei ce suportã acþiunea.\n\
+/POS          Specificã poziþionarea ºi dimensiunile.\n\
+MIN           Minimalizeazã fereastra.\n\
+MAX           Maximalizeazã fereastra.\n\
+RESTORE       Restabileºte fereastra.\n\
+titlu         Noul titlu.\n"
+
+
+STRING_HELP1, "Enumerã toate comenzile disponibile (+ descriere)\n\n\
+  comandã /?     Pentru mai multe informaþii referitoare la o anume comandã.\n\n\
+?         Enumerã toate comenzile disponibile (fãrã descriere).\n\
+ALIAS     Instituie, destituie sau afiºeazã alias.\n\
+ASSOC     Modificã asocierile extensiilor de fiºiere.\n\
+ATTRIB    Afiºeazã sau modificã atributele fiºierelor.\n\
+BEEP      Semnalizeazã utilizând difuzorul intern.\n\
+CALL      Apeleazã dintr-un fiºier de comenzi, un alt fiºier de comenzi.\n\
+CD        Afiºeazã sau schimbã directorul curent.\n\
+CHCP      Afiºeazã sau stabileºte numãrul codificãrii curente a paginii.\n\
+CHDIR     Afiºeazã sau schimbã directorul curent.\n\
+CHOICE    Aºteaptã alegerea unei opþiuni (din mai multe furnizate).\n\
+CLS       Curãþã ecranul.\n\
+CMD       Lanseazã o nouã instanþã a interpretorului de comenzi ReactOS.\n\
+COLOR     Stabileºte culorile implicite pentru text ºi fundal.\n\
+COPY      Copie unul sau mai multe fiºiere dintr-un loc în altul.\n\
+DATE      Afiºeazã sau stabileºte data.\n\
+DEL       ªterge unul sau mai multe fiºiere.\n\
+DELETE    ªterge unul sau mai multe fiºiere.\n\
+DELAY     Impune o pauzã pe o duratã de timp specificatã.\n\
+DIR       Enumerã conþinutul unui director.\n\
+DIRS      Afiºeazã conþinutul stivei de directoare.\n\
+ECHO      Afiºeazã mesaje în ecou sau\n\
+          activeazã/dezactiveazã aceastã funcþionalitate.\n\
+ECHOS     Afiºeazã un mesaj în ecou fãrã a trece în rând nou.\n\
+ECHOERR   Afiºezã un mesaj în ecou la ieºirea standard pentru erori\n\
+ECHOSERR  Afiºeazã un mesaj în ecou la ieºirea standard pentru erori fãrã a\n\
+          trece în rând nou.\n\
+ERASE     ªterge unul sau mai multe fiºiere.\n\
+EXIT      Ieºire din (interpretorul de comenzi) CMD.EXE\n\
+FOR       Executã o comandã pentru fiecare fiºier dintr-un grup (de fiºiere).\n\
+FREE      Oferã informaþii despre unitatea de stocare.\n\
+GOTO      Executã salturi cãtre rânduri etichetate în interiorul unui\n\
+          fiºier de comenzi.\n\
+HELP      Oferã informaþii referitoare la comenzile ReactOS.\n\
+HISTORY   Enumerã toate comenzile care au fost utilizate.\n\
+IF        Realizeazã execuþii condiþionate în fiºierele de comenzi.\n\
+LABEL     Creazã, modificã, sau ºterge eticheta unei unitãþi de stocare.\n\
+MEMORY    Afiºeazã informaþii referitoare la memoria sistemului.\n\
+MD        Creazã un director.\n\
+MKDIR     Creazã un director.\n\
+MKLINK    Creazã un obiect-legãturã în sistemul de fiºiere.\n\
+MOVE      Mutã unul sau mai multe fiºiere dintr-un director în altul.\n\
+PATH      Afiºeazã sau stabileºte cãile de cãutare de fiºierelor executabile.\n\
+PAUSE     Suspendã execuþia unui fiºier de comenzi ºi afiºeazã un mesaj.\n\
+POPD      Restabileºte valoarea precedentã a directorului curent, anterior\n\
+          stocatã cu PUSHD.\n\
+PROMPT    Modificã aspectul liniei de comandã.\n\
+PUSHD     Reþine calea directorului curent ºi o schimbã cu alta nouã.\n\
+RD        Eliminã un director.\n\
+REM       Desemneazã un rând de comentarii într-un fiºier de comenzi.\n\
+REN       Redenumeºte un fiºier/director sau un grup (de fiºiere/directoare).\n\
+RENAME    Redenumeºte un fiºier/director sau un grup (de fiºiere/directoare).\n\
+REPLACE   Înlocuieºte fiºiere.\n"
+STRING_HELP2, "RMDIR     Eliminã un director.\n\
+SCREEN    Mutã cursorul ºi (opþional) afiºeazã un text.\n\
+SET       Afiºeazã, stabileºte sau eliminã variabile de mediu ReactOS.\n\
+SHIFT     Schimbã poziþia argumentelor înlocuibile într-un fiºier de comenzi.\n\
+START     Deschide o fereastrã separatã pentru execuþia unui executabil sau\n\
+          (fiºier de) comenzi.\n\
+TIME      Afiºeazã sau stabileºte data sistemului.\n\
+TIMER     Gestioneazã cronometre.\n\
+TITLE     Stabileºte titlul pentru fereastra unei sesiuni CMD.EXE\n\
+TYPE      Afiºeazã conþinutul unui fiºier text.\n\
+VER       Afiºeazã versiunea ReactOS.\n\
+VERIFY    Verificã scrierea corectã a fiºierelor pe disc.\n\
+VOL       Afiºeazã eticheta ºi numãrul de serie a unui volum.\n"
+
+
+STRING_CHOICE_OPTION,         "DN"
+STRING_COPY_OPTION,           "DNT"
+
+STRING_ALIAS_ERROR,          "Linia de comandã devine prea lungã dupã extinderea alias!\n"
+STRING_ASSOC_ERROR,          "Nu se poate gãsi nici o aplicaþie asociatã extensiei «%s»\n"
+STRING_BATCH_ERROR,          "Eroare la deschiderea fiºierului de comenzi\n"
+STRING_CHCP_ERROR1,          "Codificarea curentã a paginilor: %u\n"
+STRING_CHCP_ERROR4,          "Codificare de paginã nevalidã\n"
+STRING_CHOICE_ERROR,         "Opþiune eronatã. Vedeþi formatul: /C[:]opþiuni"
+STRING_CHOICE_ERROR_TXT,     "Opþiune eronatã. Vedeþi formatul: /T[:]implicit,nn"
+STRING_CHOICE_ERROR_OPTION,  "Opþiune eronatã: %s"
+STRING_CMD_ERROR1,           "Nu se poate redirecþiona intrarea din fiºierul «%s»\n"
+STRING_CMD_ERROR2,           "Nu se poate crea fiºierul temporar pentru canalizarea de date\n"
+STRING_CMD_ERROR3,           "Nu se poate redirecþiona cãtre fiºierul %s\n"
+STRING_CMD_ERROR4,           "Executare «%s»...\n"
+STRING_CMD_ERROR5,           "Executare «cmdexit.bat»...\n"
+STRING_COLOR_ERROR1,         "Eroare de culoare identicã! (Culorile nu trebuie sã fie identice)"
+STRING_COLOR_ERROR2,         "Eroare la specificarea culorii"
+STRING_COLOR_ERROR3,         "Culoare %x\n"
+STRING_COLOR_ERROR4,         "Eroare de culoare identicã!"
+STRING_CONSOLE_ERROR,        "Eroare necunoscutã: %d\n"
+STRING_COPY_ERROR1,          "Eroare: Nu se poate deschide fiºierul - «%s»!\n"
+STRING_COPY_ERROR2,          "Eroare: Nu se poate copia peste el însuºi!\n"
+STRING_COPY_ERROR3,          "Eroare de scriere în destinaþie!\n"
+STRING_COPY_ERROR4,          "Eroare: Încã nu a fost implementat!\n"
+STRING_DATE_ERROR,           "Datã nevalidã."
+STRING_DEL_ERROR5,           "Se va ºterge fiºierul «%s»!\n"
+STRING_DEL_ERROR6,           "Confirmaþi (Da/Nu)?"
+STRING_DEL_ERROR7,           "ªtergere: %s\n"
+STRING_ERROR_ERROR1,         "Eroare necunoscutã! Codul de eroare: 0x%lx\n"
+STRING_ERROR_ERROR2,         "Eroare de sintaxã"
+STRING_FOR_ERROR1,           "Lipseºte «IN» din formularea lui «FOR»."
+STRING_FOR_ERROR2,           "Nu au fost gãsite paranteze."
+STRING_FOR_ERROR3,           "Lipseºte «DO»."
+STRING_FOR_ERROR4,           "Nici o comandã dupã «DO»."
+STRING_FREE_ERROR1,          "Unitate nevalidã"
+STRING_FREE_ERROR2,          "neetichetat"
+STRING_GOTO_ERROR1,          "Nu a fost specificatã nici o etichetã pentru «GOTO»"
+STRING_GOTO_ERROR2,          "Nu s-a gãsit eticheta «%s»\n"
+
+STRING_MD_ERROR,             "Existã deja un fiºier sau un subdirector cu acest nume.\n"
+STRING_MD_ERROR2,            "Calea cãtre noul director nu existã.\n"
+STRING_MOVE_ERROR1,          "[OK]\n"
+STRING_MOVE_ERROR2,          "[Eroare]\n"
+
+STRING_REN_ERROR1,           "A eºuat MoveFile(). Eroarea: %lu\n"
+
+STRING_START_ERROR1,         "Deocamdatã fiºierele de comenzi nu sunt admise!"
+
+STRING_TIME_ERROR1,          "Orã nevalidã."
+
+STRING_TYPE_ERROR1,          "Opþiune eronatã «/%s»\n"
+
+STRING_WINDOW_ERROR1,        "fereastra nu a fost gãsitã"
+
+
+STRING_ERROR_PARAMETERF_ERROR,     "Formatul argumentului nu este corect - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "Argument eronat - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "Prea multe argumente - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Calea nu este gãsitã\n"
+STRING_ERROR_FILE_NOT_FOUND,       "Fiºierul nu este gãsit\n"
+STRING_ERROR_REQ_PARAM_MISSING,    "Lipseºte (cel puþin) un argument obligatoriu!\n"
+STRING_ERROR_INVALID_DRIVE,        "Specificarea unitãþii este eronatã\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "Formatul argumentului este eronat - %s\n"
+STRING_ERROR_BADCOMMAND,           "Comandã eronatã sau fiºier inexistent - %s\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Eroare de exces de memorie.\n"
+STRING_ERROR_CANNOTPIPE,           "Eroare!  Nu se pot canaliza date!  Nu se poate deschide fiºierul temporar!\n"
+STRING_ERROR_D_PAUSEMSG,           "Tastaþi pentru a continua..."
+STRING_ERROR_DRIVER_NOT_READY,     "Unitatea de stocare nu e utilizabilã"
+
+STRING_PATH_ERROR,                 "CMD: «%s» inexistentã în mediu\n"
+
+STRING_REPLACE_ERROR1, "Argument eronat - %s\n"
+STRING_REPLACE_ERROR2, "Calea nu este gãsitã - %s\n"
+STRING_REPLACE_ERROR3, "Numele fiºierului, directorului sau eticheta volumului este incorectã.\n"
+STRING_REPLACE_ERROR4, "Combinaþia de argumente nu este validã!\n"
+STRING_REPLACE_ERROR5, "Acces nepermis - %s\n"
+STRING_REPLACE_ERROR6, "Fiºierele nu au fost gãsite - %s\n"
+STRING_REPLACE_ERROR7, "Eroare Extinsã 32\n"
+
+STRING_REACTOS_VERSION,            "Sistemul de Operare React [Versiunea %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nInterpretorul de comenzi ReactOS\nVersiunea %s %s"
+STRING_VERSION_RUNVER,             " operând pe %s"
+STRING_COPY_FILE ,                 "        %d fiºier(e) copiat(e)\n"
+STRING_DELETE_WIPE,                "ºters"
+STRING_FOR_ERROR,                  "specificaþie de variabilã eronatã."
+STRING_SCREEN_COL,                 "valoarea pentru «coloanã» este nevalidã"
+STRING_SCREEN_ROW,                 "valoarea pentru «rând» este nevalidã"
+STRING_TIMER_TIME                  "Cronometrul %d: %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "A fost creatã o legãturã simbolicã pentru %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "A fost creatã o legãturã permanentã pentru %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "A fost creatã o joncþiune pentru %s <<===>> %s\n"
+STRING_MORE,                       "Mai mult? "
+STRING_CANCEL_BATCH_FILE,          "\r\nS-a tastat Ctrl-Break.  Anulaþi fiºierul de comenzi? (Da/Nu/Toate) "
+
+STRING_INVALID_OPERAND,            "Operand eronat."
+STRING_EXPECTED_CLOSE_PAREN,       "Se cere «)»."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Se cere un numãr sau un nume de variabilã."
+STRING_SYNTAX_COMMAND_INCORRECT,   "Sintaxa comenzii este eronatã."
+
+END
