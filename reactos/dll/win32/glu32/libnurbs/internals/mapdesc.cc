@@ -90,7 +90,7 @@ Mapdesc::setBboxsize( INREAL *mat )
 }
 
 void
-Mapdesc::identify( REAL (&dest)[MAXCOORDS][MAXCOORDS] )
+Mapdesc::identify( REAL dest[MAXCOORDS][MAXCOORDS] )
 {
     memset( dest, 0, sizeof( dest ) );
     for( int i=0; i != hcoords; i++ )
