@@ -716,7 +716,7 @@ HPALETTE CardWindow::CreateCardPalette()
     cols[1] = RGB(255, 255, 255);
 
     //include the base background colour
-    cols[1] = crBackgnd;
+    cols[2] = crBackgnd;
 
     //include the standard button colours...
     cols[3] = CardButton::GetHighlight(crBackgnd);
