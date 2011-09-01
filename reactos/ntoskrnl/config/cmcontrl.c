@@ -118,7 +118,7 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
     if (!SystemHiveData) return;
 
     /* Initialize the Hive View List and the security cache */
-    RtlZeroMemory(SystemHive, sizeof(SystemHive));
+    RtlZeroMemory(SystemHive, sizeof(*SystemHive));
     CmpInitHiveViewList((PCMHIVE)SystemHive);
     CmpInitSecurityCache((PCMHIVE)SystemHive);
 

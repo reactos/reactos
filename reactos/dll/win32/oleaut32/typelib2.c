@@ -317,7 +317,7 @@ static int ctl2_find_guid(
     while (offset != -1) {
 	guidentry = (MSFT_GuidEntry *)&This->typelib_segment_data[MSFT_SEG_GUID][offset];
 
-        if (IsEqualGUID(guidentry, guid)) return offset;
+        if (IsEqualGUID(*guidentry, guid)) return offset;
 
 	offset = guidentry->next_hash;
     }

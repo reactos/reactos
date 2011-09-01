@@ -441,7 +441,7 @@ SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
 			 */
 			RtlCopyMemory (SmpClientDirectory.CandidateClient->ProgramName,
 				       ProgramName,
-				       SM_SB_NAME_MAX_LENGTH);
+				       SM_SB_NAME_MAX_LENGTH * sizeof(WCHAR));
 		}
 	} else {
 		DPRINT1("SM: %s: CandidateClient %p pending!\n", __FUNCTION__,

@@ -667,7 +667,7 @@ GreStretchBltMask(
         MaskPoint.y = YOriginMask;
         IntLPtoDP(DCMask, &MaskPoint, 1);
         MaskPoint.x += DCMask->ptlDCOrig.x;
-        MaskPoint.y += DCMask->ptlDCOrig.x;
+        MaskPoint.y += DCMask->ptlDCOrig.y;
     }
 
     /* Perform the bitblt operation */

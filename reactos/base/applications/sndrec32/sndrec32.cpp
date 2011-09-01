@@ -766,7 +766,7 @@ WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
                 isnew = TRUE;
                 display_dur = TRUE;
 
-                ZeroMemory( file_path, MAX_PATH );
+                ZeroMemory( file_path, MAX_PATH * sizeof(TCHAR) );
 
                 EnableWindow( slider, FALSE );
 

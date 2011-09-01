@@ -298,7 +298,7 @@ IntEngGradientFillRect(
 #define SMALLER(a,b)     (a->y < b->y) || (a->y == b->y && a->x < b->x)
 #define SWAP(a,b,c)  c = a;\
                      a = b;\
-                     a = c
+                     b = c
 #define NLINES 3
 BOOL FASTCALL
 IntEngGradientFillTriangle(
