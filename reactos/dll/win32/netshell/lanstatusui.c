@@ -179,7 +179,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
             pContext->Status = 3;
         }
     }
-    else if (IfEntry.dwOperStatus == (MIB_IF_OPER_STATUS_UNREACHABLE | MIB_IF_OPER_STATUS_DISCONNECTED))
+    else if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_UNREACHABLE || IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_DISCONNECTED)
     {
         if (pContext->Status != 4)
         {
@@ -187,7 +187,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
             pContext->Status = 4;
         }
     }
-    else if (MIB_IF_OPER_STATUS_NON_OPERATIONAL)
+    else if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_NON_OPERATIONAL)
     {
         if (pContext->Status != 5)
         {
