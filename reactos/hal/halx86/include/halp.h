@@ -161,9 +161,9 @@ typedef union _TIMER_CONTROL_PORT_REGISTER
     struct
     {
         UCHAR BcdMode:1;
-        TIMER_OPERATING_MODES OperatingMode:3;
-        TIMER_ACCESS_MODES AccessMode:2;
-        TIMER_CHANNELS Channel:2;
+        UCHAR OperatingMode:3;
+        UCHAR AccessMode:2;
+        UCHAR Channel:2;
     };
     UCHAR Bits;
 } TIMER_CONTROL_PORT_REGISTER, *PTIMER_CONTROL_PORT_REGISTER;
