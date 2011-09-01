@@ -23,8 +23,8 @@ PHARDWARE_PTE PxeBase;
 //PHARDWARE_PTE HalPageTable;
 
 PVOID GdtIdt;
-ULONG PcrBasePage;
-ULONG TssBasePage;
+ULONG_PTR PcrBasePage;
+ULONG_PTR TssBasePage;
 
 /* FUNCTIONS **************************************************************/
 
@@ -152,6 +152,8 @@ MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, ULONG cPage
 	{
 		if (!MempMapSinglePage(VirtualAddress, PhysicalAddress))
 		{
+		    DPRINTM(DPRINT_WINDOWS, "Failed to map page %ld from %p to %p\n",
+                    i, (PVOID)VirtualAddress, (PVOID)PhysicalAddress);
 			return i;
 		}
 		VirtualAddress += PAGE_SIZE;
@@ -172,7 +174,8 @@ MempSetupPaging(IN ULONG StartPage,
                             StartPage * PAGE_SIZE,
                             NumberOfPages) != NumberOfPages)
     {
-        DPRINTM(DPRINT_WINDOWS,"Failed to map pages 1\n");
+        DPRINTM(DPRINT_WINDOWS,"Failed to map pages %ld, %ld\n",
+                StartPage, NumberOfPages);
         return FALSE;
     }
 
@@ -181,7 +184,8 @@ MempSetupPaging(IN ULONG StartPage,
                             StartPage * PAGE_SIZE,
                             NumberOfPages) != NumberOfPages)
     {
-        DPRINTM(DPRINT_WINDOWS,"Failed to map pages 2\n");
+        DPRINTM(DPRINT_WINDOWS,"Failed to map pages %ld, %ld\n",
+                StartPage, NumberOfPages);
         return FALSE;
     }
 
@@ -227,7 +231,7 @@ WinLdrpMapApic()
 }
 
 BOOLEAN
-WinLdrMapSpecialPages(ULONG PcrBasePage)
+WinLdrMapSpecialPages()
 {
     /* Map the PCR page */
     if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
@@ -350,10 +354,8 @@ WinLdrSetProcessorContext(void)
     DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
 }
 
-WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
+void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	ULONG TssSize;
-	ULONG_PTR KernelStack;
 	ULONG_PTR Pcr = 0;
 	ULONG_PTR Tss = 0;
 	ULONG BlockSize, NumPages;
@@ -382,24 +384,25 @@ WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	/* Allocate space for new GDT + IDT */
 	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
 	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
-	*GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
-
-	if (*GdtIdt == NULL)
+	GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
+	if (GdtIdt == NULL)
 	{
 		UiMessageBox("Can't allocate pages for GDT+IDT!\n");
 		return;
 	}
 
 	/* Zero newly prepared GDT+IDT */
-	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
+	RtlZeroMemory(GdtIdt, NumPages << MM_PAGE_SHIFT);
 
-    /* Write initial context information */
-    LoaderBlock->KernelStack = (ULONG_PTR)KernelStack;
-    LoaderBlock->KernelStack += KERNEL_STACK_SIZE;
-    LoaderBlock->Prcb = (ULONG_PTR)&Pcr->Prcb;
-    LoaderBlock->Process = (ULONG_PTR)PdrPage->InitialProcess;
-    LoaderBlock->Thread = (ULONG_PTR)PdrPage->InitialThread;
+	// Before we start mapping pages, create a block of memory, which will contain
+	// PDE and PTEs
+	if (MempAllocatePageTables() == FALSE)
+	{
+	    // FIXME: bugcheck
+	}
 
+	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
+    WinLdrMapSpecialPages();
 }
 
 

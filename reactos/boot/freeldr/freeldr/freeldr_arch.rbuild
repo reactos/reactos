@@ -41,8 +41,7 @@
 				<file>xboxmem.c</file>
 				<file>xboxrtc.c</file>
 				<file>xboxvideo.c</file>
-				<file>ntsetup.c</file>
-				<file>wlmemory.c</file>
+				<file>winldr.c</file>
 			</if>
 		</directory>
 		<directory name="powerpc">
@@ -71,8 +70,7 @@
 		<if property="ARCH" value="amd64">
 			<directory name="amd64">
 				<file>loader.c</file>
-				<file>ntsetup.c</file>
-				<file>wlmemory.c</file>
+				<file>winldr.c</file>
 			</directory>
 			<directory name="i386">
 				<file>hardware.c</file>
@@ -93,7 +91,7 @@
 
 		<if property="ARCH" value="arm">
 			<directory name="arm">
-				<file>wlmemory.c</file>
+				<file>winldr.c</file>
 			</directory>
 		</if>
 	</directory>

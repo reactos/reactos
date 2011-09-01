@@ -11,7 +11,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-// The only global var here, used to mark mem pages as NLS in WinLdrTurnOnPaging()
+// The only global var here, used to mark mem pages as NLS in WinLdrSetupMemoryLayout()
 ULONG TotalNLSSize = 0;
 
 BOOLEAN WinLdrGetNLSNames(LPSTR AnsiName,

@@ -628,7 +628,7 @@ LoadAndBootWindowsCommon(
 	/* Do the machine specific initialization */
 	WinLdrSetupMachineDependent(LoaderBlock);
 
-	/* Turn on paging mode of CPU */
+	/* Map pages and create memory descriptors */
 	WinLdrSetupMemoryLayout(LoaderBlock);
 
 	/* Save final value of LoaderPagesSpanned */
@@ -639,6 +639,9 @@ LoadAndBootWindowsCommon(
 
 	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);
+
+	// Zero KI_USER_SHARED_DATA page
+	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
 	WinLdrpDumpBootDriver(LoaderBlockVA);

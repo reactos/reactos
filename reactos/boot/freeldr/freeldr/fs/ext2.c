@@ -118,7 +118,7 @@ PEXT2_FILE_INFO Ext2OpenFile(PCSTR FileName)
 	PEXT2_FILE_INFO		FileHandle;
 	CHAR			SymLinkPath[EXT2_NAME_LEN];
 	CHAR			FullPath[EXT2_NAME_LEN * 2];
-	ULONG			Index;
+	ULONG_PTR		Index;
 
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName);
 

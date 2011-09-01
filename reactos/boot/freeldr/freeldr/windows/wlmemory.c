@@ -324,9 +324,6 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     MempDump();
 #endif
 
-	// Zero KI_USER_SHARED_DATA page
-	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
-
 	return TRUE;
 }
 

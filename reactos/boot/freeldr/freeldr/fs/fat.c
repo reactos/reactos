@@ -650,7 +650,7 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID D
 {
 	ULONG		EntryCount;
 	ULONG		CurrentEntry;
-	ULONG		FileNameLen;
+	SIZE_T		FileNameLen;
 	FATX_DIRENTRY	OurDirEntry;
 	PFATX_DIRENTRY	DirEntry = &OurDirEntry;
 

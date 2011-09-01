@@ -93,7 +93,7 @@ ULONG IniGetSectionSettingNameSize(ULONG_PTR SectionId, ULONG SettingIndex)
 		return 0;
 
 	// Return the size of the string plus 1 for the null-terminator
-	return (strlen(SectionItem->ItemName) + 1);
+	return (ULONG)(strlen(SectionItem->ItemName) + 1);
 }
 
 ULONG IniGetSectionSettingValueSize(ULONG_PTR SectionId, ULONG SettingIndex)
@@ -106,7 +106,7 @@ ULONG IniGetSectionSettingValueSize(ULONG_PTR SectionId, ULONG SettingIndex)
 		return 0;
 
 	// Return the size of the string plus 1 for the null-terminator
-	return (strlen(SectionItem->ItemValue) + 1);
+	return (ULONG)(strlen(SectionItem->ItemValue) + 1);
 }
 
 BOOLEAN IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHAR SettingName, ULONG NameSize, PCHAR SettingValue, ULONG ValueSize)

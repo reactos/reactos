@@ -112,8 +112,7 @@ if(ARCH MATCHES i386)
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
-        arch/i386/ntsetup.c
-        arch/i386/wlmemory.c
+        arch/i386/winldr.c
         windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
@@ -141,8 +140,7 @@ elseif(ARCH MATCHES amd64)
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c
-        arch/amd64/ntsetup.c
-        arch/amd64/wlmemory.c)
+        arch/amd64/winldr.c)
 else()
 #TBD
 endif()
