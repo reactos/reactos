@@ -4344,7 +4344,7 @@ GetMenuItemInfoA(
          {
             AnsiBuffer[miiW.cch] = 0;
          }
-         mii->cch = mii->cch;
+         mii->cch = miiW->cch;
       }
    }
    else
