@@ -1693,8 +1693,8 @@ RegistrationProc(LPVOID Parameter)
         {
           if (0 == LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
                                UnknownError,
-                               sizeof(UnknownError) / sizeof(UnknownError[0] -
-                               20)))
+                               sizeof(UnknownError) / sizeof(UnknownError[0]) -
+                               20))
             {
               wcscpy(UnknownError, L"Unknown error");
             }

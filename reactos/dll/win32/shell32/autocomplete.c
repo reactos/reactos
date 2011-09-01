@@ -448,7 +448,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	    ShowWindow(This->hwndListBox, SW_HIDE);
 	    break;
 	case WM_KILLFOCUS:
-	    if ((This->options && ACO_AUTOSUGGEST) &&
+	    if ((This->options & ACO_AUTOSUGGEST) &&
 		((HWND)wParam != This->hwndListBox))
 	    {
 		ShowWindow(This->hwndListBox, SW_HIDE);
