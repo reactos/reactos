@@ -339,7 +339,7 @@ RtlSetBits(
     }
 
     /* Set all full ULONGs */
-    RtlFillMemoryUlong(Buffer, NumberToSet >> 3, MAXULONG);
+    RtlFillMemoryUlong(Buffer, MAXULONG, NumberToSet >> 3);
     Buffer += NumberToSet >> 5;
 
     /* Set what's left */
