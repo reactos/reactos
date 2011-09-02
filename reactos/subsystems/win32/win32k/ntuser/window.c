@@ -61,11 +61,8 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd)
 
    Window = UserGetWindowObject(hWnd);
    if (Window)
-   {
-      ASSERT(Window->head.cLockObj >= 0);
-
       Window->head.cLockObj++;
-   }
+
    return Window;
 }
 
@@ -86,8 +83,6 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd)
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
-
-   ASSERT(Window->head.cLockObj >= 0);
 
    return Window;
 }

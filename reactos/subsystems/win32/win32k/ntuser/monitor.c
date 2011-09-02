@@ -93,8 +93,6 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
         return NULL;
     }
 
-    ASSERT(Monitor->head.cLockObj >= 0);
-
     return Monitor;
 }
 
