@@ -750,7 +750,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             case IRP_MN_QUERY_CAPABILITIES:
-                
+
                 /* Call the worker */
                 DPRINT("Querying the capabilities for the PDO\n");
                 Status = HalpQueryCapabilities(DeviceObject,
@@ -773,7 +773,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             case IRP_MN_QUERY_ID:
-                
+
                 /* Call the worker */
                 DPRINT("Query the ID for the PDO\n");
                 Status = HalpQueryIdPdo(DeviceObject,
@@ -782,7 +782,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             default:
-                
+
                 /* We don't handle anything else, so inherit the old state */
                 DPRINT("Illegal IRP: %lx\n", Minor);
                 Status = Irp->IoStatus.Status;
@@ -807,7 +807,7 @@ HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
 {
     DPRINT1("HAL: PnP Driver WMI!\n");
     while (TRUE);
-    return STATUS_SUCCESS;   
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -816,7 +816,7 @@ HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
     DPRINT1("HAL: PnP Driver Power!\n");
-    return STATUS_SUCCESS;   
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

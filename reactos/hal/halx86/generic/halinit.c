@@ -53,7 +53,7 @@ HalInitSystem(IN ULONG BootPhase,
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Check the boot phase */
-    if (!BootPhase)
+    if (BootPhase == 0)
     {
         /* Phase 0... save bus type */
         HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
@@ -158,27 +158,6 @@ HalInitSystem(IN ULONG BootPhase,
     {
         /* Initialize bus handlers */
         HalpInitBusHandlers();
-
-#ifndef _MINIHAL_
-        /* Enable IRQ 0 */
-        HalpEnableInterruptHandler(IDT_DEVICE,
-                                   0,
-                                   PRIMARY_VECTOR_BASE,
-                                   CLOCK2_LEVEL,
-                                   HalpClockInterrupt,
-                                   Latched);
-
-        /* Enable IRQ 8 */
-        HalpEnableInterruptHandler(IDT_DEVICE,
-                                   0,
-                                   PRIMARY_VECTOR_BASE + 8,
-                                   PROFILE_LEVEL,
-                                   HalpProfileInterrupt,
-                                   Latched);
-
-        /* Initialize DMA. NT does this in Phase 0 */
-        HalpInitDma();
-#endif
 
         /* Do some HAL-specific initialization */
         HalpInitPhase1();

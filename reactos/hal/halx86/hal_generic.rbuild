@@ -21,11 +21,9 @@
 			<file>usage.c</file>
 			<if property="ARCH" value="i386">
 				<file>bios.c</file>
-				<directory name="i386">
-					<file>portio.c</file>
-					<file>systimer.S</file>
-					<file>trap.S</file>
-				</directory>
+				<file>portio.c</file>
+				<file>systimer.S</file>
+				<file>trap.S</file>
 			</if>
 		</directory>
 		<directory name="include">
