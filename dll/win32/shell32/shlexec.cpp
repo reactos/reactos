@@ -189,11 +189,8 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
     DWORD   used = 0;
     bool    tildeEffect = false;
 
-    TRACE("%p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
+    TRACE("Before parsing: %p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
           debugstr_w(lpFile), pidl, args);
-
-    DbgPrint("[shell32, SHELL_ArgifyW] Processing %ws\n", args);
-    DbgPrint("[shell32, SHELL_ArgifyW] fmt = %ws\n", fmt);
 
     while (*fmt)
     {
@@ -391,7 +388,8 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
     if (out_len)
         *out_len = used;
 
-    DbgPrint("[shell32, SHELL_ArgifyW] Done result = %ws\n", out);
+    TRACE("After parsing: %p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
+          debugstr_w(lpFile), pidl, args);
 
     return found_p1;
 }
