@@ -57,8 +57,6 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
       return NULL;
    }
 
-   ASSERT(Accel->head.cLockObj >= 0);
-
    return Accel;
 }
 
