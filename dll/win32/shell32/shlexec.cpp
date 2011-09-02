@@ -32,6 +32,125 @@ static const WCHAR wszEmpty[] = {0};
 
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
+static void ParseNoTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used, int argNum)
+{
+    bool firstCharQuote = false;
+    bool quotes_opened = false;
+    bool backslash_encountered = false;
+
+    for (int curArg=0; curArg<=argNum && *args; ++curArg)
+    {
+        firstCharQuote = false;
+        if (*args == '"')
+        {
+            quotes_opened = true;
+            firstCharQuote = true;
+            args++;
+        }
+
+        while(*args)
+        {
+            if (*args == '\\')
+            {
+                // if we found a backslash then flip the variable
+                backslash_encountered = !backslash_encountered;
+            }
+            else if (*args == '"')
+            {
+                if (quotes_opened)
+                {
+                    if (*(args+1) != '"')
+                    {
+                        quotes_opened = false;
+                        args++;
+                        break;
+                    }
+                    else
+                    {
+                       args++;
+                    }
+                }
+                else
+                {
+                    quotes_opened = true;
+                }
+
+                backslash_encountered = false;
+            }
+            else
+            {
+                backslash_encountered = false;
+                if (*args == ' ' && !firstCharQuote)
+                    break;
+            }
+
+            if (curArg == argNum)
+            {
+                used++;
+                if (used < len)
+                    *res++ = *args;
+            }
+            
+            args++;
+        }
+
+        while(*args == ' ')
+            ++args;
+    }
+}
+
+static void ParseTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used, int argNum)
+{
+    bool quotes_opened = false;
+    bool backslash_encountered = false;
+
+    for (int curArg=0; curArg<=argNum && *args; ++curArg)
+    {
+        while(*args)
+        {
+            if (*args == '\\')
+            {
+                // if we found a backslash then flip the variable
+                backslash_encountered = !backslash_encountered;
+            }
+            else if (*args == '"')
+            {
+                if (quotes_opened)
+                {
+                    if (*(args+1) != '"')
+                    {
+                        quotes_opened = false;
+                    }
+                    else
+                    {
+                       args++;
+                    }
+                }
+                else
+                {
+                    quotes_opened = true;
+                }
+
+                backslash_encountered = false;
+            }
+            else
+            {
+                backslash_encountered = false;
+                if (*args == ' ' && !quotes_opened && curArg!=argNum)
+                    break;
+            }
+
+            if (curArg == argNum)
+            {
+                used++;
+                if (used < len)
+                    *res++ = *args;
+            }
+            
+            args++;
+        }
+    }
+}
 
 /***********************************************************************
  *	SHELL_ArgifyW [Internal]
@@ -48,7 +167,18 @@ static const WCHAR wszEmpty[] = {0};
  * %S ???
  * %* all following parameters (see batfile)
  *
- */
+*       The way we parse the command line arguments was determined through extensive
+*  testing and can be summed up by the following rules"
+*
+*  - %2
+*       - if first letter is " break on first non literal " and include any white spaces
+*       - if first letter is NOT " break on first " or white space
+*       - if " is opened any pair of consecutive " results in ONE literal "
+*
+*  - %~2
+*       - use rules from here http://www.autohotkey.net/~deleyd/parameters/parameters.htm
+*/
+
 static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* lpFile, LPITEMIDLIST pidl, LPCWSTR args, DWORD* out_len)
 {
     WCHAR   xlpFile[1024];
@@ -57,9 +187,13 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
     PWSTR   res = out;
     PCWSTR  cmd;
     DWORD   used = 0;
+    bool    tildeEffect = false;
 
     TRACE("%p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
           debugstr_w(lpFile), pidl, args);
+
+    DbgPrint("[shell32, SHELL_ArgifyW] Processing %ws\n", args);
+    DbgPrint("[shell32, SHELL_ArgifyW] fmt = %ws\n", fmt);
 
     while (*fmt)
     {
@@ -67,165 +201,174 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
         {
             switch (*++fmt)
             {
-            case '\0':
-            case '%':
-                used++;
-                if (used < len)
-                    *res++ = '%';
-                break;
-
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case '0':
-            case '*':
-                if (args)
+                case '\0':
+                case '%':
                 {
-                    if (*fmt == '*')
-                    {
-                        used++;
-                        if (used < len)
-                            *res++ = '"';
-                        while(*args)
-                        {
-                            used++;
-                            if (used < len)
-                                *res++ = *args++;
-                            else
-                                args++;
-                        }
-                        used++;
-                        if (used < len)
-                            *res++ = '"';
-                        break;
-                    }
-                    else
-                    {
-                        while(*args && !isspace(*args))
-                        {
-                            used++;
-                            if (used < len)
-                                *res++ = *args++;
-                            else
-                                args++;
-                        }
-
-                        while(isspace(*args))
-                            ++args;
-                    }
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            case '1':
-                if (!done || (*fmt == '1'))
-                {
-                    /*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
-                    if (SearchPathW(NULL, lpFile, wszExe, sizeof(xlpFile)/sizeof(WCHAR), xlpFile, NULL))
-                        cmd = xlpFile;
-                    else
-                        cmd = lpFile;
-
-                    used += wcslen(cmd);
+                    used++;
                     if (used < len)
-                    {
-                        wcscpy(res, cmd);
-                        res += wcslen(cmd);
-                    }
-                }
-                found_p1 = TRUE;
-                break;
+                        *res++ = '%';
+                }; break;
 
-            /*
-             * IE uses this a lot for activating things such as windows media
-             * player. This is not verified to be fully correct but it appears
-             * to work just fine.
-             */
-            case 'l':
-            case 'L':
-		if (lpFile) {
-		    used += wcslen(lpFile);
-		    if (used < len)
-		    {
-			wcscpy(res, lpFile);
-			res += wcslen(lpFile);
-		    }
-		}
-		found_p1 = TRUE;
-                break;
-
-            case 'i':
-            case 'I':
-		if (pidl) {
-		    DWORD chars = 0;
-		    /* %p should not exceed 8, maybe 16 when looking forward to 64bit.
-		     * allowing a buffer of 100 should more than exceed all needs */
-		    WCHAR buf[100];
-		    LPVOID  pv;
-		    HGLOBAL hmem = SHAllocShared(pidl, ILGetSize(pidl), 0);
-		    pv = SHLockShared(hmem, 0);
-		    chars = swprintf(buf, wszILPtr, pv);
-		    if (chars >= sizeof(buf)/sizeof(WCHAR))
-			ERR("pidl format buffer too small!\n");
-		    used += chars;
-		    if (used < len)
-		    {
-			wcscpy(res,buf);
-			res += chars;
-		    }
-		    SHUnlockShared(pv);
-		}
-                found_p1 = TRUE;
-                break;
-
-	    default:
-                /*
-                 * Check if this is an env-variable here...
-                 */
-
-                /* Make sure that we have at least one more %.*/
-                if (strchrW(fmt, '%'))
+                case '*':
                 {
-                    WCHAR   tmpBuffer[1024];
-                    PWSTR   tmpB = tmpBuffer;
-                    WCHAR   tmpEnvBuff[MAX_PATH];
-                    DWORD   envRet;
-
-                    while (*fmt != '%')
-                        *tmpB++ = *fmt++;
-                    *tmpB++ = 0;
-
-                    TRACE("Checking %s to be an env-var\n", debugstr_w(tmpBuffer));
-
-                    envRet = GetEnvironmentVariableW(tmpBuffer, tmpEnvBuff, MAX_PATH);
-                    if (envRet == 0 || envRet > MAX_PATH)
+                    if (args)
                     {
-                        used += wcslen(tmpBuffer);
-                        if (used < len)
+                        if (*fmt == '*')
                         {
-                            wcscpy( res, tmpBuffer );
-                            res += wcslen(tmpBuffer);
+                            used++;
+                            while(*args)
+                            {
+                                used++;
+                                if (used < len)
+                                    *res++ = *args++;
+                                else
+                                    args++;
+                            }
+                            used++;
+                            break;
                         }
                     }
-                    else
+                }; break;
+
+                case '~':
+
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                //case '0':
+                {
+                    if (*fmt == '~')
                     {
-                        used += wcslen(tmpEnvBuff);
-                        if (used < len)
+                        fmt++;
+                        tildeEffect = true;
+                    }
+
+                    if (args)
+                    {
+                        if (tildeEffect)
                         {
-                            wcscpy( res, tmpEnvBuff );
-                            res += wcslen(tmpEnvBuff);
+                            ParseTildeEffect(res, args, len, used, *fmt - '2');
+                            tildeEffect = false;
+                        }
+                        else
+                        {
+                            ParseNoTildeEffect(res, args, len, used, *fmt - '2');
                         }
                     }
-                }
-                done = TRUE;
-                break;
+                }; break;
+
+                case '1':
+                    if (!done || (*fmt == '1'))
+                    {
+                        /*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
+                        if (SearchPathW(NULL, lpFile, wszExe, sizeof(xlpFile)/sizeof(WCHAR), xlpFile, NULL))
+                            cmd = xlpFile;
+                        else
+                            cmd = lpFile;
+
+                        used += wcslen(cmd);
+                        if (used < len)
+                        {
+                            wcscpy(res, cmd);
+                            res += wcslen(cmd);
+                        }
+                    }
+                    found_p1 = TRUE;
+                    break;
+
+                /*
+                 * IE uses this a lot for activating things such as windows media
+                 * player. This is not verified to be fully correct but it appears
+                 * to work just fine.
+                 */
+                case 'l':
+                case 'L':
+		            if (lpFile)
+                    {
+		                used += wcslen(lpFile);
+		                if (used < len)
+		                {
+			                wcscpy(res, lpFile);
+			                res += wcslen(lpFile);
+		                }
+		            }
+		            found_p1 = TRUE;
+                    break;
+
+                case 'i':
+                case 'I':
+		            if (pidl)
+                    {
+		                DWORD chars = 0;
+		                /* %p should not exceed 8, maybe 16 when looking forward to 64bit.
+		                    * allowing a buffer of 100 should more than exceed all needs */
+		                WCHAR buf[100];
+		                LPVOID  pv;
+		                HGLOBAL hmem = SHAllocShared(pidl, ILGetSize(pidl), 0);
+		                pv = SHLockShared(hmem, 0);
+		                chars = swprintf(buf, wszILPtr, pv);
+		                
+                        if (chars >= sizeof(buf)/sizeof(WCHAR))
+			                ERR("pidl format buffer too small!\n");
+		                
+                        used += chars;
+		                
+                        if (used < len)
+		                {
+			                wcscpy(res,buf);
+			                res += chars;
+		                }
+		                SHUnlockShared(pv);
+		            }
+                    found_p1 = TRUE;
+                    break;
+
+	            default:
+                    /*
+                     * Check if this is an env-variable here...
+                     */
+
+                    /* Make sure that we have at least one more %.*/
+                    if (strchrW(fmt, '%'))
+                    {
+                        WCHAR   tmpBuffer[1024];
+                        PWSTR   tmpB = tmpBuffer;
+                        WCHAR   tmpEnvBuff[MAX_PATH];
+                        DWORD   envRet;
+
+                        while (*fmt != '%')
+                            *tmpB++ = *fmt++;
+                        *tmpB++ = 0;
+
+                        TRACE("Checking %s to be an env-var\n", debugstr_w(tmpBuffer));
+
+                        envRet = GetEnvironmentVariableW(tmpBuffer, tmpEnvBuff, MAX_PATH);
+                        if (envRet == 0 || envRet > MAX_PATH)
+                        {
+                            used += wcslen(tmpBuffer);
+                            if (used < len)
+                            {
+                                wcscpy( res, tmpBuffer );
+                                res += wcslen(tmpBuffer);
+                            }
+                        }
+                        else
+                        {
+                            used += wcslen(tmpEnvBuff);
+                            if (used < len)
+                            {
+                                wcscpy( res, tmpEnvBuff );
+                                res += wcslen(tmpEnvBuff);
+                            }
+                        }
+                    }
+                    done = TRUE;
+                    break;
             }
             /* Don't skip past terminator (catch a single '%' at the end) */
             if (*fmt != '\0')
@@ -248,6 +391,8 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
     if (out_len)
         *out_len = used;
 
+    DbgPrint("[shell32, SHELL_ArgifyW] Done result = %ws\n", out);
+
     return found_p1;
 }
 
@@ -258,13 +403,14 @@ static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR psz
 
     HRESULT hr = SHGetDesktopFolder(&desktop);
 
-    if (SUCCEEDED(hr)) {
-	hr = desktop->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret);
+    if (SUCCEEDED(hr))
+    {
+	    hr = desktop->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret);
 
-	if (SUCCEEDED(hr))
-	    StrRetToStrNW(pszPath, uOutSize, &strret, pidl);
+	    if (SUCCEEDED(hr))
+	        StrRetToStrNW(pszPath, uOutSize, &strret, pidl);
 
-	desktop->Release();
+	    desktop->Release();
     }
 
     return hr;
@@ -298,17 +444,23 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
 
     /* ShellExecute specifies the command from psei->lpDirectory
      * if present. Not from the current dir as CreateProcess does */
-    if( lpDirectory )
-        if( ( gcdret = GetCurrentDirectoryW( MAX_PATH, curdir)))
-            if( !SetCurrentDirectoryW( lpDirectory))
+    if ( lpDirectory )
+        if ( ( gcdret = GetCurrentDirectoryW( MAX_PATH, curdir)))
+            if ( !SetCurrentDirectoryW( lpDirectory))
                 ERR("cannot set directory %s\n", debugstr_w(lpDirectory));
+    
     ZeroMemory(&startup,sizeof(STARTUPINFOW));
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
     dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
+    
     if (psei->fMask & SEE_MASK_NO_CONSOLE)
         dwCreationFlags |= CREATE_NEW_CONSOLE;
+    
+    //DbgPrint("[shell32, SHELL_ExecuteW] CreateProcessW cmd = %ws\n", (LPWSTR)lpCmd);
+    //DbgBreakPoint();
+
     if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
                        lpDirectory, &startup, &info))
     {
@@ -318,6 +470,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
             if (WaitForInputIdle( info.hProcess, 30000 ) == WAIT_FAILED)
                 WARN("WaitForInputIdle failed: Error %d\n", GetLastError() );
         retval = 33;
+        
         if (psei->fMask & SEE_MASK_NOCLOSEPROCESS)
             psei_out->hProcess = info.hProcess;
         else
@@ -333,6 +486,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     TRACE("returning %lu\n", retval);
 
     psei_out->hInstApp = (HINSTANCE)retval;
+    
     if( gcdret )
         if( !SetCurrentDirectoryW( curdir))
             ERR("cannot return to directory %s\n", debugstr_w(curdir));
@@ -626,8 +780,9 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOpera
                            &filetypelen) == ERROR_SUCCESS)
         {
             filetypelen /= sizeof(WCHAR);
-	    if (filetypelen == sizeof(filetype)/sizeof(WCHAR))
-		filetypelen--;
+	        if (filetypelen == sizeof(filetype)/sizeof(WCHAR))
+		        filetypelen--;
+            
             filetype[filetypelen] = '\0';
             TRACE("File type: %s\n", debugstr_w(filetype));
         }
@@ -644,41 +799,41 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOpera
         filetype[filetypelen] = '\0';
         retval = SHELL_FindExecutableByOperation(lpOperation, key, filetype, command, sizeof(command));
 
-	if (retval > 32)
-	{
-	    DWORD finishedLen;
-	    SHELL_ArgifyW(lpResult, resultLen, command, xlpFile, pidl, args, &finishedLen);
-	    if (finishedLen > resultLen)
-		ERR("Argify buffer not large enough.. truncated\n");
-
-	    /* Remove double quotation marks and command line arguments */
-	    if (*lpResult == '"')
+	    if (retval > 32)
 	    {
-		WCHAR *p = lpResult;
-		while (*(p + 1) != '"')
-		{
-		    *p = *(p + 1);
-		    p++;
-		}
-		*p = '\0';
-	    }
+	        DWORD finishedLen;
+	        SHELL_ArgifyW(lpResult, resultLen, command, xlpFile, pidl, args, &finishedLen);
+	        if (finishedLen > resultLen)
+		        ERR("Argify buffer not large enough.. truncated\n");
+            DbgPrint("[shell32, SHELL_FindExecutable] Remove double quotation marks and command line arguments\n");
+	        /* Remove double quotation marks and command line arguments */
+	        if (*lpResult == '"')
+	        {
+		        WCHAR *p = lpResult;
+		        while (*(p + 1) != '"')
+		        {
+		            *p = *(p + 1);
+		            p++;
+		        }
+		        *p = '\0';
+	        }
             else
             {
                 /* Truncate on first space */
-		WCHAR *p = lpResult;
-		while (*p != ' ' && *p != '\0')
+		        WCHAR *p = lpResult;
+		        while (*p != ' ' && *p != '\0')
                     p++;
                 *p='\0';
             }
-	}
+	    }
     }
     else /* Check win.ini */
     {
-	static const WCHAR wExtensions[] = {'e','x','t','e','n','s','i','o','n','s',0};
+	    static const WCHAR wExtensions[] = {'e','x','t','e','n','s','i','o','n','s',0};
 
-	/* Toss the leading dot */
-	extension++;
-	if (GetProfileStringW(wExtensions, extension, wszEmpty, command, sizeof(command)/sizeof(WCHAR)) > 0)
+	    /* Toss the leading dot */
+	    extension++;
+	    if (GetProfileStringW(wExtensions, extension, wszEmpty, command, sizeof(command)/sizeof(WCHAR)) > 0)
         {
             if (wcslen(command) != 0)
             {
@@ -1370,11 +1525,14 @@ static UINT_PTR SHELL_quote_and_execute( LPCWSTR wcmd, LPCWSTR wszParameters, LP
     strcpyW(wszQuotedCmd, wQuote);
     strcatW(wszQuotedCmd, wcmd);
     strcatW(wszQuotedCmd, wQuote);
-    if (wszParameters[0]) {
+    if (wszParameters[0])
+    {
         strcatW(wszQuotedCmd, wSpace);
         strcatW(wszQuotedCmd, wszParameters);
     }
+    
     TRACE("%s/%s => %s/%s\n", debugstr_w(wszApplicationName), debugstr_w(psei->lpVerb), debugstr_w(wszQuotedCmd), debugstr_w(lpstrProtocol));
+    
     if (*lpstrProtocol)
         retval = execute_from_key(lpstrProtocol, wszApplicationName, env, psei->lpParameters, wcmd, execfunc, psei, psei_out);
     else
@@ -1498,14 +1656,20 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     else if (*sei_tmp.lpFile == '\"')
     {
         DWORD l = strlenW(sei_tmp.lpFile+1);
-        if(l >= dwApplicationNameLen) dwApplicationNameLen = l+1;
+        if(l >= dwApplicationNameLen)
+            dwApplicationNameLen = l+1;
+        
         wszApplicationName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwApplicationNameLen*sizeof(WCHAR));
         memcpy(wszApplicationName, sei_tmp.lpFile+1, (l+1)*sizeof(WCHAR));
+        
         if (wszApplicationName[l-1] == '\"')
             wszApplicationName[l-1] = '\0';
         appKnownSingular = TRUE;
+        
         TRACE("wszApplicationName=%s\n",debugstr_w(wszApplicationName));
-    } else {
+    }
+    else
+    {
         DWORD l = strlenW(sei_tmp.lpFile)+1;
         if(l > dwApplicationNameLen) dwApplicationNameLen = l+1;
         wszApplicationName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwApplicationNameLen*sizeof(WCHAR));
@@ -1521,10 +1685,10 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
             wszParameters = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
             parametersLen = len;
         }
-	strcpyW(wszParameters, sei_tmp.lpParameters);
+	    strcpyW(wszParameters, sei_tmp.lpParameters);
     }
     else
-	*wszParameters = '\0';
+	    *wszParameters = '\0';
 
     wszDir = dirBuffer;
     if (sei_tmp.lpDirectory)
@@ -1535,10 +1699,10 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
             wszDir = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
             dirLen = len;
         }
-	strcpyW(wszDir, sei_tmp.lpDirectory);
+	    strcpyW(wszDir, sei_tmp.lpDirectory);
     }
     else
-	*wszDir = '\0';
+	    *wszDir = '\0';
 
     /* adjust string pointers to point to the new buffers */
     sei_tmp.lpFile = wszApplicationName;
@@ -1553,25 +1717,26 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     /* process the IDList */
     if (sei_tmp.fMask & SEE_MASK_IDLIST)
     {
-	IShellExecuteHookW* pSEH;
+	    IShellExecuteHookW* pSEH;
 
-	HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_IShellExecuteHookW, (LPVOID*)&pSEH, NULL);
+	    HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_IShellExecuteHookW, (LPVOID*)&pSEH, NULL);
 
-	if (SUCCEEDED(hr))
-	{
-	    hr = pSEH->Execute(&sei_tmp);
+	    if (SUCCEEDED(hr))
+	    {
+	        hr = pSEH->Execute(&sei_tmp);
 
-	    pSEH->Release();
+	        pSEH->Release();
 
-	    if (hr == S_OK) {
+	        if (hr == S_OK)
+            {
                 HeapFree(GetProcessHeap(), 0, wszApplicationName);
                 if (wszParameters != parametersBuffer)
                     HeapFree(GetProcessHeap(), 0, wszParameters);
                 if (wszDir != dirBuffer)
                     HeapFree(GetProcessHeap(), 0, wszDir);
-		return TRUE;
+		        return TRUE;
             }
-	}
+	    }
 
         SHGetPathFromIDListW((LPCITEMIDLIST)sei_tmp.lpIDList, wszApplicationName);
         appKnownSingular = TRUE;
@@ -1677,65 +1842,71 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     TRACE("execute:%s,%s,%s\n", debugstr_w(wszApplicationName), debugstr_w(wszParameters), debugstr_w(wszDir));
 
     /* separate out command line arguments from executable file name */
-    if (!*sei_tmp.lpParameters && !appKnownSingular) {
-	/* If the executable path is quoted, handle the rest of the command line as parameters. */
-	if (sei_tmp.lpFile[0] == '"') {
-	    LPWSTR src = wszApplicationName/*sei_tmp.lpFile*/ + 1;
-	    LPWSTR dst = wfileName;
-	    LPWSTR end;
+    if (!*sei_tmp.lpParameters && !appKnownSingular)
+    {
+	    /* If the executable path is quoted, handle the rest of the command line as parameters. */
+	    if (sei_tmp.lpFile[0] == '"')
+        {
+	        LPWSTR src = wszApplicationName/*sei_tmp.lpFile*/ + 1;
+	        LPWSTR dst = wfileName;
+	        LPWSTR end;
 
-	    /* copy the unquoted executable path to 'wfileName' */
-	    while(*src && *src!='"')
-		*dst++ = *src++;
+	        /* copy the unquoted executable path to 'wfileName' */
+	        while(*src && *src!='"')
+		    *dst++ = *src++;
 
-	    *dst = '\0';
+	        *dst = '\0';
 
-	    if (*src == '"') {
-		end = ++src;
+	        if (*src == '"')
+            {
+		        end = ++src;
 
-		while(isspace(*src))
-		    ++src;
-	    } else
-		end = src;
+		        while(isspace(*src))
+		            ++src;
+	        }
+            else
+		        end = src;
 
-	    /* copy the parameter string to 'wszParameters' */
-	    strcpyW(wszParameters, src);
+	        /* copy the parameter string to 'wszParameters' */
+	        strcpyW(wszParameters, src);
 
-	    /* terminate previous command string after the quote character */
-	    *end = '\0';
-	}
-	else
-	{
-	    /* If the executable name is not quoted, we have to use this search loop here,
-	       that in CreateProcess() is not sufficient because it does not handle shell links. */
-	    WCHAR buffer[MAX_PATH], xlpFile[MAX_PATH];
-	    LPWSTR space, s;
-
-	    LPWSTR beg = wszApplicationName/*sei_tmp.lpFile*/;
-	    for(s=beg; (space= const_cast<LPWSTR>(strchrW(s, ' '))); s=space+1) {
-		int idx = space-sei_tmp.lpFile;
-		memcpy(buffer, sei_tmp.lpFile, idx * sizeof(WCHAR));
-		buffer[idx] = '\0';
-
-		/*FIXME This finds directory paths if the targeted file name contains spaces. */
-		if (SearchPathW(*sei_tmp.lpDirectory? sei_tmp.lpDirectory: NULL, buffer, wszExe, sizeof(xlpFile)/sizeof(xlpFile[0]), xlpFile, NULL))
-		{
-		    /* separate out command from parameter string */
-		    LPCWSTR p = space + 1;
-
-		    while(isspaceW(*p))
-			++p;
-
-		    strcpyW(wszParameters, p);
-		    *space = '\0';
-
-		    break;
-		}
+	        /* terminate previous command string after the quote character */
+	        *end = '\0';
 	    }
+	    else
+	    {
+	        /* If the executable name is not quoted, we have to use this search loop here,
+	           that in CreateProcess() is not sufficient because it does not handle shell links. */
+	        WCHAR buffer[MAX_PATH], xlpFile[MAX_PATH];
+	        LPWSTR space, s;
 
-           lstrcpynW(wfileName, sei_tmp.lpFile,sizeof(wfileName)/sizeof(WCHAR));
-	}
-    } else
+	        LPWSTR beg = wszApplicationName/*sei_tmp.lpFile*/;
+	        for(s=beg; (space= const_cast<LPWSTR>(strchrW(s, ' '))); s=space+1)
+            {
+		        int idx = space-sei_tmp.lpFile;
+		        memcpy(buffer, sei_tmp.lpFile, idx * sizeof(WCHAR));
+		        buffer[idx] = '\0';
+
+		        /*FIXME This finds directory paths if the targeted file name contains spaces. */
+		        if (SearchPathW(*sei_tmp.lpDirectory? sei_tmp.lpDirectory: NULL, buffer, wszExe, sizeof(xlpFile)/sizeof(xlpFile[0]), xlpFile, NULL))
+		        {
+		            /* separate out command from parameter string */
+		            LPCWSTR p = space + 1;
+
+		            while(isspaceW(*p))
+			            ++p;
+
+		            strcpyW(wszParameters, p);
+		            *space = '\0';
+
+		            break;
+		        }
+	        }
+
+               lstrcpynW(wfileName, sei_tmp.lpFile,sizeof(wfileName)/sizeof(WCHAR));
+	    }
+    }
+    else
        lstrcpynW(wfileName, sei_tmp.lpFile,sizeof(wfileName)/sizeof(WCHAR));
 
     lpFile = wfileName;
@@ -1750,13 +1921,15 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         wcmdLen = len;
     }
     strcpyW(wcmd, wszApplicationName);
-    if (sei_tmp.lpParameters[0]) {
+    if (sei_tmp.lpParameters[0])
+    {
         strcatW(wcmd, wSpace);
         strcatW(wcmd, wszParameters);
     }
 
     retval = execfunc(wcmd, NULL, FALSE, &sei_tmp, sei);
-    if (retval > 32) {
+    if (retval > 32)
+    {
         HeapFree(GetProcessHeap(), 0, wszApplicationName);
         if (wszParameters != parametersBuffer)
             HeapFree(GetProcessHeap(), 0, wszParameters);
@@ -1894,7 +2067,7 @@ BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
     memcpy(&seiW, sei, sizeof(SHELLEXECUTEINFOW));
 
     if (sei->lpVerb)
-	seiW.lpVerb = __SHCloneStrAtoW(&wVerb, sei->lpVerb);
+	    seiW.lpVerb = __SHCloneStrAtoW(&wVerb, sei->lpVerb);
 
     if (sei->lpFile)
         seiW.lpFile = __SHCloneStrAtoW(&wFile, sei->lpFile);
