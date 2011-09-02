@@ -30,6 +30,7 @@ if(ARCH MATCHES i386)
 endif()
 
 add_library(lib_hal_generic ${HAL_GENERIC_SOURCE})
+add_dependencies(lib_hal_generic asm)
 add_pch(lib_hal_generic include/hal.h)
 
 list(APPEND HAL_LEGACY_SOURCE
