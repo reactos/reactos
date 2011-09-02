@@ -44,7 +44,7 @@ list(APPEND HAL_LEGACY_SOURCE
     legacy/halpcat.c)
 
 add_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
-add_pch(lib_hal_legacy include/hal.h)
+#add_pch(lib_hal_legacy include/hal.h)
 target_link_libraries(lib_hal_legacy lib_hal_generic)
 
 list(APPEND HAL_ACPI_SOURCE
@@ -54,7 +54,7 @@ list(APPEND HAL_ACPI_SOURCE
     legacy/bus/pcibus.c)
 
 add_library(lib_hal_acpi ${HAL_ACPI_SOURCE})
-add_pch(lib_hal_acpi include/hal.h)
+#add_pch(lib_hal_acpi include/hal.h)
 target_link_libraries(lib_hal_acpi lib_hal_generic)
 
 if(ARCH MATCHES i386)
@@ -100,7 +100,7 @@ if(ARCH MATCHES i386)
         ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
     target_link_libraries(hal lib_hal_generic lib_hal_legacy libcntpr)
     add_importlibs(hal ntoskrnl)
-    add_pch(hal include/hal.h)
+    #add_pch(hal include/hal.h)
     add_dependencies(hal psdk bugcodes)
     set_entrypoint(hal HalInitSystem 8)
     set_subsystem(hal native)
