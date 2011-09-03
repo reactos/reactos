@@ -24,6 +24,7 @@
 #ifdef __i386__
 #define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
 
+DBG_DEFAULT_CHANNEL(LINUX);
 
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
@@ -304,14 +305,14 @@ BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
 
 	DbgDumpBuffer(DPRINT_LINUX, LinuxBootSector, 512);
 
-	DPRINTM(DPRINT_LINUX, "SetupSectors: %d\n", LinuxBootSector->SetupSectors);
-	DPRINTM(DPRINT_LINUX, "RootFlags: 0x%x\n", LinuxBootSector->RootFlags);
-	DPRINTM(DPRINT_LINUX, "SystemSize: 0x%x\n", LinuxBootSector->SystemSize);
-	DPRINTM(DPRINT_LINUX, "SwapDevice: 0x%x\n", LinuxBootSector->SwapDevice);
-	DPRINTM(DPRINT_LINUX, "RamSize: 0x%x\n", LinuxBootSector->RamSize);
-	DPRINTM(DPRINT_LINUX, "VideoMode: 0x%x\n", LinuxBootSector->VideoMode);
-	DPRINTM(DPRINT_LINUX, "RootDevice: 0x%x\n", LinuxBootSector->RootDevice);
-	DPRINTM(DPRINT_LINUX, "BootFlag: 0x%x\n", LinuxBootSector->BootFlag);
+	TRACE("SetupSectors: %d\n", LinuxBootSector->SetupSectors);
+	TRACE("RootFlags: 0x%x\n", LinuxBootSector->RootFlags);
+	TRACE("SystemSize: 0x%x\n", LinuxBootSector->SystemSize);
+	TRACE("SwapDevice: 0x%x\n", LinuxBootSector->SwapDevice);
+	TRACE("RamSize: 0x%x\n", LinuxBootSector->RamSize);
+	TRACE("VideoMode: 0x%x\n", LinuxBootSector->VideoMode);
+	TRACE("RootDevice: 0x%x\n", LinuxBootSector->RootDevice);
+	TRACE("BootFlag: 0x%x\n", LinuxBootSector->BootFlag);
 
 	return TRUE;
 }
@@ -363,21 +364,21 @@ BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
 
 	DbgDumpBuffer(DPRINT_LINUX, LinuxSetupSector, SetupSectorSize);
 
-	DPRINTM(DPRINT_LINUX, "SetupHeaderSignature: 0x%x (HdrS)\n", LinuxSetupSector->SetupHeaderSignature);
-	DPRINTM(DPRINT_LINUX, "Version: 0x%x\n", LinuxSetupSector->Version);
-	DPRINTM(DPRINT_LINUX, "RealModeSwitch: 0x%x\n", LinuxSetupSector->RealModeSwitch);
-	DPRINTM(DPRINT_LINUX, "SetupSeg: 0x%x\n", LinuxSetupSector->SetupSeg);
-	DPRINTM(DPRINT_LINUX, "StartSystemSeg: 0x%x\n", LinuxSetupSector->StartSystemSeg);
-	DPRINTM(DPRINT_LINUX, "KernelVersion: 0x%x\n", LinuxSetupSector->KernelVersion);
-	DPRINTM(DPRINT_LINUX, "TypeOfLoader: 0x%x\n", LinuxSetupSector->TypeOfLoader);
-	DPRINTM(DPRINT_LINUX, "LoadFlags: 0x%x\n", LinuxSetupSector->LoadFlags);
-	DPRINTM(DPRINT_LINUX, "SetupMoveSize: 0x%x\n", LinuxSetupSector->SetupMoveSize);
-	DPRINTM(DPRINT_LINUX, "Code32Start: 0x%x\n", LinuxSetupSector->Code32Start);
-	DPRINTM(DPRINT_LINUX, "RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress);
-	DPRINTM(DPRINT_LINUX, "RamdiskSize: 0x%x\n", LinuxSetupSector->RamdiskSize);
-	DPRINTM(DPRINT_LINUX, "BootSectKludgeOffset: 0x%x\n", LinuxSetupSector->BootSectKludgeOffset);
-	DPRINTM(DPRINT_LINUX, "BootSectKludgeSegment: 0x%x\n", LinuxSetupSector->BootSectKludgeSegment);
-	DPRINTM(DPRINT_LINUX, "HeapEnd: 0x%x\n", LinuxSetupSector->HeapEnd);
+	TRACE("SetupHeaderSignature: 0x%x (HdrS)\n", LinuxSetupSector->SetupHeaderSignature);
+	TRACE("Version: 0x%x\n", LinuxSetupSector->Version);
+	TRACE("RealModeSwitch: 0x%x\n", LinuxSetupSector->RealModeSwitch);
+	TRACE("SetupSeg: 0x%x\n", LinuxSetupSector->SetupSeg);
+	TRACE("StartSystemSeg: 0x%x\n", LinuxSetupSector->StartSystemSeg);
+	TRACE("KernelVersion: 0x%x\n", LinuxSetupSector->KernelVersion);
+	TRACE("TypeOfLoader: 0x%x\n", LinuxSetupSector->TypeOfLoader);
+	TRACE("LoadFlags: 0x%x\n", LinuxSetupSector->LoadFlags);
+	TRACE("SetupMoveSize: 0x%x\n", LinuxSetupSector->SetupMoveSize);
+	TRACE("Code32Start: 0x%x\n", LinuxSetupSector->Code32Start);
+	TRACE("RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress);
+	TRACE("RamdiskSize: 0x%x\n", LinuxSetupSector->RamdiskSize);
+	TRACE("BootSectKludgeOffset: 0x%x\n", LinuxSetupSector->BootSectKludgeOffset);
+	TRACE("BootSectKludgeSegment: 0x%x\n", LinuxSetupSector->BootSectKludgeSegment);
+	TRACE("HeapEnd: 0x%x\n", LinuxSetupSector->HeapEnd);
 
 	return TRUE;
 }
@@ -484,12 +485,12 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
 	LinuxSetupSector->RamdiskAddress = (ULONG)LinuxInitrdLoadAddress;
 	LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
 
-	DPRINTM(DPRINT_LINUX, "RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress);
-	DPRINTM(DPRINT_LINUX, "RamdiskSize: 0x%x\n", LinuxSetupSector->RamdiskSize);
+	TRACE("RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress);
+	TRACE("RamdiskSize: 0x%x\n", LinuxSetupSector->RamdiskSize);
 
 	if (LinuxSetupSector->Version >= 0x0203)
 	{
-		DPRINTM(DPRINT_LINUX, "InitrdAddressMax: 0x%x\n", LinuxSetupSector->InitrdAddressMax);
+		TRACE("InitrdAddressMax: 0x%x\n", LinuxSetupSector->InitrdAddressMax);
 	}
 
 	// Read in the ramdisk

@@ -13,6 +13,8 @@
 #include <ndk/asm.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(WINDOWS);
+
 extern ULONG LoaderPagesSpanned;
 
 PCHAR  MemTypeDesc[]  = {
@@ -148,7 +150,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 			Mad[MadCount].MemoryType != LoaderFirmwarePermanent &&
 			Mad[MadCount].MemoryType != LoaderFree)
 		{
-			DPRINTM(DPRINT_WINDOWS, "Setting page %x %x to Temporary from %d\n",
+			TRACE("Setting page %x %x to Temporary from %d\n",
 				BasePage, PageCount, Mad[MadCount].MemoryType);
 			Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
 		}
@@ -174,7 +176,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		Status = MempSetupPaging(BasePage, PageCount);
 		if (!Status)
 		{
-			DPRINTM(DPRINT_WINDOWS, "Error during MempSetupPaging\n");
+			ERR("Error during MempSetupPaging\n");
 			return;
 		}
 	}
@@ -231,13 +233,13 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	MemoryMapStartPage = (ULONG_PTR)MemoryMap >> MM_PAGE_SHIFT;
 	MemoryMapSizeInPages = (NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM) + MM_PAGE_SIZE - 1) / MM_PAGE_SIZE;
 
-	DPRINTM(DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries);
+	TRACE("Got memory map with %d entries\n", NoEntries);
 
 	// Always contiguously map low 1Mb of memory
 	Status = MempSetupPaging(0, 0x100);
 	if (!Status)
 	{
-		DPRINTM(DPRINT_WINDOWS, "Error during MempSetupPaging of low 1Mb\n");
+		ERR("Error during MempSetupPaging of low 1Mb\n");
 		return FALSE;
 	}
 
@@ -300,7 +302,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	}
 #endif
 
-	DPRINTM(DPRINT_WINDOWS, "MadCount: %d\n", MadCount);
+	TRACE("MadCount: %d\n", MadCount);
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlock); //FIXME: Delete!
 
@@ -317,7 +319,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 	// Fill the memory descriptor list and
 	//PrepareMemoryDescriptorList();
-	DPRINTM(DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n");
+	TRACE("Memory Descriptor List prepared, printing PDE\n");
 	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
 
 #if DBG
@@ -337,7 +339,7 @@ WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	PLIST_ENTRY PreviousEntry, NextEntry;
 	PMEMORY_ALLOCATION_DESCRIPTOR PreviousDescriptor = NULL, NextDescriptor = NULL;
 
-	DPRINTM(DPRINT_WINDOWS, "BP=0x%X PC=0x%X %s\n", NewDescriptor->BasePage,
+	TRACE("BP=0x%X PC=0x%X %s\n", NewDescriptor->BasePage,
 		NewDescriptor->PageCount, MemTypeDesc[NewDescriptor->MemoryType]);
 
 	/* Find a place where to insert the new descriptor to */

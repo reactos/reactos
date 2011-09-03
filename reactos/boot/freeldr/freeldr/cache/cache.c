@@ -20,6 +20,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(CACHE);
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Internal data
@@ -58,9 +60,9 @@ BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
 	{
 		CacheManagerInitialized = FALSE;
 
-		DPRINTM(DPRINT_CACHE, "CacheBlockCount: %d\n", CacheBlockCount);
-		DPRINTM(DPRINT_CACHE, "CacheSizeLimit: %d\n", CacheSizeLimit);
-		DPRINTM(DPRINT_CACHE, "CacheSizeCurrent: %d\n", CacheSizeCurrent);
+		TRACE("CacheBlockCount: %d\n", CacheBlockCount);
+		TRACE("CacheSizeLimit: %d\n", CacheSizeLimit);
+		TRACE("CacheSizeCurrent: %d\n", CacheSizeCurrent);
 		//
 		// Loop through and free the cache blocks
 		//
@@ -98,10 +100,10 @@ BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
 
 	CacheManagerInitialized = TRUE;
 
-	DPRINTM(DPRINT_CACHE, "Initializing BIOS drive 0x%x.\n", DriveNumber);
-	DPRINTM(DPRINT_CACHE, "BytesPerSector: %d.\n", CacheManagerDrive.BytesPerSector);
-	DPRINTM(DPRINT_CACHE, "BlockSize: %d.\n", CacheManagerDrive.BlockSize);
-	DPRINTM(DPRINT_CACHE, "CacheSizeLimit: %d.\n", CacheSizeLimit);
+	TRACE("Initializing BIOS drive 0x%x.\n", DriveNumber);
+	TRACE("BytesPerSector: %d.\n", CacheManagerDrive.BytesPerSector);
+	TRACE("BlockSize: %d.\n", CacheManagerDrive.BlockSize);
+	TRACE("CacheSizeLimit: %d.\n", CacheSizeLimit);
 
 	return TRUE;
 }
@@ -122,7 +124,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
 	ULONG				BlockCount;
 	ULONG				Idx;
 
-	DPRINTM(DPRINT_CACHE, "CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %I64d SectorCount: %d Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer);
+	TRACE("CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %I64d SectorCount: %d Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer);
 
 	// If we aren't initialized yet then they can't do this
 	if (CacheManagerInitialized == FALSE)
@@ -139,7 +141,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
 	EndBlock = (ULONG)((StartSector + (SectorCount - 1)) / CacheManagerDrive.BlockSize);
 	SectorOffsetInEndBlock = (ULONG)(1 + (StartSector + (SectorCount - 1)) % CacheManagerDrive.BlockSize);
 	BlockCount = (EndBlock - StartBlock) + 1;
-	DPRINTM(DPRINT_CACHE, "StartBlock: %d SectorOffsetInStartBlock: %d CopyLengthInStartBlock: %d EndBlock: %d SectorOffsetInEndBlock: %d BlockCount: %d\n", StartBlock, SectorOffsetInStartBlock, CopyLengthInStartBlock, EndBlock, SectorOffsetInEndBlock, BlockCount);
+	TRACE("StartBlock: %d SectorOffsetInStartBlock: %d CopyLengthInStartBlock: %d EndBlock: %d SectorOffsetInEndBlock: %d BlockCount: %d\n", StartBlock, SectorOffsetInStartBlock, CopyLengthInStartBlock, EndBlock, SectorOffsetInEndBlock, BlockCount);
 
 	//
 	// Read the first block into the buffer
@@ -161,7 +163,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
 		RtlCopyMemory(Buffer,
 			(PVOID)((ULONG_PTR)CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)),
 			(CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
-		DPRINTM(DPRINT_CACHE, "1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, ((ULONG_PTR)CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
+		TRACE("1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, ((ULONG_PTR)CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
 
 		//
 		// Update the buffer address
@@ -194,7 +196,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
 		RtlCopyMemory(Buffer,
 			CacheBlock->BlockData,
 			CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector);
-		DPRINTM(DPRINT_CACHE, "2 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector);
+		TRACE("2 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector);
 
 		//
 		// Update the buffer address
@@ -227,7 +229,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
 		RtlCopyMemory(Buffer,
 			CacheBlock->BlockData,
 			SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector);
-		DPRINTM(DPRINT_CACHE, "3 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector);
+		TRACE("3 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector);
 
 		//
 		// Update the buffer address
@@ -252,7 +254,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(UCHAR DiskNumber, ULONGLONG StartSector, 
 	ULONG				BlockCount;
 	ULONG				Idx;
 
-	DPRINTM(DPRINT_CACHE, "CacheForceDiskSectorsIntoCache() DiskNumber: 0x%x StartSector: %d SectorCount: %d\n", DiskNumber, StartSector, SectorCount);
+	TRACE("CacheForceDiskSectorsIntoCache() DiskNumber: 0x%x StartSector: %d SectorCount: %d\n", DiskNumber, StartSector, SectorCount);
 
 	// If we aren't initialized yet then they can't do this
 	if (CacheManagerInitialized == FALSE)
@@ -295,7 +297,7 @@ BOOLEAN CacheReleaseMemory(ULONG MinimumAmountToRelease)
 {
 	ULONG				AmountReleased;
 
-	DPRINTM(DPRINT_CACHE, "CacheReleaseMemory() MinimumAmountToRelease = %d\n", MinimumAmountToRelease);
+	TRACE("CacheReleaseMemory() MinimumAmountToRelease = %d\n", MinimumAmountToRelease);
 
 	// If we aren't initialized yet then they can't do this
 	if (CacheManagerInitialized == FALSE)

@@ -21,8 +21,9 @@
 #include <freeldr.h>
 #include <debug.h>
 
-static FRLDRHKEY RootKey;
+DBG_DEFAULT_CHANNEL(REGISTRY);
 
+static FRLDRHKEY RootKey;
 
 VOID
 RegInitializeRegistry (VOID)
@@ -71,7 +72,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                        &SelectKey);
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegOpenKey() failed (Error %u)\n", (int)Error);
+        ERR("RegOpenKey() failed (Error %u)\n", (int)Error);
         return Error;
     }
 
@@ -83,7 +84,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegQueryValue('Default') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
         return Error;
     }
 
@@ -95,7 +96,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegQueryValue('Default') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
         return Error;
     }
 
@@ -125,7 +126,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                        &SystemKey);
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegOpenKey(SystemKey) failed (Error %lu)\n", Error);
+        ERR("RegOpenKey(SystemKey) failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -134,7 +135,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                        &ControlSetKey);
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegOpenKey(ControlSetKey) failed (Error %lu)\n", Error);
+        ERR("RegOpenKey(ControlSetKey) failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -143,7 +144,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                          &LinkKey);
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegCreateKey(LinkKey) failed (Error %lu)\n", Error);
+        ERR("RegCreateKey(LinkKey) failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -154,7 +155,7 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
                         sizeof(PVOID));
     if (Error != ERROR_SUCCESS)
     {
-        DPRINTM(DPRINT_REGISTRY, "RegSetValue(LinkKey) failed (Error %lu)\n", Error);
+        ERR("RegSetValue(LinkKey) failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -178,7 +179,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
     ULONG NameSize;
     int CmpResult;
 
-    DPRINTM(DPRINT_REGISTRY, "KeyName '%S'\n", KeyName);
+    TRACE("KeyName '%S'\n", KeyName);
 
     if (*KeyName == L'\\')
     {
@@ -202,7 +203,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 
     while (*KeyName != 0)
     {
-        DPRINTM(DPRINT_REGISTRY, "KeyName '%S'\n", KeyName);
+        TRACE("KeyName '%S'\n", KeyName);
 
         if (*KeyName == L'\\')
             KeyName++;
@@ -225,11 +226,11 @@ RegCreateKey(FRLDRHKEY ParentKey,
         CmpResult = 1;
         while (Ptr != &CurrentKey->SubKeyList)
         {
-            DPRINTM(DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr);
+            TRACE("Ptr 0x%x\n", Ptr);
 
             SearchKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
-            DPRINTM(DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey);
-            DPRINTM(DPRINT_REGISTRY, "Searching '%S'\n", SearchKey->Name);
+            TRACE("SearchKey 0x%x\n", SearchKey);
+            TRACE("Searching '%S'\n", SearchKey->Name);
             CmpResult = _wcsnicmp(SearchKey->Name, name, subkeyLength);
 
             if (CmpResult == 0 && SearchKey->NameSize == NameSize) break;
@@ -264,8 +265,8 @@ RegCreateKey(FRLDRHKEY ParentKey,
             memcpy(NewKey->Name, name, NewKey->NameSize - sizeof(WCHAR));
             NewKey->Name[subkeyLength] = 0;
 
-            DPRINTM(DPRINT_REGISTRY, "NewKey 0x%x\n", NewKey);
-            DPRINTM(DPRINT_REGISTRY, "NewKey '%S'  Length %d\n", NewKey->Name, NewKey->NameSize);
+            TRACE("NewKey 0x%x\n", NewKey);
+            TRACE("NewKey '%S'  Length %d\n", NewKey->Name, NewKey->NameSize);
 
             CurrentKey = NewKey;
         }
@@ -324,7 +325,7 @@ RegEnumKey(FRLDRHKEY Key,
 
     SearchKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
 
-    DPRINTM(DPRINT_REGISTRY, "Name '%S'  Length %d\n", SearchKey->Name, SearchKey->NameSize);
+    TRACE("Name '%S'  Length %d\n", SearchKey->Name, SearchKey->NameSize);
 
     Size = min(SearchKey->NameSize, *NameSize);
     *NameSize = Size;
@@ -348,7 +349,7 @@ RegOpenKey(FRLDRHKEY ParentKey,
     int stringLength;
     ULONG NameSize;
 
-    DPRINTM(DPRINT_REGISTRY, "KeyName '%S'\n", KeyName);
+    TRACE("KeyName '%S'\n", KeyName);
 
     *Key = NULL;
 
@@ -374,7 +375,7 @@ RegOpenKey(FRLDRHKEY ParentKey,
 
     while (*KeyName != 0)
     {
-        DPRINTM(DPRINT_REGISTRY, "KeyName '%S'\n", KeyName);
+        TRACE("KeyName '%S'\n", KeyName);
 
         if (*KeyName == L'\\') KeyName++;
         p = wcschr(KeyName, L'\\');
@@ -395,12 +396,12 @@ RegOpenKey(FRLDRHKEY ParentKey,
         Ptr = CurrentKey->SubKeyList.Flink;
         while (Ptr != &CurrentKey->SubKeyList)
         {
-            DPRINTM(DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr);
+            TRACE("Ptr 0x%x\n", Ptr);
 
             SearchKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
 
-            DPRINTM(DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey);
-            DPRINTM(DPRINT_REGISTRY, "Searching '%S'\n", SearchKey->Name);
+            TRACE("SearchKey 0x%x\n", SearchKey);
+            TRACE("Searching '%S'\n", SearchKey->Name);
 
             if (SearchKey->NameSize == NameSize &&
                 _wcsnicmp(SearchKey->Name, name, subkeyLength) == 0) break;
@@ -443,7 +444,7 @@ RegSetValue(FRLDRHKEY Key,
     PLIST_ENTRY Ptr;
     PVALUE Value = NULL;
 
-    DPRINTM(DPRINT_REGISTRY, "Key 0x%p, ValueName '%S', Type %ld, Data 0x%p, DataSize %ld\n",
+    TRACE("Key 0x%p, ValueName '%S', Type %ld, Data 0x%p, DataSize %ld\n",
             Key, ValueName, Type, Data, DataSize);
 
     if ((ValueName == NULL) || (*ValueName == 0))
@@ -476,7 +477,7 @@ RegSetValue(FRLDRHKEY Key,
         {
             Value = CONTAINING_RECORD(Ptr, VALUE, ValueList);
 
-            DPRINTM(DPRINT_REGISTRY, "Value->Name '%S'\n", Value->Name);
+            TRACE("Value->Name '%S'\n", Value->Name);
 
             if (_wcsicmp(Value->Name, ValueName) == 0) break;
 
@@ -486,7 +487,7 @@ RegSetValue(FRLDRHKEY Key,
         if (Ptr == &Key->ValueList)
         {
             /* add new value */
-            DPRINTM(DPRINT_REGISTRY, "No value found - adding new value\n");
+            TRACE("No value found - adding new value\n");
 
             Value = (PVALUE)MmHeapAlloc(sizeof(VALUE));
             if (Value == NULL) return ERROR_OUTOFMEMORY;
@@ -574,7 +575,7 @@ RegQueryValue(FRLDRHKEY Key,
         {
             Value = CONTAINING_RECORD(Ptr, VALUE, ValueList);
 
-            DPRINTM(DPRINT_REGISTRY, "Searching for '%S'. Value name '%S'\n", ValueName, Value->Name);
+            TRACE("Searching for '%S'. Value name '%S'\n", ValueName, Value->Name);
 
             if (_wcsicmp(Value->Name, ValueName) == 0) break;
 

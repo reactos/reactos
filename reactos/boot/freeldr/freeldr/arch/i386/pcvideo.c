@@ -51,6 +51,8 @@
 #define VERTRES_350_SCANLINES		0x01
 #define VERTRES_400_SCANLINES		0x02
 
+DBG_DEFAULT_CHANNEL(UI);
+
 #include <pshpack2.h>
 typedef struct
 {
@@ -476,37 +478,37 @@ PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInform
 
   RtlCopyMemory(ModeInformation, (PVOID)BIOSCALLBUFFER, sizeof(SVGA_MODE_INFORMATION));
 
-  DPRINTM(DPRINT_UI, "\n");
-  DPRINTM(DPRINT_UI, "BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode);
-  DPRINTM(DPRINT_UI, "ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes);
-  DPRINTM(DPRINT_UI, "WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA);
-  DPRINTM(DPRINT_UI, "WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB);
-  DPRINTM(DPRINT_UI, "WindowGranularity = %dKB\n", ModeInformation->WindowGranularity);
-  DPRINTM(DPRINT_UI, "WindowSize = %dKB\n", ModeInformation->WindowSize);
-  DPRINTM(DPRINT_UI, "WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment);
-  DPRINTM(DPRINT_UI, "WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment);
-  DPRINTM(DPRINT_UI, "WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction);
-  DPRINTM(DPRINT_UI, "BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine);
-  DPRINTM(DPRINT_UI, "WidthInPixels = %d\n", ModeInformation->WidthInPixels);
-  DPRINTM(DPRINT_UI, "HeightInPixels = %d\n", ModeInformation->HeightInPixels);
-  DPRINTM(DPRINT_UI, "CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels);
-  DPRINTM(DPRINT_UI, "CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels);
-  DPRINTM(DPRINT_UI, "NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes);
-  DPRINTM(DPRINT_UI, "BitsPerPixel = %d\n", ModeInformation->BitsPerPixel);
-  DPRINTM(DPRINT_UI, "NumberOfBanks = %d\n", ModeInformation->NumberOfBanks);
-  DPRINTM(DPRINT_UI, "MemoryModel = %d\n", ModeInformation->MemoryModel);
-  DPRINTM(DPRINT_UI, "BankSize = %d\n", ModeInformation->BankSize);
-  DPRINTM(DPRINT_UI, "NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes);
-  DPRINTM(DPRINT_UI, "---VBE v1.2+ ---\n");
-  DPRINTM(DPRINT_UI, "RedMaskSize = %d\n", ModeInformation->RedMaskSize);
-  DPRINTM(DPRINT_UI, "RedMaskPosition = %d\n", ModeInformation->RedMaskPosition);
-  DPRINTM(DPRINT_UI, "GreenMaskSize = %d\n", ModeInformation->GreenMaskSize);
-  DPRINTM(DPRINT_UI, "GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition);
-  DPRINTM(DPRINT_UI, "BlueMaskSize = %d\n", ModeInformation->BlueMaskSize);
-  DPRINTM(DPRINT_UI, "BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition);
-  DPRINTM(DPRINT_UI, "ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize);
-  DPRINTM(DPRINT_UI, "ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition);
-  DPRINTM(DPRINT_UI, "\n");
+  TRACE("\n");
+  TRACE("BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode);
+  TRACE("ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes);
+  TRACE("WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA);
+  TRACE("WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB);
+  TRACE("WindowGranularity = %dKB\n", ModeInformation->WindowGranularity);
+  TRACE("WindowSize = %dKB\n", ModeInformation->WindowSize);
+  TRACE("WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment);
+  TRACE("WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment);
+  TRACE("WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction);
+  TRACE("BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine);
+  TRACE("WidthInPixels = %d\n", ModeInformation->WidthInPixels);
+  TRACE("HeightInPixels = %d\n", ModeInformation->HeightInPixels);
+  TRACE("CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels);
+  TRACE("CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels);
+  TRACE("NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes);
+  TRACE("BitsPerPixel = %d\n", ModeInformation->BitsPerPixel);
+  TRACE("NumberOfBanks = %d\n", ModeInformation->NumberOfBanks);
+  TRACE("MemoryModel = %d\n", ModeInformation->MemoryModel);
+  TRACE("BankSize = %d\n", ModeInformation->BankSize);
+  TRACE("NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes);
+  TRACE("---VBE v1.2+ ---\n");
+  TRACE("RedMaskSize = %d\n", ModeInformation->RedMaskSize);
+  TRACE("RedMaskPosition = %d\n", ModeInformation->RedMaskPosition);
+  TRACE("GreenMaskSize = %d\n", ModeInformation->GreenMaskSize);
+  TRACE("GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition);
+  TRACE("BlueMaskSize = %d\n", ModeInformation->BlueMaskSize);
+  TRACE("BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition);
+  TRACE("ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize);
+  TRACE("ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition);
+  TRACE("\n");
 
   return TRUE;
 }
@@ -881,21 +883,21 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
 
   if (VIDEOCARD_CGA_OR_OTHER == PcVideoDetectVideoCard())
     {
-      DPRINTM(DPRINT_UI, "CGA or other display adapter detected.\n");
+      TRACE("CGA or other display adapter detected.\n");
       printf("CGA or other display adapter detected.\n");
       printf("Using 80x25 text mode.\n");
       VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
   else if (VIDEOCARD_EGA == PcVideoDetectVideoCard())
     {
-      DPRINTM(DPRINT_UI, "EGA display adapter detected.\n");
+      TRACE("EGA display adapter detected.\n");
       printf("EGA display adapter detected.\n");
       printf("Using 80x25 text mode.\n");
       VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
   else /* if (VIDEOCARD_VGA == PcVideoDetectVideoCard()) */
     {
-      DPRINTM(DPRINT_UI, "VGA display adapter detected.\n");
+      TRACE("VGA display adapter detected.\n");
 
       if (0 == _stricmp(DisplayModeName, "NORMAL_VGA"))
         {

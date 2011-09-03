@@ -25,6 +25,8 @@
 
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(WINDOWS);
+
 void
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
@@ -53,40 +55,40 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
     /* Get ANSI codepage file */
     if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext))
     {
-        printf("Failed to find 'NLS/AnsiCodepage'\n");
+        ERR("Failed to find 'NLS/AnsiCodepage'\n");
         return;
     }
     if (!InfGetDataField(&InfContext, 1, &AnsiName))
     {
-        printf("Failed to get load options\n");
+        ERR("Failed to get load options\n");
         return;
     }
 
     /* Get OEM codepage file */
     if (!InfFindFirstLine(InfHandle, "NLS", "OemCodepage", &InfContext))
     {
-        printf("Failed to find 'NLS/AnsiCodepage'\n");
+        ERR("Failed to find 'NLS/AnsiCodepage'\n");
         return;
     }
     if (!InfGetDataField(&InfContext, 1, &OemName))
     {
-        printf("Failed to get load options\n");
+        ERR("Failed to get load options\n");
         return;
     }
 
     if (!InfFindFirstLine(InfHandle, "NLS", "UnicodeCasetable", &InfContext))
     {
-        printf("Failed to find 'NLS/AnsiCodepage'\n");
+        ERR("Failed to find 'NLS/AnsiCodepage'\n");
         return;
     }
     if (!InfGetDataField(&InfContext, 1, &LangName))
     {
-        printf("Failed to get load options\n");
+        ERR("Failed to get load options\n");
         return;
     }
 
     Status = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-    DPRINTM(DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status);
+    TRACE("NLS data loaded with status %d\n", Status);
 }
 
 VOID
@@ -132,7 +134,7 @@ SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPC
 
                 if (!Status)
                 {
-                    DPRINTM(DPRINT_WINDOWS, "could not add boot driver %s, %s\n", SearchPath, DriverName);
+                    ERR("could not add boot driver %s, %s\n", SearchPath, DriverName);
                     return;
                 }
             }
@@ -178,7 +180,7 @@ VOID LoadReactOSSetup(VOID)
         SystemPath = SourcePaths[i];
         if (!SystemPath)
         {
-            printf("Failed to open 'txtsetup.sif'\n");
+            ERR("Failed to open txtsetup.sif\n");
             return;
         }
         sprintf(FileName, "%stxtsetup.sif", SystemPath);
@@ -189,18 +191,18 @@ VOID LoadReactOSSetup(VOID)
         }
     }
 
-    DPRINTM(DPRINT_WINDOWS,"BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
+    TRACE("BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
 
     /* Get Load options - debug and non-debug */
     if (!InfFindFirstLine(InfHandle, "SetupData", "OsLoadOptions", &InfContext))
     {
-        printf("Failed to find 'SetupData/OsLoadOptions'\n");
+        ERR("Failed to find 'SetupData/OsLoadOptions'\n");
         return;
     }
 
     if (!InfGetDataField (&InfContext, 1, &LoadOptions))
     {
-        printf("Failed to get load options\n");
+        ERR("Failed to get load options\n");
         return;
     }
 
@@ -215,7 +217,7 @@ VOID LoadReactOSSetup(VOID)
     }
 #endif
 
-    DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
+    TRACE("BootOptions: '%s'\n", BootOptions);
 
     //SetupUiInitialize();
     UiDrawStatusText("");

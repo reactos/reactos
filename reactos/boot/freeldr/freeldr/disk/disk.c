@@ -21,8 +21,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-#undef  UNIMPLEMENTED
-#define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "Unimplemented\n"));
+DBG_DEFAULT_CHANNEL(DISK);
 
 static BOOLEAN bReportError = TRUE;
 
@@ -44,7 +43,7 @@ VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 
 	sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
-	DPRINTM(DPRINT_DISK, "%s\n", ErrorCodeString);
+	TRACE("%s\n", ErrorCodeString);
 
 	UiMessageBox(ErrorCodeString);
 }

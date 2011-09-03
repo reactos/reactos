@@ -24,6 +24,8 @@
 #include <ndk/ldrtypes.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(WINDOWS);
+
 //FIXME: Do a better way to retrieve Arc disk information
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
@@ -92,9 +94,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	strncpy(ArcBoot, BootPath, PathSeparator);
 	ArcBoot[PathSeparator] = 0;
 
-	DPRINTM(DPRINT_WINDOWS, "ArcBoot: %s\n", ArcBoot);
-	DPRINTM(DPRINT_WINDOWS, "SystemRoot: %s\n", SystemRoot);
-	DPRINTM(DPRINT_WINDOWS, "Options: %s\n", Options);
+	TRACE("ArcBoot: %s\n", ArcBoot);
+	TRACE("SystemRoot: %s\n", SystemRoot);
+	TRACE("Options: %s\n", Options);
 
 	/* Fill Arc BootDevice */
 	LoaderBlock->ArcBootDeviceName = MmHeapAlloc(strlen(ArcBoot)+1);
@@ -257,7 +259,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		DriverPath[0] = 0;
 	}
 
-	DPRINTM(DPRINT_WINDOWS, "DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock);
+	TRACE("DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock);
 
 
 	// Check if driver is already loaded
@@ -278,7 +280,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Status = WinLdrAllocateDataTableEntry(LoaderBlock, DllName, DllName, DriverBase, DriverDTE);
 	if (!Status)
 	{
-		DPRINTM(DPRINT_WINDOWS, "WinLdrAllocateDataTableEntry() failed\n");
+		ERR("WinLdrAllocateDataTableEntry() failed\n");
 		return FALSE;
 	}
 
@@ -290,8 +292,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Status = WinLdrScanImportDescriptorTable(LoaderBlock, FullPath, *DriverDTE);
 	if (!Status)
 	{
-		DPRINTM(DPRINT_WINDOWS, "WinLdrScanImportDescriptorTable() failed for %s\n",
-			FullPath);
+		ERR("WinLdrScanImportDescriptorTable() failed for %s\n", FullPath);
 		return FALSE;
 	}
 
@@ -313,7 +314,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	{
 		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
 
-		DPRINTM(DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
+		TRACE("BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
 			BootDriver->LdrEntry, &BootDriver->RegistryPath);
 
 		// Paths are relative (FIXME: Are they always relative?)
@@ -357,7 +358,7 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 	//sprintf(ProgressString, "Loading %s...", FileName);
 	//UiDrawProgressBarCenter(1, 100, ProgressString);
 
-	DPRINTM(DPRINT_WINDOWS, "Loading module %s\n", ModuleName);
+	TRACE("Loading module %s\n", ModuleName);
 	*Size = 0;
 
 	/* Open the image file */
@@ -394,7 +395,7 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 		return NULL;
 	}
 
-	DPRINTM(DPRINT_WINDOWS, "Loaded %s at 0x%x with size 0x%x\n", ModuleName, PhysicalBase, FileSize);
+	TRACE("Loaded %s at 0x%x with size 0x%x\n", ModuleName, PhysicalBase, FileSize);
 
 	return PhysicalBase;
 }
@@ -442,7 +443,7 @@ LoadModule(
 	strcat(FullFileName, File);
 
 	Status = WinLdrLoadImage(FullFileName, LoaderSystemCode, &BaseAdress);
-	DPRINTM(DPRINT_WINDOWS, "%s loaded with status %d at %p\n",
+	TRACE("%s loaded with status %d at %p\n",
 	        File, Status, BaseAdress);
 
 	strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
@@ -503,7 +504,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 		while (*p != '\0' && *p != '"')
 			p++;
 		strcpy(BootOptions, p);
-		DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
+		TRACE("BootOptions: '%s'\n", BootOptions);
 	}
 
 	/* Append boot-time options */
@@ -526,7 +527,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	/* Let user know we started loading */
 	//UiDrawStatusText("Loading...");
 
-	DPRINTM(DPRINT_WINDOWS,"BootPath: '%s'\n", BootPath);
+	TRACE("BootPath: '%s'\n", BootPath);
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
@@ -540,11 +541,11 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	UiDrawBackdrop();
 	UiDrawProgressBarCenter(15, 100, "Loading system hive...");
 	Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
-	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive loaded with status %d\n", Status);
+	TRACE("SYSTEM hive loaded with status %d\n", Status);
 
 	/* Load NLS data, OEM font, and prepare boot drivers list */
 	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
-	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive scanned with status %d\n", Status);
+	TRACE("SYSTEM hive scanned with status %d\n", Status);
 
 
 	LoadAndBootWindowsCommon(OperatingSystemVersion,
@@ -610,7 +611,7 @@ LoadAndBootWindowsCommon(
 	UiDrawBackdrop();
 	UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
 	Status = WinLdrLoadBootDrivers(LoaderBlock, (PCHAR)BootPath);
-	DPRINTM(DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status);
+	TRACE("Boot drivers loaded with status %d\n", Status);
 
 	/* Initialize Phase 1 - no drivers loading anymore */
 	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemRoot, BootPath, OperatingSystemVersion);
@@ -637,7 +638,7 @@ LoadAndBootWindowsCommon(
 	/* Set processor context */
 	WinLdrSetProcessorContext();
 
-	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
+	TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);
 
 	// Zero KI_USER_SHARED_DATA page
@@ -670,7 +671,7 @@ WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	{
 		MemoryDescriptor = CONTAINING_RECORD(NextMd, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
 
-		DPRINTM(DPRINT_WINDOWS, "BP %08X PC %04X MT %d\n", MemoryDescriptor->BasePage,
+		TRACE("BP %08X PC %04X MT %d\n", MemoryDescriptor->BasePage,
 			MemoryDescriptor->PageCount, MemoryDescriptor->MemoryType);
 
 		NextMd = MemoryDescriptor->ListEntry.Flink;
@@ -689,7 +690,7 @@ WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	{
 		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
 
-		DPRINTM(DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
+		TRACE("BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
 			BootDriver->LdrEntry, &BootDriver->RegistryPath);
 
 		NextBd = BootDriver->Link.Flink;
@@ -708,7 +709,7 @@ WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	{
 		ArcDisk = CONTAINING_RECORD(NextBd, ARC_DISK_SIGNATURE, ListEntry);
 
-		DPRINTM(DPRINT_WINDOWS, "ArcDisk %s checksum: 0x%X, signature: 0x%X\n",
+		TRACE("ArcDisk %s checksum: 0x%X, signature: 0x%X\n",
 			ArcDisk->ArcName, ArcDisk->CheckSum, ArcDisk->Signature);
 
 		NextBd = ArcDisk->ListEntry.Flink;

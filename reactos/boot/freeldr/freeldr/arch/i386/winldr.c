@@ -28,6 +28,8 @@
 	} GDTIDT;
 #pragma pack(4)
 
+DBG_DEFAULT_CHANNEL(WINDOWS);
+
 /* GLOBALS ***************************************************************/
 
 PHARDWARE_PTE PDE;
@@ -56,7 +58,7 @@ MempAllocatePageTables()
 	// and windows doesn't expect ALL memory mapped...
 	NumPageTables = TotalPagesInLookupTable >> 10;
 
-	DPRINTM(DPRINT_WINDOWS, "NumPageTables = %d\n", NumPageTables);
+	TRACE("NumPageTables = %d\n", NumPageTables);
 
 	// Allocate memory block for all these things:
 	// PDE, HAL mapping page table, physical mapping, kernel mapping
@@ -75,7 +77,7 @@ MempAllocatePageTables()
 	if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
 		PhysicalPageTablesBuffer)
 	{
-		DPRINTM(DPRINT_WINDOWS, "There was a problem allocating two adjacent blocks of memory!");
+		TRACE("There was a problem allocating two adjacent blocks of memory!");
 	}
 
 	if (Buffer == NULL || PhysicalPageTablesBuffer == NULL)
@@ -128,7 +130,7 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 
 	if (Entry+(KSEG0_BASE >> 22) > 1023)
 	{
-		DPRINTM(DPRINT_WINDOWS, "WARNING! Entry: %X > 1023\n", Entry+(KSEG0_BASE >> 22));
+		TRACE("WARNING! Entry: %X > 1023\n", Entry+(KSEG0_BASE >> 22));
 	}
 
 	// Kernel-mode mapping
@@ -232,7 +234,7 @@ WinLdrpMapApic()
 	MsrValue.QuadPart = __readmsr(0x1B);
 	APICAddress = (MsrValue.LowPart & 0xFFFFF000);
 
-	DPRINTM(DPRINT_WINDOWS, "Local APIC detected at address 0x%x\n",
+	TRACE("Local APIC detected at address 0x%x\n",
 		APICAddress);
 
 	/* Map it */
@@ -249,7 +251,7 @@ WinLdrMapSpecialPages(void)
 {
 
 	//VideoDisplayString(L"Hello from VGA, going into the kernel\n");
-	DPRINTM(DPRINT_WINDOWS, "HalPageTable: 0x%X\n", HalPageTable);
+	TRACE("HalPageTable: 0x%X\n", HalPageTable);
 
 	// Page Tables have been setup, make special handling for PCR and TSS
 	// (which is done in BlSetupFotNt in usual ntldr)
@@ -266,7 +268,7 @@ WinLdrMapSpecialPages(void)
 
 	// Map VGA memory
 	//VideoMemoryBase = MmMapIoSpace(0xb8000, 4000, MmNonCached);
-	//DPRINTM(DPRINT_WINDOWS, "VideoMemoryBase: 0x%X\n", VideoMemoryBase);
+	//TRACE("VideoMemoryBase: 0x%X\n", VideoMemoryBase);
 
     return TRUE;
 }
@@ -318,7 +320,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	// PDE and PTEs
 	if (MempAllocatePageTables() == FALSE)
 	{
-	    // FIXME: bugcheck
+	    BugCheck("MempAllocatePageTables failed!\n");
 	}
 
 	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
@@ -340,7 +342,7 @@ WinLdrSetProcessorContext(void)
 	Pcr = KIP0PCRADDRESS;
 	Tss = KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT);
 
-	DPRINTM(DPRINT_WINDOWS, "GDtIdt %p, Pcr %p, Tss 0x%08X\n",
+	TRACE("GDtIdt %p, Pcr %p, Tss 0x%08X\n",
 		GdtIdt, Pcr, Tss);
 
 	// Enable paging
@@ -595,18 +597,18 @@ MempDump()
     ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
     int i, j;
 
-    DPRINTM(DPRINT_WINDOWS, "\nPDE\n");
+    TRACE("\nPDE\n");
 
     for (i=0; i<128; i++)
     {
-        DPRINTM(DPRINT_WINDOWS, "0x%04X | ", i*8);
+        TRACE("0x%04X | ", i*8);
 
         for (j=0; j<8; j++)
         {
-            DPRINTM(DPRINT_WINDOWS, "0x%08X ", PDE_Addr[i*8+j]);
+            TRACE("0x%08X ", PDE_Addr[i*8+j]);
         }
 
-        DPRINTM(DPRINT_WINDOWS, "\n");
+        TRACE("\n");
     }
 }
 #endif

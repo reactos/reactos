@@ -21,6 +21,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(MEMORY);
+
 #if DBG
 typedef struct
 {
@@ -60,14 +62,14 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
 #endif
 
-	DPRINTM(DPRINT_MEMORY, "Initializing Memory Manager.\n");
+	TRACE("Initializing Memory Manager.\n");
 
 #if DBG
 	// Dump the system memory map
-	DPRINTM(DPRINT_MEMORY, "System Memory Map (Base Address, Length, Type):\n");
+	TRACE("System Memory Map (Base Address, Length, Type):\n");
 	while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
 	{
-		DPRINTM(DPRINT_MEMORY, "%x\t %x\t %s\n",
+		TRACE("%x\t %x\t %s\n",
 			MemoryDescriptor->BasePage * MM_PAGE_SIZE,
 			MemoryDescriptor->PageCount * MM_PAGE_SIZE,
 			MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
@@ -96,7 +98,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 
 	MmInitializeHeap(PageLookupTableAddress);
 
-	DPRINTM(DPRINT_MEMORY, "Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable);
+	TRACE("Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable);
 	return TRUE;
 }
 
@@ -131,7 +133,7 @@ VOID MmInitializeHeap(PVOID PageLookupTable)
 	// Mark those pages as used
 	MmMarkPagesInLookupTable(PageLookupTableAddress, HeapStart, PagesNeeded, LoaderOsloaderHeap);
 
-	DPRINTM(DPRINT_MEMORY, "Heap initialized, base 0x%08x, pages %d\n", (HeapStart << MM_PAGE_SHIFT), PagesNeeded);
+	TRACE("Heap initialized, base 0x%08x, pages %d\n", (HeapStart << MM_PAGE_SHIFT), PagesNeeded);
 }
 
 #if DBG
@@ -189,9 +191,9 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
         }
     }
     
-    DPRINTM(DPRINT_MEMORY, "lo/hi %lx %lxn", MmLowestPhysicalPage, MmHighestPhysicalPage);
+    TRACE("lo/hi %lx %lxn", MmLowestPhysicalPage, MmHighestPhysicalPage);
     PageCount = MmHighestPhysicalPage - MmLowestPhysicalPage;
-    DPRINTM(DPRINT_MEMORY, "MmGetAddressablePageCountIncludingHoles() returning 0x%x\n", PageCount);
+    TRACE("MmGetAddressablePageCountIncludingHoles() returning 0x%x\n", PageCount);
     return PageCount;
 }
 
@@ -267,7 +269,7 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
             - PageLookupTableSize);
     }
 
-    DPRINTM(DPRINT_MEMORY, "MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableMemAddress);
+    TRACE("MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableMemAddress);
 
     return PageLookupTableMemAddress;
 }
@@ -279,7 +281,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
     ULONG PageLookupTableStartPage;
     ULONG PageLookupTablePageCount;
 
-    DPRINTM(DPRINT_MEMORY, "MmInitPageLookupTable()\n");
+    TRACE("MmInitPageLookupTable()\n");
 
     //
     // Mark every page as allocated initially
@@ -351,7 +353,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
         //
         // Mark used pages in the lookup table
         //
-        DPRINTM(DPRINT_MEMORY, "Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryDescriptor->BasePage, MemoryDescriptor->PageCount);
+        TRACE("Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryDescriptor->BasePage, MemoryDescriptor->PageCount);
         MmMarkPagesInLookupTable(PageLookupTable, MemoryDescriptor->BasePage, MemoryDescriptor->PageCount, MemoryMapPageAllocated);
     }
 
@@ -360,7 +362,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
     //
     PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
     PageLookupTablePageCount = MmGetPageNumberFromAddress((PVOID)((ULONG_PTR)PageLookupTable + ROUND_UP(TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM), MM_PAGE_SIZE))) - PageLookupTableStartPage;
-    DPRINTM(DPRINT_MEMORY, "Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount);
+    TRACE("Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount);
     MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, LoaderFirmwareTemporary);
 }
 
@@ -375,13 +377,13 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 #if 0
 		if ((Index <= (StartPage + 16)) || (Index >= (StartPage+PageCount-16)))
 		{
-			DPRINTM(DPRINT_MEMORY, "Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount);
+			TRACE("Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount);
 		}
 #endif
 		RealPageLookupTable[Index].PageAllocated = PageAllocated;
 		RealPageLookupTable[Index].PageAllocationLength = (PageAllocated != LoaderFree) ? 1 : 0;
 	}
-	DPRINTM(DPRINT_MEMORY, "MmMarkPagesInLookupTable() Done\n");
+	TRACE("MmMarkPagesInLookupTable() Done\n");
 }
 
 VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY MemoryType)
@@ -450,7 +452,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 	}
 	else
 	{
-		DPRINTM(DPRINT_MEMORY, "Alloc low memory, LastFreePageHint %d, TPC %d\n", LastFreePageHint, TotalPageCount);
+		TRACE("Alloc low memory, LastFreePageHint %d, TPC %d\n", LastFreePageHint, TotalPageCount);
 		/* Allocate "low" pages */
 		for (Index=1; Index < LastFreePageHint; Index++)
 		{

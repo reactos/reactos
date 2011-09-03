@@ -27,6 +27,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(DISK);
+
 #define XBOX_IDE_COMMAND_PORT 0x1f0
 #define XBOX_IDE_CONTROL_PORT 0x170
 
@@ -288,11 +290,11 @@ XboxDiskPolledRead(ULONG CommandPort,
         }
       StallExecutionProcessor(10);
     }
-  DPRINTM(DPRINT_DISK, "status=0x%x\n", Status);
-  DPRINTM(DPRINT_DISK, "waited %d usecs for busy to clear\n", RetryCount * 10);
+  TRACE("status=0x%x\n", Status);
+  TRACE("waited %d usecs for busy to clear\n", RetryCount * 10);
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
-      DPRINTM(DPRINT_DISK, "Drive is BUSY for too long\n");
+      WARN("Drive is BUSY for too long\n");
       return FALSE;
     }
 
@@ -307,22 +309,22 @@ XboxDiskPolledRead(ULONG CommandPort,
   /*  Issue command to drive  */
   if (DrvHead & IDE_DH_LBA)
     {
-      DPRINTM(DPRINT_DISK, "READ:DRV=%d:LBA=1:BLK=%d:SC=0x%x:CM=0x%x\n",
-                DrvHead & IDE_DH_DRV1 ? 1 : 0,
-                ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
-                SectorCnt,
-                Command);
+      TRACE("READ:DRV=%d:LBA=1:BLK=%d:SC=0x%x:CM=0x%x\n",
+            DrvHead & IDE_DH_DRV1 ? 1 : 0,
+            ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
+            SectorCnt,
+            Command);
     }
   else
     {
-      DPRINTM(DPRINT_DISK, "READ:DRV=%d:LBA=0:CH=0x%x:CL=0x%x:HD=0x%x:SN=0x%x:SC=0x%x:CM=0x%x\n",
-                DrvHead & IDE_DH_DRV1 ? 1 : 0,
-                CylinderHigh,
-                CylinderLow,
-                DrvHead & 0x0f,
-                SectorNum,
-                SectorCnt,
-                Command);
+      TRACE("READ:DRV=%d:LBA=0:CH=0x%x:CL=0x%x:HD=0x%x:SN=0x%x:SC=0x%x:CM=0x%x\n",
+            DrvHead & IDE_DH_DRV1 ? 1 : 0,
+            CylinderHigh,
+            CylinderLow,
+            DrvHead & 0x0f,
+            SectorNum,
+            SectorCnt,
+            Command);
     }
 
   /*  Setup command parameters  */
@@ -411,7 +413,7 @@ XboxDiskPolledRead(ULONG CommandPort,
 		{
 		  if (SectorCount >= SectorCnt)
 		    {
-		      DPRINTM(DPRINT_DISK, "Buffer size exceeded!\n");
+		      TRACE("Buffer size exceeded!\n");
 		      Junk = TRUE;
 		    }
 		  break;
@@ -420,8 +422,8 @@ XboxDiskPolledRead(ULONG CommandPort,
 		{
 		  if (SectorCount > SectorCnt)
 		    {
-		      DPRINTM(DPRINT_DISK, "Read %lu sectors of junk!\n",
-                                SectorCount - SectorCnt);
+		      TRACE("Read %lu sectors of junk!\n",
+                    SectorCount - SectorCnt);
 		    }
 		  IDEWriteDriveControl(ControlPort, 0);
 		  StallExecutionProcessor(50);
@@ -443,13 +445,13 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
   if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
     {
       /* Xbox has only 1 IDE controller and no floppy */
-      DPRINTM(DPRINT_DISK, "Invalid drive number\n");
+      WARN("Invalid drive number\n");
       return FALSE;
     }
 
   if (UINT64_C(0) != ((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)))
     {
-      DPRINTM(DPRINT_DISK, "48bit LBA required but not implemented\n");
+      FIXME("48bit LBA required but not implemented\n");
       return FALSE;
     }
 
@@ -522,7 +524,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
                            (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
                            (PUCHAR) &DrvParms))
     {
-      DPRINTM(DPRINT_DISK, "XboxDiskPolledRead() failed\n");
+      ERR("XboxDiskPolledRead() failed\n");
       return FALSE;
     }
 
@@ -537,7 +539,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
     }
   else
     {
-      DPRINTM(DPRINT_DISK, "BytesPerSector %d\n", DrvParms.BytesPerSector);
+      TRACE("BytesPerSector %d\n", DrvParms.BytesPerSector);
       if (DrvParms.BytesPerSector == 0)
         {
           Geometry->BytesPerSector = 512;
@@ -554,10 +556,10 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
             }
         }
     }
-  DPRINTM(DPRINT_DISK, "Cylinders %d\n", Geometry->Cylinders);
-  DPRINTM(DPRINT_DISK, "Heads %d\n", Geometry->Heads);
-  DPRINTM(DPRINT_DISK, "Sectors %d\n", Geometry->Sectors);
-  DPRINTM(DPRINT_DISK, "BytesPerSector %d\n", Geometry->BytesPerSector);
+  TRACE("Cylinders %d\n", Geometry->Cylinders);
+  TRACE("Heads %d\n", Geometry->Heads);
+  TRACE("Sectors %d\n", Geometry->Sectors);
+  TRACE("BytesPerSector %d\n", Geometry->BytesPerSector);
 
   return TRUE;
 }

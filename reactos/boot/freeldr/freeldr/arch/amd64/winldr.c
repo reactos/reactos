@@ -17,6 +17,8 @@
 
 #define HYPER_SPACE_ENTRY       0x1EE
 
+DBG_DEFAULT_CHANNEL(WINDOWS);
+
 /* GLOBALS ***************************************************************/
 
 PHARDWARE_PTE PxeBase;
@@ -31,13 +33,13 @@ ULONG_PTR TssBasePage;
 BOOLEAN
 MempAllocatePageTables()
 {
-    DPRINTM(DPRINT_WINDOWS,">>> MempAllocatePageTables\n");
+    TRACE(">>> MempAllocatePageTables\n");
 
 	/* Allocate a page for the PML4 */
 	PxeBase = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
     if (!PxeBase)
     {
-        DPRINTM(DPRINT_WINDOWS,"failed to allocate PML4\n");
+        ERR("failed to allocate PML4\n");
         return FALSE;
     }
 
@@ -55,7 +57,7 @@ MempAllocatePageTables()
 
     // FIXME: map PDE's for hals memory mapping
 
-    DPRINTM(DPRINT_WINDOWS,">>> leave MempAllocatePageTables\n");
+    TRACE(">>> leave MempAllocatePageTables\n");
 
 	return TRUE;
 }
@@ -97,14 +99,14 @@ MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 
 	if (!PteBase)
 	{
-        DPRINTM(DPRINT_WINDOWS,"!!!No Dir %p, %p, %p, %p\n", PxeBase, PpeBase, PdeBase, PteBase);
+        ERR("!!!No Dir %p, %p, %p, %p\n", PxeBase, PpeBase, PdeBase, PteBase);
 		return FALSE;
 	}
 
 	Index = VAtoPTI(VirtualAddress);
 	if (PteBase[Index].Valid)
 	{
-        DPRINTM(DPRINT_WINDOWS,"!!!Already mapped %ld\n", Index);
+        ERR("!!!Already mapped %ld\n", Index);
 		return FALSE;
 	}
 
@@ -152,7 +154,7 @@ MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, ULONG cPage
 	{
 		if (!MempMapSinglePage(VirtualAddress, PhysicalAddress))
 		{
-		    DPRINTM(DPRINT_WINDOWS, "Failed to map page %ld from %p to %p\n",
+		    ERR("Failed to map page %ld from %p to %p\n",
                     i, (PVOID)VirtualAddress, (PVOID)PhysicalAddress);
 			return i;
 		}
@@ -166,7 +168,7 @@ BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
 				IN ULONG NumberOfPages)
 {
-    DPRINTM(DPRINT_WINDOWS,">>> MempSetupPaging(0x%lx, %ld, %p)\n",
+    TRACE(">>> MempSetupPaging(0x%lx, %ld, %p)\n",
             StartPage, NumberOfPages, StartPage * PAGE_SIZE + KSEG0_BASE);
 
     /* Identity mapping */
@@ -174,7 +176,7 @@ MempSetupPaging(IN ULONG StartPage,
                             StartPage * PAGE_SIZE,
                             NumberOfPages) != NumberOfPages)
     {
-        DPRINTM(DPRINT_WINDOWS,"Failed to map pages %ld, %ld\n",
+        ERR("Failed to map pages %ld, %ld\n",
                 StartPage, NumberOfPages);
         return FALSE;
     }
@@ -184,7 +186,7 @@ MempSetupPaging(IN ULONG StartPage,
                             StartPage * PAGE_SIZE,
                             NumberOfPages) != NumberOfPages)
     {
-        DPRINTM(DPRINT_WINDOWS,"Failed to map pages %ld, %ld\n",
+        ERR("Failed to map pages %ld, %ld\n",
                 StartPage, NumberOfPages);
         return FALSE;
     }
@@ -195,7 +197,7 @@ MempSetupPaging(IN ULONG StartPage,
 VOID
 MempUnmapPage(ULONG Page)
 {
-   // DPRINTM(DPRINT_WINDOWS,">>> MempUnmapPage\n");
+   // TRACE(">>> MempUnmapPage\n");
 }
 
 VOID
@@ -206,7 +208,7 @@ WinLdrpMapApic()
 	ULONG CpuInfo[4];
 	ULONG64 APICAddress;
 
-    DPRINTM(DPRINT_WINDOWS,">>> WinLdrpMapApic\n");
+    TRACE(">>> WinLdrpMapApic\n");
 
 	/* Check if we have a local APIC */
 	__cpuid((int*)CpuInfo, 1);
@@ -215,7 +217,7 @@ WinLdrpMapApic()
 	/* If there is no APIC, just return */
 	if (!LocalAPIC)
 	{
-        DPRINTM(DPRINT_WINDOWS,"No APIC found.\n");
+        WARN("No APIC found.\n");
 		return;
 	}
 
@@ -223,7 +225,7 @@ WinLdrpMapApic()
 	MsrValue.QuadPart = __readmsr(0x1B);
 	APICAddress = (MsrValue.LowPart & 0xFFFFF000);
 
-	DPRINTM(DPRINT_WINDOWS, "Local APIC detected at address 0x%x\n",
+	TRACE("Local APIC detected at address 0x%x\n",
 		APICAddress);
 
 	/* Map it */
@@ -236,14 +238,14 @@ WinLdrMapSpecialPages()
     /* Map the PCR page */
     if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
     {
-        DPRINTM(DPRINT_WINDOWS, "Could not map PCR @ %lx\n", PcrBasePage);
+        ERR("Could not map PCR @ %lx\n", PcrBasePage);
         return FALSE;
     }
 
     /* Map KI_USER_SHARED_DATA */
     if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
     {
-        DPRINTM(DPRINT_WINDOWS, "Could not map KI_USER_SHARED_DATA\n");
+        ERR("Could not map KI_USER_SHARED_DATA\n");
         return FALSE;
     }
 
@@ -325,7 +327,7 @@ Amd64SetupIdt(PVOID IdtBase)
 VOID
 WinLdrSetProcessorContext(void)
 {
-    DPRINTM(DPRINT_WINDOWS, "WinLdrSetProcessorContext\n");
+    TRACE("WinLdrSetProcessorContext\n");
 
 	/* Disable Interrupts */
 	_disable();
@@ -351,7 +353,7 @@ WinLdrSetProcessorContext(void)
 	/* Load TSR */
 	__ltr(KGDT64_SYS_TSS);
 
-    DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
+    TRACE("leave WinLdrSetProcessorContext\n");
 }
 
 void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
