@@ -143,7 +143,7 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
     DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, CONFIRM_MSG_PROP), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
     SelectObject(hdc, hOldFont);
     EndPaint(hDlg, &ps);
-    
+
     return TRUE;
 }
 
@@ -184,7 +184,7 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
     confirm_msg_move_button(hDlg, IDNO,         &xPos, yOffset, TRUE);
     confirm_msg_move_button(hDlg, IDD_YESTOALL, &xPos, yOffset, info->bYesToAll);
     confirm_msg_move_button(hDlg, IDYES,        &xPos, yOffset, TRUE);
-    
+
     return TRUE;
 }
 
@@ -712,12 +712,12 @@ SHShowFileOperationDialog(FILE_OPERATION *op, FILE_LIST *flFrom, FILE_LIST *flTo
     }
     ShowWindow(hwnd, SW_SHOWNORMAL);
 
-    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0) 
-    { 
-        if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg)) 
+    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+    {
+        if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg))
         {
-            TranslateMessage(&msg); 
-            DispatchMessage(&msg); 
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
     }
 
@@ -936,7 +936,7 @@ static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly)
             dwAttr = wfd.dwFileAttributes;
             break;
         } while (FindNextFileW(hFind, &wfd));
-      
+
       FindClose(hFind);
     }
     return dwAttr;
@@ -964,7 +964,7 @@ static DWORD SHNameTranslate(LPWSTR* wString, LPCWSTR* pWToFrom, BOOL more)
             aSize += size;
             aString += size;
         } while ((size != 1) && more);
-        
+
         /* The two sizes might be different in the case of multibyte chars */
         size = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, 0);
         if (*wString) /* only in the second loop */
@@ -1100,16 +1100,16 @@ static void parse_wildcard_files(FILE_LIST *flList, LPCWSTR szFile, LPDWORD pdwL
 
         if (*pdwListIndex >= flList->num_alloc)
             grow_list( flList );
-        
+
         szFullPath = wildcard_to_file(szFile, wfd.cFileName);
         file = &flList->feFiles[(*pdwListIndex)++];
         add_file_to_entry(file, szFullPath);
         file->bFromWildcard = TRUE;
         file->attributes = wfd.dwFileAttributes;
-        
+
         if (IsAttribDir(file->attributes))
             flList->bAnyDirectories = TRUE;
-        
+
         HeapFree(GetProcessHeap(), 0, szFullPath);
     }
 
@@ -1135,7 +1135,7 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
     /* empty list */
     if (!szFiles[0])
         return ERROR_ACCESS_DENIED;
-        
+
     flList->feFiles = (FILE_ENTRY *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                 flList->num_alloc * sizeof(FILE_ENTRY));
 
@@ -1169,10 +1169,10 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
             add_file_to_entry(file, szCurFile);
             file->attributes = GetFileAttributesW( file->szFullPath );
             file->bExists = (file->attributes != INVALID_FILE_ATTRIBUTES);
-            
+
             if (!file->bExists)
                 flList->bAnyDontExist = TRUE;
-            
+
             if (IsAttribDir(file->attributes))
                 flList->bAnyDirectories = TRUE;
         }
@@ -1244,7 +1244,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     /* Don't ask the user about overwriting files when he accepted to overwrite the
        folder. FIXME: this is not exactly what Windows does - e.g. there would be
        an additional confirmation for a nested folder */
-    fileOp.fFlags |= FOF_NOCONFIRMATION;  
+    fileOp.fFlags |= FOF_NOCONFIRMATION;
 
     SHFileOperationW(&fileOp);
 }
@@ -1509,7 +1509,7 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom)
             {
                 // This is a windows 2003 server specific value which ahs been removed.
                 // Later versions of windows return ERROR_FILE_NOT_FOUND.
-                return 1026; 
+                return 1026;
             }
             else
             {

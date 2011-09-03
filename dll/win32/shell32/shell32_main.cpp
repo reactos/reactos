@@ -132,10 +132,10 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
      * This way the caller can make a single GlobalFree call to free both, as per MSDN.
      */
     argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
-    
+
     if (!argv)
         return NULL;
-    
+
     cmdline=(LPWSTR)(argv+argc);
     wcscpy(cmdline, lpCmdline);
 
@@ -241,17 +241,17 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
 
     SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
     ReadFile( hfile, magic, sizeof(magic), &len, NULL );
-    
+
     if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
     {
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &nt, sizeof(nt), &len, NULL );
         CloseHandle( hfile );
-        
+
         /* DLL files are not executable and should return 0 */
         if (nt.FileHeader.Characteristics & IMAGE_FILE_DLL)
             return 0;
-        
+
         if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
         {
              return IMAGE_NT_SIGNATURE |
@@ -266,7 +266,7 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &ne, sizeof(ne), &len, NULL );
         CloseHandle( hfile );
-        
+
         if (ne.ne_exetyp == 2)
             return IMAGE_OS2_SIGNATURE | (ne.ne_expver << 16);
         return 0;
@@ -586,7 +586,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                                 GetSystemMetrics( SM_CXICON),
                                 GetSystemMetrics( SM_CYICON),
                                 &psfi->hIcon, 0, 1, 0);
-                        
+
                         if (ret != 0 && ret != 0xFFFFFFFF)
                         {
                             IconNotYetLoaded=FALSE;
@@ -1130,7 +1130,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                 PAINTSTRUCT ps;
                 HDC hdc;
                 HDC hdcMem;
-                
+
                 hdc = BeginPaint(hWnd, &ps);
                 hdcMem = CreateCompatibleDC(hdc);
 

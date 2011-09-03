@@ -47,45 +47,45 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 struct LINK_HEADER
 {
-	DWORD		dwSize;			/* 0x00 size of the header - 0x4c */
-	GUID		MagicGuid;		/* 0x04 is CLSID_ShellLink */
-	DWORD		dwFlags;		/* 0x14 describes elements following */
-	DWORD		dwFileAttr;		/* 0x18 attributes of the target file */
-	FILETIME	Time1;			/* 0x1c */
-	FILETIME	Time2;			/* 0x24 */
-	FILETIME	Time3;			/* 0x2c */
-	DWORD		dwFileLength;	/* 0x34 File length */
-	DWORD		nIcon;			/* 0x38 icon number */
-	DWORD		fStartup;		/* 0x3c startup type */
-	DWORD		wHotKey;		/* 0x40 hotkey */
-	DWORD		Unknown5;		/* 0x44 */
-	DWORD		Unknown6;		/* 0x48 */
+    DWORD        dwSize;         /* 0x00 size of the header - 0x4c */
+    GUID         MagicGuid;      /* 0x04 is CLSID_ShellLink */
+    DWORD        dwFlags;        /* 0x14 describes elements following */
+    DWORD        dwFileAttr;     /* 0x18 attributes of the target file */
+    FILETIME     Time1;          /* 0x1c */
+    FILETIME     Time2;          /* 0x24 */
+    FILETIME     Time3;          /* 0x2c */
+    DWORD        dwFileLength;   /* 0x34 File length */
+    DWORD        nIcon;          /* 0x38 icon number */
+    DWORD        fStartup;       /* 0x3c startup type */
+    DWORD        wHotKey;        /* 0x40 hotkey */
+    DWORD        Unknown5;       /* 0x44 */
+    DWORD        Unknown6;       /* 0x48 */
 };
 
 struct LOCATION_INFO
 {
-	DWORD		dwTotalSize;
-	DWORD		dwHeaderSize;
-	DWORD		dwFlags;
-	DWORD		dwVolTableOfs;
-	DWORD		dwLocalPathOfs;
-	DWORD		dwNetworkVolTableOfs;
-	DWORD		dwFinalPathOfs;
+    DWORD        dwTotalSize;
+    DWORD        dwHeaderSize;
+    DWORD        dwFlags;
+    DWORD        dwVolTableOfs;
+    DWORD        dwLocalPathOfs;
+    DWORD        dwNetworkVolTableOfs;
+    DWORD        dwFinalPathOfs;
 };
 
 struct LOCAL_VOLUME_INFO
 {
-	DWORD		dwSize;
-	DWORD		dwType;
-	DWORD		dwVolSerial;
-	DWORD		dwVolLabelOfs;
+    DWORD        dwSize;
+    DWORD        dwType;
+    DWORD        dwVolSerial;
+    DWORD        dwVolLabelOfs;
 };
 
 struct volume_info
 {
-	DWORD		type;
-	DWORD		serial;
-	WCHAR		label[12];  /* assume 8.3 */
+    DWORD        type;
+    DWORD        serial;
+    WCHAR        label[12];  /* assume 8.3 */
 };
 
 #include "poppack.h"
@@ -98,7 +98,7 @@ static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWor
 static LPWSTR __inline HEAP_strdupAtoW( HANDLE heap, DWORD flags, LPCSTR str)
 {
     INT len;
-    LPWSTR p; 
+    LPWSTR p;
 
     assert(str);
 
@@ -122,26 +122,26 @@ static LPWSTR __inline strdupW( LPCWSTR src )
 
 ShellLink::ShellLink()
 {
-	pPidl = NULL;
-	wHotKey = 0;
-	memset(&time1, 0, sizeof(time1));
-	memset(&time2, 0, sizeof(time2));
-	memset(&time3, 0, sizeof(time3));
-	iShowCmd = SW_SHOWNORMAL;
-	sIcoPath = NULL;
-	iIcoNdx = 0;
-	sPath = NULL;
-	sArgs = NULL;
-	sWorkDir = NULL;
-	sDescription = NULL;
-	sPathRel = NULL;
- 	sProduct = NULL;
- 	sComponent = NULL;
-	memset(&volume, 0, sizeof(volume));
+    pPidl = NULL;
+    wHotKey = 0;
+    memset(&time1, 0, sizeof(time1));
+    memset(&time2, 0, sizeof(time2));
+    memset(&time3, 0, sizeof(time3));
+    iShowCmd = SW_SHOWNORMAL;
+    sIcoPath = NULL;
+    iIcoNdx = 0;
+    sPath = NULL;
+    sArgs = NULL;
+    sWorkDir = NULL;
+    sDescription = NULL;
+    sPathRel = NULL;
+    sProduct = NULL;
+    sComponent = NULL;
+    memset(&volume, 0, sizeof(volume));
     sLinkPath = NULL;
-	bRunAs = FALSE;
-	bDirty = FALSE;
-	iIdOpen = -1;
+    bRunAs = FALSE;
+    bDirty = FALSE;
+    iIdOpen = -1;
 }
 
 ShellLink::~ShellLink()
@@ -163,42 +163,42 @@ HRESULT WINAPI ShellLink::GetClassID(CLSID *pclsid )
 {
     TRACE("%p %p\n", this, pclsid);
 
-	if (pclsid == NULL)
-		return E_POINTER;
+    if (pclsid == NULL)
+        return E_POINTER;
     *pclsid = CLSID_ShellLink;
     return S_OK;
 }
 
 HRESULT WINAPI ShellLink::IsDirty()
 {
-	TRACE("(%p)\n",this);
+    TRACE("(%p)\n",this);
 
-	if (bDirty)
-	    return S_OK;
+    if (bDirty)
+        return S_OK;
 
-	return S_FALSE;
+    return S_FALSE;
 }
 
 HRESULT WINAPI ShellLink::Load(LPCOLESTR pszFileName, DWORD dwMode)
 {
-	HRESULT r;
-	CComPtr<IStream>		stm;
+    HRESULT r;
+    CComPtr<IStream>        stm;
 
-	TRACE("(%p, %s, %x)\n",this, debugstr_w(pszFileName), dwMode);
+    TRACE("(%p, %s, %x)\n",this, debugstr_w(pszFileName), dwMode);
 
-	if (dwMode == 0)
-		dwMode = STGM_READ | STGM_SHARE_DENY_WRITE;
-	r = SHCreateStreamOnFileW(pszFileName, dwMode, &stm);
-	if (SUCCEEDED(r))
-	{
-		HeapFree(GetProcessHeap(), 0, sLinkPath);
-		sLinkPath = strdupW(pszFileName);
-		r = Load(stm);
-		ShellLink_UpdatePath(sPathRel, pszFileName, sWorkDir, &sPath);
-		bDirty = FALSE;
-	}
-	TRACE("-- returning hr %08x\n", r);
-	return r;
+    if (dwMode == 0)
+        dwMode = STGM_READ | STGM_SHARE_DENY_WRITE;
+    r = SHCreateStreamOnFileW(pszFileName, dwMode, &stm);
+    if (SUCCEEDED(r))
+    {
+        HeapFree(GetProcessHeap(), 0, sLinkPath);
+        sLinkPath = strdupW(pszFileName);
+        r = Load(stm);
+        ShellLink_UpdatePath(sPathRel, pszFileName, sWorkDir, &sPath);
+        bDirty = FALSE;
+    }
+    TRACE("-- returning hr %08x\n", r);
+    return r;
 }
 
 static BOOL StartLinkProcessor( LPCOLESTR szLink )
@@ -239,21 +239,21 @@ static BOOL StartLinkProcessor( LPCOLESTR szLink )
 
 HRESULT WINAPI ShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 {
-	HRESULT r;
-	CComPtr<IStream>		stm;
+    HRESULT r;
+    CComPtr<IStream>        stm;
 
-	TRACE("(%p)->(%s)\n", this, debugstr_w(pszFileName));
+    TRACE("(%p)->(%s)\n", this, debugstr_w(pszFileName));
 
-	if (!pszFileName)
-		return E_FAIL;
+    if (!pszFileName)
+        return E_FAIL;
 
-	r = SHCreateStreamOnFileW( pszFileName, STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE, &stm );
-	if( SUCCEEDED( r ) )
-	{
-		r = Save(stm, FALSE);
+    r = SHCreateStreamOnFileW( pszFileName, STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE, &stm );
+    if( SUCCEEDED( r ) )
+    {
+        r = Save(stm, FALSE);
 
-		if( SUCCEEDED( r ) )
-		{
+        if( SUCCEEDED( r ) )
+        {
             if ( sLinkPath )
             {
                 HeapFree(GetProcessHeap(), 0, sLinkPath);
@@ -264,24 +264,24 @@ HRESULT WINAPI ShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
                 wcscpy(sLinkPath, pszFileName);
             }
 
-			StartLinkProcessor( pszFileName );
+            StartLinkProcessor( pszFileName );
 
-			bDirty = FALSE;
-		}
-		else
-		{
-			DeleteFileW( pszFileName );
-			WARN("Failed to create shortcut %s\n", debugstr_w(pszFileName) );
-		}
-	}
+            bDirty = FALSE;
+        }
+        else
+        {
+            DeleteFileW( pszFileName );
+            WARN("Failed to create shortcut %s\n", debugstr_w(pszFileName) );
+        }
+    }
 
-	return r;
+    return r;
 }
 
 HRESULT WINAPI ShellLink::SaveCompleted(LPCOLESTR pszFileName)
 {
-	FIXME("(%p)->(%s)\n", this, debugstr_w(pszFileName));
-	return NOERROR;
+    FIXME("(%p)->(%s)\n", this, debugstr_w(pszFileName));
+    return NOERROR;
 }
 
 HRESULT WINAPI ShellLink::GetCurFile(LPOLESTR *ppszFileName)
@@ -442,7 +442,7 @@ static LPWSTR Stream_LoadPath( LPCSTR p, DWORD maxlen )
 }
 
 static HRESULT Stream_LoadLocation( IStream *stm,
-								   ShellLink::volume_info *volume, LPWSTR *path )
+                                   ShellLink::volume_info *volume, LPWSTR *path )
 {
     char *p = NULL;
     LOCATION_INFO *loc;
@@ -922,9 +922,9 @@ HRESULT WINAPI ShellLink::Save(IStream *stm, BOOL fClearDirty)
  */
 HRESULT WINAPI ShellLink::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
-	TRACE("(%p)\n", this);
+    TRACE("(%p)\n", this);
 
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 static BOOL SHELL_ExistsFileW(LPCWSTR path)
@@ -936,50 +936,50 @@ static BOOL SHELL_ExistsFileW(LPCWSTR path)
 
 /**************************************************************************
  *  ShellLink_UpdatePath
- *	update absolute path in sPath using relative path in sPathRel
+ *    update absolute path in sPath using relative path in sPathRel
  */
 static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath)
 {
     if (!path || !psPath)
-	return E_INVALIDARG;
+        return E_INVALIDARG;
 
     if (!*psPath && sPathRel) {
-	WCHAR buffer[2*MAX_PATH], abs_path[2*MAX_PATH];
-	LPWSTR final = NULL;
+        WCHAR buffer[2*MAX_PATH], abs_path[2*MAX_PATH];
+        LPWSTR final = NULL;
 
-	/* first try if [directory of link file] + [relative path] finds an existing file */
+        /* first try if [directory of link file] + [relative path] finds an existing file */
 
         GetFullPathNameW( path, MAX_PATH*2, buffer, &final );
         if( !final )
             final = buffer;
-	wcscpy(final, sPathRel);
+        wcscpy(final, sPathRel);
 
-	*abs_path = '\0';
+        *abs_path = '\0';
 
-	if (SHELL_ExistsFileW(buffer)) {
-	    if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
-		wcscpy(abs_path, buffer);
-	} else {
-	    /* try if [working directory] + [relative path] finds an existing file */
-	    if (sWorkDir) {
-		wcscpy(buffer, sWorkDir);
-		wcscpy(PathAddBackslashW(buffer), sPathRel);
+        if (SHELL_ExistsFileW(buffer)) {
+            if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
+                wcscpy(abs_path, buffer);
+        } else {
+            /* try if [working directory] + [relative path] finds an existing file */
+            if (sWorkDir) {
+                wcscpy(buffer, sWorkDir);
+                wcscpy(PathAddBackslashW(buffer), sPathRel);
 
-		if (SHELL_ExistsFileW(buffer))
-		    if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
-			wcscpy(abs_path, buffer);
-	    }
-	}
+                if (SHELL_ExistsFileW(buffer))
+                    if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
+                        wcscpy(abs_path, buffer);
+            }
+        }
 
-	/* FIXME: This is even not enough - not all shell links can be resolved using this algorithm. */
-	if (!*abs_path)
-	    wcscpy(abs_path, sPathRel);
+        /* FIXME: This is even not enough - not all shell links can be resolved using this algorithm. */
+        if (!*abs_path)
+            wcscpy(abs_path, sPathRel);
 
-	*psPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(abs_path)+1)*sizeof(WCHAR));
-	if (!*psPath)
-	    return E_OUTOFMEMORY;
+        *psPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(abs_path)+1)*sizeof(WCHAR));
+        if (!*psPath)
+            return E_OUTOFMEMORY;
 
-	wcscpy(*psPath, abs_path);
+        wcscpy(*psPath, abs_path);
     }
 
     return S_OK;
@@ -1010,7 +1010,7 @@ HRESULT WINAPI ShellLink::GetIDList(LPITEMIDLIST * ppidl)
 
     if (!pPidl)
     {
-	*ppidl = NULL;
+        *ppidl = NULL;
         return S_FALSE;
     }
     *ppidl = ILClone(pPidl);
@@ -1040,7 +1040,7 @@ HRESULT WINAPI ShellLink::GetDescription(LPSTR pszName,INT cchMaxName)
         pszName[0] = 0;
     if( sDescription )
         WideCharToMultiByte( CP_ACP, 0, sDescription, -1,
-            pszName, cchMaxName, NULL, NULL);
+                             pszName, cchMaxName, NULL, NULL);
 
     return S_OK;
 }
@@ -1167,15 +1167,15 @@ static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPCITEMIDLIST pidl,
     HRESULT hr = SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psf, &pidlLast);
 
     if (SUCCEEDED(hr)) {
-	CComPtr<IExtractIconA>		pei;
+        CComPtr<IExtractIconA>        pei;
 
-	hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IExtractIconA, NULL, (LPVOID*)&pei);
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IExtractIconA, NULL, (LPVOID*)&pei);
 
-	if (SUCCEEDED(hr)) {
-	    hr = pei->GetIconLocation(0, pszIconPath, MAX_PATH, piIcon, NULL);
-	}
+        if (SUCCEEDED(hr)) {
+            hr = pei->GetIconLocation(0, pszIconPath, MAX_PATH, piIcon, NULL);
+        }
 
-	psf->Release();
+        psf->Release();
     }
 
     return hr;
@@ -1191,40 +1191,40 @@ HRESULT WINAPI ShellLink::GetIconLocation(LPSTR pszIconPath,INT cchIconPath,INT 
     if (sIcoPath)
     {
         WideCharToMultiByte(CP_ACP, 0, sIcoPath, -1, pszIconPath, cchIconPath, NULL, NULL);
-	    return S_OK;
+        return S_OK;
     }
 
     if (pPidl || sPath)
     {
-	    CComPtr<IShellFolder>		pdsk;
+        CComPtr<IShellFolder>        pdsk;
 
-	    HRESULT hr = SHGetDesktopFolder(&pdsk);
+        HRESULT hr = SHGetDesktopFolder(&pdsk);
 
-	    if (SUCCEEDED(hr))
+        if (SUCCEEDED(hr))
         {
-	        /* first look for an icon using the PIDL (if present) */
-	        if (pPidl)
-		        hr = SHELL_PidlGeticonLocationA(pdsk, pPidl, pszIconPath, cchIconPath, piIcon);
-	        else
-		        hr = E_FAIL;
+            /* first look for an icon using the PIDL (if present) */
+            if (pPidl)
+                hr = SHELL_PidlGeticonLocationA(pdsk, pPidl, pszIconPath, cchIconPath, piIcon);
+            else
+                hr = E_FAIL;
 
-	        /* if we couldn't find an icon yet, look for it using the file system path */
-	        if (FAILED(hr) && sPath)
+            /* if we couldn't find an icon yet, look for it using the file system path */
+            if (FAILED(hr) && sPath)
             {
-		        LPITEMIDLIST pidl;
+                LPITEMIDLIST pidl;
 
-		        hr = pdsk->ParseDisplayName(0, NULL, sPath, NULL, &pidl, NULL);
+                hr = pdsk->ParseDisplayName(0, NULL, sPath, NULL, &pidl, NULL);
 
-		        if (SUCCEEDED(hr))
+                if (SUCCEEDED(hr))
                 {
-		            hr = SHELL_PidlGeticonLocationA(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
+                    hr = SHELL_PidlGeticonLocationA(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
 
-		            SHFree(pidl);
-		        }
-	        }
-	    }
+                    SHFree(pidl);
+                }
+            }
+        }
 
-	    return hr;
+        return hr;
     }
     return S_OK;
 }
@@ -1276,36 +1276,36 @@ HRESULT WINAPI ShellLink::Resolve(HWND hwnd, DWORD fFlags)
 
     if (!sPath && pPidl)
     {
-	    WCHAR buffer[MAX_PATH];
+        WCHAR buffer[MAX_PATH];
 
-	    bSuccess = SHGetPathFromIDListW(pPidl, buffer);
+        bSuccess = SHGetPathFromIDListW(pPidl, buffer);
 
-	    if (bSuccess && *buffer)
+        if (bSuccess && *buffer)
         {
-	        sPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(buffer)+1)*sizeof(WCHAR));
-	        
+            sPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(buffer)+1)*sizeof(WCHAR));
+    
             if (!sPath)
-		        return E_OUTOFMEMORY;
+                return E_OUTOFMEMORY;
 
-	        wcscpy(sPath, buffer);
+            wcscpy(sPath, buffer);
 
-	        bDirty = TRUE;
-	    }
+            bDirty = TRUE;
+        }
         else
-	        hr = S_OK;    /* don't report an error occurred while just caching information */
+            hr = S_OK;    /* don't report an error occurred while just caching information */
     }
 
     if (!sIcoPath && sPath)
     {
-	    sIcoPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(sPath)+1)*sizeof(WCHAR));
-	    
+        sIcoPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(sPath)+1)*sizeof(WCHAR));
+    
         if (!sIcoPath)
-	        return E_OUTOFMEMORY;
+            return E_OUTOFMEMORY;
 
-	    wcscpy(sIcoPath, sPath);
-	    iIcoNdx = 0;
+        wcscpy(sIcoPath, sPath);
+        iIcoNdx = 0;
 
-	    bDirty = TRUE;
+        bDirty = TRUE;
     }
 
     return hr;
@@ -1317,8 +1317,8 @@ HRESULT WINAPI ShellLink::SetPath(LPCSTR pszFile)
     LPWSTR str;
 
     TRACE("(%p)->(path=%s)\n",this, pszFile);
-	if (pszFile == NULL)
-		return E_INVALIDARG;
+    if (pszFile == NULL)
+        return E_INVALIDARG;
 
     str = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
     if (!str)
@@ -1340,7 +1340,7 @@ HRESULT WINAPI ShellLink::GetPath(LPWSTR pszFile,INT cchMaxPath, WIN32_FIND_DATA
 
     if (cchMaxPath)
         pszFile[0] = 0;
-    
+
     if (sPath)
         lstrcpynW( pszFile, sPath, cchMaxPath );
 
@@ -1439,15 +1439,15 @@ static HRESULT SHELL_PidlGeticonLocationW(IShellFolder* psf, LPCITEMIDLIST pidl,
     HRESULT hr = SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psf, &pidlLast);
 
     if (SUCCEEDED(hr)) {
-	CComPtr<IExtractIconW>		pei;
+        CComPtr<IExtractIconW>        pei;
 
-	hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IExtractIconW, NULL, (LPVOID*)&pei);
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IExtractIconW, NULL, (LPVOID*)&pei);
 
-	if (SUCCEEDED(hr)) {
-	    hr = pei->GetIconLocation(0, pszIconPath, MAX_PATH, piIcon, &wFlags);
-	}
+        if (SUCCEEDED(hr)) {
+            hr = pei->GetIconLocation(0, pszIconPath, MAX_PATH, piIcon, &wFlags);
+        }
 
-	psf->Release();
+        psf->Release();
     }
 
     return hr;
@@ -1462,40 +1462,40 @@ HRESULT WINAPI ShellLink::GetIconLocation(LPWSTR pszIconPath,INT cchIconPath,INT
 
     if (sIcoPath)
     {
-	lstrcpynW(pszIconPath, sIcoPath, cchIconPath);
-	return S_OK;
+        lstrcpynW(pszIconPath, sIcoPath, cchIconPath);
+        return S_OK;
     }
 
     if (pPidl || sPath)
     {
-	CComPtr<IShellFolder>		pdsk;
+        CComPtr<IShellFolder>        pdsk;
 
-	HRESULT hr = SHGetDesktopFolder(&pdsk);
+        HRESULT hr = SHGetDesktopFolder(&pdsk);
 
-	if (SUCCEEDED(hr))
+        if (SUCCEEDED(hr))
         {
-	    /* first look for an icon using the PIDL (if present) */
-	    if (pPidl)
-		hr = SHELL_PidlGeticonLocationW(pdsk, pPidl, pszIconPath, cchIconPath, piIcon);
-	    else
-		hr = E_FAIL;
+            /* first look for an icon using the PIDL (if present) */
+            if (pPidl)
+                hr = SHELL_PidlGeticonLocationW(pdsk, pPidl, pszIconPath, cchIconPath, piIcon);
+            else
+                hr = E_FAIL;
 
-	    /* if we couldn't find an icon yet, look for it using the file system path */
-	    if (FAILED(hr) && sPath)
+            /* if we couldn't find an icon yet, look for it using the file system path */
+            if (FAILED(hr) && sPath)
             {
-		LPITEMIDLIST pidl;
+                LPITEMIDLIST pidl;
 
-		hr = pdsk->ParseDisplayName(0, NULL, sPath, NULL, &pidl, NULL);
+                hr = pdsk->ParseDisplayName(0, NULL, sPath, NULL, &pidl, NULL);
 
-		if (SUCCEEDED(hr))
+                if (SUCCEEDED(hr))
                 {
-		    hr = SHELL_PidlGeticonLocationW(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
+                    hr = SHELL_PidlGeticonLocationW(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
 
-		    SHFree(pidl);
-		}
-	    }
-	}
-	return hr;
+                    SHFree(pidl);
+                }
+            }
+        }
+        return hr;
     }
     return S_OK;
 }
@@ -1523,7 +1523,7 @@ HRESULT WINAPI ShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD dwReserved)
 
     HeapFree(GetProcessHeap(), 0, sPathRel);
     sPathRel = (LPWSTR)HeapAlloc( GetProcessHeap(), 0,
-                                (wcslen( pszPathRel )+1) * sizeof (WCHAR) );
+                                  (wcslen( pszPathRel )+1) * sizeof (WCHAR) );
     if ( !sPathRel )
         return E_OUTOFMEMORY;
     wcscpy( sPathRel, pszPathRel );
@@ -1670,10 +1670,10 @@ HRESULT WINAPI ShellLink::SetPath(LPCWSTR pszFile)
         if (*pszFile == '\0')
             *buffer = '\0';
         else if (!GetFullPathNameW(pszFile, MAX_PATH, buffer, &fname))
-	    return E_FAIL;
+            return E_FAIL;
         else if(!PathFileExistsW(buffer) &&
-		!SearchPathW(NULL, pszFile, NULL, MAX_PATH, buffer, NULL))
-	  hr = S_FALSE;
+        !SearchPathW(NULL, pszFile, NULL, MAX_PATH, buffer, NULL))
+            hr = S_FALSE;
 
         pPidl = SHSimpleIDListFromPathW(pszFile);
         ShellLink_GetVolumeInfo(buffer, &volume);
@@ -1706,21 +1706,21 @@ HRESULT WINAPI ShellLink::CopyDataBlock(DWORD dwSig, void** ppDataBlock )
 
     switch (dwSig)
     {
-    case EXP_DARWIN_ID_SIG:
-        if (!sComponent)
+        case EXP_DARWIN_ID_SIG:
+            if (!sComponent)
+                break;
+            block = shelllink_build_darwinid( sComponent, dwSig );
+            r = S_OK;
             break;
-        block = shelllink_build_darwinid( sComponent, dwSig );
-        r = S_OK;
-        break;
-    case EXP_SZ_LINK_SIG:
-    case NT_CONSOLE_PROPS_SIG:
-    case NT_FE_CONSOLE_PROPS_SIG:
-    case EXP_SPECIAL_FOLDER_SIG:
-    case EXP_SZ_ICON_SIG:
-        FIXME("valid but unhandled datablock %08x\n", dwSig);
-        break;
-    default:
-        ERR("unknown datablock %08x\n", dwSig);
+        case EXP_SZ_LINK_SIG:
+        case NT_CONSOLE_PROPS_SIG:
+        case NT_FE_CONSOLE_PROPS_SIG:
+        case EXP_SPECIAL_FOLDER_SIG:
+        case EXP_SZ_ICON_SIG:
+            FIXME("valid but unhandled datablock %08x\n", dwSig);
+            break;
+        default:
+            ERR("unknown datablock %08x\n", dwSig);
     }
     *ppDataBlock = block;
     return r;
@@ -1955,47 +1955,42 @@ HRESULT WINAPI ShellLink::GetCommandString(UINT_PTR idCmd, UINT uType, UINT* pwR
     return E_NOTIMPL;
 }
 
-INT_PTR CALLBACK ExtendedShortcutProc(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-)
+INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
+                                      WPARAM wParam, LPARAM lParam)
 {
-   HWND hDlgCtrl;
+    HWND hDlgCtrl;
 
-   switch(uMsg)
-   {
-   case WM_INITDIALOG:
-       if (lParam)
-       {
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            if (lParam)
+            {
+                hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+                SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
+            }
+            return TRUE;
+        case WM_COMMAND:
             hDlgCtrl = GetDlgItem(hwndDlg, 14000);
-            SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
-       }
-       return TRUE;
-   case WM_COMMAND:
-        hDlgCtrl = GetDlgItem(hwndDlg, 14000);
-		if (LOWORD(wParam) == IDOK)
-        {
-		   if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED )
-	          EndDialog(hwndDlg, 1);
-           else
-              EndDialog(hwndDlg, 0);
-        }
-        else if (LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hwndDlg, -1);
-        }
-        else if (LOWORD(wParam) == 14000)
-        {
-           if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
-              SendMessage(hDlgCtrl, BM_SETCHECK, BST_UNCHECKED, 0);
-           else
-              SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
-
-        }
-   }
-   return FALSE;
+            if (LOWORD(wParam) == IDOK)
+            {
+                if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED )
+                    EndDialog(hwndDlg, 1);
+                else
+                    EndDialog(hwndDlg, 0);
+            }
+            else if (LOWORD(wParam) == IDCANCEL)
+            {
+                EndDialog(hwndDlg, -1);
+            }
+            else if (LOWORD(wParam) == 14000)
+            {
+                if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    SendMessage(hDlgCtrl, BM_SETCHECK, BST_UNCHECKED, 0);
+                else
+                    SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
+            }
+    }
+    return FALSE;
 }
 
 /**************************************************************************
@@ -2019,113 +2014,113 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:
-        ppsp = (LPPROPSHEETPAGEW)lParam;
-        if (ppsp == NULL)
-            break;
+        case WM_INITDIALOG:
+            ppsp = (LPPROPSHEETPAGEW)lParam;
+            if (ppsp == NULL)
+                break;
 
-        TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n",hwndDlg, lParam, ppsp->lParam);
+            TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n",hwndDlg, lParam, ppsp->lParam);
 
-        pThis = (ShellLink *)ppsp->lParam;
-        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
+            pThis = (ShellLink *)ppsp->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
 
-		TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", pThis->sArgs, pThis->sComponent, pThis->sDescription,
-			pThis->sIcoPath, pThis->sPath, pThis->sPathRel, pThis->sProduct, pThis->sWorkDir);
+            TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", pThis->sArgs, pThis->sComponent, pThis->sDescription,
+            pThis->sIcoPath, pThis->sPath, pThis->sPathRel, pThis->sProduct, pThis->sWorkDir);
 
-        /* target path */
-        hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
-        if ( hDlgCtrl != NULL )
-            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sPath );
-
-       /* working dir */
-       hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
-       if ( hDlgCtrl != NULL )
-            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sWorkDir );
-
-	   /* description */
-       hDlgCtrl = GetDlgItem( hwndDlg, 14019 );
-       if ( hDlgCtrl != NULL )
-            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sDescription );
-        return TRUE;
-    case WM_NOTIFY:
-       lppsn = (LPPSHNOTIFY) lParam;
-       if ( lppsn->hdr.code == PSN_APPLY )
-       {
-            /* set working directory */
-            hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
-            SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer );
-            pThis->SetWorkingDirectory(szBuffer);
-            /* set link destination */
+            /* target path */
             hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
-            SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer);
-            if ( !SHELL_ExistsFileW(szBuffer) )
-            {
-                //FIXME load localized error msg
-                MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
-                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
-                return TRUE;
-            }
-            ptr = wcsrchr(szBuffer, L'.');
-            if (ptr && !_wcsnicmp(ptr, L".lnk", 4))
-            {
-                // FIXME load localized error msg
-                MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );
-                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
-                return TRUE;
-            }
+            if ( hDlgCtrl != NULL )
+                SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sPath );
 
-            pThis->SetPath(szBuffer);
+            /* working dir */
+            hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
+            if ( hDlgCtrl != NULL )
+                SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sWorkDir );
 
-            TRACE("This %p sLinkPath %S\n", pThis, pThis->sLinkPath);
-            pThis->Save(pThis->sLinkPath, TRUE );
-            SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+            /* description */
+            hDlgCtrl = GetDlgItem( hwndDlg, 14019 );
+            if ( hDlgCtrl != NULL )
+                SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sDescription );
             return TRUE;
-       }
-       break;
-    case WM_COMMAND:
-       switch(LOWORD(wParam))
-       {
-           case 14020:
-               ///
-               /// FIXME
-               /// open target directory
-               ///
-               return TRUE;
-           case 14021:
-               if (pThis->sIcoPath)
-                    wcscpy(szBuffer, pThis->sIcoPath);
-               IconIndex = pThis->iIcoNdx;
-               if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
-               {
-                    pThis->SetIconLocation(szBuffer, IconIndex);
-                    ///
-                    /// FIXME redraw icon
-               }
-               return TRUE;
-           case 14022:
-               result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->bRunAs);
-               if (result == 1 || result == 0)
-               {
-                   if (pThis->bRunAs != result )
-                   {
-                       PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                   }
+        case WM_NOTIFY:
+            lppsn = (LPPSHNOTIFY) lParam;
+            if ( lppsn->hdr.code == PSN_APPLY )
+            {
+                /* set working directory */
+                hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
+                SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer );
+                pThis->SetWorkingDirectory(szBuffer);
+                /* set link destination */
+                hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
+                SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer);
+                if ( !SHELL_ExistsFileW(szBuffer) )
+                {
+                    //FIXME load localized error msg
+                    MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
+                    SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                    return TRUE;
+                }
+                ptr = wcsrchr(szBuffer, L'.');
+                if (ptr && !_wcsnicmp(ptr, L".lnk", 4))
+                {
+                    // FIXME load localized error msg
+                    MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );
+                    SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                    return TRUE;
+                }
 
-                   pThis->bRunAs = result;
-               }
-               return TRUE;
-       }
-       switch(HIWORD(wParam))
-       {
-           case EN_CHANGE:
-              PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-              break;
-       }
-       break;
-    default:
-        break;
-   }
-   return FALSE;
+                pThis->SetPath(szBuffer);
+
+                TRACE("This %p sLinkPath %S\n", pThis, pThis->sLinkPath);
+                pThis->Save(pThis->sLinkPath, TRUE );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                return TRUE;
+            }
+            break;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case 14020:
+                    ///
+                    /// FIXME
+                    /// open target directory
+                    ///
+                    return TRUE;
+                case 14021:
+                    if (pThis->sIcoPath)
+                        wcscpy(szBuffer, pThis->sIcoPath);
+                    IconIndex = pThis->iIcoNdx;
+                    if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
+                    {
+                        pThis->SetIconLocation(szBuffer, IconIndex);
+                        ///
+                        /// FIXME redraw icon
+                    }
+                    return TRUE;
+                case 14022:
+                    result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->bRunAs);
+                    if (result == 1 || result == 0)
+                    {
+                        if (pThis->bRunAs != result )
+                        {
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        }
+
+                        pThis->bRunAs = result;
+                    }
+                    return TRUE;
+            }
+            switch(HIWORD(wParam))
+            {
+                case EN_CHANGE:
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                break;
+            }
+            break;
+        default:
+            break;
+    }
+    return FALSE;
 }
 
 /**************************************************************************
@@ -2176,35 +2171,35 @@ HRESULT WINAPI ShellLink::GetSite(REFIID iid, void ** ppvSite)
 }
 
 /**************************************************************************
- *	  IShellLink_ConstructFromFile
+ *      IShellLink_ConstructFromFile
  */
 HRESULT WINAPI IShellLink_ConstructFromFile(IUnknown *pUnkOuter, REFIID riid, LPCITEMIDLIST pidl, LPVOID *ppv)
 {
-	CComPtr<IUnknown>				psl;
+    CComPtr<IUnknown>                psl;
 
-	HRESULT hr = ShellLink::_CreatorClass::CreateInstance(NULL, riid, (void**)&psl);
+    HRESULT hr = ShellLink::_CreatorClass::CreateInstance(NULL, riid, (void**)&psl);
 
-	if (SUCCEEDED(hr))
-	{
-		CComPtr<IPersistFile>		ppf;
+    if (SUCCEEDED(hr))
+    {
+        CComPtr<IPersistFile>        ppf;
 
-		*ppv = NULL;
+        *ppv = NULL;
 
-		hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
+        hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
 
-		if (SUCCEEDED(hr))
-		{
-			WCHAR path[MAX_PATH];
+        if (SUCCEEDED(hr))
+        {
+            WCHAR path[MAX_PATH];
 
-			if (SHGetPathFromIDListW(pidl, path))
-				hr = ppf->Load(path, 0);
-			else
-				hr = E_FAIL;
+            if (SHGetPathFromIDListW(pidl, path))
+                hr = ppf->Load(path, 0);
+            else
+                hr = E_FAIL;
 
-			if (SUCCEEDED(hr))
-				*ppv = psl.Detach();
-		}
-	}
+            if (SUCCEEDED(hr))
+                *ppv = psl.Detach();
+        }
+    }
 
-	return hr;
+    return hr;
 }
