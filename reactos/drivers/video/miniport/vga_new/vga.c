@@ -19,7 +19,6 @@
 //
 
 VP_STATUS
-NTAPI
 VgaFindAdapter(
     PVOID HwDeviceExtension,
     PVOID HwContext,
@@ -29,13 +28,11 @@ VgaFindAdapter(
     );
 
 BOOLEAN
-NTAPI
 VgaInitialize(
     PVOID HwDeviceExtension
     );
 
 BOOLEAN
-NTAPI
 VgaStartIO(
     PVOID HwDeviceExtension,
     PVIDEO_REQUEST_PACKET RequestPacket
@@ -105,7 +102,6 @@ VgaSetColorLookup(
     );
 
 VP_STATUS
-NTAPI
 GetDeviceDataCallback(
    PVOID HwDeviceExtension,
    PVOID Context,
@@ -134,6 +130,7 @@ VgaAcquireResources(
 #pragma alloc_text(PAGE,VgaSetColorLookup)
 #endif
 
+
 //---------------------------------------------------------------------------
 ULONG
 // eVb: 1.3 [GCC] - Add NTAPI for GCC support
@@ -306,10 +303,9 @@ Return Value:
     return initializationStatus;
 
 } // end DriverEntry()
-
+
 //---------------------------------------------------------------------------
 VP_STATUS
-NTAPI
 VgaFindAdapter(
     PVOID HwDeviceExtension,
     PVOID HwContext,
@@ -387,7 +383,7 @@ Return Value:
     if ((ConfigInfo->AdapterInterfaceType == Internal) &&
         (VideoPortGetDeviceData(HwDeviceExtension,
                                 VpControllerData,
-                                GetDeviceDataCallback,
+                                &GetDeviceDataCallback,
                                 VgaAccessRange) != NO_ERROR))
     {
         return ERROR_INVALID_PARAMETER;
@@ -489,10 +485,9 @@ Return Value:
 
 
 } // VgaFindAdapter()
-
+
 //---------------------------------------------------------------------------
 BOOLEAN
-NTAPI
 VgaInitialize(
     PVOID HwDeviceExtension
     )
@@ -532,10 +527,9 @@ Return Value:
     return TRUE;
 
 } // VgaInitialize()
-
+
 //---------------------------------------------------------------------------
 BOOLEAN
-NTAPI
 VgaStartIO(
     PVOID HwDeviceExtension,
     PVIDEO_REQUEST_PACKET RequestPacket
@@ -1446,9 +1440,8 @@ Return Value:
     return ERROR_INVALID_PARAMETER;
 
 } // end VgaSetColorLookup()
-
+
 VP_STATUS
-NTAPI
 GetDeviceDataCallback(
     PVOID HwDeviceExtension,
     PVOID Context,
