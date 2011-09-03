@@ -107,7 +107,8 @@ static void confirm_msg_move_button(HWND hDlg, INT iId, INT *xPos, INT yOffset, 
     HWND hButton = GetDlgItem(hDlg, iId);
     RECT r;
 
-    if (bShow) {
+    if (bShow)
+    {
         POINT pt;
         int width;
 
@@ -143,7 +144,8 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
     DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, CONFIRM_MSG_PROP), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
     SelectObject(hdc, hOldFont);
     EndPaint(hDlg, &ps);
-    return TRUE;
+    
+	return TRUE;
 }
 
 static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
@@ -183,6 +185,7 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
     confirm_msg_move_button(hDlg, IDNO,         &xPos, yOffset, TRUE);
     confirm_msg_move_button(hDlg, IDD_YESTOALL, &xPos, yOffset, info->bYesToAll);
     confirm_msg_move_button(hDlg, IDYES,        &xPos, yOffset, TRUE);
+    
     return TRUE;
 }
 
@@ -219,69 +222,80 @@ int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hI
 /* confirmation dialogs content */
 typedef struct
 {
-        HINSTANCE hIconInstance;
-        UINT icon_resource_id;
+    HINSTANCE hIconInstance;
+    UINT icon_resource_id;
 	UINT caption_resource_id, text_resource_id;
 } SHELL_ConfirmIDstruc;
 
 static BOOL SHELL_ConfirmIDs(int nKindOfDialog, SHELL_ConfirmIDstruc *ids)
 {
-        ids->hIconInstance = shell32_hInstance;
-	switch (nKindOfDialog) {
-	  case ASK_DELETE_FILE:
+    ids->hIconInstance = shell32_hInstance;
+	switch (nKindOfDialog)
+    {
+	    case ASK_DELETE_FILE:
+			ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+			ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
+			ids->text_resource_id  = IDS_DELETEITEM_TEXT;
+			return TRUE;
+
+	    case ASK_DELETE_FOLDER:
             ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-	    ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
-	    ids->text_resource_id  = IDS_DELETEITEM_TEXT;
-	    return TRUE;
-	  case ASK_DELETE_FOLDER:
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-	    ids->caption_resource_id  = IDS_DELETEFOLDER_CAPTION;
-	    ids->text_resource_id  = IDS_DELETEITEM_TEXT;
-	    return TRUE;
-	  case ASK_DELETE_MULTIPLE_ITEM:
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-	    ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
-	    ids->text_resource_id  = IDS_DELETEMULTIPLE_TEXT;
-	    return TRUE;
-          case ASK_TRASH_FILE:
-            ids->icon_resource_id = IDI_SHELL_TRASH_FILE;
-            ids->caption_resource_id = IDS_DELETEITEM_CAPTION;
-            ids->text_resource_id = IDS_TRASHITEM_TEXT;
-            return TRUE;
-          case ASK_TRASH_FOLDER:
-            ids->icon_resource_id = IDI_SHELL_TRASH_FILE;
-            ids->caption_resource_id = IDS_DELETEFOLDER_CAPTION;
-            ids->text_resource_id = IDS_TRASHFOLDER_TEXT;
-            return TRUE;
-          case ASK_TRASH_MULTIPLE_ITEM:
-            ids->icon_resource_id = IDI_SHELL_TRASH_FILE;
-            ids->caption_resource_id = IDS_DELETEITEM_CAPTION;
-            ids->text_resource_id = IDS_TRASHMULTIPLE_TEXT;
-            return TRUE;
-          case ASK_CANT_TRASH_ITEM:
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-            ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
-            ids->text_resource_id  = IDS_CANTTRASH_TEXT;
-            return TRUE;
-	  case ASK_DELETE_SELECTED:
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-            ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
-            ids->text_resource_id  = IDS_DELETESELECTED_TEXT;
-            return TRUE;
+	        ids->caption_resource_id  = IDS_DELETEFOLDER_CAPTION;
+	        ids->text_resource_id  = IDS_DELETEITEM_TEXT;
+	        return TRUE;
+
+	    case ASK_DELETE_MULTIPLE_ITEM:
+			ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+			ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
+			ids->text_resource_id  = IDS_DELETEMULTIPLE_TEXT;
+			return TRUE;
+
+		case ASK_TRASH_FILE:
+			ids->icon_resource_id = IDI_SHELL_TRASH_FILE;
+			ids->caption_resource_id = IDS_DELETEITEM_CAPTION;
+			ids->text_resource_id = IDS_TRASHITEM_TEXT;
+			return TRUE;
+
+		case ASK_TRASH_FOLDER:
+			ids->icon_resource_id = IDI_SHELL_TRASH_FILE;
+			ids->caption_resource_id = IDS_DELETEFOLDER_CAPTION;
+			ids->text_resource_id = IDS_TRASHFOLDER_TEXT;
+			return TRUE;
+
+		case ASK_TRASH_MULTIPLE_ITEM:
+			ids->icon_resource_id = IDI_SHELL_TRASH_FILE;
+			ids->caption_resource_id = IDS_DELETEITEM_CAPTION;
+			ids->text_resource_id = IDS_TRASHMULTIPLE_TEXT;
+			return TRUE;
+
+		case ASK_CANT_TRASH_ITEM:
+			ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+			ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
+			ids->text_resource_id  = IDS_CANTTRASH_TEXT;
+			return TRUE;
+
+		case ASK_DELETE_SELECTED:
+			ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+			ids->caption_resource_id  = IDS_DELETEITEM_CAPTION;
+			ids->text_resource_id  = IDS_DELETESELECTED_TEXT;
+			return TRUE;
+
 	  case ASK_OVERWRITE_FILE:
-            ids->hIconInstance = NULL;
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-	    ids->caption_resource_id  = IDS_OVERWRITEFILE_CAPTION;
-	    ids->text_resource_id  = IDS_OVERWRITEFILE_TEXT;
-            return TRUE;
+			ids->hIconInstance = NULL;
+			ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+			ids->caption_resource_id  = IDS_OVERWRITEFILE_CAPTION;
+			ids->text_resource_id  = IDS_OVERWRITEFILE_TEXT;
+			return TRUE;
+
 	  case ASK_OVERWRITE_FOLDER:
-            ids->hIconInstance = NULL;
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
-            ids->caption_resource_id  = IDS_OVERWRITEFILE_CAPTION;
-            ids->text_resource_id  = IDS_OVERWRITEFOLDER_TEXT;
-            return TRUE;
-	  default:
-	    FIXME(" Unhandled nKindOfDialog %d stub\n", nKindOfDialog);
+			ids->hIconInstance = NULL;
+			ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+			ids->caption_resource_id  = IDS_OVERWRITEFILE_CAPTION;
+			ids->text_resource_id  = IDS_OVERWRITEFOLDER_TEXT;
+			return TRUE;
+
+		default:
+			FIXME(" Unhandled nKindOfDialog %d stub\n", nKindOfDialog);
 	}
 	return FALSE;
 }
@@ -294,11 +308,13 @@ static BOOL SHELL_ConfirmDialogW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir, FI
 	HICON hIcon;
 	int ret;
 
-        assert(nKindOfDialog >= 0 && nKindOfDialog < 32);
-        if (op && (op->dwYesToAllMask & (1 << nKindOfDialog)))
-            return TRUE;
+    DbgPrint("[shell32, SHELL_ConfirmDialogW] Called\n");
 
-        if (!SHELL_ConfirmIDs(nKindOfDialog, &ids)) return FALSE;
+    assert(nKindOfDialog >= 0 && nKindOfDialog < 32);
+    if (op && (op->dwYesToAllMask & (1 << nKindOfDialog)))
+        return TRUE;
+
+    if (!SHELL_ConfirmIDs(nKindOfDialog, &ids)) return FALSE;
 
 	LoadStringW(shell32_hInstance, ids.caption_resource_id, szCaption, sizeof(szCaption)/sizeof(WCHAR));
 	LoadStringW(shell32_hInstance, ids.text_resource_id, szText, sizeof(szText)/sizeof(WCHAR));
@@ -306,20 +322,22 @@ static BOOL SHELL_ConfirmDialogW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir, FI
 	args[0] = (DWORD_PTR)szDir;
 	FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
 	               szText, 0, 0, szBuffer, sizeof(szBuffer), (va_list*)args);
-        hIcon = LoadIconW(ids.hIconInstance, (LPWSTR)MAKEINTRESOURCE(ids.icon_resource_id));
+    hIcon = LoadIconW(ids.hIconInstance, (LPWSTR)MAKEINTRESOURCE(ids.icon_resource_id));
 
-        ret = SHELL_ConfirmMsgBox(hWnd, szBuffer, szCaption, hIcon, op && op->bManyItems);
-        if (op) {
-            if (ret == IDD_YESTOALL) {
-                op->dwYesToAllMask |= (1 << nKindOfDialog);
-                ret = IDYES;
-            }
-            if (ret == IDCANCEL)
-                op->bCancelled = TRUE;
-            if (ret != IDYES)
-                op->req->fAnyOperationsAborted = TRUE;
+    ret = SHELL_ConfirmMsgBox(hWnd, szBuffer, szCaption, hIcon, op && op->bManyItems);
+    if (op)
+    {
+        if (ret == IDD_YESTOALL)
+        {
+            op->dwYesToAllMask |= (1 << nKindOfDialog);
+            ret = IDYES;
         }
-        return ret == IDYES;
+        if (ret == IDCANCEL)
+            op->bCancelled = TRUE;
+        if (ret != IDYES)
+            op->req->fAnyOperationsAborted = TRUE;
+    }
+    return ret == IDYES;
 }
 
 BOOL SHELL_ConfirmYesNoW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir)
@@ -375,20 +393,20 @@ BOOL SHELL_DeleteDirectoryW(HWND hwnd, LPCWSTR pszDir, BOOL bShowUI)
 
 	if (!bShowUI || (ret = SHELL_ConfirmDialogW(hwnd, ASK_DELETE_FOLDER, pszDir, NULL)))
 	{
-	  do
-	  {
-	    if (IsDotDir(wfd.cFileName))
-	      continue;
-	    PathCombineW(szTemp, pszDir, wfd.cFileName);
-	    if (FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes)
-	      ret = SHELL_DeleteDirectoryW(hwnd, szTemp, FALSE);
-	    else
-	      ret = (SHNotifyDeleteFileW(szTemp) == ERROR_SUCCESS);
-	  } while (ret && FindNextFileW(hFind, &wfd));
+		do
+		{
+			if (IsDotDir(wfd.cFileName))
+				continue;
+			PathCombineW(szTemp, pszDir, wfd.cFileName);
+			if (FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes)
+				ret = SHELL_DeleteDirectoryW(hwnd, szTemp, FALSE);
+			else
+				ret = (SHNotifyDeleteFileW(szTemp) == ERROR_SUCCESS);
+		} while (ret && FindNextFileW(hFind, &wfd));
 	}
 	FindClose(hFind);
 	if (ret)
-	  ret = (SHNotifyRemoveDirectoryW(pszDir) == ERROR_SUCCESS);
+		ret = (SHNotifyRemoveDirectoryW(pszDir) == ERROR_SUCCESS);
 	return ret;
 }
 
@@ -486,13 +504,13 @@ static DWORD SHNotifyDeleteFileW(LPCWSTR path)
 	  /* File may be write protected or a system file */
 	  DWORD dwAttr = GetFileAttributesW(path);
 	  if (IsAttrib(dwAttr, FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
-	    if (SetFileAttributesW(path, dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM)))
-	      ret = DeleteFileW(path);
+		if (SetFileAttributesW(path, dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM)))
+			ret = DeleteFileW(path);
 	}
 	if (ret)
 	{
-	  SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, path, NULL);
-	  return ERROR_SUCCESS;
+		SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, path, NULL);
+		return ERROR_SUCCESS;
 	}
 	return GetLastError();
 }
@@ -536,16 +554,16 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
 	  if (INVALID_FILE_ATTRIBUTES == dwAttr)
 	  {
 	    /* Source file may be write protected or a system file */
-	    dwAttr = GetFileAttributesW(src);
-	    if (IsAttrib(dwAttr, FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
-	      if (SetFileAttributesW(src, dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM)))
-	        ret = MoveFileW(src, dest);
+		dwAttr = GetFileAttributesW(src);
+		if (IsAttrib(dwAttr, FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
+			if (SetFileAttributesW(src, dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM)))
+				ret = MoveFileW(src, dest);
 	  }
 	}
 	if (ret)
 	{
-	  SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW, src, dest);
-	  return ERROR_SUCCESS;
+		SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW, src, dest);
+		return ERROR_SUCCESS;
 	}
 	return GetLastError();
 }
@@ -623,51 +641,52 @@ static INT_PTR CALLBACK SHOperationDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:
-        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
+		case WM_INITDIALOG:
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
 
-        /* get context */
-        Context = (FILE_OPERATION_CONTEXT*)lParam;
+			/* get context */
+			Context = (FILE_OPERATION_CONTEXT*)lParam;
 
-        /* store progress bar handle */
-        Context->hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+			/* store progress bar handle */
+			Context->hDlgCtrl = GetDlgItem(hwndDlg, 14000);
 
-        /* store window handle */
-        Context->hwndDlg = hwndDlg;
+			/* store window handle */
+			Context->hwndDlg = hwndDlg;
 
-        /* set progress bar range */
-        (void)SendMessageW(Context->hDlgCtrl, (UINT) PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+			/* set progress bar range */
+			(void)SendMessageW(Context->hDlgCtrl, (UINT) PBM_SETRANGE, 0, MAKELPARAM(0, 100));
 
-        /* start file queueing */
-        SetTimer(hwndDlg, TIMER_ID, 1000, NULL);
-        //QueueFile(Context);
+			/* start file queueing */
+			SetTimer(hwndDlg, TIMER_ID, 1000, NULL);
+			//QueueFile(Context);
 
-        return TRUE;
+			return TRUE;
 
-    case WM_CLOSE:
-        Context->op->bCancelled = TRUE;
-        EndDialog(hwndDlg, Context->op->bCancelled);
-        return TRUE;
-    case WM_COMMAND:
-        if (LOWORD(wParam) == 14002)
-        {
-            Context->op->bCancelled = TRUE;
-            EndDialog(hwndDlg, Context->op->bCancelled);
-            return TRUE;
-        }
-        break;
-    case WM_TIMER:
-        if (wParam == TIMER_ID)
-        {
-            QueueFile(Context);
-            KillTimer(hwndDlg, TIMER_ID);
-        }
-        break;
-    case WM_FILE:
-        if (!QueueFile(Context))
-            EndDialog(hwndDlg, Context->op->bCancelled);
-    default:
-        break;
+		case WM_CLOSE:
+			Context->op->bCancelled = TRUE;
+			EndDialog(hwndDlg, Context->op->bCancelled);
+			return TRUE;
+
+		case WM_COMMAND:
+			if (LOWORD(wParam) == 14002)
+			{
+				Context->op->bCancelled = TRUE;
+				EndDialog(hwndDlg, Context->op->bCancelled);
+				return TRUE;
+			}; break;
+
+		case WM_TIMER:
+			if (wParam == TIMER_ID)
+			{
+				QueueFile(Context);
+				KillTimer(hwndDlg, TIMER_ID);
+			}; break;
+
+		case WM_FILE:
+			if (!QueueFile(Context))
+				EndDialog(hwndDlg, Context->op->bCancelled);
+		default:
+			break;
     }
     return FALSE;
 }
@@ -726,18 +745,30 @@ static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
 	BOOL ret;
 	DWORD attribs;
 
+    DbgPrint("[shell32, SHNotifyCopyFileW] Called\n");
+
 	TRACE("(%s %s %s)\n", debugstr_w(src), debugstr_w(dest), bFailIfExists ? "failIfExists" : "");
 
-        /* Destination file may already exist with read only attribute */
-        attribs = GetFileAttributesW(dest);
-        if (IsAttrib(attribs, FILE_ATTRIBUTE_READONLY))
-          SetFileAttributesW(dest, attribs & ~FILE_ATTRIBUTE_READONLY);
+    /* Destination file may already exist with read only attribute */
+    attribs = GetFileAttributesW(dest);
+    if (IsAttrib(attribs, FILE_ATTRIBUTE_READONLY))
+        SetFileAttributesW(dest, attribs & ~FILE_ATTRIBUTE_READONLY);
+
+    if (GetFileAttributesW(dest) & FILE_ATTRIBUTE_READONLY)
+    {
+        SetFileAttributesW(dest, attribs & ~FILE_ATTRIBUTE_READONLY);
+        DbgPrint("[shell32, SHNotifyCopyFileW] Something went really WRONG...%ls, we still have FILE_ATTRIBUTE_READONLY\n", dest);
+        if (GetFileAttributesW(dest) & FILE_ATTRIBUTE_READONLY)
+        {
+            DbgPrint("[shell32, SHNotifyCopyFileW] STILL SHIT\n");
+        }
+    }
 
 	ret = CopyFileW(src, dest, bFailIfExists);
 	if (ret)
 	{
-	  SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, dest, NULL);
-	  return ERROR_SUCCESS;
+		SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, dest, NULL);
+		return ERROR_SUCCESS;
 	}
 
 	return GetLastError();
@@ -815,8 +846,8 @@ int WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES se
 	retCode = SHELL32_AnsiToUnicodeBuf(path, &wPath, 0);
 	if (!retCode)
 	{
-	  retCode = SHCreateDirectoryExW(hWnd, wPath, sec);
-	  SHELL32_FreeUnicodeBuf(wPath);
+		retCode = SHCreateDirectoryExW(hWnd, wPath, sec);
+		SHELL32_FreeUnicodeBuf(wPath);
 	}
 	return retCode;
 }
@@ -837,39 +868,40 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 	}
 	else
 	{
-	  ret = SHNotifyCreateDirectoryW(path, sec);
-	  /* Refuse to work on certain error codes before trying to create directories recursively */
-	  if (ret != ERROR_SUCCESS &&
-	      ret != ERROR_FILE_EXISTS &&
-	      ret != ERROR_ALREADY_EXISTS &&
-	      ret != ERROR_FILENAME_EXCED_RANGE)
-	  {
-	    WCHAR *pEnd, *pSlash, szTemp[MAX_PATH + 1];  /* extra for PathAddBackslash() */
+		ret = SHNotifyCreateDirectoryW(path, sec);
+		/* Refuse to work on certain error codes before trying to create directories recursively */
+		if (ret != ERROR_SUCCESS &&
+		  ret != ERROR_FILE_EXISTS &&
+		  ret != ERROR_ALREADY_EXISTS &&
+		  ret != ERROR_FILENAME_EXCED_RANGE)
+		{
+			WCHAR *pEnd, *pSlash, szTemp[MAX_PATH + 1];  /* extra for PathAddBackslash() */
 
-	    lstrcpynW(szTemp, path, MAX_PATH);
-	    pEnd = PathAddBackslashW(szTemp);
-	    pSlash = szTemp + 3;
+			lstrcpynW(szTemp, path, MAX_PATH);
+			pEnd = PathAddBackslashW(szTemp);
+			pSlash = szTemp + 3;
 
-	    while (*pSlash)
-	    {
-              while (*pSlash && *pSlash != '\\') pSlash++;
-	      if (*pSlash)
-	      {
-	        *pSlash = 0;    /* terminate path at separator */
+			while (*pSlash)
+			{
+				while (*pSlash && *pSlash != '\\') pSlash++;
+				if (*pSlash)
+				{
+					*pSlash = 0;    /* terminate path at separator */
 
-	        ret = SHNotifyCreateDirectoryW(szTemp, pSlash + 1 == pEnd ? sec : NULL);
-	      }
-	      *pSlash++ = '\\'; /* put the separator back */
-	    }
-	  }
+					ret = SHNotifyCreateDirectoryW(szTemp, pSlash + 1 == pEnd ? sec : NULL);
+				}
+				*pSlash++ = '\\'; /* put the separator back */
+			}
+		}
 
-	  if (ret && hWnd && (ERROR_CANCELLED != ret))
-	  {
-	    /* We failed and should show a dialog box */
-	    FIXME("Show system error message, creating path %s, failed with error %d\n", debugstr_w(path), ret);
-	    ret = ERROR_CANCELLED; /* Error has been already presented to user (not really yet!) */
-	  }
+		if (ret && hWnd && (ERROR_CANCELLED != ret))
+		{
+			/* We failed and should show a dialog box */
+			FIXME("Show system error message, creating path %s, failed with error %d\n", debugstr_w(path), ret);
+			ret = ERROR_CANCELLED; /* Error has been already presented to user (not really yet!) */
+		}
 	}
+
 	return ret;
 }
 
@@ -898,14 +930,14 @@ static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly)
 	TRACE("%s %d\n", debugstr_w(pName), fileOnly);
 	if (INVALID_HANDLE_VALUE != hFind)
 	{
-	  do
-	  {
-	    if (b_FileMask && IsAttribDir(wfd.dwFileAttributes))
-	       continue;
-	    dwAttr = wfd.dwFileAttributes;
-	    break;
-	  }
-	  while (FindNextFileW(hFind, &wfd));
+		do
+		{
+			if (b_FileMask && IsAttribDir(wfd.dwFileAttributes))
+			   continue;
+			dwAttr = wfd.dwFileAttributes;
+			break;
+		} while (FindNextFileW(hFind, &wfd));
+	  
 	  FindClose(hFind);
 	}
 	return dwAttr;
@@ -927,20 +959,21 @@ static DWORD SHNameTranslate(LPWSTR* wString, LPCWSTR* pWToFrom, BOOL more)
 
 	if (aString)
 	{
-	  do
-	  {
-	    size = lstrlenA(aString) + 1;
-	    aSize += size;
-	    aString += size;
-	  } while ((size != 1) && more);
-	  /* The two sizes might be different in the case of multibyte chars */
-	  size = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, 0);
-	  if (*wString) /* only in the second loop */
-	  {
-	    MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, size);
-	    *pWToFrom = *wString;
-	    *wString += size;
-	  }
+		do
+		{
+			size = lstrlenA(aString) + 1;
+			aSize += size;
+			aString += size;
+		} while ((size != 1) && more);
+		
+		/* The two sizes might be different in the case of multibyte chars */
+		size = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, 0);
+		if (*wString) /* only in the second loop */
+		{
+			MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, size);
+			*pWToFrom = *wString;
+			*wString += size;
+		}
 	}
 	return size;
 }
@@ -970,30 +1003,30 @@ int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp)
 
 	TRACE("\n");
 	if (FO_DELETE == (nFileOp.wFunc & FO_MASK))
-	  nFileOp.pTo = NULL; /* we need a NULL or a valid pointer for translation */
+		nFileOp.pTo = NULL; /* we need a NULL or a valid pointer for translation */
 	if (!(nFileOp.fFlags & FOF_SIMPLEPROGRESS))
-	  nFileOp.lpszProgressTitle = NULL; /* we need a NULL or a valid pointer for translation */
+		nFileOp.lpszProgressTitle = NULL; /* we need a NULL or a valid pointer for translation */
 	while (1) /* every loop calculate size, second translate also, if we have storage for this */
 	{
-	  size = SHNameTranslate(&wString, &nFileOp.lpszProgressTitle, FALSE); /* no loop */
-	  size += SHNameTranslate(&wString, &nFileOp.pFrom, TRUE); /* internal loop */
-	  size += SHNameTranslate(&wString, &nFileOp.pTo, TRUE); /* internal loop */
+		size = SHNameTranslate(&wString, &nFileOp.lpszProgressTitle, FALSE); /* no loop */
+		size += SHNameTranslate(&wString, &nFileOp.pFrom, TRUE); /* internal loop */
+		size += SHNameTranslate(&wString, &nFileOp.pTo, TRUE); /* internal loop */
 
-	  if (ForFree)
-	  {
-	    retCode = SHFileOperationW(&nFileOp);
-	    HeapFree(GetProcessHeap(), 0, ForFree); /* we cannot use wString, it was changed */
-	    break;
-	  }
-	  else
-	  {
-	    wString = ForFree = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
-	    if (ForFree) continue;
-	    retCode = ERROR_OUTOFMEMORY;
-	    nFileOp.fAnyOperationsAborted = TRUE;
-	    SetLastError(retCode);
-	    return retCode;
-	  }
+		if (ForFree)
+		{
+			retCode = SHFileOperationW(&nFileOp);
+			HeapFree(GetProcessHeap(), 0, ForFree); /* we cannot use wString, it was changed */
+			break;
+		}
+		else
+		{
+			wString = ForFree = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+			if (ForFree) continue;
+			retCode = ERROR_OUTOFMEMORY;
+			nFileOp.fAnyOperationsAborted = TRUE;
+			SetLastError(retCode);
+			return retCode;
+		}
 	}
 
 	lpFileOp->hNameMappings = nFileOp.hNameMappings;
@@ -1063,15 +1096,22 @@ static void parse_wildcard_files(FILE_LIST *flList, LPCWSTR szFile, LPDWORD pdwL
 
     for (res = TRUE; res; res = FindNextFileW(hFile, &wfd))
     {
-        if (IsDotDir(wfd.cFileName)) continue;
-        if (*pdwListIndex >= flList->num_alloc) grow_list( flList );
-        szFullPath = wildcard_to_file(szFile, wfd.cFileName);
+        if (IsDotDir(wfd.cFileName))
+			continue;
+
+        if (*pdwListIndex >= flList->num_alloc)
+			grow_list( flList );
+        
+		szFullPath = wildcard_to_file(szFile, wfd.cFileName);
         file = &flList->feFiles[(*pdwListIndex)++];
         add_file_to_entry(file, szFullPath);
         file->bFromWildcard = TRUE;
         file->attributes = wfd.dwFileAttributes;
-        if (IsAttribDir(file->attributes)) flList->bAnyDirectories = TRUE;
-        HeapFree(GetProcessHeap(), 0, szFullPath);
+        
+		if (IsAttribDir(file->attributes))
+			flList->bAnyDirectories = TRUE;
+        
+		HeapFree(GetProcessHeap(), 0, szFullPath);
     }
 
     FindClose(hFile);
@@ -1180,7 +1220,8 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     else
         lstrcpyW(szTo, szDestPath);
 
-    if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo)) {
+    if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
+	{
         if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FOLDER, feFrom->szFilename, op))
         {
             /* Vista returns an ERROR_CANCELLED even if user pressed "No" */
@@ -1367,6 +1408,7 @@ static HRESULT copy_files(FILE_OPERATION *op, const FILE_LIST *flFrom, FILE_LIST
         {
             if (!copy_file_to_file(op, entryToCopy->szFullPath, fileDest->szFullPath))
             {
+                DbgPrint("[shell32, copy_files] copy_file_to_file failed\n");
                 op->req->fAnyOperationsAborted = TRUE;
                 return ERROR_CANCELLED;
             }
@@ -1671,16 +1713,16 @@ void WINAPI SHFreeNameMappings(HANDLE hNameMapping)
 {
 	if (hNameMapping)
 	{
-	  int i = SHDSA_GetItemCount((HDSA)hNameMapping) - 1;
+		int i = SHDSA_GetItemCount((HDSA)hNameMapping) - 1;
 
-	  for (; i>= 0; i--)
-	  {
-	    LPSHNAMEMAPPINGW lp = (SHNAMEMAPPINGW *)DSA_GetItemPtr((HDSA)hNameMapping, i);
+		for (; i>= 0; i--)
+		{
+			LPSHNAMEMAPPINGW lp = (SHNAMEMAPPINGW *)DSA_GetItemPtr((HDSA)hNameMapping, i);
 
-	    SHFree(lp->pszOldPath);
-	    SHFree(lp->pszNewPath);
-	  }
-	  DSA_Destroy((HDSA)hNameMapping);
+			SHFree(lp->pszOldPath);
+			SHFree(lp->pszNewPath);
+		}
+		DSA_Destroy((HDSA)hNameMapping);
 	}
 }
 
@@ -1736,7 +1778,8 @@ EXTERN_C DWORD WINAPI SheGetDirW(DWORD drive, LPWSTR buffer)
     char drv_path[3];
 
     /* change current directory to the specified drive */
-    if (drive) {
+    if (drive)
+	{
         strcpy(drv_path, "A:");
         drv_path[0] += (char)drive-1;
 

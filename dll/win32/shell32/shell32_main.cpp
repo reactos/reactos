@@ -101,7 +101,8 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             /* space */
             argc++;
             /* skip the remaining spaces */
-            while (*cs==0x0009 || *cs==0x0020) {
+            while (*cs==0x0009 || *cs==0x0020)
+			{
                 cs++;
             }
             if (*cs==0)
@@ -131,9 +132,11 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
      * This way the caller can make a single GlobalFree call to free both, as per MSDN.
      */
     argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
-    if (!argv)
+    
+	if (!argv)
         return NULL;
-    cmdline=(LPWSTR)(argv+argc);
+    
+	cmdline=(LPWSTR)(argv+argc);
     wcscpy(cmdline, lpCmdline);
 
     argc=0;
@@ -238,15 +241,18 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
 
     SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
     ReadFile( hfile, magic, sizeof(magic), &len, NULL );
-    if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
+    
+	if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
     {
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &nt, sizeof(nt), &len, NULL );
         CloseHandle( hfile );
-        /* DLL files are not executable and should return 0 */
+        
+		/* DLL files are not executable and should return 0 */
         if (nt.FileHeader.Characteristics & IMAGE_FILE_DLL)
             return 0;
-        if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+        
+		if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
         {
              return IMAGE_NT_SIGNATURE |
                    (nt.OptionalHeader.MajorSubsystemVersion << 24) |
@@ -260,7 +266,8 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &ne, sizeof(ne), &len, NULL );
         CloseHandle( hfile );
-        if (ne.ne_exetyp == 2)
+        
+		if (ne.ne_exetyp == 2)
             return IMAGE_OS2_SIGNATURE | (ne.ne_expver << 16);
         return 0;
     }
@@ -582,7 +589,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                                 GetSystemMetrics( SM_CXICON),
                                 GetSystemMetrics( SM_CYICON),
                                 &psfi->hIcon, 0, 1, 0);
-                        if (ret != 0 && ret != 0xFFFFFFFF)
+                        
+						if (ret != 0 && ret != 0xFFFFFFFF)
                         {
                             IconNotYetLoaded=FALSE;
                             psfi->iIcon = icon_idx;
@@ -849,41 +857,51 @@ UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
 
     switch (msg)
     {
-    case ABM_GETSTATE:
-        return ABS_ALWAYSONTOP | ABS_AUTOHIDE;
-    case ABM_GETTASKBARPOS:
-        GetWindowRect(data->hWnd, &rec);
-        data->rc=rec;
-        return TRUE;
-    case ABM_ACTIVATE:
-        SetActiveWindow(data->hWnd);
-        return TRUE;
-    case ABM_GETAUTOHIDEBAR:
-        return 0; /* pretend there is no autohide bar */
-    case ABM_NEW:
-        /* cbSize, hWnd, and uCallbackMessage are used. All other ignored */
-        SetWindowPos(data->hWnd,HWND_TOP,0,0,0,0,SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE);
-        return TRUE;
-    case ABM_QUERYPOS:
-        GetWindowRect(data->hWnd, &(data->rc));
-        return TRUE;
-    case ABM_REMOVE:
-        FIXME("ABM_REMOVE broken\n");
-        /* FIXME: this is wrong; should it be DestroyWindow instead? */
-        /*CloseHandle(data->hWnd);*/
-        return TRUE;
-    case ABM_SETAUTOHIDEBAR:
-        SetWindowPos(data->hWnd,HWND_TOP,rec.left+1000,rec.top,
-                         width,height,SWP_SHOWWINDOW);
-        return TRUE;
-    case ABM_SETPOS:
-        data->uEdge=(ABE_RIGHT | ABE_LEFT);
-        SetWindowPos(data->hWnd,HWND_TOP,data->rc.left,data->rc.top,
-                     width,height,SWP_SHOWWINDOW);
-        return TRUE;
-    case ABM_WINDOWPOSCHANGED:
-        return TRUE;
+		case ABM_GETSTATE:
+			return ABS_ALWAYSONTOP | ABS_AUTOHIDE;
+
+		case ABM_GETTASKBARPOS:
+			GetWindowRect(data->hWnd, &rec);
+			data->rc=rec;
+			return TRUE;
+
+		case ABM_ACTIVATE:
+			SetActiveWindow(data->hWnd);
+			return TRUE;
+
+		case ABM_GETAUTOHIDEBAR:
+			return 0; /* pretend there is no autohide bar */
+
+		case ABM_NEW:
+			/* cbSize, hWnd, and uCallbackMessage are used. All other ignored */
+			SetWindowPos(data->hWnd,HWND_TOP,0,0,0,0,SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE);
+			return TRUE;
+
+		case ABM_QUERYPOS:
+			GetWindowRect(data->hWnd, &(data->rc));
+			return TRUE;
+
+		case ABM_REMOVE:
+			FIXME("ABM_REMOVE broken\n");
+			/* FIXME: this is wrong; should it be DestroyWindow instead? */
+			/*CloseHandle(data->hWnd);*/
+			return TRUE;
+
+		case ABM_SETAUTOHIDEBAR:
+			SetWindowPos(data->hWnd,HWND_TOP,rec.left+1000,rec.top,
+							 width,height,SWP_SHOWWINDOW);
+			return TRUE;
+
+		case ABM_SETPOS:
+			data->uEdge=(ABE_RIGHT | ABE_LEFT);
+			SetWindowPos(data->hWnd,HWND_TOP,data->rc.left,data->rc.top,
+						 width,height,SWP_SHOWWINDOW);
+			return TRUE;
+
+		case ABM_WINDOWPOSCHANGED:
+			return TRUE;
     }
+
     return FALSE;
 }
 
@@ -1076,7 +1094,9 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                         }
 
                         // We need the decimal point of the current locale to display the RAM size correctly
-                        if( GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSeparator, sizeof(szDecimalSeparator) / sizeof(WCHAR)) > 0)
+                        if (GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
+							szDecimalSeparator,
+							sizeof(szDecimalSeparator) / sizeof(WCHAR)) > 0)
                         {
                             UCHAR uDecimals;
                             UINT uIntegral;
@@ -1127,11 +1147,10 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 
                 EndPaint(hWnd, &ps);
             }
-
-            break;
-        }
+        }; break;
 
         case WM_COMMAND:
+		{
             switch(wParam)
             {
                 case IDOK:
@@ -1160,7 +1179,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                     return TRUE;
                 }
             }
-            break;
+		}; break;
 
         case WM_CLOSE:
             EndDialog(hWnd, TRUE);
