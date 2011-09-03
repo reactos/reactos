@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 add_definitions(
@@ -57,7 +56,7 @@ list(APPEND SOURCE
 
 add_library(comctl32 SHARED ${SOURCE})
 
-set_module_type(comctl32 win32dll)
+set_module_type(comctl32 win32dll UNICODE)
 
 target_link_libraries(comctl32 uuid wine)
 

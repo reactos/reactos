@@ -66,8 +66,3 @@ endfunction()
 function(add_target_include_directories _module)
     add_target_property(${_module} INCLUDE_DIRECTORIES ${ARGN})
 endfunction()
-
-macro(set_unicode)
-   add_definitions(-DUNICODE -D_UNICODE)
-   set(IS_UNICODE 1)
-endmacro()

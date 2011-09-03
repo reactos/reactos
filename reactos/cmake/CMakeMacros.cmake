@@ -241,8 +241,12 @@ function(add_importlibs _module)
 endfunction()
 
 function(set_module_type MODULE TYPE)
-    cmake_parse_arguments(__module "" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
+    cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
     
+    if(__module_UNPARSED_ARGUMENTS)
+        message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
+    endif()
+
     # Set subsystem. Also take this as an occasion
     # to error out if someone gave a non existing type
     if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) OR (${TYPE} STREQUAL kernelmodedriver))
@@ -259,15 +263,15 @@ function(set_module_type MODULE TYPE)
         set_subsystem(${MODULE} ${__subsystem})
     endif()
     
-    if(__module_UNPARSED_ARGUMENTS)
-        message(STATUS ${__module_UNPARSED_ARGUMENTS})
+    #set unicode definitions
+    if(__module_UNICODE)
+        add_target_compile_definitions(${MODULE} -DUNICODE -D_UNICODE)
     endif()
     
     # set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
         list(GET __module_ENTRYPOINT 0 __entrypoint)
         list(LENGTH __module_ENTRYPOINT __length)
-        message(STATUS "Entrypoint ${__entrypoint}, module ${MODULE}")
         if(${__length} EQUAL 2)
             list(GET __module_ENTRYPOINT 1 __entrystack)
         elseif(NOT ${__length} EQUAL 1)
@@ -278,11 +282,11 @@ function(set_module_type MODULE TYPE)
         set(__entrypoint NtProcessStartup)
         set(__entrystack 4)
     elseif((${TYPE} STREQUAL win32gui) OR (${TYPE} STREQUAL win32cui))
-        if(IS_UNICODE)
+        if(__module_UNICODE)
             set(__entrypoint wWinMainCRTStartup)
         else()
             set(__entrypoint WinMainCRTStartup)
-        endif(IS_UNICODE)
+        endif()
     elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl))
         set(__entrypoint DllMainCRTStartup)

@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -13,7 +12,7 @@ add_library(msdmo SHARED
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
-set_entrypoint(msdmo 0)
+set_module_type(msdmo win32dll ENTRYPOINT 0 UNICODE)
 
 target_link_libraries(msdmo uuid wine mediaobj_guid)
 

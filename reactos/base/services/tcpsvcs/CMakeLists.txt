@@ -1,5 +1,4 @@
 
-set_unicode()
 
 list(APPEND SOURCE
     tcpsvcs.c
@@ -14,7 +13,7 @@ list(APPEND SOURCE
 
 add_executable(tcpsvcs ${SOURCE})
 
-set_module_type(tcpsvcs win32cui)
+set_module_type(tcpsvcs win32cui UNICODE)
 add_importlibs(tcpsvcs ws2_32 advapi32 msvcrt kernel32 ntdll)
 add_pch(tcpsvcs tcpsvcs.h)
 

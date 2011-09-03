@@ -11,8 +11,6 @@ add_definitions(
 
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/pnp.idl)
 
-set_unicode()
-
 set_rc_compiler()
 
 spec2def(setupapi.dll setupapi.spec)
@@ -41,7 +39,7 @@ list(APPEND SOURCE
 
 add_library(setupapi SHARED ${SOURCE})
 
-set_module_type(setupapi win32dll)
+set_module_type(setupapi win32dll UNICODE)
 
 target_link_libraries(setupapi
     uuid

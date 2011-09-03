@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(user32.dll user32.spec)
 
@@ -67,7 +66,7 @@ list(APPEND SOURCE
 
 add_library(user32 SHARED ${SOURCE})
 
-set_module_type(user32 win32dll)
+set_module_type(user32 win32dll UNICODE)
 
 target_link_libraries(user32
     user32_wsprintf

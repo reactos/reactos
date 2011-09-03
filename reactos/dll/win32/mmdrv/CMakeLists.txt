@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DNDEBUG)
 
@@ -16,6 +15,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mmdrv.def)
 
 add_library(mmdrv SHARED ${SOURCE})
+set_module_type(mmdrv win32dll ENTRYPOINT 0 UNICODE)
 
 set_entrypoint(mmdrv 0)
 add_importlibs(mmdrv winmm user32 kernel32 ntdll)

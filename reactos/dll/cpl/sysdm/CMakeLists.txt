@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(sysdm.cpl sysdm.spec)
@@ -20,7 +19,7 @@ list(APPEND SOURCE
 
 add_library(sysdm SHARED ${SOURCE})
 
-set_module_type(sysdm cpl)
+set_module_type(sysdm cpl UNICODE)
 
 add_importlibs(sysdm
     msvcrt

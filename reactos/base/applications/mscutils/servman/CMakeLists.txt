@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 list(APPEND SOURCE
@@ -26,7 +25,7 @@ list(APPEND SOURCE
 
 add_executable(servman ${SOURCE})
 
-set_module_type(servman win32gui)
+set_module_type(servman win32gui UNICODE)
 
 add_importlibs(servman user32 gdi32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)
 

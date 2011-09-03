@@ -15,7 +15,6 @@ add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
     
-set_unicode()
 
 list(APPEND SOURCE
     crypt/crypt.c
@@ -57,7 +56,7 @@ list(APPEND SOURCE
 
 add_library(advapi32 SHARED ${SOURCE})
 
-set_module_type(advapi32 win32dll)
+set_module_type(advapi32 win32dll UNICODE)
 
 target_link_libraries(advapi32
     wine

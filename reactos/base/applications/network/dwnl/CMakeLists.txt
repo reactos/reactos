@@ -1,9 +1,8 @@
 
-set_unicode()
 
 add_executable(dwnl dwnl.c)
 
-set_module_type(dwnl win32cui)
+set_module_type(dwnl win32cui UNICODE)
 
 target_link_libraries(dwnl uuid)
 

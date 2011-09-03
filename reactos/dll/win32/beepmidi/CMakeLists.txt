@@ -1,6 +1,4 @@
 
-set_unicode()
-
 spec2def(beepmidi.dll beepmidi.spec)
 
 list(APPEND SOURCE
@@ -9,7 +7,8 @@ list(APPEND SOURCE
 
 add_library(beepmidi SHARED ${SOURCE})
 
-set_entrypoint(beepmidi 0)
+set_module_type(beepmidi win32dll ENTRYPOINT 0 UNICODE)
+
 add_importlibs(beepmidi winmm kernel32 ntdll msvcrt)
 add_importlib_target(beepmidi.spec)
 

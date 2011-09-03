@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 include_directories(BEFORE .)
@@ -22,7 +21,7 @@ list(APPEND SOURCE
 
 add_executable(regedit ${SOURCE})
 
-set_module_type(regedit win32gui)
+set_module_type(regedit win32gui UNICODE)
 
 target_link_libraries(regedit uuid)
 

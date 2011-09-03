@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(deskmon.dll deskmon.spec)
@@ -12,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(deskmon SHARED ${SOURCE})
 
-set_module_type(deskmon win32dll)
+set_module_type(deskmon win32dll UNICODE)
 
 target_link_libraries(deskmon uuid)
 

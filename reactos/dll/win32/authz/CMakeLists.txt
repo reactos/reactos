@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(authz.dll authz.spec)
 
@@ -13,7 +12,7 @@ list(APPEND SOURCE
 
 add_library(authz SHARED ${SOURCE})
 
-set_module_type(authz win32dll)
+set_module_type(authz win32dll UNICODE)
 
 add_importlibs(authz advapi32 msvcrt kernel32 ntdll)
 add_pch(authz precomp.h)

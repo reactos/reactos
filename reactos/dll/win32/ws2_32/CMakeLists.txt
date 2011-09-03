@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DLE)
 add_definitions(-DWINSOCK_API_LINKAGE=DECLSPEC_EXPORT)
@@ -25,7 +24,7 @@ list(APPEND SOURCE
 
 add_library(ws2_32 SHARED ${SOURCE})
 
-set_module_type(ws2_32 win32dll)
+set_module_type(ws2_32 win32dll UNICODE)
 
 target_link_libraries(ws2_32 wine)
 

@@ -1,14 +1,13 @@
 
 spec2def(powrprof.dll powrprof.spec)
 
-set_unicode()
 
 add_library(powrprof SHARED
     powrprof.c
     powrprof.rc
     ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
 
-set_module_type(powrprof win32dll)
+set_module_type(powrprof win32dll UNICODE)
 
 target_link_libraries(powrprof wine)
 

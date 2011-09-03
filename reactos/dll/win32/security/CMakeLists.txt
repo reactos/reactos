@@ -1,4 +1,3 @@
-set_unicode()
 add_definitions(-D__SECURITY__)
 
 set_rc_compiler()
@@ -9,7 +8,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/security.def)
 
 add_library(security SHARED ${SOURCE})
-set_entrypoint(security 0)
+
+set_module_type(security win32dll ENTRYPOINT 0 UNICODE)
 
 add_importlibs(security secur32 advapi32 ntdll kernel32)
 

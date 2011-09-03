@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/tdilib)
 
@@ -12,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(wshtcpip SHARED ${SOURCE})
 
-set_entrypoint(wshtcpip 0)
+set_module_type(wshtcpip win32dll UNICODE ENTRYPOINT 0)
 
 target_link_libraries(wshtcpip tdilib)
 add_importlibs(wshtcpip ws2_32 kernel32 ntdll)
