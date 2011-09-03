@@ -36,8 +36,6 @@
 #define DPRINT_PELOADER     0x00001000  // OR this with DebugPrintMask to enable messages from PE images loader
 #define DPRINT_SCSIPORT     0x00002000  // OR this with DebugPrintMask to enable messages from SCSI miniport
 
-#define DBG_DEFAULT_CHANNEL(x) static int DbgDefaultChannel = DPRINT_##x;
-
 #if DBG && !defined(_M_ARM)
 
 	VOID	DebugInit(VOID);
@@ -49,6 +47,8 @@
     #define FIXME_LEVEL    0x2
     #define WARN_LEVEL     0x4
     #define TRACE_LEVEL    0x8
+
+    #define DBG_DEFAULT_CHANNEL(ch) static int DbgDefaultChannel = DPRINT_##ch
 
     #define ERR_CH(ch, fmt, ...)    DbgPrint2(DPRINT_##ch, ERR_LEVEL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
     #define FIXME_CH(ch, fmt, ...)  DbgPrint2(DPRINT_##ch, FIXME_LEVEL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
@@ -93,6 +93,8 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #endif // defined __i386__
 
 #else
+
+    #define DBG_DEFAULT_CHANNEL(ch)
 
     #define ERR_CH(ch, fmt, ...)
     #define FIXME_CH(ch, fmt, ...)
