@@ -21,10 +21,10 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "File"
     BEGIN
-        MENUITEM "Nuovo",                         ID_NEW
+        MENUITEM "Nuovo",                       ID_NEW
         MENUITEM "Apri...",                     ID_FILE_OPEN
-        MENUITEM "Salva",                        ID_FILE_SAVE, GRAYED
-        MENUITEM "Salva con nome...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Salva",                       ID_FILE_SAVE, GRAYED
+        MENUITEM "Salva con nome...",           ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Esci",                        ID_EXIT
     END
@@ -32,11 +32,9 @@ BEGIN
     MENUITEM "todo2",                       0
     POPUP "?"
     BEGIN
-        MENUITEM "Informazioni...",                    ID__ABOUT
+        MENUITEM "Informazioni...",             ID__ABOUT
     END
 END
-
-
 
 STRINGTABLE 
 BEGIN

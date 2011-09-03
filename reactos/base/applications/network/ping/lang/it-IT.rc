@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_USAGE "\nUso: ping [-t] [-n conteggio] [-l dimensione] [-w timeout] host-destinazione\n\n\
 Opzioni:\n\
-    -t             Esegue il ping dell'host specificato finchè non termina.\n\
+    -t             Esegue il ping dell'host specificato finchÃ¨ non termina.\n\
                    Per fermare - digitare Control-C.\n\
     -n conteggio   Numero di richieste echo da inviare.\n\
     -l dimensione  Dimensione del buffer di invio.\n\
@@ -24,7 +24,7 @@ Opzioni:\n\
     IDS_BAD_PARAMETER               "Parametro errato %1.\n\0"
     IDS_BAD_OPTION_FORMAT           "Formato opzione errato %1.\n\0"
     IDS_BAD_OPTION                  "Opzione errata %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L          "Valore errato per il parametro -l, è valido un valore tra 0 to %1!d!.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Valore errato per il parametro -l, Ã¨ valido un valore tra 0 to %1!d!.\n\0"
     IDS_REPLY_FROM                  "Risposta da %1: bytes=%2!d! time%3%4 TTL=%5!d!\n\0"
     IDS_DEST_UNREACHABLE            "Host destinazione irraggiungibile.\n\0"
     IDS_COULD_NOT_TRANSMIT          "Impossibile trasmettere dati (%1!d!).\n\0"

@@ -5,11 +5,8 @@
  * PURPOSE:      English Language File for Spider Solitaire
  * TRANSLATOR:   Gregor Schneider
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
 
 /* Dialogs */
 

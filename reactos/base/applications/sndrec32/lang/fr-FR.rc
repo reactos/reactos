@@ -8,7 +8,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Information à propos de l'Enregistreur de Son ReactOS"
+CAPTION "Information Ã  propos de l'Enregistreur de Son ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDI_SNDREC32,-1,19,14,21,20
@@ -45,10 +45,10 @@ END
 STRINGTABLE 
 BEGIN
     IDS_STRPOS              "Position: %.2f s"
-    IDS_STRDUR              "Durée: %.2f s"
+    IDS_STRDUR              "DurÃ©e: %.2f s"
     IDS_STRBUF              "Buffer: %.2f kb"
     IDS_STRFMT              "%.1f kHz %u bits"
     IDS_STRMONO             "mono"
-    IDS_STRSTEREO           "stéréo"
+    IDS_STRSTEREO           "stÃ©rÃ©o"
     IDS_STRCHAN             "%s"
 END

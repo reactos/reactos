@@ -9,12 +9,12 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Soubor"
 	BEGIN
-		MENUITEM "&Otevøít...", IDM_OPEN_FILE
-		MENUITEM "&Zavøít", IDM_CLOSE_FILE
+		MENUITEM "&OtevÃ¸Ã­t...", IDM_OPEN_FILE
+		MENUITEM "&ZavÃ¸Ã­t", IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "&Ukonèit", IDM_EXIT
+		MENUITEM "&UkonÃ¨it", IDM_EXIT
 	END
-	POPUP "&Nápovìda"
+	POPUP "&NÃ¡povÃ¬da"
 	BEGIN
 		MENUITEM "&O programu...", IDM_ABOUT
 	END
@@ -22,14 +22,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Všechny podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Pøehrát"
+	IDS_ALL_TYPES_FILTER "VÅ¡echny podporovanÃ© (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "PÃ¸ehrÃ¡t"
 	IDS_TOOLTIP_STOP "Zastavit"
 	IDS_TOOLTIP_EJECT "Vysunout"
-	IDS_TOOLTIP_BACKWARD "Pøeskoèit zpìt"
-	IDS_TOOLTIP_SEEKBACK "Posunout zpìt"
-	IDS_TOOLTIP_SEEKFORW "Posunout vpøed"
-	IDS_TOOLTIP_FORWARD "Pøeskoèit vpøed"
-	IDS_APPTITLE "ReactOS Pøehrávaè multimédií"
-	IDS_PLAY "Pøehrát"
+	IDS_TOOLTIP_BACKWARD "PÃ¸eskoÃ¨it zpÃ¬t"
+	IDS_TOOLTIP_SEEKBACK "Posunout zpÃ¬t"
+	IDS_TOOLTIP_SEEKFORW "Posunout vpÃ¸ed"
+	IDS_TOOLTIP_FORWARD "PÃ¸eskoÃ¨it vpÃ¸ed"
+	IDS_APPTITLE "ReactOS PÃ¸ehrÃ¡vaÃ¨ multimÃ©diÃ­"
+	IDS_PLAY "PÃ¸ehrÃ¡t"
 END

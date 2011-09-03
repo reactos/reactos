@@ -1,7 +1,7 @@
  /* 
  * FILE:             base/applications/cmdutils/find/lang/ro-RO.rc
                      ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ªtefan (PM on ReactOS Forum at fulea.stefan)
+ * TRANSLATOR:       Fulea Åžtefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-20  initial romanian translation
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -9,15 +9,15 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "FIND: Tipãreºte toate rândurile unui fiºier ce conþin un ºir.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""ºir"" [ fiºier... ]\n\
-    /C  Numãrã liniile ce conþin ºirul.\n\
-    /I  Ignorã diferenþele între majuscule ºi minuscule.\n\
-    /N  Numãrã rândurile afiºate, începând cu 1.\n\
-    /V  Tipãreºte rândurile ce nu conþin ºirul."
+IDS_USAGE, "FIND: TipÄƒreÅŸte toate rÃ¢ndurile unui fiÅŸier ce conÅ£in un ÅŸir.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""ÅŸir"" [ fiÅŸier... ]\n\
+    /C  NumÄƒrÄƒ liniile ce conÅ£in ÅŸirul.\n\
+    /I  IgnorÄƒ diferenÅ£ele Ã®ntre majuscule ÅŸi minuscule.\n\
+    /N  NumÄƒrÄƒ rÃ¢ndurile afiÅŸate, Ã®ncepÃ¢nd cu 1.\n\
+    /V  TipÄƒreÅŸte rÃ¢ndurile ce nu conÅ£in ÅŸirul."
 
-IDS_NO_SUCH_FILE, "FIND: Fiºierul %s nu existã!\n"
+IDS_NO_SUCH_FILE, "FIND: FiÅŸierul %s nu existÄƒ!\n"
 
-IDS_CANNOT_OPEN, "FIND: Fiºierul %s nu poate fi deschis!\n"
+IDS_CANNOT_OPEN, "FIND: FiÅŸierul %s nu poate fi deschis!\n"
 
 END

@@ -1,7 +1,7 @@
 /* 
  * FILE:             base/applications/logoff/lang/ro-RO.rc
                      ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ¸tefan (PM on ReactOS Forum at fulea.stefan)
+ * TRANSLATOR:       Fulea Åžtefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
  */
  
@@ -10,12 +10,12 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "×ncheie o sesiune.\n\n\
-  /v\t\tAfi­eazÇ informaîii despre acîiunile efectuate.\n\
-  /?\t\tAfi­eazÇ acest manual.\n\n"
+IDS_USAGE, "ÃŽncheie o sesiune.\n\n\
+  /v\t\tAfiÅŸeazÄƒ informaÅ£ii despre acÅ£iunile efectuate.\n\
+  /?\t\tAfiÅŸeazÄƒ acest manual.\n\n"
 
-IDS_LOGOFF_REMOTE, "×ncheierea sesiunii pe un calculator Œn reîea."
-IDS_LOGOFF_LOCAL,  "×ncheierea sesiunii curente pe calculatorul local."
+IDS_LOGOFF_REMOTE, "ÃŽncheierea sesiunii pe un calculator Ã®n reÅ£ea."
+IDS_LOGOFF_LOCAL,  "ÃŽncheierea sesiunii curente pe calculatorul local."
 
 IDS_ILLEGAL_PARAM, "Parametri nevalizi\n"
 END

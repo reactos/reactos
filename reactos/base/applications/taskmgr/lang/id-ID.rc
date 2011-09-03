@@ -1,15 +1,6 @@
-/////////////////////////////////////////////////////////////////////////////
 // Indonesian resource file by Zaenal Mutaqin  (ade999@gmail.com)
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
-LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -652,20 +643,3 @@ BEGIN
     IDS_Not_Responding            "Tidak Merespon"
     IDS_Running                   "Berjalan"
 END
-
-
-#endif    // Indonesian resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

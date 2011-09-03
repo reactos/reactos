@@ -1,9 +1,10 @@
 /*
  * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\shutdown\lang\sv-SE.rc 
+ * FILE:            base/applications/shutdown/lang/sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
@@ -12,9 +13,9 @@ BEGIN
 IDS_USAGE, "SYNTAX: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Ingen parameter eller -? Visar detta meddelandet.\n\
   -l\t\tLogga ut\n\
-  -s\t\tSt‰ng av datorn.\n\
-  -r\t\tSt‰ng av och starta datorn.\n\
-  -f\t\tGˆr att program som kˆrs avslutas utan att anv‰ndare meddelas.\n\
-    \t\tOm du inte angav nÂgon annan parameter till detta kommandot\n\
-    \t\tkommer anv‰ndaren dessutom att loggas ut."
+  -s\t\tSt√§ng av datorn.\n\
+  -r\t\tSt√§ng av och starta datorn.\n\
+  -f\t\tG√∂r att program som k√∂rs avslutas utan att anv√§ndare meddelas.\n\
+    \t\tOm du inte angav n√•gon annan parameter till detta kommandot\n\
+    \t\tkommer anv√§ndaren dessutom att loggas ut."
 END

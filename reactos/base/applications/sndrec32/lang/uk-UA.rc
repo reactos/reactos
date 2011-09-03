@@ -5,8 +5,8 @@
  * PURPOSE:     Ukraianian Language File for Volume Control
  * TRANSLATOR:  Sakara Yevhen
  */
- 
- LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
@@ -30,9 +30,9 @@ BEGIN
     POPUP "Файл"
     BEGIN
         MENUITEM "Новий",                        	ID_NEW
-        MENUITEM "Відкрити...",                     ID_FILE_OPEN
-        MENUITEM "Зберегти",                        ID_FILE_SAVE, GRAYED
-        MENUITEM "Зберегти як...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Відкрити...",                   ID_FILE_OPEN
+        MENUITEM "Зберегти",                    ID_FILE_SAVE, GRAYED
+        MENUITEM "Зберегти як...",            ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Вихід",      		                ID_EXIT
     END
@@ -40,7 +40,7 @@ BEGIN
     MENUITEM "todo2",                       0
     POPUP "?"
     BEGIN
-        MENUITEM "Про програму...",                 ID__ABOUT
+        MENUITEM "Про програму...",          ID__ABOUT
     END
 END
 

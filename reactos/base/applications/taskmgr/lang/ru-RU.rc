@@ -1,14 +1,6 @@
 // Russian language resource file (Dmitry Chapyshev, 2007-06-10)
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-//  Меню
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -651,22 +643,3 @@ BEGIN
     IDS_Not_Responding            "Не отвечает"
     IDS_Running                   "Работает"
 END
-
-
-#endif    // Russian (RU) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
-
-

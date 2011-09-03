@@ -5,11 +5,8 @@
  * PURPOSE:      Italian Language File for Spider Solitaire
  * TRANSLATOR:   Gabriel ilardi gabrielilardi [at] hotmail [dot] it
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-
 
 /* Dialogs */
 
@@ -36,7 +33,7 @@ END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Difficolt‡"
+CAPTION "Difficolt√†"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Facile: un seme", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP

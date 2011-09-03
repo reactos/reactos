@@ -11,15 +11,15 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Možnosti"
+CAPTION "MoÅ¾nosti"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Karty", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Sejmout &jednu", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Sejmout &tøi", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    AUTORADIOBUTTON "Sejmout &tÃ¸i", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "Zobrazit è&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "Stavový øád&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Zobrazit Ã¨&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "StavovÃ½ Ã¸Ã¡d&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Storno", IDCANCEL, 101, 97, 50, 14
@@ -54,8 +54,8 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib verze 1.0."
-    IDS_SOL_QUIT    "Ukonèit rozehranou hru?"
-    IDS_SOL_WIN     "Gratulujeme, zvítìzili jste!!"
+    IDS_SOL_QUIT    "UkonÃ¨it rozehranou hru?"
+    IDS_SOL_WIN     "Gratulujeme, zvÃ­tÃ¬zili jste!!"
     IDS_SOL_DEAL    "Rozdat znova?"
 END
 
@@ -69,14 +69,14 @@ BEGIN
         MENUITEM "&Rozdat\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "Rub& karet...",                    IDM_GAME_DECK
-        MENUITEM "&Možnosti...",                 IDM_GAME_OPTIONS
+        MENUITEM "&MoÅ¾nosti...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Konec",                       IDM_GAME_EXIT
     END
-    POPUP "Nápo&vìda"
+    POPUP "NÃ¡po&vÃ¬da"
     BEGIN
         MENUITEM "&Obsah\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "O høe &Solitaire",                      IDM_HELP_ABOUT
+        MENUITEM "O hÃ¸e &Solitaire",                      IDM_HELP_ABOUT
     END
 END
 

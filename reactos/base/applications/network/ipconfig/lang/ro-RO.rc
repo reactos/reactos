@@ -1,7 +1,7 @@
  /* 
  * FILE:             base/applications/network/ipconfig/lang/ro-RO.rc
                      ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ™tefan (PM on ReactOS Forum at fulea.stefan)
+ * TRANSLATOR:       Fulea ≈ûtefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
  */
 
@@ -35,43 +35,43 @@ BEGIN
         ipconfig [/? | /all | /renew [adaptor] | /release [adaptor] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid adaptor |\n \
-                  /setclassid adaptor [id_clas„] ]\n \
+                  /setclassid adaptor [id_clasƒÉ] ]\n \
     \n \
     unde\n \
         adaptor         Numele conexiunii\n \
-                       (sunt permise metacaracterele * ∫i ?, vezi exemple)\n \
+                       (sunt permise metacaracterele * ≈üi ?, vezi exemple)\n \
     \n \
-        Op˛iuni:\n \
-           /?           Afi∫eaz„ acest manual.\n \
-           /all         Afi∫eaz„ toat„ informa˛ia de configurare.\n \
-           /release     Deta∫eaz„ adresa IP pentru adaptorul specificat.\n \
-           /renew       ReÓnnoie∫te adresa IP pentru adaptorul specificat.\n \
-           /flushdns    Cur„˛„ memoria rezolvatorului DNS.\n \
-           /registerdns ReÓmprosp„teaz„ toate aloc„rile DHCP ∫i\n \
-                        repet„ Ónregistrarea numelor DNS.\n \
-           /displaydns  Afi∫eaz„ con˛inutul memoriei rezolvatorului DNS.\n \
-           /showclassid Afi∫eaz„ toate identit„˛ile de clas„ dhcp permise\n \
+        Op≈£iuni:\n \
+           /?           Afi≈üeazƒÉ acest manual.\n \
+           /all         Afi≈üeazƒÉ toatƒÉ informa≈£ia de configurare.\n \
+           /release     Deta≈üeazƒÉ adresa IP pentru adaptorul specificat.\n \
+           /renew       Re√Ænnoie≈üte adresa IP pentru adaptorul specificat.\n \
+           /flushdns    CurƒÉ≈£ƒÉ memoria rezolvatorului DNS.\n \
+           /registerdns Re√ÆmprospƒÉteazƒÉ toate alocƒÉrile DHCP ≈üi\n \
+                        repetƒÉ √Ænregistrarea numelor DNS.\n \
+           /displaydns  Afi≈üeazƒÉ con≈£inutul memoriei rezolvatorului DNS.\n \
+           /showclassid Afi≈üeazƒÉ toate identitƒÉ≈£ile de clasƒÉ dhcp permise\n \
                         pentru adaptor.\n \
-           /setclassid  Modific„ identitatea de clas„ (id_clas„) dhcp.\n \
+           /setclassid  ModificƒÉ identitatea de clasƒÉ (id_clasƒÉ) dhcp.\n \
     \n \
-    Œn mod implicit sunt afi∫ate doar adresa IP, masca de subre˛ea ∫i\n \
-    ie∫irea ""gateway"" implicit„ pentru fiecare adaptor ce suport„ TCP/IP.\n \
+    √én mod implicit sunt afi≈üate doar adresa IP, masca de subre≈£ea ≈üi\n \
+    ie≈üirea ""gateway"" implicitƒÉ pentru fiecare adaptor ce suportƒÉ TCP/IP.\n \
     \n \
-    Pentru ""Release"" ∫i ""Renew"", dac„ nu este specificat nici un adaptor,\n \
-    atunci vor fi deta∫ate sau reÓnnoite toate aloc„rile de adrese IP pentru\n \
-    toate adaptoarele ce suport„ TCP/IP.\n \
+    Pentru ""Release"" ≈üi ""Renew"", dacƒÉ nu este specificat nici un adaptor,\n \
+    atunci vor fi deta≈üate sau re√Ænnoite toate alocƒÉrile de adrese IP pentru\n \
+    toate adaptoarele ce suportƒÉ TCP/IP.\n \
     \n \
-    Dac„ pentru Setclassid nu se specific„ ∫i identitatea de clas„, atunci\n \
-    identitatea de clas„ se elimin„.\n \
+    DacƒÉ pentru Setclassid nu se specificƒÉ ≈üi identitatea de clasƒÉ, atunci\n \
+    identitatea de clasƒÉ se eliminƒÉ.\n \
     \n \
     Exemple:\n \
-        > ipconfig                   ... Afi∫eaz„ informa˛ii.\n \
-        > ipconfig /all              ... Afi∫eaz„ informa˛ii detaliate.\n \
-        > ipconfig /renew            ... ReÓnnoie∫te toate adaptoarele.\n \
-        > ipconfig /renew EL*        ... ReÓnnoie∫te toate conexiunile care\n \
-                                         au numele Óncep‚nd cu ""EL"".\n \
-        > ipconfig /release *Con*    ... Deta∫eaz„ conexiunile care con˛in Ón\n \
-                                         numele lor secven˛a ""Con"".\n \
+        > ipconfig                   ... Afi≈üeazƒÉ informa≈£ii.\n \
+        > ipconfig /all              ... Afi≈üeazƒÉ informa≈£ii detaliate.\n \
+        > ipconfig /renew            ... Re√Ænnoie≈üte toate adaptoarele.\n \
+        > ipconfig /renew EL*        ... Re√Ænnoie≈üte toate conexiunile care\n \
+                                         au numele √Æncep√¢nd cu ""EL"".\n \
+        > ipconfig /release *Con*    ... Deta≈üeazƒÉ conexiunile care con≈£in √Æn\n \
+                                         numele lor secven≈£a ""Con"".\n \
                                          ex. ""Local Area Connection 1"" sau\n \
                                              ""Local Area Connection 2""\n"
 END

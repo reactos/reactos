@@ -1,7 +1,7 @@
 /* 
  * FILE:             base/applications/shutdown/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ªtefan (PM on ReactOS Forum at fulea.stefan)
+ * TRANSLATOR:       Fulea Åtefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-24  initial translation
  */
 
@@ -11,13 +11,13 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "Utilizare: shutdown [-?] [-l | -s | -r] [-f]\n\n\
-  fãrã arg.\n\
-  sau -?\tAfiºeazã acest manual\n\
-  -l\t\tÎnchide sesiunea curentã\n\
-  -s\t\tÎnchide calculatorul\n\
-  -r\t\tReporneºte calculatorul\n\
-  -f\t\tForşeazã închiderea aplicaşiilor fãrã mesaje de avertisment.\n\
-    \t\tDacã nu aşi specificat nici un alt parametru, aceastã\n\
-    \t\topşiune are în mod implicit stabilitã închiderea\n\
+  fÄƒrÄƒ arg.\n\
+  sau -?\tAfiÅŸeazÄƒ acest manual\n\
+  -l\t\tÃnchide sesiunea curentÄƒ\n\
+  -s\t\tÃnchide calculatorul\n\
+  -r\t\tReporneÅŸte calculatorul\n\
+  -f\t\tForÅ£eazÄƒ Ã®nchiderea aplicaÅ£iilor fÄƒrÄƒ mesaje de avertisment.\n\
+    \t\tDacÄƒ nu aÅ£i specificat nici un alt parametru, aceastÄƒ\n\
+    \t\topÅ£iune are Ã®n mod implicit stabilitÄƒ Ã®nchiderea\n\
 	\tsesiunii curente."
 END

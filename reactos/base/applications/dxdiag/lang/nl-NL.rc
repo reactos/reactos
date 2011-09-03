@@ -18,7 +18,7 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dit hulpprogramma geeft gedetailleerde information over de op dit systeem geïnstalleerde ReactX-onderdelen en stuurprogrammas.", -1, 10, 10, 443, 17
+    LTEXT "Dit hulpprogramma geeft gedetailleerde information over de op dit systeem geÃ¯nstalleerde ReactX-onderdelen en stuurprogrammas.", -1, 10, 10, 443, 17
     LTEXT "Als u weet welk gebied het probleem veroorzaakt, kunt u hierboven op het desbetreffende tabblad klikken. Weet u dit niet, dan klikt u op de knop ""Volgende pagina"" om elke pagina te bekijken.", -1, 10, 30, 443, 25
     GROUPBOX "Systeeminfo", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Huidige Datum/Tijd:", -1, 70, 70, 80, 10, SS_RIGHT

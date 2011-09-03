@@ -93,7 +93,7 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Hendelseliste"
-	IDS_EVENTSTRINGIDNOTFOUND      "Beskrivelsen for Hendelse ID ( %lu ) i kilden ( %s ) kan ikke bli finnet. Lokale datamaskinen har ikke nødvendige register informasjon eller melding DLL filer for å vise melding fra en fjern datamaskin."
+	IDS_EVENTSTRINGIDNOTFOUND      "Beskrivelsen for Hendelse ID ( %lu ) i kilden ( %s ) kan ikke bli finnet. Lokale datamaskinen har ikke nÃ¸dvendige register informasjon eller melding DLL filer for Ã¥ vise melding fra en fjern datamaskin."
 	IDS_EVENTLOG_ERROR_TYPE        "Feil"
 	IDS_EVENTLOG_WARNING_TYPE      "Advarseler"
 	IDS_EVENTLOG_INFORMATION_TYPE  "Informasjon"

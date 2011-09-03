@@ -1,21 +1,18 @@
 /*
- * PROJECT:      Spider Solitaire (Pav˙ËÌ solitÈr)
+ * PROJECT:      Spider Solitaire (Pav√∫ƒç√≠ solit√©r)
  * LICENSE:      See COPYING in top level directory
  * FILE:         base/applications/games/spider/lang/sk-SK.rc
  * PURPOSE:      Slovak Language File for Spider Solitaire
- * TRANSLATOR:   M·rio KaËm·r aka Kario <kario@szm.sk>
+ * TRANSLATOR:   M√°rio Kaƒçm√°r aka Kario <kario@szm.sk>
  * DATE OF TR.:  13-10-2009
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
-
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "V˝ber rubu kariet"
+CAPTION "V√Ωber rubu kariet"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -32,12 +29,12 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Zruöiù", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "Zru≈°i≈•", IDCANCEL, 126, 84, 54, 13
 END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Obtiaûnosù"
+CAPTION "Obtia≈ænos≈•"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Easy: &One Color",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
@@ -45,18 +42,18 @@ BEGIN
     AUTORADIOBUTTON "Hard: &Four Colors",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "Zruöiù", IDCANCEL, 58, 58, 40, 14
+    PUSHBUTTON      "Zru≈°i≈•", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Pav˙ËÌ solitÈr" //Spider
-    IDS_SPI_ABOUT   "Pav˙ËÌ solitÈr od Gregor Schneider\n\nCardLib verzia 1.0"
-    IDS_SPI_QUIT    "Naozaj chcete skonËiù aktu·lnu hru?"
-    IDS_SPI_WIN     "Blahoûel·m, vyhrali ste!"
-    IDS_SPI_DEAL    "Rozdaù znova?"
+    IDS_SPI_NAME    "Pav√∫ƒç√≠ solit√©r" //Spider
+    IDS_SPI_ABOUT   "Pav√∫ƒç√≠ solit√©r od Gregor Schneider\n\nCardLib verzia 1.0"
+    IDS_SPI_QUIT    "Naozaj chcete skonƒçi≈• aktu√°lnu hru?"
+    IDS_SPI_WIN     "Blaho≈æel√°m, vyhrali ste!"
+    IDS_SPI_DEAL    "Rozda≈• znova?"
 END
 
 
@@ -66,16 +63,16 @@ IDR_MENU1 MENU DISCARDABLE
 BEGIN
     POPUP "&Hra"
     BEGIN
-        MENUITEM "&Nov· hra\tF2",               IDM_GAME_NEW
+        MENUITEM "&Nov√° hra\tF2",               IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&BalÌËek...",                 IDM_GAME_DECK
+        MENUITEM "&Bal√≠ƒçek...",                 IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "S&konËiù",                    IDM_GAME_EXIT
+        MENUITEM "S&konƒçi≈•",                    IDM_GAME_EXIT
     END
-    POPUP "&PomocnÌk"
+    POPUP "&Pomocn√≠k"
     BEGIN
         MENUITEM "&Obsah\tF1",                  IDM_HELP_CONTENTS
-        MENUITEM "&»o je...",                   IDM_HELP_ABOUT
+        MENUITEM "&ƒåo je...",                   IDM_HELP_ABOUT
     END
 END
 

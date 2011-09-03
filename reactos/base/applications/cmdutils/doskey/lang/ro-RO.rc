@@ -1,35 +1,35 @@
 /* 
  * FILE:             base/applications/cmdutils/doskey/lang/ro-RO.rc
                      ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ∏tefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-20  initial romanian translation (OEM 852)
+ * TRANSLATOR:       Fulea ≈ûtefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-20  initial romanian translation
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Gestioneaz« starea de editare a liniei de comand«, istoric ≠i macrodefiniÓii.\n\
+IDS_HELP, "GestioneazƒÉ starea de editare a liniei de comandƒÉ, istoric ≈üi macrodefini≈£ii.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe]\n\
        [/HISTORY] [/LISTSIZE=dimensiune] [/REINSTALL]\n\
-       [/MACROS[:exe | :ALL]] [/MACROFILE=fi≠ier] [nume_macro=[text]]\n\
+       [/MACROS[:exe | :ALL]] [/MACROFILE=fi≈üier] [nume_macro=[text]]\n\
 \n\
-  /INSERT                 Activeaz« modul de inserÓie.\n\
-  /OVERSTRIKE             Dezactiveaz« modul de inserÓie.\n\
-  /EXENAME=exename        Stabile≠te programul de vizualizare/modificare a\n\
-                          istoricului ≠i a macrodefiniÓiilor.\n\
+  /INSERT                 ActiveazƒÉ modul de inser≈£ie.\n\
+  /OVERSTRIKE             DezactiveazƒÉ modul de inser≈£ie.\n\
+  /EXENAME=exename        Stabile≈üte programul de vizualizare/modificare a\n\
+                          istoricului ≈üi a macrodefini≈£iilor.\n\
                           Implicit este cmd.exe.\n\
-  /HISTORY                Afi≠eaz« istoricul comenzilor.\n\
-  /LISTSIZE=dimensiune    Stabile≠te num«rul de comenzi reÓinute ån istoric.\n\
-  /REINSTALL              Cur«Ó« istoricul comenzilor.\n\
-  /MACROS                 Afi≠eaz« macrodefiniÓiile.\n\
-  /MACROS:exename         Afi≠eaz« macrodefiniÓiile pentru un program anume.\n\
-  /MACROS:ALL             Afi≠eaz« macrodefiniÓiile pentru toate programele.\n\
-  /MACROFILE=fi≠ier       ◊ncarc« macrodefiniÓiile din fi≠ier.\n\
-  nume_macro              Numele macrodefiniÓiei ån curs de creare.\n\
-  text                    Textul ånlocuitor dintr-o macrodefiniÓie.\n"
+  /HISTORY                Afi≈üeazƒÉ istoricul comenzilor.\n\
+  /LISTSIZE=dimensiune    Stabile≈üte numƒÉrul de comenzi re≈£inute √Æn istoric.\n\
+  /REINSTALL              CurƒÉ≈£ƒÉ istoricul comenzilor.\n\
+  /MACROS                 Afi≈üeazƒÉ macrodefini≈£iile.\n\
+  /MACROS:exename         Afi≈üeazƒÉ macrodefini≈£iile pentru un program anume.\n\
+  /MACROS:ALL             Afi≈üeazƒÉ macrodefini≈£iile pentru toate programele.\n\
+  /MACROFILE=fi≈üier       √éncarcƒÉ macrodefini≈£iile din fi≈üier.\n\
+  nume_macro              Numele macrodefini≈£iei √Æn curs de creare.\n\
+  text                    Textul √Ænlocuitor dintr-o macrodefini≈£ie.\n"
 
-IDS_INVALID_MACRO_DEF, "MacrodefiniÓie invalid«: %s\n"
+IDS_INVALID_MACRO_DEF, "Macrodefini≈£ie invalidƒÉ: %s\n"
 
 END

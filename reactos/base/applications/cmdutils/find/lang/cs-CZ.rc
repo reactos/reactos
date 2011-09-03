@@ -9,15 +9,15 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "FIND: Zobrazí všechny øádky souboru obsahující hledanı øetìzec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""øetìzec"" [ soubor... ]\n\
-    /C  Zobrazí poèet øádkù obsahující øetìzec.\n\
-    /I  Ignoruje velikost písmen.\n\
-    /N  Èísluje zobrazené øádky, zaèíná od 1.\n\
-    /V  Zobrazí všechny øádky, které NEobsahují zadanı øetìec."
+IDS_USAGE, "FIND: ZobrazÃ­ vÅ¡echny Ã¸Ã¡dky souboru obsahujÃ­cÃ­ hledanÃ½ Ã¸etÃ¬zec.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""Ã¸etÃ¬zec"" [ soubor... ]\n\
+    /C  ZobrazÃ­ poÃ¨et Ã¸Ã¡dkÃ¹ obsahujÃ­cÃ­ Ã¸etÃ¬zec.\n\
+    /I  Ignoruje velikost pÃ­smen.\n\
+    /N  ÃˆÃ­sluje zobrazenÃ© Ã¸Ã¡dky, zaÃ¨Ã­nÃ¡ od 1.\n\
+    /V  ZobrazÃ­ vÅ¡echny Ã¸Ã¡dky, kterÃ© NEobsahujÃ­ zadanÃ½ Ã¸etÃ¬Å¾ec."
 
 IDS_NO_SUCH_FILE, "FIND: Soubor %s nebyl nalezen.\n"
 
-IDS_CANNOT_OPEN, "FIND: Soubor %s nelze otevøít!\n"
+IDS_CANNOT_OPEN, "FIND: Soubor %s nelze otevÃ¸Ã­t!\n"
 
 END

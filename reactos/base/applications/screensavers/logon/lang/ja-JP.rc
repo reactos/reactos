@@ -2,6 +2,6 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "���O�I�� �X�N���[���Z�[�o�["
-    IDS_TEXT        "�ݒ肪�K�v�ȃI�v�V�����͂���܂���B"
+    IDS_DESCRIPTION "ログオン スクリーンセーバー"
+    IDS_TEXT        "設定が必要なオプションはありません。"
 END

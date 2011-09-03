@@ -2,6 +2,6 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Écran de veille de logon"
-    IDS_TEXT        "Il n'y a aucune option à définir."
+    IDS_DESCRIPTION "Ã‰cran de veille de logon"
+    IDS_TEXT        "Il n'y a aucune option Ã  dÃ©finir."
 END
