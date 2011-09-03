@@ -15,15 +15,15 @@ static void Test_NtFreeVirtualMemory(void)
                                      &Length,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(((ULONG_PTR)Buffer % PAGE_SIZE) == 0, "The buffer is not aligned to PAGE_SIZE.\n"); 
     
     Status = NtFreeVirtualMemory(NtCurrentProcess(),
                                  &Buffer,
                                  &Length,
                                  MEM_DECOMMIT);
-    ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory failed : 0x%08x\n", Status);
+    ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory failed : 0x%08lx\n", Status);
     
     /* Now try to free more than we got */
     Length++;
@@ -31,13 +31,13 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer,
                                  &Length,
                                  MEM_DECOMMIT);
-    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08x\n", Status);
+    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
     
     Status = NtFreeVirtualMemory(NtCurrentProcess(),
                                  &Buffer,
                                  &Length,
                                  MEM_RELEASE);
-    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08x\n", Status);
+    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
     
     /* Free out of bounds from the wrong origin */
     Length = PAGE_SIZE;
@@ -47,7 +47,7 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_DECOMMIT);
-    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08x\n", Status);
+    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
     
     Buffer2 = (PVOID)((ULONG_PTR)Buffer+1);
     Length = PAGE_SIZE;
@@ -55,7 +55,7 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08x\n", Status);
+    ok(Status == STATUS_UNABLE_TO_FREE_VM, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
     
     /* Same but in bounds */
     Length = PAGE_SIZE - 1;
@@ -65,7 +65,7 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_DECOMMIT);
-    ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory returned status : 0x%08x\n", Status);
+    ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
     ok(Buffer2 == Buffer, "NtFreeVirtualMemory set wrong buffer.\n");
     ok(Length == PAGE_SIZE, "NtFreeVirtualMemory did not round Length to PAGE_SIZE.\n");
     
@@ -75,7 +75,7 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory returned status : 0x%08x\n", Status);
+    ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
     ok(Buffer2 == Buffer, "NtFreeVirtualMemory set wrong buffer.\n");
     ok(Length == PAGE_SIZE, "NtFreeVirtualMemory did not round Length to PAGE_SIZE.\n");
     
@@ -87,8 +87,8 @@ static void Test_NtFreeVirtualMemory(void)
                                      &Length,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(((ULONG_PTR)Buffer % PAGE_SIZE) == 0, "The buffer is not aligned to PAGE_SIZE.\n");
     
     Buffer2 = Buffer;
@@ -97,8 +97,8 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(Buffer2 == Buffer, "The buffer is not aligned to PAGE_SIZE.\n");
 
     Buffer2 = (PVOID)((ULONG_PTR)Buffer+PAGE_SIZE);
@@ -107,8 +107,8 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(Buffer2 == (PVOID)((ULONG_PTR)Buffer+PAGE_SIZE), "The buffer is not aligned to PAGE_SIZE.\n");
     
     /* Same, but try to free the second page before the first one */
@@ -119,8 +119,8 @@ static void Test_NtFreeVirtualMemory(void)
                                      &Length,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(((ULONG_PTR)Buffer % PAGE_SIZE) == 0, "The buffer is not aligned to PAGE_SIZE.\n");
     
     Buffer2 = (PVOID)((ULONG_PTR)Buffer+PAGE_SIZE);
@@ -129,8 +129,8 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(Buffer2 == (PVOID)((ULONG_PTR)Buffer+PAGE_SIZE), "The buffer is not aligned to PAGE_SIZE.\n");
     
     Buffer2 = Buffer;
@@ -139,8 +139,8 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(Buffer2 == Buffer, "The buffer is not aligned to PAGE_SIZE.\n");
     
     /* Now allocate two pages and try to free them in the middle */
@@ -151,8 +151,8 @@ static void Test_NtFreeVirtualMemory(void)
                                      &Length,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(((ULONG_PTR)Buffer % PAGE_SIZE) == 0, "The buffer is not aligned to PAGE_SIZE.\n");
     
     Buffer2 = (PVOID)((ULONG_PTR)Buffer+1);
@@ -161,8 +161,8 @@ static void Test_NtFreeVirtualMemory(void)
                                  &Buffer2,
                                  &Length,
                                  MEM_RELEASE);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed : 0x%08x\n", Status);
-    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x08x\n", Length);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed : 0x%08lx\n", Status);
+    ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(Buffer2 == Buffer, "The buffer is not aligned to PAGE_SIZE.\n");
 }
     

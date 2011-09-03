@@ -6,8 +6,17 @@ add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    
+if(MSVC)
+    set(IDL_FLAGS ${IDL_FLAGS} /prefix server s_ /app_config)
+else()
+    set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
+endif()
+
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)
+unset(IDL_FLAGS)
 
 list(APPEND SOURCE
     cstub.c
@@ -20,6 +29,11 @@ list(APPEND SOURCE
     testlist.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_s.c)
+
+if(MSVC)
+    # The nmake generator misses this dependency, so set it explicitly until this bug is fixed.
+    set_source_files_properties(server.c PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/server_s.h)
+endif()
 
 add_executable(rpcrt4_winetest ${SOURCE})
 target_link_libraries(rpcrt4_winetest

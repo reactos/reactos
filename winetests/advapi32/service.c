@@ -32,7 +32,8 @@
 
 #include "wine/test.h"
 
-static const CHAR spooler[] = "Spooler"; /* Should be available on all platforms */
+//static const CHAR spooler[] = "Spooler"; /* Should be available on all platforms */
+static const CHAR spooler[] = "Eventlog"; /* All platform except reactos :-/ */
 
 static BOOL (WINAPI *pChangeServiceConfig2A)(SC_HANDLE,DWORD,LPVOID);
 static BOOL (WINAPI *pEnumServicesStatusExA)(SC_HANDLE, SC_ENUM_TYPE, DWORD,

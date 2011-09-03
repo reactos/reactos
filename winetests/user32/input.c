@@ -43,10 +43,9 @@
  *    if it is a problem.
  *
  */
-#undef _WIN32_WINNT
-#undef _WIN32_IE
-#define _WIN32_IE 0x0500
-#define _WIN32_WINNT 0x500
+
+//#define _WIN32_WINNT 0x401
+//#define _WIN32_IE 0x0500
 
 #include <stdarg.h>
 #include <assert.h>
@@ -234,14 +233,15 @@ static BOOL do_test( HWND hwnd, int seqnr, const KEV td[] )
         ADDTOINPUTS(td[i])
         strcat(buf, getdesc[td[i]]);
         if(td[i])
-            expmsg[i].message = KbdMessage(td[i], &(expmsg[i].wParam), &(expmsg[i].lParam)); /* see queue_kbd_event() */
+            expmsg[i].message = KbdMessage(td[i], &(expmsg[i].wParam), &(expmsg[i].lParam));
         else
             expmsg[i].message = 0;
     }
     for( kmctr = 0; kmctr < MAXKEYEVENTS && expmsg[kmctr].message; kmctr++)
         ;
-    assert( evtctr <= MAXKEYEVENTS );
-    assert( evtctr == pSendInput(evtctr, &inputs[0], sizeof(INPUT)));
+    ok( evtctr <= MAXKEYEVENTS, "evtctr is above MAXKEYEVENTS\n" );
+    if( evtctr != pSendInput(evtctr, &inputs[0], sizeof(INPUT)))
+       ok (FALSE, "SendInput failed to send some events\n");
     i = 0;
     if (winetest_debug > 1)
         trace("======== key stroke sequence #%d: %s =============\n",
@@ -369,6 +369,16 @@ static void test_Input_whitebox(void)
     DestroyWindow(hWndTest);
 }
 
+static inline BOOL is_keyboard_message( UINT message )
+{
+    return (message >= WM_KEYFIRST && message <= WM_KEYLAST);
+}
+
+static inline BOOL is_mouse_message( UINT message )
+{
+    return (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST);
+}
+
 /* try to make sure pending X events have been processed before continuing */
 static void empty_message_queue(void)
 {
@@ -382,6 +392,9 @@ static void empty_message_queue(void)
         if (MsgWaitForMultipleObjects(0, NULL, FALSE, min_timeout, QS_ALLINPUT) == WAIT_TIMEOUT) break;
         while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
         {
+            if (is_keyboard_message(msg.message) || is_mouse_message(msg.message))
+                ok(msg.time != 0, "message %#x has time set to 0\n", msg.message);
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
@@ -415,7 +428,7 @@ struct message {
     LPARAM lParam;         /* expected value of lParam */
 };
 
-struct sendinput_test_s {
+static const struct sendinput_test_s {
     WORD wVk;
     DWORD dwFlags;
     BOOL _todo_wine;
@@ -675,10 +688,10 @@ static struct message sent_messages[MAXKEYMESSAGES];
 static UINT sent_messages_cnt;
 
 /* Verify that only specified key state transitions occur */
-static void compare_and_check(int id, BYTE *ks1, BYTE *ks2, struct sendinput_test_s *test)
+static void compare_and_check(int id, BYTE *ks1, BYTE *ks2, const struct sendinput_test_s *test)
 {
     int i, failcount = 0;
-    struct transition_s *t = test->expected_transitions;
+    const struct transition_s *t = test->expected_transitions;
     UINT actual_cnt = 0;
     const struct message *expected = test->expected_messages;
 
@@ -1140,6 +1153,8 @@ static void test_Input_unicode(void)
     WNDCLASSW wclass;
     HANDLE hInstance = GetModuleHandleW(NULL);
     HHOOK hook;
+    HMODULE hModuleImm32;
+    BOOL (WINAPI *pImmDisableIME)(DWORD);
 
     wclass.lpszClassName = classNameW;
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
@@ -1155,6 +1170,16 @@ static void test_Input_unicode(void)
         win_skip("Unicode functions not supported\n");
         return;
     }
+
+    hModuleImm32 = LoadLibrary("imm32.dll");
+    if (hModuleImm32) {
+        pImmDisableIME = (void *)GetProcAddress(hModuleImm32, "ImmDisableIME");
+        if (pImmDisableIME)
+            pImmDisableIME(0);
+    }
+    pImmDisableIME = NULL;
+    FreeLibrary(hModuleImm32);
+
     /* create the test window that will receive the keystrokes */
     hWndTest = CreateWindowW(wclass.lpszClassName, windowNameW,
                              WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, 100, 100,

@@ -54,6 +54,243 @@ typedef struct
     CURSORICONFILEDIRENTRY idEntries[1];
 } CURSORICONFILEDIR;
 
+#define RIFF_FOURCC( c0, c1, c2, c3 ) \
+        ( (DWORD)(BYTE)(c0) | ( (DWORD)(BYTE)(c1) << 8 ) | \
+        ( (DWORD)(BYTE)(c2) << 16 ) | ( (DWORD)(BYTE)(c3) << 24 ) )
+
+#define ANI_RIFF_ID RIFF_FOURCC('R', 'I', 'F', 'F')
+#define ANI_LIST_ID RIFF_FOURCC('L', 'I', 'S', 'T')
+#define ANI_ACON_ID RIFF_FOURCC('A', 'C', 'O', 'N')
+#define ANI_anih_ID RIFF_FOURCC('a', 'n', 'i', 'h')
+#define ANI_seq__ID RIFF_FOURCC('s', 'e', 'q', ' ')
+#define ANI_fram_ID RIFF_FOURCC('f', 'r', 'a', 'm')
+#define ANI_icon_ID RIFF_FOURCC('i', 'c', 'o', 'n')
+#define ANI_rate_ID RIFF_FOURCC('r', 'a', 't', 'e')
+
+#define ANI_FLAG_ICON       0x1
+#define ANI_FLAG_SEQUENCE   0x2
+
+typedef struct {
+    DWORD header_size;
+    DWORD num_frames;
+    DWORD num_steps;
+    DWORD width;
+    DWORD height;
+    DWORD bpp;
+    DWORD num_planes;
+    DWORD display_rate;
+    DWORD flags;
+} ani_header;
+
+typedef struct {
+    BYTE data[32*32*4];
+} ani_data32x32x32;
+
+typedef struct {
+    CURSORICONFILEDIR    icon_info;  /* animated cursor frame information */
+    BITMAPINFOHEADER     bmi_header; /* animated cursor frame header */
+    ani_data32x32x32     bmi_data;   /* animated cursor frame DIB data */
+} ani_frame32x32x32;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_anih_ID */
+    DWORD                chunk_size; /* actual size of data */
+    ani_header           header;     /* animated cursor header */
+} riff_header_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_LIST_ID */
+    DWORD                chunk_size; /* actual size of data */
+    DWORD                chunk_type; /* ANI_fram_ID */
+} riff_list_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_icon_ID */
+    DWORD                chunk_size; /* actual size of data */
+    ani_frame32x32x32    data;       /* animated cursor frame */
+} riff_icon32x32x32_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_RIFF_ID */
+    DWORD                chunk_size; /* actual size of data */
+    DWORD                chunk_type; /* ANI_ACON_ID */
+    riff_header_t        header;     /* RIFF animated cursor header */
+    riff_list_t          frame_list; /* RIFF animated cursor frame list info */
+    riff_icon32x32x32_t  frames[1];  /* array of animated cursor frames */
+} riff_cursor1_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_RIFF_ID */
+    DWORD                chunk_size; /* actual size of data */
+    DWORD                chunk_type; /* ANI_ACON_ID */
+    riff_header_t        header;     /* RIFF animated cursor header */
+    riff_list_t          frame_list; /* RIFF animated cursor frame list info */
+    riff_icon32x32x32_t  frames[3];  /* array of three animated cursor frames */
+} riff_cursor3_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_rate_ID */
+    DWORD                chunk_size; /* actual size of data */
+    DWORD                rate[3];    /* animated cursor rate data */
+} riff_rate3_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_seq__ID */
+    DWORD                chunk_size; /* actual size of data */
+    DWORD                order[3];   /* animated cursor sequence data */
+} riff_seq3_t;
+
+typedef struct {
+    DWORD                chunk_id;   /* ANI_RIFF_ID */
+    DWORD                chunk_size; /* actual size of data */
+    DWORD                chunk_type; /* ANI_ACON_ID */
+    riff_header_t        header;     /* RIFF animated cursor header */
+    riff_seq3_t          seq;        /* sequence data for three cursor frames */
+    riff_rate3_t         rates;      /* rate data for three cursor frames */
+    riff_list_t          frame_list; /* RIFF animated cursor frame list info */
+    riff_icon32x32x32_t  frames[3];  /* array of three animated cursor frames */
+} riff_cursor3_seq_t;
+
+#define EMPTY_ICON32 \
+{ \
+    ANI_icon_ID, \
+    sizeof(ani_frame32x32x32), \
+    { \
+        { \
+            0x0, /* reserved */ \
+            0,   /* type: icon(1), cursor(2) */ \
+            1,   /* count */ \
+            { \
+                { \
+                    32,                        /* width */ \
+                    32,                        /* height */ \
+                    0,                         /* color count */ \
+                    0x0,                       /* reserved */ \
+                    16,                        /* x hotspot */ \
+                    16,                        /* y hotspot */ \
+                    sizeof(ani_data32x32x32),  /* DIB size */ \
+                    sizeof(CURSORICONFILEDIR)  /* DIB offset */ \
+                } \
+            } \
+        }, \
+        { \
+              sizeof(BITMAPINFOHEADER),  /* structure for DIB-type data */ \
+              32,                        /* width */ \
+              32*2,                      /* actual height times two */ \
+              1,                         /* planes */ \
+              32,                        /* bpp */ \
+              BI_RGB,                    /* compression */ \
+              0,                         /* image size */ \
+              0,                         /* biXPelsPerMeter */ \
+              0,                         /* biYPelsPerMeter */ \
+              0,                         /* biClrUsed */ \
+              0                          /* biClrImportant */ \
+        }, \
+        /* DIB data: left uninitialized */ \
+    } \
+}
+
+riff_cursor1_t empty_anicursor = {
+    ANI_RIFF_ID,
+    sizeof(empty_anicursor) - sizeof(DWORD)*2,
+    ANI_ACON_ID,
+    {
+        ANI_anih_ID,
+        sizeof(ani_header),
+        {
+            sizeof(ani_header),
+            1,            /* frames */
+            1,            /* steps */
+            32,           /* width */
+            32,           /* height */
+            32,           /* depth */
+            1,            /* planes */
+            10,           /* display rate in jiffies */
+            ANI_FLAG_ICON /* flags */
+        }
+    },
+    {
+        ANI_LIST_ID,
+        sizeof(riff_icon32x32x32_t)*(1 /*frames*/) + sizeof(DWORD),
+        ANI_fram_ID,
+    },
+    {
+        EMPTY_ICON32
+    }
+};
+
+riff_cursor3_t empty_anicursor3 = {
+    ANI_RIFF_ID,
+    sizeof(empty_anicursor3) - sizeof(DWORD)*2,
+    ANI_ACON_ID,
+    {
+        ANI_anih_ID,
+        sizeof(ani_header),
+        {
+            sizeof(ani_header),
+            3,            /* frames */
+            3,            /* steps */
+            32,           /* width */
+            32,           /* height */
+            32,           /* depth */
+            1,            /* planes */
+            0xbeef,       /* display rate in jiffies */
+            ANI_FLAG_ICON /* flags */
+        }
+    },
+    {
+        ANI_LIST_ID,
+        sizeof(riff_icon32x32x32_t)*(3 /*frames*/) + sizeof(DWORD),
+        ANI_fram_ID,
+    },
+    {
+        EMPTY_ICON32,
+        EMPTY_ICON32,
+        EMPTY_ICON32
+    }
+};
+
+riff_cursor3_seq_t empty_anicursor3_seq = {
+    ANI_RIFF_ID,
+    sizeof(empty_anicursor3_seq) - sizeof(DWORD)*2,
+    ANI_ACON_ID,
+    {
+        ANI_anih_ID,
+        sizeof(ani_header),
+        {
+            sizeof(ani_header),
+            3,                              /* frames */
+            3,                              /* steps */
+            32,                             /* width */
+            32,                             /* height */
+            32,                             /* depth */
+            1,                              /* planes */
+            0xbeef,                         /* display rate in jiffies */
+            ANI_FLAG_ICON|ANI_FLAG_SEQUENCE /* flags */
+        }
+    },
+    {
+        ANI_seq__ID,
+        sizeof(riff_seq3_t) - sizeof(DWORD)*2,
+        { 2, 0, 1} /* show frames in a uniquely identifiable order */
+    },
+    {
+        ANI_rate_ID,
+        sizeof(riff_rate3_t) - sizeof(DWORD)*2,
+        { 0xc0de, 0xcafe, 0xbabe}
+    },
+    {
+        ANI_LIST_ID,
+        sizeof(riff_icon32x32x32_t)*(3 /*frames*/) + sizeof(DWORD),
+        ANI_fram_ID,
+    },
+    {
+        EMPTY_ICON32,
+        EMPTY_ICON32,
+        EMPTY_ICON32
+    }
+};
+
 #include "poppack.h"
 
 static char **test_argv;
@@ -65,6 +302,10 @@ static HANDLE child_process;
 #define PROC_INIT (WM_USER+1)
 
 static BOOL (WINAPI *pGetCursorInfo)(CURSORINFO *);
+static BOOL (WINAPI *pGetIconInfoExA)(HICON,ICONINFOEXA *);
+static BOOL (WINAPI *pGetIconInfoExW)(HICON,ICONINFOEXW *);
+
+static const int is_win64 = (sizeof(void *) > sizeof(int));
 
 static LRESULT CALLBACK callback_child(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -78,7 +319,7 @@ static LRESULT CALLBACK callback_child(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             SetLastError(0xdeadbeef);
             ret = DestroyCursor((HCURSOR) lParam);
             error = GetLastError();
-            todo_wine ok(!ret || broken(ret) /* win9x */, "DestroyCursor on the active cursor succeeded.\n");
+            ok(!ret || broken(ret) /* win9x */, "DestroyCursor on the active cursor succeeded.\n");
             ok(error == ERROR_DESTROY_OBJECT_OF_OTHER_THREAD ||
                error == 0xdeadbeef,  /* vista */
                 "Last error: %u\n", error);
@@ -504,6 +745,37 @@ static void test_icon_info_dbg(HICON hIcon, UINT exp_cx, UINT exp_cy, UINT exp_b
         ok_(__FILE__, line)(bmMask.bmWidth == exp_cx, "bmMask.bmWidth = %d\n", bmMask.bmWidth);
         ok_(__FILE__, line)(bmMask.bmHeight == exp_cy * 2, "bmMask.bmHeight = %d\n", bmMask.bmHeight);
     }
+    if (pGetIconInfoExA)
+    {
+        ICONINFOEXA infoex;
+
+        memset( &infoex, 0xcc, sizeof(infoex) );
+        SetLastError( 0xdeadbeef );
+        infoex.cbSize = sizeof(infoex) - 1;
+        ret = pGetIconInfoExA( hIcon, &infoex );
+        ok_(__FILE__, line)(!ret, "GetIconInfoEx succeeded\n");
+        ok_(__FILE__, line)(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %d\n", GetLastError());
+
+        SetLastError( 0xdeadbeef );
+        infoex.cbSize = sizeof(infoex) + 1;
+        ret = pGetIconInfoExA( hIcon, &infoex );
+        ok_(__FILE__, line)(!ret, "GetIconInfoEx succeeded\n");
+        ok_(__FILE__, line)(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %d\n", GetLastError());
+
+        SetLastError( 0xdeadbeef );
+        infoex.cbSize = sizeof(infoex);
+        ret = pGetIconInfoExA( (HICON)0xdeadbabe, &infoex );
+        ok_(__FILE__, line)(!ret, "GetIconInfoEx succeeded\n");
+        ok_(__FILE__, line)(GetLastError() == ERROR_INVALID_CURSOR_HANDLE,
+                            "wrong error %d\n", GetLastError());
+
+        infoex.cbSize = sizeof(infoex);
+        ret = pGetIconInfoExA( hIcon, &infoex );
+        ok_(__FILE__, line)(ret, "GetIconInfoEx failed err %d\n", GetLastError());
+        ok_(__FILE__, line)(infoex.wResID == 0, "GetIconInfoEx wrong resid %x\n", infoex.wResID);
+        ok_(__FILE__, line)(infoex.szModName[0] == 0, "GetIconInfoEx wrong module %s\n", infoex.szModName);
+        ok_(__FILE__, line)(infoex.szResName[0] == 0, "GetIconInfoEx wrong name %s\n", infoex.szResName);
+    }
 }
 
 #define test_icon_info(a,b,c,d) test_icon_info_dbg((a),(b),(c),(d),__LINE__)
@@ -730,6 +1002,24 @@ static unsigned char gif4pixel[42] = {
 0x02,0x00,0x00,0x02,0x03,0x14,0x16,0x05,0x00,0x3b
 };
 
+static const DWORD biSize_tests[] = {
+    0,
+    sizeof(BITMAPCOREHEADER) - 1,
+    sizeof(BITMAPCOREHEADER) + 1,
+    sizeof(BITMAPINFOHEADER) - 1,
+    sizeof(BITMAPINFOHEADER) + 1,
+    sizeof(BITMAPV4HEADER) - 1,
+    sizeof(BITMAPV4HEADER) + 1,
+    sizeof(BITMAPV5HEADER) - 1,
+    sizeof(BITMAPV5HEADER) + 1,
+    (sizeof(BITMAPCOREHEADER) + sizeof(BITMAPINFOHEADER)) / 2,
+    (sizeof(BITMAPV4HEADER) + sizeof(BITMAPV5HEADER)) / 2,
+    0xdeadbeef,
+    0xffffffff
+};
+
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+
 static void test_LoadImageBitmap(const char * test_desc, HBITMAP hbm)
 {
     BITMAP bm;
@@ -819,8 +1109,9 @@ static void test_LoadImage(void)
     DWORD error, bytes_written;
     CURSORICONFILEDIR *icon_data;
     CURSORICONFILEDIRENTRY *icon_entry;
-    BITMAPINFOHEADER *icon_header;
+    BITMAPINFOHEADER *icon_header, *bitmap_header;
     ICONINFO icon_info;
+    int i;
 
 #define ICON_WIDTH 32
 #define ICON_HEIGHT 32
@@ -889,6 +1180,18 @@ static void test_LoadImage(void)
         ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
     }
 
+    if (pGetIconInfoExA)
+    {
+        ICONINFOEXA infoex;
+        infoex.cbSize = sizeof(infoex);
+        ret = pGetIconInfoExA( handle, &infoex );
+        ok( ret, "GetIconInfoEx failed err %d\n", GetLastError() );
+        ok( infoex.wResID == 0, "GetIconInfoEx wrong resid %x\n", infoex.wResID );
+        ok( infoex.szModName[0] == 0, "GetIconInfoEx wrong module %s\n", infoex.szModName );
+        ok( infoex.szResName[0] == 0, "GetIconInfoEx wrong name %s\n", infoex.szResName );
+    }
+    else win_skip( "GetIconInfoEx not available\n" );
+
     /* Clean up. */
     SetLastError(0xdeadbeef);
     ret = DestroyCursor(handle);
@@ -899,20 +1202,61 @@ static void test_LoadImage(void)
     HeapFree(GetProcessHeap(), 0, icon_data);
     DeleteFileA("icon.ico");
 
+    /* Test a system icon */
+    handle = LoadIcon( 0, IDI_HAND );
+    ok(handle != NULL, "LoadImage() failed.\n");
+    if (pGetIconInfoExA)
+    {
+        ICONINFOEXA infoexA;
+        ICONINFOEXW infoexW;
+        infoexA.cbSize = sizeof(infoexA);
+        ret = pGetIconInfoExA( handle, &infoexA );
+        ok( ret, "GetIconInfoEx failed err %d\n", GetLastError() );
+        ok( infoexA.wResID == (UINT_PTR)IDI_HAND, "GetIconInfoEx wrong resid %x\n", infoexA.wResID );
+        /* the A version is broken on 64-bit, it truncates the string after the first char */
+        if (is_win64 && infoexA.szModName[0] && infoexA.szModName[1] == 0)
+            trace( "GetIconInfoExA broken on Win64\n" );
+        else
+            ok( GetModuleHandleA(infoexA.szModName) == GetModuleHandleA("user32.dll"),
+                "GetIconInfoEx wrong module %s\n", infoexA.szModName );
+        ok( infoexA.szResName[0] == 0, "GetIconInfoEx wrong name %s\n", infoexA.szResName );
+        infoexW.cbSize = sizeof(infoexW);
+        ret = pGetIconInfoExW( handle, &infoexW );
+        ok( ret, "GetIconInfoEx failed err %d\n", GetLastError() );
+        ok( infoexW.wResID == (UINT_PTR)IDI_HAND, "GetIconInfoEx wrong resid %x\n", infoexW.wResID );
+        ok( GetModuleHandleW(infoexW.szModName) == GetModuleHandleA("user32.dll"),
+            "GetIconInfoEx wrong module %s\n", wine_dbgstr_w(infoexW.szModName) );
+        ok( infoexW.szResName[0] == 0, "GetIconInfoEx wrong name %s\n", wine_dbgstr_w(infoexW.szResName) );
+    }
+    SetLastError(0xdeadbeef);
+    DestroyIcon(handle);
+
     test_LoadImageFile("BMP", bmpimage, sizeof(bmpimage), "bmp", 1);
     test_LoadImageFile("BMP (coreinfo)", bmpcoreimage, sizeof(bmpcoreimage), "bmp", 1);
     test_LoadImageFile("GIF", gifimage, sizeof(gifimage), "gif", 0);
     test_LoadImageFile("GIF (2x2 pixel)", gif4pixel, sizeof(gif4pixel), "gif", 0);
     test_LoadImageFile("JPG", jpgimage, sizeof(jpgimage), "jpg", 0);
     test_LoadImageFile("PNG", pngimage, sizeof(pngimage), "png", 0);
+
     /* Check failure for broken BMP images */
-    bmpimage[0x14]++; /* biHeight > 65535 */
+    bitmap_header = (BITMAPINFOHEADER *)(bmpimage + sizeof(BITMAPFILEHEADER));
+
+    bitmap_header->biHeight = 65536;
     test_LoadImageFile("BMP (too high)", bmpimage, sizeof(bmpimage), "bmp", 0);
-    bmpimage[0x14]--;
-    bmpimage[0x18]++; /* biWidth > 65535 */
+    bitmap_header->biHeight = 1;
+
+    bitmap_header->biWidth = 65536;
     test_LoadImageFile("BMP (too wide)", bmpimage, sizeof(bmpimage), "bmp", 0);
-    bmpimage[0x18]--;
+    bitmap_header->biWidth = 1;
+
+    for (i = 0; i < ARRAY_SIZE(biSize_tests); i++) {
+        bitmap_header->biSize = biSize_tests[i];
+        test_LoadImageFile("BMP (broken biSize)", bmpimage, sizeof(bmpimage), "bmp", 0);
+    }
+    bitmap_header->biSize = sizeof(BITMAPINFOHEADER);
 }
+
+#undef ARRAY_SIZE
 
 static void test_CreateIconFromResource(void)
 {
@@ -968,6 +1312,17 @@ static void test_CreateIconFromResource(void)
         ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
     }
 
+    if (pGetIconInfoExA)
+    {
+        ICONINFOEXA infoex;
+        infoex.cbSize = sizeof(infoex);
+        ret = pGetIconInfoExA( handle, &infoex );
+        ok( ret, "GetIconInfoEx failed err %d\n", GetLastError() );
+        ok( infoex.wResID == 0, "GetIconInfoEx wrong resid %x\n", infoex.wResID );
+        ok( infoex.szModName[0] == 0, "GetIconInfoEx wrong module %s\n", infoex.szModName );
+        ok( infoex.szResName[0] == 0, "GetIconInfoEx wrong name %s\n", infoex.szResName );
+    }
+
     /* Clean up. */
     SetLastError(0xdeadbeef);
     ret = DestroyCursor(handle);
@@ -1005,7 +1360,331 @@ static void test_CreateIconFromResource(void)
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: %u\n", error);
 
+    /* Rejection of NULL pointer crashes at least on WNT4WSSP6, W2KPROSP4, WXPPROSP3
+     *
+     * handle = CreateIconFromResource(NULL, ICON_RES_SIZE, TRUE, 0x00030000);
+     * ok(handle == NULL, "Invalid pointer accepted (%p)\n", handle);
+     */
     HeapFree(GetProcessHeap(), 0, hotspot);
+
+    /* Test creating an animated cursor. */
+    empty_anicursor.frames[0].data.icon_info.idType = 2; /* type: cursor */
+    empty_anicursor.frames[0].data.icon_info.idEntries[0].xHotspot = 3;
+    empty_anicursor.frames[0].data.icon_info.idEntries[0].yHotspot = 3;
+    handle = CreateIconFromResource((PBYTE) &empty_anicursor, sizeof(empty_anicursor), FALSE, 0x00030000);
+    ok(handle != NULL, "Create cursor failed.\n");
+
+    /* Test the animated cursor's information. */
+    SetLastError(0xdeadbeef);
+    ret = GetIconInfo(handle, &icon_info);
+    ok(ret, "GetIconInfo() failed.\n");
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "Last error: %u\n", error);
+
+    if (ret)
+    {
+        ok(icon_info.fIcon == FALSE, "fIcon != FALSE.\n");
+        ok(icon_info.xHotspot == 3, "xHotspot is %u.\n", icon_info.xHotspot);
+        ok(icon_info.yHotspot == 3, "yHotspot is %u.\n", icon_info.yHotspot);
+        ok(icon_info.hbmColor != NULL || broken(!icon_info.hbmColor) /* no color cursor support */,
+           "No hbmColor!\n");
+        ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
+    }
+
+    /* Clean up. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(handle);
+    ok(ret, "DestroyCursor() failed.\n");
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "Last error: %u\n", error);
+}
+
+static int check_cursor_data( HDC hdc, HCURSOR hCursor, void *data, int length)
+{
+    char *image = NULL;
+    BITMAPINFO *info;
+    ICONINFO iinfo;
+    DWORD ret;
+
+    ret = GetIconInfo( hCursor, &iinfo );
+    ok(ret, "GetIconInfo() failed\n");
+    if (!ret) return 0;
+    ret = 0;
+    info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] ));
+    ok(info != NULL, "HeapAlloc() failed\n");
+    if (!info) return 0;
+
+    info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info->bmiHeader.biWidth = 32;
+    info->bmiHeader.biHeight = 32;
+    info->bmiHeader.biPlanes = 1;
+    info->bmiHeader.biBitCount = 32;
+    info->bmiHeader.biCompression = BI_RGB;
+    info->bmiHeader.biSizeImage = 32 * 32 * 4;
+    info->bmiHeader.biXPelsPerMeter = 0;
+    info->bmiHeader.biYPelsPerMeter = 0;
+    info->bmiHeader.biClrUsed = 0;
+    info->bmiHeader.biClrImportant = 0;
+    image = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage );
+    ok(image != NULL, "HeapAlloc() failed\n");
+    if (!image) goto cleanup;
+    ret = GetDIBits( hdc, iinfo.hbmColor, 0, 32, image, info, DIB_RGB_COLORS );
+    ok(ret, "GetDIBits() failed\n");
+    if (!ret) goto cleanup;
+    ret = (memcmp(image, data, length) == 0);
+    ok(ret, "Expected 0x%x, actually 0x%x (first 4 bytes only)\n", *(DWORD *)data, *(DWORD *)image);
+
+cleanup:
+    HeapFree( GetProcessHeap(), 0, image );
+    HeapFree( GetProcessHeap(), 0, info );
+    return ret;
+}
+
+static HCURSOR (WINAPI *pGetCursorFrameInfo)(HCURSOR hCursor, DWORD unk1, DWORD istep, DWORD *rate, DWORD *steps);
+static void test_GetCursorFrameInfo(void)
+{
+    DWORD frame_identifier[] = { 0x10Ad, 0xc001, 0x1c05 };
+    HBITMAP bmp = NULL, bmpOld = NULL;
+    DWORD rate, steps;
+    BITMAPINFOHEADER *icon_header;
+    BITMAPINFO bitmapInfo;
+    HDC hdc = NULL;
+    void *bits = 0;
+    INT16 *hotspot;
+    HANDLE h1, h2;
+    BOOL ret;
+    int i;
+
+    if (!pGetCursorFrameInfo)
+    {
+        win_skip( "GetCursorFrameInfo not supported, skipping tests.\n" );
+        return;
+    }
+
+    hdc = CreateCompatibleDC(0);
+    ok(hdc != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
+    if (!hdc)
+        return;
+
+    memset(&bitmapInfo, 0, sizeof(bitmapInfo));
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = 3;
+    bitmapInfo.bmiHeader.biHeight = 3;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
+    bmp = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, &bits, NULL, 0);
+    ok (bmp && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
+    if (!bmp || !bits)
+        goto cleanup;
+    bmpOld = SelectObject(hdc, bmp);
+
+#define ICON_RES_WIDTH 32
+#define ICON_RES_HEIGHT 32
+#define ICON_RES_AND_SIZE (ICON_WIDTH*ICON_HEIGHT/8)
+#define ICON_RES_BPP 32
+#define ICON_RES_SIZE \
+    (sizeof(BITMAPINFOHEADER) + ICON_AND_SIZE + ICON_AND_SIZE*ICON_BPP)
+#define CRSR_RES_SIZE (2*sizeof(INT16) + ICON_RES_SIZE)
+
+    /* Set icon data. */
+    hotspot = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, CRSR_RES_SIZE);
+
+    /* Cursor resources have an extra hotspot, icon resources not. */
+    hotspot[0] = 3;
+    hotspot[1] = 3;
+
+    icon_header = (BITMAPINFOHEADER *) (hotspot + 2);
+    icon_header->biSize = sizeof(BITMAPINFOHEADER);
+    icon_header->biWidth = ICON_WIDTH;
+    icon_header->biHeight = ICON_HEIGHT*2;
+    icon_header->biPlanes = 1;
+    icon_header->biBitCount = ICON_BPP;
+    icon_header->biSizeImage = 0; /* Uncompressed bitmap. */
+
+    /* Creating a static cursor. */
+    SetLastError(0xdeadbeef);
+    h1 = CreateIconFromResource((PBYTE) hotspot, CRSR_RES_SIZE, FALSE, 0x00030000);
+    ok(h1 != NULL, "Create cursor failed (error = %d).\n", GetLastError());
+
+    /* Check GetCursorFrameInfo behavior on a static cursor */
+    rate = steps = 0xdead;
+    h2 = pGetCursorFrameInfo(h1, 0xdead, 0xdead, &rate, &steps);
+    ok(h1 == h2, "GetCursorFrameInfo() failed: (%p != %p).\n", h1, h2);
+    ok(rate == 0, "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0x0).\n", rate);
+    ok(steps == 1, "GetCursorFrameInfo() unexpected param 5 value (%d != 1).\n", steps);
+
+    /* Clean up static cursor. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(h1);
+    ok(ret, "DestroyCursor() failed (error = %d).\n", GetLastError());
+
+    /* Creating a single-frame animated cursor. */
+    empty_anicursor.frames[0].data.icon_info.idType = 2; /* type: cursor */
+    empty_anicursor.frames[0].data.icon_info.idEntries[0].xHotspot = 3;
+    empty_anicursor.frames[0].data.icon_info.idEntries[0].yHotspot = 3;
+    memcpy( &empty_anicursor.frames[0].data.bmi_data.data[0], &frame_identifier[0], sizeof(DWORD) );
+    SetLastError(0xdeadbeef);
+    h1 = CreateIconFromResource((PBYTE) &empty_anicursor, sizeof(empty_anicursor), FALSE, 0x00030000);
+    ok(h1 != NULL, "Create cursor failed (error = %d).\n", GetLastError());
+
+    /* Check GetCursorFrameInfo behavior on a single-frame animated cursor */
+    rate = steps = 0xdead;
+    h2 = pGetCursorFrameInfo(h1, 0xdead, 0, &rate, &steps);
+    ok(h1 == h2, "GetCursorFrameInfo() failed: (%p != %p).\n", h1, h2);
+    ret = check_cursor_data( hdc, h2, &frame_identifier[0], sizeof(DWORD) );
+    ok(ret, "GetCursorFrameInfo() returned wrong cursor data for frame 0.\n");
+    ok(rate == 0x0, "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0x0).\n", rate);
+    ok(steps == empty_anicursor.header.header.num_steps,
+        "GetCursorFrameInfo() unexpected param 5 value (%d != 1).\n", steps);
+
+    /* Clean up single-frame animated cursor. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(h1);
+    ok(ret, "DestroyCursor() failed (error = %d).\n", GetLastError());
+
+    /* Creating a multi-frame animated cursor. */
+    for (i=0; i<empty_anicursor3.header.header.num_frames; i++)
+    {
+        empty_anicursor3.frames[i].data.icon_info.idType = 2; /* type: cursor */
+        empty_anicursor3.frames[i].data.icon_info.idEntries[0].xHotspot = 3;
+        empty_anicursor3.frames[i].data.icon_info.idEntries[0].yHotspot = 3;
+        memcpy( &empty_anicursor3.frames[i].data.bmi_data.data[0], &frame_identifier[i], sizeof(DWORD) );
+    }
+    SetLastError(0xdeadbeef);
+    h1 = CreateIconFromResource((PBYTE) &empty_anicursor3, sizeof(empty_anicursor3), FALSE, 0x00030000);
+    ok(h1 != NULL, "Create cursor failed (error = %d).\n", GetLastError());
+
+    /* Check number of steps in multi-frame animated cursor */
+    i=0;
+    while (DrawIconEx(hdc, 0, 0, h1, 32, 32, i, NULL, DI_NORMAL))
+        i++;
+    ok(i == empty_anicursor3.header.header.num_steps,
+        "Unexpected number of steps in cursor (%d != %d)\n",
+        i, empty_anicursor3.header.header.num_steps);
+
+    /* Check GetCursorFrameInfo behavior on a multi-frame animated cursor */
+    for (i=0; i<empty_anicursor3.header.header.num_frames; i++)
+    {
+        rate = steps = 0xdead;
+        h2 = pGetCursorFrameInfo(h1, 0xdead, i, &rate, &steps);
+        ok(h1 != h2 && h2 != 0, "GetCursorFrameInfo() failed for cursor %p: (%p, %p).\n", h1, h1, h2);
+        ret = check_cursor_data( hdc, h2, &frame_identifier[i], sizeof(DWORD) );
+        ok(ret, "GetCursorFrameInfo() returned wrong cursor data for frame %d.\n", i);
+        ok(rate == empty_anicursor3.header.header.display_rate,
+            "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0x%x).\n",
+            rate, empty_anicursor3.header.header.display_rate);
+        ok(steps == empty_anicursor3.header.header.num_steps,
+            "GetCursorFrameInfo() unexpected param 5 value (%d != %d).\n",
+            steps, empty_anicursor3.header.header.num_steps);
+    }
+
+    /* Check GetCursorFrameInfo behavior on rate 3 of a multi-frame animated cursor */
+    rate = steps = 0xdead;
+    h2 = pGetCursorFrameInfo(h1, 0xdead, 3, &rate, &steps);
+    ok(h2 == 0, "GetCursorFrameInfo() failed for cursor %p: (%p != 0).\n", h1, h2);
+    ok(rate == 0xdead || broken(rate == empty_anicursor3.header.header.display_rate) /*win2k*/
+       || broken(rate == ~0) /*win2k (sporadic)*/,
+        "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0xdead).\n", rate);
+    ok(steps == 0xdead || broken(steps == empty_anicursor3.header.header.num_steps) /*win2k*/
+       || broken(steps == 0) /*win2k (sporadic)*/,
+        "GetCursorFrameInfo() unexpected param 5 value (0x%x != 0xdead).\n", steps);
+
+    /* Clean up multi-frame animated cursor. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(h1);
+    ok(ret, "DestroyCursor() failed (error = %d).\n", GetLastError());
+
+    /* Create a multi-frame animated cursor with num_steps == 1 */
+    empty_anicursor3.header.header.num_steps = 1;
+    SetLastError(0xdeadbeef);
+    h1 = CreateIconFromResource((PBYTE) &empty_anicursor3, sizeof(empty_anicursor3), FALSE, 0x00030000);
+    ok(h1 != NULL, "Create cursor failed (error = %d).\n", GetLastError());
+
+    /* Check number of steps in multi-frame animated cursor (mismatch between steps and frames) */
+    i=0;
+    while (DrawIconEx(hdc, 0, 0, h1, 32, 32, i, NULL, DI_NORMAL))
+        i++;
+    ok(i == empty_anicursor3.header.header.num_steps,
+        "Unexpected number of steps in cursor (%d != %d)\n",
+        i, empty_anicursor3.header.header.num_steps);
+
+    /* Check GetCursorFrameInfo behavior on rate 0 for a multi-frame animated cursor (with num_steps == 1) */
+    rate = steps = 0xdead;
+    h2 = pGetCursorFrameInfo(h1, 0xdead, 0, &rate, &steps);
+    ok(h1 != h2 && h2 != 0, "GetCursorFrameInfo() failed for cursor %p: (%p, %p).\n", h1, h1, h2);
+    ret = check_cursor_data( hdc, h2, &frame_identifier[0], sizeof(DWORD) );
+    ok(ret, "GetCursorFrameInfo() returned wrong cursor data for frame 0.\n");
+    ok(rate == empty_anicursor3.header.header.display_rate,
+        "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0x%x).\n",
+        rate, empty_anicursor3.header.header.display_rate);
+    ok(steps == ~0 || broken(steps == empty_anicursor3.header.header.num_steps) /*win2k*/,
+        "GetCursorFrameInfo() unexpected param 5 value (%d != ~0).\n", steps);
+
+    /* Check GetCursorFrameInfo behavior on rate 1 for a multi-frame animated cursor (with num_steps == 1) */
+    rate = steps = 0xdead;
+    h2 = pGetCursorFrameInfo(h1, 0xdead, 1, &rate, &steps);
+    ok(h2 == 0, "GetCursorFrameInfo() failed for cursor %p: (%p != 0).\n", h1, h2);
+    ok(rate == 0xdead || broken(rate == empty_anicursor3.header.header.display_rate) /*win2k*/
+       || broken(rate == ~0) /*win2k (sporadic)*/,
+        "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0xdead).\n", rate);
+    ok(steps == 0xdead || broken(steps == empty_anicursor3.header.header.num_steps) /*win2k*/
+       || broken(steps == 0) /*win2k (sporadic)*/,
+        "GetCursorFrameInfo() unexpected param 5 value (%d != 0xdead).\n", steps);
+
+    /* Clean up multi-frame animated cursor. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(h1);
+    ok(ret, "DestroyCursor() failed (error = %d).\n", GetLastError());
+
+    /* Creating a multi-frame animated cursor with rate data. */
+    for (i=0; i<empty_anicursor3_seq.header.header.num_frames; i++)
+    {
+        empty_anicursor3_seq.frames[i].data.icon_info.idType = 2; /* type: cursor */
+        empty_anicursor3_seq.frames[i].data.icon_info.idEntries[0].xHotspot = 3;
+        empty_anicursor3_seq.frames[i].data.icon_info.idEntries[0].yHotspot = 3;
+        memcpy( &empty_anicursor3_seq.frames[i].data.bmi_data.data[0], &frame_identifier[i], sizeof(DWORD) );
+    }
+    SetLastError(0xdeadbeef);
+    h1 = CreateIconFromResource((PBYTE) &empty_anicursor3_seq, sizeof(empty_anicursor3_seq), FALSE, 0x00030000);
+    ok(h1 != NULL, "Create cursor failed (error = %x).\n", GetLastError());
+
+    /* Check number of steps in multi-frame animated cursor with rate data */
+    i=0;
+    while (DrawIconEx(hdc, 0, 0, h1, 32, 32, i, NULL, DI_NORMAL))
+        i++;
+    ok(i == empty_anicursor3_seq.header.header.num_steps,
+        "Unexpected number of steps in cursor (%d != %d)\n",
+        i, empty_anicursor3_seq.header.header.num_steps);
+
+    /* Check GetCursorFrameInfo behavior on a multi-frame animated cursor with rate data */
+    for (i=0; i<empty_anicursor3_seq.header.header.num_frames; i++)
+    {
+        int frame_id = empty_anicursor3_seq.seq.order[i];
+
+        rate = steps = 0xdead;
+        h2 = pGetCursorFrameInfo(h1, 0xdead, i, &rate, &steps);
+        ok(h1 != h2 && h2 != 0, "GetCursorFrameInfo() failed for cursor %p: (%p, %p).\n", h1, h1, h2);
+        ret = check_cursor_data( hdc, h2, &frame_identifier[frame_id], sizeof(DWORD) );
+        ok(ret, "GetCursorFrameInfo() returned wrong cursor data for frame %d.\n", i);
+        ok(rate == empty_anicursor3_seq.rates.rate[i],
+            "GetCursorFrameInfo() unexpected param 4 value (0x%x != 0x%x).\n",
+            rate, empty_anicursor3_seq.rates.rate[i]);
+        ok(steps == empty_anicursor3_seq.header.header.num_steps,
+            "GetCursorFrameInfo() unexpected param 5 value (%d != %d).\n",
+            steps, empty_anicursor3_seq.header.header.num_steps);
+    }
+
+    /* Clean up multi-frame animated cursor with rate data. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(h1);
+    ok(ret, "DestroyCursor() failed (error = %d).\n", GetLastError());
+
+cleanup:
+    if(bmpOld) SelectObject(hdc, bmpOld);
+    if(bmp) DeleteObject(bmp);
+    if(hdc) DeleteDC(hdc);
 }
 
 static HICON create_test_icon(HDC hdc, int width, int height, int bpp,
@@ -1123,7 +1802,7 @@ static void test_DrawIcon(void)
 
     if(GetDeviceCaps(hdcDst, BITSPIXEL) <= 8)
     {
-        skip("Windows will distort DrawIcon colors at 8-bpp and less due to palletizing.\n");
+        skip("Windows will distort DrawIcon colors at 8-bpp and less due to palettizing.\n");
         goto cleanup;
     }
 
@@ -1207,7 +1886,7 @@ static void test_DrawIconEx(void)
 
     if(GetDeviceCaps(hdcDst, BITSPIXEL) <= 8)
     {
-        skip("Windows will distort DrawIconEx colors at 8-bpp and less due to palletizing.\n");
+        skip("Windows will distort DrawIconEx colors at 8-bpp and less due to palettizing.\n");
         goto cleanup;
     }
 
@@ -1356,7 +2035,7 @@ static void test_DrawState(void)
 
     if(GetDeviceCaps(hdcDst, BITSPIXEL) <= 8)
     {
-        skip("Windows will distort DrawIconEx colors at 8-bpp and less due to palletizing.\n");
+        skip("Windows will distort DrawIconEx colors at 8-bpp and less due to palettizing.\n");
         goto cleanup;
     }
 
@@ -1639,8 +2318,8 @@ static void test_ShowCursor(void)
 static void test_DestroyCursor(void)
 {
     static const BYTE bmp_bits[4096];
-    ICONINFO cursorInfo;
-    HCURSOR cursor, cursor2;
+    ICONINFO cursorInfo, new_info;
+    HCURSOR cursor, cursor2, new_cursor;
     BOOL ret;
     DWORD error;
     UINT display_bpp;
@@ -1668,23 +2347,84 @@ static void test_DestroyCursor(void)
     ok(!ret || broken(ret)  /* succeeds on win9x */, "DestroyCursor on the active cursor succeeded\n");
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: %u\n", error);
-    if (!ret)
-    {
-        cursor2 = GetCursor();
-        ok(cursor2 == cursor, "Active was set to %p when trying to destroy it\n", cursor2);
-        SetCursor(NULL);
 
-        /* Trying to destroy the cursor properly fails now with
-         * ERROR_INVALID_CURSOR_HANDLE.  This happens because we called
-         * DestroyCursor() 2+ times after calling SetCursor().  The calls to
-         * GetCursor() and SetCursor(NULL) in between make no difference. */
+    new_cursor = GetCursor();
+    if (ret)  /* win9x replaces cursor by another one on destroy */
+        ok(new_cursor != cursor, "GetCursor returned %p/%p\n", new_cursor, cursor);
+    else
+        ok(new_cursor == cursor, "GetCursor returned %p/%p\n", new_cursor, cursor);
+
+    SetLastError(0xdeadbeef);
+    ret = GetIconInfo( cursor, &new_info );
+    ok( !ret || broken(ret), /* nt4 */ "GetIconInfo succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE ||
+        broken(GetLastError() == 0xdeadbeef), /* win9x */
+        "wrong error %u\n", GetLastError() );
+
+    if (ret)  /* nt4 delays destruction until cursor changes */
+    {
+        DeleteObject( new_info.hbmColor );
+        DeleteObject( new_info.hbmMask );
+
         SetLastError(0xdeadbeef);
-        ret = DestroyCursor(cursor);
-        todo_wine ok(!ret, "DestroyCursor succeeded.\n");
-        error = GetLastError();
-        ok(error == ERROR_INVALID_CURSOR_HANDLE || error == 0xdeadbeef, /* vista */
-           "Last error: 0x%08x\n", error);
+        ret = DestroyCursor( cursor );
+        ok( !ret, "DestroyCursor succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE || GetLastError() == 0xdeadbeef,
+            "wrong error %u\n", GetLastError() );
+
+        SetLastError(0xdeadbeef);
+        cursor2 = SetCursor( cursor );
+        ok( cursor2 == cursor, "SetCursor returned %p/%p\n", cursor2, cursor);
+        ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE || GetLastError() == 0xdeadbeef,
+            "wrong error %u\n", GetLastError() );
     }
+    else
+    {
+        SetLastError(0xdeadbeef);
+        cursor2 = CopyCursor( cursor );
+        ok(!cursor2, "CopyCursor succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE ||
+            broken(GetLastError() == 0xdeadbeef), /* win9x */
+            "wrong error %u\n", GetLastError() );
+
+        SetLastError(0xdeadbeef);
+        ret = DestroyCursor( cursor );
+        if (new_cursor != cursor)  /* win9x */
+            ok( ret, "DestroyCursor succeeded\n" );
+        else
+            ok( !ret, "DestroyCursor succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE || GetLastError() == 0xdeadbeef,
+            "wrong error %u\n", GetLastError() );
+
+        SetLastError(0xdeadbeef);
+        cursor2 = SetCursor( cursor );
+        ok(!cursor2, "SetCursor returned %p/%p\n", cursor2, cursor);
+        ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE || GetLastError() == 0xdeadbeef,
+            "wrong error %u\n", GetLastError() );
+    }
+
+    cursor2 = GetCursor();
+    ok(cursor2 == new_cursor, "GetCursor returned %p/%p\n", cursor2, new_cursor);
+
+    SetLastError(0xdeadbeef);
+    cursor2 = SetCursor( 0 );
+    if (new_cursor != cursor)  /* win9x */
+        ok(cursor2 == new_cursor, "SetCursor returned %p/%p\n", cursor2, cursor);
+    else
+        ok(!cursor2, "SetCursor returned %p/%p\n", cursor2, cursor);
+    ok( GetLastError() == 0xdeadbeef, "wrong error %u\n", GetLastError() );
+
+    cursor2 = GetCursor();
+    ok(!cursor2, "GetCursor returned %p/%p\n", cursor2, cursor);
+
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(cursor);
+    if (new_cursor != cursor)  /* win9x */
+        ok( ret, "DestroyCursor succeeded\n" );
+    else
+        ok( !ret, "DestroyCursor succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_CURSOR_HANDLE || GetLastError() == 0xdeadbeef,
+        "wrong error %u\n", GetLastError() );
 
     DeleteObject(cursorInfo.hbmMask);
     DeleteObject(cursorInfo.hbmColor);
@@ -1716,6 +2456,9 @@ static void test_DestroyCursor(void)
 START_TEST(cursoricon)
 {
     pGetCursorInfo = (void *)GetProcAddress( GetModuleHandleA("user32.dll"), "GetCursorInfo" );
+    pGetIconInfoExA = (void *)GetProcAddress( GetModuleHandleA("user32.dll"), "GetIconInfoExA" );
+    pGetIconInfoExW = (void *)GetProcAddress( GetModuleHandleA("user32.dll"), "GetIconInfoExW" );
+    pGetCursorFrameInfo = (void *)GetProcAddress( GetModuleHandleA("user32.dll"), "GetCursorFrameInfo" );
     test_argc = winetest_get_mainargs(&test_argv);
 
     if (test_argc >= 3)
@@ -1741,6 +2484,7 @@ START_TEST(cursoricon)
     test_CreateIcon();
     test_LoadImage();
     test_CreateIconFromResource();
+    test_GetCursorFrameInfo();
     test_DrawIcon();
     test_DrawIconEx();
     test_DrawState();

@@ -77,7 +77,7 @@ static void test_setitemheight(DWORD style)
 
     trace("Style %x\n", style);
     GetClientRect(hCombo, &r);
-    expect_rect(r, 0, 0, 100, 24);
+    expect_rect(r, 0, 0, 100, font_height(GetStockObject(SYSTEM_FONT)) + 8);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
     MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
     todo_wine expect_rect(r, 5, 5, 105, 105);
@@ -112,11 +112,15 @@ static void test_setfont(DWORD style)
     hFont2 = CreateFont(8, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH|FF_DONTCARE, "Marlett");
 
     GetClientRect(hCombo, &r);
-    expect_rect(r, 0, 0, 100, 24);
+    expect_rect(r, 0, 0, 100, font_height(GetStockObject(SYSTEM_FONT)) + 8);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
     MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
     todo_wine expect_rect(r, 5, 5, 105, 105);
 
+    /* The size of the dropped control is initially equal to the size
+       of the window when it was created.  The size of the calculated
+       dropped area changes only by how much the selection area
+       changes, not by how much the list area changes.  */
     if (font_height(hFont1) == 10 && font_height(hFont2) == 8)
     {
         SendMessage(hCombo, WM_SETFONT, (WPARAM)hFont1, FALSE);
@@ -124,21 +128,21 @@ static void test_setfont(DWORD style)
         expect_rect(r, 0, 0, 100, 18);
         SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
-        todo_wine expect_rect(r, 5, 5, 105, 99);
+        todo_wine expect_rect(r, 5, 5, 105, 105 - (font_height(GetStockObject(SYSTEM_FONT)) - font_height(hFont1)));
 
         SendMessage(hCombo, WM_SETFONT, (WPARAM)hFont2, FALSE);
         GetClientRect(hCombo, &r);
         expect_rect(r, 0, 0, 100, 16);
         SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
-        todo_wine expect_rect(r, 5, 5, 105, 97);
+        todo_wine expect_rect(r, 5, 5, 105, 105 - (font_height(GetStockObject(SYSTEM_FONT)) - font_height(hFont2)));
 
         SendMessage(hCombo, WM_SETFONT, (WPARAM)hFont1, FALSE);
         GetClientRect(hCombo, &r);
         expect_rect(r, 0, 0, 100, 18);
         SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
-        todo_wine expect_rect(r, 5, 5, 105, 99);
+        todo_wine expect_rect(r, 5, 5, 105, 105 - (font_height(GetStockObject(SYSTEM_FONT)) - font_height(hFont1)));
     }
     else
     {

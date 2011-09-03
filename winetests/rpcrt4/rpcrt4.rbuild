@@ -12,6 +12,8 @@
 		<include root="intermediate" base="rpcrt4_winetest">.</include>
 		<define name="__ROS_LONG64__" />
 		<redefine name="_WIN32_WINNT">0x0500</redefine>
+        <!--Grotesque hack-->
+        <define name="s_IServer_v0_0_s_ifspec">IServer_v0_0_s_ifspec</define>
 		<library>wine</library>
 		<library>pseh</library>
 		<library>ole32</library>
