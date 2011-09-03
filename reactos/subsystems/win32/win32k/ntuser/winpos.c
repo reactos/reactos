@@ -950,6 +950,7 @@ co_WinPosSetWindowPos(
    HDC Dc;
    RECTL CopyRect;
    PWND Ancestor;
+   BOOL bPointerInWindow;
 
    ASSERT_REFS_CO(Window);
 
@@ -963,6 +964,7 @@ co_WinPosSetWindowPos(
    {
       return FALSE;
    }
+   bPointerInWindow = IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y);
 
    WinPos.hwnd = Window->head.h;
    WinPos.hwndInsertAfter = WndInsertAfter;
@@ -1329,7 +1331,7 @@ co_WinPosSetWindowPos(
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
 
-   if(IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
+   if(bPointerInWindow != IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
    {
       /* Generate mouse move message */
       MSG msg;
