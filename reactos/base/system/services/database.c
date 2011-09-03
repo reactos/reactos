@@ -1002,6 +1002,8 @@ ScmSendStartCommand(PSERVICE Service,
     DWORD dwReadCount = 0;
     DWORD dwError = ERROR_SUCCESS;
     DWORD i;
+    PWSTR *pOffPtr;
+    PWSTR pArgPtr;
 
     DPRINT("ScmSendStartCommand() called\n");
 
@@ -1043,16 +1045,25 @@ ScmSendStartCommand(PSERVICE Service,
     /* Copy argument list */
     if (argc > 0 && argv != NULL)
     {
-//        Ptr += wcslen(Service->lpServiceName) + 1;
-//        Ptr = ALIGN_UP_POINTER(Ptr, LPWSTR);
+        Ptr += wcslen(Service->lpServiceName) + 1;
+        pOffPtr = (PWSTR*)ALIGN_UP_POINTER(Ptr, PWSTR);
+        pArgPtr = (PWSTR)((ULONG_PTR)pOffPtr + argc * sizeof(PWSTR));
 
-//        ControlPacket->dwArgumentsOffset = (DWORD)((INT_PTR)Ptr - (INT_PTR)ControlPacket);
+        ControlPacket->dwArgumentsCount = argc;
+        ControlPacket->dwArgumentsOffset = (DWORD)((ULONG_PTR)pOffPtr - (ULONG_PTR)ControlPacket);
 
+        DPRINT("dwArgumentsCount: %lu\n", ControlPacket->dwArgumentsCount);
+        DPRINT("dwArgumentsOffset: %lu\n", ControlPacket->dwArgumentsOffset);
 
-#if 0
-        memcpy(Ptr, Arguments, ArgsLength);
-        Ptr += ArgsLength;
-#endif
+        for (i = 0; i < argc; i++)
+        {
+             wcscpy(pArgPtr, argv[i]);
+             *pOffPtr = (PWSTR)((ULONG_PTR)pArgPtr - (ULONG_PTR)pOffPtr);
+             DPRINT("offset: %p\n", *pOffPtr);
+
+             pArgPtr += wcslen(argv[i]) + 1;
+             pOffPtr++;
+        }
     }
 
     /* Send the start command */
