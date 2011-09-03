@@ -1,5 +1,4 @@
 
-set_unicode()
 set_cpp()
 
 list(APPEND SOURCE
@@ -21,7 +20,7 @@ list(APPEND SOURCE
 
 add_executable(rosautotest ${SOURCE})
 
-set_module_type(rosautotest win32cui)
+set_module_type(rosautotest win32cui UNICODE)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)
 add_pch(rosautotest precomp.h)
 
