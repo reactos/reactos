@@ -30,6 +30,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_s.c)
 
+if(MSVC)
+    # The nmake generator misses this dependency, so set it explicitly until this bug is fixed.
+    set_source_files_properties(server.c PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/server_s.h)
+endif()
+
 add_executable(rpcrt4_winetest ${SOURCE})
 target_link_libraries(rpcrt4_winetest
     uuid
