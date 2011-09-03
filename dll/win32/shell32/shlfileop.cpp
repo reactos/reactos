@@ -24,7 +24,6 @@
 //#define NO_SHLWAPI_STREAM
 #include <precomp.h>
 
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define IsAttrib(x, y)  ((INVALID_FILE_ATTRIBUTES != (x)) && ((x) & (y)))
@@ -1503,7 +1502,20 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom)
             bPathExists = SHELL_DeleteDirectoryW(lpFileOp->hwnd, fileEntry->szFullPath, FALSE);
 
         if (!bPathExists)
-            return ERROR_FILE_NOT_FOUND;
+        {
+            DWORD err = GetLastError();
+
+            if (ERROR_FILE_NOT_FOUND == err)
+            {
+                // This is a windows 2003 server specific value which ahs been removed.
+                // Later versions of windows return ERROR_FILE_NOT_FOUND.
+                return 1026; 
+            }
+            else
+            {
+                return err;
+            }
+        }
     }
 
     return ERROR_SUCCESS;

@@ -1153,7 +1153,7 @@ HRESULT WINAPI ShellLink::SetShowCmd(INT iShowCmd)
 {
     TRACE("(%p) %d\n",this, iShowCmd);
 
-    iShowCmd = iShowCmd;
+    this->iShowCmd = iShowCmd;
     bDirty = TRUE;
 
     return NOERROR;
@@ -1191,39 +1191,40 @@ HRESULT WINAPI ShellLink::GetIconLocation(LPSTR pszIconPath,INT cchIconPath,INT 
     if (sIcoPath)
     {
         WideCharToMultiByte(CP_ACP, 0, sIcoPath, -1, pszIconPath, cchIconPath, NULL, NULL);
-	return S_OK;
+	    return S_OK;
     }
 
     if (pPidl || sPath)
     {
-	CComPtr<IShellFolder>		pdsk;
+	    CComPtr<IShellFolder>		pdsk;
 
-	HRESULT hr = SHGetDesktopFolder(&pdsk);
+	    HRESULT hr = SHGetDesktopFolder(&pdsk);
 
-	if (SUCCEEDED(hr))
+	    if (SUCCEEDED(hr))
         {
-	    /* first look for an icon using the PIDL (if present) */
-	    if (pPidl)
-		hr = SHELL_PidlGeticonLocationA(pdsk, pPidl, pszIconPath, cchIconPath, piIcon);
-	    else
-		hr = E_FAIL;
+	        /* first look for an icon using the PIDL (if present) */
+	        if (pPidl)
+		        hr = SHELL_PidlGeticonLocationA(pdsk, pPidl, pszIconPath, cchIconPath, piIcon);
+	        else
+		        hr = E_FAIL;
 
-	    /* if we couldn't find an icon yet, look for it using the file system path */
-	    if (FAILED(hr) && sPath)
+	        /* if we couldn't find an icon yet, look for it using the file system path */
+	        if (FAILED(hr) && sPath)
             {
-		LPITEMIDLIST pidl;
+		        LPITEMIDLIST pidl;
 
-		hr = pdsk->ParseDisplayName(0, NULL, sPath, NULL, &pidl, NULL);
+		        hr = pdsk->ParseDisplayName(0, NULL, sPath, NULL, &pidl, NULL);
 
-		if (SUCCEEDED(hr)) {
-		    hr = SHELL_PidlGeticonLocationA(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
+		        if (SUCCEEDED(hr))
+                {
+		            hr = SHELL_PidlGeticonLocationA(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
 
-		    SHFree(pidl);
-		}
+		            SHFree(pidl);
+		        }
+	        }
 	    }
-	}
 
-	return hr;
+	    return hr;
     }
     return S_OK;
 }
@@ -1235,7 +1236,8 @@ HRESULT WINAPI ShellLink::SetIconLocation(LPCSTR pszIconPath,INT iIcon)
     HeapFree(GetProcessHeap(), 0, sIcoPath);
     sIcoPath = NULL;
 
-    if ( pszIconPath ) {
+    if ( pszIconPath )
+    {
         sIcoPath = HEAP_strdupAtoW(GetProcessHeap(), 0, pszIconPath);
         if ( !sIcoPath )
             return E_OUTOFMEMORY;
@@ -1254,7 +1256,8 @@ HRESULT WINAPI ShellLink::SetRelativePath(LPCSTR pszPathRel, DWORD dwReserved)
     HeapFree(GetProcessHeap(), 0, sPathRel);
     sPathRel = NULL;
 
-    if ( pszPathRel ) {
+    if ( pszPathRel )
+    {
         sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
         bDirty = TRUE;
     }
@@ -1271,32 +1274,38 @@ HRESULT WINAPI ShellLink::Resolve(HWND hwnd, DWORD fFlags)
 
     /*FIXME: use IResolveShellLink interface */
 
-    if (!sPath && pPidl) {
-	WCHAR buffer[MAX_PATH];
+    if (!sPath && pPidl)
+    {
+	    WCHAR buffer[MAX_PATH];
 
-	bSuccess = SHGetPathFromIDListW(pPidl, buffer);
+	    bSuccess = SHGetPathFromIDListW(pPidl, buffer);
 
-	if (bSuccess && *buffer) {
-	    sPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(buffer)+1)*sizeof(WCHAR));
-	    if (!sPath)
-		return E_OUTOFMEMORY;
+	    if (bSuccess && *buffer)
+        {
+	        sPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(buffer)+1)*sizeof(WCHAR));
+	        
+            if (!sPath)
+		        return E_OUTOFMEMORY;
 
-	    wcscpy(sPath, buffer);
+	        wcscpy(sPath, buffer);
 
-	    bDirty = TRUE;
-	} else
-	    hr = S_OK;    /* don't report an error occurred while just caching information */
+	        bDirty = TRUE;
+	    }
+        else
+	        hr = S_OK;    /* don't report an error occurred while just caching information */
     }
 
-    if (!sIcoPath && sPath) {
-	sIcoPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(sPath)+1)*sizeof(WCHAR));
-	if (!sIcoPath)
-	    return E_OUTOFMEMORY;
+    if (!sIcoPath && sPath)
+    {
+	    sIcoPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(sPath)+1)*sizeof(WCHAR));
+	    
+        if (!sIcoPath)
+	        return E_OUTOFMEMORY;
 
-	wcscpy(sIcoPath, sPath);
-	iIcoNdx = 0;
+	    wcscpy(sIcoPath, sPath);
+	    iIcoNdx = 0;
 
-	bDirty = TRUE;
+	    bDirty = TRUE;
     }
 
     return hr;
@@ -1312,7 +1321,7 @@ HRESULT WINAPI ShellLink::SetPath(LPCSTR pszFile)
 		return E_INVALIDARG;
 
     str = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
-    if( !str )
+    if (!str)
         return E_OUTOFMEMORY;
 
     r = SetPath(str);
@@ -1331,6 +1340,7 @@ HRESULT WINAPI ShellLink::GetPath(LPWSTR pszFile,INT cchMaxPath, WIN32_FIND_DATA
 
     if (cchMaxPath)
         pszFile[0] = 0;
+    
     if (sPath)
         lstrcpynW( pszFile, sPath, cchMaxPath );
 
@@ -1344,7 +1354,7 @@ HRESULT WINAPI ShellLink::GetDescription(LPWSTR pszName,INT cchMaxName)
     TRACE("(%p)->(%p len=%u)\n",this, pszName, cchMaxName);
 
     pszName[0] = 0;
-    if( sDescription )
+    if (sDescription)
         lstrcpynW( pszName, sDescription, cchMaxName );
 
     return S_OK;
