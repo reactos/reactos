@@ -265,7 +265,7 @@ function(set_module_type MODULE TYPE)
     
     #set unicode definitions
     if(__module_UNICODE)
-        add_target_compile_definitions(${MODULE} -DUNICODE -D_UNICODE)
+        add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
     endif()
     
     # set entry point
