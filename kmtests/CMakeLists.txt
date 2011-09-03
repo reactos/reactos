@@ -7,6 +7,11 @@ include_directories(
 add_subdirectory(example)
 add_subdirectory(ntos_io)
 
+list(APPEND COMMON_SOURCE
+    rtl/RtlAvlTree.c
+    rtl/RtlMemory.c
+    rtl/RtlSplayTree.c)
+
 #
 # kmtest_drv.sys driver
 #
@@ -37,10 +42,9 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
+    ntos_ob/ObReference.c
     ntos_ob/ObType.c
-    rtl/RtlAvlTree.c
-    rtl/RtlMemory.c
-    rtl/RtlSplayTree.c
+    ${COMMON_SOURCE}
 
     kmtest_drv/kmtest_drv.rc)
 
@@ -49,15 +53,16 @@ add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)
 target_link_libraries(kmtest_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
-set_property(TARGET kmtest_drv PROPERTY COMPILE_DEFINITIONS KMT_KERNEL_MODE NTDDI_VERSION=NTDDI_WS03SP1)
+add_target_compile_definitions(kmtest_drv KMT_KERNEL_MODE NTDDI_VERSION=NTDDI_WS03SP1)
+#add_pch(kmtest_drv include/kmt_test.h)
 
 add_cd_file(TARGET kmtest_drv DESTINATION reactos/bin FOR all)
 
 add_library(kmtest_printf
     kmtest_drv/printf_stubs.c
     ${REACTOS_SOURCE_DIR}/lib/sdk/crt/printf/streamout.c)
-set_property(TARGET kmtest_printf PROPERTY COMPILE_DEFINITIONS _LIBCNT_ _USER32_WSPRINTF wctomb=KmtWcToMb)
-set_property(TARGET kmtest_printf PROPERTY INCLUDE_DIRECTORIES ${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
+add_target_compile_definitions(kmtest_printf _LIBCNT_ _USER32_WSPRINTF wctomb=KmtWcToMb)
+add_target_include_directories(kmtest_printf ${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 
 #
 # kmtest.exe loader application
@@ -72,9 +77,7 @@ list(APPEND KMTEST_SOURCE
 
     example/Example_user.c
     ntos_io/IoDeviceObject_user.c
-    rtl/RtlAvlTree.c
-    rtl/RtlMemory.c
-    rtl/RtlSplayTree.c
+    ${COMMON_SOURCE}
 
     kmtest/kmtest.rc)
 
@@ -82,9 +85,11 @@ add_executable(kmtest ${KMTEST_SOURCE})
 set_module_type(kmtest win32cui)
 target_link_libraries(kmtest ${PSEH_LIB})
 add_importlibs(kmtest advapi32 msvcrt kernel32 ntdll)
-set_property(TARGET kmtest PROPERTY COMPILE_DEFINITIONS KMT_USER_MODE)
+add_target_compile_definitions(kmtest KMT_USER_MODE)
+#add_pch(kmtest include/kmt_test.h)
 
-add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
+add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR bootcd livecd)
+add_cd_file(TARGET kmtest DESTINATION reactos/bin NAME_ON_CD kmtest_.exe FOR regtest)
 
 #
 # Group targets

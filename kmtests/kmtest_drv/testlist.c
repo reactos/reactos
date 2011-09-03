@@ -30,6 +30,7 @@ KMT_TESTFUNC Test_KeGuardedMutex;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KernelType;
+KMT_TESTFUNC Test_ObReference;
 KMT_TESTFUNC Test_ObType;
 KMT_TESTFUNC Test_ObTypeClean;
 KMT_TESTFUNC Test_ObTypeNoClean;
@@ -62,6 +63,7 @@ const KMT_TEST TestList[] =
     { "KeIrql",                             Test_KeIrql },
     { "KeProcessor",                        Test_KeProcessor },
     { "-KernelType",                        Test_KernelType },
+    { "ObReference",                        Test_ObReference },
     { "ObType",                             Test_ObType },
     { "-ObTypeClean",                       Test_ObTypeClean },
     { "-ObTypeNoClean",                     Test_ObTypeNoClean },

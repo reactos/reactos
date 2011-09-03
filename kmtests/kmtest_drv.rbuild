@@ -44,6 +44,7 @@
 		<file>KeSpinLock.c</file>
 	</directory>
 	<directory name="ntos_ob">
+		<file>ObReference.c</file>
 		<file>ObType.c</file>
 	</directory>
 	<directory name="rtl">
