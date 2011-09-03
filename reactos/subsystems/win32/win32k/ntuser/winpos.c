@@ -1026,7 +1026,7 @@ co_WinPosSetWindowPos(
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
-    TRACE("co_WinPosDoNCCALCSize");
+    TRACE("co_WinPosDoNCCALCSize returned %d\n", WvrFlags);
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
@@ -2088,6 +2088,9 @@ NtUserSetWindowRgn(
       hrgnCopy = NULL;
    }
 
+   /* Delete the region passed by the caller */
+   GreDeleteObject(hRgn);
+
    if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
@@ -2097,9 +2100,6 @@ NtUserSetWindowRgn(
 
    if (hrgnCopy)
    {
-      if (Window->fnid != FNID_DESKTOP)
-         NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
-
       /* Set public ownership */
       IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
    }
