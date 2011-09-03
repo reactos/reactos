@@ -55,9 +55,9 @@ BEGIN
            /setclassid  Modificã identitatea de clasã (id_clasã) dhcp.\n \
     \n \
     În mod implicit sunt afiºate doar adresa IP, masca de subreþea ºi\n \
-    ieºirea \"gateway\" implicitã pentru fiecare adaptor ce suportã TCP/IP.\n \
+    ieºirea ""gateway"" implicitã pentru fiecare adaptor ce suportã TCP/IP.\n \
     \n \
-    Pentru \"Release\" ºi \"Renew\", dacã nu este specificat nici un adaptor,\n \
+    Pentru ""Release"" ºi ""Renew"", dacã nu este specificat nici un adaptor,\n \
     atunci vor fi detaºate sau reînnoite toate alocãrile de adrese IP pentru\n \
     toate adaptoarele ce suportã TCP/IP.\n \
     \n \
@@ -69,9 +69,9 @@ BEGIN
         > ipconfig /all              ... Afiºeazã informaþii detaliate.\n \
         > ipconfig /renew            ... Reînnoieºte toate adaptoarele.\n \
         > ipconfig /renew EL*        ... Reînnoieºte toate conexiunile care\n \
-                                         au numele începând cu \"EL\".\n \
+                                         au numele începând cu ""EL"".\n \
         > ipconfig /release *Con*    ... Detaºeazã conexiunile care conþin în\n \
-                                         numele lor secvenþa \"Con\".\n \
+                                         numele lor secvenþa ""Con"".\n \
                                          ex. ""Local Area Connection 1"" sau\n \
                                              ""Local Area Connection 2""\n"
 END
