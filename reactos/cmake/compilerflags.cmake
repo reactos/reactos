@@ -43,6 +43,7 @@ function(add_compile_flags _flags)
     # Adds the compiler flag to both CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_flags}" PARENT_SCOPE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_flags}" PARENT_SCOPE)
+    set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${_flags}" PARENT_SCOPE)
 endfunction()
 
 function(add_target_compile_flags _module _flags)

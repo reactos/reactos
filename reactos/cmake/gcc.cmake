@@ -5,6 +5,9 @@ add_compile_flags("-pipe -fms-extensions")
 # Debugging (Note: DWARF-4 on 4.5.1 when we ship)
 add_compile_flags("-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types")
 
+# For some reason, cmake sets -fPIC, and we don't want it
+string(REPLACE "-fPIC" "" CMAKE_SHARED_LIBRARY_ASM_FLAGS ${CMAKE_SHARED_LIBRARY_ASM_FLAGS})
+
 # Tuning
 if(ARCH MATCHES i386)
     add_compile_flags("-march=${OARCH} -mtune=${TUNE}")
@@ -13,7 +16,7 @@ else()
 endif()
 
 # Warnings
-add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value -Winvalid-pch")
+add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value")
 
 if(ARCH MATCHES amd64)
     add_compile_flags("-Wno-format")
@@ -86,7 +89,7 @@ set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FL
 set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
-set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> ${CMAKE_C_FLAGS} <DEFINES> -D__ASM__ -c <SOURCE>")
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 #set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
 
@@ -295,12 +298,7 @@ if(PCH)
             IMPLICIT_DEPENDS ${__lang} ${_header_filename}
             DEPENDS ${_header_filename} ${ARGN})
         get_target_property(_src_files ${_target_name} SOURCES)
-        foreach(_item in ${_src_files})
-            get_source_file_property(__src_lang ${_item} LANGUAGE)
-            if(__src_lang STREQUAL __lang)
-                set_source_files_properties(${_item} PROPERTIES COMPILE_FLAGS "-fpch-preprocess" OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
-            endif()
-        endforeach()
+        add_target_compile_flags(${_target_name} "-fpch-preprocess -Winvalid-pch -Wno-error=invalid-pch")
         #set dependency checking : depends on precompiled header only which already depends on deeper header
         set_target_properties(${_target_name} PROPERTIES IMPLICIT_DEPENDS_INCLUDE_TRANSFORM "\"${_basename}\"=;<${_basename}>=")
     endmacro()
