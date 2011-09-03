@@ -264,9 +264,10 @@ function(set_module_type MODULE TYPE)
     endif()
     
     # set entry point
-    if(__module_ENTRYPOINT)
+    if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
         list(GET __module_ENTRYPOINT 0 __entrypoint)
         list(LENGTH __module_ENTRYPOINT __length)
+        message(STATUS "Entrypoint ${__entrypoint}, module ${MODULE}")
         if(${__length} EQUAL 2)
             list(GET __module_ENTRYPOINT 1 __entrystack)
         elseif(NOT ${__length} EQUAL 1)
