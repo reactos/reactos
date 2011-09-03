@@ -250,11 +250,6 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 
 #else
 
-VOID
-DbgPrintMask(ULONG Mask, char *Format, ...)
-{
-}
-
 ULONG
 DbgPrint(PCCH Format, ...)
 {

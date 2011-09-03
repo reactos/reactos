@@ -106,9 +106,11 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
     #define WARN(fmt, ...)
     #define TRACE(fmt, ...)
 
-	#define DebugInit(x)
-	#define BugCheck(_x_)
-	#define DbgDumpBuffer(_x_, _y_, _z_)
+    #define UNIMPLEMENTED
+
+	#define DebugInit()
+	#define BugCheck(fmt, ...)
+	#define DbgDumpBuffer(mask, buf, len)
 
 #endif // DBG
 
