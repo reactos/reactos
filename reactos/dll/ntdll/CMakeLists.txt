@@ -36,7 +36,7 @@ endif(ARCH MATCHES i386)
 
 add_library(ntdll SHARED ${SOURCE})
 
-set_entrypoint(ntdll 0)
+set_module_type(ntdll win32dll ENTRYPOINT 0)
 
 if(MSVC)
     add_linkerflag(ntdll /RELEASE)
@@ -48,7 +48,6 @@ target_link_libraries(ntdll
                       libcntpr
                       ${PSEH_LIB})
 
-set_image_base(ntdll ${baseaddress_ntdll})
 add_pch(ntdll include/ntdll.h)
 add_dependencies(ntdll ntstatus asm)
 

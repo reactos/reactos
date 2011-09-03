@@ -20,10 +20,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20.def)
 
 add_library(msvcrt20 SHARED ${SOURCE})
+set_module_type(msvcrt20 win32dll ENTRYPOINT DllMain 12)
 
 add_dependencies(msvcrt20 psdk)
-set_entrypoint(msvcrt20 DllMain 12)
-set_image_base(msvcrt20 ${baseaddress_msvcrt20})
 
 target_link_libraries(msvcrt20 crt wine ${PSEH_LIB})
 

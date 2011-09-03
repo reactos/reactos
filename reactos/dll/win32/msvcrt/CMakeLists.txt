@@ -23,9 +23,9 @@ list(APPEND SOURCE
 
 add_library(msvcrt SHARED ${SOURCE})
 
+set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
+
 add_dependencies(msvcrt psdk)
-set_entrypoint(msvcrt DllMain 12)
-set_image_base(msvcrt ${baseaddress_msvcrt})
 
 target_link_libraries(msvcrt crt wine ${PSEH_LIB})
 

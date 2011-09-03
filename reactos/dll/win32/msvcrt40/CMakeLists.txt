@@ -21,9 +21,9 @@ list(APPEND SOURCE
 
 add_library(msvcrt40 SHARED ${SOURCE})
 
+set_module_type(msvcrt40 win32dll ENTRYPOINT DllMain 12)
+
 add_dependencies(msvcrt40 psdk)
-set_entrypoint(msvcrt40 DllMain 12)
-set_image_base(msvcrt40 ${baseaddress_msvcrt40})
 
 target_link_libraries(msvcrt40 crt wine ${PSEH_LIB})
 
