@@ -102,7 +102,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             argc++;
             /* skip the remaining spaces */
             while (*cs==0x0009 || *cs==0x0020)
-			{
+            {
                 cs++;
             }
             if (*cs==0)
@@ -133,10 +133,10 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
      */
     argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
     
-	if (!argv)
+    if (!argv)
         return NULL;
     
-	cmdline=(LPWSTR)(argv+argc);
+    cmdline=(LPWSTR)(argv+argc);
     wcscpy(cmdline, lpCmdline);
 
     argc=0;
@@ -242,17 +242,17 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
     SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
     ReadFile( hfile, magic, sizeof(magic), &len, NULL );
     
-	if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
+    if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
     {
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &nt, sizeof(nt), &len, NULL );
         CloseHandle( hfile );
         
-		/* DLL files are not executable and should return 0 */
+        /* DLL files are not executable and should return 0 */
         if (nt.FileHeader.Characteristics & IMAGE_FILE_DLL)
             return 0;
         
-		if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+        if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
         {
              return IMAGE_NT_SIGNATURE |
                    (nt.OptionalHeader.MajorSubsystemVersion << 24) |
@@ -267,7 +267,7 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
         ReadFile( hfile, &ne, sizeof(ne), &len, NULL );
         CloseHandle( hfile );
         
-		if (ne.ne_exetyp == 2)
+        if (ne.ne_exetyp == 2)
             return IMAGE_OS2_SIGNATURE | (ne.ne_expver << 16);
         return 0;
     }
@@ -276,7 +276,7 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
 }
 
 /*************************************************************************
- * SHELL_IsShortcut		[internal]
+ * SHELL_IsShortcut        [internal]
  *
  * Decide if an item id list points to a shell shortcut
  */
@@ -319,8 +319,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     int iIndex;
     DWORD_PTR ret = TRUE;
     DWORD dwAttributes = 0;
-    CComPtr<IShellFolder>		psfParent;
-    CComPtr<IExtractIconW>		pei;
+    CComPtr<IShellFolder>        psfParent;
+    CComPtr<IExtractIconW>        pei;
     LPITEMIDLIST    pidlLast = NULL, pidl = NULL;
     HRESULT hr = S_OK;
     BOOL IconNotYetLoaded=TRUE;
@@ -333,7 +333,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     if ( (flags & SHGFI_USEFILEATTRIBUTES) &&
          (flags & (SHGFI_ATTRIBUTES|SHGFI_EXETYPE|SHGFI_PIDL)))
         return FALSE;
-	if (!path)
+    if (!path)
          return FALSE;
 
     /* windows initializes these values regardless of the flags */
@@ -412,8 +412,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             psfi->dwAttributes = 0xffffffff;
         }
-		if (psfParent != NULL)
-			psfParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlLast,
+        if (psfParent != NULL)
+            psfParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlLast,
                                       &(psfi->dwAttributes) );
     }
 
@@ -590,7 +590,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                                 GetSystemMetrics( SM_CYICON),
                                 &psfi->hIcon, 0, 1, 0);
                         
-						if (ret != 0 && ret != 0xFFFFFFFF)
+                        if (ret != 0 && ret != 0xFFFFFFFF)
                         {
                             IconNotYetLoaded=FALSE;
                             psfi->iIcon = icon_idx;
@@ -857,49 +857,49 @@ UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
 
     switch (msg)
     {
-		case ABM_GETSTATE:
-			return ABS_ALWAYSONTOP | ABS_AUTOHIDE;
+        case ABM_GETSTATE:
+            return ABS_ALWAYSONTOP | ABS_AUTOHIDE;
 
-		case ABM_GETTASKBARPOS:
-			GetWindowRect(data->hWnd, &rec);
-			data->rc=rec;
-			return TRUE;
+        case ABM_GETTASKBARPOS:
+            GetWindowRect(data->hWnd, &rec);
+            data->rc=rec;
+            return TRUE;
 
-		case ABM_ACTIVATE:
-			SetActiveWindow(data->hWnd);
-			return TRUE;
+        case ABM_ACTIVATE:
+            SetActiveWindow(data->hWnd);
+            return TRUE;
 
-		case ABM_GETAUTOHIDEBAR:
-			return 0; /* pretend there is no autohide bar */
+        case ABM_GETAUTOHIDEBAR:
+            return 0; /* pretend there is no autohide bar */
 
-		case ABM_NEW:
-			/* cbSize, hWnd, and uCallbackMessage are used. All other ignored */
-			SetWindowPos(data->hWnd,HWND_TOP,0,0,0,0,SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE);
-			return TRUE;
+        case ABM_NEW:
+            /* cbSize, hWnd, and uCallbackMessage are used. All other ignored */
+            SetWindowPos(data->hWnd,HWND_TOP,0,0,0,0,SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOSIZE);
+            return TRUE;
 
-		case ABM_QUERYPOS:
-			GetWindowRect(data->hWnd, &(data->rc));
-			return TRUE;
+        case ABM_QUERYPOS:
+            GetWindowRect(data->hWnd, &(data->rc));
+            return TRUE;
 
-		case ABM_REMOVE:
-			FIXME("ABM_REMOVE broken\n");
-			/* FIXME: this is wrong; should it be DestroyWindow instead? */
-			/*CloseHandle(data->hWnd);*/
-			return TRUE;
+        case ABM_REMOVE:
+            FIXME("ABM_REMOVE broken\n");
+            /* FIXME: this is wrong; should it be DestroyWindow instead? */
+            /*CloseHandle(data->hWnd);*/
+            return TRUE;
 
-		case ABM_SETAUTOHIDEBAR:
-			SetWindowPos(data->hWnd,HWND_TOP,rec.left+1000,rec.top,
-							 width,height,SWP_SHOWWINDOW);
-			return TRUE;
+        case ABM_SETAUTOHIDEBAR:
+            SetWindowPos(data->hWnd,HWND_TOP,rec.left+1000,rec.top,
+                             width,height,SWP_SHOWWINDOW);
+            return TRUE;
 
-		case ABM_SETPOS:
-			data->uEdge=(ABE_RIGHT | ABE_LEFT);
-			SetWindowPos(data->hWnd,HWND_TOP,data->rc.left,data->rc.top,
-						 width,height,SWP_SHOWWINDOW);
-			return TRUE;
+        case ABM_SETPOS:
+            data->uEdge=(ABE_RIGHT | ABE_LEFT);
+            SetWindowPos(data->hWnd,HWND_TOP,data->rc.left,data->rc.top,
+                         width,height,SWP_SHOWWINDOW);
+            return TRUE;
 
-		case ABM_WINDOWPOSCHANGED:
-			return TRUE;
+        case ABM_WINDOWPOSCHANGED:
+            return TRUE;
     }
 
     return FALSE;
@@ -932,7 +932,7 @@ EXTERN_C DWORD WINAPI SHHelpShortcuts_RunDLLW(DWORD dwArg1, DWORD dwArg2, DWORD 
  */
 EXTERN_C HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
 {
-    CComPtr<IUnknown>			ptr;
+    CComPtr<IUnknown>            ptr;
 
     TRACE("%s\n", debugstr_guid(&rclsid));
 
@@ -1095,8 +1095,8 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 
                         // We need the decimal point of the current locale to display the RAM size correctly
                         if (GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
-							szDecimalSeparator,
-							sizeof(szDecimalSeparator) / sizeof(WCHAR)) > 0)
+                            szDecimalSeparator,
+                            sizeof(szDecimalSeparator) / sizeof(WCHAR)) > 0)
                         {
                             UCHAR uDecimals;
                             UINT uIntegral;
@@ -1150,7 +1150,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
         }; break;
 
         case WM_COMMAND:
-		{
+        {
             switch(wParam)
             {
                 case IDOK:
@@ -1179,7 +1179,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                     return TRUE;
                 }
             }
-		}; break;
+        }; break;
 
         case WM_CLOSE:
             EndDialog(hWnd, TRUE);
@@ -1292,32 +1292,32 @@ OBJECT_ENTRY(CLSID_StartMenu, CStartMenuCallback)
 OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
 END_OBJECT_MAP()
 
-CShell32Module								gModule;
+CShell32Module                                gModule;
 
 
 /*
 static const struct {
-	REFIID			riid;
-	LPFNCREATEINSTANCE	lpfnCI;
+    REFIID            riid;
+    LPFNCREATEINSTANCE    lpfnCI;
 } InterfaceTable[] = {
-	{CLSID_ShellFSFolder,	&IFSFolder_Constructor},
-	{CLSID_MyComputer,	&ISF_MyComputer_Constructor},
-	{CLSID_ShellDesktop,	&ISF_Desktop_Constructor},
-	{CLSID_ShellItem,	&IShellItem_Constructor},
-	{CLSID_ShellLink,	&IShellLink_Constructor},
-	{CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
-	{CLSID_ControlPanel,	&IControlPanel_Constructor},
-	{CLSID_AutoComplete,   &IAutoComplete_Constructor},
-	{CLSID_MyDocuments,    &ISF_MyDocuments_Constructor},
-	{CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
-	{CLSID_FontsFolderShortcut, &ISF_Fonts_Constructor},
-	{CLSID_Printers,       &ISF_Printers_Constructor},
-	{CLSID_AdminFolderShortcut, &ISF_AdminTools_Constructor},
-	{CLSID_RecycleBin,     &RecycleBin_Constructor},
-	{CLSID_OpenWithMenu,   &SHEOW_Constructor},
-	{CLSID_NewMenu,        &INewItem_Constructor},
-	{CLSID_StartMenu,      &StartMenu_Constructor},
-	{CLSID_MenuBandSite,   &MenuBandSite_Constructor},
+    {CLSID_ShellFSFolder,    &IFSFolder_Constructor},
+    {CLSID_MyComputer,    &ISF_MyComputer_Constructor},
+    {CLSID_ShellDesktop,    &ISF_Desktop_Constructor},
+    {CLSID_ShellItem,    &IShellItem_Constructor},
+    {CLSID_ShellLink,    &IShellLink_Constructor},
+    {CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
+    {CLSID_ControlPanel,    &IControlPanel_Constructor},
+    {CLSID_AutoComplete,   &IAutoComplete_Constructor},
+    {CLSID_MyDocuments,    &ISF_MyDocuments_Constructor},
+    {CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
+    {CLSID_FontsFolderShortcut, &ISF_Fonts_Constructor},
+    {CLSID_Printers,       &ISF_Printers_Constructor},
+    {CLSID_AdminFolderShortcut, &ISF_AdminTools_Constructor},
+    {CLSID_RecycleBin,     &RecycleBin_Constructor},
+    {CLSID_OpenWithMenu,   &SHEOW_Constructor},
+    {CLSID_NewMenu,        &INewItem_Constructor},
+    {CLSID_StartMenu,      &StartMenu_Constructor},
+    {CLSID_MenuBandSite,   &MenuBandSite_Constructor},
 };
 */
 
@@ -1380,7 +1380,7 @@ HIMAGELIST   ShellBigIconList = 0;
 
 void *operator new (size_t, void *buf)
 {
-	return buf;
+    return buf;
 }
 
 /*************************************************************************
@@ -1391,38 +1391,38 @@ void *operator new (size_t, void *buf)
  */
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 {
-	TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
-	if (dwReason == DLL_PROCESS_ATTACH)
-	{
-		/* HACK - the global constructors don't run, so I placement new them here */
-		new (&gModule) CShell32Module;
-		new (&_AtlWinModule) CAtlWinModule;
-		new (&_AtlBaseModule) CAtlBaseModule;
-		new (&_AtlComModule) CAtlComModule;
+    TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
+        /* HACK - the global constructors don't run, so I placement new them here */
+        new (&gModule) CShell32Module;
+        new (&_AtlWinModule) CAtlWinModule;
+        new (&_AtlBaseModule) CAtlBaseModule;
+        new (&_AtlComModule) CAtlComModule;
 
-		shell32_hInstance = hInstance;
-		gModule.Init(ObjectMap, hInstance, NULL);
+        shell32_hInstance = hInstance;
+        gModule.Init(ObjectMap, hInstance, NULL);
 
-		DisableThreadLibraryCalls (hInstance);
+        DisableThreadLibraryCalls (hInstance);
 
-		/* get full path to this DLL for IExtractIconW_fnGetIconLocation() */
-		GetModuleFileNameW(hInstance, swShell32Name, MAX_PATH);
-		swShell32Name[MAX_PATH - 1] = '\0';
+        /* get full path to this DLL for IExtractIconW_fnGetIconLocation() */
+        GetModuleFileNameW(hInstance, swShell32Name, MAX_PATH);
+        swShell32Name[MAX_PATH - 1] = '\0';
 
-		InitCommonControlsEx(NULL);
+        InitCommonControlsEx(NULL);
 
-		SIC_Initialize();
-		InitChangeNotifications();
-		InitIconOverlays();
-	}
-	else if (dwReason == DLL_PROCESS_DETACH)
-	{
-		shell32_hInstance = NULL;
-		SIC_Destroy();
-		FreeChangeNotifications();
-		gModule.Term();
-	}
-	return TRUE;
+        SIC_Initialize();
+        InitChangeNotifications();
+        InitIconOverlays();
+    }
+    else if (dwReason == DLL_PROCESS_DETACH)
+    {
+        shell32_hInstance = NULL;
+        SIC_Destroy();
+        FreeChangeNotifications();
+        gModule.Term();
+    }
+    return TRUE;
 }
 
 /***********************************************************************
@@ -1430,7 +1430,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
  */
 STDAPI DllCanUnloadNow()
 {
-	return gModule.DllCanUnloadNow();
+    return gModule.DllCanUnloadNow();
 }
 
 /*************************************************************************
@@ -1439,13 +1439,13 @@ STDAPI DllCanUnloadNow()
  */
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-	HRESULT								hResult;
+    HRESULT                                hResult;
 
-	TRACE("CLSID:%s,IID:%s\n", shdebugstr_guid(&rclsid), shdebugstr_guid(&riid));
+    TRACE("CLSID:%s,IID:%s\n", shdebugstr_guid(&rclsid), shdebugstr_guid(&riid));
 
-	hResult = gModule.DllGetClassObject(rclsid, riid, ppv);
-	TRACE("-- pointer to class factory: %p\n", *ppv);
-	return hResult;
+    hResult = gModule.DllGetClassObject(rclsid, riid, ppv);
+    TRACE("-- pointer to class factory: %p\n", *ppv);
+    return hResult;
 }
 
 /***********************************************************************
@@ -1453,7 +1453,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 STDAPI DllRegisterServer()
 {
-	return gModule.DllRegisterServer(FALSE);
+    return gModule.DllRegisterServer(FALSE);
 }
 
 /***********************************************************************
@@ -1461,7 +1461,7 @@ STDAPI DllRegisterServer()
  */
 STDAPI DllUnregisterServer()
 {
-	return gModule.DllUnregisterServer(FALSE);
+    return gModule.DllUnregisterServer(FALSE);
 }
 
 /*************************************************************************
