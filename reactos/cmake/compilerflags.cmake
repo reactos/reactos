@@ -24,33 +24,8 @@ function(add_target_property _module _propname)
     set_property(TARGET ${_module} PROPERTY ${_propname} ${_newvalue})
 endfunction()
 
-#
-# For backwards compatibility. To be removed soon.
-#
-function(add_compiler_flags)
-    set(flags_list "")
-    # Adds the compiler flag to both CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
-    foreach(flag ${ARGN})
-        set(flags_list "${flags_list} ${flag}")
-    endforeach()
-
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flags_list}" PARENT_SCOPE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags_list}" PARENT_SCOPE)
-endfunction()
-
-function(add_linkerflag MODULE _flag)
-    if (${ARGC} GREATER 2)
-        message(STATUS "Excess arguments to add_linkerflag! Module ${MODULE}, args ${ARGN}")
-    endif()
-    set(NEW_LINKER_FLAGS ${_flag})
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
-endfunction()
-
-# New versions, using add_target_property where appropriate.
+# Wrapper functions for the important properties, using add_target_property
+# where appropriate.
 # Note that the functions for string properties take a single string
 # argument while those for list properties can take a variable number of
 # arguments, all of which will be added to the list
@@ -59,7 +34,7 @@ endfunction()
 #  add_compile_flags("-pedantic -O5")
 #  add_target_link_flags(mymodule "-s --fatal-warnings")
 #  add_target_compile_flags(mymodule "-pedantic -O5")
-#  add_target_compile_definitions(mymodule WIN32 _WIN32)
+#  add_target_compile_definitions(mymodule WIN32 _WIN32 INLINE=inline)
 #  add_target_include_directories(mymodule include ../include)
 function(add_compile_flags _flags)
     if (${ARGC} GREATER 1)

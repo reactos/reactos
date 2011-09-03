@@ -31,7 +31,7 @@ target_link_libraries(msvcrt crt wine ${PSEH_LIB})
 
 if(MSVC)
     # export of deleting destructor "name"
-    add_linkerflag(msvcrt "/ignore:4102")
+    add_target_link_flags(msvcrt "/ignore:4102")
 endif()
 
 add_importlibs(msvcrt kernel32 ntdll)

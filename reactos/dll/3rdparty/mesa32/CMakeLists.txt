@@ -1,6 +1,6 @@
 
 if(NOT MSVC)
-    add_compiler_flags(-w)
+    add_compile_flags("-w")
 endif()
 
 add_definitions(

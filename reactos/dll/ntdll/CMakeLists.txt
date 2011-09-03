@@ -39,7 +39,7 @@ add_library(ntdll SHARED ${SOURCE})
 set_module_type(ntdll win32dll ENTRYPOINT 0)
 
 if(MSVC)
-    add_linkerflag(ntdll /RELEASE)
+    add_target_link_flags(ntdll "/RELEASE")
 endif()
 
 target_link_libraries(ntdll
