@@ -5,6 +5,10 @@
 extern "C" {
 #endif
 
+#if (_WIN32_WINNT >= 0x0600) && !defined(NOGDI)
+#  include "wingdi.h"
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4820)
@@ -137,12 +141,14 @@ typedef struct _INPUT_RECORD {
 #if (_WIN32_WINNT >= 0x0600)
 #define HISTORY_NO_DUP_FLAG 0x1
 #define CONSOLE_OVERSTRIKE  0x1
+#ifndef NOGDI
 typedef struct _CONSOLE_HISTORY_INFO {
     UINT cbSize;
     UINT HistoryBufferSize;
     UINT NumberOfHistoryBuffers;
     DWORD dwFlags;
 } CONSOLE_HISTORY_INFO, *PCONSOLE_HISTORY_INFO;
+#endif
 
 typedef struct _CONSOLE_SCREEN_BUFFER_INFOEX {
     ULONG cbSize;
