@@ -653,7 +653,7 @@ static VOID KdbpSymFreeMem(PVOID Area)
 	return ExFreePool(Area);
 }
 
-static BOOLEAN KdbpSymReadMem(PVOID FileContext, PVOID TargetDebug, PVOID SourceMem, ULONG Size)
+static BOOLEAN KdbpSymReadMem(PVOID FileContext, ULONG_PTR* TargetDebug, PVOID SourceMem, ULONG Size)
 {
 	return NT_SUCCESS(KdbpSafeReadMemory(TargetDebug, SourceMem, Size));
 }
