@@ -4086,6 +4086,9 @@ DWORD RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    LPWSTR *lpVector = NULL;
+    DWORD i;
+    DWORD dwLength;
 
     DPRINT("RStartServiceA() called\n");
 
@@ -4119,12 +4122,56 @@ DWORD RStartServiceA(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    /* FIXME: Convert argument vector to Unicode */
+    /* Build a Unicode argument vector */
+    if (argc > 0)
+    {
+        lpVector = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             argc * sizeof(LPWSTR));
+        if (lpVector == NULL)
+            return ERROR_NOT_ENOUGH_MEMORY;
+
+        for (i = 0; i < argc; i++)
+        {
+            dwLength = MultiByteToWideChar(CP_ACP,
+                                           0,
+                                           ((LPSTR*)argv)[i],
+                                           -1,
+                                           NULL,
+                                           0);
+
+            lpVector[i] = HeapAlloc(GetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    dwLength * sizeof(WCHAR));
+            if (lpVector[i] == NULL)
+            {
+                dwError = ERROR_NOT_ENOUGH_MEMORY;
+                goto done;
+            }
+
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                ((LPSTR*)argv)[i],
+                                -1,
+                                lpVector[i],
+                                dwLength);
+        }
+    }
 
     /* Start the service */
-    dwError = ScmStartService(lpService, 0, NULL);
+    dwError = ScmStartService(lpService, argc, lpVector);
 
-    /* FIXME: Free argument vector */
+done:
+    /* Free the Unicode argument vector */
+    if (lpVector != NULL)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            if (lpVector[i] != NULL)
+                HeapFree(GetProcessHeap(), 0, lpVector[i]);
+        }
+        HeapFree(GetProcessHeap(), 0, lpVector);
+    }
 
     return dwError;
 }
