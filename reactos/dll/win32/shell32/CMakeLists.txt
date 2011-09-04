@@ -73,13 +73,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 add_library(shell32 SHARED ${SOURCE})
-
 set_module_type(shell32 win32dll)
-
-target_link_libraries(shell32
-    wine
-    uuid
-    recyclebin)
+target_link_libraries(shell32 wine uuid recyclebin)
+add_delay_importlibs(shell32 ole32 version)
 
 add_importlibs(shell32
     advapi32
@@ -88,8 +84,6 @@ add_importlibs(shell32
     comctl32
     comdlg32
     shlwapi
-    ole32
-    version
     devmgr
     winspool
     winmm
@@ -98,6 +92,5 @@ add_importlibs(shell32
     ntdll)
 
 add_pch(shell32 precomp.h)
-
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(shell32.spec)

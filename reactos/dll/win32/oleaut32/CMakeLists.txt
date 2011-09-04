@@ -54,7 +54,6 @@ if(MSVC)
 endif()
 
 add_library(oleaut32 SHARED ${SOURCE})
-
 set_module_type(oleaut32 win32dll)
 
 target_link_libraries(oleaut32
@@ -63,7 +62,7 @@ target_link_libraries(oleaut32
     uuid
     ${PSEH_LIB})
 
-add_importlibs(oleaut32 windowscodecs ole32 rpcrt4 user32 gdi32 advapi32 comctl32 urlmon msvcrt kernel32 ntdll)
-
+add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
+add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(oleaut32.spec)
