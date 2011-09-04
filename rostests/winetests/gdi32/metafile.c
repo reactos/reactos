@@ -1427,7 +1427,7 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
 	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
 	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
-if(1)
+if(!winetest_interactive)
 	skip("skipping match_emf_record(), bug 5393\n");
 else
 {
