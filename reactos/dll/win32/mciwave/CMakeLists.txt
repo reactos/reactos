@@ -13,8 +13,13 @@ list(APPEND SOURCE
 
 add_library(mciwave SHARED ${SOURCE})
 
-set_entrypoint(mciwave 0)
+set_module_type(mciwave win32dll ENTRYPOINT 0)
+
 target_link_libraries(mciwave wine)
 add_importlibs(mciwave user32 winmm msvcrt kernel32 ntdll)
 add_dependencies(mciwave psdk)
 add_cd_file(TARGET mciwave DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(mciwave)
+endif()

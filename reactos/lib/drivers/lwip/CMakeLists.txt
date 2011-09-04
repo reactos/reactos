@@ -58,3 +58,6 @@ list(APPEND SOURCE
 
 add_library(lwip ${SOURCE})
 add_dependencies(lwip bugcodes)
+if(NOT MSVC)
+    allow_warnings(lwip)
+endif()

@@ -34,3 +34,7 @@ add_delay_importlibs(wininet secur32 crypt32)
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
 add_importlib_target(wininet.spec)
+
+if(NOT MSVC)
+    allow_warnings(wininet)
+endif()

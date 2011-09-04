@@ -5,6 +5,9 @@ add_compile_flags("-pipe -fms-extensions")
 # Debugging (Note: DWARF-4 on 4.5.1 when we ship)
 add_compile_flags("-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types")
 
+# Do not allow warnings
+add_compile_flags("-Werror")
+
 # For some reason, cmake sets -fPIC, and we don't want it
 string(REPLACE "-fPIC" "" CMAKE_SHARED_LIBRARY_ASM_FLAGS ${CMAKE_SHARED_LIBRARY_ASM_FLAGS})
 
@@ -348,4 +351,8 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
 
     add_custom_target(${_target_name} ALL DEPENDS ${_binary_file})
 
+endfunction()
+
+function(allow_warnings __module)
+    add_target_compile_flags(${__module} -Wno-error)
 endfunction()

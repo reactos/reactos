@@ -50,3 +50,7 @@ add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
 add_importlibs(rpcrt4 msvcrt advapi32 ws2_32 kernel32 ntdll)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
 add_importlib_target(rpcrt4.spec)
+
+if(NOT MSVC)
+    allow_warnings(rpcrt4)
+endif()

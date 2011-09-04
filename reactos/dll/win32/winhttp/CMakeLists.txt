@@ -22,3 +22,7 @@ add_delay_importlibs(winhttp crypt32)
 add_importlibs(winhttp shlwapi wininet ws2_32 msvcrt advapi32 kernel32 ntdll)
 add_importlib_target(winhttp.spec)
 add_cd_file(TARGET winhttp DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(winhttp)
+endif()

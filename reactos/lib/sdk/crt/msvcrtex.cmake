@@ -68,6 +68,7 @@ set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTD
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
+    allow_warnings(msvcrtex)
 endif()
 
 add_dependencies(msvcrtex psdk asm)
