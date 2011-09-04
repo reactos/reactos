@@ -278,13 +278,122 @@ ScConnectControlPipe(HANDLE *hPipe)
 
 
 static DWORD
+ScBuildUnicodeArgsVector(PSCM_CONTROL_PACKET ControlPacket,
+                         LPDWORD lpArgCount,
+                         LPWSTR **lpArgVector)
+{
+    LPWSTR *lpVector;
+    LPWSTR *lpArg;
+    DWORD i;
+
+    *lpArgCount = 0;
+    *lpArgVector = NULL;
+
+    if (ControlPacket->dwArgumentsCount > 0)
+    {
+        lpVector = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             ControlPacket->dwSize - ControlPacket->dwArgumentsOffset);
+        if (lpVector == NULL)
+            return ERROR_OUTOFMEMORY;
+
+        memcpy(lpVector,
+               ((PBYTE)ControlPacket + ControlPacket->dwArgumentsOffset),
+               ControlPacket->dwSize - ControlPacket->dwArgumentsOffset);
+
+        lpArg = lpVector;
+        for (i = 0; i < ControlPacket->dwArgumentsCount; i++)
+        {
+            *lpArg = (LPWSTR)((ULONG_PTR)lpArg + (ULONG_PTR)*lpArg);
+            lpArg++;
+        }
+
+        *lpArgCount = ControlPacket->dwArgumentsCount;
+        *lpArgVector = lpVector;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+static DWORD
+ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
+                      LPDWORD lpArgCount,
+                      LPSTR **lpArgVector)
+{
+    LPSTR *lpVector;
+    LPSTR *lpPtr;
+    LPWSTR lpUnicodeString;
+    LPSTR lpAnsiString;
+    DWORD dwVectorSize;
+    DWORD dwUnicodeSize;
+    DWORD dwAnsiSize;
+    DWORD i;
+
+    *lpArgCount = 0;
+    *lpArgVector = NULL;
+
+    if (ControlPacket->dwArgumentsCount > 0)
+    {
+        dwVectorSize = ControlPacket->dwArgumentsCount * sizeof(LPWSTR);
+
+        lpUnicodeString = (LPWSTR)((PBYTE)ControlPacket +
+                                   ControlPacket->dwArgumentsOffset +
+                                   dwVectorSize);
+        dwUnicodeSize = (ControlPacket->dwSize -
+                         ControlPacket->dwArgumentsOffset -
+                         dwVectorSize) / sizeof(WCHAR);
+
+        dwAnsiSize = WideCharToMultiByte(CP_ACP,
+                                         0,
+                                         lpUnicodeString,
+                                         dwUnicodeSize,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL);
+
+        lpVector = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             dwVectorSize + dwAnsiSize);
+        if (lpVector == NULL)
+            return ERROR_OUTOFMEMORY;
+
+        lpPtr = (LPSTR*)lpVector;
+        lpAnsiString = (LPSTR)((ULONG_PTR)lpVector + dwVectorSize);
+
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpUnicodeString,
+                            dwUnicodeSize,
+                            lpAnsiString,
+                            dwAnsiSize,
+                            NULL,
+                            NULL);
+
+        for (i = 0; i < ControlPacket->dwArgumentsCount; i++)
+        {
+            *lpPtr = lpAnsiString;
+
+            lpPtr++;
+            lpAnsiString += (strlen(lpAnsiString) + 1);
+        }
+
+        *lpArgCount = ControlPacket->dwArgumentsCount;
+        *lpArgVector = lpVector;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+static DWORD
 ScStartService(PACTIVE_SERVICE lpService,
                PSCM_CONTROL_PACKET ControlPacket)
 {
     HANDLE ThreadHandle;
     DWORD ThreadId;
-    LPWSTR *lpArgW;
-    DWORD i;
+    DWORD dwError;
 
     TRACE("ScStartService() called\n");
     TRACE("Size: %lu\n", ControlPacket->dwSize);
@@ -293,104 +402,22 @@ ScStartService(PACTIVE_SERVICE lpService,
     /* Set the service status handle */
     lpService->hServiceStatus = ControlPacket->hServiceStatus;
 
+    /* Build the arguments vector */
     if (lpService->bUnicode == TRUE)
     {
-        lpService->ThreadParams.W.dwArgCount = ControlPacket->dwArgumentsCount;
-        lpService->ThreadParams.W.lpArgVector = NULL;
-
-        if (ControlPacket->dwArgumentsOffset > 0)
-        {
-            lpService->ThreadParams.W.lpArgVector =
-                HeapAlloc(GetProcessHeap(),
-                          HEAP_ZERO_MEMORY,
-                          ControlPacket->dwSize - ControlPacket->dwArgumentsOffset);
-            if (lpService->ThreadParams.W.lpArgVector == NULL)
-                return ERROR_OUTOFMEMORY;
-
-            memcpy(lpService->ThreadParams.W.lpArgVector,
-                   ((PBYTE)ControlPacket + ControlPacket->dwArgumentsOffset),
-                   ControlPacket->dwSize - ControlPacket->dwArgumentsOffset);
-
-            lpArgW = lpService->ThreadParams.W.lpArgVector;
-            for (i = 0; i < lpService->ThreadParams.W.dwArgCount; i++)
-            {
-                *lpArgW = (LPWSTR)((ULONG_PTR)lpArgW + (ULONG_PTR)*lpArgW);
-                lpArgW++;
-            }
-        }
+        dwError = ScBuildUnicodeArgsVector(ControlPacket,
+                                           &lpService->ThreadParams.W.dwArgCount,
+                                           &lpService->ThreadParams.W.lpArgVector);
     }
     else
     {
-        /* FIXME */
-        lpService->ThreadParams.A.dwArgCount = 0;
-        lpService->ThreadParams.A.lpArgVector = NULL;
-
-#if 0
-        LPSTR *lpArgVector;
-        LPSTR Ptr;
-        LPSTR AnsiString;
-        DWORD AnsiLength;
-
-        AnsiLength = WideCharToMultiByte(CP_ACP,
-                                         0,
-                                         lpService->Arguments,
-                                         dwLength,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL);
-        if (AnsiLength == 0)
-            return ERROR_INVALID_PARAMETER; /* ? */
-
-        AnsiString = HeapAlloc(GetProcessHeap(),
-                               0,
-                               AnsiLength + 1);
-        if (AnsiString == NULL)
-            return ERROR_OUTOFMEMORY;
-
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpService->Arguments,
-                            dwLength,
-                            AnsiString,
-                            AnsiLength,
-                            NULL,
-                            NULL);
-
-        AnsiString[AnsiLength] = ANSI_NULL;
-
-        lpArgVector = HeapAlloc(GetProcessHeap(),
-                                0,
-                                (dwArgCount + 1) * sizeof(LPSTR));
-        if (lpArgVector == NULL)
-        {
-            HeapFree(GetProcessHeap(),
-                        0,
-                        AnsiString);
-            return ERROR_OUTOFMEMORY;
-        }
-
-        dwArgCount = 0;
-        Ptr = AnsiString;
-        while (*Ptr)
-        {
-            lpArgVector[dwArgCount] = Ptr;
-
-            dwArgCount++;
-            Ptr += (strlen(Ptr) + 1);
-        }
-        lpArgVector[dwArgCount] = NULL;
-
-        (lpService->ThreadParams.A.lpServiceMain)(dwArgCount, lpArgVector);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpArgVector);
-        HeapFree(GetProcessHeap(),
-                 0,
-                 AnsiString);
-#endif
+        dwError = ScBuildAnsiArgsVector(ControlPacket,
+                                        &lpService->ThreadParams.A.dwArgCount,
+                                        &lpService->ThreadParams.A.lpArgVector);
     }
+
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
 
     /* Invoke the services entry point and implement the command loop */
     ThreadHandle = CreateThread(NULL,
