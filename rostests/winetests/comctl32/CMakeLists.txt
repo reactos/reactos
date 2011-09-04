@@ -39,6 +39,8 @@ target_link_libraries(comctl32_winetest wine)
 
 if(MSVC)
     target_link_libraries(comctl32_winetest uuid)
+else()
+    allow_warnings(comctl32_winetest)
 endif()
 
 set_module_type(comctl32_winetest win32cui)

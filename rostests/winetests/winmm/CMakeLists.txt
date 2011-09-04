@@ -17,3 +17,7 @@ target_link_libraries(winmm_winetest wine dxguid)
 set_module_type(winmm_winetest win32cui)
 add_importlibs(winmm_winetest winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET winmm_winetest DESTINATION reactos/bin FOR all)
+
+if(NOT MSVC)
+    allow_warnings(winmm_winetest)
+endif()
