@@ -497,11 +497,14 @@ GetW32ThreadInfo(VOID)
     pti->pClientInfo = pci;
     _SEH2_TRY
     {
-        ProbeForWrite( Teb,
-                       sizeof(TEB),
-                       sizeof(ULONG));
+        if(Teb)
+        {    
+            ProbeForWrite( Teb,
+                           sizeof(TEB),
+                           sizeof(ULONG));
 
-        Teb->Win32ThreadInfo = (PW32THREAD) pti;
+            Teb->Win32ThreadInfo = (PW32THREAD) pti;
+        }
 
         pci->ppi = ppi;
         pci->fsHooks = pti->fsHooks;
