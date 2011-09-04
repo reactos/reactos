@@ -360,5 +360,5 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
 endfunction()
 
 function(allow_warnings __module)
-    add_target_compile_flags(${__module} -Wno-error)
+    add_target_compile_flags(${__module} "-Wno-error")
 endfunction()
