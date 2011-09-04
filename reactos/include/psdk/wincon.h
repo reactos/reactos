@@ -141,14 +141,13 @@ typedef struct _INPUT_RECORD {
 #if (_WIN32_WINNT >= 0x0600)
 #define HISTORY_NO_DUP_FLAG 0x1
 #define CONSOLE_OVERSTRIKE  0x1
-#ifndef NOGDI
+
 typedef struct _CONSOLE_HISTORY_INFO {
     UINT cbSize;
     UINT HistoryBufferSize;
     UINT NumberOfHistoryBuffers;
     DWORD dwFlags;
 } CONSOLE_HISTORY_INFO, *PCONSOLE_HISTORY_INFO;
-#endif
 
 typedef struct _CONSOLE_SCREEN_BUFFER_INFOEX {
     ULONG cbSize;
@@ -161,6 +160,7 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFOEX {
     COLORREF ColorTable[16];
 } CONSOLE_SCREEN_BUFFER_INFOEX, *PCONSOLE_SCREEN_BUFFER_INFOEX;
 
+#ifndef NOGDI
 typedef struct _CONSOLE_FONT_INFOEX {
     ULONG cbSize;
     DWORD nFont;
@@ -169,6 +169,7 @@ typedef struct _CONSOLE_FONT_INFOEX {
     UINT FontWeight;
     WCHAR FaceName[LF_FACESIZE];
 } CONSOLE_FONT_INFOEX, *PCONSOLE_FONT_INFOEX;
+#endif
 #endif
 
 BOOL WINAPI AllocConsole(void);
