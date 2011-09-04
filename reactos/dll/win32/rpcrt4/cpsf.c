@@ -241,7 +241,7 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
 
   TRACE("(%p,%p,%s)\n", hDll, pProxyFileList, debugstr_guid(pclsid));
 
-  //if (!hDll) return E_HANDLE;
+  if (!hDll) return E_HANDLE;
   if (!*pProxyFileList) return E_NOINTERFACE;
 
   if (pclsid)
