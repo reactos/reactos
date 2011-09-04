@@ -293,7 +293,7 @@ BT958HwFindAdapter(IN PVOID HwDeviceExtension,
 
     if (!Buslogic_InitBT958(deviceExtension,ConfigInfo)) // harware specific initializations. Find what's for our card
     {
-       (deviceExtension,
+       ScsiPortLogError(deviceExtension,
                          NULL,
                          0,
                          0,
