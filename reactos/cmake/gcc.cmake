@@ -9,7 +9,9 @@ add_compile_flags("-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-u
 add_compile_flags("-Werror")
 
 # For some reason, cmake sets -fPIC, and we don't want it
-string(REPLACE "-fPIC" "" CMAKE_SHARED_LIBRARY_ASM_FLAGS ${CMAKE_SHARED_LIBRARY_ASM_FLAGS})
+if(DEFINED CMAKE_SHARED_LIBRARY_ASM_FLAGS)
+    string(REPLACE "-fPIC" "" CMAKE_SHARED_LIBRARY_ASM_FLAGS ${CMAKE_SHARED_LIBRARY_ASM_FLAGS})
+endif()
 
 # Tuning
 if(ARCH MATCHES i386)
