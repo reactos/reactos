@@ -992,7 +992,7 @@
 # stub _vsprintf_p
 # stub _vsprintf_p_l
 # stub _vsprintf_s_l
-@ cdecl _vswprintf(ptr wstr ptr)
+# @ cdecl _vswprintf(ptr wstr ptr)
 @ cdecl _vswprintf_c(ptr long wstr ptr) _vsnwprintf
 # @ cdecl _vswprintf_c_l(ptr long wstr ptr ptr) _vsnwprintf_l
 # @ cdecl _vswprintf_l(ptr wstr ptr ptr)
