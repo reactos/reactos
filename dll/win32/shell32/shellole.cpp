@@ -329,6 +329,7 @@ IDefClFImpl::IDefClFImpl()
 	lpfnCI = NULL;
 	riidInst = NULL;
 	pcRefDll = NULL;
+    rclsid = NULL;
 }
 
 HRESULT IDefClFImpl::Initialize(LPFNCREATEINSTANCE lpfnCIx, PLONG pcRefDllx, const IID *riidInstx)

@@ -174,6 +174,7 @@ BOOL CDesktopFolderEnumZ::CreateFontsEnumList(DWORD dwFlags)
 
 CFontsFolder::CFontsFolder()
 {
+    pidlRoot = NULL;
 }
 
 CFontsFolder::~CFontsFolder()

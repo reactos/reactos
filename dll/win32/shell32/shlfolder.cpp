@@ -23,7 +23,7 @@
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL (shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const WCHAR wszDotShellClassInfo[] = {
     '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0};
@@ -177,42 +177,45 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
     hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_IShellFolder, ppvOut);
     if (SUCCEEDED (hr))
     {
-	LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
-	IPersistFolder *pPF;
-	IPersistFolder3 *ppf;
+	    LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
+	    IPersistFolder *pPF;
+	    IPersistFolder3 *ppf;
 
         if (_ILIsFolder(pidlChild) &&
             SUCCEEDED (((IUnknown *)(*ppvOut))->QueryInterface(IID_IPersistFolder3, (LPVOID *) & ppf)))
         {
-	    PERSIST_FOLDER_TARGET_INFO ppfti;
+	        PERSIST_FOLDER_TARGET_INFO ppfti;
 
-	    ZeroMemory (&ppfti, sizeof (ppfti));
+	        ZeroMemory (&ppfti, sizeof (ppfti));
 
-	    /* fill the PERSIST_FOLDER_TARGET_INFO */
-	    ppfti.dwAttributes = -1;
-	    ppfti.csidl = -1;
+	        /* fill the PERSIST_FOLDER_TARGET_INFO */
+	        ppfti.dwAttributes = -1;
+	        ppfti.csidl = -1;
 
-	    /* build path */
-	    if (pathRoot) {
-		lstrcpynW (ppfti.szTargetParsingName, pathRoot, MAX_PATH - 1);
-		PathAddBackslashW(ppfti.szTargetParsingName); /* FIXME: why have drives a backslash here ? */
-	    }
+	        /* build path */
+	        if (pathRoot)
+            {
+		        lstrcpynW (ppfti.szTargetParsingName, pathRoot, MAX_PATH - 1);
+		        PathAddBackslashW(ppfti.szTargetParsingName); /* FIXME: why have drives a backslash here ? */
+	        }
 
-	    if (pidlChild) {
+	        if (pidlChild)
+            {
                 int len = wcslen(ppfti.szTargetParsingName);
 
-		if (!_ILSimpleGetTextW(pidlChild, ppfti.szTargetParsingName + len, MAX_PATH - len))
-			hr = E_INVALIDARG;
-	    }
+		        if (!_ILSimpleGetTextW(pidlChild, ppfti.szTargetParsingName + len, MAX_PATH - len))
+			        hr = E_INVALIDARG;
+	        }
 
-	    ppf->InitializeEx(NULL, pidlAbsolute, &ppfti);
-	    ppf->Release();
-	}
-	else if (SUCCEEDED ((hr = ((IUnknown *)(*ppvOut))->QueryInterface (IID_IPersistFolder, (LPVOID *) & pPF)))) {
-	    pPF->Initialize(pidlAbsolute);
-	    pPF->Release();
-	}
-	ILFree (pidlAbsolute);
+	        ppf->InitializeEx(NULL, pidlAbsolute, &ppfti);
+	        ppf->Release();
+	    }
+	    else if (SUCCEEDED ((hr = ((IUnknown *)(*ppvOut))->QueryInterface (IID_IPersistFolder, (LPVOID *) & pPF))))
+        {
+	        pPF->Initialize(pidlAbsolute);
+	        pPF->Release();
+	    }
+	    ILFree (pidlAbsolute);
     }
     TRACE ("-- (%p) ret=0x%08x\n", *ppvOut, hr);
     return hr;

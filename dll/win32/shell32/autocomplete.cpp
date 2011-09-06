@@ -50,6 +50,7 @@ CAutoComplete::CAutoComplete()
 	hwndListBox = NULL;
 	txtbackup = NULL;
 	quickComplete = NULL;
+    hwndEdit = NULL;
 }
 
 /**************************************************************************

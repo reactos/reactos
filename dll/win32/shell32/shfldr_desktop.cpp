@@ -22,7 +22,7 @@
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL (shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*
 CDesktopFolder should create two file system folders internally, one representing the
@@ -140,6 +140,7 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
     static WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
+    DbgPrint("[shell32, CDesktopFolderEnum::Initialize] Called with flags = %d\n", dwFlags);
 
     /* enumerate the root folders */
     if (dwFlags & SHCONTF_FOLDERS)
@@ -262,6 +263,7 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
 
 CDesktopFolder::CDesktopFolder()
 {
+    pidlRoot = NULL;
 }
 
 CDesktopFolder::~CDesktopFolder()
@@ -393,20 +395,25 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
 	HRESULT									hResult;
 
 	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    DbgPrint("[shell32, CDesktopFolder::EnumObjects] Called with flags = %d\n", dwFlags);
 
 	if (ppEnumIDList == NULL)
 		return E_POINTER;
 	*ppEnumIDList = NULL;
-	ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnum>);
-	if (theEnumerator == NULL)
+	
+    ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnum>);
+	
+    if (theEnumerator == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+	
+    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
 	if (FAILED (hResult))
 	{
 		delete theEnumerator;
 		return hResult;
 	}
-	hResult = theEnumerator->Initialize (this, hwndOwner, dwFlags);
+	
+    hResult = theEnumerator->Initialize (this, hwndOwner, dwFlags);
 	if (FAILED (hResult))
 		return hResult;
 	*ppEnumIDList = result.Detach ();

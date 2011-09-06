@@ -76,6 +76,7 @@ HRESULT WINAPI CFileSysEnumX::Initialize(DWORD dwFlags)
 
 CMyDocsFolder::CMyDocsFolder()
 {
+    pidlRoot = NULL;
 }
 
 CMyDocsFolder::~CMyDocsFolder()
