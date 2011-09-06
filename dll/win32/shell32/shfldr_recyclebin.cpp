@@ -562,6 +562,7 @@ static HRESULT WINAPI CBitBucketItemContextMenuConstructor(REFIID riid, LPCITEMI
 
 CBitBucket::CBitBucket()
 {
+    pidl = NULL;
 }
 
 CBitBucket::~CBitBucket()
