@@ -12,7 +12,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/printui.def)
 
 add_library(printui SHARED ${SOURCE})
-set_entrypoint(printui 0)
+set_module_type(printui win32dll ENTRYPOINT 0 )
 
 target_link_libraries(printui wine)
 

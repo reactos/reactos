@@ -12,7 +12,7 @@ list(APPEND SOURCE
 
 add_library(stdole32.tlb SHARED ${SOURCE})
 
-set_entrypoint(stdole32.tlb 0)
+set_module_type(stdole32.tlb win32dll ENTRYPOINT 0 )
 set_target_properties(stdole32.tlb PROPERTIES SUFFIX "")
 
 add_dependencies(stdole32.tlb std_ole_v1)

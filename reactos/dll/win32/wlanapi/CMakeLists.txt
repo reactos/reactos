@@ -13,7 +13,7 @@ list(APPEND SOURCE
 
 add_library(wlanapi SHARED ${SOURCE})
 
-set_entrypoint(wlanapi 0)
+set_module_type(wlanapi win32dll ENTRYPOINT 0 )
 
 target_link_libraries(wlanapi
     wine

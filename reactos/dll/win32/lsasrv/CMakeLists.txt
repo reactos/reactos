@@ -24,7 +24,6 @@ list(APPEND SOURCE
 add_library(lsasrv SHARED ${SOURCE})
 set_module_type(lsasrv win32dll ENTRYPOINT 0 UNICODE)
 
-set_entrypoint(lsasrv 0)
 target_link_libraries(lsasrv wine ${PSEH_LIB})
 add_importlibs(lsasrv rpcrt4 msvcrt kernel32 ntdll)
 add_pch(lsasrv lsasrv.h)
