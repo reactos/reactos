@@ -1349,6 +1349,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Type",0x00010001,0x00000002
 
+; Multiple UNC provider driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
+
 ; NDIS driver - the only boot-start network driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Group",0x00000000,"NDIS"
@@ -1747,6 +1756,6 @@ HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 
 ; Debug channels
-;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+ole,+rpc"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+advapi,+testsvc,+wkssvc"
 
 ; EOF
