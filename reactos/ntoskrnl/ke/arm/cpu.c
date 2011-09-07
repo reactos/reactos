@@ -17,7 +17,6 @@
 ULONG KeFixedTbEntries;
 ULONG KiDmaIoCoherency;
 ULONG KeIcacheFlushCount = 0;
-CCHAR KeNumberProcessors;
 ULONG KeDcacheFlushCount;
 ULONG KeActiveProcessors;
 ULONG KeProcessorArchitecture;

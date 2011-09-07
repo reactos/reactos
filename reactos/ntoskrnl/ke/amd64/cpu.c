@@ -35,7 +35,6 @@ ULONG KeI386MachineType;
 ULONG KeI386NpxPresent = 1;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
-CHAR KeNumberProcessors = 0;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiSMTProcessorsPresent;
 

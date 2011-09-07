@@ -645,7 +645,7 @@
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
-@ extern KeNumberProcessors
+@ extern KeNumberProcessors _KeNumberProcessors
 @ stdcall KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
 @ stdcall KePulseEvent(ptr long long)

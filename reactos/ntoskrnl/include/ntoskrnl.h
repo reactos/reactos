@@ -106,6 +106,8 @@
 #define KdDebuggerNotPresent            _KdDebuggerNotPresent
 #define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
 extern PUSHORT _NlsOemLeadByteInfo;
+#define KeNumberProcessors              _KeNumberProcessors
+extern UCHAR _KeNumberProcessors;
 #define FsRtlLegalAnsiCharacterArray    _FsRtlLegalAnsiCharacterArray
 #undef LEGAL_ANSI_CHARACTER_ARRAY
 #undef NLS_MB_CODE_PAGE_TAG

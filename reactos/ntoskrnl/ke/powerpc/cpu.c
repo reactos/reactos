@@ -23,7 +23,6 @@ ULONG KeLargestCacheLine = 0x40;
 ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
-CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiSMTProcessorsPresent;
 

@@ -41,7 +41,6 @@ ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 ULONG KePrefetchNTAGranularity = 32;
-CHAR KeNumberProcessors = 0;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
@@ -587,7 +586,7 @@ KiGetCacheInformation(VOID)
                                 /* Compute associativity */
                                 Associativity = 4;
                                 if (RegisterByte >= 0x79) Associativity = 8;
-                                
+
                                 /* Mask out only the first nibble */
                                 RegisterByte &= 0x07;
 
@@ -605,7 +604,7 @@ KiGetCacheInformation(VOID)
                             {
                                 /* Set minimum cache line size */
                                 if (CacheLine < 128) CacheLine = 128;
-                                
+
                                 /* Hard-code size/associativity */
                                 Associativity = 8;
                                 switch (RegisterByte)
@@ -614,24 +613,24 @@ KiGetCacheInformation(VOID)
                                         Size = 512 * 1024;
                                         Associativity = 4;
                                         break;
-                                        
+
                                     case 0x23:
                                         Size = 1024 * 1024;
                                         break;
-                                        
+
                                     case 0x25:
                                         Size = 2048 * 1024;
                                         break;
-                                        
+
                                     case 0x29:
                                         Size = 4096 * 1024;
                                         break;
-                                    
+
                                     default:
                                         Size = 0;
                                         break;
                                 }
-                                
+
                                 /* Check if this cache is bigger than the last */
                                 if ((Size / Associativity) > CurrentSize)
                                 {
@@ -661,7 +660,7 @@ KiGetCacheInformation(VOID)
                             {
                                 /* Set minimum cache line size */
                                 if (CacheLine < 64) CacheLine = 64;
-                                
+
                                 /* Hard-code size/associativity */
                                 switch (RegisterByte)
                                 {
@@ -669,37 +668,37 @@ KiGetCacheInformation(VOID)
                                         Size = 4 * 1024 * 1024;
                                         Associativity = 8;
                                         break;
-                                        
+
                                     case 0x4B:
                                         Size = 6 * 1024 * 1024;
                                         Associativity = 12;
                                         break;
-                                        
+
                                     case 0x4C:
                                         Size = 8 * 1024 * 1024;
                                         Associativity = 16;
                                         break;
-                                        
+
                                     case 0x78:
                                         Size = 1 * 1024 * 1024;
                                         Associativity = 4;
                                         break;
-                                        
+
                                     case 0x7D:
                                         Size = 2 * 1024 * 1024;
                                         Associativity = 8;
                                         break;
-                                            
+
                                     case 0x7F:
                                         Size = 512 * 1024;
                                         Associativity = 2;
                                         break;
-                                                
+
                                     case 0x86:
                                         Size = 512 * 1024;
                                         Associativity = 4;
                                         break;
-                                    
+
                                     case 0x87:
                                         Size = 1 * 1024 * 1024;
                                         Associativity = 8;
@@ -709,7 +708,7 @@ KiGetCacheInformation(VOID)
                                         Size = 0;
                                         break;
                                 }
-                                
+
                                 /* Check if this cache is bigger than the last */
                                 if ((Size / Associativity) > CurrentSize)
                                 {
@@ -734,17 +733,17 @@ KiGetCacheInformation(VOID)
                 /* Get L1 size first */
                 CPUID(0x80000005, &Data[0], &Data[1], &Data[2], &Data[3]);
                 KePrefetchNTAGranularity = Data[2] & 0xFF;
-                
+
                 /* Check if we support CPUID 0x80000006 */
                 CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
                 if (Data[0] >= 0x80000006)
                 {
                     /* Get 2nd level cache and tlb size */
                     CPUID(0x80000006, &Data[0], &Data[1], &Data[2], &Data[3]);
-                    
+
                     /* Cache line size */
                     CacheLine = Data[2] & 0xFF;
-                    
+
                     /* Hardcode associativity */
                     RegisterByte = Data[2] >> 12;
                     switch (RegisterByte)
@@ -752,28 +751,28 @@ KiGetCacheInformation(VOID)
                         case 2:
                             Associativity = 2;
                             break;
-                        
+
                         case 4:
                             Associativity = 4;
                             break;
-                            
+
                         case 6:
                             Associativity = 8;
                             break;
-                            
+
                         case 8:
                         case 15:
                             Associativity = 16;
                             break;
-                        
+
                         default:
                             Associativity = 1;
                             break;
                     }
-                    
+
                     /* Compute size */
                     Size = (Data[2] >> 16) << 10;
-                    
+
                     /* Hack for Model 6, Steping 300 */
                     if ((KeGetCurrentPrcb()->CpuType == 6) &&
                         (KeGetCurrentPrcb()->CpuStep == 0x300))
@@ -797,7 +796,7 @@ KiGetCacheInformation(VOID)
             /* FIXME */
             break;
     }
-    
+
     /* Set the cache line */
     if (CacheLine > KeLargestCacheLine) KeLargestCacheLine = CacheLine;
     DPRINT1("Prefetch Cache: %d bytes\tL2 Cache: %d bytes\tL2 Cache Line: %d bytes\tL2 Cache Associativity: %d\n",
@@ -1221,13 +1220,13 @@ KiIsNpxPresent(VOID)
 {
     ULONG Cr0;
     USHORT Magic;
-    
+
     /* Set magic */
     Magic = 0xFFFF;
-    
+
     /* Read CR0 and mask out FPU flags */
     Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
-    
+
     /* Store on FPU stack */
 #ifdef _MSC_VER
     __asm fninit;
@@ -1235,7 +1234,7 @@ KiIsNpxPresent(VOID)
 #else
     asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
 #endif
-    
+
     /* Magic should now be cleared */
     if (Magic & 0xFF)
     {
@@ -1243,13 +1242,13 @@ KiIsNpxPresent(VOID)
         __writecr0(Cr0 | CR0_EM | CR0_TS);
         return FALSE;
     }
-    
+
     /* You have an FPU, enable it */
     Cr0 |= CR0_ET;
-    
+
     /* Enable INT 16 on 486 and higher */
     if (KeGetCurrentPrcb()->CpuType >= 3) Cr0 |= CR0_NE;
-    
+
     /* Set FPU state */
     __writecr0(Cr0 | CR0_EM | CR0_TS);
     return TRUE;
@@ -1263,28 +1262,28 @@ KiIsNpxErrataPresent(VOID)
     BOOLEAN ErrataPresent;
     ULONG Cr0;
     volatile double Value1, Value2;
-    
+
     /* Disable interrupts */
     _disable();
-    
+
     /* Read CR0 and remove FPU flags */
     Cr0 = __readcr0();
     __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
-    
+
     /* Initialize FPU state */
     Ke386FnInit();
-    
+
     /* Multiply the magic values and divide, we should get the result back */
     Value1 = 4195835.0;
     Value2 = 3145727.0;
     ErrataPresent = (Value1 * Value2 / 3145727.0) != 4195835.0;
-    
+
     /* Restore CR0 */
     __writecr0(Cr0);
-    
+
     /* Enable interrupts */
     _enable();
-    
+
     /* Return if there's an errata */
     return ErrataPresent;
 }
@@ -1296,23 +1295,23 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
     ULONG EFlags, Cr0;
     PKTHREAD Thread, NpxThread;
     PFX_SAVE_AREA FxSaveArea;
-    
+
     /* Save volatiles and disable interrupts */
     EFlags = __readeflags();
     _disable();
-    
+
     /* Save the PCR and get the current thread */
     Thread = KeGetCurrentThread();
-    
+
     /* Check if we're already loaded */
     if (Thread->NpxState != NPX_STATE_LOADED)
     {
         /* If there's nothing to load, quit */
         if (!SaveArea) return;
-        
+
         /* Need FXSR support for this */
         ASSERT(KeI386FxsrPresent == TRUE);
-        
+
         /* Check for sane CR0 */
         Cr0 = __readcr0();
         if (Cr0 & (CR0_MP | CR0_TS | CR0_EM))
@@ -1320,7 +1319,7 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
             /* Mask out FPU flags */
             __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
         }
-        
+
         /* Get the NPX thread and check its FPU state */
         NpxThread = KeGetCurrentPrcb()->NpxThread;
         if ((NpxThread) && (NpxThread->NpxState == NPX_STATE_LOADED))
@@ -1328,11 +1327,11 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
             /* Get the FX frame and store the state there */
             FxSaveArea = KiGetThreadNpxArea(NpxThread);
             Ke386FxSave(FxSaveArea);
-            
+
             /* NPX thread has lost its state */
             NpxThread->NpxState = NPX_STATE_NOT_LOADED;
         }
-        
+
         /* Now load NPX state from the NPX area */
         FxSaveArea = KiGetThreadNpxArea(Thread);
         Ke386FxStore(FxSaveArea);
@@ -1346,11 +1345,11 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
             /* Mask out FPU flags */
             __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
         }
-        
+
         /* Get FX frame */
         FxSaveArea = KiGetThreadNpxArea(Thread);
         Thread->NpxState = NPX_STATE_NOT_LOADED;
-        
+
         /* Save state if supported by CPU */
         if (KeI386FxsrPresent) Ke386FxSave(FxSaveArea);
     }
@@ -1360,12 +1359,12 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
 
     /* Clear NPX thread */
     KeGetCurrentPrcb()->NpxThread = NULL;
-    
+
     /* Add the CR0 from the NPX frame */
     Cr0 |= NPX_STATE_NOT_LOADED;
     Cr0 |= FxSaveArea->Cr0NpxState;
     __writecr0(Cr0);
-    
+
     /* Restore interrupt state */
     __writeeflags(EFlags);
 }
@@ -1380,10 +1379,10 @@ NTAPI
 KiCoprocessorError(VOID)
 {
     PFX_SAVE_AREA NpxArea;
-    
+
     /* Get the FPU area */
     NpxArea = KiGetThreadNpxArea(KeGetCurrentThread());
-    
+
     /* Set CR0_TS */
     NpxArea->Cr0NpxState = CR0_TS;
     __writecr0(__readcr0() | CR0_TS);
