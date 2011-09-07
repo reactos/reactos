@@ -220,8 +220,8 @@ HalpInitializeLegacyPIC(VOID)
     __outbyte(PIC2_DATA_PORT, 0xFF);
 }
 
-
 VOID
+NTAPI
 ApicInitializeLocalApic(ULONG Cpu)
 {
     APIC_BASE_ADRESS_REGISTER BaseRegister;
@@ -233,9 +233,6 @@ ApicInitializeLocalApic(ULONG Cpu)
     BaseRegister.Enable = 1;
     BaseRegister.BootStrapCPUCore = (Cpu == 0);
     __writemsr(MSR_APIC_BASE, BaseRegister.Long);
-
-    DPRINT1("ApicBase for Cpu %u PhysicalAddress = %p\n", Cpu, BaseRegister.BaseAddress);
-    DPRINT1("ApicVersion = 0x%lx\n", ApicRead(0x30));
 
     /* Set spurious vector and SoftwareEnable to 1 */
     SpIntRegister.Long = ApicRead(APIC_SIVR);
@@ -283,24 +280,10 @@ ApicInitializeLocalApic(ULONG Cpu)
     LvtEntry.MessageType = APIC_MT_Fixed;
     ApicWrite(APIC_ERRLVTR, LvtEntry.Long);
 
-    DPRINT1("Error code = 0x%lx\n", ApicRead(0x280));
+    /* Set the IRQL from the PCR */
+    ApicSetCurrentIrql(KeGetPcr()->Irql);
 }
 
-VOID
-NTAPI
-ApicInitializeProcessor(
-    IN ULONG ProcessorNumber,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    DPRINT1("ApicInitializeProcessor(%ld)\n", ProcessorNumber);
-
-    /* Initialize the local APIC for this cpu */
-    ApicInitializeLocalApic(ProcessorNumber);
-
-    /* Initialize the timer */
-    ApicInitializeTimer(ProcessorNumber);
-
-}
 
 VOID
 FORCEINLINE
@@ -443,9 +426,6 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     EFlags = __readeflags();
     _disable();
 
-    /* Initialize the local APIC for this cpu */
-    ApicInitializeLocalApic(0);
-
     /* Initialize and mask the PIC */
     HalpInitializeLegacyPIC();
 
@@ -455,21 +435,10 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 
     /* Register interrupt handlers */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
+#ifndef _M_AMD64
     KeRegisterInterruptHandler(APC_VECTOR, HalpApcInterrupt);
     KeRegisterInterruptHandler(DPC_VECTOR, HalpDispatchInterrupt);
-
-    // HACK, since we messed with the value, should init the local apic in
-    // HalInitializeProcessor instead
-    ApicSetCurrentIrql(APC_LEVEL);
-    ASSERT(ApicGetProcessorIrql() <= APC_LEVEL);
-
-__debugbreak();
-
-HalpInitializeClock();
-//HalpCalibrateStallExecution();
-_enable();
-for (;;);
-
+#endif
 
     /* Restore interrupt state */
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
@@ -488,6 +457,7 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     ASSERT(FALSE);
 }
 
+#ifndef _M_AMD64
 VOID
 DECLSPEC_NORETURN
 FASTCALL
@@ -512,7 +482,7 @@ __debugbreak();
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
-
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -592,6 +562,7 @@ HalDisableSystemInterrupt(
     IOApicWrite(IOAPIC_REDTBL + 2 * Irql, ReDirReg.Long0);
 }
 
+#ifndef _M_AMD64
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
@@ -625,7 +596,6 @@ HalEndSystemInterrupt(
     ApicWrite(APIC_EOI, 0);
 }
 
-#ifndef _M_AMD64
 
 KIRQL
 NTAPI
@@ -659,7 +629,7 @@ KfRaiseIrql(
 {
     KIRQL OldIrql;
 
-    /* Read the current TPR and convert it to an IRQL */
+    /* Read the current IRQL */
     OldIrql = ApicGetCurrentIrql();
 #if DBG
     /* Validate correct raise */
@@ -672,6 +642,7 @@ KfRaiseIrql(
     /* Convert the new IRQL to a TPR value and write the register */
     ApicSetCurrentIrql(NewIrql);
 
+    /* Return old IRQL */
     return OldIrql;
 }
 

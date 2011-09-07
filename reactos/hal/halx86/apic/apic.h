@@ -1,6 +1,7 @@
 
 #ifdef _M_AMD64
-#define APIC_BASE 0xfffffffffee00000ULL;
+#define APIC_BASE 0xFFFFFFFFFEE00000ULL
+#define IOAPIC_BASE 0xFFFFFFFFFEE01000ULL // checkme
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APC_VECTOR           0x3D // IRQL 01
 #define APIC_SPURIOUS_VECTOR 0x3f
@@ -18,7 +19,6 @@
 #else
 #define APIC_BASE 0xFFFE0000
 #define IOAPIC_BASE 0xFFFE1000 // checkme
-#define IOAPIC_PHYS_BASE 0xFEC00000
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APIC_SPURIOUS_VECTOR 0x1f
 #define APC_VECTOR           0x3D // IRQL 01
@@ -36,6 +36,7 @@
 #endif
 
 #define MSR_APIC_BASE 0x0000001B
+#define IOAPIC_PHYS_BASE 0xFEC00000
 #define APIC_CLOCK_INDEX 8
 
 

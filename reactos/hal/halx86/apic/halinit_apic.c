@@ -27,8 +27,6 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    DPRINT1("ApicInitializeProcessor(%ld)\n", ProcessorNumber);
-
     /* Initialize the local APIC for this cpu */
     ApicInitializeLocalApic(ProcessorNumber);
 

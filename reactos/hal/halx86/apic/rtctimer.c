@@ -42,6 +42,9 @@ RtcSetClockRate(UCHAR ClockRate)
     EFlags = __readeflags();
     _disable();
 
+    /* Acquire CMOS lock */
+    HalpAcquireCmosSpinLock();
+
     // TODO: disable NMI
 
     /* Read value of register A */
@@ -53,6 +56,9 @@ RtcSetClockRate(UCHAR ClockRate)
 
     /* Write the new value */
     HalpWriteCmos(RTC_REGISTER_A, RegisterA);
+
+    /* Release CMOS lock */
+    HalpReleaseCmosSpinLock();
 
     /* Restore interrupts if they were previously enabled */
     __writeeflags(EFlags);
@@ -67,9 +73,15 @@ HalpInitializeClock(VOID)
     UCHAR RegisterB;
     // TODO: disable NMI
 
+    /* Acquire CMOS lock */
+    HalpAcquireCmosSpinLock();
+
     /* Enable the periodic interrupt in the CMOS */
     RegisterB = HalpReadCmos(RTC_REGISTER_B);
     HalpWriteCmos(RTC_REGISTER_B, RegisterB | RTC_REG_B_PI);
+
+    /* Release CMOS lock */
+    HalpReleaseCmosSpinLock();
 
    // RtcSetClockRate(HalpCurrentRate);
 }
@@ -84,8 +96,9 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
 __debugbreak();
+
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
+    if (HalBeginSystemInterrupt(CLOCK_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
     {
         /* Read register C, so that the next interrupt can happen */
         HalpReadCmos(RTC_REGISTER_C);;
