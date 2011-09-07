@@ -346,7 +346,8 @@ HRESULT WINAPI CDefView::Initialize(IShellFolder *shellFolder)
 {
 	pSFParent = shellFolder;
 	shellFolder->QueryInterface(IID_IShellFolder2, (LPVOID *)&pSF2Parent);
-	return S_OK;
+	
+    return S_OK;
 }
 
 /**********************************************************
@@ -359,10 +360,11 @@ HRESULT CDefView::IncludeObject(LPCITEMIDLIST pidl)
 
 	if (pCommDlgBrowser.p != NULL)
 	{
-	  TRACE("ICommDlgBrowser::IncludeObject pidl=%p\n", pidl);
-	  ret = pCommDlgBrowser->IncludeObject((IShellView *)this, pidl);
-	  TRACE("--0x%08x\n", ret);
+        TRACE("ICommDlgBrowser::IncludeObject pidl=%p\n", pidl);
+        ret = pCommDlgBrowser->IncludeObject((IShellView *)this, pidl);
+        TRACE("--0x%08x\n", ret);
 	}
+
 	return ret;
 }
 
@@ -372,10 +374,11 @@ HRESULT CDefView::OnDefaultCommand()
 
 	if (pCommDlgBrowser.p != NULL)
 	{
-	  TRACE("ICommDlgBrowser::OnDefaultCommand\n");
-	  ret = pCommDlgBrowser->OnDefaultCommand((IShellView *)this);
-	  TRACE("-- returns %08x\n", ret);
+        TRACE("ICommDlgBrowser::OnDefaultCommand\n");
+        ret = pCommDlgBrowser->OnDefaultCommand((IShellView *)this);
+        TRACE("-- returns %08x\n", ret);
 	}
+
 	return ret;
 }
 
@@ -385,10 +388,11 @@ HRESULT CDefView::OnStateChange(UINT uFlags)
 
 	if (pCommDlgBrowser.p != NULL)
 	{
-	  TRACE("ICommDlgBrowser::OnStateChange flags=%x\n", uFlags);
-	  ret = pCommDlgBrowser->OnStateChange((IShellView *)this, uFlags);
-	  TRACE("--\n");
+        TRACE("ICommDlgBrowser::OnStateChange flags=%x\n", uFlags);
+        ret = pCommDlgBrowser->OnStateChange((IShellView *)this, uFlags);
+        TRACE("--\n");
 	}
+
 	return ret;
 }
 /**********************************************************
@@ -405,14 +409,14 @@ void CDefView::CheckToolbar()
 
 	if (pCommDlgBrowser != NULL)
 	{
-	  pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_CHECKBUTTON,
-		FCIDM_TB_SMALLICON, (FolderSettings.ViewMode==FVM_LIST)? TRUE : FALSE, &result);
-	  pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_CHECKBUTTON,
-		FCIDM_TB_REPORTVIEW, (FolderSettings.ViewMode==FVM_DETAILS)? TRUE : FALSE, &result);
-	  pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON,
-		FCIDM_TB_SMALLICON, TRUE, &result);
-	  pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON,
-		FCIDM_TB_REPORTVIEW, TRUE, &result);
+        pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_CHECKBUTTON,
+            FCIDM_TB_SMALLICON, (FolderSettings.ViewMode==FVM_LIST)? TRUE : FALSE, &result);
+        pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_CHECKBUTTON,
+            FCIDM_TB_REPORTVIEW, (FolderSettings.ViewMode==FVM_DETAILS)? TRUE : FALSE, &result);
+        pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON,
+            FCIDM_TB_SMALLICON, TRUE, &result);
+        pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON,
+            FCIDM_TB_REPORTVIEW, TRUE, &result);
 	}
 }
 
@@ -454,19 +458,38 @@ BOOL CDefView::CreateList()
 
 	switch (FolderSettings.ViewMode)
 	{
-	  case FVM_ICON:	dwStyle |= LVS_ICON;		break;
-	  case FVM_DETAILS: 	dwStyle |= LVS_REPORT;		break;
-	  case FVM_SMALLICON: 	dwStyle |= LVS_SMALLICON;	break;
-	  case FVM_LIST: 	dwStyle |= LVS_LIST;		break;
-	  default:		dwStyle |= LVS_LIST;		break;
+        case FVM_ICON:
+            dwStyle |= LVS_ICON;
+            break;
+        
+        case FVM_DETAILS:
+            dwStyle |= LVS_REPORT;
+            break;
+
+        case FVM_SMALLICON:
+            dwStyle |= LVS_SMALLICON;
+            break;
+
+        case FVM_LIST:
+            dwStyle |= LVS_LIST;
+            break;
+
+        default:
+            dwStyle |= LVS_LIST;
+            break;
 	}
 
-	if (FolderSettings.fFlags & FWF_AUTOARRANGE)	dwStyle |= LVS_AUTOARRANGE;
-	if (FolderSettings.fFlags & FWF_DESKTOP)
+	if (FolderSettings.fFlags & FWF_AUTOARRANGE)
+        dwStyle |= LVS_AUTOARRANGE;
+	
+    if (FolderSettings.fFlags & FWF_DESKTOP)
 	  FolderSettings.fFlags |= FWF_NOCLIENTEDGE | FWF_NOSCROLL;
-	if (FolderSettings.fFlags & FWF_SINGLESEL)	dwStyle |= LVS_SINGLESEL;
-	if (FolderSettings.fFlags & FWF_NOCLIENTEDGE)
-	  dwExStyle &= ~WS_EX_CLIENTEDGE;
+	
+    if (FolderSettings.fFlags & FWF_SINGLESEL)
+        dwStyle |= LVS_SINGLESEL;
+	
+    if (FolderSettings.fFlags & FWF_NOCLIENTEDGE)
+	    dwExStyle &= ~WS_EX_CLIENTEDGE;
 
 	hWndList=CreateWindowExW( dwExStyle,
 					WC_LISTVIEWW,
@@ -478,34 +501,35 @@ BOOL CDefView::CreateList()
 					shell32_hInstance,
 					NULL);
 
-	if(!hWndList)
-	  return FALSE;
+	if (!hWndList)
+        return FALSE;
 
         ListViewSortInfo.bIsAscending = TRUE;
         ListViewSortInfo.nHeaderID = -1;
         ListViewSortInfo.nLastHeaderID = -1;
 
-       if (FolderSettings.fFlags & FWF_DESKTOP) {
-         /*
-          * FIXME: look at the registry value
-          * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow
-          * and activate drop shadows if necessary
-          */
-         if (1)
-         {
-           SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
-           SendMessageW(hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
-         }
-         else
-         {
-           SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
-           SendMessageW(hWndList, LVM_SETBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
-         }
+    if (FolderSettings.fFlags & FWF_DESKTOP)
+    {
+        /*
+        * FIXME: look at the registry value
+        * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow
+        * and activate drop shadows if necessary
+        */
+        if (1)
+        {
+            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
+            SendMessageW(hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
+        }
+        else
+        {
+            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
+            SendMessageW(hWndList, LVM_SETBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
+        }
 
-         SendMessageW(hWndList, LVM_SETTEXTCOLOR, 0, RGB(255,255,255));
-       }
+        SendMessageW(hWndList, LVM_SETTEXTCOLOR, 0, RGB(255,255,255));
+    }
 
-        /*  UpdateShellSettings(); */
+    /*  UpdateShellSettings(); */
 	return TRUE;
 }
 
@@ -518,7 +542,6 @@ BOOL CDefView::InitList()
 {
 	LVCOLUMNW	lvColumn;
 	SHELLDETAILS	sd;
-	int	i;
 	WCHAR	szTemp[50];
 
 	TRACE("%p\n",this);
@@ -530,19 +553,20 @@ BOOL CDefView::InitList()
 
 	if (pSF2Parent)
 	{
-	  for (i=0; 1; i++)
-	  {
-	    if (FAILED(pSF2Parent->GetDetailsOf(NULL, i, &sd)))
-	      break;
-	    lvColumn.fmt = sd.fmt;
-	    lvColumn.cx = sd.cxChar*8; /* chars->pixel */
-	    StrRetToStrNW( szTemp, 50, &sd.str, NULL);
-	    SendMessageW(hWndList, LVM_INSERTCOLUMNW, i, (LPARAM) &lvColumn);
-	  }
+        for (int i=0; 1; i++)
+        {
+            if (FAILED(pSF2Parent->GetDetailsOf(NULL, i, &sd)))
+	            break;
+            
+            lvColumn.fmt = sd.fmt;
+            lvColumn.cx = sd.cxChar*8; /* chars->pixel */
+            StrRetToStrNW( szTemp, 50, &sd.str, NULL);
+            SendMessageW(hWndList, LVM_INSERTCOLUMNW, i, (LPARAM) &lvColumn);
+        }
 	}
 	else
 	{
-	  FIXME("no SF2\n");
+	    FIXME("no SF2\n");
 	}
 
 	SendMessageW(hWndList, LVM_SETIMAGELIST, LVSIL_SMALL, (LPARAM)ShellSmallIconList);
@@ -562,11 +586,13 @@ INT CALLBACK CDefView::CompareItems(LPVOID lParam1, LPVOID lParam2, LPARAM lpDat
 	int ret;
 	TRACE("pidl1=%p pidl2=%p lpsf=%p\n", lParam1, lParam2, (LPVOID) lpData);
 
-	if(!lpData) return 0;
+	if (!lpData)
+        return 0;
 
 	ret = (SHORT)SCODE_CODE(((IShellFolder *)lpData)->CompareIDs(0, (LPITEMIDLIST)lParam1, (LPITEMIDLIST)lParam2));
 	TRACE("ret=%i\n",ret);
-	return ret;
+	
+    return ret;
 }
 
 /*************************************************************************
@@ -609,7 +635,7 @@ INT CALLBACK CDefView::ListViewCompareItems(LPVOID lParam1, LPVOID lParam2, LPAR
     bIsBothFolder = bIsFolder1 && bIsFolder2;
 
     /* When sorting between a File and a Folder, the Folder gets sorted first */
-    if( (bIsFolder1 || bIsFolder2) && !bIsBothFolder)
+    if ( (bIsFolder1 || bIsFolder2) && !bIsBothFolder)
     {
         nDiff = bIsFolder1 ? -1 : 1;
     }
@@ -631,7 +657,7 @@ INT CALLBACK CDefView::ListViewCompareItems(LPVOID lParam1, LPVOID lParam2, LPAR
             nDiff = lstrcmpiA(strName1, strName2);
         }
         /* Sort by FileName: Folder or Files can be sorted */
-        else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_NAME || bIsBothFolder)
+        else if (pSortInfo->nHeaderID == LISTVIEW_COLUMN_NAME || bIsBothFolder)
         {
             /* Sort by Text */
             _ILSimpleGetText(pItemIdList1, strName1, MAX_PATH);
@@ -639,12 +665,12 @@ INT CALLBACK CDefView::ListViewCompareItems(LPVOID lParam1, LPVOID lParam2, LPAR
             nDiff = lstrcmpiA(strName1, strName2);
         }
         /* Sort by File Size, Only valid for Files */
-        else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_SIZE)
+        else if (pSortInfo->nHeaderID == LISTVIEW_COLUMN_SIZE)
         {
             nDiff = (INT)(_ILGetFileSize(pItemIdList1, NULL, 0) - _ILGetFileSize(pItemIdList2, NULL, 0));
         }
         /* Sort by File Type, Only valid for Files */
-        else if(pSortInfo->nHeaderID == LISTVIEW_COLUMN_TYPE)
+        else if (pSortInfo->nHeaderID == LISTVIEW_COLUMN_TYPE)
         {
             /* Sort by Type */
             _ILGetFileType(pItemIdList1, strName1, MAX_PATH);
@@ -654,20 +680,19 @@ INT CALLBACK CDefView::ListViewCompareItems(LPVOID lParam1, LPVOID lParam2, LPAR
     }
     /*  If the Date, FileSize, FileType, Attrib was the same, sort by FileName */
 
-    if(nDiff == 0)
+    if (nDiff == 0)
     {
         _ILSimpleGetText(pItemIdList1, strName1, MAX_PATH);
         _ILSimpleGetText(pItemIdList2, strName2, MAX_PATH);
         nDiff = lstrcmpiA(strName1, strName2);
     }
 
-    if(!pSortInfo->bIsAscending)
+    if (!pSortInfo->bIsAscending)
     {
         nDiff = -nDiff;
     }
 
     return nDiff;
-
 }
 
 /**********************************************************
@@ -678,16 +703,18 @@ int CDefView::LV_FindItemByPidl(LPCITEMIDLIST pidl)
 	LVITEMW lvItem;
 	lvItem.iSubItem = 0;
 	lvItem.mask = LVIF_PARAM;
-	for(lvItem.iItem = 0;
+	
+    for (lvItem.iItem = 0;
 		SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
 		lvItem.iItem++)
 	{
-	  LPITEMIDLIST currentpidl = (LPITEMIDLIST) lvItem.lParam;
-	  HRESULT hr = pSFParent->CompareIDs(0, pidl, currentpidl);
-	  if(SUCCEEDED(hr) && !HRESULT_CODE(hr))
-	  {
-	    return lvItem.iItem;
-	  }
+        LPITEMIDLIST currentpidl = (LPITEMIDLIST) lvItem.lParam;
+        HRESULT hr = pSFParent->CompareIDs(0, pidl, currentpidl);
+        
+        if (SUCCEEDED(hr) && !HRESULT_CODE(hr))
+        {
+            return lvItem.iItem;
+        }
   	}
 	return -1;
 }
@@ -707,10 +734,11 @@ BOOLEAN CDefView::LV_AddItem(LPCITEMIDLIST pidl)
 	lvItem.lParam = (LPARAM) ILClone(ILFindLastID(pidl));				/*set the item's data*/
 	lvItem.pszText = LPSTR_TEXTCALLBACKW;			/*get text on a callback basis*/
 	lvItem.iImage = I_IMAGECALLBACK;			/*get the image on a callback basis*/
-	if (SendMessageW(hWndList, LVM_INSERTITEMW, 0, (LPARAM)&lvItem) == -1)
-      return FALSE;
+	
+    if (SendMessageW(hWndList, LVM_INSERTITEMW, 0, (LPARAM)&lvItem) == -1)
+        return FALSE;
 	else
-	  return TRUE;
+	    return TRUE;
 }
 
 /**********************************************************
@@ -723,7 +751,8 @@ BOOLEAN CDefView::LV_DeleteItem(LPCITEMIDLIST pidl)
 	TRACE("(%p)(pidl=%p)\n", this, pidl);
 
 	nIndex = LV_FindItemByPidl(ILFindLastID(pidl));
-	return (-1 == ListView_DeleteItem(hWndList, nIndex)) ? FALSE : TRUE;
+	
+    return (-1 == ListView_DeleteItem(hWndList, nIndex)) ? FALSE : TRUE;
 }
 
 /**********************************************************
@@ -737,21 +766,23 @@ BOOLEAN CDefView::LV_RenameItem(LPCITEMIDLIST pidlOld, LPCITEMIDLIST pidlNew)
 	TRACE("(%p)(pidlold=%p pidlnew=%p)\n", this, pidlOld, pidlNew);
 
 	nItem = LV_FindItemByPidl(ILFindLastID(pidlOld));
-	if ( -1 != nItem )
+	
+    if ( -1 != nItem )
 	{
-	  lvItem.mask = LVIF_PARAM;		/* only the pidl */
-	  lvItem.iItem = nItem;
-	  SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
+        lvItem.mask = LVIF_PARAM;		/* only the pidl */
+        lvItem.iItem = nItem;
+        SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
 
-	  SHFree((LPITEMIDLIST)lvItem.lParam);
-	  lvItem.mask = LVIF_PARAM;
-	  lvItem.iItem = nItem;
-	  lvItem.lParam = (LPARAM) ILClone(ILFindLastID(pidlNew));	/* set the item's data */
-	  SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
-	  SendMessageW(hWndList, LVM_UPDATE, nItem, 0);
-	  return TRUE;					/* FIXME: better handling */
+        SHFree((LPITEMIDLIST)lvItem.lParam);
+        lvItem.mask = LVIF_PARAM;
+        lvItem.iItem = nItem;
+        lvItem.lParam = (LPARAM) ILClone(ILFindLastID(pidlNew));	/* set the item's data */
+        SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
+        SendMessageW(hWndList, LVM_UPDATE, nItem, 0);
+        return TRUE;					/* FIXME: better handling */
 	}
-	return FALSE;
+	
+    return FALSE;
 }
 
 /**********************************************************
@@ -766,7 +797,9 @@ INT CALLBACK CDefView::fill_list( LPVOID ptr, LPVOID arg )
     LPITEMIDLIST pidl = (LPITEMIDLIST)ptr;
     CDefView *pThis = (CDefView *)arg;
     /* in a commdlg This works as a filemask*/
-    if ( pThis->IncludeObject(pidl)==S_OK ) pThis->LV_AddItem(pidl);
+    if (pThis->IncludeObject(pidl) == S_OK)
+        pThis->LV_AddItem(pidl);
+    
     SHFree(pidl);
     return TRUE;
 }
@@ -781,31 +814,29 @@ HRESULT CDefView::FillList()
 
 	TRACE("%p\n",this);
 
-    DbgPrint("[shell32, CDefView::FillList] Called\n");
-
 	/* get the itemlist from the shfolder*/
 	hRes = pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS, &pEnumIDList);
 	if (hRes != S_OK)
 	{
-	  if (hRes==S_FALSE)
-	    return(NOERROR);
-	    return(hRes);
+        if (hRes==S_FALSE)
+            return(NOERROR);
+        return(hRes);
 	}
 
 	/* create a pointer array */
 	hdpa = DPA_Create(16);
 	if (!hdpa)
 	{
-	  return(E_OUTOFMEMORY);
+	    return(E_OUTOFMEMORY);
 	}
 
 	/* copy the items into the array*/
 	while((S_OK == pEnumIDList->Next(1, &pidl, &dwFetched)) && dwFetched)
 	{
-	  if (DPA_InsertPtr(hdpa, 0x7fff, pidl) == -1)
-	  {
-	    SHFree(pidl);
-	  }
+	    if (DPA_InsertPtr(hdpa, 0x7fff, pidl) == -1)
+	    {
+	        SHFree(pidl);
+	    }
 	}
 
 	/* sort the array */
@@ -879,10 +910,10 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
 	if(CreateList())
 	{
-	  if(InitList())
-	  {
-	    FillList();
-	  }
+        if(InitList())
+        {
+            FillList();
+        }
 	}
 
     if (SUCCEEDED(this->QueryInterface(IID_IDropTarget, (LPVOID*)&pdt)))
@@ -892,10 +923,10 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 	pSFParent->QueryInterface(IID_IPersistFolder2, (LPVOID*)&ppf2);
 	if (ppf2)
 	{
-	  ppf2->GetCurFolder((LPITEMIDLIST*)&ntreg.pidl);
-	  ntreg.fRecursive = TRUE;
-	  hNotify = SHChangeNotifyRegister(m_hWnd, SHCNF_IDLIST, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
-	  SHFree((LPITEMIDLIST)ntreg.pidl);
+	    ppf2->GetCurFolder((LPITEMIDLIST*)&ntreg.pidl);
+	    ntreg.fRecursive = TRUE;
+	    hNotify = SHChangeNotifyRegister(m_hWnd, SHCNF_IDLIST, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
+	    SHFree((LPITEMIDLIST)ntreg.pidl);
 	}
 
 	hAccel = LoadAcceleratorsA(shell32_hInstance, "shv_accel");
@@ -919,34 +950,36 @@ HMENU CDefView::BuildFileMenu()
 	TRACE("(%p)\n",this);
 
 	hSubMenu = CreatePopupMenu();
-	if(hSubMenu)
-	{ /*get the number of items in our global array*/
-	  for(nTools = 0; Tools[nTools].idCommand != -1; nTools++){}
+	if (hSubMenu)
+	{
+        /*get the number of items in our global array*/
+	    for(nTools = 0; Tools[nTools].idCommand != -1; nTools++){}
 
-	  /*add the menu items*/
-	  for(i = 0; i < nTools; i++)
-	  {
-	    LoadStringW(shell32_hInstance, Tools[i].idMenuString, szText, MAX_PATH);
-
-	    ZeroMemory(&mii, sizeof(mii));
-	    mii.cbSize = sizeof(mii);
-	    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-
-	    if(BTNS_SEP != Tools[i].bStyle) /* no separator*/
+	    /*add the menu items*/
+	    for(i = 0; i < nTools; i++)
 	    {
-	      mii.fType = MFT_STRING;
-	      mii.fState = MFS_ENABLED;
-	      mii.dwTypeData = szText;
-	      mii.wID = Tools[i].idCommand;
+	        LoadStringW(shell32_hInstance, Tools[i].idMenuString, szText, MAX_PATH);
+
+	        ZeroMemory(&mii, sizeof(mii));
+	        mii.cbSize = sizeof(mii);
+	        mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+
+	        if(BTNS_SEP != Tools[i].bStyle) /* no separator*/
+	        {
+	            mii.fType = MFT_STRING;
+	            mii.fState = MFS_ENABLED;
+	            mii.dwTypeData = szText;
+	            mii.wID = Tools[i].idCommand;
+	        }
+	        else
+	        {
+	            mii.fType = MFT_SEPARATOR;
+	        }
+	        /* tack This item onto the end of the menu */
+	        InsertMenuItemW(hSubMenu, (UINT)-1, TRUE, &mii);
 	    }
-	    else
-	    {
-	      mii.fType = MFT_SEPARATOR;
-	    }
-	    /* tack This item onto the end of the menu */
-	    InsertMenuItemW(hSubMenu, (UINT)-1, TRUE, &mii);
-	  }
 	}
+
 	TRACE("-- return (menu=%p)\n",hSubMenu);
 	return hSubMenu;
 }
@@ -955,14 +988,15 @@ HMENU CDefView::BuildFileMenu()
 * ShellView_MergeFileMenu()
 */
 void CDefView::MergeFileMenu(HMENU hSubMenu)
-{	TRACE("(%p)->(submenu=%p) stub\n",this,hSubMenu);
+{
+    TRACE("(%p)->(submenu=%p) stub\n",this,hSubMenu);
 
-	if(hSubMenu)
+	if (hSubMenu)
 	{ /*insert This item at the beginning of the menu */
 	  _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
 	  _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM, MFT_STRING, L"dummy45", MFS_ENABLED);
-
 	}
+
 	TRACE("--\n");
 }
 
@@ -973,20 +1007,21 @@ void CDefView::MergeViewMenu(HMENU hSubMenu)
 {
 	TRACE("(%p)->(submenu=%p)\n",this,hSubMenu);
 
-	if(hSubMenu)
-	{ /*add a separator at the correct position in the menu*/
-	  MENUITEMINFOW mii;
-	  static WCHAR view[] = L"View";
+	if (hSubMenu)
+	{
+        /*add a separator at the correct position in the menu*/
+	    MENUITEMINFOW mii;
+	    static WCHAR view[] = L"View";
 
-	  _InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
+	    _InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
 
-	  ZeroMemory(&mii, sizeof(mii));
-	  mii.cbSize = sizeof(mii);
-	  mii.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_DATA;
-	  mii.fType = MFT_STRING;
-	  mii.dwTypeData = view;
-	  mii.hSubMenu = LoadMenuW(shell32_hInstance, L"MENU_001");
-	  InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, &mii);
+	    ZeroMemory(&mii, sizeof(mii));
+	    mii.cbSize = sizeof(mii);
+	    mii.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_DATA;
+	    mii.fType = MFT_STRING;
+	    mii.dwTypeData = view;
+	    mii.hSubMenu = LoadMenuW(shell32_hInstance, L"MENU_001");
+	    InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, &mii);
 	}
 }
 
@@ -1010,31 +1045,31 @@ UINT CDefView::GetSelections()
 
 	TRACE("selected=%i\n", cidl);
 
-	if(apidl)
+	if (apidl)
 	{
-	  TRACE("-- Items selected =%u\n", cidl);
+	    TRACE("-- Items selected =%u\n", cidl);
 
-	  lvItem.mask = LVIF_STATE | LVIF_PARAM;
-	  lvItem.stateMask = LVIS_SELECTED;
-	  lvItem.iItem = 0;
-	  lvItem.iSubItem = 0;
-      lvItem.state = 0;
+	    lvItem.mask = LVIF_STATE | LVIF_PARAM;
+	    lvItem.stateMask = LVIS_SELECTED;
+	    lvItem.iItem = 0;
+	    lvItem.iSubItem = 0;
+        lvItem.state = 0;
 
-	  while(SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM)&lvItem) && (i < cidl))
-	  {
-	    if(lvItem.state & LVIS_SELECTED)
+	    while(SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM)&lvItem) && (i < cidl))
 	    {
-	      apidl[i] = (LPITEMIDLIST)lvItem.lParam;
-	      i++;
-		  if (i == cidl)
-	        break;
-	      TRACE("-- selected Item found\n");
+	        if(lvItem.state & LVIS_SELECTED)
+	        {
+	            apidl[i] = (LPITEMIDLIST)lvItem.lParam;
+	            i++;
+		        if (i == cidl)
+	            break;
+	            TRACE("-- selected Item found\n");
+	        }
+	        lvItem.iItem++;
 	    }
-	    lvItem.iItem++;
-	  }
 	}
-	return cidl;
 
+	return cidl;
 }
 
 /**********************************************************
@@ -1122,13 +1157,14 @@ HRESULT CDefView::OpenSelectedItems()
 
 
 	if (FAILED(hr))
-	  return hr;
+	    return hr;
 
 	if (0 == CF_IDLIST)
 	{
-	  CF_IDLIST = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+	    CF_IDLIST = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
 	}
-	fetc.cfFormat = CF_IDLIST;
+	
+    fetc.cfFormat = CF_IDLIST;
 	fetc.ptd = NULL;
 	fetc.dwAspect = DVASPECT_CONTENT;
 	fetc.lindex = -1;
@@ -1136,11 +1172,11 @@ HRESULT CDefView::OpenSelectedItems()
 
 	hr = selection->QueryGetData(&fetc);
 	if (FAILED(hr))
-	  return hr;
+	    return hr;
 
 	hr = selection->GetData(&fetc, &stgm);
 	if (FAILED(hr))
-	  return hr;
+	    return hr;
 
 	pIDList = (LPIDA)GlobalLock(stgm.hGlobal);
 
@@ -1154,31 +1190,31 @@ HRESULT CDefView::OpenSelectedItems()
 
 	for (i = pIDList->cidl; i > 0; --i)
 	{
-	  LPCITEMIDLIST pidl;
+	    LPCITEMIDLIST pidl;
 
-	  pidl = (LPCITEMIDLIST)((LPBYTE)pIDList+pIDList->aoffset[i]);
+	    pidl = (LPCITEMIDLIST)((LPBYTE)pIDList+pIDList->aoffset[i]);
 
-	  attribs = SFGAO_FOLDER;
-	  hr = pSFParent->GetAttributesOf(1, &pidl, &attribs);
+	    attribs = SFGAO_FOLDER;
+	    hr = pSFParent->GetAttributesOf(1, &pidl, &attribs);
 
-	  if (SUCCEEDED(hr) && ! (attribs & SFGAO_FOLDER))
-	  {
-	    SHELLEXECUTEINFOW shexinfo;
+	    if (SUCCEEDED(hr) && ! (attribs & SFGAO_FOLDER))
+	    {
+	        SHELLEXECUTEINFOW shexinfo;
 
-	    shexinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-	    shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	/* SEE_MASK_IDLIST is also possible. */
-	    shexinfo.hwnd = NULL;
-	    shexinfo.lpVerb = NULL;
-	    shexinfo.lpFile = NULL;
-	    shexinfo.lpParameters = NULL;
-	    shexinfo.lpDirectory = parent_dir;
-	    shexinfo.nShow = SW_NORMAL;
-	    shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
+	        shexinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+	        shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	/* SEE_MASK_IDLIST is also possible. */
+	        shexinfo.hwnd = NULL;
+	        shexinfo.lpVerb = NULL;
+	        shexinfo.lpFile = NULL;
+	        shexinfo.lpParameters = NULL;
+	        shexinfo.lpDirectory = parent_dir;
+	        shexinfo.nShow = SW_NORMAL;
+	        shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
 
-	    ShellExecuteExW(&shexinfo);    /* Discard error/success info */
+	        ShellExecuteExW(&shexinfo);    /* Discard error/success info */
 
-	    ILFree((LPITEMIDLIST)shexinfo.lpIDList);
-	  }
+	        ILFree((LPITEMIDLIST)shexinfo.lpIDList);
+	    }
 	}
 
 	GlobalUnlock(stgm.hGlobal);
@@ -1219,91 +1255,95 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 	/* look, what's selected and create a context menu object of it*/
 	if (GetSelections())
 	{
-	  pSFParent->GetUIObjectOf(hWndParent, cidl, (LPCITEMIDLIST*)apidl, IID_IContextMenu, NULL, (LPVOID *)&pCM);
+	    pSFParent->GetUIObjectOf(hWndParent, cidl, (LPCITEMIDLIST*)apidl, IID_IContextMenu, NULL, (LPVOID *)&pCM);
 
-	  if(pCM)
-	  {
-	    TRACE("-- pContextMenu\n");
-	    hMenu = CreatePopupMenu();
-
-	    if( hMenu )
+	    if (pCM)
 	    {
-			hResult = IUnknown_SetSite(pCM, (IShellView *)this);
-	      /* See if we are in Explore or Open mode. If the browser's tree is present, we are in Explore mode.*/
-	      if(SUCCEEDED(pShellBrowser->GetControlWindow(FCW_TREE, &hwndTree)) && hwndTree)
-	      {
-	        TRACE("-- explore mode\n");
-	        fExplore = TRUE;
-	      }
+	        TRACE("-- pContextMenu\n");
+	        hMenu = CreatePopupMenu();
 
-	      /* build the flags depending on what we can do with the selected item */
-	      wFlags = CMF_NORMAL | (cidl != 1 ? 0 : CMF_CANRENAME) | (fExplore ? CMF_EXPLORE : 0);
+	        if (hMenu)
+	        {
+		        hResult = IUnknown_SetSite(pCM, (IShellView *)this);
+	            
+                /* See if we are in Explore or Open mode. If the browser's tree is present, we are in Explore mode.*/
+	            if (SUCCEEDED(pShellBrowser->GetControlWindow(FCW_TREE, &hwndTree)) && hwndTree)
+	            {
+	                TRACE("-- explore mode\n");
+	                fExplore = TRUE;
+	            }
 
-	      /* let the ContextMenu merge its items in */
-		  if (SUCCEEDED(pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, wFlags )))
-	      {
-	        if (FolderSettings.fFlags & FWF_DESKTOP)
-		  SetMenuDefaultItem(hMenu, FCIDM_SHVIEW_OPEN, MF_BYCOMMAND);
+	            /* build the flags depending on what we can do with the selected item */
+	            wFlags = CMF_NORMAL | (cidl != 1 ? 0 : CMF_CANRENAME) | (fExplore ? CMF_EXPLORE : 0);
 
-		if( bDefault )
-		{
-		  TRACE("-- get menu default command\n");
-		  uCommand = GetMenuDefaultItem(hMenu, FALSE, GMDI_GOINTOPOPUPS);
-		}
-		else
-		{
-		  TRACE("-- track popup\n");
-		  uCommand = TrackPopupMenu( hMenu,TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,m_hWnd,NULL);
-		}
+	            /* let the ContextMenu merge its items in */
+		        if (SUCCEEDED(pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, wFlags )))
+	            {
+	                if (FolderSettings.fFlags & FWF_DESKTOP)
+		                SetMenuDefaultItem(hMenu, FCIDM_SHVIEW_OPEN, MF_BYCOMMAND);
 
-		if(uCommand > 0)
-		{
-		  TRACE("-- uCommand=%u\n", uCommand);
-		  if (uCommand==FCIDM_SHVIEW_OPEN && pCommDlgBrowser.p != NULL)
-		  {
-		    TRACE("-- dlg: OnDefaultCommand\n");
-		    if (OnDefaultCommand() != S_OK)
-		    {
-		      OpenSelectedItems();
-		    }
-		  }
-		  else
-		  {
-		    TRACE("-- explore -- invoke command\n");
-		    ZeroMemory(&cmi, sizeof(cmi));
-		    cmi.cbSize = sizeof(cmi);
-		    cmi.hwnd = hWndParent; /* this window has to answer CWM_GETISHELLBROWSER */
-		    cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
-		    pCM->InvokeCommand(&cmi);
-		  }
-		}
-			hResult = IUnknown_SetSite(pCM, NULL);
-		DestroyMenu(hMenu);
-	      }
+	                if (bDefault)
+	                {
+		                TRACE("-- get menu default command\n");
+		                uCommand = GetMenuDefaultItem(hMenu, FALSE, GMDI_GOINTOPOPUPS);
+	                }
+	                else
+	                {
+		                TRACE("-- track popup\n");
+		                uCommand = TrackPopupMenu( hMenu,TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,m_hWnd,NULL);
+	                }
+
+	                if (uCommand > 0)
+	                {
+		                TRACE("-- uCommand=%u\n", uCommand);
+		                
+                        if (uCommand==FCIDM_SHVIEW_OPEN && pCommDlgBrowser.p != NULL)
+		                {
+		                    TRACE("-- dlg: OnDefaultCommand\n");
+		                    if (OnDefaultCommand() != S_OK)
+		                    {
+		                        OpenSelectedItems();
+		                    }
+		                }
+		                else
+		                {
+		                    TRACE("-- explore -- invoke command\n");
+		                    ZeroMemory(&cmi, sizeof(cmi));
+		                    cmi.cbSize = sizeof(cmi);
+		                    cmi.hwnd = hWndParent; /* this window has to answer CWM_GETISHELLBROWSER */
+		                    cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
+		                    pCM->InvokeCommand(&cmi);
+		                }
+	                }
+		            
+                    hResult = IUnknown_SetSite(pCM, NULL);
+	                DestroyMenu(hMenu);
+	            }
+	        }
+	        pCM.Release();
 	    }
-	    pCM.Release();
-	  }
 	}
 	else	/* background context menu */
 	{
-	  hMenu = CreatePopupMenu();
+	    hMenu = CreatePopupMenu();
 
-	  CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)&pCM);
-	  pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
+	    CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)&pCM);
+	    pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
 
-	  uCommand = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,m_hWnd,NULL);
-	  DestroyMenu(hMenu);
+	    uCommand = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,m_hWnd,NULL);
+	    DestroyMenu(hMenu);
 
-	  TRACE("-- (%p)->(uCommand=0x%08x )\n",this, uCommand);
+	    TRACE("-- (%p)->(uCommand=0x%08x )\n",this, uCommand);
 
-	  ZeroMemory(&cmi, sizeof(cmi));
-	  cmi.cbSize = sizeof(cmi);
-	  cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
-	  cmi.hwnd = hWndParent;
-	  pCM->InvokeCommand(&cmi);
+	    ZeroMemory(&cmi, sizeof(cmi));
+	    cmi.cbSize = sizeof(cmi);
+	    cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
+	    cmi.hwnd = hWndParent;
+	    pCM->InvokeCommand(&cmi);
 
-	  pCM.Release();
+	    pCM.Release();
 	}
+
 	return 0;
 }
 
@@ -1343,17 +1383,17 @@ void CDefView::OnDeactivate()
 {
 	TRACE("%p\n",this);
 
-	if(uState != SVUIA_DEACTIVATE)
+	if (uState != SVUIA_DEACTIVATE)
 	{
-	  if(hMenu)
-	  {
-	    pShellBrowser->SetMenuSB(0, 0, 0);
-	    pShellBrowser->RemoveMenusSB(hMenu);
-	    DestroyMenu(hMenu);
-	    hMenu = 0;
-	  }
+	    if (hMenu)
+	    {
+	        pShellBrowser->SetMenuSB(0, 0, 0);
+	        pShellBrowser->RemoveMenusSB(hMenu);
+	        DestroyMenu(hMenu);
+	        hMenu = 0;
+	    }
 
-	  uState = SVUIA_DEACTIVATE;
+	    uState = SVUIA_DEACTIVATE;
 	}
 }
 
@@ -1366,9 +1406,9 @@ void CDefView::DoActivate(UINT uState)
 	TRACE("%p uState=%x\n", this, uState);
 
 	/*don't do anything if the state isn't really changing */
-	if(uState == uState)
+	if (uState == uState)
 	{
-	  return;
+	    return;
 	}
 
 	OnDeactivate();
@@ -1376,57 +1416,58 @@ void CDefView::DoActivate(UINT uState)
 	/*only do This if we are active */
 	if(uState != SVUIA_DEACTIVATE)
 	{
-	  /*merge the menus */
-	  hMenu = CreateMenu();
+	    /*merge the menus */
+	    hMenu = CreateMenu();
 
-	  if(hMenu)
-	  {
-	    pShellBrowser->InsertMenusSB(hMenu, &omw);
-	    TRACE("-- after fnInsertMenusSB\n");
-
-	    /*build the top level menu get the menu item's text*/
-	    strcpy(szText,"dummy 31");
-
-	    ZeroMemory(&mii, sizeof(mii));
-	    mii.cbSize = sizeof(mii);
-	    mii.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
-	    mii.fType = MFT_STRING;
-	    mii.fState = MFS_ENABLED;
-	    mii.dwTypeData = szText;
-	    mii.hSubMenu = BuildFileMenu();
-
-	    /*insert our menu into the menu bar*/
-	    if(mii.hSubMenu)
+	    if(hMenu)
 	    {
-	      InsertMenuItemA(hMenu, FCIDM_MENU_HELP, FALSE, &mii);
+	        pShellBrowser->InsertMenusSB(hMenu, &omw);
+	        TRACE("-- after fnInsertMenusSB\n");
+
+	        /*build the top level menu get the menu item's text*/
+	        strcpy(szText,"dummy 31");
+
+	        ZeroMemory(&mii, sizeof(mii));
+	        mii.cbSize = sizeof(mii);
+	        mii.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
+	        mii.fType = MFT_STRING;
+	        mii.fState = MFS_ENABLED;
+	        mii.dwTypeData = szText;
+	        mii.hSubMenu = BuildFileMenu();
+
+	        /*insert our menu into the menu bar*/
+	        if (mii.hSubMenu)
+	        {
+	            InsertMenuItemA(hMenu, FCIDM_MENU_HELP, FALSE, &mii);
+	        }
+
+	        /*get the view menu so we can merge with it*/
+	        ZeroMemory(&mii, sizeof(mii));
+	        mii.cbSize = sizeof(mii);
+	        mii.fMask = MIIM_SUBMENU;
+
+	        if (GetMenuItemInfoA(hMenu, FCIDM_MENU_VIEW, FALSE, &mii))
+	        {
+	            MergeViewMenu(mii.hSubMenu);
+	        }
+
+	        /*add the items that should only be added if we have the focus*/
+	        if (SVUIA_ACTIVATE_FOCUS == uState)
+	        {
+	            /*get the file menu so we can merge with it */
+	            ZeroMemory(&mii, sizeof(mii));
+	            mii.cbSize = sizeof(mii);
+	            mii.fMask = MIIM_SUBMENU;
+
+	            if (GetMenuItemInfoA(hMenu, FCIDM_MENU_FILE, FALSE, &mii))
+	            {
+	                MergeFileMenu(mii.hSubMenu);
+	            }
+	        }
+
+	        TRACE("-- before fnSetMenuSB\n");
+	        pShellBrowser->SetMenuSB(hMenu, 0, m_hWnd);
 	    }
-
-	    /*get the view menu so we can merge with it*/
-	    ZeroMemory(&mii, sizeof(mii));
-	    mii.cbSize = sizeof(mii);
-	    mii.fMask = MIIM_SUBMENU;
-
-	    if(GetMenuItemInfoA(hMenu, FCIDM_MENU_VIEW, FALSE, &mii))
-	    {
-	      MergeViewMenu(mii.hSubMenu);
-	    }
-
-	    /*add the items that should only be added if we have the focus*/
-	    if(SVUIA_ACTIVATE_FOCUS == uState)
-	    {
-	      /*get the file menu so we can merge with it */
-	      ZeroMemory(&mii, sizeof(mii));
-	      mii.cbSize = sizeof(mii);
-	      mii.fMask = MIIM_SUBMENU;
-
-	      if(GetMenuItemInfoA(hMenu, FCIDM_MENU_FILE, FALSE, &mii))
-	      {
-	        MergeFileMenu(mii.hSubMenu);
-	      }
-	    }
-	    TRACE("-- before fnSetMenuSB\n");
-	    pShellBrowser->SetMenuSB(hMenu, 0, m_hWnd);
-	  }
 	}
 	uState = uState;
 	TRACE("--\n");
@@ -1497,46 +1538,47 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
 	TRACE("(%p)->(0x%08x 0x%08x %p) stub\n",this, dwCmdID, dwCmd, hwndCmd);
 
-	switch(dwCmdID)
+	switch (dwCmdID)
 	{
-	  case FCIDM_SHVIEW_SMALLICON:
-	    FolderSettings.ViewMode = FVM_SMALLICON;
-	    SetStyle (LVS_SMALLICON, LVS_TYPEMASK);
-	    CheckToolbar();
-	    break;
+	    case FCIDM_SHVIEW_SMALLICON:
+	        FolderSettings.ViewMode = FVM_SMALLICON;
+	        SetStyle (LVS_SMALLICON, LVS_TYPEMASK);
+	        CheckToolbar();
+	        break;
 
-	  case FCIDM_SHVIEW_BIGICON:
-	    FolderSettings.ViewMode = FVM_ICON;
-	    SetStyle (LVS_ICON, LVS_TYPEMASK);
-	    CheckToolbar();
-	    break;
+	    case FCIDM_SHVIEW_BIGICON:
+	        FolderSettings.ViewMode = FVM_ICON;
+	        SetStyle (LVS_ICON, LVS_TYPEMASK);
+	        CheckToolbar();
+	        break;
 
-	  case FCIDM_SHVIEW_LISTVIEW:
-	    FolderSettings.ViewMode = FVM_LIST;
-	    SetStyle (LVS_LIST, LVS_TYPEMASK);
-	    CheckToolbar();
-	    break;
+	    case FCIDM_SHVIEW_LISTVIEW:
+	        FolderSettings.ViewMode = FVM_LIST;
+	        SetStyle (LVS_LIST, LVS_TYPEMASK);
+	        CheckToolbar();
+	        break;
 
-	  case FCIDM_SHVIEW_REPORTVIEW:
-	    FolderSettings.ViewMode = FVM_DETAILS;
-	    SetStyle (LVS_REPORT, LVS_TYPEMASK);
-	    CheckToolbar();
-	    break;
+	    case FCIDM_SHVIEW_REPORTVIEW:
+	        FolderSettings.ViewMode = FVM_DETAILS;
+	        SetStyle (LVS_REPORT, LVS_TYPEMASK);
+	        CheckToolbar();
+	        break;
 
-	  /* the menu-ID's for sorting are 0x30... see shrec.rc */
-	  case 0x30:
-	  case 0x31:
-	  case 0x32:
-	  case 0x33:
-	    ListViewSortInfo.nHeaderID = (LPARAM) (dwCmdID - 0x30);
-	    ListViewSortInfo.bIsAscending = TRUE;
-	    ListViewSortInfo.nLastHeaderID = ListViewSortInfo.nHeaderID;
-	    SendMessageA(hWndList, LVM_SORTITEMS, (WPARAM) &ListViewSortInfo, (LPARAM)ListViewCompareItems);
-	    break;
+	    /* the menu-ID's for sorting are 0x30... see shrec.rc */
+	    case 0x30:
+	    case 0x31:
+	    case 0x32:
+	    case 0x33:
+	        ListViewSortInfo.nHeaderID = (LPARAM) (dwCmdID - 0x30);
+	        ListViewSortInfo.bIsAscending = TRUE;
+	        ListViewSortInfo.nLastHeaderID = ListViewSortInfo.nHeaderID;
+	        SendMessageA(hWndList, LVM_SORTITEMS, (WPARAM) &ListViewSortInfo, (LPARAM)ListViewCompareItems);
+	        break;
 
-	  default:
+	    default:
 	    TRACE("-- COMMAND 0x%04x unhandled\n", dwCmdID);
 	}
+
 	return 0;
 }
 
@@ -1560,429 +1602,430 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
 	TRACE("%p CtlID=%u lpnmh->code=%x\n",this,CtlID,lpnmh->code);
 
-	switch(lpnmh->code)
+	switch (lpnmh->code)
 	{
-	  case NM_SETFOCUS:
-	    TRACE("-- NM_SETFOCUS %p\n", this);
-	    OnSetFocus(0, 0, 0, unused);
-	    break;
+	    case NM_SETFOCUS:
+	        TRACE("-- NM_SETFOCUS %p\n", this);
+	        OnSetFocus(0, 0, 0, unused);
+	        break;
 
-	  case NM_KILLFOCUS:
-	    TRACE("-- NM_KILLFOCUS %p\n", this);
-	    OnDeactivate();
-	    /* Notify the ICommDlgBrowser interface */
-	    OnStateChange(CDBOSC_KILLFOCUS);
-	    break;
+	    case NM_KILLFOCUS:
+	        TRACE("-- NM_KILLFOCUS %p\n", this);
+	        OnDeactivate();
+	        /* Notify the ICommDlgBrowser interface */
+	        OnStateChange(CDBOSC_KILLFOCUS);
+	        break;
 
-	  case NM_CUSTOMDRAW:
-	    TRACE("-- NM_CUSTOMDRAW %p\n", this);
-	    return CDRF_DODEFAULT;
+	    case NM_CUSTOMDRAW:
+	        TRACE("-- NM_CUSTOMDRAW %p\n", this);
+	        return CDRF_DODEFAULT;
 
-	  case NM_RELEASEDCAPTURE:
-	    TRACE("-- NM_RELEASEDCAPTURE %p\n", this);
-	    break;
+	    case NM_RELEASEDCAPTURE:
+	        TRACE("-- NM_RELEASEDCAPTURE %p\n", this);
+	        break;
 
-	  case NM_CLICK:
-	    TRACE("-- NM_CLICK %p\n", this);
-	    break;
+	    case NM_CLICK:
+	        TRACE("-- NM_CLICK %p\n", this);
+	        break;
 
-	  case NM_RCLICK:
-	    TRACE("-- NM_RCLICK %p\n", this);
-	    break;
+	    case NM_RCLICK:
+	        TRACE("-- NM_RCLICK %p\n", this);
+	        break;
 
-          case NM_DBLCLK:
+        case NM_DBLCLK:
             TRACE("-- NM_DBLCLK %p\n", this);
             if (OnDefaultCommand() != S_OK) OpenSelectedItems();
             break;
 
-          case NM_RETURN:
+        case NM_RETURN:
             TRACE("-- NM_RETURN %p\n", this);
             if (OnDefaultCommand() != S_OK) OpenSelectedItems();
             break;
 
-	  case HDN_ENDTRACKW:
-	    TRACE("-- HDN_ENDTRACKW %p\n", this);
-	    /*nColumn1 = ListView_GetColumnWidth(hWndList, 0);
-	    nColumn2 = ListView_GetColumnWidth(hWndList, 1);*/
-	    break;
+	    case HDN_ENDTRACKW:
+	        TRACE("-- HDN_ENDTRACKW %p\n", this);
+	        /*nColumn1 = ListView_GetColumnWidth(hWndList, 0);
+	        nColumn2 = ListView_GetColumnWidth(hWndList, 1);*/
+	        break;
 
-	  case LVN_DELETEITEM:
-	    TRACE("-- LVN_DELETEITEM %p\n", this);
-	    SHFree((LPITEMIDLIST)lpnmlv->lParam);     /*delete the pidl because we made a copy of it*/
-	    break;
+	    case LVN_DELETEITEM:
+	        TRACE("-- LVN_DELETEITEM %p\n", this);
+	        SHFree((LPITEMIDLIST)lpnmlv->lParam);     /*delete the pidl because we made a copy of it*/
+	        break;
 
-	  case LVN_DELETEALLITEMS:
-	    TRACE("-- LVN_DELETEALLITEMS %p\n", this);
-	    return FALSE;
-
-	  case LVN_INSERTITEM:
-	    TRACE("-- LVN_INSERTITEM (STUB)%p\n", this);
-	    break;
-
-	  case LVN_ITEMACTIVATE:
-	    TRACE("-- LVN_ITEMACTIVATE %p\n", this);
-	    OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
-	    break;
-
-	  case LVN_COLUMNCLICK:
-	    ListViewSortInfo.nHeaderID = lpnmlv->iSubItem;
-	    if(ListViewSortInfo.nLastHeaderID == ListViewSortInfo.nHeaderID)
-	    {
-	      ListViewSortInfo.bIsAscending = !ListViewSortInfo.bIsAscending;
-	    }
-	    else
-	    {
-	      ListViewSortInfo.bIsAscending = TRUE;
-	    }
-	    ListViewSortInfo.nLastHeaderID = ListViewSortInfo.nHeaderID;
-
-	    SendMessageW(lpnmlv->hdr.hwndFrom, LVM_SORTITEMS, (WPARAM) &ListViewSortInfo, (LPARAM)ListViewCompareItems);
-	    break;
-
-	  case LVN_GETDISPINFOA:
-          case LVN_GETDISPINFOW:
-	    TRACE("-- LVN_GETDISPINFO %p\n", this);
-	    pidl = (LPITEMIDLIST)lpdi->item.lParam;
-
-	    if(lpdi->item.mask & LVIF_TEXT)	/* text requested */
-	    {
-	      if (pSF2Parent)
-	      {
-	        SHELLDETAILS sd;
-	        pSF2Parent->GetDetailsOf(pidl, lpdi->item.iSubItem, &sd);
-                if (lpnmh->code == LVN_GETDISPINFOA)
-                {
-                    /* shouldn't happen */
-                    NMLVDISPINFOA *lpdiA = (NMLVDISPINFOA *)lpnmh;
-                    StrRetToStrNA( lpdiA->item.pszText, lpdiA->item.cchTextMax, &sd.str, NULL);
-                    TRACE("-- text=%s\n",lpdiA->item.pszText);
-                }
-                else /* LVN_GETDISPINFOW */
-                {
-                    StrRetToStrNW( lpdi->item.pszText, lpdi->item.cchTextMax, &sd.str, NULL);
-                    TRACE("-- text=%s\n",debugstr_w(lpdi->item.pszText));
-                }
-	      }
-	      else
-	      {
-	        FIXME("no SF2\n");
-	      }
-	    }
-	    if(lpdi->item.mask & LVIF_IMAGE)	/* image requested */
-	    {
-	      lpdi->item.iImage = SHMapPIDLToSystemImageListIndex(pSFParent, pidl, 0);
-	    }
-		lpdi->item.mask |= LVIF_DI_SETITEM;
-	    break;
-
-	  case LVN_ITEMCHANGED:
-	    TRACE("-- LVN_ITEMCHANGED %p\n", this);
-	    OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
-	    break;
-
-	  case LVN_BEGINDRAG:
-	  case LVN_BEGINRDRAG:
-	    TRACE("-- LVN_BEGINDRAG\n");
-
-	    if (GetSelections())
-	    {
-	      IDataObject * pda;
-	      DWORD dwAttributes = SFGAO_CANLINK;
-	      DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
-
-	      if (SUCCEEDED(pSFParent->GetUIObjectOf(m_hWnd, cidl, (LPCITEMIDLIST*)apidl, IID_IDataObject,0,(LPVOID *)&pda)))
-	      {
-	          IDropSource * pds = (IDropSource *)this;	/* own DropSource interface */
-
-	  	  if (SUCCEEDED(pSFParent->GetAttributesOf(cidl, (LPCITEMIDLIST*)apidl, &dwAttributes)))
-		  {
-		    if (dwAttributes & SFGAO_CANLINK)
-		    {
-		      dwEffect |= DROPEFFECT_LINK;
-		    }
-		  }
-
-	          if (pds)
-	          {
-	            DWORD dwEffect2;
-		    DoDragDrop(pda, pds, dwEffect, &dwEffect2);
-		  }
-	          pda->Release();
-	      }
-	    }
-	    break;
-
-	  case LVN_BEGINLABELEDITW:
-	    {
-	      DWORD dwAttr = SFGAO_CANRENAME;
-	      pidl = (LPITEMIDLIST)lpdi->item.lParam;
-
-	      TRACE("-- LVN_BEGINLABELEDITW %p\n", this);
-
-	      pSFParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidl, &dwAttr);
-	      if (SFGAO_CANRENAME & dwAttr)
-	      {
+	    case LVN_DELETEALLITEMS:
+	        TRACE("-- LVN_DELETEALLITEMS %p\n", this);
 	        return FALSE;
-	      }
-	      return TRUE;
-	    }
 
-	  case LVN_ENDLABELEDITW:
+	    case LVN_INSERTITEM:
+	        TRACE("-- LVN_INSERTITEM (STUB)%p\n", this);
+	        break;
+
+	    case LVN_ITEMACTIVATE:
+	        TRACE("-- LVN_ITEMACTIVATE %p\n", this);
+	        OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
+	        break;
+
+	    case LVN_COLUMNCLICK:
+	        ListViewSortInfo.nHeaderID = lpnmlv->iSubItem;
+	        if (ListViewSortInfo.nLastHeaderID == ListViewSortInfo.nHeaderID)
+	        {
+	            ListViewSortInfo.bIsAscending = !ListViewSortInfo.bIsAscending;
+	        }
+	        else
+	        {
+	            ListViewSortInfo.bIsAscending = TRUE;
+	        }
+	        ListViewSortInfo.nLastHeaderID = ListViewSortInfo.nHeaderID;
+
+	        SendMessageW(lpnmlv->hdr.hwndFrom, LVM_SORTITEMS, (WPARAM) &ListViewSortInfo, (LPARAM)ListViewCompareItems);
+	        break;
+
+	    case LVN_GETDISPINFOA:
+        case LVN_GETDISPINFOW:
+	        TRACE("-- LVN_GETDISPINFO %p\n", this);
+	        pidl = (LPITEMIDLIST)lpdi->item.lParam;
+
+	        if (lpdi->item.mask & LVIF_TEXT)	/* text requested */
+	        {
+	            if (pSF2Parent)
+	            {
+	                SHELLDETAILS sd;
+	                pSF2Parent->GetDetailsOf(pidl, lpdi->item.iSubItem, &sd);
+                    if (lpnmh->code == LVN_GETDISPINFOA)
+                    {
+                        /* shouldn't happen */
+                        NMLVDISPINFOA *lpdiA = (NMLVDISPINFOA *)lpnmh;
+                        StrRetToStrNA( lpdiA->item.pszText, lpdiA->item.cchTextMax, &sd.str, NULL);
+                        TRACE("-- text=%s\n",lpdiA->item.pszText);
+                    }
+                    else /* LVN_GETDISPINFOW */
+                    {
+                        StrRetToStrNW( lpdi->item.pszText, lpdi->item.cchTextMax, &sd.str, NULL);
+                        TRACE("-- text=%s\n",debugstr_w(lpdi->item.pszText));
+                    }
+	            }
+	            else
+	            {
+	                FIXME("no SF2\n");
+	            }
+	        }
+	        if(lpdi->item.mask & LVIF_IMAGE)	/* image requested */
+	        {
+	            lpdi->item.iImage = SHMapPIDLToSystemImageListIndex(pSFParent, pidl, 0);
+	        }
+	        lpdi->item.mask |= LVIF_DI_SETITEM;
+	        break;
+
+	    case LVN_ITEMCHANGED:
+	        TRACE("-- LVN_ITEMCHANGED %p\n", this);
+	        OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
+	        break;
+
+	    case LVN_BEGINDRAG:
+	    case LVN_BEGINRDRAG:
+	        TRACE("-- LVN_BEGINDRAG\n");
+
+	        if (GetSelections())
+	        {
+	            IDataObject * pda;
+	            DWORD dwAttributes = SFGAO_CANLINK;
+	            DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
+
+	            if (SUCCEEDED(pSFParent->GetUIObjectOf(m_hWnd, cidl, (LPCITEMIDLIST*)apidl, IID_IDataObject,0,(LPVOID *)&pda)))
+	            {
+	                IDropSource * pds = (IDropSource *)this;	/* own DropSource interface */
+
+	  	            if (SUCCEEDED(pSFParent->GetAttributesOf(cidl, (LPCITEMIDLIST*)apidl, &dwAttributes)))
+		            {
+		                if (dwAttributes & SFGAO_CANLINK)
+		                {
+		                    dwEffect |= DROPEFFECT_LINK;
+		                }
+		            }
+
+	                if (pds)
+	                {
+	                    DWORD dwEffect2;
+		                DoDragDrop(pda, pds, dwEffect, &dwEffect2);
+		            }
+	                pda->Release();
+	            }
+	        }
+	        break;
+
+	    case LVN_BEGINLABELEDITW:
 	    {
-	      TRACE("-- LVN_ENDLABELEDITW %p\n", this);
-	      if (lpdi->item.pszText)
-	      {
-	        HRESULT hr;
-		LVITEMW lvItem;
+	        DWORD dwAttr = SFGAO_CANRENAME;
+	        pidl = (LPITEMIDLIST)lpdi->item.lParam;
 
-		lvItem.iItem = lpdi->item.iItem;
-		lvItem.iSubItem = 0;
-		lvItem.mask = LVIF_PARAM;
-		SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
+	        TRACE("-- LVN_BEGINLABELEDITW %p\n", this);
 
-		pidl = (LPITEMIDLIST)lpdi->item.lParam;
-	        hr = pSFParent->SetNameOf(0, pidl, lpdi->item.pszText, SHGDN_INFOLDER, &pidl);
-
-		if(SUCCEEDED(hr) && pidl)
-		{
-	          lvItem.mask = LVIF_PARAM;
-		  lvItem.lParam = (LPARAM)pidl;
-		  SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
-		  return TRUE;
-		}
-	      }
-	      return FALSE;
+	        pSFParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidl, &dwAttr);
+	        if (SFGAO_CANRENAME & dwAttr)
+	        {
+	            return FALSE;
+	        }
+	        return TRUE;
 	    }
 
-	  case LVN_KEYDOWN:
+	    case LVN_ENDLABELEDITW:
+	    {
+	        TRACE("-- LVN_ENDLABELEDITW %p\n", this);
+	        if (lpdi->item.pszText)
+	        {
+	            HRESULT hr;
+	            LVITEMW lvItem;
+
+	            lvItem.iItem = lpdi->item.iItem;
+	            lvItem.iSubItem = 0;
+	            lvItem.mask = LVIF_PARAM;
+	            SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
+
+	            pidl = (LPITEMIDLIST)lpdi->item.lParam;
+	                hr = pSFParent->SetNameOf(0, pidl, lpdi->item.pszText, SHGDN_INFOLDER, &pidl);
+
+	            if (SUCCEEDED(hr) && pidl)
+	            {
+	                lvItem.mask = LVIF_PARAM;
+		            lvItem.lParam = (LPARAM)pidl;
+		            SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
+		            
+                    return TRUE;
+	            }
+	        }
+	        
+            return FALSE;
+	    }
+
+	    case LVN_KEYDOWN:
 	    {
 	    /*  MSG msg;
-	      msg.hwnd = m_hWnd;
-	      msg.message = WM_KEYDOWN;
-	      msg.wParam = plvKeyDown->wVKey;
-	      msg.lParam = 0;
-	      msg.time = 0;
-	      msg.pt = 0;*/
+	        msg.hwnd = m_hWnd;
+	        msg.message = WM_KEYDOWN;
+	        msg.wParam = plvKeyDown->wVKey;
+	        msg.lParam = 0;
+	        msg.time = 0;
+	        msg.pt = 0;*/
 
-	      LPNMLVKEYDOWN plvKeyDown = (LPNMLVKEYDOWN) lpnmh;
-          SHORT ctrl = GetKeyState(VK_CONTROL) & 0x8000;
+            LPNMLVKEYDOWN plvKeyDown = (LPNMLVKEYDOWN) lpnmh;
+            SHORT ctrl = GetKeyState(VK_CONTROL) & 0x8000;
 
-              /* initiate a rename of the selected file or directory */
-              if(plvKeyDown->wVKey == VK_F2)
-              {
+            /* initiate a rename of the selected file or directory */
+            if (plvKeyDown->wVKey == VK_F2)
+            {
                 /* see how many files are selected */
                 int i = ListView_GetSelectedCount(hWndList);
 
                 /* get selected item */
-                if(i == 1)
+                if (i == 1)
                 {
-                  /* get selected item */
-                  i = ListView_GetNextItem(hWndList, -1,
-			LVNI_SELECTED);
+                    /* get selected item */
+                    i = ListView_GetNextItem(hWndList, -1, LVNI_SELECTED);
 
-                  SendMessageW(hWndList, LVM_ENSUREVISIBLE, i, 0);
-                  SendMessageW(hWndList, LVM_EDITLABELW, i, 0);
+                    SendMessageW(hWndList, LVM_ENSUREVISIBLE, i, 0);
+                    SendMessageW(hWndList, LVM_EDITLABELW, i, 0);
                 }
-              }
-#if 0
-	      TranslateAccelerator(m_hWnd, hAccel, &msg)
-#endif
-	      else if(plvKeyDown->wVKey == VK_DELETE)
-              {
-		UINT i;
-		int item_index;
-		LVITEMA item;
-		LPITEMIDLIST* pItems;
-		ISFHelper *psfhlp;
-
-		pSFParent->QueryInterface(IID_ISFHelper,
-		 	(LPVOID*)&psfhlp);
-
-		if (psfhlp == NULL)
-		  break;
-
-		if(!(i = ListView_GetSelectedCount(hWndList)))
-		  break;
-
-		/* allocate memory for the pidl array */
-		pItems = (LPITEMIDLIST *)HeapAlloc(GetProcessHeap(), 0,
-			sizeof(LPITEMIDLIST) * i);
-
-		/* retrieve all selected items */
-		i = 0;
-		item_index = -1;
-		while(ListView_GetSelectedCount(hWndList) > i)
-		{
-		  /* get selected item */
-		  item_index = ListView_GetNextItem(hWndList,
-			item_index, LVNI_SELECTED);
-		  item.iItem = item_index;
-		  item.mask = LVIF_PARAM;
-		  SendMessageA(hWndList, LVM_GETITEMA, 0, (LPARAM) &item);
-
-		  /* get item pidl */
-		  pItems[i] = (LPITEMIDLIST)item.lParam;
-
-		  i++;
-		}
-
-		/* perform the item deletion */
-		psfhlp->DeleteItems(i, (LPCITEMIDLIST*)pItems);
-
-		/* free pidl array memory */
-		HeapFree(GetProcessHeap(), 0, pItems);
-        }
-
-        /* Initiate a refresh */
-        else if(plvKeyDown->wVKey == VK_F5)
-        {
-            Refresh();
-        }
-        else if(plvKeyDown->wVKey == VK_BACK)
-        {
-            LPSHELLBROWSER lpSb;
-            if((lpSb = (LPSHELLBROWSER)SendMessageW(hWndParent, CWM_GETISHELLBROWSER, 0, 0)))
-            {
-                lpSb->BrowseObject(NULL, SBSP_PARENT);
             }
-        }
-        else if(plvKeyDown->wVKey == 'C' && ctrl)
-        {
-            if (GetSelections())
+    #if 0
+	        TranslateAccelerator(m_hWnd, hAccel, &msg)
+    #endif
+	        else if(plvKeyDown->wVKey == VK_DELETE)
             {
-                CComPtr<IDataObject> pda;
+	            UINT i;
+	            int item_index;
+	            LVITEMA item;
+	            LPITEMIDLIST* pItems;
+	            ISFHelper *psfhlp;
 
-                if (SUCCEEDED(pSFParent->GetUIObjectOf(m_hWnd, cidl, (LPCITEMIDLIST*)apidl, IID_IDataObject, 0, (LPVOID *)&pda)))
+	            pSFParent->QueryInterface(IID_ISFHelper,
+		            (LPVOID*)&psfhlp);
+
+	            if (psfhlp == NULL)
+		            break;
+
+	            if (!(i = ListView_GetSelectedCount(hWndList)))
+		            break;
+
+	            /* allocate memory for the pidl array */
+	            pItems = (LPITEMIDLIST *)HeapAlloc(GetProcessHeap(), 0,
+		            sizeof(LPITEMIDLIST) * i);
+
+	            /* retrieve all selected items */
+	            i = 0;
+	            item_index = -1;
+	            while (ListView_GetSelectedCount(hWndList) > i)
+	            {
+		            /* get selected item */
+		            item_index = ListView_GetNextItem(hWndList,
+		            item_index, LVNI_SELECTED);
+		            item.iItem = item_index;
+		            item.mask = LVIF_PARAM;
+		            SendMessageA(hWndList, LVM_GETITEMA, 0, (LPARAM) &item);
+
+		            /* get item pidl */
+		            pItems[i] = (LPITEMIDLIST)item.lParam;
+
+		            i++;
+	            }
+
+	            /* perform the item deletion */
+	            psfhlp->DeleteItems(i, (LPCITEMIDLIST*)pItems);
+
+	            /* free pidl array memory */
+	            HeapFree(GetProcessHeap(), 0, pItems);
+            }
+            /* Initiate a refresh */
+            else if (plvKeyDown->wVKey == VK_F5)
+            {
+                Refresh();
+            }
+            else if (plvKeyDown->wVKey == VK_BACK)
+            {
+                LPSHELLBROWSER lpSb;
+                if ((lpSb = (LPSHELLBROWSER)SendMessageW(hWndParent, CWM_GETISHELLBROWSER, 0, 0)))
                 {
-                    HRESULT hr = OleSetClipboard(pda);
-                    if (FAILED(hr))
+                    lpSb->BrowseObject(NULL, SBSP_PARENT);
+                }
+            }
+            else if (plvKeyDown->wVKey == 'C' && ctrl)
+            {
+                if (GetSelections())
+                {
+                    CComPtr<IDataObject> pda;
+
+                    if (SUCCEEDED(pSFParent->GetUIObjectOf(m_hWnd, cidl, (LPCITEMIDLIST*)apidl, IID_IDataObject, 0, (LPVOID *)&pda)))
                     {
-                        WARN("OleSetClipboard failed");
+                        HRESULT hr = OleSetClipboard(pda);
+                        if (FAILED(hr))
+                        {
+                            WARN("OleSetClipboard failed");
+                        }
                     }
                 }
+                break;
             }
-            break;
-        }
-        else if(plvKeyDown->wVKey == 'V' && ctrl)
-        {
-            CComPtr<IDataObject> pda;
-            STGMEDIUM medium;
-            FORMATETC formatetc;
-            LPITEMIDLIST * apidl;
-            LPITEMIDLIST pidl;
-            CComPtr<IShellFolder> psfFrom;
-            CComPtr<IShellFolder> psfDesktop;
-            CComPtr<IShellFolder> psfTarget;
-            LPIDA lpcida;
-            CComPtr<ISFHelper> psfhlpdst;
-            CComPtr<ISFHelper> psfhlpsrc;
-            HRESULT hr;
-
-            hr = OleGetClipboard(&pda);
-            if (hr != S_OK)
+            else if(plvKeyDown->wVKey == 'V' && ctrl)
             {
-                ERR("Failed to get clipboard with %lx\n", hr);
-                return E_FAIL;
-            }
+                CComPtr<IDataObject> pda;
+                STGMEDIUM medium;
+                FORMATETC formatetc;
+                LPITEMIDLIST * apidl;
+                LPITEMIDLIST pidl;
+                CComPtr<IShellFolder> psfFrom;
+                CComPtr<IShellFolder> psfDesktop;
+                CComPtr<IShellFolder> psfTarget;
+                LPIDA lpcida;
+                CComPtr<ISFHelper> psfhlpdst;
+                CComPtr<ISFHelper> psfhlpsrc;
+                HRESULT hr;
 
-            InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-            hr = pda->GetData(&formatetc, &medium);
+                hr = OleGetClipboard(&pda);
+                if (hr != S_OK)
+                {
+                    ERR("Failed to get clipboard with %lx\n", hr);
+                    return E_FAIL;
+                }
 
-            if (FAILED(hr))
-            {
-                ERR("Failed to get clipboard data with %lx\n", hr);
-                return E_FAIL;
-            }
+                InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+                hr = pda->GetData(&formatetc, &medium);
 
-            /* lock the handle */
-            lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-            if (!lpcida)
-            {
-                ERR("failed to lock pidl\n");
-                ReleaseStgMedium(&medium);
-                return E_FAIL;
-            }
+                if (FAILED(hr))
+                {
+                    ERR("Failed to get clipboard data with %lx\n", hr);
+                    return E_FAIL;
+                }
 
-            /* convert the data into pidl */
-            apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+                /* lock the handle */
+                lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+                if (!lpcida)
+                {
+                    ERR("failed to lock pidl\n");
+                    ReleaseStgMedium(&medium);
+                    return E_FAIL;
+                }
 
-            if (!apidl)
-            {
-                ERR("failed to copy pidl\n");
-                return E_FAIL;
-            }
+                /* convert the data into pidl */
+                apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
 
-            if (FAILED(SHGetDesktopFolder(&psfDesktop)))
-            {
-                ERR("failed to get desktop folder\n");
+                if (!apidl)
+                {
+                    ERR("failed to copy pidl\n");
+                    return E_FAIL;
+                }
+
+                if (FAILED(SHGetDesktopFolder(&psfDesktop)))
+                {
+                    ERR("failed to get desktop folder\n");
+                    SHFree(pidl);
+                    _ILFreeaPidl(apidl, lpcida->cidl);
+                    ReleaseStgMedium(&medium);
+                    return E_FAIL;
+                }
+
+                if (_ILIsDesktop(pidl))
+                {
+                    /* use desktop shellfolder */
+                    psfFrom = psfDesktop;
+                }
+                else if (FAILED(psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom)))
+                {
+                    ERR("no IShellFolder\n");
+
+                    SHFree(pidl);
+                    _ILFreeaPidl(apidl, lpcida->cidl);
+                    ReleaseStgMedium(&medium);
+
+                    return E_FAIL;
+                }
+
+                psfTarget = pSFParent;
+
+
+                /* get source and destination shellfolder */
+                if (FAILED(psfTarget->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpdst)))
+                {
+                    ERR("no IID_ISFHelper for destination\n");
+
+                    SHFree(pidl);
+                    _ILFreeaPidl(apidl, lpcida->cidl);
+                    ReleaseStgMedium(&medium);
+
+                    return E_FAIL;
+                }
+
+                if (FAILED(psfFrom->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpsrc)))
+                {
+                    ERR("no IID_ISFHelper for source\n");
+
+                    SHFree(pidl);
+                    _ILFreeaPidl(apidl, lpcida->cidl);
+                    ReleaseStgMedium(&medium);
+                    return E_FAIL;
+                }
+
+                /* FIXXME
+                * do we want to perform a copy or move ???
+                */
+                hr = psfhlpdst->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl);
+
                 SHFree(pidl);
                 _ILFreeaPidl(apidl, lpcida->cidl);
                 ReleaseStgMedium(&medium);
-                return E_FAIL;
-            }
 
-            if (_ILIsDesktop(pidl))
-            {
-                /* use desktop shellfolder */
-                psfFrom = psfDesktop;
-            }
-            else if (FAILED(psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom)))
-            {
-                ERR("no IShellFolder\n");
-
-                SHFree(pidl);
-                _ILFreeaPidl(apidl, lpcida->cidl);
-                ReleaseStgMedium(&medium);
-
-                return E_FAIL;
-            }
-
-            psfTarget = pSFParent;
-
-
-            /* get source and destination shellfolder */
-            if (FAILED(psfTarget->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpdst)))
-            {
-                ERR("no IID_ISFHelper for destination\n");
-
-                SHFree(pidl);
-                _ILFreeaPidl(apidl, lpcida->cidl);
-                ReleaseStgMedium(&medium);
-
-                return E_FAIL;
-            }
-
-            if (FAILED(psfFrom->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpsrc)))
-            {
-                ERR("no IID_ISFHelper for source\n");
-
-                SHFree(pidl);
-                _ILFreeaPidl(apidl, lpcida->cidl);
-                ReleaseStgMedium(&medium);
-                return E_FAIL;
-            }
-
-            /* FIXXME
-            * do we want to perform a copy or move ???
-            */
-            hr = psfhlpdst->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl);
-
-            SHFree(pidl);
-            _ILFreeaPidl(apidl, lpcida->cidl);
-            ReleaseStgMedium(&medium);
-
-            TRACE("paste end hr %x\n", hr);
-            break;
-		}
-        else
-            FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
+                TRACE("paste end hr %x\n", hr);
+                break;
+	        }
+            else
+                FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
         }
         break;
 
-	  default:
-	    TRACE("-- %p WM_COMMAND %x unhandled\n", this, lpnmh->code);
-	    break;
+	    default:
+	        TRACE("-- %p WM_COMMAND %x unhandled\n", this, lpnmh->code);
+	        break;
 	}
+
 	return 0;
 }
 
@@ -2003,17 +2046,21 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 		case SHCNE_CREATE:
 			LV_AddItem(Pidls[0]);
 			break;
+
 		case SHCNE_RMDIR:
 		case SHCNE_DELETE:
 			LV_DeleteItem(Pidls[0]);
 			break;
+
 		case SHCNE_RENAMEFOLDER:
 		case SHCNE_RENAMEITEM:
 			LV_RenameItem(Pidls[0], Pidls[1]);
 			break;
+
 		case SHCNE_UPDATEITEM:
 			break;
 	}
+
 	return TRUE;
 }
 
@@ -2024,9 +2071,9 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 {
     if (!pCM.p)
     {
-      /* no menu */
-      ERR("no menu!!!\n");
-      return FALSE;
+        /* no menu */
+        ERR("no menu!!!\n");
+        return FALSE;
     }
 
     if (pCM.p->HandleMenuMsg(uMsg, (WPARAM)m_hWnd, lParam) == S_OK)
@@ -2077,8 +2124,9 @@ HRESULT WINAPI CDefView::TranslateAccelerator(LPMSG lpmsg)
 
 	if (lpmsg->message >= WM_KEYFIRST && lpmsg->message >= WM_KEYLAST)
 	{
-	  TRACE("-- key=0x04%lx\n",lpmsg->wParam) ;
+        TRACE("-- key=0x04%lx\n",lpmsg->wParam) ;
 	}
+
 	return S_FALSE; /* not handled */
 }
 
@@ -2100,29 +2148,29 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
 	TRACE("(%p)->(state=%x) stub\n",this, uState);
 
 	/*don't do anything if the state isn't really changing*/
-	if(uState == uState)
+	if (uState == uState)
 	{
-	  return S_OK;
+        return S_OK;
 	}
 
 	/*OnActivate handles the menu merging and internal state*/
 	DoActivate(uState);
 
 	/*only do This if we are active*/
-	if(uState != SVUIA_DEACTIVATE)
+	if (uState != SVUIA_DEACTIVATE)
 	{
 
-/*
-	  GetFolderPath is not a method of IShellFolder
-	  IShellFolder_GetFolderPath( pSFParent, szName, sizeof(szName) );
-*/
-	  /* set the number of parts */
-	  pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, 1, (LPARAM)nPartArray, &lResult);
+    /*
+	    GetFolderPath is not a method of IShellFolder
+	    IShellFolder_GetFolderPath( pSFParent, szName, sizeof(szName) );
+    */
+	    /* set the number of parts */
+	    pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, 1, (LPARAM)nPartArray, &lResult);
 
-	  /* set the text for the parts */
-/*
-	  pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXTA, 0, (LPARAM)szName, &lResult);
-*/
+	    /* set the text for the parts */
+    /*
+	    pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXTA, 0, (LPARAM)szName, &lResult);
+    */
 	}
 
 	return S_OK;
@@ -2195,9 +2243,9 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 	/*Make absolutely sure all our UI is cleaned up.*/
 	UIActivate(SVUIA_DEACTIVATE);
 
-	if(hMenu)
+	if (hMenu)
 	{
-	  DestroyMenu(hMenu);
+        DestroyMenu(hMenu);
 	}
 
 	DestroyWindow();
@@ -2212,7 +2260,8 @@ HRESULT WINAPI CDefView::GetCurrentInfo(LPFOLDERSETTINGS lpfs)
 	TRACE("(%p)->(%p) vmode=%x flags=%x\n",this, lpfs,
 		FolderSettings.ViewMode, FolderSettings.fFlags);
 
-	if (!lpfs) return E_INVALIDARG;
+	if (!lpfs)
+        return E_INVALIDARG;
 
 	*lpfs = FolderSettings;
 	return NOERROR;
@@ -2242,42 +2291,43 @@ HRESULT WINAPI CDefView::SelectItem(LPCITEMIDLIST pidl, UINT uFlags)
 
 	if (i != -1)
 	{
-	  LVITEMW lvItem;
+	    LVITEMW lvItem;
 
-	  if(uFlags & SVSI_ENSUREVISIBLE)
+	    if(uFlags & SVSI_ENSUREVISIBLE)
 	    SendMessageW(hWndList, LVM_ENSUREVISIBLE, i, 0);
 
-	  lvItem.mask = LVIF_STATE;
-	  lvItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
-	  lvItem.iItem = 0;
-	  lvItem.iSubItem = 0;
+	    lvItem.mask = LVIF_STATE;
+	    lvItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+	    lvItem.iItem = 0;
+	    lvItem.iSubItem = 0;
 
-          while(SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem))
-	  {
-	    if (lvItem.iItem == i)
+        while (SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem))
 	    {
-	      if (uFlags & SVSI_SELECT)
-	        lvItem.state |= LVIS_SELECTED;
-	      else
-		lvItem.state &= ~LVIS_SELECTED;
+	        if (lvItem.iItem == i)
+	        {
+	            if (uFlags & SVSI_SELECT)
+	                lvItem.state |= LVIS_SELECTED;
+	            else
+	                lvItem.state &= ~LVIS_SELECTED;
 
-	      if(uFlags & SVSI_FOCUSED)
-	        lvItem.state &= ~LVIS_FOCUSED;
+	            if (uFlags & SVSI_FOCUSED)
+	                lvItem.state &= ~LVIS_FOCUSED;
+	        }
+	        else
+	        {
+	            if (uFlags & SVSI_DESELECTOTHERS)
+	                lvItem.state &= ~LVIS_SELECTED;
+	        }
+
+	        SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
+	        lvItem.iItem++;
 	    }
-	    else
-	    {
-	      if (uFlags & SVSI_DESELECTOTHERS)
-	        lvItem.state &= ~LVIS_SELECTED;
-	    }
-	    SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
-	    lvItem.iItem++;
-	  }
 
 
-	  if(uFlags & SVSI_EDIT)
+	    if(uFlags & SVSI_EDIT)
 	    SendMessageW(hWndList, LVM_EDITLABELW, i, 0);
-
 	}
+
 	return S_OK;
 }
 
@@ -2289,23 +2339,24 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
 
 	*ppvOut = NULL;
 
-	switch(uItem)
+	switch (uItem)
 	{
 		case SVGIO_BACKGROUND:
-			if (IsEqualIID(riid, IID_IContextMenu))
-			{
-				//*ppvOut = ISvBgCm_Constructor(pSFParent, FALSE);
-				CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)ppvOut);
-				if (!ppvOut)
-					hr = E_OUTOFMEMORY;
-			}
-			break;
+		    if (IsEqualIID(riid, IID_IContextMenu))
+		    {
+			    //*ppvOut = ISvBgCm_Constructor(pSFParent, FALSE);
+			    CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)ppvOut);
+			    if (!ppvOut)
+				    hr = E_OUTOFMEMORY;
+		    }
+		    break;
 
 		case SVGIO_SELECTION:
 			GetSelections();
 			hr = pSFParent->GetUIObjectOf(m_hWnd, cidl, (LPCITEMIDLIST*)apidl, riid, 0, ppvOut);
 			break;
 	}
+
 	TRACE("-- (%p)->(interface=%p)\n",this, *ppvOut);
 
 	return hr;
@@ -2325,6 +2376,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetFolder(REFIID riid, void **ppv)
 {
 	if (pSFParent == NULL)
 		return E_FAIL;
+
 	return pSFParent->QueryInterface(riid, ppv);
 }
 
@@ -2388,18 +2440,18 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, LPCITEMIDL
  */
 HRESULT WINAPI CDefView::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText)
 {
-    UINT i;
-
     FIXME("(%p)->(%p(%s) 0x%08x %p %p\n",
               this, pguidCmdGroup, debugstr_guid(pguidCmdGroup), cCmds, prgCmds, pCmdText);
 
     if (!prgCmds)
         return E_POINTER;
-    for (i = 0; i < cCmds; i++)
+
+    for (UINT i=0; i < cCmds; i++)
     {
         FIXME("\tprgCmds[%d].cmdID = %d\n", i, prgCmds[i].cmdID);
         prgCmds[i].cmdf = 0;
     }
+
     return OLECMDERR_E_UNKNOWNGROUP;
 }
 
@@ -2417,7 +2469,8 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
 	   (nCmdID == 0x29) &&
 	   (nCmdexecopt == 4) && pvaOut)
 	   return S_OK;
-	if (IsEqualIID(*pguidCmdGroup, CGID_ShellDocView) &&
+	
+    if (IsEqualIID(*pguidCmdGroup, CGID_ShellDocView) &&
 	   (nCmdID == 9) &&
 	   (nCmdexecopt == 0))
 	   return 1;
@@ -2461,38 +2514,50 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
          htinfo.pt.y < SCROLLAREAWIDTH || htinfo.pt.y > clientRect.bottom - SCROLLAREAWIDTH ))
     {
         cScrollDelay = (cScrollDelay + 1) % 5; /* DragOver is called every 50 ms */
-        if (cScrollDelay == 0) { /* Mouse did hover another 250 ms over the scroll-area */
+        if (cScrollDelay == 0)
+        {
+            /* Mouse did hover another 250 ms over the scroll-area */
             if (htinfo.pt.x < SCROLLAREAWIDTH)
                 SendMessageW(hWndList, WM_HSCROLL, SB_LINEUP, 0);
+            
             if (htinfo.pt.x > clientRect.right - SCROLLAREAWIDTH)
                 SendMessageW(hWndList, WM_HSCROLL, SB_LINEDOWN, 0);
+            
             if (htinfo.pt.y < SCROLLAREAWIDTH)
                 SendMessageW(hWndList, WM_VSCROLL, SB_LINEUP, 0);
+            
             if (htinfo.pt.y > clientRect.bottom - SCROLLAREAWIDTH)
                 SendMessageW(hWndList, WM_VSCROLL, SB_LINEDOWN, 0);
         }
-    } else {
+    }
+    else
+    {
         cScrollDelay = 0; /* Reset, if the cursor is not over the listview's scroll-area */
     }
+
     ptLastMousePos = htinfo.pt;
 
     /* If we are still over the previous sub-item, notify it via DragOver and return. */
     if (pCurDropTarget && lResult == iDragOverItem)
-    return pCurDropTarget->DragOver(grfKeyState, pt, pdwEffect);
+        return pCurDropTarget->DragOver(grfKeyState, pt, pdwEffect);
 
     /* We've left the previous sub-item, notify it via DragLeave and Release it. */
-    if (pCurDropTarget) {
+    if (pCurDropTarget)
+    {
         pCurDropTarget->DragLeave();
         pCurDropTarget.Release();
     }
 
     iDragOverItem = lResult;
-    if (lResult == -1) {
+    if (lResult == -1)
+    {
         /* We are not above one of the listview's subitems. Bind to the parent folder's
          * DropTarget interface. */
         hr = pSFParent->QueryInterface(IID_IDropTarget,
                                          (LPVOID*)&pCurDropTarget);
-    } else {
+    }
+    else
+    {
         /* Query the relative PIDL of the shellfolder object represented by the currently
          * dragged over listview-item ... */
         lvItem.mask = LVIF_PARAM;
@@ -2568,11 +2633,11 @@ HRESULT WINAPI CDefView::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyStat
 	TRACE("(%p)\n",this);
 
 	if (fEscapePressed)
-	  return DRAGDROP_S_CANCEL;
+	    return DRAGDROP_S_CANCEL;
 	else if (!(grfKeyState & MK_LBUTTON) && !(grfKeyState & MK_RBUTTON))
-	  return DRAGDROP_S_DROP;
+	    return DRAGDROP_S_DROP;
 	else
-	  return NOERROR;
+	    return NOERROR;
 }
 
 HRESULT WINAPI CDefView::GiveFeedback(DWORD dwEffect)
@@ -2630,14 +2695,16 @@ HRESULT WINAPI CDefView::GetAdvise(DWORD *pAspects, DWORD *pAdvf, IAdviseSink **
 {
 	TRACE("this=%p pAspects=%p pAdvf=%p ppAdvSink=%p\n", this, pAspects, pAdvf, ppAdvSink);
 
-	if( ppAdvSink )
+	if (ppAdvSink)
 	{
 		*ppAdvSink = pAdvSink;
 		pAdvSink.p->AddRef();
 	}
-	if( pAspects )
+
+	if (pAspects)
 		*pAspects = dwAspects;
-	if( pAdvf )
+
+	if (pAdvf)
 		*pAdvf = dwAdvf;
 
 	return S_OK;
@@ -2661,19 +2728,24 @@ HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newVie
 
 	if (newView == NULL)
 		return E_POINTER;
-	*newView = NULL;
+	
+    *newView = NULL;
 	ATLTRY (theView = new CComObject<CDefView>);
-	if (theView == NULL)
+	
+    if (theView == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theView->QueryInterface (IID_IShellView, (void **)&result);
+	
+    hResult = theView->QueryInterface (IID_IShellView, (void **)&result);
 	if (FAILED (hResult))
 	{
 		delete theView;
 		return hResult;
 	}
-	hResult = theView->Initialize (pFolder);
+	
+    hResult = theView->Initialize (pFolder);
 	if (FAILED (hResult))
 		return hResult;
 	*newView = result.Detach ();
-	return S_OK;
+	
+    return S_OK;
 }
