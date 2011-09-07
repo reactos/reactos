@@ -259,6 +259,12 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
         /* location text field */
         wcsncpy(buff, lpstr, plength - flength);
         buff[plength - flength] = UNICODE_NULL;
+
+        if (wcslen(buff) == 2)
+        {
+            wcscat(buff, L"\\");
+        }
+
         hDlgCtrl = GetDlgItem(hwndDlg, 14009);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)buff);
     }
