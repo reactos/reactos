@@ -65,11 +65,4 @@ HalpBiosDisplayReset(VOID)
     return FALSE;
 }
 
-VOID
-NTAPI
-INIT_FUNCTION
-HalpInitializeClock(VOID)
-{
-}
-
 /* EOF */
