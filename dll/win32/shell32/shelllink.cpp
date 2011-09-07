@@ -2015,6 +2015,7 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
     switch(uMsg)
     {
         case WM_INITDIALOG:
+        {
             ppsp = (LPPROPSHEETPAGEW)lParam;
             if (ppsp == NULL)
                 break;
@@ -2025,7 +2026,14 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
 
             TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", pThis->sArgs, pThis->sComponent, pThis->sDescription,
-            pThis->sIcoPath, pThis->sPath, pThis->sPathRel, pThis->sProduct, pThis->sWorkDir);
+                pThis->sIcoPath, pThis->sPath, pThis->sPathRel, pThis->sProduct, pThis->sWorkDir);
+
+            /* target location */
+            wchar_t * wTrgtLocat;
+            const int ch = '\\';
+            wTrgtLocat = wcsrchr(pThis->sWorkDir, ch)+1;
+            hDlgCtrl = GetDlgItem( hwndDlg, 14007 );
+            SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)wTrgtLocat);
 
             /* target path */
             hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
@@ -2042,6 +2050,8 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
             if ( hDlgCtrl != NULL )
                 SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)pThis->sDescription );
             return TRUE;
+        }
+
         case WM_NOTIFY:
             lppsn = (LPPSHNOTIFY) lParam;
             if ( lppsn->hdr.code == PSN_APPLY )
