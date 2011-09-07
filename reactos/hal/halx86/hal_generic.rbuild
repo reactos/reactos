@@ -24,6 +24,7 @@
 				<file>portio.c</file>
 				<file>systimer.S</file>
 				<file>trap.S</file>
+				<file>v86.S</file>
 			</if>
 		</directory>
 		<directory name="include">

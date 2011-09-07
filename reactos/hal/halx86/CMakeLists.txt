@@ -15,7 +15,6 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/drive.c
     generic/memory.c
     generic/misc.c
-    generic/profil.c
     generic/reboot.c
     generic/sysinfo.c
     generic/usage.c)
@@ -23,10 +22,7 @@ list(APPEND HAL_GENERIC_SOURCE
 if(ARCH MATCHES i386)
     list(APPEND HAL_GENERIC_SOURCE
         generic/bios.c
-        generic/timer.c
-        generic/portio.c
-        generic/systimer.S
-        generic/trap.S)
+        generic/portio.c)
 endif()
 
 add_library(lib_hal_generic ${HAL_GENERIC_SOURCE})
@@ -58,11 +54,28 @@ add_library(lib_hal_acpi ${HAL_ACPI_SOURCE})
 #add_pch(lib_hal_acpi include/hal.h)
 target_link_libraries(lib_hal_acpi lib_hal_generic)
 
-if(ARCH MATCHES i386)
-    list(APPEND HAL_UP_SOURCE
-        up/pic.c
-        up/processor.c)
+list(APPEND HAL_UP_SOURCE
+    generic/spinlock.c
+    generic/halinit.c
+    up/halinit_up.c
+    up/processor.c)
 
+list(APPEND HAL_PIC_SOURCE
+    generic/profil.c
+    generic/timer.c
+    generic/systimer.S
+    generic/trap.S
+    up/pic.c)
+
+list(APPEND HAL_APIC_SOURCE
+    apic/apic.c
+    apic/apictimer.c
+    apic/apictrap.S
+    apic/rtctimer.c
+    apic/tsc.c
+    apic/tsccal.S)
+
+if(ARCH MATCHES i386)
     list(APPEND MINI_HAL_SOURCE
         generic/portio.c
         generic/systimer.S
@@ -94,10 +107,9 @@ if(ARCH MATCHES i386)
     # hal
     add_library(hal SHARED
         ${HAL_UP_SOURCE}
-        up/halinit_up.c
+        ${HAL_PIC_SOURCE}
+        generic/v86.S
         up/halup.rc
-        generic/spinlock.c
-        generic/halinit.c
         ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
     target_link_libraries(hal lib_hal_generic lib_hal_legacy libcntpr)
     add_importlibs(hal ntoskrnl)
@@ -107,15 +119,17 @@ if(ARCH MATCHES i386)
     set_subsystem(hal native)
     set_image_base(hal 0x00010000)
     add_cd_file(TARGET hal DESTINATION reactos/system32 NO_CAB FOR all)
+    if(MSVC)
+        add_target_link_flags(hal "/ignore:4216 /ignore:4078")
+    endif()
 
     # hal acpi
     spec2def(halacpi.dll ../hal.spec halacpi)
     add_library(halacpi SHARED
         ${HAL_UP_SOURCE}
-        up/halinit_up.c
-        up/halup.rc
-        generic/spinlock.c
-        generic/halinit.c
+        ${HAL_PIC_SOURCE}
+        generic/v86.S
+        acpi/halacpi.rc
         ${CMAKE_CURRENT_BINARY_DIR}/halacpi.def)
     target_link_libraries(halacpi lib_hal_generic lib_hal_acpi libcntpr)
     add_importlibs(halacpi ntoskrnl)
@@ -125,6 +139,9 @@ if(ARCH MATCHES i386)
     set_image_base(halacpi 0x00010000)
     set_property(TARGET halacpi PROPERTY COMPILE_DEFINITIONS CONFIG_ACPI)
     add_cd_file(TARGET halacpi DESTINATION reactos/system32 NO_CAB FOR all)
+    if(MSVC)
+        add_target_link_flags(halacpi "/ignore:4216 /ignore:4078")
+    endif()
 
     # mini_hal
     add_library(mini_hal ${MINI_HAL_SOURCE})
@@ -138,13 +155,11 @@ elseif(ARCH MATCHES amd64)
     list(APPEND HAL_SOURCE
         ${HAL_GENERIC_SOURCE}
         ${HAL_ACPI_SOURCE}
-        ${HAL_UP_SOURCE}
+        ${HAL_APIC_SOURCE}
         generic/spinlock.c
         generic/halinit.c
         amd64/x86bios.c
         amd64/halinit.c
-        amd64/stubs.c
-        amd64/systimer.S
         amd64/processor.c
         ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
 
@@ -158,6 +173,9 @@ elseif(ARCH MATCHES amd64)
     set_image_base(hal 0x00010000)
     add_importlibs(hal ntoskrnl)
     target_link_libraries(hal libcntpr)
+    if(MSVC)
+        add_target_link_flags(hal "/ignore:4216")
+    endif()
 
     add_cd_file(TARGET hal DESTINATION reactos/system32 NO_CAB FOR all)
 
