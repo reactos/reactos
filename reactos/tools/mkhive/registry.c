@@ -448,6 +448,9 @@ RegSetValueExW(
 		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
 
+    if (cbData > Key->KeyCell->MaxValueDataLen)
+        Key->KeyCell->MaxValueDataLen = cbData;
+
 	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset, FALSE);
 
 	DPRINT("Return status 0x%08x\n", Status);
