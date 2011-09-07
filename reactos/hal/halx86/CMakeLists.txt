@@ -13,6 +13,7 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/display.c
     generic/dma.c
     generic/drive.c
+    generic/halinit.c
     generic/memory.c
     generic/misc.c
     generic/reboot.c
@@ -56,8 +57,6 @@ target_link_libraries(lib_hal_acpi lib_hal_generic)
 
 list(APPEND HAL_UP_SOURCE
     generic/spinlock.c
-    generic/halinit.c
-    up/halinit_up.c
     up/processor.c)
 
 list(APPEND HAL_PIC_SOURCE
@@ -65,12 +64,14 @@ list(APPEND HAL_PIC_SOURCE
     generic/timer.c
     generic/systimer.S
     generic/trap.S
+    up/halinit_up.c
     up/pic.c)
 
 list(APPEND HAL_APIC_SOURCE
     apic/apic.c
     apic/apictimer.c
     apic/apictrap.S
+    apic/halinit_apic.c
     apic/rtctimer.c
     apic/tsc.c
     apic/tsccal.S)
@@ -98,7 +99,7 @@ if(ARCH MATCHES i386)
         generic/sysinfo.c
         generic/timer.c
         generic/usage.c
-        up/halinit_up.c
+        up/halinit_mini.c
         up/pic.c
         up/processor.c)
 
@@ -157,7 +158,6 @@ elseif(ARCH MATCHES amd64)
         ${HAL_ACPI_SOURCE}
         ${HAL_APIC_SOURCE}
         generic/spinlock.c
-        generic/halinit.c
         amd64/x86bios.c
         amd64/halinit.c
         amd64/processor.c

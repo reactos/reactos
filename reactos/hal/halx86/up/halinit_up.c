@@ -18,6 +18,16 @@
 /* FUNCTIONS ***************************************************************/
 
 VOID
+NTAPI
+HalpInitProcessor(
+    IN ULONG ProcessorNumber,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* Set default IDR */
+    KeGetPcr()->IDR = 0xFFFFFFFB;
+}
+
+VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 
@@ -26,7 +36,6 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 VOID
 HalpInitPhase1(VOID)
 {
-#ifndef _MINIHAL_
         /* Enable IRQ 0 */
         HalpEnableInterruptHandler(IDT_DEVICE,
                                    0,
@@ -45,7 +54,6 @@ HalpInitPhase1(VOID)
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();
-#endif
 }
 
 /* EOF */

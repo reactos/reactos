@@ -41,6 +41,27 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+HalInitializeProcessor(
+    IN ULONG ProcessorNumber,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* Hal specific initialization for this cpu */
+    HalpInitProcessor(ProcessorNumber, LoaderBlock);
+
+    /* Set default stall count */
+    KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
+
+    /* Update the interrupt affinity and processor mask */
+    InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
+                             ProcessorNumber);
+
+    /* Register routines for KDCOM */
+    HalpRegisterKdSupportFunctions();
+}
+
 /*
  * @implemented
  */
@@ -61,48 +82,25 @@ HalInitSystem(IN ULONG BootPhase,
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
 
-        /* Checked HAL requires checked kernel */
-#if DBG
-        if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
-        {
-            /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 1, 0);
-        }
-#else
-        /* Release build requires release HAL */
-        if (Prcb->BuildType & PRCB_BUILD_DEBUG)
-        {
-            /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
-        }
-#endif
-
-#ifdef CONFIG_SMP
-        /* SMP HAL requires SMP kernel */
-        if (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR)
-        {
-            /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
-        }
-#endif
-
-        /* Validate the PRCB */
+        /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
         {
-            /* Validation failed, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
+            /* No match, bugcheck */
+            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, PRCB_MAJOR_VERSION, 0);
         }
 
-#ifndef _MINIHAL_
+        /* Checked/free HAL requires checked/free kernel */
+        if (Prcb->BuildType != HAL_BUILD_TYPE)
+        {
+            /* No match, bugcheck */
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HAL_BUILD_TYPE, 0);
+        }
+
         /* Initialize ACPI */
         HalpSetupAcpiPhase0(LoaderBlock);
 
         /* Initialize the PICs */
         HalpInitializePICs(TRUE);
-#endif
-
-        /* Force initial PIC state */
-        KfRaiseIrql(KeGetCurrentIrql());
 
         /* Initialize CMOS lock */
         KeInitializeSpinLock(&HalpSystemHardwareLock);
@@ -114,17 +112,10 @@ HalInitSystem(IN ULONG BootPhase,
         HalQuerySystemInformation = HaliQuerySystemInformation;
         HalSetSystemInformation = HaliSetSystemInformation;
         HalInitPnpDriver = HaliInitPnpDriver;
-#ifndef _MINIHAL_
         HalGetDmaAdapter = HalpGetDmaAdapter;
-#else
-        HalGetDmaAdapter = NULL;
-#endif
+
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
-#ifndef _MINIHAL_
         HalResetDisplay = HalpBiosDisplayReset;
-#else
-        HalResetDisplay = NULL;
-#endif
         HalHaltSystem = HaliHaltSystem;
 
         /* Register IRQ 2 */
@@ -140,10 +131,8 @@ HalInitSystem(IN ULONG BootPhase,
         /* Setup busy waiting */
         HalpCalibrateStallExecution();
 
-#ifndef _MINIHAL_
         /* Initialize the clock */
         HalpInitializeClock();
-#endif
 
         /*
          * We could be rebooting with a pending profile interrupt,

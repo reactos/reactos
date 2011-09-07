@@ -36,7 +36,7 @@
 			<file>bussupp.c</file>
 		</directory>
 		<directory name="up">
-			<file>halinit_up.c</file>
+			<file>halinit_mini.c</file>
 			<file>pic.c</file>
 			<file>processor.c</file>
 		</directory>
