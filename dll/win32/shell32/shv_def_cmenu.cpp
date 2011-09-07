@@ -660,7 +660,7 @@ IDefaultContextMenuImpl::AddStaticContextMenusToMenu(
             }
             else
             {
-                TRACE("Failed to laod string, defaulting to default (NULL) value for mii.dwTypeData\n");
+                TRACE("Failed to load string, defaulting to NULL value for mii.dwTypeData\n");
             }
         }
         else

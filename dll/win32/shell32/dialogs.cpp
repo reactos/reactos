@@ -1,5 +1,5 @@
 /*
- *	common shell dialogs
+ *    common shell dialogs
  *
  * Copyright 2000 Juergen Schmied
  *
@@ -22,14 +22,14 @@
 
 
 typedef struct
-    {
-	HWND hwndOwner ;
-	HICON hIcon ;
-	LPCWSTR lpstrDirectory ;
-	LPCWSTR lpstrTitle ;
-	LPCWSTR lpstrDescription ;
-	UINT uFlags ;
-    } RUNFILEDLGPARAMS ;
+{
+    HWND hwndOwner ;
+    HICON hIcon ;
+    LPCWSTR lpstrDirectory ;
+    LPCWSTR lpstrTitle ;
+    LPCWSTR lpstrDescription ;
+    UINT uFlags ;
+} RUNFILEDLGPARAMS ;
 
 typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *) ;
 
@@ -39,7 +39,7 @@ static void FillList (HWND, char *, BOOL) ;
 
 
 /*************************************************************************
- * PickIconDlg					[SHELL32.62]
+ * PickIconDlg                    [SHELL32.62]
  *
  */
 
@@ -261,17 +261,17 @@ BOOL WINAPI PickIconDlg(
 }
 
 /*************************************************************************
- * RunFileDlg					[internal]
+ * RunFileDlg                    [internal]
  *
  * The Unicode function that is available as ordinal 61 on Windows NT/2000/XP/...
  */
 void WINAPI RunFileDlg(
-	HWND hwndOwner,
-	HICON hIcon,
-	LPCWSTR lpstrDirectory,
-	LPCWSTR lpstrTitle,
-	LPCWSTR lpstrDescription,
-	UINT uFlags)
+    HWND hwndOwner,
+    HICON hIcon,
+    LPCWSTR lpstrDirectory,
+    LPCWSTR lpstrTitle,
+    LPCWSTR lpstrDescription,
+    UINT uFlags)
 {
     static const WCHAR resnameW[] = {'S','H','E','L','L','_','R','U','N','_','D','L','G',0};
     RUNFILEDLGPARAMS rfdp;
@@ -295,7 +295,7 @@ void WINAPI RunFileDlg(
     }
 
     DialogBoxIndirectParamW(shell32_hInstance,
-			    (LPCDLGTEMPLATEW)tmplate, hwndOwner, RunDlgProc, (LPARAM)&rfdp);
+                (LPCDLGTEMPLATEW)tmplate, hwndOwner, RunDlgProc, (LPARAM)&rfdp);
 
 }
 
@@ -308,6 +308,12 @@ static LPWSTR RunDlg_GetParentDir(LPCWSTR cmdline)
     static const WCHAR dotexeW[] = {'.','e','x','e',0};
 
     result = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(strlenW(cmdline)+5));
+
+    if (NULL == result)
+    {
+        TRACE("HeapAlloc couldn't allocate %d bytes\n", sizeof(WCHAR)*(strlenW(cmdline)+5));
+        return NULL;
+    }
 
     src = cmdline;
     dest = result;
@@ -391,50 +397,54 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
 
         case WM_COMMAND :
             switch (LOWORD (wParam))
-                {
+            {
                 case IDOK :
-                    {
+                {
                     int ic ;
                     HWND htxt = GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH);
                     if ((ic = GetWindowTextLengthW (htxt)))
-                        {
+                    {
                         WCHAR *psz, *parent=NULL ;
                         SHELLEXECUTEINFOW sei ;
 
                         ZeroMemory (&sei, sizeof(sei)) ;
                         sei.cbSize = sizeof(sei) ;
                         psz = (WCHAR *)HeapAlloc( GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR) );
-                        GetWindowTextW (htxt, psz, ic + 1) ;
 
-                        /* according to http://www.codeproject.com/KB/shell/runfiledlg.aspx we should send a
-                         * WM_NOTIFY before execution */
-
-                        sei.hwnd = hwnd;
-                        sei.nShow = SW_SHOWNORMAL;
-                        sei.lpFile = psz;
-
-                        if (prfdp->lpstrDirectory)
-                            sei.lpDirectory = prfdp->lpstrDirectory;
-                        else
-                            sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
-
-                        if (!ShellExecuteExW( &sei ))
+                        if (psz)
                         {
+                            GetWindowTextW (htxt, psz, ic + 1) ;
+
+                            /* according to http://www.codeproject.com/KB/shell/runfiledlg.aspx we should send a
+                             * WM_NOTIFY before execution */
+
+                            sei.hwnd = hwnd;
+                            sei.nShow = SW_SHOWNORMAL;
+                            sei.lpFile = psz;
+
+                            if (prfdp->lpstrDirectory)
+                                sei.lpDirectory = prfdp->lpstrDirectory;
+                            else
+                                sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+
+                            if (!ShellExecuteExW( &sei ))
+                            {
+                                HeapFree(GetProcessHeap(), 0, psz);
+                                HeapFree(GetProcessHeap(), 0, parent);
+                                SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                                return TRUE ;
+                            }
+
+                            /* FillList is still ANSI */
+                            GetWindowTextA (htxt, (LPSTR)psz, ic + 1) ;
+                            FillList (htxt, (LPSTR)psz, FALSE) ;
+
                             HeapFree(GetProcessHeap(), 0, psz);
                             HeapFree(GetProcessHeap(), 0, parent);
-                            SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                            return TRUE ;
-                        }
-
-                        /* FillList is still ANSI */
-                        GetWindowTextA (htxt, (LPSTR)psz, ic + 1) ;
-                        FillList (htxt, (LPSTR)psz, FALSE) ;
-
-                        HeapFree(GetProcessHeap(), 0, psz);
-                        HeapFree(GetProcessHeap(), 0, parent);
-                        EndDialog (hwnd, 0);
+                            EndDialog (hwnd, 0);
                         }
                     }
+                }
 
                 case IDCANCEL :
                     EndDialog (hwnd, 0) ;
@@ -491,7 +501,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
 /* This grabs the MRU list from the registry and fills the combo for the "Run" dialog above */
 /* fShowDefault ignored if pszLatest != NULL */
 static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
-    {
+{
     HKEY hkey ;
 /*    char szDbgMsg[256] = "" ; */
     char *pszList = NULL, *pszCmd = NULL, cMatch = 0, cMax = 0x60, szIndex[2] = "-" ;
@@ -508,20 +518,28 @@ static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
     RegQueryValueExA (hkey, "MRUList", NULL, NULL, NULL, &icList) ;
 
     if (icList > 0)
-        {
+    {
         pszList = (char *)HeapAlloc( GetProcessHeap(), 0, icList) ;
-        if (ERROR_SUCCESS != RegQueryValueExA (hkey, "MRUList", NULL, NULL, (LPBYTE)pszList, &icList))
-            MessageBoxA (hCb, "Unable to grab MRUList !", "Nix", MB_OK) ;
-        }
-    else
+
+        if (pszList)
         {
+            if (ERROR_SUCCESS != RegQueryValueExA (hkey, "MRUList", NULL, NULL, (LPBYTE)pszList, &icList))
+                MessageBoxA (hCb, "Unable to grab MRUList !", "Nix", MB_OK);
+        }
+        else
+        {
+            TRACE("HeapAlloc failed to allocate %d bytes\n", icList);
+        }
+    }
+    else
+    {
         icList = 1 ;
         pszList = (char *)HeapAlloc( GetProcessHeap(), 0, icList) ;
         pszList[0] = 0 ;
-        }
+    }
 
     for (Nix = 0 ; Nix < icList - 1 ; Nix++)
-        {
+    {
         if (pszList[Nix] > cMax)
             cMax = pszList[Nix] ;
 
@@ -537,9 +555,9 @@ static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
             MessageBoxA (hCb, "Unable to grab index", "Nix", MB_OK) ;
 
         if (NULL != pszLatest)
-            {
+        {
             if (!lstrcmpiA(pszCmd, pszLatest))
-                {
+            {
                 /*
                 sprintf (szDbgMsg, "Found existing (%d).\n", Nix) ;
                 MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
@@ -552,25 +570,24 @@ static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
                 memmove (&pszList[1], pszList, Nix) ;
                 pszList[0] = cMatch ;
                 continue ;
-                }
             }
+        }
 
         if (26 != icList - 1 || icList - 2 != Nix || cMatch || NULL == pszLatest)
-            {
+        {
             /*
             sprintf (szDbgMsg, "Happily appending (%d).\n", Nix) ;
             MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
             */
             SendMessageA (hCb, CB_ADDSTRING, 0, (LPARAM)pszCmd) ;
             if (!Nix && fShowDefault)
-                {
+            {
                 SetWindowTextA (hCb, pszCmd) ;
                 SendMessageA (hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                }
-
             }
+        }
         else
-            {
+        {
             /*
             sprintf (szDbgMsg, "Doing loop thing.\n") ;
             MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
@@ -584,11 +601,11 @@ static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
             pszList[0] = cMatch ;
             szIndex[0] = cMatch ;
             RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
-            }
         }
+    }
 
     if (!cMatch && NULL != pszLatest)
-        {
+    {
         /*
         sprintf (szDbgMsg, "Simply inserting (increasing list).\n") ;
         MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
@@ -598,25 +615,33 @@ static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
         SendMessageA (hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
 
         cMatch = ++cMax ;
-        if( pszList )
+        if (pszList)
             pszList = (char *)HeapReAlloc(GetProcessHeap(), 0, pszList, ++icList) ;
         else
             pszList = (char *)HeapAlloc(GetProcessHeap(), 0, ++icList) ;
-        memmove (&pszList[1], pszList, icList - 1) ;
-        pszList[0] = cMatch ;
-        szIndex[0] = cMatch ;
-        RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
+
+        if (pszList)
+        {
+            memmove (&pszList[1], pszList, icList - 1) ;
+            pszList[0] = cMatch ;
+            szIndex[0] = cMatch ;
+            RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
         }
+        else
+        {
+            TRACE("HeapAlloc or HeapReAlloc failed to allocate enough bytes\n");
+        }
+    }
 
     RegSetValueExA (hkey, "MRUList", 0, REG_SZ, (LPBYTE)pszList, strlen (pszList) + 1) ;
 
     HeapFree( GetProcessHeap(), 0, pszCmd) ;
     HeapFree( GetProcessHeap(), 0, pszList) ;
-    }
+}
 
 
 /*************************************************************************
- * ConfirmDialog				[internal]
+ * ConfirmDialog                [internal]
  *
  * Put up a confirm box, return TRUE if the user confirmed
  */
@@ -632,7 +657,7 @@ static BOOL ConfirmDialog(HWND hWndOwner, UINT PromptId, UINT TitleId)
 
 
 /*************************************************************************
- * RestartDialogEx				[SHELL32.730]
+ * RestartDialogEx                [SHELL32.730]
  */
 
 int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, DWORD uReason)
@@ -675,7 +700,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 
 
 /*************************************************************************
- * RestartDialog				[SHELL32.59]
+ * RestartDialog                [SHELL32.59]
  */
 
 int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
@@ -685,7 +710,7 @@ int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
 
 
 /*************************************************************************
- * ExitWindowsDialog				[SHELL32.60]
+ * ExitWindowsDialog                [SHELL32.60]
  *
  * NOTES
  *     exported by ordinal

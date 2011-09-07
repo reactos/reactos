@@ -25,221 +25,221 @@ WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 static
 LPITEMIDLIST _dbg_ILGetNext(LPCITEMIDLIST pidl)
 {
-	WORD len;
+    WORD len;
 
-	if(pidl)
-	{
-	  len =  pidl->mkid.cb;
-	  if (len)
-	  {
-	    return (LPITEMIDLIST) (((LPBYTE)pidl)+len);
-	  }
-	}
-	return NULL;
+    if(pidl)
+    {
+      len =  pidl->mkid.cb;
+      if (len)
+      {
+        return (LPITEMIDLIST) (((LPBYTE)pidl)+len);
+      }
+    }
+    return NULL;
 }
 
 static
 BOOL _dbg_ILIsDesktop(LPCITEMIDLIST pidl)
 {
-	return ( !pidl || (pidl && pidl->mkid.cb == 0x00) );
+    return ( !pidl || (pidl && pidl->mkid.cb == 0x00) );
 }
 
 static
 LPPIDLDATA _dbg_ILGetDataPointer(LPCITEMIDLIST pidl)
 {
-	if(pidl && pidl->mkid.cb != 0x00)
-	  return (LPPIDLDATA) &(pidl->mkid.abID);
-	return NULL;
+    if(pidl && pidl->mkid.cb != 0x00)
+      return (LPPIDLDATA) &(pidl->mkid.abID);
+    return NULL;
 }
 
 static
 LPSTR _dbg_ILGetTextPointer(LPCITEMIDLIST pidl)
 {
-	LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
+    LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
 
-	if (pdata)
-	{
-	  switch (pdata->type)
-	  {
-	    case PT_GUID:
-	    case PT_SHELLEXT:
-	    case PT_YAGUID:
-	      return NULL;
+    if (pdata)
+    {
+      switch (pdata->type)
+      {
+        case PT_GUID:
+        case PT_SHELLEXT:
+        case PT_YAGUID:
+          return NULL;
 
-	    case PT_DRIVE:
-	    case PT_DRIVE1:
-	    case PT_DRIVE2:
-	    case PT_DRIVE3:
-	      return (LPSTR)&(pdata->u.drive.szDriveName);
+        case PT_DRIVE:
+        case PT_DRIVE1:
+        case PT_DRIVE2:
+        case PT_DRIVE3:
+          return (LPSTR)&(pdata->u.drive.szDriveName);
 
-	    case PT_FOLDER:
-	    case PT_FOLDER1:
-	    case PT_VALUE:
-	    case PT_IESPECIAL1:
-	    case PT_IESPECIAL2:
-	      return (LPSTR)&(pdata->u.file.szNames);
+        case PT_FOLDER:
+        case PT_FOLDER1:
+        case PT_VALUE:
+        case PT_IESPECIAL1:
+        case PT_IESPECIAL2:
+          return (LPSTR)&(pdata->u.file.szNames);
 
-	    case PT_WORKGRP:
-	    case PT_COMP:
-	    case PT_NETWORK:
-	    case PT_NETPROVIDER:
-	    case PT_SHARE:
-	      return (LPSTR)&(pdata->u.network.szNames);
-	  }
-	}
-	return NULL;
+        case PT_WORKGRP:
+        case PT_COMP:
+        case PT_NETWORK:
+        case PT_NETPROVIDER:
+        case PT_SHARE:
+          return (LPSTR)&(pdata->u.network.szNames);
+      }
+    }
+    return NULL;
 }
 
 static
 LPWSTR _dbg_ILGetTextPointerW(LPCITEMIDLIST pidl)
 {
-	LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
+    LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
 
-	if (pdata)
-	{
-	  switch (pdata->type)
-	  {
-	    case PT_GUID:
-	    case PT_SHELLEXT:
-	    case PT_YAGUID:
-	      return NULL;
+    if (pdata)
+    {
+      switch (pdata->type)
+      {
+        case PT_GUID:
+        case PT_SHELLEXT:
+        case PT_YAGUID:
+          return NULL;
 
-	    case PT_DRIVE:
-	    case PT_DRIVE1:
-	    case PT_DRIVE2:
-	    case PT_DRIVE3:
-	      /* return (LPSTR)&(pdata->u.drive.szDriveName);*/
-	      return NULL;
+        case PT_DRIVE:
+        case PT_DRIVE1:
+        case PT_DRIVE2:
+        case PT_DRIVE3:
+          /* return (LPSTR)&(pdata->u.drive.szDriveName);*/
+          return NULL;
 
-	    case PT_FOLDER:
-	    case PT_FOLDER1:
-	    case PT_VALUE:
-	    case PT_IESPECIAL1:
-	    case PT_IESPECIAL2:
-	      /* return (LPSTR)&(pdata->u.file.szNames); */
-	      return NULL;
+        case PT_FOLDER:
+        case PT_FOLDER1:
+        case PT_VALUE:
+        case PT_IESPECIAL1:
+        case PT_IESPECIAL2:
+          /* return (LPSTR)&(pdata->u.file.szNames); */
+          return NULL;
 
-	    case PT_WORKGRP:
-	    case PT_COMP:
-	    case PT_NETWORK:
-	    case PT_NETPROVIDER:
-	    case PT_SHARE:
-	      /* return (LPSTR)&(pdata->u.network.szNames); */
-	      return NULL;
+        case PT_WORKGRP:
+        case PT_COMP:
+        case PT_NETWORK:
+        case PT_NETPROVIDER:
+        case PT_SHARE:
+          /* return (LPSTR)&(pdata->u.network.szNames); */
+          return NULL;
 
-	    case PT_VALUEW:
-	      return (LPWSTR)&(pdata->u.file.szNames);
-	  }
-	}
-	return NULL;
+        case PT_VALUEW:
+          return (LPWSTR)&(pdata->u.file.szNames);
+      }
+    }
+    return NULL;
 }
 
 
 static
 LPSTR _dbg_ILGetSTextPointer(LPCITEMIDLIST pidl)
 {
-	LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
+    LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
 
-	if (pdata)
-	{
-	  switch (pdata->type)
-	  {
-	    case PT_FOLDER:
-	    case PT_VALUE:
-	    case PT_IESPECIAL1:
-	    case PT_IESPECIAL2:
-	      return (LPSTR)(pdata->u.file.szNames + strlen (pdata->u.file.szNames) + 1);
+    if (pdata)
+    {
+      switch (pdata->type)
+      {
+        case PT_FOLDER:
+        case PT_VALUE:
+        case PT_IESPECIAL1:
+        case PT_IESPECIAL2:
+          return (LPSTR)(pdata->u.file.szNames + strlen (pdata->u.file.szNames) + 1);
 
-	    case PT_WORKGRP:
-	      return (LPSTR)(pdata->u.network.szNames + strlen (pdata->u.network.szNames) + 1);
-	  }
-	}
-	return NULL;
+        case PT_WORKGRP:
+          return (LPSTR)(pdata->u.network.szNames + strlen (pdata->u.network.szNames) + 1);
+      }
+    }
+    return NULL;
 }
 
 static
 LPWSTR _dbg_ILGetSTextPointerW(LPCITEMIDLIST pidl)
 {
-	LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
+    LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
 
-	if (pdata)
-	{
-	  switch (pdata->type)
-	  {
-	    case PT_FOLDER:
-	    case PT_VALUE:
-	    case PT_IESPECIAL1:
-	    case PT_IESPECIAL2:
-	      /*return (LPSTR)(pdata->u.file.szNames + strlen (pdata->u.file.szNames) + 1); */
-	      return NULL;
+    if (pdata)
+    {
+      switch (pdata->type)
+      {
+        case PT_FOLDER:
+        case PT_VALUE:
+        case PT_IESPECIAL1:
+        case PT_IESPECIAL2:
+          /*return (LPSTR)(pdata->u.file.szNames + strlen (pdata->u.file.szNames) + 1); */
+          return NULL;
 
-	    case PT_WORKGRP:
-	      /* return (LPSTR)(pdata->u.network.szNames + strlen (pdata->u.network.szNames) + 1); */
-	      return NULL;
+        case PT_WORKGRP:
+          /* return (LPSTR)(pdata->u.network.szNames + strlen (pdata->u.network.szNames) + 1); */
+          return NULL;
 
-	    case PT_VALUEW:
-	      return (LPWSTR)(pdata->u.file.szNames + wcslen ((LPWSTR)pdata->u.file.szNames) + 1);
-	  }
-	}
-	return NULL;
+        case PT_VALUEW:
+          return (LPWSTR)(pdata->u.file.szNames + wcslen ((LPWSTR)pdata->u.file.szNames) + 1);
+      }
+    }
+    return NULL;
 }
 
 
 static
 IID* _dbg_ILGetGUIDPointer(LPCITEMIDLIST pidl)
 {
-	LPPIDLDATA pdata =_ILGetDataPointer(pidl);
+    LPPIDLDATA pdata =_ILGetDataPointer(pidl);
 
-	if (pdata)
-	{
-	  switch (pdata->type)
-	  {
-	    case PT_SHELLEXT:
-	    case PT_GUID:
+    if (pdata)
+    {
+      switch (pdata->type)
+      {
+        case PT_SHELLEXT:
+        case PT_GUID:
             case PT_YAGUID:
-	      return &(pdata->u.guid.guid);
-	  }
-	}
-	return NULL;
+          return &(pdata->u.guid.guid);
+      }
+    }
+    return NULL;
 }
 
 static
 void _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 {
-	LPSTR		szSrc;
-	LPWSTR		szSrcW;
-	GUID const * 	riid;
+    LPSTR        szSrc;
+    LPWSTR        szSrcW;
+    GUID const *     riid;
 
-	if (!pidl) return;
+    if (!pidl) return;
 
-	if (szOut)
-	  *szOut = 0;
+    if (szOut)
+      *szOut = 0;
 
-	if (_dbg_ILIsDesktop(pidl))
-	{
-	 /* desktop */
-	  if (szOut) lstrcpynA(szOut, "Desktop", uOutSize);
-	}
-	else if (( szSrc = _dbg_ILGetTextPointer(pidl) ))
-	{
-	  /* filesystem */
-	  if (szOut) lstrcpynA(szOut, szSrc, uOutSize);
-	}
-	else if (( szSrcW = _dbg_ILGetTextPointerW(pidl) ))
-	{
-	  CHAR tmp[MAX_PATH];
-	  /* unicode filesystem */
-	  WideCharToMultiByte(CP_ACP,0,szSrcW, -1, tmp, MAX_PATH, NULL, NULL);
-	  if (szOut) lstrcpynA(szOut, tmp, uOutSize);
-	}
-	else if (( riid = _dbg_ILGetGUIDPointer(pidl) ))
-	{
-	  if (szOut)
+    if (_dbg_ILIsDesktop(pidl))
+    {
+     /* desktop */
+      if (szOut) lstrcpynA(szOut, "Desktop", uOutSize);
+    }
+    else if (( szSrc = _dbg_ILGetTextPointer(pidl) ))
+    {
+      /* filesystem */
+      if (szOut) lstrcpynA(szOut, szSrc, uOutSize);
+    }
+    else if (( szSrcW = _dbg_ILGetTextPointerW(pidl) ))
+    {
+      CHAR tmp[MAX_PATH];
+      /* unicode filesystem */
+      WideCharToMultiByte(CP_ACP,0,szSrcW, -1, tmp, MAX_PATH, NULL, NULL);
+      if (szOut) lstrcpynA(szOut, tmp, uOutSize);
+    }
+    else if (( riid = _dbg_ILGetGUIDPointer(pidl) ))
+    {
+      if (szOut)
             sprintf( szOut, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
                  riid->Data1, riid->Data2, riid->Data3,
                  riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
                  riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7] );
-	}
+    }
 }
 
 
@@ -247,21 +247,21 @@ void _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 
 void pdump (LPCITEMIDLIST pidl)
 {
-	LPCITEMIDLIST pidltemp = pidl;
+    LPCITEMIDLIST pidltemp = pidl;
 
-	if (!TRACE_ON(pidl)) return;
+    if (!TRACE_ON(pidl)) return;
 
-	if (! pidltemp)
-	{
-	  MESSAGE ("-------- pidl=NULL (Desktop)\n");
-	}
-	else
-	{
-	  MESSAGE ("-------- pidl=%p\n", pidl);
-	  if (pidltemp->mkid.cb)
-	  {
-	    do
-	    {
+    if (! pidltemp)
+    {
+      MESSAGE ("-------- pidl=NULL (Desktop)\n");
+    }
+    else
+    {
+      MESSAGE ("-------- pidl=%p\n", pidl);
+      if (pidltemp->mkid.cb)
+      {
+        do
+        {
           if (_ILIsUnicode(pidltemp))
           {
               DWORD dwAttrib = 0;
@@ -297,16 +297,16 @@ void pdump (LPCITEMIDLIST pidl)
                            debugstr_a(szName), debugstr_a(szLongName), debugstr_a(szShortName));
           }
 
-	      pidltemp = _dbg_ILGetNext(pidltemp);
+          pidltemp = _dbg_ILGetNext(pidltemp);
 
-	    } while (pidltemp && pidltemp->mkid.cb);
-	  }
-	  else
-	  {
-	    MESSAGE ("empty pidl (Desktop)\n");
-	  }
-	  pcheck(pidl);
-	}
+        } while (pidltemp && pidltemp->mkid.cb);
+      }
+      else
+      {
+        MESSAGE ("empty pidl (Desktop)\n");
+      }
+      pcheck(pidl);
+    }
 }
 
 static void dump_pidl_hex( LPCITEMIDLIST pidl )
@@ -340,83 +340,92 @@ BOOL pcheck( LPCITEMIDLIST pidl )
 
     while( pidltemp && pidltemp->mkid.cb )
     {
-        type = _dbg_ILGetDataPointer(pidltemp)->type;
-        switch( type )
+        LPPIDLDATA pidlData = _dbg_ILGetDataPointer(pidltemp);
+
+        if (pidlData)
         {
-        case PT_CPLAPPLET:
-        case PT_GUID:
-        case PT_SHELLEXT:
-        case PT_DRIVE:
-        case PT_DRIVE1:
-        case PT_DRIVE2:
-        case PT_DRIVE3:
-        case PT_FOLDER:
-        case PT_VALUE:
-        case PT_VALUEW:
-        case PT_FOLDER1:
-        case PT_WORKGRP:
-        case PT_COMP:
-        case PT_NETPROVIDER:
-        case PT_NETWORK:
-        case PT_IESPECIAL1:
-        case PT_YAGUID:
-        case PT_IESPECIAL2:
-        case PT_SHARE:
-            break;
-        default:
-            ERR("unknown IDLIST %p [%p] size=%u type=%x\n",
-                pidl, pidltemp, pidltemp->mkid.cb,type );
-            dump_pidl_hex( pidltemp );
+            type = pidlData->type;
+            switch( type )
+            {
+                case PT_CPLAPPLET:
+                case PT_GUID:
+                case PT_SHELLEXT:
+                case PT_DRIVE:
+                case PT_DRIVE1:
+                case PT_DRIVE2:
+                case PT_DRIVE3:
+                case PT_FOLDER:
+                case PT_VALUE:
+                case PT_VALUEW:
+                case PT_FOLDER1:
+                case PT_WORKGRP:
+                case PT_COMP:
+                case PT_NETPROVIDER:
+                case PT_NETWORK:
+                case PT_IESPECIAL1:
+                case PT_YAGUID:
+                case PT_IESPECIAL2:
+                case PT_SHARE:
+                    break;
+                default:
+                    ERR("unknown IDLIST %p [%p] size=%u type=%x\n",
+                        pidl, pidltemp, pidltemp->mkid.cb,type );
+                    dump_pidl_hex( pidltemp );
+                    return FALSE;
+            }
+            pidltemp = _dbg_ILGetNext(pidltemp);
+        }
+        else
+        {
             return FALSE;
         }
-        pidltemp = _dbg_ILGetNext(pidltemp);
     }
     return TRUE;
 }
 
 static const struct {
-	REFIID riid;
-	const char *name;
+    REFIID riid;
+    const char *name;
 } InterfaceDesc[] = {
-	{IID_IUnknown,			"IID_IUnknown"},
-	{IID_IClassFactory,		"IID_IClassFactory"},
-	{IID_IShellView,		"IID_IShellView"},
-	{IID_IOleCommandTarget,	"IID_IOleCommandTarget"},
-	{IID_IDropTarget,		"IID_IDropTarget"},
-	{IID_IDropSource,		"IID_IDropSource"},
-	{IID_IViewObject,		"IID_IViewObject"},
-	{IID_IContextMenu,		"IID_IContextMenu"},
-	{IID_IShellExtInit,		"IID_IShellExtInit"},
-	{IID_IShellFolder,		"IID_IShellFolder"},
-	{IID_IShellFolder2,		"IID_IShellFolder2"},
-	{IID_IPersist,			"IID_IPersist"},
-	{IID_IPersistFolder,		"IID_IPersistFolder"},
-	{IID_IPersistFolder2,		"IID_IPersistFolder2"},
-	{IID_IPersistFolder3,		"IID_IPersistFolder3"},
-	{IID_IExtractIconA,		"IID_IExtractIconA"},
-	{IID_IExtractIconW,		"IID_IExtractIconW"},
-	{IID_IDataObject,		"IID_IDataObject"},
-	{IID_IAutoComplete,            "IID_IAutoComplete"},
-	{IID_IAutoComplete2,           "IID_IAutoComplete2"},
+    {IID_IUnknown,            "IID_IUnknown"},
+    {IID_IClassFactory,        "IID_IClassFactory"},
+    {IID_IShellView,        "IID_IShellView"},
+    {IID_IOleCommandTarget,    "IID_IOleCommandTarget"},
+    {IID_IDropTarget,        "IID_IDropTarget"},
+    {IID_IDropSource,        "IID_IDropSource"},
+    {IID_IViewObject,        "IID_IViewObject"},
+    {IID_IContextMenu,        "IID_IContextMenu"},
+    {IID_IShellExtInit,        "IID_IShellExtInit"},
+    {IID_IShellFolder,        "IID_IShellFolder"},
+    {IID_IShellFolder2,        "IID_IShellFolder2"},
+    {IID_IPersist,            "IID_IPersist"},
+    {IID_IPersistFolder,        "IID_IPersistFolder"},
+    {IID_IPersistFolder2,        "IID_IPersistFolder2"},
+    {IID_IPersistFolder3,        "IID_IPersistFolder3"},
+    {IID_IExtractIconA,        "IID_IExtractIconA"},
+    {IID_IExtractIconW,        "IID_IExtractIconW"},
+    {IID_IDataObject,        "IID_IDataObject"},
+    {IID_IAutoComplete,            "IID_IAutoComplete"},
+    {IID_IAutoComplete2,           "IID_IAutoComplete2"},
         {IID_IShellLinkA,              "IID_IShellLinkA"},
         {IID_IShellLinkW,              "IID_IShellLinkW"},
-	};
+    };
 
 const char * shdebugstr_guid( const struct _GUID *id )
 {
-	unsigned int i;
-	const char* name = NULL;
-	char clsidbuf[100];
+    unsigned int i;
+    const char* name = NULL;
+    char clsidbuf[100];
 
-	if (!id) return "(null)";
+    if (!id) return "(null)";
 
-	    for (i=0; i < sizeof(InterfaceDesc) / sizeof(InterfaceDesc[0]); i++) {
-	        if (IsEqualIID(InterfaceDesc[i].riid, *id)) name = InterfaceDesc[i].name;
-	    }
-	    if (!name) {
-		if (HCR_GetClassNameA(*id, clsidbuf, 100))
-		    name = clsidbuf;
-	    }
+        for (i=0; i < sizeof(InterfaceDesc) / sizeof(InterfaceDesc[0]); i++) {
+            if (IsEqualIID(InterfaceDesc[i].riid, *id)) name = InterfaceDesc[i].name;
+        }
+        if (!name) {
+        if (HCR_GetClassNameA(*id, clsidbuf, 100))
+            name = clsidbuf;
+        }
 
             return wine_dbg_sprintf( "\n\t{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x} (%s)",
                  id->Data1, id->Data2, id->Data3,

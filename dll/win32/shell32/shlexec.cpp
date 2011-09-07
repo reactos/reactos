@@ -20,6 +20,7 @@
  */
 
 #include <precomp.h>
+#include <windef.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 

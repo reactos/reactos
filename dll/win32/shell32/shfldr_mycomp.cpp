@@ -77,6 +77,8 @@ CDrivesFolderEnum::~CDrivesFolderEnum()
 
 HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
 {
+    DbgPrint("[shell32, CDrivesFolderEnum::Initialize] Called with flags = %d\n", dwFlags);
+
 	if (CreateMyCompEnumList(dwFlags) == FALSE)
 		return E_FAIL;
 	return S_OK;
@@ -97,6 +99,8 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
 
+    DbgPrint("[shell32, CDrivesFolderEnum::CreateMyCompEnumList] Called with flags = %d\n", dwFlags);
+
     /* enumerate the folders */
     if (dwFlags & SHCONTF_FOLDERS)
     {
@@ -114,7 +118,8 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
         }
 
         TRACE("-- (%p)-> enumerate (mycomputer shell extensions)\n", this);
-        for (i=0; i<2; i++) {
+        for (i=0; i<2; i++)
+        {
             if (ret && !RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
                                       MyComputer_NameSpaceW, 0, KEY_READ, &hkey))
             {
@@ -255,19 +260,27 @@ HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUM
 
 	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
+    DbgPrint("[shell32, CDrivesFolder::EnumObjects] Called with flags = %d\n", dwFlags);
+
 	if (ppEnumIDList == NULL)
 		return E_POINTER;
-	*ppEnumIDList = NULL;
+	
+    *ppEnumIDList = NULL;
 	ATLTRY (theEnumerator = new CComObject<CDrivesFolderEnum>);
-	if (theEnumerator == NULL)
+	
+    if (theEnumerator == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+	
+    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
 	if (FAILED (hResult))
 	{
 		delete theEnumerator;
 		return hResult;
 	}
-	hResult = theEnumerator->Initialize (hwndOwner, dwFlags);
+
+	DbgPrint("[shell32, CDrivesFolder::EnumObjects] Calling theEnumerator->Initialize\n");
+
+    hResult = theEnumerator->Initialize (hwndOwner, dwFlags);
 	if (FAILED (hResult))
 		return hResult;
 	*ppEnumIDList = result.Detach ();

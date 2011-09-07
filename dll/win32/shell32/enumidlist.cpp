@@ -1,7 +1,7 @@
 /*
- *	IEnumIDList
+ *    IEnumIDList
  *
- *	Copyright 1998	Juergen Schmied <juergen.schmied@metronet.de>
+ *    Copyright 1998    Juergen Schmied <juergen.schmied@metronet.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,9 +24,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 IEnumIDListImpl::IEnumIDListImpl()
 {
-	mpFirst = NULL;
-	mpLast = NULL;
-	mpCurrent = NULL;
+    mpFirst = NULL;
+    mpLast = NULL;
+    mpCurrent = NULL;
 }
 
 IEnumIDListImpl::~IEnumIDListImpl()
@@ -38,39 +38,39 @@ IEnumIDListImpl::~IEnumIDListImpl()
  */
 BOOL IEnumIDListImpl::AddToEnumList(LPITEMIDLIST pidl)
 {
-	ENUMLIST					*pNew;
+    ENUMLIST *pNew;
 
-	TRACE("(%p)->(pidl=%p)\n", this, pidl);
+    TRACE("(%p)->(pidl=%p)\n", this, pidl);
 
-	if (!pidl)
-		return FALSE;
+    if (!pidl)
+        return FALSE;
 
-	pNew = (ENUMLIST *)SHAlloc(sizeof(ENUMLIST));
-	if (pNew)
-	{
-	  /*set the next pointer */
-	  pNew->pNext = NULL;
-	  pNew->pidl = pidl;
+    pNew = (ENUMLIST *)SHAlloc(sizeof(ENUMLIST));
+    if (pNew)
+    {
+      /*set the next pointer */
+      pNew->pNext = NULL;
+      pNew->pidl = pidl;
 
-	  /*is This the first item in the list? */
-	  if (!mpFirst)
-	  {
-	    mpFirst = pNew;
-	    mpCurrent = pNew;
-	  }
+      /*is This the first item in the list? */
+      if (!mpFirst)
+      {
+        mpFirst = pNew;
+        mpCurrent = pNew;
+      }
 
-	  if (mpLast)
-	  {
-	    /*add the new item to the end of the list */
-	    mpLast->pNext = pNew;
-	  }
+      if (mpLast)
+      {
+        /*add the new item to the end of the list */
+        mpLast->pNext = pNew;
+      }
 
-	  /*update the last item pointer */
-	  mpLast = pNew;
-	  TRACE("-- (%p)->(first=%p, last=%p)\n", this, mpFirst, mpLast);
-	  return TRUE;
-	}
-	return FALSE;
+      /*update the last item pointer */
+      mpLast = pNew;
+      TRACE("-- (%p)->(first=%p, last=%p)\n", this, mpFirst, mpLast);
+      return TRUE;
+    }
+    return FALSE;
 }
 
 /**************************************************************************
@@ -78,21 +78,21 @@ BOOL IEnumIDListImpl::AddToEnumList(LPITEMIDLIST pidl)
 */
 BOOL IEnumIDListImpl::DeleteList()
 {
-	ENUMLIST					*pDelete;
+    ENUMLIST                    *pDelete;
 
-	TRACE("(%p)->()\n", this);
+    TRACE("(%p)->()\n", this);
 
-	while (mpFirst)
-	{
-		pDelete = mpFirst;
-		mpFirst = pDelete->pNext;
-		SHFree(pDelete->pidl);
-		SHFree(pDelete);
-	}
-	mpFirst = NULL;
-	mpLast = NULL;
-	mpCurrent = NULL;
-	return TRUE;
+    while (mpFirst)
+    {
+        pDelete = mpFirst;
+        mpFirst = pDelete->pNext;
+        SHFree(pDelete->pidl);
+        SHFree(pDelete);
+    }
+    mpFirst = NULL;
+    mpLast = NULL;
+    mpCurrent = NULL;
+    return TRUE;
 }
 
 /**************************************************************************
@@ -100,20 +100,25 @@ BOOL IEnumIDListImpl::DeleteList()
  */
 BOOL IEnumIDListImpl::HasItemWithCLSID(LPITEMIDLIST pidl)
 {
-	ENUMLIST					*pCur;
-    REFIID						refid = *_ILGetGUIDPointer(pidl);
+    ENUMLIST *pCur;
+    IID *ptr = _ILGetGUIDPointer(pidl);
 
-    pCur = mpFirst;
-
-    while(pCur)
+    if (ptr)
     {
-        LPGUID curid = _ILGetGUIDPointer(pCur->pidl);
-        if (curid && IsEqualGUID(*curid, refid))
+        REFIID refid = *ptr;
+        pCur = mpFirst;
+
+        while(pCur)
         {
-            return TRUE;
+            LPGUID curid = _ILGetGUIDPointer(pCur->pidl);
+            if (curid && IsEqualGUID(*curid, refid))
+            {
+                return TRUE;
+            }
+            pCur = pCur->pNext;
         }
-        pCur = pCur->pNext;
     }
+
     return FALSE;
 }
 
@@ -122,8 +127,8 @@ BOOL IEnumIDListImpl::HasItemWithCLSID(LPITEMIDLIST pidl)
  *  CreateFolderEnumList()
  */
 BOOL IEnumIDListImpl::CreateFolderEnumList(
-	LPCWSTR lpszPath,
-	DWORD dwFlags)
+    LPCWSTR lpszPath,
+    DWORD dwFlags)
 {
     LPITEMIDLIST pidl=NULL;
     WIN32_FIND_DATAW stffile;
@@ -179,6 +184,7 @@ BOOL IEnumIDListImpl::CreateFolderEnumList(
         } while (succeeded && !findFinished);
         FindClose(hFile);
     }
+
     return succeeded;
 }
 
@@ -187,66 +193,66 @@ BOOL IEnumIDListImpl::CreateFolderEnumList(
  */
 
 HRESULT WINAPI IEnumIDListImpl::Next(
-	ULONG celt,
-	LPITEMIDLIST * rgelt,
-	ULONG *pceltFetched)
+    ULONG celt,
+    LPITEMIDLIST * rgelt,
+    ULONG *pceltFetched)
 {
-	ULONG    i;
-	HRESULT  hr = S_OK;
-	LPITEMIDLIST  temp;
+    ULONG    i;
+    HRESULT  hr = S_OK;
+    LPITEMIDLIST  temp;
 
-	TRACE("(%p)->(%d,%p, %p)\n", this, celt, rgelt, pceltFetched);
+    TRACE("(%p)->(%d,%p, %p)\n", this, celt, rgelt, pceltFetched);
 
 /* It is valid to leave pceltFetched NULL when celt is 1. Some of explorer's
  * subsystems actually use it (and so may a third party browser)
  */
-	if(pceltFetched)
-	  *pceltFetched = 0;
+    if(pceltFetched)
+      *pceltFetched = 0;
 
-	*rgelt=0;
+    *rgelt=0;
 
-	if(celt > 1 && !pceltFetched)
-	{ return E_INVALIDARG;
-	}
+    if(celt > 1 && !pceltFetched)
+    { return E_INVALIDARG;
+    }
 
-	if(celt > 0 && !mpCurrent)
-	{ return S_FALSE;
-	}
+    if(celt > 0 && !mpCurrent)
+    { return S_FALSE;
+    }
 
-	for(i = 0; i < celt; i++)
-	{ if(!mpCurrent)
-	    break;
+    for(i = 0; i < celt; i++)
+    { if(!mpCurrent)
+        break;
 
-	  temp = ILClone(mpCurrent->pidl);
-	  rgelt[i] = temp;
-	  mpCurrent = mpCurrent->pNext;
-	}
-	if(pceltFetched)
-	{  *pceltFetched = i;
-	}
+      temp = ILClone(mpCurrent->pidl);
+      rgelt[i] = temp;
+      mpCurrent = mpCurrent->pNext;
+    }
+    if(pceltFetched)
+    {  *pceltFetched = i;
+    }
 
-	return hr;
+    return hr;
 }
 
 /**************************************************************************
 *  IEnumIDList_fnSkip
 */
 HRESULT WINAPI IEnumIDListImpl::Skip(
-	ULONG celt)
+    ULONG celt)
 {
-	DWORD    dwIndex;
-	HRESULT  hr = S_OK;
+    DWORD    dwIndex;
+    HRESULT  hr = S_OK;
 
-	TRACE("(%p)->(%u)\n", this, celt);
+    TRACE("(%p)->(%u)\n", this, celt);
 
-	for(dwIndex = 0; dwIndex < celt; dwIndex++)
-	{ if(!mpCurrent)
-	  { hr = S_FALSE;
-	    break;
-	  }
-	  mpCurrent = mpCurrent->pNext;
-	}
-	return hr;
+    for(dwIndex = 0; dwIndex < celt; dwIndex++)
+    { if(!mpCurrent)
+      { hr = S_FALSE;
+        break;
+      }
+      mpCurrent = mpCurrent->pNext;
+    }
+    return hr;
 }
 
 /**************************************************************************
@@ -254,9 +260,9 @@ HRESULT WINAPI IEnumIDListImpl::Skip(
 */
 HRESULT WINAPI IEnumIDListImpl::Reset()
 {
-	TRACE("(%p)\n", this);
-	mpCurrent = mpFirst;
-	return S_OK;
+    TRACE("(%p)\n", this);
+    mpCurrent = mpFirst;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -264,8 +270,8 @@ HRESULT WINAPI IEnumIDListImpl::Reset()
 */
 HRESULT WINAPI IEnumIDListImpl::Clone(LPENUMIDLIST *ppenum)
 {
-	TRACE("(%p)->() to (%p)->() E_NOTIMPL\n", this, ppenum);
-	return E_NOTIMPL;
+    TRACE("(%p)->() to (%p)->() E_NOTIMPL\n", this, ppenum);
+    return E_NOTIMPL;
 }
 
 /**************************************************************************
@@ -274,22 +280,22 @@ HRESULT WINAPI IEnumIDListImpl::Clone(LPENUMIDLIST *ppenum)
  */
 HRESULT IEnumIDList_Constructor(IEnumIDList **enumerator)
 {
-	CComObject<IEnumIDListImpl>				*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<IEnumIDListImpl>                *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	if (enumerator == NULL)
-		return E_POINTER;
-	*enumerator = NULL;
-	ATLTRY (theEnumerator = new CComObject<IEnumIDListImpl>);
-	if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
-	*enumerator = result.Detach ();
-	return S_OK;
+    if (enumerator == NULL)
+        return E_POINTER;
+    *enumerator = NULL;
+    ATLTRY (theEnumerator = new CComObject<IEnumIDListImpl>);
+    if (theEnumerator == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
+    *enumerator = result.Detach ();
+    return S_OK;
 }

@@ -87,6 +87,21 @@ GetKeyDescription(LPWSTR szKeyName, LPWSTR szResult)
   return TRUE;
 }
 
+void CNewMenu::UnloadItem(SHELLNEW_ITEM *item)
+{
+    // bail if the item is clearly invalid
+    if (NULL == item)
+        return;
+
+    if (NULL != item->szTarget)
+        free(item->szTarget);
+
+    free(item->szDesc);
+    free(item->szIcon);
+    free(item->szExt);
+
+    HeapFree(GetProcessHeap(), 0, item);
+}
 
 CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPWSTR szKeyName)
 {
