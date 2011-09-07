@@ -722,7 +722,7 @@ HalpWriteCmos(
 //
 VOID
 NTAPI
-HalpAcquireSystemHardwareSpinLock(
+HalpAcquireCmosSpinLock(
     VOID
 );
 

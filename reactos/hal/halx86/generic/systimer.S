@@ -11,7 +11,7 @@
 
 #include <ks386.inc>
 
-EXTERN _HalpAcquireSystemHardwareSpinLock@0:PROC
+EXTERN _HalpAcquireCmosSpinLock@0:PROC
 EXTERN _HalpReleaseCmosSpinLock@0:PROC
 EXTERN _DbgBreakPoint@0:PROC
 
@@ -98,7 +98,7 @@ _HalpCalibrateStallExecution@0:
     mov dword ptr [ebp-12], 0
 
     /* Acquire CMOS lock */
-    call _HalpAcquireSystemHardwareSpinLock@0
+    call _HalpAcquireCmosSpinLock@0
 
     /* Now initialize register A on the CMOS */
     mov ax, HEX(2D00) OR CMOS_REGISTER_A
@@ -186,7 +186,7 @@ OnlyOnePersonCanWriteHalCode:
     push offset Looper
 
     /* Acquire CMOS lock */
-    call _HalpAcquireSystemHardwareSpinLock@0
+    call _HalpAcquireCmosSpinLock@0
 
     /* Now initialize register A on the CMOS */
     mov ax, HEX(2D00) OR CMOS_REGISTER_A
@@ -271,7 +271,7 @@ FoundFactor:
     mov eax, HEX(13)
 
     /* Acquire CMOS lock */
-    call _HalpAcquireSystemHardwareSpinLock@0
+    call _HalpAcquireCmosSpinLock@0
 
     /* Now initialize register A on the CMOS */
     mov ax, HEX(2D00) OR CMOS_REGISTER_A
