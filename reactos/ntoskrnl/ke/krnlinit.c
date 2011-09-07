@@ -24,6 +24,9 @@ PLOADER_PARAMETER_BLOCK KeLoaderBlock;
 /* PRCB Array */
 PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
 
+/* Number of processors */
+UCHAR KeNumberProcessors = 0;
+
 /* NUMA Node Support */
 KNODE KiNode0;
 PKNODE KeNodeBlock[1];
