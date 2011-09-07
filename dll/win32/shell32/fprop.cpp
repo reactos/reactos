@@ -32,6 +32,62 @@ typedef struct _LANGANDCODEPAGE_
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
+static LONG SH_GetAssociatedApplication(WCHAR *fileext, WCHAR *wAssocApp)
+{
+    WCHAR wDataType[MAX_PATH] = {0};
+    HKEY hkey;
+    LONG result;
+    DWORD dwLen = MAX_PATH * sizeof(WCHAR);
+
+    wAssocApp[0] = '\0';
+    RegCreateKeyExW(HKEY_CLASSES_ROOT, fileext, 0, NULL, 0, KEY_READ, NULL, &hkey, NULL);
+    result = RegQueryValueExW(hkey, L"", NULL, NULL, (LPBYTE)wDataType, &dwLen);
+    RegCloseKey(hkey);
+    
+    if (result == ERROR_SUCCESS)
+    {
+        wcscat(wDataType, L"\\shell\\open\\command");
+        dwLen = MAX_PATH * sizeof(WCHAR);
+        RegCreateKeyExW(HKEY_CLASSES_ROOT, wDataType, 0, NULL, 0, KEY_READ, NULL, &hkey, NULL);
+        result = (RegQueryValueExW(hkey, NULL, NULL, NULL, (LPBYTE)wAssocApp, &dwLen));
+        RegCloseKey(hkey);
+        
+        if (result != ERROR_SUCCESS)
+        {
+            /* FIXME: Make it return full path instead of
+               notepad.exe "%1"
+               %systemroot%\notepad.exe "%1"
+               etc
+               Maybe there is code to do that somewhere? 
+               dll\win32\shell32\shlexec.c for example?
+            */
+            wAssocApp[0] = '\0';
+        }
+    }
+
+    return result;
+}
+
+static LONG SH_FileGeneralOpensWith(HWND hwndDlg, WCHAR *fileext)
+{
+    HWND hDlgCtrl;
+    LONG result;
+    WCHAR wAppName[MAX_PATH] = {0};
+    WCHAR wAssocApp[MAX_PATH] = {0};
+    
+    hDlgCtrl = GetDlgItem(hwndDlg, 14007);
+    result = SH_GetAssociatedApplication(fileext, wAssocApp);
+    
+    if (result == ERROR_SUCCESS)
+    {
+        _wsplitpath(wAssocApp, NULL, NULL, wAppName, NULL);
+    
+        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)wAppName);
+    }
+
+    return result;
+}
+
 /*************************************************************************
  *
  * SH_CreatePropertySheetPage [Internal]
@@ -668,6 +724,9 @@ SH_FileGeneralDlgProc(HWND hwndDlg,
 
             /* enumerate file extension from registry and application which opens it */
             SH_FileGeneralSetFileType(hwndDlg, wcsrchr(lpstr, '.'));
+
+            /* set opens with */
+            SH_FileGeneralOpensWith(hwndDlg, wcsrchr(lpstr, '.'));
 
             /* set file time create/modfied/accessed */
             SH_FileGeneralSetFileSizeTime(hwndDlg, lpstr, NULL);
