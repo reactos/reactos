@@ -68,6 +68,7 @@ void InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName);
 COpenWithMenu::COpenWithMenu()
 {
     count = 0;
+    wId = 0;
 }
 
 COpenWithMenu::~COpenWithMenu()

@@ -34,16 +34,16 @@ CFSFolder::EnumObjects.
 */
 
 class CFileSysEnumX :
-	public IEnumIDListImpl
+    public IEnumIDListImpl
 {
 private:
 public:
-	CFileSysEnumX();
-	~CFileSysEnumX();
-	HRESULT WINAPI Initialize(DWORD dwFlags);
+    CFileSysEnumX();
+    ~CFileSysEnumX();
+    HRESULT WINAPI Initialize(DWORD dwFlags);
 
 BEGIN_COM_MAP(CFileSysEnumX)
-	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
@@ -67,16 +67,17 @@ CFileSysEnumX::~CFileSysEnumX()
 
 HRESULT WINAPI CFileSysEnumX::Initialize(DWORD dwFlags)
 {
-    WCHAR								szPath[MAX_PATH];
+    WCHAR                                szPath[MAX_PATH];
 
     if (SHGetSpecialFolderPathW(0, szPath, CSIDL_PERSONAL, FALSE) == FALSE)
-		return E_FAIL;
-	return CreateFolderEnumList(szPath, dwFlags);
+        return E_FAIL;
+    return CreateFolderEnumList(szPath, dwFlags);
 }
 
 CMyDocsFolder::CMyDocsFolder()
 {
     pidlRoot = NULL;
+    sPathTarget = NULL;
 }
 
 CMyDocsFolder::~CMyDocsFolder()
@@ -88,16 +89,16 @@ CMyDocsFolder::~CMyDocsFolder()
 
 HRESULT WINAPI CMyDocsFolder::FinalConstruct()
 {
-	WCHAR								szMyPath[MAX_PATH];
+    WCHAR                                szMyPath[MAX_PATH];
 
-	if (!SHGetSpecialFolderPathW(0, szMyPath, CSIDL_PERSONAL, TRUE))
-		return E_UNEXPECTED;
+    if (!SHGetSpecialFolderPathW(0, szMyPath, CSIDL_PERSONAL, TRUE))
+        return E_UNEXPECTED;
 
-	pidlRoot = _ILCreateMyDocuments();    /* my qualified pidl */
-	sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
-	wcscpy(sPathTarget, szMyPath);
+    pidlRoot = _ILCreateMyDocuments();    /* my qualified pidl */
+    sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
+    wcscpy(sPathTarget, szMyPath);
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
@@ -189,32 +190,32 @@ HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
  */
 HRESULT WINAPI CMyDocsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-	CComObject<CFileSysEnumX>				*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<CFileSysEnumX>                *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
-	if (ppEnumIDList == NULL)
-		return E_POINTER;
-	*ppEnumIDList = NULL;
-	ATLTRY (theEnumerator = new CComObject<CFileSysEnumX>);
-	if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
-	hResult = theEnumerator->Initialize (dwFlags);
-	if (FAILED (hResult))
-		return hResult;
-	*ppEnumIDList = result.Detach ();
+    if (ppEnumIDList == NULL)
+        return E_POINTER;
+    *ppEnumIDList = NULL;
+    ATLTRY (theEnumerator = new CComObject<CFileSysEnumX>);
+    if (theEnumerator == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
+    hResult = theEnumerator->Initialize (dwFlags);
+    if (FAILED (hResult))
+        return hResult;
+    *ppEnumIDList = result.Detach ();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************

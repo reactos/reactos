@@ -48,18 +48,18 @@ always shows My Computer.
 class CDesktopFolder;
 
 class CDesktopFolderEnum :
-	public IEnumIDListImpl
+    public IEnumIDListImpl
 {
 private:
-//	CComPtr								fDesktopEnumerator;
-//	CComPtr								fCommonDesktopEnumerator;
+//    CComPtr                                fDesktopEnumerator;
+//    CComPtr                                fCommonDesktopEnumerator;
 public:
-	CDesktopFolderEnum();
-	~CDesktopFolderEnum();
-	HRESULT WINAPI Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags);
+    CDesktopFolderEnum();
+    ~CDesktopFolderEnum();
+    HRESULT WINAPI Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags);
 
 BEGIN_COM_MAP(CDesktopFolderEnum)
-	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
@@ -145,125 +145,126 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
     /* enumerate the root folders */
     if (dwFlags & SHCONTF_FOLDERS)
     {
-		HKEY hkey;
-		UINT i;
-		DWORD dwResult;
+        HKEY hkey;
+        UINT i;
+        DWORD dwResult;
 
-		/* create the pidl for This item */
-		if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
-		{
-			ret = AddToEnumList(_ILCreateMyDocuments());
-		}
-		ret = AddToEnumList(_ILCreateMyComputer());
+        /* create the pidl for This item */
+        if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
+        {
+            ret = AddToEnumList(_ILCreateMyDocuments());
+        }
+        ret = AddToEnumList(_ILCreateMyComputer());
 
-		for (i = 0; i < 2; i++)
-		{
-			if (i == 0)
-				dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
-			else 
-				dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
+        for (i = 0; i < 2; i++)
+        {
+            if (i == 0)
+                dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
+            else 
+                dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
 
-			if (dwResult == ERROR_SUCCESS)
-			{
-				WCHAR iid[50];
-				LPITEMIDLIST pidl;
-				int i=0;
+            if (dwResult == ERROR_SUCCESS)
+            {
+                WCHAR iid[50];
+                LPITEMIDLIST pidl;
+                int i=0;
 
-				while (ret)
-				{
-					DWORD size;
-					LONG r;
+                while (ret)
+                {
+                    DWORD size;
+                    LONG r;
 
-					size = sizeof (iid) / sizeof (iid[0]);
-					r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
-					if (ERROR_SUCCESS == r)
-					{
-						if (IsNamespaceExtensionHidden(iid) < 1)
-						{
-						   pidl = _ILCreateGuidFromStrW(iid);
-							if (pidl != NULL)
-							{
-							   if (!HasItemWithCLSID(pidl))
-							   {
-								   ret = AddToEnumList(pidl);
-							   }
-							   else
-							   {
-									SHFree(pidl);
-							  }
-							}
-					   }
-					}
-					else if (ERROR_NO_MORE_ITEMS == r)
-						break;
-					else
-						ret = FALSE;
-					i++;
-				}
-				RegCloseKey(hkey);
-			}
-		}
-		for (i = 0; i < 2; i++)
-		{
-			if (i == 0)
-				dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ClassicStartMenuW, 0, KEY_READ, &hkey);
-			else 
-				dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, ClassicStartMenuW, 0, KEY_READ, &hkey);
+                    size = sizeof (iid) / sizeof (iid[0]);
+                    r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
+                    if (ERROR_SUCCESS == r)
+                    {
+                        if (IsNamespaceExtensionHidden(iid) < 1)
+                        {
+                           pidl = _ILCreateGuidFromStrW(iid);
+                            if (pidl != NULL)
+                            {
+                               if (!HasItemWithCLSID(pidl))
+                               {
+                                   ret = AddToEnumList(pidl);
+                               }
+                               else
+                               {
+                                    SHFree(pidl);
+                              }
+                            }
+                       }
+                    }
+                    else if (ERROR_NO_MORE_ITEMS == r)
+                        break;
+                    else
+                        ret = FALSE;
+                    i++;
+                }
+                RegCloseKey(hkey);
+            }
+        }
+        for (i = 0; i < 2; i++)
+        {
+            if (i == 0)
+                dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ClassicStartMenuW, 0, KEY_READ, &hkey);
+            else 
+                dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, ClassicStartMenuW, 0, KEY_READ, &hkey);
 
-			if (dwResult == ERROR_SUCCESS)
-			{
-				DWORD j = 0, dwVal, Val, dwType, dwIID;
-				LONG r;
-				WCHAR iid[50];
+            if (dwResult == ERROR_SUCCESS)
+            {
+                DWORD j = 0, dwVal, Val, dwType, dwIID;
+                LONG r;
+                WCHAR iid[50];
 
-				while(ret)
-				{
-					dwVal = sizeof(Val);
-					dwIID = sizeof(iid) / sizeof(WCHAR);
+                while(ret)
+                {
+                    dwVal = sizeof(Val);
+                    dwIID = sizeof(iid) / sizeof(WCHAR);
 
-					r = RegEnumValueW(hkey, j++, iid, &dwIID, NULL, &dwType, (LPBYTE)&Val, &dwVal);
-					if (r == ERROR_SUCCESS)
-					{
-						if (Val == 0 && dwType == REG_DWORD)
-						{
-							LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
-							if (pidl != NULL)
-							{
-								if (!HasItemWithCLSID(pidl))
-								{
-								   AddToEnumList(pidl);
-								}
-								else
-								{
-									SHFree(pidl);
-								}
-							}
-						}
-					}
-					else if (ERROR_NO_MORE_ITEMS == r)
-						break;
-					else
-						ret = FALSE;
-				}
-				RegCloseKey(hkey);
-			}
+                    r = RegEnumValueW(hkey, j++, iid, &dwIID, NULL, &dwType, (LPBYTE)&Val, &dwVal);
+                    if (r == ERROR_SUCCESS)
+                    {
+                        if (Val == 0 && dwType == REG_DWORD)
+                        {
+                            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
+                            if (pidl != NULL)
+                            {
+                                if (!HasItemWithCLSID(pidl))
+                                {
+                                   AddToEnumList(pidl);
+                                }
+                                else
+                                {
+                                    SHFree(pidl);
+                                }
+                            }
+                        }
+                    }
+                    else if (ERROR_NO_MORE_ITEMS == r)
+                        break;
+                    else
+                        ret = FALSE;
+                }
+                RegCloseKey(hkey);
+            }
 
-		}
-	}
+        }
+    }
 
-	/* enumerate the elements in %windir%\desktop */
-	ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_DESKTOPDIRECTORY, FALSE);
-	ret = ret && CreateFolderEnumList(szPath, dwFlags);
+    /* enumerate the elements in %windir%\desktop */
+    ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_DESKTOPDIRECTORY, FALSE);
+    ret = ret && CreateFolderEnumList(szPath, dwFlags);
 
     ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
     ret = ret && CreateFolderEnumList(szPath, dwFlags);
 
-	return ret ? S_OK : E_FAIL;
+    return ret ? S_OK : E_FAIL;
 }
 
 CDesktopFolder::CDesktopFolder()
 {
     pidlRoot = NULL;
+    sPathTarget = NULL;
 }
 
 CDesktopFolder::~CDesktopFolder()
@@ -272,7 +273,7 @@ CDesktopFolder::~CDesktopFolder()
 
 HRESULT WINAPI CDesktopFolder::FinalConstruct()
 {
-    WCHAR								szMyPath[MAX_PATH];
+    WCHAR                                szMyPath[MAX_PATH];
 
     if (!SHGetSpecialFolderPathW( 0, szMyPath, CSIDL_DESKTOPDIRECTORY, TRUE ))
         return E_UNEXPECTED;
@@ -280,7 +281,7 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
     pidlRoot = _ILCreateDesktop();    /* my qualified pidl */
     sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
     wcscpy(sPathTarget, szMyPath);
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -390,37 +391,37 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
  */
 HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-	CComObject<CDesktopFolderEnum>			*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<CDesktopFolderEnum>            *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
     DbgPrint("[shell32, CDesktopFolder::EnumObjects] Called with flags = %d\n", dwFlags);
 
-	if (ppEnumIDList == NULL)
-		return E_POINTER;
-	*ppEnumIDList = NULL;
-	
+    if (ppEnumIDList == NULL)
+        return E_POINTER;
+    *ppEnumIDList = NULL;
+    
     ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnum>);
-	
+    
     if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	
+        return E_OUTOFMEMORY;
+    
     hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
-	
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
+    
     hResult = theEnumerator->Initialize (this, hwndOwner, dwFlags);
-	if (FAILED (hResult))
-		return hResult;
-	*ppEnumIDList = result.Detach ();
+    if (FAILED (hResult))
+        return hResult;
+    *ppEnumIDList = result.Detach ();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -464,7 +465,7 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LP
  */
 HRESULT WINAPI CDesktopFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
-    CComPtr<IShellView>					pShellView;
+    CComPtr<IShellView>                    pShellView;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n",
@@ -794,7 +795,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
 HRESULT WINAPI CDesktopFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
                 LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut)
 {
-    CComPtr<IShellFolder2>				psf;
+    CComPtr<IShellFolder2>                psf;
     HRESULT hr;
     WCHAR szSrc[MAX_PATH + 1], szDest[MAX_PATH + 1];
     LPWSTR ptr;
@@ -984,7 +985,7 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
 
 HRESULT WINAPI CDesktopFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
 {
-    CComPtr<IEnumIDList>				penum;
+    CComPtr<IEnumIDList>                penum;
     HRESULT hr;
     WCHAR wszText[MAX_PATH];
     WCHAR wszNewFolder[25];
@@ -1149,7 +1150,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
 
 HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl)
 {
-    CComPtr<IPersistFolder2>			ppf2;
+    CComPtr<IPersistFolder2>            ppf2;
     WCHAR szSrcPath[MAX_PATH];
     WCHAR szTargetPath[MAX_PATH];
     SHFILEOPSTRUCTW op;

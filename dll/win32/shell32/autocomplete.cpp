@@ -51,6 +51,7 @@ CAutoComplete::CAutoComplete()
 	txtbackup = NULL;
 	quickComplete = NULL;
     hwndEdit = NULL;
+    wpOrigLBoxProc = NULL;
 }
 
 /**************************************************************************
