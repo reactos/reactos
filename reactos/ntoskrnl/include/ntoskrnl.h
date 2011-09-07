@@ -86,14 +86,6 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
-/* Internal Headers */
-#include "internal/ntoskrnl.h"
-#include "config.h"
-
-#include <reactos/probe.h>
-#include "internal/probe.h"
-#include "resource.h"
-
 //
 // Define the internal versions of external and public global data
 //
@@ -123,3 +115,12 @@ extern UCHAR _KeNumberProcessors;
 #undef HALDISPATCH
 #define HALDISPATCH                     (&HalDispatchTable)
 #define ExRaiseStatus RtlRaiseStatus
+
+/* Internal Headers */
+#include "internal/ntoskrnl.h"
+#include "config.h"
+
+#include <reactos/probe.h>
+#include "internal/probe.h"
+#include "resource.h"
+
