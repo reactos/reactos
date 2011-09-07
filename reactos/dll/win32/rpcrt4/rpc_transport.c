@@ -224,6 +224,9 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
     if (err == ERROR_PIPE_BUSY) {
       TRACE("connection failed, error=%x\n", err);
       return RPC_S_SERVER_TOO_BUSY;
+    } else if (err == ERROR_BAD_NETPATH) {
+      TRACE("connection failed, error=%x\n", err);
+      return RPC_S_SERVER_UNAVAILABLE;
     }
     if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
       err = GetLastError();
@@ -305,17 +308,31 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq
 static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
 {
   RpcConnection_np *npc = (RpcConnection_np *) Connection;
-  static const char prefix[] = "\\\\.";
+  static const char prefix[] = "\\\\";
+  static const char local[] =".";
   RPC_STATUS r;
   LPSTR pname;
+  INT size;
 
   /* already connected? */
   if (npc->pipe)
     return RPC_S_OK;
 
   /* protseq=ncacn_np: named pipes */
-  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
-  strcat(strcpy(pname, prefix), Connection->Endpoint);
+  size = strlen(prefix);
+  if (Connection->NetworkAddr == NULL || strlen(Connection->NetworkAddr) == 0)
+    size += strlen(local);
+  else
+    size += strlen(Connection->NetworkAddr);
+  size += strlen(Connection->Endpoint) + 1;
+
+  pname = I_RpcAllocate(size);
+  strcpy(pname, prefix);
+  if (Connection->NetworkAddr == NULL || strlen(Connection->NetworkAddr) == 0)
+    strcat(pname, local);
+  else
+    strcat(pname, Connection->NetworkAddr);
+  strcat(pname, Connection->Endpoint);
   r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
   I_RpcFree(pname);
 
