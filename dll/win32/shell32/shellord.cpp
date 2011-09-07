@@ -2253,7 +2253,7 @@ EXTERN_C HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
  *    SHParseDisplayName        [shell version 6.0]
  */
 EXTERN_C HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
-LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
+    LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 {
     CComPtr<IShellFolder>		psfDesktop;
     HRESULT         hr=E_FAIL;

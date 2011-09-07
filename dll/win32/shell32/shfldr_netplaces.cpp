@@ -45,6 +45,7 @@ static shvheader NetworkPlacesSFHeader[] = {
 
 CNetFolder::CNetFolder()
 {
+    pidlRoot = NULL;
 }
 
 CNetFolder::~CNetFolder()

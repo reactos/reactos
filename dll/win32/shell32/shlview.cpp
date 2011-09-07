@@ -781,13 +781,15 @@ HRESULT CDefView::FillList()
 
 	TRACE("%p\n",this);
 
+    DbgPrint("[shell32, CDefView::FillList] Called\n");
+
 	/* get the itemlist from the shfolder*/
 	hRes = pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS, &pEnumIDList);
 	if (hRes != S_OK)
 	{
 	  if (hRes==S_FALSE)
 	    return(NOERROR);
-	  return(hRes);
+	    return(hRes);
 	}
 
 	/* create a pointer array */
@@ -873,6 +875,8 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
 	TRACE("%p\n",this);
 
+    DbgPrint("[shell32, CDefView::OnCreate] Called\n");
+
 	if(CreateList())
 	{
 	  if(InitList())
@@ -881,7 +885,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 	  }
 	}
 
-        if (SUCCEEDED(this->QueryInterface(IID_IDropTarget, (LPVOID*)&pdt)))
+    if (SUCCEEDED(this->QueryInterface(IID_IDropTarget, (LPVOID*)&pdt)))
 	    RegisterDragDrop(m_hWnd, pdt);
 
 	/* register for receiving notifications */
@@ -1014,6 +1018,7 @@ UINT CDefView::GetSelections()
 	  lvItem.stateMask = LVIS_SELECTED;
 	  lvItem.iItem = 0;
 	  lvItem.iSubItem = 0;
+      lvItem.state = 0;
 
 	  while(SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM)&lvItem) && (i < cidl))
 	  {
@@ -2139,6 +2144,8 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 
 	TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n",this, lpPrevView,lpfs, psb, prcView, phWnd);
 
+    DbgPrint("[shell32, CDefView::CreateViewWindow] Called lpfs = 0x%x, psb = 0x%x\n", lpfs, psb);
+
 	if (lpfs != NULL)
 		TRACE("-- vmode=%x flags=%x\n", lpfs->ViewMode, lpfs->fFlags);
 	if (prcView != NULL)
@@ -2161,6 +2168,8 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 	{
 		TRACE("-- CommDlgBrowser\n");
 	}
+
+    DbgPrint("[shell32, CDefView::CreateViewWindow] About to call the create function\n");
 
 	Create(hWndParent, prcView, NULL, WS_CHILD | WS_TABSTOP, 0, 0U);
 	if (m_hWnd == NULL)

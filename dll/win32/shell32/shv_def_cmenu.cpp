@@ -619,6 +619,7 @@ IDefaultContextMenuImpl::AddStaticContextMenusToMenu(
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
     mii.wID = 0x4000;
+    mii.dwTypeData = NULL;
     iIdSCMFirst = mii.wID;
 
     curEntry = shead;
@@ -656,6 +657,10 @@ IDefaultContextMenuImpl::AddStaticContextMenusToMenu(
                 /* use translated verb */
                 szVerb[(sizeof(szVerb)/sizeof(WCHAR))-1] = L'\0';
                 mii.dwTypeData = szVerb;
+            }
+            else
+            {
+                TRACE("Failed to laod string, defaulting to default (NULL) value for mii.dwTypeData\n");
             }
         }
         else
@@ -752,7 +757,7 @@ IDefaultContextMenuImpl::BuildShellItemContextMenu(
     UINT indexMenu;
     SFGAOF rfg;
     HRESULT hr;
-    BOOL bAddSep;
+    BOOL bAddSep = FALSE;
     GUID * guid;
     BOOL bClipboardData;
     STRRET strFile;

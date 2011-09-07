@@ -325,6 +325,8 @@ BOOL CPrintersEnum::CreatePrintersEnumList(DWORD dwFlags)
 
 CPrinterFolder::CPrinterFolder()
 {
+    pidlRoot = NULL;
+    dwAttributes = 0;
 }
 
 CPrinterFolder::~CPrinterFolder()

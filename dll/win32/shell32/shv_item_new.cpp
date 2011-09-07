@@ -28,6 +28,7 @@ static WCHAR szNew[MAX_PATH];
 CNewMenu::CNewMenu()
 {
 	s_SnHead = NULL;
+    szPath = NULL;
 }
 
 CNewMenu::~CNewMenu()
