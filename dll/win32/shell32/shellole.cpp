@@ -1,8 +1,8 @@
 /*
- *	handling of SHELL32.DLL OLE-Objects
+ *    handling of SHELL32.DLL OLE-Objects
  *
- *	Copyright 1997	Marcus Meissner
- *	Copyright 1998	Juergen Schmied  <juergen.schmied@metronet.de>
+ *    Copyright 1997    Marcus Meissner
+ *    Copyright 1998    Juergen Schmied  <juergen.schmied@metronet.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,11 +38,11 @@ HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const I
 DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
 {
     WCHAR sFormat[52] = {'{','%','0','8','l','x','-','%','0','4',
-		         'x','-','%','0','4','x','-','%','0','2',
+                 'x','-','%','0','4','x','-','%','0','2',
                          'x','%','0','2','x','-','%','0','2','x',
-			 '%','0','2','x','%','0','2','x','%','0',
-			 '2','x','%','0','2','x','%','0','2','x',
-			 '}','\0'};
+             '%','0','2','x','%','0','2','x','%','0',
+             '2','x','%','0','2','x','%','0','2','x',
+             '}','\0'};
 
     return swprintf ( str, sFormat,
              guid.Data1, guid.Data2, guid.Data3,
@@ -68,116 +68,116 @@ DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
  *     CoCreateInstace, SHLoadOLE
  */
 HRESULT WINAPI SHCoCreateInstance(
-	LPCWSTR aclsid,
-	const CLSID *clsid,
-	LPUNKNOWN pUnkOuter,
-	REFIID refiid,
-	LPVOID *ppv)
+    LPCWSTR aclsid,
+    const CLSID *clsid,
+    LPUNKNOWN pUnkOuter,
+    REFIID refiid,
+    LPVOID *ppv)
 {
-	DWORD	hres;
-	CLSID	iid;
-	const	CLSID * myclsid = clsid;
-	WCHAR	sKeyName[MAX_PATH];
-	const	WCHAR sCLSID[7] = {'C','L','S','I','D','\\','\0'};
-	WCHAR	sClassID[60];
-	const WCHAR sInProcServer32[16] ={'\\','I','n','p','r','o','c','S','e','r','v','e','r','3','2','\0'};
-	const WCHAR sLoadWithoutCOM[15] ={'L','o','a','d','W','i','t','h','o','u','t','C','O','M','\0'};
-	WCHAR	sDllPath[MAX_PATH];
-	HKEY	hKey;
-	DWORD	dwSize;
-	BOOLEAN bLoadFromShell32 = FALSE;
-	BOOLEAN bLoadWithoutCOM = FALSE;
-	CComPtr<IClassFactory>		pcf;
+    DWORD    hres;
+    CLSID    iid;
+    const    CLSID * myclsid = clsid;
+    WCHAR    sKeyName[MAX_PATH];
+    const    WCHAR sCLSID[7] = {'C','L','S','I','D','\\','\0'};
+    WCHAR    sClassID[60];
+    const WCHAR sInProcServer32[16] ={'\\','I','n','p','r','o','c','S','e','r','v','e','r','3','2','\0'};
+    const WCHAR sLoadWithoutCOM[15] ={'L','o','a','d','W','i','t','h','o','u','t','C','O','M','\0'};
+    WCHAR    sDllPath[MAX_PATH];
+    HKEY    hKey;
+    DWORD    dwSize;
+    BOOLEAN bLoadFromShell32 = FALSE;
+    BOOLEAN bLoadWithoutCOM = FALSE;
+    CComPtr<IClassFactory>        pcf;
 
-	if(!ppv) return E_POINTER;
-	*ppv=NULL;
+    if(!ppv) return E_POINTER;
+    *ppv=NULL;
 
-	/* if the clsid is a string, convert it */
-	if (!clsid)
-	{
-	  if (!aclsid) return REGDB_E_CLASSNOTREG;
-	  CLSIDFromString((LPOLESTR)aclsid, &iid);
-	  myclsid = &iid;
-	}
+    /* if the clsid is a string, convert it */
+    if (!clsid)
+    {
+      if (!aclsid) return REGDB_E_CLASSNOTREG;
+      CLSIDFromString((LPOLESTR)aclsid, &iid);
+      myclsid = &iid;
+    }
 
-	TRACE("(%p,%s,unk:%p,%s,%p)\n",
-		aclsid, shdebugstr_guid(myclsid), pUnkOuter, shdebugstr_guid(&refiid), ppv);
+    TRACE("(%p,%s,unk:%p,%s,%p)\n",
+        aclsid, shdebugstr_guid(myclsid), pUnkOuter, shdebugstr_guid(&refiid), ppv);
 
-	/* we look up the dll path in the registry */
+    /* we look up the dll path in the registry */
         __SHGUIDToStringW(*myclsid, sClassID);
-	wcscpy(sKeyName, sCLSID);
-	wcscat(sKeyName, sClassID);
-	wcscat(sKeyName, sInProcServer32);
+    wcscpy(sKeyName, sCLSID);
+    wcscat(sKeyName, sClassID);
+    wcscat(sKeyName, sInProcServer32);
 
-	if (ERROR_SUCCESS == RegOpenKeyExW(HKEY_CLASSES_ROOT, sKeyName, 0, KEY_READ, &hKey)) {
-	    dwSize = sizeof(sDllPath);
-	    SHQueryValueExW(hKey, NULL, 0,0, sDllPath, &dwSize );
+    if (ERROR_SUCCESS == RegOpenKeyExW(HKEY_CLASSES_ROOT, sKeyName, 0, KEY_READ, &hKey)) {
+        dwSize = sizeof(sDllPath);
+        SHQueryValueExW(hKey, NULL, 0,0, sDllPath, &dwSize );
 
-	    /* if a special registry key is set, we load a shell extension without help of OLE32 */
-	    bLoadWithoutCOM = (ERROR_SUCCESS == SHQueryValueExW(hKey, sLoadWithoutCOM, 0, 0, 0, 0));
+        /* if a special registry key is set, we load a shell extension without help of OLE32 */
+        bLoadWithoutCOM = (ERROR_SUCCESS == SHQueryValueExW(hKey, sLoadWithoutCOM, 0, 0, 0, 0));
 
-	    /* if the com object is inside shell32, omit use of ole32 */
-	    bLoadFromShell32 = (0==lstrcmpiW( PathFindFileNameW(sDllPath), sShell32));
+        /* if the com object is inside shell32, omit use of ole32 */
+        bLoadFromShell32 = (0==lstrcmpiW( PathFindFileNameW(sDllPath), sShell32));
 
-	    RegCloseKey (hKey);
-	} else {
-	    /* since we can't find it in the registry we try internally */
-	    bLoadFromShell32 = TRUE;
-	}
+        RegCloseKey (hKey);
+    } else {
+        /* since we can't find it in the registry we try internally */
+        bLoadFromShell32 = TRUE;
+    }
 
-	TRACE("WithoutCom=%u FromShell=%u\n", bLoadWithoutCOM, bLoadFromShell32);
+    TRACE("WithoutCom=%u FromShell=%u\n", bLoadWithoutCOM, bLoadFromShell32);
 
-	/* now we create an instance */
-	if (bLoadFromShell32) {
-	    if (! SUCCEEDED(DllGetClassObject(*myclsid, IID_IClassFactory, (LPVOID*)&pcf))) {
-	        ERR("LoadFromShell failed for CLSID=%s\n", shdebugstr_guid(myclsid));
-	    }
-	} else if (bLoadWithoutCOM) {
+    /* now we create an instance */
+    if (bLoadFromShell32) {
+        if (! SUCCEEDED(DllGetClassObject(*myclsid, IID_IClassFactory, (LPVOID*)&pcf))) {
+            ERR("LoadFromShell failed for CLSID=%s\n", shdebugstr_guid(myclsid));
+        }
+    } else if (bLoadWithoutCOM) {
 
-	    /* load an external dll without ole32 */
-	    HINSTANCE hLibrary;
-	    typedef HRESULT (CALLBACK *DllGetClassObjectFunc)(REFCLSID clsid, REFIID iid, LPVOID *ppv);
-	    DllGetClassObjectFunc DllGetClassObject;
+        /* load an external dll without ole32 */
+        HINSTANCE hLibrary;
+        typedef HRESULT (CALLBACK *DllGetClassObjectFunc)(REFCLSID clsid, REFIID iid, LPVOID *ppv);
+        DllGetClassObjectFunc DllGetClassObject;
 
-	    if ((hLibrary = LoadLibraryExW(sDllPath, 0, LOAD_WITH_ALTERED_SEARCH_PATH)) == 0) {
-	        ERR("couldn't load InprocServer32 dll %s\n", debugstr_w(sDllPath));
-		hres = E_ACCESSDENIED;
-	        goto end;
-	    } else if (!(DllGetClassObject = (DllGetClassObjectFunc)GetProcAddress(hLibrary, "DllGetClassObject"))) {
-	        ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(sDllPath));
-	        FreeLibrary( hLibrary );
-		hres = E_ACCESSDENIED;
-	        goto end;
-	    } else if (! SUCCEEDED(hres = DllGetClassObject(*myclsid, IID_IClassFactory, (LPVOID*)&pcf))) {
-		    TRACE("GetClassObject failed 0x%08x\n", hres);
-		    goto end;
-	    }
+        if ((hLibrary = LoadLibraryExW(sDllPath, 0, LOAD_WITH_ALTERED_SEARCH_PATH)) == 0) {
+            ERR("couldn't load InprocServer32 dll %s\n", debugstr_w(sDllPath));
+        hres = E_ACCESSDENIED;
+            goto end;
+        } else if (!(DllGetClassObject = (DllGetClassObjectFunc)GetProcAddress(hLibrary, "DllGetClassObject"))) {
+            ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(sDllPath));
+            FreeLibrary( hLibrary );
+        hres = E_ACCESSDENIED;
+            goto end;
+        } else if (! SUCCEEDED(hres = DllGetClassObject(*myclsid, IID_IClassFactory, (LPVOID*)&pcf))) {
+            TRACE("GetClassObject failed 0x%08x\n", hres);
+            goto end;
+        }
 
-	} else {
+    } else {
 
-	    /* load an external dll in the usual way */
-	    hres = CoCreateInstance(*myclsid, pUnkOuter, CLSCTX_INPROC_SERVER, refiid, ppv);
-	    goto end;
-	}
+        /* load an external dll in the usual way */
+        hres = CoCreateInstance(*myclsid, pUnkOuter, CLSCTX_INPROC_SERVER, refiid, ppv);
+        goto end;
+    }
 
-	/* here we should have a ClassFactory */
-	if (!pcf) return E_ACCESSDENIED;
+    /* here we should have a ClassFactory */
+    if (!pcf) return E_ACCESSDENIED;
 
-	hres = pcf->CreateInstance(pUnkOuter, refiid, ppv);
+    hres = pcf->CreateInstance(pUnkOuter, refiid, ppv);
 end:
-	if(hres!=S_OK)
-	{
-	  ERR("failed (0x%08x) to create CLSID:%s IID:%s\n",
+    if(hres!=S_OK)
+    {
+      ERR("failed (0x%08x) to create CLSID:%s IID:%s\n",
               hres, shdebugstr_guid(myclsid), shdebugstr_guid(&refiid));
-	  ERR("class not found in registry\n");
-	}
+      ERR("class not found in registry\n");
+    }
 
-	TRACE("-- instance: %p\n",*ppv);
-	return hres;
+    TRACE("-- instance: %p\n",*ppv);
+    return hres;
 }
 
 /*************************************************************************
- * SHCLSIDFromString				[SHELL32.147]
+ * SHCLSIDFromString                [SHELL32.147]
  *
  * Under Windows 9x this was an ANSI version of CLSIDFromString. It also allowed
  * to avoid dependency on ole32.dll (see SHLoadOLE for details).
@@ -201,19 +201,19 @@ DWORD WINAPI SHCLSIDFromStringA (LPCSTR clsid, CLSID *id)
 
 DWORD WINAPI SHCLSIDFromStringW (LPCWSTR clsid, CLSID *id)
 {
-	TRACE("(%p(%s) %p)\n", clsid, debugstr_w(clsid), id);
-	return CLSIDFromString((LPWSTR)clsid, id);
+    TRACE("(%p(%s) %p)\n", clsid, debugstr_w(clsid), id);
+    return CLSIDFromString((LPWSTR)clsid, id);
 }
 
 EXTERN_C DWORD WINAPI SHCLSIDFromStringAW (LPCVOID clsid, CLSID *id)
 {
-	if (SHELL_OsIsUnicode())
-	  return SHCLSIDFromStringW ((LPCWSTR)clsid, id);
-	return SHCLSIDFromStringA ((LPCSTR)clsid, id);
+    if (SHELL_OsIsUnicode())
+      return SHCLSIDFromStringW ((LPCWSTR)clsid, id);
+    return SHCLSIDFromStringA ((LPCSTR)clsid, id);
 }
 
 /*************************************************************************
- *			 SHGetMalloc			[SHELL32.@]
+ *             SHGetMalloc            [SHELL32.@]
  *
  * Equivalent to CoGetMalloc(MEMCTX_TASK, ...). Under Windows 9x this function
  * could use the shell32 built-in "mini-COM" without the need to load ole32.dll -
@@ -231,12 +231,12 @@ EXTERN_C DWORD WINAPI SHCLSIDFromStringAW (LPCVOID clsid, CLSID *id)
  */
 HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
 {
-	TRACE("(%p)\n", lpmal);
-	return CoGetMalloc(MEMCTX_TASK, lpmal);
+    TRACE("(%p)\n", lpmal);
+    return CoGetMalloc(MEMCTX_TASK, lpmal);
 }
 
 /*************************************************************************
- * SHAlloc					[SHELL32.196]
+ * SHAlloc                    [SHELL32.196]
  *
  * Equivalent to CoTaskMemAlloc. Under Windows 9x this function could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll -
@@ -250,15 +250,15 @@ HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
  */
 LPVOID WINAPI SHAlloc(DWORD len)
 {
-	LPVOID ret;
+    LPVOID ret;
 
-	ret = CoTaskMemAlloc(len);
-	TRACE("%u bytes at %p\n",len, ret);
-	return ret;
+    ret = CoTaskMemAlloc(len);
+    TRACE("%u bytes at %p\n",len, ret);
+    return ret;
 }
 
 /*************************************************************************
- * SHFree					[SHELL32.195]
+ * SHFree                    [SHELL32.195]
  *
  * Equivalent to CoTaskMemFree. Under Windows 9x this function could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll -
@@ -272,24 +272,24 @@ LPVOID WINAPI SHAlloc(DWORD len)
  */
 void WINAPI SHFree(LPVOID pv)
 {
-	TRACE("%p\n",pv);
-	CoTaskMemFree(pv);
+    TRACE("%p\n",pv);
+    CoTaskMemFree(pv);
 }
 
 /*************************************************************************
- * SHGetDesktopFolder			[SHELL32.@]
+ * SHGetDesktopFolder            [SHELL32.@]
  */
 HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
 {
-	HRESULT	hres = S_OK;
-	TRACE("\n");
+    HRESULT    hres = S_OK;
+    TRACE("\n");
 
-	if(!psf) return E_INVALIDARG;
-	*psf = NULL;
-	hres = CDesktopFolder::_CreatorClass::CreateInstance(NULL, IID_IShellFolder, (void**)psf);
+    if(!psf) return E_INVALIDARG;
+    *psf = NULL;
+    hres = CDesktopFolder::_CreatorClass::CreateInstance(NULL, IID_IShellFolder, (void**)psf);
 
-	TRACE("-- %p->(%p)\n",psf, *psf);
-	return hres;
+    TRACE("-- %p->(%p)\n",psf, *psf);
+    return hres;
 }
 /**************************************************************************
  * Default ClassFactory Implementation
@@ -303,46 +303,46 @@ HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
  */
 
 class IDefClFImpl :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IClassFactory
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IClassFactory
 {
 private:
-	CLSID					*rclsid;
-	LPFNCREATEINSTANCE		lpfnCI;
-	const IID				*riidInst;
-	LONG					*pcRefDll;		/* pointer to refcounter in external dll (ugrrr...) */
+    CLSID                    *rclsid;
+    LPFNCREATEINSTANCE        lpfnCI;
+    const IID                *riidInst;
+    LONG                    *pcRefDll;        /* pointer to refcounter in external dll (ugrrr...) */
 public:
-	IDefClFImpl();
-	HRESULT Initialize(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInstx);
+    IDefClFImpl();
+    HRESULT Initialize(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInstx);
 
-	// IClassFactory
-	virtual HRESULT WINAPI CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject);
-	virtual HRESULT WINAPI LockServer(BOOL fLock);
+    // IClassFactory
+    virtual HRESULT WINAPI CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject);
+    virtual HRESULT WINAPI LockServer(BOOL fLock);
 
 BEGIN_COM_MAP(IDefClFImpl)
-	COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
+    COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
 END_COM_MAP()
 };
 
 IDefClFImpl::IDefClFImpl()
 {
-	lpfnCI = NULL;
-	riidInst = NULL;
-	pcRefDll = NULL;
+    lpfnCI = NULL;
+    riidInst = NULL;
+    pcRefDll = NULL;
     rclsid = NULL;
 }
 
 HRESULT IDefClFImpl::Initialize(LPFNCREATEINSTANCE lpfnCIx, PLONG pcRefDllx, const IID *riidInstx)
 {
-	lpfnCI = lpfnCIx;
-	riidInst = riidInstx;
-	pcRefDll = pcRefDllx;
+    lpfnCI = lpfnCIx;
+    riidInst = riidInstx;
+    pcRefDll = pcRefDllx;
 
-	if (pcRefDll)
-		InterlockedIncrement(pcRefDll);
+    if (pcRefDll)
+        InterlockedIncrement(pcRefDll);
 
-	TRACE("(%p)%s\n", this, shdebugstr_guid(riidInst));
-	return S_OK;
+    TRACE("(%p)%s\n", this, shdebugstr_guid(riidInst));
+    return S_OK;
 }
 
 /******************************************************************************
@@ -350,17 +350,17 @@ HRESULT IDefClFImpl::Initialize(LPFNCREATEINSTANCE lpfnCIx, PLONG pcRefDllx, con
  */
 HRESULT WINAPI IDefClFImpl::CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject)
 {
-	TRACE("%p->(%p,%s,%p)\n", this, pUnkOuter, shdebugstr_guid(&riid), ppvObject);
+    TRACE("%p->(%p,%s,%p)\n", this, pUnkOuter, shdebugstr_guid(&riid), ppvObject);
 
-	*ppvObject = NULL;
+    *ppvObject = NULL;
 
-	if (riidInst == NULL || IsEqualCLSID(riid, *riidInst) || IsEqualCLSID(riid, IID_IUnknown))
-	{
-		return lpfnCI(pUnkOuter, riid, ppvObject);
-	}
+    if (riidInst == NULL || IsEqualCLSID(riid, *riidInst) || IsEqualCLSID(riid, IID_IUnknown))
+    {
+        return lpfnCI(pUnkOuter, riid, ppvObject);
+    }
 
-	ERR("unknown IID requested %s\n", shdebugstr_guid(&riid));
-	return E_NOINTERFACE;
+    ERR("unknown IID requested %s\n", shdebugstr_guid(&riid));
+    return E_NOINTERFACE;
 }
 
 /******************************************************************************
@@ -368,8 +368,8 @@ HRESULT WINAPI IDefClFImpl::CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, LPV
  */
 HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 {
-	TRACE("%p->(0x%x), not implemented\n", this, fLock);
-	return E_NOTIMPL;
+    TRACE("%p->(0x%x), not implemented\n", this, fLock);
+    return E_NOTIMPL;
 }
 
 /**************************************************************************
@@ -378,116 +378,116 @@ HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 
 HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInst, IClassFactory **theFactory)
 {
-	CComObject<IDefClFImpl>					*theClassObject;
-	CComPtr<IClassFactory>					result;
-	HRESULT									hResult;
+    CComObject<IDefClFImpl>                    *theClassObject;
+    CComPtr<IClassFactory>                    result;
+    HRESULT                                    hResult;
 
-	if (theFactory == NULL)
-		return E_POINTER;
-	*theFactory = NULL;
-	ATLTRY (theClassObject = new CComObject<IDefClFImpl>);
-	if (theClassObject == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theClassObject->QueryInterface (IID_IClassFactory, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theClassObject;
-		return hResult;
-	}
-	hResult = theClassObject->Initialize (lpfnCI, pcRefDll, riidInst);
-	if (FAILED (hResult))
-		return hResult;
-	*theFactory = result.Detach ();
-	return S_OK;
+    if (theFactory == NULL)
+        return E_POINTER;
+    *theFactory = NULL;
+    ATLTRY (theClassObject = new CComObject<IDefClFImpl>);
+    if (theClassObject == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theClassObject->QueryInterface (IID_IClassFactory, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theClassObject;
+        return hResult;
+    }
+    hResult = theClassObject->Initialize (lpfnCI, pcRefDll, riidInst);
+    if (FAILED (hResult))
+        return hResult;
+    *theFactory = result.Detach ();
+    return S_OK;
 }
 
 /******************************************************************************
- * SHCreateDefClassObject			[SHELL32.70]
+ * SHCreateDefClassObject            [SHELL32.70]
  */
 HRESULT WINAPI SHCreateDefClassObject(
-	REFIID	riid,
-	LPVOID*	ppv,
-	LPFNCREATEINSTANCE lpfnCI,	/* [in] create instance callback entry */
-	LPDWORD	pcRefDll,		/* [in/out] ref count of the dll */
-	REFIID	riidInst)		/* [in] optional interface to the instance */
+    REFIID    riid,
+    LPVOID*    ppv,
+    LPFNCREATEINSTANCE lpfnCI,    /* [in] create instance callback entry */
+    LPDWORD    pcRefDll,        /* [in/out] ref count of the dll */
+    REFIID    riidInst)        /* [in] optional interface to the instance */
 {
-	IClassFactory				*pcf;
-	HRESULT						hResult;
+    IClassFactory                *pcf;
+    HRESULT                        hResult;
 
-	TRACE("%s %p %p %p %s\n", shdebugstr_guid(&riid), ppv, lpfnCI, pcRefDll, shdebugstr_guid(&riidInst));
+    TRACE("%s %p %p %p %s\n", shdebugstr_guid(&riid), ppv, lpfnCI, pcRefDll, shdebugstr_guid(&riidInst));
 
-	if (!IsEqualCLSID(riid, IID_IClassFactory))
-		return E_NOINTERFACE;
-	hResult = IDefClF_fnConstructor(lpfnCI, (PLONG)pcRefDll, &riidInst, &pcf);
-	if (FAILED(hResult))
-		return hResult;
-	*ppv = pcf;
-	return NOERROR;
+    if (!IsEqualCLSID(riid, IID_IClassFactory))
+        return E_NOINTERFACE;
+    hResult = IDefClF_fnConstructor(lpfnCI, (PLONG)pcRefDll, &riidInst, &pcf);
+    if (FAILED(hResult))
+        return hResult;
+    *ppv = pcf;
+    return NOERROR;
 }
 
 /*************************************************************************
- *  DragAcceptFiles		[SHELL32.@]
+ *  DragAcceptFiles        [SHELL32.@]
  */
 void WINAPI DragAcceptFiles(HWND hWnd, BOOL b)
 {
-	LONG exstyle;
+    LONG exstyle;
 
-	if( !IsWindow(hWnd) ) return;
-	exstyle = GetWindowLongPtrA(hWnd,GWL_EXSTYLE);
-	if (b)
-	  exstyle |= WS_EX_ACCEPTFILES;
-	else
-	  exstyle &= ~WS_EX_ACCEPTFILES;
-	SetWindowLongPtrA(hWnd,GWL_EXSTYLE,exstyle);
+    if( !IsWindow(hWnd) ) return;
+    exstyle = GetWindowLongPtrA(hWnd,GWL_EXSTYLE);
+    if (b)
+      exstyle |= WS_EX_ACCEPTFILES;
+    else
+      exstyle &= ~WS_EX_ACCEPTFILES;
+    SetWindowLongPtrA(hWnd,GWL_EXSTYLE,exstyle);
 }
 
 /*************************************************************************
- * DragFinish		[SHELL32.@]
+ * DragFinish        [SHELL32.@]
  */
 void WINAPI DragFinish(HDROP h)
 {
-	TRACE("\n");
-	GlobalFree((HGLOBAL)h);
+    TRACE("\n");
+    GlobalFree((HGLOBAL)h);
 }
 
 /*************************************************************************
- * DragQueryPoint		[SHELL32.@]
+ * DragQueryPoint        [SHELL32.@]
  */
 BOOL WINAPI DragQueryPoint(HDROP hDrop, POINT *p)
 {
         DROPFILES *lpDropFileStruct;
-	BOOL bRet;
+    BOOL bRet;
 
-	TRACE("\n");
+    TRACE("\n");
 
-	lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
+    lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
 
         *p = lpDropFileStruct->pt;
-	bRet = lpDropFileStruct->fNC;
+    bRet = lpDropFileStruct->fNC;
 
-	GlobalUnlock(hDrop);
-	return bRet;
+    GlobalUnlock(hDrop);
+    return bRet;
 }
 
 /*************************************************************************
- *  DragQueryFileA		[SHELL32.@]
- *  DragQueryFile 		[SHELL32.@]
+ *  DragQueryFileA        [SHELL32.@]
+ *  DragQueryFile         [SHELL32.@]
  */
 UINT WINAPI DragQueryFileA(
-	HDROP hDrop,
-	UINT lFile,
-	LPSTR lpszFile,
-	UINT lLength)
+    HDROP hDrop,
+    UINT lFile,
+    LPSTR lpszFile,
+    UINT lLength)
 {
-	LPSTR lpDrop;
-	UINT i = 0;
-	DROPFILES *lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
+    LPSTR lpDrop;
+    UINT i = 0;
+    DROPFILES *lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
 
-	TRACE("(%p, %x, %p, %u)\n",	hDrop,lFile,lpszFile,lLength);
+    TRACE("(%p, %x, %p, %u)\n",    hDrop,lFile,lpszFile,lLength);
 
-	if(!lpDropFileStruct) goto end;
+    if(!lpDropFileStruct) goto end;
 
-	lpDrop = (LPSTR) lpDropFileStruct + lpDropFileStruct->pFiles;
+    lpDrop = (LPSTR) lpDropFileStruct + lpDropFileStruct->pFiles;
 
         if(lpDropFileStruct->fWide) {
             LPWSTR lpszFileW = NULL;
@@ -507,42 +507,42 @@ UINT WINAPI DragQueryFileA(
             goto end;
         }
 
-	while (i++ < lFile)
-	{
-	  while (*lpDrop++); /* skip filename */
-	  if (!*lpDrop)
-	  {
-	    i = (lFile == 0xFFFFFFFF) ? i : 0;
-	    goto end;
-	  }
-	}
+    while (i++ < lFile)
+    {
+      while (*lpDrop++); /* skip filename */
+      if (!*lpDrop)
+      {
+        i = (lFile == 0xFFFFFFFF) ? i : 0;
+        goto end;
+      }
+    }
 
-	i = strlen(lpDrop);
-	if (!lpszFile ) goto end;   /* needed buffer size */
-	lstrcpynA (lpszFile, lpDrop, lLength);
+    i = strlen(lpDrop);
+    if (!lpszFile ) goto end;   /* needed buffer size */
+    lstrcpynA (lpszFile, lpDrop, lLength);
 end:
-	GlobalUnlock(hDrop);
-	return i;
+    GlobalUnlock(hDrop);
+    return i;
 }
 
 /*************************************************************************
- *  DragQueryFileW		[SHELL32.@]
+ *  DragQueryFileW        [SHELL32.@]
  */
 UINT WINAPI DragQueryFileW(
-	HDROP hDrop,
-	UINT lFile,
-	LPWSTR lpszwFile,
-	UINT lLength)
+    HDROP hDrop,
+    UINT lFile,
+    LPWSTR lpszwFile,
+    UINT lLength)
 {
-	LPWSTR lpwDrop;
-	UINT i = 0;
-	DROPFILES *lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
+    LPWSTR lpwDrop;
+    UINT i = 0;
+    DROPFILES *lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
 
-	TRACE("(%p, %x, %p, %u)\n", hDrop,lFile,lpszwFile,lLength);
+    TRACE("(%p, %x, %p, %u)\n", hDrop,lFile,lpszwFile,lLength);
 
-	if(!lpDropFileStruct) goto end;
+    if(!lpDropFileStruct) goto end;
 
-	lpwDrop = (LPWSTR) ((LPSTR)lpDropFileStruct + lpDropFileStruct->pFiles);
+    lpwDrop = (LPWSTR) ((LPSTR)lpDropFileStruct + lpDropFileStruct->pFiles);
 
         if(lpDropFileStruct->fWide == FALSE) {
             LPSTR lpszFileA = NULL;
@@ -562,21 +562,21 @@ UINT WINAPI DragQueryFileW(
             goto end;
         }
 
-	i = 0;
-	while (i++ < lFile)
-	{
-	  while (*lpwDrop++); /* skip filename */
-	  if (!*lpwDrop)
-	  {
-	    i = (lFile == 0xFFFFFFFF) ? i : 0;
-	    goto end;
-	  }
-	}
+    i = 0;
+    while (i++ < lFile)
+    {
+      while (*lpwDrop++); /* skip filename */
+      if (!*lpwDrop)
+      {
+        i = (lFile == 0xFFFFFFFF) ? i : 0;
+        goto end;
+      }
+    }
 
-	i = wcslen(lpwDrop);
-	if ( !lpszwFile) goto end;   /* needed buffer size */
-	lstrcpynW (lpszwFile, lpwDrop, lLength);
+    i = wcslen(lpwDrop);
+    if ( !lpszwFile) goto end;   /* needed buffer size */
+    lstrcpynW (lpszwFile, lpwDrop, lLength);
 end:
-	GlobalUnlock(hDrop);
-	return i;
+    GlobalUnlock(hDrop);
+    return i;
 }

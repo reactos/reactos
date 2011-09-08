@@ -23,29 +23,29 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*************************************************************************
- * SHRegOpenKeyA				[SHELL32.506]
+ * SHRegOpenKeyA                [SHELL32.506]
  *
  */
 EXTERN_C HRESULT WINAPI SHRegOpenKeyA(
-	HKEY hKey,
-	LPSTR lpSubKey,
-	PHKEY phkResult)
+    HKEY hKey,
+    LPSTR lpSubKey,
+    PHKEY phkResult)
 {
-	TRACE("(%p, %s, %p)\n", hKey, debugstr_a(lpSubKey), phkResult);
-	return RegOpenKeyA(hKey, lpSubKey, phkResult);
+    TRACE("(%p, %s, %p)\n", hKey, debugstr_a(lpSubKey), phkResult);
+    return RegOpenKeyA(hKey, lpSubKey, phkResult);
 }
 
 /*************************************************************************
- * SHRegOpenKeyW				[SHELL32.507] NT 4.0
+ * SHRegOpenKeyW                [SHELL32.507] NT 4.0
  *
  */
 EXTERN_C HRESULT WINAPI SHRegOpenKeyW (
-	HKEY hkey,
-	LPCWSTR lpszSubKey,
-	PHKEY retkey)
+    HKEY hkey,
+    LPCWSTR lpszSubKey,
+    PHKEY retkey)
 {
-	WARN("%p %s %p\n",hkey,debugstr_w(lpszSubKey),retkey);
-	return RegOpenKeyW( hkey, lpszSubKey, retkey );
+    WARN("%p %s %p\n",hkey,debugstr_w(lpszSubKey),retkey);
+    return RegOpenKeyW( hkey, lpszSubKey, retkey );
 }
 
 /*************************************************************************
@@ -54,8 +54,8 @@ EXTERN_C HRESULT WINAPI SHRegOpenKeyW (
  */
 EXTERN_C HRESULT WINAPI SHRegQueryValueA(HKEY hkey, LPSTR lpSubKey, LPSTR lpValue, LPDWORD lpcbValue)
 {
-	TRACE("(%p %s %p %p)\n", hkey, debugstr_a(lpSubKey), lpValue, lpcbValue);
-	return RegQueryValueA(hkey, lpSubKey, lpValue, (LONG*)lpcbValue);
+    TRACE("(%p %s %p %p)\n", hkey, debugstr_a(lpSubKey), lpValue, lpcbValue);
+    return RegQueryValueA(hkey, lpSubKey, lpValue, (LONG*)lpcbValue);
 }
 
 /*************************************************************************
@@ -63,82 +63,82 @@ EXTERN_C HRESULT WINAPI SHRegQueryValueA(HKEY hkey, LPSTR lpSubKey, LPSTR lpValu
  *
  */
 EXTERN_C HRESULT WINAPI SHRegQueryValueExA(
-	HKEY hkey,
-	LPSTR lpValueName,
-	LPDWORD lpReserved,
-	LPDWORD lpType,
-	LPBYTE lpData,
-	LPDWORD lpcbData)
+    HKEY hkey,
+    LPSTR lpValueName,
+    LPDWORD lpReserved,
+    LPDWORD lpType,
+    LPBYTE lpData,
+    LPDWORD lpcbData)
 {
-	TRACE("%p %s %p %p %p %p\n", hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
-	return RegQueryValueExA (hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+    TRACE("%p %s %p %p %p %p\n", hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+    return RegQueryValueExA (hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
 }
 
 /*************************************************************************
- * SHRegQueryValueW				[SHELL32.510] NT4.0
+ * SHRegQueryValueW                [SHELL32.510] NT4.0
  *
  */
 EXTERN_C HRESULT WINAPI SHRegQueryValueW(
-	HKEY hkey,
-	LPWSTR lpszSubKey,
-	LPWSTR lpszData,
-	LPDWORD lpcbData )
+    HKEY hkey,
+    LPWSTR lpszSubKey,
+    LPWSTR lpszData,
+    LPDWORD lpcbData )
 {
-	WARN("%p %s %p %p semi-stub\n",
-		hkey, debugstr_w(lpszSubKey), lpszData, lpcbData);
-	return RegQueryValueW( hkey, lpszSubKey, lpszData, (LONG*)lpcbData );
+    WARN("%p %s %p %p semi-stub\n",
+        hkey, debugstr_w(lpszSubKey), lpszData, lpcbData);
+    return RegQueryValueW( hkey, lpszSubKey, lpszData, (LONG*)lpcbData );
 }
 
 /*************************************************************************
- * SHRegQueryValueExW	[SHELL32.511] NT4.0
+ * SHRegQueryValueExW    [SHELL32.511] NT4.0
  *
  * FIXME
  *  if the datatype REG_EXPAND_SZ then expand the string and change
  *  *pdwType to REG_SZ.
  */
 EXTERN_C HRESULT WINAPI SHRegQueryValueExW (
-	HKEY hkey,
-	LPWSTR pszValue,
-	LPDWORD pdwReserved,
-	LPDWORD pdwType,
-	LPVOID pvData,
-	LPDWORD pcbData)
+    HKEY hkey,
+    LPWSTR pszValue,
+    LPDWORD pdwReserved,
+    LPDWORD pdwType,
+    LPVOID pvData,
+    LPDWORD pcbData)
 {
-	DWORD ret;
-	WARN("%p %s %p %p %p %p semi-stub\n",
-		hkey, debugstr_w(pszValue), pdwReserved, pdwType, pvData, pcbData);
-	ret = RegQueryValueExW ( hkey, pszValue, pdwReserved, pdwType, (LPBYTE)pvData, pcbData);
-	return ret;
+    DWORD ret;
+    WARN("%p %s %p %p %p %p semi-stub\n",
+        hkey, debugstr_w(pszValue), pdwReserved, pdwType, pvData, pcbData);
+    ret = RegQueryValueExW ( hkey, pszValue, pdwReserved, pdwType, (LPBYTE)pvData, pcbData);
+    return ret;
 }
 
 /*************************************************************************
  * SHRegDeleteKeyA   [SHELL32.?]
  */
 HRESULT WINAPI SHRegDeleteKeyA(
-	HKEY hkey,
-	LPCSTR pszSubKey)
+    HKEY hkey,
+    LPCSTR pszSubKey)
 {
-	FIXME("hkey=%p, %s\n", hkey, debugstr_a(pszSubKey));
-	return 0;
+    FIXME("hkey=%p, %s\n", hkey, debugstr_a(pszSubKey));
+    return 0;
 }
 
 /*************************************************************************
  * SHRegDeleteKeyW   [SHELL32.512]
  */
 EXTERN_C HRESULT WINAPI SHRegDeleteKeyW(
-	HKEY hkey,
-	LPCWSTR pszSubKey)
+    HKEY hkey,
+    LPCWSTR pszSubKey)
 {
-	FIXME("hkey=%p, %s\n", hkey, debugstr_w(pszSubKey));
-	return 0;
+    FIXME("hkey=%p, %s\n", hkey, debugstr_w(pszSubKey));
+    return 0;
 }
 
 /*************************************************************************
- * SHRegCloseKey			[SHELL32.505] NT 4.0
+ * SHRegCloseKey            [SHELL32.505] NT 4.0
  *
  */
 EXTERN_C HRESULT WINAPI SHRegCloseKey (HKEY hkey)
 {
-	TRACE("%p\n",hkey);
-	return RegCloseKey( hkey );
+    TRACE("%p\n",hkey);
+    return RegCloseKey( hkey );
 }

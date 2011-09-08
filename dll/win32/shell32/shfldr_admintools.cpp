@@ -38,16 +38,16 @@ This folder should not exist. It is just a file system folder...
  */
 
 class CDesktopFolderEnumY :
-	public IEnumIDListImpl
+    public IEnumIDListImpl
 {
 private:
 public:
-	CDesktopFolderEnumY();
-	~CDesktopFolderEnumY();
-	HRESULT WINAPI Initialize(LPWSTR szTarget, DWORD dwFlags);
+    CDesktopFolderEnumY();
+    ~CDesktopFolderEnumY();
+    HRESULT WINAPI Initialize(LPWSTR szTarget, DWORD dwFlags);
 
 BEGIN_COM_MAP(CDesktopFolderEnumY)
-	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
@@ -82,34 +82,34 @@ HRESULT WINAPI CDesktopFolderEnumY::Initialize(LPWSTR szTarget, DWORD dwFlags)
 
 CAdminToolsFolder::CAdminToolsFolder()
 {
-	pclsid = NULL;
+    pclsid = NULL;
 
-	pidlRoot = NULL;  /* absolute pidl */
-	szTarget = NULL;
+    pidlRoot = NULL;  /* absolute pidl */
+    szTarget = NULL;
 
-	dwAttributes = 0;        /* attributes returned by GetAttributesOf FIXME: use it */
+    dwAttributes = 0;        /* attributes returned by GetAttributesOf FIXME: use it */
 }
 
 CAdminToolsFolder::~CAdminToolsFolder()
 {
-	TRACE ("-- destroying IShellFolder(%p)\n", this);
-	if (pidlRoot)
-		SHFree(pidlRoot);
-	HeapFree(GetProcessHeap(), 0, szTarget);
+    TRACE ("-- destroying IShellFolder(%p)\n", this);
+    if (pidlRoot)
+        SHFree(pidlRoot);
+    HeapFree(GetProcessHeap(), 0, szTarget);
 }
 
 HRESULT WINAPI CAdminToolsFolder::FinalConstruct()
 {
-	szTarget = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-	if (szTarget == NULL)
-		return E_OUTOFMEMORY;
-	if (!SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_COMMON_ADMINTOOLS, FALSE))
-		return E_FAIL;
+    szTarget = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+    if (szTarget == NULL)
+        return E_OUTOFMEMORY;
+    if (!SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_COMMON_ADMINTOOLS, FALSE))
+        return E_FAIL;
 
-	pidlRoot = _ILCreateAdminTools();    /* my qualified pidl */
-	if (pidlRoot == NULL)
-		return E_OUTOFMEMORY;
-	return S_OK;
+    pidlRoot = _ILCreateAdminTools();    /* my qualified pidl */
+    if (pidlRoot == NULL)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -127,7 +127,7 @@ HRESULT WINAPI CAdminToolsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LP
     if (pchEaten)
         *pchEaten = 0;
 
-	MessageBoxW(NULL, lpszDisplayName, L"ParseDisplayName", MB_OK);
+    MessageBoxW(NULL, lpszDisplayName, L"ParseDisplayName", MB_OK);
 
     return E_NOTIMPL;
 }
@@ -137,32 +137,32 @@ HRESULT WINAPI CAdminToolsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LP
  */
 HRESULT WINAPI CAdminToolsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-	CComObject<CDesktopFolderEnumY>			*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<CDesktopFolderEnumY>            *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
-	if (ppEnumIDList == NULL)
-		return E_POINTER;
-	*ppEnumIDList = NULL;
-	ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnumY>);
-	if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
-	hResult = theEnumerator->Initialize (szTarget, dwFlags);
-	if (FAILED (hResult))
-		return hResult;
-	*ppEnumIDList = result.Detach ();
+    if (ppEnumIDList == NULL)
+        return E_POINTER;
+    *ppEnumIDList = NULL;
+    ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnumY>);
+    if (theEnumerator == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
+    hResult = theEnumerator->Initialize (szTarget, dwFlags);
+    if (FAILED (hResult))
+        return hResult;
+    *ppEnumIDList = result.Detach ();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -206,8 +206,8 @@ HRESULT WINAPI CAdminToolsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1,
  */
 HRESULT WINAPI CAdminToolsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
-    CComPtr<IShellView>					pShellView;
-    HRESULT								hr = E_INVALIDARG;
+    CComPtr<IShellView>                    pShellView;
+    HRESULT                                hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this,
             hwndOwner, shdebugstr_guid (&riid), ppvOut);
@@ -291,7 +291,7 @@ HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCIT
                 REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
-    CComPtr<IUnknown>					pObj;
+    CComPtr<IUnknown>                    pObj;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",

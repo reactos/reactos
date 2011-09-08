@@ -1,5 +1,5 @@
 /*
- *	Open With  Context Menu extension
+ *    Open With  Context Menu extension
  *
  * Copyright 2007 Johannes Anderwald <janderwald@reactos.org>
  *
@@ -50,8 +50,8 @@ typedef struct
 
 typedef struct
 {
-	LPCWSTR szKeyName;
-	UINT ResourceID;
+    LPCWSTR szKeyName;
+    UINT ResourceID;
 }FOLDER_VIEW_ENTRY, PFOLDER_VIEW_ENTRY;
 /*
 static FOLDER_VIEW_ENTRY s_Options[] =
@@ -116,7 +116,7 @@ InitializeFolderOptionsListCtrl(HWND hwndDlg)
     WCHAR szName[50];
     HWND hDlgCtrl;
 
-	hDlgCtrl = GetDlgItem(hwndDlg, 14003);
+    hDlgCtrl = GetDlgItem(hwndDlg, 14003);
 
     if (!LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szName, sizeof(szName) / sizeof(WCHAR)))
         szName[0] = 0;
@@ -589,7 +589,7 @@ CountFolderAndFiles(LPVOID lParam)
                 pContext->cFiles++;
                 pContext->bSize.u.LowPart += FindData.nFileSizeLow;
                 pContext->bSize.u.HighPart += FindData.nFileSizeHigh;
-            }	
+            }    
         }
         else if (GetLastError() == ERROR_NO_MORE_FILES)
         {
@@ -777,7 +777,7 @@ SH_ShowFolderProperties(LPWSTR pwszFolder,  LPCITEMIDLIST pidlFolder, LPCITEMIDL
     WCHAR szName[MAX_PATH] = {0};
     HPSXA hpsx = NULL;
     LPWSTR pFolderName;
-    CComPtr<IDataObject>		pDataObj;
+    CComPtr<IDataObject>        pDataObj;
 
     if (!PathIsDirectoryW(pwszFolder))
         return FALSE;

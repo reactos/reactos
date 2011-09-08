@@ -36,16 +36,16 @@ be inserted in a removable drive.
 */
 
 class CFileSysEnum :
-	public IEnumIDListImpl
+    public IEnumIDListImpl
 {
 private:
 public:
-	CFileSysEnum();
-	~CFileSysEnum();
-	HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags);
+    CFileSysEnum();
+    ~CFileSysEnum();
+    HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags);
 
 BEGIN_COM_MAP(CFileSysEnum)
-	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
@@ -59,7 +59,7 @@ CFileSysEnum::~CFileSysEnum()
 
 HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR sPathTarget, DWORD dwFlags)
 {
-	return CreateFolderEnumList(sPathTarget, dwFlags);
+    return CreateFolderEnumList(sPathTarget, dwFlags);
 }
 
 /**************************************************************************
@@ -76,11 +76,11 @@ void CFSFolder::SF_RegisterClipFmt()
 
 CFSFolder::CFSFolder()
 {
-	pclsid = (CLSID *)&CLSID_ShellFSFolder;
-	sPathTarget = NULL;
-	pidlRoot = NULL;
-	cfShellIDList = 0;
-	fAcceptFmt = FALSE;
+    pclsid = (CLSID *)&CLSID_ShellFSFolder;
+    sPathTarget = NULL;
+    pidlRoot = NULL;
+    cfShellIDList = 0;
+    fAcceptFmt = FALSE;
 }
 
 CFSFolder::~CFSFolder()
@@ -252,32 +252,32 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
 HRESULT WINAPI CFSFolder::EnumObjects (HWND hwndOwner,
                             DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
 {
-	CComObject<CFileSysEnum>				*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<CFileSysEnum>                *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
-	if (ppEnumIDList == NULL)
-		return E_POINTER;
-	*ppEnumIDList = NULL;
-	ATLTRY (theEnumerator = new CComObject<CFileSysEnum>);
-	if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
-	hResult = theEnumerator->Initialize (sPathTarget, dwFlags);
-	if (FAILED (hResult))
-		return hResult;
-	*ppEnumIDList = result.Detach ();
+    if (ppEnumIDList == NULL)
+        return E_POINTER;
+    *ppEnumIDList = NULL;
+    ATLTRY (theEnumerator = new CComObject<CFileSysEnum>);
+    if (theEnumerator == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
+    hResult = theEnumerator->Initialize (sPathTarget, dwFlags);
+    if (FAILED (hResult))
+        return hResult;
+    *ppEnumIDList = result.Detach ();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -454,13 +454,13 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1)) {
             hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
         } else if (IsEqualIID (riid, IID_IDataObject)){
-			if (cidl >= 1) {
+            if (cidl >= 1) {
             hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
-			}
-			else
-			{
+            }
+            else
+            {
                 hr = IDataObject_Constructor (hwndOwner, pidlRoot, (LPCITEMIDLIST*)&pidlRoot, 1, (IDataObject **)&pObj);
-			}
+            }
         } else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1)) {
             pidl = ILCombine (pidlRoot, apidl[0]);
             pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);

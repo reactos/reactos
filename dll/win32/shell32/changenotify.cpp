@@ -1,5 +1,5 @@
 /*
- *	shell change notification
+ *    shell change notification
  *
  * Copyright 2000 Juergen Schmied
  *
@@ -25,14 +25,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 namespace
 {
-	extern CRITICAL_SECTION SHELL32_ChangenotifyCS;
-	CRITICAL_SECTION_DEBUG critsect_debug =
-	{
-		0, 0, &SHELL32_ChangenotifyCS,
-		{ &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-		  0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
-	};
-	CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
+    extern CRITICAL_SECTION SHELL32_ChangenotifyCS;
+    CRITICAL_SECTION_DEBUG critsect_debug =
+    {
+        0, 0, &SHELL32_ChangenotifyCS,
+        { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+          0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
+    };
+    CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 }
 
 typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
@@ -40,16 +40,16 @@ typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
 /* internal list of notification clients (internal) */
 typedef struct _NOTIFICATIONLIST
 {
-	struct _NOTIFICATIONLIST *next;
-	struct _NOTIFICATIONLIST *prev;
-	HWND hwnd;		/* window to notify */
-	DWORD uMsg;		/* message to send */
-	LPNOTIFYREGISTER apidl; /* array of entries to watch*/
-	UINT cidl;		/* number of pidls in array */
-	LONG wEventMask;	/* subscribed events */
-	LONG wSignalledEvent;   /* event that occurred */
-	DWORD dwFlags;		/* client flags */
-	LPCITEMIDLIST pidlSignaled; /*pidl of the path that caused the signal*/
+    struct _NOTIFICATIONLIST *next;
+    struct _NOTIFICATIONLIST *prev;
+    HWND hwnd;        /* window to notify */
+    DWORD uMsg;        /* message to send */
+    LPNOTIFYREGISTER apidl; /* array of entries to watch*/
+    UINT cidl;        /* number of pidls in array */
+    LONG wEventMask;    /* subscribed events */
+    LONG wSignalledEvent;   /* event that occurred */
+    DWORD dwFlags;        /* client flags */
+    LPCITEMIDLIST pidlSignaled; /*pidl of the path that caused the signal*/
 
 } NOTIFICATIONLIST, *LPNOTIFICATIONLIST;
 
@@ -178,7 +178,7 @@ void FreeChangeNotifications(void)
 }
 
 /*************************************************************************
- * SHChangeNotifyRegister			[SHELL32.2]
+ * SHChangeNotifyRegister            [SHELL32.2]
  *
  */
 ULONG WINAPI
@@ -196,7 +196,7 @@ SHChangeNotifyRegister(
     item = (NOTIFICATIONLIST *)SHAlloc(sizeof(NOTIFICATIONLIST));
 
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p) item=%p\n",
-	hwnd, fSources, wEventMask, uMsg, cItems, lpItems, item);
+    hwnd, fSources, wEventMask, uMsg, cItems, lpItems, item);
 
     item->next = NULL;
     item->prev = NULL;
@@ -225,7 +225,7 @@ SHChangeNotifyRegister(
 }
 
 /*************************************************************************
- * SHChangeNotifyDeregister			[SHELL32.4]
+ * SHChangeNotifyDeregister            [SHELL32.4]
  */
 BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
 {
@@ -245,10 +245,10 @@ BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
 }
 
 /*************************************************************************
- * SHChangeNotifyUpdateEntryList       		[SHELL32.5]
+ * SHChangeNotifyUpdateEntryList               [SHELL32.5]
  */
 EXTERN_C BOOL WINAPI SHChangeNotifyUpdateEntryList(DWORD unknown1, DWORD unknown2,
-			      DWORD unknown3, DWORD unknown4)
+                  DWORD unknown3, DWORD unknown4)
 {
     FIXME("(0x%08x, 0x%08x, 0x%08x, 0x%08x)\n",
           unknown1, unknown2, unknown3, unknown4);
@@ -269,7 +269,7 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
 }
 
 /*************************************************************************
- * SHChangeNotify				[SHELL32.@]
+ * SHChangeNotify                [SHELL32.@]
  */
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
 {
@@ -403,7 +403,7 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
 }
 
 /*************************************************************************
- * NTSHChangeNotifyRegister			[SHELL32.640]
+ * NTSHChangeNotifyRegister            [SHELL32.640]
  * NOTES
  *   Idlist is an array of structures and Count specifies how many items in the array.
  *   count should always be one when calling SHChangeNotifyRegister, or
@@ -422,13 +422,13 @@ EXTERN_C ULONG WINAPI NTSHChangeNotifyRegister(
 }
 
 /*************************************************************************
- * SHChangeNotification_Lock			[SHELL32.644]
+ * SHChangeNotification_Lock            [SHELL32.644]
  */
 HANDLE WINAPI SHChangeNotification_Lock(
-	HANDLE hChange,
-	DWORD dwProcessId,
-	LPITEMIDLIST **lppidls,
-	LPLONG lpwEventId)
+    HANDLE hChange,
+    DWORD dwProcessId,
+    LPITEMIDLIST **lppidls,
+    LPLONG lpwEventId)
 {
     DWORD i;
     LPNOTIFICATIONLIST node;
@@ -457,7 +457,7 @@ HANDLE WINAPI SHChangeNotification_Lock(
 }
 
 /*************************************************************************
- * SHChangeNotification_Unlock			[SHELL32.645]
+ * SHChangeNotification_Unlock            [SHELL32.645]
  */
 BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock)
 {
@@ -466,7 +466,7 @@ BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock)
 }
 
 /*************************************************************************
- * NTSHChangeNotifyDeregister			[SHELL32.641]
+ * NTSHChangeNotifyDeregister            [SHELL32.641]
  */
 EXTERN_C DWORD WINAPI NTSHChangeNotifyDeregister(ULONG x1)
 {

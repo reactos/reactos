@@ -61,67 +61,67 @@ static const columninfo CBitBucketColumns[] =
  */
 
 class CBitBucketEnum :
-	public IEnumIDListImpl
+    public IEnumIDListImpl
 {
 private:
 public:
-	CBitBucketEnum();
-	~CBitBucketEnum();
-	HRESULT WINAPI Initialize(DWORD dwFlags);
-	static BOOL WINAPI CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile);
-	BOOL WINAPI CBEnumBitBucket(IN HANDLE hDeletedFile);
+    CBitBucketEnum();
+    ~CBitBucketEnum();
+    HRESULT WINAPI Initialize(DWORD dwFlags);
+    static BOOL WINAPI CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile);
+    BOOL WINAPI CBEnumBitBucket(IN HANDLE hDeletedFile);
 
 BEGIN_COM_MAP(CBitBucketEnum)
-	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
 class CCBitBucketBackgroundContextMenu :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IContextMenu2
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IContextMenu2
 {
 private:
-	INT									iIdEmpty;
+    INT                                    iIdEmpty;
 public:
-	CCBitBucketBackgroundContextMenu();
-	~CCBitBucketBackgroundContextMenu();
+    CCBitBucketBackgroundContextMenu();
+    ~CCBitBucketBackgroundContextMenu();
 
-	// IContextMenu
-	virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+    // IContextMenu
+    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
-	// IContextMenu2
-	virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    // IContextMenu2
+    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 BEGIN_COM_MAP(CCBitBucketBackgroundContextMenu)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
 END_COM_MAP()
 };
 
 class CCBitBucketItemContextMenu :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IContextMenu2
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IContextMenu2
 {
 private:
-	LPITEMIDLIST						apidl;
+    LPITEMIDLIST                        apidl;
 public:
-	CCBitBucketItemContextMenu();
-	~CCBitBucketItemContextMenu();
-	HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+    CCBitBucketItemContextMenu();
+    ~CCBitBucketItemContextMenu();
+    HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
-	// IContextMenu
-	virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+    // IContextMenu
+    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
-	// IContextMenu2
-	virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    // IContextMenu2
+    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 BEGIN_COM_MAP(CCBitBucketItemContextMenu)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
 END_COM_MAP()
 };
 
@@ -209,21 +209,21 @@ HRESULT WINAPI CBitBucketEnum::Initialize(DWORD dwFlags)
 {
     static LPCWSTR szDrive = L"C:\\";
 
-	if (dwFlags & SHCONTF_NONFOLDERS)
-	{
-		TRACE("Starting Enumeration\n");
+    if (dwFlags & SHCONTF_NONFOLDERS)
+    {
+        TRACE("Starting Enumeration\n");
 
-		if (!EnumerateRecycleBinW(szDrive /* FIXME */ , CBEnumBitBucket, (PVOID)this))
-		{
-			WARN("Error: EnumerateCBitBucketW failed\n");
-			return E_FAIL;
-		}
-	}
-	else
-	{
-		// do nothing
-	}
-	return S_OK;
+        if (!EnumerateRecycleBinW(szDrive /* FIXME */ , CBEnumBitBucket, (PVOID)this))
+        {
+            WARN("Error: EnumerateCBitBucketW failed\n");
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // do nothing
+    }
+    return S_OK;
 }
 
 static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
@@ -253,7 +253,7 @@ static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
 
 BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
 {
-	return ((CBitBucketEnum *)Context)->CBEnumBitBucket(hDeletedFile);
+    return ((CBitBucketEnum *)Context)->CBEnumBitBucket(hDeletedFile);
 }
 
 BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN HANDLE hDeletedFile)
@@ -314,7 +314,7 @@ BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN HANDLE hDeletedFile)
 
 CCBitBucketBackgroundContextMenu::CCBitBucketBackgroundContextMenu()
 {
-	iIdEmpty = 0;
+    iIdEmpty = 0;
 }
 
 CCBitBucketBackgroundContextMenu::~CCBitBucketBackgroundContextMenu()
@@ -323,95 +323,95 @@ CCBitBucketBackgroundContextMenu::~CCBitBucketBackgroundContextMenu()
 
 HRESULT WINAPI CCBitBucketBackgroundContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
-	WCHAR szBuffer[100];
-	MENUITEMINFOW mii;
-	int id = 1;
+    WCHAR szBuffer[100];
+    MENUITEMINFOW mii;
+    int id = 1;
 
-	TRACE("%p %p %u %u %u %u\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
+    TRACE("%p %p %u %u %u %u\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
 
-	if (!hMenu)
-		return E_INVALIDARG;
+    if (!hMenu)
+        return E_INVALIDARG;
 
-	memset(&mii, 0, sizeof(mii));
-	mii.cbSize = sizeof(mii);
-	mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-	mii.fState = MFS_ENABLED;
-	szBuffer[0] = L'\0';
-	LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
-	szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-	mii.dwTypeData = szBuffer;
-	mii.cch = wcslen( mii.dwTypeData );
-	mii.wID = idCmdFirst + id++;
-	mii.fType = MFT_STRING;
-	iIdEmpty = 1;
+    memset(&mii, 0, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+    mii.fState = MFS_ENABLED;
+    szBuffer[0] = L'\0';
+    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
+    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+    mii.dwTypeData = szBuffer;
+    mii.cch = wcslen( mii.dwTypeData );
+    mii.wID = idCmdFirst + id++;
+    mii.fType = MFT_STRING;
+    iIdEmpty = 1;
 
-	if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
-		return E_FAIL;
+    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
+        return E_FAIL;
 
-	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
 }
 
 HRESULT WINAPI CCBitBucketBackgroundContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-	HRESULT hr;
-	LPSHELLBROWSER	lpSB;
-	LPSHELLVIEW lpSV = NULL;
+    HRESULT hr;
+    LPSHELLBROWSER    lpSB;
+    LPSHELLVIEW lpSV = NULL;
 
-	TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
+    TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
 
-	if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
-	{
-		// FIXME
-		// path & flags
-		hr = SHEmptyRecycleBinW(lpcmi->hwnd, L"C:\\", 0);
-		TRACE("result %x\n", hr);
-		if (hr != S_OK)
-			return hr;
+    if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
+    {
+        // FIXME
+        // path & flags
+        hr = SHEmptyRecycleBinW(lpcmi->hwnd, L"C:\\", 0);
+        TRACE("result %x\n", hr);
+        if (hr != S_OK)
+            return hr;
 
-		lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-		if (lpSB && SUCCEEDED(lpSB->QueryActiveShellView(&lpSV)))
-			lpSV->Refresh();
-	}
-	return S_OK;
+        lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+        if (lpSB && SUCCEEDED(lpSB->QueryActiveShellView(&lpSV)))
+            lpSV->Refresh();
+    }
+    return S_OK;
 }
 
 HRESULT WINAPI CCBitBucketBackgroundContextMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
-	FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+    FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT WINAPI CCBitBucketBackgroundContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	TRACE("CBitBucket_IContextMenu2Item_IContextMenu2Folder_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
+    TRACE("CBitBucket_IContextMenu2Item_IContextMenu2Folder_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
 
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI CBitBucketBackgroundContextMenuConstructor(REFIID riid, LPVOID *ppv)
 {
-	CComObject<CCBitBucketBackgroundContextMenu>	*theMenu;
-	CComPtr<IUnknown>						result;
-	HRESULT									hResult;
+    CComObject<CCBitBucketBackgroundContextMenu>    *theMenu;
+    CComPtr<IUnknown>                        result;
+    HRESULT                                    hResult;
 
-	TRACE("%s\n", shdebugstr_guid(&riid));
+    TRACE("%s\n", shdebugstr_guid(&riid));
 
-	if (ppv == NULL)
-		return E_POINTER;
-	*ppv = NULL;
-	ATLTRY(theMenu = new CComObject<CCBitBucketBackgroundContextMenu>);
-	if (theMenu == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theMenu->QueryInterface(riid, (void **)&result);
-	if (FAILED(hResult))
-	{
-		delete theMenu;
-		return hResult;
-	}
-	*ppv = result.Detach();
-	TRACE ("--(%p)\n", *ppv);
-	return S_OK;
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY(theMenu = new CComObject<CCBitBucketBackgroundContextMenu>);
+    if (theMenu == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theMenu->QueryInterface(riid, (void **)&result);
+    if (FAILED(hResult))
+    {
+        delete theMenu;
+        return hResult;
+    }
+    *ppv = result.Detach();
+    TRACE ("--(%p)\n", *ppv);
+    return S_OK;
 }
 
 /**************************************************************************
@@ -420,144 +420,144 @@ static HRESULT WINAPI CBitBucketBackgroundContextMenuConstructor(REFIID riid, LP
 
 CCBitBucketItemContextMenu::CCBitBucketItemContextMenu()
 {
-	apidl = NULL;
+    apidl = NULL;
 }
 
 CCBitBucketItemContextMenu::~CCBitBucketItemContextMenu()
 {
-	ILFree(apidl);
+    ILFree(apidl);
 }
 
 HRESULT WINAPI CCBitBucketItemContextMenu::Initialize(LPCITEMIDLIST pidl)
 {
-	apidl = ILClone(pidl);
-	if (apidl == NULL)
-		return E_OUTOFMEMORY;
-	return S_OK;
+    apidl = ILClone(pidl);
+    if (apidl == NULL)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT WINAPI CCBitBucketItemContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
-	WCHAR szBuffer[30] = {0};
-	ULONG Count = 1;
+    WCHAR szBuffer[30] = {0};
+    ULONG Count = 1;
 
-	TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-	if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-	{
-		szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
-		Count++;
-	}
+    if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        Count++;
+    }
 
-	if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-	{
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-		szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
-	}
+    if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    {
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
 
-	if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-	{
-		szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
-	}
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
 
-	if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-	{
-		szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-		_InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
-	}
+    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+    }
 
-	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
 }
 
 HRESULT WINAPI CCBitBucketItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-	SEARCH_CONTEXT Context;
-	static LPCWSTR szDrive = L"C:\\";
+    SEARCH_CONTEXT Context;
+    static LPCWSTR szDrive = L"C:\\";
 
-	TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",this,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",this,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
-	if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(5)) 
-	{
-		Context.pFileDetails = _ILGetRecycleStruct(apidl);
-		Context.bFound = FALSE;
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(5)) 
+    {
+        Context.pFileDetails = _ILGetRecycleStruct(apidl);
+        Context.bFound = FALSE;
 
-		EnumerateRecycleBinW(szDrive, CBSearchBitBucket, (PVOID)&Context);
-		if (!Context.bFound)
-			return E_FAIL;
+        EnumerateRecycleBinW(szDrive, CBSearchBitBucket, (PVOID)&Context);
+        if (!Context.bFound)
+            return E_FAIL;
 
-		if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
-		{
-			/* restore file */
-			if (RestoreFile(Context.hDeletedFile))
-				return S_OK;
-			else
-				return E_FAIL;
-		}
-		else
-		{
-			DeleteFileHandleToRecycleBin(Context.hDeletedFile);
-			return E_NOTIMPL;
-		}
-	}
-	else if (lpcmi->lpVerb == MAKEINTRESOURCEA(3)) 
-	{
-		FIXME("implement cut\n");
-		return E_NOTIMPL;
-	}
-	else if (lpcmi->lpVerb == MAKEINTRESOURCEA(7))
-	{
-		FIXME("implement properties\n");
-		return E_NOTIMPL;
-	}
+        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
+        {
+            /* restore file */
+            if (RestoreFile(Context.hDeletedFile))
+                return S_OK;
+            else
+                return E_FAIL;
+        }
+        else
+        {
+            DeleteFileHandleToRecycleBin(Context.hDeletedFile);
+            return E_NOTIMPL;
+        }
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(3)) 
+    {
+        FIXME("implement cut\n");
+        return E_NOTIMPL;
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(7))
+    {
+        FIXME("implement properties\n");
+        return E_NOTIMPL;
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT WINAPI CCBitBucketItemContextMenu::GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
-	TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+    TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
-	return E_FAIL;
+    return E_FAIL;
 }
 
 HRESULT WINAPI CCBitBucketItemContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	TRACE("CBitBucket_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",this, uMsg, wParam, lParam);
+    TRACE("CBitBucket_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",this, uMsg, wParam, lParam);
 
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI CBitBucketItemContextMenuConstructor(REFIID riid, LPCITEMIDLIST pidl, LPVOID *ppv)
 {
-	CComObject<CCBitBucketItemContextMenu>	*theMenu;
-	CComPtr<IUnknown>						result;
-	HRESULT									hResult;
+    CComObject<CCBitBucketItemContextMenu>    *theMenu;
+    CComPtr<IUnknown>                        result;
+    HRESULT                                    hResult;
 
-	TRACE("%s\n", shdebugstr_guid(&riid));
+    TRACE("%s\n", shdebugstr_guid(&riid));
 
-	if (ppv == NULL)
-		return E_POINTER;
-	*ppv = NULL;
-	ATLTRY(theMenu = new CComObject<CCBitBucketItemContextMenu>);
-	if (theMenu == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theMenu->QueryInterface(riid, (void **)&result);
-	if (FAILED(hResult))
-	{
-		delete theMenu;
-		return hResult;
-	}
-	hResult = theMenu->Initialize(pidl);
-	if (FAILED(hResult))
-		return hResult;
-	*ppv = result.Detach();
-	TRACE ("--(%p)\n", *ppv);
-	return S_OK;
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY(theMenu = new CComObject<CCBitBucketItemContextMenu>);
+    if (theMenu == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theMenu->QueryInterface(riid, (void **)&result);
+    if (FAILED(hResult))
+    {
+        delete theMenu;
+        return hResult;
+    }
+    hResult = theMenu->Initialize(pidl);
+    if (FAILED(hResult))
+        return hResult;
+    *ppv = result.Detach();
+    TRACE ("--(%p)\n", *ppv);
+    return S_OK;
 }
 
 CBitBucket::CBitBucket()
@@ -568,7 +568,7 @@ CBitBucket::CBitBucket()
 CBitBucket::~CBitBucket()
 {
 /*    InterlockedDecrement(&objCount);*/
-	SHFree(pidl);
+    SHFree(pidl);
 }
 
 HRESULT WINAPI CBitBucket::ParseDisplayName(HWND hwnd, LPBC pbc,
@@ -588,32 +588,32 @@ UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
 
 HRESULT WINAPI CBitBucket::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-	CComObject<CBitBucketEnum>				*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<CBitBucketEnum>                *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
-	if (ppEnumIDList == NULL)
-		return E_POINTER;
-	*ppEnumIDList = NULL;
-	ATLTRY (theEnumerator = new CComObject<CBitBucketEnum>);
-	if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
-	hResult = theEnumerator->Initialize(dwFlags);
-	if (FAILED (hResult))
-		return hResult;
-	*ppEnumIDList = result.Detach();
+    if (ppEnumIDList == NULL)
+        return E_POINTER;
+    *ppEnumIDList = NULL;
+    ATLTRY (theEnumerator = new CComObject<CBitBucketEnum>);
+    if (theEnumerator == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
+    hResult = theEnumerator->Initialize(dwFlags);
+    if (FAILED (hResult))
+        return hResult;
+    *ppEnumIDList = result.Detach();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT WINAPI CBitBucket::BindToObject(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
@@ -656,7 +656,7 @@ HRESULT WINAPI CBitBucket::CreateViewObject(HWND hwndOwner, REFIID riid, void **
     }
     else if (IsEqualIID (riid, IID_IContextMenu) || IsEqualIID (riid, IID_IContextMenu2))
     {
-		hr = CBitBucketBackgroundContextMenuConstructor(riid, ppv);
+        hr = CBitBucketBackgroundContextMenuConstructor(riid, ppv);
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
@@ -677,8 +677,8 @@ HRESULT WINAPI CBitBucket::CreateViewObject(HWND hwndOwner, REFIID riid, void **
 HRESULT WINAPI CBitBucket::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
                                    SFGAOF *rgfInOut)
 {
-	TRACE("(%p, %d, {%p, ...}, {%x})\n", this, cidl, apidl ? apidl[0] : NULL, (unsigned int)*rgfInOut);
-	*rgfInOut &= SFGAO_CANMOVE|SFGAO_CANDELETE|SFGAO_HASPROPSHEET|SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    TRACE("(%p, %d, {%p, ...}, {%x})\n", this, cidl, apidl ? apidl[0] : NULL, (unsigned int)*rgfInOut);
+    *rgfInOut &= SFGAO_CANMOVE|SFGAO_CANDELETE|SFGAO_HASPROPSHEET|SFGAO_FILESYSTEM | SFGAO_FOLDER;
     return S_OK;
 }
 
@@ -698,7 +698,7 @@ HRESULT WINAPI CBitBucket::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIS
 
     if ((IsEqualIID (riid, IID_IContextMenu) || IsEqualIID(riid, IID_IContextMenu2)) && (cidl >= 1))
     {
-		hr = CBitBucketItemContextMenuConstructor(riid, apidl[0], (void **)&pObj);
+        hr = CBitBucketItemContextMenuConstructor(riid, apidl[0], (void **)&pObj);
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
@@ -1189,7 +1189,7 @@ BitBucketDlg(
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:	
+    case WM_INITDIALOG:    
         page = (PROPSHEETPAGE*)lParam;
         InitializeBitBucketDlg(hwndDlg, (WCHAR)page->lParam);
         dwStyle = (DWORD) SendDlgItemMessage(hwndDlg, 14000, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);

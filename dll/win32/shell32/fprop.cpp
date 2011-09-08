@@ -388,7 +388,7 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER l
     }
 
     if (SHFileGeneralGetFileTimeString(&accessed_time, resultstr))
-	{
+    {
         hDlgCtrl = GetDlgItem(hwndDlg, 14019);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
     }
@@ -844,7 +844,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     WCHAR *pFileName;
     HPSXA hpsxa[3];
     INT_PTR res;
-    CComPtr<IDataObject>		pDataObj;
+    CComPtr<IDataObject>        pDataObj;
     HRESULT hResult;
 
     TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(lpf));

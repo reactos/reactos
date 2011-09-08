@@ -52,41 +52,41 @@ static HMODULE SHELL32_hshlwapi=NULL;
 
 
 /*************************************************************************
- * ParseFieldA					[internal]
+ * ParseFieldA                    [internal]
  *
  * copies a field from a ',' delimited string
  *
  * first field is nField = 1
  */
 DWORD WINAPI ParseFieldA(
-	LPCSTR src,
-	DWORD nField,
-	LPSTR dst,
-	DWORD len)
+    LPCSTR src,
+    DWORD nField,
+    LPSTR dst,
+    DWORD len)
 {
-	WARN("(%s,0x%08x,%p,%d) semi-stub.\n",debugstr_a(src),nField,dst,len);
+    WARN("(%s,0x%08x,%p,%d) semi-stub.\n",debugstr_a(src),nField,dst,len);
 
-	if (!src || !src[0] || !dst || !len)
-	  return 0;
+    if (!src || !src[0] || !dst || !len)
+      return 0;
 
-	/* skip n fields delimited by ',' */
-	while (nField > 1)
-	{
-	  if (*src=='\0') return FALSE;
-	  if (*(src++)==',') nField--;
-	}
+    /* skip n fields delimited by ',' */
+    while (nField > 1)
+    {
+      if (*src=='\0') return FALSE;
+      if (*(src++)==',') nField--;
+    }
 
-	/* copy part till the next ',' to dst */
-	while ( *src!='\0' && *src!=',' && (len--)>0 ) *(dst++)=*(src++);
+    /* copy part till the next ',' to dst */
+    while ( *src!='\0' && *src!=',' && (len--)>0 ) *(dst++)=*(src++);
 
-	/* finalize the string */
-	*dst=0x0;
+    /* finalize the string */
+    *dst=0x0;
 
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************************************
- * ParseFieldW			[internal]
+ * ParseFieldW            [internal]
  *
  * copies a field from a ',' delimited string
  *
@@ -94,49 +94,49 @@ DWORD WINAPI ParseFieldA(
  */
 DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len)
 {
-	WARN("(%s,0x%08x,%p,%d) semi-stub.\n", debugstr_w(src), nField, dst, len);
+    WARN("(%s,0x%08x,%p,%d) semi-stub.\n", debugstr_w(src), nField, dst, len);
 
-	if (!src || !src[0] || !dst || !len)
-	  return 0;
+    if (!src || !src[0] || !dst || !len)
+      return 0;
 
-	/* skip n fields delimited by ',' */
-	while (nField > 1)
-	{
-	  if (*src == 0x0) return FALSE;
-	  if (*src++ == ',') nField--;
-	}
+    /* skip n fields delimited by ',' */
+    while (nField > 1)
+    {
+      if (*src == 0x0) return FALSE;
+      if (*src++ == ',') nField--;
+    }
 
-	/* copy part till the next ',' to dst */
-	while ( *src != 0x0 && *src != ',' && (len--)>0 ) *(dst++) = *(src++);
+    /* copy part till the next ',' to dst */
+    while ( *src != 0x0 && *src != ',' && (len--)>0 ) *(dst++) = *(src++);
 
-	/* finalize the string */
-	*dst = 0x0;
+    /* finalize the string */
+    *dst = 0x0;
 
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************************************
- * ParseField			[SHELL32.58]
+ * ParseField            [SHELL32.58]
  */
 EXTERN_C DWORD WINAPI ParseFieldAW(LPCVOID src, DWORD nField, LPVOID dst, DWORD len)
 {
-	if (SHELL_OsIsUnicode())
-	  return ParseFieldW((LPCWSTR)src, nField, (LPWSTR)dst, len);
-	return ParseFieldA((LPCSTR)src, nField, (LPSTR)dst, len);
+    if (SHELL_OsIsUnicode())
+      return ParseFieldW((LPCWSTR)src, nField, (LPWSTR)dst, len);
+    return ParseFieldA((LPCSTR)src, nField, (LPSTR)dst, len);
 }
 
 /*************************************************************************
- * GetFileNameFromBrowse			[SHELL32.63]
+ * GetFileNameFromBrowse            [SHELL32.63]
  *
  */
 BOOL WINAPI GetFileNameFromBrowse(
-	HWND hwndOwner,
-	LPWSTR lpstrFile,
-	UINT nMaxFile,
-	LPCWSTR lpstrInitialDir,
-	LPCWSTR lpstrDefExt,
-	LPCWSTR lpstrFilter,
-	LPCWSTR lpstrTitle)
+    HWND hwndOwner,
+    LPWSTR lpstrFile,
+    UINT nMaxFile,
+    LPCWSTR lpstrInitialDir,
+    LPCWSTR lpstrDefExt,
+    LPCWSTR lpstrFilter,
+    LPCWSTR lpstrTitle)
 {
 typedef BOOL (WINAPI *GetOpenFileNameProc)(OPENFILENAMEW *ofn);
     HMODULE hmodule;
@@ -145,16 +145,16 @@ typedef BOOL (WINAPI *GetOpenFileNameProc)(OPENFILENAMEW *ofn);
     BOOL ret;
 
     TRACE("%p, %s, %d, %s, %s, %s, %s)\n",
-	  hwndOwner, debugstr_w(lpstrFile), nMaxFile, lpstrInitialDir, lpstrDefExt,
-	  lpstrFilter, lpstrTitle);
+      hwndOwner, debugstr_w(lpstrFile), nMaxFile, lpstrInitialDir, lpstrDefExt,
+      lpstrFilter, lpstrTitle);
 
     hmodule = LoadLibraryW(L"comdlg32.dll");
     if(!hmodule) return FALSE;
     pGetOpenFileNameW = (GetOpenFileNameProc)GetProcAddress(hmodule, "GetOpenFileNameW");
     if(!pGetOpenFileNameW)
     {
-	FreeLibrary(hmodule);
-	return FALSE;
+    FreeLibrary(hmodule);
+    return FALSE;
     }
 
     memset(&ofn, 0, sizeof(ofn));
@@ -175,7 +175,7 @@ typedef BOOL (WINAPI *GetOpenFileNameProc)(OPENFILENAMEW *ofn);
 }
 
 /*************************************************************************
- * SHGetSetSettings				[SHELL32.68]
+ * SHGetSetSettings                [SHELL32.68]
  */
 EXTERN_C VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
 {
@@ -190,7 +190,7 @@ EXTERN_C VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet
 }
 
 /*************************************************************************
- * SHGetSettings				[SHELL32.@]
+ * SHGetSettings                [SHELL32.@]
  *
  * NOTES
  *  the registry path are for win98 (tested)
@@ -199,55 +199,55 @@ EXTERN_C VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet
  */
 EXTERN_C VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 {
-	HKEY	hKey;
-	DWORD	dwData;
-	DWORD	dwDataSize = sizeof (DWORD);
+    HKEY    hKey;
+    DWORD    dwData;
+    DWORD    dwDataSize = sizeof (DWORD);
 
-	TRACE("(%p 0x%08x)\n",lpsfs,dwMask);
+    TRACE("(%p 0x%08x)\n",lpsfs,dwMask);
 
-	if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
-				 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0))
-	  return;
+    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0))
+      return;
 
-	if ( (SSF_SHOWEXTENSIONS & dwMask) && !RegQueryValueExA(hKey, "HideFileExt", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	  lpsfs->fShowExtensions  = ((dwData == 0) ?  0 : 1);
+    if ( (SSF_SHOWEXTENSIONS & dwMask) && !RegQueryValueExA(hKey, "HideFileExt", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+      lpsfs->fShowExtensions  = ((dwData == 0) ?  0 : 1);
 
-	if ( (SSF_SHOWINFOTIP & dwMask) && !RegQueryValueExA(hKey, "ShowInfoTip", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	  lpsfs->fShowInfoTip  = ((dwData == 0) ?  0 : 1);
+    if ( (SSF_SHOWINFOTIP & dwMask) && !RegQueryValueExA(hKey, "ShowInfoTip", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+      lpsfs->fShowInfoTip  = ((dwData == 0) ?  0 : 1);
 
-	if ( (SSF_DONTPRETTYPATH & dwMask) && !RegQueryValueExA(hKey, "DontPrettyPath", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	  lpsfs->fDontPrettyPath  = ((dwData == 0) ?  0 : 1);
+    if ( (SSF_DONTPRETTYPATH & dwMask) && !RegQueryValueExA(hKey, "DontPrettyPath", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+      lpsfs->fDontPrettyPath  = ((dwData == 0) ?  0 : 1);
 
-	if ( (SSF_HIDEICONS & dwMask) && !RegQueryValueExA(hKey, "HideIcons", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	  lpsfs->fHideIcons  = ((dwData == 0) ?  0 : 1);
+    if ( (SSF_HIDEICONS & dwMask) && !RegQueryValueExA(hKey, "HideIcons", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+      lpsfs->fHideIcons  = ((dwData == 0) ?  0 : 1);
 
-	if ( (SSF_MAPNETDRVBUTTON & dwMask) && !RegQueryValueExA(hKey, "MapNetDrvBtn", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	  lpsfs->fMapNetDrvBtn  = ((dwData == 0) ?  0 : 1);
+    if ( (SSF_MAPNETDRVBUTTON & dwMask) && !RegQueryValueExA(hKey, "MapNetDrvBtn", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+      lpsfs->fMapNetDrvBtn  = ((dwData == 0) ?  0 : 1);
 
-	if ( (SSF_SHOWATTRIBCOL & dwMask) && !RegQueryValueExA(hKey, "ShowAttribCol", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	  lpsfs->fShowAttribCol  = ((dwData == 0) ?  0 : 1);
+    if ( (SSF_SHOWATTRIBCOL & dwMask) && !RegQueryValueExA(hKey, "ShowAttribCol", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+      lpsfs->fShowAttribCol  = ((dwData == 0) ?  0 : 1);
 
-	if (((SSF_SHOWALLOBJECTS | SSF_SHOWSYSFILES) & dwMask) && !RegQueryValueExA(hKey, "Hidden", 0, 0, (LPBYTE)&dwData, &dwDataSize))
-	{ if (dwData == 0)
-	  { if (SSF_SHOWALLOBJECTS & dwMask)	lpsfs->fShowAllObjects  = 0;
-	    if (SSF_SHOWSYSFILES & dwMask)	lpsfs->fShowSysFiles  = 0;
-	  }
-	  else if (dwData == 1)
-	  { if (SSF_SHOWALLOBJECTS & dwMask)	lpsfs->fShowAllObjects  = 1;
-	    if (SSF_SHOWSYSFILES & dwMask)	lpsfs->fShowSysFiles  = 0;
-	  }
-	  else if (dwData == 2)
-	  { if (SSF_SHOWALLOBJECTS & dwMask)	lpsfs->fShowAllObjects  = 0;
-	    if (SSF_SHOWSYSFILES & dwMask)	lpsfs->fShowSysFiles  = 1;
-	  }
-	}
-	RegCloseKey (hKey);
+    if (((SSF_SHOWALLOBJECTS | SSF_SHOWSYSFILES) & dwMask) && !RegQueryValueExA(hKey, "Hidden", 0, 0, (LPBYTE)&dwData, &dwDataSize))
+    { if (dwData == 0)
+      { if (SSF_SHOWALLOBJECTS & dwMask)    lpsfs->fShowAllObjects  = 0;
+        if (SSF_SHOWSYSFILES & dwMask)    lpsfs->fShowSysFiles  = 0;
+      }
+      else if (dwData == 1)
+      { if (SSF_SHOWALLOBJECTS & dwMask)    lpsfs->fShowAllObjects  = 1;
+        if (SSF_SHOWSYSFILES & dwMask)    lpsfs->fShowSysFiles  = 0;
+      }
+      else if (dwData == 2)
+      { if (SSF_SHOWALLOBJECTS & dwMask)    lpsfs->fShowAllObjects  = 0;
+        if (SSF_SHOWSYSFILES & dwMask)    lpsfs->fShowSysFiles  = 1;
+      }
+    }
+    RegCloseKey (hKey);
 
-	TRACE("-- 0x%04x\n", *(WORD*)lpsfs);
+    TRACE("-- 0x%04x\n", *(WORD*)lpsfs);
 }
 
 /*************************************************************************
- * SHShellFolderView_Message			[SHELL32.73]
+ * SHShellFolderView_Message            [SHELL32.73]
  *
  * Send a message to an explorer cabinet window.
  *
@@ -267,16 +267,16 @@ EXTERN_C VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
  *    that was clicked.
  */
 LRESULT WINAPI SHShellFolderView_Message(
-	HWND hwndCabinet,
-	UINT uMessage,
-	LPARAM lParam)
+    HWND hwndCabinet,
+    UINT uMessage,
+    LPARAM lParam)
 {
-	FIXME("%p %08x %08lx stub\n",hwndCabinet, uMessage, lParam);
-	return 0;
+    FIXME("%p %08x %08lx stub\n",hwndCabinet, uMessage, lParam);
+    return 0;
 }
 
 /*************************************************************************
- * RegisterShellHook				[SHELL32.181]
+ * RegisterShellHook                [SHELL32.181]
  *
  * Register a shell hook.
  *
@@ -288,15 +288,15 @@ LRESULT WINAPI SHShellFolderView_Message(
  *     Exported by ordinal
  */
 BOOL WINAPI RegisterShellHook(
-	HWND hWnd,
-	DWORD dwType)
+    HWND hWnd,
+    DWORD dwType)
 {
-	FIXME("(%p,0x%08x):stub.\n",hWnd, dwType);
-	return TRUE;
+    FIXME("(%p,0x%08x):stub.\n",hWnd, dwType);
+    return TRUE;
 }
 
 /*************************************************************************
- * ShellMessageBoxW				[SHELL32.182]
+ * ShellMessageBoxW                [SHELL32.182]
  *
  * See ShellMessageBoxA.
  *
@@ -307,47 +307,47 @@ BOOL WINAPI RegisterShellHook(
  * shlwapi as well.
  */
 EXTERN_C int WINAPI ShellMessageBoxW(
-	HINSTANCE hInstance,
-	HWND hWnd,
-	LPCWSTR lpText,
-	LPCWSTR lpCaption,
-	UINT uType,
-	...)
+    HINSTANCE hInstance,
+    HWND hWnd,
+    LPCWSTR lpText,
+    LPCWSTR lpCaption,
+    UINT uType,
+    ...)
 {
-	WCHAR	szText[100],szTitle[100];
-	LPCWSTR pszText = szText, pszTitle = szTitle;
-	LPWSTR  pszTemp;
-	va_list args;
-	int	ret;
+    WCHAR    szText[100],szTitle[100];
+    LPCWSTR pszText = szText, pszTitle = szTitle;
+    LPWSTR  pszTemp;
+    va_list args;
+    int    ret;
 
-	va_start(args, uType);
-	/* wvsprintfA(buf,fmt, args); */
+    va_start(args, uType);
+    /* wvsprintfA(buf,fmt, args); */
 
-	TRACE("(%p,%p,%p,%p,%08x)\n",
-	    hInstance,hWnd,lpText,lpCaption,uType);
+    TRACE("(%p,%p,%p,%p,%08x)\n",
+        hInstance,hWnd,lpText,lpCaption,uType);
 
-	if (IS_INTRESOURCE(lpCaption))
-	  LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
-	else
-	  pszTitle = lpCaption;
+    if (IS_INTRESOURCE(lpCaption))
+      LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
+    else
+      pszTitle = lpCaption;
 
-	if (IS_INTRESOURCE(lpText))
-	  LoadStringW(hInstance, LOWORD(lpText), szText, sizeof(szText)/sizeof(szText[0]));
-	else
-	  pszText = lpText;
+    if (IS_INTRESOURCE(lpText))
+      LoadStringW(hInstance, LOWORD(lpText), szText, sizeof(szText)/sizeof(szText[0]));
+    else
+      pszText = lpText;
 
-	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-		       pszText, 0, 0, (LPWSTR)&pszTemp, 0, &args);
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+               pszText, 0, 0, (LPWSTR)&pszTemp, 0, &args);
 
-	va_end(args);
+    va_end(args);
 
-	ret = MessageBoxW(hWnd,pszTemp,pszTitle,uType);
-	LocalFree(pszTemp);
-	return ret;
+    ret = MessageBoxW(hWnd,pszTemp,pszTitle,uType);
+    LocalFree(pszTemp);
+    return ret;
 }
 
 /*************************************************************************
- * ShellMessageBoxA				[SHELL32.183]
+ * ShellMessageBoxA                [SHELL32.183]
  *
  * Format and output an error message.
  *
@@ -365,47 +365,47 @@ EXTERN_C int WINAPI ShellMessageBoxW(
  *     Exported by ordinal
  */
 EXTERN_C int WINAPI ShellMessageBoxA(
-	HINSTANCE hInstance,
-	HWND hWnd,
-	LPCSTR lpText,
-	LPCSTR lpCaption,
-	UINT uType,
-	...)
+    HINSTANCE hInstance,
+    HWND hWnd,
+    LPCSTR lpText,
+    LPCSTR lpCaption,
+    UINT uType,
+    ...)
 {
-	char	szText[100],szTitle[100];
-	LPCSTR  pszText = szText, pszTitle = szTitle;
-	LPSTR   pszTemp;
-	va_list args;
-	int	ret;
+    char    szText[100],szTitle[100];
+    LPCSTR  pszText = szText, pszTitle = szTitle;
+    LPSTR   pszTemp;
+    va_list args;
+    int    ret;
 
-	va_start(args, uType);
-	/* wvsprintfA(buf,fmt, args); */
+    va_start(args, uType);
+    /* wvsprintfA(buf,fmt, args); */
 
-	TRACE("(%p,%p,%p,%p,%08x)\n",
-	    hInstance,hWnd,lpText,lpCaption,uType);
+    TRACE("(%p,%p,%p,%p,%08x)\n",
+        hInstance,hWnd,lpText,lpCaption,uType);
 
-	if (IS_INTRESOURCE(lpCaption))
-	  LoadStringA(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle));
-	else
-	  pszTitle = lpCaption;
+    if (IS_INTRESOURCE(lpCaption))
+      LoadStringA(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle));
+    else
+      pszTitle = lpCaption;
 
-	if (IS_INTRESOURCE(lpText))
-	  LoadStringA(hInstance, LOWORD(lpText), szText, sizeof(szText));
-	else
-	  pszText = lpText;
+    if (IS_INTRESOURCE(lpText))
+      LoadStringA(hInstance, LOWORD(lpText), szText, sizeof(szText));
+    else
+      pszText = lpText;
 
-	FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-		       pszText, 0, 0, (LPSTR)&pszTemp, 0, &args);
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+               pszText, 0, 0, (LPSTR)&pszTemp, 0, &args);
 
-	va_end(args);
+    va_end(args);
 
-	ret = MessageBoxA(hWnd,pszTemp,pszTitle,uType);
-	LocalFree(pszTemp);
-	return ret;
+    ret = MessageBoxA(hWnd,pszTemp,pszTitle,uType);
+    LocalFree(pszTemp);
+    return ret;
 }
 
 /*************************************************************************
- * SHRegisterDragDrop				[SHELL32.86]
+ * SHRegisterDragDrop                [SHELL32.86]
  *
  * Probably equivalent to RegisterDragDrop but under Windows 95 it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
@@ -420,15 +420,15 @@ EXTERN_C int WINAPI ShellMessageBoxA(
  *     RegisterDragDrop, SHLoadOLE
  */
 HRESULT WINAPI SHRegisterDragDrop(
-	HWND hWnd,
-	LPDROPTARGET pDropTarget)
+    HWND hWnd,
+    LPDROPTARGET pDropTarget)
 {
-	FIXME("(%p,%p):stub.\n", hWnd, pDropTarget);
-	return RegisterDragDrop(hWnd, pDropTarget);
+    FIXME("(%p,%p):stub.\n", hWnd, pDropTarget);
+    return RegisterDragDrop(hWnd, pDropTarget);
 }
 
 /*************************************************************************
- * SHRevokeDragDrop				[SHELL32.87]
+ * SHRevokeDragDrop                [SHELL32.87]
  *
  * Probably equivalent to RevokeDragDrop but under Windows 9x it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
@@ -447,7 +447,7 @@ HRESULT WINAPI SHRevokeDragDrop(HWND hWnd)
 }
 
 /*************************************************************************
- * SHDoDragDrop					[SHELL32.88]
+ * SHDoDragDrop                    [SHELL32.88]
  *
  * Probably equivalent to DoDragDrop but under Windows 9x it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
@@ -460,36 +460,36 @@ HRESULT WINAPI SHRevokeDragDrop(HWND hWnd)
  *     DoDragDrop, SHLoadOLE
  */
 HRESULT WINAPI SHDoDragDrop(
-	HWND hWnd,
-	LPDATAOBJECT lpDataObject,
-	LPDROPSOURCE lpDropSource,
-	DWORD dwOKEffect,
-	LPDWORD pdwEffect)
+    HWND hWnd,
+    LPDATAOBJECT lpDataObject,
+    LPDROPSOURCE lpDropSource,
+    DWORD dwOKEffect,
+    LPDWORD pdwEffect)
 {
     FIXME("(%p %p %p 0x%08x %p):stub.\n",
     hWnd, lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
-	return DoDragDrop(lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
+    return DoDragDrop(lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
 }
 
 /*************************************************************************
- * ArrangeWindows				[SHELL32.184]
+ * ArrangeWindows                [SHELL32.184]
  *
  */
 WORD WINAPI ArrangeWindows(
-	HWND hwndParent,
-	DWORD dwReserved,
-	LPCRECT lpRect,
-	WORD cKids,
-	CONST HWND * lpKids)
+    HWND hwndParent,
+    DWORD dwReserved,
+    LPCRECT lpRect,
+    WORD cKids,
+    CONST HWND * lpKids)
 {
     /* Unimplemented in WinXP SP3 */
     TRACE("(%p 0x%08x %p 0x%04x %p):stub.\n",
-	   hwndParent, dwReserved, lpRect, cKids, lpKids);
+       hwndParent, dwReserved, lpRect, cKids, lpKids);
     return 0;
 }
 
 /*************************************************************************
- * SignalFileOpen				[SHELL32.103]
+ * SignalFileOpen                [SHELL32.103]
  *
  * NOTES
  *     exported by ordinal
@@ -523,17 +523,17 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
     /* Get the key for the policies location in the registry
      */
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-		      "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
-		      0, KEY_READ, &Policy_basekey)) {
+              "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+              0, KEY_READ, &Policy_basekey)) {
 
-	if (RegOpenKeyExA(HKEY_CURRENT_USER,
-			  "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
-			  0, KEY_READ, &Policy_basekey)) {
-	    TRACE("No Explorer Policies location exists. Policy wanted=%s\n",
-		  policy);
-	    *len = 0;
-	    return ERROR_FILE_NOT_FOUND;
-	}
+    if (RegOpenKeyExA(HKEY_CURRENT_USER,
+              "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+              0, KEY_READ, &Policy_basekey)) {
+        TRACE("No Explorer Policies location exists. Policy wanted=%s\n",
+          policy);
+        *len = 0;
+        return ERROR_FILE_NOT_FOUND;
+    }
     }
 
     /* Retrieve the data if it exists
@@ -590,7 +590,7 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
      */
 
     /* Create the MRU data structure for "RecentDocs"
-	 */
+     */
     ptr = buffer;
     lstrcpyA(ptr, doc_name);
     ptr += (lstrlenA(buffer) + 1);
@@ -613,7 +613,7 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 }
 
 /*************************************************************************
- * SHAddToRecentDocs				[SHELL32.@]
+ * SHAddToRecentDocs                [SHELL32.@]
  *
  * Modify (add/clear) Shell's list of recently used documents.
  *
@@ -645,7 +645,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     CHAR new_lnk_filepath[MAX_PATH];
     CHAR new_lnk_name[MAX_PATH];
     CHAR * ext;
-    CComPtr<IMalloc>		ppM;
+    CComPtr<IMalloc>        ppM;
     LPITEMIDLIST pidl;
     HWND hwnd = 0;       /* FIXME:  get real window handle */
     INT ret;
@@ -668,21 +668,21 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     datalen = 64;
     ret=SHADD_get_policy( "NoRecentDocsHistory", &type, data, &datalen);
     if ((ret > 0) && (ret != ERROR_FILE_NOT_FOUND)) {
-	ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
-	return;
+    ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
+    return;
     }
     if (ret == ERROR_SUCCESS) {
-	if (!( (type == REG_DWORD) ||
-	       ((type == REG_BINARY) && (datalen == 4)) )) {
-	    ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%d, len=%d\n",
-		type, datalen);
-	    return;
-	}
+    if (!( (type == REG_DWORD) ||
+           ((type == REG_BINARY) && (datalen == 4)) )) {
+        ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%d, len=%d\n",
+        type, datalen);
+        return;
+    }
 
-	TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
-	/* now test the actual policy value */
-	if ( data[0] != 0)
-	    return;
+    TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
+    /* now test the actual policy value */
+    if ( data[0] != 0)
+        return;
     }
 
     /* Open key to where the necessary info is
@@ -692,59 +692,59 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
      *        key is stored in the DLL global data.
      */
     if (RegCreateKeyExA(HKEY_CURRENT_USER,
-			"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-			0, 0, 0, KEY_READ, 0, &HCUbasekey, 0)) {
-	ERR("Failed to create 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'\n");
-	return;
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+            0, 0, 0, KEY_READ, 0, &HCUbasekey, 0)) {
+    ERR("Failed to create 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'\n");
+    return;
     }
 
     /* Get path to user's "Recent" directory
      */
     if(SUCCEEDED(SHGetMalloc(&ppM))) {
-	if (SUCCEEDED(SHGetSpecialFolderLocation(hwnd, CSIDL_RECENT,
-						 &pidl))) {
-	    SHGetPathFromIDListA(pidl, link_dir);
-	    ppM->Free(pidl);
-	}
-	else {
-	    /* serious issues */
-	    link_dir[0] = 0;
-	    ERR("serious issues 1\n");
-	}
+    if (SUCCEEDED(SHGetSpecialFolderLocation(hwnd, CSIDL_RECENT,
+                         &pidl))) {
+        SHGetPathFromIDListA(pidl, link_dir);
+        ppM->Free(pidl);
     }
     else {
-	/* serious issues */
-	link_dir[0] = 0;
-	ERR("serious issues 2\n");
+        /* serious issues */
+        link_dir[0] = 0;
+        ERR("serious issues 1\n");
+    }
+    }
+    else {
+    /* serious issues */
+    link_dir[0] = 0;
+    ERR("serious issues 2\n");
     }
     TRACE("Users Recent dir %s\n", link_dir);
 
     /* If no input, then go clear the lists */
     if (!pv) {
-	/* clear user's Recent dir
-	 */
+    /* clear user's Recent dir
+     */
 
-	/* FIXME: delete all files in "link_dir"
-	 *
-	 * while( more files ) {
-	 *    lstrcpyA(old_lnk_name, link_dir);
-	 *    PathAppendA(old_lnk_name, filenam);
-	 *    DeleteFileA(old_lnk_name);
-	 * }
-	 */
-	FIXME("should delete all files in %s\\\n", link_dir);
+    /* FIXME: delete all files in "link_dir"
+     *
+     * while( more files ) {
+     *    lstrcpyA(old_lnk_name, link_dir);
+     *    PathAppendA(old_lnk_name, filenam);
+     *    DeleteFileA(old_lnk_name);
+     * }
+     */
+    FIXME("should delete all files in %s\\\n", link_dir);
 
-	/* clear MRU list
-	 */
-	/* MS Bug ?? v4.72.3612.1700 of shell32 does the delete against
-	 *  HKEY_LOCAL_MACHINE version of ...CurrentVersion\Explorer
-	 *  and naturally it fails w/ rc=2. It should do it against
-	 *  HKEY_CURRENT_USER which is where it is stored, and where
-	 *  the MRU routines expect it!!!!
-	 */
-	RegDeleteKeyA(HCUbasekey, "RecentDocs");
-	RegCloseKey(HCUbasekey);
-	return;
+    /* clear MRU list
+     */
+    /* MS Bug ?? v4.72.3612.1700 of shell32 does the delete against
+     *  HKEY_LOCAL_MACHINE version of ...CurrentVersion\Explorer
+     *  and naturally it fails w/ rc=2. It should do it against
+     *  HKEY_CURRENT_USER which is where it is stored, and where
+     *  the MRU routines expect it!!!!
+     */
+    RegDeleteKeyA(HCUbasekey, "RecentDocs");
+    RegCloseKey(HCUbasekey);
+    return;
     }
 
     /* Have data to add, the jobs to be done:
@@ -760,7 +760,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
     case SHARD_PIDL:
-	SHGetPathFromIDListA((LPCITEMIDLIST)pv, doc_name);
+    SHGetPathFromIDListA((LPCITEMIDLIST)pv, doc_name);
         break;
 
     case SHARD_PATHA:
@@ -801,173 +801,173 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     /* ***  JOB 1: Update registry for ...\Explorer\RecentDocs list  *** */
 
     {  /* on input needs:
-	*      doc_name    -  pure file-spec, no path
-	*      link_dir    -  path to the user's Recent directory
-	*      HCUbasekey  -  key of ...Windows\CurrentVersion\Explorer" node
-	* creates:
-	*      new_lnk_name-  pure file-spec, no path for new .lnk file
-	*      new_lnk_filepath
-	*                  -  path and file name of new .lnk file
-	*/
-	CREATEMRULISTA mymru;
-	HANDLE mruhandle;
-	INT len, pos, bufused, err;
-	INT i;
-	DWORD attr;
-	CHAR buffer[2048];
-	CHAR *ptr;
-	CHAR old_lnk_name[MAX_PATH];
-	short int slen;
+    *      doc_name    -  pure file-spec, no path
+    *      link_dir    -  path to the user's Recent directory
+    *      HCUbasekey  -  key of ...Windows\CurrentVersion\Explorer" node
+    * creates:
+    *      new_lnk_name-  pure file-spec, no path for new .lnk file
+    *      new_lnk_filepath
+    *                  -  path and file name of new .lnk file
+    */
+    CREATEMRULISTA mymru;
+    HANDLE mruhandle;
+    INT len, pos, bufused, err;
+    INT i;
+    DWORD attr;
+    CHAR buffer[2048];
+    CHAR *ptr;
+    CHAR old_lnk_name[MAX_PATH];
+    short int slen;
 
-	mymru.cbSize = sizeof(CREATEMRULISTA);
-	mymru.nMaxItems = 15;
-	mymru.dwFlags = MRUF_BINARY_LIST | MRUF_DELAYED_SAVE;
-	mymru.hKey = HCUbasekey;
-	mymru.lpszSubKey = "RecentDocs";
-	mymru.lpfnCompare = (PROC)SHADD_compare_mru;
-	mruhandle = CreateMRUListA(&mymru);
-	if (!mruhandle) {
-	    /* MRU failed */
-	    ERR("MRU processing failed, handle zero\n");
-	    RegCloseKey(HCUbasekey);
-	    return;
-	}
-	len = lstrlenA(doc_name);
-	pos = FindMRUData(mruhandle, doc_name, len, 0);
+    mymru.cbSize = sizeof(CREATEMRULISTA);
+    mymru.nMaxItems = 15;
+    mymru.dwFlags = MRUF_BINARY_LIST | MRUF_DELAYED_SAVE;
+    mymru.hKey = HCUbasekey;
+    mymru.lpszSubKey = "RecentDocs";
+    mymru.lpfnCompare = (PROC)SHADD_compare_mru;
+    mruhandle = CreateMRUListA(&mymru);
+    if (!mruhandle) {
+        /* MRU failed */
+        ERR("MRU processing failed, handle zero\n");
+        RegCloseKey(HCUbasekey);
+        return;
+    }
+    len = lstrlenA(doc_name);
+    pos = FindMRUData(mruhandle, doc_name, len, 0);
 
-	/* Now get the MRU entry that will be replaced
-	 * and delete the .lnk file for it
-	 */
-	if ((bufused = EnumMRUListA(mruhandle, (pos == -1) ? 14 : pos,
+    /* Now get the MRU entry that will be replaced
+     * and delete the .lnk file for it
+     */
+    if ((bufused = EnumMRUListA(mruhandle, (pos == -1) ? 14 : pos,
                                     buffer, 2048)) != -1) {
-	    ptr = buffer;
-	    ptr += (lstrlenA(buffer) + 1);
-	    slen = *((short int*)ptr);
-	    ptr += 2;  /* skip the length area */
-	    if (bufused >= slen + (ptr-buffer)) {
-		/* buffer size looks good */
-		ptr += 12; /* get to string */
-		len = bufused - (ptr-buffer);  /* get length of buf remaining */
-		if ((lstrlenA(ptr) > 0) && (lstrlenA(ptr) <= len-1)) {
-		    /* appears to be good string */
-		    lstrcpyA(old_lnk_name, link_dir);
-		    PathAppendA(old_lnk_name, ptr);
-		    if (!DeleteFileA(old_lnk_name)) {
-			if ((attr = GetFileAttributesA(old_lnk_name)) == INVALID_FILE_ATTRIBUTES) {
-			    if ((err = GetLastError()) != ERROR_FILE_NOT_FOUND) {
-				ERR("Delete for %s failed, err=%d, attr=%08x\n",
-				    old_lnk_name, err, attr);
-			    }
-			    else {
-				TRACE("old .lnk file %s did not exist\n",
-				      old_lnk_name);
-			    }
-			}
-			else {
-			    ERR("Delete for %s failed, attr=%08x\n",
-				old_lnk_name, attr);
-			}
-		    }
-		    else {
-			TRACE("deleted old .lnk file %s\n", old_lnk_name);
-		    }
-		}
-	    }
-	}
+        ptr = buffer;
+        ptr += (lstrlenA(buffer) + 1);
+        slen = *((short int*)ptr);
+        ptr += 2;  /* skip the length area */
+        if (bufused >= slen + (ptr-buffer)) {
+        /* buffer size looks good */
+        ptr += 12; /* get to string */
+        len = bufused - (ptr-buffer);  /* get length of buf remaining */
+        if ((lstrlenA(ptr) > 0) && (lstrlenA(ptr) <= len-1)) {
+            /* appears to be good string */
+            lstrcpyA(old_lnk_name, link_dir);
+            PathAppendA(old_lnk_name, ptr);
+            if (!DeleteFileA(old_lnk_name)) {
+            if ((attr = GetFileAttributesA(old_lnk_name)) == INVALID_FILE_ATTRIBUTES) {
+                if ((err = GetLastError()) != ERROR_FILE_NOT_FOUND) {
+                ERR("Delete for %s failed, err=%d, attr=%08x\n",
+                    old_lnk_name, err, attr);
+                }
+                else {
+                TRACE("old .lnk file %s did not exist\n",
+                      old_lnk_name);
+                }
+            }
+            else {
+                ERR("Delete for %s failed, attr=%08x\n",
+                old_lnk_name, attr);
+            }
+            }
+            else {
+            TRACE("deleted old .lnk file %s\n", old_lnk_name);
+            }
+        }
+        }
+    }
 
-	/* Create usable .lnk file name for the "Recent" directory
-	 */
-	wsprintfA(new_lnk_name, "%s.lnk", doc_name);
-	lstrcpyA(new_lnk_filepath, link_dir);
-	PathAppendA(new_lnk_filepath, new_lnk_name);
-	i = 1;
-	olderrormode = SetErrorMode(SEM_FAILCRITICALERRORS);
-	while (GetFileAttributesA(new_lnk_filepath) != INVALID_FILE_ATTRIBUTES) {
-	    i++;
-	    wsprintfA(new_lnk_name, "%s (%u).lnk", doc_name, i);
-	    lstrcpyA(new_lnk_filepath, link_dir);
-	    PathAppendA(new_lnk_filepath, new_lnk_name);
-	}
-	SetErrorMode(olderrormode);
-	TRACE("new shortcut will be %s\n", new_lnk_filepath);
+    /* Create usable .lnk file name for the "Recent" directory
+     */
+    wsprintfA(new_lnk_name, "%s.lnk", doc_name);
+    lstrcpyA(new_lnk_filepath, link_dir);
+    PathAppendA(new_lnk_filepath, new_lnk_name);
+    i = 1;
+    olderrormode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    while (GetFileAttributesA(new_lnk_filepath) != INVALID_FILE_ATTRIBUTES) {
+        i++;
+        wsprintfA(new_lnk_name, "%s (%u).lnk", doc_name, i);
+        lstrcpyA(new_lnk_filepath, link_dir);
+        PathAppendA(new_lnk_filepath, new_lnk_name);
+    }
+    SetErrorMode(olderrormode);
+    TRACE("new shortcut will be %s\n", new_lnk_filepath);
 
-	/* Now add the new MRU entry and data
-	 */
-	pos = SHADD_create_add_mru_data(mruhandle, doc_name, new_lnk_name,
-					buffer, &len);
-	FreeMRUList(mruhandle);
-	TRACE("Updated MRU list, new doc is position %d\n", pos);
+    /* Now add the new MRU entry and data
+     */
+    pos = SHADD_create_add_mru_data(mruhandle, doc_name, new_lnk_name,
+                    buffer, &len);
+    FreeMRUList(mruhandle);
+    TRACE("Updated MRU list, new doc is position %d\n", pos);
     }
 
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
 
     {  /* on input needs:
-	*      doc_name    -  pure file-spec, no path
-	*      new_lnk_filepath
-	*                  -  path and file name of new .lnk file
- 	*      uFlags[in]  -  flags on call to SHAddToRecentDocs
-	*      pv[in]      -  document path/pidl on call to SHAddToRecentDocs
-	*/
-	CComPtr<IShellLinkA>		psl;
-	CComPtr<IPersistFile>		pPf;
-	HRESULT hres;
-	CHAR desc[MAX_PATH];
-	WCHAR widelink[MAX_PATH];
+    *      doc_name    -  pure file-spec, no path
+    *      new_lnk_filepath
+    *                  -  path and file name of new .lnk file
+     *      uFlags[in]  -  flags on call to SHAddToRecentDocs
+    *      pv[in]      -  document path/pidl on call to SHAddToRecentDocs
+    */
+    CComPtr<IShellLinkA>        psl;
+    CComPtr<IPersistFile>        pPf;
+    HRESULT hres;
+    CHAR desc[MAX_PATH];
+    WCHAR widelink[MAX_PATH];
 
-	CoInitialize(0);
+    CoInitialize(0);
 
-	hres = CoCreateInstance(CLSID_ShellLink,
-				 NULL,
-				 CLSCTX_INPROC_SERVER,
-				 IID_IShellLinkA,
-				 (void **)&psl);
-	if(SUCCEEDED(hres)) {
+    hres = CoCreateInstance(CLSID_ShellLink,
+                 NULL,
+                 CLSCTX_INPROC_SERVER,
+                 IID_IShellLinkA,
+                 (void **)&psl);
+    if(SUCCEEDED(hres)) {
 
-	    hres = psl->QueryInterface(IID_IPersistFile,
-					     (LPVOID *)&pPf);
-	    if(FAILED(hres)) {
-		/* bombed */
-		ERR("failed QueryInterface for IPersistFile %08x\n", hres);
-		goto fail;
-	    }
+        hres = psl->QueryInterface(IID_IPersistFile,
+                         (LPVOID *)&pPf);
+        if(FAILED(hres)) {
+        /* bombed */
+        ERR("failed QueryInterface for IPersistFile %08x\n", hres);
+        goto fail;
+        }
 
-	    /* Set the document path or pidl */
-	    if (uFlags == SHARD_PIDL) {
-		hres = psl->SetIDList((LPCITEMIDLIST) pv);
-	    } else {
-		hres = psl->SetPath((LPCSTR) pv);
-	    }
-	    if(FAILED(hres)) {
-		/* bombed */
-		ERR("failed Set{IDList|Path} %08x\n", hres);
-		goto fail;
-	    }
+        /* Set the document path or pidl */
+        if (uFlags == SHARD_PIDL) {
+        hres = psl->SetIDList((LPCITEMIDLIST) pv);
+        } else {
+        hres = psl->SetPath((LPCSTR) pv);
+        }
+        if(FAILED(hres)) {
+        /* bombed */
+        ERR("failed Set{IDList|Path} %08x\n", hres);
+        goto fail;
+        }
 
-	    lstrcpyA(desc, "Shortcut to ");
-	    lstrcatA(desc, doc_name);
-	    hres = psl->SetDescription(desc);
-	    if(FAILED(hres)) {
-		/* bombed */
-		ERR("failed SetDescription %08x\n", hres);
-		goto fail;
-	    }
+        lstrcpyA(desc, "Shortcut to ");
+        lstrcatA(desc, doc_name);
+        hres = psl->SetDescription(desc);
+        if(FAILED(hres)) {
+        /* bombed */
+        ERR("failed SetDescription %08x\n", hres);
+        goto fail;
+        }
 
-	    MultiByteToWideChar(CP_ACP, 0, new_lnk_filepath, -1,
-				widelink, MAX_PATH);
-	    /* create the short cut */
-	    hres = pPf->Save(widelink, TRUE);
-	    if(FAILED(hres)) {
-		/* bombed */
-		ERR("failed IPersistFile::Save %08x\n", hres);
-		goto fail;
-	    }
-	    hres = pPf->SaveCompleted(widelink);
-	    TRACE("shortcut %s has been created, result=%08x\n",
-		  new_lnk_filepath, hres);
-	}
-	else {
-	    ERR("CoCreateInstance failed, hres=%08x\n", hres);
-	}
+        MultiByteToWideChar(CP_ACP, 0, new_lnk_filepath, -1,
+                widelink, MAX_PATH);
+        /* create the short cut */
+        hres = pPf->Save(widelink, TRUE);
+        if(FAILED(hres)) {
+        /* bombed */
+        ERR("failed IPersistFile::Save %08x\n", hres);
+        goto fail;
+        }
+        hres = pPf->SaveCompleted(widelink);
+        TRACE("shortcut %s has been created, result=%08x\n",
+          new_lnk_filepath, hres);
+    }
+    else {
+        ERR("CoCreateInstance failed, hres=%08x\n", hres);
+    }
     }
 
  fail:
@@ -979,7 +979,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 }
 
 /*************************************************************************
- * SHCreateShellFolderViewEx			[SHELL32.174]
+ * SHCreateShellFolderViewEx            [SHELL32.174]
  *
  * Create a new instance of the default Shell folder view object.
  *
@@ -991,36 +991,36 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
  *  see IShellFolder::CreateViewObject
  */
 HRESULT WINAPI SHCreateShellFolderViewEx(
-	LPCSFV psvcbi,    /* [in] shelltemplate struct */
-	IShellView **ppv) /* [out] IShellView pointer */
+    LPCSFV psvcbi,    /* [in] shelltemplate struct */
+    IShellView **ppv) /* [out] IShellView pointer */
 {
-	IShellView * psf;
-	HRESULT hRes;
+    IShellView * psf;
+    HRESULT hRes;
 
-	TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
-	  psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
-	  psvcbi->fvm, psvcbi->psvOuter);
+    TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
+      psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
+      psvcbi->fvm, psvcbi->psvOuter);
 
-	hRes = IShellView_Constructor(psvcbi->pshf, &psf);
-	if (FAILED(hRes))
-		return hRes;
+    hRes = IShellView_Constructor(psvcbi->pshf, &psf);
+    if (FAILED(hRes))
+        return hRes;
 
-	if (!psf)
-	  return E_OUTOFMEMORY;
+    if (!psf)
+      return E_OUTOFMEMORY;
 
-	psf->AddRef();
-	hRes = psf->QueryInterface(IID_IShellView, (LPVOID *)ppv);
-	psf->Release();
+    psf->AddRef();
+    hRes = psf->QueryInterface(IID_IShellView, (LPVOID *)ppv);
+    psf->Release();
 
-	return hRes;
+    return hRes;
 }
 /*************************************************************************
- *  SHWinHelp					[SHELL32.127]
+ *  SHWinHelp                    [SHELL32.127]
  *
  */
 EXTERN_C HRESULT WINAPI SHWinHelp (DWORD v, DWORD w, DWORD x, DWORD z)
-{	FIXME("0x%08x 0x%08x 0x%08x 0x%08x stub\n",v,w,x,z);
-	return 0;
+{    FIXME("0x%08x 0x%08x 0x%08x 0x%08x stub\n",v,w,x,z);
+    return 0;
 }
 /*************************************************************************
  *  SHRunControlPanel [SHELL32.161]
@@ -1028,40 +1028,40 @@ EXTERN_C HRESULT WINAPI SHWinHelp (DWORD v, DWORD w, DWORD x, DWORD z)
  */
 EXTERN_C BOOL WINAPI SHRunControlPanel (LPCWSTR lpcszCmdLine, HWND hwndMsgParent)
 {
-	FIXME("0x%08x 0x%08x stub\n",lpcszCmdLine,hwndMsgParent);
-	return 0;
+    FIXME("0x%08x 0x%08x stub\n",lpcszCmdLine,hwndMsgParent);
+    return 0;
 }
 
 static LPUNKNOWN SHELL32_IExplorerInterface=0;
 /*************************************************************************
- * SHSetInstanceExplorer			[SHELL32.176]
+ * SHSetInstanceExplorer            [SHELL32.176]
  *
  * NOTES
  *  Sets the interface
  */
 VOID WINAPI SHSetInstanceExplorer (LPUNKNOWN lpUnknown)
-{	TRACE("%p\n", lpUnknown);
-	SHELL32_IExplorerInterface = lpUnknown;
+{    TRACE("%p\n", lpUnknown);
+    SHELL32_IExplorerInterface = lpUnknown;
 }
 /*************************************************************************
- * SHGetInstanceExplorer			[SHELL32.@]
+ * SHGetInstanceExplorer            [SHELL32.@]
  *
  * NOTES
  *  gets the interface pointer of the explorer and a reference
  */
 HRESULT WINAPI SHGetInstanceExplorer (IUnknown **lpUnknown)
-{	TRACE("%p\n", lpUnknown);
+{    TRACE("%p\n", lpUnknown);
 
-	*lpUnknown = SHELL32_IExplorerInterface;
+    *lpUnknown = SHELL32_IExplorerInterface;
 
-	if (!SHELL32_IExplorerInterface)
-	  return E_FAIL;
+    if (!SHELL32_IExplorerInterface)
+      return E_FAIL;
 
-	SHELL32_IExplorerInterface->AddRef();
-	return NOERROR;
+    SHELL32_IExplorerInterface->AddRef();
+    return NOERROR;
 }
 /*************************************************************************
- * SHFreeUnusedLibraries			[SHELL32.123]
+ * SHFreeUnusedLibraries            [SHELL32.123]
  *
  * Probably equivalent to CoFreeUnusedLibraries but under Windows 9x it could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
@@ -1075,11 +1075,11 @@ HRESULT WINAPI SHGetInstanceExplorer (IUnknown **lpUnknown)
  */
 void WINAPI SHFreeUnusedLibraries (void)
 {
-	FIXME("stub\n");
-	CoFreeUnusedLibraries();
+    FIXME("stub\n");
+    CoFreeUnusedLibraries();
 }
 /*************************************************************************
- * DAD_AutoScroll				[SHELL32.129]
+ * DAD_AutoScroll                [SHELL32.129]
  *
  */
 BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, const POINT * pt)
@@ -1088,7 +1088,7 @@ BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, const POINT * p
     return 0;
 }
 /*************************************************************************
- * DAD_DragEnter				[SHELL32.130]
+ * DAD_DragEnter                [SHELL32.130]
  *
  */
 BOOL WINAPI DAD_DragEnter(HWND hwnd)
@@ -1097,7 +1097,7 @@ BOOL WINAPI DAD_DragEnter(HWND hwnd)
     return FALSE;
 }
 /*************************************************************************
- * DAD_DragEnterEx				[SHELL32.131]
+ * DAD_DragEnterEx                [SHELL32.131]
  *
  */
 BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
@@ -1106,7 +1106,7 @@ BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
     return FALSE;
 }
 /*************************************************************************
- * DAD_DragMove				[SHELL32.134]
+ * DAD_DragMove                [SHELL32.134]
  *
  */
 BOOL WINAPI DAD_DragMove(POINT p)
@@ -1115,7 +1115,7 @@ BOOL WINAPI DAD_DragMove(POINT p)
     return FALSE;
 }
 /*************************************************************************
- * DAD_DragLeave				[SHELL32.132]
+ * DAD_DragLeave                [SHELL32.132]
  *
  */
 BOOL WINAPI DAD_DragLeave(VOID)
@@ -1124,28 +1124,28 @@ BOOL WINAPI DAD_DragLeave(VOID)
     return FALSE;
 }
 /*************************************************************************
- * DAD_SetDragImage				[SHELL32.136]
+ * DAD_SetDragImage                [SHELL32.136]
  *
  * NOTES
  *  exported by name
  */
 BOOL WINAPI DAD_SetDragImage(
-	HIMAGELIST himlTrack,
-	LPPOINT lppt)
+    HIMAGELIST himlTrack,
+    LPPOINT lppt)
 {
-	FIXME("%p %p stub\n",himlTrack, lppt);
+    FIXME("%p %p stub\n",himlTrack, lppt);
   return 0;
 }
 /*************************************************************************
- * DAD_ShowDragImage				[SHELL32.137]
+ * DAD_ShowDragImage                [SHELL32.137]
  *
  * NOTES
  *  exported by name
  */
 BOOL WINAPI DAD_ShowDragImage(BOOL bShow)
 {
-	FIXME("0x%08x stub\n",bShow);
-	return 0;
+    FIXME("0x%08x stub\n",bShow);
+    return 0;
 }
 
 static const WCHAR szwCabLocation[] = {
@@ -1160,86 +1160,86 @@ static const WCHAR szwCabLocation[] = {
 static const WCHAR szwSettings[] = { 'S','e','t','t','i','n','g','s',0 };
 
 /*************************************************************************
- * ReadCabinetState				[SHELL32.651] NT 4.0
+ * ReadCabinetState                [SHELL32.651] NT 4.0
  *
  */
 BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 {
-	HKEY hkey = 0;
-	DWORD type, r;
+    HKEY hkey = 0;
+    DWORD type, r;
 
-	TRACE("%p %d\n", cs, length);
+    TRACE("%p %d\n", cs, length);
 
-	if( (cs == NULL) || (length < (int)sizeof(*cs))  )
-		return FALSE;
+    if( (cs == NULL) || (length < (int)sizeof(*cs))  )
+        return FALSE;
 
-	r = RegOpenKeyW( HKEY_CURRENT_USER, szwCabLocation, &hkey );
-	if( r == ERROR_SUCCESS )
-	{
-		type = REG_BINARY;
-		r = RegQueryValueExW( hkey, szwSettings,
-			NULL, &type, (LPBYTE)cs, (LPDWORD)&length );
-		RegCloseKey( hkey );
+    r = RegOpenKeyW( HKEY_CURRENT_USER, szwCabLocation, &hkey );
+    if( r == ERROR_SUCCESS )
+    {
+        type = REG_BINARY;
+        r = RegQueryValueExW( hkey, szwSettings,
+            NULL, &type, (LPBYTE)cs, (LPDWORD)&length );
+        RegCloseKey( hkey );
 
-	}
+    }
 
-	/* if we can't read from the registry, create default values */
-	if ( (r != ERROR_SUCCESS) || (cs->cLength < sizeof(*cs)) ||
-		(cs->cLength != length) )
-	{
-		ERR("Initializing shell cabinet settings\n");
-		memset(cs, 0, sizeof(*cs));
-		cs->cLength          = sizeof(*cs);
-		cs->nVersion         = 2;
-		cs->fFullPathTitle   = FALSE;
-		cs->fSaveLocalView   = TRUE;
-		cs->fNotShell        = FALSE;
-		cs->fSimpleDefault   = TRUE;
-		cs->fDontShowDescBar = FALSE;
-		cs->fNewWindowMode   = FALSE;
-		cs->fShowCompColor   = FALSE;
-		cs->fDontPrettyNames = FALSE;
-		cs->fAdminsCreateCommonGroups = TRUE;
-		cs->fMenuEnumFilter  = 96;
-	}
+    /* if we can't read from the registry, create default values */
+    if ( (r != ERROR_SUCCESS) || (cs->cLength < sizeof(*cs)) ||
+        (cs->cLength != length) )
+    {
+        ERR("Initializing shell cabinet settings\n");
+        memset(cs, 0, sizeof(*cs));
+        cs->cLength          = sizeof(*cs);
+        cs->nVersion         = 2;
+        cs->fFullPathTitle   = FALSE;
+        cs->fSaveLocalView   = TRUE;
+        cs->fNotShell        = FALSE;
+        cs->fSimpleDefault   = TRUE;
+        cs->fDontShowDescBar = FALSE;
+        cs->fNewWindowMode   = FALSE;
+        cs->fShowCompColor   = FALSE;
+        cs->fDontPrettyNames = FALSE;
+        cs->fAdminsCreateCommonGroups = TRUE;
+        cs->fMenuEnumFilter  = 96;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************************************
- * WriteCabinetState				[SHELL32.652] NT 4.0
+ * WriteCabinetState                [SHELL32.652] NT 4.0
  *
  */
 BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
 {
-	DWORD r;
-	HKEY hkey = 0;
+    DWORD r;
+    HKEY hkey = 0;
 
-	TRACE("%p\n",cs);
+    TRACE("%p\n",cs);
 
-	if( cs == NULL )
-		return FALSE;
+    if( cs == NULL )
+        return FALSE;
 
-	r = RegCreateKeyExW( HKEY_CURRENT_USER, szwCabLocation, 0,
-		 NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
-	if( r == ERROR_SUCCESS )
-	{
-		r = RegSetValueExW( hkey, szwSettings, 0,
-			REG_BINARY, (LPBYTE) cs, cs->cLength);
+    r = RegCreateKeyExW( HKEY_CURRENT_USER, szwCabLocation, 0,
+         NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    if( r == ERROR_SUCCESS )
+    {
+        r = RegSetValueExW( hkey, szwSettings, 0,
+            REG_BINARY, (LPBYTE) cs, cs->cLength);
 
-		RegCloseKey( hkey );
-	}
+        RegCloseKey( hkey );
+    }
 
-	return (r==ERROR_SUCCESS);
+    return (r==ERROR_SUCCESS);
 }
 
 /*************************************************************************
- * FileIconInit 				[SHELL32.660]
+ * FileIconInit                 [SHELL32.660]
  *
  */
 BOOL WINAPI FileIconInit(BOOL bFullInit)
-{	FIXME("(%s)\n", bFullInit ? "true" : "false");
-	return 0;
+{    FIXME("(%s)\n", bFullInit ? "true" : "false");
+    return 0;
 }
 
 /*************************************************************************
@@ -1319,71 +1319,71 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 }
 
 /*************************************************************************
- * SHAllocShared				[SHELL32.520]
+ * SHAllocShared                [SHELL32.520]
  *
  * See shlwapi.SHAllocShared
  */
 HANDLE WINAPI SHAllocShared(LPVOID lpvData, DWORD dwSize, DWORD dwProcId)
 {
-	typedef HANDLE (WINAPI *SHAllocSharedProc)(LPCVOID, DWORD, DWORD);
-	static SHAllocSharedProc		pSHAllocShared;
+    typedef HANDLE (WINAPI *SHAllocSharedProc)(LPCVOID, DWORD, DWORD);
+    static SHAllocSharedProc        pSHAllocShared;
 
     GET_FUNC(pSHAllocShared, SHAllocSharedProc, shlwapi, (char*)7, NULL);
     return pSHAllocShared(lpvData, dwSize, dwProcId);
 }
 
 /*************************************************************************
- * SHLockShared					[SHELL32.521]
+ * SHLockShared                    [SHELL32.521]
  *
  * See shlwapi.SHLockShared
  */
 LPVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
 {
-	typedef HANDLE (WINAPI *SHLockSharedProc)(HANDLE, DWORD);
-	static SHLockSharedProc			pSHLockShared;
+    typedef HANDLE (WINAPI *SHLockSharedProc)(HANDLE, DWORD);
+    static SHLockSharedProc            pSHLockShared;
 
     GET_FUNC(pSHLockShared, SHLockSharedProc, shlwapi, (char*)8, NULL);
     return pSHLockShared(hShared, dwProcId);
 }
 
 /*************************************************************************
- * SHUnlockShared				[SHELL32.522]
+ * SHUnlockShared                [SHELL32.522]
  *
  * See shlwapi.SHUnlockShared
  */
 BOOL WINAPI SHUnlockShared(LPVOID lpView)
 {
-	typedef HANDLE (WINAPI *SHUnlockSharedProc)(LPCVOID);
-	static SHUnlockSharedProc		pSHUnlockShared;
+    typedef HANDLE (WINAPI *SHUnlockSharedProc)(LPCVOID);
+    static SHUnlockSharedProc        pSHUnlockShared;
 
     GET_FUNC(pSHUnlockShared, SHUnlockSharedProc, shlwapi, (char*)9, FALSE);
     return pSHUnlockShared(lpView) != NULL;
 }
 
 /*************************************************************************
- * SHFreeShared					[SHELL32.523]
+ * SHFreeShared                    [SHELL32.523]
  *
  * See shlwapi.SHFreeShared
  */
 BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
 {
-	typedef HANDLE (WINAPI *SHFreeSharedProc)(HANDLE, DWORD);
-	static SHFreeSharedProc			pSHFreeShared;
+    typedef HANDLE (WINAPI *SHFreeSharedProc)(HANDLE, DWORD);
+    static SHFreeSharedProc            pSHFreeShared;
 
     GET_FUNC(pSHFreeShared, SHFreeSharedProc, shlwapi, (char*)10, FALSE);
     return pSHFreeShared(hShared, dwProcId) != NULL;
 }
 
 /*************************************************************************
- * SetAppStartingCursor				[SHELL32.99]
+ * SetAppStartingCursor                [SHELL32.99]
  */
 EXTERN_C HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
-{	FIXME("hwnd=%p 0x%04x stub\n",u,v );
-	return 0;
+{    FIXME("hwnd=%p 0x%04x stub\n",u,v );
+    return 0;
 }
 
 /*************************************************************************
- * SHLoadOLE					[SHELL32.151]
+ * SHLoadOLE                    [SHELL32.151]
  *
  * To reduce the memory usage of Windows 95, its shell32 contained an
  * internal implementation of a part of COM (see e.g. SHGetMalloc, SHCoCreateInstance,
@@ -1402,97 +1402,97 @@ EXTERN_C HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
  * hack in SHCoCreateInstance)
  */
 HRESULT WINAPI SHLoadOLE(LPARAM lParam)
-{	FIXME("0x%08lx stub\n",lParam);
-	return S_OK;
+{    FIXME("0x%08lx stub\n",lParam);
+    return S_OK;
 }
 /*************************************************************************
- * DriveType					[SHELL32.64]
+ * DriveType                    [SHELL32.64]
  *
  */
 EXTERN_C int WINAPI DriveType(int DriveType)
 {
     WCHAR root[] = L"A:\\";
-	root[0] = L'A' + DriveType;
-	return GetDriveTypeW(root);
+    root[0] = L'A' + DriveType;
+    return GetDriveTypeW(root);
 }
 
 /*************************************************************************
- * InvalidateDriveType			[SHELL32.65]
+ * InvalidateDriveType            [SHELL32.65]
  * Unimplemented in XP SP3
  */
 EXTERN_C int WINAPI InvalidateDriveType(int u)
 {
-	TRACE("0x%08x stub\n",u);
-	return 0;
+    TRACE("0x%08x stub\n",u);
+    return 0;
 }
 
 /*************************************************************************
- * SHAbortInvokeCommand				[SHELL32.198]
+ * SHAbortInvokeCommand                [SHELL32.198]
  *
  */
 EXTERN_C HRESULT WINAPI SHAbortInvokeCommand(void)
-{	FIXME("stub\n");
-	return 1;
+{    FIXME("stub\n");
+    return 1;
 }
 
 /*************************************************************************
- * SHOutOfMemoryMessageBox			[SHELL32.126]
+ * SHOutOfMemoryMessageBox            [SHELL32.126]
  *
  */
 int WINAPI SHOutOfMemoryMessageBox(
-	HWND hwndOwner,
-	LPCSTR lpCaption,
-	UINT uType)
+    HWND hwndOwner,
+    LPCSTR lpCaption,
+    UINT uType)
 {
-	FIXME("%p %s 0x%08x stub\n",hwndOwner, lpCaption, uType);
-	return 0;
+    FIXME("%p %s 0x%08x stub\n",hwndOwner, lpCaption, uType);
+    return 0;
 }
 
 /*************************************************************************
- * SHFlushClipboard				[SHELL32.121]
+ * SHFlushClipboard                [SHELL32.121]
  *
  */
 EXTERN_C HRESULT WINAPI SHFlushClipboard(void)
 {
-	return OleFlushClipboard();
+    return OleFlushClipboard();
 }
 
 /*************************************************************************
- * SHWaitForFileToOpen				[SHELL32.97]
+ * SHWaitForFileToOpen                [SHELL32.97]
  *
  */
 BOOL WINAPI SHWaitForFileToOpen(
-	LPCITEMIDLIST pidl,
-	DWORD dwFlags,
-	DWORD dwTimeout)
+    LPCITEMIDLIST pidl,
+    DWORD dwFlags,
+    DWORD dwTimeout)
 {
-	FIXME("%p 0x%08x 0x%08x stub\n", pidl, dwFlags, dwTimeout);
-	return 0;
+    FIXME("%p 0x%08x 0x%08x stub\n", pidl, dwFlags, dwTimeout);
+    return 0;
 }
 
 /************************************************************************
- *	RLBuildListOfPaths			[SHELL32.146]
+ *    RLBuildListOfPaths            [SHELL32.146]
  *
  * NOTES
  *   builds a DPA
  */
 EXTERN_C DWORD WINAPI RLBuildListOfPaths (void)
-{	FIXME("stub\n");
-	return 0;
+{    FIXME("stub\n");
+    return 0;
 }
 
 /************************************************************************
- *	SHValidateUNC				[SHELL32.173]
+ *    SHValidateUNC                [SHELL32.173]
  *
  */
 EXTERN_C BOOL WINAPI SHValidateUNC (HWND hwndOwner, LPWSTR pszFile, UINT fConnect)
 {
-	FIXME("0x%08x 0x%08x 0x%08x stub\n",hwndOwner,pszFile,fConnect);
-	return 0;
+    FIXME("0x%08x 0x%08x 0x%08x stub\n",hwndOwner,pszFile,fConnect);
+    return 0;
 }
 
 /************************************************************************
- *	DoEnvironmentSubstA			[SHELL32.@]
+ *    DoEnvironmentSubstA            [SHELL32.@]
  *
  * Replace %KEYWORD% in the str with the value of variable KEYWORD
  * from environment. If it is not found the %KEYWORD% is left
@@ -1528,7 +1528,7 @@ EXTERN_C DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
 }
 
 /************************************************************************
- *	DoEnvironmentSubstW			[SHELL32.@]
+ *    DoEnvironmentSubstW            [SHELL32.@]
  *
  * See DoEnvironmentSubstA.
  */
@@ -1552,7 +1552,7 @@ EXTERN_C DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 }
 
 /************************************************************************
- *	DoEnvironmentSubst			[SHELL32.53]
+ *    DoEnvironmentSubst            [SHELL32.53]
  *
  * See DoEnvironmentSubstA.
  */
@@ -1584,21 +1584,21 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 }
 
 /*************************************************************************
- *      PathIsTemporaryW	[SHELL32.714]
+ *      PathIsTemporaryW    [SHELL32.714]
  */
 EXTERN_C BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
 {
- 	FIXME("(%s)stub\n", debugstr_w(Str));
-	return FALSE;
+     FIXME("(%s)stub\n", debugstr_w(Str));
+    return FALSE;
 }
 
 /*************************************************************************
- *      PathIsTemporaryA	[SHELL32.713]
+ *      PathIsTemporaryA    [SHELL32.713]
  */
 EXTERN_C BOOL WINAPI PathIsTemporaryA(LPSTR Str)
 {
- 	FIXME("(%s)stub\n", debugstr_a(Str));
-	return FALSE;
+     FIXME("(%s)stub\n", debugstr_a(Str));
+    return FALSE;
 }
 
 typedef struct _PSXA
@@ -1636,7 +1636,7 @@ static BOOL CALLBACK PsxaCall(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 /*************************************************************************
- *      SHAddFromPropSheetExtArray	[SHELL32.167]
+ *      SHAddFromPropSheetExtArray    [SHELL32.167]
  */
 UINT WINAPI SHAddFromPropSheetExtArray(HPSXA hpsxa, LPFNADDPROPSHEETPAGE lpfnAddPage, LPARAM lParam)
 {
@@ -1666,7 +1666,7 @@ UINT WINAPI SHAddFromPropSheetExtArray(HPSXA hpsxa, LPFNADDPROPSHEETPAGE lpfnAdd
 }
 
 /*************************************************************************
- *      SHCreatePropSheetExtArray	[SHELL32.168]
+ *      SHCreatePropSheetExtArray    [SHELL32.168]
  */
 HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
 {
@@ -1675,7 +1675,7 @@ HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_if
 
 
 /*************************************************************************
- *      SHCreatePropSheetExtArrayEx	[SHELL32.194]
+ *      SHCreatePropSheetExtArrayEx    [SHELL32.194]
  */
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj)
 {
@@ -1739,8 +1739,8 @@ EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, 
                 }
                 if (SUCCEEDED(hr))
                 {
-					CComPtr<IShellExtInit>			psxi;
-					CComPtr<IShellPropSheetExt>		pspsx;
+                    CComPtr<IShellExtInit>            psxi;
+                    CComPtr<IShellPropSheetExt>        pspsx;
 
                    /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
                        Only if both interfaces are supported it's a real shell extension.
@@ -1775,7 +1775,7 @@ EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, 
 }
 
 /*************************************************************************
- *      SHReplaceFromPropSheetExtArray	[SHELL32.170]
+ *      SHReplaceFromPropSheetExtArray    [SHELL32.170]
  */
 UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA hpsxa, UINT uPageID, LPFNADDPROPSHEETPAGE lpfnReplaceWith, LPARAM lParam)
 {
@@ -1806,7 +1806,7 @@ UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA hpsxa, UINT uPageID, LPFNADDPRO
 }
 
 /*************************************************************************
- *      SHDestroyPropSheetExtArray	[SHELL32.169]
+ *      SHDestroyPropSheetExtArray    [SHELL32.169]
  */
 void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
 {
@@ -1827,60 +1827,60 @@ void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
 }
 
 /*************************************************************************
- *      CIDLData_CreateFromIDArray	[SHELL32.83]
+ *      CIDLData_CreateFromIDArray    [SHELL32.83]
  *
  *  Create IDataObject from PIDLs??
  */
 HRESULT WINAPI CIDLData_CreateFromIDArray(
-	LPCITEMIDLIST pidlFolder,
-	UINT cpidlFiles,
-	LPCITEMIDLIST *lppidlFiles,
-	IDataObject **ppdataObject)
+    LPCITEMIDLIST pidlFolder,
+    UINT cpidlFiles,
+    LPCITEMIDLIST *lppidlFiles,
+    IDataObject **ppdataObject)
 {
-	UINT i;
-	HWND hwnd = 0;   /*FIXME: who should be hwnd of owner? set to desktop */
-	HRESULT hResult;
+    UINT i;
+    HWND hwnd = 0;   /*FIXME: who should be hwnd of owner? set to desktop */
+    HRESULT hResult;
 
-	TRACE("(%p, %d, %p, %p)\n", pidlFolder, cpidlFiles, lppidlFiles, ppdataObject);
-	if (TRACE_ON(pidl))
-	{
-		pdump (pidlFolder);
-		for (i = 0; i < cpidlFiles; i++)
-			pdump(lppidlFiles[i]);
-	}
-	hResult = IDataObject_Constructor(hwnd, pidlFolder, lppidlFiles, cpidlFiles, ppdataObject);
-	return hResult;
+    TRACE("(%p, %d, %p, %p)\n", pidlFolder, cpidlFiles, lppidlFiles, ppdataObject);
+    if (TRACE_ON(pidl))
+    {
+        pdump (pidlFolder);
+        for (i = 0; i < cpidlFiles; i++)
+            pdump(lppidlFiles[i]);
+    }
+    hResult = IDataObject_Constructor(hwnd, pidlFolder, lppidlFiles, cpidlFiles, ppdataObject);
+    return hResult;
 }
 
 /*************************************************************************
- * SHCreateStdEnumFmtEtc			[SHELL32.74]
+ * SHCreateStdEnumFmtEtc            [SHELL32.74]
  *
  * NOTES
  *
  */
 HRESULT WINAPI SHCreateStdEnumFmtEtc(
-	UINT cFormats,
-	const FORMATETC *lpFormats,
-	LPENUMFORMATETC *ppenumFormatetc)
+    UINT cFormats,
+    const FORMATETC *lpFormats,
+    LPENUMFORMATETC *ppenumFormatetc)
 {
-	IEnumFORMATETC *pef;
-	HRESULT hRes;
-	TRACE("cf=%d fe=%p pef=%p\n", cFormats, lpFormats, ppenumFormatetc);
+    IEnumFORMATETC *pef;
+    HRESULT hRes;
+    TRACE("cf=%d fe=%p pef=%p\n", cFormats, lpFormats, ppenumFormatetc);
 
-	hRes = IEnumFORMATETC_Constructor(cFormats, lpFormats, &pef);
-	if (FAILED(hRes))
-		return hRes;
+    hRes = IEnumFORMATETC_Constructor(cFormats, lpFormats, &pef);
+    if (FAILED(hRes))
+        return hRes;
 
-	pef->AddRef();
-	hRes = pef->QueryInterface(IID_IEnumFORMATETC, (LPVOID*)ppenumFormatetc);
-	pef->Release();
+    pef->AddRef();
+    hRes = pef->QueryInterface(IID_IEnumFORMATETC, (LPVOID*)ppenumFormatetc);
+    pef->Release();
 
-	return hRes;
+    return hRes;
 }
 
 
 /*************************************************************************
- *		SHCreateShellFolderView (SHELL32.256)
+ *        SHCreateShellFolderView (SHELL32.256)
  */
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
@@ -1894,19 +1894,19 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **pps
     {
         LPVOID lpdata = 0;/*LocalAlloc(LMEM_ZEROINIT, 0x4E4);*/
 
-	if (!lpdata)
+    if (!lpdata)
             ret = E_OUTOFMEMORY;
-	else
-	{
+    else
+    {
             /* Initialize and return unknown lpdata structure */
-	}
+    }
     }
 
     return ret;
 }
 
 /*************************************************************************
- *		SHFindFiles (SHELL32.90)
+ *        SHFindFiles (SHELL32.90)
  */
 BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
 {
@@ -1915,7 +1915,7 @@ BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
 }
 
 /*************************************************************************
- *		SHUpdateImageW (SHELL32.192)
+ *        SHUpdateImageW (SHELL32.192)
  *
  * Notifies the shell that an icon in the system image list has been changed.
  *
@@ -1939,7 +1939,7 @@ void WINAPI SHUpdateImageW(LPCWSTR pszHashItem, int iIndex, UINT uFlags, int iIm
 }
 
 /*************************************************************************
- *		SHUpdateImageA (SHELL32.191)
+ *        SHUpdateImageA (SHELL32.191)
  *
  * See SHUpdateImageW.
  */
@@ -2074,7 +2074,7 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-	WCHAR szPath[MAX_PATH] = {0};
+    WCHAR szPath[MAX_PATH] = {0};
     DWORD dwSize, dwType;
     LONG ret;
 
@@ -2255,7 +2255,7 @@ EXTERN_C HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
 EXTERN_C HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 {
-    CComPtr<IShellFolder>		psfDesktop;
+    CComPtr<IShellFolder>        psfDesktop;
     HRESULT         hr=E_FAIL;
     ULONG           dwAttr=sfgaoIn;
 

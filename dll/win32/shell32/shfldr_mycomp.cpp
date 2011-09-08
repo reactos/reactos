@@ -40,17 +40,17 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 */
 
 class CDrivesFolderEnum :
-	public IEnumIDListImpl
+    public IEnumIDListImpl
 {
 private:
 public:
-	CDrivesFolderEnum();
-	~CDrivesFolderEnum();
-	HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
-	BOOL CreateMyCompEnumList(DWORD dwFlags);
+    CDrivesFolderEnum();
+    ~CDrivesFolderEnum();
+    HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
+    BOOL CreateMyCompEnumList(DWORD dwFlags);
 
 BEGIN_COM_MAP(CDrivesFolderEnum)
-	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
@@ -79,9 +79,9 @@ HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
 {
     DbgPrint("[shell32, CDrivesFolderEnum::Initialize] Called with flags = %d\n", dwFlags);
 
-	if (CreateMyCompEnumList(dwFlags) == FALSE)
-		return E_FAIL;
-	return S_OK;
+    if (CreateMyCompEnumList(dwFlags) == FALSE)
+        return E_FAIL;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -137,9 +137,9 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
                     {
                         /* FIXME: shell extensions, shouldn't the type be
                          * PT_SHELLEXT? */
-						LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
-						if (pidl != NULL)
-							ret = AddToEnumList(pidl);
+                        LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
+                        if (pidl != NULL)
+                            ret = AddToEnumList(pidl);
                         i++;
                     }
                     else if (ERROR_NO_MORE_ITEMS == r)
@@ -162,8 +162,8 @@ CDrivesFolder::CDrivesFolder()
 
 CDrivesFolder::~CDrivesFolder()
 {
-	TRACE ("-- destroying IShellFolder(%p)\n", this);
-	SHFree(pidlRoot);
+    TRACE ("-- destroying IShellFolder(%p)\n", this);
+    SHFree(pidlRoot);
 }
 
 HRESULT WINAPI CDrivesFolder::FinalConstruct()
@@ -172,8 +172,8 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     WCHAR szName[MAX_PATH];
 
     pidlRoot = _ILCreateMyComputer();    /* my qualified pidl */
-	if (pidlRoot == NULL)
-		return E_OUTOFMEMORY;
+    if (pidlRoot == NULL)
+        return E_OUTOFMEMORY;
 
     dwSize = sizeof(szName);
     if (RegGetValueW(HKEY_CURRENT_USER,
@@ -188,7 +188,7 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
         }
         TRACE("sName %s\n", debugstr_w(sName));
     }
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -254,40 +254,40 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
 */
 HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-	CComObject<CDrivesFolderEnum>			*theEnumerator;
-	CComPtr<IEnumIDList>					result;
-	HRESULT									hResult;
+    CComObject<CDrivesFolderEnum>            *theEnumerator;
+    CComPtr<IEnumIDList>                    result;
+    HRESULT                                    hResult;
 
-	TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
     DbgPrint("[shell32, CDrivesFolder::EnumObjects] Called with flags = %d\n", dwFlags);
 
-	if (ppEnumIDList == NULL)
-		return E_POINTER;
-	
+    if (ppEnumIDList == NULL)
+        return E_POINTER;
+    
     *ppEnumIDList = NULL;
-	ATLTRY (theEnumerator = new CComObject<CDrivesFolderEnum>);
-	
+    ATLTRY (theEnumerator = new CComObject<CDrivesFolderEnum>);
+    
     if (theEnumerator == NULL)
-		return E_OUTOFMEMORY;
-	
+        return E_OUTOFMEMORY;
+    
     hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theEnumerator;
-		return hResult;
-	}
+    if (FAILED (hResult))
+    {
+        delete theEnumerator;
+        return hResult;
+    }
 
-	DbgPrint("[shell32, CDrivesFolder::EnumObjects] Calling theEnumerator->Initialize\n");
+    DbgPrint("[shell32, CDrivesFolder::EnumObjects] Calling theEnumerator->Initialize\n");
 
     hResult = theEnumerator->Initialize (hwndOwner, dwFlags);
-	if (FAILED (hResult))
-		return hResult;
-	*ppEnumIDList = result.Detach ();
+    if (FAILED (hResult))
+        return hResult;
+    *ppEnumIDList = result.Detach ();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
-	return S_OK;
+    return S_OK;
 }
 
 /**************************************************************************

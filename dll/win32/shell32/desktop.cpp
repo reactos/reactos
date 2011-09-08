@@ -32,10 +32,10 @@ static const WCHAR szProgmanWindowName[] = {
 };
 
 class CDesktopBrowser :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IShellBrowser,
-	public ICommDlgBrowser,
-	public IServiceProvider
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellBrowser,
+    public ICommDlgBrowser,
+    public IServiceProvider
 {
 public:
     DWORD Tag;
@@ -43,26 +43,26 @@ private:
     HWND hWnd;
     HWND hWndShellView;
     HWND hWndDesktopListView;
-    CComPtr<IShellDesktopTray>		ShellDesk;
-    CComPtr<IShellView>				DesktopView;
+    CComPtr<IShellDesktopTray>        ShellDesk;
+    CComPtr<IShellView>                DesktopView;
     IShellBrowser *DefaultShellBrowser;
     LPITEMIDLIST pidlDesktopDirectory;
     LPITEMIDLIST pidlDesktop;
 public:
-	CDesktopBrowser();
-	~CDesktopBrowser();
-	HRESULT Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx);
-	HWND FindDesktopListView ();
-	BOOL CreateDeskWnd();
-	HWND DesktopGetWindowControl(IN UINT id);
-	static LRESULT CALLBACK ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam);
-	static BOOL MessageLoop();
+    CDesktopBrowser();
+    ~CDesktopBrowser();
+    HRESULT Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx);
+    HWND FindDesktopListView ();
+    BOOL CreateDeskWnd();
+    HWND DesktopGetWindowControl(IN UINT id);
+    static LRESULT CALLBACK ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam);
+    static BOOL MessageLoop();
 
-	// *** IOleWindow methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-	virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    // *** IOleWindow methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
 
-	// *** IShellBrowser methods ***
+    // *** IShellBrowser methods ***
     virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths);
     virtual HRESULT STDMETHODCALLTYPE SetMenuSB(HMENU hmenuShared, HOLEMENU holemenuRes, HWND hwndActiveObject);
     virtual HRESULT STDMETHODCALLTYPE RemoveMenusSB(HMENU hmenuShared);
@@ -77,31 +77,31 @@ public:
     virtual HRESULT STDMETHODCALLTYPE OnViewWindowActive(struct IShellView *ppshv);
     virtual HRESULT STDMETHODCALLTYPE SetToolbarItems(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags);
 
-	// *** ICommDlgBrowser methods ***
-	virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand (struct IShellView *ppshv);
-	virtual HRESULT STDMETHODCALLTYPE OnStateChange (struct IShellView *ppshv, ULONG uChange);
-	virtual HRESULT STDMETHODCALLTYPE IncludeObject (struct IShellView *ppshv, LPCITEMIDLIST pidl);
+    // *** ICommDlgBrowser methods ***
+    virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand (struct IShellView *ppshv);
+    virtual HRESULT STDMETHODCALLTYPE OnStateChange (struct IShellView *ppshv, ULONG uChange);
+    virtual HRESULT STDMETHODCALLTYPE IncludeObject (struct IShellView *ppshv, LPCITEMIDLIST pidl);
 
-	// *** IServiceProvider methods ***
-	virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    // *** IServiceProvider methods ***
+    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
 
 BEGIN_COM_MAP(CDesktopBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
-	COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_ICommDlgBrowser, ICommDlgBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+    COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
+    COM_INTERFACE_ENTRY_IID(IID_ICommDlgBrowser, ICommDlgBrowser)
+    COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
 END_COM_MAP()
 };
 
 CDesktopBrowser::CDesktopBrowser()
 {
-	Tag = SHDESK_TAG;
-	hWnd = NULL;
-	hWndShellView = NULL;
-	hWndDesktopListView = NULL;
-	DefaultShellBrowser = NULL;
-	pidlDesktopDirectory = NULL;
-	pidlDesktop = NULL;
+    Tag = SHDESK_TAG;
+    hWnd = NULL;
+    hWndShellView = NULL;
+    hWndDesktopListView = NULL;
+    DefaultShellBrowser = NULL;
+    pidlDesktopDirectory = NULL;
+    pidlDesktop = NULL;
 }
 
 CDesktopBrowser::~CDesktopBrowser()
@@ -130,9 +130,9 @@ CDesktopBrowser::~CDesktopBrowser()
 
 HRESULT CDesktopBrowser::Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx)
 {
-    CComPtr<IShellFolder>	psfDesktopFolder;
-    CSFV					csfv;
-    HRESULT					hRet;
+    CComPtr<IShellFolder>    psfDesktopFolder;
+    CSFV                    csfv;
+    HRESULT                    hRet;
 
     hWnd = hWndx;
     ShellDesk = ShellDeskx;
@@ -154,14 +154,14 @@ HRESULT CDesktopBrowser::Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx)
 
     hRet = SHCreateShellFolderViewEx(&csfv, &DesktopView);
 
-	return hRet;
+    return hRet;
 }
 
 static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
-	IShellDesktopTray		*ShellDesk;
-	CComObject<CDesktopBrowser>		*pThis;
-	HRESULT					hRet;
+    IShellDesktopTray        *ShellDesk;
+    CComObject<CDesktopBrowser>        *pThis;
+    HRESULT                    hRet;
 
     ShellDesk = (IShellDesktopTray *)lpCreateStruct->lpCreateParams;
     if (ShellDesk == NULL)
@@ -170,19 +170,19 @@ static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
         return NULL;
     }
 
-	pThis = new CComObject<CDesktopBrowser>;
-	if (pThis == NULL)
-		return NULL;
-	pThis->AddRef();
+    pThis = new CComObject<CDesktopBrowser>;
+    if (pThis == NULL)
+        return NULL;
+    pThis->AddRef();
 
-	hRet = pThis->Initialize(hWnd, ShellDesk);
-	if (FAILED(hRet))
-	{
-		pThis->Release();
-		return NULL;
-	}
+    hRet = pThis->Initialize(hWnd, ShellDesk);
+    if (FAILED(hRet))
+    {
+        pThis->Release();
+        return NULL;
+    }
 
-	return pThis;
+    return pThis;
 }
 
 HWND CDesktopBrowser::FindDesktopListView ()
@@ -302,7 +302,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::GetControlWindow(UINT id, HWND *lphwn
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::SendControlMsg(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pret)
 {
-    HWND						hWnd;
+    HWND                        hWnd;
 
     if (pret == NULL)
         return E_POINTER;
@@ -323,8 +323,8 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::SendControlMsg(UINT id, UINT uMsg, WP
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::QueryActiveShellView(IShellView **ppshv)
 {
     *ppshv = DesktopView;
-	if (DesktopView != NULL)
-		DesktopView->AddRef();
+    if (DesktopView != NULL)
+        DesktopView->AddRef();
 
     return S_OK;
 }
@@ -486,7 +486,7 @@ RegisterProgmanWindowClass(VOID)
     WNDCLASSW wcProgman;
 
     wcProgman.style = CS_DBLCLKS;
-	wcProgman.lpfnWndProc = CDesktopBrowser::ProgmanWindowProc;
+    wcProgman.lpfnWndProc = CDesktopBrowser::ProgmanWindowProc;
     wcProgman.cbClsExtra = 0;
     wcProgman.cbWndExtra = sizeof(CDesktopBrowser *);
     wcProgman.hInstance = shell32_hInstance;
@@ -501,7 +501,7 @@ RegisterProgmanWindowClass(VOID)
 
 
 /*************************************************************************
- * SHCreateDesktop			[SHELL32.200]
+ * SHCreateDesktop            [SHELL32.200]
  *
  */
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
@@ -544,7 +544,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 }
 
 /*************************************************************************
- * SHCreateDesktop			[SHELL32.201]
+ * SHCreateDesktop            [SHELL32.201]
  *
  */
 BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)

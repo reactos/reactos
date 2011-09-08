@@ -34,50 +34,50 @@ typedef enum
 typedef
 BOOLEAN 
 (NTAPI *INITIALIZE_FMIFS)(
-	IN PVOID hinstDll,
-	IN DWORD dwReason,
-	IN PVOID reserved
+    IN PVOID hinstDll,
+    IN DWORD dwReason,
+    IN PVOID reserved
 );
 typedef
 BOOLEAN
 (NTAPI *QUERY_AVAILABLEFSFORMAT)(
-	IN DWORD Index,
-	IN OUT PWCHAR FileSystem,
-	OUT UCHAR* Major,
-	OUT UCHAR* Minor,
-	OUT BOOLEAN* LastestVersion
+    IN DWORD Index,
+    IN OUT PWCHAR FileSystem,
+    OUT UCHAR* Major,
+    OUT UCHAR* Minor,
+    OUT BOOLEAN* LastestVersion
 );
 typedef
 BOOLEAN
 (NTAPI *ENABLEVOLUMECOMPRESSION)(
-	IN PWCHAR DriveRoot,
-	IN USHORT Compression
+    IN PWCHAR DriveRoot,
+    IN USHORT Compression
 );
 
 typedef
 VOID 
 (NTAPI *FORMAT_EX)(
-	IN PWCHAR DriveRoot,
-	IN FMIFS_MEDIA_FLAG MediaFlag,
-	IN PWCHAR Format,
-	IN PWCHAR Label,
-	IN BOOLEAN QuickFormat,
-	IN ULONG ClusterSize,
-	IN PFMIFSCALLBACK Callback
+    IN PWCHAR DriveRoot,
+    IN FMIFS_MEDIA_FLAG MediaFlag,
+    IN PWCHAR Format,
+    IN PWCHAR Label,
+    IN BOOLEAN QuickFormat,
+    IN ULONG ClusterSize,
+    IN PFMIFSCALLBACK Callback
 );
 
 typedef
 VOID 
 (NTAPI *CHKDSK)(
-	IN PWCHAR DriveRoot,
-	IN PWCHAR Format,
-	IN BOOLEAN CorrectErrors,
-	IN BOOLEAN Verbose,
-	IN BOOLEAN CheckOnlyIfDirty,
-	IN BOOLEAN ScanDrive,
-	IN PVOID Unused2,
-	IN PVOID Unused3,
-	IN PFMIFSCALLBACK Callback
+    IN PWCHAR DriveRoot,
+    IN PWCHAR Format,
+    IN BOOLEAN CorrectErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID Unused2,
+    IN PVOID Unused3,
+    IN PFMIFSCALLBACK Callback
 );
 
 
@@ -163,9 +163,9 @@ BOOLEAN bChkdskSuccess = FALSE;
 BOOLEAN
 NTAPI
 ChkdskCallback(
-	IN CALLBACKCOMMAND Command,
-	IN ULONG SubAction,
-	IN PVOID ActionInfo)
+    IN CALLBACKCOMMAND Command,
+    IN ULONG SubAction,
+    IN PVOID ActionInfo)
 {
     PDWORD Progress;
     PBOOLEAN pSuccess;
@@ -674,7 +674,7 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
    UINT i;
    WCHAR szName[MAX_PATH+6];
    DWORD dwMaxComponent, dwFileSysFlags;
-   CComPtr<IDataObject>		pDataObj;
+   CComPtr<IDataObject>        pDataObj;
    UINT DriveType;
 
    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
@@ -1018,9 +1018,9 @@ BOOLEAN bSuccess = FALSE;
 BOOLEAN
 NTAPI
 FormatExCB(
-	IN CALLBACKCOMMAND Command,
-	IN ULONG SubAction,
-	IN PVOID ActionInfo)
+    IN CALLBACKCOMMAND Command,
+    IN ULONG SubAction,
+    IN PVOID ActionInfo)
 {
     PDWORD Progress;
     PBOOLEAN pSuccess;
@@ -1057,7 +1057,7 @@ FormatExCB(
 VOID
 FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
-	WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
+    WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
     WCHAR szFileSys[40] = {0};
     WCHAR szLabel[40] = {0};
     INT iSelIndex;

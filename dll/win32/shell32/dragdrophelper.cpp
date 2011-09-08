@@ -1,9 +1,9 @@
 /*
- *	file system folder
+ *    file system folder
  *
- *	Copyright 1997			    Marcus Meissner
- *	Copyright 1998, 1999, 2002	Juergen Schmied
- *	Copyright 2009              Andrew Hill
+ *    Copyright 1997                Marcus Meissner
+ *    Copyright 1998, 1999, 2002    Juergen Schmied
+ *    Copyright 2009              Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

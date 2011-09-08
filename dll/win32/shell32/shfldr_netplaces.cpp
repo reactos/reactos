@@ -1,10 +1,10 @@
 /*
- *	Network Places (Neighbourhood) folder
+ *    Network Places (Neighbourhood) folder
  *
- *	Copyright 1997			    Marcus Meissner
- *	Copyright 1998, 1999, 2002	Juergen Schmied
- *	Copyright 2003              Mike McCormack for Codeweavers
- *	Copyright 2009              Andrew Hill
+ *    Copyright 1997                Marcus Meissner
+ *    Copyright 1998, 1999, 2002    Juergen Schmied
+ *    Copyright 2003              Mike McCormack for Codeweavers
+ *    Copyright 2009              Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,7 @@ static shvheader NetworkPlacesSFHeader[] = {
     {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
     {IDS_SHV_COLUMN13, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN_WORKGROUP, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-	{IDS_SHV_NETWORKLOCATION, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15}
+    {IDS_SHV_NETWORKLOCATION, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15}
 };
 
 #define COLUMN_NAME          0
@@ -50,20 +50,20 @@ CNetFolder::CNetFolder()
 
 CNetFolder::~CNetFolder()
 {
-	TRACE("-- destroying IShellFolder(%p)\n", this);
-	SHFree(pidlRoot);
+    TRACE("-- destroying IShellFolder(%p)\n", this);
+    SHFree(pidlRoot);
 }
 
 HRESULT WINAPI CNetFolder::FinalConstruct()
 {
-	pidlRoot = _ILCreateNetHood();	/* my qualified pidl */
-	if (pidlRoot == NULL)
-		return E_OUTOFMEMORY;
-	return S_OK;
+    pidlRoot = _ILCreateNetHood();    /* my qualified pidl */
+    if (pidlRoot == NULL)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 /**************************************************************************
-*	ISF_NetworkPlaces_fnParseDisplayName
+*    ISF_NetworkPlaces_fnParseDisplayName
 */
 HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LPOLESTR lpszDisplayName,
                DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
@@ -76,7 +76,7 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
 
     *ppidl = 0;
     if (pchEaten)
-        *pchEaten = 0;		/* strange but like the original */
+        *pchEaten = 0;        /* strange but like the original */
 
     TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
 
@@ -84,7 +84,7 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
 }
 
 /**************************************************************************
-*		ISF_NetworkPlaces_fnEnumObjects
+*        ISF_NetworkPlaces_fnEnumObjects
 */
 HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
@@ -99,7 +99,7 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 }
 
 /**************************************************************************
-*		ISF_NetworkPlaces_fnBindToObject
+*        ISF_NetworkPlaces_fnBindToObject
 */
 HRESULT WINAPI CNetFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
@@ -110,7 +110,7 @@ HRESULT WINAPI CNetFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, RE
 }
 
 /**************************************************************************
-*	ISF_NetworkPlaces_fnBindToStorage
+*    ISF_NetworkPlaces_fnBindToStorage
 */
 HRESULT WINAPI CNetFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
@@ -122,7 +122,7 @@ HRESULT WINAPI CNetFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, R
 }
 
 /**************************************************************************
-* 	ISF_NetworkPlaces_fnCompareIDs
+*     ISF_NetworkPlaces_fnCompareIDs
 */
 
 HRESULT WINAPI CNetFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
@@ -136,7 +136,7 @@ HRESULT WINAPI CNetFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITE
 }
 
 /**************************************************************************
-*	ISF_NetworkPlaces_fnCreateViewObject
+*    ISF_NetworkPlaces_fnCreateViewObject
 */
 HRESULT WINAPI CNetFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
@@ -149,26 +149,26 @@ HRESULT WINAPI CNetFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID 
     if (!ppvOut)
         return hr;
 
-	*ppvOut = NULL;
+    *ppvOut = NULL;
 
-	if (IsEqualIID (riid, IID_IDropTarget))
+    if (IsEqualIID (riid, IID_IDropTarget))
     {
-	    WARN ("IDropTarget not implemented\n");
-	    hr = E_NOTIMPL;
-	}
+        WARN ("IDropTarget not implemented\n");
+        hr = E_NOTIMPL;
+    }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
-	    WARN ("IContextMenu not implemented\n");
-	    hr = E_NOTIMPL;
-	}
+        WARN ("IContextMenu not implemented\n");
+        hr = E_NOTIMPL;
+    }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-	    hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
-	    if (pShellView)
+        hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
+        if (pShellView)
         {
             hr = pShellView->QueryInterface(riid, ppvOut);
             pShellView->Release();
-	    }
+        }
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
@@ -217,7 +217,7 @@ HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWOR
 }
 
 /**************************************************************************
-*	ISF_NetworkPlaces_fnGetUIObjectOf
+*    ISF_NetworkPlaces_fnGetUIObjectOf
 *
 * PARAMETERS
 *  hwndOwner [in]  Parent window for any output
@@ -241,47 +241,47 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIS
     if (!ppvOut)
         return hr;
 
-	*ppvOut = NULL;
+    *ppvOut = NULL;
 
-	if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1))
+    if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1))
     {
         hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
-	}
+    }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
-	    hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
-	}
+        hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+    }
     else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
     {
-	    pidl = ILCombine (pidlRoot, apidl[0]);
-	    pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
-	    SHFree (pidl);
-	    hr = S_OK;
-	}
+        pidl = ILCombine (pidlRoot, apidl[0]);
+        pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+        SHFree (pidl);
+        hr = S_OK;
+    }
     else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
     {
-	    pidl = ILCombine (pidlRoot, apidl[0]);
-	    pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
-	    SHFree (pidl);
-	    hr = S_OK;
-	}
+        pidl = ILCombine (pidlRoot, apidl[0]);
+        pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+        SHFree (pidl);
+        hr = S_OK;
+    }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
-	    hr = this->QueryInterface(IID_IDropTarget, (LPVOID *) & pObj);
-	}
+        hr = this->QueryInterface(IID_IDropTarget, (LPVOID *) & pObj);
+    }
     else
-	    hr = E_NOINTERFACE;
+        hr = E_NOINTERFACE;
 
-	if (SUCCEEDED(hr) && !pObj)
-	    hr = E_OUTOFMEMORY;
+    if (SUCCEEDED(hr) && !pObj)
+        hr = E_OUTOFMEMORY;
 
-	*ppvOut = pObj;
+    *ppvOut = pObj;
     TRACE ("(%p)->hr=0x%08x\n", this, hr);
     return hr;
 }
 
 /**************************************************************************
-*	ISF_NetworkPlaces_fnGetDisplayNameOf
+*    ISF_NetworkPlaces_fnGetDisplayNameOf
 *
 */
 HRESULT WINAPI CNetFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
@@ -307,7 +307,7 @@ HRESULT WINAPI CNetFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, L
 *  dwFlags   [in]  SHGNO formatting flags
 *  ppidlOut  [out] simple pidl returned
 */
-HRESULT WINAPI CNetFolder::SetNameOf (HWND hwndOwner, LPCITEMIDLIST pidl,	/*simple pidl */
+HRESULT WINAPI CNetFolder::SetNameOf (HWND hwndOwner, LPCITEMIDLIST pidl,    /*simple pidl */
                LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this,
@@ -390,7 +390,7 @@ HRESULT WINAPI CNetFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 }
 
 /************************************************************************
- *	INPFldr_PersistFolder2_GetClassID
+ *    INPFldr_PersistFolder2_GetClassID
  */
 HRESULT WINAPI CNetFolder::GetClassID(CLSID *lpClassId)
 {
@@ -405,7 +405,7 @@ HRESULT WINAPI CNetFolder::GetClassID(CLSID *lpClassId)
 }
 
 /************************************************************************
- *	INPFldr_PersistFolder2_Initialize
+ *    INPFldr_PersistFolder2_Initialize
  *
  * NOTES: it makes no sense to change the pidl
  */
@@ -417,7 +417,7 @@ HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *	IPersistFolder2_fnGetCurFolder
+ *    IPersistFolder2_fnGetCurFolder
  */
 HRESULT WINAPI CNetFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {

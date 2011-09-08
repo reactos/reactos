@@ -790,7 +790,7 @@ static POLICYDATA sh32_policy_table[] =
 };
 
 /*************************************************************************
- * SHRestricted				 [SHELL32.100]
+ * SHRestricted                 [SHELL32.100]
  *
  * Get the value associated with a policy Id.
  *
@@ -812,51 +812,51 @@ static POLICYDATA sh32_policy_table[] =
  */
 DWORD WINAPI SHRestricted (RESTRICTIONS policy)
 {
-	char regstr[256];
-	HKEY    xhkey;
-	DWORD   retval, datsize = 4;
-	LPPOLICYDATA p;
+    char regstr[256];
+    HKEY    xhkey;
+    DWORD   retval, datsize = 4;
+    LPPOLICYDATA p;
 
-	TRACE("(%08x)\n", policy);
+    TRACE("(%08x)\n", policy);
 
-	/* scan to see if we know this policy ID */
-	for (p = sh32_policy_table; p->policy; p++)
-	{
-	  if (policy == p->policy)
-	  {
-	    break;
-	  }
-	}
+    /* scan to see if we know this policy ID */
+    for (p = sh32_policy_table; p->policy; p++)
+    {
+      if (policy == p->policy)
+      {
+        break;
+      }
+    }
 
-	if (p->policy == 0)
-	{
-	    /* we don't know this policy, return 0 */
-	    TRACE("unknown policy: (%08x)\n", policy);
-		return 0;
-	}
+    if (p->policy == 0)
+    {
+        /* we don't know this policy, return 0 */
+        TRACE("unknown policy: (%08x)\n", policy);
+        return 0;
+    }
 
-	/* we have a known policy */
+    /* we have a known policy */
 
-	/* first check if this policy has been cached, return it if so */
-	if (p->cache != SHELL_NO_POLICY)
-	{
-	    return p->cache;
-	}
+    /* first check if this policy has been cached, return it if so */
+    if (p->cache != SHELL_NO_POLICY)
+    {
+        return p->cache;
+    }
 
-	lstrcpyA(regstr, strRegistryPolicyA);
-	lstrcatA(regstr, p->appstr);
+    lstrcpyA(regstr, strRegistryPolicyA);
+    lstrcatA(regstr, p->appstr);
 
-	/* return 0 and don't set the cache if any registry errors occur */
-	retval = 0;
-	if (RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey) == ERROR_SUCCESS)
-	{
-	  if (RegQueryValueExA(xhkey, p->keystr, NULL, NULL, (LPBYTE)&retval, &datsize) == ERROR_SUCCESS)
-	  {
-	    p->cache = retval;
-	  }
-	  RegCloseKey(xhkey);
-	}
-	return retval;
+    /* return 0 and don't set the cache if any registry errors occur */
+    retval = 0;
+    if (RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey) == ERROR_SUCCESS)
+    {
+      if (RegQueryValueExA(xhkey, p->keystr, NULL, NULL, (LPBYTE)&retval, &datsize) == ERROR_SUCCESS)
+      {
+        p->cache = retval;
+      }
+      RegCloseKey(xhkey);
+    }
+    return retval;
 }
 
 /*************************************************************************
@@ -878,28 +878,28 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
  */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey)
 {
-	TRACE("(%p, %p)\n", unused, inpRegKey);
+    TRACE("(%p, %p)\n", unused, inpRegKey);
 
-	/* first check - if input is non-NULL and points to the secret
-	   key string, then pass. Otherwise return 0.
-	 */
-	if (inpRegKey != NULL)
-	{
-	  if (SHELL_OsIsUnicode())
-	  {
-	    if (lstrcmpiW((LPCWSTR)inpRegKey, strRegistryPolicyW) &&
-	        lstrcmpiW((LPCWSTR)inpRegKey, strPolicyW))
-	      /* doesn't match, fail */
-	      return 0;
-	  }
-	  else
-	  {
-	    if (lstrcmpiA((LPCSTR)inpRegKey, strRegistryPolicyA) &&
-	        lstrcmpiA((LPCSTR)inpRegKey, strPolicyA))
-	      /* doesn't match, fail */
-	      return 0;
-	  }
-	}
+    /* first check - if input is non-NULL and points to the secret
+       key string, then pass. Otherwise return 0.
+     */
+    if (inpRegKey != NULL)
+    {
+      if (SHELL_OsIsUnicode())
+      {
+        if (lstrcmpiW((LPCWSTR)inpRegKey, strRegistryPolicyW) &&
+            lstrcmpiW((LPCWSTR)inpRegKey, strPolicyW))
+          /* doesn't match, fail */
+          return 0;
+      }
+      else
+      {
+        if (lstrcmpiA((LPCSTR)inpRegKey, strRegistryPolicyA) &&
+            lstrcmpiA((LPCSTR)inpRegKey, strPolicyA))
+          /* doesn't match, fail */
+          return 0;
+      }
+    }
 
-	return TRUE;
+    return TRUE;
 }

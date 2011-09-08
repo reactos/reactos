@@ -70,8 +70,8 @@ static BOOL ILGetDisplayNameExA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPSTR pat
 
 BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type)
 {
-    CComPtr<IShellFolder>		psfParent;
-	LPSHELLFOLDER lsf = psf;
+    CComPtr<IShellFolder>        psfParent;
+    LPSHELLFOLDER lsf = psf;
     HRESULT ret = NO_ERROR;
     LPCITEMIDLIST pidllast;
     STRRET strret;
@@ -373,7 +373,7 @@ HRESULT WINAPI SHILCreateFromPathA(LPCSTR path, LPITEMIDLIST * ppidl, DWORD * at
 
 HRESULT WINAPI SHILCreateFromPathW(LPCWSTR path, LPITEMIDLIST * ppidl, DWORD * attributes)
 {
-    CComPtr<IShellFolder>		sf;
+    CComPtr<IShellFolder>        sf;
     DWORD pchEaten;
     HRESULT ret = E_FAIL;
 
@@ -683,7 +683,7 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  */
 HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST *pidlReal)
 {
-    CComPtr<IDataObject>		pDataObj;
+    CComPtr<IDataObject>        pDataObj;
     HRESULT hr;
 
     hr = lpsf->GetUIObjectOf(0, 1, &pidlSimple,
@@ -967,8 +967,8 @@ EXTERN_C LPITEMIDLIST WINAPI ILCreateFromPathAW (LPCVOID path)
 static HRESULT _ILParsePathW(LPCWSTR path, LPWIN32_FIND_DATAW lpFindFile,
                              BOOL bBindCtx, LPITEMIDLIST *ppidl, LPDWORD prgfInOut)
 {
-    CComPtr<IShellFolder>	pSF;
-    CComPtr<IBindCtx>		pBC;
+    CComPtr<IShellFolder>    pSF;
+    CComPtr<IBindCtx>        pBC;
     HRESULT ret;
 
     TRACE("%s %p %d (%p)->%p (%p)->0x%x\n", debugstr_w(path), lpFindFile, bBindCtx,
@@ -1210,7 +1210,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 {
     HRESULT hr;
     LPCITEMIDLIST pidlLast;
-    CComPtr<IShellFolder>		psfFolder;
+    CComPtr<IShellFolder>        psfFolder;
     DWORD dwAttributes;
     STRRET strret;
 
@@ -1244,7 +1244,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
  */
 HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCITEMIDLIST *ppidlLast)
 {
-    CComPtr<IShellFolder>		psfDesktop;
+    CComPtr<IShellFolder>        psfDesktop;
     HRESULT         hr=E_FAIL;
 
     TRACE_(shell)("pidl=%p\n", pidl);

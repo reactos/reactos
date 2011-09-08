@@ -1,5 +1,5 @@
 /*
- *	Open With  Context Menu extension
+ *    Open With  Context Menu extension
  *
  * Copyright 2007 Johannes Anderwald <janderwald@reactos.org>
  * Copyright 2009 Andrew Hill
@@ -73,7 +73,7 @@ COpenWithMenu::COpenWithMenu()
 
 COpenWithMenu::~COpenWithMenu()
 {
-	TRACE(" destroying IContextMenu(%p)\n", this);
+    TRACE(" destroying IContextMenu(%p)\n", this);
 }
 
 VOID
@@ -141,11 +141,11 @@ LoadOWItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
 
 
 HRESULT WINAPI COpenWithMenu::QueryContextMenu(
-	HMENU hmenu,
-	UINT indexMenu,
-	UINT idCmdFirst,
-	UINT idCmdLast,
-	UINT uFlags)
+    HMENU hmenu,
+    UINT indexMenu,
+    UINT idCmdFirst,
+    UINT idCmdLast,
+    UINT uFlags)
 {
     MENUITEMINFOW mii;
     WCHAR szBuffer[100] = {0};
@@ -717,9 +717,9 @@ COpenWithMenu::GetCommandString(UINT_PTR idCmd, UINT uType,
 }
 
 HRESULT WINAPI COpenWithMenu::HandleMenuMsg(
-	UINT uMsg,
-	WPARAM wParam,
-	LPARAM lParam)
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     TRACE("This %p uMsg %x\n",this, uMsg);
 
@@ -737,7 +737,7 @@ GetManufacturer(WCHAR * szAppName, POPEN_ITEM_CONTEXT pContext)
     LPLANGANDCODEPAGE lplangcode;
     WCHAR szBuffer[100];
     WCHAR * pResult;
-	BOOL bResult;
+    BOOL bResult;
 
     static const WCHAR wFormat[] = L"\\StringFileInfo\\%04x%04x\\CompanyName";
     static const WCHAR wTranslation[] = L"VarFileInfo\\Translation";
@@ -1098,8 +1098,8 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
 {
     TRACE("This %p\n", this);
 
-	if (pdtobj == NULL)
-		return E_INVALIDARG;
+    if (pdtobj == NULL)
+        return E_INVALIDARG;
     return SHEOW_LoadOpenWithItems(pdtobj);
 }
 

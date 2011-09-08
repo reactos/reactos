@@ -1,6 +1,6 @@
 /*
- *	Copyright 1997	Marcus Meissner
- *	Copyright 1998	Juergen Schmied
+ *    Copyright 1997    Marcus Meissner
+ *    Copyright 1998    Juergen Schmied
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -187,7 +187,7 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
 */
 IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 {
-    CComPtr<IDefaultExtractIconInit>	initIcon;
+    CComPtr<IDefaultExtractIconInit>    initIcon;
     IExtractIconW *extractIcon;
     GUID const * riid;
     int icon_idx;
@@ -330,8 +330,8 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             else if (!lstrcmpiA(sTemp, "lnkfile"))
             {
                 /* extract icon from shell shortcut */
-                CComPtr<IShellFolder>		dsf;
-                CComPtr<IShellLinkW>		psl;
+                CComPtr<IShellFolder>        dsf;
+                CComPtr<IShellLinkW>        psl;
 
                 if (SUCCEEDED(SHGetDesktopFolder(&dsf)))
                 {

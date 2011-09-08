@@ -27,7 +27,7 @@ static WCHAR szNew[MAX_PATH];
 
 CNewMenu::CNewMenu()
 {
-	s_SnHead = NULL;
+    s_SnHead = NULL;
     szPath = NULL;
 }
 
@@ -331,9 +331,9 @@ CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi)
   UINT i, target;
   HANDLE hFile;
   DWORD dwWritten, dwError;
-	CComPtr<IFolderView>				folderView;
-	CComPtr<IShellFolder>				parentFolder;
-	HRESULT								hResult;
+    CComPtr<IFolderView>                folderView;
+    CComPtr<IShellFolder>                parentFolder;
+    HRESULT                                hResult;
 
   static const WCHAR szP1[] = { '%', '1', 0 };
   static const WCHAR szFormat[] = {'%','s',' ','(','%','d',')','%','s',0 };
@@ -353,14 +353,14 @@ CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi)
   if (!pCurItem)
       return E_UNEXPECTED;
 
-	if (fSite == NULL)
-		return E_FAIL;
-	hResult = IUnknown_QueryService(fSite, SID_IFolderView, IID_IFolderView, (void **)&folderView);
-	if (FAILED(hResult))
-		return hResult;
-	hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
-	if (FAILED(hResult))
-		return hResult;
+    if (fSite == NULL)
+        return E_FAIL;
+    hResult = IUnknown_QueryService(fSite, SID_IFolderView, IID_IFolderView, (void **)&folderView);
+    if (FAILED(hResult))
+        return hResult;
+    hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
+    if (FAILED(hResult))
+        return hResult;
 
   if (parentFolder->QueryInterface(IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
   {
@@ -462,8 +462,8 @@ CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi)
         TRACE("Notifying fs %s\n", debugstr_w(szBuffer));
         SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, (LPCVOID)szBuffer, NULL);
         break;
-	 case SHELLNEW_TYPE_INVALID:
-		 break;
+     case SHELLNEW_TYPE_INVALID:
+         break;
      }
   }
   return S_OK;
@@ -548,71 +548,71 @@ CNewMenu::DoDrawItem(HWND hWnd, DRAWITEMSTRUCT * drawItem)
 * DoNewFolder
 */
 void CNewMenu::DoNewFolder(
-	IShellView *psv)
+    IShellView *psv)
 {
-	ISFHelper * psfhlp;
-	WCHAR wszName[MAX_PATH];
-	CComPtr<IFolderView>				folderView;
-	CComPtr<IShellFolder>				parentFolder;
-	HRESULT								hResult;
+    ISFHelper * psfhlp;
+    WCHAR wszName[MAX_PATH];
+    CComPtr<IFolderView>                folderView;
+    CComPtr<IShellFolder>                parentFolder;
+    HRESULT                                hResult;
 
-	if (fSite == NULL)
-		return;
-	hResult = IUnknown_QueryService(fSite, SID_IFolderView, IID_IFolderView, (void **)&folderView);
-	if (FAILED(hResult))
-		return;
-	hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
-	if (FAILED(hResult))
-		return;
+    if (fSite == NULL)
+        return;
+    hResult = IUnknown_QueryService(fSite, SID_IFolderView, IID_IFolderView, (void **)&folderView);
+    if (FAILED(hResult))
+        return;
+    hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
+    if (FAILED(hResult))
+        return;
 
-	parentFolder->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlp);
-	if (psfhlp)
-	{
-	  LPITEMIDLIST pidl;
+    parentFolder->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlp);
+    if (psfhlp)
+    {
+      LPITEMIDLIST pidl;
 
-	  if (psfhlp->GetUniqueName(wszName, MAX_PATH) != S_OK)
-		  return;
-	  if (psfhlp->AddFolder(0, wszName, &pidl) != S_OK)
-		  return;
+      if (psfhlp->GetUniqueName(wszName, MAX_PATH) != S_OK)
+          return;
+      if (psfhlp->AddFolder(0, wszName, &pidl) != S_OK)
+          return;
 
-	  if(psv)
-	  {
+      if(psv)
+      {
         psv->Refresh();
-	    /* if we are in a shellview do labeledit */
-	    psv->SelectItem(
+        /* if we are in a shellview do labeledit */
+        psv->SelectItem(
                     pidl,(SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE
                     |SVSI_FOCUSED|SVSI_SELECT));
         psv->Refresh();
-	  }
-	  SHFree(pidl);
+      }
+      SHFree(pidl);
 
-	  psfhlp->Release();
-	}
+      psfhlp->Release();
+    }
 }
 
 HRESULT STDMETHODCALLTYPE CNewMenu::SetSite(IUnknown *pUnkSite)
 {
-	fSite = pUnkSite;
-	return S_OK;
+    fSite = pUnkSite;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CNewMenu::GetSite(REFIID riid, void **ppvSite)
 {
-	if (ppvSite == NULL)
-		return E_POINTER;
-	*ppvSite = fSite;
-	if (fSite.p != NULL)
-		fSite.p->AddRef();
-	return S_OK;
+    if (ppvSite == NULL)
+        return E_POINTER;
+    *ppvSite = fSite;
+    if (fSite.p != NULL)
+        fSite.p->AddRef();
+    return S_OK;
 }
 
 HRESULT
 WINAPI
 CNewMenu::QueryContextMenu(HMENU hmenu,
-	                                            UINT indexMenu,
-	                                            UINT idCmdFirst,
-	                                            UINT idCmdLast,
-	                                            UINT uFlags)
+                                                UINT indexMenu,
+                                                UINT idCmdFirst,
+                                                UINT idCmdLast,
+                                                UINT uFlags)
 {
     WCHAR szBuffer[200];
     MENUITEMINFOW mii;
@@ -656,13 +656,13 @@ HRESULT
 WINAPI
 CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
-	LPSHELLBROWSER	lpSB;
-	LPSHELLVIEW lpSV = NULL;
+    LPSHELLBROWSER    lpSB;
+    LPSHELLVIEW lpSV = NULL;
     HRESULT hr;
 
-	if((lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER,0,0)))
-	{
-	  lpSB->QueryActiveShellView(&lpSV);
+    if((lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER,0,0)))
+    {
+      lpSB->QueryActiveShellView(&lpSV);
     }
 
     if (LOWORD(lpici->lpVerb) == 0)
@@ -698,8 +698,8 @@ CNewMenu::GetCommandString(UINT_PTR idCmd,
 HRESULT 
 WINAPI 
 CNewMenu::HandleMenuMsg(UINT uMsg,
-	                     WPARAM wParam,
-	                     LPARAM lParam)
+                         WPARAM wParam,
+                         LPARAM lParam)
 {
     DRAWITEMSTRUCT * lpids = (DRAWITEMSTRUCT*) lParam;
     MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
@@ -718,7 +718,7 @@ CNewMenu::HandleMenuMsg(UINT uMsg,
     }
     return S_OK;
 
-	return E_UNEXPECTED;
+    return E_UNEXPECTED;
 }
 
 HRESULT WINAPI

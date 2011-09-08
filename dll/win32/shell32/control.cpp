@@ -22,10 +22,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
-CPlApplet*	Control_UnloadApplet(CPlApplet* applet)
+CPlApplet*    Control_UnloadApplet(CPlApplet* applet)
 {
-    unsigned	i;
-    CPlApplet*	next;
+    unsigned    i;
+    CPlApplet*    next;
 
     for (i = 0; i < applet->count; i++) {
         if (!applet->info[i].dwSize) continue;
@@ -38,11 +38,11 @@ CPlApplet*	Control_UnloadApplet(CPlApplet* applet)
     return next;
 }
 
-CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
+CPlApplet*    Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 {
-    CPlApplet*	applet;
-    unsigned 	i;
-    CPLINFO	info;
+    CPlApplet*    applet;
+    unsigned     i;
+    CPLINFO    info;
     NEWCPLINFOW newinfo;
 
     if (!(applet = (CPlApplet *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*applet))))
@@ -52,62 +52,62 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 
     if (!(applet->hModule = LoadLibraryW(cmd))) {
         WARN("Cannot load control panel applet %s\n", debugstr_w(cmd));
-	goto theError;
+    goto theError;
     }
     if (!(applet->proc = (APPLET_PROC)GetProcAddress(applet->hModule, "CPlApplet"))) {
         WARN("Not a valid control panel applet %s\n", debugstr_w(cmd));
-	goto theError;
+    goto theError;
     }
     if (!applet->proc(hWnd, CPL_INIT, 0L, 0L)) {
         WARN("Init of applet has failed\n");
-	goto theError;
+    goto theError;
     }
     if ((applet->count = applet->proc(hWnd, CPL_GETCOUNT, 0L, 0L)) == 0) {
         WARN("No subprogram in applet\n");
-	goto theError;
+    goto theError;
     }
 
     applet = (CPlApplet *)HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, applet,
-			 sizeof(*applet) + (applet->count - 1) * sizeof(NEWCPLINFOW));
+             sizeof(*applet) + (applet->count - 1) * sizeof(NEWCPLINFOW));
 
     for (i = 0; i < applet->count; i++) {
        ZeroMemory(&newinfo, sizeof(newinfo));
        newinfo.dwSize = sizeof(NEWCPLINFOW);
        applet->info[i].dwSize = sizeof(NEWCPLINFOW);
        /* proc is supposed to return a null value upon success for
-	* CPL_INQUIRE and CPL_NEWINQUIRE
-	* However, real drivers don't seem to behave like this
-	* So, use introspection rather than return value
-	*/
+    * CPL_INQUIRE and CPL_NEWINQUIRE
+    * However, real drivers don't seem to behave like this
+    * So, use introspection rather than return value
+    */
        applet->proc(hWnd, CPL_NEWINQUIRE, i, (LPARAM)&newinfo);
        if (newinfo.hIcon == 0) {
-	   applet->proc(hWnd, CPL_INQUIRE, i, (LPARAM)&info);
-	   if (info.idIcon == 0 || info.idName == 0) {
-	       WARN("Couldn't get info from sp %u\n", i);
-	       applet->info[i].dwSize = 0;
-	   } else {
-	       /* convert the old data into the new structure */
-	       applet->info[i].dwFlags = 0;
-	       applet->info[i].dwHelpContext = 0;
-	       applet->info[i].lData = info.lData;
-	       applet->info[i].hIcon = LoadIconW(applet->hModule,
-						 MAKEINTRESOURCEW(info.idIcon));
-	       LoadStringW(applet->hModule, info.idName,
-			   applet->info[i].szName, sizeof(applet->info[i].szName) / sizeof(WCHAR));
-	       LoadStringW(applet->hModule, info.idInfo,
-			   applet->info[i].szInfo, sizeof(applet->info[i].szInfo) / sizeof(WCHAR));
-	       applet->info[i].szHelpFile[0] = '\0';
-	   }
+       applet->proc(hWnd, CPL_INQUIRE, i, (LPARAM)&info);
+       if (info.idIcon == 0 || info.idName == 0) {
+           WARN("Couldn't get info from sp %u\n", i);
+           applet->info[i].dwSize = 0;
+       } else {
+           /* convert the old data into the new structure */
+           applet->info[i].dwFlags = 0;
+           applet->info[i].dwHelpContext = 0;
+           applet->info[i].lData = info.lData;
+           applet->info[i].hIcon = LoadIconW(applet->hModule,
+                         MAKEINTRESOURCEW(info.idIcon));
+           LoadStringW(applet->hModule, info.idName,
+               applet->info[i].szName, sizeof(applet->info[i].szName) / sizeof(WCHAR));
+           LoadStringW(applet->hModule, info.idInfo,
+               applet->info[i].szInfo, sizeof(applet->info[i].szInfo) / sizeof(WCHAR));
+           applet->info[i].szHelpFile[0] = '\0';
+       }
        }
        else
        {
            CopyMemory(&applet->info[i], &newinfo, newinfo.dwSize);
-	       if (newinfo.dwSize != sizeof(NEWCPLINFOW))
+           if (newinfo.dwSize != sizeof(NEWCPLINFOW))
            {
-	            applet->info[i].dwSize = sizeof(NEWCPLINFOW);
-		        lstrcpyW(applet->info[i].szName, newinfo.szName);
-				lstrcpyW(applet->info[i].szInfo, newinfo.szInfo);
-				lstrcpyW(applet->info[i].szHelpFile, newinfo.szHelpFile);
+                applet->info[i].dwSize = sizeof(NEWCPLINFOW);
+                lstrcpyW(applet->info[i].szName, newinfo.szName);
+                lstrcpyW(applet->info[i].szInfo, newinfo.szInfo);
+                lstrcpyW(applet->info[i].szHelpFile, newinfo.szHelpFile);
            }
        }
     }
@@ -124,74 +124,74 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 
 static void Control_WndProc_Create(HWND hWnd, const CREATESTRUCTW* cs)
 {
-   CPanel*	panel = (CPanel*)cs->lpCreateParams;
+   CPanel*    panel = (CPanel*)cs->lpCreateParams;
 
    SetWindowLongPtrW(hWnd, 0, (LONG_PTR)panel);
    panel->status = 0;
    panel->hWnd = hWnd;
 }
 
-#define	XICON	32
-#define XSTEP	128
-#define	YICON	32
-#define YSTEP	64
+#define    XICON    32
+#define XSTEP    128
+#define    YICON    32
+#define YSTEP    64
 
-static BOOL	Control_Localize(const CPanel* panel, int cx, int cy,
-				 CPlApplet** papplet, unsigned* psp)
+static BOOL    Control_Localize(const CPanel* panel, int cx, int cy,
+                 CPlApplet** papplet, unsigned* psp)
 {
-    unsigned int	i;
-	int				x = (XSTEP-XICON)/2, y = 0;
-    CPlApplet*	applet;
-    RECT	rc;
+    unsigned int    i;
+    int                x = (XSTEP-XICON)/2, y = 0;
+    CPlApplet*    applet;
+    RECT    rc;
 
     GetClientRect(panel->hWnd, &rc);
     for (applet = panel->first; applet; applet = applet->next) {
         for (i = 0; i < applet->count; i++) {
-	    if (!applet->info[i].dwSize) continue;
-	    if (x + XSTEP >= rc.right - rc.left) {
-	        x = (XSTEP-XICON)/2;
-		y += YSTEP;
-	    }
-	    if (cx >= x && cx < x + XICON && cy >= y && cy < y + YSTEP) {
-	        *papplet = applet;
-	        *psp = i;
-		return TRUE;
-	    }
-	    x += XSTEP;
-	}
+        if (!applet->info[i].dwSize) continue;
+        if (x + XSTEP >= rc.right - rc.left) {
+            x = (XSTEP-XICON)/2;
+        y += YSTEP;
+        }
+        if (cx >= x && cx < x + XICON && cy >= y && cy < y + YSTEP) {
+            *papplet = applet;
+            *psp = i;
+        return TRUE;
+        }
+        x += XSTEP;
+    }
     }
     return FALSE;
 }
 
 static LRESULT Control_WndProc_Paint(const CPanel* panel, WPARAM wParam)
 {
-    HDC		hdc;
-    PAINTSTRUCT	ps;
-    RECT	rc, txtRect;
-    unsigned int	i;
-	int				x = 0, y = 0;
-    CPlApplet*	applet;
-    HGDIOBJ	hOldFont;
+    HDC        hdc;
+    PAINTSTRUCT    ps;
+    RECT    rc, txtRect;
+    unsigned int    i;
+    int                x = 0, y = 0;
+    CPlApplet*    applet;
+    HGDIOBJ    hOldFont;
 
     hdc = (wParam) ? (HDC)wParam : BeginPaint(panel->hWnd, &ps);
     hOldFont = SelectObject(hdc, GetStockObject(ANSI_VAR_FONT));
     GetClientRect(panel->hWnd, &rc);
     for (applet = panel->first; applet; applet = applet->next) {
         for (i = 0; i < applet->count; i++) {
-	    if (x + XSTEP >= rc.right - rc.left) {
-	        x = 0;
-		y += YSTEP;
-	    }
-	    if (!applet->info[i].dwSize) continue;
-	    DrawIcon(hdc, x + (XSTEP-XICON)/2, y, applet->info[i].hIcon);
-	    txtRect.left = x;
-	    txtRect.right = x + XSTEP;
-	    txtRect.top = y + YICON;
-	    txtRect.bottom = y + YSTEP;
-	    DrawTextW(hdc, applet->info[i].szName, -1, &txtRect,
-		      DT_CENTER | DT_VCENTER);
-	    x += XSTEP;
-	}
+        if (x + XSTEP >= rc.right - rc.left) {
+            x = 0;
+        y += YSTEP;
+        }
+        if (!applet->info[i].dwSize) continue;
+        DrawIcon(hdc, x + (XSTEP-XICON)/2, y, applet->info[i].hIcon);
+        txtRect.left = x;
+        txtRect.right = x + XSTEP;
+        txtRect.top = y + YICON;
+        txtRect.bottom = y + YSTEP;
+        DrawTextW(hdc, applet->info[i].szName, -1, &txtRect,
+              DT_CENTER | DT_VCENTER);
+        x += XSTEP;
+    }
     }
     SelectObject(hdc, hOldFont);
     if (!wParam) EndPaint(panel->hWnd, &ps);
@@ -200,48 +200,48 @@ static LRESULT Control_WndProc_Paint(const CPanel* panel, WPARAM wParam)
 
 static LRESULT Control_WndProc_LButton(CPanel* panel, LPARAM lParam, BOOL up)
 {
-    unsigned	i;
-    CPlApplet*	applet;
+    unsigned    i;
+    CPlApplet*    applet;
 
     if (Control_Localize(panel, (short)LOWORD(lParam), (short)HIWORD(lParam), &applet, &i)) {
        if (up) {
-	   if (panel->clkApplet == applet && panel->clkSP == i) {
-	       applet->proc(applet->hWnd, CPL_DBLCLK, i, applet->info[i].lData);
-	   }
+       if (panel->clkApplet == applet && panel->clkSP == i) {
+           applet->proc(applet->hWnd, CPL_DBLCLK, i, applet->info[i].lData);
+       }
        } else {
-	   panel->clkApplet = applet;
-	   panel->clkSP = i;
+       panel->clkApplet = applet;
+       panel->clkSP = i;
        }
     }
     return 0;
 }
 
-static LRESULT WINAPI	Control_WndProc(HWND hWnd, UINT wMsg,
-					WPARAM lParam1, LPARAM lParam2)
+static LRESULT WINAPI    Control_WndProc(HWND hWnd, UINT wMsg,
+                    WPARAM lParam1, LPARAM lParam2)
 {
-   CPanel*	panel = (CPanel*)GetWindowLongPtrW(hWnd, 0);
+   CPanel*    panel = (CPanel*)GetWindowLongPtrW(hWnd, 0);
 
    if (panel || wMsg == WM_CREATE) {
       switch (wMsg) {
       case WM_CREATE:
-	 Control_WndProc_Create(hWnd, (CREATESTRUCTW*)lParam2);
-	 return 0;
+     Control_WndProc_Create(hWnd, (CREATESTRUCTW*)lParam2);
+     return 0;
       case WM_DESTROY:
          {
-	    CPlApplet*	applet = panel->first;
-	    while (applet)
-	       applet = Control_UnloadApplet(applet);
+        CPlApplet*    applet = panel->first;
+        while (applet)
+           applet = Control_UnloadApplet(applet);
          }
          PostQuitMessage(0);
-	 break;
+     break;
       case WM_PAINT:
-	 return Control_WndProc_Paint(panel, lParam1);
+     return Control_WndProc_Paint(panel, lParam1);
       case WM_LBUTTONUP:
-	 return Control_WndProc_LButton(panel, lParam2, TRUE);
+     return Control_WndProc_LButton(panel, lParam2, TRUE);
       case WM_LBUTTONDOWN:
-	 return Control_WndProc_LButton(panel, lParam2, FALSE);
+     return Control_WndProc_LButton(panel, lParam2, FALSE);
 /* EPP       case WM_COMMAND: */
-/* EPP 	 return Control_WndProc_Command(mwi, lParam1, lParam2); */
+/* EPP      return Control_WndProc_Command(mwi, lParam1, lParam2); */
       }
    }
 
@@ -250,8 +250,8 @@ static LRESULT WINAPI	Control_WndProc(HWND hWnd, UINT wMsg,
 
 static void Control_DoInterface(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
-    WNDCLASSW	wc;
-    MSG	msg;
+    WNDCLASSW    wc;
+    MSG    msg;
     const WCHAR* appName = L"ReactOS Control Panel";
     wc.style = CS_HREDRAW|CS_VREDRAW;
     wc.lpfnWndProc = Control_WndProc;
@@ -267,16 +267,16 @@ static void Control_DoInterface(CPanel* panel, HWND hWnd, HINSTANCE hInst)
     if (!RegisterClassW(&wc)) return;
 
     CreateWindowExW(0, wc.lpszClassName, appName,
-		    WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-		    CW_USEDEFAULT, CW_USEDEFAULT,
-		    CW_USEDEFAULT, CW_USEDEFAULT,
-		    hWnd, NULL, hInst, panel);
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            hWnd, NULL, hInst, panel);
     if (!panel->hWnd) return;
 
     if (!panel->first) {
-	/* FIXME appName & message should be localized  */
-	MessageBoxW(panel->hWnd, L"Cannot load any applets", appName, MB_OK);
-	return;
+    /* FIXME appName & message should be localized  */
+    MessageBoxW(panel->hWnd, L"Cannot load any applets", appName, MB_OK);
+    return;
     }
 
     while (GetMessageW(&msg, panel->hWnd, 0, 0)) {
@@ -287,9 +287,9 @@ static void Control_DoInterface(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 
 static void Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
-    HANDLE		h;
-    WIN32_FIND_DATAW	fd;
-    WCHAR		buffer[MAX_PATH];
+    HANDLE        h;
+    WIN32_FIND_DATAW    fd;
+    WCHAR        buffer[MAX_PATH];
     static const WCHAR wszAllCpl[] = {'*','.','c','p','l',0};
     WCHAR *p;
 
@@ -300,35 +300,35 @@ static void Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 
     if ((h = FindFirstFileW(buffer, &fd)) != INVALID_HANDLE_VALUE) {
         do {
-	   wcscpy(p, fd.cFileName);
-	   Control_LoadApplet(hWnd, buffer, panel);
-	} while (FindNextFileW(h, &fd));
-	FindClose(h);
+       wcscpy(p, fd.cFileName);
+       Control_LoadApplet(hWnd, buffer, panel);
+    } while (FindNextFileW(h, &fd));
+    FindClose(h);
     }
 
     Control_DoInterface(panel, hWnd, hInst);
 }
 
-static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
+static    void    Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
    /* forms to parse:
-    *	foo.cpl,@sp,str
-    *	foo.cpl,@sp
-    *	foo.cpl,,str
-    *	foo.cpl @sp
-    *	foo.cpl str
+    *    foo.cpl,@sp,str
+    *    foo.cpl,@sp
+    *    foo.cpl,,str
+    *    foo.cpl @sp
+    *    foo.cpl str
     *   "a path\foo.cpl"
     */
 {
-    LPWSTR	buffer;
-    LPWSTR	beg = NULL;
-    LPWSTR	end;
-    WCHAR	ch;
+    LPWSTR    buffer;
+    LPWSTR    beg = NULL;
+    LPWSTR    end;
+    WCHAR    ch;
     LPCWSTR       ptr, ptr2;
     WCHAR szName[MAX_PATH];
-    unsigned 	sp = 0;
-    LPWSTR	extraPmts = NULL;
+    unsigned     sp = 0;
+    LPWSTR    extraPmts = NULL;
     int        quoted = 0;
-    BOOL	spSet = FALSE;
+    BOOL    spSet = FALSE;
     HANDLE hMutex;
     UINT Length;
 
@@ -352,7 +352,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     szName[Length] = L'\0';
     hMutex = CreateMutexW(NULL, TRUE, szName);
 
- 	if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+     if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         return;
     buffer = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer)
@@ -362,32 +362,32 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     }
     end = wcscpy(buffer, wszCmd);
     for (;;) {
-	ch = *end;
+    ch = *end;
         if (ch == '"') quoted = !quoted;
-	if (!quoted && (ch == ' ' || ch == ',' || ch == '\0')) {
-	    *end = '\0';
-	    if (beg) {
-	        if (*beg == '@') {
-		    sp = atoiW(beg + 1);
-		    spSet = TRUE;
-		} else if (*beg == '\0') {
-		    sp = 0;
-		    spSet = TRUE;
-		} else {
-		    extraPmts = beg;
-		}
-	    }
-	    if (ch == '\0') break;
-	    beg = end + 1;
-	    if (ch == ' ') while (end[1] == ' ') end++;
-	}
-	end++;
+    if (!quoted && (ch == ' ' || ch == ',' || ch == '\0')) {
+        *end = '\0';
+        if (beg) {
+            if (*beg == '@') {
+            sp = atoiW(beg + 1);
+            spSet = TRUE;
+        } else if (*beg == '\0') {
+            sp = 0;
+            spSet = TRUE;
+        } else {
+            extraPmts = beg;
+        }
+        }
+        if (ch == '\0') break;
+        beg = end + 1;
+        if (ch == ' ') while (end[1] == ' ') end++;
+    }
+    end++;
     }
     while ((ptr = StrChrW(buffer, '"')))
-	memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
+    memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
 
     while ((ptr = StrChrW(extraPmts, '"')))
-	memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
+    memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
 
@@ -398,8 +398,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
        assert(applet && applet->next == NULL);
        if (sp >= applet->count) {
-	  WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
-	  sp = 0;
+      WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
+      sp = 0;
        }
 
        if ((extraPmts) && extraPmts[0] &&(!spSet))
@@ -422,21 +422,21 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
        }
        Control_UnloadApplet(applet);
     }
-	ReleaseMutex(hMutex);
-	CloseHandle(hMutex);
+    ReleaseMutex(hMutex);
+    CloseHandle(hMutex);
     HeapFree(GetProcessHeap(), 0, buffer);
 }
 
 /*************************************************************************
- * Control_RunDLLW			[SHELL32.@]
+ * Control_RunDLLW            [SHELL32.@]
  *
  */
 EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
 {
-    CPanel	panel;
+    CPanel    panel;
 
     TRACE("(%p, %p, %s, 0x%08x)\n",
-	  hWnd, hInst, debugstr_w(cmd), nCmdShow);
+      hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
     memset(&panel, 0, sizeof(panel));
 
@@ -448,7 +448,7 @@ EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DW
 }
 
 /*************************************************************************
- * Control_RunDLLA			[SHELL32.@]
+ * Control_RunDLLA            [SHELL32.@]
  *
  */
 EXTERN_C void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
@@ -463,7 +463,7 @@ EXTERN_C void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWO
 }
 
 /*************************************************************************
- * Control_FillCache_RunDLLW			[SHELL32.@]
+ * Control_FillCache_RunDLLW            [SHELL32.@]
  *
  */
 EXTERN_C HRESULT WINAPI Control_FillCache_RunDLLW(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
@@ -473,7 +473,7 @@ EXTERN_C HRESULT WINAPI Control_FillCache_RunDLLW(HWND hWnd, HANDLE hModule, DWO
 }
 
 /*************************************************************************
- * Control_FillCache_RunDLLA			[SHELL32.@]
+ * Control_FillCache_RunDLLA            [SHELL32.@]
  *
  */
 EXTERN_C HRESULT WINAPI Control_FillCache_RunDLLA(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
@@ -483,7 +483,7 @@ EXTERN_C HRESULT WINAPI Control_FillCache_RunDLLA(HWND hWnd, HANDLE hModule, DWO
 
 
 /*************************************************************************
- * RunDLL_CallEntry16				[SHELL32.122]
+ * RunDLL_CallEntry16                [SHELL32.122]
  * the name is probably wrong
  */
 EXTERN_C void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
@@ -511,7 +511,7 @@ EXTERN_C void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
 }
 
 /*************************************************************************
- * CallCPLEntry16				[SHELL32.166]
+ * CallCPLEntry16                [SHELL32.166]
  *
  * called by desk.cpl on "Advanced" with:
  * hMod("DeskCp16.Dll"), pFunc("CplApplet"), 0, 1, 0xc, 0

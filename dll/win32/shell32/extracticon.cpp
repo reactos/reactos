@@ -18,11 +18,11 @@ struct IconLocation
 };
 
 class IconExtraction :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IDefaultExtractIconInit,
-	public IExtractIconW,
-	public IExtractIconA,
-	public IPersistFile
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IDefaultExtractIconInit,
+    public IExtractIconW,
+    public IExtractIconA,
+    public IPersistFile
 {
 private:
     UINT flags;
@@ -31,41 +31,41 @@ private:
     struct IconLocation openIcon;
     struct IconLocation shortcutIcon;
 public:
-	IconExtraction();
-	~IconExtraction();
+    IconExtraction();
+    ~IconExtraction();
 
-	// IDefaultExtractIconInit
-	virtual HRESULT STDMETHODCALLTYPE SetDefaultIcon(LPCWSTR pszFile, int iIcon);
-	virtual HRESULT STDMETHODCALLTYPE SetFlags(UINT uFlags);
-	virtual HRESULT STDMETHODCALLTYPE SetKey(HKEY hkey);
-	virtual HRESULT STDMETHODCALLTYPE SetNormalIcon(LPCWSTR pszFile, int iIcon);
-	virtual HRESULT STDMETHODCALLTYPE SetOpenIcon(LPCWSTR pszFile, int iIcon);
-	virtual HRESULT STDMETHODCALLTYPE SetShortcutIcon(LPCWSTR pszFile, int iIcon);
+    // IDefaultExtractIconInit
+    virtual HRESULT STDMETHODCALLTYPE SetDefaultIcon(LPCWSTR pszFile, int iIcon);
+    virtual HRESULT STDMETHODCALLTYPE SetFlags(UINT uFlags);
+    virtual HRESULT STDMETHODCALLTYPE SetKey(HKEY hkey);
+    virtual HRESULT STDMETHODCALLTYPE SetNormalIcon(LPCWSTR pszFile, int iIcon);
+    virtual HRESULT STDMETHODCALLTYPE SetOpenIcon(LPCWSTR pszFile, int iIcon);
+    virtual HRESULT STDMETHODCALLTYPE SetShortcutIcon(LPCWSTR pszFile, int iIcon);
 
-	// IExtractIconW
-	virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-	virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+    // IExtractIconW
+    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+    virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
-	// IExtractIconA
-	virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-	virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+    // IExtractIconA
+    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+    virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
-	// IPersist
-	virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
-	virtual HRESULT STDMETHODCALLTYPE IsDirty();
+    // IPersist
+    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    virtual HRESULT STDMETHODCALLTYPE IsDirty();
 
-	// IPersistFile
-	virtual HRESULT STDMETHODCALLTYPE Load(LPCOLESTR pszFileName, DWORD dwMode);
-	virtual HRESULT STDMETHODCALLTYPE Save(LPCOLESTR pszFileName, BOOL fRemember);
-	virtual HRESULT STDMETHODCALLTYPE SaveCompleted(LPCOLESTR pszFileName);
-	virtual HRESULT STDMETHODCALLTYPE GetCurFile(LPOLESTR *ppszFileName);
+    // IPersistFile
+    virtual HRESULT STDMETHODCALLTYPE Load(LPCOLESTR pszFileName, DWORD dwMode);
+    virtual HRESULT STDMETHODCALLTYPE Save(LPCOLESTR pszFileName, BOOL fRemember);
+    virtual HRESULT STDMETHODCALLTYPE SaveCompleted(LPCOLESTR pszFileName);
+    virtual HRESULT STDMETHODCALLTYPE GetCurFile(LPOLESTR *ppszFileName);
 
 BEGIN_COM_MAP(IconExtraction)
-	COM_INTERFACE_ENTRY_IID(IID_IDefaultExtractIconInit, IDefaultExtractIconInit)
-	COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
-	COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
-	COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-	COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
+    COM_INTERFACE_ENTRY_IID(IID_IDefaultExtractIconInit, IDefaultExtractIconInit)
+    COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
+    COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
+    COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+    COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
 END_COM_MAP()
 };
 
@@ -87,11 +87,11 @@ VOID DuplicateString(
 
 IconExtraction::IconExtraction()
 {
-	flags = 0;
-	memset(&defaultIcon, 0, sizeof(defaultIcon));
-	memset(&normalIcon, 0, sizeof(normalIcon));
-	memset(&openIcon, 0, sizeof(openIcon));
-	memset(&shortcutIcon, 0, sizeof(shortcutIcon));
+    flags = 0;
+    memset(&defaultIcon, 0, sizeof(defaultIcon));
+    memset(&normalIcon, 0, sizeof(normalIcon));
+    memset(&openIcon, 0, sizeof(openIcon));
+    memset(&shortcutIcon, 0, sizeof(shortcutIcon));
 }
 
 IconExtraction::~IconExtraction()
@@ -337,22 +337,22 @@ HRESULT STDMETHODCALLTYPE IconExtraction::GetCurFile(
 
 HRESULT WINAPI SHCreateDefaultExtractIcon(REFIID riid, void **ppv)
 {
-	CComObject<IconExtraction>				*theExtractor;
-	CComPtr<IUnknown>						result;
-	HRESULT									hResult;
+    CComObject<IconExtraction>                *theExtractor;
+    CComPtr<IUnknown>                        result;
+    HRESULT                                    hResult;
 
-	if (ppv == NULL)
-		return E_POINTER;
-	*ppv = NULL;
-	ATLTRY (theExtractor = new CComObject<IconExtraction>);
-	if (theExtractor == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theExtractor->QueryInterface (riid, (void **)&result);
-	if (FAILED (hResult))
-	{
-		delete theExtractor;
-		return hResult;
-	}
-	*ppv = result.Detach ();
-	return S_OK;
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY (theExtractor = new CComObject<IconExtraction>);
+    if (theExtractor == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theExtractor->QueryInterface (riid, (void **)&result);
+    if (FAILED (hResult))
+    {
+        delete theExtractor;
+        return hResult;
+    }
+    *ppv = result.Detach ();
+    return S_OK;
 }

@@ -71,9 +71,9 @@ static DWORD __inline BrowseFlagsToSHCONTF(UINT ulFlags)
 static void browsefolder_callback( LPBROWSEINFOW lpBrowseInfo, HWND hWnd,
                                    UINT msg, LPARAM param )
 {
-	if (!lpBrowseInfo->lpfn)
-		return;
-	lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
+    if (!lpBrowseInfo->lpfn)
+        return;
+    lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
 }
 
 /******************************************************************************
@@ -215,17 +215,17 @@ static void GetNormalAndSelectedIcons(LPITEMIDLIST lpifq, LPTVITEMW lpTV_ITEM)
  */
 static BOOL GetName(LPSHELLFOLDER lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR lpFriendlyName)
 {
-	BOOL   bSuccess=TRUE;
-	STRRET str;
+    BOOL   bSuccess=TRUE;
+    STRRET str;
 
-	TRACE("%p %p %x %p\n", lpsf, lpi, dwFlags, lpFriendlyName);
-	if (SUCCEEDED(lpsf->GetDisplayNameOf(lpi, dwFlags, &str)))
+    TRACE("%p %p %x %p\n", lpsf, lpi, dwFlags, lpFriendlyName);
+    if (SUCCEEDED(lpsf->GetDisplayNameOf(lpi, dwFlags, &str)))
           bSuccess = StrRetToStrNW(lpFriendlyName, MAX_PATH, &str, lpi);
-	else
-	  bSuccess = FALSE;
+    else
+      bSuccess = FALSE;
 
-	TRACE("-- %s\n", debugstr_w(lpFriendlyName));
-	return bSuccess;
+    TRACE("-- %s\n", debugstr_w(lpFriendlyName));
+    return bSuccess;
 }
 
 /******************************************************************************
@@ -247,39 +247,39 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
     LPCITEMIDLIST pidl, LPCITEMIDLIST pidlParent, IEnumIDList* pEnumIL,
     HTREEITEM hParent)
 {
-	TVITEMW 	tvi;
-	TVINSERTSTRUCTW	tvins;
-	WCHAR		szBuff[MAX_PATH];
-	LPTV_ITEMDATA	lptvid=0;
+    TVITEMW     tvi;
+    TVINSERTSTRUCTW    tvins;
+    WCHAR        szBuff[MAX_PATH];
+    LPTV_ITEMDATA    lptvid=0;
 
-	tvi.mask  = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM;
+    tvi.mask  = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM;
 
-	tvi.cChildren= pEnumIL ? 1 : 0;
-	tvi.mask |= TVIF_CHILDREN;
+    tvi.cChildren= pEnumIL ? 1 : 0;
+    tvi.mask |= TVIF_CHILDREN;
 
-	lptvid = (TV_ITEMDATA *)SHAlloc( sizeof(TV_ITEMDATA) );
-	if (!lptvid)
-	    return NULL;
+    lptvid = (TV_ITEMDATA *)SHAlloc( sizeof(TV_ITEMDATA) );
+    if (!lptvid)
+        return NULL;
 
-	if (!GetName(lpsf, pidl, SHGDN_NORMAL, szBuff))
-	    return NULL;
+    if (!GetName(lpsf, pidl, SHGDN_NORMAL, szBuff))
+        return NULL;
 
-	tvi.pszText    = szBuff;
-	tvi.cchTextMax = MAX_PATH;
-	tvi.lParam = (LPARAM)lptvid;
+    tvi.pszText    = szBuff;
+    tvi.cchTextMax = MAX_PATH;
+    tvi.lParam = (LPARAM)lptvid;
 
-	lpsf->AddRef();
-	lptvid->lpsfParent = lpsf;
-	lptvid->lpi	= ILClone(pidl);
-	lptvid->lpifq	= pidlParent ? ILCombine(pidlParent, pidl) : ILClone(pidl);
-	lptvid->pEnumIL = pEnumIL;
-	GetNormalAndSelectedIcons(lptvid->lpifq, &tvi);
+    lpsf->AddRef();
+    lptvid->lpsfParent = lpsf;
+    lptvid->lpi    = ILClone(pidl);
+    lptvid->lpifq    = pidlParent ? ILCombine(pidlParent, pidl) : ILClone(pidl);
+    lptvid->pEnumIL = pEnumIL;
+    GetNormalAndSelectedIcons(lptvid->lpifq, &tvi);
 
-	tvins.item         = tvi;
-	tvins.hInsertAfter = NULL;
-	tvins.hParent      = hParent;
+    tvins.item         = tvi;
+    tvins.hInsertAfter = NULL;
+    tvins.hParent      = hParent;
 
-	return (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_INSERTITEM, 0, (LPARAM)&tvins );
+    return (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_INSERTITEM, 0, (LPARAM)&tvins );
 }
 
 /******************************************************************************
@@ -298,33 +298,33 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                  LPITEMIDLIST  pidl, HTREEITEM hParent, IEnumIDList* lpe)
 {
-	HTREEITEM	hPrev = 0;
-	LPITEMIDLIST	pidlTemp = 0;
-	ULONG		ulFetched;
-	HRESULT		hr;
-	HWND		hwnd = GetParent( info->hwndTreeView );
+    HTREEITEM    hPrev = 0;
+    LPITEMIDLIST    pidlTemp = 0;
+    ULONG        ulFetched;
+    HRESULT        hr;
+    HWND        hwnd = GetParent( info->hwndTreeView );
 
-	TRACE("%p %p %p %p\n",lpsf, pidl, hParent, lpe);
+    TRACE("%p %p %p %p\n",lpsf, pidl, hParent, lpe);
 
-	/* No IEnumIDList -> No children */
-	if (!lpe) return;
+    /* No IEnumIDList -> No children */
+    if (!lpe) return;
 
-	SetCapture( hwnd );
-	SetCursor( LoadCursorA( 0, (LPSTR)IDC_WAIT ) );
+    SetCapture( hwnd );
+    SetCursor( LoadCursorA( 0, (LPSTR)IDC_WAIT ) );
 
-	while (NOERROR == lpe->Next(1,&pidlTemp,&ulFetched))
-	{
-	    ULONG ulAttrs = SFGAO_HASSUBFOLDER | SFGAO_FOLDER;
-	    IEnumIDList* pEnumIL = NULL;
-	    IShellFolder* pSFChild = NULL;
-	    lpsf->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlTemp, &ulAttrs);
-	    if (ulAttrs & SFGAO_FOLDER)
-	    {
-	        hr = lpsf->BindToObject(pidlTemp, NULL, IID_IShellFolder, (LPVOID *)&pSFChild);
-	        if (SUCCEEDED(hr))
+    while (NOERROR == lpe->Next(1,&pidlTemp,&ulFetched))
+    {
+        ULONG ulAttrs = SFGAO_HASSUBFOLDER | SFGAO_FOLDER;
+        IEnumIDList* pEnumIL = NULL;
+        IShellFolder* pSFChild = NULL;
+        lpsf->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlTemp, &ulAttrs);
+        if (ulAttrs & SFGAO_FOLDER)
+        {
+            hr = lpsf->BindToObject(pidlTemp, NULL, IID_IShellFolder, (LPVOID *)&pSFChild);
+            if (SUCCEEDED(hr))
                 {
-	            DWORD flags = BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags);
-	            hr = pSFChild->EnumObjects(hwnd, flags, &pEnumIL);
+                DWORD flags = BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags);
+                hr = pSFChild->EnumObjects(hwnd, flags, &pEnumIL);
                     if (hr == S_OK)
                     {
                         if ((pEnumIL->Skip(1) != S_OK) ||
@@ -336,17 +336,17 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                     }
                     pSFChild->Release();
                 }
-	    }
+        }
 
-	    if (!(hPrev = InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent)))
-	        goto done;
-	    SHFree(pidlTemp);  /* Finally, free the pidl that the shell gave us... */
-	    pidlTemp=NULL;
-	}
+        if (!(hPrev = InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent)))
+            goto done;
+        SHFree(pidlTemp);  /* Finally, free the pidl that the shell gave us... */
+        pidlTemp=NULL;
+    }
 
 done:
-	ReleaseCapture();
-	SetCursor(LoadCursorW(0, (LPWSTR)IDC_ARROW));
+    ReleaseCapture();
+    SetCursor(LoadCursorW(0, (LPWSTR)IDC_ARROW));
     SHFree(pidlTemp);
 }
 
@@ -491,16 +491,16 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     if (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
         FIXME("flags BIF_NEWDIALOGSTYLE partially implemented\n");
     if (lpBrowseInfo->ulFlags & ~SUPPORTEDFLAGS)
-	FIXME("flags %x not implemented\n", lpBrowseInfo->ulFlags & ~SUPPORTEDFLAGS);
+    FIXME("flags %x not implemented\n", lpBrowseInfo->ulFlags & ~SUPPORTEDFLAGS);
 
     if (lpBrowseInfo->lpszTitle)
-	SetWindowTextW( GetDlgItem(hWnd, IDD_TITLE), lpBrowseInfo->lpszTitle );
+    SetWindowTextW( GetDlgItem(hWnd, IDD_TITLE), lpBrowseInfo->lpszTitle );
     else
-	ShowWindow( GetDlgItem(hWnd, IDD_TITLE), SW_HIDE );
+    ShowWindow( GetDlgItem(hWnd, IDD_TITLE), SW_HIDE );
 
     if (!(lpBrowseInfo->ulFlags & BIF_STATUSTEXT)
         || (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
-	ShowWindow( GetDlgItem(hWnd, IDD_STATUS), SW_HIDE );
+    ShowWindow( GetDlgItem(hWnd, IDD_STATUS), SW_HIDE );
 
     /* Hide "Make New Folder" Button? */
     if ((lpBrowseInfo->ulFlags & BIF_NONEWFOLDERBUTTON)
@@ -675,7 +675,7 @@ static BOOL BrsFolder_OnSetSelectionA(browse_info *info, LPVOID selection, BOOL 
  *             BrsFolderDlgProc32  (not an exported API function)
  */
 static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
-				          LPARAM lParam )
+                          LPARAM lParam )
 {
     browse_info *info;
 
@@ -806,7 +806,7 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
     else
         templateName = swBrowseTemplateName;
     r = DialogBoxParamW( shell32_hInstance, templateName, lpbi->hwndOwner,
-	                 BrsFolderDlgProc, (LPARAM)&info );
+                     BrsFolderDlgProc, (LPARAM)&info );
     if (SUCCEEDED(hr))
         OleUninitialize();
     if (!r)

@@ -28,12 +28,12 @@ EXTERN_C HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
 
 ShellItem::ShellItem()
 {
-	pidl = NULL;
+    pidl = NULL;
 }
 
 ShellItem::~ShellItem()
 {
-	ILFree(pidl);
+    ILFree(pidl);
 }
 
 HRESULT ShellItem::get_parent_pidl(LPITEMIDLIST *parent_pidl)
@@ -60,7 +60,7 @@ HRESULT ShellItem::get_parent_pidl(LPITEMIDLIST *parent_pidl)
 HRESULT ShellItem::get_parent_shellfolder(IShellFolder **ppsf)
 {
     LPITEMIDLIST parent_pidl;
-    CComPtr<IShellFolder>		desktop;
+    CComPtr<IShellFolder>        desktop;
     HRESULT ret;
 
     ret = get_parent_pidl(&parent_pidl);
@@ -112,7 +112,7 @@ HRESULT WINAPI ShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
 
 HRESULT WINAPI ShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
 {
-    CComPtr<IShellFolder>		parent_folder;
+    CComPtr<IShellFolder>        parent_folder;
     LPITEMIDLIST child_pidl;
     HRESULT ret;
 
@@ -179,7 +179,7 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
 {
     IShellItem *newShellItem;
     LPITEMIDLIST new_pidl;
-	CComPtr<IPersistIDList>			newPersistIDList;
+    CComPtr<IPersistIDList>            newPersistIDList;
     HRESULT ret;
 
     TRACE("(%p,%p,%p,%p)\n", pidlParent, psfParent, pidl, ppsi);
@@ -193,7 +193,7 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
         LPITEMIDLIST temp_parent=NULL;
         if (!pidlParent)
         {
-            CComPtr<IPersistFolder2>	ppf2Parent;
+            CComPtr<IPersistFolder2>    ppf2Parent;
 
             if (FAILED(psfParent->QueryInterface(IID_IPersistFolder2, (void**)&ppf2Parent)))
             {
@@ -223,26 +223,26 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
             return E_OUTOFMEMORY;
     }
 
-	ret = ShellItem::_CreatorClass::CreateInstance(NULL, IID_IShellItem, (void**)&newShellItem);
+    ret = ShellItem::_CreatorClass::CreateInstance(NULL, IID_IShellItem, (void**)&newShellItem);
     if (FAILED(ret))
     {
         *ppsi = NULL;
         ILFree(new_pidl);
-		return ret;
+        return ret;
     }
-	ret = newShellItem->QueryInterface(IID_IPersistIDList, (void **)&newPersistIDList);
+    ret = newShellItem->QueryInterface(IID_IPersistIDList, (void **)&newPersistIDList);
     if (FAILED(ret))
-	{
+    {
         ILFree(new_pidl);
-		return ret;
-	}
-	ret = newPersistIDList->SetIDList(new_pidl);
+        return ret;
+    }
+    ret = newPersistIDList->SetIDList(new_pidl);
     if (FAILED(ret))
-	{
+    {
         ILFree(new_pidl);
-		return ret;
-	}
+        return ret;
+    }
     ILFree(new_pidl);
-	*ppsi = newShellItem;
+    *ppsi = newShellItem;
     return ret;
 }

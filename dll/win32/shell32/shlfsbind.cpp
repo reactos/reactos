@@ -28,14 +28,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(pidl);
  * IFileSystemBindData implementation
  */
 class IFileSystemBindDataImpl :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IFileSystemBindData
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IFileSystemBindData
 {
 private:
     WIN32_FIND_DATAW findFile;
 public:
-	IFileSystemBindDataImpl();
-	~IFileSystemBindDataImpl();
+    IFileSystemBindDataImpl();
+    ~IFileSystemBindDataImpl();
 
     // *** IFileSystemBindData methods ***
     virtual HRESULT STDMETHODCALLTYPE SetFindData(const WIN32_FIND_DATAW *pfd);
@@ -45,7 +45,7 @@ DECLARE_NOT_AGGREGATABLE(IFileSystemBindDataImpl)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(IFileSystemBindDataImpl)
-	COM_INTERFACE_ENTRY_IID(IID_IFileSystemBindData, IFileSystemBindData)
+    COM_INTERFACE_ENTRY_IID(IID_IFileSystemBindData, IFileSystemBindData)
 END_COM_MAP()
 };
 
@@ -54,10 +54,10 @@ static const WCHAR wFileSystemBindData[] = {
 
 HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC *ppV)
 {
-	CComPtr<IFileSystemBindData>		fileSystemBindData;
-	CComPtr<IBindCtx>					bindContext;
-	BIND_OPTS							bindOpts;
-	HRESULT								hResult;
+    CComPtr<IFileSystemBindData>        fileSystemBindData;
+    CComPtr<IBindCtx>                    bindContext;
+    BIND_OPTS                            bindOpts;
+    HRESULT                                hResult;
 
     TRACE("%p, %p\n", pfd, ppV);
 
@@ -66,37 +66,37 @@ HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC
 
     *ppV = NULL;
 
-	hResult = IFileSystemBindDataImpl::_CreatorClass::CreateInstance(NULL, IID_IFileSystemBindData, (void **)&fileSystemBindData);
-	if (FAILED(hResult))
-		return hResult;
+    hResult = IFileSystemBindDataImpl::_CreatorClass::CreateInstance(NULL, IID_IFileSystemBindData, (void **)&fileSystemBindData);
+    if (FAILED(hResult))
+        return hResult;
     hResult = fileSystemBindData->SetFindData(pfd);
-	if (FAILED(hResult))
-		return hResult;
+    if (FAILED(hResult))
+        return hResult;
 
-	hResult = CreateBindCtx(0, &bindContext);
-	if (FAILED(hResult))
-		return hResult;
+    hResult = CreateBindCtx(0, &bindContext);
+    if (FAILED(hResult))
+        return hResult;
     bindOpts.cbStruct = sizeof(BIND_OPTS);
     bindOpts.grfFlags = 0;
     bindOpts.grfMode = STGM_CREATE;
     bindOpts.dwTickCountDeadline = 0;
     hResult = bindContext->SetBindOptions(&bindOpts);
-	if (FAILED(hResult))
-		return hResult;
+    if (FAILED(hResult))
+        return hResult;
     hResult = bindContext->RegisterObjectParam((LPOLESTR)wFileSystemBindData, fileSystemBindData);
-	if (FAILED(hResult))
-		return hResult;
+    if (FAILED(hResult))
+        return hResult;
 
-	*ppV = bindContext.Detach();
+    *ppV = bindContext.Detach();
 
     return S_OK;
 }
 
 HRESULT WINAPI FileSystemBindData_GetFindData(LPBC pbc, WIN32_FIND_DATAW *pfd)
 {
-	CComPtr<IUnknown>					pUnk;
-	CComPtr<IFileSystemBindData>		pfsbd;
-	HRESULT								ret;
+    CComPtr<IUnknown>                    pUnk;
+    CComPtr<IFileSystemBindData>        pfsbd;
+    HRESULT                                ret;
 
     TRACE("%p, %p\n", pbc, pfd);
 
@@ -115,9 +115,9 @@ HRESULT WINAPI FileSystemBindData_GetFindData(LPBC pbc, WIN32_FIND_DATAW *pfd)
 
 HRESULT WINAPI FileSystemBindData_SetFindData(LPBC pbc, const WIN32_FIND_DATAW *pfd)
 {
-	CComPtr<IUnknown>					pUnk;
-	CComPtr<IFileSystemBindData>		pfsbd;
-	HRESULT								ret;
+    CComPtr<IUnknown>                    pUnk;
+    CComPtr<IFileSystemBindData>        pfsbd;
+    HRESULT                                ret;
 
     TRACE("%p, %p\n", pbc, pfd);
 
@@ -133,12 +133,12 @@ HRESULT WINAPI FileSystemBindData_SetFindData(LPBC pbc, const WIN32_FIND_DATAW *
 
 IFileSystemBindDataImpl::IFileSystemBindDataImpl()
 {
-	memset(&findFile, 0, sizeof(WIN32_FIND_DATAW));
+    memset(&findFile, 0, sizeof(WIN32_FIND_DATAW));
 }
 
 IFileSystemBindDataImpl::~IFileSystemBindDataImpl()
 {
-	TRACE(" destroying ISFBindPidl(%p)\n", this);
+    TRACE(" destroying ISFBindPidl(%p)\n", this);
 }
 
 HRESULT WINAPI IFileSystemBindDataImpl::GetFindData(WIN32_FIND_DATAW *pfd)
