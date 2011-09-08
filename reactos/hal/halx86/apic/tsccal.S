@@ -8,6 +8,7 @@
 
 EXTERN _TscCalibrationPhase:BYTE
 EXTERN _TscCalibrationArray:QWORD
+EXTERN _HalpSendEOI@0:PROC
 
 PUBLIC _TscCalibrationISR
 _TscCalibrationISR:
@@ -26,13 +27,25 @@ _TscCalibrationISR:
     jnb _CalibrationISR_Exit
 
     /* Store the current value */
-    mov dword ptr _TscCalibrationArray[ecx * 2], eax
-    mov dword ptr _TscCalibrationArray[ecx * 2 + 4], edx
+    shl ecx, 3
+    mov dword ptr _TscCalibrationArray[ecx], eax
+    mov dword ptr _TscCalibrationArray[ecx + 4], edx
 
     /* Advance phase */
     inc byte ptr ds:[_TscCalibrationPhase]
 
 _CalibrationISR_Exit:
+
+    /* Read CMOS register C */
+    mov al, HEX(0C)
+    out HEX(70), al
+    jmp $+2
+    in al, HEX(71)
+    jmp $+2
+
+    /* Send EOI */
+    call _HalpSendEOI@0
+
     pop edx
     pop ecx
     pop eax

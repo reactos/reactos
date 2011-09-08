@@ -88,7 +88,7 @@ FORCEINLINE
 IOApicRead(UCHAR Register)
 {
     /* Select the register, then do the read */
-    *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOREGSEL) = Register;
+    *(volatile UCHAR *)(IOAPIC_BASE + IOAPIC_IOREGSEL) = Register;
     return *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOWIN);
 }
 
@@ -97,7 +97,7 @@ FORCEINLINE
 IOApicWrite(UCHAR Register, ULONG Value)
 {
     /* Select the register, then do the write */
-    *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOREGSEL) = Register;
+    *(volatile UCHAR *)(IOAPIC_BASE + IOAPIC_IOREGSEL) = Register;
     *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOWIN) = Value;
 }
 
@@ -240,6 +240,12 @@ ApicInitializeLocalApic(ULONG Cpu)
     SpIntRegister.SoftwareEnable = 1;
     SpIntRegister.FocusCPUCoreChecking = 0;
     ApicWrite(APIC_SIVR, SpIntRegister.Long);
+
+    /* Set the mode to flat (max 8 CPUs supported!) */
+    ApicWrite(APIC_DFR, APIC_DF_Flat);
+
+    /* Set logical apic ID */
+    ApicWrite(APIC_LDR, ApicLogicalId(Cpu) << 24);
 
     /* Set the spurious ISR */
     KeRegisterInterruptHandler(APIC_SPURIOUS_VECTOR, ApicSpuriousService);
@@ -409,9 +415,11 @@ ApicInitializeIOApic(VOID)
 
     /* Enable the timer interrupt */
     ReDirReg.Vector = APIC_CLOCK_VECTOR;
-    ReDirReg.DestinationMode = APIC_DM_Logical;
+    ReDirReg.DeliveryMode = APIC_MT_Fixed;
+    ReDirReg.DestinationMode = APIC_DM_Physical;
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 0;
+    ReDirReg.Destination = ApicRead(APIC_ID);
     IOApicWrite(IOAPIC_REDTBL + 2 * APIC_CLOCK_INDEX, ReDirReg.Long0);
 
 }
@@ -519,6 +527,7 @@ HalEnableSystemInterrupt(
     IN KINTERRUPT_MODE InterruptMode)
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
+    PKPRCB Prcb = KeGetCurrentPrcb();
     UCHAR Index;
     ASSERT(Irql <= HIGH_LEVEL);
     ASSERT((IrqlToTpr(Irql) & 0xF0) == (Vector & 0xF0));
@@ -531,6 +540,7 @@ HalEnableSystemInterrupt(
     ReDirReg.Vector = Vector;
     ReDirReg.DeliveryMode = APIC_MT_LowestPriority;
     ReDirReg.DestinationMode = APIC_DM_Logical;
+    ReDirReg.Destination |= ApicLogicalId(Prcb->Number);
     ReDirReg.TriggerMode = 1 - InterruptMode;
     ReDirReg.Mask = FALSE;
 
@@ -560,6 +570,14 @@ HalDisableSystemInterrupt(
 
     /* Write back lower dword */
     IOApicWrite(IOAPIC_REDTBL + 2 * Irql, ReDirReg.Long0);
+}
+
+VOID
+NTAPI
+HalpSendEOI(VOID)
+{
+    /* Write 0 to the EndOfInterruptRegister */
+    ApicWrite(APIC_EOI, 0);
 }
 
 #ifndef _M_AMD64
@@ -592,7 +610,7 @@ HalEndSystemInterrupt(
     /* Restore the old IRQL */
     ApicSetCurrentIrql(OldIrql);
 
-    /* Write 0 to the EndOfInterruptRegister for level triggered ints */
+    /* Write 0 to the EndOfInterruptRegister */
     ApicWrite(APIC_EOI, 0);
 }
 

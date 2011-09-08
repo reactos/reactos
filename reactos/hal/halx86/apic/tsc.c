@@ -18,7 +18,7 @@ LARGE_INTEGER HalpCpuClockFrequency = {INITIAL_STALL_COUNT * 1000000};
 
 UCHAR TscCalibrationPhase;
 LARGE_INTEGER TscCalibrationArray[NUM_SAMPLES];
-extern const UCHAR HalpClockVector;
+UCHAR HalpRtcClockVector = 0xD1;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -29,6 +29,7 @@ HalpInitializeTsc()
     ULONG_PTR Flags;
     KIDTENTRY OldIdtEntry, *IdtPointer;
     PKPCR Pcr = KeGetPcr();
+    UCHAR RegisterA, RegisterB;
 
     /* Check if the CPU supports RDTSC */
     if (!(KeGetCurrentPrcb()->FeatureBits & KF_RDTSC))
@@ -40,31 +41,41 @@ HalpInitializeTsc()
     Flags = __readeflags();
     _disable();
 
-__debugbreak();
+    /* Enable the periodic interrupt in the CMOS */
+    RegisterB = HalpReadCmos(RTC_REGISTER_B);
+    HalpWriteCmos(RTC_REGISTER_B, RegisterB | RTC_REG_B_PI);
 
-    /* Initialze the PIT */
-    //HalpInitializePIT();
+    /* Modify register A to get 4096 Hz */
+    RegisterA = HalpReadCmos(RTC_REGISTER_A);
+    RegisterA = (RegisterA & 0xF0) | 9;
+    HalpWriteCmos(RTC_REGISTER_A, RegisterA);
 
     /* Save old IDT entry */
-    IdtPointer = KiGetIdtEntry(Pcr, HalpClockVector);
+    IdtPointer = KiGetIdtEntry(Pcr, HalpRtcClockVector);
     OldIdtEntry = *IdtPointer;
 
     /* Set the calibration ISR */
-    KeRegisterInterruptHandler(HalpClockVector, TscCalibrationISR);
+    KeRegisterInterruptHandler(HalpRtcClockVector, TscCalibrationISR);
 
     /* Reset TSC value to 0 */
     __writemsr(MSR_RDTSC, 0);
 
     /* Enable the timer interupt */
-    HalEnableSystemInterrupt(HalpClockVector, CLOCK_LEVEL, Latched);
+    HalEnableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL, Latched);
+
+    /* Read register C, so that the next interrupt can happen */
+    HalpReadCmos(RTC_REGISTER_C);;
 
     /* Wait for completion */
     _enable();
     while (TscCalibrationPhase < NUM_SAMPLES) _ReadWriteBarrier();
     _disable();
 
+    /* Disable the periodic interrupt in the CMOS */
+    HalpWriteCmos(RTC_REGISTER_B, RegisterB & ~RTC_REG_B_PI);
+
     /* Disable the timer interupt */
-    HalDisableSystemInterrupt(HalpClockVector, CLOCK_LEVEL);
+    HalDisableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL);
 
     /* Restore old IDT entry */
     *IdtPointer = OldIdtEntry;

@@ -39,6 +39,7 @@
 #define IOAPIC_PHYS_BASE 0xFEC00000
 #define APIC_CLOCK_INDEX 8
 
+#define ApicLogicalId(Cpu) ((UCHAR)(1<< Cpu))
 
 /* APIC Register Address Map */
 #define APIC_ID       0x0020 /* Local APIC ID Register (R/W) */
@@ -104,6 +105,12 @@ enum
     APIC_DSH_Self,
     APIC_DSH_AllIncludingSelf,
     APIC_DSH_AllExclusingSelf
+};
+
+enum
+{
+    APIC_DF_Flat = 0xFFFFFFFF,
+    APIC_DF_Cluster = 0x0FFFFFFF
 };
 
 enum
@@ -224,7 +231,7 @@ enum
     IOAPIC_ID  = 0x00,
     IOAPIC_VER = 0x01,
     IOAPIC_ARB = 0x02,
-    IOAPIC_REDTBL = 0x28
+    IOAPIC_REDTBL = 0x10
 };
 
 typedef union _IOAPIC_REDIRECTION_REGISTER

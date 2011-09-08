@@ -83,7 +83,9 @@ HalpInitializeClock(VOID)
     /* Release CMOS lock */
     HalpReleaseCmosSpinLock();
 
-   // RtcSetClockRate(HalpCurrentRate);
+    RtcSetClockRate(HalpCurrentRate);
+
+    DPRINT1("Clock initialized\n");
 }
 
 VOID
@@ -95,7 +97,6 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
-__debugbreak();
 
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(CLOCK_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
