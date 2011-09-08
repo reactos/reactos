@@ -728,7 +728,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
 
         /* Clear it */
         //Kernel32ProcessInitPostImportfunction = NULL;
-        UNIMPLEMENTED;
+        //UNIMPLEMENTED;
     }
 
     /* No root entry? return */
@@ -1988,7 +1988,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
     {
         /* Load kernel32 and call BasePostImportInit... */
-        DPRINT1("Unimplemented codepath!\n");
+        DPRINT("Unimplemented codepath!\n");
     }
 
     /* Walk the IAT and load all the DLLs */
@@ -2095,7 +2095,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         /* Check for Application Compatibility Goo */
         //LdrQueryApplicationCompatibilityGoo(hKey);
-        DPRINT1("Querying app compat hacks is missing!\n");
+        DPRINT("Querying app compat hacks is missing!\n");
     }
 
     /*
