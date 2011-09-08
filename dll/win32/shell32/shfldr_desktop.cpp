@@ -304,10 +304,16 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
            this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
            pchEaten, ppidl, pdwAttributes);
 
-    if (!lpszDisplayName || !ppidl)
+    if (!ppidl)
         return E_INVALIDARG;
 
-    *ppidl = 0;
+    if (!lpszDisplayName)
+    {
+        *ppidl = NULL;
+        return E_INVALIDARG;
+    }
+
+    *ppidl = NULL;
 
     if (pchEaten)
         *pchEaten = 0;        /* strange but like the original */
@@ -333,6 +339,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
     else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
     {
         *ppidl = pidlTemp;
+        DbgPrint("[shell32, CDesktopFolder::ParseDisplayName] 1 *ppidl = 0x%x\n", *ppidl);
         return S_OK;
     }
     else
@@ -379,7 +386,10 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
         }
     }
 
-    *ppidl = pidlTemp;
+    if (SUCCEEDED(hr))
+        *ppidl = pidlTemp;
+    else
+        *ppidl = NULL;
 
     TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
 

@@ -188,8 +188,16 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
      this, hwndOwner, pbc, lpszDisplayName, debugstr_w (lpszDisplayName),
      pchEaten, ppidl, pdwAttributes);
 
-    if (!lpszDisplayName || !ppidl)
+    if (!ppidl)
         return E_INVALIDARG;
+
+    if (!lpszDisplayName)
+    {
+        *ppidl = NULL;
+        return E_INVALIDARG;
+    }
+
+    *ppidl = NULL;
 
     if (pchEaten)
         *pchEaten = 0; /* strange but like the original */
