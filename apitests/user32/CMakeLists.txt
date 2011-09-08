@@ -14,6 +14,7 @@ list(APPEND SOURCE
     ScrollDC.c
     ScrollWindowEx.c
     SetCursorPos.c
+    SetActiveWindow.c
     WndProc.c
     testlist.c
     user32_apitest.rc)

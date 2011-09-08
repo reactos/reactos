@@ -1427,14 +1427,15 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
 	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
 	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
-#if 1
+if(!winetest_interactive)
 	skip("skipping match_emf_record(), bug 5393\n");
-#else
+else
+{
 	trace("%s: EMF record %u, size %u/record %u, size %u\n",
                 desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
  
         if (!match_emf_record(emr1, emr2, desc, ignore_scaling)) return -1;
-#endif
+}
 
         /* We have already bailed out if iType or nSize don't match */
 	offset1 += emr1->nSize;

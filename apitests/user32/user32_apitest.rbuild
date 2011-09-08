@@ -19,6 +19,7 @@
 	<file>GetIconInfo.c</file>
 	<file>GetPeekMessage.c</file>
 	<file>DeferWindowPos.c</file>
+	<file>SetActiveWindow.c</file>
 	<file>SetCursorPos.c</file>
 	<file>WndProc.c</file>
 
