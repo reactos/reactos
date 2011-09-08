@@ -291,19 +291,25 @@ NtUserCopyAcceleratorTable(
 {
    PACCELERATOR_TABLE Accel;
    int Ret;
-   BOOL Done = FALSE;
    DECLARE_RETURN(int);
 
    TRACE("Enter NtUserCopyAcceleratorTable\n");
    UserEnterShared();
 
    Accel = UserGetAccelObject(hAccel);
-
-   if ((Entries && (EntriesCount < 1)) || ((hAccel == NULL) || (!Accel)))
+   if (!Accel)
    {
-      RETURN(0);
+       EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
+       RETURN(0);
    }
 
+   /* If Entries is NULL return table size */
+   if (!Entries)
+   {
+      RETURN(Accel->Count);
+   }
+
+   /* Don't overrun */
    if (Accel->Count < EntriesCount)
        EntriesCount = Accel->Count;
 
@@ -313,20 +319,11 @@ NtUserCopyAcceleratorTable(
    {
        ProbeForWrite(Entries, EntriesCount*sizeof(Entries[0]), 4);
 
-       while (!Done)
+       for (Ret = 0; Ret < EntriesCount; Ret++)
        {
-           if (Entries)
-           {
-               Entries[Ret].fVirt = Accel->Table[Ret].fVirt & 0x7f;
-               Entries[Ret].key = Accel->Table[Ret].key;
-               Entries[Ret].cmd = Accel->Table[Ret].cmd;
-
-               if(Ret + 1 == EntriesCount) Done = TRUE;
-           }
-
-           if((Accel->Table[Ret].fVirt & 0x80) != 0) Done = TRUE;
-
-           Ret++;
+           Entries[Ret].fVirt = Accel->Table[Ret].fVirt;
+           Entries[Ret].key = Accel->Table[Ret].key;
+           Entries[Ret].cmd = Accel->Table[Ret].cmd;
        }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -360,7 +357,7 @@ NtUserCreateAcceleratorTable(
           Entries, EntriesCount);
    UserEnterExclusive();
 
-   if (!Entries || EntriesCount < 1)
+   if (!Entries || EntriesCount <= 0)
    {
       SetLastNtError(STATUS_INVALID_PARAMETER);
       RETURN( (HACCEL) NULL );
@@ -375,57 +372,51 @@ NtUserCreateAcceleratorTable(
    }
 
    Accel->Count = EntriesCount;
-   if (Accel->Count > 0)
+   Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), USERTAG_ACCEL);
+   if (Accel->Table == NULL)
    {
-      Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), USERTAG_ACCEL);
-      if (Accel->Table == NULL)
-      {
-         UserDereferenceObject(Accel);
-         UserDeleteObject(hAccel, otAccel);
-         SetLastNtError(STATUS_NO_MEMORY);
-         RETURN( (HACCEL) NULL);
-      }
+       UserDereferenceObject(Accel);
+       UserDeleteObject(hAccel, otAccel);
+       SetLastNtError(STATUS_NO_MEMORY);
+       RETURN( (HACCEL) NULL);
+   }
 
-      _SEH2_TRY
-      {
-          ProbeForRead(Entries, EntriesCount * sizeof(ACCEL), 4);
+   _SEH2_TRY
+   {
+       ProbeForRead(Entries, EntriesCount * sizeof(ACCEL), 4);
 
-          for (Index = 0; Index < EntriesCount; Index++)
-          {
-              Accel->Table[Index].fVirt = Entries[Index].fVirt&0x7f;
-              if(Accel->Table[Index].fVirt & FVIRTKEY)
-              {
-                  Accel->Table[Index].key = Entries[Index].key;
-              }
-              else
-              {
-                 RtlMultiByteToUnicodeN(&Accel->Table[Index].key,
-                                        sizeof(WCHAR),
-                                        NULL,
-                                        (PCSTR)&Entries[Index].key,
-                                        sizeof(CHAR));
-              }
+       for (Index = 0; Index < EntriesCount; Index++)
+       {
+           Accel->Table[Index].fVirt = Entries[Index].fVirt & 0x7F;
+           if(Accel->Table[Index].fVirt & FVIRTKEY)
+           {
+               Accel->Table[Index].key = Entries[Index].key;
+           }
+           else
+           {
+               RtlMultiByteToUnicodeN(&Accel->Table[Index].key,
+                                      sizeof(WCHAR),
+                                      NULL,
+                                      (PCSTR)&Entries[Index].key,
+                                      sizeof(CHAR));
+           }
 
-              Accel->Table[Index].cmd = Entries[Index].cmd;
-          }
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-          Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
+           Accel->Table[Index].cmd = Entries[Index].cmd;
+       }
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
 
-      if (!NT_SUCCESS(Status))
-      {
-          ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
-          UserDereferenceObject(Accel);
-          UserDeleteObject(hAccel, otAccel);
-          SetLastNtError(Status);
-          RETURN( (HACCEL) NULL);
-      }
-
-      /* Set the end-of-table terminator. */
-      Accel->Table[EntriesCount - 1].fVirt |= 0x80;
+   if (!NT_SUCCESS(Status))
+   {
+       ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
+       UserDereferenceObject(Accel);
+       UserDeleteObject(hAccel, otAccel);
+       SetLastNtError(Status);
+       RETURN( (HACCEL) NULL);
    }
 
    /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
@@ -545,10 +536,6 @@ NtUserTranslateAccelerator(
          TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
                 hWnd, hAccel, pUnsafeMessage, 1);
          RETURN( 1);
-      }
-      if (((Accel->Table[i].fVirt & 0x80) > 0))
-      {
-         break;
       }
    }
 
