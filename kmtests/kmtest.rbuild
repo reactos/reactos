@@ -1,4 +1,4 @@
-<module name="kmtest" type="win32cui" installbase="bin" installname="kmtest.exe">
+<module name="kmtest" type="win32cui" installbase="bin" installname="kmtest_.exe">
 	<include base="kmtest">include</include>
 	<library>advapi32</library>
 	<library>ntdll</library>

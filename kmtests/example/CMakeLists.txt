@@ -10,6 +10,7 @@ add_library(example_drv SHARED ${EXAMPLE_DRV_SOURCE})
 set_module_type(example_drv kernelmodedriver)
 target_link_libraries(example_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(example_drv ntoskrnl hal)
-set_property(TARGET example_drv PROPERTY COMPILE_DEFINITIONS KMT_STANDALONE_DRIVER)
+add_target_compile_definitions(example_drv KMT_STANDALONE_DRIVER)
+#add_pch(example_drv ../include/kmt_test.h)
 
 add_cd_file(TARGET example_drv DESTINATION reactos/bin FOR all)
