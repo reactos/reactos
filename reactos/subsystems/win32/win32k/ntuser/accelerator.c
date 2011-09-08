@@ -309,21 +309,32 @@ NtUserCopyAcceleratorTable(
 
    Ret = 0;
 
-   while (!Done)
+   _SEH2_TRY
    {
-       if (Entries)
+       ProbeForWrite(Entries, EntriesCount*sizeof(Entries[0]), 4);
+
+       while (!Done)
        {
-           Entries[Ret].fVirt = Accel->Table[Ret].fVirt & 0x7f;
-           Entries[Ret].key = Accel->Table[Ret].key;
-           Entries[Ret].cmd = Accel->Table[Ret].cmd;
+           if (Entries)
+           {
+               Entries[Ret].fVirt = Accel->Table[Ret].fVirt & 0x7f;
+               Entries[Ret].key = Accel->Table[Ret].key;
+               Entries[Ret].cmd = Accel->Table[Ret].cmd;
 
-           if(Ret + 1 == EntriesCount) Done = TRUE;
+               if(Ret + 1 == EntriesCount) Done = TRUE;
+           }
+
+           if((Accel->Table[Ret].fVirt & 0x80) != 0) Done = TRUE;
+
+           Ret++;
        }
-
-       if((Accel->Table[Ret].fVirt & 0x80) != 0) Done = TRUE;
-
-       Ret++;
    }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      Ret = 0;
+   }
+   _SEH2_END;
 
    RETURN(Ret);
 
@@ -342,6 +353,7 @@ NtUserCreateAcceleratorTable(
    PACCELERATOR_TABLE Accel;
    HACCEL hAccel;
    INT Index;
+   NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(HACCEL);
 
    TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
@@ -374,23 +386,42 @@ NtUserCreateAcceleratorTable(
          RETURN( (HACCEL) NULL);
       }
 
-      for (Index = 0; Index < EntriesCount; Index++)
+      _SEH2_TRY
       {
-          Accel->Table[Index].fVirt = Entries[Index].fVirt&0x7f;
-          if(Accel->Table[Index].fVirt & FVIRTKEY)
-          {
-              Accel->Table[Index].key = Entries[Index].key;
-          }
-          else
-          {
-             RtlMultiByteToUnicodeN(&Accel->Table[Index].key,
-                                    sizeof(WCHAR),
-                                    NULL,
-                                    (PCSTR)&Entries[Index].key,
-                                    sizeof(CHAR));
-          }
+          ProbeForRead(Entries, EntriesCount * sizeof(ACCEL), 4);
 
-          Accel->Table[Index].cmd = Entries[Index].cmd;
+          for (Index = 0; Index < EntriesCount; Index++)
+          {
+              Accel->Table[Index].fVirt = Entries[Index].fVirt&0x7f;
+              if(Accel->Table[Index].fVirt & FVIRTKEY)
+              {
+                  Accel->Table[Index].key = Entries[Index].key;
+              }
+              else
+              {
+                 RtlMultiByteToUnicodeN(&Accel->Table[Index].key,
+                                        sizeof(WCHAR),
+                                        NULL,
+                                        (PCSTR)&Entries[Index].key,
+                                        sizeof(CHAR));
+              }
+
+              Accel->Table[Index].cmd = Entries[Index].cmd;
+          }
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+          Status = _SEH2_GetExceptionCode();
+      }
+      _SEH2_END;
+
+      if (!NT_SUCCESS(Status))
+      {
+          ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
+          UserDereferenceObject(Accel);
+          UserDeleteObject(hAccel, otAccel);
+          SetLastNtError(Status);
+          RETURN( (HACCEL) NULL);
       }
 
       /* Set the end-of-table terminator. */
@@ -450,28 +481,41 @@ APIENTRY
 NtUserTranslateAccelerator(
    HWND hWnd,
    HACCEL hAccel,
-   LPMSG Message)
+   LPMSG pUnsafeMessage)
 {
    PWND Window = NULL;
    PACCELERATOR_TABLE Accel = NULL;
    ULONG i;
+   MSG Message;
    USER_REFERENCE_ENTRY AccelRef, WindowRef;
    DECLARE_RETURN(int);
 
    TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
-          hWnd, hAccel, Message);
+          hWnd, hAccel, pUnsafeMessage);
    UserEnterShared();
 
-   if (Message == NULL)
+   if (pUnsafeMessage == NULL)
    {
       SetLastNtError(STATUS_INVALID_PARAMETER);
       RETURN( 0);
    }
 
-   if ((Message->message != WM_KEYDOWN) &&
-         (Message->message != WM_SYSKEYDOWN) &&
-         (Message->message != WM_SYSCHAR) &&
-         (Message->message != WM_CHAR))
+   _SEH2_TRY
+   {
+       ProbeForRead(pUnsafeMessage, sizeof(MSG), 4);
+       RtlCopyMemory(&Message, pUnsafeMessage, sizeof(MSG));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      _SEH2_YIELD(RETURN( 0));
+   }
+   _SEH2_END;
+
+   if ((Message.message != WM_KEYDOWN) &&
+         (Message.message != WM_SYSKEYDOWN) &&
+         (Message.message != WM_SYSCHAR) &&
+         (Message.message != WM_CHAR))
    {
       RETURN( 0);
    }
@@ -490,17 +534,16 @@ NtUserTranslateAccelerator(
 
    UserRefObjectCo(Window, &WindowRef);
 
-
    /* FIXME: Associate AcceleratorTable with the current thread */
 
    for (i = 0; i < Accel->Count; i++)
    {
-      if (co_IntTranslateAccelerator(Window, Message->message, Message->wParam, Message->lParam,
+      if (co_IntTranslateAccelerator(Window, Message.message, Message.wParam, Message.lParam,
                                      Accel->Table[i].fVirt, Accel->Table[i].key,
                                      Accel->Table[i].cmd))
       {
          TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
-                hWnd, hAccel, Message, 1);
+                hWnd, hAccel, pUnsafeMessage, 1);
          RETURN( 1);
       }
       if (((Accel->Table[i].fVirt & 0x80) > 0))
@@ -516,7 +559,7 @@ CLEANUP:
    if (Accel) UserDerefObjectCo(Accel);
 
    TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p) = %i end\n",
-          hWnd, hAccel, Message, 0);
+          hWnd, hAccel, pUnsafeMessage, 0);
    UserLeave();
    END_CLEANUP;
 }

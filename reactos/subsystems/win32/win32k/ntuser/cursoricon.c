@@ -564,13 +564,29 @@ UserClipCursor(
 
     DesktopWindow = UserGetDesktopWindow();
 
-    if (prcl != NULL &&
-       (prcl->right > prcl->left) &&
-       (prcl->bottom > prcl->top) &&
-        DesktopWindow != NULL)
+    if (prcl != NULL && DesktopWindow != NULL)
     {
+        if (prcl->right < prcl->left || prcl->bottom < prcl->top)
+        {
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
         CurInfo->bClipped = TRUE;
-        RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
+
+        /* Set nw cliping region. Note: we can't use RECTL_bIntersectRect because
+           it sets rect to 0 0 0 0 when it's empty. For more info see monitor winetest */
+        CurInfo->rcClip.left = max(prcl->left, DesktopWindow->rcWindow.left);
+        CurInfo->rcClip.right = min(prcl->right, DesktopWindow->rcWindow.right);
+        if (CurInfo->rcClip.right < CurInfo->rcClip.left)
+            CurInfo->rcClip.right = CurInfo->rcClip.left;
+
+        CurInfo->rcClip.top = max(prcl->top, DesktopWindow->rcWindow.top);
+        CurInfo->rcClip.bottom = min(prcl->bottom, DesktopWindow->rcWindow.bottom);
+        if (CurInfo->rcClip.bottom < CurInfo->rcClip.top)
+            CurInfo->rcClip.bottom = CurInfo->rcClip.top;
+
+        /* Make sure cursor is in clipping region */
         UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, 0, 0, FALSE);
     }
     else
