@@ -17,13 +17,13 @@ FASTCALL
 IntGdiGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
-  ULONG Size = sizeof(WCHAR) * (MAX_PATH + 12);
   OBJECT_ATTRIBUTES ObAttr;
 //  http://support.microsoft.com/kb/324097
   ULONG Ret = 0x409; // English
-  PVOID KeyInfo;
+  PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
+  ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);
   UNICODE_STRING Language;
-  
+
   RtlInitUnicodeString( &Language,
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
 
@@ -35,22 +35,22 @@ IntGdiGetLanguageID(VOID)
 
   if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
   {
-     KeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
-     if ( KeyInfo )
+     pKeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
+     if ( pKeyInfo )
      {
         RtlInitUnicodeString(&Language, L"Default");
 
         if ( NT_SUCCESS(ZwQueryValueKey( KeyHandle,
                                          &Language,
                         KeyValuePartialInformation,
-                                           KeyInfo,
+                                          pKeyInfo,
                                               Size,
                                              &Size)) )
       {
-        RtlInitUnicodeString(&Language, (PVOID)((char *)KeyInfo + 12));
+        RtlInitUnicodeString(&Language, (PWSTR)pKeyInfo->Data);
         RtlUnicodeStringToInteger(&Language, 16, &Ret);
       }
-      ExFreePoolWithTag(KeyInfo, TAG_STRING);
+      ExFreePoolWithTag(pKeyInfo, TAG_STRING);
     }
     ZwClose(KeyHandle);
   }

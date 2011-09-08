@@ -286,6 +286,9 @@ PKBL W32kGetDefaultKeyLayout(VOID)
 
    if( NT_SUCCESS(Status) )
    {
+      FullKeyboardLayoutPath.Buffer = wszBuffer;
+      FullKeyboardLayoutPath.MaximumLength = sizeof(wszBuffer);
+
       // FIXME: Is this 100% correct?
       // We're called very early, so HKEY_CURRENT_USER might not be available yet. Check this first.
       InitializeObjectAttributes(&KeyAttributes, &CurrentUserPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -294,18 +297,18 @@ PKBL W32kGetDefaultKeyLayout(VOID)
       if(Status == STATUS_OBJECT_NAME_NOT_FOUND)
       {
          // It is not available, so read it from HKEY_USERS\.DEFAULT
+         FullKeyboardLayoutPath.Length = sizeof(szDefaultUserPath) - sizeof(UNICODE_NULL);
          RtlCopyMemory(wszBuffer, szDefaultUserPath, sizeof(szDefaultUserPath));
       }
       else
       {
          // The path is available
          ZwClose(KeyHandle);
-         RtlCopyMemory(wszBuffer, CurrentUserPath.Buffer, CurrentUserPath.MaximumLength);
+         RtlCopyUnicodeString(&FullKeyboardLayoutPath, &CurrentUserPath);
       }
 
-      // Build the full path
-      RtlInitUnicodeString(&FullKeyboardLayoutPath, wszBuffer);
-      FullKeyboardLayoutPath.MaximumLength = MAX_PATH;
+      // Free CurrentUserPath - we dont need it anymore
+      RtlFreeUnicodeString(&CurrentUserPath);
 
       Status = RtlAppendUnicodeToString(&FullKeyboardLayoutPath, szKeyboardLayoutPath);
 
@@ -326,8 +329,6 @@ PKBL W32kGetDefaultKeyLayout(VOID)
       }
       else
          ERR("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
-
-      RtlFreeUnicodeString(&CurrentUserPath);
    }
    else
       ERR("RtlFormatCurrentUserKeyPath failed! (%08lx)\n", Status);
