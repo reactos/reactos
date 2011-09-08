@@ -84,6 +84,14 @@ void Test_SetActiveWindow()
     EXPECT_NEXT(hWnd4,hWnd1);
     EXPECT_NEXT(hWnd1,hWnd3);
     EXPECT_ACTIVE(hWnd2);
+
+    SetActiveWindow(hWnd1);
+    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
+
+    EXPECT_NEXT(hWnd2,hWnd4);
+    EXPECT_NEXT(hWnd4,hWnd1);
+    EXPECT_NEXT(hWnd1,hWnd3);
+    EXPECT_ACTIVE(hWnd1);
 }
 
 START_TEST(SetActiveWindow)
