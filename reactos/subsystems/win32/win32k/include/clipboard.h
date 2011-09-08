@@ -1,40 +1,22 @@
 #pragma once
 
-typedef struct _ClipboardChainElement
+#include "window.h"
+#include <include/win32.h>
+
+typedef struct _CLIP
 {
-    PWND                 window;
-    struct _ClipboardChainElement *next;
-} CLIPBOARDCHAINELEMENT, *PCLIPBOARDCHAINELEMENT;
+    UINT   fmt;
+    HANDLE hData;
+    BOOL   fGlobalHandle;
+} CLIP, *PCLIP;
 
-typedef struct _ClipboardElement
-{
-    UINT                        format;
-    HANDLE                      hData;
-    DWORD                       size;   // data may be delayed o synth render
-    struct _ClipboardElement   *next;
-} CLIPBOARDELEMENT, *PCLIPBOARDELEMENT;
+UINT APIENTRY
+UserEnumClipboardFormats(UINT uFormat);
 
-typedef struct _CLIPBOARDSYSTEM
-{
-    PTHREADINFO     ClipboardThread;
-    PTHREADINFO     ClipboardOwnerThread;
-    PWND  ClipboardWindow;
-    PWND  ClipboardViewerWindow;
-    PWND  ClipboardOwnerWindow;
-    BOOL            sendDrawClipboardMsg;
-    BOOL            recentlySetClipboard;
-    BOOL            delayedRender;
-    UINT            lastEnumClipboardFormats;
-    DWORD           ClipboardSequenceNumber;
+VOID FASTCALL
+UserClipboardFreeWindow(PWND pWindow);
 
-    PCLIPBOARDCHAINELEMENT WindowsChain;
-    PCLIPBOARDELEMENT      ClipboardData;
+struct _WINSTATION_OBJECT;
 
-    PCHAR synthesizedData;
-    DWORD synthesizedDataSize;
-
-} CLIPBOARDSYSTEM, *PCLIPBOARDSYSTEM;
-
-VOID FASTCALL IntClipboardFreeWindow(PWND window);
-UINT APIENTRY IntEnumClipboardFormats(UINT format);
-VOID FASTCALL IntIncrementSequenceNumber(VOID);
+VOID NTAPI
+UserEmptyClipboardData(struct _WINSTATION_OBJECT *pWinSta);

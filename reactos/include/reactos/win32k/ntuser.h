@@ -205,6 +205,13 @@ typedef struct tagHOOK
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
 
+typedef struct tagCLIPBOARDDATA
+{
+  HEAD  head;
+  DWORD cbData;
+  BYTE  Data[0];
+} CLIPBOARDDATA, *PCLIPBOARDDATA;
+
 /* THREADINFO Flags */
 #define TIF_INCLEANUP               0x00000001
 #define TIF_16BIT                   0x00000002
@@ -909,6 +916,23 @@ typedef struct _USERCONNECT
   SHAREDINFO siClient;
 } USERCONNECT, *PUSERCONNECT;
 
+typedef struct tagGETCLIPBDATA
+{ 
+  UINT uFmtRet;
+  BOOL fGlobalHandle; 
+  union
+  { 
+    HANDLE hLocale;
+    HANDLE hPalette; 
+  };
+} GETCLIPBDATA, *PGETCLIPBDATA; 
+
+typedef struct tagSETCLIPBDATA
+{ 
+    BOOL fGlobalHandle;
+    BOOL fIncSerialNumber;
+} SETCLIPBDATA, *PSETCLIPBDATA; 
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(
@@ -1010,8 +1034,8 @@ NtUserGetSystemMenu(
 BOOL
 NTAPI
 NtUserHiliteMenuItem(
-  HWND hwnd,
-  HMENU hmenu,
+  HWND hWnd,
+  HMENU hMenu,
   UINT uItemHilite,
   UINT uHilite);
 
@@ -1464,11 +1488,11 @@ NtUserConsoleControl(
   DWORD dwUnknown2,
   DWORD dwUnknown3);
 
-DWORD
+HANDLE
 NTAPI
 NtUserConvertMemHandle(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  PVOID pData,
+  DWORD cbData);
 
 int
 NTAPI
@@ -1509,13 +1533,13 @@ NTAPI
 NtUserCreateInputContext(
     DWORD dwUnknown1);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserCreateLocalMemHandle(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HANDLE hMem,
+  PVOID pData,
+  DWORD cbData,
+  DWORD *pcbData);
 
 HWND
 NTAPI
@@ -1678,7 +1702,7 @@ NtUserDrawIconEx(
   BOOL bMetaHDC,
   PVOID pDIXData);
 
-DWORD
+BOOL
 NTAPI
 NtUserEmptyClipboard(VOID);
 
@@ -1828,14 +1852,14 @@ NtUserGetClassName(HWND hWnd,
 HANDLE
 NTAPI
 NtUserGetClipboardData(
-  UINT uFormat,
-  PVOID pBuffer);
+  UINT fmt,
+  PGETCLIPBDATA pgcd);
 
 INT
 NTAPI
 NtUserGetClipboardFormatName(
-  UINT format,
-  PUNICODE_STRING FormatName,
+  UINT uFormat,
+  LPWSTR lpszFormatName,
   INT cchMaxCount);
 
 HWND
@@ -2634,9 +2658,9 @@ NtUserSetClassWord(
 HANDLE
 NTAPI
 NtUserSetClipboardData(
-  UINT uFormat,
+  UINT fmt,
   HANDLE hMem,
-  DWORD Unknown2);
+  PSETCLIPBDATA scd);
 
 HWND
 NTAPI

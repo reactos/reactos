@@ -482,7 +482,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    UserDereferenceObject(Window);
 
-   IntClipboardFreeWindow(Window);
+   UserClipboardFreeWindow(Window);
 
    return 0;
 }
