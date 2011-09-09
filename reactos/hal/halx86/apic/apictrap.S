@@ -27,6 +27,18 @@ PUBLIC _ApicSpuriousService
 TRAP_ENTRY HalpTrap0D, 0
 TRAP_ENTRY HalpApcInterrupt, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpDispatchInterrupt, KI_PUSH_FAKE_ERROR_CODE
+
+// VBox APIC needs an iret more or less directly following the EOI
+PUBLIC _HackEoi
+_HackEoi:
+    pushfd
+    push cs
+    push offset OnlyOnePersonKnowsHowToHackAroundVBoxBugsAndThatIsNotYou // !!
+    mov dword ptr ds:[HEX(0FFFE00B0)], 0
+    iretd
+OnlyOnePersonKnowsHowToHackAroundVBoxBugsAndThatIsNotYou:
+    ret
+
 #endif
 TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE

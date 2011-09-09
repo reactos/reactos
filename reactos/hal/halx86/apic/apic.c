@@ -609,17 +609,22 @@ HalBeginSystemInterrupt(
     return TRUE;
 }
 
+void HackEoi(void);
+
 VOID
 NTAPI
 HalEndSystemInterrupt(
     IN KIRQL OldIrql,
     IN PKTRAP_FRAME TrapFrame)
 {
+    /* Write 0 to the EndOfInterruptRegister */
+    //ApicWrite(APIC_EOI, 0);
+
+    // HACK!
+    HackEoi();
+
     /* Restore the old IRQL */
     ApicSetCurrentIrql(OldIrql);
-
-    /* Write 0 to the EndOfInterruptRegister */
-    ApicWrite(APIC_EOI, 0);
 }
 
 
