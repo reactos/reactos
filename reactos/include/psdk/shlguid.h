@@ -57,27 +57,26 @@ DEFINE_GUID(IID_IObjMgr,   0x00BB2761L,0x6A77,0x11D0,0xA5,0x35,0x00,0xC0,0x4F,0x
 DEFINE_GUID(IID_IProgressDialog, 0xEBBC7C04,0x315E,0x11D2,0xB6,0x2F,0x00,0x60,0x97,0xDF,0x5B,0xD4);
 
 
-#ifndef __GNUC__ /* avoid duplicate definitions with shobjidl.h (FIXME) */
-DEFINE_GUID(IID_IDockingWindow,     0x012dd920L, 0x7B26, 0x11D0, 0x8C, 0xA9, 0x00, 0xA0, 0xC9, 0x2D, 0xBF, 0xE8);
-DEFINE_OLEGUID(IID_IShellPropSheetExt,  0x000214E9L, 0, 0);
-DEFINE_OLEGUID(IID_IExtractIconA,       0x000214EBL, 0, 0);
-DEFINE_OLEGUID(IID_IExtractIconW,       0x000214FAL, 0, 0);
-DEFINE_OLEGUID(IID_IContextMenu,        0x000214E4L, 0, 0);
-DEFINE_OLEGUID(IID_IContextMenu2,       0x000214F4L, 0, 0);
-DEFINE_OLEGUID(IID_ICommDlgBrowser,     0x000214F1L, 0, 0);
-DEFINE_OLEGUID(IID_IShellBrowser,       0x000214E2L, 0, 0);
-DEFINE_OLEGUID(IID_IShellView,          0x000214E3L, 0, 0);
-DEFINE_OLEGUID(IID_IShellFolder,        0x000214E6L, 0, 0);
-DEFINE_OLEGUID(IID_IShellExtInit,       0x000214E8L, 0, 0);
-DEFINE_OLEGUID(IID_IPersistFolder,      0x000214EAL, 0, 0);
-DEFINE_OLEGUID(IID_IShellLinkA,         0x000214EEL, 0, 0);
-DEFINE_OLEGUID(IID_IEnumIDList,         0x000214F2L, 0, 0);
-DEFINE_OLEGUID(IID_IShellLinkW,         0x000214F9L, 0, 0);
-DEFINE_OLEGUID(IID_IShellExecuteHookA,  0x000214F5L, 0, 0);
-DEFINE_OLEGUID(IID_IShellExecuteHookW,  0x000214FBL, 0, 0);
-DEFINE_OLEGUID(IID_INewShortcutHookA,   0x000214E1L, 0, 0);
-DEFINE_OLEGUID(IID_INewShortcutHookW,   0x000214F7L, 0, 0);
-#endif
+/* avoid duplicate definitions with shobjidl.h (FIXME) */
+/* DEFINE_GUID(IID_IDockingWindow,     0x012dd920L, 0x7B26, 0x11D0, 0x8C, 0xA9, 0x00, 0xA0, 0xC9, 0x2D, 0xBF, 0xE8); */
+/* DEFINE_OLEGUID(IID_IShellPropSheetExt,  0x000214E9L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IExtractIconA,       0x000214EBL, 0, 0); */
+/* DEFINE_OLEGUID(IID_IExtractIconW,       0x000214FAL, 0, 0); */
+/* DEFINE_OLEGUID(IID_IContextMenu,        0x000214E4L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IContextMenu2,       0x000214F4L, 0, 0); */
+/* DEFINE_OLEGUID(IID_ICommDlgBrowser,     0x000214F1L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellBrowser,       0x000214E2L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellView,          0x000214E3L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellFolder,        0x000214E6L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellExtInit,       0x000214E8L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IPersistFolder,      0x000214EAL, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellLinkA,         0x000214EEL, 0, 0); */
+/* DEFINE_OLEGUID(IID_IEnumIDList,         0x000214F2L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellLinkW,         0x000214F9L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellExecuteHookA,  0x000214F5L, 0, 0); */
+/* DEFINE_OLEGUID(IID_IShellExecuteHookW,  0x000214FBL, 0, 0); */
+/* DEFINE_OLEGUID(IID_INewShortcutHookA,   0x000214E1L, 0, 0); */
+/* DEFINE_OLEGUID(IID_INewShortcutHookW,   0x000214F7L, 0, 0); */
 
 DEFINE_GUID(CLSID_CUrlHistory, 0x3c374a40, 0xbae4, 0x11cf, 0xbf, 0x7d, 0x00, 0xaa, 0x00, 0x69, 0x46, 0xee);
 #define SID_SUrlHistory       CLSID_CUrlHistory
@@ -133,8 +132,6 @@ DEFINE_GUID(CLSID_ACLMulti,       0x00bb2765, 0x6a77, 0x11d0, 0xa5, 0x35, 0x00, 
 DEFINE_GUID(CLSID_ACListISF,      0x03c036f1, 0xa186, 0x11d0, 0x82, 0x4a, 0x00, 0xaa, 0x00, 0x5b, 0x043, 0x83);
 
 DEFINE_GUID(CLSID_ProgressDialog, 0xf8383852, 0xfcd3, 0x11d1, 0xa6, 0xb9, 0x0, 0x60, 0x97, 0xdf, 0x5b, 0xd4);
-
-DEFINE_GUID(CLSID_ShellItem,      0x2fe352ea, 0xfd1f, 0x11d2, 0xb1, 0xf4, 0x00, 0xc0, 0x4f, 0x8e, 0xeb, 0x3e);
 
 #define PSGUID_SHELLDETAILS     {0x28636aa6, 0x953d, 0x11d2, 0xb5, 0xd6, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0xd0}
 DEFINE_GUID(FMTID_ShellDetails,  0x28636aa6, 0x953d, 0x11d2, 0xb5, 0xd6, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0xd0);

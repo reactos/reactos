@@ -3694,6 +3694,15 @@ RtlUnlockBootStatusData(
 );
 #endif
 
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGUIDFromString(
+  IN PUNICODE_STRING GuidString,
+  OUT GUID *Guid);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
