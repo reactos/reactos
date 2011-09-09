@@ -15,8 +15,6 @@ BEGIN
     MENUITEM "Imprimir",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Propiedades",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Ayuda",                    IDC_PROGHELP, GRAYED
   END
   POPUP "Ver"
   BEGIN
@@ -27,7 +25,6 @@ BEGIN
   END
   POPUP "Ayuda"
   BEGIN
-    MENUITEM "Ayuda",                    IDC_PROGHELP
     MENUITEM "Acerca de",                   IDC_ABOUT
   END
 END
@@ -37,8 +34,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "Propiedades",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Ayuda",                    IDC_PROGHELP
   END
 END
 

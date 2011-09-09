@@ -12,8 +12,7 @@
 #define IDC_PROP             2000
 #define IDC_REFRESH          2001
 #define IDC_PRINT            2002
-#define IDC_PROGHELP         2003
-#define IDC_EXIT             2004
+#define IDC_EXIT             2003
 #define IDC_ABOUT            4031
 
 /* menus */
@@ -30,8 +29,6 @@
 /* button bitmaps */
 #define IDB_PROP            10000
 #define IDB_REFRESH         10001
-#define IDB_HELP            10002
-#define IDB_EXIT            10003
 
 /* toolbar buttons */
 #define TBICON_PROP         0

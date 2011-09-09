@@ -11,8 +11,6 @@ BEGIN
     MENUITEM "Отпечатване",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Свойства",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Помощ",                    IDC_PROGHELP, GRAYED
   END
   POPUP "Изглед"
   BEGIN
@@ -23,7 +21,6 @@ BEGIN
   END
   POPUP "Помощ"
   BEGIN
-    MENUITEM "Помощ",                    IDC_PROGHELP
     MENUITEM "За",                   IDC_ABOUT
   END
 END
@@ -33,8 +30,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "Свойства",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Помощ",                    IDC_PROGHELP
   END
 END
 

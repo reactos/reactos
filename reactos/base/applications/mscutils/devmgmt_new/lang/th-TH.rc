@@ -20,8 +20,6 @@ BEGIN
     MENUITEM "พิมพ์",                        IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "คุณสมบัติ",                    IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "ช่วยเหลือ",                    IDC_PROGHELP, GRAYED
   END
   POPUP "มุมมอง"
   BEGIN
@@ -32,7 +30,6 @@ BEGIN
   END
   POPUP "ช่วยเหลือ"
   BEGIN
-    MENUITEM "ช่วยเหลือ",                    IDC_PROGHELP
     MENUITEM "เกี่ยวกับ",                    IDC_ABOUT
   END
 END
@@ -42,8 +39,6 @@ BEGIN
   POPUP "หน้าต่างปัจจุบัน"
   BEGIN
     MENUITEM "คุณสมบัติ",                    IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "ช่วยเหลือ",                    IDC_PROGHELP
   END
 END
 

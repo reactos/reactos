@@ -14,8 +14,6 @@ BEGIN
     MENUITEM "프린트",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "속성",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "도움말",                    IDC_PROGHELP, GRAYED
   END
   POPUP "보기"
   BEGIN
@@ -26,7 +24,6 @@ BEGIN
   END
   POPUP "도움말"
   BEGIN
-    MENUITEM "도움말",                    IDC_PROGHELP
     MENUITEM "정보",                   IDC_ABOUT
   END
 END
@@ -36,8 +33,6 @@ BEGIN
   POPUP "팝업"
   BEGIN
     MENUITEM "속성",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "도움말",                    IDC_PROGHELP
   END
 END
 

@@ -16,8 +16,6 @@ BEGIN
     MENUITEM "TlaËiù",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Vlastnosti",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "PomocnÌk",                    IDC_PROGHELP, GRAYED
   END
   POPUP "Zobraziù"
   BEGIN
@@ -28,7 +26,6 @@ BEGIN
   END
   POPUP "PomocnÌk"
   BEGIN
-    MENUITEM "PomocnÌk",                    IDC_PROGHELP
     MENUITEM "»o je ...",                   IDC_ABOUT
   END
 END
@@ -38,8 +35,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "Vlastnosti",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "PomocnÌk",                    IDC_PROGHELP
   END
 END
 

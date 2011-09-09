@@ -11,8 +11,6 @@ BEGIN
     MENUITEM "印刷",                    IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "プロパティ",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "ヘルプ",                  IDC_PROGHELP, GRAYED
   END
   POPUP "表\示"
   BEGIN
@@ -23,7 +21,6 @@ BEGIN
   END
   POPUP "ヘルプ"
   BEGIN
-    MENUITEM "ヘルプ",                  IDC_PROGHELP
     MENUITEM "バージョン情報",          IDC_ABOUT
   END
 END
@@ -33,8 +30,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "プロパティ",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "ヘルプ",                  IDC_PROGHELP
   END
 END
 

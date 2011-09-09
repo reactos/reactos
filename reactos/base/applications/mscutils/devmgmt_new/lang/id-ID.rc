@@ -11,8 +11,6 @@ BEGIN
     MENUITEM "Cetak",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Properti",                IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Bantuan",                 IDC_PROGHELP, GRAYED
   END
   POPUP "Lihat"
   BEGIN
@@ -23,7 +21,6 @@ BEGIN
   END
   POPUP "Bantuan"
   BEGIN
-    MENUITEM "Bantuan",                 IDC_PROGHELP
     MENUITEM "Tentang",                 IDC_ABOUT
   END
 END
@@ -33,8 +30,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "Properti",                IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Bantuan",                 IDC_PROGHELP
   END
 END
 

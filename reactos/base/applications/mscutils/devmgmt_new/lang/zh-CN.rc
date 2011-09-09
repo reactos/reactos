@@ -15,8 +15,6 @@ BEGIN
     MENUITEM "打印",                     IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "属性",                     IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "帮助",                     IDC_PROGHELP, GRAYED
   END
   POPUP "查看"
   BEGIN
@@ -27,7 +25,6 @@ BEGIN
   END
   POPUP "帮助"
   BEGIN
-    MENUITEM "帮助内容",                  IDC_PROGHELP
     MENUITEM "关于",                     IDC_ABOUT
   END
 END
@@ -37,8 +34,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "属性",                     IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "帮助",                     IDC_PROGHELP
   END
 END
 

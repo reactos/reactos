@@ -17,8 +17,6 @@ BEGIN
     MENUITEM "Skriv ut",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Egenskaper",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Hjälp",                    IDC_PROGHELP, GRAYED
   END
   POPUP "Visa"
   BEGIN
@@ -29,7 +27,6 @@ BEGIN
   END
   POPUP "Hjälp"
   BEGIN
-    MENUITEM "Hjälp",                    IDC_PROGHELP
     MENUITEM "Om",                   IDC_ABOUT
   END
 END
@@ -39,8 +36,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "Egenskaper",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Hjälp",                    IDC_PROGHELP
   END
 END
 

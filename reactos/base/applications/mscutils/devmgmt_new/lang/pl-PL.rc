@@ -18,8 +18,6 @@ BEGIN
     MENUITEM "&Drukuj",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Właściwości",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Pomo&c",                    IDC_PROGHELP, GRAYED
   END
   POPUP "&Widok"
   BEGIN
@@ -30,7 +28,6 @@ BEGIN
   END
   POPUP "Pomo&c"
   BEGIN
-    MENUITEM "&Tematy pomocy",                    IDC_PROGHELP
     MENUITEM "Menedżer urządzeń - i&nformacje",                   IDC_ABOUT
   END
 END
@@ -40,8 +37,6 @@ BEGIN
   POPUP "popup"
   BEGIN
     MENUITEM "Właściwości",              IDC_PROP, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Pomoc",                    IDC_PROGHELP
   END
 END
 
