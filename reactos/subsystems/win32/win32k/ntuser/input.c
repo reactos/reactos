@@ -15,7 +15,7 @@
 
 DBG_DEFAULT_CHANNEL(UserInput);
 
-extern BYTE gQueueKeyStateTable[];
+extern BYTE gKeyStateTable[];
 extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 extern PPROCESSINFO ppiScrnSaver;
 
@@ -634,16 +634,16 @@ KeyboardThreadMain(PVOID StartContext)
                {
                    if(KeyInput.Flags & KEY_E0)
                    {
-                      gQueueKeyStateTable[VK_RMENU] = 0;
+                      gKeyStateTable[VK_RMENU] = 0;
                    }
                    else
                    {
-                      gQueueKeyStateTable[VK_LMENU] = 0;
+                      gKeyStateTable[VK_LMENU] = 0;
                    }
-                   if (gQueueKeyStateTable[VK_RMENU] == 0 &&
-                       gQueueKeyStateTable[VK_LMENU] == 0)
+                   if (gKeyStateTable[VK_RMENU] == 0 &&
+                       gKeyStateTable[VK_LMENU] == 0)
                    {
-                      gQueueKeyStateTable[VK_MENU] = 0;
+                      gKeyStateTable[VK_MENU] = 0;
                    }
                }
             }
@@ -663,15 +663,15 @@ KeyboardThreadMain(PVOID StartContext)
                    {
                       if(KeyInput.Flags & KEY_E0)
                       {
-                         gQueueKeyStateTable[VK_RMENU] = 0x80;
+                         gKeyStateTable[VK_RMENU] = KS_DOWN_BIT;
                       }
                       else
                       {
-                         gQueueKeyStateTable[VK_LMENU] = 0x80;
+                         gKeyStateTable[VK_LMENU] = KS_DOWN_BIT;
                          bLeftAlt = TRUE;
                       }
 
-                      gQueueKeyStateTable[VK_MENU] = 0x80;
+                      gKeyStateTable[VK_MENU] = KS_DOWN_BIT;
                    }
 
                   /* Read the next key before sending this one */
@@ -717,14 +717,14 @@ KeyboardThreadMain(PVOID StartContext)
                         IntKeyboardSendWinKeyMsg();
                      else if (fsModifiers == MOD_ALT)
                      {
-                        gQueueKeyStateTable[VK_MENU] = 0;
+                        gKeyStateTable[VK_MENU] = 0;
                         if(bLeftAlt)
                         {
-                           gQueueKeyStateTable[VK_LMENU] = 0;
+                           gKeyStateTable[VK_LMENU] = 0;
                         }
                         else
                         {
-                           gQueueKeyStateTable[VK_RMENU] = 0;
+                           gKeyStateTable[VK_RMENU] = 0;
                         }
                         co_IntKeyboardSendAltKeyMsg();
                      }
@@ -1138,12 +1138,12 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
 
-   if (gQueueKeyStateTable[VK_SHIFT] & 0xc0)
+   if (gKeyStateTable[VK_SHIFT] & KS_DOWN_BIT)
    {
       Msg.wParam |= MK_SHIFT;
    }
 
-   if (gQueueKeyStateTable[VK_CONTROL] & 0xc0)
+   if (gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)
    {
       Msg.wParam |= MK_CONTROL;
    }
@@ -1154,7 +1154,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    }
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {
-      gQueueKeyStateTable[VK_LBUTTON] |= 0xc0;
+      gKeyStateTable[VK_LBUTTON] |= KS_DOWN_BIT;
       Msg.message = SwapBtnMsg[0][SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
@@ -1162,7 +1162,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    }
    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
    {
-      gQueueKeyStateTable[VK_LBUTTON] &= ~0x80;
+      gKeyStateTable[VK_LBUTTON] &= ~KS_DOWN_BIT;
       Msg.message = SwapBtnMsg[1][SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
@@ -1170,7 +1170,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    }
    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
    {
-      gQueueKeyStateTable[VK_MBUTTON] |= 0xc0;
+      gKeyStateTable[VK_MBUTTON] |= KS_DOWN_BIT;
       Msg.message = WM_MBUTTONDOWN;
       CurInfo->ButtonsDown |= MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
@@ -1178,7 +1178,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    }
    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
    {
-      gQueueKeyStateTable[VK_MBUTTON] &= ~0x80;
+      gKeyStateTable[VK_MBUTTON] &= ~KS_DOWN_BIT;
       Msg.message = WM_MBUTTONUP;
       CurInfo->ButtonsDown &= ~MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
@@ -1186,7 +1186,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    }
    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
    {
-      gQueueKeyStateTable[VK_RBUTTON] |= 0xc0;
+      gKeyStateTable[VK_RBUTTON] |= KS_DOWN_BIT;
       Msg.message = SwapBtnMsg[0][!SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
@@ -1194,7 +1194,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
    }
    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
    {
-      gQueueKeyStateTable[VK_RBUTTON] &= ~0x80;
+      gKeyStateTable[VK_RBUTTON] &= ~KS_DOWN_BIT;
       Msg.message = SwapBtnMsg[1][!SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
@@ -1213,14 +1213,14 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = WM_XBUTTONDOWN;
       if(mi->mouseData & XBUTTON1)
       {
-         gQueueKeyStateTable[VK_XBUTTON1] |= 0xc0;
+         gKeyStateTable[VK_XBUTTON1] |= KS_DOWN_BIT;
          CurInfo->ButtonsDown |= MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
          co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
       if(mi->mouseData & XBUTTON2)
       {
-         gQueueKeyStateTable[VK_XBUTTON2] |= 0xc0;
+         gKeyStateTable[VK_XBUTTON2] |= KS_DOWN_BIT;
          CurInfo->ButtonsDown |= MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
          co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
@@ -1231,14 +1231,14 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = WM_XBUTTONUP;
       if(mi->mouseData & XBUTTON1)
       {
-         gQueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
+         gKeyStateTable[VK_XBUTTON1] &= ~KS_DOWN_BIT;
          CurInfo->ButtonsDown &= ~MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
          co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
       if(mi->mouseData & XBUTTON2)
       {
-         gQueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
+         gKeyStateTable[VK_XBUTTON2] &= ~KS_DOWN_BIT;
          CurInfo->ButtonsDown &= ~MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
          co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
@@ -1315,9 +1315,9 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    if (ki->dwFlags & KEYEVENTF_KEYUP)
    {
       Msg.message = WM_KEYUP;
-      if (((gQueueKeyStateTable[VK_MENU] & 0x80) &&
+      if (((gKeyStateTable[VK_MENU] & KS_DOWN_BIT) &&
           ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
-           || !(gQueueKeyStateTable[VK_CONTROL] & 0x80)))
+           || !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)))
           || (wVkStripped == VK_F10))
       {
          if( TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
@@ -1330,14 +1330,14 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    else
    {
       Msg.message = WM_KEYDOWN;
-      if (((gQueueKeyStateTable[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
-          !(gQueueKeyStateTable[VK_CONTROL] & 0x80 || wVkStripped == VK_CONTROL))
+      if (((gKeyStateTable[VK_MENU] & KS_DOWN_BIT || wVkStripped == VK_MENU) &&
+          !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT || wVkStripped == VK_CONTROL))
           || (wVkStripped == VK_F10))
       {
          Msg.message = WM_SYSKEYDOWN;
          TrackSysKey = wVkStripped;
       }
-      if (!(ki->dwFlags & KEYEVENTF_UNICODE) && gQueueKeyStateTable[wVk] & 0x80) flags |= KF_REPEAT;
+      if (!(ki->dwFlags & KEYEVENTF_UNICODE) && gKeyStateTable[wVk] & KS_DOWN_BIT) flags |= KF_REPEAT;
    }
 
    if (ki->dwFlags & KEYEVENTF_UNICODE)
@@ -1350,17 +1350,17 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    {
       if (ki->dwFlags & KEYEVENTF_KEYUP)
       {
-         gQueueKeyStateTable[wVk] &= ~0x80;
-         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
+         gKeyStateTable[wVk] &= ~KS_DOWN_BIT;
+         gKeyStateTable[wVkStripped] = gKeyStateTable[wVkL] | gKeyStateTable[wVkR];
       }
       else
       {
-         if (!(gQueueKeyStateTable[wVk] & 0x80)) gQueueKeyStateTable[wVk] ^= 0x01;
-         gQueueKeyStateTable[wVk] |= 0xc0;
-         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
+         if (!(gKeyStateTable[wVk] & KS_DOWN_BIT)) gKeyStateTable[wVk] ^= KS_LOCK_BIT;
+         gKeyStateTable[wVk] |= KS_DOWN_BIT;
+         gKeyStateTable[wVkStripped] = gKeyStateTable[wVkL] | gKeyStateTable[wVkR];
       }
 
-      if (gQueueKeyStateTable[VK_MENU] & 0x80) flags |= KF_ALTDOWN;
+      if (gKeyStateTable[VK_MENU] & KS_DOWN_BIT) flags |= KF_ALTDOWN;
 
       if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
 

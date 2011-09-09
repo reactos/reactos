@@ -32,7 +32,7 @@
 
 DBG_DEFAULT_CHANNEL(UserKbd);
 
-BYTE gQueueKeyStateTable[256];
+BYTE gKeyStateTable[0x100];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -42,7 +42,7 @@ NTSTATUS
 NTAPI
 InitKeyboardImpl(VOID)
 {
-   RtlZeroMemory(&gQueueKeyStateTable,0x100);
+   RtlZeroMemory(&gKeyStateTable, 0x100);
    return STATUS_SUCCESS;
 }
 
@@ -69,7 +69,7 @@ static VOID APIENTRY SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
    if (vk == VK_CAPITAL || vk == VK_NUMLOCK)
    {
       if (down)
-         gQueueKeyStateTable[vk] ^= KS_LOCK_BIT;
+         gKeyStateTable[vk] ^= KS_LOCK_BIT;
    }
 
    if (vk == VK_SHIFT)
@@ -80,46 +80,46 @@ static VOID APIENTRY SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
       vk = ext ? VK_RMENU : VK_LMENU;
 
    if (down)
-      gQueueKeyStateTable[vk] |= KS_DOWN_BIT;
+      gKeyStateTable[vk] |= KS_DOWN_BIT;
    else
-      gQueueKeyStateTable[vk] &= ~KS_DOWN_MASK;
+      gKeyStateTable[vk] &= ~KS_DOWN_BIT;
 
    if (vk == VK_LSHIFT || vk == VK_RSHIFT)
    {
-      if ((gQueueKeyStateTable[VK_LSHIFT] & KS_DOWN_BIT) ||
-            (gQueueKeyStateTable[VK_RSHIFT] & KS_DOWN_BIT))
+      if ((gKeyStateTable[VK_LSHIFT] & KS_DOWN_BIT) ||
+            (gKeyStateTable[VK_RSHIFT] & KS_DOWN_BIT))
       {
-         gQueueKeyStateTable[VK_SHIFT] |= KS_DOWN_BIT;
+         gKeyStateTable[VK_SHIFT] |= KS_DOWN_BIT;
       }
       else
       {
-         gQueueKeyStateTable[VK_SHIFT] &= ~KS_DOWN_MASK;
+         gKeyStateTable[VK_SHIFT] &= ~KS_DOWN_BIT;
       }
    }
 
    if (vk == VK_LCONTROL || vk == VK_RCONTROL)
    {
-      if ((gQueueKeyStateTable[VK_LCONTROL] & KS_DOWN_BIT) ||
-            (gQueueKeyStateTable[VK_RCONTROL] & KS_DOWN_BIT))
+      if ((gKeyStateTable[VK_LCONTROL] & KS_DOWN_BIT) ||
+            (gKeyStateTable[VK_RCONTROL] & KS_DOWN_BIT))
       {
-         gQueueKeyStateTable[VK_CONTROL] |= KS_DOWN_BIT;
+         gKeyStateTable[VK_CONTROL] |= KS_DOWN_BIT;
       }
       else
       {
-         gQueueKeyStateTable[VK_CONTROL] &= ~KS_DOWN_MASK;
+         gKeyStateTable[VK_CONTROL] &= ~KS_DOWN_BIT;
       }
    }
 
    if (vk == VK_LMENU || vk == VK_RMENU)
    {
-      if ((gQueueKeyStateTable[VK_LMENU] & KS_DOWN_BIT) ||
-            (gQueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT))
+      if ((gKeyStateTable[VK_LMENU] & KS_DOWN_BIT) ||
+            (gKeyStateTable[VK_RMENU] & KS_DOWN_BIT))
       {
-         gQueueKeyStateTable[VK_MENU] |= KS_DOWN_BIT;
+         gKeyStateTable[VK_MENU] |= KS_DOWN_BIT;
       }
       else
       {
-         gQueueKeyStateTable[VK_MENU] &= ~KS_DOWN_MASK;
+         gKeyStateTable[VK_MENU] &= ~KS_DOWN_BIT;
       }
    }
 }
@@ -338,8 +338,8 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
 
    if( key < 0x100 )
    {
-      ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-            (gQueueKeyStateTable[key] & KS_LOCK_BIT);
+      ret = ((DWORD)(gKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
+            (gKeyStateTable[key] & KS_LOCK_BIT);
       if ( ret & 0x8000 )
          ret |= 0xFFFF0000; // If down, windows returns 0xFFFF8000.
    }
@@ -359,19 +359,19 @@ WORD FASTCALL get_key_state(void)
 
     if (gpsi->aiSysMet[SM_SWAPBUTTON])
     {
-        if (gQueueKeyStateTable[VK_RBUTTON] & 0x80) ret |= MK_LBUTTON;
-        if (gQueueKeyStateTable[VK_LBUTTON] & 0x80) ret |= MK_RBUTTON;
+        if (gKeyStateTable[VK_RBUTTON] & KS_DOWN_BIT) ret |= MK_LBUTTON;
+        if (gKeyStateTable[VK_LBUTTON] & KS_DOWN_BIT) ret |= MK_RBUTTON;
     }
     else
     {
-        if (gQueueKeyStateTable[VK_LBUTTON] & 0x80) ret |= MK_LBUTTON;
-        if (gQueueKeyStateTable[VK_RBUTTON] & 0x80) ret |= MK_RBUTTON;
+        if (gKeyStateTable[VK_LBUTTON] & KS_DOWN_BIT) ret |= MK_LBUTTON;
+        if (gKeyStateTable[VK_RBUTTON] & KS_DOWN_BIT) ret |= MK_RBUTTON;
     }
-    if (gQueueKeyStateTable[VK_MBUTTON]  & 0x80) ret |= MK_MBUTTON;
-    if (gQueueKeyStateTable[VK_SHIFT]    & 0x80) ret |= MK_SHIFT;
-    if (gQueueKeyStateTable[VK_CONTROL]  & 0x80) ret |= MK_CONTROL;
-    if (gQueueKeyStateTable[VK_XBUTTON1] & 0x80) ret |= MK_XBUTTON1;
-    if (gQueueKeyStateTable[VK_XBUTTON2] & 0x80) ret |= MK_XBUTTON2;
+    if (gKeyStateTable[VK_MBUTTON]  & KS_DOWN_BIT) ret |= MK_MBUTTON;
+    if (gKeyStateTable[VK_SHIFT]    & KS_DOWN_BIT) ret |= MK_SHIFT;
+    if (gKeyStateTable[VK_CONTROL]  & KS_DOWN_BIT) ret |= MK_CONTROL;
+    if (gKeyStateTable[VK_XBUTTON1] & KS_DOWN_BIT) ret |= MK_XBUTTON1;
+    if (gKeyStateTable[VK_XBUTTON2] & KS_DOWN_BIT) ret |= MK_XBUTTON2;
     return ret;
 }
 
@@ -443,7 +443,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
    UState = ToUnicodeInner( lpMsg->wParam,
                             HIWORD(lpMsg->lParam) & 0xff,
-                            gQueueKeyStateTable,
+                            gKeyStateTable,
                             wp,
                             2,
                             0,
@@ -850,7 +850,7 @@ W32kKeyProcessMessage(LPMSG Msg,
 
    /* arty -- handle numpad -- On real windows, the actual key produced
     * by the messaging layer is different based on the state of numlock. */
-   ModifierBits = ModBits(KeyboardLayout,gQueueKeyStateTable);
+   ModifierBits = ModBits(KeyboardLayout,gKeyStateTable);
 
    /* Get the raw scan code, so we can look up whether the key is a numpad
     * key
@@ -934,7 +934,7 @@ W32kKeyProcessMessage(LPMSG Msg,
    }
 
    /* We need to unset SYSKEYDOWN if the ALT key is an ALT+Gr */
-   if( gQueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT )
+   if( gKeyStateTable[VK_RMENU] & KS_DOWN_BIT )
    {
       if( Msg->message == WM_SYSKEYDOWN )
          Msg->message = WM_KEYDOWN;

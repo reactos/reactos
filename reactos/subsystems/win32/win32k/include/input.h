@@ -28,7 +28,6 @@ extern PATTACHINFO gpai;
 #define KBL_RESET 4
 
 /* Key States */
-#define KS_DOWN_MASK     0xc0
 #define KS_DOWN_BIT      0x80
 #define KS_LOCK_BIT      0x01
 /* Lock modifiers */
