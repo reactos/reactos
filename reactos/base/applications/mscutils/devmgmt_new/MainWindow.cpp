@@ -208,7 +208,7 @@ CMainWindow::OnCreate(HWND hwnd)
         if (CreateStatusBar())
         {
             /* Create the device view object */
-            m_DeviceView = new CDeviceView();
+            m_DeviceView = new CDeviceView(m_hMainWnd);
 
             /* Initialize it */
             if (m_DeviceView->Initialize())
@@ -217,12 +217,47 @@ CMainWindow::OnCreate(HWND hwnd)
                 ShowWindow(hwnd, m_CmdShow);
 
                 /* Set as handled */
-                //RetCode = 0;
+                RetCode = 0;
             }
         }
     }
 
     return RetCode;
+}
+
+LRESULT
+CMainWindow::OnSize()
+{
+    RECT rcClient, rcTool, rcStatus;
+    INT lvHeight, iToolHeight, iStatusHeight;
+
+    /* Autosize the toolbar */
+    SendMessage(m_hToolBar, TB_AUTOSIZE, 0, 0);
+
+    /* Get the toolbar rect and save the height */
+    GetWindowRect(m_hToolBar, &rcTool);
+    iToolHeight = rcTool.bottom - rcTool.top;
+
+    /* Resize the status bar */
+    SendMessage(m_hStatusBar, WM_SIZE, 0, 0);
+
+    /* Get the statusbar rect and save the height */
+    GetWindowRect(m_hStatusBar, &rcStatus);
+    iStatusHeight = rcStatus.bottom - rcStatus.top;
+
+    /* Get the full client rect */
+    GetClientRect(m_hMainWnd, &rcClient);
+
+    /* Calculate the remaining height for the treeview */
+    lvHeight = rcClient.bottom - iToolHeight - iStatusHeight;
+
+    /* Resize the device view */
+    m_DeviceView->Size(0,
+                       iToolHeight,
+                       rcClient.right,
+                       lvHeight);
+
+    return 0;
 }
 
 LRESULT
@@ -348,6 +383,12 @@ CMainWindow::MainWndProc(HWND hwnd,
 
             /* Call the create handler */
             RetCode = pThis->OnCreate(hwnd);
+            break;
+        }
+
+        case WM_SIZE:
+        {
+            RetCode = pThis->OnSize();
             break;
         }
 
