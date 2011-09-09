@@ -176,11 +176,6 @@ extern PWLSESSION WLSession;
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
   )
 
-/* user32 */
-BOOL WINAPI
-UpdatePerUserSystemParameters(DWORD dwUnknown,
-                              DWORD dwReserved);
-
 /* environment.c */
 BOOL
 CreateUserEnvironment(IN PWLSESSION Session);
