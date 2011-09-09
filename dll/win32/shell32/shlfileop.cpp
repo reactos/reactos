@@ -307,8 +307,6 @@ static BOOL SHELL_ConfirmDialogW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir, FI
     HICON hIcon;
     int ret;
 
-    DbgPrint("[shell32, SHELL_ConfirmDialogW] Called\n");
-
     assert(nKindOfDialog >= 0 && nKindOfDialog < 32);
     if (op && (op->dwYesToAllMask & (1 << nKindOfDialog)))
         return TRUE;
@@ -744,8 +742,6 @@ static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
     BOOL ret;
     DWORD attribs;
 
-    DbgPrint("[shell32, SHNotifyCopyFileW] Called\n");
-
     TRACE("(%s %s %s)\n", debugstr_w(src), debugstr_w(dest), bFailIfExists ? "failIfExists" : "");
 
     /* Destination file may already exist with read only attribute */
@@ -756,10 +752,9 @@ static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
     if (GetFileAttributesW(dest) & FILE_ATTRIBUTE_READONLY)
     {
         SetFileAttributesW(dest, attribs & ~FILE_ATTRIBUTE_READONLY);
-        DbgPrint("[shell32, SHNotifyCopyFileW] Something went really WRONG...%ls, we still have FILE_ATTRIBUTE_READONLY\n", dest);
         if (GetFileAttributesW(dest) & FILE_ATTRIBUTE_READONLY)
         {
-            DbgPrint("[shell32, SHNotifyCopyFileW] STILL SHIT\n");
+            TRACE("[shell32, SHNotifyCopyFileW] STILL SHIT\n");
         }
     }
 
@@ -1407,7 +1402,6 @@ static HRESULT copy_files(FILE_OPERATION *op, const FILE_LIST *flFrom, FILE_LIST
         {
             if (!copy_file_to_file(op, entryToCopy->szFullPath, fileDest->szFullPath))
             {
-                DbgPrint("[shell32, copy_files] copy_file_to_file failed\n");
                 op->req->fAnyOperationsAborted = TRUE;
                 return ERROR_CANCELLED;
             }

@@ -457,9 +457,6 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     if (psei->fMask & SEE_MASK_NO_CONSOLE)
         dwCreationFlags |= CREATE_NEW_CONSOLE;
 
-    //DbgPrint("[shell32, SHELL_ExecuteW] CreateProcessW cmd = %ws\n", (LPWSTR)lpCmd);
-    //DbgBreakPoint();
-
     if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
                        lpDirectory, &startup, &info))
     {
@@ -804,7 +801,6 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOpera
             SHELL_ArgifyW(lpResult, resultLen, command, xlpFile, pidl, args, &finishedLen);
             if (finishedLen > resultLen)
                 ERR("Argify buffer not large enough.. truncated\n");
-            DbgPrint("[shell32, SHELL_FindExecutable] Remove double quotation marks and command line arguments\n");
             /* Remove double quotation marks and command line arguments */
             if (*lpResult == '"')
             {

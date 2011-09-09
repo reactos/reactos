@@ -140,7 +140,6 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
     static WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
-    DbgPrint("[shell32, CDesktopFolderEnum::Initialize] Called with flags = %d\n", dwFlags);
 
     /* enumerate the root folders */
     if (dwFlags & SHCONTF_FOLDERS)
@@ -339,7 +338,6 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
     else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
     {
         *ppidl = pidlTemp;
-        DbgPrint("[shell32, CDesktopFolder::ParseDisplayName] 1 *ppidl = 0x%x\n", *ppidl);
         return S_OK;
     }
     else
@@ -406,7 +404,6 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     HRESULT                                    hResult;
 
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
-    DbgPrint("[shell32, CDesktopFolder::EnumObjects] Called with flags = %d\n", dwFlags);
 
     if (ppEnumIDList == NULL)
         return E_POINTER;

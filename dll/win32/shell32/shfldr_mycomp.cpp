@@ -77,8 +77,6 @@ CDrivesFolderEnum::~CDrivesFolderEnum()
 
 HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
 {
-    DbgPrint("[shell32, CDrivesFolderEnum::Initialize] Called with flags = %d\n", dwFlags);
-
     if (CreateMyCompEnumList(dwFlags) == FALSE)
         return E_FAIL;
     return S_OK;
@@ -98,8 +96,6 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
     BOOL ret = TRUE;
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
-
-    DbgPrint("[shell32, CDrivesFolderEnum::CreateMyCompEnumList] Called with flags = %d\n", dwFlags);
 
     /* enumerate the folders */
     if (dwFlags & SHCONTF_FOLDERS)
@@ -260,8 +256,6 @@ HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUM
 
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
-    DbgPrint("[shell32, CDrivesFolder::EnumObjects] Called with flags = %d\n", dwFlags);
-
     if (ppEnumIDList == NULL)
         return E_POINTER;
     
@@ -277,8 +271,6 @@ HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUM
         delete theEnumerator;
         return hResult;
     }
-
-    DbgPrint("[shell32, CDrivesFolder::EnumObjects] Calling theEnumerator->Initialize\n");
 
     hResult = theEnumerator->Initialize (hwndOwner, dwFlags);
     if (FAILED (hResult))
