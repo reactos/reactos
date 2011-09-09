@@ -602,7 +602,7 @@ KeyboardThreadMain(PVOID StartContext)
          }
          if(!NT_SUCCESS(Status))
          {
-            ERR("Win32K: Failed to read from mouse.\n");
+            ERR("Win32K: Failed to read from keyboard.\n");
             return; //(Status);
          }
 

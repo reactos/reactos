@@ -318,7 +318,7 @@ ToUnicodeInner(UINT wVirtKey,
    {
       if( bLigature )
       {
-         TRACE("Not handling ligature (yet)\n" );
+         WARN("Not handling ligature (yet)\n" );
          return 0;
       }
 
@@ -579,7 +579,7 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
 
    switch( Type )
    {
-      case 0:
+      case MAPVK_VK_TO_VSC:
          if( Code == VK_SHIFT )
             Code = VK_LSHIFT;
          if( Code == VK_MENU )
@@ -589,13 +589,13 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
          ret = VkToScan( Code, FALSE, keyLayout );
          break;
 
-      case 1:
+      case MAPVK_VSC_TO_VK:
          ret =
             DontDistinguishShifts
-            (IntMapVirtualKeyEx( Code, 3, keyLayout ) );
+            (IntMapVirtualKeyEx( Code, MAPVK_VSC_TO_VK_EX, keyLayout ) );
          break;
 
-      case 2:
+      case MAPVK_VK_TO_CHAR:
          {
             WCHAR wp[2] = {0};
 
@@ -605,10 +605,17 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
          }
          break;
 
-      case 3:
+      case MAPVK_VSC_TO_VK_EX:
 
          ret = ScanToVk( Code, FALSE, keyLayout );
          break;
+      
+      case MAPVK_VK_TO_VSC_EX:
+         STUB;
+         break;
+      
+      default:
+         ERR("Wrong type value: %u\n", Type);
    }
 
    return ret;
@@ -796,7 +803,7 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    {
       WCHAR UCName[2];
 
-      UCName[0] = W32kSimpleToupper(IntMapVirtualKeyEx( VkCode, 2, keyLayout ));
+      UCName[0] = W32kSimpleToupper(IntMapVirtualKeyEx( VkCode, MAPVK_VK_TO_CHAR, keyLayout ));
       UCName[1] = 0;
       ret = 1;
 
@@ -860,7 +867,7 @@ W32kKeyProcessMessage(LPMSG Msg,
    TRACE("ScanCode %04x\n",ScanCode);
 
    BaseMapping = Msg->wParam =
-                    IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
+                    IntMapVirtualKeyEx( ScanCode, MAPVK_VSC_TO_VK, KeyboardLayout );
    if( Prefix == 0 )
    {
       if( ScanCode >= KeyboardLayout->bMaxVSCtoVK )
