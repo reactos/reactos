@@ -3,7 +3,7 @@
  *
  * Copyright 2002 Robert Dickenson
  * Copyright 2003-2004 Ivan Leo Murray-Smith
- * Copyright 2004 Sylvain Pétréolle
+ * Copyright 2004 Sylvain PÃ©trÃ©olle
  * Copyright 2007 Paolo Devoti
  *
  * This library is free software; you can redistribute it and/or
@@ -355,7 +355,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_EXIT        "Esce dall'editor del Registro"
     ID_FAVOURITES_ADDTOFAVOURITES "Aggiunge una chiave alla lista dei Preferiti"
-    ID_FAVOURITES_REMOVEFAVOURITE "Rimuove una o più chiavi dalla lista dei preferiti"
+    ID_FAVOURITES_REMOVEFAVOURITE "Rimuove una o piÃ¹ chiavi dalla lista dei preferiti"
     ID_VIEW_STATUSBAR       "Mostra o nasconde la barra di stato"
     ID_VIEW_SPLIT           "Cambia la posizione del separatore tra due pannelli"
     ID_VIEW_REFRESH         "Aggiorna la finestra"
@@ -384,7 +384,7 @@ BEGIN
     IDS_ERR_DELVAL_CAPTION  "Errore nella cancellazione dei valori"
     IDS_ERR_DELETEVALUE     "Impossibile cancellare tutti i valori indicati!"
     IDS_ERR_RENVAL_CAPTION  "Errore nel rinominare il valore"
-    IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare %s. Il nome indicato è vuoto. Riprovate con un altro nome."
+    IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare %s. Il nome indicato Ã¨ vuoto. Riprovate con un altro nome."
     IDS_NEW_KEY             "Nuova chiave #%d"
     IDS_NEW_VALUE           "Nuovo valore #%d"
 END
@@ -448,7 +448,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_IMPORT_PROMPT             "Aggiungere l'informazione al registro?"
-  IDS_IMPORTED_OK               "L'informazione è stata aggiunta al registro"
+  IDS_IMPORTED_OK               "L'informazione Ã¨ stata aggiunta al registro"
 END
 
 STRINGTABLE DISCARDABLE

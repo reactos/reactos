@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/mingw-w64)
 add_definitions(-D_CRTBLD)
 
 if(NOT MSVC)
-    add_definitions(-Wno-main)
+    add_compile_flags("-Wno-main")
 endif()
 
 list(APPEND MINGW_COMMON_SOURCE

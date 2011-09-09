@@ -3,15 +3,15 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "FIND: Localiza uma seqüência de texto em um ou mais arquivos.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""seqüência"" [ arquivo... ]\n\
-    /C  Exibe apenas o número de linhas que contêm a seqüência.\n\
-    /I  Ignora maiúsculas/minúsculas ao localizar uma seqüência.\n\
-    /N  Exibe o número de cada linha, iniciando no 1.\n\
-    /V  Exibe todas as linhas que NÃO contêm a seqüência especificada."
+IDS_USAGE, "FIND: Localiza uma seqÃ¼Ãªncia de texto em um ou mais arquivos.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""seqÃ¼Ãªncia"" [ arquivo... ]\n\
+    /C  Exibe apenas o nÃºmero de linhas que contÃªm a seqÃ¼Ãªncia.\n\
+    /I  Ignora maiÃºsculas/minÃºsculas ao localizar uma seqÃ¼Ãªncia.\n\
+    /N  Exibe o nÃºmero de cada linha, iniciando no 1.\n\
+    /V  Exibe todas as linhas que NÃƒO contÃªm a seqÃ¼Ãªncia especificada."
 
-IDS_NO_SUCH_FILE, "FIND: %s: Arquivo não encontrado\n"
+IDS_NO_SUCH_FILE, "FIND: %s: Arquivo nÃ£o encontrado\n"
 
-IDS_CANNOT_OPEN, "FIND: %s: Não foi possível abrir o arquivo\n"
+IDS_CANNOT_OPEN, "FIND: %s: NÃ£o foi possÃ­vel abrir o arquivo\n"
 
 END

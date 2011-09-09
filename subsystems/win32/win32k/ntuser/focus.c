@@ -164,9 +164,8 @@ co_IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      TRACE("sending WM_KILLFOCUS to hwnd 0x%x\n", hWndPrev);
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      co_IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
@@ -177,7 +176,7 @@ co_IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
    {
       PWND pWnd = UserGetWindowObject(hWnd);
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, pWnd, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
+      co_IntPostOrSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
 
@@ -403,14 +402,13 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
          return 0;
       }
       ThreadQueue->FocusWindow = Window->head.h;
-      TRACE("Focus: 0x%x -> 0x%x\n", hWndPrev, Window->head.h);
+      TRACE("Focus: %d -> %d\n", hWndPrev, Window->head.h);
 
       co_IntSendKillFocusMessages(hWndPrev, Window->head.h);
       co_IntSendSetFocusMessages(hWndPrev, Window->head.h);
    }
    else
    {
-      TRACE("Focus: 0x%x -> 0x%x\n", hWndPrev, 0);
       ThreadQueue->FocusWindow = 0;
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
       {
@@ -699,7 +697,7 @@ NtUserSetFocus(HWND hWnd)
    DECLARE_RETURN(HWND);
    HWND ret;
 
-   TRACE("Enter NtUserSetFocus(0x%x)\n", hWnd);
+   TRACE("Enter NtUserSetFocus(%x)\n", hWnd);
    UserEnterExclusive();
 
    if (hWnd)

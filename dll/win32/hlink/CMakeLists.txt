@@ -13,16 +13,14 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
 
 add_library(hlink SHARED ${SOURCE})
-
 set_module_type(hlink win32dll)
-
 target_link_libraries(hlink uuid wine)
+add_delay_importlibs(hlink urlmon)
 
 add_importlibs(hlink
     shell32
     ole32
     advapi32
-    urlmon
     msvcrt
     kernel32
     ntdll)

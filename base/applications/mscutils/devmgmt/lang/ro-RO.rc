@@ -2,24 +2,24 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Fi∫ier"
+  POPUP "&Fi¬∫ier"
   BEGIN
-    MENUITEM "I&e∫ire",                   IDC_EXIT
+    MENUITEM "I&e¬∫ire",                   IDC_EXIT
   END
-  POPUP "Ac˛iune"
+  POPUP "Ac√æiune"
   BEGIN
     MENUITEM "Imprimare",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Propriet„˛i",              IDC_PROP, GRAYED
+    MENUITEM "Propriet√£√æi",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Ajutor",                    IDC_PROGHELP, GRAYED
   END
   POPUP "Vizualizare"
   BEGIN
-    MENUITEM "Dispozitive dup„ tip",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispozitive dup„ conexiune",   IDC_STATIC, GRAYED
-    MENUITEM "Resurse dup„ tip",       IDC_STATIC, GRAYED
-    MENUITEM "Resurse dup„ conexiune", IDC_STATIC, GRAYED
+    MENUITEM "Dispozitive dup√£ tip",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Dispozitive dup√£ conexiune",   IDC_STATIC, GRAYED
+    MENUITEM "Resurse dup√£ tip",       IDC_STATIC, GRAYED
+    MENUITEM "Resurse dup√£ conexiune", IDC_STATIC, GRAYED
   END
   POPUP "Ajutor"
   BEGIN
@@ -32,7 +32,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Propriet„˛i",              IDC_PROP, GRAYED
+    MENUITEM "Propriet√£√æi",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Ajutor",                    IDC_PROGHELP
   END
@@ -44,22 +44,22 @@ FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Gestionar de Dispozitive v0.1\nDrept de autor (C) 2006\nde Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
-  PUSHBUTTON "Œnchidere", IDOK, 75, 162, 44, 15
+  PUSHBUTTON "√énchidere", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Tradus Ón limba rom‚n„ de Petru Dimitriu.\r\nAcest program este software liber; pute˛i redistribui sau modifica programul sub termenii licen˛ei publice GNU a∫a cum este publicat„ de Free Software Foundation - fie versiunea 2 a licen˛ei, sau (la alegerea dvs.) oricare versiune ulterioar„.\r\n\r\nAcest program este distribuit Ón speran˛a c„ va fi de folos, dar F√R√ NICIO GARANﬁIE, nici m„car garan˛ia VANDABILIT√ﬁII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vede˛i Licen˛a GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui s„ fi primit o copie a licen˛ei Ómpreun„ cu acest program; dac„ nu, scrie˛i la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Tradus √Æn limba rom√¢n√£ de Petru Dimitriu.\r\nAcest program este software liber; pute√æi redistribui sau modifica programul sub termenii licen√æei publice GNU a¬∫a cum este publicat√£ de Free Software Foundation - fie versiunea 2 a licen√æei, sau (la alegerea dvs.) oricare versiune ulterioar√£.\r\n\r\nAcest program este distribuit √Æn speran√æa c√£ va fi de folos, dar F√ÉR√É NICIO GARAN√ûIE, nici m√£car garan√æia VANDABILIT√É√ûII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vede√æi Licen√æa GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui s√£ fi primit o copie a licen√æei √Æmpreun√£ cu acest program; dac√£ nu, scrie√æi la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Propriet„˛i"
-  IDS_TOOLTIP_REFRESH   "ReÓmprosp„tare"
+  IDS_TOOLTIP_PROP      "Propriet√£√æi"
+  IDS_TOOLTIP_REFRESH   "Re√Æmprosp√£tare"
   IDS_TOOLTIP_HELP      "Ajutor"
-  IDS_TOOLTIP_EXIT      "Ie∫ire"
+  IDS_TOOLTIP_EXIT      "Ie¬∫ire"
 END
 
 /* Hints */
@@ -67,16 +67,16 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Gestionarul de Dispozitive ReactOS"
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXIT         " P„r„se∫te programul."
-  IDS_HINT_REFRESH      " ReÓmprosp„teaz„ lista de servicii."
-  IDS_HINT_PROP         " Afieaz„ tabel cu propriet„˛i pentru selec˛ia curent„."
-  IDS_HINT_HELP         " Afi∫eaz„ fereastra de ajutor."
+  IDS_HINT_EXIT         " P√£r√£se¬∫te programul."
+  IDS_HINT_REFRESH      " Re√Æmprosp√£teaz√£ lista de servicii."
+  IDS_HINT_PROP         " Afieaz√£ tabel cu propriet√£√æi pentru selec√æia curent√£."
+  IDS_HINT_HELP         " Afi¬∫eaz√£ fereastra de ajutor."
   IDS_HINT_ABOUT        " Despre Gestionarul de Dispozitive ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Aduce fereastra la m„rimea normal„."
-  IDS_HINT_SYS_MOVE     " Mut„ fereastra."
-  IDS_HINT_SYS_SIZE     " Redimensioneaz„ fereastra."
-  IDS_HINT_SYS_MINIMIZE " Reduce fereastra la o pictogram„ pe ecran."
-  IDS_HINT_SYS_MAXIMIZE " M„re∫te fereastra astfel Ónc‚t aceasta s„ ocupe tot ecranul."
-  IDS_HINT_SYS_CLOSE    " Œnchide fereastra."
+  IDS_HINT_SYS_RESTORE  " Aduce fereastra la m√£rimea normal√£."
+  IDS_HINT_SYS_MOVE     " Mut√£ fereastra."
+  IDS_HINT_SYS_SIZE     " Redimensioneaz√£ fereastra."
+  IDS_HINT_SYS_MINIMIZE " Reduce fereastra la o pictogram√£ pe ecran."
+  IDS_HINT_SYS_MAXIMIZE " M√£re¬∫te fereastra astfel √Ænc√¢t aceasta s√£ ocupe tot ecranul."
+  IDS_HINT_SYS_CLOSE    " √énchide fereastra."
 END

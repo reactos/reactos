@@ -719,7 +719,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD n
     if (fRebarWindow == NULL)
         return E_FAIL;
 
-    if (IsEqualIID(pguidCmdGroup, IID_IDeskBand))
+    if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
     {
         switch (nCmdID)
         {

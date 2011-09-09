@@ -313,7 +313,7 @@ NtUserCallOneParam(
       }
       case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
          /* FIXME: Should use UserEnterShared */
-         RETURN(IntEnumClipboardFormats(Param));
+         RETURN(UserEnumClipboardFormats(Param));
 
       case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
           IntUserManualGuiCheck(Param);

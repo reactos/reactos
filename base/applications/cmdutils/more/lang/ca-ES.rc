@@ -2,13 +2,13 @@ LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE, "Mostra en pantalla el contingut p‡gina per p‡gina.\n\n\
+  IDS_USAGE, "Mostra en pantalla el contingut p√†gina per p√†gina.\n\n\
   MORE < [Unitat:][Ruta]Nom del fitxer\n\
-  InstrucciÛ | MORE \n\
+  Instrucci√≥ | MORE \n\
   MORE [Unitat:][Ruta]Nom del fitxer\n\n\
-  [Unitat:][Ruta]Nom del fitxer    Un fitxer, el contingut del qual ser‡ mostrat.\n\
-  InstrucciÛ\t\t     Una instrucciÛ, el resultat de la qual ser‡ mostrada.\n\n\
-  Al visualitzar ""-- Continua --"" heu de premer qualsevol tecla per visualitzar la seg¸ent p‡gina.\n"
+  [Unitat:][Ruta]Nom del fitxer    Un fitxer, el contingut del qual ser√† mostrat.\n\
+  Instrucci√≥\t\t     Una instrucci√≥, el resultat de la qual ser√† mostrada.\n\n\
+  Al visualitzar ""-- Continua --"" heu de premer qualsevol tecla per visualitzar la seg√ºent p√†gina.\n"
 
   IDS_CONTINUE, " -- Continua (100%) -- "
   IDS_FILE_ACCESS, "No puc accedir al fitxer %s."

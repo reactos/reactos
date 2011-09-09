@@ -183,7 +183,7 @@ typedef struct ext2_dirent		EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 #define LOG2_BLOCK_SIZE(sb)	(sb->log2_block_size + 10)
 
 /* The size of an ext2 block in bytes.  */
-#define EXT2_BLOCK_SIZE(sb)	(1 << LOG2_BLOCK_SIZE(sb))
+#define EXT2_BLOCK_SIZE(sb)	(((SIZE_T)1) << LOG2_BLOCK_SIZE(sb))
 
 /* The revision level.  */
 #define EXT2_REVISION(sb)	(sb->revision_level)

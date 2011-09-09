@@ -12,7 +12,7 @@ list(APPEND SOURCE
 add_library(smdll SHARED ${SOURCE})
 
 target_link_libraries(smdll smlib)
-set_entrypoint(smdll DllMainCRTStartup 12)
+set_module_type(smdll nativedll ENTRYPOINT DllMainCRTStartup 12)
 add_importlibs(smdll ntdll)
 add_pch(smdll precomp.h)
 add_dependencies(smdll psdk)

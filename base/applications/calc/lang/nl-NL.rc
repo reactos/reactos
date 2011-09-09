@@ -145,7 +145,7 @@ BEGIN
                     150,21,45,10
     CONTROL         "Radialen",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,
                     204,21,45,10
-    CONTROL         "Gradiënten",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+    CONTROL         "GradiÃ«nten",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
                     258,21,45,10
     PUSHBUTTON      "C",IDC_BUTTON_CANC,267,38,43,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -343,7 +343,7 @@ IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
 BEGIN
     POPUP "Bewerken"
     BEGIN
-        MENUITEM "Kopiëren\tCTRL-C",            IDM_EDIT_COPY
+        MENUITEM "KopiÃ«ren\tCTRL-C",            IDM_EDIT_COPY
         MENUITEM "Plakken\tCTRL-V",             IDM_EDIT_PASTE
     END
     POPUP "Beeld"
@@ -359,7 +359,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Graden\tF2",                  IDM_VIEW_DEG, CHECKED
         MENUITEM "Radialen\tF3",                IDM_VIEW_RAD, CHECKED
-        MENUITEM "Gradiënten\tF4",              IDM_VIEW_GRAD, CHECKED
+        MENUITEM "GradiÃ«nten\tF4",              IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Cijfergroepering",            IDM_VIEW_GROUP, CHECKED
     END
@@ -375,7 +375,7 @@ IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Kopiëren\tCTRL-C",            IDM_EDIT_COPY
+        MENUITEM "KopiÃ«ren\tCTRL-C",            IDM_EDIT_COPY
         MENUITEM "Plakken\tCTRL-V",             IDM_EDIT_PASTE
     END
     POPUP "Beeld"
@@ -408,7 +408,7 @@ IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Kopiëren\tCTRL-C",            IDM_EDIT_COPY
+        MENUITEM "KopiÃ«ren\tCTRL-C",            IDM_EDIT_COPY
         MENUITEM "Plakken\tCTRL-V",             IDM_EDIT_PASTE
     END
     POPUP "View"
@@ -458,7 +458,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ANGLE_DEGREES       "Graden"
-    IDS_ANGLE_GRADIANS      "Gradiënten"
+    IDS_ANGLE_GRADIANS      "GradiÃ«nten"
     IDS_ANGLE_RADIANS       "Radialen"
 END
 
@@ -536,18 +536,18 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °C calorieën"
+    IDS_ENERGY_15_C_CALORIES        "15 Â°C calorieÃ«n"
     IDS_ENERGY_BTUS                 "British thermal units"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_EVS                  "Elektronvolts"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
-    IDS_ENERGY_IT_CALORIES          "International Table calorieën"
-    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalorieën"
+    IDS_ENERGY_IT_CALORIES          "International Table calorieÃ«n"
+    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalorieÃ«n"
     IDS_ENERGY_JOULES               "Joules"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt uur"
-    IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calorieën"
-    IDS_ENERGY_TH_CALORIES          "Thermochemical calorieën"
+    IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calorieÃ«n"
+    IDS_ENERGY_TH_CALORIES          "Thermochemical calorieÃ«n"
 END
 
 // TYPES OF LENGTHS

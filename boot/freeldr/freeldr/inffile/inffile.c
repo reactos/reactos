@@ -320,7 +320,7 @@ InfpAddKeyToLine (PINFCACHELINE Line,
   if (Line->Key != NULL)
     return NULL;
 
-  Line->Key = (PCHAR)MmHeapAlloc (strlen (Key) + 1);
+  Line->Key = MmHeapAlloc(strlen(Key) + 1);
   if (Line->Key == NULL)
     return NULL;
 
@@ -431,7 +431,7 @@ __inline static int is_eol( struct parser *parser, const CHAR *ptr )
 /* push data from current token start up to pos into the current token */
 static int push_token( struct parser *parser, const CHAR *pos )
 {
-  unsigned int len = pos - parser->start;
+  SIZE_T len = pos - parser->start;
   const CHAR *src = parser->start;
   CHAR *dst = parser->token + parser->token_len;
 

@@ -1,10 +1,9 @@
 
 set_rc_compiler()
-set_unicode()
 
 add_executable(logon logon.c logon.rc)
 
-set_module_type(logon win32gui)
+set_module_type(logon win32gui UNICODE)
 set_target_properties(logon PROPERTIES SUFFIX ".scr")
 
 target_link_libraries(logon scrnsave)

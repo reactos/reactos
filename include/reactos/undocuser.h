@@ -95,6 +95,7 @@
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
+BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable);
 BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);

@@ -590,7 +590,7 @@ MmCreatePeb(IN PEPROCESS Process,
                                 ViewShare,
                                 MEM_TOP_DOWN,
                                 PAGE_READONLY);
-    DPRINT1("NLS Tables at: %p\n", TableBase);
+    DPRINT("NLS Tables at: %p\n", TableBase);
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup and exit */
@@ -602,7 +602,7 @@ MmCreatePeb(IN PEPROCESS Process,
     // Allocate the PEB
     //
     Status = MiCreatePebOrTeb(Process, sizeof(PEB), (PULONG_PTR)&Peb);
-    DPRINT1("PEB at: %p\n", Peb);
+    DPRINT("PEB at: %p\n", Peb);
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup and exit */

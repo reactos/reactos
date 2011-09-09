@@ -424,7 +424,7 @@ HalpRestoreIopm(VOID)
     //
     // Set default state
     //
-    RtlFillMemory(HalpSavedIoMap, 0xFF, IOPM_FULL_SIZE);
+    RtlFillMemory(HalpSavedIoMap, IOPM_FULL_SIZE, 0xFF);
 
     //
     // Restore the backed up copy, and initialize it

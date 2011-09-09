@@ -830,7 +830,8 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
         case OpNop:
             break;
         case OpDeref: {
-            ulong val, addr = stackpop(&stack);
+            ulong val;
+            void* addr = (void*)stackpop(&stack);
             if (!RosSymCallbacks.MemGetProc
                 (d->pe->fd,
                  &val,
@@ -840,7 +841,8 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
             stackpush(&stack, val);
         } break;
         case OpDerefSize: {
-            ulong val, addr = stackpop(&stack), size = dwarfget1(buf);
+            ulong val, size = dwarfget1(buf);
+            void* addr = (void*)stackpop(&stack);
             if (!RosSymCallbacks.MemGetProc
                 (d->pe->fd,
                  &val,
@@ -850,12 +852,13 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
             stackpush(&stack, val);
         } break;
         case OpFbreg: {
-            ulong val, addr = cfa, offset = dwarfget128s(buf);
+            ulong val, offset = dwarfget128s(buf);;
+            void* addr = (void*)cfa;
             werrstr("FBREG cfa %x offset %x", cfa, offset);
             if (!RosSymCallbacks.MemGetProc
                 (d->pe->fd,
                  &val,
-                 addr+offset,
+                 (PVOID)((ULONG_PTR)addr+offset),
                  d->addrsize))
                 goto fatal;
             stackpush(&stack, val);
@@ -873,13 +876,13 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
             } else if (opcode >= OpBreg0 && opcode < OpRegx) {
                 ulong val, 
                     reg = opcode - OpBreg0, 
-                    addr = registers->Registers[reg],
                     offset = dwarfget128s(buf);
+                void* addr = (void*)(ULONG_PTR)registers->Registers[reg];
                 werrstr("BREG[%d] reg %x offset %x", reg, addr, offset);
                 if (!RosSymCallbacks.MemGetProc
-                    (d->pe->fd,
+                    ((PVOID)d->pe->fd,
                      &val,
-                     addr + offset,
+                     (PVOID)((ULONG_PTR)addr + offset),
                      d->addrsize))
                     goto fatal;
                 stackpush(&stack, val);
@@ -964,7 +967,7 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
 void
 dwarfdumpsym(Dwarf *d, DwarfSym *s)
 {
-    int i, j;
+    int j;
     werrstr("tag %x\n", s->attrs.tag);
     for (j = 0; plist[j].name; j++) {
         char *have = ((char*)&s->attrs) + plist[j].haveoff;
@@ -996,7 +999,7 @@ dwarfgetparams(Dwarf *d, DwarfSym *s, ulong pc, int pnum, DwarfParam *paramblock
 			paramblocks[ip].type = param.attrs.type;
             paramblocks[ip].loctype = param.attrs.have.location;
             paramblocks[ip].len = param.attrs.location.b.len;
-			paramblocks[ip].fde = param.attrs.location.b.data;
+			paramblocks[ip].fde = (ulong)param.attrs.location.b.data;
             werrstr("param[%d] block %s -> type %x loctype %x fde %x len %x", 
                    ip, 
                    paramblocks[ip].name, 

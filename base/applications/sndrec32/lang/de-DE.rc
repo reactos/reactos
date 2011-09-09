@@ -22,7 +22,7 @@ BEGIN
     POPUP "Datei"
     BEGIN
         MENUITEM "Neu",                         ID_NEW
-        MENUITEM "Öffnen...",                   ID_FILE_OPEN
+        MENUITEM "Ã–ffnen...",                   ID_FILE_OPEN
         MENUITEM "Speichern",                   ID_FILE_SAVE, GRAYED
         MENUITEM "Speichern unter...",          ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
@@ -32,7 +32,7 @@ BEGIN
     MENUITEM "todo2",                       0
     POPUP "?"
     BEGIN
-        MENUITEM "Über...",                    ID__ABOUT
+        MENUITEM "Ãœber...",                    ID__ABOUT
     END
 END
 

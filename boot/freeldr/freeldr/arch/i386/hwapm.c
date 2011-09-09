@@ -23,6 +23,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(HWDETECT);
+
 static BOOLEAN
 FindApmBios(VOID)
 {
@@ -37,17 +39,17 @@ FindApmBios(VOID)
 
   if (INT386_SUCCESS(RegsOut))
     {
-      DPRINTM(DPRINT_HWDETECT, "Found APM BIOS\n");
-      DPRINTM(DPRINT_HWDETECT, "AH: %x\n", RegsOut.b.ah);
-      DPRINTM(DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al);
-      DPRINTM(DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh);
-      DPRINTM(DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl);
-      DPRINTM(DPRINT_HWDETECT, "CX: %x\n", RegsOut.w.cx);
+      TRACE("Found APM BIOS\n");
+      TRACE("AH: %x\n", RegsOut.b.ah);
+      TRACE("AL: %x\n", RegsOut.b.al);
+      TRACE("BH: %x\n", RegsOut.b.bh);
+      TRACE("BL: %x\n", RegsOut.b.bl);
+      TRACE("CX: %x\n", RegsOut.w.cx);
 
       return TRUE;
     }
 
-  DPRINTM(DPRINT_HWDETECT, "No APM BIOS found\n");
+  TRACE("No APM BIOS found\n");
 
   return FALSE;
 }

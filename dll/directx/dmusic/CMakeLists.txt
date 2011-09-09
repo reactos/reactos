@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-D__WINESRC__)
 
@@ -24,7 +23,7 @@ add_library(dmusic SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def)
 
-set_entrypoint(dmusic 0)
+set_module_type(dmusic win32dll UNICODE ENTRYPOINT 0)
 
 target_link_libraries(dmusic
     dxguid

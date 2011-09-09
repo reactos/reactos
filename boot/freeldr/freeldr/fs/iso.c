@@ -24,6 +24,8 @@
 
 #define SECTORSIZE 2048
 
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
+
 static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	PDIR_RECORD	Record;
@@ -31,7 +33,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 	ULONG i;
 	CHAR Name[32];
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
+	TRACE("IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
 
 	RtlZeroMemory(Name, 32 * sizeof(UCHAR));
 
@@ -53,18 +55,18 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 
 		if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
 		{
-			DPRINTM(DPRINT_FILESYSTEM, "Name '.'\n");
+			TRACE("Name '.'\n");
 		}
 		else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
 		{
-			DPRINTM(DPRINT_FILESYSTEM, "Name '..'\n");
+			TRACE("Name '..'\n");
 		}
 		else
 		{
 			for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
 				Name[i] = Record->FileId[i];
 			Name[i] = 0;
-			DPRINTM(DPRINT_FILESYSTEM, "Name '%s'\n", Name);
+			TRACE("Name '%s'\n", Name);
 
 			if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
 			{
@@ -101,15 +103,15 @@ static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG
 	ULONG Count;
 	ULONG ret;
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength);
+	TRACE("IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength);
 
 	SectorCount = ROUND_UP(DirectoryLength, SECTORSIZE) / SECTORSIZE;
-	DPRINTM(DPRINT_FILESYSTEM, "Trying to read (DirectoryCount) %d sectors.\n", SectorCount);
+	TRACE("Trying to read (DirectoryCount) %d sectors.\n", SectorCount);
 
 	//
 	// Attempt to allocate memory for directory buffer
 	//
-	DPRINTM(DPRINT_FILESYSTEM, "Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength);
+	TRACE("Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength);
 	DirectoryBuffer = MmHeapAlloc(DirectoryLength);
 	if (!DirectoryBuffer)
 		return ENOMEM;
@@ -158,7 +160,7 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
 	ULONG Count;
 	LONG ret;
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName);
+	TRACE("IsoLookupFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
 	RtlZeroMemory(&IsoFileInfo, sizeof(ISO_FILE_INFO));
@@ -249,8 +251,8 @@ LONG IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
 	PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFileInformation() FileSize = %d\n", FileHandle->FileSize);
-	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFileInformation() FilePointer = %d\n", FileHandle->FilePointer);
+	TRACE("IsoGetFileInformation() FileSize = %d\n", FileHandle->FileSize);
+	TRACE("IsoGetFileInformation() FilePointer = %d\n", FileHandle->FilePointer);
 
 	RtlZeroMemory(Information, sizeof(FILEINFORMATION));
 	Information->EndingAddress.LowPart = FileHandle->FileSize;
@@ -271,7 +273,7 @@ LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 	DeviceId = FsGetDeviceId(*FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoOpen() FileName = %s\n", Path);
+	TRACE("IsoOpen() FileName = %s\n", Path);
 
 	RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
 	ret = IsoLookupFile(Path, DeviceId, &TempFileInfo);
@@ -302,7 +304,7 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 	ULONG BytesRead;
 	LONG ret;
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
+	TRACE("IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
 
 	DeviceId = FsGetDeviceId(FileId);
 	*Count = 0;
@@ -452,7 +454,7 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 		FilePointer += N;
 	}
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoRead() done\n");
+	TRACE("IsoRead() done\n");
 
 	return ESUCCESS;
 }
@@ -461,7 +463,7 @@ LONG IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
 	PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoSeek() NewFilePointer = %lu\n", Position->LowPart);
+	TRACE("IsoSeek() NewFilePointer = %lu\n", Position->LowPart);
 
 	if (SeekMode != SeekAbsolute)
 		return EINVAL;

@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -12,7 +11,7 @@ add_library(dxdiagn SHARED
     regsvr.c
     ${CMAKE_CURRENT_BINARY_DIR}/dxdiagn.def)
 
-set_module_type(dxdiagn win32dll)
+set_module_type(dxdiagn win32dll UNICODE)
 
 target_link_libraries(dxdiagn uuid wine)
 

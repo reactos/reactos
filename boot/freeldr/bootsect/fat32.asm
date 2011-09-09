@@ -443,14 +443,14 @@ LoadFatSector:
 		je   LoadFatSectorAlreadyLoaded
 
 		mov  DWORD [FatSectorInCache],eax
-        mov  bx,7000h
+        mov  bx,9000h
         mov  es,bx
-        xor  bx,bx								; We will load it to [7000:0000h]
+        xor  bx,bx								; We will load it to [9000:0000h]
 		mov  cx,1
 		call ReadSectors
 
 LoadFatSectorAlreadyLoaded:
-        mov  bx,7000h
+        mov  bx,9000h
         mov  es,bx
 		pop  ecx
 		mov  eax,DWORD [es:ecx]					; Get FAT entry

@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\mmc\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:      ReactOS RAPPS
+ * FILE:         base\applications\mmc\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDM_CONSOLEROOT MENU DISCARDABLE
@@ -14,7 +15,7 @@ BEGIN
         MENUITEM "&Avsluta\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Hj‰lp"
+    POPUP "&Hj√§lp"
     BEGIN
         MENUITEM "&Om ReactOS Management Console...", ID_HELP_ABOUT
     END

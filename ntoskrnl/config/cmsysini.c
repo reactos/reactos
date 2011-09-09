@@ -1109,7 +1109,6 @@ CmpLoadHiveThread(IN PVOID StartContext)
     RegStart = RegName.Length;
 
     /* Build the base name */
-    RegName.Length = RegStart;
     RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].BaseName);
     RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
 

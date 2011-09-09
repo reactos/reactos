@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DLANGPACK)
 
@@ -47,7 +46,7 @@ list(APPEND SOURCE
 
 add_library(gdi32 SHARED ${SOURCE})
 
-set_module_type(gdi32 win32dll)
+set_module_type(gdi32 win32dll UNICODE)
 
 target_link_libraries(gdi32
     win32ksys

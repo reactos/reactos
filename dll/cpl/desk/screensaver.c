@@ -450,7 +450,7 @@ AddScreenSavers(HWND hwndDlg, PDATA pData)
     lpBackSlash = _tcsrchr(szSearchPath, _T('\\'));
     if (lpBackSlash != NULL)
     {
-        lpBackSlash = '\0';
+        *lpBackSlash = '\0';
         SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
     }
 }

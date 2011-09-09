@@ -74,7 +74,6 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
       return NULL;
    }
 
-   ASSERT(Menu->head.cLockObj >= 0);
    return Menu;
 }
 
@@ -137,11 +136,8 @@ IntGetMenuObject(HMENU hMenu)
 {
    PMENU_OBJECT Menu = UserGetMenuObject(hMenu);
    if (Menu)
-   {
-      ASSERT(Menu->head.cLockObj >= 0);
-
       Menu->head.cLockObj++;
-   }
+
    return Menu;
 }
 

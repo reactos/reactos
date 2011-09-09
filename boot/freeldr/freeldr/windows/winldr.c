@@ -24,11 +24,7 @@
 #include <ndk/ldrtypes.h>
 #include <debug.h>
 
-// TODO: Move to .h
-void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      PVOID *GdtIdt,
-                      ULONG *PcrBasePage,
-                      ULONG *TssBasePage);
+DBG_DEFAULT_CHANNEL(WINDOWS);
 
 //FIXME: Do a better way to retrieve Arc disk information
 extern ULONG reactos_disk_count;
@@ -43,17 +39,8 @@ extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
 extern void WinLdrSetupEms(IN PCHAR BootOptions);
 
-BOOLEAN
-WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
-                        IN PCH DllName,
-                        OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
-
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
-VOID WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
-VOID WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
-VOID WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
 
 // Init "phase 0"
 VOID
@@ -85,9 +72,9 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 // Init "phase 1"
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       PCHAR Options,
-                       PCHAR SystemRoot,
-                       PCHAR BootPath,
+                       LPCSTR Options,
+                       LPCSTR SystemRoot,
+                       LPCSTR BootPath,
                        USHORT VersionToBoot)
 {
 	/* Examples of correct options and paths */
@@ -107,9 +94,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	strncpy(ArcBoot, BootPath, PathSeparator);
 	ArcBoot[PathSeparator] = 0;
 
-	DPRINTM(DPRINT_WINDOWS, "ArcBoot: %s\n", ArcBoot);
-	DPRINTM(DPRINT_WINDOWS, "SystemRoot: %s\n", SystemRoot);
-	DPRINTM(DPRINT_WINDOWS, "Options: %s\n", Options);
+	TRACE("ArcBoot: %s\n", ArcBoot);
+	TRACE("SystemRoot: %s\n", SystemRoot);
+	TRACE("Options: %s\n", Options);
 
 	/* Fill Arc BootDevice */
 	LoaderBlock->ArcBootDeviceName = MmHeapAlloc(strlen(ArcBoot)+1);
@@ -272,7 +259,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		DriverPath[0] = 0;
 	}
 
-	DPRINTM(DPRINT_WINDOWS, "DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock);
+	TRACE("DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock);
 
 
 	// Check if driver is already loaded
@@ -293,7 +280,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Status = WinLdrAllocateDataTableEntry(LoaderBlock, DllName, DllName, DriverBase, DriverDTE);
 	if (!Status)
 	{
-		DPRINTM(DPRINT_WINDOWS, "WinLdrAllocateDataTableEntry() failed\n");
+		ERR("WinLdrAllocateDataTableEntry() failed\n");
 		return FALSE;
 	}
 
@@ -305,8 +292,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Status = WinLdrScanImportDescriptorTable(LoaderBlock, FullPath, *DriverDTE);
 	if (!Status)
 	{
-		DPRINTM(DPRINT_WINDOWS, "WinLdrScanImportDescriptorTable() failed for %s\n",
-			FullPath);
+		ERR("WinLdrScanImportDescriptorTable() failed for %s\n", FullPath);
 		return FALSE;
 	}
 
@@ -328,7 +314,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	{
 		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
 
-		DPRINTM(DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
+		TRACE("BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
 			BootDriver->LdrEntry, &BootDriver->RegistryPath);
 
 		// Paths are relative (FIXME: Are they always relative?)
@@ -372,7 +358,7 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 	//sprintf(ProgressString, "Loading %s...", FileName);
 	//UiDrawProgressBarCenter(1, 100, ProgressString);
 
-	DPRINTM(DPRINT_WINDOWS, "Loading module %s\n", ModuleName);
+	TRACE("Loading module %s\n", ModuleName);
 	*Size = 0;
 
 	/* Open the image file */
@@ -409,7 +395,7 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 		return NULL;
 	}
 
-	DPRINTM(DPRINT_WINDOWS, "Loaded %s at 0x%x with size 0x%x\n", ModuleName, PhysicalBase, FileSize);
+	TRACE("Loaded %s at 0x%x with size 0x%x\n", ModuleName, PhysicalBase, FileSize);
 
 	return PhysicalBase;
 }
@@ -435,6 +421,38 @@ WinLdrDetectVersion()
 	return _WIN32_WINNT_WS03;
 }
 
+PVOID
+LoadModule(
+    PLOADER_PARAMETER_BLOCK LoaderBlock,
+    PCCH Path,
+    PCCH File,
+    PLDR_DATA_TABLE_ENTRY *Dte,
+    ULONG Percentage)
+{
+	CHAR FullFileName[MAX_PATH];
+	CHAR ProgressString[256];
+	NTSTATUS Status;
+	PVOID BaseAdress;
+
+	UiDrawBackdrop();
+	sprintf(ProgressString, "Loading %s...", File);
+	UiDrawProgressBarCenter(Percentage, 100, ProgressString);
+
+	strcpy(FullFileName, Path);
+	strcat(FullFileName, "SYSTEM32\\");
+	strcat(FullFileName, File);
+
+	Status = WinLdrLoadImage(FullFileName, LoaderSystemCode, &BaseAdress);
+	TRACE("%s loaded with status %d at %p\n",
+	        File, Status, BaseAdress);
+
+	strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
+	strcat(FullFileName, File);
+	WinLdrAllocateDataTableEntry(LoaderBlock, File,
+		FullFileName, BaseAdress, Dte);
+
+	return BaseAdress;
+}
 
 VOID
 LoadAndBootWindows(PCSTR OperatingSystemName,
@@ -442,51 +460,39 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
                    USHORT OperatingSystemVersion)
 {
 	BOOLEAN HasSection;
-	char  FullPath[MAX_PATH], SystemRoot[MAX_PATH], BootPath[MAX_PATH];
+	char  BootPath[MAX_PATH];
 	CHAR  FileName[MAX_PATH];
 	CHAR  BootOptions[256];
 	PCHAR File;
-	PCHAR PathSeparator;
-	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
 	ULONG_PTR SectionId;
-	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
-	KERNEL_ENTRY_POINT KiSystemStartup;
-	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
-	// Mm-related things
-	PVOID GdtIdt;
-	ULONG PcrBasePage=0;
-	ULONG TssBasePage=0;
-	// Progress bar
-	CHAR ProgressString[256];
+	PLOADER_PARAMETER_BLOCK LoaderBlock;
 
 	// Open the operating system section
 	// specified in the .ini file
 	HasSection = IniOpenSection(OperatingSystemName, &SectionId);
 
 	UiDrawBackdrop();
-	UiDrawStatusText("Detecting Hardware...");
-	sprintf(ProgressString, "Loading NT...");
-	UiDrawProgressBarCenter(1, 100, ProgressString);
+	UiDrawProgressBarCenter(1, 100, "Loading NT...");
 
 	/* Read the system path is set in the .ini file */
-	if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", FullPath, sizeof(FullPath)))
+	if (!HasSection ||
+	    !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
 	{
-		strcpy(FullPath, OperatingSystemName);
+		strcpy(BootPath, OperatingSystemName);
 	}
 
 	/* Special case for LiveCD */
-	if (!_strnicmp(FullPath, "LiveCD", strlen("LiveCD")))
+	if (!_strnicmp(BootPath, "LiveCD", strlen("LiveCD")))
 	{
-		strcpy(BootPath, FullPath + strlen("LiveCD"));
-		MachDiskGetBootPath(FullPath, sizeof(FullPath));
-		strcat(FullPath, BootPath);
+		strcpy(FileName, BootPath + strlen("LiveCD"));
+		MachDiskGetBootPath(BootPath, sizeof(BootPath));
+		strcat(BootPath, FileName);
 	}
 
-	/* Convert FullPath to SystemRoot */
-	PathSeparator = strstr(FullPath, "\\");
-	strcpy(SystemRoot, PathSeparator);
-	strcat(SystemRoot, "\\");
+	/* append a backslash */
+	if ((strlen(BootPath)==0) || BootPath[strlen(BootPath)] != '\\')
+		strcat(BootPath, "\\");
 
 	/* Read booting options */
 	if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
@@ -498,44 +504,30 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 		while (*p != '\0' && *p != '"')
 			p++;
 		strcpy(BootOptions, p);
-		DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
+		TRACE("BootOptions: '%s'\n", BootOptions);
 	}
 
 	/* Append boot-time options */
 	AppendBootTimeOptions(BootOptions);
 
-	//
-	// Check if a ramdisk file was given
-	//
+	/* Check if a ramdisk file was given */
 	File = strstr(BootOptions, "/RDPATH=");
 	if (File)
 	{
-		//
-		// Copy the file name and everything else after it
-		//
+		/* Copy the file name and everything else after it */
 		strcpy(FileName, File + 8);
 
-		//
-		// Null-terminate
-		//
+		/* Null-terminate */
 		*strstr(FileName, " ") = ANSI_NULL;
 
-		//
-		// Load the ramdisk
-		//
+		/* Load the ramdisk */
 		RamDiskLoadVirtualFile(FileName);
 	}
 
 	/* Let user know we started loading */
 	//UiDrawStatusText("Loading...");
 
-	/* append a backslash */
-	strcpy(BootPath, FullPath);
-	if ((strlen(BootPath)==0) ||
-	    BootPath[strlen(BootPath)] != '\\')
-		strcat(BootPath, "\\");
-
-	DPRINTM(DPRINT_WINDOWS,"BootPath: '%s'\n", BootPath);
+	TRACE("BootPath: '%s'\n", BootPath);
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
@@ -544,86 +536,82 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
    	/* Setup redirection support */
 	WinLdrSetupEms(BootOptions);
 #endif
+
+	/* Load Hive */
+	UiDrawBackdrop();
+	UiDrawProgressBarCenter(15, 100, "Loading system hive...");
+	Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
+	TRACE("SYSTEM hive loaded with status %d\n", Status);
+
+	/* Load NLS data, OEM font, and prepare boot drivers list */
+	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
+	TRACE("SYSTEM hive scanned with status %d\n", Status);
+
+
+	LoadAndBootWindowsCommon(OperatingSystemVersion,
+	                         LoaderBlock,
+	                         BootOptions,
+	                         BootPath,
+	                         0);
+}
+
+VOID
+LoadAndBootWindowsCommon(
+	USHORT OperatingSystemVersion,
+	PLOADER_PARAMETER_BLOCK LoaderBlock,
+	LPCSTR BootOptions,
+	LPCSTR BootPath,
+	BOOLEAN Setup)
+{
+	PLOADER_PARAMETER_BLOCK LoaderBlockVA;
+	BOOLEAN Status;
+	CHAR FileName[MAX_PATH];
+	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
+	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
+	KERNEL_ENTRY_POINT KiSystemStartup;
+	LPCSTR SystemRoot;
+
+	/* Convert BootPath to SystemRoot */
+	SystemRoot = strstr(BootPath, "\\");
+
 	/* Detect hardware */
 	UseRealHeap = TRUE;
 	LoaderBlock->ConfigurationRoot = MachHwDetect();
-
-	sprintf(ProgressString, "Loading system hive...");
-	UiDrawBackdrop();
-	UiDrawProgressBarCenter(15, 100, ProgressString);
-
-	/* Load Hive */
-	Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
-	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive loaded with status %d\n", Status);
 
 	if (OperatingSystemVersion == 0)
 		OperatingSystemVersion = WinLdrDetectVersion();
 
 	/* Load kernel */
-	strcpy(FileName, BootPath);
-	strcat(FileName, "SYSTEM32\\NTOSKRNL.EXE");
-	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
-	UiDrawBackdrop();
-	UiDrawProgressBarCenter(30, 100, ProgressString);
-	Status = WinLdrLoadImage(FileName, LoaderSystemCode, &NtosBase);
-	DPRINTM(DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase);
+	NtosBase = LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", &KernelDTE, 30);
 
 	/* Load HAL */
-	strcpy(FileName, BootPath);
-	strcat(FileName, "SYSTEM32\\HAL.DLL");
-	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
-	UiDrawBackdrop();
-	UiDrawProgressBarCenter(45, 100, ProgressString);
-	Status = WinLdrLoadImage(FileName, LoaderHalCode, &HalBase);
-	DPRINTM(DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase);
+	HalBase = LoadModule(LoaderBlock, BootPath, "HAL.DLL", &HalDTE, 45);
 
 	/* Load kernel-debugger support dll */
 	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
 	{
-		strcpy(FileName, BootPath);
-		strcat(FileName, "SYSTEM32\\KDCOM.DLL");
-		sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
-		UiDrawBackdrop();
-		UiDrawProgressBarCenter(60, 100, ProgressString);
-		Status = WinLdrLoadImage(FileName, LoaderBootDriver, &KdComBase);
-		DPRINTM(DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase);
-	}
-
-	/* Allocate data table entries for above-loaded modules */
-	WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
-		"WINDOWS\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
-	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
-		"WINDOWS\\SYSTEM32\\HAL.DLL", HalBase, &HalDTE);
-	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
-	{
-		WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
-			"WINDOWS\\SYSTEM32\\KDCOM.DLL", KdComBase, &KdComDTE);
+		KdComBase = LoadModule(LoaderBlock, BootPath, "KDCOM.DLL", &KdComDTE, 60);
 	}
 
 	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */
 	strcpy(FileName, BootPath);
-	strcat(FileName, "SYSTEM32\\");
-	WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KernelDTE);
-	WinLdrScanImportDescriptorTable(LoaderBlock, FileName, HalDTE);
+	strcat(FileName, "system32\\");
+	Status = WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KernelDTE);
+	Status &= WinLdrScanImportDescriptorTable(LoaderBlock, FileName, HalDTE);
 	if (KdComDTE)
-		WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KdComDTE);
+		Status &= WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KdComDTE);
 
-	sprintf(ProgressString, "Loading NLS and OEM fonts...");
-	UiDrawBackdrop();
-	UiDrawProgressBarCenter(80, 100, ProgressString);
-	/* Load NLS data, OEM font, and prepare boot drivers list */
-	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
-	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive scanned with status %d\n", Status);
+	if (!Status)
+	{
+		UiMessageBox("Error loading imported dll.");
+		return;
+	}
 
 	/* Load boot drivers */
-	sprintf(ProgressString, "Loading boot drivers...");
 	UiDrawBackdrop();
-	UiDrawProgressBarCenter(100, 100, ProgressString);
-	Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
-	DPRINTM(DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status);
-
-	/* Alloc PCR, TSS, do magic things with the GDT/IDT */
-	WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
+	UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
+	Status = WinLdrLoadBootDrivers(LoaderBlock, (PCHAR)BootPath);
+	TRACE("Boot drivers loaded with status %d\n", Status);
 
 	/* Initialize Phase 1 - no drivers loading anymore */
 	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemRoot, BootPath, OperatingSystemVersion);
@@ -633,22 +621,28 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	LoaderBlockVA = PaToVa(LoaderBlock);
 
 	/* "Stop all motors", change videomode */
-	if (OperatingSystemVersion < _WIN32_WINNT_WIN2K)
-		MachPrepareForReactOS(TRUE);
-	else
-		MachPrepareForReactOS(FALSE);
+	MachPrepareForReactOS(Setup);
 
 	/* Debugging... */
 	//DumpMemoryAllocMap();
 
-	/* Turn on paging mode of CPU*/
-	WinLdrTurnOnPaging(LoaderBlock, PcrBasePage, TssBasePage, GdtIdt);
+	/* Do the machine specific initialization */
+	WinLdrSetupMachineDependent(LoaderBlock);
+
+	/* Map pages and create memory descriptors */
+	WinLdrSetupMemoryLayout(LoaderBlock);
 
 	/* Save final value of LoaderPagesSpanned */
-	LoaderBlockVA->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
+	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
-	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
+	/* Set processor context */
+	WinLdrSetProcessorContext();
+
+	TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);
+
+	// Zero KI_USER_SHARED_DATA page
+	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
 	WinLdrpDumpBootDriver(LoaderBlockVA);
@@ -663,8 +657,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Pass control */
 	(*KiSystemStartup)(LoaderBlockVA);
-
-	return;
 }
 
 VOID
@@ -679,7 +671,7 @@ WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	{
 		MemoryDescriptor = CONTAINING_RECORD(NextMd, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
 
-		DPRINTM(DPRINT_WINDOWS, "BP %08X PC %04X MT %d\n", MemoryDescriptor->BasePage,
+		TRACE("BP %08X PC %04X MT %d\n", MemoryDescriptor->BasePage,
 			MemoryDescriptor->PageCount, MemoryDescriptor->MemoryType);
 
 		NextMd = MemoryDescriptor->ListEntry.Flink;
@@ -698,7 +690,7 @@ WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	{
 		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
 
-		DPRINTM(DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
+		TRACE("BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
 			BootDriver->LdrEntry, &BootDriver->RegistryPath);
 
 		NextBd = BootDriver->Link.Flink;
@@ -717,7 +709,7 @@ WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	{
 		ArcDisk = CONTAINING_RECORD(NextBd, ARC_DISK_SIGNATURE, ListEntry);
 
-		DPRINTM(DPRINT_WINDOWS, "ArcDisk %s checksum: 0x%X, signature: 0x%X\n",
+		TRACE("ArcDisk %s checksum: 0x%X, signature: 0x%X\n",
 			ArcDisk->ArcName, ArcDisk->CheckSum, ArcDisk->Signature);
 
 		NextBd = ArcDisk->ListEntry.Flink;

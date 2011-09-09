@@ -628,7 +628,7 @@
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
 @ cdecl -arch=x86_64 KeLowerIrql(long)
-@ extern KeNumberProcessors
+@ extern KeNumberProcessors _KeNumberProcessors
 @ stdcall -arch=i386,arm KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
 @ stdcall KePulseEvent(ptr long long)

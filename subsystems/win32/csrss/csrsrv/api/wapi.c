@@ -278,8 +278,8 @@ CsrSrvAttachSharedSection(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
     /* Check if we have a process */
     if (CsrProcess)
     {
-        /* Map the sectio into this process */
-        DPRINT1("CSR Process Handle: %p. CSR Process: %p\n", CsrProcess->Process, CsrProcess);
+        /* Map the section into this process */
+        DPRINT("CSR Process Handle: %p. CSR Process: %p\n", CsrProcess->Process, CsrProcess);
         Status = NtMapViewOfSection(CsrSrvSharedSection,
                                     CsrProcess->Process,
                                     &CsrSrvSharedSectionBase,
@@ -520,7 +520,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         Status = CsrSrvAttachSharedSection(ProcessData, ConnectInfo);
         if (NT_SUCCESS(Status))
         {
-            DPRINT1("Connection ok\n");
+            DPRINT("Connection ok\n");
             AllowConnection = TRUE;
         }
         else

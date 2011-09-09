@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 list(APPEND SOURCE
@@ -26,7 +25,7 @@ list(APPEND SOURCE
 
 add_executable(mstsc ${SOURCE})
 
-set_module_type(mstsc win32gui)
+set_module_type(mstsc win32gui UNICODE)
 
 add_importlibs(mstsc user32 gdi32 comctl32 ws2_32 advapi32 shell32 ole32 comdlg32 msvcrt kernel32)
 

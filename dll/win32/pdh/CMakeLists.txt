@@ -14,7 +14,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
 
 add_library(pdh SHARED ${SOURCE})
-set_entrypoint(pdh 0)
+set_module_type(pdh win32dll ENTRYPOINT 0 )
 
 target_link_libraries(pdh wine)
 

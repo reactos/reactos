@@ -1948,17 +1948,10 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
             FStatus = CallQS [SystemInformationClass].Query(SystemInformation,
                                                             Length,
                                                             &ResultLength);
-            if (UnsafeResultLength != NULL)
-            {
-                if (PreviousMode != KernelMode)
-                {
-                    *UnsafeResultLength = ResultLength;
-                }
-                else
-                {
-                    *UnsafeResultLength = ResultLength;
-                }
-            }
+
+            /* Save the result length to the caller */
+            if (UnsafeResultLength)
+                *UnsafeResultLength = ResultLength;
         }
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())

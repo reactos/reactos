@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(input.dll input.spec)
@@ -13,7 +12,7 @@ add_library(input SHARED
     input.rc
     ${CMAKE_CURRENT_BINARY_DIR}/input.def)
 
-set_module_type(input win32dll)
+set_module_type(input win32dll UNICODE)
 
 add_importlibs(input
     msvcrt

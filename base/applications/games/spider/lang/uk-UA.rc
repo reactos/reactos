@@ -1,17 +1,12 @@
 /*
- * PROJECT:    ReactOS Spider
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:    base/applications/games/spider/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for ReactOS  Spider
- * TRANSLATORS:    Sakara Yevhen, Igor Paliychuk
+ * PROJECT:      ReactOS Spider
+ * LICENSE:      GPL - See COPYING in the top level directory
+ * FILE:         base/applications/games/spider/lang/uk-UA.rc
+ * PURPOSE:      Ukraianian Language File for ReactOS Spider
+ * TRANSLATORS:  Sakara Yevhen, Igor Paliychuk
  */
 
- 
-#include "resource.h"
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
-
-
 
 /* Dialogs */
 

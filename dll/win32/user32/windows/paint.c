@@ -208,7 +208,7 @@ SetWindowRgn(
    if (!Hook)
    {
       Ret = NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
-      if (hRgn && Ret)
+      if (Ret)
           DeleteObject(hRgn);
       return Ret;
    }
@@ -285,10 +285,10 @@ GetWindowRgn(
 
   if (!Ret)
      return ERROR;
-
+/*
   if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      Ret = OffsetRgn(hRgn, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
-
+*/
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorRgn(hWnd, hRgn);
 
@@ -319,10 +319,10 @@ GetWindowRgnBox(
 
   if (!Ret)
      return ERROR;
-
+/*
   if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
-
+*/
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorWindowRect(pWnd, lprc);
 

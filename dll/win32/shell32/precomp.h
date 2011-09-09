@@ -12,8 +12,6 @@
 #include <malloc.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 

@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(samsrv.dll samsrv.spec)
 
@@ -10,7 +9,8 @@ list(APPEND SOURCE
 
 add_library(samsrv SHARED ${SOURCE})
 
-set_entrypoint(samsrv 0)
+set_module_type(samsrv win32dll ENTRYPOINT 0 UNICODE)
+
 add_importlibs(samsrv kernel32 ntdll)
 add_dependencies(samsrv psdk)
 add_cd_file(TARGET samsrv DESTINATION reactos/system32 FOR all)

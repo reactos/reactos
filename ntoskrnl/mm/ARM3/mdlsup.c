@@ -1174,7 +1174,7 @@ MmUnlockPages(IN PMDL Mdl)
             // Check if this page is in the PFN database
             //
             Pfn1 = MiGetPfnEntry(*MdlPages);
-            if (Pfn1);
+            if (Pfn1)
             {
                 /* Get the current entry and reference count */
                 OldRefCount = Pfn1->u3.e2.ReferenceCount;

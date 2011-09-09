@@ -44,3 +44,7 @@ endif()
 add_dependencies(libxslt psdk)
 add_pch(libxslt libxslt.h)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(libxslt)
+endif()

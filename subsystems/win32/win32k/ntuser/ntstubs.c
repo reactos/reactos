@@ -108,30 +108,6 @@ NtUserBuildHimcList(
     return 0;
 }
 
-DWORD
-APIENTRY
-NtUserConvertMemHandle(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   STUB
-
-   return 0;
-}
-
-DWORD
-APIENTRY
-NtUserCreateLocalMemHandle(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   STUB
-
-   return 0;
-}
-
 BOOL
 APIENTRY
 NtUserDdeGetQualityOfService(

@@ -950,6 +950,7 @@ co_WinPosSetWindowPos(
    HDC Dc;
    RECTL CopyRect;
    PWND Ancestor;
+   BOOL bPointerInWindow;
 
    ASSERT_REFS_CO(Window);
 
@@ -963,6 +964,7 @@ co_WinPosSetWindowPos(
    {
       return FALSE;
    }
+   bPointerInWindow = IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y);
 
    WinPos.hwnd = Window->head.h;
    WinPos.hwndInsertAfter = WndInsertAfter;
@@ -1026,7 +1028,7 @@ co_WinPosSetWindowPos(
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
-    TRACE("co_WinPosDoNCCALCSize");
+    TRACE("co_WinPosDoNCCALCSize returned %d\n", WvrFlags);
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
@@ -1329,7 +1331,7 @@ co_WinPosSetWindowPos(
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
 
-   if(IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
+   if(bPointerInWindow != IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
    {
       /* Generate mouse move message */
       MSG msg;
@@ -2088,6 +2090,9 @@ NtUserSetWindowRgn(
       hrgnCopy = NULL;
    }
 
+   /* Delete the region passed by the caller */
+   GreDeleteObject(hRgn);
+
    if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
@@ -2097,9 +2102,6 @@ NtUserSetWindowRgn(
 
    if (hrgnCopy)
    {
-      if (Window->fnid != FNID_DESKTOP)
-         NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
-
       /* Set public ownership */
       IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
    }

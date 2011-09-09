@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(timedate.cpl timedate.spec)
@@ -15,7 +14,7 @@ add_library(timedate SHARED
     timedate.rc
     ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)
 
-set_module_type(timedate cpl)
+set_module_type(timedate cpl UNICODE)
 
 add_importlibs(timedate
     advapi32

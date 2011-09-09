@@ -23,10 +23,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)
 
 add_library(comdlg32 SHARED ${SOURCE})
-
 set_module_type(comdlg32 win32dll)
-
 target_link_libraries(comdlg32 uuid wine)
+add_delay_importlibs(comdlg32 ole32)
 
 add_importlibs(comdlg32
     shell32
@@ -36,7 +35,6 @@ add_importlibs(comdlg32
     user32
     gdi32
     advapi32
-    ole32
     msvcrt
     kernel32
     ntdll)

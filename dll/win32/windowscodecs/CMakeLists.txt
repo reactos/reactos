@@ -13,7 +13,7 @@ include_directories(
 set_rc_compiler()
 
 if(MSVC)
-    add_compiler_flags(/FItypeof.h)
+    add_compile_flags("/FItypeof.h")
 endif()
 
 spec2def(windowscodecs.dll windowscodecs.spec)

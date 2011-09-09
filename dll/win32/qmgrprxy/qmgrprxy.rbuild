@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="qmgrprxy" type="win32dll" baseaddress="${BASEADDRESS_QMGRPRXY}" installbase="system32" entrypoint="0" installname="qmgrprxy.dll" allowwarnings="true">
+<module name="qmgrprxy" type="win32dll" baseaddress="${BASEADDRESS_QMGRPRXY}" installbase="system32" installname="qmgrprxy.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="qmgrprxy.spec" />
 	<include base="qmgrprxy">.</include>

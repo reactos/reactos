@@ -2,7 +2,7 @@
  * WineMine
  * Turkish Language Support
  *
- * Copyright 2006 Fatih A˛˝c˝
+ * Copyright 2006 Fatih A√æ√Ωc√Ω
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,39 +22,39 @@
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE BEGIN
-     IDS_APPNAME, "Wine May˝n Tarlas˝"
-     IDS_NOBODY,  "HiÁ kimse"
-     IDS_ABOUT,   "Telif hakk˝ 2000, Joshua Thielen"
+     IDS_APPNAME, "Wine May√Ωn Tarlas√Ω"
+     IDS_NOBODY,  "Hi√ß kimse"
+     IDS_ABOUT,   "Telif hakk√Ω 2000, Joshua Thielen"
 END
 
 MENU_WINEMINE MENU
 BEGIN
-    POPUP "&SeÁenekler" BEGIN
+    POPUP "&Se√ßenekler" BEGIN
         MENUITEM "&Yeni\tF2",      IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Soru ›˛areti",  IDM_MARKQ
+        MENUITEM "&Soru √ù√æareti",  IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "&Acemi",         IDM_BEGINNER
-        MENUITEM "&Geli˛mi˛",      IDM_ADVANCED
+        MENUITEM "&Geli√æmi√æ",      IDM_ADVANCED
         MENUITEM "&Uzman",         IDM_EXPERT
-        MENUITEM "&÷zel",          IDM_CUSTOM
+        MENUITEM "&√ñzel",          IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "&«˝k˝˛\tAlt+X",  IDM_EXIT
+        MENUITEM "&√á√Ωk√Ω√æ\tAlt+X",  IDM_EXIT
     END
     POPUP "&Bilgi" BEGIN
-        MENUITEM "&En K˝sa S¸reler",    IDM_TIMES
-        MENUITEM "&Hakk˝nda",      IDM_ABOUT
+        MENUITEM "&En K√Ωsa S√ºreler",    IDM_TIMES
+        MENUITEM "&Hakk√Ωnda",      IDM_ABOUT
     END
 END
 
 DLG_TIMES DIALOGEX 0, 0, 160, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "En K˝sa S¸reler"
+CAPTION "En K√Ωsa S√ºreler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "En K˝sa S¸reler", -1,  10,  10, 140,  45
+    GROUPBOX        "En K√Ωsa S√ºreler", -1,  10,  10, 140,  45
     LTEXT           "Acemi",           -1,  20,  20,  40,   8
-    LTEXT           "Geli˛mi˛",        -1,  20,  30,  40,   8
+    LTEXT           "Geli√æmi√æ",        -1,  20,  30,  40,   8
     LTEXT           "Uzman",           -1,  20,  40,  40,   8
     LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
     LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
@@ -70,22 +70,22 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Tebrikler!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "L¸tfen ad˝n˝z˝ girin", -1,  10,  10, 150,  10
+    LTEXT           "L√ºtfen ad√Ωn√Ωz√Ω girin", -1,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
     DEFPUSHBUTTON   "Tamam",                         IDOK,  60,  40,  40,  15
 END
 
 DLG_CUSTOM DIALOGEX  0, 0, 100, 100
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "÷zel Oyun"
+CAPTION "√ñzel Oyun"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Sat˝rlar",   -1,   5,   5,  30,  10
-    LTEXT           "S¸tunlar",   -1,   5,  35,  30,  10
-    LTEXT           "May˝nlar",   -1,   5,  65,  30,  10
+    LTEXT           "Sat√Ωrlar",   -1,   5,   5,  30,  10
+    LTEXT           "S√ºtunlar",   -1,   5,  35,  30,  10
+    LTEXT           "May√Ωnlar",   -1,   5,  65,  30,  10
     EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
     EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
     EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
     DEFPUSHBUTTON   "Tamam",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "›ptal", IDCANCEL,  40,  50,  50,  15
+    PUSHBUTTON      "√ùptal", IDCANCEL,  40,  50,  50,  15
 END

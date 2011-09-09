@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DLANGPACK)
 include_directories(include)
@@ -14,7 +13,7 @@ list(APPEND SOURCE
 
 add_library(lpk SHARED ${SOURCE})
 
-set_module_type(lpk win32dll)
+set_module_type(lpk win32dll UNICODE)
 
 add_importlib_target(lpk.spec)
 add_importlibs(lpk user32 usp10 msvcrt kernel32 ntdll)

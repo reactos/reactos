@@ -3,12 +3,12 @@ LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "FIND: Mostra totes les linies que continguin una determinada cadena de car‡cters.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""Cadena de car‡cters"" [ file... ]\n\
-    /C  Conta el numero de linies que contenen la cadena de car‡cters\n\
-    /I  Ignora maj˙scules i min˙scules\n\
-    /N  Numero de linies mostrades, comenÁant per la primera\n\
-    /V  Mostra les linies que no contenen la cadena de car‡cters"
+IDS_USAGE, "FIND: Mostra totes les linies que continguin una determinada cadena de car√†cters.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""Cadena de car√†cters"" [ file... ]\n\
+    /C  Conta el numero de linies que contenen la cadena de car√†cters\n\
+    /I  Ignora maj√∫scules i min√∫scules\n\
+    /N  Numero de linies mostrades, comen√ßant per la primera\n\
+    /V  Mostra les linies que no contenen la cadena de car√†cters"
 
 IDS_NO_SUCH_FILE, "FIND: %s: No he trobat el fitxer\n"
 

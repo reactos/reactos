@@ -15,7 +15,6 @@ add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
     
-set_unicode()
 
 list(APPEND SOURCE
     crypt/crypt.c
@@ -56,17 +55,14 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c)
 
 add_library(advapi32 SHARED ${SOURCE})
-
-set_module_type(advapi32 win32dll)
-
-target_link_libraries(advapi32
-    wine
-    ${PSEH_LIB})
-
-add_importlibs(advapi32 rpcrt4 msvcrt kernel32 ntdll)
+set_module_type(advapi32 win32dll UNICODE)
+target_link_libraries(advapi32 wine ${PSEH_LIB})
+add_delay_importlibs(advapi32 rpcrt4)
+add_importlibs(advapi32 msvcrt kernel32 ntdll)
 
 add_pch(advapi32 advapi32.h
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.h
     ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.h)
+
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(advapi32.spec)

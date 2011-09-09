@@ -1,9 +1,10 @@
 /*
  * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\sndrec32\lang\sv-SE.rc  
+ * FILE:            base/applications/sndrec32/lang/sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
@@ -28,17 +29,17 @@ BEGIN
     POPUP "Arkiv"
     BEGIN
         MENUITEM "Ny",                         ID_NEW
-        MENUITEM "÷ppna...",                     ID_FILE_OPEN
-        MENUITEM "Spara",                        ID_FILE_SAVE, GRAYED
-        MENUITEM "Spara som...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM "√ñppna...",                   ID_FILE_OPEN
+        MENUITEM "Spara",                      ID_FILE_SAVE, GRAYED
+        MENUITEM "Spara som...",               ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Avsluta",                        ID_EXIT
+        MENUITEM "Avsluta",                    ID_EXIT
     END
     MENUITEM "todo1",                       0
     MENUITEM "todo2",                       0
-    POPUP "Hj‰lp"
+    POPUP "Hj√§lp"
     BEGIN
-        MENUITEM "Om...",                    ID__ABOUT
+        MENUITEM "Om...",                      ID__ABOUT
     END
 END
 
@@ -51,7 +52,7 @@ END
 STRINGTABLE 
 BEGIN
     IDS_STRPOS              "Position: %.2f s"
-    IDS_STRDUR              "L‰ngd: %.2f s"
+    IDS_STRDUR              "L√§ngd: %.2f s"
     IDS_STRBUF              "Buffert: %.2f kb"
     IDS_STRFMT              "%.1f kHz %u bits"
     IDS_STRMONO             "mono"

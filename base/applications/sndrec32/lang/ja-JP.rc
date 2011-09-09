@@ -8,47 +8,47 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "reactOS_sndrec32 ‚ÉŠÖ‚·‚éî•ñ"
+CAPTION "reactOS_sndrec32 ã«é–¢ã™ã‚‹æƒ…å ±"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "reactOS_sndrec32, ƒo[ƒWƒ‡ƒ“ 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "reactOS_sndrec32, ãƒãƒ¼ã‚¸ãƒ§ãƒ³ 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2009",IDC_STATIC,55,25,114,8
     DEFPUSHBUTTON   "OK",IDOK,139,54,50,14,WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "ƒtƒ@ƒCƒ‹"
+    POPUP "ãƒ•ã‚¡ã‚¤ãƒ«"
     BEGIN
-        MENUITEM "V‹Kì¬",                    ID_NEW
-        MENUITEM "ŠJ‚­...",                     ID_FILE_OPEN
-        MENUITEM "ã‘‚«•Û‘¶",                  ID_FILE_SAVE, GRAYED
-        MENUITEM "–¼‘O‚ð‚Â‚¯‚Ä•Û‘¶...",         ID_FILE_SAVEAS, GRAYED
+        MENUITEM "æ–°è¦ä½œæˆ",                    ID_NEW
+        MENUITEM "é–‹ã...",                     ID_FILE_OPEN
+        MENUITEM "ä¸Šæ›¸ãä¿å­˜",                  ID_FILE_SAVE, GRAYED
+        MENUITEM "åå‰ã‚’ã¤ã‘ã¦ä¿å­˜...",         ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "I—¹",                        ID_EXIT
+        MENUITEM "çµ‚äº†",                        ID_EXIT
     END
     MENUITEM "todo1",                       0
     MENUITEM "todo2",                       0
     POPUP "?"
     BEGIN
-        MENUITEM "ƒo[ƒWƒ‡ƒ“î•ñ...",                    ID__ABOUT
+        MENUITEM "ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±...",                    ID__ABOUT
     END
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "ƒTƒEƒ“ƒh ƒŒƒR[ƒ_"
+    IDS_APP_TITLE           "ã‚µã‚¦ãƒ³ãƒ‰ ãƒ¬ã‚³ãƒ¼ãƒ€"
     IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_STRPOS              "ˆÊ’u: %.2f •b"
-    IDS_STRDUR              "’·‚³: %.2f •b"
-    IDS_STRBUF              "ƒoƒbƒtƒ@: %.2f kb"
-    IDS_STRFMT              "%.1f kHz %u ƒrƒbƒg"
-    IDS_STRMONO             "ƒ‚ƒmƒ‰ƒ‹"
-    IDS_STRSTEREO           "ƒXƒeƒŒƒI"
+    IDS_STRPOS              "ä½ç½®: %.2f ç§’"
+    IDS_STRDUR              "é•·ã•: %.2f ç§’"
+    IDS_STRBUF              "ãƒãƒƒãƒ•ã‚¡: %.2f kb"
+    IDS_STRFMT              "%.1f kHz %u ãƒ“ãƒƒãƒˆ"
+    IDS_STRMONO             "ãƒ¢ãƒŽãƒ©ãƒ«"
+    IDS_STRSTEREO           "ã‚¹ãƒ†ãƒ¬ã‚ª"
     IDS_STRCHAN             "%s"
 END

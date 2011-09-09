@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(intl.cpl intl.spec)
@@ -19,7 +18,7 @@ add_library(intl SHARED
     sort.c
     intl.rc)
 
-set_module_type(intl cpl)
+set_module_type(intl cpl UNICODE)
 
 add_importlibs(intl
     msvcrt

@@ -33,7 +33,7 @@ list(APPEND SOURCE
 
 add_library(actxprxy SHARED ${SOURCE})
 
-set_entrypoint(actxprxy 0)
+set_module_type(actxprxy win32dll)
 
 target_link_libraries(actxprxy
     uuid

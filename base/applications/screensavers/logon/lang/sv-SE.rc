@@ -1,13 +1,14 @@
 /*
  * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\screensavers\logon\lang\sv-SE.rc 
+ * FILE:            base/applications/screensavers/logon/lang/sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Inloggingssk‰rmsl‰ckare"
-    IDS_TEXT        "Inga inst‰llningar behˆvs."
+    IDS_DESCRIPTION "Inloggingssk√§rmsl√§ckare"
+    IDS_TEXT        "Inga inst√§llningar beh√∂vs."
 END

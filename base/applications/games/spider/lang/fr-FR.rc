@@ -5,11 +5,8 @@
  * PURPOSE:      French Language File for Spider Solitaire
  * TRANSLATOR:   Pierre Schweitzer
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
-
 
 /* Dialogs */
 

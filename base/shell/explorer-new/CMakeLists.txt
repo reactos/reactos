@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-DWIN32)
 
@@ -22,7 +21,7 @@ add_executable(explorer_new ${SOURCE})
 
 target_link_libraries(explorer_new uuid)
 
-set_module_type(explorer_new win32gui)
+set_module_type(explorer_new win32gui UNICODE)
 add_importlibs(explorer_new
     advapi32
     gdi32

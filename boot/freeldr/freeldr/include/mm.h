@@ -117,7 +117,7 @@ VOID	MmFreeMemory(PVOID MemoryPointer);
 PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 
-PVOID	MmHeapAlloc(ULONG MemorySize);
+PVOID	MmHeapAlloc(SIZE_T MemorySize);
 VOID	MmHeapFree(PVOID MemoryPointer);
 
 #define ExAllocatePool(pool, size) MmHeapAlloc(size)

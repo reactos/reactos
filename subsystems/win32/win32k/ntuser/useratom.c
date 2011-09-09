@@ -69,7 +69,7 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
    Status = RtlQueryAtomInAtomTable(gAtomTable, nAtom, NULL, NULL, lpBuffer, &Size);
 
    if (Size < nSize)
-      *(lpBuffer + Size) = 0;
+      *(lpBuffer + Size/sizeof(WCHAR)) = 0;
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);

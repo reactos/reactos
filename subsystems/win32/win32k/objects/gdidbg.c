@@ -78,7 +78,6 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"UserMisc", DbgChUserMisc},
     {L"UserMonitor", DbgChUserMonitor},
     {L"UserMsg", DbgChUserMsg},
-    {L"UserMsgCall", DbgChUserMsgCall},
     {L"UserMsgQ", DbgChUserMsgQ},
     {L"UserObj", DbgChUserObj},
     {L"UserPainting", DbgChUserPainting},

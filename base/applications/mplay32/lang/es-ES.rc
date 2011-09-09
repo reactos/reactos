@@ -23,7 +23,7 @@ BEGIN
 	IDS_TOOLTIP_EJECT "Expulsar"
 	IDS_TOOLTIP_BACKWARD "Marca anterior"
 	IDS_TOOLTIP_SEEKBACK "Rebobinar"
-	IDS_TOOLTIP_SEEKFORW "Avance r·pido"
+	IDS_TOOLTIP_SEEKFORW "Avance r√°pido"
 	IDS_TOOLTIP_FORWARD "Marca siguiente"
     IDS_APPTITLE "Reproductor Multimedia de ReactOS"
 	IDS_PLAY "Reproducir"

@@ -1216,17 +1216,17 @@ __INTRIN_INLINE void __int2c(void)
 
 __INTRIN_INLINE void _disable(void)
 {
-	__asm__("cli");
+	__asm__("cli" : : : "memory");
 }
 
 __INTRIN_INLINE void _enable(void)
 {
-	__asm__("sti");
+	__asm__("sti" : : : "memory");
 }
 
 __INTRIN_INLINE void __halt(void)
 {
-	__asm__("hlt\n\t");
+	__asm__("hlt\n\t" : : : "memory");
 }
 
 /*** Protected memory management ***/
@@ -1505,9 +1505,16 @@ __INTRIN_INLINE void __sidt(void *Destination)
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
+/*** Misc operations ***/
+
 __INTRIN_INLINE void _mm_pause(void)
 {
 	__asm__ __volatile__("pause" : : : "memory");
+}
+
+__INTRIN_INLINE void __nop(void)
+{
+	__asm__ __volatile__("nop");
 }
 
 #ifdef __cplusplus

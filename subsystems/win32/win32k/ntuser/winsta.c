@@ -97,18 +97,6 @@ CleanupWindowStationImpl(VOID)
    return STATUS_SUCCESS;
 }
 
-BOOL FASTCALL
-IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
-{
-    WinStaObj->Clipboard = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDSYSTEM), TAG_WINSTA);
-    if (WinStaObj->Clipboard)
-    {
-        RtlZeroMemory(WinStaObj->Clipboard, sizeof(CLIPBOARDSYSTEM));
-        return TRUE;
-    }
-    return FALSE;
-}
-
 /* OBJECT CALLBACKS  **********************************************************/
 
 VOID APIENTRY
@@ -117,6 +105,8 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
 
    TRACE("Deleting window station (0x%X)\n", WinSta);
+
+   UserEmptyClipboardData(WinSta);
 
    RtlDestroyAtomTable(WinSta->AtomTable);
 
@@ -240,14 +230,14 @@ IntGetFullWindowStationName(
    Buffer += WINSTA_ROOT_NAME_LENGTH;
    if (WinStaName != NULL)
    {
-      memcpy(Buffer, L"\\", sizeof(WCHAR));
+      *Buffer = L'\\';
       Buffer ++;
       memcpy(Buffer, WinStaName->Buffer, WinStaName->Length);
 
       if (DesktopName != NULL)
       {
          Buffer += WinStaName->Length / sizeof(WCHAR);
-         memcpy(Buffer, L"\\", sizeof(WCHAR));
+         *Buffer = L'\\';
          Buffer ++;
          memcpy(Buffer, DesktopName->Buffer, DesktopName->Length);
       }
@@ -503,11 +493,6 @@ NtUserCreateWindowStation(
    WindowStationObject->Name = WindowStationName;
    WindowStationObject->ScreenSaverRunning = FALSE;
    WindowStationObject->FlatMenu = FALSE;
-
-   if (!IntSetupClipboard(WindowStationObject))
-   {
-       ERR("WindowStation: Error Setting up the clipboard!!!\n");
-   }
 
    if (InputWindowStation == NULL)
    {

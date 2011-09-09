@@ -4,7 +4,7 @@ IDM_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "O&pzioni"
     BEGIN
-        MENUITEM "P&ropriet‡", IDC_PROPERTIES
+        MENUITEM "P&ropriet√†", IDC_PROPERTIES
         MENUITEM "&Controlli avanzati", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "E&sci", IDC_EXIT
@@ -20,12 +20,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_SNDVOL32       "Controllo Volume"
-    IDS_NOMIXERDEVICES "Non ci sono dispositivi mixer disponibili! Il programma si chiuder‡."
+    IDS_NOMIXERDEVICES "Non ci sono dispositivi mixer disponibili! Il programma si chiuder√†."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Propriet‡"
+CAPTION "Propriet√†"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Mixer:", -1, 7,8,48,9

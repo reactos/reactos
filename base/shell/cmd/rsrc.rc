@@ -6,6 +6,7 @@
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/no-NO.rc"
+#include "lang/ro-RO.rc"
 #include "lang/sk-SK.rc"
 
 // UTF-8

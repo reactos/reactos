@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            \base\applications\network\ipconfig\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:      ReactOS IPCONFIG
+ * FILE:         base\applications\network\ipconfig\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
  */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
@@ -12,7 +13,7 @@ BEGIN
   IDS_P2P     "Peer To Peer"
   IDS_MIXED   "Mixad"
   IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "Ok‰nd"
+  IDS_UNKNOWN "Ok√§nd"
 END
 
 STRINGTABLE DISCARDABLE
@@ -36,36 +37,36 @@ BEGIN
                   /showclassid kort |\n \
                   /setclassid kort [classid] ]\n \
     \n \
-    d‰r\n \
+    d√§r\n \
         kort         Anslutningssnamn\n \
-                       (jokertecken * och ? ‰r tillÂtet, se exempeln)\n \
+                       (jokertecken * och ? √§r till√•tet, se exempeln)\n \
     \n \
         Alternativ:\n \
-           /?           Visar detta hj‰lpmeddelandet\n \
+           /?           Visar detta hj√§lpmeddelandet\n \
            /all         Visar detaljerd information.\n \
-           /release     Frigˆr IP adressen fˆr det angivna kortet.\n \
-           /renew       Fˆrnya alla IP adresser fˆr det angivna kortet.\n \
-           /flushdns    Tˆmmer DNS Resolver-buffern.\n \
-           /registerdns Uppdaterar alla DHCP leaseavtal och registerer DNS namn pÂ nytt.\n \
-           /displaydns  Visar inhÂll i DNS Resolver-bufferen.\n \
-           /showclassid Visar alla klass-ID:na fˆr DHCP som ‰r tillÂtet fˆr kortet.\n \
-           /setclassid  ƒndrar DHCP-klass-ID:t.\n \
+           /release     Frig√∂r IP adressen f√∂r det angivna kortet.\n \
+           /renew       F√∂rnya alla IP adresser f√∂r det angivna kortet.\n \
+           /flushdns    T√∂mmer DNS Resolver-buffern.\n \
+           /registerdns Uppdaterar alla DHCP leaseavtal och registerer DNS namn p√• nytt.\n \
+           /displaydns  Visar inh√•ll i DNS Resolver-bufferen.\n \
+           /showclassid Visar alla klass-ID:na f√∂r DHCP som √§r till√•tet f√∂r kortet.\n \
+           /setclassid  √Ñndrar DHCP-klass-ID:t.\n \
     \n \
-    Som standard visas bara IP-adressen, n‰tsmasken och\n \
-    standardgateway fˆr varje n‰tverkskort som ‰r bundet till TCP/IP.\n \
+    Som standard visas bara IP-adressen, n√§tsmasken och\n \
+    standardgateway f√∂r varje n√§tverkskort som √§r bundet till TCP/IP.\n \
     \n \
-    Om inget n‰tverkskort angetts fˆr Release och Renew, kommer IP-adresserna\n \
-    fˆr alla n‰tverkskort som ‰r bundna till TCP/IP att frigˆras eller fˆrnyas.\n \
+    Om inget n√§tverkskort angetts f√∂r Release och Renew, kommer IP-adresserna\n \
+    f√∂r alla n√§tverkskort som √§r bundna till TCP/IP att frig√∂ras eller f√∂rnyas.\n \
     \n \
-    Om inget klass-ID har angetts fˆr Setclassid tas klass-ID:t bort.\n \
+    Om inget klass-ID har angetts f√∂r Setclassid tas klass-ID:t bort.\n \
     \n \
     Exempel:\n \
         > ipconfig                   ... Visar informastion.\n \
         > ipconfig /all              ... Visar detaljerd information\n \
-        > ipconfig /renew            ... Fˆrnyar alla kort\n \
-        > ipconfig /renew EL*        ... Fˆrnyar alle kort med navn som\n \
-                                         bˆrjar med EL\n \
-        > ipconfig /release *Ans*    ... frigˆr alla matchande anslutningar,\n \
-                                         t.ex.  ""Anslutning till lokalt n‰tverk 1"" eller\n \
-												""Anslutning till lokalt n‰tverk 2""\n \ "
+        > ipconfig /renew            ... F√∂rnyar alla kort\n \
+        > ipconfig /renew EL*        ... F√∂rnyar alle kort med navn som\n \
+                                         b√∂rjar med EL\n \
+        > ipconfig /release *Ans*    ... frig√∂r alla matchande anslutningar,\n \
+                                         t.ex.  ""Anslutning till lokalt n√§tverk 1"" eller\n \
+												""Anslutning till lokalt n√§tverk 2""\n \ "
 END

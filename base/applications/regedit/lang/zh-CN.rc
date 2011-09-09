@@ -1,6 +1,6 @@
 /*
  *  Regedit (Simplified Chinese resources)
- *  (����������Դ)
+ *  (简体中文资源)
  *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
  *
  * This library is free software; you can redistribute it and/or
@@ -35,84 +35,82 @@ END
 
 IDC_REGEDIT MENU DISCARDABLE
 BEGIN
-    POPUP "�ļ�(&F)"
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "�˳�(&X)",                    ID_REGISTRY_EXIT
+        MENUITEM "退出(&X)",                    ID_REGISTRY_EXIT
     END
-    POPUP "����(&H)"
+    POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "����ע����༭��(&A)...",     ID_HELP_ABOUT
+        MENUITEM "关于注册表编辑器(&A)...",     ID_HELP_ABOUT
     END
 END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "�ļ�(&F)"
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "����(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "导入(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
 
-        MENUITEM "����(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "导出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "�������õ�Ԫ...",	ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "ж�����õ�Ԫ...",	ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM "加载配置单元...",	ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "卸载配置单元...",	ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
-        MENUITEM "��������ע���(&C)...",       ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "连接网络注册表(&C)...",       ID_REGISTRY_CONNECTNETWORKREGISTRY
 
 
-        MENUITEM "�Ͽ�����ע���(&C)...",       ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "断开网络注册表(&C)...",       ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
 
 
         MENUITEM SEPARATOR
-        MENUITEM "��ӡ(&P)...\tCtrl+P",         ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "打印(&P)...\tCtrl+P",         ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "�˳�(&X)",                    ID_REGISTRY_EXIT
+        MENUITEM "退出(&X)",                    ID_REGISTRY_EXIT
     END
-    POPUP "�༭(&E)"
+    POPUP "编辑(&E)"
     BEGIN
-        MENUITEM "�޸�(&M)",                    ID_EDIT_MODIFY
+        MENUITEM "修改(&M)",                    ID_EDIT_MODIFY
         MENUITEM SEPARATOR
-        POPUP "�½�(&N)"
+        POPUP "新建(&N)"
         BEGIN
-            MENUITEM "��(&K)",                  ID_EDIT_NEW_KEY
+            MENUITEM "项(&K)",                  ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "�ַ���ֵ(&S)",            ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "������ֵ(&B)",            ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD ֵ(&D)",            ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "���ַ���ֵ(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "�������ַ���ֵ(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "字符串值(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "二进制值(&B)",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD ??&D)",            ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "多字符串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "可扩充字符串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "Ȩ��(&P)...",                 ID_EDIT_PERMISSIONS
+        MENUITEM "权限(&P)...",                 ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "ɾ��(&D)\tDel",               ID_EDIT_DELETE
-        MENUITEM "������(&R)",                  ID_EDIT_RENAME
+        MENUITEM "删除(&D)\tDel",               ID_EDIT_DELETE
+        MENUITEM "重命名(&R)",                  ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "����������(&C)",              ID_EDIT_COPYKEYNAME
+        MENUITEM "复制项名称(&C)",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "����(&F)...\tCtrl+F",         ID_EDIT_FIND
-        MENUITEM "������һ��(&X)\tF3",          ID_EDIT_FINDNEXT
+        MENUITEM "查找(&F)...\tCtrl+F",         ID_EDIT_FIND
+        MENUITEM "查找下一个(&X)\tF3",          ID_EDIT_FINDNEXT
     END
-    POPUP "�鿴(&V)"
+    POPUP "查看(&V)"
     BEGIN
-        MENUITEM "״̬��(&B)",                  ID_VIEW_STATUSBAR
+        MENUITEM "状态栏(&B)",                  ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "���(&L)",                    ID_VIEW_SPLIT
+        MENUITEM "拆分(&L)",                    ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "ˢ��(&R)\tF5",                ID_VIEW_REFRESH
+        MENUITEM "刷新(&R)\tF5",                ID_VIEW_REFRESH
     END
-    POPUP "�ղؼ�(&F)"
+    POPUP "收藏夹(&F)"
     BEGIN
-        MENUITEM "���ӵ��ղؼ�(&A)",            ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "ɾ���ղؼ�(&R)",              ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "添加到收藏夹(&A)",            ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "删除收藏夹(&R)",              ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "����(&H)"
+    POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "��������(&H)\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM "帮助主题(&H)\tF1",            ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "����ע����༭��(&A)...",     ID_HELP_ABOUT
+        MENUITEM "关于注册表编辑器(&A)...",     ID_HELP_ABOUT
     END
 END
 
@@ -120,56 +118,56 @@ IDR_POPUP_MENUS MENU DISCARDABLE
 BEGIN
   POPUP ""
   BEGIN
-	MENUITEM "�޸�(&M)",                    ID_EDIT_MODIFY
-	MENUITEM "�޸Ķ���λ����",              ID_EDIT_MODIFY_BIN
+	MENUITEM "修改(&M)",                    ID_EDIT_MODIFY
+	MENUITEM "修改二进位数据",              ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
-	MENUITEM "ɾ��(&D)\tDel",               ID_EDIT_DELETE
-	MENUITEM "������(&R)",                  ID_EDIT_RENAME
+	MENUITEM "删除(&D)\tDel",               ID_EDIT_DELETE
+	MENUITEM "重命名(&R)",                  ID_EDIT_RENAME
   END
   POPUP ""
   BEGIN
-        POPUP "�½�(&N)"
+        POPUP "新建(&N)"
         BEGIN
-            MENUITEM "��(&K)",                  ID_EDIT_NEW_KEY
+            MENUITEM "项(&K)",                  ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "�ַ���ֵ(&S)",            ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "������ֵ(&B)",            ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD ֵ(&D)",            ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "字符串值(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "二进制值(&B)",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 值(&D)",            ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "多字符串值(&M)",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "可扩充字符串值(&E)",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
   BEGIN
-        MENUITEM "Expand/Collapse",             ID_TREE_EXPANDBRANCH
-        POPUP "�½�(&N)"
+        MENUITEM "展开/折叠",             ID_TREE_EXPANDBRANCH
+        POPUP "新建(&N)"
         BEGIN
-            MENUITEM "��(&K)",                  ID_EDIT_NEW_KEY
+            MENUITEM "项(&K)",                  ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "�ַ���ֵ(&S)",            ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "������ֵ(&B)",            ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD ֵ(&D)",            ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "字符串值(&S)",            ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "二进制值(&B)",            ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 值(&D)",            ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "多字符串值(&M)",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "可扩充字符串值(&E)",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "����(&F)",                    ID_EDIT_FIND
+        MENUITEM "查找(&F)",                    ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "ɾ��(&D)",                    ID_TREE_DELETE
-        MENUITEM "������(&R)",                  ID_TREE_RENAME
+        MENUITEM "删除(&D)",                    ID_TREE_DELETE
+        MENUITEM "重命名(&R)",                  ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "����(&E)",                    ID_TREE_EXPORT
-        MENUITEM "Ȩ��(&P)...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "导出(&E)",                    ID_TREE_EXPORT
+        MENUITEM "权限(&P)...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "����������(&C)",              ID_EDIT_COPYKEYNAME
+        MENUITEM "复制项名称(&C)",              ID_EDIT_COPYKEYNAME
   END
   POPUP ""
   BEGIN
-        MENUITEM "C&ut", ID_HEXEDIT_CUT
-        MENUITEM "&Copy", ID_HEXEDIT_COPY
-        MENUITEM "&Paste", ID_HEXEDIT_PASTE
-        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM "剪切(&U)", ID_HEXEDIT_CUT
+        MENUITEM "复制(&C)", ID_HEXEDIT_COPY
+        MENUITEM "粘贴(&P)", ID_HEXEDIT_PASTE
+        MENUITEM "删除(&D)", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "全选(&A)", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -177,75 +175,65 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "�༭�ַ���"
+CAPTION "编辑字符串"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "��ֵ����(&N):",IDC_STATIC,6,6,134,8
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "��ֵ����(&V):",IDC_STATIC,6,35,161,8
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "ȷ��",IDOK,142,64,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,196,64,50,14
+    DEFPUSHBUTTON   "确定",IDOK,142,64,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,64,50,14
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "�༭���ַ���"
+CAPTION "编辑多字符串"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "��ֵ����(&N):",IDC_STATIC,6,6,134,8
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "��ֵ����(&V):",IDC_STATIC,6,35,161,8
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON   "ȷ��",IDOK,142,154,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,196,154,50,14
+    DEFPUSHBUTTON   "确定",IDOK,142,154,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,154,50,14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "�༭��������ֵ"
+CAPTION "编辑二进制数值"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "��ֵ����(&N):",IDC_STATIC,6,6,134,8
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "��ֵ����(&V):",IDC_STATIC,6,35,161,8
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
-    DEFPUSHBUTTON   "ȷ��",IDOK,142,154,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,196,154,50,14
+    DEFPUSHBUTTON   "确定",IDOK,142,154,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,154,50,14
 END
 
 
 IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "�༭ DWORD ֵ"
+CAPTION "编辑 DWORD 值"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "��ֵ����(&N):",IDC_STATIC,6,6,134,8
+    LTEXT           "数值名称(&N):",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "��ֵ����(&V):",IDC_STATIC,6,35,161,8
+    LTEXT           "数值数据(&V):",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
-    GROUPBOX        "����",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "ʮ������(&H)",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "ʮ����(&D)",IDC_FORMAT_DEC,141,59,60,10
-    DEFPUSHBUTTON   "ȷ��",IDOK,142,82,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,196,82,50,14
+    GROUPBOX        "基数",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "十六进制(&H)",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "十进制(&D)",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "确定",IDOK,142,82,50,14
+    PUSHBUTTON      "取消",IDCANCEL,196,82,50,14
 END
 
 
@@ -301,149 +289,149 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "����"
-    IDS_LIST_COLUMN_TYPE    "����"
-    IDS_LIST_COLUMN_DATA    "����"
+    IDS_LIST_COLUMN_NAME    "名称"
+    IDS_LIST_COLUMN_TYPE    "类型"
+    IDS_LIST_COLUMN_DATA    "数据"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "ע����༭��"
+    IDS_APP_TITLE           "注册表编辑器"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "����������ע���������ص����"
-    ID_EDIT_MENU            "�����༭ֵ��������"
-    ID_VIEW_MENU            "�����Զ���ע������ڵ����"
-    ID_FAVOURITES_MENU      "�������ʳ�����ʱ���õ����"
-    ID_HELP_MENU            "������ʾ�����Լ�ע����༭���й���Ϣ�����"
-    ID_EDIT_NEW_MENU        "�������������ֵ�����"
+    ID_REGISTRY_MENU        "包含与整个注册表工作相关的命令。"
+    ID_EDIT_MENU            "包含编辑值或项的命令。"
+    ID_VIEW_MENU            "包含自定义注册表窗口的命令。"
+    ID_FAVOURITES_MENU      "包含访问常用项时所用的命令。"
+    ID_HELP_MENU            "包含显示帮助以及注册表编辑器有关信息的命令。"
+    ID_EDIT_NEW_MENU        "包含创建新项或值的命令。"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_EDIT_MODIFY          "�޸ĸ�ֵ�����ݡ�"
-    ID_EDIT_NEW_KEY         "�������"
-    ID_EDIT_NEW_STRINGVALUE "�������ַ���ֵ��"
-    ID_EDIT_NEW_BINARYVALUE "�����¶�����ֵ��"
-    ID_EDIT_NEW_DWORDVALUE  "������ DWORD ֵ��"
-    ID_REGISTRY_IMPORTREGISTRYFILE "���ļ����뵽ע����С�"
+    ID_EDIT_MODIFY          "修改该值的数据。"
+    ID_EDIT_NEW_KEY         "添加新项。"
+    ID_EDIT_NEW_STRINGVALUE "添加新字符串值。"
+    ID_EDIT_NEW_BINARYVALUE "添加新二进制值。"
+    ID_EDIT_NEW_DWORDVALUE  "添加新 DWORD 值。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "将文件导入到注册表中。"
     ID_REGISTRY_EXPORTREGISTRYFILE
-                            "��ע���ȫ���򲿷ֵ������ļ��С�"
+                            "将注册表全部或部分导出到文件中。"
     ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
+                            "加載配置单元到注册表中。"
     ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
+                            "從注册表中卸載配置单元。"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "���ӵ�Զ�̼������ע�����"
+                            "连接到远程计算机的注册表。"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "�Ͽ���Զ�̼����ע��������ӡ�"
-    ID_REGISTRY_PRINT       "��ӡ���л򲿷�ע�����"
-/*    ID_HELP_HELPTOPICS    "��ע����༭��������" */
-    ID_HELP_ABOUT           "��ʾ������Ϣ���汾�źͰ�Ȩ��"
+                            "断开与远程计算机注册表的连接。"
+    ID_REGISTRY_PRINT       "打印所有或部分注册表。"
+/*    ID_HELP_HELPTOPICS    "打开注册表编辑器帮助。" */
+    ID_HELP_ABOUT           "显示程序信息、版本号和版权。"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "�˳�ע����༭����"
-    ID_FAVOURITES_ADDTOFAVOURITES "�������ӵ��ղؼ��б��С�"
-    ID_FAVOURITES_REMOVEFAVOURITE "������ղؼ��б���ɾ����"
-    ID_VIEW_STATUSBAR       "��ʾ������״̬����"
-    ID_VIEW_SPLIT           "�ı�������Ĳ��λ�á�"
-    ID_VIEW_REFRESH         "ˢ�´��ڡ�"
-    ID_EDIT_DELETE          "ɾ����ѡ���ݡ�"
-    ID_EDIT_RENAME          "������ѡ�����ݡ�"
-    ID_EDIT_COPYKEYNAME     "��ѡ��������Ƹ��Ƶ��������ϡ�"
-    ID_EDIT_FIND            "���ֵ���������ҵ��ı��ַ�����"
-    ID_EDIT_FINDNEXT        "���������ϴ��������ı���"
+    ID_REGISTRY_EXIT        "退出注册表编辑器。"
+    ID_FAVOURITES_ADDTOFAVOURITES "将项添加到收藏夹列表中。"
+    ID_FAVOURITES_REMOVEFAVOURITE "将项从收藏夹列表中删除。"
+    ID_VIEW_STATUSBAR       "显示或隐藏状态栏。"
+    ID_VIEW_SPLIT           "改变两窗格的拆分位置。"
+    ID_VIEW_REFRESH         "刷新窗口。"
+    ID_EDIT_DELETE          "删除所选内容。"
+    ID_EDIT_RENAME          "重命名选定内容。"
+    ID_EDIT_COPYKEYNAME     "将选定项的名称复制到剪贴板上。"
+    ID_EDIT_FIND            "在项、值或数据里找到文本字符串。"
+    ID_EDIT_FINDNEXT        "继续查找上次搜索的文本。"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "����"
-    IDS_WARNING		    "����"
-    IDS_BAD_KEY             "Can't query key '%s'"
-    IDS_BAD_VALUE           "Can't query value '%s'"
-    IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
-    IDS_TOO_BIG_VALUE       "��ֵ���� (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ ���͵����ݲ��ܰ������ַ�����\r\nע����༭����ɾ���ҵ��ÿ��ַ�����"
-    IDS_QUERY_DELETE_KEY_ONE     "ȷʵҪɾ���������?"
-    IDS_QUERY_DELETE_KEY_MORE    "ȷʵҪɾ����Щ����?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "ȷ����ɾ��"
-    IDS_QUERY_DELETE_ONE    "ȷʵҪɾ������ֵ��?"
-    IDS_QUERY_DELETE_MORE   "ȷʵҪɾ����Щ��ֵ��?"
-    IDS_QUERY_DELETE_CONFIRM "ȷ����ֵɾ��"
-    IDS_ERR_DELVAL_CAPTION  "ɾ��ֵʱ������"
-    IDS_ERR_DELETEVALUE     "�޷�ɾ������ָ����ֵ!"
-    IDS_ERR_RENVAL_CAPTION  "������ֵʱ��������"
-    IDS_ERR_RENVAL_TOEMPTY  "ע����༭���޷������� %s��ָ����ֵ��Ϊ�ա�������������ƣ�����һ�Ρ�"
-    IDS_NEW_KEY             "���� #%d"
-    IDS_NEW_VALUE           "��ֵ #%d"
+    IDS_ERROR		    "错误"
+    IDS_WARNING		    "警告"
+    IDS_BAD_KEY             "不能查询项 '%s'"
+    IDS_BAD_VALUE           "不能查询值 '%s'"
+    IDS_UNSUPPORTED_TYPE    "不能编辑这类型的项 (%ld)"
+    IDS_TOO_BIG_VALUE       "数值过大 (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\r\n注册表编辑器将删除找到得空字符串。"
+    IDS_QUERY_DELETE_KEY_ONE     "确实要删除这个项吗?"
+    IDS_QUERY_DELETE_KEY_MORE    "确实要删除这些项吗?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "确认项删除"
+    IDS_QUERY_DELETE_ONE    "确实要删除此数值吗?"
+    IDS_QUERY_DELETE_MORE   "确实要删除这些数值吗?"
+    IDS_QUERY_DELETE_CONFIRM "确认数值删除"
+    IDS_ERR_DELVAL_CAPTION  "删除值时出错。"
+    IDS_ERR_DELETEVALUE     "无法删除所有指定的值!"
+    IDS_ERR_RENVAL_CAPTION  "重命名值时产生错误"
+    IDS_ERR_RENVAL_TOEMPTY  "注册表编辑器无法重命名 %s。指定的值名为空。请键入其他名称，再试一次。"
+    IDS_NEW_KEY             "新项 #%d"
+    IDS_NEW_VALUE           "新值 #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(����Ϊ��Ķ���λֵ)"
-    IDS_DEFAULT_VALUE_NAME  "(Ĭ��)"
-    IDS_VALUE_NOT_SET       "(��ֵδ����)"
-    IDS_UNKNOWN_TYPE        "δ֪����: (0x%lx)"
-    IDS_MY_COMPUTER         "My Computer"
-    IDS_IMPORT_REG_FILE     "����ע����ļ�"
-    IDS_EXPORT_REG_FILE     "����ע����ļ�"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
-    IDS_INVALID_DWORD       "(����ȷ�� DWORD ֵ)"
+    IDS_BINARY_EMPTY	    "(长度为零的二进位值)"
+    IDS_DEFAULT_VALUE_NAME  "(默认)"
+    IDS_VALUE_NOT_SET       "(数值未设置)"
+    IDS_UNKNOWN_TYPE        "未知类型: (0x%lx)"
+    IDS_MY_COMPUTER         "我的计算机"
+    IDS_IMPORT_REG_FILE     "导入注册表文件"
+    IDS_EXPORT_REG_FILE     "导出注册表文件"
+    IDS_LOAD_HIVE           "加载配置单元"
+    IDS_UNLOAD_HIVE         "卸载配置单元"
+    IDS_INVALID_DWORD       "(不正确的 DWORD 值)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_FLT_REGFILE         "Registration File"
-    IDS_FLT_REGFILES        "ע���ļ�"
+    IDS_FLT_REGFILE         "注册文件"
+    IDS_FLT_REGFILES        "注册文件"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 ע���ļ� (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 注册文件 (REGEDIT4)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "�����ļ� (*.*)"
+    IDS_FLT_ALLFILES        "所有文件 (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "��ȫ����"
-  IDS_ACCESS_READ               "��ȡ"
-  IDS_ACCESS_QUERYVALUE         "��ѯ��ֵ"
-  IDS_ACCESS_SETVALUE           "������ֵ"
-  IDS_ACCESS_CREATESUBKEY       "��������"
-  IDS_ACCESS_ENUMERATESUBKEYS   "ö������"
-  IDS_ACCESS_NOTIFY             "֪ͨ"
-  IDS_ACCESS_CREATELINK         "��������"
-  IDS_ACCESS_DELETE             "ɾ��"
-  IDS_ACCESS_WRITEDAC           "д�� DAC"
-  IDS_ACCESS_WRITEOWNER         "д��������"
-  IDS_ACCESS_READCONTROL        "��ȡ����"
+  IDS_ACCESS_FULLCONTROL        "完全控制"
+  IDS_ACCESS_READ               "读取"
+  IDS_ACCESS_QUERYVALUE         "查询数值"
+  IDS_ACCESS_SETVALUE           "设置数值"
+  IDS_ACCESS_CREATESUBKEY       "创建子项"
+  IDS_ACCESS_ENUMERATESUBKEYS   "枚举子项"
+  IDS_ACCESS_NOTIFY             "通知"
+  IDS_ACCESS_CREATELINK         "创建链接"
+  IDS_ACCESS_DELETE             "删除"
+  IDS_ACCESS_WRITEDAC           "写入 DAC"
+  IDS_ACCESS_WRITEOWNER         "写入所有者"
+  IDS_ACCESS_READCONTROL        "读取控制"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "ֻ�и���"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "���������"
-  IDS_INHERIT_SUBKEYSONLY        "ֻ������"
+  IDS_INHERIT_THISKEYONLY        "只有该项"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "该项及其子项"
+  IDS_INHERIT_SUBKEYSONLY        "只有子项"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_EXPAND                     "չ��"
-  IDS_COLLAPSE                   "�۵�"
-  IDS_GOTO_SUGGESTED_KEY         "ת��(&G)'%s'"
-  IDS_FINISHEDFIND               "ע���������ϡ�"
+  IDS_EXPAND                     "展开"
+  IDS_COLLAPSE                   "折叠"
+  IDS_GOTO_SUGGESTED_KEY         "转到(&G)'%s'"
+  IDS_FINISHEDFIND               "注册表搜索完毕。"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Add the data to the registry?"
-  IDS_IMPORTED_OK               "Information added to the registry"
+  IDS_IMPORT_PROMPT             "增加资料到注册表?"
+  IDS_IMPORTED_OK               "资料已被加到注册表"
 END
 
 STRINGTABLE DISCARDABLE
@@ -508,70 +496,83 @@ END
  */
 
 IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 380, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-    WS_BORDER
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "������Χ",IDC_STATIC,2,0,350,48
-   CONTROL  "ȫ��(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 35,11
-   CONTROL  "��ѡ��֧(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   GROUPBOX "导出范围",IDC_STATIC,2,0,350,48
+   CONTROL  "全部(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 35,11
+   CONTROL  "所选分支(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,310,12
 END
 
+//
+// Dialog resources
+//
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+}
+
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "���ӵ��ղؼ�"
+CAPTION "添加到收藏夹"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "ȷ��",IDOK,129,7,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,129,24,50,14
-    LTEXT           "�ղؼ���(&F):",IDC_STATIC,7,7,70,10
+    DEFPUSHBUTTON   "确定",IDOK,129,7,50,14
+    PUSHBUTTON      "取消",IDCANCEL,129,24,50,14
+    LTEXT           "收藏夹名(&F):",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ɾ���ղؼ�"
+CAPTION "删除收藏夹"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "ȷ��",IDOK,107,114,50,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,7,114,50,14
+    DEFPUSHBUTTON   "确定",IDOK,107,114,50,14
+    PUSHBUTTON      "取消",IDCANCEL,7,114,50,14
     CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "ѡ���ղؼ�(&S):",IDC_STATIC,7,7,99,12
+    LTEXT           "选择收藏夹(&S):",IDC_STATIC,7,7,99,12
 END
 
 IDD_FIND DIALOGEX DISCARDABLE  0, 0, 275, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "����"
+CAPTION "查找"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "������һ��(&F)",IDOK,205,7,55,14
-    PUSHBUTTON      "ȡ��",IDCANCEL,205,24,55,14
-    GROUPBOX        "�鿴",IDC_STATIC,7,25,63,51
-    LTEXT           "����Ŀ��(&N):",IDC_STATIC,7,8,50,10
+    DEFPUSHBUTTON   "查找下一个(&F)",IDOK,205,7,55,14
+    PUSHBUTTON      "取消",IDCANCEL,205,24,55,14
+    GROUPBOX        "查看",IDC_STATIC,7,25,63,51
+    LTEXT           "查找目标(&N):",IDC_STATIC,7,8,50,10
     EDITTEXT        IDC_FINDWHAT,55,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "��(&K)",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "项(&K)",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
-    CONTROL         "ֵ(&V)",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "值(&V)",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
-    CONTROL         "����(&D)",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "数据(&D)",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "ȫ��ƥ��(&W)",IDC_MATCHSTRING,"Button",
+    CONTROL         "全字匹配(&W)",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "��Сдƥ��(&C)",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "大小写匹配(&C)",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
-CAPTION "����"
+CAPTION "查找"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "ȡ��(&C)",IDCANCEL,93,29,45,14
-    LTEXT           "��������ע���...",IDC_STATIC,33,12,83,8
+    DEFPUSHBUTTON   "取消(&C)",IDCANCEL,93,29,45,14
+    LTEXT           "正在搜索注册表...",IDC_STATIC,33,12,83,8
 END
 
 /*

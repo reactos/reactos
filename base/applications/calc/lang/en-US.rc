@@ -536,7 +536,7 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 Â°C calories"
     IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_EVS                  "Electron-Volts"
@@ -553,7 +553,7 @@ END
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Ångströms"
+    IDS_LENGTH_ANGSTROMS            "Ã…ngstrÃ¶ms"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
     IDS_LENGTH_CENTIMETERS          "Centimeters"

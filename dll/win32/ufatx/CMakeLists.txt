@@ -7,7 +7,7 @@ list(APPEND SOURCE
 
 add_library(ufatx SHARED ${SOURCE})
 
-set_entrypoint(ufatx 0)
+set_module_type(ufatx win32dll ENTRYPOINT 0 )
 
 target_link_libraries(ufatx vfatxlib)
 add_importlibs(ufatx ntdll)

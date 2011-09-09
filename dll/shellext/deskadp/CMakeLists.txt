@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 spec2def(deskadp.dll deskadp.spec)
 
@@ -11,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(deskadp SHARED ${SOURCE})
 
-set_module_type(deskadp win32dll)
+set_module_type(deskadp win32dll UNICODE)
 
 target_link_libraries(deskadp uuid)
 

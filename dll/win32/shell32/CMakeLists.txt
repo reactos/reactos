@@ -1,4 +1,3 @@
-set_unicode()
 set_cpp()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -76,13 +75,15 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED ${SOURCE})
 
-set_module_type(shell32 win32dll)
+set_module_type(shell32 win32dll UNICODE)
 
 target_link_libraries(shell32
     atlnew
     wine
     uuid
     recyclebin)
+
+add_delay_importlibs(shell32 ole32 version)
 
 add_importlibs(shell32
     advapi32
@@ -91,8 +92,6 @@ add_importlibs(shell32
     comctl32
     comdlg32
     shlwapi
-    ole32
-    version
     devmgr
     winspool
     winmm

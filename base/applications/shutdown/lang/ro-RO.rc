@@ -1,0 +1,23 @@
+/* 
+ * FILE:             base/applications/shutdown/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ştefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-24  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Utilizare: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  fără arg.\n\
+  sau -?\tAfişează acest manual\n\
+  -l\t\tÎnchide sesiunea curentă\n\
+  -s\t\tÎnchide calculatorul\n\
+  -r\t\tReporneşte calculatorul\n\
+  -f\t\tForţează închiderea aplicaţiilor fără mesaje de avertisment.\n\
+    \t\tDacă nu aţi specificat nici un alt parametru, această\n\
+    \t\topţiune are în mod implicit stabilită închiderea\n\
+	\tsesiunii curente."
+END

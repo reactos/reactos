@@ -1,12 +1,11 @@
 
-set_unicode()
 set_rc_compiler()
 
 add_executable(vmwinst vmwinst.c vmwinst.rc)
 
 target_link_libraries(vmwinst ${PSEH_LIB})
 
-set_module_type(vmwinst win32gui)
+set_module_type(vmwinst win32gui UNICODE)
 add_importlibs(vmwinst
     advapi32
     comctl32

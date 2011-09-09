@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(modemui.dll modemui.spec)
@@ -12,6 +11,6 @@ list(APPEND SOURCE
 
 add_library(modemui SHARED ${SOURCE})
 
-set_module_type(modemui win32dll)
+set_module_type(modemui win32dll UNICODE)
 add_importlibs(modemui msvcrt kernel32 ntdll)
 add_cd_file(TARGET modemui DESTINATION reactos/system32 FOR all)

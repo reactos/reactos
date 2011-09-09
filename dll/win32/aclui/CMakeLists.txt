@@ -1,7 +1,6 @@
 
 spec2def(aclui.dll aclui.spec)
 set_rc_compiler()
-set_unicode()
 
 add_definitions(-DSUPPORT_UXTHEME)
 
@@ -16,7 +15,7 @@ list(APPEND SOURCE
 
 add_library(aclui SHARED ${SOURCE})
 
-set_module_type(aclui win32dll)
+set_module_type(aclui win32dll UNICODE)
 
 add_importlib_target(aclui.spec)
 

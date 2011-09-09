@@ -7,7 +7,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/srclient.def)
 
 add_library(srclient SHARED ${SOURCE})
-set_entrypoint(srclient 0)
+set_module_type(srclient win32dll ENTRYPOINT 0 )
 
 add_importlibs(srclient kernel32 ntdll)
 add_dependencies(srclient psdk)

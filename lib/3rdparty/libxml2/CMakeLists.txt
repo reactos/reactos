@@ -59,3 +59,7 @@ list(APPEND SOURCE
 add_library(libxml2 ${SOURCE})
 target_link_libraries(libxml2 oldnames)
 add_dependencies(libxml2 psdk)
+
+if(NOT MSVC)
+    allow_warnings(libxml2)
+endif()

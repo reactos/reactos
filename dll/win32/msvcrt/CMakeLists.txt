@@ -23,20 +23,15 @@ list(APPEND SOURCE
 
 add_library(msvcrt SHARED ${SOURCE})
 
-if(NOT MSVC)
-    set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
-endif()
+set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
 
 add_dependencies(msvcrt psdk)
-set_entrypoint(msvcrt DllMain 12)
-set_image_base(msvcrt ${baseaddress_msvcrt})
 
-target_link_libraries(msvcrt crt wine)
+target_link_libraries(msvcrt crt wine ${PSEH_LIB})
 
 if(MSVC)
-    add_linkerflag(msvcrt "/ignore:4102")
-else()
-    target_link_libraries(msvcrt pseh)
+    # export of deleting destructor "name"
+    add_target_link_flags(msvcrt "/ignore:4102")
 endif()
 
 add_importlibs(msvcrt kernel32 ntdll)

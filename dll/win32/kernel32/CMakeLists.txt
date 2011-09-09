@@ -93,8 +93,7 @@ endif(ARCH MATCHES i386)
 
 add_library(kernel32 SHARED ${SOURCE})
 
-set_entrypoint(kernel32 DllMain 12)
-set_image_base(kernel32 ${baseaddress_kernel32})
+set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 

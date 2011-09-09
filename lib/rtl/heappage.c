@@ -1195,7 +1195,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
 
     /* Traverse the list */
     Current = RtlpDphDelayedFreeQueue.Flink;
-    while (Current != &RtlpDphDelayedFreeQueue);
+    while (Current != &RtlpDphDelayedFreeQueue)
     {
         /* Get the next entry pointer */
         Next = Current->Flink;

@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(opengl32.dll opengl32.spec)
 
@@ -13,7 +12,7 @@ list(APPEND SOURCE
 
 add_library(opengl32 SHARED ${SOURCE})
 
-set_module_type(opengl32 win32dll)
+set_module_type(opengl32 win32dll UNICODE)
 
 add_importlibs(opengl32
     msvcrt

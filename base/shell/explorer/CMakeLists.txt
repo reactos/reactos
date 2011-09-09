@@ -1,7 +1,6 @@
 
 add_subdirectory(notifyhook)
 
-set_unicode()
 set_rc_compiler()
 
 #NOTE : explorer doesn't follow standard c++, and so doesn't compile with stlport headers
@@ -11,7 +10,8 @@ set_rc_compiler()
 
 add_definitions(
     -DWIN32
-    -D__WINDRES__)
+    -D__WINDRES__
+    -DUNICODE -D_UNICODE)
 
 #add_pch(explorer precomp.h)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -56,7 +56,7 @@ list(APPEND SOURCE
 add_executable(explorer ${SOURCE})
 
 set_subsystem(explorer windows)
-set_entrypoint(explorer WinMainCRTStartup)
+set_entrypoint(explorer wWinMainCRTStartup)
 
 target_link_libraries(explorer
     -lsupc++

@@ -52,7 +52,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         endif()
         add_definitions(/Dinline=__inline)
     else()
-        add_compiler_flags(-fshort-wchar)
+        add_compile_flags("-fshort-wchar")
     endif()
 
     include_directories(include/host)
@@ -137,6 +137,12 @@ else()
     elseif(ARCH MATCHES arm)
         add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
+    
+    # Activate support for assembly source files
+    enable_language(ASM)
+
+    # Activate language support for resource files
+    enable_language(RC)
 
     # Compiler specific definitions and macros
     if(MSVC)
@@ -150,12 +156,6 @@ else()
 
     # IDL macros for widl/midl
     include(cmake/idl-support.cmake)
-
-    # Activate support for assembly source files
-    enable_language(ASM)
-
-    # Activate language support for resource files
-    enable_language(RC)
 
     if(MSVC AND USE_WDK_HEADERS)
         include_directories(
