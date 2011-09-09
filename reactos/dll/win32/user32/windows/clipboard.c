@@ -206,6 +206,9 @@ GetClipboardData(UINT uFormat)
     GETCLIPBDATA gcd;
 
     hData = NtUserGetClipboardData(uFormat, &gcd);
+    if (!hData)
+        return NULL;
+
     if (gcd.fGlobalHandle)
     {
         HANDLE hGlobal;
@@ -242,7 +245,7 @@ GetClipboardData(UINT uFormat)
                 pNewData = IntSynthesizeWideChar(pData, cbData, gcd.uFmtRet == CF_OEMTEXT);
                 break;
             default:
-                FIXME("Format: %u\n", uFormat);
+                FIXME("Format: %u != %u\n", uFormat, gcd.uFmtRet);
         }
 
         /* Is it a global handle? */
