@@ -31,8 +31,41 @@ CNewMenu::CNewMenu()
     szPath = NULL;
 }
 
+
 CNewMenu::~CNewMenu()
 {
+    UnloadShellItems();
+}
+
+void CNewMenu::UnloadItem(SHELLNEW_ITEM *item)
+{
+    // bail if the item is clearly invalid
+    if (NULL == item)
+        return;
+
+    if (NULL != item->szTarget)
+        free(item->szTarget);
+
+    free(item->szDesc);
+    free(item->szIcon);
+    free(item->szExt);
+
+    HeapFree(GetProcessHeap(), 0, item);
+}
+
+void CNewMenu::UnloadShellItems()
+{
+    SHELLNEW_ITEM *pCurItem;
+
+    while (s_SnHead)
+    {
+        pCurItem = s_SnHead;
+        s_SnHead = s_SnHead->Next;
+
+        UnloadItem(pCurItem);
+    }
+
+    s_SnHead = NULL;
 }
 
 static
@@ -85,22 +118,6 @@ GetKeyDescription(LPWSTR szKeyName, LPWSTR szResult)
 
   RegCloseKey(hKey);
   return TRUE;
-}
-
-void CNewMenu::UnloadItem(SHELLNEW_ITEM *item)
-{
-    // bail if the item is clearly invalid
-    if (NULL == item)
-        return;
-
-    if (NULL != item->szTarget)
-        free(item->szTarget);
-
-    free(item->szDesc);
-    free(item->szIcon);
-    free(item->szExt);
-
-    HeapFree(GetProcessHeap(), 0, item);
 }
 
 CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPWSTR szKeyName)
@@ -200,6 +217,8 @@ CNewMenu::LoadShellNewItems()
   if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, szNew, sizeof(szNew) / sizeof(WCHAR)))
       szNew[0] = 0;
   szNew[MAX_PATH-1] = 0;
+
+  UnloadShellItems();
 
   dwIndex = 0;
   do

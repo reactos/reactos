@@ -57,6 +57,7 @@ public:
 	~CNewMenu();
 	SHELLNEW_ITEM *LoadItem(LPWSTR szKeyName);
     void UnloadItem(SHELLNEW_ITEM *item);
+	void UnloadShellItems();
 	BOOL LoadShellNewItems();
 	UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
 	HRESULT DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi);
