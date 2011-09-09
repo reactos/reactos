@@ -17,10 +17,39 @@
 LARGE_INTEGER HalpCpuClockFrequency = {INITIAL_STALL_COUNT * 1000000};
 
 UCHAR TscCalibrationPhase;
-LARGE_INTEGER TscCalibrationArray[NUM_SAMPLES];
+ULONG64 TscCalibrationArray[NUM_SAMPLES];
 UCHAR HalpRtcClockVector = 0xD1;
 
+#define RTC_MODE 6 /* Mode 6 is 1024 Hz */
+#define SAMPLE_FREQENCY ((32768 << 1) >> RTC_MODE)
+
 /* PRIVATE FUNCTIONS *********************************************************/
+
+static
+ULONG64
+DoLinearRegression(
+    ULONG XMax,
+    ULONG64 *ArrayY)
+{
+    ULONG X, SumXX;
+    ULONG64 SumXY;
+
+    /* Calculate the sum of the squares of X */
+    SumXX = (XMax * (XMax + 1) * (2*XMax + 1)) / 6;
+
+    /* Calculate the sum of the differences to the first value
+       weighted by x */
+    for (SumXY = 0, X = 1; X <= XMax; X++)
+    {
+         SumXY += X * (ArrayY[X] - ArrayY[0]);
+    }
+
+    /* Account for sample frequency */
+    SumXY *= SAMPLE_FREQENCY;
+
+    /* Return the quotient of the sums */
+    return (SumXY + (SumXX/2)) / SumXX;
+}
 
 VOID
 NTAPI
@@ -45,9 +74,9 @@ HalpInitializeTsc()
     RegisterB = HalpReadCmos(RTC_REGISTER_B);
     HalpWriteCmos(RTC_REGISTER_B, RegisterB | RTC_REG_B_PI);
 
-    /* Modify register A to get 4096 Hz */
+    /* Modify register A to RTC_MODE to get SAMPLE_FREQENCY */
     RegisterA = HalpReadCmos(RTC_REGISTER_A);
-    RegisterA = (RegisterA & 0xF0) | 9;
+    RegisterA = (RegisterA & 0xF0) | RTC_MODE;
     HalpWriteCmos(RTC_REGISTER_A, RegisterA);
 
     /* Save old IDT entry */
@@ -80,8 +109,9 @@ HalpInitializeTsc()
     /* Restore old IDT entry */
     *IdtPointer = OldIdtEntry;
 
-    // do linear regression
-
+    /* Calculate an average, using simplified linear regression */
+    HalpCpuClockFrequency.QuadPart = DoLinearRegression(NUM_SAMPLES - 1,
+                                                        TscCalibrationArray);
 
     /* Restore flags */
     __writeeflags(Flags);
@@ -133,7 +163,7 @@ KeStallExecutionProcessor(ULONG MicroSeconds)
     StartTime = __rdtsc();
 
     /* Calculate the ending time */
-    EndTime = StartTime + HalpCpuClockFrequency.QuadPart * MicroSeconds;
+    EndTime = StartTime + KeGetPcr()->StallScaleFactor * MicroSeconds;
 
     /* Loop until time is elapsed */
     while (__rdtsc() < EndTime);

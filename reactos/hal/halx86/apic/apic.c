@@ -113,6 +113,11 @@ KIRQL
 FORCEINLINE
 ApicGetCurrentIrql(VOID)
 {
+    // HACK: This won't work with amd64, where cr8 is modified directly, but
+    // VBox is broken and returns a wrong value when using a vmmcall after a
+    // page table modification.
+    return KeGetPcr()->Irql;
+
     /* Read the TPR and convert it to an IRQL */
     return TprToIrql(ApicRead(APIC_TPR));
 }
@@ -123,6 +128,9 @@ ApicSetCurrentIrql(KIRQL Irql)
 {
     /* Convert IRQL and write the TPR */
     ApicWrite(APIC_TPR, IrqlToTpr(Irql));
+
+    /* HACK: Keep PCR field in sync, s.a. */
+    KeGetPcr()->Irql = Irql;
 }
 
 UCHAR
