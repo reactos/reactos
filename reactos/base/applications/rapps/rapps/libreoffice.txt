@@ -2,13 +2,13 @@
 
 [Section]
 Name = LibreOffice
-Version = 3.3.2
+Version = 3.3.3
 Licence = LGPL
 Description = Former called OpenOffice. Open Source Office Suite.
-Size = 214.0MB
+Size = 217.0MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/3.3.2/win/x86/LibO_3.3.2_Win_x86_install_multi.exe
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/3.3.3/win/x86/LibO_3.3.3_Win_x86_install_multi.exe
 CDPath = none
 
 [Section.0407]
@@ -25,3 +25,5 @@ Description = Otwarty pakiet biurowy.
 
 [Section.0422]
 Description = Відкритий офісний пакет.
+Size = 249.0M
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/3.3.3/win/x86/LibO_3.3.3_Win_x86_install_all_lang.exe

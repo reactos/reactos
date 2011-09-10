@@ -58,7 +58,7 @@ BEGIN
         MENUITEM "&Ongedaan maken\tCtrl+Z",   CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "K&nippen\tCtrl+X",          CMD_CUT
-        MENUITEM "&Kopiëren\tCtrl+C",         CMD_COPY
+        MENUITEM "&KopiÃ«ren\tCtrl+C",         CMD_COPY
         MENUITEM "&Plakken\tCtrl+V",          CMD_PASTE
         MENUITEM "&Verwijderen\tDel",         CMD_DELETE
         MENUITEM SEPARATOR

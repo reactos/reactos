@@ -10,6 +10,7 @@
 #define _tcschr _wcschr
 #define _tcscmp _wcscmp
 #define _tcscpy _wcscpy
+#define tcscpy wcscpy
 #define _tcslen _wcslen
 #define _tcsncat _wcsncat
 #define _tcsncmp _wcsncmp
@@ -34,6 +35,7 @@
 #define _tcschr _strchr
 #define _tcscmp _strcmp
 #define _tcscpy _strcpy
+#define tcscpy strcpy
 #define _tcslen _strlen
 #define _tcsncat _strncat
 #define _tcsncmp _strncmp

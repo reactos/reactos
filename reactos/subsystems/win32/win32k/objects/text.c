@@ -15,7 +15,6 @@
 
 /** Functions *****************************************************************/
 
-#if 0
 /*
    flOpts :
    GetTextExtentPoint32W = 0
@@ -135,7 +134,6 @@ GreGetTextExtentExW(
   DC_UnlockDc(pdc);
   return Result;
 }
-#endif
 
 DWORD
 APIENTRY

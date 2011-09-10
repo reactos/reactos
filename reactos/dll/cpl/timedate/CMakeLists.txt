@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(timedate.cpl timedate.spec)
@@ -15,7 +14,7 @@ add_library(timedate SHARED
     timedate.rc
     ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)
 
-set_module_type(timedate cpl)
+set_module_type(timedate cpl UNICODE)
 
 add_importlibs(timedate
     advapi32
@@ -27,4 +26,5 @@ add_importlibs(timedate
     msvcrt
     kernel32)
 
+add_pch(timedate timedate.h)
 add_cd_file(TARGET timedate DESTINATION reactos/system32 FOR all)

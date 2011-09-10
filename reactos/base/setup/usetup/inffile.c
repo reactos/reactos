@@ -28,10 +28,6 @@
 
 #include "usetup.h"
 
-#ifdef __REACTOS__
-#include <infros.h>
-#endif
-
 #define NDEBUG
 #include <debug.h>
 

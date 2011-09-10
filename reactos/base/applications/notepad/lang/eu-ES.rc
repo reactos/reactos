@@ -61,7 +61,7 @@ BEGIN
         END
     POPUP "Laguntza"
     BEGIN
-        MENUITEM "Õ&ndizea",                  CMD_HELP_CONTENTS
+        MENUITEM "√ç&ndizea",                  CMD_HELP_CONTENTS
         MENUITEM "&Bilatu...",                CMD_HELP_SEARCH
         MENUITEM "Laguntzari buruz laguntza", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
@@ -165,10 +165,10 @@ STRING_TOOLARGE,                "'%s' fitxategia handiegia da\
                                  ohar-blokarentzat.\n Erabili beste editore bat."
 STRING_NOTEXT,                  "Ez duzu ezer idatzi. \nMesedez zerbait idatzi e \
                                  berriz saiatu"
-STRING_DOESNOTEXIST,            "'%s'\nFitxategia ez dago\n\n øFitxategi berri bat \
+STRING_DOESNOTEXIST,            "'%s'\nFitxategia ez dago\n\n ¬øFitxategi berri bat \
                                  sortu nahi duzu?"
 STRING_NOTSAVED,                "'%s'Fitxategiaren testua  aldatu egin da\n\n \
-                                 øAldaketak gorde nahi dituzu?"
+                                 ¬øAldaketak gorde nahi dituzu?"
 STRING_NOTFOUND,                "Ez da aurkitu '%s'."
 STRING_OUT_OF_MEMORY,           "Ez dago memoria nahikorik lan hau\
                                  amaitzeko. \nItxi aplikazio bat edo gehiago \

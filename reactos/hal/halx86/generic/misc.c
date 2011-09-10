@@ -62,6 +62,7 @@ HalpMarkAcpiHal(VOID)
     UNICODE_STRING KeyString;
     HANDLE KeyHandle;
     HANDLE Handle;
+    ULONG Value = HalDisableFirmwareMapper ? 1 : 0;
     
     /* Open the control set key */
     RtlInitUnicodeString(&KeyString,
@@ -88,8 +89,8 @@ HalpMarkAcpiHal(VOID)
                                    &KeyString,
                                    0,
                                    REG_DWORD,
-                                   &HalDisableFirmwareMapper,
-                                   sizeof(HalDisableFirmwareMapper));
+                                   &Value,
+                                   sizeof(Value));
             
             /* Close subkey */
             ZwClose(KeyHandle);

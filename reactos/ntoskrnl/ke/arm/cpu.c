@@ -17,7 +17,6 @@
 ULONG KeFixedTbEntries;
 ULONG KiDmaIoCoherency;
 ULONG KeIcacheFlushCount = 0;
-CCHAR KeNumberProcessors;
 ULONG KeDcacheFlushCount;
 ULONG KeActiveProcessors;
 ULONG KeProcessorArchitecture;
@@ -90,23 +89,6 @@ KeInvalidateAllCaches(VOID)
     return TRUE;
 }
 
-BOOLEAN
-NTAPI
-KeDisableInterrupts(VOID)
-{
-    ARM_STATUS_REGISTER Flags;
-    
-    //
-    // Get current interrupt state and disable interrupts
-    //
-    Flags = KeArmStatusRegisterGet();
-    _disable();
-    
-    //
-    // Return previous interrupt state
-    //
-    return Flags.IrqDisable;
-}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -130,17 +112,17 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
                 IN BOOLEAN AllProcessors)
 {
     KIRQL OldIrql;
-    
+
     //
     // Raise the IRQL for the TB Flush
     //
     OldIrql = KeRaiseIrqlToSynchLevel();
-    
+
     //
     // Flush the TB for the Current CPU
     //
     KeFlushCurrentTb();
-    
+
     //
     // Return to Original IRQL
     //
@@ -168,7 +150,7 @@ NTAPI
 KeQueryActiveProcessors(VOID)
 {
     PAGED_CODE();
-    
+
     //
     // Simply return the number of active processors
     //
@@ -186,7 +168,7 @@ KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
     // Capture the context
     //
     RtlCaptureContext(&State->ContextFrame);
-    
+
     //
     // Capture the control state
     //

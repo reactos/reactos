@@ -512,6 +512,27 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     __writeeflags(EFlags);
 }
 
+UCHAR
+FASTCALL
+HalpIrqToVector(UCHAR Irq)
+{
+    return (PRIMARY_VECTOR_BASE + Irq);
+}
+
+UCHAR
+FASTCALL
+HalpVectorToIrq(UCHAR Vector)
+{
+    return (Vector - PRIMARY_VECTOR_BASE);
+}
+
+KIRQL
+FASTCALL
+HalpVectorToIrql(UCHAR Vector)
+{
+    return (PROFILE_LEVEL - (Vector - PRIMARY_VECTOR_BASE));
+}
+
 /* IRQL MANAGEMENT ************************************************************/
 
 /*

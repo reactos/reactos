@@ -19,7 +19,7 @@
 /*!
  * \brief DRIVEROBJ cleanup function
  */
-BOOL INTERNAL_CALL
+BOOL NTAPI
 DRIVEROBJ_Cleanup(PVOID pObject)
 {
     PEDRIVEROBJ pedo = pObject;

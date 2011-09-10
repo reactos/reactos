@@ -1,5 +1,3 @@
-#pragma once
-
 #define COBJMACROS
 #include <windows.h>
 #include <commctrl.h>
@@ -12,6 +10,13 @@
 #include <regstr.h>
 #include <cplext.h>
 #include <dll/desk/deskcplx.h>
+#include <cfgmgr32.h>
+
+#include "theme.h"
+#include "appearance.h"
+#include "preview.h"
+#include "draw.h"
+#include "monslctl.h"
 
 #include "resource.h"
 

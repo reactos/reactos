@@ -1,5 +1,5 @@
 /*
- * reactos/subsys/csrss/api/process.c
+ * subsystems/win32/csrss/csrsrv/api/process.c
  *
  * "\windows\ApiPort" port process management functions
  *
@@ -105,6 +105,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
                                 PROCESS_ALL_ACCESS,
                                 &ObjectAttributes,
                                 &ClientId);
+         DPRINT("CSR Process: %p Handle: %p\n", pProcessData, pProcessData->Process);
          if (!NT_SUCCESS(Status))
          {
             ProcessData[hash] = pProcessData->next;

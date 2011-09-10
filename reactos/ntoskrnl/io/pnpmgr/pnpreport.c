@@ -202,12 +202,12 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     if (DeviceObject && *DeviceObject)
     {
         Pdo = *DeviceObject;
-        DeviceNode = IopGetDeviceNode(*DeviceObject);
     }
     else
     {
         /* Create the PDO */
         Status = PnpRootCreateDevice(&ServiceName,
+                                     DriverObject,
                                      &Pdo,
                                      NULL);
         if (!NT_SUCCESS(Status))
@@ -215,18 +215,18 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
             DPRINT("PnpRootCreateDevice() failed (Status 0x%08lx)\n", Status);
             return Status;
         }
+    }
 
-        /* Create the device node for the new PDO */
-        Status = IopCreateDeviceNode(IopRootDeviceNode,
-                                     Pdo,
-                                     NULL,
-                                     &DeviceNode);
+    /* Create the device node for the new PDO */
+    Status = IopCreateDeviceNode(IopRootDeviceNode,
+                                 Pdo,
+                                 NULL,
+                                 &DeviceNode);
 
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
-            return Status;
-        }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     /* We don't call AddDevice for devices reported this way */
@@ -248,7 +248,8 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
     /* Open a handle to the instance path key */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    /* REG_OPTION_VOLATILE is a HACK!!! */
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_VOLATILE, &InstanceKey);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -258,16 +259,16 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
                          L"DETECTED%ls\\%wZ",
                          IfString,
                          &ServiceName);
-    HardwareId[IdLength++] = UNICODE_NULL;
+    IdLength++;
 
     /* Add DETECTED\DriverName */
     IdLength += swprintf(&HardwareId[IdLength],
                          L"DETECTED\\%wZ",
                          &ServiceName);
-    HardwareId[IdLength++] = UNICODE_NULL;
+    IdLength++;
 
     /* Terminate the string with another null */
-    HardwareId[IdLength] = UNICODE_NULL;
+    HardwareId[IdLength++] = UNICODE_NULL;
 
     /* Store the value for CompatibleIDs */
     RtlInitUnicodeString(&ValueName, L"CompatibleIDs");
@@ -289,10 +290,12 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
                             L"DETECTED%ls\\%wZ",
                             IfString,
                             &ServiceName);
-       HardwareId[++IdLength] = UNICODE_NULL;
+       IdLength++;
+
+       HardwareId[IdLength++] = UNICODE_NULL;
 
        /* Write the value to the registry */
-       Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_SZ, HardwareId, IdLength * sizeof(WCHAR));
+       Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_MULTI_SZ, HardwareId, IdLength * sizeof(WCHAR));
        if (!NT_SUCCESS(Status))
        {
           DPRINT("Failed to write the hardware ID: 0x%x\n", Status);

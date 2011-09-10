@@ -8,10 +8,7 @@
 
 /* INCLUDES *********************************************************/
 
-#include <windows.h>
-#include <tchar.h>
-#include "definitions.h"
-#include "globalvar.h"
+#include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
 

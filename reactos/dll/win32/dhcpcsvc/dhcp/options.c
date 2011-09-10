@@ -40,12 +40,8 @@
  * Enterprises, see ``http://www.vix.com''.
  */
 
-#include <ctype.h>
-#include <string.h>
-
 #define DHCP_OPTION_DATA
 #include "rosdhcp.h"
-#include "dhcpd.h"
 
 int bad_options = 0;
 int bad_options_max = 5;

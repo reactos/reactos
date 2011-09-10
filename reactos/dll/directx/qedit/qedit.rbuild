@@ -9,6 +9,7 @@
 	<file>mediadet.c</file>
 	<file>regsvr.c</file>
 	<file>samplegrabber.c</file>
+	<pch>qedit_private.h</pch>
 	<library>wine</library>
 	<library>strmiids</library>
 	<library>uuid</library>

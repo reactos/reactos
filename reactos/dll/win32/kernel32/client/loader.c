@@ -818,7 +818,7 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
             /* Fail */
             BaseSetLastNTError(Status);
             if (phModule) *phModule = 0;
-            return Status;
+            return NT_SUCCESS(Status);
         }
     }
 

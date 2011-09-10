@@ -1482,7 +1482,7 @@ BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -1534,7 +1534,7 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -1615,7 +1615,7 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
    BOOL Hook;
    INT Ret = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

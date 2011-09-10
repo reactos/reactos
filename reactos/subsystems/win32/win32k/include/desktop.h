@@ -1,8 +1,5 @@
 #pragma once
 
-#include "msgqueue.h"
-#include "window.h"
-
 typedef struct _DESKTOP
 {
     PDESKTOPINFO pDeskInfo;
@@ -32,7 +29,7 @@ typedef struct _DESKTOP
     /* Thread blocking input */
     PVOID BlockInputThread;
     LIST_ENTRY ShellHookWindows;
-} DESKTOP, *PDESKTOP;
+} DESKTOP;
 
 // Desktop flags
 #define DF_TME_HOVER        0x00000400
@@ -81,9 +78,6 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 NTSTATUS NTAPI 
 IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
 
-LRESULT CALLBACK
-IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 HDC FASTCALL
 IntGetScreenDC(VOID);
 
@@ -111,9 +105,6 @@ co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height);
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP Desktop);
 
-HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
-
 BOOL IntSetThreadDesktop(IN HDESK hDesktop,
                          IN BOOL FreeOnFailure);
 
@@ -123,18 +114,19 @@ IntValidateDesktopHandle(
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
    PDESKTOP *Object);
+
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,
                     PUNICODE_STRING DesktopPath,
                     HWINSTA *hWinSta,
                     HDESK *hDesktop);
+
 BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable);
 VOID APIENTRY UserRedrawDesktop(VOID);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
 VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
-BOOL FASTCALL IntPaintDesktop(HDC hDC);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))

@@ -396,6 +396,10 @@ IopLoadServiceModule(
    {
       DPRINT("Loading module\n");
       Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
+      if (NT_SUCCESS(Status))
+      {
+          IopDisplayLoadingMessage(ServiceName);
+      }
    }
 
    ExFreePool(ServiceImagePath.Buffer);

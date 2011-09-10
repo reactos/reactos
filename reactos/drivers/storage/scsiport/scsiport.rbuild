@@ -10,4 +10,5 @@
 	<file>scsiport.c</file>
 	<file>stubs.c</file>
 	<file>scsiport.rc</file>
+	<pch>precomp.h</pch>
 </module>

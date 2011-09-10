@@ -16,9 +16,9 @@ add_definitions(
     -DREGISTER_PROXY_DLL
     -DCOM_NO_WINDOWS_H)
 
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+    
+add_rpc_files(client irot.idl)
 
 add_rpcproxy_files(
     dcom.idl
@@ -66,6 +66,7 @@ list(APPEND SOURCE
     ole32res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dcom_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/dcom_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/irot_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_unknwn_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_objidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_oleidl_p.c
@@ -79,7 +80,6 @@ set_module_type(ole32 win32dll)
 
 target_link_libraries(ole32
     wine
-    irotrpc
     uuid
     ${PSEH_LIB})
 

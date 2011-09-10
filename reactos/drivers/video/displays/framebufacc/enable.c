@@ -108,13 +108,15 @@ DrvEnablePDEV(
    }
 
    /* hw mouse pointer */
-   
+
     ppdev->pPointerAttributes = NULL;
     ppdev->PointerAttributesSize = 0;
 
     /* Test see if the driver support hw mouse or not */
-    if (!EngDeviceIoControl(ppdev->hDriver,IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES,
-                            &ppdev->ModeIndex, sizeof(PVIDEO_MODE),
+    if (!EngDeviceIoControl(ppdev->hDriver,
+                            IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES,
+                            NULL,
+                            sizeof(PVIDEO_MODE),
                             &ppdev->PointerCapabilities,
                             sizeof(VIDEO_POINTER_CAPABILITIES),
                             &returnedDataLength))

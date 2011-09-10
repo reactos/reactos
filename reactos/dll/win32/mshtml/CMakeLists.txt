@@ -78,14 +78,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
 add_library(mshtml SHARED ${SOURCE})
-
 set_module_type(mshtml win32dll)
-
-target_link_libraries(mshtml
-    uuid
-    wine
-    strmiids
-    oldnames)
+target_link_libraries(mshtml uuid wine strmiids oldnames)
+add_delay_importlibs(mshtml wininet)
 
 add_importlibs(mshtml
     urlmon
@@ -95,7 +90,6 @@ add_importlibs(mshtml
     user32
     gdi32
     advapi32
-    wininet
     msvcrt
     kernel32
     ntdll)

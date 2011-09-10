@@ -11,7 +11,6 @@
 /* INCLUDES ****************************************************************/
 
 #include "services.h"
-#include "svcctl_s.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -91,7 +90,7 @@ static GENERIC_MAPPING
 ScmServiceMapping = {SERVICE_READ,
                      SERVICE_WRITE,
                      SERVICE_EXECUTE,
-                     SC_MANAGER_ALL_ACCESS};
+                     SERVICE_ALL_ACCESS};
 
 
 /* FUNCTIONS ***************************************************************/
@@ -2868,8 +2867,17 @@ DWORD RStartServiceW(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    DWORD i;
 
-    DPRINT("RStartServiceW() called\n");
+    DPRINT("RStartServiceW(%p %lu %p) called\n", hService, argc, argv);
+    DPRINT("  argc: %lu\n", argc);
+    if (argv != NULL)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            DPRINT("  argv[%lu]: %S\n", i, argv[i]);
+        }
+    }
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2901,13 +2909,8 @@ DWORD RStartServiceW(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    if (argv) {
-        UNIMPLEMENTED;
-        argv = NULL;
-    }
-
     /* Start the service */
-    dwError = ScmStartService(lpService, argc, (LPWSTR *)argv);
+    dwError = ScmStartService(lpService, argc, (LPWSTR*)argv);
 
     return dwError;
 }
@@ -4083,6 +4086,9 @@ DWORD RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    LPWSTR *lpVector = NULL;
+    DWORD i;
+    DWORD dwLength;
 
     DPRINT("RStartServiceA() called\n");
 
@@ -4116,12 +4122,56 @@ DWORD RStartServiceA(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    /* FIXME: Convert argument vector to Unicode */
+    /* Build a Unicode argument vector */
+    if (argc > 0)
+    {
+        lpVector = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             argc * sizeof(LPWSTR));
+        if (lpVector == NULL)
+            return ERROR_NOT_ENOUGH_MEMORY;
+
+        for (i = 0; i < argc; i++)
+        {
+            dwLength = MultiByteToWideChar(CP_ACP,
+                                           0,
+                                           ((LPSTR*)argv)[i],
+                                           -1,
+                                           NULL,
+                                           0);
+
+            lpVector[i] = HeapAlloc(GetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    dwLength * sizeof(WCHAR));
+            if (lpVector[i] == NULL)
+            {
+                dwError = ERROR_NOT_ENOUGH_MEMORY;
+                goto done;
+            }
+
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                ((LPSTR*)argv)[i],
+                                -1,
+                                lpVector[i],
+                                dwLength);
+        }
+    }
 
     /* Start the service */
-    dwError = ScmStartService(lpService, 0, NULL);
+    dwError = ScmStartService(lpService, argc, lpVector);
 
-    /* FIXME: Free argument vector */
+done:
+    /* Free the Unicode argument vector */
+    if (lpVector != NULL)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            if (lpVector[i] != NULL)
+                HeapFree(GetProcessHeap(), 0, lpVector[i]);
+        }
+        HeapFree(GetProcessHeap(), 0, lpVector);
+    }
 
     return dwError;
 }

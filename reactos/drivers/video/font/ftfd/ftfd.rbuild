@@ -10,4 +10,5 @@
 	<file>glyph.c</file>
 	<file>rosglue.c</file>
 	<file>sprintf.c</file>
+	<pch>ftfd.h</pch>
 </module>

@@ -27,31 +27,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
 add_library(shlwapi SHARED ${SOURCE})
-
 set_module_type(shlwapi win32dll)
-
 target_link_libraries(shlwapi wine uuid)
-
-add_importlibs(shlwapi
-    user32
-    gdi32
-    advapi32
-    oleaut32
-    ole32
-    comctl32
-    comdlg32
-    mpr
-    mlang
-    urlmon
-    winmm
-    version
-    shell32
-    kernel32
-    userenv
-    wininet
-    msvcrt
-    ntdll)
-
+add_delay_importlibs(shlwapi userenv oleaut32 ole32 comctl32 comdlg32 mpr mlang urlmon shell32 winmm version)
+add_importlibs(shlwapi user32 gdi32 advapi32 msvcrt wininet kernel32 ntdll)
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
-
 add_importlib_target(shlwapi.spec)

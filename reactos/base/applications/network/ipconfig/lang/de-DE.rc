@@ -31,28 +31,28 @@ BEGIN
     \n \
     wobei\n \
         Adapter         Verbindungsname\n \
-                       (Wildcards * und ? sind möglich, siehe Beispiele)\n \
+                       (Wildcards * und ? sind mÃ¶glich, siehe Beispiele)\n \
     \n \
         Optionen:\n \
            /?           Zeigt die Hilfe an.\n \
            /all         Zeigt alle Konfigurationsinformationen an.\n \
-           /release     Gibt die IP-Adresse für den angegebenen Adapter frei.\n \
-           /renew       Erneuert die IP-Adresse für den angegebenen Adapter.\n \
-           /flushdns    Leert den DNS-Auflösungscache.\n \
+           /release     Gibt die IP-Adresse fÃ¼r den angegebenen Adapter frei.\n \
+           /renew       Erneuert die IP-Adresse fÃ¼r den angegebenen Adapter.\n \
+           /flushdns    Leert den DNS-AuflÃ¶sungscache.\n \
            /registerdns Aktualisiert alle DHCP-Leases und registriert DNS-Namen.\n \
-           /displaydns  Zeigt den Inhalt des DNS-Auflösungscaches an.\n \
-           /showclassid Zeigt alle DHCP-Klassen-IDs an, die für diesen\n \
+           /displaydns  Zeigt den Inhalt des DNS-AuflÃ¶sungscaches an.\n \
+           /showclassid Zeigt alle DHCP-Klassen-IDs an, die fÃ¼r diesen\n \
                         Adapter zugelassen sind. \n \
-           /setclassid  Ändert die DHCP-Klassen-ID\n \
+           /setclassid  Ã„ndert die DHCP-Klassen-ID\n \
     \n \
-    Standardmäßig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n \
-    gateway für jeden an TCP/IP gebundenen Adapter angezeigt.\n \
+    StandardmÃ¤ÃŸig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n \
+    gateway fÃ¼r jeden an TCP/IP gebundenen Adapter angezeigt.\n \
     \n \
     Wird bei RELEASE oder RENEW kein Adaptername angegeben, so werden die IP-\n \
     Adressen von allen an TCP/IP gebundenen Adapter freigegeben oder erneuert.\n \
     \n \
     Wird bei SETCLASSID kein Klassenkennung angegeben, dann wird die Klassen-\n \
-    kennung gelöscht. \n \
+    kennung gelÃ¶scht. \n \
     \n \
     Beispiele:\n \
         > ipconfig                   ... Zeigt Informationen an.\n \

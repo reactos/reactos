@@ -159,7 +159,7 @@ UnloadAppInitDlls()
         LPWSTR ptr;
 		size_t i;
 
-        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
+        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH * sizeof(WCHAR));
 
 		for (i = 0; i < KEY_LENGTH; ++ i)
 		{
@@ -243,7 +243,6 @@ Init(VOID)
          {
             InitializeCriticalSection(&U32AccelCacheLock);
             GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
-            InitStockObjects();
             LoadAppInitDlls();
 
             return TRUE;

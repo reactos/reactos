@@ -80,6 +80,8 @@ typedef struct _CODEPAGE_ENTRY
    CPTABLEINFO CodePageTable;
 } CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
 
+extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+
 typedef
 DWORD
 (*WaitForInputIdleType)(
@@ -89,7 +91,6 @@ DWORD
 /* GLOBAL VARIABLES **********************************************************/
 
 extern BOOL bIsFileApiAnsi;
-extern HANDLE hProcessHeap;
 extern HANDLE hBaseDir;
 extern HMODULE hCurrentModule;
 
@@ -107,6 +108,10 @@ extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
 extern BOOLEAN BaseRunningInServerProcess;
 
 /* FUNCTION PROTOTYPES *******************************************************/
+
+VOID
+NTAPI
+BaseDllInitializeMemoryManager(VOID);
 
 BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
 
@@ -247,3 +252,11 @@ BaseSetLastNTError(IN NTSTATUS Status);
 
 /* FIXME */
 WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
+
+HANDLE
+WINAPI
+DuplicateConsoleHandle(HANDLE hConsole,
+                       DWORD dwDesiredAccess,
+                       BOOL	bInheritHandle,
+                       DWORD dwOptions);
+

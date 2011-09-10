@@ -6,18 +6,10 @@
  * explicit reference counting if this turns out not to be acceptable.
  */
 
-#define NTOSAPI
-#include <ntddk.h>
-#include <reactos/rossym.h>
-#include "rossympriv.h"
-#include <ntimage.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include "rossym.h"
-#include "rossympriv.h"
-#include "dwarf.h"
 
 static int parseabbrevs(Dwarf*, ulong, DwarfAbbrev*, DwarfAttr*, int*, int*);
 DwarfAbbrev *dwarfgetabbrev(Dwarf*, ulong, ulong);

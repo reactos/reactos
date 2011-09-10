@@ -538,6 +538,7 @@ public:
 	{
 		ATLASSERT(_pModule == NULL);
 		_pModule = this;
+		_pModule->m_pObjMap = NULL;
 	}
 
 	~CComModule()

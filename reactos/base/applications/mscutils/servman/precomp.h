@@ -79,7 +79,7 @@ VOID ListViewSelectionChanged(PMAIN_WND_INFO Info, LPNMLISTVIEW pnmv);
 BOOL CreateListView(PMAIN_WND_INFO Info);
 
 /* start */
-BOOL DoStart(PMAIN_WND_INFO Info);
+BOOL DoStart(PMAIN_WND_INFO Info, LPWSTR lpStartParams);
 
 /* stop */
 typedef struct _STOP_INFO

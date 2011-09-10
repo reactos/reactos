@@ -54,17 +54,7 @@
  * mail info, and .plan/.project files.
  */
 
-#include <winsock2.h>
-#include "err.h"
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#include "various.h"
-#include "getopt.h"
+#include "precomp.h"
 
 char *__progname;
 

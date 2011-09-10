@@ -411,6 +411,7 @@
 ;@ stdcall RtlAbortRXact
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAcquirePebLock()
+@ stdcall RtlAcquirePrivilege(ptr long long ptr)
 @ stdcall RtlAcquireResourceExclusive(ptr long)
 @ stdcall RtlAcquireResourceShared(ptr long)
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
@@ -720,10 +721,11 @@
 ;@ stdcall RtlInitializeStackTraceDataBase ; 5.1 SP2 and SP3, and 5.2 only
 @ stdcall RtlInsertElementGenericTable(ptr ptr long ptr)
 @ stdcall RtlInsertElementGenericTableAvl(ptr ptr long ptr)
+@ stdcall -arch=x86_64 RtlInstallFunctionTableCallback(double double long ptr ptr ptr)
 @ stdcall RtlInt64ToUnicodeString(double long ptr)
 @ stdcall RtlIntegerToChar(long long long ptr)
 @ stdcall RtlIntegerToUnicodeString(long long ptr)
-;@ stdcall RtlInterlockedCompareExchange64
+@ stdcall -arch=win32 -ret64 RtlInterlockedCompareExchange64(ptr double double)
 @ stdcall -arch=i386,x86_64 RtlInterlockedFlushSList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPopEntrySList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPushEntrySList(ptr ptr)
@@ -846,6 +848,7 @@
 @ stdcall RtlReleaseActivationContext(ptr)
 ;@ stdcall RtlReleaseMemoryStream
 @ stdcall RtlReleasePebLock()
+@ stdcall RtlReleasePrivilege(ptr)
 @ stdcall RtlReleaseResource(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockShared(ptr)
@@ -853,6 +856,7 @@
 @ stdcall RtlRemoveVectoredContinueHandler(ptr)
 @ stdcall RtlRemoveVectoredExceptionHandler(ptr)
 @ stdcall RtlResetRtlTranslations(ptr)
+@ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr)
 @ stdcall RtlRestoreLastWin32Error(long) RtlSetLastWin32Error
 ;@ stdcall RtlRevertMemoryStream
 @ stdcall RtlRunDecodeUnicodeString(long ptr)
@@ -1292,7 +1296,7 @@
 ;@ cdecl -private -arch=i386 _CIpow()
 ;@ cdecl _CIsin
 ;@ cdecl _CIsqrt
-;@ stdcall -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
+@ cdecl -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
@@ -1317,6 +1321,7 @@
 @ cdecl _itoa(long ptr long)
 @ cdecl _itow(long ptr long)
 @ cdecl _lfind(ptr ptr ptr long ptr)
+@ cdecl -arch=x86_64 _local_unwind()
 @ cdecl _ltoa(long ptr long)
 @ cdecl _ltow(long ptr long)
 @ cdecl _memccpy(ptr ptr long long)

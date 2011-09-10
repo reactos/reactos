@@ -313,6 +313,22 @@ typedef DWORD FLONG;
 #define ERROR_SEVERITY_INFORMATIONAL 0x40000000
 #define ERROR_SEVERITY_WARNING       0x80000000
 #define ERROR_SEVERITY_ERROR         0xC0000000
+
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
+extern "C++" { \
+    inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)|((int)b)); } \
+    inline ENUMTYPE operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+    inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)&((int)b)); } \
+    inline ENUMTYPE operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+    inline ENUMTYPE operator ~ (ENUMTYPE a) { return (ENUMTYPE)(~((int)a)); } \
+    inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)^((int)b)); } \
+    inline ENUMTYPE operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
+#endif
+
 /* also in ddk/ntifs.h */
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -3302,7 +3318,7 @@ typedef struct _QUOTA_LIMITS {
   SIZE_T PagefileLimit;
   LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
-    
+
 typedef struct _QUOTA_LIMITS_EX {
   SIZE_T PagedPoolLimit;
   SIZE_T NonPagedPoolLimit;
@@ -5249,17 +5265,9 @@ MemoryBarrier(VOID)
 #error Unknown architecture
 #endif
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) || defined(_M_AMD64)
 
-#ifdef _MSC_VER
-#pragma intrinsic(__int2c)
-#pragma intrinsic(_mm_pause)
 #define YieldProcessor _mm_pause
-#else
-#define YieldProcessor() __asm__ __volatile__("pause");
-#define __int2c() __asm__ __volatile__("int $0x2c");
-#endif
-
 
 FORCEINLINE
 VOID
@@ -5268,13 +5276,6 @@ DbgRaiseAssertionFailure(VOID)
     __int2c();
 }
 
-#elif defined (_M_AMD64)
-#ifdef _MSC_VER
-#pragma intrinsic(_mm_pause)
-#define YieldProcessor _mm_pause
-#else
-#define YieldProcessor() __asm__ __volatile__("pause");
-#endif
 #elif defined(_M_PPC)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_MIPS)

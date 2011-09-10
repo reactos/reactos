@@ -22,11 +22,11 @@ When porting a new DLL from Wine to ReactOS, please do the following steps
 The following build tools are shared with Wine.
 
 reactos/tools/unicode             # Synced to Wine-1_2rc6
-reactos/tools/widl                # Synced to Wine-1_3_4
+reactos/tools/widl                # Synced to Wine-1.3.26
 reactos/tools/winebuild           # Synced to Wine-1_1_13
 reactos/tools/wmc                 # Synced to Wine-20081105 (~Wine-1.1.7)
-reactos/tools/wpp                 # Synced to Wine-20081105 (~Wine-1.1.7)
-reactos/tools/wrc                 # Synced to Wine-1_1_28
+reactos/tools/wpp                 # Synced to Wine-1.3.26
+reactos/tools/wrc                 # Synced to Wine-1.3.26
 
 The following libraries are shared with Wine.
 
@@ -140,7 +140,7 @@ reactos/dll/win32/rasapi32        # Autosync
 reactos/dll/win32/resutils        # Autosync
 reactos/dll/win32/riched20        # Autosync
 reactos/dll/win32/riched32        # Autosync
-reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_55
+reactos/dll/win32/rpcrt4          # Synced to Wine-1.3.26
 reactos/dll/win32/rsabase         # Autosync
 reactos/dll/win32/rsaenh          # Autosync
 reactos/dll/win32/sccbase         # Autosync
@@ -212,7 +212,7 @@ check Wine current souces first as it may already be fixed.
 reactos/lib/sdk/uuid                  # Synced to Wine-1.1.42
 
 advapi32 -
-  reactos/dll/win32/advapi32/crypt/*.c          # ekohl says we're not sharing this
+  reactos/dll/win32/advapi32/crypt/*.c          # Unknown
   reactos/dll/win32/advapi32/sec/cred.c         # Out of Sync
   reactos/dll/win32/advapi32/sec/sid.c          # Out of Sync
 
@@ -263,7 +263,7 @@ User32 -
   reactos/dll/win32/user32/windows/menu.c       # Forked
   reactos/dll/win32/user32/windows/messagebox.c # Forked
   reactos/dll/win32/user32/windows/rect.c       # Forked (uitools.c)
-  reactos/dll/win32/user32/windows/spy.c	# Synced to Wine-1_1_40
+  reactos/dll/win32/user32/windows/spy.c        # Synced to Wine-1_1_40
   reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
   reactos/dll/win32/user32/windows/winpos.c     # Forked
 

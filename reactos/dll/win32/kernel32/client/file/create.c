@@ -212,7 +212,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
 				      NULL))
    {
      WARN("Invalid path\n");
-     SetLastError(ERROR_PATH_NOT_FOUND);
+     SetLastError(ERROR_FILE_NOT_FOUND);
      return INVALID_HANDLE_VALUE;
    }
 

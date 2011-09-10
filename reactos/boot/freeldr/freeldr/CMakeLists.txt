@@ -1,7 +1,12 @@
 
-if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+if(ARCH MATCHES i386)
     CreateBootSectorTarget2(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
+        ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+        F800)
+elseif(ARCH MATCHES amd64)
+    CreateBootSectorTarget2(frldr16
+        ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
 endif()
@@ -107,8 +112,7 @@ if(ARCH MATCHES i386)
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
-        windows/i386/ntsetup.c
-        windows/i386/wlmemory.c
+        arch/i386/winldr.c
         windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
@@ -119,7 +123,9 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND FREELDR_COMMON_SOURCE
         arch/amd64/entry.S
+        arch/amd64/int386.S
         arch/amd64/loader.c
+        arch/amd64/pnpbios.S
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
@@ -134,8 +140,7 @@ elseif(ARCH MATCHES amd64)
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c
-        windows/amd64/ntsetup.c
-        windows/amd64/wlmemory.c)
+        arch/amd64/winldr.c)
 else()
 #TBD
 endif()
@@ -185,13 +190,15 @@ concatenate_files(
 
 add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 
-add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR all)
+# rename freeldr on livecd to setupldr.sys because isoboot.bin search for setupldr.sys
+add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
+add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR livecd NAME_ON_CD setupldr.sys)
 
 list(APPEND SETUPLDR_SOURCE
     inffile/inffile.c)
 
 if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
-    list(APPEND SETUPLDR_SOURCE windows/setupldr2.c)
+    list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
 if(NOT MSVC)
@@ -231,5 +238,5 @@ concatenate_files(
 
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 
-add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR all)
+add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 

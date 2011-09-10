@@ -54,8 +54,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Magnifier È stato realizzato per fornire un livello minimo di funzionalit‡ agli utenti affetti da problemi visivi. La maggior parte di questi utenti avr‡ bisogno di un programma di utilit‡ dotato di maggiori funzioni per l'uso quotidiano.",IDC_STATIC,36,7,207,33
-    CONTROL         "Non mostrare pi˘ questo messaggio",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+    LTEXT           "Magnifier √© stato realizzato per fornire un livello minimo di funzionalit√† agli utenti affetti da problemi visivi. La maggior parte di questi utenti avr√† bisogno di un programma di utilit√† dotato di maggiori funzioni per l'uso quotidiano.",IDC_STATIC,36,7,207,33
+    CONTROL         "Non mostrare pi√π questo messaggio",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 
 STRINGTABLE

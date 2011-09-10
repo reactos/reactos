@@ -15,8 +15,6 @@
 
 #include "wdmaud.h"
 
-#include <stdio.h>
-
 #define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
 
 HANDLE KernelHandle = INVALID_HANDLE_VALUE;

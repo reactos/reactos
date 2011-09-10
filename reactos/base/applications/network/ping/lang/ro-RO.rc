@@ -1,0 +1,43 @@
+ /* 
+ * FILE:             base/applications/network/ping/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ştefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-21  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nUtilizare: ping [-t] [-n număr] [-l dimensiune] [-w expirare] gazdă-destinaţie\n\n\
+Opţiuni:\n\
+    -t             Transmite necontenit pachete către gazda specificată.\n\
+                   Pentru a opri transmisia - tastaţi Control-C.\n\
+    -n număr       Numărul de ecouri cerute ca răspuns.\n\
+    -l dimensiune  Transmite dimensiunea memoriei tampon.\n\
+    -w expirare    Limita temporală de aşteptare a unui răspuns,\n\
+                   exprimată în milisecunde.\n\n\0"
+
+    IDS_PING_WITH_BYTES             "\nTransmitere către %1 [%2] cu %3!d! octeţi de date:\n\n\0"
+    IDS_PING_STATISTICS             "\nstatistici de transmisie pentru %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    pachete: transmise = %1!d!, recepţionate = %2!d!, pierdute = %3!d! (%4!d!%% pierderi),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "timpul aproximativ de tur-retur, in milisecunde:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    minim = %1, maxim = %2, mediu = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Nu există suficiente resurse disponibile.\n\0"
+    IDS_UNKNOWN_HOST                "%1 este o gazdă necunoscută.\n\0"
+    IDS_SETSOCKOPT_FAILED           "setsockopt a eşuat (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Nu se poate crea socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Nu se poate iniţia winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Este necesară specificarea numelui sau a adresei IP a gazdei destinaţie.\n\0"
+    IDS_BAD_PARAMETER               "Parametru eronat: %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Opţiune cu format eronat: %1.\n\0"
+    IDS_BAD_OPTION                  "%1 este o opţiune eronată.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Valoare eronată pentru opţiunea -l, domeniul valid este 0 - %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Răspuns de la %1: octeţi=%2!d! timp%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Gazda destinaţie este inaccesibilă.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Nu s-a reuşit transmiterea datelor (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Nu s-a reuşit recepţia datelor (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Cererea a expirat.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END

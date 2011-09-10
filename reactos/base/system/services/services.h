@@ -7,8 +7,11 @@
 #include <windows.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <services/services.h>
+#include "svcctl_s.h"
 
 
 typedef struct _SERVICE_GROUP

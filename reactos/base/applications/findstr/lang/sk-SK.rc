@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  12-02-2008
  */
 
@@ -7,15 +7,15 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "FIND: Zobraz° vÁetky riadky s£boru obsahuj£ce hñadanÏ reúazec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""reúazec"" [ s£bor... ]\n\
-    /C  Zobraz° poüet riadkov, ktorÇ obsahuj£ reúazec.\n\
-    /I  Ignoruje veñkosú p°smen.\n\
-    /N  ¨°sluje zobrazenÇ riadky, zaü°na od 1.\n\
-    /V  Zobraz° vÁetky riadky, ktorÇ neobsahuj£ hñadanÏ reúazec."
+IDS_USAGE, "FIND: Zobraz√≠ v≈°etky riadky s√∫boru obsahuj√∫ce hƒæadan√Ω re≈•azec.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""re≈•azec"" [ s√∫bor... ]\n\
+    /C  Zobraz√≠ poƒçet riadkov, ktor√© obsahuj√∫ re≈•azec.\n\
+    /I  Ignoruje veƒækos≈• p√≠smen.\n\
+    /N  ƒå√≠sluje zobrazen√© riadky, zaƒç√≠na od 1.\n\
+    /V  Zobraz√≠ v≈°etky riadky, ktor√© neobsahuj√∫ hƒæadan√Ω re≈•azec."
 
-IDS_NO_SUCH_FILE, "FIND: S£bor %s sa nenaÁiel.\n"
+IDS_NO_SUCH_FILE, "FIND: S√∫bor %s sa nena≈°iel.\n"
 
-IDS_CANNOT_OPEN, "FIND: S£bor %s sa ned† otvoriú.\n"
+IDS_CANNOT_OPEN, "FIND: S√∫bor %s sa ned√° otvori≈•.\n"
 
 END

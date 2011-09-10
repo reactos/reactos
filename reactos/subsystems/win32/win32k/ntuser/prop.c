@@ -29,8 +29,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserProp);
 
 /* STATIC FUNCTIONS **********************************************************/
 
@@ -108,7 +107,7 @@ NtUserBuildPropList(HWND hWnd,
    DWORD Cnt = 0;
    DECLARE_RETURN(NTSTATUS);
 
-   DPRINT("Enter NtUserBuildPropList\n");
+   TRACE("Enter NtUserBuildPropList\n");
    UserEnterShared();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -162,7 +161,7 @@ NtUserBuildPropList(HWND hWnd,
    RETURN( STATUS_SUCCESS);
 
 CLEANUP:
-   DPRINT("Leave NtUserBuildPropList, ret=%i\n",_ret_);
+   TRACE("Leave NtUserBuildPropList, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -175,7 +174,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
    HANDLE Data;
    DECLARE_RETURN(HANDLE);
 
-   DPRINT("Enter NtUserRemoveProp\n");
+   TRACE("Enter NtUserRemoveProp\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -197,7 +196,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
    RETURN(Data);
 
 CLEANUP:
-   DPRINT("Leave NtUserRemoveProp, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRemoveProp, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -208,7 +207,7 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
    PWND Window;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserSetProp\n");
+   TRACE("Enter NtUserSetProp\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -219,7 +218,7 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
    RETURN( IntSetProp(Window, Atom, Data));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetProp, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetProp, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

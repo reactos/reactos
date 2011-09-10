@@ -18,7 +18,6 @@
  */
 
 #include <advapi32.h>
-#include "crypt.h"
 
 /* SHA Context Structure Declaration */
 

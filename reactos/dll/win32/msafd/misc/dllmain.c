@@ -12,8 +12,6 @@
 
 #include <msafd.h>
 
-#include <debug.h>
-
 #if DBG
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
 DWORD DebugTraceLevel = 0;
@@ -2034,7 +2032,7 @@ WSPGetSockOpt(IN SOCKET Handle,
     PSOCKET_INFORMATION Socket = NULL;
     PVOID Buffer;
     INT BufferSize;
-    BOOLEAN BoolBuffer;
+    BOOL BoolBuffer;
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -2069,29 +2067,38 @@ WSPGetSockOpt(IN SOCKET Handle,
                 case SO_ACCEPTCONN:
                     BoolBuffer = Socket->SharedData.Listening;
                     Buffer = &BoolBuffer;
-                    BufferSize = sizeof(BOOLEAN);
+                    BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_BROADCAST:
                     BoolBuffer = Socket->SharedData.Broadcast;
                     Buffer = &BoolBuffer;
-                    BufferSize = sizeof(BOOLEAN);
+                    BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_DEBUG:
                     BoolBuffer = Socket->SharedData.Debug;
                     Buffer = &BoolBuffer;
-                    BufferSize = sizeof(BOOLEAN);
+                    BufferSize = sizeof(BOOL);
+                    break;
+
+                case SO_DONTLINGER:
+                    BoolBuffer = (Socket->SharedData.LingerData.l_onoff == 0);
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOL);
+                    break;
+
+                case SO_LINGER:
+                    Buffer = &Socket->SharedData.LingerData;
+                    BufferSize = sizeof(struct linger);
                     break;
 
                 /* case SO_CONDITIONAL_ACCEPT: */
-                case SO_DONTLINGER:
                 case SO_DONTROUTE:
                 case SO_ERROR:
                 case SO_GROUP_ID:
                 case SO_GROUP_PRIORITY:
                 case SO_KEEPALIVE:
-                case SO_LINGER:
                 case SO_MAX_MSG_SIZE:
                 case SO_OOBINLINE:
                 case SO_PROTOCOL_INFO:
@@ -2155,8 +2162,36 @@ WSPSetSockOpt(
         switch (optname)
         {
            case SO_BROADCAST:
+              if (optlen < sizeof(BOOL))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
               Socket->SharedData.Broadcast = (*optval != 0) ? 1 : 0;
               return 0;
+
+           case SO_DONTLINGER:
+              if (optlen < sizeof(BOOL))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+              Socket->SharedData.LingerData.l_onoff = (*optval != 0) ? 0 : 1;
+              return 0;
+
+           case SO_LINGER:
+              if (optlen < sizeof(struct linger))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+              RtlCopyMemory(&Socket->SharedData.LingerData,
+                            optval,
+                            sizeof(struct linger));
+              return 0;
+
+           default:
+              break;
         }
     }
 
@@ -2365,9 +2400,6 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     {
         InfoData.Information.Boolean = *Boolean;
     }
-
-    AFD_DbgPrint(MID_TRACE,("XXX Info %x (Data %x)\n",
-        AfdInformationClass, *Ulong));
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,

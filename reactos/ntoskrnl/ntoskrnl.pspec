@@ -112,7 +112,7 @@
 @ FASTCALL ExInterlockedAddLargeStatistic(ptr long)
 #endif
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
-#ifdef __x86__
+#ifdef _M_IX86
 @ FASTCALL ExInterlockedCompareExchange64(ptr ptr ptr ptr)
 @ stdcall ExInterlockedDecrementLong(ptr ptr)
 @ stdcall ExInterlockedExchangeUlong(ptr long ptr)
@@ -645,7 +645,7 @@
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
-@ extern KeNumberProcessors
+@ extern KeNumberProcessors _KeNumberProcessors
 @ stdcall KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
 @ stdcall KePulseEvent(ptr long long)

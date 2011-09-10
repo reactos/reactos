@@ -10,4 +10,5 @@
     <file>speaker.c</file>
     <file>rate.c</file>
     <file>mixer.c</file>
+    <pch>precomp.h</pch>
 </module>

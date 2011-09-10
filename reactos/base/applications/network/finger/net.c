@@ -34,12 +34,7 @@
  * SUCH DAMAGE.
  */
 
-#include <winsock2.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-
-#include "various.h"
+#include "precomp.h"
 
 void
 netfinger(char *name)

@@ -1,5 +1,3 @@
-#pragma once
-
 #define _WINBASE_
 #define _WINDOWS_H
 #include <stdarg.h>

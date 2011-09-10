@@ -8,6 +8,15 @@
 
 /* DEFINITIONS ***************************************************************/
 
+#include <ntddk.h>
+#include <windef.h>
+
+typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
+#include <wincon.h>
+
+#include <blue/ntddblue.h>
+#include <ndk/inbvfuncs.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

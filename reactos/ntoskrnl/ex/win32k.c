@@ -43,7 +43,7 @@ PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
+BOOLEAN
 NTAPI
 ExpDesktopOkToClose( IN PEPROCESS Process OPTIONAL,
                      IN PVOID Object,
@@ -57,10 +57,10 @@ ExpDesktopOkToClose( IN PEPROCESS Process OPTIONAL,
     Parameters.Handle = Handle;
     Parameters.PreviousMode = AccessMode;
 
-    return ExpDesktopObjectOkToClose(&Parameters);
+    return NT_SUCCESS(ExpDesktopObjectOkToClose(&Parameters));
 }
 
-NTSTATUS
+BOOLEAN
 NTAPI
 ExpWindowStationOkToClose( IN PEPROCESS Process OPTIONAL,
                      IN PVOID Object,
@@ -74,7 +74,7 @@ ExpWindowStationOkToClose( IN PEPROCESS Process OPTIONAL,
     Parameters.Handle = Handle;
     Parameters.PreviousMode = AccessMode;
 
-    return ExpWindowStationObjectOkToClose(&Parameters);
+    return NT_SUCCESS(ExpWindowStationObjectOkToClose(&Parameters));
 }
 
 VOID

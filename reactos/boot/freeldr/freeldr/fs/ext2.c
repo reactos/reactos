@@ -21,6 +21,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
+
 BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
 PEXT2_FILE_INFO	Ext2OpenFile(PCSTR FileName);
 BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
@@ -73,7 +75,7 @@ BOOLEAN DiskGetBootVolume(PUCHAR DriveNumber, PULONGLONG StartSector, PULONGLONG
 BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector);
+	TRACE("Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector);
 
 	// Store the drive number and start sector
 	Ext2DriveNumber = DriveNumber;
@@ -118,9 +120,9 @@ PEXT2_FILE_INFO Ext2OpenFile(PCSTR FileName)
 	PEXT2_FILE_INFO		FileHandle;
 	CHAR			SymLinkPath[EXT2_NAME_LEN];
 	CHAR			FullPath[EXT2_NAME_LEN * 2];
-	ULONG			Index;
+	ULONG_PTR		Index;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName);
+	TRACE("Ext2OpenFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(SymLinkPath, sizeof(SymLinkPath));
 
@@ -134,7 +136,7 @@ PEXT2_FILE_INFO Ext2OpenFile(PCSTR FileName)
 	// and re-call this function
 	if ((TempExt2FileInfo.Inode.mode & EXT2_S_IFMT) == EXT2_S_IFLNK)
 	{
-		DPRINTM(DPRINT_FILESYSTEM, "File is a symbolic link\n");
+		TRACE("File is a symbolic link\n");
 
 		// Now read in the symbolic link path
 		if (!Ext2ReadFileBig(&TempExt2FileInfo, TempExt2FileInfo.FileSize, NULL, SymLinkPath))
@@ -147,7 +149,7 @@ PEXT2_FILE_INFO Ext2OpenFile(PCSTR FileName)
 			return NULL;
 		}
 
-		DPRINTM(DPRINT_FILESYSTEM, "Symbolic link path = %s\n", SymLinkPath);
+		TRACE("Symbolic link path = %s\n", SymLinkPath);
 
 		// Get the full path
 		if (SymLinkPath[0] == '/' || SymLinkPath[0] == '\\')
@@ -179,7 +181,7 @@ PEXT2_FILE_INFO Ext2OpenFile(PCSTR FileName)
 			strcat(FullPath, SymLinkPath);
 		}
 
-		DPRINTM(DPRINT_FILESYSTEM, "Full file path = %s\n", FullPath);
+		TRACE("Full file path = %s\n", FullPath);
 
 		if (TempExt2FileInfo.FileBlockList != NULL)
 		{
@@ -225,7 +227,7 @@ BOOLEAN Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 	EXT2_INODE	InodeData;
 	EXT2_DIR_ENTRY	DirectoryEntry;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2LookupFile() FileName = %s\n", FileName);
+	TRACE("Ext2LookupFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(Ext2FileInfoPointer, sizeof(EXT2_FILE_INFO));
 
@@ -319,7 +321,7 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 	ULONG		CurrentOffset;
 	PEXT2_DIR_ENTRY	CurrentDirectoryEntry;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2SearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = %s\n", DirectoryBuffer, DirectorySize, FileName);
+	TRACE("Ext2SearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = %s\n", DirectoryBuffer, DirectorySize, FileName);
 
 	for (CurrentOffset=0; CurrentOffset<DirectorySize; )
 	{
@@ -336,7 +338,7 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 			return FALSE;
 		}
 
-		DPRINTM(DPRINT_FILESYSTEM, "Dumping directory entry at offset %d:\n", CurrentOffset);
+		TRACE("Dumping directory entry at offset %d:\n", CurrentOffset);
 		DbgDumpBuffer(DPRINT_FILESYSTEM, CurrentDirectoryEntry, CurrentDirectoryEntry->direntlen);
 
 		if ((_strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->namelen) == 0) &&
@@ -344,17 +346,17 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 		{
 			RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT2_DIR_ENTRY));
 
-			DPRINTM(DPRINT_FILESYSTEM, "EXT2 Directory Entry:\n");
-			DPRINTM(DPRINT_FILESYSTEM, "inode = %d\n", DirectoryEntry->inode);
-			DPRINTM(DPRINT_FILESYSTEM, "direntlen = %d\n", DirectoryEntry->direntlen);
-			DPRINTM(DPRINT_FILESYSTEM, "namelen = %d\n", DirectoryEntry->namelen);
-			DPRINTM(DPRINT_FILESYSTEM, "filetype = %d\n", DirectoryEntry->filetype);
-			DPRINTM(DPRINT_FILESYSTEM, "name = ");
+			TRACE("EXT2 Directory Entry:\n");
+			TRACE("inode = %d\n", DirectoryEntry->inode);
+			TRACE("direntlen = %d\n", DirectoryEntry->direntlen);
+			TRACE("namelen = %d\n", DirectoryEntry->namelen);
+			TRACE("filetype = %d\n", DirectoryEntry->filetype);
+			TRACE("name = ");
 			for (CurrentOffset=0; CurrentOffset<DirectoryEntry->namelen; CurrentOffset++)
 			{
-				DPRINTM(DPRINT_FILESYSTEM, "%c", DirectoryEntry->name[CurrentOffset]);
+				TRACE("%c", DirectoryEntry->name[CurrentOffset]);
 			}
-			DPRINTM(DPRINT_FILESYSTEM, "\n");
+			TRACE("\n");
 
 			return TRUE;
 		}
@@ -378,7 +380,7 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 	ULONG				LengthInBlock;
 	ULONG				NumberOfBlocks;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadFileBig() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer);
+	TRACE("Ext2ReadFileBig() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer);
 
 	if (BytesRead != NULL)
 	{
@@ -422,7 +424,7 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 	if (((Ext2FileInfo->Inode.mode & EXT2_S_IFMT) == EXT2_S_IFLNK) &&
 		(Ext2FileInfo->FileSize <= FAST_SYMLINK_MAX_NAME_SIZE))
 	{
-		DPRINTM(DPRINT_FILESYSTEM, "Reading fast symbolic link data\n");
+		TRACE("Reading fast symbolic link data\n");
 
 		// Copy the data from the link
 		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Ext2FileInfo->FilePointer + Ext2FileInfo->Inode.symlink), (ULONG)BytesToRead);
@@ -571,7 +573,7 @@ BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG S
 BOOLEAN Ext2ReadSuperBlock(VOID)
 {
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadSuperBlock()\n");
+	TRACE("Ext2ReadSuperBlock()\n");
 
 	//
 	// Free any memory previously allocated
@@ -605,43 +607,43 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 	}
 	RtlCopyMemory(Ext2SuperBlock, (PVOID)((ULONG_PTR)DISKREADBUFFER + 1024), 1024);
 
-	DPRINTM(DPRINT_FILESYSTEM, "Dumping super block:\n");
-	DPRINTM(DPRINT_FILESYSTEM, "total_inodes: %d\n", Ext2SuperBlock->total_inodes);
-	DPRINTM(DPRINT_FILESYSTEM, "total_blocks: %d\n", Ext2SuperBlock->total_blocks);
-	DPRINTM(DPRINT_FILESYSTEM, "reserved_blocks: %d\n", Ext2SuperBlock->reserved_blocks);
-	DPRINTM(DPRINT_FILESYSTEM, "free_blocks: %d\n", Ext2SuperBlock->free_blocks);
-	DPRINTM(DPRINT_FILESYSTEM, "free_inodes: %d\n", Ext2SuperBlock->free_inodes);
-	DPRINTM(DPRINT_FILESYSTEM, "first_data_block: %d\n", Ext2SuperBlock->first_data_block);
-	DPRINTM(DPRINT_FILESYSTEM, "log2_block_size: %d\n", Ext2SuperBlock->log2_block_size);
-	DPRINTM(DPRINT_FILESYSTEM, "log2_fragment_size: %d\n", Ext2SuperBlock->log2_fragment_size);
-	DPRINTM(DPRINT_FILESYSTEM, "blocks_per_group: %d\n", Ext2SuperBlock->blocks_per_group);
-	DPRINTM(DPRINT_FILESYSTEM, "fragments_per_group: %d\n", Ext2SuperBlock->fragments_per_group);
-	DPRINTM(DPRINT_FILESYSTEM, "inodes_per_group: %d\n", Ext2SuperBlock->inodes_per_group);
-	DPRINTM(DPRINT_FILESYSTEM, "mtime: %d\n", Ext2SuperBlock->mtime);
-	DPRINTM(DPRINT_FILESYSTEM, "utime: %d\n", Ext2SuperBlock->utime);
-	DPRINTM(DPRINT_FILESYSTEM, "mnt_count: %d\n", Ext2SuperBlock->mnt_count);
-	DPRINTM(DPRINT_FILESYSTEM, "max_mnt_count: %d\n", Ext2SuperBlock->max_mnt_count);
-	DPRINTM(DPRINT_FILESYSTEM, "magic: 0x%x\n", Ext2SuperBlock->magic);
-	DPRINTM(DPRINT_FILESYSTEM, "fs_state: %d\n", Ext2SuperBlock->fs_state);
-	DPRINTM(DPRINT_FILESYSTEM, "error_handling: %d\n", Ext2SuperBlock->error_handling);
-	DPRINTM(DPRINT_FILESYSTEM, "minor_revision_level: %d\n", Ext2SuperBlock->minor_revision_level);
-	DPRINTM(DPRINT_FILESYSTEM, "lastcheck: %d\n", Ext2SuperBlock->lastcheck);
-	DPRINTM(DPRINT_FILESYSTEM, "checkinterval: %d\n", Ext2SuperBlock->checkinterval);
-	DPRINTM(DPRINT_FILESYSTEM, "creator_os: %d\n", Ext2SuperBlock->creator_os);
-	DPRINTM(DPRINT_FILESYSTEM, "revision_level: %d\n", Ext2SuperBlock->revision_level);
-	DPRINTM(DPRINT_FILESYSTEM, "uid_reserved: %d\n", Ext2SuperBlock->uid_reserved);
-	DPRINTM(DPRINT_FILESYSTEM, "gid_reserved: %d\n", Ext2SuperBlock->gid_reserved);
-	DPRINTM(DPRINT_FILESYSTEM, "first_inode: %d\n", Ext2SuperBlock->first_inode);
-	DPRINTM(DPRINT_FILESYSTEM, "inode_size: %d\n", Ext2SuperBlock->inode_size);
-	DPRINTM(DPRINT_FILESYSTEM, "block_group_number: %d\n", Ext2SuperBlock->block_group_number);
-	DPRINTM(DPRINT_FILESYSTEM, "feature_compatibility: 0x%x\n", Ext2SuperBlock->feature_compatibility);
-	DPRINTM(DPRINT_FILESYSTEM, "feature_incompat: 0x%x\n", Ext2SuperBlock->feature_incompat);
-	DPRINTM(DPRINT_FILESYSTEM, "feature_ro_compat: 0x%x\n", Ext2SuperBlock->feature_ro_compat);
-	DPRINTM(DPRINT_FILESYSTEM, "unique_id = { 0x%x, 0x%x, 0x%x, 0x%x }\n",
+	TRACE("Dumping super block:\n");
+	TRACE("total_inodes: %d\n", Ext2SuperBlock->total_inodes);
+	TRACE("total_blocks: %d\n", Ext2SuperBlock->total_blocks);
+	TRACE("reserved_blocks: %d\n", Ext2SuperBlock->reserved_blocks);
+	TRACE("free_blocks: %d\n", Ext2SuperBlock->free_blocks);
+	TRACE("free_inodes: %d\n", Ext2SuperBlock->free_inodes);
+	TRACE("first_data_block: %d\n", Ext2SuperBlock->first_data_block);
+	TRACE("log2_block_size: %d\n", Ext2SuperBlock->log2_block_size);
+	TRACE("log2_fragment_size: %d\n", Ext2SuperBlock->log2_fragment_size);
+	TRACE("blocks_per_group: %d\n", Ext2SuperBlock->blocks_per_group);
+	TRACE("fragments_per_group: %d\n", Ext2SuperBlock->fragments_per_group);
+	TRACE("inodes_per_group: %d\n", Ext2SuperBlock->inodes_per_group);
+	TRACE("mtime: %d\n", Ext2SuperBlock->mtime);
+	TRACE("utime: %d\n", Ext2SuperBlock->utime);
+	TRACE("mnt_count: %d\n", Ext2SuperBlock->mnt_count);
+	TRACE("max_mnt_count: %d\n", Ext2SuperBlock->max_mnt_count);
+	TRACE("magic: 0x%x\n", Ext2SuperBlock->magic);
+	TRACE("fs_state: %d\n", Ext2SuperBlock->fs_state);
+	TRACE("error_handling: %d\n", Ext2SuperBlock->error_handling);
+	TRACE("minor_revision_level: %d\n", Ext2SuperBlock->minor_revision_level);
+	TRACE("lastcheck: %d\n", Ext2SuperBlock->lastcheck);
+	TRACE("checkinterval: %d\n", Ext2SuperBlock->checkinterval);
+	TRACE("creator_os: %d\n", Ext2SuperBlock->creator_os);
+	TRACE("revision_level: %d\n", Ext2SuperBlock->revision_level);
+	TRACE("uid_reserved: %d\n", Ext2SuperBlock->uid_reserved);
+	TRACE("gid_reserved: %d\n", Ext2SuperBlock->gid_reserved);
+	TRACE("first_inode: %d\n", Ext2SuperBlock->first_inode);
+	TRACE("inode_size: %d\n", Ext2SuperBlock->inode_size);
+	TRACE("block_group_number: %d\n", Ext2SuperBlock->block_group_number);
+	TRACE("feature_compatibility: 0x%x\n", Ext2SuperBlock->feature_compatibility);
+	TRACE("feature_incompat: 0x%x\n", Ext2SuperBlock->feature_incompat);
+	TRACE("feature_ro_compat: 0x%x\n", Ext2SuperBlock->feature_ro_compat);
+	TRACE("unique_id = { 0x%x, 0x%x, 0x%x, 0x%x }\n",
 		Ext2SuperBlock->unique_id[0], Ext2SuperBlock->unique_id[1], Ext2SuperBlock->unique_id[2], Ext2SuperBlock->unique_id[3]);
-	DPRINTM(DPRINT_FILESYSTEM, "volume_name = '%.16s'\n", Ext2SuperBlock->volume_name);
-	DPRINTM(DPRINT_FILESYSTEM, "last_mounted_on = '%.64s'\n", Ext2SuperBlock->last_mounted_on);
-	DPRINTM(DPRINT_FILESYSTEM, "compression_info = 0x%x\n", Ext2SuperBlock->compression_info);
+	TRACE("volume_name = '%.16s'\n", Ext2SuperBlock->volume_name);
+	TRACE("last_mounted_on = '%.64s'\n", Ext2SuperBlock->last_mounted_on);
+	TRACE("compression_info = 0x%x\n", Ext2SuperBlock->compression_info);
 
 	//
 	// Check the super block magic
@@ -677,13 +679,13 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
 	// Calculate the group count
 	Ext2GroupCount = (Ext2SuperBlock->total_blocks - Ext2SuperBlock->first_data_block + Ext2SuperBlock->blocks_per_group - 1) / Ext2SuperBlock->blocks_per_group;
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2GroupCount: %d\n", Ext2GroupCount);
+	TRACE("Ext2GroupCount: %d\n", Ext2GroupCount);
 
 	// Calculate the block size
 	Ext2BlockSizeInBytes = 1024 << Ext2SuperBlock->log2_block_size;
 	Ext2BlockSizeInSectors = Ext2BlockSizeInBytes / Ext2DiskGeometry.BytesPerSector;
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2BlockSizeInBytes: %d\n", Ext2BlockSizeInBytes);
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2BlockSizeInSectors: %d\n", Ext2BlockSizeInSectors);
+	TRACE("Ext2BlockSizeInBytes: %d\n", Ext2BlockSizeInBytes);
+	TRACE("Ext2BlockSizeInSectors: %d\n", Ext2BlockSizeInSectors);
 
 	// Calculate the fragment size
 	if (Ext2SuperBlock->log2_fragment_size >= 0)
@@ -695,8 +697,8 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 		Ext2FragmentSizeInBytes = 1024 >> -(Ext2SuperBlock->log2_fragment_size);
 	}
 	Ext2FragmentSizeInSectors = Ext2FragmentSizeInBytes / Ext2DiskGeometry.BytesPerSector;
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2FragmentSizeInBytes: %d\n", Ext2FragmentSizeInBytes);
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2FragmentSizeInSectors: %d\n", Ext2FragmentSizeInSectors);
+	TRACE("Ext2FragmentSizeInBytes: %d\n", Ext2FragmentSizeInBytes);
+	TRACE("Ext2FragmentSizeInSectors: %d\n", Ext2FragmentSizeInSectors);
 
 	// Verify that the fragment size and the block size are equal
 	if (Ext2BlockSizeInBytes != Ext2FragmentSizeInBytes)
@@ -707,11 +709,11 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
 	// Calculate the number of inodes in one block
 	Ext2InodesPerBlock = Ext2BlockSizeInBytes / EXT2_INODE_SIZE(Ext2SuperBlock);
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2InodesPerBlock: %d\n", Ext2InodesPerBlock);
+	TRACE("Ext2InodesPerBlock: %d\n", Ext2InodesPerBlock);
 
 	// Calculate the number of group descriptors in one block
 	Ext2GroupDescPerBlock = EXT2_DESC_PER_BLOCK(Ext2SuperBlock);
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2GroupDescPerBlock: %d\n", Ext2GroupDescPerBlock);
+	TRACE("Ext2GroupDescPerBlock: %d\n", Ext2GroupDescPerBlock);
 
 	return TRUE;
 }
@@ -721,7 +723,7 @@ BOOLEAN Ext2ReadGroupDescriptors(VOID)
 	ULONG		GroupDescBlockCount;
 	ULONG		CurrentGroupDescBlock;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptors()\n");
+	TRACE("Ext2ReadGroupDescriptors()\n");
 
 	//
 	// Free any memory previously allocated
@@ -766,7 +768,7 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 {
 	EXT2_FILE_INFO	DirectoryFileInfo;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadDirectory() Inode = %d\n", Inode);
+	TRACE("Ext2ReadDirectory() Inode = %d\n", Inode);
 
 	// Read the directory inode
 	if (!Ext2ReadInode(Inode, InodePointer))
@@ -826,7 +828,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 {
 	CHAR	ErrorString[80];
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer);
+	TRACE("Ext2ReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer);
 
 	// Make sure its a valid block
 	if (BlockNumber > Ext2SuperBlock->total_blocks)
@@ -839,7 +841,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 	// Check to see if this is a sparse block
 	if (BlockNumber == 0)
 	{
-		DPRINTM(DPRINT_FILESYSTEM, "Block is part of a sparse file. Zeroing input buffer.\n");
+		TRACE("Block is part of a sparse file. Zeroing input buffer.\n");
 
 		RtlZeroMemory(Buffer, Ext2BlockSizeInBytes);
 
@@ -856,7 +858,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 BOOLEAN Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
 {
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadPartialBlock() BlockNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", BlockNumber, StartingOffset, Length, Buffer);
+	TRACE("Ext2ReadPartialBlock() BlockNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", BlockNumber, StartingOffset, Length, Buffer);
 
 	if (!Ext2ReadBlock(BlockNumber, (PVOID)FILESYSBUFFER))
 	{
@@ -901,7 +903,7 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	CHAR		ErrorString[80];
 	EXT2_GROUP_DESC	GroupDescriptor;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadInode() Inode = %d\n", Inode);
+	TRACE("Ext2ReadInode() Inode = %d\n", Inode);
 
 	// Make sure its a valid inode
 	if ((Inode < 1) || (Inode > Ext2SuperBlock->total_inodes))
@@ -915,9 +917,9 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	InodeGroupNumber = Ext2GetInodeGroupNumber(Inode);
 	InodeBlockNumber = Ext2GetInodeBlockNumber(Inode);
 	InodeOffsetInBlock = Ext2GetInodeOffsetInBlock(Inode);
-	DPRINTM(DPRINT_FILESYSTEM, "InodeGroupNumber = %d\n", InodeGroupNumber);
-	DPRINTM(DPRINT_FILESYSTEM, "InodeBlockNumber = %d\n", InodeBlockNumber);
-	DPRINTM(DPRINT_FILESYSTEM, "InodeOffsetInBlock = %d\n", InodeOffsetInBlock);
+	TRACE("InodeGroupNumber = %d\n", InodeGroupNumber);
+	TRACE("InodeBlockNumber = %d\n", InodeBlockNumber);
+	TRACE("InodeOffsetInBlock = %d\n", InodeOffsetInBlock);
 
 	// Read the group descriptor
 	if (!Ext2ReadGroupDescriptor(InodeGroupNumber, &GroupDescriptor))
@@ -927,7 +929,7 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 
 	// Add the start block of the inode table to the inode block number
 	InodeBlockNumber += GroupDescriptor.inode_table_id;
-	DPRINTM(DPRINT_FILESYSTEM, "InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber);
+	TRACE("InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber);
 
 	// Read the block
 	if (!Ext2ReadBlock(InodeBlockNumber, (PVOID)FILESYSBUFFER))
@@ -938,31 +940,31 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	// Copy the data to their buffer
 	RtlCopyMemory(InodeBuffer, (PVOID)((ULONG_PTR)FILESYSBUFFER + (InodeOffsetInBlock * EXT2_INODE_SIZE(Ext2SuperBlock))), sizeof(EXT2_INODE));
 
-	DPRINTM(DPRINT_FILESYSTEM, "Dumping inode information:\n");
-	DPRINTM(DPRINT_FILESYSTEM, "mode = 0x%x\n", InodeBuffer->mode);
-	DPRINTM(DPRINT_FILESYSTEM, "uid = %d\n", InodeBuffer->uid);
-	DPRINTM(DPRINT_FILESYSTEM, "size = %d\n", InodeBuffer->size);
-	DPRINTM(DPRINT_FILESYSTEM, "atime = %d\n", InodeBuffer->atime);
-	DPRINTM(DPRINT_FILESYSTEM, "ctime = %d\n", InodeBuffer->ctime);
-	DPRINTM(DPRINT_FILESYSTEM, "mtime = %d\n", InodeBuffer->mtime);
-	DPRINTM(DPRINT_FILESYSTEM, "dtime = %d\n", InodeBuffer->dtime);
-	DPRINTM(DPRINT_FILESYSTEM, "gid = %d\n", InodeBuffer->gid);
-	DPRINTM(DPRINT_FILESYSTEM, "nlinks = %d\n", InodeBuffer->nlinks);
-	DPRINTM(DPRINT_FILESYSTEM, "blockcnt = %d\n", InodeBuffer->blockcnt);
-	DPRINTM(DPRINT_FILESYSTEM, "flags = 0x%x\n", InodeBuffer->flags);
-	DPRINTM(DPRINT_FILESYSTEM, "osd1 = 0x%x\n", InodeBuffer->osd1);
-	DPRINTM(DPRINT_FILESYSTEM, "dir_blocks = { %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u }\n",
+	TRACE("Dumping inode information:\n");
+	TRACE("mode = 0x%x\n", InodeBuffer->mode);
+	TRACE("uid = %d\n", InodeBuffer->uid);
+	TRACE("size = %d\n", InodeBuffer->size);
+	TRACE("atime = %d\n", InodeBuffer->atime);
+	TRACE("ctime = %d\n", InodeBuffer->ctime);
+	TRACE("mtime = %d\n", InodeBuffer->mtime);
+	TRACE("dtime = %d\n", InodeBuffer->dtime);
+	TRACE("gid = %d\n", InodeBuffer->gid);
+	TRACE("nlinks = %d\n", InodeBuffer->nlinks);
+	TRACE("blockcnt = %d\n", InodeBuffer->blockcnt);
+	TRACE("flags = 0x%x\n", InodeBuffer->flags);
+	TRACE("osd1 = 0x%x\n", InodeBuffer->osd1);
+	TRACE("dir_blocks = { %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u }\n",
 		InodeBuffer->blocks.dir_blocks[0], InodeBuffer->blocks.dir_blocks[1], InodeBuffer->blocks.dir_blocks[ 2], InodeBuffer->blocks.dir_blocks[ 3],
 		InodeBuffer->blocks.dir_blocks[4], InodeBuffer->blocks.dir_blocks[5], InodeBuffer->blocks.dir_blocks[ 6], InodeBuffer->blocks.dir_blocks[ 7],
 		InodeBuffer->blocks.dir_blocks[8], InodeBuffer->blocks.dir_blocks[9], InodeBuffer->blocks.dir_blocks[10], InodeBuffer->blocks.dir_blocks[11]);
-	DPRINTM(DPRINT_FILESYSTEM, "indir_block = %u\n", InodeBuffer->blocks.indir_block);
-	DPRINTM(DPRINT_FILESYSTEM, "double_indir_block = %u\n", InodeBuffer->blocks.double_indir_block);
-	DPRINTM(DPRINT_FILESYSTEM, "tripple_indir_block = %u\n", InodeBuffer->blocks.tripple_indir_block);
-	DPRINTM(DPRINT_FILESYSTEM, "version = %d\n", InodeBuffer->version);
-	DPRINTM(DPRINT_FILESYSTEM, "acl = %d\n", InodeBuffer->acl);
-	DPRINTM(DPRINT_FILESYSTEM, "dir_acl = %d\n", InodeBuffer->dir_acl);
-	DPRINTM(DPRINT_FILESYSTEM, "fragment_addr = %d\n", InodeBuffer->fragment_addr);
-	DPRINTM(DPRINT_FILESYSTEM, "osd2 = { %d, %d, %d }\n",
+	TRACE("indir_block = %u\n", InodeBuffer->blocks.indir_block);
+	TRACE("double_indir_block = %u\n", InodeBuffer->blocks.double_indir_block);
+	TRACE("tripple_indir_block = %u\n", InodeBuffer->blocks.tripple_indir_block);
+	TRACE("version = %d\n", InodeBuffer->version);
+	TRACE("acl = %d\n", InodeBuffer->acl);
+	TRACE("dir_acl = %d\n", InodeBuffer->dir_acl);
+	TRACE("fragment_addr = %d\n", InodeBuffer->fragment_addr);
+	TRACE("osd2 = { %d, %d, %d }\n",
 		InodeBuffer->osd2[0], InodeBuffer->osd2[1], InodeBuffer->osd2[2]);
 
 	return TRUE;
@@ -970,7 +972,7 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 
 BOOLEAN Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer)
 {
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptor()\n");
+	TRACE("Ext2ReadGroupDescriptor()\n");
 
 	/*if (!Ext2ReadBlock(Ext2GetGroupDescBlockNumber(Group), (PVOID)FILESYSBUFFER))
 	{
@@ -981,13 +983,13 @@ BOOLEAN Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer)
 
 	RtlCopyMemory(GroupBuffer, &Ext2GroupDescriptors[Group], sizeof(EXT2_GROUP_DESC));
 
-	DPRINTM(DPRINT_FILESYSTEM, "Dumping group descriptor:\n");
-	DPRINTM(DPRINT_FILESYSTEM, "block_id = %d\n", GroupBuffer->block_id);
-	DPRINTM(DPRINT_FILESYSTEM, "inode_id = %d\n", GroupBuffer->inode_id);
-	DPRINTM(DPRINT_FILESYSTEM, "inode_table_id = %d\n", GroupBuffer->inode_table_id);
-	DPRINTM(DPRINT_FILESYSTEM, "free_blocks = %d\n", GroupBuffer->free_blocks);
-	DPRINTM(DPRINT_FILESYSTEM, "free_inodes = %d\n", GroupBuffer->free_inodes);
-	DPRINTM(DPRINT_FILESYSTEM, "used_dirs = %d\n", GroupBuffer->used_dirs);
+	TRACE("Dumping group descriptor:\n");
+	TRACE("block_id = %d\n", GroupBuffer->block_id);
+	TRACE("inode_id = %d\n", GroupBuffer->inode_id);
+	TRACE("inode_table_id = %d\n", GroupBuffer->inode_table_id);
+	TRACE("free_blocks = %d\n", GroupBuffer->free_blocks);
+	TRACE("free_inodes = %d\n", GroupBuffer->free_inodes);
+	TRACE("used_dirs = %d\n", GroupBuffer->used_dirs);
 
 	return TRUE;
 }
@@ -1000,7 +1002,7 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	ULONG		CurrentBlockInList;
 	ULONG		CurrentBlock;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadBlockPointerList()\n");
+	TRACE("Ext2ReadBlockPointerList()\n");
 
 	// Get the number of blocks this file occupies
 	// I would just use Inode->i_blocks but it
@@ -1080,7 +1082,7 @@ BOOLEAN Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInLis
 	ULONG	CurrentBlock;
 	ULONG	BlockPointersPerBlock;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2CopyIndirectBlockPointers() BlockCount = %d\n", BlockCount);
+	TRACE("Ext2CopyIndirectBlockPointers() BlockCount = %d\n", BlockCount);
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
@@ -1104,7 +1106,7 @@ BOOLEAN Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 	ULONG	CurrentBlock;
 	ULONG	BlockPointersPerBlock;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2CopyDoubleIndirectBlockPointers() BlockCount = %d\n", BlockCount);
+	TRACE("Ext2CopyDoubleIndirectBlockPointers() BlockCount = %d\n", BlockCount);
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
@@ -1139,7 +1141,7 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 	ULONG	CurrentBlock;
 	ULONG	BlockPointersPerBlock;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2CopyTripleIndirectBlockPointers() BlockCount = %d\n", BlockCount);
+	TRACE("Ext2CopyTripleIndirectBlockPointers() BlockCount = %d\n", BlockCount);
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
@@ -1185,9 +1187,9 @@ LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 	Information->EndingAddress.QuadPart = FileHandle->FileSize;
 	Information->CurrentAddress.QuadPart = FileHandle->FilePointer;
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileInformation() FileSize = %d\n",
+	TRACE("Ext2GetFileInformation() FileSize = %d\n",
 	    Information->EndingAddress.LowPart);
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileInformation() FilePointer = %d\n",
+	TRACE("Ext2GetFileInformation() FilePointer = %d\n",
 	    Information->CurrentAddress.LowPart);
 
 	return ESUCCESS;
@@ -1203,7 +1205,7 @@ LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 	//DeviceId = FsGetDeviceId(*FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2Open() FileName = %s\n", Path);
+	TRACE("Ext2Open() FileName = %s\n", Path);
 
 	//
 	// Call old open method
@@ -1248,7 +1250,7 @@ LONG Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
 	PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2Seek() NewFilePointer = %lu\n", Position->LowPart);
+	TRACE("Ext2Seek() NewFilePointer = %lu\n", Position->LowPart);
 
 	if (SeekMode != SeekAbsolute)
 		return EINVAL;

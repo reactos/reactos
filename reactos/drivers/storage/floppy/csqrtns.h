@@ -24,11 +24,7 @@
  *                  15-Feb-2004 vizzini - Created
  */
 
-#ifdef _MSC_VER
 #include <csq.h>
-#else
-#include <csq.h>
-#endif
 
 /*
  * CSQ Stuff

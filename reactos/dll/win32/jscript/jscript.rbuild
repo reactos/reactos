@@ -36,6 +36,7 @@
 	<file>function.c</file>
 	<file>global.c</file>
 	<file>rsrc.rc</file>
+	<pch>jscript.h</pch>
 </module>
 <module name="jsglobal" type="embeddedtypelib">
 	<dependency>stdole2</dependency>

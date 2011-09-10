@@ -9,8 +9,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserDefwnd);
 
 // Client Shutdown messages
 #define MCS_SHUTDOWNTIMERS  1
@@ -114,7 +113,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    switch (wParam & 0xfff0)
    {
       case SC_SCREENSAVE:
-        DPRINT1("Screensaver Called!\n");
+        ERR("Screensaver Called!\n");
         UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
         break;
 
@@ -145,7 +144,7 @@ IntDefWindowProc(
    {
       case WM_SYSCOMMAND:
       {
-         DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
+         ERR("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
          lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
@@ -247,20 +246,20 @@ GetNCHitEx(PWND pWnd, POINT pt)
    rcClient.right = pWnd->rcClient.right;
    rcClient.bottom = pWnd->rcClient.bottom;
 
-   if (!IntPtInRect(&rcWindow, pt)) return HTNOWHERE;
+   if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y)) return HTNOWHERE;
 
    Style = pWnd->style;
    ExStyle = pWnd->ExStyle;
 
    if (Style & WS_MINIMIZE) return HTCAPTION;
 
-   if (IntPtInRect( &rcClient, pt )) return HTCLIENT;
+   if (RECTL_bPointInRect( &rcClient,  pt.x, pt.y )) return HTCLIENT;
 
    /* Check borders */
    if (HAS_THICKFRAME( Style, ExStyle ))
    {
       RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
-      if (!IntPtInRect(&rcWindow, pt))
+      if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y ))
       {
             /* Check top sizing border */
             if (pt.y < rcWindow.top)
@@ -298,7 +297,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
         else if (HAS_THINFRAME( Style, ExStyle ))
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
-        if (!IntPtInRect( &rcWindow, pt )) return HTBORDER;
+        if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y  )) return HTBORDER;
     }
 
     /* Check caption */
@@ -309,7 +308,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             rcWindow.top += UserGetSystemMetrics(SM_CYSMCAPTION) - 1;
         else
             rcWindow.top += UserGetSystemMetrics(SM_CYCAPTION) - 1;
-        if (!IntPtInRect( &rcWindow, pt ))
+        if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y ))
         {
             BOOL min_or_max_box = (Style & WS_MAXIMIZEBOX) ||
                                   (Style & WS_MINIMIZEBOX);
@@ -394,7 +393,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             rcClient.left -= UserGetSystemMetrics(SM_CXVSCROLL);
         else
             rcClient.right += UserGetSystemMetrics(SM_CXVSCROLL);
-        if (IntPtInRect( &rcClient, pt )) return HTVSCROLL;
+        if (RECTL_bPointInRect( &rcClient, pt.x, pt.y )) return HTVSCROLL;
     }
 
       /* Check horizontal scroll bar */
@@ -402,7 +401,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
     if (Style & WS_HSCROLL)
     {
         rcClient.bottom += UserGetSystemMetrics(SM_CYHSCROLL);
-        if (IntPtInRect( &rcClient, pt ))
+        if (RECTL_bPointInRect( &rcClient, pt.x, pt.y ))
         {
             /* Check size box */
             if ((Style & WS_VSCROLL) &&

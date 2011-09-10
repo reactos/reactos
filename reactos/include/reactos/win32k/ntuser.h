@@ -6,6 +6,60 @@ typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
 
+
+#define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
+#define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
+
+#define HANDLEENTRY_INDESTROY 1
+
+typedef struct _USER_HANDLE_ENTRY
+{
+    void          *ptr;          /* pointer to object */
+    union
+    {
+        PVOID pi;
+        PTHREADINFO pti;          // pointer to Win32ThreadInfo
+        PPROCESSINFO ppi;         // pointer to W32ProcessInfo
+    };
+    unsigned char  type;         /* object type (0 if free) */
+    unsigned char  flags;
+    unsigned short generation;   /* generation counter */
+} USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
+
+typedef struct _USER_HANDLE_TABLE
+{
+   PUSER_HANDLE_ENTRY handles;
+   PUSER_HANDLE_ENTRY freelist;
+   int nb_handles;
+   int allocated_handles;
+} USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
+
+typedef enum _USER_OBJECT_TYPE
+{
+  otFree = 0,
+  otWindow,
+  otMenu,
+  otCursorIcon,
+  otSMWP,
+  otHook,
+  otClipBoardData,
+  otCallProc,
+  otAccel,
+  otDDEaccess,
+  otDDEconv,
+  otDDExact,
+  otMonitor,
+  otKBDlayout,
+  otKBDfile,
+  otEvent,
+  otTimer,
+  otInputContext,
+  otHidData,
+  otDeviceInfo,
+  otTouchInput,
+  otGestureInfo
+} USER_OBJECT_TYPE;
+
 typedef enum _USERTHREADINFOCLASS
 {
     UserThreadShutdownInformation,
@@ -150,6 +204,13 @@ typedef struct tagHOOK
   BOOLEAN        Ansi;       /* Is it an Ansi hook? */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
+
+typedef struct tagCLIPBOARDDATA
+{
+  HEAD  head;
+  DWORD cbData;
+  BYTE  Data[0];
+} CLIPBOARDDATA, *PCLIPBOARDDATA;
 
 /* THREADINFO Flags */
 #define TIF_INCLEANUP               0x00000001
@@ -699,6 +760,8 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define SRVINFO_APIHOOK 0x0010
 #define SRVINFO_METRICS 0x0020
 
+#define NUM_SYSCOLORS 31
+
 typedef struct tagOEMBITMAPINFO
 {
     INT x;
@@ -727,9 +790,9 @@ typedef struct tagDPISERVERINFO
 typedef struct _PERUSERSERVERINFO
 {
     INT           aiSysMet[SM_CMETRICS];
-    ULONG         argbSystemUnmatched[COLOR_LAST+1];
-    COLORREF      argbSystem[COLOR_LAST+1];
-    HBRUSH        ahbrSystem[COLOR_LAST+1];
+    ULONG         argbSystemUnmatched[NUM_SYSCOLORS];
+    COLORREF      argbSystem[NUM_SYSCOLORS];
+    HBRUSH        ahbrSystem[NUM_SYSCOLORS];
     HBRUSH        hbrGray;
     POINT         ptCursor;
     POINT         ptCursorReal;
@@ -853,6 +916,23 @@ typedef struct _USERCONNECT
   SHAREDINFO siClient;
 } USERCONNECT, *PUSERCONNECT;
 
+typedef struct tagGETCLIPBDATA
+{ 
+  UINT uFmtRet;
+  BOOL fGlobalHandle; 
+  union
+  { 
+    HANDLE hLocale;
+    HANDLE hPalette; 
+  };
+} GETCLIPBDATA, *PGETCLIPBDATA; 
+
+typedef struct tagSETCLIPBDATA
+{ 
+    BOOL fGlobalHandle;
+    BOOL fIncSerialNumber;
+} SETCLIPBDATA, *PSETCLIPBDATA; 
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(
@@ -954,8 +1034,8 @@ NtUserGetSystemMenu(
 BOOL
 NTAPI
 NtUserHiliteMenuItem(
-  HWND hwnd,
-  HMENU hmenu,
+  HWND hWnd,
+  HMENU hMenu,
   UINT uItemHilite,
   UINT uHilite);
 
@@ -1408,11 +1488,11 @@ NtUserConsoleControl(
   DWORD dwUnknown2,
   DWORD dwUnknown3);
 
-DWORD
+HANDLE
 NTAPI
 NtUserConvertMemHandle(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  PVOID pData,
+  DWORD cbData);
 
 int
 NTAPI
@@ -1453,13 +1533,13 @@ NTAPI
 NtUserCreateInputContext(
     DWORD dwUnknown1);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserCreateLocalMemHandle(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HANDLE hMem,
+  PVOID pData,
+  DWORD cbData,
+  DWORD *pcbData);
 
 HWND
 NTAPI
@@ -1622,7 +1702,7 @@ NtUserDrawIconEx(
   BOOL bMetaHDC,
   PVOID pDIXData);
 
-DWORD
+BOOL
 NTAPI
 NtUserEmptyClipboard(VOID);
 
@@ -1772,14 +1852,14 @@ NtUserGetClassName(HWND hWnd,
 HANDLE
 NTAPI
 NtUserGetClipboardData(
-  UINT uFormat,
-  PVOID pBuffer);
+  UINT fmt,
+  PGETCLIPBDATA pgcd);
 
 INT
 NTAPI
 NtUserGetClipboardFormatName(
-  UINT format,
-  PUNICODE_STRING FormatName,
+  UINT uFormat,
+  LPWSTR lpszFormatName,
   INT cchMaxCount);
 
 HWND
@@ -2578,9 +2658,9 @@ NtUserSetClassWord(
 HANDLE
 NTAPI
 NtUserSetClipboardData(
-  UINT uFormat,
+  UINT fmt,
   HANDLE hMem,
-  DWORD Unknown2);
+  PSETCLIPBDATA scd);
 
 HWND
 NTAPI
@@ -3119,7 +3199,6 @@ typedef struct tagKMDDELPARAM
  */
 
 #define NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO   0xffff0005
-#define NOPARAM_ROUTINE_ANYPOPUP              0xffff0006
 #define ONEPARAM_ROUTINE_CSRSS_GUICHECK       0xffff0008
 #define ONEPARAM_ROUTINE_SWITCHCARETSHOWING   0xfffe0008
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
@@ -3134,7 +3213,6 @@ typedef struct tagKMDDELPARAM
   #define MSQ_STATE_MOVESIZE	0x5
   #define MSQ_STATE_CARET	0x6
 #define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
-#define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 #define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 

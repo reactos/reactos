@@ -84,7 +84,7 @@ PcConsKbHit(VOID)
   Regs.b.ah = 0x01;
   Int386(0x16, &Regs, &Regs);
 
-  return 0 == (Regs.x.eflags & I386FLAG_ZF);
+  return 0 == (Regs.x.eflags & EFLAGS_ZF);
 }
 
 int

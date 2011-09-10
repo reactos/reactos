@@ -63,10 +63,10 @@ CdfsGetPVDData(PUCHAR Buffer,
     for (i = 0; i < 2048; i += 4)
     {
         /* DON'T optimize this to ULONG!!! (breaks overflow) */
-        Serial.Part[0] += Buffer[i+3];
-        Serial.Part[1] += Buffer[i+2];
-        Serial.Part[2] += Buffer[i+1];
         Serial.Part[3] += Buffer[i+0];
+        Serial.Part[2] += Buffer[i+1];
+        Serial.Part[1] += Buffer[i+2];
+        Serial.Part[0] += Buffer[i+3];
     }
     CdInfo->SerialNumber = Serial.Value;
 

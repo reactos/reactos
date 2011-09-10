@@ -10,44 +10,44 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
-    POPUP "&µ—«‡≈◊Õ°"
+    POPUP "&‡∏ï‡∏±‡∏ß‡πÄ‡∏•‡∏∑‡∏≠‡∏Å"
     BEGIN
-        MENUITEM "&§ÿ≥ ¡∫—µ‘", IDC_PROPERTIES
-        MENUITEM "§«∫§ÿ¡·∫∫&¢—Èπ Ÿß", IDC_ADVANCED_CONTROLS
+        MENUITEM "&‡∏Ñ‡∏∏‡∏ì‡∏™‡∏°‡∏ö‡∏±‡∏ï‡∏¥", IDC_PROPERTIES
+        MENUITEM "‡∏Ñ‡∏ß‡∏ö‡∏Ñ‡∏∏‡∏°‡πÅ‡∏ö‡∏ö&‡∏Ç‡∏±‡πâ‡∏ô‡∏™‡∏π‡∏á", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&ÕÕ°®“°‚ª√·°√¡", IDC_EXIT
+        MENUITEM "&‡∏≠‡∏≠‡∏Å‡∏à‡∏≤‡∏Å‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°", IDC_EXIT
     END
-    POPUP "&™Ë«¬‡À≈◊Õ"
+    POPUP "&‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠"
     BEGIN
-        MENUITEM "‡&π◊ÈÕÀ“„π°“√™Ë«¬‡À≈◊Õ", IDC_HELP_TOPICS
+        MENUITEM "‡πÄ&‡∏ô‡∏∑‡πâ‡∏≠‡∏´‡∏≤‡πÉ‡∏ô‡∏Å‡∏≤‡∏£‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "‡&°’Ë¬«°—∫·ºß§«∫§ÿ¡√–∫∫‡ ’¬ß", IDC_ABOUT
+        MENUITEM "‡πÄ&‡∏Å‡∏µ‡πà‡∏¢‡∏ß‡∏Å‡∏±‡∏ö‡πÅ‡∏ú‡∏á‡∏Ñ‡∏ß‡∏ö‡∏Ñ‡∏∏‡∏°‡∏£‡∏∞‡∏ö‡∏ö‡πÄ‡∏™‡∏µ‡∏¢‡∏á", IDC_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SNDVOL32       "·ºß§«∫§ÿ¡√–∫∫‡ ’¬ß"
-    IDS_NOMIXERDEVICES "‰¡Ëæ∫Õÿª°√≥Ïº ¡‡ ’¬ß„¥Ê‡À≈◊ÕÕ¬ŸË‡≈¬! ‚ª√·°√¡π’È®–∂Ÿ°ª‘¥∑—π∑’"
+    IDS_SNDVOL32       "‡πÅ‡∏ú‡∏á‡∏Ñ‡∏ß‡∏ö‡∏Ñ‡∏∏‡∏°‡∏£‡∏∞‡∏ö‡∏ö‡πÄ‡∏™‡∏µ‡∏¢‡∏á"
+    IDS_NOMIXERDEVICES "‡πÑ‡∏°‡πà‡∏û‡∏ö‡∏≠‡∏∏‡∏õ‡∏Å‡∏£‡∏ì‡πå‡∏ú‡∏™‡∏°‡πÄ‡∏™‡∏µ‡∏¢‡∏á‡πÉ‡∏î‡πÜ‡πÄ‡∏´‡∏•‡∏∑‡∏≠‡∏≠‡∏¢‡∏π‡πà‡πÄ‡∏•‡∏¢! ‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°‡∏ô‡∏µ‡πâ‡∏à‡∏∞‡∏ñ‡∏π‡∏Å‡∏õ‡∏¥‡∏î‡∏ó‡∏±‡∏ô‡∏ó‡∏µ"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "§ÿ≥ ¡∫—µ‘"
+CAPTION "‡∏Ñ‡∏∏‡∏ì‡∏™‡∏°‡∏ö‡∏±‡∏ï‡∏¥"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Õÿª°√≥Ï&ª√—∫·µËß‡ ’¬ß:", -1, 7,8,48,9
+  LTEXT "‡∏≠‡∏∏‡∏õ‡∏Å‡∏£‡∏ì‡πå&‡∏õ‡∏£‡∏±‡∏ö‡πÅ‡∏ï‡πà‡∏á‡πÄ‡∏™‡∏µ‡∏¢‡∏á:", -1, 7,8,48,9
   COMBOBOX IDC_MIXERDEVICE, 55,8,162,80, CBS_DROPDOWNLIST | WS_TABSTOP
-  GROUPBOX "ª√—∫·µËß√–∫∫‡ ’¬ß„ÀÈ :", -1, 7,25,211,77
-  PUSHBUTTON "‡&≈Ëπ¬ÈÕπ", IDC_PLAYBACK, 13,43,47,8, BS_AUTORADIOBUTTON
-  PUSHBUTTON "&°”≈—ß∫—π∑÷°", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
-  PUSHBUTTON "&Õ◊ËπÊ:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
+  GROUPBOX "‡∏õ‡∏£‡∏±‡∏ö‡πÅ‡∏ï‡πà‡∏á‡∏£‡∏∞‡∏ö‡∏ö‡πÄ‡∏™‡∏µ‡∏¢‡∏á‡πÉ‡∏´‡πâ :", -1, 7,25,211,77
+  PUSHBUTTON "‡πÄ&‡∏•‡πà‡∏ô‡∏¢‡πâ‡∏≠‡∏ô", IDC_PLAYBACK, 13,43,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&‡∏Å‡∏≥‡∏•‡∏±‡∏á‡∏ö‡∏±‡∏ô‡∏ó‡∏∂‡∏Å", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&‡∏≠‡∏∑‡πà‡∏ô‡πÜ:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
   COMBOBOX IDC_LINE, 55,80,155,50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-  LTEXT "· ¥ß°“√§«∫§ÿ¡√–∫∫‡ ’¬ß :", IDC_LABELCONTROLS, 7, 109, 162, 8
+  LTEXT "‡πÅ‡∏™‡∏î‡∏á‡∏Å‡∏≤‡∏£‡∏Ñ‡∏ß‡∏ö‡∏Ñ‡∏∏‡∏°‡∏£‡∏∞‡∏ö‡∏ö‡πÄ‡∏™‡∏µ‡∏¢‡∏á :", IDC_LABELCONTROLS, 7, 109, 162, 8
   CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
 
-  PUSHBUTTON "µ°≈ß", IDOK, 114,226,50,14
-  PUSHBUTTON "¬°‡≈‘°", IDCANCEL, 168,226,50,14
+  PUSHBUTTON "‡∏ï‡∏Å‡∏•‡∏á", IDOK, 114,226,50,14
+  PUSHBUTTON "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å", IDCANCEL, 168,226,50,14
 END
 
 IDD_VOLUME_CTRL DIALOG 0, 0, 90, 150

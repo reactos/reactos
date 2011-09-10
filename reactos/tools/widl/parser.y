@@ -133,7 +133,7 @@ static attr_list_t *check_dispiface_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_module_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_coclass_attrs(const char *name, attr_list_t *attrs);
 const char *get_attr_display_name(enum attr_type type);
-static void add_explicit_handle_if_necessary(var_t *func);
+static void add_explicit_handle_if_necessary(const type_t *iface, var_t *func);
 static void check_def(const type_t *t);
 
 static statement_t *make_statement(enum statement_type type);
@@ -384,8 +384,11 @@ statement:
 
 typedecl:
 	  enumdef
+	| tENUM aIDENTIFIER                     { $$ = type_new_enum($2, FALSE, NULL); }
 	| structdef
+	| tSTRUCT aIDENTIFIER                   { $$ = type_new_struct($2, FALSE, NULL); }
 	| uniondef
+	| tUNION aIDENTIFIER                    { $$ = type_new_nonencapsulated_union($2, FALSE, NULL); }
 	| attributes enumdef                    { $$ = $2; $$->attrs = check_enum_attrs($1); }
 	| attributes structdef                  { $$ = $2; $$->attrs = check_struct_attrs($1); }
 	| attributes uniondef                   { $$ = $2; $$->attrs = check_union_attrs($1); }
@@ -449,8 +452,12 @@ arg:	  attributes decl_spec m_any_declarator	{ if ($2->stgclass != STG_NONE && $
 						}
 	;
 
-array:	  '[' m_expr ']'			{ $$ = $2; }
+array:	  '[' expr ']'				{ $$ = $2;
+						  if (!$$->is_const)
+						      error_loc("array dimension is not an integer constant\n");
+						}
 	| '[' '*' ']'				{ $$ = make_expr(EXPR_VOID); }
+	| '[' ']'				{ $$ = make_expr(EXPR_VOID); }
 	;
 
 m_attributes:					{ $$ = NULL; }
@@ -515,7 +522,7 @@ attribute:					{ $$ = NULL; }
 	| tIGNORE				{ $$ = make_attr(ATTR_IGNORE); }
 	| tIIDIS '(' expr ')'			{ $$ = make_attrp(ATTR_IIDIS, $3); }
 	| tIMMEDIATEBIND			{ $$ = make_attr(ATTR_IMMEDIATEBIND); }
-	| tIMPLICITHANDLE '(' tHANDLET aIDENTIFIER ')'	{ $$ = make_attrp(ATTR_IMPLICIT_HANDLE, $4); }
+	| tIMPLICITHANDLE '(' arg ')'		{ $$ = make_attrp(ATTR_IMPLICIT_HANDLE, $3); }
 	| tIN					{ $$ = make_attr(ATTR_IN); }
 	| tINPUTSYNC				{ $$ = make_attr(ATTR_INPUTSYNC); }
 	| tLENGTHIS '(' m_exprs ')'		{ $$ = make_attrp(ATTR_LENGTHIS, $3); }
@@ -581,10 +588,10 @@ uuid_string:
 						  $$ = parse_uuid($1); }
         ;
 
-callconv: tCDECL				{ $$ = $<str>1; }
-	| tFASTCALL				{ $$ = $<str>1; }
-	| tPASCAL				{ $$ = $<str>1; }
-	| tSTDCALL				{ $$ = $<str>1; }
+callconv: tCDECL				{ $$ = xstrdup("__cdecl"); }
+	| tFASTCALL				{ $$ = xstrdup("__fastcall"); }
+	| tPASCAL				{ $$ = xstrdup("__pascal"); }
+	| tSTDCALL				{ $$ = xstrdup("__stdcall"); }
 	;
 
 cases:						{ $$ = NULL; }
@@ -634,16 +641,6 @@ enumdef: tENUM t_ident '{' enums '}'		{ $$ = type_new_enum($2, TRUE, $4); }
 m_exprs:  m_expr                                { $$ = append_expr( NULL, $1 ); }
 	| m_exprs ',' m_expr                    { $$ = append_expr( $1, $3 ); }
 	;
-
-/*
-exprs:						{ $$ = make_expr(EXPR_VOID); }
-	| expr_list
-	;
-
-expr_list: expr
-	| expr_list ',' expr			{ LINK($3, $1); $$ = $3; }
-	;
-*/
 
 m_expr:						{ $$ = make_expr(EXPR_VOID); }
 	| expr
@@ -1420,6 +1417,11 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
   array_dims_t *arr = decl ? decl->array : NULL;
   type_t *func_type = decl ? decl->func_type : NULL;
   type_t *type = decl_spec->type;
+  
+  /* In case of a range attribute, duplicate the type to keep track of
+   * the min/max values in the type format string */
+  if(is_attr(attrs, ATTR_RANGE))
+    type = duptype(type, 1);
 
   if (is_attr(type->attrs, ATTR_INLINE))
   {
@@ -1728,7 +1730,6 @@ static typelib_t *make_library(const char *name, const attr_list_t *attrs)
 {
     typelib_t *typelib = xmalloc(sizeof(*typelib));
     typelib->name = xstrdup(name);
-    typelib->filename = NULL;
     typelib->attrs = attrs;
     list_init( &typelib->importlibs );
     return typelib;
@@ -2114,7 +2115,7 @@ struct allowed_attr allowed_attr[] =
     /* ATTR_UUID */                { 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, "uuid" },
     /* ATTR_V1ENUM */              { 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, "v1_enum" },
     /* ATTR_VARARG */              { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "vararg" },
-    /* ATTR_VERSION */             { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, "version" },
+    /* ATTR_VERSION */             { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, "version" },
     /* ATTR_VIPROGID */            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "vi_progid" },
     /* ATTR_WIREMARSHAL */         { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, "wire_marshal" },
 };
@@ -2133,6 +2134,17 @@ static attr_list_t *check_iface_attrs(const char *name, attr_list_t *attrs)
     if (!allowed_attr[attr->type].on_interface)
       error_loc("inapplicable attribute %s for interface %s\n",
                 allowed_attr[attr->type].display_name, name);
+    if (attr->type == ATTR_IMPLICIT_HANDLE)
+    {
+        const var_t *var = attr->u.pval;
+        if (type_get_type( var->type) == TYPE_BASIC &&
+            type_basic_get_type( var->type ) == TYPE_BASIC_HANDLE)
+            continue;
+        if (is_aliaschain_attr( var->type, ATTR_HANDLE ))
+            continue;
+      error_loc("attribute %s requires a handle type in interface %s\n",
+                allowed_attr[attr->type].display_name, name);
+    }
   }
   return attrs;
 }
@@ -2563,11 +2575,15 @@ static void check_remoting_args(const var_t *func)
                 error_loc_info(&arg->loc_info, "out interface pointer \'%s\' of function \'%s\' is not a double pointer\n", arg->name, funcname);
                 break;
             case TGT_STRING:
-                if (is_ptr(type) ||
-                    (is_array(type) &&
-                     (!type_array_has_conformance(type) ||
-                      type_array_get_conformance(type)->type == EXPR_VOID)))
-                    error_loc_info(&arg->loc_info, "out parameter \'%s\' of function \'%s\' cannot be an unsized string\n", arg->name, funcname);
+                if (is_array(type))
+                {
+                    /* needs conformance or fixed dimension */
+                    if (type_array_has_conformance(type) &&
+                        type_array_get_conformance(type)->type != EXPR_VOID) break;
+                    if (!type_array_has_conformance(type) && type_array_get_dim(type)) break;
+                }
+                if (is_attr( arg->attrs, ATTR_IN )) break;
+                error_loc_info(&arg->loc_info, "out parameter \'%s\' of function \'%s\' cannot be an unsized string\n", arg->name, funcname);
                 break;
             case TGT_INVALID:
                 /* already error'd before we get here */
@@ -2593,31 +2609,20 @@ static void check_remoting_args(const var_t *func)
     }
 }
 
-static void add_explicit_handle_if_necessary(var_t *func)
+static void add_explicit_handle_if_necessary(const type_t *iface, var_t *func)
 {
-    const var_t* explicit_handle_var;
-    const var_t* explicit_generic_handle_var = NULL;
-    const var_t* context_handle_var = NULL;
+    unsigned char explicit_fc, implicit_fc;
 
     /* check for a defined binding handle */
-    explicit_handle_var = get_explicit_handle_var(func);
-    if (!explicit_handle_var)
+    if (!get_func_handle_var( iface, func, &explicit_fc, &implicit_fc ) || !explicit_fc)
     {
-        explicit_generic_handle_var = get_explicit_generic_handle_var(func);
-        if (!explicit_generic_handle_var)
-        {
-            context_handle_var = get_context_handle_var(func);
-            if (!context_handle_var)
-            {
-                /* no explicit handle specified so add
-                 * "[in] handle_t IDL_handle" as the first parameter to the
-                 * function */
-                var_t *idl_handle = make_var(xstrdup("IDL_handle"));
-                idl_handle->attrs = append_attr(NULL, make_attr(ATTR_IN));
-                idl_handle->type = find_type_or_error("handle_t", 0);
-                type_function_add_head_arg(func->type, idl_handle);
-            }
-        }
+        /* no explicit handle specified so add
+         * "[in] handle_t IDL_handle" as the first parameter to the
+         * function */
+        var_t *idl_handle = make_var(xstrdup("IDL_handle"));
+        idl_handle->attrs = append_attr(NULL, make_attr(ATTR_IN));
+        idl_handle->type = find_type_or_error("handle_t", 0);
+        type_function_add_head_arg(func->type, idl_handle);
     }
 }
 
@@ -2629,7 +2634,7 @@ static void check_functions(const type_t *iface, int is_inside_library)
         STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
         {
             var_t *func = stmt->u.var;
-            add_explicit_handle_if_necessary(func);
+            add_explicit_handle_if_necessary(iface, func);
         }
     }
     if (!is_inside_library && !is_attr(iface->attrs, ATTR_LOCAL))

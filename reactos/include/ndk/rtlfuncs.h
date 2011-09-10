@@ -171,7 +171,7 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->MaximumLength = BufferSize;
     UnicodeString->Buffer = Buffer;
 }
-    
+
 FORCEINLINE
 VOID
 RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
@@ -244,6 +244,107 @@ RtlConvertUlongToLuid(ULONG Ulong)
 //
 // RTL Splay Tree Functions
 //
+#ifndef RTL_USE_AVL_TABLES
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTable(
+    OUT PRTL_GENERIC_TABLE Table,
+    IN PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
+    IN PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
+    IN PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
+    IN PVOID TableContext OPTIONAL
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN CLONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN CLONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL,
+    IN PVOID NodeOrParent,
+    IN TABLE_SEARCH_RESULT SearchResult
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    OUT PVOID *NodeOrParent,
+    OUT TABLE_SEARCH_RESULT *SearchResult
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN BOOLEAN Restart
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplaying(
+    IN PRTL_GENERIC_TABLE Table,
+    IN OUT PVOID *RestartKey
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlGetElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN ULONG I
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberGenericTableElements(
+    IN PRTL_GENERIC_TABLE Table
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmpty(
+    IN PRTL_GENERIC_TABLE Table
+);
+
+#endif /* !RTL_USE_AVL_TABLES */
+
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
@@ -254,7 +355,8 @@ RtlSplay(
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlDelete(IN PRTL_SPLAY_LINKS Links
+RtlDelete(
+    IN PRTL_SPLAY_LINKS Links
 );
 
 NTSYSAPI
@@ -339,7 +441,7 @@ RtlRealPredecessor(
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
-    
+
 //
 // RTL AVL Tree Functions
 //
@@ -461,8 +563,24 @@ NTAPI
 RtlIsGenericTableEmptyAvl(
     IN PRTL_AVL_TABLE Table
 );
-  
-#endif
+
+#ifdef RTL_USE_AVL_TABLES
+
+#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
+#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
+#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
+#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
+#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
+#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
+#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
+#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
+#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
+#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
+#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
+
+#endif /* RTL_USE_AVL_TABLES */
+
+#endif /* NTOS_MODE_USER */
 
 //
 // Error and Exception Functions
@@ -1879,6 +1997,19 @@ RtlFillMemoryUlong(
     IN ULONG Fill
 );
 
+NTSYSAPI
+SIZE_T
+NTAPI
+RtlCompareMemoryUlong(
+    IN PVOID Source,
+    IN SIZE_T Length,
+    IN ULONG Pattern
+);
+
+#define RtlCopyBytes RtlCopyMemory
+#define RtlFillBytes RtlFillMemory
+#define RtlZeroBytes RtlZeroMemory
+
 #endif
 
 NTSYSAPI
@@ -2805,7 +2936,7 @@ NTAPI
 RtlInitializeRangeList(
     IN OUT PRTL_RANGE_LIST RangeList
 );
-    
+
 NTSYSAPI
 VOID
 NTAPI
@@ -3561,6 +3692,15 @@ NTAPI
 RtlUnlockBootStatusData(
     IN HANDLE FileHandle
 );
+#endif
+
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGUIDFromString(
+  IN PUNICODE_STRING GuidString,
+  OUT GUID *Guid);
 #endif
 
 #ifdef __cplusplus

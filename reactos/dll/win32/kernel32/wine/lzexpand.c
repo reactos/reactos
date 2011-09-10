@@ -593,3 +593,31 @@ void WINAPI LZClose( HFILE fd )
             HeapFree( GetProcessHeap(), 0, lzs );
         }
 }
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+LZCloseFile(IN HFILE FileHandle)
+{
+    /* One function uses _lclose, the other CloseHandle -- same thing */
+    LZClose(FileHandle);
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+WINAPI
+LZCreateFileW(IN LPCWSTR FileName,
+              IN DWORD dwDesiredAccess,
+              IN DWORD dwShareMode,
+              IN DWORD dwCreationDisposition,
+              IN LPWSTR lpString1)
+{
+    WARN(" LZCreateFileW Not implemented!\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+

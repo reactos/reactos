@@ -1,7 +1,5 @@
 #pragma once
 
-#include <include/win32.h>
-
 LRESULT APIENTRY
 co_IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,

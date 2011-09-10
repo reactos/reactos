@@ -20,7 +20,20 @@
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
 
-#include <ndk/ntndk.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/dbgkfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/kdtypes.h>
+#include <ndk/kefuncs.h>
+#include <ndk/ldrfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/pofuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/umfuncs.h>
 
 /* CSRSS Header */
 #include <csrss/csrss.h>

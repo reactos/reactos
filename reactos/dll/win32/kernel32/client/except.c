@@ -454,7 +454,7 @@ IsBadReadPtr(IN LPCVOID lp,
     if (!lp) return TRUE;
 
     /* Get the page size */
-    PageSize = BaseCachedSysInfo.PageSize;
+    PageSize = BaseStaticServerData->SysInfo.PageSize;
 
     /* Calculate the last page */
     Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
@@ -526,7 +526,7 @@ IsBadWritePtr(LPVOID lp,
     if (!lp) return TRUE;
 
     /* Get the page size */
-    PageSize = BaseCachedSysInfo.PageSize;
+    PageSize = BaseStaticServerData->SysInfo.PageSize;
 
     /* Calculate the last page */
     Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);

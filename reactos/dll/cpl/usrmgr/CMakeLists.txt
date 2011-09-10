@@ -1,5 +1,4 @@
 
-set_unicode()
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -18,7 +17,7 @@ add_library(usrmgr SHARED
     usrmgr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/usrmgr.def)
 
-set_module_type(usrmgr cpl)
+set_module_type(usrmgr cpl UNICODE)
 
 add_importlibs(usrmgr
     advapi32
@@ -30,5 +29,5 @@ add_importlibs(usrmgr
     kernel32
     ntdll)
 
-
+add_pch(usrmgr usrmgr.h)
 add_cd_file(TARGET usrmgr DESTINATION reactos/system32 FOR all)

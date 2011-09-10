@@ -30,7 +30,8 @@ typedef struct _RPC_CLIENT_ID {
 [
     uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
     version(0.0),
-    pointer_default(unique)
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\EventLog]")
 #ifndef __midl
     ,explicit_handle
 #endif

@@ -18,38 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define DEBUG
+
 #include "config.h"
 #include "iphlpapi_private.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-#ifdef HAVE_ARPA_NAMESER_H
-# include <arpa/nameser.h>
-#endif
-#ifdef HAVE_RESOLV_H
-# include <resolv.h>
-#endif
-
-#define DEBUG
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "iphlpapi.h"
-#include "dhcp.h"
-#include "ifenum.h"
-#include "ipstats.h"
-#include "resinfo.h"
-#include "route.h"
-#include "wine/debug.h"
-#include "dhcpcsdk.h"
-#include "dhcpcapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 

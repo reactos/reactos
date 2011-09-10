@@ -6,13 +6,7 @@
  * PROGRAMMERS:     Based on a source code sample from Microsoft NT4 DDK
  */
 
-#include <ntddk.h>
-#include <scsi.h>
-#include <ntddscsi.h>
-#include <ntdddisk.h>
-#include <ntddcdrm.h>
-#include <include/class2.h>
-#include <stdio.h>
+#include "precomp.h"
 
 //#define NDEBUG
 #include <debug.h>

@@ -43,10 +43,8 @@
 //					  Original code
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include "tncon.h"
-#include "keytrans.h"
-#include "ttelhndl.h"
-#include "tconsole.h"
+
+#include "precomp.h"
 
 #define KEYEVENT InputRecord[i].Event.KeyEvent
 

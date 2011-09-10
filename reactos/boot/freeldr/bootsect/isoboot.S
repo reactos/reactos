@@ -360,10 +360,13 @@ get_fs_structures:
     call crlf
 #endif
 
-    mov bx, FREELDR_BASE            // bx = load address
+// use high segment, as some bios can fail, when offset is too big
+    mov bx, FREELDR_BASE / 16 // es = load segment
+    mov es, bx
+    xor ebx, ebx              // bx = load offset
     mov si, di                // restore file pointer
-    mov cx, HEX(0FFFF)            // load the whole file
-    call getfssec            // get the whole file
+    mov cx, HEX(0FFFF)        // load the whole file
+    call getfssec             // get the whole file
 
 #ifdef DEBUG_MESSAGES
     mov si, offset startldr_msg

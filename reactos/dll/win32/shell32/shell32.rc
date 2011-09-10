@@ -39,6 +39,7 @@ END
 #include "icon_res.rc"
 #include "bitmap_res.rc"
 #include "avi_res.rc"
+#include "rgs_res.rc"
 
 /*
  * Everything specific to any language goes

@@ -28,8 +28,7 @@
 // Written by Paul Brannan <pbranna@clemson.edu>
 // Last modified August 30, 1998
 
-#include "tmouse.h"
-#include "tconsole.h"
+#include "precomp.h"
 
 TMouse::TMouse(Tnclip &RefClipboard): Clipboard(RefClipboard) {
 	hConsole = GetStdHandle(STD_INPUT_HANDLE);

@@ -24,6 +24,7 @@
 	<file>qmgr_main.c</file>
 	<file>service.c</file>
 	<file>rsrc.rc</file>
+	<pch>qmgr.h</pch>
 </module>
 <module name="qmgr_local_header" type="idlheader">
 	<file>qmgr_local.idl</file>

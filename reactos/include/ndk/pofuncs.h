@@ -114,21 +114,21 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction(
-    POWER_ACTION SystemAction,
-    SYSTEM_POWER_STATE MinSystemState,
-    ULONG Flags,
-    BOOLEAN Asynchronous
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOLEAN Asynchronous
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
-    POWER_INFORMATION_LEVEL PowerInformationLevel,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength
+    IN POWER_INFORMATION_LEVEL PowerInformationLevel,
+    IN PVOID InputBuffer OPTIONAL,
+    IN ULONG InputBufferLength,
+    OUT PVOID OutputBuffer OPTIONAL,
+    IN ULONG OutputBufferLength
 );
 
 NTSYSCALLAPI

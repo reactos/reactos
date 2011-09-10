@@ -97,6 +97,7 @@ DWORD        WINAPI SHFormatDrive(HWND,UINT,UINT,UINT);
 void         WINAPI SHFree(LPVOID);
 BOOL         WINAPI GetFileNameFromBrowse(HWND,LPWSTR,UINT,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR);
 HRESULT      WINAPI SHGetInstanceExplorer(IUnknown**);
+VOID         WINAPI SHSetInstanceExplorer (IUnknown*);
 HRESULT      WINAPI SHGetFolderPathAndSubDirA(HWND,int,HANDLE,DWORD,LPCSTR,LPSTR);
 HRESULT      WINAPI SHGetFolderPathAndSubDirW(HWND,int,HANDLE,DWORD,LPCWSTR,LPWSTR);
 #define             SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir);
@@ -1458,7 +1459,7 @@ typedef struct _SHChangeProductKeyAsIDList {
 } SHChangeProductKeyAsIDList, *LPSHChangeProductKeyAsIDList;
 
 ULONG WINAPI SHChangeNotifyRegister(HWND hwnd, int fSources, LONG fEvents, UINT wMsg,
-                                    int cEntries, const SHChangeNotifyEntry *pshcne);
+                                    int cEntries, SHChangeNotifyEntry *pshcne);
 BOOL WINAPI SHChangeNotifyDeregister(ULONG ulID);
 HANDLE WINAPI SHChangeNotification_Lock(HANDLE hChangeNotification, DWORD dwProcessId,
                                         LPITEMIDLIST **pppidl, LONG *plEvent);
@@ -1469,7 +1470,7 @@ HRESULT WINAPI SHGetRealIDL(IShellFolder *psf, LPCITEMIDLIST pidlSimple, LPITEMI
 /****************************************************************************
 * SHCreateDirectory API
 */
-DWORD WINAPI SHCreateDirectory(HWND, LPCWSTR);
+int WINAPI SHCreateDirectory(HWND, LPCWSTR);
 int WINAPI SHCreateDirectoryExA(HWND, LPCSTR, LPSECURITY_ATTRIBUTES);
 int WINAPI SHCreateDirectoryExW(HWND, LPCWSTR, LPSECURITY_ATTRIBUTES);
 #define    SHCreateDirectoryEx WINELIB_NAME_AW(SHCreateDirectoryEx)
@@ -1738,7 +1739,7 @@ HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
 #define MM_SUBMENUSHAVEIDS      0x00000002L
 #define MM_DONTREMOVESEPS       0x00000004L
 
-HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
+UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
 
 
 /****************************************************************************
@@ -1835,6 +1836,17 @@ DECLARE_INTERFACE_(IShellIconOverlayIdentifier, IUnknown)
     STDMETHOD (GetPriority)(THIS_ int * pIPriority) PURE;
 };
 
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IShellIconOverlayIdentifier_QueryInterface(p,a,b)         (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellIconOverlayIdentifier_AddRef(p)                     (p)->lpVtbl->AddRef(p)
+#define IShellIconOverlayIdentifier_Release(p)                    (p)->lpVtbl->Release(p)
+/*** IShellIconOverlayIdentifier methods ***/
+#define IShellIconOverlayIdentifier_IsMemberOf(p,a,b)             (p)->lpVtbl->IsMemberOf(p,a,b)
+#define IShellIconOverlayIdentifier_GetOverlayInfo(p,a,b,c,d)     (p)->lpVtbl->GetOverlayInfo(p,a,b,c,d)
+#define IShellIconOverlayIdentifier_GetPriority(p,a)              (p)->lpVtbl->GetPriority(p,a)
+#endif
+
 #define ISIOI_ICONFILE  0x00000001
 #define ISIOI_ICONINDEX 0x00000002
 
@@ -1856,12 +1868,12 @@ DECLARE_INTERFACE_(IShellIconOverlayIdentifier, IUnknown)
 /*****************************************************************************
  * IDockingWindowSite interface
  */
-#define INTERFACE   IDockingWindowSite
+#define INTERFACE IDockingWindowSite
 DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
 {
     // *** IUnknown methods ***
     STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
 
     // *** IOleWindow methods ***
@@ -1874,6 +1886,60 @@ DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
     STDMETHOD(SetBorderSpaceDW)(THIS_ IUnknown *punkObj, LPCBORDERWIDTHS pbw) PURE;
 };
 #undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDockingWindowSite_QueryInterface(p,a,b)         (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDockingWindowSite_AddRef(p)                     (p)->lpVtbl->AddRef(p)
+#define IDockingWindowSite_Release(p)                    (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IDockingWindowSite_GetWindow(p,a)                (p)->lpVtbl->GetWindow(p,a)
+#define IDockingWindowSite_ContextSensitiveHelp(p,a)     (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IDockingWindowSite methods ***/
+#define IDockingWindowSite_GetBorderDW(p,a,b)            (p)->lpVtbl->GetBorderDW(p,a,b)
+#define IDockingWindowSite_RequestBorderSpaceDW(p,a,b)   (p)->lpVtbl->RequestBorderSpaceDW(p,a,b)
+#define IDockingWindowSite_SetBorderSpaceDW(p,a,b)       (p)->lpVtbl->SetBorderSpaceDW(p,a,b)
+#endif
+
+/*****************************************************************************
+ * IShellTaskScheduler interface
+ */
+#define REFTASKOWNERID REFGUID
+
+#define INTERFACE IShellTaskScheduler
+DECLARE_INTERFACE_(IShellTaskScheduler, IUnknown)
+{
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    // *** IShellTaskScheduler methods ***
+    STDMETHOD(AddTask)(THIS_ IRunnableTask *pTask, REFTASKOWNERID rtoid, DWORD_PTR lParam, DWORD dwPriority) PURE;
+    STDMETHOD(RemoveTasks)(THIS_ REFTASKOWNERID rtoid, DWORD_PTR lParam, BOOL fWaitIfRunning) PURE;
+    STDMETHOD_(UINT, CountTasks)(THIS_ REFTASKOWNERID rtoid) PURE;
+    STDMETHOD(Status)(THIS_ DWORD dwReleaseStatus, DWORD dwThreadTimeout) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IShellTaskScheduler_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellTaskScheduler_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IShellTaskScheduler_Release(p)             (p)->lpVtbl->Release(p)
+/*** IShellTaskScheduler methods ***/
+#define IShellTaskScheduler_AddTask(p,a,b,c,d)     (p)->lpVtbl->AddTask(p,a,b,c,d)
+#define IShellTaskScheduler_RemoveTasks(p,a,b,c)   (p)->lpVtbl->RemoveTasks(p,a,b,c)
+#define IShellTaskScheduler_CountTasks(p,a)        (p)->lpVtbl->CountTasks(p,a)
+#define IShellTaskScheduler_Status(p,a,b)          (p)->lpVtbl->Status(p,a,b)
+#endif
+
+typedef void (CALLBACK *PFNASYNCICONTASKBALLBACK)(LPCITEMIDLIST pidl, LPVOID pvData, LPVOID pvHint, INT iIconIndex, INT iOpenIconIndex);
+
+/*****************************************************************************
+ * Control Panel functions
+ */
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
 
 #ifdef __cplusplus
 } /* extern "C" */

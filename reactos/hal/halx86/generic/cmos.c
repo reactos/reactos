@@ -57,7 +57,7 @@ HalpGetCmosData(IN ULONG BusNumber,
     if (!Length) return 0;
 
     /* Acquire CMOS Lock */
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     /* Check if this is simple CMOS */
     if (BusNumber == 0)
@@ -111,7 +111,7 @@ HalpSetCmosData(IN ULONG BusNumber,
     if (!Length) return 0;
 
     /* Acquire CMOS Lock */
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     /* Check if this is simple CMOS */
     if (BusNumber == 0)
@@ -179,7 +179,7 @@ HalGetEnvironmentVariable(IN PCH Name,
     if (_stricmp(Name, "LastKnownGood")) return ENOENT;
 
     /* Acquire CMOS Lock */
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     /* Query the current value */
     Val = HalpReadCmos(RTC_REGISTER_B) & 0x01;
@@ -220,7 +220,7 @@ HalSetEnvironmentVariable(IN PCH Name,
     if (!_stricmp(Value, "TRUE"))
     {
         /* It's true, acquire CMOS lock */
-        HalpAcquireSystemHardwareSpinLock();
+        HalpAcquireCmosSpinLock();
 
         /* Read the current value and add the flag */
         Val = HalpReadCmos(RTC_REGISTER_B) | 1;
@@ -228,7 +228,7 @@ HalSetEnvironmentVariable(IN PCH Name,
     else if (!_stricmp(Value, "FALSE"))
     {
         /* It's false, acquire CMOS lock */
-        HalpAcquireSystemHardwareSpinLock();
+        HalpAcquireCmosSpinLock();
 
         /* Read the current value and mask out  the flag */
         Val = HalpReadCmos(RTC_REGISTER_B) & ~1;
@@ -255,7 +255,7 @@ NTAPI
 HalQueryRealTimeClock(OUT PTIME_FIELDS Time)
 {
     /* Acquire CMOS Lock */
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     /* Loop while update is in progress */
     while ((HalpReadCmos(RTC_REGISTER_A)) & RTC_REG_A_UIP);
@@ -290,7 +290,7 @@ NTAPI
 HalSetRealTimeClock(IN PTIME_FIELDS Time)
 {
     /* Acquire CMOS Lock */
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     /* Loop while update is in progress */
     while ((HalpReadCmos(RTC_REGISTER_A)) & RTC_REG_A_UIP);

@@ -1,8 +1,6 @@
 /* Service debugging (simply logs to a file) */
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <windows.h>
+#include "audiosrv.h"
 
 void logmsg(char* string, ...)
 {

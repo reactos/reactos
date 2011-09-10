@@ -35,7 +35,6 @@ ULONG KeI386MachineType;
 ULONG KeI386NpxPresent = 1;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
-CHAR KeNumberProcessors = 0;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiSMTProcessorsPresent;
 
@@ -481,11 +480,11 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
 //    __stmxcsr(&ProcessorState->SpecialRegisters.MxCsr);
-//    ProcessorState->SpecialRegisters.DebugControl = 
-//    ProcessorState->SpecialRegisters.LastBranchToRip = 
-//    ProcessorState->SpecialRegisters.LastBranchFromRip = 
-//    ProcessorState->SpecialRegisters.LastExceptionToRip = 
-//    ProcessorState->SpecialRegisters.LastExceptionFromRip = 
+//    ProcessorState->SpecialRegisters.DebugControl =
+//    ProcessorState->SpecialRegisters.LastBranchToRip =
+//    ProcessorState->SpecialRegisters.LastBranchFromRip =
+//    ProcessorState->SpecialRegisters.LastExceptionToRip =
+//    ProcessorState->SpecialRegisters.LastExceptionFromRip =
 
     /* Save MSRs */
     ProcessorState->SpecialRegisters.MsrGsBase = __readmsr(X86_MSR_GSBASE);
@@ -528,18 +527,18 @@ KeQueryActiveProcessors(VOID)
 
 NTSTATUS
 NTAPI
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+KxSaveFloatingPointState(OUT PKFLOATING_SAVE FloatingState)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    UNREFERENCED_PARAMETER(FloatingState);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+KxRestoreFloatingPointState(IN PKFLOATING_SAVE FloatingState)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    UNREFERENCED_PARAMETER(FloatingState);
+    return STATUS_SUCCESS;
 }
 
 BOOLEAN

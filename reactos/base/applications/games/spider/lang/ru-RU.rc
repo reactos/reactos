@@ -5,11 +5,8 @@
  * PURPOSE:      Russian Language File for Spider Solitaire
  * TRANSLATOR:   Dmitry Chapyshev
  */
- 
-#include "resource.h"
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-
 
 /* Dialogs */
 

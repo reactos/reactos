@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(slayer.dll slayer.spec)
@@ -11,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(slayer SHARED ${SOURCE})
 
-set_module_type(slayer win32dll)
+set_module_type(slayer win32dll UNICODE)
 
 target_link_libraries(slayer uuid)
 

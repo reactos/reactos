@@ -2,248 +2,516 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        transport/tcp/event.c
- * PURPOSE:     Transmission Control Protocol -- Events from oskittcp
- * PROGRAMMERS: Art Yerkes
- * REVISIONS:
- *   CSH 01/08-2000 Created
+ * PURPOSE:     Transmission Control Protocol
+ * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)
  */
 
 #include "precomp.h"
 
-int TCPSocketState(void *ClientData,
-           void *WhichSocket,
-           void *WhichConnection,
-           OSK_UINT NewState ) {
-    PCONNECTION_ENDPOINT Connection = WhichConnection;
+#include "lwip/err.h"
+#include "lwip/sys.h"
+#include "lwip/pbuf.h"
+#include "lwip/tcp.h"
+#include "lwip/api.h"
 
-    TI_DbgPrint(DEBUG_TCP,("Connection: %x Flags: %c%c%c%c%c\n",
-               Connection,
-               NewState & SEL_CONNECT ? 'C' : 'c',
-               NewState & SEL_READ    ? 'R' : 'r',
-               NewState & SEL_FIN     ? 'F' : 'f',
-               NewState & SEL_ACCEPT  ? 'A' : 'a',
-               NewState & SEL_WRITE   ? 'W' : 'w'));
+#include "rosip.h"
 
-    /* If this socket is missing its socket context, that means that it
-     * has been created as a new connection in sonewconn but not accepted
-     * yet. We can safely ignore event notifications on these sockets.
-     * Once they are accepted, they will get a socket context and we will 
-     * be able to process them.
-     */
-    if (!Connection)
-        return 0;
+static const char * const tcp_state_str[] = {
+  "CLOSED",      
+  "LISTEN",      
+  "SYN_SENT",    
+  "SYN_RCVD",    
+  "ESTABLISHED", 
+  "FIN_WAIT_1",  
+  "FIN_WAIT_2",  
+  "CLOSE_WAIT",  
+  "CLOSING",     
+  "LAST_ACK",    
+  "TIME_WAIT"   
+};
 
-    TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
-               NewState, Connection,
-               Connection->SignalState ^ NewState,
-               NewState));
+extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 
-    Connection->SignalState = NewState;
+static
+VOID
+BucketCompletionWorker(PVOID Context)
+{
+    PTDI_BUCKET Bucket = (PTDI_BUCKET)Context;
+    PTCP_COMPLETION_ROUTINE Complete;
+    
+    Complete = (PTCP_COMPLETION_ROUTINE)Bucket->Request.RequestNotifyObject;
+    
+    Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
+    
+    DereferenceObject(Bucket->AssociatedEndpoint);
 
-    HandleSignalledConnection(Connection);
-
-    return 0;
+    ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
 }
 
-void TCPPacketSendComplete( PVOID Context,
-                PNDIS_PACKET NdisPacket,
-                NDIS_STATUS NdisStatus ) {
-    TI_DbgPrint(DEBUG_TCP,("called %x\n", NdisPacket));
-    FreeNdisPacket(NdisPacket);
-    TI_DbgPrint(DEBUG_TCP,("done\n"));
-}
-
-#define STRINGIFY(x) #x
-
-int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
-    NDIS_STATUS NdisStatus;
-    PNEIGHBOR_CACHE_ENTRY NCE;
-    IP_PACKET Packet = { 0 };
-    IP_ADDRESS RemoteAddress, LocalAddress;
-    PIPv4_HEADER Header;
-
-    if( *data == 0x45 ) { /* IPv4 */
-    Header = (PIPv4_HEADER)data;
-    LocalAddress.Type = IP_ADDRESS_V4;
-    LocalAddress.Address.IPv4Address = Header->SrcAddr;
-    RemoteAddress.Type = IP_ADDRESS_V4;
-    RemoteAddress.Address.IPv4Address = Header->DstAddr;
-    } else {
-    TI_DbgPrint(MIN_TRACE,("Outgoing packet is not IPv4\n"));
-    OskitDumpBuffer( data, len );
-    return OSK_EINVAL;
-    }
-
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-    TI_DbgPrint(MIN_TRACE,("Unable to get route to %s\n", A2S(&RemoteAddress)));
-    return OSK_EADDRNOTAVAIL;
-    }
-
-    NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL, len );
-
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-    TI_DbgPrint(DEBUG_TCP, ("Error from NDIS: %08x\n", NdisStatus));
-    return OSK_ENOBUFS;
-    }
-
-    GetDataPtr( Packet.NdisPacket, 0,
-        (PCHAR *)&Packet.Header, &Packet.ContigSize );
-
-    RtlCopyMemory( Packet.Header, data, len );
-
-    Packet.HeaderSize = sizeof(IPv4_HEADER);
-    Packet.TotalSize = len;
-    Packet.SrcAddr = LocalAddress;
-    Packet.DstAddr = RemoteAddress;
-
-    if (!NT_SUCCESS(IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL )))
+VOID
+CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEAN Synchronous)
+{
+    ReferenceObject(Connection);
+    Bucket->AssociatedEndpoint = Connection;
+    if (Synchronous)
     {
-        FreeNdisPacket(Packet.NdisPacket);
-        return OSK_EINVAL;
+        BucketCompletionWorker(Bucket);
     }
-
-    return 0;
+    else
+    {
+        ChewCreate(BucketCompletionWorker, Bucket);
+    }
 }
 
-/* Memory management routines
- *
- * By far the most requests for memory are either for 128 or 2049 byte blocks,
- * so we want to satisfy those from lookaside lists. Unfortunately, the
- * TCPFree() function doesn't pass the size of the block to be freed, so we
- * need to keep track of it ourselves. We do it by prepending each block with
- * 4 bytes, indicating if this is a 'L'arge (2049), 'S'mall (128) or 'O'ther
- * block.
- */
-
-/* Set to some non-zero value to get a profile of memory allocation sizes */
-#define MEM_PROFILE 0
-
-#define SMALL_SIZE 128
-#define LARGE_SIZE 2049
-
-#define SIGNATURE_LARGE 'LLLL'
-#define SIGNATURE_SMALL 'SSSS'
-#define SIGNATURE_OTHER 'OOOO'
-static NPAGED_LOOKASIDE_LIST LargeLookasideList;
-static NPAGED_LOOKASIDE_LIST SmallLookasideList;
-
-NTSTATUS
-TCPMemStartup( void )
+VOID
+FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked)
 {
-    ExInitializeNPagedLookasideList( &LargeLookasideList,
-                                     NULL,
-                                     NULL,
-                                     0,
-                                     LARGE_SIZE + sizeof( ULONG ),
-                                     OSK_LARGE_TAG,
-                                     0 );
-    ExInitializeNPagedLookasideList( &SmallLookasideList,
-                                     NULL,
-                                     NULL,
-                                     0,
-                                     SMALL_SIZE + sizeof( ULONG ),
-                                     OSK_SMALL_TAG,
-                                     0 );
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
+    
+    if (interlocked)
+    {
+        while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
+        {
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Receive request: %x %x\n",
+                         Bucket->Request, Status));
+        
+            Bucket->Status = Status;
+            Bucket->Information = 0;
+        
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
+    else
+    {
+        while (!IsListEmpty(&Connection->ReceiveRequest))
+        {
+            Entry = RemoveHeadList(&Connection->ReceiveRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = Status;
+            
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
 
-    return STATUS_SUCCESS;
+    DereferenceObject(Connection);
 }
 
-void *TCPMalloc( void *ClientData,
-         OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
-    void *v;
-    ULONG Signature;
+VOID
+FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked)
+{
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
 
-#if 0 != MEM_PROFILE
-    static OSK_UINT *Sizes = NULL, *Counts = NULL, ArrayAllocated = 0;
-    static OSK_UINT ArrayUsed = 0, AllocationCount = 0;
-    OSK_UINT i, NewSize, *NewArray;
-    int Found;
-
-    Found = 0;
-    for ( i = 0; i < ArrayUsed && ! Found; i++ ) {
-    Found = ( Sizes[i] == Bytes );
-    if ( Found ) {
-        Counts[i]++;
-    }
-    }
-    if ( ! Found ) {
-    if ( ArrayAllocated <= ArrayUsed ) {
-        NewSize = ( 0 == ArrayAllocated ? 16 : 2 * ArrayAllocated );
-        NewArray = exAllocatePool( NonPagedPool, 2 * NewSize * sizeof( OSK_UINT ) );
-        if ( NULL != NewArray ) {
-        if ( 0 != ArrayAllocated ) {
-            memcpy( NewArray, Sizes,
-                    ArrayAllocated * sizeof( OSK_UINT ) );
-            exFreePool( Sizes );
-            memcpy( NewArray + NewSize, Counts,
-                    ArrayAllocated * sizeof( OSK_UINT ) );
-            exFreePool( Counts );
-        }
-        Sizes = NewArray;
-        Counts = NewArray + NewSize;
-        ArrayAllocated = NewSize;
-        } else if ( 0 != ArrayAllocated ) {
-        exFreePool( Sizes );
-        exFreePool( Counts );
-        ArrayAllocated = 0;
+    if (interlocked)
+    {
+        while ((Entry = ExInterlockedRemoveHeadList(&Connection->SendRequest, &Connection->Lock)))
+        {
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );    
+        
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Send request: %x %x\n",
+                         Bucket->Request, Status));
+        
+            Bucket->Status = Status;
+            Bucket->Information = 0;
+        
+            CompleteBucket(Connection, Bucket, FALSE);
         }
     }
-    if ( ArrayUsed < ArrayAllocated ) {
-        Sizes[ArrayUsed] = Bytes;
-        Counts[ArrayUsed] = 1;
-        ArrayUsed++;
-    }
+    else
+    {
+        while (!IsListEmpty(&Connection->SendRequest))
+        {
+            Entry = RemoveHeadList(&Connection->SendRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = Status;
+            
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
     }
 
-    if ( 0 == (++AllocationCount % MEM_PROFILE) ) {
-    TI_DbgPrint(DEBUG_TCP, ("Memory allocation size profile:\n"));
-    for ( i = 0; i < ArrayUsed; i++ ) {
+    DereferenceObject(Connection);
+}
+
+VOID
+FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked)
+{
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
+
+    if (interlocked)
+    {
+        while ((Entry = ExInterlockedRemoveHeadList(&Connection->ShutdownRequest, &Connection->Lock)))
+        {   
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+            Bucket->Status = Status;
+            Bucket->Information = 0;
+        
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
+    else
+    {
+        while (!IsListEmpty(&Connection->ShutdownRequest))
+        {
+            Entry = RemoveHeadList(&Connection->ShutdownRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = Status;
+            
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
+    }
+
+    DereferenceObject(Connection);
+}
+
+VOID
+FlushConnectQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
+{
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
+
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
+    {
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Bucket->Status = Status;
+        Bucket->Information = 0;
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+
+    DereferenceObject(Connection);
+}
+
+VOID
+FlushListenQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status)
+{
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    
+    ReferenceObject(Connection);
+
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
+    {
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Bucket->Status = Status;
+        Bucket->Information = 0;
+        
+        DereferenceObject(Bucket->AssociatedEndpoint);
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+
+    DereferenceObject(Connection);
+}
+
+VOID
+FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
+{    
+    ReferenceObject(Connection);
+    
+    // flush receive queue
+    FlushReceiveQueue(Connection, Status, TRUE);
+
+    /* We completed the reads successfully but we need to return failure now */
+    if (Status == STATUS_SUCCESS)
+    {
+        Status = STATUS_FILE_CLOSED;
+    }
+    
+    // flush listen queue
+    FlushListenQueue(Connection, Status);
+    
+    // flush send queue
+    FlushSendQueue(Connection, Status, TRUE);
+    
+    // flush connect queue
+    FlushConnectQueue(Connection, Status);
+
+    // flush shutdown queue
+    FlushShutdownQueue(Connection, Status, TRUE);
+    
+    DereferenceObject(Connection);
+}
+
+VOID
+TCPFinEventHandler(void *arg, const err_t err)
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg, LastConnection;
+    const NTSTATUS Status = TCPTranslateError(err);
+    KIRQL OldIrql;
+
+    ASSERT(Connection->AddressFile);
+
+    /* Check if this was a partial socket closure */
+    if (err == ERR_OK && Connection->SocketContext)
+    {
+        /* Just flush the receive queue and get out of here */
+        FlushReceiveQueue(Connection, STATUS_SUCCESS, TRUE);
+    }
+    else
+    {
+        /* First off all, remove the PCB pointer */
+        Connection->SocketContext = NULL;
+
+        /* Complete all outstanding requests now */
+        FlushAllQueues(Connection, Status);
+
+        LockObject(Connection, &OldIrql);
+
+        LockObjectAtDpcLevel(Connection->AddressFile);
+
+        /* Unlink this connection from the address file */
+        if (Connection->AddressFile->Connection == Connection)
+        {
+            Connection->AddressFile->Connection = Connection->Next;
+            DereferenceObject(Connection);
+        }
+        else if (Connection->AddressFile->Listener == Connection)
+        {
+            Connection->AddressFile->Listener = NULL;
+            DereferenceObject(Connection);
+        }
+        else
+        {
+            LastConnection = Connection->AddressFile->Connection;
+            while (LastConnection->Next != Connection && LastConnection->Next != NULL)
+                LastConnection = LastConnection->Next;
+            if (LastConnection->Next == Connection)
+            {
+                LastConnection->Next = Connection->Next;
+                DereferenceObject(Connection);
+            }
+        }
+
+        UnlockObjectFromDpcLevel(Connection->AddressFile);
+
+        /* Remove the address file from this connection */
+        DereferenceObject(Connection->AddressFile);
+        Connection->AddressFile = NULL;
+
+        UnlockObject(Connection, OldIrql);
+    }
+}
+    
+VOID
+TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    PIRP Irp;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+        
+    ReferenceObject(Connection);
+    
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
+    {
+        PIO_STACK_LOCATION IrpSp;
+        
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Irp = Bucket->Request.RequestContext;
+        IrpSp = IoGetCurrentIrpStackLocation( Irp );
+        
+        TI_DbgPrint(DEBUG_TCP,("[IP, TCPAcceptEventHandler] Getting the socket\n"));
+        
+        Status = TCPCheckPeerForAccept(newpcb,
+                                       (PTDI_REQUEST_KERNEL)&IrpSp->Parameters);
+        
+        TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n", Status));
+        
+        Bucket->Status = Status;
+        Bucket->Information = 0;
+                
+        if (Status == STATUS_SUCCESS)
+        {
+            LockObject(Bucket->AssociatedEndpoint, &OldIrql);
+
+            /* sanity assert...this should never be in anything else but a CLOSED state */
+            ASSERT( ((PTCP_PCB)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED );
+            
+            /*  free socket context created in FileOpenConnection, as we're using a new one */
+            LibTCPClose(Bucket->AssociatedEndpoint, TRUE, FALSE);
+
+            /* free previously created socket context (we don't use it, we use newpcb) */
+            Bucket->AssociatedEndpoint->SocketContext = newpcb;
+            
+            LibTCPAccept(newpcb, (PTCP_PCB)Connection->SocketContext, Bucket->AssociatedEndpoint);
+
+            UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
+        }
+        
+        DereferenceObject(Bucket->AssociatedEndpoint);
+        
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+    
+    DereferenceObject(Connection);
+}
+
+VOID
+TCPSendEventHandler(void *arg, u16_t space)
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    PIRP Irp;
+    NTSTATUS Status;
+    PMDL Mdl;
+    
+    ReferenceObject(Connection);
+
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->SendRequest, &Connection->Lock)))
+    {
+        UINT SendLen = 0;
+        PVOID SendBuffer = 0;
+        
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Irp = Bucket->Request.RequestContext;
+        Mdl = Irp->MdlAddress;
+        
         TI_DbgPrint(DEBUG_TCP,
-                    ("Size %4u Count %5u\n", Sizes[i], Counts[i]));
+                    ("Getting the user buffer from %x\n", Mdl));
+        
+        NdisQueryBuffer( Mdl, &SendBuffer, &SendLen );
+        
+        TI_DbgPrint(DEBUG_TCP,
+                    ("Writing %d bytes to %x\n", SendLen, SendBuffer));
+        
+        TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
+        TI_DbgPrint
+        (DEBUG_TCP,
+         ("Connection->SocketContext: %x\n",
+          Connection->SocketContext));
+        
+        Status = TCPTranslateError(LibTCPSend(Connection,
+                                              SendBuffer,
+                                              SendLen, TRUE));
+        
+        TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", SendLen));
+        
+        if( Status == STATUS_PENDING )
+        {
+            ExInterlockedInsertHeadList(&Connection->SendRequest,
+                                        &Bucket->Entry,
+                                        &Connection->Lock);
+            break;
+        }
+        else
+        {
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Send request: %x %x\n",
+                         Bucket->Request, Status));
+            
+            Bucket->Status = Status;
+            Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? SendLen : 0;
+                        
+            CompleteBucket(Connection, Bucket, FALSE);
+        }
     }
-    TI_DbgPrint(DEBUG_TCP, ("End of memory allocation size profile\n"));
-    }
-#endif /* MEM_PROFILE */
 
-    if ( SMALL_SIZE == Bytes ) {
-    v = ExAllocateFromNPagedLookasideList( &SmallLookasideList );
-    Signature = SIGNATURE_SMALL;
-    } else if ( LARGE_SIZE == Bytes ) {
-    v = ExAllocateFromNPagedLookasideList( &LargeLookasideList );
-    Signature = SIGNATURE_LARGE;
-    } else {
-    v = ExAllocatePoolWithTag( NonPagedPool, Bytes + sizeof(ULONG),
-                               OSK_OTHER_TAG );
-    Signature = SIGNATURE_OTHER;
-    }
-    if( v ) {
-    *((ULONG *) v) = Signature;
-    v = (void *)((char *) v + sizeof(ULONG));
-    }
+    //  If we completed all outstanding send requests then finish all pending shutdown requests,
+    //  cancel the timer and dereference the connection
+    if (IsListEmpty(&Connection->SendRequest))
+    {
+        FlushShutdownQueue(Connection, STATUS_SUCCESS, FALSE);
 
-    return v;
+        if (KeCancelTimer(&Connection->DisconnectTimer))
+        {
+            DereferenceObject(Connection);
+        }
+    }
+    
+    DereferenceObject(Connection);
 }
 
-void TCPFree( void *ClientData,
-          void *data, OSK_PCHAR File, OSK_UINT Line ) {
-    ULONG Signature;
-
-    data = (void *)((char *) data - sizeof(ULONG));
-    Signature = *((ULONG *) data);
-    if ( SIGNATURE_SMALL == Signature ) {
-    ExFreeToNPagedLookasideList( &SmallLookasideList, data );
-    } else if ( SIGNATURE_LARGE == Signature ) {
-    ExFreeToNPagedLookasideList( &LargeLookasideList, data );
-    } else if ( SIGNATURE_OTHER == Signature ) {
-    ExFreePoolWithTag( data, OSK_OTHER_TAG );
-    } else {
-    ASSERT( FALSE );
-    }
-}
-
-void
-TCPMemShutdown( void )
+VOID
+TCPRecvEventHandler(void *arg)
 {
-    ExDeleteNPagedLookasideList( &SmallLookasideList );
-    ExDeleteNPagedLookasideList( &LargeLookasideList );
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    PIRP Irp;
+    PMDL Mdl;
+    UINT Received;
+    UINT RecvLen;
+    PUCHAR RecvBuffer;
+    NTSTATUS Status;
+
+    ReferenceObject(Connection);
+
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
+    {
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Irp = Bucket->Request.RequestContext;
+        Mdl = Irp->MdlAddress;
+
+        NdisQueryBuffer( Mdl, &RecvBuffer, &RecvLen );
+
+        Status = LibTCPGetDataFromConnectionQueue(Connection, RecvBuffer, RecvLen, &Received);
+        if (Status == STATUS_PENDING)
+        {
+            ExInterlockedInsertHeadList(&Connection->ReceiveRequest,
+                                        &Bucket->Entry,
+                                        &Connection->Lock);
+            break;
+        }
+
+        Bucket->Status = Status;
+        Bucket->Information = Received;
+
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+
+    DereferenceObject(Connection);
+}
+
+VOID
+TCPConnectEventHandler(void *arg, err_t err)
+{
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+        
+    ReferenceObject(Connection);
+    
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
+    {
+        
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Bucket->Status = TCPTranslateError(err);
+        Bucket->Information = 0;
+                
+        CompleteBucket(Connection, Bucket, FALSE);
+    }
+    
+    DereferenceObject(Connection);
 }

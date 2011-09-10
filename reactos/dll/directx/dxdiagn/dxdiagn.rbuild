@@ -18,4 +18,5 @@
 	<file>dxdiag_main.c</file>
 	<file>provider.c</file>
 	<file>regsvr.c</file>
+	<pch>dxdiag_private.h</pch>
 </module>

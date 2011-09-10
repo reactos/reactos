@@ -108,7 +108,7 @@ GetActiveWindow(VOID)
 UINT WINAPI
 ArrangeIconicWindows(HWND hWnd)
 {
-  return NtUserCallHwndLock( hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);
+  return NtUserxArrangeIconicWindows( hWnd );
 }
 
 /*

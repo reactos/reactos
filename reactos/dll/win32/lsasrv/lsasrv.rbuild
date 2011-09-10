@@ -14,4 +14,5 @@
 	<file>privileges.c</file>
 	<file>sids.c</file>
 	<file>lsasrv.rc</file>
+	<pch>lsasrv.h</pch>
 </module>

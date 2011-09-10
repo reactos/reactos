@@ -22,18 +22,20 @@
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
+PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+
 BOOLEAN BaseRunningInServerProcess;
 
 WCHAR BaseDefaultPathBuffer[6140];
 
-HANDLE hProcessHeap = NULL;
+HANDLE BaseNamedObjectDirectory;
 HMODULE hCurrentModule = NULL;
 HMODULE kernel32_handle = NULL;
 HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
-
+UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
 static BOOL DllInitialized = FALSE;
 
 BOOL WINAPI
@@ -55,44 +57,31 @@ extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
 BOOLEAN InWindows = FALSE;
 
-HANDLE
-WINAPI
-DuplicateConsoleHandle(HANDLE hConsole,
-                       DWORD dwDesiredAccess,
-                       BOOL	bInheritHandle,
-                       DWORD dwOptions);
-
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
-
-SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 WINAPI
-OpenBaseDirectory(PHANDLE DirHandle)
+BaseGetNamedObjectDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
     NTSTATUS Status;
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &BaseStaticServerData->NamedObjectDirectory,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
-    Status = NtOpenDirectoryObject(DirHandle,
+    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
                                    DIRECTORY_ALL_ACCESS &
                                    ~(DELETE | WRITE_DAC | WRITE_OWNER),
                                    &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
-    DPRINT("Opened BNO: %lx\n", *DirHandle);
+    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
     return Status;
 }
 
@@ -141,8 +130,8 @@ BasepInitConsole(VOID)
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT("BasepInitConsole for : %S\n", lpTest);
-    DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n", 
-           Parameters->ConsoleHandle, Parameters->StandardInput, 
+    DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n",
+           Parameters->ConsoleHandle, Parameters->StandardInput,
            Parameters->StandardOutput, Parameters->StandardError);
 
     /* We have nothing to do if this isn't a console app... */
@@ -201,7 +190,7 @@ BasepInitConsole(VOID)
     ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
     if (ExeName)
         SetConsoleInputExeNameW(ExeName + 1);
-    
+
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
 
@@ -213,7 +202,7 @@ BasepInitConsole(VOID)
      */
     CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
     Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
-    Status = CsrClientCallServer(&Request, 
+    Status = CsrClientCallServer(&Request,
                                  NULL,
                                  CsrRequest,
                                  sizeof(CSR_API_MESSAGE));
@@ -223,7 +212,7 @@ BasepInitConsole(VOID)
         /* We're lying here, so at least the process can load... */
         return TRUE;
     }
-    
+
     if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
@@ -244,14 +233,13 @@ BasepInitConsole(VOID)
         }
     }
 
-    DPRINT("Console setup: %lx, %lx, %lx, %lx\n", 
+    DPRINT("Console setup: %lx, %lx, %lx, %lx\n",
             Parameters->ConsoleHandle,
             Parameters->StandardInput,
             Parameters->StandardOutput,
             Parameters->StandardError);
     return TRUE;
 }
-
 
 BOOL
 WINAPI
@@ -313,6 +301,11 @@ DllMain(HANDLE hDll,
             return FALSE;
         }
 
+        /* Get the server data */
+        ASSERT(Peb->ReadOnlyStaticServerData);
+        BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
+        ASSERT(BaseStaticServerData);
+
         /* Check if we are running a CSR Server */
         if (!BaseRunningInServerProcess)
         {
@@ -321,30 +314,17 @@ DllMain(HANDLE hDll,
             CsrNewThread();
         }
 
-        hProcessHeap = RtlGetProcessHeap();
-        RtlInitializeHandleTable(0xFFFF,
-                                 sizeof(BASE_HEAP_HANDLE_ENTRY),
-                                 &BaseHeapHandleTable);
-        kernel32_handle = hCurrentModule = hDll;
-        DPRINT("Heap: %p\n", hProcessHeap);
+        /* Initialize heap handle table */
+        BaseDllInitializeMemoryManager();
 
-        /*
-         * Initialize WindowsDirectory and SystemDirectory
-         */
-        DPRINT("NtSystemRoot: %S\n", SharedUserData->NtSystemRoot);
-        RtlCreateUnicodeString (&WindowsDirectory, SharedUserData->NtSystemRoot);
-        SystemDirectory.MaximumLength = WindowsDirectory.MaximumLength + 18;
-        SystemDirectory.Length = WindowsDirectory.Length + 18;
-        SystemDirectory.Buffer = RtlAllocateHeap(hProcessHeap,
-                                                 0,
-                                                 SystemDirectory.MaximumLength);
-        if(SystemDirectory.Buffer == NULL)
-        {
-           DPRINT1("Failure allocating SystemDirectory buffer\n");
-           return FALSE;
-        }
-        wcscpy(SystemDirectory.Buffer, WindowsDirectory.Buffer);
-        wcscat(SystemDirectory.Buffer, L"\\System32");
+        /* Set HMODULE for our DLL */
+        kernel32_handle = hCurrentModule = hDll;
+
+        /* Set the directories */
+        BaseWindowsDirectory = BaseStaticServerData->WindowsDirectory;
+        BaseWindowsSystemDirectory = BaseStaticServerData->WindowsSystemDirectory;
+        SystemDirectory = BaseWindowsSystemDirectory;
+        WindowsDirectory = BaseWindowsDirectory;
 
         /* Construct the default path (using the static buffer) */
         _snwprintf(BaseDefaultPathBuffer, sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
@@ -363,7 +343,8 @@ DllMain(HANDLE hDll,
         InitCommandLines();
 
         /* Open object base directory */
-        Status = OpenBaseDirectory(&hBaseDir);
+        Status = BaseGetNamedObjectDirectory();
+        hBaseDir = BaseNamedObjectDirectory;
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to open object base directory (Status %lx)\n", Status);
@@ -384,17 +365,6 @@ DllMain(HANDLE hDll,
         if (!BasepInitConsole())
         {
             DPRINT1("Failure to set up console\n");
-            return FALSE;
-        }
-
-        /* Cache static system information */
-        Status = ZwQuerySystemInformation(SystemBasicInformation,
-                                          &BaseCachedSysInfo,
-                                          sizeof(BaseCachedSysInfo),
-                                          NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failure to get system information\n");
             return FALSE;
         }
 
@@ -421,9 +391,6 @@ DllMain(HANDLE hDll,
 
                 /* Close object base directory */
                 NtClose(hBaseDir);
-
-                RtlFreeUnicodeString (&SystemDirectory);
-                RtlFreeUnicodeString (&WindowsDirectory);
             }
             break;
 

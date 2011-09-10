@@ -136,41 +136,41 @@ _unmarshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN *pUnk) {
     DWORD		xsize;
 
     TRACE("...%s...\n",debugstr_guid(riid));
-    
+
     *pUnk = NULL;
     hres = xbuf_get(buf,(LPBYTE)&xsize,sizeof(xsize));
     if (hres) {
         ERR("xbuf_get failed\n");
         return hres;
     }
-    
+
     if (xsize == 0) return S_OK;
-    
+
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
     if (hres) {
 	ERR("Stream create failed %x\n",hres);
 	return hres;
     }
-    
+
     hres = IStream_Write(pStm,buf->base+buf->curoff,xsize,&res);
     if (hres) {
         ERR("stream write %x\n",hres);
         return hres;
     }
-    
+
     memset(&seekto,0,sizeof(seekto));
     hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
     if (hres) {
         ERR("Failed Seek %x\n",hres);
         return hres;
     }
-    
+
     hres = CoUnmarshalInterface(pStm,riid,(LPVOID*)pUnk);
     if (hres) {
 	ERR("Unmarshalling interface %s failed with %x\n",debugstr_guid(riid),hres);
 	return hres;
     }
-    
+
     IStream_Release(pStm);
     return xbuf_skip(buf,xsize);
 }
@@ -200,25 +200,25 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
     hres = E_FAIL;
 
     TRACE("...%s...\n",debugstr_guid(riid));
-    
+
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
     if (hres) {
 	ERR("Stream create failed %x\n",hres);
 	goto fail;
     }
-    
+
     hres = CoMarshalInterface(pStm,riid,pUnk,0,NULL,0);
     if (hres) {
 	ERR("Marshalling interface %s failed with %x\n", debugstr_guid(riid), hres);
 	goto fail;
     }
-    
+
     hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
     if (hres) {
         ERR("Stream stat failed\n");
         goto fail;
     }
-    
+
     tempbuf = HeapAlloc(GetProcessHeap(), 0, ststg.cbSize.u.LowPart);
     memset(&seekto,0,sizeof(seekto));
     hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
@@ -226,22 +226,22 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
         ERR("Failed Seek %x\n",hres);
         goto fail;
     }
-    
+
     hres = IStream_Read(pStm,tempbuf,ststg.cbSize.u.LowPart,&res);
     if (hres) {
         ERR("Failed Read %x\n",hres);
         goto fail;
     }
-    
+
     xsize = ststg.cbSize.u.LowPart;
     xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
     hres = xbuf_add(buf,tempbuf,ststg.cbSize.u.LowPart);
-    
+
     HeapFree(GetProcessHeap(),0,tempbuf);
     IStream_Release(pStm);
-    
+
     return hres;
-    
+
 fail:
     xsize = 0;
     xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
@@ -385,8 +385,13 @@ typedef struct _TMAsmProxy {
 #include "poppack.h"
 
 #else /* __i386__ */
+#ifdef _MSC_VER
+#pragma message("You need to implement stubless proxies for your architecture")
+#else
 # warning You need to implement stubless proxies for your architecture
+#endif
 typedef struct _TMAsmProxy {
+    char a;
 } TMAsmProxy;
 #endif
 
@@ -1010,7 +1015,7 @@ deserialize_param(
 		ITypeInfo_ReleaseTypeAttr(tinfo2, tattr);
 		ITypeInfo_Release(tinfo2);
 	    }
-	    /* read it in all cases, we need to know if we have 
+	    /* read it in all cases, we need to know if we have
 	     * NULL pointer or not.
 	     */
 	    hres = xbuf_get(buf,(LPBYTE)&cookie,sizeof(cookie));
@@ -1862,7 +1867,7 @@ TMStubImpl_AddRef(LPRPCSTUBBUFFER iface)
 {
     TMStubImpl *This = (TMStubImpl *)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
-        
+
     TRACE("(%p)->(ref before=%u)\n", This, refCount - 1);
 
     return refCount;

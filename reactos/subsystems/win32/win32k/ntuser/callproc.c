@@ -31,28 +31,6 @@ DestroyCallProc(IN PDESKTOPINFO Desktop,
 }
 
 PCALLPROCDATA
-CloneCallProc(IN PDESKTOP Desktop,
-              IN PCALLPROCDATA CallProc)
-{
-    PCALLPROCDATA NewCallProc;
-    HANDLE Handle;
-
-    NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
-                                             Desktop,
-                                             &Handle,
-                                             otCallProc,
-                                             sizeof(CALLPROCDATA));
-    if (NewCallProc != NULL)
-    {
-        NewCallProc->pfnClientPrevious = CallProc->pfnClientPrevious;
-        NewCallProc->wType = CallProc->wType;
-        NewCallProc->spcpdNext = NULL;
-    }
-
-    return NewCallProc;
-}
-
-PCALLPROCDATA
 CreateCallProc(IN PDESKTOP Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
@@ -81,8 +59,6 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
                     OUT PWNDPROC_INFO wpInfo)
 {
     PCALLPROCDATA CallProc;
-
-    /* NOTE: Accessing the WNDPROC_INFO structure may raise an exception! */
 
     CallProc = UserGetObject(gHandleTable,
                              hCallProc,

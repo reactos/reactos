@@ -1,0 +1,77 @@
+ /* 
+ * FILE:             base/applications/network/ipconfig/lang/ro-RO.rc
+                     ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ştefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-21  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_BCAST   "Broadcast"
+  IDS_P2P     "Peer To Peer"
+  IDS_MIXED   "Mixed"
+  IDS_HYBRID  "Hybrid"
+  IDS_UNKNOWN "unknown"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_OTHER   "alt tip de adaptor"
+  IDS_ETH     "adaptor Ethernet"
+  IDS_TOKEN   "adaptor Token Ring"
+  IDS_FDDI    "adaptor FDDI"
+  IDS_PPP     "adaptor PPP"
+  IDS_LOOP    "adaptor Loopback"
+  IDS_SLIP    "adaptor SLIP"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+/* Please keep the spacing/formatting as per En.rc when translating */
+  IDS_USAGE
+    "\nUTILIZARE:\n \
+        ipconfig [/? | /all | /renew [adaptor] | /release [adaptor] |\n \
+                  /flushdns | /displaydns | /registerdns |\n \
+                  /showclassid adaptor |\n \
+                  /setclassid adaptor [id_clasă] ]\n \
+    \n \
+    unde\n \
+        adaptor         Numele conexiunii\n \
+                       (sunt permise metacaracterele * şi ?, vezi exemple)\n \
+    \n \
+        Opţiuni:\n \
+           /?           Afişează acest manual.\n \
+           /all         Afişează toată informaţia de configurare.\n \
+           /release     Detaşează adresa IP pentru adaptorul specificat.\n \
+           /renew       Reînnoieşte adresa IP pentru adaptorul specificat.\n \
+           /flushdns    Curăţă memoria rezolvatorului DNS.\n \
+           /registerdns Reîmprospătează toate alocările DHCP şi\n \
+                        repetă înregistrarea numelor DNS.\n \
+           /displaydns  Afişează conţinutul memoriei rezolvatorului DNS.\n \
+           /showclassid Afişează toate identităţile de clasă dhcp permise\n \
+                        pentru adaptor.\n \
+           /setclassid  Modifică identitatea de clasă (id_clasă) dhcp.\n \
+    \n \
+    În mod implicit sunt afişate doar adresa IP, masca de subreţea şi\n \
+    ieşirea ""gateway"" implicită pentru fiecare adaptor ce suportă TCP/IP.\n \
+    \n \
+    Pentru ""Release"" şi ""Renew"", dacă nu este specificat nici un adaptor,\n \
+    atunci vor fi detaşate sau reînnoite toate alocările de adrese IP pentru\n \
+    toate adaptoarele ce suportă TCP/IP.\n \
+    \n \
+    Dacă pentru Setclassid nu se specifică şi identitatea de clasă, atunci\n \
+    identitatea de clasă se elimină.\n \
+    \n \
+    Exemple:\n \
+        > ipconfig                   ... Afişează informaţii.\n \
+        > ipconfig /all              ... Afişează informaţii detaliate.\n \
+        > ipconfig /renew            ... Reînnoieşte toate adaptoarele.\n \
+        > ipconfig /renew EL*        ... Reînnoieşte toate conexiunile care\n \
+                                         au numele începând cu ""EL"".\n \
+        > ipconfig /release *Con*    ... Detaşează conexiunile care conţin în\n \
+                                         numele lor secvenţa ""Con"".\n \
+                                         ex. ""Local Area Connection 1"" sau\n \
+                                             ""Local Area Connection 2""\n"
+END

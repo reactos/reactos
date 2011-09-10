@@ -28,6 +28,11 @@
 #include <windef.h>
 #include <winsock2.h>
 #include <afd/shared.h>
+#include <pseh/pseh2.h>
+
+#include "tdi_proto.h"
+#include "tdiconn.h"
+#include "debug.h"
 
 #ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))
@@ -103,7 +108,7 @@ typedef struct IPADDR_ENTRY {
 #define FUNCTION_CLOSE                  6
 #define MAX_FUNCTIONS                   7
 
-#define IN_FLIGHT_REQUESTS              4
+#define IN_FLIGHT_REQUESTS              5
 
 #define EXTRA_LOCK_BUFFERS              2 /* Number of extra buffers needed
 					   * for ancillary data on packet

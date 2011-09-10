@@ -2,13 +2,13 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_USAGE, "Muestra datos p·gina por p·gina en la pantalla.\n\n\
+  IDS_USAGE, "Muestra datos p√°gina por p√°gina en la pantalla.\n\n\
   MORE < [Unidad:][Ruta]Nombre del archivo\n\
   Comando | MORE \n\
   MORE [Unidad:][Ruta]Nombre del archivo\n\n\
   [Unidad:][Ruta]Nombre del archivo    Un archivo, cuyo contenido pueda ser mostrado.\n\
   Comando\t\t     Un comando, cuya salida pueda ser mostrada.\n\n\
-  Al visualizar ""-- Continuar --"" presione cualquier tecla para mostrar la siguiente p·gina.\n"
+  Al visualizar ""-- Continuar --"" presione cualquier tecla para mostrar la siguiente p√°gina.\n"
 
   IDS_CONTINUE, " -- Continuar (100%) -- "
   IDS_FILE_ACCESS, "No se puede acceder al fichero %s."

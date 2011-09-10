@@ -1136,23 +1136,6 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     }
     RtlAppendUnicodeToString(SymbolicLinkName, L"#");
     RtlAppendUnicodeStringToString(SymbolicLinkName, &GuidString);
-    SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
-
-    /* Create symbolic link */
-    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
-    Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
-    if (!NT_SUCCESS(Status) && ReferenceString == NULL)
-    {
-        DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
-        ZwClose(SubKey);
-        ZwClose(InterfaceKey);
-        ZwClose(ClassKey);
-        ExFreePool(SubKeyName.Buffer);
-        ExFreePool(InterfaceKeyName.Buffer);
-        ExFreePool(BaseKeyName.Buffer);
-        ExFreePool(SymbolicLinkName->Buffer);
-        return Status;
-    }
 
     if (ReferenceString && ReferenceString->Length)
     {
@@ -1163,21 +1146,42 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
 
     /* Write symbolic link name in registry */
     SymbolicLinkName->Buffer[1] = '\\';
-    Status = ZwSetValueKey(
-        SubKey,
-        &SymbolicLink,
-        0, /* TileIndex */
-        REG_SZ,
-        SymbolicLinkName->Buffer,
-        SymbolicLinkName->Length);
+    Status = ZwSetValueKey(SubKey,
+                           &SymbolicLink,
+                           0, /* TileIndex */
+                           REG_SZ,
+                           SymbolicLinkName->Buffer,
+                           SymbolicLinkName->Length);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+        ZwClose(SubKey);
+        ZwClose(InterfaceKey);
+        ZwClose(ClassKey);
+        ExFreePool(SubKeyName.Buffer);
+        ExFreePool(InterfaceKeyName.Buffer);
+        ExFreePool(BaseKeyName.Buffer);
         ExFreePool(SymbolicLinkName->Buffer);
+        return Status;
     }
     else
     {
         SymbolicLinkName->Buffer[1] = '?';
+    }
+
+    /* Create symbolic link */
+    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
+    Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
+
+    /* If the symbolic link already exists, return an informational success status */
+    if (Status == STATUS_OBJECT_NAME_COLLISION)
+        Status = STATUS_OBJECT_NAME_EXISTS;
+
+    /* Check if it really failed */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
+        ExFreePool(SymbolicLinkName->Buffer);
     }
 
     ZwClose(SubKey);

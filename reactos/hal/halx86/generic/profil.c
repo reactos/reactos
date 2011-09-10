@@ -25,7 +25,7 @@ HalStopProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
     UCHAR StatusB;
 
     /* Acquire the CMOS lock */
-    HalpAcquireSystemHardwareSpinLock();
+    HalpAcquireCmosSpinLock();
 
     /* Read Status Register B */
     StatusB = HalpReadCmos(RTC_REGISTER_B);

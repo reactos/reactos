@@ -69,18 +69,18 @@ endif()
 
 add_library(msi SHARED ${SOURCE})
 
-add_idl_Headers(msi_idlheader msiserver.idl)
+add_idl_headers(msi_idlheader msiserver.idl)
 add_typelib(msi_tlb msiserver.idl)
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
 add_dependencies(msi msi_idlheader msi_tlb)
+add_delay_importlibs(msi odbccp32)
 
 add_importlibs(msi
     advapi32
     cabinet
     comctl32
     gdi32
-    odbccp32
     ole32
     oleaut32
     shell32
@@ -93,6 +93,7 @@ add_importlibs(msi
     kernel32
     ntdll)
 
+add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)

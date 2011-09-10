@@ -76,22 +76,4 @@ PSYSTEM_CURSORINFO IntGetSysCursorInfo(VOID);
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)
 
-ULONG
-NTAPI
-GreSetPointerShape(
-    HDC hdc,
-    HBITMAP hbmMask,
-    HBITMAP hbmColor,
-    LONG xHot,
-    LONG yHot,
-    LONG x,
-    LONG y);
-
-VOID
-NTAPI
-GreMovePointer(
-    HDC hdc,
-    LONG x,
-    LONG y);
-
 /* EOF */

@@ -1,5 +1,4 @@
 
-set_unicode()
 set_rc_compiler()
 
 spec2def(intl.cpl intl.spec)
@@ -19,7 +18,7 @@ add_library(intl SHARED
     sort.c
     intl.rc)
 
-set_module_type(intl cpl)
+set_module_type(intl cpl UNICODE)
 
 add_importlibs(intl
     msvcrt
@@ -30,4 +29,5 @@ add_importlibs(intl
     shell32
     kernel32)
 
+add_pch(intl intl.h)
 add_cd_file(TARGET intl DESTINATION reactos/system32 FOR all)

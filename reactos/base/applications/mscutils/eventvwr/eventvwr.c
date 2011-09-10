@@ -123,8 +123,8 @@ static void FreeRecords(void)
         return;
 
     for (iIndex = 0; iIndex < g_TotalRecords; iIndex++)
-        HeapFree(GetProcessHeap(), 0, (PEVENTLOGRECORD) g_RecordPtrs[iIndex]);
-    HeapFree(GetProcessHeap(), 0, (PEVENTLOGRECORD) g_RecordPtrs);
+        HeapFree(GetProcessHeap(), 0, g_RecordPtrs[iIndex]);
+    HeapFree(GetProcessHeap(), 0, g_RecordPtrs);
     g_RecordPtrs = NULL;
 }
 
@@ -311,7 +311,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         szMessage = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
 
         /* Allocate space for parameters */
-        szArguments = (LPWSTR*)malloc(sizeof(LPVOID) * pevlr->NumStrings);
+        szArguments = malloc(sizeof(LPVOID) * pevlr->NumStrings);
         if (!szArguments)
         {
             return FALSE;
@@ -325,15 +325,10 @@ GetEventMessage(IN LPCWSTR KeyName,
                 {
                     /* Not yet support for reading messages from parameter message DLL */
                 }
+            }
 
-                szArguments[i] = szMessage;
-                szMessage += wcslen(szMessage) + 1;
-            }
-            else
-            {
-                szArguments[i] = szMessage;
-                szMessage += wcslen(szMessage) + 1;
-            }
+            szArguments[i] = szMessage;
+            szMessage += wcslen(szMessage) + 1;
         }
 
         szDll = wcstok(SourceModuleName, EVENT_DLL_SEPARATOR);
@@ -386,7 +381,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         if (!bDone)
         {
             LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
-            swprintf(EventText, szStringIDNotFound, (DWORD)(pevlr->EventID & 0xFFFF), SourceName);
+            swprintf(EventText, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
         }
 
         free(szArguments);
@@ -396,7 +391,7 @@ GetEventMessage(IN LPCWSTR KeyName,
     }
 
     LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
-    swprintf(EventText, szStringIDNotFound, (DWORD)(pevlr->EventID & 0xFFFF), SourceName);
+    swprintf(EventText, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
 
     return FALSE;
 }
@@ -555,7 +550,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     GetNumberOfEventLogRecords (hEventLog , &dwTotalRecords);
     g_TotalRecords = dwTotalRecords;
 
-    g_RecordPtrs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(PEVENTLOGRECORD));
+    g_RecordPtrs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(PVOID));
 
     /* If we have at least 1000 records show the waiting dialog */
     if (dwTotalRecords > 1000)
@@ -570,7 +565,7 @@ QueryEventMessages(LPWSTR lpMachineName,
 
     while (dwCurrentRecord < dwTotalRecords)
     {
-        pevlr = (EVENTLOGRECORD*) HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD) * dwTotalRecords);
+        pevlr = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD) * dwTotalRecords);
         g_RecordPtrs[dwCurrentRecord] = pevlr;
 
         bResult = ReadEventLog(hEventLog,  // Event log handle
@@ -583,7 +578,7 @@ QueryEventMessages(LPWSTR lpMachineName,
         if((!bResult) && (GetLastError () == ERROR_INSUFFICIENT_BUFFER))
         {
             HeapFree(GetProcessHeap(), 0, pevlr);
-            pevlr = (EVENTLOGRECORD*) HeapAlloc(GetProcessHeap(), 0, dwNeeded);
+            pevlr = HeapAlloc(GetProcessHeap(), 0, dwNeeded);
             g_RecordPtrs[dwCurrentRecord] = pevlr;
 
             ReadEventLogW(hEventLog,  // event log handle
@@ -622,8 +617,8 @@ QueryEventMessages(LPWSTR lpMachineName,
             GetEventType(pevlr->EventType, szEventTypeText);
             GetEventCategory(lpLogName, lpSourceName, pevlr, szCategory);
 
-            swprintf(szEventID, L"%u", (DWORD)(pevlr->EventID & 0xFFFF));
-            swprintf(szCategoryID, L"%u", (DWORD)(pevlr->EventCategory));
+            swprintf(szEventID, L"%u", (pevlr->EventID & 0xFFFF));
+            swprintf(szCategoryID, L"%u", pevlr->EventCategory);
 
             lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
             lviEventItem.iItem = 0;
@@ -689,7 +684,7 @@ QueryEventMessages(LPWSTR lpMachineName,
 
     i = swprintf(szWindowTitle, L"%s - %s Log on \\\\", szTitle, lpLogName); /* i = number of characters written */
     /* lpComputerName can be NULL here if no records was read */
-    dwMaxLength = sizeof(szWindowTitle)/sizeof(WCHAR)-i;
+    dwMaxLength = sizeof(szWindowTitle) / sizeof(WCHAR) - i;
     if(!lpComputerName)
         GetComputerNameW(szWindowTitle+i, &dwMaxLength);
     else

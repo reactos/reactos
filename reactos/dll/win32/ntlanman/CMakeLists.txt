@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(ntlanman.dll ntlanman.spec)
 
@@ -11,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(ntlanman SHARED ${SOURCE})
 
-set_module_type(ntlanman win32dll)
+set_module_type(ntlanman win32dll UNICODE)
 
 target_link_libraries(ntlanman wine)
 

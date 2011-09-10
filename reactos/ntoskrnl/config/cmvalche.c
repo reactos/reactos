@@ -49,7 +49,6 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PHHIVE Hive;
     PCACHED_CHILD_LIST ChildList;
     HCELL_INDEX CellToRelease;
-    PCM_KEY_NODE KeyNode;
 
     /* Set defaults */
     *ValueListToRelease = HCELL_NIL;
@@ -58,8 +57,6 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Get the hive and value cache */
     Hive = Kcb->KeyHive;
     ChildList = &Kcb->ValueCache;
-    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
-    ChildList = (PCACHED_CHILD_LIST)&KeyNode->ValueList;
 
     /* Check if the value is cached */
     if (CmpIsValueCached(ChildList->ValueList))
@@ -212,7 +209,6 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     BOOLEAN IndexIsCached;
     ULONG i = 0;
     HCELL_INDEX Cell = HCELL_NIL;
-    PCM_KEY_NODE KeyNode;
 
     /* Set defaults */
     *CellToRelease = HCELL_NIL;
@@ -221,8 +217,6 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Get the hive and child list */
     Hive = Kcb->KeyHive;
     ChildList = &Kcb->ValueCache;
-    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
-    ChildList = (PCACHED_CHILD_LIST)&KeyNode->ValueList;
 
     /* Check if the child list has any entries */
     if (ChildList->Count != 0)

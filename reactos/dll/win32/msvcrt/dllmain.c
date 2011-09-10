@@ -21,11 +21,7 @@
  */
 
 #include <precomp.h>
-#include <internal/wine/msvcrt.h>
-#include <locale.h>
-#include <mbctype.h>
 
-#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 /* EXTERNAL PROTOTYPES ********************************************************/

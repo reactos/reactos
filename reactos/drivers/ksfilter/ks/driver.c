@@ -8,9 +8,6 @@
 
 #include "priv.h"
 
-#include "ksfunc.h"
-
-
 /*
     @implemented
 */

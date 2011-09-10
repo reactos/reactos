@@ -23,4 +23,5 @@
 	<file>factory.c</file>
 	<file>mediacatenum.c</file>
 	<file>parsedisplayname.c</file>
+	<pch>devenum_private.h</pch>
 </module>

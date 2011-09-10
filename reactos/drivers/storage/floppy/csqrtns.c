@@ -38,11 +38,7 @@
  *       that my lock choice is a spin lock.
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "csqrtns.h"
+#include "precomp.h"
 
 /* Global CSQ struct that the CSQ functions initialize and use */
 IO_CSQ Csq;

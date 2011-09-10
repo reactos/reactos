@@ -34,5 +34,6 @@ extern char *parser_text;
 extern int yy_flex_debug;
 
 int parser_lex(void);
+int parser_lex_destroy(void);
 
 #endif

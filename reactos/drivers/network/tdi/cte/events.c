@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
+#include "precomp.h"
 
 typedef struct _CTEBLOCK_EVENT
 {
@@ -123,7 +123,7 @@ CTEScheduleEvent(PCTE_DELAYED_EVENT Event,
     KeAcquireSpinLock(&Event->Lock, &OldIrql);
 
     /* Make sure it is queued */
-    if (!Event->Queued);
+    if (!Event->Queued)
     {
         /* Mark it as queued and set optional context pointer */
         Event->Queued = TRUE;

@@ -20,4 +20,5 @@
 	<file>inetcfgcomp_iface.c</file>
 	<file>tcpipconf_notify.c</file>
 	<file>netcfgx.rc</file>
+	<pch>precomp.h</pch>
 </module>

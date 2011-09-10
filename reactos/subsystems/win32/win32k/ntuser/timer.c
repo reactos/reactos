@@ -14,8 +14,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserTimer);
 
 WORD FASTCALL get_key_state(void);
 
@@ -96,7 +95,7 @@ RemoveTimer(PTIMER pTmr)
      UserDereferenceObject(pTmr);
      Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
   }
-  if (!Ret) DPRINT1("Warning: Unable to delete timer\n");
+  if (!Ret) ERR("Warning: Unable to delete timer\n");
 
   return Ret;
 }
@@ -199,14 +198,14 @@ IntSetTimer( PWND Window,
   /* Windows NT/2k/XP behaviour */
   if (Elapse > MAX_ELAPSE_TIME)
   {
-     DPRINT("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse\n");
      Elapse = 1;
   }
 #else
   /* Windows XP SP2 and Windows Server 2003 behaviour */
   if (Elapse > MAX_ELAPSE_TIME)
   {
-     DPRINT("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse\n");
      Elapse = MAX_ELAPSE_TIME;
   }
 #endif
@@ -214,7 +213,7 @@ IntSetTimer( PWND Window,
   /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
   if (Elapse < 10)
   {
-     DPRINT("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse\n");
      Elapse = 10;
   }
 
@@ -234,7 +233,7 @@ IntSetTimer( PWND Window,
       if (IDEvent == (UINT_PTR) -1)
       {
          IntUnlockWindowlessTimerBitmap();
-         DPRINT1("Unable to find a free window-less timer id\n");
+         ERR("Unable to find a free window-less timer id\n");
          EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
          ASSERT(FALSE);
          return 0;
@@ -300,13 +299,13 @@ SystemTimerProc(HWND hwnd,
      pWnd = UserGetWindowObject(hwnd);
      if (!pWnd)
      {
-        DPRINT1( "System Timer Proc has invalid window handle! 0x%x Id: %d\n", hwnd, idEvent);
+        ERR( "System Timer Proc has invalid window handle! 0x%x Id: %d\n", hwnd, idEvent);
         return;
      }
   }
   else
   {
-     DPRINT( "Windowless Timer Running!\n" );
+     TRACE( "Windowless Timer Running!\n" );
      return;
   }
 
@@ -326,7 +325,7 @@ SystemTimerProc(HWND hwnd,
                pWnd == pDesk->spwndTrack )
           {
              Point = gpsi->ptCursor;
-             if ( IntPtInRect(&pDesk->rcMouseHover, Point) )
+             if ( RECTL_bPointInRect(&pDesk->rcMouseHover, Point.x, Point.y) )
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
                 {
@@ -355,7 +354,7 @@ SystemTimerProc(HWND hwnd,
        return; // Not this window so just return.
 
      default:
-       DPRINT1( "System Timer Proc invalid id %d!\n", idEvent );
+       ERR( "System Timer Proc invalid id %d!\n", idEvent );
        break;
   }
   IntKillTimer(pWnd, idEvent, TRUE);
@@ -382,7 +381,7 @@ SystemTimerSet( PWND Window,
   if (Window && Window->head.pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
      EngSetLastError(ERROR_ACCESS_DENIED);
-     DPRINT("SysemTimerSet: Access Denied!\n");
+     TRACE("SysemTimerSet: Access Denied!\n");
      return 0;
   }
   return IntSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
@@ -512,7 +511,7 @@ ProcessTimers(VOID)
   TimeLast = Time;
 
   TimerLeave();
-  DPRINT("TimerCount = %d\n", TimerCount);
+  TRACE("TimerCount = %d\n", TimerCount);
 }
 
 BOOL FASTCALL
@@ -570,7 +569,7 @@ BOOL FASTCALL
 IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTIMER pTmr = NULL;
-   DPRINT("IntKillTimer Window %x id %p systemtimer %s\n",
+   TRACE("IntKillTimer Window %x id %p systemtimer %s\n",
           Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
    TimerEnterExclusive();
@@ -627,7 +626,7 @@ NtUserSetTimer
    PWND Window;
    DECLARE_RETURN(UINT_PTR);
 
-   DPRINT("Enter NtUserSetTimer\n");
+   TRACE("Enter NtUserSetTimer\n");
    UserEnterExclusive();
    Window = UserGetWindowObject(hWnd);
    UserLeave();
@@ -635,7 +634,7 @@ NtUserSetTimer
    RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserSetTimer, ret=%i\n", _ret_);
 
    END_CLEANUP;
 }
@@ -652,7 +651,7 @@ NtUserKillTimer
    PWND Window;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserKillTimer\n");
+   TRACE("Enter NtUserKillTimer\n");
    UserEnterExclusive();
    Window = UserGetWindowObject(hWnd);
    UserLeave();
@@ -660,7 +659,7 @@ NtUserKillTimer
    RETURN(IntKillTimer(Window, uIDEvent, FALSE));
 
 CLEANUP:
-   DPRINT("Leave NtUserKillTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserKillTimer, ret=%i\n", _ret_);
    END_CLEANUP;
 }
 
@@ -676,13 +675,30 @@ NtUserSetSystemTimer(
 {
    DECLARE_RETURN(UINT_PTR);
 
-   DPRINT("Enter NtUserSetSystemTimer\n");
+   TRACE("Enter NtUserSetSystemTimer\n");
 
    RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
    END_CLEANUP;
+}
+
+BOOL
+APIENTRY
+NtUserValidateTimerCallback(
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+  BOOL Ret = FALSE;
+
+  UserEnterShared();
+
+  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), lParam);
+
+  UserLeave();
+  return Ret;
 }
 
 

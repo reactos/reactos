@@ -7,10 +7,7 @@
  *
  */
 
-#include <windows.h>
-#include <shellapi.h>
 #include "magnifier.h"
-#include "resource.h"
 
 const TCHAR szWindowClass[] = TEXT("MAGNIFIER");
 

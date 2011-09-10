@@ -9,7 +9,8 @@
 #pragma once
 
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #include <csrss/csrss.h>
 

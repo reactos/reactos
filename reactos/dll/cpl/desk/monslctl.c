@@ -1,7 +1,5 @@
-#include <windows.h>
-#include <tchar.h>
-#include <stdio.h>
-#include "monslctl.h"
+
+#include "desk.h"
 
 static const TCHAR szMonitorSelWndClass[] = TEXT("MONITORSELWNDCLASS");
 

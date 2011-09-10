@@ -4,25 +4,16 @@
 #define _KSDDK_
 
 #include <windows.h>
-#include <mmsystem.h>
 #include <stdio.h>
 #include <math.h>
 #include <setupapi.h>
-#include <ndk/ntndk.h>
-#include <ks.h>
+#include <ndk/umtypes.h>
 #include <ksmedia.h>
 #include "interface.h"
 
-
 #define _2pi                6.283185307179586476925286766559
 
-
-
-#include <ks.h>
-
-
 GUID CategoryGuid = {STATIC_KSCATEGORY_AUDIO};
-
 
 const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Connection               = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
@@ -33,7 +24,6 @@ const GUID KSMEDIUMSETID_Standard               = {0x4747B320L, 0x62CE, 0x11CF, 
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
-
 
 VOID
 TestKs()

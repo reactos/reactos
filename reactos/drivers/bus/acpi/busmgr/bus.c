@@ -60,6 +60,8 @@ LIST_HEAD(acpi_bus_event_list);
 KEVENT AcpiEventQueue;
 KDPC event_dpc;
 
+int ProcessorCount, PowerDeviceCount, PowerButtonCount, FixedPowerButtonCount;
+int FixedSleepButtonCount, SleepButtonCount, ThermalZoneCount;
 
 static int
 acpi_device_register (
@@ -401,9 +403,9 @@ acpi_bus_get_power_flags (
 		char		object_name[5] = {'_','P','R','0'+i,'\0'};
 
 		/* Evaluate "_PRx" to se if power resources are referenced */
-		acpi_evaluate_reference(device->handle, object_name, NULL,
+		status = acpi_evaluate_reference(device->handle, object_name, NULL,
 			&ps->resources);
-		if (ps->resources.count) {
+		if (ACPI_SUCCESS(status) && ps->resources.count) {
 			device->power.flags.power_resources = 1;
 			ps->flags.valid = 1;
 		}
@@ -1145,6 +1147,7 @@ acpi_bus_add (
 	char			*uid = NULL;
 	ACPI_DEVICE_ID_LIST *cid_list = NULL;
 	int			i = 0;
+	char			static_uid_buffer[5];
 
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
@@ -1269,27 +1272,41 @@ acpi_bus_add (
 		break;
 	case ACPI_BUS_TYPE_POWER:
 		hid = ACPI_POWER_HID;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (PowerDeviceCount++));
 		break;
 	case ACPI_BUS_TYPE_PROCESSOR:
 		hid = ACPI_PROCESSOR_HID;
+		uid = static_uid_buffer;
+		sprintf(uid, "%d", (ProcessorCount++));
 		break;
 	case ACPI_BUS_TYPE_SYSTEM:
 		hid = ACPI_SYSTEM_HID;
 		break;
 	case ACPI_BUS_TYPE_THERMAL:
 		hid = ACPI_THERMAL_HID;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (ThermalZoneCount++));
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTON:
 		hid = ACPI_BUTTON_HID_POWER;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (PowerButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTONF:
 		hid = ACPI_BUTTON_HID_POWERF;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (FixedPowerButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
 		hid = ACPI_BUTTON_HID_SLEEP;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (SleepButtonCount++));
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 		hid = ACPI_BUTTON_HID_SLEEPF;
+        uid = static_uid_buffer;
+		sprintf(uid, "%d", (FixedSleepButtonCount++));
 		break;
 	}
 

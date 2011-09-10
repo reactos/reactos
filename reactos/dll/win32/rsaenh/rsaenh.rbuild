@@ -19,6 +19,7 @@
 	<file>rsaenh.c</file>
 	<file>sha2.c</file>
 	<file>version.rc</file>
+	<pch>tomcrypt.h</pch>
 	<library>wine</library>
 	<library>crypt32</library>
 	<library>advapi32</library>

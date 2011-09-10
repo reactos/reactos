@@ -81,24 +81,6 @@ extern "C" {
 
 /*** Memory barriers ***/
 
-#ifdef _x86_64
-__INTRIN_INLINE void __faststorefence(void)
-{
-    long local;
-	__asm__ __volatile__("lock; orl $0, %0;" : : "m"(local));
-}
-#endif
-
-__INTRIN_INLINE void _mm_lfence(void)
-{
-	__asm__ __volatile__("lfence");
-}
-
-__INTRIN_INLINE void _mm_sfence(void)
-{
-	__asm__ __volatile__("sfence");
-}
-
 __INTRIN_INLINE void _ReadWriteBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
@@ -107,6 +89,34 @@ __INTRIN_INLINE void _ReadWriteBarrier(void)
 /* GCC only supports full barriers */
 #define _ReadBarrier _ReadWriteBarrier
 #define _WriteBarrier _ReadWriteBarrier
+
+__INTRIN_INLINE void _mm_mfence(void)
+{
+	__asm__ __volatile__("mfence" : : : "memory");
+}
+
+__INTRIN_INLINE void _mm_lfence(void)
+{
+	_ReadBarrier();
+	__asm__ __volatile__("lfence");
+	_ReadBarrier();
+}
+
+__INTRIN_INLINE void _mm_sfence(void)
+{
+	_WriteBarrier();
+	__asm__ __volatile__("sfence");
+	_WriteBarrier();
+}
+
+#ifdef _x86_64
+__INTRIN_INLINE void __faststorefence(void)
+{
+    long local;
+	__asm__ __volatile__("lock; orl $0, %0;" : : "m"(local));
+}
+#endif
+
 
 /*** Atomic operations ***/
 
@@ -1206,17 +1216,17 @@ __INTRIN_INLINE void __int2c(void)
 
 __INTRIN_INLINE void _disable(void)
 {
-	__asm__("cli");
+	__asm__("cli" : : : "memory");
 }
 
 __INTRIN_INLINE void _enable(void)
 {
-	__asm__("sti");
+	__asm__("sti" : : : "memory");
 }
 
 __INTRIN_INLINE void __halt(void)
 {
-	__asm__("hlt\n\t");
+	__asm__("hlt\n\t" : : : "memory");
 }
 
 /*** Protected memory management ***/
@@ -1438,7 +1448,7 @@ __INTRIN_INLINE void __writedr(unsigned reg, unsigned int value)
 
 __INTRIN_INLINE void __invlpg(void * const Address)
 {
-	__asm__("invlpg %[Address]" : : [Address] "m" (*((unsigned char *)(Address))));
+	__asm__("invlpg %[Address]" : : [Address] "m" (*((unsigned char *)(Address))) : "memory");
 }
 
 
@@ -1482,7 +1492,7 @@ __INTRIN_INLINE unsigned long __segmentlimit(const unsigned long a)
 
 __INTRIN_INLINE void __wbinvd(void)
 {
-	__asm__ __volatile__("wbinvd");
+	__asm__ __volatile__("wbinvd" : : : "memory");
 }
 
 __INTRIN_INLINE void __lidt(void *Source)
@@ -1495,9 +1505,16 @@ __INTRIN_INLINE void __sidt(void *Destination)
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
+/*** Misc operations ***/
+
 __INTRIN_INLINE void _mm_pause(void)
 {
-	__asm__ __volatile__("pause");
+	__asm__ __volatile__("pause" : : : "memory");
+}
+
+__INTRIN_INLINE void __nop(void)
+{
+	__asm__ __volatile__("nop");
 }
 
 #ifdef __cplusplus

@@ -32,19 +32,6 @@ static short iMenuSysKey = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-void
-InitStockObjects(void)
-{
-  /* FIXME - Instead of copying the stuff to usermode we should map the tables to
-             userland. The current implementation has one big flaw: the system color
-             table doesn't get updated when another process changes them. That's why
-             we should rather map the table into usermode. But it only affects the
-             SysColors table - the pens, brushes and stock objects are not affected
-             as their handles never change. But it'd be faster to map them, too. */
-
- // Done! gpsi!
-}
-
 /*
  * @implemented
  */
@@ -522,7 +509,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     }
 
   SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
-  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
+  NtUserxSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
   if (GetCapture() != hwnd) SetCapture( hwnd );
 
   if (Style & WS_CHILD)
@@ -681,7 +668,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       if (lResult) moved = FALSE;
   }
 
-  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
+  NtUserxSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
 
@@ -1595,7 +1582,7 @@ User32DefWindowProc(HWND hWnd,
           {
             case 0xffff: /* Caret timer */
               /* switch showing byte in win32k and get information about the caret */
-              if(NtUserSwitchCaretShowing(&CaretInfo) && (CaretInfo.hWnd == hWnd))
+              if(NtUserxSwitchCaretShowing(&CaretInfo) && (CaretInfo.hWnd == hWnd))
               {
                 DrawCaret(hWnd, &CaretInfo);
               }
@@ -1808,7 +1795,7 @@ User32DefWindowProc(HWND hWnd,
             /* Pack the information and call win32k */
             if (Change)
             {
-                if (!NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)Flags | ((DWORD_PTR)Action << 3), TWOPARAM_ROUTINE_ROS_UPDATEUISTATE))
+                if (!NtUserxUpdateUiState(hWnd, Flags | ((DWORD)Action << 3)))
                     break;
             }
 
@@ -2209,7 +2196,7 @@ DefWindowProcA(HWND hWnd,
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)
@@ -2242,7 +2229,7 @@ DefWindowProcW(HWND hWnd,
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)

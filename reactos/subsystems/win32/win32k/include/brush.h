@@ -1,7 +1,5 @@
 #pragma once
 
-#include "gdiobj.h"
-
 /* Internal interface */
 
 #define NB_HATCH_STYLES  6
@@ -96,7 +94,7 @@ typedef struct _EBRUSHOBJ
 #define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_vDereferenceObject((POBJ)pBrush)
 
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
-BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
+BOOL NTAPI BRUSH_Cleanup(PVOID ObjectBody);
 
 struct _DC;
 
@@ -123,10 +121,6 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo);
 PVOID
 NTAPI
 EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo);
-
-PVOID FASTCALL AllocateObjectAttr(VOID);
-
-VOID FASTCALL FreeObjectAttr(PVOID);
 
 BOOL FASTCALL IntGdiSetBrushOwner(PBRUSH,DWORD);
 BOOL FASTCALL GreSetBrushOwner(HBRUSH,DWORD);

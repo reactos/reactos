@@ -286,7 +286,7 @@ CSR_API(CsrAllocConsole)
                          FALSE,
                          0))
     {
-        DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
+        DPRINT1("DuplicateHandle() failed: %lu\n", GetLastError());
         ConioDeleteConsole((Object_t *) Console);
         if (NewConsole || !ProcessData->bInheritHandles)
         {

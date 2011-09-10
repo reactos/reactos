@@ -329,9 +329,10 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     unsigned short stack_size;
     /* header for procedure string */
     const NDR_PROC_HEADER *pProcHeader = (const NDR_PROC_HEADER *)&pFormat[0];
-    /* the value to return to the client from the remote procedure */
-    LONG_PTR RetVal = 0;
     const RPC_CLIENT_INTERFACE *client_interface;
+    __ms_va_list args;
+    unsigned int number_of_params;
+    ULONG_PTR arg_buffer[256];
 
     TRACE("Handle %p, pStubDesc %p, pFormat %p, ...\n", Handle, pStubDesc, pFormat);
 
@@ -396,29 +397,26 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     TRACE("MIDL stub version = 0x%x\n", pStubDesc->MIDLVersion);
 
     /* needed for conformance of top-level objects */
-#ifdef __i386__
-    pEsMsg->StubMsg.StackTop = *(unsigned char **)(&pFormat+1);
-#else
-# warning Stack not retrieved for your CPU architecture
-#endif
+    __ms_va_start( args, pFormat );
+    pEsMsg->StubMsg.StackTop = va_arg( args, unsigned char * );
+    __ms_va_end( args );
+
+    pFormat = convert_old_args( &pEsMsg->StubMsg, pFormat, stack_size, FALSE,
+                                arg_buffer, sizeof(arg_buffer), &number_of_params );
 
     switch (pEsMsg->Operation)
     {
     case MES_ENCODE:
         pEsMsg->StubMsg.BufferLength = mes_proc_header_buffer_size();
 
-        client_do_args_old_format(&pEsMsg->StubMsg, pFormat, PROXY_CALCSIZE,
-            pEsMsg->StubMsg.StackTop, stack_size, (unsigned char *)&RetVal,
-            FALSE /* object_proc */, TRUE /* ignore_retval */);
+        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_CALCSIZE, NULL, number_of_params, NULL );
 
         pEsMsg->ByteCount = pEsMsg->StubMsg.BufferLength - mes_proc_header_buffer_size();
         es_data_alloc(pEsMsg, pEsMsg->StubMsg.BufferLength);
 
         mes_proc_header_marshal(pEsMsg);
 
-        client_do_args_old_format(&pEsMsg->StubMsg, pFormat, PROXY_MARSHAL,
-            pEsMsg->StubMsg.StackTop, stack_size, (unsigned char *)&RetVal,
-            FALSE /* object_proc */, TRUE /* ignore_retval */);
+        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_MARSHAL, NULL, number_of_params, NULL );
 
         es_data_write(pEsMsg, pEsMsg->ByteCount);
         break;
@@ -427,9 +425,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
 
         es_data_read(pEsMsg, pEsMsg->ByteCount);
 
-        client_do_args_old_format(&pEsMsg->StubMsg, pFormat, PROXY_UNMARSHAL,
-            pEsMsg->StubMsg.StackTop, stack_size, (unsigned char *)&RetVal,
-            FALSE /* object_proc */, TRUE /* ignore_retval */);
+        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_UNMARSHAL, NULL, number_of_params, NULL );
         break;
     default:
         RpcRaiseException(RPC_S_INTERNAL_ERROR);
@@ -442,6 +438,12 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
 
 void RPC_ENTRY NdrMesTypeDecode2(handle_t Handle, const MIDL_TYPE_PICKLING_INFO *pPicklingInfo,
     const MIDL_STUB_DESC *pStubDesc, PFORMAT_STRING pFormatString, void *pObject)
+{
+    FIXME("(%p, %p, %p, %p, %p)\n", Handle, pPicklingInfo, pStubDesc, pFormatString, pObject);
+}
+
+void RPC_ENTRY NdrMesTypeEncode2(handle_t Handle, const MIDL_TYPE_PICKLING_INFO *pPicklingInfo,
+    const MIDL_STUB_DESC *pStubDesc, PFORMAT_STRING pFormatString, const void *pObject)
 {
     FIXME("(%p, %p, %p, %p, %p)\n", Handle, pPicklingInfo, pStubDesc, pFormatString, pObject);
 }

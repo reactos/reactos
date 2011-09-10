@@ -1,7 +1,9 @@
 
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl
+    ${CMAKE_CURRENT_BINARY_DIR})
 
-set_unicode()
+add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/eventlogrpc.idl)
+
 
 list(APPEND SOURCE
     eventlog.c
@@ -9,13 +11,16 @@ list(APPEND SOURCE
     logport.c
     eventlog.rc
     rpc.c
-    file.c)
+    file.c
+    ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_s.c)
 
 add_executable(eventlog ${SOURCE})
 
-target_link_libraries(eventlog eventlogrpc ${PSEH_LIB})
+if(NOT MSVC)
+    target_link_libraries(eventlog pseh)
+endif()
 
-set_module_type(eventlog win32cui)
+set_module_type(eventlog win32cui UNICODE)
 add_importlibs(eventlog advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(eventlog eventlog.h)
 add_cd_file(TARGET eventlog DESTINATION reactos/system32 FOR all)

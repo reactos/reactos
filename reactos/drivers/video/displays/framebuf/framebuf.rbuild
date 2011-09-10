@@ -12,4 +12,5 @@
 	<file>ddenable.c</file>	
 	<file>dd.c</file>		
 	<file>framebuf.rc</file>
+	<pch>framebuf.h</pch>
 </module>

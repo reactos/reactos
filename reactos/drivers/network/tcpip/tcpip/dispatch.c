@@ -10,8 +10,6 @@
  */
 
 #include "precomp.h"
-#include <pseh/pseh2.h>
-
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     KIRQL OldIrql;
@@ -122,6 +120,7 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
+    PCONNECTION_ENDPOINT Connection;
     BOOLEAN DequeuedIrp = TRUE;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
@@ -173,7 +172,16 @@ VOID NTAPI DispCancelRequest(
         break;
             
     case TDI_DISCONNECT:
+        Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+
         DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        if (DequeuedIrp)
+        {
+            if (KeCancelTimer(&Connection->DisconnectTimer))
+            {
+                DereferenceObject(Connection);
+            }
+        }
         break;
 
     default:
@@ -436,11 +444,9 @@ NTSTATUS DispTdiDisassociateAddress(
  *     Status of operation
  */
 {
-  PCONNECTION_ENDPOINT Connection, LastConnection;
+  PCONNECTION_ENDPOINT Connection;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  KIRQL OldIrql;
-  NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -460,52 +466,9 @@ NTSTATUS DispTdiDisassociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  LockObject(Connection, &OldIrql);
+  /* NO-OP because we need the address to deallocate the port when the connection closes */
 
-  if (!Connection->AddressFile) {
-    UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  LockObjectAtDpcLevel(Connection->AddressFile);
-
-  /* Unlink this connection from the address file */
-  if (Connection->AddressFile->Connection == Connection)
-  {
-      Connection->AddressFile->Connection = Connection->Next;
-      DereferenceObject(Connection);
-      Status = STATUS_SUCCESS;
-  }
-  else
-  {
-      LastConnection = Connection->AddressFile->Connection;
-      while (LastConnection->Next != Connection && LastConnection->Next != NULL)
-         LastConnection = LastConnection->Next;
-      if (LastConnection->Next == Connection)
-      {
-          LastConnection->Next = Connection->Next;
-          DereferenceObject(Connection);
-          Status = STATUS_SUCCESS;
-      }
-      else
-      {
-          Status = STATUS_INVALID_PARAMETER;
-      }
-  }
-
-  UnlockObjectFromDpcLevel(Connection->AddressFile);
-
-  if (Status == STATUS_SUCCESS)
-  {
-      /* Remove the address file from this connection */
-      DereferenceObject(Connection->AddressFile);
-      Connection->AddressFile = NULL;
-  }
-
-  UnlockObject(Connection, OldIrql);
-
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -545,15 +508,22 @@ NTSTATUS DispTdiDisconnect(
     Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
+    
+  Status = DispPrepareIrpForCancel
+    (TranContext->Handle.ConnectionContext,
+     Irp,
+     (PDRIVER_CANCEL)DispCancelRequest);
 
-  Status = TCPDisconnect(
-      TranContext->Handle.ConnectionContext,
-      DisReq->RequestFlags,
-      DisReq->RequestSpecific,
-      DisReq->RequestConnectionInformation,
-      DisReq->ReturnConnectionInformation,
-      DispDataRequestComplete,
-      Irp );
+  if (NT_SUCCESS(Status))
+  {
+      Status = TCPDisconnect(TranContext->Handle.ConnectionContext,
+                             DisReq->RequestFlags,
+                             DisReq->RequestSpecific,
+                             DisReq->RequestConnectionInformation,
+                             DisReq->ReturnConnectionInformation,
+                             DispDataRequestComplete,
+                             Irp);
+  }
 
 done:
    if (Status != STATUS_PENDING) {
@@ -638,6 +608,7 @@ NTSTATUS DispTdiListen(
 	  Status = STATUS_NO_MEMORY;
 
       if( NT_SUCCESS(Status) ) {
+          ReferenceObject(Connection->AddressFile);
 	  Connection->AddressFile->Listener->AddressFile =
 	      Connection->AddressFile;
 

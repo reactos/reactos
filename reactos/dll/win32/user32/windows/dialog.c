@@ -74,7 +74,7 @@ typedef struct
     UINT       id;
     LPCWSTR    className;
     LPCWSTR    windowName;
-    BOOL       windowNameFree;
+    BOOL       windowNameFree; // ReactOS
     LPCVOID    data;
 } DLG_CONTROL_INFO;
 
@@ -154,7 +154,7 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 
             SETDLGINFO( hWnd, dlgInfo );
 
-            NtUserCallHwndParam( hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+            NtUserxSetDialogPointer( hWnd, dlgInfo );
         }
         else
         {
@@ -318,6 +318,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
 
     if (!(dlgInfo = GETDLGINFO(hwnd))) return FALSE;
 
+    TRACE(" BEGIN\n" );
     while (items--)
     {
         template = (LPCSTR)DIALOG_GetControl32( (const WORD *)template, &info,
@@ -401,44 +402,10 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             dlgInfo->idResult = GetWindowLongPtrA( hwndCtrl, GWLP_ID );
         }
     }
+    TRACE(" END\n" );
     return TRUE;
 }
 
- /***********************************************************************
-  *           DIALOG_FindMsgDestination
-  *
-  * The messages that IsDialogMessage sends may not go to the dialog
-  * calling IsDialogMessage if that dialog is a child, and it has the
-  * DS_CONTROL style set.
-  * We propagate up until we hit one that does not have DS_CONTROL, or
-  * whose parent is not a dialog.
-  *
-  * This is undocumented behaviour.
-  */
-static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
-{
-    while (GetWindowLongA(hwndDlg, GWL_STYLE) & DS_CONTROL)
-    {
-        PWND pWnd;
-        HWND hParent = GetParent(hwndDlg);
-        if (!hParent) break;
-// ReactOS
-        if (!IsWindow(hParent)) break;
-
-        pWnd = ValidateHwnd(hParent);
-        // FIXME: Use pWnd->fnid == FNID_DESKTOP
-        if (!pWnd || hParent == GetDesktopWindow()) break;
-
-        if (!(pWnd->state & WNDS_DIALOGWINDOW))
-        {
-            break;
-        }
-
-        hwndDlg = hParent;
-    }
-
-    return hwndDlg;
-}
 
  /***********************************************************************
   *           DIALOG_IsAccelerator
@@ -455,7 +422,7 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
         DWORD style = GetWindowLongPtrW( hwndControl, GWL_STYLE );
         if ((style & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE)
         {
-            dlgCode = SendMessageA( hwndControl, WM_GETDLGCODE, 0, 0 );
+            dlgCode = SendMessageW( hwndControl, WM_GETDLGCODE, 0, 0 );
             if ( (dlgCode & (DLGC_BUTTON | DLGC_STATIC)) &&
                  GetWindowTextW( hwndControl, buffer, sizeof(buffer)/sizeof(WCHAR) ))
             {
@@ -464,7 +431,7 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
 
                 do
                 {
-                    p = wcschr( p + 2, '&' );
+                    p = strchrW( p + 2, '&' );
                 }
                 while (p != NULL && p[1] == '&');
 
@@ -515,6 +482,42 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
 }
 
  /***********************************************************************
+  *           DIALOG_FindMsgDestination
+  *
+  * The messages that IsDialogMessage sends may not go to the dialog
+  * calling IsDialogMessage if that dialog is a child, and it has the
+  * DS_CONTROL style set.
+  * We propagate up until we hit one that does not have DS_CONTROL, or
+  * whose parent is not a dialog.
+  *
+  * This is undocumented behaviour.
+  */
+static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
+{
+    while (GetWindowLongA(hwndDlg, GWL_STYLE) & DS_CONTROL)
+    {
+        PWND pWnd;
+        HWND hParent = GetParent(hwndDlg);
+        if (!hParent) break;
+// ReactOS
+        if (!IsWindow(hParent)) break;
+
+        pWnd = ValidateHwnd(hParent);
+        // FIXME: Use pWnd->fnid == FNID_DESKTOP
+        if (!pWnd || hParent == GetDesktopWindow()) break;
+
+        if (!(pWnd->state & WNDS_DIALOGWINDOW))
+        {
+            break;
+        }
+
+        hwndDlg = hParent;
+    }
+
+    return hwndDlg;
+}
+
+ /***********************************************************************
  *           DIALOG_DoDialogBox
  */
 INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
@@ -545,15 +548,22 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                     /* No message present -> send ENTERIDLE and wait */
                     SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
                 }
-                if (!GetMessageW( &msg, 0, 0, 0 )) break;
+                GetMessageW( &msg, 0, 0, 0 );
             }
 
+            if (msg.message == WM_QUIT)
+            {
+                PostQuitMessage( msg.wParam );
+                if (!IsWindow( hwnd )) return 0;
+                break;
+            }
             if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {
                 TranslateMessage( &msg );
                 DispatchMessageW( &msg );
             }
+            if (!IsWindow( hwnd )) return 0;
             if (dlgInfo->flags & DF_END) break;
 
             if (bFirstEmpty && msg.message == WM_TIMER)
@@ -603,6 +613,11 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     result->y       = GET_WORD(p); p++;
     result->cx      = GET_WORD(p); p++;
     result->cy      = GET_WORD(p); p++;
+    TRACE("DIALOG%s %d, %d, %d, %d, %d\n",
+           result->dialogEx ? "EX" : "", result->x, result->y,
+           result->cx, result->cy, result->helpId );
+    TRACE(" STYLE 0x%08x\n", result->style );
+    TRACE(" EXSTYLE 0x%08x\n", result->exStyle );
 
     /* Get the menu name */
 
@@ -615,9 +630,11 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
         case 0xffff:
             result->menuName = (LPCWSTR)(UINT_PTR)GET_WORD( p + 1 );
             p += 2;
+            TRACE(" MENU %04x\n", LOWORD(result->menuName) );
             break;
         default:
             result->menuName = (LPCWSTR)p;
+            TRACE(" MENU %s\n", debugstr_w(result->menuName) );
             p += strlenW( result->menuName ) + 1;
             break;
     }
@@ -633,9 +650,11 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
         case 0xffff:
             result->className = (LPCWSTR)(UINT_PTR)GET_WORD( p + 1 );
             p += 2;
+            TRACE(" CLASS %04x\n", LOWORD(result->className) );
             break;
         default:
             result->className = (LPCWSTR)p;
+            TRACE(" CLASS %s\n", debugstr_w( result->className ));
             p += strlenW( result->className ) + 1;
             break;
     }
@@ -644,6 +663,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
 
     result->caption = (LPCWSTR)p;
     p += strlenW( result->caption ) + 1;
+    TRACE(" CAPTION %s\n", debugstr_w( result->caption ) );
 
     /* Get the font name */
 
@@ -678,6 +698,10 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             }
             result->faceName = (LPCWSTR)p;
             p += strlenW( result->faceName ) + 1;
+
+            TRACE(" FONT %d, %s, %d, %s\n",
+                  result->pointSize, debugstr_w( result->faceName ),
+                  result->weight, result->italic ? "TRUE" : "FALSE" );
         }
     }
 
@@ -969,13 +993,13 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (dlgProc)
         {
             HWND focus = GetNextDlgTabItem( hwnd, 0, FALSE );
-            if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) &&
+            if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) && IsWindow( hwnd ) &&
                 ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
             {
                 /* By returning TRUE, app has requested a default focus assignment.
                  * WM_INITDIALOG may have changed the tab order, so find the first
                  * tabstop control again. */
-                dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE);
+                dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
                 if( dlgInfo->hwndFocus )
                     SetFocus( dlgInfo->hwndFocus );
             }
@@ -1133,7 +1157,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
                 NtUserSetThreadState(0,DF_DIALOGACTIVE);
-                NtUserCallHwndParam( hwnd, 0, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+                NtUserxSetDialogPointer( hwnd, 0 );
             }
              /* Window clean-up */
             return DefWindowProcA( hwnd, msg, wParam, lParam );
@@ -1289,6 +1313,7 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
     return retWnd ? retWnd : hwndCtrl;
 }
 
+
 /**********************************************************************
  *	    DIALOG_DlgDirListW
  *
@@ -1305,8 +1330,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     ((attrib & DDL_POSTMSGS) ? PostMessageW( hwnd, msg, wparam, lparam ) \
                              : SendMessageW( hwnd, msg, wparam, lparam ))
 
-//    TRACE("%p '%s' %d %d %04x\n",
-//          hDlg, spec ? spec : "NULL", idLBox, idStatic, attrib );
+    TRACE("%p %s %d %d %04x\n", hDlg, debugstr_w(spec), idLBox, idStatic, attrib );
 
     /* If the path exists and is a directory, chdir to it */
     if (!spec || !spec[0] || SetCurrentDirectoryW( spec )) spec = any;
@@ -1377,6 +1401,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     return TRUE;
 #undef SENDMSG
 }
+
 
 /**********************************************************************
  *	    DIALOG_DlgDirListA
@@ -2039,7 +2064,7 @@ GetDlgItemInt(
   BOOL *lpTranslated,
   BOOL bSigned)
 {
-	char str[30];
+    char str[30];
     char * endptr;
     long result = 0;
 
@@ -2315,6 +2340,39 @@ static void DIALOG_FixChildrenOnChangeFocus (HWND hwndDlg, HWND hwndNext)
     }
 }
 
+/***********************************************************************
+ *           DIALOG_IdToHwnd
+ *
+ * A recursive version of GetDlgItem
+ *
+ * RETURNS
+ *  The HWND for a Child ID.
+ */
+static HWND DIALOG_IdToHwnd( HWND hwndDlg, INT id )
+{
+    int i;
+    HWND *list = WIN_ListChildren( hwndDlg );
+    HWND ret = 0;
+
+    if (!list) return 0;
+
+    for (i = 0; list[i]; i++)
+    {
+        if (GetWindowLongPtrW( list[i], GWLP_ID ) == id)
+        {
+            ret = list[i];
+            break;
+        }
+
+        /* Recurse into every child */
+        if ((ret = DIALOG_IdToHwnd( list[i], id ))) break;
+    }
+
+    HeapFree( GetProcessHeap(), 0, list );
+    return ret;
+}
+
+
 /*
  * @implemented
  */
@@ -2419,7 +2477,7 @@ IsDialogMessageW(
                  }
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
-                    HWND hwndDef = GetDlgItem(hDlg, LOWORD(dw));
+                    HWND hwndDef = DIALOG_IdToHwnd(hDlg, LOWORD(dw));
                     if (hwndDef ? IsWindowEnabled(hwndDef) : LOWORD(dw)==IDOK)
                         SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ), (LPARAM)hwndDef);
                  }

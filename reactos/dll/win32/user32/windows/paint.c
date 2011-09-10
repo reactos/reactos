@@ -200,7 +200,7 @@ SetWindowRgn(
    BOOL Hook;
    int Ret = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 
@@ -208,7 +208,7 @@ SetWindowRgn(
    if (!Hook)
    {
       Ret = NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
-      if (hRgn && Ret)
+      if (Ret)
           DeleteObject(hRgn);
       return Ret;
    }
@@ -244,7 +244,7 @@ UpdateWindow(
        pWnd->state & WNDS_INTERNALPAINT ||
        pWnd->spwndChild )
   {
-     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
+     return NtUserxUpdateWindow(hWnd);
   }
   return TRUE;
 }
@@ -258,7 +258,7 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return NtUserCallHwndParamLock(hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
+  return NtUserxValidateRgn(hWnd, hRgn);
 }
 
 /*
@@ -285,10 +285,10 @@ GetWindowRgn(
 
   if (!Ret)
      return ERROR;
-
+/*
   if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      Ret = OffsetRgn(hRgn, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
-
+*/
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorRgn(hWnd, hRgn);
 
@@ -319,10 +319,10 @@ GetWindowRgnBox(
 
   if (!Ret)
      return ERROR;
-
+/*
   if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
-
+*/
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorWindowRect(pWnd, lprc);
 

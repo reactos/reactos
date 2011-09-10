@@ -8,4 +8,5 @@
 	<file>misc.c</file>
 	<file>mouclass.c</file>
 	<file>mouclass.rc</file>
+	<pch>mouclass.h</pch>
 </module>

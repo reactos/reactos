@@ -1,5 +1,4 @@
 
-set_unicode()
 
 spec2def(console.dll console.spec)
 
@@ -14,7 +13,7 @@ list(APPEND SOURCE
 
 add_library(console SHARED ${SOURCE})
 
-set_module_type(console win32dll)
+set_module_type(console win32dll UNICODE)
 
 add_importlibs(console
     msvcrt

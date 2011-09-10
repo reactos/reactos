@@ -70,7 +70,7 @@ int FASTCALL IntFillRect(DC *dc, INT XLeft, INT YLeft, INT Width, INT Height, PB
 
 static
 POINT
-INTERNAL_CALL
+NTAPI
 app_new_point(int x, int y)
 {
     POINT p;
@@ -82,7 +82,7 @@ app_new_point(int x, int y)
 
 static
 Rect
-INTERNAL_CALL
+NTAPI
 rect(int x, int y, int width, int height)
 {
     Rect r;
@@ -122,7 +122,7 @@ rect(int x, int y, int width, int height)
  */
 static
 int
-INTERNAL_CALL
+NTAPI
 app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
 {
     /* Outer ellipse: e(x,y) = b*b*x*x + a*a*y*y - a*a*b*b */

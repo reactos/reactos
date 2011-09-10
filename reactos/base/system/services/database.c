@@ -116,7 +116,7 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
     PLIST_ENTRY ImageEntry;
     PSERVICE_IMAGE CurrentImage;
 
-    DPRINT("ScmGetServiceImageByImagePath() called\n");
+    DPRINT("ScmGetServiceImageByImagePath(%S) called\n", lpImagePath);
 
     ImageEntry = ImageListHead.Flink;
     while (ImageEntry != &ImageListHead)
@@ -149,7 +149,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT("ScmCreateOrReferenceServiceImage()");
+    DPRINT("ScmCreateOrReferenceServiceImage(%p)\n", pService);
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -211,17 +211,22 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         /* Append service record */
         InsertTailList(&ImageListHead,
                        &pServiceImage->ImageListEntry);
-
-        pService->lpImage = pServiceImage;
     }
     else
     {
-        /* Create a new service image */
-        pService->lpImage->dwImageRunCount++;
+        /* Increment the run counter */
+        pServiceImage->dwImageRunCount++;
     }
+
+    DPRINT("pServiceImage->dwImageRunCount: %lu\n", pServiceImage->dwImageRunCount);
+
+    /* Link the service image to the service */
+    pService->lpImage = pServiceImage;
 
 done:;
     RtlFreeUnicodeString(&ImagePath);
+
+    DPRINT("ScmCreateOrReferenceServiceImage() done (Error: %lu)\n", dwError);
 
     return dwError;
 }
@@ -913,33 +918,43 @@ ScmControlService(PSERVICE Service,
 
     DWORD dwWriteCount = 0;
     DWORD dwReadCount = 0;
-    DWORD TotalLength;
+    DWORD PacketSize;
+    PWSTR Ptr;
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmControlService() called\n");
 
     EnterCriticalSection(&ControlServiceCriticalSection);
 
-    TotalLength = wcslen(Service->lpServiceName) + 1;
+    /* Calculate the total length of the start command line */
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
 
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
                                                    HEAP_ZERO_MEMORY,
-                                                   sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)));
+                                                   PacketSize);
     if (ControlPacket == NULL)
     {
         LeaveCriticalSection(&ControlServiceCriticalSection);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
+    ControlPacket->dwSize = PacketSize;
     ControlPacket->dwControl = dwControl;
-    ControlPacket->dwSize = TotalLength;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
+
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+
+    Ptr = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
+    wcscpy(Ptr, Service->lpServiceName);
+
+    ControlPacket->dwArgumentsCount = 0;
+    ControlPacket->dwArgumentsOffset = 0;
 
     /* Send the control packet */
     WriteFile(Service->lpImage->hControlPipe,
               ControlPacket,
-              sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)),
+              PacketSize,
               &dwWriteCount,
               NULL);
 
@@ -981,64 +996,80 @@ ScmSendStartCommand(PSERVICE Service,
 {
     PSCM_CONTROL_PACKET ControlPacket;
     SCM_REPLY_PACKET ReplyPacket;
-    DWORD TotalLength;
-    DWORD ArgsLength = 0;
-    DWORD Length;
+    DWORD PacketSize;
     PWSTR Ptr;
     DWORD dwWriteCount = 0;
     DWORD dwReadCount = 0;
     DWORD dwError = ERROR_SUCCESS;
     DWORD i;
+    PWSTR *pOffPtr;
+    PWSTR pArgPtr;
 
     DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
-    TotalLength = wcslen(Service->lpServiceName) + 1;
-    if (argc > 0)
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
+
+    /* Calculate the required packet size for the start arguments */
+    if (argc > 0 && argv != NULL)
     {
+        PacketSize = ALIGN_UP(PacketSize, LPWSTR);
+
+        DPRINT("Argc: %lu\n", argc);
         for (i = 0; i < argc; i++)
         {
-            DPRINT("Arg: %S\n", argv[i]);
-            Length = wcslen(argv[i]) + 1;
-            TotalLength += Length;
-            ArgsLength += Length;
+            DPRINT("Argv[%lu]: %S\n", i, argv[i]);
+            PacketSize += (wcslen(argv[i]) + 1) * sizeof(WCHAR) + sizeof(PWSTR);
         }
     }
-    TotalLength++;
-    DPRINT("ArgsLength: %ld TotalLength: %ld\n", ArgsLength, TotalLength);
 
     /* Allocate a control packet */
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
                                                    HEAP_ZERO_MEMORY,
-                                                   sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
+                                                   PacketSize);
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
+    ControlPacket->dwSize = PacketSize;
     ControlPacket->dwControl = SERVICE_CONTROL_START;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    ControlPacket->dwSize = TotalLength;
-    Ptr = &ControlPacket->szArguments[0];
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+
+    Ptr = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
     wcscpy(Ptr, Service->lpServiceName);
-    Ptr += (wcslen(Service->lpServiceName) + 1);
+
+    ControlPacket->dwArgumentsCount = 0;
+    ControlPacket->dwArgumentsOffset = 0;
 
     /* Copy argument list */
-    if (argc > 0)
+    if (argc > 0 && argv != NULL)
     {
-        UNIMPLEMENTED;
-        DPRINT1("Arguments sent to service ignored!\n");
-#if 0
-        memcpy(Ptr, Arguments, ArgsLength);
-        Ptr += ArgsLength;
-#endif
-    }
+        Ptr += wcslen(Service->lpServiceName) + 1;
+        pOffPtr = (PWSTR*)ALIGN_UP_POINTER(Ptr, PWSTR);
+        pArgPtr = (PWSTR)((ULONG_PTR)pOffPtr + argc * sizeof(PWSTR));
 
-    /* Terminate the argument list */
-    *Ptr = 0;
+        ControlPacket->dwArgumentsCount = argc;
+        ControlPacket->dwArgumentsOffset = (DWORD)((ULONG_PTR)pOffPtr - (ULONG_PTR)ControlPacket);
+
+        DPRINT("dwArgumentsCount: %lu\n", ControlPacket->dwArgumentsCount);
+        DPRINT("dwArgumentsOffset: %lu\n", ControlPacket->dwArgumentsOffset);
+
+        for (i = 0; i < argc; i++)
+        {
+             wcscpy(pArgPtr, argv[i]);
+             *pOffPtr = (PWSTR)((ULONG_PTR)pArgPtr - (ULONG_PTR)pOffPtr);
+             DPRINT("offset: %p\n", *pOffPtr);
+
+             pArgPtr += wcslen(argv[i]) + 1;
+             pOffPtr++;
+        }
+    }
 
     /* Send the start command */
     WriteFile(Service->lpImage->hControlPipe,
               ControlPacket,
-              sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
+              PacketSize,
               &dwWriteCount,
               NULL);
 
@@ -1075,6 +1106,15 @@ ScmStartUserModeService(PSERVICE Service,
     BOOL Result;
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwProcessId;
+
+    DPRINT("ScmStartUserModeService(%p)\n", Service);
+
+    /* If the image is already running ... */
+    if (Service->lpImage->dwImageRunCount > 1)
+    {
+        /* ... just send a start command */
+        return ScmSendStartCommand(Service, argc, argv);
+    }
 
     StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.lpReserved = NULL;
@@ -1275,18 +1315,26 @@ ScmAutoStartServices(VOID)
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
-      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+        CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
         /* Build the safe boot path */
         wcscpy(szSafeBootServicePath,
                L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
-        switch(GetSystemMetrics(SM_CLEANBOOT))
+
+        switch (GetSystemMetrics(SM_CLEANBOOT))
         {
             /* NOTE: Assumes MINIMAL (1) and DSREPAIR (3) load same items */
             case 1:
-            case 3: wcscat(szSafeBootServicePath, L"\\Minimal\\"); break;
-            case 2: wcscat(szSafeBootServicePath, L"\\Network\\"); break;
+            case 3:
+                wcscat(szSafeBootServicePath, L"\\Minimal\\");
+                break;
+
+            case 2:
+                wcscat(szSafeBootServicePath, L"\\Network\\");
+                break;
         }
-        if(GetSystemMetrics(SM_CLEANBOOT))
+
+        if (GetSystemMetrics(SM_CLEANBOOT))
         {
             /* If key does not exist then do not assume safe mode */
             dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -1294,20 +1342,22 @@ ScmAutoStartServices(VOID)
                                     0,
                                     KEY_READ,
                                     &hKey);
-            if(dwError == ERROR_SUCCESS)
+            if (dwError == ERROR_SUCCESS)
             {
                 RegCloseKey(hKey);
+
                 /* Finish Safe Boot path off */
                 wcsncat(szSafeBootServicePath,
                         CurrentService->lpServiceName,
                         MAX_PATH - wcslen(szSafeBootServicePath));
+
                 /* Check that the key is in the Safe Boot path */
                 dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                         szSafeBootServicePath,
                                         0,
                                         KEY_READ,
                                         &hKey);
-                if(dwError != ERROR_SUCCESS)
+                if (dwError != ERROR_SUCCESS)
                 {
                     /* Mark service as visited so it is not auto-started */
                     CurrentService->ServiceVisited = TRUE;
@@ -1325,7 +1375,8 @@ ScmAutoStartServices(VOID)
                 CurrentService->ServiceVisited = FALSE;
             }
         }
-      ServiceEntry = ServiceEntry->Flink;
+
+        ServiceEntry = ServiceEntry->Flink;
     }
 
     /* Start all services which are members of an existing group */

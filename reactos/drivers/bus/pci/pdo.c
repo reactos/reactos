@@ -23,29 +23,37 @@ PdoQueryDeviceText(
   PIO_STACK_LOCATION IrpSp)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
+  UNICODE_STRING String;
   NTSTATUS Status;
 
   DPRINT("Called\n");
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-  Status = STATUS_SUCCESS;
-
   switch (IrpSp->Parameters.QueryDeviceText.DeviceTextType)
   {
     case DeviceTextDescription:
+      Status = PciDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                         &DeviceExtension->DeviceDescription,
+                                         &String);
+
       DPRINT("DeviceTextDescription\n");
-      Irp->IoStatus.Information = (ULONG_PTR)DeviceExtension->DeviceDescription.Buffer;
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
       break;
 
     case DeviceTextLocationInformation:
+      Status = PciDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                         &DeviceExtension->DeviceLocation,
+                                         &String);
+
       DPRINT("DeviceTextLocationInformation\n");
-      Irp->IoStatus.Information = (ULONG_PTR)DeviceExtension->DeviceLocation.Buffer;
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
       break;
 
     default:
       Irp->IoStatus.Information = 0;
       Status = STATUS_INVALID_PARAMETER;
+      break;
   }
 
   return Status;
@@ -669,6 +677,7 @@ PdoQueryResources(
     }
 
     if ((PciConfig.u.type0.InterruptPin != 0) &&
+        (PciConfig.u.type0.InterruptLine != 0) &&
         (PciConfig.u.type0.InterruptLine != 0xFF))
       ResCount++;
   }
@@ -769,6 +778,7 @@ PdoQueryResources(
 
     /* Add interrupt resource */
     if ((PciConfig.u.type0.InterruptPin != 0) &&
+        (PciConfig.u.type0.InterruptLine != 0) &&
         (PciConfig.u.type0.InterruptLine != 0xFF))
     {
       Descriptor->Type = CmResourceTypeInterrupt;

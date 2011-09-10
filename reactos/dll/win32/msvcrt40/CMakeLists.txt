@@ -1,4 +1,6 @@
 
+spec2def(msvcrt40.dll msvcrt40.spec)
+
 add_definitions(
     -DUSE_MSVCRT_PREFIX
     -D_MSVCRT_
@@ -11,8 +13,6 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 
-spec2def(msvcrt40.dll msvcrt40.spec)
-
 list(APPEND SOURCE
     msvcrt40.c
     stubs.c
@@ -20,13 +20,16 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt40.def)
 
 add_library(msvcrt40 SHARED ${SOURCE})
-set_image_base(msvcrt40 ${baseaddress_msvcrt40})
-set_entrypoint(msvcrt40 DllMain@12)
 
-target_link_libraries(msvcrt40 crt wine)
+set_module_type(msvcrt40 win32dll ENTRYPOINT DllMain 12)
 
-if(NOT MSVC)
-    target_link_libraries(msvcrt40 pseh)
+add_dependencies(msvcrt40 psdk)
+
+target_link_libraries(msvcrt40 crt wine ${PSEH_LIB})
+
+if(MSVC)
+    # export of deleting destructor "name"
+    add_target_link_flags(msvcrt40 "/ignore:4102")
 endif()
 
 add_importlibs(msvcrt40 kernel32 ntdll)

@@ -24,7 +24,7 @@ add_rpcproxy_files(sti_wia.idl)
 
 add_library(sti SHARED ${SOURCE})
 
-set_entrypoint(sti 0)
+set_module_type(sti win32dll)
 
 target_link_libraries(sti
     wine

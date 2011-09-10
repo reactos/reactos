@@ -1,10 +1,3 @@
-#include <windows.h>
-#include <commctrl.h>
-#include <tchar.h>
-#include <stdlib.h>
-
-#include "resource.h"
-#include "cardlib.h"
 
 #include "solitaire.h"
 

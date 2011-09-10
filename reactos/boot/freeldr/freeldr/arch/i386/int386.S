@@ -22,6 +22,9 @@
 
 #include <arch/pc/x86common.h>
 
+#define I386FLAG_CF		HEX(0001)  // Carry Flag
+#define I386FLAG_ZF		HEX(0040)  // Zero Flag
+#define I386FLAG_SF		HEX(0080)  // Sign Flag
 /* Only these flags are propagated into Int386() */
 #define FLAGS_PROP	(I386FLAG_CF | \
                      I386FLAG_ZF | \

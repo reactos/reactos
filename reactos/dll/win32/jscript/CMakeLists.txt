@@ -59,5 +59,10 @@ add_importlibs(jscript
     kernel32
     ntdll)
 
+add_pch(jscript jscript.h)
 add_dependencies(jscript jsglobal)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(jscript)
+endif()

@@ -47,8 +47,6 @@ static language_t get_language(resource_t *resource) {
 			return *resource->res.curg->lvc.language;
 		case res_dlg:
 			return *resource->res.dlg->lvc.language;
-		case res_dlgex:
-			return *resource->res.dlgex->lvc.language;
 		case res_fnt:
 			return *resource->res.fnt->data->lvc.language;
 		case res_fntdir:
@@ -59,8 +57,6 @@ static language_t get_language(resource_t *resource) {
 			return *resource->res.icog->lvc.language;
 		case res_men:
 			return *resource->res.men->lvc.language;
-		case res_menex:
-			return *resource->res.menex->lvc.language;
 		case res_rdt:
 			return *resource->res.rdt->data->lvc.language;
 		case res_stt:
@@ -358,6 +354,13 @@ static int compare_dialog(dialog_t *dialog1, dialog_t *dialog2) {
 		  ((dialog1->gotexstyle && !dialog2->gotexstyle) ||
 		  (!dialog1->gotexstyle && dialog2->gotexstyle)))
 			different = 1;
+	if(!different && dialog1->gothelpid && dialog2->gothelpid) {
+		if(dialog1->helpid != dialog2->helpid)
+			different = 1;
+	} else if(!different &&
+		  ((dialog1->gothelpid && !dialog2->gothelpid) ||
+		  (!dialog1->gothelpid && dialog2->gothelpid)))
+			different = 1;
 	nameid = strdup(get_nameid_str(dialog1->menu));
 	if(!different && strcmp(nameid, get_nameid_str(dialog2->menu)))
 		different = 1;
@@ -369,60 +372,6 @@ static int compare_dialog(dialog_t *dialog1, dialog_t *dialog2) {
 
         ctrl1 = dialog1->controls;
         ctrl2 = dialog2->controls;
-        while(!different && (ctrl1 || ctrl2))
-        {
-            different = compare_control(ctrl1, ctrl2);
-            if (ctrl1) ctrl1 = ctrl1->next;
-            if (ctrl2) ctrl2 = ctrl2->next;
-        }
-	return different;
-}
-
-static int compare_dialogex(dialogex_t *dialogex1, dialogex_t *dialogex2) {
-	int different = 0;
-	char *nameid = NULL;
-	control_t *ctrl1, *ctrl2;
-	if(!different &&
-	   ((dialogex1->memopt != dialogex2->memopt) ||
-	   (dialogex1->lvc.version != dialogex2->lvc.version) ||
-	   (dialogex1->lvc.characts != dialogex2->lvc.characts)))
-		different = 1;
-	if(!different && dialogex1->gotstyle && dialogex2->gotstyle) {
-		if((!dialogex1->style || !dialogex2->style) ||
-		   (dialogex1->style->and_mask || dialogex2->style->and_mask) ||
-		   (dialogex1->style->or_mask != dialogex2->style->or_mask))
-			different = 1;
-	} else if(!different &&
-		  ((dialogex1->gotstyle && !dialogex2->gotstyle) ||
-		  (!dialogex1->gotstyle && dialogex2->gotstyle)))
-			different = 1;
-	if(!different && dialogex1->gotexstyle && dialogex2->gotexstyle) {
-		if((!dialogex1->exstyle || !dialogex2->exstyle) ||
-		   (dialogex1->exstyle->and_mask || dialogex2->exstyle->and_mask) ||
-		   (dialogex1->exstyle->or_mask != dialogex2->exstyle->or_mask))
-			different = 1;
-	} else if(!different &&
-		  ((dialogex1->gotexstyle && !dialogex2->gotexstyle) ||
-		  (!dialogex1->gotexstyle && dialogex2->gotexstyle)))
-			different = 1;
-	if(!different && dialogex1->gothelpid && dialogex2->gothelpid) {
-		if(dialogex1->helpid != dialogex2->helpid)
-			different = 1;
-	} else if(!different &&
-		  ((dialogex1->gothelpid && !dialogex2->gothelpid) ||
-		  (!dialogex1->gothelpid && dialogex2->gothelpid)))
-			different = 1;
-	nameid = strdup(get_nameid_str(dialogex1->menu));
-	if(!different && strcmp(nameid, get_nameid_str(dialogex2->menu)))
-		different = 1;
-	free(nameid);
-	nameid = strdup(get_nameid_str(dialogex1->dlgclass));
-	if(!different && strcmp(nameid, get_nameid_str(dialogex2->dlgclass)))
-		different = 1;
-	free(nameid);
-
-        ctrl1 = dialogex1->controls;
-        ctrl2 = dialogex2->controls;
         while(!different && (ctrl1 || ctrl2))
         {
             different = compare_control(ctrl1, ctrl2);
@@ -496,13 +445,67 @@ static int compare_icon_group(icon_group_t *icon_group1, icon_group_t *icon_grou
 static int compare_menu_item(menu_item_t *menu_item1, menu_item_t *menu_item2) {
 	int different = 0;
 	while(!different && menu_item1 && menu_item2) {
-		if(menu_item1->popup && menu_item2->popup)
-			different = compare_menu_item(menu_item1->popup, menu_item2->popup);
-		else if(!menu_item1->popup && !menu_item2->popup) {
-			if(menu_item1->name && menu_item2->name) {
-				if((menu_item1->id != menu_item2->id) ||
-				   (menu_item1->state != menu_item2->state))
+		if(menu_item1->popup && menu_item2->popup) {
+			if(!different && menu_item1->gotid && menu_item2->gotid) {
+				if(menu_item1->id != menu_item2->id)
 					different = 1;
+			} else if(!different &&
+				  ((menu_item1->gotid && !menu_item2->gotid) ||
+				  (!menu_item1->gotid && menu_item2->gotid)))
+					different = 1;
+			if(!different && menu_item1->gottype && menu_item2->gottype) {
+				if(menu_item1->type != menu_item2->type)
+					different = 1;
+			} else if(!different &&
+				  ((menu_item1->gottype && !menu_item2->gottype) ||
+				  (!menu_item1->gottype && menu_item2->gottype)))
+					different = 1;
+			if(!different && menu_item1->gotstate && menu_item2->gotstate) {
+				if(menu_item1->state != menu_item2->state)
+					different = 1;
+			} else if(!different &&
+				  ((menu_item1->gotstate && !menu_item2->gotstate) ||
+				  (!menu_item1->gotstate && menu_item2->gotstate)))
+					different = 1;
+			if(!different && menu_item1->gothelpid && menu_item2->gothelpid) {
+				if(menu_item1->helpid != menu_item2->helpid)
+					different = 1;
+			} else if(!different &&
+				  ((menu_item1->gothelpid && !menu_item2->gothelpid) ||
+				  (!menu_item1->gothelpid && menu_item2->gothelpid)))
+					different = 1;
+			if(!different)
+				different = compare_menu_item(menu_item1->popup, menu_item2->popup);
+		} else if(!menu_item1->popup && !menu_item2->popup) {
+			if(menu_item1->name && menu_item2->name) {
+				if(!different && menu_item1->gotid && menu_item2->gotid) {
+					if(menu_item1->id != menu_item2->id)
+						different = 1;
+				} else if(!different &&
+					  ((menu_item1->gotid && !menu_item2->gotid) ||
+					  (!menu_item1->gotid && menu_item2->gotid)))
+						different = 1;
+				if(!different && menu_item1->gottype && menu_item2->gottype) {
+					if(menu_item1->type != menu_item2->type)
+						different = 1;
+				} else if(!different &&
+					  ((menu_item1->gottype && !menu_item2->gottype) ||
+					  (!menu_item1->gottype && menu_item2->gottype)))
+						different = 1;
+				if(!different && menu_item1->gotstate && menu_item2->gotstate) {
+					if(menu_item1->state != menu_item2->state)
+						different = 1;
+				} else if(!different &&
+					  ((menu_item1->gotstate && !menu_item2->gotstate) ||
+					  (!menu_item1->gotstate && menu_item2->gotstate)))
+						different = 1;
+				if(!different && menu_item1->gothelpid && menu_item2->gothelpid) {
+					if(menu_item1->helpid != menu_item2->helpid)
+						different = 1;
+				} else if(!different &&
+					  ((menu_item1->gothelpid && !menu_item2->gothelpid) ||
+					  (!menu_item1->gothelpid && menu_item2->gothelpid)))
+						different = 1;
 			} else if((menu_item1->name && !menu_item2->name) ||
 				  (!menu_item1->name && menu_item2->name))
 					different = 1;
@@ -527,97 +530,6 @@ static int compare_menu(menu_t *menu1, menu_t *menu2) {
 		different = 1;
 	if(!different)
 		different = compare_menu_item(menu1->items, menu2->items);
-	return different;
-}
-
-static int compare_menuex_item(menuex_item_t *menuex_item1, menuex_item_t *menuex_item2) {
-	int different = 0;
-	while(!different && menuex_item1 && menuex_item2) {
-		if(menuex_item1->popup && menuex_item2->popup) {
-			if(!different && menuex_item1->gotid && menuex_item2->gotid) {
-				if(menuex_item1->id != menuex_item2->id)
-					different = 1;
-			} else if(!different &&
-				  ((menuex_item1->gotid && !menuex_item2->gotid) ||
-				  (!menuex_item2->gotid && menuex_item2->gotid)))
-					different = 1;
-			if(!different && menuex_item1->gottype && menuex_item2->gottype) {
-				if(menuex_item1->type != menuex_item2->type)
-					different = 1;
-			} else if(!different &&
-				  ((menuex_item1->gottype && !menuex_item2->gottype) ||
-				  (!menuex_item2->gottype && menuex_item2->gottype)))
-					different = 1;
-			if(!different && menuex_item1->gotstate && menuex_item2->gotstate) {
-				if(menuex_item1->state != menuex_item2->state)
-					different = 1;
-			} else if(!different &&
-				  ((menuex_item1->gotstate && !menuex_item2->gotstate) ||
-				  (!menuex_item2->gotstate && menuex_item2->gotstate)))
-					different = 1;
-			if(!different && menuex_item1->gothelpid && menuex_item2->gothelpid) {
-				if(menuex_item1->helpid != menuex_item2->helpid)
-					different = 1;
-			} else if(!different &&
-				  ((menuex_item1->gothelpid && !menuex_item2->gothelpid) ||
-				  (!menuex_item2->gothelpid && menuex_item2->gothelpid)))
-					different = 1;
-			if(!different)
-				different = compare_menuex_item(menuex_item1->popup, menuex_item2->popup);
-		} else if(!menuex_item1->popup && !menuex_item2->popup) {
-			if(menuex_item1->name && menuex_item2->name) {
-				if(!different && menuex_item1->gotid && menuex_item2->gotid) {
-					if(menuex_item1->id != menuex_item2->id)
-						different = 1;
-				} else if(!different &&
-					  ((menuex_item1->gotid && !menuex_item2->gotid) ||
-					  (!menuex_item2->gotid && menuex_item2->gotid)))
-						different = 1;
-				if(!different && menuex_item1->gottype && menuex_item2->gottype) {
-					if(menuex_item1->type != menuex_item2->type)
-						different = 1;
-				} else if(!different &&
-					  ((menuex_item1->gottype && !menuex_item2->gottype) ||
-					  (!menuex_item2->gottype && menuex_item2->gottype)))
-						different = 1;
-				if(!different && menuex_item1->gotstate && menuex_item2->gotstate) {
-					if(menuex_item1->state != menuex_item2->state)
-						different = 1;
-				} else if(!different &&
-					  ((menuex_item1->gotstate && !menuex_item2->gotstate) ||
-					  (!menuex_item2->gotstate && menuex_item2->gotstate)))
-						different = 1;
-				if(!different && menuex_item1->gothelpid && menuex_item2->gothelpid) {
-					if(menuex_item1->helpid != menuex_item2->helpid)
-						different = 1;
-				} else if(!different &&
-					  ((menuex_item1->gothelpid && !menuex_item2->gothelpid) ||
-					  (!menuex_item2->gothelpid && menuex_item2->gothelpid)))
-						different = 1;
-			} else if((menuex_item1->name && !menuex_item2->name) ||
-				  (!menuex_item1->name && menuex_item2->name))
-					different = 1;
-		} else
-			different = 1;
-		menuex_item1 = menuex_item1->next;
-		menuex_item2 = menuex_item2->next;
-	}
-	if(!different &&
-	   ((menuex_item1 && !menuex_item2) ||
-	   (!menuex_item1 && menuex_item2)))
-		different = 1;
-	return different;
-}
-
-static int compare_menuex(menuex_t *menuex1, menuex_t *menuex2) {
-	int different = 0;
-	if(!different &&
-	   ((menuex1->memopt != menuex2->memopt) ||
-	   (menuex1->lvc.version != menuex2->lvc.version) ||
-	   (menuex1->lvc.characts != menuex2->lvc.characts)))
-		different = 1;
-	if(!different)
-		different = compare_menuex_item(menuex1->items, menuex2->items);
 	return different;
 }
 
@@ -924,8 +836,6 @@ static int compare(resource_t *resource1, resource_t *resource2) {
 			return compare_cursor_group(resource1->res.curg, resource2->res.curg);
 		case res_dlg:
 			return compare_dialog(resource1->res.dlg, resource2->res.dlg);
-		case res_dlgex:
-			return compare_dialogex(resource1->res.dlgex, resource2->res.dlgex);
 		case res_fnt:
 			return compare_font(resource1->res.fnt, resource2->res.fnt);
 		case res_fntdir:
@@ -936,8 +846,6 @@ static int compare(resource_t *resource1, resource_t *resource2) {
 			return compare_icon_group(resource1->res.icog, resource2->res.icog);
 		case res_men:
 			return compare_menu(resource1->res.men, resource2->res.men);
-		case res_menex:
-			return compare_menuex(resource1->res.menex, resource2->res.menex);
 		case res_rdt:
 			return compare_rcdata(resource1->res.rdt, resource2->res.rdt);
 		case res_stt:
@@ -979,7 +887,7 @@ typedef struct resource_id_node
     struct resource_id_node *next;
 } resource_id_node_t;
 
-struct
+static struct
 {
     int enabled;
     struct resource_id_node *ids;
@@ -1034,13 +942,11 @@ static void setup_tabs(void)
 		case res_cur:
 		case res_curg:
 		case res_dlg:
-		case res_dlgex:
 		case res_fnt:
 		case res_fntdir:
 		case res_ico:
 		case res_icog:
 		case res_men:
-		case res_menex:
 		case res_rdt:
 		case res_stt:
 		case res_usr:
@@ -1077,7 +983,7 @@ static resource_t *find_main(int type, name_id_t *id, resource_lang_node_t *lang
 
     if (neutral != NULL && (en != NULL || en_US != NULL))
     {
-        fprintf(stderr, "INFO: Resource %04x/%s has both NEUTRAL and MASTER language translarion\n",
+        fprintf(stderr, "INFO: Resource %04x/%s has both NEUTRAL and MASTER language translation\n",
             type, get_nameid_str(id));
     }
 

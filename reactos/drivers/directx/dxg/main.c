@@ -8,7 +8,6 @@
  *       15/10-2007   Magnus Olsen
  */
 
-
 #include <dxg_int.h>
 #include "dxg_driver.h"
 
@@ -20,9 +19,7 @@ VOID *gpDummyPage = NULL;
 PEPROCESS gpepSession = NULL;
 PLARGE_INTEGER gpLockShortDelay = NULL;
 
-
 PDRVFN gpEngFuncs;
-
 
 
 
@@ -114,9 +111,6 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     return STATUS_NO_MEMORY;
 }
 
-
-
-
 NTSTATUS
 APIENTRY
 DxDdCleanupDxGraphics(VOID)
@@ -137,7 +131,3 @@ DxDdCleanupDxGraphics(VOID)
 
     return STATUS_SUCCESS;
 }
-
-
-
-

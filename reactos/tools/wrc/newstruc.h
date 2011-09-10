@@ -23,39 +23,25 @@
 
 #include "wrctypes.h"
 
-#define __NEW_STRUCT_FUNC(p)	\
-	p##_t *new_##p(void)\
-	{\
-		p##_t * ret = xmalloc(sizeof(*ret)); \
-		memset( ret, 0, sizeof(*ret) ); \
-		return ret; \
-	}
-
-#define __NEW_STRUCT_PROTO(p)	p##_t *new_##p(void)
-
-__NEW_STRUCT_PROTO(dialog);
-__NEW_STRUCT_PROTO(dialogex);
-__NEW_STRUCT_PROTO(name_id);
-__NEW_STRUCT_PROTO(menu);
-__NEW_STRUCT_PROTO(menuex);
-__NEW_STRUCT_PROTO(menu_item);
-__NEW_STRUCT_PROTO(menuex_item);
-__NEW_STRUCT_PROTO(control);
-__NEW_STRUCT_PROTO(icon);
-__NEW_STRUCT_PROTO(cursor);
-__NEW_STRUCT_PROTO(versioninfo);
-__NEW_STRUCT_PROTO(ver_value);
-__NEW_STRUCT_PROTO(ver_block);
-__NEW_STRUCT_PROTO(stt_entry);
-__NEW_STRUCT_PROTO(accelerator);
-__NEW_STRUCT_PROTO(event);
-__NEW_STRUCT_PROTO(raw_data);
-__NEW_STRUCT_PROTO(lvc);
-__NEW_STRUCT_PROTO(res_count);
-__NEW_STRUCT_PROTO(string);
-__NEW_STRUCT_PROTO(toolbar_item);
-__NEW_STRUCT_PROTO(ani_any);
-
+dialog_t *new_dialog(void);
+name_id_t *new_name_id(void);
+menu_t *new_menu(void);
+menu_item_t *new_menu_item(void);
+control_t *new_control(void);
+icon_t *new_icon(void);
+cursor_t *new_cursor(void);
+versioninfo_t *new_versioninfo(void);
+ver_value_t *new_ver_value(void);
+ver_block_t *new_ver_block(void);
+stt_entry_t *new_stt_entry(void);
+accelerator_t *new_accelerator(void);
+event_t *new_event(void);
+raw_data_t *new_raw_data(void);
+lvc_t *new_lvc(void);
+res_count_t *new_res_count(void);
+string_t *new_string(void);
+toolbar_item_t *new_toolbar_item(void);
+ani_any_t *new_ani_any(void);
 resource_t *new_resource(enum res_e t, void *res, int memopt, language_t *lan);
 version_t *new_version(DWORD v);
 characts_t *new_characts(DWORD c);

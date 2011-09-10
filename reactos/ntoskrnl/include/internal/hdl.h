@@ -30,7 +30,7 @@
     if (x & HdlpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define HDLTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define HDLTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //

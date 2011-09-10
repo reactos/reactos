@@ -11,7 +11,7 @@ add_definitions(
     -DLIBXML_STATIC)
 
 if(MSVC)
-    add_compiler_flags(/FIwine/typeof.h /FImsvc.h)
+    add_compile_flags("/FIwine/typeof.h /FImsvc.h")
 endif(MSVC)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)

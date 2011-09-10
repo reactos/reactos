@@ -98,6 +98,7 @@ if(ARCH MATCHES i386)
     endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND LIBCNTPR_SOURCE
+        except/amd64/ehandler.c
         except/amd64/chkstk_asm.s
         except/amd64/seh.s
         setjmp/amd64/setjmp.s

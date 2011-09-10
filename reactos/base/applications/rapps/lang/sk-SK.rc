@@ -60,7 +60,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Všeobecné", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "&Uložiť pozíciu okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Aktualizovať zoznam dostupných programov pri spustení", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Aktualizovať zoznam dostupných programov pri spustení", IDC_UPDATE_AVLIST, 15, 29, 222, 12
 	AUTOCHECKBOX "&Záznam o inštalovaní a odstránení programov", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Sťahovanie", -1, 4, 65, 240, 51

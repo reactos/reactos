@@ -21,9 +21,6 @@
 
 #include <advapi32.h>
 
-#include "crypt.h"
-
-
 void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen)
 {
     unsigned int keyIndex = 0, stateIndex = 0;

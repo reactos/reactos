@@ -6,4 +6,5 @@
 	<file>dllmain.c</file>
 	<file>samlib.c</file>
 	<file>samlib.rc</file>
+	<pch>precomp.h</pch>
 </module>

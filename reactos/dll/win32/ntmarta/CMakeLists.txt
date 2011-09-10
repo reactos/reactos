@@ -1,5 +1,4 @@
 
-set_unicode()
 
 add_definitions(-D__WINESRC__)
 
@@ -15,7 +14,7 @@ list(APPEND SOURCE
 
 add_library(ntmarta SHARED ${SOURCE})
 
-set_module_type(ntmarta win32dll)
+set_module_type(ntmarta win32dll UNICODE)
 
 add_importlibs(ntmarta
     user32

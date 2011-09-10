@@ -11,6 +11,7 @@ if(CMAKE_CROSSCOMPILING)
         infrosput.c)
 
     add_library(inflib ${GLOBAL_FILES} ${SOURCE})
+    add_pch(inflib inflib.h)
     add_dependencies(inflib psdk)
 else()
     list(APPEND SOURCE
@@ -21,7 +22,7 @@ else()
 
     add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST)
     if(NOT MSVC)
-        add_compiler_flags(-Wpointer-arith -Wwrite-strings)
+        add_compile_flags("-Wpointer-arith -Wwrite-strings")
     endif()
     add_library(inflibhost ${GLOBAL_FILES} ${SOURCE})
     target_link_libraries(inflibhost unicode)

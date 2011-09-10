@@ -21,43 +21,12 @@
 /*
 Implements the toolbar band of a cabinet window
 */
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
+#include "precomp.h"
 
 /*
 TODO:
   **Fix GetBandInfo to calculate size correctly
 */
-static const int gBackCommandID = 0xa121;
-static const int gForwardCommandID = 0xa122;
-static const int gUpLevelCommandID = 0xa022;
-static const int gSearchCommandID = 1003;
-static const int gFoldersCommandID = 1004;
-static const int gMoveToCommandID = 0x701f;
-static const int gCopyToCommandID = 0x701e;
-static const int gDeleteCommandID = 0x7011;
-static const int gUndoCommandID = 0x701b;
-static const int gViewsCommandID = 0x7031;
-static const int gStopCommandID = 1010;
-static const int gRefreshCommandID = 0xa220;
-static const int gHomeCommandID = 1012;
-static const int gMapDriveCommandID = 41089;
-static const int gDisconnectCommandID = 41090;
-static const int gFavoritesCommandID = 1015;
-static const int gHistoryCommandID = 1016;
-static const int gFullScreenCommandID = 1017;
-static const int gPropertiesCommandID = 0x7013;
-static const int gCutCommandID = 0x7018;
-static const int gCopyCommandID = 0x7019;
-static const int gPasteCommandID = 0x701a;
-static const int gFolderOptionsCommandID = 41251;
 
 class CToolsBand :
 	public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,

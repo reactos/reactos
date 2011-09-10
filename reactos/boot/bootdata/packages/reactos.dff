@@ -663,6 +663,7 @@ media\inf\disk.inf                                  6
 media\inf\display.inf                               6
 media\inf\font.inf                                  6
 media\inf\fdc.inf                                   6
+media\inf\hal.inf                                   6
 media\inf\hdc.inf                                   6
 media\inf\intl.inf                                  6
 media\inf\layout.inf                                6
@@ -777,8 +778,6 @@ modules\rosapps\drivers\green\green.sys                                    2   o
 
 ; Rostests
 modules\rostests\rosautotest\rosautotest.exe                               1   optional
-modules\rostests\drivers\kmtest\kmtest.sys                                 2   optional
-modules\rostests\drivers\kmtest\kmtestassist.sys                           2   optional
 modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
 modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
@@ -875,5 +874,11 @@ modules\rostests\apitests\kernel32\kernel32_apitest.exe                    7   o
 modules\rostests\apitests\ntdll\ntdll_apitest.exe                          7   optional
 modules\rostests\apitests\user32\user32_apitest.exe                        7   optional
 modules\rostests\apitests\ws2_32\ws2_32_apitest.exe                        7   optional
+
+modules\rostests\kmtests\kmtest_.exe                                       7   optional
+modules\rostests\kmtests\kmtest_drv.sys                                    7   optional
+modules\rostests\kmtests\example\example_drv.sys                           7   optional
+modules\rostests\kmtests\ntos_io\iodeviceobject_drv.sys                    7   optional
+modules\rostests\kmtests\ntos_io\iohelper_drv.sys                          7   optional
 
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional

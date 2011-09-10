@@ -8,7 +8,7 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="include">
-	<pch>afd.h</pch>
+		<pch>afd.h</pch>
 	</directory>
 	<directory name="afd">
 		<file>bind.c</file>

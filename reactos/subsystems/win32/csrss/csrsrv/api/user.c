@@ -1,6 +1,6 @@
 /* $Id$
  *
- * reactos/subsys/csrss/api/user.c
+ * subsystems/win32/csrss/csrsrv/api/user.c
  *
  * User functions
  *

@@ -38,4 +38,6 @@ add_importlibs(hhctrl
     kernel32
     ntdll)
 
+add_dependencies(hhctrl wineheaders)
+add_pch(hhctrl hhctrl.h)
 add_cd_file(TARGET hhctrl DESTINATION reactos/system32 FOR all)

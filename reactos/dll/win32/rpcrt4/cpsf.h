@@ -23,23 +23,23 @@
 
 HRESULT StdProxy_Construct(REFIID riid, LPUNKNOWN pUnkOuter, const ProxyFileInfo *ProxyInfo,
                            int Index, LPPSFACTORYBUFFER pPSFactory, LPRPCPROXYBUFFER *ppProxy,
-                           LPVOID *ppvObj);
+                           LPVOID *ppvObj) DECLSPEC_HIDDEN;
 
 HRESULT CStdStubBuffer_Construct(REFIID riid, LPUNKNOWN pUnkServer, PCInterfaceName name,
                                  CInterfaceStubVtbl *vtbl, LPPSFACTORYBUFFER pPSFactory,
-                                 LPRPCSTUBBUFFER *ppStub);
+                                 LPRPCSTUBBUFFER *ppStub) DECLSPEC_HIDDEN;
 
 HRESULT CStdStubBuffer_Delegating_Construct(REFIID riid, LPUNKNOWN pUnkServer, PCInterfaceName name,
                                             CInterfaceStubVtbl *vtbl, REFIID delegating_iid,
-                                            LPPSFACTORYBUFFER pPSFactory, LPRPCSTUBBUFFER *ppStub);
+                                            LPPSFACTORYBUFFER pPSFactory, LPRPCSTUBBUFFER *ppStub) DECLSPEC_HIDDEN;
 
-const MIDL_SERVER_INFO *CStdStubBuffer_GetServerInfo(IRpcStubBuffer *iface);
+const MIDL_SERVER_INFO *CStdStubBuffer_GetServerInfo(IRpcStubBuffer *iface) DECLSPEC_HIDDEN;
 
-const IRpcStubBufferVtbl CStdStubBuffer_Vtbl;
-const IRpcStubBufferVtbl CStdStubBuffer_Delegating_Vtbl;
+extern const IRpcStubBufferVtbl CStdStubBuffer_Vtbl DECLSPEC_HIDDEN;
+extern const IRpcStubBufferVtbl CStdStubBuffer_Delegating_Vtbl DECLSPEC_HIDDEN;
 
-BOOL fill_delegated_proxy_table(IUnknownVtbl *vtbl, DWORD num);
-HRESULT create_proxy(REFIID iid, IUnknown *pUnkOuter, IRpcProxyBuffer **pproxy, void **ppv);
-HRESULT create_stub(REFIID iid, IUnknown *pUnk, IRpcStubBuffer **ppstub);
+BOOL fill_delegated_proxy_table(IUnknownVtbl *vtbl, DWORD num) DECLSPEC_HIDDEN;
+HRESULT create_proxy(REFIID iid, IUnknown *pUnkOuter, IRpcProxyBuffer **pproxy, void **ppv) DECLSPEC_HIDDEN;
+HRESULT create_stub(REFIID iid, IUnknown *pUnk, IRpcStubBuffer **ppstub) DECLSPEC_HIDDEN;
 
 #endif  /* __WINE_CPSF_H */

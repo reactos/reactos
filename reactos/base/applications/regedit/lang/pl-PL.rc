@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Regedit resources
   * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,8 +20,9 @@
  *         Use ReactOS forum PM or IRC to contact me
  *         http://www.reactos.org
  *         IRC: irc.freenode.net #reactos-pl; 
- *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  *         UTF-8 conversion by Caemyr (May, 2011) 
+ *         Update by wojo664 (04.08.2011) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -258,46 +259,46 @@ END
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "Lista zasobów"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    PUSHBUTTON "Pokaż...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 }
 
 
 IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "Zasoby"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "Przerwanie:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "Pamięć:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Dane specyficzne dla sprzętu:", IDC_STATIC, 10, 177, 105, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "Użycie", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Nieokreślone", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Dzielone", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Device Exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Driver Exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Typ interfejsu:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Numer szyny:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "Wersja:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "Wydanie:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
-    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    PUSHBUTTON "&Dane...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
 }
 
 
@@ -454,40 +455,40 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BUSNUMBER                 "Bus Number"
-    IDS_INTERFACE                 "Interface"
-    IDS_DMA_CHANNEL               "Channel"
+    IDS_BUSNUMBER                 "Numer Szyny"
+    IDS_INTERFACE                 "Interfejs"
+    IDS_DMA_CHANNEL               "Kanał"
     IDS_DMA_PORT                  "Port"
-    IDS_INTERRUPT_VECTOR          "Vector"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "Affinity"
-    IDS_INTERRUPT_TYPE            "Type"
-    IDS_MEMORY_ADDRESS            "Physical Address"
-    IDS_MEMORY_LENGTH             "Length"
-    IDS_MEMORY_ACCESS             "Access"
-    IDS_PORT_ADDRESS              "Physical Address"
-    IDS_PORT_LENGTH               "Length"
-    IDS_PORT_ACCESS               "Access"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1"
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_INTERRUPT_VECTOR          "Wektor"
+    IDS_INTERRUPT_LEVEL           "Poziom"
+    IDS_INTERRUPT_AFFINITY        "Przynależność"
+    IDS_INTERRUPT_TYPE            "Typ"
+    IDS_MEMORY_ADDRESS            "Adres fizyczny"
+    IDS_MEMORY_LENGTH             "Długość"
+    IDS_MEMORY_ACCESS             "Dostęp"
+    IDS_PORT_ADDRESS              "Adres fizyczny"
+    IDS_PORT_LENGTH               "Długość"
+    IDS_PORT_ACCESS               "Dostęp"
+    IDS_SPECIFIC_RESERVED1        "Zarezerwowane 1"
+    IDS_SPECIFIC_RESERVED2        "Zarezerwowane 2"
+    IDS_SPECIFIC_DATASIZE         "Rozmiar danych"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
-    IDS_PORT_MEMORY_IO            "Memory"
+    IDS_PORT_MEMORY_IO            "Pamięć"
     IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "Read Only"
-    IDS_MEMORY_WRITE_ONLY         "Write Only"
-    IDS_MEMORY_READ_WRITE         "Read / Write"
+    IDS_MEMORY_READ_ONLY          "Tylko Odczyt"
+    IDS_MEMORY_WRITE_ONLY         "Tylko Zapis"
+    IDS_MEMORY_READ_WRITE         "Odczyt / Zapis"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Undefined"
-    IDS_BUS_INTERNAL              "Internal"
+    IDS_BUS_UNDEFINED             "Niezdefiniowane"
+    IDS_BUS_INTERNAL              "Wewnętrzne"
     IDS_BUS_ISA                   "ISA"
     IDS_BUS_EISA                  "EISA"
     IDS_BUS_MICROCHANNEL          "MicroChannel"
@@ -499,11 +500,11 @@ BEGIN
     IDS_BUS_CBUS                  "C-Bus"
     IDS_BUS_MPIBUS                "MPI-Bus"
     IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
+    IDS_BUS_PROCESSORINTERNAL     "Procesora"
+    IDS_BUS_INTERNALPOWERBUS      "Wewnętrzna szyna zasilania"
     IDS_BUS_PNPISABUS             "PnP-ISA Bus"
     IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
+    IDS_BUS_UNKNOWNTYPE           "Nieznany typ interfejsu"
 END
 
 /*****************************************************************/
@@ -519,7 +520,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
 FONT 8, "MS Shell Dlg"
 BEGIN
    GROUPBOX "Zakres eksportu",IDC_STATIC,2,0,366,48
-   CONTROL "&Wszystko",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "&Wszystko",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10,47,11
    CONTROL "Wy&brana gałąź",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
@@ -560,7 +561,7 @@ BEGIN
     CONTROL         "&Klucze",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
     CONTROL         "&Wartości",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,48,36,8
+                    WS_TABSTOP,14,48,45,8
     CONTROL         "&Dane",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
     CONTROL         " &tylko całe ciągi",IDC_MATCHSTRING,"Button",

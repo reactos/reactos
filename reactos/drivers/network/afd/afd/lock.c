@@ -8,10 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
-#include "pseh/pseh2.h"
 
 PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
@@ -160,7 +156,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 	    if( MapBuf[i].Mdl ) {
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
 		_SEH2_TRY {
-		    MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
+		    MmProbeAndLockPages( MapBuf[i].Mdl, UserMode,
 				         Write ? IoModifyAccess : IoReadAccess );
 		} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 		    LockFailed = TRUE;

@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(mshtml.tlb SHARED rsrc.rc)
 
-set_entrypoint(mshtml.tlb 0)
+set_module_type(mshtml.tlb win32dll ENTRYPOINT 0 )
 set_target_properties(mshtml.tlb PROPERTIES SUFFIX "")
 add_dependencies(mshtml.tlb mshtml__tlb)
 add_cd_file(TARGET mshtml.tlb DESTINATION reactos/system32 FOR all)

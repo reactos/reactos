@@ -19,18 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid.h>
-#include <shlguid_undoc.h>
-#include <tchar.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include "resource.h"
-#include "wine/debug.h"
-#include "bandsite.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
@@ -730,7 +719,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD n
     if (fRebarWindow == NULL)
         return E_FAIL;
 
-    if (IsEqualIID(pguidCmdGroup, IID_IDeskBand))
+    if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
     {
         switch (nCmdID)
         {

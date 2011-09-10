@@ -120,7 +120,7 @@ BOOLEAN
 FORCEINLINE
 MiIsHyperspaceAddress(PVOID Address)
 {
-    return ((ULONG64)Address >= HYPER_SPACE && 
+    return ((ULONG64)Address >= HYPER_SPACE &&
             (ULONG64)Address <= HYPER_SPACE_END);
 }
 
@@ -147,7 +147,7 @@ MiGetPteForProcess(
     MMPTE TmplPte, *Pte;
 
     /* Check if we need hypersapce mapping */
-    if (Address < MmSystemRangeStart && 
+    if (Address < MmSystemRangeStart &&
         Process && Process != PsGetCurrentProcess())
     {
         UNIMPLEMENTED;
@@ -313,7 +313,7 @@ MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
     MMPTE Pte;
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
-    return Pte.u.Hard.Valid;
+    return (BOOLEAN)Pte.u.Hard.Valid;
 }
 
 BOOLEAN
@@ -469,7 +469,7 @@ MmDeleteVirtualMapping(
 
     /* Return information to the caller */
     if (WasDirty)
-        *WasDirty = OldPte.u.Hard.Dirty;;
+        *WasDirty = (BOOLEAN)OldPte.u.Hard.Dirty;;
 
     if (Page)
         *Page = Pfn;
@@ -537,7 +537,7 @@ MmCreateVirtualMappingUnsafe(
 
         Pte = MiGetPteForProcess(Process, Address, TRUE);
 
-DPRINT1("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n", 
+DPRINT1("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
         Address, TmplPte.u.Long, Pte);
 
         if (InterlockedExchangePte(Pte, TmplPte))
@@ -592,13 +592,13 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 
     /* No page colors yet */
     Process->NextPageColor = 0;
-    
+
     /* Setup the hyperspace lock */
     KeInitializeSpinLock(&Process->HyperSpaceLock);
 
     /* Lock PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     /* Get a page for the table base and for hyperspace */
     TableBasePfn = MiRemoveAnyPage(0);
     HyperPfn = MiRemoveAnyPage(0);
@@ -647,14 +647,14 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Now write the PTE/PDE entry for hyperspace itself */
     TempPte = ValidKernelPte;
     TempPte.u.Hard.PageFrameNumber = HyperPfn;
-    TableIndex = MiAddressToPxi(HYPER_SPACE);
+    TableIndex = MiAddressToPxi((PVOID)HYPER_SPACE);
     SystemTable[TableIndex] = TempPte;
 
     /* Sanity check */
     ASSERT(MiAddressToPxi(MmHyperSpaceEnd) > TableIndex);
 
     /* Now do the x86 trick of making the PDE a page table itself */
-    TableIndex = MiAddressToPxi(PTE_BASE);
+    TableIndex = MiAddressToPxi((PVOID)PTE_BASE);
     TempPte.u.Hard.PageFrameNumber = TableBasePfn;
     SystemTable[TableIndex] = TempPte;
 

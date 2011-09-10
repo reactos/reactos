@@ -11,9 +11,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
+DBG_DEFAULT_CHANNEL(UserSysparams);
 
 static BOOL Setup = FALSE;
 
@@ -80,7 +78,7 @@ InitMetrics(VOID)
 #endif
 
     /* Window sizes */
-    DPRINT("ncm.iCaptionWidth=%d,GetSystemMetrics(SM_CYSIZE)=%d,GetSystemMetrics(SM_CXFRAME)=%d,avcwCaption=%d \n",
+    TRACE("ncm.iCaptionWidth=%d,GetSystemMetrics(SM_CYSIZE)=%d,GetSystemMetrics(SM_CXFRAME)=%d,avcwCaption=%d \n",
            gspv.ncm.iCaptionWidth, piSysMet[SM_CYSIZE],piSysMet[SM_CXFRAME], gspv.tmCaptionFont.tmAveCharWidth);
 
     piSysMet[SM_CXMIN] = 3 * max(gspv.ncm.iCaptionWidth, 8) // 112
@@ -185,7 +183,7 @@ UserGetSystemMetrics(ULONG Index)
 {
     ASSERT(gpsi);
     ASSERT(Setup);
-    DPRINT("UserGetSystemMetrics(%d)\n", Index);
+    TRACE("UserGetSystemMetrics(%d)\n", Index);
 
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
@@ -206,7 +204,7 @@ UserGetSystemMetrics(ULONG Index)
             return 0; // FIXME
     }
 
-    DPRINT1("UserGetSystemMetrics() called with invalid index %d\n", Index);
+    ERR("UserGetSystemMetrics() called with invalid index %d\n", Index);
     return 0;
 }
 

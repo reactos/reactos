@@ -32,13 +32,21 @@ rip = 0
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .PROC MACRO name
+#ifdef _M_IX86
     _&name PROC
+#else
+    &name PROC FRAME
+#endif
 ENDM
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .ENDP MACRO name
+#ifdef _M_IX86
     _&name ENDP
+#else
+    &name ENDP
+#endif
 ENDM
 #define ENDFUNC .ENDP
 
@@ -189,16 +197,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
+#ifdef _X86_
     _\name:
+#else
+    \name:
+#endif
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
+#define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .macro .ENDP name
     .cfi_endproc
     .endfunc
 .endm
+#define ENDFUNC .ENDP
 
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol

@@ -6,15 +6,7 @@
  * COPYRIGHT:   Copyright 2011 Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <prsht.h>
-#include <setupapi.h>
-
-#include <wine/debug.h>
-
-#include "internal.h"
-#include "resource.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msports);
 

@@ -2,7 +2,7 @@
 include_directories(include/internal/mingw-w64)
 
 if(NOT MSVC)
-    add_compiler_flags(-Wno-main)
+    add_compile_flags("-Wno-main")
 endif()
 
 list(APPEND MSVCRTEX_SOURCE
@@ -68,6 +68,7 @@ set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTD
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
+    allow_warnings(msvcrtex)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

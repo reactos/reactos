@@ -252,7 +252,8 @@ typedef struct _DEVPROPKEY {
 [
   uuid (8D9F4E40-A03D-11CE-8F69-08003E30051B),
   version(1.0),
-  pointer_default(unique)
+  pointer_default(unique),
+  endpoint("ncacn_np:[\\pipe\\plugplay]")
   #ifndef __midl
   ,explicit_handle
   #endif

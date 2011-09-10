@@ -11,7 +11,7 @@
  */
 
 #include <advapi32.h>
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 #define USZ {0,0,0}
 

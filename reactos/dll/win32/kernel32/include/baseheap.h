@@ -33,12 +33,6 @@
 // API for it (such as GlobalLock).
 //
 
-//
-// The Handle Table
-//
-extern RTL_HANDLE_TABLE BaseHeapHandleTable;
-
-//
 // Tracing Support
 // Define _BASE_HANDLE_TRACE for Traces
 //

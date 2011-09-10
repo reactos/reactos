@@ -46,11 +46,11 @@ RtlCompareMemory(IN const VOID *Source1,
 /*
  * @implemented
  */
-ULONG
+SIZE_T
 NTAPI
 RtlCompareMemoryUlong (
    PVOID Source,
-   ULONG Length,
+   SIZE_T Length,
    ULONG Value
 )
 /*
@@ -63,8 +63,8 @@ RtlCompareMemoryUlong (
  */
 {
    PULONG ptr = (PULONG)Source;
-   ULONG  len = Length / sizeof(ULONG);
-   ULONG i;
+   ULONG_PTR len = Length / sizeof(ULONG);
+   ULONG_PTR i;
 
    for (i = 0; i < len; i++)
    {
@@ -73,7 +73,7 @@ RtlCompareMemoryUlong (
       ptr++;
    }
 
-   return (ULONG)((PCHAR)ptr - (PCHAR)Source);
+   return (SIZE_T)((PCHAR)ptr - (PCHAR)Source);
 }
 
 

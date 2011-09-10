@@ -6,15 +6,6 @@
  * COPYRIGHT:        Copyright 2009 Johannes Anderwald
  */
 
-#include <windows.h>
-#include <winuser.h>
-#include <dbt.h>
-#include <setupapi.h>
-
-#include <ks.h>
-#include <ksmedia.h>
-
-#include <audiosrv/audiosrv.h>
 #include "audiosrv.h"
 
 BOOL

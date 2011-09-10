@@ -1,8 +1,5 @@
 #pragma once
 
-#include "window.h"
-#include "clipboard.h"
-
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
 #define WINSTA_ROOT_NAME_LENGTH	23
 
@@ -42,7 +39,7 @@ typedef struct _WINSTATION_OBJECT
 
     /* ScreenSaver */
     BOOL ScreenSaverRunning;
-    UINT  ScreenSaverTimeOut;
+    UINT ScreenSaverTimeOut;
    /* Should this be on each desktop ? */
     BOOL ScreenSaverActive;
 
@@ -54,8 +51,17 @@ typedef struct _WINSTATION_OBJECT
     ULONG Flags;
     struct _DESKTOP* ActiveDesktop;
 
-    PCLIPBOARDSYSTEM Clipboard;
-    DWORD           ClipboardSequenceNumber;
+    PTHREADINFO    ptiClipLock;
+    PTHREADINFO    ptiDrawingClipboard;
+    PWND           spwndClipOpen;
+    PWND           spwndClipViewer;
+    PWND           spwndClipOwner;
+    PCLIP          pClipBase;     // Not a clip object.
+    DWORD          cNumClipFormats;
+    INT            iClipSerialNumber;
+    INT            iClipSequenceNumber;
+    INT            fClipboardChanged : 1;
+    INT            fInDelayedRendering : 1;
 
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 

@@ -38,11 +38,11 @@ IDC_REGEDIT MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Kilépés",                       ID_REGISTRY_EXIT
+        MENUITEM "&KilÃ©pÃ©s",                       ID_REGISTRY_EXIT
     END
-    POPUP "&Súgó"
+    POPUP "&SÃºgÃ³"
     BEGIN
-        MENUITEM "&Névjegy ...",                  ID_HELP_ABOUT
+        MENUITEM "&NÃ©vjegy ...",                  ID_HELP_ABOUT
     END
 END
 
@@ -420,7 +420,7 @@ BEGIN
   IDS_ACCESS_ENUMERATESUBKEYS   "Enumerate Subkeys"
   IDS_ACCESS_NOTIFY             "Notify"
   IDS_ACCESS_CREATELINK         "Create Link"
-  IDS_ACCESS_DELETE             "Törlés"
+  IDS_ACCESS_DELETE             "TÃ¶rlÃ©s"
   IDS_ACCESS_WRITEDAC           "Write DAC"
   IDS_ACCESS_WRITEOWNER         "Write Owner"
   IDS_ACCESS_READCONTROL        "Read Control"

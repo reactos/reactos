@@ -1542,8 +1542,8 @@ BOOLEAN
 NTAPI
 LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
 {
-    static BOOLEAN WarnedOnce = FALSE;
-    if (WarnedOnce == FALSE) { UNIMPLEMENTED; WarnedOnce = TRUE; }
+    //static BOOLEAN WarnedOnce = FALSE;
+    //if (WarnedOnce == FALSE) { UNIMPLEMENTED; WarnedOnce = TRUE; }
     return FALSE;
 }
 

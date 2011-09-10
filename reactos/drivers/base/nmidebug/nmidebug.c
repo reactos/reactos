@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntifs.h>
-#include <ntndk.h>
+#include <ndk/ketypes.h>
 
 /* FUNCTIONS ******************************************************************/
 
@@ -21,6 +21,7 @@ NmiClearFlag(VOID)
 {
     ((PCHAR)&KiBugCheckData[4])[0] -= (NmiBegin[3] | NmiBegin[7]);
     ((PCHAR)&KiBugCheckData[4])[3] |= 1;
+#ifdef _M_IX86
 #ifdef _MSC_VER
     __asm
     {
@@ -28,6 +29,7 @@ NmiClearFlag(VOID)
     }
 #else
     __asm__("rcrl %b[shift], %k[retval]" : [retval] "=rm" (KiBugCheckData[4]) : "[retval]" (KiBugCheckData[4]), [shift] "Nc" (8));
+#endif
 #endif
 }
 
@@ -44,7 +46,9 @@ NmiDbgCallback(IN PVOID Context,
     ((void(*)())&KiBugCheckData[4])();
 
     /* Handle the NMI safely */
+#ifdef _M_IX86
     KiEnableTimerWatchdog = (RtlCompareMemory(NmiBegin, NmiBegin + 4, 4) != 4);
+#endif
     return TRUE;
 }
 

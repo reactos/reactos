@@ -614,15 +614,6 @@ EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
     pexlo->xlo.pulXlate = pexlo->aulXlate;
 }
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitXlateImpl(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
-
 /** Public DDI Functions ******************************************************/
 
 #undef XLATEOBJ_iXlate

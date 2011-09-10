@@ -530,7 +530,7 @@ extern PMMWSL MmWorkingSetList;
 //
 // Figures out the hardware bits for a PTE
 //
-ULONG
+ULONG_PTR
 FORCEINLINE
 MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {

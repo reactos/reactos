@@ -31,13 +31,7 @@
  * TODO: Implement format
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "hardware.h"
-#include "csqrtns.h"
-#include "ioctl.h"
+#include "precomp.h"
 
 
 NTSTATUS NTAPI

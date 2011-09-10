@@ -58,6 +58,8 @@
 #ifndef _PROPERTYKEY_EQUALITY_OPERATORS_
 #define _PROPERTYKEY_EQUALITY_OPERATORS_
 #ifdef __cplusplus
+extern "C++"
+{
 inline bool operator==(REFPROPERTYKEY guidOne, REFPROPERTYKEY guidOther)
 {
     return IsEqualPropertyKey(guidOne, guidOther);
@@ -66,5 +68,6 @@ inline bool operator!=(REFPROPERTYKEY guidOne, REFPROPERTYKEY guidOther)
 {
     return !(guidOne == guidOther);
 }
+} //extern "C++"
 #endif
 #endif

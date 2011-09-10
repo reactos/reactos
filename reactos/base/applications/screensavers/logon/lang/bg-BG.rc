@@ -2,6 +2,6 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Входен екранен предпазител"
-    IDS_TEXT        "Няма възможност за настройки."
+    IDS_DESCRIPTION "Р’С…РѕРґРµРЅ РµРєСЂР°РЅРµРЅ РїСЂРµРґРїР°Р·РёС‚РµР»"
+    IDS_TEXT        "РќСЏРјР° РІСЉР·РјРѕР¶РЅРѕСЃС‚ Р·Р° РЅР°СЃС‚СЂРѕР№РєРё."
 END

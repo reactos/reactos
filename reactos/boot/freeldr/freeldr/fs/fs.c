@@ -23,13 +23,15 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 VOID FileSystemError(PCSTR ErrorString)
 {
-	DPRINTM(DPRINT_FILESYSTEM, "%s\n", ErrorString);
+	ERR("%s\n", ErrorString);
 
 	UiMessageBox(ErrorString);
 }
@@ -43,7 +45,7 @@ PFILE FsOpenFile(PCSTR FileName)
 	//
 	// Print status message
 	//
-	DPRINTM(DPRINT_FILESYSTEM, "Opening file '%s'...\n", FileName);
+	TRACE("Opening file '%s'...\n", FileName);
 
 	//
 	// Create full file name
@@ -163,7 +165,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
 	}
 	num++;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
+	TRACE("FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
 
 	return num;
 }
@@ -195,7 +197,7 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 
 	Buffer[i] = 0;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
+	TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
 typedef struct tagFILEDATA
@@ -258,7 +260,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     ULONG DeviceId;
 
     /* Print status message */
-    DPRINTM(DPRINT_FILESYSTEM, "Opening file '%s'...\n", Path);
+    TRACE("Opening file '%s'...\n", Path);
 
     *FileId = MAX_FDS;
 
@@ -339,7 +341,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
 #endif
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = PxeMount(DeviceId);
 #endif
@@ -412,7 +414,7 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     DEVICE* pNewEntry;
     ULONG dwLength;
 
-    DPRINTM(DPRINT_FILESYSTEM, "FsRegisterDevice() Prefix = %s\n", Prefix);
+    TRACE("FsRegisterDevice() Prefix = %s\n", Prefix);
 
     dwLength = strlen(Prefix) + 1;
     pNewEntry = MmHeapAlloc(sizeof(DEVICE) + dwLength);

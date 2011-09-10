@@ -3,6 +3,7 @@
  *         testament@users.sourceforge.net
  *         https://sourceforge.net/projects/reactospl
  *         UTF-8 conversion by Caemyr (May, 2011)
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  */
  
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -72,12 +73,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Wybór uruchamiania", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
- CONTROL "Uruchamianie &normalne - załaduj wszystkie sterowniki urządzeń i usługi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
- CONTROL "Uruchamianie &diagnostyczne - załaduj tylko podstawowe urządzenia i usługi", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
- CONTROL "Uruchamianie &selektywne", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
- AUTOCHECKBOX "&Przetwarzaj plik SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
- AUTOCHECKBOX "Załaduj &usługi systemowe", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
- AUTOCHECKBOX "Załaduj &elementy startowe", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+ CONTROL "Uruchamianie &normalne - załaduj wszystkie sterowniki urządzeń i usługi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 238, 10
+ CONTROL "Uruchamianie &diagnostyczne - załaduj tylko podstawowe urządzenia i usługi", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 253, 10
+ CONTROL "Uruchamianie &selektywne", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 95, 10
+ AUTOCHECKBOX "&Przetwarzaj plik SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 102, 10
+ AUTOCHECKBOX "Załaduj &usługi systemowe", IDC_CBX_SYSTEM_SERVICE, 30, 95, 95, 10
+ AUTOCHECKBOX "Załaduj &elementy startowe", IDC_CBX_STARTUP_ITEM, 30, 110, 98, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -140,7 +141,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_SERVICES_COLUMN_SERVICE "Usługa"
-    IDS_SERVICES_COLUMN_REQ     "Wymagany"
+    IDS_SERVICES_COLUMN_REQ     "Wymagana"
     IDS_SERVICES_COLUMN_VENDOR  "Producent"
     IDS_SERVICES_COLUMN_STATUS  "Stan"
 END

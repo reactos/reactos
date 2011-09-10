@@ -9,26 +9,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-#include <string.h>
-#include <setupapi.h>
-#include <pseh/pseh2.h>
-#include <shlobj.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <time.h>
-
-#include <syssetup/syssetup.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "globals.h"
-#include "resource.h"
 
 #define VMWINST
 
@@ -1013,7 +997,7 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	  break;
 	}
 
-      dwValueSize = 64 * sizeof(TCHAR);
+      dwValueSize = 64 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
 			  L"Display",
 			  NULL,
@@ -1025,7 +1009,7 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	  break;
 	}
 
-      dwValueSize = 32 * sizeof(TCHAR);
+      dwValueSize = 32 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
 			  L"Std",
 			  NULL,
@@ -1163,7 +1147,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
 		   &hKey))
     return FALSE;
 
-  dwValueSize = 9 * sizeof(TCHAR);
+  dwValueSize = 9 * sizeof(WCHAR);
   if (RegQueryValueExW(hKey,
 		      L"Default",
 		      NULL,
@@ -1709,8 +1693,8 @@ RegistrationProc(LPVOID Parameter)
         {
           if (0 == LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
                                UnknownError,
-                               sizeof(UnknownError) / sizeof(UnknownError[0] -
-                               20)))
+                               sizeof(UnknownError) / sizeof(UnknownError[0]) -
+                               20))
             {
               wcscpy(UnknownError, L"Unknown error");
             }

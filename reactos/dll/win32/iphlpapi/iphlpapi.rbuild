@@ -19,4 +19,5 @@
 	<file>resinfo_reactos.c</file>
 	<file>route_reactos.c</file>
 	<file>iphlpapi.rc</file>
+	<pch>iphlpapi_private.h</pch>
 </module>

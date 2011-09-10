@@ -35,23 +35,23 @@ END
 
 IDC_REGEDIT MENU DISCARDABLE
 BEGIN
-    POPUP "·&øÈ¡"
+    POPUP "‡πÅ&‡∏ü‡πâ‡∏°"
     BEGIN
-        MENUITEM "&ÕÕ°®“°‚ª√·°√¡",              ID_REGISTRY_EXIT
+        MENUITEM "&‡∏≠‡∏≠‡∏Å‡∏à‡∏≤‡∏Å‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°",              ID_REGISTRY_EXIT
     END
-    POPUP "&™Ë«¬‡À≈◊Õ"
+    POPUP "&‡∏ä‡πà‡∏ß‡∏¢‡πÄ‡∏´‡∏•‡∏∑‡∏≠"
     BEGIN
-        MENUITEM "‡&°’Ë¬«°—∫ ...",              ID_HELP_ABOUT
+        MENUITEM "‡πÄ&‡∏Å‡∏µ‡πà‡∏¢‡∏ß‡∏Å‡∏±‡∏ö ...",              ID_HELP_ABOUT
     END
 END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "·&øÈ¡"
+    POPUP "‡πÅ&‡∏ü‡πâ‡∏°"
     BEGIN
-        MENUITEM "&π”‡¢È“...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&‡∏ô‡∏≥‡πÄ‡∏Ç‡πâ‡∏≤...",    ID_REGISTRY_IMPORTREGISTRYFILE
 
-        MENUITEM "& ËßÕÕ°...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&‡∏™‡πà‡∏á‡∏≠‡∏≠‡∏Å...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
 		MENUITEM "Load Hive...",	ID_REGISTRY_LOADHIVE, GRAYED
@@ -64,15 +64,15 @@ BEGIN
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&æ‘¡æÏ\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&‡∏û‡∏¥‡∏°‡∏û‡πå\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&ÕÕ°®“°‚ª√·°√¡",              ID_REGISTRY_EXIT
+        MENUITEM "&‡∏≠‡∏≠‡∏Å‡∏à‡∏≤‡∏Å‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°",              ID_REGISTRY_EXIT
     END
-    POPUP "·&°È‰¢"
+    POPUP "‡πÅ&‡∏Å‡πâ‡πÑ‡∏Ç"
     BEGIN
-        MENUITEM "&ª√—∫ª√ÿß",                   ID_EDIT_MODIFY
+        MENUITEM "&‡∏õ‡∏£‡∏±‡∏ö‡∏õ‡∏£‡∏∏‡∏á",                   ID_EDIT_MODIFY
         MENUITEM SEPARATOR
-        POPUP "„&À¡Ë"
+        POPUP "‡πÉ&‡∏´‡∏°‡πà"
         BEGIN
             MENUITEM "&Key",                    ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR

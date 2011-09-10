@@ -8,9 +8,7 @@
  *       30/12-2007   Magnus Olsen
  */
 
-
 #include <dxg_int.h>
-
 
 PDD_SURFACE_LOCAL
 NTAPI
@@ -44,11 +42,3 @@ DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 
     return retVal;
 }
-
-
-
-
-
-
-
-

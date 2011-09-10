@@ -25,7 +25,7 @@
 #include "windef.h"
 #include "winbase.h"
 
-#include "irot.h"
+#include "irot_s.h"
 
 #include "wine/list.h"
 #include "wine/debug.h"

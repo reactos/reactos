@@ -47,11 +47,7 @@
  *       I prefer bit fields, but they break endianness.
  */
 
-#include <ntddk.h>
-#include <debug.h>
-
-#include "floppy.h"
-#include "hardware.h"
+#include "precomp.h"
 
 /*
  * Hardware Support Routines
@@ -452,7 +448,10 @@ HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
 
     /* Is the equipment check flag set?  Could be no disk in drive... */
     if((Buffer[0] & SR0_EQUIPMENT_CHECK) == SR0_EQUIPMENT_CHECK)
-        INFO_(FLOPPY, "HwRecalibrateResult: Seeked to track 0 successfully, but EC is set; returning STATUS_SUCCESS anyway\n");
+    {
+        WARN_(FLOPPY, "HwRecalibrateResult: Seeked to track 0 successfully, but EC is set; returning failure\n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
     return STATUS_SUCCESS;
 }

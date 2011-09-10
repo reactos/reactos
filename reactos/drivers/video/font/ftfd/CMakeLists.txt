@@ -11,7 +11,7 @@ add_library(ftfd SHARED
     sprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
-set_entrypoint(ftfd FtfdEnableDriver@12)
+set_entrypoint(ftfd FtfdEnableDriver 12)
 set_subsystem(ftfd native)
 set_image_base(ftfd ${baseaddress_ftfd})
 
@@ -19,6 +19,7 @@ target_link_libraries(ftfd
     freetype
     libcntpr)
 
+add_pch(ftfd ftfd.h)
 add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)
 add_cd_file(TARGET ftfd DESTINATION reactos/system32 FOR all)

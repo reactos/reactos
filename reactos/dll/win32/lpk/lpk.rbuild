@@ -8,6 +8,6 @@
 
 	<file>dllmain.c</file>
 	<file>stub.c</file>
-
 	<file>lpk.rc</file>
+	<pch>ros_lpk.h</pch>
 </module>

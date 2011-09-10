@@ -44,10 +44,6 @@
 #include "parser.h"
 #include "wine/wpp.h"
 
-#ifndef INCLUDEDIR
-#define INCLUDEDIR "/usr/local/include/wine"
-#endif
-
 #ifdef WORDS_BIGENDIAN
 #define ENDIAN	"big"
 #else
@@ -56,41 +52,33 @@
 
 static const char usage[] =
 	"Usage: wrc [options...] [infile[.rc|.res]]\n"
-	"   -D id[=val] Define preprocessor identifier id=val\n"
-	"   -E          Preprocess only\n"
-	"   -F target   Ignored for compatibility with windres\n"
-	"   -h          Prints this summary\n"
-	"   -i file     The name of the input file\n"
-	"   -I path     Set include search dir to path (multiple -I allowed)\n"
-	"   -J format   The input format (either `rc' or `rc16')\n"
-	"   -l lan      Set default language to lan (default is neutral {0, 0})\n"
-	"   -o file     Output to file (default is infile.res)\n"
-	"   -O format   The output format (either `res' or `res16`)\n"
-	"   -r          Ignored for compatibility with rc\n"
-	"   -U id       Undefine preprocessor identifier id\n"
-	"   -v          Enable verbose mode\n"
-	"The following long options are supported:\n"
-	"   --debug=nn            Set debug level to 'nn'\n"
-	"   --define              Synonym for -D\n"
-	"   --endianess=e         Set output byte-order e={n[ative], l[ittle], b[ig]}\n"
-	"                         (win32 only; default is " ENDIAN "-endian)\n"
-	"   --help                Synonym for -h\n"
-	"   --include-dir         Synonym for -I\n"
-	"   --input               Synonym for -i\n"
-	"   --input-format        Synonym for -J\n"
-	"   --language            Synonym for -l\n"
-	"   --no-use-temp-file    Ignored for compatibility with windres\n"
-	"   --nostdinc            Disables searching the standard include path\n"
-	"   --output -fo          Synonym for -o\n"
-	"   --output-format       Synonym for -O\n"
-	"   --pedantic            Enable pedantic warnings\n"
-	"   --preprocessor        Specifies the preprocessor to use, including arguments\n"
-	"   --target              Synonym for -F\n"
-	"   --undefine            Synonym for -U\n"
-	"   --use-temp-file       Ignored for compatibility with windres\n"
-	"   --verbose             Synonym for -v\n"
-	"   --verify-translations Check the status of the various translations\n"
-	"   --version             Print version and exit\n"
+	"   -b, --target=TARGET        Specify target CPU and platform when cross-compiling\n"
+	"   -D, --define id[=val]      Define preprocessor identifier id=val\n"
+	"   --debug=nn                 Set debug level to 'nn'\n"
+	"   -E                         Preprocess only\n"
+	"   --endianess=e              Set output byte-order e={n[ative], l[ittle], b[ig]}\n"
+	"                              (win32 only; default is " ENDIAN "-endian)\n"
+	"   -F TARGET                  Synonym for -b for compatibility with windres\n"
+	"   -fo FILE                   Synonym for -o for compatibility with windres\n"
+	"   -h, --help                 Prints this summary\n"
+	"   -i, --input=FILE           The name of the input file\n"
+	"   -I, --include-dir=PATH     Set include search dir to path (multiple -I allowed)\n"
+	"   -J, --input-format=FORMAT  The input format (either `rc' or `rc16')\n"
+	"   -l, --language=LANG        Set default language to LANG (default is neutral {0, 0})\n"
+	"   -m16, -m32, -m64           Build for 16-bit, 32-bit resp. 64-bit platforms\n"
+	"   --no-use-temp-file         Ignored for compatibility with windres\n"
+	"   --nostdinc                 Disables searching the standard include path\n"
+	"   -o, --output=FILE          Output to file (default is infile.res)\n"
+	"   -O, --output-format=FORMAT The output format (`po', `pot', `res', or `res16`)\n"
+	"   --pedantic                 Enable pedantic warnings\n"
+	"   --po-dir=DIR               Directory containing po files for translations\n"
+	"   --preprocessor             Specifies the preprocessor to use, including arguments\n"
+	"   -r                         Ignored for compatibility with rc\n"
+	"   -U, --undefine id          Undefine preprocessor identifier id\n"
+	"   --use-temp-file            Ignored for compatibility with windres\n"
+	"   -v, --verbose              Enable verbose mode\n"
+	"   --verify-translations      Check the status of the various translations\n"
+	"   --version                  Print version and exit\n"
 	"Input is taken from stdin if no sourcefile specified.\n"
 	"Debug level 'n' is a bitmask with following meaning:\n"
 	"    * 0x01 Tell which resource is parsed (verbose mode)\n"
@@ -157,11 +145,13 @@ int no_preprocess = 0;
 
 int check_utf8 = 1;  /* whether to check for valid utf8 */
 
+static int pointer_size = sizeof(void *);
+
 static int verify_translations_mode;
 
-char *output_name = NULL;	/* The name given by the -o option */
+static char *output_name;	/* The name given by the -o option */
 char *input_name = NULL;	/* The name given on the command-line */
-char *temp_name = NULL;		/* Temporary file for preprocess pipe */
+static char *temp_name = NULL;	/* Temporary file for preprocess pipe */
 
 int line_number = 1;		/* The current line */
 int char_number = 1;		/* The current char pos within the line */
@@ -182,6 +172,7 @@ enum long_options_values
     LONG_OPT_NOSTDINC = 1,
     LONG_OPT_TMPFILE,
     LONG_OPT_NOTMPFILE,
+    LONG_OPT_PO_DIR,
     LONG_OPT_PREPROCESSOR,
     LONG_OPT_VERSION,
     LONG_OPT_DEBUG,
@@ -191,29 +182,30 @@ enum long_options_values
 };
 
 static const char short_options[] =
-	"D:Ef:F:hi:I:J:l:o:O:rU:v";
+	"b:D:Ef:F:hi:I:J:l:m:o:O:rU:v";
 static const struct option long_options[] = {
-	{ "debug", 1, 0, LONG_OPT_DEBUG },
-	{ "define", 1, 0, 'D' },
-	{ "endianess", 1, 0, LONG_OPT_ENDIANESS },
-	{ "help", 0, 0, 'h' },
-	{ "include-dir", 1, 0, 'I' },
-	{ "input", 1, 0, 'i' },
-	{ "input-format", 1, 0, 'J' },
-	{ "language", 1, 0, 'l' },
-	{ "no-use-temp-file", 0, 0, LONG_OPT_NOTMPFILE },
-	{ "nostdinc", 0, 0, LONG_OPT_NOSTDINC },
-	{ "output", 1, 0, 'o' },
-	{ "output-format", 1, 0, 'O' },
-	{ "pedantic", 0, 0, LONG_OPT_PEDANTIC },
-	{ "preprocessor", 1, 0, LONG_OPT_PREPROCESSOR },
-	{ "target", 1, 0, 'F' },
-	{ "undefine", 1, 0, 'U' },
-	{ "use-temp-file", 0, 0, LONG_OPT_TMPFILE },
-	{ "verbose", 0, 0, 'v' },
-	{ "verify-translations", 0, 0, LONG_OPT_VERIFY_TRANSL },
-	{ "version", 0, 0, LONG_OPT_VERSION },
-	{ 0, 0, 0, 0 }
+	{ "debug", 1, NULL, LONG_OPT_DEBUG },
+	{ "define", 1, NULL, 'D' },
+	{ "endianess", 1, NULL, LONG_OPT_ENDIANESS },
+	{ "help", 0, NULL, 'h' },
+	{ "include-dir", 1, NULL, 'I' },
+	{ "input", 1, NULL, 'i' },
+	{ "input-format", 1, NULL, 'J' },
+	{ "language", 1, NULL, 'l' },
+	{ "no-use-temp-file", 0, NULL, LONG_OPT_NOTMPFILE },
+	{ "nostdinc", 0, NULL, LONG_OPT_NOSTDINC },
+	{ "output", 1, NULL, 'o' },
+	{ "output-format", 1, NULL, 'O' },
+	{ "pedantic", 0, NULL, LONG_OPT_PEDANTIC },
+	{ "po-dir", 1, NULL, LONG_OPT_PO_DIR },
+	{ "preprocessor", 1, NULL, LONG_OPT_PREPROCESSOR },
+	{ "target", 1, NULL, 'F' },
+	{ "undefine", 1, NULL, 'U' },
+	{ "use-temp-file", 0, NULL, LONG_OPT_TMPFILE },
+	{ "verbose", 0, NULL, 'v' },
+	{ "verify-translations", 0, NULL, LONG_OPT_VERIFY_TRANSL },
+	{ "version", 0, NULL, LONG_OPT_VERSION },
+	{ NULL, 0, NULL, 0 }
 };
 
 static void set_version_defines(void)
@@ -256,40 +248,45 @@ static int load_file( const char *input_name, const char *output_name )
     /* Run the preprocessor on the input */
     if(!no_preprocess)
     {
+        FILE *output;
+        int ret, fd;
+        char *name;
+
         /*
          * Preprocess the input to a temp-file, or stdout if
          * no output was given.
          */
 
-        chat("Starting preprocess\n");
-
-        if (!preprocess_only)
+        if (preprocess_only)
         {
-            ret = wpp_parse_temp( input_name, output_name, &temp_name );
-        }
-        else if (output_name)
-        {
-            FILE *output;
+            if (output_name)
+            {
+                if (!(output = fopen( output_name, "w" )))
+                    fatal_perror( "Could not open %s for writing", output_name );
+                ret = wpp_parse( input_name, output );
+                fclose( output );
+            }
+            else ret = wpp_parse( input_name, stdout );
 
-            if (!(output = fopen( output_name, "w" )))
-                fatal_perror( "Could not open %s for writing", output_name );
-            ret = wpp_parse( input_name, output );
-            fclose( output );
-        }
-        else
-        {
-            ret = wpp_parse( input_name, stdout );
-        }
-
-        if (ret) return ret;
-
-        if(preprocess_only)
-        {
+            if (ret) return ret;
             output_name = NULL;
             exit(0);
         }
 
-        input_name = temp_name;
+        if (output_name && output_name[0]) name = strmake( "%s.XXXXXX", output_name );
+        else name = xstrdup( "wrc.XXXXXX" );
+
+        if ((fd = mkstemps( name, 0 )) == -1)
+            error("Could not generate a temp name from %s\n", name);
+
+        temp_name = name;
+        if (!(output = fdopen(fd, "wt")))
+            error("Could not open fd %s for writing\n", name);
+
+        ret = wpp_parse( input_name, output );
+        fclose( output );
+        if (ret) return ret;
+        input_name = name;
     }
 
     /* Reset the language */
@@ -304,6 +301,7 @@ static int load_file( const char *input_name, const char *output_name )
 
     ret = parser_parse();
     fclose(parser_in);
+    parser_lex_destroy();
     if (temp_name)
     {
         unlink( temp_name );
@@ -313,6 +311,19 @@ static int load_file( const char *input_name, const char *output_name )
     return ret;
 }
 
+static void set_target( const char *target )
+{
+    char *p, *cpu = xstrdup( target );
+
+    /* target specification is in the form CPU-MANUFACTURER-OS or CPU-MANUFACTURER-KERNEL-OS */
+    if (!(p = strchr( cpu, '-' ))) error( "Invalid target specification '%s'\n", target );
+    *p = 0;
+    if (!strcmp( cpu, "amd64" ) || !strcmp( cpu, "x86_64" ) || !strcmp( cpu, "ia64" ))
+        pointer_size = 8;
+    else
+        pointer_size = 4;
+    free( cpu );
+}
 
 int main(int argc,char *argv[])
 {
@@ -325,6 +336,8 @@ int main(int argc,char *argv[])
 	int nb_files = 0;
 	int i;
 	int cmdlen;
+        int po_mode = 0;
+        char *po_dir = NULL;
         char **files = xmalloc( argc * sizeof(*files) );
 
 	signal(SIGSEGV, segvhandler);
@@ -339,8 +352,6 @@ int main(int argc,char *argv[])
 	/* Set the default defined stuff */
         set_version_defines();
 	wpp_add_cmdline_define("RC_INVOKED=1");
-	wpp_add_cmdline_define("__WIN32__=1");
-	wpp_add_cmdline_define("__FLAT__=1");
 	/* Microsoft RC always searches current directory */
 	wpp_add_include_path(".");
 
@@ -370,6 +381,9 @@ int main(int argc,char *argv[])
 			break;
 		case LONG_OPT_NOTMPFILE:
 			if (debuglevel) warning("--no-use-temp-file option not yet supported, ignored.\n");
+			break;
+		case LONG_OPT_PO_DIR:
+			po_dir = xstrdup( optarg );
 			break;
 		case LONG_OPT_PREPROCESSOR:
 			if (strcmp(optarg, "cat") == 0) no_preprocess = 1;
@@ -415,8 +429,9 @@ int main(int argc,char *argv[])
 		case 'E':
 			preprocess_only = 1;
 			break;
+		case 'b':
 		case 'F':
-			/* ignored for compatibility with windres */
+			set_target( optarg );
 			break;
 		case 'h':
 			printf(usage);
@@ -440,6 +455,12 @@ int main(int argc,char *argv[])
 				defaultlanguage = new_language(PRIMARYLANGID(lan), SUBLANGID(lan));
 			}
 			break;
+                case 'm':
+			if (!strcmp( optarg, "16" )) win32 = 0;
+			else if (!strcmp( optarg, "32" )) { win32 = 1; pointer_size = 4; }
+			else if (!strcmp( optarg, "64" )) { win32 = 1; pointer_size = 8; }
+			else error( "Invalid option: -m%s\n", optarg );
+			break;
 		case 'f':
 			if (*optarg != 'o') error("Unknown option: -f%s\n",  optarg);
 			optarg++;
@@ -449,12 +470,9 @@ int main(int argc,char *argv[])
 			else error("Too many output files.\n");
 			break;
 		case 'O':
-			if (strcmp(optarg, "res16") == 0)
-			{
-				win32 = 0;
-				wpp_del_define("__WIN32__");
-				wpp_del_define("__FLAT__");
-			}
+			if (strcmp(optarg, "po") == 0) po_mode = 1;
+			else if (strcmp(optarg, "pot") == 0) po_mode = 2;
+			else if (strcmp(optarg, "res16") == 0) win32 = 0;
 			else if (strcmp(optarg, "res")) warning("Output format %s not supported.\n", optarg);
 			break;
 		case 'r':
@@ -478,18 +496,26 @@ int main(int argc,char *argv[])
 		return 1;
 	}
 
+	if (win32)
+	{
+		wpp_add_cmdline_define("_WIN32=1");
+		if (pointer_size == 8) wpp_add_cmdline_define("_WIN64=1");
+	}
+
 	/* If we do need to search standard includes, add them to the path */
 	if (stdinc)
 	{
+        /* ReactOS doesn't use this feature
 		wpp_add_include_path(INCLUDEDIR"/msvcrt");
 		wpp_add_include_path(INCLUDEDIR"/windows");
+        */
 	}
 
 	/* Kill io buffering when some kind of debuglevel is enabled */
 	if(debuglevel)
 	{
-		setbuf(stdout,0);
-		setbuf(stderr,0);
+		setbuf(stdout, NULL);
+		setbuf(stderr, NULL);
 	}
 
 	parser_debug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
@@ -510,20 +536,10 @@ int main(int argc,char *argv[])
         for (i = 0; i < nb_files; i++)
         {
             input_name = files[i];
-            if(!output_name && !preprocess_only)
-            {
-		output_name = dup_basename(input_name, ".rc");
-		strcat(output_name, ".res");
-            }
             if (load_file( input_name, output_name )) exit(1);
         }
 	/* stdin special case. NULL means "stdin" for wpp. */
-        if (nb_files == 0)
-        {
-            if(!output_name && !preprocess_only)
-		output_name = strdup("wrc.tab.res");
-            if (load_file( NULL, output_name )) exit(1);
-        }
+        if (nb_files == 0 && load_file( NULL, output_name )) exit(1);
 
 	if(debuglevel & DEBUGLEVEL_DUMP)
 		dump_resources(resource_top);
@@ -533,11 +549,32 @@ int main(int argc,char *argv[])
 		verify_translations(resource_top);
 		exit(0);
 	}
+	if (po_mode)
+	{
+            if (po_mode == 2)  /* pot file */
+            {
+                if (!output_name)
+                {
+                    output_name = dup_basename( nb_files ? files[0] : NULL, ".rc" );
+                    strcat( output_name, ".pot" );
+                }
+                write_pot_file( output_name );
+            }
+            else write_po_files( output_name );
+            output_name = NULL;
+            exit(0);
+	}
+        if (po_dir) add_translations( po_dir );
 
 	/* Convert the internal lists to binary data */
 	resources2res(resource_top);
 
 	chat("Writing .res-file\n");
+        if (!output_name)
+        {
+            output_name = dup_basename( nb_files ? files[0] : NULL, ".rc" );
+            strcat(output_name, ".res");
+        }
 	write_resfile(output_name, resource_top);
 	output_name = NULL;
 

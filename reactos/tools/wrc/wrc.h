@@ -45,7 +45,6 @@ extern int preprocess_only;
 extern int no_preprocess;
 extern int check_utf8;
 
-extern char *output_name;
 extern char *input_name;
 extern char *cmdline;
 extern time_t now;
@@ -57,6 +56,21 @@ extern resource_t *resource_top;
 extern language_t *currentlanguage;
 
 void verify_translations(resource_t *top);
+void write_pot_file( const char *outname );
+void write_po_files( const char *outname );
+void add_translations( const char *po_dir );
 void write_resfile(char *outname, resource_t *top);
+
+static inline void set_location( location_t *loc )
+{
+    loc->file = input_name;
+    loc->line = line_number;
+    loc->col  = char_number;
+}
+
+static inline void print_location( const location_t *loc )
+{
+    if (loc->file) fprintf(stderr, "%s:%d:%d: ", loc->file, loc->line, loc->col );
+}
 
 #endif

@@ -10,22 +10,20 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
+DBG_DEFAULT_CHANNEL(UserMisc);
 
 SHORT
 FASTCALL
 IntGdiGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
-  ULONG Size = sizeof(WCHAR) * (MAX_PATH + 12);
   OBJECT_ATTRIBUTES ObAttr;
 //  http://support.microsoft.com/kb/324097
   ULONG Ret = 0x409; // English
-  PVOID KeyInfo;
+  PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
+  ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);
   UNICODE_STRING Language;
-  
+
   RtlInitUnicodeString( &Language,
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
 
@@ -37,26 +35,26 @@ IntGdiGetLanguageID(VOID)
 
   if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
   {
-     KeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
-     if ( KeyInfo )
+     pKeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
+     if ( pKeyInfo )
      {
         RtlInitUnicodeString(&Language, L"Default");
 
         if ( NT_SUCCESS(ZwQueryValueKey( KeyHandle,
                                          &Language,
                         KeyValuePartialInformation,
-                                           KeyInfo,
+                                          pKeyInfo,
                                               Size,
                                              &Size)) )
       {
-        RtlInitUnicodeString(&Language, (PVOID)((char *)KeyInfo + 12));
+        RtlInitUnicodeString(&Language, (PWSTR)pKeyInfo->Data);
         RtlUnicodeStringToInteger(&Language, 16, &Ret);
       }
-      ExFreePoolWithTag(KeyInfo, TAG_STRING);
+      ExFreePoolWithTag(pKeyInfo, TAG_STRING);
     }
     ZwClose(KeyHandle);
   }
-  DPRINT("Language ID = %x\n",Ret);
+  TRACE("Language ID = %x\n",Ret);
   return (SHORT) Ret;
 }
 
@@ -69,7 +67,7 @@ NtUserGetThreadState(
 {
    DWORD_PTR ret = 0;
 
-   DPRINT("Enter NtUserGetThreadState\n");
+   TRACE("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
    {
        UserEnterShared();
@@ -104,7 +102,7 @@ NtUserGetThreadState(
          {
            PUSER_SENT_MESSAGE Message = 
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
-           DPRINT1("THREADSTATE_INSENDMESSAGE\n");
+           ERR("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
            if (Message)
@@ -144,7 +142,7 @@ NtUserGetThreadState(
          break;
    }
 
-   DPRINT("Leave NtUserGetThreadState, ret=%i\n", ret);
+   TRACE("Leave NtUserGetThreadState, ret=%i\n", ret);
    UserLeave();
 
    return ret;
@@ -183,13 +181,13 @@ NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
 
-   DPRINT("Enter NtUserGetDoubleClickTime\n");
+   TRACE("Enter NtUserGetDoubleClickTime\n");
    UserEnterShared();
 
    // FIXME: Check if this works on non-interactive winsta
    Result = gspv.iDblClickTime;
 
-   DPRINT("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
+   TRACE("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
    UserLeave();
    return Result;
 }
@@ -210,7 +208,7 @@ NtUserGetGUIThreadInfo(
 
    DECLARE_RETURN(BOOLEAN);
 
-   DPRINT("Enter NtUserGetGUIThreadInfo\n");
+   TRACE("Enter NtUserGetGUIThreadInfo\n");
    UserEnterShared();
 
    Status = MmCopyFromCaller(&SafeGui, lpgui, sizeof(DWORD));
@@ -296,7 +294,7 @@ NtUserGetGUIThreadInfo(
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -314,7 +312,7 @@ NtUserGetGuiResources(
    DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
 
-   DPRINT("Enter NtUserGetGuiResources\n");
+   TRACE("Enter NtUserGetGuiResources\n");
    UserEnterShared();
 
    Status = ObReferenceObjectByHandle(hProcess,
@@ -362,7 +360,7 @@ NtUserGetGuiResources(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -463,37 +461,6 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
    return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
-IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src)
-{
-   if (Src->Length + sizeof(WCHAR) <= Src->MaximumLength
-         && L'\0' == Src->Buffer[Src->Length / sizeof(WCHAR)])
-   {
-      /* The unicode_string is already nul terminated. Just reuse it. */
-      *Dest = Src->Buffer;
-      return STATUS_SUCCESS;
-   }
-
-   *Dest = ExAllocatePoolWithTag(PagedPool, Src->Length + sizeof(WCHAR), TAG_STRING);
-   if (NULL == *Dest)
-   {
-      return STATUS_NO_MEMORY;
-   }
-   RtlCopyMemory(*Dest, Src->Buffer, Src->Length);
-   (*Dest)[Src->Length / 2] = L'\0';
-
-   return STATUS_SUCCESS;
-}
-
-void FASTCALL
-IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString)
-{
-   if (NullTerminated != UnicodeString->Buffer)
-   {
-      ExFreePool(NullTerminated);
-   }
-}
-
 PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {
@@ -530,11 +497,14 @@ GetW32ThreadInfo(VOID)
     pti->pClientInfo = pci;
     _SEH2_TRY
     {
-        ProbeForWrite( Teb,
-                       sizeof(TEB),
-                       sizeof(ULONG));
+        if(Teb)
+        {    
+            ProbeForWrite( Teb,
+                           sizeof(TEB),
+                           sizeof(ULONG));
 
-        Teb->Win32ThreadInfo = (PW32THREAD) pti;
+            Teb->Win32ThreadInfo = (PW32THREAD) pti;
+        }
 
         pci->ppi = ppi;
         pci->fsHooks = pti->fsHooks;

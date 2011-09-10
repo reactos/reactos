@@ -986,6 +986,7 @@ ObQueryNameString(IN PVOID Object,
     ULONG NameSize;
     PWCH ObjectName;
     BOOLEAN ObjectIsNamed;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Get the Kernel Meta-Structures */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -994,28 +995,57 @@ ObQueryNameString(IN PVOID Object,
     /* Check if a Query Name Procedure is available */
     if (ObjectHeader->Type->TypeInfo.QueryNameProcedure)
     {
-        /* Call the procedure */
+        /* Call the procedure inside SEH */
         ObjectIsNamed = ((LocalInfo) && (LocalInfo->Name.Length > 0));
-        return ObjectHeader->Type->TypeInfo.QueryNameProcedure(Object,
+
+        _SEH2_TRY
+        {
+            Status = ObjectHeader->Type->TypeInfo.QueryNameProcedure(Object,
                                                                ObjectIsNamed,
                                                                ObjectNameInfo,
                                                                Length,
                                                                ReturnLength,
                                                                KernelMode);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        return Status;
     }
 
     /* Check if the object doesn't even have a name */
     if (!(LocalInfo) || !(LocalInfo->Name.Buffer))
     {
-        /* We're returning the name structure */
-        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
+        Status = STATUS_SUCCESS;
 
-        /* Check if we were given enough space */
-        if (*ReturnLength > Length) return STATUS_INFO_LENGTH_MISMATCH;
+        _SEH2_TRY
+        {
+            /* We're returning the name structure */
+            *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
 
-        /* Return an empty buffer */
-        RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
-        return STATUS_SUCCESS;
+            /* Check if we were given enough space */
+            if (*ReturnLength > Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+            else
+            {
+                /* Return an empty buffer */
+                RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        return Status;
     }
 
     /*
@@ -1025,123 +1055,136 @@ ObQueryNameString(IN PVOID Object,
      * enough right at the beginning, not work our way through
      * and find out at the end
      */
-    if (Object == ObpRootDirectoryObject)
+    _SEH2_TRY
     {
-        /* Size of the '\' string */
-        NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR);
-    }
-    else
-    {
-        /* Get the Object Directory and add name of Object */
-        ParentDirectory = LocalInfo->Directory;
-        NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR) + LocalInfo->Name.Length;
-
-        /* Loop inside the directory to get the top-most one (meaning root) */
-        while ((ParentDirectory != ObpRootDirectoryObject) && (ParentDirectory))
+        if (Object == ObpRootDirectoryObject)
         {
-            /* Get the Name Information */
-            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
-                            OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+            /* Size of the '\' string */
+            NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR);
+        }
+        else
+        {
+            /* Get the Object Directory and add name of Object */
+            ParentDirectory = LocalInfo->Directory;
+            NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR) + LocalInfo->Name.Length;
 
-            /* Add the size of the Directory Name */
-            if (LocalInfo && LocalInfo->Directory)
+            /* Loop inside the directory to get the top-most one (meaning root) */
+            while ((ParentDirectory != ObpRootDirectoryObject) && (ParentDirectory))
             {
-                /* Size of the '\' string + Directory Name */
-                NameSize += sizeof(OBJ_NAME_PATH_SEPARATOR) +
-                            LocalInfo->Name.Length;
+                /* Get the Name Information */
+                LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
+                    OBJECT_TO_OBJECT_HEADER(ParentDirectory));
 
-                /* Move to next parent Directory */
-                ParentDirectory = LocalInfo->Directory;
-            }
-            else
-            {
-                /* Directory with no name. We append "...\" */
-                NameSize += sizeof(L"...") + sizeof(OBJ_NAME_PATH_SEPARATOR);
-                break;
+                /* Add the size of the Directory Name */
+                if (LocalInfo && LocalInfo->Directory)
+                {
+                    /* Size of the '\' string + Directory Name */
+                    NameSize += sizeof(OBJ_NAME_PATH_SEPARATOR) +
+                                LocalInfo->Name.Length;
+
+                    /* Move to next parent Directory */
+                    ParentDirectory = LocalInfo->Directory;
+                }
+                else
+                {
+                    /* Directory with no name. We append "...\" */
+                    NameSize += sizeof(L"...") + sizeof(OBJ_NAME_PATH_SEPARATOR);
+                    break;
+                }
             }
         }
-    }
 
-    /* Finally, add the name of the structure and the null char */
-    *ReturnLength = NameSize +
-                    sizeof(OBJECT_NAME_INFORMATION) +
-                    sizeof(UNICODE_NULL);
+        /* Finally, add the name of the structure and the null char */
+        *ReturnLength = NameSize +
+                        sizeof(OBJECT_NAME_INFORMATION) +
+                        sizeof(UNICODE_NULL);
 
-    /* Check if we were given enough space */
-    if (*ReturnLength > Length) return STATUS_INFO_LENGTH_MISMATCH;
+        /* Check if we were given enough space */
+        if (*ReturnLength > Length) _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
 
-    /*
-     * Now we will actually create the name. We work backwards because
-     * it's easier to start off from the Name we have and walk up the
-     * parent directories. We use the same logic as Name Length calculation.
-     */
-    LocalInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-    ObjectName = (PWCH)((ULONG_PTR)ObjectNameInfo + *ReturnLength);
-    *--ObjectName = UNICODE_NULL;
+        /*
+        * Now we will actually create the name. We work backwards because
+        * it's easier to start off from the Name we have and walk up the
+        * parent directories. We use the same logic as Name Length calculation.
+        */
+        LocalInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+        ObjectName = (PWCH)((ULONG_PTR)ObjectNameInfo + *ReturnLength);
+        *--ObjectName = UNICODE_NULL;
 
-    /* Check if the object is actually the Root directory */
-    if (Object == ObpRootDirectoryObject)
-    {
-        /* This is already the Root Directory, return "\\" */
-        *--ObjectName = OBJ_NAME_PATH_SEPARATOR;
-        ObjectNameInfo->Name.Length = (USHORT)NameSize;
-        ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
-                                                      sizeof(UNICODE_NULL));
-        ObjectNameInfo->Name.Buffer = ObjectName;
-        return STATUS_SUCCESS;
-    }
-    else
-    {
-        /* Start by adding the Object's Name */
-        ObjectName = (PWCH)((ULONG_PTR)ObjectName -
-                            LocalInfo->Name.Length);
-        RtlCopyMemory(ObjectName,
-                      LocalInfo->Name.Buffer,
-                      LocalInfo->Name.Length);
-
-        /* Now parse the Parent directories until we reach the top */
-        ParentDirectory = LocalInfo->Directory;
-        while ((ParentDirectory != ObpRootDirectoryObject) && (ParentDirectory))
+        /* Check if the object is actually the Root directory */
+        if (Object == ObpRootDirectoryObject)
         {
-            /* Get the name information */
-            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
-                            OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+            /* This is already the Root Directory, return "\\" */
+            *--ObjectName = OBJ_NAME_PATH_SEPARATOR;
+            ObjectNameInfo->Name.Length = (USHORT)NameSize;
+            ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
+                                                          sizeof(UNICODE_NULL));
+            ObjectNameInfo->Name.Buffer = ObjectName;
+            _SEH2_YIELD(return STATUS_SUCCESS);
+        }
+        else
+        {
+            /* Start by adding the Object's Name */
+            ObjectName = (PWCH)((ULONG_PTR)ObjectName -
+                                           LocalInfo->Name.Length);
+            RtlCopyMemory(ObjectName,
+                          LocalInfo->Name.Buffer,
+                          LocalInfo->Name.Length);
 
-            /* Add the "\" */
+            /* Now parse the Parent directories until we reach the top */
+            ParentDirectory = LocalInfo->Directory;
+            while ((ParentDirectory != ObpRootDirectoryObject) && (ParentDirectory))
+            {
+                /* Get the name information */
+                LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
+                    OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+
+                /* Add the "\" */
+                *(--ObjectName) = OBJ_NAME_PATH_SEPARATOR;
+
+                /* Add the Parent Directory's Name */
+                if (LocalInfo && LocalInfo->Name.Buffer)
+                {
+                    /* Add the name */
+                    ObjectName = (PWCH)((ULONG_PTR)ObjectName -
+                                                   LocalInfo->Name.Length);
+                    RtlCopyMemory(ObjectName,
+                                  LocalInfo->Name.Buffer,
+                                  LocalInfo->Name.Length);
+
+                    /* Move to next parent */
+                    ParentDirectory = LocalInfo->Directory;
+                }
+                else
+                {
+                    /* Directory without a name, we add "..." */
+                    ObjectName = (PWCH)((ULONG_PTR)ObjectName -
+                                                   sizeof(L"...") +
+                                                   sizeof(UNICODE_NULL));
+                    RtlCopyMemory(ObjectName,
+                                  L"...",
+                                  sizeof(L"...") + sizeof(UNICODE_NULL));
+                    break;
+                }
+            }
+
+            /* Add Root Directory Name */
             *(--ObjectName) = OBJ_NAME_PATH_SEPARATOR;
-
-            /* Add the Parent Directory's Name */
-            if (LocalInfo && LocalInfo->Name.Buffer)
-            {
-                /* Add the name */
-                ObjectName = (PWCH)((ULONG_PTR)ObjectName -
-                                    LocalInfo->Name.Length);
-                RtlCopyMemory(ObjectName,
-                              LocalInfo->Name.Buffer,
-                              LocalInfo->Name.Length);
-
-                /* Move to next parent */
-                ParentDirectory = LocalInfo->Directory;
-            }
-            else
-            {
-                /* Directory without a name, we add "..." */
-                ObjectName -= sizeof(L"...");
-                ObjectName = L"...";
-                break;
-            }
+            ObjectNameInfo->Name.Length = (USHORT)NameSize;
+            ObjectNameInfo->Name.MaximumLength =
+                (USHORT)(NameSize + sizeof(UNICODE_NULL));
+            ObjectNameInfo->Name.Buffer = ObjectName;
         }
-
-        /* Add Root Directory Name */
-        *(--ObjectName) = OBJ_NAME_PATH_SEPARATOR;
-        ObjectNameInfo->Name.Length = (USHORT)NameSize;
-        ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
-                                                      sizeof(UNICODE_NULL));
-        ObjectNameInfo->Name.Buffer = ObjectName;
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Return the exception code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     /* Return success */
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID

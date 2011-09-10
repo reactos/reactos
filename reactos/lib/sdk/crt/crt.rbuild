@@ -98,6 +98,7 @@
 			<directory name="amd64">
 				<file>seh.s</file>
 				<file>chkstk_asm.s</file>
+				<file>ehandler.c</file>
 			</directory>
 		</if>
 		<file>xcptfil.c</file>
@@ -157,7 +158,7 @@
 		<file>sinh.c</file>
 		<file>tanh.c</file>
 		<file>powl.c</file>
-        
+
         <directory name="ieee754">
             <file>j0_y0.c</file>
             <file>j1_y1.c</file>

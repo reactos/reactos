@@ -78,7 +78,7 @@ static HMODULE LoadCOM(void)
  * (which also implements the MInterfacePointer structure) */
 typedef struct RpcStreamImpl
 {
-  const IStreamVtbl *lpVtbl;
+  IStream IStream_iface;
   LONG RefCount;
   PMIDL_STUB_MESSAGE pMsg;
   LPDWORD size;
@@ -86,11 +86,16 @@ typedef struct RpcStreamImpl
   DWORD pos;
 } RpcStreamImpl;
 
+static inline RpcStreamImpl *impl_from_IStream(IStream *iface)
+{
+  return CONTAINING_RECORD(iface, RpcStreamImpl, IStream_iface);
+}
+
 static HRESULT WINAPI RpcStream_QueryInterface(LPSTREAM iface,
                                               REFIID riid,
                                               LPVOID *obj)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   if (IsEqualGUID(&IID_IUnknown, riid) ||
       IsEqualGUID(&IID_ISequentialStream, riid) ||
       IsEqualGUID(&IID_IStream, riid)) {
@@ -103,13 +108,13 @@ static HRESULT WINAPI RpcStream_QueryInterface(LPSTREAM iface,
 
 static ULONG WINAPI RpcStream_AddRef(LPSTREAM iface)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   return InterlockedIncrement( &This->RefCount );
 }
 
 static ULONG WINAPI RpcStream_Release(LPSTREAM iface)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   ULONG ref = InterlockedDecrement( &This->RefCount );
   if (!ref) {
     TRACE("size=%d\n", *This->size);
@@ -125,7 +130,7 @@ static HRESULT WINAPI RpcStream_Read(LPSTREAM iface,
                                     ULONG cb,
                                     ULONG *pcbRead)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   HRESULT hr = S_OK;
   if (This->pos + cb > *This->size)
   {
@@ -145,7 +150,7 @@ static HRESULT WINAPI RpcStream_Write(LPSTREAM iface,
                                      ULONG cb,
                                      ULONG *pcbWritten)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   if (This->data + cb > (unsigned char *)This->pMsg->RpcMsg->Buffer + This->pMsg->BufferLength)
     return STG_E_MEDIUMFULL;
   memcpy(This->data + This->pos, pv, cb);
@@ -160,7 +165,7 @@ static HRESULT WINAPI RpcStream_Seek(LPSTREAM iface,
                                     DWORD origin,
                                     ULARGE_INTEGER *newPos)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   switch (origin) {
   case STREAM_SEEK_SET:
     This->pos = move.u.LowPart;
@@ -184,7 +189,7 @@ static HRESULT WINAPI RpcStream_Seek(LPSTREAM iface,
 static HRESULT WINAPI RpcStream_SetSize(LPSTREAM iface,
                                        ULARGE_INTEGER newSize)
 {
-  RpcStreamImpl *This = (RpcStreamImpl *)iface;
+  RpcStreamImpl *This = impl_from_IStream(iface);
   *This->size = newSize.u.LowPart;
   return S_OK;
 }
@@ -212,7 +217,7 @@ static LPSTREAM RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init)
   RpcStreamImpl *This;
   This = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RpcStreamImpl));
   if (!This) return NULL;
-  This->lpVtbl = &RpcStream_Vtbl;
+  This->IStream_iface.lpVtbl = &RpcStream_Vtbl;
   This->RefCount = 1;
   This->pMsg = pStubMsg;
   This->size = (LPDWORD)pStubMsg->Buffer;
@@ -309,13 +314,12 @@ void WINAPI NdrInterfacePointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
 {
   const IID *riid = get_ip_iid(pStubMsg, pMemory, pFormat);
   ULONG size = 0;
-  HRESULT hr;
 
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   if (!LoadCOM()) return;
-  hr = COM_GetMarshalSizeMax(&size, riid, (LPUNKNOWN)pMemory,
-                            pStubMsg->dwDestContext, pStubMsg->pvDestContext,
-                            MSHLFLAGS_NORMAL);
+  COM_GetMarshalSizeMax(&size, riid, (LPUNKNOWN)pMemory,
+                        pStubMsg->dwDestContext, pStubMsg->pvDestContext,
+                        MSHLFLAGS_NORMAL);
   TRACE("size=%d\n", size);
   pStubMsg->BufferLength += sizeof(DWORD) + size;
 }

@@ -7,9 +7,8 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
-#include <ctype.h>
-#include <ws2_32.h>
-#include <winbase.h>
+
+#include "ws2_32.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ 1024

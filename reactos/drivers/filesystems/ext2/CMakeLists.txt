@@ -24,7 +24,7 @@ list(APPEND SOURCE
 add_library(ext2fs SHARED ${SOURCE})
 
 target_link_libraries(ext2fs ${PSEH_LIB})
-
+add_pch(ext2fs inc/ext2fsd.h)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
 

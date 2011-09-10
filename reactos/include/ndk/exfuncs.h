@@ -114,30 +114,17 @@ ExEnumHandleTable(
 );
 
 //
-// Resource Functions
+// HardError Functions
 //
-PVOID
+NTSTATUS
 NTAPI
-ExEnterCriticalRegionAndAcquireResourceExclusive(
-    IN PERESOURCE Resource
-);
-
-PVOID
-NTAPI
-ExEnterCriticalRegionAndAcquireResourceShared(
-    IN PERESOURCE Resource
-);
-
-PVOID
-NTAPI
-ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(
-    IN PERESOURCE Resource
-);
-
-VOID
-FASTCALL
-ExReleaseResourceAndLeaveCriticalRegion(
-    IN PERESOURCE Resource
+ExRaiseHardError(
+    IN NTSTATUS ErrorStatus,
+    IN ULONG NumberOfParameters,
+    IN ULONG UnicodeStringParameterMask,
+    IN PULONG_PTR Parameters,
+    IN ULONG ValidResponseOptions,
+    OUT PULONG Response
 );
 
 #endif

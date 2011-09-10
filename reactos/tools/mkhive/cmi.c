@@ -388,6 +388,19 @@ CmiAddSubKey(
 	if (NT_SUCCESS(Status))
 	{
 		ParentKeyCell->SubKeyCounts[Storage]++;
+		if (Packable)
+        {
+            if (NameLength*sizeof(WCHAR) > ParentKeyCell->MaxNameLen)
+                ParentKeyCell->MaxNameLen = NameLength*sizeof(WCHAR);
+        }
+        else
+        {
+            if (NameLength > ParentKeyCell->MaxNameLen)
+                ParentKeyCell->MaxNameLen = NameLength;
+        }
+        if (NewKeyCell->ClassLength > ParentKeyCell->MaxClassLen)
+            ParentKeyCell->MaxClassLen = NewKeyCell->ClassLength;
+
 		*pSubKeyCell = NewKeyCell;
 		*pBlockOffset = NKBOffset;
 	}
@@ -720,6 +733,16 @@ CmiAddValueKey(
 
 	ValueListCell->ValueOffset[KeyCell->ValueList.Count] = NewValueCellOffset;
 	KeyCell->ValueList.Count++;
+	if (NewValueCell->Flags & VALUE_COMP_NAME)
+	{
+	    if (NewValueCell->NameLength*sizeof(WCHAR) > KeyCell->MaxValueNameLen)
+            KeyCell->MaxValueNameLen = NewValueCell->NameLength*sizeof(WCHAR);
+	}
+	else
+	{
+	    if (NewValueCell->NameLength > KeyCell->MaxValueNameLen)
+            KeyCell->MaxValueNameLen = NewValueCell->NameLength;
+	}
 
 	HvMarkCellDirty(&RegistryHive->Hive, KeyCellOffset, FALSE);
 	HvMarkCellDirty(&RegistryHive->Hive, KeyCell->ValueList.List, FALSE);

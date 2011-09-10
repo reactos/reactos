@@ -21,6 +21,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(HWDETECT);
+
 BOOLEAN AcpiPresent = FALSE;
 
 static PRSDP_DESCRIPTOR
@@ -34,7 +36,7 @@ FindAcpiBios(VOID)
     {
         if (!memcmp(Ptr, "RSD PTR ", 8))
         {
-            DPRINTM(DPRINT_HWDETECT, "ACPI supported\n");
+            TRACE("ACPI supported\n");
 
             return (PRSDP_DESCRIPTOR)Ptr;
         }
@@ -42,7 +44,7 @@ FindAcpiBios(VOID)
         Ptr = (PUCHAR)((ULONG_PTR)Ptr + 0x10);
     }
 
-    DPRINTM(DPRINT_HWDETECT, "ACPI not supported\n");
+    TRACE("ACPI not supported\n");
 
     return NULL;
 }
@@ -81,8 +83,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         if (PartialResourceList == NULL)
         {
-            DPRINTM(DPRINT_HWDETECT,
-                    "Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor\n");
             return;
         }
 
@@ -103,7 +104,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         memcpy(AcpiBiosData->MemoryMap, BiosMemoryMap,
             BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
 
-        DPRINTM(DPRINT_HWDETECT, "RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
+        TRACE("RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
             TableSize);
 
         /* Create new bus key */

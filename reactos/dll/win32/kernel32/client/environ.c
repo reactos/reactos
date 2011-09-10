@@ -509,4 +509,26 @@ ExpandEnvironmentStringsW (
 	return (Length / sizeof(WCHAR));
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetEnvironmentStringsA(IN LPCH NewEnvironment)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetEnvironmentStringsW(IN LPWCH NewEnvironment)
+{
+    STUB;
+    return FALSE;
+}
+
 /* EOF */

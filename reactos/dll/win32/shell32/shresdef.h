@@ -155,31 +155,31 @@
 #define IDS_FIND_VERB               304
 #define IDS_PRINT_VERB              305
 
-#define IDS_FILE_FOLDER             307
-#define IDS_CREATELINK              308
-#define IDS_INSTALLNEWFONT          309
-#define IDS_SHV_COLUMN_FONTTYPE     310
-#define IDS_SHV_COLUMN12            311
-#define IDS_SHV_COLUMN13            312
-#define IDS_SHV_COLUMN_WORKGROUP    313
-#define IDS_SHV_NETWORKLOCATION     314
-#define IDS_COPY                    315
-#define IDS_DELETE                  316
-#define IDS_PROPERTIES              317
-#define IDS_SHV_COLUMN_DOCUMENTS    318
-#define IDS_SHV_COLUMN_STATUS       319
-#define IDS_SHV_COLUMN_COMMENTS     320
-#define IDS_SHV_COLUMN_LOCATION     321
-#define IDS_SHV_COLUMN_MODEL        322
-#define IDS_CUT                     323
-#define IDS_RESTORE                 324
-#define IDS_DEFAULT_CLUSTER_SIZE    325
-#define IDS_ADMINISTRATIVETOOLS     326
-#define IDS_FORMATDRIVE             327
-#define IDS_RENAME                  328
-#define IDS_INSERT                  329
-#define IDS_DESCRIPTION             330
-#define IDS_COPY_OF                 331
+#define IDS_FILE_FOLDER             308
+#define IDS_CREATELINK              309
+#define IDS_INSTALLNEWFONT          310
+#define IDS_SHV_COLUMN_FONTTYPE     311
+#define IDS_SHV_COLUMN12            312
+#define IDS_SHV_COLUMN13            313
+#define IDS_SHV_COLUMN_WORKGROUP    314
+#define IDS_SHV_NETWORKLOCATION     315
+#define IDS_COPY                    316
+#define IDS_DELETE                  317
+#define IDS_PROPERTIES              318
+#define IDS_SHV_COLUMN_DOCUMENTS    319
+#define IDS_SHV_COLUMN_STATUS       320
+#define IDS_SHV_COLUMN_COMMENTS     321
+#define IDS_SHV_COLUMN_LOCATION     322
+#define IDS_SHV_COLUMN_MODEL        323
+#define IDS_CUT                     324
+#define IDS_RESTORE                 325
+#define IDS_DEFAULT_CLUSTER_SIZE    326
+#define IDS_ADMINISTRATIVETOOLS     327
+#define IDS_FORMATDRIVE             328
+#define IDS_RENAME                  329
+#define IDS_INSERT                  330
+#define IDS_DESCRIPTION             331
+#define IDS_COPY_OF                 332
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
@@ -450,5 +450,25 @@ FIXME: Need to add them, but for now just let them use the same: searching.avi
 #define FCIDM_TB_SMALLICON      0xA003
 #define FCIDM_TB_REPORTVIEW     0xA004
 #define FCIDM_TB_DESKTOP        0xA005  /* FIXME */
+
+/* .rgs files */
+#define IDR_ADMINFOLDERSHORTCUT 128
+#define IDR_AUTOCOMPLETE        129
+#define IDR_CONTROLPANEL        130
+#define IDR_DRAGDROPHELPER      131
+#define IDR_FOLDEROPTIONS       132
+#define IDR_FOLDERSHORTCUT      133
+#define IDR_FONTSFOLDERSHORTCUT 134
+#define IDR_MENUBANDSITE        135
+#define IDR_MYCOMPUTER          136
+#define IDR_MYDOCUMENTS         137
+#define IDR_NETWORKPLACES       138
+#define IDR_NEWMENU             139
+#define IDR_PRINTERS            140
+#define IDR_RECYCLEBIN          141
+#define IDR_SHELLDESKTOP        142
+#define IDR_SHELLFSFOLDER       143
+#define IDR_SHELLLINK           144
+#define IDR_STARTMENU           145
 
 #endif

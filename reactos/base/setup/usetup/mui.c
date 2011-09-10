@@ -25,9 +25,6 @@
  */
 
 #include "usetup.h"
-#include "interface/consup.h"
-#include "errorcode.h"
-#include "mui.h"
 #include "muifonts.h"
 #include "muilanguages.h"
 
@@ -41,7 +38,7 @@ PopupError(IN PCCH Text,
            IN PINPUT_RECORD Ir,
            IN ULONG WaitEvent);
 
-static 
+static
 ULONG
 FindLanguageIndex()
 {
@@ -146,8 +143,8 @@ MUIDisplayPage(IN ULONG page)
     do
     {
         CONSOLE_SetStyledText (
-		    entry[index].X, 
-		    entry[index].Y, 
+		    entry[index].X,
+		    entry[index].Y,
 		    entry[index].Flags,
 		    entry[index].Buffer);
 
@@ -520,7 +517,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)ACPage,
-                           (wcslen(ACPage)+1) * sizeof(PWCHAR));
+                           (wcslen(ACPage)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -535,7 +532,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)OEMCPage,
-                           (wcslen(OEMCPage)+1) * sizeof(PWCHAR));
+                           (wcslen(OEMCPage)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -550,7 +547,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)MACCPage,
-                           (wcslen(MACCPage)+1) * sizeof(PWCHAR));
+                           (wcslen(MACCPage)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);

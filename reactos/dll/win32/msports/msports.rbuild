@@ -12,4 +12,5 @@
 	<file>msports.c</file>
 	<file>serial.c</file>
 	<file>msports.rc</file>
+	<pch>precomp.h</pch>
 </module>

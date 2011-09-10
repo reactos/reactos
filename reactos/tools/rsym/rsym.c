@@ -557,7 +557,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
       if ((0 == StartOfRawData
            || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
           && 0 != InSectionHeaders[Section].PointerToRawData
-          && 0 == (InSectionHeaders[Section].Characteristics & IMAGE_SCN_LNK_REMOVE))
+          && 0 != (strncmp(InSectionHeaders[Section].Name, ".stab", 5)))
         {
           StartOfRawData = InSectionHeaders[Section].PointerToRawData;
         }
@@ -609,7 +609,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
   OutRelocSection = NULL;
   for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-      if (0 == (InSectionHeaders[Section].Characteristics & IMAGE_SCN_LNK_REMOVE))
+      if (0 != (strncmp(InSectionHeaders[Section].Name, ".stab", 5)))
         {
           *CurrentSectionHeader = InSectionHeaders[Section];
           CurrentSectionHeader->PointerToLinenumbers = 0;

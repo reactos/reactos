@@ -27,21 +27,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntddk.h>
-#include <srb.h>
-#include <scsi.h>
-#include <ntddscsi.h>
-#include <ntddstor.h>
-#include <ntdddisk.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include "precomp.h"
 
 #ifndef NDEBUG
 #define NDEBUG
 #endif
 #include <debug.h>
-
-#include "scsiport_int.h"
 
 ULONG InternalDebugLevel = 0x00;
 
@@ -1546,12 +1537,12 @@ CreatePortConfig:
                                                    &Dirql[i],
                                                    &Affinity[i]);
           }
-          
+
           if (DeviceExtension->InterruptCount == 1 || Dirql[0] > Dirql[1])
               MaxDirql = Dirql[0];
           else
               MaxDirql = Dirql[1];
-          
+
           for (i = 0; i < DeviceExtension->InterruptCount; i++)
           {
               /* Determing IRQ sharability as usual */
@@ -1585,7 +1576,7 @@ CreatePortConfig:
                   break;
               }
           }
-          
+
           if (!NT_SUCCESS(Status))
               break;
       }
@@ -1648,7 +1639,7 @@ CreatePortConfig:
 
       /* Initialize bus scanning information */
       DeviceExtension->BusesConfig = ExAllocatePoolWithTag(PagedPool,
-          sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
+          sizeof(PVOID) * DeviceExtension->PortConfig->NumberOfBuses
           + sizeof(ULONG), TAG_SCSIPORT);
 
       if (!DeviceExtension->BusesConfig)
@@ -1660,7 +1651,7 @@ CreatePortConfig:
 
       /* Zero it */
       RtlZeroMemory(DeviceExtension->BusesConfig,
-          sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
+          sizeof(PVOID) * DeviceExtension->PortConfig->NumberOfBuses
           + sizeof(ULONG));
 
       /* Store number of buses there */
@@ -2017,7 +2008,7 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
       case BusChangeDetected:
           DPRINT1("UNIMPLEMENTED SCSI Notification called: BusChangeDetected!\n");
           break;
-      
+
       default:
 	DPRINT1 ("Unsupported notification from WMI: %lu\n", NotificationType);
 	break;
@@ -2192,7 +2183,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         PortConfig->DmaPort != SP_UNINITIALIZED_VALUE)
     {
         Dma = 1;
-        
+
         if (PortConfig->DmaChannel2 != SP_UNINITIALIZED_VALUE ||
             PortConfig->DmaPort2 != SP_UNINITIALIZED_VALUE)
             Dma++;
@@ -2297,7 +2288,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         ResourceDescriptor->u.Dma.Channel = (Dma == 2) ? PortConfig->DmaChannel2 : PortConfig->DmaChannel;
         ResourceDescriptor->u.Dma.Port = (Dma == 2) ? PortConfig->DmaPort2 : PortConfig->DmaPort;
         ResourceDescriptor->Flags = 0;
-        
+
         if (((Dma == 2) ? PortConfig->DmaWidth2 : PortConfig->DmaWidth) == Width8Bits)
             ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8;
         else if (((Dma == 2) ? PortConfig->DmaWidth2 : PortConfig->DmaWidth) == Width16Bits)
@@ -2310,7 +2301,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
         if (((Dma == 2) ? PortConfig->DmaPort2 : PortConfig->DmaPort) == SP_UNINITIALIZED_VALUE)
             ResourceDescriptor->u.Dma.Port = 0;
-        
+
         ResourceDescriptor++;
         Dma--;
     }
@@ -2336,12 +2327,11 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
     CHAR VendorIdString[8];
     CHAR DeviceIdString[8];
     UNICODE_STRING UnicodeStr;
-    PCM_RESOURCE_LIST ResourceList;
+    PCM_RESOURCE_LIST ResourceList = NULL;
     NTSTATUS Status;
 
     DPRINT ("SpiGetPciConfiguration() called\n");
 
-	RtlZeroMemory(&ResourceList, sizeof(PCM_RESOURCE_LIST));
     SlotNumber.u.AsULONG = 0;
 
     /* Loop through all devices */
@@ -5952,7 +5942,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     NTSTATUS Status = STATUS_SUCCESS;
-    
+
 
     KeyValueInformation = (PKEY_VALUE_FULL_INFORMATION) Buffer;
 
@@ -6241,7 +6231,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     break;
 
                 case CmResourceTypeInterrupt:
-  
+
                     if (Interrupt == 0)
                     {
                         ConfigInfo->BusInterruptLevel =
@@ -6262,7 +6252,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
                         ConfigInfo->InterruptMode2 = (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
                     }
-                        
+
                     Interrupt++;
                     break;
 
@@ -6272,7 +6262,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     {
                         ConfigInfo->DmaChannel = PartialDescriptor->u.Dma.Channel;
                         ConfigInfo->DmaPort = PartialDescriptor->u.Dma.Port;
-                        
+
                         if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
                             ConfigInfo->DmaWidth = Width8Bits;
                         else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
@@ -6285,7 +6275,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     {
                         ConfigInfo->DmaChannel2 = PartialDescriptor->u.Dma.Channel;
                         ConfigInfo->DmaPort2 = PartialDescriptor->u.Dma.Port;
-                        
+
                         if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
                             ConfigInfo->DmaWidth2 = Width8Bits;
                         else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
@@ -6294,7 +6284,7 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                         else if (PartialDescriptor->Flags & CM_RESOURCE_DMA_32)
                             ConfigInfo->DmaWidth2 = Width32Bits;
                     }
- 
+
                     Dma++;
                     break;
 

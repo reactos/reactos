@@ -285,7 +285,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     return NewPalette;
 }
 
-BOOL INTERNAL_CALL
+BOOL NTAPI
 PALETTE_Cleanup(PVOID ObjectBody)
 {
     PPALETTE pPal = (PPALETTE)ObjectBody;

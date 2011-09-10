@@ -12,4 +12,5 @@
 	<file>services.c</file>
 	<file>debug.c</file>
 	<file>audiosrv.rc</file>
+	<pch>audiosrv.h</pch>
 </module>

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002-2008 Erik de Castro Lopo <erikd@mega-nerd.com>
+** Copyright (C) 2002-2011 Erik de Castro Lopo <erikd@mega-nerd.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,25 +16,25 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* 
-** This is the Win32 specific config.h header file. 
+/*
+** This is the Win32 specific config.h header file.
 **
-** On Unix (including MacOSX), this header file is automatically generated 
+** On Unix (including MacOSX), this header file is automatically generated
 ** during the configure process while on Win32 this has to be hand edited
 ** to keep it up to date.
 **
 ** This is also a good file to add Win32 specific things.
 */
 
-/* 
-** MSVC++ assumes that all floating point constants without a trailing 
-** letter 'f' are double precision. 
+/*
+** MSVC++ assumes that all floating point constants without a trailing
+** letter 'f' are double precision.
 **
 ** If this assumption is incorrect and one of these floating point constants
 ** is assigned to a float variable MSVC++ generates a warning.
 **
 ** Since there are currently about 25000 of these warnings generated in
-** src/src_sinc.c this slows down compile times considerably. The 
+** src/src_sinc.c this slows down compile times considerably. The
 ** following #pragma disables the warning.
 */
 #ifdef _MSC_VER
@@ -48,7 +48,7 @@
 #define COMPILER_IS_GCC 0
 
 /* Target processor clips on negative float to int conversion. */
-#define CPU_CLIPS_NEGATIVE 1
+#define CPU_CLIPS_NEGATIVE 0
 
 /* Target processor clips on positive float to int conversion. */
 #define CPU_CLIPS_POSITIVE 0
@@ -166,13 +166,16 @@
 #define PACKAGE_NAME "libsamplerate"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libsamplerate 0.1.7"
+#define PACKAGE_STRING "libsamplerate 0.1.8"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libsamplerate"
 
+/* Define to the home page for this package. */
+#define PACKAGE_URL "http://www.mega-nerd.com/libsamplerate/"
+
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.1.7"
+#define PACKAGE_VERSION "0.1.8"
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8
@@ -190,16 +193,25 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.1.4"
+#define VERSION "0.1.8"
 
 
 
 /* Extra Win32 hacks. */
 
 /*
-**	Microsoft's compiler still does not support the 1999 ISO C Standard 
+**	Microsoft's compiler still does not support the 1999 ISO C Standard
 **	which includes 'inline'.
 */
 
 #define inline __inline
 
+/* ReactOS hacks */
+void __stdcall DbgBreakPoint(void);
+unsigned long __cdecl DbgPrint(const char *Format, ...);
+#define exit(n) DbgBreakPoint()
+#define printf DbgPrint
+
+# ifdef _MSC_VER
+#  pragma warning(disable:4244)
+# endif /* _MSC_VER */

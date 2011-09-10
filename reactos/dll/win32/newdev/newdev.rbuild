@@ -5,6 +5,7 @@
 	<file>stubs.c</file>
 	<file>wizard.c</file>
 	<file>newdev.rc</file>
+	<pch>newdev_private.h</pch>
 	<library>wine</library>
 	<library>gdi32</library>
 	<library>comctl32</library>

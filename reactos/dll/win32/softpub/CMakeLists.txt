@@ -7,7 +7,7 @@ spec2def(softpub.dll softpub.spec)
 add_library(softpub SHARED softpub.rc
     ${CMAKE_CURRENT_BINARY_DIR}/softpub.def)
 
-set_entrypoint(softpub 0)
+set_module_type(softpub win32dll ENTRYPOINT 0 )
 
 target_link_libraries(softpub wine)
 

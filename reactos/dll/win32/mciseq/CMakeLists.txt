@@ -10,8 +10,13 @@ list(APPEND SOURCE
 
 add_library(mciseq SHARED ${SOURCE})
 
-set_entrypoint(mciseq 0)
+set_module_type(mciseq win32dll ENTRYPOINT 0)
+
 target_link_libraries(mciseq wine)
 add_importlibs(mciseq winmm user32 kernel32 ntdll msvcrt)
 add_dependencies(mciseq psdk)
 add_cd_file(TARGET mciseq DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    allow_warnings(mciseq)
+endif()

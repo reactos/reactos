@@ -1035,7 +1035,7 @@ COutputPin::KsMediaSamplesCompleted(PKSSTREAM_SEGMENT StreamSegment)
     return NOERROR;
 }
 
-IMemAllocator * 
+IMemAllocator *
 STDMETHODCALLTYPE
 COutputPin::KsPeekAllocator(KSPEEKOPERATION Operation)
 {
@@ -1318,7 +1318,7 @@ COutputPin::Render(
 HRESULT
 STDMETHODCALLTYPE
 COutputPin::Backout(
-    IPin *ppinOut, 
+    IPin *ppinOut,
     IGraphBuilder *pGraph)
 {
 #ifdef KSPROXY_TRACE
@@ -2428,7 +2428,7 @@ COutputPin::IoProcessRoutine()
     assert(NumHandles);
 
     //allocate stream segment array
-    StreamSegment = (PKSSTREAM_SEGMENT*)CoTaskMemAlloc(sizeof(PKSSTREAM_SEGMENT) * NumHandles);
+    StreamSegment = (PKSSTREAM_SEGMENT*)CoTaskMemAlloc(sizeof(PVOID) * NumHandles);
     if (!StreamSegment)
     {
         OutputDebugStringW(L"COutputPin::IoProcessRoutine out of memory\n");
@@ -2444,7 +2444,7 @@ COutputPin::IoProcessRoutine()
     }
 
     // zero handles array
-    ZeroMemory(StreamSegment, sizeof(PKSSTREAM_SEGMENT) * NumHandles);
+    ZeroMemory(StreamSegment, sizeof(PVOID) * NumHandles);
     ZeroMemory(Samples, sizeof(IMediaSample*) * NumHandles);
 
     // first wait for the start event to signal
@@ -2536,7 +2536,7 @@ COutputPin::IoProcessRoutine()
         }
 
         //circular stream segment array
-        RtlMoveMemory(StreamSegment, &StreamSegment[1], sizeof(PKSSTREAM_SEGMENT) * (NumHandles - 1));
+        RtlMoveMemory(StreamSegment, &StreamSegment[1], sizeof(PVOID) * (NumHandles - 1));
         RtlMoveMemory(Samples, &Samples[1], sizeof(IMediaSample*) * (NumHandles - 1));
 
     }while(TRUE);

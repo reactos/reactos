@@ -41,12 +41,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#define DPRINTM2(fmt, ...) DPRINTM(DPRINT_SCSIPORT, "(%s:%d) SCSIPORT: " fmt, __FILE__, __LINE__, __VA_ARGS__)
-
-#undef UNIMPLEMENTED
-#define UNIMPLEMENTED DPRINTM2("%s UNIMPLEMENTED\n", __FUNCTION__)
-
 #define SCSI_PORT_NEXT_REQUEST_READY  0x0008
+
+DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 typedef struct
 {
@@ -442,7 +439,7 @@ ScsiDebugPrint(
     }
 
     /* Print the message */
-    DPRINTM(DPRINT_SCSIPORT, "%s", Buffer);
+    TRACE("%s", Buffer);
 
     /* Cleanup */
     va_end(ap);
@@ -570,7 +567,7 @@ ScsiPortGetPhysicalAddress(
     ULONG BufferLength = 0;
     ULONG Offset;
 
-    DPRINTM2("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
+    TRACE("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
         HwDeviceExtension, Srb, VirtualAddress, Length);
 
     DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
@@ -683,7 +680,7 @@ ScsiPortGetUncachedExtension(
     ULONG MapRegistersCount;
     NTSTATUS Status;
 
-    DPRINTM2("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+    TRACE("ScsiPortGetUncachedExtension(%p %p %lu)\n",
         HwDeviceExtension, ConfigInfo, NumberOfBytes);
 
     DeviceExtension = ((PSCSI_PORT_DEVICE_EXTENSION)HwDeviceExtension) - 1;
@@ -749,7 +746,7 @@ ScsiPortGetUncachedExtension(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINTM2("SpiAllocateCommonBuffer() failed with Status = 0x%08X!\n", Status);
+        TRACE("SpiAllocateCommonBuffer() failed with Status = 0x%08X!\n", Status);
         return NULL;
     }
 
@@ -833,7 +830,7 @@ SpiScanAdapter(
         Lun = 0;
         do
         {
-            DPRINTM2("Scanning SCSI device %d.%d.%d\n",
+            TRACE("Scanning SCSI device %d.%d.%d\n",
                 ScsiBus, TargetId, Lun);
 
             Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
@@ -905,7 +902,7 @@ SpiResourceToConfig(
             /* Copy access ranges */
             if (RangeNumber < HwInitializationData->NumberOfAccessRanges)
             {
-                DPRINTM2("Got port at 0x%I64x, len 0x%x\n",
+                TRACE("Got port at 0x%I64x, len 0x%x\n",
                     PartialData->u.Port.Start.QuadPart, PartialData->u.Port.Length);
                 AccessRange = &((*(PortConfig->AccessRanges))[RangeNumber]);
 
@@ -921,7 +918,7 @@ SpiResourceToConfig(
             /* Copy access ranges */
             if (RangeNumber < HwInitializationData->NumberOfAccessRanges)
             {
-                DPRINTM2("Got memory at 0x%I64x, len 0x%x\n",
+                TRACE("Got memory at 0x%I64x, len 0x%x\n",
                     PartialData->u.Memory.Start.QuadPart, PartialData->u.Memory.Length);
                 AccessRange = &((*(PortConfig->AccessRanges))[RangeNumber]);
 
@@ -935,7 +932,7 @@ SpiResourceToConfig(
 
         case CmResourceTypeInterrupt:
             /* Copy interrupt data */
-            DPRINTM2("Got interrupt level %d, vector %d\n",
+            TRACE("Got interrupt level %d, vector %d\n",
                 PartialData->u.Interrupt.Level, PartialData->u.Interrupt.Vector);
             PortConfig->BusInterruptLevel = PartialData->u.Interrupt.Level;
             PortConfig->BusInterruptVector = PartialData->u.Interrupt.Vector;
@@ -952,7 +949,7 @@ SpiResourceToConfig(
             break;
 
         case CmResourceTypeDma:
-            DPRINTM2("Got DMA channel %d, port %d\n",
+            TRACE("Got DMA channel %d, port %d\n",
                 PartialData->u.Dma.Channel, PartialData->u.Dma.Port);
             PortConfig->DmaChannel = PartialData->u.Dma.Channel;
             PortConfig->DmaPort = PartialData->u.Dma.Port;
@@ -975,10 +972,9 @@ SpiGetPciConfigData(
     ULONG FunctionNumber;
     CHAR VendorIdString[8];
     CHAR DeviceIdString[8];
-    PCM_RESOURCE_LIST ResourceList;
+    PCM_RESOURCE_LIST ResourceList = NULL;
     NTSTATUS Status;
 
-    RtlZeroMemory(&ResourceList, sizeof(PCM_RESOURCE_LIST));
     SlotNumber.u.AsULONG = 0;
 
     /* Loop through all devices */
@@ -1019,7 +1015,7 @@ SpiGetPciConfigData(
                 continue;
             }
 
-            DPRINTM2( "Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
+            TRACE( "Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
                 PciConfig.VendorID, PciConfig.DeviceID,
                 BusNumber,
                 SlotNumber.u.bits.DeviceNumber, SlotNumber.u.bits.FunctionNumber);
@@ -1143,7 +1139,7 @@ ScsiPortInitialize(
             PortConfig.BusInterruptLevel = 0;
 
             /* Get PCI device data */
-            DPRINTM2("VendorId '%.*s'  DeviceId '%.*s'\n",
+            TRACE("VendorId '%.*s'  DeviceId '%.*s'\n",
                 HwInitializationData->VendorIdLength,
                 HwInitializationData->VendorId,
                 HwInitializationData->DeviceIdLength,
@@ -1187,7 +1183,7 @@ ScsiPortInitialize(
 
         DeviceExtension->BusNum = PortConfig.SystemIoBusNumber;
 
-        DPRINTM2("Adapter found: buses = %d, targets = %d\n",
+        TRACE("Adapter found: buses = %d, targets = %d\n",
                  PortConfig.NumberOfBuses, DeviceExtension->MaxTargedIds);
 
         /* Initialize adapter */
@@ -1322,8 +1318,7 @@ NTAPI
 ScsiPortReadPortUchar(
     IN PUCHAR Port)
 {
-    DPRINTM2("ScsiPortReadPortUchar(%p)\n",
-        Port);
+    TRACE("ScsiPortReadPortUchar(%p)\n", Port);
 
     return READ_PORT_UCHAR(Port);
 }

@@ -1,6 +1,6 @@
 /*
  *         translated by Caemyr - Olaf Siejka (Apr,2008)
- *         updated by Saibamen - Adam Stachowicz (Apr, 2011)
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  *         Use ReactOS forum PM or IRC to contact me
  *         http://www.reactos.org
  *         IRC: irc.freenode.net #reactos-pl
@@ -50,7 +50,7 @@ BEGIN
     LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
-    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 210, 10, SS_LEFT
     LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
 END
 
@@ -159,7 +159,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Urządzenia DirectInput", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
-    GROUPBOX "Urządenia wejścia", -1, 10, 100, 452, 60
+    GROUPBOX "Urządzenia wejścia", -1, 10, 100, 452, 60
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "Informacje", -1, 10, 170, 452, 50
     EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
@@ -220,7 +220,7 @@ BEGIN
 	IDS_REG_SUCCESS "OK"
 	IDS_REG_FAIL "Błąd"
 	IDS_DDTEST_ERROR "Test nieudany!"
-	IDS_DDTEST_DESCRIPTION "Czy chcesz rozpocząć test interface DirectDraw?"
+	IDS_DDTEST_DESCRIPTION "Czy chcesz rozpocząć test interfejsu DirectDraw?"
 	IDS_DDPRIMARY_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania na powierzchni podstawowej. Narysowane zostaną czarne i białe prostokąty. Kontynuować?"
 	IDS_DDPRIMARY_RESULT "Czy było widać czarne i białe prostokąty?"
 	IDS_DDOFFSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania przy użyciu bufora pozaekranowego. Narysowany zostanie poruszający się biały kwadrat. Kontynuować?"

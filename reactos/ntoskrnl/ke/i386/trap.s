@@ -167,6 +167,9 @@ EXTERN _PsConvertToGuiThread@0:PROC
 
 PUBLIC _KiConvertToGuiThread@0
 _KiConvertToGuiThread@0:
+    /* Safe ebx */
+    push ebx
+
     /* Calculate the stack frame offset in ebx */
     mov ebx, ebp
     sub ebx, esp
@@ -177,6 +180,9 @@ _KiConvertToGuiThread@0:
     /* Adjust ebp to the new stack */
     mov ebp, esp
     add ebp, ebx
+
+    /* Restore ebx */
+    pop ebx
 
     /* return to the caller */
     ret

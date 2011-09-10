@@ -1,7 +1,5 @@
 #pragma once
 
-#include "gdiobj.h"
-
 /* Object structure */
 typedef struct _EDRIVEROBJ
 {
@@ -10,8 +8,10 @@ typedef struct _EDRIVEROBJ
     PVOID reserved;
 } EDRIVEROBJ, *PEDRIVEROBJ;
 
+typedef DRIVEROBJ *PDRIVEROBJ;
+
 /* Cleanup function */
-BOOL INTERNAL_CALL DRIVEROBJ_Cleanup(PVOID pObject);
+BOOL NTAPI DRIVEROBJ_Cleanup(PVOID pObject);
 
 
 #define DRIVEROBJ_AllocObjectWithHandle()  ((PEDRIVEROBJ)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DRIVEROBJ, sizeof(DRIVEROBJ)))

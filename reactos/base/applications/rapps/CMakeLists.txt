@@ -1,5 +1,4 @@
 
-set_unicode()
 
 list(APPEND SOURCE
     aboutdlg.c
@@ -26,7 +25,8 @@ include_directories(
 set_rc_compiler()
 
 add_executable(rapps ${SOURCE})
-set_module_type(rapps win32gui)
+add_pch(rapps rapps.h)
+set_module_type(rapps win32gui UNICODE)
 target_link_libraries(rapps uuid)
 
 add_importlibs(rapps advapi32 comctl32 gdi32 urlmon user32 shell32 shlwapi msvcrt kernel32 ntdll)

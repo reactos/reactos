@@ -28,9 +28,7 @@
 // Written by Paul Brannan <pbranna@clemson.edu>
 // Last modified 7/12/98
 
-#include <string.h>
-#include "tcharmap.h"
-#include "tnconfig.h"
+#include "precomp.h"
 
 // map B (US ASCII)
 // this maps each character to itself

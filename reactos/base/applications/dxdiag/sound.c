@@ -8,7 +8,6 @@
  */
 
 #include "precomp.h"
-#include <devguid.h>
 #include <dsound.h>
 
 #if 0

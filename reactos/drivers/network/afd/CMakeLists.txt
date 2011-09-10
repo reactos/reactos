@@ -23,7 +23,5 @@ target_link_libraries(afd ${PSEH_LIB})
 
 set_module_type(afd kernelmodedriver)
 add_importlibs(afd ntoskrnl hal)
-
 add_pch(afd include/afd.h)
-
 add_cd_file(TARGET afd DESTINATION reactos/system32/drivers FOR all)

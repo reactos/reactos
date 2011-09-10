@@ -33,4 +33,5 @@
 	<file>desk.rc</file>
 	<file>draw.c</file>
 	<file>theme.c</file>
+	<pch>desk.h</pch>
 </module>

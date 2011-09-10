@@ -23,4 +23,5 @@
 	<file>mmixer.c</file>
 	<file>legacy.c</file>
 	<file>wdmaud.rc</file>
+	<pch>wdmaud.h</pch>
 </module>

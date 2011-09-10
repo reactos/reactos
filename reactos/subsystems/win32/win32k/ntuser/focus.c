@@ -20,8 +20,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(UserFocus);
 
 HWND FASTCALL
 IntGetCaptureWindow(VOID)
@@ -112,10 +111,10 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          HANDLE OldTID = IntGetWndThreadId(WindowPrev);
          HANDLE NewTID = IntGetWndThreadId(Window);
 
-         DPRINT("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
+         TRACE("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
          if (Window->style & WS_MINIMIZE)
          {
-            DPRINT("Widow was minimized\n");
+            TRACE("Widow was minimized\n");
          }
 
          if (OldTID != NewTID)
@@ -214,18 +213,18 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
 
    ASSERT_REFS_CO(Wnd);
 
-   DPRINT("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
+   TRACE("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
 
    if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
-      DPRINT("Failed - Child\n");
+      TRACE("Failed - Child\n");
       return FALSE;
    }
 
    if (0 == (Wnd->style & WS_VISIBLE) &&
        Wnd->head.pti->pEThread->ThreadsProcess != CsrProcess)
    {
-      DPRINT("Failed - Invisible\n");
+      TRACE("Failed - Invisible\n");
       return FALSE;
    }
 
@@ -238,7 +237,7 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
 
    if (hWndPrev == hWnd)
    {
-      DPRINT("Failed - Same\n");
+      TRACE("Failed - Same\n");
       return TRUE;
    }
 
@@ -360,7 +359,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL)
    cbt.hWndActive = hWndPrev;
    if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
    {
-      DPRINT1("SetActiveWindow WH_CBT Call Hook return!\n");
+      ERR("SetActiveWindow WH_CBT Call Hook return!\n");
       return 0;
    }
    ThreadQueue->ActiveWindow = hWnd;
@@ -399,10 +398,11 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
 
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->head.h, (LPARAM)hWndPrev))
       {
-         DPRINT1("SetFocusWindow 1 WH_CBT Call Hook return!\n");
+         ERR("SetFocusWindow 1 WH_CBT Call Hook return!\n");
          return 0;
       }
       ThreadQueue->FocusWindow = Window->head.h;
+      TRACE("Focus: %d -> %d\n", hWndPrev, Window->head.h);
 
       co_IntSendKillFocusMessages(hWndPrev, Window->head.h);
       co_IntSendSetFocusMessages(hWndPrev, Window->head.h);
@@ -412,7 +412,7 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
       ThreadQueue->FocusWindow = 0;
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
       {
-         DPRINT1("SetFocusWindow 2 WH_CBT Call Hook return!\n");
+         ERR("SetFocusWindow 2 WH_CBT Call Hook return!\n");
          return 0;
       }
 
@@ -443,13 +443,13 @@ NtUserGetForegroundWindow(VOID)
 {
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter NtUserGetForegroundWindow\n");
+   TRACE("Enter NtUserGetForegroundWindow\n");
    UserEnterExclusive();
 
    RETURN( UserGetForegroundWindow());
 
 CLEANUP:
-   DPRINT("Leave NtUserGetForegroundWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetForegroundWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -472,7 +472,7 @@ NtUserSetActiveWindow(HWND hWnd)
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter NtUserSetActiveWindow(%x)\n", hWnd);
+   TRACE("Enter NtUserSetActiveWindow(%x)\n", hWnd);
    UserEnterExclusive();
 
    if (hWnd)
@@ -508,7 +508,7 @@ NtUserSetActiveWindow(HWND hWnd)
    }
 
 CLEANUP:
-   DPRINT("Leave NtUserSetActiveWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetActiveWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -523,14 +523,14 @@ IntGetCapture(VOID)
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter IntGetCapture\n");
+   TRACE("Enter IntGetCapture\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
    RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
 
 CLEANUP:
-   DPRINT("Leave IntGetCapture, ret=%i\n",_ret_);
+   TRACE("Leave IntGetCapture, ret=%i\n",_ret_);
    END_CLEANUP;
 }
 
@@ -626,13 +626,13 @@ NtUserSetCapture(HWND hWnd)
 {
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
+   TRACE("Enter NtUserSetCapture(%x)\n", hWnd);
    UserEnterExclusive();
 
    RETURN( co_UserSetCapture(hWnd));
 
 CLEANUP:
-   DPRINT("Leave NtUserSetCapture, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetCapture, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -697,7 +697,7 @@ NtUserSetFocus(HWND hWnd)
    DECLARE_RETURN(HWND);
    HWND ret;
 
-   DPRINT("Enter NtUserSetFocus(%x)\n", hWnd);
+   TRACE("Enter NtUserSetFocus(%x)\n", hWnd);
    UserEnterExclusive();
 
    if (hWnd)
@@ -719,7 +719,7 @@ NtUserSetFocus(HWND hWnd)
    }
 
 CLEANUP:
-   DPRINT("Leave NtUserSetFocus, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetFocus, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

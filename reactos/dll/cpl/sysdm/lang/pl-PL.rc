@@ -4,6 +4,7 @@
  *         https://sourceforge.net/projects/reactospl
  *         updated by Caemyr - Olaf Siejka (Jan, 2008)
  *         UTF-8 conversion by Caemyr (May, 2011)
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -103,7 +104,7 @@ BEGIN
 
     GROUPBOX    "Wybór profili sprzętu", IDC_STATIC, 7, 130, 240, 75
     LTEXT       "Podczas uruchamiania ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Czekaj na wybór profilu sprzętu przez użytkownika", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Czekaj na wybór profilu sprzętu przez użytkownika", IDC_HRDPROFWAIT, 14, 158, 175, 8, WS_GROUP
     AUTORADIOBUTTON "&Wybierz &pierwszy profil na liście, jeżeli użytkownik nie wybierze profilu w ciągu", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT       "s", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12

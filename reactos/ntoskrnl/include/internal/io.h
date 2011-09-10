@@ -10,7 +10,7 @@
 //
 // Define this if you want debugging support
 //
-#define _IO_DEBUG_                                      0x00
+#define _IO_DEBUG_                                      0x01
 
 //
 // These define the Debug Masks Supported
@@ -43,7 +43,7 @@
     }
 #endif
 #else
-#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define IOTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
 //
@@ -1022,6 +1022,7 @@ PnpRootDriverEntry(
 NTSTATUS
 PnpRootCreateDevice(
     IN PUNICODE_STRING ServiceName,
+    IN OPTIONAL PDRIVER_OBJECT DriverObject,
     OUT PDEVICE_OBJECT *PhysicalDeviceObject,
     OUT OPTIONAL PUNICODE_STRING FullInstancePath
 );

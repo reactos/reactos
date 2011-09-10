@@ -20,6 +20,17 @@
 /*
  * @unimplemented
  */
+NTSTATUS
+WINAPI
+BasepCheckBadapp(int a, wchar_t *Str, int b, int c, int d, int e, int f, int g, int h)
+{
+    STUB;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
 VOID
 WINAPI
 BaseDumpAppcompatCache(VOID)
@@ -35,6 +46,27 @@ WINAPI
 BaseFlushAppcompatCache(VOID)
 {
     STUB;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+WINAPI
+BasepFreeAppCompatData(PVOID A, PVOID B)
+{
+    STUB;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BaseIsAppcompatInfrastructureDisabled(VOID)
+{
+    STUB;
+    return TRUE;
 }
 
 /*

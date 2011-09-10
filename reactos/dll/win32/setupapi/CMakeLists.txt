@@ -1,14 +1,15 @@
 
-set_unicode()
-
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl
+    ${CMAKE_CURRENT_BINARY_DIR})
+    
 add_definitions(
     -D_SETUPAPI_
     -D_CFGMGR32_
     -Dwcsnicmp=_wcsnicmp)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_BINARY_DIR}/include/reactos/idl)
+add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/pnp.idl)
 
 set_rc_compiler()
 
@@ -33,17 +34,13 @@ list(APPEND SOURCE
     rpc.c
     setupapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def
+    ${CMAKE_CURRENT_BINARY_DIR}/pnp_c.c)
 
 add_library(setupapi SHARED ${SOURCE})
-
-set_module_type(setupapi win32dll)
-
-target_link_libraries(setupapi
-    pnprpc
-    uuid
-    wine
-    ${PSEH_LIB})
+set_module_type(setupapi win32dll UNICODE)
+target_link_libraries(setupapi uuid wine ${PSEH_LIB})
+add_delay_importlibs(setupapi shell32)
 
 add_importlibs(setupapi
     msvcrt
@@ -53,9 +50,9 @@ add_importlibs(setupapi
     user32
     rpcrt4
     version
-    shell32
     kernel32
     ntdll)
 
+add_pch(setupapi setupapi_private.h)
 add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)
 add_importlib_target(setupapi.spec)

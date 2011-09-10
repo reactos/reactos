@@ -11,8 +11,6 @@
  */
 #include <msafd.h>
 
-#include <debug.h>
-
 CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;
 

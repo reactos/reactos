@@ -1,27 +1,36 @@
-/* A Bison parser, made by GNU Bison 2.1.  */
+/* A Bison parser, made by GNU Bison 2.4.2.  */
 
-/* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
-
-   This program is free software; you can redistribute it and/or modify
+/* Skeleton interface for Bison's Yacc-like parsers in C
+   
+      Copyright (C) 1984, 1989-1990, 2000-2006, 2009-2010 Free Software
+   Foundation, Inc.
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-/* As a special exception, when this file is copied by Bison into a
-   Bison output file, you may use that output file without restriction.
-   This special exception was added by the Free Software Foundation
-   in version 1.24 of Bison.  */
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+   
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -74,57 +83,16 @@
      tLSHIFT = 300
    };
 #endif
-/* Tokens.  */
-#define tRCINCLUDE 258
-#define tIF 259
-#define tIFDEF 260
-#define tIFNDEF 261
-#define tELSE 262
-#define tELIF 263
-#define tENDIF 264
-#define tDEFINED 265
-#define tNL 266
-#define tINCLUDE 267
-#define tLINE 268
-#define tGCCLINE 269
-#define tERROR 270
-#define tWARNING 271
-#define tPRAGMA 272
-#define tPPIDENT 273
-#define tUNDEF 274
-#define tMACROEND 275
-#define tCONCAT 276
-#define tELIPSIS 277
-#define tSTRINGIZE 278
-#define tIDENT 279
-#define tLITERAL 280
-#define tMACRO 281
-#define tDEFINE 282
-#define tDQSTRING 283
-#define tSQSTRING 284
-#define tIQSTRING 285
-#define tUINT 286
-#define tSINT 287
-#define tULONG 288
-#define tSLONG 289
-#define tULONGLONG 290
-#define tSLONGLONG 291
-#define tRCINCLUDEPATH 292
-#define tLOGOR 293
-#define tLOGAND 294
-#define tNE 295
-#define tEQ 296
-#define tGTE 297
-#define tLTE 298
-#define tRSHIFT 299
-#define tLSHIFT 300
 
 
 
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+{
 
-#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
+/* Line 1685 of yacc.c  */
 #line 126 "ppy.y"
-typedef union YYSTYPE {
+
 	int		sint;
 	unsigned int	uint;
 	long		slong;
@@ -136,15 +104,17 @@ typedef union YYSTYPE {
 	cval_t		cval;
 	marg_t		*marg;
 	mtext_t		*mtext;
+
+
+
+/* Line 1685 of yacc.c  */
+#line 112 "ppy.tab.h"
 } YYSTYPE;
-/* Line 1447 of yacc.c.  */
-#line 142 "ppy.tab.h"
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE ppy_lval;
-
 
 

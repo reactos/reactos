@@ -10,4 +10,5 @@
 	<file>pciidex.c</file>
 	<file>pdo.c</file>
 	<file>pciidex.rc</file>
+	<pch>pciidex.h</pch>
 </module>

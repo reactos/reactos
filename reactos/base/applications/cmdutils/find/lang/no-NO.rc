@@ -12,6 +12,6 @@ IDS_USAGE, "FINN: Skriv alle linjene for filen som inneholder en streng.\n\n\
 
 IDS_NO_SUCH_FILE, "FINN: %s: Ingen filer\n"
 
-IDS_CANNOT_OPEN, "FINN: %s: Kan ikke åpne filen\n"
+IDS_CANNOT_OPEN, "FINN: %s: Kan ikke Ã¥pne filen\n"
 
 END

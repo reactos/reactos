@@ -20,7 +20,7 @@ if(ARCH MATCHES i386)
     endif()
 endif()
 
-set_entrypoint(framebuf_new DrvEnableDriver@12)
+set_entrypoint(framebuf_new DrvEnableDriver 12)
 set_subsystem(framebuf_new native)
 set_image_base(framebuf_new 0x00010000)
 

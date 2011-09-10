@@ -8,9 +8,6 @@
  * 20040708 Created
  */
 #include "afd.h"
-#include "tdi_proto.h"
-#include "tdiconn.h"
-#include "debug.h"
 
 static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
                            PIRP Irp,
