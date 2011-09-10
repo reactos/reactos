@@ -87,18 +87,18 @@ KmtCreateService(
     assert(ServiceHandle);
     assert(ServiceName && ServicePath);
 
-    if (!GetCurrentDirectory(sizeof DriverPath / sizeof DriverPath[0], DriverPath))
+    if (!GetModuleFileName(NULL, DriverPath, sizeof DriverPath / sizeof DriverPath[0]))
         error_goto(Error, cleanup);
 
-    if (DriverPath[wcslen(DriverPath) - 1] != L'\\')
-    {
-        DriverPath[wcslen(DriverPath) + 1] = L'\0';
-        DriverPath[wcslen(DriverPath)] = L'\\';
-    }
+    assert(wcsrchr(DriverPath, L'\\') != NULL);
+    wcsrchr(DriverPath, L'\\')[1] = L'\0';
 
     result = StringCbCat(DriverPath, sizeof DriverPath, ServicePath);
     if (FAILED(result))
         error_value_goto(Error, result, cleanup);
+
+    if (GetFileAttributes(DriverPath) == INVALID_FILE_ATTRIBUTES)
+        error_goto(Error, cleanup);
 
     *ServiceHandle = CreateService(ScmHandle, ServiceName, DisplayName,
                             SERVICE_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START,
