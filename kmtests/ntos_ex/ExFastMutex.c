@@ -52,12 +52,6 @@ TestFastMutex(
     ExiReleaseFastMutex(Mutex);
     CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
 
-    /* acquire/release unsafe */
-    ExAcquireFastMutexUnsafe(Mutex);
-    CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, OriginalIrql);
-    ExReleaseFastMutexUnsafe(Mutex);
-    CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
-
     /* try to acquire */
     ok_bool_true(ExTryToAcquireFastMutex(Mutex), "ExTryToAcquireFastMutex returned");
     CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
@@ -69,33 +63,45 @@ TestFastMutex(
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
     ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(Mutex);
 
-    /* mismatched acquire/release */
-    ExAcquireFastMutex(Mutex);
-    CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
-    ExReleaseFastMutexUnsafe(Mutex);
-    CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, APC_LEVEL);
-    KmtSetIrql(OriginalIrql);
-    CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
+    /* acquire/release unsafe */
+    if (!KmtIsCheckedBuild || OriginalIrql == APC_LEVEL)
+    {
+        ExAcquireFastMutexUnsafe(Mutex);
+        CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, OriginalIrql);
+        ExReleaseFastMutexUnsafe(Mutex);
+        CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
 
-    Mutex->OldIrql = 0x55555555LU;
-    ExAcquireFastMutexUnsafe(Mutex);
-    CheckMutex(Mutex, 0L, Thread, 0LU, 0x55555555LU, OriginalIrql);
-    Mutex->OldIrql = PASSIVE_LEVEL;
-    ExReleaseFastMutex(Mutex);
-    CheckMutex(Mutex, 1L, NULL, 0LU, PASSIVE_LEVEL, PASSIVE_LEVEL);
-    KmtSetIrql(OriginalIrql);
-    CheckMutex(Mutex, 1L, NULL, 0LU, PASSIVE_LEVEL, OriginalIrql);
+        /* mismatched acquire/release */
+        ExAcquireFastMutex(Mutex);
+        CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
+        ExReleaseFastMutexUnsafe(Mutex);
+        CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, APC_LEVEL);
+        KmtSetIrql(OriginalIrql);
+        CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
 
-    /* release without acquire */
-    ExReleaseFastMutexUnsafe(Mutex);
-    CheckMutex(Mutex, 2L, NULL, 0LU, PASSIVE_LEVEL, OriginalIrql);
-    --Mutex->Count;
-    Mutex->OldIrql = OriginalIrql;
-    ExReleaseFastMutex(Mutex);
-    CheckMutex(Mutex, 2L, NULL, 0LU, OriginalIrql, OriginalIrql);
-    ExReleaseFastMutex(Mutex);
-    CheckMutex(Mutex, 3L, NULL, 0LU, OriginalIrql, OriginalIrql);
-    Mutex->Count -= 2;
+        Mutex->OldIrql = 0x55555555LU;
+        ExAcquireFastMutexUnsafe(Mutex);
+        CheckMutex(Mutex, 0L, Thread, 0LU, 0x55555555LU, OriginalIrql);
+        Mutex->OldIrql = PASSIVE_LEVEL;
+        ExReleaseFastMutex(Mutex);
+        CheckMutex(Mutex, 1L, NULL, 0LU, PASSIVE_LEVEL, PASSIVE_LEVEL);
+        KmtSetIrql(OriginalIrql);
+        CheckMutex(Mutex, 1L, NULL, 0LU, PASSIVE_LEVEL, OriginalIrql);
+    }
+    
+    if (!KmtIsCheckedBuild)
+    {
+        /* release without acquire */
+        ExReleaseFastMutexUnsafe(Mutex);
+        CheckMutex(Mutex, 2L, NULL, 0LU, PASSIVE_LEVEL, OriginalIrql);
+        --Mutex->Count;
+        Mutex->OldIrql = OriginalIrql;
+        ExReleaseFastMutex(Mutex);
+        CheckMutex(Mutex, 2L, NULL, 0LU, OriginalIrql, OriginalIrql);
+        ExReleaseFastMutex(Mutex);
+        CheckMutex(Mutex, 3L, NULL, 0LU, OriginalIrql, OriginalIrql);
+        Mutex->Count -= 2;
+    }
 
     /* make sure we survive this in case of error */
     ok_eq_long(Mutex->Count, 1L);

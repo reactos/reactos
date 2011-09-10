@@ -86,8 +86,9 @@ TestResourceSharedAccess(
     ok_bool_false(ExAcquireResourceExclusiveLite(Res, FALSE), "ExAcquireResourceExclusiveLite returned");
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 
-    /* this must not crash or deadlock (but can assert) */
-    ExConvertExclusiveToSharedLite(Res);
+    /* this asserts */
+    if (!KmtIsCheckedBuild)
+        ExConvertExclusiveToSharedLite(Res);
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 
     while (Count--)

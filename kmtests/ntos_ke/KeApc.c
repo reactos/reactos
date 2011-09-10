@@ -71,24 +71,27 @@ START_TEST(KeApc)
     CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
     /* leave without entering */
-    KeLeaveCriticalRegion();
-    CheckApcs(1, 0, FALSE, PASSIVE_LEVEL);
-    KeEnterCriticalRegion();
-    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+    if (!KmtIsCheckedBuild)
+    {
+        KeLeaveCriticalRegion();
+        CheckApcs(1, 0, FALSE, PASSIVE_LEVEL);
+        KeEnterCriticalRegion();
+        CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
-    KeLeaveGuardedRegion();
-    CheckApcs(0, 1, TRUE, PASSIVE_LEVEL);
-    KeEnterGuardedRegion();
-    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+        KeLeaveGuardedRegion();
+        CheckApcs(0, 1, TRUE, PASSIVE_LEVEL);
+        KeEnterGuardedRegion();
+        CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
-    KeLeaveCriticalRegion();
-    CheckApcs(1, 0, FALSE, PASSIVE_LEVEL);
-    KeLeaveGuardedRegion();
-    CheckApcs(1, 1, TRUE, PASSIVE_LEVEL);
-    KeEnterCriticalRegion();
-    CheckApcs(0, 1, TRUE, PASSIVE_LEVEL);
-    KeEnterGuardedRegion();
-    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+        KeLeaveCriticalRegion();
+        CheckApcs(1, 0, FALSE, PASSIVE_LEVEL);
+        KeLeaveGuardedRegion();
+        CheckApcs(1, 1, TRUE, PASSIVE_LEVEL);
+        KeEnterCriticalRegion();
+        CheckApcs(0, 1, TRUE, PASSIVE_LEVEL);
+        KeEnterGuardedRegion();
+        CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+    }
 
     /* manually disable APCs */
     Thread->KernelApcDisable = -1;
@@ -126,51 +129,58 @@ START_TEST(KeApc)
       KeLeaveCriticalRegion();
       CheckApcs(0, 0, TRUE, HIGH_LEVEL);
 
-      KeEnterGuardedRegion();
-        CheckApcs(0, -1, TRUE, HIGH_LEVEL);
-      KeLeaveGuardedRegion();
+      /* Ke*GuardedRegion assert at > APC_LEVEL */
+      if (!KmtIsCheckedBuild)
+      {
+          KeEnterGuardedRegion();
+            CheckApcs(0, -1, TRUE, HIGH_LEVEL);
+          KeLeaveGuardedRegion();
+      }
       CheckApcs(0, 0, TRUE, HIGH_LEVEL);
     KeLowerIrql(Irql);
     CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
-    KeRaiseIrql(HIGH_LEVEL, &Irql);
-    CheckApcs(0, 0, TRUE, HIGH_LEVEL);
-    KeEnterCriticalRegion();
-    CheckApcs(-1, 0, TRUE, HIGH_LEVEL);
-    KeEnterGuardedRegion();
-    CheckApcs(-1, -1, TRUE, HIGH_LEVEL);
-    KeLowerIrql(Irql);
-    CheckApcs(-1, -1, TRUE, PASSIVE_LEVEL);
-    KeLeaveCriticalRegion();
-    CheckApcs(0, -1, TRUE, PASSIVE_LEVEL);
-    KeLeaveGuardedRegion();
-    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+    if (!KmtIsCheckedBuild)
+    {
+        KeRaiseIrql(HIGH_LEVEL, &Irql);
+        CheckApcs(0, 0, TRUE, HIGH_LEVEL);
+        KeEnterCriticalRegion();
+        CheckApcs(-1, 0, TRUE, HIGH_LEVEL);
+        KeEnterGuardedRegion();
+        CheckApcs(-1, -1, TRUE, HIGH_LEVEL);
+        KeLowerIrql(Irql);
+        CheckApcs(-1, -1, TRUE, PASSIVE_LEVEL);
+        KeLeaveCriticalRegion();
+        CheckApcs(0, -1, TRUE, PASSIVE_LEVEL);
+        KeLeaveGuardedRegion();
+        CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
-    KeEnterGuardedRegion();
-    CheckApcs(0, -1, TRUE, PASSIVE_LEVEL);
-    KeRaiseIrql(HIGH_LEVEL, &Irql);
-    CheckApcs(0, -1, TRUE, HIGH_LEVEL);
-    KeEnterCriticalRegion();
-    CheckApcs(-1, -1, TRUE, HIGH_LEVEL);
-    KeLeaveGuardedRegion();
-    CheckApcs(-1, 0, TRUE, HIGH_LEVEL);
-    KeLowerIrql(Irql);
-    CheckApcs(-1, 0, FALSE, PASSIVE_LEVEL);
-    KeLeaveCriticalRegion();
-    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+        KeEnterGuardedRegion();
+        CheckApcs(0, -1, TRUE, PASSIVE_LEVEL);
+        KeRaiseIrql(HIGH_LEVEL, &Irql);
+        CheckApcs(0, -1, TRUE, HIGH_LEVEL);
+        KeEnterCriticalRegion();
+        CheckApcs(-1, -1, TRUE, HIGH_LEVEL);
+        KeLeaveGuardedRegion();
+        CheckApcs(-1, 0, TRUE, HIGH_LEVEL);
+        KeLowerIrql(Irql);
+        CheckApcs(-1, 0, FALSE, PASSIVE_LEVEL);
+        KeLeaveCriticalRegion();
+        CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
-    KeEnterCriticalRegion();
-    CheckApcs(-1, 0, FALSE, PASSIVE_LEVEL);
-    KeRaiseIrql(HIGH_LEVEL, &Irql);
-    CheckApcs(-1, 0, TRUE, HIGH_LEVEL);
-    KeEnterGuardedRegion();
-    CheckApcs(-1, -1, TRUE, HIGH_LEVEL);
-    KeLeaveCriticalRegion();
-    CheckApcs(0, -1, TRUE, HIGH_LEVEL);
-    KeLowerIrql(Irql);
-    CheckApcs(0, -1, TRUE, PASSIVE_LEVEL);
-    KeLeaveGuardedRegion();
-    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+        KeEnterCriticalRegion();
+        CheckApcs(-1, 0, FALSE, PASSIVE_LEVEL);
+        KeRaiseIrql(HIGH_LEVEL, &Irql);
+        CheckApcs(-1, 0, TRUE, HIGH_LEVEL);
+        KeEnterGuardedRegion();
+        CheckApcs(-1, -1, TRUE, HIGH_LEVEL);
+        KeLeaveCriticalRegion();
+        CheckApcs(0, -1, TRUE, HIGH_LEVEL);
+        KeLowerIrql(Irql);
+        CheckApcs(0, -1, TRUE, PASSIVE_LEVEL);
+        KeLeaveGuardedRegion();
+        CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+    }
 
     KeEnterCriticalRegion();
     CheckApcs(-1, 0, FALSE, PASSIVE_LEVEL);

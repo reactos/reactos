@@ -61,7 +61,7 @@ const KMT_TEST TestList[] =
     { "KeEvent",                            Test_KeEvent },
     { "KeGuardedMutex",                     Test_KeGuardedMutex },
     { "KeIrql",                             Test_KeIrql },
-    { "KeProcessor",                        Test_KeProcessor },
+    { "-KeProcessor",                       Test_KeProcessor },
     { "-KernelType",                        Test_KernelType },
     { "ObReference",                        Test_ObReference },
     { "ObType",                             Test_ObType },

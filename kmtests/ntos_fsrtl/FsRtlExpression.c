@@ -16,11 +16,15 @@ static VOID FsRtlIsNameInExpressionTest()
 {
     UNICODE_STRING Expression, Name;
 
-    RtlInitUnicodeString(&Expression, L"*");
-    RtlInitUnicodeString(&Name, L"");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
-    RtlInitUnicodeString(&Expression, L"");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    /* !Name->Length || !Expression->Length asserts */
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitUnicodeString(&Expression, L"*");
+        RtlInitUnicodeString(&Name, L"");
+        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+        RtlInitUnicodeString(&Expression, L"");
+        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    }
 
     RtlInitUnicodeString(&Expression, L"ntdll.dll");
     RtlInitUnicodeString(&Name, L".");
@@ -125,8 +129,11 @@ static VOID FsRtlIsNameInExpressionTest()
     RtlInitUnicodeString(&Expression, L"*.?.c.d");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     RtlInitUnicodeString(&Expression, L"*?");
-    RtlInitUnicodeString(&Name, L"");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitUnicodeString(&Name, L"");
+        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    }
     RtlInitUnicodeString(&Name, L"a");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     RtlInitUnicodeString(&Name, L"aa");
@@ -134,8 +141,11 @@ static VOID FsRtlIsNameInExpressionTest()
     RtlInitUnicodeString(&Name, L"aaa");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     RtlInitUnicodeString(&Expression, L"?*?");
-    RtlInitUnicodeString(&Name, L"");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitUnicodeString(&Name, L"");
+        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    }
     RtlInitUnicodeString(&Name, L"a");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
     RtlInitUnicodeString(&Name, L"aa");
@@ -166,11 +176,14 @@ static VOID FsRtlIsDbcsInExpressionTest()
 {
     ANSI_STRING Expression, Name;
 
-    RtlInitAnsiString(&Expression, "*");
-    RtlInitAnsiString(&Name, "");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
-    RtlInitAnsiString(&Expression, "");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitAnsiString(&Expression, "*");
+        RtlInitAnsiString(&Name, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+        RtlInitAnsiString(&Expression, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    }
 
     RtlInitAnsiString(&Expression, "ntdll.dll");
     RtlInitAnsiString(&Name, ".");
@@ -275,8 +288,11 @@ static VOID FsRtlIsDbcsInExpressionTest()
     RtlInitAnsiString(&Expression, "*.?.c.d");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
     RtlInitAnsiString(&Expression, "*?");
-    RtlInitAnsiString(&Name, "");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitAnsiString(&Name, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    }
     RtlInitAnsiString(&Name, "a");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
     RtlInitAnsiString(&Name, "aa");
@@ -284,8 +300,11 @@ static VOID FsRtlIsDbcsInExpressionTest()
     RtlInitAnsiString(&Name, "aaa");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
     RtlInitAnsiString(&Expression, "?*?");
-    RtlInitAnsiString(&Name, "");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitAnsiString(&Name, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    }
     RtlInitAnsiString(&Name, "a");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
     RtlInitAnsiString(&Name, "aa");
