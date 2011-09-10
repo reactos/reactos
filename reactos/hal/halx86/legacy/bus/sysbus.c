@@ -117,21 +117,21 @@ HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
                            OUT PKIRQL Irql,
                            OUT PKAFFINITY Affinity)
 {
-    ULONG SystemVector;
-    
-    /* Get the system vector */
-    SystemVector = PRIMARY_VECTOR_BASE + BusInterruptLevel;
-    
-    /* Validate it */
-    if ((SystemVector < PRIMARY_VECTOR_BASE) || (SystemVector > PRIMARY_VECTOR_BASE + 27))
+    UCHAR SystemVector;
+
+    /* Validate the IRQ */
+    if (BusInterruptLevel > 23)
     {
         /* Invalid vector */
-        DPRINT1("Vector %lx is too low or too high!\n", SystemVector);
+        DPRINT1("IRQ %lx is too high!\n", BusInterruptLevel);
         return 0;
     }
-    
+
+    /* Get the system vector */
+    SystemVector = HalpIrqToVector((UCHAR)BusInterruptLevel);
+
     /* Return the IRQL and affinity */
-    *Irql = (PRIMARY_VECTOR_BASE + 27) - SystemVector;
+    *Irql = HalpVectorToIrql(SystemVector);
     *Affinity = HalpDefaultInterruptAffinity;
     ASSERT(HalpDefaultInterruptAffinity);
     

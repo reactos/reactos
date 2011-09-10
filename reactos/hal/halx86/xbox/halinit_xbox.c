@@ -16,6 +16,8 @@
 #define NDEBUG
 #include <debug.h>
 
+const USHORT HalpBuildType = HAL_BUILD_TYPE;
+
 /* FUNCTIONS ***************************************************************/
 
 VOID

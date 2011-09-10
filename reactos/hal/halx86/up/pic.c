@@ -507,6 +507,12 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
         }
     }
     
+    /* Register IRQ 2 */
+    HalpRegisterVector(IDT_INTERNAL,
+                       PRIMARY_VECTOR_BASE + 2,
+                       PRIMARY_VECTOR_BASE + 2,
+                       HIGH_LEVEL);
+
     /* Restore interrupt state */
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
     __writeeflags(EFlags);

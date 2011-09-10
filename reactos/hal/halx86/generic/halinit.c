@@ -90,10 +90,10 @@ HalInitSystem(IN ULONG BootPhase,
         }
 
         /* Checked/free HAL requires checked/free kernel */
-        if (Prcb->BuildType != HAL_BUILD_TYPE)
+        if (Prcb->BuildType != HalpBuildType)
         {
             /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HAL_BUILD_TYPE, 0);
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
         }
 
         /* Initialize ACPI */
@@ -117,12 +117,6 @@ HalInitSystem(IN ULONG BootPhase,
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
         HalResetDisplay = HalpBiosDisplayReset;
         HalHaltSystem = HaliHaltSystem;
-
-        /* Register IRQ 2 */
-        HalpRegisterVector(IDT_INTERNAL,
-                           PRIMARY_VECTOR_BASE + 2,
-                           PRIMARY_VECTOR_BASE + 2,
-                           HIGH_LEVEL);
 
         /* Setup I/O space */
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
