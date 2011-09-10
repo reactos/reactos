@@ -362,7 +362,6 @@ static const IDirectMusicThruVtbl DirectMusicThru_Vtbl = {
 
 HRESULT WINAPI DMUSIC_CreateDirectMusicPortImpl (LPCGUID lpcGUID, LPVOID *ppobj, LPUNKNOWN pUnkOuter, LPDMUS_PORTPARAMS pPortParams, LPDMUS_PORTCAPS pPortCaps) {
 	IDirectMusicPortImpl *obj;
-	HRESULT hr = E_FAIL;
 
 	TRACE("(%p,%p,%p)\n", lpcGUID, ppobj, pUnkOuter);
 
@@ -380,7 +379,7 @@ HRESULT WINAPI DMUSIC_CreateDirectMusicPortImpl (LPCGUID lpcGUID, LPVOID *ppobj,
 	obj->caps = *pPortCaps;
 	obj->pDirectSound = NULL;
 	obj->pLatencyClock = NULL;
-	hr = DMUSIC_CreateReferenceClockImpl(&IID_IReferenceClock, (LPVOID*)&obj->pLatencyClock, NULL);
+	DMUSIC_CreateReferenceClockImpl(&IID_IReferenceClock, (LPVOID*)&obj->pLatencyClock, NULL);
 
 #if 0
 	if (pPortParams->dwValidParams & DMUS_PORTPARAMS_CHANNELGROUPS) {

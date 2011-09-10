@@ -437,14 +437,9 @@ MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, THEME *theme)
 BOOL
 MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags, THEME *theme)
 {
-	ULONG Height;
-	UINT VCenter;
 	HBRUSH hbr;
 	HGDIOBJ hFontOld;
     RECT rc;
-
-	Height = theme->Size[SIZE_CAPTION_Y] - 1;
-	VCenter = (rect->bottom - rect->top) / 2;
 
 	if (uFlags & DC_GRADIENT)
 	{

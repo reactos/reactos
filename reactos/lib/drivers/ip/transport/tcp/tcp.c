@@ -34,13 +34,12 @@ DisconnectTimeoutDpc(PKDPC Dpc,
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)DeferredContext;
     PLIST_ENTRY Entry;
     PTDI_BUCKET Bucket;
-    NTSTATUS Status;
-    
+
     LockObjectAtDpcLevel(Connection);
-    
+
     /* We timed out waiting for pending sends so force it to shutdown */
-    Status = TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
-    
+    TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
+
     while (!IsListEmpty(&Connection->SendRequest))
     {
         Entry = RemoveHeadList(&Connection->SendRequest);
@@ -151,11 +150,8 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection )
 {
     KIRQL OldIrql;
-    PVOID Socket;
 
     LockObject(Connection, &OldIrql);
-
-    Socket = Connection->SocketContext;
 
     FlushAllQueues(Connection, STATUS_CANCELLED);
 

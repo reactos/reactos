@@ -67,7 +67,6 @@ WsNcEntryInitializeFromRegistry(IN PNSCATALOG_ENTRY CatalogEntry,
 {
     CHAR CatalogEntryName[13];
     HKEY EntryKey;
-    LONG Return;
     ULONG RegType = REG_SZ;
     ULONG RegSize = MAX_PATH;
 
@@ -75,90 +74,90 @@ WsNcEntryInitializeFromRegistry(IN PNSCATALOG_ENTRY CatalogEntry,
     sprintf(CatalogEntryName, "%0""12""i", (int)UniqueId);
 
     /* Open the Entry */
-    Return = RegOpenKeyEx(ParentKey,
-                          CatalogEntryName,
-                          0,
-                          KEY_READ,
-                          &EntryKey);
+    RegOpenKeyEx(ParentKey,
+                 CatalogEntryName,
+                 0,
+                 KEY_READ,
+                 &EntryKey);
 
     /* Read the Library Path */
-    Return = RegQueryValueExW(EntryKey,
-                              L"LibraryPath",
-                              0,
-                              &RegType,
-                              (LPBYTE)&CatalogEntry->DllPath,
-                              &RegSize);
+    RegQueryValueExW(EntryKey,
+                     L"LibraryPath",
+                     0,
+                     &RegType,
+                     (LPBYTE)&CatalogEntry->DllPath,
+                     &RegSize);
 
     /* Query Display String Size*/
-    Return = RegQueryValueExW(EntryKey,
-                              L"DisplayString",
-                              0,
-                              NULL,
-                              NULL,
-                              &RegSize);
+    RegQueryValueExW(EntryKey,
+                     L"DisplayString",
+                     0,
+                     NULL,
+                     NULL,
+                     &RegSize);
 
     /* Allocate it */
     CatalogEntry->ProviderName = (LPWSTR)HeapAlloc(WsSockHeap, 0, RegSize);
 
     /* Read it */
-    Return = RegQueryValueExW(EntryKey,
-                              L"DisplayString",
-                              0,
-                              &RegType,
-                              (LPBYTE)CatalogEntry->ProviderName,
-                              &RegSize);
+    RegQueryValueExW(EntryKey,
+                     L"DisplayString",
+                     0,
+                     &RegType,
+                     (LPBYTE)CatalogEntry->ProviderName,
+                     &RegSize);
 
     /* Read the Provider Id */
     RegType = REG_BINARY;
     RegSize = sizeof(GUID);
-    Return = RegQueryValueEx(EntryKey,
-                             "ProviderId",
-                             0,
-                             &RegType,
-                             (LPBYTE)&CatalogEntry->ProviderId,
-                             &RegSize);
+    RegQueryValueEx(EntryKey,
+                    "ProviderId",
+                    0,
+                    &RegType,
+                    (LPBYTE)&CatalogEntry->ProviderId,
+                    &RegSize);
 
     /* Read the Address Family */
     RegType = REG_DWORD;
     RegSize = sizeof(DWORD);
-    Return = RegQueryValueEx(EntryKey,
-                             "AddressFamily",
-                             0,
-                             &RegType,
-                             (LPBYTE)&CatalogEntry->AddressFamily,
-                             &RegSize);
+    RegQueryValueEx(EntryKey,
+                    "AddressFamily",
+                    0,
+                    &RegType,
+                    (LPBYTE)&CatalogEntry->AddressFamily,
+                    &RegSize);
 
     /* Read the Namespace Id */
-    Return = RegQueryValueEx(EntryKey,
-                             "SupportedNamespace",
-                             0,
-                             &RegType,
-                             (LPBYTE)&CatalogEntry->NamespaceId,
-                             &RegSize);
+    RegQueryValueEx(EntryKey,
+                    "SupportedNamespace",
+                    0,
+                    &RegType,
+                    (LPBYTE)&CatalogEntry->NamespaceId,
+                    &RegSize);
 
     /* Read the Enabled Flag */
-    Return = RegQueryValueEx(EntryKey,
-                             "Enabled",
-                             0,
-                             &RegType,
-                             (LPBYTE)&CatalogEntry->Enabled,
-                             &RegSize);
+    RegQueryValueEx(EntryKey,
+                    "Enabled",
+                    0,
+                    &RegType,
+                    (LPBYTE)&CatalogEntry->Enabled,
+                    &RegSize);
 
     /* Read the Version */
-    Return = RegQueryValueEx(EntryKey,
-                             "Version",
-                             0,
-                             &RegType,
-                             (LPBYTE)&CatalogEntry->Version,
-                             &RegSize);
+    RegQueryValueEx(EntryKey,
+                    "Version",
+                    0,
+                    &RegType,
+                    (LPBYTE)&CatalogEntry->Version,
+                    &RegSize);
 
     /* Read the Support Service Class Info Flag */
-    Return = RegQueryValueEx(EntryKey,
-                             "Version",
-                             0,
-                             &RegType,
-                             (LPBYTE)&CatalogEntry->StoresServiceClassInfo,
-                             &RegSize);
+    RegQueryValueEx(EntryKey,
+                    "Version",
+                    0,
+                    &RegType,
+                    (LPBYTE)&CatalogEntry->StoresServiceClassInfo,
+                    &RegSize);
 
     /* Done */
     RegCloseKey(EntryKey);

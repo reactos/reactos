@@ -126,7 +126,6 @@ MMixerCheckFilterPinMidiSupport(
     PKSDATARANGE DataRange;
     KSPIN_COMMUNICATION Communication;
     KSPIN_DATAFLOW DataFlow;
-    MIXER_STATUS Status;
 
     /* get first datarange */
     DataRange = (PKSDATARANGE)(MultipleItem + 1);
@@ -146,11 +145,11 @@ MMixerCheckFilterPinMidiSupport(
             {
                 if (DataFlow == KSPIN_DATAFLOW_IN && Communication == KSPIN_COMMUNICATION_SINK)
                 {
-                    Status = MMixerAddMidiPin(MixerContext, MixerList, MixerData->DeviceId, PinId, FALSE, szPname);
+                    MMixerAddMidiPin(MixerContext, MixerList, MixerData->DeviceId, PinId, FALSE, szPname);
                 }
                 else if (DataFlow == KSPIN_DATAFLOW_OUT && Communication == KSPIN_COMMUNICATION_SOURCE)
                 {
-                    Status = MMixerAddMidiPin(MixerContext, MixerList, MixerData->DeviceId, PinId, TRUE, szPname);
+                    MMixerAddMidiPin(MixerContext, MixerList, MixerData->DeviceId, PinId, TRUE, szPname);
                 }
             }
         }

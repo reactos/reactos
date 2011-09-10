@@ -22,7 +22,6 @@ WSPAsyncSelect(IN  SOCKET Handle,
 {
     PSOCKET_INFORMATION Socket = NULL;
     PASYNC_DATA                 AsyncData;
-    NTSTATUS                    Status;
     BOOLEAN                     BlockMode;
 
     /* Get the Socket Structure associated to this Socket */
@@ -81,11 +80,11 @@ WSPAsyncSelect(IN  SOCKET Handle,
     AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
 
     /* Begin Async Select by using I/O Completion */
-    Status = NtSetIoCompletion(SockAsyncCompletionPort,
-                               (PVOID)&SockProcessQueuedAsyncSelect,
-                                AsyncData,
-                                0,
-                                0);
+    NtSetIoCompletion(SockAsyncCompletionPort,
+                      (PVOID)&SockProcessQueuedAsyncSelect,
+                      AsyncData,
+                      0,
+                      0);
 
     /* Return */
     return ERROR_SUCCESS;

@@ -564,7 +564,6 @@ TcpipAdvancedOptDlg(
 {
     TcpipConfNotifyImpl * This;
     LPPROPSHEETPAGE page;
-    int res;
 
     switch(uMsg)
     {
@@ -576,11 +575,11 @@ TcpipAdvancedOptDlg(
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_OPTPROP)
             {
-                res = DialogBoxParamW(netcfgx_hInstance,
-                                      MAKEINTRESOURCEW(IDD_TCPIP_FILTER_DLG), 
-                                      GetParent(hwndDlg), 
-                                      TcpipFilterSettingsDlg,
-                                      (LPARAM)GetWindowLongPtr(hwndDlg, DWLP_USER));
+                DialogBoxParamW(netcfgx_hInstance,
+                                MAKEINTRESOURCEW(IDD_TCPIP_FILTER_DLG), 
+                                GetParent(hwndDlg), 
+                                TcpipFilterSettingsDlg,
+                                (LPARAM)GetWindowLongPtr(hwndDlg, DWLP_USER));
                 break;
             }
     }
@@ -2359,14 +2358,11 @@ CopyIpAddrString(
     COPY_TYPE Type,
     LPWSTR szMetric)
 {
-    LPWSTR szItem;
     IP_ADDR_STRING * pCurrent;
     IP_ADDR *pNew, *pLast;
 
     pCurrent = pSrc;
     pLast = NULL;
-
-    szItem = szMetric;
 
     while(pCurrent)
     {

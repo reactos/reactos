@@ -329,7 +329,10 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN ScanDrive,
            IN PFMIFSCALLBACK Callback)
 {
-    BOOLEAN verify, salvage_files;
+#if 0
+    BOOLEAN verify;
+    BOOLEAN salvage_files;
+#endif
     //ULONG free_clusters;
     //DOS_FS fs;
 
@@ -344,9 +347,10 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     FsCheckTotalFiles = 0;
 
+#if 0
     verify = TRUE;
     salvage_files = TRUE;
-#if 0
+
     /* Open filesystem */
     fs_open(DriveRoot,FixErrors);
 

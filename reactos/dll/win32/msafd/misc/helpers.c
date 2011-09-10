@@ -296,10 +296,9 @@ SockLoadHelperDll(
     PWINSOCK_MAPPING Mapping, 
     PHELPER_DATA *HelperDllData)
 {
-    PHELPER_DATA	HelperData;
+    PHELPER_DATA        HelperData;
     PWSTR               HelperDllName;
     PWSTR               FullHelperDllName;
-    ULONG               HelperDllNameSize;
     PWSTR               HelperKey;
     HKEY                KeyHandle;
     ULONG               DataSize;
@@ -412,9 +411,9 @@ SockLoadHelperDll(
     }
 
     /* Get the Full name, expanding Environment Strings */
-    HelperDllNameSize = ExpandEnvironmentStringsW (HelperDllName,
-                                                   FullHelperDllName, 
-                                                   256);
+    ExpandEnvironmentStringsW (HelperDllName,
+                               FullHelperDllName, 
+                               256);
 
     /* Load the DLL */
     HelperData->hInstance = LoadLibraryW(FullHelperDllName);

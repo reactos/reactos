@@ -2598,7 +2598,6 @@ BOOLEAN SockGetAsyncSelectHelperAfdHandle(VOID)
     UNICODE_STRING AfdHelper;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoSb;
-    NTSTATUS Status;
     FILE_COMPLETION_INFORMATION CompletionInfo;
     OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
 
@@ -2617,17 +2616,17 @@ BOOLEAN SockGetAsyncSelectHelperAfdHandle(VOID)
                          NULL);
 
     /* Open the Handle to AFD */
-    Status = NtCreateFile(&SockAsyncHelperAfdHandle,
-                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoSb,
-                          NULL,
-                          0,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                          FILE_OPEN_IF,
-                          0,
-                          NULL,
-                          0);
+    NtCreateFile(&SockAsyncHelperAfdHandle,
+                 GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                 &ObjectAttributes,
+                 &IoSb,
+                 NULL,
+                 0,
+                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                 FILE_OPEN_IF,
+                 0,
+                 NULL,
+                 0);
 
     /* 
      * Now Set up the Completion Port Information 
@@ -2635,20 +2634,20 @@ BOOLEAN SockGetAsyncSelectHelperAfdHandle(VOID)
      */
     CompletionInfo.Port = SockAsyncCompletionPort;
     CompletionInfo.Key = SockAsyncSelectCompletionRoutine;
-    Status = NtSetInformationFile(SockAsyncHelperAfdHandle,
-                                  &IoSb,
-                                  &CompletionInfo,
-                                  sizeof(CompletionInfo),
-                                  FileCompletionInformation);
+    NtSetInformationFile(SockAsyncHelperAfdHandle,
+                         &IoSb,
+                         &CompletionInfo,
+                         sizeof(CompletionInfo),
+                         FileCompletionInformation);
 
 
     /* Protect the Handle */
     HandleFlags.ProtectFromClose = TRUE;
     HandleFlags.Inherit = FALSE;
-    Status = NtSetInformationObject(SockAsyncCompletionPort,
-                                    ObjectHandleFlagInformation,
-                                    &HandleFlags,
-                                    sizeof(HandleFlags));
+    NtSetInformationObject(SockAsyncCompletionPort,
+                           ObjectHandleFlagInformation,
+                           &HandleFlags,
+                           sizeof(HandleFlags));
 
 
     /* Set this variable to true so that Send/Recv/Accept will know wether to renable disabled events */

@@ -160,7 +160,6 @@ NTSTATUS ICMPSendDatagram(
     IP_PACKET Packet;
     PTA_IP_ADDRESS RemoteAddressTa = (PTA_IP_ADDRESS)ConnInfo->RemoteAddress;
     IP_ADDRESS RemoteAddress,  LocalAddress;
-    USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
     KIRQL OldIrql;
@@ -170,15 +169,14 @@ NTSTATUS ICMPSendDatagram(
     TI_DbgPrint(MID_TRACE,("RemoteAddressTa: %x\n", RemoteAddressTa));
 
     switch( RemoteAddressTa->Address[0].AddressType ) {
-    case TDI_ADDRESS_TYPE_IP:
-	RemoteAddress.Type = IP_ADDRESS_V4;
-	RemoteAddress.Address.IPv4Address =
-	    RemoteAddressTa->Address[0].Address[0].in_addr;
-	RemotePort = RemoteAddressTa->Address[0].Address[0].sin_port;
-	break;
+        case TDI_ADDRESS_TYPE_IP:
+            RemoteAddress.Type = IP_ADDRESS_V4;
+            RemoteAddress.Address.IPv4Address =
+                RemoteAddressTa->Address[0].Address[0].in_addr;
+            break;
 
-    default:
-	return STATUS_UNSUCCESSFUL;
+        default:
+            return STATUS_UNSUCCESSFUL;
     }
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));

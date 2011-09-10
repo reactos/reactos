@@ -107,7 +107,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
 add_library(glu32 SHARED ${SOURCE})
-
+allow_warnings(glu32)
 set_module_type(glu32 win32dll ENTRYPOINT 0 )
 
 if(NOT MSVC)

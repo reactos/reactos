@@ -252,7 +252,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
-    UCHAR State, BestState = 0;
+    UCHAR State;
     UINT Length, BestLength = 0, MaskLength;
     PNEIGHBOR_CACHE_ENTRY NCE, BestNCE = NULL;
 
@@ -281,7 +281,6 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;
-	    BestState  = State;
 	    TI_DbgPrint(DEBUG_ROUTER,("Route selected\n"));
 	}
 
