@@ -88,8 +88,8 @@ add_importlibs(kmtest advapi32 msvcrt kernel32 ntdll)
 add_target_compile_definitions(kmtest KMT_USER_MODE)
 #add_pch(kmtest include/kmt_test.h)
 
-add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR bootcd livecd)
-add_cd_file(TARGET kmtest DESTINATION reactos/bin NAME_ON_CD kmtest_.exe FOR regtest)
+set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
+add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
 
 #
 # Group targets
