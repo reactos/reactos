@@ -1712,6 +1712,9 @@ ObpCloseHandle(IN HANDLE Handle,
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Closing handle: %lx\n", __FUNCTION__, Handle);
 
+    if (AccessMode == KernelMode && Handle == (HANDLE)-1)
+        return STATUS_INVALID_HANDLE;
+
     /* Check if we're dealing with a kernel handle */
     if (ObIsKernelHandle(Handle, AccessMode))
     {
