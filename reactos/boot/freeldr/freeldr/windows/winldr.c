@@ -566,7 +566,6 @@ LoadAndBootWindowsCommon(
 	PLOADER_PARAMETER_BLOCK LoaderBlockVA;
 	BOOLEAN Status;
 	CHAR FileName[MAX_PATH];
-	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	LPCSTR SystemRoot;
@@ -582,15 +581,15 @@ LoadAndBootWindowsCommon(
 		OperatingSystemVersion = WinLdrDetectVersion();
 
 	/* Load kernel */
-	NtosBase = LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", &KernelDTE, 30);
+	LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", &KernelDTE, 30);
 
 	/* Load HAL */
-	HalBase = LoadModule(LoaderBlock, BootPath, "HAL.DLL", &HalDTE, 45);
+	LoadModule(LoaderBlock, BootPath, "HAL.DLL", &HalDTE, 45);
 
 	/* Load kernel-debugger support dll */
 	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
 	{
-		KdComBase = LoadModule(LoaderBlock, BootPath, "KDCOM.DLL", &KdComDTE, 60);
+		LoadModule(LoaderBlock, BootPath, "KDCOM.DLL", &KdComDTE, 60);
 	}
 
 	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */

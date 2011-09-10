@@ -93,7 +93,6 @@ UpdateGroupProperties(HWND hwndDlg)
     TCHAR szGroupName[UNLEN];
     INT iItem;
     HWND hwndLV;
-    NET_API_STATUS status;
     PLOCALGROUP_INFO_1 pGroupInfo = NULL;
 
     hwndLV = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
@@ -107,7 +106,7 @@ UpdateGroupProperties(HWND hwndDlg)
                          szGroupName,
                          UNLEN);
 
-    status = NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
+    NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
 
     ListView_SetItemText(hwndLV, iItem, 1,
                          pGroupInfo->lgrpi1_comment);

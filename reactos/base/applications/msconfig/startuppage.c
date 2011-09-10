@@ -77,7 +77,7 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
 {
     HKEY hKey, hSubKey;
-    DWORD Index, SubIndex, dwValues, dwSubValues, retVal;
+    DWORD Index, SubIndex, dwValues, dwSubValues;
     DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME;
     LV_ITEM item;
     TCHAR* Data;
@@ -89,7 +89,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
     {
         if (RegQueryInfoKey(hKey, NULL, NULL, NULL, &dwValues, NULL, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++)
+            for (Index = 0; Index < dwValues; Index++)
             {
                 dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
@@ -97,7 +97,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                 if (Data == NULL)
                     break;
 
-                retVal = RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL);
+                RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL);
                 _stprintf(szSubPath, _T("%s\\%s"), szBasePath, szValueName);
                 memset(&item, 0, sizeof(LV_ITEM));
                 item.mask = LVIF_TEXT;

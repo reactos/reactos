@@ -341,18 +341,17 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     TCHAR szGrouping[MAX_FMT_SIZE];
     TCHAR szBuffer[MAX_FMT_SIZE];
     CURRENCYFMT cyFmt;
-    INT ret;
     INT i;
 
     /* Get group separator */
-    ret = GetLocaleInfo(pGlobalData->lcid,
-                        LOCALE_SMONTHOUSANDSEP,
-                        szThousandSep, MAX_FMT_SIZE);
+    GetLocaleInfo(pGlobalData->lcid,
+                  LOCALE_SMONTHOUSANDSEP,
+                  szThousandSep, MAX_FMT_SIZE);
 
     /* Get grouping */
-    ret = GetLocaleInfo(pGlobalData->lcid,
-                        LOCALE_SMONGROUPING,
-                        szGrouping, MAX_FMT_SIZE);
+    GetLocaleInfo(pGlobalData->lcid,
+                  LOCALE_SMONGROUPING,
+                  szGrouping, MAX_FMT_SIZE);
 
     /* digit grouping */
     cyFmt.NumDigits = 0;

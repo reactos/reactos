@@ -142,14 +142,10 @@ add_library(acpi SHARED
     buspdo.c
     main.c)
 
+allow_warnings(acpi)
 set_module_type(acpi kernelmodedriver)
-
-target_link_libraries(acpi
-    wdmguid
-    acpica)
-
+target_link_libraries(acpi wdmguid acpica)
 add_importlibs(acpi ntoskrnl hal)
-
 add_cd_file(TARGET acpi DESTINATION reactos/system32/drivers NO_CAB FOR all)
 
 add_subdirectory(cmbatt)

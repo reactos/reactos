@@ -137,14 +137,12 @@ PdoQueryBusInformation(
   PIO_STACK_LOCATION IrpSp)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
-  PFDO_DEVICE_EXTENSION FdoDeviceExtension;
   PPNP_BUS_INFORMATION BusInformation;
 
   UNREFERENCED_PARAMETER(IrpSp);
   DPRINT("Called\n");
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
   BusInformation = ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
   Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
   if (BusInformation != NULL)
@@ -1337,13 +1335,10 @@ PdoSetPower(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PPDO_DEVICE_EXTENSION DeviceExtension;
   NTSTATUS Status;
 
   UNREFERENCED_PARAMETER(Irp);
   DPRINT("Called\n");
-
-  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   if (IrpSp->Parameters.Power.Type == DevicePowerState) {
     Status = STATUS_SUCCESS;

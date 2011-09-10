@@ -54,7 +54,6 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
              */
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCCB Ccb;
     PFCB Fcb;
 
     DPRINT("CdfsReadFile(ReadOffset %lu  Length %lu)\n", ReadOffset, Length);
@@ -64,7 +63,6 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (Length == 0)
         return(STATUS_SUCCESS);
 
-    Ccb = (PCCB)FileObject->FsContext2;
     Fcb = (PFCB)FileObject->FsContext;
 
     if (ReadOffset >= Fcb->Entry.DataLengthL)

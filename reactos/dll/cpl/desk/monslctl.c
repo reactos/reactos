@@ -684,7 +684,6 @@ MonSelGetMonitorFont(IN OUT PMONITORSELWND infoPtr,
     SIZE rcsize;
     LOGFONT lf;
     HFONT hPrevFont, hFont;
-    INT len;
 
     hFont = infoPtr->Monitors[Index].hFont;
     if (hFont == NULL &&
@@ -697,8 +696,6 @@ MonSelGetMonitorFont(IN OUT PMONITORSELWND infoPtr,
         rcsize.cy = infoPtr->Monitors[Index].rc.bottom - infoPtr->Monitors[Index].rc.top -
                     (2 * infoPtr->SelectionFrame.cy) - 2;
         rcsize.cy = (rcsize.cy * 60) / 100;
-
-        len = _tcslen(infoPtr->Monitors[Index].szCaption);
 
         hPrevFont = SelectObject(hDC,
                                  infoPtr->hFont);

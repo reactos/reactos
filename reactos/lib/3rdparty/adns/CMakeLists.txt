@@ -22,3 +22,4 @@ list(APPEND SOURCE
 
 add_library(adns ${SOURCE})
 add_dependencies(adns psdk)
+allow_warnings(adns)

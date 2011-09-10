@@ -41,3 +41,4 @@ add_library(libmpg123
     tabinit.c)
 
 add_dependencies(libmpg123 psdk)
+allow_warnings(libmpg123)

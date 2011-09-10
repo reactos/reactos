@@ -1025,11 +1025,9 @@ SoundsDlgProc(HWND hwndDlg,
         {
             LVITEM item;
             PLABEL_CONTEXT pLabelContext;
-            LPPSHNOTIFY lppsn;
             TCHAR * ptr;
 
             LPNMHDR lpnm = (LPNMHDR)lParam;
-            lppsn = (LPPSHNOTIFY) lParam;
 
             switch(lpnm->code)
             {

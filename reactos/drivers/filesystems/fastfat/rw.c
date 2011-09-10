@@ -749,7 +749,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    LARGE_INTEGER OldFileSize;
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Length = 0;
-   ULONG OldAllocationSize;
    PVOID Buffer;
    ULONG BytesPerSector;
 
@@ -905,7 +904,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    }
 
    OldFileSize = Fcb->RFCB.FileSize;
-   OldAllocationSize = Fcb->RFCB.AllocationSize.u.LowPart;
 
    Buffer = VfatGetUserBuffer(IrpContext->Irp);
    if (!Buffer)

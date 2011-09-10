@@ -116,7 +116,6 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
     TCHAR szFracNum[MAX_SAMPLES_STR_SIZE];
     TCHAR szFracCount[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
-    INT nRetCode;
 
     /* Get current number of fractional symbols */
     GetLocaleInfo(lcid,
@@ -143,10 +142,10 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
-                           CB_SETCURSEL,
-                           (WPARAM)_ttoi(szFracNum),
-                           (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
+                CB_SETCURSEL,
+                (WPARAM)_ttoi(szFracNum),
+                (LPARAM)0);
 }
 
 /* Init field separator control box */
@@ -325,7 +324,6 @@ InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
     TCHAR szNewSample[MAX_SAMPLES_STR_SIZE];
     LPTSTR pszResultStr;
     INT nCBIndex;
-    INT nRetCode;
 
     /* Get current negative numbers format */
     GetLocaleInfo(lcid,
@@ -372,10 +370,10 @@ InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
-                           CB_SETCURSEL,
-                           (WPARAM)_ttoi(szNegNumFmt),
-                           (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
+                CB_SETCURSEL,
+                (WPARAM)_ttoi(szNegNumFmt),
+                (LPARAM)0);
 }
 
 /* Init leading zeroes control box */
@@ -386,7 +384,6 @@ InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
     TCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
     LPTSTR pszResultStr;
     INT nCBIndex;
-    INT nRetCode;
 
     /* Get current leading zeroes format */
     GetLocaleInfo(lcid,
@@ -420,10 +417,10 @@ InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
     }
 
     /* Set current item to value from registry */
-    nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
-                           CB_SETCURSEL,
-                           (WPARAM)_ttoi(szLeadNumFmt),
-                           (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
+                CB_SETCURSEL,
+                (WPARAM)_ttoi(szLeadNumFmt),
+                (LPARAM)0);
 }
 
 static VOID

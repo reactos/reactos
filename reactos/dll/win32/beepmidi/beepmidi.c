@@ -500,7 +500,6 @@ PlayNote(
     {
         /* Start playing the note */
         NoteNode* new_node;
-        NoteNode* tail_node = NULL;
 
         EnterCriticalSection(&device_lock);
 
@@ -518,7 +517,6 @@ PlayNote(
             }
 #endif
 
-            tail_node = node;
             node = node->next;
         }
 

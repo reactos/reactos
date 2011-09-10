@@ -29,7 +29,6 @@ ReadBytes(
 	PWORKITEM_DATA WorkItemData)
 {
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
-	PUCHAR ComPortBase;
 	ULONG Length;
 	PUCHAR Buffer;
 	UCHAR ReceivedByte;
@@ -44,7 +43,6 @@ ReadBytes(
 	ASSERT(WorkItemData);
 
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 	Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
 	Buffer = SerialGetUserBuffer(Irp);
 
@@ -259,7 +257,6 @@ SerialWrite(
 	ULONG Length;
 	ULONG_PTR Information = 0;
 	PUCHAR Buffer;
-	PUCHAR ComPortBase;
 	KIRQL Irql;
 	NTSTATUS Status = STATUS_SUCCESS;
 
@@ -272,7 +269,6 @@ SerialWrite(
 	Length = Stack->Parameters.Write.Length;
 	Buffer = SerialGetUserBuffer(Irp);
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	if (Stack->Parameters.Write.ByteOffset.QuadPart != 0 || Buffer == NULL)
 	{

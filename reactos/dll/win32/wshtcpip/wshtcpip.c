@@ -523,7 +523,6 @@ WSHOpenSocket2(
     UNICODE_STRING TcpDeviceName = RTL_CONSTANT_STRING(DD_TCP_DEVICE_NAME);
     UNICODE_STRING UdpDeviceName = RTL_CONSTANT_STRING(DD_UDP_DEVICE_NAME);
     UNICODE_STRING RawDeviceName = RTL_CONSTANT_STRING(DD_RAW_IP_DEVICE_NAME);
-    NTSTATUS Status;
 
     DPRINT("WSHOpenSocket2 called\n");
 
@@ -562,7 +561,7 @@ WSHOpenSocket2(
         return WSAENOBUFS;
 
     /* Append the transport device name */
-    Status = RtlAppendUnicodeStringToString(TransportDeviceName, &String);
+    RtlAppendUnicodeStringToString(TransportDeviceName, &String);
 
     if (*SocketType == SOCK_RAW) {
         /* Append a separator */
@@ -575,7 +574,7 @@ WSHOpenSocket2(
         String.Length = 0;
         String.MaximumLength = TransportDeviceName->MaximumLength - TransportDeviceName->Length;
 
-        Status = RtlIntegerToUnicodeString((ULONG)*Protocol, 10, &String);
+        RtlIntegerToUnicodeString((ULONG)*Protocol, 10, &String);
 
         TransportDeviceName->Length += String.Length;
     }

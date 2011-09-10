@@ -469,14 +469,11 @@ FdoSetPower(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PFDO_DEVICE_EXTENSION DeviceExtension;
   NTSTATUS Status;
 
   UNREFERENCED_PARAMETER(Irp);
 
   DPRINT("Called\n");
-
-  DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   if (IrpSp->Parameters.Power.Type == DevicePowerState) {
     /* FIXME: Set device power state for the device */

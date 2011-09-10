@@ -510,7 +510,6 @@ CabinetOpen(VOID)
         IO_STATUS_BLOCK IoStatusBlock;
         UNICODE_STRING FileName;
         NTSTATUS NtStatus;
-        ULONG Size;
 
         RtlInitUnicodeString(&FileName, CabinetName);
 
@@ -581,7 +580,6 @@ CabinetOpen(VOID)
             return CAB_STATUS_INVALID_CAB;
         }
 
-        Size = 0;
         Buffer = (PUCHAR)(PCABHeader + 1);
 
         /* Read/skip any reserved bytes */

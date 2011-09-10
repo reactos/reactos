@@ -602,7 +602,6 @@ UpdateUserProperties(HWND hwndDlg)
     TCHAR szUserName[UNLEN];
     INT iItem;
     HWND hwndLV;
-    NET_API_STATUS status;
     PUSER_INFO_2 pUserInfo = NULL;
     LV_ITEM lvi;
 
@@ -617,7 +616,7 @@ UpdateUserProperties(HWND hwndDlg)
                          szUserName,
                          UNLEN);
 
-    status = NetUserGetInfo(NULL, szUserName, 2, (LPBYTE*)&pUserInfo);
+    NetUserGetInfo(NULL, szUserName, 2, (LPBYTE*)&pUserInfo);
 
     memset(&lvi, 0x00, sizeof(lvi));
     lvi.iItem = iItem;
