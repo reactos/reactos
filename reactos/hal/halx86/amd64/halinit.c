@@ -21,6 +21,23 @@ BOOLEAN HalpPciLockSettings;
 /* FUNCTIONS *****************************************************************/
 
 VOID
+NTAPI
+HalpInitProcessor(
+    IN ULONG ProcessorNumber,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    DPRINT1("ApicInitializeProcessor(%ld)\n", ProcessorNumber);
+
+    /* Initialize the local APIC for this cpu */
+    ApicInitializeLocalApic(ProcessorNumber);
+
+    /* Initialize the timer */
+    //ApicInitializeTimer(ProcessorNumber);
+
+}
+
+
+VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 
@@ -32,18 +49,4 @@ HalpInitPhase1(VOID)
 
 }
 
-VOID
-INIT_FUNCTION
-HalpInitializeClock(VOID)
-{
-}
 
-VOID
-HalpCalibrateStallExecution()
-{
-}
-
-VOID
-HalpInitializePICs(IN BOOLEAN EnableInterrupts)
-{
-}

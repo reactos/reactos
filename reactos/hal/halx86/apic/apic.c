@@ -16,9 +16,11 @@
 #include <debug.h>
 
 #include "apic.h"
+void HackEoi(void);
 
 /* GLOBALS ********************************************************************/
 
+ULONG ApicVersion;
 UCHAR HalpVectorToIndex[256];
 
 #ifndef _M_AMD64
@@ -101,6 +103,14 @@ IOApicWrite(UCHAR Register, ULONG Value)
     *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOWIN) = Value;
 }
 
+VOID
+FORCEINLINE
+ApicSendEOI(void)
+{
+    //ApicWrite(APIC_EOI, 0);
+    HackEoi();
+}
+
 KIRQL
 FORCEINLINE
 ApicGetProcessorIrql(VOID)
@@ -113,24 +123,27 @@ KIRQL
 FORCEINLINE
 ApicGetCurrentIrql(VOID)
 {
-    // HACK: This won't work with amd64, where cr8 is modified directly, but
-    // VBox is broken and returns a wrong value when using a vmmcall after a
-    // page table modification.
-    return KeGetPcr()->Irql;
+#ifdef _M_AMD64
+    return (KIRQL)__readcr8();
+#else
+    // HACK: some magic to Sync VBox's APIC registers
+    ApicRead(APIC_VER);
 
     /* Read the TPR and convert it to an IRQL */
     return TprToIrql(ApicRead(APIC_TPR));
+#endif
 }
 
 VOID
 FORCEINLINE
 ApicSetCurrentIrql(KIRQL Irql)
 {
+#ifdef _M_AMD64
+    __writecr8(Irql);
+#else
     /* Convert IRQL and write the TPR */
     ApicWrite(APIC_TPR, IrqlToTpr(Irql));
-
-    /* HACK: Keep PCR field in sync, s.a. */
-    KeGetPcr()->Irql = Irql;
+#endif
 }
 
 UCHAR
@@ -150,7 +163,7 @@ KIRQL
 FASTCALL
 HalpVectorToIrql(UCHAR Vector)
 {
-    return TprToIrql(Vector >> 2);
+    return TprToIrql(Vector);
 }
 
 UCHAR
@@ -248,6 +261,9 @@ ApicInitializeLocalApic(ULONG Cpu)
     SpIntRegister.SoftwareEnable = 1;
     SpIntRegister.FocusCPUCoreChecking = 0;
     ApicWrite(APIC_SIVR, SpIntRegister.Long);
+
+    /* Read the version and save it globally */
+    if (Cpu == 0) ApicVersion = ApicRead(APIC_VER);
 
     /* Set the mode to flat (max 8 CPUs supported!) */
     ApicWrite(APIC_DFR, APIC_DF_Flat);
@@ -430,6 +446,7 @@ ApicInitializeIOApic(VOID)
     ReDirReg.Destination = ApicRead(APIC_ID);
     IOApicWrite(IOAPIC_REDTBL + 2 * APIC_CLOCK_INDEX, ReDirReg.Long0);
 
+    ApicSendEOI();
 }
 
 VOID
@@ -447,14 +464,22 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 
     /* Initialize the I/O APIC */
     ApicInitializeIOApic();
-    ApicWrite(APIC_EOI, 0);
 
-    /* Register interrupt handlers */
+    /* Manually reserve some vectors */
+    HalpVectorToIndex[APIC_CLOCK_VECTOR] = 8;
+    HalpVectorToIndex[APC_VECTOR] = 99;
+    HalpVectorToIndex[DISPATCH_VECTOR] = 99;
+
+    /* Set interrupt handlers in the IDT */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
 #ifndef _M_AMD64
     KeRegisterInterruptHandler(APC_VECTOR, HalpApcInterrupt);
-    KeRegisterInterruptHandler(DPC_VECTOR, HalpDispatchInterrupt);
+    KeRegisterInterruptHandler(DISPATCH_VECTOR, HalpDispatchInterrupt);
 #endif
+
+    /* Register the vectors for APC and dispatch interrupts */
+    HalpRegisterVector(IDT_INTERNAL, 0, APC_VECTOR, APC_LEVEL);
+    HalpRegisterVector(IDT_INTERNAL, 0, DISPATCH_VECTOR, DISPATCH_LEVEL);
 
     /* Restore interrupt state */
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
@@ -466,11 +491,40 @@ DECLSPEC_NORETURN
 FASTCALL
 HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
+    KPROCESSOR_MODE ProcessorMode;
+    KIRQL OldIrql;
     ASSERT(ApicGetCurrentIrql() < APC_LEVEL);
     ASSERT(ApicGetProcessorIrql() == APC_LEVEL);
 
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
+   /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Save the old IRQL */
+    OldIrql = ApicGetCurrentIrql();
+
+    /* Set APC_LEVEL */
+    ApicSetCurrentIrql(APC_LEVEL);
+
+    /* Kernel or user APC? */
+    if (KiUserTrap(TrapFrame)) ProcessorMode = UserMode;
+    else if (TrapFrame->EFlags & EFLAGS_V86_MASK) ProcessorMode = UserMode;
+    else ProcessorMode = KernelMode;
+
+    /* Enable interrupts and call the kernel's APC interrupt handler */
+    _enable();
+    KiDeliverApc(ProcessorMode, NULL, TrapFrame);
+
+    /* Disable interrupts */
+    _disable();
+
+    /* Restore the old IRQL */
+    ApicSetCurrentIrql(OldIrql);
+
+    /* End the interrupt */
+    ApicSendEOI();
+
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
 }
 
 #ifndef _M_AMD64
@@ -480,9 +534,12 @@ FASTCALL
 HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL OldIrql = ApicGetCurrentIrql();
-__debugbreak();
+
     ASSERT(OldIrql < DISPATCH_LEVEL);
     ASSERT(ApicGetProcessorIrql() == DISPATCH_LEVEL);
+
+   /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
 
     ApicSetCurrentIrql(DISPATCH_LEVEL);
 
@@ -493,12 +550,19 @@ __debugbreak();
 
     ApicSetCurrentIrql(OldIrql);
 
-    ApicWrite(APIC_EOI, 0);
+    ApicSendEOI();
 
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
 #endif
+
+VOID
+NTAPI
+HalpSendEOI(VOID)
+{
+    ApicSendEOI();
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -580,14 +644,6 @@ HalDisableSystemInterrupt(
     IOApicWrite(IOAPIC_REDTBL + 2 * Irql, ReDirReg.Long0);
 }
 
-VOID
-NTAPI
-HalpSendEOI(VOID)
-{
-    /* Write 0 to the EndOfInterruptRegister */
-    ApicWrite(APIC_EOI, 0);
-}
-
 #ifndef _M_AMD64
 BOOLEAN
 NTAPI
@@ -609,19 +665,14 @@ HalBeginSystemInterrupt(
     return TRUE;
 }
 
-void HackEoi(void);
-
 VOID
 NTAPI
 HalEndSystemInterrupt(
     IN KIRQL OldIrql,
     IN PKTRAP_FRAME TrapFrame)
 {
-    /* Write 0 to the EndOfInterruptRegister */
-    //ApicWrite(APIC_EOI, 0);
-
-    // HACK!
-    HackEoi();
+    /* Send an EOI */
+    ApicSendEOI();
 
     /* Restore the old IRQL */
     ApicSetCurrentIrql(OldIrql);
