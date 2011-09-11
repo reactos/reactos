@@ -1055,7 +1055,6 @@ ScsiPortInitialize(IN PVOID Argument1,
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
-    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ScsiPortDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
 
     /* Obtain configuration information */
