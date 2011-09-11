@@ -2825,10 +2825,11 @@ PRTL_ACTIVATION_CONTEXT_STACK_FRAME
 FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
+    //RTL_ACTIVATION_CONTEXT_STACK_FRAME *top;
 
     /* find the right frame */
-    top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    //top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
     frame = &Frame->Frame;
 
     if (!frame)

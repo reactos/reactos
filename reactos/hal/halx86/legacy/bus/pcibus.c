@@ -311,7 +311,7 @@ HalpValidPCISlot(IN PBUS_HANDLER BusHandler,
     PCI_SLOT_NUMBER MultiSlot;
     PPCIPBUSDATA BusData = (PPCIPBUSDATA)BusHandler->BusData;
     UCHAR HeaderType;
-    ULONG Device;
+    //ULONG Device;
 
     /* Simple validation */
     if (Slot.u.bits.Reserved) return FALSE;
@@ -321,7 +321,7 @@ HalpValidPCISlot(IN PBUS_HANDLER BusHandler,
     if (!Slot.u.bits.FunctionNumber) return TRUE;
 
     /* Functions 0+ need Multi-Function support, so check the slot */
-    Device = Slot.u.bits.DeviceNumber;
+    //Device = Slot.u.bits.DeviceNumber;
     MultiSlot = Slot;
     MultiSlot.u.bits.FunctionNumber = 0;
 

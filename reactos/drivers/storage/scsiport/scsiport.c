@@ -1836,13 +1836,11 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 		 IN ULONG ErrorCode,
 		 IN ULONG UniqueId)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  //PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT1("ScsiPortLogError() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+  //DeviceExtension = CONTAINING_RECORD(HwDeviceExtension, SCSI_PORT_DEVICE_EXTENSION, MiniPortDeviceExtension);
 
 
   DPRINT("ScsiPortLogError() done\n");
@@ -4209,7 +4207,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     LONG Result;
     PIRP Irp;
-    ULONG SequenceNumber;
+    //ULONG SequenceNumber;
 
     Srb = SrbInfo->Srb;
     Irp = Srb->OriginalRequest;
@@ -4309,7 +4307,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     /* Save transfer length in the IRP */
     Irp->IoStatus.Information = Srb->DataTransferLength;
 
-    SequenceNumber = SrbInfo->SequenceNumber;
+    //SequenceNumber = SrbInfo->SequenceNumber;
     SrbInfo->SequenceNumber = 0;
 
     /* Decrement the queue count */
@@ -4577,7 +4575,6 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
             IN PVOID ServiceContext)
 {
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    BOOLEAN Result;
 
     DPRINT("ScsiPortIsr() called!\n");
 
@@ -4588,7 +4585,7 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
         return FALSE;
 
     /* Call miniport's HwInterrupt routine */
-    Result = DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+    DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
 
     /* If flag of notification is set - queue a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)

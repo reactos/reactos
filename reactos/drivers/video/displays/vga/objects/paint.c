@@ -11,11 +11,10 @@
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {
     int x, y, x2, y2, w, h, j;
-    ULONG offset, pre1;
-    ULONG orgpre1, orgx, midpre1, tmppre1;
+    ULONG orgx, pre1, midpre1, tmppre1;
+    //ULONG offset, orgpre1;
     int ileftpix, imidpix, irightpix;
 /*    double leftpix, midpix, rightpix;*/
-    UCHAR a;
 
     /* Swap dimensions so that x, y are at topmost left */
     if ( Dimensions.right < Dimensions.left )
@@ -46,7 +45,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
     DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);
 
     /* Calculate the starting offset */
-    offset = xconv[x]+y80[y];
+    //offset = xconv[x]+y80[y];
 
     /* Make a note of original x */
     orgx = x;
@@ -57,7 +56,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
     imidpix = (w-ileftpix-irightpix) / 8;
 
     pre1 = xconv[(x-1)&~7] + y80[y];
-    orgpre1=pre1;
+    //orgpre1=pre1;
 
     /* check for overlap ( very horizontally skinny rect ) */
     if ( (ileftpix+irightpix) > w )
@@ -70,7 +69,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
         tmppre1 = pre1;
         for ( j = y; j < y+h; j++ )
         {
-            a = READ_REGISTER_UCHAR ( vidmem+tmppre1 );
+            READ_REGISTER_UCHAR ( vidmem+tmppre1 );
             WRITE_REGISTER_UCHAR ( vidmem+tmppre1, iColor );
             tmppre1 += 80;
         }
@@ -86,7 +85,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
         tmppre1 = pre1;
         for ( j = y; j < y+h; j++ )
         {
-            a = READ_REGISTER_UCHAR(vidmem + tmppre1);
+            READ_REGISTER_UCHAR(vidmem + tmppre1);
             WRITE_REGISTER_UCHAR(vidmem + tmppre1, iColor);
             tmppre1 += 80;
         }
@@ -120,7 +119,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 
     for ( j = y; j < y+h; j++ )
     {
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
+        READ_REGISTER_UCHAR(vidmem + pre1);
         WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
         pre1 += 80;
     }

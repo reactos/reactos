@@ -403,7 +403,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
 						IN BOOLEAN ValidateOnly,
 						OUT PRAMDISK_DRIVE_EXTENSION *NewDriveExtension)
 {
-	ULONG BasePage, ViewCount, DiskType, Length;
+    ULONG BasePage, DiskType, Length;
+    //ULONG ViewCount;
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
     PRAMDISK_DRIVE_EXTENSION DriveExtension;
@@ -456,11 +457,11 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 //
                 return STATUS_INVALID_PARAMETER;
             }
-			
+
 			//
 			// Read the view count instead
 			//
-			ViewCount = Input->ViewCount;
+			//ViewCount = Input->ViewCount;
 			
 			//
 			// Sanitize disk options
@@ -1288,11 +1289,11 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
                  IN PIRP Irp)
 {
     PRAMDISK_DRIVE_EXTENSION DeviceExtension;
-    ULONG Length;
-    LARGE_INTEGER ByteOffset;
+    //ULONG Length;
+    //LARGE_INTEGER ByteOffset;
     PIO_STACK_LOCATION IoStackLocation;
     NTSTATUS Status, ReturnStatus;
-    
+
     //
     // Get the device extension and make sure this isn't a bus
     //
@@ -1310,8 +1311,8 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
     // Capture parameters
     //
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    Length = IoStackLocation->Parameters.Read.Length;
-    ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    //Length = IoStackLocation->Parameters.Read.Length;
+    //ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
     
     //
     // FIXME: Validate offset

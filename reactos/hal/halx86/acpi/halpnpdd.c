@@ -282,12 +282,12 @@ NTAPI
 HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
                       OUT PDEVICE_CAPABILITIES Capabilities)
 {
-    PPDO_EXTENSION PdoExtension;
+    //PPDO_EXTENSION PdoExtension;
     NTSTATUS Status;
     PAGED_CODE();
     
     /* Get the extension and check for valid version */
-    PdoExtension = DeviceObject->DeviceExtension;
+    //PdoExtension = DeviceObject->DeviceExtension;
     ASSERT(Capabilities->Version == 1);
     if (Capabilities->Version == 1)
     {
@@ -619,7 +619,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStackLocation;
-    PPDO_EXTENSION PdoExtension;
+    //PPDO_EXTENSION PdoExtension;
     PFDO_EXTENSION FdoExtension;
     NTSTATUS Status;
     UCHAR Minor;
@@ -691,8 +691,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
     {
         /* This is a PDO instead */
         ASSERT(FdoExtension->ExtensionType == PdoExtensionType);
-        PdoExtension = (PPDO_EXTENSION)FdoExtension;
-        
+        //PdoExtension = (PPDO_EXTENSION)FdoExtension;
         /* Query the IRP type */
         Status = STATUS_SUCCESS;
         switch (Minor)

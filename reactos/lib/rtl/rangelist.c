@@ -57,7 +57,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 	     IN PVOID Owner OPTIONAL)
 {
   PRTL_RANGE_ENTRY RangeEntry;
-  PRTL_RANGE_ENTRY Previous;
+  //PRTL_RANGE_ENTRY Previous;
   PRTL_RANGE_ENTRY Current;
   PLIST_ENTRY Entry;
 
@@ -91,7 +91,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
     }
   else
     {
-      Previous = NULL;
+      //Previous = NULL;
       Entry = RangeList->ListHead.Flink;
       while (Entry != &RangeList->ListHead)
 	{
@@ -108,7 +108,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 	      return STATUS_SUCCESS;
 	    }
 
-	  Previous = Current;
+	  //Previous = Current;
 	  Entry = Entry->Flink;
 	}
 

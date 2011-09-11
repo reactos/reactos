@@ -912,8 +912,8 @@ CreateMainWindow(LPCTSTR lpCaption,
                                   Info);
         if (hMainWnd == NULL)
         {
-            int ret;
-            ret = GetLastError();
+            //int ret;
+            //ret = GetLastError();
             GetError();
             HeapFree(ProcessHeap,
                      0,
