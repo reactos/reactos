@@ -36,12 +36,7 @@ RtcClockRateToIncrement(UCHAR Rate)
 VOID
 RtcSetClockRate(UCHAR ClockRate)
 {
-    ULONG_PTR EFlags;
     UCHAR RegisterA;
-
-    /* Disable interrupts */
-    EFlags = __readeflags();
-    _disable();
 
     /* Update the global values */
     HalpCurrentRate = ClockRate;
@@ -64,9 +59,6 @@ RtcSetClockRate(UCHAR ClockRate)
 
     /* Release CMOS lock */
     HalpReleaseCmosSpinLock();
-
-    /* Restore interrupts if they were previously enabled */
-    __writeeflags(EFlags);
 }
 
 
@@ -75,7 +67,13 @@ NTAPI
 INIT_FUNCTION
 HalpInitializeClock(VOID)
 {
+    ULONG_PTR EFlags;
     UCHAR RegisterB;
+
+    /* Save EFlags and disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+
     // TODO: disable NMI
 
     /* Acquire CMOS lock */
@@ -91,9 +89,13 @@ HalpInitializeClock(VOID)
     /* Set initial rate */
     RtcSetClockRate(HalpCurrentRate);
 
+    /* Restore interrupt state */
+    __writeeflags(EFlags);
+
     /* Notify the kernel about the maximum and minimum increment */
     KeSetTimeIncrement(RtcClockRateToIncrement(RtcMaximumClockRate),
                        RtcClockRateToIncrement(RtcMinimumClockRate));
+
 
     DPRINT1("Clock initialized\n");
 }

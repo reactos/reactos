@@ -5,7 +5,7 @@
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APC_VECTOR           0x3D // IRQL 01
 #define APIC_SPURIOUS_VECTOR 0x3f
-#define DPC_VECTOR           0x41 // IRQL 02
+#define DISPATCH_VECTOR      0x41 // IRQL 02
 #define APIC_GENERIC_VECTOR  0xC1 // IRQL 27
 #define APIC_CLOCK_VECTOR    0xD1 // IRQL 28
 #define APIC_SYNCH_VECTOR    0xD1 // IRQL 28
@@ -22,7 +22,7 @@
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APIC_SPURIOUS_VECTOR 0x1f
 #define APC_VECTOR           0x3D // IRQL 01
-#define DPC_VECTOR           0x41 // IRQL 02
+#define DISPATCH_VECTOR      0x41 // IRQL 02
 #define APIC_GENERIC_VECTOR  0xC1 // IRQL 27
 #define APIC_CLOCK_VECTOR    0xD1 // IRQL 28
 #define APIC_SYNCH_VECTOR    0xD1 // IRQL 28

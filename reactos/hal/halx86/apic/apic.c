@@ -502,8 +502,11 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Save the old IRQL */
     OldIrql = ApicGetCurrentIrql();
 
-    /* Set APC_LEVEL */
+    /* Raise to APC_LEVEL */
     ApicSetCurrentIrql(APC_LEVEL);
+
+    /* End the interrupt */
+    ApicSendEOI();
 
     /* Kernel or user APC? */
     if (KiUserTrap(TrapFrame)) ProcessorMode = UserMode;
@@ -520,9 +523,6 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Restore the old IRQL */
     ApicSetCurrentIrql(OldIrql);
 
-    /* End the interrupt */
-    ApicSendEOI();
-
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
@@ -533,24 +533,29 @@ DECLSPEC_NORETURN
 FASTCALL
 HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
-    KIRQL OldIrql = ApicGetCurrentIrql();
-
-    ASSERT(OldIrql < DISPATCH_LEVEL);
+    KIRQL OldIrql;
+    ASSERT(ApicGetCurrentIrql() < DISPATCH_LEVEL);
     ASSERT(ApicGetProcessorIrql() == DISPATCH_LEVEL);
 
    /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
 
+    /* Save the old IRQL */
+    OldIrql = ApicGetCurrentIrql();
+
+    /* Raise to DISPATCH_LEVEL */
     ApicSetCurrentIrql(DISPATCH_LEVEL);
+
+    /* End the interrupt */
+    ApicSendEOI();
 
     /* Enable interrupts and call the kernel's DPC interrupt handler */
     _enable();
     KiDispatchInterrupt();
     _disable();
 
+    /* Restore the old IRQL */
     ApicSetCurrentIrql(OldIrql);
-
-    ApicSendEOI();
 
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
@@ -604,20 +609,41 @@ HalEnableSystemInterrupt(
     ASSERT(Irql <= HIGH_LEVEL);
     ASSERT((IrqlToTpr(Irql) & 0xF0) == (Vector & 0xF0));
 
+    /* Get the irq for this vector */
     Index = HalpVectorToIndex[Vector];
 
-    /* Read lower dword of redirection entry */
-    ReDirReg.Long0 = IOApicRead(IOAPIC_REDTBL + 2 * Index);
+    /* Check if its valid */
+    if (Index == 0xff)
+    {
+        /* Interrupt is not in use */
+        return FALSE;
+    }
 
-    ReDirReg.Vector = Vector;
-    ReDirReg.DeliveryMode = APIC_MT_LowestPriority;
-    ReDirReg.DestinationMode = APIC_DM_Logical;
-    ReDirReg.Destination |= ApicLogicalId(Prcb->Number);
-    ReDirReg.TriggerMode = 1 - InterruptMode;
+    /* Read the redirection entry */
+    ReDirReg = ApicReadIORedirectionEntry(Index);
+
+    /* Check if the interrupt was unused */
+    if (ReDirReg.Vector != Vector)
+    {
+        ReDirReg.Vector = Vector;
+        ReDirReg.DeliveryMode = APIC_MT_LowestPriority;
+        ReDirReg.DestinationMode = APIC_DM_Logical;
+        ReDirReg.Destination = 0;
+        ReDirReg.TriggerMode = 1 - InterruptMode;
+    }
+
+    /* Check if the destination is logical */
+    if (ReDirReg.DestinationMode = APIC_DM_Logical)
+    {
+        /* Set the bit for this cpu */
+        ReDirReg.Destination |= ApicLogicalId(Prcb->Number);
+    }
+
+    /* Now unmask it */
     ReDirReg.Mask = FALSE;
 
-    /* Write back lower dword */
-    IOApicWrite(IOAPIC_REDTBL + 2 * Irql, ReDirReg.Long0);
+    /* Write back the entry */
+    ApicWriteIORedirectionEntry(Index, ReDirReg);
 
     return TRUE;
 }
