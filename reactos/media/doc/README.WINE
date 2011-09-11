@@ -270,7 +270,7 @@ User32 -
 Update process for autosync DLLs
 
 *** This process can only be done on Microsoft Windows ***
-- Download wineimport.cmd at svn://svn.reactos.org/reactos/trunk/tools/
+- Download wineimport.cmd at svn://svn.reactos.org/project-tools/trunk/
 - Download cvs command line program and be sure to put it in your path
   (available at http://ftp.gnu.org/non-gnu/cvs/binary/stable/x86-woe/ )
 - Download svn command line program and be sure to put it in your path

@@ -306,7 +306,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     // Loop two tables (Hyperspace and TTB). Each one is 16KB
     //
     //
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < sizeof(Pfn) / sizeof(Pfn[0]); i++)
     {
         //
         // Allocate a page

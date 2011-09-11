@@ -489,7 +489,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     else
     {
         /* Use the optimized path after acquiring the lock */
-        QuickPath = 1;
+        QuickPath = TRUE;
         NewBuffer = NULL;
     }
 
