@@ -613,7 +613,7 @@ KsAllocateObjectHeader(
     IN  KSDISPATCH_TABLE* Table)
 {
     PIO_STACK_LOCATION IoStack;
-    PDEVICE_EXTENSION DeviceExtension;
+    //PDEVICE_EXTENSION DeviceExtension;
     //PKSIDEVICE_HEADER DeviceHeader;
     PKSIOBJECT_HEADER ObjectHeader;
     //PKSOBJECT_CREATE_ITEM CreateItem;
@@ -631,7 +631,7 @@ KsAllocateObjectHeader(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    //DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
     /* get device header */
     //DeviceHeader = DeviceExtension->DeviceHeader;
 

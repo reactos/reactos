@@ -731,7 +731,7 @@ NTSTATUS DispTdiQueryInformation(
     case TDI_QUERY_CONNECTION_INFO:
       {
         PTDI_CONNECTION_INFO ConnectionInfo;
-        PCONNECTION_ENDPOINT Endpoint;
+        //PCONNECTION_ENDPOINT Endpoint;
 
         if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*ConnectionInfo)) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
@@ -743,8 +743,7 @@ NTSTATUS DispTdiQueryInformation(
 
         switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
           case TDI_CONNECTION_FILE:
-            Endpoint =
-              (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+            //Endpoint = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
             RtlZeroMemory(ConnectionInfo, sizeof(*ConnectionInfo));
             return STATUS_SUCCESS;
 

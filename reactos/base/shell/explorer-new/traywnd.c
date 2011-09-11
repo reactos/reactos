@@ -321,11 +321,11 @@ ITrayWindowImpl_CalculateValidSize(IN OUT ITrayWindowImpl *This,
                                    IN OUT RECT *pRect)
 {
     RECT rcScreen;
-    BOOL Horizontal;
+    //BOOL Horizontal;
     HMONITOR hMon;
     SIZE szMax, szWnd;
 
-    Horizontal = ITrayWindowImpl_IsPosHorizontal(This);
+    //Horizontal = ITrayWindowImpl_IsPosHorizontal(This);
 
     szWnd.cx = pRect->right - pRect->left;
     szWnd.cy = pRect->bottom - pRect->top;

@@ -883,7 +883,8 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
 {
     HANDLE handle = 0;
     HICON hIcon = 0;
-    HRSRC hRsrc, hGroupRsrc;
+    HRSRC hRsrc;
+    //HRSRC hGroupRsrc;
     CURSORICONDIR *dir;
     CURSORICONDIRENTRY *dirEntry;
     LPBYTE bits;
@@ -906,7 +907,7 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
     if (!(hRsrc = FindResourceW( hInstance, name,
                                  (LPWSTR)(fCursor ? RT_GROUP_CURSOR : RT_GROUP_ICON) )))
         return 0;
-    hGroupRsrc = hRsrc;
+    //hGroupRsrc = hRsrc;
 
     /* Find the best entry in the directory */
 

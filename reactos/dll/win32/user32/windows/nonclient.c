@@ -1045,19 +1045,19 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
 VOID
 DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point)
 {
-   INT ScrollBar;
+   //INT ScrollBar;
 
    if ((wParam & 0xfff0) == SC_HSCROLL)
    {
       if ((wParam & 0x0f) != HTHSCROLL)
          return;
-      ScrollBar = SB_HORZ;
+      //ScrollBar = SB_HORZ;
    }
    else
    {
       if ((wParam & 0x0f) != HTVSCROLL)
          return;
-      ScrollBar = SB_VERT;
+      //ScrollBar = SB_VERT;
    }
 
    /* FIXME */

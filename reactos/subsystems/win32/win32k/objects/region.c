@@ -2029,7 +2029,7 @@ PROSRGNDATA
 FASTCALL
 REGION_AllocRgnWithHandle(INT nReg)
 {
-    HRGN hReg;
+    //HRGN hReg;
     PROSRGNDATA pReg;
 
     pReg = (PROSRGNDATA)GDIOBJ_AllocateObject(GDIObjType_RGN_TYPE,
@@ -2048,7 +2048,7 @@ REGION_AllocRgnWithHandle(INT nReg)
         return NULL;
     }
 
-    hReg = pReg->BaseObject.hHmgr;
+    //hReg = pReg->BaseObject.hHmgr;
 
     if (nReg == 0 || nReg == 1)
     {

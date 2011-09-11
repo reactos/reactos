@@ -346,7 +346,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldGroupName[UNLEN];
     TCHAR szNewGroupName[UNLEN];
-    LOCALGROUP_INFO_0 lgrpi0;
+    //LOCALGROUP_INFO_0 lgrpi0;
     NET_API_STATUS status;
 
     /* Leave, if there is no valid listview item */
@@ -375,7 +375,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
         return FALSE;
 
     /* Change the user name */
-    lgrpi0.lgrpi0_name = szNewGroupName;
+    //lgrpi0.lgrpi0_name = szNewGroupName;
 
 #if 0
     status = NetLocalGroupSetInfo(NULL, szOldGroupName, 0, (LPBYTE)&lgrpi0, NULL);

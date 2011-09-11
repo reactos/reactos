@@ -392,7 +392,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     COLORADJUSTMENT ca;
     POINTL MaskOrigin = {0, 0};
     SURFACE *psurfDest;
-    SURFACE *psurfSource = NULL;
+    //SURFACE *psurfSource = NULL;
     RECTL InputClippedRect;
     RECTL InputRect;
     RECTL OutputRect;
@@ -469,7 +469,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     if (UsesSource)
     {
-        psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+        //psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
     }
 
     /* Prepare color adjustment */

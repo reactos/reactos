@@ -958,7 +958,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     BOOLEAN ret;
     RECTL OutputRect;
     POINTL InputPoint;
-    SURFACE *psurfDest;
+    //SURFACE *psurfDest;
 
     ASSERT(psoMask);
 
@@ -986,7 +986,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     /* No success yet */
     ret = FALSE;
     ASSERT(psoDest);
-    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+    //psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     /* Dummy BitBlt to let driver know that it should flush its changes.
        This should really be done using a call to DrvSynchronizeSurface,

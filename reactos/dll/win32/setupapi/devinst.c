@@ -134,12 +134,13 @@ CheckSectionValid(
     OUT PDWORD ScoreSuiteMask)
 {
     LPWSTR Section = NULL;
-    LPCWSTR pExtensionPlatform, pExtensionArchitecture;
+    //LPCWSTR pExtensionPlatform;
+    LPCWSTR pExtensionArchitecture;
     LPWSTR Fields[6];
     DWORD i;
     BOOL ret = FALSE;
 
-    static const WCHAR ExtensionPlatformNone[]  = {'.',0};
+    //static const WCHAR ExtensionPlatformNone[]  = {'.',0};
     static const WCHAR ExtensionPlatformNT[]  = {'.','N','T',0};
     static const WCHAR ExtensionPlatformWindows[]  = {'.','W','i','n',0};
 
@@ -167,14 +168,14 @@ CheckSectionValid(
     switch (PlatformInfo->Platform)
     {
         case VER_PLATFORM_WIN32_WINDOWS:
-            pExtensionPlatform = ExtensionPlatformWindows;
+            //pExtensionPlatform = ExtensionPlatformWindows;
             break;
         case VER_PLATFORM_WIN32_NT:
-            pExtensionPlatform = ExtensionPlatformNT;
+            //pExtensionPlatform = ExtensionPlatformNT;
             break;
         default:
             ERR("Unknown platform 0x%lx\n", PlatformInfo->Platform);
-            pExtensionPlatform = ExtensionPlatformNone;
+            //pExtensionPlatform = ExtensionPlatformNone;
             break;
     }
     switch (PlatformInfo->ProcessorArchitecture)

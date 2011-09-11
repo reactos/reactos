@@ -127,7 +127,6 @@ GdiPoolAllocate(
     PLIST_ENTRY ple;
     PVOID pvAlloc, pvBaseAddress;
     SIZE_T cjSize;
-    NTSTATUS status;
 
     /* Disable APCs and acquire the pool lock */
     KeEnterCriticalRegion();
@@ -192,12 +191,12 @@ GdiPoolAllocate(
         /* Commit the pages */
         pvBaseAddress = PAGE_ALIGN(pvAlloc);
         cjSize = ADDRESS_AND_SIZE_TO_SPAN_PAGES(pvAlloc, pPool->cjAllocSize) * PAGE_SIZE;
-        status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                         &pvBaseAddress,
-                                         0,
-                                         &cjSize,
-                                         MEM_COMMIT,
-                                         PAGE_READWRITE);
+        ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                &pvBaseAddress,
+                                0,
+                                &cjSize,
+                                MEM_COMMIT,
+                                PAGE_READWRITE);
 
         pSection->ulCommitBitmap |= ulPageBit;
     }

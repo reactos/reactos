@@ -29,7 +29,6 @@ MmZeroPageThread(VOID)
     PKTHREAD Thread = KeGetCurrentThread();
     //PVOID StartAddress, EndAddress;
     PVOID WaitObjects[2];
-    NTSTATUS Status;
     KIRQL OldIrql;
     PVOID ZeroAddress;
     PFN_NUMBER PageIndex, FreePage;
@@ -50,14 +49,14 @@ MmZeroPageThread(VOID)
 
     while (TRUE)
     {
-        Status = KeWaitForMultipleObjects(1, // 2
-                                          WaitObjects,
-                                          WaitAny,
-                                          WrFreePage,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL,
-                                          NULL);
+        KeWaitForMultipleObjects(1, // 2
+                                 WaitObjects,
+                                 WaitAny,
+                                 WrFreePage,
+                                 KernelMode,
+                                 FALSE,
+                                 NULL,
+                                 NULL);
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         while (TRUE)
         {

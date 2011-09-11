@@ -1078,7 +1078,8 @@ CmpLoadHiveThread(IN PVOID StartContext)
 {
     WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
-    ULONG FileStart, RegStart, i, ErrorResponse, WorkerCount, Length;
+    ULONG FileStart, i, ErrorResponse, WorkerCount, Length;
+    //ULONG RegStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
     HANDLE PrimaryHandle, LogHandle;
@@ -1106,7 +1107,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
     /* And build the registry root path */
     RtlInitUnicodeString(&TempName, L"\\REGISTRY\\");
     RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
-    RegStart = RegName.Length;
+    //RegStart = RegName.Length;
 
     /* Build the base name */
     RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].BaseName);

@@ -138,15 +138,17 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
 	INT   current = 0;	/*the position of the cursor in the string (str)*/
 	INT   charcount = 0;/*chars in the string (str)*/
 	INPUT_RECORD ir;
+#ifdef FEATURE_UNIX_FILENAME_COMPLETION
 	WORD   wLastKey = 0;
+#endif
 	TCHAR  ch;
-	BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
 	BOOL bReturn = FALSE;
 	BOOL bCharInput;
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
 	TCHAR szPath[MAX_PATH];
 #endif
 #ifdef FEATURE_HISTORY
+	//BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
 	TCHAR PreviousChar;
 #endif
 
@@ -209,7 +211,7 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
 						current = charcount = 0;
 						curx = orgx;
 						cury = orgy;
-						bContinue=TRUE;
+						//bContinue=TRUE;
 						break;
 					}
 
@@ -223,7 +225,7 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
 						current = charcount = _tcslen (str);
 						ConOutPrintf (_T("%s"), str);
 						GetCursorXY (&curx, &cury);
-						bContinue=TRUE;
+						//bContinue=TRUE;
 						break;
 					}
 
@@ -599,7 +601,7 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
 				}
 			}
 
-		wLastKey = ir.Event.KeyEvent.wVirtualKeyCode;
+		//wLastKey = ir.Event.KeyEvent.wVirtualKeyCode;
 	}
 	while (!bReturn);
 

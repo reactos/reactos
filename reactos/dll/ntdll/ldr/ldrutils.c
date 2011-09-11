@@ -1591,7 +1591,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
     PWCHAR Buffer, BufEnd = NULL;
     ULONG Length = 0;
     WCHAR p;
-    PWCHAR pp;
+    //PWCHAR pp;
 
     /* Check if we don't have a search path */
     if (!ActualSearchPath) *SearchPath = LdrpDefaultPath.Buffer;
@@ -1716,7 +1716,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
             BufEnd = Buffer;
 
             /* Update string position */
-            pp = ActualSearchPath++;
+            //pp = ActualSearchPath++;
         }
         else
         {

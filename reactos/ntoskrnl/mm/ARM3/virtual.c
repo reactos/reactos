@@ -116,7 +116,8 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
 {
     PFN_NUMBER ActualPages = 0;
     PETHREAD CurrentThread = PsGetCurrentThread();
-    PMMPFN Pfn1, Pfn2;
+    PMMPFN Pfn1;
+    //PMMPFN Pfn2;
     PFN_NUMBER PageFrameIndex, PageTableIndex;
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -149,7 +150,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
 
                 /* Get the page table entry */
                 PageTableIndex = Pfn1->u4.PteFrame;
-                Pfn2 = MiGetPfnEntry(PageTableIndex);
+                //Pfn2 = MiGetPfnEntry(PageTableIndex);
 
                 /* Lock the PFN database */
                 OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);

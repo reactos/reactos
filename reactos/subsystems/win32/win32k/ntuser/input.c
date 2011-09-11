@@ -1741,7 +1741,7 @@ NtUserGetMouseMovePointsEx(
     DWORD resolution)
 {
     MOUSEMOVEPOINT Safeppt;
-    BOOL Hit;
+    //BOOL Hit;
     INT Count = -1;
     DECLARE_RETURN(DWORD);
 
@@ -1775,7 +1775,7 @@ NtUserGetMouseMovePointsEx(
     // http://msdn.microsoft.com/en-us/library/ms646259(v=vs.85).aspx
     // This explains the math issues in transforming points.
     Count = gcur_count; // FIFO is forward so retrieve backward.
-    Hit = FALSE;
+    //Hit = FALSE;
     do
     {
         if (Safeppt.x == 0 && Safeppt.y == 0)
@@ -1787,7 +1787,7 @@ NtUserGetMouseMovePointsEx(
             {
                 if (Safeppt.time == MouseHistoryOfMoves[Count].time)
                 {
-                    Hit = TRUE;
+                    //Hit = TRUE;
                     break;
                 }
                 else
@@ -1796,7 +1796,7 @@ NtUserGetMouseMovePointsEx(
                     continue;
                 }
             }
-            Hit = TRUE;
+            //Hit = TRUE;
             break;
         }
         if (--Count < 0) Count = 63;

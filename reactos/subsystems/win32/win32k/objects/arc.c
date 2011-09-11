@@ -196,7 +196,7 @@ IntGdiArcInternal(
           int YEndArc)
 {
   BOOL Ret;
-  PDC_ATTR pdcattr;
+  //PDC_ATTR pdcattr;
 
   DPRINT("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
@@ -219,7 +219,7 @@ IntGdiArcInternal(
                  arctype);
   }
 
-  pdcattr = dc->pdcattr;
+  //pdcattr = dc->pdcattr;
 
   if (arctype == GdiTypeArcTo)
   {

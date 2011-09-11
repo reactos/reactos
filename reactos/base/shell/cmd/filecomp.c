@@ -511,9 +511,9 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	/* Length of string before we complete it */
 	INT StartLength;
 	/* Length of string after completed */
-	INT EndLength;
+	//INT EndLength;
 	/* The number of chars added too it */
-	static INT DiffLength = 0;
+	//static INT DiffLength = 0;
 	/* Used to find and assemble the string that is returned */
 	TCHAR szBaseWord[MAX_PATH];
 	TCHAR szPrefix[MAX_PATH];
@@ -751,8 +751,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		_tcscat(strOut,_T("\""));
 
 	_tcscpy(LastReturned,strOut);
-	EndLength = _tcslen(strOut);
-	DiffLength = EndLength - StartLength;
+	//EndLength = _tcslen(strOut);
+	//DiffLength = EndLength - StartLength;
 	if(FileList != NULL)
 		cmd_free(FileList);
 

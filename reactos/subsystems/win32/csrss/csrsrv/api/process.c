@@ -207,7 +207,6 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 CSR_API(CsrCreateProcess)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
-   NTSTATUS Status;
 
    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -224,7 +223,7 @@ CSR_API(CsrCreateProcess)
        NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
        if (Request->Data.CreateProcessRequest.bInheritHandles)
          {
-           Status = CallProcessInherit(ProcessData, NewProcessData);
+           CallProcessInherit(ProcessData, NewProcessData);
          }
      }
 

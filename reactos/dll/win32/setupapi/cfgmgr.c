@@ -3972,7 +3972,6 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExA(
     REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags,
     HMACHINE hMachine)
 {
-    CONFIGRET rc = CR_SUCCESS;
     LPWSTR pszClassNameW = NULL;
 
     TRACE("%p %s %lx %lx %p %lx %lx\n",
@@ -3985,8 +3984,8 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExA(
          return CR_INVALID_DATA;
     }
 
-    rc = CM_Open_Class_Key_ExW(pClassGuid, pszClassNameW, samDesired,
-                               Disposition, phkClass, ulFlags, hMachine);
+    CM_Open_Class_Key_ExW(pClassGuid, pszClassNameW, samDesired,
+                          Disposition, phkClass, ulFlags, hMachine);
 
     if (pszClassNameW != NULL)
         MyFree(pszClassNameW);

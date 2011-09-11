@@ -684,7 +684,7 @@ co_IntPeekMessage( PMSG Msg,
                    BOOL bGMSG )
 {
     PTHREADINFO pti;
-    PCLIENTINFO pci;
+    //PCLIENTINFO pci;
     LARGE_INTEGER LargeTickCount;
     PUSER_MESSAGE_QUEUE ThreadQueue;
     BOOL RemoveMessages;
@@ -693,7 +693,7 @@ co_IntPeekMessage( PMSG Msg,
 
     pti = PsGetCurrentThreadWin32Thread();
     ThreadQueue = pti->MessageQueue;
-    pci = pti->pClientInfo;
+    //pci = pti->pClientInfo;
 
     RemoveMessages = RemoveMsg & PM_REMOVE;
     ProcessMask = HIWORD(RemoveMsg);
@@ -1557,7 +1557,7 @@ co_IntDoSendMessage( HWND hWnd,
                      LPARAM lParam,
                      PDOSENDMESSAGE dsm)
 {
-    PTHREADINFO pti;
+    //PTHREADINFO pti;
     LRESULT Result = TRUE;
     NTSTATUS Status;
     PWND Window = NULL;
@@ -1581,7 +1581,7 @@ co_IntDoSendMessage( HWND hWnd,
     }
 
     /* See if the current thread can handle the message */
-    pti = PsGetCurrentThreadWin32Thread();
+    //pti = PsGetCurrentThreadWin32Thread();
 
     UserModeMsg.hwnd = hWnd;
     UserModeMsg.message = Msg;
@@ -1677,11 +1677,11 @@ DWORD APIENTRY
 IntGetQueueStatus(DWORD Changes)
 {
     PTHREADINFO pti;
-    PUSER_MESSAGE_QUEUE Queue;
+    //PUSER_MESSAGE_QUEUE Queue;
     DWORD Result;
 
     pti = PsGetCurrentThreadWin32Thread();
-    Queue = pti->MessageQueue;
+    //Queue = pti->MessageQueue;
 // wine:
     Changes &= (QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT);
 

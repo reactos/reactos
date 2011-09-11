@@ -3846,7 +3846,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 
    if ((DesktopWindow = UserGetWindowObject(IntGetDesktopWindow())))
    {
-      PTHREADINFO pti;
+      //PTHREADINFO pti;
 
       pt.x = X;
       pt.y = Y;
@@ -3855,7 +3855,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       //its possible this referencing is useless, thou it shouldnt hurt...
       UserRefObjectCo(DesktopWindow, &Ref);
 
-      pti = PsGetCurrentThreadWin32Thread();
+      //pti = PsGetCurrentThreadWin32Thread();
       Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
 
       if(Window)

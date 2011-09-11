@@ -903,7 +903,6 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
                        IN ULONG CountOfRights)
 {
     LSAPR_USER_RIGHT_SET UserRightSet;
-    NTSTATUS Status;
 
     TRACE("(%p,%p,%d,%p,0x%08x) stub\n", PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
 
@@ -912,14 +911,14 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
 
     RpcTryExcept
     {
-        Status = LsarRemoveAccountRights((LSAPR_HANDLE)PolicyHandle,
-                                         (PRPC_SID)AccountSid,
-                                         AllRights,
-                                         &UserRightSet);
+        LsarRemoveAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                (PRPC_SID)AccountSid,
+                                AllRights,
+                                &UserRightSet);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
 

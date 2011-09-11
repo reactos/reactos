@@ -648,7 +648,7 @@ UserChangeDisplaySettings(
     HKEY hkey;
     NTSTATUS Status;
     PPDEVOBJ ppdev;
-    PDESKTOP pdesk;
+    //PDESKTOP pdesk;
 
     /* If no DEVMODE is given, use registry settings */
     if (!pdm)
@@ -769,7 +769,7 @@ UserChangeDisplaySettings(
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
 
-        pdesk = IntGetActiveDesktop();
+        //pdesk = IntGetActiveDesktop();
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */

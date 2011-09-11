@@ -45,6 +45,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
 add_library(dbghelp SHARED ${SOURCE})
+allow_warnings(dbghelp)
 set_module_type(dbghelp win32dll)
 target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames)
 add_delay_importlibs(dbghelp version)

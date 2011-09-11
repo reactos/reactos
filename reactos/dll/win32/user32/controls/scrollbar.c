@@ -310,7 +310,7 @@ IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
 void
 IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
 {
-  INT ThumbSize;
+  //INT ThumbSize;
   SCROLLBARINFO Info;
   BOOL Vertical;
 
@@ -344,7 +344,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
       return;
     }
 
-  ThumbSize = Info.xyThumbBottom - Info.xyThumbTop;
+  //ThumbSize = Info.xyThumbBottom - Info.xyThumbTop;
 
   /*
    * Draw the arrows.

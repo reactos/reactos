@@ -350,7 +350,7 @@ NtGdiSetDIBitsToDeviceInternal(
     SURFACE *pSurf;
     RECTL rcDest;
     POINTL ptSource;
-    INT DIBWidth;
+    //INT DIBWidth;
     SIZEL SourceSize;
     EXLATEOBJ exlo;
     PPALETTE ppalDIB = NULL;
@@ -410,7 +410,7 @@ NtGdiSetDIBitsToDeviceInternal(
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
 
-    DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
+    //DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
     hSourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
                                       ScanLines,
@@ -1390,7 +1390,7 @@ DIB_CreateDIBSection(
     INT effHeight;
     ULONG totalSize;
     BITMAP bm;
-    SIZEL Size;
+    //SIZEL Size;
     HANDLE hSecure;
 
     DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
@@ -1507,8 +1507,8 @@ DIB_CreateDIBSection(
     }
 
     // Create Device Dependent Bitmap and add DIB pointer
-    Size.cx = bm.bmWidth;
-    Size.cy = abs(bm.bmHeight);
+    //Size.cx = bm.bmWidth;
+    //Size.cy = abs(bm.bmHeight);
     res = GreCreateBitmapEx(bm.bmWidth,
                             abs(bm.bmHeight),
                             bm.bmWidthBytes,

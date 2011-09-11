@@ -285,11 +285,11 @@ CSR_API(CsrAddConsoleAlias)
     WCHAR * lpExeName;
     WCHAR * lpSource;
     WCHAR * lpTarget;
-    ULONG TotalLength;
-    WCHAR * Ptr;
+    //ULONG TotalLength;
+    //WCHAR * Ptr;
 
-    TotalLength = Request->Data.AddConsoleAlias.SourceLength + Request->Data.AddConsoleAlias.ExeLength + Request->Data.AddConsoleAlias.TargetLength;
-    Ptr = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
+    //TotalLength = Request->Data.AddConsoleAlias.SourceLength + Request->Data.AddConsoleAlias.ExeLength + Request->Data.AddConsoleAlias.TargetLength;
+    //Ptr = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
 
     lpSource = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
     lpExeName = (WCHAR*)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE) + Request->Data.AddConsoleAlias.SourceLength * sizeof(WCHAR));

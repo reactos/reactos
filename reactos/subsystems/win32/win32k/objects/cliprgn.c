@@ -26,14 +26,14 @@ int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
-   HRGN hRgnVis;
+   //HRGN hRgnVis;
    PREGION prgnClip, prgnGCClip;
 
     // would prefer this, but the rest of the code sucks
 //    ASSERT(Dc->rosdc.hGCClipRgn);
 //    ASSERT(Dc->rosdc.hClipRgn);
    ASSERT(Dc->prgnVis);
-   hRgnVis = Dc->prgnVis->BaseObject.hHmgr;
+   //hRgnVis = Dc->prgnVis->BaseObject.hHmgr;
 
    if (Dc->rosdc.hGCClipRgn == NULL)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);

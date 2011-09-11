@@ -1090,7 +1090,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	if (!es->text) {
 
 	    CHAR *textA = NULL; // ReactOS Hacked!
-	    UINT countA = 0;
+	    //UINT countA = 0;
 
 	    if(es->hloc32W)
 	    {
@@ -1098,7 +1098,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 		{
 		    TRACE("Synchronizing with 32-bit ANSI buffer\n");
 		    textA = LocalLock(es->hloc32A);
-		    countA = strlen(textA) + 1;
+		    //countA = strlen(textA) + 1;
 		}
 	    }
 	    else {

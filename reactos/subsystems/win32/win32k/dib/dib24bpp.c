@@ -468,7 +468,8 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
    register PUCHAR Dst;
    BLENDFUNCTION BlendFunc;
    register NICEPIXEL32 DstPixel, SrcPixel;
-   UCHAR Alpha, SrcBpp;
+   UCHAR Alpha;
+   //UCHAR SrcBpp;
 
    DPRINT("DIB_24BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
           SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -499,7 +500,7 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
 
    Dst = (PUCHAR)((ULONG_PTR)Dest->pvScan0 + (DestRect->top * Dest->lDelta) +
                              (DestRect->left * 3));
-   SrcBpp = BitsPerFormat(Source->iBitmapFormat);
+   //SrcBpp = BitsPerFormat(Source->iBitmapFormat);
 
    Rows = 0;
    SrcY = SourceRect->top;

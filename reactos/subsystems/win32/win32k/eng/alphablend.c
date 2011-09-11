@@ -201,13 +201,13 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
 {
     BOOL ret = FALSE;
     SURFACE *psurfDest;
-    SURFACE *psurfSource;
+    //SURFACE *psurfSource;
 
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     ASSERT(psoSource);
-    psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+    //psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
 
     ASSERT(DestRect);
     ASSERT(SourceRect);

@@ -4409,9 +4409,9 @@ DWORD RChangeServiceConfig2A(
     if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescriptonW;
-        LPSERVICE_DESCRIPTIONA lpServiceDescriptonA;
+        //LPSERVICE_DESCRIPTIONA lpServiceDescriptonA;
 
-        lpServiceDescriptonA = Info.psd;
+        //lpServiceDescriptonA = Info.psd;
 
         ///if (lpServiceDescriptonA &&
         ///lpServiceDescriptonA->lpDescription)

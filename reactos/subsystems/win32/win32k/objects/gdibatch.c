@@ -43,14 +43,14 @@ FASTCALL
 SynchonizeDriver(FLONG Flags)
 {
   SURFOBJ *SurfObj;
-  PPDEVOBJ Device;
+  //PPDEVOBJ Device;
 
   if (Flags & GCAPS2_SYNCFLUSH)
       Flags = DSS_FLUSH_EVENT;
   if (Flags & GCAPS2_SYNCTIMER)
       Flags = DSS_TIMER_EVENT;
 
-  Device = IntEnumHDev();
+  //Device = IntEnumHDev();
 //  UNIMPLEMENTED;
 //ASSERT(FALSE);
   SurfObj = 0;// EngLockSurface( Device->pSurface );
