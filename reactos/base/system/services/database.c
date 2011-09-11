@@ -23,6 +23,13 @@
  */
 // #define USE_SERVICE_START_PENDING
 
+/*
+ * Uncomment the line below to use asynchronous IO operations
+ * on the service control pipes.
+ */
+// #define USE_ASYNCHRONOUS_IO
+
+
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY ImageListHead;
@@ -32,6 +39,8 @@ static RTL_RESOURCE DatabaseLock;
 static DWORD dwResumeCount = 1;
 
 static CRITICAL_SECTION ControlServiceCriticalSection;
+static DWORD dwPipeTimeout = 30000; /* 30 Seconds */
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -92,12 +101,16 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
     DPRINT("PipeName: %S\n", szControlPipeName);
 
     pServiceImage->hControlPipe = CreateNamedPipeW(szControlPipeName,
+#ifdef USE_ASYNCHRONOUS_IO
+                                                   PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+#else
                                                    PIPE_ACCESS_DUPLEX,
+#endif
                                                    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
                                                    100,
                                                    8000,
                                                    4,
-                                                   30000,
+                                                   dwPipeTimeout,
                                                    NULL);
     DPRINT("CreateNamedPipeW(%S) done\n", szControlPipeName);
     if (pServiceImage->hControlPipe == INVALID_HANDLE_VALUE)
@@ -921,6 +934,10 @@ ScmControlService(PSERVICE Service,
     DWORD PacketSize;
     PWSTR Ptr;
     DWORD dwError = ERROR_SUCCESS;
+    BOOL bResult;
+#ifdef USE_ASYNCHRONOUS_IO
+    OVERLAPPED Overlapped = {0, 0, 0, 0, 0};
+#endif
 
     DPRINT("ScmControlService() called\n");
 
@@ -951,20 +968,140 @@ ScmControlService(PSERVICE Service,
     ControlPacket->dwArgumentsCount = 0;
     ControlPacket->dwArgumentsOffset = 0;
 
-    /* Send the control packet */
-    WriteFile(Service->lpImage->hControlPipe,
-              ControlPacket,
-              PacketSize,
-              &dwWriteCount,
-              NULL);
+#ifdef USE_ASYNCHRONOUS_IO
+    bResult = WriteFile(Service->lpImage->hControlPipe,
+                        ControlPacket,
+                        PacketSize,
+                        &dwWriteCount,
+                        &Overlapped);
+    if (bResult == FALSE)
+    {
+        DPRINT1("WriteFile() returned FALSE\n");
+
+        dwError = GetLastError();
+        if (dwError == ERROR_IO_PENDING)
+        {
+            DPRINT1("dwError: ERROR_IO_PENDING\n");
+
+            dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
+                                          dwPipeTimeout);
+            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+
+            if (dwError == WAIT_TIMEOUT)
+            {
+                bResult = CancelIo(Service->lpImage->hControlPipe);
+                if (bResult == FALSE)
+                {
+                    DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
+                }
+
+                dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
+                goto Done;
+            }
+            else if (dwError == ERROR_SUCCESS)
+            {
+                bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
+                                              &Overlapped,
+                                              &dwWriteCount,
+                                              TRUE);
+                if (bResult == FALSE)
+                {
+                    dwError = GetLastError();
+                    DPRINT1("GetOverlappedResult() failed (Error %lu)\n", dwError);
+
+                    goto Done;
+                }
+            }
+        }
+        else
+        {
+            DPRINT1("WriteFile() failed (Error %lu)\n", dwError);
+            goto Done;
+        }
+    }
 
     /* Read the reply */
-    ReadFile(Service->lpImage->hControlPipe,
-             &ReplyPacket,
-             sizeof(SCM_REPLY_PACKET),
-             &dwReadCount,
-             NULL);
+    Overlapped.hEvent = (HANDLE) NULL;
 
+    bResult = ReadFile(Service->lpImage->hControlPipe,
+                       &ReplyPacket,
+                       sizeof(SCM_REPLY_PACKET),
+                       &dwReadCount,
+                       &Overlapped);
+    if (bResult == FALSE)
+    {
+        DPRINT1("ReadFile() returned FALSE\n");
+
+        dwError = GetLastError();
+        if (dwError == ERROR_IO_PENDING)
+        {
+            DPRINT1("dwError: ERROR_IO_PENDING\n");
+
+            dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
+                                          dwPipeTimeout);
+            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+
+            if (dwError == WAIT_TIMEOUT)
+            {
+                bResult = CancelIo(Service->lpImage->hControlPipe);
+                if (bResult == FALSE)
+                {
+                    DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
+                }
+
+                dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
+                goto Done;
+            }
+            else if (dwError == ERROR_SUCCESS)
+            {
+                bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
+                                              &Overlapped,
+                                              &dwReadCount,
+                                              TRUE);
+                if (bResult == FALSE)
+                {
+                    dwError = GetLastError();
+                    DPRINT1("GetOverlappedResult() failed (Error %lu)\n", dwError);
+
+                    goto Done;
+                }
+            }
+        }
+        else
+        {
+            DPRINT1("ReadFile() failed (Error %lu)\n", dwError);
+            goto Done;
+        }
+    }
+
+#else
+    /* Send the control packet */
+    bResult = WriteFile(Service->lpImage->hControlPipe,
+                        ControlPacket,
+                        PacketSize,
+                        &dwWriteCount,
+                        NULL);
+    if (bResult == FALSE)
+    {
+        dwError = GetLastError();
+        DPRINT("WriteFile() failed (Error %lu)\n", dwError);
+        goto Done;
+    }
+
+    /* Read the reply */
+    bResult = ReadFile(Service->lpImage->hControlPipe,
+                       &ReplyPacket,
+                       sizeof(SCM_REPLY_PACKET),
+                       &dwReadCount,
+                       NULL);
+    if (bResult == FALSE)
+    {
+        dwError = GetLastError();
+        DPRINT("ReadFile() failed (Error %lu)\n", dwError);
+    }
+#endif
+
+Done:
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
@@ -1004,6 +1141,10 @@ ScmSendStartCommand(PSERVICE Service,
     DWORD i;
     PWSTR *pOffPtr;
     PWSTR pArgPtr;
+    BOOL bResult;
+#ifdef USE_ASYNCHRONOUS_IO
+    OVERLAPPED Overlapped = {0, 0, 0, 0, 0};
+#endif
 
     DPRINT("ScmSendStartCommand() called\n");
 
@@ -1066,20 +1207,140 @@ ScmSendStartCommand(PSERVICE Service,
         }
     }
 
-    /* Send the start command */
-    WriteFile(Service->lpImage->hControlPipe,
-              ControlPacket,
-              PacketSize,
-              &dwWriteCount,
-              NULL);
+#ifdef USE_ASYNCHRONOUS_IO
+    bResult = WriteFile(Service->lpImage->hControlPipe,
+                        ControlPacket,
+                        PacketSize,
+                        &dwWriteCount,
+                        &Overlapped);
+    if (bResult == FALSE)
+    {
+        DPRINT1("WriteFile() returned FALSE\n");
+
+        dwError = GetLastError();
+        if (dwError == ERROR_IO_PENDING)
+        {
+            DPRINT1("dwError: ERROR_IO_PENDING\n");
+
+            dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
+                                          dwPipeTimeout);
+            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+
+            if (dwError == WAIT_TIMEOUT)
+            {
+                bResult = CancelIo(Service->lpImage->hControlPipe);
+                if (bResult == FALSE)
+                {
+                    DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
+                }
+
+                dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
+                goto Done;
+            }
+            else if (dwError == ERROR_SUCCESS)
+            {
+                bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
+                                              &Overlapped,
+                                              &dwWriteCount,
+                                              TRUE);
+                if (bResult == FALSE)
+                {
+                    dwError = GetLastError();
+                    DPRINT1("GetOverlappedResult() failed (Error %lu)\n", dwError);
+
+                    goto Done;
+                }
+            }
+        }
+        else
+        {
+            DPRINT1("WriteFile() failed (Error %lu)\n", dwError);
+            goto Done;
+        }
+    }
 
     /* Read the reply */
-    ReadFile(Service->lpImage->hControlPipe,
-             &ReplyPacket,
-             sizeof(SCM_REPLY_PACKET),
-             &dwReadCount,
-             NULL);
+    Overlapped.hEvent = (HANDLE) NULL;
 
+    bResult = ReadFile(Service->lpImage->hControlPipe,
+                       &ReplyPacket,
+                       sizeof(SCM_REPLY_PACKET),
+                       &dwReadCount,
+                       &Overlapped);
+    if (bResult == FALSE)
+    {
+        DPRINT1("ReadFile() returned FALSE\n");
+
+        dwError = GetLastError();
+        if (dwError == ERROR_IO_PENDING)
+        {
+            DPRINT1("dwError: ERROR_IO_PENDING\n");
+
+            dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
+                                          dwPipeTimeout);
+            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+
+            if (dwError == WAIT_TIMEOUT)
+            {
+                bResult = CancelIo(Service->lpImage->hControlPipe);
+                if (bResult == FALSE)
+                {
+                    DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
+                }
+
+                dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
+                goto Done;
+            }
+            else if (dwError == ERROR_SUCCESS)
+            {
+                bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
+                                              &Overlapped,
+                                              &dwReadCount,
+                                              TRUE);
+                if (bResult == FALSE)
+                {
+                    dwError = GetLastError();
+                    DPRINT1("GetOverlappedResult() failed (Error %lu)\n", dwError);
+
+                    goto Done;
+                }
+            }
+        }
+        else
+        {
+            DPRINT1("ReadFile() failed (Error %lu)\n", dwError);
+            goto Done;
+        }
+    }
+
+#else
+    /* Send the start command */
+    bResult = WriteFile(Service->lpImage->hControlPipe,
+                        ControlPacket,
+                        PacketSize,
+                        &dwWriteCount,
+                        NULL);
+    if (bResult == FALSE)
+    {
+        dwError = GetLastError();
+        DPRINT("WriteFile() failed (Error %lu)\n", dwError);
+        goto Done;
+    }
+
+    /* Read the reply */
+    bResult = ReadFile(Service->lpImage->hControlPipe,
+                       &ReplyPacket,
+                       sizeof(SCM_REPLY_PACKET),
+                       &dwReadCount,
+                       NULL);
+    if (bResult == FALSE)
+    {
+        dwError = GetLastError();
+        DPRINT("ReadFile() failed (Error %lu)\n", dwError);
+    }
+#endif
+
+Done:
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
@@ -1097,6 +1358,166 @@ ScmSendStartCommand(PSERVICE Service,
 
 
 static DWORD
+ScmWaitForServiceConnect(PSERVICE Service)
+{
+    DWORD dwRead = 0;
+    DWORD dwProcessId = 0;
+    DWORD dwError = ERROR_SUCCESS;
+    BOOL bResult;
+#ifdef USE_ASYNCHRONOUS_IO
+    OVERLAPPED Overlapped = {0, 0, 0, 0, 0};
+#endif
+
+    DPRINT1("ScmWaitForServiceConnect()\n");
+
+#ifdef USE_ASYNCHRONOUS_IO
+    Overlapped.hEvent = (HANDLE)NULL;
+
+    bResult = ConnectNamedPipe(Service->lpImage->hControlPipe,
+                               &Overlapped);
+    if (bResult == FALSE)
+    {
+        DPRINT1("ConnectNamedPipe() returned FALSE\n");
+
+        dwError = GetLastError();
+        if (dwError == ERROR_IO_PENDING)
+        {
+            DPRINT1("dwError: ERROR_IO_PENDING\n");
+
+            dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
+                                          dwPipeTimeout);
+            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+
+            if (dwError == WAIT_TIMEOUT)
+            {
+                bResult = CancelIo(Service->lpImage->hControlPipe);
+                if (bResult == FALSE)
+                {
+                    DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
+                }
+
+                return ERROR_SERVICE_REQUEST_TIMEOUT;
+            }
+            else if (dwError == ERROR_SUCCESS)
+            {
+                bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
+                                              &Overlapped,
+                                              &dwRead,
+                                              TRUE);
+                if (bResult == FALSE)
+                {
+                    dwError = GetLastError();
+                    DPRINT1("GetOverlappedResult failed (Error %lu)\n", dwError);
+
+                    return dwError;
+                }
+            }
+        }
+        else if (dwError != ERROR_PIPE_CONNECTED)
+        {
+            DPRINT1("ConnectNamedPipe failed (Error %lu)\n", dwError);
+            return dwError;
+        }
+    }
+
+    DPRINT1("Control pipe connected!\n");
+
+    Overlapped.hEvent = (HANDLE) NULL;
+
+    /* Read the process id from pipe */
+    bResult = ReadFile(Service->lpImage->hControlPipe,
+                       (LPVOID)&dwProcessId,
+                       sizeof(DWORD),
+                       &dwRead,
+                       &Overlapped);
+    if (bResult == FALSE)
+    {
+        DPRINT1("ReadFile() returned FALSE\n");
+
+        dwError = GetLastError();
+        if (dwError == ERROR_IO_PENDING)
+        {
+            DPRINT1("dwError: ERROR_IO_PENDING\n");
+
+            dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
+                                          dwPipeTimeout);
+            if (dwError == WAIT_TIMEOUT)
+            {
+                DPRINT1("WaitForSingleObject() returned WAIT_TIMEOUT\n");
+
+                bResult = CancelIo(Service->lpImage->hControlPipe);
+                if (bResult == FALSE)
+                {
+                    DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
+                }
+
+                return ERROR_SERVICE_REQUEST_TIMEOUT;
+            }
+            else if (dwError == ERROR_SUCCESS)
+            {
+                DPRINT1("WaitForSingleObject() returned ERROR_SUCCESS\n");
+
+                DPRINT1("Process Id: %lu\n", dwProcessId);
+
+                bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
+                                              &Overlapped,
+                                              &dwRead,
+                                              TRUE);
+                if (bResult == FALSE)
+                {
+                    dwError = GetLastError();
+                    DPRINT1("GetOverlappedResult() failed (Error %lu)\n", dwError);
+
+                    return dwError;
+                }
+            }
+            else
+            {
+                DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+            }
+        }
+        else
+        {
+            DPRINT1("ReadFile() failed (Error %lu)\n", dwError);
+            return dwError;
+        }
+    }
+
+    DPRINT1("ScmWaitForServiceConnect() done\n");
+
+    return ERROR_SUCCESS;
+#else
+
+    /* Connect control pipe */
+    if (ConnectNamedPipe(Service->lpImage->hControlPipe, NULL) ?
+        TRUE : (dwError = GetLastError()) == ERROR_PIPE_CONNECTED)
+    {
+        DPRINT("Control pipe connected!\n");
+
+        /* Read SERVICE_STATUS_HANDLE from pipe */
+        bResult = ReadFile(Service->lpImage->hControlPipe,
+                           (LPVOID)&dwProcessId,
+                           sizeof(DWORD),
+                           &dwRead,
+                           NULL);
+        if (bResult == FALSE)
+        {
+            dwError = GetLastError();
+            DPRINT1("Reading the service control pipe failed (Error %lu)\n",
+                    dwError);
+        }
+    }
+    else
+    {
+        DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
+    }
+
+    return dwError;
+#endif
+}
+
+
+static DWORD
 ScmStartUserModeService(PSERVICE Service,
                         DWORD argc,
                         LPWSTR *argv)
@@ -1105,7 +1526,6 @@ ScmStartUserModeService(PSERVICE Service,
     STARTUPINFOW StartupInfo;
     BOOL Result;
     DWORD dwError = ERROR_SUCCESS;
-    DWORD dwProcessId;
 
     DPRINT("ScmStartUserModeService(%p)\n", Service);
 
@@ -1156,35 +1576,20 @@ ScmStartUserModeService(PSERVICE Service,
     ResumeThread(ProcessInformation.hThread);
 
     /* Connect control pipe */
-    if (ConnectNamedPipe(Service->lpImage->hControlPipe, NULL) ?
-        TRUE : (dwError = GetLastError()) == ERROR_PIPE_CONNECTED)
+    dwError = ScmWaitForServiceConnect(Service);
+    if (dwError == ERROR_SUCCESS)
     {
-        DWORD dwRead = 0;
-
-        DPRINT("Control pipe connected!\n");
-
-        /* Read SERVICE_STATUS_HANDLE from pipe */
-        if (!ReadFile(Service->lpImage->hControlPipe,
-                      (LPVOID)&dwProcessId,
-                      sizeof(DWORD),
-                      &dwRead,
-                      NULL))
-        {
-            dwError = GetLastError();
-            DPRINT1("Reading the service control pipe failed (Error %lu)\n",
-                    dwError);
-        }
-        else
-        {
-            DPRINT("Received service process ID %lu\n", dwProcessId);
-
-            /* Send start command */
-            dwError = ScmSendStartCommand(Service, argc, argv);
-        }
+        /* Send start command */
+        dwError = ScmSendStartCommand(Service,
+                                      argc,
+                                      argv);
     }
     else
     {
         DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
+        Service->lpImage->dwProcessId = 0;
+        Service->lpImage->hProcess = NULL;
+        CloseHandle(ProcessInformation.hProcess);
     }
 
     /* Close thread handle */
@@ -1531,7 +1936,29 @@ ScmUnlockDatabase(VOID)
 VOID
 ScmInitNamedPipeCriticalSection(VOID)
 {
+    HKEY hKey;
+    DWORD dwKeySize;
+    DWORD dwError;
+
     InitializeCriticalSection(&ControlServiceCriticalSection);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Control",
+                            0,
+                            KEY_READ,
+                            &hKey);
+   if (dwError == ERROR_SUCCESS)
+   {
+        dwKeySize = sizeof(DWORD);
+        RegQueryValueExW(hKey,
+                         L"ServicesPipeTimeout",
+                         0,
+                         NULL,
+                         (LPBYTE)&dwPipeTimeout,
+                         &dwKeySize);
+
+       RegCloseKey(hKey);
+   }
 }
 
 
