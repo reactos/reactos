@@ -53,8 +53,8 @@ connect(IN SOCKET s,
 
                 /* Check if error code was due to the host not being found */
                 if ((Status == SOCKET_ERROR) &&
-                    (ErrorCode == WSAEHOSTUNREACH) &&
-                    (ErrorCode == WSAENETUNREACH))
+                    ((ErrorCode == WSAEHOSTUNREACH) ||
+                     (ErrorCode == WSAENETUNREACH)))
                 {
                     /* Check if we can try again */
                     if (TryAgain)

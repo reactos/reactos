@@ -1953,7 +1953,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
         //
         // Only remove-device and query-id are allowed
         //
-        if ((Minor != IRP_MN_REMOVE_DEVICE) || (Minor != IRP_MN_QUERY_ID))
+        if ((Minor != IRP_MN_REMOVE_DEVICE) && (Minor != IRP_MN_QUERY_ID))
         {
             //
             // Fail anything else
