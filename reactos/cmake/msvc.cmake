@@ -214,3 +214,6 @@ function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_addre
 
     add_custom_target(${_target_name} ALL DEPENDS ${_binary_file})
 endfunction()
+
+function(allow_warnings __module)
+endfunction()

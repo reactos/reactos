@@ -182,11 +182,11 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
         /* Choose the correct debug level based on which function this is */
         if (IoStackLocation->MajorFunction == IRP_MJ_POWER)
         {
-            DebugLevel = 0x400;
+            //DebugLevel = 0x400;
         }
         else if (IoStackLocation->MajorFunction == IRP_MJ_PNP)
         {
-            DebugLevel = 0x100;
+            //DebugLevel = 0x100;
         }
 
         /* For an FDO, just dump the extension pointer and IRP string */
