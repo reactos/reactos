@@ -12,6 +12,7 @@
 	</directory>
 	<directory name="example">
 		<file>Example.c</file>
+		<file>GuardedMemory.c</file>
 		<file>KernelType.c</file>
 	</directory>
 	<directory name="ntos_ex">
@@ -42,6 +43,9 @@
 		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>
 		<file>KeSpinLock.c</file>
+	</directory>
+	<directory name="ntos_mm">
+		<file>MmSection.c</file>
 	</directory>
 	<directory name="ntos_ob">
 		<file>ObReference.c</file>

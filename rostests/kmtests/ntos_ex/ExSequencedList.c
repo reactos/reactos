@@ -13,7 +13,7 @@ struct _SINGLE_LIST_ENTRY *__fastcall ExInterlockedPopEntrySList(union _SLIST_HE
 #include <kmt_test.h>
 
 /* TODO: SLIST_HEADER is a lot different for x64 */
-
+#ifndef _M_AMD64
 #define CheckSListHeader(ListHead, ExpectedPointer, ExpectedDepth) do   \
 {                                                                       \
     ok_eq_pointer((ListHead)->Next.Next, ExpectedPointer);              \
@@ -39,9 +39,11 @@ struct _SINGLE_LIST_ENTRY *__fastcall ExInterlockedPopEntrySList(union _SLIST_HE
 #undef ExInterlockedPopEntrySList
 #define TestXListFunctional TestSListFunctionalExports
 #include "ExXList.h"
+#endif
 
 START_TEST(ExSequencedList)
 {
+#ifndef _M_AMD64
     PSLIST_HEADER ListHead;
     KSPIN_LOCK SpinLock;
     USHORT ExpectedSequence = 0;
@@ -76,4 +78,5 @@ START_TEST(ExSequencedList)
     
     KeLowerIrql(Irql);
     ExFreePoolWithTag(Buffer, 'TLqS');
+#endif
 }

@@ -7,6 +7,10 @@
 
 __declspec(dllimport) void __stdcall KeRaiseIrql(unsigned char, unsigned char *);
 __declspec(dllimport) void __stdcall KeLowerIrql(unsigned char);
+#ifdef _M_AMD64
+#define CLOCK1_LEVEL CLOCK_LEVEL
+#define CLOCK2_LEVEL CLOCK_LEVEL
+#endif
 
 #include <kmt_test.h>
 

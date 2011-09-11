@@ -12,6 +12,7 @@
 	</directory>
 	<directory name="example">
 		<file>Example_user.c</file>
+		<file>GuardedMemory.c</file>
 	</directory>
 	<directory name="ntos_io">
 		<file>IoDeviceObject_user.c</file>

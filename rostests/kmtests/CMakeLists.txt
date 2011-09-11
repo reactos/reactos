@@ -8,6 +8,7 @@ add_subdirectory(example)
 add_subdirectory(ntos_io)
 
 list(APPEND COMMON_SOURCE
+    example/GuardedMemory.c
     rtl/RtlAvlTree.c
     rtl/RtlMemory.c
     rtl/RtlSplayTree.c)
@@ -42,6 +43,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
+    ntos_mm/MmSection.c
     ntos_ob/ObReference.c
     ntos_ob/ObType.c
     ${COMMON_SOURCE}

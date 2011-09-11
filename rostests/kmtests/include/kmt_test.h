@@ -129,6 +129,8 @@ VOID KmtVTrace(PCSTR FileAndLine, PCSTR Format, va_list Arguments)              
 VOID KmtTrace(PCSTR FileAndLine, PCSTR Format, ...)                                 KMT_FORMAT(ms_printf, 2, 3);
 BOOLEAN KmtVSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
 BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)                KMT_FORMAT(ms_printf, 3, 4);
+PVOID KmtAllocateGuarded(SIZE_T SizeRequested);
+VOID KmtFreeGuarded(PVOID Pointer);
 
 #ifdef KMT_KERNEL_MODE
 #define ok_irql(irql)                       ok(KeGetCurrentIrql() == irql, "IRQL is %d, expected %d\n", KeGetCurrentIrql(), irql)
@@ -409,6 +411,44 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)
     Ret = KmtVSkip(Condition, FileAndLine, Format, Arguments);
     va_end(Arguments);
     return Ret;
+}
+
+PVOID KmtAllocateGuarded(SIZE_T SizeRequested)
+{
+    NTSTATUS Status;
+    SIZE_T Size = PAGE_ROUND_UP(SizeRequested + PAGE_SIZE);
+    PVOID VirtualMemory = NULL;
+    PCHAR StartOfBuffer;
+
+    Status = ZwAllocateVirtualMemory(ZwCurrentProcess(), &VirtualMemory, 0, &Size, MEM_RESERVE, PAGE_NOACCESS);
+
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    Size -= PAGE_SIZE;
+    Status = ZwAllocateVirtualMemory(ZwCurrentProcess(), &VirtualMemory, 0, &Size, MEM_COMMIT, PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        Size = 0;
+        Status = ZwFreeVirtualMemory(ZwCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        return NULL;
+    }
+
+    StartOfBuffer = VirtualMemory;
+    StartOfBuffer += Size - SizeRequested;
+
+    return StartOfBuffer;
+}
+
+VOID KmtFreeGuarded(PVOID Pointer)
+{
+    NTSTATUS Status;
+    PVOID VirtualMemory = (PVOID)PAGE_ROUND_DOWN((SIZE_T)Pointer);
+    SIZE_T Size = 0;
+
+    Status = ZwFreeVirtualMemory(ZwCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 }
 
 #endif /* defined KMT_DEFINE_TEST_FUNCTIONS */

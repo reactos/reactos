@@ -6,8 +6,10 @@
  */
 
 struct _SINGLE_LIST_ENTRY;
+#ifdef _X86_
 struct _SINGLE_LIST_ENTRY *__stdcall ExInterlockedPushEntryList(struct _SINGLE_LIST_ENTRY *, struct _SINGLE_LIST_ENTRY *, unsigned long *);
 struct _SINGLE_LIST_ENTRY *__stdcall ExInterlockedPopEntryList(struct _SINGLE_LIST_ENTRY *, unsigned long *);
+#endif
 
 #include <kmt_test.h>
 
