@@ -801,7 +801,8 @@ DetectSystem(VOID)
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
     GEOMETRY Geometry;
-    UCHAR DiskCount, i;
+    UCHAR DiskCount;
+    USHORT i;
     ULONG Size;
     BOOLEAN Changed;
 

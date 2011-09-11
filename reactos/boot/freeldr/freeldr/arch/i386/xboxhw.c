@@ -324,7 +324,8 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
     GEOMETRY Geometry;
     PCONFIGURATION_COMPONENT_DATA DiskKey, ControllerKey;
-    UCHAR DiskCount, i;
+    UCHAR DiskCount;
+    USHORT i;
     ULONG Size;
     BOOLEAN Changed;
     
