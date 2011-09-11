@@ -22,6 +22,7 @@ KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
 
 extern ULONG ExpInitializationPhase;
+extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
 /* DATA **********************************************************************/
@@ -1049,6 +1050,10 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     /* Assume failure */
     *Handle = NULL;
 
+    /* Create a volatile device tree in 1st stage so we have a clean slate
+     * for enumeration using the correct HAL (chosen in 1st stage setup) */
+    if (ExpInTextModeSetup) CreateOptions |= REG_OPTION_VOLATILE;
+
     /* Open root key for device instances */
     Status = IopOpenRegistryKeyEx(&hParent, NULL, &EnumU, KEY_CREATE_SUB_KEY);
     if (!NT_SUCCESS(Status))
@@ -1143,7 +1148,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                         &ObjectAttributes,
                         0,
                         NULL,
-                        0,
+                        REG_OPTION_VOLATILE,
                         NULL);
    if (NT_SUCCESS(Status))
    {
@@ -2638,7 +2643,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         REG_OPTION_NON_VOLATILE,
+         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
          NULL);
       if (!NT_SUCCESS(Status))
       {
@@ -2654,7 +2659,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         REG_OPTION_NON_VOLATILE,
+         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
          NULL);
       ZwClose(hLevel1Key);
       if (!NT_SUCCESS(Status))
@@ -3898,7 +3903,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    InitializeObjectAttributes(&ObjectAttributes, &KeyName,
                               OBJ_CASE_INSENSITIVE, *DevInstRegKey, NULL);
    Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
-                        0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+                        0, NULL, ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0, NULL);
    ZwClose(ObjectAttributes.RootDirectory);
 
    return Status;
