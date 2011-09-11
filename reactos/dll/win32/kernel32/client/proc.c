@@ -642,7 +642,6 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
     PRTL_USER_PROCESS_PARAMETERS RemoteParameters = NULL;
     UNICODE_STRING DllPath, ImageName, CommandLine, CurrentDirectory;
-    UINT RetVal;
     NTSTATUS Status;
     PWCHAR ScanChar;
     ULONG EnviroSize;
@@ -654,10 +653,10 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     DPRINT("BasepInitializeEnvironment\n");
 
     /* Get the full path name */
-    RetVal = GetFullPathNameW(ApplicationPathName,
-                              MAX_PATH,
-                              FullPath,
-                              &Remaining);
+    GetFullPathNameW(ApplicationPathName,
+                     MAX_PATH,
+                     FullPath,
+                     &Remaining);
     DPRINT("ApplicationPathName: %S, FullPath: %S\n", ApplicationPathName,
             FullPath);
 

@@ -272,9 +272,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_DEVICE_EXTENSION DeviceExt;
     PFILE_FULL_EA_INFORMATION EaInfo;
     PAFD_CREATE_PACKET ConnectInfo = NULL;
-    ULONG EaLength;
+    //ULONG EaLength;
     PWCHAR EaInfoValue = NULL;
-    UINT Disposition, i;
+    //UINT Disposition;
+    UINT i;
     NTSTATUS Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,
@@ -282,7 +283,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     DeviceExt = DeviceObject->DeviceExtension;
     FileObject = IrpSp->FileObject;
-    Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
+    //Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
 
     Irp->IoStatus.Information = 0;
 
@@ -292,9 +293,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
 	EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
 
-	EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-	    EaInfo->EaNameLength +
-	    EaInfo->EaValueLength;
+	//EaLength = sizeof(FILE_FULL_EA_INFORMATION) + EaInfo->EaNameLength + EaInfo->EaValueLength;
 
 	AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n",
 				EaInfo, EaInfoValue));

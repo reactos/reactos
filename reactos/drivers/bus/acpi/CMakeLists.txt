@@ -125,6 +125,7 @@ add_library(acpica
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c)
 
+allow_warnings(acpica)
 add_dependencies(acpica bugcodes)
 
 add_library(acpi SHARED

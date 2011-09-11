@@ -68,18 +68,17 @@ KsAcquireDeviceSecurityLock(
     IN KSDEVICE_HEADER DevHeader,
     IN BOOLEAN Exclusive)
 {
-    NTSTATUS Status;
     PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
 
     KeEnterCriticalRegion();
 
     if (Exclusive)
     {
-        Status = ExAcquireResourceExclusiveLite(&Header->SecurityLock, TRUE);
+        ExAcquireResourceExclusiveLite(&Header->SecurityLock, TRUE);
     }
     else
     {
-        Status = ExAcquireResourceSharedLite(&Header->SecurityLock, TRUE);
+        ExAcquireResourceSharedLite(&Header->SecurityLock, TRUE);
     }
 }
 
@@ -169,12 +168,12 @@ KsDefaultDispatchPower(
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
     PKSIOBJECT_HEADER ObjectHeader;
-    PIO_STACK_LOCATION IoStack;
+    //PIO_STACK_LOCATION IoStack;
     PLIST_ENTRY ListEntry;
     NTSTATUS Status;
 
     /* get current irp stack */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    //IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* caller wants to add the target device */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -229,11 +228,11 @@ KsDefaultForwardIrp(
 {
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
-    PIO_STACK_LOCATION IoStack;
+    //PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
 
     /* get current irp stack */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    //IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* caller wants to add the target device */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -615,9 +614,9 @@ KsAllocateObjectHeader(
 {
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
-    PKSIDEVICE_HEADER DeviceHeader;
+    //PKSIDEVICE_HEADER DeviceHeader;
     PKSIOBJECT_HEADER ObjectHeader;
-    PKSOBJECT_CREATE_ITEM CreateItem;
+    //PKSOBJECT_CREATE_ITEM CreateItem;
     NTSTATUS Status;
 
     if (!Header)
@@ -634,7 +633,7 @@ KsAllocateObjectHeader(
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
     /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
+    //DeviceHeader = DeviceExtension->DeviceHeader;
 
     /* sanity check */
     ASSERT(IoStack->FileObject);
@@ -652,7 +651,7 @@ KsAllocateObjectHeader(
     InitializeListHead(&ObjectHeader->ItemList);
 
     /* get create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    //CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
     /* do we have a name */
     if (IoStack->FileObject->FileName.Buffer)

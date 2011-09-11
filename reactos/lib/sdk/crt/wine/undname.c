@@ -216,7 +216,8 @@ static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
             c = '>';
             if (i < a->start) c = '-';
             else if (i >= a->num) c = '}';
-            TRACE("%p\t%d%c %s\n", a, i, c, a->elts[i]);
+            /* This check is as useless as the unused-but-set gcc warning that we want to silence here */
+            if (c != 0) TRACE("%p\t%d%c %s\n", a, i, c, a->elts[i]);
         }
     }
 

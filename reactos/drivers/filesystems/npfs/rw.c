@@ -818,8 +818,9 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
     ExAcquireFastMutex(&ReaderCcb->DataListLock);
 
-#ifndef NDEBUG
     DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
+
+#ifndef NDEBUG
     HexDump(Buffer, Length);
 #endif
 

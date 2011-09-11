@@ -2266,12 +2266,12 @@ static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
     WCHAR PathBuffer[MAX_PATH];
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     UCHAR PartNum;
     NTSTATUS Status;
 
 #ifndef NDEBUG
+    PDISKENTRY DiskEntry;
     ULONG Line;
     ULONG i;
     PLIST_ENTRY Entry;
@@ -2287,7 +2287,9 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+#ifndef NDEBUG
     DiskEntry = PartitionList->CurrentDisk;
+#endif
     PartEntry = PartitionList->CurrentPartition;
     PartNum = PartitionList->CurrentPartitionNumber;
 

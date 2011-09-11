@@ -593,7 +593,6 @@ WINAPI
 FreeLibraryAndExitThread(HMODULE hLibModule,
                          DWORD dwExitCode)
 {
-    NTSTATUS Status;
 
     if (LDR_IS_DATAFILE(hLibModule))
     {
@@ -601,7 +600,7 @@ FreeLibraryAndExitThread(HMODULE hLibModule,
         if (RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1)))
         {
             /* Unmap view */
-            Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
+            NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
 
             /* Unload alternate resource module */
             LdrUnloadAlternateResourceModule(hLibModule);
@@ -610,7 +609,7 @@ FreeLibraryAndExitThread(HMODULE hLibModule,
     else
     {
         /* Just unload it */
-        Status = LdrUnloadDll((PVOID)hLibModule);
+        LdrUnloadDll((PVOID)hLibModule);
     }
 
     /* Exit thread */

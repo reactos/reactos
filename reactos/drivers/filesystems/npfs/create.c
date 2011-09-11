@@ -748,7 +748,7 @@ NTSTATUS NTAPI
 NpfsCleanup(PDEVICE_OBJECT DeviceObject,
             PIRP Irp)
 {
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     PNPFS_CCB Ccb, OtherSide;
@@ -758,7 +758,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
     DPRINT("NpfsCleanup(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = FileObject->FsContext2;
 
@@ -909,7 +909,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     BOOLEAN Server;
@@ -917,7 +917,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = FileObject->FsContext2;
 

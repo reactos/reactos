@@ -444,7 +444,7 @@ WINAPI
 IsBadReadPtr(IN LPCVOID lp,
              IN UINT_PTR ucb)
 {
-    ULONG PageSize;
+    //ULONG PageSize;
     BOOLEAN Result = FALSE;
     volatile CHAR *Current;
     PCHAR Last;
@@ -454,7 +454,7 @@ IsBadReadPtr(IN LPCVOID lp,
     if (!lp) return TRUE;
 
     /* Get the page size */
-    PageSize = BaseStaticServerData->SysInfo.PageSize;
+    //PageSize = BaseStaticServerData->SysInfo.PageSize;
 
     /* Calculate the last page */
     Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
@@ -516,7 +516,7 @@ NTAPI
 IsBadWritePtr(LPVOID lp,
               UINT_PTR ucb)
 {
-    ULONG PageSize;
+    //ULONG PageSize;
     BOOLEAN Result = FALSE;
     volatile CHAR *Current;
     PCHAR Last;
@@ -526,7 +526,7 @@ IsBadWritePtr(LPVOID lp,
     if (!lp) return TRUE;
 
     /* Get the page size */
-    PageSize = BaseStaticServerData->SysInfo.PageSize;
+    //PageSize = BaseStaticServerData->SysInfo.PageSize;
 
     /* Calculate the last page */
     Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);

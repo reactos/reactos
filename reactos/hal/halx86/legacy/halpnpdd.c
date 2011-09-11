@@ -284,12 +284,12 @@ NTAPI
 HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
                       OUT PDEVICE_CAPABILITIES Capabilities)
 {
-    PPDO_EXTENSION PdoExtension;
+    //PPDO_EXTENSION PdoExtension;
     NTSTATUS Status;
     PAGED_CODE();
 
     /* Get the extension and check for valid version */
-    PdoExtension = DeviceObject->DeviceExtension;
+    //PdoExtension = DeviceObject->DeviceExtension;
     ASSERT(Capabilities->Version == 1);
     if (Capabilities->Version == 1)
     {
@@ -346,7 +346,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     PCM_RESOURCE_LIST ResourceList;
 //    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
 //    PIO_RESOURCE_DESCRIPTOR Descriptor;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
+//    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
 //    ULONG i;
     PAGED_CODE();
 
@@ -385,7 +385,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         ResourceList->List[0].PartialResourceList.Count = 0;
 
         /* Setup the first descriptor */
-        PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+        //PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
         /* Find the requirement descriptor for the SCI */
 #if 0
@@ -627,7 +627,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStackLocation;
-    PPDO_EXTENSION PdoExtension;
+    //PPDO_EXTENSION PdoExtension;
     PFDO_EXTENSION FdoExtension;
     NTSTATUS Status;
     UCHAR Minor;
@@ -698,7 +698,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
     {
         /* This is a PDO instead */
         ASSERT(FdoExtension->ExtensionType == PdoExtensionType);
-        PdoExtension = (PPDO_EXTENSION)FdoExtension;
+        //PdoExtension = (PPDO_EXTENSION)FdoExtension;
 
         /* Query the IRP type */
         Status = STATUS_SUCCESS;

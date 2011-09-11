@@ -557,7 +557,7 @@ NpfsPeekPipe(PIRP Irp,
     ULONG OutputBufferLength;
     ULONG ReturnLength = 0;
     PFILE_PIPE_PEEK_BUFFER Reply;
-    PNPFS_FCB Fcb;
+    //PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     NTSTATUS Status;
     ULONG MessageCount = 0;
@@ -579,7 +579,7 @@ NpfsPeekPipe(PIRP Irp,
 
     Ccb = IoStack->FileObject->FsContext2;
     Reply = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-    Fcb = Ccb->Fcb;
+    //Fcb = Ccb->Fcb;
 
 
     Reply->NamedPipeState = Ccb->PipeState;
@@ -667,13 +667,13 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
-    PNPFS_VCB Vcb;
+    //PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
 
     DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT("IoStack: %p\n", IoStack);
     FileObject = IoStack->FileObject;

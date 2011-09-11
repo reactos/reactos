@@ -371,7 +371,7 @@ NDIS_STATUS NTAPI ProtocolReceive(
     USHORT EType;
     UINT PacketType, BytesTransferred;
     UINT temp;
-    IP_PACKET IPPacket;
+    //IP_PACKET IPPacket;
     PCHAR BufferData;
     NDIS_STATUS NdisStatus;
     PNDIS_PACKET NdisPacket;
@@ -426,8 +426,8 @@ NDIS_STATUS NTAPI ProtocolReceive(
 
     GetDataPtr( NdisPacket, 0, &BufferData, &temp );
 
-    IPPacket.NdisPacket = NdisPacket;
-    IPPacket.Position = 0;
+    //IPPacket.NdisPacket = NdisPacket;
+    //IPPacket.Position = 0;
 
     TransferDataCalled++;
 
