@@ -111,7 +111,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
+    if (HalBeginSystemInterrupt(CLOCK_LEVEL, HalpClockVector, &Irql))
     {
         /* Read register C, so that the next interrupt can happen */
         HalpReadCmos(RTC_REGISTER_C);;

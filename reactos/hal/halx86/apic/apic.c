@@ -18,6 +18,8 @@
 #include "apic.h"
 void HackEoi(void);
 
+#define APIC_LAZY_IRQL
+
 /* GLOBALS ********************************************************************/
 
 ULONG ApicVersion;
@@ -105,6 +107,46 @@ IOApicWrite(UCHAR Register, ULONG Value)
 
 VOID
 FORCEINLINE
+ApicWriteIORedirectionEntry(
+    UCHAR Index,
+    IOAPIC_REDIRECTION_REGISTER ReDirReg)
+{
+    IOApicWrite(IOAPIC_REDTBL + 2 * Index, ReDirReg.Long0);
+    IOApicWrite(IOAPIC_REDTBL + 2 * Index + 1, ReDirReg.Long1);
+}
+
+IOAPIC_REDIRECTION_REGISTER
+FORCEINLINE
+ApicReadIORedirectionEntry(
+    UCHAR Index)
+{
+    IOAPIC_REDIRECTION_REGISTER ReDirReg;
+
+    ReDirReg.Long0 = IOApicRead(IOAPIC_REDTBL + 2 * Index);
+    ReDirReg.Long1 = IOApicRead(IOAPIC_REDTBL + 2 * Index + 1);
+
+    return ReDirReg;
+}
+
+VOID
+FORCEINLINE
+ApicRequestInterrupt(IN UCHAR Vector)
+{
+    APIC_COMMAND_REGISTER CommandRegister;
+
+    /* Setup the command register */
+    CommandRegister.Long0 = 0;
+    CommandRegister.Vector = Vector;
+    CommandRegister.MessageType = APIC_MT_Fixed;
+    CommandRegister.TriggerMode = APIC_TGM_Edge;
+    CommandRegister.DestinationShortHand = APIC_DSH_Self;
+
+    /* Write the low dword to send the interrupt */
+    ApicWrite(APIC_ICR0, CommandRegister.Long0);
+}
+
+VOID
+FORCEINLINE
 ApicSendEOI(void)
 {
     //ApicWrite(APIC_EOI, 0);
@@ -125,6 +167,12 @@ ApicGetCurrentIrql(VOID)
 {
 #ifdef _M_AMD64
     return (KIRQL)__readcr8();
+#elif defined(APIC_LAZY_IRQL)
+    // HACK: some magic to Sync VBox's APIC registers
+    ApicRead(APIC_VER);
+
+    /* Return the field in the PCR */
+    return (KIRQL)__readfsbyte(FIELD_OFFSET(KPCR, Irql));
 #else
     // HACK: some magic to Sync VBox's APIC registers
     ApicRead(APIC_VER);
@@ -136,10 +184,36 @@ ApicGetCurrentIrql(VOID)
 
 VOID
 FORCEINLINE
-ApicSetCurrentIrql(KIRQL Irql)
+ApicRaiseIrql(KIRQL Irql)
 {
 #ifdef _M_AMD64
     __writecr8(Irql);
+#elif defined(APIC_LAZY_IRQL)
+    __writefsbyte(FIELD_OFFSET(KPCR, Irql), Irql);
+#else
+    /* Convert IRQL and write the TPR */
+    ApicWrite(APIC_TPR, IrqlToTpr(Irql));
+#endif
+}
+
+VOID
+FORCEINLINE
+ApicLowerIrql(KIRQL Irql)
+{
+#ifdef _M_AMD64
+    __writecr8(Irql);
+#elif defined(APIC_LAZY_IRQL)
+    __writefsbyte(FIELD_OFFSET(KPCR, Irql), Irql);
+
+    /* Is the new Irql lower than set in the TPR? */
+    if (Irql < KeGetPcr()->IRR)
+    {
+        /* Save the new hard IRQL in the IRR field */
+        KeGetPcr()->IRR = Irql;
+
+        /* Need to lower it back */
+        ApicWrite(APIC_TPR, IrqlToTpr(Irql));
+    }
 #else
     /* Convert IRQL and write the TPR */
     ApicWrite(APIC_TPR, IrqlToTpr(Irql));
@@ -171,6 +245,13 @@ FASTCALL
 HalpVectorToIrq(UCHAR Vector)
 {
     return HalpVectorToIndex[Vector];
+}
+
+VOID
+NTAPI
+HalpSendEOI(VOID)
+{
+    ApicSendEOI();
 }
 
 VOID
@@ -311,31 +392,10 @@ ApicInitializeLocalApic(ULONG Cpu)
     ApicWrite(APIC_ERRLVTR, LvtEntry.Long);
 
     /* Set the IRQL from the PCR */
-    ApicSetCurrentIrql(KeGetPcr()->Irql);
-}
+    ApicWrite(APIC_TPR, IrqlToTpr(KeGetPcr()->Irql));
 
-
-VOID
-FORCEINLINE
-ApicWriteIORedirectionEntry(
-    UCHAR Index,
-    IOAPIC_REDIRECTION_REGISTER ReDirReg)
-{
-    IOApicWrite(IOAPIC_REDTBL + 2 * Index, ReDirReg.Long0);
-    IOApicWrite(IOAPIC_REDTBL + 2 * Index + 1, ReDirReg.Long1);
-}
-
-IOAPIC_REDIRECTION_REGISTER
-FORCEINLINE
-ApicReadIORedirectionEntry(
-    UCHAR Index)
-{
-    IOAPIC_REDIRECTION_REGISTER ReDirReg;
-
-    ReDirReg.Long0 = IOApicRead(IOAPIC_REDTBL + 2 * Index);
-    ReDirReg.Long1 = IOApicRead(IOAPIC_REDTBL + 2 * Index + 1);
-
-    return ReDirReg;
+    /* Save the new hard IRQL in the IRR field */
+    KeGetPcr()->IRR = KeGetPcr()->Irql;
 }
 
 UCHAR
@@ -486,6 +546,9 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     __writeeflags(EFlags);
 }
 
+
+/* SOFTWARE INTERRUPT TRAPS ***************************************************/
+
 VOID
 DECLSPEC_NORETURN
 FASTCALL
@@ -493,17 +556,25 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KPROCESSOR_MODE ProcessorMode;
     KIRQL OldIrql;
-    ASSERT(ApicGetCurrentIrql() < APC_LEVEL);
     ASSERT(ApicGetProcessorIrql() == APC_LEVEL);
 
    /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
 
+#ifdef APIC_LAZY_IRQL
+    if (!HalBeginSystemInterrupt(APC_LEVEL, APC_VECTOR, &OldIrql))
+    {
+        /* "Spurious" interrupt, exit the interrupt */
+        KiEoiHelper(TrapFrame);
+    }
+#else
     /* Save the old IRQL */
     OldIrql = ApicGetCurrentIrql();
+    ASSERT(OldIrql < APC_LEVEL);
+#endif
 
     /* Raise to APC_LEVEL */
-    ApicSetCurrentIrql(APC_LEVEL);
+    ApicRaiseIrql(APC_LEVEL);
 
     /* End the interrupt */
     ApicSendEOI();
@@ -521,7 +592,7 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     _disable();
 
     /* Restore the old IRQL */
-    ApicSetCurrentIrql(OldIrql);
+    ApicLowerIrql(OldIrql);
 
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
@@ -534,17 +605,25 @@ FASTCALL
 HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL OldIrql;
-    ASSERT(ApicGetCurrentIrql() < DISPATCH_LEVEL);
     ASSERT(ApicGetProcessorIrql() == DISPATCH_LEVEL);
 
    /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
 
-    /* Save the old IRQL */
+#ifdef APIC_LAZY_IRQL
+    if (!HalBeginSystemInterrupt(DISPATCH_LEVEL, DISPATCH_VECTOR, &OldIrql))
+    {
+        /* "Spurious" interrupt, exit the interrupt */
+        KiEoiHelper(TrapFrame);
+    }
+#else
+    /* Get the current IRQL */
     OldIrql = ApicGetCurrentIrql();
+    ASSERT(OldIrql < DISPATCH_LEVEL);
+#endif
 
     /* Raise to DISPATCH_LEVEL */
-    ApicSetCurrentIrql(DISPATCH_LEVEL);
+    ApicRaiseIrql(DISPATCH_LEVEL);
 
     /* End the interrupt */
     ApicSendEOI();
@@ -555,37 +634,23 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     _disable();
 
     /* Restore the old IRQL */
-    ApicSetCurrentIrql(OldIrql);
+    ApicLowerIrql(OldIrql);
 
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
 #endif
 
-VOID
-NTAPI
-HalpSendEOI(VOID)
-{
-    ApicSendEOI();
-}
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+/* SOFTWARE INTERRUPTS ********************************************************/
+
 
 VOID
 FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Irql)
 {
-    APIC_COMMAND_REGISTER CommandRegister;
-
-    /* Setup the command register */
-    CommandRegister.Long0 = 0;
-    CommandRegister.Vector = IrqlToTpr(Irql);
-    CommandRegister.MessageType = APIC_MT_Fixed;
-    CommandRegister.TriggerMode = APIC_TGM_Edge;
-    CommandRegister.DestinationShortHand = APIC_DSH_Self;
-
-    /* Write the low dword to send the interrupt */
-    ApicWrite(APIC_ICR0, CommandRegister.Long0);
+    /* Convert irql to vector and request an interrupt */
+    ApicRequestInterrupt(IrqlToTpr(Irql));
 }
 
 VOID
@@ -595,6 +660,9 @@ HalClearSoftwareInterrupt(
 {
     /* Nothing to do */
 }
+
+
+/* SYSTEM INTERRUPTS **********************************************************/
 
 BOOLEAN
 NTAPI
@@ -678,11 +746,37 @@ HalBeginSystemInterrupt(
     IN UCHAR Vector,
     OUT PKIRQL OldIrql)
 {
+    KIRQL CurrentIrql;
+
     /* Get the current IRQL */
-    *OldIrql = ApicGetCurrentIrql();
+    CurrentIrql = ApicGetCurrentIrql();
+
+#ifdef APIC_LAZY_IRQL
+    /* Check if this interrupt is allowed */
+    if (CurrentIrql >= Irql)
+    {
+        /* It is not, set the real Irql in the TPR! */
+        ApicWrite(APIC_TPR, IrqlToTpr(CurrentIrql));
+
+        /* Save the new hard IRQL in the IRR field */
+        KeGetPcr()->IRR = CurrentIrql;
+
+        /* End this interrupt */
+        ApicSendEOI();
+
+        // FIXME: level interrupts
+        /* Re-request the interrupt to be handled later */
+        ApicRequestInterrupt(Vector);
+
+        /* Pretend it was a spurious interrupt */
+        return FALSE;
+    }
+#endif
+    /* Save the current IRQL */
+    *OldIrql = CurrentIrql;
 
     /* Set the new IRQL */
-    ApicSetCurrentIrql(Irql);
+    ApicRaiseIrql(Irql);
 
     /* Turn on interrupts */
     _enable();
@@ -701,9 +795,11 @@ HalEndSystemInterrupt(
     ApicSendEOI();
 
     /* Restore the old IRQL */
-    ApicSetCurrentIrql(OldIrql);
+    ApicLowerIrql(OldIrql);
 }
 
+
+/* IRQL MANAGEMENT ************************************************************/
 
 KIRQL
 NTAPI
@@ -726,8 +822,8 @@ KfLowerIrql(
         KeBugCheck(IRQL_NOT_LESS_OR_EQUAL);
     }
 #endif
-    /* Convert the new IRQL to a TPR value and write the register */
-    ApicSetCurrentIrql(OldIrql);
+    /* Set the new IRQL */
+    ApicLowerIrql(OldIrql);
 }
 
 KIRQL
@@ -748,7 +844,7 @@ KfRaiseIrql(
     }
 #endif
     /* Convert the new IRQL to a TPR value and write the register */
-    ApicSetCurrentIrql(NewIrql);
+    ApicRaiseIrql(NewIrql);
 
     /* Return old IRQL */
     return OldIrql;
