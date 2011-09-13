@@ -66,7 +66,7 @@ typedef struct _STRRET
     {
     [case(STRRET_WSTR)][string] LPWSTR    pOleStr;        /* OLESTR that will be freed */
     [case(STRRET_OFFSET)]       UINT      uOffset;        /* Offset into SHITEMID (ANSI) */
-    [case(STRRET_CSTR)]         char      cStr[MAX_PATH]; /* ANSI Buffer */
+    [case(STRRET_CSTR)]         CHAR      cStr[MAX_PATH]; /* ANSI Buffer */
     } DUMMYUNIONNAME;
 } STRRET, *LPSTRRET;
 cpp_quote("#include <poppack.h>")
