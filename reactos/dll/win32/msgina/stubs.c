@@ -70,20 +70,6 @@ WlxIsLockOk(
 /*
  * @unimplemented
  */
-BOOL WINAPI
-WlxIsLogoffOk(
-	PVOID pWlxContext)
-{
-  UNREFERENCED_PARAMETER(pWlxContext);
-
-  UNIMPLEMENTED;
-  return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
 VOID WINAPI
 WlxLogoff(
 	PVOID pWlxContext)
