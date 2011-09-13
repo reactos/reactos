@@ -241,14 +241,21 @@ KiEndInterrupt(IN KIRQL Irql,
     DbgPrint("KiEndInterrupt is unimplemented\n");
 }
 
+BOOLEAN
+FORCEINLINE
+KiUserTrap(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Anything else but Ring 0 is Ring 3 */
+    return !!(TrapFrame->SegCs & MODE_MASK);
+}
+
 #define Ki386PerfEnd(x)
 
 struct _KPCR;
 
-VOID
-FASTCALL
-KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
+//VOID KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
 
+VOID KiSwitchToBootStack(IN ULONG_PTR InitialStack);
 VOID KiDivideErrorFault(VOID);
 VOID KiDebugTrapOrFault(VOID);
 VOID KiNmiInterrupt(VOID);
@@ -274,52 +281,21 @@ VOID KiDebugServiceTrap(VOID);
 VOID KiDpcInterrupt(VOID);
 VOID KiIpiInterrupt(VOID);
 
-VOID
-KiGdtPrepareForApplicationProcessorInit(ULONG Id);
-VOID
-Ki386InitializeLdt(VOID);
-VOID
-Ki386SetProcessorFeatures(VOID);
-
-VOID
-NTAPI
-KiGetCacheInformation(VOID);
-
-BOOLEAN
-NTAPI
-KiIsNpxPresent(
-    VOID
-);
-
-BOOLEAN
-NTAPI
-KiIsNpxErrataPresent(
-    VOID
-);
-
-VOID
-NTAPI
-KiSetProcessorType(VOID);
-
-ULONG
-NTAPI
-KiGetFeatureBits(VOID);
-
-VOID
-NTAPI
-KiInitializeCpuFeatures(VOID);
+VOID KiGdtPrepareForApplicationProcessorInit(ULONG Id);
+VOID Ki386InitializeLdt(VOID);
+VOID Ki386SetProcessorFeatures(VOID);
+VOID KiGetCacheInformation(VOID);
+VOID KiSetProcessorType(VOID);
+ULONG KiGetFeatureBits(VOID);
+VOID KiInitializeCpuFeatures(VOID);
 
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
-VOID
-NtEarlyInitVdm(VOID);
-VOID
-KeApplicationProcessorInitDispatcher(VOID);
-VOID
-KeCreateApplicationProcessorIdleThread(ULONG Id);
+VOID NtEarlyInitVdm(VOID);
+VOID KeApplicationProcessorInitDispatcher(VOID);
+VOID KeCreateApplicationProcessorIdleThread(ULONG Id);
 
 VOID
-NTAPI
 Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
@@ -330,7 +306,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
-NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,
