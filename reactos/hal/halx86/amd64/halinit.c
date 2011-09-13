@@ -19,7 +19,7 @@ BOOLEAN HalpPciLockSettings;
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /* FUNCTIONS *****************************************************************/
-
+#if 0
 VOID
 NTAPI
 HalpInitProcessor(
@@ -49,4 +49,5 @@ HalpInitPhase1(VOID)
 
 }
 
+#endif
 

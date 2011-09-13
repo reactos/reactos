@@ -15,7 +15,8 @@
 #define APIC_PROFILE_VECTOR  0xFD // IRQL 31
 #define APIC_NMI_VECTOR      0xFF
 #define IrqlToTpr(Irql) (Irql << 4)
-#define TprToIrql(Tpr) (Tpr >> 4)
+#define TprToIrql(Tpr) ((KIRQL)(Tpr >> 4))
+#define CLOCK2_LEVEL CLOCK_LEVEL
 #else
 #define APIC_BASE 0xFFFE0000
 #define IOAPIC_BASE 0xFFFE1000 // checkme

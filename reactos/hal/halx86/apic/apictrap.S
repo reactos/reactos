@@ -14,19 +14,45 @@
 #include <ksamd64.inc>
 #include <trapamd64.inc>
 #define KI_PUSH_FAKE_ERROR_CODE TF_PUSH_FAKE_ERROR_CODE
+.code
+
+TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE
+
 PUBLIC ApicSpuriousService
+ApicSpuriousService:
+    iret
+
+PUBLIC HackEoi
+HackEoi:
+    xor rax, rax
+    mov ax, ss
+    push rax
+    push rsp
+    pushfq
+    mov ax, cs
+    push rax
+    lea rax, HackEoiReturn[rip]
+    push rax
+    mov dword ptr [HEX(0FFFFFFFFFEE000B0)], 0
+    iretq
+HackEoiReturn:
+    ret
+
 #else
 #include <ks386.inc>
 #include <internal/i386/asmmacro.S>
-PUBLIC _ApicSpuriousService
-#endif
-
 .code
 
-#ifndef _M_AMD64
+TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpTrap0D, 0
 TRAP_ENTRY HalpApcInterrupt, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpDispatchInterrupt, KI_PUSH_FAKE_ERROR_CODE
+
+PUBLIC _ApicSpuriousService
+_ApicSpuriousService:
+    iret
 
 // VBox APIC needs an iret more or less directly following the EOI
 PUBLIC _HackEoi
@@ -40,16 +66,9 @@ OnlyOnePersonKnowsHowToHackAroundVBoxBugsAndThatIsNotYou:
     ret
 
 #endif
-TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
-TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE
 
-FUNC ApicSpuriousService
-#ifdef _M_AMD64
-    .ENDPROLOG
-#endif
-    int 3
-    iret
-ENDFUNC ApicSpuriousService
+
+
 
 
 END

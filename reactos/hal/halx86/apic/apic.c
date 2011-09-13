@@ -18,7 +18,9 @@
 #include "apic.h"
 void HackEoi(void);
 
+#ifndef _M_AMD64
 #define APIC_LAZY_IRQL
+#endif
 
 /* GLOBALS ********************************************************************/
 
@@ -393,9 +395,10 @@ ApicInitializeLocalApic(ULONG Cpu)
 
     /* Set the IRQL from the PCR */
     ApicWrite(APIC_TPR, IrqlToTpr(KeGetPcr()->Irql));
-
+#ifdef APIC_LAZY_IRQL
     /* Save the new hard IRQL in the IRR field */
     KeGetPcr()->IRR = KeGetPcr()->Irql;
+#endif
 }
 
 UCHAR
@@ -549,6 +552,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
 
+#ifndef _M_AMD64
 VOID
 DECLSPEC_NORETURN
 FASTCALL
@@ -598,7 +602,6 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 
-#ifndef _M_AMD64
 VOID
 DECLSPEC_NORETURN
 FASTCALL
