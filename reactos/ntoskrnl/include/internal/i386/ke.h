@@ -493,7 +493,7 @@ extern CHAR KiSystemCallExit2[];
 //
 // Trap Macros
 //
-#include "../trap_x.h"
+#include "trap_x.h"
 
 //
 // Returns a thread's FPU save area

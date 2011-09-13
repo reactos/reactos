@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/include/trap_x.h
+ * FILE:            ntoskrnl/include/i386/trap_x.h
  * PURPOSE:         Internal Inlined Functions for the Trap Handling Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -91,7 +91,7 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->DbgArgPointer = TrapFrame->Edx;
     TrapFrame->DbgArgMark = 0xBADB0D00;
     TrapFrame->DbgEip = TrapFrame->Eip;
-    TrapFrame->DbgEbp = TrapFrame->Ebp;   
+    TrapFrame->DbgEbp = TrapFrame->Ebp;
     TrapFrame->PreviousPreviousMode = -1;
 }
 

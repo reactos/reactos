@@ -11,7 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "internal/trap_x.h"
+#include "internal/i386/trap_x.h"
 
 /* GLOBALS *******************************************************************/
 
