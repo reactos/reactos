@@ -32,7 +32,7 @@ typedef enum
 } HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
 
 typedef
-BOOLEAN 
+BOOLEAN
 (NTAPI *INITIALIZE_FMIFS)(
     IN PVOID hinstDll,
     IN DWORD dwReason,
@@ -55,7 +55,7 @@ BOOLEAN
 );
 
 typedef
-VOID 
+VOID
 (NTAPI *FORMAT_EX)(
     IN PWCHAR DriveRoot,
     IN FMIFS_MEDIA_FLAG MediaFlag,
@@ -67,7 +67,7 @@ VOID
 );
 
 typedef
-VOID 
+VOID
 (NTAPI *CHKDSK)(
     IN PWCHAR DriveRoot,
     IN PWCHAR Format,
@@ -234,7 +234,7 @@ ChkDskNow(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     bChkdskSuccess = FALSE;
     SendDlgItemMessageW(hwndDlg, 14002, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
     pContext->Chkdsk(szDrive, szFs, bCorrectErrors, TRUE, FALSE, bScanDrive, NULL, NULL, ChkdskCallback);
-    
+
     ChkdskDrvDialog = NULL;
     pContext->Result = bChkdskSuccess;
     bChkdskSuccess = FALSE;
@@ -563,7 +563,7 @@ DriveExtraDlg(
             break;
          case 14001:
             dwSize = sizeof(szPath);
-            if (RegGetValueW(HKEY_LOCAL_MACHINE, 
+            if (RegGetValueW(HKEY_LOCAL_MACHINE,
                              L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\DefragPath",
                              NULL,
                              RRF_RT_REG_EXPAND_SZ,
@@ -588,7 +588,7 @@ DriveExtraDlg(
             break;
          case 14002:
             dwSize = sizeof(szPath);
-            if (RegGetValueW(HKEY_LOCAL_MACHINE, 
+            if (RegGetValueW(HKEY_LOCAL_MACHINE,
                              L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\BackupPath",
                              NULL,
                              RRF_RT_REG_EXPAND_SZ,
@@ -692,7 +692,7 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
       if (!wcslen(szName))
       {
           /* FIXME
-           * check if disk is a really a local hdd 
+           * check if disk is a really a local hdd
            */
           i = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szName, sizeof(szName)/sizeof(WCHAR)-6);
           if (i > 0 && i < (sizeof(szName)/sizeof(WCHAR)) - 6)
@@ -766,7 +766,7 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
             ClusterSize = 32768;
         else if (TotalNumberOfBytes->QuadPart <= (4096LL * 1024LL * 1024LL))
             ClusterSize = 8192;
-        else 
+        else
             return FALSE;
     }
     else if (!wcsicmp(szFs, L"FAT32"))
@@ -783,7 +783,7 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
             ClusterSize = 8192;
         else if (TotalNumberOfBytes->QuadPart <= (32768LL * 1024LL * 1024LL))
             ClusterSize = 16384;
-        else 
+        else
             return FALSE;
    }
     else if (!wcsicmp(szFs, L"NTFS"))
@@ -1156,8 +1156,8 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 }
 
 
-BOOL 
-CALLBACK 
+INT_PTR
+CALLBACK
 FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PFORMAT_DRIVE_CONTEXT pContext;
@@ -1261,7 +1261,7 @@ InitializeFmifsLibrary(PFORMAT_DRIVE_CONTEXT pContext)
  *              SHFormatDrive (SHELL32.@)
  */
 
-DWORD 
+DWORD
 WINAPI
 SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
 {
