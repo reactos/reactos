@@ -569,6 +569,7 @@ LoadAndBootWindowsCommon(
 	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	LPCSTR SystemRoot;
+	TRACE("LoadAndBootWindowsCommon()\n");
 
 	/* Convert BootPath to SystemRoot */
 	SystemRoot = strstr(BootPath, "\\");
@@ -631,11 +632,11 @@ LoadAndBootWindowsCommon(
 	/* Map pages and create memory descriptors */
 	WinLdrSetupMemoryLayout(LoaderBlock);
 
-	/* Save final value of LoaderPagesSpanned */
-	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
-
 	/* Set processor context */
 	WinLdrSetProcessorContext();
+
+	/* Save final value of LoaderPagesSpanned */
+	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
 	TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);
