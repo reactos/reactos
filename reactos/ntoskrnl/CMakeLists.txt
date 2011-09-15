@@ -312,6 +312,7 @@ elseif(ARCH MATCHES amd64)
         ke/amd64/interrupt.c
         ke/amd64/irql.c
         ke/amd64/kiinit.c
+        ke/amd64/krnlinit.c
         ke/amd64/spinlock.c
         ke/amd64/stubs.c
         ke/amd64/thrdini.c
