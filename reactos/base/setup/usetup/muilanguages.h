@@ -1,6 +1,6 @@
 #pragma once
 
-#include <buildno.h>
+#include <reactos/buildno.h>
 
 #include "lang/af-ZA.h"
 #include "lang/ar-AE.h"

@@ -22,8 +22,8 @@
  */
 
 #include <precomp.h>
-#include <buildno.h>
-#include <version.h>
+#include <reactos/buildno.h>
+#include <reactos/version.h>
 
 VOID ShortVersion (VOID)
 {

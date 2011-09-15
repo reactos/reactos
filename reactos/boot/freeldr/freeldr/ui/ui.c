@@ -19,7 +19,7 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 #include <debug.h>
-#include <buildno.h>
+#include <reactos/buildno.h>
 
 DBG_DEFAULT_CHANNEL(UI);
 
