@@ -53,9 +53,9 @@ static void
 qst(size_t size, int (__cdecl *compar)(const void*, const void*), char *base, char *max)
 {
   char c, *i, *j, *jj;
-  int ii;
+  size_t ii;
   char *mid, *tmp;
-  int lo, hi;
+  size_t lo, hi;
   size_t thresh;
   size_t mthresh;
 

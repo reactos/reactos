@@ -132,7 +132,7 @@ static void WINAPI EXCEPTION_ctor(exception *_this, const char** name)
   _this->vtable = &MSVCRT_exception_vtable;
   if (*name)
   {
-    unsigned int name_len = strlen(*name) + 1;
+    size_t name_len = strlen(*name) + 1;
     _this->name = MSVCRT_malloc(name_len);
     memcpy(_this->name, *name, name_len);
     _this->do_free = TRUE;
@@ -608,7 +608,7 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
 
     if (name)
     {
-      unsigned int len = strlen(name);
+      size_t len = strlen(name);
 
       /* It seems _unDName may leave blanks at the end of the demangled name */
       while (len && name[--len] == ' ')

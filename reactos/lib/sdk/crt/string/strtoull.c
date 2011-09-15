@@ -59,7 +59,7 @@ strtoull(const char *nptr, char **endptr, int base)
 #endif
   }
   else if (neg)
-    acc = -acc;
+    acc = 0-acc;
   if (endptr != 0)
     *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
   return acc;

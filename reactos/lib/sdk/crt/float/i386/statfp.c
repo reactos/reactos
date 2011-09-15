@@ -26,12 +26,13 @@ unsigned int CDECL _statusfp(void)
 {
   unsigned int retVal = 0;
   unsigned int fpword;
-#if defined(__GNUC__)
+
+#ifdef _M_AMD64
+    fpword = _mm_getcsr();
+#elif defined(__GNUC__)
   __asm__ __volatile__( "fstsw %0" : "=m" (fpword) : );
-#elif defined(_M_IX86)
+#else // _MSC_VER
   __asm fstsw [fpword];
-#else
-  #pragma message("FIXME: _statusfp is halfplemented")
 #endif
   if (fpword & 0x1)  retVal |= _SW_INVALID;
   if (fpword & 0x2)  retVal |= _SW_DENORMAL;

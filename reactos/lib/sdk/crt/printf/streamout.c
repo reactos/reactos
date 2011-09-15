@@ -67,7 +67,7 @@ enum
     (flags & FLAG_LONGDOUBLE) ? va_arg(argptr, long double) : \
     va_arg(argptr, double)
 
-#define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
+#define get_exp(f) (int)floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
 #define round(x) floor((x) + 0.5)
 
 #ifndef _USER32_WSPRINTF
@@ -244,7 +244,7 @@ streamout_char(FILE *stream, int chr)
 
 static
 int
-streamout_astring(FILE *stream, const char *string, int count)
+streamout_astring(FILE *stream, const char *string, size_t count)
 {
     TCHAR chr;
     int written = 0;
@@ -267,7 +267,7 @@ streamout_astring(FILE *stream, const char *string, int count)
 
 static
 int
-streamout_wstring(FILE *stream, const wchar_t *string, int count)
+streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 {
     wchar_t chr;
     int written = 0;
@@ -317,7 +317,8 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
     TCHAR chr, *string;
     STRING *nt_string;
     const TCHAR *digits, *prefix;
-    int base, len, prefixlen, fieldwidth, precision, padding;
+    int base, fieldwidth, precision, padding;
+    size_t prefixlen, len;
     int written = 1, written_all = 0;
     unsigned int flags;
     unsigned __int64 val64;
@@ -510,7 +511,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                     len = wcslen((wchar_t*)string);
                 else
                     len = strlen((char*)string);
-                if (precision >= 0 && len > precision) len = precision;
+                if (precision >= 0 && len > (unsigned)precision) len = precision;
                 precision = 0;
                 break;
 
@@ -611,7 +612,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         /* Calculate padding */
         prefixlen = prefix ? _tcslen(prefix) : 0;
         if (precision < 0) precision = 0;
-        padding = fieldwidth - len - prefixlen - precision;
+        padding = (int)(fieldwidth - len - prefixlen - precision);
         if (padding < 0) padding = 0;
 
         /* Optional left space padding */

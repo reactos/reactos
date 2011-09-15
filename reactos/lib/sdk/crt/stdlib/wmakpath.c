@@ -32,7 +32,7 @@ void _wmakepath(wchar_t* path, const wchar_t* drive, const wchar_t* dir, const w
     }
     if (dir && dir[0])
     {
-        unsigned int len = strlenW(dir);
+        size_t len = strlenW(dir);
         memmove(p, dir, len * sizeof(wchar_t));
         p += len;
         if (p[-1] != '/' && p[-1] != '\\')
@@ -40,7 +40,7 @@ void _wmakepath(wchar_t* path, const wchar_t* drive, const wchar_t* dir, const w
     }
     if (fname && fname[0])
     {
-        unsigned int len = strlenW(fname);
+        size_t len = strlenW(fname);
         memmove(p, fname, len * sizeof(wchar_t));
         p += len;
     }

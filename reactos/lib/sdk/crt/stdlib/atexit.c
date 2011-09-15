@@ -23,7 +23,7 @@ void _atexit_cleanup(void)
 _onexit_t __dllonexit(_onexit_t func, _onexit_t **start, _onexit_t **end)
 {
    _onexit_t *tmp;
-   int len;
+   size_t len;
 
    if (!start || !*start || !end || !*end)
       return NULL;

@@ -267,7 +267,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
   char*       wxflag_ptr;
   HANDLE*     handle_ptr;
 
-  *size = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * fdend;
+  *size = (WORD)(sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * fdend);
   *block = calloc(*size, 1);
   if (!*block)
   {
@@ -302,7 +302,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
 void msvcrt_init_io(void)
 {
   STARTUPINFOA  si;
-  int           i;
+  unsigned int  i;
 
   InitializeCriticalSection(&FILE_cs);
   FILE_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": FILE_cs");
@@ -397,7 +397,7 @@ void msvcrt_init_io(void)
 static int flush_buffer(FILE* file)
 {
   if(file->_bufsiz) {
-        int cnt=file->_ptr-file->_base;
+        int cnt = (int)(file->_ptr - file->_base);
         if(cnt>0 && _write(file->_file, file->_base, cnt) != cnt) {
             file->_flag |= _IOERR;
             return EOF;
@@ -839,7 +839,7 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
  */
 LONG CDECL _lseek(int fd, LONG offset, int whence)
 {
-    return _lseeki64(fd, offset, whence);
+    return (LONG)_lseeki64(fd, offset, whence);
 }
 
 /*********************************************************************
@@ -1056,7 +1056,7 @@ FILE* CDECL _fdopen(int fd, const char *mode)
  */
 FILE* CDECL _wfdopen(int fd, const wchar_t *mode)
 {
-  unsigned mlen = strlenW(mode);
+  unsigned mlen = (unsigned)strlenW(mode);
   char *modea = calloc(mlen + 1, 1);
   FILE* file = NULL;
   int open_flags, stream_flags;
@@ -1409,7 +1409,7 @@ int CDECL _sopen( const char *path, int oflags, int shflags, ... )
  */
 int CDECL _wsopen( const wchar_t* path, int oflags, int shflags, ... )
 {
-  const unsigned int len = strlenW(path);
+  const unsigned int len = (unsigned)strlenW(path);
   char *patha = calloc(len + 1,1);
   va_list ap;
   int pmode;
@@ -1453,7 +1453,7 @@ int CDECL _open( const char *path, int flags, ... )
  */
 int CDECL _wopen(const wchar_t *path,int flags,...)
 {
-  const unsigned int len = strlenW(path);
+  const unsigned int len = (unsigned)strlenW(path);
   char *patha = calloc(len + 1,1);
   va_list ap;
   int pmode;
@@ -1793,7 +1793,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
           *_errno() = ENOSPC;
           if(nr_lf)
               free(p);
-          return s - buf_start;
+          return (int)(s - buf_start);
       }
       else
       {
@@ -2071,7 +2071,7 @@ wchar_t * CDECL fgetws(wchar_t *s, int size, FILE* file)
  */
 size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
 {
-  size_t wrcnt=size * nmemb;
+  int wrcnt=(int)(size * nmemb);
   int written = 0;
   if (size == 0)
       return 0;
@@ -2184,7 +2184,7 @@ FILE * CDECL _fsopen(const char *path, const char *mode, int share)
  */
 FILE * CDECL _wfsopen(const wchar_t *path, const wchar_t *mode, int share)
 {
-  const unsigned int plen = strlenW(path), mlen = strlenW(mode);
+  const unsigned int plen = (unsigned)strlenW(path), mlen = (unsigned)strlenW(mode);
   char *patha = calloc(plen + 1, 1);
   char *modea = calloc(mlen + 1, 1);
 
@@ -2256,7 +2256,7 @@ int CDECL _fputchar(int c)
  *		fread (MSVCRT.@)
  */
 size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
-{ size_t rcnt=size * nmemb;
+{ int rcnt=(int)(size * nmemb);
   size_t read=0;
   int pread=0;
 
@@ -2431,7 +2431,7 @@ LONG CDECL ftell(FILE* file)
   if(pos == -1) return -1;
   if(file->_bufsiz)  {
     if( file->_flag & _IOWRT ) {
-        off = file->_ptr - file->_base;
+        off = (int)(file->_ptr - file->_base);
     } else {
         off = -file->_cnt;
         if (fdesc[file->_file].wxflag & WX_TEXT) {
@@ -2457,7 +2457,7 @@ int CDECL fgetpos(FILE* file, fpos_t *pos)
   if(*pos == -1) return -1;
   if(file->_bufsiz)  {
     if( file->_flag & _IOWRT ) {
-        off = file->_ptr - file->_base;
+        off = (int)(file->_ptr - file->_base);
     } else {
         off = -file->_cnt;
         if (fdesc[file->_file].wxflag & WX_TEXT) {
@@ -2664,7 +2664,7 @@ int CDECL setvbuf(FILE* file, char *buf, int mode, size_t size)
 	file->_flag &= ~_IONBF;
   	file->_base = file->_ptr = buf;
   	if(buf) {
-		file->_bufsiz = size;
+		file->_bufsiz = (int)size;
 	}
   } else {
 	file->_flag |= _IONBF;

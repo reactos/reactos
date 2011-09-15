@@ -56,7 +56,7 @@ _flsbuf(int ch, FILE *stream)
     if (stream->_base && !(stream->_flag & _IONBF))
     {
         /* We can, check if there is something to write */
-        count = stream->_ptr - stream->_base;
+        count = (int)(stream->_ptr - stream->_base);
         if (count > 0)
             written = _write(stream->_file, stream->_base, count);
         else

@@ -40,7 +40,8 @@ int BlockEnvToEnvironA(void)
 {
    char *ptr, *environment_strings;
    char **envptr;
-   int count = 1, len;
+   int count = 1;
+   size_t len;
 
    TRACE("BlockEnvToEnvironA()\n");
 
@@ -91,7 +92,8 @@ int BlockEnvToEnvironW(void)
 {
    wchar_t *ptr, *environment_strings;
    wchar_t **envptr;
-   int count = 1, len;
+   int count = 1;
+   size_t len;
 
    TRACE("BlockEnvToEnvironW()\n");
 

@@ -6,7 +6,7 @@
  */
 unsigned char *_mbsstr(const unsigned char *src1,const unsigned char *src2)
 {
-  int len;
+  size_t len;
 
   if (src2 ==NULL || *src2 == 0)
     return (unsigned char *)src1;

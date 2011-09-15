@@ -40,7 +40,7 @@ typedef void (*MSVCRT_new_handler_func)(size_t size);
 static MSVCRT_new_handler_func MSVCRT_new_handler;
 static int MSVCRT_new_mode;
 
-/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */ 
+/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */
 static unsigned int MSVCRT_amblksiz = 16;
 /* FIXME - According to documentation it should be 480 bytes, at runtime default is 0 */
 static size_t MSVCRT_sbh_threshold = 0;
@@ -148,7 +148,7 @@ int CDECL _callnewh(size_t size)
  */
 void* CDECL _expand(void* mem, size_t size)
 {
-  return HeapReAlloc(GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, mem, size);
+  return HeapReAlloc(GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, mem, (DWORD)size);
 }
 
 /*********************************************************************
@@ -187,7 +187,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
 
   LOCK_HEAP;
   phe.lpData = next->_pentry;
-  phe.cbData = next->_size;
+  phe.cbData = (DWORD)next->_size;
   phe.wFlags = next->_useflag == _USEDENTRY ? PROCESS_HEAP_ENTRY_BUSY : 0;
 
   if (phe.lpData && phe.wFlags & PROCESS_HEAP_ENTRY_BUSY &&
@@ -303,7 +303,7 @@ void* CDECL malloc(size_t size)
 void* CDECL realloc(void* ptr, size_t size)
 {
   if (!ptr) return malloc(size);
-  if (size) return HeapReAlloc(GetProcessHeap(), 0, ptr, size);
+  if (size) return HeapReAlloc(GetProcessHeap(), 0, ptr, (DWORD)size);
   free(ptr);
   return NULL;
 }

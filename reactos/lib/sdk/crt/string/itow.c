@@ -34,7 +34,7 @@ _i64tow(__int64 value, wchar_t *string, int radix)
     *pos = '\0';
 
     do {
-	digit = val % radix;
+	digit = (WCHAR)(val % radix);
 	val = val / radix;
 	if (digit < 10) {
 	    *--pos = '0' + digit;
@@ -68,7 +68,7 @@ _ui64tow(unsigned __int64 value, wchar_t *string, int radix)
     *pos = '\0';
 
     do {
-	digit = value % radix;
+	digit = (WCHAR)(value % radix);
 	value = value / radix;
 	if (digit < 10) {
 	    *--pos = '0' + digit;
@@ -120,7 +120,7 @@ _ltow(long value, wchar_t *string, int radix)
     *pos = '\0';
 
     do {
-	digit = val % radix;
+	digit = (WCHAR)(val % radix);
 	val = val / radix;
 	if (digit < 10) {
 	    *--pos = '0' + digit;
@@ -155,7 +155,7 @@ _ultow(unsigned long value, wchar_t *string, int radix)
     *pos = '\0';
 
     do {
-	digit = value % radix;
+	digit = (WCHAR)(value % radix);
 	value = value / radix;
 	if (digit < 10) {
 	    *--pos = '0' + digit;

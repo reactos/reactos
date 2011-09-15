@@ -65,7 +65,7 @@ wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
     acc = ULONG_MAX;
   }
   else if (neg)
-    acc = -acc;
+    acc = 0-acc;
   if (endptr != 0)
     *endptr = any ? (wchar_t *)((size_t)(s - 1)) : (wchar_t *)((size_t)nptr);
   return acc;

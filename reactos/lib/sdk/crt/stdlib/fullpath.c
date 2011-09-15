@@ -25,7 +25,7 @@ _TCHAR* _tfullpath(_TCHAR* absPath, const _TCHAR* relPath, size_t maxLength)
         absPath = malloc(maxLength);
     }
 
-    copied = GetFullPathName(relPath,maxLength,absPath,&lpFilePart);
+    copied = GetFullPathName(relPath,(DWORD)maxLength,absPath,&lpFilePart);
     if (copied == 0 || copied > maxLength)
         return NULL;
 

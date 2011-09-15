@@ -74,6 +74,11 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 #define siglongjmp(buf,val) longjmp(buf,val)
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4733)
+#endif
+
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #ifdef __i386__
@@ -100,6 +105,10 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
     return frame->Prev;
 #endif
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 extern void __wine_enter_vm86( CONTEXT *context );
 

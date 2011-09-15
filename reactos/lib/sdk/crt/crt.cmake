@@ -379,6 +379,7 @@ elseif(ARCH MATCHES amd64)
         except/amd64/seh.s
         except/amd64/ehandler.c
         float/amd64/clearfp.S
+        float/amd64/getsetfpcw.S
         float/i386/cntrlfp.c
         float/amd64/fpreset.S
         float/amd64/logb.S

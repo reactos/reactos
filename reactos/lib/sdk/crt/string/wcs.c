@@ -60,7 +60,7 @@ wchar_t* CDECL _wcsdup( const wchar_t* str )
   wchar_t* ret = NULL;
   if (str)
   {
-    int size = (strlenW(str) + 1) * sizeof(wchar_t);
+    size_t size = (strlenW(str) + 1) * sizeof(wchar_t);
     ret = malloc( size );
     if (ret) memcpy( ret, str, size );
   }
@@ -386,7 +386,7 @@ size_t CDECL wcstombs(char *mbstr, const wchar_t *wcstr, size_t count)
  */
 INT CDECL wcscpy_s( wchar_t* wcDest, size_t numElement, const  wchar_t *wcSrc)
 {
-    INT size = 0;
+    size_t size = 0;
 
     if(!wcDest || !numElement)
         return EINVAL;

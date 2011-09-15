@@ -26,7 +26,7 @@ int _cputs(const char *_str)
   UNLOCK_CONSOLE;
   return retval;
 #else
-  int len = strlen(_str);
+  int len = (int)strlen(_str);
   DWORD written = 0;
   if (!WriteFile( fdesc[stdout->_file].hFile ,_str,len,&written,NULL))
     return -1;

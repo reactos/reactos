@@ -15,7 +15,7 @@ time_t _time(time_t* ptime)
     time_t time = 0;
 
     GetSystemTimeAsFileTime(&SystemTime);
-    time = FileTimeToUnixTime(&SystemTime, NULL);
+    time = (time_t)FileTimeToUnixTime(&SystemTime, NULL);
 
     if (ptime)
     {

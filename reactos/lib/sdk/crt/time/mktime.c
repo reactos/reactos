@@ -106,36 +106,36 @@ mktime_worker(struct tm * ptm, int utc)
     int tm_isdst;
 */
 
-/** 
+/**
  * \name _mkgmtime
- * 
+ *
  */
 time_t
 _mkgmtime(struct tm *ptm)
 {
-    time_t time = mktime_worker(ptm, 1);
-    return (time > MAX_32BIT_TIME) ? -1 : time;
+    __time64_t time = mktime_worker(ptm, 1);
+    return (time_t)((time > MAX_32BIT_TIME) ? -1 : time);
 }
 
 time_t
 mktime(struct tm *ptm)
 {
-    time_t time = mktime_worker(ptm, 0);
-    return (time > MAX_32BIT_TIME) ? -1 : time;
+    __time64_t time = mktime_worker(ptm, 0);
+    return (time_t)((time > MAX_32BIT_TIME) ? -1 : time);
 }
 
 __time32_t
 _mkgmtime32(struct tm *ptm)
 {
-    time_t time = mktime_worker(ptm, 1);
-    return (time > MAX_32BIT_TIME) ? -1 : time;
+    __time64_t time = mktime_worker(ptm, 1);
+    return (__time32_t)((time > MAX_32BIT_TIME) ? -1 : time);
 }
 
 __time32_t
 _mktime32(struct tm *ptm)
 {
-    time_t time = mktime_worker(ptm, 0);
-    return (time > MAX_32BIT_TIME) ? -1 : time;
+    __time64_t time = mktime_worker(ptm, 0);
+    return (__time32_t)((time > MAX_32BIT_TIME) ? -1 : time);
 }
 
 __time64_t

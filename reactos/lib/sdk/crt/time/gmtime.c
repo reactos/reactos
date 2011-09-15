@@ -23,7 +23,7 @@ _gmtime_worker(struct tm *ptm, __time64_t time, int do_dst)
     }
 
     /* Divide into date and time */
-    days = time / SECONDSPERDAY;
+    days = (unsigned int)(time / SECONDSPERDAY);
     secondinday = time % SECONDSPERDAY;
 
     /* Shift to days from 1.1.1601 */
@@ -61,11 +61,11 @@ _gmtime_worker(struct tm *ptm, __time64_t time, int do_dst)
     ptm->tm_isdst = 0;
     if (do_dst)
     {
-        unsigned int yeartime = dayinyear * SECONDSPERDAY + secondinday ;
+        int yeartime = dayinyear * SECONDSPERDAY + secondinday ;
         if (yeartime >= dst_begin && yeartime <= dst_end) // FIXME! DST in winter
         {
             time -= _dstbias;
-            days = time / SECONDSPERDAY + DIFFDAYS;
+            days = (unsigned int)(time / SECONDSPERDAY + DIFFDAYS);
             dayinyear = days - daystoyear;
             ptm->tm_isdst = 1;
         }
@@ -97,7 +97,7 @@ _gmtime_worker(struct tm *ptm, __time64_t time, int do_dst)
 
 /******************************************************************************
  * \name _gmtime64
- * \brief 
+ * \brief
  * \param ptime Pointer to a variable of type __time64_t containing the time.
  */
 struct tm *
@@ -123,7 +123,7 @@ _gmtime64(const __time64_t * ptime)
 
 /******************************************************************************
  * \name _gmtime32
- * \brief 
+ * \brief
  * \param ptime Pointer to a variable of type __time32_t containing the time.
  */
 struct tm *
@@ -135,7 +135,7 @@ _gmtime32(const __time32_t * ptime)
 
 /******************************************************************************
  * \name gmtime
- * \brief 
+ * \brief
  * \param ptime Pointer to a variable of type time_t containing the time.
  */
 struct tm *
