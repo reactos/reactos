@@ -14,7 +14,7 @@ START_TEST(MmSection)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS ExceptionStatus;
-    const PVOID InvalidPointer = (PVOID)0x5555555555555555LLU;
+    const PVOID InvalidPointer = (PVOID)0x5555555555555555ULL;
     PVOID SectionObject;
     LARGE_INTEGER MaximumSize;
 
@@ -42,6 +42,9 @@ START_TEST(MmSection)
     ok_eq_hex(Status, STATUS_INVALID_PAGE_PROTECTION);
     ok_eq_pointer(SectionObject, InvalidPointer);
 
+    if (SectionObject && SectionObject != InvalidPointer)
+        ObDereferenceObject(SectionObject);
+
     StartSeh()
         Status = MmCreateSection(NULL, 0, NULL, NULL, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
@@ -52,6 +55,21 @@ START_TEST(MmSection)
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_pointer(SectionObject, InvalidPointer);
 
+    if (SectionObject && SectionObject != InvalidPointer)
+        ObDereferenceObject(SectionObject);
+
+    SectionObject = InvalidPointer;
+    MaximumSize.QuadPart = 0;
+    StartSeh()
+        Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, NULL, NULL);
+    EndSeh(STATUS_SUCCESS);
+    ok_eq_hex(Status, STATUS_INVALID_FILE_FOR_SECTION);
+    ok_eq_longlong(MaximumSize.QuadPart, 0LL);
+    ok_eq_pointer(SectionObject, InvalidPointer);
+
+    if (SectionObject && SectionObject != InvalidPointer)
+        ObDereferenceObject(SectionObject);
+
     MaximumSize.QuadPart = 0;
     StartSeh()
         Status = MmCreateSection(NULL, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
@@ -59,11 +77,17 @@ START_TEST(MmSection)
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER_4);
     ok_eq_longlong(MaximumSize.QuadPart, 0LL);
 
+    if (SectionObject && SectionObject != InvalidPointer)
+        ObDereferenceObject(SectionObject);
+
     MaximumSize.QuadPart = 1;
     StartSeh()
         Status = MmCreateSection(NULL, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_longlong(MaximumSize.QuadPart, 1LL);
+
+    if (SectionObject && SectionObject != InvalidPointer)
+        ObDereferenceObject(SectionObject);
 
     SectionObject = InvalidPointer;
     MaximumSize.QuadPart = 0;
@@ -73,6 +97,9 @@ START_TEST(MmSection)
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER_4);
     ok_eq_longlong(MaximumSize.QuadPart, 0LL);
     ok_eq_pointer(SectionObject, InvalidPointer);
+
+    if (SectionObject && SectionObject != InvalidPointer)
+        ObDereferenceObject(SectionObject);
 
     SectionObject = InvalidPointer;
     MaximumSize.QuadPart = 1;
@@ -86,13 +113,4 @@ START_TEST(MmSection)
 
     if (SectionObject && SectionObject != InvalidPointer)
         ObDereferenceObject(SectionObject);
-
-    SectionObject = InvalidPointer;
-    MaximumSize.QuadPart = 1;
-    StartSeh()
-        Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
-    ok_eq_hex(Status, STATUS_INVALID_FILE_FOR_SECTION);
-    ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-    ok_eq_pointer(SectionObject, InvalidPointer);
 }

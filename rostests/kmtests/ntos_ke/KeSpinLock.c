@@ -88,8 +88,13 @@ static VOID LocalName(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData)  \
 
 DEFINE_ACQUIRE(AcquireNormal,         TRUE,  KeAcquireSpinLock(SpinLock, &CheckData->Irql))
 DEFINE_RELEASE(ReleaseNormal,         TRUE,  KeReleaseSpinLock(SpinLock, CheckData->Irql))
+#ifdef _X86_
 DEFINE_ACQUIRE(AcquireExp,            TRUE,  (KeAcquireSpinLock)(SpinLock, &CheckData->Irql))
 DEFINE_RELEASE(ReleaseExp,            TRUE,  (KeReleaseSpinLock)(SpinLock, CheckData->Irql))
+#else
+DEFINE_ACQUIRE(AcquireExp,            TRUE,  KeAcquireSpinLock(SpinLock, &CheckData->Irql))
+DEFINE_RELEASE(ReleaseExp,            TRUE,  KeReleaseSpinLock(SpinLock, CheckData->Irql))
+#endif
 DEFINE_ACQUIRE(AcquireSynch,          TRUE,  CheckData->Irql = KeAcquireSpinLockRaiseToSynch(SpinLock))
 
 DEFINE_ACQUIRE(AcquireInStackQueued,  TRUE,  KeAcquireInStackQueuedSpinLock(SpinLock, &CheckData->QueueHandle))
