@@ -1,7 +1,6 @@
 
 #ifdef _M_AMD64
-#define APIC_BASE 0xFFFFFFFFFEE00000ULL
-#define IOAPIC_BASE 0xFFFFFFFFFEE01000ULL // checkme
+#define IOAPIC_BASE 0xFFFFFFFFFFFE1000ULL // checkme
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APC_VECTOR           0x3D // IRQL 01
 #define APIC_SPURIOUS_VECTOR 0x3f
@@ -18,7 +17,6 @@
 #define TprToIrql(Tpr) ((KIRQL)(Tpr >> 4))
 #define CLOCK2_LEVEL CLOCK_LEVEL
 #else
-#define APIC_BASE 0xFFFE0000
 #define IOAPIC_BASE 0xFFFE1000 // checkme
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APIC_SPURIOUS_VECTOR 0x1f

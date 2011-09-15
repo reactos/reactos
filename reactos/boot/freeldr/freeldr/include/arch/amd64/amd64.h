@@ -36,14 +36,6 @@
 #define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)
 #define VAtoPTI(va) ((((ULONG64)va) >> PTI_SHIFT) & 0x1FF)
 
-#define HYPERSPACE_BASE             0xfffff70000000000ULL
-#define HAL_BASE                    0xffffffff80000000ULL
-#define APIC_BASE                   0xFFFFFFFFFFFE0000ULL
-
-#define APIC_PHYS_BASE              0xfee00000
-
-#define NUM_PAGES_KERNEL
-
 #ifndef ASM
 
 VOID FrLdrSetupGdtIdt(VOID);

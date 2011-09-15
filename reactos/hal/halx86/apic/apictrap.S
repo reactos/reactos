@@ -34,7 +34,7 @@ HackEoi:
     push rax
     lea rax, HackEoiReturn[rip]
     push rax
-    mov dword ptr [HEX(0FFFFFFFFFEE000B0)], 0
+    mov dword ptr [HEX(0FFFFFFFFFFFE00B0)], 0
     iretq
 HackEoiReturn:
     ret

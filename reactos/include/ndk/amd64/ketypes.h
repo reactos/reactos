@@ -162,6 +162,9 @@ Author:
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     100
+#define HYPERSPACE_BASE         0xfffff70000000000ULL
+#define MM_HAL_VA_START         0xFFFFFFFFFFC00000ULL /* This is Vista+ */
+#define APIC_BASE               0xFFFFFFFFFFFE0000ULL
 
 //
 // IOPM Definitions

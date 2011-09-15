@@ -13,8 +13,7 @@
 #include <debug.h>
 
 /* Share with Mm headers? */
-#define MM_HAL_VA_START     (PVOID)0xFFC00000
-#define MM_HAL_HEAP_START   (PVOID)((ULONG_PTR)MM_HAL_VA_START + (1024 * 1024))
+#define MM_HAL_HEAP_START   (PVOID)(MM_HAL_VA_START + (1024 * 1024))
 
 /* GLOBALS *******************************************************************/
 
@@ -25,14 +24,15 @@ PVOID HalpHeapStart = MM_HAL_HEAP_START;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-ULONG
+ULONG_PTR
 NTAPI
 HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                        IN ULONG MaxAddress,
-                        IN ULONG PageCount,
+                        IN ULONG_PTR MaxAddress,
+                        IN PFN_NUMBER PageCount,
                         IN BOOLEAN Aligned)
 {
-    ULONG UsedDescriptors, Alignment, PhysicalAddress;
+    ULONG UsedDescriptors, Alignment;
+    ULONG_PTR PhysicalAddress;
     PFN_NUMBER MaxPage, BasePage;
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock, NewBlock, FreeBlock;
@@ -87,7 +87,7 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     
     /* Okay, now get a descriptor */
     NewBlock = &HalpAllocationDescriptorArray[HalpUsedAllocDescriptors];
-    NewBlock->PageCount = PageCount;
+    NewBlock->PageCount = (ULONG)PageCount;
     NewBlock->BasePage = MdBlock->BasePage + Alignment;
     NewBlock->MemoryType = LoaderHALCachedMemory;
     
@@ -103,8 +103,8 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         {
             /* Get the next descriptor */
             FreeBlock = &HalpAllocationDescriptorArray[UsedDescriptors];
-            FreeBlock->PageCount = MdBlock->PageCount - Alignment - PageCount;
-            FreeBlock->BasePage = MdBlock->BasePage + Alignment + PageCount;
+            FreeBlock->PageCount = MdBlock->PageCount - Alignment - (ULONG)PageCount;
+            FreeBlock->BasePage = MdBlock->BasePage + Alignment + (ULONG)PageCount;
             
             /* One more */
             HalpUsedAllocDescriptors++;
@@ -120,8 +120,8 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     else
     {
         /* Consume memory from this block */
-        MdBlock->BasePage += PageCount;
-        MdBlock->PageCount -= PageCount;
+        MdBlock->BasePage += (ULONG)PageCount;
+        MdBlock->PageCount -= (ULONG)PageCount;
         
         /* Insert the descriptor */
         InsertTailList(&MdBlock->ListEntry, &NewBlock->ListEntry);
@@ -137,10 +137,10 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
-                        IN ULONG PageCount)
+                        IN PFN_NUMBER PageCount)
 {
     PHARDWARE_PTE PointerPte;
-    ULONG UsedPages = 0;
+    PFN_NUMBER UsedPages = 0;
     PVOID VirtualAddress, BaseAddress;
 
     /* Start at the current HAL heap base */
@@ -205,13 +205,13 @@ HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
 VOID
 NTAPI
 HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
-                        IN ULONG PageCount)
+                        IN PFN_NUMBER PageCount)
 {
     PHARDWARE_PTE PointerPte;
     ULONG i;
 
     /* Only accept valid addresses */
-    if (VirtualAddress < MM_HAL_VA_START) return;
+    if (VirtualAddress < (PVOID)MM_HAL_VA_START) return;
 
     /* Align it down to page size */
     VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress & ~(PAGE_SIZE - 1));

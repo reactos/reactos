@@ -639,18 +639,27 @@ HalpReleasePciDeviceForDebugging(
 //
 // Memory routines
 //
+ULONG_PTR
+NTAPI
+HalpAllocPhysicalMemory(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN ULONG_PTR MaxAddress,
+    IN PFN_NUMBER PageCount,
+    IN BOOLEAN Aligned
+);
+
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(
     IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG NumberPage
+    IN PFN_NUMBER PageCount
 );
 
 VOID
 NTAPI
 HalpUnmapVirtualAddress(
     IN PVOID VirtualAddress,
-    IN ULONG NumberPages
+    IN PFN_NUMBER NumberPages
 );
 
 /* sysinfo.c */
@@ -736,22 +745,6 @@ VOID
 NTAPI
 HalpReleaseCmosSpinLock(
     VOID
-);
-
-ULONG
-NTAPI
-HalpAllocPhysicalMemory(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN ULONG MaxAddress,
-    IN ULONG PageCount,
-    IN BOOLEAN Aligned
-);
-
-PVOID
-NTAPI
-HalpMapPhysicalMemory64(
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG PageCount
 );
 
 NTSTATUS
@@ -852,8 +845,8 @@ HalpInitProcessor(
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
-#define KiEoiHelper() return
-#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) TRUE
+#define KiEoiHelper(TrapFrame) return /* Just return to the caller */
+#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) (KeRaiseIrql(Irql, OldIrql), TRUE)
 #ifndef CONFIG_SMP
 /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
 #define KiAcquireSpinLock(SpinLock)

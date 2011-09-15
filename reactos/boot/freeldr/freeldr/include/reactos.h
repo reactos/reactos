@@ -40,8 +40,6 @@
     ((p) >> PFN_SHIFT)
 
 #define STARTUP_BASE                0xC0000000
-#define HAL_BASE                    0xFFC00000
-#define APIC_BASE                   0xFFFE0000
 
 #define LowMemPageTableIndex        0
 #define StartupPageTableIndex       (STARTUP_BASE >> 22)

@@ -100,11 +100,11 @@ HalpAcpiCopyBiosTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     {
         /* Phase 0: Convert to pages and use the HAL heap */
         PageCount = BYTES_TO_PAGES(Size);
-        PhysAddress.LowPart = HalpAllocPhysicalMemory(LoaderBlock,
-                                                      0x1000000,
-                                                      PageCount,
-                                                      FALSE);
-        if (PhysAddress.LowPart)
+        PhysAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock,
+                                                       0x1000000,
+                                                       PageCount,
+                                                       FALSE);
+        if (PhysAddress.QuadPart)
         {
             /* Map it */
             CachedTable = HalpMapPhysicalMemory64(PhysAddress, PageCount);
@@ -217,7 +217,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
     else
     {
-        /* To find tables, we need the RSDT */ 
+        /* To find tables, we need the RSDT */
         Rsdt = HalpAcpiGetTable(LoaderBlock, RSDT_SIGNATURE);
         if (Rsdt)
         {
@@ -342,7 +342,7 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ASSERT(Header);
     
     /* How many pages do we need? */
-    PageCount = BYTES_TO_PAGES(Header->Length);    
+    PageCount = BYTES_TO_PAGES(Header->Length);
     if (PageCount != 2)
     {
         /* We assumed two, but this is not the case, free the current mapping */
@@ -546,7 +546,7 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCONFIGURATION_COMPONENT_DATA Next = NULL;
     PCM_PARTIAL_RESOURCE_LIST ResourceList;
     PACPI_BIOS_MULTI_NODE NodeData;
-    ULONG NodeLength;
+    SIZE_T NodeLength;
     PFN_NUMBER PageCount;
     PVOID MappedAddress;
     PHYSICAL_ADDRESS PhysicalAddress;
@@ -605,12 +605,11 @@ HalpAcpiFindRsdtPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PageCount = BYTES_TO_PAGES(NodeLength);
 
     /* Allocate the memory */
-    PhysicalAddress.HighPart = 0;
-    PhysicalAddress.LowPart = HalpAllocPhysicalMemory(LoaderBlock,
-                                                      0x1000000,
-                                                      PageCount,
-                                                      FALSE);
-    if (PhysicalAddress.LowPart)
+    PhysicalAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock,
+                                                       0x1000000,
+                                                       PageCount,
+                                                       FALSE);
+    if (PhysicalAddress.QuadPart)
     {
         /* Map it if the allocation worked */
         MappedAddress = HalpMapPhysicalMemory64(PhysicalAddress, PageCount);
@@ -741,7 +740,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         MmUnmapIoSpace(MappedAddress, TableLength << PAGE_SHIFT);
     }
     
-    /* Cache the RSDT */    
+    /* Cache the RSDT */
     HalpAcpiCacheTable(&Rsdt->Header);
     
     /* Check for compatible loader block extension */
@@ -825,7 +824,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HalpNumaInitializeStaticConfiguration(LoaderBlock);
     
     /* Initialize hotplug through the SRAT */
-    HalpDynamicSystemResourceConfiguration(LoaderBlock);    
+    HalpDynamicSystemResourceConfiguration(LoaderBlock);
     DPRINT1("ACPI SRAT at 0x%p\n", HalpAcpiSrat);
     if (HalpAcpiSrat)
     {
@@ -843,14 +842,14 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HaliAcpiTimerInit(0, 0);
     
     /* Do we have a low stub address yet? */
-    if (!HalpLowStubPhysicalAddress.LowPart)
+    if (!HalpLowStubPhysicalAddress.QuadPart)
     {
         /* Allocate it */
-        HalpLowStubPhysicalAddress.LowPart = HalpAllocPhysicalMemory(LoaderBlock,
-                                                                     0x100000,
-                                                                     1,
-                                                                     FALSE);
-        if (HalpLowStubPhysicalAddress.LowPart)
+        HalpLowStubPhysicalAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock,
+                                                                      0x100000,
+                                                                      1,
+                                                                      FALSE);
+        if (HalpLowStubPhysicalAddress.QuadPart)
         {
             /* Map it */
             HalpLowStub = HalpMapPhysicalMemory64(HalpLowStubPhysicalAddress, 1);

@@ -235,22 +235,30 @@ WinLdrpMapApic()
 BOOLEAN
 WinLdrMapSpecialPages()
 {
-    /* Map the PCR page */
-    if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
-    {
-        ERR("Could not map PCR @ %lx\n", PcrBasePage);
-        return FALSE;
-    }
+	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
 
-    /* Map KI_USER_SHARED_DATA */
-    if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
-    {
-        ERR("Could not map KI_USER_SHARED_DATA\n");
-        return FALSE;
-    }
+	/* Map the PCR page */
+	if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
+	{
+		ERR("Could not map PCR @ %lx\n", PcrBasePage);
+		return FALSE;
+	}
+
+	/* Map KI_USER_SHARED_DATA */
+	if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
+	{
+		ERR("Could not map KI_USER_SHARED_DATA\n");
+		return FALSE;
+	}
 
 	/* Map the APIC page */
 	WinLdrpMapApic();
+
+	/* Map the page tables for 4 MB HAL address space. */
+	PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(MM_HAL_VA_START));
+	PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(MM_HAL_VA_START));
+	MempGetOrCreatePageDir(PdeBase, VAtoPDI(MM_HAL_VA_START));
+	MempGetOrCreatePageDir(PdeBase, VAtoPDI(MM_HAL_VA_START + 2 * 1024 * 1024));
 
     return TRUE;
 }
