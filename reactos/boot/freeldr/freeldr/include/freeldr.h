@@ -50,7 +50,7 @@
 #include <ntdddisk.h>
 #include <internal/hal.h>
 #include <drivers/pci/pci.h>
-#include <reactos/buildno.h>
+
 #include <winerror.h>
 
 /* internal headers */

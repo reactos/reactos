@@ -60,7 +60,6 @@
 #include "cpanel.h"
 #include "enumidlist.h"
 #include "shfldr.h"
-#include "version.h"
 #include "shellfolder.h"
 #include "xdg.h"
 #include "shellapi.h"

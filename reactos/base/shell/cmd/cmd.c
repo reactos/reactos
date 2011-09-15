@@ -142,6 +142,8 @@
  */
 
 #include <precomp.h>
+#include <buildno.h>
+#include <version.h>
 
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)

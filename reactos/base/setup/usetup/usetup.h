@@ -52,9 +52,6 @@
 /* DDK Disk Headers */
 #include <ntddscsi.h>
 
-/* ReactOS Version */
-#include <reactos/buildno.h>
-
 /* Internal Headers */
 #include "interface/consup.h"
 #include "partlist.h"

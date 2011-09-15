@@ -1,5 +1,7 @@
 #pragma once
 
+#include <buildno.h>
+
 #include "lang/af-ZA.h"
 #include "lang/ar-AE.h"
 #include "lang/ar-BH.h"

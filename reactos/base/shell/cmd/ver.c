@@ -22,7 +22,8 @@
  */
 
 #include <precomp.h>
-
+#include <buildno.h>
+#include <version.h>
 
 VOID ShortVersion (VOID)
 {
