@@ -14,7 +14,7 @@
 
 #include "tsc.h"
 
-LARGE_INTEGER HalpCpuClockFrequency = {INITIAL_STALL_COUNT * 1000000};
+LARGE_INTEGER HalpCpuClockFrequency = {{INITIAL_STALL_COUNT * 1000000}};
 
 UCHAR TscCalibrationPhase;
 ULONG64 TscCalibrationArray[NUM_SAMPLES];

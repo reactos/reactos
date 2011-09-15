@@ -28,7 +28,7 @@ ULONG ApicVersion;
 UCHAR HalpVectorToIndex[256];
 
 #ifndef _M_AMD64
-static const UCHAR
+const UCHAR
 HalpIRQLtoTPR[32] =
 {
     0x00, /*  0 PASSIVE_LEVEL */
@@ -65,7 +65,7 @@ HalpIRQLtoTPR[32] =
     0xff, /* 31 HIGH_LEVEL */
 };
 
-static const KIRQL
+const KIRQL
 HalVectorToIRQL[16] =
 {
        0, /* 00 PASSIVE_LEVEL */
@@ -132,7 +132,7 @@ ApicReadIORedirectionEntry(
 
 VOID
 FORCEINLINE
-ApicRequestInterrupt(IN UCHAR Vector)
+ApicRequestInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
 {
     APIC_COMMAND_REGISTER CommandRegister;
 
@@ -140,7 +140,7 @@ ApicRequestInterrupt(IN UCHAR Vector)
     CommandRegister.Long0 = 0;
     CommandRegister.Vector = Vector;
     CommandRegister.MessageType = APIC_MT_Fixed;
-    CommandRegister.TriggerMode = APIC_TGM_Edge;
+    CommandRegister.TriggerMode = TriggerMode;
     CommandRegister.DestinationShortHand = APIC_DSH_Self;
 
     /* Write the low dword to send the interrupt */
@@ -653,7 +653,7 @@ FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Irql)
 {
     /* Convert irql to vector and request an interrupt */
-    ApicRequestInterrupt(IrqlToTpr(Irql));
+    ApicRequestInterrupt(IrqlToTpr(Irql), APIC_TGM_Edge);
 }
 
 VOID
@@ -700,15 +700,17 @@ HalEnableSystemInterrupt(
         ReDirReg.DeliveryMode = APIC_MT_LowestPriority;
         ReDirReg.DestinationMode = APIC_DM_Logical;
         ReDirReg.Destination = 0;
-        ReDirReg.TriggerMode = 1 - InterruptMode;
     }
 
     /* Check if the destination is logical */
-    if (ReDirReg.DestinationMode = APIC_DM_Logical)
+    if (ReDirReg.DestinationMode == APIC_DM_Logical)
     {
         /* Set the bit for this cpu */
         ReDirReg.Destination |= ApicLogicalId(Prcb->Number);
     }
+
+    /* Set the trigger mode */
+    ReDirReg.TriggerMode = 1 - InterruptMode;
 
     /* Now unmask it */
     ReDirReg.Mask = FALSE;
@@ -758,6 +760,9 @@ HalBeginSystemInterrupt(
     /* Check if this interrupt is allowed */
     if (CurrentIrql >= Irql)
     {
+        IOAPIC_REDIRECTION_REGISTER RedirReg;
+        UCHAR Index;
+
         /* It is not, set the real Irql in the TPR! */
         ApicWrite(APIC_TPR, IrqlToTpr(CurrentIrql));
 
@@ -767,9 +772,23 @@ HalBeginSystemInterrupt(
         /* End this interrupt */
         ApicSendEOI();
 
-        // FIXME: level interrupts
-        /* Re-request the interrupt to be handled later */
-        ApicRequestInterrupt(Vector);
+        /* Get the irq for this vector */
+        Index = HalpVectorToIndex[Vector];
+
+        /* Check if its valid */
+        if (Index != 0xff)
+        {
+            /* Read the I/O redirection entry */
+            RedirReg = ApicReadIORedirectionEntry(Index);
+
+            /* Re-request the interrupt to be handled later */
+            ApicRequestInterrupt(Vector, (UCHAR)RedirReg.TriggerMode);
+       }
+       else
+       {
+            /* Re-request the interrupt to be handled later */
+            ApicRequestInterrupt(Vector, APIC_TGM_Edge);
+       }
 
         /* Pretend it was a spurious interrupt */
         return FALSE;
