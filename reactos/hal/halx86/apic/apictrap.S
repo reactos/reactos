@@ -13,11 +13,10 @@
 #ifdef _M_AMD64
 #include <ksamd64.inc>
 #include <trapamd64.inc>
-#define KI_PUSH_FAKE_ERROR_CODE TF_PUSH_FAKE_ERROR_CODE
 .code
 
-TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
-TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY HalpClockInterrupt, (TF_VOLATILES OR TF_SEND_EOI)
+TRAP_ENTRY HalpProfileInterrupt, (TF_VOLATILES OR TF_SEND_EOI)
 
 PUBLIC ApicSpuriousService
 ApicSpuriousService:
@@ -37,6 +36,7 @@ HackEoi:
     mov dword ptr [HEX(0FFFFFFFFFFFE00B0)], 0
     iretq
 HackEoiReturn:
+    add rsp, 8 // esp was changed by the iret to the pushed value
     ret
 
 #else

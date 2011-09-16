@@ -846,7 +846,7 @@ HalpInitProcessor(
 #define KfLowerIrql KeLowerIrql
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
 #define KiEoiHelper(TrapFrame) return /* Just return to the caller */
-#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) (KeRaiseIrql(Irql, OldIrql), TRUE)
+#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) TRUE
 #ifndef CONFIG_SMP
 /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
 #define KiAcquireSpinLock(SpinLock)

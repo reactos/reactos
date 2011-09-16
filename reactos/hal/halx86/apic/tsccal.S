@@ -55,10 +55,12 @@ _CalibrationISR_Exit:
 
 EXTERN TscCalibrationPhase:BYTE
 EXTERN TscCalibrationArray:DWORD
+EXTERN HalpSendEOI:PROC
 
 PUBLIC TscCalibrationISR
 FUNC TscCalibrationISR
     push rax
+    push rbx
     push rcx
     push rdx
     .ENDPROLOG
@@ -74,17 +76,28 @@ FUNC TscCalibrationISR
     jnb CalibrationISR_Exit
 
     /* Store the current value */
-    shl rcx, 1
-    lea rax, [TscCalibrationArray]
-    mov dword ptr [rax + rcx], eax
-    mov dword ptr [rax + rcx + 4], edx
+    shl rcx, 3
+    lea rbx, [TscCalibrationArray]
+    mov dword ptr [rbx + rcx], eax
+    mov dword ptr [rbx + rcx + 4], edx
 
     /* Advance phase */
     inc byte ptr [TscCalibrationPhase]
 
 CalibrationISR_Exit:
+    /* Read CMOS register C */
+    mov al, HEX(0C)
+    out HEX(70), al
+    jmp $+2
+    in al, HEX(71)
+    jmp $+2
+
+    /* Send EOI */
+    call HalpSendEOI
+
     pop rdx
     pop rcx
+    pop rbx
     pop rax
     iretq
 ENDFUNC TscCalibrationISR

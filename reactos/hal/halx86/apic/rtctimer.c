@@ -109,32 +109,36 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
+#ifdef _M_AMD64
+    /* This is for debugging */
+    TrapFrame->ErrorCode = 0xc10c4;
+#endif
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK_LEVEL, HalpClockVector, &Irql))
+    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, HalpClockVector, &Irql))
     {
-        /* Read register C, so that the next interrupt can happen */
-        HalpReadCmos(RTC_REGISTER_C);;
-
-        /* Save increment */
-        LastIncrement = HalpCurrentTimeIncrement;
-
-        /* Check if someone changed the time rate */
-        if (HalpClockSetMSRate)
-        {
-            /* Set new clock rate */
-            RtcSetClockRate(HalpCurrentRate);
-
-            /* We're done */
-            HalpClockSetMSRate = FALSE;
-        }
-
-        /* Update the system time -- the kernel will exit this trap  */
-        KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+        /* Spurious, just end the interrupt */
+        KiEoiHelper(TrapFrame);
     }
 
-    /* Spurious, just end the interrupt */
-    KiEoiHelper(TrapFrame);
+    /* Read register C, so that the next interrupt can happen */
+    HalpReadCmos(RTC_REGISTER_C);;
+
+    /* Save increment */
+    LastIncrement = HalpCurrentTimeIncrement;
+
+    /* Check if someone changed the time rate */
+    if (HalpClockSetMSRate)
+    {
+        /* Set new clock rate */
+        RtcSetClockRate(HalpCurrentRate);
+
+        /* We're done */
+        HalpClockSetMSRate = FALSE;
+    }
+
+    /* Update the system time -- on x86 the kernel will exit this trap  */
+    KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
 }
 
 VOID
