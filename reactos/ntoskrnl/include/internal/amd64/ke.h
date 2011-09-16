@@ -238,7 +238,8 @@ FORCEINLINE
 KiEndInterrupt(IN KIRQL Irql,
                IN PKTRAP_FRAME TrapFrame)
 {
-    DbgPrint("KiEndInterrupt is unimplemented\n");
+    /* Make sure this is from the clock handler */
+    ASSERT(TrapFrame->ErrorCode == 0xc10c4);
 }
 
 BOOLEAN

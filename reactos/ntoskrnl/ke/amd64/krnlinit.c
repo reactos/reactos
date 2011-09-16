@@ -80,6 +80,9 @@ KiSystemStartupBootStack(VOID)
     /* Initialize PRCB pool lookaside pointers */
     ExInitPoolLookasidePointers();
 
+    /* Lower to APC_LEVEL */
+    KeLowerIrql(APC_LEVEL);
+
     /* Check if this is the boot cpu */
     if (Prcb->Number == 0)
     {
@@ -152,9 +155,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Set the current MP Master KPRCB to the Boot PRCB */
     Prcb->MultiThreadSetMaster = Prcb;
-
-    /* Lower to APC_LEVEL */
-    KeLowerIrql(APC_LEVEL);
 
     /* Initialize Bugcheck Callback data */
     InitializeListHead(&KeBugcheckCallbackListHead);

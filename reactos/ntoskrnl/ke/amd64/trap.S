@@ -637,12 +637,13 @@ PUBLIC KiGeneralProtectionFault
     /* We have an error code */
     ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
-    TRAPINFO KiGeneralProtectionFault
-    mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rcx, MsgGeneralProtFault[rip]
-    call qword ptr FrLdrDbgPrint[rip]
+    //TRAPINFO KiGeneralProtectionFault
+    //mov rdx, [rbp + KTRAP_FRAME_Rip]
+    //lea rcx, MsgGeneralProtFault[rip]
+    //call qword ptr FrLdrDbgPrint[rip]
 
     /* Call the C handler */
+    mov rcx, rbp
     call KiGeneralProtectionFaultHandler
 
     /* Check for success */
@@ -890,9 +891,9 @@ PUBLIC KiIpiInterrupt
 PUBLIC KiUnexpectedInterrupt
 .PROC KiUnexpectedInterrupt
     /* The error code is the vector */
-    cli
     ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
+#if 0
     /* Set bugcheck parameters */
     mov ecx, TRAP_CAUSE_UNKNOWN
     mov rdx, [rbp + KTRAP_FRAME_ErrorCode] // the vector
@@ -901,8 +902,10 @@ PUBLIC KiUnexpectedInterrupt
     sub rsp, 8
     mov [rbp + KTRAP_FRAME_P5 + 8], rbp // trap frame
     call KeBugCheckWithTf
-
     jmp $
+#endif
+    LEAVE_TRAP_FRAME;
+    iretq
 .ENDP KiUnexpectedInterrupt
 
 #ifdef _MSC_VER
