@@ -19,6 +19,8 @@ EXTERN KiSystemFatalException:PROC
 EXTERN KiNpxNotAvailableFaultHandler:PROC
 EXTERN KiGeneralProtectionFaultHandler:PROC
 EXTERN KiXmmExceptionHandler:PROC
+EXTERN KiDeliverApc:PROC
+EXTERN KiDispatchInterrupt:PROC
 
 /* GLOBALS *******************************************************************/
 
@@ -524,9 +526,76 @@ PUBLIC KiDebugServiceTrap
     ExitTrap TF_SAVE_ALL
 .ENDP KiDebugServiceTrap
 
-TRAP_ENTRY KiApcInterrupt, (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
-TRAP_ENTRY KiDpcInterrupt, (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
-TRAP_ENTRY KiIpiInterrupt, (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
+
+PUBLIC KiApcInterrupt
+.PROC KiApcInterrupt
+   /* No error code */
+    EnterTrap (TF_VOLATILES or TF_IRQL)
+
+    /* Raise to APC_LEVEL */
+    mov rax, APC_LEVEL
+    mov cr8, rax
+
+    /* End the interrupt */
+    mov dword ptr [APIC_EOI], 0
+
+    /* Enable interrupts  */
+    sti
+
+    /* Call the worker routine */
+    mov cl, [rbp + KTRAP_FRAME_SegCs] // ProcessorMode
+    and cl, 1
+    mov rdx, 0                        // ExceptionFrame
+    mov r8, rdx                       // TrapFrame
+    call KiDeliverApc
+
+    /* Disable interrupts */
+    cli
+
+    /* Return */
+    ExitTrap (TF_VOLATILES or TF_IRQL)
+.ENDP KiApcInterrupt
+
+
+PUBLIC KiDpcInterrupt
+.PROC KiDpcInterrupt
+   /* No error code */
+    EnterTrap (TF_VOLATILES or TF_IRQL)
+
+    /* Raise to DISPATCH_LEVEL */
+    mov rax, DISPATCH_LEVEL
+    mov cr8, rax
+
+    /* End the interrupt */
+    mov dword ptr [APIC_EOI], 0
+
+    /* Call the worker routine */
+    sti
+    call KiDispatchInterrupt
+    cli
+
+    /* Return */
+    ExitTrap (TF_VOLATILES or TF_IRQL)
+.ENDP KiDpcInterrupt
+
+
+PUBLIC KiIpiInterrupt
+.PROC KiIpiInterrupt
+   /* No error code */
+    EnterTrap (TF_VOLATILES or TF_IRQL)
+
+    /* Raise to IPI_LEVEL */
+    mov rax, IPI_LEVEL
+    mov cr8, rax
+
+    /* End the interrupt */
+    mov dword ptr [APIC_EOI], 0
+
+    int 3
+
+    /* Return */
+    ExitTrap (TF_VOLATILES or TF_IRQL)
+.ENDP KiIpiInterrupt
 
 
 PUBLIC KiUnexpectedInterrupt
