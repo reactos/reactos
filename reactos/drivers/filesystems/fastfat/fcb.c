@@ -29,7 +29,8 @@ static ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)
 	PWCHAR curr;
 	register WCHAR c;
 
-	ASSERT(NameU->Buffer[0] != L'.');
+	// LFN could start from "."
+	//ASSERT(NameU->Buffer[0] != L'.');
 	curr = NameU->Buffer;
 	last = NameU->Buffer + NameU->Length / sizeof(WCHAR);
 
