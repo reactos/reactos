@@ -1317,6 +1317,7 @@ NtGdiDrawStream(
  * @unimplemented
  */
 BOOL
+APIENTRY
 NtGdiUpdateTransform(IN HDC hdc)
 {
     UNIMPLEMENTED;
