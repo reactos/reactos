@@ -15,7 +15,7 @@
 
 /* CONSTANTS *****************************************************************/
 
-const PCHAR RtlpShortIllegals = " ;+=[],\"*\\<>/?:|";
+const PCHAR RtlpShortIllegals = ";+=[],\"*\\<>/?:|";
 
 
 /* FUNCTIONS *****************************************************************/
@@ -103,7 +103,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
       {
          NameBuffer[NameLength++] = L'_';
       }
-      else if (c != '.')
+      else if (c != '.' && c != ' ')
       {
          NameBuffer[NameLength++] = (WCHAR)c;
       }
@@ -123,7 +123,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
          {
             ExtBuffer[ExtLength++] = L'_';
          }
-         else
+         else if (c != ' ')
          {
             ExtBuffer[ExtLength++] = c;
          }
