@@ -168,7 +168,10 @@ NTAPI
 RtlEnterHeapLock(
     PHEAP_LOCK Lock)
 {
-    return ExAcquireResourceExclusive(&Lock->Resource, TRUE);
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusive(&Lock->Resource, TRUE);
+    KeLeaveCriticalRegion();
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -185,7 +188,9 @@ NTAPI
 RtlLeaveHeapLock(
     PHEAP_LOCK Lock)
 {
+    KeEnterCriticalRegion();
     ExReleaseResource(&Lock->Resource);
+    KeLeaveCriticalRegion();
     return STATUS_SUCCESS;
 }
 
