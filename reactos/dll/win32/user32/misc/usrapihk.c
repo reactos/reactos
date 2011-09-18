@@ -260,7 +260,7 @@ InitUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC pfn)
 
   RtlEnterCriticalSection(&gcsUserApiHook);
 
-  if (!pfn(uahLoadInit,(ULONG_PTR)&uah) ||  // Swap data, User32 to and Uxtheme from!
+  if (!pfn(uahLoadInit,&uah) ||  // Swap data, User32 to and Uxtheme from!
        uah.ForceResetUserApiHook != (FARPROC)ForceResetUserApiHook ||
        uah.size <= 0 )
   {
