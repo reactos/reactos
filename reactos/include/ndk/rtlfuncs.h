@@ -3349,16 +3349,6 @@ RtlFormatCurrentUserKeyPath(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlpNtOpenKey(
-    OUT HANDLE KeyHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG Unused
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 RtlOpenCurrentUser(
     IN ACCESS_MASK DesiredAccess,
     OUT PHANDLE KeyHandle
@@ -3386,6 +3376,68 @@ RtlWriteRegistryValue(
     PVOID ValueData,
     ULONG ValueLength
 );
+
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtCreateKey(
+    OUT HANDLE KeyHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG TitleIndex,
+    IN PUNICODE_STRING Class,
+    OUT PULONG Disposition
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtEnumerateSubKey(
+    IN HANDLE KeyHandle,
+    OUT PUNICODE_STRING SubKeyName,
+    IN ULONG Index,
+    IN ULONG Unused
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtMakeTemporaryKey(
+    IN HANDLE KeyHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtOpenKey(
+    OUT HANDLE KeyHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG Unused
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtQueryValueKey(
+    IN HANDLE KeyHandle,
+    OUT PULONG Type OPTIONAL,
+    OUT PVOID Data OPTIONAL,
+    IN OUT PULONG DataLength OPTIONAL,
+    IN ULONG Unused
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpNtSetValueKey(
+    IN HANDLE KeyHandle,
+    IN ULONG Type,
+    IN PVOID Data,
+    IN ULONG DataLength
+);
+#endif
 
 //
 // NLS Functions
