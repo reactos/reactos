@@ -162,6 +162,12 @@ co_WinPosArrangeIconicWindows(PWND parent)
 
    ASSERT_REFS_CO(parent);
 
+   /* Check if we found any children */
+   if(List == NULL)
+   {
+       return 0;
+   }
+
    IntGetClientRect( parent, &rectParent );
    x = rectParent.left;
    y = rectParent.bottom;
@@ -693,15 +699,14 @@ co_WinPosDoWinPosChanging(PWND Window,
  */
 static
 HWND FASTCALL
-WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
+WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
 {
    HWND *List = NULL;
    HWND Owner;
    LONG Style;
-   PWND Window ,DesktopWindow, ChildObject;
+   PWND DesktopWindow, ChildObject;
    int i;
 
-   Window = UserGetWindowObject(hWnd);
    Owner = Window->spwndOwner ? Window->spwndOwner->head.h : NULL;
    Style = Window->style;
 
@@ -732,7 +737,7 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
                      }
                   }
                }
-               if (List[i] != hWnd)
+               if (List[i] != Window->head.h)
                   hWndLocalPrev = List[i];
                if (hWndLocalPrev == hWndInsertAfter)
                   break;
@@ -757,7 +762,7 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
       {
          PWND Wnd;
 
-         if (List[i] == hWnd)
+         if (List[i] == Window->head.h)
             break;
 
          if (!(Wnd = UserGetWindowObject(List[i])))
@@ -896,11 +901,15 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
             && HWND_NOTOPMOST != WinPos->hwndInsertAfter
             && HWND_BOTTOM != WinPos->hwndInsertAfter)
       {
-         PWND InsAfterWnd, Parent = Wnd->spwndParent;
+         PWND InsAfterWnd;
 
          InsAfterWnd = UserGetWindowObject(WinPos->hwndInsertAfter);
+         if(!InsAfterWnd)
+         {
+             return TRUE;
+         }
 
-         if (InsAfterWnd && UserGetAncestor(InsAfterWnd, GA_PARENT) != Parent)
+         if (InsAfterWnd->spwndParent != Wnd->spwndParent)
          {
             return FALSE;
          }
@@ -995,7 +1004,7 @@ co_WinPosSetWindowPos(
          SWP_NOZORDER &&
          Ancestor && Ancestor->head.h == IntGetDesktopWindow() )
    {
-      WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
+      WinPos.hwndInsertAfter = WinPosDoOwnedPopups(Window, WinPos.hwndInsertAfter);
    }
 
    if (!(WinPos.flags & SWP_NOREDRAW))
@@ -1604,9 +1613,8 @@ co_WinPosSearchChildren(
                     return pwndChild;
                 }
             }
+            ExFreePool(List);
         }
-
-        ExFreePool(List);
     }
 
     *HitTest = co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
@@ -1756,17 +1764,28 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp )
 
     for (i = 0, winpos = pDWP->acvr; res && i < pDWP->ccvr; i++, winpos++)
     {
+        PWND pwnd;
+        USER_REFERENCE_ENTRY Ref;
+
         TRACE("hwnd %p, after %p, %d,%d (%dx%d), flags %08x\n",
                winpos->pos.hwnd, winpos->pos.hwndInsertAfter, winpos->pos.x, winpos->pos.y,
                winpos->pos.cx, winpos->pos.cy, winpos->pos.flags);
+        
+        pwnd = UserGetWindowObject(winpos->pos.hwnd);
+        if(!pwnd)
+            continue;
 
-        res = co_WinPosSetWindowPos( UserGetWindowObject(winpos->pos.hwnd),
+        UserRefObjectCo(pwnd, &Ref);
+
+        res = co_WinPosSetWindowPos( pwnd,
                                      winpos->pos.hwndInsertAfter,
                                      winpos->pos.x,
                                      winpos->pos.y,
                                      winpos->pos.cx,
                                      winpos->pos.cy,
                                      winpos->pos.flags);
+
+        UserDerefObjectCo(pwnd);
     }
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
     UserDereferenceObject(pDWP);

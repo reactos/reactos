@@ -334,6 +334,11 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
            return STATUS_SUCCESS;
         }
         PackedData = ExAllocatePoolWithTag(NonPagedPool, size, TAG_MSG);
+        if (PackedData == NULL)
+        {
+            ERR("Not enough memory to pack lParam\n");
+            return STATUS_NO_MEMORY;
+        }
         RtlCopyMemory(PackedData, (PVOID)lParam, MsgMemorySize(MsgMemoryEntry, wParam, lParam));
         *lParamPacked = (LPARAM)PackedData;
     }
@@ -375,6 +380,7 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     {
         PMSGMEMORY MsgMemoryEntry;
         MsgMemoryEntry = FindMsgMemory(Msg);
+        ASSERT(MsgMemoryEntry);
         if (MsgMemoryEntry->Size < 0)
         {
             /* Keep previous behavior */
@@ -587,7 +593,7 @@ IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
     CWPR.message = Msg;
     CWPR.wParam  = wParam;
     CWPR.lParam  = lParam;
-    CWPR.lResult = *uResult;
+    CWPR.lResult = uResult ? (*uResult) : 0;
     co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
 }
 
@@ -608,7 +614,7 @@ IntDispatchMessage(PMSG pMsg)
 
     pti = PsGetCurrentThreadWin32Thread();
 
-    if ( Window->head.pti != pti)
+    if ( Window && Window->head.pti != pti)
     {
        EngSetLastError( ERROR_MESSAGE_SYNC_ONLY );
        return 0;
@@ -2050,7 +2056,7 @@ NtUserMessageCall( HWND hWnd,
     {
     case FNID_DEFWINDOWPROC:
         /* Validate input */
-        if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
+        if (hWnd)
         {
            Window = UserGetWindowObject(hWnd);
            if (!Window)
@@ -2058,11 +2064,12 @@ NtUserMessageCall( HWND hWnd,
                UserLeave();
                return FALSE;
            }
+           UserRefObjectCo(Window, &Ref);
         }
-        UserRefObjectCo(Window, &Ref);
         lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
         Ret = TRUE;
-        UserDerefObjectCo(Window);
+        if (hWnd)
+            UserDerefObjectCo(Window);
         break;
     case FNID_SENDNOTIFYMESSAGE:
         Ret = UserSendNotifyMessage(hWnd, Msg, wParam, lParam);

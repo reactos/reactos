@@ -1591,7 +1591,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
         Dialog boxes and message boxes do not inherit layout, so you must
         set the layout explicitly.
        */
-         if ( Class && Class->fnid != FNID_DIALOG)
+         if ( Class->fnid != FNID_DIALOG)
          {
             PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
             if (ppi->dwLayout & LAYOUT_RTL)
@@ -2170,6 +2170,9 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
       if (Window->ExStyle & WS_EX_MDICHILD)
       {
+          ASSERT(ParentWindow);
+          if(!ParentWindow)
+              goto cleanup;
         co_IntSendMessage(UserHMGetHandle(ParentWindow), WM_MDIREFRESHMENU, 0, 0);
         /* ShowWindow won't activate child windows */
         co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
@@ -2291,19 +2294,18 @@ NtUserCreateWindowEx(
     lstrWindowName.Buffer = NULL;
     lstrClassName.Buffer = NULL;
 
-    /* Check if we got a Window name */
-    if (plstrWindowName)
+    ASSERT(plstrWindowName);
+
+    /* Copy the window name to kernel mode */
+    Status = ProbeAndCaptureLargeString(&lstrWindowName, plstrWindowName);
+    if (!NT_SUCCESS(Status))
     {
-        /* Copy the string to kernel mode */
-        Status = ProbeAndCaptureLargeString(&lstrWindowName, plstrWindowName);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("NtUserCreateWindowEx: failed to capture plstrWindowName\n");
-            SetLastNtError(Status);
-            return NULL;
-        }
-        plstrWindowName = &lstrWindowName;
+        ERR("NtUserCreateWindowEx: failed to capture plstrWindowName\n");
+        SetLastNtError(Status);
+        return NULL;
     }
+
+    plstrWindowName = &lstrWindowName;
 
     /* Check if the class is an atom */
     if (IS_ATOM(plstrClassName))
