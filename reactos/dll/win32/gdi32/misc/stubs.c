@@ -1622,11 +1622,11 @@ GdiTransparentBlt(IN HDC hdcDst,
                   IN INT ySrc,
                   IN INT cxSrc,
                   IN INT cySrc,
-                  IN COLORREF TransColor
+                  IN UINT TransColor
                  )
 {
     /* FIXME some part need be done in user mode */
-    return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, TransColor);
+    return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, (COLORREF)TransColor);
 }
 
 /*

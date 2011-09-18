@@ -2995,6 +2995,7 @@ DWORD WINAPI GdiGetCodePage(HDC);
 DWORD WINAPI GdiGetBatchLimit(void);
 DWORD WINAPI GdiSetBatchLimit(DWORD);
 BOOL WINAPI GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
+BOOL WINAPI GdiTransparentBlt(HDC,int,int,int,int,HDC,int,int,int,int,UINT);
 BOOL WINAPI GdiIsMetaFileDC(HDC);
 #define GetCValue(cmyk) ((BYTE)(cmyk))
 #define GetMValue(cmyk) ((BYTE)((cmyk)>> 8))
