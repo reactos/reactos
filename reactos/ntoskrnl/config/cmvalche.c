@@ -75,7 +75,7 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
             /* We need the exclusive lock */
             return SearchNeedExclusiveLock;
         }
-                
+
         /* Select the value list as our cell, and get the actual list array */
         CellToRelease = ChildList->ValueList;
         *CellData = (PCELL_DATA)HvGetCell(Hive, CellToRelease);
@@ -688,7 +688,7 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PVOID Buffer;
     HCELL_INDEX ValueCellToRelease = HCELL_NIL, CellToRelease = HCELL_NIL;
     BOOLEAN IsSmall;
-    ULONG CompareResult;
+    ULONG_PTR CompareResult;
     PAGED_CODE();
 
     /* Check if this is a symlink */

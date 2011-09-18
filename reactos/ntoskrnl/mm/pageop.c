@@ -227,7 +227,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    }
    PageOp->ReferenceCount = 1;
    PageOp->Next = MmPageOpHashTable[Hash];
-   PageOp->Hash = Hash;
+   PageOp->Hash = (ULONG)Hash;
    PageOp->Thread = PsGetCurrentThread();
    PageOp->Abandoned = FALSE;
    PageOp->Status = STATUS_PENDING;

@@ -107,14 +107,14 @@ MiMakeSystemAddressValidPfn(IN PVOID VirtualAddress,
     return LockChange;
 }
 
-PFN_NUMBER
+PFN_COUNT
 NTAPI
 MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                          IN PFN_NUMBER PageCount,
                          IN ULONG Flags,
                          OUT PPFN_NUMBER ValidPages)
 {
-    PFN_NUMBER ActualPages = 0;
+    PFN_COUNT ActualPages = 0;
     PETHREAD CurrentThread = PsGetCurrentThread();
     PMMPFN Pfn1;
     //PMMPFN Pfn2;
@@ -2350,7 +2350,8 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     PMMVAD Vad = NULL;
     PVOID Address, NextAddress;
     BOOLEAN Found = FALSE;
-    ULONG NewProtect, NewState, BaseVpn;
+    ULONG NewProtect, NewState;
+    ULONG_PTR BaseVpn;
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -2666,7 +2667,7 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
-                SectionName->SectionFileName.MaximumLength = MemoryInformationLength;
+                SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
                 RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
 
                 if (ReturnLength) *ReturnLength = ModuleFileName.Length;
@@ -2681,7 +2682,7 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
         else
         {
             RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
-            SectionName->SectionFileName.MaximumLength = MemoryInformationLength;
+            SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
             RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
 
             if (ReturnLength) *ReturnLength = ModuleFileName.Length;

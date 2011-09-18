@@ -548,7 +548,7 @@ IopAttachFilterDriversCallback(
       DPRINT("Filter Driver: %S (%wZ)\n", Filters, &DeviceNode->InstancePath);
       ServiceName.Buffer = Filters;
       ServiceName.MaximumLength =
-      ServiceName.Length = wcslen(Filters) * sizeof(WCHAR);
+      ServiceName.Length = (USHORT)wcslen(Filters) * sizeof(WCHAR);
 
       /* Load and initialize the filter driver */
       Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
@@ -840,7 +840,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    FileExtension = wcsrchr(ServiceName.Buffer, '.');
    if (FileExtension != NULL)
    {
-      ServiceName.Length -= wcslen(FileExtension) * sizeof(WCHAR);
+      ServiceName.Length -= (USHORT)wcslen(FileExtension) * sizeof(WCHAR);
       FileExtension[0] = 0;
    }
 
@@ -1168,7 +1168,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     * Construct the driver object name
     */
 
-   ObjectName.Length = (wcslen(Start) + 8) * sizeof(WCHAR);
+   ObjectName.Length = ((USHORT)wcslen(Start) + 8) * sizeof(WCHAR);
    ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
    if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
@@ -1942,7 +1942,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
                (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
                return;
            }
-           
+
            /* Initialize and start device */
            IopInitializeDevice(DeviceNode, DriverObject);
            Status = IopStartDevice(DeviceNode);

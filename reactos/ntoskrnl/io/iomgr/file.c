@@ -1281,7 +1281,7 @@ IopSecurityFile(IN PVOID ObjectBody,
         _SEH2_TRY
         {
             /* Return length */
-            *BufferLength = IoStatusBlock.Information;
+            *BufferLength = (ULONG)IoStatusBlock.Information;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1394,9 +1394,9 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Now calculate the new lengths left */
     FileLength = LocalReturnLength -
                  FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
-    LocalReturnLength = (ULONG_PTR)p -
-                        (ULONG_PTR)ObjectNameInfo +
-                        LocalFileInfo->FileNameLength;
+    LocalReturnLength = (ULONG)((ULONG_PTR)p -
+                                (ULONG_PTR)ObjectNameInfo +
+                                LocalFileInfo->FileNameLength);
 
     /* Write the Name and null-terminate it */
     RtlCopyMemory(p, LocalFileInfo->FileName, FileLength);
@@ -1408,7 +1408,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     *ReturnLength = LocalReturnLength;
 
     /* Setup the length and maximum length */
-    FileLength = (ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo;
+    FileLength = (ULONG)((ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo);
     ObjectNameInfo->Name.Length = (USHORT)FileLength -
                                           sizeof(OBJECT_NAME_INFORMATION);
     ObjectNameInfo->Name.MaximumLength = (USHORT)ObjectNameInfo->Name.Length +

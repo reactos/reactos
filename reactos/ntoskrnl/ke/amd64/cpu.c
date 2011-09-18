@@ -27,15 +27,10 @@ KTSS64 KiBootTss;
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
-ULONG KeProcessorArchitecture;
-ULONG KeProcessorLevel;
-ULONG KeProcessorRevision;
-ULONG KeFeatureBits;
 ULONG KeI386MachineType;
 ULONG KeI386NpxPresent = 1;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
-KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiSMTProcessorsPresent;
 
 /* Freeze data */

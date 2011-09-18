@@ -94,7 +94,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       DriverObject, DeviceNode->PhysicalDeviceObject);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n", 
+      DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n",
               &DriverObject->DriverName,
               &DeviceNode->InstancePath,
               Status);
@@ -146,7 +146,7 @@ IopSendEject(IN PDEVICE_OBJECT DeviceObject)
     Stack.MajorFunction = IRP_MJ_PNP;
     Stack.MinorFunction = IRP_MN_EJECT;
     
-    return IopSynchronousCall(DeviceObject, &Stack, &Dummy); 
+    return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
 static
@@ -932,7 +932,7 @@ NTSTATUS
 NTAPI
 IopInitiatePnpIrp(IN PDEVICE_OBJECT DeviceObject,
                   IN OUT PIO_STATUS_BLOCK IoStatusBlock,
-                  IN ULONG MinorFunction,
+                  IN UCHAR MinorFunction,
                   IN PIO_STACK_LOCATION Stack OPTIONAL)
 {
     IO_STACK_LOCATION IoStackLocation;
@@ -1044,7 +1044,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     LPCWSTR Current, Last;
-    ULONG dwLength;
+    USHORT Length;
     NTSTATUS Status;
 
     /* Assume failure */
@@ -1076,8 +1076,8 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
         }
 
         /* Prepare relative key name */
-        dwLength = (ULONG_PTR)Current - (ULONG_PTR)KeyName.Buffer;
-        KeyName.MaximumLength = KeyName.Length = dwLength;
+        Length = (USHORT)((ULONG_PTR)Current - (ULONG_PTR)KeyName.Buffer);
+        KeyName.MaximumLength = KeyName.Length = Length;
         DPRINT("Create '%wZ'\n", &KeyName);
 
         /* Open key */
@@ -1324,7 +1324,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                           0,
                           REG_SZ,
                           (PVOID)KeyValue.Buffer,
-                          (wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
+                          ((ULONG)wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
 
 cleanup:
    if (NT_SUCCESS(Status))
@@ -1370,7 +1370,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
       while (*Ptr)
       {
          DPRINT("  %S\n", Ptr);
-         Length = wcslen(Ptr) + 1;
+         Length = (ULONG)wcslen(Ptr) + 1;
 
          Ptr += Length;
          TotalLength += Length;
@@ -1430,7 +1430,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       while (*Ptr)
       {
          DPRINT("  %S\n", Ptr);
-         Length = wcslen(Ptr) + 1;
+         Length = (ULONG)wcslen(Ptr) + 1;
 
          Ptr += Length;
          TotalLength += Length;
@@ -1678,7 +1678,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 0,
                                 REG_SZ,
                                 (PVOID)IoStatusBlock.Information,
-                                (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+                                ((ULONG)wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       }
       else
       {
@@ -1718,7 +1718,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
          0,
          REG_SZ,
          (PVOID)IoStatusBlock.Information,
-         (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+         ((ULONG)wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
@@ -2920,7 +2920,8 @@ IopCreateRegistryKeyEx(OUT PHANDLE Handle,
                        OUT PULONG Disposition OPTIONAL)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG KeyDisposition, RootHandleIndex = 0, i = 1, NestedCloseLevel = 0, Length;
+    ULONG KeyDisposition, RootHandleIndex = 0, i = 1, NestedCloseLevel = 0;
+    USHORT Length;
     HANDLE HandleArray[2];
     BOOLEAN Recursing = TRUE;
     PWCHAR pp, p, p1;
@@ -2968,7 +2969,7 @@ IopCreateRegistryKeyEx(OUT PHANDLE Handle,
             
             /* Process the parent key name */
             for (p = p1; ((p < pp) && (*p != OBJ_NAME_PATH_SEPARATOR)); p++);
-            Length = (p - p1) * sizeof(WCHAR);
+            Length = (USHORT)(p - p1) * sizeof(WCHAR);
             
             /* Is there a parent name? */
             if (Length)
@@ -3455,7 +3456,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     {
         case DevicePropertyBusTypeGuid:
 
-            /* Get the GUID from the internal cache */        
+            /* Get the GUID from the internal cache */
             Status = PnpBusTypeGuidGet(DeviceNode->ChildBusTypeIndex, &BusTypeGuid);
             if (!NT_SUCCESS(Status)) return Status;
 
@@ -3497,7 +3498,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             NullTerminate = TRUE;
 
             /* This is the format of the returned data */
-            PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
+            PIP_RETURN_DATA((ULONG)(EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
                             DeviceInstanceName);
             
         case DevicePropertyAddress:
@@ -3586,18 +3587,18 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         case DevicePropertyRemovalPolicy:
             PIP_UNIMPLEMENTED();
         case DevicePropertyInstallState:
-            PIP_UNIMPLEMENTED();        
+            PIP_UNIMPLEMENTED();
         case DevicePropertyResourceRequirements:
-            PIP_UNIMPLEMENTED();        
+            PIP_UNIMPLEMENTED();
         case DevicePropertyAllocatedResources:
-            PIP_UNIMPLEMENTED();        
+            PIP_UNIMPLEMENTED();
         default:
             return STATUS_INVALID_PARAMETER_2;
     }
     
     /* Having a registry value name implies registry data */
     if (ValueName)
-    {   
+    {
         /* We know up-front how much data to expect */
         *ResultLength = BufferLength;
         

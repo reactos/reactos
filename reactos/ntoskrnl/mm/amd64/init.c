@@ -134,7 +134,7 @@ MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Add this to the total of pages */
-        MmNumberOfPhysicalPages += Descriptor->PageCount;
+        MmNumberOfPhysicalPages += (PFN_COUNT)Descriptor->PageCount;
 
         /* Check if this is the new lowest page */
         if (Descriptor->BasePage < MmLowestPhysicalPage)
@@ -535,7 +535,7 @@ MiBuildNonPagedPool(VOID)
     ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart));
 
     /* Map the nonpaged pool */
-    PageCount = (MmSizeOfNonPagedPoolInBytes + PAGE_SIZE - 1) / PAGE_SIZE;
+    PageCount = (PFN_COUNT)((MmSizeOfNonPagedPoolInBytes + PAGE_SIZE - 1) / PAGE_SIZE);
     MxMapPageRange(MmNonPagedPoolStart, PageCount);
 
     /* Loop the non paged pool extension PTEs */
@@ -575,9 +575,9 @@ MiBuildSystemPteSpace()
         MmNonPagedSystemStart = (PVOID)MI_NON_PAGED_SYSTEM_START_MIN;
 
         /* Reduce the amount of system PTEs to reach this point */
-        MmNumberOfSystemPtes = ((ULONG64)MmPfnDatabase -
+        MmNumberOfSystemPtes = (ULONG)(((ULONG64)MmPfnDatabase -
                                 (ULONG64)MmNonPagedSystemStart) >>
-                                PAGE_SHIFT;
+                                PAGE_SHIFT);
         MmNumberOfSystemPtes--;
         ASSERT(MmNumberOfSystemPtes > 1000);
     }
@@ -615,7 +615,7 @@ MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PFN_NUMBER NextPage = -1;
     PULONG Bitmap;
     ULONG Runs = 0;
-    ULONG Size;
+    ULONG_PTR Size;
 
     /* Calculate size for the PFN bitmap */
     Size = ROUND_UP(MmHighestPhysicalPage + 1, sizeof(ULONG));
@@ -640,7 +640,9 @@ MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Initialize the bitmap and clear all bits */
-    RtlInitializeBitMap(&MiPfnBitMap, Bitmap, MmHighestPhysicalPage + 1);
+    RtlInitializeBitMap(&MiPfnBitMap,
+                        Bitmap,
+                        (ULONG)MmHighestPhysicalPage + 1);
     RtlClearAllBits(&MiPfnBitMap);
 
     /* Loop the memory descriptors */
@@ -674,7 +676,9 @@ MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Set the bits in the PFN bitmap */
-        RtlSetBits(&MiPfnBitMap, Descriptor->BasePage, Descriptor->PageCount);
+        RtlSetBits(&MiPfnBitMap,
+                   (ULONG)Descriptor->BasePage,
+                   (ULONG)Descriptor->PageCount);
 
         /* Set the next page */
         NextPage = Descriptor->BasePage + Descriptor->PageCount;
@@ -765,7 +769,7 @@ MiBuildPagedPool_x(VOID)
     // into a 4-byte aligned bitmap.
 
     /* The size of the bitmap in bits is the size in pages */
-    BitMapSize = MmSizeOfPagedPoolInPages;
+    BitMapSize = (ULONG)MmSizeOfPagedPoolInPages;
 
     /* Calculate buffer size in bytes, aligned to 32 bits */
     Size = sizeof(RTL_BITMAP) + ROUND_UP(BitMapSize, 32) / 8;

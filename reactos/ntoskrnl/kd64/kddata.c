@@ -101,7 +101,7 @@ ULONG KdpNumInternalBreakpoints;
 //
 // Symbol Data
 //
-ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
+ULONG_PTR KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 
 //
 // Tracepoint Data

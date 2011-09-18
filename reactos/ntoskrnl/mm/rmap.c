@@ -112,8 +112,8 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset;
+      Offset = (ULONG)((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+               + MemoryArea->Data.SectionData.ViewOffset);
 
       /*
        * Get or create a pageop
@@ -247,7 +247,7 @@ MmIsDirtyPageRmap(PFN_NUMBER Page)
    {
 	  if (
 #ifdef NEWCC
-	      !RMAP_IS_SEGMENT(current_entry->Address) && 
+	      !RMAP_IS_SEGMENT(current_entry->Address) &&
 #endif
 		  MmIsDirtyPage(current_entry->Process, current_entry->Address))
       {
@@ -290,7 +290,7 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 
    if (
 #ifdef NEWCC
-       !RMAP_IS_SEGMENT(Address) && 
+       !RMAP_IS_SEGMENT(Address) &&
 #endif
 	   MmGetPfnForProcess(Process, Address) != Page)
    {
@@ -323,7 +323,7 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
    MmSetRmapListHeadPage(Page, new_entry);
    ExReleaseFastMutex(&RmapListLock);
 #ifdef NEWCC
-   if (!RMAP_IS_SEGMENT(Address)) 
+   if (!RMAP_IS_SEGMENT(Address))
 #endif
    {
 	   if (Process == NULL)
@@ -365,7 +365,7 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
       previous_entry = current_entry;
       current_entry = current_entry->Next;
 #ifdef NEWCC
-	  if (!RMAP_IS_SEGMENT(previous_entry->Address)) 
+	  if (!RMAP_IS_SEGMENT(previous_entry->Address))
 #endif
 	  {
 		  if (DeleteMapping)
@@ -383,9 +383,9 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
 		  {
 			  (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
 		  }
-	  } 
+	  }
 #ifdef NEWCC
-	  else 
+	  else
 	  {
 		  ExFreeToNPagedLookasideList(&RmapLookasideList, previous_entry);
 	  }

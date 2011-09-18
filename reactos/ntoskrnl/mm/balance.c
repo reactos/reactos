@@ -62,7 +62,7 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
    MiMinimumAvailablePages = 64;
     if ((NrAvailablePages + NrSystemPages) >= 8192)
     {
-        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 4 * 3;   
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 4 * 3;
     }
     else if ((NrAvailablePages + NrSystemPages) >= 4096)
     {
@@ -70,7 +70,7 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     }
     else
     {
-        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;        
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;
     }
    MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
 }
@@ -196,7 +196,7 @@ MmRebalanceMemoryConsumers(VOID)
    ULONG NrFreedPages;
    NTSTATUS Status;
 
-   Target = (MiMinimumAvailablePages - MmAvailablePages) + MiPagesRequired;
+   Target = (ULONG)(MiMinimumAvailablePages - MmAvailablePages) + MiPagesRequired;
    Target = max(Target, (LONG) MiMinimumPagesPerRun);
 
    for (i = 0; i < MC_MAXIMUM && Target > 0; i++)

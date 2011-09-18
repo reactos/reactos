@@ -12,10 +12,18 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef _WIN64
+# define InterlockedOrSetMember(Destination, SetMember) \
+    InterlockedOr64((PLONG64)Destination, SetMember);
+#else
+# define InterlockedOrSetMember(Destination, SetMember) \
+    InterlockedOr((PLONG)Destination, SetMember);
+#endif
+
 /* GLOBALS *******************************************************************/
 
-ULONG KiIdleSummary;
-ULONG KiIdleSMTSummary;
+ULONG_PTR KiIdleSummary;
+ULONG_PTR KiIdleSMTSummary;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -321,7 +329,7 @@ KiSelectNextThread(IN PKPRCB Prcb)
         Thread = Prcb->IdleThread;
 
         /* Enable idle scheduling */
-        InterlockedOr((PLONG) &KiIdleSummary, Prcb->SetMember);
+        InterlockedOrSetMember(&KiIdleSummary, Prcb->SetMember);
         Prcb->IdleSchedule = TRUE;
 
         /* FIXME: SMT support */
@@ -370,7 +378,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
         else
         {
             /* Set the idle summary */
-            InterlockedOr((PLONG)&KiIdleSummary, Prcb->SetMember);
+            InterlockedOrSetMember(&KiIdleSummary, Prcb->SetMember);
 
             /* Schedule the idle thread */
             NextThread = Prcb->IdleThread;

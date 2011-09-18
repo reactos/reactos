@@ -265,7 +265,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     if (Extension)
     {
         /* Update the name length */
-        Length += wcslen(Extension) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+        Length += (USHORT)wcslen(Extension) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
         /* Allocate the buffer for the full name */
         NameBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
@@ -407,7 +407,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     }
 
     /* Get the disposition */
-    *PrimaryDisposition = IoStatusBlock.Information;
+    *PrimaryDisposition = (ULONG)IoStatusBlock.Information;
     if (IoStatusBlock.Information != FILE_CREATED)
     {
         /* Check how large the file is */
@@ -570,7 +570,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         }
 
         /* Return the disposition */
-        *LogDisposition = IoStatusBlock.Information;
+        *LogDisposition = (ULONG)IoStatusBlock.Information;
     }
 
     /* We're done, close handles and free buffers */

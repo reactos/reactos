@@ -136,7 +136,7 @@ NTAPI
 MmIsThisAnNtAsSystem(VOID)
 {
     /* Return if this is a server system */
-    return MmProductType;
+    return MmProductType & 0xFF;
 }
 
 /*

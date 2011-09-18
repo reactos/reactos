@@ -100,9 +100,9 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
         /* Generate a new cookie */
         KeQuerySystemTime(&SystemTime);
         Prcb = KeGetCurrentPrcb();
-        NewCookie = Prcb->MmPageFaultCount ^ Prcb->InterruptTime ^
+        NewCookie = (Prcb->MmPageFaultCount ^ Prcb->InterruptTime ^
                     SystemTime.u.LowPart ^ SystemTime.u.HighPart ^
-                    (ULONG_PTR)&SystemTime;
+                    (ULONG)(ULONG_PTR)&SystemTime);
 
         /* Set the new cookie*/
         InterlockedCompareExchange((LONG*)&SharedUserData->Cookie,

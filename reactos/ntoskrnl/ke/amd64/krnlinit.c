@@ -141,7 +141,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKPRCB Prcb,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG PageDirectory[2];
+    ULONG_PTR PageDirectory[2];
     PVOID DpcStack;
     ULONG i;
 

@@ -24,7 +24,8 @@ PVOID
 NTAPI
 MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
 {
-    PFN_NUMBER PageCount, MdlPageCount, PageFrameIndex;
+    PFN_COUNT PageCount, MdlPageCount;
+    PFN_NUMBER PageFrameIndex;
     PHYSICAL_ADDRESS LowAddress, HighAddress, SkipBytes;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
     PMDL Mdl;
@@ -37,7 +38,7 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
     // Get the page count
     //
     ASSERT(NumberOfBytes != 0);
-    PageCount = BYTES_TO_PAGES(NumberOfBytes);
+    PageCount = (PFN_COUNT)BYTES_TO_PAGES(NumberOfBytes);
 
     //
     // Use the MDL allocator for simplicity, so setup the parameters
@@ -173,7 +174,7 @@ MmFreeNonCachedMemory(IN PVOID BaseAddress,
 {
     PMDL Mdl;
     PMMPTE PointerPte;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount;
 
     //
     // Sanity checks
@@ -184,7 +185,7 @@ MmFreeNonCachedMemory(IN PVOID BaseAddress,
     //
     // Get the page count
     //
-    PageCount = BYTES_TO_PAGES(NumberOfBytes);
+    PageCount = (PFN_COUNT)BYTES_TO_PAGES(NumberOfBytes);
 
     //
     // Get the first PTE

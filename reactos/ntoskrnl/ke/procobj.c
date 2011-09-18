@@ -115,7 +115,7 @@ NTAPI
 KeInitializeProcess(IN OUT PKPROCESS Process,
                     IN KPRIORITY Priority,
                     IN KAFFINITY Affinity,
-                    IN PULONG DirectoryTableBase,
+                    IN PULONG_PTR DirectoryTableBase,
                     IN BOOLEAN Enable)
 {
 #ifdef CONFIG_SMP

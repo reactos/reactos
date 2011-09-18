@@ -79,7 +79,8 @@ KdInitSystem(IN ULONG BootPhase,
     STRING ImageName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
-    ULONG i, j, Length, DebugOptionLength;
+    ULONG i, j, Length;
+    SIZE_T DebugOptionLength;
     CHAR NameBuffer[256];
     PWCHAR Name;
 
@@ -209,8 +210,7 @@ KdInitSystem(IN ULONG BootPhase,
                         }
 
                         /* Calculate the length of the current option */
-                        DebugOptionLength = ((ULONG_PTR)DebugOptionEnd -
-                                             (ULONG_PTR)DebugOptionStart);
+                        DebugOptionLength = (DebugOptionEnd - DebugOptionStart);
 
                        /*
                         * Break out if we reached the last option
@@ -224,7 +224,7 @@ KdInitSystem(IN ULONG BootPhase,
                         {
                             /*
                              * Disable the debugger, but
-                             * allow it to be reenabled 
+                             * allow it to be reenabled
                              */
                             DisableKdAfterInit = TRUE;
                             BlockEnable = FALSE;
@@ -246,7 +246,7 @@ KdInitSystem(IN ULONG BootPhase,
                         }
 
                         /*
-                         * If there are more options then 
+                         * If there are more options then
                          * the next character should be a comma
                          */
                         if (*DebugOptionEnd != ',')

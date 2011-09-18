@@ -176,7 +176,7 @@ PMMWSL MmSystemCacheWorkingSetList = MI_SYSTEM_CACHE_WS_START;
 // On systems with more than 32MB, this number is then doubled, and further
 // aligned up to a PDE boundary (4MB).
 //
-ULONG_PTR MmNumberOfSystemPtes;
+PFN_COUNT MmNumberOfSystemPtes;
 
 //
 // This is how many pages the PFN database will take up
@@ -206,7 +206,8 @@ PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 //
 // This is where we keep track of the most basic physical layout markers
 //
-PFN_NUMBER MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
+PFN_NUMBER MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
+PFN_COUNT MmNumberOfPhysicalPages;
 
 //
 // The total number of pages mapped by the boot loader, which include the kernel
@@ -230,7 +231,10 @@ PVOID MmSystemRangeStart;
 PMMPTE MiHighestUserPte;
 PMMPDE MiHighestUserPde;
 #if (_MI_PAGING_LEVELS >= 3)
-/* We need the highest PPE and PXE addresses */
+PMMPTE MiHighestUserPpe;
+#if (_MI_PAGING_LEVELS >= 4)
+PMMPTE MiHighestUserPxe;
+#endif
 #endif
 
 /* These variables define the system cache address space */
@@ -555,7 +559,7 @@ NTAPI
 INIT_FUNCTION
 MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
+    PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PMMPTE PointerPte, LastPte;
@@ -1557,12 +1561,14 @@ MiBuildPagedPool(VOID)
 {
     PMMPTE PointerPte;
     PMMPDE PointerPde;
-    MMPTE TempPte = ValidKernelPte;
     MMPDE TempPde = ValidKernelPde;
     PFN_NUMBER PageFrameIndex;
     KIRQL OldIrql;
-    ULONG Size, BitMapSize;
+    SIZE_T Size;
+    ULONG BitMapSize;
 #if (_MI_PAGING_LEVELS == 2)
+    MMPTE TempPte = ValidKernelPte;
+
     //
     // Get the page frame number for the system page directory
     //
@@ -1704,7 +1710,7 @@ MiBuildPagedPool(VOID)
     //
     Size = Size * 1024;
     ASSERT(Size == MmSizeOfPagedPoolInPages);
-    BitMapSize = Size;
+    BitMapSize = (ULONG)Size;
     Size = sizeof(RTL_BITMAP) + (((Size + 31) / 32) * sizeof(ULONG));
 
     //
@@ -1770,7 +1776,7 @@ MiDbgDumpMemoryDescriptors(VOID)
 {
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
-    ULONG TotalPages = 0;
+    PFN_NUMBER TotalPages = 0;
     PCHAR
     MemType[] =
     {
@@ -1812,7 +1818,7 @@ MiDbgDumpMemoryDescriptors(VOID)
         TotalPages += Md->PageCount;
     }
 
-    DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+    DPRINT1("Total: %08lX (%d MB)\n", (ULONG)TotalPages, (ULONG)(TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
 BOOLEAN
@@ -1864,8 +1870,10 @@ MmArmInitSystem(IN ULONG Phase,
         MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
         MiHighestUserPde = MiAddressToPde(MmHighestUserAddress);
 #if (_MI_PAGING_LEVELS >= 3)
-        /* We need the highest PPE and PXE addresses */
-        ASSERT(FALSE);
+        MiHighestUserPpe = MiAddressToPpe(MmHighestUserAddress);
+#if (_MI_PAGING_LEVELS >= 4)
+        MiHighestUserPxe = MiAddressToPxe(MmHighestUserAddress);
+#endif
 #endif
         //
         // Get the size of the boot loader's image allocations and then round
@@ -2063,7 +2071,7 @@ MmArmInitSystem(IN ULONG Phase,
         //
         RtlInitializeBitMap(&MiPfnBitMap,
                             Bitmap,
-                            MmHighestPhysicalPage + 1);
+                            (ULONG)MmHighestPhysicalPage + 1);
         RtlClearAllBits(&MiPfnBitMap);
 
         //
@@ -2087,7 +2095,7 @@ MmArmInitSystem(IN ULONG Phase,
                 //
                 // Set the bits in the PFN bitmap
                 //
-                RtlSetBits(&MiPfnBitMap, Run->BasePage, Run->PageCount);
+                RtlSetBits(&MiPfnBitMap, (ULONG)Run->BasePage, (ULONG)Run->PageCount);
             }
         }
 

@@ -220,7 +220,8 @@ MmDeleteKernelStack(IN PVOID StackBase,
                     IN BOOLEAN GuiStack)
 {
     PMMPTE PointerPte;
-    PFN_NUMBER StackPages, PageFrameNumber;//, PageTableFrameNumber;
+    PFN_NUMBER PageFrameNumber;//, PageTableFrameNumber;
+    PFN_COUNT StackPages;
     PMMPFN Pfn1;//, Pfn2;
     ULONG i;
     KIRQL OldIrql;
@@ -293,7 +294,7 @@ NTAPI
 MmCreateKernelStack(IN BOOLEAN GuiStack,
                     IN UCHAR Node)
 {
-    PFN_NUMBER StackPtes, StackPages;
+    PFN_COUNT StackPtes, StackPages;
     PMMPTE PointerPte, StackPte;
     PVOID BaseAddress;
     MMPTE TempPte, InvalidPte;
@@ -576,7 +577,7 @@ MmCreatePeb(IN PEPROCESS Process,
     // Attach to Process
     //
     KeAttachProcess(&Process->Pcb);
-    
+
     //
     // Map NLS Tables
     //
@@ -1113,7 +1114,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     PMMPFN Pfn1;
 
     /* Choose a process color */
-    Process->NextPageColor = RtlRandom(&MmProcessColorSeed);
+    Process->NextPageColor = (USHORT)RtlRandom(&MmProcessColorSeed);
 
     /* Setup the hyperspace lock */
     KeInitializeSpinLock(&Process->HyperSpaceLock);

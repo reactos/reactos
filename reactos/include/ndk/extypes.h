@@ -588,7 +588,7 @@ typedef struct _HANDLE_TABLE_ENTRY
 typedef struct _HANDLE_TABLE
 {
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-    ULONG TableCode;
+    ULONG_PTR TableCode;
 #else
     PHANDLE_TABLE_ENTRY **Table;
 #endif

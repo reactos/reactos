@@ -129,7 +129,7 @@ IopBootLog(PUNICODE_STRING DriverName,
                            0,
                            REG_SZ,
                            (PVOID)Buffer,
-                           (wcslen(Buffer) + 1) * sizeof(WCHAR));
+                           (ULONG)(wcslen(Buffer) + 1) * sizeof(WCHAR));
     ZwClose(BootLogKey);
     ZwClose(ControlSetKey);
 
@@ -191,8 +191,8 @@ IopWriteLogFile(PWSTR LogText)
                              NULL,
                              NULL,
                              &IoStatusBlock,
-                             (PVOID)LogText,
-                             wcslen(LogText) * sizeof(WCHAR),
+                             LogText,
+                             (ULONG)wcslen(LogText) * sizeof(WCHAR),
                              NULL,
                              NULL);
         if (!NT_SUCCESS(Status))

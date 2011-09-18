@@ -68,7 +68,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
     }
 }
 
-VOID 
+VOID
 HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
 {
   ULONG Flags;
@@ -101,7 +101,7 @@ HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
     {
       return;
     }
-  if (KeGetCurrentThread () != NULL && 
+  if (KeGetCurrentThread () != NULL &&
       KeGetCurrentThread ()->ApcState.KernelApcPending)
     {
       _enable();
@@ -166,7 +166,7 @@ KfRaiseIrql (KIRQL	NewIrql)
 {
   KIRQL OldIrql;
   ULONG Flags;
- 
+
   Flags = __readeflags();
   _disable();
 
@@ -242,12 +242,12 @@ KeRaiseIrqlToSynchLevel (VOID)
 
 BOOLEAN NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
-			 UCHAR Vector,
+			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
   ULONG Flags;
   DPRINT("Vector (0x%X)  Irql (0x%X)\n", Vector, Irql);
-  
+
   if (KeGetCurrentIrql () >= Irql)
   {
     DPRINT1("current irql %d, new irql %d\n", KeGetCurrentIrql(), Irql);
@@ -285,10 +285,10 @@ HalEndSystemInterrupt (KIRQL Irql,
   APICSendEOI();
   HalpLowerIrql (Irql, TRUE);
 }
-  
+
 VOID
 NTAPI
-HalDisableSystemInterrupt(UCHAR Vector,
+HalDisableSystemInterrupt(ULONG Vector,
 			  KIRQL Irql)
 {
   ULONG irq;
@@ -296,7 +296,7 @@ HalDisableSystemInterrupt(UCHAR Vector,
   DPRINT ("Vector (0x%X)\n", Vector);
 
   if (Vector < FIRST_DEVICE_VECTOR ||
-      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS)  
+      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS)
   {
     DPRINT1("Not a device interrupt, vector=%x\n", Vector);
     ASSERT(FALSE);
@@ -306,19 +306,19 @@ HalDisableSystemInterrupt(UCHAR Vector,
   irq = VECTOR2IRQ (Vector);
   IOAPICMaskIrq (irq);
 
-  return;  
+  return;
 }
 
 
 BOOLEAN NTAPI
-HalEnableSystemInterrupt (UCHAR Vector,
+HalEnableSystemInterrupt (ULONG Vector,
 			  KIRQL Irql,
 			  KINTERRUPT_MODE InterruptMode)
 {
   ULONG irq;
 
   if (Vector < FIRST_DEVICE_VECTOR ||
-      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS) 
+      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS)
   {
     DPRINT("Not a device interrupt\n");
     return FALSE;
@@ -344,7 +344,7 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
     case DISPATCH_LEVEL:
       __writefsbyte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 1);
       break;
-      
+
     default:
       ASSERT(FALSE);
   }

@@ -95,7 +95,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     KAPC_STATE ApcState;
     LARGE_INTEGER SectionOffset = {{0, 0}};
     BOOLEAN LoadSymbols = FALSE;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPTE PointerPte, LastPte;
     PVOID DriverBase;
     MMPTE TempPte;
@@ -324,7 +324,7 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     if (wcschr(ImportName.Buffer, L'.'))
     {
         /* Remove the extension */
-        ImportName.Length = (wcschr(ImportName.Buffer, L'.') -
+        ImportName.Length = (USHORT)(wcschr(ImportName.Buffer, L'.') -
             ImportName.Buffer) * sizeof(WCHAR);
     }
 
@@ -690,7 +690,7 @@ MiSnapThunk(IN PVOID DllBase,
     ULONG ForwardExportSize;
     PIMAGE_EXPORT_DIRECTORY ForwardExportDirectory;
     PIMAGE_IMPORT_BY_NAME ForwardName;
-    ULONG ForwardLength;
+    SIZE_T ForwardLength;
     IMAGE_THUNK_DATA ForwardThunk;
     PAGED_CODE();
 
@@ -797,9 +797,9 @@ MiSnapThunk(IN PVOID DllBase,
 
             /* Build the forwarder name */
             DllName.Buffer = (PCHAR)Address->u1.Function;
-            DllName.Length = strchr(DllName.Buffer, '.') -
-                             DllName.Buffer +
-                             sizeof(ANSI_NULL);
+            DllName.Length = (USHORT)(strchr(DllName.Buffer, '.') -
+                                      DllName.Buffer) +
+                                      sizeof(WCHAR);
             DllName.MaximumLength = DllName.Length;
 
             /* Convert it */
@@ -1377,7 +1377,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PVOID DllBase, NewImageAddress;
     NTSTATUS Status;
     PMMPTE PointerPte, StartPte, LastPte;
-    PFN_NUMBER PteCount;
+    PFN_COUNT PteCount;
     PMMPFN Pfn1;
     MMPTE TempPte, OldPte;
 
@@ -1666,7 +1666,7 @@ MiBuildImportsForBootDrivers(VOID)
         /* Scan the thunks */
         for (i = 0, DllBase = 0, DllEnd = 0; i < ImportSize; i++, ImageThunk++)
 #else
-        i = DllBase = DllEnd = 0;
+        DllBase = DllEnd = i = 0;
         while ((ImportDescriptor->Name) &&
                (ImportDescriptor->OriginalFirstThunk))
         {
@@ -2277,7 +2277,8 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
 {
     PVOID ImageBase;
     PETHREAD CurrentThread = PsGetCurrentThread();
-    PFN_NUMBER PageCount = 0, PageFrameIndex;
+    PFN_COUNT PageCount = 0;
+    PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
     PAGED_CODE();
 

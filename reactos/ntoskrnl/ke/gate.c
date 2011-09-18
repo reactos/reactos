@@ -34,7 +34,7 @@ KeWaitForGate(IN PKGATE Gate,
     KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD Thread = KeGetCurrentThread();
     PKWAIT_BLOCK GateWaitBlock;
-    NTSTATUS Status;
+    LONG_PTR Status;
     PKQUEUE Queue;
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);

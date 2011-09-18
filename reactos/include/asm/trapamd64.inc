@@ -10,6 +10,19 @@ TF_IRQL                 = HEX(20)
 TF_SAVE_ALL             = (TF_VOLATILES OR TF_NONVOLATILES OR TF_XMM OR TF_SEGMENTS)
 TF_HAS_ERROR_CODE       = HEX(40)
 TF_SEND_EOI             = HEX(80)
+//TF_SYSTEMSERVICE        = (TRAPFLAG_VOLATILES or TRAPFLAG_DEBUG)
+
+/*
+ * Stack Layout:
+ * |-------------------|
+ * | KTRAP_FRAME       |
+ * |-------------------| <- rbp
+ * | EXCEPTION_RECORD  |
+ * |-------------------|
+ * | KEXCEPTION_FRAME  |
+ * |-------------------| <- rsp
+ *
+ */
 
 /*
  * EnterTrap - Allocate KTRAP_FRAME_LENGTH and save registers to it

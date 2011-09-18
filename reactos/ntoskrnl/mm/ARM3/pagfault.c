@@ -80,7 +80,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     {
         /* This must be a TEB/PEB VAD */
         ASSERT(Vad->u.VadFlags.MemCommit == TRUE);
-        *ProtectCode = Vad->u.VadFlags.Protection;
+        *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
         return NULL;
     }
     else
@@ -95,7 +95,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         ASSERT(PointerPte != NULL);
 
         /* Return the Prototype PTE and the protection for the page mapping */
-        *ProtectCode = Vad->u.VadFlags.Protection;
+        *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
         return PointerPte;
     }
 }
@@ -347,7 +347,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
 {
     MMPTE TempPte;
     PMMPTE OriginalPte;
-    ULONG Protection;
+    ULONG_PTR Protection;
     PFN_NUMBER PageFrameIndex;
 
     /* Must be called with an valid prototype PTE, with the PFN lock held */
@@ -942,7 +942,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     }
 
     /* Get protection and check if it's a prototype PTE */
-    ProtectionCode = TempPte.u.Soft.Protection;
+    ProtectionCode = (ULONG)TempPte.u.Soft.Protection;
     ASSERT(TempPte.u.Soft.Prototype == 0);
 
     /* Check for non-demand zero PTE */

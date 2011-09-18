@@ -81,17 +81,17 @@ static ULONG MiPagingFileCount;
 ULONG MmNumberOfPagingFiles;
 
 /* Number of pages that are available for swapping */
-PFN_NUMBER MiFreeSwapPages;
+PFN_COUNT MiFreeSwapPages;
 
 /* Number of pages that have been allocated for swapping */
-PFN_NUMBER MiUsedSwapPages;
+PFN_COUNT MiUsedSwapPages;
 
 BOOLEAN MmZeroPageFile;
 
 /*
  * Number of pages that have been reserved for swapping but not yet allocated
  */
-static PFN_NUMBER MiReservedSwapPages;
+static PFN_COUNT MiReservedSwapPages;
 
 /*
  * Ratio between reserved and available swap pages, e.g. setting this to five
@@ -124,7 +124,7 @@ NTAPI
 MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
 {
     memcpy(Mdl + 1, Pages, sizeof(PFN_NUMBER) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
-    
+
     /* FIXME: this flag should be set by the caller perhaps? */
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
 }
@@ -219,7 +219,8 @@ NTSTATUS
 NTAPI
 MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
-   ULONG i, offset;
+   ULONG i;
+   ULONG_PTR offset;
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
@@ -269,7 +270,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = Iosb.Status;
    }
-    
+
    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
    {
       MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
@@ -281,7 +282,8 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
-   ULONG i, offset;
+   ULONG i;
+   ULONG_PTR offset;
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
@@ -421,7 +423,7 @@ NTAPI
 MmFreeSwapPage(SWAPENTRY Entry)
 {
    ULONG i;
-   ULONG off;
+   ULONG_PTR off;
    KIRQL oldIrql;
 
    i = FILE_FROM_ENTRY(Entry);

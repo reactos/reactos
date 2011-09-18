@@ -670,7 +670,7 @@ HalClearSoftwareInterrupt(
 BOOLEAN
 NTAPI
 HalEnableSystemInterrupt(
-    IN UCHAR Vector,
+    IN ULONG Vector,
     IN KIRQL Irql,
     IN KINTERRUPT_MODE InterruptMode)
 {
@@ -724,12 +724,13 @@ HalEnableSystemInterrupt(
 VOID
 NTAPI
 HalDisableSystemInterrupt(
-    IN UCHAR Vector,
+    IN ULONG Vector,
     IN KIRQL Irql)
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
     UCHAR Index;
     ASSERT(Irql <= HIGH_LEVEL);
+    ASSERT(Vector < RTL_NUMBER_OF(HalpVectorToIndex));
 
     Index = HalpVectorToIndex[Vector];
 
@@ -748,7 +749,7 @@ BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
     IN KIRQL Irql,
-    IN UCHAR Vector,
+    IN ULONG Vector,
     OUT PKIRQL OldIrql)
 {
     KIRQL CurrentIrql;

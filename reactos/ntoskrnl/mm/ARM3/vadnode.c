@@ -370,7 +370,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
                                 OUT PMMADDRESS_NODE *Parent)
 {
     PMMADDRESS_NODE Node, LowestNode, Child;
-    ULONG LowVpn, HighVpn;
+    ULONG_PTR LowVpn, HighVpn;
     PFN_NUMBER PageCount;
 
     /* Sanity checks */

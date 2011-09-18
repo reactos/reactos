@@ -87,9 +87,9 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER KeBootTime;
 extern ULONGLONG KeBootTimeBias;
 extern BOOLEAN ExCmosClockIsSane;
-extern ULONG KeProcessorArchitecture;
-extern ULONG KeProcessorLevel;
-extern ULONG KeProcessorRevision;
+extern USHORT KeProcessorArchitecture;
+extern USHORT KeProcessorLevel;
+extern USHORT KeProcessorRevision;
 extern ULONG KeFeatureBits;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
@@ -125,7 +125,7 @@ extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
-extern ULONG KiIdleSummary;
+extern ULONG_PTR KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -450,7 +450,7 @@ KeInitializeProfile(
     struct _KPROFILE* Profile,
     struct _KPROCESS* Process,
     PVOID ImageBase,
-    ULONG ImageSize,
+    SIZE_T ImageSize,
     ULONG BucketSize,
     KPROFILE_SOURCE ProfileSource,
     KAFFINITY Affinity
@@ -628,7 +628,7 @@ VOID
 FASTCALL
 KiUnlinkThread(
     IN PKTHREAD Thread,
-    IN NTSTATUS WaitStatus
+    IN LONG_PTR WaitStatus
 );
 
 VOID
@@ -653,7 +653,7 @@ KeInitializeProcess(
     struct _KPROCESS *Process,
     KPRIORITY Priority,
     KAFFINITY Affinity,
-    PULONG DirectoryTableBase,
+    PULONG_PTR DirectoryTableBase,
     IN BOOLEAN Enable
 );
 

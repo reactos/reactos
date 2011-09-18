@@ -339,7 +339,7 @@ QueryStringCallback(
         return STATUS_SUCCESS;
     }
 
-    Source.MaximumLength = Source.Length = ValueLength;
+    Source.MaximumLength = Source.Length = (USHORT)ValueLength;
     Source.Buffer = ValueData;
 
     return RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &Source, Destination);
@@ -667,7 +667,7 @@ PnpRootQueryDeviceRelations(
     {
         /* Get the entry */
         Device = CONTAINING_RECORD(NextEntry, PNPROOT_DEVICE, ListEntry);
-    
+
         if (!Device->Pdo)
         {
             /* Create a physical device object for the
@@ -1240,7 +1240,7 @@ PnpRootDriverEntry(
     DPRINT("PnpRootDriverEntry(%p %wZ)\n", DriverObject, RegistryPath);
 
     IopRootDriverObject = DriverObject;
-    
+
     DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
     DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;

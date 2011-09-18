@@ -1374,7 +1374,9 @@ FstubFixupEfiPartition(IN PPARTITION_DESCRIPTOR PartitionDescriptor,
     if (PartitionLength > MaxOffset)
     {
         /* Resize partition to its maximum real length */
-        PartitionDescriptor->PartitionLengthLsb0 = MaxOffset - PartitionDescriptor->StartingSectorLsb0;
+#pragma message("--> FIXME: FstubFixupEfiPartition is most likeley broken!")
+        PartitionDescriptor->PartitionLengthLsb0 =
+            (UCHAR)(MaxOffset - PartitionDescriptor->StartingSectorLsb0);
     }
 }
 

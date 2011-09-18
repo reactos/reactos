@@ -73,7 +73,7 @@ MI_GET_CLUSTER_SIZE(IN PMMPTE Pte)
     // Then read the size from the trailing PTE
     //
     Pte++;
-    return Pte->u.List.NextEntry;
+    return (ULONG)Pte->u.List.NextEntry;
 }
 
 PMMPTE
@@ -270,7 +270,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType)
 {
     KIRQL OldIrql;
-    ULONG_PTR ClusterSize;
+    ULONG ClusterSize;
     PMMPTE PreviousPte, NextPte, InsertPte;
 
     //

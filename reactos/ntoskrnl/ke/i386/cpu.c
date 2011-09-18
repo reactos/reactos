@@ -23,10 +23,6 @@ UCHAR KiNMITSS[KTSS_IO_MAPS];
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
-ULONG KeProcessorArchitecture;
-ULONG KeProcessorLevel;
-ULONG KeProcessorRevision;
-ULONG KeFeatureBits;
 ULONG KiFastSystemCallDisable = 1;
 ULONG KeI386NpxPresent = 0;
 ULONG KiMXCsrMask = 0;
@@ -41,7 +37,6 @@ ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 ULONG KePrefetchNTAGranularity = 32;
-KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
 
@@ -109,17 +104,21 @@ RDMSR(IN ULONG Register)
 
 /* NSC/Cyrix CPU indexed register access macros */
 static __inline
-ULONG
+UCHAR
 getCx86(UCHAR reg)
 {
     WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22, reg);
     return READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23);
 }
 
-#define setCx86(reg, data) do { \
-   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); \
-   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23,(data)); \
-} while (0)
+static __inline
+void
+setCx86(UCHAR reg, UCHAR data)
+{
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22, reg);
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23, data);
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -260,7 +259,8 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4], Dummy, Ccr1;
+    ULONG Reg[4], Dummy;
+    UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -513,8 +513,8 @@ KiGetCacheInformation(VOID)
     ULONG Data[4], Dummy;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
-    UCHAR RegisterByte;
-    ULONG Size, Associativity = 0, CacheLine = 64, CurrentSize = 0;
+    UCHAR RegisterByte, Associativity = 0;
+    ULONG Size, CacheLine = 64, CurrentSize = 0;
     BOOLEAN FirstPass = TRUE;
 
     /* Set default L2 size */
@@ -745,7 +745,7 @@ KiGetCacheInformation(VOID)
                     CacheLine = Data[2] & 0xFF;
 
                     /* Hardcode associativity */
-                    RegisterByte = Data[2] >> 12;
+                    RegisterByte = (Data[2] >> 12) & 0xFF;
                     switch (RegisterByte)
                     {
                         case 2:

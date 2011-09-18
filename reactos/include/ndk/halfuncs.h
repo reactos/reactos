@@ -133,7 +133,7 @@ BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
     KIRQL Irql,
-    UCHAR Vector,
+    ULONG Vector,
     PKIRQL OldIrql
 );
 
@@ -147,7 +147,7 @@ NTHALAPI
 VOID
 NTAPI
 HalDisableSystemInterrupt(
-    UCHAR Vector,
+    ULONG Vector,
     KIRQL Irql
 );
 
@@ -155,7 +155,7 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalEnableSystemInterrupt(
-    UCHAR Vector,
+    ULONG Vector,
     KIRQL Irql,
     KINTERRUPT_MODE InterruptMode
 );
@@ -221,7 +221,7 @@ NTAPI
 HalAdjustResourceList(
     IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList
 );
-    
+
 //
 // Environment Functions
 //

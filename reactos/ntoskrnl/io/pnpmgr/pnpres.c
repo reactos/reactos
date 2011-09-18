@@ -72,7 +72,7 @@ IopFindMemoryResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   ULONGLONG Start;
+   LONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
@@ -87,7 +87,8 @@ IopFindMemoryResource(
 
         if (IopCheckDescriptorForConflict(CmDesc, &ConflictingDesc))
         {
-            Start += ConflictingDesc.u.Memory.Start.QuadPart + ConflictingDesc.u.Memory.Length;
+            Start += ConflictingDesc.u.Memory.Start.QuadPart +
+                     ConflictingDesc.u.Memory.Length;
         }
         else
         {
@@ -104,7 +105,7 @@ IopFindPortResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   ULONGLONG Start;
+   LONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
@@ -524,7 +525,7 @@ IopUpdateControlKeyWithResources(IN PDEVICE_NODE DeviceNode)
    ZwClose(ControlKey);
 
    if (!NT_SUCCESS(Status))
-       return Status; 
+       return Status;
 
    return STATUS_SUCCESS;
 }
@@ -647,7 +648,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
           }
           
           NameU.Length = 0;
-          NameU.MaximumLength = OldLength + TranslatedSuffix.Length;
+          NameU.MaximumLength = (USHORT)OldLength + TranslatedSuffix.Length;
           
           Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
                                        DevicePropertyPhysicalDeviceObjectName,
@@ -673,7 +674,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
           ASSERT(FALSE);
       }
       
-      NameU.Length = OldLength;
+      NameU.Length = (USHORT)OldLength;
 
       RtlAppendUnicodeStringToString(&NameU, &RawSuffix);
 
@@ -691,7 +692,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       }
 
       /* "Remove" the suffix by setting the length back to what it used to be */
-      NameU.Length = OldLength;
+      NameU.Length = (USHORT)OldLength;
 
       RtlAppendUnicodeStringToString(&NameU, &TranslatedSuffix);
 
@@ -985,7 +986,6 @@ IopCheckForResourceConflict(
       }
    }
 
-        
 ByeBye:
 
    return Result;
@@ -1036,7 +1036,7 @@ IopDetectResourceConflict(
               goto cleanup;
           }
 
-          Status = ZwEnumerateKey(ResourceMapKey, 
+          Status = ZwEnumerateKey(ResourceMapKey,
                                   ChildKeyIndex1,
                                   KeyBasicInformation,
                                   KeyInformation,
@@ -1050,7 +1050,7 @@ IopDetectResourceConflict(
           goto cleanup;
 
       KeyName.Buffer = KeyInformation->Name;
-      KeyName.MaximumLength = KeyName.Length = KeyInformation->NameLength;
+      KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
       InitializeObjectAttributes(&ObjectAttributes,
                                  &KeyName,
                                  OBJ_CASE_INSENSITIVE,
@@ -1063,7 +1063,7 @@ IopDetectResourceConflict(
 
       while (TRUE)
       {
-          Status = ZwEnumerateKey(ChildKey2, 
+          Status = ZwEnumerateKey(ChildKey2,
                                   ChildKeyIndex2,
                                   KeyBasicInformation,
                                   NULL,
@@ -1095,7 +1095,7 @@ IopDetectResourceConflict(
               goto cleanup;
 
           KeyName.Buffer = KeyInformation->Name;
-          KeyName.MaximumLength = KeyName.Length = KeyInformation->NameLength;
+          KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
           InitializeObjectAttributes(&ObjectAttributes,
                                      &KeyName,
                                      OBJ_CASE_INSENSITIVE,

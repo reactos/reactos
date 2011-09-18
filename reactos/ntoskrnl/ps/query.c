@@ -1293,10 +1293,10 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     KAFFINITY Affinity = 0, CombinedAffinity;
     PVOID Address = NULL;
     PEPROCESS Process;
-    ULONG DisableBoost = 0;
-    ULONG IdealProcessor = 0;
+    ULONG_PTR DisableBoost = 0;
+    ULONG_PTR IdealProcessor = 0;
     PTEB Teb;
-    ULONG TlsIndex = 0;
+    ULONG_PTR TlsIndex = 0;
     PVOID *ExpansionSlots;
     PETHREAD ProcThread;
     PAGED_CODE();

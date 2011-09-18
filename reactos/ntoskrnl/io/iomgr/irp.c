@@ -1832,7 +1832,7 @@ NTAPI
 IoIs32bitProcess(
     IN PIRP Irp OPTIONAL)
 {
-#pragma message "IoIs32bitProcess is hardcoded to FALSE"
+    UNIMPLEMENTED;
     return FALSE;
 }
 #endif

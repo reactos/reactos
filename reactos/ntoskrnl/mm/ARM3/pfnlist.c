@@ -226,7 +226,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     PMMPFNLIST ListHead;
     MMLISTS ListName;
     PFN_NUMBER OldFlink, OldBlink;
-    ULONG OldColor, OldCache;
+    USHORT OldColor, OldCache;
     PMMCOLOR_TABLES ColorTable;
 
     /* Make sure PFN lock is held */

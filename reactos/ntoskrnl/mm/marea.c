@@ -881,7 +881,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 {
    PVOID EndAddress;
    ULONG Granularity;
-   ULONG tmpLength;
+   ULONG_PTR tmpLength;
    PMEMORY_AREA MemoryArea;
 
    DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %p, "
@@ -980,7 +980,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
 VOID NTAPI
 MmMapMemoryArea(PVOID BaseAddress,
-                ULONG Length,
+                SIZE_T Length,
                 ULONG Consumer,
                 ULONG Protection)
 {

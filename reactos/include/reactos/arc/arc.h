@@ -134,16 +134,16 @@ typedef struct _TIMEINFO
 typedef struct _MEMORY_DESCRIPTOR
 {
     MEMORY_TYPE MemoryType;
-    ULONG BasePage;
-    ULONG PageCount;
+    PFN_NUMBER BasePage;
+    PFN_NUMBER PageCount;
 } MEMORY_DESCRIPTOR, *PMEMORY_DESCRIPTOR;
 
 typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
 {
     LIST_ENTRY ListEntry;
     TYPE_OF_MEMORY MemoryType;
-    ULONG BasePage;
-    ULONG PageCount;
+    PFN_NUMBER BasePage;
+    PFN_NUMBER PageCount;
 } MEMORY_ALLOCATION_DESCRIPTOR, *PMEMORY_ALLOCATION_DESCRIPTOR;
 
 typedef struct _BOOT_DRIVER_LIST_ENTRY

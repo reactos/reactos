@@ -21,7 +21,7 @@ typedef struct _IOPNP_DEVICE_EXTENSION
 } IOPNP_DEVICE_EXTENSION, *PIOPNP_DEVICE_EXTENSION;
 
 PUNICODE_STRING PiInitGroupOrderTable;
-ULONG PiInitGroupOrderTableCount;
+USHORT PiInitGroupOrderTableCount;
 INTERFACE_TYPE PnpDefaultInterfaceType;
 
 /* FUNCTIONS ******************************************************************/
@@ -90,7 +90,7 @@ PiInitCacheGroupInformation(VOID)
                 
                 /* Cache it for later */
                 PiInitGroupOrderTable = GroupTable;
-                PiInitGroupOrderTableCount = Count;
+                PiInitGroupOrderTableCount = (USHORT)Count;
             }
             else
             {
@@ -113,7 +113,7 @@ PpInitGetGroupOrderIndex(IN HANDLE ServiceHandle)
 {
     NTSTATUS Status;
     PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
-    ULONG i;
+    USHORT i;
     PVOID Buffer;
     UNICODE_STRING Group;
     PAGED_CODE();
@@ -135,7 +135,7 @@ PpInitGetGroupOrderIndex(IN HANDLE ServiceHandle)
     /* Convert to unicode string */
     Buffer = (PVOID)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
     PnpRegSzToString(Buffer, KeyValueInformation->DataLength, &Group.Length);
-    Group.MaximumLength = KeyValueInformation->DataLength;
+    Group.MaximumLength = (USHORT)KeyValueInformation->DataLength;
     Group.Buffer = Buffer;
     
     /* Loop the groups */
@@ -162,7 +162,8 @@ PipGetDriverTagPriority(IN HANDLE ServiceHandle)
     PVOID Buffer;
     UNICODE_STRING Group;
     PULONG GroupOrder;
-    ULONG i = -1, Count, Tag = 0;
+    ULONG Count, Tag = 0;
+    USHORT i = -1;
     UNICODE_STRING GroupString =
     RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet"
                         L"\\Control\\ServiceGroupOrder");
@@ -182,7 +183,7 @@ PipGetDriverTagPriority(IN HANDLE ServiceHandle)
         /* Convert to unicode string */
         Buffer = (PVOID)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
         PnpRegSzToString(Buffer, KeyValueInformation->DataLength, &Group.Length);
-        Group.MaximumLength = KeyValueInformation->DataLength;
+        Group.MaximumLength = (USHORT)KeyValueInformation->DataLength;
         Group.Buffer = Buffer;
     }
 
@@ -246,9 +247,9 @@ Quickie:
 NTSTATUS
 NTAPI
 PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
-                       IN BOOLEAN LoadDriver,     
+                       IN BOOLEAN LoadDriver,
                        IN PDRIVER_OBJECT DriverObject)
-{ 
+{
     NTSTATUS Status;
     HANDLE EnumRootKey, SubKey, ControlKey, ClassKey, PropertiesKey;
     UNICODE_STRING ClassGuid, Properties;
@@ -290,7 +291,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
         /* Convert to unicode string */
         Buffer = (PVOID)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
         PnpRegSzToString(Buffer, KeyValueInformation->DataLength, &ClassGuid.Length);
-        ClassGuid.MaximumLength = KeyValueInformation->DataLength;
+        ClassGuid.MaximumLength = (USHORT)KeyValueInformation->DataLength;
         ClassGuid.Buffer = Buffer;
         
         /* Open the key */
@@ -483,7 +484,7 @@ IopInitializePlugPlayServices(VOID)
     
     /* Report the device to the user-mode pnp manager */
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                              &IopRootDeviceNode->InstancePath);   
+                              &IopRootDeviceNode->InstancePath);
     
     /* Initialize the Bus Type GUID List */
     PnpBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));

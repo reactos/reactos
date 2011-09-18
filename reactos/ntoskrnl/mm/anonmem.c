@@ -358,7 +358,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
 static VOID
 MmModifyAttributes(PMMSUPPORT AddressSpace,
                    PVOID BaseAddress,
-                   ULONG RegionSize,
+                   SIZE_T RegionSize,
                    ULONG OldType,
                    ULONG OldProtect,
                    ULONG NewType,
@@ -510,7 +510,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    PVOID BaseAddress;
    ULONG RegionSize;
    PVOID PBaseAddress;
-   ULONG PRegionSize;
+   ULONG_PTR PRegionSize;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -979,7 +979,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    PEPROCESS Process;
    PMMSUPPORT AddressSpace;
    PVOID BaseAddress, PBaseAddress;
-   ULONG RegionSize, PRegionSize;
+   SIZE_T RegionSize, PRegionSize;
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     KAPC_STATE ApcState;
@@ -1123,13 +1123,13 @@ NTAPI
 MmProtectAnonMem(PMMSUPPORT AddressSpace,
                  PMEMORY_AREA MemoryArea,
                  PVOID BaseAddress,
-                 ULONG Length,
+                 SIZE_T Length,
                  ULONG Protect,
                  PULONG OldProtect)
 {
    PMM_REGION Region;
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG LengthCount = 0;
+   ULONG_PTR LengthCount = 0;
 
    /* Search all Regions in MemoryArea up to Length */
    /* Every Region up to Length must be committed for success */
@@ -1137,7 +1137,7 @@ MmProtectAnonMem(PMMSUPPORT AddressSpace,
    {
       Region = MmFindRegion(MemoryArea->StartingAddress,
                             &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-                            (PVOID)((ULONG_PTR)BaseAddress + (ULONG_PTR)LengthCount), NULL);
+                            (PVOID)((ULONG_PTR)BaseAddress + LengthCount), NULL);
 
       /* If a Region was found and it is committed */
       if ((Region) && (Region->Type == MEM_COMMIT))

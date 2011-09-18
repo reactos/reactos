@@ -211,7 +211,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
-    ULONG NlsTableSizes[3]; /* 3 NLS tables */
+    SIZE_T NlsTableSizes[3]; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
@@ -418,8 +418,8 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     }
 
     /* Setup the basic header, and give the process the low 1MB to itself */
-    ProcessParams->Length = Size;
-    ProcessParams->MaximumLength = Size;
+    ProcessParams->Length = (ULONG)Size;
+    ProcessParams->MaximumLength = (ULONG)Size;
     ProcessParams->Flags = RTL_USER_PROCESS_PARAMETERS_NORMALIZED |
                            RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
 
@@ -837,7 +837,7 @@ VOID
 NTAPI
 INIT_FUNCTION
 ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-             IN ULONG PagesToDestroy,
+             IN ULONG_PTR PagesToDestroy,
              IN TYPE_OF_MEMORY MemoryType)
 {
     PLIST_ENTRY ListEntry;
@@ -993,10 +993,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
     NlsData = LoaderBlock->NlsData;
     ExpNlsTableBase = NlsData->AnsiCodePageData;
     ExpAnsiCodePageDataOffset = 0;
-    ExpOemCodePageDataOffset = ((ULONG_PTR)NlsData->OemCodePageData -
-                                (ULONG_PTR)NlsData->AnsiCodePageData);
-    ExpUnicodeCaseTableDataOffset = ((ULONG_PTR)NlsData->UnicodeCodePageData -
-                                     (ULONG_PTR)NlsData->AnsiCodePageData);
+    ExpOemCodePageDataOffset = (ULONG)((ULONG_PTR)NlsData->OemCodePageData -
+                                       (ULONG_PTR)NlsData->AnsiCodePageData);
+    ExpUnicodeCaseTableDataOffset = (ULONG)((ULONG_PTR)NlsData->UnicodeCodePageData -
+                                            (ULONG_PTR)NlsData->AnsiCodePageData);
 
     /* Initialize the NLS Tables */
     RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
@@ -1084,8 +1084,13 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Set system ranges */
+#ifdef _M_AMD64
+    SharedUserData->Reserved1 = MM_HIGHEST_USER_ADDRESS_WOW64;
+    SharedUserData->Reserved3 = MM_SYSTEM_RANGE_START_WOW64;
+#else
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
     SharedUserData->Reserved3 = (ULONG_PTR)MmSystemRangeStart;
+#endif
 
     /* Make a copy of the NLS Tables */
     ExpInitNls(LoaderBlock);

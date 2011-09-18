@@ -250,7 +250,7 @@ KiUserTrap(IN PKTRAP_FRAME TrapFrame)
     return !!(TrapFrame->SegCs & MODE_MASK);
 }
 
-#define Ki386PerfEnd(x)
+#define Ki386PerfEnd()
 
 struct _KPCR;
 
@@ -318,6 +318,16 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 
 // HACK
 extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
+
+// win64 uses DMA macros, this one is not defined
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 

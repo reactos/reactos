@@ -88,7 +88,7 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
                 }
 
                 /* Set the offset */
-                ModuleInfo->OffsetToFileName = p - ModuleName.Buffer;
+                ModuleInfo->OffsetToFileName = (USHORT)(p - ModuleName.Buffer);
             }
             else
             {
@@ -478,8 +478,8 @@ QSI_DEF(SystemBasicInformation)
     Sbi->TimerResolution = KeMaximumIncrement;
     Sbi->PageSize = PAGE_SIZE;
     Sbi->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
-    Sbi->LowestPhysicalPageNumber = MmLowestPhysicalPage;
-    Sbi->HighestPhysicalPageNumber = MmHighestPhysicalPage;
+    Sbi->LowestPhysicalPageNumber = (ULONG)MmLowestPhysicalPage;
+    Sbi->HighestPhysicalPageNumber = (ULONG)MmHighestPhysicalPage;
     Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
     Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
     Sbi->MaximumUserModeAddress = (ULONG_PTR)MmHighestUserAddress;
@@ -542,7 +542,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->IoWriteOperationCount = IoWriteOperationCount;
     Spi->IoOtherOperationCount = IoOtherOperationCount;
 
-    Spi->AvailablePages = MmAvailablePages;
+    Spi->AvailablePages = (ULONG)MmAvailablePages;
     /*
      *   Add up all the used "Committed" memory + pagefile.
      *   Not sure this is right. 8^\
@@ -759,7 +759,7 @@ QSI_DEF(SystemProcessInformation)
             }
             if (!ImageNameLength && Process != PsIdleProcess && Process->ImageFileName)
             {
-              ImageNameLength = strlen(Process->ImageFileName) * sizeof(WCHAR);
+              ImageNameLength = (USHORT)strlen(Process->ImageFileName) * sizeof(WCHAR);
             }
 
             /* Round up the image name length as NT does */
@@ -1781,9 +1781,9 @@ QSI_DEF(SystemRangeStartInformation)
     if (Size != sizeof(ULONG_PTR)) return STATUS_INFO_LENGTH_MISMATCH;
 
     *(PULONG_PTR)Buffer = (ULONG_PTR)MmSystemRangeStart;
-    
+
     if (ReqSize) *ReqSize = sizeof(ULONG_PTR);
-    
+
     return STATUS_SUCCESS;
 }
 

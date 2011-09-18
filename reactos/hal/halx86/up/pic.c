@@ -44,7 +44,7 @@
  *   IRQ2 since the line was asserted by the slave when it received the spurious
  *   IRQ15!
  *
- * - When the 80287/80387 math co-processor generates an FPU/NPX trap, this is 
+ * - When the 80287/80387 math co-processor generates an FPU/NPX trap, this is
  *   connected to IRQ13, so we have to clear the busy latch on the NPX port.
  */
 PHAL_DISMISS_INTERRUPT HalpSpecialDismissTable[16] =
@@ -1096,7 +1096,7 @@ HalpHardwareInterruptLevel(VOID)
  */
 BOOLEAN
 NTAPI
-HalEnableSystemInterrupt(IN UCHAR Vector,
+HalEnableSystemInterrupt(IN ULONG Vector,
                          IN KIRQL Irql,
                          IN KINTERRUPT_MODE InterruptMode)
 {
@@ -1139,7 +1139,7 @@ HalEnableSystemInterrupt(IN UCHAR Vector,
  */
 VOID
 NTAPI
-HalDisableSystemInterrupt(IN UCHAR Vector,
+HalDisableSystemInterrupt(IN ULONG Vector,
                           IN KIRQL Irql)
 {
     ULONG IrqMask;
@@ -1175,7 +1175,7 @@ HalDisableSystemInterrupt(IN UCHAR Vector,
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(IN KIRQL Irql,
-                        IN UCHAR Vector,
+                        IN ULONG Vector,
                         OUT PKIRQL OldIrql)
 {
     ULONG Irq;
@@ -1218,21 +1218,21 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
                 Mask.Both = Pcr->IDR;
                 __outbyte(PIC1_DATA_PORT, Mask.Master);
                 __outbyte(PIC2_DATA_PORT, Mask.Slave);
-            
+                
                 /* Now check if this specific interrupt is already in-service */
                 PendingIrqMask = (1 << PendingIrql);
                 if (Pcr->IrrActive & PendingIrqMask) return;
-                    
+                
                 /* Set active bit otherwise, and clear it from IRR */
                 Pcr->IrrActive |= PendingIrqMask;
                 Pcr->IRR ^= PendingIrqMask;
-            
+                
                 /* Handle delayed hardware interrupt */
                 SWInterruptHandlerTable[PendingIrql]();
-            
+                
                 /* Handling complete */
                 Pcr->IrrActive ^= PendingIrqMask;
-            
+                
                 /* Check if there's still interrupts pending */
                 PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[Pcr->Irql];
                 if (!PendingIrqlMask) break;
@@ -1275,7 +1275,7 @@ _HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     HalpEndSoftwareInterrupt(CurrentIrql, TrapFrame);
 
     /* Exit the interrupt */
-    KiEoiHelper(TrapFrame); 
+    KiEoiHelper(TrapFrame);
 }
 
 VOID
@@ -1374,7 +1374,7 @@ HalpDispatchInterrupt2(VOID)
             /* Clear IRR bit */
             Pcr->IRR ^= (1 << PendingIrql);
         }
-    
+
         /* Now handle pending interrupt */
         SWInterruptHandlerTable[PendingIrql]();
     }

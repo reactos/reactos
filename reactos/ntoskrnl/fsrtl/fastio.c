@@ -199,7 +199,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
             if (IoStatus->Status != STATUS_END_OF_FILE)
             {
                 ASSERT((ULONGLONG)FcbHeader->FileSize.QuadPart >=
-                       (FileOffset->QuadPart + IoStatus->Information));
+                      ((ULONGLONG)FileOffset->QuadPart + IoStatus->Information));
             }
         }
         else
@@ -219,7 +219,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
             if (Result == TRUE)
             {
                 ASSERT((IoStatus->Status == STATUS_END_OF_FILE) ||
-                       ((FileOffset->QuadPart + IoStatus->Information) <=
+                       (((ULONGLONG)FileOffset->QuadPart + IoStatus->Information) <=
                         (ULONGLONG)FcbHeader->FileSize.QuadPart));
             }
         }

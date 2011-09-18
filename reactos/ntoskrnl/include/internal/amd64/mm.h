@@ -59,6 +59,9 @@
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
+#define MM_HIGHEST_USER_ADDRESS_WOW64 0x7FFEFFFF
+#define MM_SYSTEM_RANGE_START_WOW64   0x80000000
+
 PULONG64
 FORCEINLINE
 MmGetPageDirectory(VOID)
@@ -145,9 +148,9 @@ MiIsPdeForAddressValid(PVOID Address)
 #define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
 #define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
 
-#define ADDR_TO_PAGE_TABLE(v) (((ULONG_PTR)(v)) / (512 * PAGE_SIZE))
-#define ADDR_TO_PDE_OFFSET(v) ((((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
-#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE)
+#define ADDR_TO_PAGE_TABLE(v) ((ULONG)(((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
+#define ADDR_TO_PDE_OFFSET(v) ((ULONG)((((ULONG_PTR)(v)) / (512 * PAGE_SIZE))))
+#define ADDR_TO_PTE_OFFSET(v)  ((ULONG)((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE))
 
 #define MiGetPdeOffset ADDR_TO_PDE_OFFSET
 

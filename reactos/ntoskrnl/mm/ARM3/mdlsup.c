@@ -318,7 +318,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
 {
     PVOID Base;
     PPFN_NUMBER MdlPages, LastPage;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount;
     BOOLEAN IsIoMapping;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
     PMMPTE PointerPte;
@@ -491,7 +491,7 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
                    IN PMDL Mdl)
 {
     PVOID Base;
-    PFN_NUMBER PageCount;
+    PFN_COUNT PageCount, ExtraPageCount;
     PPFN_NUMBER MdlPages;
     PMMPTE PointerPte;
 
@@ -538,14 +538,16 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
             //
             // Get the MDL page array
             //
-            MdlPages = (PPFN_NUMBER)(Mdl + 1);
-            MdlPages += PageCount;
+            MdlPages = MmGetMdlPfnArray(Mdl);
+
+            /* Number of extra pages stored after the PFN array */
+            ExtraPageCount = (PFN_COUNT)*(MdlPages + PageCount);
 
             //
             // Do the math
             //
-            PageCount += *MdlPages;
-            PointerPte -= *MdlPages;
+            PageCount += ExtraPageCount;
+            PointerPte -= ExtraPageCount;
             ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
             ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
 
@@ -553,7 +555,7 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
             // Get the new base address
             //
             BaseAddress = (PVOID)((ULONG_PTR)BaseAddress -
-                                  (*MdlPages << PAGE_SHIFT));
+                                  (ExtraPageCount << PAGE_SHIFT));
         }
 
         //
@@ -1251,7 +1253,7 @@ MmUnlockPages(IN PMDL Mdl)
             //
             ASSERT(Process->NumberOfLockedPages > 0);
             InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
-                                        -PageCount);
+                                        -(LONG_PTR)PageCount);
         }
 
         //
@@ -1272,7 +1274,7 @@ MmUnlockPages(IN PMDL Mdl)
         //
         ASSERT(Process->NumberOfLockedPages > 0);
         InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
-                                    -PageCount);
+                                    -(LONG_PTR)PageCount);
     }
 
     //

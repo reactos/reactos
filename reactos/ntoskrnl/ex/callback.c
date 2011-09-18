@@ -173,7 +173,7 @@ ExCompareExchangeCallBack(IN OUT PEX_CALLBACK CallBack,
 {
     EX_FAST_REF OldValue;
     PEX_CALLBACK_ROUTINE_BLOCK CallbackBlock;
-    ULONG_PTR Count;
+    ULONG Count;
 
     /* Check that we have a new block */
     if (NewBlock)
@@ -187,7 +187,7 @@ ExCompareExchangeCallBack(IN OUT PEX_CALLBACK CallBack,
             return FALSE;
         }
     }
-    
+
     /* Do the swap */
     OldValue = ExCompareSwapFastReference(&CallBack->RoutineBlock,
                                           NewBlock,

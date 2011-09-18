@@ -554,7 +554,11 @@ typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
     ULONG_PTR DpcLock;
+#ifdef _M_AMD64
+    volatile LONG DpcQueueDepth;
+#else
     volatile ULONG DpcQueueDepth;
+#endif
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
@@ -935,10 +939,10 @@ typedef struct _KPROCESS
     DISPATCHER_HEADER Header;
     LIST_ENTRY ProfileListHead;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG DirectoryTableBase;
+    ULONG_PTR DirectoryTableBase;
     ULONG Unused0;
 #else
-    ULONG DirectoryTableBase[2];
+    ULONG_PTR DirectoryTableBase[2];
 #endif
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;

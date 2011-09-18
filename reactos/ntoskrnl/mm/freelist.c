@@ -38,7 +38,7 @@ SIZE_T MmSharedCommit;
 SIZE_T MmDriverCommit;
 SIZE_T MmProcessCommit;
 SIZE_T MmPagedPoolCommit;
-SIZE_T MmPeakCommitment; 
+SIZE_T MmPeakCommitment;
 SIZE_T MmtotalCommitLimitMaximum;
 
 static RTL_BITMAP MiUserPfnBitMap;
@@ -60,7 +60,7 @@ MiInitializeUserPfnBitmap(VOID)
     /* Initialize it and clear all the bits to begin with */
     RtlInitializeBitMap(&MiUserPfnBitMap,
                         Bitmap,
-                        MmHighestPhysicalPage + 1);
+                        (ULONG)MmHighestPhysicalPage + 1);
     RtlClearAllBits(&MiUserPfnBitMap);
 }
 
@@ -93,7 +93,7 @@ MmInsertLRULastUserPage(PFN_NUMBER Pfn)
     ASSERT(Pfn != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Pfn));
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    RtlSetBit(&MiUserPfnBitMap, Pfn);
+    RtlSetBit(&MiUserPfnBitMap, (ULONG)Pfn);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
@@ -106,7 +106,7 @@ MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
     
     /* Find the next user page */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, PreviousPfn + 1);
+    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, (ULONG)PreviousPfn + 1);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     if (Position == 0xFFFFFFFF) return 0;
     
@@ -123,7 +123,7 @@ MmRemoveLRUUserPage(PFN_NUMBER Page)
     /* Unset the page as a user page */
     ASSERT(Page != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
-    RtlClearBit(&MiUserPfnBitMap, Page);
+    RtlClearBit(&MiUserPfnBitMap, (ULONG)Page);
 }
 
 BOOLEAN
@@ -170,7 +170,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     //
     // Convert, and normalize, the high address into a PFN
     //
-    HighPage = (PFN_NUMBER)(HighAddress.QuadPart >> PAGE_SHIFT);    
+    HighPage = (PFN_NUMBER)(HighAddress.QuadPart >> PAGE_SHIFT);
     if (HighPage > MmHighestPhysicalPage) HighPage = MmHighestPhysicalPage;
     
     //
@@ -378,7 +378,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     // We're done, mark the pages as locked
     //
     Mdl->Process = NULL;
-    Mdl->MdlFlags |= MDL_PAGES_LOCKED; 
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
     return Mdl;
 }
 

@@ -105,7 +105,7 @@ BOOLEAN
 NTAPI
 LdrVerifyMappedImageMatchesChecksum(
     IN PVOID BaseAddress,
-    IN ULONG NumberOfBytes,
+    IN SIZE_T NumberOfBytes,
     IN ULONG FileLength
 );
 

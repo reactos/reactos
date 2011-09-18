@@ -523,6 +523,6 @@ extern KD_BREAKPOINT_TYPE KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;
 extern BOOLEAN BreakpointsSuspended;
 extern ULONG KdpNumInternalBreakpoints;
-extern ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
+extern ULONG_PTR KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 extern ULONG TraceDataBuffer[40];
 extern ULONG TraceDataBufferPosition;

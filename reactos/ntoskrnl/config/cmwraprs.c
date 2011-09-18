@@ -84,7 +84,7 @@ CmpFileRead(IN PHHIVE RegistryHive,
 
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwReadFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
-                       Buffer, BufferLength, &_FileOffset, 0);
+                       Buffer, (ULONG)BufferLength, &_FileOffset, 0);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
@@ -104,7 +104,7 @@ CmpFileWrite(IN PHHIVE RegistryHive,
 
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwWriteFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
-                       Buffer, BufferLength, &_FileOffset, 0);
+                       Buffer, (ULONG)BufferLength, &_FileOffset, 0);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
