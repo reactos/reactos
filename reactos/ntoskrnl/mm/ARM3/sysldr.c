@@ -799,7 +799,7 @@ MiSnapThunk(IN PVOID DllBase,
             DllName.Buffer = (PCHAR)Address->u1.Function;
             DllName.Length = (USHORT)(strchr(DllName.Buffer, '.') -
                                       DllName.Buffer) +
-                                      sizeof(WCHAR);
+                                      sizeof(ANSI_NULL);
             DllName.MaximumLength = DllName.Length;
 
             /* Convert it */
