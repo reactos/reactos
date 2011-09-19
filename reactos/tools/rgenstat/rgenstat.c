@@ -113,7 +113,6 @@ path_to_url(char* path)
 static void
 write_line(char *line)
 {
-  int n_out;
   char buf[200];
 
   memset(buf, 0, sizeof(buf));
@@ -122,7 +121,7 @@ write_line(char *line)
   buf[strlen(buf)] = '\r';
   buf[strlen(buf)] = '\n';
 
-  n_out = fwrite(&buf[0], 1, strlen(buf), out);
+  (void)fwrite(&buf[0], 1, strlen(buf), out);
 }
 
 
@@ -888,6 +887,7 @@ int main(int argc, char **argv)
   input_file = convert_path(argv[1]);
   if (input_file[0] == 0)
     {
+      free(input_file);
       printf("Missing input-filename\n");
       return 1;
     }
@@ -895,6 +895,8 @@ int main(int argc, char **argv)
   output_file = convert_path(argv[2]);
   if (output_file[0] == 0)
     {
+      free(input_file);
+      free(output_file);
       printf("Missing output-filename\n");
       return 1;
     }
@@ -902,12 +904,16 @@ int main(int argc, char **argv)
   out = fopen(output_file, "wb");
   if (out == NULL)
     {
+      free(input_file);
+      free(output_file);
     	printf("Cannot open output file");
     	return 1;
      }
 
   read_input_file(input_file);
 
+  free(input_file);
+  free(output_file);
   fclose(out);
 
   return 0;
