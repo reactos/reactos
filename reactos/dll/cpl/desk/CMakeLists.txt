@@ -40,6 +40,7 @@ add_importlibs(desk
     ole32
     setupapi
     shell32
+    uxtheme
     kernel32
     ntdll)
 
