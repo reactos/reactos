@@ -11,9 +11,12 @@
 	<file>main.c</file>
 	<file>metric.c</file>
 	<file>msstyles.c</file>
+	<file>ncscrollbar.c</file>
+	<file>nonclient.c</file>
 	<file>property.c</file>
 	<file>stylemap.c</file>
 	<file>system.c</file>
+	<file>themehooks.c</file>
 	<file>uxini.c</file>
 	<file>version.rc</file>
 	<library>wine</library>

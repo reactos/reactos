@@ -11,9 +11,12 @@ list(APPEND SOURCE
     main.c
     metric.c
     msstyles.c
+    ncscrollbar.c
+    nonclient.c
     property.c
     stylemap.c
     system.c
+    themehooks.c
     uxini.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c
