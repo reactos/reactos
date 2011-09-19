@@ -1097,6 +1097,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "TDI", \
  "PlugPlay", \
  "SpoolerGroup", \
+ "UIGroup", \
  "Extended Base"
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
@@ -1660,6 +1661,16 @@ HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ImagePath",0x00020000,"%System
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
+
+; Themes service
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","DisplayName",0x00000000,"Themes"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Description",0x00000000,"Themes support"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Group",0x00000000,"UIGroup"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ImagePath",0x00020000,"%SystemRoot%\system32\thmsvc.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Type",0x00010001,0x00000020
 
 ; Sound Blaster (NT4)
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
