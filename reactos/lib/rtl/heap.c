@@ -126,7 +126,7 @@ RtlpInitializeHeap(OUT PHEAP Heap,
     ASSERT(HeaderSize <= PAGE_SIZE);
 
     /* Initialise the Heap Entry header containing the Heap header */
-    Heap->Entry.Size = HeaderSize >> HEAP_ENTRY_SHIFT;
+    Heap->Entry.Size = (USHORT)(HeaderSize >> HEAP_ENTRY_SHIFT);
     Heap->Entry.Flags = HEAP_ENTRY_BUSY;
     Heap->Entry.SmallTagIndex = LOBYTE(Heap->Entry.Size) ^ HIBYTE(Heap->Entry.Size) ^ Heap->Entry.Flags;
     Heap->Entry.PreviousSize = 0;
@@ -157,7 +157,7 @@ RtlpInitializeHeap(OUT PHEAP Heap,
 
     /* Initialise the Heap validation info */
     Heap->HeaderValidateCopy = NULL;
-    Heap->HeaderValidateLength = HeaderSize;
+    Heap->HeaderValidateLength = (USHORT)HeaderSize;
 
     /* Initialise the Heap Lock */
     if (!(Flags & HEAP_NO_SERIALIZE) && !(Flags & HEAP_LOCK_USER_ALLOCATED))
@@ -656,7 +656,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
             }
 
             /* Update tracking numbers */
-            Segment->NumberOfUnCommittedPages -= *Size / PAGE_SIZE;
+            Segment->NumberOfUnCommittedPages -= (ULONG)(*Size / PAGE_SIZE);
 
             /* Calculate first and last entries */
             FirstEntry = (PHEAP_ENTRY)Address;
@@ -738,7 +738,7 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
     PHEAP_ENTRY PrecedingInUseEntry = NULL, NextInUseEntry = NULL;
     PHEAP_FREE_ENTRY NextFreeEntry;
     PHEAP_UCR_DESCRIPTOR UcrDescriptor;
-    ULONG PrecedingSize, NextSize, DecommitSize;
+    SIZE_T PrecedingSize, NextSize, DecommitSize;
     ULONG_PTR DecommitBase;
     NTSTATUS Status;
 
@@ -828,7 +828,7 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
 
     /* Insert uncommitted pages */
     RtlpInsertUnCommittedPages(Segment, DecommitBase, DecommitSize);
-    Segment->NumberOfUnCommittedPages += (DecommitSize / PAGE_SIZE);
+    Segment->NumberOfUnCommittedPages += (ULONG)(DecommitSize / PAGE_SIZE);
 
     if (PrecedingSize)
     {
@@ -866,7 +866,8 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
     }
 }
 
-BOOLEAN NTAPI
+NTSTATUS
+NTAPI
 RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
                           OUT PHEAP_SEGMENT Segment,
                           IN UCHAR SegmentIndex,
@@ -908,7 +909,7 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
 
     /* Initialise the Heap Segment location information */
     Segment->BaseAddress = Segment;
-    Segment->NumberOfPages = SegmentReserve >> PAGE_SHIFT;
+    Segment->NumberOfPages = (ULONG)(SegmentReserve >> PAGE_SHIFT);
 
     /* Initialise the Heap Entries contained within the Heap Segment */
     Segment->FirstEntry = &Segment->Entry + Segment->Entry.Size;
@@ -928,7 +929,7 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
     }
 
     /* Initialise the Heap Segment UnCommitted Range information */
-    Segment->NumberOfUnCommittedPages = (SegmentReserve - SegmentCommit) >> PAGE_SHIFT;
+    Segment->NumberOfUnCommittedPages = (ULONG)((SegmentReserve - SegmentCommit) >> PAGE_SHIFT);
     Segment->NumberOfUnCommittedRanges = 0;
     InitializeListHead(&Segment->UCRSegmentList);
 
@@ -1162,7 +1163,7 @@ RtlpExtendHeap(PHEAP Heap,
     DPRINT("RtlpExtendHeap(%p %x)\n", Heap, Size);
 
     /* Calculate amount in pages */
-    Pages = (Size + PAGE_SIZE - 1) / PAGE_SIZE;
+    Pages = (ULONG)((Size + PAGE_SIZE - 1) / PAGE_SIZE);
     FreeSize = Pages * PAGE_SIZE;
     DPRINT("Pages %x, FreeSize %x. Going through segments...\n", Pages, FreeSize);
 
@@ -1998,11 +1999,10 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     PULONG FreeListsInUse;
     ULONG FreeListsInUseUlong;
     SIZE_T AllocationSize;
-    SIZE_T Index;
+    SIZE_T Index, InUseIndex, i;
     PLIST_ENTRY FreeListHead;
     PHEAP_ENTRY InUseEntry;
     PHEAP_FREE_ENTRY FreeBlock;
-    ULONG InUseIndex, i;
     UCHAR FreeFlags;
     EXCEPTION_RECORD ExceptionRecord;
     BOOLEAN HeapLocked = FALSE;
@@ -3390,7 +3390,7 @@ RtlpValidateHeapSegment(
                 }
                 else
                 {
-                    UnCommittedPages += (UcrDescriptor->Size / PAGE_SIZE);
+                    UnCommittedPages += (ULONG)(UcrDescriptor->Size / PAGE_SIZE);
                     UnCommittedRanges++;
 
                     CurrentEntry = (PHEAP_ENTRY)((PCHAR)UcrDescriptor->Address + UcrDescriptor->Size);

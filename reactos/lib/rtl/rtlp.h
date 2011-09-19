@@ -63,7 +63,7 @@ typedef struct _DISPATCHER_CONTEXT
 PVOID
 NTAPI
 RtlpAllocateMemory(
-    ULONG Bytes,
+    SIZE_T Bytes,
     ULONG Tag);
 
 VOID

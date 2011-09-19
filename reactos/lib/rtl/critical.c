@@ -299,7 +299,7 @@ VOID
 NTAPI
 RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 {
-    ULONG EntryId;
+    SIZE_T EntryId;
 
     /* Is it part of our cached entries? */
     if ((DebugInfo >= RtlpStaticDebugInfo) &&
@@ -310,7 +310,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 
         /* Mark as free */
         EntryId = (DebugInfo - RtlpStaticDebugInfo);
-        DPRINT("Freeing from Buffer: %p. Entry: %lu inside Process: %p\n",
+        DPRINT("Freeing from Buffer: %p. Entry: %Iu inside Process: %p\n",
                DebugInfo,
                EntryId,
                NtCurrentTeb()->ClientId.UniqueProcess);

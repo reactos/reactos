@@ -24,8 +24,8 @@ typedef struct _DPH_BLOCK_INFORMATION
 {
      ULONG StartStamp;
      PVOID Heap;
-     ULONG RequestedSize;
-     ULONG ActualSize;
+     SIZE_T RequestedSize;
+     SIZE_T ActualSize;
      union
      {
           LIST_ENTRY FreeQueue;
@@ -46,10 +46,10 @@ typedef struct _DPH_HEAP_BLOCK
      };
      PUCHAR pUserAllocation;
      PUCHAR pVirtualBlock;
-     ULONG nVirtualBlockSize;
-     ULONG nVirtualAccessSize;
-     ULONG nUserRequestedSize;
-     ULONG nUserActualSize;
+     SIZE_T nVirtualBlockSize;
+     SIZE_T nVirtualAccessSize;
+     SIZE_T nUserRequestedSize;
+     SIZE_T nUserActualSize;
      PVOID UserValue;
      ULONG UserFlags;
      PRTL_TRACE_BLOCK StackTrace;
@@ -67,30 +67,30 @@ typedef struct _DPH_HEAP_ROOT
      PDPH_HEAP_BLOCK pVirtualStorageListHead;
      PDPH_HEAP_BLOCK pVirtualStorageListTail;
      ULONG nVirtualStorageRanges;
-     ULONG nVirtualStorageBytes;
+     SIZE_T nVirtualStorageBytes;
 
      RTL_AVL_TABLE BusyNodesTable;
      PDPH_HEAP_BLOCK NodeToAllocate;
      ULONG nBusyAllocations;
-     ULONG nBusyAllocationBytesCommitted;
+     SIZE_T nBusyAllocationBytesCommitted;
 
      PDPH_HEAP_BLOCK pFreeAllocationListHead;
      PDPH_HEAP_BLOCK pFreeAllocationListTail;
      ULONG nFreeAllocations;
-     ULONG nFreeAllocationBytesCommitted;
+     SIZE_T nFreeAllocationBytesCommitted;
 
      LIST_ENTRY AvailableAllocationHead;
      ULONG nAvailableAllocations;
-     ULONG nAvailableAllocationBytesCommitted;
+     SIZE_T nAvailableAllocationBytesCommitted;
 
      PDPH_HEAP_BLOCK pUnusedNodeListHead;
      PDPH_HEAP_BLOCK pUnusedNodeListTail;
      ULONG nUnusedNodes;
-     ULONG nBusyAllocationBytesAccessible;
+     SIZE_T nBusyAllocationBytesAccessible;
      PDPH_HEAP_BLOCK pNodePoolListHead;
      PDPH_HEAP_BLOCK pNodePoolListTail;
      ULONG nNodePools;
-     ULONG nNodePoolBytes;
+     SIZE_T nNodePoolBytes;
 
      LIST_ENTRY NextHeap;
      ULONG ExtraFlags;
@@ -117,7 +117,7 @@ UNICODE_STRING RtlpDphTargetDllsUnicode;
 RTL_CRITICAL_SECTION RtlpDphDelayedFreeQueueLock;
 LIST_ENTRY RtlpDphDelayedFreeQueue;
 SLIST_HEADER RtlpDphDelayedTemporaryPushList;
-ULONG RtlpDphMemoryUsedByDelayedFreeBlocks;
+SIZE_T RtlpDphMemoryUsedByDelayedFreeBlocks;
 ULONG RtlpDphNumberOfDelayedFreeBlocks;
 
 /* Counters */
@@ -429,7 +429,7 @@ RtlpDphWritePageHeapBlockInformation(PDPH_HEAP_ROOT DphRoot, PVOID UserAllocatio
     RtlFillMemory(FillPtr, ROUND_UP(FillPtr, PAGE_SIZE) - (ULONG_PTR)FillPtr, DPH_FILL_SUFFIX);
 
     /* FIXME: Check if logging stack traces is turned on */
-    //if (DphRoot->ExtraFlags & 
+    //if (DphRoot->ExtraFlags &
 
     return TRUE;
 }
@@ -758,7 +758,7 @@ RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtu
     ULONG NodeCount, i;
 
     //NodeCount = (Size >> 6) - 1;
-    NodeCount = (Size / sizeof(DPH_HEAP_BLOCK));
+    NodeCount = (ULONG)(Size / sizeof(DPH_HEAP_BLOCK));
     DphStartNode = Virtual;
 
     /* Set pNextAlloc for all blocks */
@@ -1903,7 +1903,8 @@ RtlpPageHeapReAllocate(HANDLE HeapPtr,
     PDPH_HEAP_ROOT DphRoot;
     PDPH_HEAP_BLOCK Node = NULL, AllocatedNode;
     BOOLEAN Biased = FALSE, UseNormalHeap = FALSE, OldBlockPageHeap = TRUE;
-    ULONG DataSize, ValidationInfo;
+    ULONG ValidationInfo;
+    SIZE_T DataSize;
     PVOID NewAlloc = NULL;
 
     /* Check requested size */
