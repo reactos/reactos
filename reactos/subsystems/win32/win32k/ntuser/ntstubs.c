@@ -818,20 +818,6 @@ NtUserRealWaitMessageEx(
 
 BOOL
 APIENTRY
-NtUserRegisterUserApiHook(
-    PUNICODE_STRING m_dllname1,
-    PUNICODE_STRING m_funname1,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
-{
-    UserEnterExclusive();
-    STUB;
-    UserLeave();
-    return 0;
-}
-
-BOOL
-APIENTRY
 NtUserRegisterRawInputDevices(
     IN PCRAWINPUTDEVICE pRawInputDevices,
     IN UINT uiNumDevices,
@@ -958,14 +944,6 @@ NtUserPaintMenuBar(
     DWORD dwUnknown4,
     DWORD dwUnknown5,
     DWORD dwUnknown6)
-{
-    STUB;
-    return 0;
-}
-
-BOOL
-APIENTRY
-NtUserUnregisterUserApiHook(VOID)
 {
     STUB;
     return 0;

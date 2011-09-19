@@ -116,6 +116,114 @@ IntRestoreTebWndCallback (HWND hWnd, PWND pWnd)
 
 /* FUNCTIONS *****************************************************************/
 
+/* calls ClientLoadLibrary in user32 */
+HMODULE
+co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName, 
+                        PUNICODE_STRING pstrInitFunc, 
+                        BOOL Unload,
+                        BOOL ApiHook)
+{
+   PVOID ResultPointer;
+   ULONG ResultLength;
+   ULONG ArgumentLength;
+   PCLIENT_LOAD_LIBRARY_ARGUMENTS pArguments;
+   NTSTATUS Status;
+   HMODULE Result;
+   ULONG_PTR pLibNameBuffer = 0, pInitFuncBuffer = 0;
+
+   TRACE("co_IntClientLoadLibrary: %S, %S, %d, %d\n", pstrLibName->Buffer, pstrLibName->Buffer, Unload, ApiHook);
+
+   /* Calculate the size of the argument */
+   ArgumentLength = sizeof(CLIENT_LOAD_LIBRARY_ARGUMENTS);
+   if(pstrLibName)
+   {
+       pLibNameBuffer = ArgumentLength;
+       ArgumentLength += pstrLibName->Length + sizeof(WCHAR);
+   }
+   if(pstrInitFunc)
+   {
+       pInitFuncBuffer = ArgumentLength; 
+       ArgumentLength += pstrInitFunc->Length + sizeof(WCHAR);
+   }
+
+   /* Allocate the argument*/
+   pArguments = IntCbAllocateMemory(ArgumentLength);
+   if(pArguments == NULL)
+   {
+       return FALSE;
+   }
+
+   /* Fill the argument */
+   pArguments->Unload = Unload;
+   pArguments->ApiHook = ApiHook;
+   if(pstrLibName)
+   {
+       /* Copy the string to the callback memory */
+       pLibNameBuffer += (ULONG_PTR)pArguments;
+       pArguments->strLibraryName.Buffer = (PWCHAR)pLibNameBuffer;
+       pArguments->strLibraryName.MaximumLength = pstrLibName->Length + sizeof(WCHAR);
+       RtlCopyUnicodeString(&pArguments->strLibraryName, pstrLibName);
+
+       /* Fix argument pointer to be relative to the argument */
+       pLibNameBuffer -= (ULONG_PTR)pArguments;
+       pArguments->strLibraryName.Buffer = (PWCHAR)(pLibNameBuffer);
+   }
+   else
+   {
+       RtlZeroMemory(&pArguments->strLibraryName, sizeof(UNICODE_STRING));
+   }
+
+   if(pstrInitFunc)
+   {
+       /* Copy the strings to the callback memory */
+       pInitFuncBuffer += (ULONG_PTR)pArguments;
+       pArguments->strInitFuncName.Buffer = (PWCHAR)pInitFuncBuffer;
+       pArguments->strInitFuncName.MaximumLength = pstrInitFunc->Length + sizeof(WCHAR);
+       RtlCopyUnicodeString(&pArguments->strInitFuncName, pstrInitFunc);
+
+       /* Fix argument pointers to be relative to the argument */
+       pInitFuncBuffer -= (ULONG_PTR)pArguments;
+       pArguments->strInitFuncName.Buffer = (PWCHAR)(pInitFuncBuffer);
+   }
+   else
+   {
+       RtlZeroMemory(&pArguments->strInitFuncName, sizeof(UNICODE_STRING));
+   }
+
+   /* Do the callback */
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_CLIENTLOADLIBRARY,
+                               pArguments,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   /* Free the argument */
+   IntCbFreeMemory(pArguments);
+
+   if(!NT_SUCCESS(Status))
+   {
+       return FALSE;
+   }
+
+   _SEH2_TRY
+   {
+       ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
+       /* Simulate old behaviour: copy into our local buffer */
+       Result = *(HMODULE*)ResultPointer;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       Result = 0;
+   }
+   _SEH2_END;
+
+   return Result;
+}
+
 VOID APIENTRY
 co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               HWND hWnd,

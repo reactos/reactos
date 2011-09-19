@@ -324,7 +324,7 @@ SystemTimerProc(HWND hwnd,
           if ( pDesk->dwDTFlags & DF_TME_HOVER &&
                pWnd == pDesk->spwndTrack )
           {
-             Point = gpsi->ptCursor;
+             Point = pWnd->head.pti->MessageQueue->MouseMoveMsg.pt;
              if ( RECTL_bPointInRect(&pDesk->rcMouseHover, Point.x, Point.y) )
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
@@ -345,9 +345,18 @@ SystemTimerProc(HWND hwnd,
                    wParam = pDesk->htEx; // Need to support all HTXYZ hits.
                    Msg = WM_NCMOUSEHOVER;
                 }
+                TRACE("Generating WM_NCMOUSEHOVER\n");
                 UserPostMessage(hwnd, Msg, wParam, MAKELPARAM(Point.x, Point.y));
                 pDesk->dwDTFlags &= ~DF_TME_HOVER;
                 break; // Kill this timer.
+             }
+             else
+             {
+                 RECTL_vSetRect(&pDesk->rcMouseHover,
+                                Point.x - gspv.iMouseHoverWidth  / 2,
+                                Point.y - gspv.iMouseHoverHeight / 2,
+                                Point.x + gspv.iMouseHoverWidth  / 2,
+                                Point.y + gspv.iMouseHoverHeight / 2);
              }
           }
        }

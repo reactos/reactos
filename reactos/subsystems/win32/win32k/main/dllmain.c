@@ -393,6 +393,22 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         /* Remove it from the list */
         *ppti = ptiCurrent->ptiSibling;
 
+        /* Decrement thread count and check if its 0 */
+        ppiCurrent->cThreads--;
+
+        /* Do now some process cleanup that requires a valid win32 thread */
+        if(ptiCurrent->ppi->cThreads == 0)
+        {
+            UserSetCursor(NULL, TRUE);
+
+            /* Check if we have registered the user api hook */
+            if(ptiCurrent->ppi == ppiUahServer)
+            {
+                /* Unregister the api hook without blocking */
+                UserUnregisterUserApiHook();
+            }
+        }
+
         DceFreeThreadDCE(ptiCurrent);
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
@@ -421,14 +437,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
         IntSetThreadDesktop(NULL, TRUE);
 
-        /* Decrement thread count and check if its 0 */
-        ppiCurrent->cThreads--;
-        if (ppiCurrent->cThreads == 0)
-        {
-            /* UGLY: Prevent this function from being called later
-               when we don't have a THREADINFO anymore. */
-            UserSetCursor(NULL, TRUE);
-        }
 
         /* Free the THREADINFO */
         PsSetThreadWin32Thread(Thread, NULL);

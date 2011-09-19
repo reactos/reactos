@@ -24,7 +24,221 @@ typedef struct _HOOKPACK
   PVOID pHookStructs;
 } HOOKPACK, *PHOOKPACK;
 
+UNICODE_STRING strUahModule;
+UNICODE_STRING strUahInitFunc;
+PPROCESSINFO ppiUahServer;
+
 /* PRIVATE FUNCTIONS *********************************************************/
+
+/* Calls ClientLoadLibrary in user32 in order to load or unload a module */
+BOOL
+IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
+{
+   PPROCESSINFO ppi;
+   HMODULE hmod;
+
+   ppi = PsGetCurrentProcessWin32Process();
+
+   ERR("IntLoadHookModule. Client PID: %d\n", PsGetProcessId(ppi->peProcess));
+
+    /* Check if this is the api hook */
+    if(iHookID == WH_APIHOOK)
+    {
+        if(!Unload && !(ppi->W32PF_flags & W32PF_APIHOOKLOADED))
+        {
+            /* A callback in user mode can trigger UserLoadApiHook to be called and 
+               as a result IntLoadHookModule will be called recursively.
+               To solve this we set the flag that means that the appliaction has
+               loaded the api hook before the callback and in case of error we remove it */
+            ppi->W32PF_flags |= W32PF_APIHOOKLOADED;
+
+            /* Call ClientLoadLibrary in user32 */
+            hmod = co_IntClientLoadLibrary(&strUahModule, &strUahInitFunc, Unload, TRUE);
+            TRACE("co_IntClientLoadLibrary returned %d\n", hmod );
+            if(hmod == 0)
+            {
+                /* Remove the flag we set before */
+                ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
+                return FALSE;
+            }
+            return TRUE;
+        }
+        else if(Unload && (ppi->W32PF_flags & W32PF_APIHOOKLOADED))
+        {
+            /* Call ClientLoadLibrary in user32 */
+            hmod = co_IntClientLoadLibrary(NULL, NULL, Unload, TRUE);
+            if(hmod != 0)
+            {
+                ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    STUB;
+
+    return FALSE;
+}
+
+/*
+IntHookModuleUnloaded: 
+Sends a internal message to all threads of the requested desktop 
+and notifies them that a global hook was destroyed 
+and an injected module must be unloaded. 
+As a result, IntLoadHookModule will be called for all the threads that 
+will receive the special purpose internal message.
+*/
+BOOL
+IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
+{
+    PTHREADINFO ptiCurrent;
+    PLIST_ENTRY ListEntry;
+    PPROCESSINFO ppiCsr;
+
+    ERR("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
+
+    ppiCsr = PsGetProcessWin32Process(CsrProcess);
+
+    ListEntry = pdesk->PtiList.Flink;
+    while(ListEntry != &pdesk->PtiList)
+    {
+        ptiCurrent = CONTAINING_RECORD(ListEntry, THREADINFO, PtiLink);
+
+        /* FIXME: do some more security checks here */
+
+        /* FIXME: the first check is a reactos specific hack for system threads */
+        if(!PsIsSystemProcess(ptiCurrent->ppi->peProcess) && 
+           ptiCurrent->ppi != ppiCsr)
+        {
+            if(ptiCurrent->ppi->W32PF_flags & W32PF_APIHOOKLOADED)
+            {
+                TRACE("IntHookModuleUnloaded: sending message to PID %d, ppi=0x%x\n", PsGetProcessId(ptiCurrent->ppi->peProcess), ptiCurrent->ppi);
+                co_MsqSendMessageAsync( ptiCurrent,
+                                        0,
+                                        iHookID,
+                                        TRUE,
+                                        (LPARAM)hHook,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        MSQ_INJECTMODULE);
+            }
+        }
+        ListEntry = ListEntry->Flink;
+    }
+
+    return TRUE;
+}
+
+BOOL 
+FASTCALL 
+UserLoadApiHook()
+{
+    return IntLoadHookModule(WH_APIHOOK, 0, FALSE);
+}
+
+BOOL
+FASTCALL
+UserRegisterUserApiHook(
+    PUNICODE_STRING pstrDllName,
+    PUNICODE_STRING pstrFuncName)
+{
+    PTHREADINFO pti, ptiCurrent;
+    HWND *List;
+    PWND DesktopWindow, pwndCurrent;
+    ULONG i;
+    PPROCESSINFO ppiCsr;
+
+    pti = PsGetCurrentThreadWin32Thread();
+    ppiCsr = PsGetProcessWin32Process(CsrProcess);
+
+    /* Fail if the api hook is already registered */
+    if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+    {
+        return FALSE;
+    }
+
+    ERR("UserRegisterUserApiHook. Server PID: %d\n", PsGetProcessId(pti->ppi->peProcess));
+
+    /* Register the api hook */
+    gpsi->dwSRVIFlags |= SRVINFO_APIHOOK;
+
+    strUahModule = *pstrDllName;
+    strUahInitFunc = *pstrFuncName;
+    ppiUahServer = pti->ppi;
+
+    /* Broadcast an internal message to every top level window */
+    DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+    List = IntWinListChildren(DesktopWindow);
+
+    if (List != NULL)
+    {
+        for (i = 0; List[i]; i++)
+        {
+            pwndCurrent = UserGetWindowObject(List[i]);
+            if(pwndCurrent == NULL)
+            {
+                continue;
+            }
+            ptiCurrent = pwndCurrent->head.pti;
+
+           /* FIXME: the first check is a reactos specific hack for system threads */
+            if(PsIsSystemProcess(ptiCurrent->ppi->peProcess) ||
+                ptiCurrent->ppi == ppiCsr)
+            {
+                continue;
+            }
+
+            co_MsqSendMessageAsync( ptiCurrent,
+                                    0,
+                                    WH_APIHOOK,
+                                    FALSE,   /* load the module */
+                                    0,
+                                    NULL,
+                                    0,
+                                    FALSE,
+                                    MSQ_INJECTMODULE);
+        }
+        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+    }
+
+    return TRUE;
+}
+
+BOOL
+FASTCALL
+UserUnregisterUserApiHook()
+{
+    PTHREADINFO pti;
+
+    pti = PsGetCurrentThreadWin32Thread();
+
+    /* Fail if the api hook is not registered */
+    if(!(gpsi->dwSRVIFlags & SRVINFO_APIHOOK))
+    {
+        return FALSE;
+    }
+
+    /* Only the process that registered the api hook can uregister it */
+    if(ppiUahServer != PsGetCurrentProcessWin32Process())
+    {
+        return FALSE;
+    }
+
+    ERR("UserUnregisterUserApiHook. Server PID: %d\n", PsGetProcessId(pti->ppi->peProcess));
+
+    /* Unregister the api hook */
+    gpsi->dwSRVIFlags &= ~SRVINFO_APIHOOK;
+    ppiUahServer = NULL;
+    ReleaseCapturedUnicodeString(&strUahModule, UserMode);
+    ReleaseCapturedUnicodeString(&strUahInitFunc, UserMode);
+
+    /* Notify all applications that the api hook module must be unloaded */
+    return IntHookModuleUnloaded(pti->rpdesk, WH_APIHOOK, 0);
+}
 
 static
 LRESULT
@@ -1509,5 +1723,65 @@ CLEANUP:
     UserLeave();
     END_CLEANUP;
 }
+
+BOOL
+APIENTRY
+NtUserRegisterUserApiHook(
+    PUNICODE_STRING m_dllname1,
+    PUNICODE_STRING m_funname1,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    BOOL ret;
+    UNICODE_STRING strDllNameSafe;
+    UNICODE_STRING strFuncNameSafe;
+    NTSTATUS Status;
+
+    /* Probe and capture parameters */
+    Status = ProbeAndCaptureUnicodeString(&strDllNameSafe, UserMode, m_dllname1);
+    if(!NT_SUCCESS(Status))
+    {
+        EngSetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    Status = ProbeAndCaptureUnicodeString(&strFuncNameSafe, UserMode, m_funname1);
+    if(!NT_SUCCESS(Status))
+    {
+        ReleaseCapturedUnicodeString(&strDllNameSafe, UserMode);
+        EngSetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    UserEnterExclusive();
+
+    /* Call internal function */
+    ret = UserRegisterUserApiHook(&strDllNameSafe, &strFuncNameSafe);
+
+    UserLeave();
+
+    /* Cleanup only in case of failure */
+    if(ret == FALSE)
+    {
+        ReleaseCapturedUnicodeString(&strDllNameSafe, UserMode);
+        ReleaseCapturedUnicodeString(&strFuncNameSafe, UserMode);
+    }
+
+    return ret;
+}
+
+BOOL
+APIENTRY
+NtUserUnregisterUserApiHook(VOID)
+{
+    BOOL ret;
+
+    UserEnterExclusive();
+    ret = UserUnregisterUserApiHook();
+    UserLeave();
+
+    return ret;
+}
+
 
 /* EOF */

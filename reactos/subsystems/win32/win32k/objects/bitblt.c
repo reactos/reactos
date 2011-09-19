@@ -549,7 +549,7 @@ GreStretchBltMask(
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        return TRUE;
     }
 
     if (!hDCDest || (UsesSource && !hDCSrc) || (UsesMask && !hDCMask))

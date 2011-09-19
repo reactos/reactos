@@ -4,6 +4,7 @@
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
 #define MSQ_ISEVENT     2
+#define MSQ_INJECTMODULE 3
 
 #define QSIDCOUNTS 6
 
@@ -206,6 +207,16 @@ co_IntSendMessageWithCallBack(HWND hWnd,
                               SENDASYNCPROC CompletionCallback,
                               ULONG_PTR CompletionCallbackContext,
                               ULONG_PTR *uResult);
+BOOL FASTCALL
+co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
+                       HWND hwnd,
+                       UINT Msg,
+                       WPARAM wParam,
+                       LPARAM lParam,
+                       SENDASYNCPROC CompletionCallback,
+                       ULONG_PTR CompletionCallbackContext,
+                       BOOL HasPackedLParam,
+                       INT HookMessage);
 
 LRESULT FASTCALL IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL IntTranslateKbdMessage(LPMSG lpMsg, UINT flags);

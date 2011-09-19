@@ -120,6 +120,9 @@ NtUserCallNoParam(DWORD Routine)
       case NOPARAM_ROUTINE_RELEASECAPTURE:
          RETURN( (DWORD_PTR)IntReleaseCapture());
 
+      case NOPARAM_ROUTINE_LOADUSERAPIHOOK:
+          RETURN(UserLoadApiHook());
+
       default:
          ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
          EngSetLastError(ERROR_INVALID_PARAMETER);

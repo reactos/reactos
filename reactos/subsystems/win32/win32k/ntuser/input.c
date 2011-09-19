@@ -1611,19 +1611,6 @@ IntTrackMouseEvent(
     if (!(pWnd = UserGetWindowObject(lpEventTrack->hwndTrack)))
         return FALSE;
 
-    if ( pDesk->spwndTrack != pWnd ||
-            (pDesk->htEx != HTCLIENT) ^ !!(lpEventTrack->dwFlags & TME_NONCLIENT) )
-    {
-        if ( lpEventTrack->dwFlags & TME_LEAVE && !(lpEventTrack->dwFlags & TME_CANCEL) )
-        {
-            UserPostMessage( lpEventTrack->hwndTrack,
-                             lpEventTrack->dwFlags & TME_NONCLIENT ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
-                             0, 0);
-        }
-        TRACE("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack, pWnd);
-        return TRUE;
-    }
-
     /* Tracking spwndTrack same as pWnd */
     if ( lpEventTrack->dwFlags & TME_CANCEL ) // Canceled mode.
     {
@@ -1641,6 +1628,7 @@ IntTrackMouseEvent(
     }
     else // Not Canceled.
     {
+       pDesk->spwndTrack = pWnd;
         if ( lpEventTrack->dwFlags & TME_LEAVE )
             pDesk->dwDTFlags |= DF_TME_LEAVE;
 

@@ -539,22 +539,35 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 
    if (pwnd)
    {
-      PWND pwndTrack = IntChildrenWindowFromPoint(pwnd, Msg->pt.x, Msg->pt.y);
-
-      if ( pDesk->spwndTrack != pwndTrack && pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) )
+      /* If we a re tracking the mouse and it moves to another top level window */
+      if(pDesk->spwndTrack && 
+         UserGetAncestor(pDesk->spwndTrack, GA_ROOT) != pwnd)
       {
-         if ( pDesk->dwDTFlags & DF_TME_LEAVE )
-            UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
-                            (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
-                             0, 0);
+          /* Generate a WM_MOUSELEAVE message */
+          if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+          {
+              MSG msgMouseLeave;
 
-         if ( pDesk->dwDTFlags & DF_TME_HOVER )
-            IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+              TRACE("co_MsqInsertMouseMessage: generating WM_MOUSELEAVE\n");
 
-         pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
+              msgMouseLeave.hwnd = UserHMGetHandle(pDesk->spwndTrack);
+              msgMouseLeave.message = WM_MOUSELEAVE;
+              msgMouseLeave.pt = Msg->pt;
+              msgMouseLeave.time = Msg->time;
+              msgMouseLeave.lParam = msgMouseLeave.wParam = 0;
+
+              MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSE);
+          }
+
+          /* Stop tracking */
+          if ( pDesk->dwDTFlags & DF_TME_HOVER )
+          {
+              IntKillTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+          }
+
+          pDesk->spwndTrack = NULL;
+          pDesk->htEx = 0;
       }
-      pDesk->spwndTrack = pwndTrack;
-      pDesk->htEx = GetNCHitEx(pDesk->spwndTrack, Msg->pt);
    }
 
    hdcScreen = IntGetScreenDC();
@@ -811,6 +824,12 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Message->Msg.wParam,
                                     Message->Msg.lParam);
    }
+   else if(Message->HookMessage == MSQ_INJECTMODULE)
+   {
+       Result = IntLoadHookModule(Message->Msg.message,
+                                  (HHOOK)Message->Msg.lParam,
+                                  Message->Msg.wParam);
+   }
    else if ((Message->CompletionCallback)
        && (Message->CallBackSenderQueue == MessageQueue))
    {   /* Call the callback routine */
@@ -1004,6 +1023,58 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          CurrentEntry = CurrentEntry->Flink;
       }
    }
+}
+
+BOOL FASTCALL
+co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
+                       HWND hwnd,
+                       UINT Msg,
+                       WPARAM wParam,
+                       LPARAM lParam,
+                       SENDASYNCPROC CompletionCallback,
+                       ULONG_PTR CompletionCallbackContext,
+                       BOOL HasPackedLParam,
+                       INT HookMessage)
+{
+
+    PTHREADINFO ptiSender;
+    PUSER_SENT_MESSAGE Message;
+
+    if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+    {
+        ERR("MsqSendMessage(): Not enough memory to allocate a message");
+        return FALSE;
+    }
+
+    ptiSender = PsGetCurrentThreadWin32Thread();
+
+    IntReferenceMessageQueue(ptiReceiver->MessageQueue);
+    /* Take reference on this MessageQueue if its a callback. It will be released
+       when message is processed or removed from target hwnd MessageQueue */
+    if (CompletionCallback)
+       IntReferenceMessageQueue(ptiSender->MessageQueue);
+
+    Message->Msg.hwnd = hwnd;
+    Message->Msg.message = Msg;
+    Message->Msg.wParam = wParam;
+    Message->Msg.lParam = lParam;
+    Message->CompletionEvent = NULL;
+    Message->Result = 0;
+    Message->lResult = 0;
+    Message->SenderQueue = NULL;
+    Message->CallBackSenderQueue = ptiSender->MessageQueue;
+    Message->DispatchingListEntry.Flink = NULL;
+    Message->CompletionCallback = CompletionCallback;
+    Message->CompletionCallbackContext = CompletionCallbackContext;
+    Message->HookMessage = HookMessage;
+    Message->HasPackedLParam = HasPackedLParam;
+    Message->QS_Flags = QS_SENDMESSAGE;
+
+    InsertTailList(&ptiReceiver->MessageQueue->SentMessagesListHead, &Message->ListEntry);
+    MsqWakeQueue(ptiReceiver->MessageQueue, QS_SENDMESSAGE, TRUE);
+    IntDereferenceMessageQueue(ptiReceiver->MessageQueue);
+
+    return TRUE;
 }
 
 NTSTATUS FASTCALL
@@ -1281,6 +1352,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     PUSER_MESSAGE_QUEUE MessageQueue;
     PTHREADINFO pti;
     PSYSTEM_CURSORINFO CurInfo;
+    PDESKTOP pDesk;
     DECLARE_RETURN(BOOL);
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -1289,6 +1361,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     CurInfo = IntGetSysCursorInfo();
     pwndMsg = UserGetWindowObject(msg->hwnd);
     clk_msg = MessageQueue->msgDblClk;
+    pDesk = pwndDesktop->head.rpdesk;
 
     /* find the window to dispatch this mouse message to */
     if (MessageQueue->CaptureWindow)
@@ -1308,6 +1381,45 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         /* Remove and ignore the message */
         *RemoveMessages = TRUE;
         RETURN(FALSE);
+    }
+
+    /* If we a re tracking the mouse and it moves to another window */
+    if(pDesk->spwndTrack && 
+       pDesk->spwndTrack != pwndMsg &&
+       msg->message != WM_MOUSELEAVE)
+    {
+        /* Generate a WM_MOUSELEAVE message */
+        if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+        {
+            MSG msgMouseLeave;
+
+            TRACE("co_IntProcessMouseMessage: generating WM_MOUSELEAVE\n");
+
+            msgMouseLeave.hwnd = UserHMGetHandle(pDesk->spwndTrack);
+            msgMouseLeave.message = WM_MOUSELEAVE;
+            msgMouseLeave.pt = msg->pt;
+            msgMouseLeave.time = msg->time;
+            msgMouseLeave.lParam = msgMouseLeave.wParam = 0;
+
+            MsqPostMessage(pwndMsg->head.pti->MessageQueue, 
+                           &msgMouseLeave, 
+                           TRUE, 
+                           QS_MOUSE);
+        }
+
+        /* Stop tracking */
+        if ( pDesk->dwDTFlags & DF_TME_HOVER )
+        {
+            IntKillTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+        }
+
+        pDesk->spwndTrack = NULL;
+        pDesk->htEx = 0;
+    }
+
+    if(pDesk->spwndTrack)
+    {
+        pDesk->htEx = hittest;
     }
 
     msg->hwnd = UserHMGetHandle(pwndMsg);
