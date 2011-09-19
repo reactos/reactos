@@ -72,3 +72,7 @@ HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
                               DWORD dwSizeNum, PTHEMENAMES pszColorNames);
 HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,
                                  PARSETHEMEINIFILEPROC callback, LPVOID lpData);
+
+BOOL WINAPI ThemeHooksInstall();
+BOOL WINAPI ThemeHooksRemove();
+
