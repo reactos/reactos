@@ -1735,12 +1735,13 @@ HRESULT WINAPI GetThemeBackgroundExtent(HTHEME hTheme, HDC hdc, int iPartId,
 static HBITMAP UXTHEME_DrawThemePartToDib(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect)
 {
     HDC hdcMem;
-    BITMAPINFO bmi = {0};
+    BITMAPINFO bmi;
     HBITMAP hbmp, hbmpOld;
     HBRUSH hbrBack;
 
     hdcMem = CreateCompatibleDC(0);
 
+    memset(&bmi, 0, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = pRect->right;
     bmi.bmiHeader.biHeight = -pRect->bottom;
