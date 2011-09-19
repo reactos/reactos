@@ -74,7 +74,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 add_library(shell32 SHARED ${SOURCE})
-
+allow_warnings(shell32)
 set_module_type(shell32 win32dll UNICODE)
 
 target_link_libraries(shell32

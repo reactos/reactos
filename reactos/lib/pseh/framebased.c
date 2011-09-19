@@ -470,14 +470,14 @@ void _SEH_FASTCALL _SEHEnterFrame_f(_SEHPortableFrame_t * frame)
 
 void _SEH_FASTCALL _SEHLeaveFrame_f(void)
 {
-	_SEHPortableFrame_t * frame;
+	/* _SEHPortableFrame_t * frame;
 
 	frame = _SEH_CONTAINING_RECORD
 	(
 		_SEHCurrentRegistration(),
 		_SEHPortableFrame_t,
 		SPF_Registration
-	);
+	); */
 
 	/* ASSERT(frame); */
 	/* ASSERT(frame->SPF_TopTryLevel == NULL) */

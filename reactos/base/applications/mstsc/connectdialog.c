@@ -1089,9 +1089,9 @@ DlgProc(HWND hDlg,
 
         case WM_NOTIFY:
         {
-            INT idctrl;
+            //INT idctrl;
             LPNMHDR pnmh;
-            idctrl = (int)wParam;
+            //idctrl = (int)wParam;
             pnmh = (LPNMHDR)lParam;
             if (//(pnmh->hwndFrom == pInfo->hSelf) &&
                 (pnmh->idFrom == IDC_TAB) &&

@@ -44,6 +44,7 @@ CsrProbeForRead(IN PVOID Address,
     Data = *Pointer;
     Pointer = (PUCHAR)((ULONG)Address + Length -1);
     Data = *Pointer;
+    (void)Data;
 }
 
 /*

@@ -45,6 +45,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
 add_library(browseui SHARED ${SOURCE})
+allow_warnings(browseui)
 set_module_type(browseui win32dll UNICODE)
 
 target_link_libraries(browseui
