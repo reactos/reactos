@@ -320,7 +320,7 @@ typedef struct _HEAP_VIRTUAL_ALLOC_ENTRY
 } HEAP_VIRTUAL_ALLOC_ENTRY, *PHEAP_VIRTUAL_ALLOC_ENTRY;
 
 /* Global variables */
-extern HEAP_LOCK RtlpProcessHeapsListLock;
+extern RTL_CRITICAL_SECTION RtlpProcessHeapsListLock;
 extern BOOLEAN RtlpPageHeapEnabled;
 
 /* Functions declarations */

@@ -112,32 +112,30 @@ RtlGetNtGlobalFlags(VOID)
 
 NTSTATUS
 NTAPI
-RtlDeleteHeapLock(
-    PHEAP_LOCK Lock)
+RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     return RtlDeleteCriticalSection(&Lock->CriticalSection);
 }
 
 NTSTATUS
 NTAPI
-RtlEnterHeapLock(
-    PHEAP_LOCK Lock)
+RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
 {
+    UNREFERENCED_PARAMETER(Exclusive);
+
     return RtlEnterCriticalSection(&Lock->CriticalSection);
 }
 
 NTSTATUS
 NTAPI
-RtlInitializeHeapLock(
-    PHEAP_LOCK Lock)
+RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
 {
-     return RtlInitializeCriticalSection(&Lock->CriticalSection);
+    return RtlInitializeCriticalSection(&(*Lock)->CriticalSection);
 }
 
 NTSTATUS
 NTAPI
-RtlLeaveHeapLock(
-    PHEAP_LOCK Lock)
+RtlLeaveHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     return RtlLeaveCriticalSection(&Lock->CriticalSection);
 }
