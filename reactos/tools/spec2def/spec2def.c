@@ -807,7 +807,11 @@ int main(int argc, char *argv[])
 
     /* Allocate memory buffer */
     pszSource = malloc(nFileSize + 1);
-    if (!pszSource) return -4;
+    if (!pszSource)
+    {
+        fclose(file);
+        return -4;
+    }
 
     /* Load input file into memory */
     nFileSize = fread(pszSource, 1, nFileSize, file);
