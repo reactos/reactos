@@ -511,7 +511,7 @@ ParseInputFile(const char *pszInFile, FILE *fileOut)
 int
 main(int argc, char* argv[])
 {
-    char *pszInFolder, *pszInFile, *pszOutFile;
+    char *pszInFile, *pszOutFile;
     FILE* fileOut;
     int ret;
 
@@ -523,7 +523,6 @@ main(int argc, char* argv[])
 
     pszInFile = convert_path(argv[1]);
     pszOutFile = convert_path(argv[2]);
-    pszInFolder = GetFolder(pszInFile);
 
     fileOut = fopen(pszOutFile, "wb");
     if (fileOut == NULL)
@@ -535,6 +534,8 @@ main(int argc, char* argv[])
     ret = ParseInputFile(pszInFile, fileOut);
 
     fclose(fileOut);
+    free(pszInFile);
+    free(pszOutFile);
 
     return ret;
 }
