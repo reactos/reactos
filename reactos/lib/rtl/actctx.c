@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         Activation Context Support
  * FILE:            lib/rtl/actctx.c
- * PROGRAMERS:      
+ * PROGRAMERS:
  *                  Jon Griffiths
  *                  Eric Pouech
  *                  Jacek Caban for CodeWeavers
@@ -241,7 +241,7 @@ static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
     UNICODE_STRING res;
 
     res.Buffer = (PWSTR)xmlstr->ptr;
-    res.Length = res.MaximumLength = xmlstr->len * sizeof(WCHAR);
+    res.Length = res.MaximumLength = (USHORT)xmlstr->len * sizeof(WCHAR);
 
     return res;
 }
@@ -647,7 +647,7 @@ static BOOL next_xml_attr(xmlbuf_t* xmlbuf, xmlstr_t* name, xmlstr_t* value,
     if (ptr == xmlbuf->end || *ptr != '=') return FALSE;
 
     name->ptr = xmlbuf->ptr;
-    name->len = ptr-xmlbuf->ptr;
+    name->len = (ULONG)(ptr - xmlbuf->ptr);
     xmlbuf->ptr = ptr;
 
     ptr++;
@@ -663,7 +663,7 @@ static BOOL next_xml_attr(xmlbuf_t* xmlbuf, xmlstr_t* name, xmlstr_t* value,
         return FALSE;
     }
 
-    value->len = ptr - value->ptr;
+    value->len = (ULONG)(ptr - value->ptr);
     xmlbuf->ptr = ptr + 1;
 
     if (xmlbuf->ptr == xmlbuf->end) return FALSE;
@@ -705,7 +705,7 @@ static BOOL next_xml_elem(xmlbuf_t* xmlbuf, xmlstr_t* elem)
         ptr++;
 
     elem->ptr = xmlbuf->ptr;
-    elem->len = ptr - xmlbuf->ptr;
+    elem->len = (ULONG)(ptr - xmlbuf->ptr);
     xmlbuf->ptr = ptr;
     return xmlbuf->ptr != xmlbuf->end;
 }
@@ -733,7 +733,7 @@ static BOOL parse_text_content(xmlbuf_t* xmlbuf, xmlstr_t* content)
     if (!ptr) return FALSE;
 
     content->ptr = xmlbuf->ptr;
-    content->len = ptr - xmlbuf->ptr;
+    content->len = (ULONG)(ptr - xmlbuf->ptr);
     xmlbuf->ptr = ptr;
 
     return TRUE;
@@ -1555,7 +1555,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
                                                       : ACTIVATION_CONTEXT_PATH_TYPE_NONE;
 
     unicode_tests = IS_TEXT_UNICODE_SIGNATURE | IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-    if (RtlIsTextUnicode( (PVOID) buffer, size, &unicode_tests ))
+    if (RtlIsTextUnicode((PVOID)buffer, (ULONG)size, &unicode_tests ))
     {
         xmlbuf.ptr = buffer;
         xmlbuf.end = xmlbuf.ptr + size / sizeof(WCHAR);
@@ -1579,12 +1579,12 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     else
     {
         /* let's assume utf-8 for now */
-        int len;
+        size_t len;
         WCHAR *new_buff;
 
         _SEH2_TRY
         {
-            len = mbstowcs( NULL, buffer, size);
+            len = mbstowcs(NULL, buffer, size);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1628,7 +1628,7 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
     return NtOpenFile( handle, GENERIC_READ, &attr, &io, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_ALERT );
 }
 
-static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, unsigned int extra_len )
+static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT extra_len )
 {
     NTSTATUS status;
     ULONG magic;
@@ -1881,7 +1881,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
         WCHAR *tmp;
         ULONG build, revision;
 
-        data_len = io.Information;
+        data_len = (ULONG)io.Information;
 
         for (;;)
         {
@@ -1890,7 +1890,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                 NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
                                       FileBothDirectoryInformation, FALSE, &lookup_us, FALSE );
                 if (io.Status != STATUS_SUCCESS) break;
-                data_len = io.Information;
+                data_len = (ULONG)io.Information;
                 data_pos = 0;
             }
             dir_info = (FILE_BOTH_DIR_INFORMATION*)(buffer + data_pos);
@@ -1905,8 +1905,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             revision = atoiW(tmp);
             if (build == ai->version.build && revision < ai->version.revision)
                 continue;
-            ai->version.build = build;
-            ai->version.revision = revision;
+            ai->version.build = (USHORT)build;
+            ai->version.revision = (USHORT)revision;
 
             if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength * sizeof(WCHAR) )))
             {
@@ -1935,7 +1935,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
 
     if (!ai->arch || !ai->name || !ai->public_key) return STATUS_NO_SUCH_FILE;
 
-    if (!(path = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+    if (!(path = RtlAllocateHeap( RtlGetProcessHeap(), 0,
                                   ((strlenW(SharedUserData->NtSystemRoot) + 1) *sizeof(WCHAR)) + sizeof(manifest_dirW) )))
         return STATUS_NO_MEMORY;
 
@@ -2373,17 +2373,17 @@ NTSTATUS
 NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
-    
+
     if (!(frame = RtlAllocateHeap( RtlGetProcessHeap(), 0, sizeof(*frame) )))
         return STATUS_NO_MEMORY;
-    
+
     frame->Previous = tebAddress->ActivationContextStackPointer->ActiveFrame;
     frame->ActivationContext = handle;
     frame->Flags = 0;
-    
+
     tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
-    
+
     *cookie = (ULONG_PTR)frame;
     DPRINT( "%p cookie=%lx\n", handle, *cookie );
     return STATUS_SUCCESS;
@@ -2525,11 +2525,11 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             acdi->ulFormatVersion = assembly ? 1 : 0; /* FIXME */
             acdi->ulAssemblyCount = actctx->num_assemblies;
             acdi->ulRootManifestPathType = assembly ? assembly->manifest.type : 0 /* FIXME */;
-            acdi->ulRootManifestPathChars = assembly && assembly->manifest.info ? manifest_len - 1 : 0;
+            acdi->ulRootManifestPathChars = assembly && assembly->manifest.info ? (DWORD)manifest_len - 1 : 0;
             acdi->ulRootConfigurationPathType = actctx->config.type;
-            acdi->ulRootConfigurationPathChars = actctx->config.info ? config_len - 1 : 0;
+            acdi->ulRootConfigurationPathChars = actctx->config.info ? (DWORD)config_len - 1 : 0;
             acdi->ulAppDirPathType = actctx->appdir.type;
-            acdi->ulAppDirPathChars = actctx->appdir.info ? appdir_len - 1 : 0;
+            acdi->ulAppDirPathChars = actctx->appdir.info ? (DWORD)appdir_len - 1 : 0;
             ptr = (LPWSTR)(acdi + 1);
             if (manifest_len)
             {
@@ -2589,9 +2589,9 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             }
 
             afdi->ulFlags = 0;  /* FIXME */
-            afdi->ulEncodedAssemblyIdentityLength = (id_len - 1) * sizeof(WCHAR);
+            afdi->ulEncodedAssemblyIdentityLength = (DWORD)(id_len - 1) * sizeof(WCHAR);
             afdi->ulManifestPathType = assembly->manifest.type;
-            afdi->ulManifestPathLength = assembly->manifest.info ? (path_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulManifestPathLength = assembly->manifest.info ? (DWORD)(path_len - 1) * sizeof(WCHAR) : 0;
             /* FIXME afdi->liManifestLastWriteTime = 0; */
             afdi->ulPolicyPathType = ACTIVATION_CONTEXT_PATH_TYPE_NONE; /* FIXME */
             afdi->ulPolicyPathLength = 0;
@@ -2601,7 +2601,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             afdi->ulManifestVersionMinor = 0;
             afdi->ulPolicyVersionMajor = 0; /* FIXME */
             afdi->ulPolicyVersionMinor = 0; /* FIXME */
-            afdi->ulAssemblyDirectoryNameLength = ad_len ? (ad_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulAssemblyDirectoryNameLength = ad_len ? (DWORD)(ad_len - 1) * sizeof(WCHAR) : 0;
             ptr = (LPWSTR)(afdi + 1);
             afdi->lpAssemblyEncodedAssemblyIdentity = ptr;
             memcpy( ptr, assembly_id, id_len * sizeof(WCHAR) );
@@ -2654,7 +2654,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             }
             if (retlen) *retlen = 0; /* yes that's what native does !! */
             afdi->ulFlags = ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION;
-            afdi->ulFilenameLength = dll_len ? (dll_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulFilenameLength = dll_len ? (DWORD)(dll_len - 1) * sizeof(WCHAR) : 0;
             afdi->ulPathLength = 0; /* FIXME */
             ptr = (LPWSTR)(afdi + 1);
             if (dll_len)

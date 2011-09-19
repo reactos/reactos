@@ -26,7 +26,7 @@ static __inline VOID
 RtlpCopyParameterString(PWCHAR *Ptr,
 			PUNICODE_STRING Destination,
 			PUNICODE_STRING Source,
-			ULONG Size)
+			USHORT Size)
 {
    Destination->Length = Source->Length;
    Destination->MaximumLength = Size ? Size : Source->MaximumLength;

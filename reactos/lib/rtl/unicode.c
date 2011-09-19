@@ -99,7 +99,7 @@ RtlAnsiStringToUnicodeString(
     if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
-        UniDest->MaximumLength = Length;
+        UniDest->MaximumLength = (USHORT)Length;
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
     else if (UniDest->Length >= UniDest->MaximumLength)
@@ -320,17 +320,13 @@ RtlCharToInteger(
             digit = -1;
         }
 
-        if (digit < 0 || digit >= (int)base)
-        {
-            *value = bMinus ? -RunningTotal : RunningTotal;
-            return STATUS_SUCCESS;
-        }
+        if (digit < 0 || digit >= (int)base) break;
 
         RunningTotal = RunningTotal * base + digit;
         str++;
     }
 
-    *value = bMinus ? -RunningTotal : RunningTotal;
+    *value = bMinus ? (0 - RunningTotal) : RunningTotal;
     return STATUS_SUCCESS;
 }
 
@@ -518,13 +514,14 @@ NTAPI
 RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
                   IN PCSZ SourceString)
 {
-    ULONG DestSize;
+    SIZE_T Size;
 
-    if(SourceString)
+    if (SourceString)
     {
-        DestSize = strlen(SourceString);
-        DestinationString->Length = (USHORT)DestSize;
-        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(CHAR);
+        Size = strlen(SourceString);
+        if (Size > (MAXUSHORT - sizeof(CHAR))) Size = MAXUSHORT - sizeof(CHAR);
+        DestinationString->Length = (USHORT)Size;
+        DestinationString->MaximumLength = (USHORT)Size + sizeof(CHAR);
     }
     else
     {
@@ -540,14 +537,14 @@ NTAPI
 RtlInitAnsiStringEx(IN OUT PANSI_STRING DestinationString,
                     IN PCSZ SourceString)
 {
-    ULONG DestSize;
+    SIZE_T Size;
 
-    if(SourceString)
+    if (SourceString)
     {
-        DestSize = strlen(SourceString);
-        if (DestSize >= 0xFFFF) return STATUS_NAME_TOO_LONG;
-        DestinationString->Length = (USHORT)DestSize;
-        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(CHAR);
+        Size = strlen(SourceString);
+        if (Size > (MAXUSHORT - sizeof(CHAR))) return STATUS_NAME_TOO_LONG;
+        DestinationString->Length = (USHORT)Size;
+        DestinationString->MaximumLength = (USHORT)Size + sizeof(CHAR);
     }
     else
     {
@@ -582,16 +579,18 @@ RtlInitString(
  */
 VOID
 NTAPI
-RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-                     IN PCWSTR SourceString)
+RtlInitUnicodeString(
+    IN OUT PUNICODE_STRING DestinationString,
+    IN PCWSTR SourceString)
 {
-    ULONG DestSize;
+    SIZE_T Size;
 
-    if(SourceString)
+    if (SourceString)
     {
-        DestSize = wcslen(SourceString) * sizeof(WCHAR);
-        DestinationString->Length = (USHORT)DestSize;
-        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
+        Size = wcslen(SourceString) * sizeof(WCHAR);
+        if (Size > (MAXUSHORT - sizeof(WCHAR))) Size = MAXUSHORT - sizeof(WCHAR);
+        DestinationString->Length = (USHORT)Size;
+        DestinationString->MaximumLength = (USHORT)Size + sizeof(WCHAR);
     }
     else
     {
@@ -607,17 +606,18 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
  */
 NTSTATUS
 NTAPI
-RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
-                       IN PCWSTR SourceString)
+RtlInitUnicodeStringEx(
+    OUT PUNICODE_STRING DestinationString,
+    IN PCWSTR SourceString)
 {
-    ULONG DestSize;
+    SIZE_T Size;
 
-    if(SourceString)
+    if (SourceString)
     {
-        DestSize = wcslen(SourceString) * sizeof(WCHAR);
-        if (DestSize >= 0xFFFC) return STATUS_NAME_TOO_LONG;
-        DestinationString->Length = (USHORT)DestSize;
-        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
+        Size = wcslen(SourceString) * sizeof(WCHAR);
+        if (Size > (MAXUSHORT - sizeof(WCHAR))) return STATUS_NAME_TOO_LONG;
+        DestinationString->Length = (USHORT)Size;
+        DestinationString->MaximumLength = (USHORT)Size + sizeof(WCHAR);
     }
     else
     {
@@ -646,7 +646,7 @@ NTSTATUS NTAPI RtlIntegerToChar(
     CHAR buffer[33];
     PCHAR pos;
     CHAR digit;
-    ULONG len;
+    SIZE_T len;
 
     if (base == 0)
     {
@@ -663,7 +663,7 @@ NTSTATUS NTAPI RtlIntegerToChar(
     do
     {
         pos--;
-        digit = value % base;
+        digit = (CHAR)(value % base);
         value = value / base;
 
         if (digit < 10)
@@ -734,8 +734,8 @@ RtlIntegerToUnicode(
         i = v % Radix;
         v = v / Radix;
 
-        if (i < 10) *tp = i + L'0';
-        else *tp = i + L'a' - 10;
+        if (i < 10) *tp = (WCHAR)(i + L'0');
+        else *tp = (WCHAR)(i + L'a' - 10);
 
         tp++;
     }
@@ -1003,18 +1003,14 @@ RtlUnicodeStringToInteger(
             digit = -1;
         }
 
-        if (digit < 0 || digit >= base)
-        {
-            *value = bMinus ? -RunningTotal : RunningTotal;
-            return STATUS_SUCCESS;
-        }
+        if (digit < 0 || (ULONG)digit >= base) break;
 
         RunningTotal = RunningTotal * base + digit;
         lpwstr++;
         CharsRemaining--;
     }
 
-    *value = bMinus ? -RunningTotal : RunningTotal;
+    *value = bMinus ? (0 - RunningTotal) : RunningTotal;
     return STATUS_SUCCESS;
 }
 
@@ -1078,7 +1074,7 @@ RtlUnicodeStringToAnsiString(
     if (AllocateDestinationString)
     {
         AnsiDest->Buffer = RtlpAllocateStringMemory(Length, TAG_ASTR);
-        AnsiDest->MaximumLength = Length;
+        AnsiDest->MaximumLength = (USHORT)Length;
 
         if (!AnsiDest->Buffer) return STATUS_NO_MEMORY;
     }
@@ -1135,7 +1131,7 @@ RtlOemStringToUnicodeString(
     if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
-        UniDest->MaximumLength = Length;
+        UniDest->MaximumLength = (USHORT)Length;
 
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
@@ -1189,7 +1185,7 @@ RtlUnicodeStringToOemString(
     if (AllocateDestinationString)
     {
         OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
-        OemDest->MaximumLength = Length;
+        OemDest->MaximumLength = (USHORT)Length;
 
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
@@ -1378,7 +1374,7 @@ RtlOemStringToCountedUnicodeString(
     if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
-        UniDest->MaximumLength = Length;
+        UniDest->MaximumLength = (USHORT)Length;
 
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
@@ -1455,8 +1451,7 @@ BOOLEAN
 NTAPI
 RtlEqualDomainName (
     IN PUNICODE_STRING DomainName1,
-    IN PUNICODE_STRING DomainName2
-)
+    IN PUNICODE_STRING DomainName2)
 {
     return RtlEqualComputerName(DomainName1, DomainName2);
 }
@@ -1483,8 +1478,7 @@ NTSTATUS
 NTAPI
 RtlGUIDFromString(
     IN UNICODE_STRING *str,
-    OUT GUID* guid
-)
+    OUT GUID* guid)
 {
     int i = 0;
     const WCHAR *lpszCLSID = str->Buffer;
@@ -1697,7 +1691,7 @@ RtlUnicodeStringToCountedOemString(
     if (AllocateDestinationString)
     {
         OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
-        OemDest->MaximumLength = Length;
+        OemDest->MaximumLength = (USHORT)Length;
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
     else if (OemDest->Length > OemDest->MaximumLength)
@@ -1742,13 +1736,12 @@ RtlLargeIntegerToChar(
     NTSTATUS Status = STATUS_SUCCESS;
     CHAR Buffer[65];
     CHAR Digit;
-    ULONG Len;
+    SIZE_T Len;
     PCHAR Pos;
 
     if (Base == 0) Base = 10;
 
-    if ((Base != 2) && (Base != 8) &&
-        (Base != 10) && (Base != 16))
+    if ((Base != 2) && (Base != 8) && (Base != 10) && (Base != 16))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1759,7 +1752,7 @@ RtlLargeIntegerToChar(
     do
     {
         Pos--;
-        Digit = Val % Base;
+        Digit = (CHAR)(Val % Base);
         Val = Val / Base;
 
         if (Digit < 10)
@@ -1873,7 +1866,7 @@ RtlUpcaseUnicodeStringToAnsiString(
     if (AllocateDestinationString)
     {
         AnsiDest->Buffer = RtlpAllocateStringMemory(Length, TAG_ASTR);
-        AnsiDest->MaximumLength = Length;
+        AnsiDest->MaximumLength = (USHORT)Length;
         if (!AnsiDest->Buffer) return STATUS_NO_MEMORY;
     }
     else if (AnsiDest->Length >= AnsiDest->MaximumLength)
@@ -1931,7 +1924,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
     if (AllocateDestinationString)
     {
         OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
-        OemDest->MaximumLength = Length;
+        OemDest->MaximumLength = (USHORT)Length;
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
     else if (OemDest->Length > OemDest->MaximumLength)
@@ -1985,7 +1978,7 @@ RtlUpcaseUnicodeStringToOemString (
     if (AllocateDestinationString)
     {
         OemDest->Buffer = RtlpAllocateStringMemory(Length, TAG_OSTR);
-        OemDest->MaximumLength = Length;
+        OemDest->MaximumLength = (USHORT)Length;
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
     else if (OemDest->Length >= OemDest->MaximumLength)
@@ -2208,19 +2201,19 @@ RtlCreateUnicodeString(
     IN OUT PUNICODE_STRING UniDest,
     IN PCWSTR  Source)
 {
-    ULONG Length;
+    SIZE_T Size;
     PAGED_CODE_RTL();
 
-    Length = (wcslen(Source) + 1) * sizeof(WCHAR);
-    if (Length > 0xFFFE) return FALSE;
+    Size = (wcslen(Source) + 1) * sizeof(WCHAR);
+    if (Size > MAXUSHORT) return FALSE;
 
-    UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
+    UniDest->Buffer = RtlpAllocateStringMemory((ULONG)Size, TAG_USTR);
 
     if (UniDest->Buffer == NULL) return FALSE;
 
-    RtlCopyMemory(UniDest->Buffer, Source, Length);
-    UniDest->MaximumLength = (USHORT)Length;
-    UniDest->Length = Length - sizeof (WCHAR);
+    RtlCopyMemory(UniDest->Buffer, Source, Size);
+    UniDest->MaximumLength = (USHORT)Size;
+    UniDest->Length = (USHORT)Size - sizeof (WCHAR);
 
     return TRUE;
 }
@@ -2353,19 +2346,19 @@ RtlAppendAsciizToString(
     IN OUT   PSTRING  Destination,
     IN PCSZ  Source)
 {
-    ULONG Length;
+    SIZE_T Size;
 
     if (Source)
     {
-        Length = (USHORT)strlen(Source);
+        Size = strlen(Source);
 
-        if (Destination->Length + Length > Destination->MaximumLength)
+        if (Destination->Length + Size > Destination->MaximumLength)
         {
             return STATUS_BUFFER_TOO_SMALL;
         }
 
-        RtlMoveMemory(&Destination->Buffer[Destination->Length], Source, Length);
-        Destination->Length += Length;
+        RtlMoveMemory(&Destination->Buffer[Destination->Length], Source, Size);
+        Destination->Length += (USHORT)Size;
     }
 
     return STATUS_SUCCESS;
@@ -2379,7 +2372,7 @@ NTAPI
 RtlUpperString(PSTRING DestinationString,
                PSTRING SourceString)
 {
-    ULONG Length;
+    USHORT Length;
     PCHAR Src, Dest;
 
     Length = min(SourceString->Length,
@@ -2502,20 +2495,20 @@ RtlFindCharInUnicodeString(
     IN PCUNICODE_STRING MatchString,
     OUT PUSHORT Position)
 {
-    int main_idx;
-    unsigned int search_idx;
+    SHORT i;
+    USHORT j;
 
     switch (Flags)
     {
         case 0:
         {
-            for (main_idx = 0; main_idx < SearchString->Length / sizeof(WCHAR); main_idx++)
+            for (i = 0; i < SearchString->Length / sizeof(WCHAR); i++)
             {
-                for (search_idx = 0; search_idx < MatchString->Length / sizeof(WCHAR); search_idx++)
+                for (j = 0; j < MatchString->Length / sizeof(WCHAR); j++)
                 {
-                    if (SearchString->Buffer[main_idx] == MatchString->Buffer[search_idx])
+                    if (SearchString->Buffer[i] == MatchString->Buffer[j])
                     {
-                        *Position = (main_idx + 1) * sizeof(WCHAR);
+                        *Position = (i + 1) * sizeof(WCHAR);
                         return STATUS_SUCCESS;
                     }
                 }
@@ -2527,13 +2520,13 @@ RtlFindCharInUnicodeString(
 
         case 1:
         {
-            for (main_idx = SearchString->Length / sizeof(WCHAR) - 1; main_idx >= 0; main_idx--)
+            for (i = SearchString->Length / sizeof(WCHAR) - 1; i >= 0; i--)
             {
-                for (search_idx = 0; search_idx < MatchString->Length / sizeof(WCHAR); search_idx++)
+                for (j = 0; j < MatchString->Length / sizeof(WCHAR); j++)
                 {
-                    if (SearchString->Buffer[main_idx] == MatchString->Buffer[search_idx])
+                    if (SearchString->Buffer[i] == MatchString->Buffer[j])
                     {
-                        *Position = main_idx * sizeof(WCHAR);
+                        *Position = i * sizeof(WCHAR);
                         return STATUS_SUCCESS;
                     }
                 }
@@ -2545,19 +2538,19 @@ RtlFindCharInUnicodeString(
 
         case 2:
         {
-            for (main_idx = 0; main_idx < SearchString->Length / sizeof(WCHAR); main_idx++)
+            for (i = 0; i < SearchString->Length / sizeof(WCHAR); i++)
             {
-                search_idx = 0;
+                j = 0;
 
-                while (search_idx < MatchString->Length / sizeof(WCHAR) &&
-                       SearchString->Buffer[main_idx] != MatchString->Buffer[search_idx])
+                while (j < MatchString->Length / sizeof(WCHAR) &&
+                       SearchString->Buffer[i] != MatchString->Buffer[j])
                 {
-                    search_idx++;
+                    j++;
                 }
 
-                if (search_idx >= MatchString->Length / sizeof(WCHAR))
+                if (j >= MatchString->Length / sizeof(WCHAR))
                 {
-                    *Position = (main_idx + 1) * sizeof(WCHAR);
+                    *Position = (i + 1) * sizeof(WCHAR);
                     return STATUS_SUCCESS;
                 }
             }
@@ -2568,19 +2561,19 @@ RtlFindCharInUnicodeString(
 
         case 3:
         {
-            for (main_idx = SearchString->Length / sizeof(WCHAR) - 1; main_idx >= 0; main_idx--)
+            for (i = SearchString->Length / sizeof(WCHAR) - 1; i >= 0; i--)
             {
-                search_idx = 0;
+                j = 0;
 
-                while (search_idx < MatchString->Length / sizeof(WCHAR) &&
-                       SearchString->Buffer[main_idx] != MatchString->Buffer[search_idx])
+                while (j < MatchString->Length / sizeof(WCHAR) &&
+                       SearchString->Buffer[i] != MatchString->Buffer[j])
                 {
-                    search_idx++;
+                    j++;
                 }
 
-                if (search_idx >= MatchString->Length / sizeof(WCHAR))
+                if (j >= MatchString->Length / sizeof(WCHAR))
                 {
-                    *Position = main_idx * sizeof(WCHAR);
+                    *Position = i * sizeof(WCHAR);
                     return STATUS_SUCCESS;
                 }
             }

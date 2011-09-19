@@ -110,7 +110,7 @@ RtlpAddKnownAce(
     GUID *ObjectTypeGuid  OPTIONAL,
     GUID *InheritedObjectTypeGuid  OPTIONAL,
     PSID Sid,
-    ULONG Type)
+    UCHAR Type)
 {
     PACE Ace;
     PSID SidStart;
@@ -223,7 +223,7 @@ RtlpAddKnownAce(
     }
 
     /* initialize the header and common fields */
-    Ace->Header.AceFlags = Flags;
+    Ace->Header.AceFlags = (BYTE)Flags;
     Ace->Header.AceType = Type;
     Ace->Header.AceSize = (WORD)AceSize;
     Ace->AccessMask = AccessMask;
@@ -253,7 +253,7 @@ RtlpAddKnownAce(
     /* copy the SID */
     RtlCopySid(RtlLengthSid(Sid), SidStart, Sid);
     Acl->AceCount++;
-    Acl->AclRevision = Revision;
+    Acl->AclRevision = (BYTE)Revision;
 
     return STATUS_SUCCESS;
 }
@@ -322,7 +322,7 @@ RtlAddAccessAllowedObjectAce(
     IN GUID *InheritedObjectTypeGuid  OPTIONAL,
     IN PSID Sid)
 {
-    ULONG Type;
+    UCHAR Type;
     PAGED_CODE_RTL();
 
     /* make sure we call RtlpAddKnownAce correctly */
@@ -405,7 +405,7 @@ RtlAddAccessDeniedObjectAce(
     IN GUID *InheritedObjectTypeGuid  OPTIONAL,
     IN PSID Sid)
 {
-    ULONG Type;
+    UCHAR Type;
     PAGED_CODE_RTL();
 
     /* make sure we call RtlpAddKnownAce correctly */
@@ -465,6 +465,7 @@ RtlAddAce(
     ULONG Index;
     PAGED_CODE_RTL();
 
+    /* Make sure, the ACL is valid */
     if (Acl->AclRevision < MIN_ACL_REVISION ||
         Acl->AclRevision > MAX_ACL_REVISION ||
         !RtlFirstFreeAce(Acl, &Ace))
@@ -472,8 +473,10 @@ RtlAddAce(
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Check if the ACL revision is smaller than the given one */
     if (Acl->AclRevision <= AclRevision)
     {
+        /* Update the revision to the given one */
         AclRevision = Acl->AclRevision;
     }
 
@@ -510,6 +513,7 @@ RtlAddAce(
                 AceListLength,
                 Current,
                 (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
+
     Acl->AceCount = Acl->AceCount + NewAceCount;
     Acl->AclRevision = AclRevision;
 
@@ -591,7 +595,7 @@ RtlAddAuditAccessObjectAce(
     BOOLEAN Success,
     BOOLEAN Failure)
 {
-    ULONG Type;
+    UCHAR Type;
 
     if (Success)
     {
@@ -630,7 +634,7 @@ RtlAddMandatoryAce(
     IN ULONG Revision,
     IN ULONG Flags,
     IN ULONG MandatoryFlags,
-    IN ULONG AceType,
+    IN UCHAR AceType,
     IN PSID LabelSid)
 {
     if (MandatoryFlags & ~SYSTEM_MANDATORY_LABEL_VALID_MASK)

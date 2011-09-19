@@ -1118,7 +1118,7 @@ RtlAddMandatoryAce(
     IN ULONG Revision,
     IN ULONG Flags,
     IN ULONG MandatoryFlags,
-    IN ULONG AceType,
+    IN UCHAR AceType,
     IN PSID LabelSid);
 
 NTSYSAPI
@@ -1993,7 +1993,7 @@ VOID
 NTAPI
 RtlFillMemoryUlong(
     IN PVOID Destination,
-    IN ULONG Length,
+    IN SIZE_T Length,
     IN ULONG Fill
 );
 
