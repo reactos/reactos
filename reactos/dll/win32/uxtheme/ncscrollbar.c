@@ -14,7 +14,7 @@
 #include "vfwmsgs.h"
 #include "uxtheme.h"
 #include <tmschema.h>
-#include <Windowsx.h>
+#include <windowsx.h>
 #include "ncthm.h"
 #include <assert.h>
 #include "wine/debug.h"
