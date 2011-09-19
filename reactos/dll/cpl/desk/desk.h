@@ -11,8 +11,9 @@
 #include <cplext.h>
 #include <dll/desk/deskcplx.h>
 #include <cfgmgr32.h>
+#include <uxtheme.h>
+#include <uxundoc.h>
 
-#include "theme.h"
 #include "appearance.h"
 #include "preview.h"
 #include "draw.h"
