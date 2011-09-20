@@ -42,7 +42,6 @@ list(APPEND SOURCE
     ppb.c
     process.c
     propvar.c
-    qsort.c
     random.c
     rangelist.c
     registry.c

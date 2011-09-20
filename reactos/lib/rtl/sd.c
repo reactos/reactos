@@ -120,7 +120,7 @@ RtlCreateSecurityDescriptor(OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
       return STATUS_UNKNOWN_REVISION;
    }
 
-   pSD->Revision = Revision;
+   pSD->Revision = SECURITY_DESCRIPTOR_REVISION1;
    pSD->Sbz1 = 0;
    pSD->Control = 0;
    pSD->Owner = NULL;
@@ -144,10 +144,10 @@ RtlCopySecurityDescriptor(IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
   DWORD OwnerLength, GroupLength;
   PISECURITY_DESCRIPTOR srcSD = pSourceSecurityDescriptor;
   PISECURITY_DESCRIPTOR destSD = pDestinationSecurityDescriptor;
-     
+
   if (srcSD->Revision != SECURITY_DESCRIPTOR_REVISION)
     return STATUS_UNKNOWN_REVISION;
- 
+
   /* Copy non relative dependent data */
   destSD->Revision = srcSD->Revision;
   destSD->Sbz1 = srcSD->Sbz1;
@@ -230,7 +230,7 @@ RtlCreateSecurityDescriptorRelative (OUT PISECURITY_DESCRIPTOR_RELATIVE Security
       return STATUS_UNKNOWN_REVISION;
    }
 
-   SecurityDescriptor->Revision = Revision;
+   SecurityDescriptor->Revision = SECURITY_DESCRIPTOR_REVISION1;
    SecurityDescriptor->Sbz1 = 0;
    SecurityDescriptor->Control = SE_SELF_RELATIVE;
    SecurityDescriptor->Owner = 0;

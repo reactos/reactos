@@ -36,7 +36,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
      }
 
    Buf->ViewBaseClient = Buf;
-   Buf->ViewSize = ViewSize;
+   Buf->ViewSize = (ULONG)ViewSize;
 
    DPRINT("RtlCQDB: BA: %p BS: 0x%lx\n", Buf->ViewBaseClient, Buf->ViewSize);
 
@@ -203,7 +203,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 
           p = strrchr(ModulePtr->FullPathName, '\\');
           if (p != NULL)
-            ModulePtr->OffsetToFileName = p - ModulePtr->FullPathName + 1;
+            ModulePtr->OffsetToFileName = (USHORT)(p - ModulePtr->FullPathName + 1);
           else
             ModulePtr->OffsetToFileName = 0;
 
@@ -234,7 +234,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN OUT PRTL_DEBUG_INFORMATION Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Pid = (ULONG_PTR) NtCurrentTeb()->ClientId.UniqueProcess;
+   ULONG Pid = (ULONG)(ULONG_PTR) NtCurrentTeb()->ClientId.UniqueProcess;
 
    Buf->Flags = DebugInfoMask;
    Buf->OffsetFree = sizeof(RTL_DEBUG_INFORMATION);

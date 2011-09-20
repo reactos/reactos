@@ -47,7 +47,7 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
 {
     UNICODE_STRING DeviceName;
     PWCHAR Start, End, Ptr;
-    ULONG DeviceNameLength;
+    SIZE_T DeviceNameLength;
 
     /* Validate the input */
     if (!PathString) return 0;
@@ -363,9 +363,9 @@ RtlpWin32NTNameToNtPathName_U(IN PUNICODE_STRING DosPath,
     }
 
     /* Build the final NT path string */
-    NtPath->Length = DosLength;
+    NtPath->Length = (USHORT)DosLength;
     NtPath->Buffer = NewBuffer;
-    NtPath->MaximumLength = DosLength + sizeof(UNICODE_NULL);
+    NtPath->MaximumLength = (USHORT)DosLength + sizeof(UNICODE_NULL);
     return STATUS_SUCCESS;
 }
 
@@ -502,8 +502,8 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
 
     /* Setup the actual NT path string and terminate it */
     NtName->Buffer = NewBuffer;
-    NtName->Length = Length;
-    NtName->MaximumLength = MaxLength;
+    NtName->Length = (USHORT)Length;
+    NtName->MaximumLength = (USHORT)MaxLength;
     NewBuffer[LengthChars] = UNICODE_NULL;
     DPRINT("new buffer: %S\n", NewBuffer);
     DPRINT("NT Name: %wZ\n", NtName);
@@ -550,7 +550,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
                 {
                     Length = ((cd->DosPath.Length / sizeof(WCHAR)) - PrefixCut) + ((InputPathType == 1) ? 8 : 4);
                     RelativeName->RelativeName.Buffer = NewBuffer + Length;
-                    RelativeName->RelativeName.Length = NtName->Length - (Length * sizeof(WCHAR));
+                    RelativeName->RelativeName.Length = NtName->Length - (USHORT)(Length * sizeof(WCHAR));
                     RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
                     RelativeName->ContainingDirectory = cd->Handle;
                 }
@@ -875,7 +875,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    IO_STATUS_BLOCK iosb;
    PCURDIR cd;
    NTSTATUS Status;
-   ULONG size;
+   USHORT size;
    HANDLE handle = NULL;
    PWSTR ptr;
 
@@ -1055,7 +1055,7 @@ static ULONG get_full_path_helper(
    LPWSTR buffer,
    ULONG size)
 {
-    ULONG                       reqsize = 0, mark = 0, dep = 0, deplen;
+    SIZE_T                      reqsize = 0, mark = 0, dep = 0, deplen;
     LPWSTR                      ins_str = NULL;
     LPCWSTR                     ptr;
     const UNICODE_STRING*       cd;
@@ -1103,7 +1103,7 @@ static ULONG get_full_path_helper(
             var.MaximumLength = 4 * sizeof(WCHAR);
             var.Buffer = tmp;
             val.Length = 0;
-            val.MaximumLength = size;
+            val.MaximumLength = (USHORT)size;
             val.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
             if (val.Buffer == NULL)
             {
@@ -1221,12 +1221,12 @@ static ULONG get_full_path_helper(
     if (ins_str != tmp && ins_str != cd->Buffer)
         RtlFreeHeap(RtlGetProcessHeap(), 0, ins_str);
 
-    collapse_path( buffer, mark );
+    collapse_path( buffer, (ULONG)mark );
     reqsize = wcslen(buffer) * sizeof(WCHAR);
 
 done:
     RtlReleasePebLock();
-    return reqsize;
+    return (ULONG)reqsize;
 }
 
 

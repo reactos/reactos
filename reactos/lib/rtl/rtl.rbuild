@@ -81,7 +81,6 @@
 	<file>ppb.c</file>
 	<file>process.c</file>
 	<file>propvar.c</file>
-	<file>qsort.c</file>
 	<file>random.c</file>
 	<file>rangelist.c</file>
 	<file>registry.c</file>

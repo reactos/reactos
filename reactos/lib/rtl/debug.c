@@ -57,7 +57,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     NTSTATUS Status;
     STRING DebugString;
     CHAR Buffer[512];
-    ULONG Length, PrefixLength;
+    SIZE_T Length, PrefixLength;
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
@@ -110,7 +110,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     }
 
     /* Build the string */
-    DebugString.Length = Length;
+    DebugString.Length = (USHORT)Length;
     DebugString.Buffer = Buffer;
 
     /* First, let the debugger know as well */
@@ -281,7 +281,7 @@ DbgPrompt(IN PCCH Prompt,
     Input.Buffer = Response;
 
     /* Setup the output string */
-    Output.Length = strlen(Prompt);
+    Output.Length = (USHORT)strlen(Prompt);
     Output.Buffer = (PCHAR)Prompt;
 
     /* Call the system service */
@@ -380,9 +380,9 @@ DbgCommandString(IN PCCH Name,
 
     /* Setup the strings */
     NameString.Buffer = (PCHAR)Name;
-    NameString.Length = strlen(Name);
+    NameString.Length = (USHORT)strlen(Name);
     CommandString.Buffer = (PCHAR)Command;
-    CommandString.Length = strlen(Command);
+    CommandString.Length = (USHORT)strlen(Command);
 
     /* Send them to the debugger */
     DebugService2(&NameString, &CommandString, BREAKPOINT_COMMAND_STRING);

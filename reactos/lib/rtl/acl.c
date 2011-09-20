@@ -461,7 +461,7 @@ RtlAddAce(
 {
     PACE Ace;
     PACE Current;
-    ULONG NewAceCount;
+    WORD NewAceCount;
     ULONG Index;
     PAGED_CODE_RTL();
 
@@ -515,7 +515,7 @@ RtlAddAce(
                 (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
 
     Acl->AceCount = Acl->AceCount + NewAceCount;
-    Acl->AclRevision = AclRevision;
+    Acl->AclRevision = (BYTE)AclRevision;
 
     return STATUS_SUCCESS;
 }
@@ -737,8 +737,8 @@ RtlCreateAcl(
     }
 
     AclSize = ROUND_UP(AclSize, 4);
-    Acl->AclSize = AclSize;
-    Acl->AclRevision = AclRevision;
+    Acl->AclSize = (WORD)AclSize;
+    Acl->AclRevision = (BYTE)AclRevision;
     Acl->AceCount = 0;
     Acl->Sbz1 = 0;
     Acl->Sbz2 = 0;
@@ -850,7 +850,7 @@ RtlSetInformationAcl(PACL Acl,
                 return STATUS_INVALID_PARAMETER;
             }
 
-            Acl->AclRevision = Info->AclRevision;
+            Acl->AclRevision = (BYTE)Info->AclRevision;
         }
         break;
 

@@ -407,7 +407,7 @@ NTAPI
 RtlSetCriticalSectionSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
                                ULONG SpinCount)
 {
-    ULONG OldCount = CriticalSection->SpinCount;
+    ULONG OldCount = (ULONG)CriticalSection->SpinCount;
 
     /* Set to parameter if MP, or to 0 if this is Uniprocessor */
     CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
