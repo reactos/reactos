@@ -38,10 +38,6 @@
 
 DBG_DEFAULT_CHANNEL(UserAccel);
 
-UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
-HMENU FASTCALL IntGetSubMenu( HMENU hMenu, int nPos);
-UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
-
 /* FUNCTIONS *****************************************************************/
 
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)

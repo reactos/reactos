@@ -175,3 +175,6 @@ typedef union _SPIBUFFER
 } SPIBUFFER;
 
 extern SPIVALUES gspv;
+
+BOOL InitSysParams();
+

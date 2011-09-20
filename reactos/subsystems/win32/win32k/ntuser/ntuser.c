@@ -13,8 +13,6 @@
 
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-BOOL InitSysParams();
-
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO gptiCurrent = NULL;

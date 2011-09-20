@@ -16,8 +16,6 @@
 
 DBG_DEFAULT_CHANNEL(UserMsgQ);
 
-VOID FASTCALL DoTheScreenSaver(VOID);
-
 /* GLOBALS *******************************************************************/
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;

@@ -13,13 +13,8 @@
 
 #include <win32k.h>
 
-#include <winsta.h>
-
 DBG_DEFAULT_CHANNEL(UserSysparams);
 
-#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
-HBITMAP NTAPI UserLoadImage(PCWSTR);
-BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;

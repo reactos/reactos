@@ -19,11 +19,6 @@ DBG_DEFAULT_CHANNEL(UserKbdLayout);
 PKBL KBLList = NULL; // Keyboard layout list.
 
 typedef PVOID (*KbdLayerDescriptor)(VOID);
-NTSTATUS APIENTRY LdrGetProcedureAddress(PVOID module,
-                                        PANSI_STRING import_name,
-                                        DWORD flags,
-                                        PVOID *func_addr);
-
 
 
 /* PRIVATE FUNCTIONS ******************************************************/

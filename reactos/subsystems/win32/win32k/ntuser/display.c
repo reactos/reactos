@@ -12,8 +12,6 @@
 
 DBG_DEFAULT_CHANNEL(UserDisplay);
 
-BOOL InitSysParams();
-
 BOOL gbBaseVideo = 0;
 
 static const PWCHAR KEY_ROOT = L"";

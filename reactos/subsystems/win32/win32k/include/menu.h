@@ -69,3 +69,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu);
+
+UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
+UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
+

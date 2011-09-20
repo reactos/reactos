@@ -13,8 +13,6 @@
 
 DBG_DEFAULT_CHANNEL(UserDce);
 
-int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
-
 /* GLOBALS *******************************************************************/
 
 /* NOTE - I think we should store this per window station (including gdi objects) */

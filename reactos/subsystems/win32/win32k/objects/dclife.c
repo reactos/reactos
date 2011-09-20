@@ -457,9 +457,6 @@ GreSetDCOwner(HDC hdc, ULONG ulOwner)
     return TRUE;
 }
 
-int FASTCALL
-CLIPPING_UpdateGCRegion(DC* Dc);
-
 static
 void
 DC_vUpdateDC(PDC pdc)

@@ -16,8 +16,6 @@
 
 DBG_DEFAULT_CHANNEL(UserTimer);
 
-WORD FASTCALL get_key_state(void);
-
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY TimersListHead;

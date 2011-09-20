@@ -14,8 +14,6 @@
 
 DBG_DEFAULT_CHANNEL(UserMsg);
 
-BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
-
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
 /* FUNCTIONS *****************************************************************/

@@ -177,4 +177,6 @@
     #define UNIMPLEMENTED
 #endif
 
+#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
+
 BOOL DbgInitDebugChannels();

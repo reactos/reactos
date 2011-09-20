@@ -192,6 +192,13 @@ PsGetProcessExitStatus(
     PEPROCESS Process
 );
 
+NTKERNELAPI
+BOOLEAN 
+NTAPI 
+PsGetProcessExitProcessCalled(
+    PEPROCESS Process
+);
+
 //
 // Quota Functions
 //

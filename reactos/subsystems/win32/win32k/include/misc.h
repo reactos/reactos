@@ -145,6 +145,9 @@ NTSTATUS FASTCALL
 IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
                                       PUNICODE_STRING Source);
 
+HBITMAP NTAPI UserLoadImage(PCWSTR);
+
+BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))

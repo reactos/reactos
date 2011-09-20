@@ -31,12 +31,6 @@
 
 DBG_DEFAULT_CHANNEL(UserWinpos);
 
-VOID FASTCALL
-co_IntPaintWindows(PWND Window, ULONG Flags, BOOL Recurse);
-
-BOOL FASTCALL
-IntValidateParent(PWND Child, HRGN hValidateRgn, BOOL Recurse);
-
 /* GLOBALS *******************************************************************/
 
 #define MINMAX_NOSWP  (0x00010000)

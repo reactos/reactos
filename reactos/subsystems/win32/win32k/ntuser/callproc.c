@@ -11,9 +11,6 @@
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
-
 /* CALLPROC ******************************************************************/
 
 WNDPROC
