@@ -3,6 +3,7 @@
                      ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
+ *                   2011-08-30  technical correction (checkbox in preferences)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -62,7 +63,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Generale", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "Pă&strează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "Act&ualizează la pornire lista aplicațiilor disponibile", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "Act&ualizează la pornire lista aplicațiilor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
 	AUTOCHECKBOX "Menține jurna&l de instalare/eliminare de aplicații", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Descărcări", -1, 4, 65, 240, 51
@@ -171,7 +172,7 @@ BEGIN
 	IDS_CAT_LIBS "Biblioteci"
 	IDS_CAT_OFFICE "Birotică"
 	IDS_CAT_OTHER "Altele"
-	IDS_CAT_SCIENCE "știință"
+	IDS_CAT_SCIENCE "Știință"
 	IDS_CAT_TOOLS "Instrumente"
 	IDS_CAT_VIDEO "Video"
 END

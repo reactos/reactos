@@ -3,6 +3,7 @@
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-08-25  initial translation
+ *                   2011-08-30  technical correction (icon)
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -18,7 +19,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Despre înregistrator audio ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            128,IDC_REACTOS_SNDREC32,19,14,21,20
+    ICON            IDI_SNDREC32,-1,19,14,21,20
     LTEXT           "Înregistrator audio ReactOS, versiunea 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
     LTEXT           "Drept de autor (C) 2009",IDC_STATIC,55,25,114,8
     DEFPUSHBUTTON   "Î&nchide",IDOK,139,54,50,14,WS_GROUP
