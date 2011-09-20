@@ -117,8 +117,7 @@ if(ARCH MATCHES i386)
         disk/scsiport.c)
     if(NOT MSVC)
         list(APPEND FREELDR_COMMON_SOURCE
-            arch/i386/drvmap.S
-            arch/i386/multiboot.S)
+            arch/i386/drvmap.S)
     endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND FREELDR_COMMON_SOURCE
@@ -148,6 +147,9 @@ endif()
 add_library(freeldr_common ${FREELDR_COMMON_SOURCE})
 add_dependencies(freeldr_common bugcodes)
 
+if(ARCH MATCHES i386 AND NOT MSVC)
+    list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
+endif()
 
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
@@ -159,7 +161,7 @@ list(APPEND FREELDR_BASE_SOURCE
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 
 if(NOT MSVC)
-    set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
+    set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
 else()
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
 endif()
@@ -208,7 +210,7 @@ endif()
 add_executable(setupldr_pe ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
-    set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 else()
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 endif()
