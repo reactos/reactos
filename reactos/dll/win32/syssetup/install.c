@@ -153,20 +153,21 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
                             &lpFilePart);
     if (dwLen != 0 && dwLen <= sizeof(szWorkingDir) / sizeof(szWorkingDir[0]))
     {
+        /* Since those should only be called with (.exe) files,
+           lpFilePart has not to be NULL */
+        ASSERT(lpFilePart != NULL);
+
         /* Save the file name */
         _tcscpy(exeName, lpFilePart);
 
-        if (lpFilePart != NULL)
+        /* We're only interested in the path. Cut the file name off.
+           Also remove the trailing backslash unless the working directory
+           is only going to be a drive, ie. C:\ */
+        *(lpFilePart--) = _T('\0');
+        if (!(lpFilePart - szWorkingDir == 2 && szWorkingDir[1] == _T(':') &&
+              szWorkingDir[2] == _T('\\')))
         {
-            /* We're only interested in the path. Cut the file name off.
-               Also remove the trailing backslash unless the working directory
-               is only going to be a drive, ie. C:\ */
-            *(lpFilePart--) = _T('\0');
-            if (!(lpFilePart - szWorkingDir == 2 && szWorkingDir[1] == _T(':') &&
-                  szWorkingDir[2] == _T('\\')))
-            {
-                *lpFilePart = _T('\0');
-            }
+            *lpFilePart = _T('\0');
         }
 
         lpWorkingDir = szWorkingDir;
