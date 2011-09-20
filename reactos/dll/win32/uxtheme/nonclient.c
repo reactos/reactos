@@ -6,14 +6,7 @@
  * PROGRAMMER:      Giannis Adamopoulos
  */
  
-#include <windows.h>
-#include <windowsx.h>
-#include "undocuser.h"
-#include "vfwmsgs.h"
-#include "uxtheme.h"
-#include <tmschema.h>
-#include "ncthm.h"
-
+#include "uxthemep.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);

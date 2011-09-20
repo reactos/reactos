@@ -9,14 +9,7 @@
  *                  Copyright 1994, 1996 Alexandre Julliard
  */
  
-#include <windows.h>
-#include "undocuser.h"
-#include "vfwmsgs.h"
-#include "uxtheme.h"
-#include <tmschema.h>
-#include <windowsx.h>
-#include "ncthm.h"
-#include <assert.h>
+#include "uxthemep.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);

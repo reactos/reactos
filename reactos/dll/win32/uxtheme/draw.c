@@ -18,21 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "vfwmsgs.h"
-#include "uxtheme.h"
-#include "tmschema.h"
-
-#include "msstyles.h"
-#include "uxthemedll.h"
+#include "uxthemep.h"
+#include "wine/debug.h"
 
 #include "wine/debug.h"
 
@@ -1881,7 +1868,7 @@ HRESULT UXTHEME_GetImageBackBackgroundRegion(HTHEME hTheme, HDC hdc, int iPartId
     hbmp = UXTHEME_DrawThemePartToDib(hTheme, hdc, iPartId, iStateId, pRect);
 
     /* Retrieve the info of the dib section */
-    GetObject(hbmp, sizeof (DIBSECTION), &dib);
+    GetObjectW(hbmp, sizeof (DIBSECTION), &dib);
 
     /* Convert the bits of the dib section to a region */
     *pRegion = UXTHEME_RegionFromDibBits((RGBQUAD*)dib.dsBm.bmBits, &clrTransparent, pRect);
