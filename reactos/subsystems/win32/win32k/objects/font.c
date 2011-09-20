@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
-
 /** Internal ******************************************************************/
 
 DWORD

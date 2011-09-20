@@ -1,18 +1,12 @@
-/* $Id$
- *
+/* 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Caret functions
  * FILE:             subsys/win32k/ntuser/caret.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * REVISION HISTORY:
- *       10/15/2003  Created
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserCaret);
 
 /* DEFINES *****************************************************************/

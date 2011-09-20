@@ -5,9 +5,6 @@
  * FILE:              subsys/win32k/eng/surface.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
- * REVISION HISTORY:
- *                 3/7/1999: Created
- *                 9/11/2000: Updated to handle real pixel packed bitmaps (UPDATE TO DATE COMPLETED)
  * TESTING TO BE DONE:
  * - Create a GDI bitmap with all formats, perform all drawing operations on them, render to VGA surface
  *   refer to \test\microwin\src\engine\devdraw.c for info on correct pixel plotting for various formats

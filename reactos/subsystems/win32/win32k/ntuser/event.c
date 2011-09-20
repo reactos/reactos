@@ -7,7 +7,6 @@
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserEvent);
 
 typedef struct _EVENTPACK

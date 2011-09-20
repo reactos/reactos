@@ -3,7 +3,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Graphics Subsystem
- * FILE:            subsys/win32k/w32k.h
+ * FILE:            subsys/win32k/pch.h
  * PURPOSE:         Main Win32K Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -17,6 +17,7 @@
 #define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntddk.h>
 #include <ntddmou.h>
+#include <ntddvdeo.h>
 #include <ntifs.h>
 #include <tvout.h>
 #include <ndk/exfuncs.h>
@@ -28,6 +29,8 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
+#include <ntddkbd.h>
+#include <bugcodes.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -37,7 +40,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
 #include <windef.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
+#include <intrin.h>
 
 /* Avoid type casting, by defining RECT to RECTL */
 #define RECT RECTL
@@ -79,6 +84,15 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Freetype headers*/
 #include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_TYPE1_TABLES_H
+#include <freetype/tttables.h>
+#include <freetype/fttrigon.h>
+#include <freetype/ftglyph.h>
+#include <freetype/ftbitmap.h>
+#include <freetype/ftoutln.h>
+#include <freetype/ftwinfnt.h>
 #include <freetype/freetype.h>
 
 /* Internal Win32K Header */

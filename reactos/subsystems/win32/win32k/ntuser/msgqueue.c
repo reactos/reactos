@@ -6,14 +6,9 @@
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
                      Alexandre Julliard
                      Maarten Lankhorst
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMsgQ);
 
 /* GLOBALS *******************************************************************/

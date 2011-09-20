@@ -46,7 +46,6 @@ typedef struct _DC *PDC;
 #include <include/region.h>
 #include <include/dc.h>
 #include <include/dib.h>
-#include <include/path.h>
 #include <include/xlateobj.h>
 #include <include/cliprgn.h>
 #include <include/inteng.h>
@@ -60,6 +59,7 @@ typedef struct _DC *PDC;
 #include <include/cliprgn.h>
 #include <include/coord.h>
 #include <include/gdifloat.h>
+#include <include/path.h>
 #include <include/floatobj.h>
 #include <dib/dib.h>
 #include <include/mouse.h>

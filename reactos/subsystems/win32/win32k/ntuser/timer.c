@@ -6,14 +6,9 @@
  * PROGRAMER:        Gunnar
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                   Michael Martin (michael.martin@reactos.org)
- * REVISION HISTORY: 10/04/2003 Implemented System Timers
- *
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserTimer);
 
 /* GLOBALS *******************************************************************/

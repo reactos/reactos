@@ -1,4 +1,3 @@
-
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
@@ -6,14 +5,9 @@
  * PURPOSE:         Keyboard layout management
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
- *
  */
 
-
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
 PKBL KBLList = NULL; // Keyboard layout list.

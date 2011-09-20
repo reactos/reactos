@@ -1,52 +1,15 @@
 /*
- * FreeType font engine interface
- *
- * Copyright 2001 Huw D M Davies for CodeWeavers.
- * Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *
- * This file contains the WineEng* functions.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-/*
- *
- * Addaped for the use in ReactOS.
- *
- */
-/*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/freetype.c
- * PURPOSE:         Freetype library support
- * PROGRAMMER:
+ * PURPOSE:         FreeType font engine interface
+ * PROGRAMMER:      Copyright 2001 Huw D M Davies for CodeWeavers.
+ *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
  */
 
 /** Includes ******************************************************************/
 
 #include <win32k.h>
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_TYPE1_TABLES_H
-#include <freetype/tttables.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
-#include <freetype/ftbitmap.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ftwinfnt.h>
 
 #define NDEBUG
 #include <debug.h>

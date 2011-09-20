@@ -4,11 +4,9 @@
  * PURPOSE:          Native User stubs
  * FILE:             subsys/win32k/ntuser/stubs.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISION HISTORY:
- *       04-06-2001  CSH  Created
  */
-#include <win32k.h>
 
+#include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 DWORD

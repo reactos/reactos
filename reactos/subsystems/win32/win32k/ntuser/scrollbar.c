@@ -5,13 +5,9 @@
  * FILE:             subsys/win32k/ntuser/scrollbar.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                   Jason Filby (jasonfilby@yahoo.com)
- * REVISION HISTORY:
- *       16-11-2002  Jason Filby  Created
  */
-/* INCLUDES ******************************************************************/
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserScrollbar);
 
 #define MINTRACKTHUMB    8               /* Minimum size of the rectangle between the arrows */

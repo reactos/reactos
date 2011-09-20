@@ -1,40 +1,14 @@
 /*
- * Graphics paths (BeginPath, EndPath etc.)
- *
- * Copyright 1997, 1998 Martin Boehme
- *                 1999 Huw D M Davies
- * Copyright 2005 Dmitry Timoshkov
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-/*
- *
- * Addaped for the use in ReactOS.
- *
- */
-/*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/path.c
- * PURPOSE:         Path support
- * PROGRAMMER:
+ * PURPOSE:         Graphics paths (BeginPath, EndPath etc.)
+ * PROGRAMMER:      Copyright 1997, 1998 Martin Boehme
+ *                            1999 Huw D M Davies
+ *                            2005 Dmitry Timoshkov
  */
 
 #include <win32k.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -42,20 +16,6 @@
 #define NUM_ENTRIES_INITIAL 16  /* Initial size of points / flags arrays  */
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
-
-BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);
-BOOL FASTCALL PATH_AddFlatBezier (PPATH pPath, POINT *pt, BOOL closed);
-BOOL FASTCALL PATH_DoArcPart (PPATH pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BYTE startEntryType);
-BOOL FASTCALL PATH_FillPath( PDC dc, PPATH pPath );
-BOOL FASTCALL PATH_FlattenPath (PPATH pPath);
-VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
-
-BOOL FASTCALL PATH_ReserveEntries (PPATH pPath, INT numEntries);
-VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
-BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath);
-BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
-
-VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
 
 /***********************************************************************
  * Internal functions

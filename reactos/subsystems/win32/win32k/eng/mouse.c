@@ -1,11 +1,10 @@
 /*
+ * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS win32 subsystem
  * PURPOSE:          Mouse pointer functions
  * FILE:             subsystems/win32k/eng/mouse.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Timo Kreuzer (timo.kreuzer@reactos.org)
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  */
 /* INCLUDES ******************************************************************/
 

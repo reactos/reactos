@@ -1,21 +1,16 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/wndproc.c
+ * PURPOSE:          Callback to usermode support
+ * FILE:             subsys/win32k/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  * NOTES:            Please use the Callback Memory Management functions for
  *                   callbacks to make sure, the memory is freed on thread
  *                   termination!
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserCallback);
 
 /* CALLBACK MEMORY MANAGEMENT ************************************************/

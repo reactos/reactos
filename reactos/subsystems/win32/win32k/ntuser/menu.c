@@ -4,13 +4,9 @@
  * PURPOSE:          Menus
  * FILE:             subsys/win32k/ntuser/menu.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * REVISION HISTORY:
- *       07/30/2003  CSH  Created
  */
-/* INCLUDES ******************************************************************/
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMenu);
 
 /* INTERNAL ******************************************************************/

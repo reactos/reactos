@@ -4,13 +4,9 @@
  * PURPOSE:          Window classes
  * FILE:             subsystems/win32/win32k/ntuser/class.c
  * PROGRAMER:        Thomas Weidenmueller <w3seek@reactos.com>
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  */
-/* INCLUDES ******************************************************************/
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserClass);
 
 REGISTER_SYSCLASS DefaultServerClasses[] =

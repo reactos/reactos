@@ -1,13 +1,10 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsystems/win32/win32k/ntuser/class.c
+ * PURPOSE:          Callproc support
+ * FILE:             subsystems/win32/win32k/ntuser/callproc.c
  * PROGRAMER:        Thomas Weidenmueller <w3seek@reactos.com>
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
  */
-/* INCLUDES ******************************************************************/
 
 #include <win32k.h>
 

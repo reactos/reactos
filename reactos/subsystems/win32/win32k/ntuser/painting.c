@@ -4,15 +4,9 @@
  *  PURPOSE:          Window painting function
  *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
- *  REVISION HISTORY:
- *       06/06/2001   Created (?)
- *       18/11/2003   Complete rewrite
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserPainting);
 
 /* PRIVATE FUNCTIONS **********************************************************/

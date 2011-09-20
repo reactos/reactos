@@ -4,12 +4,9 @@
  * PURPOSE:          NtUserCallXxx call stubs
  * FILE:             subsystem/win32/win32k/ntuser/simplecall.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
- * REVISION HISTORY:
- *       2008/03/20  Split from misc.c
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* registered Logon process */

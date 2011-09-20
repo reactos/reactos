@@ -6,15 +6,11 @@
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   James Tabor (james.tabor@rectos.org)
  *                   Rafal Harabien (rafalh@reactos.org)
- *
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
- * NOTE:             Most of this code was adapted from Wine,
+  * NOTE:            Most of this code was adapted from Wine,
  *                   Copyright (C) 2002 Alexandre Julliard
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserHook);
 
 typedef struct _HOOKPACK

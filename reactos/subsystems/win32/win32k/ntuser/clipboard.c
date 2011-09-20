@@ -9,7 +9,6 @@
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserClipbrd);
 
 #define DATA_DELAYED     (HANDLE)0

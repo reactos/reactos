@@ -8,8 +8,6 @@
 
 #include <win32k.h>
 
-#include <intrin.h>
-
 #define NDEBUG
 #include <debug.h>
 

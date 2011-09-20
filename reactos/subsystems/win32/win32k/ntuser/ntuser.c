@@ -3,14 +3,9 @@
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
  *  FILE:             subsystems/win32/win32k/ntuser/ntuser.c
- *  REVISION HISTORY:
- *       16 July 2005   Created (hardon)
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* GLOBALS *******************************************************************/

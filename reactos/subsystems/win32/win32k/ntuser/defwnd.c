@@ -4,11 +4,9 @@
  * PURPOSE:          Misc User funcs
  * FILE:             subsystem/win32/win32k/ntuser/defwnd.c
  * PROGRAMER:
- *
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserDefwnd);
 
 // Client Shutdown messages

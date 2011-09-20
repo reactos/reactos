@@ -12,9 +12,7 @@
 // - save appropriate text metrics
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserSysparams);
-
 
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;

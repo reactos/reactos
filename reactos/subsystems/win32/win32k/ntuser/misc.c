@@ -4,12 +4,9 @@
  * PURPOSE:          Misc User funcs
  * FILE:             subsystems/win32/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
- * REVISION HISTORY:
- *       2003/05/22  Created
  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 SHORT

@@ -7,9 +7,6 @@
  */
 
 #include <win32k.h>
-
-#include <intrin.h>
-
 DBG_DEFAULT_CHANNEL(UserDisplay);
 
 BOOL gbBaseVideo = 0;

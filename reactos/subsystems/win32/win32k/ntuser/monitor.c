@@ -4,14 +4,9 @@
  *  PURPOSE:          Monitor support
  *  FILE:             subsys/win32k/ntuser/monitor.c
  *  PROGRAMER:        Anich Gregor (blight@blight.eu.org)
- *  REVISION HISTORY:
- *       26-02-2004  Created
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserMonitor);
 
 /* FIXME: find include file for these */

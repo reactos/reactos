@@ -4,13 +4,9 @@
  * FILE:            subsystems/win32/win32k/ntuser/windc.c
  * PURPOSE:         Window DC management
  * COPYRIGHT:       Copyright 2007 ReactOS
- *
- */
-
-/* INCLUDES ******************************************************************/
+  */
 
 #include <win32k.h>
-
 DBG_DEFAULT_CHANNEL(UserDce);
 
 /* GLOBALS *******************************************************************/

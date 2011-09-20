@@ -5,8 +5,6 @@
  * FILE:             subsys/win32k/eng/bitblt.c
  * PROGRAMER:        Jason Filby
  *                   Timo Kreuzer
- * REVISION HISTORY:
- *        2/10/1999: Created
  */
 
 #include <win32k.h>
