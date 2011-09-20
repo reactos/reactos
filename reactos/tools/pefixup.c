@@ -282,7 +282,10 @@ int main(int argc, char **argv)
     */
    len = read(fd_in, hdrbuf, sizeof(elfhdr));
    if (!memcmp(hdrbuf, elfhdr, sizeof(elfhdr)))
+   {
+      close(fd_in);
       return 0;
+   }
 
    len = lseek(fd_in, 0, SEEK_END);
    if (len < sizeof(IMAGE_DOS_HEADER))
