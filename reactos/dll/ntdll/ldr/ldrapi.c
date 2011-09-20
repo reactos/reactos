@@ -911,7 +911,7 @@ NTSTATUS
 NTAPI
 LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
                                    IN ULONG Reserved,
-                                   IN PRTL_PROCESS_MODULES ModuleInformation,
+                                   OUT PRTL_PROCESS_MODULES ModuleInformation,
                                    IN ULONG Size,
                                    OUT PULONG ReturnedSize OPTIONAL)
 {
@@ -929,21 +929,21 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
     /* Acquire loader lock */
     RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
 
-    /* Check if we were given enough space */
-    if (Size < UsedSize)
-    {
-        Status = STATUS_INFO_LENGTH_MISMATCH;
-    }
-    else
-    {
-        ModuleInformation->NumberOfModules = 0;
-        ModulePtr = &ModuleInformation->Modules[0];
-        Status = STATUS_SUCCESS;
-    }
-
-    /* Traverse the list of modules */
     _SEH2_TRY
     {
+        /* Check if we were given enough space */
+        if (Size < UsedSize)
+        {
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+            ModuleInformation->NumberOfModules = 0;
+            ModulePtr = &ModuleInformation->Modules[0];
+            Status = STATUS_SUCCESS;
+        }
+
+        /* Traverse the list of modules */
         ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
         Entry = ModuleListHead->Flink;
 
