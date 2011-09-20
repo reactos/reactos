@@ -111,8 +111,9 @@ LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
     {
         if (_wcsicmp(Name->Buffer, WellKnownPrivileges[Priv].Name) == 0)
         {
-            Value->LowPart = WellKnownPrivileges[Priv].Luid.LowPart;
-            Value->HighPart = WellKnownPrivileges[Priv].Luid.HighPart;
+//            Value->LowPart = WellKnownPrivileges[Priv].Luid.LowPart;
+//            Value->HighPart = WellKnownPrivileges[Priv].Luid.HighPart;
+            *Value = WellKnownPrivileges[Priv].Luid;
             return STATUS_SUCCESS;
         }
     }

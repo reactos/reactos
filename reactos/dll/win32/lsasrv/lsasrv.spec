@@ -35,11 +35,13 @@
  @ stdcall LsarCreateAccount(ptr ptr long ptr)
  @ stdcall LsarCreateSecret(ptr ptr long ptr)
  @ stdcall LsarCreateTrustedDomain(ptr ptr long ptr)
+ @ stub LsarCreateTrustedDomainEx
  @ stdcall LsarDelete(ptr)
  @ stdcall LsarEnumerateAccounts(ptr ptr ptr long)
  @ stdcall LsarEnumeratePrivileges(ptr ptr ptr long)
  @ stdcall LsarEnumeratePrivilegesAccount(ptr ptr)
  @ stdcall LsarEnumerateTrustedDomains(ptr ptr ptr long)
+ @ stub LsarEnumerateTrustedDomainsEx
  @ stdcall LsarGetQuotasForAccount(ptr ptr)
  @ stdcall LsarGetSystemAccessAccount(ptr ptr)
  @ stdcall LsarLookupNames(ptr long ptr ptr ptr long ptr)
@@ -47,19 +49,29 @@
  @ stdcall LsarLookupPrivilegeName(ptr ptr ptr)
  @ stdcall LsarLookupPrivilegeValue(ptr ptr ptr)
  @ stdcall LsarLookupSids(ptr ptr ptr ptr long ptr)
+ @ stub LsarLookupSids2
  @ stdcall LsarOpenAccount(ptr ptr long ptr)
  @ stdcall LsarOpenPolicy(ptr ptr long ptr)
+ @ stub LsarOpenPolicySce
  @ stdcall LsarOpenSecret(ptr ptr long ptr)
  @ stdcall LsarOpenTrustedDomain(ptr ptr long ptr)
+ @ stub LsarOpenTrustedDomainByName
+ @ stub LsarQueryDomainInformationPolicy
+ @ stub LsarQueryForestTrustInformation
  @ stdcall LsarQueryInfoTrustedDomain(ptr long ptr)
  @ stdcall LsarQueryInformationPolicy(ptr long ptr)
  @ stdcall LsarQuerySecret(ptr ptr ptr ptr ptr)
  @ stdcall LsarQuerySecurityObject(ptr long ptr)
+ @ stub LsarQueryTrustedDomainInfo
+ @ stub LsarQueryTrustedDomainInfoByName
  @ stdcall LsarRemovePrivilegesFromAccount(ptr long ptr)
+ @ stub LsarSetDomainInformationPolicy
+ @ stub LsarSetForestTrustInformation
  @ stdcall LsarSetInformationPolicy(ptr long ptr)
  @ stdcall LsarSetInformationTrustedDomain(ptr long ptr)
  @ stdcall LsarSetQuotasForAccount(ptr ptr)
  @ stdcall LsarSetSecret(ptr ptr ptr)
  @ stdcall LsarSetSecurityObject(ptr long ptr)
  @ stdcall LsarSetSystemAccessAccount(ptr long)
+ @ stub LsarSetTrustedDomainInfoByName
  @ stdcall ServiceInit()

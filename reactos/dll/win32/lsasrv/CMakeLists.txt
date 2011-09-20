@@ -12,8 +12,10 @@ spec2def(lsasrv.dll lsasrv.spec)
 
 list(APPEND SOURCE
     authport.c
+    database.c
     lsarpc.c
     lsasrv.c
+    policy.c
     privileges.c
     sids.c
     lsasrv.rc

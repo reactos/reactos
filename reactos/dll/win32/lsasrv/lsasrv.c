@@ -26,6 +26,9 @@ LsapInitLsa(VOID)
     /* Initialize the well known SIDs */
     LsapInitSids();
 
+    /* Initialize the LSA database */
+    LsapInitDatabase();
+
     /* Start the RPC server */
     LsarStartRpcServer();
 
