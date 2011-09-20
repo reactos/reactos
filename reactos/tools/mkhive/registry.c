@@ -84,6 +84,7 @@ CreateInMemoryStructure(
 	Key->KeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
 	if (!Key->KeyCell)
 	{
+        free(Key->Name);
 		free(Key);
 		return NULL;
 	}
