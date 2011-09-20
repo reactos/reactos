@@ -40,7 +40,7 @@ GetSystemPowerStatus(IN LPSYSTEM_POWER_STATUS PowerStatus)
         return FALSE;
     }
 
-    RtlZeroMemory(PowerStatus, sizeof(LPSYSTEM_POWER_STATUS));
+    RtlZeroMemory(PowerStatus, sizeof(SYSTEM_POWER_STATUS));
 
     PowerStatus->BatteryLifeTime = BATTERY_LIFE_UNKNOWN;
     PowerStatus->BatteryFullLifeTime = BATTERY_LIFE_UNKNOWN;
