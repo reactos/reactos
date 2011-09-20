@@ -14,8 +14,6 @@
 
 DBG_DEFAULT_CHANNEL(UserWnd);
 
-#define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
-
 /* HELPER FUNCTIONS ***********************************************************/
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
