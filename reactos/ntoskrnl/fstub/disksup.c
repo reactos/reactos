@@ -1365,18 +1365,17 @@ NTAPI
 FstubFixupEfiPartition(IN PPARTITION_DESCRIPTOR PartitionDescriptor,
                        IN ULONGLONG MaxOffset)
 {
-    ULONG PartitionLength;
+    ULONG PartitionMaxOffset, PartitionLength;
     PAGED_CODE();
 
     /* Compute partition length (according to MBR entry) */
-    PartitionLength = PartitionDescriptor->StartingSectorLsb0 + PartitionDescriptor->PartitionLengthLsb0;
+    PartitionMaxOffset = GET_STARTING_SECTOR(PartitionDescriptor) + GET_PARTITION_LENGTH(PartitionDescriptor);
     /* In case the partition length goes beyond disk size... */
-    if (PartitionLength > MaxOffset)
+    if (PartitionMaxOffset > MaxOffset)
     {
         /* Resize partition to its maximum real length */
-#pragma message("--> FIXME: FstubFixupEfiPartition is most likeley broken!")
-        PartitionDescriptor->PartitionLengthLsb0 =
-            (UCHAR)(MaxOffset - PartitionDescriptor->StartingSectorLsb0);
+        PartitionLength = (ULONG)(PartitionMaxOffset - GET_STARTING_SECTOR(PartitionDescriptor));
+        SET_PARTITION_LENGTH(PartitionDescriptor, PartitionLength);
     }
 }
 
