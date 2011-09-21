@@ -206,7 +206,7 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
         KeyValueInformation = RtlAllocateHeap(RtlGetProcessHeap(),
                                               0,
                                               KeyInfoSize);
-        if (KeyInfo == NULL)
+        if (KeyValueInformation == NULL)
         {
             /* Give up this time */
             Status = STATUS_NO_MEMORY;
