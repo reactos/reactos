@@ -1370,7 +1370,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         } while (*Let != 0);
  
         /* Append extension & UNICODE_NULL */
-        memmove(TempFileName, Ext, sizeof(Ext) + sizeof(WCHAR));
+        memmove(TempFileName, Ext, sizeof(Ext));
 
         /* If user provided its ID, just return */
         if (uUnique)
