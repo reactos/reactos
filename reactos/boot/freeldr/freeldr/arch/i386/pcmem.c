@@ -27,95 +27,100 @@
 
 DBG_DEFAULT_CHANNEL(MEMORY);
 
-static ULONG
-PcMemGetExtendedMemorySize(VOID)
+static
+BOOLEAN
+GetExtendedMemoryConfiguration(ULONG* pMemoryAtOneMB /* in KB */, ULONG* pMemoryAtSixteenMB /* in 64KB */)
 {
-  REGS RegsIn;
-  REGS RegsOut;
-  ULONG MemorySize;
+    REGS     RegsIn;
+    REGS     RegsOut;
 
-  TRACE("GetExtendedMemorySize()\n");
+    TRACE("GetExtendedMemoryConfiguration()\n");
 
-  /* Int 15h AX=E801h
-   * Phoenix BIOS v4.0 - GET MEMORY SIZE FOR >64M CONFIGURATIONS
-   *
-   * AX = E801h
-   * Return:
-   * CF clear if successful
-   * AX = extended memory between 1M and 16M, in K (max 3C00h = 15MB)
-   * BX = extended memory above 16M, in 64K blocks
-   * CX = configured memory 1M to 16M, in K
-   * DX = configured memory above 16M, in 64K blocks
-   * CF set on error
-   */
-  RegsIn.w.ax = 0xE801;
-  Int386(0x15, &RegsIn, &RegsOut);
+    *pMemoryAtOneMB = 0;
+    *pMemoryAtSixteenMB = 0;
 
-  TRACE("Int15h AX=E801h\n");
-  TRACE("AX = 0x%x\n", RegsOut.w.ax);
-  TRACE("BX = 0x%x\n", RegsOut.w.bx);
-  TRACE("CX = 0x%x\n", RegsOut.w.cx);
-  TRACE("DX = 0x%x\n", RegsOut.w.dx);
-  TRACE("CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
+    // Int 15h AX=E801h
+    // Phoenix BIOS v4.0 - GET MEMORY SIZE FOR >64M CONFIGURATIONS
+    //
+    // AX = E801h
+    // Return:
+    // CF clear if successful
+    // AX = extended memory between 1M and 16M, in K (max 3C00h = 15MB)
+    // BX = extended memory above 16M, in 64K blocks
+    // CX = configured memory 1M to 16M, in K
+    // DX = configured memory above 16M, in 64K blocks
+    // CF set on error
+    RegsIn.w.ax = 0xE801;
+    Int386(0x15, &RegsIn, &RegsOut);
 
-  if (INT386_SUCCESS(RegsOut))
+    TRACE("Int15h AX=E801h\n");
+    TRACE("AX = 0x%x\n", RegsOut.w.ax);
+    TRACE("BX = 0x%x\n", RegsOut.w.bx);
+    TRACE("CX = 0x%x\n", RegsOut.w.cx);
+    TRACE("DX = 0x%x\n", RegsOut.w.dx);
+    TRACE("CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
+
+    if (INT386_SUCCESS(RegsOut))
     {
-      /* If AX=BX=0000h the use CX and DX */
-      if (RegsOut.w.ax == 0)
+        // If AX=BX=0000h the use CX and DX
+        if (RegsOut.w.ax == 0)
         {
-          /* Return extended memory size in K */
-          MemorySize = RegsOut.w.dx * 64;
-          MemorySize += RegsOut.w.cx;
-          return MemorySize;
+            // Return extended memory size in K
+            *pMemoryAtSixteenMB = RegsOut.w.dx;
+            *pMemoryAtOneMB = RegsOut.w.cx;
+            return TRUE;
         }
-      else
+        else
         {
-          /* Return extended memory size in K */
-          MemorySize = RegsOut.w.bx * 64;
-          MemorySize += RegsOut.w.ax;
-          return MemorySize;
+            // Return extended memory size in K
+            *pMemoryAtSixteenMB = RegsOut.w.bx;
+            *pMemoryAtOneMB = RegsOut.w.ax;
+            return TRUE;
         }
     }
 
-  /* If we get here then Int15 Func E801h didn't work */
-  /* So try Int15 Func 88h */
+    // If we get here then Int15 Func E801h didn't work
+    // So try Int15 Func 88h
+    // Int 15h AH=88h
+    // SYSTEM - GET EXTENDED MEMORY SIZE (286+)
+    //
+    // AH = 88h
+    // Return:
+    // CF clear if successful
+    // AX = number of contiguous KB starting at absolute address 100000h
+    // CF set on error
+    // AH = status
+    // 80h invalid command (PC,PCjr)
+    // 86h unsupported function (XT,PS30)
+    RegsIn.b.ah = 0x88;
+    Int386(0x15, &RegsIn, &RegsOut);
 
-  /* Int 15h AH=88h
-   * SYSTEM - GET EXTENDED MEMORY SIZE (286+)
-   *
-   * AH = 88h
-   * Return:
-   * CF clear if successful
-   * AX = number of contiguous KB starting at absolute address 100000h
-   * CF set on error
-   * AH = status
-   * 80h invalid command (PC,PCjr)
-   * 86h unsupported function (XT,PS30)
-   */
-  RegsIn.b.ah = 0x88;
-  Int386(0x15, &RegsIn, &RegsOut);
+    TRACE("Int15h AH=88h\n");
+    TRACE("AX = 0x%x\n", RegsOut.w.ax);
+    TRACE("CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
-  TRACE("Int15h AH=88h\n");
-  TRACE("AX = 0x%x\n", RegsOut.w.ax);
-  TRACE("CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
-
-  if (INT386_SUCCESS(RegsOut) && RegsOut.w.ax != 0)
+    if (INT386_SUCCESS(RegsOut) && RegsOut.w.ax != 0)
     {
-      MemorySize = RegsOut.w.ax;
-      return MemorySize;
+        *pMemoryAtOneMB = RegsOut.w.ax;
+        return TRUE;
     }
 
-  /* If we get here then Int15 Func 88h didn't work */
-  /* So try reading the CMOS */
-  WRITE_PORT_UCHAR((PUCHAR)0x70, 0x31);
-  MemorySize = READ_PORT_UCHAR((PUCHAR)0x71);
-  MemorySize = (MemorySize & 0xFFFF);
-  MemorySize = (MemorySize << 8);
+    // If we get here then Int15 Func 88h didn't work
+    // So try reading the CMOS
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0x31);
+    *pMemoryAtOneMB = READ_PORT_UCHAR((PUCHAR)0x71);
+    *pMemoryAtOneMB = (*pMemoryAtOneMB & 0xFFFF);
+    *pMemoryAtOneMB = (*pMemoryAtOneMB << 8);
 
-  TRACE("Int15h Failed\n");
-  TRACE("CMOS reports: 0x%x\n", MemorySize);
+    TRACE("Int15h Failed\n");
+    TRACE("CMOS reports: 0x%x\n", *pMemoryAtOneMB);
 
-  return MemorySize;
+    if (*pMemoryAtOneMB != 0)
+    {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 static ULONG
@@ -228,21 +233,36 @@ ULONG
 PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
   ULONG EntryCount;
+  ULONG ExtendedMemorySizeAtOneMB;
+  ULONG ExtendedMemorySizeAtSixteenMB;
 
   EntryCount = PcMemGetBiosMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
 
   /* If the BIOS didn't provide a memory map, synthesize one */
-  if (0 == EntryCount && 2 <= MaxMemoryMapSize)
+  if (0 == EntryCount && 3 <= MaxMemoryMapSize)
     {
-      /* Conventional memory */
-      BiosMemoryMap[0].BaseAddress = 0;
-      BiosMemoryMap[0].Length = PcMemGetConventionalMemorySize() * 1024;
-      BiosMemoryMap[0].Type = BiosMemoryUsable;
-      /* Extended memory */
-      BiosMemoryMap[1].BaseAddress = 1024 * 1024;
-      BiosMemoryMap[1].Length = PcMemGetExtendedMemorySize() * 1024;
-      BiosMemoryMap[1].Type = BiosMemoryUsable;
-      EntryCount = 2;
+      GetExtendedMemoryConfiguration(&ExtendedMemorySizeAtOneMB, &ExtendedMemorySizeAtSixteenMB);
+
+                                  /* Conventional memory */
+      BiosMemoryMap[EntryCount].BaseAddress = 0;
+      BiosMemoryMap[EntryCount].Length = PcMemGetConventionalMemorySize() * 1024;
+      BiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+      EntryCount++;
+
+      /* Extended memory at 1MB */
+      BiosMemoryMap[EntryCount].BaseAddress = 1024 * 1024;
+      BiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtOneMB * 1024;
+      BiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+      EntryCount++;
+
+      if (ExtendedMemorySizeAtSixteenMB != 0)
+      {
+        /* Extended memory at 16MB */
+        BiosMemoryMap[EntryCount].BaseAddress = 0x1000000;
+        BiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtSixteenMB * 64 * 1024;
+        BiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+        EntryCount++;
+      }
     }
 
   return EntryCount;
