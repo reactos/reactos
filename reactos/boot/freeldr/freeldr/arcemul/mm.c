@@ -35,6 +35,49 @@ static const MEMORY_DESCRIPTOR_INT MemoryDescriptors[] =
 
 #endif
 };
+
+static
+VOID MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount)
+{
+	int		Index;
+	int		Index2;
+	ULONGLONG BaseAddressOffset;
+
+	// Loop through each entry in the array
+	for (Index=0; Index<*MapCount; Index++)
+	{
+		// Correct all the addresses to be aligned on page boundaries
+		BaseAddressOffset = ROUND_UP(BiosMemoryMap[Index].BaseAddress, MM_PAGE_SIZE) - BiosMemoryMap[Index].BaseAddress;
+		BiosMemoryMap[Index].BaseAddress += BaseAddressOffset;
+		if (BiosMemoryMap[Index].Length < BaseAddressOffset)
+		{
+			BiosMemoryMap[Index].Length = 0;
+		}
+		else
+		{
+			BiosMemoryMap[Index].Length -= BaseAddressOffset;
+		}
+		BiosMemoryMap[Index].Length = ROUND_DOWN(BiosMemoryMap[Index].Length, MM_PAGE_SIZE);
+
+		// If the entry type isn't usable then remove
+		// it from the memory map (this will help reduce
+		// the size of our lookup table)
+		// If the length is less than a full page then
+		// get rid of it also.
+		if (BiosMemoryMap[Index].Type != BiosMemoryUsable ||
+			BiosMemoryMap[Index].Length < MM_PAGE_SIZE)
+		{
+			// Slide every entry after this down one
+			for (Index2=Index; Index2<(*MapCount - 1); Index2++)
+			{
+				BiosMemoryMap[Index2] = BiosMemoryMap[Index2 + 1];
+			}
+			(*MapCount)--;
+			Index--;
+		}
+	}
+}
+
 const MEMORY_DESCRIPTOR*
 ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
 {
@@ -57,6 +100,11 @@ ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
         BiosMemoryMapEntryCount = MachVtbl.GetMemoryMap(BiosMemoryMap,
                                                         sizeof(BiosMemoryMap) /
                                                         sizeof(BIOS_MEMORY_MAP));
+
+        //
+        // Fix entries that are not page aligned
+        //
+        MmFixupSystemMemoryMap(BiosMemoryMap, &BiosMemoryMapEntryCount);
 
         //
         // Copy the entries to our structure
