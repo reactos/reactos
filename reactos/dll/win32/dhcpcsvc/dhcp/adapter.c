@@ -190,7 +190,7 @@ void AdapterInit() {
 }
 
 int
-InterfaceConnected(const PMIB_IFROW IfEntry)
+InterfaceConnected(const MIB_IFROW* IfEntry)
 {
     if (IfEntry->dwOperStatus == IF_OPER_STATUS_CONNECTED ||
         IfEntry->dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
