@@ -721,7 +721,7 @@ HalpDebugPciDumpBus(IN ULONG i,
             SubClassName += 5;
             p = strchr(SubClassName, '\r');
             Length = p - SubClassName;
-            if (Length > sizeof(bSubClassName)) Length = sizeof(bSubClassName);
+            if (Length > sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
             strncpy(bSubClassName, SubClassName, Length);
             bSubClassName[Length] = '\0';
         }
