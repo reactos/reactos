@@ -261,7 +261,7 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
        But for now limit EventLog size to just under 5K. */
     LogFile->Header.MaxSize = 5000;
 
-    if (!SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
+    if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
         INVALID_SET_FILE_POINTER)
     {
         DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
