@@ -520,6 +520,47 @@ OwnerPageDlgProc(HWND hwndDlg,
 
   return FALSE;
 }
+
+static
+NTSTATUS
+SetAccountDomain(LPWSTR DomainName)
+{
+    POLICY_ACCOUNT_DOMAIN_INFO Info;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle;
+    NTSTATUS Status;
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Info.DomainName.Buffer = DomainName;
+    Info.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    Info.DomainName.MaximumLength = Info.DomainName.Length + sizeof(WCHAR);
+    Info.DomainSid = NULL;
+
+    Status = LsaSetInformationPolicy(PolicyHandle,
+                                     PolicyAccountDomainInformation,
+                                     (PVOID)&Info);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT("LsaSetInformationPolicy failed (Status: 0x%08lx)\n", Status);
+    }
+
+    LsaClose(PolicyHandle);
+
+    return Status;
+}
+
 static
 BOOL
 WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
@@ -544,6 +585,9 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
 
   /* Try to also set DNS hostname */
   SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
+
+  /* Set the account domain name */
+  SetAccountDomain(ComputerName);
 
   return TRUE;
 }
