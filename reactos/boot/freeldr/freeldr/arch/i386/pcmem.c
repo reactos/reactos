@@ -27,6 +27,11 @@
 
 DBG_DEFAULT_CHANNEL(MEMORY);
 
+#define MAX_BIOS_DESCRIPTORS 32
+
+BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
+ULONG PcBiosMapCount;
+
 static
 BOOLEAN
 GetExtendedMemoryConfiguration(ULONG* pMemoryAtOneMB /* in KB */, ULONG* pMemoryAtSixteenMB /* in 64KB */)
@@ -174,14 +179,17 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
    * CF set on error
    * AH = error code (86h)
    */
-  Regs.x.eax = 0x0000E820;
-  Regs.x.edx = 0x534D4150; /* ('SMAP') */
   Regs.x.ebx = 0x00000000;
-  Regs.x.ecx = sizeof(BIOS_MEMORY_MAP);
-  Regs.w.es = BIOSCALLBUFSEGMENT;
-  Regs.w.di = BIOSCALLBUFOFFSET;
+
   for (MapCount = 0; MapCount < MaxMemoryMapSize; MapCount++)
     {
+      /* Setup the registers for the BIOS call */
+      Regs.x.eax = 0x0000E820;
+      Regs.x.edx = 0x534D4150; /* ('SMAP') */
+      /* Regs.x.ebx = 0x00000001;  Continuation value already set */
+      Regs.x.ecx = sizeof(BIOS_MEMORY_MAP);
+      Regs.w.es = BIOSCALLBUFSEGMENT;
+      Regs.w.di = BIOSCALLBUFOFFSET;
       Int386(0x15, &Regs, &Regs);
 
       TRACE("Memory Map Entry %d\n", MapCount);
@@ -192,8 +200,8 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       TRACE("CF set = %s\n", (Regs.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
       /* If the BIOS didn't return 'SMAP' in EAX then
-       * it doesn't support this call */
-      if (Regs.x.eax != 0x534D4150)
+       * it doesn't support this call. If CF is set, we're done */
+      if (Regs.x.eax != 0x534D4150 || !INT386_SUCCESS(Regs))
         {
           break;
         }
@@ -210,62 +218,57 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       /* If the continuation value is zero or the
        * carry flag is set then this was
        * the last entry so we're done */
-      if (Regs.x.ebx == 0x00000000 || !INT386_SUCCESS(Regs))
+      if (Regs.x.ebx == 0x00000000)
         {
-          MapCount++;
           TRACE("End Of System Memory Map!\n\n");
           break;
         }
 
-      /* Setup the registers for the next call */
-      Regs.x.eax = 0x0000E820;
-      Regs.x.edx = 0x534D4150; /* ('SMAP') */
-      /* Regs.x.ebx = 0x00000001;  Continuation value already set by the BIOS */
-      Regs.x.ecx = sizeof(BIOS_MEMORY_MAP);
-      Regs.w.es = BIOSCALLBUFSEGMENT;
-      Regs.w.di = BIOSCALLBUFOFFSET;
     }
 
   return MapCount;
 }
 
-ULONG
-PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
+PBIOS_MEMORY_MAP
+PcMemGetMemoryMap(ULONG *MemoryMapSize)
 {
   ULONG EntryCount;
   ULONG ExtendedMemorySizeAtOneMB;
   ULONG ExtendedMemorySizeAtSixteenMB;
 
-  EntryCount = PcMemGetBiosMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
+  EntryCount = PcMemGetBiosMemoryMap(PcBiosMemoryMap, MAX_BIOS_DESCRIPTORS);
+  PcBiosMapCount = EntryCount;
 
   /* If the BIOS didn't provide a memory map, synthesize one */
-  if (0 == EntryCount && 3 <= MaxMemoryMapSize)
+  if (0 == EntryCount)
     {
       GetExtendedMemoryConfiguration(&ExtendedMemorySizeAtOneMB, &ExtendedMemorySizeAtSixteenMB);
 
                                   /* Conventional memory */
-      BiosMemoryMap[EntryCount].BaseAddress = 0;
-      BiosMemoryMap[EntryCount].Length = PcMemGetConventionalMemorySize() * 1024;
-      BiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+      PcBiosMemoryMap[EntryCount].BaseAddress = 0;
+      PcBiosMemoryMap[EntryCount].Length = PcMemGetConventionalMemorySize() * 1024;
+      PcBiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
       EntryCount++;
 
       /* Extended memory at 1MB */
-      BiosMemoryMap[EntryCount].BaseAddress = 1024 * 1024;
-      BiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtOneMB * 1024;
-      BiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+      PcBiosMemoryMap[EntryCount].BaseAddress = 1024 * 1024;
+      PcBiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtOneMB * 1024;
+      PcBiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
       EntryCount++;
 
       if (ExtendedMemorySizeAtSixteenMB != 0)
       {
         /* Extended memory at 16MB */
-        BiosMemoryMap[EntryCount].BaseAddress = 0x1000000;
-        BiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtSixteenMB * 64 * 1024;
-        BiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+        PcBiosMemoryMap[EntryCount].BaseAddress = 0x1000000;
+        PcBiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtSixteenMB * 64 * 1024;
+        PcBiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
         EntryCount++;
       }
     }
 
-  return EntryCount;
+  *MemoryMapSize = EntryCount;
+
+  return PcBiosMemoryMap;
 }
 
 /* EOF */

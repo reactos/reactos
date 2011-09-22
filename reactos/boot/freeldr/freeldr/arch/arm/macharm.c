@@ -143,15 +143,12 @@ ArmHwDetect(VOID)
     return RootNode;
 }
 
-ULONG
-ArmMemGetMemoryMap(OUT PBIOS_MEMORY_MAP BiosMemoryMap,
-                   IN ULONG MaxMemoryMapSize)
+PBIOS_MEMORY_MAP
+ArmMemGetMemoryMap(OUT PULONG MaxMemoryMapSize)
 {
     /* Return whatever the board returned to us (CS0 Base + Size and FLASH0) */
-    memcpy(BiosMemoryMap,
-           ArmBoardBlock->MemoryMap,
-           ArmBoardBlock->MemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
-    return ArmBoardBlock->MemoryMapEntryCount;
+    *MaxMemoryMapSize = ArmBoardBlock->MemoryMapEntryCount;
+    return ArmBoardBlock->MemoryMap;
 }
 
 VOID

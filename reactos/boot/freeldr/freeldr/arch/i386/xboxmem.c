@@ -75,31 +75,24 @@ XboxMemInit(VOID)
   AvailableMemoryMb = InstalledMemoryMb;
 }
 
-ULONG
-XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
-{
-  ULONG EntryCount = 0;
+BIOS_MEMORY_MAP BiosMemoryMap[2];
 
+PBIOS_MEMORY_MAP
+XboxMemGetMemoryMap(ULONG *MemoryMapSize)
+{
   /* Synthesize memory map */
-  if (1 <= MaxMemoryMapSize)
-    {
       /* Available RAM block */
       BiosMemoryMap[0].BaseAddress = 0;
       BiosMemoryMap[0].Length = AvailableMemoryMb * 1024 * 1024;
       BiosMemoryMap[0].Type = BiosMemoryUsable;
-      EntryCount = 1;
-    }
 
-  if (2 <= MaxMemoryMapSize)
-    {
       /* Video memory */
       BiosMemoryMap[1].BaseAddress = AvailableMemoryMb * 1024 * 1024;
       BiosMemoryMap[1].Length = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024;
       BiosMemoryMap[1].Type = BiosMemoryReserved;
-      EntryCount = 2;
-    }
 
-  return EntryCount;
+  *MemoryMapSize = 2;
+  return BiosMemoryMap;
 }
 
 PVOID

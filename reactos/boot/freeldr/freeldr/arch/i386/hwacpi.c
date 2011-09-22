@@ -58,8 +58,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PRSDP_DESCRIPTOR Rsdp;
     PACPI_BIOS_DATA AcpiBiosData;
-    BIOS_MEMORY_MAP BiosMemoryMap[32];
-    ULONG BiosMemoryMapEntryCount, TableSize;
+    ULONG TableSize;
 
     Rsdp = FindAcpiBios();
 
@@ -68,13 +67,8 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Set up the flag in the loader block */
         AcpiPresent = TRUE;
 
-        /* Get BIOS memory map */
-        RtlZeroMemory(BiosMemoryMap, sizeof(BiosMemoryMap));
-        BiosMemoryMapEntryCount = PcMemGetMemoryMap(BiosMemoryMap,
-            sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
-
         /* Calculate the table size */
-        TableSize = BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP) +
+        TableSize = PcBiosMapCount * sizeof(BIOS_MEMORY_MAP) +
             sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
 
         /* Set 'Configuration Data' value */
@@ -100,9 +94,9 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Fill the table */
         AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
         AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
-        AcpiBiosData->Count = BiosMemoryMapEntryCount;
-        memcpy(AcpiBiosData->MemoryMap, BiosMemoryMap,
-            BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
+        AcpiBiosData->Count = PcBiosMapCount;
+        memcpy(AcpiBiosData->MemoryMap, PcBiosMemoryMap,
+            PcBiosMapCount * sizeof(BIOS_MEMORY_MAP));
 
         TRACE("RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
             TableSize);

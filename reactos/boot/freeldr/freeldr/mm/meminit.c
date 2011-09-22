@@ -124,7 +124,7 @@ const MEMORY_DESCRIPTOR*
 ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
 {
     MEMORY_DESCRIPTOR_INT* CurrentDescriptor;
-    BIOS_MEMORY_MAP BiosMemoryMap[32];
+    PBIOS_MEMORY_MAP BiosMemoryMap;
     static ULONG BiosMemoryMapEntryCount;
     static MEMORY_DESCRIPTOR_INT BiosMemoryDescriptors[32];
     static BOOLEAN MemoryMapInitialized = FALSE;
@@ -138,10 +138,7 @@ ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
         //
         // Get the machine generated memory map
         //
-        RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
-        BiosMemoryMapEntryCount = MachVtbl.GetMemoryMap(BiosMemoryMap,
-                                                        sizeof(BiosMemoryMap) /
-                                                        sizeof(BIOS_MEMORY_MAP));
+        BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
 
         //
         // Fix entries that are not page aligned
@@ -545,6 +542,7 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							Index;
+	TRACE("MmMarkPagesInLookupTable()\n");
 
     StartPage -= MmLowestPhysicalPage;
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
