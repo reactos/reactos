@@ -1374,18 +1374,6 @@ LdrUnloadDll(IN PVOID BaseAddress)
     NextEntry = LdrpUnloadHead.Flink;
     while (NextEntry != &LdrpUnloadHead)
     {
-        /* If we have an active entry */
-        if (CurrentEntry)
-        {
-            /* Remove it */
-            RemoveEntryList(&CurrentEntry->InLoadOrderLinks);
-            CurrentEntry = NULL;
-
-            /* Reset list pointers */
-            NextEntry = LdrpUnloadHead.Flink;
-            if (NextEntry == &LdrpUnloadHead) break;
-        }
-
         /* Get the current entry */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, HashLinks);
 
