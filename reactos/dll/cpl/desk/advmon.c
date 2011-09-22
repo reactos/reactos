@@ -88,11 +88,8 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     IDataObject *pdo;
 #ifdef _MSC_VER
     HMODULE hShell32 = NULL;
-#endif
     CPSEAE msvc_SHCreatePropSheetExtArrayEx;
-
-    /* silence gcc warning */
-    msvc_SHCreatePropSheetExtArrayEx = NULL;
+#endif
 
     /* FIXME: Build the "%s and %s" caption string for the monitor and adapter name */
     szCaption[0] = _T('\0');

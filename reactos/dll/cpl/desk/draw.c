@@ -437,18 +437,18 @@ MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, COLOR_SCHEME *scheme)
 BOOL
 MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags, COLOR_SCHEME *scheme)
 {
-	ULONG Height;
-	UINT VCenter, Padding;
-	LONG ButtonWidth;
+	//ULONG Height;
+	//UINT VCenter, Padding;
+	//LONG ButtonWidth;
 	HBRUSH hbr;
 	HGDIOBJ hFontOld;
-    RECT rc;
+	RECT rc;
 
-	Height = scheme->Size[SIZE_CAPTION_Y] - 1;
-	VCenter = (rect->bottom - rect->top) / 2;
-	Padding = VCenter - (Height / 2);
+	//Height = scheme->Size[SIZE_CAPTION_Y] - 1;
+	//VCenter = (rect->bottom - rect->top) / 2;
+	//Padding = VCenter - (Height / 2);
 
-	ButtonWidth = scheme->Size[SIZE_SIZE_X] - 2;
+	//ButtonWidth = scheme->Size[SIZE_SIZE_X] - 2;
 
 	if (uFlags & DC_GRADIENT)
 	{

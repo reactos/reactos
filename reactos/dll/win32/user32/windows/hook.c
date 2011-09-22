@@ -434,7 +434,7 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
 {
     HINSTANCE hLibrary;
     PVOID pInitFunction;
-    NTSTATUS Status;
+    //NTSTATUS Status;
     ANSI_STRING InitFuncName;
     BOOL Result = FALSE;
 
@@ -467,7 +467,7 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
         /* Initialize the user api hook */
         ASSERT(pstrInitFunc->Buffer);
 
-        Status = RtlUnicodeStringToAnsiString(&InitFuncName, 
+        /*Status = */ RtlUnicodeStringToAnsiString(&InitFuncName, 
                                               pstrInitFunc,
                                               TRUE);
 

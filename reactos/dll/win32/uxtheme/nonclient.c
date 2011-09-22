@@ -736,7 +736,7 @@ static VOID
 ThemeHandleButton(HWND hWnd, WPARAM wParam)
 {
     MSG Msg;
-    BOOL Pressed = TRUE, OldState;
+    BOOL Pressed = TRUE; // , OldState;
     WPARAM SCMsg, ht;
     ULONG Style;
     DRAW_CONTEXT context;
@@ -779,7 +779,7 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
         if (Msg.message != WM_MOUSEMOVE)
             continue;
 
-        OldState = Pressed;
+        //OldState = Pressed;
         ht = SendMessage(hWnd, WM_NCHITTEST, 0, MAKELPARAM(Msg.pt.x, Msg.pt.y));
         Pressed = (ht == wParam);
 

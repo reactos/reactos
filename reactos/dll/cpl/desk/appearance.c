@@ -53,7 +53,7 @@ AppearancePage_ShowColorScemes(GLOBALS *g, HWND hwndColor, INT ThemeId)
 static INT_PTR
 AppearancePage_OnInit(HWND hwndDlg)
 {
-	INT i, TemplateCount, iListIndex;
+	INT i, /*TemplateCount,*/ iListIndex;
 	HWND hwndColor, hwndTheme;
 	GLOBALS *g;
 
@@ -74,7 +74,7 @@ AppearancePage_OnInit(HWND hwndDlg)
 
 	LoadThemes(g);
 
-	TemplateCount = LoadSchemePresetEntries(g->strSelectedStyle);
+	/*TemplateCount = */ LoadSchemePresetEntries(g->strSelectedStyle);
 
 	hwndColor = GetDlgItem(hwndDlg, IDC_APPEARANCE_COLORSCHEME);
 	g->SchemeId = -1;

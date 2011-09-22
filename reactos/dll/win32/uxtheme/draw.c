@@ -1756,8 +1756,8 @@ static HBITMAP UXTHEME_DrawThemePartToDib(HTHEME hTheme, HDC hdc, int iPartId, i
 static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent, LPCRECT pRect)
 {
     int x, y, xstart;
-    int cMaxRgnRects, cRgnDataSize, cRgnRects;
 #ifdef EXTCREATEREGION_WORKS
+    int cMaxRgnRects, cRgnDataSize, cRgnRects;
     RECT* prcCurrent;
     PRGNDATA prgnData;
 #else
@@ -1769,12 +1769,12 @@ static HRGN UXTHEME_RegionFromDibBits(RGBQUAD* pBuffer, RGBQUAD* pclrTransparent
     pclrCurrent = (PULONG)pBuffer;
     clrTransparent = *(PULONG)pclrTransparent;
 
+#ifdef EXTCREATEREGION_WORKS
     /* Create a region and pre-allocate memory enough for 3 spaces in one row*/
     cRgnRects = 0;
     cMaxRgnRects = 4* (pRect->bottom-pRect->top);
     cRgnDataSize = sizeof(RGNDATA) + cMaxRgnRects * sizeof(RECT);
 
-#ifdef EXTCREATEREGION_WORKS
     /* Allocate the region data */
     prgnData = (PRGNDATA)HeapAlloc(GetProcessHeap(), 0, cRgnDataSize);
 
