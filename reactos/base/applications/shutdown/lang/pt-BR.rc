@@ -1,0 +1,16 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Uso: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  Sem argumentos ou -?\tExibem esta mensagem\n\
+  -l\t\t\tFazer logoff\n\
+  -s\t\t\tDesligar o computador\n\
+  -r\t\t\tDesligar e reiniciar o computador\n\
+  -f\t\t\tForçar o fechamento dos aplicativos em execução sem avisar os usuários\n\
+    \t\t\tSe você não especificar outro parâmetro, esta opção\n\
+    \t\t\ttambém fará logoff"
+END

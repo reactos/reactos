@@ -1,10 +1,12 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 // Dialog
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Calculator"
+CAPTION "Calculadora ReactOS"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -141,17 +143,17 @@ BEGIN
                     WS_VISIBLE,230,21,38,10
     CONTROL         "Byte",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,270,21,38,10
-    CONTROL         "Degrees",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,
+    CONTROL         "Graus",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,
                     150,21,45,10
-    CONTROL         "Radians",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,
+    CONTROL         "Radianos",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,
                     204,21,45,10
-    CONTROL         "Gradians",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+    CONTROL         "Grados",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
                     258,21,45,10
     PUSHBUTTON      "C",IDC_BUTTON_CANC,267,38,43,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,222,38,43,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Back",IDC_BUTTON_BACK,177,38,43,18,BS_CENTER | 
+    PUSHBUTTON      "Apagar",IDC_BUTTON_BACK,177,38,43,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,5,1,305,14,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -160,7 +162,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Calculator"
+CAPTION "Calculadora ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -168,7 +170,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,80,23,41,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Back",IDC_BUTTON_BACK,36,23,42,18,BS_CENTER | 
+    PUSHBUTTON      "Apagar",IDC_BUTTON_BACK,36,23,42,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,5,1,159,14,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -227,25 +229,25 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Calculator"
+CAPTION "Calculadora ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON      "Convert",IDC_BUTTON_CONVERT,35,105,76,17
+    PUSHBUTTON      "Converter",IDC_BUTTON_CONVERT,35,105,76,17
     COMBOBOX        IDC_COMBO_CATEGORY,5,31,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Category:",IDC_STATIC,5,20,56,8
+    LTEXT           "Categoria:",IDC_STATIC,5,20,56,8
     COMBOBOX        IDC_COMBO_FROM,5,60,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Convert from:",IDC_STATIC,5,49,56,8
+    LTEXT           "Converter de:",IDC_STATIC,5,49,56,8
     COMBOBOX        IDC_COMBO_TO,5,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
-    LTEXT           "Convert to:",IDC_STATIC,5,76,56,8
+    LTEXT           "Converter para:",IDC_STATIC,5,76,56,8
     CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
-    CONTROL         "Back",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
+    CONTROL         "Apagar",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW | 
                     BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
                     40,17
     RTEXT           "",IDC_TEXT_OUTPUT,5,1,312,14,SS_CENTERIMAGE,
@@ -305,16 +307,16 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Calc"
+CAPTION "Sobre Calc ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
     CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
-    LTEXT           "ReactOS Calculator",IDC_STATIC,120,12,132,8,
+    LTEXT           "Calcuadora ReactOS",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
-    LTEXT           "Version ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
-    LTEXT           "Written by Carlo Bramini",IDC_STATIC,120,32,132,8,
+    LTEXT           "Versão ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "Escrita por Carlo Bramini",IDC_STATIC,120,32,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
     GROUPBOX        "",IDC_STATIC,5,56,256,88
@@ -324,7 +326,7 @@ END
 
 IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Statistics box"
+CAPTION "Caixa de estatísticas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT | 
@@ -341,89 +343,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
-    POPUP "Edit"
+    POPUP "Editar"
     BEGIN
-        MENUITEM "Copy\tCtrl+C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V",               IDM_EDIT_PASTE
+        MENUITEM "Copiar\tCtrl+C",                IDM_EDIT_COPY
+        MENUITEM "Colar\tCtrl+V",               IDM_EDIT_PASTE
     END
-    POPUP "View"
+    POPUP "Visualizar"
     BEGIN
-        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientific",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversion",                  IDM_VIEW_CONVERSION
+        MENUITEM "Padrão",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Científica",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Conversão",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6",                 IDM_VIEW_DEC, CHECKED
         MENUITEM "Octal\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binary\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Binário\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Degrees\tF2",                 IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radians\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Gradians\tF4",                IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Graus\tF2",                 IDM_VIEW_DEG, CHECKED
+        MENUITEM "Radianos\tF3",                 IDM_VIEW_RAD, CHECKED
+        MENUITEM "Grados\tF4",                IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Group digits",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Agrupar dígitos",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Help"
+    POPUP "Ajuda"
     BEGIN
-        MENUITEM "Help topics",                 IDM_HELP_HELP
+        MENUITEM "Tópicos de ajuda",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "About ReactOS Calc",          IDM_HELP_ABOUT
+        MENUITEM "Sobre Calculadora ReactOS",          IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
 BEGIN
-    POPUP "Edit"
+    POPUP "Editar"
     BEGIN
-        MENUITEM "Copy\tCtrl+C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V",               IDM_EDIT_PASTE
+        MENUITEM "Copiar\tCtrl+C",                IDM_EDIT_COPY
+        MENUITEM "Colar\tCtrl+V",               IDM_EDIT_PASTE
     END
-    POPUP "View"
+    POPUP "Visualizar"
     BEGIN
-        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientific",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversion",                  IDM_VIEW_CONVERSION
+        MENUITEM "Padrão",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Científica",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Conversão",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6",                 IDM_VIEW_DEC, CHECKED
         MENUITEM "Octal\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binary\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Binário\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
         MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
         MENUITEM "Byte\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Group digits",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Agrupar dígitos",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Help"
+    POPUP "Ajuda"
     BEGIN
-        MENUITEM "Help topics",                 IDM_HELP_HELP
+        MENUITEM "Tópicos de ajuda",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "About ReactOS Calc",          IDM_HELP_ABOUT
+        MENUITEM "Sobre Calculadora ReactOS",          IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU DISCARDABLE 
 BEGIN
-    POPUP "Edit"
+    POPUP "Editar"
     BEGIN
-        MENUITEM "Copy\tCtrl+C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V",               IDM_EDIT_PASTE
+        MENUITEM "Copiar\tCtrl+C",                IDM_EDIT_COPY
+        MENUITEM "Colar\tCtrl+V",               IDM_EDIT_PASTE
     END
-    POPUP "View"
+    POPUP "Visualizar"
     BEGIN
-        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientific",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversion",                  IDM_VIEW_CONVERSION
+        MENUITEM "Padrão",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Científica",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Conversão",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Group digits",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Agrupar dígitos",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Help"
+    POPUP "Ajuda"
     BEGIN
-        MENUITEM "Help topics",                 IDM_HELP_HELP
+        MENUITEM "Tópicos de ajuda",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "About ReactOS Calc",          IDM_HELP_ABOUT
+        MENUITEM "Sobre Calculadora ReactOS",          IDM_HELP_ABOUT
     END
 END
 
@@ -431,72 +433,72 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS Calc is free software released under GNU GPL license.\r\n\r\nYou can get a copy of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nYou can also get a translation of GNU GPL license here:\r\nhttp://www.gnu.org/licenses/translations.html"
-    IDS_MATH_ERROR          "Error"
-    IDS_QUICKHELP           "Quick help"
+    IDS_STRING_LICENSE      "Calculadora ReactOS é um software livre lançado sobre a licença GNU GPL.\r\nVocê pode adquirir uma cópia da licença GNU GPL no endereço abaixo:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nVocê também pode adquirir uma tradução da licença GNU GPL no endereço abaixo:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_MATH_ERROR          "Erro"
+    IDS_QUICKHELP           "Ajuda rápida"
 END
 
 // Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_ANGLE          "Angle"
-    IDS_CONV_AREA           "Area"
-    IDS_CONV_CONSUMPTION    "Consumption (engines)"
-    IDS_CONV_CURRENCY       "Currencies"
-    IDS_CONV_ENERGY         "Energy"
-    IDS_CONV_LENGTH         "Lengths"
-    IDS_CONV_POWER          "Power"
-    IDS_CONV_PRESSURE       "Pressure"
-    IDS_CONV_TEMPERATURE    "Temperature"
-    IDS_CONV_TIME           "Time"
-    IDS_CONV_VELOCITY       "Velocity"
+    IDS_CONV_ANGLE          "Ângulo"
+    IDS_CONV_AREA           "Área"
+    IDS_CONV_CONSUMPTION    "Consumo (veículos)"
+    IDS_CONV_CURRENCY       "Monetária"
+    IDS_CONV_ENERGY         "Energia"
+    IDS_CONV_LENGTH         "Distância"
+    IDS_CONV_POWER          "Potência"
+    IDS_CONV_PRESSURE       "Pressão"
+    IDS_CONV_TEMPERATURE    "Temperatura"
+    IDS_CONV_TIME           "Tempo"
+    IDS_CONV_VELOCITY       "Velocidade"
     IDS_CONV_VOLUME         "Volume"
-    IDS_CONV_WEIGHT         "Weights"
+    IDS_CONV_WEIGHT         "Peso"
 END
 
 // TYPES OF ANGLES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ANGLE_DEGREES       "Degrees"
-    IDS_ANGLE_GRADIANS      "Gradians"
-    IDS_ANGLE_RADIANS       "Radians"
+    IDS_ANGLE_DEGREES       "Graus"
+    IDS_ANGLE_GRADIANS      "Grados"
+    IDS_ANGLE_RADIANS       "Radianos"
 END
 
 // TYPES OF AREAS
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_AREA_ACRES                  "Acres"
-    IDS_AREA_ACRES_BRAZIL           "Acres (Brazil)"
-    IDS_AREA_ACRES_FRANCE           "Acres (France)"
-    IDS_AREA_ACRES_SCOTS            "Acres (Scots)"
-    IDS_AREA_ACRES_US               "Acres (US)"
+    IDS_AREA_ACRES_BRAZIL           "Acres (Brasil)"
+    IDS_AREA_ACRES_FRANCE           "Acres (França)"
+    IDS_AREA_ACRES_SCOTS            "Acres (Escócia)"
+    IDS_AREA_ACRES_US               "Acres (EUA)"
     IDS_AREA_ARES                   "Ares"
     IDS_AREA_CHOU                   "Chou"
     IDS_AREA_DANBO                  "Danbo"
     IDS_AREA_HECTARES               "Hectares"
     IDS_AREA_JEONGBO                "Jeongbo"
-    IDS_AREA_MORGEN_HUNGARY         "Morgen (Hungary)"
+    IDS_AREA_MORGEN_HUNGARY         "Morgen (Hungária)"
     IDS_AREA_MU                     "Mu"
     IDS_AREA_PING                   "Ping"
     IDS_AREA_PYEONG                 "Pyeong"
     IDS_AREA_PYEONGBANGJA           "Pyeongbangja"
     IDS_AREA_RAI                    "Rai"
     IDS_AREA_SE                     "Se"
-    IDS_AREA_SQUARE_CENTIMETERS     "Square centimeters"
-    IDS_AREA_SQUARE_CHR             "Square chr"
-    IDS_AREA_SQUARE_FATHOMS         "Square fathoms"
-    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Square fathoms (Hungary)"
-    IDS_AREA_SQUARE_FEET            "Square feet"
-    IDS_AREA_SQUARE_INCHES          "Square inches"
-    IDS_AREA_SQUARE_KILOMETERS      "Square kilometers"
-    IDS_AREA_SQUARE_LAR             "Square lar"
-    IDS_AREA_SQUARE_METER           "Square meter"
-    IDS_AREA_SQUARE_MILES           "Square miles"
-    IDS_AREA_SQUARE_MILLIMETERS     "Square millimeters"
-    IDS_AREA_SQUARE_SHAKU           "Square shaku"
-    IDS_AREA_SQUARE_TSUEN           "Square tsuen"
-    IDS_AREA_SQUARE_VA              "Square va"
-    IDS_AREA_SQUARE_YARD            "Square yard"
+    IDS_AREA_SQUARE_CENTIMETERS     "Centímetros quadrados"
+    IDS_AREA_SQUARE_CHR             "Chr quadradas"
+    IDS_AREA_SQUARE_FATHOMS         "Braças quadradas"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Braças quadradas (Hungária)"
+    IDS_AREA_SQUARE_FEET            "Pés quadrados"
+    IDS_AREA_SQUARE_INCHES          "Polegadas quadradas"
+    IDS_AREA_SQUARE_KILOMETERS      "Quilômetros quadrados"
+    IDS_AREA_SQUARE_LAR             "Lar quadradas"
+    IDS_AREA_SQUARE_METER           "Metros quadrados"
+    IDS_AREA_SQUARE_MILES           "Milhas quadradas"
+    IDS_AREA_SQUARE_MILLIMETERS     "Milímetros quadrados"
+    IDS_AREA_SQUARE_SHAKU           "Shaku quadradas"
+    IDS_AREA_SQUARE_TSUEN           "Tsuen quadrados"
+    IDS_AREA_SQUARE_VA              "Va quadrados"
+    IDS_AREA_SQUARE_YARD            "Jardas quadradas"
     IDS_AREA_TAN                    "Tan"
     IDS_AREA_TSUBO                  "Tsubo"
 END
@@ -504,92 +506,92 @@ END
 // TYPES OF COMSUMPTIONS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONSUMPTION_KM_PER_L        "Kilometer/liter"
-    IDS_CONSUMPTION_L_PER_100_KM    "Liters/100 kilometers"
-    IDS_CONSUMPTION_MILES_GALLON_UK "Miles/gallon (UK)"
-    IDS_CONSUMPTION_MILES_GALLON_US "Miles/gallon (US)"
+    IDS_CONSUMPTION_KM_PER_L        "Quilômetros/litro"
+    IDS_CONSUMPTION_L_PER_100_KM    "Litros/100 quilômetros"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Milhas/galão (UK)"
+    IDS_CONSUMPTION_MILES_GALLON_US "Milhas/galão (EUA)"
 END
 
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Austrian schilling"
-    IDS_CURRENCY_BELGIAN_FRANC      "Belgian franc"
-    IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
-    IDS_CURRENCY_CZECH_KORUNA       "Czech koruna"
-    IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
-    IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Xelim austríaco"
+    IDS_CURRENCY_BELGIAN_FRANC      "Franco belga"
+    IDS_CURRENCY_CYPRIOT_POUND      "Libra cipriota"
+    IDS_CURRENCY_CZECH_KORUNA       "Coroa checa"
+    IDS_CURRENCY_DEUTSCHE_MARK      "Marco alemão"
+    IDS_CURRENCY_DUTCH_GUILDER      "Florim neerlandês"
     IDS_CURRENCY_EURO               "Euro"
-    IDS_CURRENCY_FINNISH_MARKKA     "Finnish markka"
-    IDS_CURRENCY_FRENCH_FRANC       "French franc"
-    IDS_CURRENCY_GREEK_DRACHMA      "Greek Drachma"
-    IDS_CURRENCY_IRISH_POUND        "Irish pound"
-    IDS_CURRENCY_ITALIAN_LIRA       "Italian lira"
-    IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
-    IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portuguese escudo"
-    IDS_CURRENCY_SLOVAK_KORUNA      "Slovak koruna"
-    IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenian tolar"
-    IDS_CURRENCY_SPANISH_PESETA     "Spanish peseta"
+    IDS_CURRENCY_FINNISH_MARKKA     "Marco finlandês"
+    IDS_CURRENCY_FRENCH_FRANC       "Franco francês"
+    IDS_CURRENCY_GREEK_DRACHMA      "Dracma"
+    IDS_CURRENCY_IRISH_POUND        "Libra irlandesa"
+    IDS_CURRENCY_ITALIAN_LIRA       "Lira italiana"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Franco luxemburguês"
+    IDS_CURRENCY_MALTESE_LIRA       "Lira maltesa"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Escudo português"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Coroa eslovaca"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "Tolar"
+    IDS_CURRENCY_SPANISH_PESETA     "Peseta"
 END
 
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °C calories"
-    IDS_ENERGY_BTUS                 "British Thermal Units"
-    IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_EVS                  "Electron-Volts"
+    IDS_ENERGY_15_C_CALORIES        "15 °C calorias"
+    IDS_ENERGY_BTUS                 "British Thermal Unit"
+    IDS_ENERGY_ERGS                 "Ergs (Cgs)"
+    IDS_ENERGY_EVS                  "Elétron-volt"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
-    IDS_ENERGY_IT_CALORIES          "International Table calories"
-    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
+    IDS_ENERGY_IT_CALORIES          "Tabela Internacional de calorias"
+    IDS_ENERGY_IT_KILOCALORIES      "Tabela Internacional de quilocalorias"
     IDS_ENERGY_JOULES               "Joules"
-    IDS_ENERGY_KILOJOULES           "Kilojoules"
-    IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hours"
-    IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calories"
-    IDS_ENERGY_TH_CALORIES          "Thermochemical calorie"
+    IDS_ENERGY_KILOJOULES           "Quilojoules"
+    IDS_ENERGY_KILOWATT_HOURS       "Quilowatt-hora"
+    IDS_ENERGY_NUTRITION_CALORIES   "Calorias nutritivas"
+    IDS_ENERGY_TH_CALORIES          "Caloria termoquímica"
 END
 
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Ångströms"
-    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomical units"
+    IDS_LENGTH_ANGSTROMS            "Ångström"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Unidade astronômica"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
-    IDS_LENGTH_CENTIMETERS          "Centimeters"
-    IDS_LENGTH_CHAINS_UK            "Chains (UK)"
+    IDS_LENGTH_CENTIMETERS          "Centímetros"
+    IDS_LENGTH_CHAINS_UK            "Correntes (UK)"
     IDS_LENGTH_CHI                  "Chi"
     IDS_LENGTH_CHOU                 "Chou"
     IDS_LENGTH_CHR                  "Chr"
     IDS_LENGTH_CUN                  "Cun"
-    IDS_LENGTH_FATHOMS              "Fathoms"
-    IDS_LENGTH_FATHOMS_HUNGARY      "Fathoms (Hungary)"
-    IDS_LENGTH_FEET                 "Feet"
+    IDS_LENGTH_FATHOMS              "Braças"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Braças (Hungária)"
+    IDS_LENGTH_FEET                 "Pés"
     IDS_LENGTH_FURLONGS             "Furlongs"
     IDS_LENGTH_GAN                  "Gan"
-    IDS_LENGTH_HANDS                "Hands"
+    IDS_LENGTH_HANDS                "Mãos"
     IDS_LENGTH_HUNH                 "Hunh"
-    IDS_LENGTH_INCHES               "Inches"
+    IDS_LENGTH_INCHES               "Polegadas"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
     IDS_LENGTH_KABIET               "Kabiet"
     IDS_LENGTH_KEN                  "Ken"
     IDS_LENGTH_KEUB                 "Keub"
-    IDS_LENGTH_KILOMETERS           "Kilometers"
+    IDS_LENGTH_KILOMETERS           "Quilômetors"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "Light years"
+    IDS_LENGTH_LIGHT_YEARS          "Anos-luz"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
-    IDS_LENGTH_METERS               "Meters"
-    IDS_LENGTH_MICRONS              "Microns"
-    IDS_LENGTH_MILES                "Miles"
-    IDS_LENGTH_MILLIMETERS          "Millimeters"
-    IDS_LENGTH_NAUTICAL_MILES       "Nautical miles"
+    IDS_LENGTH_METERS               "Metros"
+    IDS_LENGTH_MICRONS              "Micrômetro"
+    IDS_LENGTH_MILES                "Milhas"
+    IDS_LENGTH_MILLIMETERS          "Milímetros"
+    IDS_LENGTH_NAUTICAL_MILES       "Milhas náuticas"
     IDS_LENGTH_NIEU                 "Nieu"
     IDS_LENGTH_PARSECS              "Parsecs"
-    IDS_LENGTH_PICAS                "Picas"
-    IDS_LENGTH_RI_JAPAN             "Ri (Japan)"
-    IDS_LENGTH_RI_KOREA             "Ri (Korea)"
-    IDS_LENGTH_RODS                 "Rods"
+    IDS_LENGTH_PICAS                "Paicas"
+    IDS_LENGTH_RI_JAPAN             "Ri (Japão)"
+    IDS_LENGTH_RI_KOREA             "Ri (Coreia)"
+    IDS_LENGTH_RODS                 "Varas"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -597,7 +599,7 @@ BEGIN
     IDS_LENGTH_SUN                  "Sun"
     IDS_LENGTH_TSUEN                "Tsuen"
     IDS_LENGTH_VA                   "Va"
-    IDS_LENGTH_YARDS                "Yards"
+    IDS_LENGTH_YARDS                "Jardas"
     IDS_LENGTH_YOTE                 "Yote"
     IDS_LENGTH_ZHANG                "Zhang"
 END
@@ -605,10 +607,10 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE       "British Thermal Units per minute"
-    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds per minute"
-    IDS_POWER_HORSEPOWER            "Horsepower"
-    IDS_POWER_KILOWATTS             "Kilowatts"
+    IDS_POWER_BTUS_PER_MINUTE       "British Thermal Units por minuto"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds por minuto"
+    IDS_POWER_HORSEPOWER            "Cavalos de potência"
+    IDS_POWER_KILOWATTS             "Quilowatts"
     IDS_POWER_MEGAWATTS             "Megawatts"
     IDS_POWER_WATTS                 "Watts"
 END
@@ -616,13 +618,13 @@ END
 // TYPE OF PRESSURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "Atmospheres"
+    IDS_PRESSURE_ATMOSPHERES        "Atmosferas"
     IDS_PRESSURE_BARS               "Bars"
-    IDS_PRESSURE_HECTOPASCALS       "Hectopascals"
-    IDS_PRESSURE_KILOPASCALS        "Kilopascals"
-    IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
-    IDS_PRESSURE_PASCALS            "Pascals"
-    IDS_PRESSURE_PSI                "Pounds-force per square inch"
+    IDS_PRESSURE_HECTOPASCALS       "Hectopascais"
+    IDS_PRESSURE_KILOPASCALS        "Quilopascais"
+    IDS_PRESSURE_MM_OF_MERCURY      "Milímetros de mercúrio"
+    IDS_PRESSURE_PASCALS            "Pascais"
+    IDS_PRESSURE_PSI                "Pounds-force per square inch (PSI)"
 END
 
 // TYPES OF TEMPERATURES
@@ -637,62 +639,62 @@ END
 // TYPES OF TIME
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TIME_DAYS         "Days"
-    IDS_TIME_HOURS        "Hours"
-    IDS_TIME_NANOSECONDS  "Nanoseconds"
-    IDS_TIME_MICROSECONDS "Microseconds"
-    IDS_TIME_MILLISECONDS "Milliseconds"
-    IDS_TIME_MINUTES      "Minutes"
-    IDS_TIME_SECONDS      "Seconds"
-    IDS_TIME_WEEKS        "Weeks"
-    IDS_TIME_YEARS        "Years"
+    IDS_TIME_DAYS         "Dias"
+    IDS_TIME_HOURS        "Horas"
+    IDS_TIME_NANOSECONDS  "Nanosegundos"
+    IDS_TIME_MICROSECONDS "Microsegundos"
+    IDS_TIME_MILLISECONDS "Milisegundos"
+    IDS_TIME_MINUTES      "Minutos"
+    IDS_TIME_SECONDS      "Segundos"
+    IDS_TIME_WEEKS        "Semanas"
+    IDS_TIME_YEARS        "Anos"
 END
 
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VELOCITY_CMS_SECOND         "Centimeters/hour"
-    IDS_VELOCITY_FEET_HOUR          "Feet/hour"
-    IDS_VELOCITY_FEET_SECOND        "Feet/second"
-    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometers/hour"
-    IDS_VELOCITY_KNOTS              "Knots"
+    IDS_VELOCITY_CMS_SECOND         "Centímetros/hora"
+    IDS_VELOCITY_FEET_HOUR          "Pés/hora"
+    IDS_VELOCITY_FEET_SECOND        "Pés/segundo"
+    IDS_VELOCITY_KILOMETERS_HOUR    "Quilômetros/hora"
+    IDS_VELOCITY_KNOTS              "Nós"
     IDS_VELOCITY_MACH               "Mach"
-    IDS_VELOCITY_METERS_SECOND      "Meters/second"
-    IDS_VELOCITY_MILES_HOUR         "Miles/hour"
+    IDS_VELOCITY_METERS_SECOND      "Metros/segundo"
+    IDS_VELOCITY_MILES_HOUR         "Milhas/hora"
 END
 
 // TYPES OF VOLUMES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VOLUME_BARRELS_UK           "Barrels (UK)"
-    IDS_VOLUME_BARRELS_OIL          "Barrels oil"
+    IDS_VOLUME_BARRELS_UK           "Barris (UK)"
+    IDS_VOLUME_BARRELS_OIL          "Barris de petróleo"
     IDS_VOLUME_BUN                  "Bun"
-    IDS_VOLUME_BUSHELS_UK           "Bushels (UK)"
-    IDS_VOLUME_BUSHELS_US           "Bushels (US)"
-    IDS_VOLUME_CUBIC_CENTIMETERS    "Cubic centimeters"
-    IDS_VOLUME_CUBIC_FEET           "Cubic feet"
-    IDS_VOLUME_CUBIC_INCHES         "Cubic inches"
-    IDS_VOLUME_CUBIC_METERS         "Cubic meters"
-    IDS_VOLUME_CUBIC_YARDS          "Cubic yards"
+    IDS_VOLUME_BUSHELS_UK           "Celemim (UK)"
+    IDS_VOLUME_BUSHELS_US           "Celemim (EUA)"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "Centímetros cúbicos"
+    IDS_VOLUME_CUBIC_FEET           "Pés cúbicos"
+    IDS_VOLUME_CUBIC_INCHES         "Polegadas cúbicas"
+    IDS_VOLUME_CUBIC_METERS         "Metros cúbicos"
+    IDS_VOLUME_CUBIC_YARDS          "Jardas cúbicas"
     IDS_VOLUME_DOE                  "Doe"
-    IDS_VOLUME_FLUID_OUNCES_UK      "Fluid ounces (UK)"
-    IDS_VOLUME_FLUID_OUNCES_US      "Fluid ounces (US)"
-    IDS_VOLUME_GALLONS_UK           "Gallons (UK)"
-    IDS_VOLUME_GALLONS_DRY_US       "Gallons, dry (US)"
-    IDS_VOLUME_GALLONS_LIQUID_US    "Gallons, liquid (US)"
+    IDS_VOLUME_FLUID_OUNCES_UK      "Onças líquidas (UK)"
+    IDS_VOLUME_FLUID_OUNCES_US      "Onças líquidas (EUA)"
+    IDS_VOLUME_GALLONS_UK           "Galões (EUA)"
+    IDS_VOLUME_GALLONS_DRY_US       "Galões secos (EUA)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Galões líquidos (EUA)"
     IDS_VOLUME_GOU                  "Gou"
     IDS_VOLUME_HOP                  "Hop"
     IDS_VOLUME_ICCE                 "Icce"
     IDS_VOLUME_KWIAN                "Kwian"
-    IDS_VOLUME_LITERS               "Liters"
+    IDS_VOLUME_LITERS               "Litros"
     IDS_VOLUME_MAL                  "Mal"
-    IDS_VOLUME_MILLILITERS          "Milliliters"
-    IDS_VOLUME_PINTS_UK             "Pints (UK)"
-    IDS_VOLUME_PINTS_DRY_US         "Pints, dry (US)"
-    IDS_VOLUME_PINTS_LIQUID_US      "Pints, liquid (US)"
-    IDS_VOLUME_QUARTS_UK            "Quarts (UK)"
-    IDS_VOLUME_QUARTS_DRY_US        "Quarts, dry (US)"
-    IDS_VOLUME_QUARTS_LIQUID_US     "Quarts, liquid (US)"
+    IDS_VOLUME_MILLILITERS          "Milímetros"
+    IDS_VOLUME_PINTS_UK             "Pintos (UK)"
+    IDS_VOLUME_PINTS_DRY_US         "Pintos secos (EUA)"
+    IDS_VOLUME_PINTS_LIQUID_US      "Pints líquidos (EUA)"
+    IDS_VOLUME_QUARTS_UK            "Quartos (UK)"
+    IDS_VOLUME_QUARTS_DRY_US        "Quartos secos (EUA)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "Quartos líquidos (EUA)"
     IDS_VOLUME_SEKI                 "Seki"
     IDS_VOLUME_SYOU                 "Syou"
     IDS_VOLUME_TANANLOUNG           "Tananloung"
@@ -704,29 +706,29 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
-    IDS_WEIGHT_CARATS               "Carats"
+    IDS_WEIGHT_CARATS               "Quilate"
     IDS_WEIGHT_CHUNG                "Chung"
     IDS_WEIGHT_DON                  "Don"
     IDS_WEIGHT_GEUN                 "Geun"
-    IDS_WEIGHT_GRAMS                "Grams"
+    IDS_WEIGHT_GRAMS                "Gramas"
     IDS_WEIGHT_GWAN                 "Gwan"
     IDS_WEIGHT_HARB                 "Harb"
     IDS_WEIGHT_JIN_CHINA            "Jin (China)"
     IDS_WEIGHT_JIN_TAIWAN           "Jin (Taiwan)"
     IDS_WEIGHT_KAN                  "Kan"
-    IDS_WEIGHT_KILOGRAMS            "Kilograms"
+    IDS_WEIGHT_KILOGRAMS            "Quilogramas"
     IDS_WEIGHT_KIN                  "Kin"
     IDS_WEIGHT_LIANG_CHINA          "Liang (China)"
     IDS_WEIGHT_LIANG_TAIWAN         "Liang (Taiwan)"
     IDS_WEIGHT_MONME                "Monme"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Ounces, avoirdupois"
-    IDS_WEIGHT_OUNCES_TROY          "Ounces, troy"
-    IDS_WEIGHT_POUNDS               "Pounds"
-    IDS_WEIGHT_QUINTAL_METRIC       "Quintal (metric)"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Onças avoirdupois"
+    IDS_WEIGHT_OUNCES_TROY          "Onças troy"
+    IDS_WEIGHT_POUNDS               "Libras"
+    IDS_WEIGHT_QUINTAL_METRIC       "Quintal (métrico)"
     IDS_WEIGHT_SALOUNG              "Saloung"
-    IDS_WEIGHT_STONES               "Stones"
+    IDS_WEIGHT_STONES               "Pedras"
     IDS_WEIGHT_TAMLUNG              "Tamlung"
-    IDS_WEIGHT_TONNES               "Tonnes"
-    IDS_WEIGHT_TONS_UK              "Tons (UK)"
-    IDS_WEIGHT_TONS_US              "Tons (US)"
+    IDS_WEIGHT_TONNES               "Toneladas"
+    IDS_WEIGHT_TONS_UK              "Toneladas (UK)"
+    IDS_WEIGHT_TONS_US              "Toneladas (EUA)"
 END

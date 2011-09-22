@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     unknown (LGPL assumed)
  * FILE:        base/applications/mspaint/lang/pt-BR.rc
@@ -49,7 +49,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Zoom"
         BEGIN
-            POPUP "User defined"
+            POPUP "Definido pelo usuário"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,8 +60,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Exibir grade", IDM_VIEWSHOWGRID
+            MENUITEM "Exibir miniatura", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "E&xibir bitmap\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -79,7 +79,7 @@ BEGIN
 
     POPUP "&Cores"
     BEGIN
-        MENUITEM "&Edit cores...", IDM_COLORSEDITPALETTE
+        MENUITEM "&Editar cores...", IDM_COLORSEDITPALETTE
     END
     
     POPUP "&?"
@@ -181,7 +181,7 @@ BEGIN
     IDS_INFOTEXT, "Paint para ReactOS está disponível sob a licença GNU Lesser General Public License (LGPL) versão 3 (visite www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Salvar as alterações em %s?"
     IDS_DEFAULTFILENAME, "Imagem.bmp"
-    IDS_MINIATURETITLE, "Miniature"
+    IDS_MINIATURETITLE, "Miniatura"
     IDS_TOOLTIP1, "Selecionar forma livre"
     IDS_TOOLTIP2, "Selecionar"
     IDS_TOOLTIP3, "Apagador/Apagador de cor"
@@ -190,7 +190,7 @@ BEGIN
     IDS_TOOLTIP6, "Lente de aumento"
     IDS_TOOLTIP7, "Lápis"
     IDS_TOOLTIP8, "Pincel"
-    IDS_TOOLTIP9, "Splay"
+    IDS_TOOLTIP9, "Spray"
     IDS_TOOLTIP10, "Texto"
     IDS_TOOLTIP11, "Linnha"
     IDS_TOOLTIP12, "Curva"
