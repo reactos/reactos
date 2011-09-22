@@ -33,7 +33,6 @@ list(APPEND FREELDR_COMMON_SOURCE
     options.c
     oslist.c
     version.c
-    arcemul/mm.c
     arcemul/time.c
     cache/blocklist.c
     cache/cache.c
@@ -53,6 +52,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     inifile/parse.c
     mm/meminit.c
     mm/mm.c
+    mm/heap.c
     reactos/registry.c
     reactos/arcname.c
     reactos/archwsup.c

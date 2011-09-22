@@ -82,42 +82,6 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	return MemPointer;
 }
 
-PVOID MmHeapAlloc(ULONG MemorySize)
-{
-	PVOID Result;
-
-	if (MemorySize > MM_PAGE_SIZE)
-	{
-		WARN("Consider using other functions to allocate %d bytes of memory!\n", MemorySize);
-	}
-
-	// Get the buffer from BGET pool
-	Result = bget(MemorySize);
-
-	if (Result == NULL)
-	{
-		ERR("Heap allocation for %d bytes failed\n", MemorySize);
-	}
-#if MM_DBG
-    {
-    	LONG CurAlloc, TotalFree, MaxFree, NumberOfGets, NumberOfRels;
-
-	    // Gather some stats
-	    bstats(&CurAlloc, &TotalFree, &MaxFree, &NumberOfGets, &NumberOfRels);
-
-	    TRACE("Current alloced %d bytes, free %d bytes, allocs %d, frees %d\n",
-		    CurAlloc, TotalFree, NumberOfGets, NumberOfRels);
-	}
-#endif
-	return Result;
-}
-
-VOID MmHeapFree(PVOID MemoryPointer)
-{
-	// Release the buffer to the pool
-	brel(MemoryPointer);
-}
-
 PVOID MmAllocateMemory(ULONG MemorySize)
 {
 	// Temporary forwarder...
@@ -345,64 +309,3 @@ PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
 	return RealPageLookupTable;
 }
 
-#undef ExAllocatePoolWithTag
-NTKERNELAPI
-PVOID
-NTAPI
-ExAllocatePoolWithTag(
-    IN POOL_TYPE PoolType,
-    IN SIZE_T NumberOfBytes,
-    IN ULONG Tag)
-{
-    return MmHeapAlloc(NumberOfBytes);
-}
-
-#undef ExFreePool
-NTKERNELAPI
-VOID
-NTAPI
-ExFreePool(
-    IN PVOID P)
-{
-    MmHeapFree(P);
-}
-
-#undef ExFreePoolWithTag
-NTKERNELAPI
-VOID
-NTAPI
-ExFreePoolWithTag(
-  IN PVOID P,
-  IN ULONG Tag)
-{
-    ExFreePool(P);
-}
-
-PVOID
-NTAPI
-RtlAllocateHeap(
-    IN PVOID HeapHandle,
-    IN ULONG Flags,
-    IN SIZE_T Size)
-{
-    PVOID ptr;
-
-    ptr = MmHeapAlloc(Size);
-    if (ptr && (Flags & HEAP_ZERO_MEMORY))
-    {
-        RtlZeroMemory(ptr, Size);
-    }
-
-    return ptr;
-}
-
-BOOLEAN
-NTAPI
-RtlFreeHeap(
-    IN PVOID HeapHandle,
-    IN ULONG Flags,
-    IN PVOID HeapBase)
-{
-    MmHeapFree(HeapBase);
-    return TRUE;
-}
