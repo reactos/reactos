@@ -323,7 +323,7 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
         while (TRUE)
         {
             /* Check for valid vector number */
-            if (i < MAXIMUM_IDTVECTOR)
+            if (i <= MAXIMUM_IDTVECTOR)
             {
                 /* Check if this entry should be parsed */
                 if ((HalpIDTUsageFlags[i].Flags & FlagMatch))
