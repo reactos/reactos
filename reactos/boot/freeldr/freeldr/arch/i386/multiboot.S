@@ -58,7 +58,7 @@ MultibootHeader:
     /* load_addr */
     .long INITIAL_BASE
     /* load_end_addr */
-    .long INITIAL_BASE + __bss_start__ - FREELDR_BASE
+    .long 0
     /* bss_end_addr */
     .long 0
     /* entry_addr */
@@ -98,16 +98,9 @@ mb3:
     /* Relocate itself to lower address */
     mov esi, INITIAL_BASE
     mov edi, FREELDR_BASE
-    mov ecx, (offset __bss_start__ - FREELDR_BASE + 3)
+    mov ecx, offset __bss_start__ - FREELDR_BASE
     shr ecx, 2
     rep movsd
-
-    /* Clean out bss */
-    xor eax, eax
-    mov ecx, offset __bss_end__ + 3
-    sub ecx, offset __bss_start__
-    shr ecx, 2
-    rep stosd
 
     /* Load segment registers for real-address mode */
     lgdt gdtptr

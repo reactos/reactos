@@ -70,11 +70,19 @@ _FrldrStartup:
     /* Initialize the idt */
     call _InitIdt
 
-    /* Pass the command line to BootMain */
-#ifdef _USE_ML
+#ifndef _USE_ML
+    /* Clean out bss */
     xor eax, eax
-#else
+    mov edi, offset __bss_start__
+    mov ecx, offset __bss_end__ + 3
+    sub ecx, edi
+    shr ecx, 2
+    rep stosd
+
+    /* Pass the command line to BootMain */
     mov eax, offset cmdline
+#else
+    xor eax, eax
 #endif
 
 	/* GO! */
