@@ -247,8 +247,9 @@ KiGetCpuVendor(VOID)
         return CPU_RISE;
     }
 
-    /* Invalid CPU */
-    return 0;
+    /* Unknown CPU */
+    DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
+    return CPU_UNKNOWN;
 }
 
 ULONG
@@ -311,9 +312,6 @@ KiGetFeatureBits(VOID)
                 Reg[3] &= ~0x800;
             }
 
-            /* Set the current features */
-            CpuFeatures = Reg[3];
-
             break;
 
         /* AMD CPUs */
@@ -363,9 +361,6 @@ KiGetFeatureBits(VOID)
                 ExtendedCPUID = FALSE;
             }
 
-            /* Set the current features */
-            CpuFeatures = Reg[3];
-
             break;
 
         /* Cyrix CPUs */
@@ -384,9 +379,6 @@ KiGetFeatureBits(VOID)
                 /* Set the new CCR1 value */
                 setCx86(CX86_CCR1, Ccr1);
             }
-
-            /* Set the current features */
-            CpuFeatures = Reg[3];
 
             break;
 
@@ -412,6 +404,9 @@ KiGetFeatureBits(VOID)
 
             break;
     }
+
+    /* Set the current features */
+    CpuFeatures = Reg[3];
 
     /* Convert all CPUID Feature bits into our format */
     if (CpuFeatures & 0x00000002) FeatureBits |= KF_V86_VIS | KF_CR4;
