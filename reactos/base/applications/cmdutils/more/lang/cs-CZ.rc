@@ -10,13 +10,13 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_USAGE, "Zobrazí výstup po jednotlivých stránkách na obrazovku.\n\n\
   MORE < [Jednotka:][Cesta]Název souboru\n\
-  Pøíkaz | MORE \n\
+  Příkaz | MORE \n\
   MORE [Jednotka:][Cesta]Název souboru\n\n\
   [Jednotka:][Cesta]Název souboru    Soubor, jehož obsah bude zobrazen.\n\
-  Pøíkaz\t\t     Pøíkaz, jehož výstup bude zobrazen.\n\n\
-  Pøi výzvì ""-- Pokraèovat --"" lze stisknout libovolnou klávesu\n\
+  Příkaz\t\t     Příkaz, jehož výstup bude zobrazen.\n\n\
+  Při výzvě ""-- Pokračovat --"" lze stisknout libovolnou klávesu\n\
   pro zobrazení další stránky.\n"
 
-  IDS_CONTINUE, " -- Pokraèovat (100%) -- "
-  IDS_FILE_ACCESS, "Nelze získat pøístup k souboru %s."
+  IDS_CONTINUE, " -- Pokračovat (100%) -- "
+  IDS_FILE_ACCESS, "Nelze získat přístup k souboru %s."
 END

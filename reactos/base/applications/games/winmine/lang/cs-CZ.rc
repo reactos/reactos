@@ -34,29 +34,29 @@ BEGIN
     POPUP "N&astavení" BEGIN
         MENUITEM "&Nová\tF2",       IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Oznaèovat nerozhodnuté", IDM_MARKQ
+        MENUITEM "&Označovat nerozhodnuté", IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "&Zaèáteèník",      IDM_BEGINNER
-        MENUITEM "&Pokroèilý",      IDM_ADVANCED
+        MENUITEM "&Začátečník",      IDM_BEGINNER
+        MENUITEM "&Pokročilý",      IDM_ADVANCED
         MENUITEM "&Expert",        IDM_EXPERT
         MENUITEM "&Dle libosti",        IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "&Konec\tAlt+K",   IDM_EXIT
     END
     POPUP "&Informace" BEGIN
-        MENUITEM "Ne&jlepší èasy",    IDM_TIMES
+        MENUITEM "Ne&jlepší časy",    IDM_TIMES
         MENUITEM "&O aplikaci",         IDM_ABOUT
     END
 END
 
 DLG_TIMES DIALOGEX 0, 0, 160, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Nejlepší èasy"
+CAPTION "Nejlepší časy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Nejlepší èasy", -1,  10,  10, 140,  45
-    LTEXT           "Zaèáteèník",      -1,  20,  20,  40,   8
-    LTEXT           "Pokroèilý",      -1,  20,  30,  40,   8
+    GROUPBOX        "Nejlepší časy", -1,  10,  10, 140,  45
+    LTEXT           "Začátečník",      -1,  20,  20,  40,   8
+    LTEXT           "Pokročilý",      -1,  20,  30,  40,   8
     LTEXT           "Expert",        -1,  20,  40,  40,   8
     LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
     LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
@@ -82,7 +82,7 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Vlastní hra"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Øádky",   -1,   5,   5,  30,  10
+    LTEXT           "Řádky",   -1,   5,   5,  30,  10
     LTEXT           "Sloupce",   -1,   5,  35,  30,  10
     LTEXT           "Miny",  -1,   5,  65,  30,  10
     EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER

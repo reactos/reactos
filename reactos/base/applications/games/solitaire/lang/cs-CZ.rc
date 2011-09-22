@@ -16,10 +16,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Karty", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Sejmout &jednu", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Sejmout &tøi", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    AUTORADIOBUTTON "Sejmout &tři", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "Zobrazit è&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "Stavový øád&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Zobrazit č&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Stavový řád&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Storno", IDCANCEL, 101, 97, 50, 14
@@ -54,8 +54,8 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib verze 1.0."
-    IDS_SOL_QUIT    "Ukonèit rozehranou hru?"
-    IDS_SOL_WIN     "Gratulujeme, zvítìzili jste!!"
+    IDS_SOL_QUIT    "Ukončit rozehranou hru?"
+    IDS_SOL_WIN     "Gratulujeme, zvítězili jste!!"
     IDS_SOL_DEAL    "Rozdat znova?"
 END
 
@@ -73,10 +73,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Konec",                       IDM_GAME_EXIT
     END
-    POPUP "Nápo&vìda"
+    POPUP "Nápo&věda"
     BEGIN
         MENUITEM "&Obsah\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "O høe &Solitaire",                      IDM_HELP_ABOUT
+        MENUITEM "O hře &Solitaire",                      IDM_HELP_ABOUT
     END
 END
 

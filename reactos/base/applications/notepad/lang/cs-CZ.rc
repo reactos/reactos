@@ -47,7 +47,7 @@ BEGIN
     POPUP "&Soubor"
     BEGIN
         MENUITEM "&Nový\tCtrl+N",          CMD_NEW
-        MENUITEM "&Otevøít\tCtrl+O",       CMD_OPEN
+        MENUITEM "&Otevřít\tCtrl+O",       CMD_OPEN
         MENUITEM "&Uložit\tCtrl+S",        CMD_SAVE
         MENUITEM "Uložit j&ako...",        CMD_SAVE_AS
         MENUITEM SEPARATOR
@@ -59,7 +59,7 @@ BEGIN
     END
     POPUP "U&pravit"
     BEGIN
-        MENUITEM "&Zpìt\tCtrl+Z",       CMD_UNDO
+        MENUITEM "&Zpět\tCtrl+Z",       CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "Vyjmou&t\tCtrl+X",    CMD_CUT
         MENUITEM "&Kopírovat\tCtrl+C",  CMD_COPY
@@ -72,22 +72,22 @@ BEGIN
         MENUITEM "Go To...\tCtrl+G",    CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Vybrat vš&e\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "È&as/Datum\tF5",      CMD_TIME_DATE
+        MENUITEM "Č&as/Datum\tF5",      CMD_TIME_DATE
     END
     POPUP "F&ormát"
     BEGIN
-        MENUITEM "Zalo&mit dlouhé øádky", CMD_WRAP
+        MENUITEM "Zalo&mit dlouhé řádky", CMD_WRAP
         MENUITEM "&Písmo...",             CMD_FONT
     END
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "&Stavový øádek", CMD_STATUSBAR
+        MENUITEM "&Stavový řádek", CMD_STATUSBAR
     END
-    POPUP "&Nápovìda"
+    POPUP "&Nápověda"
     BEGIN
         MENUITEM "O&bsah",            CMD_HELP_CONTENTS
         MENUITEM "&Najít...",         CMD_HELP_SEARCH
-        MENUITEM "Pomoc k ná&povìdì", CMD_HELP_ON_HELP
+        MENUITEM "Pomoc k ná&povědě", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&O programu...",    CMD_ABOUT
         MENUITEM "In&fo...",          CMD_ABOUT_WINE
@@ -118,7 +118,7 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 
 DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Storno",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Nápovìda",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Nápověda",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
@@ -131,17 +131,17 @@ BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Kódování:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Odøádkování:",0x156,5,20,41,12
+LTEXT           "Odřádkování:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,165,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Jít na øádek"
+CAPTION "Jít na řádek"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Èíslo øádku:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "Číslo řádku:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Storno", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -155,7 +155,7 @@ BEGIN
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Zavøít",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Zavřít",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -185,18 +185,18 @@ STRING_UNTITLED,                                "(bez názvu)"
 STRING_ALL_FILES,                               "Všechny soubory (*.*)"
 STRING_TEXT_FILES_TXT,                  "Textové soubory (*.txt)"
 
-STRING_TOOLARGE,                                "Soubor '%s' je pro notepad pøíliš velký.\n \
+STRING_TOOLARGE,                                "Soubor '%s' je pro notepad příliš velký.\n \
 Použijte jiný editor, prosím."
 STRING_NOTEXT,                                  "Nebyl zadán žádný text. \
-\nVložte nìjaký text a zkuste to znovu."
+\nVložte nějaký text a zkuste to znovu."
 STRING_DOESNOTEXIST,                            "Soubor '%s'\nneexistuje.\n\n \
-Chcete ho vytvoøit ?"
-STRING_NOTSAVED,                                "Soubor '%s'\nbyl zmìnìn.\n\n \
-Chcete uložit zmìny ?"
+Chcete ho vytvořit ?"
+STRING_NOTSAVED,                                "Soubor '%s'\nbyl změněn.\n\n \
+Chcete uložit změny ?"
 STRING_NOTFOUND,                                        "'%s' nebyl nalezen."
-STRING_OUT_OF_MEMORY,                   "Není dost pamìti na dokonèení této úlohy. \
-\nUzavøete jednu èi více aplikací, abyste získali více  \nvolné \
-pamìti."
+STRING_OUT_OF_MEMORY,                   "Není dost paměti na dokončení této úlohy. \
+\nUzavřete jednu či více aplikací, abyste získali více  \nvolné \
+paměti."
 STRING_CANNOTFIND                               "Nelze nalézt '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
@@ -205,5 +205,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Øádek %d, sloupec %d"
+STRING_LINE_COLUMN,                             "Řádek %d, sloupec %d"
 END

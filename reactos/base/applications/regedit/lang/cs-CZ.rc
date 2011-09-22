@@ -37,9 +37,9 @@ IDC_REGEDIT MENU DISCARDABLE
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "U&konèit",                       ID_REGISTRY_EXIT
+        MENUITEM "U&končit",                       ID_REGISTRY_EXIT
     END
-    POPUP "&Nápovìda"
+    POPUP "&Nápověda"
     BEGIN
         MENUITEM "&O editoru registru ...",                  ID_HELP_ABOUT
     END
@@ -54,61 +54,61 @@ BEGIN
         MENUITEM "&Exportovat do souboru registru...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Naèíst strom registru...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Načíst strom registru...",				ID_REGISTRY_LOADHIVE, GRAYED
 		MENUITEM "Uvolnit strom registru...",				ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
-        MENUITEM "&Pøipojit síový registr...",
+        MENUITEM "&Připojit síťový registr...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
-        MENUITEM "&Odpojit síový registr...",
+        MENUITEM "&Odpojit síťový registr...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Tisk\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "U&konèit",                       ID_REGISTRY_EXIT
+        MENUITEM "U&končit",                       ID_REGISTRY_EXIT
     END
     POPUP "&Úpravy"
     BEGIN
-        MENUITEM "&Zmìnit hodnotu",                     ID_EDIT_MODIFY
+        MENUITEM "&Změnit hodnotu",                     ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Nový"
         BEGIN
-            MENUITEM "&Klíè",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Klíč",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Øetìzec",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Řetězec",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binární hodnota",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Víceøetìzcová hodnota",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "&Rozšiøitelná øetìzcová hodnota",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+			MENUITEM "&Víceřetězcová hodnota",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Rozšiřitelná řetězcová hodnota",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "Oprá&vnìní...",		ID_EDIT_PERMISSIONS
+        MENUITEM "Oprá&vnění...",		ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Odstranit\tDel",                ID_EDIT_DELETE
-        MENUITEM "&Pøejmenovat",                     ID_EDIT_RENAME
+        MENUITEM "&Přejmenovat",                     ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Z&kopírovat název klíèe",              ID_EDIT_COPYKEYNAME
+        MENUITEM "Z&kopírovat název klíče",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Najít\tCtrl+F",               ID_EDIT_FIND
         MENUITEM "Najít &další\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "&Stavový øádek",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Stavový řádek",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Rozdìlit",                      ID_VIEW_SPLIT
+        MENUITEM "&Rozdělit",                      ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Aktualizovat\tF5",                ID_VIEW_REFRESH
     END
     POPUP "&Oblíbené"
     BEGIN
-        MENUITEM "&Pøidat k oblíbeným",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Přidat k oblíbeným",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Odebrat z oblíbených",           ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Nápovìda"
+    POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&Témata nápovìdy\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM "&Témata nápovědy\tF1",            ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&O editoru registru",      ID_HELP_ABOUT
     END
@@ -122,19 +122,19 @@ BEGIN
 	MENUITEM "Upravit &binární data",          ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
 	MENUITEM "&Odstranit\tDel",                ID_EDIT_DELETE
-	MENUITEM "&Pøejmenovat",                     ID_EDIT_RENAME
+	MENUITEM "&Přejmenovat",                     ID_EDIT_RENAME
   END
   POPUP ""
   BEGIN
         POPUP "&Nový"
         BEGIN
-            MENUITEM "&Klíè",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Klíč",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Øetìzec",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Řetězec",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binární hodnota",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Víceøetìzcová hodnota",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Rozšiøitelná øetìzcová hodnota",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Víceřetězcová hodnota",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Rozšiřitelná řetězcová hodnota",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -142,32 +142,32 @@ BEGIN
         MENUITEM "Rozbalit/Sbalit",                 ID_TREE_EXPANDBRANCH
         POPUP "&Nový"
         BEGIN
-            MENUITEM "&Klíè",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Klíč",                        ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Øetìzec",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Řetězec",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binární hodnota",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Víceøetìzcová hodnota",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Rozšiøitelná øetìzcová hodnota",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Víceřetězcová hodnota",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Rozšiřitelná řetězcová hodnota",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Najít",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Odstranit",                         ID_TREE_DELETE
-        MENUITEM "&Pøejmenovat",                         ID_TREE_RENAME
+        MENUITEM "&Přejmenovat",                         ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportovat",                         ID_TREE_EXPORT
-        MENUITEM "Oprá&vnìní...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Oprá&vnění...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Z&kopírovat název klíèe",                  ID_EDIT_COPYKEYNAME
+        MENUITEM "Z&kopírovat název klíče",                  ID_EDIT_COPYKEYNAME
   END
   POPUP ""
   BEGIN
-        MENUITEM "C&ut", ID_HEXEDIT_CUT
-        MENUITEM "&Copy", ID_HEXEDIT_COPY
-        MENUITEM "&Paste", ID_HEXEDIT_PASTE
-        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM "Vyj&mout", ID_HEXEDIT_CUT
+        MENUITEM "&Kopírovat", ID_HEXEDIT_COPY
+        MENUITEM "V&ložit", ID_HEXEDIT_PASTE
+        MENUITEM "O&dstranit", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "Vybr&at vše", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -177,10 +177,10 @@ END
  */
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
+CAPTION "Načíst registr"
 FONT 8, "Ms Shell Dlg"
 {
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT           "&Klíč:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
@@ -189,7 +189,7 @@ FONT 8, "Ms Shell Dlg"
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Úprava øetìzce"
+CAPTION "Úprava řetězce"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Název:",IDC_STATIC,6,6,134,8
@@ -203,7 +203,7 @@ END
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Úprava více-øetìzce"
+CAPTION "Úprava více-řetězce"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Název:",IDC_STATIC,6,6,134,8
@@ -313,72 +313,72 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "Obsahuje pøíkazy pro práci s celým registrem"
-    ID_EDIT_MENU            "Obsahuje pøíkazy pro úpravu hodnot a klíèù"
-    ID_VIEW_MENU            "Obsahuje pøíkazy pro pøizpùsobení okna registru"
-    ID_FAVOURITES_MENU      "Obsahuje pøíkazy pro pøístup k èasto používaným klíèùm"
-    ID_HELP_MENU            "Obsahuje pøíkazy pro zobrazení nápovìdy a informací o editoru registru"
-    ID_EDIT_NEW_MENU        "Obsahuje pøíkazy pro vytváøení nových klíèù a hodnot"
+    ID_REGISTRY_MENU        "Obsahuje příkazy pro práci s celým registrem"
+    ID_EDIT_MENU            "Obsahuje příkazy pro úpravu hodnot a klíčů"
+    ID_VIEW_MENU            "Obsahuje příkazy pro přizpůsobení okna registru"
+    ID_FAVOURITES_MENU      "Obsahuje příkazy pro přístup k často používaným klíčům"
+    ID_HELP_MENU            "Obsahuje příkazy pro zobrazení nápovědy a informací o editoru registru"
+    ID_EDIT_NEW_MENU        "Obsahuje příkazy pro vytváření nových klíčů a hodnot"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_EDIT_MODIFY          "Upravuje data položky"
-    ID_EDIT_NEW_KEY         "Pøidá nový klíè"
-    ID_EDIT_NEW_STRINGVALUE "Pøidá novou položku ve formì øetìzce"
-    ID_EDIT_NEW_BINARYVALUE "Pøidá novou položku s binární hodnotou"
-    ID_EDIT_NEW_DWORDVALUE  "Pøidá novou DWORD položku"
+    ID_EDIT_NEW_KEY         "Přidá nový klíč"
+    ID_EDIT_NEW_STRINGVALUE "Přidá novou položku ve formě řetězce"
+    ID_EDIT_NEW_BINARYVALUE "Přidá novou položku s binární hodnotou"
+    ID_EDIT_NEW_DWORDVALUE  "Přidá novou DWORD položku"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importuje textový soubor do registru"
     ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Exportuje všechny èásti registru do textového souboru"
+                            "Exportuje všechny části registru do textového souboru"
     ID_REGISTRY_LOADHIVE
                             "Loads a hive file into the registry"
     ID_REGISTRY_UNLOADHIVE
                             "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Pøipojí se ke vzdálenému registru jiného poèítaèe"
+                            "Připojí se ke vzdálenému registru jiného počítače"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Odpojí se od vzdálenému registru jiného poèítaèe"
-    ID_REGISTRY_PRINT       "Vytiskne všechny èásti registru"
-/*    ID_HELP_HELPTOPICS      "Otevøe témata nápovìdy pro editor registru" */
+                            "Odpojí se od vzdálenému registru jiného počítače"
+    ID_REGISTRY_PRINT       "Vytiskne všechny části registru"
+/*    ID_HELP_HELPTOPICS      "Otevře témata nápovědy pro editor registru" */
     ID_HELP_ABOUT           "Zobrazí informace o aplikaci, verzi a copyright"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Ukonèí editor registru"
-    ID_FAVOURITES_ADDTOFAVOURITES "Pøidá klíè do seznamu oblíbených"
-    ID_FAVOURITES_REMOVEFAVOURITE "Odebere klíè ze seznamu oblíbených"
-    ID_VIEW_STATUSBAR       "Zobrazí nebo skryje stavový øádek"
-    ID_VIEW_SPLIT           "Upravuje polohu rozdìlovaèe obou panelù"
+    ID_REGISTRY_EXIT        "Ukončí editor registru"
+    ID_FAVOURITES_ADDTOFAVOURITES "Přidá klíč do seznamu oblíbených"
+    ID_FAVOURITES_REMOVEFAVOURITE "Odebere klíč ze seznamu oblíbených"
+    ID_VIEW_STATUSBAR       "Zobrazí nebo skryje stavový řádek"
+    ID_VIEW_SPLIT           "Upravuje polohu rozdělovače obou panelů"
     ID_VIEW_REFRESH         "Obnoví okno"
-    ID_EDIT_DELETE          "Smaže výbìr"
-    ID_EDIT_RENAME          "Pøejmenuje výbìr"
-    ID_EDIT_COPYKEYNAME     "Zkopíruje název klíèe do schránky"
-    ID_EDIT_FIND            "Vyhledá textový øetìzec v klíèi, položkách, nebo datech"
-    ID_EDIT_FINDNEXT        "Vyhledá další výskyt textu zadaného v pøedchozím hledání"
+    ID_EDIT_DELETE          "Smaže výběr"
+    ID_EDIT_RENAME          "Přejmenuje výběr"
+    ID_EDIT_COPYKEYNAME     "Zkopíruje název klíče do schránky"
+    ID_EDIT_FIND            "Vyhledá textový řetězec v klíči, položkách, nebo datech"
+    ID_EDIT_FINDNEXT        "Vyhledá další výskyt textu zadaného v předchozím hledání"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR               "Chyba"
-    IDS_WARNING             "Upozornìní"
-    IDS_BAD_KEY             "Nelze se dotázat klíèe '%s'"
+    IDS_WARNING             "Upozornění"
+    IDS_BAD_KEY             "Nelze se dotázat klíče '%s'"
     IDS_BAD_VALUE           "Nelze se dotázat položky '%s'"
-    IDS_UNSUPPORTED_TYPE    "Nelze upravovat klíèe tohoto typu (%ld)"
-    IDS_TOO_BIG_VALUE       "Položka je pøíliš velká (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Položky typu REG_MULTI_SZ nemohou obsahovat prázdné øetezce.\nPrázdné øetìzce byly odebrány ze seznamu."
-    IDS_QUERY_DELETE_KEY_ONE    "Opravdu chcete odstranit tento klíè?"
-    IDS_QUERY_DELETE_KEY_MORE   "Opravdu chcete odstranit tyto klíèe?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Potvrzení smazání klíèe"
+    IDS_UNSUPPORTED_TYPE    "Nelze upravovat klíče tohoto typu (%ld)"
+    IDS_TOO_BIG_VALUE       "Položka je příliš velká (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Položky typu REG_MULTI_SZ nemohou obsahovat prázdné řetezce.\nPrázdné řetězce byly odebrány ze seznamu."
+    IDS_QUERY_DELETE_KEY_ONE    "Opravdu chcete odstranit tento klíč?"
+    IDS_QUERY_DELETE_KEY_MORE   "Opravdu chcete odstranit tyto klíče?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Potvrzení smazání klíče"
     IDS_QUERY_DELETE_ONE    "Opravdu chcete odstranit tuto položku?"
     IDS_QUERY_DELETE_MORE   "Opravdu chcete odstranit tyto položky?"
-    IDS_QUERY_DELETE_CONFIRM "Potvrzení odstranìní položky"
-    IDS_ERR_DELVAL_CAPTION  "Chyba pøi odstraòování položek"
+    IDS_QUERY_DELETE_CONFIRM "Potvrzení odstranění položky"
+    IDS_ERR_DELVAL_CAPTION  "Chyba při odstraňování položek"
     IDS_ERR_DELETEVALUE     "Nelze odstranit všechny vybrané položky!"
-    IDS_ERR_RENVAL_CAPTION  "Chyba pøi pøejmenování položky"
-    IDS_ERR_RENVAL_TOEMPTY  "Nelze pøejmenovat %s. Vybraná položka je prázdná. Vyzkoušejte jiný název."
-    IDS_NEW_KEY             "Nový klíè #%d"
+    IDS_ERR_RENVAL_CAPTION  "Chyba při přejmenování položky"
+    IDS_ERR_RENVAL_TOEMPTY  "Nelze přejmenovat %s. Vybraná položka je prázdná. Vyzkoušejte jiný název."
+    IDS_NEW_KEY             "Nový klíč #%d"
     IDS_NEW_VALUE           "Nová hodnota #%d"
 END
 
@@ -388,7 +388,7 @@ BEGIN
     IDS_DEFAULT_VALUE_NAME  "(Výchozí)"
     IDS_VALUE_NOT_SET       "(Hodnota nezadána)"
     IDS_UNKNOWN_TYPE        "Neznámý typ: (0x%lx)"
-    IDS_MY_COMPUTER         "Tento poèítaè"
+    IDS_MY_COMPUTER         "Tento počítač"
     IDS_IMPORT_REG_FILE     "Importovat soubor registru"
     IDS_EXPORT_REG_FILE     "Exportovat do souboru registru"
     IDS_LOAD_HIVE           "Load Hive"
@@ -409,25 +409,25 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Úplné oprávnìní"
-  IDS_ACCESS_READ               "Ètení"
+  IDS_ACCESS_FULLCONTROL        "Úplné oprávnění"
+  IDS_ACCESS_READ               "Čtení"
   IDS_ACCESS_QUERYVALUE         "Dotaz na hodnotu"
   IDS_ACCESS_SETVALUE           "Nastavení hodnoty"
-  IDS_ACCESS_CREATESUBKEY       "Vytvoøit podklíè"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Zjistit poèet podklíèù"
+  IDS_ACCESS_CREATESUBKEY       "Vytvořit podklíč"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Zjistit počet podklíčů"
   IDS_ACCESS_NOTIFY             "Upozornit"
-  IDS_ACCESS_CREATELINK         "Vytvoøit odkaz"
+  IDS_ACCESS_CREATELINK         "Vytvořit odkaz"
   IDS_ACCESS_DELETE             "Odstranit"
   IDS_ACCESS_WRITEDAC           "Zapsat DAC"
   IDS_ACCESS_WRITEOWNER         "Zapsat vlastníka"
-  IDS_ACCESS_READCONTROL        "Oprávnìní ke ètení"
+  IDS_ACCESS_READCONTROL        "Oprávnění ke čtení"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "Pouze tento klíè"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "Tento klíè a jeho podklíèe"
-  IDS_INHERIT_SUBKEYSONLY        "Pouze podklíèe"
+  IDS_INHERIT_THISKEYONLY        "Pouze tento klíč"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "Tento klíč a jeho podklíče"
+  IDS_INHERIT_SUBKEYSONLY        "Pouze podklíče"
 END
 
 STRINGTABLE DISCARDABLE
@@ -435,13 +435,13 @@ BEGIN
   IDS_EXPAND                     "&Rozbalit"
   IDS_COLLAPSE                   "&Sbalit"
   IDS_GOTO_SUGGESTED_KEY         "&Jít na '%s'"
-  IDS_FINISHEDFIND               "Prohledávání registru bylo dokonèeno."
+  IDS_FINISHEDFIND               "Prohledávání registru bylo dokončeno."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Add the data to the registry?"
-  IDS_IMPORTED_OK               "Information added to the registry"
+  IDS_IMPORT_PROMPT             "Přidat data do registru?"
+  IDS_IMPORTED_OK               "Data přidána do registru."
 END
 
 STRINGTABLE DISCARDABLE
@@ -511,13 +511,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
    GROUPBOX "Rozsah exportu",IDC_STATIC,2,0,366,48
    CONTROL "&Vše",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "V&ybraná vìtev",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   CONTROL "V&ybraná větev",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Pøidat do Oblíbených"
+CAPTION "Přidat do Oblíbených"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
@@ -548,13 +548,13 @@ BEGIN
     GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
     LTEXT           "&Najít:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Klíèe",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Klíče",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
     CONTROL         "&Hodnoty",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
     CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "Hledat pouze &celý øetìzec",IDC_MATCHSTRING,"Button",
+    CONTROL         "Hledat pouze &celý řetězec",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
     CONTROL         "Rozlišovat &velikost písmen",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
@@ -589,7 +589,7 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Otevøe nápovìdu pro editor registru."
+ *    ID_HELP_HELPTOPICS      "Otevře nápovědu pro editor registru."
  *    ID_HELP_ABOUT           "Zobrazí informace o aplikaci, verzi a copyright."
  *END
  */
