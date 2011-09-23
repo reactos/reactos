@@ -1,5 +1,4 @@
-/* $Id$
- *
+/* 
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,7 +58,7 @@ typedef struct tagMACHVTBL
   VOID (*PrepareForReactOS)(IN BOOLEAN Setup);
 
   MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(MEMORY_DESCRIPTOR* Current);
-  PBIOS_MEMORY_MAP (*GetMemoryMap)(PULONG MemoryMapSize);
+  PMEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
   BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);

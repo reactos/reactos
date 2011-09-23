@@ -21,6 +21,7 @@
  */
 
 #include <freeldr.h>
+#include <arch/pc/x86common.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -28,9 +29,43 @@
 DBG_DEFAULT_CHANNEL(MEMORY);
 
 #define MAX_BIOS_DESCRIPTORS 32
+#define FREELDR_BASE_PAGE  (FREELDR_BASE / PAGE_SIZE)
+#define FILEBUF_BASE_PAGE  (FILESYSBUFFER / PAGE_SIZE)
+#define DISKBUF_BASE_PAGE  (DISKREADBUFFER / PAGE_SIZE)
+#define STACK_BASE_PAGE    (DISKBUF_BASE_PAGE + 1)
+#define STACK_END_PAGE     (STACK32ADDR / PAGE_SIZE)
+#define BIOSBUF_BASE_PAGE  (BIOSCALLBUFFER / PAGE_SIZE)
+
+#define FREELDR_PAGE_COUNT (FILEBUF_BASE_PAGE - FREELDR_BASE_PAGE)
+#define FILEBUF_PAGE_COUNT (DISKBUF_BASE_PAGE - FILEBUF_BASE_PAGE)
+#define DISKBUF_PAGE_COUNT (1)
+#define STACK_PAGE_COUNT   (STACK_END_PAGE - STACK_BASE_PAGE)
+#define BIOSBUF_PAGE_COUNT (0xA0 - BIOSBUF_BASE_PAGE)
 
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
+
+MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
+{
+ { MemoryFirmwarePermanent, 0x00,               1 }, // realmode int vectors
+ { MemoryFirmwareTemporary, 0x01,               FREELDR_BASE_PAGE - 1 }, // freeldr stack + cmdline
+ { MemoryLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
+ { MemoryFirmwareTemporary, FILEBUF_BASE_PAGE,  FILEBUF_PAGE_COUNT }, // File system read buffer. FILESYSBUFFER
+ { MemoryFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
+ { MemorySpecialMemory,     STACK_BASE_PAGE,    STACK_PAGE_COUNT }, // prot mode stack.
+ { MemoryFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
+ { MemoryFirmwarePermanent, 0xA0,               0x60 }, // ROM / Video
+ { MemorySpecialMemory,     0xFFF,              1 }, // unusable memory
+ { MemorySpecialMemory,     MAXULONG_PTR,       0 }, // end of map
+};
+
+ULONG
+AddMemoryDescriptor(
+    IN OUT PMEMORY_DESCRIPTOR List,
+    IN ULONG MaxCount,
+    IN PFN_NUMBER BasePage,
+    IN PFN_NUMBER PageCount,
+    IN MEMORY_TYPE MemoryType);
 
 static
 BOOLEAN
@@ -153,11 +188,14 @@ PcMemGetConventionalMemorySize(VOID)
   return (ULONG)Regs.w.ax;
 }
 
-static ULONG
-PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
+static
+ULONG
+PcMemGetBiosMemoryMap(PMEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
 {
   REGS Regs;
-  ULONG MapCount;
+  ULONG MapCount = 0;
+  ULONGLONG RealBaseAddress, RealSize;
+  ASSERT(PcBiosMapCount == 0);
 
   TRACE("GetBiosMemoryMap()\n");
 
@@ -181,7 +219,7 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
    */
   Regs.x.ebx = 0x00000000;
 
-  for (MapCount = 0; MapCount < MaxMemoryMapSize; MapCount++)
+  while (PcBiosMapCount < MAX_BIOS_DESCRIPTORS)
     {
       /* Setup the registers for the BIOS call */
       Regs.x.eax = 0x0000E820;
@@ -192,7 +230,7 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       Regs.w.di = BIOSCALLBUFOFFSET;
       Int386(0x15, &Regs, &Regs);
 
-      TRACE("Memory Map Entry %d\n", MapCount);
+      TRACE("Memory Map Entry %d\n", PcBiosMapCount);
       TRACE("Int15h AX=E820h\n");
       TRACE("EAX = 0x%x\n", Regs.x.eax);
       TRACE("EBX = 0x%x\n", Regs.x.ebx);
@@ -206,14 +244,39 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
           break;
         }
 
-      /* Copy data to caller's buffer */
-      RtlCopyMemory(&BiosMemoryMap[MapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
+      /* Copy data to global buffer */
+      RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
 
-      TRACE("BaseAddress: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].BaseAddress);
-      TRACE("Length: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].Length);
-      TRACE("Type: 0x%x\n", BiosMemoryMap[MapCount].Type);
-      TRACE("Reserved: 0x%x\n", BiosMemoryMap[MapCount].Reserved);
+      TRACE("BaseAddress: 0x%p\n", (PVOID)(ULONG_PTR)PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
+      TRACE("Length: 0x%p\n", (PVOID)(ULONG_PTR)PcBiosMemoryMap[PcBiosMapCount].Length);
+      TRACE("Type: 0x%x\n", PcBiosMemoryMap[PcBiosMapCount].Type);
+      TRACE("Reserved: 0x%x\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
       TRACE("\n");
+
+      /* Align up base of memory area */
+      RealBaseAddress = ROUND_UP(PcBiosMemoryMap[PcBiosMapCount].BaseAddress, MM_PAGE_SIZE);
+      RealSize = PcBiosMemoryMap[PcBiosMapCount].Length -
+                 (RealBaseAddress - PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
+
+      /* Check if we can add this descriptor */
+      if ((RealSize >= MM_PAGE_SIZE) && (MapCount < MaxMemoryMapSize))
+      {
+        MEMORY_TYPE MemoryType;
+
+        if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryUsable)
+          MemoryType = MemoryFree;
+        else
+          MemoryType = MemoryFirmwarePermanent;
+
+        /* Add the descriptor */
+        MapCount = AddMemoryDescriptor(PcMemoryMap,
+                                       MAX_BIOS_DESCRIPTORS,
+                                       RealBaseAddress / MM_PAGE_SIZE,
+                                       RealSize / MM_PAGE_SIZE,
+                                       MemoryType);
+      }
+
+      PcBiosMapCount++;
 
       /* If the continuation value is zero or the
        * carry flag is set then this was
@@ -229,46 +292,59 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
   return MapCount;
 }
 
-PBIOS_MEMORY_MAP
+
+PMEMORY_DESCRIPTOR
 PcMemGetMemoryMap(ULONG *MemoryMapSize)
 {
-  ULONG EntryCount;
+  ULONG i, EntryCount;
   ULONG ExtendedMemorySizeAtOneMB;
   ULONG ExtendedMemorySizeAtSixteenMB;
 
-  EntryCount = PcMemGetBiosMemoryMap(PcBiosMemoryMap, MAX_BIOS_DESCRIPTORS);
-  PcBiosMapCount = EntryCount;
+  EntryCount = PcMemGetBiosMemoryMap(PcMemoryMap, MAX_BIOS_DESCRIPTORS);
 
   /* If the BIOS didn't provide a memory map, synthesize one */
   if (0 == EntryCount)
     {
       GetExtendedMemoryConfiguration(&ExtendedMemorySizeAtOneMB, &ExtendedMemorySizeAtSixteenMB);
 
-                                  /* Conventional memory */
-      PcBiosMemoryMap[EntryCount].BaseAddress = 0;
-      PcBiosMemoryMap[EntryCount].Length = PcMemGetConventionalMemorySize() * 1024;
-      PcBiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
-      EntryCount++;
+      /* Conventional memory */
+      AddMemoryDescriptor(PcMemoryMap,
+                          MAX_BIOS_DESCRIPTORS,
+                          0,
+                          PcMemGetConventionalMemorySize() * 1024 / PAGE_SIZE,
+                          MemoryFree);
 
-      /* Extended memory at 1MB */
-      PcBiosMemoryMap[EntryCount].BaseAddress = 1024 * 1024;
-      PcBiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtOneMB * 1024;
-      PcBiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
+      /* Extended memory */
+      EntryCount = AddMemoryDescriptor(PcMemoryMap,
+                          MAX_BIOS_DESCRIPTORS,
+                          1024 * 1024 / PAGE_SIZE,
+                          ExtendedMemorySizeAtOneMB * 1024 / PAGE_SIZE,
+                          MemoryFree);
       EntryCount++;
 
       if (ExtendedMemorySizeAtSixteenMB != 0)
       {
         /* Extended memory at 16MB */
-        PcBiosMemoryMap[EntryCount].BaseAddress = 0x1000000;
-        PcBiosMemoryMap[EntryCount].Length = ExtendedMemorySizeAtSixteenMB * 64 * 1024;
-        PcBiosMemoryMap[EntryCount].Type = BiosMemoryUsable;
-        EntryCount++;
+        EntryCount = AddMemoryDescriptor(PcMemoryMap,
+                          MAX_BIOS_DESCRIPTORS,
+                          0x1000000 / PAGE_SIZE,
+                          ExtendedMemorySizeAtSixteenMB * 64 * 1024 / PAGE_SIZE,
+                          MemoryFree);
       }
+    }
+
+    TRACE("Dumping resulting memory map:\n");
+    for (i = 0; i < EntryCount; i++)
+    {
+        TRACE("BasePage=0x%lx, PageCount=0x%lx, Type=%s\n",
+              PcMemoryMap[i].BasePage,
+              PcMemoryMap[i].PageCount,
+              MmGetSystemMemoryMapTypeString(PcMemoryMap[i].MemoryType));
     }
 
   *MemoryMapSize = EntryCount;
 
-  return PcBiosMemoryMap;
+  return PcMemoryMap;
 }
 
 /* EOF */

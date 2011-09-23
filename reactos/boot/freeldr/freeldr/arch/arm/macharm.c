@@ -143,12 +143,25 @@ ArmHwDetect(VOID)
     return RootNode;
 }
 
-PBIOS_MEMORY_MAP
-ArmMemGetMemoryMap(OUT PULONG MaxMemoryMapSize)
+MEMORY_DESCRIPTOR ArmMemoryMap[32];
+
+PMEMORY_DESCRIPTOR
+ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
 {
+    ASSERT(ArmBoardBlock->MemoryMapEntryCount <= 32);
+
     /* Return whatever the board returned to us (CS0 Base + Size and FLASH0) */
-    *MaxMemoryMapSize = ArmBoardBlock->MemoryMapEntryCount;
-    return ArmBoardBlock->MemoryMap;
+    for (i = 0; i < ArmBoardBlock->MemoryMapEntryCount; i++)
+    {
+        ArmMemoryMap[i].BasePage = ArmBoardBlock->MemoryMap[i].BaseAddress / PAGE_SIZE;
+        ArmMemoryMap[i].PageCount = ArmBoardBlock->MemoryMap[i].Length / PAGE_SIZE;
+        if (ArmBoardBlock->MemoryMap[i].Type == BiosMemoryUsable)
+            ArmMemoryMap[i].MemoryType = MemoryFree;
+        else
+            ArmMemoryMap[i].MemoryType = MemoryFirmwarePermanent;
+    }
+
+    return ArmBoardBlock->MemoryMapEntryCount;
 }
 
 VOID

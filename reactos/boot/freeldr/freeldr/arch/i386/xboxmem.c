@@ -75,21 +75,21 @@ XboxMemInit(VOID)
   AvailableMemoryMb = InstalledMemoryMb;
 }
 
-BIOS_MEMORY_MAP BiosMemoryMap[2];
+MEMORY_DESCRIPTOR BiosMemoryMap[2];
 
-PBIOS_MEMORY_MAP
+PMEMORY_DESCRIPTOR
 XboxMemGetMemoryMap(ULONG *MemoryMapSize)
 {
   /* Synthesize memory map */
       /* Available RAM block */
-      BiosMemoryMap[0].BaseAddress = 0;
-      BiosMemoryMap[0].Length = AvailableMemoryMb * 1024 * 1024;
-      BiosMemoryMap[0].Type = BiosMemoryUsable;
+      BiosMemoryMap[0].BasePage = 0;
+      BiosMemoryMap[0].PageCount = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
+      BiosMemoryMap[0].MemoryType = MemoryFree;
 
       /* Video memory */
-      BiosMemoryMap[1].BaseAddress = AvailableMemoryMb * 1024 * 1024;
-      BiosMemoryMap[1].Length = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024;
-      BiosMemoryMap[1].Type = BiosMemoryReserved;
+      BiosMemoryMap[1].BasePage = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
+      BiosMemoryMap[1].PageCount = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024 / MM_PAGE_SIZE;
+      BiosMemoryMap[1].MemoryType = MemoryFirmwarePermanent;
 
   *MemoryMapSize = 2;
   return BiosMemoryMap;

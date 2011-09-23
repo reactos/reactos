@@ -53,211 +53,106 @@ ULONG		LastFreePageHint = 0;
 ULONG MmLowestPhysicalPage = 0xFFFFFFFF;
 ULONG MmHighestPhysicalPage = 0;
 
+PMEMORY_DESCRIPTOR BiosMemoryMap;
+ULONG BiosMemoryMapEntryCount;
+
 extern ULONG_PTR	MmHeapPointer;
 extern ULONG_PTR	MmHeapStart;
 
-typedef struct
+ULONG
+AddMemoryDescriptor(
+    IN OUT PMEMORY_DESCRIPTOR List,
+    IN ULONG MaxCount,
+    IN PFN_NUMBER BasePage,
+    IN PFN_NUMBER PageCount,
+    IN MEMORY_TYPE MemoryType)
 {
-    MEMORY_DESCRIPTOR m;
-    ULONG Index;
-    BOOLEAN GeneratedDescriptor;
-} MEMORY_DESCRIPTOR_INT;
-static const MEMORY_DESCRIPTOR_INT MemoryDescriptors[] =
-{
-#if defined (__i386__) || defined (_M_AMD64)
-    { { MemoryFirmwarePermanent, 0x00, 1 }, 0, }, // realmode int vectors
-    { { MemoryFirmwareTemporary, 0x01, 7 }, 1, }, // freeldr stack + cmdline
-    { { MemoryLoadedProgram, 0x08, 0x70 }, 2, }, // freeldr image (roughly max. 0x64 pages)
-    { { MemorySpecialMemory, 0x78, 8 }, 3, }, // prot mode stack. BIOSCALLBUFFER
-    { { MemoryFirmwareTemporary, 0x80, 0x10 }, 4, }, // File system read buffer. FILESYSBUFFER
-    { { MemoryFirmwareTemporary, 0x90, 0x10 }, 5, }, // Disk read buffer for int 13h. DISKREADBUFFER
-    { { MemoryFirmwarePermanent, 0xA0, 0x60 }, 6, }, // ROM / Video
-    { { MemorySpecialMemory, 0xFFF, 1 }, 7, }, // unusable memory
-#elif __arm__ // This needs to be done per-platform specific way
+    ULONG i, c;
+    PFN_NUMBER NextBase;
+    TRACE("AddMemoryDescriptor(0x%lx-0x%lx [0x%lx pages])\n",
+          BasePage, BasePage + PageCount, PageCount);
 
-#endif
-};
+    /* Scan through all existing descriptors */
+    for (i = 0, c = 0; (c < MaxCount) && (List[c].PageCount != 0); c++)
+    {
+        /* Count entries completely below the new range */
+        if (List[i].BasePage + List[i].PageCount <= BasePage) i++;
+    }
 
-static
-VOID MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount)
-{
-	int		Index;
-	int		Index2;
-	ULONGLONG BaseAddressOffset;
+    /* Check if the list is full */
+    if (c >= MaxCount) return c;
 
-	// Loop through each entry in the array
-	for (Index=0; Index<*MapCount; Index++)
-	{
-		// Correct all the addresses to be aligned on page boundaries
-		BaseAddressOffset = ROUND_UP(BiosMemoryMap[Index].BaseAddress, MM_PAGE_SIZE) - BiosMemoryMap[Index].BaseAddress;
-		BiosMemoryMap[Index].BaseAddress += BaseAddressOffset;
-		if (BiosMemoryMap[Index].Length < BaseAddressOffset)
-		{
-			BiosMemoryMap[Index].Length = 0;
-		}
-		else
-		{
-			BiosMemoryMap[Index].Length -= BaseAddressOffset;
-		}
-		BiosMemoryMap[Index].Length = ROUND_DOWN(BiosMemoryMap[Index].Length, MM_PAGE_SIZE);
+    /* Is there an existing descriptor starting before the new range */
+    while ((i < c) && (List[i].BasePage <= BasePage))
+    {
+        /* The end of the existing one is the minimum for the new range */
+        NextBase = List[i].BasePage + List[i].PageCount;
 
-		// If the entry type isn't usable then remove
-		// it from the memory map (this will help reduce
-		// the size of our lookup table)
-		// If the length is less than a full page then
-		// get rid of it also.
-		if (BiosMemoryMap[Index].Type != BiosMemoryUsable ||
-			BiosMemoryMap[Index].Length < MM_PAGE_SIZE)
-		{
-			// Slide every entry after this down one
-			for (Index2=Index; Index2<(*MapCount - 1); Index2++)
-			{
-				BiosMemoryMap[Index2] = BiosMemoryMap[Index2 + 1];
-			}
-			(*MapCount)--;
-			Index--;
-		}
-	}
+        /* Bail out, if everything is trimmed away */
+        if ((BasePage + PageCount) <= NextBase) return c;
+
+        /* Trim the naew range at the lower end */
+        PageCount -= (NextBase - BasePage);
+        BasePage = NextBase;
+
+        /* Go to the next entry and repeat */
+        i++;
+    }
+
+    ASSERT(PageCount > 0);
+
+    /* Are there still entries above? */
+    if (i < c)
+    {
+        /* Shift the following entries one up */
+        RtlMoveMemory(&List[i+1], &List[i], (c - i) * sizeof(List[0]));
+
+        /* Insert the new range */
+        List[i].BasePage = BasePage;
+        List[i].PageCount = min(PageCount, List[i+1].BasePage - BasePage);
+        List[i].MemoryType = MemoryType;
+        c++;
+
+        TRACE("Inserting at i=%ld: (0x%lx:0x%lx)\n",
+              i, List[i].BasePage, List[i].PageCount);
+
+        /* Check if the range was trimmed */
+        if (PageCount > List[i].PageCount)
+        {
+            /* Recursively process the trimmed part */
+            c = AddMemoryDescriptor(List,
+                                    MaxCount,
+                                    BasePage + List[i].PageCount,
+                                    PageCount - List[i].PageCount,
+                                    MemoryType);
+        }
+    }
+    else
+    {
+        /* We can simply add the range here */
+        TRACE("Adding i=%ld: (0x%lx:0x%lx)\n", i, BasePage, PageCount);
+        List[i].BasePage = BasePage;
+        List[i].PageCount = PageCount;
+        List[i].MemoryType = MemoryType;
+        c++;
+    }
+
+    /* Return the new count */
+    return c;
 }
 
 const MEMORY_DESCRIPTOR*
 ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
 {
-    MEMORY_DESCRIPTOR_INT* CurrentDescriptor;
-    PBIOS_MEMORY_MAP BiosMemoryMap;
-    static ULONG BiosMemoryMapEntryCount;
-    static MEMORY_DESCRIPTOR_INT BiosMemoryDescriptors[32];
-    static BOOLEAN MemoryMapInitialized = FALSE;
-    ULONG i, j;
-
-    //
-    // Check if it is the first time we're called
-    //
-    if (!MemoryMapInitialized)
-    {
-        //
-        // Get the machine generated memory map
-        //
-        BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
-
-        //
-        // Fix entries that are not page aligned
-        //
-        MmFixupSystemMemoryMap(BiosMemoryMap, &BiosMemoryMapEntryCount);
-
-        //
-        // Copy the entries to our structure
-        //
-        for (i = 0, j = 0; i < BiosMemoryMapEntryCount; i++)
-        {
-            //
-            // Is it suitable memory?
-            //
-            if (BiosMemoryMap[i].Type != BiosMemoryUsable)
-            {
-                //
-                // No. Process next descriptor
-                //
-                continue;
-            }
-
-            //
-            // Copy this memory descriptor
-            //
-            BiosMemoryDescriptors[j].m.MemoryType = MemoryFree;
-            BiosMemoryDescriptors[j].m.BasePage = (ULONG)(BiosMemoryMap[i].BaseAddress / MM_PAGE_SIZE);
-            BiosMemoryDescriptors[j].m.PageCount = (ULONG)(BiosMemoryMap[i].Length / MM_PAGE_SIZE);
-            BiosMemoryDescriptors[j].Index = j;
-            BiosMemoryDescriptors[j].GeneratedDescriptor = TRUE;
-            j++;
-        }
-
-        //
-        // Remember how much descriptors we found
-        //
-        BiosMemoryMapEntryCount = j;
-
-        //
-        // Mark memory map as already retrieved and initialized
-        //
-        MemoryMapInitialized = TRUE;
-    }
-
-    CurrentDescriptor = CONTAINING_RECORD(Current, MEMORY_DESCRIPTOR_INT, m);
-
     if (Current == NULL)
     {
-        //
-        // First descriptor requested
-        //
-        if (BiosMemoryMapEntryCount > 0)
-        {
-            //
-            // Return first generated memory descriptor
-            //
-            return &BiosMemoryDescriptors[0].m;
-        }
-        else if (sizeof(MemoryDescriptors) > 0)
-        {
-            //
-            // Return first fixed memory descriptor
-            //
-            return &MemoryDescriptors[0].m;
-        }
-        else
-        {
-            //
-            // Strange case, we have no memory descriptor
-            //
-            return NULL;
-        }
-    }
-    else if (CurrentDescriptor->GeneratedDescriptor)
-    {
-        //
-        // Current entry is a generated descriptor
-        //
-        if (CurrentDescriptor->Index + 1 < BiosMemoryMapEntryCount)
-        {
-            //
-            // Return next generated descriptor
-            //
-            return &BiosMemoryDescriptors[CurrentDescriptor->Index + 1].m;
-        }
-        else if (sizeof(MemoryDescriptors) > 0)
-        {
-            //
-            // Return first fixed memory descriptor
-            //
-            return &MemoryDescriptors[0].m;
-        }
-        else
-        {
-            //
-            // No fixed memory descriptor; end of memory map
-            //
-            return NULL;
-        }
+        return BiosMemoryMap;
     }
     else
     {
-        //
-        // Current entry is a fixed descriptor
-        //
-        if (CurrentDescriptor->Index + 1 < sizeof(MemoryDescriptors) / sizeof(MemoryDescriptors[0]))
-        {
-            //
-            // Return next fixed descriptor
-            //
-            return &MemoryDescriptors[CurrentDescriptor->Index + 1].m;
-        }
-        else
-        {
-            //
-            // No more fixed memory descriptor; end of memory map
-            //
-            return NULL;
-        }
+        Current++;
+        if (Current->PageCount == 0) return NULL;
+        return Current;
     }
 }
 
@@ -269,6 +164,8 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 #endif
 
 	TRACE("Initializing Memory Manager.\n");
+
+    BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
 
 #if DBG
 	// Dump the system memory map
@@ -298,6 +195,26 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 
 	// Initialize the page lookup table
 	MmInitPageLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
+
+{
+    ULONG Type, Index, PrevIndex = 0;
+	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
+
+    Type = RealPageLookupTable[0].PageAllocated;
+	for (Index = 1; Index < TotalPagesInLookupTable; Index++)
+	{
+	    if ((RealPageLookupTable[Index].PageAllocated != Type) ||
+            (Index == TotalPagesInLookupTable - 1))
+	    {
+            TRACE("Range: 0x%lx - 0x%lx Type=%d\n",
+                PrevIndex, Index - 1, Type);
+	        Type = RealPageLookupTable[Index].PageAllocated;
+	        PrevIndex = Index;
+	    }
+	}
+}
+
+
 	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
 	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
@@ -305,6 +222,8 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	MmInitializeHeap(PageLookupTableAddress);
 
 	TRACE("Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable);
+
+
 	return TRUE;
 }
 
@@ -359,7 +278,7 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
             //
             // Yes, remember it if this is real memory
             //
-            if (MemoryDescriptor->MemoryType == MemoryFree) MmLowestPhysicalPage = MemoryDescriptor->BasePage;
+            MmLowestPhysicalPage = MemoryDescriptor->BasePage;
         }
     }
 
@@ -467,6 +386,10 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
     //
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
+        TRACE("Got range: 0x%lx-0x%lx, type=%s\n",
+              MemoryDescriptor->BasePage,
+              MemoryDescriptor->BasePage + MemoryDescriptor->PageCount,
+              MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
         //
         // Convert ARC memory type to loader memory type
         //
@@ -704,6 +627,9 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, P
 	ULONG							Index;
 
 	StartPage = MmGetPageNumberFromAddress(PageAddress);
+
+	if (StartPage < MmLowestPhysicalPage) return FALSE;
+
     StartPage -= MmLowestPhysicalPage;
 
 	// Make sure they aren't trying to go past the
