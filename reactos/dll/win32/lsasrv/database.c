@@ -76,7 +76,7 @@ LsapIsDatabaseInstalled(VOID)
 
 
 static NTSTATUS
-LsapInstallDatabase(VOID)
+LsapCreateDatabaseKeys(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -180,7 +180,6 @@ LsapInstallDatabase(VOID)
         goto Done;
     }
 
-
 Done:
     if (SecretsKeyHandle != NULL)
         NtClose(SecretsKeyHandle);
@@ -200,6 +199,55 @@ Done:
 }
 
 
+static NTSTATUS
+LsapCreateDatabaseObjects(VOID)
+{
+    PLSA_DB_OBJECT DbObject = NULL;
+
+    /* Open the 'Policy' object */
+    DbObject = (PLSA_DB_OBJECT)LsapCreateDbObject(NULL,
+                                L"Policy",
+                                TRUE,
+                                LsaDbPolicyObject,
+                                0);
+    if (DbObject != NULL)
+    {
+        LsapSetObjectAttribute(DbObject,
+                               L"PolPrDmN",
+                               NULL,
+                               0);
+
+        LsapSetObjectAttribute(DbObject,
+                               L"PolPrDmS",
+                               NULL,
+                               0);
+
+        LsapSetObjectAttribute(DbObject,
+                               L"PolAcDmN",
+                               NULL,
+                               0);
+
+        LsapSetObjectAttribute(DbObject,
+                               L"PolAcDmS",
+                               NULL,
+                               0);
+
+
+        /* Close the 'Policy' object */
+        LsapCloseDbObject((LSAPR_HANDLE)DbObject);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LsapUpdateDatabase(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 LsapInitDatabase(VOID)
 {
@@ -216,10 +264,26 @@ LsapInitDatabase(VOID)
 
     if (!LsapIsDatabaseInstalled())
     {
-        Status = LsapInstallDatabase();
+        Status = LsapCreateDatabaseKeys();
         if (!NT_SUCCESS(Status))
         {
-            ERR("Failed to install the LSA database (Status: 0x%08lx)\n", Status);
+            ERR("Failed to create the LSA database keys (Status: 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        Status = LsapCreateDatabaseObjects();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to create the LSA database objects (Status: 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
+    else
+    {
+        Status = LsapUpdateDatabase();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to update the LSA database (Status: 0x%08lx)\n", Status);
             return Status;
         }
     }
