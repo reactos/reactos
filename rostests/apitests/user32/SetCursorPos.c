@@ -20,7 +20,7 @@ struct _test_info
 };
 
 struct _test_info info[] = { {0,0,0}, /* SetCursorPos without a window */
-                             {1,2,0}, /* mouse_event without a window */
+                             {1,1,0}, /* mouse_event without a window */
                              {0,1,1}, /* SetCursorPos with a window */
                              {1,1,1}, /* mouse_event with a window */
                              {0,1,1}, /* multiple SetCursorPos with a window with coalescing */
@@ -97,7 +97,7 @@ void Test_SetCursorPos()
     memset(results, sizeof(results), 0);
 
     hMouseHookLL = SetWindowsHookEx(WH_MOUSE_LL, MouseLLHookProc, GetModuleHandleA( NULL ), 0);
-    hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseHookProc, GetModuleHandleA( NULL ), 0);
+    hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");
 
