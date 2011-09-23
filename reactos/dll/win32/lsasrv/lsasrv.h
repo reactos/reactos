@@ -92,6 +92,22 @@ LsarStartRpcServer(VOID);
 
 /* policy.c */
 NTSTATUS
+LsarQueryAuditEvents(LSAPR_HANDLE PolicyHandle,
+                     PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
+                       PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
+                       PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryDnsDomain(LSAPR_HANDLE PolicyHandle,
+                   PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
 LsarSetPrimaryDomain(LSAPR_HANDLE PolicyObject,
                      PLSAPR_POLICY_PRIMARY_DOM_INFO Info);
 
