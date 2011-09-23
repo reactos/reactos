@@ -2038,6 +2038,28 @@ MmArmInitSystem(IN ULONG Phase,
                                        MI_MIN_ALLOCATION_FRAGMENT);
         }
 
+        /* Check for kernel stack size that's too big */
+        if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
+        {
+            /* Sanitize to default value */
+            MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
+        }
+        else
+        {
+            /* Take the registry setting, and convert it into bytes */
+            MmLargeStackSize *= _1KB;
+
+            /* Now align it to a page boundary */
+            MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
+
+            /* Sanity checks */
+            ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE);
+            ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0);
+
+            /* Make sure it's not too low */
+            if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
+        }
+
         /* Initialize the platform-specific parts */
         MiInitMachineDependent(LoaderBlock);
 

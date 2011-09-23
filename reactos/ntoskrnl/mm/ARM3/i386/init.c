@@ -163,28 +163,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPFN Pfn1;
     ULONG Flags;
 
-    /* Check for kernel stack size that's too big */
-    if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
-    {
-        /* Sanitize to default value */
-        MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
-    }
-    else
-    {
-        /* Take the registry setting, and convert it into bytes */
-        MmLargeStackSize *= _1KB;
-
-        /* Now align it to a page boundary */
-        MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
-
-        /* Sanity checks */
-        ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE);
-        ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0);
-
-        /* Make sure it's not too low */
-        if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
-    }
-
     /* Check for global bit */
 #if 0
     if (KeFeatureBits & KF_GLOBAL_PAGE)
