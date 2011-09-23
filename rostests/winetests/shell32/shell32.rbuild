@@ -17,10 +17,16 @@
 	<library>ntdll</library>
 	<file>appbar.c</file>
 	<file>autocomplete.c</file>
+	<file>brsfolder.c</file>
+	<file>ebrowser.c</file>
 	<file>generated.c</file>
 	<file>progman_dde.c</file>
+	<file>recyclebin.c</file>
+	<file>shelldispatch.c</file>
 	<file>shelllink.c</file>
+	<file>shellole.c</file>
 	<file>shellpath.c</file>
+	<file>shfldr_special.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>
@@ -28,7 +34,6 @@
 	<file>string.c</file>
 	<file>systray.c</file>
 	<file>testlist.c</file>
-	<file>shfldr_special.c</file>
 	<file>rsrc.rc</file>
 </module>
 </group>

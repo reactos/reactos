@@ -45,19 +45,15 @@ static void test_cbsize(void)
         nidW.hIcon = LoadIcon(NULL, IDI_APPLICATION);
         nidW.uCallbackMessage = WM_USER+17;
         ret = pShell_NotifyIconW(NIM_ADD, &nidW);
-        if (ret)
-        {
-            /* using an invalid cbSize does work */
-            nidW.cbSize = 3;
-            nidW.hWnd = hMainWnd;
-            nidW.uID = 1;
-            ret = pShell_NotifyIconW(NIM_DELETE, &nidW);
-            ok( ret || broken(!ret), /* nt4 */ "NIM_DELETE failed!\n");
-            /* as icon doesn't exist anymore - now there will be an error */
-            nidW.cbSize = sizeof(nidW);
-            ok(!pShell_NotifyIconW(NIM_DELETE, &nidW) != !ret, "The icon was not deleted\n");
-        }
-        else win_skip( "Shell_NotifyIconW not working\n" );  /* win9x */
+        /* using an invalid cbSize does work */
+        nidW.cbSize = 3;
+        nidW.hWnd = hMainWnd;
+        nidW.uID = 1;
+        ret = pShell_NotifyIconW(NIM_DELETE, &nidW);
+        ok( ret || broken(!ret), /* nt4 */ "NIM_DELETE failed!\n");
+        /* as icon doesn't exist anymore - now there will be an error */
+        nidW.cbSize = sizeof(nidW);
+        ok(!pShell_NotifyIconW(NIM_DELETE, &nidW) != !ret, "The icon was not deleted\n");
     }
 
     /* same for Shell_NotifyIconA */
@@ -75,7 +71,7 @@ static void test_cbsize(void)
     nidA.hWnd = hMainWnd;
     nidA.uID = 1;
     ret = Shell_NotifyIconA(NIM_DELETE, &nidA);
-    ok( ret || broken(!ret),  /* win9x */ "NIM_DELETE failed!\n");
+    ok(ret, "NIM_DELETE failed!\n");
     /* as icon doesn't exist anymore - now there will be an error */
     nidA.cbSize = sizeof(nidA);
     ok(!Shell_NotifyIconA(NIM_DELETE, &nidA) != !ret, "The icon was not deleted\n");

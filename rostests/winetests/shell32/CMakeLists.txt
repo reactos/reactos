@@ -8,10 +8,16 @@ add_definitions(
 list(APPEND SOURCE
     appbar.c
     autocomplete.c
+    brsfolder.c
+    ebrowser.c
     generated.c
     progman_dde.c
+    recyclebin.c
+    shelldispatch.c
     shelllink.c
+    shellole.c
     shellpath.c
+    shfldr_special.c
     shlexec.c
     shlfileop.c
     shlfolder.c
@@ -19,11 +25,10 @@ list(APPEND SOURCE
     string.c
     systray.c
     testlist.c
-    shfldr_special.c
     rsrc.rc)
 
 add_executable(shell32_winetest ${SOURCE})
 target_link_libraries(shell32_winetest wine uuid)
 set_module_type(shell32_winetest win32cui)
-add_importlibs(shell32_winetest shlwapi gdi32 shell32 ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(shell32_winetest shell32 ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET shell32_winetest DESTINATION reactos/bin FOR all)

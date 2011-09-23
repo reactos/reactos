@@ -57,6 +57,7 @@ static char tmpdir[MAX_PATH];
 static char child_file[MAX_PATH];
 static DLLVERSIONINFO dllver;
 static BOOL skip_noassoc_tests = FALSE;
+static HANDLE dde_ready_event;
 
 
 /***
@@ -526,7 +527,7 @@ static void CALLBACK childTimeout(HWND wnd, UINT msg, UINT_PTR timer, DWORD time
 
 static void doChild(int argc, char** argv)
 {
-    char* filename;
+    char *filename, longpath[MAX_PATH] = "";
     HANDLE hFile, map;
     int i;
     int rc;
@@ -552,6 +553,8 @@ static void doChild(int argc, char** argv)
             trace("argvA%d=%s\n", i, argv[i]);
         childPrintf(hFile, "argvA%d=%s\r\n", i, encodeA(argv[i]));
     }
+    GetModuleFileNameA(GetModuleHandleA(NULL), longpath, MAX_PATH);
+    childPrintf(hFile, "longPath=%s\r\n", encodeA(longpath));
 
     map = OpenFileMappingA(FILE_MAP_READ, FALSE, "winetest_shlexec_dde_map");
     if (map != NULL)
@@ -572,13 +575,14 @@ static void doChild(int argc, char** argv)
 
             timer = SetTimer(NULL, 0, 2500, childTimeout);
 
-            dde_ready = CreateEvent(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
+            dde_ready = OpenEvent(EVENT_MODIFY_STATE, FALSE, "winetest_shlexec_dde_ready");
             SetEvent(dde_ready);
             CloseHandle(dde_ready);
 
             while (GetMessage(&msg, NULL, 0, 0))
                 DispatchMessage(&msg);
 
+            Sleep(500);
             KillTimer(NULL, timer);
             assert(DdeNameService(ddeInst, hszApplication, 0L, DNS_UNREGISTER));
             assert(DdeFreeStringHandle(ddeInst, hszTopic));
@@ -587,7 +591,7 @@ static void doChild(int argc, char** argv)
         }
         else
         {
-            dde_ready = CreateEvent(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
+            dde_ready = OpenEvent(EVENT_MODIFY_STATE, FALSE, "winetest_shlexec_dde_ready");
             SetEvent(dde_ready);
             CloseHandle(dde_ready);
         }
@@ -676,6 +680,11 @@ static void _okChildString(const char* file, int line, const char* key, const ch
 {
     char* result;
     result=getChildString("Arguments", key);
+    if (!result)
+    {
+        ok_(file, line)(FALSE, "%s expected '%s', but key not found or empty\n", key, expected);
+        return;
+    }
     ok_(file, line)(lstrcmpiA(result, expected) == 0,
                     "%s expected '%s', got '%s'\n", key, expected, result);
 }
@@ -684,6 +693,11 @@ static void _okChildPath(const char* file, int line, const char* key, const char
 {
     char* result;
     result=getChildString("Arguments", key);
+    if (!result)
+    {
+        ok_(file, line)(FALSE, "%s expected '%s', but key not found or empty\n", key, expected);
+        return;
+    }
     ok_(file, line)(StrCmpPath(result, expected) == 0,
                     "%s expected '%s', got '%s'\n", key, expected, result);
 }
@@ -772,6 +786,26 @@ static DWORD get_long_path_name(const char* shortpath, char* longpath, DWORD lon
     }
 
     return tmplen;
+}
+
+/***
+ *
+ * PathFindFileNameA equivalent that supports WinNT
+ *
+ ***/
+
+static LPSTR path_find_file_name(LPCSTR lpszPath)
+{
+  LPCSTR lastSlash = lpszPath;
+
+  while (lpszPath && *lpszPath)
+  {
+    if ((*lpszPath == '\\' || *lpszPath == '/' || *lpszPath == ':') &&
+        lpszPath[1] && lpszPath[1] != '\\' && lpszPath[1] != '/')
+      lastSlash = lpszPath + 1;
+    lpszPath = CharNext(lpszPath);
+  }
+  return (LPSTR)lastSlash;
 }
 
 /***
@@ -1613,14 +1647,7 @@ static dde_tests_t dde_tests[] =
 
 static DWORD WINAPI hooked_WaitForInputIdle(HANDLE process, DWORD timeout)
 {
-    HANDLE dde_ready;
-    DWORD wait_result;
-
-    dde_ready = CreateEventA(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
-    wait_result = WaitForSingleObject(dde_ready, timeout);
-    CloseHandle(dde_ready);
-
-    return wait_result;
+    return WaitForSingleObject(dde_ready_event, timeout);
 }
 
 /*
@@ -1714,7 +1741,7 @@ static void test_dde(void)
     {
         if (!create_test_association(".sde"))
         {
-            skip("Unable to create association for '.sfe'\n");
+            skip("Unable to create association for '.sde'\n");
             return;
         }
         create_test_verb_dde(".sde", "Open", 0, test->command, test->ddeexec,
@@ -1732,7 +1759,9 @@ static void test_dde(void)
         }
         ddeExec[0] = 0;
 
+        dde_ready_event = CreateEventA(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
         rc = shell_execute_ex(SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI, NULL, filename, NULL, NULL);
+        CloseHandle(dde_ready_event);
         if ((test->todo & 0x1)==0)
         {
             ok(32 < rc, "%s failed: rc=%d err=%d\n", shell_call,
@@ -2118,8 +2147,9 @@ static void test_commandline(void)
     static const WCHAR chkfmt3[] = {'\\','\"','%','s','\"',0};
     static const WCHAR chkfmt4[] = {'%','s','=','%','s','\"',' ','%','s','\"',0};
     WCHAR cmdline[255];
-    LPWSTR *args = (LPWSTR*)0xdeadcafe;
+    LPWSTR *args = (LPWSTR*)0xdeadcafe, pbuf;
     INT numargs = -1;
+    size_t buflen;
 
     wsprintfW(cmdline,fmt1,one,two,three,four);
     args=CommandLineToArgvW(cmdline,&numargs);
@@ -2170,6 +2200,46 @@ static void test_commandline(void)
     wsprintfW(cmdline,fmt6);
     args=CommandLineToArgvW(cmdline,&numargs);
     ok(numargs == 1, "expected 1 args, got %i\n",numargs);
+    if (numargs == 1) {
+        buflen = max(lstrlenW(args[0])+1,256);
+        pbuf = HeapAlloc(GetProcessHeap(), 0, buflen*sizeof(pbuf[0]));
+        GetModuleFileNameW(NULL, pbuf, buflen);
+        pbuf[buflen-1] = 0;
+        /* check args[0] is module file name */
+        ok(lstrcmpW(args[0],pbuf)==0, "wrong path to the current executable\n");
+        HeapFree(GetProcessHeap(), 0, pbuf);
+    }
+}
+
+static void test_directory(void)
+{
+    char path[MAX_PATH], newdir[MAX_PATH];
+    char params[1024];
+    int rc;
+
+    /* copy this executable to a new folder and cd to it */
+    sprintf(newdir, "%s\\newfolder", tmpdir);
+    rc = CreateDirectoryA( newdir, NULL );
+    ok( rc, "failed to create %s err %u\n", newdir, GetLastError() );
+    sprintf(path, "%s\\%s", newdir, path_find_file_name(argv0));
+    CopyFileA(argv0, path, FALSE);
+    SetCurrentDirectory(tmpdir);
+
+    sprintf(params, "shlexec \"%s\" Exec", child_file);
+
+    rc=shell_execute_ex(SEE_MASK_NOZONECHECKS|SEE_MASK_FLAG_NO_UI,
+                        NULL, path_find_file_name(argv0), params, NULL);
+    todo_wine ok(rc == SE_ERR_FNF, "%s returned %d\n", shell_call, rc);
+
+    rc=shell_execute_ex(SEE_MASK_NOZONECHECKS|SEE_MASK_FLAG_NO_UI,
+                        NULL, path_find_file_name(argv0), params, newdir);
+    ok(rc > 32, "%s returned %d\n", shell_call, rc);
+    okChildInt("argcA", 4);
+    okChildString("argvA3", "Exec");
+    todo_wine okChildPath("longPath", path);
+
+    DeleteFile(path);
+    RemoveDirectoryA(newdir);
 }
 
 START_TEST(shlexec)
@@ -2194,6 +2264,7 @@ START_TEST(shlexec)
     test_dde();
     test_dde_default_app();
     test_commandline();
+    test_directory();
 
     cleanup_test();
 }

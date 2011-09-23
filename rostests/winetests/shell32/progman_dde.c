@@ -200,14 +200,22 @@ static void init_strings(void)
             WCHAR module[MAX_PATH];
             WCHAR module_expanded[MAX_PATH];
             WCHAR localized[MAX_PATH];
+            HRESULT hr;
             int id;
 
             MultiByteToWideChar(CP_ACP, 0, startup, -1, startupW, sizeof(startupW)/sizeof(WCHAR));
-            pSHGetLocalizedName(startupW, module, MAX_PATH, &id);
-            ExpandEnvironmentStringsW(module, module_expanded, MAX_PATH);
-            LoadStringW(GetModuleHandleW(module_expanded), id, localized, MAX_PATH);
+            hr = pSHGetLocalizedName(startupW, module, MAX_PATH, &id);
+            todo_wine ok(hr == S_OK, "got 0x%08x\n", hr);
+            /* check to be removed when SHGetLocalizedName is implemented */
+            if (hr == S_OK)
+            {
+                ExpandEnvironmentStringsW(module, module_expanded, MAX_PATH);
+                LoadStringW(GetModuleHandleW(module_expanded), id, localized, MAX_PATH);
 
-            WideCharToMultiByte(CP_ACP, 0, localized, -1, StartupTitle, sizeof(StartupTitle), NULL, NULL);
+                WideCharToMultiByte(CP_ACP, 0, localized, -1, StartupTitle, sizeof(StartupTitle), NULL, NULL);
+            }
+            else
+                lstrcpyA(StartupTitle, (strrchr(startup, '\\') + 1));
         }
         else
         {

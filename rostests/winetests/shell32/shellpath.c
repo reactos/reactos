@@ -31,12 +31,15 @@
 #include "shlobj.h"
 #include "shlwapi.h"
 #include "initguid.h"
+#include "knownfolders.h"
 #include "wine/test.h"
 
 /* CSIDL_MYDOCUMENTS is now the same as CSIDL_PERSONAL, but what we want
  * here is its original value.
  */
 #define OLD_CSIDL_MYDOCUMENTS  0x000c
+
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) ( sizeof(x) / sizeof((x)[0]) )
@@ -93,6 +96,10 @@ static LPITEMIDLIST (WINAPI *pILFindLastID)(LPCITEMIDLIST);
 static int (WINAPI *pSHFileOperationA)(LPSHFILEOPSTRUCTA);
 static HRESULT (WINAPI *pSHGetMalloc)(LPMALLOC *);
 static UINT (WINAPI *pGetSystemWow64DirectoryA)(LPSTR,UINT);
+static HRESULT (WINAPI *pSHGetKnownFolderPath)(REFKNOWNFOLDERID, DWORD, HANDLE, PWSTR *);
+static HRESULT (WINAPI *pSHSetKnownFolderPath)(REFKNOWNFOLDERID, DWORD, HANDLE, PWSTR);
+static HRESULT (WINAPI *pSHGetFolderPathEx)(REFKNOWNFOLDERID, DWORD, HANDLE, LPWSTR, DWORD);
+
 static DLLVERSIONINFO shellVersion = { 0 };
 static LPMALLOC pMalloc;
 static const BYTE guidType[] = { PT_GUID };
@@ -187,7 +194,10 @@ static void loadShell32(void)
 
     GET_PROC(DllGetVersion)
     GET_PROC(SHGetFolderPathA)
+    GET_PROC(SHGetFolderPathEx)
     GET_PROC(SHGetFolderLocation)
+    GET_PROC(SHGetKnownFolderPath)
+    GET_PROC(SHSetKnownFolderPath)
     GET_PROC(SHGetSpecialFolderPathA)
     GET_PROC(SHGetSpecialFolderLocation)
     GET_PROC(ILFindLastID)
@@ -352,7 +362,7 @@ static void test_parameters(void)
         BOOL ret;
 
         if (0)
-           ret = pSHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE);
+           pSHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE);
 
         /* odd but true: calling with a NULL path still succeeds if it's a real
          * dir (on some windows platform).  on winME it generates exception.
@@ -833,6 +843,1651 @@ static void test_NonExistentPath(void)
     else skip("RegOpenKeyExA(HKEY_CURRENT_USER, %s, ...) failed\n", userShellFolders);
 }
 
+static void test_SHGetFolderPathEx(void)
+{
+    HRESULT hr;
+    WCHAR buffer[MAX_PATH], *path;
+    DWORD len;
+
+    if (!pSHGetKnownFolderPath || !pSHGetFolderPathEx)
+    {
+        win_skip("SHGetKnownFolderPath or SHGetFolderPathEx not available\n");
+        return;
+    }
+
+if (0) { /* crashes */
+    hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
+}
+    path = NULL;
+    hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, 0, NULL, &path);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(path != NULL, "expected path != NULL\n");
+
+    hr = pSHGetFolderPathEx(&FOLDERID_Desktop, 0, NULL, buffer, MAX_PATH);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(!lstrcmpiW(path, buffer), "expected equal paths\n");
+    len = lstrlenW(buffer);
+    CoTaskMemFree(path);
+
+    hr = pSHGetFolderPathEx(&FOLDERID_Desktop, 0, NULL, buffer, 0);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
+
+if (0) { /* crashes */
+    hr = pSHGetFolderPathEx(&FOLDERID_Desktop, 0, NULL, NULL, len + 1);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
+
+    hr = pSHGetFolderPathEx(NULL, 0, NULL, buffer, MAX_PATH);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
+}
+    hr = pSHGetFolderPathEx(&FOLDERID_Desktop, 0, NULL, buffer, len);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), "expected 0x8007007a, got 0x%08x\n", hr);
+
+    hr = pSHGetFolderPathEx(&FOLDERID_Desktop, 0, NULL, buffer, len + 1);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+}
+
+/* Standard CSIDL values (and their flags) uses only two less-significant bytes */
+#define NO_CSIDL 0x10000
+#define CSIDL_TODO_WINE 0x20000
+#define KNOWN_FOLDER(id, csidl, name, category, parent, relative_path, parsing_name, attributes, definitionFlags) \
+    { &id, # id, csidl, # csidl, name, category, &parent, # parent, relative_path, parsing_name, attributes, definitionFlags, __LINE__ }
+
+/* non-published known folders test */
+static const GUID _FOLDERID_CryptoKeys =            {0xB88F4DAA, 0xE7BD, 0x49A9, {0xB7, 0x4D, 0x02, 0x88, 0x5A, 0x5D, 0xC7, 0x65} };
+static const GUID _FOLDERID_DpapiKeys =             {0x10C07CD0, 0xEF91, 0x4567, {0xB8, 0x50, 0x44, 0x8B, 0x77, 0xCB, 0x37, 0xF9} };
+static const GUID _FOLDERID_SystemCertificates =    {0x54EED2E0, 0xE7CA, 0x4FDB, {0x91, 0x48, 0x0F, 0x42, 0x47, 0x29, 0x1C, 0xFA} };
+static const GUID _FOLDERID_CredentialManager =     {0x915221FB, 0x9EFE, 0x4BDA, {0x8F, 0xD7, 0xF7, 0x8D, 0xCA, 0x77, 0x4F, 0x87} };
+
+struct knownFolderDef {
+    const KNOWNFOLDERID *folderId;
+    const char *sFolderId;
+    const int csidl;
+    const char *sCsidl;
+    const char *sName;
+    const KF_CATEGORY category;
+    const KNOWNFOLDERID *fidParent;
+    const char *sParent;
+    const char *sRelativePath;
+    const char *sParsingName;
+    const DWORD attributes;
+    const KF_DEFINITION_FLAGS definitionFlags;
+    const int line;
+};
+
+/* Note: content of parsing name may vary between Windows versions.
+ * As a base, values from 6.0 (Vista) were used. Some entries may contain
+ * alternative values. In that case, Windows version where the value was
+ * found is noted.
+ *
+ * The list of values for parsing name was encoded as a number of null-
+ * terminated strings placed one by one (separated by null byte only).
+ * End of list is marked by two consecutive null bytes.
+ */
+static const struct knownFolderDef known_folders[] = {
+    KNOWN_FOLDER(FOLDERID_AddNewPrograms,
+                 NO_CSIDL,
+                 "AddNewProgramsFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{15eae92e-f17a-4431-9f28-805e482dafd4}\0"
+                "shell:::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{15eae92e-f17a-4431-9f28-805e482dafd4}\0\0" /* 6.1 */,
+                0,
+                0),
+    KNOWN_FOLDER(FOLDERID_AdminTools,
+                 CSIDL_ADMINTOOLS,
+                 "Administrative Tools",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Programs,
+                 "Administrative Tools",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_AppUpdates,
+                 NO_CSIDL,
+                 "AppUpdatesFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7b81be6a-ce2b-4676-a29e-eb907a5126c5}\\::{d450a8a1-9568-45c7-9c0e-b4f9fb4537bd}\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{7b81be6a-ce2b-4676-a29e-eb907a5126c5}\\::{d450a8a1-9568-45c7-9c0e-b4f9fb4537bd}\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_CDBurning,
+                 CSIDL_CDBURN_AREA,
+                 "CD Burning",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows\\Burn\\Burn",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_LOCAL_REDIRECT_ONLY),
+    KNOWN_FOLDER(FOLDERID_ChangeRemovePrograms,
+                 NO_CSIDL,
+                 "ChangeRemoveProgramsFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7b81be6a-ce2b-4676-a29e-eb907a5126c5}\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{7b81be6a-ce2b-4676-a29e-eb907a5126c5}\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_CommonAdminTools,
+                 CSIDL_COMMON_ADMINTOOLS,
+                 "Common Administrative Tools",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_CommonPrograms,
+                 "Administrative Tools",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_CommonOEMLinks,
+                 CSIDL_COMMON_OEM_LINKS,"OEM Links",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramData,
+                 "OEM Links",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_CommonPrograms,
+                 CSIDL_COMMON_PROGRAMS,
+                 "Common Programs",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_CommonStartMenu,
+                 "Programs",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_CommonStartMenu,
+                 CSIDL_COMMON_STARTMENU,
+                 "Common Start Menu",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramData,
+                 "Microsoft\\Windows\\Start Menu",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_CommonStartup,
+                 CSIDL_COMMON_STARTUP,
+                 "Common Startup",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_CommonPrograms,
+                 "StartUp",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_CommonTemplates,
+                 CSIDL_COMMON_TEMPLATES,
+                 "Common Templates",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramData,
+                 "Microsoft\\Windows\\Templates",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ComputerFolder,
+                 CSIDL_DRIVES,
+                 "MyComputerFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ConflictFolder,
+                 NO_CSIDL,
+                 "ConflictFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{E413D040-6788-4C22-957E-175D1C513A34},\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{E413D040-6788-4C22-957E-175D1C513A34},\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ConnectionsFolder,
+                 CSIDL_CONNECTIONS,
+                 "ConnectionsFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Contacts,
+                 NO_CSIDL,
+                 "Contacts",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Contacts",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{56784854-C6CB-462B-8169-88E350ACB882}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_ControlPanelFolder,
+                 CSIDL_CONTROLS,
+                 "ControlPanelFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Cookies,
+                 CSIDL_COOKIES,
+                 "Cookies",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Cookies",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Desktop,
+                 CSIDL_DESKTOP,
+                 "Desktop",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Desktop",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_DeviceMetadataStore,
+                 NO_CSIDL,
+                 "Device Metadata Store",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramData,
+                 "Microsoft\\Windows\\DeviceMetadataStore",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Documents,
+                 CSIDL_MYDOCUMENTS,
+                 "Personal",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Documents",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{FDD39AD0-238F-46AF-ADB4-6C85480369C7}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_DocumentsLibrary,
+                 NO_CSIDL,
+                 "DocumentsLibrary",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Libraries,
+                 "Documents.library-ms",
+                 "::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{7b0db17d-9cd2-4a93-9733-46cc89022e7c}\0\0",
+                 0,
+                 KFDF_PRECREATE | KFDF_STREAM),
+    KNOWN_FOLDER(FOLDERID_Downloads,
+                 NO_CSIDL,
+                 "Downloads",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Downloads",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_Favorites,
+                 CSIDL_FAVORITES,
+                 "Favorites",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Favorites",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_Fonts,
+                 CSIDL_FONTS,
+                 "Fonts",
+                 KF_CATEGORY_FIXED,
+                 FOLDERID_Windows,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Games,
+                 NO_CSIDL,
+                 "Games",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{ED228FDF-9EA8-4870-83b1-96b02CFE0D52}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_GameTasks,
+                 NO_CSIDL,
+                 "GameTasks",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows\\GameExplorer",
+                 NULL,
+                 0,
+                 KFDF_LOCAL_REDIRECT_ONLY),
+    KNOWN_FOLDER(FOLDERID_History,
+                 CSIDL_HISTORY,
+                 "History",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows\\History",
+                 NULL,
+                 0,
+                 KFDF_LOCAL_REDIRECT_ONLY),
+    KNOWN_FOLDER(FOLDERID_HomeGroup,
+                 NO_CSIDL,
+                 "HomeGroupFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ImplicitAppShortcuts,
+                 NO_CSIDL,
+                 "ImplicitAppShortcuts",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_UserPinned,
+                 "ImplicitAppShortcuts",
+                 NULL,
+                 0,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_InternetCache,
+                 CSIDL_INTERNET_CACHE,
+                 "Cache",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows\\Temporary Internet Files",
+                 NULL,
+                 0,
+                 KFDF_LOCAL_REDIRECT_ONLY),
+    KNOWN_FOLDER(FOLDERID_InternetFolder,
+                 CSIDL_INTERNET,
+                 "InternetFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{871C5380-42A0-1069-A2EA-08002B30309D}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Libraries,
+                 NO_CSIDL,
+                 "Libraries",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Libraries",
+                 NULL,
+                 0,
+                 KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_Links,
+                 NO_CSIDL,
+                 "Links",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Links",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{bfb9d5e0-c6a9-404c-b2b2-ae6db6af4968}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_LocalAppData,
+                 CSIDL_LOCAL_APPDATA,
+                 "Local AppData",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "AppData\\Local",
+                 NULL,
+                 0,
+                 KFDF_LOCAL_REDIRECT_ONLY | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_LocalAppDataLow,
+                 NO_CSIDL,
+                 "LocalAppDataLow",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "AppData\\LocalLow",
+                 NULL,
+                 FILE_ATTRIBUTE_NOT_CONTENT_INDEXED,
+                 KFDF_LOCAL_REDIRECT_ONLY | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_LocalizedResourcesDir,
+                 CSIDL_RESOURCES_LOCALIZED,
+                 "LocalizedResourcesDir",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Music,
+                 CSIDL_MYMUSIC,
+                 "My Music",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Music",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{4BD8D571-6D19-48D3-BE97-422220080E43}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_MusicLibrary,
+                 NO_CSIDL,
+                 "MusicLibrary",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Libraries,
+                 "Music.library-ms",
+                 "::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{2112AB0A-C86A-4ffe-A368-0DE96E47012E}\0\0",
+                 0,
+                 KFDF_PRECREATE | KFDF_STREAM),
+    KNOWN_FOLDER(FOLDERID_NetHood,
+                 CSIDL_NETHOOD,
+                 "NetHood",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Network Shortcuts",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_NetworkFolder,
+                 CSIDL_NETWORK,
+                 "NetworkPlacesFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_OriginalImages,
+                 NO_CSIDL,
+                 "Original Images",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows Photo Gallery\\Original Images",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_PhotoAlbums,
+                 NO_CSIDL,
+                 "PhotoAlbums",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Pictures,
+                 "Slide Shows",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Pictures,
+                 CSIDL_MYPICTURES,
+                 "My Pictures",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Pictures",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{33E28130-4E1E-4676-835A-98395C3BC3BB}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PicturesLibrary,
+                 NO_CSIDL,
+                 "PicturesLibrary",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Libraries,
+                 "Pictures.library-ms",
+                 "::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{A990AE9F-A03B-4e80-94BC-9912D7504104}\0\0",
+                 0,
+                 KFDF_PRECREATE | KFDF_STREAM),
+    KNOWN_FOLDER(FOLDERID_Playlists,
+                 NO_CSIDL,
+                 "Playlists",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Music,
+                 "Playlists",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 0),
+    KNOWN_FOLDER(FOLDERID_PrintersFolder,
+                 CSIDL_PRINTERS,
+                 "PrintersFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_PrintHood,
+                 CSIDL_PRINTHOOD,
+                 "PrintHood",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Printer Shortcuts",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Profile,
+                 CSIDL_PROFILE,
+                 "Profile",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ProgramData,
+                 CSIDL_COMMON_APPDATA,
+                 "Common AppData",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ProgramFiles,
+                 CSIDL_PROGRAM_FILES,
+                 "ProgramFiles",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE
+                ),
+    KNOWN_FOLDER(FOLDERID_ProgramFilesCommon,
+                 CSIDL_PROGRAM_FILES_COMMON,
+                 "ProgramFilesCommon",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ProgramFilesCommonX64,
+                 NO_CSIDL,
+                 "ProgramFilesCommonX64",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ProgramFilesCommonX86,
+                 NO_CSIDL,
+                 "ProgramFilesCommonX86",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ProgramFilesX64,
+                 NO_CSIDL,
+                 "ProgramFilesX64",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ProgramFilesX86,
+                 CSIDL_PROGRAM_FILESX86,
+                 "ProgramFilesX86",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_Programs,
+                 CSIDL_PROGRAMS,
+                 "Programs",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_StartMenu,
+                 "Programs",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_Public,
+                 NO_CSIDL,
+                 "Public",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 "::{4336a54d-038b-4685-ab02-99bb52d3fb8b}\0"
+                 "(null)\0\0" /* 6.1 */,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicDesktop,
+                 CSIDL_COMMON_DESKTOPDIRECTORY,
+                 "Common Desktop",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Desktop",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicDocuments,
+                 CSIDL_COMMON_DOCUMENTS,
+                 "Common Documents",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Documents",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicDownloads,
+                 NO_CSIDL,
+                 "CommonDownloads",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Downloads",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicGameTasks,
+                 NO_CSIDL,
+                 "PublicGameTasks",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramData,
+                 "Microsoft\\Windows\\GameExplorer",
+                 NULL,
+                 0,
+                 KFDF_LOCAL_REDIRECT_ONLY),
+    KNOWN_FOLDER(FOLDERID_PublicLibraries,
+                 NO_CSIDL,
+                 "PublicLibraries",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Libraries",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicMusic,
+                 CSIDL_COMMON_MUSIC,
+                 "CommonMusic",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Music",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicPictures,
+                 CSIDL_COMMON_PICTURES,
+                 "CommonPictures",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Pictures",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicRingtones,
+                 NO_CSIDL,
+                 "CommonRingtones",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramData,
+                 "Microsoft\\Windows\\Ringtones",
+                 NULL,
+                 0,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_PublicVideos,
+                 CSIDL_COMMON_VIDEO,
+                 "CommonVideo",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_Public,
+                 "Videos",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_QuickLaunch,
+                 NO_CSIDL,
+                 "Quick Launch",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Internet Explorer\\Quick Launch",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Recent,
+                 CSIDL_RECENT,
+                 "Recent",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Recent",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_RecordedTVLibrary,
+                 NO_CSIDL,
+                 "RecordedTVLibrary",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_PublicLibraries,
+                 "RecordedTV.library-ms",
+                 NULL,
+                 0,
+                 KFDF_PRECREATE | KFDF_STREAM),
+    KNOWN_FOLDER(FOLDERID_RecycleBinFolder,
+                 CSIDL_BITBUCKET,
+                 "RecycleBinFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{645FF040-5081-101B-9F08-00AA002F954E}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_ResourceDir,
+                 CSIDL_RESOURCES,
+                 "ResourceDir",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Ringtones,
+                 NO_CSIDL,
+                 "Ringtones",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows\\Ringtones",
+                 NULL,
+                 0,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_RoamingAppData,
+                 CSIDL_APPDATA,
+                 "AppData",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "AppData\\Roaming",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SampleMusic,
+                 NO_CSIDL,
+                 "SampleMusic",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_PublicMusic,
+                 "Sample Music",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_SamplePictures,
+                 NO_CSIDL,
+                 "SamplePictures",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_PublicPictures,
+                 "Sample Pictures",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_SamplePlaylists,
+                 NO_CSIDL,
+                 "SamplePlaylists",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_PublicMusic,
+                 "Sample Playlists",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SampleVideos,
+                 NO_CSIDL,
+                 "SampleVideos",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_PublicVideos,
+                 "Sample Videos",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_SavedGames,
+                 NO_CSIDL,
+                 "SavedGames",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Saved Games",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{4C5C32FF-BB9D-43b0-B5B4-2D72E54EAAA4}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_SavedSearches,
+                 NO_CSIDL,
+                 "Searches",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Searches",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{7d1d3a04-debb-4115-95cf-2f29da2920da}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH),
+    KNOWN_FOLDER(FOLDERID_SEARCH_CSC,
+                 NO_CSIDL,
+                 "CSCFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "shell:::{BD7A2E7B-21CB-41b2-A086-B309680C6B7E}\\*\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SearchHome,
+                 NO_CSIDL,
+                 "SearchHomeFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{9343812e-1c37-4a49-a12e-4b2d810d956b}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SEARCH_MAPI,
+                 NO_CSIDL,
+                 "MAPIFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}\\*\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SendTo,
+                 CSIDL_SENDTO,
+                 "SendTo",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\SendTo",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SidebarDefaultParts,
+                 NO_CSIDL,
+                 "Default Gadgets",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_ProgramFiles,
+                 "Windows Sidebar\\Gadgets",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SidebarParts,
+                 NO_CSIDL,
+                 "Gadgets",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Microsoft\\Windows Sidebar\\Gadgets",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_StartMenu,
+                 CSIDL_STARTMENU,
+                 "Start Menu",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Start Menu",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_Startup,
+                 CSIDL_STARTUP,
+                 "Startup",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Programs,
+                 "StartUp",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_SyncManagerFolder,
+                 NO_CSIDL,
+                 "SyncCenterFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SyncResultsFolder,
+                 NO_CSIDL,
+                 "SyncResultsFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{BC48B32F-5910-47F5-8570-5074A8A5636A},\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{BC48B32F-5910-47F5-8570-5074A8A5636A},\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SyncSetupFolder,
+                 NO_CSIDL,
+                 "SyncSetupFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{F1390A9A-A3F4-4E5D-9C5F-98F3BD8D935C},\0"
+                 "::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{F1390A9A-A3F4-4E5D-9C5F-98F3BD8D935C},\0\0" /* 6.1 */,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_System,
+                 CSIDL_SYSTEM,
+                 "System",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_SystemX86,
+                 CSIDL_SYSTEMX86,
+                 "SystemX86",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Templates,
+                 CSIDL_TEMPLATES,
+                 "Templates",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_RoamingAppData,
+                 "Microsoft\\Windows\\Templates",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_UserPinned,
+                 NO_CSIDL,
+                 "User Pinned",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_QuickLaunch,
+                 "User Pinned",
+                 NULL,
+                 FILE_ATTRIBUTE_HIDDEN,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_UserProfiles,
+                 NO_CSIDL,
+                 "UserProfiles",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_UserProgramFiles,
+                 NO_CSIDL,
+                 "UserProgramFiles",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_LocalAppData,
+                 "Programs",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_UserProgramFilesCommon,
+                 NO_CSIDL,
+                 "UserProgramFilesCommon",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_UserProgramFiles,
+                 "Common",
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_UsersFiles,
+                 NO_CSIDL,
+                 "UsersFilesFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_UsersLibraries,
+                 NO_CSIDL,
+                 "UsersLibrariesFolder",
+                 KF_CATEGORY_VIRTUAL,
+                 GUID_NULL,
+                 NULL,
+                 "::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\0\0",
+                 0,
+                 0),
+    KNOWN_FOLDER(FOLDERID_Videos,
+                 CSIDL_MYVIDEO,
+                 "My Video",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Profile,
+                 "Videos",
+                 "::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{18989B1D-99B5-455B-841C-AB7C74E4DDFC}\0\0",
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_ROAMABLE | KFDF_PRECREATE),
+    KNOWN_FOLDER(FOLDERID_VideosLibrary,
+                 NO_CSIDL,
+                 "VideosLibrary",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Libraries,
+                 "Videos.library-ms",
+                 "::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{491E922F-5643-4af4-A7EB-4E7A138D8174}\0\0",
+                 0,
+                 KFDF_PRECREATE | KFDF_STREAM),
+    KNOWN_FOLDER(FOLDERID_Windows,
+                 CSIDL_WINDOWS,
+                 "Windows",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(_FOLDERID_CredentialManager,
+                 NO_CSIDL,
+                 "CredentialManager",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(_FOLDERID_CryptoKeys,
+                 NO_CSIDL,
+                 "CryptoKeys",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(_FOLDERID_DpapiKeys,
+                 NO_CSIDL,
+                 "DpapiKeys",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    KNOWN_FOLDER(_FOLDERID_SystemCertificates,
+                 NO_CSIDL,
+                 "SystemCertificates",
+                 KF_CATEGORY_FIXED,
+                 GUID_NULL,
+                 NULL,
+                 NULL,
+                 0,
+                 0),
+    { NULL, NULL, 0, NULL, NULL, 0, 0 }
+};
+#undef KNOWN_FOLDER
+BOOL known_folder_found[sizeof(known_folders)/sizeof(known_folders[0])-1];
+
+static void check_known_folder(IKnownFolderManager *mgr, KNOWNFOLDERID *folderId)
+{
+    HRESULT hr;
+    const struct knownFolderDef *known_folder = &known_folders[0];
+    int csidl, expectedCsidl, ret;
+    KNOWNFOLDER_DEFINITION kfd;
+    IKnownFolder *folder;
+    WCHAR sName[1024], sRelativePath[MAX_PATH], sParsingName[MAX_PATH];
+    BOOL validPath;
+    char sParentGuid[39];
+    BOOL *current_known_folder_found = &known_folder_found[0];
+    BOOL found = FALSE;
+    const char *srcParsingName;
+
+    while(known_folder->folderId != NULL)
+    {
+        if(IsEqualGUID(known_folder->folderId, folderId))
+        {
+            *current_known_folder_found = TRUE;
+            found = TRUE;
+            /* verify CSIDL */
+            if(known_folder->csidl != NO_CSIDL)
+            {
+                expectedCsidl = known_folder->csidl & (~CSIDL_TODO_WINE);
+
+                hr = IKnownFolderManager_FolderIdToCsidl(mgr, folderId, &csidl);
+                ok_(__FILE__, known_folder->line)(hr == S_OK, "cannot retrieve CSIDL for folder %s\n", known_folder->sFolderId);
+
+                if(known_folder->csidl & CSIDL_TODO_WINE)
+                    todo_wine ok_(__FILE__, known_folder->line)(csidl == expectedCsidl, "invalid CSIDL retrieved for folder %s. %d (%s) expected, but %d found\n", known_folder->sFolderId, expectedCsidl, known_folder->sCsidl, csidl);
+                else
+                    ok_(__FILE__, known_folder->line)(csidl == expectedCsidl, "invalid CSIDL retrieved for folder %s. %d (%s) expected, but %d found\n", known_folder->sFolderId, expectedCsidl, known_folder->sCsidl, csidl);
+            }
+
+            hr = IKnownFolderManager_GetFolder(mgr, folderId, &folder);
+            ok_(__FILE__, known_folder->line)(hr == S_OK, "cannot get known folder for %s\n", known_folder->sFolderId);
+            if(SUCCEEDED(hr))
+            {
+                hr = IKnownFolder_GetFolderDefinition(folder, &kfd);
+                todo_wine
+                ok_(__FILE__, known_folder->line)(hr == S_OK, "cannot get known folder definition for %s\n", known_folder->sFolderId);
+                if(SUCCEEDED(hr))
+                {
+                    ret = MultiByteToWideChar(CP_ACP, 0, known_folder->sName, -1,  sName, sizeof(sName)/sizeof(sName[0]));
+                    ok_(__FILE__, known_folder->line)(ret != 0, "cannot convert known folder name \"%s\" to wide characters\n", known_folder->sName);
+
+                    todo_wine
+                    ok_(__FILE__, known_folder->line)(lstrcmpW(kfd.pszName, sName)==0, "invalid known folder name returned for %s: %s expected, but %s retrieved\n", known_folder->sFolderId, wine_dbgstr_w(sName), wine_dbgstr_w(kfd.pszName));
+
+                    ok_(__FILE__, known_folder->line)(kfd.category == known_folder->category, "invalid known folder category for %s: %d expected, but %d retrieved\n", known_folder->sFolderId, known_folder->category, kfd.category);
+
+                    printGUID(&kfd.fidParent, sParentGuid);
+                    ok_(__FILE__, known_folder->line)(IsEqualGUID(known_folder->fidParent, &kfd.fidParent), "invalid known folder parent for %s: %s expected, but %s retrieved\n", known_folder->sFolderId, known_folder->sParent, sParentGuid);
+
+                    if(!known_folder->sRelativePath)
+                        validPath = (kfd.pszRelativePath==NULL);
+                    else
+                    {
+                        ret = MultiByteToWideChar(CP_ACP, 0, known_folder->sRelativePath, -1, sRelativePath, sizeof(sRelativePath)/sizeof(sRelativePath[0]));
+                        ok_(__FILE__, known_folder->line)(ret != 0, "cannot convert known folder path \"%s\" to wide characters\n", known_folder->sRelativePath);
+
+                        validPath = (lstrcmpW(kfd.pszRelativePath, sRelativePath)==0);
+                    }
+
+                    ok_(__FILE__, known_folder->line)(validPath, "invalid known folder relative path returned for %s: %s expected, but %s retrieved\n", known_folder->sFolderId, known_folder->sRelativePath, wine_dbgstr_w(kfd.pszRelativePath));
+
+                    /* to check parsing name, we need to iterate list */
+                    srcParsingName = known_folder->sParsingName;
+
+                    /* if we expect NULL, then we don't even check the list */
+                    validPath = (srcParsingName==NULL) && (kfd.pszParsingName==NULL);
+
+                    if(srcParsingName)
+                        while(*srcParsingName && !validPath)
+                        {
+                            /* when NULL is only one of possible value, we mark path as valid */
+                            validPath = (strcmp(srcParsingName, "(null)")==0) && (kfd.pszParsingName==NULL);
+
+                            /* in the other case, we compare string from list with retrieved value */
+                            if(!validPath)
+                            {
+                                ret = MultiByteToWideChar(CP_ACP, 0, srcParsingName, -1, sParsingName, sizeof(sParsingName)/sizeof(sParsingName[0]));
+                                ok_(__FILE__, known_folder->line)(ret != 0, "cannot convert known folder path \"%s\" to wide characters\n", srcParsingName);
+
+                                validPath = (lstrcmpW(kfd.pszParsingName, sParsingName)==0);
+                            }
+
+                            srcParsingName += strlen(srcParsingName)+1;
+                        }
+
+                    ok_(__FILE__, known_folder->line)(validPath, "invalid known folder parsing name returned for %s: %s retrieved\n", known_folder->sFolderId, wine_dbgstr_w(kfd.pszParsingName));
+
+                    ok_(__FILE__, known_folder->line)(known_folder->attributes == kfd.dwAttributes, "invalid known folder attributes for %s: 0x%08x expected, but 0x%08x retrieved\n", known_folder->sFolderId, known_folder->attributes, kfd.dwAttributes);
+
+                    ok_(__FILE__, known_folder->line)(!(kfd.kfdFlags & (~known_folder->definitionFlags)), "invalid known folder flags for %s: 0x%08x expected, but 0x%08x retrieved\n", known_folder->sFolderId, known_folder->definitionFlags, kfd.kfdFlags);
+
+                    FreeKnownFolderDefinitionFields(&kfd);
+                }
+
+            IKnownFolder_Release(folder);
+            }
+
+            break;
+        }
+        known_folder++;
+        current_known_folder_found++;
+    }
+
+    if(!found)
+    {
+        printGUID(folderId, sParentGuid);
+        trace("unknown known folder found: %s\n", sParentGuid);
+
+        hr = IKnownFolderManager_GetFolder(mgr, folderId, &folder);
+        ok(hr == S_OK, "cannot get known folder for %s\n", sParentGuid);
+        if(SUCCEEDED(hr))
+        {
+            hr = IKnownFolder_GetFolderDefinition(folder, &kfd);
+            todo_wine
+            ok(hr == S_OK, "cannot get known folder definition for %s\n", sParentGuid);
+            if(SUCCEEDED(hr))
+            {
+                trace("  category: %d\n", kfd.category);
+                trace("  name: %s\n", wine_dbgstr_w(kfd.pszName));
+                trace("  description: %s\n", wine_dbgstr_w(kfd.pszDescription));
+                printGUID(&kfd.fidParent, sParentGuid);
+                trace("  parent: %s\n", sParentGuid);
+                trace("  relative path: %s\n", wine_dbgstr_w(kfd.pszRelativePath));
+                trace("  parsing name: %s\n", wine_dbgstr_w(kfd.pszParsingName));
+                trace("  tooltip: %s\n", wine_dbgstr_w(kfd.pszTooltip));
+                trace("  localized name: %s\n", wine_dbgstr_w(kfd.pszLocalizedName));
+                trace("  icon: %s\n", wine_dbgstr_w(kfd.pszIcon));
+                trace("  security: %s\n", wine_dbgstr_w(kfd.pszSecurity));
+                trace("  attributes: 0x%08x\n", kfd.dwAttributes);
+                trace("  flags: 0x%08x\n", kfd.kfdFlags);
+                printGUID(&kfd.ftidType, sParentGuid);
+                trace("  type: %s\n", sParentGuid);
+                FreeKnownFolderDefinitionFields(&kfd);
+            }
+
+            IKnownFolder_Release(folder);
+        }
+    }
+}
+#undef NO_CSIDL
+#undef CSIDL_TODO_WINE
+
+static void test_knownFolders(void)
+{
+    static const WCHAR sWindows[] = {'W','i','n','d','o','w','s',0};
+    static const WCHAR sExample[] = {'E','x','a','m','p','l','e',0};
+    static const WCHAR sExample2[] = {'E','x','a','m','p','l','e','2',0};
+    static const WCHAR sSubFolder[] = {'S','u','b','F','o','l','d','e','r',0};
+    static const WCHAR sBackslash[] = {'\\',0};
+    static const KNOWNFOLDERID newFolderId = {0x01234567, 0x89AB, 0xCDEF, {0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x01} };
+    static const KNOWNFOLDERID subFolderId = {0xFEDCBA98, 0x7654, 0x3210, {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF} };
+    HRESULT hr;
+    IKnownFolderManager *mgr = NULL;
+    IKnownFolder *folder = NULL, *subFolder = NULL;
+    KNOWNFOLDERID folderId, *folders;
+    KF_CATEGORY cat = 0;
+    KNOWNFOLDER_DEFINITION kfDefinition, kfSubDefinition;
+    int csidl, i;
+    UINT nCount = 0;
+    LPWSTR folderPath, errorMsg;
+    KF_REDIRECTION_CAPABILITIES redirectionCapabilities = 1;
+    WCHAR sWinDir[MAX_PATH], sExamplePath[MAX_PATH], sExample2Path[MAX_PATH], sSubFolderPath[MAX_PATH], sSubFolder2Path[MAX_PATH];
+    BOOL bRes;
+    DWORD dwAttributes;
+
+    GetWindowsDirectoryW( sWinDir, MAX_PATH );
+
+    GetTempPathW(sizeof(sExamplePath)/sizeof(sExamplePath[0]), sExamplePath);
+    lstrcatW(sExamplePath, sExample);
+
+    GetTempPathW(sizeof(sExample2Path)/sizeof(sExample2Path[0]), sExample2Path);
+    lstrcatW(sExample2Path, sExample2);
+
+    lstrcpyW(sSubFolderPath, sExamplePath);
+    lstrcatW(sSubFolderPath, sBackslash);
+    lstrcatW(sSubFolderPath, sSubFolder);
+
+    lstrcpyW(sSubFolder2Path, sExample2Path);
+    lstrcatW(sSubFolder2Path, sBackslash);
+    lstrcatW(sSubFolder2Path, sSubFolder);
+
+    CoInitialize(NULL);
+
+    hr = CoCreateInstance(&CLSID_KnownFolderManager, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IKnownFolderManager, (LPVOID*)&mgr);
+    if(hr == REGDB_E_CLASSNOTREG)
+        win_skip("IKnownFolderManager unavailable\n");
+    else
+    {
+        ok(hr == S_OK, "failed to create KnownFolderManager instance: 0x%08x\n", hr);
+
+        hr = IKnownFolderManager_FolderIdFromCsidl(mgr, CSIDL_WINDOWS, &folderId);
+        ok(hr == S_OK, "failed to convert CSIDL to KNOWNFOLDERID: 0x%08x\n", hr);
+        ok(IsEqualGUID(&folderId, &FOLDERID_Windows)==TRUE, "invalid KNOWNFOLDERID returned\n");
+
+        hr = IKnownFolderManager_FolderIdToCsidl(mgr, &FOLDERID_Windows, &csidl);
+        ok(hr == S_OK, "failed to convert CSIDL to KNOWNFOLDERID: 0x%08x\n", hr);
+        ok(csidl == CSIDL_WINDOWS, "invalid CSIDL returned\n");
+
+        hr = IKnownFolderManager_GetFolder(mgr, &FOLDERID_Windows, &folder);
+        ok(hr == S_OK, "failed to get known folder: 0x%08x\n", hr);
+        if(SUCCEEDED(hr))
+        {
+            hr = IKnownFolder_GetCategory(folder, &cat);
+            todo_wine
+            ok(hr == S_OK, "failed to get folder category: 0x%08x\n", hr);
+            todo_wine
+            ok(cat==KF_CATEGORY_FIXED, "invalid folder category: %d\n", cat);
+
+            hr = IKnownFolder_GetId(folder, &folderId);
+            ok(hr == S_OK, "failed to get folder id: 0x%08x\n", hr);
+            ok(IsEqualGUID(&folderId, &FOLDERID_Windows)==TRUE, "invalid KNOWNFOLDERID returned\n");
+
+            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+            ok(lstrcmpiW(sWinDir, folderPath)==0, "invalid path returned: \"%s\", expected: \"%s\"\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sWinDir));
+            CoTaskMemFree(folderPath);
+
+            hr = IKnownFolder_GetRedirectionCapabilities(folder, &redirectionCapabilities);
+            todo_wine
+            ok(hr == S_OK, "failed to get redirection capabilities: 0x%08x\n", hr);
+            todo_wine
+            ok(redirectionCapabilities==0, "invalid redirection capabilities returned: %d\n", redirectionCapabilities);
+
+            hr = IKnownFolder_SetPath(folder, 0, sWinDir);
+            todo_wine
+            ok(hr == E_INVALIDARG, "unexpected value from SetPath: 0x%08x\n", hr);
+
+            hr = IKnownFolder_GetFolderDefinition(folder, &kfDefinition);
+            todo_wine
+            ok(hr == S_OK, "failed to get folder definition: 0x%08x\n", hr);
+            if(SUCCEEDED(hr))
+            {
+                todo_wine
+                ok(kfDefinition.category==KF_CATEGORY_FIXED, "invalid folder category: 0x%08x\n", kfDefinition.category);
+                todo_wine
+                ok(lstrcmpW(kfDefinition.pszName, sWindows)==0, "invalid folder name: %s\n", wine_dbgstr_w(kfDefinition.pszName));
+                todo_wine
+                ok(kfDefinition.dwAttributes==0, "invalid folder attributes: %d\n", kfDefinition.dwAttributes);
+                FreeKnownFolderDefinitionFields(&kfDefinition);
+            }
+
+            hr = IKnownFolder_Release(folder);
+            ok(hr == S_OK, "failed to release KnownFolder instance: 0x%08x\n", hr);
+        }
+
+        hr = IKnownFolderManager_GetFolderByName(mgr, sWindows, &folder);
+        todo_wine
+        ok(hr == S_OK, "failed to get known folder: 0x%08x\n", hr);
+        if(SUCCEEDED(hr))
+        {
+            hr = IKnownFolder_GetId(folder, &folderId);
+            ok(hr == S_OK, "failed to get folder id: 0x%08x\n", hr);
+            ok(IsEqualGUID(&folderId, &FOLDERID_Windows)==TRUE, "invalid KNOWNFOLDERID returned\n");
+
+            hr = IKnownFolder_Release(folder);
+            ok(hr == S_OK, "failed to release KnownFolder instance: 0x%08x\n", hr);
+        }
+
+        for(i=0; i<sizeof(known_folder_found)/sizeof(known_folder_found[0]); ++i)
+            known_folder_found[i] = FALSE;
+
+        hr = IKnownFolderManager_GetFolderIds(mgr, &folders, &nCount);
+        ok(hr == S_OK, "failed to get known folders: 0x%08x\n", hr);
+        for(i=0;i<nCount;++i)
+            check_known_folder(mgr, &folders[i]);
+
+        for(i=0; i<sizeof(known_folder_found)/sizeof(known_folder_found[0]); ++i)
+            if(!known_folder_found[i])
+                trace("Known folder %s not found on current platform\n", known_folders[i].sFolderId);
+
+        CoTaskMemFree(folders);
+
+        /* test of registering new known folders */
+        bRes = CreateDirectoryW(sExamplePath, NULL);
+        ok(bRes, "cannot create example directory: %s\n", wine_dbgstr_w(sExamplePath));
+        bRes = CreateDirectoryW(sExample2Path, NULL);
+        ok(bRes, "cannot create example directory: %s\n", wine_dbgstr_w(sExample2Path));
+        bRes = CreateDirectoryW(sSubFolderPath, NULL);
+        ok(bRes, "cannot create example directory: %s\n", wine_dbgstr_w(sSubFolderPath));
+
+        ZeroMemory(&kfDefinition, sizeof(kfDefinition));
+        kfDefinition.category = KF_CATEGORY_PERUSER;
+        kfDefinition.pszName = CoTaskMemAlloc(sizeof(sExample));
+        lstrcpyW(kfDefinition.pszName, sExample);
+        kfDefinition.pszDescription = CoTaskMemAlloc(sizeof(sExample));
+        lstrcpyW(kfDefinition.pszDescription, sExample);
+        kfDefinition.pszRelativePath = CoTaskMemAlloc(sizeof(sExamplePath));
+        lstrcpyW(kfDefinition.pszRelativePath, sExamplePath);
+
+        hr = IKnownFolderManager_RegisterFolder(mgr, &newFolderId, &kfDefinition);
+        if(hr == HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED))
+            win_skip("No permissions required to register custom known folder\n");
+        else
+        {
+            ok(hr == S_OK, "failed to register known folder: 0x%08x\n", hr);
+            if(SUCCEEDED(hr))
+            {
+                hr = IKnownFolderManager_GetFolder(mgr, &newFolderId, &folder);
+                ok(hr == S_OK, "failed to get known folder: 0x%08x\n", hr);
+                if(SUCCEEDED(hr))
+                {
+                    hr = IKnownFolder_GetCategory(folder, &cat);
+                    ok(hr == S_OK, "failed to get folder category: hr=0x%0x\n", hr);
+                    ok(cat == KF_CATEGORY_PERUSER, "invalid category returned: %d, while %d (KF_CATEGORY_PERUSER) expected\n", cat, KF_CATEGORY_PERUSER);
+
+                    hr = IKnownFolder_GetId(folder, &folderId);
+                    ok(hr == S_OK, "failed to get folder id: 0x%08x\n", hr);
+                    ok(IsEqualGUID(&folderId, &newFolderId)==TRUE, "invalid KNOWNFOLDERID returned\n");
+
+                    /* current path should be Temp\Example */
+                    hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                    ok(hr == S_OK, "failed to get path from known folder: 0x%08x\n", hr);
+                    ok(lstrcmpiW(folderPath, sExamplePath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExamplePath));
+                    CoTaskMemFree(folderPath);
+
+                    /* register sub-folder and mark it as child of Example folder */
+                    ZeroMemory(&kfSubDefinition, sizeof(kfSubDefinition));
+                    kfSubDefinition.category = KF_CATEGORY_PERUSER;
+                    kfSubDefinition.pszName = CoTaskMemAlloc(sizeof(sSubFolder));
+                    lstrcpyW(kfSubDefinition.pszName, sSubFolder);
+                    kfSubDefinition.pszDescription = CoTaskMemAlloc(sizeof(sSubFolder));
+                    lstrcpyW(kfSubDefinition.pszDescription, sSubFolder);
+                    kfSubDefinition.pszRelativePath = CoTaskMemAlloc(sizeof(sSubFolder));
+                    lstrcpyW(kfSubDefinition.pszRelativePath, sSubFolder);
+                    kfSubDefinition.fidParent = newFolderId;
+
+                    hr = IKnownFolderManager_RegisterFolder(mgr, &subFolderId, &kfSubDefinition);
+                    ok(hr == S_OK, "failed to register known folder: 0x%08x\n", hr);
+                    if(SUCCEEDED(hr))
+                    {
+
+                        hr = IKnownFolderManager_GetFolder(mgr, &subFolderId, &subFolder);
+                        ok(hr == S_OK, "failed to get known folder: 0x%08x\n", hr);
+                        if(SUCCEEDED(hr))
+                        {
+                            /* check sub folder path */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolderPath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolderPath));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* try to redirect Example to Temp\Example2  */
+                            hr = IKnownFolderManager_Redirect(mgr, &newFolderId, NULL, 0, sExample2Path, 0, NULL, &errorMsg);
+                            ok(hr == S_OK, "failed to redirect known folder: 0x%08x, errorMsg: %s\n", hr, wine_dbgstr_w(errorMsg));
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExample2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExample2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder - it should fail now, as we redirected it's parent folder, but we have no sub folder in new location */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "unexpected value from GetPath(): 0x%08x\n", hr);
+                            ok(folderPath==NULL, "invalid known folder path retrieved: \"%s\" when NULL pointer was expected\n", wine_dbgstr_w(folderPath));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* set Example path to original. Using SetPath() is valid here, as it also uses redirection internally */
+                            hr = IKnownFolder_SetPath(folder, 0, sExamplePath);
+                            ok(hr == S_OK, "SetPath() failed: 0x%08x\n", hr);
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExamplePath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExamplePath));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* create sub folder in Temp\Example2 */
+                            bRes = CreateDirectoryW(sSubFolder2Path, NULL);
+                            ok(bRes, "cannot create example directory: %s\n", wine_dbgstr_w(sSubFolder2Path));
+
+                            /* again perform that same redirection */
+                            hr = IKnownFolderManager_Redirect(mgr, &newFolderId, NULL, 0, sExample2Path, 0, NULL, &errorMsg);
+                            ok(hr == S_OK, "failed to redirect known folder: 0x%08x, errorMsg: %s\n", hr, wine_dbgstr_w(errorMsg));
+
+                            /* verify sub folder. It should succeed now, as the required sub folder exists */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolder2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolder2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* remove newly created directory */
+                            RemoveDirectoryW(sSubFolder2Path);
+
+                            /* verify sub folder. It still succeedes, so Windows does not check folder presence each time */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            todo_wine
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            todo_wine
+                            ok(lstrcmpiW(folderPath, sSubFolder2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolder2Path));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* set Example path to original */
+                            hr = IKnownFolder_SetPath(folder, 0, sExamplePath);
+                            ok(hr == S_OK, "SetPath() failed: 0x%08x\n", hr);
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExamplePath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExamplePath));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolderPath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolderPath));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* create sub folder in Temp\Example2 */
+                            bRes = CreateDirectoryW(sSubFolder2Path, NULL);
+                            ok(bRes, "cannot create example directory: %s\n", wine_dbgstr_w(sSubFolder2Path));
+
+                            /* do that same redirection, but try to exclude sub-folder */
+                            hr = IKnownFolderManager_Redirect(mgr, &newFolderId, NULL, 0, sExample2Path, 1, &subFolderId, &errorMsg);
+                            ok(hr == S_OK, "failed to redirect known folder: 0x%08x, errorMsg: %s\n", hr, wine_dbgstr_w(errorMsg));
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExample2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExample2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder. Unexpectedly, this path was also changed. So, exclusion seems to be ignored (Windows bug)? This test however will let us know, if this behavior is changed */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolder2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolder2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* remove newly created directory */
+                            RemoveDirectoryW(sSubFolder2Path);
+
+
+                            /* set Example path to original */
+                            hr = IKnownFolder_SetPath(folder, 0, sExamplePath);
+                            ok(hr == S_OK, "SetPath() failed: 0x%08x\n", hr);
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExamplePath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExamplePath));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolderPath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolderPath));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* do that same redirection again, but set it to copy content. It should also copy the sub folder, so checking it would succeed now */
+                            hr = IKnownFolderManager_Redirect(mgr, &newFolderId, NULL, KF_REDIRECT_COPY_CONTENTS, sExample2Path, 0, NULL, &errorMsg);
+                            ok(hr == S_OK, "failed to redirect known folder: 0x%08x, errorMsg: %s\n", hr, wine_dbgstr_w(errorMsg));
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExample2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExample2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolder2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolder2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* remove copied directory */
+                            RemoveDirectoryW(sSubFolder2Path);
+
+
+                            /* set Example path to original */
+                            hr = IKnownFolder_SetPath(folder, 0, sExamplePath);
+                            ok(hr == S_OK, "SetPath() failed: 0x%08x\n", hr);
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExamplePath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExamplePath));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolderPath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolderPath));
+                            CoTaskMemFree(folderPath);
+
+
+                            /* redirect again, set it to copy content and remove originals */
+                            hr = IKnownFolderManager_Redirect(mgr, &newFolderId, NULL, KF_REDIRECT_COPY_CONTENTS | KF_REDIRECT_DEL_SOURCE_CONTENTS, sExample2Path, 0, NULL, &errorMsg);
+                            ok(hr == S_OK, "failed to redirect known folder: 0x%08x, errorMsg: %s\n", hr, wine_dbgstr_w(errorMsg));
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExample2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExample2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolder2Path)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolder2Path));
+                            CoTaskMemFree(folderPath);
+
+                            /* check if original directory was really removed */
+                            dwAttributes = GetFileAttributesW(sExamplePath);
+                            ok(dwAttributes==INVALID_FILE_ATTRIBUTES, "directory should not exist, but has attributes: 0x%08x\n", dwAttributes );
+
+
+                            /* redirect (with copy) to original path */
+                            hr = IKnownFolderManager_Redirect(mgr, &newFolderId, NULL, KF_REDIRECT_COPY_CONTENTS,  sExamplePath, 0, NULL, &errorMsg);
+                            ok(hr == S_OK, "failed to redirect known folder: 0x%08x, errorMsg: %s\n", hr, wine_dbgstr_w(errorMsg));
+
+                            /* verify */
+                            hr = IKnownFolder_GetPath(folder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sExamplePath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sExamplePath));
+                            CoTaskMemFree(folderPath);
+
+                            /* verify sub folder */
+                            hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
+                            ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);
+                            ok(lstrcmpiW(folderPath, sSubFolderPath)==0, "invalid known folder path retrieved: \"%s\" when \"%s\" was expected\n", wine_dbgstr_w(folderPath), wine_dbgstr_w(sSubFolderPath));
+                            CoTaskMemFree(folderPath);
+
+                            /* check shell utility functions */
+                            if(!pSHGetKnownFolderPath || !pSHSetKnownFolderPath)
+                                todo_wine
+                                win_skip("cannot get SHGet/SetKnownFolderPath routines\n");
+                            else
+                            {
+                                /* try to get current known folder path */
+                                hr = pSHGetKnownFolderPath(&newFolderId, 0, NULL, &folderPath);
+                                todo_wine
+                                ok(hr==S_OK, "cannot get known folder path: hr=0x%0x\n", hr);
+                                todo_wine
+                                ok(lstrcmpW(folderPath, sExamplePath)==0, "invalid path returned: %s\n", wine_dbgstr_w(folderPath));
+
+                                /* set it to new value */
+                                hr = pSHSetKnownFolderPath(&newFolderId, 0, NULL, sExample2Path);
+                                todo_wine
+                                ok(hr==S_OK, "cannot set known folder path: hr=0x%0x\n", hr);
+
+                                /* check if it changed */
+                                hr = pSHGetKnownFolderPath(&newFolderId, 0, NULL, &folderPath);
+                                todo_wine
+                                ok(hr==S_OK, "cannot get known folder path: hr=0x%0x\n", hr);
+                                todo_wine
+                                ok(lstrcmpW(folderPath, sExample2Path)==0, "invalid path returned: %s\n", wine_dbgstr_w(folderPath));
+
+                                /* set it back */
+                                hr = pSHSetKnownFolderPath(&newFolderId, 0, NULL, sExamplePath);
+                                todo_wine
+                                ok(hr==S_OK, "cannot set known folder path: hr=0x%0x\n", hr);
+                            }
+
+                            IKnownFolder_Release(subFolder);
+                        }
+
+                        hr = IKnownFolderManager_UnregisterFolder(mgr, &subFolderId);
+                        ok(hr == S_OK, "failed to unregister folder: 0x%08x\n", hr);
+                    }
+
+                    FreeKnownFolderDefinitionFields(&kfSubDefinition);
+
+                    hr = IKnownFolder_Release(folder);
+                    ok(hr == S_OK, "failed to release KnownFolder instance: 0x%08x\n", hr);
+                }
+
+                hr = IKnownFolderManager_UnregisterFolder(mgr, &newFolderId);
+                ok(hr == S_OK, "failed to unregister folder: 0x%08x\n", hr);
+            }
+        }
+        FreeKnownFolderDefinitionFields(&kfDefinition);
+
+        RemoveDirectoryW(sSubFolder2Path);
+        RemoveDirectoryW(sSubFolderPath);
+        RemoveDirectoryW(sExamplePath);
+        RemoveDirectoryW(sExample2Path);
+
+        hr = IKnownFolderManager_Release(mgr);
+        ok(hr == S_OK, "failed to release KnownFolderManager instance: 0x%08x\n", hr);
+    }
+    CoUninitialize();
+}
+
 START_TEST(shellpath)
 {
     if (!init()) return;
@@ -858,5 +2513,7 @@ START_TEST(shellpath)
         testWinDir();
         testSystemDir();
         test_NonExistentPath();
+        test_SHGetFolderPathEx();
+        test_knownFolders();
     }
 }

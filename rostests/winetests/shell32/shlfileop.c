@@ -820,6 +820,7 @@ static void test_copy(void)
     DWORD retval;
     LPSTR ptr;
     BOOL on_nt4 = FALSE;
+    BOOL ret;
 
     if (old_shell32)
     {
@@ -973,16 +974,16 @@ static void test_copy(void)
     shfo.pTo = "test2.txt\0";
     /* suppress the error-dialog in win9x here */
     shfo.fFlags = FOF_NOERRORUI | FOF_NOCONFIRMATION | FOF_SILENT;
-    ok(SetFileAttributesA(shfo.pTo, FILE_ATTRIBUTE_READONLY),
-        "Failure to set file attributes (error %x)\n", GetLastError());
+    ret = SetFileAttributesA(shfo.pTo, FILE_ATTRIBUTE_READONLY);
+    ok(ret, "Failure to set file attributes (error %x)\n", GetLastError());
     retval = CopyFileA(shfo.pFrom, shfo.pTo, FALSE);
     ok(!retval && GetLastError() == ERROR_ACCESS_DENIED, "CopyFileA should have fail with ERROR_ACCESS_DENIED\n");
     retval = SHFileOperationA(&shfo);
     /* Does not work on Win95, Win95B, NT4WS and NT4SRV */
     ok(!retval || broken(retval == DE_OPCANCELLED), "SHFileOperationA failed to copy (error %x)\n", retval);
     /* Set back normal attributes to make the file deletion succeed */
-    ok(SetFileAttributesA(shfo.pTo, FILE_ATTRIBUTE_NORMAL),
-        "Failure to set file attributes (error %x)\n", GetLastError());
+    ret = SetFileAttributesA(shfo.pTo, FILE_ATTRIBUTE_NORMAL);
+    ok(ret, "Failure to set file attributes (error %x)\n", GetLastError());
     shfo.fFlags = tmp_flags;
 
     /* try to copy files to a file */
@@ -1715,11 +1716,11 @@ static void test_copy(void)
     {
         ok(DeleteFileA("threedir\\two.txt"), "Expected file to exist\n");
         ok(!DeleteFileA("fourdir"), "Expected file to not exist\n");
-        ok(!RemoveDirectoryA("fourdir"), "Expected dit to not exist\n");
+        ok(!RemoveDirectoryA("fourdir"), "Expected dir to not exist\n");
     }
     ok(RemoveDirectoryA("threedir"), "Expected dir to exist\n");
     ok(!DeleteFileA("five"), "Expected file to not exist\n");
-    ok(!RemoveDirectoryA("five"), "Expected dit to not exist\n");
+    ok(!RemoveDirectoryA("five"), "Expected dir to not exist\n");
 
     createTestFile("aa.txt");
     createTestFile("ab.txt");
@@ -2057,6 +2058,7 @@ static void test_sh_create_dir(void)
     ok(ERROR_ALREADY_EXISTS == ret, "SHCreateDirectoryEx should fail to create existing directory, ret = %d\n", ret);
 
     ret = pSHCreateDirectoryExA(NULL, "c:\\testdir3", NULL);
+    ok(ERROR_SUCCESS == ret, "SHCreateDirectoryEx failed to create directory, ret = %d\n", ret);
     ok(file_exists("c:\\testdir3"), "The directory is not created\n");
 }
 
@@ -2065,6 +2067,7 @@ static void test_sh_path_prepare(void)
     HRESULT res;
     CHAR path[MAX_PATH];
     CHAR UNICODE_PATH_A[MAX_PATH];
+    BOOL UsedDefaultChar;
 
     if(!pSHPathPrepareForWriteA)
     {
@@ -2156,7 +2159,19 @@ static void test_sh_path_prepare(void)
         win_skip("Skipping SHPathPrepareForWriteW tests\n");
         return;
     }
-    WideCharToMultiByte(CP_ACP, 0, UNICODE_PATH, -1, UNICODE_PATH_A, sizeof(UNICODE_PATH_A), NULL, NULL);
+
+    SetLastError(0xdeadbeef);
+    UsedDefaultChar = FALSE;
+    if (WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, UNICODE_PATH, -1, UNICODE_PATH_A, sizeof(UNICODE_PATH_A), NULL, &UsedDefaultChar) == 0)
+    {
+        win_skip("Could not convert Unicode path name to multibyte (%d)\n", GetLastError());
+        return;
+    }
+    if (UsedDefaultChar)
+    {
+        win_skip("Could not find unique multibyte representation for directory name using default codepage\n");
+        return;
+    }
 
     /* unicode directory doesn't exist, SHPPFW_NONE */
     RemoveDirectoryA(UNICODE_PATH_A);
