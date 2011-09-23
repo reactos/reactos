@@ -59,7 +59,7 @@ static HWND CreateTestWindow()
     WNDCLASSA  wclass;
     HANDLE hInstance = GetModuleHandleA( NULL );
     HWND hWndTest;
-	
+
     wclass.lpszClassName = "MouseInputTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
     wclass.lpfnWndProc   = WndProc;
@@ -154,8 +154,8 @@ void Test_SetCursorPos()
     SetCapture(NULL);
     DestroyWindow(hwnd);
 
-    UnhookWindowsHookEx (hMouseHook);	
-    UnhookWindowsHookEx (hMouseHookLL);	
+    UnhookWindowsHookEx (hMouseHook);
+    UnhookWindowsHookEx (hMouseHookLL);
 
 }
 
