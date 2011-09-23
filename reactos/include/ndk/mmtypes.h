@@ -980,7 +980,7 @@ extern SIZE_T MmHeapDeCommitFreeBlockThreshold;
 //
 // Section Object Type
 //
-extern POBJECT_TYPE MmSectionObjectType;
+extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 
 #endif // !NTOS_MODE_USER
 

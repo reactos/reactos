@@ -369,7 +369,7 @@ typedef NTSTATUS
   PDEVICE_OBJECT DeviceObject,
   ULONG *RegFlags,
   PUNICODE_STRING Name,
-  PUNICODE_STRING MofResouceName);
+  PUNICODE_STRING MofResourceName);
 
 typedef NTSTATUS
 (NTAPI *PCLASS_QUERY_WMI_REGINFO)(

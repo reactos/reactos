@@ -176,8 +176,8 @@ typedef struct _AUX_ACCESS_DATA
 //
 // External SRM Data
 //
-extern PACL SePublicDefaultDacl;
-extern PACL SeSystemDefaultDacl;
+extern PACL NTSYSAPI SePublicDefaultDacl;
+extern PACL NTSYSAPI SeSystemDefaultDacl;
 
 #endif
 #endif
