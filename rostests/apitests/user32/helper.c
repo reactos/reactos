@@ -85,7 +85,7 @@ void trace_cache(const char* file, int line)
     for (i=0; i < message_cache_size; i++)
     {
         sprintf_msg_entry(buff, &message_cache[i]);
-        trace_(file,line)("%s\n", buff);
+        trace_(file,line)("%d: %s\n", i, buff);
     }
     trace_(file,line)("\n");
 }
@@ -102,7 +102,7 @@ void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
 
         sprintf_msg_entry(buffGot, &message_cache[i]);
         sprintf_msg_entry(buffExp, msg_chain);
-        ok_(file,line)(same,"got %s, expected %s\n", buffGot, buffExp);
+        ok_(file,line)(same,"%d: got %s, expected %s\n",i, buffGot, buffExp);
 
         if(!got_error && !same)
             got_error = TRUE;
