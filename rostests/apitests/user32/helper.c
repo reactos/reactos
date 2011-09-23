@@ -42,91 +42,78 @@ static char* get_msg_name(UINT msg)
     }
 }
 
+static char* get_hook_name(UINT id)
+{
+    switch (id)
+    {
+        case WH_KEYBOARD: return "WH_KEYBOARD";
+        case WH_KEYBOARD_LL: return "WH_KEYBOARD_LL";
+        case WH_MOUSE: return "WH_MOUSE";
+        case WH_MOUSE_LL: return "WH_MOUSE_LL";
+        default: return NULL;
+    }
+}
+
 void empty_message_cache()
 {
     memset(message_cache, 0, sizeof(message_cache));
     message_cache_size = 0;
 }
 
+void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
+{
+    if(!msg->iwnd && !msg->msg)
+    {
+        sprintf(buffer, "nothing");
+    }
+    else 
+    {
+        char* msgName = msg->hook ? get_hook_name(msg->msg) : get_msg_name(msg->msg);
+        char* msgType = msg->hook ? "hook" : "msg";
+        if(msgName)
+            sprintf(buffer, "hwnd%d %s %s %d %d", msg->iwnd, msgType, msgName, msg->param1, msg->param2); 
+        else
+            sprintf(buffer, "hwnd%d %s %d %d %d", msg->iwnd, msgType, msg->msg, msg->param1, msg->param2); 
+    }
+}
+
 void trace_cache(const char* file, int line)
 {
     int i;
+    char buff[100];
     char *szMsgName;
 
     for (i=0; i < message_cache_size; i++)
     {
-        if(!message_cache[i].hook)
-        {
-            if((szMsgName = get_msg_name(message_cache[i].msg)))
-            {
-                trace_(file,line)("hwnd%d, msg:%s\n",message_cache[i].iwnd, szMsgName );
-            }
-            else
-            {
-                trace_(file,line)("hwnd%d, msg:%d\n",message_cache[i].iwnd, message_cache[i].msg );
-            }
-        }
-        else
-        {
-            trace_(file,line)("hwnd%d, hook:%d, param1:%d, param2:%d\n",message_cache[i].iwnd, 
-                                                            message_cache[i].msg,
-                                                            message_cache[i].param1,
-                                                            message_cache[i].param2);
-        }
+        sprintf_msg_entry(buff, &message_cache[i]);
+        trace_(file,line)("%s\n", buff);
     }
-    trace("\n");
+    trace_(file,line)("\n");
 }
 
 void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
 {
     int i = 0;
+    char buffGot[100], buffExp[100];
     BOOL got_error = FALSE;
 
     while(1)
     {
-        char *szMsgExpected, *szMsgGot;
         BOOL same = !memcmp(&message_cache[i],msg_chain, sizeof(MSG_ENTRY));
 
-        szMsgExpected = get_msg_name(msg_chain->msg);
-        szMsgGot = get_msg_name(message_cache[i].msg);
-        if(!msg_chain->hook)
-        {
-            if(szMsgExpected && szMsgGot)
-            {
-                ok_(file,line)(same,
-                   "message %d: expected %s to hwnd%d and got %s to hwnd%d\n",
-                    i, szMsgExpected, msg_chain->iwnd, szMsgGot, message_cache[i].iwnd);    
-            }
-            else
-            {
-                ok_(file,line)(same,
-                   "message %d: expected msg %d to hwnd%d and got msg %d to hwnd%d\n",
-                    i, msg_chain->msg, msg_chain->iwnd, message_cache[i].msg, message_cache[i].iwnd);
-            }
-        }
-        else
-        {
-            ok_(file,line)(same,
-               "message %d: expected hook %d, hwnd%d, param1 %d, param2 %d and got hook %d, hwnd%d, param1 %d, param2 %d\n",
-                i, msg_chain->msg, msg_chain->iwnd,msg_chain->param1, msg_chain->param2,
-               message_cache[i].msg, message_cache[i].iwnd, message_cache[i].param1, message_cache[i].param2);
-        }
+        sprintf_msg_entry(buffGot, &message_cache[i]);
+        sprintf_msg_entry(buffExp, msg_chain);
+        ok_(file,line)(same,"got %s, expected %s\n", buffGot, buffExp);
 
         if(!got_error && !same)
-        {
             got_error = TRUE;
-        }
 
         if(msg_chain->msg !=0 && msg_chain->iwnd != 0)
-        {
             msg_chain++;
-        }
         else
         {
             if(i>message_cache_size)
-            {
                 break;
-            }
         }
         i++;
     }
