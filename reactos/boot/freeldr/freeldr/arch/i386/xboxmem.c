@@ -84,12 +84,12 @@ XboxMemGetMemoryMap(ULONG *MemoryMapSize)
       /* Available RAM block */
       BiosMemoryMap[0].BasePage = 0;
       BiosMemoryMap[0].PageCount = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
-      BiosMemoryMap[0].MemoryType = MemoryFree;
+      BiosMemoryMap[0].MemoryType = LoaderFree;
 
       /* Video memory */
       BiosMemoryMap[1].BasePage = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
       BiosMemoryMap[1].PageCount = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024 / MM_PAGE_SIZE;
-      BiosMemoryMap[1].MemoryType = MemoryFirmwarePermanent;
+      BiosMemoryMap[1].MemoryType = LoaderFirmwarePermanent;
 
   *MemoryMapSize = 2;
   return BiosMemoryMap;

@@ -26,22 +26,28 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 #if DBG
 typedef struct
 {
-    MEMORY_TYPE Type;
+    TYPE_OF_MEMORY Type;
     PCSTR TypeString;
 } FREELDR_MEMORY_TYPE, *PFREELDR_MEMORY_TYPE;
 
 FREELDR_MEMORY_TYPE MemoryTypeArray[] =
 {
-    { MemoryMaximum, "Unknown memory" },
-    { MemoryExceptionBlock, "Exception block" },
-    { MemorySystemBlock, "System block" },
-    { MemoryFree, "Free memory" },
-    { MemoryBad, "Bad memory" },
-    { MemoryLoadedProgram, "Loaded program" },
-    { MemoryFirmwareTemporary, "Firmware temporary" },
-    { MemoryFirmwarePermanent, "Firmware permanent" },
-    { MemoryFreeContiguous, "Free contiguous memory" },
-    { MemorySpecialMemory, "Special memory" },
+    { LoaderMaximum, "Unknown memory" },
+    { LoaderFree, "Free memory" },
+    { LoaderBad, "Bad memory" },
+    { LoaderLoadedProgram, "LoadedProgram" },
+    { LoaderFirmwareTemporary, "FirmwareTemporary" },
+    { LoaderFirmwarePermanent, "FirmwarePermanent" },
+    { LoaderOsloaderHeap, "OsloaderHeap" },
+    { LoaderOsloaderStack, "OsloaderStack" },
+    { LoaderSystemCode, "SystemCode" },
+    { LoaderHalCode, "HalCode" },
+    { LoaderBootDriver, "BootDriver" },
+    { LoaderRegistryData, "RegistryData" },
+    { LoaderMemoryData, "MemoryData" },
+    { LoaderNlsData, "NlsData" },
+    { LoaderSpecialMemory, "SpecialMemory" },
+    { LoaderReserve, "Reserve" },
 };
 ULONG MemoryTypeCount = sizeof(MemoryTypeArray) / sizeof(MemoryTypeArray[0]);
 #endif
@@ -196,28 +202,10 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	// Initialize the page lookup table
 	MmInitPageLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
 
-{
-    ULONG Type, Index, PrevIndex = 0;
-	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
-
-    Type = RealPageLookupTable[0].PageAllocated;
-	for (Index = 1; Index < TotalPagesInLookupTable; Index++)
-	{
-	    if ((RealPageLookupTable[Index].PageAllocated != Type) ||
-            (Index == TotalPagesInLookupTable - 1))
-	    {
-            TRACE("Range: 0x%lx - 0x%lx Type=%d\n",
-                PrevIndex, Index - 1, Type);
-	        Type = RealPageLookupTable[Index].PageAllocated;
-	        PrevIndex = Index;
-	    }
-	}
-}
-
-
 	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
-	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
+	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress,
+                                                        TotalPagesInLookupTable);
 
 	MmInitializeHeap(PageLookupTableAddress);
 
@@ -228,7 +216,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 }
 
 #if DBG
-PCSTR MmGetSystemMemoryMapTypeString(MEMORY_TYPE Type)
+PCSTR MmGetSystemMemoryMapTypeString(TYPE_OF_MEMORY Type)
 {
 	ULONG		Index;
 
@@ -267,7 +255,7 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
             //
             // Yes, remember it if this is real memory
             //
-            if (MemoryDescriptor->MemoryType == MemoryFree) MmHighestPhysicalPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+            if (MemoryDescriptor->MemoryType == LoaderFree) MmHighestPhysicalPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
         }
 
         //
@@ -296,64 +284,26 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
     ULONG PageLookupTableStartPage = 0;
     PVOID PageLookupTableMemAddress = NULL;
 
-    //
     // Calculate how much pages we need to keep the page lookup table
-    //
     PageLookupTableSize = TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM);
     PageLookupTablePages = PageLookupTableSize / MM_PAGE_SIZE;
 
-    //
     // Search the highest memory block big enough to contain lookup table
-    //
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
-        //
-        // Is it suitable memory?
-        //
-        if (MemoryDescriptor->MemoryType != MemoryFree)
-        {
-            //
-            // No. Process next descriptor
-            //
-            continue;
-        }
+        // Continue, if memory is not free
+        if (MemoryDescriptor->MemoryType != LoaderFree) continue;
 
-        //
-        // Is the block big enough?
-        //
-        if (MemoryDescriptor->PageCount < PageLookupTablePages)
-        {
-            //
-            // No. Process next descriptor
-            //
-            continue;
-        }
+        // Continue, if the block is not big enough?
+        if (MemoryDescriptor->PageCount < PageLookupTablePages) continue;
 
-        //
-        // Is it at a higher address than previous suitable address?
-        //
-        if (MemoryDescriptor->BasePage < PageLookupTableStartPage)
-        {
-            //
-            // No. Process next descriptor
-            //
-            continue;
-        }
+        // Continue, if it is not at a higher address than previous address
+        if (MemoryDescriptor->BasePage < PageLookupTableStartPage) continue;
 
-        //
-        // Can we use this address?
-        //
-        if (MemoryDescriptor->BasePage >= MM_MAX_PAGE)
-        {
-            //
-            // No. Process next descriptor
-            //
-            continue;
-        }
+        // Continue, if the address is too high
+        if (MemoryDescriptor->BasePage >= MM_MAX_PAGE) continue;
 
-        //
         // Memory block is more suitable than the previous one
-        //
         PageLookupTableStartPage = MemoryDescriptor->BasePage;
         PageLookupTableMemAddress = (PVOID)((ULONG_PTR)
             (MemoryDescriptor->BasePage + MemoryDescriptor->PageCount) * MM_PAGE_SIZE
@@ -374,87 +324,31 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 
     TRACE("MmInitPageLookupTable()\n");
 
-    //
     // Mark every page as allocated initially
     // We will go through and mark pages again according to the memory map
     // But this will mark any holes not described in the map as allocated
-    //
     MmMarkPagesInLookupTable(PageLookupTable, MmLowestPhysicalPage, TotalPageCount, LoaderFirmwarePermanent);
 
-    //
     // Parse the whole memory map
-    //
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
         TRACE("Got range: 0x%lx-0x%lx, type=%s\n",
               MemoryDescriptor->BasePage,
               MemoryDescriptor->BasePage + MemoryDescriptor->PageCount,
               MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
-        //
-        // Convert ARC memory type to loader memory type
-        //
-        switch (MemoryDescriptor->MemoryType)
-        {
-            case MemoryFree:
-            {
-                //
-                // Allocatable memory
-                //
-                MemoryMapPageAllocated = LoaderFree;
-                break;
-            }
-            case MemoryFirmwarePermanent:
-            {
-                //
-                // Firmware permanent memory
-                //
-                MemoryMapPageAllocated = LoaderFirmwarePermanent;
-                break;
-            }
-            case MemoryFirmwareTemporary:
-            {
-                //
-                // Firmware temporary memory
-                //
-                MemoryMapPageAllocated = LoaderFirmwareTemporary;
-                break;
-            }
-            case MemoryLoadedProgram:
-            {
-                //
-                // Bootloader code
-                //
-                MemoryMapPageAllocated = LoaderLoadedProgram;
-                break;
-            }
-            case MemorySpecialMemory:
-            {
-                //
-                // OS Loader Stack
-                //
-                MemoryMapPageAllocated = LoaderOsloaderStack;
-                break;
-            }
-            default:
-            {
-                //
-                // Put something sensible here, which won't be overwritten
-                //
-                MemoryMapPageAllocated = LoaderSpecialMemory;
-                break;
-            }
-        }
 
-        //
+        MemoryMapPageAllocated = MemoryDescriptor->MemoryType;
+
         // Mark used pages in the lookup table
-        //
-        TRACE("Marking pages as type %d: StartPage: %d PageCount: %d\n", MemoryMapPageAllocated, MemoryDescriptor->BasePage, MemoryDescriptor->PageCount);
-        MmMarkPagesInLookupTable(PageLookupTable, MemoryDescriptor->BasePage, MemoryDescriptor->PageCount, MemoryMapPageAllocated);
+        TRACE("Marking pages as type %d: StartPage: %d PageCount: %d\n",
+              MemoryMapPageAllocated, MemoryDescriptor->BasePage, MemoryDescriptor->PageCount);
+        MmMarkPagesInLookupTable(PageLookupTable,
+                                 MemoryDescriptor->BasePage,
+                                 MemoryDescriptor->PageCount,
+                                 MemoryMapPageAllocated);
     }
 
-    //
     // Mark the pages that the lookup table occupies as reserved
-    //
     PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
     PageLookupTablePageCount = MmGetPageNumberFromAddress((PVOID)((ULONG_PTR)PageLookupTable + ROUND_UP(TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM), MM_PAGE_SIZE))) - PageLookupTableStartPage;
     TRACE("Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount);
@@ -515,9 +409,9 @@ ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 
 ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, BOOLEAN FromEnd)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							AvailablePagesSoFar;
-	ULONG							Index;
+	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+	ULONG AvailablePagesSoFar;
+	ULONG Index;
 
 	if (LastFreePageHint > TotalPageCount)
 	{
@@ -639,7 +533,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, P
 		return FALSE;
 	}
 
-	for (Index=StartPage; Index<(StartPage + PageCount); Index++)
+	for (Index = StartPage; Index < (StartPage + PageCount); Index++)
 	{
 		// If this page is allocated then there obviously isn't
 		// memory availabe so return FALSE

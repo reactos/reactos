@@ -26,7 +26,7 @@
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
-#define DEBUG_CUSTOM
+//#define DEBUG_CUSTOM
 #define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
@@ -38,7 +38,7 @@ ULONG   DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG   DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG   DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY;
+ULONG   DebugPrintMask = DPRINT_WARNING | DPRINT_WINDOWS;
 #else //#elif defined (DEBUG_NONE)
 ULONG   DebugPrintMask = 0;
 #endif

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,16 +46,16 @@ ULONG PcBiosMapCount;
 
 MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
 {
- { MemoryFirmwarePermanent, 0x00,               1 }, // realmode int vectors
- { MemoryFirmwareTemporary, 0x01,               FREELDR_BASE_PAGE - 1 }, // freeldr stack + cmdline
- { MemoryLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
- { MemoryFirmwareTemporary, FILEBUF_BASE_PAGE,  FILEBUF_PAGE_COUNT }, // File system read buffer. FILESYSBUFFER
- { MemoryFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
- { MemorySpecialMemory,     STACK_BASE_PAGE,    STACK_PAGE_COUNT }, // prot mode stack.
- { MemoryFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
- { MemoryFirmwarePermanent, 0xA0,               0x60 }, // ROM / Video
- { MemorySpecialMemory,     0xFFF,              1 }, // unusable memory
- { MemorySpecialMemory,     MAXULONG_PTR,       0 }, // end of map
+ { LoaderFirmwarePermanent, 0x00,               1 }, // realmode int vectors
+ { LoaderFirmwareTemporary, 0x01,               FREELDR_BASE_PAGE - 1 }, // freeldr stack + cmdline
+ { LoaderLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
+ { LoaderFirmwareTemporary, FILEBUF_BASE_PAGE,  FILEBUF_PAGE_COUNT }, // File system read buffer. FILESYSBUFFER
+ { LoaderFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
+ { LoaderOsloaderStack,     STACK_BASE_PAGE,    STACK_PAGE_COUNT }, // prot mode stack.
+ { LoaderFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
+ { LoaderFirmwarePermanent, 0xA0,               0x60 }, // ROM / Video
+ { LoaderSpecialMemory,     0xFFF,              1 }, // unusable memory
+ { 0, 0, 0 }, // end of map
 };
 
 ULONG
@@ -65,7 +64,7 @@ AddMemoryDescriptor(
     IN ULONG MaxCount,
     IN PFN_NUMBER BasePage,
     IN PFN_NUMBER PageCount,
-    IN MEMORY_TYPE MemoryType);
+    IN TYPE_OF_MEMORY MemoryType);
 
 static
 BOOLEAN
@@ -261,12 +260,12 @@ PcMemGetBiosMemoryMap(PMEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
       /* Check if we can add this descriptor */
       if ((RealSize >= MM_PAGE_SIZE) && (MapCount < MaxMemoryMapSize))
       {
-        MEMORY_TYPE MemoryType;
+        TYPE_OF_MEMORY MemoryType;
 
         if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryUsable)
-          MemoryType = MemoryFree;
+          MemoryType = LoaderFree;
         else
-          MemoryType = MemoryFirmwarePermanent;
+          MemoryType = LoaderFirmwarePermanent;
 
         /* Add the descriptor */
         MapCount = AddMemoryDescriptor(PcMemoryMap,
@@ -312,14 +311,14 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
                           MAX_BIOS_DESCRIPTORS,
                           0,
                           PcMemGetConventionalMemorySize() * 1024 / PAGE_SIZE,
-                          MemoryFree);
+                          LoaderFree);
 
       /* Extended memory */
       EntryCount = AddMemoryDescriptor(PcMemoryMap,
                           MAX_BIOS_DESCRIPTORS,
                           1024 * 1024 / PAGE_SIZE,
                           ExtendedMemorySizeAtOneMB * 1024 / PAGE_SIZE,
-                          MemoryFree);
+                          LoaderFree);
       EntryCount++;
 
       if (ExtendedMemorySizeAtSixteenMB != 0)
@@ -329,7 +328,7 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
                           MAX_BIOS_DESCRIPTORS,
                           0x1000000 / PAGE_SIZE,
                           ExtendedMemorySizeAtSixteenMB * 64 * 1024 / PAGE_SIZE,
-                          MemoryFree);
+                          LoaderFree);
       }
     }
 

@@ -89,7 +89,7 @@ extern	ULONG		FreePagesInLookupTable;
 extern	ULONG		LastFreePageHint;
 
 #if DBG
-PCSTR MmGetSystemMemoryMapTypeString(MEMORY_TYPE Type);
+PCSTR MmGetSystemMemoryMapTypeString(TYPE_OF_MEMORY Type);
 #endif
 
 ULONG		MmGetPageNumberFromAddress(PVOID Address);	// Returns the page number that contains a linear address
