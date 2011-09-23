@@ -81,7 +81,6 @@ void trace_cache(const char* file, int line)
 {
     int i;
     char buff[100];
-    char *szMsgName;
 
     for (i=0; i < message_cache_size; i++)
     {
