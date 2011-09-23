@@ -38,6 +38,7 @@
 	<file>netfw.idl</file>
 	<file>netcon.idl</file>
 	<file>oaidl.idl</file>
+	<file>objectarray.idl</file>
 	<file>objidl.idl</file>
 	<file>objsafe.idl</file>
 	<file>ocidl.idl</file>

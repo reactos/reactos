@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Alexandre Julliard
+ * Copyright 2011 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,12 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* just a wrapper for activscp.idl */
-
-#include "activscp.idl"
+import "oaidl.idl";
+import "ocidl.idl";
 
 [
-    threading(both),
-    uuid(b8da6310-e19b-11d0-933c-00a0c90dcaa9)  /* IActiveScriptStats */
+    uuid(92ca9dcd-5622-4bba-a805-5e9f541bd8c9),
+    object,
+    pointer_default(unique)
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+interface IObjectArray : IUnknown
+{
+    HRESULT GetCount([out] UINT *pcObjects);
+    HRESULT GetAt(
+        [in] UINT uiIndex,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+}
+
+[
+    uuid(5632b1a4-e38a-400a-928a-d4cd63230295),
+    object,
+    pointer_default(unique)
+]
+interface IObjectCollection : IObjectArray
+{
+    HRESULT AddObject([in] IUnknown *punk);
+    HRESULT AddFromArray([in] IObjectArray *poaSource);
+    HRESULT RemoveObjectAt([in] UINT uiIndex);
+    HRESULT Clear();
+}

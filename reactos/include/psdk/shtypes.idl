@@ -80,6 +80,12 @@ typedef struct
 } SHELLDETAILS, *LPSHELLDETAILS;
 cpp_quote("#include <poppack.h>")
 
+typedef struct _COMDLG_FILTERSPEC
+{
+    [string] LPCWSTR pszName;
+    [string] LPCWSTR pszSpec;
+} COMDLG_FILTERSPEC;
+
 typedef [v1_enum] enum tagSHCOLSTATE
 {
     SHCOLSTATE_DEFAULT = 0,
@@ -105,3 +111,27 @@ typedef [v1_enum] enum tagSHCOLSTATE
 } SHCOLSTATE;
 
 typedef DWORD SHCOLSTATEF;
+
+typedef GUID KNOWNFOLDERID;
+
+cpp_quote("#if 0")
+typedef KNOWNFOLDERID *REFKNOWNFOLDERID;
+cpp_quote("#endif")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFKNOWNFOLDERID const KNOWNFOLDERID &")
+cpp_quote("#else")
+cpp_quote("#define REFKNOWNFOLDERID const KNOWNFOLDERID * __MIDL_CONST")
+cpp_quote("#endif")
+
+typedef GUID FOLDERTYPEID;
+
+cpp_quote("#if 0")
+typedef FOLDERTYPEID *REFFOLDERTYPEID;
+cpp_quote("#endif")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID &")
+cpp_quote("#else")
+cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID * __MIDL_CONST")
+cpp_quote("#endif")

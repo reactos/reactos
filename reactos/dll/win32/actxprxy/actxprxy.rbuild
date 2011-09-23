@@ -30,6 +30,7 @@
 	<file>actxprxy_objsafe.idl</file>
 	<file>actxprxy_ocmm.idl</file>
 	<file>actxprxy_servprov.idl</file>
+	<file>actxprxy_shldisp.idl</file>
 	<file>actxprxy_shobjidl.idl</file>
 	<file>actxprxy_urlhist.idl</file>
 </module>

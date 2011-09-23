@@ -59,6 +59,7 @@ list(APPEND SOURCE
     netcon.idl
     netfw.idl
     oaidl.idl
+    objectarray.idl
     objidl.idl
     objsafe.idl
     ocidl.idl
