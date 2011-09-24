@@ -47,7 +47,7 @@ Bus_PnP (
 
 
     if (commonData->IsFDO) {
-        DPRINT1("FDO %s IRP:0x%p\n",
+        DPRINT("FDO %s IRP:0x%p\n",
                       PnPMinorFunctionString(irpStack->MinorFunction),
                       Irp);
         //
@@ -59,7 +59,7 @@ Bus_PnP (
                     irpStack,
                     (PFDO_DEVICE_DATA) commonData);
     } else {
-        DPRINT1("PDO %s IRP: 0x%p\n",
+        DPRINT("PDO %s IRP: 0x%p\n",
                       PnPMinorFunctionString(irpStack->MinorFunction),
                       Irp);
         //
@@ -312,7 +312,7 @@ Bus_StartFdo (
     /* Initialize ACPI bus manager */
     AcpiStatus = acpi_init();
     if (!ACPI_SUCCESS(AcpiStatus)) {
-        DPRINT("acpi_init() failed with status 0x%X\n", AcpiStatus);
+        DPRINT1("acpi_init() failed with status 0x%X\n", AcpiStatus);
         AcpiTerminate();
         return STATUS_UNSUCCESSFUL;
     }
