@@ -332,6 +332,12 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* Using Mm */
                 MmUnmapIoSpace(Header, 2 * PAGE_SIZE);
             }
+
+            DPRINT1("Failed to find ACPI table %c%c%c%c\n",
+                    (Signature & 0xFF),
+                    (Signature & 0xFF00) >> 8,
+                    (Signature & 0xFF0000) >> 16,
+                    (Signature & 0xFF000000) >> 24);
      
             /* Didn't find anything */
             return NULL;
@@ -386,7 +392,15 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         }
         
         /* The correct checksum is always 0, anything else is illegal */
-        if (CheckSum) HalpInvalidAcpiTable = Header->Signature;
+        if (CheckSum)
+        {
+            HalpInvalidAcpiTable = Header->Signature;
+            DPRINT1("Checksum failed on ACPI table %c%c%c%c\n",
+                    (Signature & 0xFF),
+                    (Signature & 0xFF00) >> 8,
+                    (Signature & 0xFF0000) >> 16,
+                    (Signature & 0xFF000000) >> 24);
+        }
     }
  
     /* Return the table */
@@ -754,6 +768,8 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             DPRINT1("ACPI Table Overrides Not Supported!\n");
         }
     }
+
+    DPRINT1("ACPI %d.0 detected\n", (Rsdt->Header.Revision + 1));
 
     /* Done */
     return Status;
