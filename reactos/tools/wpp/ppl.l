@@ -680,7 +680,7 @@ void pp_writestring(const char *format, ...)
 <pp_iqs,pp_dqs,pp_sqs>\n	{
 		newline(1);
 		add_string(ppy_text, ppy_leng);
-		ppy_warning("Newline in string constant encounterd (started line %d)", string_start());
+		ppy_warning("Newline in string constant encountered (started line %d)", string_start());
 	}
 
 	/*

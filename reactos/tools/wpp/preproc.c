@@ -729,7 +729,7 @@ static const struct wpp_callbacks default_callbacks =
 	wpp_default_warning,
 };
 
-struct wpp_callbacks *wpp_callbacks = &default_callbacks;
+const struct wpp_callbacks *wpp_callbacks = &default_callbacks;
 
 int ppy_error(const char *s, ...)
 {

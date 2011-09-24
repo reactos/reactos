@@ -218,7 +218,7 @@ int pp_get_if_depth(void);
 #define __attribute__(x)  /*nothing*/
 #endif
 
-extern struct wpp_callbacks *wpp_callbacks;
+extern const struct wpp_callbacks *wpp_callbacks;
 
 int ppy_error(const char *s, ...) __attribute__((format (printf, 1, 2)));
 int ppy_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
