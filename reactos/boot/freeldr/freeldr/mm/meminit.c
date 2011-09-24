@@ -255,7 +255,8 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
             //
             // Yes, remember it if this is real memory
             //
-            if (MemoryDescriptor->MemoryType == LoaderFree) MmHighestPhysicalPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+            if (MemoryDescriptor->MemoryType == MemoryFree)
+                MmHighestPhysicalPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
         }
 
         //
@@ -292,7 +293,7 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
         // Continue, if memory is not free
-        if (MemoryDescriptor->MemoryType != LoaderFree) continue;
+        if (MemoryDescriptor->MemoryType != MemoryFree) continue;
 
         // Continue, if the block is not big enough?
         if (MemoryDescriptor->PageCount < PageLookupTablePages) continue;
