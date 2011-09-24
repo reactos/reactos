@@ -364,7 +364,93 @@ TRUE;
 FALSE;
 #endif
 
+/* Number of memory descriptors in the loader block */
+ULONG MiNumberDescriptors = 0;
+
+/* Number of free pages in the loader block */
+PFN_NUMBER MiNumberOfFreePages = 0;
+
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY ListEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
+    PFN_NUMBER PageFrameIndex, FreePages = 0;
+
+    /* Loop the memory descriptors */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Get the descriptor */
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
+        DPRINT("MD Type: %lx Base: %lx Count: %lx\n",
+            Descriptor->MemoryType, Descriptor->BasePage, Descriptor->PageCount);
+
+        /* Count this descriptor */
+        MiNumberDescriptors++;
+
+        /* Check if this is invisible memory */
+        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) &&
+            (Descriptor->MemoryType == LoaderSpecialMemory) &&
+            (Descriptor->MemoryType == LoaderHALCachedMemory) &&
+            (Descriptor->MemoryType == LoaderBBTMemory))
+        {
+            /* Skip this descriptor */
+            continue;
+        }
+
+        /* Check if this is bad memory */
+        if (Descriptor->MemoryType != LoaderBad)
+        {
+            /* Count this in the total of pages */
+            MmNumberOfPhysicalPages += Descriptor->PageCount;
+        }
+
+        /* Check if this is the new lowest page */
+        if (Descriptor->BasePage < MmLowestPhysicalPage)
+        {
+            /* Update the lowest page */
+            MmLowestPhysicalPage = Descriptor->BasePage;
+        }
+
+        /* Check if this is the new highest page */
+        PageFrameIndex = Descriptor->BasePage + Descriptor->PageCount;
+        if (PageFrameIndex > MmHighestPhysicalPage)
+        {
+            /* Update the highest page */
+            MmHighestPhysicalPage = PageFrameIndex - 1;
+        }
+
+        /* Check if this is free memory */
+        if ((Descriptor->MemoryType == LoaderFree) ||
+            (Descriptor->MemoryType == LoaderLoadedProgram) ||
+            (Descriptor->MemoryType == LoaderFirmwareTemporary) ||
+            (Descriptor->MemoryType == LoaderOsloaderStack))
+        {
+            /* Count it too free pages */
+            MiNumberOfFreePages += Descriptor->PageCount;
+
+            /* Check if this is the largest memory descriptor */
+            if (Descriptor->PageCount > FreePages)
+            {
+                /* Remember it */
+                MxFreeDescriptor = Descriptor;
+                FreePages = Descriptor->PageCount;
+            }
+        }
+    }
+
+    /* Save original values of the free descriptor, since it'll be
+     * altered by early allocations */
+    MxOldFreeDescriptor = *MxFreeDescriptor;
+}
 
 PFN_NUMBER
 NTAPI
@@ -1375,48 +1461,6 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
     KeLowerIrql(OldIrql);
 }
 
-PFN_NUMBER
-NTAPI
-MiPagesInLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                     IN PBOOLEAN IncludeType)
-{
-    PLIST_ENTRY NextEntry;
-    PFN_NUMBER PageCount = 0;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-
-    //
-    // Now loop through the descriptors
-    //
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        //
-        // Grab each one, and check if it's one we should include
-        //
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-        if ((MdBlock->MemoryType < LoaderMaximum) &&
-            (IncludeType[MdBlock->MemoryType]))
-        {
-            //
-            // Add this to our running total
-            //
-            PageCount += MdBlock->PageCount;
-        }
-
-        //
-        // Try the next descriptor
-        //
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-
-    //
-    // Return the total
-    //
-    return PageCount;
-}
-
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
 INIT_FUNCTION
@@ -1424,23 +1468,15 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                          IN PBOOLEAN IncludeType)
 {
     PLIST_ENTRY NextEntry;
-    ULONG Run = 0, InitialRuns = 0;
+    ULONG Run = 0, InitialRuns;
     PFN_NUMBER NextPage = -1, PageCount = 0;
     PPHYSICAL_MEMORY_DESCRIPTOR Buffer, NewBuffer;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
 
     //
-    // Scan the memory descriptors
+    // Start with the maximum we might need
     //
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        //
-        // For each one, increase the memory allocation estimate
-        //
-        InitialRuns++;
-        NextEntry = NextEntry->Flink;
-    }
+    InitialRuns = MiNumberDescriptors;
 
     //
     // Allocate the maximum we'll ever need
@@ -1970,7 +2006,8 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Count physical pages on the system
         //
-        PageCount = MiPagesInLoaderBlock(LoaderBlock, IncludeType);
+        MiScanMemoryDescriptors(LoaderBlock);
+        PageCount = MmNumberOfPhysicalPages;
 
         //
         // Check if this is a machine with less than 19MB of RAM
