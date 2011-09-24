@@ -29,9 +29,82 @@ MMPTE DemandZeroPte  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
                       PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)}};
 
-extern PFN_NUMBER MiNumberOfFreePages;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiInitializeSessionSpaceLayout()
+{
+    //
+    // Set the size of session view, pool, and image
+    //
+    MmSessionSize = MI_SESSION_SIZE;
+    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
+    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
+
+    //
+    // Set the size of system view
+    //
+    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+
+    //
+    // This is where it all ends
+    //
+    MiSessionImageEnd = (PVOID)PTE_BASE;
+
+    //
+    // This is where we will load Win32k.sys and the video driver
+    //
+    MiSessionImageStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
+                                  MmSessionImageSize);
+
+    //
+    // So the view starts right below the session working set (itself below
+    // the image area)
+    //
+    MiSessionViewStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
+                                 MmSessionImageSize -
+                                 MI_SESSION_WORKING_SET_SIZE -
+                                 MmSessionViewSize);
+
+    //
+    // Session pool follows
+    //
+    MiSessionPoolEnd = MiSessionViewStart;
+    MiSessionPoolStart = (PVOID)((ULONG_PTR)MiSessionPoolEnd -
+                                 MmSessionPoolSize);
+
+    //
+    // And it all begins here
+    //
+    MmSessionBase = MiSessionPoolStart;
+
+    //
+    // Sanity check that our math is correct
+    //
+    ASSERT((ULONG_PTR)MmSessionBase + MmSessionSize == PTE_BASE);
+
+    //
+    // Session space ends wherever image session space ends
+    //
+    MiSessionSpaceEnd = MiSessionImageEnd;
+
+    //
+    // System view space ends at session space, so now that we know where
+    // this is, we can compute the base address of system view space itself.
+    //
+    MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
+                                MmSystemViewSize);
+
+    /* Compute the PTE addresses for all the addresses we carved out */
+    MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+    MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+    MiSessionBasePte = MiAddressToPte(MmSessionBase);
+    MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+}
 
 VOID
 NTAPI

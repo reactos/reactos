@@ -40,16 +40,16 @@ MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
 
 /* Sizes */
 ///SIZE_T MmSessionSize = MI_SESSION_SIZE;
-SIZE_T MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-SIZE_T MmSessionPoolSize = MI_SESSION_POOL_SIZE;
-SIZE_T MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
-SIZE_T MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+extern SIZE_T MmSessionViewSize;
+extern SIZE_T MmSessionPoolSize;
+extern SIZE_T MmSessionImageSize;
+extern SIZE_T MmSystemViewSize;
 SIZE_T MiNonPagedSystemSize;
 
 /* Address ranges */
-ULONG64 MmUserProbeAddress = 0x7FFFFFF0000ULL;
-PVOID MmHighestUserAddress = (PVOID)0x7FFFFFEFFFFULL;
-PVOID MmSystemRangeStart = (PVOID)0xFFFF080000000000ULL;
+//ULONG64 MmUserProbeAddress = 0x7FFFFFF0000ULL;
+//PVOID MmHighestUserAddress = (PVOID)0x7FFFFFEFFFFULL;
+//PVOID MmSystemRangeStart = (PVOID)0xFFFF080000000000ULL;
 PVOID MmSessionBase;                            // FFFFF90000000000 = MiSessionPoolStart
 PVOID MiSessionPoolStart;                       // FFFFF90000000000 = MiSessionPoolEnd - MmSessionPoolSize
 PVOID MiSessionPoolEnd;                         //                  = MiSessionViewStart
@@ -75,7 +75,6 @@ ULONG64 MxPfnSizeInBytes;
 
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
-ULONG MiNumberDescriptors = 0;
 PFN_NUMBER MiSystemPages = 0;
 BOOLEAN MiIncludeType[LoaderMaximum];
 
@@ -88,90 +87,51 @@ BOOLEAN MiPfnsInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+INIT_FUNCTION
+MiInitializeSessionSpaceLayout()
+{
+    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
+    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
+    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+
+    /* Set up session space */
+    MiSessionSpaceEnd = (PVOID)MI_SESSION_SPACE_END;
+
+    /* This is where we will load Win32k.sys and the video driver */
+    MiSessionImageEnd = MiSessionSpaceEnd;
+    MiSessionImageStart = (PCHAR)MiSessionImageEnd - MmSessionImageSize;
+
+    /* The view starts right below the session working set (itself below
+     * the image area) */
+    MiSessionViewEnd = MI_SESSION_VIEW_END;
+    MiSessionViewStart = (PCHAR)MiSessionViewEnd - MmSessionViewSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
+
+    /* Session pool follows */
+    MiSessionPoolEnd = MiSessionViewStart;
+    MiSessionPoolStart = (PCHAR)MiSessionPoolEnd - MmSessionPoolSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSessionPoolStart));
+
+    /* And it all begins here */
+    MmSessionBase = MiSessionPoolStart;
+
+    /* System view space ends at session space, so now that we know where
+     * this is, we can compute the base address of system view space itself. */
+    MiSystemViewStart = (PCHAR)MmSessionBase - MmSystemViewSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSystemViewStart));
+
+    /* Sanity checks */
+    ASSERT(MiSessionViewEnd <= MiSessionImageStart);
+    ASSERT(MmSessionBase <= MiSessionPoolStart);
+}
+
 ULONG
 NoDbgPrint(const char *Format, ...)
 {
     return 0;
-}
-
-VOID
-NTAPI
-MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
-    PLIST_ENTRY ListEntry;
-    PFN_NUMBER LastPage;
-    ULONG i;
-
-    /* Get the size of the boot loader's image allocations */
-    MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned * PAGE_SIZE;
-    MmBootImageSize = ROUND_UP(MmBootImageSize, 4 * 1024 * 1024);
-
-    /* Instantiate memory that we don't consider RAM/usable */
-    for (i = 0; i < LoaderMaximum; i++) MiIncludeType[i] = TRUE;
-    MiIncludeType[LoaderBad] = FALSE;
-    MiIncludeType[LoaderFirmwarePermanent] = FALSE;
-    MiIncludeType[LoaderSpecialMemory] = FALSE;
-    MiIncludeType[LoaderBBTMemory] = FALSE;
-
-    /* Loop the memory descriptors */
-    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        /* Get the memory descriptor */
-        Descriptor = CONTAINING_RECORD(ListEntry,
-                                       MEMORY_ALLOCATION_DESCRIPTOR,
-                                       ListEntry);
-
-        /* Count it */
-        MiNumberDescriptors++;
-
-        /* Skip pages that are not part of the PFN database */
-        if (!MiIncludeType[Descriptor->MemoryType])
-        {
-            continue;
-        }
-
-        /* Add this to the total of pages */
-        MmNumberOfPhysicalPages += (PFN_COUNT)Descriptor->PageCount;
-
-        /* Check if this is the new lowest page */
-        if (Descriptor->BasePage < MmLowestPhysicalPage)
-        {
-            /* Update the lowest page */
-            MmLowestPhysicalPage = Descriptor->BasePage;
-        }
-
-        /* Check if this is the new highest page */
-        LastPage = Descriptor->BasePage + Descriptor->PageCount - 1;
-        if (LastPage > MmHighestPhysicalPage)
-        {
-            /* Update the highest page */
-            MmHighestPhysicalPage = LastPage;
-        }
-
-        /* Check if this is currently free memory */
-        if ((Descriptor->MemoryType == LoaderFree) ||
-            (Descriptor->MemoryType == LoaderLoadedProgram) ||
-            (Descriptor->MemoryType == LoaderFirmwareTemporary) ||
-            (Descriptor->MemoryType == LoaderOsloaderStack))
-        {
-            /* Check if this is the largest memory descriptor */
-            if (Descriptor->PageCount > MxFreePageCount)
-            {
-                /* For now, it is */
-                MxFreeDescriptor = Descriptor;
-                MxFreePageBase = Descriptor->BasePage;
-                MxFreePageCount = Descriptor->PageCount;
-            }
-        }
-        else
-        {
-            /* Add it to the amount of system used pages */
-            MiSystemPages += Descriptor->PageCount;
-        }
-    }
 }
 
 PFN_NUMBER
@@ -340,41 +300,6 @@ MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-
-VOID
-NTAPI
-MiInitializeSessionSpace(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    /* Set up session space */
-    MiSessionSpaceEnd = (PVOID)MI_SESSION_SPACE_END;
-
-    /* This is where we will load Win32k.sys and the video driver */
-    MiSessionImageEnd = MiSessionSpaceEnd;
-    MiSessionImageStart = (PCHAR)MiSessionImageEnd - MmSessionImageSize;
-
-    /* The view starts right below the session working set (itself below
-     * the image area) */
-    MiSessionViewEnd = MI_SESSION_VIEW_END;
-    MiSessionViewStart = (PCHAR)MiSessionViewEnd - MmSessionViewSize;
-    ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
-
-    /* Session pool follows */
-    MiSessionPoolEnd = MiSessionViewStart;
-    MiSessionPoolStart = (PCHAR)MiSessionPoolEnd - MmSessionPoolSize;
-    ASSERT(IS_PAGE_ALIGNED(MiSessionPoolStart));
-
-    /* And it all begins here */
-    MmSessionBase = MiSessionPoolStart;
-
-    /* System view space ends at session space, so now that we know where
-     * this is, we can compute the base address of system view space itself. */
-    MiSystemViewStart = (PCHAR)MmSessionBase - MmSystemViewSize;
-    ASSERT(IS_PAGE_ALIGNED(MiSystemViewStart));
-
-    /* Sanity checks */
-    ASSERT(MiSessionViewEnd <= MiSessionImageStart);
-    ASSERT(MmSessionBase <= MiSessionPoolStart);
-}
 
 VOID
 MiInitializePageTable()
@@ -607,92 +532,6 @@ MiBuildSystemPteSpace()
 
 VOID
 NTAPI
-MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PPHYSICAL_MEMORY_DESCRIPTOR Buffer;
-    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
-    PLIST_ENTRY ListEntry;
-    PFN_NUMBER NextPage = -1;
-    PULONG Bitmap;
-    ULONG Runs = 0;
-    ULONG_PTR Size;
-
-    /* Calculate size for the PFN bitmap */
-    Size = ROUND_UP(MmHighestPhysicalPage + 1, sizeof(ULONG));
-
-    /* Allocate the PFN bitmap */
-    Bitmap = ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
-
-    /* Allocate enough memory for the physical memory block */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                   sizeof(PHYSICAL_MEMORY_DESCRIPTOR) +
-                                   sizeof(PHYSICAL_MEMORY_RUN) *
-                                   (MiNumberDescriptors - 1),
-                                   'lMmM');
-    if (!Bitmap || !Buffer)
-    {
-        /* This is critical */
-        KeBugCheckEx(INSTALL_MORE_MEMORY,
-                     MmNumberOfPhysicalPages,
-                     MmLowestPhysicalPage,
-                     MmHighestPhysicalPage,
-                     0x101);
-    }
-
-    /* Initialize the bitmap and clear all bits */
-    RtlInitializeBitMap(&MiPfnBitMap,
-                        Bitmap,
-                        (ULONG)MmHighestPhysicalPage + 1);
-    RtlClearAllBits(&MiPfnBitMap);
-
-    /* Loop the memory descriptors */
-    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        /* Get the memory descriptor */
-        Descriptor = CONTAINING_RECORD(ListEntry,
-                                       MEMORY_ALLOCATION_DESCRIPTOR,
-                                       ListEntry);
-
-        /* Skip pages that are not part of the PFN database */
-        if (!MiIncludeType[Descriptor->MemoryType])
-        {
-            continue;
-        }
-
-        /* Does the memory block begin where the last ended? */
-        if (Descriptor->BasePage == NextPage)
-        {
-            /* Add it to the current run */
-            Buffer->Run[Runs - 1].PageCount += Descriptor->PageCount;
-        }
-        else
-        {
-            /* Create a new run */
-            Runs++;
-            Buffer->Run[Runs - 1].BasePage = Descriptor->BasePage;
-            Buffer->Run[Runs - 1].PageCount = Descriptor->PageCount;
-        }
-
-        /* Set the bits in the PFN bitmap */
-        RtlSetBits(&MiPfnBitMap,
-                   (ULONG)Descriptor->BasePage,
-                   (ULONG)Descriptor->PageCount);
-
-        /* Set the next page */
-        NextPage = Descriptor->BasePage + Descriptor->PageCount;
-    }
-
-    // FIXME: allocate a buffer of better size
-
-    Buffer->NumberOfRuns = Runs;
-    Buffer->NumberOfPages = MmNumberOfPhysicalPages;
-    MmPhysicalMemoryBlock = Buffer;
-}
-
-VOID
-NTAPI
 MiBuildPagedPool_x(VOID)
 {
     PMMPTE Pte;
@@ -824,16 +663,13 @@ MmArmInitSystem_x(IN ULONG Phase,
         MmBootImageSize = ROUND_UP(MmBootImageSize, PAGE_SIZE);
 
         /* Parse memory descriptors, find free pages */
-        MiEvaluateMemoryDescriptors(LoaderBlock);
+        //MiEvaluateMemoryDescriptors(LoaderBlock);
 
         /* Start PFN database at hardcoded address */
         MmPfnDatabase = MI_PFN_DATABASE;
 
         /* Prepare PFN database mappings */
         MiPreparePfnDatabse(LoaderBlock);
-
-        /* Initialize the session space */
-        MiInitializeSessionSpace(LoaderBlock);
 
         /* Initialize some mappings */
         MiInitializePageTable();
@@ -859,7 +695,7 @@ MmArmInitSystem_x(IN ULONG Phase,
         MiBuildSystemPteSpace();
 
         /* Build the physical memory block */
-        MiBuildPhysicalMemoryBlock(LoaderBlock);
+        //MiBuildPhysicalMemoryBlock(LoaderBlock);
 
         /* Size up paged pool and build the shadow system page directory */
         //MiBuildPagedPool();

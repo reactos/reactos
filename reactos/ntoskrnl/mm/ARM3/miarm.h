@@ -28,6 +28,9 @@
 
 #define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
 
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
+#define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
+#define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
 #define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
 #define MI_PAGED_POOL_START                     (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
@@ -526,6 +529,14 @@ extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;
 extern PMMWSL MmWorkingSetList;
+extern PFN_NUMBER MiNumberOfFreePages;
+extern SIZE_T MmSessionViewSize;
+extern SIZE_T MmSessionPoolSize;
+extern SIZE_T MmSessionImageSize;
+extern PVOID MiSystemViewStart;
+extern PVOID MiSessionPoolEnd;     // 0xBE000000
+extern PVOID MiSessionPoolStart;   // 0xBD000000
+extern PVOID MiSessionViewStart;   // 0xBE000000
 
 //
 // Figures out the hardware bits for a PTE
@@ -909,6 +920,10 @@ MmArmInitSystem(
     IN ULONG Phase,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
+
+VOID
+NTAPI
+MiInitializeSessionSpaceLayout();
 
 NTSTATUS
 NTAPI

@@ -410,7 +410,7 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (Descriptor->MemoryType != LoaderBad)
         {
             /* Count this in the total of pages */
-            MmNumberOfPhysicalPages += Descriptor->PageCount;
+            MmNumberOfPhysicalPages += (PFN_COUNT)Descriptor->PageCount;
         }
 
         /* Check if this is the new lowest page */
@@ -1898,9 +1898,9 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Define the basic user vs. kernel address space separation
         //
-        MmSystemRangeStart = (PVOID)KSEG0_BASE;
-        MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
-        MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
+        MmSystemRangeStart = (PVOID)MI_DEFAULT_SYSTEM_RANGE_START;
+        MmUserProbeAddress = (ULONG_PTR)MI_HIGHEST_USER_ADDRESS;
+        MmHighestUserAddress = (PVOID)MI_HIGHEST_USER_ADDRESS;
 
         /* Highest PTE and PDE based on the addresses above */
         MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
@@ -1922,73 +1922,8 @@ MmArmInitSystem(IN ULONG Phase,
         MmBootImageSize = (MmBootImageSize + PDE_MAPPED_VA - 1) & ~(PDE_MAPPED_VA - 1);
         ASSERT((MmBootImageSize % PDE_MAPPED_VA) == 0);
 
-        //
-        // Set the size of session view, pool, and image
-        //
-        MmSessionSize = MI_SESSION_SIZE;
-        MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-        MmSessionPoolSize = MI_SESSION_POOL_SIZE;
-        MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
-
-        //
-        // Set the size of system view
-        //
-        MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
-
-        //
-        // This is where it all ends
-        //
-        MiSessionImageEnd = (PVOID)PTE_BASE;
-
-        //
-        // This is where we will load Win32k.sys and the video driver
-        //
-        MiSessionImageStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
-                                      MmSessionImageSize);
-
-        //
-        // So the view starts right below the session working set (itself below
-        // the image area)
-        //
-        MiSessionViewStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
-                                     MmSessionImageSize -
-                                     MI_SESSION_WORKING_SET_SIZE -
-                                     MmSessionViewSize);
-
-        //
-        // Session pool follows
-        //
-        MiSessionPoolEnd = MiSessionViewStart;
-        MiSessionPoolStart = (PVOID)((ULONG_PTR)MiSessionPoolEnd -
-                                     MmSessionPoolSize);
-
-        //
-        // And it all begins here
-        //
-        MmSessionBase = MiSessionPoolStart;
-
-        //
-        // Sanity check that our math is correct
-        //
-        ASSERT((ULONG_PTR)MmSessionBase + MmSessionSize == PTE_BASE);
-
-        //
-        // Session space ends wherever image session space ends
-        //
-        MiSessionSpaceEnd = MiSessionImageEnd;
-
-        //
-        // System view space ends at session space, so now that we know where
-        // this is, we can compute the base address of system view space itself.
-        //
-        MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
-                                    MmSystemViewSize);
-
-        /* Compute the PTE addresses for all the addresses we carved out */
-        MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
-        MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
-        MiSessionBasePte = MiAddressToPte(MmSessionBase);
-        MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+        /* Initialize session space address layout */
+        MiInitializeSessionSpaceLayout();
 
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
