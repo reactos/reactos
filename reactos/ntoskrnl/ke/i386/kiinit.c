@@ -407,7 +407,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     PoInitializePrcb(Prcb);
 
     /* Bugcheck if this is a 386 CPU */
-    if (Prcb->CpuType == 3) KeBugCheckEx(0x5D, 0x386, 0, 0, 0);
+    if (Prcb->CpuType == 3) KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
 
     /* Get the processor features for the CPU */
     FeatureBits = KiGetFeatureBits();
@@ -480,7 +480,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             RtlCopyMemory(Vendor, Prcb->VendorString, sizeof(Vendor));
 
             /* Bugcheck the system. Windows *requires* this */
-            KeBugCheckEx(0x5D,
+            KeBugCheckEx(UNSUPPORTED_PROCESSOR,
                          (1 << 24 ) | (Prcb->CpuType << 16) | Prcb->CpuStep,
                          Vendor[0],
                          Vendor[1],
