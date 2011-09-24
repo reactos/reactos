@@ -1884,6 +1884,9 @@ MmArmInitSystem(IN ULONG Phase,
     IncludeType[LoaderBBTMemory] = FALSE;
     if (Phase == 0)
     {
+        /* Count physical pages on the system */
+        MiScanMemoryDescriptors(LoaderBlock);
+
         /* Initialize the phase 0 temporary event */
         KeInitializeEvent(&MiTempEvent, NotificationEvent, FALSE);
 
@@ -1939,14 +1942,9 @@ MmArmInitSystem(IN ULONG Phase,
         MmZeroingPageThreadActive = FALSE;
 
         //
-        // Count physical pages on the system
-        //
-        MiScanMemoryDescriptors(LoaderBlock);
-        PageCount = MmNumberOfPhysicalPages;
-
-        //
         // Check if this is a machine with less than 19MB of RAM
         //
+        PageCount = MmNumberOfPhysicalPages;
         if (PageCount < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
         {
             //
@@ -2031,6 +2029,23 @@ MmArmInitSystem(IN ULONG Phase,
             /* Make sure it's not too low */
             if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
         }
+
+        /* Compute color information (L2 cache-separated paging lists) */
+        MiComputeColorInformation();
+
+        // Calculate the number of bytes for the PFN database
+        // then add the color tables and convert to pages
+        MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
+        MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
+        MxPfnAllocation >>= PAGE_SHIFT;
+
+        // We have to add one to the count here, because in the process of
+        // shifting down to the page size, we actually ended up getting the
+        // lower aligned size (so say, 0x5FFFF bytes is now 0x5F pages).
+        // Later on, we'll shift this number back into bytes, which would cause
+        // us to end up with only 0x5F000 bytes -- when we actually want to have
+        // 0x60000 bytes.
+        MxPfnAllocation++;
 
         /* Initialize the platform-specific parts */
         MiInitMachineDependent(LoaderBlock);

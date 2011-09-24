@@ -265,27 +265,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Compute non paged pool limits and size */
     MiComputeNonPagedPoolVa(MiNumberOfFreePages);
 
-    /* Compute color information (L2 cache-separated paging lists) */
-    MiComputeColorInformation();
-
-    //
-    // Calculate the number of bytes for the PFN database
-    // then add the color tables and convert to pages
-    //
-    MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
-    MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
-    MxPfnAllocation >>= PAGE_SHIFT;
-
-    //
-    // We have to add one to the count here, because in the process of
-    // shifting down to the page size, we actually ended up getting the
-    // lower aligned size (so say, 0x5FFFF bytes is now 0x5F pages).
-    // Later on, we'll shift this number back into bytes, which would cause
-    // us to end up with only 0x5F000 bytes -- when we actually want to have
-    // 0x60000 bytes.
-    //
-    MxPfnAllocation++;
-
     //
     // Now calculate the nonpaged pool expansion VA region
     //
