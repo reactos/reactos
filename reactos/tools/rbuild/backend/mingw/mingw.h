@@ -59,6 +59,8 @@ public:
 
 	std::string GetFullName ( const FileLocation& file ) const;
 	std::string GetFullPath ( const FileLocation& file ) const;
+	std::string GetRegistrySourceFiles () const;
+	std::string GetRegistryTargetFiles () const;
 
 private:
 	void CreateMakefile ();
@@ -108,8 +110,6 @@ private:
 	void OutputInstallTarget ( const FileLocation& source, const FileLocation& target );
 	void OutputNonModuleInstallTargets ();
 	void OutputModuleInstallTargets ();
-	std::string GetRegistrySourceFiles ();
-	std::string GetRegistryTargetFiles ();
 	void OutputRegistryInstallTarget ();
 	void GenerateInstallTarget ();
 	void GetModuleTestTargets ( std::vector<std::string>& out ) const;
