@@ -44,6 +44,9 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     case WM_GETICON :
     case WM_GETTEXT:
         break;
+    case WM_SYSTIMER:
+        ok(0, "Got unexpected WM_SYSTIMER in the winproc. wParam=%d\n", wParam);
+        break;
     default:
         record_message(iwnd, message, SENT, 0,0);
     }
