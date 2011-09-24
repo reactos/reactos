@@ -1258,6 +1258,14 @@ Language=English
 An attempt was made to write to read-only memory.
 .
 
+MessageId=0xC1
+Severity=Success
+Facility=System
+SymbolicName=SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
+Language=English
+SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION
+.
+
 MessageId=0xC2
 Severity=Success
 Facility=System
