@@ -57,7 +57,6 @@ list(APPEND FREELDR_COMMON_SOURCE
     reactos/arcname.c
     reactos/archwsup.c
     reactos/binhive.c
-
     ui/directui.c
     ui/gui.c
     ui/minitui.c
@@ -72,8 +71,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     windows/peloader.c
     windows/winldr.c
     windows/wlmemory.c
-    windows/wlregistry.c
-)
+    windows/wlregistry.c)
 
 if(ARCH MATCHES i386)
     list(APPEND FREELDR_COMMON_SOURCE
@@ -155,23 +153,30 @@ list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
     rtl/bget.c
-    rtl/libsupp.c
-)
+    rtl/libsupp.c)
 
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
+add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
+    set_target_properties(freeldr_pe_dbg PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
 else()
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
+    set_target_properties(freeldr_pe_dbg PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
 endif()
 
 set_image_base(freeldr_pe 0x10000)
 set_subsystem(freeldr_pe native)
 set_entrypoint(freeldr_pe RealEntryPoint)
 
+set_image_base(freeldr_pe_dbg 0x10000)
+set_subsystem(freeldr_pe_dbg native)
+set_entrypoint(freeldr_pe_dbg RealEntryPoint)
+
 if(ARCH MATCHES i386)
     target_link_libraries(freeldr_pe mini_hal)
+    target_link_libraries(freeldr_pe_dbg mini_hal)
 endif()
 
 target_link_libraries(freeldr_pe
@@ -182,8 +187,18 @@ target_link_libraries(freeldr_pe
     rtl
     libcntpr)
 
+target_link_libraries(freeldr_pe_dbg
+    freeldr_common
+    cportlib
+    rossym
+    cmlib
+    rtl
+    libcntpr)
+
 add_pch(freeldr_pe include/freeldr.h)
+
 add_dependencies(freeldr_pe asm)
+add_dependencies(freeldr_pe_dbg asm)
 
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
@@ -204,19 +219,27 @@ if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
 endif()
 
 add_executable(setupldr_pe ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+add_executable(setupldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_target_properties(setupldr_pe_dbg PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 else()
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_target_properties(setupldr_pe_dbg PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 endif()
 
 set_image_base(setupldr_pe 0x10000)
 set_subsystem(setupldr_pe native)
 set_entrypoint(setupldr_pe RealEntryPoint)
 
+set_image_base(setupldr_pe_dbg 0x10000)
+set_subsystem(setupldr_pe_dbg native)
+set_entrypoint(setupldr_pe_dbg RealEntryPoint)
+
 if(ARCH MATCHES i386)
     target_link_libraries(setupldr_pe mini_hal)
+    target_link_libraries(setupldr_pe_dbg mini_hal)
 endif()
 
 target_link_libraries(setupldr_pe
@@ -227,7 +250,16 @@ target_link_libraries(setupldr_pe
     rtl
     libcntpr)
 
+target_link_libraries(setupldr_pe_dbg
+    freeldr_common
+    cportlib
+    rossym
+    cmlib
+    rtl
+    libcntpr)
+
 add_dependencies(setupldr_pe asm)
+add_dependencies(setupldr_pe_dbg asm)
 
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
@@ -237,4 +269,3 @@ concatenate_files(
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
-
