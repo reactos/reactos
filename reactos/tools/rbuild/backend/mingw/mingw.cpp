@@ -1252,17 +1252,17 @@ MingwBackend::OutputModuleInstallTargets ()
 }
 
 string
-MingwBackend::GetRegistrySourceFiles ()
+MingwBackend::GetRegistrySourceFiles () const
 {
-	return "boot" + sSep + "bootdata" + sSep + "hivecls_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hivedef_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hiveinst_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hivesft_" + Environment::GetArch() + ".inf "
-		"boot" + sSep + "bootdata" + sSep + "hivesys_" + Environment::GetArch() + ".inf ";
+	return "boot" + sSep + "bootdata" + sSep + "hivecls_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hivedef_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesft_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesys_$(ARCH).inf "
+		"boot" + sSep + "bootdata" + sSep + "hiveinst_$(ARCH).inf ";
 }
 
 string
-MingwBackend::GetRegistryTargetFiles ()
+MingwBackend::GetRegistryTargetFiles () const
 {
 	string system32ConfigDirectory = "system32" + sSep + "config";
 	FileLocation system32 ( InstallDirectory, system32ConfigDirectory, "" );
@@ -1295,9 +1295,9 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%chiveinst_$(ARCH).inf\n",
-	          cSep, GetFullPath ( system32 ).c_str (),
-	          cSep, cSep );
+	          "\t$(mkhive_TARGET) %s %s\n",
+	          GetFullPath ( system32 ).c_str (),
+	          registrySourceFiles.c_str() );
 	fprintf ( fMakefile,
 	          "\n" );
 }

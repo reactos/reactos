@@ -2917,6 +2917,7 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory,
 void
 MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 {
+	string registrySourceFiles = backend->GetRegistrySourceFiles ();
 	fprintf ( fMakefile, "# REGISTRY COMMANDS\n" );
 	FileLocation reactosSystem32ConfigDirectory ( OutputDirectory,
 	                                              livecdDirectory + sSep + "reactos" + sSep + "system32" + sSep + "config",
@@ -2924,9 +2925,10 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst_$(ARCH).inf\n",
-	          cSep, backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
-	          cSep, cSep, cSep, cSep );
+	          "\t$(mkhive_TARGET) %s %s boot%cbootdata%clivecd.inf\n",
+	          backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
+	          registrySourceFiles.c_str(),
+	          cSep, cSep );
 }
 
 void
