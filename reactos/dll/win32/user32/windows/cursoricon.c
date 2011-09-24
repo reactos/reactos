@@ -1703,13 +1703,13 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
     else
         new_height = height;
 
-    if(bm_type == 0)
+    if (bm_type == 0)
     {
         BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)&scaled_info->bmiHeader;
         core->bcWidth = new_width;
         core->bcHeight = new_height;
     }
-    else
+    else if (bm_type == 1)
     {
         /* Some sanity checks for BITMAPINFO (not applicable to BITMAPCOREINFO) */
         if (info->bmiHeader.biHeight > 65535 || info->bmiHeader.biWidth > 65535) {
@@ -1720,6 +1720,8 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
         scaled_info->bmiHeader.biWidth = new_width;
         scaled_info->bmiHeader.biHeight = new_height;
     }
+    else
+        goto end;
 
     if (new_height < 0) new_height = -new_height;
 
