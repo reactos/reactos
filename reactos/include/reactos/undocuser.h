@@ -57,6 +57,7 @@
 
 /* Caret timer ID */
 #define IDCARETTIMER (0xffff)
+#define ID_TME_TIMER (0xFFFA)
 
 /* SetWindowPos undocumented flags */
 #define SWP_NOCLIENTSIZE 0x0800
