@@ -9,7 +9,9 @@
 #include <wine/test.h>
 #include <windows.h>
 #include "helper.h"
+#include <undocuser.h>
 
+MSG_ENTRY last_post_message;
 MSG_ENTRY message_cache[100];
 static int message_cache_size = 0;
 
@@ -38,6 +40,7 @@ static char* get_msg_name(UINT msg)
         case WM_NCHITTEST: return "WM_NCHITTEST";
         case WM_SETCURSOR: return "WM_SETCURSOR";
         case WM_MOUSEMOVE: return "WM_MOUSEMOVE";
+        case WM_SYSTIMER: return "WM_SYSTIMER";
         default: return NULL;
     }
 }
@@ -56,6 +59,7 @@ static char* get_hook_name(UINT id)
 
 void empty_message_cache()
 {
+    memset(&last_post_message, 0, sizeof(last_post_message));
     memset(message_cache, 0, sizeof(message_cache));
     message_cache_size = 0;
 }
@@ -68,8 +72,29 @@ void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
     }
     else 
     {
-        char* msgName = msg->hook ? get_hook_name(msg->msg) : get_msg_name(msg->msg);
-        char* msgType = msg->hook ? "hook" : "msg";
+        char* msgName;
+        char* msgType;
+
+        switch (msg->type)
+        {
+        case POST:
+            msgName = get_msg_name(msg->msg);
+            msgType = "post msg";
+            break;
+        case SENT:
+            msgName = get_msg_name(msg->msg);
+            msgType = "sent msg";
+            break;
+        case HOOK:
+            msgName = get_hook_name(msg->msg);
+            msgType = "hook";
+            break;
+        case EVENT:
+            msgName = NULL;
+            msgType = "event";
+            break;
+        }
+
         if(msgName)
             sprintf(buffer, "hwnd%d %s %s %d %d", msg->iwnd, msgType, msgName, msg->param1, msg->param2); 
         else
@@ -126,18 +151,39 @@ void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
     empty_message_cache();
 }
 
-void record_message(int iwnd, UINT message, BOOL hook, int param1,int param2)
+void record_message(int iwnd, UINT message, MSG_TYPE type, int param1,int param2)
 {
     if(message_cache_size>=100)
     {
         return;
     }
 
+    /* do not report a post message a second time */
+    if(type == SENT &&
+       last_post_message.iwnd == iwnd && 
+       last_post_message.msg == message && 
+       last_post_message.param1 == param1 && 
+       last_post_message.param2 == param2)
+    {
+        memset(&last_post_message, 0, sizeof(last_post_message));
+        return;
+    }
+
     message_cache[message_cache_size].iwnd = iwnd;
     message_cache[message_cache_size].msg = message;
-    message_cache[message_cache_size].hook = hook;
+    message_cache[message_cache_size].type = type;
     message_cache[message_cache_size].param1 = param1;
     message_cache[message_cache_size].param2 = param2;
+
+    if(message_cache[message_cache_size].type == POST)
+    {
+        last_post_message = message_cache[message_cache_size];
+    }
+    else
+    {
+        memset(&last_post_message, 0, sizeof(last_post_message));
+    }
+
     message_cache_size++;
 }
 

@@ -9,6 +9,7 @@
 #include <wine/test.h>
 #include <windows.h>
 #include "helper.h"
+#include <undocuser.h>
 
 HWND hWnd1, hWnd2, hWnd3;
 HHOOK hMouseHookLL, hMouseHook;
@@ -23,21 +24,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if(message < WM_USER &&
-       message != WM_IME_SETCONTEXT && 
-       message != WM_IME_NOTIFY &&
-       message != WM_KEYUP &&
-       message != WM_GETICON &&
-       message != WM_GETTEXT && /* the following messages have to be ignroed because dwm changes the time they are sent */
-       message != WM_NCPAINT &&
-       message != WM_ERASEBKGND &&
-       message != WM_PAINT &&
-       message != 0x031f /*WM_DWMNCRENDERINGCHANGED*/)
-    {
-        int iwnd = get_iwnd(hWnd);
-        if(iwnd)
-            record_message(iwnd, message, FALSE,0,0);
-    }
+    int iwnd = get_iwnd(hWnd);
 
     if(message == WM_PAINT)
     {
@@ -46,21 +33,52 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         Rectangle(ps.hdc,  ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom);
         EndPaint(hWnd, &ps);
     }
-    
+
+    if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    switch(message)
+    {
+    case WM_IME_SETCONTEXT:
+    case WM_IME_NOTIFY :
+    case WM_GETICON :
+    case WM_GETTEXT:
+        break;
+    default:
+        record_message(iwnd, message, SENT, 0,0);
+    }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 static LRESULT CALLBACK MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    record_message(0, WH_MOUSE_LL, TRUE, wParam, 0);
+    record_message(0, WH_MOUSE_LL, HOOK, wParam, 0);
     return CallNextHookEx(hMouseHookLL, nCode, wParam, lParam);
 }
 
 static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     MOUSEHOOKSTRUCT *hs = (MOUSEHOOKSTRUCT*) lParam;
-    record_message(get_iwnd(hs->hwnd), WH_MOUSE, TRUE, wParam, hs->wHitTestCode);
+    record_message(get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
     return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
+}
+
+static void FlushMessages()
+{
+    MSG msg;
+
+    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    {
+        int iwnd = get_iwnd(msg.hwnd);
+        if(iwnd)
+        {
+            if(msg.message == WM_SYSTIMER)
+                record_message(iwnd, msg.message, POST,msg.wParam,0);
+            else if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
+                record_message(iwnd, msg.message, POST,0,0);
+        }
+        DispatchMessageA( &msg );
+    }
 }
 
 static void create_test_windows()
@@ -114,73 +132,63 @@ DWORD TmeQuery(HWND hwnd)
     return tme.dwFlags;
 }
 
-#define FLUSH_MESSAGES(msg) while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
 #define EXPECT_TME_FLAGS(hWnd, expected)                                                                 \
     { DWORD flags = TmeQuery(hWnd);                                                                      \
       ok(flags == (expected),"wrong tme flags. expected %li, and got %li\n", (DWORD)(expected), flags);  \
-    }
-
-#define EXPECT_QUEUE_STATUS(expected, notexpected)                                                                             \
-    {                                                                                                                          \
-        DWORD status = HIWORD(GetQueueStatus(QS_ALLEVENTS));                                                                   \
-        ok(((status) & (expected))== (expected),"wrong queue status. expected %li, and got %li\n", (DWORD)(expected), status); \
-        if(notexpected)                                                                                                        \
-            ok((status & (notexpected))!=(notexpected), "wrong queue status. got non expected %li\n", (DWORD)(notexpected));   \
     }
 
 MSG_ENTRY empty_chain[]= {{0,0}};
 
 /* the mouse moves over hwnd2 */
 MSG_ENTRY mousemove2_chain[]={{2, WM_NCHITTEST},
-                              {2, WH_MOUSE,1, WM_MOUSEMOVE, HTCLIENT},
+                              {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
                               {2, WM_SETCURSOR},
                               {1, WM_SETCURSOR},
-                              {2, WM_MOUSEMOVE},
+                              {2, WM_MOUSEMOVE, POST},
                                {0,0}};
 
 /* the mouse hovers hwnd2 */
 MSG_ENTRY mousehover2_chain[]={{2, WM_NCHITTEST},
-                               {2, WH_MOUSE,1, WM_MOUSEMOVE, HTCLIENT},
+                               {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
                                {2, WM_SETCURSOR},
                                {1, WM_SETCURSOR},
-                               {2, WM_MOUSEMOVE},
-                               {2, WM_MOUSEHOVER},
+                               {2, WM_MOUSEMOVE, POST},
+                               {2, WM_SYSTIMER, POST, ID_TME_TIMER},
+                               {2, WM_MOUSEHOVER, POST},
                                 {0,0}};
 
 /* the mouse leaves hwnd2 and moves to hwnd1 */
 MSG_ENTRY mouseleave2to1_chain[]={{1, WM_NCHITTEST},
-                                  {1, WH_MOUSE,1, WM_MOUSEMOVE, HTCLIENT},
+                                  {1, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
                                   {1, WM_SETCURSOR},
-                                  {1, WM_MOUSEMOVE},
-                                  {2, WM_MOUSELEAVE},
+                                  {1, WM_MOUSEMOVE, POST},
+                                  {2, WM_MOUSELEAVE, POST},
                                    {0,0}};    
 
 /* the mouse leaves hwnd2 and moves to hwnd3 */
 MSG_ENTRY mouseleave2to3_chain[]={{3, WM_NCHITTEST},
-                                  {3, WH_MOUSE,1, WM_MOUSEMOVE, HTCLIENT},
+                                  {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
                                   {3, WM_SETCURSOR},
                                   {1, WM_SETCURSOR},
-                                  {3, WM_MOUSEMOVE},
-                                  {2, WM_MOUSELEAVE},
+                                  {3, WM_MOUSEMOVE, POST},
+                                  {2, WM_MOUSELEAVE, POST},
                                    {0,0}};
 
 void Test_TrackMouseEvent()
 {
-    MSG msg;
-    
     SetCursorPos(0,0);
     create_test_windows();
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     empty_message_cache();
 
     /* the mouse moves over hwnd2 */
     SetCursorPos(220,220);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(mousemove2_chain);
     EXPECT_TME_FLAGS(hWnd2, 0);
     TmeStartTracking(hWnd2, TME_HOVER|TME_LEAVE);
     EXPECT_TME_FLAGS(hWnd2, TME_HOVER|TME_LEAVE);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* the mouse hovers hwnd2 */
@@ -188,7 +196,7 @@ void Test_TrackMouseEvent()
     Sleep(100);
     EXPECT_QUEUE_STATUS(QS_TIMER|QS_MOUSEMOVE, 0);
     EXPECT_TME_FLAGS(hWnd2, TME_HOVER|TME_LEAVE);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     EXPECT_TME_FLAGS(hWnd2, TME_LEAVE);
     COMPARE_CACHE(mousehover2_chain);
 
@@ -196,17 +204,17 @@ void Test_TrackMouseEvent()
     SetCursorPos(150,150);
     EXPECT_QUEUE_STATUS(QS_MOUSEMOVE,QS_TIMER );
     EXPECT_TME_FLAGS(hWnd2, TME_LEAVE);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     EXPECT_TME_FLAGS(hWnd2, 0);
     COMPARE_CACHE(mouseleave2to1_chain);
 
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* the mouse moves over hwnd2 */
     SetCursorPos(220,220);
     EXPECT_QUEUE_STATUS(QS_MOUSEMOVE, QS_TIMER);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(mousemove2_chain);
     EXPECT_TME_FLAGS(hWnd2, 0);
     COMPARE_CACHE(empty_chain);
@@ -215,31 +223,31 @@ void Test_TrackMouseEvent()
     TmeStartTracking(hWnd2, TME_HOVER|TME_LEAVE);
     TmeStartTracking(hWnd2, TME_HOVER|TME_LEAVE);
     EXPECT_QUEUE_STATUS(0, QS_TIMER|QS_MOUSEMOVE);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
     EXPECT_TME_FLAGS(hWnd2, TME_HOVER|TME_LEAVE);
 
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* the mouse moves from hwnd2 to the intersection of hwnd2 and hwnd3 */
     SetCursorPos(300,300);
     EXPECT_QUEUE_STATUS(QS_MOUSEMOVE, QS_TIMER);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     EXPECT_TME_FLAGS(hWnd2, TME_HOVER|TME_LEAVE);
     COMPARE_CACHE(mousemove2_chain);
 
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* the mouse moves from hwnd2 to hwnd3 */
     SetCursorPos(400,400);
     EXPECT_QUEUE_STATUS(QS_MOUSEMOVE, QS_TIMER);
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     EXPECT_TME_FLAGS(hWnd2, 0);
     COMPARE_CACHE(mouseleave2to3_chain);
 
-    FLUSH_MESSAGES(msg);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
 }
 
