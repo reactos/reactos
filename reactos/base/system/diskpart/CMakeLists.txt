@@ -39,9 +39,9 @@ add_executable(diskpart
 	setid.c
 	shrink.c
 	uniqueid.c
-	resource.rc)
+	diskpart.rc)
 
-set_module_type(calc win32cui)
+set_module_type(diskpart win32cui)
 add_importlibs(diskpart user32 msvcrt kernel32)
 if(MSVC)
 add_importlibs(diskpart ntdll)
