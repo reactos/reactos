@@ -93,6 +93,8 @@ void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
             msgName = NULL;
             msgType = "event";
             break;
+        default:
+            return;
         }
 
         if(msgName)

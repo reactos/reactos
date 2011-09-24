@@ -23,7 +23,7 @@ void empty_message_cache();
 ATOM RegisterSimpleClass(WNDPROC lpfnWndProc, LPCWSTR lpszClassName);
 
 /* filter messages that are affected by dwm */
-static _inline BOOL IsDWmMsg(UINT msg)
+static inline BOOL IsDWmMsg(UINT msg)
 {
     switch(msg)
     {
@@ -36,7 +36,7 @@ static _inline BOOL IsDWmMsg(UINT msg)
     return FALSE;
 }
 
-static _inline BOOL IseKeyMsg(UINT msg)
+static inline BOOL IseKeyMsg(UINT msg)
 {
     return (msg == WM_KEYUP || msg == WM_KEYDOWN);
 }
