@@ -143,9 +143,9 @@ ArmHwDetect(VOID)
     return RootNode;
 }
 
-MEMORY_DESCRIPTOR ArmMemoryMap[32];
+FREELDR_MEMORY_DESCRIPTOR ArmMemoryMap[32];
 
-PMEMORY_DESCRIPTOR
+PFREELDR_MEMORY_DESCRIPTOR
 ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
 {
     ASSERT(ArmBoardBlock->MemoryMapEntryCount <= 32);

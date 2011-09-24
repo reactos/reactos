@@ -49,7 +49,7 @@ VOID XboxPrepareForReactOS(IN BOOLEAN Setup);
 
 VOID XboxMemInit(VOID);
 PVOID XboxMemReserveMemory(ULONG MbToReserve);
-PMEMORY_DESCRIPTOR XboxMemGetMemoryMap(ULONG *MemoryMapSize);
+PFREELDR_MEMORY_DESCRIPTOR XboxMemGetMemoryMap(ULONG *MemoryMapSize);
 
 BOOLEAN XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);

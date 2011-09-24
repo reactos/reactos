@@ -75,9 +75,9 @@ XboxMemInit(VOID)
   AvailableMemoryMb = InstalledMemoryMb;
 }
 
-MEMORY_DESCRIPTOR BiosMemoryMap[2];
+FREELDR_MEMORY_DESCRIPTOR BiosMemoryMap[2];
 
-PMEMORY_DESCRIPTOR
+PFREELDR_MEMORY_DESCRIPTOR
 XboxMemGetMemoryMap(ULONG *MemoryMapSize)
 {
   /* Synthesize memory map */

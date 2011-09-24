@@ -27,6 +27,13 @@ typedef enum
 	BiosMemoryAcpiNvs
 } BIOS_MEMORY_TYPE;
 
+typedef struct _FREELDR_MEMORY_DESCRIPTOR
+{
+    TYPE_OF_MEMORY MemoryType;
+    PFN_NUMBER BasePage;
+    PFN_NUMBER PageCount;
+} FREELDR_MEMORY_DESCRIPTOR, *PFREELDR_MEMORY_DESCRIPTOR;
+
 #include <pshpack1.h>
 typedef struct
 {

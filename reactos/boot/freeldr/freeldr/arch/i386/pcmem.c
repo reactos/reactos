@@ -44,7 +44,7 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
 
-MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
+FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
 {
  { LoaderFirmwarePermanent, 0x00,               1 }, // realmode int vectors
  { LoaderFirmwareTemporary, 0x01,               FREELDR_BASE_PAGE - 1 }, // freeldr stack + cmdline
@@ -60,7 +60,7 @@ MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
 
 ULONG
 AddMemoryDescriptor(
-    IN OUT PMEMORY_DESCRIPTOR List,
+    IN OUT PFREELDR_MEMORY_DESCRIPTOR List,
     IN ULONG MaxCount,
     IN PFN_NUMBER BasePage,
     IN PFN_NUMBER PageCount,
@@ -189,7 +189,7 @@ PcMemGetConventionalMemorySize(VOID)
 
 static
 ULONG
-PcMemGetBiosMemoryMap(PMEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
+PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
 {
   REGS Regs;
   ULONG MapCount = 0;
@@ -292,7 +292,7 @@ PcMemGetBiosMemoryMap(PMEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
 }
 
 
-PMEMORY_DESCRIPTOR
+PFREELDR_MEMORY_DESCRIPTOR
 PcMemGetMemoryMap(ULONG *MemoryMapSize)
 {
   ULONG i, EntryCount;

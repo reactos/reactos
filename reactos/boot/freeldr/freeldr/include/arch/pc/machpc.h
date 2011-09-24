@@ -46,7 +46,7 @@ VOID PcVideoSync(VOID);
 VOID PcVideoPrepareForReactOS(IN BOOLEAN Setup);
 VOID PcPrepareForReactOS(IN BOOLEAN Setup);
 
-PMEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
+PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
 
 BOOLEAN PcDiskGetBootPath(char *BootPath, unsigned Size);
 BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);

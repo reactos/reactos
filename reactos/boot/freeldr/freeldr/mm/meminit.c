@@ -59,7 +59,7 @@ ULONG		LastFreePageHint = 0;
 ULONG MmLowestPhysicalPage = 0xFFFFFFFF;
 ULONG MmHighestPhysicalPage = 0;
 
-PMEMORY_DESCRIPTOR BiosMemoryMap;
+PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
 
 extern ULONG_PTR	MmHeapPointer;
@@ -67,11 +67,11 @@ extern ULONG_PTR	MmHeapStart;
 
 ULONG
 AddMemoryDescriptor(
-    IN OUT PMEMORY_DESCRIPTOR List,
+    IN OUT PFREELDR_MEMORY_DESCRIPTOR List,
     IN ULONG MaxCount,
     IN PFN_NUMBER BasePage,
     IN PFN_NUMBER PageCount,
-    IN MEMORY_TYPE MemoryType)
+    IN TYPE_OF_MEMORY MemoryType)
 {
     ULONG i, c;
     PFN_NUMBER NextBase;
@@ -147,8 +147,8 @@ AddMemoryDescriptor(
     return c;
 }
 
-const MEMORY_DESCRIPTOR*
-ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
+const FREELDR_MEMORY_DESCRIPTOR*
+ArcGetMemoryDescriptor(const FREELDR_MEMORY_DESCRIPTOR* Current)
 {
     if (Current == NULL)
     {
@@ -166,7 +166,7 @@ ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
 BOOLEAN MmInitializeMemoryManager(VOID)
 {
 #if DBG
-	const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+	const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
 #endif
 
 	TRACE("Initializing Memory Manager.\n");
@@ -239,7 +239,7 @@ ULONG MmGetPageNumberFromAddress(PVOID Address)
 
 ULONG MmGetAddressablePageCountIncludingHoles(VOID)
 {
-    const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     ULONG PageCount;
 
     //
@@ -255,7 +255,7 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
             //
             // Yes, remember it if this is real memory
             //
-            if (MemoryDescriptor->MemoryType == MemoryFree)
+            if (MemoryDescriptor->MemoryType == LoaderFree)
                 MmHighestPhysicalPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
         }
 
@@ -279,7 +279,7 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
 
 PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
 {
-    const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     ULONG PageLookupTableSize;
     ULONG PageLookupTablePages;
     ULONG PageLookupTableStartPage = 0;
@@ -293,7 +293,7 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
         // Continue, if memory is not free
-        if (MemoryDescriptor->MemoryType != MemoryFree) continue;
+        if (MemoryDescriptor->MemoryType != LoaderFree) continue;
 
         // Continue, if the block is not big enough?
         if (MemoryDescriptor->PageCount < PageLookupTablePages) continue;
@@ -318,7 +318,7 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
 
 VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 {
-    const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     TYPE_OF_MEMORY MemoryMapPageAllocated;
     ULONG PageLookupTableStartPage;
     ULONG PageLookupTablePageCount;

@@ -57,8 +57,8 @@ typedef struct tagMACHVTBL
   VOID (*Beep)(VOID);
   VOID (*PrepareForReactOS)(IN BOOLEAN Setup);
 
-  MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(MEMORY_DESCRIPTOR* Current);
-  PMEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
+  FREELDR_MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(FREELDR_MEMORY_DESCRIPTOR* Current);
+  PFREELDR_MEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
   BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);

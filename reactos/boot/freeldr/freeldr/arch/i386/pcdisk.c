@@ -271,6 +271,7 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNu
 
 BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
+	BOOLEAN ExtensionsSupported;
 
 	TRACE("PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
 
@@ -279,9 +280,11 @@ BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULON
 	// If so then check to see if Int13 extensions work
 	// If they do then use them, otherwise default back to BIOS calls
 	//
-	if ((DriveNumber >= 0x80) && DiskInt13ExtensionsSupported(DriveNumber))
+	ExtensionsSupported = DiskInt13ExtensionsSupported(DriveNumber);
+
+	if ((DriveNumber >= 0x80) && ExtensionsSupported)
 	{
-		TRACE("Using Int 13 Extensions for read. DiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, DiskInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE");
+		TRACE("Using Int 13 Extensions for read. DiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, ExtensionsSupported ? "TRUE" : "FALSE");
 
 		//
 		// LBA is easy, nothing to calculate
