@@ -441,18 +441,16 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 {
     TCHAR szBuffer[64];
     MEMORYSTATUSEX MemoryStatus;
-    ULARGE_INTEGER FreeBytes;
-    DWORDLONG FreeMemory;
+    ULARGE_INTEGER FreeDiskSpace;
+    UINT i, FreeMemMb, PageFileSizeMb;
     INT Index;
-    INT i;
-    INT FileSize;
 
     Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
                                     LB_GETCURSEL,
                                     0,
                                     0);
-    if (Index < pVirtMem->Count)
+    if (Index >= 0 && Index < pVirtMem->Count)
     {
         /* Set drive letter */
         SetDlgItemText(hwndDlg, IDC_DRIVE,
@@ -460,10 +458,10 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 
         /* Set available disk space */
         if (GetDiskFreeSpaceEx(pVirtMem->Pagefile[Index].szDrive,
-                               NULL, NULL, &FreeBytes))
+                               NULL, NULL, &FreeDiskSpace))
         {
-            pVirtMem->Pagefile[Index].FreeSize = (UINT)(FreeBytes.QuadPart / (1024 * 1024));
-            _stprintf(szBuffer, _T("%I64u MB"), pVirtMem->Pagefile[Index].FreeSize);
+            pVirtMem->Pagefile[Index].FreeSize = (UINT)(FreeDiskSpace.QuadPart / (1024 * 1024));
+            _stprintf(szBuffer, _T("%u MB"), pVirtMem->Pagefile[Index].FreeSize);
             SetDlgItemText(hwndDlg, IDC_SPACEAVAIL, szBuffer);
         }
 
@@ -516,18 +514,18 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         MemoryStatus.dwLength = sizeof(MEMORYSTATUSEX);
         if (GlobalMemoryStatusEx(&MemoryStatus))
         {
-            FreeMemory = MemoryStatus.ullTotalPhys / (1024 * 1024);
-            _stprintf(szBuffer, _T("%I64u MB"), FreeMemory + (FreeMemory / 2));
+            FreeMemMb = (UINT)(MemoryStatus.ullTotalPhys / (1024 * 1024));
+            _stprintf(szBuffer, _T("%u MB"), FreeMemMb + (FreeMemMb / 2));
             SetDlgItemText(hwndDlg, IDC_RECOMMENDED, szBuffer);
         }
 
         /* Set current pagefile size */
-        FileSize = 0;
+        PageFileSizeMb = 0;
         for (i = 0; i < 26; i++)
         {
-            FileSize += pVirtMem->Pagefile[i].InitialSize;
+            PageFileSizeMb += pVirtMem->Pagefile[i].InitialSize;
         }
-        _stprintf(szBuffer, _T("%u MB"), FileSize);
+        _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
     }
 
