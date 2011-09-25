@@ -20,6 +20,10 @@
 #include <freeldr.h>
 #include <debug.h>
 
+//#define MM_DBG 1 // needs #define BufStats 1 in bget.c
+
+ULONG MmMaximumHeapAlloc;
+
 DBG_DEFAULT_CHANNEL(MEMORY);
 
 VOID MmInitializeHeap(PVOID PageLookupTable)
@@ -62,15 +66,16 @@ PVOID MmHeapAlloc(ULONG MemorySize)
 	{
 		ERR("Heap allocation for %d bytes failed\n", MemorySize);
 	}
-#if MM_DBG
-    {
-    	LONG CurAlloc, TotalFree, MaxFree, NumberOfGets, NumberOfRels;
+#ifdef MM_DBG
+	{
+		LONG CurAlloc, TotalFree, MaxFree, NumberOfGets, NumberOfRels;
 
-	    // Gather some stats
-	    bstats(&CurAlloc, &TotalFree, &MaxFree, &NumberOfGets, &NumberOfRels);
+		// Gather some stats
+		bstats(&CurAlloc, &TotalFree, &MaxFree, &NumberOfGets, &NumberOfRels);
+		if (CurAlloc > MmMaximumHeapAlloc) MmMaximumHeapAlloc = CurAlloc;
 
-	    TRACE("Current alloced %d bytes, free %d bytes, allocs %d, frees %d\n",
-		    CurAlloc, TotalFree, NumberOfGets, NumberOfRels);
+		TRACE("Current alloc %d, free %d, max alloc %lx, allocs %d, frees %d\n",
+		    CurAlloc, TotalFree, MmMaximumHeapAlloc, NumberOfGets, NumberOfRels);
 	}
 #endif
 	return Result;

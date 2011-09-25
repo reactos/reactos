@@ -333,7 +333,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
         // Mark used pages in the lookup table
-        
+
         if (MemoryDescriptor->BasePage + MemoryDescriptor->PageCount <= TotalPageCount)
         {
             TRACE("Marking pages 0x%lx-0x%lx as type %s\n",
@@ -364,6 +364,15 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							Index;
 	TRACE("MmMarkPagesInLookupTable()\n");
+
+    /* Validate the range */
+    if ((StartPage < MmLowestPhysicalPage) ||
+        ((StartPage + PageCount - 1) > MmHighestPhysicalPage))
+    {
+        ERR("Memory (0x%lx:0x%lx) outside of lookup table! Valid range: 0x%lx-0x%lx.\n",
+            StartPage, PageCount, MmLowestPhysicalPage, MmHighestPhysicalPage);
+        return;
+    }
 
     StartPage -= MmLowestPhysicalPage;
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)

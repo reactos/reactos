@@ -402,7 +402,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	// Attempt to allocate memory for directory buffer
 	//
 	TRACE("Trying to allocate (DirectorySize) %d bytes.\n", *DirectorySize);
-	DirectoryBuffer = MmAllocateMemory(*DirectorySize);
+	DirectoryBuffer = MmHeapAlloc(*DirectorySize);
 
 	if (DirectoryBuffer == NULL)
 	{
@@ -416,7 +416,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	{
 		if (!FatReadVolumeSectors(Volume, Volume->RootDirSectorStart, Volume->RootDirSectors, DirectoryBuffer))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return NULL;
 		}
 	}
@@ -424,7 +424,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	{
 		if (!FatReadClusterChain(Volume, DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return NULL;
 		}
 	}
@@ -774,7 +774,7 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 		{
 			if (!FatXSearchDirectoryBufferForFile(Volume, DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
-				MmFreeMemory(DirectoryBuffer);
+				MmHeapFree(DirectoryBuffer);
 				return ENOENT;
 			}
 		}
@@ -782,12 +782,12 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 		{
 			if (!FatSearchDirectoryBufferForFile(Volume, DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
-				MmFreeMemory(DirectoryBuffer);
+				MmHeapFree(DirectoryBuffer);
 				return ENOENT;
 			}
 		}
 
-		MmFreeMemory(DirectoryBuffer);
+		MmHeapFree(DirectoryBuffer);
 
 		//
 		// If we have another sub-directory to go then
@@ -800,12 +800,12 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 			//
 			if (!(FatFileInfo.Attributes & ATTR_DIRECTORY))
 			{
-				MmFreeMemory(FatFileInfo.FileFatChain);
+				MmHeapFree(FatFileInfo.FileFatChain);
 				return ENOTDIR;
 			}
 			DirectoryStartCluster = FatFileInfo.FileFatChain[0];
 		}
-		MmFreeMemory(FatFileInfo.FileFatChain);
+		MmHeapFree(FatFileInfo.FileFatChain);
 	}
 
 	memcpy(FatFileInfoPointer, &FatFileInfo, sizeof(FAT_FILE_INFO));
@@ -1011,7 +1011,7 @@ ULONG* FatGetClusterChainArray(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
 	//
 	// Allocate array memory
 	//
-	ArrayPointer = MmAllocateMemory(ArraySize);
+	ArrayPointer = MmHeapAlloc(ArraySize);
 
 	if (ArrayPointer == NULL)
 	{
@@ -1044,7 +1044,7 @@ ULONG* FatGetClusterChainArray(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
 		//
 		if (!FatGetFatEntry(Volume, StartCluster, &StartCluster))
 		{
-			MmFreeMemory(ArrayPointer);
+			MmHeapFree(ArrayPointer);
 			return NULL;
 		}
 	}

@@ -71,7 +71,8 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-	TRACE("Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd);
+	TRACE("Allocated %d bytes (%d pages) of memory (type %ld) starting at page 0x%lx.\n",
+          MemorySize, PagesNeeded, MemoryType, FirstFreePageFromEnd);
 	TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
 	// Update LoaderPagesSpanned count
@@ -80,12 +81,6 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 
 	// Now return the pointer
 	return MemPointer;
-}
-
-PVOID MmAllocateMemory(ULONG MemorySize)
-{
-	// Temporary forwarder...
-	return MmAllocateMemoryWithType(MemorySize, LoaderOsloaderHeap);
 }
 
 PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)

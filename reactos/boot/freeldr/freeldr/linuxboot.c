@@ -18,7 +18,7 @@
  */
 
 #ifndef _M_ARM
- 
+
 #include <freeldr.h>
 #include <debug.h>
 #ifdef __i386__
@@ -283,7 +283,7 @@ BOOLEAN LinuxParseIniSection(PCSTR OperatingSystemName)
 BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
 {
 	// Allocate memory for boot sector
-	LinuxBootSector = (PLINUX_BOOTSECTOR)MmAllocateMemory(512);
+	LinuxBootSector = MmAllocateMemoryWithType(512, LoaderSystemCode);
 	if (LinuxBootSector == NULL)
 	{
 		return FALSE;
@@ -346,7 +346,7 @@ BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
 	}
 
 	// Allocate memory for setup sectors
-	LinuxSetupSector = (PLINUX_SETUPSECTOR)MmAllocateMemory(SetupSectorSize);
+	LinuxSetupSector = MmAllocateMemoryWithType(SetupSectorSize, LoaderSystemCode);
 	if (LinuxSetupSector == NULL)
 	{
 		return FALSE;
