@@ -23,7 +23,7 @@ UCHAR KiNMITSS[KTSS_IO_MAPS];
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
-ULONG KiFastSystemCallDisable = 1;
+ULONG KiFastSystemCallDisable = 0;
 ULONG KeI386NpxPresent = 0;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
@@ -1064,21 +1064,21 @@ KiRestoreFastSyscallReturnState(VOID)
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Check if it has been disabled */
-        if (!KiFastSystemCallDisable)
+        if (KiFastSystemCallDisable)
+        {
+            /* Disable fast system call */
+            KeFeatureBits &= ~KF_FAST_SYSCALL;
+            KiFastCallExitHandler = KiSystemCallTrapReturn;
+            DPRINT1("Support for SYSENTER disabled.\n");
+        }
+        else
         {
             /* Do an IPI to enable it */
             KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
 
             /* It's enabled, so use the proper exit stub */
             KiFastCallExitHandler = KiSystemCallSysExitReturn;
-            DPRINT1("Support for SYSENTER detected.\n");
-        }
-        else
-        {
-            /* Disable fast system call */
-            KeFeatureBits &= ~KF_FAST_SYSCALL;
-            KiFastCallExitHandler = KiSystemCallTrapReturn;
-            DPRINT1("Support for SYSENTER disabled.\n");
+            DPRINT("Support for SYSENTER detected.\n");
         }
     }
     else
