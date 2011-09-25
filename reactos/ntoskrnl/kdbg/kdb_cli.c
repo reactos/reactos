@@ -3489,6 +3489,9 @@ KdpPrompt(IN LPSTR InString,
                         *(KdpPromptString.Buffer + i));
     }
 
+    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        KbdDisableMouse();
+
     /* Loop the whole string */
     for (i = 0; i < OutStringLength; i++)
     {
@@ -3555,6 +3558,9 @@ KdpPrompt(IN LPSTR InString,
         *(PCHAR)(OutString + i) = Response;
         KdPortPutByteEx(&SerialPortInfo, Response);
     }
+
+    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        KbdEnableMouse();
 
     /* Print a new line */
     KdPortPutByteEx(&SerialPortInfo, '\r');
