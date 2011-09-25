@@ -134,7 +134,7 @@ void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
         if(!got_error && !same)
             got_error = TRUE;
 
-        if(msg_chain->msg !=0 && msg_chain->iwnd != 0)
+        if(msg_chain->msg !=0 || msg_chain->iwnd != 0)
             msg_chain++;
         else
         {
