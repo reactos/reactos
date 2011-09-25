@@ -146,7 +146,7 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
         ImageEntry = ImageEntry->Flink;
     }
 
-    DPRINT1("Couldn't find a matching image\n");
+    DPRINT("Couldn't find a matching image\n");
 
     return NULL;
 
@@ -1368,7 +1368,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
     OVERLAPPED Overlapped = {0, 0, 0, 0, 0};
 #endif
 
-    DPRINT1("ScmWaitForServiceConnect()\n");
+    DPRINT("ScmWaitForServiceConnect()\n");
 
 #ifdef USE_ASYNCHRONOUS_IO
     Overlapped.hEvent = (HANDLE)NULL;
@@ -1377,19 +1377,21 @@ ScmWaitForServiceConnect(PSERVICE Service)
                                &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT1("ConnectNamedPipe() returned FALSE\n");
+        DPRINT("ConnectNamedPipe() returned FALSE\n");
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT1("dwError: ERROR_IO_PENDING\n");
+            DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
                                           dwPipeTimeout);
-            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+            DPRINT("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
+                DPRINT("WaitForSingleObject() returned WAIT_TIMEOUT\n");
+
                 bResult = CancelIo(Service->lpImage->hControlPipe);
                 if (bResult == FALSE)
                 {
@@ -1420,7 +1422,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
         }
     }
 
-    DPRINT1("Control pipe connected!\n");
+    DPRINT("Control pipe connected!\n");
 
     Overlapped.hEvent = (HANDLE) NULL;
 
@@ -1432,18 +1434,18 @@ ScmWaitForServiceConnect(PSERVICE Service)
                        &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT1("ReadFile() returned FALSE\n");
+        DPRINT("ReadFile() returned FALSE\n");
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT1("dwError: ERROR_IO_PENDING\n");
+            DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
                                           dwPipeTimeout);
             if (dwError == WAIT_TIMEOUT)
             {
-                DPRINT1("WaitForSingleObject() returned WAIT_TIMEOUT\n");
+                DPRINT("WaitForSingleObject() returned WAIT_TIMEOUT\n");
 
                 bResult = CancelIo(Service->lpImage->hControlPipe);
                 if (bResult == FALSE)
@@ -1455,9 +1457,9 @@ ScmWaitForServiceConnect(PSERVICE Service)
             }
             else if (dwError == ERROR_SUCCESS)
             {
-                DPRINT1("WaitForSingleObject() returned ERROR_SUCCESS\n");
+                DPRINT("WaitForSingleObject() returned ERROR_SUCCESS\n");
 
-                DPRINT1("Process Id: %lu\n", dwProcessId);
+                DPRINT("Process Id: %lu\n", dwProcessId);
 
                 bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
                                               &Overlapped,

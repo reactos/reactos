@@ -609,11 +609,7 @@ DWORD RControlService(
             if (dwControl >= 128 && dwControl <= 255)
                 DesiredAccess = SERVICE_USER_DEFINED_CONTROL;
             else
-                DesiredAccess = SERVICE_QUERY_CONFIG |
-                                SERVICE_CHANGE_CONFIG |
-                                SERVICE_QUERY_STATUS |
-                                SERVICE_START |
-                                SERVICE_PAUSE_CONTINUE;
+                return ERROR_INVALID_PARAMETER;
             break;
     }
 
@@ -862,7 +858,9 @@ DWORD RQueryServiceObjectSecurity(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock the service list */
+    /* Lock the service database */
+    ScmLockDatabaseShared();
+
 
     /* hack */
     Status = RtlCreateSecurityDescriptor(&ObjectDescriptor, SECURITY_DESCRIPTOR_REVISION);
@@ -873,7 +871,8 @@ DWORD RQueryServiceObjectSecurity(
                                     cbBufSize,
                                     &dwBytesNeeded);
 
-    /* FIXME: Unlock the service list */
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     if (NT_SUCCESS(Status))
     {
@@ -975,9 +974,12 @@ DWORD RSetServiceObjectSecurity(
         return RtlNtStatusToDosError(Status);
 
     RpcRevertToSelf();
+#endif
 
-    /* FIXME: Lock service database */
+    /* Lock the service database exclusive */
+    ScmLockDatabaseExclusive();
 
+#if 0
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                   &lpService->lpSecurityDescriptor,
@@ -1011,7 +1013,8 @@ Done:
         NtClose(hToken);
 #endif
 
-    /* FIXME: Unlock service database */
+    /* Unlock service database */
+    ScmUnlockDatabase();
 
     DPRINT("RSetServiceObjectSecurity() done (Error %lu)\n", dwError);
 
@@ -1053,7 +1056,7 @@ DWORD RQueryServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* Lock the srevice database shared */
+    /* Lock the service database shared */
     ScmLockDatabaseShared();
 
     /* Return service status information */
