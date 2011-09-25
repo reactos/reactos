@@ -63,6 +63,7 @@ target_link_libraries(explorer
     -lstdc++
     -lgcc
     -lmingwex
+    -lmingw32
     wine
     uuid)
 
