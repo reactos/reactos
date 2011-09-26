@@ -99,7 +99,7 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (Alignment)
     {
         /* Check if we had leftovers */
-        if ((MdBlock->PageCount - Alignment) != PageCount)
+        if (MdBlock->PageCount > (PageCount + Alignment))
         {
             /* Get the next descriptor */
             FreeBlock = &HalpAllocationDescriptorArray[UsedDescriptors];
@@ -113,8 +113,10 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             InsertHeadList(&MdBlock->ListEntry, &FreeBlock->ListEntry);
         }
         
-        /* Use this descriptor */
-        NewBlock->PageCount = Alignment;
+        /* Trim the original block to the alignment only */
+        MdBlock->PageCount = Alignment;
+
+        /* Insert the descriptor after the original one */
         InsertHeadList(&MdBlock->ListEntry, &NewBlock->ListEntry);
     }
     else
@@ -123,11 +125,11 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         MdBlock->BasePage += (ULONG)PageCount;
         MdBlock->PageCount -= (ULONG)PageCount;
         
-        /* Insert the descriptor */
+        /* Insert the descriptor before the original one */
         InsertTailList(&MdBlock->ListEntry, &NewBlock->ListEntry);
 
         /* Remove the entry if the whole block was allocated */
-        if (!MdBlock->PageCount == 0) RemoveEntryList(&MdBlock->ListEntry);
+        if (MdBlock->PageCount == 0) RemoveEntryList(&MdBlock->ListEntry);
     }
 
     /* Return the address */
