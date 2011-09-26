@@ -122,7 +122,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       if (!SystemPowerDeviceNodeCreated)
       {
          PopSystemPowerDeviceNode = DeviceNode;
-         ObReferenceObject(PopSystemPowerDeviceNode);
+         ObReferenceObject(PopSystemPowerDeviceNode->PhysicalDeviceObject);
          SystemPowerDeviceNodeCreated = TRUE;
       }
    }
@@ -1937,7 +1937,7 @@ IopEnumerateDevice(
             {
                 /* Ignore this DO */
                 DPRINT1("IopCreateDeviceNode() failed with status 0x%08x. Skipping PDO %u\n", Status, i);
-                ObDereferenceObject(ChildDeviceNode);
+                ObDereferenceObject(ChildDeviceObject);
             }
         }
         else
@@ -2764,7 +2764,8 @@ IopIsFirmwareMapperDisabled(VOID)
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE hPnpKey;
    PKEY_VALUE_PARTIAL_INFORMATION KeyInformation;
-   ULONG DesiredLength, Length, KeyValue;
+   ULONG DesiredLength, Length;
+   ULONG KeyValue = 0;
    NTSTATUS Status;
 
    InitializeObjectAttributes(&ObjectAttributes, &KeyPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -2797,7 +2798,6 @@ IopIsFirmwareMapperDisabled(VOID)
                else
                {
                    DPRINT1("ZwQueryValueKey(%wZ%wZ) failed\n", &KeyPathU, &KeyNameU);
-                   KeyValue = 0;
                }
 
                ExFreePool(KeyInformation);
@@ -2805,13 +2805,11 @@ IopIsFirmwareMapperDisabled(VOID)
            else
            {
                DPRINT1("Failed to allocate memory for registry query\n");
-               KeyValue = 0;
            }
        }
        else
        {
            DPRINT1("ZwQueryValueKey(%wZ%wZ) failed with status 0x%08lx\n", &KeyPathU, &KeyNameU, Status);
-           KeyValue = 0;
        }
 
        ZwClose(hPnpKey);
