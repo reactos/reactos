@@ -469,6 +469,18 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ASSERT(PoolDesc != NULL);
 
     //
+    // Check if this is a special pool allocation
+    //
+    if (MmUseSpecialPool(NumberOfBytes, Tag))
+    {
+        //
+        // Try to allocate using special pool
+        //
+        Entry = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
+        if (Entry) return Entry;
+    }
+
+    //
     // Check if this is a big page allocation
     //
     if (NumberOfBytes > POOL_MAX_ALLOC)
@@ -754,6 +766,18 @@ ExFreePoolWithTag(IN PVOID P,
     POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;
     BOOLEAN Combined = FALSE;
+
+    //
+    // Check if it was allocated from a special pool
+    //
+    if (MmIsSpecialPoolAddress(P))
+    {
+        //
+        // It is, so handle it via special pool free routine
+        //
+        MmFreeSpecialPool(P);
+        return;
+    }
 
     //
     // Quickly deal with big page allocations

@@ -16,6 +16,10 @@ PULONG MmGetPageDirectory(VOID);
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 
+/* MMPTE related defines */
+#define MM_EMPTY_PTE_LIST  ((ULONG)0xFFFFF)
+#define MM_EMPTY_LIST  ((ULONG_PTR)-1)
+
 /* Base addresses of PTE and PDE */
 #define PAGETABLE_MAP       (0xc0000000)
 #define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
@@ -26,6 +30,8 @@ PULONG MmGetPageDirectory(VOID);
 #define PDE_TOP     0xC0300FFF
 #define PTE_TOP     0xC03FFFFF
 #define HYPER_SPACE 0xC0400000
+
+#define PTE_PER_PAGE 0x400
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \

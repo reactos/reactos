@@ -887,6 +887,36 @@ MmPageFault(
     ULONG ErrorCode
 );
 
+/* special.c *****************************************************************/
+
+VOID
+NTAPI
+MiInitializeSpecialPool();
+
+BOOLEAN
+NTAPI
+MmUseSpecialPool(
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag);
+
+BOOLEAN
+NTAPI
+MmIsSpecialPoolAddress(
+    IN PVOID P);
+
+PVOID
+NTAPI
+MmAllocateSpecialPool(
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag,
+    IN POOL_TYPE PoolType,
+    IN ULONG SpecialType);
+
+VOID
+NTAPI
+MmFreeSpecialPool(
+    IN PVOID P);
+
 /* mm.c **********************************************************************/
 
 NTSTATUS

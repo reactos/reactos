@@ -75,6 +75,11 @@
 #define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
 #define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
+/* MMPTE related defines */
+#define MM_EMPTY_PTE_LIST  ((ULONG64)0xFFFFFFFF)
+#define MM_EMPTY_LIST  ((ULONG_PTR)-1)
+#define PTE_PER_PAGE 0x200
+
 #define ADDR_TO_PAGE_TABLE(v) ((ULONG)(((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
 #define ADDR_TO_PDE_OFFSET(v) ((ULONG)((((ULONG_PTR)(v)) / (512 * PAGE_SIZE))))
 #define ADDR_TO_PTE_OFFSET(v)  ((ULONG)((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE))

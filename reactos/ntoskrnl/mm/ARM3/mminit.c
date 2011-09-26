@@ -1792,6 +1792,9 @@ MiBuildPagedPool(VOID)
     //
     InitializePool(PagedPool, 0);
 
+    /* Initialize special pool */
+    MiInitializeSpecialPool();
+
     /* Default low threshold of 30MB or one fifth of paged pool */
     MiLowPagedPoolThreshold = (30 * _1MB) >> PAGE_SHIFT;
     MiLowPagedPoolThreshold = min(MiLowPagedPoolThreshold, Size / 5);
