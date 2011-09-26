@@ -170,6 +170,15 @@ static VOID FsRtlIsNameInExpressionTest()
     RtlInitUnicodeString(&Expression, L"*.bmp;*.dib");
     RtlInitUnicodeString(&Name, L"winhlp32.exe");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+
+    /* Backtracking tests */
+    RtlInitUnicodeString(&Expression, L"*.*.*.*");
+    RtlInitUnicodeString(&Name, L"127.0.0.1");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitUnicodeString(&Expression, L"*a*ab*abc");
+    RtlInitUnicodeString(&Name, L"aabaabcdadabdabc");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
 }
 
 static VOID FsRtlIsDbcsInExpressionTest()
@@ -329,6 +338,15 @@ static VOID FsRtlIsDbcsInExpressionTest()
     RtlInitAnsiString(&Expression, "*.bmp;*.dib");
     RtlInitAnsiString(&Name, "winhlp32.exe");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    /* Backtracking tetss */
+    RtlInitAnsiString(&Expression, "*.*.*.*");
+    RtlInitAnsiString(&Name, "127.0.0.1");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "*a*ab*abc");
+    RtlInitAnsiString(&Name, "aabaabcdadabdabc");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
 }
 
 START_TEST(FsRtlExpression)
