@@ -2358,7 +2358,13 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetCurrentViewMode(UINT *pViewMode)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p), stub\n", this, pViewMode);
+
+    if (!pViewMode)
+        return E_INVALIDARG;
+
+    *pViewMode = this->FolderSettings.ViewMode;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
@@ -2376,12 +2382,34 @@ HRESULT STDMETHODCALLTYPE CDefView::GetFolder(REFIID riid, void **ppv)
 
 HRESULT STDMETHODCALLTYPE CDefView::Item(int iItemIndex, LPITEMIDLIST *ppidl)
 {
-    return E_NOTIMPL;
+    LVITEMW item;
+
+    TRACE("(%p)->(%d %p)\n", this, iItemIndex, ppidl);
+
+    item.mask = LVIF_PARAM;
+    item.iItem = iItemIndex;
+
+    if (SendMessageW(this->hWndList, LVM_GETITEMW, 0, (LPARAM)&item))
+    {
+        *ppidl = ILClone((PITEMID_CHILD)item.lParam);
+        return S_OK;
+    }
+    
+    *ppidl = 0;
+
+    return E_INVALIDARG;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::ItemCount(UINT uFlags, int *pcItems)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)->(%u %p)\n", this, uFlags, pcItems);
+
+    if (uFlags != SVGIO_ALLVIEW)
+        FIXME("some flags unsupported, %x\n", uFlags & ~SVGIO_ALLVIEW);
+
+    *pcItems = SendMessageW(this->hWndList, LVM_GETITEMCOUNT, 0, 0);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::Items(UINT uFlags, REFIID riid, void **ppv)
@@ -2391,12 +2419,20 @@ HRESULT STDMETHODCALLTYPE CDefView::Items(UINT uFlags, REFIID riid, void **ppv)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetSelectionMarkedItem(int *piItem)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", this, piItem);
+
+    *piItem = SendMessageW(this->hWndList, LVM_GETSELECTIONMARK, 0, 0);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetFocusedItem(int *piItem)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", this, piItem);
+    
+    *piItem = SendMessageW(this->hWndList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetItemPosition(LPCITEMIDLIST pidl, POINT *ppt)
@@ -2408,11 +2444,11 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSpacing(POINT *ppt)
 {
     TRACE("(%p)->(%p)\n", this, ppt);
 
-    if (NULL == hWndList) return S_FALSE;
+    if (NULL == this->hWndList) return S_FALSE;
 
     if (ppt)
     {
-        const DWORD ret = SendMessageW(hWndList, LVM_GETITEMSPACING, 0, 0);
+        const DWORD ret = SendMessageW(this->hWndList, LVM_GETITEMSPACING, 0, 0);
 
         ppt->x = LOWORD(ret);
         ppt->y = HIWORD(ret);
@@ -2433,7 +2469,33 @@ HRESULT STDMETHODCALLTYPE CDefView::GetAutoArrange()
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 {
-    return E_NOTIMPL;
+    LVITEMW lvItem;
+
+    TRACE("(%p)->(%d, %x)\n", this, iItem, dwFlags);
+
+    lvItem.state = 0;
+    lvItem.stateMask = LVIS_SELECTED;
+
+    if (dwFlags & SVSI_ENSUREVISIBLE)
+        SendMessageW(this->hWndList, LVM_ENSUREVISIBLE, iItem, 0);
+
+    /* all items */
+    if (dwFlags & SVSI_DESELECTOTHERS)
+        SendMessageW(this->hWndList, LVM_SETITEMSTATE, -1, (LPARAM)&lvItem);
+
+    /* this item */
+    if (dwFlags & SVSI_SELECT)
+        lvItem.state |= LVIS_SELECTED;
+
+    if (dwFlags & SVSI_FOCUSED)
+        lvItem.stateMask |= LVIS_FOCUSED;
+
+    SendMessageW(this->hWndList, LVM_SETITEMSTATE, iItem, (LPARAM)&lvItem);
+
+    if (dwFlags & SVSI_EDIT)
+        SendMessageW(this->hWndList, LVM_EDITLABELW, iItem, 0);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, LPCITEMIDLIST *apidl, POINT *apt, DWORD dwFlags)
