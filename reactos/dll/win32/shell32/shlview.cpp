@@ -2406,7 +2406,19 @@ HRESULT STDMETHODCALLTYPE CDefView::GetItemPosition(LPCITEMIDLIST pidl, POINT *p
 
 HRESULT STDMETHODCALLTYPE CDefView::GetSpacing(POINT *ppt)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", this, ppt);
+
+    if (NULL == hWndList) return S_FALSE;
+
+    if (ppt)
+    {
+        const DWORD ret = SendMessageW(hWndList, LVM_GETITEMSPACING, 0, 0);
+
+        ppt->x = LOWORD(ret);
+        ppt->y = HIWORD(ret);
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetDefaultSpacing(POINT *ppt)
