@@ -53,54 +53,10 @@ WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 MEMORY_ALLOCATION_DESCRIPTOR *Mad;
 ULONG MadCount = 0;
+/* 200 MADs fit into 1 page, that should really be enough! */
+#define MAX_MAD_COUNT 200
 
 /* FUNCTIONS **************************************************************/
-
-VOID
-MempDisablePages()
-{
-	ULONG i;
-
-	//
-	// We need to delete kernel mapping from memory areas which are
-	// marked as Special or Permanent memory (thus non-accessible)
-	//
-
-	for (i=0; i<MadCount; i++)
-	{
-		ULONG StartPage, EndPage, Page;
-
-		StartPage = Mad[i].BasePage;
-		EndPage = Mad[i].BasePage + Mad[i].PageCount;
-
-		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
-			Mad[i].MemoryType == LoaderSpecialMemory ||
-			Mad[i].MemoryType == LoaderFree ||
-			(Mad[i].MemoryType == LoaderFirmwareTemporary && EndPage <= LoaderPagesSpanned) ||
-			Mad[i].MemoryType == LoaderOsloaderStack ||
-			Mad[i].MemoryType == LoaderLoadedProgram)
-		{
-			//
-			// But, the first megabyte of memory always stays!
-			// And, to tell the truth, we don't care about what's higher
-			// than LoaderPagesSpanned
-			if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
-				Mad[i].MemoryType == LoaderSpecialMemory)
-			{
-				if (StartPage < 0x100)
-					StartPage = 0x100;
-
-				if (EndPage > LoaderPagesSpanned)
-					EndPage = LoaderPagesSpanned;
-			}
-
-			for (Page = StartPage; Page < EndPage; Page++)
-			{
-				MempUnmapPage(Page);
-			}
-		}
-	}
-}
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -108,8 +64,10 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG PageCount,
                    ULONG Type)
 {
-	BOOLEAN Status;
+	BOOLEAN Status = TRUE;
 
+    TRACE("MempAddMemoryBlock(BasePage=0x%lx, PageCount=0x%lx, Type=%ld)\n",
+          BasePage, PageCount, Type);
 	//
 	// Check for memory block after 4GB - we don't support it yet
 	// Note: Even last page before 4GB limit is not supported
@@ -133,6 +91,16 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         PageCount = MM_MAX_PAGE - BasePage;
     }
 
+	/* Check if we have slots left */
+	if (MadCount >= MAX_MAD_COUNT)
+	{
+		ERR("Error: no MAD slots left!\n");
+		return;
+	}
+
+    /* Get rid of the loader heap */
+    //if (Type == LoaderOsloaderHeap) Type = LoaderFirmwareTemporary;
+
 	//
 	// Set Base page, page count and type
 	//
@@ -140,26 +108,6 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Mad[MadCount].PageCount = PageCount;
 	Mad[MadCount].MemoryType = Type;
 
-	//
-	// Check if it's more than the allowed for OS loader
-	// if yes - don't map the pages, just add as FirmwareTemporary
-	//
-	if (BasePage + PageCount > LoaderPagesSpanned)
-	{
-		if (Mad[MadCount].MemoryType != LoaderSpecialMemory &&
-			Mad[MadCount].MemoryType != LoaderFirmwarePermanent &&
-			Mad[MadCount].MemoryType != LoaderFree)
-		{
-			TRACE("Setting page %x %x to Temporary from %d\n",
-				BasePage, PageCount, Mad[MadCount].MemoryType);
-			Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
-		}
-
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		return;
-	}
 
 	//
 	// Add descriptor
@@ -167,19 +115,61 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 	MadCount++;
 
-	//
-	// Map it (don't map low 1Mb because it was already contiguously
-	// mapped in WinLdrPrepareMemoryLayout)
-	//
-	if (BasePage >= 0x100)
-	{
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			ERR("Error during MempSetupPaging\n");
-			return;
-		}
-	}
+    switch (Type)
+    {
+        /* Pages used by the loader */
+        case LoaderLoadedProgram:
+        case LoaderOsloaderStack:
+        case LoaderFirmwareTemporary:
+        case LoaderFirmwarePermanent:
+            /* Map these pages into user mode */
+            Status = MempSetupPaging(BasePage, PageCount, FALSE);
+            break;
+
+        /* Pages used by the kernel */
+        case LoaderExceptionBlock:
+        case LoaderSystemBlock:
+        case LoaderSystemCode:
+        case LoaderHalCode:
+        case LoaderBootDriver:
+        case LoaderConsoleInDriver:
+        case LoaderConsoleOutDriver:
+        case LoaderStartupDpcStack:
+        case LoaderStartupKernelStack:
+        case LoaderStartupPanicStack:
+        case LoaderStartupPcrPage:
+        case LoaderStartupPdrPage:
+        case LoaderRegistryData:
+        case LoaderMemoryData:
+        case LoaderNlsData:
+        case LoaderOsloaderHeap: // FIXME
+            /* Map these pages into kernel mode */
+            Status = MempSetupPaging(BasePage, PageCount, TRUE);
+            break;
+
+        /* Pages not in use */
+        case LoaderFree:
+        case LoaderBad:
+            break;
+
+        /* Invisible to kernel */
+        case LoaderSpecialMemory:
+        case LoaderHALCachedMemory:
+        case LoaderBBTMemory:
+            break;
+
+        // FIXME: not known (not used anyway)
+        case LoaderReserve:
+        case LoaderXIPRom:
+        case LoaderLargePageFiller:
+        case LoaderErrorLogMemory:
+            break;
+    }
+
+    if (!Status)
+    {
+        ERR("Error during MempSetupPaging\n");
+    }
 }
 
 #ifdef _M_ARM
@@ -219,7 +209,8 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	//
 
 	// Allocate memory for memory allocation descriptors
-	Mad = MmHeapAlloc(sizeof(MEMORY_ALLOCATION_DESCRIPTOR) * 1024);
+	Mad = MmAllocateMemoryWithType(sizeof(MEMORY_ALLOCATION_DESCRIPTOR) * MAX_MAD_COUNT,
+                                   LoaderMemoryData);
 
 	// Setup an entry for each descriptor
 	MemoryMap = MmGetMemoryMap(&NoEntries);
@@ -236,7 +227,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	TRACE("Got memory map with %d entries\n", NoEntries);
 
 	// Always contiguously map low 1Mb of memory
-	Status = MempSetupPaging(0, 0x100);
+	Status = MempSetupPaging(0, 0x100, FALSE);
 	if (!Status)
 	{
 		ERR("Error during MempSetupPaging of low 1Mb\n");
@@ -313,9 +304,6 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 		UiMessageBox("Error during MempSetupPaging");
 		return;
 	}*/
-
-	// Unmap what is not needed from kernel page table
-	MempDisablePages();
 
 	// Fill the memory descriptor list and
 	//PrepareMemoryDescriptorList();

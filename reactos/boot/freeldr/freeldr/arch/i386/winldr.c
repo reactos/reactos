@@ -144,13 +144,15 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 
 BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
-		IN ULONG NumberOfPages)
+		IN ULONG NumberOfPages,
+		IN BOOLEAN KernelMapping)
 {
 	PHARDWARE_PTE PhysicalPT;
 	PHARDWARE_PTE KernelPT;
 	ULONG Entry, Page;
 
-	//Print(L"MempSetupPaging: SP 0x%X, Number: 0x%X\n", StartPage, NumberOfPages);
+	TRACE("MempSetupPaging: SP 0x%X, Number: 0x%X, Kernel: %s\n",
+       StartPage, NumberOfPages, KernelMapping ? "yes" : "no");
 
 	// HACK
 	if (StartPage+NumberOfPages >= 0x80000)
@@ -184,9 +186,13 @@ MempSetupPaging(IN ULONG StartPage,
 		PhysicalPT[Page & 0x3ff].Valid = (Page != 0);
 		PhysicalPT[Page & 0x3ff].Write = (Page != 0);
 
-		KernelPT[Page & 0x3ff].PageFrameNumber = Page;
-		KernelPT[Page & 0x3ff].Valid = (Page != 0);
-		KernelPT[Page & 0x3ff].Write = (Page != 0);
+        if (KernelMapping)
+        {
+             if (KernelPT[Page & 0x3ff].Valid) WARN("xxx already mapped \n");
+            KernelPT[Page & 0x3ff].PageFrameNumber = Page;
+            KernelPT[Page & 0x3ff].Valid = (Page != 0);
+            KernelPT[Page & 0x3ff].Write = (Page != 0);
+        }
 	}
 
 	return TRUE;

@@ -166,7 +166,8 @@ MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, ULONG cPage
 
 BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages)
+				IN ULONG NumberOfPages,
+				IN BOOLEAN KernelMapping)
 {
     TRACE(">>> MempSetupPaging(0x%lx, %ld, %p)\n",
             StartPage, NumberOfPages, StartPage * PAGE_SIZE + KSEG0_BASE);
@@ -382,9 +383,6 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 		return;
 	}
 	RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
-
-	/* Allocate a kernel stack */
-	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
 
 	/* Allocate TSS */
 	BlockSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);

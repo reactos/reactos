@@ -36,15 +36,6 @@ WinLdrSetProcessorContext(void);
 // TODO: Move to .h
 VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
 
-//FIXME: Do a better way to retrieve Arc disk information
-extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
-extern char reactos_arc_strings[32][256];
-
-extern BOOLEAN UseRealHeap;
-extern ULONG LoaderPagesSpanned;
-
-
 VOID
 SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
 {
@@ -226,8 +217,7 @@ VOID LoadReactOSSetup(VOID)
     AllocateAndInitLPB(&LoaderBlock);
 
     /* Allocate and initialize setup loader block */
-    SetupBlock = MmHeapAlloc(sizeof(SETUP_LOADER_BLOCK));
-    RtlZeroMemory(SetupBlock, sizeof(SETUP_LOADER_BLOCK));
+    SetupBlock = &WinLdrSystemBlock->SetupBlock;
     LoaderBlock->SetupLdrBlock = SetupBlock;
 
     /* Set textmode setup flag */

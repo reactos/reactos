@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <arc/setupblk.h>
+
 /* Entry-point to kernel */
 typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
 
@@ -53,6 +55,34 @@ typedef struct  /* Root System Descriptor Pointer */
 	CHAR             reserved [3];           /* reserved field must be 0 */
 } RSDP_DESCRIPTOR, *PRSDP_DESCRIPTOR;
 #include <poppack.h>
+
+typedef struct _ARC_DISK_SIGNATURE_EX
+{
+    ARC_DISK_SIGNATURE DiskSignature;
+    CHAR ArcName[MAX_PATH];
+} ARC_DISK_SIGNATURE_EX, *PARC_DISK_SIGNATURE_EX;
+
+#define MAX_OPTIONS_LENGTH 255
+
+typedef struct _LOADER_SYSTEM_BLOCK
+{
+    LOADER_PARAMETER_BLOCK LoaderBlock;
+    LOADER_PARAMETER_EXTENSION Extension;
+    SETUP_LOADER_BLOCK SetupBlock;
+#ifdef _M_IX86
+    HEADLESS_LOADER_BLOCK HeadlessLoaderBlock;
+#endif
+    NLS_DATA_BLOCK NlsDataBlock;
+    CHAR LoadOptions[MAX_OPTIONS_LENGTH+1];
+    CHAR ArcBootDeviceName[MAX_PATH+1];
+    // CHAR ArcHalDeviceName[MAX_PATH];
+    CHAR NtBootPathName[MAX_PATH+1];
+    CHAR NtHalPathName[MAX_PATH+1];
+    ARC_DISK_INFORMATION ArcDiskInformation;
+    ARC_DISK_SIGNATURE_EX ArcDiskSignature[];
+} LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
+
+extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -144,7 +174,8 @@ MempAllocatePageTables();
 
 BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages);
+				IN ULONG NumberOfPages,
+				IN BOOLEAN KernelMapping);
 
 VOID
 MempUnmapPage(ULONG Page);

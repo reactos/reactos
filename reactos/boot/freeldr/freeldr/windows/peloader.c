@@ -76,7 +76,7 @@ WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		/* Compare names */
 		if (WinLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
 		{
-			/* Yes, found it, report pointer to the loaded module's DTE 
+			/* Yes, found it, report pointer to the loaded module's DTE
 			   to the caller and increase load count for it */
 			*LoadedEntry = DataTableEntry;
 			DataTableEntry->LoadCount++;
@@ -266,6 +266,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	LONG Status;
 	LARGE_INTEGER Position;
 	ULONG i, BytesRead;
+	TRACE("WinLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
 
 	/* Open the image file */
 	Status = ArcOpen(FileName, OpenReadOnly, &FileId);
@@ -424,7 +425,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	/* Relocate the image, if it needs it */
 	if (NtHeaders->OptionalHeader.ImageBase != (ULONG_PTR)VirtualBase)
 	{
-		WARN("Relocating %p -> %p\n", NtHeaders->OptionalHeader.ImageBase, 
+		WARN("Relocating %p -> %p\n", NtHeaders->OptionalHeader.ImageBase,
              VirtualBase);
 		return (BOOLEAN)LdrRelocateImageWithBias(PhysicalBase,
 			(ULONG_PTR)VirtualBase - (ULONG_PTR)PhysicalBase,
@@ -434,6 +435,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 			FALSE);
 	}
 
+	TRACE("WinLdrLoadImage() done, PA = %p\n", *ImageBasePA);
 	return TRUE;
 }
 
@@ -447,7 +449,7 @@ WinLdrpCompareDllName(IN PCH DllName,
 	PWSTR Buffer;
 	UNICODE_STRING UnicodeNamePA;
 	ULONG i, Length;
-	
+
 	/* First obvious check: for length of two names */
 	Length = strlen(DllName);
 
@@ -615,7 +617,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 			/* Everything allright, get the ordinal */
 			Ordinal = OrdinalTable[Middle];
-			
+
 			//TRACE("WinLdrpBindImportName() found Ordinal %d\n", Ordinal);
 		}
 	}
@@ -733,7 +735,7 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	//Print(L"Loading referenced DLL: %s\n", FullDllName);
 
 	/* Load the image */
-	Status = WinLdrLoadImage(FullDllName, LoaderHalCode, &BasePA);
+	Status = WinLdrLoadImage(FullDllName, LoaderSystemCode, &BasePA);
 
 	if (!Status)
 	{
