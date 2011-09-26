@@ -214,6 +214,7 @@ list(APPEND SOURCE
     mm/ARM3/pool.c
     mm/ARM3/procsup.c
     mm/ARM3/section.c
+    mm/ARM3/special.c
     mm/ARM3/sysldr.c
     mm/ARM3/syspte.c
     mm/ARM3/vadnode.c
