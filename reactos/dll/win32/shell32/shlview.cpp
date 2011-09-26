@@ -2327,7 +2327,7 @@ HRESULT WINAPI CDefView::SelectItem(LPCITEMIDLIST pidl, UINT uFlags)
 
 HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
 {
-    HRESULT hr = E_FAIL;
+    HRESULT hr = E_NOINTERFACE;
 
     TRACE("(%p)->(uItem=0x%08x,\n\tIID=%s, ppv=%p)\n",this, uItem, debugstr_guid(&riid), ppvOut);
 
@@ -2342,6 +2342,8 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
                 CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)ppvOut);
                 if (!ppvOut)
                     hr = E_OUTOFMEMORY;
+                else
+                    hr = S_OK;
             }
             break;
 
@@ -2369,7 +2371,37 @@ HRESULT STDMETHODCALLTYPE CDefView::GetCurrentViewMode(UINT *pViewMode)
 
 HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
 {
-    return E_NOTIMPL;
+    DWORD dwStyle;
+    TRACE("(%p)->(%u), stub\n", this, ViewMode);
+
+    if ((ViewMode < FVM_FIRST || ViewMode > FVM_LAST) /* && (ViewMode != FVM_AUTO) */ )
+        return E_INVALIDARG;
+
+    /* Windows before Vista uses LVM_SETVIEW and possibly
+       LVM_SETEXTENDEDLISTVIEWSTYLE to set the style of the listview,
+       while later versions seem to accomplish this through other
+       means. */
+    switch (ViewMode)
+    {
+        case FVM_ICON:        dwStyle = LVS_ICON;             break;
+        case FVM_DETAILS:     dwStyle = LVS_REPORT;           break;
+        case FVM_SMALLICON:   dwStyle = LVS_SMALLICON;        break;
+        case FVM_LIST:        dwStyle = LVS_LIST;             break;
+        default:
+        {
+            FIXME("ViewMode %d not implemented\n", ViewMode);
+            dwStyle = LVS_LIST;
+            break;
+        }
+    }
+
+    SetStyle(dwStyle, LVS_TYPEMASK);
+
+    /* This will not necessarily be the actual mode set above.
+       This mimics the behavior of Windows XP. */
+    this->FolderSettings.ViewMode = ViewMode;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetFolder(REFIID riid, void **ppv)
@@ -2512,7 +2544,7 @@ HRESULT WINAPI CDefView::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLE
               this, pguidCmdGroup, debugstr_guid(pguidCmdGroup), cCmds, prgCmds, pCmdText);
 
     if (!prgCmds)
-        return E_POINTER;
+        return E_INVALIDARG;
 
     for (UINT i=0; i < cCmds; i++)
     {
@@ -2532,6 +2564,9 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
 {
     FIXME("(%p)->(\n\tTarget GUID:%s Command:0x%08x Opt:0x%08x %p %p)\n",
               this, debugstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+    if (!pguidCmdGroup)
+        return OLECMDERR_E_UNKNOWNGROUP;
 
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer) &&
        (nCmdID == 0x29) &&
