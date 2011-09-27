@@ -92,7 +92,7 @@ EXTERN(_Int386)
 	/* Copy the input regs to our variables */
 	movl	$Int386_REGS,%edi
 	movl	Int386_regsin,%esi
-	movl	$0x24,%ecx
+	movl	$0x28,%ecx
 	cld
 	rep
 	movsb
@@ -170,7 +170,7 @@ Int386_vector_opcode:
 	/* Copy the variables to the output regs */
 	movl	$Int386_REGS,%esi
 	movl	Int386_regsout,%edi
-	movl	$0x24,%ecx
+	movl	$0x28,%ecx
 	cld
 	rep
 	movsb
