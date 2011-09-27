@@ -1,4 +1,9 @@
 
+# Show a note about ccache build
+if(CCACHE STREQUAL "ccache")
+    message("-- Enabling ccache build - done")
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions")
 
@@ -94,6 +99,8 @@ set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FL
 set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
+SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 #set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
@@ -292,10 +299,10 @@ if(PCH)
 
         if(IS_CPP)
             set(__lang CXX)
-            set(__compiler ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1})
+            set(__compiler ${CCACHE} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1})
         else()
             set(__lang C)
-            set(__compiler ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1})
+            set(__compiler ${CCACHE} ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1})
         endif()
 
         add_custom_command(OUTPUT ${_gch_filename}
