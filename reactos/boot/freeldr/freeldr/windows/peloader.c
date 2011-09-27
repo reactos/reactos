@@ -735,7 +735,7 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	//Print(L"Loading referenced DLL: %s\n", FullDllName);
 
 	/* Load the image */
-	Status = WinLdrLoadImage(FullDllName, LoaderSystemCode, &BasePA);
+	Status = WinLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
 
 	if (!Status)
 	{

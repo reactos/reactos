@@ -48,6 +48,10 @@ static VOID
 WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                        IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor);
 
+extern PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
+extern ULONG BiosMemoryMapEntryCount;
+extern ULONG MmLowestPhysicalPage;
+extern ULONG MmHighestPhysicalPage;
 
 /* GLOBALS ***************************************************************/
 
@@ -108,12 +112,25 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Mad[MadCount].PageCount = PageCount;
 	Mad[MadCount].MemoryType = Type;
 
-
 	//
 	// Add descriptor
 	//
 	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 	MadCount++;
+
+    /* Make sure we don't map too high */
+    if (BasePage + PageCount > LoaderPagesSpanned) return;
+
+    /* Special handling for page 0 */
+    if (BasePage == 0)
+    {
+        /* If its only one page, ignore it! */
+        if (PageCount == 1) return;
+
+        /* Otherwise, skip first page */
+        BasePage++;
+        PageCount--;
+    }
 
     switch (Type)
     {
@@ -121,7 +138,6 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         case LoaderLoadedProgram:
         case LoaderOsloaderStack:
         case LoaderFirmwareTemporary:
-        case LoaderFirmwarePermanent:
             /* Map these pages into user mode */
             Status = MempSetupPaging(BasePage, PageCount, FALSE);
             break;
@@ -129,6 +145,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* Pages used by the kernel */
         case LoaderExceptionBlock:
         case LoaderSystemBlock:
+        case LoaderFirmwarePermanent:
         case LoaderSystemCode:
         case LoaderHalCode:
         case LoaderBootDriver:
@@ -142,6 +159,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         case LoaderRegistryData:
         case LoaderMemoryData:
         case LoaderNlsData:
+        case LoaderXIPRom:
         case LoaderOsloaderHeap: // FIXME
             /* Map these pages into kernel mode */
             Status = MempSetupPaging(BasePage, PageCount, TRUE);
@@ -160,7 +178,6 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         // FIXME: not known (not used anyway)
         case LoaderReserve:
-        case LoaderXIPRom:
         case LoaderLargePageFiller:
         case LoaderErrorLogMemory:
             break;
@@ -292,6 +309,20 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 		MadCount++;
 	}
 #endif
+
+    /* Now we need to add high descriptors from the bios memory map */
+    for (i = 0; i < BiosMemoryMapEntryCount; i++)
+    {
+        /* Check if its higher than the lookup table */
+        if (BiosMemoryMap->BasePage > MmHighestPhysicalPage)
+        {
+            /* Copy this descriptor */
+            MempAddMemoryBlock(LoaderBlock,
+                               BiosMemoryMap->BasePage,
+                               BiosMemoryMap->PageCount,
+                               BiosMemoryMap->MemoryType);
+        }
+    }
 
 	TRACE("MadCount: %d\n", MadCount);
 

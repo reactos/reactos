@@ -39,7 +39,7 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 #define FILEBUF_PAGE_COUNT (DISKBUF_BASE_PAGE - FILEBUF_BASE_PAGE)
 #define DISKBUF_PAGE_COUNT (1)
 #define STACK_PAGE_COUNT   (STACK_END_PAGE - STACK_BASE_PAGE)
-#define BIOSBUF_PAGE_COUNT (0xA0 - BIOSBUF_BASE_PAGE)
+#define BIOSBUF_PAGE_COUNT (1)
 
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
@@ -53,7 +53,8 @@ FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
  { LoaderFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
  { LoaderOsloaderStack,     STACK_BASE_PAGE,    STACK_PAGE_COUNT }, // prot mode stack.
  { LoaderFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
- { LoaderFirmwarePermanent, 0xA0,               0x60 }, // ROM / Video
+ { LoaderFirmwarePermanent, 0xA0,               0x50 }, // ROM / Video
+ { LoaderSpecialMemory,     0xF0,               0x10 }, // ROM / Video
  { LoaderSpecialMemory,     0xFFF,              1 }, // unusable memory
  { 0, 0, 0 }, // end of map
 };
@@ -194,6 +195,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
   REGS Regs;
   ULONG MapCount = 0;
   ULONGLONG RealBaseAddress, RealSize;
+  TYPE_OF_MEMORY MemoryType;
   ASSERT(PcBiosMapCount == 0);
 
   TRACE("GetBiosMemoryMap()\n");
@@ -252,21 +254,40 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
       TRACE("Reserved: 0x%x\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
       TRACE("\n");
 
-      /* Align up base of memory area */
-      RealBaseAddress = ROUND_UP(PcBiosMemoryMap[PcBiosMapCount].BaseAddress, MM_PAGE_SIZE);
-      RealSize = PcBiosMemoryMap[PcBiosMapCount].Length -
-                 (RealBaseAddress - PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
+      /* Check if this is free memory */
+      if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryUsable)
+      {
+          MemoryType = LoaderFree;
+
+          /* Align up base of memory area */
+          RealBaseAddress = ALIGN_UP_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                                        MM_PAGE_SIZE);
+
+          /* Calculate the length after aligning the base */
+          RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
+                     PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
+          RealSize = ALIGN_DOWN_BY(RealSize, MM_PAGE_SIZE);
+      }
+      else
+      {
+          if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryReserved)
+             MemoryType = LoaderFirmwarePermanent;
+          else
+             MemoryType = LoaderSpecialMemory;
+
+          /* Align down base of memory area */
+          RealBaseAddress = ALIGN_DOWN_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                                          MM_PAGE_SIZE);
+
+          /* Calculate the length after aligning the base */
+          RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
+                     PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
+          RealSize = ALIGN_UP_BY(RealSize, MM_PAGE_SIZE);
+      }
 
       /* Check if we can add this descriptor */
       if ((RealSize >= MM_PAGE_SIZE) && (MapCount < MaxMemoryMapSize))
       {
-        TYPE_OF_MEMORY MemoryType;
-
-        if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryUsable)
-          MemoryType = LoaderFree;
-        else
-          MemoryType = LoaderFirmwarePermanent;
-
         /* Add the descriptor */
         MapCount = AddMemoryDescriptor(PcMemoryMap,
                                        MAX_BIOS_DESCRIPTORS,
