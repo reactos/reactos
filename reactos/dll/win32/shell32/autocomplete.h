@@ -29,6 +29,7 @@ class CAutoComplete :
 {
 private:
 	BOOL					enabled;
+	BOOL					initialized;
 	HWND					hwndEdit;
 	HWND					hwndListBox;
 	WNDPROC					wpOrigEditProc;

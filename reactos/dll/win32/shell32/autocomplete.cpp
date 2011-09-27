@@ -45,6 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 CAutoComplete::CAutoComplete()
 {
     enabled = TRUE;
+    initialized = FALSE;
     options = ACO_AUTOAPPEND;
     wpOrigEditProc = NULL;
     hwndListBox = NULL;
@@ -105,7 +106,15 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
     if (options & ACO_RTLREADING)
         FIXME(" ACO_RTLREADING not supported\n");
 
-    hwndEdit = hwndEdit;
+    if (!hwndEdit || !punkACL)
+        return E_INVALIDARG;
+
+    if (this->initialized)
+    {
+        WARN("Autocompletion object is already initialized\n");
+        /* This->hwndEdit is set to NULL when the edit window is destroyed. */
+        return this->hwndEdit ? E_FAIL : E_UNEXPECTED;
+    }
 
     if (!SUCCEEDED (punkACL->QueryInterface(IID_IEnumString, (LPVOID *)&enumstr)))
     {
@@ -113,6 +122,8 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
         return  E_NOINTERFACE;
     }
 
+    this->hwndEdit = hwndEdit;
+    this->initialized = TRUE;
     wpOrigEditProc = (WNDPROC)SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR) ACEditSubclassProc);
     SetWindowLongPtrW(hwndEdit, GWLP_USERDATA, (LONG_PTR)this);
 
