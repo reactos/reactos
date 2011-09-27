@@ -55,8 +55,8 @@ static void test_query_recyclebin(void)
     HRESULT hr;
     HANDLE file;
     SHFILEOPSTRUCTA shfo;
-    const CHAR *name="test.txt";
-    CHAR buf[MAX_PATH+strlen(name)+2];
+    const CHAR name[] = "test.txt";
+    CHAR buf[MAX_PATH + sizeof(name) + 1];
     if(!pSHQueryRecycleBinA)
     {
         skip("SHQueryRecycleBinA does not exist\n");
