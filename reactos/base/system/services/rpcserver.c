@@ -77,6 +77,7 @@ typedef struct _SERVICE_HANDLE
    SERVICE_STOP | \
    SERVICE_START)
 
+#define TAG_ARRAY_SIZE 32
 
 /* VARIABLES ***************************************************************/
 
@@ -263,10 +264,124 @@ ScmCheckAccess(SC_HANDLE Handle,
 DWORD
 ScmAssignNewTag(PSERVICE lpService)
 {
-    /* FIXME */
-    DPRINT("Assigning new tag to service %S\n", lpService->lpServiceName);
-    lpService->dwTag = 0;
-    return ERROR_SUCCESS;
+    HKEY hKey = NULL;
+    DWORD dwError;
+    DWORD dwGroupTagCount = 0;
+    PDWORD pdwGroupTags = NULL;
+    DWORD dwFreeTag = 0;
+    DWORD dwTagUsedBase = 1;
+    BOOLEAN TagUsed[TAG_ARRAY_SIZE];
+    DWORD dwTagOffset;
+    DWORD i;
+    DWORD cbDataSize;
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Control\\GroupOrderList",
+                            0,
+                            KEY_READ,
+                            &hKey);
+
+    if (dwError != ERROR_SUCCESS)
+        goto findFreeTag;
+
+    /* query value length */
+    cbDataSize = 0;
+    dwError = RegQueryValueExW(hKey,
+                               lpService->lpGroup->szGroupName,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &cbDataSize);
+
+    if (dwError != ERROR_MORE_DATA)
+        goto findFreeTag;
+
+    pdwGroupTags = HeapAlloc(GetProcessHeap(), 0, cbDataSize);
+    if (!pdwGroupTags)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto cleanup;
+    }
+
+    dwError = RegQueryValueExW(hKey,
+                               lpService->lpGroup->szGroupName,
+                               NULL,
+                               NULL,
+                               (LPBYTE)pdwGroupTags,
+                               &cbDataSize);
+
+    if (dwError != ERROR_SUCCESS)
+        goto findFreeTag;
+
+    dwGroupTagCount = min(pdwGroupTags[0], cbDataSize / sizeof(pdwGroupTags[0]));
+
+findFreeTag:
+    do
+    {
+        /* mark all tags as unused */
+        for (i = 0; i < TAG_ARRAY_SIZE; i++)
+            TagUsed[i] = FALSE;
+
+        /* mark tags in GroupOrderList as used */
+        for (i = 1; i <= dwGroupTagCount; i++)
+        {
+            dwTagOffset = pdwGroupTags[i] - dwTagUsedBase;
+            if (dwTagOffset >= 0 && dwTagOffset < TAG_ARRAY_SIZE)
+                TagUsed[dwTagOffset] = TRUE;
+        }
+
+        /* mark tags in service list as used */
+        ServiceEntry = lpService->ServiceListEntry.Flink;
+        while (ServiceEntry != &lpService->ServiceListEntry)
+        {
+            CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+            if (CurrentService->lpGroup == lpService->lpGroup)
+            {
+                dwTagOffset = CurrentService->dwTag - dwTagUsedBase;
+                if (dwTagOffset >= 0 && dwTagOffset < TAG_ARRAY_SIZE)
+                    TagUsed[dwTagOffset] = TRUE;
+            }
+
+            ServiceEntry = ServiceEntry->Flink;
+        }
+
+        /* find unused tag, if any */
+        for (i = 0; i < TAG_ARRAY_SIZE; i++)
+        {
+            if (!TagUsed[i])
+            {
+                dwFreeTag = dwTagUsedBase + i;
+                break;
+            }
+        }
+
+        dwTagUsedBase += TAG_ARRAY_SIZE;
+    }
+    while (!dwFreeTag);
+
+cleanup:
+    if (pdwGroupTags)
+        HeapFree(GetProcessHeap(), 0, pdwGroupTags);
+
+    if (hKey)
+        RegCloseKey(hKey);
+
+    if (dwFreeTag)
+    {
+        lpService->dwTag = dwFreeTag;
+        DPRINT("Assigning new tag %lu to service %S in group %S\n",
+               lpService->dwTag, lpService->lpServiceName, lpService->lpGroup->szGroupName);
+        dwError = ERROR_SUCCESS;
+    }
+    else
+    {
+        DPRINT1("Failed to assign new tag to service %S, error=%lu\n",
+                lpService->lpServiceName, dwError);
+    }
+
+    return dwError;
 }
 
 
