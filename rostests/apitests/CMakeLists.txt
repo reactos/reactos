@@ -1,6 +1,7 @@
 
 add_library(apitest apitest.c)
 
+add_subdirectory(advapi32)
 add_subdirectory(dciman32)
 add_subdirectory(gdi32)
 add_subdirectory(ntdll)

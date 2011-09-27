@@ -6,6 +6,10 @@
 		<file>apitest.c</file>
 	</module>
 
+	<directory name="advapi32">
+		<xi:include href="advapi32/advapi32_apitest.rbuild" />
+	</directory>
+
 	<directory name="dciman32">
 		<xi:include href="dciman32/dciman32_apitest.rbuild" />
 	</directory>
