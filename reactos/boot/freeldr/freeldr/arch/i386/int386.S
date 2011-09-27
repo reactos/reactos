@@ -45,6 +45,8 @@ Int386_esi:
 	.long 0
 Int386_edi:
 	.long 0
+Int386_ebp:
+	.long 0
 
 Int386_ds:
 	.word 0

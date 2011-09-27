@@ -1,4 +1,5 @@
 
+#include "../../include/arch/pc/pcbios.h"
 
 Int386:
 	/* Save all registers + segment registers */

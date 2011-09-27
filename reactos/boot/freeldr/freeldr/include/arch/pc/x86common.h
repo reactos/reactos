@@ -23,25 +23,10 @@
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */
 
-/* Layout of the REGS structure */
-#define REGS_EAX 0
-#define REGS_EBX 4
-#define REGS_ECX 8
-#define REGS_EDX 12
-#define REGS_ESI 16
-#define REGS_EDI 20
-#define REGS_DS 24
-#define REGS_ES 26
-#define REGS_FS 28
-#define REGS_GS 30
-#define REGS_EFLAGS 32
-#define REGS_SIZE 36
-
 /* These addresses specify the realmode "BSS section" layout */
 #define BSS_RealModeEntry        (BSS_START +  0)
-#define BSS_CallbackAddress      (BSS_START +  4)
-#define BSS_CallbackReturn       (BSS_START +  8)
-#define BSS_RegisterSet          (BSS_START + 16) /* size = 36 */
+#define BSS_CallbackReturn       (BSS_START +  4)
+#define BSS_RegisterSet          (BSS_START +  8) /* size = 40 */
 #define BSS_IntVector            (BSS_START + 52)
 #define BSS_PxeEntryPoint        (BSS_START + 56)
 #define BSS_PxeBufferSegment     (BSS_START + 60)

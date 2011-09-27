@@ -10,6 +10,7 @@ typedef struct
 
 	unsigned long	esi;
 	unsigned long	edi;
+	unsigned long	ebp;
 
 	unsigned short	ds;
 	unsigned short	es;
@@ -29,6 +30,7 @@ typedef struct
 
 	unsigned short	si, _upper_si;
 	unsigned short	di, _upper_di;
+	unsigned short	bp, _upper_bp;
 
 	unsigned short	ds;
 	unsigned short	es;
@@ -56,6 +58,7 @@ typedef struct
 
 	unsigned short	si, _upper_si;
 	unsigned short	di, _upper_di;
+	unsigned short	bp, _upper_bp;
 
 	unsigned short	ds;
 	unsigned short	es;
@@ -96,3 +99,19 @@ VOID	SoftReboot(VOID);					// Implemented in boot.S
 VOID	DetectHardware(VOID);		// Implemented in hardware.c
 
 #endif /* ! __ASM__ */
+
+/* Layout of the REGS structure */
+#define REGS_EAX 0
+#define REGS_EBX 4
+#define REGS_ECX 8
+#define REGS_EDX 12
+#define REGS_ESI 16
+#define REGS_EDI 20
+#define REGS_EBP 24
+#define REGS_DS 28
+#define REGS_ES 30
+#define REGS_FS 32
+#define REGS_GS 34
+#define REGS_EFLAGS 36
+#define REGS_SIZE 40
+

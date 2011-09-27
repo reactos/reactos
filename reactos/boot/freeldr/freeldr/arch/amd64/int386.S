@@ -19,6 +19,7 @@
 
 #include <asm.inc>
 #include <arch/pc/x86common.h>
+#include <arch/pc/pcbios.h>
 .code64
 
 EXTERN CallRealMode:PROC
