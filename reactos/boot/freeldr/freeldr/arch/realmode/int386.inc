@@ -29,6 +29,7 @@ Int386:
 	mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
 	mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
 	mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
+	mov ebp, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
 
 	/* Do not set the flags register */
 	/* only return its value in regsout */
@@ -46,6 +47,7 @@ Int386_vector_opcode:
 	mov dword ptr cs:[BSS_RegisterSet + REGS_EDX], edx
 	mov dword ptr cs:[BSS_RegisterSet + REGS_ESI], esi
 	mov dword ptr cs:[BSS_RegisterSet + REGS_EDI], edi
+	mov dword ptr cs:[BSS_RegisterSet + REGS_EBP], ebp
 
 	mov ax, ds
 	mov word ptr cs:[BSS_RegisterSet + REGS_DS], ax

@@ -279,6 +279,77 @@ WinLdrMapSpecialPages(void)
     return TRUE;
 }
 
+#define ExtendedBIOSDataArea ((PULONG)0x740)
+#define ExtendedBIOSDataSize ((PULONG)0x744)
+#define RomFontPointers ((PULONG)0x700)
+
+enum
+{
+    INT1FhFont = 0x00,
+    INT43hFont = 0x01,
+    ROM_8x14CharacterFont = 0x02,
+    ROM_8x8DoubleDotFontLo = 0x03,
+    ROM_8x8DoubleDotFontHi = 0x04,
+    ROM_AlphaAlternate = 0x05,
+    ROM_8x16Font = 0x06,
+    ROM_Alternate9x16Font = 0x07,
+    UltraVision_8x20Font = 0x11,
+    UltraVision_8x10Font = 0x12,
+};
+
+void WinLdrSetupSpecialDataPointers()
+{
+    REGS BiosRegs;
+
+    /* Get the address of the bios rom fonts. Win 2003 videoprt reads these
+       values from address 0x700 .. 0x718 and store them in the registry
+       in HKLM\System\CurrentControlSet\Control\Wow\RomFontPointers
+       Int 10h, AX=1130h, BH = pointer specifier
+       returns: es:bp = address */
+    BiosRegs.d.eax = 0x1130;
+    BiosRegs.b.bh = ROM_8x14CharacterFont;
+    Int386(0x10, &BiosRegs, &BiosRegs);
+    RomFontPointers[0] = BiosRegs.w.es << 4 | BiosRegs.w.bp;
+
+    BiosRegs.b.bh = ROM_8x8DoubleDotFontLo;
+    Int386(0x10, &BiosRegs, &BiosRegs);
+    RomFontPointers[1] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
+
+    BiosRegs.b.bh = ROM_8x8DoubleDotFontHi;
+    Int386(0x10, &BiosRegs, &BiosRegs);
+    RomFontPointers[2] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
+
+    BiosRegs.b.bh = ROM_AlphaAlternate;
+    Int386(0x10, &BiosRegs, &BiosRegs);
+    RomFontPointers[3] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
+
+    BiosRegs.b.bh = ROM_8x16Font;
+    Int386(0x10, &BiosRegs, &BiosRegs);
+    RomFontPointers[4] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
+
+    BiosRegs.b.bh = ROM_Alternate9x16Font;
+    Int386(0x10, &BiosRegs, &BiosRegs);
+    RomFontPointers[5] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
+
+    /* Store address of the extended bios data area in 0x740 */
+    BiosRegs.d.eax = 0xC100;
+    Int386(0x15, &BiosRegs, &BiosRegs);
+    if (INT386_SUCCESS(BiosRegs))
+    {
+        *ExtendedBIOSDataArea = BiosRegs.w.es << 4;
+        *ExtendedBIOSDataSize = 1024;
+        ERR(">> *ExtendedBIOSDataArea = 0x%lx\n", *ExtendedBIOSDataArea);
+    }
+    else
+    {
+        ERR("Couldn't get address of extended BIOS data area\n");
+        *ExtendedBIOSDataArea = 0;
+        *ExtendedBIOSDataSize = 0;
+    }
+
+    /* Store size of the extended bios data area in 0x740 */
+}
+
 void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 	ULONG TssSize;
@@ -331,6 +402,9 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
     WinLdrMapSpecialPages();
+
+    /* Set some special fields */
+    WinLdrSetupSpecialDataPointers();
 }
 
 
