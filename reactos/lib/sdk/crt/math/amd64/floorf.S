@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
- * PURPOSE:           Implementation of tan
+ * PURPOSE:           Implementation of floorf
  * FILE:              lib/sdk/crt/math/amd64/floorf.S
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
-#include <ksamd64.inc>
 
 /* CODE **********************************************************************/
 .code64
@@ -19,26 +18,22 @@ FUNC floorf
     sub rsp, 16
     .ENDPROLOG
 
-    /* Put parameter on the stack */
-    movss dword ptr [rsp], xmm0
-    fld   dword ptr [rsp]
+    /* Truncate xmm0 to integer (single precision) */
+    cvttss2si rcx, xmm0
 
-    /* Change fpu control word to round down */
-    fstcw [rsp]
-    mov   eax, [rsp]
-    or    eax, HEX(000400)
-    and   eax, HEX(00f7ff)
-    mov   [rsp + 8], eax
-    fldcw [rsp + 8]
+    /* Duplicate the bits into rax */
+    movd eax, xmm0
 
-    /* Round to integer */
-    frndint
+    /* Shift all bits to the right, keeping the sign bit */
+    shr rax, 31
 
-    /* Restore fpu control word */
-    fldcw [rsp]
+    /* Substract the sign bit from the truncated value, so that
+       we get the correct result for negative values. */
+    sub rcx, rax
 
-    fstp  dword ptr [rsp]
-    movss xmm0, dword ptr [rsp]
+    /* Convert the result back to xmm0 (single precision) */
+    cvtsi2ss xmm0, rcx
+
     add rsp, 16
     ret
 ENDFUNC floorf

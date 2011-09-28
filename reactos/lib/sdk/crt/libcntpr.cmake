@@ -111,6 +111,7 @@ elseif(ARCH MATCHES amd64)
         math/amd64/exp.S
         math/amd64/fabs.S
         math/amd64/floor.S
+        math/amd64/floorf.S
         math/amd64/fmod.S
         math/amd64/ldexp.S
         math/amd64/log.S
