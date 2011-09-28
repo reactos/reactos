@@ -277,6 +277,9 @@ ScmAssignNewTag(PSERVICE lpService)
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
 
+    ASSERT(lpService != NULL);
+    ASSERT(lpService->lpGroup != NULL);
+
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Control\\GroupOrderList",
                             0,
@@ -295,7 +298,7 @@ ScmAssignNewTag(PSERVICE lpService)
                                NULL,
                                &cbDataSize);
 
-    if (dwError != ERROR_MORE_DATA)
+    if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
         goto findFreeTag;
 
     pdwGroupTags = HeapAlloc(GetProcessHeap(), 0, cbDataSize);
@@ -315,7 +318,10 @@ ScmAssignNewTag(PSERVICE lpService)
     if (dwError != ERROR_SUCCESS)
         goto findFreeTag;
 
-    dwGroupTagCount = min(pdwGroupTags[0], cbDataSize / sizeof(pdwGroupTags[0]));
+    if (cbDataSize < sizeof(pdwGroupTags[0]))
+        goto findFreeTag;
+
+    dwGroupTagCount = min(pdwGroupTags[0], cbDataSize / sizeof(pdwGroupTags[0]) - 1);
 
 findFreeTag:
     do
@@ -336,6 +342,7 @@ findFreeTag:
         ServiceEntry = lpService->ServiceListEntry.Flink;
         while (ServiceEntry != &lpService->ServiceListEntry)
         {
+            ASSERT(ServiceEntry != NULL);
             CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
             if (CurrentService->lpGroup == lpService->lpGroup)
             {
@@ -1961,6 +1968,7 @@ DWORD RCreateServiceW(
     DPRINT("dwErrorControl = %lu\n", dwErrorControl);
     DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
     DPRINT("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+    DPRINT("lpdwTagId = %p\n", lpdwTagId);
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -2005,6 +2013,11 @@ DWORD RCreateServiceW(
     }
 
     if (dwStartType > SERVICE_DISABLED)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if (lpdwTagId && (!lpLoadOrderGroup || !*lpLoadOrderGroup))
     {
         return ERROR_INVALID_PARAMETER;
     }
