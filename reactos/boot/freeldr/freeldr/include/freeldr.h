@@ -45,8 +45,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <rosldr.h>
-#include <rtl.h>
 #include <ntdddisk.h>
 #include <internal/hal.h>
 #include <drivers/pci/pci.h>
@@ -55,8 +53,8 @@
 
 /* internal headers */
 #include <arcemul.h>
-#include <bytesex.h>
 #include <bget.h>
+#include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>
 #include <comm.h>

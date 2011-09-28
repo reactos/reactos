@@ -56,6 +56,8 @@ PVOID KernelMemory = 0;
 #define KernelMemorySize            (8 * 1024 * 1024)
 #define XROUNDUP(x,n)               ((((ULONG)x) + ((n) - 1)) & (~((n) - 1)))
 
+char reactos_module_strings[64][256];	// Array to hold module names
+
 /* Load Address of Next Module */
 ULONG_PTR NextModuleBase = 0;
 
@@ -178,7 +180,7 @@ FrLdrAddPageMapping(ppc_map_set_t *set, int proc, paddr_t phys, vaddr_t virt)
         set->info = newinfo;
         set->mapsize *= 2;
     }
-    
+
     set->info[set->usecount].flags = MMU_ALL_RW;
     set->info[set->usecount].proc = proc;
     set->info[set->usecount].addr = virt;
@@ -208,7 +210,7 @@ FrLdrStartup(ULONG Magic)
 
     while(OldModCount != LoaderBlock.ModsCount)
     {
-        printf("Added %d modules last pass\n", 
+        printf("Added %d modules last pass\n",
                LoaderBlock.ModsCount - OldModCount);
 
         OldModCount = LoaderBlock.ModsCount;
@@ -224,7 +226,7 @@ FrLdrStartup(ULONG Magic)
                         ((PVOID)reactos_modules[i].ModStart,
                          (PCHAR)reactos_modules[i].String);
             }
-        }        
+        }
     }
 
     printf("Starting mmu\n");
@@ -233,7 +235,7 @@ FrLdrStartup(ULONG Magic)
 
     printf("Allocating vsid 0 (kernel)\n");
     MmuAllocVsid(0, 0xff00);
-    
+
     /* We'll use vsid 1 for freeldr (expendable) */
     printf("Allocating vsid 1 (freeldr)\n");
     MmuAllocVsid(1, 0xff);
@@ -247,7 +249,7 @@ FrLdrStartup(ULONG Magic)
          i += (1<<PFN_SHIFT) ) {
         FrLdrAddPageMapping(&memmap, 1, i, 0);
     }
-    
+
     printf("KernelBase %x\n", KernelBase);
 
     /* Heap pages -- this gets the entire freeldr heap */
@@ -255,7 +257,7 @@ FrLdrStartup(ULONG Magic)
         tmp = i<<PFN_SHIFT;
         if (FreeLdrMap[i].PageAllocated == LoaderSystemCode) {
             UsedEntries++;
-            if (tmp >= (ULONG)KernelMemory && 
+            if (tmp >= (ULONG)KernelMemory &&
                 tmp <  (ULONG)KernelMemory + KernelMemorySize) {
                 FrLdrAddPageMapping(&memmap, 0, tmp, KernelBase + tmp - (ULONG)KernelMemory);
             } else {
@@ -721,7 +723,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 
     } while(TempName);
     NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
-    
+
 
     /* Get Module Size */
     LocalModuleSize = FsGetFileSize(ModuleImage);
@@ -773,7 +775,7 @@ FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
         PVOID ModuleBase = (PVOID)NextModuleBase;
 
         if(FrLdrMapModule(Image, ShortName, 0, 0))
-            Result = ModuleBase;   
+            Result = ModuleBase;
     }
     return Result;
 }

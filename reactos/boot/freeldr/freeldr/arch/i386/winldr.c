@@ -338,16 +338,14 @@ void WinLdrSetupSpecialDataPointers()
     {
         *ExtendedBIOSDataArea = BiosRegs.w.es << 4;
         *ExtendedBIOSDataSize = 1024;
-        ERR(">> *ExtendedBIOSDataArea = 0x%lx\n", *ExtendedBIOSDataArea);
+        TRACE("*ExtendedBIOSDataArea = 0x%lx\n", *ExtendedBIOSDataArea);
     }
     else
     {
-        ERR("Couldn't get address of extended BIOS data area\n");
+        WARN("Couldn't get address of extended BIOS data area\n");
         *ExtendedBIOSDataArea = 0;
         *ExtendedBIOSDataSize = 0;
     }
-
-    /* Store size of the extended bios data area in 0x740 */
 }
 
 void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
