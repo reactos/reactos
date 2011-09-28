@@ -446,6 +446,39 @@ AcpiOsWriteMemory (
     return (AE_OK);
 }
 
+BOOLEAN
+OslIsPciDevicePresent(ULONG BusNumber, ULONG SlotNumber)
+{
+    UINT32 ReadLength;
+    PCI_COMMON_CONFIG PciConfig;
+
+    /* Detect device presence by reading the PCI configuration space */
+
+    ReadLength = HalGetBusDataByOffset(PCIConfiguration,
+                                       BusNumber,
+                                       SlotNumber,
+                                       &PciConfig,
+                                       0,
+                                       sizeof(PciConfig));
+    if (ReadLength == 0)
+    {
+        DPRINT1("PCI device is not present\n");
+        return FALSE;
+    }
+
+    ASSERT(ReadLength >= 2);
+
+    if (PciConfig.VendorID == PCI_INVALID_VENDORID)
+    {
+        DPRINT1("Invalid vendor ID in PCI configuration space\n");
+        return FALSE;
+    }
+
+    DPRINT("PCI device is present\n");
+
+    return TRUE;
+}
+
 ACPI_STATUS
 AcpiOsReadPciConfiguration (
     ACPI_PCI_ID             *PciId,
@@ -453,7 +486,6 @@ AcpiOsReadPciConfiguration (
     void                    *Value,
     UINT32                  Width)
 {
-    NTSTATUS Status;
     PCI_SLOT_NUMBER slot;
 
     slot.u.AsULONG = 0;
@@ -462,22 +494,17 @@ AcpiOsReadPciConfiguration (
 
     DPRINT("AcpiOsReadPciConfiguration, slot=0x%X, func=0x%X\n", slot.u.AsULONG, Register);
 
-    Status = HalGetBusDataByOffset(PCIConfiguration,
+    if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
+        return AE_NOT_FOUND;
+
+    HalGetBusDataByOffset(PCIConfiguration,
         PciId->Bus,
         slot.u.AsULONG,
         Value,
         Register,
-        (Width / 8));
+        (Width >> 3));
 
-    if (Status == 0 || Status == 2)
-    {
-        DPRINT1("HalGetBusDataByOffset failed (Status = %d)\n", Status);
-        return AE_NOT_FOUND;
-    }
-    else
-    {
-        return AE_OK;
-    }
+    return AE_OK;
 }
 
 ACPI_STATUS
@@ -487,7 +514,6 @@ AcpiOsWritePciConfiguration (
     ACPI_INTEGER             Value,
     UINT32                   Width)
 {
-    NTSTATUS Status;
     ULONG buf = Value;
     PCI_SLOT_NUMBER slot;
 
@@ -497,20 +523,17 @@ AcpiOsWritePciConfiguration (
 
     DPRINT("AcpiOsWritePciConfiguration, slot=0x%x\n", slot.u.AsULONG);
 
-    Status = HalSetBusDataByOffset(PCIConfiguration,
+    if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
+        return AE_NOT_FOUND;
+
+    HalSetBusDataByOffset(PCIConfiguration,
         PciId->Bus,
         slot.u.AsULONG,
         &buf,
         Register,
-        (Width / 8));
+        (Width >> 3));
 
-    if (Status == 0 || Status == 2)
-    {
-        DPRINT1("HalSetBusDataByOffset failed (Status = %d)\n", Status);
-        return AE_NOT_FOUND;
-    }
-    else
-        return AE_OK;
+    return AE_OK;
 }
 
 ACPI_STATUS
