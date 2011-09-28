@@ -214,6 +214,11 @@ MSG_ENTRY mousehover3_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
                                {3, WM_MOUSEHOVER, POST},
                                 {0,0}};
 
+/* the mouse hovers hwnd3 without moving */
+MSG_ENTRY mousehover3_nomove_chain[]={{3, WM_SYSTIMER, POST, ID_TME_TIMER},
+                                      {3, WM_MOUSEHOVER, POST},
+                                      {0,0}};
+
 /* the mouse hovers hwnd3 and the timer is not dispatched */
 MSG_ENTRY mousehover3_droptimer_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
                                          {3, WM_NCHITTEST},
@@ -238,17 +243,25 @@ MSG_ENTRY mousehover3_dropmousell_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
                                          {3, WM_MOUSEHOVER, POST},
                                          {0,0}};
 
-/* the mouse leaves hwnd2 and moves to hwnd3 and mouse message is dropped by WH_MOUSE */
+/* the mouse leaves hwnd3 and moves to hwnd2 and mouse message is dropped by WH_MOUSE */
 MSG_ENTRY mouseleave3to2_dropmouse_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
                                             {2, WM_NCHITTEST},
                                             {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
                                             {0,0}};
 
+/* the mouse leaves hwnd3 and moves to hwnd2 and mouse message is dropped by WH_MOUSE_LL */
+MSG_ENTRY mouseleave3to2_dropmousell_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+                                             {0,0}};
+
+/* after WH_MOUSE drops WM_MOUSEMOVE, WM_MOUSELEAVE is still in the queue */
+MSG_ENTRY mouseleave3_remainging_chain[]={{3, WM_MOUSELEAVE, POST},
+                                          {0,0}};
+
 void Test_TrackMouseEvent()
 {
     MOVE_CURSOR(0,0);
     create_test_windows();
-    FlushMessages(0,0);
+    FlushMessages();
     empty_message_cache();
 
     /* the mouse moves over hwnd2 */
@@ -331,21 +344,27 @@ void Test_TrackMouseEvent()
     EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);
     COMPARE_CACHE(mousehover3_chain);
 
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
     /* Begin tracking mouse events for hWnd3 */
     TmeStartTracking(hWnd3, TME_HOVER );
     FLUSH_MESSAGES(0, QS_TIMER|QS_MOUSEMOVE);
     COMPARE_CACHE(empty_chain);
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE);
 
-    /* make sure that the timer won't fire before the mouse moves */
+    /* make sure that the timer will fire before the mouse moves */
     Sleep(100);
-    COMPARE_CACHE(empty_chain);
+    FlushMessages();
+    COMPARE_CACHE(mousehover3_nomove_chain);
+    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);
+
     Sleep(100);
-    COMPARE_CACHE(empty_chain);
-    Sleep(100);
+    FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* the mouse hovers hwnd3 and the timer is not dispatched*/
+    TmeStartTracking(hWnd3, TME_HOVER );
     ignore_timer = TRUE;
     MOVE_CURSOR(400,400);
     Sleep(100);
@@ -354,7 +373,7 @@ void Test_TrackMouseEvent()
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE); /* TME_HOVER is still active  */
     COMPARE_CACHE(mousehover3_droptimer_chain);   /* we get no WM_MOUSEHOVER    */
     ignore_timer = FALSE; 
-
+    
     /* the mouse hovers hwnd3 and mouse message is dropped by WH_MOUSE_LL */
     ignore_mousell = TRUE;
     MOVE_CURSOR(402,402);
@@ -364,6 +383,9 @@ void Test_TrackMouseEvent()
     EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);           
     COMPARE_CACHE(mousehover3_dropmousell_chain);   /* we get WM_MOUSEHOVER normaly */
     ignore_mousell = FALSE;
+
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
 
     /* the mouse hovers hwnd3 and mouse message is dropped by WH_MOUSE */
     ignore_mouse = TRUE;
@@ -376,13 +398,35 @@ void Test_TrackMouseEvent()
     COMPARE_CACHE(mousehover3_dropmouse_chain);   /* we get WM_MOUSEHOVER normaly */
     ignore_mouse = FALSE;
 
-    /* the mouse leaves hwnd2 and moves to hwnd3 and mouse message is dropped by WH_MOUSE */
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    /* the mouse leaves hwnd3 and moves to hwnd2 and mouse message is dropped by WH_MOUSE_LL */
+    ignore_mousell = TRUE;
+    TmeStartTracking(hWnd3, TME_LEAVE );
+    MOVE_CURSOR(220,220);
+    FLUSH_MESSAGES(0, QS_MOUSEMOVE|QS_TIMER);         /* WH_MOUSE drops WM_MOUSEMOVE */
+    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);               /* all flags are removed */
+    COMPARE_CACHE(mouseleave3to2_dropmousell_chain);  /* we get no WM_MOUSELEAVE */
+    ignore_mousell = FALSE;
+
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    /* the mouse leaves hwnd3 and moves to hwnd2 and mouse message is dropped by WH_MOUSE */
     ignore_mouse = TRUE;
     MOVE_CURSOR(220,220);
     FLUSH_MESSAGES(QS_MOUSEMOVE, QS_TIMER);         /* WH_MOUSE drops WM_MOUSEMOVE */
     EXPECT_TME_FLAGS(hWnd3, 0);                     /* all flags are removed */
     COMPARE_CACHE(mouseleave3to2_dropmouse_chain);  /* we get no WM_MOUSELEAVE */
     ignore_mouse = FALSE;
+
+    /* after WH_MOUSE drops WM_MOUSEMOVE, WM_MOUSELEAVE is still in the queue */
+    FLUSH_MESSAGES(QS_POSTMESSAGE, QS_TIMER|QS_MOUSEMOVE);
+    COMPARE_CACHE(mouseleave3_remainging_chain);
+
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
 }
 
 START_TEST(TrackMouseEvent)
