@@ -10,7 +10,6 @@
 
 #include <freeldr.h>
 
-#include <ndk/asm.h>
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(WINDOWS);

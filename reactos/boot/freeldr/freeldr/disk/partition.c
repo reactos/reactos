@@ -289,7 +289,6 @@ IopCopyPartitionRecord(
     return TRUE;
 }
 
-NTKERNELAPI
 NTSTATUS
 FASTCALL
 IoReadPartitionTable(

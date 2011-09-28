@@ -30,6 +30,7 @@
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 /* public headers */
+#ifdef __REACTOS__
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
@@ -48,8 +49,10 @@
 #include <ntdddisk.h>
 #include <internal/hal.h>
 #include <drivers/pci/pci.h>
-
 #include <winerror.h>
+#else
+#include <ntsup.h>
+#endif
 
 /* internal headers */
 #include <arcemul.h>

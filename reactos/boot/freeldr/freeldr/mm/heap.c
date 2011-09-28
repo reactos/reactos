@@ -90,7 +90,6 @@ VOID MmHeapFree(PVOID MemoryPointer)
 
 
 #undef ExAllocatePoolWithTag
-NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithTag(
@@ -102,7 +101,6 @@ ExAllocatePoolWithTag(
 }
 
 #undef ExFreePool
-NTKERNELAPI
 VOID
 NTAPI
 ExFreePool(
@@ -112,7 +110,6 @@ ExFreePool(
 }
 
 #undef ExFreePoolWithTag
-NTKERNELAPI
 VOID
 NTAPI
 ExFreePoolWithTag(
