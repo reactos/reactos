@@ -756,104 +756,104 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
                                             Reserved);
     if (hClassesKey == INVALID_HANDLE_VALUE)
     {
-	return FALSE;
+        return FALSE;
     }
 
     for (dwIndex = 0; ; dwIndex++)
     {
-	dwLength = 40;
-	lError = RegEnumKeyExW(hClassesKey,
-			       dwIndex,
-			       szKeyName,
-			       &dwLength,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL);
-	TRACE("RegEnumKeyExW() returns %d\n", lError);
-	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
-	{
-	    TRACE("Key name: %s\n", debugstr_w(szKeyName));
+        dwLength = 40;
+        lError = RegEnumKeyExW(hClassesKey,
+                               dwIndex,
+                               szKeyName,
+                               &dwLength,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        TRACE("RegEnumKeyExW() returns %d\n", lError);
+        if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
+        {
+            TRACE("Key name: %s\n", debugstr_w(szKeyName));
 
-	    if (RegOpenKeyExW(hClassesKey,
-			      szKeyName,
-			      0,
-			      KEY_QUERY_VALUE,
-			      &hClassKey))
-	    {
-		RegCloseKey(hClassesKey);
-		return FALSE;
-	    }
+            if (RegOpenKeyExW(hClassesKey,
+                              szKeyName,
+                              0,
+                              KEY_QUERY_VALUE,
+                              &hClassKey))
+            {
+                RegCloseKey(hClassesKey);
+                return FALSE;
+            }
 
-	    if (!RegQueryValueExW(hClassKey,
-				  REGSTR_VAL_NOUSECLASS,
-				  NULL,
-				  NULL,
-				  NULL,
-				  NULL))
-	    {
-		TRACE("'NoUseClass' value found!\n");
-		RegCloseKey(hClassKey);
-		continue;
-	    }
+            if (!RegQueryValueExW(hClassKey,
+                                  REGSTR_VAL_NOUSECLASS,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  NULL))
+            {
+                TRACE("'NoUseClass' value found!\n");
+                RegCloseKey(hClassKey);
+                continue;
+            }
 
-	    if ((Flags & DIBCI_NOINSTALLCLASS) &&
-		(!RegQueryValueExW(hClassKey,
-				   REGSTR_VAL_NOINSTALLCLASS,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL)))
-	    {
-		TRACE("'NoInstallClass' value found!\n");
-		RegCloseKey(hClassKey);
-		continue;
-	    }
+            if ((Flags & DIBCI_NOINSTALLCLASS) &&
+                (!RegQueryValueExW(hClassKey,
+                                   REGSTR_VAL_NOINSTALLCLASS,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL)))
+            {
+                TRACE("'NoInstallClass' value found!\n");
+                RegCloseKey(hClassKey);
+                continue;
+            }
 
-	    if ((Flags & DIBCI_NODISPLAYCLASS) &&
-		(!RegQueryValueExW(hClassKey,
-				   REGSTR_VAL_NODISPLAYCLASS,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL)))
-	    {
-		TRACE("'NoDisplayClass' value found!\n");
-		RegCloseKey(hClassKey);
-		continue;
-	    }
+            if ((Flags & DIBCI_NODISPLAYCLASS) &&
+                (!RegQueryValueExW(hClassKey,
+                                   REGSTR_VAL_NODISPLAYCLASS,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL)))
+            {
+                TRACE("'NoDisplayClass' value found!\n");
+                RegCloseKey(hClassKey);
+                continue;
+            }
 
-	    RegCloseKey(hClassKey);
+            RegCloseKey(hClassKey);
 
-	    TRACE("Guid: %s\n", debugstr_w(szKeyName));
-	    if (dwGuidListIndex < ClassGuidListSize)
-	    {
-		if (szKeyName[0] == '{' && szKeyName[37] == '}')
-		{
-		    szKeyName[37] = 0;
-		}
-		TRACE("Guid: %p\n", &szKeyName[1]);
+            TRACE("Guid: %s\n", debugstr_w(szKeyName));
+            if (dwGuidListIndex < ClassGuidListSize)
+            {
+                if (szKeyName[0] == '{' && szKeyName[37] == '}')
+                {
+                    szKeyName[37] = 0;
+                }
+                TRACE("Guid: %p\n", &szKeyName[1]);
 
-		UuidFromStringW(&szKeyName[1],
-				&ClassGuidList[dwGuidListIndex]);
-	    }
+                UuidFromStringW(&szKeyName[1],
+                                &ClassGuidList[dwGuidListIndex]);
+            }
 
-	    dwGuidListIndex++;
-	}
+            dwGuidListIndex++;
+        }
 
-	if (lError != ERROR_SUCCESS)
-	    break;
+        if (lError != ERROR_SUCCESS)
+            break;
     }
 
     RegCloseKey(hClassesKey);
 
     if (RequiredSize != NULL)
-	*RequiredSize = dwGuidListIndex;
+        *RequiredSize = dwGuidListIndex;
 
     if (ClassGuidListSize < dwGuidListIndex)
     {
-	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	return FALSE;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
     }
 
     return TRUE;
@@ -868,9 +868,9 @@ BOOL WINAPI SetupDiClassGuidsFromNameA(
         DWORD ClassGuidListSize,
         PDWORD RequiredSize)
 {
-  return SetupDiClassGuidsFromNameExA(ClassName, ClassGuidList,
-                                      ClassGuidListSize, RequiredSize,
-                                      NULL, NULL);
+    return SetupDiClassGuidsFromNameExA(ClassName, ClassGuidList,
+                                        ClassGuidListSize, RequiredSize,
+                                        NULL, NULL);
 }
 
 /***********************************************************************
@@ -882,9 +882,9 @@ BOOL WINAPI SetupDiClassGuidsFromNameW(
         DWORD ClassGuidListSize,
         PDWORD RequiredSize)
 {
-  return SetupDiClassGuidsFromNameExW(ClassName, ClassGuidList,
-                                      ClassGuidListSize, RequiredSize,
-                                      NULL, NULL);
+    return SetupDiClassGuidsFromNameExW(ClassName, ClassGuidList,
+                                        ClassGuidListSize, RequiredSize,
+                                        NULL, NULL);
 }
 
 /***********************************************************************
@@ -959,7 +959,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
         ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
 
     if (!ClassName || !RequiredSize)
-     {
+    {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -968,7 +968,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-	*RequiredSize = 0;
+    *RequiredSize = 0;
 
     hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
                                             KEY_ENUMERATE_SUB_KEYS,
@@ -977,82 +977,82 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
                                             Reserved);
     if (hClassesKey == INVALID_HANDLE_VALUE)
     {
-	return FALSE;
+        return FALSE;
     }
 
     for (dwIndex = 0; ; dwIndex++)
     {
-	dwLength = 40;
-	lError = RegEnumKeyExW(hClassesKey,
-			       dwIndex,
-			       szKeyName,
-			       &dwLength,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL);
-	TRACE("RegEnumKeyExW() returns %d\n", lError);
-	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
-	{
-	    TRACE("Key name: %p\n", szKeyName);
+        dwLength = 40;
+        lError = RegEnumKeyExW(hClassesKey,
+                               dwIndex,
+                               szKeyName,
+                               &dwLength,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        TRACE("RegEnumKeyExW() returns %d\n", lError);
+        if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
+        {
+            TRACE("Key name: %p\n", szKeyName);
 
-	    if (RegOpenKeyExW(hClassesKey,
-			      szKeyName,
-			      0,
-			      KEY_QUERY_VALUE,
-			      &hClassKey))
-	    {
-		RegCloseKey(hClassesKey);
-		return FALSE;
-	    }
+            if (RegOpenKeyExW(hClassesKey,
+                              szKeyName,
+                              0,
+                              KEY_QUERY_VALUE,
+                              &hClassKey))
+            {
+                RegCloseKey(hClassesKey);
+                return FALSE;
+            }
 
-	    dwLength = MAX_CLASS_NAME_LEN * sizeof(WCHAR);
-	    if (!RegQueryValueExW(hClassKey,
-				  Class,
-				  NULL,
-				  NULL,
-				  (LPBYTE)szClassName,
-				  &dwLength))
-	    {
-		TRACE("Class name: %p\n", szClassName);
+            dwLength = MAX_CLASS_NAME_LEN * sizeof(WCHAR);
+            if (!RegQueryValueExW(hClassKey,
+                                  Class,
+                                  NULL,
+                                  NULL,
+                                  (LPBYTE)szClassName,
+                                  &dwLength))
+            {
+                TRACE("Class name: %p\n", szClassName);
 
-		if (strcmpiW(szClassName, ClassName) == 0)
-		{
-		    TRACE("Found matching class name\n");
+                if (strcmpiW(szClassName, ClassName) == 0)
+                {
+                    TRACE("Found matching class name\n");
 
-		    TRACE("Guid: %p\n", szKeyName);
-		    if (dwGuidListIndex < ClassGuidListSize)
-		    {
-			if (szKeyName[0] == '{' && szKeyName[37] == '}')
-			{
-			    szKeyName[37] = 0;
-			}
-			TRACE("Guid: %p\n", &szKeyName[1]);
+                    TRACE("Guid: %p\n", szKeyName);
+                    if (dwGuidListIndex < ClassGuidListSize)
+                    {
+                        if (szKeyName[0] == '{' && szKeyName[37] == '}')
+                        {
+                            szKeyName[37] = 0;
+                        }
+                        TRACE("Guid: %p\n", &szKeyName[1]);
 
-			UuidFromStringW(&szKeyName[1],
-					&ClassGuidList[dwGuidListIndex]);
-		    }
+                        UuidFromStringW(&szKeyName[1],
+                                        &ClassGuidList[dwGuidListIndex]);
+                    }
 
-		    dwGuidListIndex++;
-		}
-	    }
+                    dwGuidListIndex++;
+                }
+            }
 
-	    RegCloseKey(hClassKey);
-	}
+            RegCloseKey(hClassKey);
+        }
 
-	if (lError != ERROR_SUCCESS)
-	    break;
+        if (lError != ERROR_SUCCESS)
+            break;
     }
 
     RegCloseKey(hClassesKey);
 
     if (RequiredSize != NULL)
-	*RequiredSize = dwGuidListIndex;
+        *RequiredSize = dwGuidListIndex;
 
     if (ClassGuidListSize < dwGuidListIndex)
     {
-	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	return FALSE;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
     }
 
     return TRUE;
@@ -1067,9 +1067,9 @@ BOOL WINAPI SetupDiClassNameFromGuidA(
         DWORD ClassNameSize,
         PDWORD RequiredSize)
 {
-  return SetupDiClassNameFromGuidExA(ClassGuid, ClassName,
-                                     ClassNameSize, RequiredSize,
-                                     NULL, NULL);
+    return SetupDiClassNameFromGuidExA(ClassGuid, ClassName,
+                                       ClassNameSize, RequiredSize,
+                                       NULL, NULL);
 }
 
 /***********************************************************************
@@ -1081,9 +1081,9 @@ BOOL WINAPI SetupDiClassNameFromGuidW(
         DWORD ClassNameSize,
         PDWORD RequiredSize)
 {
-  return SetupDiClassNameFromGuidExW(ClassGuid, ClassName,
-                                     ClassNameSize, RequiredSize,
-                                     NULL, NULL);
+    return SetupDiClassNameFromGuidExW(ClassGuid, ClassName,
+                                       ClassNameSize, RequiredSize,
+                                       NULL, NULL);
 }
 
 /***********************************************************************
@@ -1104,11 +1104,11 @@ BOOL WINAPI SetupDiClassNameFromGuidExA(
     if (MachineName)
         MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
     ret = SetupDiClassNameFromGuidExW(ClassGuid, ClassNameW, MAX_CLASS_NAME_LEN,
-     RequiredSize, MachineNameW, Reserved);
+                                      RequiredSize, MachineNameW, Reserved);
     if (ret)
     {
         int len = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName,
-         ClassNameSize, NULL, NULL);
+                                      ClassNameSize, NULL, NULL);
         if (len == 0 || len > ClassNameSize)
         {
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -1214,9 +1214,9 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoList(const GUID *ClassGuid,
-			    HWND hwndParent)
+        HWND hwndParent)
 {
-  return SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent, NULL, NULL);
+    return SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent, NULL, NULL);
 }
 
 /***********************************************************************
@@ -1224,9 +1224,9 @@ SetupDiCreateDeviceInfoList(const GUID *ClassGuid,
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
-			       HWND hwndParent,
-			       PCSTR MachineName,
-			       PVOID Reserved)
+        HWND hwndParent,
+        PCSTR MachineName,
+        PVOID Reserved)
 {
     LPWSTR MachineNameW = NULL;
     HDEVINFO hDevInfo;
@@ -1268,9 +1268,9 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
-			       HWND hwndParent,
-			       PCWSTR MachineName,
-			       PVOID Reserved)
+        HWND hwndParent,
+        PCWSTR MachineName,
+        PVOID Reserved)
 {
     struct DeviceInfoSet *list = NULL;
     DWORD size = FIELD_OFFSET(struct DeviceInfoSet, szData);
@@ -1670,13 +1670,13 @@ cleanup:
  *              SetupDiCreateDeviceInfoA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiCreateDeviceInfoA(
-       HDEVINFO DeviceInfoSet,
-       PCSTR DeviceName,
-       CONST GUID *ClassGuid,
-       PCSTR DeviceDescription,
-       HWND hwndParent,
-       DWORD CreationFlags,
-       PSP_DEVINFO_DATA DeviceInfoData)
+        HDEVINFO DeviceInfoSet,
+        PCSTR DeviceName,
+        CONST GUID *ClassGuid,
+        PCSTR DeviceDescription,
+        HWND hwndParent,
+        DWORD CreationFlags,
+        PSP_DEVINFO_DATA DeviceInfoData)
 {
     BOOL ret;
     LPWSTR DeviceNameW = NULL;
@@ -1712,13 +1712,13 @@ BOOL WINAPI SetupDiCreateDeviceInfoA(
  *              SetupDiCreateDeviceInfoW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiCreateDeviceInfoW(
-       HDEVINFO DeviceInfoSet,
-       PCWSTR DeviceName,
-       CONST GUID *ClassGuid,
-       PCWSTR DeviceDescription,
-       HWND hwndParent,
-       DWORD CreationFlags,
-       PSP_DEVINFO_DATA DeviceInfoData)
+        HDEVINFO DeviceInfoSet,
+        PCWSTR DeviceName,
+        CONST GUID *ClassGuid,
+        PCWSTR DeviceDescription,
+        HWND hwndParent,
+        DWORD CreationFlags,
+        PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *deviceInfo = NULL;
@@ -1918,18 +1918,18 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
  *		SetupDiGetDeviceInstanceIdA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInstanceIdA(
-	HDEVINFO DeviceInfoSet,
-	PSP_DEVINFO_DATA DeviceInfoData,
-	PSTR DeviceInstanceId,
-	DWORD DeviceInstanceIdSize,
-	PDWORD RequiredSize)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        PSTR DeviceInstanceId,
+        DWORD DeviceInstanceIdSize,
+        PDWORD RequiredSize)
 {
     BOOL ret = FALSE;
     DWORD size;
     PWSTR instanceId;
 
     TRACE("%p %p %p %d %p\n", DeviceInfoSet, DeviceInfoData, DeviceInstanceId,
-	    DeviceInstanceIdSize, RequiredSize);
+            DeviceInstanceIdSize, RequiredSize);
 
     if (!DeviceInstanceId && DeviceInstanceIdSize > 0)
     {
@@ -1987,17 +1987,17 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdA(
  *		SetupDiGetDeviceInstanceIdW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInstanceIdW(
-	HDEVINFO DeviceInfoSet,
-	PSP_DEVINFO_DATA DeviceInfoData,
-	PWSTR DeviceInstanceId,
-	DWORD DeviceInstanceIdSize,
-	PDWORD RequiredSize)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        PWSTR DeviceInstanceId,
+        DWORD DeviceInstanceIdSize,
+        PDWORD RequiredSize)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *devInfo;
 
     TRACE("%p %p %p %d %p\n", DeviceInfoSet, DeviceInfoData, DeviceInstanceId,
-	    DeviceInstanceIdSize, RequiredSize);
+            DeviceInstanceIdSize, RequiredSize);
 
     if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
@@ -2077,14 +2077,14 @@ BOOL WINAPI SetupDiGetActualSectionToInstallW(
  */
 BOOL WINAPI
 SetupDiGetActualSectionToInstallExA(
-    IN HINF InfHandle,
-    IN PCSTR InfSectionName,
-    IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo OPTIONAL,
-    OUT PSTR InfSectionWithExt OPTIONAL,
-    IN DWORD InfSectionWithExtSize,
-    OUT PDWORD RequiredSize OPTIONAL,
-    OUT PSTR* Extension OPTIONAL,
-    IN PVOID Reserved)
+        IN HINF InfHandle,
+        IN PCSTR InfSectionName,
+        IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo OPTIONAL,
+        OUT PSTR InfSectionWithExt OPTIONAL,
+        IN DWORD InfSectionWithExtSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PSTR* Extension OPTIONAL,
+        IN PVOID Reserved)
 {
     LPWSTR InfSectionNameW = NULL;
     LPWSTR InfSectionWithExtW = NULL;
@@ -2143,9 +2143,9 @@ BOOL WINAPI SetupDiGetClassDescriptionA(
         DWORD ClassDescriptionSize,
         PDWORD RequiredSize)
 {
-  return SetupDiGetClassDescriptionExA(ClassGuid, ClassDescription,
-                                       ClassDescriptionSize,
-                                       RequiredSize, NULL, NULL);
+    return SetupDiGetClassDescriptionExA(ClassGuid, ClassDescription,
+                                         ClassDescriptionSize,
+                                         RequiredSize, NULL, NULL);
 }
 
 /***********************************************************************
@@ -2157,9 +2157,9 @@ BOOL WINAPI SetupDiGetClassDescriptionW(
         DWORD ClassDescriptionSize,
         PDWORD RequiredSize)
 {
-  return SetupDiGetClassDescriptionExW(ClassGuid, ClassDescription,
-                                       ClassDescriptionSize,
-                                       RequiredSize, NULL, NULL);
+    return SetupDiGetClassDescriptionExW(ClassGuid, ClassDescription,
+                                         ClassDescriptionSize,
+                                         RequiredSize, NULL, NULL);
 }
 
 /***********************************************************************
@@ -2316,10 +2316,10 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
  *		SetupDiGetClassDevsA (SETUPAPI.@)
  */
 HDEVINFO WINAPI SetupDiGetClassDevsA(
-       CONST GUID *class,
-       LPCSTR enumstr,
-       HWND parent,
-       DWORD flags)
+        CONST GUID *class,
+        LPCSTR enumstr,
+        HWND parent,
+        DWORD flags)
 {
     return SetupDiGetClassDevsExA(class, enumstr, parent,
                                   flags, NULL, NULL, NULL);
@@ -2372,10 +2372,10 @@ end:
  *		SetupDiGetClassDevsW (SETUPAPI.@)
  */
 HDEVINFO WINAPI SetupDiGetClassDevsW(
-       CONST GUID *class,
-       LPCWSTR enumstr,
-       HWND parent,
-       DWORD flags)
+        CONST GUID *class,
+        LPCWSTR enumstr,
+        HWND parent,
+        DWORD flags)
 {
     return SetupDiGetClassDevsExW(class, enumstr, parent, flags, NULL, NULL,
             NULL);
@@ -2860,11 +2860,11 @@ BOOL WINAPI SetupDiDeleteDeviceInterfaceRegKey(
  *   Failure: FALSE.  Call GetLastError() for more info.
  */
 BOOL WINAPI SetupDiEnumDeviceInterfaces(
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       CONST GUID * InterfaceClassGuid,
-       DWORD MemberIndex,
-       PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        CONST GUID * InterfaceClassGuid,
+        DWORD MemberIndex,
+        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     BOOL ret = FALSE;
@@ -2997,12 +2997,12 @@ BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
  *		SetupDiGetDeviceInterfaceDetailA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
-      HDEVINFO DeviceInfoSet,
-      PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
-      PSP_DEVICE_INTERFACE_DETAIL_DATA_A DeviceInterfaceDetailData,
-      DWORD DeviceInterfaceDetailDataSize,
-      PDWORD RequiredSize,
-      PSP_DEVINFO_DATA DeviceInfoData)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
+        PSP_DEVICE_INTERFACE_DETAIL_DATA_A DeviceInterfaceDetailData,
+        DWORD DeviceInterfaceDetailDataSize,
+        PDWORD RequiredSize,
+        PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailDataW = NULL;
@@ -3031,14 +3031,14 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
         SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
-    
-    if((DeviceInterfaceDetailDataSize != 0) && 
+
+    if((DeviceInterfaceDetailDataSize != 0) &&
         (DeviceInterfaceDetailDataSize < (FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath) + sizeof(CHAR))))
     {
         SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
-    
+
     if (!DeviceInterfaceDetailData && DeviceInterfaceDetailDataSize)
     {
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -3091,12 +3091,12 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
  *		SetupDiGetDeviceInterfaceDetailW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
-      HDEVINFO DeviceInfoSet,
-      PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
-      PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData,
-      DWORD DeviceInterfaceDetailDataSize,
-      PDWORD RequiredSize,
-      PSP_DEVINFO_DATA DeviceInfoData)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
+        PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData,
+        DWORD DeviceInterfaceDetailDataSize,
+        PDWORD RequiredSize,
+        PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     BOOL ret = FALSE;
@@ -3249,14 +3249,13 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
         }
     }
 
-    ret = SetupDiGetDeviceRegistryPropertyW(
-        DeviceInfoSet,
-        DeviceInfoData,
-        Property,
-        &RegType,
-        PropertyBufferW,
-        PropertyBufferSizeW,
-        &RequiredSizeW);
+    ret = SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet,
+                                            DeviceInfoData,
+                                            Property,
+                                            &RegType,
+                                            PropertyBufferW,
+                                            PropertyBufferSizeW,
+                                            &RequiredSizeW);
 
     if (ret || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
@@ -3395,11 +3394,11 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
  *		SetupDiSetDeviceRegistryPropertyA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiSetDeviceRegistryPropertyA(
-	HDEVINFO DeviceInfoSet,
-	PSP_DEVINFO_DATA DeviceInfoData,
-	DWORD Property,
-	const BYTE *PropertyBuffer,
-	DWORD PropertyBufferSize)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        DWORD Property,
+        const BYTE *PropertyBuffer,
+        DWORD PropertyBufferSize)
 {
     BOOL ret = FALSE;
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
@@ -3434,11 +3433,11 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyA(
  *		SetupDiSetDeviceRegistryPropertyW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
-	HDEVINFO DeviceInfoSet,
-	PSP_DEVINFO_DATA DeviceInfoData,
-	DWORD Property,
-	const BYTE *PropertyBuffer,
-	DWORD PropertyBufferSize)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        DWORD Property,
+        const BYTE *PropertyBuffer,
+        DWORD PropertyBufferSize)
 {
     BOOL ret = FALSE;
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
@@ -3465,8 +3464,8 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
     if (Property < sizeof(PropertyMap) / sizeof(PropertyMap[0])
         && PropertyMap[Property].nameW)
     {
-    	HKEY hKey;
-    	LONG l;
+        HKEY hKey;
+        LONG l;
         hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_SET_VALUE);
         if (hKey == INVALID_HANDLE_VALUE)
             return FALSE;
@@ -3551,14 +3550,14 @@ HKEY SETUP_CreateClassKey(HINF hInf)
     HKEY hClassKey;
 
     if (!SetupGetLineTextW(NULL,
-			   hInf,
-			   Version,
-			   ClassGUID,
-			   Buffer,
-			   MAX_PATH,
-			   &RequiredSize))
+                           hInf,
+                           Version,
+                           ClassGUID,
+                           Buffer,
+                           MAX_PATH,
+                           &RequiredSize))
     {
-	return INVALID_HANDLE_VALUE;
+        return INVALID_HANDLE_VALUE;
     }
 
     lstrcpyW(FullBuffer, REGSTR_PATH_CLASS_NT);
@@ -3566,48 +3565,47 @@ HKEY SETUP_CreateClassKey(HINF hInf)
     lstrcatW(FullBuffer, Buffer);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		      FullBuffer,
-		      0,
-		      KEY_SET_VALUE,
-		      &hClassKey))
+                      FullBuffer,
+                      0,
+                      KEY_SET_VALUE,
+                      &hClassKey))
     {
-	if (!SetupGetLineTextW(NULL,
-			       hInf,
-			       Version,
-			       Class,
-			       Buffer,
-			       MAX_PATH,
-			       &RequiredSize))
-	{
-	    return INVALID_HANDLE_VALUE;
-	}
+        if (!SetupGetLineTextW(NULL,
+                               hInf,
+                               Version,
+                               Class,
+                               Buffer,
+                               MAX_PATH,
+                               &RequiredSize))
+        {
+            return INVALID_HANDLE_VALUE;
+        }
 
-	if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-			    FullBuffer,
-			    0,
-			    NULL,
-			    REG_OPTION_NON_VOLATILE,
-			    KEY_SET_VALUE,
-			    NULL,
-			    &hClassKey,
-			    NULL))
-	{
-	    return INVALID_HANDLE_VALUE;
-	}
-
+        if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                            FullBuffer,
+                            0,
+                            NULL,
+                            REG_OPTION_NON_VOLATILE,
+                            KEY_SET_VALUE,
+                            NULL,
+                            &hClassKey,
+                            NULL))
+        {
+            return INVALID_HANDLE_VALUE;
+        }
     }
 
     if (RegSetValueExW(hClassKey,
-		       Class,
-		       0,
-		       REG_SZ,
-		       (LPBYTE)Buffer,
-		       RequiredSize * sizeof(WCHAR)))
+                       Class,
+                       0,
+                       REG_SZ,
+                       (LPBYTE)Buffer,
+                       RequiredSize * sizeof(WCHAR)))
     {
-	RegCloseKey(hClassKey);
-	RegDeleteKeyW(HKEY_LOCAL_MACHINE,
-		      FullBuffer);
-	return INVALID_HANDLE_VALUE;
+        RegCloseKey(hClassKey);
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE,
+                      FullBuffer);
+        return INVALID_HANDLE_VALUE;
     }
 
     return hClassKey;
@@ -3720,10 +3718,10 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     if (!ClassGuid)
     {
         if ((l = RegOpenKeyExW(HKLM,
-                          lpKeyName,
-                          0,
-                          samDesired,
-                          &hClassesKey)))
+                               lpKeyName,
+                               0,
+                               samDesired,
+                               &hClassesKey)))
         {
             SetLastError(ERROR_INVALID_CLASS);
             hClassesKey = INVALID_HANDLE_VALUE;
@@ -3739,19 +3737,19 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         SETUPDI_GuidToString(ClassGuid, bracedGuidString);
 
         if (!(l = RegOpenKeyExW(HKLM,
-                          lpKeyName,
-                          0,
-                          samDesired,
-                          &hClassesKey)))
+                                lpKeyName,
+                                0,
+                                samDesired,
+                                &hClassesKey)))
         {
-        	 if (MachineName != NULL)
-        	     RegCloseKey(HKLM);
-                
+            if (MachineName != NULL)
+                RegCloseKey(HKLM);
+
             if ((l = RegOpenKeyExW(hClassesKey,
-                              bracedGuidString,
-                              0,
-                              samDesired,
-                              &key)))
+                                   bracedGuidString,
+                                   0,
+                                   samDesired,
+                                   &key)))
             {
                 SetLastError(l);
                 key = INVALID_HANDLE_VALUE;
@@ -3773,10 +3771,10 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
  *		SetupDiOpenDeviceInterfaceW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiOpenDeviceInterfaceW(
-       HDEVINFO DeviceInfoSet,
-       PCWSTR DevicePath,
-       DWORD OpenFlags,
-       PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
+        HDEVINFO DeviceInfoSet,
+        PCWSTR DevicePath,
+        DWORD OpenFlags,
+        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
 {
     struct DeviceInfoSet * list;
     PCWSTR pEnd;
@@ -3978,7 +3976,7 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceW(
 
     RegCloseKey(hDevKey);
     dwIndex++;
-    }while(TRUE);
+    } while(TRUE);
 
     RegCloseKey(hKey);
     return FALSE;
@@ -3988,10 +3986,10 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceW(
  *		SetupDiOpenDeviceInterfaceA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiOpenDeviceInterfaceA(
-       HDEVINFO DeviceInfoSet,
-       PCSTR DevicePath,
-       DWORD OpenFlags,
-       PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
+        HDEVINFO DeviceInfoSet,
+        PCSTR DevicePath,
+        DWORD OpenFlags,
+        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
 {
     LPWSTR DevicePathW = NULL;
     BOOL bResult;
@@ -4014,10 +4012,10 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceA(
  *		SetupDiSetClassInstallParamsA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiSetClassInstallParamsA(
-       HDEVINFO  DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       PSP_CLASSINSTALL_HEADER ClassInstallParams,
-       DWORD ClassInstallParamsSize)
+        HDEVINFO  DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        PSP_CLASSINSTALL_HEADER ClassInstallParams,
+        DWORD ClassInstallParamsSize)
 {
     FIXME("%p %p %x %u\n",DeviceInfoSet, DeviceInfoData,
           ClassInstallParams->InstallFunction, ClassInstallParamsSize);
@@ -4026,8 +4024,8 @@ BOOL WINAPI SetupDiSetClassInstallParamsA(
 
 static BOOL WINAPI
 IntSetupDiRegisterDeviceInfo(
-    IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN OUT PSP_DEVINFO_DATA DeviceInfoData)
 {
     return SetupDiRegisterDeviceInfo(DeviceInfoSet, DeviceInfoData, 0, NULL, NULL, NULL);
 }
@@ -4036,9 +4034,9 @@ IntSetupDiRegisterDeviceInfo(
  *		SetupDiCallClassInstaller (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiCallClassInstaller(
-       DI_FUNCTION InstallFunction,
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData)
+        DI_FUNCTION InstallFunction,
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData)
 {
     BOOL ret = FALSE;
 
@@ -4391,9 +4389,9 @@ BOOL WINAPI SetupDiCallClassInstaller(
  *		SetupDiGetDeviceInstallParamsA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInstallParamsA(
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
 {
     SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
     BOOL ret = FALSE;
@@ -4434,8 +4432,8 @@ BOOL WINAPI SetupDiGetDeviceInstallParamsA(
  */
 BOOL WINAPI
 SetupDiGetDeviceInfoListClass(
-    IN HDEVINFO DeviceInfoSet,
-    OUT LPGUID ClassGuid)
+        IN HDEVINFO DeviceInfoSet,
+        OUT LPGUID ClassGuid)
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
@@ -4464,9 +4462,9 @@ SetupDiGetDeviceInfoListClass(
  */
 BOOL WINAPI
 SetupDiGetDeviceInstallParamsW(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
-    OUT PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+        OUT PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
@@ -4512,7 +4510,7 @@ SetupDiGetDeviceInstallParamsW(
 
 static BOOL
 CheckDeviceInstallParameters(
-    IN PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
+        IN PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     DWORD SupportedFlags =
         DI_NOVCP |                            /* 0x00000008 */
@@ -4571,9 +4569,9 @@ CheckDeviceInstallParameters(
  */
 BOOL WINAPI
 SetupDiSetDeviceInstallParamsW(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
-    IN PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+        IN PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
@@ -4611,9 +4609,9 @@ SetupDiSetDeviceInstallParamsW(
  */
 BOOL WINAPI
 SetupDiSetDeviceInstallParamsA(
-    HDEVINFO DeviceInfoSet,
-    PSP_DEVINFO_DATA DeviceInfoData,
-    PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
 {
     SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
     int len = 0;
@@ -4648,9 +4646,9 @@ SetupDiSetDeviceInstallParamsA(
 
 static HKEY
 OpenHardwareProfileKey(
-    IN HKEY HKLM,
-    IN DWORD HwProfile,
-    IN DWORD samDesired)
+        IN HKEY HKLM,
+        IN DWORD HwProfile,
+        IN DWORD samDesired)
 {
     HKEY hHWProfilesKey = NULL;
     HKEY hHWProfileKey = NULL;
@@ -4658,10 +4656,10 @@ OpenHardwareProfileKey(
     LONG rc;
 
     rc = RegOpenKeyExW(HKLM,
-        REGSTR_PATH_HWPROFILES,
-        0,
-        0,
-        &hHWProfilesKey);
+                       REGSTR_PATH_HWPROFILES,
+                       0,
+                       0,
+                       &hHWProfilesKey);
     if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
@@ -4669,24 +4667,22 @@ OpenHardwareProfileKey(
     }
     if (HwProfile == 0)
     {
-        rc = RegOpenKeyExW(
-            hHWProfilesKey,
-            REGSTR_KEY_CURRENT,
-            0,
-            KEY_CREATE_SUB_KEY,
-            &hHWProfileKey);
+        rc = RegOpenKeyExW(hHWProfilesKey,
+                           REGSTR_KEY_CURRENT,
+                           0,
+                           KEY_CREATE_SUB_KEY,
+                           &hHWProfileKey);
     }
     else
     {
         WCHAR subKey[5];
         snprintfW(subKey, 4, InstanceKeyFormat, HwProfile);
         subKey[4] = '\0';
-        rc = RegOpenKeyExW(
-            hHWProfilesKey,
-            subKey,
-            0,
-            KEY_CREATE_SUB_KEY,
-            &hHWProfileKey);
+        rc = RegOpenKeyExW(hHWProfilesKey,
+                           subKey,
+                           0,
+                           KEY_CREATE_SUB_KEY,
+                           &hHWProfileKey);
     }
     if (rc != ERROR_SUCCESS)
     {
@@ -4705,8 +4701,8 @@ cleanup:
 
 static BOOL
 IsDeviceInfoInDeviceInfoSet(
-    struct DeviceInfoSet *deviceInfoSet,
-    struct DeviceInfo *deviceInfo)
+        struct DeviceInfoSet *deviceInfoSet,
+        struct DeviceInfo *deviceInfo)
 {
     PLIST_ENTRY ListEntry;
 
@@ -4727,8 +4723,8 @@ IsDeviceInfoInDeviceInfoSet(
  */
 BOOL WINAPI
 SetupDiDeleteDeviceInfo(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *deviceInfoSet;
     struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData;
@@ -4760,11 +4756,11 @@ SetupDiDeleteDeviceInfo(
  */
 BOOL WINAPI
 SetupDiOpenDeviceInfoA(
-    IN HDEVINFO DeviceInfoSet,
-    IN PCSTR DeviceInstanceId,
-    IN HWND hwndParent OPTIONAL,
-    IN DWORD OpenFlags,
-    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+        IN HDEVINFO DeviceInfoSet,
+        IN PCSTR DeviceInstanceId,
+        IN HWND hwndParent OPTIONAL,
+        IN DWORD OpenFlags,
+        OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     LPWSTR DeviceInstanceIdW = NULL;
     BOOL bResult;
@@ -4789,11 +4785,11 @@ SetupDiOpenDeviceInfoA(
  */
 BOOL WINAPI
 SetupDiOpenDeviceInfoW(
-    IN HDEVINFO DeviceInfoSet,
-    IN PCWSTR DeviceInstanceId,
-    IN HWND hwndParent OPTIONAL,
-    IN DWORD OpenFlags,
-    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+        IN HDEVINFO DeviceInfoSet,
+        IN PCWSTR DeviceInstanceId,
+        IN HWND hwndParent OPTIONAL,
+        IN DWORD OpenFlags,
+        OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     struct DeviceInfoSet *list;
     HKEY hEnumKey, hKey = NULL;
@@ -4918,8 +4914,8 @@ cleanup:
  */
 BOOL WINAPI
 SetupDiGetSelectedDevice(
-    IN HDEVINFO DeviceInfoSet,
-    OUT PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        OUT PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
@@ -4956,8 +4952,8 @@ SetupDiGetSelectedDevice(
  */
 BOOL WINAPI
 SetupDiSetSelectedDevice(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
@@ -4988,7 +4984,7 @@ SetupDiSetSelectedDevice(
 /* Return the current hardware profile id, or -1 if error */
 static DWORD
 SETUPAPI_GetCurrentHwProfile(
-    IN HDEVINFO DeviceInfoSet)
+        IN HDEVINFO DeviceInfoSet)
 {
     HKEY hKey = NULL;
     DWORD dwRegType, dwLength;
@@ -4996,12 +4992,11 @@ SETUPAPI_GetCurrentHwProfile(
     LONG rc;
     DWORD ret = (DWORD)-1;
 
-    rc = RegOpenKeyExW(
-        ((struct DeviceInfoSet *)DeviceInfoSet)->HKLM,
-        REGSTR_PATH_IDCONFIGDB,
-        0, /* Options */
-        KEY_QUERY_VALUE,
-        &hKey);
+    rc = RegOpenKeyExW(((struct DeviceInfoSet *)DeviceInfoSet)->HKLM,
+                       REGSTR_PATH_IDCONFIGDB,
+                       0, /* Options */
+                       KEY_QUERY_VALUE,
+                       &hKey);
     if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
@@ -5009,12 +5004,11 @@ SETUPAPI_GetCurrentHwProfile(
     }
 
     dwLength = sizeof(DWORD);
-    rc = RegQueryValueExW(
-        hKey,
-        REGSTR_VAL_CURRENTCONFIG,
-        NULL,
-        &dwRegType,
-        (LPBYTE)&hwProfile, &dwLength);
+    rc = RegQueryValueExW(hKey,
+                          REGSTR_VAL_CURRENTCONFIG,
+                          NULL,
+                          &dwRegType,
+                          (LPBYTE)&hwProfile, &dwLength);
     if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
@@ -5037,8 +5031,8 @@ cleanup:
 
 static BOOL
 ResetDevice(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData)
 {
 #ifndef __WINESRC__
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
@@ -5060,8 +5054,8 @@ ResetDevice(
 }
 
 static BOOL StopDevice(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData)
 {
     FIXME("Stub: StopDevice(%p %p)\n", DeviceInfoSet, DeviceInfoData);
     return TRUE;
@@ -5072,8 +5066,8 @@ static BOOL StopDevice(
  */
 BOOL WINAPI
 SetupDiChangeState(
-    IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN OUT PSP_DEVINFO_DATA DeviceInfoData)
 {
     PSP_PROPCHANGE_PARAMS PropChange;
     HKEY hKey = INVALID_HANDLE_VALUE;
@@ -5184,12 +5178,12 @@ cleanup:
  */
 BOOL WINAPI
 SetupDiSelectDevice(
-    IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+        IN HDEVINFO DeviceInfoSet,
+        IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
-	FIXME("%p %p\n", DeviceInfoSet, DeviceInfoData);
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    FIXME("%p %p\n", DeviceInfoSet, DeviceInfoData);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -5198,8 +5192,8 @@ SetupDiSelectDevice(
  */
 BOOL WINAPI
 SetupDiRegisterCoDeviceInstallers(
-    IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData)
 {
     BOOL ret = FALSE; /* Return value */
 
@@ -5290,8 +5284,8 @@ cleanup:
 
 static BOOL
 InfIsFromOEMLocation(
-    IN PCWSTR FullName,
-    OUT LPBOOL IsOEMLocation)
+        IN PCWSTR FullName,
+        OUT LPBOOL IsOEMLocation)
 {
     PWCHAR last;
 
@@ -5344,8 +5338,8 @@ InfIsFromOEMLocation(
  */
 BOOL WINAPI
 SetupDiInstallDevice(
-    IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData)
+        IN HDEVINFO DeviceInfoSet,
+        IN OUT PSP_DEVINFO_DATA DeviceInfoData)
 {
     SP_DEVINSTALL_PARAMS_W InstallParams;
     struct DriverInfoElement *SelectedDriver;
@@ -5729,12 +5723,12 @@ cleanup:
  *		SetupDiOpenDevRegKey (SETUPAPI.@)
  */
 HKEY WINAPI SetupDiOpenDevRegKey(
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       DWORD Scope,
-       DWORD HwProfile,
-       DWORD KeyType,
-       REGSAM samDesired)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        DWORD Scope,
+        DWORD HwProfile,
+        DWORD KeyType,
+        REGSAM samDesired)
 {
     struct DeviceInfoSet *set = DeviceInfoSet;
     struct DeviceInfo *devInfo;
@@ -5816,11 +5810,11 @@ static BOOL SETUPDI_DeleteDrvKey(HKEY RootKey, struct DeviceInfo *devInfo)
  *		SetupDiDeleteDevRegKey (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiDeleteDevRegKey(
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       DWORD Scope,
-       DWORD HwProfile,
-       DWORD KeyType)
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        DWORD Scope,
+        DWORD HwProfile,
+        DWORD KeyType)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *devInfo;

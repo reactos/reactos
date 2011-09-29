@@ -938,43 +938,43 @@ static BOOL create_full_pathW(const WCHAR *path)
     strcpyW(new_path, path);
 
     while((len = strlenW(new_path)) && new_path[len - 1] == '\\')
-	new_path[len - 1] = 0;
+        new_path[len - 1] = 0;
 
     while(!CreateDirectoryW(new_path, NULL))
     {
-	WCHAR *slash;
-	DWORD last_error = GetLastError();
+        WCHAR *slash;
+        DWORD last_error = GetLastError();
 
-	if(last_error == ERROR_ALREADY_EXISTS)
-	    break;
+        if(last_error == ERROR_ALREADY_EXISTS)
+            break;
 
-	if(last_error != ERROR_PATH_NOT_FOUND)
-	{
-	    ret = FALSE;
-	    break;
-	}
+        if(last_error != ERROR_PATH_NOT_FOUND)
+        {
+            ret = FALSE;
+            break;
+        }
 
-	if(!(slash = strrchrW(new_path, '\\')))
-	{
-	    ret = FALSE;
-	    break;
-	}
+        if(!(slash = strrchrW(new_path, '\\')))
+        {
+            ret = FALSE;
+            break;
+        }
 
-	len = slash - new_path;
-	new_path[len] = 0;
-	if(!create_full_pathW(new_path))
-	{
-	    ret = FALSE;
-	    break;
-	}
-	new_path[len] = '\\';
+        len = slash - new_path;
+        new_path[len] = 0;
+        if(!create_full_pathW(new_path))
+        {
+            ret = FALSE;
+            break;
+        }
+        new_path[len] = '\\';
     }
 
     HeapFree(GetProcessHeap(), 0, new_path);
     return ret;
 }
 
-static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style, 
+static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
                            PSP_FILE_CALLBACK_W handler, PVOID context )
 {
     BOOL rc = FALSE;
@@ -1311,15 +1311,15 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                        debugstr_w( op_result == FILEOP_NEWPATH ? newpath : paths.Source ),
                        debugstr_w(paths.Target) );
                 if (op->dst_path)
-		{
-		    if (!create_full_pathW( op->dst_path ))
-		    {
-			paths.Win32Error = GetLastError();
-			op_result = handler( context, SPFILENOTIFY_COPYERROR,
-					     (UINT_PTR)&paths, (UINT_PTR)newpath );
-			if (op_result == FILEOP_ABORT) goto done;
-		    }
-		}
+                {
+                    if (!create_full_pathW( op->dst_path ))
+                    {
+                        paths.Win32Error = GetLastError();
+                        op_result = handler( context, SPFILENOTIFY_COPYERROR,
+                                     (UINT_PTR)&paths, (UINT_PTR)newpath );
+                        if (op_result == FILEOP_ABORT) goto done;
+                    }
+                }
                 if (do_file_copyW( op_result == FILEOP_NEWPATH ? newpath : paths.Source,
                                paths.Target, op->style, handler, context )) break;  /* success */
                 /* try to extract it from the cabinet file */
@@ -1721,10 +1721,10 @@ UINT WINAPI SetupRenameErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR source,
  *            SetupCopyErrorA   (SETUPAPI.@)
  */
 
-UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname, 
+UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname,
                              PCSTR sourcepath, PCSTR sourcefile, PCSTR targetpath,
-                             UINT w32error, DWORD style, PSTR pathbuffer, 
-			     DWORD buffersize, PDWORD requiredsize)
+                             UINT w32error, DWORD style, PSTR pathbuffer,
+                             DWORD buffersize, PDWORD requiredsize)
 {
     FIXME( "stub: (Error Number %d when attempting to copy file %s from %s to %s)\n",
            w32error, debugstr_a(sourcefile), debugstr_a(sourcepath) ,debugstr_a(targetpath));
@@ -1735,10 +1735,10 @@ UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname,
  *            SetupCopyErrorW   (SETUPAPI.@)
  */
 
-UINT WINAPI SetupCopyErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR diskname, 
+UINT WINAPI SetupCopyErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR diskname,
                              PCWSTR sourcepath, PCWSTR sourcefile, PCWSTR targetpath,
-                             UINT w32error, DWORD style, PWSTR pathbuffer, 
-			     DWORD buffersize, PDWORD requiredsize)
+                             UINT w32error, DWORD style, PWSTR pathbuffer,
+                             DWORD buffersize, PDWORD requiredsize)
 {
     FIXME( "stub: (Error Number %d when attempting to copy file %s from %s to %s)\n",
            w32error, debugstr_w(sourcefile), debugstr_w(sourcepath) ,debugstr_w(targetpath));
