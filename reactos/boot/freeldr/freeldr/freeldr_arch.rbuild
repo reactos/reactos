@@ -19,6 +19,7 @@
 				<file>hardware.c</file>
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
+				<file>hwdisk.c</file>
 				<file>hwpci.c</file>
 				<file>i386bug.c</file>
 				<file>i386disk.c</file>

@@ -83,6 +83,7 @@ if(ARCH MATCHES i386)
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
+        arch/i386/hwdisk.c
         arch/i386/hwpci.c
         arch/i386/i386bug.c
         arch/i386/i386disk.c
