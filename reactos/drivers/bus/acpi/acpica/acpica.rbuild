@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="acpica" type="staticlibrary" allowwarnings="true">
+<module name="acpica" type="staticlibrary">
+    <define name="ACPI_USE_LOCAL_CACHE"/>
 	<include base="acpica">include</include>
 	<directory name="dispatcher">
+		<file>dsargs.c</file>
+		<file>dscontrol.c</file>
 		<file>dsfield.c</file>
 		<file>dsinit.c</file>
 		<file>dsmethod.c</file>
@@ -12,25 +15,31 @@
 		<file>dsutils.c</file>
 		<file>dswexec.c</file>
 		<file>dswload.c</file>
+		<file>dswload2.c</file>
 		<file>dswscope.c</file>
 		<file>dswstate.c</file>
 	</directory>
 	<directory name="events">
 		<file>evevent.c</file>
+		<file>evglock.c</file>
 		<file>evgpe.c</file>
 		<file>evgpeblk.c</file>
+		<file>evgpeinit.c</file>
+		<file>evgpeutil.c</file>
 		<file>evmisc.c</file>
 		<file>evregion.c</file>
 		<file>evrgnini.c</file>
 		<file>evsci.c</file>
 		<file>evxface.c</file>
 		<file>evxfevnt.c</file>
+		<file>evxfgpe.c</file>
 		<file>evxfregn.c</file>
 	</directory>
 	<directory name="executer">
 		<file>exconfig.c</file>
 		<file>exconvrt.c</file>
 		<file>excreate.c</file>
+		<file>exdebug.c</file>
 		<file>exdump.c</file>
 		<file>exfield.c</file>
 		<file>exfldio.c</file>
@@ -55,6 +64,7 @@
 	<directory name="hardware">
 		<file>hwacpi.c</file>
 		<file>hwgpe.c</file>
+		<file>hwpci.c</file>
 		<file>hwregs.c</file>
 		<file>hwsleep.c</file>
 		<file>hwtimer.c</file>
@@ -121,6 +131,7 @@
 		<file>utclib.c</file>
 		<file>utcopy.c</file>
 		<file>utdebug.c</file>
+		<file>utdecode.c</file>
 		<file>utdelete.c</file>
 		<file>uteval.c</file>
 		<file>utglobal.c</file>
@@ -131,9 +142,11 @@
 		<file>utmisc.c</file>
 		<file>utmutex.c</file>
 		<file>utobject.c</file>
+		<file>utosi.c</file>
 		<file>utresrc.c</file>
 		<file>utstate.c</file>
 		<file>uttrack.c</file>
 		<file>utxface.c</file>
+		<file>utxferror.c</file>
 	</directory>
 </module>

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -128,10 +128,6 @@ ACPI_STATUS
 AcpiEvInstallXruptHandlers (
     void);
 
-ACPI_STATUS
-AcpiEvInstallFadtGpes (
-    void);
-
 UINT32
 AcpiEvFixedEventDetect (
     void);
@@ -144,18 +140,6 @@ BOOLEAN
 AcpiEvIsNotifyObject (
     ACPI_NAMESPACE_NODE     *Node);
 
-ACPI_STATUS
-AcpiEvAcquireGlobalLock(
-    UINT16                  Timeout);
-
-ACPI_STATUS
-AcpiEvReleaseGlobalLock(
-    void);
-
-ACPI_STATUS
-AcpiEvInitGlobalLockHandler (
-    void);
-
 UINT32
 AcpiEvGetGpeNumberIndex (
     UINT32                  GpeNumber);
@@ -167,20 +151,46 @@ AcpiEvQueueNotifyRequest (
 
 
 /*
- * evgpe - GPE handling and dispatch
+ * evglock - Global Lock support
  */
 ACPI_STATUS
-AcpiEvUpdateGpeEnableMasks (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
-    UINT8                   Type);
+AcpiEvInitGlobalLockHandler (
+    void);
+
+ACPI_STATUS
+AcpiEvAcquireGlobalLock(
+    UINT16                  Timeout);
+
+ACPI_STATUS
+AcpiEvReleaseGlobalLock(
+    void);
+
+ACPI_STATUS
+AcpiEvRemoveGlobalLockHandler (
+    void);
+
+
+/*
+ * evgpe - Low-level GPE support
+ */
+UINT32
+AcpiEvGpeDetect (
+    ACPI_GPE_XRUPT_INFO     *GpeXruptList);
+
+ACPI_STATUS
+AcpiEvUpdateGpeEnableMask (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
 
 ACPI_STATUS
 AcpiEvEnableGpe (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
-    BOOLEAN                 WriteToHardware);
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
 
 ACPI_STATUS
-AcpiEvDisableGpe (
+AcpiEvAddGpeReference (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
+
+ACPI_STATUS
+AcpiEvRemoveGpeReference (
     ACPI_GPE_EVENT_INFO     *GpeEventInfo);
 
 ACPI_GPE_EVENT_INFO *
@@ -188,25 +198,19 @@ AcpiEvGetGpeEventInfo (
     ACPI_HANDLE             GpeDevice,
     UINT32                  GpeNumber);
 
+ACPI_GPE_EVENT_INFO *
+AcpiEvLowGetGpeInfo (
+    UINT32                  GpeNumber,
+    ACPI_GPE_BLOCK_INFO     *GpeBlock);
 
-/*
- * evgpeblk
- */
-BOOLEAN
-AcpiEvValidGpeEvent (
+ACPI_STATUS
+AcpiEvFinishGpe (
     ACPI_GPE_EVENT_INFO     *GpeEventInfo);
 
-ACPI_STATUS
-AcpiEvWalkGpeList (
-    ACPI_GPE_CALLBACK       GpeWalkCallback,
-    void                    *Context);
 
-ACPI_STATUS
-AcpiEvDeleteGpeHandlers (
-    ACPI_GPE_XRUPT_INFO     *GpeXruptInfo,
-    ACPI_GPE_BLOCK_INFO     *GpeBlock,
-    void                    *Context);
-
+/*
+ * evgpeblk - Upper-level GPE block support
+ */
 ACPI_STATUS
 AcpiEvCreateGpeBlock (
     ACPI_NAMESPACE_NODE     *GpeDevice,
@@ -218,8 +222,9 @@ AcpiEvCreateGpeBlock (
 
 ACPI_STATUS
 AcpiEvInitializeGpeBlock (
-    ACPI_NAMESPACE_NODE     *GpeDevice,
-    ACPI_GPE_BLOCK_INFO     *GpeBlock);
+    ACPI_GPE_XRUPT_INFO     *GpeXruptInfo,
+    ACPI_GPE_BLOCK_INFO     *GpeBlock,
+    void                    *Context);
 
 ACPI_STATUS
 AcpiEvDeleteGpeBlock (
@@ -227,25 +232,59 @@ AcpiEvDeleteGpeBlock (
 
 UINT32
 AcpiEvGpeDispatch (
+    ACPI_NAMESPACE_NODE     *GpeDevice,
     ACPI_GPE_EVENT_INFO     *GpeEventInfo,
     UINT32                  GpeNumber);
 
-UINT32
-AcpiEvGpeDetect (
-    ACPI_GPE_XRUPT_INFO     *GpeXruptList);
-
-ACPI_STATUS
-AcpiEvSetGpeType (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
-    UINT8                   Type);
-
-ACPI_STATUS
-AcpiEvCheckForWakeOnlyGpe (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
-
+/*
+ * evgpeinit - GPE initialization and update
+ */
 ACPI_STATUS
 AcpiEvGpeInitialize (
     void);
+
+void
+AcpiEvUpdateGpes (
+    ACPI_OWNER_ID           TableOwnerId);
+
+ACPI_STATUS
+AcpiEvMatchGpeMethod (
+    ACPI_HANDLE             ObjHandle,
+    UINT32                  Level,
+    void                    *Context,
+    void                    **ReturnValue);
+
+/*
+ * evgpeutil - GPE utilities
+ */
+ACPI_STATUS
+AcpiEvWalkGpeList (
+    ACPI_GPE_CALLBACK       GpeWalkCallback,
+    void                    *Context);
+
+BOOLEAN
+AcpiEvValidGpeEvent (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
+
+ACPI_STATUS
+AcpiEvGetGpeDevice (
+    ACPI_GPE_XRUPT_INFO     *GpeXruptInfo,
+    ACPI_GPE_BLOCK_INFO     *GpeBlock,
+    void                    *Context);
+
+ACPI_GPE_XRUPT_INFO *
+AcpiEvGetGpeXruptBlock (
+    UINT32                  InterruptNumber);
+
+ACPI_STATUS
+AcpiEvDeleteGpeXrupt (
+    ACPI_GPE_XRUPT_INFO     *GpeXrupt);
+
+ACPI_STATUS
+AcpiEvDeleteGpeHandlers (
+    ACPI_GPE_XRUPT_INFO     *GpeXruptInfo,
+    ACPI_GPE_BLOCK_INFO     *GpeBlock,
+    void                    *Context);
 
 
 /*
@@ -265,7 +304,7 @@ AcpiEvAddressSpaceDispatch (
     UINT32                  Function,
     UINT32                  RegionOffset,
     UINT32                  BitWidth,
-    ACPI_INTEGER            *Value);
+    UINT64                  *Value);
 
 ACPI_STATUS
 AcpiEvAttachRegion (

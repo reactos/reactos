@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -263,12 +263,12 @@ AcpiDsInitializeObjects (
         "**** Starting initialization of namespace objects ****\n"));
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT, "Parsing all Control Methods:"));
 
-    Info.MethodCount    = 0;
-    Info.OpRegionCount  = 0;
-    Info.ObjectCount    = 0;
-    Info.DeviceCount    = 0;
-    Info.TableIndex     = TableIndex;
-    Info.OwnerId        = OwnerId;
+    /* Set all init info to zero */
+
+    ACPI_MEMSET (&Info, 0, sizeof (ACPI_INIT_WALK_INFO));
+
+    Info.OwnerId = OwnerId;
+    Info.TableIndex = TableIndex;
 
     /* Walk entire namespace from the supplied root */
 
@@ -297,12 +297,12 @@ AcpiDsInitializeObjects (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nTable [%4.4s](id %4.4X) - %hd Objects with %hd Devices %hd Methods %hd Regions\n",
+        "\nTable [%4.4s](id %4.4X) - %u Objects with %u Devices %u Methods %u Regions\n",
         Table->Signature, OwnerId, Info.ObjectCount,
         Info.DeviceCount, Info.MethodCount, Info.OpRegionCount));
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%hd Methods, %hd Regions\n", Info.MethodCount, Info.OpRegionCount));
+        "%u Methods, %u Regions\n", Info.MethodCount, Info.OpRegionCount));
 
     return_ACPI_STATUS (AE_OK);
 }

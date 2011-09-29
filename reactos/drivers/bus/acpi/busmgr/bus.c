@@ -1650,7 +1650,7 @@ acpi_bus_init (void)
 	//result = acpi_ec_ecdt_probe();
 	/* Ignore result. Not having an ECDT is not fatal. */
 
-	status = AcpiInitializeObjects(ACPI_NO_DEVICE_INIT | ACPI_NO_OBJECT_INIT);
+	status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
 	if (ACPI_FAILURE(status)) {
 		DPRINT1("Unable to initialize ACPI objects\n");
 		goto error1;

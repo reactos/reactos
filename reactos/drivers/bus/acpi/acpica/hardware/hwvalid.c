@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -237,7 +237,7 @@ AcpiHwValidateIoRequest (
     if (LastAddress > ACPI_UINT16_MAX)
     {
         ACPI_ERROR ((AE_INFO,
-            "Illegal I/O port address/length above 64K: 0x%p/%X",
+            "Illegal I/O port address/length above 64K: %p/0x%X",
             ACPI_CAST_PTR (void, Address), ByteWidth));
         return_ACPI_STATUS (AE_LIMIT);
     }
@@ -316,6 +316,13 @@ AcpiHwReadPort (
     UINT32                  i;
 
 
+    /* Truncate address to 16 bits if requested */
+
+    if (AcpiGbl_TruncateIoAddresses)
+    {
+        Address &= ACPI_UINT16_MAX;
+    }
+
     /* Validate the entire request and perform the I/O */
 
     Status = AcpiHwValidateIoRequest (Address, Width);
@@ -382,6 +389,13 @@ AcpiHwWritePort (
     ACPI_STATUS             Status;
     UINT32                  i;
 
+
+    /* Truncate address to 16 bits if requested */
+
+    if (AcpiGbl_TruncateIoAddresses)
+    {
+        Address &= ACPI_UINT16_MAX;
+    }
 
     /* Validate the entire request and perform the I/O */
 

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -116,6 +116,8 @@
 #ifndef __ACGCC_H__
 #define __ACGCC_H__
 
+#define ACPI_INLINE             __inline__
+
 /* Function name is used for debug output. Non-ANSI, compiler-dependent */
 
 #define ACPI_GET_FUNCTION_NAME          __FUNCTION__
@@ -133,9 +135,6 @@
  * is unused.
  */
 #define ACPI_UNUSED_VAR __attribute__ ((unused))
-
-#define COMPILER_DEPENDENT_INT64   long long int
-#define COMPILER_DEPENDENT_UINT64  unsigned long long int
 
 #define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq) \
 	do { \
@@ -163,6 +162,12 @@
 			"andl   $0x1,%%eax" \
 			:"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~3L):"dx"); \
 	} while(0)
+    
+#ifdef ACPI_APPLICATION
+#define ACPI_FLUSH_CPU_CACHE()
+#else
+#define ACPI_FLUSH_CPU_CACHE()  asm ("WBINVD")
+#endif
 
 #define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
 {                           \

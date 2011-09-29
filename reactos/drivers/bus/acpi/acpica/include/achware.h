@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -200,13 +200,15 @@ AcpiHwWritePort (
 /*
  * hwgpe - GPE support
  */
-ACPI_STATUS
-AcpiHwLowDisableGpe (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
+UINT32
+AcpiHwGetGpeRegisterBit (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
+    ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo);
 
 ACPI_STATUS
-AcpiHwWriteGpeEnableReg (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo);
+AcpiHwLowSetGpe (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
+    UINT32                  Action);
 
 ACPI_STATUS
 AcpiHwDisableGpeBlock (
@@ -246,6 +248,16 @@ AcpiHwEnableRuntimeGpeBlock (
     ACPI_GPE_XRUPT_INFO     *GpeXruptInfo,
     ACPI_GPE_BLOCK_INFO     *GpeBlock,
     void                    *Context);
+
+
+/*
+ * hwpci - PCI configuration support
+ */
+ACPI_STATUS
+AcpiHwDerivePciId (
+    ACPI_PCI_ID             *PciId,
+    ACPI_HANDLE             RootPciDevice,
+    ACPI_HANDLE             PciRegion);
 
 
 /*

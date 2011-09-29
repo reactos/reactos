@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -185,25 +185,25 @@ AcpiNsInitializeObjects (
     /* Walk entire namespace from the supplied root */
 
     Status = AcpiWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                                ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
-                                &Info, NULL);
+                ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
+                &Info, NULL);
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status, "During WalkNamespace"));
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nInitialized %hd/%hd Regions %hd/%hd Fields %hd/%hd "
-        "Buffers %hd/%hd Packages (%hd nodes)\n",
+        "\nInitialized %u/%u Regions %u/%u Fields %u/%u "
+        "Buffers %u/%u Packages (%u nodes)\n",
         Info.OpRegionInit,  Info.OpRegionCount,
         Info.FieldInit,     Info.FieldCount,
         Info.BufferInit,    Info.BufferCount,
         Info.PackageInit,   Info.PackageCount, Info.ObjectCount));
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%hd Control Methods found\n", Info.MethodCount));
+        "%u Control Methods found\n", Info.MethodCount));
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%hd Op Regions found\n", Info.OpRegionCount));
+        "%u Op Regions found\n", Info.OpRegionCount));
 
     return_ACPI_STATUS (AE_OK);
 }
@@ -285,6 +285,16 @@ AcpiNsInitializeDevices (
     Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
                 ACPI_UINT32_MAX, FALSE, AcpiNsInitOneDevice, NULL, &Info, NULL);
 
+    /*
+     * Any _OSI requests should be completed by now. If the BIOS has
+     * requested any Windows OSI strings, we will always truncate
+     * I/O addresses to 16 bits -- for Windows compatibility.
+     */
+    if (AcpiGbl_OsiData >= ACPI_OSI_WIN_2000)
+    {
+        AcpiGbl_TruncateIoAddresses = TRUE;
+    }
+
     ACPI_FREE (Info.EvaluateInfo);
     if (ACPI_FAILURE (Status))
     {
@@ -292,8 +302,8 @@ AcpiNsInitializeDevices (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nExecuted %hd _INI methods requiring %hd _STA executions "
-        "(examined %hd objects)\n",
+        "\nExecuted %u _INI methods requiring %u _STA executions "
+        "(examined %u objects)\n",
         Info.Num_INI, Info.Num_STA, Info.DeviceCount));
 
     return_ACPI_STATUS (Status);
@@ -510,7 +520,7 @@ AcpiNsFindIniMethods (
      * The only _INI methods that we care about are those that are
      * present under Device, Processor, and Thermal objects.
      */
-    ParentNode = AcpiNsGetParentNode (Node);
+    ParentNode = Node->Parent;
     switch (ParentNode->Type)
     {
     case ACPI_TYPE_DEVICE:
@@ -522,7 +532,7 @@ AcpiNsFindIniMethods (
         while (ParentNode)
         {
             ParentNode->Flags |= ANOBJ_SUBTREE_HAS_INI;
-            ParentNode = AcpiNsGetParentNode (ParentNode);
+            ParentNode = ParentNode->Parent;
         }
         break;
 

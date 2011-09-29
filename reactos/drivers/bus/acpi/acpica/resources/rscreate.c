@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -270,7 +270,7 @@ AcpiRsCreatePciRoutingTable (
 
     /*
      * Loop through the ACPI_INTERNAL_OBJECTS - Each object should be a
-     * package that in turn contains an ACPI_INTEGER Address, a UINT8 Pin,
+     * package that in turn contains an UINT64 Address, a UINT8 Pin,
      * a Name, and a UINT8 SourceIndex.
      */
     TopObjectList    = PackageObject->Package.Elements;
@@ -301,7 +301,7 @@ AcpiRsCreatePciRoutingTable (
         if ((*TopObjectList)->Common.Type != ACPI_TYPE_PACKAGE)
         {
             ACPI_ERROR ((AE_INFO,
-                "(PRT[%X]) Need sub-package, found %s",
+                "(PRT[%u]) Need sub-package, found %s",
                 Index, AcpiUtGetObjectTypeName (*TopObjectList)));
             return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
         }
@@ -311,7 +311,7 @@ AcpiRsCreatePciRoutingTable (
         if ((*TopObjectList)->Package.Count != 4)
         {
             ACPI_ERROR ((AE_INFO,
-                "(PRT[%X]) Need package of length 4, found length %d",
+                "(PRT[%u]) Need package of length 4, found length %u",
                 Index, (*TopObjectList)->Package.Count));
             return_ACPI_STATUS (AE_AML_PACKAGE_LIMIT);
         }
@@ -328,7 +328,7 @@ AcpiRsCreatePciRoutingTable (
         ObjDesc = SubObjectList[0];
         if (ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
-            ACPI_ERROR ((AE_INFO, "(PRT[%X].Address) Need Integer, found %s",
+            ACPI_ERROR ((AE_INFO, "(PRT[%u].Address) Need Integer, found %s",
                 Index, AcpiUtGetObjectTypeName (ObjDesc)));
             return_ACPI_STATUS (AE_BAD_DATA);
         }
@@ -340,7 +340,7 @@ AcpiRsCreatePciRoutingTable (
         ObjDesc = SubObjectList[1];
         if (ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
-            ACPI_ERROR ((AE_INFO, "(PRT[%X].Pin) Need Integer, found %s",
+            ACPI_ERROR ((AE_INFO, "(PRT[%u].Pin) Need Integer, found %s",
                 Index, AcpiUtGetObjectTypeName (ObjDesc)));
             return_ACPI_STATUS (AE_BAD_DATA);
         }
@@ -378,7 +378,7 @@ AcpiRsCreatePciRoutingTable (
                 if (ObjDesc->Reference.Class != ACPI_REFCLASS_NAME)
                 {
                     ACPI_ERROR ((AE_INFO,
-                        "(PRT[%X].Source) Need name, found Reference Class %X",
+                        "(PRT[%u].Source) Need name, found Reference Class 0x%X",
                         Index, ObjDesc->Reference.Class));
                     return_ACPI_STATUS (AE_BAD_DATA);
                 }
@@ -426,7 +426,7 @@ AcpiRsCreatePciRoutingTable (
             default:
 
                ACPI_ERROR ((AE_INFO,
-                   "(PRT[%X].Source) Need Ref/String/Integer, found %s",
+                   "(PRT[%u].Source) Need Ref/String/Integer, found %s",
                    Index, AcpiUtGetObjectTypeName (ObjDesc)));
                return_ACPI_STATUS (AE_BAD_DATA);
             }
@@ -442,7 +442,7 @@ AcpiRsCreatePciRoutingTable (
         if (ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
             ACPI_ERROR ((AE_INFO,
-                "(PRT[%X].SourceIndex) Need Integer, found %s",
+                "(PRT[%u].SourceIndex) Need Integer, found %s",
                 Index, AcpiUtGetObjectTypeName (ObjDesc)));
             return_ACPI_STATUS (AE_BAD_DATA);
         }

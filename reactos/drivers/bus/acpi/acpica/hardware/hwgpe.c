@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -132,23 +132,54 @@ AcpiHwEnableWakeupGpeBlock (
 
 /******************************************************************************
  *
- * FUNCTION:    AcpiHwLowDisableGpe
+ * FUNCTION:    AcpiHwGetGpeRegisterBit
+ *
+ * PARAMETERS:  GpeEventInfo        - Info block for the GPE
+ *              GpeRegisterInfo     - Info block for the GPE register
+ *
+ * RETURN:      Register mask with a one in the GPE bit position
+ *
+ * DESCRIPTION: Compute the register mask for this GPE. One bit is set in the
+ *              correct position for the input GPE.
+ *
+ ******************************************************************************/
+
+UINT32
+AcpiHwGetGpeRegisterBit (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
+    ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo)
+{
+
+    return ((UINT32) 1 <<
+        (GpeEventInfo->GpeNumber - GpeRegisterInfo->BaseGpeNumber));
+}
+
+
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiHwLowSetGpe
  *
  * PARAMETERS:  GpeEventInfo        - Info block for the GPE to be disabled
+ *              Action              - Enable or disable
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Disable a single GPE in the enable register.
+ * DESCRIPTION: Enable or disable a single GPE in the parent enable register.
  *
  ******************************************************************************/
 
 ACPI_STATUS
-AcpiHwLowDisableGpe (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo)
+AcpiHwLowSetGpe (
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
+    UINT32                  Action)
 {
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
     ACPI_STATUS             Status;
     UINT32                  EnableMask;
+    UINT32                  RegisterBit;
+
+
+    ACPI_FUNCTION_ENTRY ();
 
 
     /* Get the info block for the entire GPE register */
@@ -167,57 +198,38 @@ AcpiHwLowDisableGpe (
         return (Status);
     }
 
-    /* Clear just the bit that corresponds to this GPE */
+    /* Set or clear just the bit that corresponds to this GPE */
 
-    ACPI_CLEAR_BIT (EnableMask, ((UINT32) 1 <<
-        (GpeEventInfo->GpeNumber - GpeRegisterInfo->BaseGpeNumber)));
+    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo, GpeRegisterInfo);
+    switch (Action)
+    {
+    case ACPI_GPE_CONDITIONAL_ENABLE:
 
+        /* Only enable if the EnableForRun bit is set */
+
+        if (!(RegisterBit & GpeRegisterInfo->EnableForRun))
+        {
+            return (AE_BAD_PARAMETER);
+        }
+
+        /*lint -fallthrough */
+
+    case ACPI_GPE_ENABLE:
+        ACPI_SET_BIT (EnableMask, RegisterBit);
+        break;
+
+    case ACPI_GPE_DISABLE:
+        ACPI_CLEAR_BIT (EnableMask, RegisterBit);
+        break;
+
+    default:
+        ACPI_ERROR ((AE_INFO, "Invalid GPE Action, %u\n", Action));
+        return (AE_BAD_PARAMETER);
+    }
 
     /* Write the updated enable mask */
 
     Status = AcpiHwWrite (EnableMask, &GpeRegisterInfo->EnableAddress);
-    return (Status);
-}
-
-
-/******************************************************************************
- *
- * FUNCTION:    AcpiHwWriteGpeEnableReg
- *
- * PARAMETERS:  GpeEventInfo        - Info block for the GPE to be enabled
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Write a GPE enable register.  Note: The bit for this GPE must
- *              already be cleared or set in the parent register
- *              EnableForRun mask.
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiHwWriteGpeEnableReg (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo)
-{
-    ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
-    ACPI_STATUS             Status;
-
-
-    ACPI_FUNCTION_ENTRY ();
-
-
-    /* Get the info block for the entire GPE register */
-
-    GpeRegisterInfo = GpeEventInfo->RegisterInfo;
-    if (!GpeRegisterInfo)
-    {
-        return (AE_NOT_EXIST);
-    }
-
-    /* Write the entire GPE (runtime) enable register */
-
-    Status = AcpiHwWrite (GpeRegisterInfo->EnableForRun,
-                    &GpeRegisterInfo->EnableAddress);
-
     return (Status);
 }
 
@@ -238,22 +250,29 @@ ACPI_STATUS
 AcpiHwClearGpe (
     ACPI_GPE_EVENT_INFO     *GpeEventInfo)
 {
+    ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
     ACPI_STATUS             Status;
-    UINT8                   RegisterBit;
+    UINT32                  RegisterBit;
 
 
     ACPI_FUNCTION_ENTRY ();
 
+    /* Get the info block for the entire GPE register */
 
-    RegisterBit = (UINT8) (1 <<
-        (GpeEventInfo->GpeNumber - GpeEventInfo->RegisterInfo->BaseGpeNumber));
+    GpeRegisterInfo = GpeEventInfo->RegisterInfo;
+    if (!GpeRegisterInfo)
+    {
+        return (AE_NOT_EXIST);
+    }
 
     /*
      * Write a one to the appropriate bit in the status register to
      * clear this GPE.
      */
+    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo, GpeRegisterInfo);
+
     Status = AcpiHwWrite (RegisterBit,
-                    &GpeEventInfo->RegisterInfo->StatusAddress);
+                    &GpeRegisterInfo->StatusAddress);
 
     return (Status);
 }
@@ -278,10 +297,10 @@ AcpiHwGetGpeStatus (
     ACPI_EVENT_STATUS       *EventStatus)
 {
     UINT32                  InByte;
-    UINT8                   RegisterBit;
+    UINT32                  RegisterBit;
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
-    ACPI_STATUS             Status;
     ACPI_EVENT_STATUS       LocalEventStatus = 0;
+    ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_ENTRY ();
@@ -298,8 +317,7 @@ AcpiHwGetGpeStatus (
 
     /* Get the register bitmask for this GPE */
 
-    RegisterBit = (UINT8) (1 <<
-        (GpeEventInfo->GpeNumber - GpeEventInfo->RegisterInfo->BaseGpeNumber));
+    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo, GpeRegisterInfo);
 
     /* GPE currently enabled? (enabled for runtime?) */
 
@@ -320,7 +338,7 @@ AcpiHwGetGpeStatus (
     Status = AcpiHwRead (&InByte, &GpeRegisterInfo->StatusAddress);
     if (ACPI_FAILURE (Status))
     {
-        goto UnlockAndExit;
+        return (Status);
     }
 
     if (RegisterBit & InByte)
@@ -331,10 +349,7 @@ AcpiHwGetGpeStatus (
     /* Set return value */
 
     (*EventStatus) = LocalEventStatus;
-
-
-UnlockAndExit:
-    return (Status);
+    return (AE_OK);
 }
 
 

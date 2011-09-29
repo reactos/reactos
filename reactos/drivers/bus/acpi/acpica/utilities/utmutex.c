@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -128,7 +128,7 @@ static ACPI_STATUS
 AcpiUtCreateMutex (
     ACPI_MUTEX_HANDLE       MutexId);
 
-static ACPI_STATUS
+static void
 AcpiUtDeleteMutex (
     ACPI_MUTEX_HANDLE       MutexId);
 
@@ -182,6 +182,13 @@ AcpiUtMutexInitialize (
         return_ACPI_STATUS (Status);
     }
 
+    /* Mutex for _OSI support */
+    Status = AcpiOsCreateMutex (&AcpiGbl_OsiMutex);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
     /* Create the reader/writer lock for namespace access */
 
     Status = AcpiUtCreateRwLock (&AcpiGbl_NamespaceRwLock);
@@ -216,8 +223,10 @@ AcpiUtMutexTerminate (
 
     for (i = 0; i < ACPI_NUM_MUTEX; i++)
     {
-        (void) AcpiUtDeleteMutex (i);
+        AcpiUtDeleteMutex (i);
     }
+
+    AcpiOsDeleteMutex (AcpiGbl_OsiMutex);
 
     /* Delete the spinlocks */
 
@@ -253,11 +262,6 @@ AcpiUtCreateMutex (
     ACPI_FUNCTION_TRACE_U32 (UtCreateMutex, MutexId);
 
 
-    if (MutexId > ACPI_MAX_MUTEX)
-    {
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
-    }
-
     if (!AcpiGbl_MutexInfo[MutexId].Mutex)
     {
         Status = AcpiOsCreateMutex (&AcpiGbl_MutexInfo[MutexId].Mutex);
@@ -281,7 +285,7 @@ AcpiUtCreateMutex (
  *
  ******************************************************************************/
 
-static ACPI_STATUS
+static void
 AcpiUtDeleteMutex (
     ACPI_MUTEX_HANDLE       MutexId)
 {
@@ -289,17 +293,10 @@ AcpiUtDeleteMutex (
     ACPI_FUNCTION_TRACE_U32 (UtDeleteMutex, MutexId);
 
 
-    if (MutexId > ACPI_MAX_MUTEX)
-    {
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
-    }
-
     AcpiOsDeleteMutex (AcpiGbl_MutexInfo[MutexId].Mutex);
 
     AcpiGbl_MutexInfo[MutexId].Mutex = NULL;
     AcpiGbl_MutexInfo[MutexId].ThreadId = ACPI_MUTEX_NOT_ACQUIRED;
-
-    return_ACPI_STATUS (AE_OK);
 }
 
 
@@ -351,16 +348,16 @@ AcpiUtAcquireMutex (
                 if (i == MutexId)
                 {
                     ACPI_ERROR ((AE_INFO,
-                        "Mutex [%s] already acquired by this thread [%p]",
+                        "Mutex [%s] already acquired by this thread [%u]",
                         AcpiUtGetMutexName (MutexId),
-                        ACPI_CAST_PTR (void, ThisThreadId)));
+                        (UINT32) ThisThreadId));
 
                     return (AE_ALREADY_ACQUIRED);
                 }
 
                 ACPI_ERROR ((AE_INFO,
-                    "Invalid acquire order: Thread %p owns [%s], wants [%s]",
-                    ACPI_CAST_PTR (void, ThisThreadId), AcpiUtGetMutexName (i),
+                    "Invalid acquire order: Thread %u owns [%s], wants [%s]",
+                    (UINT32) ThisThreadId, AcpiUtGetMutexName (i),
                     AcpiUtGetMutexName (MutexId)));
 
                 return (AE_ACQUIRE_DEADLOCK);
@@ -370,15 +367,15 @@ AcpiUtAcquireMutex (
 #endif
 
     ACPI_DEBUG_PRINT ((ACPI_DB_MUTEX,
-        "Thread %p attempting to acquire Mutex [%s]\n",
-        ACPI_CAST_PTR (void, ThisThreadId), AcpiUtGetMutexName (MutexId)));
+        "Thread %u attempting to acquire Mutex [%s]\n",
+        (UINT32) ThisThreadId, AcpiUtGetMutexName (MutexId)));
 
     Status = AcpiOsAcquireMutex (AcpiGbl_MutexInfo[MutexId].Mutex,
                 ACPI_WAIT_FOREVER);
     if (ACPI_SUCCESS (Status))
     {
-        ACPI_DEBUG_PRINT ((ACPI_DB_MUTEX, "Thread %p acquired Mutex [%s]\n",
-            ACPI_CAST_PTR (void, ThisThreadId), AcpiUtGetMutexName (MutexId)));
+        ACPI_DEBUG_PRINT ((ACPI_DB_MUTEX, "Thread %u acquired Mutex [%s]\n",
+            (UINT32) ThisThreadId, AcpiUtGetMutexName (MutexId)));
 
         AcpiGbl_MutexInfo[MutexId].UseCount++;
         AcpiGbl_MutexInfo[MutexId].ThreadId = ThisThreadId;
@@ -386,8 +383,8 @@ AcpiUtAcquireMutex (
     else
     {
         ACPI_EXCEPTION ((AE_INFO, Status,
-            "Thread %p could not acquire Mutex [%X]",
-            ACPI_CAST_PTR (void, ThisThreadId), MutexId));
+            "Thread %u could not acquire Mutex [0x%X]",
+            (UINT32) ThisThreadId, MutexId));
     }
 
     return (Status);
@@ -417,8 +414,8 @@ AcpiUtReleaseMutex (
 
 
     ThisThreadId = AcpiOsGetThreadId ();
-    ACPI_DEBUG_PRINT ((ACPI_DB_MUTEX, "Thread %p releasing Mutex [%s]\n",
-        ACPI_CAST_PTR (void, ThisThreadId), AcpiUtGetMutexName (MutexId)));
+    ACPI_DEBUG_PRINT ((ACPI_DB_MUTEX, "Thread %u releasing Mutex [%s]\n",
+        (UINT32) ThisThreadId, AcpiUtGetMutexName (MutexId)));
 
     if (MutexId > ACPI_MAX_MUTEX)
     {
@@ -431,7 +428,7 @@ AcpiUtReleaseMutex (
     if (AcpiGbl_MutexInfo[MutexId].ThreadId == ACPI_MUTEX_NOT_ACQUIRED)
     {
         ACPI_ERROR ((AE_INFO,
-            "Mutex [%X] is not acquired, cannot release", MutexId));
+            "Mutex [0x%X] is not acquired, cannot release", MutexId));
 
         return (AE_NOT_ACQUIRED);
     }

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2009, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -114,7 +114,7 @@
  *****************************************************************************/
 
 #ifndef __ACFREEBSD_H__
-#define	__ACFREEBSD_H__
+#define __ACFREEBSD_H__
 
 
 /* FreeBSD uses GCC */
@@ -123,12 +123,11 @@
 #include <sys/types.h>
 #include <machine/acpica_machdep.h>
 
-#define	ACPI_UINTPTR_T		uintptr_t
+#define ACPI_UINTPTR_T      uintptr_t
 
-#define	ACPI_USE_LOCAL_CACHE
-#define	ACPI_USE_SYSTEM_CLIBRARY
-
-#define	__cdecl
+#define ACPI_USE_DO_WHILE_0
+#define ACPI_USE_LOCAL_CACHE
+#define ACPI_USE_SYSTEM_CLIBRARY
 
 #ifdef _KERNEL
 
@@ -140,17 +139,17 @@
 
 #include "opt_acpi.h"
 
-#define	ACPI_THREAD_ID		lwpid_t
+#define ACPI_MUTEX_TYPE     ACPI_OSL_MUTEX
 
 #ifdef ACPI_DEBUG
-#define	ACPI_DEBUG_OUTPUT	/* for backward compatibility */
-#define	ACPI_DISASSEMBLER
+#define ACPI_DEBUG_OUTPUT   /* for backward compatibility */
+#define ACPI_DISASSEMBLER
 #endif
 
 #ifdef ACPI_DEBUG_OUTPUT
 #include "opt_ddb.h"
 #ifdef DDB
-#define	ACPI_DEBUGGER
+#define ACPI_DEBUGGER
 #endif /* DDB */
 #endif /* ACPI_DEBUG_OUTPUT */
 
@@ -158,7 +157,7 @@
 #undef DEBUGGER_THREADING
 #endif /* DEBUGGER_THREADING */
 
-#define	DEBUGGER_THREADING	0	/* integrated with DDB */
+#define DEBUGGER_THREADING  0   /* integrated with DDB */
 
 #else /* _KERNEL */
 
@@ -166,14 +165,12 @@
 #include <ctype.h>
 #endif
 
-#define	ACPI_THREAD_ID		pthread_t
+#define ACPI_CAST_PTHREAD_T(pthread)    ((ACPI_THREAD_ID) ACPI_TO_INTEGER (pthread))
 
-/* Not building kernel code, so use libc */
-#define	ACPI_USE_STANDARD_HEADERS
-#define	ACPI_FLUSH_CPU_CACHE()
+#define ACPI_USE_STANDARD_HEADERS
 
-#define	__cli()
-#define	__sti()
+#define ACPI_FLUSH_CPU_CACHE()
+#define __cdecl
 
 #endif /* _KERNEL */
 
