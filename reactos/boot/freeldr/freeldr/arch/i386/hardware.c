@@ -221,12 +221,19 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       TRACE("PnP-BIOS not supported\n");
       return;
     }
-  TRACE("Signature '%c%c%c%c'\n",
-	    InstData->Signature[0], InstData->Signature[1],
-	    InstData->Signature[2], InstData->Signature[3]);
 
+  TRACE("PnP-BIOS supported\n");
+  TRACE("Signature '%c%c%c%c'\n",
+        InstData->Signature[0], InstData->Signature[1],
+        InstData->Signature[2], InstData->Signature[3]);
 
   x = PnpBiosGetDeviceNodeCount(&NodeSize, &NodeCount);
+  if (x == 0x82)
+    {
+      TRACE("PnP-BIOS function 'Get Number of System Device Nodes' not supported\n");
+      return;
+    }
+
   NodeCount &= 0xFF; // needed since some fscked up BIOSes return
                      // wrong info (e.g. Mac Virtual PC)
                      // e.g. look: http://my.execpc.com/~geezer/osd/pnp/pnp16.c
@@ -235,7 +242,6 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       ERR("PnP-BIOS failed to enumerate device nodes\n");
       return;
     }
-  TRACE("PnP-BIOS supported\n");
   TRACE("MaxNodeSize %u  NodeCount %u\n", NodeSize, NodeCount);
   TRACE("Estimated buffer size %u\n", NodeSize * NodeCount);
 
@@ -1354,7 +1360,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 
   ControllerNumber = 0;
   BasePtr = (PUSHORT)0x400;
-  for (i = 0; i < 4; i++, BasePtr++)
+  for (i = 0; i < 2; i++, BasePtr++)
     {
       Base = (ULONG)*BasePtr;
       if (Base == 0)
@@ -1394,7 +1400,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       /* Set Interrupt */
       PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
       PartialDescriptor->Type = CmResourceTypeInterrupt;
-      PartialDescriptor->ShareDisposition = CmResourceShareShared;
+      PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
       PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
       PartialDescriptor->u.Interrupt.Level = Irq[i];
       PartialDescriptor->u.Interrupt.Vector = Irq[i];
