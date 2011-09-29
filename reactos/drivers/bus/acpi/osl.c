@@ -462,7 +462,7 @@ OslIsPciDevicePresent(ULONG BusNumber, ULONG SlotNumber)
                                        sizeof(PciConfig));
     if (ReadLength == 0)
     {
-        DPRINT1("PCI device is not present\n");
+        DPRINT("PCI device is not present\n");
         return FALSE;
     }
 
@@ -470,7 +470,7 @@ OslIsPciDevicePresent(ULONG BusNumber, ULONG SlotNumber)
 
     if (PciConfig.VendorID == PCI_INVALID_VENDORID)
     {
-        DPRINT1("Invalid vendor ID in PCI configuration space\n");
+        DPRINT("Invalid vendor ID in PCI configuration space\n");
         return FALSE;
     }
 
@@ -497,6 +497,7 @@ AcpiOsReadPciConfiguration (
     if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
         return AE_NOT_FOUND;
 
+    /* Width is in BITS */
     HalGetBusDataByOffset(PCIConfiguration,
         PciId->Bus,
         slot.u.AsULONG,
@@ -526,6 +527,7 @@ AcpiOsWritePciConfiguration (
     if (!OslIsPciDevicePresent(PciId->Bus, slot.u.AsULONG))
         return AE_NOT_FOUND;
 
+    /* Width is in BITS */
     HalSetBusDataByOffset(PCIConfiguration,
         PciId->Bus,
         slot.u.AsULONG,
