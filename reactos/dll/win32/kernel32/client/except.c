@@ -300,7 +300,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
 
    /* Raise the harderror */
-   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | 0x10000000,
+   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION,
        4, 0, ErrorParameters, OptionOkCancel, &ErrorResponse);
 
    if (NT_SUCCESS(ErrCode) && (ErrorResponse == ResponseCancel))
