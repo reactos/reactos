@@ -538,6 +538,27 @@ extern PVOID MiSessionPoolEnd;     // 0xBE000000
 extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
 
+BOOLEAN
+FORCEINLINE
+MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
+{
+    return ((MemoryType == LoaderFree) ||
+            (MemoryType == LoaderLoadedProgram) ||
+            (MemoryType == LoaderFirmwareTemporary) ||
+            (MemoryType == LoaderOsloaderStack));
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
+{
+    return ((MemoryType == LoaderFirmwarePermanent) ||
+            (MemoryType == LoaderSpecialMemory) ||
+            (MemoryType == LoaderHALCachedMemory) ||
+            (MemoryType == LoaderBBTMemory));
+}
+
+
 //
 // Figures out the hardware bits for a PTE
 //

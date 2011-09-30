@@ -572,15 +572,16 @@ MiInitializeColorTables(VOID)
     for (i = 0; i < MmSecondaryColors; i++)
     {
         /* Set both free and zero lists for each color */
-        MmFreePagesByColor[ZeroedPageList][i].Flink = 0xFFFFFFFF;
-        MmFreePagesByColor[ZeroedPageList][i].Blink = (PVOID)0xFFFFFFFF;
+        MmFreePagesByColor[ZeroedPageList][i].Flink = LIST_HEAD;
+        MmFreePagesByColor[ZeroedPageList][i].Blink = (PVOID)LIST_HEAD;
         MmFreePagesByColor[ZeroedPageList][i].Count = 0;
-        MmFreePagesByColor[FreePageList][i].Flink = 0xFFFFFFFF;
-        MmFreePagesByColor[FreePageList][i].Blink = (PVOID)0xFFFFFFFF;
+        MmFreePagesByColor[FreePageList][i].Flink = LIST_HEAD;
+        MmFreePagesByColor[FreePageList][i].Blink = (PVOID)LIST_HEAD;
         MmFreePagesByColor[FreePageList][i].Count = 0;
     }
 }
 
+#ifndef _M_AMD64
 BOOLEAN
 NTAPI
 INIT_FUNCTION
@@ -1059,6 +1060,7 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Finally add the pages for the PFN database itself */
     MiBuildPfnDatabaseSelf();
 }
+#endif /* !_M_AMD64 */
 
 VOID
 NTAPI
@@ -1287,7 +1289,7 @@ MiAddHalIoMappings(VOID)
     PFN_NUMBER PageFrameIndex;
 
     /* HAL Heap address -- should be on a PDE boundary */
-    BaseAddress = (PVOID)0xFFC00000;
+    BaseAddress = (PVOID)MM_HAL_VA_START;
     ASSERT(MiAddressToPteOffset(BaseAddress) == 0);
 
     /* Check how many PDEs the heap has */

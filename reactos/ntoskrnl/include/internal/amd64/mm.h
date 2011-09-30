@@ -93,6 +93,9 @@
 
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PDE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PPE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PXE(v) ((v)->u.Hard.PageFrameNumber)
 
 // FIXME, only copied from x86
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)
@@ -192,15 +195,35 @@ MiAddressToPxi(PVOID Address)
 /* Convert a PTE into a corresponding address */
 PVOID
 FORCEINLINE
-MiPteToAddress(PMMPTE Pte)
+MiPteToAddress(PMMPTE PointerPte)
 {
     /* Use signed math */
-    LONG64 Temp = (LONG64)Pte;
-    Temp <<= 25;
-    Temp >>= 16;
-    return (PVOID)Temp;
+    return (PVOID)(((LONG64)PointerPte << 25) >> 16);
 }
-#define MiPdeToAddress MiPteToAddress
+
+PVOID
+FORCEINLINE
+MiPdeToAddress(PMMPTE PointerPde)
+{
+    /* Use signed math */
+    return (PVOID)(((LONG64)PointerPde << 34) >> 16);
+}
+
+PVOID
+FORCEINLINE
+MiPpeToAddress(PMMPTE PointerPpe)
+{
+    /* Use signed math */
+    return (PVOID)(((LONG64)PointerPpe << 43) >> 16);
+}
+
+PVOID
+FORCEINLINE
+MiPxeToAddress(PMMPTE PointerPxe)
+{
+    /* Use signed math */
+    return (PVOID)(((LONG64)PointerPxe << 52) >> 16);
+}
 
 BOOLEAN
 FORCEINLINE
