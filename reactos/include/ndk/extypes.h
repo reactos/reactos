@@ -1092,10 +1092,10 @@ typedef struct _SYSTEM_POOLTAG
     };
     ULONG PagedAllocs;
     ULONG PagedFrees;
-    ULONG PagedUsed;
+    SIZE_T PagedUsed;
     ULONG NonPagedAllocs;
     ULONG NonPagedFrees;
-    ULONG NonPagedUsed;
+    SIZE_T NonPagedUsed;
 } SYSTEM_POOLTAG, *PSYSTEM_POOLTAG;
 typedef struct _SYSTEM_POOLTAG_INFORMATION
 {
@@ -1331,10 +1331,10 @@ typedef struct _SYSTEM_VERIFIER_INFORMATION
    ULONG CurrentNonPagedPoolAllocations;
    ULONG PeakPagedPoolAllocations;
    ULONG PeakNonPagedPoolAllocations;
-   ULONG PagedPoolUsageInBytes;
-   ULONG NonPagedPoolUsageInBytes;
-   ULONG PeakPagedPoolUsageInBytes;
-   ULONG PeakNonPagedPoolUsageInBytes;
+   SIZE_T PagedPoolUsageInBytes;
+   SIZE_T NonPagedPoolUsageInBytes;
+   SIZE_T PeakPagedPoolUsageInBytes;
+   SIZE_T PeakNonPagedPoolUsageInBytes;
 } SYSTEM_VERIFIER_INFORMATION, *PSYSTEM_VERIFIER_INFORMATION;
 
 // FIXME: Class 52
