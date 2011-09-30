@@ -1254,9 +1254,9 @@ NTAPI
 INIT_FUNCTION
 KiIsNpxErrataPresent(VOID)
 {
-    BOOLEAN ErrataPresent;
+    static double Value1 = 4195835.0, Value2 = 3145727.0;
+    INT ErrataPresent;
     ULONG Cr0;
-    volatile double Value1, Value2;
 
     /* Disable interrupts */
     _disable();
@@ -1269,9 +1269,30 @@ KiIsNpxErrataPresent(VOID)
     Ke386FnInit();
 
     /* Multiply the magic values and divide, we should get the result back */
-    Value1 = 4195835.0;
-    Value2 = 3145727.0;
-    ErrataPresent = (Value1 * Value2 / 3145727.0) != 4195835.0;
+#ifdef __GNUC__
+    __asm__ __volatile__
+    (
+        "fldl %1\n\t"
+        "fdivl %2\n\t"
+        "fmull %2\n\t"
+        "fldl %1\n\t"
+        "fsubp\n\t"
+        "fistpl %0\n\t"
+        : "=m" (ErrataPresent)
+        : "m" (Value1),
+          "m" (Value2)
+    );
+#else
+    __asm
+    {
+        fld Value1
+        fdiv Value2
+        fmul Value2
+        fld Value1
+        fsubp
+        fistp ErrataPresent
+    };
+#endif
 
     /* Restore CR0 */
     __writecr0(Cr0);
@@ -1280,7 +1301,7 @@ KiIsNpxErrataPresent(VOID)
     _enable();
 
     /* Return if there's an errata */
-    return ErrataPresent;
+    return ErrataPresent != 0;
 }
 
 VOID
