@@ -104,15 +104,12 @@ static void FlushMessages()
 
 static void create_test_windows()
 {
-    WNDCLASSEXW wcex;
-
     hMouseHookLL = SetWindowsHookExW(WH_MOUSE_LL, MouseLLHookProc, GetModuleHandleW( NULL ), 0);
     hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");
     
     RegisterSimpleClass(TmeTestProc, L"testClass");
-    RegisterClassExW(&wcex);
 
     hWnd1 = CreateWindowW(L"testClass", L"test", WS_OVERLAPPEDWINDOW,
                          100, 100, 500, 500, NULL, NULL, 0, NULL);
@@ -128,6 +125,14 @@ static void create_test_windows()
     ShowWindow(hWnd3, SW_SHOWNORMAL);
     UpdateWindow(hWnd3);
     //SetWindowPos (hWnd3, HWND_TOP, 0,0,0,0, SWP_NOMOVE|SWP_NOREDRAW);
+}
+
+static void destroy_test_window()
+{
+    DestroyWindow(hWnd1);
+    UnregisterClassW(L"testClass", 0);
+    UnhookWindowsHookEx(hMouseHookLL);
+    UnhookWindowsHookEx(hMouseHook);
 }
 
 static void TmeStartTracking(HWND hwnd, DWORD Flags)
@@ -161,8 +166,6 @@ DWORD TmeQuery(HWND hwnd)
 #define MOVE_CURSOR(x,y) mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE ,                           \
                                      x*(65535/GetSystemMetrics(SM_CXVIRTUALSCREEN)),                     \
                                      y*(65535/GetSystemMetrics(SM_CYVIRTUALSCREEN)) , 0,0);
-
-MSG_ENTRY empty_chain[]= {{0,0}};
 
 /* the mouse moves over hwnd2 */
 MSG_ENTRY mousemove2_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
@@ -427,6 +430,8 @@ void Test_TrackMouseEvent()
 
     FlushMessages();
     COMPARE_CACHE(empty_chain);
+
+    destroy_test_window();
 }
 
 START_TEST(TrackMouseEvent)

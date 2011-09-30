@@ -16,6 +16,9 @@ typedef struct _MSG_ENTRY
     int param2;
 } MSG_ENTRY;
 
+
+extern MSG_ENTRY empty_chain[];
+
 void record_message(int iwnd, UINT message, MSG_TYPE type, int param1,int param2);
 void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain);
 void trace_cache(const char* file, int line);
@@ -44,7 +47,6 @@ static inline BOOL IseKeyMsg(UINT msg)
 #define COMPARE_CACHE(...) compare_cache(__FILE__, __LINE__, ##__VA_ARGS__)
 #define TRACE_CACHE() trace_cache(__FILE__, __LINE__)
 
-#define EXPECT_NEXT(hWnd1, hWnd2) ok(GetWindow(hWnd1,GW_HWNDNEXT) == hWnd2, "Expected %p after %p, not %p\n",hWnd2,hWnd1,GetWindow(hWnd1,GW_HWNDNEXT) )
 #define EXPECT_ACTIVE(hwnd) ok(GetActiveWindow() == hwnd, "Expected %p to be the active window, not %p\n",hwnd,GetActiveWindow())
 
 #define EXPECT_QUEUE_STATUS(expected, notexpected)                                                                              \

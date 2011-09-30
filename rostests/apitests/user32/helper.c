@@ -15,6 +15,8 @@ MSG_ENTRY last_post_message;
 MSG_ENTRY message_cache[100];
 static int message_cache_size = 0;
 
+MSG_ENTRY empty_chain[]= {{0,0}};
+
 static char* get_msg_name(UINT msg)
 {
     switch(msg)
@@ -41,6 +43,8 @@ static char* get_msg_name(UINT msg)
         case WM_SETCURSOR: return "WM_SETCURSOR";
         case WM_MOUSEMOVE: return "WM_MOUSEMOVE";
         case WM_SYSTIMER: return "WM_SYSTIMER";
+        case WM_GETMINMAXINFO: return "WM_GETMINMAXINFO";
+        case WM_NCCALCSIZE: return "WM_NCCALCSIZE";
         default: return NULL;
     }
 }
