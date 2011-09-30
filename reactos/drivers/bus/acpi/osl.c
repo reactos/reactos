@@ -131,7 +131,7 @@ AcpiOsGetPhysicalAddress(
 void *
 AcpiOsAllocate (ACPI_SIZE size)
 {
-    //DPRINT("AcpiOsAllocate size %d\n",size);
+    DPRINT("AcpiOsAllocate size %d\n",size);
     return ExAllocatePool(NonPagedPool, size);
 }
 
@@ -736,8 +736,6 @@ AcpiOsReadPciConfiguration (
     UINT32                  Width)
 {
     PCI_SLOT_NUMBER slot;
-    
-    if (1) return AE_ERROR;
 
     slot.u.AsULONG = 0;
     slot.u.bits.DeviceNumber = PciId->Device;
