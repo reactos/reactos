@@ -234,8 +234,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
 
     /* Initialize PFN and make it valid */
     TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-    MI_WRITE_VALID_PTE(PointerPte, TempPte);
-    MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
+    MiInitializePfnAndMakePteValid(PageFrameNumber, PointerPte, TempPte);
 
     /* Release the PFN database lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);

@@ -1152,6 +1152,14 @@ MiInitializePfn(
 
 VOID
 NTAPI
+MiInitializePfnAndMakePteValid(
+    IN PFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPte,
+    IN MMPTE TempPte
+);
+
+VOID
+NTAPI
 MiInitializePfnForOtherProcess(
     IN PFN_NUMBER PageFrameIndex,
     IN PMMPTE PointerPte,

@@ -776,6 +776,64 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     Pfn1->u2.ShareCount++;
 }
 
+VOID
+NTAPI
+MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
+                               IN PMMPTE PointerPte,
+                               IN MMPTE TempPte)
+{
+    PMMPFN Pfn1;
+    NTSTATUS Status;
+    PMMPTE PointerPtePte;
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* PTE must be invalid */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+
+    /* Setup the PTE */
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+    Pfn1->PteAddress = PointerPte;
+    Pfn1->OriginalPte = DemandZeroPte;
+
+    /* Otherwise this is a fresh page -- set it up */
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    Pfn1->u3.e2.ReferenceCount++;
+    Pfn1->u2.ShareCount++;
+    Pfn1->u3.e1.PageLocation = ActiveAndValid;
+    ASSERT(Pfn1->u3.e1.Rom == 0);
+    Pfn1->u3.e1.Modified = 1;
+
+    /* Get the page table for the PTE */
+    PointerPtePte = MiAddressToPte(PointerPte);
+    if (PointerPtePte->u.Hard.Valid == 0)
+    {
+        /* Make sure the PDE gets paged in properly */
+        Status = MiCheckPdeForPagedPool(PointerPte);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Crash */
+            KeBugCheckEx(MEMORY_MANAGEMENT,
+                         0x61940,
+                         (ULONG_PTR)PointerPte,
+                         (ULONG_PTR)PointerPtePte->u.Long,
+                         (ULONG_PTR)MiPteToAddress(PointerPte));
+        }
+    }
+
+    /* Get the PFN for the page table */
+    PageFrameIndex = PFN_FROM_PTE(PointerPtePte);
+    ASSERT(PageFrameIndex != 0);
+    Pfn1->u4.PteFrame = PageFrameIndex;
+
+    /* Increase its share count so we don't get rid of it */
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+    Pfn1->u2.ShareCount++;
+
+    /* Write valid PTE */
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+}
+
+
 PFN_NUMBER
 NTAPI
 MiAllocatePfn(IN PMMPTE PointerPte,
