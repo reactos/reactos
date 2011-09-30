@@ -20,6 +20,7 @@
  */
 
 #include <precomp.h>
+#include <PropIdl.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -588,7 +589,49 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
          const CLSID *pclsid, DWORD grfFlags, DWORD grfMode,
          DWORD dwDisposition, IPropertyStorage **ppstg, UINT *puCodePage)
 {
-    return E_NOTIMPL;
+    PROPSPEC prop;
+    PROPVARIANT ret;
+    HRESULT hres;
+
+    TRACE("%p %s %s %x %x %x %p %p\n", psstg, debugstr_guid(&fmtid), debugstr_guid(pclsid),
+        grfFlags, grfMode, dwDisposition, ppstg, puCodePage);
+
+    hres = psstg->Open(fmtid, grfMode, ppstg);
+ 
+     switch (dwDisposition)
+     {
+         case CREATE_ALWAYS:
+             if (SUCCEEDED(hres))
+             {
+                 reinterpret_cast<IPropertyStorage*>(*ppstg)->Release();
+                 hres = psstg->Delete(fmtid);
+                 if(FAILED(hres))
+                     return hres;
+                 hres = E_FAIL;
+             }
+ 
+         case OPEN_ALWAYS:
+         case CREATE_NEW:
+             if (FAILED(hres))
+                 hres = psstg->Create(fmtid, pclsid, grfFlags, grfMode, ppstg);
+ 
+         case OPEN_EXISTING:
+             if (FAILED(hres))
+                 return hres;
+ 
+             if (puCodePage)
+             {
+                 prop.ulKind = PRSPEC_PROPID;
+                 prop.propid = PID_CODEPAGE;
+                 hres = reinterpret_cast<IPropertyStorage*>(*ppstg)->ReadMultiple(1, &prop, &ret);
+                 if (FAILED(hres) || ret.vt!=VT_I2)
+                     *puCodePage = 0;
+                 else
+                     *puCodePage = ret.iVal;
+             }
+     }
+ 
+     return S_OK;
 }
 
 /*************************************************************************
@@ -597,7 +640,36 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
 EXTERN_C HRESULT WINAPI SHPropStgReadMultiple(IPropertyStorage *pps, UINT uCodePage,
          ULONG cpspec, const PROPSPEC *rgpspec, PROPVARIANT *rgvar)
 {
-    return E_NOTIMPL;
+    STATPROPSETSTG stat;
+    HRESULT hres;
+ 
+    FIXME("%p %u %u %p %p\n", pps, uCodePage, cpspec, rgpspec, rgvar);
+ 
+    memset(rgvar, 0, cpspec*sizeof(PROPVARIANT));
+    hres = pps->ReadMultiple(cpspec, rgpspec, rgvar);
+    if (FAILED(hres))
+        return hres;
+ 
+    if (!uCodePage)
+    {
+        PROPSPEC prop;
+        PROPVARIANT ret;
+ 
+        prop.ulKind = PRSPEC_PROPID;
+        prop.propid = PID_CODEPAGE;
+        hres = pps->ReadMultiple(1, &prop, &ret);
+        if(FAILED(hres) || ret.vt!=VT_I2)
+            return S_OK;
+ 
+        uCodePage = ret.iVal;
+    }
+ 
+    hres = pps->Stat(&stat);
+    if (FAILED(hres))
+        return S_OK;
+ 
+    /* TODO: do something with codepage and stat */
+    return S_OK;
 }
 
 /*************************************************************************
@@ -606,5 +678,38 @@ EXTERN_C HRESULT WINAPI SHPropStgReadMultiple(IPropertyStorage *pps, UINT uCodeP
 EXTERN_C HRESULT WINAPI SHPropStgWriteMultiple(IPropertyStorage *pps, UINT *uCodePage,
          ULONG cpspec, const PROPSPEC *rgpspec, PROPVARIANT *rgvar, PROPID propidNameFirst)
 {
-    return E_NOTIMPL;
+    STATPROPSETSTG stat;
+    UINT codepage;
+    HRESULT hres;
+ 
+    FIXME("%p %p %u %p %p %d\n", pps, uCodePage, cpspec, rgpspec, rgvar, propidNameFirst);
+ 
+    hres = pps->Stat(&stat);
+    if (FAILED(hres))
+        return hres;
+ 
+    if (uCodePage && *uCodePage)
+        codepage = *uCodePage;
+    else
+    {
+        PROPSPEC prop;
+        PROPVARIANT ret;
+ 
+        prop.ulKind = PRSPEC_PROPID;
+        prop.propid = PID_CODEPAGE;
+        hres = pps->ReadMultiple(1, &prop, &ret);
+        if (FAILED(hres))
+            return hres;
+        if (ret.vt!=VT_I2 || !ret.iVal)
+            return E_FAIL;
+ 
+        codepage = ret.iVal;
+        if (uCodePage)
+            *uCodePage = codepage;
+    }
+ 
+    /* TODO: do something with codepage and stat */
+ 
+    hres = pps->WriteMultiple(cpspec, rgpspec, rgvar, propidNameFirst);
+    return hres;
 }
