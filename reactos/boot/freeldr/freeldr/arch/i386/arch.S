@@ -59,6 +59,14 @@ EXTERN(_RealEntryPoint)
 
 	call _EnableA20
 
+	/* Clean out bss */
+	xor eax, eax
+	mov edi, offset __bss_start__
+	mov ecx, offset __bss_end__ + 3
+	sub ecx, edi
+	shr ecx, 2
+	rep stosd
+
 	/* GO! */
 	push eax
 	call	_BootMain
