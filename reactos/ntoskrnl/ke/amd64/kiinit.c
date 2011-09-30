@@ -24,9 +24,6 @@ ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 /* Spinlocks used only on X86 */
 KSPIN_LOCK KiFreezeExecutionLock;
 
-/* BIOS Memory Map. Not NTLDR-compliant yet */
-extern ULONG KeMemoryMapRangeCount;
-extern ADDRESS_RANGE KeMemoryMap[64];
 
 KIPCR KiInitialPcr;
 
@@ -46,28 +43,28 @@ KiInitMachineDependent(VOID)
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
         /* FIXME: Support this */
-        DPRINT1("Large Page support detected but not yet taken advantage of!\n");
+        DPRINT("Large Page support detected but not yet taken advantage of!\n");
     }
 
     /* Check for global page support */
     if (KeFeatureBits & KF_GLOBAL_PAGE)
     {
         /* FIXME: Support this */
-        DPRINT1("Global Page support detected but not yet taken advantage of!\n");
+        DPRINT("Global Page support detected but not yet taken advantage of!\n");
     }
 
     /* Check if we have MTRR */
     if (KeFeatureBits & KF_MTRR)
     {
         /* FIXME: Support this */
-        DPRINT1("MTRR support detected but not yet taken advantage of!\n");
+        DPRINT("MTRR support detected but not yet taken advantage of!\n");
     }
 
     /* Check for PAT and/or MTRR support */
     if (KeFeatureBits & KF_PAT)
     {
         /* FIXME: Support this */
-        DPRINT1("PAT support detected but not yet taken advantage of!\n");
+        DPRINT("PAT support detected but not yet taken advantage of!\n");
     }
 
         /* Allocate the IOPM save area. */
@@ -344,9 +341,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
     FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
-    /* HACK, because freeldr maps page 0 */
-    MiAddressToPte((PVOID)0)->u.Hard.Valid = 0;
-
     /* Save the loader block */
     KeLoaderBlock = LoaderBlock;
 
@@ -403,12 +397,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         /* Check for break-in */
         if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
-
-        /* Hack! Wait for the debugger! */
-#ifdef _WINKD_x
-        while (!KdPollBreakIn());
-        DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
-#endif
     }
 
     DPRINT1("Pcr = %p, Gdt = %p, Idt = %p, Tss = %p\n",
