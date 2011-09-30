@@ -20,7 +20,6 @@
  */
 
 #include <precomp.h>
-#include <PropIdl.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
