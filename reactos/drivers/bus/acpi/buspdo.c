@@ -372,8 +372,9 @@ Bus_PDO_QueryDeviceCaps(
 
     if (device)
     {
+       deviceCapabilities->LockSupported = device->flags.lockable;
        deviceCapabilities->EjectSupported = device->flags.ejectable;
-       deviceCapabilities->HardwareDisabled = !device->status.enabled;
+       deviceCapabilities->HardwareDisabled = !device->status.enabled && !device->status.functional;
        deviceCapabilities->Removable = device->flags.removable;
        deviceCapabilities->SurpriseRemovalOK = device->flags.suprise_removal_ok;
        deviceCapabilities->UniqueID = device->flags.unique_id;
