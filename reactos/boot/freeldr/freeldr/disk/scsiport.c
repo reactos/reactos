@@ -1659,12 +1659,6 @@ LoadBootDeviceDriver(VOID)
         FunctionTable[i] = (ULONG)((ULONG_PTR)ExportTable[i].Function - (ULONG_PTR)&ImageDosHeader);
     }
 
-    /* Add freeldr.sys to list of loaded executables */
-    Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "scsiport.sys",
-        "FREELDR.SYS", &ImageDosHeader, &FreeldrDTE);
-    if (!Status)
-        return EIO;
-
     /* Create full ntbootdd.sys path */
     MachDiskGetBootPath(NtBootDdPath, sizeof(NtBootDdPath));
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
@@ -1677,12 +1671,28 @@ LoadBootDeviceDriver(VOID)
         return ESUCCESS;
     }
 
-    /* Fix imports */
+    /* Allocate a DTE for ntbootdd */
     Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "ntbootdd.sys",
         "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
     if (!Status)
         return EIO;
+
+    /* Add freeldr.sys to list of loaded executables, it repaces scsiport.sys */
+    Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "scsiport.sys",
+        "FREELDR.SYS", &ImageDosHeader, &FreeldrDTE);
+    if (!Status)
+    {
+        RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
+        return EIO;
+    }
+
+    /* Fix imports */
     Status = WinLdrScanImportDescriptorTable(&LoaderBlock, "", BootDdDTE);
+
+    /* Now unlinkt the DTEs, they won't be valid later */
+    RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
+    RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
+
     if (!Status)
         return EIO;
 
