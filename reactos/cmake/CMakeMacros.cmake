@@ -207,7 +207,9 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
         string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
     endmacro()
 
-    function(concatenate_files _file1 _file2 _output)
+    # yeah the parameter mess sucks, but thats what works...
+    function(concatenate_files _file1 _target2 _output)
+        get_target_property(_file2 ${_target2} LOCATION)
         to_win_path("${_file1}" _real_file1)
         to_win_path("${_file2}" _real_file2)
         to_win_path("${_output}" _real_output)
@@ -215,15 +217,16 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
             OUTPUT ${_output}
             COMMAND cmd.exe /C "copy /Y /B ${_real_file1} + ${_real_file2} ${_real_output} > nul"
             DEPENDS ${_file1}
-            DEPENDS ${_file2})
+            DEPENDS ${_target2})
     endfunction()
 else()
-    macro(concatenate_files _file1 _file2 _output)
+    macro(concatenate_files _file1 _target2 _output)
+        get_target_property(_file2 ${_target2} LOCATION)
         add_custom_command(
             OUTPUT ${_output}
             COMMAND cat ${_file1} ${_file2} > ${_output}
             DEPENDS ${_file1}
-            DEPENDS ${_file2})
+            DEPENDS ${_target2})
     endmacro()
 endif()
 
@@ -242,7 +245,7 @@ endfunction()
 
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
-    
+
     if(__module_UNPARSED_ARGUMENTS)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
@@ -258,16 +261,16 @@ function(set_module_type MODULE TYPE)
     elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx) OR (${TYPE} STREQUAL cpl)))
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
     endif()
-    
+
     if(DEFINED __subsystem)
         set_subsystem(${MODULE} ${__subsystem})
     endif()
-    
+
     #set unicode definitions
     if(__module_UNICODE)
         add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
     endif()
-    
+
     # set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
         list(GET __module_ENTRYPOINT 0 __entrypoint)
@@ -298,7 +301,7 @@ function(set_module_type MODULE TYPE)
         set(__entrypoint DllMain)
         set(__entrystack 12)
     endif()
-    
+
     if(DEFINED __entrypoint)
         if(DEFINED __entrystack)
             set_entrypoint(${MODULE} ${__entrypoint} ${__entrystack})
@@ -306,7 +309,7 @@ function(set_module_type MODULE TYPE)
             set_entrypoint(${MODULE} ${__entrypoint})
         endif()
     endif()
-    
+
     #set base address
     if(__module_IMAGEBASE)
         set_image_base(${MODULE} __module_IMAGEBASE)
@@ -319,21 +322,21 @@ function(set_module_type MODULE TYPE)
     elseif(${TYPE} STREQUAL kernelmodedriver)
         set_image_base(${MODULE} 0x00010000)
     endif()
-    
-    # Now do some stuff which is specific to each type 
+
+    # Now do some stuff which is specific to each type
     if(${TYPE} STREQUAL kernelmodedriver)
         add_dependencies(${MODULE} bugcodes)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
     endif()
-    
+
     if(${TYPE} STREQUAL win32ocx)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".ocx")
     endif()
-    
+
     if(${TYPE} STREQUAL cpl)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     endif()
-    
+
     # do compiler specific stuff
     set_module_type_toolchain(${MODULE} ${TYPE})
 endfunction()

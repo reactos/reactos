@@ -10,6 +10,11 @@ SECTIONS
     *(SORT(.rdata*))
   }
 
+  .edata BLOCK(__file_alignment__) :
+  {
+    *(.edata)
+  }
+
   .bss :
   {
     __bss_start__ = . ;

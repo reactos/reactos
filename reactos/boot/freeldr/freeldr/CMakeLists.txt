@@ -1,4 +1,6 @@
 
+spec2def(freeldr.sys freeldr.spec)
+
 if(ARCH MATCHES i386)
     CreateBootSectorTarget2(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
@@ -126,6 +128,7 @@ elseif(ARCH MATCHES amd64)
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
+        arch/i386/hwdisk.c
         arch/i386/hwpci.c
         arch/i386/i386rtl.c
         arch/i386/i386disk.c
@@ -155,8 +158,12 @@ list(APPEND FREELDR_BASE_SOURCE
     rtl/bget.c
     rtl/libsupp.c)
 
-add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
-add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
+if (NOT MSVC)
+    list(APPEND FREELDR_BASE_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
+endif()
+
+add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
+add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
@@ -202,7 +209,7 @@ add_dependencies(freeldr_pe_dbg asm)
 
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.exe
+    freeldr_pe
     ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 
 add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
@@ -218,8 +225,8 @@ if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
     list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
-add_executable(setupldr_pe ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
-add_executable(setupldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
@@ -263,7 +270,7 @@ add_dependencies(setupldr_pe_dbg asm)
 
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    ${CMAKE_CURRENT_BINARY_DIR}/setupldr_pe.exe
+    setupldr_pe
     ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
