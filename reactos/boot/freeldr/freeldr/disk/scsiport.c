@@ -1557,68 +1557,11 @@ ScsiPortWriteRegisterUshort(
     WRITE_REGISTER_USHORT(Register, Value);
 }
 
+extern char __ImageBase;
+
 ULONG
 LoadBootDeviceDriver(VOID)
 {
-    struct
-    {
-        CHAR* Name;
-        PVOID Function;
-    } ExportTable[] =
-    {
-        { "ScsiDebugPrint", ScsiDebugPrint },
-        { "ScsiPortCompleteRequest", ScsiPortCompleteRequest },
-        { "ScsiPortConvertPhysicalAddressToUlong", ScsiPortConvertPhysicalAddressToUlong },
-        { "ScsiPortConvertUlongToPhysicalAddress", ScsiPortConvertUlongToPhysicalAddress },
-        { "ScsiPortFlushDma", ScsiPortFlushDma },
-        { "ScsiPortFreeDeviceBase", ScsiPortFreeDeviceBase },
-        { "ScsiPortGetBusData", ScsiPortGetBusData },
-        { "ScsiPortGetDeviceBase", ScsiPortGetDeviceBase },
-        { "ScsiPortGetLogicalUnit", ScsiPortGetLogicalUnit },
-        { "ScsiPortGetPhysicalAddress", ScsiPortGetPhysicalAddress },
-        { "ScsiPortGetSrb", ScsiPortGetSrb },
-        { "ScsiPortGetUncachedExtension", ScsiPortGetUncachedExtension },
-        { "ScsiPortGetVirtualAddress", ScsiPortGetVirtualAddress },
-        { "ScsiPortInitialize", ScsiPortInitialize },
-        { "ScsiPortIoMapTransfer", ScsiPortIoMapTransfer },
-        { "ScsiPortLogError", ScsiPortLogError },
-        { "ScsiPortMoveMemory", ScsiPortMoveMemory },
-        { "ScsiPortNotification", ScsiPortNotification },
-        { "ScsiPortReadPortBufferUchar", ScsiPortReadPortBufferUchar },
-        { "ScsiPortReadPortBufferUlong", ScsiPortReadPortBufferUlong },
-        { "ScsiPortReadPortBufferUshort", ScsiPortReadPortBufferUshort },
-        { "ScsiPortReadPortUchar", ScsiPortReadPortUchar },
-        { "ScsiPortReadPortUlong", ScsiPortReadPortUlong },
-        { "ScsiPortReadPortUshort", ScsiPortReadPortUshort },
-        { "ScsiPortReadRegisterBufferUchar", ScsiPortReadRegisterBufferUchar },
-        { "ScsiPortReadRegisterBufferUlong", ScsiPortReadRegisterBufferUlong },
-        { "ScsiPortReadRegisterBufferUshort", ScsiPortReadRegisterBufferUshort },
-        { "ScsiPortReadRegisterUchar", ScsiPortReadRegisterUchar },
-        { "ScsiPortReadRegisterUlong", ScsiPortReadRegisterUlong },
-        { "ScsiPortReadRegisterUshort", ScsiPortReadRegisterUshort },
-        { "ScsiPortSetBusDataByOffset", ScsiPortSetBusDataByOffset },
-        { "ScsiPortStallExecution", ScsiPortStallExecution },
-        { "ScsiPortValidateRange", ScsiPortValidateRange },
-        { "ScsiPortWritePortBufferUchar", ScsiPortWritePortBufferUchar },
-        { "ScsiPortWritePortBufferUlong", ScsiPortWritePortBufferUlong },
-        { "ScsiPortWritePortBufferUshort", ScsiPortWritePortBufferUshort },
-        { "ScsiPortWritePortUchar", ScsiPortWritePortUchar },
-        { "ScsiPortWritePortUlong", ScsiPortWritePortUlong },
-        { "ScsiPortWritePortUshort", ScsiPortWritePortUshort },
-        { "ScsiPortWriteRegisterBufferUchar", ScsiPortWriteRegisterBufferUchar },
-        { "ScsiPortWriteRegisterBufferUlong", ScsiPortWriteRegisterBufferUlong },
-        { "ScsiPortWriteRegisterBufferUshort", ScsiPortWriteRegisterBufferUshort },
-        { "ScsiPortWriteRegisterUchar", ScsiPortWriteRegisterUchar },
-        { "ScsiPortWriteRegisterUlong", ScsiPortWriteRegisterUlong },
-        { "ScsiPortWriteRegisterUshort", ScsiPortWriteRegisterUshort },
-    };
-    IMAGE_DOS_HEADER ImageDosHeader;
-    IMAGE_NT_HEADERS ImageNtHeaders;
-    IMAGE_EXPORT_DIRECTORY ImageExportDirectory;
-    CHAR* TableName[sizeof(ExportTable) / sizeof(ExportTable[0])];
-    USHORT OrdinalTable[sizeof(ExportTable) / sizeof(ExportTable[0])];
-    ULONG FunctionTable[sizeof(ExportTable) / sizeof(ExportTable[0])];
-
     PIMAGE_NT_HEADERS NtHeaders;
     LOADER_PARAMETER_BLOCK LoaderBlock;
     PIMAGE_IMPORT_DESCRIPTOR ImportTable;
@@ -1627,37 +1570,11 @@ LoadBootDeviceDriver(VOID)
     CHAR NtBootDdPath[MAX_PATH];
     PVOID ImageBase;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
-    USHORT i;
     BOOLEAN Status;
 
     /* Some initialization of our temporary loader block */
     RtlZeroMemory(&LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
     InitializeListHead(&LoaderBlock.LoadOrderListHead);
-
-    /* Create our fake executable header for freeldr.sys */
-    RtlZeroMemory(&ImageDosHeader, sizeof(IMAGE_DOS_HEADER));
-    RtlZeroMemory(&ImageNtHeaders, sizeof(IMAGE_NT_HEADERS));
-    RtlZeroMemory(&ImageExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY));
-    ImageDosHeader.e_magic = SWAPW(IMAGE_DOS_SIGNATURE);
-    ImageDosHeader.e_lfanew = SWAPD((ULONG_PTR)&ImageNtHeaders - (ULONG_PTR)&ImageDosHeader);
-    ImageNtHeaders.Signature = IMAGE_NT_SIGNATURE;
-    ImageNtHeaders.OptionalHeader.NumberOfRvaAndSizes = SWAPD(IMAGE_DIRECTORY_ENTRY_EXPORT + 1);
-    ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress =
-        SWAPW((ULONG_PTR)&ImageExportDirectory - (ULONG_PTR)&ImageDosHeader);
-    ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size = 1;
-    ImageExportDirectory.NumberOfNames = sizeof(ExportTable) / sizeof(ExportTable[0]);
-    ImageExportDirectory.AddressOfNames = (ULONG_PTR)TableName - (ULONG_PTR)&ImageDosHeader;
-    ImageExportDirectory.AddressOfNameOrdinals = (ULONG_PTR)OrdinalTable - (ULONG_PTR)&ImageDosHeader;
-    ImageExportDirectory.NumberOfFunctions = sizeof(ExportTable) / sizeof(ExportTable[0]);
-    ImageExportDirectory.AddressOfFunctions = (ULONG_PTR)FunctionTable - (ULONG_PTR)&ImageDosHeader;
-
-    /* Fill freeldr.sys export table */
-    for (i = 0; i < sizeof(ExportTable) / sizeof(ExportTable[0]); i++)
-    {
-        TableName[i] = PaToVa((PVOID)((ULONG_PTR)ExportTable[i].Name - (ULONG_PTR)&ImageDosHeader));
-        OrdinalTable[i] = i;
-        FunctionTable[i] = (ULONG)((ULONG_PTR)ExportTable[i].Function - (ULONG_PTR)&ImageDosHeader);
-    }
 
     /* Create full ntbootdd.sys path */
     MachDiskGetBootPath(NtBootDdPath, sizeof(NtBootDdPath));
@@ -1677,9 +1594,10 @@ LoadBootDeviceDriver(VOID)
     if (!Status)
         return EIO;
 
-    /* Add freeldr.sys to list of loaded executables, it repaces scsiport.sys */
+    /* Add the PE part of freeldr.sys to the list of loaded executables, it
+       contains Scsiport* exports, imported by ntbootdd.sys */
     Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "scsiport.sys",
-        "FREELDR.SYS", &ImageDosHeader, &FreeldrDTE);
+        "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
     if (!Status)
     {
         RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
