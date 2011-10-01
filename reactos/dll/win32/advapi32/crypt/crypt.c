@@ -1104,6 +1104,7 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
                 'P','r','o','v','i','d','e','r',0
         };
 	static const WCHAR typeW[] = {'T','y','p','e',0};
+	BOOL ret;
 
 	TRACE("(%d, %p, %d, %p, %p, %p)\n", dwIndex, pdwReserved, dwFlags,
 			pdwProvType, pszProvName, pcbProvName);
@@ -1125,6 +1126,7 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 		return FALSE;
 	}
 
+	ret = TRUE;
 	if (!pszProvName)
 	{
 		DWORD numkeys;
@@ -1136,6 +1138,7 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 		if (!(provNameW = CRYPT_Alloc(*pcbProvName * sizeof(WCHAR))))
 		{
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			RegCloseKey(hKey);
 			return FALSE;
 		}
 
@@ -1147,7 +1150,7 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 		if (dwIndex >= numkeys)
 		{
 			SetLastError(ERROR_NO_MORE_ITEMS);
-			return FALSE;
+			ret = FALSE;
 		}
 	} else {
 		DWORD size = sizeof(DWORD);
@@ -1158,16 +1161,22 @@ BOOL WINAPI CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 		if (result)
 		{
 			SetLastError(result);
+			RegCloseKey(hKey);
 			return FALSE;
 		}
 		if (RegOpenKeyW(hKey, pszProvName, &subkey))
+		{
+			RegCloseKey(hKey);
 			return FALSE;
+		}
+
 		if (RegQueryValueExW(subkey, typeW, NULL, NULL, (BYTE*)pdwProvType, &size))
-			return FALSE;
+			ret = FALSE;
+
 		RegCloseKey(subkey);
 	}
 	RegCloseKey(hKey);
-	return TRUE;
+	return ret;
 }
 
 /******************************************************************************
