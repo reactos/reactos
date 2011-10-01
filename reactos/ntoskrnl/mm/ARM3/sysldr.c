@@ -150,6 +150,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     if (!NT_SUCCESS(Status))
     {
         /* Detach and return */
+        DPRINT1("MmMapViewOfSection failed with status 0x%x\n", Status);
         KeUnstackDetachProcess(&ApcState);
         return Status;
     }
@@ -1185,6 +1186,8 @@ CheckDllState:
                     *MissingDriver = DllName.Buffer;
                     *(PULONG)MissingDriver |= 1;
                     *MissingApi = NULL;
+
+                    DPRINT1("Failed to load dependency: %wZ\n", &DllName);
                 }
             }
             else
@@ -1208,6 +1211,7 @@ CheckDllState:
                 {
                     /* We failed, unload the image */
                     MmUnloadSystemImage(DllEntry);
+                    DPRINT1("MmCallDllInitialize failed with status 0x%x\n", Status);
                     while (TRUE);
                     Loaded = FALSE;
                 }
@@ -2443,7 +2447,11 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
                              PAGE_EXECUTE,
                              SEC_IMAGE,
                              ImageHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwCreateSection failed with status 0x%x\n", Status);
+        return Status;
+    }
 
     /* Make sure we're in the system process */
     KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
@@ -2462,6 +2470,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     if (!NT_SUCCESS(Status))
     {
         /* We failed, close the handle and return */
+        DPRINT1("ZwMapViewOfSection failed with status 0x%x\n", Status);
         KeUnstackDetachProcess(&ApcState);
         ZwClose(SectionHandle);
         return Status;
@@ -2703,7 +2712,11 @@ LoaderScan:
                             &IoStatusBlock,
                             FILE_SHARE_READ | FILE_SHARE_DELETE,
                             0);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwOpenFile failed with status 0x%x\n", Status);
+            goto Quickie;
+        }
 
         /* Validate it */
         Status = MmCheckSystemImage(FileHandle, FALSE);
@@ -2742,7 +2755,11 @@ LoaderScan:
                                  PAGE_EXECUTE,
                                  SEC_IMAGE,
                                  FileHandle);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateSection failed with status 0x%x\n", Status);
+            goto Quickie;
+        }
 
         /* Now get the section pointer */
         Status = ObReferenceObjectByHandle(SectionHandle,
@@ -2801,7 +2818,11 @@ LoaderScan:
     }
 
     /* Check for failure of the load earlier */
-    if (!NT_SUCCESS(Status)) goto Quickie;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiLoadImageSection failed with status 0x%x\n", Status);
+        goto Quickie;
+    }
 
     /* Relocate the driver */
     Status = LdrRelocateImageWithBias(ModuleLoadBase,
@@ -2810,8 +2831,11 @@ LoaderScan:
                                       STATUS_SUCCESS,
                                       STATUS_CONFLICTING_ADDRESSES,
                                       STATUS_INVALID_IMAGE_FORMAT);
-    if (!NT_SUCCESS(Status)) goto Quickie;
-
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrRelocateImageWithBias failed with status 0x%x\n", Status);
+        goto Quickie;
+    }
 
     /* Get the NT Header */
     NtHeader = RtlImageNtHeader(ModuleLoadBase);
@@ -2900,6 +2924,8 @@ LoaderScan:
                                       &LoadedImports);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("MiResolveImageReferences failed with status 0x%x\n", Status);
+
         /* Fail */
         MiProcessLoaderEntry(LdrEntry, FALSE);
 
