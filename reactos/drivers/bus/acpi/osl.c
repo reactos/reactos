@@ -124,7 +124,18 @@ AcpiOsGetPhysicalAddress(
     void *LogicalAddress,
     ACPI_PHYSICAL_ADDRESS *PhysicalAddress)
 {
-    ASSERT(FALSE);
+    PHYSICAL_ADDRESS PhysAddr;
+
+    if (!LogicalAddress || !PhysicalAddress)
+    {
+        DPRINT1("Bad parameter\n");
+        return AE_BAD_PARAMETER;
+    }
+
+    PhysAddr = MmGetPhysicalAddress(LogicalAddress);
+
+    *PhysicalAddress = (ACPI_PHYSICAL_ADDRESS)PhysAddr.QuadPart;
+
     return AE_OK;
 }
 
@@ -190,7 +201,8 @@ AcpiOsWritable(
 ACPI_THREAD_ID
 AcpiOsGetThreadId (void)
 {
-    return (ULONG)PsGetCurrentThreadId();
+    /* Thread ID must be non-zero */
+    return (ULONG)PsGetCurrentThreadId() + 1;
 }
 
 ACPI_STATUS
