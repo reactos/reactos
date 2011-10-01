@@ -239,6 +239,8 @@ IopNormalizeImagePath(
 {
    UNICODE_STRING InputImagePath;
 
+   DPRINT("Normalizing image path '%wZ' for service '%wZ'\n", ImagePath, ServiceName);
+
    RtlCopyMemory(
       &InputImagePath,
       ImagePath,
@@ -272,6 +274,8 @@ IopNormalizeImagePath(
       /* Free caller's string */
       ExFreePoolWithTag(InputImagePath.Buffer, TAG_RTLREGISTRY);
    }
+ 
+   DPRINT("Normalized image path is '%wZ' for service '%wZ'\n", ImagePath, ServiceName);
 
    return STATUS_SUCCESS;
 }
@@ -394,7 +398,7 @@ IopLoadServiceModule(
    }
    else
    {
-      DPRINT("Loading module\n");
+      DPRINT("Loading module from %wZ\n", &ServiceImagePath);
       Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
       if (NT_SUCCESS(Status))
       {
@@ -1897,6 +1901,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
         * Load the driver module
         */
 
+       DPRINT("Loading module from %wZ\n", &ImagePath);
        Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
 
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
