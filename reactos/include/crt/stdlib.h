@@ -278,7 +278,7 @@ extern "C" {
   void __cdecl qsort(void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
 #endif
 
-#if !defined(__GNUC__) && !defined(__clang)
+#if !defined(__GNUC__) && !defined(__clang__)
   unsigned short __cdecl _byteswap_ushort(unsigned short _Short);
   unsigned long __cdecl _byteswap_ulong (unsigned long _Long);
 #if _INTEGRAL_MAX_BITS >= 64
@@ -414,7 +414,7 @@ extern "C" {
   void __cdecl perror(const char *_ErrMsg);
 #endif
   _CRTIMP int __cdecl _putenv(const char *_EnvString);
-#if !defined(__GNUC__) && !defined(__clang)
+#if !defined(__GNUC__) && !defined(__clang__)
   unsigned int __cdecl _rotl(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
   __MINGW_EXTENSION unsigned __int64 __cdecl _rotl64(unsigned __int64 _Val,int _Shift);
