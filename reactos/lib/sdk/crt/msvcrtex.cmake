@@ -62,7 +62,7 @@ else()
 endif()
 
 add_library(msvcrtex ${MSVCRTEX_SOURCE})
-add_target_compile_definitions(msvcrtex _M_CEE_PURE)
+add_target_compile_definitions(msvcrtex _DLL)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 
 if(NOT MSVC)

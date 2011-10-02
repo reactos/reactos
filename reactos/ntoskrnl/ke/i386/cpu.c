@@ -1289,7 +1289,7 @@ KiIsNpxErrataPresent(VOID)
         fdiv Value2
         fmul Value2
         fld Value1
-        fsubp
+        fsubp st(1), st(0)
         fistp ErrataPresent
     };
 #endif
