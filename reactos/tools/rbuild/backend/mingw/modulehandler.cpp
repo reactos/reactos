@@ -364,6 +364,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 				dep += ssprintf ( " $(%s_HEADERS)", importedModule.name.c_str () );
 			else if ( GetExtension ( *objectFilename ) == ".rc" )
 				dep += ssprintf ( " $(%s_MCHEADERS)", importedModule.name.c_str () );
+			delete objectFilename;
 		}
 	}
 	else
