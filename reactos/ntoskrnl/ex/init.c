@@ -750,9 +750,9 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG Count, Length;
     PWCHAR Name;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    BOOLEAN OverFlow = FALSE;
     CHAR NameBuffer[256];
     STRING SymbolString;
+    NTSTATUS Status;
 
     /* Loop the driver list */
     NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -775,7 +775,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 if (sizeof(NameBuffer) < Length + sizeof(ANSI_NULL))
                 {
                     /* It's too long */
-                    OverFlow = TRUE;
+                    Status = STATUS_BUFFER_OVERFLOW;
                 }
                 else
                 {
@@ -789,33 +789,21 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
                     /* Null-terminate */
                     NameBuffer[Count] = ANSI_NULL;
+                    Status = STATUS_SUCCESS;
                 }
             }
             else
             {
-                /* This should be a driver, check if it fits */
-                if (sizeof(NameBuffer) <
-                    (sizeof("\\System32\\Drivers\\") +
-                     NtSystemRoot.Length / sizeof(WCHAR) - sizeof(UNICODE_NULL) +
-                     LdrEntry->BaseDllName.Length / sizeof(WCHAR) +
-                     sizeof(ANSI_NULL)))
-                {
-                    /* Buffer too small */
-                    OverFlow = TRUE;
-                    while (TRUE);
-                }
-                else
-                {
-                    /* Otherwise build the name. HACKED for GCC :( */
-                    sprintf(NameBuffer,
-                            "%S\\System32\\Drivers\\%S",
-                            &SharedUserData->NtSystemRoot[2],
-                            LdrEntry->BaseDllName.Buffer);
-                }
+                /* Safely print the string into our buffer */
+                Status = RtlStringCbPrintfA(NameBuffer,
+                                            sizeof(NameBuffer),
+                                            "%S\\System32\\Drivers\\%wZ",
+                                            &SharedUserData->NtSystemRoot[2],
+                                            &LdrEntry->BaseDllName);
             }
 
             /* Check if the buffer was ok */
-            if (!OverFlow)
+            if (NT_SUCCESS(Status))
             {
                 /* Initialize the STRING for the debugger */
                 RtlInitString(&SymbolString, NameBuffer);
