@@ -1,7 +1,6 @@
 
 add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+    -D__ROS_LONG64__)
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
@@ -51,6 +50,7 @@ target_link_libraries(kernel32_winetest wine)
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 if(NOT MSVC)
+    add_target_compile_flags(kernel32_winetest "-Wno-format")
     allow_warnings(kernel32_winetest)
 endif()
 

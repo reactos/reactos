@@ -25,7 +25,7 @@ add_executable(msvcrt_winetest ${SOURCE})
 if(MSVC)
     target_link_libraries(msvcrt_winetest oldnames)
 else()
-    allow_warnings(msvcrt_winetest)
+    add_target_compile_flags(msvcrt_winetest "-Wno-format")
 endif()
 
 set_module_type(msvcrt_winetest win32cui)

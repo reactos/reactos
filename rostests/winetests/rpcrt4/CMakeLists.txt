@@ -4,8 +4,7 @@ remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x500)
 
 add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+    -D__ROS_LONG64__)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
     
@@ -47,5 +46,6 @@ add_importlibs(rpcrt4_winetest ole32 rpcrt4 msvcrt kernel32 ntdll)
 add_cd_file(TARGET rpcrt4_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
+    add_target_compile_flags(rpcrt4_winetest "-Wno-format")
     allow_warnings(rpcrt4_winetest)
 endif()

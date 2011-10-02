@@ -1,7 +1,6 @@
 
 add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+    -D__ROS_LONG64__)
 
 list(APPEND SOURCE
     capture.c
@@ -19,5 +18,5 @@ add_importlibs(winmm_winetest winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET winmm_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
-    allow_warnings(winmm_winetest)
+    add_target_compile_flags(winmm_winetest "-Wno-format")
 endif()

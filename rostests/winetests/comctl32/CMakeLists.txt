@@ -40,6 +40,7 @@ target_link_libraries(comctl32_winetest wine)
 if(MSVC)
     target_link_libraries(comctl32_winetest uuid)
 else()
+    add_target_compile_flags(comctl32_winetest "-Wno-format")
     allow_warnings(comctl32_winetest)
 endif()
 

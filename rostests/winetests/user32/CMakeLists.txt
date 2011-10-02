@@ -1,7 +1,6 @@
 
 add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+    -D__ROS_LONG64__)
 
 set_rc_compiler()
 
@@ -40,5 +39,5 @@ add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET user32_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
-    allow_warnings(user32_winetest)
+    add_target_compile_flags(user32_winetest "-Wno-format")
 endif()
