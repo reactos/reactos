@@ -66,12 +66,28 @@ static int MakeService(SC_HANDLE hScm, const wchar_t *serviceName, SC_HANDLE *hS
     return 0;
 }
 
+static void DestroyService(SC_HANDLE hService)
+{
+    LONG ret;
+
+    if (!hService)
+        return;
+    SetLastError(DNS_ERROR_RCODE_NXRRSET);
+    ret = DeleteService(hService);
+    ok(ret == TRUE, "DeleteService returned %ld, expected 1\n", ret);
+    ok(GetLastError() == DNS_ERROR_RCODE_NXRRSET /* win7 */
+        || GetLastError() == ERROR_SUCCESS /* win2k3 */, "DeleteService GetLastError()=0x%08lx\n", GetLastError());
+
+    CloseServiceHandle(hService);
+}
+
 static void Test_CreateService(void)
 {
     SC_HANDLE hScm = NULL;
     SC_HANDLE hService1 = NULL, hService2 = NULL;
-    LONG ret;
+    SC_HANDLE hService3 = NULL;
     DWORD tag1 = 0, tag2 = 0;
+    DWORD tag3 = 785;
 
     SetLastError(DNS_ERROR_RCODE_NXRRSET);
     hScm = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
@@ -92,28 +108,49 @@ static void Test_CreateService(void)
 
     ok(tag1 != tag2, "tag1=%lu, tag2=%lu\n", tag1, tag2);
 
+    /* ask for a tag, but don't have a group */
+    hService3 = CreateServiceW(
+                    hScm,
+                    L"advapi32_apitest_CreateService_Test_Service2",
+                    NULL,
+                    DELETE,
+                    SERVICE_KERNEL_DRIVER,
+                    SERVICE_BOOT_START,
+                    SERVICE_ERROR_IGNORE,
+                    L"%systemroot%\\drivers\\win32k.sys",
+                    NULL,
+                    &tag3,
+                    NULL,
+                    NULL,
+                    NULL);
+    ok(hService3 == NULL, "hService3=%p\n", hService3);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "error=%lu\n", GetLastError());
+    ok(tag3 == 785, "tag3=%lu\n", tag3);
+    DestroyService(hService3);
+
+    hService3 = CreateServiceW(
+                    hScm,
+                    L"advapi32_apitest_CreateService_Test_Service2",
+                    NULL,
+                    DELETE,
+                    SERVICE_KERNEL_DRIVER,
+                    SERVICE_BOOT_START,
+                    SERVICE_ERROR_IGNORE,
+                    L"%systemroot%\\drivers\\win32k.sys",
+                    L"",
+                    &tag3,
+                    NULL,
+                    NULL,
+                    NULL);
+    ok(hService3 == NULL, "hService3=%p\n", hService3);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "error=%lu\n", GetLastError());
+    ok(tag3 == 785, "tag3=%lu\n", tag3);
+    DestroyService(hService3);
+
 cleanup:
-    if (hService2)
-    {
-        SetLastError(DNS_ERROR_RCODE_NXRRSET);
-        ret = DeleteService(hService2);
-        ok(ret == TRUE, "DeleteService returned %ld, expected 1\n", ret);
-        ok(GetLastError() == DNS_ERROR_RCODE_NXRRSET /* win7 */
-            || GetLastError() == ERROR_SUCCESS /* win2k3 */, "DeleteService (Error: %ld)\n", GetLastError());
 
-        CloseServiceHandle(hService2);
-    }
-
-    if (hService1)
-    {
-        SetLastError(DNS_ERROR_RCODE_NXRRSET);
-        ret = DeleteService(hService1);
-        ok(ret == TRUE, "DeleteService returned %ld, expected 1\n", ret);
-        ok(GetLastError() == DNS_ERROR_RCODE_NXRRSET /* win7 */
-            || GetLastError() == ERROR_SUCCESS /* win2k3 */, "DeleteService (Error: %ld)\n", GetLastError());
-
-        CloseServiceHandle(hService1);
-    }
+    DestroyService(hService2);
+    DestroyService(hService1);
 
     if (hScm)
         CloseServiceHandle(hScm);

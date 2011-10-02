@@ -27,7 +27,7 @@
     NTSTATUS Status;                                                    \
     if (skip(SectionObject != NULL &&                                   \
              SectionObject != (PVOID)0x5555555555555555ULL,             \
-             "blah\n"))                                                 \
+             "No section object\n"))                                    \
         break;                                                          \
     Status = ObOpenObjectByPointer(SectionObject, OBJ_KERNEL_HANDLE,    \
                                    NULL, 0, MmSectionObjectType,        \
@@ -401,7 +401,7 @@ START_TEST(MmSection)
     ok(ExGetPreviousMode() == UserMode, "Previous mode is kernel mode\n");
     /* create a one-byte file that we can use */
     InitializeObjectAttributes(&ObjectAttributes, &FileName1, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = ZwCreateFile(&FileHandle1, GENERIC_ALL, &ObjectAttributes, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SUPERSEDE, FILE_NON_DIRECTORY_FILE, NULL, 0);
+    Status = ZwCreateFile(&FileHandle1, GENERIC_WRITE | SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SUPERSEDE, FILE_NON_DIRECTORY_FILE, NULL, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulongptr(IoStatusBlock.Information, FILE_CREATED);
     ok(FileHandle1 != NULL, "FileHandle1 is NULL\n");
@@ -409,6 +409,8 @@ START_TEST(MmSection)
     {
         FileOffset.QuadPart = 0;
         Status = ZwWriteFile(FileHandle1, NULL, NULL, NULL, &IoStatusBlock, &FileData, sizeof FileData, &FileOffset, NULL);
+        ok(Status == STATUS_SUCCESS || Status == STATUS_PENDING, "Status = 0x%08lx\n", Status);
+        Status = ZwWaitForSingleObject(FileHandle1, FALSE, NULL);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_ulongptr(IoStatusBlock.Information, 1);
         Status = ZwClose(FileHandle1);
