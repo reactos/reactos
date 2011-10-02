@@ -237,7 +237,10 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
 
     /* open key */
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Entry);
         return;
+    }
 
     /* FIXME check for duplicates */
 
