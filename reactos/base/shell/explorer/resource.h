@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by explorer_intres.rc
 //
+#define IDI_COMPUTER                    0
 #define IDS_TITLE                       1
 #define MANIFEST_RESOURCE_ID            1
 #define IDS_START                       2
@@ -91,7 +92,6 @@
 #define IDI_SEARCH_DOC                  146
 #define IDI_PRINTER                     147
 #define IDI_NETWORK                     148
-#define IDI_COMPUTER                    149
 #define IDM_DESKTOPBAR                  150
 #define IDM_VOLUME                      151
 #define IDM_NOTIFYAREA                  152
