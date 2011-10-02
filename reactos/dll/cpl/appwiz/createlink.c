@@ -335,6 +335,8 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     nLength = wcslen(szPath);
     if (!nLength)
     {
+        HeapFree(GetProcessHeap(), 0, pContext);
+
         /* no directory given */
         return FALSE;
     }
@@ -342,6 +344,8 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     attrs = GetFileAttributesW(szPath);
     if (attrs == INVALID_FILE_ATTRIBUTES)
     {
+        HeapFree(GetProcessHeap(), 0, pContext);
+
         /* invalid path */
         return FALSE;
     }
