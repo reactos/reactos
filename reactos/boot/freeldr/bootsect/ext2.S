@@ -339,14 +339,17 @@ Done:
 
 
 
-msgDiskError		db 'Disk error',0
+msgDiskError:
+    .ascii "Disk error", NUL
 // Sorry, need the space...
 //msgAnyKey			db 'Press any key to restart',0
-msgAnyKey			db 'Press any key',0
+msgAnyKey:
+    .ascii "Press any key", NUL
 
         times 509-($-$$) db 0   // Pad to 509 bytes
 
-BootPartition			db 0
+BootPartition:
+    db 0
 
         dw 0aa55h       // BootSector signature
 
@@ -654,11 +657,16 @@ DisplayItAndReboot:
         call PutChars           // Display it
 		jmp  Reboot
 
-msgFreeLdr   db 'freeldr.sys not found',0
-msgFileSize  db 'File size is 0',0
-msgRegFile   db 'freeldr.sys isnt a regular file',0
-filename     db 'freeldr.sys'
-msgLoading   db 'Loading FreeLoader...',0
+msgFreeLdr:
+    .ascii "freeldr.sys not found", NUL
+msgFileSize:
+    .ascii "File size is 0", NUL
+msgRegFile:
+    .ascii "freeldr.sys isnt a regular file", NUL
+filename:
+    .ascii "freeldr.sys"
+msgLoading:
+    .ascii "Loading FreeLoader...", NUL
 
         times 1022-($-$$) db 0   // Pad to 1022 bytes
 
