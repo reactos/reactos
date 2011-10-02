@@ -157,6 +157,11 @@ ljmp16 MACRO segment, offset
     DW segment
 ENDM
 
+data32 MACRO opcode:VARARG
+    DB 66h
+    opcode
+ENDM
+
 UNIMPLEMENTED MACRO name
 ENDM
 
