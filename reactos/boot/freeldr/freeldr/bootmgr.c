@@ -145,7 +145,7 @@ VOID RunLoader(VOID)
 	}
 	TimeOut = GetTimeOut();
 
-	if (!UiInitialize(1))
+	if (!UiInitialize(TRUE))
 	{
 		UiMessageBoxCritical("Unable to initialize UI.");
 		return;

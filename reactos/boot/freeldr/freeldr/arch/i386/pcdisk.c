@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(DISK);
@@ -127,7 +125,7 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 	}
 
 	// If we get here then the read failed
-	ERR("Disk Read Failed in LBA mode", RegsOut.b.ah);
+	ERR("Disk Read Failed in LBA mode: %x (DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d)\n", RegsOut.b.ah, DriveNumber, SectorNumber, SectorCount);
 
 	return FALSE;
 }
@@ -251,7 +249,7 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNu
 		// If we retried 3 times then fail
 		if (RetryCount >= 3)
 		{
-			ERR("Disk Read Failed in CHS mode, after retrying 3 times", RegsOut.b.ah);
+			ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x\n", RegsOut.b.ah);
 			return FALSE;
 		}
 
