@@ -31,10 +31,10 @@ add_library(ksproxy SHARED
 set_entrypoint(ksproxy 0)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
 if(MSVC)
-    set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "/GR-")
+    add_target_compile_flags(ksproxy "/GR-")
 else()
     #FIXME : can't build if this is enabled, check if this is needed
-    #set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+    #add_target_compile_flags(ksproxy "-fno-exceptions -fno-rtti")
     target_link_libraries(ksproxy -lsupc++ -lgcc -lmingw32 oldnames)
 endif()
 

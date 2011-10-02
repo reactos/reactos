@@ -118,7 +118,7 @@ function(set_entrypoint MODULE ENTRYPOINT)
         add_target_link_flags(${MODULE} "-Wl,-entry,0")
     elseif(ARCH MATCHES i386)
         set(_entrysymbol _${ENTRYPOINT})
-        if (${ARGC} GREATER 2)
+        if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
         add_target_link_flags(${MODULE} "-Wl,-entry,${_entrysymbol}")
@@ -191,7 +191,7 @@ function(add_importlib_target _exports_file)
         endif()
     endif()
 
-    if (${_extension} STREQUAL ".spec")
+    if(${_extension} STREQUAL ".spec")
 
         # Normal importlib creation
         add_custom_command(
@@ -276,7 +276,7 @@ if(PCH)
 
         # This gets any specific definitions that were added with set-target-property
         get_target_property(_target_defs ${_target_name} COMPILE_DEFINITIONS)
-        if (_target_defs)
+        if(_target_defs)
             foreach(item ${_target_defs})
                 list(APPEND ${_out_compile_flags} -D${item})
             endforeach()

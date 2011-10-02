@@ -138,7 +138,7 @@ if(ARCH MATCHES i386)
     set_entrypoint(halacpi HalInitSystem@8)
     set_subsystem(halacpi native)
     set_image_base(halacpi 0x00010000)
-    set_property(TARGET halacpi PROPERTY COMPILE_DEFINITIONS CONFIG_ACPI)
+    add_target_compile_definitions(halacpi CONFIG_ACPI)
     add_cd_file(TARGET halacpi DESTINATION reactos/system32 NO_CAB FOR all)
     if(MSVC)
         add_target_link_flags(halacpi "/ignore:4216 /ignore:4078")
@@ -146,7 +146,7 @@ if(ARCH MATCHES i386)
 
     # mini_hal
     add_library(mini_hal ${MINI_HAL_SOURCE})
-    set_property(TARGET mini_hal PROPERTY COMPILE_DEFINITIONS "_BLDR_;_MINIHAL_")
+    add_target_compile_definitions(mini_hal _BLDR_ _MINIHAL_)
     add_dependencies(mini_hal psdk bugcodes asm)
 
 elseif(ARCH MATCHES amd64)

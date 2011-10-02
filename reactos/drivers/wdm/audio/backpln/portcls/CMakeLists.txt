@@ -57,10 +57,10 @@ target_link_libraries(portcls
     ${PSEH_LIB})
 
 if(MSVC)
-    set_target_properties(portcls PROPERTIES COMPILE_FLAGS "/GR-")
+    add_target_compile_flags(portcls "/GR-")
 else()
     target_link_libraries(portcls -lgcc)
-    set_target_properties(portcls PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+    add_target_compile_flags(portcls "-fno-exceptions -fno-rtti")
 endif(MSVC)
 
 add_pch(portcls private.hpp)

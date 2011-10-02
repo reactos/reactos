@@ -47,19 +47,19 @@ if(NOT MSVC)
     target_link_libraries(mingw_common oldnames)
 endif()
 
-set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
+add_target_compile_definitions(mingw_common _M_CEE_PURE)
 add_dependencies(mingw_common psdk)
 
 add_library(mingw_main crt0_c.c crtexe.c dllargv.c)
-set_property(TARGET mingw_main PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_target_compile_definitions(mingw_main _DLL __USE_CRTIMP)
 add_dependencies(mingw_main psdk)
 
 add_library(mingw_wmain crt0_w.c crtexe.c dllargv.c)
-set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
+add_target_compile_definitions(mingw_wmain WPRFLAG UNICODE _UNICODE)
 add_dependencies(mingw_wmain psdk)
 
 add_library(mingw_dllmain crtdll.c dllargv.c)
-set_property(TARGET mingw_dllmain PROPERTY COMPILE_DEFINITIONS CRTDLL _WINDOWS_)
+add_target_compile_definitions(mingw_dllmain CRTDLL _WINDOWS_)
 add_dependencies(mingw_dllmain psdk)
 
 if(NOT MSVC)
@@ -73,5 +73,5 @@ if(NOT MSVC)
 endif()
 
 add_library(getopt getopt.c)
-set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_target_compile_definitions(getopt _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)

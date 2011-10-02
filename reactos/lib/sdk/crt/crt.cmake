@@ -442,6 +442,6 @@ endif()
 
 add_library(crt ${CRT_SOURCE})
 target_link_libraries(crt chkstk)
-set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
+add_target_compile_definitions(crt __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
 #add_pch(crt precomp.h)
 add_dependencies(crt psdk asm)
