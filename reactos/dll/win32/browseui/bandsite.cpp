@@ -247,10 +247,9 @@ struct CBandSiteBase::BandObject *CBandSiteBase::GetBandFromHwnd(HWND hwnd)
 
 CBandSiteBase::~CBandSiteBase()
 {
-    int										i;
 
     TRACE("destroying %p\n", this);
-    
+
     if (fRebarWindow != NULL)
     {
         DestroyWindow(fRebarWindow);
@@ -259,6 +258,7 @@ CBandSiteBase::~CBandSiteBase()
 
     if (fBands != NULL)
     {
+        int i;
         for (i = 0; i < fBandsAllocated; i++)
         {
             if (fBands[i].DeskBand != NULL)

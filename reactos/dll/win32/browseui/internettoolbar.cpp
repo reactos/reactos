@@ -135,6 +135,8 @@ CDockSite::CDockSite()
 	fToolbar = NULL;
 	fRebarWindow = NULL;
 	fChildWindow = NULL;
+	fBandID = 0;
+	fFlags = 0;
 	fInitialized = false;
 	memset(&fDeskBandInfo, 0, sizeof(fDeskBandInfo));
 }
@@ -150,7 +152,6 @@ HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser
 	CComPtr<IDeskBand>						deskBand;
 	TCHAR									textBuffer[40];
 	REBARBANDINFOW							bandInfo;
-	int										bandCount;
 	HRESULT									hResult;
 
 	hResult = containedBand->QueryInterface(IID_IObjectWithSite, (void **)&site);
@@ -180,7 +181,7 @@ HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser
 	bandInfo.cch = sizeof(textBuffer) / sizeof(TCHAR);
 	hResult = GetRBBandInfo(bandInfo);
 
-	bandCount = (int)SendMessage(fRebarWindow, RB_GETBANDCOUNT, 0, 0);
+	SendMessage(fRebarWindow, RB_GETBANDCOUNT, 0, 0);
 	SendMessage(fRebarWindow, RB_INSERTBANDW, -1, (LPARAM)&bandInfo);
 	fInitialized = true;
 	return S_OK;

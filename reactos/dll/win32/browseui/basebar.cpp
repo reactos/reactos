@@ -491,18 +491,19 @@ LRESULT CBaseBar::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 LRESULT CBaseBar::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
 	POINT									newLocation;
-	int										delta;
+	//int										delta;
 
 	if (fTracking)
 	{
 		newLocation.x = (short)LOWORD(lParam);
 		newLocation.y = (short)HIWORD(lParam);
+#if 0
 		if (fVertical)
 			delta = newLocation.x - fLastLocation.x;
 		else
 			delta = newLocation.y - fLastLocation.y;
 		
-
+#endif
 		fLastLocation = newLocation;
 	}
 	return 0;
