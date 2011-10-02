@@ -200,7 +200,12 @@ POINT * FASTCALL GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
     return NULL;
   }
   *nPtsOut = 0;
+
   out = ExAllocatePoolWithTag(PagedPool, dwOut * sizeof(POINT), TAG_BEZIER);
+  if(!out) {
+    return NULL;
+  }
+
   for(Bezier = 0; Bezier < (count-1)/3; Bezier++) {
     POINT ptBuf[4];
     memcpy(ptBuf, Points + Bezier * 3, sizeof(POINT) * 4);
