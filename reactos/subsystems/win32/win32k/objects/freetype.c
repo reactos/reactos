@@ -1366,6 +1366,7 @@ ftGdiGlyphCacheSet(
     if(FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
     {
         DPRINT1("Conversion failed\n");
+        ExFreePoolWithTag(NewEntry, TAG_FONT);
         FT_Done_Glyph((FT_Glyph)BitmapGlyph);
         return NULL;
     }
