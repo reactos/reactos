@@ -455,7 +455,10 @@ LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
 
     dwBufSize = GetSystemDrive(&szSystemDrive);
     if (dwBufSize == 0)
+    {
+        HeapFree(GetProcessHeap(), 0, szSystemDrive);
         return FALSE;
+    }
 
     wcscpy(pStartInfo->szFreeldrIni, szSystemDrive);
     wcscat(pStartInfo->szFreeldrIni, L"\\freeldr.ini");
