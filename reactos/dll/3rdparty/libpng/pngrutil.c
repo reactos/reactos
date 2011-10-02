@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.5.2 [March 31, 2011]
+ * Last changed in libpng 1.5.5 [September 22, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -87,10 +87,10 @@ png_int_32 (PNGAPI
 png_get_int_32)(png_const_bytep buf)
 {
    png_uint_32 uval = png_get_uint_32(buf);
-   if ((uval & 0x80000000L) == 0) /* non-negative */
+   if ((uval & 0x80000000) == 0) /* non-negative */
       return uval;
 
-   uval = (uval ^ 0xffffffffL) + 1;  /* 2's complement: -x = ~x+1 */
+   uval = (uval ^ 0xffffffff) + 1;  /* 2's complement: -x = ~x+1 */
    return -(png_int_32)uval;
 }
 
@@ -278,8 +278,7 @@ png_crc_error(png_structp png_ptr)
       return (0);
 }
 
-#if defined(PNG_READ_zTXt_SUPPORTED) || defined(PNG_READ_iTXt_SUPPORTED) || \
-    defined(PNG_READ_iCCP_SUPPORTED)
+#ifdef PNG_READ_COMPRESSED_TEXT_SUPPORTED
 static png_size_t
 png_inflate(png_structp png_ptr, png_bytep data, png_size_t size,
     png_bytep output, png_size_t output_size)
@@ -370,41 +369,31 @@ png_inflate(png_structp png_ptr, png_bytep data, png_size_t size,
        * and the error message is dumped into the uncompressed
        * buffer if available.
        */
+#     ifdef PNG_WARNINGS_SUPPORTED
       {
-         PNG_CONST char *msg;
-#ifdef PNG_CONSOLE_IO_SUPPORTED
-         char umsg[52];
-#endif
+         png_const_charp msg;
+
          if (png_ptr->zstream.msg != 0)
             msg = png_ptr->zstream.msg;
 
-         else
+         else switch (ret)
          {
-#ifdef PNG_CONSOLE_IO_SUPPORTED
-            switch (ret)
-            {
-               case Z_BUF_ERROR:
-                  msg = "Buffer error in compressed datastream in %s chunk";
-                  break;
+            case Z_BUF_ERROR:
+               msg = "Buffer error in compressed datastream";
+               break;
 
-               case Z_DATA_ERROR:
-                  msg = "Data error in compressed datastream in %s chunk";
-                  break;
+            case Z_DATA_ERROR:
+               msg = "Data error in compressed datastream";
+               break;
 
-               default:
-                  msg = "Incomplete compressed datastream in %s chunk";
-                  break;
-            }
-
-            png_snprintf(umsg, sizeof umsg, msg, png_ptr->chunk_name);
-            msg = umsg;
-#else
-            msg = "Damaged compressed datastream in chunk other than IDAT";
-#endif
+            default:
+               msg = "Incomplete compressed datastream";
+               break;
          }
 
-         png_warning(png_ptr, msg);
+         png_chunk_warning(png_ptr, msg);
       }
+#     endif
 
       /* 0 means an error - notice that this code simply ignores
        * zero length compressed chunks as a result.
@@ -438,8 +427,8 @@ png_decompress_chunk(png_structp png_ptr, int comp_type,
       png_size_t expanded_size = png_inflate(png_ptr,
           (png_bytep)(png_ptr->chunkdata + prefix_size),
           chunklength - prefix_size,
-          0,            /*output*/
-          0);           /*output size*/
+          0,            /* output */
+          0);           /* output size */
 
       /* Now check the limits on this chunk - if the limit fails the
        * compressed data will be removed, the prefix will remain.
@@ -469,7 +458,7 @@ png_decompress_chunk(png_structp png_ptr, int comp_type,
       {
          /* Success (maybe) - really uncompress the chunk. */
          png_size_t new_size = 0;
-         png_charp text = png_malloc_warn(png_ptr,
+         png_charp text = (png_charp)png_malloc_warn(png_ptr,
              prefix_size + expanded_size + 1);
 
          if (text != NULL)
@@ -500,15 +489,9 @@ png_decompress_chunk(png_structp png_ptr, int comp_type,
 
    else /* if (comp_type != PNG_COMPRESSION_TYPE_BASE) */
    {
-#ifdef PNG_STDIO_SUPPORTED
-      char umsg[50];
-
-      png_snprintf(umsg, sizeof umsg,
-          "Unknown zTXt compression type %d", comp_type);
-      png_warning(png_ptr, umsg);
-#else
-      png_warning(png_ptr, "Unknown zTXt compression type");
-#endif
+      PNG_WARNING_PARAMETERS(p)
+      png_warning_parameter_signed(p, 1, PNG_NUMBER_FORMAT_d, comp_type);
+      png_formatted_warning(png_ptr, p, "Unknown zTXt compression type @1");
 
       /* The recovery is to simply drop the data. */
    }
@@ -518,7 +501,7 @@ png_decompress_chunk(png_structp png_ptr, int comp_type,
     * amount of compressed data.
     */
    {
-      png_charp text = png_malloc_warn(png_ptr, prefix_size + 1);
+      png_charp text = (png_charp)png_malloc_warn(png_ptr, prefix_size + 1);
 
       if (text != NULL)
       {
@@ -536,7 +519,7 @@ png_decompress_chunk(png_structp png_ptr, int comp_type,
 
    *newlength = prefix_size;
 }
-#endif
+#endif /* PNG_READ_COMPRESSED_TEXT_SUPPORTED */
 
 /* Read and check the IDHR chunk */
 void /* PRIVATE */
@@ -844,14 +827,12 @@ png_handle_gAMA(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 #  ifdef PNG_READ_sRGB_SUPPORTED
    if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_sRGB))
    {
-      if (PNG_OUT_OF_RANGE(igamma, 45500L, 500))
+      if (PNG_OUT_OF_RANGE(igamma, 45500, 500))
       {
-         png_warning(png_ptr,
-             "Ignoring incorrect gAMA value when sRGB is also present");
-
-#    ifdef PNG_CONSOLE_IO_SUPPORTED
-         fprintf(stderr, "gamma = (%d/100000)", (int)igamma);
-#    endif
+         PNG_WARNING_PARAMETERS(p)
+         png_warning_parameter_signed(p, 1, PNG_NUMBER_FORMAT_fixed, igamma);
+         png_formatted_warning(png_ptr, p,
+             "Ignoring incorrect gAMA value @1 when sRGB is also present");
          return;
       }
    }
@@ -1013,27 +994,111 @@ png_handle_cHRM(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    {
       if (PNG_OUT_OF_RANGE(x_white, 31270,  1000) ||
           PNG_OUT_OF_RANGE(y_white, 32900,  1000) ||
-          PNG_OUT_OF_RANGE(x_red,   64000L, 1000) ||
+          PNG_OUT_OF_RANGE(x_red,   64000,  1000) ||
           PNG_OUT_OF_RANGE(y_red,   33000,  1000) ||
           PNG_OUT_OF_RANGE(x_green, 30000,  1000) ||
-          PNG_OUT_OF_RANGE(y_green, 60000L, 1000) ||
+          PNG_OUT_OF_RANGE(y_green, 60000,  1000) ||
           PNG_OUT_OF_RANGE(x_blue,  15000,  1000) ||
           PNG_OUT_OF_RANGE(y_blue,   6000,  1000))
       {
-         png_warning(png_ptr,
-             "Ignoring incorrect cHRM value when sRGB is also present");
+         PNG_WARNING_PARAMETERS(p)
 
-#ifdef PNG_CONSOLE_IO_SUPPORTED
-         fprintf(stderr, "wx=%d, wy=%d, rx=%d, ry=%d\n",
-             x_white, y_white, x_red, y_red);
+         png_warning_parameter_signed(p, 1, PNG_NUMBER_FORMAT_fixed, x_white);
+         png_warning_parameter_signed(p, 2, PNG_NUMBER_FORMAT_fixed, y_white);
+         png_warning_parameter_signed(p, 3, PNG_NUMBER_FORMAT_fixed, x_red);
+         png_warning_parameter_signed(p, 4, PNG_NUMBER_FORMAT_fixed, y_red);
+         png_warning_parameter_signed(p, 5, PNG_NUMBER_FORMAT_fixed, x_green);
+         png_warning_parameter_signed(p, 6, PNG_NUMBER_FORMAT_fixed, y_green);
+         png_warning_parameter_signed(p, 7, PNG_NUMBER_FORMAT_fixed, x_blue);
+         png_warning_parameter_signed(p, 8, PNG_NUMBER_FORMAT_fixed, y_blue);
 
-         fprintf(stderr, "gx=%d, gy=%d, bx=%d, by=%d\n",
-             x_green, y_green, x_blue, y_blue);
-#endif /* PNG_CONSOLE_IO_SUPPORTED */
+         png_formatted_warning(png_ptr, p,
+             "Ignoring incorrect cHRM white(@1,@2) r(@3,@4)g(@5,@6)b(@7,@8) "
+             "when sRGB is also present");
       }
       return;
    }
 #endif /* PNG_READ_sRGB_SUPPORTED */
+
+#ifdef PNG_READ_RGB_TO_GRAY_SUPPORTED
+   /* Store the _white values as default coefficients for the rgb to gray
+    * operation if it is supported.  Check if the transform is already set to
+    * avoid destroying the transform values.
+    */
+   if (!png_ptr->rgb_to_gray_coefficients_set)
+   {
+      /* png_set_background has not been called and we haven't seen an sRGB
+       * chunk yet.  Find the XYZ of the three end points.
+       */
+      png_XYZ XYZ;
+      png_xy xy;
+
+      xy.redx = x_red;
+      xy.redy = y_red;
+      xy.greenx = x_green;
+      xy.greeny = y_green;
+      xy.bluex = x_blue;
+      xy.bluey = y_blue;
+      xy.whitex = x_white;
+      xy.whitey = y_white;
+
+      if (png_XYZ_from_xy_checked(png_ptr, &XYZ, xy))
+      {
+         /* The success case, because XYZ_from_xy normalises to a reference
+          * white Y of 1.0 we just need to scale the numbers.  This should
+          * always work just fine. It is an internal error if this overflows.
+          */
+         {
+            png_fixed_point r, g, b;
+            if (png_muldiv(&r, XYZ.redY, 32768, PNG_FP_1) &&
+               r >= 0 && r <= 32768 &&
+               png_muldiv(&g, XYZ.greenY, 32768, PNG_FP_1) &&
+               g >= 0 && g <= 32768 &&
+               png_muldiv(&b, XYZ.blueY, 32768, PNG_FP_1) &&
+               b >= 0 && b <= 32768 &&
+               r+g+b <= 32769)
+            {
+               /* We allow 0 coefficients here.  r+g+b may be 32769 if two or
+                * all of the coefficients were rounded up.  Handle this by
+                * reducing the *largest* coefficient by 1; this matches the
+                * approach used for the default coefficients in pngrtran.c
+                */
+               int add = 0;
+
+               if (r+g+b > 32768)
+                  add = -1;
+               else if (r+g+b < 32768)
+                  add = 1;
+
+               if (add != 0)
+               {
+                  if (g >= r && g >= b)
+                     g += add;
+                  else if (r >= g && r >= b)
+                     r += add;
+                  else
+                     b += add;
+               }
+
+               /* Check for an internal error. */
+               if (r+g+b != 32768)
+                  png_error(png_ptr,
+                     "internal error handling cHRM coefficients");
+
+               png_ptr->rgb_to_gray_red_coeff   = (png_uint_16)r;
+               png_ptr->rgb_to_gray_green_coeff = (png_uint_16)g;
+            }
+
+            /* This is a png_error at present even though it could be ignored -
+             * it should never happen, but it is important that if it does, the
+             * bug is fixed.
+             */
+            else
+               png_error(png_ptr, "internal error handling cHRM->XYZ");
+         }
+      }
+   }
+#endif
 
    png_set_cHRM_fixed(png_ptr, info_ptr, x_white, y_white, x_red, y_red,
       x_green, y_green, x_blue, y_blue);
@@ -1094,13 +1159,15 @@ png_handle_sRGB(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 #if defined(PNG_READ_gAMA_SUPPORTED) && defined(PNG_READ_GAMMA_SUPPORTED)
    if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_gAMA))
    {
-      if (PNG_OUT_OF_RANGE(info_ptr->gamma, 45500L, 500))
+      if (PNG_OUT_OF_RANGE(info_ptr->gamma, 45500, 500))
       {
-         png_warning(png_ptr,
-             "Ignoring incorrect gAMA value when sRGB is also present");
-#ifdef PNG_CONSOLE_IO_SUPPORTED
-         fprintf(stderr, "incorrect gamma=(%d/100000)\n", info_ptr->gamma);
-#endif
+         PNG_WARNING_PARAMETERS(p)
+
+         png_warning_parameter_signed(p, 1, PNG_NUMBER_FORMAT_fixed,
+            info_ptr->gamma);
+
+         png_formatted_warning(png_ptr, p,
+             "Ignoring incorrect gAMA value @1 when sRGB is also present");
       }
    }
 #endif /* PNG_READ_gAMA_SUPPORTED */
@@ -1109,10 +1176,10 @@ png_handle_sRGB(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_cHRM))
       if (PNG_OUT_OF_RANGE(info_ptr->x_white, 31270,  1000) ||
           PNG_OUT_OF_RANGE(info_ptr->y_white, 32900,  1000) ||
-          PNG_OUT_OF_RANGE(info_ptr->x_red,   64000L, 1000) ||
+          PNG_OUT_OF_RANGE(info_ptr->x_red,   64000,  1000) ||
           PNG_OUT_OF_RANGE(info_ptr->y_red,   33000,  1000) ||
           PNG_OUT_OF_RANGE(info_ptr->x_green, 30000,  1000) ||
-          PNG_OUT_OF_RANGE(info_ptr->y_green, 60000L, 1000) ||
+          PNG_OUT_OF_RANGE(info_ptr->y_green, 60000,  1000) ||
           PNG_OUT_OF_RANGE(info_ptr->x_blue,  15000,  1000) ||
           PNG_OUT_OF_RANGE(info_ptr->y_blue,   6000,  1000))
       {
@@ -1120,6 +1187,47 @@ png_handle_sRGB(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
              "Ignoring incorrect cHRM value when sRGB is also present");
       }
 #endif /* PNG_READ_cHRM_SUPPORTED */
+
+   /* This is recorded for use when handling the cHRM chunk above.  An sRGB
+    * chunk unconditionally overwrites the coefficients for grayscale conversion
+    * too.
+    */
+   png_ptr->is_sRGB = 1;
+
+#  ifdef PNG_READ_RGB_TO_GRAY_SUPPORTED
+      /* Don't overwrite user supplied values: */
+      if (!png_ptr->rgb_to_gray_coefficients_set)
+      {
+         /* These numbers come from the sRGB specification (or, since one has to
+          * pay much money to get a copy, the wikipedia sRGB page) the
+          * chromaticity values quoted have been inverted to get the reverse
+          * transformation from RGB to XYZ and the 'Y' coefficients scaled by
+          * 32768 (then rounded).
+          *
+          * sRGB and ITU Rec-709 both truncate the values for the D65 white
+          * point to four digits and, even though it actually stores five
+          * digits, the PNG spec gives the truncated value.
+          *
+          * This means that when the chromaticities are converted back to XYZ
+          * end points we end up with (6968,23435,2366), which, as described in
+          * pngrtran.c, would overflow.  If the five digit precision and up is
+          * used we get, instead:
+          *
+          *    6968*R + 23435*G + 2365*B
+          *
+          * (Notice that this rounds the blue coefficient down, rather than the
+          * choice used in pngrtran.c which is to round the green one down.)
+          */
+         png_ptr->rgb_to_gray_red_coeff   =  6968; /* 0.212639005871510 */
+         png_ptr->rgb_to_gray_green_coeff = 23434; /* 0.715168678767756 */
+         /* png_ptr->rgb_to_gray_blue_coeff  =  2366; 0.072192315360734	*/
+
+         /* The following keeps the cHRM chunk from destroying the
+          * coefficients again in the event that it follows the sRGB chunk.
+          */
+         png_ptr->rgb_to_gray_coefficients_set = 1;
+      }
+#  endif
 
    png_set_sRGB_gAMA_and_cHRM(png_ptr, info_ptr, intent);
 }
@@ -1240,23 +1348,15 @@ png_handle_iCCP(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    /* And the following guarantees that profile_size == profile_length. */
    if (profile_size > profile_length)
    {
+      PNG_WARNING_PARAMETERS(p)
+
       png_free(png_ptr, png_ptr->chunkdata);
       png_ptr->chunkdata = NULL;
-#ifdef PNG_STDIO_SUPPORTED
-      {
-         char umsg[80];
 
-         png_snprintf2(umsg, 80,
-             "Ignoring iCCP chunk with declared size = %u "
-              "and actual length = %u",
-              (unsigned int) profile_size,
-              (unsigned int) profile_length);
-         png_warning(png_ptr, umsg);
-      }
-#else
-      png_warning(png_ptr,
-         "Ignoring iCCP chunk with uncompressed size mismatch");
-#endif
+      png_warning_parameter_unsigned(p, 1, PNG_NUMBER_FORMAT_u, profile_size);
+      png_warning_parameter_unsigned(p, 2, PNG_NUMBER_FORMAT_u, profile_length);
+      png_formatted_warning(png_ptr, p,
+         "Ignoring iCCP chunk with declared size = @1 and actual length = @2");
       return;
    }
 
@@ -1565,6 +1665,7 @@ png_handle_bKGD(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 {
    png_size_t truelen;
    png_byte buf[6];
+   png_color_16 background;
 
    png_debug(1, "in png_handle_bKGD");
 
@@ -1621,7 +1722,7 @@ png_handle_bKGD(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     */
    if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
    {
-      png_ptr->background.index = buf[0];
+      background.index = buf[0];
 
       if (info_ptr && info_ptr->num_palette)
       {
@@ -1631,33 +1732,36 @@ png_handle_bKGD(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
             return;
          }
 
-         png_ptr->background.red =
-             (png_uint_16)png_ptr->palette[buf[0]].red;
-
-         png_ptr->background.green =
-             (png_uint_16)png_ptr->palette[buf[0]].green;
-
-         png_ptr->background.blue =
-             (png_uint_16)png_ptr->palette[buf[0]].blue;
+         background.red = (png_uint_16)png_ptr->palette[buf[0]].red;
+         background.green = (png_uint_16)png_ptr->palette[buf[0]].green;
+         background.blue = (png_uint_16)png_ptr->palette[buf[0]].blue;
       }
+
+      else
+         background.red = background.green = background.blue = 0;
+
+      background.gray = 0;
    }
 
    else if (!(png_ptr->color_type & PNG_COLOR_MASK_COLOR)) /* GRAY */
    {
-      png_ptr->background.red =
-      png_ptr->background.green =
-      png_ptr->background.blue =
-      png_ptr->background.gray = png_get_uint_16(buf);
+      background.index = 0;
+      background.red =
+      background.green =
+      background.blue =
+      background.gray = png_get_uint_16(buf);
    }
 
    else
    {
-      png_ptr->background.red = png_get_uint_16(buf);
-      png_ptr->background.green = png_get_uint_16(buf + 2);
-      png_ptr->background.blue = png_get_uint_16(buf + 4);
+      background.index = 0;
+      background.red = png_get_uint_16(buf);
+      background.green = png_get_uint_16(buf + 2);
+      background.blue = png_get_uint_16(buf + 4);
+      background.gray = 0;
    }
 
-   png_set_bKGD(png_ptr, info_ptr, &(png_ptr->background));
+   png_set_bKGD(png_ptr, info_ptr, &background);
 }
 #endif
 
@@ -1982,6 +2086,14 @@ png_handle_sCAL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
       return;
    }
 
+   /* Need unit type, width, \0, height: minimum 4 bytes */
+   else if (length < 4)
+   {
+      png_warning(png_ptr, "sCAL chunk too short");
+      png_crc_finish(png_ptr, length);
+      return;
+   }
+
    png_debug1(2, "Allocating and reading sCAL chunk data (%u bytes)",
       length + 1);
 
@@ -2017,22 +2129,28 @@ png_handle_sCAL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    /* Validate the ASCII numbers, need two ASCII numbers separated by
     * a '\0' and they need to fit exactly in the chunk data.
     */
-   i = 0;
+   i = 1;
    state = 0;
 
-   if (png_ptr->chunkdata[1] == 45 /* negative width */ ||
-       !png_check_fp_number(png_ptr->chunkdata, slength, &state, &i) ||
+   if (!png_check_fp_number(png_ptr->chunkdata, slength, &state, &i) ||
        i >= slength || png_ptr->chunkdata[i++] != 0)
       png_warning(png_ptr, "Invalid sCAL chunk ignored: bad width format");
+
+   else if (!PNG_FP_IS_POSITIVE(state))
+      png_warning(png_ptr, "Invalid sCAL chunk ignored: non-positive width");
 
    else
    {
       png_size_t heighti = i;
 
-      if (png_ptr->chunkdata[i] == 45 /* negative height */ ||
-          !png_check_fp_number(png_ptr->chunkdata, slength, &state, &i) ||
+      state = 0;
+      if (!png_check_fp_number(png_ptr->chunkdata, slength, &state, &i) ||
           i != slength)
          png_warning(png_ptr, "Invalid sCAL chunk ignored: bad height format");
+
+      else if (!PNG_FP_IS_POSITIVE(state))
+         png_warning(png_ptr,
+            "Invalid sCAL chunk ignored: non-positive height");
 
       else
          /* This is the (only) success case. */
@@ -2659,6 +2777,14 @@ void /* PRIVATE */
 png_combine_row(png_structp png_ptr, png_bytep row, int mask)
 {
    png_debug(1, "in png_combine_row");
+
+   /* Added in 1.5.4: the row_info should match the information returned by any
+    * call to png_read_update_info at this point.  Do not continue if we got
+    * this wrong.
+    */
+   if (png_ptr->info_rowbytes != 0 && png_ptr->info_rowbytes !=
+          PNG_ROWBYTES(png_ptr->row_info.pixel_depth, png_ptr->width))
+      png_error(png_ptr, "internal row size calculation error");
 
    if (mask == 0xff)
    {
@@ -3398,7 +3524,9 @@ png_read_start_row(png_structp png_ptr)
 
    png_debug(1, "in png_read_start_row");
    png_ptr->zstream.avail_in = 0;
+#ifdef PNG_READ_TRANSFORMS_SUPPORTED
    png_init_read_transformations(png_ptr);
+#endif
 #ifdef PNG_READ_INTERLACING_SUPPORTED
    if (png_ptr->interlaced)
    {

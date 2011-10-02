@@ -1026,8 +1026,10 @@ png_push_process_row(png_structp png_ptr)
 
    png_memcpy(png_ptr->prev_row, png_ptr->row_buf, png_ptr->rowbytes + 1);
 
+#ifdef PNG_READ_TRANSFORMS_SUPPORTED
    if (png_ptr->transformations)
       png_do_read_transformations(png_ptr);
+#endif
 
 #ifdef PNG_READ_INTERLACING_SUPPORTED
    /* Blow up interlaced rows to full size */
@@ -1288,7 +1290,7 @@ png_push_handle_tEXt(png_structp png_ptr, png_infop info_ptr, png_uint_32
       {
          PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
          png_error(png_ptr, "Out of place tEXt");
-         /*NOT REACHED*/
+         /* NOT REACHED */
       }
 
 #ifdef PNG_MAX_MALLOC_64K
@@ -1385,7 +1387,7 @@ png_push_handle_zTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32
    {
       PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
       png_error(png_ptr, "Out of place zTXt");
-      /*NOT REACHED*/
+      /* NOT REACHED */
    }
 
 #ifdef PNG_MAX_MALLOC_64K
@@ -1589,7 +1591,7 @@ png_push_handle_iTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32
    {
       PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
       png_error(png_ptr, "Out of place iTXt");
-      /*NOT REACHED*/
+      /* NOT REACHED */
    }
 
 #ifdef PNG_MAX_MALLOC_64K

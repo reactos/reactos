@@ -1,7 +1,7 @@
 
 /* pngread.c - read a PNG file
  *
- * Last changed in libpng 1.5.2 [March 31, 2011]
+ * Last changed in libpng 1.5.4 [July 7, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -47,11 +47,9 @@ png_create_read_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
 
 #ifdef PNG_SETJMP_SUPPORTED
 #ifdef USE_FAR_KEYWORD
-   jmp_buf png_jmpbuf;
+   jmp_buf tmp_jmpbuf;
 #endif
 #endif
-
-   int i;
 
    png_debug(1, "in png_create_read_struct");
 
@@ -85,13 +83,13 @@ png_create_read_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
    encounter a png_error() will longjmp here.  Since the jmpbuf is
    then meaningless we abort instead of returning. */
 #ifdef USE_FAR_KEYWORD
-   if (setjmp(png_jmpbuf))
+   if (setjmp(tmp_jmpbuf))
 #else
    if (setjmp(png_jmpbuf(png_ptr))) /* Sets longjmp to match setjmp */
 #endif
       PNG_ABORT();
 #ifdef USE_FAR_KEYWORD
-   png_memcpy(png_jmpbuf(png_ptr), png_jmpbuf, png_sizeof(jmp_buf));
+   png_memcpy(png_jmpbuf(png_ptr), tmp_jmpbuf, png_sizeof(jmp_buf));
 #endif
 #endif /* PNG_SETJMP_SUPPORTED */
 
@@ -101,54 +99,9 @@ png_create_read_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
 
    png_set_error_fn(png_ptr, error_ptr, error_fn, warn_fn);
 
-   if (user_png_ver)
-   {
-      i = 0;
-
-      do
-      {
-         if (user_png_ver[i] != png_libpng_ver[i])
-            png_ptr->flags |= PNG_FLAG_LIBRARY_MISMATCH;
-      } while (png_libpng_ver[i++]);
-   }
-
-   else
-      png_ptr->flags |= PNG_FLAG_LIBRARY_MISMATCH;
-
-
-   if (png_ptr->flags & PNG_FLAG_LIBRARY_MISMATCH)
-   {
-     /* Libpng 0.90 and later are binary incompatible with libpng 0.89, so
-      * we must recompile any applications that use any older library version.
-      * For versions after libpng 1.0, we will be compatible, so we need
-      * only check the first digit.
-      */
-      if (user_png_ver == NULL || user_png_ver[0] != png_libpng_ver[0] ||
-          (user_png_ver[0] == '1' && user_png_ver[2] != png_libpng_ver[2]) ||
-          (user_png_ver[0] == '0' && user_png_ver[2] < '9'))
-      {
-#ifdef PNG_CONSOLE_IO_SUPPORTED
-         char msg[80];
-         if (user_png_ver)
-         {
-            png_snprintf2(msg, 80,
-                "Application built with libpng-%.20s"
-                " but running with %.20s",
-                user_png_ver,
-                png_libpng_ver);
-            png_warning(png_ptr, msg);
-         }
-#else
-         png_warning(png_ptr,
-             "Incompatible libpng version in application and library");
-#endif
-#ifdef PNG_ERROR_NUMBERS_SUPPORTED
-         png_ptr->flags = 0;
-#endif
-
-         png_cleanup_needed = 1;
-      }
-   }
+   /* Call the general version checker (shared with read and write code): */
+   if (!png_user_version_check(png_ptr, user_png_ver))
+      png_cleanup_needed = 1;
 
    if (!png_cleanup_needed)
    {
@@ -457,7 +410,11 @@ png_read_update_info(png_structp png_ptr, png_infop info_ptr)
           "Ignoring extra png_read_update_info() call;"
           " row buffer not reallocated");
 
+#ifdef PNG_READ_TRANSFORMS_SUPPORTED
    png_read_transform_info(png_ptr, info_ptr);
+#else
+   PNG_UNUSED(info_ptr)
+#endif
 }
 
 #ifdef PNG_SEQUENTIAL_READ_SUPPORTED
@@ -704,8 +661,10 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
 #endif
 
 
+#ifdef PNG_READ_TRANSFORMS_SUPPORTED
    if (png_ptr->transformations)
       png_do_read_transformations(png_ptr);
+#endif
 
 #ifdef PNG_READ_INTERLACING_SUPPORTED
    /* Blow up interlaced rows to full size */
@@ -1163,7 +1122,9 @@ png_read_destroy(png_structp png_ptr, png_infop info_ptr,
    jmp_buf tmp_jmp;
 #endif
    png_error_ptr error_fn;
+#ifdef PNG_WARNINGS_SUPPORTED
    png_error_ptr warning_fn;
+#endif
    png_voidp error_ptr;
 #ifdef PNG_USER_MEM_SUPPORTED
    png_free_ptr free_fn;
@@ -1249,10 +1210,6 @@ png_read_destroy(png_structp png_ptr, png_infop info_ptr,
 #endif
 #endif
 
-#ifdef PNG_TIME_RFC1123_SUPPORTED
-   png_free(png_ptr, png_ptr->time_buffer);
-#endif
-
    inflateEnd(&png_ptr->zstream);
 
 #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
@@ -1269,11 +1226,13 @@ png_read_destroy(png_structp png_ptr, png_infop info_ptr,
     * being used again.
     */
 #ifdef PNG_SETJMP_SUPPORTED
-   png_memcpy(tmp_jmp, png_ptr->png_jmpbuf, png_sizeof(jmp_buf));
+   png_memcpy(tmp_jmp, png_ptr->longjmp_buffer, png_sizeof(jmp_buf));
 #endif
 
    error_fn = png_ptr->error_fn;
+#ifdef PNG_WARNINGS_SUPPORTED
    warning_fn = png_ptr->warning_fn;
+#endif
    error_ptr = png_ptr->error_ptr;
 #ifdef PNG_USER_MEM_SUPPORTED
    free_fn = png_ptr->free_fn;
@@ -1282,14 +1241,16 @@ png_read_destroy(png_structp png_ptr, png_infop info_ptr,
    png_memset(png_ptr, 0, png_sizeof(png_struct));
 
    png_ptr->error_fn = error_fn;
+#ifdef PNG_WARNINGS_SUPPORTED
    png_ptr->warning_fn = warning_fn;
+#endif
    png_ptr->error_ptr = error_ptr;
 #ifdef PNG_USER_MEM_SUPPORTED
    png_ptr->free_fn = free_fn;
 #endif
 
 #ifdef PNG_SETJMP_SUPPORTED
-   png_memcpy(png_ptr->png_jmpbuf, tmp_jmp, png_sizeof(jmp_buf));
+   png_memcpy(png_ptr->longjmp_buffer, tmp_jmp, png_sizeof(jmp_buf));
 #endif
 
 }
@@ -1325,8 +1286,22 @@ png_read_png(png_structp png_ptr, png_infop info_ptr,
 
    /* -------------- image transformations start here ------------------- */
 
-#ifdef PNG_READ_16_TO_8_SUPPORTED
-   /* Tell libpng to strip 16 bit/color files down to 8 bits per color.
+#ifdef PNG_READ_SCALE_16_TO_8_SUPPORTED
+   /* Tell libpng to strip 16-bit/color files down to 8 bits per color.
+    */
+   if (transforms & PNG_TRANSFORM_SCALE_16)
+   {
+     /* Added at libpng-1.5.4. "strip_16" produces the same result that it
+      * did in earlier versions, while "scale_16" is now more accurate.
+      */
+      png_set_scale_16(png_ptr);
+   }
+#endif
+
+#ifdef PNG_READ_STRIP_16_TO_8_SUPPORTED
+   /* If both SCALE and STRIP are required pngrtran will effectively cancel the
+    * latter by doing SCALE first.  This is ok and allows apps not to check for
+    * which is supported to get the right answer.
     */
    if (transforms & PNG_TRANSFORM_STRIP_16)
       png_set_strip_16(png_ptr);
@@ -1407,7 +1382,7 @@ png_read_png(png_structp png_ptr, png_infop info_ptr,
 #endif
 
 #ifdef PNG_READ_SWAP_SUPPORTED
-   /* Swap bytes of 16 bit files to least significant byte first */
+   /* Swap bytes of 16-bit files to least significant byte first */
    if (transforms & PNG_TRANSFORM_SWAP_ENDIAN)
       png_set_swap(png_ptr);
 #endif
@@ -1424,6 +1399,12 @@ png_read_png(png_structp png_ptr, png_infop info_ptr,
    /* Expand grayscale image to RGB */
    if (transforms & PNG_TRANSFORM_GRAY_TO_RGB)
       png_set_gray_to_rgb(png_ptr);
+#endif
+
+/* Added at libpng-1.5.4 */
+#ifdef PNG_READ_EXPAND_16_SUPPORTED
+   if (transforms & PNG_TRANSFORM_EXPAND_16)
+      png_set_expand_16(png_ptr);
 #endif
 
    /* We don't handle adding filler bytes */
