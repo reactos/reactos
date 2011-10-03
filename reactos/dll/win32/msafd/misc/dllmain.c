@@ -1431,16 +1431,16 @@ WSPConnect(SOCKET Handle,
            LPINT lpErrno)
 {
     IO_STATUS_BLOCK         IOSB;
-    PAFD_CONNECT_INFO       ConnectInfo;
-    PSOCKET_INFORMATION     Socket = NULL;
+    PAFD_CONNECT_INFO       ConnectInfo = NULL;
+    PSOCKET_INFORMATION     Socket;
     NTSTATUS                Status;
     INT                     Errno;
-    UCHAR                   ConnectBuffer[0x22];
     ULONG                   ConnectDataLength;
     ULONG                   InConnectDataLength;
     INT                     BindAddressLength;
     PSOCKADDR               BindAddress;
     HANDLE                  SockEvent;
+    int                     SocketDataLength;
 
     Status = NtCreateEvent(&SockEvent,
                            GENERIC_READ | GENERIC_WRITE,
@@ -1506,16 +1506,26 @@ WSPConnect(SOCKET Handle,
             goto notify;
     }
 
-    /* Dynamic Structure...ugh */
-    ConnectInfo = (PAFD_CONNECT_INFO)ConnectBuffer;
+    /* Calculate the size of SocketAddress->sa_data */
+    SocketDataLength = SocketAddressLength - FIELD_OFFSET(struct sockaddr, sa_data);
+
+    /* Allocate a connection info buffer with SocketDataLength bytes of payload */
+    ConnectInfo = HeapAlloc(GetProcessHeap(), 0,
+                            FIELD_OFFSET(AFD_CONNECT_INFO,
+                                         RemoteAddress.Address[0].Address[SocketDataLength]));
+    if (!ConnectInfo)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto notify;
+    }
 
     /* Set up Address in TDI Format */
     ConnectInfo->RemoteAddress.TAAddressCount = 1;
-    ConnectInfo->RemoteAddress.Address[0].AddressLength = SocketAddressLength - sizeof(SocketAddress->sa_family);
+    ConnectInfo->RemoteAddress.Address[0].AddressLength = SocketDataLength;
     ConnectInfo->RemoteAddress.Address[0].AddressType = SocketAddress->sa_family;
-    RtlCopyMemory (ConnectInfo->RemoteAddress.Address[0].Address,
-                   SocketAddress->sa_data,
-                   SocketAddressLength - sizeof(SocketAddress->sa_family));
+    RtlCopyMemory(ConnectInfo->RemoteAddress.Address[0].Address,
+                  SocketAddress->sa_data,
+                  SocketDataLength);
 
     /*
     * Disable FD_WRITE and FD_CONNECT
@@ -1613,6 +1623,8 @@ WSPConnect(SOCKET Handle,
     AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
 notify:
+    if (ConnectInfo) HeapFree(GetProcessHeap(), 0, ConnectInfo);
+
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
