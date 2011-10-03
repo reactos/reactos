@@ -885,6 +885,7 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
                                                             &UnicodeString,
                                                             TRUE)))
                 {
+                  HeapFree(GetProcessHeap(), 0, cs);
                   return FALSE;
                 }
               cs->szClass = AnsiString.Buffer;
@@ -900,6 +901,8 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
                   RtlInitAnsiString(&AnsiString, cs->szClass);
                   RtlFreeAnsiString(&AnsiString);
                 }
+
+              HeapFree(GetProcessHeap(), 0, cs);
               return FALSE;
             }
           cs->szTitle = AnsiString.Buffer;
