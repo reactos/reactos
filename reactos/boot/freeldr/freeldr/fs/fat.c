@@ -370,9 +370,21 @@ ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONGLONG PartitionSect
 	}
 }
 
+typedef struct _DIRECTORY_BUFFER
+{
+	LIST_ENTRY Link;
+	PVOID Volume;
+	ULONG DirectoryStartCluster;
+	ULONG DirectorySize;
+	UCHAR Data[];
+} DIRECTORY_BUFFER, *PDIRECTORY_BUFFER;
+
+LIST_ENTRY DirectoryBufferListHead = {&DirectoryBufferListHead, &DirectoryBufferListHead};
+
 PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOLEAN RootDirectory)
 {
-	PVOID	DirectoryBuffer;
+	PDIRECTORY_BUFFER DirectoryBuffer;
+	PLIST_ENTRY Entry;
 
 	TRACE("FatBufferDirectory() DirectoryStartCluster = %d RootDirectory = %s\n", DirectoryStartCluster, (RootDirectory ? "TRUE" : "FALSE"));
 
@@ -384,6 +396,23 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	{
 		DirectoryStartCluster = Volume->RootDirStartCluster;
 		RootDirectory = FALSE;
+	}
+
+	/* Search the list for a match */
+	for (Entry = DirectoryBufferListHead.Flink;
+	     Entry != &DirectoryBufferListHead;
+	     Entry = Entry->Flink)
+	{
+		DirectoryBuffer = CONTAINING_RECORD(Entry, DIRECTORY_BUFFER, Link);
+
+		/* Check if it matches */
+		if ((DirectoryBuffer->Volume == Volume) &&
+		    (DirectoryBuffer->DirectoryStartCluster == DirectoryStartCluster))
+		{
+			TRACE("Found cached buffer\n");
+			*DirectorySize = DirectoryBuffer->DirectorySize;
+			return DirectoryBuffer->Data;
+		}
 	}
 
 	//
@@ -402,7 +431,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	// Attempt to allocate memory for directory buffer
 	//
 	TRACE("Trying to allocate (DirectorySize) %d bytes.\n", *DirectorySize);
-	DirectoryBuffer = MmHeapAlloc(*DirectorySize);
+	DirectoryBuffer = MmHeapAlloc(*DirectorySize + sizeof(DIRECTORY_BUFFER));
 
 	if (DirectoryBuffer == NULL)
 	{
@@ -414,7 +443,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	//
 	if (RootDirectory)
 	{
-		if (!FatReadVolumeSectors(Volume, Volume->RootDirSectorStart, Volume->RootDirSectors, DirectoryBuffer))
+		if (!FatReadVolumeSectors(Volume, Volume->RootDirSectorStart, Volume->RootDirSectors, DirectoryBuffer->Data))
 		{
 			MmHeapFree(DirectoryBuffer);
 			return NULL;
@@ -422,14 +451,20 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
 	}
 	else
 	{
-		if (!FatReadClusterChain(Volume, DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer))
+		if (!FatReadClusterChain(Volume, DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer->Data))
 		{
 			MmHeapFree(DirectoryBuffer);
 			return NULL;
 		}
 	}
 
-	return DirectoryBuffer;
+	/* Enqueue it in the list */
+	DirectoryBuffer->Volume = Volume;
+	DirectoryBuffer->DirectoryStartCluster = DirectoryStartCluster;
+	DirectoryBuffer->DirectorySize = *DirectorySize;
+	InsertTailList(&DirectoryBufferListHead, &DirectoryBuffer->Link);
+
+	return DirectoryBuffer->Data;
 }
 
 BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
@@ -774,7 +809,6 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 		{
 			if (!FatXSearchDirectoryBufferForFile(Volume, DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
-				MmHeapFree(DirectoryBuffer);
 				return ENOENT;
 			}
 		}
@@ -782,12 +816,9 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 		{
 			if (!FatSearchDirectoryBufferForFile(Volume, DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
-				MmHeapFree(DirectoryBuffer);
 				return ENOENT;
 			}
 		}
-
-		MmHeapFree(DirectoryBuffer);
 
 		//
 		// If we have another sub-directory to go then
