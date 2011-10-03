@@ -14,8 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID MmPrintMemoryStatistic(VOID);
-
 FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
@@ -1297,10 +1295,6 @@ QSI_DEF(SystemFullMemoryInformation)
            TheIdleProcess->Pcb.KernelTime,
            MiFreeSwapPages,
            MiUsedSwapPages);
-
-#ifndef NDEBUG
-    MmPrintMemoryStatistic();
-#endif
 
     *Spi = MiMemoryConsumers[MC_USER].PagesUsed;
 
