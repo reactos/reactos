@@ -1314,6 +1314,7 @@ extern "C" {
 #define WGL_SWAP_UNDERLAY14 0x20000000
 #define WGL_SWAP_UNDERLAY15 0x40000000
 #define AC_SRC_OVER 0
+#define LAYOUT_LTR 0
 #define LAYOUT_RTL 1 // Right to left
 #define LAYOUT_BTT 2 // Bottom to top
 #define LAYOUT_VBH 4 // Vertical before horizontal
