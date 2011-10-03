@@ -210,7 +210,7 @@ HeapAllocate(
 {
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block, NextBlock;
-    USHORT BlockSize, Remaining;
+    USHORT BlockSize, PreviousSize = 0, Remaining;
 
     /* Check if the allocation is too large */
     if ((ByteSize +  sizeof(HEAP_BLOCK)) > MAXUSHORT * sizeof(HEAP_BLOCK))
@@ -223,13 +223,16 @@ HeapAllocate(
     if (Tag == 0) Tag = 'enoN';
 
     /* Calculate alloc size */
-    BlockSize = (USHORT)(ByteSize + sizeof(HEAP_BLOCK) - 1) / sizeof(HEAP_BLOCK);
+    BlockSize = (USHORT)((ByteSize + sizeof(HEAP_BLOCK) - 1) / sizeof(HEAP_BLOCK));
 
     /* Loop all heap chunks */
     for (Block = &Heap->Blocks;
          Block->Size != 0;
          Block = Block + 1 + Block->Size)
     {
+        ASSERT(Block->PreviousSize == PreviousSize);
+        PreviousSize = Block->Size;
+
         /* Continue, if its not free */
         if (Block->Tag != 0) continue;
 
@@ -252,22 +255,25 @@ HeapAllocate(
             NextBlock = Block + 1 + BlockSize;
 
             /* Make it a free block */
+            NextBlock->Tag = 0;
             NextBlock->Size = Remaining - 1;
             NextBlock->PreviousSize = BlockSize;
-            NextBlock->Tag = 0;
+            BlockSize = NextBlock->Size;
 
             /* Advance to the next block */
-            BlockSize = NextBlock->Size;
             NextBlock = NextBlock + 1 + BlockSize;
         }
         else
         {
             /* Not enough left, use the full block */
+            BlockSize = Block->Size;
+
+            /* Get the next block */
             NextBlock = Block + 1 + BlockSize;
         }
 
         /* Update the next blocks back link */
-        NextBlock->PreviousSize = Block->Size;
+        NextBlock->PreviousSize = BlockSize;
 
         /* Update heap usage */
         Heap->NumAllocs++;
@@ -296,6 +302,7 @@ HeapFree(
 {
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block, PrevBlock, NextBlock;
+    USHORT PreviousSize = 0;
     TRACE("HeapFree(%p, %p)\n", HeapHandle, Pointer);
     ASSERT(Tag != 'dnE#');
 
@@ -303,14 +310,14 @@ HeapFree(
     if ((Pointer < (PVOID)(Heap + 1)) ||
         (Pointer > (PVOID)((PUCHAR)Heap + Heap->MaximumSize)))
     {
-        ERR("Bad free of %p from heap %p\n", Pointer, Heap);
+        ERR("HEAP: trying to free %p outside of heap %p\n", Pointer, Heap);
         ASSERT(FALSE);
     }
 
     Block = ((PHEAP_BLOCK)Pointer) - 1;
 
     /* Check if the tag matches */
-    if (Tag && Block->Tag != Tag)
+    if (Tag && (Block->Tag != Tag))
     {
         ERR("HEAP: Bad tag! Pointer = %p: block tag '%.4s', requested '%.4s'\n",
             Pointer, &Block->Tag, &Tag);
@@ -341,11 +348,11 @@ HeapFree(
         }
     }
 
-    /* Check if there is a block before and is free */
+    /* Check if there is a block before and it's free */
     if ((Block->PreviousSize != 0) && (PrevBlock->Tag == 0))
     {
         /* Check if their combined size if small enough */
-        if ((PrevBlock->Size + Block->Size + 2) < MAXUSHORT)
+        if ((PrevBlock->Size + Block->Size + 1) <= MAXUSHORT)
         {
             /* Merge current block into previous */
             PrevBlock->Size += Block->Size + 1;
