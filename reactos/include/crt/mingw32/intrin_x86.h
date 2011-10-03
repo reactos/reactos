@@ -1204,10 +1204,14 @@ __INTRIN_INLINE uintptr_t __readeflags(void)
 }
 
 /*** Interrupts ***/
+#ifdef __clang__
+#define __debugbreak() __asm__("int $3")
+#else
 __INTRIN_INLINE void __debugbreak(void)
 {
 	__asm__("int $3");
 }
+#endif
 
 __INTRIN_INLINE void __int2c(void)
 {
