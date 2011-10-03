@@ -1735,6 +1735,194 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
 
 
 /***********************************************************************
+ * CM_Get_DevNode_Custom_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Custom_PropertyA(
+    DEVINST dnDevInst, PCSTR pszCustomPropertyName, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lx %s %p %p %p %lx\n", dnDevInst, pszCustomPropertyName,
+          pulRegDataType, Buffer, pulLength, ulFlags);
+    return CM_Get_DevNode_Custom_Property_ExA(dnDevInst, pszCustomPropertyName,
+                                              pulRegDataType, Buffer,
+                                              pulLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Custom_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Custom_PropertyW(
+    DEVINST dnDevInst, PCWSTR pszCustomPropertyName, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lx %s %p %p %p %lx\n", dnDevInst, debugstr_w(pszCustomPropertyName),
+          pulRegDataType, Buffer, pulLength, ulFlags);
+    return CM_Get_DevNode_Custom_Property_ExW(dnDevInst, pszCustomPropertyName,
+                                              pulRegDataType, Buffer,
+                                              pulLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Custom_Property_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExA(
+    DEVINST dnDevInst, PCSTR pszCustomPropertyName, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    LPWSTR pszPropertyNameW = NULL;
+    PVOID BufferW;
+    ULONG ulLengthW;
+    ULONG ulDataType = REG_NONE;
+    CONFIGRET ret;
+
+    TRACE("%lx %s %p %p %p %lx %p\n", dnDevInst, pszCustomPropertyName,
+          pulRegDataType, Buffer, pulLength, ulFlags, hMachine);
+
+    if (!pulLength)
+        return CR_INVALID_POINTER;
+
+    ulLengthW = *pulLength * sizeof(WCHAR);
+    BufferW = HeapAlloc(GetProcessHeap(), 0, ulLengthW);
+    if (!BufferW)
+        return CR_OUT_OF_MEMORY;
+
+    pszPropertyNameW = pSetupMultiByteToUnicode(pszCustomPropertyName,
+                                                CP_ACP);
+    if (pszPropertyNameW == NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, BufferW);
+        return CR_OUT_OF_MEMORY;
+    }
+
+    ret = CM_Get_DevNode_Custom_Property_ExW(dnDevInst,
+                                             pszPropertyNameW,
+                                             &ulDataType,
+                                             BufferW,
+                                             &ulLengthW,
+                                             ulFlags,
+                                             hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        if (ulDataType == REG_SZ ||
+            ulDataType == REG_EXPAND_SZ ||
+            ulDataType == REG_MULTI_SZ)
+        {
+            /* Do W->A conversion */
+            *pulLength = WideCharToMultiByte(CP_ACP,
+                                             0,
+                                             BufferW,
+                                             lstrlenW(BufferW) + 1,
+                                             Buffer,
+                                             *pulLength,
+                                             NULL,
+                                             NULL);
+            if (*pulLength == 0)
+                ret = CR_FAILURE;
+        }
+        else
+        {
+            /* Directly copy the value */
+            if (ulLengthW <= *pulLength)
+                memcpy(Buffer, BufferW, ulLengthW);
+            else
+            {
+                *pulLength = ulLengthW;
+                ret = CR_BUFFER_SMALL;
+            }
+        }
+    }
+
+    if (pulRegDataType)
+        *pulRegDataType = ulDataType;
+
+    HeapFree(GetProcessHeap(), 0, BufferW);
+    MyFree(pszPropertyNameW);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Get_DevNode_Custom_Property_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExW(
+    DEVINST dnDevInst, PCWSTR pszCustomPropertyName, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    ULONG ulDataType = REG_NONE;
+    ULONG ulTransferLength;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%lx %s %p %p %p %lx %p\n", dnDevInst,
+          debugstr_w(pszCustomPropertyName), pulRegDataType, Buffer,
+          pulLength, ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (pszCustomPropertyName == NULL ||
+        pulLength == NULL ||
+        *pulLength == 0)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_CUSTOMDEVPROP_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ulTransferLength = *pulLength;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetCustomDevProp(BindingHandle,
+                                   lpDevInst,
+                                   (LPWSTR)pszCustomPropertyName,
+                                   &ulDataType,
+                                   Buffer,
+                                   &ulTransferLength,
+                                   pulLength,
+                                   ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+    {
+        if (pulRegDataType != NULL)
+            *pulRegDataType = ulDataType;
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Get_DevNode_Registry_PropertyA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyA(
@@ -1775,7 +1963,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
 {
     PVOID BufferW;
     ULONG LengthW;
-    ULONG RegDataType = REG_NONE;
+    ULONG ulDataType = REG_NONE;
     CONFIGRET ret;
 
     TRACE("%lx %lu %p %p %p %lx %lx\n",
@@ -1793,7 +1981,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
 
     ret = CM_Get_DevNode_Registry_Property_ExW(dnDevInst,
                                                ulProperty,
-                                               &RegDataType,
+                                               &ulDataType,
                                                BufferW,
                                                &LengthW,
                                                ulFlags,
@@ -1801,7 +1989,9 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
 
     if (ret == CR_SUCCESS)
     {
-        if (RegDataType == REG_SZ || RegDataType == REG_EXPAND_SZ)
+        if (ulDataType == REG_SZ ||
+            ulDataType == REG_EXPAND_SZ ||
+            ulDataType == REG_MULTI_SZ)
         {
             /* Do W->A conversion */
             *pulLength = WideCharToMultiByte(CP_ACP,
@@ -1829,7 +2019,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
     }
 
     if (pulRegDataType)
-        *pulRegDataType = RegDataType;
+        *pulRegDataType = ulDataType;
 
     HeapFree(GetProcessHeap(), 0, BufferW);
 
@@ -1848,7 +2038,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
     HSTRING_TABLE StringTable = NULL;
     CONFIGRET ret = CR_SUCCESS;
     LPWSTR lpDevInst;
-    ULONG ulDataType = 0;
+    ULONG ulDataType = REG_NONE;
     ULONG ulTransferLength = 0;
 
     TRACE("%lx %lu %p %p %p %lx %lx\n",
@@ -3973,6 +4163,7 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExA(
     HMACHINE hMachine)
 {
     LPWSTR pszClassNameW = NULL;
+    CONFIGRET ret;
 
     TRACE("%p %s %lx %lx %p %lx %lx\n",
           debugstr_guid(pClassGuid), pszClassName,
@@ -3984,13 +4175,13 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExA(
          return CR_INVALID_DATA;
     }
 
-    CM_Open_Class_Key_ExW(pClassGuid, pszClassNameW, samDesired,
-                          Disposition, phkClass, ulFlags, hMachine);
+    ret = CM_Open_Class_Key_ExW(pClassGuid, pszClassNameW, samDesired,
+                                Disposition, phkClass, ulFlags, hMachine);
 
     if (pszClassNameW != NULL)
         MyFree(pszClassNameW);
 
-    return CR_SUCCESS;
+    return ret;
 }
 
 
