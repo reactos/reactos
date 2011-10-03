@@ -368,7 +368,6 @@ WinMain(
 	if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
 	{
 		ERR("WL: Could not register logon process\n");
-		HandleShutdown(NULL, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
 		NtShutdownSystem(ShutdownNoReboot);
 		ExitProcess(0);
 	}
