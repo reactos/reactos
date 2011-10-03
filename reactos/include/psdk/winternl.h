@@ -595,8 +595,20 @@ typedef struct _FILE_MAILSLOT_SET_INFORMATION {
     LARGE_INTEGER ReadTimeout;
 } FILE_MAILSLOT_SET_INFORMATION, *PFILE_MAILSLOT_SET_INFORMATION;
 
-typedef struct _FILE_ALL_INFORMATION
-{
+typedef struct _FILE_PIPE_LOCAL_INFORMATION {
+    ULONG NamedPipeType;
+    ULONG NamedPipeConfiguration;
+    ULONG MaximumInstances;
+    ULONG CurrentInstances;
+    ULONG InboundQuota;
+    ULONG ReadDataAvailable;
+    ULONG OutboundQuota;
+    ULONG WriteQuotaAvailable;
+    ULONG NamedPipeState;
+    ULONG NamedPipeEnd;
+} FILE_PIPE_LOCAL_INFORMATION, *PFILE_PIPE_LOCAL_INFORMATION;
+
+typedef struct _FILE_ALL_INFORMATION {
     FILE_BASIC_INFORMATION     BasicInformation;
     FILE_STANDARD_INFORMATION  StandardInformation;
     FILE_INTERNAL_INFORMATION  InternalInformation;
@@ -2483,6 +2495,7 @@ typedef struct _FILE_FS_VOLUME_INFORMATION
     BOOLEAN SupportsObjects;
     WCHAR VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+#define FSCTL_PIPE_LISTEN CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #ifdef __cplusplus
 } /* extern "C" */
