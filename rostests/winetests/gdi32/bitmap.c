@@ -820,11 +820,11 @@ static void test_dib_formats(void)
     BITMAPINFO *bi = (BITMAPINFO *)buffer;
     char data[256];
     void *bits;
-    int planes, bpp, compr;
+    //int planes, bpp, compr;
     HBITMAP hdib, hbmp;
     HDC hdc, memdc;
     UINT ret;
-    BOOL expect_ok, todo;
+    //BOOL expect_ok, todo;
 
     hdc = GetDC( 0 );
     memdc = CreateCompatibleDC( 0 );
@@ -832,6 +832,7 @@ static void test_dib_formats(void)
 
     memset( data, 0xaa, sizeof(data) );
 
+#if 0 // FIXME: ReactOS Bug 6527
     for (bpp = 0; bpp <= 64; bpp++)
     {
         for (planes = 0; planes <= 64; planes++)
@@ -993,6 +994,7 @@ static void test_dib_formats(void)
             }
         }
     }
+#endif
 
     memset( bi, 0, sizeof(bi->bmiHeader) );
     bi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
