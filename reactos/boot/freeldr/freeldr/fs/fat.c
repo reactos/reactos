@@ -804,8 +804,9 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 				return ENOTDIR;
 			}
 			DirectoryStartCluster = FatFileInfo.FileFatChain[0];
+			MmHeapFree(FatFileInfo.FileFatChain);
+			FatFileInfo.FileFatChain = NULL;
 		}
-		MmHeapFree(FatFileInfo.FileFatChain);
 	}
 
 	memcpy(FatFileInfoPointer, &FatFileInfo, sizeof(FAT_FILE_INFO));
@@ -1332,6 +1333,7 @@ LONG FatClose(ULONG FileId)
 {
 	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
+	if (FileHandle->FileFatChain) MmHeapFree(FileHandle->FileFatChain);
 	MmHeapFree(FileHandle);
 
 	return ESUCCESS;
