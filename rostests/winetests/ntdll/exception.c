@@ -72,13 +72,16 @@ static BOOL is_wow64;
 
 static const struct exception
 {
-    BYTE     code[18];   /* asm code */
-    BYTE     offset;     /* offset of faulting instruction */
-    BYTE     length;     /* length of faulting instruction */
-    BOOL     wow64_broken; /* broken on Wow64, should be skipped */
-    NTSTATUS status;     /* expected status code */
-    DWORD    nb_params;  /* expected number of parameters */
-    DWORD    params[4];  /* expected parameters */
+    BYTE     code[18];      /* asm code */
+    BYTE     offset;        /* offset of faulting instruction */
+    BYTE     length;        /* length of faulting instruction */
+    BOOL     wow64_broken;  /* broken on Wow64, should be skipped */
+    NTSTATUS status;        /* expected status code */
+    DWORD    nb_params;     /* expected number of parameters */
+    DWORD    params[4];     /* expected parameters */
+    NTSTATUS alt_status;    /* alternative status code */
+    DWORD    alt_nb_params; /* alternative number of parameters */
+    DWORD    alt_params[4]; /* alternative parameters */
 } exceptions[] =
 {
 /* 0 */
@@ -137,66 +140,67 @@ static const struct exception
       6, 6, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test moving %cs -> %ss */
-    { { 0x0e, 0x17, 0x58, 0xc3 },  /* 18: pushl %cs; popl %ss; popl %eax; ret */
+    { { 0x0e, 0x17, 0x58, 0xc3 },  /* pushl %cs; popl %ss; popl %eax; ret */
       1, 1, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
 /* 20 */
     /* test overlong instruction (limit is 15 bytes, 5 on Win7) */
     { { 0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0xfa,0xc3 },
-      0, 16, TRUE, STATUS_ILLEGAL_INSTRUCTION, 0 },
+      0, 16, TRUE, STATUS_ILLEGAL_INSTRUCTION, 0, { 0 },
+      STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
     { { 0x64,0x64,0x64,0x64,0xfa,0xc3 },
       0, 5, TRUE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test invalid interrupt */
-    { { 0xcd, 0xff, 0xc3 },   /* 21: int $0xff; ret */
+    { { 0xcd, 0xff, 0xc3 },   /* int $0xff; ret */
       0, 2, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test moves to/from Crx */
-    { { 0x0f, 0x20, 0xc0, 0xc3 },  /* 22: movl %cr0,%eax; ret */
+    { { 0x0f, 0x20, 0xc0, 0xc3 },  /* movl %cr0,%eax; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x20, 0xe0, 0xc3 },  /* 23: movl %cr4,%eax; ret */
+    { { 0x0f, 0x20, 0xe0, 0xc3 },  /* movl %cr4,%eax; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 /* 25 */
-    { { 0x0f, 0x22, 0xc0, 0xc3 },  /* 24: movl %eax,%cr0; ret */
+    { { 0x0f, 0x22, 0xc0, 0xc3 },  /* movl %eax,%cr0; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x22, 0xe0, 0xc3 },  /* 25: movl %eax,%cr4; ret */
+    { { 0x0f, 0x22, 0xe0, 0xc3 },  /* movl %eax,%cr4; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test moves to/from Drx */
-    { { 0x0f, 0x21, 0xc0, 0xc3 },  /* 26: movl %dr0,%eax; ret */
+    { { 0x0f, 0x21, 0xc0, 0xc3 },  /* movl %dr0,%eax; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x21, 0xc8, 0xc3 },  /* 27: movl %dr1,%eax; ret */
+    { { 0x0f, 0x21, 0xc8, 0xc3 },  /* movl %dr1,%eax; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x21, 0xf8, 0xc3 },  /* 28: movl %dr7,%eax; ret */
+    { { 0x0f, 0x21, 0xf8, 0xc3 },  /* movl %dr7,%eax; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 /* 30 */
-    { { 0x0f, 0x23, 0xc0, 0xc3 },  /* 29: movl %eax,%dr0; ret */
+    { { 0x0f, 0x23, 0xc0, 0xc3 },  /* movl %eax,%dr0; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x23, 0xc8, 0xc3 },  /* 30: movl %eax,%dr1; ret */
+    { { 0x0f, 0x23, 0xc8, 0xc3 },  /* movl %eax,%dr1; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x23, 0xf8, 0xc3 },  /* 31: movl %eax,%dr7; ret */
+    { { 0x0f, 0x23, 0xf8, 0xc3 },  /* movl %eax,%dr7; ret */
       0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test memory reads */
-    { { 0xa1, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* 32: movl 0xfffffffc,%eax; ret */
+    { { 0xa1, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xfffffffc,%eax; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffc } },
-    { { 0xa1, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* 33: movl 0xfffffffd,%eax; ret */
+    { { 0xa1, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xfffffffd,%eax; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffd } },
 /* 35 */
-    { { 0xa1, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* 34: movl 0xfffffffe,%eax; ret */
+    { { 0xa1, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xfffffffe,%eax; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffe } },
-    { { 0xa1, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* 35: movl 0xffffffff,%eax; ret */
+    { { 0xa1, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xffffffff,%eax; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test memory writes */
-    { { 0xa3, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* 36: movl %eax,0xfffffffc; ret */
+    { { 0xa3, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xfffffffc; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffc } },
-    { { 0xa3, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* 37: movl %eax,0xfffffffd; ret */
+    { { 0xa3, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xfffffffd; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffd } },
-    { { 0xa3, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* 38: movl %eax,0xfffffffe; ret */
+    { { 0xa3, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xfffffffe; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffe } },
 /* 40 */
-    { { 0xa3, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* 39: movl %eax,0xffffffff; ret */
+    { { 0xa3, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xffffffff; ret */
       0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xffffffff } },
 
     /* test exception with cleared %ds and %es (broken on Wow64) */
@@ -389,14 +393,23 @@ static DWORD handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *fram
     trace( "exception %u: %x flags:%x addr:%p\n",
            entry, rec->ExceptionCode, rec->ExceptionFlags, rec->ExceptionAddress );
 
-    ok( rec->ExceptionCode == except->status,
+    ok( rec->ExceptionCode == except->status ||
+        (except->alt_status != 0 && rec->ExceptionCode == except->alt_status),
         "%u: Wrong exception code %x/%x\n", entry, rec->ExceptionCode, except->status );
     ok( rec->ExceptionAddress == (char*)code_mem + except->offset,
         "%u: Wrong exception address %p/%p\n", entry,
         rec->ExceptionAddress, (char*)code_mem + except->offset );
 
-    ok( rec->NumberParameters == except->nb_params,
-        "%u: Wrong number of parameters %u/%u\n", entry, rec->NumberParameters, except->nb_params );
+    if (except->alt_status == 0 || rec->ExceptionCode != except->alt_status)
+    {
+        ok( rec->NumberParameters == except->nb_params,
+            "%u: Wrong number of parameters %u/%u\n", entry, rec->NumberParameters, except->nb_params );
+    }
+    else
+    {
+        ok( rec->NumberParameters == except->alt_nb_params,
+            "%u: Wrong number of parameters %u/%u\n", entry, rec->NumberParameters, except->nb_params );
+    }
 
     /* Most CPUs (except Intel Core apparently) report a segment limit violation */
     /* instead of page faults for accesses beyond 0xffffffff */
@@ -414,10 +427,20 @@ static DWORD handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *fram
         goto skip_params;
     }
 
-    for (i = 0; i < rec->NumberParameters; i++)
-        ok( rec->ExceptionInformation[i] == except->params[i],
-            "%u: Wrong parameter %d: %lx/%x\n",
-            entry, i, rec->ExceptionInformation[i], except->params[i] );
+    if (except->alt_status == 0 || rec->ExceptionCode != except->alt_status)
+    {
+        for (i = 0; i < rec->NumberParameters; i++)
+            ok( rec->ExceptionInformation[i] == except->params[i],
+                "%u: Wrong parameter %d: %lx/%x\n",
+                entry, i, rec->ExceptionInformation[i], except->params[i] );
+    }
+    else
+    {
+        for (i = 0; i < rec->NumberParameters; i++)
+            ok( rec->ExceptionInformation[i] == except->alt_params[i],
+                "%u: Wrong parameter %d: %lx/%x\n",
+                entry, i, rec->ExceptionInformation[i], except->alt_params[i] );
+    }
 
 skip_params:
     /* don't handle exception if it's not the address we expected */
@@ -451,18 +474,45 @@ static void test_prot_fault(void)
     }
 }
 
+struct dbgreg_test {
+    DWORD dr0, dr1, dr2, dr3, dr6, dr7;
+};
+
 /* test handling of debug registers */
 static DWORD dreg_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *frame,
                       CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **dispatcher )
 {
+    const struct dbgreg_test *test = *(const struct dbgreg_test **)(frame + 1);
+
     context->Eip += 2;	/* Skips the popl (%eax) */
-    context->Dr0 = 0x42424242;
-    context->Dr1 = 0;
-    context->Dr2 = 0;
-    context->Dr3 = 0;
-    context->Dr6 = 0;
-    context->Dr7 = 0x155;
+    context->Dr0 = test->dr0;
+    context->Dr1 = test->dr1;
+    context->Dr2 = test->dr2;
+    context->Dr3 = test->dr3;
+    context->Dr6 = test->dr6;
+    context->Dr7 = test->dr7;
     return ExceptionContinueExecution;
+}
+
+#define CHECK_DEBUG_REG(n, m) \
+    ok((ctx.Dr##n & m) == test->dr##n, "(%d) failed to set debug register " #n " to %x, got %x\n", \
+       test_num, test->dr##n, ctx.Dr##n)
+
+static void check_debug_registers(int test_num, const struct dbgreg_test *test)
+{
+    CONTEXT ctx;
+    NTSTATUS status;
+
+    ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
+    status = pNtGetContextThread(GetCurrentThread(), &ctx);
+    ok(status == STATUS_SUCCESS, "NtGetContextThread failed with %x\n", status);
+
+    CHECK_DEBUG_REG(0, ~0);
+    CHECK_DEBUG_REG(1, ~0);
+    CHECK_DEBUG_REG(2, ~0);
+    CHECK_DEBUG_REG(3, ~0);
+    CHECK_DEBUG_REG(6, 0x0f);
+    CHECK_DEBUG_REG(7, ~0xdc00);
 }
 
 static const BYTE segfault_code[5] = {
@@ -621,6 +671,7 @@ static void test_exceptions(void)
 {
     CONTEXT ctx;
     NTSTATUS res;
+    struct dbgreg_test dreg_test;
 
     if (!pNtGetContextThread || !pNtSetContextThread)
     {
@@ -629,13 +680,21 @@ static void test_exceptions(void)
     }
 
     /* test handling of debug registers */
-    run_exception_test(dreg_handler, NULL, &segfault_code, sizeof(segfault_code), 0);
+    memset(&dreg_test, 0, sizeof(dreg_test));
 
-    ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
-    res = pNtGetContextThread(GetCurrentThread(), &ctx);
-    ok (res == STATUS_SUCCESS,"NtGetContextThread failed with %x\n", res);
-    ok(ctx.Dr0 == 0x42424242,"failed to set debugregister 0 to 0x42424242, got %x\n", ctx.Dr0);
-    ok((ctx.Dr7 & ~0xdc00) == 0x155,"failed to set debugregister 7 to 0x155, got %x\n", ctx.Dr7);
+    dreg_test.dr0 = 0x42424240;
+    dreg_test.dr2 = 0x126bb070;
+    dreg_test.dr3 = 0x0badbad0;
+    dreg_test.dr7 = 0xffff0115;
+    run_exception_test(dreg_handler, &dreg_test, &segfault_code, sizeof(segfault_code), 0);
+    check_debug_registers(1, &dreg_test);
+
+    dreg_test.dr0 = 0x42424242;
+    dreg_test.dr2 = 0x100f0fe7;
+    dreg_test.dr3 = 0x0abebabe;
+    dreg_test.dr7 = 0x115;
+    run_exception_test(dreg_handler, &dreg_test, &segfault_code, sizeof(segfault_code), 0);
+    check_debug_registers(2, &dreg_test);
 
     /* test single stepping behavior */
     got_exception = 0;
@@ -658,7 +717,7 @@ static void test_exceptions(void)
     ctx.Dr7 = 3;
     ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
     res = pNtSetContextThread( GetCurrentThread(), &ctx);
-    ok( res == STATUS_SUCCESS, "NtSetContextThread faild with %x\n", res);
+    ok( res == STATUS_SUCCESS, "NtSetContextThread failed with %x\n", res);
 
     got_exception = 0;
     run_exception_test(bpx_handler, NULL, dummy_code, sizeof(dummy_code), 0);
@@ -737,7 +796,7 @@ static void test_debugger(void)
 
             if (counter > 100)
             {
-                ok(FALSE, "got way too many exceptions, probaby caught in a infinite loop, terminating child\n");
+                ok(FALSE, "got way too many exceptions, probably caught in a infinite loop, terminating child\n");
                 pNtTerminateProcess(pi.hProcess, 1);
             }
             else if (counter >= 2) /* skip startup breakpoint */
@@ -805,8 +864,10 @@ static void test_debugger(void)
     } while (de.dwDebugEventCode != EXIT_PROCESS_DEBUG_EVENT);
 
     winetest_wait_child_process( pi.hProcess );
-    ok(CloseHandle(pi.hThread) != 0, "error %u\n", GetLastError());
-    ok(CloseHandle(pi.hProcess) != 0, "error %u\n", GetLastError());
+    ret = CloseHandle(pi.hThread);
+    ok(ret, "error %u\n", GetLastError());
+    ret = CloseHandle(pi.hProcess);
+    ok(ret, "error %u\n", GetLastError());
 
     return;
 }

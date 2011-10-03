@@ -18,6 +18,7 @@ extern void func_info(void);
 extern void func_large_int(void);
 extern void func_om(void);
 extern void func_path(void);
+extern void func_pipe(void);
 extern void func_port(void);
 extern void func_reg(void);
 extern void func_rtl(void);
@@ -40,6 +41,7 @@ const struct test winetest_testlist[] =
     { "large_int", func_large_int },
     { "om", func_om },
     { "path", func_path },
+    { "pipe", func_pipe },
     { "port", func_port },
     { "reg", func_reg },
     { "rtl", func_rtl },

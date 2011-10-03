@@ -16,10 +16,11 @@ list(APPEND SOURCE
     large_int.c
     om.c
     path.c
+    pipe.c
     port.c
     reg.c
-    rtlbitmap.c
     rtl.c
+    rtlbitmap.c
     rtlstr.c
     string.c
     time.c

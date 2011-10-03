@@ -128,7 +128,6 @@ static NTSTATUS (WINAPI *pNtConnectPort)(PHANDLE,PUNICODE_STRING,
                                          PLPC_SECTION_WRITE,PLPC_SECTION_READ,
                                          PVOID,PVOID,PULONG);
 static NTSTATUS (WINAPI *pRtlInitUnicodeString)(PUNICODE_STRING,LPCWSTR);
-static NTSTATUS (WINAPI *pNtWaitForSingleObject)(HANDLE,BOOLEAN,PLARGE_INTEGER);
 static BOOL     (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 static BOOL is_wow64;
@@ -150,7 +149,6 @@ static BOOL init_function_ptrs(void)
     pNtRegisterThreadTerminatePort = (void *)GetProcAddress(hntdll, "NtRegisterThreadTerminatePort");
     pNtConnectPort = (void *)GetProcAddress(hntdll, "NtConnectPort");
     pRtlInitUnicodeString = (void *)GetProcAddress(hntdll, "RtlInitUnicodeString");
-    pNtWaitForSingleObject = (void *)GetProcAddress(hntdll, "NtWaitForSingleObject");
 
     if (!pNtCompleteConnectPort || !pNtAcceptConnectPort ||
         !pNtReplyWaitReceivePort || !pNtCreatePort || !pNtRequestWaitReplyPort ||

@@ -51,8 +51,8 @@ static LPWSTR   (WINAPIV *p_ultow)(ULONG, LPWSTR, INT);
 static LPWSTR   (WINAPIV *p_i64tow)(LONGLONG, LPWSTR, INT);
 static LPWSTR   (WINAPIV *p_ui64tow)(ULONGLONG, LPWSTR, INT);
 
-static long     (WINAPIV *pwcstol)(LPCWSTR, LPWSTR *, INT);
-static ULONG    (WINAPIV *pwcstoul)(LPCWSTR, LPWSTR *, INT);
+static LPWSTR   (__cdecl *p_wcslwr)(LPWSTR);
+static LPWSTR   (__cdecl *p_wcsupr)(LPWSTR);
 
 static LPWSTR   (WINAPIV *p_wcschr)(LPCWSTR, WCHAR);
 static LPWSTR   (WINAPIV *p_wcsrchr)(LPCWSTR, WCHAR);
@@ -89,8 +89,8 @@ static void InitFunctionPtrs(void)
 	p_i64tow = (void *)GetProcAddress(hntdll, "_i64tow");
 	p_ui64tow = (void *)GetProcAddress(hntdll, "_ui64tow");
 
-	pwcstol = (void *)GetProcAddress(hntdll, "wcstol");
-	pwcstoul = (void *)GetProcAddress(hntdll, "wcstoul");
+        p_wcslwr = (void *)GetProcAddress(hntdll, "_wcslwr");
+        p_wcsupr = (void *)GetProcAddress(hntdll, "_wcsupr");
 
 	p_wcschr= (void *)GetProcAddress(hntdll, "wcschr");
 	p_wcsrchr= (void *)GetProcAddress(hntdll, "wcsrchr");
@@ -1143,22 +1143,54 @@ static void test_wcsrchr(void)
        "wcsrchr should have returned NULL\n");
 }
 
-static __cdecl int intcomparefunc(const void *a, const void*b)
+static void test_wcslwrupr(void)
 {
-	ok (a != b, "must never get the same pointer\n");
-	return (*(int*)a) - (*(int*)b);
+    static WCHAR teststringW[] = {'a','b','r','a','c','a','d','a','b','r','a',0};
+    static WCHAR emptyW[1] = {0};
+    static const WCHAR constemptyW[1] = {0};
+
+    if (0) /* crashes on native */
+    {
+        static const WCHAR conststringW[] = {'a','b','r','a','c','a','d','a','b','r','a',0};
+        ok(p_wcslwr((LPWSTR)conststringW) == conststringW, "p_wcslwr returned different string\n");
+        ok(p_wcsupr((LPWSTR)conststringW) == conststringW, "p_wcsupr returned different string\n");
+        ok(p_wcslwr(NULL) == NULL, "p_wcslwr didn't returned NULL\n");
+        ok(p_wcsupr(NULL) == NULL, "p_wcsupr didn't returned NULL\n");
+    }
+    ok(p_wcslwr(teststringW) == teststringW, "p_wcslwr returned different string\n");
+    ok(p_wcsupr(teststringW) == teststringW, "p_wcsupr returned different string\n");
+    ok(p_wcslwr(emptyW) == emptyW, "p_wcslwr returned different string\n");
+    ok(p_wcsupr(emptyW) == emptyW, "p_wcsupr returned different string\n");
+    ok(p_wcslwr((LPWSTR)constemptyW) == constemptyW, "p_wcslwr returned different string\n");
+    ok(p_wcsupr((LPWSTR)constemptyW) == constemptyW, "p_wcsupr returned different string\n");
 }
 
-static __cdecl int charcomparefunc(const void *a, const void*b)
+static __cdecl int intcomparefunc(const void *a, const void *b)
 {
-	ok (a != b, "must never get the same pointer\n");
-	return (*(char*)a) - (*(char*)b);
+    const int *p = a, *q = b;
+
+    ok (a != b, "must never get the same pointer\n");
+
+    return *p - *q;
 }
 
-static __cdecl int strcomparefunc(const void *a, const void*b)
+static __cdecl int charcomparefunc(const void *a, const void *b)
 {
-	ok (a != b, "must never get the same pointer\n");
-	return lstrcmpA(*(char**)a,*(char**)b);
+    const char *p = a, *q = b;
+
+    ok (a != b, "must never get the same pointer\n");
+
+    return *p - *q;
+}
+
+static __cdecl int strcomparefunc(const void *a, const void *b)
+{
+    const char * const *p = a;
+    const char * const *q = b;
+
+    ok (a != b, "must never get the same pointer\n");
+
+    return lstrcmpA(*p, *q);
 }
 
 static void test_qsort(void)
@@ -1174,6 +1206,27 @@ static void test_qsort(void)
 	"Sorted",
 	"."
     };
+
+    p_qsort ((void*)arr, 0, sizeof(int), intcomparefunc);
+    ok(arr[0] == 23, "badly sorted, nmemb=0, arr[0] is %d\n", arr[0]);
+    ok(arr[1] == 42, "badly sorted, nmemb=0, arr[1] is %d\n", arr[1]);
+    ok(arr[2] == 8,  "badly sorted, nmemb=0, arr[2] is %d\n", arr[2]);
+    ok(arr[3] == 4,  "badly sorted, nmemb=0, arr[3] is %d\n", arr[3]);
+    ok(arr[4] == 16, "badly sorted, nmemb=0, arr[4] is %d\n", arr[4]);
+
+    p_qsort ((void*)arr, 1, sizeof(int), intcomparefunc);
+    ok(arr[0] == 23, "badly sorted, nmemb=1, arr[0] is %d\n", arr[0]);
+    ok(arr[1] == 42, "badly sorted, nmemb=1, arr[1] is %d\n", arr[1]);
+    ok(arr[2] == 8,  "badly sorted, nmemb=1, arr[2] is %d\n", arr[2]);
+    ok(arr[3] == 4,  "badly sorted, nmemb=1, arr[3] is %d\n", arr[3]);
+    ok(arr[4] == 16, "badly sorted, nmemb=1, arr[4] is %d\n", arr[4]);
+
+    p_qsort ((void*)arr, 5, 0, intcomparefunc);
+    ok(arr[0] == 23, "badly sorted, size=0, arr[0] is %d\n", arr[0]);
+    ok(arr[1] == 42, "badly sorted, size=0, arr[1] is %d\n", arr[1]);
+    ok(arr[2] == 8,  "badly sorted, size=0, arr[2] is %d\n", arr[2]);
+    ok(arr[3] == 4,  "badly sorted, size=0, arr[3] is %d\n", arr[3]);
+    ok(arr[4] == 16, "badly sorted, size=0, arr[4] is %d\n", arr[4]);
 
     p_qsort ((void*)arr, 5, sizeof(int), intcomparefunc);
     ok(arr[0] == 4,  "badly sorted, arr[0] is %d\n", arr[0]);
@@ -1241,6 +1294,8 @@ START_TEST(string)
         test_wcschr();
     if (p_wcsrchr)
         test_wcsrchr();
+    if (p_wcslwr && p_wcsupr)
+        test_wcslwrupr();
     if (patoi)
         test_atoi();
     if (patol)

@@ -39,7 +39,7 @@ static inline int IsLeapYear(int Year)
 }
 
 /* start time of the tests */
-TIME_FIELDS tftest = {1889,12,31,23,59,59,0,0};
+static TIME_FIELDS tftest = {1889,12,31,23,59,59,0,0};
 
 static void test_pRtlTimeToTimeFields(void)
 {

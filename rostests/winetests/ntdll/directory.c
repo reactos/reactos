@@ -50,8 +50,9 @@ static NTSTATUS (WINAPI *pRtlWow64EnableFsRedirection)( BOOLEAN enable );
 static NTSTATUS (WINAPI *pRtlWow64EnableFsRedirectionEx)( ULONG disable, ULONG *old_value );
 
 /* The attribute sets to test */
-struct testfile_s {
-    int todo;                 /* set if it doesn't work on wine yet */
+static struct testfile_s {
+    BOOL todo;                /* set if it doesn't work on wine yet */
+    BOOL attr_done;           /* set if attributes were tested for this file already */
     const DWORD attr;         /* desired attribute */
     const char *name;         /* filename to use */
     const char *target;       /* what to point to (only for reparse pts) */
@@ -59,11 +60,13 @@ struct testfile_s {
     int nfound;               /* How many were found (expect 1) */
     WCHAR nameW[20];          /* unicode version of name (filled in later) */
 } testfiles[] = {
-    { 0, FILE_ATTRIBUTE_NORMAL,    "n.tmp", NULL, "normal" },
-    { 1, FILE_ATTRIBUTE_HIDDEN,    "h.tmp", NULL, "hidden" },
-    { 1, FILE_ATTRIBUTE_SYSTEM,    "s.tmp", NULL, "system" },
-    { 0, FILE_ATTRIBUTE_DIRECTORY, "d.tmp", NULL, "directory" },
-    { 0, 0, NULL }
+    { 0, 0, FILE_ATTRIBUTE_NORMAL,    "n.tmp", NULL, "normal" },
+    { 1, 0, FILE_ATTRIBUTE_HIDDEN,    "h.tmp", NULL, "hidden" },
+    { 1, 0, FILE_ATTRIBUTE_SYSTEM,    "s.tmp", NULL, "system" },
+    { 0, 0, FILE_ATTRIBUTE_DIRECTORY, "d.tmp", NULL, "directory" },
+    { 0, 0, FILE_ATTRIBUTE_DIRECTORY, ".",     NULL, ". directory" },
+    { 0, 0, FILE_ATTRIBUTE_DIRECTORY, "..",    NULL, ".. directory" },
+    { 0, 0, 0, NULL }
 };
 static const int max_test_dir_size = 20;  /* size of above plus some for .. etc */
 
@@ -71,19 +74,21 @@ static const int max_test_dir_size = 20;  /* size of above plus some for .. etc 
 static void set_up_attribute_test(const char *testdirA)
 {
     int i;
+    BOOL ret;
 
-    ok(CreateDirectoryA(testdirA, NULL),
-       "couldn't create dir '%s', error %d\n", testdirA, GetLastError());
+    ret = CreateDirectoryA(testdirA, NULL);
+    ok(ret, "couldn't create dir '%s', error %d\n", testdirA, GetLastError());
 
     for (i=0; testfiles[i].name; i++) {
         char buf[MAX_PATH];
         pRtlMultiByteToUnicodeN(testfiles[i].nameW, sizeof(testfiles[i].nameW), NULL, testfiles[i].name, strlen(testfiles[i].name)+1);
 
+        if (strcmp(testfiles[i].name, ".") == 0 || strcmp(testfiles[i].name, "..") == 0)
+            continue;
         sprintf(buf, "%s\\%s", testdirA, testfiles[i].name);
-        testfiles[i].nfound = 0;
         if (testfiles[i].attr & FILE_ATTRIBUTE_DIRECTORY) {
-            ok(CreateDirectoryA(buf, NULL),
-               "couldn't create dir '%s', error %d\n", buf, GetLastError());
+            ret = CreateDirectoryA(buf, NULL);
+            ok(ret, "couldn't create dir '%s', error %d\n", buf, GetLastError());
         } else {
             HANDLE h = CreateFileA(buf,
                                    GENERIC_READ|GENERIC_WRITE,
@@ -95,6 +100,14 @@ static void set_up_attribute_test(const char *testdirA)
     }
 }
 
+static void reset_found_files(void)
+{
+    int i;
+
+    for (i = 0; testfiles[i].name; i++)
+        testfiles[i].nfound = 0;
+}
+
 /* Remove the given test directory and the attribute test files, if any */
 static void tear_down_attribute_test(const char *testdirA)
 {
@@ -103,6 +116,8 @@ static void tear_down_attribute_test(const char *testdirA)
     for (i=0; testfiles[i].name; i++) {
         int ret;
         char buf[MAX_PATH];
+        if (strcmp(testfiles[i].name, ".") == 0 || strcmp(testfiles[i].name, "..") == 0)
+            continue;
         sprintf(buf, "%s\\%s", testdirA, testfiles[i].name);
         if (testfiles[i].attr & FILE_ATTRIBUTE_DIRECTORY) {
             ret = RemoveDirectory(buf);
@@ -127,18 +142,18 @@ static void tally_test_file(FILE_BOTH_DIRECTORY_INFORMATION *dir_info)
     WCHAR *nameW = dir_info->FileName;
     int namelen = dir_info->FileNameLength / sizeof(WCHAR);
 
-    if (nameW[0] == '.')
-        return;
-
     for (i=0; testfiles[i].name; i++) {
         int len = strlen(testfiles[i].name);
         if (namelen != len || memcmp(nameW, testfiles[i].nameW, len*sizeof(WCHAR)))
             continue;
-        if (testfiles[i].todo) {
-            todo_wine
-            ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
-        } else {
-            ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
+        if (!testfiles[i].attr_done) {
+            if (testfiles[i].todo) {
+                todo_wine
+                ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
+            } else {
+                ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
+            }
+            testfiles[i].attr_done = TRUE;
         }
         testfiles[i].nfound++;
         break;
@@ -146,12 +161,9 @@ static void tally_test_file(FILE_BOTH_DIRECTORY_INFORMATION *dir_info)
     ok(testfiles[i].name != NULL, "unexpected file found\n");
 }
 
-static void test_NtQueryDirectoryFile(void)
+static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char *testdirA,
+                                            BOOLEAN single_entry, BOOLEAN restart_flag)
 {
-    OBJECT_ATTRIBUTES attr;
-    UNICODE_STRING ntdirname;
-    char testdirA[MAX_PATH];
-    WCHAR testdirW[MAX_PATH];
     HANDLE dirh;
     IO_STATUS_BLOCK io;
     UINT data_pos;
@@ -162,31 +174,19 @@ static void test_NtQueryDirectoryFile(void)
     int numfiles;
     int i;
 
-    /* Clean up from prior aborted run, if any, then set up test files */
-    ok(GetTempPathA(MAX_PATH, testdirA), "couldn't get temp dir\n");
-    strcat(testdirA, "NtQueryDirectoryFile.tmp");
-    tear_down_attribute_test(testdirA);
-    set_up_attribute_test(testdirA);
+    reset_found_files();
 
     /* Read the directory and note which files are found */
-    pRtlMultiByteToUnicodeN(testdirW, sizeof(testdirW), NULL, testdirA, strlen(testdirA)+1);
-    if (!pRtlDosPathNameToNtPathName_U(testdirW, &ntdirname, NULL, NULL))
-    {
-        ok(0,"RtlDosPathNametoNtPathName_U failed\n");
-        goto done;
-    }
-    InitializeObjectAttributes(&attr, &ntdirname, OBJ_CASE_INSENSITIVE, 0, NULL);
-    status = pNtOpenFile( &dirh, SYNCHRONIZE | FILE_LIST_DIRECTORY, &attr, &io,
-                         FILE_OPEN,
+    status = pNtOpenFile( &dirh, SYNCHRONIZE | FILE_LIST_DIRECTORY, attr, &io, FILE_OPEN,
                          FILE_SYNCHRONOUS_IO_NONALERT|FILE_OPEN_FOR_BACKUP_INTENT|FILE_DIRECTORY_FILE);
     ok (status == STATUS_SUCCESS, "failed to open dir '%s', ret 0x%x, error %d\n", testdirA, status, GetLastError());
     if (status != STATUS_SUCCESS) {
        skip("can't test if we can't open the directory\n");
-       goto done;
+       return;
     }
 
     pNtQueryDirectoryFile( dirh, NULL, NULL, NULL, &io, data, sizeof(data),
-                       FileBothDirectoryInformation, FALSE, NULL, TRUE );
+                       FileBothDirectoryInformation, single_entry, NULL, restart_flag );
     ok (U(io).Status == STATUS_SUCCESS, "filed to query directory; status %x\n", U(io).Status);
     data_len = io.Information;
     ok (data_len >= sizeof(FILE_BOTH_DIRECTORY_INFORMATION), "not enough data in directory\n");
@@ -200,7 +200,7 @@ static void test_NtQueryDirectoryFile(void)
 
         if (dir_info->NextEntryOffset == 0) {
             pNtQueryDirectoryFile( dirh, 0, NULL, NULL, &io, data, sizeof(data),
-                               FileBothDirectoryInformation, FALSE, NULL, FALSE );
+                               FileBothDirectoryInformation, single_entry, NULL, FALSE );
             if (U(io).Status == STATUS_NO_MORE_FILES)
                 break;
             ok (U(io).Status == STATUS_SUCCESS, "filed to query directory; status %x\n", U(io).Status);
@@ -216,10 +216,38 @@ static void test_NtQueryDirectoryFile(void)
     ok(numfiles < max_test_dir_size, "too many loops\n");
 
     for (i=0; testfiles[i].name; i++)
-        ok(testfiles[i].nfound == 1, "Wrong number %d of %s files found\n",
-          testfiles[i].nfound, testfiles[i].description);
+        ok(testfiles[i].nfound == 1, "Wrong number %d of %s files found (ReturnSingleEntry=%d,RestartScan=%d)\n",
+           testfiles[i].nfound, testfiles[i].description, single_entry, restart_flag);
 
     pNtClose(dirh);
+}
+
+static void test_NtQueryDirectoryFile(void)
+{
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING ntdirname;
+    char testdirA[MAX_PATH];
+    WCHAR testdirW[MAX_PATH];
+
+    /* Clean up from prior aborted run, if any, then set up test files */
+    ok(GetTempPathA(MAX_PATH, testdirA), "couldn't get temp dir\n");
+    strcat(testdirA, "NtQueryDirectoryFile.tmp");
+    tear_down_attribute_test(testdirA);
+    set_up_attribute_test(testdirA);
+
+    pRtlMultiByteToUnicodeN(testdirW, sizeof(testdirW), NULL, testdirA, strlen(testdirA)+1);
+    if (!pRtlDosPathNameToNtPathName_U(testdirW, &ntdirname, NULL, NULL))
+    {
+        ok(0, "RtlDosPathNametoNtPathName_U failed\n");
+        goto done;
+    }
+    InitializeObjectAttributes(&attr, &ntdirname, OBJ_CASE_INSENSITIVE, 0, NULL);
+
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, FALSE, TRUE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, FALSE, FALSE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, TRUE, TRUE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, TRUE, FALSE);
+
 done:
     tear_down_attribute_test(testdirA);
     pRtlFreeUnicodeString(&ntdirname);

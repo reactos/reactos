@@ -497,6 +497,7 @@ static void test_RtlFindSetRuns(void)
 
   /* Get first 2 */
   ulCount = pRtlFindSetRuns(&bm, runs, 2, FALSE);
+  ok(ulCount == 2, "RtlFindClearRuns returned %d, expected 2\n", ulCount);
   ok (runs[0].StartingIndex == 7 || runs[0].StartingIndex == 101,"bad find\n");
   ok (runs[1].StartingIndex == 7 || runs[1].StartingIndex == 101,"bad find\n");
   ok (runs[0].NumberOfBits + runs[1].NumberOfBits == 19 + 3,"bad size\n");
@@ -506,6 +507,7 @@ static void test_RtlFindSetRuns(void)
   /* Get longest 3 */
   memset(runs, 0, sizeof(runs));
   ulCount = pRtlFindSetRuns(&bm, runs, 2, TRUE);
+  ok(ulCount == 2, "RtlFindClearRuns returned %d, expected 2\n", ulCount);
   ok (runs[0].StartingIndex == 7 || runs[0].StartingIndex == 1877,"bad find\n");
   ok (runs[1].StartingIndex == 7 || runs[1].StartingIndex == 1877,"bad find\n");
   ok (runs[0].NumberOfBits + runs[1].NumberOfBits == 33 + 19,"bad size\n");
@@ -515,6 +517,7 @@ static void test_RtlFindSetRuns(void)
   /* Get all 3 */
   memset(runs, 0, sizeof(runs));
   ulCount = pRtlFindSetRuns(&bm, runs, 3, TRUE);
+  ok(ulCount == 3, "RtlFindClearRuns returned %d, expected 3\n", ulCount);
   ok (runs[0].StartingIndex == 7 || runs[0].StartingIndex == 101 ||
       runs[0].StartingIndex == 1877,"bad find\n");
   ok (runs[1].StartingIndex == 7 || runs[1].StartingIndex == 101 ||
@@ -571,6 +574,7 @@ static void test_RtlFindClearRuns(void)
 
   /* Get first 2 */
   ulCount = pRtlFindClearRuns(&bm, runs, 2, FALSE);
+  ok(ulCount == 2, "RtlFindClearRuns returned %d, expected 2\n", ulCount);
   ok (runs[0].StartingIndex == 7 || runs[0].StartingIndex == 101,"bad find\n");
   ok (runs[1].StartingIndex == 7 || runs[1].StartingIndex == 101,"bad find\n");
   ok (runs[0].NumberOfBits + runs[1].NumberOfBits == 19 + 3,"bad size\n");
@@ -580,6 +584,7 @@ static void test_RtlFindClearRuns(void)
   /* Get longest 3 */
   memset(runs, 0, sizeof(runs));
   ulCount = pRtlFindClearRuns(&bm, runs, 2, TRUE);
+  ok(ulCount == 2, "RtlFindClearRuns returned %d, expected 2\n", ulCount);
   ok (runs[0].StartingIndex == 7 || runs[0].StartingIndex == 1877,"bad find\n");
   ok (runs[1].StartingIndex == 7 || runs[1].StartingIndex == 1877,"bad find\n");
   ok (runs[0].NumberOfBits + runs[1].NumberOfBits == 33 + 19,"bad size\n");
@@ -589,6 +594,7 @@ static void test_RtlFindClearRuns(void)
   /* Get all 3 */
   memset(runs, 0, sizeof(runs));
   ulCount = pRtlFindClearRuns(&bm, runs, 3, TRUE);
+  ok(ulCount == 3, "RtlFindClearRuns returned %d, expected 3\n", ulCount);
   ok (runs[0].StartingIndex == 7 || runs[0].StartingIndex == 101 ||
       runs[0].StartingIndex == 1877,"bad find\n");
   ok (runs[1].StartingIndex == 7 || runs[1].StartingIndex == 101 ||

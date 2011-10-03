@@ -244,6 +244,7 @@ static void testExpand(void)
         us_dst.Buffer = NULL;
 
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
+        ok(nts == STATUS_BUFFER_TOO_SMALL, "Call failed (%u)\n", nts);
         ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
            "Wrong  returned length for %s: %u\n", test->src, ul );
 

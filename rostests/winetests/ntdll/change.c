@@ -27,13 +27,11 @@
 #include <stdio.h>
 #include "wine/test.h"
 
-typedef NTSTATUS (WINAPI *fnNtNotifyChangeDirectoryFile)(
+static NTSTATUS (WINAPI *pNtNotifyChangeDirectoryFile)(
                           HANDLE,HANDLE,PIO_APC_ROUTINE,PVOID,
                           PIO_STATUS_BLOCK,PVOID,ULONG,ULONG,BOOLEAN);
-fnNtNotifyChangeDirectoryFile pNtNotifyChangeDirectoryFile;
 
-typedef NTSTATUS (WINAPI *fnNtCancelIoFile)(HANDLE,PIO_STATUS_BLOCK);
-fnNtCancelIoFile pNtCancelIoFile;
+static NTSTATUS (WINAPI *pNtCancelIoFile)(HANDLE,PIO_STATUS_BLOCK);
 
 
 static void test_ntncdf(void)
@@ -321,10 +319,8 @@ START_TEST(change)
         return;
     }
 
-    pNtNotifyChangeDirectoryFile = (fnNtNotifyChangeDirectoryFile) 
-        GetProcAddress(hntdll, "NtNotifyChangeDirectoryFile");
-    pNtCancelIoFile = (fnNtCancelIoFile)
-        GetProcAddress(hntdll, "NtCancelIoFile");
+    pNtNotifyChangeDirectoryFile = (void *)GetProcAddress(hntdll, "NtNotifyChangeDirectoryFile");
+    pNtCancelIoFile = (void *)GetProcAddress(hntdll, "NtCancelIoFile");
 
     if (!pNtNotifyChangeDirectoryFile || !pNtCancelIoFile)
     {

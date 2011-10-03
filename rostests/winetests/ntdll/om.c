@@ -46,6 +46,7 @@ static NTSTATUS (WINAPI *pNtOpenSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJEC
 static NTSTATUS (WINAPI *pNtCreateSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PUNICODE_STRING);
 static NTSTATUS (WINAPI *pNtQuerySymbolicLinkObject)(HANDLE,PUNICODE_STRING,PULONG);
 static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE,OBJECT_INFORMATION_CLASS,PVOID,ULONG,PULONG);
+static NTSTATUS (WINAPI *pNtReleaseSemaphore)(HANDLE handle, ULONG count, PULONG previous);
 
 
 static void test_case_sensitive (void)
@@ -419,9 +420,12 @@ static void test_directory(void)
         memset( buffer, 0xaa, sizeof(buffer) );
         status = pNtQuerySymbolicLinkObject( dir, &str, &len );
         ok( status == STATUS_SUCCESS, "NtQuerySymbolicLinkObject failed %08x\n", status );
+        if (status != STATUS_SUCCESS)
+            goto error;
         full_len = str.Length + sizeof(WCHAR);
         ok( len == full_len, "bad length %u/%u\n", len, full_len );
-        ok( buffer[len / sizeof(WCHAR) - 1] == 0, "no terminating null\n" );
+        if (len == full_len)
+            ok( buffer[len / sizeof(WCHAR) - 1] == 0, "no terminating null\n" );
 
         str.MaximumLength = str.Length;
         len = 0xdeadbeef;
@@ -441,6 +445,7 @@ static void test_directory(void)
         ok( status == STATUS_SUCCESS, "NtQuerySymbolicLinkObject failed %08x\n", status );
         ok( len == full_len, "bad length %u/%u\n", len, full_len );
 
+error:
         pNtClose(dir);
     }
 
@@ -654,10 +659,12 @@ static void test_query_object(void)
 {
     static const WCHAR name[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s',
                                  '\\','t','e','s','t','_','e','v','e','n','t'};
+    static const WCHAR type_event[] = {'E','v','e','n','t'};
+    static const WCHAR type_file[] = {'F','i','l','e'};
     HANDLE handle;
     char buffer[1024];
     NTSTATUS status;
-    ULONG len;
+    ULONG len, expected_len;
     UNICODE_STRING *str;
     char dir[MAX_PATH];
 
@@ -669,9 +676,19 @@ static void test_query_object(void)
     ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
 
     len = 0;
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, 0, &len );
+    todo_wine ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    todo_wine ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + sizeof(type_event) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(UNICODE_STRING), &len );
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
     ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(OBJECT_TYPE_INFORMATION), &len );
+    todo_wine ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    todo_wine ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + sizeof(type_event) + sizeof(WCHAR), "unexpected len %u\n", len );
 
     len = 0;
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
@@ -688,6 +705,21 @@ static void test_query_object(void)
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, len, &len );
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
     ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    todo_wine ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    todo_wine ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    todo_wine ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR), "unexpected len %u\n", len );
+    todo_wine ok( str->Buffer && !memcmp( str->Buffer, type_event, sizeof(type_file) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+
+    len -= sizeof(WCHAR);
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, len, &len );
+    todo_wine ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    todo_wine ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + sizeof(type_event) + sizeof(WCHAR), "unexpected len %u\n", len );
 
     pNtClose( handle );
 
@@ -709,11 +741,60 @@ static void test_query_object(void)
     ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
     ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
     str = (UNICODE_STRING *)buffer;
-    ok( sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR) == len ||
-        broken(sizeof(UNICODE_STRING) + str->Length == len), /* NT4 */
+    expected_len = sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR);
+    ok( len == expected_len || broken(len == expected_len - sizeof(WCHAR)), /* NT4 */
         "unexpected len %u\n", len );
     trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, 0, &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH || broken(status == STATUS_INSUFFICIENT_RESOURCES),
+        "NtQueryObject failed %x\n", status );
+    ok( len == expected_len || broken(!len || len == sizeof(UNICODE_STRING)),
+        "unexpected len %u\n", len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(UNICODE_STRING), &len );
+    ok( status == STATUS_BUFFER_OVERFLOW || broken(status == STATUS_INSUFFICIENT_RESOURCES
+            || status == STATUS_INFO_LENGTH_MISMATCH),
+        "NtQueryObject failed %x\n", status );
+    ok( len == expected_len || broken(!len),
+        "unexpected len %u\n", len );
+
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    todo_wine ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    todo_wine ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR);
+    todo_wine ok( len >= expected_len, "unexpected len %u\n", len );
+    todo_wine ok( str->Buffer && !memcmp( str->Buffer, type_file, sizeof(type_file) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+
     pNtClose( handle );
+}
+
+static void test_type_mismatch(void)
+{
+    HANDLE h;
+    NTSTATUS res;
+    OBJECT_ATTRIBUTES attr;
+
+    attr.Length                   = sizeof(attr);
+    attr.RootDirectory            = 0;
+    attr.ObjectName               = NULL;
+    attr.Attributes               = 0;
+    attr.SecurityDescriptor       = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    res = pNtCreateEvent( &h, 0, &attr, 0, 0 );
+    ok(!res, "can't create event: %x\n", res);
+
+    res = pNtReleaseSemaphore( h, 30, NULL );
+    ok(res == STATUS_OBJECT_TYPE_MISMATCH, "expected 0xc0000024, got %x\n", res);
+
+    pNtClose( h );
 }
 
 START_TEST(om)
@@ -747,6 +828,7 @@ START_TEST(om)
     pNtCreateTimer          =  (void *)GetProcAddress(hntdll, "NtCreateTimer");
     pNtCreateSection        =  (void *)GetProcAddress(hntdll, "NtCreateSection");
     pNtQueryObject          =  (void *)GetProcAddress(hntdll, "NtQueryObject");
+    pNtReleaseSemaphore     =  (void *)GetProcAddress(hntdll, "NtReleaseSemaphore");
 
     test_case_sensitive();
     test_namespace_pipe();
@@ -754,4 +836,5 @@ START_TEST(om)
     test_directory();
     test_symboliclink();
     test_query_object();
+    test_type_mismatch();
 }

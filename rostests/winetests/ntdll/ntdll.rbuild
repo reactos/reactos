@@ -17,6 +17,7 @@
 	<file>large_int.c</file>
 	<file>om.c</file>
 	<file>path.c</file>
+	<file>pipe.c</file>
 	<file>port.c</file>
 	<file>reg.c</file>
 	<file>rtlbitmap.c</file>

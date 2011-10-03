@@ -3,6 +3,7 @@
  * Copyright 2007 Jeff Latimer
  * Copyright 2007 Andrey Turkin
  * Copyright 2008 Jeff Zaroyko
+ * Copyright 2011 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,6 +36,7 @@
 #include "wine/test.h"
 #include "winternl.h"
 #include "winuser.h"
+#include "winioctl.h"
 
 #ifndef IO_COMPLETION_ALL_ACCESS
 #define IO_COMPLETION_ALL_ACCESS 0x001F0003
@@ -75,6 +77,7 @@ static NTSTATUS (WINAPI *pNtSetInformationFile)(HANDLE, PIO_STATUS_BLOCK, PVOID,
 static NTSTATUS (WINAPI *pNtQueryInformationFile)(HANDLE, PIO_STATUS_BLOCK, PVOID, ULONG, FILE_INFORMATION_CLASS);
 static NTSTATUS (WINAPI *pNtQueryDirectoryFile)(HANDLE,HANDLE,PIO_APC_ROUTINE,PVOID,PIO_STATUS_BLOCK,
                                                 PVOID,ULONG,FILE_INFORMATION_CLASS,BOOLEAN,PUNICODE_STRING,BOOLEAN);
+static NTSTATUS (WINAPI *pNtQueryVolumeInformationFile)(HANDLE,PIO_STATUS_BLOCK,PVOID,ULONG,FS_INFORMATION_CLASS);
 
 static inline BOOL is_signaled( HANDLE obj )
 {
@@ -112,9 +115,9 @@ static HANDLE create_temp_file( ULONG flags )
 #define CKEY_FIRST 0x1030341
 #define CKEY_SECOND 0x132E46
 
-ULONG_PTR completionKey;
-IO_STATUS_BLOCK ioSb;
-ULONG_PTR completionValue;
+static ULONG_PTR completionKey;
+static IO_STATUS_BLOCK ioSb;
+static ULONG_PTR completionValue;
 
 static ULONG get_pending_msgs(HANDLE h)
 {
@@ -157,8 +160,10 @@ static void create_file_test(void)
 {
     static const WCHAR systemrootW[] = {'\\','S','y','s','t','e','m','R','o','o','t',
                                         '\\','f','a','i','l','i','n','g',0};
+    static const WCHAR questionmarkInvalidNameW[] = {'a','f','i','l','e','?',0};
+    static const WCHAR pipeInvalidNameW[]  = {'a','|','b',0};
     NTSTATUS status;
-    HANDLE dir;
+    HANDLE dir, file;
     WCHAR path[MAX_PATH];
     OBJECT_ATTRIBUTES attr;
     IO_STATUS_BLOCK io;
@@ -246,6 +251,35 @@ static void create_file_test(void)
     todo_wine
     ok( status == STATUS_INVALID_PARAMETER,
         "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status );
+
+    /* Invalid chars in file/dirnames */
+    pRtlDosPathNameToNtPathName_U(questionmarkInvalidNameW, &nameW, NULL, NULL);
+    attr.ObjectName = &nameW;
+    status = pNtCreateFile(&dir, GENERIC_READ|SYNCHRONIZE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ, FILE_CREATE,
+                           FILE_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    ok(status == STATUS_OBJECT_NAME_INVALID,
+       "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status);
+
+    status = pNtCreateFile(&file, GENERIC_WRITE|SYNCHRONIZE, &attr, &io, NULL, 0,
+                           0, FILE_CREATE,
+                           FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    ok(status == STATUS_OBJECT_NAME_INVALID,
+       "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status);
+
+    pRtlDosPathNameToNtPathName_U(pipeInvalidNameW, &nameW, NULL, NULL);
+    attr.ObjectName = &nameW;
+    status = pNtCreateFile(&dir, GENERIC_READ|SYNCHRONIZE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ, FILE_CREATE,
+                           FILE_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    ok(status == STATUS_OBJECT_NAME_INVALID,
+       "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status);
+
+    status = pNtCreateFile(&file, GENERIC_WRITE|SYNCHRONIZE, &attr, &io, NULL, 0,
+                           0, FILE_CREATE,
+                           FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    ok(status == STATUS_OBJECT_NAME_INVALID,
+       "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status);
 }
 
 static void open_file_test(void)
@@ -454,6 +488,7 @@ static void read_file_test(void)
     char buffer[128];
     LARGE_INTEGER offset;
     HANDLE event = CreateEventA( NULL, TRUE, FALSE, NULL );
+    BOOL ret;
 
     buffer[0] = 1;
 
@@ -597,8 +632,8 @@ static void read_file_test(void)
     CloseHandle( read );
 
     if (!create_pipe( &read, &write, FILE_FLAG_OVERLAPPED, 4096 )) return;
-    ok(DuplicateHandle(GetCurrentProcess(), read, GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS),
-        "Failed to duplicate handle: %d\n", GetLastError());
+    ret = DuplicateHandle(GetCurrentProcess(), read, GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS);
+    ok(ret, "Failed to duplicate handle: %d\n", GetLastError());
 
     apc_count = 0;
     U(iosb).Status = 0xdeadbabe;
@@ -711,6 +746,7 @@ static void read_file_test(void)
     ResetEvent( event );
     status = pNtWriteFile( handle, event, apc, &apc_count, &iosb, text, strlen(text), &offset, NULL );
     ok( status == STATUS_SUCCESS || status == STATUS_PENDING, "wrong status %x\n", status );
+    if (status == STATUS_PENDING) WaitForSingleObject( event, 1000 );
     ok( U(iosb).Status == STATUS_SUCCESS, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == strlen(text), "wrong info %lu\n", iosb.Information );
     ok( is_signaled( event ), "event is signaled\n" );
@@ -727,6 +763,7 @@ static void read_file_test(void)
     ok( status == STATUS_SUCCESS ||
         status == STATUS_PENDING, /* vista */
         "wrong status %x\n", status );
+    if (status == STATUS_PENDING) WaitForSingleObject( event, 1000 );
     ok( U(iosb).Status == STATUS_SUCCESS, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == strlen(text), "wrong info %lu\n", iosb.Information );
     ok( is_signaled( event ), "event is signaled\n" );
@@ -742,6 +779,7 @@ static void read_file_test(void)
     status = pNtReadFile( handle, event, apc, &apc_count, &iosb, buffer, 2, &offset, NULL );
     if (status == STATUS_PENDING)  /* vista */
     {
+        WaitForSingleObject( event, 1000 );
         ok( U(iosb).Status == STATUS_END_OF_FILE, "wrong status %x\n", U(iosb).Status );
         ok( iosb.Information == 0, "wrong info %lu\n", iosb.Information );
         ok( is_signaled( event ), "event is signaled\n" );
@@ -772,6 +810,7 @@ static void read_file_test(void)
         status == STATUS_SUCCESS ||
         status == STATUS_PENDING,  /* vista */
         "wrong status %x\n", status );
+    if (status == STATUS_PENDING) WaitForSingleObject( event, 1000 );
     ok( U(iosb).Status == STATUS_SUCCESS, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == strlen(text), "wrong info %lu\n", iosb.Information );
     ok( is_signaled( event ), "event is signaled\n" );
@@ -811,6 +850,46 @@ static void read_file_test(void)
     CloseHandle( handle );
 
     CloseHandle( event );
+}
+
+static void append_file_test(void)
+{
+    const char text[] = "foobar";
+    HANDLE handle;
+    NTSTATUS status;
+    IO_STATUS_BLOCK iosb;
+    DWORD written;
+    char buffer[128];
+
+    GetTempFileNameA( ".", "foo", 0, buffer );
+    /* It is possible to open a file with only FILE_APPEND_DATA access flags.
+       It matches the O_WRONLY|O_APPEND open() posix behavior */
+    handle = CreateFileA(buffer, FILE_APPEND_DATA, 0, NULL, CREATE_ALWAYS,
+                         FILE_FLAG_DELETE_ON_CLOSE, 0);
+    ok( handle != INVALID_HANDLE_VALUE, "Failed to create a temp file in FILE_APPEND_DATA mode.\n" );
+    if(handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Couldn't create a temporary file, skipping FILE_APPEND_DATA test\n");
+        return;
+    }
+
+    U(iosb).Status = STATUS_PENDING;
+    iosb.Information = 0;
+
+    status = pNtWriteFile(handle, NULL, NULL, NULL, &iosb,
+                          text, sizeof(text), NULL, NULL);
+
+    if (status == STATUS_PENDING)
+    {
+        WaitForSingleObject( handle, 1000 );
+        status = U(iosb).Status;
+    }
+    written = iosb.Information;
+
+    todo_wine
+    ok(status == STATUS_SUCCESS && written == sizeof(text), "FILE_APPEND_DATA NtWriteFile failed\n");
+
+    CloseHandle(handle);
 }
 
 static void nt_mailslot_test(void)
@@ -858,7 +937,7 @@ static void nt_mailslot_test(void)
         "rc = %x not STATUS_SUCCESS or STATUS_INVALID_PARAMETER\n", rc);
     ok( hslot != 0, "Handle is invalid\n");
 
-    if  ( rc == STATUS_SUCCESS ) rc = pNtClose(hslot);
+    if  ( rc == STATUS_SUCCESS ) pNtClose(hslot);
 
     /*
      * Test that the length field is checked properly
@@ -947,8 +1026,11 @@ static void test_iocp_fileio(HANDLE h)
         ok( hPipeClt != INVALID_HANDLE_VALUE, "Cannot connect to pipe\n" );
         if (hPipeClt != INVALID_HANDLE_VALUE)
         {
+            U(iosb).Status = 0xdeadbeef;
             res = pNtSetInformationFile( hPipeSrv, &iosb, &fci, sizeof(fci), FileCompletionInformation );
             ok( res == STATUS_INVALID_PARAMETER, "Unexpected NtSetInformationFile on non-overlapped handle: %x\n", res );
+            ok( U(iosb).Status == STATUS_INVALID_PARAMETER /* 98 */ || U(iosb).Status == 0xdeadbeef /* NT4+ */,
+                "Unexpected iosb.Status on non-overlapped handle: %x\n", U(iosb).Status );
             CloseHandle(hPipeClt);
         }
         CloseHandle( hPipeSrv );
@@ -968,7 +1050,8 @@ static void test_iocp_fileio(HANDLE h)
         DWORD read;
         long count;
 
-        NTSTATUS res = pNtSetInformationFile( hPipeSrv, &iosb, &fci, sizeof(fci), FileCompletionInformation );
+        U(iosb).Status = 0xdeadbeef;
+        res = pNtSetInformationFile( hPipeSrv, &iosb, &fci, sizeof(fci), FileCompletionInformation );
         ok( res == STATUS_SUCCESS, "NtSetInformationFile failed: %x\n", res );
         ok( U(iosb).Status == STATUS_SUCCESS, "iosb.Status invalid: %x\n", U(iosb).Status );
 
@@ -1047,8 +1130,10 @@ static void test_file_basic_information(void)
     /* Clear fbi to avoid setting times */
     memset(&fbi, 0, sizeof(fbi));
     fbi.FileAttributes = FILE_ATTRIBUTE_SYSTEM;
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fbi, sizeof fbi, FileBasicInformation);
-    ok ( res == STATUS_SUCCESS, "can't set system attribute\n");
+    ok ( res == STATUS_SUCCESS, "can't set system attribute, NtSetInformationFile returned %x\n", res );
+    ok ( U(io).Status == STATUS_SUCCESS, "can't set system attribute, io.Status is %x\n", U(io).Status );
 
     memset(&fbi, 0, sizeof(fbi));
     res = pNtQueryInformationFile(h, &io, &fbi, sizeof fbi, FileBasicInformation);
@@ -1058,8 +1143,10 @@ static void test_file_basic_information(void)
     /* Then HIDDEN */
     memset(&fbi, 0, sizeof(fbi));
     fbi.FileAttributes = FILE_ATTRIBUTE_HIDDEN;
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fbi, sizeof fbi, FileBasicInformation);
-    ok ( res == STATUS_SUCCESS, "can't set system attribute\n");
+    ok ( res == STATUS_SUCCESS, "can't set system attribute, NtSetInformationFile returned %x\n", res );
+    ok ( U(io).Status == STATUS_SUCCESS, "can't set system attribute, io.Status is %x\n", U(io).Status );
 
     memset(&fbi, 0, sizeof(fbi));
     res = pNtQueryInformationFile(h, &io, &fbi, sizeof fbi, FileBasicInformation);
@@ -1069,8 +1156,10 @@ static void test_file_basic_information(void)
     /* Check NORMAL last of all (to make sure we can clear attributes) */
     memset(&fbi, 0, sizeof(fbi));
     fbi.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fbi, sizeof fbi, FileBasicInformation);
-    ok ( res == STATUS_SUCCESS, "can't set normal attribute\n");
+    ok ( res == STATUS_SUCCESS, "can't set normal attribute, NtSetInformationFile returned %x\n", res );
+    ok ( U(io).Status == STATUS_SUCCESS, "can't set normal attribute, io.Status is %x\n", U(io).Status );
 
     memset(&fbi, 0, sizeof(fbi));
     res = pNtQueryInformationFile(h, &io, &fbi, sizeof fbi, FileBasicInformation);
@@ -1107,10 +1196,14 @@ static void test_file_all_information(void)
     /* Clear fbi to avoid setting times */
     memset(&fai_buf.fai.BasicInformation, 0, sizeof(fai_buf.fai.BasicInformation));
     fai_buf.fai.BasicInformation.FileAttributes = FILE_ATTRIBUTE_SYSTEM;
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fai_buf.fai, sizeof fai_buf, FileAllInformation);
-    ok ( res == STATUS_INVALID_INFO_CLASS || res == STATUS_NOT_IMPLEMENTED, "shouldn't be able to set FileAllInformation, res %x\n", res);
+    ok ( res == STATUS_INVALID_INFO_CLASS || broken(res == STATUS_NOT_IMPLEMENTED), "shouldn't be able to set FileAllInformation, res %x\n", res);
+    todo_wine ok ( U(io).Status == 0xdeadbeef, "shouldn't be able to set FileAllInformation, io.Status is %x\n", U(io).Status);
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fai_buf.fai.BasicInformation, sizeof fai_buf.fai.BasicInformation, FileBasicInformation);
-    ok ( res == STATUS_SUCCESS, "can't set system attribute\n");
+    ok ( res == STATUS_SUCCESS, "can't set system attribute, res: %x\n", res );
+    ok ( U(io).Status == STATUS_SUCCESS, "can't set system attribute, io.Status: %x\n", U(io).Status );
 
     memset(&fai_buf.fai, 0, sizeof(fai_buf.fai));
     res = pNtQueryInformationFile(h, &io, &fai_buf.fai, sizeof fai_buf, FileAllInformation);
@@ -1120,8 +1213,10 @@ static void test_file_all_information(void)
     /* Then HIDDEN */
     memset(&fai_buf.fai.BasicInformation, 0, sizeof(fai_buf.fai.BasicInformation));
     fai_buf.fai.BasicInformation.FileAttributes = FILE_ATTRIBUTE_HIDDEN;
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fai_buf.fai.BasicInformation, sizeof fai_buf.fai.BasicInformation, FileBasicInformation);
-    ok ( res == STATUS_SUCCESS, "can't set system attribute\n");
+    ok ( res == STATUS_SUCCESS, "can't set system attribute, res: %x\n", res );
+    ok ( U(io).Status == STATUS_SUCCESS, "can't set system attribute, io.Status: %x\n", U(io).Status );
 
     memset(&fai_buf.fai, 0, sizeof(fai_buf.fai));
     res = pNtQueryInformationFile(h, &io, &fai_buf.fai, sizeof fai_buf, FileAllInformation);
@@ -1131,8 +1226,10 @@ static void test_file_all_information(void)
     /* Check NORMAL last of all (to make sure we can clear attributes) */
     memset(&fai_buf.fai.BasicInformation, 0, sizeof(fai_buf.fai.BasicInformation));
     fai_buf.fai.BasicInformation.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+    U(io).Status = 0xdeadbeef;
     res = pNtSetInformationFile(h, &io, &fai_buf.fai.BasicInformation, sizeof fai_buf.fai.BasicInformation, FileBasicInformation);
-    ok ( res == STATUS_SUCCESS, "can't set normal attribute\n");
+    ok ( res == STATUS_SUCCESS, "can't set system attribute, res: %x\n", res );
+    ok ( U(io).Status == STATUS_SUCCESS, "can't set system attribute, io.Status: %x\n", U(io).Status );
 
     memset(&fai_buf.fai, 0, sizeof(fai_buf.fai));
     res = pNtQueryInformationFile(h, &io, &fai_buf.fai, sizeof fai_buf, FileAllInformation);
@@ -1440,6 +1537,145 @@ static void test_file_all_name_information(void)
     HeapFree( GetProcessHeap(), 0, file_name );
 }
 
+static void test_query_volume_information_file(void)
+{
+    NTSTATUS status;
+    HANDLE dir;
+    WCHAR path[MAX_PATH];
+    OBJECT_ATTRIBUTES attr;
+    IO_STATUS_BLOCK io;
+    UNICODE_STRING nameW;
+    FILE_FS_VOLUME_INFORMATION *ffvi;
+    BYTE buf[sizeof(FILE_FS_VOLUME_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
+
+    GetWindowsDirectoryW( path, MAX_PATH );
+    pRtlDosPathNameToNtPathName_U( path, &nameW, NULL, NULL );
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.ObjectName = &nameW;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    status = pNtOpenFile( &dir, SYNCHRONIZE|FILE_LIST_DIRECTORY, &attr, &io,
+                          FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT );
+    ok( !status, "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status );
+    pRtlFreeUnicodeString( &nameW );
+
+    ZeroMemory( buf, sizeof(buf) );
+    U(io).Status = 0xdadadada;
+    io.Information = 0xcacacaca;
+
+    status = pNtQueryVolumeInformationFile( dir, &io, buf, sizeof(buf), FileFsVolumeInformation );
+
+    ffvi = (FILE_FS_VOLUME_INFORMATION *)buf;
+
+todo_wine
+{
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %d\n", status);
+    ok(U(io).Status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %d\n", U(io).Status);
+
+    ok(io.Information == (FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + ffvi->VolumeLabelLength),
+    "expected %d, got %lu\n", (FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + ffvi->VolumeLabelLength),
+     io.Information);
+
+    ok(ffvi->VolumeCreationTime.QuadPart != 0, "Missing VolumeCreationTime\n");
+    ok(ffvi->VolumeSerialNumber != 0, "Missing VolumeSerialNumber\n");
+    ok(ffvi->SupportsObjects == 1,"expected 1, got %d\n", ffvi->SupportsObjects);
+}
+    ok(ffvi->VolumeLabelLength == lstrlenW(ffvi->VolumeLabel) * sizeof(WCHAR), "got %d\n", ffvi->VolumeLabelLength);
+
+    trace("VolumeSerialNumber: %x VolumeLabelName: %s\n", ffvi->VolumeSerialNumber, wine_dbgstr_w(ffvi->VolumeLabel));
+
+    CloseHandle( dir );
+}
+
+static void test_NtCreateFile(void)
+{
+    static const struct test_data
+    {
+        DWORD disposition, attrib_in, status, result, attrib_out, needs_cleanup;
+    } td[] =
+    {
+    /* 0*/{ FILE_CREATE, FILE_ATTRIBUTE_READONLY, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY, FALSE },
+    /* 1*/{ FILE_CREATE, 0, STATUS_OBJECT_NAME_COLLISION, 0, 0, TRUE },
+    /* 2*/{ FILE_CREATE, 0, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE, FALSE },
+    /* 3*/{ FILE_OPEN, FILE_ATTRIBUTE_READONLY, 0, FILE_OPENED, FILE_ATTRIBUTE_ARCHIVE, TRUE },
+    /* 4*/{ FILE_OPEN, FILE_ATTRIBUTE_READONLY, STATUS_OBJECT_NAME_NOT_FOUND, 0, 0, FALSE },
+    /* 5*/{ FILE_OPEN_IF, 0, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE, FALSE },
+    /* 6*/{ FILE_OPEN_IF, FILE_ATTRIBUTE_READONLY, 0, FILE_OPENED, FILE_ATTRIBUTE_ARCHIVE, TRUE },
+    /* 7*/{ FILE_OPEN_IF, FILE_ATTRIBUTE_READONLY, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY, FALSE },
+    /* 8*/{ FILE_OPEN_IF, 0, 0, FILE_OPENED, FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY, FALSE },
+    /* 9*/{ FILE_OVERWRITE, 0, STATUS_ACCESS_DENIED, 0, 0, TRUE },
+    /*10*/{ FILE_OVERWRITE, 0, STATUS_OBJECT_NAME_NOT_FOUND, 0, 0, FALSE },
+    /*11*/{ FILE_CREATE, 0, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE, FALSE },
+    /*12*/{ FILE_OVERWRITE, FILE_ATTRIBUTE_READONLY, 0, FILE_OVERWRITTEN, FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY, FALSE },
+    /*13*/{ FILE_OVERWRITE_IF, 0, STATUS_ACCESS_DENIED, 0, 0, TRUE },
+    /*14*/{ FILE_OVERWRITE_IF, 0, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE, FALSE },
+    /*15*/{ FILE_OVERWRITE_IF, FILE_ATTRIBUTE_READONLY, 0, FILE_OVERWRITTEN, FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY, FALSE },
+    /*16*/{ FILE_SUPERSEDE, 0, 0, FILE_SUPERSEDED, FILE_ATTRIBUTE_ARCHIVE, FALSE },
+    /*17*/{ FILE_SUPERSEDE, FILE_ATTRIBUTE_READONLY, 0, FILE_SUPERSEDED, FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY, TRUE },
+    /*18*/{ FILE_SUPERSEDE, 0, 0, FILE_CREATED, FILE_ATTRIBUTE_ARCHIVE, TRUE }
+    };
+    static const WCHAR fooW[] = {'f','o','o',0};
+    static const WCHAR dotW[] = {'.',0};
+    NTSTATUS status;
+    HANDLE handle;
+    WCHAR path[MAX_PATH];
+    OBJECT_ATTRIBUTES attr;
+    IO_STATUS_BLOCK io;
+    UNICODE_STRING nameW;
+    DWORD ret, i;
+
+    GetTempFileNameW(dotW, fooW, 0, path);
+    DeleteFileW(path);
+    pRtlDosPathNameToNtPathName_U(path, &nameW, NULL, NULL);
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = NULL;
+    attr.ObjectName = &nameW;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        status = pNtCreateFile(&handle, GENERIC_READ, &attr, &io, NULL,
+                               td[i].attrib_in, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                               td[i].disposition, 0, NULL, 0);
+
+        ok(status == td[i].status, "%d: expected %#x got %#x\n", i, td[i].status, status);
+
+        if (!status)
+        {
+            ok(io.Information == td[i].result,"%d: expected %#x got %#lx\n", i, td[i].result, io.Information);
+
+            ret = GetFileAttributesW(path);
+            ret &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+            /* FIXME: leave only 'else' case below once Wine is fixed */
+            if (ret != td[i].attrib_out)
+            {
+            todo_wine
+                ok(ret == td[i].attrib_out, "%d: expected %#x got %#x\n", i, td[i].attrib_out, ret);
+                SetFileAttributesW(path, td[i].attrib_out);
+            }
+            else
+                ok(ret == td[i].attrib_out, "%d: expected %#x got %#x\n", i, td[i].attrib_out, ret);
+
+            CloseHandle(handle);
+        }
+
+        if (td[i].needs_cleanup)
+        {
+            SetFileAttributesW(path, FILE_ATTRIBUTE_ARCHIVE);
+            DeleteFileW(path);
+        }
+    }
+
+    SetFileAttributesW(path, FILE_ATTRIBUTE_ARCHIVE);
+    DeleteFileW( path );
+}
+
 START_TEST(file)
 {
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
@@ -1474,11 +1710,14 @@ START_TEST(file)
     pNtSetInformationFile   = (void *)GetProcAddress(hntdll, "NtSetInformationFile");
     pNtQueryInformationFile = (void *)GetProcAddress(hntdll, "NtQueryInformationFile");
     pNtQueryDirectoryFile   = (void *)GetProcAddress(hntdll, "NtQueryDirectoryFile");
+    pNtQueryVolumeInformationFile = (void *)GetProcAddress(hntdll, "NtQueryVolumeInformationFile");
 
+    test_NtCreateFile();
     create_file_test();
     open_file_test();
     delete_file_test();
     read_file_test();
+    append_file_test();
     nt_mailslot_test();
     test_iocompletion();
     test_file_basic_information();
@@ -1486,4 +1725,5 @@ START_TEST(file)
     test_file_both_information();
     test_file_name_information();
     test_file_all_name_information();
+    test_query_volume_information_file();
 }

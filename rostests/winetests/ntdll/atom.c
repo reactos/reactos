@@ -110,7 +110,7 @@ static DWORD WINAPI RtlAtomTestThread(LPVOID Table)
 
     Len = 64;
     res = pRtlQueryAtomInAtomTable(AtomTable, Atom, &RefCount, &PinCount, Name, &Len);
-    ok(!res, "Failed with longenough buffer, retval: %x\n", res);
+    ok(!res, "Failed with long enough buffer, retval: %x\n", res);
     ok(RefCount == 1, "Refcount was not 1 but %x\n", RefCount);
     ok(PinCount == 1, "Pincount was not 1 but %x\n", PinCount);
     ok(!lstrcmpW(Name, testAtom2), "We found wrong atom!!\n");

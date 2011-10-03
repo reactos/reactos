@@ -24,6 +24,7 @@
 #include <stdlib.h>
 
 #include "ntdll_test.h"
+#include "inaddr.h"
 
 #ifndef __WINE_WINTERNL_H
 
@@ -44,6 +45,20 @@ typedef struct _RTL_HANDLE_TABLE
 } RTL_HANDLE_TABLE;
 
 #endif
+
+/* avoid #include <winsock2.h> */
+#undef htons
+#ifdef WORDS_BIGENDIAN
+#define htons(s) ((USHORT)(s))
+#else  /* WORDS_BIGENDIAN */
+static inline USHORT __my_ushort_swap(USHORT s)
+{
+    return (s >> 8) | (s << 8);
+}
+#define htons(s) __my_ushort_swap(s)
+#endif  /* WORDS_BIGENDIAN */
+
+
 
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;
@@ -70,8 +85,14 @@ static NTSTATUS  (WINAPI *pRtlFreeSid)(PSID);
 static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 static DWORD     (WINAPI *pRtlGetThreadErrorMode)(void);
 static NTSTATUS  (WINAPI *pRtlSetThreadErrorMode)(DWORD, LPDWORD);
+static IMAGE_BASE_RELOCATION *(WINAPI *pLdrProcessRelocationBlock)(void*,UINT,USHORT*,INT_PTR);
+static CHAR *    (WINAPI *pRtlIpv4AddressToStringA)(const IN_ADDR *, LPSTR);
+static NTSTATUS  (WINAPI *pRtlIpv4AddressToStringExA)(const IN_ADDR *, USHORT, LPSTR, PULONG);
+
 static HMODULE hkernel32 = 0;
 static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
+
+
 #define LEN 16
 static const char* src_src = "This is a test!"; /* 16 bytes long, incl NUL */
 static ULONG src_aligned_block[4];
@@ -107,6 +128,9 @@ static void InitFunctionPtrs(void)
         pNtCurrentTeb = (void *)GetProcAddress(hntdll, "NtCurrentTeb");
         pRtlGetThreadErrorMode = (void *)GetProcAddress(hntdll, "RtlGetThreadErrorMode");
         pRtlSetThreadErrorMode = (void *)GetProcAddress(hntdll, "RtlSetThreadErrorMode");
+        pLdrProcessRelocationBlock  = (void *)GetProcAddress(hntdll, "LdrProcessRelocationBlock");
+        pRtlIpv4AddressToStringA = (void *)GetProcAddress(hntdll, "RtlIpv4AddressToStringA");
+        pRtlIpv4AddressToStringExA = (void *)GetProcAddress(hntdll, "RtlIpv4AddressToStringExA");
     }
     hkernel32 = LoadLibraryA("kernel32.dll");
     ok(hkernel32 != 0, "LoadLibrary failed\n");
@@ -1006,8 +1030,8 @@ static void test_RtlAllocateAndInitializeSid(void)
     /* these tests crash on XP */
     if (0)
     {
-        ret = pRtlAllocateAndInitializeSid(NULL, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
-        ret = pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, NULL);
+        pRtlAllocateAndInitializeSid(NULL, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
+        pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, NULL);
     }
 
     ret = pRtlAllocateAndInitializeSid(&sia, 9, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
@@ -1094,6 +1118,201 @@ static void test_RtlThreadErrorMode(void)
     pRtlSetThreadErrorMode(oldmode, NULL);
 }
 
+static void test_LdrProcessRelocationBlock(void)
+{
+    IMAGE_BASE_RELOCATION *ret;
+    USHORT reloc;
+    DWORD addr32;
+    SHORT addr16;
+
+    if(!pLdrProcessRelocationBlock) {
+        win_skip("LdrProcessRelocationBlock not available\n");
+        return;
+    }
+
+    addr32 = 0x50005;
+    reloc = IMAGE_REL_BASED_HIGHLOW<<12;
+    ret = pLdrProcessRelocationBlock(&addr32, 1, &reloc, 0x500050);
+    ok((USHORT*)ret == &reloc+1, "ret = %p, expected %p\n", ret, &reloc+1);
+    ok(addr32 == 0x550055, "addr32 = %x, expected 0x550055\n", addr32);
+
+    addr16 = 0x505;
+    reloc = IMAGE_REL_BASED_HIGH<<12;
+    ret = pLdrProcessRelocationBlock(&addr16, 1, &reloc, 0x500060);
+    ok((USHORT*)ret == &reloc+1, "ret = %p, expected %p\n", ret, &reloc+1);
+    ok(addr16 == 0x555, "addr16 = %x, expected 0x555\n", addr16);
+
+    addr16 = 0x505;
+    reloc = IMAGE_REL_BASED_LOW<<12;
+    ret = pLdrProcessRelocationBlock(&addr16, 1, &reloc, 0x500060);
+    ok((USHORT*)ret == &reloc+1, "ret = %p, expected %p\n", ret, &reloc+1);
+    ok(addr16 == 0x565, "addr16 = %x, expected 0x565\n", addr16);
+}
+
+static void test_RtlIpv4AddressToString(void)
+{
+    CHAR buffer[20];
+    CHAR *res;
+    IN_ADDR ip;
+    DWORD len;
+
+    if (!pRtlIpv4AddressToStringA)
+    {
+        win_skip("RtlIpv4AddressToStringA not available\n");
+        return;
+    }
+
+    ip.S_un.S_un_b.s_b1 = 1;
+    ip.S_un.S_un_b.s_b2 = 2;
+    ip.S_un.S_un_b.s_b3 = 3;
+    ip.S_un.S_un_b.s_b4 = 4;
+
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringA(&ip, buffer);
+    len = strlen(buffer);
+    ok(res == (buffer + len), "got %p with '%s' (expected %p)\n", res, buffer, buffer + len);
+
+    res = pRtlIpv4AddressToStringA(&ip, NULL);
+    ok( (res == (char *)~0) ||
+        broken(res == (char *)0 + len),        /* XP and w2003 */
+        "got %p (expected ~0)\n", res);
+
+    if (0) {
+        /* this crashes in windows */
+        memset(buffer, '#', sizeof(buffer) - 1);
+        buffer[sizeof(buffer) -1] = 0;
+        res = pRtlIpv4AddressToStringA(NULL, buffer);
+        trace("got %p with '%s'\n", res, buffer);
+    }
+
+    if (0) {
+        /* this crashes in windows */
+        res = pRtlIpv4AddressToStringA(NULL, NULL);
+        trace("got %p\n", res);
+    }
+}
+
+static void test_RtlIpv4AddressToStringEx(void)
+{
+    CHAR ip_1234[] = "1.2.3.4";
+    CHAR ip_1234_80[] = "1.2.3.4:80";
+    LPSTR expect;
+    CHAR buffer[30];
+    NTSTATUS res;
+    IN_ADDR ip;
+    ULONG size;
+    DWORD used;
+    USHORT port;
+
+    if (!pRtlIpv4AddressToStringExA)
+    {
+        win_skip("RtlIpv4AddressToStringExA not available\n");
+        return;
+    }
+
+    ip.S_un.S_un_b.s_b1 = 1;
+    ip.S_un.S_un_b.s_b2 = 2;
+    ip.S_un.S_un_b.s_b3 = 3;
+    ip.S_un.S_un_b.s_b4 = 4;
+
+    port = htons(80);
+    expect = ip_1234_80;
+
+    size = sizeof(buffer);
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    used = strlen(buffer);
+    ok( (res == STATUS_SUCCESS) &&
+        (size == strlen(expect) + 1) && !strcmp(buffer, expect),
+        "got 0x%x and size %d with '%s'\n", res, size, buffer);
+
+    size = used + 1;
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    ok( (res == STATUS_SUCCESS) &&
+        (size == strlen(expect) + 1) && !strcmp(buffer, expect),
+        "got 0x%x and size %d with '%s'\n", res, size, buffer);
+
+    size = used;
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    ok( (res == STATUS_INVALID_PARAMETER) && (size == used + 1),
+        "got 0x%x and %d with '%s' (expected STATUS_INVALID_PARAMETER and %d)\n",
+        res, size, buffer, used + 1);
+
+    size = used - 1;
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    ok( (res == STATUS_INVALID_PARAMETER) && (size == used + 1),
+        "got 0x%x and %d with '%s' (expected STATUS_INVALID_PARAMETER and %d)\n",
+        res, size, buffer, used + 1);
+
+
+    /* to get only the ip, use 0 as port */
+    port = 0;
+    expect = ip_1234;
+
+    size = sizeof(buffer);
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    used = strlen(buffer);
+    ok( (res == STATUS_SUCCESS) &&
+        (size == strlen(expect) + 1) && !strcmp(buffer, expect),
+        "got 0x%x and size %d with '%s'\n", res, size, buffer);
+
+    size = used + 1;
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    ok( (res == STATUS_SUCCESS) &&
+        (size == strlen(expect) + 1) && !strcmp(buffer, expect),
+        "got 0x%x and size %d with '%s'\n", res, size, buffer);
+
+    size = used;
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    ok( (res == STATUS_INVALID_PARAMETER) && (size == used + 1),
+        "got 0x%x and %d with '%s' (expected STATUS_INVALID_PARAMETER and %d)\n",
+        res, size, buffer, used + 1);
+
+    size = used - 1;
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, port, buffer, &size);
+    ok( (res == STATUS_INVALID_PARAMETER) && (size == used + 1),
+        "got 0x%x and %d with '%s' (expected STATUS_INVALID_PARAMETER and %d)\n",
+        res, size, buffer, used + 1);
+
+
+    /* parameters are checked */
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(&ip, 0, buffer, NULL);
+    ok(res == STATUS_INVALID_PARAMETER,
+        "got 0x%x with '%s' (expected STATUS_INVALID_PARAMETER)\n", res, buffer);
+
+    size = sizeof(buffer);
+    res = pRtlIpv4AddressToStringExA(&ip, 0, NULL, &size);
+    ok( res == STATUS_INVALID_PARAMETER,
+        "got 0x%x and size %d (expected STATUS_INVALID_PARAMETER)\n", res, size);
+
+    size = sizeof(buffer);
+    memset(buffer, '#', sizeof(buffer) - 1);
+    buffer[sizeof(buffer) -1] = 0;
+    res = pRtlIpv4AddressToStringExA(NULL, 0, buffer, &size);
+    ok( res == STATUS_INVALID_PARAMETER,
+        "got 0x%x and size %d with '%s' (expected STATUS_INVALID_PARAMETER)\n",
+        res, size, buffer);
+}
+
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
@@ -1114,4 +1333,7 @@ START_TEST(rtl)
     test_RtlAllocateAndInitializeSid();
     test_RtlDeleteTimer();
     test_RtlThreadErrorMode();
+    test_LdrProcessRelocationBlock();
+    test_RtlIpv4AddressToString();
+    test_RtlIpv4AddressToStringEx();
 }
