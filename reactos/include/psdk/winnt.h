@@ -66,6 +66,10 @@
 #endif
 #endif /* __ANONYMOUS_DEFINED */
 
+#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
+#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define DBG_UNREFERENCED_PARAMETER(P)
+#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
 #ifndef DECLSPEC_ALIGN
 # if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
@@ -5251,7 +5255,8 @@ FORCEINLINE
 VOID
 MemoryBarrier(VOID)
 {
-    LONG Barrier;
+    LONG Barrier, *Dummy = &Barrier;
+    UNREFERENCED_LOCAL_VARIABLE(Dummy);
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #endif

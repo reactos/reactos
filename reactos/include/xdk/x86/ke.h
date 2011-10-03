@@ -51,7 +51,9 @@ FORCEINLINE
 VOID
 KeMemoryBarrier(VOID)
 {
-  volatile LONG Barrier;
+  LONG Barrier, *Dummy = &Barrier;
+  UNREFERENCED_LOCAL_VARIABLE(Dummy);
+
 #if defined(__GNUC__)
   __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
 #elif defined(_MSC_VER)

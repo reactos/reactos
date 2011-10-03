@@ -417,11 +417,6 @@ typedef struct _FILETIME {
 # define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
 #endif
 
-#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
-#define DBG_UNREFERENCED_PARAMETER(P)
-#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
-
 #ifndef __WATCOMC__
 #ifndef _export
 #define _export
