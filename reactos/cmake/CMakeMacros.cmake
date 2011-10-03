@@ -34,13 +34,18 @@ function(add_dependency_footer)
     file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
 endfunction()
 
-function(add_message_headers)
+function(add_message_headers _type)
+    if(${_type} STREQUAL UNICODE)
+        set(_flag "-U")
+    else()
+        set(_flag "-A")
+    endif()
     foreach(_in_FILE ${ARGN})
         get_filename_component(FILE ${_in_FILE} NAME_WE)
-        macro_mc(${FILE})
+        macro_mc(${_flag} ${FILE})
         add_custom_command(
             OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
-            COMMAND ${COMMAND_MC}
+            COMMAND ${COMMAND_MC} ${MC_FLAGS}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
         set_source_files_properties(
             ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc

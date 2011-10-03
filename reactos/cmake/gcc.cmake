@@ -249,8 +249,8 @@ function(spec2def _dllname _spec_file)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
 endfunction()
 
-macro(macro_mc FILE)
-    set(COMMAND_MC ${CMAKE_MC_COMPILER} -A -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
+macro(macro_mc FLAG FILE)
+    set(COMMAND_MC ${CMAKE_MC_COMPILER} ${FLAG} -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
 endmacro()
 
 #pseh lib, needed with mingw

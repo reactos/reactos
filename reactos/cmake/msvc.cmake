@@ -174,8 +174,8 @@ function(spec2def _dllname _spec_file)
         PROPERTIES GENERATED TRUE)
 endfunction()
 
-macro(macro_mc FILE)
-    set(COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+macro(macro_mc FLAG FILE)
+    set(COMMAND_MC mc ${FLAG} -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
