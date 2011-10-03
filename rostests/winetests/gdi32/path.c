@@ -89,8 +89,9 @@ static void test_widenpath(void)
     Polyline(hdc, pnt, 6);
     EndPath(hdc);
     ret = WidenPath(hdc);
+    ok(ret == TRUE, "WidenPath failed: %d\n", GetLastError());
     nSize = GetPath(hdc, NULL, NULL, 0);
-    ok(nSize > 6, "WidenPath should compute a widdened path with a 1px wide pen. Path length is %d, should be more than 6\n", nSize);
+    ok(nSize > 6, "WidenPath should compute a widened path with a 1px wide pen. Path length is %d, should be more than 6\n", nSize);
 
     ReleaseDC(0, hdc);
     return;

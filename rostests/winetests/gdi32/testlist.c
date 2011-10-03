@@ -10,6 +10,7 @@ extern void func_bitmap(void);
 extern void func_brush(void);
 extern void func_clipping(void);
 extern void func_dc(void);
+extern void func_dib(void);
 extern void func_font(void);
 extern void func_gdiobj(void);
 extern void func_generated(void);
@@ -26,6 +27,7 @@ const struct test winetest_testlist[] =
     { "brush", func_brush },
     { "clipping", func_clipping },
     { "dc", func_dc },
+    { "dib", func_dib },
     { "font", func_font },
     { "gdiobj", func_gdiobj },
     { "generated", func_generated },

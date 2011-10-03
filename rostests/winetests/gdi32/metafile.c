@@ -37,6 +37,8 @@ static BOOL emr_processed = FALSE;
 
 static INT (WINAPI * pGetRelAbs)(HDC, DWORD);
 static INT (WINAPI * pSetRelAbs)(HDC, INT);
+static COLORREF (WINAPI *pSetDCBrushColor)(HDC,COLORREF);
+static COLORREF (WINAPI *pSetDCPenColor)(HDC,COLORREF);
 
 #define GDI_GET_PROC(func)                                     \
     p ## func = (void *)GetProcAddress(hGDI, #func);           \
@@ -54,6 +56,8 @@ static void init_function_pointers(void)
     assert(hGDI);
     GDI_GET_PROC(GetRelAbs);
     GDI_GET_PROC(SetRelAbs);
+    GDI_GET_PROC(SetDCBrushColor);
+    GDI_GET_PROC(SetDCPenColor);
 }
 
 static int CALLBACK eto_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
@@ -264,6 +268,141 @@ static void test_ExtTextOut(void)
     DestroyWindow(hwnd);
 }
 
+struct eto_scale_test_record
+{
+    INT graphics_mode;
+    INT map_mode;
+    double ex_scale;
+    double ey_scale;
+    BOOL processed;
+};
+
+static int CALLBACK eto_scale_enum_proc(HDC hdc, HANDLETABLE *handle_table,
+    const ENHMETARECORD *emr, int n_objs, LPARAM param)
+{
+    struct eto_scale_test_record *test = (struct eto_scale_test_record*)param;
+
+    if (emr->iType == EMR_EXTTEXTOUTW)
+    {
+        const EMREXTTEXTOUTW *pExtTextOutW = (const EMREXTTEXTOUTW *)emr;
+        trace("gm %d, mm %d, scale %f, %f, expected %f, %f\n",
+              test->graphics_mode, test->map_mode,
+              pExtTextOutW->exScale, pExtTextOutW->eyScale,
+              test->ex_scale, test->ey_scale);
+        ok(fabs(test->ex_scale - pExtTextOutW->exScale) < 0.001,
+           "Got exScale %f, expected %f\n", pExtTextOutW->exScale, test->ex_scale);
+        ok(fabs(test->ey_scale - pExtTextOutW->eyScale) < 0.001,
+           "Got eyScale %f, expected %f\n", pExtTextOutW->eyScale, test->ey_scale);
+        test->processed = TRUE;
+    }
+
+    return 1;
+}
+
+static void test_ExtTextOutScale(void)
+{
+    const RECT rc = { 0, 0, 100, 100 };
+    const WCHAR str[] = {'a',0 };
+    struct eto_scale_test_record test;
+    HDC hdcDisplay, hdcMetafile;
+    HENHMETAFILE hMetafile;
+    HWND hwnd;
+    SIZE wndext, vportext;
+    int horzSize, vertSize, horzRes, vertRes;
+    int ret;
+    int i;
+
+    hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                           0, 0, 200, 200, 0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA failed\n");
+
+    hdcDisplay = GetDC(hwnd);
+    ok(hdcDisplay != 0, "GetDC failed\n");
+
+    horzSize = GetDeviceCaps(hdcDisplay, HORZSIZE);
+    horzRes  = GetDeviceCaps(hdcDisplay, HORZRES);
+    vertSize = GetDeviceCaps(hdcDisplay, VERTSIZE);
+    vertRes  = GetDeviceCaps(hdcDisplay, VERTRES);
+    ok(horzSize && horzRes && vertSize && vertRes, "GetDeviceCaps failed\n");
+
+    for (i = 0; i < 16; i++)
+    {
+        test.graphics_mode = i / 8 + 1;
+        test.map_mode      = i % 8 + 1;
+
+        ret = SetGraphicsMode(hdcDisplay, test.graphics_mode);
+        ok(ret, "SetGraphicsMode failed\n");
+        ret = SetMapMode(hdcDisplay, test.map_mode);
+        ok(ret, "SetMapMode failed\n");
+
+        if ((test.map_mode == MM_ISOTROPIC) || (test.map_mode == MM_ANISOTROPIC))
+        {
+            ret = SetWindowExtEx(hdcDisplay, 1, 1, NULL);
+            ok(ret, "SetWindowExtEx failed\n");
+            ret = SetViewportExtEx(hdcDisplay, -20, -10, NULL);
+            ok(ret, "SetViewportExtEx failed\n");
+        }
+
+        ret = GetViewportExtEx(hdcDisplay, &vportext);
+        ok(ret, "GetViewportExtEx failed\n");
+        ret = GetWindowExtEx(hdcDisplay, &wndext);
+        ok(ret, "GetWindowExtEx failed\n");
+
+        trace("gm %d, mm %d, wnd %d,%d, vp %d,%d horz %d,%d vert %d,%d\n",
+               test.graphics_mode, test.map_mode,
+               wndext.cx, wndext.cy, vportext.cx, vportext.cy,
+               horzSize, horzRes, vertSize, vertRes);
+
+        if (test.graphics_mode == GM_COMPATIBLE)
+        {
+            test.ex_scale = 100.0 * ((FLOAT)horzSize  / (FLOAT)horzRes) /
+                                    ((FLOAT)wndext.cx / (FLOAT)vportext.cx);
+            test.ey_scale = 100.0 * ((FLOAT)vertSize  / (FLOAT)vertRes) /
+                                    ((FLOAT)wndext.cy / (FLOAT)vportext.cy);
+        }
+        else
+        {
+            test.ex_scale = 0.0;
+            test.ey_scale = 0.0;
+        }
+
+        hdcMetafile = CreateEnhMetaFileA(hdcDisplay, NULL, NULL, NULL);
+        ok(hdcMetafile != 0, "CreateEnhMetaFileA failed\n");
+
+        ret = SetGraphicsMode(hdcMetafile, test.graphics_mode);
+        ok(ret, "SetGraphicsMode failed\n");
+        ret = SetMapMode(hdcMetafile, test.map_mode);
+        ok(ret, "SetMapMode failed\n");
+
+        if ((test.map_mode == MM_ISOTROPIC) || (test.map_mode == MM_ANISOTROPIC))
+        {
+            ret = SetWindowExtEx(hdcMetafile, 1, 1, NULL);
+            ok(ret, "SetWindowExtEx failed\n");
+            ret = SetViewportExtEx(hdcMetafile, -20, -10, NULL);
+            ok(ret, "SetViewportExtEx failed\n");
+        }
+
+        ret = ExtTextOutW(hdcMetafile, 0, 0, 0, 0, str, 1, NULL);
+        ok(ret, "ExtTextOutW failed\n");
+
+        hMetafile = CloseEnhMetaFile(hdcMetafile);
+        ok(hMetafile != 0, "CloseEnhMetaFile failed\n");
+
+        test.processed = 0;
+        ret = EnumEnhMetaFile(hdcDisplay, hMetafile, eto_scale_enum_proc, &test, &rc);
+        ok(ret, "EnumEnhMetaFile failed\n");
+        ok(test.processed, "EnumEnhMetaFile couldn't find EMR_EXTTEXTOUTW record\n");
+
+        ret = DeleteEnhMetaFile(hMetafile);
+        ok(ret, "DeleteEnhMetaFile failed\n");
+    }
+
+    ret = ReleaseDC(hwnd, hdcDisplay);
+    ok(ret, "ReleaseDC failed\n");
+    DestroyWindow(hwnd);
+}
+
+
 static void check_dc_state(HDC hdc, int restore_no,
                            int wnd_org_x, int wnd_org_y, int wnd_ext_x, int wnd_ext_y,
                            int vp_org_x, int vp_org_y, int vp_ext_x, int vp_ext_y)
@@ -340,13 +479,17 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     ret = GetWorldTransform(hdc, &xform);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        ok(GetWindowOrgEx(hdc, &pt), "GetWindowOrgEx error %u\n", GetLastError());
+        ret = GetWindowOrgEx(hdc, &pt);
+        ok(ret, "GetWindowOrgEx error %u\n", GetLastError());
         trace("window org (%d,%d)\n", pt.x, pt.y);
-        ok(GetViewportOrgEx(hdc, &pt), "GetViewportOrgEx error %u\n", GetLastError());
+        ret = GetViewportOrgEx(hdc, &pt);
+        ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
         trace("vport org (%d,%d)\n", pt.x, pt.y);
-        ok(GetWindowExtEx(hdc, &size), "GetWindowExtEx error %u\n", GetLastError());
+        ret = GetWindowExtEx(hdc, &size);
+        ok(ret, "GetWindowExtEx error %u\n", GetLastError());
         trace("window ext (%d,%d)\n", size.cx, size.cy);
-        ok(GetViewportExtEx(hdc, &size), "GetViewportExtEx error %u\n", GetLastError());
+        ret = GetViewportExtEx(hdc, &size);
+        ok(ret, "GetViewportExtEx error %u\n", GetLastError());
         trace("vport ext (%d,%d)\n", size.cx, size.cy);
     }
     else
@@ -458,13 +601,17 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     ret = GetWorldTransform(hdc, &xform);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        ok(GetWindowOrgEx(hdc, &pt), "GetWindowOrgEx error %u\n", GetLastError());
+        ret = GetWindowOrgEx(hdc, &pt);
+        ok(ret, "GetWindowOrgEx error %u\n", GetLastError());
         trace("window org (%d,%d)\n", pt.x, pt.y);
-        ok(GetViewportOrgEx(hdc, &pt), "GetViewportOrgEx error %u\n", GetLastError());
+        ret = GetViewportOrgEx(hdc, &pt);
+        ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
         trace("vport org (%d,%d)\n", pt.x, pt.y);
-        ok(GetWindowExtEx(hdc, &size), "GetWindowExtEx error %u\n", GetLastError());
+        ret = GetWindowExtEx(hdc, &size);
+        ok(ret, "GetWindowExtEx error %u\n", GetLastError());
         trace("window ext (%d,%d)\n", size.cx, size.cy);
-        ok(GetViewportExtEx(hdc, &size), "GetViewportExtEx error %u\n", GetLastError());
+        ret = GetViewportExtEx(hdc, &size);
+        ok(ret, "GetViewportExtEx error %u\n", GetLastError());
         trace("vport ext (%d,%d)\n", size.cx, size.cy);
     }
     else
@@ -512,8 +659,10 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 0,"Expecting ViewportOrg x of 0, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 120,"Expecting ViewportExt cx of 120, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 1, "ret = %d\n", ret);
@@ -527,8 +676,10 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 10,"Expecting ViewportOrg x of 10, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 200,"Expecting ViewportExt cx of 200, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 2, "ret = %d\n", ret);
@@ -544,8 +695,10 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 20,"Expecting ViewportOrg x of 20, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 300,"Expecting ViewportExt cx of 300, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 3, "ret = %d\n", ret);
@@ -564,15 +717,19 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 30,"Expecting ViewportOrg x of 30, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 400,"Expecting ViewportExt cx of 400, got %i\n",size.cx);
     ret = RestoreDC(hdcMetafile, -1);
     ok(ret, "ret = %d\n", ret);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 20,"Expecting ViewportOrg x of 20, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 300,"Expecting ViewportExt cx of 300, got %i\n",size.cx);
     ok( GetPolyFillMode( hdcMetafile ) == ALTERNATE, "PolyFillMode not restored\n" );
     ok( GetBkColor( hdcMetafile ) == 0, "Background color not restored\n" );
@@ -580,14 +737,18 @@ static void test_SaveDC(void)
     ok(ret == 3, "ret = %d\n", ret);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 20,"Expecting ViewportOrg x of 20, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 300,"Expecting ViewportExt cx of 300, got %i\n",size.cx);
     ret = RestoreDC(hdcMetafile, 1);
     ok(ret, "ret = %d\n", ret);
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 0,"Expecting ViewportOrg x of 0, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 120,"Expecting ViewportExt cx of 120, got %i\n",size.cx);
 
     SetWindowOrgEx(hdcMetafile, -4, -4, NULL);
@@ -599,15 +760,19 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 40,"Expecting ViewportOrg x of 40, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 50,"Expecting ViewportExt cx of 50, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 1, "ret = %d\n", ret);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 40,"Expecting ViewportOrg x of 40, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 50,"Expecting ViewportExt cx of 50, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 2, "ret = %d\n", ret);
@@ -635,8 +800,10 @@ static void test_SaveDC(void)
     ret = RestoreDC(hdcMetafile, 1);
     ok(ret, "ret = %d\n", ret);
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 40,"Expecting ViewportOrg x of 40, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 50,"Expecting ViewportExt cx of 50, got %i\n",size.cx);
 
     hFontCheck = SelectObject(hdcMetafile, hFontOld);
@@ -683,10 +850,18 @@ static void test_mf_SaveDC(void)
     /* Need to write something to the emf, otherwise Windows won't play it back */
     LineTo(hdcMetafile, 150, 150);
 
-    SetWindowOrgEx(hdcMetafile, 0, 0, NULL);
-    SetViewportOrgEx(hdcMetafile, 0, 0, NULL);
-    SetWindowExtEx(hdcMetafile, 110, 110, NULL );
-    SetViewportExtEx(hdcMetafile, 120, 120, NULL );
+    pt.x = pt.y = 5555;
+    SetWindowOrgEx(hdcMetafile, 0, 0, &pt);
+    ok( pt.x == 5555 && pt.y == 5555, "wrong origin %d,%d\n", pt.x, pt.y);
+    pt.x = pt.y = 5555;
+    SetViewportOrgEx(hdcMetafile, 0, 0, &pt);
+    ok( pt.x == 5555 && pt.y == 5555, "wrong origin %d,%d\n", pt.x, pt.y);
+    size.cx = size.cy = 5555;
+    SetWindowExtEx(hdcMetafile, 110, 110, &size );
+    ok( size.cx == 5555 && size.cy == 5555, "wrong size %d,%d\n", size.cx, size.cy );
+    size.cx = size.cy = 5555;
+    SetViewportExtEx(hdcMetafile, 120, 120, &size );
+    ok( size.cx == 5555 && size.cy == 5555, "wrong size %d,%d\n", size.cx, size.cy );
 
     /* Force Win9x to update DC state */
     SetPixelV(hdcMetafile, 50, 50, 0);
@@ -858,6 +1033,21 @@ static const unsigned char MF_PATTERN_BRUSH_BITS[] = {
     0x01, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
     0x2d, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
     0x00, 0x00
+};
+
+static const unsigned char MF_DCBRUSH_BITS[] =
+{
+    0x01, 0x00, 0x09, 0x00, 0x00, 0x03, 0x2a, 0x00,
+    0x00, 0x00, 0x02, 0x00, 0x08, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0xfc, 0x02,
+    0x00, 0x00, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x2d, 0x01, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0xfa, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x2d, 0x01, 0x01, 0x00,
+    0x07, 0x00, 0x00, 0x00, 0x1b, 0x04, 0x14, 0x00,
+    0x14, 0x00, 0x0a, 0x00, 0x0a, 0x00, 0x03, 0x00,
+    0x00, 0x00, 0x00, 0x00
 };
 
 static const unsigned char MF_TEXTOUT_ON_PATH_BITS[] =
@@ -1086,6 +1276,50 @@ static const unsigned char EMF_BITBLT[] =
     0x10, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00
 };
 
+static const unsigned char EMF_DCBRUSH_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x39, 0x01, 0x00, 0x00, 0x39, 0x01, 0x00, 0x00,
+    0x52, 0x02, 0x00, 0x00, 0x52, 0x02, 0x00, 0x00,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0x44, 0x01, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00,
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x04, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
+    0x40, 0x01, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xe2, 0x04, 0x00,
+    0x80, 0xa9, 0x03, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x80,
+    0x25, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x80, 0x27, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x55, 0x55, 0x55, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x26, 0x00, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x33, 0x44, 0x55, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x2b, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x56, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
 
 /* For debugging or dumping the raw metafiles produced by
  * new test functions.
@@ -1428,12 +1662,12 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
 	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
 if(!winetest_interactive)
-	skip("skipping match_emf_record(), bug 5393\n");
+    skip("skipping match_emf_record(), bug 5393\n");
 else
 {
 	trace("%s: EMF record %u, size %u/record %u, size %u\n",
-                desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
- 
+              desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
+
         if (!match_emf_record(emr1, emr2, desc, ignore_scaling)) return -1;
 }
 
@@ -1506,6 +1740,58 @@ static void test_emf_BitBlt(void)
     DeleteDC(hdcBitmap);
     DeleteDC(hdcDisplay);
 #undef BMP_DIM
+}
+
+static void test_emf_DCBrush(void)
+{
+    HDC hdcMetafile;
+    HENHMETAFILE hMetafile;
+    HBRUSH hBrush;
+    HPEN hPen;
+    BOOL ret;
+    COLORREF color;
+
+    if (!pSetDCBrushColor || !pSetDCPenColor)
+    {
+        win_skip( "SetDCBrush/PenColor not supported\n" );
+        return;
+    }
+
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok( hdcMetafile != 0, "CreateEnhMetaFileA failed\n" );
+
+    hBrush = SelectObject(hdcMetafile, GetStockObject(DC_BRUSH));
+    ok(hBrush != 0, "SelectObject error %d.\n", GetLastError());
+
+    hPen = SelectObject(hdcMetafile, GetStockObject(DC_PEN));
+    ok(hPen != 0, "SelectObject error %d.\n", GetLastError());
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x55,0x55,0x55) );
+    ok( color == 0xffffff, "SetDCBrushColor returned %x\n", color );
+
+    color = pSetDCPenColor( hdcMetafile, RGB(0x33,0x44,0x55) );
+    ok( color == 0, "SetDCPenColor returned %x\n", color );
+
+    Rectangle( hdcMetafile, 10, 10, 20, 20 );
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x12,0x34,0x56) );
+    ok( color == 0x555555, "SetDCBrushColor returned %x\n", color );
+
+    hMetafile = CloseEnhMetaFile(hdcMetafile);
+    ok( hMetafile != 0, "CloseEnhMetaFile failed\n" );
+
+    if (compare_emf_bits (hMetafile, EMF_DCBRUSH_BITS, sizeof(EMF_DCBRUSH_BITS),
+                          "emf_DC_Brush", FALSE ) != 0)
+    {
+        dump_emf_bits(hMetafile, "emf_DC_Brush");
+        dump_emf_records(hMetafile, "emf_DC_Brush");
+    }
+    ret = DeleteEnhMetaFile(hMetafile);
+    ok( ret, "DeleteEnhMetaFile error %d\n", GetLastError());
+    ret = DeleteObject(hBrush);
+    ok( ret, "DeleteObject(HBRUSH) error %d\n", GetLastError());
+    ret = DeleteObject(hPen);
+    ok( ret, "DeleteObject(HPEN) error %d\n", GetLastError());
 }
 
 /* Test a blank metafile.  May be used as a template for new tests. */
@@ -1669,6 +1955,7 @@ static void test_SetMetaFileBits(void)
     ret = DeleteMetaFile(hmf);
     ok(ret, "DeleteMetaFile(%p) error %d\n", hmf, GetLastError());
 
+#ifndef _WIN64 /* Generates access violation on XP x64 and Win2003 x64 */
     /* Now with zeroed out mtSize field */
     memcpy(buf, MF_GRAPHICS_BITS, sizeof(MF_GRAPHICS_BITS));
     mh = (METAHEADER *)buf;
@@ -1686,6 +1973,7 @@ static void test_SetMetaFileBits(void)
 
     ret = DeleteMetaFile(hmf);
     ok(ret, "DeleteMetaFile(%p) error %d\n", hmf, GetLastError());
+#endif
 }
 
 /* Simple APIs from mfdrv/graphics.c
@@ -1780,6 +2068,53 @@ static void test_mf_PatternBrush(void)
     ok( ret, "DeleteObject(HBITMAP) error %d\n",
         GetLastError());
     HeapFree (GetProcessHeap(), 0, orig_lb);
+}
+
+static void test_mf_DCBrush(void)
+{
+    HDC hdcMetafile;
+    HMETAFILE hMetafile;
+    HBRUSH hBrush;
+    HPEN hPen;
+    BOOL ret;
+    COLORREF color;
+
+    if (!pSetDCBrushColor || !pSetDCPenColor)
+    {
+        win_skip( "SetDCBrush/PenColor not supported\n" );
+        return;
+    }
+
+    hdcMetafile = CreateMetaFileA(NULL);
+    ok( hdcMetafile != 0, "CreateMetaFileA failed\n" );
+
+    hBrush = SelectObject(hdcMetafile, GetStockObject(DC_BRUSH));
+    ok(hBrush != 0, "SelectObject error %d.\n", GetLastError());
+
+    hPen = SelectObject(hdcMetafile, GetStockObject(DC_PEN));
+    ok(hPen != 0, "SelectObject error %d.\n", GetLastError());
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x55,0x55,0x55) );
+    ok( color == CLR_INVALID, "SetDCBrushColor returned %x\n", color );
+
+    color = pSetDCPenColor( hdcMetafile, RGB(0x33,0x44,0x55) );
+    ok( color == CLR_INVALID, "SetDCPenColor returned %x\n", color );
+
+    Rectangle( hdcMetafile, 10, 10, 20, 20 );
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x12,0x34,0x56) );
+    ok( color == CLR_INVALID, "SetDCBrushColor returned %x\n", color );
+
+    hMetafile = CloseMetaFile(hdcMetafile);
+    ok( hMetafile != 0, "CloseMetaFile failed\n" );
+
+    if (compare_mf_bits(hMetafile, MF_DCBRUSH_BITS, sizeof(MF_DCBRUSH_BITS), "mf_DCBrush") != 0)
+    {
+        dump_mf_bits(hMetafile, "mf_DCBrush");
+        EnumMetaFile(0, hMetafile, mf_enum_proc, 0);
+    }
+    ret = DeleteMetaFile(hMetafile);
+    ok(ret, "DeleteMetaFile(%p) error %d\n", hMetafile, GetLastError());
 }
 
 static void test_mf_ExtTextOut_on_path(void)
@@ -1991,6 +2326,7 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         ok(ret == sizeof(rgn2.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %u\n", ret);
 
         ret = GetRegionData(hrgn, sizeof(rgn2), &rgn2.data);
+        ok(ret == sizeof(rgn2), "expected sizeof(rgn2), got %u\n", ret);
 
         trace("size %u, type %u, count %u, rgn size %u, bound (%d,%d-%d,%d)\n",
               rgn2.data.rdh.dwSize, rgn2.data.rdh.iType,
@@ -2475,6 +2811,7 @@ static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
     METAHEADER *mh = NULL;
     METARECORD *rec;
     INT horz_res, vert_res, horz_size, vert_size;
+    INT curve_caps, line_caps, poly_caps;
 
     display_dc = GetDC(NULL);
     ok(display_dc != NULL, "display_dc is NULL\n");
@@ -2486,6 +2823,16 @@ static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
 
     emf_dc = CreateEnhMetaFileA(display_dc, NULL, rc, NULL);
     ok(emf_dc != NULL, "emf_dc is NULL\n");
+
+    curve_caps = GetDeviceCaps(emf_dc, CURVECAPS);
+    ok(curve_caps == 511, "expect 511 got %d\n", curve_caps);
+
+    line_caps = GetDeviceCaps(emf_dc, LINECAPS);
+    ok(line_caps == 254, "expect 254 got %d\n", line_caps);
+
+    poly_caps = GetDeviceCaps(emf_dc, POLYGONALCAPS);
+    ok(poly_caps == 255, "expect 511 got %d\n", poly_caps);
+
     for(i = 0; i < 3000; i++) /* This is enough to take emf_size > 0xffff */
         Rectangle(emf_dc, 0, 0, 1000, 20);
     emf = CloseEnhMetaFile(emf_dc);
@@ -2753,14 +3100,17 @@ START_TEST(metafile)
 
     /* For enhanced metafiles (enhmfdrv) */
     test_ExtTextOut();
+    test_ExtTextOutScale();
     test_SaveDC();
     test_emf_BitBlt();
+    test_emf_DCBrush();
 
     /* For win-format metafiles (mfdrv) */
     test_mf_SaveDC();
     test_mf_Blank();
     test_mf_Graphics();
     test_mf_PatternBrush();
+    test_mf_DCBrush();
     test_CopyMetaFile();
     test_SetMetaFileBits();
     test_mf_ExtTextOut_on_path();

@@ -11,14 +11,16 @@
 	<file>brush.c</file>
 	<file>clipping.c</file>
 	<file>dc.c</file>
+	<file>dib.c</file>
+	<file>font.c</file>
 	<file>gdiobj.c</file>
 	<file>generated.c</file>
 	<file>icm.c</file>
-	<file>font.c</file>
 	<file>mapping.c</file>
 	<file>metafile.c</file>
 	<file>palette.c</file>
 	<file>path.c</file>
 	<file>pen.c</file>
 	<file>testlist.c</file>
+	<file>resource.rc</file>
 </module>

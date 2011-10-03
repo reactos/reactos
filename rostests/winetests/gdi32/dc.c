@@ -30,6 +30,8 @@
 #include "winuser.h"
 #include "winerror.h"
 
+static DWORD (WINAPI *pSetLayout)(HDC hdc, DWORD layout);
+
 static void dump_region(HRGN hrgn)
 {
     DWORD i, size;
@@ -72,7 +74,7 @@ static void test_savedc_2(void)
     ok(hdc != NULL, "GetDC failed\n");
 
     ret = GetClipBox(hdc, &rc_clip);
-    ok(ret == SIMPLEREGION, "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION), "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
     ret = GetClipRgn(hdc, hrgn);
     ok(ret == 0, "GetClipRgn returned %d instead of 0\n", ret);
     ret = GetRgnBox(hrgn, &rc);
@@ -105,17 +107,23 @@ todo_wine
         ok(ret == SIMPLEREGION, "IntersectClipRect returned %d instead of SIMPLEREGION\n", ret);
 
     ret = GetClipBox(hdc, &rc_clip);
-    ok(ret == SIMPLEREGION, "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION), "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
     SetRect(&rc, 0, 0, 50, 50);
-    ok(EqualRect(&rc, &rc_clip), "rects are not equal\n");
+    ok(EqualRect(&rc, &rc_clip),
+       "rects are not equal: (%d,%d-%d,%d) - (%d,%d-%d,%d)\n",
+       rc.left, rc.top, rc.right, rc.bottom,
+       rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
 
     ret = RestoreDC(hdc, 1);
     ok(ret, "ret = %d\n", ret);
 
     ret = GetClipBox(hdc, &rc_clip);
-    ok(ret == SIMPLEREGION, "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION), "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
     SetRect(&rc, 0, 0, 100, 100);
-    ok(EqualRect(&rc, &rc_clip), "rects are not equal\n");
+    ok(EqualRect(&rc, &rc_clip),
+       "rects are not equal: (%d,%d-%d,%d) - (%d,%d-%d,%d)\n",
+       rc.left, rc.top, rc.right, rc.bottom,
+       rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
 
     DeleteObject(hrgn);
     ReleaseDC(hwnd, hdc);
@@ -257,20 +265,50 @@ static void test_GdiConvertToDevmodeW(void)
 static void test_CreateCompatibleDC(void)
 {
     BOOL bRet;
-    HDC hDC;
-    HDC hNewDC;
+    HDC hdc, hNewDC, hdcMetafile;
+    HBITMAP bitmap;
+    INT caps;
+
+    bitmap = CreateBitmap( 10, 10, 1, 1, NULL );
 
     /* Create a DC compatible with the screen */
-    hDC = CreateCompatibleDC(NULL);
-    ok(hDC != NULL, "CreateCompatibleDC returned %p\n", hDC);
+    hdc = CreateCompatibleDC(NULL);
+    ok(hdc != NULL, "CreateCompatibleDC returned %p\n", hdc);
+    ok( SelectObject( hdc, bitmap ) != 0, "SelectObject failed\n" );
+    caps = GetDeviceCaps( hdc, TECHNOLOGY );
+    ok( caps == DT_RASDISPLAY, "wrong caps %u\n", caps );
 
     /* Delete this DC, this should succeed */
-    bRet = DeleteDC(hDC);
+    bRet = DeleteDC(hdc);
     ok(bRet == TRUE, "DeleteDC returned %u\n", bRet);
 
     /* Try to create a DC compatible to the deleted DC. This has to fail */
-    hNewDC = CreateCompatibleDC(hDC);
+    hNewDC = CreateCompatibleDC(hdc);
     ok(hNewDC == NULL, "CreateCompatibleDC returned %p\n", hNewDC);
+
+    hdc = GetDC( 0 );
+    hdcMetafile = CreateEnhMetaFileA(hdc, NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA failed\n");
+    hNewDC = CreateCompatibleDC( hdcMetafile );
+    ok(hNewDC != NULL, "CreateCompatibleDC failed\n");
+    ok( SelectObject( hNewDC, bitmap ) != 0, "SelectObject failed\n" );
+    caps = GetDeviceCaps( hdcMetafile, TECHNOLOGY );
+    ok( caps == DT_RASDISPLAY, "wrong caps %u\n", caps );
+    caps = GetDeviceCaps( hNewDC, TECHNOLOGY );
+    ok( caps == DT_RASDISPLAY, "wrong caps %u\n", caps );
+    DeleteDC( hNewDC );
+    DeleteEnhMetaFile( CloseEnhMetaFile( hdcMetafile ));
+    ReleaseDC( 0, hdc );
+
+    hdcMetafile = CreateMetaFileA(NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA failed\n");
+    hNewDC = CreateCompatibleDC( hdcMetafile );
+    ok(hNewDC == NULL, "CreateCompatibleDC succeeded\n");
+    caps = GetDeviceCaps( hdcMetafile, TECHNOLOGY );
+    ok( caps == DT_METAFILE, "wrong caps %u\n", caps );
+    DeleteMetaFile( CloseMetaFile( hdcMetafile ));
+
+    DeleteObject( bitmap );
 }
 
 static void test_DC_bitmap(void)
@@ -494,66 +532,148 @@ todo_wine
     ok(ret, "UnregisterClassA failed\n");
 }
 
-static void test_boundsrect_invalid(void)
+static void test_boundsrect(void)
 {
     HDC hdc;
-    RECT rect, expect;
+    HBITMAP bitmap;
+    RECT rect, expect, set_rect;
     UINT ret;
 
-    hdc = GetDC(NULL);
-    ok(hdc != NULL, "GetDC failed\n");
+    hdc = CreateCompatibleDC(0);
+    ok(hdc != NULL, "CreateCompatibleDC failed\n");
+    bitmap = CreateCompatibleBitmap( hdc, 200, 200 );
+    SelectObject( hdc, bitmap );
 
     ret = GetBoundsRect(hdc, NULL, 0);
-    ok(ret == 0 ||
-       broken(ret == DCB_RESET), /* Win9x */
-       "Expected GetBoundsRect to return 0, got %u\n", ret);
+    ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
 
     ret = GetBoundsRect(hdc, NULL, ~0U);
-    ok(ret == 0 ||
-       broken(ret == DCB_RESET), /* Win9x */
+    ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+    /* Test parameter handling order. */
+    SetRect(&set_rect, 10, 20, 40, 50);
+    ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
+    ok(ret & DCB_RESET,
+       "Expected return flag DCB_RESET to be set, got %u\n", ret);
+
+    ret = GetBoundsRect(hdc, NULL, DCB_RESET);
+    ok(ret == 0,
        "Expected GetBoundsRect to return 0, got %u\n", ret);
 
-    if (GetBoundsRect(hdc, NULL, 0) == DCB_RESET)
-        win_skip("Win9x fails catastrophically with first GetBoundsRect call\n");
-    else
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_RESET,
+       "Expected GetBoundsRect to return DCB_RESET, got %u\n", ret);
+    SetRect(&expect, 0, 0, 0, 0);
+    ok(EqualRect(&rect, &expect) ||
+       broken(EqualRect(&rect, &set_rect)), /* nt4 sp1-5 */
+       "Expected output rectangle (0,0)-(0,0), got (%d,%d)-(%d,%d)\n",
+       rect.left, rect.top, rect.right, rect.bottom);
+
+    ret = GetBoundsRect(NULL, NULL, 0);
+    ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+    ret = GetBoundsRect(NULL, NULL, ~0U);
+    ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+    ret = SetBoundsRect(NULL, NULL, 0);
+    ok(ret == 0, "Expected SetBoundsRect to return 0, got %u\n", ret);
+
+    ret = SetBoundsRect(NULL, NULL, ~0U);
+    ok(ret == 0, "Expected SetBoundsRect to return 0, got %u\n", ret);
+
+    SetRect(&set_rect, 10, 20, 40, 50);
+    ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
+    ok(ret == (DCB_RESET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
+
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+    SetRect(&expect, 10, 20, 40, 50);
+    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+       rect.left, rect.top, rect.right, rect.bottom);
+
+    SetMapMode( hdc, MM_ANISOTROPIC );
+    SetViewportExtEx( hdc, 2, 2, NULL );
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+    SetRect(&expect, 5, 10, 20, 25);
+    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+       rect.left, rect.top, rect.right, rect.bottom);
+
+    SetViewportOrgEx( hdc, 20, 30, NULL );
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+    SetRect(&expect, -5, -5, 10, 10);
+    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+       rect.left, rect.top, rect.right, rect.bottom);
+
+    SetRect(&set_rect, 10, 20, 40, 50);
+    ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
+    ok(ret == (DCB_SET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
+
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+    SetRect(&expect, 10, 20, 40, 50);
+    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+       rect.left, rect.top, rect.right, rect.bottom);
+
+    SetMapMode( hdc, MM_TEXT );
+    SetViewportOrgEx( hdc, 0, 0, NULL );
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+    SetRect(&expect, 40, 70, 100, 130);
+    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+       rect.left, rect.top, rect.right, rect.bottom);
+
+    if (pSetLayout)
     {
-        /* Test parameter handling order. */
-        SetRect(&rect, 0, 0, 50, 50);
-        ret = SetBoundsRect(hdc, &rect, DCB_SET);
-        ok(ret & DCB_RESET,
-           "Expected return flag DCB_RESET to be set, got %u\n", ret);
-
-        ret = GetBoundsRect(hdc, NULL, DCB_RESET);
-        ok(ret == 0,
-           "Expected GetBoundsRect to return 0, got %u\n", ret);
-
+        pSetLayout( hdc, LAYOUT_RTL );
         ret = GetBoundsRect(hdc, &rect, 0);
-        ok(ret == DCB_RESET,
-           "Expected GetBoundsRect to return DCB_RESET, got %u\n", ret);
-        SetRect(&expect, 0, 0, 0, 0);
-        ok(EqualRect(&rect, &expect),
-           "Expected output rectangle (0,0)-(0,0), got (%d,%d)-(%d,%d)\n",
+        ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+        SetRect(&expect, 159, 70, 99, 130);
+        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+           rect.left, rect.top, rect.right, rect.bottom);
+        SetRect(&set_rect, 50, 25, 30, 35);
+        ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
+        ok(ret == (DCB_SET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
+        ret = GetBoundsRect(hdc, &rect, 0);
+        ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+        SetRect(&expect, 50, 25, 30, 35);
+        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+           rect.left, rect.top, rect.right, rect.bottom);
+
+        pSetLayout( hdc, LAYOUT_LTR );
+        ret = GetBoundsRect(hdc, &rect, 0);
+        ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
+        SetRect(&expect, 149, 25, 169, 35);
+        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
            rect.left, rect.top, rect.right, rect.bottom);
     }
 
-    if (GetBoundsRect(hdc, NULL, 0) == DCB_RESET)
-        win_skip("Win9x fails catastrophically with NULL device context parameter\n");
-    else
+    /* empty rect resets, except on nt4 */
+    SetRect(&expect, 20, 20, 10, 10);
+    ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
+    ok(ret == (DCB_SET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
+    ret = GetBoundsRect(hdc, &rect, 0);
+    ok(ret == DCB_RESET || broken(ret == DCB_SET)  /* nt4 */,
+       "GetBoundsRect returned %x\n", ret);
+    if (ret == DCB_RESET)
     {
-        ret = GetBoundsRect(NULL, NULL, 0);
-        ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
+        SetRect(&expect, 0, 0, 0, 0);
+        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+           rect.left, rect.top, rect.right, rect.bottom);
 
-        ret = GetBoundsRect(NULL, NULL, ~0U);
-        ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
-
-        ret = SetBoundsRect(NULL, NULL, 0);
-        ok(ret == 0, "Expected SetBoundsRect to return 0, got %u\n", ret);
-
-        ret = SetBoundsRect(NULL, NULL, ~0U);
-        ok(ret == 0, "Expected SetBoundsRect to return 0, got %u\n", ret);
+        SetRect(&expect, 20, 20, 20, 20);
+        ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
+        ok(ret == (DCB_RESET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
+        ret = GetBoundsRect(hdc, &rect, 0);
+        ok(ret == DCB_RESET, "GetBoundsRect returned %x\n", ret);
+        SetRect(&expect, 0, 0, 0, 0);
+        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
+           rect.left, rect.top, rect.right, rect.bottom);
     }
 
-    DeleteDC(hdc);
+    DeleteDC( hdc );
+    DeleteObject( bitmap );
 }
 
 static void test_desktop_colorres(void)
@@ -592,17 +712,87 @@ static void test_desktop_colorres(void)
         }
     }
 
-    DeleteDC(hdc);
+    ReleaseDC(NULL, hdc);
+}
+
+static void test_gamma(void)
+{
+    BOOL ret;
+    HDC hdc = GetDC(NULL);
+    WORD oldramp[3][256], ramp[3][256];
+    INT i;
+
+    ret = GetDeviceGammaRamp(hdc, &oldramp);
+    if (!ret)
+    {
+        win_skip("GetDeviceGammaRamp failed, skipping tests\n");
+        goto done;
+    }
+
+    /* try to set back old ramp */
+    ret = SetDeviceGammaRamp(hdc, &oldramp);
+    if (!ret)
+    {
+        win_skip("SetDeviceGammaRamp failed, skipping tests\n");
+        goto done;
+    }
+
+    memcpy(ramp, oldramp, sizeof(ramp));
+
+    /* set one color ramp to zeros */
+    memset(ramp[0], 0, sizeof(ramp[0]));
+    ret = SetDeviceGammaRamp(hdc, &ramp);
+    ok(!ret, "SetDeviceGammaRamp succeeded\n");
+
+    /* set one color ramp to a flat straight rising line */
+    for (i = 0; i < 256; i++) ramp[0][i] = i;
+    ret = SetDeviceGammaRamp(hdc, &ramp);
+    todo_wine ok(!ret, "SetDeviceGammaRamp succeeded\n");
+
+    /* set one color ramp to a steep straight rising line */
+    for (i = 0; i < 256; i++) ramp[0][i] = i * 256;
+    ret = SetDeviceGammaRamp(hdc, &ramp);
+    ok(ret, "SetDeviceGammaRamp failed\n");
+
+    /* try a bright gamma ramp */
+    ramp[0][0] = 0;
+    ramp[0][1] = 0x7FFF;
+    for (i = 2; i < 256; i++) ramp[0][i] = 0xFFFF;
+    ret = SetDeviceGammaRamp(hdc, &ramp);
+    ok(!ret, "SetDeviceGammaRamp succeeded\n");
+
+    /* try ramps which are not uniform */
+    ramp[0][0] = 0;
+    for (i = 1; i < 256; i++) ramp[0][i] = ramp[0][i - 1] + 512;
+    ret = SetDeviceGammaRamp(hdc, &ramp);
+    ok(ret, "SetDeviceGammaRamp failed\n");
+    ramp[0][0] = 0;
+    for (i = 2; i < 256; i+=2)
+    {
+        ramp[0][i - 1] = ramp[0][i - 2];
+        ramp[0][i] = ramp[0][i - 2] + 512;
+    }
+    ret = SetDeviceGammaRamp(hdc, &ramp);
+    ok(ret, "SetDeviceGammaRamp failed\n");
+
+    /* cleanup: set old ramp again */
+    ret = SetDeviceGammaRamp(hdc, &oldramp);
+    ok(ret, "SetDeviceGammaRamp failed\n");
+
+done:
+    ReleaseDC(NULL, hdc);
 }
 
 START_TEST(dc)
 {
+    pSetLayout = (void *)GetProcAddress( GetModuleHandle("gdi32.dll"), "SetLayout");
     test_savedc();
     test_savedc_2();
     test_GdiConvertToDevmodeW();
     test_CreateCompatibleDC();
     test_DC_bitmap();
     test_DeleteDC();
-    test_boundsrect_invalid();
+    test_boundsrect();
     test_desktop_colorres();
+    test_gamma();
 }
