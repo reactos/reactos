@@ -495,7 +495,7 @@ MsafdReturnWithErrno(NTSTATUS Status,
     }
     else
     {
-        DbgPrint("%s: Received invalid lpErrno pointer! %s\n", __FUNCTION__);
+        DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
 
         if (ReturnedBytes)
             *ReturnedBytes = (Status == STATUS_SUCCESS) ? Received : 0;

@@ -1434,6 +1434,7 @@ WSPConnect(SOCKET Handle,
     PAFD_CONNECT_INFO       ConnectInfo;
     PSOCKET_INFORMATION     Socket = NULL;
     NTSTATUS                Status;
+    INT                     Errno;
     UCHAR                   ConnectBuffer[0x22];
     ULONG                   ConnectDataLength;
     ULONG                   InConnectDataLength;
@@ -1447,8 +1448,8 @@ WSPConnect(SOCKET Handle,
                            1,
                            FALSE);
 
-    if( !NT_SUCCESS(Status) )
-        return -1;
+    if (!NT_SUCCESS(Status))
+        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -1456,9 +1457,9 @@ WSPConnect(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       NtClose(SockEvent);
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        NtClose(SockEvent);
+        if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
     }
 
     /* Bind us First */
@@ -1469,15 +1470,15 @@ WSPConnect(SOCKET Handle,
         BindAddress = HeapAlloc(GetProcessHeap(), 0, BindAddressLength);
         if (!BindAddress)
         {
-            MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
-            return INVALID_SOCKET;
+            NtClose(SockEvent);
+            return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
         }
         Socket->HelperData->WSHGetWildcardSockaddr (Socket->HelperContext,
                                                     BindAddress,
                                                     &BindAddressLength);
         /* Bind it */
         if (WSPBind(Handle, BindAddress, BindAddressLength, lpErrno) == SOCKET_ERROR)
-            return INVALID_SOCKET;
+            return SOCKET_ERROR;
     }
 
     /* Set the Connect Data */
@@ -1618,38 +1619,38 @@ notify:
     /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
     SockReenableAsyncSelectEvent(Socket, FD_CONNECT);
 
-    NtClose( SockEvent );
+    NtClose(SockEvent);
 
     if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_CONNECT))
     {
-        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
-                                               Socket->Handle,
-                                               Socket->TdiAddressHandle,
-                                               Socket->TdiConnectionHandle,
-                                               WSH_NOTIFY_CONNECT);
+        Errno = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                              Socket->Handle,
+                                              Socket->TdiAddressHandle,
+                                              Socket->TdiConnectionHandle,
+                                              WSH_NOTIFY_CONNECT);
 
-        if (Status)
+        if (Errno)
         {
-            if (lpErrno) *lpErrno = Status;
+            if (lpErrno) *lpErrno = Errno;
             return SOCKET_ERROR;
         }
     }
     else if (Status != STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_CONNECT_ERROR))
     {
-        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
-                                               Socket->Handle,
-                                               Socket->TdiAddressHandle,
-                                               Socket->TdiConnectionHandle,
-                                               WSH_NOTIFY_CONNECT_ERROR);
+        Errno = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                              Socket->Handle,
+                                              Socket->TdiAddressHandle,
+                                              Socket->TdiConnectionHandle,
+                                              WSH_NOTIFY_CONNECT_ERROR);
 
-        if (Status)
+        if (Errno)
         {
-            if (lpErrno) *lpErrno = Status;
+            if (lpErrno) *lpErrno = Errno;
             return SOCKET_ERROR;
         }
     }
 
-    return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
+    return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
 int
 WSPAPI
