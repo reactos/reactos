@@ -1235,6 +1235,7 @@ __INTRIN_INLINE void __halt(void)
 
 /*** Protected memory management ***/
 
+#ifdef _M_AMD64
 __INTRIN_INLINE void __writecr0(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr0" : : [Data] "r" (Data) : "memory");
@@ -1250,7 +1251,6 @@ __INTRIN_INLINE void __writecr4(const unsigned __int64 Data)
 	__asm__("mov %[Data], %%cr4" : : [Data] "r" (Data) : "memory");
 }
 
-#ifdef _M_AMD64
 __INTRIN_INLINE void __writecr8(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr8" : : [Data] "r" (Data) : "memory");
@@ -1291,6 +1291,21 @@ __INTRIN_INLINE unsigned __int64 __readcr8(void)
 	return value;
 }
 #else
+__INTRIN_INLINE void __writecr0(const unsigned int Data)
+{
+	__asm__("mov %[Data], %%cr0" : : [Data] "r" (Data) : "memory");
+}
+
+__INTRIN_INLINE void __writecr3(const unsigned int Data)
+{
+	__asm__("mov %[Data], %%cr3" : : [Data] "r" (Data) : "memory");
+}
+
+__INTRIN_INLINE void __writecr4(const unsigned int Data)
+{
+	__asm__("mov %[Data], %%cr4" : : [Data] "r" (Data) : "memory");
+}
+
 __INTRIN_INLINE unsigned long __readcr0(void)
 {
 	unsigned long value;
