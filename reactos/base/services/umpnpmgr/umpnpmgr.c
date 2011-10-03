@@ -2427,8 +2427,86 @@ DWORD PNP_GetCustomDevProp(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hDeviceKey = NULL;
+    HKEY hParamKey = NULL;
+    LONG lError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetCustomDevProp() called\n");
+
+    if (pulTransferLen == NULL || pulLength == NULL)
+    {
+        ret = CR_INVALID_POINTER;
+        goto done;
+    }
+
+    if (ulFlags & ~CM_CUSTOMDEVPROP_BITS)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    if (*pulLength < *pulTransferLen)
+        *pulLength = *pulTransferLen;
+
+    *pulTransferLen = 0;
+
+    lError = RegOpenKeyExW(hEnumKey,
+                           pDeviceID,
+                           0,
+                           KEY_READ,
+                           &hDeviceKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    lError = RegOpenKeyExW(hDeviceKey,
+                           L"Device Parameters",
+                           0,
+                           KEY_READ,
+                           &hParamKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    lError = RegQueryValueExW(hParamKey,
+                              CustomPropName,
+                              NULL,
+                              pulRegDataType,
+                              Buffer,
+                              pulLength);
+    if (lError != ERROR_SUCCESS)
+    {
+        if (lError == ERROR_MORE_DATA)
+        {
+            ret = CR_BUFFER_SMALL;
+        }
+        else
+        {
+            *pulLength = 0;
+            ret = CR_NO_SUCH_VALUE;
+        }
+    }
+
+done:;
+    if (ret == CR_SUCCESS)
+        *pulTransferLen = *pulLength;
+
+    if (hParamKey != NULL)
+        RegCloseKey(hParamKey);
+
+    if (hDeviceKey != NULL)
+        RegCloseKey(hDeviceKey);
+
+    DPRINT("PNP_GetCustomDevProp() done (returns %lx)\n", ret);
+
+    return ret;
 }
 
 
