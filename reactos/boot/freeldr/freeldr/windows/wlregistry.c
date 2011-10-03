@@ -16,26 +16,15 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 // The only global var here, used to mark mem pages as NLS in WinLdrSetupMemoryLayout()
 ULONG TotalNLSSize = 0;
 
-BOOLEAN WinLdrGetNLSNames(LPSTR AnsiName,
-                          LPSTR OemName,
-                          LPSTR LangName);
+static BOOLEAN
+WinLdrGetNLSNames(LPSTR AnsiName,
+                  LPSTR OemName,
+                  LPSTR LangName);
 
-BOOLEAN
-WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN LPCSTR DirectoryPath,
-                  IN LPCSTR AnsiFileName,
-                  IN LPCSTR OemFileName,
-                  IN LPCSTR LanguageFileName);
-
-VOID
-WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+static VOID
+WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                    IN LPCSTR DirectoryPath);
 
-BOOLEAN
-WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
-                      LPWSTR RegistryPath,
-                      LPWSTR ImagePath,
-                      LPWSTR ServiceName);
 
 /* FUNCTIONS **************************************************************/
 
@@ -173,7 +162,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	BOOLEAN Status;
 
 	// Scan registry and prepare boot drivers list
-	WinLdrScanRegistry(LoaderBlock, DirectoryPath);
+	WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, DirectoryPath);
 
 	// Get names of NLS files
 	Status = WinLdrGetNLSNames(AnsiName, OemName, LangName);
@@ -201,9 +190,10 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 /* PRIVATE FUNCTIONS ******************************************************/
 
 // Queries registry for those three file names
-BOOLEAN WinLdrGetNLSNames(LPSTR AnsiName,
-                          LPSTR OemName,
-                          LPSTR LangName)
+static BOOLEAN
+WinLdrGetNLSNames(LPSTR AnsiName,
+                  LPSTR OemName,
+                  LPSTR LangName)
 {
 	LONG rc = ERROR_SUCCESS;
 	FRLDRHKEY hKey;
@@ -459,8 +449,8 @@ Failure:
 	return FALSE;
 }
 
-VOID
-WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+static VOID
+WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                    IN LPCSTR DirectoryPath)
 {
 	LONG rc = 0;
@@ -602,7 +592,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 							TRACE("Adding boot driver: '%s'\n", ImagePath);
 
-							Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+							Status = WinLdrAddDriverToList(BootDriverListHead,
 								L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
 								TempImagePath,
 								ServiceName);
@@ -680,7 +670,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 						}
 						TRACE("  Adding boot driver: '%s'\n", ImagePath);
 
-						Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+						Status = WinLdrAddDriverToList(BootDriverListHead,
 							L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
 							TempImagePath,
 							ServiceName);

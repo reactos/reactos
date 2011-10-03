@@ -1563,7 +1563,7 @@ ULONG
 LoadBootDeviceDriver(VOID)
 {
     PIMAGE_NT_HEADERS NtHeaders;
-    LOADER_PARAMETER_BLOCK LoaderBlock;
+    LIST_ENTRY ModuleListHead;
     PIMAGE_IMPORT_DESCRIPTOR ImportTable;
     ULONG ImportTableSize;
     PLDR_DATA_TABLE_ENTRY BootDdDTE, FreeldrDTE;
@@ -1572,9 +1572,8 @@ LoadBootDeviceDriver(VOID)
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
     BOOLEAN Status;
 
-    /* Some initialization of our temporary loader block */
-    RtlZeroMemory(&LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
-    InitializeListHead(&LoaderBlock.LoadOrderListHead);
+    /* Initialize the loaded module list */
+    InitializeListHead(&ModuleListHead);
 
     /* Create full ntbootdd.sys path */
     MachDiskGetBootPath(NtBootDdPath, sizeof(NtBootDdPath));
@@ -1589,14 +1588,14 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Allocate a DTE for ntbootdd */
-    Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "ntbootdd.sys",
+    Status = WinLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
         "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
     if (!Status)
         return EIO;
 
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
        contains Scsiport* exports, imported by ntbootdd.sys */
-    Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "scsiport.sys",
+    Status = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
         "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
     if (!Status)
     {
@@ -1605,7 +1604,7 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Fix imports */
-    Status = WinLdrScanImportDescriptorTable(&LoaderBlock, "", BootDdDTE);
+    Status = WinLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
 
     /* Now unlinkt the DTEs, they won't be valid later */
     RemoveEntryList(&BootDdDTE->InLoadOrderLinks);

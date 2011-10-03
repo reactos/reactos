@@ -19,12 +19,12 @@
 
 DBG_DEFAULT_CHANNEL(PELOADER);
 
-BOOLEAN
+static BOOLEAN
 WinLdrpCompareDllName(IN PCH DllName,
                       IN PUNICODE_STRING UnicodeName);
 
-BOOLEAN
-WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                       IN PVOID DllBase,
                       IN PVOID ImageBase,
                       IN PIMAGE_THUNK_DATA ThunkData,
@@ -32,14 +32,14 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                       IN ULONG ExportSize,
                       IN BOOLEAN ProcessForwards);
 
-BOOLEAN
-WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
                                 PCCH DirectoryPath,
                                 PCH ImportName,
                                 PLDR_DATA_TABLE_ENTRY *DataTableEntry);
 
-BOOLEAN
-WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PVOID DllBase,
                               IN PVOID ImageBase,
                               IN PIMAGE_THUNK_DATA ThunkData);
@@ -50,7 +50,7 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 /* Returns TRUE if DLL has already been loaded - looks in LoadOrderList in LPB */
 BOOLEAN
-WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
                         IN PCH DllName,
                         OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry)
 {
@@ -62,16 +62,17 @@ WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 	/* Just go through each entry in the LoadOrderList and compare loaded module's
 	   name with a given name */
-	ModuleEntry = WinLdrBlock->LoadOrderListHead.Flink;
-	while (ModuleEntry != &WinLdrBlock->LoadOrderListHead)
+	ModuleEntry = ModuleListHead->Flink;
+	while (ModuleEntry != ModuleListHead)
 	{
 		/* Get pointer to the current DTE */
 		DataTableEntry = CONTAINING_RECORD(ModuleEntry,
 			LDR_DATA_TABLE_ENTRY,
 			InLoadOrderLinks);
 
-		TRACE("WinLdrCheckForLoadedDll: DTE %p, EP %p\n",
-			DataTableEntry, DataTableEntry->EntryPoint);
+		TRACE("WinLdrCheckForLoadedDll: DTE %p, EP %p, base %p name '%ws'\n",
+			DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
+			VaToPa(DataTableEntry->BaseDllName.Buffer));
 
 		/* Compare names */
 		if (WinLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
@@ -93,7 +94,7 @@ WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 }
 
 BOOLEAN
-WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
                                 IN PCCH DirectoryPath,
                                 IN PLDR_DATA_TABLE_ENTRY ScanDTE)
 {
@@ -132,9 +133,9 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			continue;
 
 		/* Load the DLL if it is not already loaded */
-		if (!WinLdrCheckForLoadedDll(WinLdrBlock, ImportName, &DataTableEntry))
+		if (!WinLdrCheckForLoadedDll(ModuleListHead, ImportName, &DataTableEntry))
 		{
-			Status = WinLdrpLoadAndScanReferencedDll(WinLdrBlock,
+			Status = WinLdrpLoadAndScanReferencedDll(ModuleListHead,
 				DirectoryPath,
 				ImportName,
 				&DataTableEntry);
@@ -148,7 +149,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 		/* Scan its import address table */
 		Status = WinLdrpScanImportAddressTable(
-			WinLdrBlock,
+			ModuleListHead,
 			DataTableEntry->DllBase,
 			ScanDTE->DllBase,
 			(PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk));
@@ -164,7 +165,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 }
 
 BOOLEAN
-WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
                              IN PCCH BaseDllName,
                              IN PCCH FullDllName,
                              IN PVOID BasePA,
@@ -175,6 +176,8 @@ WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	PLDR_DATA_TABLE_ENTRY DataTableEntry;
 	PIMAGE_NT_HEADERS NtHeaders;
 	USHORT Length;
+	TRACE("WinLdrAllocateDataTableEntry(, '%s', '%s', %p)\n",
+       BaseDllName, FullDllName, BasePA);
 
 	/* Allocate memory for a data table entry, zero-initialize it */
 	DataTableEntry = (PLDR_DATA_TABLE_ENTRY)MmHeapAlloc(sizeof(LDR_DATA_TABLE_ENTRY));
@@ -236,7 +239,9 @@ WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	DataTableEntry->LoadCount = 1;
 
 	/* Insert this DTE to a list in the LPB */
-	InsertTailList(&WinLdrBlock->LoadOrderListHead, &DataTableEntry->InLoadOrderLinks);
+	InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
+	TRACE("Inserting DTE %p, name='%S' DllBase=%p \n", DataTableEntry,
+          DataTableEntry->BaseDllName.Buffer, DataTableEntry->DllBase);
 
 	/* Save pointer to a newly allocated and initialized entry */
 	*NewEntry = DataTableEntry;
@@ -442,7 +447,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 /* PRIVATE FUNCTIONS *******************************************************/
 
 /* DllName - physical, UnicodeString->Buffer - virtual */
-BOOLEAN
+static BOOLEAN
 WinLdrpCompareDllName(IN PCH DllName,
                       IN PUNICODE_STRING UnicodeName)
 {
@@ -488,8 +493,8 @@ WinLdrpCompareDllName(IN PCH DllName,
 	return FALSE;
 }
 
-BOOLEAN
-WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                       IN PVOID DllBase,
                       IN PVOID ImageBase,
                       IN PIMAGE_THUNK_DATA ThunkData,
@@ -651,7 +656,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		*strchr(ForwardDllName,'.') = '\0';
 
 		TRACE("WinLdrpBindImportName(): ForwardDllName %s\n", ForwardDllName);
-		if (!WinLdrCheckForLoadedDll(WinLdrBlock, ForwardDllName, &DataTableEntry))
+		if (!WinLdrCheckForLoadedDll(ModuleListHead, ForwardDllName, &DataTableEntry))
 		{
 			/* We can't continue if DLL couldn't be loaded, so bomb out with an error */
 			//Print(L"Error loading DLL!\n");
@@ -692,7 +697,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 			/* And recursively call ourselves */
 			Status = WinLdrpBindImportName(
-				WinLdrBlock,
+				ModuleListHead,
 				DataTableEntry->DllBase,
 				ImageBase,
 				&RefThunkData,
@@ -717,8 +722,8 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	return TRUE;
 }
 
-BOOLEAN
-WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
                                 PCCH DirectoryPath,
                                 PCH ImportName,
                                 PLDR_DATA_TABLE_ENTRY *DataTableEntry)
@@ -744,7 +749,7 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	}
 
 	/* Allocate DTE for newly loaded DLL */
-	Status = WinLdrAllocateDataTableEntry(WinLdrBlock,
+	Status = WinLdrAllocateDataTableEntry(ModuleListHead,
 		ImportName,
 		FullDllName,
 		BasePA,
@@ -759,7 +764,7 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	/* Scan its dependencies too */
 	TRACE("WinLdrScanImportDescriptorTable() calling ourselves for %S\n",
 		VaToPa((*DataTableEntry)->BaseDllName.Buffer));
-	Status = WinLdrScanImportDescriptorTable(WinLdrBlock, DirectoryPath, *DataTableEntry);
+	Status = WinLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
 
 	if (!Status)
 	{
@@ -770,8 +775,8 @@ WinLdrpLoadAndScanReferencedDll(PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	return TRUE;
 }
 
-BOOLEAN
-WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+static BOOLEAN
+WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PVOID DllBase,
                               IN PVOID ImageBase,
                               IN PIMAGE_THUNK_DATA ThunkData)
@@ -786,7 +791,7 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	/* Obtain the export table from the DLL's base */
 	if (DllBase == NULL)
 	{
-		//Print(L"Error, DllBase == NULL!\n");
+		ERR("Error, DllBase == NULL!\n");
 		return FALSE;
 	}
 	else
@@ -802,14 +807,17 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 
 	/* If pointer to Export Directory is */
 	if (ExportDirectory == NULL)
+	{
+		ERR("DllBase=%p(%p)\n", DllBase, VaToPa(DllBase));
 		return FALSE;
+	}
 
 	/* Go through each entry in the thunk table and bind it */
 	while (((PIMAGE_THUNK_DATA)VaToPa(ThunkData))->u1.AddressOfData != 0)
 	{
 		/* Bind it */
 		Status = WinLdrpBindImportName(
-			WinLdrBlock,
+			ModuleListHead,
 			DllBase,
 			ImageBase,
 			ThunkData,

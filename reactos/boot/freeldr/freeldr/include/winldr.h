@@ -107,14 +107,14 @@ WinLdrLoadImage(IN PCHAR FileName,
 
 
 BOOLEAN
-WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
                              IN PCCH BaseDllName,
                              IN PCCH FullDllName,
                              IN PVOID BasePA,
                              OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
 BOOLEAN
-WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
                                 IN PCCH DirectoryPath,
                                 IN PLDR_DATA_TABLE_ENTRY ScanDTE);
 
@@ -135,12 +135,9 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 
 BOOLEAN
-WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
                         IN PCH DllName,
                         OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
-
-BOOLEAN
-WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, LPSTR BootPath);
 
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,

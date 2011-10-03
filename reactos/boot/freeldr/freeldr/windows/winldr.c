@@ -214,6 +214,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	if (LoaderBlock->SetupLdrBlock)
 		LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
 
+    TRACE("WinLdrInitializePhase1() completed\n");
 }
 
 BOOLEAN
@@ -252,7 +253,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 
 	// Check if driver is already loaded
-	Status = WinLdrCheckForLoadedDll(LoaderBlock, DllName, DriverDTE);
+	Status = WinLdrCheckForLoadedDll(&LoaderBlock->LoadOrderListHead, DllName, DriverDTE);
 	if (Status)
 	{
 		// We've got the pointer to its DTE, just return success
@@ -266,7 +267,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 
 	// Allocate a DTE for it
-	Status = WinLdrAllocateDataTableEntry(LoaderBlock, DllName, DllName, DriverBase, DriverDTE);
+	Status = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
 	if (!Status)
 	{
 		ERR("WinLdrAllocateDataTableEntry() failed\n");
@@ -278,7 +279,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// Look for any dependencies it may have, and load them too
 	sprintf(FullPath,"%s%s", BootPath, DriverPath);
-	Status = WinLdrScanImportDescriptorTable(LoaderBlock, FullPath, *DriverDTE);
+	Status = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FullPath, *DriverDTE);
 	if (!Status)
 	{
 		ERR("WinLdrScanImportDescriptorTable() failed for %s\n", FullPath);
@@ -439,7 +440,7 @@ LoadModule(
 
 	strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
 	strcat(FullFileName, File);
-	WinLdrAllocateDataTableEntry(LoaderBlock, File,
+	WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead, File,
 		FullFileName, BaseAdress, Dte);
 
 	return BaseAdress;
@@ -587,10 +588,10 @@ LoadAndBootWindowsCommon(
 	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */
 	strcpy(FileName, BootPath);
 	strcat(FileName, "system32\\");
-	Status = WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KernelDTE);
-	Status &= WinLdrScanImportDescriptorTable(LoaderBlock, FileName, HalDTE);
+	Status = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FileName, KernelDTE);
+	Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FileName, HalDTE);
 	if (KdComDTE)
-		Status &= WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KdComDTE);
+		Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FileName, KdComDTE);
 
 	if (!Status)
 	{
