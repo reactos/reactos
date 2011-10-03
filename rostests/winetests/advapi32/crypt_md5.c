@@ -33,13 +33,9 @@ typedef struct
     unsigned char digest[16];
 } MD5_CTX;
 
-typedef VOID (WINAPI *fnMD5Init)( MD5_CTX *ctx );
-typedef VOID (WINAPI *fnMD5Update)( MD5_CTX *ctx, const unsigned char *src, const int len );
-typedef VOID (WINAPI *fnMD5Final)( MD5_CTX *ctx );
-
-fnMD5Init pMD5Init;
-fnMD5Update pMD5Update;
-fnMD5Final pMD5Final;
+static VOID (WINAPI *pMD5Init)( MD5_CTX *ctx );
+static VOID (WINAPI *pMD5Update)( MD5_CTX *ctx, const unsigned char *src, const int len );
+static VOID (WINAPI *pMD5Final)( MD5_CTX *ctx );
 
 #define ctxcmp( a, b ) memcmp( a, b, FIELD_OFFSET( MD5_CTX, in ) )
 
@@ -79,9 +75,9 @@ static void test_md5_ctx(void)
 
     module = GetModuleHandleA("advapi32.dll");
 
-    pMD5Init = (fnMD5Init)GetProcAddress( module, "MD5Init" );
-    pMD5Update = (fnMD5Update)GetProcAddress( module, "MD5Update" );
-    pMD5Final = (fnMD5Final)GetProcAddress( module, "MD5Final" );
+    pMD5Init = (void *)GetProcAddress( module, "MD5Init" );
+    pMD5Update = (void *)GetProcAddress( module, "MD5Update" );
+    pMD5Final = (void *)GetProcAddress( module, "MD5Final" );
 
     if (!pMD5Init || !pMD5Update || !pMD5Final)
     {

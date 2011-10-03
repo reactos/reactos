@@ -249,13 +249,13 @@ static void test_LsaLookupNames2(void)
 
     if (!pLsaLookupNames2)
     {
-        win_skip("LsaLookupNames2 not avaliable\n");
+        win_skip("LsaLookupNames2 not available\n");
         return;
     }
 
     if (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH)
     {
-        skip("Non-english locale (skipping LsaLookupNames2 tests)\n");
+        skip("Non-English locale (skipping LsaLookupNames2 tests)\n");
         return;
     }
 

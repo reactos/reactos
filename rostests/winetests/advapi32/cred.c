@@ -156,10 +156,10 @@ static void test_CredReadDomainCredentialsA(void)
      * does not check for NULL output pointers and try to zero them out early */
 if(0)
 {
-    ok(!pCredReadDomainCredentialsA(&info, 0, NULL, &creds) &&
-            GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
-    ok(!pCredReadDomainCredentialsA(&info, 0, &count, NULL) &&
-            GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
+    ret = pCredReadDomainCredentialsA(&info, 0, NULL, &creds);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
+    ret = pCredReadDomainCredentialsA(&info, 0, &count, NULL);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
 }
 
     SetLastError(0xdeadbeef);

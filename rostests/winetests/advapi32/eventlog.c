@@ -633,7 +633,7 @@ static BOOL create_new_eventlog(void)
     HKEY key, eventkey;
     BOOL bret = FALSE;
     LONG lret;
-    int i;
+    DWORD i;
 
     /* First create our eventlog */
     lret = RegOpenKeyA(HKEY_LOCAL_MACHINE, eventlogsvc, &key);
@@ -711,7 +711,7 @@ static void test_readwrite(void)
     DWORD sidsize, count;
     BOOL ret, sidavailable;
     BOOL on_vista = FALSE; /* Used to indicate Vista, W2K8 or Win7 */
-    int i;
+    DWORD i;
     char *localcomputer = NULL;
     DWORD size;
 
@@ -826,21 +826,24 @@ static void test_readwrite(void)
         ret = ReportEvent(handle, read_write[i].evt_type, read_write[i].evt_cat,
                           read_write[i].evt_id, run_sidtests ? user : NULL,
                           read_write[i].evt_numstrings, 0, read_write[i].evt_strings, NULL);
+        ok(ret, "Expected ReportEvent success : %d\n", GetLastError());
 
         count = 0xdeadbeef;
+        SetLastError(0xdeadbeef);
         ret = GetNumberOfEventLogRecords(handle, &count);
-        ok(ret, "Expected success\n");
+        ok(ret, "Expected GetNumberOfEventLogRecords success : %d\n", GetLastError());
         ok(count == (i + 1), "Expected %d records, got %d\n", i + 1, count);
 
         oldest = 0xdeadbeef;
         ret = GetOldestEventLogRecord(handle, &oldest);
-        ok(ret, "Expected success\n");
+        ok(ret, "Expected GetOldestEventLogRecord success : %d\n", GetLastError());
         ok(oldest == 1 ||
            (oldest > 1 && oldest != 0xdeadbeef), /* Vista SP1+, W2K8 and Win7 */
            "Expected oldest to be 1 or higher, got %d\n", oldest);
         if (oldest > 1 && oldest != 0xdeadbeef)
             on_vista = TRUE;
 
+        SetLastError(0xdeadbeef);
         if (i % 2)
             ret = CloseEventLog(handle);
         else
@@ -1092,7 +1095,7 @@ static void cleanup_eventlog(void)
     BOOL bret;
     LONG lret;
     HKEY key;
-    int i;
+    DWORD i;
     char winesvc[MAX_PATH];
 
     /* Delete the registry tree */
@@ -1144,6 +1147,6 @@ START_TEST(eventlog)
     {
         test_readwrite();
         test_autocreation();
+        cleanup_eventlog();
     }
-    cleanup_eventlog();
 }

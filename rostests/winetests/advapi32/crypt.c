@@ -238,6 +238,9 @@ static void test_incorrect_api_usage(void)
     if (!result) return;
     pCryptDestroyHash(hHash);
 
+    result = pCryptGenKey(0, CALG_RC4, 0, &hKey);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+
     result = pCryptGenKey(hProv, CALG_RC4, 0, &hKey);
     ok (result, "%d\n", GetLastError());
     if (!result) return;
@@ -414,6 +417,7 @@ static void test_verify_sig(void)
 	 CRYPT_NEWKEYSET);
 	if (!ret && GetLastError() == NTE_EXISTS)
 		ret = pCryptAcquireContextA(&prov, szKeySet, NULL, PROV_RSA_FULL, 0);
+	ok(ret, "CryptAcquireContextA failed: %08x\n", GetLastError());
 	ret = pCryptImportKey(prov, (LPBYTE)privKey, sizeof(privKey), 0, 0, &key);
 	ok(ret, "CryptImportKey failed: %08x\n", GetLastError());
 	ret = pCryptCreateHash(prov, CALG_MD5, 0, 0, &hash);
@@ -898,6 +902,7 @@ static void test_set_provider_ex(void)
 	
 	/* call CryptGetDefaultProvider to see if they match */
 	result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, NULL, &cbProvName);
+	ok(result, "%d\n", GetLastError());
 	if (!(pszProvName = LocalAlloc(LMEM_ZEROINIT, cbProvName)))
 		goto reset;
 
@@ -945,7 +950,8 @@ static void test_machine_guid(void)
           r);
    /* Create and release a provider */
    ret = pCryptAcquireContextA(&hCryptProv, szKeySet, NULL, PROV_RSA_FULL, 0);
-   ok(ret, "CryptAcquireContextA failed: %08x\n", GetLastError());
+   ok(ret || broken(!ret && GetLastError() == NTE_KEYSET_ENTRY_BAD /* NT4 */),
+      "CryptAcquireContextA failed: %08x\n", GetLastError());
    pCryptReleaseContext(hCryptProv, 0);
 
    if (restoreGuid)
@@ -992,7 +998,6 @@ static void test_rc2_keylen(void)
                           sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
                           0, CRYPT_IPSEC_HMAC_KEY, &hkey);
         /* CRYPT_IPSEC_HMAC_KEY is not supported on W2K and lower */
-        todo_wine
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
            "CryptImportKey error %08x\n", GetLastError());
@@ -1040,7 +1045,6 @@ static void test_rc2_keylen(void)
                               sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
                               0, CRYPT_IPSEC_HMAC_KEY, &hkey);
         /* CRYPT_IPSEC_HMAC_KEY is not supported on W2K and lower */
-        todo_wine
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
            "CryptImportKey error %08x\n", GetLastError());
@@ -1065,7 +1069,6 @@ static void test_rc2_keylen(void)
         ret = pCryptImportKey(provider, (BYTE*)&key_blob,
                               sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
                               0, CRYPT_IPSEC_HMAC_KEY, &hkey);
-        todo_wine
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
            "CryptImportKey error %08x\n", GetLastError());
@@ -1080,7 +1083,6 @@ static void test_rc2_keylen(void)
         ret = pCryptImportKey(provider, (BYTE*)&key_blob,
                               sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
                               0, CRYPT_IPSEC_HMAC_KEY, &hkey);
-        todo_wine
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
            "CryptImportKey error %08x\n", GetLastError());
