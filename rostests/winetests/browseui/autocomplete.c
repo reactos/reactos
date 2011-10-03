@@ -55,8 +55,8 @@ static LPWSTR strdup_AtoW(LPCSTR str)
 
 typedef struct
 {
-    IEnumStringVtbl *vtbl;
-    IACListVtbl *aclVtbl;
+    IEnumString IEnumString_iface;
+    IACList IACList_iface;
     LONG ref;
     HRESULT expret;
     INT expcount;
@@ -68,17 +68,22 @@ typedef struct
 extern IEnumStringVtbl TestACLVtbl;
 extern IACListVtbl TestACL_ACListVtbl;
 
+static inline TestACL *impl_from_IEnumString(IEnumString *iface)
+{
+    return CONTAINING_RECORD(iface, TestACL, IEnumString_iface);
+}
+
 static TestACL *impl_from_IACList(IACList *iface)
 {
-    return (TestACL *)((char *)iface - FIELD_OFFSET(TestACL, aclVtbl));
+    return CONTAINING_RECORD(iface, TestACL, IACList_iface);
 }
 
 static TestACL *TestACL_Constructor(int limit, const char **strings)
 {
     TestACL *This = CoTaskMemAlloc(sizeof(TestACL));
     ZeroMemory(This, sizeof(*This));
-    This->vtbl = &TestACLVtbl;
-    This->aclVtbl = &TestACL_ACListVtbl;
+    This->IEnumString_iface.lpVtbl = &TestACLVtbl;
+    This->IACList_iface.lpVtbl = &TestACL_ACListVtbl;
     This->ref = 1;
     This->expret = S_OK;
     This->limit = limit;
@@ -88,14 +93,14 @@ static TestACL *TestACL_Constructor(int limit, const char **strings)
 
 static ULONG STDMETHODCALLTYPE TestACL_AddRef(IEnumString *iface)
 {
-    TestACL *This = (TestACL *)iface;
+    TestACL *This = impl_from_IEnumString(iface);
     trace("ACL(%p): addref (%d)\n", This, This->ref+1);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG STDMETHODCALLTYPE TestACL_Release(IEnumString *iface)
 {
-    TestACL *This = (TestACL *)iface;
+    TestACL *This = impl_from_IEnumString(iface);
     ULONG res;
 
     res = InterlockedDecrement(&This->ref);
@@ -105,7 +110,7 @@ static ULONG STDMETHODCALLTYPE TestACL_Release(IEnumString *iface)
 
 static HRESULT STDMETHODCALLTYPE TestACL_QueryInterface(IEnumString *iface, REFIID iid, LPVOID *ppvOut)
 {
-    TestACL *This = (TestACL *)iface;
+    TestACL *This = impl_from_IEnumString(iface);
     *ppvOut = NULL;
     if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IEnumString))
     {
@@ -113,7 +118,7 @@ static HRESULT STDMETHODCALLTYPE TestACL_QueryInterface(IEnumString *iface, REFI
     }
     else if (IsEqualGUID(iid, &IID_IACList))
     {
-        *ppvOut = &This->aclVtbl;
+        *ppvOut = &This->IACList_iface;
     }
 
     if (*ppvOut)
@@ -131,7 +136,7 @@ static HRESULT STDMETHODCALLTYPE TestACL_QueryInterface(IEnumString *iface, REFI
 
 static HRESULT STDMETHODCALLTYPE TestACL_Next(IEnumString *iface, ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 {
-    TestACL *This = (TestACL *)iface;
+    TestACL *This = impl_from_IEnumString(iface);
     ULONG i;
 
     trace("ACL(%p): read %d item(s)\n", This, celt);
@@ -164,7 +169,7 @@ static HRESULT STDMETHODCALLTYPE TestACL_Clone(IEnumString *iface, IEnumString *
 
 static HRESULT STDMETHODCALLTYPE TestACL_Reset(IEnumString *iface)
 {
-    TestACL *This = (TestACL *)iface;
+    TestACL *This = impl_from_IEnumString(iface);
     trace("ACL(%p): Reset\n", This);
     This->pos = 0;
     return S_OK;
@@ -173,7 +178,7 @@ static HRESULT STDMETHODCALLTYPE TestACL_Reset(IEnumString *iface)
 static HRESULT STDMETHODCALLTYPE TestACL_Expand(IACList *iface, LPCOLESTR str)
 {
     TestACL *This = impl_from_IACList(iface);
-    trace("ACL(%p): Expand\n", impl_from_IACList(iface));
+    trace("ACL(%p): Expand\n", This);
     This->expcount++;
     return This->expret;
 }
@@ -192,17 +197,20 @@ IEnumStringVtbl TestACLVtbl =
 
 static ULONG STDMETHODCALLTYPE TestACL_ACList_AddRef(IACList *iface)
 {
-    return TestACL_AddRef((IEnumString *)impl_from_IACList(iface));
+    TestACL *This = impl_from_IACList(iface);
+    return TestACL_AddRef(&This->IEnumString_iface);
 }
 
 static ULONG STDMETHODCALLTYPE TestACL_ACList_Release(IACList *iface)
 {
-    return TestACL_Release((IEnumString *)impl_from_IACList(iface));
+    TestACL *This = impl_from_IACList(iface);
+    return TestACL_Release(&This->IEnumString_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE TestACL_ACList_QueryInterface(IACList *iface, REFIID iid, LPVOID *ppvout)
 {
-    return TestACL_QueryInterface((IEnumString *)impl_from_IACList(iface), iid, ppvout);
+    TestACL *This = impl_from_IACList(iface);
+    return TestACL_QueryInterface(&This->IEnumString_iface, iid, ppvout);
 }
 
 IACListVtbl TestACL_ACListVtbl =
@@ -259,8 +267,8 @@ static void test_ACLMulti(void)
 
     acl1 = TestACL_Constructor(3, strings1);
     acl2 = TestACL_Constructor(3, strings2);
-    stop_on_error(mgr->lpVtbl->Append(mgr, (IUnknown *)acl1));
-    stop_on_error(mgr->lpVtbl->Append(mgr, (IUnknown *)acl2));
+    stop_on_error(mgr->lpVtbl->Append(mgr, (IUnknown *)&acl1->IACList_iface));
+    stop_on_error(mgr->lpVtbl->Append(mgr, (IUnknown *)&acl2->IACList_iface));
     ok(mgr->lpVtbl->Append(mgr, NULL) == E_FAIL, "Unexpected return from Append\n");
     expect_str(obj, "a");
     expect_str(obj, "c");
@@ -307,7 +315,7 @@ static void test_ACLMulti(void)
     acl2->expret = E_FAIL;
     ok(acl->lpVtbl->Expand(acl, exp) == E_FAIL, "Unexpected Expand return\n");
 
-    stop_on_error(mgr->lpVtbl->Remove(mgr, (IUnknown *)acl1));
+    stop_on_error(mgr->lpVtbl->Remove(mgr, (IUnknown *)&acl1->IACList_iface));
     ok(acl1->ref == 1, "acl1 not released\n");
     expect_end(obj);
     obj->lpVtbl->Reset(obj);
