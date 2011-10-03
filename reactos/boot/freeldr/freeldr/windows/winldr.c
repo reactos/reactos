@@ -217,8 +217,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     TRACE("WinLdrInitializePhase1() completed\n");
 }
 
-BOOLEAN
-WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
+static BOOLEAN
+WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
                        LPSTR BootPath,
                        PUNICODE_STRING FilePath,
                        ULONG Flags,
@@ -249,11 +249,11 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		DriverPath[0] = 0;
 	}
 
-	TRACE("DriverPath: %s, DllName: %s, LPB %p\n", DriverPath, DllName, LoaderBlock);
+	TRACE("DriverPath: %s, DllName: %s, LPB\n", DriverPath, DllName);
 
 
 	// Check if driver is already loaded
-	Status = WinLdrCheckForLoadedDll(&LoaderBlock->LoadOrderListHead, DllName, DriverDTE);
+	Status = WinLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
 	if (Status)
 	{
 		// We've got the pointer to its DTE, just return success
@@ -267,7 +267,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 
 	// Allocate a DTE for it
-	Status = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
+	Status = WinLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
 	if (!Status)
 	{
 		ERR("WinLdrAllocateDataTableEntry() failed\n");
@@ -279,7 +279,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// Look for any dependencies it may have, and load them too
 	sprintf(FullPath,"%s%s", BootPath, DriverPath);
-	Status = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FullPath, *DriverDTE);
+	Status = WinLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
 	if (!Status)
 	{
 		ERR("WinLdrScanImportDescriptorTable() failed for %s\n", FullPath);
@@ -310,7 +310,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		// Paths are relative (FIXME: Are they always relative?)
 
 		// Load it
-		Status = WinLdrLoadDeviceDriver(LoaderBlock, BootPath, &BootDriver->FilePath,
+		Status = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead, BootPath, &BootDriver->FilePath,
 			0, &BootDriver->LdrEntry);
 
 		// If loading failed - cry loudly

@@ -36,7 +36,7 @@ WinLdrSetProcessorContext(void);
 // TODO: Move to .h
 VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
 
-VOID
+static VOID
 SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
 {
     INFCONTEXT InfContext;
@@ -82,8 +82,8 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
     TRACE("NLS data loaded with status %d\n", Status);
 }
 
-VOID
-SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
+static VOID
+SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR SearchPath)
 {
     INFCONTEXT InfContext, dirContext;
     BOOLEAN Status;
@@ -118,7 +118,7 @@ SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPC
                 ServiceName[wcslen(ServiceName) - 4] = 0;
 
                 /* Add it to the list */
-                Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+                Status = WinLdrAddDriverToList(BootDriverListHead,
                     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                     ImagePathW,
                     ServiceName);
@@ -229,7 +229,7 @@ VOID LoadReactOSSetup(VOID)
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, FileName);
 
     /* Get a list of boot drivers */
-    SetupLdrScanBootDrivers(LoaderBlock, InfHandle, BootPath);
+    SetupLdrScanBootDrivers(&LoaderBlock->BootDriverListHead, InfHandle, BootPath);
 
 
     LoadAndBootWindowsCommon(_WIN32_WINNT_WS03,
