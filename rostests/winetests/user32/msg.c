@@ -7608,6 +7608,21 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
     return ret;
 }
 
+static INT_PTR CALLBACK StopQuitMsgCheckProcA(HWND hwnd, UINT message, WPARAM wp, LPARAM lp)
+{
+    if (message == WM_CREATE)
+        PostMessage(hwnd, WM_CLOSE, 0, 0);
+    else if (message == WM_CLOSE)
+    {
+        /* Only the first WM_QUIT will survive the window destruction */
+        PostMessage(hwnd, WM_USER, 0x1234, 0x5678);
+        PostMessage(hwnd, WM_QUIT, 0x1234, 0x5678);
+        PostMessage(hwnd, WM_QUIT, 0x4321, 0x8765);
+    }
+
+    return DefWindowProcA(hwnd, message, wp, lp);
+}
+
 static LRESULT WINAPI TestDlgProcA(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG defwndproc_counter = 0;
@@ -7788,6 +7803,10 @@ static BOOL RegisterWindowClasses(void)
 
     cls.lpfnWndProc = ParentMsgCheckProcA;
     cls.lpszClassName = "TestParentClass";
+    if(!RegisterClassA(&cls)) return FALSE;
+
+    cls.lpfnWndProc = StopQuitMsgCheckProcA;
+    cls.lpszClassName = "StopQuitClass";
     if(!RegisterClassA(&cls)) return FALSE;
 
     cls.lpfnWndProc = DefWindowProcA;
@@ -10131,6 +10150,13 @@ static const struct message WmQuitDialogSeq[] = {
     { 0 }
 };
 
+static const struct message WmStopQuitSeq[] = {
+    { WM_DWMNCRENDERINGCHANGED, posted|optional },
+    { WM_CLOSE, posted },
+    { WM_QUIT, posted|wparam|lparam, 0x1234, 0 },
+    { 0 }
+};
+
 static void test_quit_message(void)
 {
     MSG msg;
@@ -10193,6 +10219,29 @@ static void test_quit_message(void)
     ok(msg.message == WM_QUIT, "Received message 0x%04x instead of WM_QUIT\n", msg.message);
     ok(msg.wParam == 0x1234, "wParam was 0x%lx instead of 0x1234\n", msg.wParam);
     ok(msg.lParam == 0, "lParam was 0x%lx instead of 0\n", msg.lParam);
+
+    /* Check what happens to a WM_QUIT message posted to a window that gets
+     * destroyed.
+     */
+    CreateWindowExA(0, "StopQuitClass", "Stop Quit Test", WS_OVERLAPPEDWINDOW,
+                    0, 0, 100, 100, NULL, NULL, NULL, NULL);
+    flush_sequence();
+    while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+    {
+        struct recvd_message rmsg;
+        rmsg.hwnd = msg.hwnd;
+        rmsg.message = msg.message;
+        rmsg.flags = posted|wparam|lparam;
+        rmsg.wParam = msg.wParam;
+        rmsg.lParam = msg.lParam;
+        rmsg.descr = "stop/quit";
+        if (msg.message == WM_QUIT)
+            /* The hwnd can only be checked here */
+            ok(!msg.hwnd, "The WM_QUIT hwnd was %p instead of NULL\n", msg.hwnd);
+        add_message(&rmsg);
+        DispatchMessage(&msg);
+    }
+    ok_sequence(WmStopQuitSeq, "WmStopQuitSeq", FALSE);
 }
 
 static const struct message WmMouseHoverSeq[] = {

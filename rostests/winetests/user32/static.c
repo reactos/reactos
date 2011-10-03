@@ -40,6 +40,22 @@ static HWND hMainWnd;
 
 static int g_nReceivedColorStatic = 0;
 
+/* try to make sure pending X events have been processed before continuing */
+static void flush_events(void)
+{
+    MSG msg;
+    int diff = 200;
+    int min_timeout = 100;
+    DWORD time = GetTickCount() + diff;
+
+    while (diff > 0)
+    {
+        if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
+        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        diff = time - GetTickCount();
+    }
+}
+
 static HWND build_static(DWORD style)
 {
     return CreateWindow("static", "Test", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)CTRL_ID, NULL, 0);
@@ -70,6 +86,7 @@ static void test_updates(int style, int flags)
     HWND hStatic = build_static(style);
     int exp;
 
+    flush_events();
     trace("Testing style 0x%x\n", style);
     g_nReceivedColorStatic = 0;
     /* during each update parent WndProc will test the WM_CTLCOLORSTATIC message */
@@ -122,7 +139,6 @@ START_TEST(static)
 
     hMainWnd = CreateWindow(szClassName, "Test", WS_OVERLAPPEDWINDOW, 0, 0, 500, 500, NULL, NULL, GetModuleHandle(NULL), NULL);
     ShowWindow(hMainWnd, SW_SHOW);
-    UpdateWindow(hMainWnd);
 
     test_updates(0, 0);
     test_updates(SS_SIMPLE, 0);

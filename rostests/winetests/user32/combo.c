@@ -404,6 +404,37 @@ static void test_changesize( DWORD style)
         ok( rc.bottom - rc.top == clheight + 2, "drop-down rect height is %d vs %d\n",
                 rc.bottom - rc.top, clheight + 2);
     }
+
+    ddwidth = SendMessageA(hCombo, CB_SETDROPPEDWIDTH, -1, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+    ddwidth = SendMessageA(hCombo, CB_GETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+
+    ddwidth = SendMessageA(hCombo, CB_SETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+    ddwidth = SendMessageA(hCombo, CB_GETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+
+    ddwidth = SendMessageA(hCombo, CB_SETDROPPEDWIDTH, clwidth - 1, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+    ddwidth = SendMessageA(hCombo, CB_GETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+
+    ddwidth = SendMessageA(hCombo, CB_SETDROPPEDWIDTH, clwidth << 1, 0);
+    ok( ddwidth == (clwidth << 1), "drop-width is %d vs %d\n", ddwidth, clwidth << 1);
+    ddwidth = SendMessageA(hCombo, CB_GETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == (clwidth << 1), "drop-width is %d vs %d\n", ddwidth, clwidth << 1);
+
+    ddwidth = SendMessageA(hCombo, CB_SETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == (clwidth << 1), "drop-width is %d vs %d\n", ddwidth, clwidth << 1);
+    ddwidth = SendMessageA(hCombo, CB_GETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == (clwidth << 1), "drop-width is %d vs %d\n", ddwidth, clwidth << 1);
+
+    ddwidth = SendMessageA(hCombo, CB_SETDROPPEDWIDTH, 1, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+    ddwidth = SendMessageA(hCombo, CB_GETDROPPEDWIDTH, 0, 0);
+    ok( ddwidth == clwidth + 2, "drop-width is %d vs %d\n", ddwidth, clwidth + 2);
+
     DestroyWindow(hCombo);
 }
 

@@ -6701,7 +6701,7 @@ START_TEST(win)
     if(!winetest_interactive)
        skip("bug 5957: skipping test_shell_window, it crashes ros/win7 explorer\n");
     else
-     test_shell_window();
+       test_shell_window();
     test_handles( hwndMain );
     test_winregion();
 

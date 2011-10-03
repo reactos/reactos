@@ -736,9 +736,10 @@ static void test_edit_control_1(void)
  */
 static void test_edit_control_2(void)
 {
-    HWND hwndMain;
+    HWND hwndMain, phwnd;
     char szLocalString[MAXLEN];
-    LONG r;
+    LONG r, w = 150, h = 50;
+    POINT cpos;
 
     /* Create main and edit windows. */
     hwndMain = CreateWindow(szEditTest2Class, "ET2", WS_OVERLAPPEDWINDOW,
@@ -749,7 +750,7 @@ static void test_edit_control_2(void)
 
     hwndET2 = CreateWindow("EDIT", NULL,
                            WS_CHILD|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL,
-                           0, 0, 150, 50, /* important this not be 0 size. */
+                           0, 0, w, h, /* important this not be 0 size. */
                            hwndMain, (HMENU) ID_EDITTEST2, hinst, NULL);
     assert(hwndET2);
     if (winetest_interactive)
@@ -767,6 +768,37 @@ static void test_edit_control_2(void)
     GetWindowText(hwndET2, szLocalString, MAXLEN);
     ok(lstrcmp(szLocalString, "bar")==0,
        "Wrong contents of edit: %s\n", szLocalString);
+
+    /* try setting the caret before it's visible */
+    r = SetCaretPos(0, 0);
+    todo_wine ok(0 == r, "SetCaretPos succeeded unexpectedly, expected: 0, got: %d\n", r);
+    phwnd = SetFocus(hwndET2);
+    ok(phwnd != NULL, "SetFocus failed unexpectedly, expected non-zero, got NULL\n");
+    r = SetCaretPos(0, 0);
+    ok(1 == r, "SetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    r = GetCaretPos(&cpos);
+    ok(1 == r, "GetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    ok(cpos.x == 0 && cpos.y == 0, "Wrong caret position, expected: (0,0), got: (%d,%d)\n", cpos.x, cpos.y);
+    r = SetCaretPos(-1, -1);
+    ok(1 == r, "SetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    r = GetCaretPos(&cpos);
+    ok(1 == r, "GetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    ok(cpos.x == -1 && cpos.y == -1, "Wrong caret position, expected: (-1,-1), got: (%d,%d)\n", cpos.x, cpos.y);
+    r = SetCaretPos(w << 1, h << 1);
+    ok(1 == r, "SetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    r = GetCaretPos(&cpos);
+    ok(1 == r, "GetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    ok(cpos.x == (w << 1) && cpos.y == (h << 1), "Wrong caret position, expected: (%d,%d), got: (%d,%d)\n", w << 1, h << 1, cpos.x, cpos.y);
+    r = SetCaretPos(w, h);
+    ok(1 == r, "SetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    r = GetCaretPos(&cpos);
+    ok(1 == r, "GetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    ok(cpos.x == w && cpos.y == h, "Wrong caret position, expected: (%d,%d), got: (%d,%d)\n", w, h, cpos.x, cpos.y);
+    r = SetCaretPos(w - 1, h - 1);
+    ok(1 == r, "SetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    r = GetCaretPos(&cpos);
+    ok(1 == r, "GetCaretPos failed unexpectedly, expected: 1, got: %d\n", r);
+    ok(cpos.x == (w - 1) && cpos.y == (h - 1), "Wrong caret position, expected: (%d,%d), got: (%d,%d)\n", w - 1, h - 1, cpos.x, cpos.y);
 
     /* OK, done! */
     DestroyWindow (hwndET2);

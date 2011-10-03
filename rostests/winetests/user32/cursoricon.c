@@ -1405,6 +1405,7 @@ static int check_cursor_data( HDC hdc, HCURSOR hCursor, void *data, int length)
     BITMAPINFO *info;
     ICONINFO iinfo;
     DWORD ret;
+    int i;
 
     ret = GetIconInfo( hCursor, &iinfo );
     ok(ret, "GetIconInfo() failed\n");
@@ -1430,10 +1431,11 @@ static int check_cursor_data( HDC hdc, HCURSOR hCursor, void *data, int length)
     if (!image) goto cleanup;
     ret = GetDIBits( hdc, iinfo.hbmColor, 0, 32, image, info, DIB_RGB_COLORS );
     ok(ret, "GetDIBits() failed\n");
-    if (!ret) goto cleanup;
-    ret = (memcmp(image, data, length) == 0);
-    ok(ret, "Expected 0x%x, actually 0x%x (first 4 bytes only)\n", *(DWORD *)data, *(DWORD *)image);
-
+    for (i = 0; ret && i < length / sizeof(COLORREF); i++)
+    {
+        ret = color_match( ((COLORREF *)data)[i], ((COLORREF *)image)[i] );
+        ok(ret, "%04x: Expected 0x%x, actually 0x%x\n", i, ((COLORREF *)data)[i], ((COLORREF *)image)[i] );
+    }
 cleanup:
     HeapFree( GetProcessHeap(), 0, image );
     HeapFree( GetProcessHeap(), 0, info );

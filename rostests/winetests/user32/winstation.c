@@ -108,7 +108,7 @@ static void test_handles(void)
     HWINSTA w1, w2, w3;
     HDESK d1, d2, d3;
     HANDLE hthread;
-    DWORD id, flags;
+    DWORD id, flags, le;
     ATOM atom;
     char buffer[20];
 
@@ -137,16 +137,22 @@ static void test_handles(void)
     ok( CloseHandle(w2), "closing dup win station handle failed\n" );
 
     w2 = CreateWindowStation("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "CreateWindowStation failed\n" );
-    ok( w2 != w1, "CreateWindowStation returned default handle\n" );
-    SetLastError( 0xdeadbeef );
-    ok( !CloseDesktop( (HDESK)w2 ), "CloseDesktop succeeded on win station\n" );
-    ok( GetLastError() == ERROR_INVALID_HANDLE || broken(GetLastError() == 0xdeadbeef), /* wow64 */
-        "bad last error %d\n", GetLastError() );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
+    le = GetLastError();
+    ok( w2 != 0 || le == ERROR_ACCESS_DENIED, "CreateWindowStation failed (%u)\n", le );
+    if (w2 != 0)
+    {
+        ok( w2 != w1, "CreateWindowStation returned default handle\n" );
+        SetLastError( 0xdeadbeef );
+        ok( !CloseDesktop( (HDESK)w2 ), "CloseDesktop succeeded on win station\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+            "bad last error %d\n", GetLastError() );
+        ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
 
-    w2 = CreateWindowStation("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( CloseHandle( w2 ), "CloseHandle failed\n" );
+        w2 = CreateWindowStation("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
+        ok( CloseHandle( w2 ), "CloseHandle failed\n" );
+    }
+    else if (le == ERROR_ACCESS_DENIED)
+        win_skip( "Not enough privileges for CreateWindowStation\n" );
 
     w2 = OpenWindowStation("winsta0", TRUE, WINSTA_ALL_ACCESS );
     ok( w2 != 0, "OpenWindowStation failed\n" );
@@ -158,38 +164,43 @@ static void test_handles(void)
 
     CreateMutexA( NULL, 0, "foobar" );
     w2 = CreateWindowStation("foobar", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "create foobar station failed\n" );
+    le = GetLastError();
+    ok( w2 != 0 || le == ERROR_ACCESS_DENIED, "create foobar station failed (%u)\n", le );
 
-    w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
-    ok( w3 != 0, "open foobar station failed\n" );
-    ok( w3 != w2, "open foobar station returned same handle\n" );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
-    ok( CloseWindowStation( w3 ), "CloseWindowStation failed\n" );
+    if (w2 != 0)
+    {
+        w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
+        ok( w3 != 0, "open foobar station failed\n" );
+        ok( w3 != w2, "open foobar station returned same handle\n" );
+        ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
+        ok( CloseWindowStation( w3 ), "CloseWindowStation failed\n" );
 
-    w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
-    ok( !w3, "open foobar station succeeded\n" );
+        w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
+        ok( !w3, "open foobar station succeeded\n" );
 
-    w2 = CreateWindowStation("foobar1", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "create foobar station failed\n" );
-    w3 = CreateWindowStation("foobar2", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w3 != 0, "create foobar station failed\n" );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-    ok( GetHandleInformation( w3, &flags ), "GetHandleInformation failed\n" );
+        w2 = CreateWindowStation("foobar1", 0, WINSTA_ALL_ACCESS, NULL );
+        ok( w2 != 0, "create foobar station failed\n" );
+        w3 = CreateWindowStation("foobar2", 0, WINSTA_ALL_ACCESS, NULL );
+        ok( w3 != 0, "create foobar station failed\n" );
+        ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
+        ok( GetHandleInformation( w3, &flags ), "GetHandleInformation failed\n" );
 
-    SetProcessWindowStation( w2 );
-    register_class();
-    atom = GlobalAddAtomA("foo");
-    ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
-    ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
+        SetProcessWindowStation( w2 );
+        atom = GlobalAddAtomA("foo");
+        ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
+        ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
 
-    ok( !CloseWindowStation( w2 ), "CloseWindowStation succeeded\n" );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
+        ok( !CloseWindowStation( w2 ), "CloseWindowStation succeeded\n" );
+        ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
 
-    SetProcessWindowStation( w3 );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
-    ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
-    ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
+        SetProcessWindowStation( w3 );
+        ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
+        ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
+        ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
+        ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
+    }
+    else if (le == ERROR_ACCESS_DENIED)
+        win_skip( "Not enough privileges for CreateWindowStation\n" );
 
     /* desktops */
     d1 = GetThreadDesktop(GetCurrentThreadId());
@@ -251,6 +262,7 @@ static void test_handles(void)
     d2 = GetThreadDesktop(GetCurrentThreadId());
     ok( d1 == d2, "got different handles after close\n" );
 
+    register_class();
     trace( "thread 1 desktop: %p\n", d1 );
     print_object( d1 );
     hthread = CreateThread( NULL, 0, thread, (LPVOID)2, 0, &id );
