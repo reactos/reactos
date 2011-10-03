@@ -393,6 +393,7 @@ static void test_CreateDirectoryW(void)
        "CreateDirectoryW with ? wildcard name should fail with error 183, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
     ret = RemoveDirectoryW(tmpdir);
+    ok(ret == FALSE, "RemoveDirectoryW should have failed\n");
 
     tmpdir[lstrlenW(tmpdir) - 1] = '*';
     ret = CreateDirectoryW(tmpdir, NULL);
@@ -400,6 +401,7 @@ static void test_CreateDirectoryW(void)
        "CreateDirectoryW with * wildcard name should fail with error 183, ret=%s error=%d\n",
        ret ? " True" : "False", GetLastError());
     ret = RemoveDirectoryW(tmpdir);
+    ok(ret == FALSE, "RemoveDirectoryW should have failed\n");
     
     GetTempPathW(MAX_PATH, tmpdir);
     lstrcatW(tmpdir, tmp_dir_name);
@@ -410,6 +412,7 @@ static void test_CreateDirectoryW(void)
       "CreateDirectoryW with multiple nonexistent directories in path should fail ret %u err %u\n",
        ret, GetLastError());
     ret = RemoveDirectoryW(tmpdir);
+    ok(ret == FALSE, "RemoveDirectoryW should have failed\n");
 }
 
 static void test_RemoveDirectoryA(void)

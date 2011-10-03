@@ -52,7 +52,7 @@ static void test_GetVersionEx(void)
     if (0)
     {
         /* Silently crashes on XP */
-        ret = GetVersionExA(NULL);
+        GetVersionExA(NULL);
     }
 
     SetLastError(0xdeadbeef);
@@ -166,6 +166,7 @@ static void test_VerifyVersionInfo(void)
     ret = pVerifyVersionInfoA(&info, VER_MINORVERSION | VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
         pVerSetConditionMask(pVerSetConditionMask(0, VER_MINORVERSION, VER_GREATER_EQUAL),
             VER_MAJORVERSION, VER_GREATER_EQUAL));
+    ok(ret, "VerifyVersionInfoA failed with error %d\n", GetLastError());
 
     info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     GetVersionEx((OSVERSIONINFO *)&info);

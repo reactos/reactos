@@ -67,23 +67,13 @@ static inline int isdigitW( WCHAR wc )
 static HMODULE hKernel32;
 static WORD enumCount;
 
-typedef BOOL (WINAPI *EnumSystemLanguageGroupsAFn)(LANGUAGEGROUP_ENUMPROC,
-                                                   DWORD, LONG_PTR);
-static EnumSystemLanguageGroupsAFn pEnumSystemLanguageGroupsA;
-typedef BOOL (WINAPI *EnumLanguageGroupLocalesAFn)(LANGGROUPLOCALE_ENUMPROC,
-                                                   LGRPID, DWORD, LONG_PTR);
-static EnumLanguageGroupLocalesAFn pEnumLanguageGroupLocalesA;
-typedef BOOL (WINAPI *EnumUILanguagesAFn)(UILANGUAGE_ENUMPROC,
-                                                   DWORD, LONG_PTR);
-static EnumUILanguagesAFn pEnumUILanguagesA;
-
-typedef INT (WINAPI *FoldStringAFn)(DWORD, LPCSTR, INT, LPSTR, INT);
-static FoldStringAFn pFoldStringA;
-typedef INT (WINAPI *FoldStringWFn)(DWORD, LPCWSTR, INT, LPWSTR, INT);
-static FoldStringWFn pFoldStringW;
-
-typedef BOOL (WINAPI *IsValidLanguageGroupFn)(LGRPID, DWORD);
-static IsValidLanguageGroupFn pIsValidLanguageGroup;
+static BOOL (WINAPI *pEnumSystemLanguageGroupsA)(LANGUAGEGROUP_ENUMPROC, DWORD, LONG_PTR);
+static BOOL (WINAPI *pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROC, LGRPID, DWORD, LONG_PTR);
+static BOOL (WINAPI *pEnumUILanguagesA)(UILANGUAGE_ENUMPROC, DWORD, LONG_PTR);
+static BOOL (WINAPI *pEnumSystemLocalesEx)(LOCALE_ENUMPROCEX, DWORD, LPARAM, LPVOID);
+static INT (WINAPI *pFoldStringA)(DWORD, LPCSTR, INT, LPSTR, INT);
+static INT (WINAPI *pFoldStringW)(DWORD, LPCWSTR, INT, LPWSTR, INT);
+static BOOL (WINAPI *pIsValidLanguageGroup)(LGRPID, DWORD);
 
 static void InitFunctionPointers(void)
 {
@@ -94,6 +84,7 @@ static void InitFunctionPointers(void)
   pFoldStringW = (void*)GetProcAddress(hKernel32, "FoldStringW");
   pIsValidLanguageGroup = (void*)GetProcAddress(hKernel32, "IsValidLanguageGroup");
   pEnumUILanguagesA = (void*)GetProcAddress(hKernel32, "EnumUILanguagesA");
+  pEnumSystemLocalesEx = (void*)GetProcAddress(hKernel32, "EnumSystemLocalesEx");
 }
 
 #define eq(received, expected, label, type) \
@@ -1352,6 +1343,14 @@ static void test_CompareStringA(void)
 
     ret = lstrcmpi("#", ".");
     todo_wine ok(ret == -1, "\"#\" vs \".\" expected -1, got %d\n", ret);
+
+    lcid = MAKELCID(MAKELANGID(LANG_POLISH, SUBLANG_DEFAULT), SORT_DEFAULT);
+
+    /* \xB9 character lies between a and b */
+    ret = CompareStringA(lcid, 0, "a", 1, "\xB9", 1);
+    todo_wine ok(ret == CSTR_LESS_THAN, "\'\\xB9\' character should be greater than \'a\'\n");
+    ret = CompareStringA(lcid, 0, "\xB9", 1, "b", 1);
+    ok(ret == CSTR_LESS_THAN, "\'\\xB9\' character should be smaller than \'b\'\n");
 }
 
 static void test_LCMapStringA(void)
@@ -2200,7 +2199,7 @@ static void test_FoldStringW(void)
 
       ok(dst[0] == ch || strchrW(outOfSequenceDigits, ch) ||
          /* Wine (correctly) maps all Unicode 4.0+ digits */
-         isdigitW(ch) || (ch >= 0x24F5 && ch <= 0x24FD) || ch == 0x24FF ||
+         isdigitW(ch) || (ch >= 0x24F5 && ch <= 0x24FD) || ch == 0x24FF || ch == 0x19da ||
          (ch >= 0x1369 && ch <= 0x1371),
          "MAP_FOLDDIGITS: ch %d 0x%04x Expected unchanged got %d\n", ch, ch, dst[0]);
     }
@@ -2346,6 +2345,29 @@ static void test_EnumSystemLanguageGroupsA(void)
   pEnumSystemLanguageGroupsA(langgrp_procA, LGRPID_SUPPORTED, 0);
 }
 
+static BOOL CALLBACK enum_func( LPWSTR name, DWORD flags, LPARAM lparam )
+{
+    trace( "%s %x\n", wine_dbgstr_w(name), flags );
+    return TRUE;
+}
+
+static void test_EnumSystemLocalesEx(void)
+{
+    BOOL ret;
+
+    if (!pEnumSystemLocalesEx)
+    {
+        win_skip( "EnumSystemLocalesEx not available\n" );
+        return;
+    }
+    SetLastError( 0xdeadbeef );
+    ret = pEnumSystemLocalesEx( enum_func, LOCALE_ALL, 0, (void *)1 );
+    ok( !ret, "should have failed\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    ret = pEnumSystemLocalesEx( enum_func, 0, 0, NULL );
+    ok( ret, "failed err %u\n", GetLastError() );
+}
 
 static BOOL CALLBACK lgrplocale_procA(LGRPID lgrpid, LCID lcid, LPSTR lpszNum,
                                       LONG_PTR lParam)
@@ -2418,13 +2440,13 @@ static void test_SetLocaleInfoA(void)
 
   /* IDATE */
   SetLastError(0);
-  bRet = SetLocaleInfoA(lcid, LOCALE_IDATE, (LPSTR)test_SetLocaleInfoA);
+  bRet = SetLocaleInfoA(lcid, LOCALE_IDATE, "test_SetLocaleInfoA");
   ok(!bRet && GetLastError() == ERROR_INVALID_FLAGS,
      "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   /* ILDATE */
   SetLastError(0);
-  bRet = SetLocaleInfoA(lcid, LOCALE_ILDATE, (LPSTR)test_SetLocaleInfoA);
+  bRet = SetLocaleInfoA(lcid, LOCALE_ILDATE, "test_SetLocaleInfoA");
   ok(!bRet && GetLastError() == ERROR_INVALID_FLAGS,
      "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 }
@@ -2656,6 +2678,131 @@ static void test_GetCPInfo(void)
     }
 }
 
+/*
+ * The CT_TYPE1 has varied over windows version.
+ * The current target for correct behavior is windows 7.
+ * There was a big shift between windows 2000 (first introduced) and windows Xp
+ * Most of the old values below are from windows 2000.
+ * A smaller subset of changes happened between windows Xp and Window vista/7
+ */
+static void test_GetStringTypeW(void)
+{
+    static const WCHAR blanks[] = {0x9, 0x20, 0xa0, 0x3000, 0xfeff};
+    static const WORD blanks_new[] = {C1_SPACE | C1_CNTRL | C1_BLANK | C1_DEFINED,
+                                 C1_SPACE | C1_BLANK | C1_DEFINED,
+                                 C1_SPACE | C1_BLANK | C1_DEFINED,
+                                 C1_SPACE | C1_BLANK | C1_DEFINED,
+                                 C1_CNTRL | C1_BLANK | C1_DEFINED};
+    static const WORD blanks_old[] ={C1_SPACE | C1_CNTRL | C1_BLANK,
+                                    C1_SPACE | C1_BLANK,
+                                    C1_SPACE | C1_BLANK,
+                                    C1_SPACE | C1_BLANK,
+                                    C1_SPACE | C1_BLANK};
+
+    static const WCHAR undefined[] = {0x378, 0x379, 0x604, 0xfff8, 0xfffe};
+
+                                  /* Lu, Ll, Lt */
+    static const WCHAR alpha[] = {0x47, 0x67, 0x1c5};
+    static const WORD alpha_old[] = {C1_UPPER | C1_ALPHA,
+                                     C1_LOWER | C1_ALPHA,
+                                     C1_UPPER | C1_LOWER | C1_ALPHA,
+                                     C1_ALPHA};
+
+                                  /* Sk, Sk, Mn, So, Me */
+    static const WCHAR oldpunc[] = { 0x2c2, 0x2e5, 0x322, 0x482, 0x6de,
+                                 /* Sc, Sm, No,*/
+                                     0xffe0, 0xffe9, 0x2153};
+
+                                /* Lm, Nl, Cf, 0xad(Cf), 0x1f88 (Lt), Lo, Mc */
+    static const WCHAR changed[] = {0x2b0, 0x2160, 0x600, 0xad, 0x1f88, 0x294, 0x903};
+    static const WORD changed_old[] = { C1_PUNCT, C1_PUNCT, 0, C1_PUNCT, C1_UPPER | C1_ALPHA, C1_ALPHA, C1_PUNCT };
+    static const WORD changed_xp[] = {C1_ALPHA | C1_DEFINED,
+                                      C1_ALPHA | C1_DEFINED,
+                                      C1_CNTRL | C1_DEFINED,
+                                      C1_PUNCT | C1_DEFINED,
+                                      C1_UPPER | C1_LOWER | C1_ALPHA | C1_DEFINED,
+                                      C1_ALPHA | C1_LOWER | C1_DEFINED,
+                                      C1_ALPHA | C1_DEFINED };
+    static const WORD changed_new[] = { C1_ALPHA | C1_DEFINED,
+                                      C1_ALPHA | C1_DEFINED,
+                                      C1_CNTRL | C1_DEFINED,
+                                      C1_PUNCT | C1_CNTRL | C1_DEFINED,
+                                      C1_UPPER | C1_LOWER | C1_ALPHA | C1_DEFINED,
+                                      C1_ALPHA | C1_DEFINED,
+                                      C1_DEFINED
+ };
+                                /* Pc,  Pd, Ps, Pe, Pi, Pf, Po*/
+    static const WCHAR punct[] = { 0x5f, 0x2d, 0x28, 0x29, 0xab, 0xbb, 0x21 };
+
+    static const WCHAR punct_special[] = {0x24, 0x2b, 0x3c, 0x3e, 0x5e, 0x60,
+                                          0x7c, 0x7e, 0xa2, 0xbe, 0xd7, 0xf7};
+    static const WCHAR digit_special[] = {0xb2, 0xb3, 0xb9};
+    static const WCHAR lower_special[] = {0x2071, 0x207f};
+    static const WCHAR cntrl_special[] = {0x070f, 0x200c, 0x200d,
+                  0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e,
+                  0x206a, 0x206b, 0x206c, 0x206d, 0x206e, 0x206f, 0xfeff,
+                  0xfff9, 0xfffa, 0xfffb};
+    static const WCHAR space_special[] = {0x09, 0x0d, 0x85};
+
+    WORD types[20];
+    int i;
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, blanks, 5, types);
+    for (i = 0; i < 5; i++)
+        ok(types[i] == blanks_new[i] || broken(types[i] == blanks_old[i] || broken(types[i] == 0)), "incorrect type1 returned for %x -> (%x != %x)\n",blanks[i],types[i],blanks_new[i]);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, alpha, 3, types);
+    for (i = 0; i < 3; i++)
+        ok(types[i] == (C1_DEFINED | alpha_old[i]) || broken(types[i] == alpha_old[i]) || broken(types[i] == 0), "incorrect types returned for %x -> (%x != %x)\n",alpha[i], types[i],(C1_DEFINED | alpha_old[i]));
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, undefined, 5, types);
+    for (i = 0; i < 5; i++)
+        ok(types[i] == 0, "incorrect types returned for %x -> (%x != 0)\n",undefined[i], types[i]);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, oldpunc, 8, types);
+    for (i = 0; i < 8; i++)
+        ok(types[i] == C1_DEFINED || broken(types[i] == C1_PUNCT) || broken(types[i] == 0), "incorrect types returned for %x -> (%x != %x)\n",oldpunc[i], types[i], C1_DEFINED);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, changed, 7, types);
+    for (i = 0; i < 7; i++)
+        ok(types[i] == changed_new[i] || broken(types[i] == changed_old[i]) || broken(types[i] == changed_xp[i]) || broken(types[i] == 0), "incorrect types returned for %x -> (%x != %x)\n",changed[i], types[i], changed_new[i]);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, punct, 7, types);
+    for (i = 0; i < 7; i++)
+        ok(types[i] == (C1_PUNCT | C1_DEFINED) || broken(types[i] == C1_PUNCT) || broken(types[i] == 0), "incorrect types returned for %x -> (%x != %x)\n",punct[i], types[i], (C1_PUNCT | C1_DEFINED));
+
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, punct_special, 12, types);
+    for (i = 0; i < 12; i++)
+        ok(types[i]  & C1_PUNCT || broken(types[i] == 0), "incorrect types returned for %x -> (%x doest not have %x)\n",punct_special[i], types[i], C1_PUNCT);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, digit_special, 3, types);
+    for (i = 0; i < 3; i++)
+        ok(types[i] & C1_DIGIT || broken(types[i] == 0), "incorrect types returned for %x -> (%x doest not have = %x)\n",digit_special[i], types[i], C1_DIGIT);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, lower_special, 2, types);
+    for (i = 0; i < 2; i++)
+        ok(types[i] & C1_LOWER || broken(types[i] == C1_PUNCT) || broken(types[i] == 0), "incorrect types returned for %x -> (%x does not have %x)\n",lower_special[i], types[i], C1_LOWER);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, cntrl_special, 20, types);
+    for (i = 0; i < 20; i++)
+        ok(types[i] & C1_CNTRL || broken(types[i] == (C1_BLANK|C1_SPACE)) || broken(types[i] == C1_PUNCT) || broken(types[i] == 0), "incorrect types returned for %x -> (%x does not have %x)\n",cntrl_special[i], types[i], C1_CNTRL);
+
+    memset(types,0,sizeof(types));
+    GetStringTypeW(CT_CTYPE1, space_special, 3, types);
+    for (i = 0; i < 3; i++)
+        ok(types[i] & C1_SPACE || broken(types[i] == C1_CNTRL) || broken(types[i] == 0), "incorrect types returned for %x -> (%x does not have %x)\n",space_special[i], types[i], C1_SPACE );
+}
+
 START_TEST(locale)
 {
   InitFunctionPointers();
@@ -2676,10 +2823,12 @@ START_TEST(locale)
   test_FoldStringW();
   test_ConvertDefaultLocale();
   test_EnumSystemLanguageGroupsA();
+  test_EnumSystemLocalesEx();
   test_EnumLanguageGroupLocalesA();
   test_SetLocaleInfoA();
   test_EnumUILanguageA();
   test_GetCPInfo();
+  test_GetStringTypeW();
   /* this requires collation table patch to make it MS compatible */
   if (0) test_sorting();
 }

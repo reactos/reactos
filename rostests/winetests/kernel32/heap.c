@@ -85,7 +85,7 @@ static void test_heap(void)
     UINT    flags;
     HGLOBAL gbl;
     HGLOBAL hsecond;
-    SIZE_T  size;
+    SIZE_T  size, size2;
 
     /* Heap*() functions */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
@@ -403,6 +403,36 @@ static void test_heap(void)
         "MAGIC_DEAD)\n", mem, GetLastError(), GetLastError());
 
     GlobalFree(gbl);
+
+    /* trying to get size from data pointer (GMEM_MOVEABLE) */
+    gbl = GlobalAlloc(GMEM_MOVEABLE, 0x123);
+    ok(gbl != NULL, "returned NULL\n");
+    mem = GlobalLock(gbl);
+    ok(mem != NULL, "returned NULL.\n");
+    ok(gbl != mem, "unexpectedly equal.\n");
+
+    size = GlobalSize(gbl);
+    size2 = GlobalSize(mem);
+    ok(size == 0x123, "got %lu\n", size);
+    ok(size2 == 0x123, "got %lu\n", size2);
+
+    GlobalFree(gbl);
+
+    /* trying to get size from data pointer (GMEM_FIXED) */
+    gbl = GlobalAlloc(GMEM_FIXED, 0x123);
+    ok(gbl != NULL, "returned NULL\n");
+    mem = GlobalLock(gbl);
+    ok(mem != NULL, "returned NULL.\n");
+    ok(gbl == mem, "got %p, %p.\n", gbl, mem);
+
+    size = GlobalSize(gbl);
+    ok(size == 0x123, "got %lu\n", size);
+
+    GlobalFree(gbl);
+
+    size = GlobalSize((void *)0xdeadbee0);
+    ok(size == 0, "got %lu\n", size);
+
 }
 
 static void test_obsolete_flags(void)
@@ -469,11 +499,11 @@ static void test_HeapQueryInformation(void)
     if (0) /* crashes under XP */
     {
         size = 0;
-        ret = pHeapQueryInformation(0,
+        pHeapQueryInformation(0,
                                 HeapCompatibilityInformation,
                                 &info, sizeof(info), &size);
         size = 0;
-        ret = pHeapQueryInformation(GetProcessHeap(),
+        pHeapQueryInformation(GetProcessHeap(),
                                 HeapCompatibilityInformation,
                                 NULL, sizeof(info), &size);
     }
@@ -694,6 +724,11 @@ static void test_debug_heap( const char *argv0, DWORD flags )
     if (!strcmp( keyname + strlen(keyname) - 3, ".so" )) keyname[strlen(keyname) - 3] = 0;
 
     err = RegCreateKeyA( HKEY_LOCAL_MACHINE, keyname, &hkey );
+    if (err == ERROR_ACCESS_DENIED)
+    {
+        skip("Not authorized to change the image file execution options\n");
+        return;
+    }
     ok( !err, "failed to create '%s' error %u\n", keyname, err );
     if (err) return;
 

@@ -160,6 +160,10 @@ static void doCrash(int argc,  char** argv)
 {
     char* p;
 
+    /* make sure the exception gets to the debugger */
+    SetErrorMode( 0 );
+    SetUnhandledExceptionFilter( NULL );
+
     if (argc >= 4)
     {
         crash_blackbox_t blackbox;
@@ -262,6 +266,8 @@ static void doDebugger(int argc, char** argv)
 
 static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
 {
+    static BOOL skip_crash_and_debug = FALSE;
+    BOOL bRet;
     DWORD ret;
     HANDLE start_event, done_event;
     char* cmd;
@@ -272,21 +278,28 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
     DWORD exit_code;
     crash_blackbox_t crash_blackbox;
     debugger_blackbox_t dbg_blackbox;
+    DWORD wait_code;
+
+    if (skip_crash_and_debug)
+    {
+        win_skip("Skipping crash_and_debug\n");
+        return;
+    }
 
     ret=RegSetValueExA(hkey, "auto", 0, REG_SZ, (BYTE*)"1", 2);
     ok(ret == ERROR_SUCCESS, "unable to set AeDebug/auto: ret=%d\n", ret);
 
     get_file_name(dbglog);
     get_events(dbglog, &start_event, &done_event);
-    cmd=HeapAlloc(GetProcessHeap(), 0, strlen(argv0)+10+strlen(dbgtasks)+1+strlen(dbglog)+34+1);
-    sprintf(cmd, "%s debugger %s %s %%ld %%ld", argv0, dbgtasks, dbglog);
+    cmd=HeapAlloc(GetProcessHeap(), 0, strlen(argv0)+10+strlen(dbgtasks)+1+strlen(dbglog)+2+34+1);
+    sprintf(cmd, "%s debugger %s \"%s\" %%ld %%ld", argv0, dbgtasks, dbglog);
     ret=RegSetValueExA(hkey, "debugger", 0, REG_SZ, (BYTE*)cmd, strlen(cmd)+1);
     ok(ret == ERROR_SUCCESS, "unable to set AeDebug/debugger: ret=%d\n", ret);
     HeapFree(GetProcessHeap(), 0, cmd);
 
     get_file_name(childlog);
-    cmd=HeapAlloc(GetProcessHeap(), 0, strlen(argv0)+16+strlen(dbglog)+1);
-    sprintf(cmd, "%s debugger crash %s", argv0, childlog);
+    cmd=HeapAlloc(GetProcessHeap(), 0, strlen(argv0)+16+strlen(dbglog)+2+1);
+    sprintf(cmd, "%s debugger crash \"%s\"", argv0, childlog);
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -299,8 +312,24 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
 
     /* The process exits... */
     trace("waiting for child exit...\n");
-    ok(WaitForSingleObject(info.hProcess, 60000) == WAIT_OBJECT_0, "Timed out waiting for the child to crash\n");
-    ok(GetExitCodeProcess(info.hProcess, &exit_code), "GetExitCodeProcess failed: err=%d\n", GetLastError());
+    wait_code = WaitForSingleObject(info.hProcess, 30000);
+#if defined(_WIN64) && defined(__MINGW32__)
+    /* Mingw x64 doesn't output proper unwind info */
+    skip_crash_and_debug = broken(wait_code == WAIT_TIMEOUT);
+    if (skip_crash_and_debug)
+    {
+        TerminateProcess(info.hProcess, WAIT_TIMEOUT);
+        WaitForSingleObject(info.hProcess, 5000);
+        CloseHandle(info.hProcess);
+        assert(DeleteFileA(dbglog) != 0);
+        assert(DeleteFileA(childlog) != 0);
+        win_skip("Giving up on child process\n");
+        return;
+    }
+#endif
+    ok(wait_code == WAIT_OBJECT_0, "Timed out waiting for the child to crash\n");
+    bRet = GetExitCodeProcess(info.hProcess, &exit_code);
+    ok(bRet, "GetExitCodeProcess failed: err=%d\n", GetLastError());
     if (strstr(dbgtasks, "code2"))
     {
         /* If, after attaching to the debuggee, the debugger exits without
@@ -308,14 +337,12 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
          */
         ok(exit_code == STATUS_DEBUGGER_INACTIVE ||
            broken(exit_code == STATUS_ACCESS_VIOLATION) || /* Intermittent Vista+ */
-           broken(exit_code == 0xffffffff) || /* Win9x */
            broken(exit_code == WAIT_ABANDONED), /* NT4, W2K */
            "wrong exit code : %08x\n", exit_code);
     }
     else
         ok(exit_code == STATUS_ACCESS_VIOLATION ||
-           broken(exit_code == WAIT_ABANDONED) || /* NT4, W2K, W2K3 */
-           broken(exit_code == 0xffffffff), /* Win9x, WinME */
+           broken(exit_code == WAIT_ABANDONED), /* NT4, W2K, W2K3 */
            "wrong exit code : %08x\n", exit_code);
     CloseHandle(info.hProcess);
 
@@ -324,7 +351,19 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
         ok(SetEvent(start_event), "SetEvent(start_event) failed\n");
 
     trace("waiting for the debugger...\n");
-    ok(WaitForSingleObject(done_event, 60000) == WAIT_OBJECT_0, "Timed out waiting for the debugger\n");
+    wait_code = WaitForSingleObject(done_event, 5000);
+#if defined(_WIN64) && defined(__MINGW32__)
+    /* Mingw x64 doesn't output proper unwind info */
+    skip_crash_and_debug = broken(wait_code == WAIT_TIMEOUT);
+    if (skip_crash_and_debug)
+    {
+        assert(DeleteFileA(dbglog) != 0);
+        assert(DeleteFileA(childlog) != 0);
+        win_skip("Giving up on debugger\n");
+        return;
+    }
+#endif
+    ok(wait_code == WAIT_OBJECT_0, "Timed out waiting for the debugger\n");
 
     assert(load_blackbox(childlog, &crash_blackbox, sizeof(crash_blackbox)));
     assert(load_blackbox(dbglog, &dbg_blackbox, sizeof(dbg_blackbox)));
@@ -342,6 +381,7 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
 
 static void crash_and_winedbg(HKEY hkey, const char* argv0)
 {
+    BOOL bRet;
     DWORD ret;
     char* cmd;
     PROCESS_INFORMATION	info;
@@ -365,7 +405,8 @@ static void crash_and_winedbg(HKEY hkey, const char* argv0)
 
     trace("waiting for child exit...\n");
     ok(WaitForSingleObject(info.hProcess, 60000) == WAIT_OBJECT_0, "Timed out waiting for the child to crash\n");
-    ok(GetExitCodeProcess(info.hProcess, &exit_code), "GetExitCodeProcess failed: err=%d\n", GetLastError());
+    bRet = GetExitCodeProcess(info.hProcess, &exit_code);
+    ok(bRet, "GetExitCodeProcess failed: err=%d\n", GetLastError());
     ok(exit_code == STATUS_ACCESS_VIOLATION, "exit code = %08x\n", exit_code);
     CloseHandle(info.hProcess);
 }
@@ -407,6 +448,7 @@ static void test_ExitCode(void)
         ok(0, "could not open the AeDebug key: %d\n", ret);
         return;
     }
+    else debugger_value.data = NULL;
 
     if (debugger_value.data && debugger_value.type == REG_SZ &&
         strstr((char*)debugger_value.data, "winedbg --auto"))
@@ -434,10 +476,8 @@ static void test_ExitCode(void)
         crash_and_debug(hkey, test_exe, "dbg,none");
     else
         skip("\"none\" debugger test needs user interaction\n");
-    if (disposition == REG_CREATED_NEW_KEY)
-        win_skip("'dbg,event,order' test doesn't finish on Win9x/WinMe\n");
-    else
-        crash_and_debug(hkey, test_exe, "dbg,event,order");
+    ok(disposition == REG_OPENED_EXISTING_KEY, "expected REG_OPENED_EXISTING_KEY, got %d\n", disposition);
+    crash_and_debug(hkey, test_exe, "dbg,event,order");
     crash_and_debug(hkey, test_exe, "dbg,attach,event,code2");
     if (pDebugSetProcessKillOnExit)
         crash_and_debug(hkey, test_exe, "dbg,attach,event,nokill");
@@ -578,8 +618,8 @@ static void test_debug_loop(int argc, char **argv)
     ok(!ret, "DebugActiveProcess() succeeded on own process.\n");
 
     get_file_name(blackbox_file);
-    cmd = HeapAlloc(GetProcessHeap(), 0, strlen(argv[0]) + strlen(arguments) + strlen(blackbox_file) + 10);
-    sprintf(cmd, "%s%s%08x %s", argv[0], arguments, pid, blackbox_file);
+    cmd = HeapAlloc(GetProcessHeap(), 0, strlen(argv[0]) + strlen(arguments) + strlen(blackbox_file) + 2 + 10);
+    sprintf(cmd, "%s%s%08x \"%s\"", argv[0], arguments, pid, blackbox_file);
 
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);

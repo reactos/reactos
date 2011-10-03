@@ -71,14 +71,16 @@ static HANDLE create_target_process(const char *arg)
     char **argv;
     char cmdline[MAX_PATH];
     PROCESS_INFORMATION pi;
+    BOOL ret;
     STARTUPINFO si = { 0 };
     si.cb = sizeof(si);
 
     winetest_get_mainargs( &argv );
     sprintf(cmdline, "%s %s %s", argv[0], argv[1], arg);
-    ok(CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL,
-                     &si, &pi) != 0, "error: %u\n", GetLastError());
-    ok(CloseHandle(pi.hThread) != 0, "error %u\n", GetLastError());
+    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    ok(ret, "error: %u\n", GetLastError());
+    ret = CloseHandle(pi.hThread);
+    ok(ret, "error %u\n", GetLastError());
     return pi.hProcess;
 }
 
@@ -146,7 +148,7 @@ static void cleanup_thread_sync_helpers(void)
   CloseHandle(stop_event);
 }
 
-DWORD tlsIndex;
+static DWORD tlsIndex;
 
 typedef struct {
   int threadnum;
@@ -157,7 +159,7 @@ typedef struct {
 /* WinME supports OpenThread but doesn't know about access restrictions so
    we require them to be either completely ignored or always obeyed.
 */
-INT obeying_ars = 0; /* -1 == no, 0 == dunno yet, 1 == yes */
+static INT obeying_ars = 0; /* -1 == no, 0 == dunno yet, 1 == yes */
 #define obey_ar(x) \
   (obeying_ars == 0 \
     ? ((x) \
@@ -286,6 +288,7 @@ static VOID test_CreateRemoteThread(void)
         skip("child process wasn't mapped at same address, so can't do CreateRemoteThread tests.\n");
         return;
     }
+    ok(ret == WAIT_OBJECT_0 || broken(ret == WAIT_OBJECT_0+1 /* nt4,w2k */), "WaitForAllObjects 2 events %d\n", ret);
 
     hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     ok(hEvent != NULL, "Can't create event, err=%u\n", GetLastError());
@@ -310,18 +313,18 @@ static VOID test_CreateRemoteThread(void)
     ok(ret == 2, "ret=%u, err=%u\n", ret, GetLastError());
 
     /* thread still suspended, so wait times out */
-    ret = WaitForSingleObject(hEvent, 100);
+    ret = WaitForSingleObject(hEvent, 1000);
     ok(ret == WAIT_TIMEOUT, "wait did not time out, ret=%u\n", ret);
 
     ret = ResumeThread(hThread);
     ok(ret == 1, "ret=%u, err=%u\n", ret, GetLastError());
 
     /* wait that doesn't time out */
-    ret = WaitForSingleObject(hEvent, 100);
+    ret = WaitForSingleObject(hEvent, 1000);
     ok(ret == WAIT_OBJECT_0, "object not signaled, ret=%u\n", ret);
 
     /* wait for thread end */
-    ret = WaitForSingleObject(hThread, 100);
+    ret = WaitForSingleObject(hThread, 1000);
     ok(ret == WAIT_OBJECT_0, "waiting for thread failed, ret=%u\n", ret);
     CloseHandle(hThread);
 
@@ -330,7 +333,7 @@ static VOID test_CreateRemoteThread(void)
                                  threadFunc_CloseHandle,
                                  hRemoteEvent, 0, &tid);
     ok(hThread != NULL, "CreateRemoteThread failed, err=%u\n", GetLastError());
-    ret = WaitForSingleObject(hThread, 100);
+    ret = WaitForSingleObject(hThread, 1000);
     ok(ret == WAIT_OBJECT_0, "waiting for thread failed, ret=%u\n", ret);
     CloseHandle(hThread);
 
@@ -341,7 +344,7 @@ static VOID test_CreateRemoteThread(void)
     ok(hThread != NULL, "CreateRemoteThread failed, err=%u\n", GetLastError());
 
     /* closed handle, so wait times out */
-    ret = WaitForSingleObject(hEvent, 100);
+    ret = WaitForSingleObject(hEvent, 1000);
     ok(ret == WAIT_TIMEOUT, "wait did not time out, ret=%u\n", ret);
 
     /* check that remote SetEvent() failed */
@@ -368,6 +371,7 @@ static VOID test_CreateThread_basic(void)
    DWORD i,j;
    DWORD GLE, ret;
    DWORD tid;
+   BOOL bRet;
 
    /* lstrlenA contains an exception handler so this makes sure exceptions work in the main thread */
    ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
@@ -423,7 +427,8 @@ static VOID test_CreateThread_basic(void)
   }
 
   SetLastError(0xCAFEF00D);
-  ok(TlsFree(tlsIndex)!=0,"TlsFree failed: %08x\n", GetLastError());
+  bRet = TlsFree(tlsIndex);
+  ok(bRet, "TlsFree failed: %08x\n", GetLastError());
   ok(GetLastError()==0xCAFEF00D,
      "GetLastError: expected 0xCAFEF00D, got %08x\n", GetLastError());
 
@@ -861,7 +866,7 @@ static VOID test_thread_processor(void)
      }
 
      error=pSetThreadIdealProcessor(curthread,MAXIMUM_PROCESSORS);
-     ok(error==0, "SetThreadIdealProcessor returned an incorrect value\n");
+     ok(error!=-1, "SetThreadIdealProcessor failed\n");
    }
 }
 
@@ -894,6 +899,7 @@ static HANDLE event;
 static void WINAPI set_test_val( int val )
 {
     test_value += val;
+    ExitThread(0);
 }
 
 static DWORD WINAPI threadFunc6(LPVOID p)
@@ -940,7 +946,8 @@ static void test_SetThreadContext(void)
         ctx.Esp -= 2 * sizeof(int *);
         ctx.Eip = (DWORD)set_test_val;
         SetLastError(0xdeadbeef);
-        ok( SetThreadContext( thread, &ctx ), "SetThreadContext failed : (%d)\n", GetLastError() );
+        ret = SetThreadContext( thread, &ctx );
+        ok( ret, "SetThreadContext failed : (%d)\n", GetLastError() );
     }
 
     SetLastError(0xdeadbeef);
@@ -949,7 +956,23 @@ static void test_SetThreadContext(void)
                          prevcount, GetLastError() );
 
     WaitForSingleObject( thread, INFINITE );
-    ok( test_value == 20, "test_value %d instead of 20\n", test_value );
+    ok( test_value == 10, "test_value %d\n", test_value );
+
+    ctx.ContextFlags = CONTEXT_FULL;
+    SetLastError(0xdeadbeef);
+    ret = GetThreadContext( thread, &ctx );
+    ok( !ret, "GetThreadContext succeeded\n" );
+    ok( GetLastError() == ERROR_GEN_FAILURE || broken(GetLastError() == ERROR_INVALID_HANDLE), /* win2k */
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError(0xdeadbeef);
+    ret = SetThreadContext( thread, &ctx );
+    ok( !ret, "SetThreadContext succeeded\n" );
+    ok( GetLastError() == ERROR_GEN_FAILURE || GetLastError() == ERROR_ACCESS_DENIED ||
+        broken(GetLastError() == ERROR_INVALID_HANDLE), /* win2k */
+        "wrong error %u\n", GetLastError() );
+
+    CloseHandle( thread );
 }
 
 #endif  /* __i386__ */
@@ -1226,7 +1249,7 @@ static void test_TLS(void)
   }
 
   ret = WaitForMultipleObjects(2, threads, TRUE, 60000);
-  ok(ret == WAIT_OBJECT_0 || ret == WAIT_OBJECT_0+1 /* nt4 */, "WaitForMultipleObjects failed %u\n",ret);
+  ok(ret == WAIT_OBJECT_0 || broken(ret == WAIT_OBJECT_0+1 /* nt4,w2k */), "WaitForAllObjects 2 threads %d\n",ret);
 
   for (i = 0; i < 2; ++i)
     CloseHandle(threads[i]);
@@ -1329,21 +1352,16 @@ static void test_ThreadErrorMode(void)
     pSetThreadErrorMode(oldmode, NULL);
 }
 
-void _fpreset(void) {} /* override the mingw fpu init code */
-
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
 static inline void set_fpu_cw(WORD cw)
 {
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
     __asm__ volatile ("fnclex; fldcw %0" : : "m" (cw));
-#endif
 }
 
 static inline WORD get_fpu_cw(void)
 {
     WORD cw = 0;
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
     __asm__ volatile ("fnstcw %0" : "=m" (cw));
-#endif
     return cw;
 }
 
@@ -1411,6 +1429,7 @@ static void test_thread_fpu_cw(void)
     cw = get_fpu_cw();
     ok(cw == initial_cw, "Expected FPU control word %#x, got %#x.\n", initial_cw, cw);
 }
+#endif
 
 START_TEST(thread)
 {

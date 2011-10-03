@@ -63,11 +63,6 @@ static void test_GetDriveTypeW(void)
     for (drive[0] = 'A'; drive[0] <= 'Z'; drive[0]++)
     {
         type = GetDriveTypeW(drive);
-        if (type == DRIVE_UNKNOWN && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-        {
-            win_skip("GetDriveTypeW is not available on Win9x\n");
-            return;
-        }
         ok(type > DRIVE_UNKNOWN && type <= DRIVE_RAMDISK,
            "not a valid drive %c: type %u\n", drive[0], type);
 

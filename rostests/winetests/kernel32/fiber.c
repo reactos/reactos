@@ -101,7 +101,8 @@ static void test_ConvertFiberToThread(void)
 {
     if (pConvertFiberToThread)
     {
-        ok(pConvertFiberToThread() , "ConvertFiberToThread failed with error %d\n", GetLastError());
+        BOOL ret = pConvertFiberToThread();
+        ok(ret, "ConvertFiberToThread failed with error %d\n", GetLastError());
     }
     else
     {
@@ -137,6 +138,7 @@ static void test_FiberHandling(void)
         return;
     }
 
+    SetLastError(0xdeadbeef);
     fibers[1] = pCreateFiberEx(0,0,0,FiberMainProc,&testparam);
     ok(fibers[1] != 0, "CreateFiberEx failed with error %d\n", GetLastError());
 

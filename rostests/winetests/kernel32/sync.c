@@ -41,8 +41,7 @@ static void test_signalandwait(void)
     DWORD (WINAPI *pSignalObjectAndWait)(HANDLE, HANDLE, DWORD, BOOL);
     HMODULE kernel32;
     DWORD r;
-    int i;
-    HANDLE event[2], maxevents[MAXIMUM_WAIT_OBJECTS], semaphore[2], file;
+    HANDLE event[2], semaphore[2], file;
 
     kernel32 = GetModuleHandle("kernel32");
     pSignalObjectAndWait = (void*) GetProcAddress(kernel32, "SignalObjectAndWait");
@@ -94,19 +93,6 @@ static void test_signalandwait(void)
     CloseHandle(event[0]);
     CloseHandle(event[1]);
 
-    /* create the maximum number of events and make sure 
-     * we can wait on that many */
-    for (i=0; i<MAXIMUM_WAIT_OBJECTS; i++)
-    {
-        maxevents[i] = CreateEvent(NULL, 1, 1, NULL);
-        ok( maxevents[i] != 0, "should create enough events\n");
-    }
-    r = WaitForMultipleObjects(MAXIMUM_WAIT_OBJECTS, maxevents, 0, 0);
-    ok( r != WAIT_FAILED && r != WAIT_TIMEOUT, "should succeed\n");
-
-    for (i=0; i<MAXIMUM_WAIT_OBJECTS; i++)
-        if (maxevents[i]) CloseHandle(maxevents[i]);
-
     /* semaphores */
     semaphore[0] = CreateSemaphore( NULL, 0, 1, NULL );
     semaphore[1] = CreateSemaphore( NULL, 1, 1, NULL );
@@ -142,20 +128,53 @@ static void test_mutex(void)
     BOOL ret;
     HANDLE hCreated;
     HANDLE hOpened;
+    int i;
+    DWORD failed = 0;
 
     hCreated = CreateMutex(NULL, FALSE, "WineTestMutex");
     ok(hCreated != NULL, "CreateMutex failed with error %d\n", GetLastError());
-    wait_ret = WaitForSingleObject(hCreated, INFINITE);
-    ok(wait_ret == WAIT_OBJECT_0, "WaitForSingleObject failed with error 0x%08x\n", wait_ret);
 
-    /* yes, opening with just READ_CONTROL access allows us to successfully
-     * call ReleaseMutex */
-    hOpened = OpenMutex(READ_CONTROL, FALSE, "WineTestMutex");
+    hOpened = OpenMutex(0, FALSE, "WineTestMutex");
+    ok(hOpened == NULL, "OpenMutex succeded\n");
+
+    hOpened = OpenMutex(GENERIC_EXECUTE, FALSE, "WineTestMutex");
     ok(hOpened != NULL, "OpenMutex failed with error %d\n", GetLastError());
-    ret = ReleaseMutex(hOpened);
-    todo_wine ok(ret, "ReleaseMutex failed with error %d\n", GetLastError());
+    wait_ret = WaitForSingleObject(hOpened, INFINITE);
+    ok(wait_ret == WAIT_OBJECT_0, "WaitForSingleObject failed with error %d\n", GetLastError());
+    CloseHandle(hOpened);
+
+    for(i=0; i < 31; i++)
+    {
+        wait_ret = WaitForSingleObject(hCreated, INFINITE);
+        ok(wait_ret == WAIT_OBJECT_0, "WaitForSingleObject failed with error 0x%08x\n", wait_ret);
+    }
+
+    hOpened = OpenMutex(GENERIC_READ | GENERIC_WRITE, FALSE, "WineTestMutex");
+    ok(hOpened != NULL, "OpenMutex failed with error %d\n", GetLastError());
+    wait_ret = WaitForSingleObject(hOpened, INFINITE);
+    ok(wait_ret == WAIT_FAILED, "WaitForSingleObject succeeded\n");
+    CloseHandle(hOpened);
+
+    for (i = 0; i < 32; i++)
+    {
+        hOpened = OpenMutex(0x1 << i, FALSE, "WineTestMutex");
+        if(hOpened != NULL)
+        {
+            ret = ReleaseMutex(hOpened);
+            ok(ret, "ReleaseMutex failed with error %d, access %x\n", GetLastError(), 1 << i);
+            CloseHandle(hOpened);
+        }
+        else
+        {
+            ReleaseMutex(hCreated);
+            failed |=0x1 << i;
+        }
+    }
+
+    ok( failed == 0x0de0fffe, "open succeded when it shouldn't: %x\n", failed);
+
     ret = ReleaseMutex(hCreated);
-    todo_wine ok(!ret && (GetLastError() == ERROR_NOT_OWNER),
+    ok(!ret && (GetLastError() == ERROR_NOT_OWNER),
         "ReleaseMutex should have failed with ERROR_NOT_OWNER instead of %d\n", GetLastError());
 
     /* test case sensitivity */
@@ -163,16 +182,12 @@ static void test_mutex(void)
     SetLastError(0xdeadbeef);
     hOpened = OpenMutex(READ_CONTROL, FALSE, "WINETESTMUTEX");
     ok(!hOpened, "OpenMutex succeeded\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-       GetLastError() == ERROR_INVALID_NAME, /* win9x */
-       "wrong error %u\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     hOpened = OpenMutex(READ_CONTROL, FALSE, "winetestmutex");
     ok(!hOpened, "OpenMutex succeeded\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-       GetLastError() == ERROR_INVALID_NAME, /* win9x */
-       "wrong error %u\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     hOpened = CreateMutex(NULL, FALSE, "WineTestMutex");
@@ -342,9 +357,7 @@ static void test_event(void)
     SetLastError(0xdeadbeef);
     handle2 = OpenEventA( EVENT_ALL_ACCESS, FALSE, __FILE__ ": TEST EVENT");
     ok( !handle2, "OpenEvent succeeded\n");
-    ok( GetLastError() == ERROR_FILE_NOT_FOUND ||
-        GetLastError() == ERROR_INVALID_NAME, /* win9x */
-        "wrong error %u\n", GetLastError());
+    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
     CloseHandle( handle );
 }
@@ -380,9 +393,7 @@ static void test_semaphore(void)
     SetLastError(0xdeadbeef);
     handle2 = OpenSemaphoreA( SEMAPHORE_ALL_ACCESS, FALSE, __FILE__ ": TEST SEMAPHORE");
     ok( !handle2, "OpenSemaphore succeeded\n");
-    ok( GetLastError() == ERROR_FILE_NOT_FOUND ||
-        GetLastError() == ERROR_INVALID_NAME, /* win9x */
-        "wrong error %u\n", GetLastError());
+    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
     CloseHandle( handle );
 }
@@ -939,6 +950,120 @@ static void test_timer_queue(void)
        GetLastError());
 }
 
+static HANDLE modify_handle(HANDLE handle, DWORD modify)
+{
+    DWORD tmp = HandleToULong(handle);
+    tmp |= modify;
+    return ULongToHandle(tmp);
+}
+
+static void test_WaitForSingleObject(void)
+{
+    HANDLE signaled, nonsignaled, invalid;
+    DWORD ret;
+
+    signaled = CreateEventW(NULL, TRUE, TRUE, NULL);
+    nonsignaled = CreateEventW(NULL, TRUE, FALSE, NULL);
+    invalid = (HANDLE) 0xdeadbee0;
+
+    /* invalid handle with different values for lower 2 bits */
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(invalid, 0);
+    ok(ret == WAIT_FAILED, "expected WAIT_FAILED, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(invalid, 1), 0);
+    ok(ret == WAIT_FAILED, "expected WAIT_FAILED, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(invalid, 2), 0);
+    ok(ret == WAIT_FAILED, "expected WAIT_FAILED, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(invalid, 3), 0);
+    ok(ret == WAIT_FAILED, "expected WAIT_FAILED, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+
+    /* valid handle with different values for lower 2 bits */
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(nonsignaled, 0);
+    ok(ret == WAIT_TIMEOUT, "expected WAIT_TIMEOUT, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(nonsignaled, 1), 0);
+    ok(ret == WAIT_TIMEOUT, "expected WAIT_TIMEOUT, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(nonsignaled, 2), 0);
+    ok(ret == WAIT_TIMEOUT, "expected WAIT_TIMEOUT, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(nonsignaled, 3), 0);
+    ok(ret == WAIT_TIMEOUT, "expected WAIT_TIMEOUT, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    /* valid handle with different values for lower 2 bits */
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(signaled, 0);
+    ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(signaled, 1), 0);
+    ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(signaled, 2), 0);
+    ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WaitForSingleObject(modify_handle(signaled, 3), 0);
+    ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    CloseHandle(signaled);
+    CloseHandle(nonsignaled);
+}
+
+static void test_WaitForMultipleObjects(void)
+{
+    DWORD r;
+    int i;
+    HANDLE maxevents[MAXIMUM_WAIT_OBJECTS];
+
+    /* create the maximum number of events and make sure
+     * we can wait on that many */
+    for (i=0; i<MAXIMUM_WAIT_OBJECTS; i++)
+    {
+        maxevents[i] = CreateEvent(NULL, i==0, TRUE, NULL);
+        ok( maxevents[i] != 0, "should create enough events\n");
+    }
+
+    /* a manual-reset event remains signaled, an auto-reset event is cleared */
+    r = WaitForMultipleObjects(MAXIMUM_WAIT_OBJECTS, maxevents, 0, 0);
+    ok( r == WAIT_OBJECT_0, "should signal lowest handle first, got %d\n", r);
+    r = WaitForMultipleObjects(MAXIMUM_WAIT_OBJECTS, maxevents, 0, 0);
+    ok( r == WAIT_OBJECT_0, "should signal handle #0 first, got %d\n", r);
+    ok(ResetEvent(maxevents[0]), "ResetEvent\n");
+    for (i=1; i<MAXIMUM_WAIT_OBJECTS; i++)
+    {
+        /* the lowest index is checked first and remaining events are untouched */
+        r = WaitForMultipleObjects(MAXIMUM_WAIT_OBJECTS, maxevents, 0, 0);
+        ok( r == WAIT_OBJECT_0+i, "should signal handle #%d first, got %d\n", i, r);
+    }
+
+    for (i=0; i<MAXIMUM_WAIT_OBJECTS; i++)
+        if (maxevents[i]) CloseHandle(maxevents[i]);
+}
+
 START_TEST(sync)
 {
     HMODULE hdll = GetModuleHandle("kernel32");
@@ -958,4 +1083,6 @@ START_TEST(sync)
     test_waitable_timer();
     test_iocp_callback();
     test_timer_queue();
+    test_WaitForSingleObject();
+    test_WaitForMultipleObjects();
 }

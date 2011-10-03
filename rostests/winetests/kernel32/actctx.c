@@ -1145,6 +1145,7 @@ static void run_child_process(void)
     STARTUPINFO si = { 0 };
     HANDLE file;
     FILETIME now;
+    BOOL ret;
 
     GetModuleFileNameA(NULL, path, MAX_PATH);
     strcat(path, ".manifest");
@@ -1165,8 +1166,8 @@ static void run_child_process(void)
         CloseHandle(file);
     }
     sprintf(cmdline, "\"%s\" %s manifest1", argv[0], argv[1]);
-    ok(CreateProcess(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL,
-                     &si, &pi) != 0, "Could not create process: %u\n", GetLastError());
+    ret = CreateProcess(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    ok(ret, "Could not create process: %u\n", GetLastError());
     winetest_wait_child_process( pi.hProcess );
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);

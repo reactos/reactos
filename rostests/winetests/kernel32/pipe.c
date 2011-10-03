@@ -37,7 +37,13 @@
 static HANDLE alarm_event;
 static BOOL (WINAPI *pDuplicateTokenEx)(HANDLE,DWORD,LPSECURITY_ATTRIBUTES,
                                         SECURITY_IMPERSONATION_LEVEL,TOKEN_TYPE,PHANDLE);
+static DWORD WINAPI (*pQueueUserAPC)(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData);
 
+static BOOL user_apc_ran;
+static void CALLBACK user_apc(ULONG_PTR param)
+{
+    user_apc_ran = TRUE;
+}
 
 static void test_CreateNamedPipe(int pipemode)
 {
@@ -50,6 +56,7 @@ static void test_CreateNamedPipe(int pipemode)
     DWORD readden;
     DWORD avail;
     DWORD lpmode;
+    BOOL ret;
 
     if (pipemode == PIPE_TYPE_BYTE)
         trace("test_CreateNamedPipe starting in byte mode\n");
@@ -86,12 +93,14 @@ static void test_CreateNamedPipe(int pipemode)
         /* lpSecurityAttrib */ NULL);
     ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
 
-    ok(WaitNamedPipeA(PIPENAME, 2000), "WaitNamedPipe failed (%d)\n", GetLastError());
+    ret = WaitNamedPipeA(PIPENAME, 2000);
+    ok(ret, "WaitNamedPipe failed (%d)\n", GetLastError());
 
     hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
     ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
 
     ok(!WaitNamedPipeA(PIPENAME, 1000), "WaitNamedPipe succeeded\n");
+
     ok(GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError());
 
     /* don't try to do i/o if one side couldn't be opened, as it hangs */
@@ -392,7 +401,7 @@ static DWORD CALLBACK alarmThreadMain(LPVOID arg)
     return 1;
 }
 
-HANDLE hnp = INVALID_HANDLE_VALUE;
+static HANDLE hnp = INVALID_HANDLE_VALUE;
 
 /** Trivial byte echo server - disconnects after each session */
 static DWORD CALLBACK serverThreadMain1(LPVOID arg)
@@ -468,6 +477,12 @@ static DWORD CALLBACK serverThreadMain2(LPVOID arg)
         DWORD readden;
         DWORD success;
 
+        user_apc_ran = FALSE;
+        if (i == 0 && pQueueUserAPC) {
+            trace("Queueing an user APC\n"); /* verify the pipe is non alerable */
+            ok(pQueueUserAPC(&user_apc, GetCurrentThread(), 0), "QueueUserAPC failed: %d\n", GetLastError());
+        }
+
         /* Wait for client to connect */
         trace("Server calling ConnectNamedPipe...\n");
         ok(ConnectNamedPipe(hnp, NULL)
@@ -490,6 +505,11 @@ static DWORD CALLBACK serverThreadMain2(LPVOID arg)
         /* finish this connection, wait for next one */
         ok(FlushFileBuffers(hnp), "FlushFileBuffers\n");
         ok(DisconnectNamedPipe(hnp), "DisconnectNamedPipe\n");
+
+        ok(user_apc_ran == FALSE, "UserAPC ran, pipe using alertable io mode\n");
+
+        if (i == 0 && pQueueUserAPC)
+            SleepEx(0, TRUE); /* get rid of apc */
 
         /* Set up next echo server */
         hnpNext =
@@ -642,6 +662,7 @@ static DWORD CALLBACK serverThreadMain4(LPVOID arg)
 {
     int i;
     HANDLE hcompletion;
+    BOOL ret;
 
     trace("serverThreadMain4\n");
     /* Set up a simple echo server */
@@ -738,8 +759,10 @@ static DWORD CALLBACK serverThreadMain4(LPVOID arg)
         ok(success, "DisconnectNamedPipe failed, err %u\n", GetLastError());
     }
 
-    ok(CloseHandle(hnp), "CloseHandle named pipe failed, err=%i\n", GetLastError());
-    ok(CloseHandle(hcompletion), "CloseHandle completion failed, err=%i\n", GetLastError());
+    ret = CloseHandle(hnp);
+    ok(ret, "CloseHandle named pipe failed, err=%i\n", GetLastError());
+    ret = CloseHandle(hcompletion);
+    ok(ret, "CloseHandle completion failed, err=%i\n", GetLastError());
 
     return 0;
 }
@@ -910,9 +933,13 @@ static void test_CreatePipe(void)
     BYTE *buffer;
     char readbuf[32];
 
+    user_apc_ran = FALSE;
+    if (pQueueUserAPC)
+        ok(pQueueUserAPC(user_apc, GetCurrentThread(), 0), "couldn't create user apc\n");
+
     pipe_attr.nLength = sizeof(SECURITY_ATTRIBUTES); 
     pipe_attr.bInheritHandle = TRUE; 
-    pipe_attr.lpSecurityDescriptor = NULL; 
+    pipe_attr.lpSecurityDescriptor = NULL;
     ok(CreatePipe(&piperead, &pipewrite, &pipe_attr, 0) != 0, "CreatePipe failed\n");
     ok(WriteFile(pipewrite,PIPENAME,sizeof(PIPENAME), &written, NULL), "Write to anonymous pipe failed\n");
     ok(written == sizeof(PIPENAME), "Write to anonymous pipe wrote %d bytes\n", written);
@@ -950,6 +977,9 @@ static void test_CreatePipe(void)
     ok(ReadFile(piperead,readbuf,sizeof(readbuf),&read, NULL) == 0, "Broken pipe not detected\n");
     ok(CloseHandle(piperead), "CloseHandle for the read pipe failed\n");
     HeapFree(GetProcessHeap(), 0, buffer);
+
+    ok(user_apc_ran == FALSE, "user apc ran, pipe using alertable io mode\n");
+    SleepEx(0, TRUE); /* get rid of apc */
 }
 
 struct named_pipe_client_params
@@ -1443,7 +1473,7 @@ static void test_overlapped(void)
 {
     DWORD tid, num;
     HANDLE thread, pipe;
-    int ret;
+    BOOL ret;
     struct overlapped_server_args args;
 
     args.pipe_created = CreateEventA(0, 1, 0, 0);
@@ -1457,7 +1487,7 @@ static void test_overlapped(void)
     Sleep(1);
 
     ret = WriteFile(pipe, "x", 1, &num, NULL);
-    ok(ret == 1, "ret %d\n", ret);
+    ok(ret, "WriteFile failed with error %d\n", GetLastError());
 
     WaitForSingleObject(thread, INFINITE);
     CloseHandle(pipe);
@@ -1582,6 +1612,8 @@ START_TEST(pipe)
 
     hmod = GetModuleHandle("advapi32.dll");
     pDuplicateTokenEx = (void *) GetProcAddress(hmod, "DuplicateTokenEx");
+    hmod = GetModuleHandle("kernel32.dll");
+    pQueueUserAPC = (void *) GetProcAddress(hmod, "QueueUserAPC");
 
     if (test_DisconnectNamedPipe())
         return;

@@ -26,16 +26,180 @@
 static const char filename[] = "test_.exe";
 static DWORD GLE;
 
-static int build_exe( void )
+enum constants {
+    page_size = 0x1000,
+    rva_rsrc_start = page_size * 3,
+    max_sections = 3
+};
+
+/* rodata @ [0x1000-0x3000) */
+static const IMAGE_SECTION_HEADER sh_rodata_1 =
+{
+    ".rodata", {2*page_size}, page_size, 2*page_size, page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rodata @ [0x1000-0x4000) */
+static const IMAGE_SECTION_HEADER sh_rodata_2 =
+{
+    ".rodata", {3*page_size}, page_size, 3*page_size, page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rodata @ [0x1000-0x2000) */
+static const IMAGE_SECTION_HEADER sh_rodata_3 =
+{
+    ".rodata", {page_size}, page_size, page_size, page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x3000-0x4000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_1 =
+{
+    ".rsrc\0\0", {page_size}, rva_rsrc_start, page_size, rva_rsrc_start, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x4000-0x5000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_2 =
+{
+    ".rsrc\0\0", {page_size}, 4*page_size, page_size, 4*page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x2000-0x4000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_3 =
+{
+    ".rsrc\0\0", {2*page_size}, rva_rsrc_start-page_size, 2*page_size, rva_rsrc_start-page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x2000-0x3000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_4 =
+{
+    ".rsrc\0\0", {page_size}, rva_rsrc_start-page_size, page_size, rva_rsrc_start-page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x3000-0x6000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_5 =
+{
+    ".rsrc\0\0", {3*page_size}, rva_rsrc_start, 3*page_size, rva_rsrc_start, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x4000-0x7000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_6 =
+{
+    ".rsrc\0\0", {3*page_size}, 4*page_size, 3*page_size, 4*page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x2000-0x5000) */
+static const IMAGE_SECTION_HEADER sh_rsrc_7 =
+{
+    ".rsrc\0\0", {3*page_size}, 2*page_size, 3*page_size, 2*page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* rsrc @ [0x3000-0x4000), small SizeOfRawData */
+static const IMAGE_SECTION_HEADER sh_rsrc_8 =
+{
+    ".rsrc\0\0", {page_size}, rva_rsrc_start, 8, rva_rsrc_start, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* reloc @ [0x4000-0x5000) */
+static const IMAGE_SECTION_HEADER sh_junk =
+{
+    ".reloc\0", {page_size}, 4*page_size, page_size, 4*page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+/* reloc @ [0x6000-0x7000) */
+static const IMAGE_SECTION_HEADER sh_junk_2 =
+{
+    ".reloc\0", {page_size}, 6*page_size, page_size, 6*page_size, 0, 0, 0, 0,
+    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
+};
+
+typedef struct _sec_build
+{
+    const IMAGE_SECTION_HEADER *sect_in[max_sections];
+} sec_build;
+
+typedef struct _sec_verify
+{
+    const IMAGE_SECTION_HEADER *sect_out[max_sections];
+    DWORD length;
+    int rsrc_section;
+    DWORD NumberOfNamedEntries, NumberOfIdEntries;
+} sec_verify;
+
+static const struct _sec_variants
+{
+    sec_build build;
+    sec_verify chk_none, chk_delete, chk_version, chk_bigdata;
+} sec_variants[] =
+{
+    /* .rsrc is the last section, data directory entry points to whole section */
+    {
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}},
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 1},
+        {{&sh_rodata_1, &sh_rsrc_5, NULL}, 6*page_size, 1, 0, 1}
+    },
+    /* single .rodata section with compatible characteristics, data directory entry points to section end */
+    /* Vista+ - existing section isn't used, new section is created at the end of file */
+    /* NT4/2000/2003 - image is broken */
+#if 0
+    {
+        {{&sh_rodata_2, NULL, NULL}},
+        {{&sh_rodata_2, &sh_rsrc_2, NULL}, 5*page_size, 1, 0, 0},
+        {{&sh_rodata_2, &sh_rsrc_2, NULL}, 5*page_size, 1, 0, 0},
+        {{&sh_rodata_2, &sh_rsrc_2, NULL}, 5*page_size, 1, 0, 1},
+        {{&sh_rodata_2, &sh_rsrc_6, NULL}, 7*page_size, 1, 0, 1}
+    },
+#endif
+    /* .rsrc is the last section, data directory entry points to section end */
+    /* Vista+ - resources are moved to section start (trashing data that could be there), and section is trimmed */
+    /* NT4/2000/2003 - resources are moved to section start (trashing data that could be there); section isn't trimmed */
+    {
+        {{&sh_rodata_3, &sh_rsrc_3, NULL}},
+        {{&sh_rodata_3, &sh_rsrc_4, NULL}, 3*page_size, 1, 0, 0},
+        {{&sh_rodata_3, &sh_rsrc_4, NULL}, 3*page_size, 1, 0, 0},
+        {{&sh_rodata_3, &sh_rsrc_4, NULL}, 3*page_size, 1, 0, 1},
+        {{&sh_rodata_3, &sh_rsrc_7, NULL}, 5*page_size, 1, 0, 1}
+    },
+    /* .rsrc is not the last section */
+    /* section is reused; sections after .rsrc are shifted to give space to rsrc (in-image offset and RVA!) */
+    {
+        {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}},
+        {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}, 5*page_size, 1, 0, 0},
+        {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}, 5*page_size, 1, 0, 0},
+        {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}, 5*page_size, 1, 0, 1},
+        {{&sh_rodata_1, &sh_rsrc_5, &sh_junk_2}, 7*page_size, 1, 0, 1}
+    },
+    /* .rsrc is the last section, data directory entry points to whole section, file size is not aligned on FileAlign */
+    {
+        {{&sh_rodata_1, &sh_rsrc_8, NULL}},
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
+        {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 1},
+        {{&sh_rodata_1, &sh_rsrc_5, NULL}, 6*page_size, 1, 0, 1}
+    }
+};
+
+static int build_exe( const sec_build* sec_descr )
 {
     IMAGE_DOS_HEADER *dos;
     IMAGE_NT_HEADERS *nt;
     IMAGE_SECTION_HEADER *sec;
     IMAGE_OPTIONAL_HEADER *opt;
     HANDLE file;
-    DWORD written;
-    BYTE page[0x1000];
-    const int page_size = 0x1000;
+    DWORD written, i, file_size;
+    BYTE page[page_size];
 
     memset( page, 0, sizeof page );
 
@@ -47,7 +211,7 @@ static int build_exe( void )
 
     nt->Signature = IMAGE_NT_SIGNATURE;
     nt->FileHeader.Machine = IMAGE_FILE_MACHINE_I386;
-    nt->FileHeader.NumberOfSections = 2;
+    nt->FileHeader.NumberOfSections = 0;
     nt->FileHeader.SizeOfOptionalHeader = sizeof nt->OptionalHeader;
     nt->FileHeader.Characteristics = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_DLL;
 
@@ -61,7 +225,7 @@ static int build_exe( void )
     opt->MajorImageVersion = 1;
     opt->MajorSubsystemVersion = 4;
     opt->SizeOfHeaders = sizeof *dos + sizeof *nt + sizeof *sec * 2;
-    opt->SizeOfImage = page_size*3;
+    opt->SizeOfImage = page_size;
     opt->Subsystem = IMAGE_SUBSYSTEM_WINDOWS_CUI;
 
     /* if SectionAlignment and File alignment are not specified */
@@ -69,21 +233,27 @@ static int build_exe( void )
     opt->SectionAlignment = page_size;
     opt->FileAlignment = page_size;
 
+    opt->DataDirectory[IMAGE_FILE_RESOURCE_DIRECTORY].VirtualAddress = rva_rsrc_start;
+    opt->DataDirectory[IMAGE_FILE_RESOURCE_DIRECTORY].Size = page_size;
+
     sec = (void*) &nt[1];
 
-    memcpy( sec[0].Name, ".rodata", 8 );
-    sec[0].Misc.VirtualSize = page_size;
-    sec[0].PointerToRawData = page_size;
-    sec[0].SizeOfRawData = page_size;
-    sec[0].VirtualAddress = page_size;
-    sec[0].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
-
-    memcpy( sec[1].Name, ".rsrc", 6 );
-    sec[1].Misc.VirtualSize = page_size;
-    sec[1].SizeOfRawData = page_size;
-    sec[1].PointerToRawData = page_size*2;
-    sec[1].VirtualAddress = page_size*2;
-    sec[1].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
+    file_size = 0;
+    for ( i = 0; i < max_sections; i++ )
+        if ( sec_descr->sect_in[i] )
+        {
+            DWORD virt_end_of_section = sec_descr->sect_in[i]->Misc.VirtualSize +
+                sec_descr->sect_in[i]->VirtualAddress;
+            DWORD phys_end_of_section = sec_descr->sect_in[i]->SizeOfRawData +
+                sec_descr->sect_in[i]->PointerToRawData;
+            memcpy( sec + nt->FileHeader.NumberOfSections, sec_descr->sect_in[i],
+                    sizeof(sec[0]) );
+            nt->FileHeader.NumberOfSections++;
+            if ( opt->SizeOfImage < virt_end_of_section )
+                opt->SizeOfImage = virt_end_of_section;
+            if ( file_size < phys_end_of_section )
+                file_size = phys_end_of_section;
+        }
 
     file = CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
     ok (file != INVALID_HANDLE_VALUE, "failed to create file\n");
@@ -91,13 +261,13 @@ static int build_exe( void )
     /* write out the header */
     WriteFile( file, page, sizeof page, &written, NULL );
 
-    /* write out an empty page for rodata */
+    /* write out zeroed pages for sections */
     memset( page, 0, sizeof page );
-    WriteFile( file, page, sizeof page, &written, NULL );
-
-    /* write out an empty page for the resources */
-    memset( page, 0, sizeof page );
-    WriteFile( file, page, sizeof page, &written, NULL );
+    for ( i = page_size; i < file_size; i += page_size )
+    {
+	DWORD size = min(page_size, file_size - i);
+        WriteFile( file, page, size, &written, NULL );
+    }
 
     CloseHandle( file );
 
@@ -169,7 +339,7 @@ static void update_resources_delete( void )
     ok( r, "EndUpdateResource failed\n");
 }
 
-static void update_resources_version(void)
+static void update_resources_version( void )
 {
     HANDLE res = NULL;
     BOOL r;
@@ -199,41 +369,41 @@ static void update_resources_version(void)
     ok( r, "EndUpdateResource failed: %d\n", GetLastError());
 }
 
-
-typedef void (*res_check_func)( IMAGE_RESOURCE_DIRECTORY* );
-
-static void check_empty( IMAGE_RESOURCE_DIRECTORY *dir )
+static void update_resources_bigdata( void )
 {
-    char *pad;
+    HANDLE res = NULL;
+    BOOL r;
+    char foo[2*page_size] = "foobar";
 
-    ok( dir->NumberOfNamedEntries == 0, "NumberOfNamedEntries should be 0 instead of %d\n", dir->NumberOfNamedEntries);
-    ok( dir->NumberOfIdEntries == 0, "NumberOfIdEntries should be 0 instead of %d\n", dir->NumberOfIdEntries);
+    res = BeginUpdateResource( filename, TRUE );
+    ok( res != NULL, "BeginUpdateResource succeeded\n");
 
-    pad = (char*) &dir[1];
+    r = UpdateResource( res,
+                        MAKEINTRESOURCE(0x3012),
+                        MAKEINTRESOURCE(0x5647),
+                        0xcdba,
+                        foo, sizeof foo );
+    ok( r == TRUE, "UpdateResource failed: %d\n", GetLastError());
 
-    ok( !memcmp( pad, "PADDINGXXPADDING", 16), "padding wrong\n");
+    r = EndUpdateResource( res, FALSE );
+    ok( r, "EndUpdateResource failed\n");
 }
 
-static void check_not_empty( IMAGE_RESOURCE_DIRECTORY *dir )
+static void check_exe( const sec_verify *verify )
 {
-    ok( dir->NumberOfNamedEntries == 0, "NumberOfNamedEntries should be 0 instead of %d\n", dir->NumberOfNamedEntries);
-    ok( dir->NumberOfIdEntries == 1, "NumberOfIdEntries should be 1 instead of %d\n", dir->NumberOfIdEntries);
-}
-
-static void check_exe( res_check_func fn )
-{
+    int i;
     IMAGE_DOS_HEADER *dos;
     IMAGE_NT_HEADERS *nt;
     IMAGE_SECTION_HEADER *sec;
     IMAGE_RESOURCE_DIRECTORY *dir;
     HANDLE file, mapping;
-    DWORD length;
+    DWORD length, sec_count = 0;
 
     file = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
     ok (file != INVALID_HANDLE_VALUE, "failed to create file (%d)\n", GetLastError());
 
     length = GetFileSize( file, NULL );
-    ok( length == 0x3000, "file size wrong\n");
+    ok( length >= verify->length, "file size wrong\n");
 
     mapping = CreateFileMapping( file, NULL, PAGE_READONLY, 0, 0, NULL );
     ok (mapping != NULL, "failed to create file\n");
@@ -245,24 +415,36 @@ static void check_exe( res_check_func fn )
         goto end;
 
     nt = (void*) ((BYTE*) dos + dos->e_lfanew);
-    ok( nt->FileHeader.NumberOfSections == 2, "number of sections wrong\n" );
-
-    if (nt->FileHeader.NumberOfSections < 2)
-        goto end;
-
     sec = (void*) &nt[1];
 
-    ok( !memcmp(sec[1].Name, ".rsrc", 6), "resource section name wrong\n");
+    for(i = 0; i < max_sections; i++)
+        if (verify->sect_out[i])
+        {
+            ok( !memcmp(&verify->sect_out[i]->Name, &sec[sec_count].Name, 8), "section %d name wrong\n", sec_count);
+            ok( verify->sect_out[i]->VirtualAddress == sec[sec_count].VirtualAddress, "section %d vaddr wrong\n", sec_count);
+            ok( verify->sect_out[i]->SizeOfRawData <= sec[sec_count].SizeOfRawData, "section %d SizeOfRawData wrong (%d vs %d)\n", sec_count, verify->sect_out[i]->SizeOfRawData ,sec[sec_count].SizeOfRawData);
+            ok( verify->sect_out[i]->PointerToRawData == sec[sec_count].PointerToRawData, "section %d PointerToRawData wrong\n", sec_count);
+            ok( verify->sect_out[i]->Characteristics == sec[sec_count].Characteristics , "section %d characteristics wrong\n", sec_count);
+            sec_count++;
+        }
 
-    dir = (void*) ((BYTE*) dos + sec[1].VirtualAddress);
+    ok( nt->FileHeader.NumberOfSections == sec_count, "number of sections wrong\n" );
 
-    ok( dir->Characteristics == 0, "Characteristics wrong\n");
-    ok( dir->TimeDateStamp == 0 || abs( dir->TimeDateStamp - GetTickCount() ) < 1000 /* nt4 */,
-        "TimeDateStamp wrong %u\n", dir->TimeDateStamp);
-    ok( dir->MajorVersion == 4, "MajorVersion wrong\n");
-    ok( dir->MinorVersion == 0, "MinorVersion wrong\n");
+    if (verify->rsrc_section >= 0 && verify->rsrc_section < nt->FileHeader.NumberOfSections)
+    {
+        dir = (void*) ((BYTE*) dos + sec[verify->rsrc_section].VirtualAddress);
 
-    fn( dir );
+        ok( dir->Characteristics == 0, "Characteristics wrong\n");
+        ok( dir->TimeDateStamp == 0 || abs( dir->TimeDateStamp - GetTickCount() ) < 1000 /* nt4 */,
+            "TimeDateStamp wrong %u\n", dir->TimeDateStamp);
+        ok( dir->MajorVersion == 4, "MajorVersion wrong\n");
+        ok( dir->MinorVersion == 0, "MinorVersion wrong\n");
+
+        ok( dir->NumberOfNamedEntries == verify->NumberOfNamedEntries, "NumberOfNamedEntries should be %d instead of %d\n",
+                verify->NumberOfNamedEntries, dir->NumberOfNamedEntries);
+        ok( dir->NumberOfIdEntries == verify->NumberOfIdEntries, "NumberOfIdEntries should be %d instead of %d\n",
+                verify->NumberOfIdEntries, dir->NumberOfIdEntries);
+    }
 
 end:
     UnmapViewOfFile( dos );
@@ -310,6 +492,8 @@ static void test_find_resource(void)
 
 START_TEST(resource)
 {
+    DWORD i;
+
     DeleteFile( filename );
     update_missing_exe();
 
@@ -320,13 +504,20 @@ START_TEST(resource)
     }
 
     update_empty_exe();
-    build_exe();
-    update_resources_none();
-    check_exe( check_empty );
-    update_resources_delete();
-    check_exe( check_empty );
-    update_resources_version();
-    check_exe( check_not_empty );
-    DeleteFile( filename );
+
+    for(i=0; i < sizeof( sec_variants ) / sizeof( sec_variants[0] ); i++)
+    {
+        const struct _sec_variants *sec = &sec_variants[i];
+        build_exe( &sec->build );
+        update_resources_none();
+        check_exe( &sec->chk_none );
+        update_resources_delete();
+        check_exe( &sec->chk_delete );
+        update_resources_version();
+        check_exe( &sec->chk_version );
+        update_resources_bigdata();
+        check_exe( &sec->chk_bigdata );
+        DeleteFile( filename );
+    }
     test_find_resource();
 }

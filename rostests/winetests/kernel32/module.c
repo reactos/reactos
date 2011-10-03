@@ -221,6 +221,7 @@ static void testLoadLibraryEx(void)
     CHAR path[MAX_PATH];
     HMODULE hmodule;
     HANDLE hfile;
+    BOOL ret;
 
     hfile = CreateFileA("testfile.dll", GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -367,13 +368,11 @@ static void testLoadLibraryEx(void)
     ok(hmodule != 0, "Expected valid module handle\n");
 
     SetLastError(0xdeadbeef);
-    ok(FreeLibrary(hmodule),
-       "Expected to be able to free the module, failed with %d\n",
-       GetLastError());
+    ret = FreeLibrary(hmodule);
+    ok(ret, "Expected to be able to free the module, failed with %d\n", GetLastError());
     SetLastError(0xdeadbeef);
-    ok(!FreeLibrary(hmodule),
-       "Unexpected ability to free the module, failed with %d\n",
-       GetLastError());
+    ret = FreeLibrary(hmodule);
+    ok(!ret, "Unexpected ability to free the module, failed with %d\n", GetLastError());
 
     CloseHandle(hmodule);
 

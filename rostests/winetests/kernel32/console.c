@@ -27,6 +27,7 @@ static BOOL (WINAPI *pGetConsoleInputExeNameA)(DWORD, LPSTR);
 static DWORD (WINAPI *pGetConsoleProcessList)(LPDWORD, DWORD);
 static HANDLE (WINAPI *pOpenConsoleW)(LPCWSTR,DWORD,BOOL,DWORD);
 static BOOL (WINAPI *pSetConsoleInputExeNameA)(LPCSTR);
+static BOOL (WINAPI *pVerifyConsoleIoHandle)(HANDLE handle);
 
 /* DEFAULT_ATTRIB is used for all initial filling of the console.
  * all modifications are made with TEST_ATTRIB so that we could check
@@ -68,6 +69,7 @@ static void init_function_pointers(void)
     KERNEL32_GET_PROC(GetConsoleProcessList);
     KERNEL32_GET_PROC(OpenConsoleW);
     KERNEL32_GET_PROC(SetConsoleInputExeNameA);
+    KERNEL32_GET_PROC(VerifyConsoleIoHandle);
 
 #undef KERNEL32_GET_PROC
 }
@@ -169,9 +171,9 @@ static void testCursorInfo(HANDLE hCon)
 
 static void testEmptyWrite(HANDLE hCon)
 {
+    static const char	emptybuf[16];
     COORD		c;
     DWORD		len;
-    const char* 	mytest = "";
 
     c.X = c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left\n");
@@ -195,13 +197,13 @@ static void testEmptyWrite(HANDLE hCon)
     }
 
     len = -1;
-    ok(WriteConsole(hCon, mytest, 0, &len, NULL) != 0 && len == 0, "WriteConsole\n");
+    ok(WriteConsole(hCon, emptybuf, 0, &len, NULL) != 0 && len == 0, "WriteConsole\n");
     okCURSOR(hCon, c);
 
     /* WriteConsole does not halt on a null terminator and is happy to write
      * memory contents beyond the actual size of the buffer. */
     len = -1;
-    ok(WriteConsole(hCon, mytest, 16, &len, NULL) != 0 && len == 16, "WriteConsole\n");
+    ok(WriteConsole(hCon, emptybuf, 16, &len, NULL) != 0 && len == 16, "WriteConsole\n");
     c.X += 16;
     okCURSOR(hCon, c);
 }
@@ -990,6 +992,37 @@ static void test_GetConsoleProcessList(void)
     HeapFree(GetProcessHeap(), 0, list);
 }
 
+static void test_OpenCON(void)
+{
+    static const WCHAR conW[] = {'C','O','N',0};
+    static const DWORD accesses[] = {CREATE_NEW, CREATE_ALWAYS, OPEN_EXISTING,
+                                     OPEN_ALWAYS, TRUNCATE_EXISTING};
+    unsigned            i;
+    HANDLE              h;
+
+    for (i = 0; i < sizeof(accesses) / sizeof(accesses[0]); i++)
+    {
+        h = CreateFileW(conW, GENERIC_WRITE, 0, NULL, accesses[i], 0, NULL);
+        ok(h != INVALID_HANDLE_VALUE, "Expected to open the CON device on write (%x)\n", accesses[i]);
+        CloseHandle(h);
+
+        h = CreateFileW(conW, GENERIC_READ, 0, NULL, accesses[i], 0, NULL);
+        /* Windows versions differ here:
+         * MSDN states in CreateFile that TRUNCATE_EXISTING requires GENERIC_WRITE
+         * NT, XP, Vista comply, but Win7 doesn't and allows to open CON with TRUNCATE_EXISTING
+         * So don't test when disposition is TRUNCATE_EXISTING
+         */
+        if (accesses[i] != TRUNCATE_EXISTING)
+        {
+            ok(h != INVALID_HANDLE_VALUE, "Expected to open the CON device on read (%x)\n", accesses[i]);
+        }
+        CloseHandle(h);
+        h = CreateFileW(conW, GENERIC_READ|GENERIC_WRITE, 0, NULL, accesses[i], 0, NULL);
+        ok(h == INVALID_HANDLE_VALUE, "Expected not to open the CON device on read-write (%x)\n", accesses[i]);
+        ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Unexpected error %x\n", GetLastError());
+    }
+}
+
 static void test_OpenConsoleW(void)
 {
     static const WCHAR coninW[] = {'C','O','N','I','N','$',0};
@@ -1083,11 +1116,1344 @@ static void test_OpenConsoleW(void)
         CloseHandle(ret);
 }
 
+static void test_VerifyConsoleIoHandle( HANDLE handle )
+{
+    BOOL ret;
+    DWORD error;
+
+    if (!pVerifyConsoleIoHandle)
+    {
+        win_skip("VerifyConsoleIoHandle is not available\n");
+        return;
+    }
+
+    /* invalid handle */
+    SetLastError(0xdeadbeef);
+    ret = pVerifyConsoleIoHandle((HANDLE)0xdeadbee0);
+    error = GetLastError();
+    ok(!ret, "expected VerifyConsoleIoHandle to fail\n");
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+
+    /* invalid handle + 1 */
+    SetLastError(0xdeadbeef);
+    ret = pVerifyConsoleIoHandle((HANDLE)0xdeadbee1);
+    error = GetLastError();
+    ok(!ret, "expected VerifyConsoleIoHandle to fail\n");
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+
+    /* invalid handle + 2 */
+    SetLastError(0xdeadbeef);
+    ret = pVerifyConsoleIoHandle((HANDLE)0xdeadbee2);
+    error = GetLastError();
+    ok(!ret, "expected VerifyConsoleIoHandle to fail\n");
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+
+    /* invalid handle + 3 */
+    SetLastError(0xdeadbeef);
+    ret = pVerifyConsoleIoHandle((HANDLE)0xdeadbee3);
+    error = GetLastError();
+    ok(!ret, "expected VerifyConsoleIoHandle to fail\n");
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+
+    /* valid handle */
+    SetLastError(0xdeadbeef);
+    ret = pVerifyConsoleIoHandle(handle);
+    error = GetLastError();
+    ok(ret, "expected VerifyConsoleIoHandle to succeed\n");
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+}
+
+static void test_GetSetStdHandle(void)
+{
+    HANDLE handle;
+    DWORD error;
+    BOOL ret;
+
+    /* get invalid std handle */
+    SetLastError(0xdeadbeef);
+    handle = GetStdHandle(42);
+    error = GetLastError();
+    ok(error == ERROR_INVALID_HANDLE || broken(error == ERROR_INVALID_FUNCTION)/* Win9x */,
+       "wrong GetLastError() %d\n", error);
+    ok(handle == INVALID_HANDLE_VALUE, "expected INVALID_HANDLE_VALUE\n");
+
+    /* get valid */
+    SetLastError(0xdeadbeef);
+    handle = GetStdHandle(STD_INPUT_HANDLE);
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+
+    /* set invalid std handle */
+    SetLastError(0xdeadbeef);
+    ret = SetStdHandle(42, handle);
+    error = GetLastError();
+    ok(!ret, "expected SetStdHandle to fail\n");
+    ok(error == ERROR_INVALID_HANDLE || broken(error == ERROR_INVALID_FUNCTION)/* Win9x */,
+       "wrong GetLastError() %d\n", error);
+
+    /* set valid (restore old value) */
+    SetLastError(0xdeadbeef);
+    ret = SetStdHandle(STD_INPUT_HANDLE, handle);
+    error = GetLastError();
+    ok(ret, "expected SetStdHandle to succeed\n");
+    ok(error == 0xdeadbeef, "wrong GetLastError() %d\n", error);
+}
+
+static void test_GetNumberOfConsoleInputEvents(HANDLE input_handle)
+{
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE handle;
+        LPDWORD nrofevents;
+        DWORD last_error;
+    } invalid_table[] =
+    {
+        {NULL,                 NULL,   ERROR_INVALID_HANDLE},
+        {NULL,                 &count, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL,   ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &count, ERROR_INVALID_HANDLE},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].nrofevents) count = 0xdeadbeef;
+        ret = GetNumberOfConsoleInputEvents(invalid_table[i].handle,
+                                            invalid_table[i].nrofevents);
+        ok(!ret, "[%d] Expected GetNumberOfConsoleInputEvents to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].nrofevents)
+        {
+            ok(count == 0xdeadbeef,
+               "[%d] Expected output count to be unmodified, got %u\n", i, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    /* Test crashes on Windows 7. */
+    if (0)
+    {
+        SetLastError(0xdeadbeef);
+        ret = GetNumberOfConsoleInputEvents(input_handle, NULL);
+        ok(!ret, "Expected GetNumberOfConsoleInputEvents to return FALSE, got %d\n", ret);
+        ok(GetLastError() == ERROR_INVALID_ACCESS,
+           "Expected last error to be ERROR_INVALID_ACCESS, got %u\n",
+           GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count != 0xdeadbeef, "Expected output count to initialized\n");
+}
+
+static void test_WriteConsoleInputA(HANDLE input_handle)
+{
+    INPUT_RECORD event;
+    INPUT_RECORD event_list[5];
+    MOUSE_EVENT_RECORD mouse_event = { {0, 0}, 0, 0, MOUSE_MOVED };
+    KEY_EVENT_RECORD key_event;
+    DWORD count, console_mode;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE handle;
+        const INPUT_RECORD *buffer;
+        DWORD count;
+        LPDWORD written;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
+        {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    /* Suppress external sources of input events for the duration of the test. */
+    ret = GetConsoleMode(input_handle, &console_mode);
+    ok(ret == TRUE, "Expected GetConsoleMode to return TRUE, got %d\n", ret);
+    if (!ret)
+    {
+        skip("GetConsoleMode failed with last error %u\n", GetLastError());
+        return;
+    }
+
+    ret = SetConsoleMode(input_handle, console_mode & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
+    ok(ret == TRUE, "Expected SetConsoleMode to return TRUE, got %d\n", ret);
+    if (!ret)
+    {
+        skip("SetConsoleMode failed with last error %u\n", GetLastError());
+        return;
+    }
+
+    /* Discard any events queued before the tests. */
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].written) count = 0xdeadbeef;
+        ret = WriteConsoleInputA(invalid_table[i].handle,
+                                 invalid_table[i].buffer,
+                                 invalid_table[i].count,
+                                 invalid_table[i].written);
+        ok(!ret, "[%d] Expected WriteConsoleInputA to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].written)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected output count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleInputA(input_handle, NULL, 0, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleInputA(input_handle, &event, 0, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    /* Writing a single mouse event doesn't seem to affect the count if an adjacent mouse event is already queued. */
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    todo_wine
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    for (i = 0; i < sizeof(event_list)/sizeof(event_list[0]); i++)
+    {
+        event_list[i].EventType = MOUSE_EVENT;
+        event_list[i].Event.MouseEvent = mouse_event;
+    }
+
+    /* Writing consecutive chunks of mouse events appears to work. */
+    ret = WriteConsoleInputA(input_handle, event_list, sizeof(event_list)/sizeof(event_list[0]), &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be event list length, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be event list length, got %u\n", count);
+
+    ret = WriteConsoleInputA(input_handle, event_list, sizeof(event_list)/sizeof(event_list[0]), &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be event list length, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 2*sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be twice event list length, got %u\n", count);
+
+    /* Again, writing a single mouse event with adjacent mouse events queued doesn't appear to affect the count. */
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    todo_wine
+    ok(count == 2*sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be twice event list length, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    key_event.bKeyDown = FALSE;
+    key_event.wRepeatCount = 0;
+    key_event.wVirtualKeyCode = VK_SPACE;
+    key_event.wVirtualScanCode = VK_SPACE;
+    key_event.uChar.AsciiChar = ' ';
+    key_event.dwControlKeyState = 0;
+
+    event.EventType = KEY_EVENT;
+    event.Event.KeyEvent = key_event;
+
+    /* Key events don't exhibit the same behavior as mouse events. */
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 2, "Expected count to be 2, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    /* Try interleaving mouse and key events. */
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    event.EventType = KEY_EVENT;
+    event.Event.KeyEvent = key_event;
+
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 2, "Expected count to be 2, got %u\n", count);
+
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    ret = WriteConsoleInputA(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 3, "Expected count to be 3, got %u\n", count);
+
+    /* Restore the old console mode. */
+    ret = SetConsoleMode(input_handle, console_mode);
+    ok(ret == TRUE, "Expected SetConsoleMode to return TRUE, got %d\n", ret);
+}
+
+static void test_WriteConsoleInputW(HANDLE input_handle)
+{
+    INPUT_RECORD event;
+    INPUT_RECORD event_list[5];
+    MOUSE_EVENT_RECORD mouse_event = { {0, 0}, 0, 0, MOUSE_MOVED };
+    KEY_EVENT_RECORD key_event;
+    DWORD count, console_mode;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE handle;
+        const INPUT_RECORD *buffer;
+        DWORD count;
+        LPDWORD written;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
+        {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    /* Suppress external sources of input events for the duration of the test. */
+    ret = GetConsoleMode(input_handle, &console_mode);
+    ok(ret == TRUE, "Expected GetConsoleMode to return TRUE, got %d\n", ret);
+    if (!ret)
+    {
+        skip("GetConsoleMode failed with last error %u\n", GetLastError());
+        return;
+    }
+
+    ret = SetConsoleMode(input_handle, console_mode & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
+    ok(ret == TRUE, "Expected SetConsoleMode to return TRUE, got %d\n", ret);
+    if (!ret)
+    {
+        skip("SetConsoleMode failed with last error %u\n", GetLastError());
+        return;
+    }
+
+    /* Discard any events queued before the tests. */
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].written) count = 0xdeadbeef;
+        ret = WriteConsoleInputW(invalid_table[i].handle,
+                                 invalid_table[i].buffer,
+                                 invalid_table[i].count,
+                                 invalid_table[i].written);
+        ok(!ret, "[%d] Expected WriteConsoleInputW to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].written)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected output count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleInputW(input_handle, NULL, 0, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleInputW(input_handle, &event, 0, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    /* Writing a single mouse event doesn't seem to affect the count if an adjacent mouse event is already queued. */
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    todo_wine
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    for (i = 0; i < sizeof(event_list)/sizeof(event_list[0]); i++)
+    {
+        event_list[i].EventType = MOUSE_EVENT;
+        event_list[i].Event.MouseEvent = mouse_event;
+    }
+
+    /* Writing consecutive chunks of mouse events appears to work. */
+    ret = WriteConsoleInputW(input_handle, event_list, sizeof(event_list)/sizeof(event_list[0]), &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be event list length, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be event list length, got %u\n", count);
+
+    ret = WriteConsoleInputW(input_handle, event_list, sizeof(event_list)/sizeof(event_list[0]), &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be event list length, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 2*sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be twice event list length, got %u\n", count);
+
+    /* Again, writing a single mouse event with adjacent mouse events queued doesn't appear to affect the count. */
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    todo_wine
+    ok(count == 2*sizeof(event_list)/sizeof(event_list[0]),
+       "Expected count to be twice event list length, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    key_event.bKeyDown = FALSE;
+    key_event.wRepeatCount = 0;
+    key_event.wVirtualKeyCode = VK_SPACE;
+    key_event.wVirtualScanCode = VK_SPACE;
+    key_event.uChar.UnicodeChar = ' ';
+    key_event.dwControlKeyState = 0;
+
+    event.EventType = KEY_EVENT;
+    event.Event.KeyEvent = key_event;
+
+    /* Key events don't exhibit the same behavior as mouse events. */
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 2, "Expected count to be 2, got %u\n", count);
+
+    ret = FlushConsoleInputBuffer(input_handle);
+    ok(ret == TRUE, "Expected FlushConsoleInputBuffer to return TRUE, got %d\n", ret);
+
+    /* Try interleaving mouse and key events. */
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    event.EventType = KEY_EVENT;
+    event.Event.KeyEvent = key_event;
+
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 2, "Expected count to be 2, got %u\n", count);
+
+    event.EventType = MOUSE_EVENT;
+    event.Event.MouseEvent = mouse_event;
+
+    ret = WriteConsoleInputW(input_handle, &event, 1, &count);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    ret = GetNumberOfConsoleInputEvents(input_handle, &count);
+    ok(ret == TRUE, "Expected GetNumberOfConsoleInputEvents to return TRUE, got %d\n", ret);
+    ok(count == 3, "Expected count to be 3, got %u\n", count);
+
+    /* Restore the old console mode. */
+    ret = SetConsoleMode(input_handle, console_mode);
+    ok(ret == TRUE, "Expected SetConsoleMode to return TRUE, got %d\n", ret);
+}
+
+static void test_WriteConsoleOutputCharacterA(HANDLE output_handle)
+{
+    static const char output[] = {'a', 0};
+
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        LPCSTR str;
+        DWORD length;
+        COORD coord;
+        LPDWORD lpNumCharsWritten;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, output, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, output, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, output, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, output, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, output, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, output, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, output, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, output, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, output, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, output, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].lpNumCharsWritten) count = 0xdeadbeef;
+        ret = WriteConsoleOutputCharacterA(invalid_table[i].hConsoleOutput,
+                                           invalid_table[i].str,
+                                           invalid_table[i].length,
+                                           invalid_table[i].coord,
+                                           invalid_table[i].lpNumCharsWritten);
+        ok(!ret, "[%d] Expected WriteConsoleOutputCharacterA to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].lpNumCharsWritten)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputCharacterA(output_handle, NULL, 0, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputCharacterA(output_handle, output, 0, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputCharacterA(output_handle, output, 1, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_WriteConsoleOutputCharacterW(HANDLE output_handle)
+{
+    static const WCHAR outputW[] = {'a',0};
+
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        LPCWSTR str;
+        DWORD length;
+        COORD coord;
+        LPDWORD lpNumCharsWritten;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, outputW, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, outputW, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, outputW, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, outputW, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, outputW, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, outputW, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, outputW, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, outputW, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, outputW, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, outputW, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].lpNumCharsWritten) count = 0xdeadbeef;
+        ret = WriteConsoleOutputCharacterW(invalid_table[i].hConsoleOutput,
+                                           invalid_table[i].str,
+                                           invalid_table[i].length,
+                                           invalid_table[i].coord,
+                                           invalid_table[i].lpNumCharsWritten);
+        ok(!ret, "[%d] Expected WriteConsoleOutputCharacterW to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].lpNumCharsWritten)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputCharacterW(output_handle, NULL, 0, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputCharacterW(output_handle, outputW, 0, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputCharacterW(output_handle, outputW, 1, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_WriteConsoleOutputAttribute(HANDLE output_handle)
+{
+    WORD attr = FOREGROUND_BLUE;
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        CONST WORD *attr;
+        DWORD length;
+        COORD coord;
+        LPDWORD lpNumAttrsWritten;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &attr, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &attr, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, &attr, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &attr, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &attr, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &attr, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &attr, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &attr, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, &count, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &attr, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &attr, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].lpNumAttrsWritten) count = 0xdeadbeef;
+        ret = WriteConsoleOutputAttribute(invalid_table[i].hConsoleOutput,
+                                          invalid_table[i].attr,
+                                          invalid_table[i].length,
+                                          invalid_table[i].coord,
+                                          invalid_table[i].lpNumAttrsWritten);
+        ok(!ret, "[%d] Expected WriteConsoleOutputAttribute to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].lpNumAttrsWritten)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputAttribute(output_handle, NULL, 0, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputAttribute(output_handle, &attr, 0, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = WriteConsoleOutputAttribute(output_handle, &attr, 1, origin, &count);
+    ok(ret == TRUE, "Expected WriteConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_FillConsoleOutputCharacterA(HANDLE output_handle)
+{
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        CHAR ch;
+        DWORD length;
+        COORD coord;
+        LPDWORD lpNumCharsWritten;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, 'a', 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, 'a', 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, 'a', 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, 'a', 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, 'a', 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, 'a', 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, 'a', 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, 'a', 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, 'a', 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, 'a', 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].lpNumCharsWritten) count = 0xdeadbeef;
+        ret = FillConsoleOutputCharacterA(invalid_table[i].hConsoleOutput,
+                                          invalid_table[i].ch,
+                                          invalid_table[i].length,
+                                          invalid_table[i].coord,
+                                          invalid_table[i].lpNumCharsWritten);
+        ok(!ret, "[%d] Expected FillConsoleOutputCharacterA to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].lpNumCharsWritten)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputCharacterA(output_handle, 'a', 0, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputCharacterA(output_handle, 'a', 1, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_FillConsoleOutputCharacterW(HANDLE output_handle)
+{
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        WCHAR ch;
+        DWORD length;
+        COORD coord;
+        LPDWORD lpNumCharsWritten;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, 'a', 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, 'a', 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, 'a', 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, 'a', 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, 'a', 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, 'a', 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, 'a', 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, 'a', 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, 'a', 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, 'a', 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].lpNumCharsWritten) count = 0xdeadbeef;
+        ret = FillConsoleOutputCharacterW(invalid_table[i].hConsoleOutput,
+                                          invalid_table[i].ch,
+                                          invalid_table[i].length,
+                                          invalid_table[i].coord,
+                                          invalid_table[i].lpNumCharsWritten);
+        ok(!ret, "[%d] Expected FillConsoleOutputCharacterW to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].lpNumCharsWritten)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputCharacterW(output_handle, 'a', 0, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputCharacterW(output_handle, 'a', 1, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_FillConsoleOutputAttribute(HANDLE output_handle)
+{
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        WORD attr;
+        DWORD length;
+        COORD coord;
+        LPDWORD lpNumAttrsWritten;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, FOREGROUND_BLUE, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, FOREGROUND_BLUE, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, FOREGROUND_BLUE, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, FOREGROUND_BLUE, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, FOREGROUND_BLUE, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, FOREGROUND_BLUE, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, FOREGROUND_BLUE, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, FOREGROUND_BLUE, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, FOREGROUND_BLUE, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, FOREGROUND_BLUE, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].lpNumAttrsWritten) count = 0xdeadbeef;
+        ret = FillConsoleOutputAttribute(invalid_table[i].hConsoleOutput,
+                                         invalid_table[i].attr,
+                                         invalid_table[i].length,
+                                         invalid_table[i].coord,
+                                         invalid_table[i].lpNumAttrsWritten);
+        ok(!ret, "[%d] Expected FillConsoleOutputAttribute to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].lpNumAttrsWritten)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputAttribute(output_handle, FOREGROUND_BLUE, 0, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputAttribute(output_handle, FOREGROUND_BLUE, 1, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = FillConsoleOutputAttribute(output_handle, ~0, 1, origin, &count);
+    ok(ret == TRUE, "Expected FillConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_ReadConsoleOutputCharacterA(HANDLE output_handle)
+{
+    CHAR read;
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        LPSTR lpstr;
+        DWORD length;
+        COORD coord;
+        LPDWORD read_count;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, origin, &count, 0, ERROR_INVALID_HANDLE, 1},
+        {NULL, &read, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &read, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, &read, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &read, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, &count, 0, ERROR_INVALID_HANDLE, 1},
+        {INVALID_HANDLE_VALUE, &read, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &read, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &read, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &read, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, &count, 1, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 10, origin, &count, 10, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &read, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &read, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].read_count) count = 0xdeadbeef;
+        ret = ReadConsoleOutputCharacterA(invalid_table[i].hConsoleOutput,
+                                          invalid_table[i].lpstr,
+                                          invalid_table[i].length,
+                                          invalid_table[i].coord,
+                                          invalid_table[i].read_count);
+        ok(!ret, "[%d] Expected ReadConsoleOutputCharacterA to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].read_count)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputCharacterA(output_handle, NULL, 0, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputCharacterA(output_handle, &read, 0, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputCharacterA(output_handle, &read, 1, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputCharacterA to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_ReadConsoleOutputCharacterW(HANDLE output_handle)
+{
+    WCHAR read;
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        LPWSTR buffer;
+        DWORD length;
+        COORD coord;
+        LPDWORD read_count;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, origin, &count, 0, ERROR_INVALID_HANDLE, 1},
+        {NULL, &read, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &read, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, &read, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &read, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, &count, 0, ERROR_INVALID_HANDLE, 1},
+        {INVALID_HANDLE_VALUE, &read, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &read, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &read, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &read, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, &count, 1, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 10, origin, &count, 10, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &read, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &read, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].read_count) count = 0xdeadbeef;
+        ret = ReadConsoleOutputCharacterW(invalid_table[i].hConsoleOutput,
+                                          invalid_table[i].buffer,
+                                          invalid_table[i].length,
+                                          invalid_table[i].coord,
+                                          invalid_table[i].read_count);
+        ok(!ret, "[%d] Expected ReadConsoleOutputCharacterW to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].read_count)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputCharacterW(output_handle, NULL, 0, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputCharacterW(output_handle, &read, 0, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputCharacterW(output_handle, &read, 1, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputCharacterW to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
+static void test_ReadConsoleOutputAttribute(HANDLE output_handle)
+{
+    WORD attr;
+    COORD origin = {0, 0};
+    DWORD count;
+    BOOL ret;
+    int i;
+
+    const struct
+    {
+        HANDLE hConsoleOutput;
+        LPWORD lpAttribute;
+        DWORD length;
+        COORD coord;
+        LPDWORD read_count;
+        DWORD expected_count;
+        DWORD last_error;
+        int win7_crash;
+    } invalid_table[] =
+    {
+        {NULL, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, origin, &count, 0, ERROR_INVALID_HANDLE, 1},
+        {NULL, &attr, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &attr, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {NULL, &attr, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &attr, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, origin, &count, 0, ERROR_INVALID_HANDLE, 1},
+        {INVALID_HANDLE_VALUE, &attr, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &attr, 0, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {INVALID_HANDLE_VALUE, &attr, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &attr, 1, origin, &count, 0, ERROR_INVALID_HANDLE},
+        {output_handle, NULL, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, NULL, 1, origin, &count, 1, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &attr, 0, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {output_handle, &attr, 1, origin, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+    };
+
+    for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
+    {
+        if (invalid_table[i].win7_crash)
+            continue;
+
+        SetLastError(0xdeadbeef);
+        if (invalid_table[i].read_count) count = 0xdeadbeef;
+        ret = ReadConsoleOutputAttribute(invalid_table[i].hConsoleOutput,
+                                         invalid_table[i].lpAttribute,
+                                         invalid_table[i].length,
+                                         invalid_table[i].coord,
+                                         invalid_table[i].read_count);
+        ok(!ret, "[%d] Expected ReadConsoleOutputAttribute to return FALSE, got %d\n", i, ret);
+        if (invalid_table[i].read_count)
+        {
+            ok(count == invalid_table[i].expected_count,
+               "[%d] Expected count to be %u, got %u\n",
+               i, invalid_table[i].expected_count, count);
+        }
+        ok(GetLastError() == invalid_table[i].last_error,
+           "[%d] Expected last error to be %u, got %u\n",
+           i, invalid_table[i].last_error, GetLastError());
+    }
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputAttribute(output_handle, NULL, 0, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputAttribute(output_handle, &attr, 0, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 0, "Expected count to be 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    ret = ReadConsoleOutputAttribute(output_handle, &attr, 1, origin, &count);
+    ok(ret == TRUE, "Expected ReadConsoleOutputAttribute to return TRUE, got %d\n", ret);
+    ok(count == 1, "Expected count to be 1, got %u\n", count);
+}
+
 START_TEST(console)
 {
+    static const char font_name[] = "Lucida Console";
     HANDLE hConIn, hConOut;
     BOOL ret;
     CONSOLE_SCREEN_BUFFER_INFO	sbi;
+    LONG err;
+    HKEY console_key;
+    char old_font[LF_FACESIZE];
+    BOOL delete = FALSE;
+    DWORD size;
 
     init_function_pointers();
 
@@ -1098,9 +2464,55 @@ START_TEST(console)
      * the curses backend
      */
 
-    /* first, we detach and open a fresh console to play with */
+    /* ReadConsoleOutputW doesn't retrieve characters from the output buffer
+     * correctly for characters that don't have a glyph in the console font. So,
+     * we first set the console font to Lucida Console (which has a wider
+     * selection of glyphs available than the default raster fonts). We want
+     * to be able to restore the original font afterwards, so don't change
+     * if we can't read the original font.
+     */
+    err = RegOpenKeyExA(HKEY_CURRENT_USER, "Console", 0,
+                        KEY_QUERY_VALUE | KEY_SET_VALUE, &console_key);
+    if (err == ERROR_SUCCESS)
+    {
+        size = sizeof(old_font);
+        err = RegQueryValueExA(console_key, "FaceName", NULL, NULL,
+                               (LPBYTE) old_font, &size);
+        if (err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND)
+        {
+            delete = (err == ERROR_FILE_NOT_FOUND);
+            err = RegSetValueExA(console_key, "FaceName", 0, REG_SZ,
+                                 (const BYTE *) font_name, sizeof(font_name));
+            if (err != ERROR_SUCCESS)
+                trace("Unable to change default console font, error %d\n", err);
+        }
+        else
+        {
+            trace("Unable to query default console font, error %d\n", err);
+            RegCloseKey(console_key);
+            console_key = NULL;
+        }
+    }
+    else
+    {
+        trace("Unable to open HKCU\\Console, error %d\n", err);
+        console_key = NULL;
+    }
+
+    /* Now detach and open a fresh console to play with */
     FreeConsole();
     ok(AllocConsole(), "Couldn't alloc console\n");
+
+    /* Restore default console font if needed */
+    if (console_key != NULL)
+    {
+        if (delete)
+            err = RegDeleteValueA(console_key, "FaceName");
+        else
+            err = RegSetValueExA(console_key, "FaceName", 0, REG_SZ,
+                                 (const BYTE *) old_font, strlen(old_font) + 1);
+        ok(err == ERROR_SUCCESS, "Unable to restore default console font, error %d\n", err);
+    }
     hConIn = CreateFileA("CONIN$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
     hConOut = CreateFileA("CONOUT$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
 
@@ -1134,4 +2546,19 @@ START_TEST(console)
 
     test_GetConsoleProcessList();
     test_OpenConsoleW();
+    test_OpenCON();
+    test_VerifyConsoleIoHandle(hConOut);
+    test_GetSetStdHandle();
+    test_GetNumberOfConsoleInputEvents(hConIn);
+    test_WriteConsoleInputA(hConIn);
+    test_WriteConsoleInputW(hConIn);
+    test_WriteConsoleOutputCharacterA(hConOut);
+    test_WriteConsoleOutputCharacterW(hConOut);
+    test_WriteConsoleOutputAttribute(hConOut);
+    test_FillConsoleOutputCharacterA(hConOut);
+    test_FillConsoleOutputCharacterW(hConOut);
+    test_FillConsoleOutputAttribute(hConOut);
+    test_ReadConsoleOutputCharacterA(hConOut);
+    test_ReadConsoleOutputCharacterW(hConOut);
+    test_ReadConsoleOutputAttribute(hConOut);
 }

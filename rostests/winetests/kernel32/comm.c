@@ -807,7 +807,7 @@ static void test_waittxempty(HANDLE hcom)
     trace("WaitCommEvent for EV_TXEMPTY took %d ms\n", timediff);
     /* 050604: This shows a difference between XP (tested with mingw compiled crosstest):
        XP returns Writefile only after everything went out of the Serial port,
-       while wine returns immedate.
+       while wine returns immediately.
        Thus on XP, WaintCommEvent after setting the CommMask for EV_TXEMPTY
        nearly return immediate,
        while on wine the most time is spent here
@@ -927,7 +927,7 @@ static void test_LoopbackRead(HANDLE hcom)
     i=0;
     do 
     {
-	res = ReadFile(hcom, rbuf+read, sizeof(rbuf-read), &read1, NULL);
+	res = ReadFile(hcom, rbuf+read, sizeof(rbuf)-read, &read1, NULL);
 	ok(res, "Readfile failed\n");
 	read += read1;
 	i++;
@@ -1341,7 +1341,7 @@ static void  test_AbortWaitCts(HANDLE hcom)
     trace("Success 0x%08x err %d evtmask 0x%08x diff1 %d, diff2 %d\n",
 	  success, err, evtmask, after-before, after1-before);
 
-    ok(evtmask == 0, "Incorect EventMask 0x%08x returned on Wait aborted bu SetCommMask, expected 0x%08x\n",
+    ok(evtmask == 0, "Incorrect EventMask 0x%08x returned on Wait aborted bu SetCommMask, expected 0x%08x\n",
 		 evtmask, 0);
     ok(GetCommModemStatus(hcom, &evtmask), "GetCommModemStatus failed\n");
     diff = after1 - before;
@@ -1627,8 +1627,10 @@ static void  test_WaitBreak(HANDLE hcom)
     trace("overlapped WriteCommEvent returned.\n");
 
     if (!success && (err == ERROR_IO_PENDING))
-	ok(WaitForSingleObjectEx(hComPortEvent, TIMEOUT, TRUE) == 0,
-           "wait hComPortEvent res %d\n", GetLastError());
+    {
+        success = WaitForSingleObjectEx(hComPortEvent, TIMEOUT, TRUE);
+        ok(!success, "wait hComPortEvent res %d\n", GetLastError());
+    }
     success = GetOverlappedResult(hcom, &overlapped, &written, FALSE);
     err = GetLastError();
     after1 = GetTickCount();

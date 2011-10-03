@@ -206,14 +206,14 @@ static const char* curr_expected_modules[] =
 {
     "kernel32_test.exe"
     "kernel32.dll",
-    /* FIXME: could test for ntdll on NT and Wine */
+    "ntdll.dll",
 };
 static const char* sub_expected_modules[] =
 {
     "kernel32_test.exe",
     "kernel32.dll",
-    "shell32.dll"
-    /* FIXME: could test for ntdll on NT and Wine */
+    "shell32.dll",
+    "ntdll.dll",
 };
 #define NUM_OF(x) (sizeof(x) / sizeof(x[0]))
 

@@ -25,6 +25,8 @@
 
 static BOOL (WINAPI *pTzSpecificLocalTimeToSystemTime)(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
 static BOOL (WINAPI *pSystemTimeToTzSpecificLocalTime)(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
+static int (WINAPI *pGetCalendarInfoA)(LCID,CALID,CALTYPE,LPSTR,int,LPDWORD);
+static int (WINAPI *pGetCalendarInfoW)(LCID,CALID,CALTYPE,LPWSTR,int,LPDWORD);
 
 #define SECSPERMIN         60
 #define SECSPERDAY        86400
@@ -437,8 +439,8 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
     tzE.StandardBias=0;
     tzE.DaylightBias=-60;
     tzE.StandardDate.wMonth=10;
-    tzE.StandardDate.wDayOfWeek=0; /*sunday */
-    tzE.StandardDate.wDay=5;       /* last (sunday) of the month */
+    tzE.StandardDate.wDayOfWeek=0; /* Sunday */
+    tzE.StandardDate.wDay=5;       /* last (Sunday) of the month */
     tzE.StandardDate.wHour=3;
     tzE.DaylightDate.wMonth=3;
     tzE.DaylightDate.wDay=5;
@@ -448,19 +450,19 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
     tzW.StandardBias=0;
     tzW.DaylightBias=-60;
     tzW.StandardDate.wMonth=10;
-    tzW.StandardDate.wDayOfWeek=0; /*sunday */
-    tzW.StandardDate.wDay=4;       /* 4th (sunday) of the month */
+    tzW.StandardDate.wDayOfWeek=0; /* Sunday */
+    tzW.StandardDate.wDay=4;       /* 4th (Sunday) of the month */
     tzW.StandardDate.wHour=2;
     tzW.DaylightDate.wMonth=4;
     tzW.DaylightDate.wDay=1;
     tzW.DaylightDate.wHour=2;
-    /* timezone Eastern hemisphere */
+    /* timezone Southern hemisphere */
     tzS.Bias=240;
     tzS.StandardBias=0;
     tzS.DaylightBias=-60;
     tzS.StandardDate.wMonth=4;
-    tzS.StandardDate.wDayOfWeek=0; /*sunday */
-    tzS.StandardDate.wDay=1;       /* 1st  (sunday) of the month */
+    tzS.StandardDate.wDayOfWeek=0; /*Sunday */
+    tzS.StandardDate.wDay=1;       /* 1st (Sunday) of the month */
     tzS.StandardDate.wHour=2;
     tzS.DaylightDate.wMonth=10;
     tzS.DaylightDate.wDay=4;
@@ -483,7 +485,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
             { 10, &tzW, {2004,10,-1,24,1,0,0,0}, 4},
             { 11, &tzW, {2004,10,-1,24,1,59,59,999}, 4},
             { 12, &tzW, {2004,10,-1,24,2,0,0,0 }, 6},
-            /* and now south */
+            /* and now South */
             { 13, &tzS, {2004,4,-1,4,1,0,0,0}, 4},
             { 14, &tzS, {2004,4,-1,4,1,59,59,999}, 4},
             { 15, &tzS, {2004,4,-1,4,2,0,0,0}, 6},
@@ -548,7 +550,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
             { 10, &tzW, {2004,10,-1,24,4,0,0,0}, 1},
             { 11, &tzW, {2004,10,-1,24,4,59,59,999}, 1},
             { 12, &tzW, {2004,10,-1,24,5,0,0,0 }, 1},
-            /* and now south */
+            /* and now South */
             { 13, &tzS, {2004,4,-1,4,4,0,0,0}, 1},
             { 14, &tzS, {2004,4,-1,4,4,59,59,999}, 1},
             { 15, &tzS, {2004,4,-1,4,5,0,0,0}, 1},
@@ -582,6 +584,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
             , {25,28,2,22,2,22}  /* 2017 */
             , {24,27,1,28,1,28}  /* 2018 */
             , {30,26,7,27,7,27}  /* 2019 */
+            , {0}
         };
         for( j=0 , year = 1999; yeardays[j][0] ; j++, year++) {
             for (i=0; cases[i].nr; i++) {
@@ -599,11 +602,106 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
     }        
 }
 
+static void test_FileTimeToDosDateTime(void)
+{
+    FILETIME ft = { 0 };
+    WORD fatdate, fattime;
+    BOOL ret;
+
+    if (0)
+    {
+        /* Crashes */
+        FileTimeToDosDateTime(NULL, NULL, NULL);
+    }
+    /* Parameter checking */
+    SetLastError(0xdeadbeef);
+    ret = FileTimeToDosDateTime(&ft, NULL, NULL);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = FileTimeToDosDateTime(&ft, &fatdate, NULL);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = FileTimeToDosDateTime(&ft, NULL, &fattime);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = FileTimeToDosDateTime(&ft, &fatdate, &fattime);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+}
+
+static void test_GetCalendarInfo(void)
+{
+    char bufferA[20];
+    WCHAR bufferW[20];
+    DWORD val1, val2;
+    int ret;
+
+    if (!pGetCalendarInfoA || !pGetCalendarInfoW)
+    {
+        trace( "GetCalendarInfo missing\n" );
+        return;
+    }
+
+    ret = pGetCalendarInfoA( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER,
+                             NULL, 0, &val1 );
+    ok( ret, "GetCalendarInfoA failed err %u\n", GetLastError() );
+    ok( ret == sizeof(val1), "wrong size %u\n", ret );
+    ok( val1 >= 2000 && val1 < 2100, "wrong value %u\n", val1 );
+
+    ret = pGetCalendarInfoW( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER,
+                             NULL, 0, &val2 );
+    ok( ret, "GetCalendarInfoW failed err %u\n", GetLastError() );
+    ok( ret == sizeof(val2)/sizeof(WCHAR), "wrong size %u\n", ret );
+    ok( val1 == val2, "A/W mismatch %u/%u\n", val1, val2 );
+
+    ret = pGetCalendarInfoA( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX, bufferA, sizeof(bufferA), NULL );
+    ok( ret, "GetCalendarInfoA failed err %u\n", GetLastError() );
+    ok( ret == 5, "wrong size %u\n", ret );
+    ok( atoi( bufferA ) == val1, "wrong value %s/%u\n", bufferA, val1 );
+
+    ret = pGetCalendarInfoW( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX, bufferW, sizeof(bufferW), NULL );
+    ok( ret, "GetCalendarInfoW failed err %u\n", GetLastError() );
+    ok( ret == 5, "wrong size %u\n", ret );
+    memset( bufferA, 0x55, sizeof(bufferA) );
+    WideCharToMultiByte( CP_ACP, 0, bufferW, -1, bufferA, sizeof(bufferA), NULL, NULL );
+    ok( atoi( bufferA ) == val1, "wrong value %s/%u\n", bufferA, val1 );
+
+    ret = pGetCalendarInfoA( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER,
+                             NULL, 0, NULL );
+    ok( !ret, "GetCalendarInfoA succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    ret = pGetCalendarInfoA( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX, NULL, 0, NULL );
+    ok( ret, "GetCalendarInfoA failed err %u\n", GetLastError() );
+    ok( ret == 5, "wrong size %u\n", ret );
+
+    ret = pGetCalendarInfoW( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER,
+                             NULL, 0, NULL );
+    ok( !ret, "GetCalendarInfoW succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    ret = pGetCalendarInfoW( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX, NULL, 0, NULL );
+    ok( ret, "GetCalendarInfoW failed err %u\n", GetLastError() );
+    ok( ret == 5, "wrong size %u\n", ret );
+}
+
 START_TEST(time)
 {
     HMODULE hKernel = GetModuleHandle("kernel32");
     pTzSpecificLocalTimeToSystemTime = (void *)GetProcAddress(hKernel, "TzSpecificLocalTimeToSystemTime");
     pSystemTimeToTzSpecificLocalTime = (void *)GetProcAddress( hKernel, "SystemTimeToTzSpecificLocalTime");
+    pGetCalendarInfoA = (void *)GetProcAddress(hKernel, "GetCalendarInfoA");
+    pGetCalendarInfoW = (void *)GetProcAddress(hKernel, "GetCalendarInfoW");
 
     test_conversions();
     test_invalid_arg();
@@ -611,4 +709,6 @@ START_TEST(time)
     test_FileTimeToSystemTime();
     test_FileTimeToLocalFileTime();
     test_TzSpecificLocalTimeToSystemTime();
+    test_FileTimeToDosDateTime();
+    test_GetCalendarInfo();
 }
