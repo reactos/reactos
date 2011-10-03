@@ -88,6 +88,14 @@ VOID MmHeapFree(PVOID MemoryPointer)
 }
 
 
+PVOID
+NTAPI
+ExAllocatePool(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
+{
+    return MmHeapAlloc(NumberOfBytes);
+}
 
 #undef ExAllocatePoolWithTag
 PVOID

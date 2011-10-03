@@ -19,14 +19,6 @@
 
 #pragma once
 
-typedef enum
-{
-	BiosMemoryUsable=1,
-	BiosMemoryReserved,
-	BiosMemoryAcpiReclaim,
-	BiosMemoryAcpiNvs
-} BIOS_MEMORY_TYPE;
-
 typedef struct _FREELDR_MEMORY_DESCRIPTOR
 {
     TYPE_OF_MEMORY MemoryType;
@@ -34,15 +26,6 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
     PFN_NUMBER PageCount;
 } FREELDR_MEMORY_DESCRIPTOR, *PFREELDR_MEMORY_DESCRIPTOR;
 
-#include <pshpack1.h>
-typedef struct
-{
-	ULONGLONG		BaseAddress;
-	ULONGLONG		Length;
-	ULONG		Type;
-	ULONG		Reserved;
-} BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
-#include <poppack.h>
 
 #if  defined(__i386__) || defined(_PPC_) || defined(_MIPS_) || defined(_ARM_)
 
@@ -88,12 +71,10 @@ typedef struct
 //
 #define DUMP_MEM_MAP_ON_VERIFY	0
 
-
-
-extern	PVOID	PageLookupTableAddress;
-extern	ULONG		TotalPagesInLookupTable;
-extern	ULONG		FreePagesInLookupTable;
-extern	ULONG		LastFreePageHint;
+extern PVOID PageLookupTableAddress;
+extern ULONG TotalPagesInLookupTable;
+extern ULONG FreePagesInLookupTable;
+extern ULONG LastFreePageHint;
 
 #if DBG
 PCSTR MmGetSystemMemoryMapTypeString(TYPE_OF_MEMORY Type);
@@ -127,6 +108,35 @@ PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 PVOID	MmHeapAlloc(SIZE_T MemorySize);
 VOID	MmHeapFree(PVOID MemoryPointer);
 
-#define ExAllocatePool(pool, size) MmHeapAlloc(size)
-#define ExAllocatePoolWithTag(pool, size, tag) MmHeapAlloc(size)
-#define ExFreePool(p) MmHeapFree(p)
+/* Heap */
+extern PVOID FrLdrDefaultHeap;
+extern PVOID FrLdrTempHeap;
+
+PVOID
+HeapCreate(
+    ULONG MaximumSize,
+    TYPE_OF_MEMORY MemoryType);
+
+VOID
+HeapDestroy(
+    PVOID HeapHandle);
+
+VOID
+HeapRelease(
+    PVOID HeapHandle);
+
+VOID
+HeapCleanupAll(VOID);
+
+PVOID
+HeapAllocate(
+    PVOID HeapHandle,
+    SIZE_T ByteSize,
+    ULONG Tag);
+
+VOID
+HeapFree(
+    PVOID HeapHandle,
+    PVOID Pointer,
+    ULONG Tag);
+

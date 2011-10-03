@@ -20,21 +20,23 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
+// OR this with DebugPrintMask to enable ...
 #define DPRINT_NONE         0x00000000  // No debug print
-#define DPRINT_WARNING      0x00000001  // OR this with DebugPrintMask to enable debugger messages and other misc stuff
-#define DPRINT_MEMORY       0x00000002  // OR this with DebugPrintMask to enable memory management messages
-#define DPRINT_FILESYSTEM   0x00000004  // OR this with DebugPrintMask to enable file system messages
-#define DPRINT_INIFILE      0x00000008  // OR this with DebugPrintMask to enable .ini file messages
-#define DPRINT_UI           0x00000010  // OR this with DebugPrintMask to enable user interface messages
-#define DPRINT_DISK         0x00000020  // OR this with DebugPrintMask to enable disk messages
-#define DPRINT_CACHE        0x00000040  // OR this with DebugPrintMask to enable cache messages
-#define DPRINT_REGISTRY     0x00000080  // OR this with DebugPrintMask to enable registry messages
-#define DPRINT_REACTOS      0x00000100  // OR this with DebugPrintMask to enable ReactOS messages
-#define DPRINT_LINUX        0x00000200  // OR this with DebugPrintMask to enable Linux messages
-#define DPRINT_HWDETECT     0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
-#define DPRINT_WINDOWS      0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
-#define DPRINT_PELOADER     0x00001000  // OR this with DebugPrintMask to enable messages from PE images loader
-#define DPRINT_SCSIPORT     0x00002000  // OR this with DebugPrintMask to enable messages from SCSI miniport
+#define DPRINT_WARNING      0x00000001  // debugger messages and other misc stuff
+#define DPRINT_MEMORY       0x00000002  // memory management messages
+#define DPRINT_FILESYSTEM   0x00000004  // file system messages
+#define DPRINT_INIFILE      0x00000008  // .ini file messages
+#define DPRINT_UI           0x00000010  // user interface messages
+#define DPRINT_DISK         0x00000020  // disk messages
+#define DPRINT_CACHE        0x00000040  // cache messages
+#define DPRINT_REGISTRY     0x00000080  // registry messages
+#define DPRINT_REACTOS      0x00000100  // ReactOS messages
+#define DPRINT_LINUX        0x00000200  // Linux messages
+#define DPRINT_HWDETECT     0x00000400  // hardware detection messages
+#define DPRINT_WINDOWS      0x00000800  // messages from Windows loader
+#define DPRINT_PELOADER     0x00001000  // messages from PE images loader
+#define DPRINT_SCSIPORT     0x00002000  // messages from SCSI miniport
+#define DPRINT_HEAP         0x00004000  // messages in a bottle
 
 #if DBG && !defined(_M_ARM)
 

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 2011 Timo Kreuzer (timo.kreuzer@reactos.orh)
+ *  Copyright (C) 2011 Timo Kreuzer (timo.kreuzer@reactos.org)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(HEAP);
+
+#define DEFAULT_HEAP_SIZE (1024 * 1024)
+#define TEMP_HEAP_SIZE (1024 * 1024)
 
 PVOID FrLdrDefaultHeap;
 PVOID FrLdrTempHeap;
@@ -171,6 +174,32 @@ HeapRelease(
     }
 
     TRACE("HeapRelease() done, freed %ld pages\n", AllFreePages);
+}
+
+VOID
+HeapCleanupAll(VOID)
+{
+    PHEAP Heap;
+
+    Heap = FrLdrDefaultHeap;
+    TRACE("Heap statistics for default heap:\n"
+          "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
+          "NumAllocs=%ld, NumFrees=%ld\n",
+          Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
+          Heap->NumAllocs, Heap->NumFrees);
+
+    /* Release fre pages */
+    HeapRelease(FrLdrDefaultHeap);
+
+    Heap = FrLdrTempHeap;
+    TRACE("Heap statistics for temp heap:\n"
+          "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
+          "NumAllocs=%ld, NumFrees=%ld\n",
+          Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
+          Heap->NumAllocs, Heap->NumFrees);
+
+    /* Destroy the heap */
+    HeapDestroy(FrLdrTempHeap);
 }
 
 PVOID
@@ -328,22 +357,21 @@ HeapFree(
 
 /* Wrapper functions *********************************************************/
 
-#define HEAP_SIZE_PROCESS_HEAP (1024 * 1024)
-
 VOID
 MmInitializeHeap(PVOID PageLookupTable)
 {
     TRACE("MmInitializeHeap()\n");
 
-    /* Create the process heap */
-    FrLdrDefaultHeap = HeapCreate(HEAP_SIZE_PROCESS_HEAP, LoaderOsloaderHeap);
+    /* Create the default heap */
+    FrLdrDefaultHeap = HeapCreate(DEFAULT_HEAP_SIZE, LoaderOsloaderHeap);
+    ASSERT(FrLdrDefaultHeap);
 
-    /* Create the process heap */
-    FrLdrTempHeap = HeapCreate(HEAP_SIZE_PROCESS_HEAP, LoaderFirmwareTemporary);
+    /* Create a temporary heap */
+    FrLdrTempHeap = HeapCreate(TEMP_HEAP_SIZE, LoaderFirmwareTemporary);
+    ASSERT(FrLdrTempHeap);
 
-    /* Create the pool heap */
-    TRACE("MmInitializeHeap() done\n");
-
+    TRACE("MmInitializeHeap() done, default heap %p, temp heap %p\n",
+          FrLdrDefaultHeap, FrLdrTempHeap);
 }
 
 PVOID
@@ -368,6 +396,15 @@ ExAllocatePoolWithTag(
     IN ULONG Tag)
 {
     return HeapAllocate(FrLdrDefaultHeap, NumberOfBytes, Tag);
+}
+
+PVOID
+NTAPI
+ExAllocatePool(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
+{
+    return HeapAllocate(FrLdrDefaultHeap, NumberOfBytes, 0);
 }
 
 #undef ExFreePool

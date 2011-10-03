@@ -96,9 +96,9 @@
 /* arch specific includes */
 #if defined(_M_IX86) || defined(_M_AMD64)
 #include <arch/pc/hardware.h>
+#include <arch/pc/pcbios.h>
 #include <arch/pc/machpc.h>
 #include <arch/pc/x86common.h>
-#include <arch/pc/pcbios.h>
 #include <arch/pc/pxe.h>
 #endif
 #if defined(_M_IX86)

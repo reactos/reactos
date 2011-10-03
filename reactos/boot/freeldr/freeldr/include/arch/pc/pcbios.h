@@ -1,5 +1,29 @@
 #ifndef __ASM__
 
+typedef enum
+{
+	BiosMemoryUsable=1,
+	BiosMemoryReserved,
+	BiosMemoryAcpiReclaim,
+	BiosMemoryAcpiNvs
+} BIOS_MEMORY_TYPE;
+
+typedef struct
+{
+	ULONGLONG		BaseAddress;
+	ULONGLONG		Length;
+	ULONG		Type;
+	ULONG		Reserved;
+} BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
+
+/* FIXME: Should be moved to NDK, and respective ACPI header files */
+typedef struct _ACPI_BIOS_DATA
+{
+    PHYSICAL_ADDRESS RSDTAddress;
+    ULONGLONG Count;
+    BIOS_MEMORY_MAP MemoryMap[1]; /* Count of BIOS memory map entries */
+} ACPI_BIOS_DATA, *PACPI_BIOS_DATA;
+
 #include <pshpack1.h>
 typedef struct
 {

@@ -33,14 +33,6 @@ typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
 #define NUM_GDT 128 // Must be 128
 #define NUM_IDT 0x100 // only 16 are used though. Must be 0x100
 
-/* FIXME: Should be moved to NDK, and respective ACPI header files */
-typedef struct _ACPI_BIOS_DATA
-{
-    PHYSICAL_ADDRESS RSDTAddress;
-    ULONGLONG Count;
-    BIOS_MEMORY_MAP MemoryMap[1]; /* Count of BIOS memory map entries */
-} ACPI_BIOS_DATA, *PACPI_BIOS_DATA;
-
 #include <pshpack1.h>
 typedef struct  /* Root System Descriptor Pointer */
 {
