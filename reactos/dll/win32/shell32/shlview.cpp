@@ -212,7 +212,7 @@ public:
     {
         static ATL::CWndClassInfo wc =
         {
-            { sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW, StartWindowProc,
+            { sizeof(WNDCLASSEX), 0, StartWindowProc,
               0, 0, NULL, NULL,
               LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_BACKGROUND + 1), NULL, SV_CLASS_NAME, NULL },
             NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
