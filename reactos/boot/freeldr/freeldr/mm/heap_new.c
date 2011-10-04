@@ -28,12 +28,23 @@ DBG_DEFAULT_CHANNEL(HEAP);
 PVOID FrLdrDefaultHeap;
 PVOID FrLdrTempHeap;
 
-typedef struct _HEAP_BLOCK
+typedef struct _BLOCK_HEADER
 {
     USHORT Size;
     USHORT PreviousSize;
     ULONG Tag;
-    UCHAR Data[];
+} BLOCK_HEADER, *PBLOCK_HEADER;
+
+typedef struct _BLOCK_DATA
+{
+    ULONG Flink;
+    ULONG Blink;
+} BLOCK_DATA, *PBLOCK_DATA;
+
+typedef struct _HEAP_BLOCK
+{
+    BLOCK_HEADER;
+    BLOCK_DATA Data[];
 } HEAP_BLOCK, *PHEAP_BLOCK;
 
 typedef struct _HEAP
@@ -44,6 +55,9 @@ typedef struct _HEAP
     ULONG NumAllocs;
     ULONG NumFrees;
     ULONG LargestAllocation;
+    ULONGLONG AllocationTime;
+    ULONGLONG FreeTime;
+    ULONG TerminatingBlock;
     HEAP_BLOCK Blocks;
 } HEAP, *PHEAP;
 
@@ -59,6 +73,7 @@ HeapCreate(
     TRACE("HeapCreate(MemoryType=%ld)\n", MemoryType);
 
     /* Allocate some memory for the heap */
+    MaximumSize = ALIGN_UP_BY(MaximumSize, MM_PAGE_SIZE);
     Heap = MmAllocateMemoryWithType(MaximumSize, MemoryType);
     if (!Heap)
     {
@@ -68,7 +83,7 @@ HeapCreate(
     }
 
     /* Initialize the heap header */
-    Heap->MaximumSize = ALIGN_UP_BY(MaximumSize, MM_PAGE_SIZE);
+    Heap->MaximumSize = MaximumSize;
     Heap->CurrentAllocBytes = 0;
     Heap->MaxAllocBytes = 0;
     Heap->NumAllocs = 0;
@@ -79,8 +94,8 @@ HeapCreate(
     Remaining = (MaximumSize - sizeof(HEAP)) / sizeof(HEAP_BLOCK);
     TRACE("Remaining = %ld\n", Remaining);
 
-    /* Substract one for the terminating entry */
-    Remaining--;
+    /* Substract 2 for the terminating entry (header + free entry) */
+    Remaining -= 2;
 
     Block = &Heap->Blocks;
     PreviousSize = 0;
@@ -92,6 +107,8 @@ HeapCreate(
         Block->Size = (USHORT)min(MAXUSHORT, Remaining - 1);
         Block->PreviousSize = PreviousSize;
         Block->Tag = 0;
+        Block->Data[0].Flink = (Block - &Heap->Blocks) + Block->Size + 1;
+        Block->Data[0].Blink = (Block - &Heap->Blocks) - 1 - PreviousSize;
 
         /* Substract current block size from remainder */
         Remaining -= (Block->Size + 1);
@@ -104,9 +121,13 @@ HeapCreate(
     }
 
     /* Now finish with a terminating block */
+    Heap->TerminatingBlock = Block - &Heap->Blocks;
     Block->Size = 0;
     Block->PreviousSize = PreviousSize;
     Block->Tag = 'dnE#';
+    Block->Data[0].Flink = 0;
+    Block->Data[0].Blink = (Block - &Heap->Blocks) - 1 - PreviousSize;
+    Heap->Blocks.Data[0].Blink = Heap->TerminatingBlock;
 
     return Heap;
 }
@@ -117,11 +138,11 @@ HeapDestroy(
 {
     PHEAP Heap = HeapHandle;
 
-    /* Mark all pages free */
+    /* Mark all pages as firmware temporary, so they are free for the kernel */
     MmMarkPagesInLookupTable(PageLookupTableAddress,
                              (ULONG_PTR)Heap / MM_PAGE_SIZE,
                              Heap->MaximumSize / MM_PAGE_SIZE,
-                             LoaderFree);
+                             LoaderFirmwareTemporary);
 }
 
 VOID
@@ -173,7 +194,7 @@ HeapRelease(
         if (Block->Size == 0) break;
     }
 
-    TRACE("HeapRelease() done, freed %ld pages\n", AllFreePages);
+    ERR("HeapRelease() done, freed %ld pages\n", AllFreePages);
 }
 
 VOID
@@ -182,17 +203,20 @@ HeapCleanupAll(VOID)
     PHEAP Heap;
 
     Heap = FrLdrDefaultHeap;
-    TRACE("Heap statistics for default heap:\n"
+    ERR("Heap statistics for default heap:\n"
           "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
           "NumAllocs=%ld, NumFrees=%ld\n",
           Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
           Heap->NumAllocs, Heap->NumFrees);
+    ERR("AllocTime = %I64d, FreeTime = %I64d, sum = %I64d\n",
+        Heap->AllocationTime, Heap->FreeTime, Heap->AllocationTime + Heap->FreeTime);
+
 
     /* Release fre pages */
     HeapRelease(FrLdrDefaultHeap);
 
     Heap = FrLdrTempHeap;
-    TRACE("Heap statistics for temp heap:\n"
+    ERR("Heap statistics for temp heap:\n"
           "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
           "NumAllocs=%ld, NumFrees=%ld\n",
           Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
@@ -200,6 +224,46 @@ HeapCleanupAll(VOID)
 
     /* Destroy the heap */
     HeapDestroy(FrLdrTempHeap);
+}
+
+static VOID
+HeapRemoveFreeList(
+    PHEAP Heap,
+    PHEAP_BLOCK Block)
+{
+    PHEAP_BLOCK Previous, Next;
+
+    Next = &Heap->Blocks + Block->Data[0].Flink;
+    Previous = &Heap->Blocks + Block->Data[0].Blink;
+    ASSERT((Next->Tag == 0) || (Next->Tag == 'dnE#'));
+    ASSERT(Next->Data[0].Blink == Block - &Heap->Blocks);
+    ASSERT((Previous->Tag == 0) || (Previous->Tag == 'dnE#'));
+    ASSERT(Previous->Data[0].Flink == Block - &Heap->Blocks);
+
+    Next->Data[0].Blink = Previous - &Heap->Blocks;
+    Previous->Data[0].Flink = Next - &Heap->Blocks;
+}
+
+static VOID
+HeapInsertFreeList(
+    PHEAP Heap,
+    PHEAP_BLOCK FreeBlock)
+{
+    PHEAP_BLOCK ListHead, NextBlock;
+    ASSERT(FreeBlock->Tag == 0);
+
+    /* Terminating block serves as free list head */
+    ListHead = &Heap->Blocks + Heap->TerminatingBlock;
+
+    for (NextBlock = &Heap->Blocks + ListHead->Data[0].Flink;
+         NextBlock < FreeBlock;
+         NextBlock = &Heap->Blocks + NextBlock->Data[0].Flink);
+
+    FreeBlock->Data[0].Flink = NextBlock - &Heap->Blocks;
+    FreeBlock->Data[0].Blink = NextBlock->Data[0].Blink;
+    NextBlock->Data[0].Blink = FreeBlock - &Heap->Blocks;
+    NextBlock = &Heap->Blocks + FreeBlock->Data[0].Blink;
+    NextBlock->Data[0].Flink = FreeBlock - &Heap->Blocks;
 }
 
 PVOID
@@ -210,7 +274,8 @@ HeapAllocate(
 {
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block, NextBlock;
-    USHORT BlockSize, PreviousSize = 0, Remaining;
+    USHORT BlockSize, Remaining;
+    ULONGLONG Time = __rdtsc();
 
     /* Check if the allocation is too large */
     if ((ByteSize +  sizeof(HEAP_BLOCK)) > MAXUSHORT * sizeof(HEAP_BLOCK))
@@ -225,22 +290,22 @@ HeapAllocate(
     /* Calculate alloc size */
     BlockSize = (USHORT)((ByteSize + sizeof(HEAP_BLOCK) - 1) / sizeof(HEAP_BLOCK));
 
-    /* Loop all heap chunks */
-    for (Block = &Heap->Blocks;
+    /* Walk the free block list */
+    Block = &Heap->Blocks + Heap->TerminatingBlock;
+    for (Block = &Heap->Blocks + Block->Data[0].Flink;
          Block->Size != 0;
-         Block = Block + 1 + Block->Size)
+         Block = &Heap->Blocks + Block->Data[0].Flink)
     {
-        ASSERT(Block->PreviousSize == PreviousSize);
-        PreviousSize = Block->Size;
-
-        /* Continue, if its not free */
-        if (Block->Tag != 0) continue;
+        ASSERT(Block->Tag == 0);
 
         /* Continue, if its too small */
         if (Block->Size < BlockSize) continue;
 
         /* This block is just fine, use it */
         Block->Tag = Tag;
+
+        /* Remove this entry from the free list */
+        HeapRemoveFreeList(Heap, Block);
 
         /* Calculate the remaining size */
         Remaining = Block->Size - BlockSize;
@@ -259,6 +324,7 @@ HeapAllocate(
             NextBlock->Size = Remaining - 1;
             NextBlock->PreviousSize = BlockSize;
             BlockSize = NextBlock->Size;
+            HeapInsertFreeList(Heap, NextBlock);
 
             /* Advance to the next block */
             NextBlock = NextBlock + 1 + BlockSize;
@@ -281,6 +347,7 @@ HeapAllocate(
         Heap->MaxAllocBytes = max(Heap->MaxAllocBytes, Heap->CurrentAllocBytes);
         Heap->LargestAllocation = max(Heap->LargestAllocation,
                                       Block->Size * sizeof(HEAP_BLOCK));
+        Heap->AllocationTime += (__rdtsc() - Time);
 
         TRACE("HeapAllocate(%p, %ld, %.4s) -> return %p\n",
               HeapHandle, ByteSize, &Tag, Block->Data);
@@ -303,6 +370,7 @@ HeapFree(
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block, PrevBlock, NextBlock;
     USHORT PreviousSize = 0;
+    ULONGLONG Time = __rdtsc();
     TRACE("HeapFree(%p, %p)\n", HeapHandle, Pointer);
     ASSERT(Tag != 'dnE#');
 
@@ -317,10 +385,10 @@ HeapFree(
     Block = ((PHEAP_BLOCK)Pointer) - 1;
 
     /* Check if the tag matches */
-    if (Tag && (Block->Tag != Tag))
+    if ((Tag && (Block->Tag != Tag)) || (Block->Tag == 0))
     {
-        ERR("HEAP: Bad tag! Pointer = %p: block tag '%.4s', requested '%.4s'\n",
-            Pointer, &Block->Tag, &Tag);
+        ERR("HEAP: Bad tag! Pointer=%p: block tag '%.4s', requested '%.4s', size=0x%lx\n",
+            Pointer, &Block->Tag, &Tag, Block->Size);
         ASSERT(FALSE);
     }
 
@@ -336,29 +404,34 @@ HeapFree(
     NextBlock = Block + Block->Size + 1;
 
     /* Check if next block is free */
-    if (NextBlock->Tag == 0)
+    if ((NextBlock->Tag == 0) &&
+        ((Block->Size + NextBlock->Size + 1) <= MAXUSHORT))
     {
-        /* Check if their combined size if small enough */
-        if ((Block->Size + NextBlock->Size + 1) <= MAXUSHORT)
-        {
-            /* Merge next block into current */
-            Block->Size += NextBlock->Size + 1;
-            NextBlock = Block + Block->Size + 1;
-            NextBlock->PreviousSize = Block->Size;
-        }
+        /* Merge next block into current */
+        Block->Size += NextBlock->Size + 1;
+        HeapRemoveFreeList(Heap, NextBlock);
+
+        NextBlock = Block + Block->Size + 1;
     }
 
     /* Check if there is a block before and it's free */
-    if ((Block->PreviousSize != 0) && (PrevBlock->Tag == 0))
+    if ((Block->PreviousSize != 0) && (PrevBlock->Tag == 0) &&
+        ((PrevBlock->Size + Block->Size + 1) <= MAXUSHORT))
     {
-        /* Check if their combined size if small enough */
-        if ((PrevBlock->Size + Block->Size + 1) <= MAXUSHORT)
-        {
-            /* Merge current block into previous */
-            PrevBlock->Size += Block->Size + 1;
-            NextBlock->PreviousSize = PrevBlock->Size;
-        }
+        /* Merge current block into previous */
+        PrevBlock->Size += Block->Size + 1;
+        Block = PrevBlock;
     }
+    else
+    {
+        /* Insert the entry into the free list */
+        HeapInsertFreeList(Heap, Block);
+    }
+
+    /* Update the next block's back link */
+    NextBlock->PreviousSize = Block->Size;
+
+    Heap->FreeTime += (__rdtsc() - Time);
 }
 
 
