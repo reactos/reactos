@@ -16,7 +16,8 @@ add_library(intl SHARED
     languages.c
     advanced.c
     sort.c
-    intl.rc)
+    intl.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/intl.def)
 
 set_module_type(intl cpl UNICODE)
 
