@@ -32,6 +32,14 @@ LRESULT CALLBACK OwnerTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
     switch(message)
     {
+    case WM_QUERYNEWPALETTE:
+        {
+            HDC hdc = GetDC(0);
+            int bits = GetDeviceCaps(hdc,BITSPIXEL);
+            ok( bits == 8 , "expected WM_QUERYNEWPALETTE only on 8bpp\n");
+            ReleaseDC(0, hdc);
+            return FALSE;
+        }
     case WM_IME_SETCONTEXT:
     case WM_IME_NOTIFY :
     case WM_GETICON :
