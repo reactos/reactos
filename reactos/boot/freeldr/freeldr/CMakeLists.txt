@@ -167,10 +167,10 @@ add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
 if(NOT MSVC)
     add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
-    set_target_properties(freeldr_pe_dbg PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
+    add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
 else()
     add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
-    set_target_properties(freeldr_pe_dbg PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
+    add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
 endif()
 
 set_image_base(freeldr_pe 0x10000)
@@ -230,12 +230,14 @@ add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SET
 
 if(NOT MSVC)
     add_target_link_flags(setupldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
-    set_target_properties(setupldr_pe_dbg PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    add_target_link_flags(setupldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
 else()
     add_target_link_flags(setupldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
-    set_target_properties(setupldr_pe_dbg PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    add_target_link_flags(setupldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
 endif()
+
 add_target_compile_definitions(setupldr_pe FREELDR_REACTOS_SETUP)
+add_target_compile_definitions(setupldr_pe_dbg FREELDR_REACTOS_SETUP)
 
 set_image_base(setupldr_pe 0x10000)
 set_subsystem(setupldr_pe native)
