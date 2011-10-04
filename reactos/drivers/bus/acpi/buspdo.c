@@ -693,7 +693,7 @@ Bus_PDO_QueryResources(
         DPRINT1("Found PCI root hub: %d\n", BusNumber);
 
         ResourceListSize = sizeof(CM_RESOURCE_LIST);
-        ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
+        ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');
         if (!ResourceList)
             return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -723,7 +723,7 @@ Bus_PDO_QueryResources(
       return Irp->IoStatus.Status;
     }
 
-    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    Buffer.Pointer = ExAllocatePoolWithTag(PagedPool, Buffer.Length, 'IPCA');
     if (!Buffer.Pointer)
       return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -782,11 +782,11 @@ Bus_PDO_QueryResources(
 
 	/* Allocate memory */
 	ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
+	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');
 
 	if (!ResourceList)
 	{
-		ExFreePool(Buffer.Pointer);
+		ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	ResourceList->Count = 1;
@@ -1110,7 +1110,7 @@ Bus_PDO_QueryResources(
 		resource = ACPI_NEXT_RESOURCE(resource);
 	}
 
-    ExFreePool(Buffer.Pointer);
+    ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 	Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
 	return STATUS_SUCCESS;
 }
@@ -1156,7 +1156,7 @@ Bus_PDO_QueryResourceRequirements(
             break;
     }
 
-    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    Buffer.Pointer = ExAllocatePoolWithTag(PagedPool, Buffer.Length, 'IPCA');
     if (!Buffer.Pointer)
       return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1216,11 +1216,11 @@ Bus_PDO_QueryResourceRequirements(
 	}
 
 	RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePool(PagedPool, RequirementsListSize);
+	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePoolWithTag(PagedPool, RequirementsListSize, 'IPCA');
 
 	if (!RequirementsList)
 	{
-		ExFreePool(Buffer.Pointer);
+		ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	RequirementsList->ListSize = RequirementsListSize;
@@ -1567,7 +1567,7 @@ Bus_PDO_QueryResourceRequirements(
 		}
 		resource = ACPI_NEXT_RESOURCE(resource);
 	}
-	ExFreePool(Buffer.Pointer);
+	ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 
     Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
 

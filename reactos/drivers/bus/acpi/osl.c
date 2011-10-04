@@ -143,7 +143,7 @@ void *
 AcpiOsAllocate (ACPI_SIZE size)
 {
     DPRINT("AcpiOsAllocate size %d\n",size);
-    return ExAllocatePool(NonPagedPool, size);
+    return ExAllocatePoolWithTag(NonPagedPool, size, 'IPCA');
 }
 
 void
@@ -151,7 +151,7 @@ AcpiOsFree(void *ptr)
 {
     if (!ptr)
         DPRINT1("Attempt to free null pointer!!!\n");	
-    ExFreePool(ptr);
+    ExFreePoolWithTag(ptr, 'IPCA');
 }
 
 BOOLEAN

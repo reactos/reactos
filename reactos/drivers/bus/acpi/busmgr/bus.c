@@ -470,7 +470,7 @@ acpi_bus_generate_event_dpc(PKDPC Dpc,
     ULONG_PTR TypeData = (ULONG_PTR)SystemArgument2;
 	KIRQL OldIrql;
     
-    event = ExAllocatePool(NonPagedPool,sizeof(struct acpi_bus_event));
+    event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'IPCA');
 	if (!event)
 		return;
     
@@ -554,7 +554,7 @@ acpi_bus_receive_event (
 
 	memcpy(event, entry, sizeof(struct acpi_bus_event));
 
-	ExFreePool(entry);
+	ExFreePoolWithTag(entry, 'IPCA');
 	return_VALUE(0);
 }
 
@@ -1152,7 +1152,7 @@ acpi_bus_add (
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
 
-	device = ExAllocatePool(NonPagedPool,sizeof(struct acpi_device));
+	device = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_device), 'IPCA');
 	if (!device) {
 		DPRINT1("Memory allocation error\n");
 		return_VALUE(-12);
@@ -1268,7 +1268,7 @@ acpi_bus_add (
 			uid = info->UniqueId.String;
 		if (info->Valid & ACPI_VALID_CID) {
 			cid_list = &info->CompatibleIdList;
-			device->pnp.cid_list = ExAllocatePool(NonPagedPool,cid_list->ListSize);
+			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'IPCA');
 			if (device->pnp.cid_list)
 				memcpy(device->pnp.cid_list, cid_list, cid_list->ListSize);
 			else
@@ -1437,9 +1437,9 @@ acpi_bus_add (
 end:
 	if (result) {
 		if (device->pnp.cid_list) {
-			ExFreePool(device->pnp.cid_list);
+			ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
 		}
-		ExFreePool(device);
+		ExFreePoolWithTag(device, 'IPCA');
 		return_VALUE(result);
 	}
 	*child = device;
@@ -1460,10 +1460,10 @@ acpi_bus_remove (
 	acpi_device_unregister(device);
 
 	if (device && device->pnp.cid_list)
-		ExFreePool(device->pnp.cid_list);
+		ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
 
 	if (device)
-		ExFreePool(device);
+		ExFreePoolWithTag(device, 'IPCA');
 
 	return_VALUE(0);
 }

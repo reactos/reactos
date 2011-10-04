@@ -406,7 +406,7 @@ Bus_DestroyPdo (
     //
 
     if (PdoData->HardwareIDs) {
-        ExFreePool (PdoData->HardwareIDs);
+        ExFreePoolWithTag (PdoData->HardwareIDs, 'IPCA');
         PdoData->HardwareIDs = NULL;
     }
 
