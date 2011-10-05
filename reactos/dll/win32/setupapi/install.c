@@ -1814,6 +1814,10 @@ static BOOL InstallOneService(
     GetLineText(hInf, ServiceSection, DescriptionKey, &Description);
     GetLineText(hInf, ServiceSection, DependenciesKey, &Dependencies);
 
+    /* If there is no group, we must not request a tag */
+    if (!LoadOrderGroup || !*LoadOrderGroup)
+        useTag = FALSE;
+
     hService = OpenServiceW(
         hSCManager,
         ServiceName,
