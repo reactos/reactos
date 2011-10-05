@@ -45,9 +45,11 @@ ULONG
 NTAPI
 RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
 {
-    UNICODE_STRING DeviceName;
-    PWCHAR Start, End, Ptr;
-    SIZE_T DeviceNameLength;
+    UNICODE_STRING PathCopy;
+    PWCHAR Start, End;
+    ULONG PathChars, ColonCount = 0;
+    USHORT ReturnOffset = 0, ReturnLength;
+    WCHAR c;
 
     /* Validate the input */
     if (!PathString) return 0;
@@ -69,58 +71,128 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
             }
             return 0;
 
-        /* Skip the drive name for drive relative or absolute paths */
-        case RtlPathTypeDriveAbsolute:
-        case RtlPathTypeDriveRelative:
-            Start = PathString->Buffer + 2;
-            break;
-
         default:
-            Start = PathString->Buffer;
             break;
     }
 
-    /* Find start of file name */
-    for (Ptr = Start; *Ptr; Ptr++)
-        if (IS_PATH_SEPARATOR(*Ptr))
-            Start = Ptr + 1;
+    /* Make a copy of the string */
+    PathCopy = *PathString;
 
-    /* Truncate at extension or stream */
-    for (End = Start; *End; End++)
-        if (*End == L'.' || *End == L':')
-            break;
-    End--;
+    /* Return if there's no characters */
+    PathChars = PathCopy.Length / sizeof(WCHAR);
+    if (!PathChars) return 0;
 
-    /* Remove trailing spaces */
-    while (End >= Start && *End == L' ')
-        End--;
-
-    /* Build the device name string */
-    DeviceNameLength = End - Start + 1;
-    DeviceName.Buffer = Start;
-    DeviceName.Length = (USHORT)DeviceNameLength * sizeof(WCHAR);
-    DeviceName.MaximumLength = DeviceName.Length;
-
-    /* Check the device name */
-    if (DeviceNameLength == 3)
+    /* Check for drive path and truncate */
+    if (PathCopy.Buffer[PathChars - 1] == L':')
     {
-        if (RtlPrefixUnicodeString(&RtlpDosAUXDevice, &DeviceName, TRUE) ||
-            RtlPrefixUnicodeString(&RtlpDosCONDevice, &DeviceName, TRUE) ||
-            RtlPrefixUnicodeString(&RtlpDosNULDevice, &DeviceName, TRUE) ||
-            RtlPrefixUnicodeString(&RtlpDosPRNDevice, &DeviceName, TRUE))
+        /* Fixup the lengths */
+        PathCopy.Length -= sizeof(WCHAR);
+        if (!--PathChars) return 0;
+
+        /* Remember this for later */
+        ColonCount = 1;
+    }
+
+    /* Check for extension or space, and truncate */
+    c = PathCopy.Buffer[PathChars - 1];
+    do
+    {
+        /* Stop if we hit something else than a space or period */
+        if ((c != '.') && (c != ' ')) break;
+
+        /* Fixup the lengths and get the next character */
+        PathCopy.Length -= sizeof(WCHAR);
+        if (--PathChars) c = PathCopy.Buffer[PathChars - 1];
+
+        /* Remember this for later */
+        ColonCount++;
+    } while (PathChars);
+
+    /* Anything still left? */
+    if (PathChars)
+    {
+        /* Loop from the end */
+        for (End = &PathCopy.Buffer[PathChars - 1];
+             End >= PathCopy.Buffer;
+             --End)
         {
-            return MAKELONG(DeviceNameLength * sizeof(WCHAR), (Start - PathString->Buffer) * sizeof(WCHAR));
+            /* Check if the character is a path or drive separator */
+            c = *End;
+            if ((c == '\\') || (c == '/') || ((c == ':') && (End == PathCopy.Buffer + 1)))
+            {
+                /* Get the next lower case character */
+                End++;
+                c = *End | ' '; // ' ' == ('z' - 'Z')
+
+                /* Check if it's a DOS device (LPT, COM, PRN, AUX, or NUL) */
+                if ((End < &PathCopy.Buffer[PathCopy.Length / sizeof(WCHAR)]) &&
+                    ((c == 'l') || (c == 'c') || (c == 'p') || (c == 'a') || (c == 'n')))
+                {
+                    /* Calculate the offset */
+                    ReturnOffset = (PCHAR)End - (PCHAR)PathCopy.Buffer;
+
+                    /* Build the final string */
+                    PathCopy.Length -= ReturnOffset;
+                    PathCopy.Length -= (ColonCount * sizeof(WCHAR));
+                    PathCopy.Buffer = End;
+                    break;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        /* Get the next lower case character and check if it's a DOS device */
+        c = *PathCopy.Buffer | ' '; // ' ' == ('z' - 'Z')
+        if ((c != 'l') && (c != 'c') && (c != 'p') && (c != 'a') && (c != 'n'))
+        {
+            /* Not LPT, COM, PRN, AUX, or NUL */
+            return 0;
         }
     }
-    else if (DeviceNameLength == 4)
+
+    /* Now skip past any extra extension or drive letter characters */
+    Start = PathCopy.Buffer;
+    End = &Start[PathChars];
+    while (Start < End)
     {
-        if ((RtlPrefixUnicodeString(&RtlpDosCOMDevice, &DeviceName, TRUE) ||
-             RtlPrefixUnicodeString(&RtlpDosLPTDevice, &DeviceName, TRUE)) &&
-            iswdigit(DeviceName.Buffer[3]) &&
-            DeviceName.Buffer[3] != L'0')
+        c = *Start;
+        if ((c == '.') || (c == ':')) break;
+        Start++;
+    }
+
+    /* And then go backwards to get rid of spaces */
+    while ((Start > PathCopy.Buffer) && (Start[-1] == ' ')) --Start;
+
+    /* Finally see how many characters are left, and that's our size */
+    PathChars = Start - PathCopy.Buffer;
+    PathCopy.Length = PathChars * sizeof(WCHAR);
+
+    /* Check if this is a COM or LPT port, which has a digit after it */
+    if ((PathChars == 4) &&
+        (iswdigit(PathCopy.Buffer[3]) && (PathCopy.Buffer[3] != '0')))
+    {
+        /* Don't compare the number part, just check for LPT or COM */
+        PathCopy.Length -= sizeof(WCHAR);
+        if ((RtlEqualUnicodeString(&PathCopy, &RtlpDosLPTDevice, TRUE)) ||
+            (RtlEqualUnicodeString(&PathCopy, &RtlpDosCOMDevice, TRUE)))
         {
-            return MAKELONG(DeviceNameLength * sizeof(WCHAR), (Start - PathString->Buffer) * sizeof(WCHAR));
+            /* Found it */
+            ReturnLength = sizeof(L"COM1") - sizeof(WCHAR);
+            return MAKELONG(ReturnLength, ReturnOffset);
         }
+    }
+    else if ((PathChars == 3) &&
+             ((RtlEqualUnicodeString(&PathCopy, &RtlpDosPRNDevice, TRUE)) ||
+              (RtlEqualUnicodeString(&PathCopy, &RtlpDosAUXDevice, TRUE)) ||
+              (RtlEqualUnicodeString(&PathCopy, &RtlpDosNULDevice, TRUE)) ||
+              (RtlEqualUnicodeString(&PathCopy, &RtlpDosCONDevice, TRUE))))
+    {
+        /* Otherwise this was something like AUX, NUL, PRN, or CON */
+        ReturnLength = sizeof(L"AUX") - sizeof(WCHAR);
+        return MAKELONG(ReturnLength, ReturnOffset);
     }
 
     /* Otherwise, this is not a valid DOS device */
