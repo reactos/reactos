@@ -462,7 +462,7 @@ IntToUnicodeEx(UINT wVirtKey,
     {
         UINT i;
         WCHAR wchFirst, wchSecond;
-        TRACE("PREVIOUS DEAD CHAR: %c\n", wchDead);
+        TRACE("Previous dead char: %lc (%x)\n", wchDead, wchDead);
 
         for (i = 0; pKbdTbl->pDeadKey[i].dwBoth; i++)
         {
@@ -477,7 +477,7 @@ IntToUnicodeEx(UINT wVirtKey,
             }
         }
 
-        TRACE("FINAL CHAR: %c\n", wchTranslatedChar);
+        TRACE("Final char: %lc (%x)\n", wchTranslatedChar, wchTranslatedChar);
     }
 
     /* dead char has not been not found */
@@ -713,7 +713,7 @@ co_IntKeyboardSendAltKeyMsg()
 BOOL NTAPI
 UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
 {
-    WORD wScanCode, wVk, wSimpleVk, wVkOtherSide;
+    WORD wScanCode, wVk, wSimpleVk, wVkOtherSide, wSysKey;
     PKBL pKbl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
@@ -845,9 +845,10 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         MSG Msg;
 
         /* If it is F10 or ALT is down and CTRL is up, it's a system key */
+        wSysKey = (pKbdTbl->fLocaleFlags & KLLF_ALTGR) ? VK_LMENU : VK_MENU;
         if (wVk == VK_F10 ||
             //uVkNoShift == VK_MENU || // FIXME: If only LALT is pressed WM_SYSKEYUP is generated instead of WM_KEYUP
-            ((gKeyStateTable[VK_MENU] & KS_DOWN_BIT) &&
+            ((gKeyStateTable[wSysKey] & KS_DOWN_BIT) && // FIXME
             !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)))
         {
             if (bKeyUp)
@@ -1048,7 +1049,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         /* Send all characters */
         for (i = 0; i < cch; ++i)
         {
-            TRACE("CHAR='%c' %04x %08x\n", wch[i], wch[i], lpMsg->lParam);
+            TRACE("Msg: %x '%lc' (%04x) %08x\n", NewMsg.message, wch[i], wch[i], NewMsg.lParam);
             NewMsg.wParam = wch[i];
             MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
         }
