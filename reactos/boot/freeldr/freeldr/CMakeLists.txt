@@ -202,7 +202,7 @@ target_link_libraries(freeldr_pe_dbg
     rtl
     libcntpr)
 
-add_pch(freeldr_pe include/freeldr.h)
+# add_pch(freeldr_pe include/freeldr.h)
 
 add_dependencies(freeldr_pe asm)
 add_dependencies(freeldr_pe_dbg asm)
