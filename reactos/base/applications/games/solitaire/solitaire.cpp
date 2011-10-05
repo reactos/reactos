@@ -235,7 +235,6 @@ VOID ShowGameOptionsDlg(HWND hwnd)
 {
     DWORD dwOldOptions = dwOptions;
     RECT rcMain, rcStatus;
-    int nWidth, nHeight, nStatusHeight;
 
     if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
     {
@@ -244,6 +243,8 @@ VOID ShowGameOptionsDlg(HWND hwnd)
 
         if ((dwOldOptions & OPTION_SHOW_STATUS) != (dwOptions & OPTION_SHOW_STATUS))
         {
+            int nWidth, nHeight, nStatusHeight;
+
             GetClientRect(hwndMain, &rcMain);
             nHeight = rcMain.bottom - rcMain.top;
             nWidth = rcMain.right - rcMain.left;
