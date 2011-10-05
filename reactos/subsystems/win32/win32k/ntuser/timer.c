@@ -11,6 +11,8 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserTimer);
 
+WORD FASTCALL UserGetMouseButtonsState(VOID);
+
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY TimersListHead;
@@ -322,7 +324,7 @@ SystemTimerProc(HWND hwnd,
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
                 {
-                   wParam = get_key_state();
+                   wParam = UserGetMouseButtonsState();
                    Msg = WM_MOUSEHOVER;
 
                    if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
