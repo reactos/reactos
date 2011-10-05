@@ -37,7 +37,7 @@
 static HANDLE alarm_event;
 static BOOL (WINAPI *pDuplicateTokenEx)(HANDLE,DWORD,LPSECURITY_ATTRIBUTES,
                                         SECURITY_IMPERSONATION_LEVEL,TOKEN_TYPE,PHANDLE);
-static DWORD WINAPI (*pQueueUserAPC)(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData);
+static DWORD (WINAPI *pQueueUserAPC)(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData);
 
 static BOOL user_apc_ran;
 static void CALLBACK user_apc(ULONG_PTR param)
