@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
  * FILE:             subsystems/win32/win32k/ntuser/input.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Rafal Harabien (rafalh@reactos.org)
  */
 
 #include <win32k.h>
@@ -20,6 +21,7 @@ PTHREADINFO ptiKeyboard;
 PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
+HANDLE ghKeyboardDevice;
 
 static DWORD LastInputTick = 0;
 static HANDLE MouseDeviceHandle;
@@ -27,16 +29,12 @@ static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
 static HANDLE KeyboardThreadHandle;
 static CLIENT_ID KeyboardThreadId;
-static HANDLE KeyboardDeviceHandle;
 static HANDLE RawInputThreadHandle;
 static CLIENT_ID RawInputThreadId;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
-static BYTE TrackSysKey = 0; /* determine whether ALT key up will cause a WM_SYSKEYUP
-                                or a WM_KEYUP message */
 
 /* FUNCTIONS *****************************************************************/
-DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 #define ClearMouseInput(mi) \
   mi.dx = 0; \
@@ -51,10 +49,10 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet);
     IntMouseInput(&mi,FALSE); \
   ClearMouseInput(mi);
 
-
-DWORD IntLastInputTick(BOOL LastInputTickSetGet)
+static DWORD FASTCALL
+IntLastInputTick(BOOL bUpdate)
 {
-    if (LastInputTickSetGet == TRUE)
+    if (bUpdate)
     {
         LARGE_INTEGER TickCount;
         KeQueryTickCount(&TickCount);
@@ -64,8 +62,8 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet)
     return LastInputTick;
 }
 
-
-VOID FASTCALL DoTheScreenSaver(VOID)
+VOID FASTCALL
+DoTheScreenSaver(VOID)
 {
     LARGE_INTEGER TickCount;
     DWORD Test, TO;
@@ -100,8 +98,8 @@ VOID FASTCALL DoTheScreenSaver(VOID)
     }
 }
 
-VOID FASTCALL
-ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
+static VOID NTAPI
+IntProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
     PMOUSE_INPUT_DATA mid;
     MOUSEINPUT mi;
@@ -191,10 +189,7 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     SendMouseEvent(mi);
 }
 
-
-
-
-VOID APIENTRY
+static VOID APIENTRY
 MouseThreadMain(PVOID StartContext)
 {
     UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
@@ -302,184 +297,12 @@ MouseThreadMain(PVOID StartContext)
 
             UserEnterExclusive();
 
-            ProcessMouseInputData(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
+            IntProcessMouseInputData(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
 
             UserLeave();
         }
         TRACE("Mouse Input Thread Stopped...\n");
     }
-}
-
-/* Returns a value that indicates if the key is a modifier key, and
- * which one.
- */
-static UINT APIENTRY
-IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
-{
-    if (InputData->Flags & KEY_E1)
-        return 0;
-
-    if (!(InputData->Flags & KEY_E0))
-    {
-        switch (InputData->MakeCode)
-        {
-            case 0x2a: /* left shift */
-            case 0x36: /* right shift */
-                return MOD_SHIFT;
-
-            case 0x1d: /* left control */
-                return MOD_CONTROL;
-
-            case 0x38: /* left alt */
-                return MOD_ALT;
-
-            default:
-                return 0;
-        }
-    }
-    else
-    {
-        switch (InputData->MakeCode)
-        {
-            case 0x1d: /* right control */
-                return MOD_CONTROL;
-
-            case 0x38: /* right alt */
-                return MOD_ALT;
-
-            case 0x5b: /* left gui (windows) */
-            case 0x5c: /* right gui (windows) */
-                return MOD_WIN;
-
-            default:
-                return 0;
-        }
-    }
-}
-
-/* Asks the keyboard driver to send a small table that shows which
- * lights should connect with which scancodes
- */
-static NTSTATUS APIENTRY
-IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
-                             PKEYBOARD_INDICATOR_TRANSLATION *IndicatorTrans)
-{
-    NTSTATUS Status;
-    DWORD Size = 0;
-    IO_STATUS_BLOCK Block;
-    PKEYBOARD_INDICATOR_TRANSLATION Ret;
-
-    Size = sizeof(KEYBOARD_INDICATOR_TRANSLATION);
-
-    Ret = ExAllocatePoolWithTag(PagedPool,
-                                Size,
-                                USERTAG_KBDTABLE);
-
-    while (Ret)
-    {
-        Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &Block,
-                                       IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION,
-                                       NULL, 0,
-                                       Ret, Size);
-
-        if (Status != STATUS_BUFFER_TOO_SMALL)
-            break;
-
-        ExFreePoolWithTag(Ret, USERTAG_KBDTABLE);
-
-        Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
-
-        Ret = ExAllocatePoolWithTag(PagedPool,
-                                    Size,
-                                    USERTAG_KBDTABLE);
-    }
-
-    if (!Ret)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    if (Status != STATUS_SUCCESS)
-    {
-        ExFreePoolWithTag(Ret, USERTAG_KBDTABLE);
-        return Status;
-    }
-
-    *IndicatorTrans = Ret;
-    return Status;
-}
-
-/* Sends the keyboard commands to turn on/off the lights.
- */
-static NTSTATUS APIENTRY
-IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
-                      PKEYBOARD_INPUT_DATA KeyInput,
-                      PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans)
-{
-    NTSTATUS Status;
-    UINT Count;
-    static KEYBOARD_INDICATOR_PARAMETERS Indicators;
-    IO_STATUS_BLOCK Block;
-
-    if (!IndicatorTrans)
-        return STATUS_NOT_SUPPORTED;
-
-    if (KeyInput->Flags & (KEY_E0 | KEY_E1 | KEY_BREAK))
-        return STATUS_SUCCESS;
-
-    for (Count = 0; Count < IndicatorTrans->NumberOfIndicatorKeys; Count++)
-    {
-        if (KeyInput->MakeCode == IndicatorTrans->IndicatorList[Count].MakeCode)
-        {
-            Indicators.LedFlags ^=
-                IndicatorTrans->IndicatorList[Count].IndicatorFlags;
-
-            /* Update the lights on the hardware */
-
-            Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
-                                           NULL,
-                                           NULL,
-                                           NULL,
-                                           &Block,
-                                           IOCTL_KEYBOARD_SET_INDICATORS,
-                                           &Indicators, sizeof(Indicators),
-                                           NULL, 0);
-
-            return Status;
-        }
-    }
-
-    return STATUS_SUCCESS;
-}
-
-static VOID APIENTRY
-IntKeyboardSendWinKeyMsg()
-{
-    PWND Window;
-    MSG Mesg;
-
-    if (!(Window = UserGetWindowObject(InputWindowStation->ShellWindow)))
-    {
-        ERR("Couldn't find window to send Windows key message!\n");
-        return;
-    }
-
-    Mesg.hwnd = InputWindowStation->ShellWindow;
-    Mesg.message = WM_SYSCOMMAND;
-    Mesg.wParam = SC_TASKLIST;
-    Mesg.lParam = 0;
-
-    /* The QS_HOTKEY is just a guess */
-    MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
-}
-
-static VOID APIENTRY
-co_IntKeyboardSendAltKeyMsg()
-{
-    ERR("co_IntKeyboardSendAltKeyMsg\n");
-//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
 }
 
 static VOID APIENTRY
@@ -489,15 +312,6 @@ KeyboardThreadMain(PVOID StartContext)
     OBJECT_ATTRIBUTES KeyboardObjectAttributes;
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
-    MSG msg;
-    PUSER_MESSAGE_QUEUE FocusQueue;
-    struct _ETHREAD *FocusThread;
-
-    PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
-    UINT ModifierState = 0;
-    USHORT LastMakeCode = 0;
-    USHORT LastFlags = 0;
-    UINT RepeatCount = 0;
 
     InitializeObjectAttributes(&KeyboardObjectAttributes,
                                &KeyboardDeviceName,
@@ -511,7 +325,7 @@ KeyboardThreadMain(PVOID StartContext)
         DueTime.QuadPart = (LONGLONG)(-10000000);
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
-        Status = NtOpenFile(&KeyboardDeviceHandle,
+        Status = NtOpenFile(&ghKeyboardDevice,
                             FILE_ALL_ACCESS,
                             &KeyboardObjectAttributes,
                             &Iosb,
@@ -542,8 +356,8 @@ KeyboardThreadMain(PVOID StartContext)
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY + 3);
 
-    IntKeyboardGetIndicatorTrans(KeyboardDeviceHandle,
-                                 &IndicatorTrans);
+    //IntKeyboardGetIndicatorTrans(ghKeyboardDevice,
+   //                              &IndicatorTrans);
 
     for (;;)
     {
@@ -563,19 +377,11 @@ KeyboardThreadMain(PVOID StartContext)
          */
         while (InputThreadsRunning)
         {
-            BOOLEAN NumKeys = 1;
-            BOOLEAN bLeftAlt;
             KEYBOARD_INPUT_DATA KeyInput;
-            KEYBOARD_INPUT_DATA NextKeyInput;
-            LPARAM lParam = 0;
-            UINT fsModifiers, fsNextModifiers;
-            struct _ETHREAD *Thread;
-            HWND hWnd;
-            int id;
 
             TRACE("KeyInput @ %08x\n", &KeyInput);
 
-            Status = NtReadFile (KeyboardDeviceHandle,
+            Status = NtReadFile (ghKeyboardDevice,
                                  NULL,
                                  NULL,
                                  NULL,
@@ -591,7 +397,7 @@ KeyboardThreadMain(PVOID StartContext)
             }
             if(Status == STATUS_PENDING)
             {
-                NtWaitForSingleObject(KeyboardDeviceHandle, FALSE, NULL);
+                NtWaitForSingleObject(ghKeyboardDevice, FALSE, NULL);
                 Status = Iosb.Status;
             }
             if(!NT_SUCCESS(Status))
@@ -616,266 +422,12 @@ KeyboardThreadMain(PVOID StartContext)
             /* Set LastInputTick */
             IntLastInputTick(TRUE);
 
-            /* Update modifier state */
-            fsModifiers = IntKeyboardGetModifiers(&KeyInput);
-
-            if (fsModifiers)
-            {
-                if (KeyInput.Flags & KEY_BREAK)
-                {
-                    ModifierState &= ~fsModifiers;
-                    if(fsModifiers == MOD_ALT)
-                    {
-                        if(KeyInput.Flags & KEY_E0)
-                        {
-                            gKeyStateTable[VK_RMENU] = 0;
-                        }
-                        else
-                        {
-                            gKeyStateTable[VK_LMENU] = 0;
-                        }
-                        if (gKeyStateTable[VK_RMENU] == 0 &&
-                                gKeyStateTable[VK_LMENU] == 0)
-                        {
-                            gKeyStateTable[VK_MENU] = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    ModifierState |= fsModifiers;
-
-                    if (ModifierState == fsModifiers &&
-                            (fsModifiers == MOD_ALT || fsModifiers == MOD_WIN))
-                    {
-                        /* First send out special notifications
-                         * (For alt, the message that turns on accelerator
-                         * display, not sure what for win. Both TODO though.)
-                         */
-                        bLeftAlt = FALSE;
-                        if(fsModifiers == MOD_ALT)
-                        {
-                            if(KeyInput.Flags & KEY_E0)
-                            {
-                                gKeyStateTable[VK_RMENU] = KS_DOWN_BIT;
-                            }
-                            else
-                            {
-                                gKeyStateTable[VK_LMENU] = KS_DOWN_BIT;
-                                bLeftAlt = TRUE;
-                            }
-
-                            gKeyStateTable[VK_MENU] = KS_DOWN_BIT;
-                        }
-
-                        /* Read the next key before sending this one */
-                        do
-                        {
-                            Status = NtReadFile (KeyboardDeviceHandle,
-                                                 NULL,
-                                                 NULL,
-                                                 NULL,
-                                                 &Iosb,
-                                                 &NextKeyInput,
-                                                 sizeof(KEYBOARD_INPUT_DATA),
-                                                 NULL,
-                                                 NULL);
-                            TRACE("KeyRaw: %s %04x\n",
-                                  (NextKeyInput.Flags & KEY_BREAK) ? "up" : "down",
-                                  NextKeyInput.MakeCode );
-
-                            if (Status == STATUS_ALERTED && !InputThreadsRunning)
-                                goto KeyboardEscape;
-
-                        }
-                        while ((!(NextKeyInput.Flags & KEY_BREAK)) &&
-                                NextKeyInput.MakeCode == KeyInput.MakeCode);
-                        /* ^ Ignore repeats, they'll be KEY_MAKE and the same
-                         *   code. I'm not caring about the counting, not sure
-                         *   if that matters. I think not.
-                         */
-
-                        /* If the ModifierState is now empty again, send a
-                         * special notification and eat both keypresses
-                         */
-
-                        fsNextModifiers = IntKeyboardGetModifiers(&NextKeyInput);
-
-                        if (fsNextModifiers)
-                            ModifierState ^= fsNextModifiers;
-
-                        if (ModifierState == 0)
-                        {
-                            UserEnterExclusive();
-                            if (fsModifiers == MOD_WIN)
-                                IntKeyboardSendWinKeyMsg();
-                            else if (fsModifiers == MOD_ALT)
-                            {
-                                gKeyStateTable[VK_MENU] = 0;
-                                if(bLeftAlt)
-                                {
-                                    gKeyStateTable[VK_LMENU] = 0;
-                                }
-                                else
-                                {
-                                    gKeyStateTable[VK_RMENU] = 0;
-                                }
-                                co_IntKeyboardSendAltKeyMsg();
-                            }
-                            UserLeave();
-                            continue;
-                        }
-
-                        NumKeys = 2;
-                    }
-                }
-            }
-
+            /* Process data */
             UserEnterExclusive();
-
-            for (; NumKeys; memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
-                    NumKeys--)
-            {
-                PKBL keyboardLayout = NULL;
-                lParam = 0;
-
-                IntKeyboardUpdateLeds(KeyboardDeviceHandle,
-                                      &KeyInput,
-                                      IndicatorTrans);
-
-                /* While we are working, we set up lParam. The format is:
-                 *  0-15: The number of times this key has autorepeated
-                 * 16-23: The keyboard scancode
-                 *    24: Set if it's and extended key (I assume KEY_E0 | KEY_E1)
-                 *        Note that E1 is only used for PAUSE (E1-1D-45) and
-                 *        E0-45 happens not to be anything.
-                 *    29: Alt is pressed ('Context code')
-                 *    30: Previous state, if the key was down before this message
-                 *        This is a cheap way to ignore autorepeat keys
-                 *    31: 1 if the key is being pressed
-                 */
-
-                /* If it's a KEY_MAKE (which is 0, so test using !KEY_BREAK)
-                 * and it's the same key as the last one, increase the repeat
-                 * count.
-                 */
-
-                if (!(KeyInput.Flags & KEY_BREAK))
-                {
-                    if (((KeyInput.Flags & (KEY_E0 | KEY_E1)) == LastFlags) &&
-                            (KeyInput.MakeCode == LastMakeCode))
-                    {
-                        RepeatCount++;
-                        lParam |= (KF_REPEAT << 16);
-                    }
-                    else
-                    {
-                        RepeatCount = 1;
-                        LastFlags = KeyInput.Flags & (KEY_E0 | KEY_E1);
-                        LastMakeCode = KeyInput.MakeCode;
-                    }
-                }
-                else
-                {
-                    LastFlags = 0;
-                    LastMakeCode = 0; /* Should never match */
-                    lParam |= (KF_UP << 16) | (KF_REPEAT << 16);
-                }
-
-                lParam |= RepeatCount;
-
-                lParam |= (KeyInput.MakeCode & 0xff) << 16;
-
-                if (KeyInput.Flags & KEY_E0)
-                    lParam |= (KF_EXTENDED << 16);
-
-                if (ModifierState & MOD_ALT)
-                {
-                    lParam |= (KF_ALTDOWN << 16);
-
-                    if (!(KeyInput.Flags & KEY_BREAK))
-                        msg.message = WM_SYSKEYDOWN;
-                    else
-                        msg.message = WM_SYSKEYUP;
-                }
-                else
-                {
-                    if (!(KeyInput.Flags & KEY_BREAK))
-                        msg.message = WM_KEYDOWN;
-                    else
-                        msg.message = WM_KEYUP;
-                }
-
-                /* Find the target thread whose locale is in effect */
-                FocusQueue = IntGetFocusMessageQueue();
-
-                if (FocusQueue)
-                {
-                    msg.hwnd = FocusQueue->FocusWindow;
-
-                    FocusThread = FocusQueue->Thread;
-                    if (FocusThread && FocusThread->Tcb.Win32Thread)
-                    {
-                        keyboardLayout = ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout;
-                    }
-                    if ( FocusQueue->QF_flags & QF_DIALOGACTIVE )
-                        lParam |= (KF_DLGMODE << 16);
-                    if ( FocusQueue->MenuOwner )//FocusQueue->MenuState ) // MenuState needs a start flag...
-                        lParam |= (KF_MENUMODE << 16);
-                }
-                if (!keyboardLayout)
-                {
-                    keyboardLayout = W32kGetDefaultKeyLayout();
-                }
-
-                msg.lParam = lParam;
-
-                /* This function uses lParam to fill wParam according to the
-                 * keyboard layout in use.
-                 */
-                W32kKeyProcessMessage(&msg,
-                                      keyboardLayout->KBTables,
-                                      KeyInput.Flags & KEY_E0 ? 0xE0 :
-                                      (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
-
-                if (GetHotKey(ModifierState,
-                              msg.wParam,
-                              &Thread,
-                              &hWnd,
-                              &id))
-                {
-                    if (!(KeyInput.Flags & KEY_BREAK))
-                    {
-                        TRACE("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
-                        MsqPostHotKeyMessage (Thread,
-                                              hWnd,
-                                              (WPARAM)id,
-                                              MAKELPARAM((WORD)ModifierState,
-                                                         (WORD)msg.wParam));
-                    }
-                    continue; /* Eat key up motion too */
-                }
-
-                if (!FocusQueue)
-                {
-                    /* There is no focused window to receive a keyboard message */
-                    continue;
-                }
-                if ( msg.wParam == VK_F10 ) // Bypass this key before it is in the queue.
-                {
-                    if (msg.message == WM_KEYUP) msg.message = WM_SYSKEYUP;
-                    if (msg.message == WM_KEYDOWN) msg.message = WM_SYSKEYDOWN;
-                }
-                /*
-                 * Post a keyboard message.
-                 */
-                co_MsqPostKeyboardMessage(msg.message, msg.wParam, msg.lParam);
-            }
-
+            UserProcessKeyboardInput(&KeyInput);
             UserLeave();
         }
 
-KeyboardEscape:
         TRACE( "KeyboardInput Thread Stopped...\n" );
     }
 }
@@ -1019,12 +571,12 @@ CleanupInputImp(VOID)
 }
 
 BOOL FASTCALL
-IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
+IntBlockInput(PTHREADINFO pti, BOOL BlockIt)
 {
     PTHREADINFO OldBlock;
-    ASSERT(W32Thread);
+    ASSERT(pti);
 
-    if(!W32Thread->rpdesk || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
+    if(!pti->rpdesk || ((pti->TIF_flags & TIF_INCLEANUP) && BlockIt))
     {
         /*
          * fail blocking if exiting the thread
@@ -1037,27 +589,27 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
      * FIXME - check access rights of the window station
      *         e.g. services running in the service window station cannot block input
      */
-    if(!ThreadHasInputAccess(W32Thread) ||
-            !IntIsActiveDesktop(W32Thread->rpdesk))
+    if(!ThreadHasInputAccess(pti) ||
+            !IntIsActiveDesktop(pti->rpdesk))
     {
         EngSetLastError(ERROR_ACCESS_DENIED);
         return FALSE;
     }
 
-    ASSERT(W32Thread->rpdesk);
-    OldBlock = W32Thread->rpdesk->BlockInputThread;
+    ASSERT(pti->rpdesk);
+    OldBlock = pti->rpdesk->BlockInputThread;
     if(OldBlock)
     {
-        if(OldBlock != W32Thread)
+        if(OldBlock != pti)
         {
             EngSetLastError(ERROR_ACCESS_DENIED);
             return FALSE;
         }
-        W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
+        pti->rpdesk->BlockInputThread = (BlockIt ? pti : NULL);
         return OldBlock == NULL;
     }
 
-    W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
+    pti->rpdesk->BlockInputThread = (BlockIt ? pti : NULL);
     return OldBlock == NULL;
 }
 
@@ -1249,176 +801,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
 }
 
 BOOL FASTCALL
-IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
-{
-    PUSER_MESSAGE_QUEUE FocusMessageQueue;
-    MSG Msg;
-    LARGE_INTEGER LargeTickCount;
-    KBDLLHOOKSTRUCT KbdHookData;
-    WORD flags, wVkStripped, wVkL, wVkR, wVk = ki->wVk, vk_hook = ki->wVk;
-
-    Msg.lParam = 0;
-
-    // Condition may arise when calling MsqPostMessage and waiting for an event.
-    ASSERT (UserIsEntered());
-
-    wVk = LOBYTE(wVk);
-    Msg.wParam = wVk;
-    flags = LOBYTE(ki->wScan);
-
-    FocusMessageQueue = IntGetFocusMessageQueue();
-
-    if (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) flags |= KF_EXTENDED;
-    /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */
-    if ( FocusMessageQueue && FocusMessageQueue->QF_flags & QF_DIALOGACTIVE )
-        flags |= KF_DLGMODE;
-    if ( FocusMessageQueue && FocusMessageQueue->MenuOwner )//FocusMessageQueue->MenuState ) // MenuState needs a start flag...
-        flags |= KF_MENUMODE;
-
-    /* strip left/right for menu, control, shift */
-    switch (wVk)
-    {
-        case VK_MENU:
-        case VK_LMENU:
-        case VK_RMENU:
-            wVk = (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) ? VK_RMENU : VK_LMENU;
-            wVkStripped = VK_MENU;
-            wVkL = VK_LMENU;
-            wVkR = VK_RMENU;
-            break;
-        case VK_CONTROL:
-        case VK_LCONTROL:
-        case VK_RCONTROL:
-            wVk = (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) ? VK_RCONTROL : VK_LCONTROL;
-            wVkStripped = VK_CONTROL;
-            wVkL = VK_LCONTROL;
-            wVkR = VK_RCONTROL;
-            break;
-        case VK_SHIFT:
-        case VK_LSHIFT:
-        case VK_RSHIFT:
-            wVk = (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) ? VK_RSHIFT : VK_LSHIFT;
-            wVkStripped = VK_SHIFT;
-            wVkL = VK_LSHIFT;
-            wVkR = VK_RSHIFT;
-            break;
-        default:
-            wVkStripped = wVkL = wVkR = wVk;
-    }
-
-    if (ki->dwFlags & KEYEVENTF_KEYUP)
-    {
-        Msg.message = WM_KEYUP;
-        if (((gKeyStateTable[VK_MENU] & KS_DOWN_BIT) &&
-                ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
-                 || !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)))
-                || (wVkStripped == VK_F10))
-        {
-            if( TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
-                    (wVkStripped != VK_MENU)) /* <ALT>-down...<something else>-up */
-                Msg.message = WM_SYSKEYUP;
-            TrackSysKey = 0;
-        }
-        flags |= KF_REPEAT | KF_UP;
-    }
-    else
-    {
-        Msg.message = WM_KEYDOWN;
-        if (((gKeyStateTable[VK_MENU] & KS_DOWN_BIT || wVkStripped == VK_MENU) &&
-                !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT || wVkStripped == VK_CONTROL))
-                || (wVkStripped == VK_F10))
-        {
-            Msg.message = WM_SYSKEYDOWN;
-            TrackSysKey = wVkStripped;
-        }
-        if (!(ki->dwFlags & KEYEVENTF_UNICODE) && gKeyStateTable[wVk] & KS_DOWN_BIT) flags |= KF_REPEAT;
-    }
-
-    if (ki->dwFlags & KEYEVENTF_UNICODE)
-    {
-        vk_hook = Msg.wParam = wVk = VK_PACKET;
-        Msg.lParam = MAKELPARAM(1 /* repeat count */, ki->wScan);
-    }
-
-    if (!(ki->dwFlags & KEYEVENTF_UNICODE))
-    {
-        if (ki->dwFlags & KEYEVENTF_KEYUP)
-        {
-            gKeyStateTable[wVk] &= ~KS_DOWN_BIT;
-            gKeyStateTable[wVkStripped] = gKeyStateTable[wVkL] | gKeyStateTable[wVkR];
-        }
-        else
-        {
-            if (!(gKeyStateTable[wVk] & KS_DOWN_BIT)) gKeyStateTable[wVk] ^= KS_LOCK_BIT;
-            gKeyStateTable[wVk] |= KS_DOWN_BIT;
-            gKeyStateTable[wVkStripped] = gKeyStateTable[wVkL] | gKeyStateTable[wVkR];
-        }
-
-        if (gKeyStateTable[VK_MENU] & KS_DOWN_BIT) flags |= KF_ALTDOWN;
-
-        if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
-
-        Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
-    }
-
-    Msg.hwnd = 0;
-
-    if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
-        Msg.hwnd = FocusMessageQueue->FocusWindow;
-
-    if (!ki->time)
-    {
-        KeQueryTickCount(&LargeTickCount);
-        Msg.time = MsqCalculateMessageTime(&LargeTickCount);
-    }
-    else
-        Msg.time = ki->time;
-
-    /* All messages have to contain the cursor point. */
-    Msg.pt = gpsi->ptCursor;
-
-    KbdHookData.vkCode = vk_hook;
-    KbdHookData.scanCode = ki->wScan;
-    KbdHookData.flags = (flags & (KF_EXTENDED | KF_ALTDOWN | KF_UP)) >> 8;
-    if (Injected) KbdHookData.flags |= LLKHF_INJECTED;
-    KbdHookData.time = Msg.time;
-    KbdHookData.dwExtraInfo = ki->dwExtraInfo;
-    if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
-    {
-        ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-            Msg.message, vk_hook, Msg.lParam);
-
-        return FALSE;
-    }
-
-    if (FocusMessageQueue == NULL)
-    {
-        TRACE("No focus message queue\n");
-
-        return FALSE;
-    }
-
-    if (FocusMessageQueue->FocusWindow != (HWND)0)
-    {
-        Msg.hwnd = FocusMessageQueue->FocusWindow;
-        TRACE("Msg.hwnd = %x\n", Msg.hwnd);
-
-        FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
-
-        // Post to hardware queue, based on the first part of wine "some GetMessage tests"
-        // in test_PeekMessage()
-        MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
-    }
-    else
-    {
-        TRACE("Invalid focus window handle\n");
-    }
-
-    return TRUE;
-}
-
-BOOL FASTCALL
-UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
+UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
 {
     PATTACHINFO pai;
 
@@ -1475,22 +858,22 @@ NtUserSendInput(
     LPINPUT pInput,
     INT cbSize)
 {
-    PTHREADINFO W32Thread;
+    PTHREADINFO pti;
     UINT cnt;
     DECLARE_RETURN(UINT);
 
     TRACE("Enter NtUserSendInput\n");
     UserEnterExclusive();
 
-    W32Thread = PsGetCurrentThreadWin32Thread();
-    ASSERT(W32Thread);
+    pti = PsGetCurrentThreadWin32Thread();
+    ASSERT(pti);
 
-    if(!W32Thread->rpdesk)
+    if (!pti->rpdesk)
     {
         RETURN( 0);
     }
 
-    if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
+    if (!nInputs || !pInput || cbSize != sizeof(INPUT))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         RETURN( 0);
@@ -1500,49 +883,41 @@ NtUserSendInput(
      * FIXME - check access rights of the window station
      *         e.g. services running in the service window station cannot block input
      */
-    if(!ThreadHasInputAccess(W32Thread) ||
-            !IntIsActiveDesktop(W32Thread->rpdesk))
+    if (!ThreadHasInputAccess(pti) ||
+            !IntIsActiveDesktop(pti->rpdesk))
     {
         EngSetLastError(ERROR_ACCESS_DENIED);
         RETURN( 0);
     }
 
     cnt = 0;
-    while(nInputs--)
+    while (nInputs--)
     {
         INPUT SafeInput;
         NTSTATUS Status;
 
         Status = MmCopyFromCaller(&SafeInput, pInput++, sizeof(INPUT));
-        if(!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             SetLastNtError(Status);
             RETURN( cnt);
         }
 
-        switch(SafeInput.type)
+        switch (SafeInput.type)
         {
             case INPUT_MOUSE:
-                if(IntMouseInput(&SafeInput.mi, TRUE))
-                {
+                if (IntMouseInput(&SafeInput.mi, TRUE))
                     cnt++;
-                }
                 break;
             case INPUT_KEYBOARD:
-                if(IntKeyboardInput(&SafeInput.ki, TRUE))
-                {
+                if (UserSendKeyboardInput(&SafeInput.ki, TRUE))
                     cnt++;
-                }
                 break;
             case INPUT_HARDWARE:
                 break;
-#ifndef NDEBUG
-
             default:
                 ERR("SendInput(): Invalid input type: 0x%x\n", SafeInput.type);
                 break;
-#endif
-
         }
     }
 

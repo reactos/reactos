@@ -221,11 +221,13 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
    pti = PsGetCurrentThreadWin32Thread();
    MessageQueue = pti->MessageQueue;
 
-   if( key < 0x100 )
+   if (key < 0x100)
    {
        ret = (DWORD)MessageQueue->KeyState[key];
        if (MessageQueue->KeyState[key] & KS_DOWN_BIT)
-          ret |= 0xFF00; // If down, windows returns 0xFF80. 
+           ret |= 0xFF80; // If down, windows returns 0xFF80.
+       if (MessageQueue->KeyState[key] & KS_LOCK_BIT)
+           ret |= 0x1;
    }
    else
    {
@@ -629,7 +631,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 // Note: Only called from input.c.
 //
 VOID FASTCALL
-co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL bInjected)
 {
    PUSER_MESSAGE_QUEUE FocusMessageQueue;
    MSG Msg;
@@ -661,9 +663,15 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
    KbdHookData.vkCode = Msg.wParam;
    KbdHookData.scanCode = (Msg.lParam >> 16) & 0xff;
-   KbdHookData.flags = (0 == (Msg.lParam & 0x01000000) ? 0 : LLKHF_EXTENDED) |
-                       (0 == (Msg.lParam & 0x20000000) ? 0 : LLKHF_ALTDOWN) |
-                       (0 == (Msg.lParam & 0x80000000) ? 0 : LLKHF_UP);
+   KbdHookData.flags = 0;
+   if (Msg.lParam & 0x01000000)
+      KbdHookData.flags |= LLKHF_EXTENDED;
+   if (Msg.lParam & 0x20000000)
+      KbdHookData.flags |= LLKHF_ALTDOWN;
+   if (Msg.lParam & 0x80000000)
+      KbdHookData.flags |= LLKHF_UP;
+   if (bInjected)
+      KbdHookData.flags |= LLKHF_INJECTED;
    KbdHookData.time = Msg.time;
    KbdHookData.dwExtraInfo = 0;
    if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
@@ -1922,6 +1930,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->NewMessagesHandle = NULL;
    MessageQueue->ShowingCursor = 0;
    MessageQueue->CursorObject = NULL;
+   RtlCopyMemory(MessageQueue->KeyState, gKeyStateTable, sizeof(gKeyStateTable));
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
                           NULL, SynchronizationEvent, FALSE);

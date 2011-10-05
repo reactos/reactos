@@ -3,334 +3,1440 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Keyboard functions
  * FILE:             subsys/win32k/ntuser/keyboard.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Rafal Harabien (rafalh@reactos.org)
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserKbd);
 
 BYTE gKeyStateTable[0x100];
+static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-/* Initialization -- Right now, just zero the key state and init the lock */
+/*
+ * InitKeyboardImpl
+ *
+ * Initialization -- Right now, just zero the key state
+ */
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitKeyboardImpl(VOID)
 {
-    RtlZeroMemory(&gKeyStateTable, 0x100);
+    RtlZeroMemory(&gKeyStateTable, sizeof(gKeyStateTable));
     return STATUS_SUCCESS;
 }
 
-/*** Statics used by TranslateMessage ***/
-
-/*** Shift state code was out of hand, sorry. --- arty */
-
-static UINT DontDistinguishShifts( UINT ret )
+/*
+ * IntKeyboardGetIndicatorTrans
+ *
+ * Asks the keyboard driver to send a small table that shows which
+ * lights should connect with which scancodes
+ */
+static
+NTSTATUS APIENTRY
+IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
+                             PKEYBOARD_INDICATOR_TRANSLATION *ppIndicatorTrans)
 {
-    if( ret == VK_LSHIFT || ret == VK_RSHIFT )
-        ret = VK_SHIFT;
-    if( ret == VK_LCONTROL || ret == VK_RCONTROL )
-        ret = VK_CONTROL;
-    if( ret == VK_LMENU || ret == VK_RMENU )
-        ret = VK_MENU;
-    return ret;
+    NTSTATUS Status;
+    DWORD dwSize = 0;
+    IO_STATUS_BLOCK Block;
+    PKEYBOARD_INDICATOR_TRANSLATION pRet;
+
+    dwSize = sizeof(KEYBOARD_INDICATOR_TRANSLATION);
+
+    pRet = ExAllocatePoolWithTag(PagedPool,
+                                 dwSize,
+                                 USERTAG_KBDTABLE);
+
+    while (pRet)
+    {
+        Status = NtDeviceIoControlFile(hKeyboardDevice,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Block,
+                                       IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION,
+                                       NULL, 0,
+                                       pRet, dwSize);
+
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+            break;
+
+        ExFreePoolWithTag(pRet, USERTAG_KBDTABLE);
+
+        dwSize += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
+
+        pRet = ExAllocatePoolWithTag(PagedPool,
+                                     dwSize,
+                                     USERTAG_KBDTABLE);
+    }
+
+    if (!pRet)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(pRet, USERTAG_KBDTABLE);
+        return Status;
+    }
+
+    *ppIndicatorTrans = pRet;
+    return Status;
 }
 
-static VOID APIENTRY SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
+/*
+ * IntKeyboardUpdateLeds
+ *
+ * Sends the keyboard commands to turn on/off the lights
+ */
+static
+NTSTATUS APIENTRY
+IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
+                      WORD wScanCode,
+                      BOOL bEnabled,
+                      PKEYBOARD_INDICATOR_TRANSLATION pIndicatorTrans)
 {
-    ASSERT(vk <= 0xff);
+    NTSTATUS Status;
+    UINT i;
+    static KEYBOARD_INDICATOR_PARAMETERS Indicators;
+    IO_STATUS_BLOCK Block;
 
-    /* Special handling for toggles like numpad and caps lock */
-    if (vk == VK_CAPITAL || vk == VK_NUMLOCK)
+    if (!pIndicatorTrans)
+        return STATUS_NOT_SUPPORTED;
+
+    for (i = 0; i < pIndicatorTrans->NumberOfIndicatorKeys; i++)
     {
-        if (down)
-            gKeyStateTable[vk] ^= KS_LOCK_BIT;
-    }
-
-    if (vk == VK_SHIFT)
-        vk = ext ? VK_RSHIFT : VK_LSHIFT;
-    if (vk == VK_CONTROL)
-        vk = ext ? VK_RCONTROL : VK_LCONTROL;
-    if (vk == VK_MENU)
-        vk = ext ? VK_RMENU : VK_LMENU;
-
-    if (down)
-        gKeyStateTable[vk] |= KS_DOWN_BIT;
-    else
-        gKeyStateTable[vk] &= ~KS_DOWN_BIT;
-
-    if (vk == VK_LSHIFT || vk == VK_RSHIFT)
-    {
-        if ((gKeyStateTable[VK_LSHIFT] & KS_DOWN_BIT) ||
-                (gKeyStateTable[VK_RSHIFT] & KS_DOWN_BIT))
+        if (pIndicatorTrans->IndicatorList[i].MakeCode == wScanCode)
         {
-            gKeyStateTable[VK_SHIFT] |= KS_DOWN_BIT;
-        }
-        else
-        {
-            gKeyStateTable[VK_SHIFT] &= ~KS_DOWN_BIT;
+            if (bEnabled)
+                Indicators.LedFlags |= pIndicatorTrans->IndicatorList[i].IndicatorFlags;
+            else
+                Indicators.LedFlags = ~pIndicatorTrans->IndicatorList[i].IndicatorFlags;
+
+            /* Update the lights on the hardware */
+            Status = NtDeviceIoControlFile(hKeyboardDevice,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &Block,
+                                           IOCTL_KEYBOARD_SET_INDICATORS,
+                                           &Indicators, sizeof(Indicators),
+                                           NULL, 0);
+
+            return Status;
         }
     }
 
-    if (vk == VK_LCONTROL || vk == VK_RCONTROL)
-    {
-        if ((gKeyStateTable[VK_LCONTROL] & KS_DOWN_BIT) ||
-                (gKeyStateTable[VK_RCONTROL] & KS_DOWN_BIT))
-        {
-            gKeyStateTable[VK_CONTROL] |= KS_DOWN_BIT;
-        }
-        else
-        {
-            gKeyStateTable[VK_CONTROL] &= ~KS_DOWN_BIT;
-        }
-    }
+    return STATUS_SUCCESS;
+}
 
-    if (vk == VK_LMENU || vk == VK_RMENU)
+/*
+ * IntSimplifyVk
+ *
+ * Changes virtual keys which distinguish between left and right hand, to keys which don't distinguish
+ */
+static
+WORD
+IntSimplifyVk(WORD wVk)
+{
+    switch (wVk)
     {
-        if ((gKeyStateTable[VK_LMENU] & KS_DOWN_BIT) ||
-                (gKeyStateTable[VK_RMENU] & KS_DOWN_BIT))
-        {
-            gKeyStateTable[VK_MENU] |= KS_DOWN_BIT;
-        }
-        else
-        {
-            gKeyStateTable[VK_MENU] &= ~KS_DOWN_BIT;
-        }
+        case VK_LSHIFT:
+        case VK_RSHIFT:
+            return VK_SHIFT;
+
+        case VK_LCONTROL:
+        case VK_RCONTROL:
+            return VK_CONTROL;
+
+        case VK_LMENU:
+        case VK_RMENU:
+            return VK_MENU;
+
+        default:
+            return wVk;
     }
 }
 
-VOID DumpKeyState( PBYTE KeyState )
+/*
+ * IntFixVk
+ *
+ * Changes virtual keys which don't not distinguish between left and right hand to proper keys
+ */
+static
+WORD
+IntFixVk(WORD wVk, BOOL bExt)
 {
-    int i;
-
-    DbgPrint( "KeyState { " );
-    for( i = 0; i < 0x100; i++ )
+    switch (wVk)
     {
-        if( KeyState[i] )
-            DbgPrint( "%02x(%02x) ", i, KeyState[i] );
+        case VK_SHIFT:
+            return bExt ? VK_RSHIFT : VK_LSHIFT;
+
+        case VK_CONTROL:
+            return bExt ? VK_RCONTROL : VK_LCONTROL;
+
+        case VK_MENU:
+            return bExt ? VK_RMENU : VK_LMENU;
+
+        default:
+            return wVk;
     }
-    DbgPrint( "};\n" );
 }
 
-static BYTE KeysSet( PKBDTABLES pkKT, PBYTE KeyState,
-                     int FakeModLeft, int FakeModRight )
+/*
+ * IntGetVkOtherSide
+ *
+ * Gets other side of vk: right -> left, left -> right
+ */
+static
+WORD
+IntGetVkOtherSide(WORD wVk)
 {
-    if( !KeyState || !pkKT )
-        return 0;
+    switch (wVk)
+    {
+        case VK_LSHIFT: return VK_RSHIFT;
+        case VK_RSHIFT: return VK_LSHIFT;
 
-    /* Search special codes first */
-    if( FakeModLeft && KeyState[FakeModLeft] )
-        return KeyState[FakeModLeft];
-    else if( FakeModRight && KeyState[FakeModRight] )
-        return KeyState[FakeModRight];
+        case VK_LCONTROL: return VK_RCONTROL;
+        case VK_RCONTROL: return VK_LCONTROL;
+
+        case VK_LMENU: return VK_RMENU;
+        case VK_RMENU: return VK_LMENU;
+
+        default: return wVk;
+    }
+}
+
+/*
+ * IntTranslateNumpadKey
+ *
+ * Translates numpad keys when numlock is enabled
+ */
+static
+WORD
+IntTranslateNumpadKey(WORD wVk)
+{
+    switch (wVk)
+    {
+        case VK_INSERT: return VK_NUMPAD0;
+        case VK_END: return VK_NUMPAD1;
+        case VK_DOWN: return VK_NUMPAD2;
+        case VK_NEXT: return VK_NUMPAD3;
+        case VK_LEFT: return VK_NUMPAD4;
+        case VK_CLEAR: return VK_NUMPAD5;
+        case VK_RIGHT: return VK_NUMPAD6;
+        case VK_HOME: return VK_NUMPAD7;
+        case VK_UP: return VK_NUMPAD8;
+        case VK_PRIOR: return VK_NUMPAD9;
+        case VK_DELETE: return VK_DECIMAL;
+        default: return wVk;
+    }
+}
+
+/*
+ * IntGetModifiers
+ *
+ * Returns a value that indicates if the key is a modifier key, and
+ * which one.
+ */
+static
+UINT FASTCALL
+IntGetModifiers(PBYTE pKeyState)
+{
+    UINT fModifiers = 0;
+    
+    if (pKeyState[VK_SHIFT] & KS_DOWN_BIT)
+        fModifiers |= MOD_SHIFT;
+
+    if (pKeyState[VK_CONTROL] & KS_DOWN_BIT)
+        fModifiers |= MOD_CONTROL;
+
+    if (pKeyState[VK_MENU] & KS_DOWN_BIT)
+        fModifiers |= MOD_ALT;
+
+    if ((pKeyState[VK_LWIN] | pKeyState[VK_RWIN]) & KS_DOWN_BIT)
+        fModifiers |= MOD_WIN;
+
+    return fModifiers;
+}
+
+/*
+ * IntGetShiftBit
+ *
+ * Search the keyboard layout modifiers table for the shift bit
+ */
+static
+DWORD FASTCALL
+IntGetShiftBit(PKBDTABLES pKbdTbl, WORD wVk)
+{
+    unsigned i;
+
+    for (i = 0; pKbdTbl->pCharModifiers->pVkToBit[i].Vk; i++)
+        if (pKbdTbl->pCharModifiers->pVkToBit[i].Vk == wVk)
+            return pKbdTbl->pCharModifiers->pVkToBit[i].ModBits;
 
     return 0;
 }
 
-/* Search the keyboard layout modifiers table for the shift bit.  I don't
- * want to count on the shift bit not moving, because it can be specified
- * in the layout */
-
-static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT, DWORD Vk )
+/*
+ * IntGetModBits
+ *
+ * Gets layout specific modification bits, for example KBDSHIFT, KBDCTRL, KBDALT
+ */
+static
+DWORD
+IntGetModBits(PKBDTABLES pKbdTbl, PBYTE pKeyState)
 {
-    int i;
-
-    for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ )
-        if( pkKT->pCharModifiers->pVkToBit[i].Vk == Vk )
-            return pkKT->pCharModifiers->pVkToBit[i].ModBits;
-
-    return 0;
-}
-
-static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState )
-{
-    DWORD ModBits = 0;
-
-    if( !KeyState )
-        return 0;
+    DWORD i, dwModBits = 0;
 
     /* DumpKeyState( KeyState ); */
 
-    if (KeysSet( pkKT, KeyState, VK_LSHIFT, VK_RSHIFT ) &
-            KS_DOWN_BIT)
-        ModBits |= GetShiftBit( pkKT, VK_SHIFT );
-
-    if (KeysSet( pkKT, KeyState, VK_SHIFT, 0 ) &
-            KS_DOWN_BIT)
-        ModBits |= GetShiftBit( pkKT, VK_SHIFT );
-
-    if (KeysSet( pkKT, KeyState, VK_LCONTROL, VK_RCONTROL ) &
-            KS_DOWN_BIT )
-        ModBits |= GetShiftBit( pkKT, VK_CONTROL );
-
-    if (KeysSet( pkKT, KeyState, VK_CONTROL, 0 ) &
-            KS_DOWN_BIT )
-        ModBits |= GetShiftBit( pkKT, VK_CONTROL );
-
-    if (KeysSet( pkKT, KeyState, VK_LMENU, VK_RMENU ) &
-            KS_DOWN_BIT )
-        ModBits |= GetShiftBit( pkKT, VK_MENU );
+    for (i = 0; pKbdTbl->pCharModifiers->pVkToBit[i].Vk; i++)
+        if (pKeyState[pKbdTbl->pCharModifiers->pVkToBit[i].Vk] & KS_DOWN_BIT)
+            dwModBits |= pKbdTbl->pCharModifiers->pVkToBit[i].ModBits;
 
     /* Handle Alt+Gr */
-    if (pkKT->fLocalFlags & 0x1)
-        if (KeysSet( pkKT, KeyState, VK_RMENU, 0 ) &
-                KS_DOWN_BIT)
-            ModBits |= GetShiftBit( pkKT, VK_CONTROL );
+    if ((pKbdTbl->fLocaleFlags & KLLF_ALTGR) && (pKeyState[VK_RMENU] & KS_DOWN_BIT))
+        dwModBits |= IntGetShiftBit(pKbdTbl, VK_CONTROL); /* Don't use KBDCTRL here */
 
-    /* Deal with VK_CAPITAL */
-    if (KeysSet( pkKT, KeyState, VK_CAPITAL, 0 ) & KS_LOCK_BIT)
-    {
-        ModBits |= CAPITAL_BIT;
-    }
+    TRACE("Current Mod Bits: %lx\n", dwModBits);
 
-    /* Deal with VK_NUMLOCK */
-    if (KeysSet( pkKT, KeyState, VK_NUMLOCK, 0 ) & KS_LOCK_BIT)
-    {
-        ModBits |= NUMLOCK_BIT;
-    }
-
-    TRACE( "Current Mod Bits: %x\n", ModBits );
-
-    return ModBits;
+    return dwModBits;
 }
 
-static BOOL TryToTranslateChar(WORD wVirtKey,
-                               DWORD ModBits,
-                               PBOOL pbDead,
-                               PBOOL pbLigature,
-                               PWCHAR pwcTranslatedChar,
-                               PKBDTABLES keyLayout )
+/*
+ * IntTranslateChar
+ *
+ * Translates virtual key to character
+ */
+static
+BOOL
+IntTranslateChar(WORD wVirtKey,
+                 PBYTE pKeyState,
+                 PBOOL pbDead,
+                 PBOOL pbLigature,
+                 PWCHAR pwcTranslatedChar,
+                 PKBDTABLES pKbdTbl)
 {
-    PVK_TO_WCHAR_TABLE vtwTbl;
-    PVK_TO_WCHARS10 vkPtr;
-    size_t size_this_entry;
-    int nMod;
-    DWORD CapsMod = 0, CapsState = 0;
+    PVK_TO_WCHAR_TABLE pVkToVchTbl;
+    PVK_TO_WCHARS10 pVkToVch;
+    DWORD i, dwModBits, dwVkModBits, dwModNumber = 0;
+    WCHAR wch;
+    BOOL bAltGr;
+    WORD wCaplokAttr;
 
-    CapsState = ModBits & ~MOD_BITS_MASK;
-    ModBits = ModBits & MOD_BITS_MASK;
+    dwModBits = pKeyState ? IntGetModBits(pKbdTbl, pKeyState) : 0;
+    bAltGr = pKeyState && (pKbdTbl->fLocaleFlags & KLLF_ALTGR) && (pKeyState[VK_RMENU] & KS_DOWN_BIT);
+    wCaplokAttr = bAltGr ? CAPLOKALTGR : CAPLOK;
 
-    TRACE ( "TryToTranslate: %04x %x\n", wVirtKey, ModBits );
+    TRACE("TryToTranslate: %04x %x\n", wVirtKey, dwModBits);
 
-    if (ModBits > keyLayout->pCharModifiers->wMaxModBits)
+    if (dwModBits > pKbdTbl->pCharModifiers->wMaxModBits)
     {
+        TRACE("dwModBits %x > wMaxModBits %x\n", dwModBits, pKbdTbl->pCharModifiers->wMaxModBits);
         return FALSE;
     }
 
-    for (nMod = 0; keyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
+    for (i = 0; pKbdTbl->pVkToWcharTable[i].pVkToWchars; i++)
     {
-        vtwTbl = &keyLayout->pVkToWcharTable[nMod];
-        size_this_entry = vtwTbl->cbSize;
-        vkPtr = (PVK_TO_WCHARS10)((BYTE *)vtwTbl->pVkToWchars);
-        while(vkPtr->VirtualKey)
+        pVkToVchTbl = &pKbdTbl->pVkToWcharTable[i];
+        pVkToVch = (PVK_TO_WCHARS10)(pVkToVchTbl->pVkToWchars);
+        while (pVkToVch->VirtualKey)
         {
-            if( wVirtKey == (vkPtr->VirtualKey & 0xff) )
+            if (wVirtKey == (pVkToVch->VirtualKey & 0xFF))
             {
-                CapsMod = keyLayout->pCharModifiers->ModNumber
-                          [ModBits ^
-                           ((CapsState & CAPITAL_BIT) ? vkPtr->Attributes : 0)];
+                dwVkModBits = dwModBits;
 
-                if( CapsMod >= keyLayout->pVkToWcharTable[nMod].nModifications )
+                /* If CapsLock is enabled for this key and locked, add SHIFT bit */
+                if ((pVkToVch->Attributes & wCaplokAttr) &&
+                    pKeyState &&
+                    (pKeyState[VK_CAPITAL] & KS_LOCK_BIT))
                 {
-                    return FALSE;
+                    /* Note: we use special value here instead of getting VK_SHIFT mod bit - it's verified */
+                    dwVkModBits ^= KBDSHIFT;
                 }
 
-                if( vkPtr->wch[CapsMod] == WCH_NONE )
+                /* If ALT without CTRL has ben used, remove ALT flag */
+                if ((dwVkModBits & (KBDALT|KBDCTRL)) == KBDALT)
+                    dwVkModBits &= ~KBDALT;
+
+                if (dwVkModBits > pKbdTbl->pCharModifiers->wMaxModBits)
+                    break;
+
+                /* Get modification number */
+                dwModNumber = pKbdTbl->pCharModifiers->ModNumber[dwVkModBits];
+                if (dwModNumber >= pVkToVchTbl->nModifications)
                 {
-                    return FALSE;
+                    TRACE("dwModNumber %u >= nModifications %u\n", dwModNumber, pVkToVchTbl->nModifications);
+                    break;
                 }
 
-                *pbDead = vkPtr->wch[CapsMod] == WCH_DEAD;
-                *pbLigature = vkPtr->wch[CapsMod] == WCH_LGTR;
-                *pwcTranslatedChar = vkPtr->wch[CapsMod];
+                /* Read character */
+                wch = pVkToVch->wch[dwModNumber];
+                if (wch == WCH_NONE)
+                    break;
 
-                TRACE("%d %04x: CapsMod %08x CapsState %08x Char %04x\n",
-                      nMod, wVirtKey,
-                      CapsMod, CapsState, *pwcTranslatedChar);
+                *pbDead = (wch == WCH_DEAD);
+                *pbLigature = (wch == WCH_LGTR);
+                *pwcTranslatedChar = wch;
 
-                if( *pbDead )
+                TRACE("%d %04x: dwModNumber %08x Char %04x\n",
+                      i, wVirtKey, dwModNumber, wch);
+
+                if (*pbDead)
                 {
-                    vkPtr = (PVK_TO_WCHARS10)(((BYTE *)vkPtr) + size_this_entry);
-                    if( vkPtr->VirtualKey != 0xff )
+                    /* After WCH_DEAD, real character is located */
+                    pVkToVch = (PVK_TO_WCHARS10)(((BYTE *)pVkToVch) + pVkToVchTbl->cbSize);
+                    if (pVkToVch->VirtualKey != 0xFF)
                     {
-                        TRACE( "Found dead key with no trailer in the table.\n" );
-                        TRACE( "VK: %04x, ADDR: %p\n", wVirtKey, vkPtr );
-                        return FALSE;
+                        WARN("Found dead key with no trailer in the table.\n");
+                        WARN("VK: %04x, ADDR: %p\n", wVirtKey, pVkToVch);
+                        break;
                     }
-                    *pwcTranslatedChar = vkPtr->wch[CapsMod];
+                    *pwcTranslatedChar = pVkToVch->wch[dwModNumber];
                 }
                 return TRUE;
             }
-            vkPtr = (PVK_TO_WCHARS10)(((BYTE *)vkPtr) + size_this_entry);
+            pVkToVch = (PVK_TO_WCHARS10)(((BYTE *)pVkToVch) + pVkToVchTbl->cbSize);
         }
     }
+
+    /* If nothing has been found in layout, check if this is ASCII control character.
+       Note: we could add it to layout table, but windows does not have it there */
+    if (wVirtKey >= 'A' && wVirtKey <= 'Z' &&
+        (pKeyState[VK_CONTROL] & KS_DOWN_BIT) &&
+        !(pKeyState[VK_MENU] & KS_DOWN_BIT))
+    {
+        *pwcTranslatedChar = (wVirtKey - 'A') + 1; /* ASCII control character */
+        *pbDead = FALSE;
+        *pbLigature = FALSE;
+        return TRUE;
+    }
+
     return FALSE;
 }
 
+/*
+ * IntToUnicodeEx
+ *
+ * Translates virtual key to characters
+ */
 static
 int APIENTRY
-ToUnicodeInner(UINT wVirtKey,
+IntToUnicodeEx(UINT wVirtKey,
                UINT wScanCode,
-               PBYTE lpKeyState,
+               PBYTE pKeyState,
                LPWSTR pwszBuff,
                int cchBuff,
                UINT wFlags,
-               PKBDTABLES pkKT)
+               PKBDTABLES pKbdTbl)
 {
-    WCHAR wcTranslatedChar;
-    BOOL bDead;
-    BOOL bLigature;
+    WCHAR wchTranslatedChar;
+    BOOL bDead, bLigature;
+    static WCHAR wchDead = 0;
+    int iRet = 0;
 
-    if( !pkKT )
-        return 0;
+    ASSERT(pKbdTbl);
 
-    if( TryToTranslateChar( wVirtKey,
-                            ModBits( pkKT, lpKeyState ),
-                            &bDead,
-                            &bLigature,
-                            &wcTranslatedChar,
-                            pkKT ) )
+    if (!IntTranslateChar(wVirtKey,
+                          pKeyState,
+                          &bDead,
+                          &bLigature,
+                          &wchTranslatedChar,
+                          pKbdTbl))
     {
-        if( bLigature )
+        return 0;
+    }
+
+    if (bLigature)
+    {
+        WARN("Not handling ligature (yet)\n" );
+        return 0;
+    }
+
+    /* If we got dead char in previous call check dead keys in keyboard layout */
+    if (wchDead)
+    {
+        UINT i;
+        WCHAR wchFirst, wchSecond;
+        TRACE("PREVIOUS DEAD CHAR: %c\n", wchDead);
+
+        for (i = 0; pKbdTbl->pDeadKey[i].dwBoth; i++)
         {
-            WARN("Not handling ligature (yet)\n" );
-            return 0;
+            wchFirst = pKbdTbl->pDeadKey[i].dwBoth >> 16;
+            wchSecond = pKbdTbl->pDeadKey[i].dwBoth & 0xFFFF;
+            if (wchFirst == wchDead && wchSecond == wchTranslatedChar)
+            {
+                wchTranslatedChar = pKbdTbl->pDeadKey[i].wchComposed;
+                wchDead = 0;
+                bDead = FALSE;
+                break;
+            }
         }
 
-        if( cchBuff > 0 )
-            pwszBuff[0] = wcTranslatedChar;
+        TRACE("FINAL CHAR: %c\n", wchTranslatedChar);
+    }
 
-        return bDead ? -1 : 1;
+    /* dead char has not been not found */
+    if (wchDead)
+    {
+        /* Treat both characters normally */
+        if (cchBuff > iRet)
+            pwszBuff[iRet++] = wchDead;
+        bDead = FALSE;
+    }
+
+    /* add character to the buffer */
+    if (cchBuff > iRet)
+        pwszBuff[iRet++] = wchTranslatedChar;
+
+    /* Save dead character */
+    wchDead = bDead ? wchTranslatedChar : 0;
+
+    return bDead ? -iRet : iRet;
+}
+
+/*
+ * IntVkToVsc
+ *
+ * Translates virtual key to scan code
+ */
+static
+WORD FASTCALL
+IntVkToVsc(WORD wVk, PKBDTABLES pKbdTbl)
+{
+    unsigned i;
+
+    ASSERT(pKbdTbl);
+
+    /* Check standard keys first */
+    for (i = 0; i < pKbdTbl->bMaxVSCtoVK; i++)
+    {
+        if ((pKbdTbl->pusVSCtoVK[i] & 0xFF) == wVk)
+            return i;
+    }
+
+    /* Check extended keys now */
+    for (i = 0; pKbdTbl->pVSCtoVK_E0[i].Vsc; i++)
+    {
+        if ((pKbdTbl->pVSCtoVK_E0[i].Vk & 0xFF) == wVk)
+            return 0xE000 | pKbdTbl->pVSCtoVK_E0[i].Vsc;
+    }
+
+    for (i = 0; pKbdTbl->pVSCtoVK_E1[i].Vsc; i++)
+    {
+        if ((pKbdTbl->pVSCtoVK_E1[i].Vk & 0xFF) == wVk)
+            return 0xE100 | pKbdTbl->pVSCtoVK_E1[i].Vsc;
+    }
+
+    /* Virtual key has not been found */
+    return 0;
+}
+
+/*
+ * IntVscToVk
+ *
+ * Translates prefixed scancode to virtual key
+ */
+static
+WORD FASTCALL
+IntVscToVk(WORD wScanCode, PKBDTABLES pKbdTbl)
+{
+    unsigned i;
+    WORD wVk = 0;
+
+    ASSERT(pKbdTbl);
+
+    if ((wScanCode & 0xFF00) == 0xE000)
+    {
+        for (i = 0; pKbdTbl->pVSCtoVK_E0[i].Vsc; i++)
+        {
+            if (pKbdTbl->pVSCtoVK_E0[i].Vsc == (wScanCode & 0xFF))
+            {
+                wVk = pKbdTbl->pVSCtoVK_E0[i].Vk;
+            }
+        }
+    }
+    else if ((wScanCode & 0xFF00) == 0xE100)
+    {
+        for (i = 0; pKbdTbl->pVSCtoVK_E1[i].Vsc; i++)
+        {
+            if (pKbdTbl->pVSCtoVK_E1[i].Vsc == (wScanCode & 0xFF))
+            {
+                wVk = pKbdTbl->pVSCtoVK_E1[i].Vk;
+            }
+        }
+    }
+    else if (wScanCode < pKbdTbl->bMaxVSCtoVK)
+    {
+        wVk = pKbdTbl->pusVSCtoVK[wScanCode];
+    }
+
+    /* 0xFF nad 0x00 are invalid VKs */
+    return wVk != 0xFF ? wVk : 0;
+}
+
+/*
+ * IntVkToChar
+ *
+ * Translates virtual key to character, ignoring shift state
+ */
+static
+WCHAR FASTCALL
+IntVkToChar(WORD wVk, PKBDTABLES pKbdTbl)
+{
+    WCHAR wch;
+    BOOL bDead, bLigature;
+
+    ASSERT(pKbdTbl);
+
+    if (IntTranslateChar(wVk,
+                         NULL,
+                         &bDead,
+                         &bLigature,
+                         &wch,
+                         pKbdTbl))
+    {
+        return wch;
     }
 
     return 0;
 }
 
-
-DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
+#if 0
+static
+VOID
+DumpKeyState(PBYTE pKeyState)
 {
-    DWORD ret = 0;
+    unsigned i;
 
-    if( key < 0x100 )
+    DbgPrint("KeyState { ");
+    for (i = 0; i < 0x100; i++)
     {
-        ret = ((DWORD)(gKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-              (gKeyStateTable[key] & KS_LOCK_BIT);
-        if ( ret & 0x8000 )
-            ret |= 0xFFFF0000; // If down, windows returns 0xFFFF8000.
+        if (pKeyState[i])
+            DbgPrint("%02x(%02x) ", i, pKeyState[i]);
+    }
+    DbgPrint("};\n");
+}
+#endif
+
+/*
+ * IntGetAsyncKeyState
+ *
+ * Gets key state from global table
+ */
+static
+WORD FASTCALL
+IntGetAsyncKeyState(DWORD dwKey)
+{
+    WORD dwRet = 0;
+
+    if (dwKey < 0x100)
+    {
+        if (gKeyStateTable[dwKey] & KS_DOWN_BIT)
+            dwRet |= 0xFFFF8000; // If down, windows returns 0xFFFF8000.
+        if (gKeyStateTable[dwKey] & KS_LOCK_BIT)
+            dwRet |= 0x1;
     }
     else
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
     }
-    return ret;
+    return dwRet;
 }
 
-/***********************************************************************
- *           get_key_state
+SHORT
+APIENTRY
+NtUserGetAsyncKeyState(INT Key)
+{
+    DECLARE_RETURN(SHORT);
+
+    TRACE("Enter NtUserGetAsyncKeyState\n");
+    UserEnterExclusive();
+
+    RETURN(IntGetAsyncKeyState(Key));
+
+CLEANUP:
+    TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n", _ret_);
+    UserLeave();
+    END_CLEANUP;
+}
+
+/*
+ * IntKeyboardSendWinKeyMsg
+ *
+ * Sends syscommand to shell, when WIN key is pressed
  */
-WORD FASTCALL get_key_state(void)
+static
+VOID NTAPI
+IntKeyboardSendWinKeyMsg()
+{
+    PWND pWnd;
+    MSG Msg;
+
+    if (!(pWnd = UserGetWindowObject(InputWindowStation->ShellWindow)))
+    {
+        ERR("Couldn't find window to send Windows key message!\n");
+        return;
+    }
+
+    Msg.hwnd = InputWindowStation->ShellWindow;
+    Msg.message = WM_SYSCOMMAND;
+    Msg.wParam = SC_TASKLIST;
+    Msg.lParam = 0;
+
+    /* The QS_HOTKEY is just a guess */
+    MsqPostMessage(pWnd->head.pti->MessageQueue, &Msg, FALSE, QS_HOTKEY);
+}
+
+/*
+ * co_IntKeyboardSendAltKeyMsg
+ *
+ * Sends syscommand enabling window menu
+ */
+static
+VOID NTAPI
+co_IntKeyboardSendAltKeyMsg()
+{
+    FIXME("co_IntKeyboardSendAltKeyMsg\n");
+    //co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
+}
+
+/*
+ * UserSendKeyboardInput
+ *
+ * Process keyboard input from input devices and SendInput API
+ */
+BOOL NTAPI
+UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
+{
+    WORD wScanCode, wVk, wSimpleVk, wVkOtherSide;
+    PKBL pKbl = NULL;
+    PKBDTABLES pKbdTbl;
+    PUSER_MESSAGE_QUEUE pFocusQueue;
+    struct _ETHREAD *pFocusThread;
+    UINT fModifiers;
+    BYTE PrevKeyState = 0;
+    HWND hWnd;
+    int HotkeyId;
+    struct _ETHREAD *Thread;
+    LARGE_INTEGER LargeTickCount;
+    BOOL bExt = pKbdInput->dwFlags & KEYEVENTF_EXTENDEDKEY;
+    BOOL bKeyUp = pKbdInput->dwFlags & KEYEVENTF_KEYUP;
+
+    /* Find the target thread whose locale is in effect */
+    pFocusQueue = IntGetFocusMessageQueue();
+
+    if (pFocusQueue)
+    {
+        pFocusThread = pFocusQueue->Thread;
+        if (pFocusThread && pFocusThread->Tcb.Win32Thread)
+            pKbl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+    }
+
+    if (!pKbl)
+        pKbl = W32kGetDefaultKeyLayout();
+    if (!pKbl)
+    {
+        ERR("No keyboard layout!\n");
+        return FALSE;
+    }
+
+    pKbdTbl = pKbl->KBTables;
+
+    /* Note: wScan field is always used */
+    wScanCode = pKbdInput->wScan & 0x7F;
+
+    if (pKbdInput->dwFlags & KEYEVENTF_UNICODE)
+    {
+        /* Generate WM_KEYDOWN msg with wParam == VK_PACKET and
+           high order word of lParam == pKbdInput->wScan */
+        wVk = VK_PACKET;
+    }
+    else
+    {
+        if (bExt)
+            wScanCode |= 0xE000;
+
+        if (pKbdInput->dwFlags & KEYEVENTF_SCANCODE)
+        {
+            /* Don't ignore invalid scan codes */
+            wVk = IntVscToVk(wScanCode, pKbdTbl);
+            if (!wVk) /* use 0xFF if vsc is invalid */
+                wVk = 0xFF;
+        }
+        else
+        {
+            wVk = pKbdInput->wVk & 0xFF;
+
+            /* LSHIFT + EXT = RSHIFT */
+            wVk = IntSimplifyVk(wVk);
+            wVk = IntFixVk(wVk, bExt);
+        }
+    }
+
+    if (!(pKbdInput->dwFlags & KEYEVENTF_UNICODE))
+    {
+        /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
+        wSimpleVk = IntSimplifyVk(wVk);
+        wVkOtherSide = IntGetVkOtherSide(wVk);
+        PrevKeyState = gKeyStateTable[wSimpleVk];
+
+        /* Update global keyboard state. Begin from lock bit */
+        if (!bKeyUp && !(PrevKeyState & KS_DOWN_BIT))
+            gKeyStateTable[wVk] ^= KS_LOCK_BIT;
+
+        /* Update down bit */
+        if (bKeyUp)
+            gKeyStateTable[wVk] &= ~KS_DOWN_BIT;
+        else
+            gKeyStateTable[wVk] |= KS_DOWN_BIT;
+
+        /* Update key without shifts */
+        gKeyStateTable[wSimpleVk] = gKeyStateTable[wVk] | gKeyStateTable[wVkOtherSide];
+
+        if (!bKeyUp)
+        {
+            /* Update keyboard LEDs */
+            if (!gpKeyboardIndicatorTrans)
+                IntKeyboardGetIndicatorTrans(ghKeyboardDevice, &gpKeyboardIndicatorTrans);
+            if (gpKeyboardIndicatorTrans)
+                IntKeyboardUpdateLeds(ghKeyboardDevice,
+                                      wScanCode,
+                                      gKeyStateTable[wSimpleVk] & KS_LOCK_BIT,
+                                      gpKeyboardIndicatorTrans);
+        }
+
+        /* Truncate scan code */
+        wScanCode &= 0x7F;
+
+        /* Support VK_*WIN and VK_*MENU keys */
+        if (bKeyUp)
+        {
+            if (wVk == VK_LWIN || wVk == VK_RWIN)
+                IntKeyboardSendWinKeyMsg();
+            else if(wSimpleVk == VK_MENU && !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT))
+                co_IntKeyboardSendAltKeyMsg();
+        }
+
+        /* Check if it is a hotkey */
+        fModifiers = IntGetModifiers(gKeyStateTable);
+        if (GetHotKey(fModifiers, wSimpleVk, &Thread, &hWnd, &HotkeyId))
+        {
+            if (!bKeyUp)
+            {
+                TRACE("Hot key pressed (hWnd %lx, id %d)\n", hWnd, HotkeyId);
+                MsqPostHotKeyMessage(Thread,
+                                     hWnd,
+                                     (WPARAM)HotkeyId,
+                                     MAKELPARAM((WORD)fModifiers, wSimpleVk));
+            }
+
+            return TRUE; /* Don't send any message */
+        }
+    }
+
+    /* If we have a focus queue, post a keyboard message */
+    if (pFocusQueue)
+    {
+        MSG Msg;
+
+        /* If it is F10 or ALT is down and CTRL is up, it's a system key */
+        if (wVk == VK_F10 ||
+            //uVkNoShift == VK_MENU || // FIXME: If only LALT is pressed WM_SYSKEYUP is generated instead of WM_KEYUP
+            ((gKeyStateTable[VK_MENU] & KS_DOWN_BIT) &&
+            !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)))
+        {
+            if (bKeyUp)
+                Msg.message = WM_SYSKEYUP;
+            else
+                Msg.message = WM_SYSKEYDOWN;
+        }
+        else
+        {
+            if (bKeyUp)
+                Msg.message = WM_KEYUP;
+            else
+                Msg.message = WM_KEYDOWN;
+        }
+        Msg.hwnd = pFocusQueue->FocusWindow;
+        Msg.lParam = MAKELPARAM(1, wScanCode);
+        /* If it is VK_PACKET, high word of wParam is used for wchar */
+        if (!(pKbdInput->dwFlags & KEYEVENTF_UNICODE))
+        {
+            if (bExt)
+                Msg.lParam |= LP_EXT_BIT;
+            if (gKeyStateTable[VK_MENU] & KS_DOWN_BIT)
+                Msg.lParam |= LP_CONTEXT_BIT;
+            if (PrevKeyState & KS_DOWN_BIT)
+                Msg.lParam |= LP_PREV_STATE_BIT;
+            if (bKeyUp)
+                Msg.lParam |= LP_TRANSITION_BIT;
+        }
+
+        Msg.wParam = wVk; // its "simplified" later
+        Msg.pt = gpsi->ptCursor;
+        if (pKbdInput->time)
+            Msg.time = pKbdInput->time;
+        else
+        {
+            KeQueryTickCount(&LargeTickCount);
+            Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+        }
+
+        /* Post a keyboard message */
+        TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
+        co_MsqPostKeyboardMessage(Msg.message, Msg.wParam, Msg.lParam, bInjected);
+    }
+
+    return TRUE;
+}
+
+/* 
+ * UserProcessKeyboardInput
+ *
+ * Process raw keyboard input data
+ */
+VOID NTAPI
+UserProcessKeyboardInput(
+    PKEYBOARD_INPUT_DATA pKbdInputData)
+{
+    WORD wScanCode, wVk;
+    PKBL pKbl = NULL;
+    PKBDTABLES pKbdTbl;
+    PUSER_MESSAGE_QUEUE pFocusQueue;
+    struct _ETHREAD *pFocusThread;
+
+    /* Calculate scan code with prefix */
+    wScanCode = pKbdInputData->MakeCode & 0x7F;
+    if (pKbdInputData->Flags & KEY_E0)
+        wScanCode |= 0xE000;
+    if (pKbdInputData->Flags & KEY_E1)
+        wScanCode |= 0xE100;
+
+    /* Find the target thread whose locale is in effect */
+    pFocusQueue = IntGetFocusMessageQueue();
+
+    if (pFocusQueue)
+    {
+        pFocusThread = pFocusQueue->Thread;
+        if (pFocusThread && pFocusThread->Tcb.Win32Thread)
+            pKbl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+    }
+
+    if (!pKbl)
+        pKbl = W32kGetDefaultKeyLayout();
+    if (!pKbl)
+        return;
+
+    pKbdTbl = pKbl->KBTables;
+
+    /* Convert scan code to virtual key.
+       Note: we could call UserSendKeyboardInput using scan code,
+             but it wouldn't interpret E1 key(s) properly */
+    wVk = IntVscToVk(wScanCode, pKbdTbl);
+    TRACE("UserProcessKeyboardInput: %x (break: %u) -> %x\n",
+          wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1 : 0, wVk);
+
+    if (wVk)
+    {
+        KEYBDINPUT KbdInput;
+
+        /* Support numlock */
+        if ((wVk & KBDNUMPAD) && (gKeyStateTable[VK_NUMLOCK] & KS_LOCK_BIT))
+        {
+            wVk = IntTranslateNumpadKey(wVk & 0xFF);
+        }
+
+        /* Send keyboard input */
+        KbdInput.wVk = wVk & 0xFF;
+        KbdInput.wScan = wScanCode & 0x7F;
+        KbdInput.dwFlags = 0;
+        if (pKbdInputData->Flags & KEY_BREAK)
+            KbdInput.dwFlags |= KEYEVENTF_KEYUP;
+        if (wVk & KBDEXT)
+            KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+        KbdInput.time = 0;
+        KbdInput.dwExtraInfo = pKbdInputData->ExtraInformation;
+        UserSendKeyboardInput(&KbdInput, FALSE);
+
+        /* E1 keys don't have break code */
+        if (pKbdInputData->Flags & KEY_E1)
+        {
+            /* Send key up event */
+            KbdInput.dwFlags |= KEYEVENTF_KEYUP;
+            UserSendKeyboardInput(&KbdInput, FALSE);
+        }
+    }
+}
+
+/* 
+ * IntTranslateKbdMessage
+ *
+ * Addes WM_(SYS)CHAR messages to message queue if message
+ * describes key which produce character.
+ */
+BOOL FASTCALL
+IntTranslateKbdMessage(LPMSG lpMsg,
+                       UINT flags)
+{
+    PTHREADINFO pti;
+    INT cch = 0, i;
+    WCHAR wch[3] = { 0 };
+    MSG NewMsg = { 0 };
+    PKBDTABLES pKbdTbl;
+    PWND pWnd;
+    LARGE_INTEGER LargeTickCount;
+    BOOL bResult = FALSE;
+
+    pWnd = UserGetWindowObject(lpMsg->hwnd);
+    if (!pWnd) // Must have a window!
+    {
+        ERR("No Window for Translate.\n");
+        return FALSE;
+    }
+
+    pti = pWnd->head.pti;
+    pKbdTbl = pti->KeyboardLayout->KBTables;
+    if (!pKbdTbl)
+        return FALSE;
+
+    if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN)
+        return FALSE;
+
+    /* Init pt, hwnd and time msg fields */
+    NewMsg.pt = gpsi->ptCursor;
+    NewMsg.hwnd = lpMsg->hwnd;
+    KeQueryTickCount(&LargeTickCount);
+    NewMsg.time = MsqCalculateMessageTime(&LargeTickCount);
+
+    TRACE("Enter IntTranslateKbdMessage msg %s, vk %x\n",
+        lpMsg->message == WM_SYSKEYDOWN ? "WM_SYSKEYDOWN" : "WM_KEYDOWN", lpMsg->wParam);
+
+    if (lpMsg->wParam == VK_PACKET)
+    {
+        NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
+        NewMsg.wParam = HIWORD(lpMsg->lParam);
+        NewMsg.lParam = LOWORD(lpMsg->lParam);
+        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
+        return TRUE;
+    }
+
+    cch = IntToUnicodeEx(lpMsg->wParam,
+                         HIWORD(lpMsg->lParam) & 0xFF,
+                         pti->MessageQueue->KeyState,
+                         wch,
+                         sizeof(wch) / sizeof(wch[0]),
+                         0,
+                         pKbdTbl);
+
+    if (cch)
+    {
+        if (cch > 0) /* Normal characters */
+            NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
+        else /* Dead character */
+        {
+            cch = -cch;
+            NewMsg.message =
+                (lpMsg->message == WM_KEYDOWN) ? WM_DEADCHAR : WM_SYSDEADCHAR;
+        }
+        NewMsg.lParam = lpMsg->lParam;
+
+        /* Send all characters */
+        for (i = 0; i < cch; ++i)
+        {
+            TRACE("CHAR='%c' %04x %08x\n", wch[i], wch[i], lpMsg->lParam);
+            NewMsg.wParam = wch[i];
+            MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
+        }
+        bResult = TRUE;
+    }
+
+    TRACE("Leave IntTranslateKbdMessage ret %u, cch %d, msg %x, wch %x\n",
+        bResult, cch, NewMsg.message, NewMsg.wParam);
+    return bResult;
+}
+
+/*
+ * Map a virtual key code, or virtual scan code, to a scan code, key code,
+ * or unshifted unicode character.
+ *
+ * Code: See Below
+ * Type:
+ * 0 -- Code is a virtual key code that is converted into a virtual scan code
+ *      that does not distinguish between left and right shift keys.
+ * 1 -- Code is a virtual scan code that is converted into a virtual key code
+ *      that does not distinguish between left and right shift keys.
+ * 2 -- Code is a virtual key code that is converted into an unshifted unicode
+ *      character.
+ * 3 -- Code is a virtual scan code that is converted into a virtual key code
+ *      that distinguishes left and right shift keys.
+ * KeyLayout: Keyboard layout handle
+ *
+ * @implemented
+ */
+static UINT
+IntMapVirtualKeyEx(UINT uCode, UINT Type, PKBDTABLES pKbdTbl)
+{
+    UINT uRet = 0;
+
+    switch (Type)
+    {
+        case MAPVK_VK_TO_VSC:
+            uCode = IntFixVk(uCode, FALSE);
+            uRet = IntVkToVsc(uCode, pKbdTbl);
+            if (uRet > 0xFF) // fail for scancodes with prefix (e0, e1)
+                uRet = 0;
+            break;
+
+        case MAPVK_VSC_TO_VK:
+            uRet = IntVscToVk(uCode, pKbdTbl) & 0xFF;
+            uRet = IntSimplifyVk(uRet);
+            break;
+
+        case MAPVK_VK_TO_CHAR:
+            uRet = (UINT)IntVkToChar(uCode, pKbdTbl);
+        break;
+
+        case MAPVK_VSC_TO_VK_EX:
+            uRet = IntVscToVk(uCode, pKbdTbl) & 0xFF;
+            break;
+
+        case MAPVK_VK_TO_VSC_EX:
+            uRet = IntVkToVsc(uCode, pKbdTbl);
+            break;
+
+        default:
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            ERR("Wrong type value: %u\n", Type);
+    }
+
+    return uRet;
+}
+
+/*
+ * NtUserMapVirtualKeyEx
+ *
+ * Map a virtual key code, or virtual scan code, to a scan code, key code,
+ * or unshifted unicode character. See IntMapVirtualKeyEx.
+ */
+UINT
+APIENTRY
+NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
+{
+    PKBDTABLES pKbdTbl = NULL;
+    DECLARE_RETURN(UINT);
+
+    TRACE("Enter NtUserMapVirtualKeyEx\n");
+    UserEnterExclusive();
+
+    if (!dwhkl)
+    {
+        PTHREADINFO pti;
+
+        pti = PsGetCurrentThreadWin32Thread();
+        if (pti && pti->KeyboardLayout)
+            pKbdTbl = pti->KeyboardLayout->KBTables;
+    }
+    else
+    {
+        PKBL pKbl;
+
+        pKbl = UserHklToKbl(dwhkl);
+        if (pKbl)
+            pKbdTbl = pKbl->KBTables;
+    }
+
+    if (!pKbdTbl)
+        RETURN(0);
+
+    RETURN(IntMapVirtualKeyEx(uCode, uType, pKbdTbl));
+
+CLEANUP:
+    TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n", _ret_);
+    UserLeave();
+    END_CLEANUP;
+}
+
+/*
+ * NtUserToUnicodeEx
+ *
+ * Translates virtual key to characters
+ */
+int
+APIENTRY
+NtUserToUnicodeEx(
+    UINT wVirtKey,
+    UINT wScanCode,
+    PBYTE pKeyStateUnsafe,
+    LPWSTR pwszBuffUnsafe,
+    int cchBuff,
+    UINT wFlags,
+    HKL dwhkl)
+{
+    PTHREADINFO pti;
+    BYTE KeyState[0x100];
+    PWCHAR pwszBuff = NULL;
+    int iRet = 0;
+    PKBL pKbl = NULL;
+    DECLARE_RETURN(int);
+
+    TRACE("Enter NtUserSetKeyboardState\n");
+    UserEnterShared();
+
+    /* Key up? */
+    if (wScanCode & SC_KEY_UP)
+    {
+        RETURN(0);
+    }
+
+    if (!NT_SUCCESS(MmCopyFromCaller(KeyState,
+                                     pKeyStateUnsafe,
+                                     sizeof(KeyState))))
+    {
+        ERR("Couldn't copy key state from caller.\n");
+        RETURN(0);
+    }
+
+    /* Virtual code is correct? */
+    if (wVirtKey < 0x100)
+    {
+        pwszBuff = ExAllocatePoolWithTag(NonPagedPool, sizeof(WCHAR) * cchBuff, TAG_STRING);
+        if (!pwszBuff)
+        {
+            ERR("ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
+            RETURN(0);
+        }
+        RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
+
+        if (dwhkl)
+            pKbl = UserHklToKbl(dwhkl);
+
+        if (!pKbl)
+        {
+            pti = PsGetCurrentThreadWin32Thread();
+            pKbl = pti->KeyboardLayout;
+        }
+
+        iRet = IntToUnicodeEx(wVirtKey,
+                              wScanCode,
+                              KeyState,
+                              pwszBuff,
+                              cchBuff,
+                              wFlags,
+                              pKbl ? pKbl->KBTables : NULL);
+
+        MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
+        ExFreePoolWithTag(pwszBuff, TAG_STRING);
+    }
+
+    RETURN(iRet);
+
+CLEANUP:
+    TRACE("Leave NtUserSetKeyboardState, ret=%i\n", _ret_);
+    UserLeave();
+    END_CLEANUP;
+}
+
+/*
+ * NtUserGetKeyNameText
+ *
+ * Gets key name from keyboard layout
+ */
+DWORD
+APIENTRY
+NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
+{
+    PTHREADINFO pti;
+    DWORD i, cchKeyName, dwRet = 0;
+    WORD wScanCode = (lParam >> 16) & 0xFF;
+    BOOL bExtKey = (lParam & LP_EXT_BIT) ? TRUE : FALSE;
+    PKBDTABLES pKbdTbl;
+    VSC_LPWSTR *pKeyNames = NULL;
+    CONST WCHAR *pKeyName = NULL;
+    WCHAR KeyNameBuf[2];
+    DECLARE_RETURN(DWORD);
+
+    TRACE("Enter NtUserGetKeyNameText\n");
+    UserEnterShared();
+
+    /* Get current keyboard layout */
+    pti = PsGetCurrentThreadWin32Thread();
+    pKbdTbl = pti ? pti->KeyboardLayout->KBTables : 0;
+
+    if (!pKbdTbl || cchSize < 1)
+        RETURN(0);
+
+    /* "Do not care" flag */
+    if(lParam & LP_DO_NOT_CARE_BIT)
+    {
+        /* Note: we could do vsc -> vk -> vsc conversion, instead of using
+                 hardcoded scan codes, but it's not what Windows does */
+        if (wScanCode == SCANCODE_RSHIFT && !bExtKey)
+            wScanCode = SCANCODE_LSHIFT;
+        else if (wScanCode == SCANCODE_CTRL || wScanCode == SCANCODE_ALT)
+            bExtKey = FALSE;
+    }
+
+    if (bExtKey)
+        pKeyNames = pKbdTbl->pKeyNamesExt;
+    else
+        pKeyNames = pKbdTbl->pKeyNames;
+
+    for (i = 0; pKeyNames[i].pwsz; i++)
+    {
+        if (pKeyNames[i].vsc == wScanCode)
+        {
+            pKeyName = pKeyNames[i].pwsz;
+            break;
+        }
+    }
+
+    if (!pKeyName)
+    {
+        WORD wVk = IntVscToVk(wScanCode, pKbdTbl);
+
+        if (wVk)
+        {
+            KeyNameBuf[0] = IntVkToChar(wVk, pKbdTbl);
+            KeyNameBuf[1] = 0;
+            if (KeyNameBuf[0])
+                pKeyName = KeyNameBuf;
+        }
+    }
+
+    if (pKeyName)
+    {
+        cchKeyName = wcslen(pKeyName);
+        if (cchKeyName > cchSize - 1)
+            cchKeyName = cchSize - 1; // don't count '\0'
+
+        _SEH2_TRY
+        {
+            ProbeForWrite(lpString, (cchKeyName + 1) * sizeof(WCHAR), 1);
+            RtlCopyMemory(lpString, pKeyName, cchKeyName * sizeof(WCHAR));
+            lpString[cchKeyName] = UNICODE_NULL;
+            dwRet = cchKeyName;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    RETURN(dwRet);
+
+CLEANUP:
+    TRACE("Leave NtUserGetKeyNameText, ret=%i\n", _ret_);
+    UserLeave();
+    END_CLEANUP;
+}
+
+/*
+ * UserGetKeyboardType
+ *
+ * Returns some keyboard specific information
+ */
+DWORD FASTCALL
+UserGetKeyboardType(
+    DWORD dwTypeFlag)
+{
+    switch (dwTypeFlag)
+    {
+        case 0:        /* Keyboard type */
+            return 4;    /* AT-101 */
+        case 1:        /* Keyboard Subtype */
+            return 0;    /* There are no defined subtypes */
+        case 2:        /* Number of F-keys */
+            return 12;   /* We're doing an 101 for now, so return 12 F-keys */
+        default:
+            ERR("Unknown type!\n");
+            return 0;    /* Note: we don't have to set last error here */
+    }
+}
+
+/*
+ * NtUserVkKeyScanEx
+ *
+ * Based on IntTranslateChar, instead of processing VirtualKey match,
+ * look for wChar match.
+ */
+DWORD
+APIENTRY
+NtUserVkKeyScanEx(
+    WCHAR wch,
+    HKL dwhkl,
+    BOOL bUsehKL)
+{
+    PKBDTABLES pKbdTbl;
+    PVK_TO_WCHAR_TABLE pVkToWchTbl;
+    PVK_TO_WCHARS10 pVkToWch;
+    PKBL pKbl = NULL;
+    DWORD i, dwModBits = 0, dwModNumber = 0, Ret = (DWORD)-1;
+
+    TRACE("NtUserVkKeyScanEx() wch %d, KbdLayout 0x%p\n", wch, dwhkl);
+    UserEnterShared();
+
+    if (bUsehKL)
+    {
+        // Use given keyboard layout
+        if (dwhkl)
+            pKbl = UserHklToKbl(dwhkl);
+    }
+    else
+    {
+        // Use thread keyboard layout
+        pKbl = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->KeyboardLayout;
+    }
+
+    if (!pKbl)
+        goto Exit;
+
+    pKbdTbl = pKbl->KBTables;
+
+    // Interate through all VkToWchar tables while pVkToWchars is not NULL
+    for (i = 0; pKbdTbl->pVkToWcharTable[i].pVkToWchars; i++)
+    {
+        pVkToWchTbl = &pKbdTbl->pVkToWcharTable[i];
+        pVkToWch = (PVK_TO_WCHARS10)(pVkToWchTbl->pVkToWchars);
+
+        // Interate through all virtual keys
+        while (pVkToWch->VirtualKey)
+        {
+            for (dwModNumber = 0; dwModNumber < pVkToWchTbl->nModifications; dwModNumber++)
+            {
+                if (pVkToWch->wch[dwModNumber] == wch)
+                {
+                    dwModBits = pKbdTbl->pCharModifiers->ModNumber[dwModNumber];
+                    TRACE("i %d wC %04x: dwModBits %08x dwModNumber %08x MaxModBits %08x\n",
+                          i, wch, dwModBits, dwModNumber, pKbdTbl->pCharModifiers->wMaxModBits);
+                    Ret = (dwModBits << 8) | (pVkToWch->VirtualKey & 0xFF);
+                    goto Exit;
+                }
+            }
+            pVkToWch = (PVK_TO_WCHARS10)(((BYTE *)pVkToWch) + pVkToWchTbl->cbSize);
+        }
+    }
+Exit:
+    UserLeave();
+    return Ret;
+}
+
+/*
+ * UserGetMouseButtonsState
+ *
+ * Returns bitfield used in mouse messages
+ */
+WORD FASTCALL
+UserGetMouseButtonsState(VOID)
 {
     WORD ret = 0;
 
@@ -351,671 +1457,5 @@ WORD FASTCALL get_key_state(void)
     if (gKeyStateTable[VK_XBUTTON2] & KS_DOWN_BIT) ret |= MK_XBUTTON2;
     return ret;
 }
-
-SHORT
-APIENTRY
-NtUserGetAsyncKeyState(
-    INT key)
-{
-    DECLARE_RETURN(SHORT);
-
-    TRACE("Enter NtUserGetAsyncKeyState\n");
-    UserEnterExclusive();
-
-    RETURN((SHORT)UserGetAsyncKeyState(key));
-
-CLEANUP:
-    TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n", _ret_);
-    UserLeave();
-    END_CLEANUP;
-}
-
-
-
-BOOL FASTCALL
-IntTranslateKbdMessage(LPMSG lpMsg,
-                       UINT flags)
-{
-    PTHREADINFO pti;
-    static INT dead_char = 0;
-    LONG UState = 0;
-    WCHAR wp[2] = { 0 };
-    MSG NewMsg = { 0 };
-    PKBDTABLES keyLayout;
-    PWND pWndMsg;
-    BOOL Result = FALSE;
-
-    pWndMsg = UserGetWindowObject(lpMsg->hwnd);
-    if (!pWndMsg) // Must have a window!
-    {
-        ERR("No Window for Translate.\n");
-        return FALSE;
-    }
-
-    pti = pWndMsg->head.pti;
-    keyLayout = pti->KeyboardLayout->KBTables;
-    if( !keyLayout )
-        return FALSE;
-
-    if (lpMsg->message < WM_KEYFIRST || lpMsg->message > WM_KEYLAST)
-        return FALSE;
-    if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN)
-        return FALSE;
-
-    /* All messages have to contain the cursor point. */
-    NewMsg.pt = gpsi->ptCursor;
-
-    TRACE("IntTranslateKbdMessage %s\n", lpMsg->message == WM_SYSKEYDOWN ? "WM_SYSKEYDOWN" : "WM_KEYDOWN");
-
-    switch (lpMsg->wParam)
-    {
-        case VK_PACKET:
-            NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
-            NewMsg.hwnd = lpMsg->hwnd;
-            NewMsg.wParam = HIWORD(lpMsg->lParam);
-            NewMsg.lParam = LOWORD(lpMsg->lParam);
-            MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
-            return TRUE;
-    }
-
-    UState = ToUnicodeInner( lpMsg->wParam,
-                             HIWORD(lpMsg->lParam) & 0xff,
-                             gKeyStateTable,
-                             wp,
-                             2,
-                             0,
-                             keyLayout );
-
-    if (UState == 1)
-    {
-        NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
-        if (dead_char)
-        {
-            ULONG i;
-            WCHAR first, second;
-            TRACE("PREVIOUS DEAD CHAR: %c\n", dead_char);
-
-            for( i = 0; keyLayout->pDeadKey[i].dwBoth; i++ )
-            {
-                first = keyLayout->pDeadKey[i].dwBoth >> 16;
-                second = keyLayout->pDeadKey[i].dwBoth;
-                if (first == dead_char && second == wp[0])
-                {
-                    wp[0] = keyLayout->pDeadKey[i].wchComposed;
-                    dead_char = 0;
-                    break;
-                }
-            }
-
-            TRACE("FINAL CHAR: %c\n", wp[0]);
-        }
-
-        if (dead_char)
-        {
-            NewMsg.hwnd = lpMsg->hwnd;
-            NewMsg.wParam = dead_char;
-            NewMsg.lParam = lpMsg->lParam;
-            dead_char = 0;
-            MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
-        }
-
-        NewMsg.hwnd = lpMsg->hwnd;
-        NewMsg.wParam = wp[0];
-        NewMsg.lParam = lpMsg->lParam;
-        TRACE( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
-        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
-        Result = TRUE;
-    }
-    else if (UState == -1)
-    {
-        NewMsg.message =
-            (lpMsg->message == WM_KEYDOWN) ? WM_DEADCHAR : WM_SYSDEADCHAR;
-        NewMsg.hwnd = lpMsg->hwnd;
-        NewMsg.wParam = wp[0];
-        NewMsg.lParam = lpMsg->lParam;
-        dead_char = wp[0];
-        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
-        Result = TRUE;
-    }
-    TRACE("IntTranslateKbdMessage E %s\n", NewMsg.message == WM_CHAR ? "WM_CHAR" : "WM_SYSCHAR");
-    return Result;
-}
-
-static UINT VkToScan( UINT Code, BOOL ExtCode, PKBDTABLES pkKT )
-{
-    int i;
-
-    for( i = 0; i < pkKT->bMaxVSCtoVK; i++ )
-    {
-        if( pkKT->pusVSCtoVK[i] == Code )
-        {
-            return i;
-        }
-    }
-
-    return 0;
-}
-
-UINT ScanToVk( UINT Code, BOOL ExtKey, PKBDTABLES pkKT )
-{
-    if( !pkKT )
-    {
-        TRACE("ScanToVk: No layout\n");
-        return 0;
-    }
-
-    if( ExtKey )
-    {
-        int i;
-
-        for( i = 0; pkKT->pVSCtoVK_E0[i].Vsc; i++ )
-        {
-            if( pkKT->pVSCtoVK_E0[i].Vsc == Code )
-                return pkKT->pVSCtoVK_E0[i].Vk & 0xff;
-        }
-        for( i = 0; pkKT->pVSCtoVK_E1[i].Vsc; i++ )
-        {
-            if( pkKT->pVSCtoVK_E1[i].Vsc == Code )
-                return pkKT->pVSCtoVK_E1[i].Vk & 0xff;
-        }
-
-        return 0;
-    }
-    else
-    {
-        if( Code >= pkKT->bMaxVSCtoVK )
-        {
-            return 0;
-        }
-        return pkKT->pusVSCtoVK[Code] & 0xff;
-    }
-}
-
-/*
- * Map a virtual key code, or virtual scan code, to a scan code, key code,
- * or unshifted unicode character.
- *
- * Code: See Below
- * Type:
- * 0 -- Code is a virtual key code that is converted into a virtual scan code
- *      that does not distinguish between left and right shift keys.
- * 1 -- Code is a virtual scan code that is converted into a virtual key code
- *      that does not distinguish between left and right shift keys.
- * 2 -- Code is a virtual key code that is converted into an unshifted unicode
- *      character.
- * 3 -- Code is a virtual scan code that is converted into a virtual key code
- *      that distinguishes left and right shift keys.
- * KeyLayout: Keyboard layout handle (currently, unused)
- *
- * @implemented
- */
-
-static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
-{
-    UINT ret = 0;
-
-    switch( Type )
-    {
-        case MAPVK_VK_TO_VSC:
-            if( Code == VK_SHIFT )
-                Code = VK_LSHIFT;
-            if( Code == VK_MENU )
-                Code = VK_LMENU;
-            if( Code == VK_CONTROL )
-                Code = VK_LCONTROL;
-            ret = VkToScan( Code, FALSE, keyLayout );
-            break;
-
-        case MAPVK_VSC_TO_VK:
-            ret =
-                DontDistinguishShifts
-                (IntMapVirtualKeyEx( Code, MAPVK_VSC_TO_VK_EX, keyLayout ) );
-            break;
-
-        case MAPVK_VK_TO_CHAR:
-        {
-            WCHAR wp[2] = {0};
-
-            ret = VkToScan( Code, FALSE, keyLayout );
-            ToUnicodeInner( Code, ret, 0, wp, 2, 0, keyLayout );
-            ret = wp[0];
-        }
-        break;
-
-        case MAPVK_VSC_TO_VK_EX:
-
-            ret = ScanToVk( Code, FALSE, keyLayout );
-            break;
-
-        case MAPVK_VK_TO_VSC_EX:
-            STUB;
-            break;
-
-        default:
-            ERR("Wrong type value: %u\n", Type);
-    }
-
-    return ret;
-}
-
-UINT
-APIENTRY
-NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
-{
-    PTHREADINFO pti;
-    PKBDTABLES keyLayout;
-    DECLARE_RETURN(UINT);
-
-    TRACE("Enter NtUserMapVirtualKeyEx\n");
-    UserEnterExclusive();
-
-    pti = PsGetCurrentThreadWin32Thread();
-    keyLayout = pti ? pti->KeyboardLayout->KBTables : 0;
-
-    if( !keyLayout )
-        RETURN(0);
-
-    RETURN(IntMapVirtualKeyEx( Code, Type, keyLayout ));
-
-CLEANUP:
-    TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n", _ret_);
-    UserLeave();
-    END_CLEANUP;
-}
-
-
-int
-APIENTRY
-NtUserToUnicodeEx(
-    UINT wVirtKey,
-    UINT wScanCode,
-    PBYTE lpKeyState,
-    LPWSTR pwszBuff,
-    int cchBuff,
-    UINT wFlags,
-    HKL dwhkl )
-{
-    PTHREADINFO pti;
-    BYTE KeyStateBuf[0x100];
-    PWCHAR OutPwszBuff = 0;
-    int ret = 0;
-    DECLARE_RETURN(int);
-
-    TRACE("Enter NtUserSetKeyboardState\n");
-    UserEnterShared();//fixme: this syscall doesnt seem to need any locking...
-
-    /* Key up? */
-    if (wScanCode & SC_KEY_UP)
-    {
-        RETURN(0);
-    }
-
-    if( !NT_SUCCESS(MmCopyFromCaller(KeyStateBuf,
-                                     lpKeyState,
-                                     sizeof(KeyStateBuf))) )
-    {
-        ERR( "Couldn't copy key state from caller.\n" );
-        RETURN(0);
-    }
-
-    /* Virtual code is correct? */
-    if (wVirtKey < 0x100)
-    {
-        OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool, sizeof(WCHAR) * cchBuff, TAG_STRING);
-        if( !OutPwszBuff )
-        {
-            ERR( "ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
-            RETURN(0);
-        }
-        RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
-
-        pti = PsGetCurrentThreadWin32Thread();
-        ret = ToUnicodeInner( wVirtKey,
-                              wScanCode,
-                              KeyStateBuf,
-                              OutPwszBuff,
-                              cchBuff,
-                              wFlags,
-                              pti ? pti->KeyboardLayout->KBTables : 0 );
-
-        MmCopyToCaller(pwszBuff, OutPwszBuff, sizeof(WCHAR)*cchBuff);
-        ExFreePoolWithTag(OutPwszBuff, TAG_STRING);
-    }
-
-    RETURN(ret);
-
-CLEANUP:
-    TRACE("Leave NtUserSetKeyboardState, ret=%i\n", _ret_);
-    UserLeave();
-    END_CLEANUP;
-}
-
-static int W32kSimpleToupper( int ch )
-{
-    if( ch >= 'a' && ch <= 'z' )
-        ch = ch - 'a' + 'A';
-    return ch;
-}
-
-DWORD
-APIENTRY
-NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
-{
-    PTHREADINFO pti;
-    int i;
-    DWORD ret = 0;
-    UINT CareVk = 0;
-    UINT VkCode = 0;
-    UINT ScanCode = (lParam >> 16) & 0xff;
-    BOOL ExtKey = lParam & (1 << 24) ? TRUE : FALSE;
-    PKBDTABLES keyLayout;
-    VSC_LPWSTR *KeyNames;
-    DECLARE_RETURN(DWORD);
-
-    TRACE("Enter NtUserGetKeyNameText\n");
-    UserEnterShared();
-
-    pti = PsGetCurrentThreadWin32Thread();
-    keyLayout = pti ? pti->KeyboardLayout->KBTables : 0;
-
-    if( !keyLayout || nSize < 1 )
-        RETURN(0);
-
-    if( lParam & (1 << 25) )
-    {
-        CareVk = VkCode = ScanToVk( ScanCode, ExtKey, keyLayout );
-        switch (VkCode)
-        {
-            case VK_RSHIFT:
-                ScanCode |= 0x100;
-            case VK_LSHIFT:
-                VkCode = VK_SHIFT;
-                break;
-            case VK_LCONTROL:
-            case VK_RCONTROL:
-                VkCode = VK_CONTROL;
-                break;
-            case VK_LMENU:
-            case VK_RMENU:
-                VkCode = VK_MENU;
-                break;
-        }
-    }
-    else
-    {
-        VkCode = ScanToVk( ScanCode, ExtKey, keyLayout );
-    }
-
-    KeyNames = 0;
-
-    if( CareVk != VkCode )
-        ScanCode = VkToScan( VkCode, ExtKey, keyLayout );
-
-    if( ExtKey )
-        KeyNames = keyLayout->pKeyNamesExt;
-    else
-        KeyNames = keyLayout->pKeyNames;
-
-    for( i = 0; KeyNames[i].pwsz; i++ )
-    {
-        if( KeyNames[i].vsc == ScanCode )
-        {
-            UINT StrLen = wcslen(KeyNames[i].pwsz);
-            UINT StrMax = StrLen > (nSize - 1) ? (nSize - 1) : StrLen;
-            WCHAR null_wc = 0;
-            if( NT_SUCCESS( MmCopyToCaller( lpString,
-                                            KeyNames[i].pwsz,
-                                            StrMax * sizeof(WCHAR) ) ) &&
-                    NT_SUCCESS( MmCopyToCaller( lpString + StrMax,
-                                                &null_wc,
-                                                sizeof( WCHAR ) ) ) )
-            {
-                ret = StrMax;
-                break;
-            }
-        }
-    }
-
-    if( ret == 0 )
-    {
-        WCHAR UCName[2];
-
-        UCName[0] = W32kSimpleToupper(IntMapVirtualKeyEx( VkCode, MAPVK_VK_TO_CHAR, keyLayout ));
-        UCName[1] = 0;
-        ret = 1;
-
-        if( !NT_SUCCESS(MmCopyToCaller( lpString, UCName, 2 * sizeof(WCHAR) )) )
-            RETURN(0);
-    }
-
-    RETURN(ret);
-
-CLEANUP:
-    TRACE("Leave NtUserGetKeyNameText, ret=%i\n", _ret_);
-    UserLeave();
-    END_CLEANUP;
-}
-
-/*
- * Filter this message according to the current key layout, setting wParam
- * appropriately.
- */
-
-VOID FASTCALL
-W32kKeyProcessMessage(LPMSG Msg,
-                      PKBDTABLES KeyboardLayout,
-                      BYTE Prefix)
-{
-    DWORD ScanCode = 0, ModifierBits = 0;
-    DWORD i = 0;
-    DWORD BaseMapping = 0;
-    DWORD RawVk = 0;
-    static WORD NumpadConversion[][2] =
-    {   { VK_DELETE, VK_DECIMAL },
-        { VK_INSERT, VK_NUMPAD0 },
-        { VK_END,    VK_NUMPAD1 },
-        { VK_DOWN,   VK_NUMPAD2 },
-        { VK_NEXT,   VK_NUMPAD3 },
-        { VK_LEFT,   VK_NUMPAD4 },
-        { VK_CLEAR,  VK_NUMPAD5 },
-        { VK_RIGHT,  VK_NUMPAD6 },
-        { VK_HOME,   VK_NUMPAD7 },
-        { VK_UP,     VK_NUMPAD8 },
-        { VK_PRIOR,  VK_NUMPAD9 },
-        { 0, 0 }
-    };
-    PVSC_VK VscVkTable = NULL;
-
-    if( !KeyboardLayout || !Msg ||
-            (Msg->message != WM_KEYDOWN && Msg->message != WM_SYSKEYDOWN &&
-             Msg->message != WM_KEYUP   && Msg->message != WM_SYSKEYUP) )
-    {
-        return;
-    }
-
-    /* arty -- handle numpad -- On real windows, the actual key produced
-     * by the messaging layer is different based on the state of numlock. */
-    ModifierBits = ModBits(KeyboardLayout, gKeyStateTable);
-
-    /* Get the raw scan code, so we can look up whether the key is a numpad
-     * key
-     *
-     * Shift and the LP_EXT_BIT cancel. */
-    ScanCode = (Msg->lParam >> 16) & 0xff;
-    TRACE("ScanCode %04x\n", ScanCode);
-
-    BaseMapping = Msg->wParam =
-                      IntMapVirtualKeyEx( ScanCode, MAPVK_VSC_TO_VK, KeyboardLayout );
-    if( Prefix == 0 )
-    {
-        if( ScanCode >= KeyboardLayout->bMaxVSCtoVK )
-            RawVk = 0xff;
-        else
-            RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
-    }
-    else
-    {
-        if( Prefix == 0xE0 )
-        {
-            /* ignore shift codes */
-            if( ScanCode == 0x2A || ScanCode == 0x36 )
-            {
-                return;
-            }
-            VscVkTable = KeyboardLayout->pVSCtoVK_E0;
-        }
-        else if( Prefix == 0xE1 )
-        {
-            VscVkTable = KeyboardLayout->pVSCtoVK_E1;
-        }
-
-        if (!VscVkTable)
-        {
-            ERR("somethings wrong, Prefix=0x%x", Prefix);
-            return;
-        }
-
-        RawVk = 0xff;
-        while (VscVkTable->Vsc)
-        {
-            if( VscVkTable->Vsc == ScanCode )
-            {
-                RawVk = VscVkTable->Vk;
-            }
-            VscVkTable++;
-        }
-    }
-
-    if ((ModifierBits & NUMLOCK_BIT) &&
-            !(ModifierBits & GetShiftBit(KeyboardLayout, VK_SHIFT)) &&
-            (RawVk & KNUMP) &&
-            !(Msg->lParam & LP_EXT_BIT))
-    {
-        /* The key in question is a numpad key.  Search for a translation. */
-        for (i = 0; NumpadConversion[i][0]; i++)
-        {
-            if ((BaseMapping & 0xff) == NumpadConversion[i][0]) /* RawVk? */
-            {
-                Msg->wParam = NumpadConversion[i][1];
-                break;
-            }
-        }
-    }
-
-    TRACE("Key: [%04x -> %04x]\n", BaseMapping, Msg->wParam);
-
-    /* Now that we have the VK, we can set the keymap appropriately
-     * This is a better place for this code, as it's guaranteed to be
-     * run, unlike translate message. */
-    if (Msg->message == WM_KEYDOWN || Msg->message == WM_SYSKEYDOWN)
-    {
-        SetKeyState( ScanCode, Msg->wParam, Msg->lParam & LP_EXT_BIT,
-                     TRUE ); /* Strike key */
-    }
-    else if (Msg->message == WM_KEYUP || Msg->message == WM_SYSKEYUP)
-    {
-        SetKeyState( ScanCode, Msg->wParam, Msg->lParam & LP_EXT_BIT,
-                     FALSE ); /* Release key */
-    }
-
-    /* We need to unset SYSKEYDOWN if the ALT key is an ALT+Gr */
-    if( gKeyStateTable[VK_RMENU] & KS_DOWN_BIT )
-    {
-        if( Msg->message == WM_SYSKEYDOWN )
-            Msg->message = WM_KEYDOWN;
-        else
-            Msg->message = WM_KEYUP;
-    }
-
-}
-
-
-
-DWORD FASTCALL
-UserGetKeyboardType(
-    DWORD TypeFlag)
-{
-    switch(TypeFlag)
-    {
-        case 0:        /* Keyboard type */
-            return 4;    /* AT-101 */
-        case 1:        /* Keyboard Subtype */
-            return 0;    /* There are no defined subtypes */
-        case 2:        /* Number of F-keys */
-            return 12;   /* We're doing an 101 for now, so return 12 F-keys */
-        default:
-            ERR("Unknown type!\n");
-            return 0;    /* The book says 0 here, so 0 */
-    }
-}
-
-
-/*
-    Based on TryToTranslateChar, instead of processing VirtualKey match,
-    look for wChar match.
- */
-DWORD
-APIENTRY
-NtUserVkKeyScanEx(
-    WCHAR wChar,
-    HKL hKeyboardLayout,
-    BOOL UsehKL ) // TRUE from KeyboardLayout, FALSE from pkbl = (THREADINFO)->KeyboardLayout
-{
-    PKBDTABLES KeyLayout;
-    PVK_TO_WCHAR_TABLE vtwTbl;
-    PVK_TO_WCHARS10 vkPtr;
-    size_t size_this_entry;
-    int nMod;
-    PKBL pkbl = NULL;
-    DWORD CapsMod = 0, CapsState = 0, Ret = -1;
-
-    TRACE("NtUserVkKeyScanEx() wChar %d, KbdLayout 0x%p\n", wChar, hKeyboardLayout);
-    UserEnterShared();
-
-    if (UsehKL)
-    {
-        if ( !hKeyboardLayout || !(pkbl = UserHklToKbl(hKeyboardLayout)))
-            goto Exit;
-    }
-    else // From VkKeyScanAW it is FALSE so KeyboardLayout is white noise.
-    {
-        pkbl = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->KeyboardLayout;
-    }
-
-    KeyLayout = pkbl->KBTables;
-
-    for (nMod = 0; KeyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
-    {
-        vtwTbl = &KeyLayout->pVkToWcharTable[nMod];
-        size_this_entry = vtwTbl->cbSize;
-        vkPtr = (PVK_TO_WCHARS10)((BYTE *)vtwTbl->pVkToWchars);
-
-        while(vkPtr->VirtualKey)
-        {
-            /*
-               0x01 Shift key
-               0x02 Ctrl key
-               0x04 Alt key
-               Should have only 8 valid possibilities. Including zero.
-             */
-            for(CapsState = 0; CapsState < vtwTbl->nModifications; CapsState++)
-            {
-                if(vkPtr->wch[CapsState] == wChar)
-                {
-                    CapsMod = KeyLayout->pCharModifiers->ModNumber[CapsState];
-                    TRACE("nMod %d wC %04x: CapsMod %08x CapsState %08x MaxModBits %08x\n",
-                          nMod, wChar, CapsMod, CapsState, KeyLayout->pCharModifiers->wMaxModBits);
-                    Ret = ((CapsMod << 8) | (vkPtr->VirtualKey & 0xff));
-                    goto Exit;
-                }
-            }
-            vkPtr = (PVK_TO_WCHARS10)(((BYTE *)vkPtr) + size_this_entry);
-        }
-    }
-Exit:
-    UserLeave();
-    return Ret;
-}
-
 
 /* EOF */

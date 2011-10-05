@@ -9,7 +9,7 @@
  */
 
 #include <windows.h>
-#include <internal/kbd.h>
+#include <ndk/kbd.h>
 
 #ifdef _M_IA64
 #define ROSDATA static __declspec(allocate(".data"))
@@ -22,18 +22,10 @@
 #endif
 #endif
 
-#define VK_EMPTY 0xff   /* The non-existent VK */
-#define KSHIFT   0x001  /* Shift modifier */
-#define KCTRL    0x002  /* Ctrl modifier */
-#define KALT     0x004  /* Alt modifier */
-#define KEXT     0x100  /* Extended key code */
-#define KMULTI   0x200  /* Multi-key */
-#define KSPEC    0x400  /* Special key */
-#define KNUMP    0x800  /* Number-pad */
-#define KNUMS    0xc00  /* Special + number pad */
-#define KMEXT    0x300  /* Multi + ext */
+#define VK_EMPTY  0xff   /* The non-existent VK */
 
-#define SHFT_INVALID 0x0F
+#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
+#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row Цифров ред*/
@@ -60,7 +52,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* Third letters row Трети буквен ред*/
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KEXT,
+  VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KBDEXT,
   /* - 37 - */
   /* Bottom Row */
   0x26a,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
@@ -72,7 +64,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 45 - */
   /* Locks */
   VK_NUMLOCK | KMEXT,   
-  VK_SCROLL | KMULTI,    
+  VK_SCROLL | KBDMULTIVK,    
   /* - 47 - */
   /* Number-Pad Цифрова подложка */
   VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
@@ -110,44 +102,44 @@ ROSDATA USHORT scancode_to_vk[] = {
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
-  { 0x10, VK_MEDIA_PREV_TRACK | KEXT },
-  { 0x19, VK_MEDIA_NEXT_TRACK | KEXT },
-  { 0x1D, VK_RCONTROL | KEXT },
-  { 0x20, VK_VOLUME_MUTE | KEXT },
-  { 0x21, VK_LAUNCH_APP2 | KEXT },
-  { 0x22, VK_MEDIA_PLAY_PAUSE | KEXT },
-  { 0x24, VK_MEDIA_STOP | KEXT },
-  { 0x2E, VK_VOLUME_DOWN | KEXT },
-  { 0x30, VK_VOLUME_UP | KEXT },
-  { 0x32, VK_BROWSER_HOME | KEXT },
-  { 0x35, VK_DIVIDE | KEXT },
-  { 0x37, VK_SNAPSHOT | KEXT },
-  { 0x38, VK_RMENU | KEXT },
-  { 0x47, VK_HOME | KEXT },
-  { 0x48, VK_UP | KEXT },
-  { 0x49, VK_PRIOR | KEXT },
-  { 0x4B, VK_LEFT | KEXT },
-  { 0x4D, VK_RIGHT | KEXT },
-  { 0x4F, VK_END | KEXT },
-  { 0x50, VK_DOWN | KEXT },
-  { 0x51, VK_NEXT | KEXT },
-  { 0x52, VK_INSERT | KEXT },
-  { 0x53, VK_DELETE | KEXT },
-  { 0x5B, VK_LWIN | KEXT },
-  { 0x5C, VK_RWIN | KEXT },
-  { 0x5D, VK_APPS | KEXT },
-  { 0x5F, VK_SLEEP | KEXT },
-  { 0x65, VK_BROWSER_SEARCH | KEXT },
-  { 0x66, VK_BROWSER_FAVORITES | KEXT },
-  { 0x67, VK_BROWSER_REFRESH | KEXT },
-  { 0x68, VK_BROWSER_STOP | KEXT },
-  { 0x69, VK_BROWSER_FORWARD | KEXT },
-  { 0x6A, VK_BROWSER_BACK | KEXT },
-  { 0x6B, VK_LAUNCH_APP1 | KEXT },
-  { 0x6C, VK_LAUNCH_MAIL | KEXT },
-  { 0x6D, VK_LAUNCH_MEDIA_SELECT | KEXT },
-  { 0x1C, VK_RETURN | KEXT },
-  { 0x46, VK_CANCEL | KEXT },
+  { 0x10, VK_MEDIA_PREV_TRACK | KBDEXT },
+  { 0x19, VK_MEDIA_NEXT_TRACK | KBDEXT },
+  { 0x1D, VK_RCONTROL | KBDEXT },
+  { 0x20, VK_VOLUME_MUTE | KBDEXT },
+  { 0x21, VK_LAUNCH_APP2 | KBDEXT },
+  { 0x22, VK_MEDIA_PLAY_PAUSE | KBDEXT },
+  { 0x24, VK_MEDIA_STOP | KBDEXT },
+  { 0x2E, VK_VOLUME_DOWN | KBDEXT },
+  { 0x30, VK_VOLUME_UP | KBDEXT },
+  { 0x32, VK_BROWSER_HOME | KBDEXT },
+  { 0x35, VK_DIVIDE | KBDEXT },
+  { 0x37, VK_SNAPSHOT | KBDEXT },
+  { 0x38, VK_RMENU | KBDEXT },
+  { 0x47, VK_HOME | KBDEXT },
+  { 0x48, VK_UP | KBDEXT },
+  { 0x49, VK_PRIOR | KBDEXT },
+  { 0x4B, VK_LEFT | KBDEXT },
+  { 0x4D, VK_RIGHT | KBDEXT },
+  { 0x4F, VK_END | KBDEXT },
+  { 0x50, VK_DOWN | KBDEXT },
+  { 0x51, VK_NEXT | KBDEXT },
+  { 0x52, VK_INSERT | KBDEXT },
+  { 0x53, VK_DELETE | KBDEXT },
+  { 0x5B, VK_LWIN | KBDEXT },
+  { 0x5C, VK_RWIN | KBDEXT },
+  { 0x5D, VK_APPS | KBDEXT },
+  { 0x5F, VK_SLEEP | KBDEXT },
+  { 0x65, VK_BROWSER_SEARCH | KBDEXT },
+  { 0x66, VK_BROWSER_FAVORITES | KBDEXT },
+  { 0x67, VK_BROWSER_REFRESH | KBDEXT },
+  { 0x68, VK_BROWSER_STOP | KBDEXT },
+  { 0x69, VK_BROWSER_FORWARD | KBDEXT },
+  { 0x6A, VK_BROWSER_BACK | KBDEXT },
+  { 0x6B, VK_LAUNCH_APP1 | KBDEXT },
+  { 0x6C, VK_LAUNCH_MAIL | KBDEXT },
+  { 0x6D, VK_LAUNCH_MEDIA_SELECT | KBDEXT },
+  { 0x1C, VK_RETURN | KBDEXT },
+  { 0x46, VK_CANCEL | KBDEXT },
   { 0, 0 },
 };
 
@@ -157,12 +149,11 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 };
 
 ROSDATA VK_TO_BIT modifier_keys[] = {
-  { VK_SHIFT,   KSHIFT },
-  { VK_CONTROL, KCTRL },
-  { VK_MENU,    KALT },
+  { VK_SHIFT,   KBDSHIFT },
+  { VK_CONTROL, KBDCTRL },
+  { VK_MENU,    KBDALT },
   { 0,          0 }
 };
-
 
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
@@ -170,91 +161,85 @@ ROSDATA MODIFIERS modifier_bits = {
   { 0, 1, 2, 4, SHFT_INVALID, SHFT_INVALID, 3 }
 };
 
-
-#define NOCAPS 0
-#define CAPS   KSHIFT /* Caps -> shift */
-
-
 /* Цифров ред */
 /* VK_OEM_3 = чЧ */
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  {VK_OEM_3,     CAPS, {0x447, 0x427} },
-  { '1',         NOCAPS, {'1', '!'} },
-  { '2',         NOCAPS, {'2', '@'} },
-//  { '3',         NOCAPS, {'3', '#'} },
-  { '4',         NOCAPS, {'4', '$'} },
-  { '5',         NOCAPS, {'5', '%'} },
-//  { '6',         NOCAPS, {'6', '^'} },
-//  { '7',         NOCAPS, {'7', '&'} },
-  { '8',         NOCAPS, {'8', '*'} },
-  { '9',         NOCAPS, {'9', '('} },
-  { '0',         NOCAPS, {'0', ')'} },
-  { VK_OEM_PLUS, NOCAPS, {'=', '+'} },
+  {VK_OEM_3,     CAPLOK, {0x447, 0x427} },
+  { '1',         0, {'1', '!'} },
+  { '2',         0, {'2', '@'} },
+//  { '3',         0, {'3', '#'} },
+  { '4',         0, {'4', '$'} },
+  { '5',         0, {'5', '%'} },
+//  { '6',         0, {'6', '^'} },
+//  { '7',         0, {'7', '&'} },
+  { '8',         0, {'8', '*'} },
+  { '9',         0, {'9', '('} },
+  { '0',         0, {'0', ')'} },
+  { VK_OEM_PLUS, 0, {'=', '+'} },
 
   /* First letter row Първи ред букви явертъуиопшщ*/
-  { 'Q',         CAPS,   {0x44f, 0x42f} },
-  { 'W',         CAPS,   {0x432, 0x412} },
-//  { 'E',         CAPS,   {0x435, 0x415} },
-  { 'R',         CAPS,   {0x440, 0x420} },
-  { 'T',         CAPS,   {0x442, 0x422} },
-  { 'Y',         CAPS,   {0x44a, 0x42a} },
-  { 'U',         CAPS,   {0x443, 0x423} },
-//  { 'I',         CAPS,   {0x438, 0x418} },
-//  { 'O',         CAPS,   {0x43e, 0x41e} },
-  { 'P',         CAPS,   {0x43f, 0x41f} },
-  { VK_OEM_4,    CAPS,   {0x448, 0x428} },
-  { VK_OEM_6,    CAPS,   {0x449, 0x429} },
+  { 'Q',         CAPLOK,   {0x44f, 0x42f} },
+  { 'W',         CAPLOK,   {0x432, 0x412} },
+//  { 'E',         CAPLOK,   {0x435, 0x415} },
+  { 'R',         CAPLOK,   {0x440, 0x420} },
+  { 'T',         CAPLOK,   {0x442, 0x422} },
+  { 'Y',         CAPLOK,   {0x44a, 0x42a} },
+  { 'U',         CAPLOK,   {0x443, 0x423} },
+//  { 'I',         CAPLOK,   {0x438, 0x418} },
+//  { 'O',         CAPLOK,   {0x43e, 0x41e} },
+  { 'P',         CAPLOK,   {0x43f, 0x41f} },
+  { VK_OEM_4,    CAPLOK,   {0x448, 0x428} },
+  { VK_OEM_6,    CAPLOK,   {0x449, 0x429} },
 
   /* Second letter row Втори ред букви асдфгхйкл ;:'" */
-  { 'A',         CAPS,   {0x430, 0x410} },
-  { 'S',         CAPS,   {0x441, 0x421} },
-  { 'D',         CAPS,   {0x434, 0x414} },
-  { 'F',         CAPS,   {0x444, 0x424} },
-  { 'G',         CAPS,   {0x433, 0x413} },
-  { 'H',         CAPS,   {0x445, 0x425} },
-//  { 'J',         CAPS,   {0x439, 0x419} },
-  { 'K',         CAPS,   {0x43a, 0x41a} },
-  { 'L',         CAPS,   {0x43b, 0x41b} },
-  { VK_OEM_1,    NOCAPS, {';', ':'} },
-//  { VK_OEM_7,    NOCAPS, {'\'','\"'} },
-
+  { 'A',         CAPLOK,   {0x430, 0x410} },
+  { 'S',         CAPLOK,   {0x441, 0x421} },
+  { 'D',         CAPLOK,   {0x434, 0x414} },
+  { 'F',         CAPLOK,   {0x444, 0x424} },
+  { 'G',         CAPLOK,   {0x433, 0x413} },
+  { 'H',         CAPLOK,   {0x445, 0x425} },
+//  { 'J',         CAPLOK,   {0x439, 0x419} },
+  { 'K',         CAPLOK,   {0x43a, 0x41a} },
+  { 'L',         CAPLOK,   {0x43b, 0x41b} },
+  { VK_OEM_1,    0, {';', ':'} },
+//  { VK_OEM_7,    0, {'\'','\"'} },
 
   /* Third letter row Трети ред букви */
-  { 'Z',         CAPS,   {0x437, 0x417} },
-  { 'X',         CAPS,   {0x44c, 0x42c} },
-  { 'C',         CAPS,   {0x446, 0x426} },
-  { 'V',         CAPS,   {0x436, 0x416} },
-  { 'B',         CAPS,   {0x431, 0x411} },
-  { 'N',         CAPS,   {0x43d, 0x41d} },
-  { 'M',         CAPS,   {0x43c, 0x41c} },
-/*  { VK_OEM_COMMA,CAPS,   {0x431, 0x411} }, */
-  { VK_OEM_COMMA,   NOCAPS, {',', '<'} },
-/*  { VK_OEM_PERIOD,CAPS,  {0x44e, 0x42e} }, */
-  { VK_OEM_PERIOD,  NOCAPS, {'.', '>'} },
-/*  { VK_OEM_2,	NOCAPS,    {'.', ','} }, */
-  { VK_OEM_2,       NOCAPS,    {'/', '?'} },
+  { 'Z',         CAPLOK,   {0x437, 0x417} },
+  { 'X',         CAPLOK,   {0x44c, 0x42c} },
+  { 'C',         CAPLOK,   {0x446, 0x426} },
+  { 'V',         CAPLOK,   {0x436, 0x416} },
+  { 'B',         CAPLOK,   {0x431, 0x411} },
+  { 'N',         CAPLOK,   {0x43d, 0x41d} },
+  { 'M',         CAPLOK,   {0x43c, 0x41c} },
+/*  { VK_OEM_COMMA,CAPLOK,   {0x431, 0x411} }, */
+  { VK_OEM_COMMA,   0, {',', '<'} },
+/*  { VK_OEM_PERIOD,CAPLOK,  {0x44e, 0x42e} }, */
+  { VK_OEM_PERIOD,  0, {'.', '>'} },
+/*  { VK_OEM_2,	0,    {'.', ','} }, */
+  { VK_OEM_2,       0,    {'/', '?'} },
 
   /* Specials */
-  { 0x6e, 	NOCAPS, {',', ','} },
-  { VK_TAB,	NOCAPS, {9, 9} },
-  { VK_ADD,        NOCAPS, {'+', '+'} },
-  { VK_DIVIDE,     NOCAPS, {'/', '/'} },
-  { VK_MULTIPLY,   NOCAPS, {'*', '*'} },
-  { VK_SUBTRACT,   NOCAPS, {'-', '-'} },
+  { 0x6e, 	0, {',', ','} },
+  { VK_TAB,	0, {9, 9} },
+  { VK_ADD,        0, {'+', '+'} },
+  { VK_DIVIDE,     0, {'/', '/'} },
+  { VK_MULTIPLY,   0, {'*', '*'} },
+  { VK_SUBTRACT,   0, {'-', '-'} },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_5, CAPS, {0x44e, 0x42e} }, //юЮ
-  { VK_OEM_102, NOCAPS, {0x5c, 0x7c} }, // \| Този клавиш липсва на много клавиатури
-  { VK_BACK, NOCAPS, {0x8, 0x8, 0x7f} },	
-  { VK_ESCAPE, NOCAPS, {0x1b, 0x1b, 0x1b} },
-  { VK_RETURN, NOCAPS, {'\r', '\r', '\n'} },
-  { VK_SPACE, NOCAPS, {' ', ' ', ' '} },
-  { VK_CANCEL, NOCAPS, {0x03, 0x03, 0x03} },
+  { VK_OEM_5, CAPLOK, {0x44e, 0x42e} }, //юЮ
+  { VK_OEM_102, 0, {0x5c, 0x7c} }, // \| Този клавиш липсва на много клавиатури
+  { VK_BACK, 0, {0x8, 0x8, 0x7f} },	
+  { VK_ESCAPE, 0, {0x1b, 0x1b, 0x1b} },
+  { VK_RETURN, 0, {'\r', '\r', '\n'} },
+  { VK_SPACE, 0, {' ', ' ', ' '} },
+  { VK_CANCEL, 0, {0x03, 0x03, 0x03} },
   { 0,0 }
 };
 
@@ -262,28 +247,27 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, Ctrl-Alt */
 /*Чист, Шифт, Ктрл, Ктрл+ Шифт */
   /* Legacy Ascii generators */
-  { VK_OEM_MINUS, NOCAPS, {'-', '_', WCH_NONE, 0x2014} }, //-_—
-//  { '3',   NOCAPS, {'3', '#', WCH_NONE, 0x2116} },
-//  { '6',   NOCAPS, {'6', '^', WCH_NONE, 0x20AC} },
-//  { '7',   NOCAPS, {'7', '&', WCH_NONE, 0xA7} },
+  { VK_OEM_MINUS, 0, {'-', '_', WCH_NONE, 0x2014} }, //-_—
+//  { '3',   0, {'3', '#', WCH_NONE, 0x2116} },
+//  { '6',   0, {'6', '^', WCH_NONE, 0x20AC} },
+//  { '7',   0, {'7', '&', WCH_NONE, 0xA7} },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   /* Normal, Shifted, Ctrl, Ctrl+Alt, Ctrl+Shift */
-  { 'E',   CAPS,   {0x435, 0x415, WCH_NONE, 0x44d, 0x42d} }, //eEэЭ
-  { 'I',   CAPS,   {0x438, 0x418, WCH_NONE, 0x44b, 0x42b} }, //иИыЫ
-  { 'O',   CAPS,   {0x43e, 0x41e, WCH_NONE, 0x451, 0x401} }, //oOёЁ
-  { 'J',   CAPS,   {0x439, 0x419, WCH_NONE, 0x45d, 0x40d} }, //йЙ малко и главно „и” с ударение
+  { 'E',   CAPLOK,   {0x435, 0x415, WCH_NONE, 0x44d, 0x42d} }, //eEэЭ
+  { 'I',   CAPLOK,   {0x438, 0x418, WCH_NONE, 0x44b, 0x42b} }, //иИыЫ
+  { 'O',   CAPLOK,   {0x43e, 0x41e, WCH_NONE, 0x451, 0x401} }, //oOёЁ
+  { 'J',   CAPLOK,   {0x439, 0x419, WCH_NONE, 0x45d, 0x40d} }, //йЙ малко и главно „и” с ударение
 //Следващите редове могат да са и в ROSDATA VK_TO_WCHARS4, 
 //като последното им попълнение трябва да се махне
-  { '3',   NOCAPS, {'3', '#', WCH_NONE, 0x2116, 0x2116} }, //3#№№
-  { '6',   NOCAPS, {'6', '^', WCH_NONE, 0x20AC,0x20AC } }, //6^€€
-  { '7',   NOCAPS, {'7', '&', WCH_NONE, 0xA7, 0xA7} }, //7&§§
-  { VK_OEM_7,    NOCAPS, {'\'','\"', WCH_NONE, 0x201e, 0x201C } }, //'"„“
+  { '3',   0, {'3', '#', WCH_NONE, 0x2116, 0x2116} }, //3#№№
+  { '6',   0, {'6', '^', WCH_NONE, 0x20AC,0x20AC } }, //6^€€
+  { '7',   0, {'7', '&', WCH_NONE, 0xA7, 0xA7} }, //7&§§
+  { VK_OEM_7,    0, {'\'','\"', WCH_NONE, 0x201e, 0x201C } }, //'"„“
   { 0, 0 }
 };
-
 
 ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
   { VK_NUMPAD0, 0, {'0'} },
@@ -321,7 +305,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x37, L"Num *" },
   { 0x38, L"Alt" },
   { 0x39, L"Space" },
-  { 0x3a, L"Caps Lock" },
+  { 0x3a, L"CAPLOK Lock" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
   { 0x3d, L"F3" },
@@ -415,7 +399,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(1,1), /* Version 1.0 */
+  MAKELONG(KLLF_ALTGR, 1), /* Version 1.0 */
 
   /* Ligatures -- Bulgarian doesn't have any */
   0,

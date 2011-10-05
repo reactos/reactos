@@ -16,7 +16,7 @@
  */
 
 #include <windows.h>
-#include <internal/kbd.h>
+#include <ndk/kbd.h>
 
 #ifdef _M_IA64
 #define ROSDATA static __declspec(allocate(".data"))
@@ -29,19 +29,10 @@
 #endif
 #endif
 
+#define VK_EMPTY  0xff   /* The non-existent VK */
 
-#define VK_EMPTY 0xff   /* The non-existent VK */
-#define KSHIFT   0x001  /* Shift modifier */
-#define KCTRL    0x002  /* Ctrl modifier */
-#define KALT     0x004  /* Alt modifier */
-#define KEXT     0x100  /* Extended key code */
-#define KMULTI   0x200  /* Multi-key */
-#define KSPEC    0x400  /* Special key */
-#define KNUMP    0x800  /* Number-pad */
-#define KNUMS    0xc00  /* Special + number pad */
-#define KMEXT    0x300  /* Multi + ext */
-
-#define SHFT_INVALID 0x0F
+#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
+#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
 /* 00 */  VK_EMPTY,
@@ -114,7 +105,7 @@ ROSDATA USHORT scancode_to_vk[] = {
 /* 43 */  VK_F9,
 /* 44 */  VK_F10,
 /* 45 */  VK_NUMLOCK | KMEXT,
-/* 46 */  VK_SCROLL | KMULTI,
+/* 46 */  VK_SCROLL | KBDMULTIVK,
 /* 47 */  VK_HOME | KNUMS,
 /* 48 */  VK_UP | KNUMS,
 /* 49 */  VK_PRIOR | KNUMS,
@@ -177,51 +168,50 @@ ROSDATA USHORT scancode_to_vk[] = {
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
-  { 0x10, VK_MEDIA_PREV_TRACK    | KEXT },	// Pista Anterior
-  { 0x19, VK_MEDIA_NEXT_TRACK    | KEXT },	// Proxima Pista
-  { 0x1D, VK_RCONTROL            | KEXT },	// Tecla ctrl
-  { 0x20, VK_VOLUME_MUTE         | KEXT },	// Mute volume
-  { 0x21, VK_LAUNCH_APP2         | KEXT },	// Tecla calculadora
-  { 0x22, VK_MEDIA_PLAY_PAUSE    | KEXT },	// Play/pause
-  { 0x24, VK_MEDIA_STOP          | KEXT },	// Stop
-  { 0x2E, VK_VOLUME_DOWN         | KEXT },	// Baixar volume
-  { 0x30, VK_VOLUME_UP           | KEXT },	// Subir volume
-  { 0x32, VK_BROWSER_HOME        | KEXT },	// Pagina predefinida do navegador de internet, ou abri-lo se não estiver activo
-  { 0x35, VK_DIVIDE              | KEXT },	// Tecla /
-  { 0x37, VK_SNAPSHOT            | KEXT },	// Tecla de Print Screen
-  { 0x38, VK_RMENU               | KEXT },	// Tecla Alt
-  { 0x47, VK_HOME                | KEXT },	// Tecla Home
-  { 0x48, VK_UP                  | KEXT },	// Cursor Cima
-  { 0x49, VK_PRIOR               | KEXT },	// Tecla Re pag
-  { 0x4b, VK_LEFT                | KEXT },	// Cursor esquerda
-  { 0x4d, VK_RIGHT               | KEXT },	// Cursor direita
-  { 0x4f, VK_END                 | KEXT },	// Tecla End
-  { 0x50, VK_DOWN                | KEXT },	// Cursor Down
-  { 0x51, VK_NEXT                | KEXT },	// Tecla Av pag
-  { 0x52, VK_INSERT              | KEXT },	// Tecla insert
-  { 0x53, VK_DELETE              | KEXT },	// Tecla delete
-  { 0x5b, VK_LWIN                | KEXT },	// Tecla windows esquerda
-  { 0x5c, VK_RWIN                | KEXT },	// Tecla windows direita
-  { 0x5d, VK_APPS                | KEXT },	// Tecla menu aplicacao direita*/
-  { 0x5f, VK_SLEEP               | KEXT },	// Tecla Sleep
-  { 0x65, VK_BROWSER_SEARCH      | KEXT },	// Pagina de pesquisa do navegador de internet
-  { 0x66, VK_BROWSER_FAVORITES   | KEXT },	// Favoritos, not yet implemented
-  { 0x67, VK_BROWSER_REFRESH     | KEXT },	// Actualizar pagina do navegador de internet
-  { 0x68, VK_BROWSER_STOP        | KEXT },	// Parar navegação na internet internet
-  { 0x69, VK_BROWSER_FORWARD     | KEXT },	// Frente no historico de paginas no navegador de internet
-  { 0x6a, VK_BROWSER_BACK        | KEXT },	// Atras no historico de paginas no navegador de internet (Backspace)
-  { 0x6b, VK_LAUNCH_APP1         | KEXT },	// Tecla Meu Computador
-  { 0x6c, VK_LAUNCH_MAIL         | KEXT },	// Abrir programa de e-mail
-  { 0x6d, VK_LAUNCH_MEDIA_SELECT | KEXT },	// Abrir reproductor multimedia
-  { 0x1c, VK_RETURN              | KEXT },	// Tecla de Enter
-  { 0x46, VK_CANCEL              | KEXT },	// Tecla Escape
+  { 0x10, VK_MEDIA_PREV_TRACK    | KBDEXT },	// Pista Anterior
+  { 0x19, VK_MEDIA_NEXT_TRACK    | KBDEXT },	// Proxima Pista
+  { 0x1D, VK_RCONTROL            | KBDEXT },	// Tecla ctrl
+  { 0x20, VK_VOLUME_MUTE         | KBDEXT },	// Mute volume
+  { 0x21, VK_LAUNCH_APP2         | KBDEXT },	// Tecla calculadora
+  { 0x22, VK_MEDIA_PLAY_PAUSE    | KBDEXT },	// Play/pause
+  { 0x24, VK_MEDIA_STOP          | KBDEXT },	// Stop
+  { 0x2E, VK_VOLUME_DOWN         | KBDEXT },	// Baixar volume
+  { 0x30, VK_VOLUME_UP           | KBDEXT },	// Subir volume
+  { 0x32, VK_BROWSER_HOME        | KBDEXT },	// Pagina predefinida do navegador de internet, ou abri-lo se não estiver activo
+  { 0x35, VK_DIVIDE              | KBDEXT },	// Tecla /
+  { 0x37, VK_SNAPSHOT            | KBDEXT },	// Tecla de Print Screen
+  { 0x38, VK_RMENU               | KBDEXT },	// Tecla Alt
+  { 0x47, VK_HOME                | KBDEXT },	// Tecla Home
+  { 0x48, VK_UP                  | KBDEXT },	// Cursor Cima
+  { 0x49, VK_PRIOR               | KBDEXT },	// Tecla Re pag
+  { 0x4b, VK_LEFT                | KBDEXT },	// Cursor esquerda
+  { 0x4d, VK_RIGHT               | KBDEXT },	// Cursor direita
+  { 0x4f, VK_END                 | KBDEXT },	// Tecla End
+  { 0x50, VK_DOWN                | KBDEXT },	// Cursor Down
+  { 0x51, VK_NEXT                | KBDEXT },	// Tecla Av pag
+  { 0x52, VK_INSERT              | KBDEXT },	// Tecla insert
+  { 0x53, VK_DELETE              | KBDEXT },	// Tecla delete
+  { 0x5b, VK_LWIN                | KBDEXT },	// Tecla windows esquerda
+  { 0x5c, VK_RWIN                | KBDEXT },	// Tecla windows direita
+  { 0x5d, VK_APPS                | KBDEXT },	// Tecla menu aplicacao direita*/
+  { 0x5f, VK_SLEEP               | KBDEXT },	// Tecla Sleep
+  { 0x65, VK_BROWSER_SEARCH      | KBDEXT },	// Pagina de pesquisa do navegador de internet
+  { 0x66, VK_BROWSER_FAVORITES   | KBDEXT },	// Favoritos, not yet implemented
+  { 0x67, VK_BROWSER_REFRESH     | KBDEXT },	// Actualizar pagina do navegador de internet
+  { 0x68, VK_BROWSER_STOP        | KBDEXT },	// Parar navegação na internet internet
+  { 0x69, VK_BROWSER_FORWARD     | KBDEXT },	// Frente no historico de paginas no navegador de internet
+  { 0x6a, VK_BROWSER_BACK        | KBDEXT },	// Atras no historico de paginas no navegador de internet (Backspace)
+  { 0x6b, VK_LAUNCH_APP1         | KBDEXT },	// Tecla Meu Computador
+  { 0x6c, VK_LAUNCH_MAIL         | KBDEXT },	// Abrir programa de e-mail
+  { 0x6d, VK_LAUNCH_MEDIA_SELECT | KBDEXT },	// Abrir reproductor multimedia
+  { 0x1c, VK_RETURN              | KBDEXT },	// Tecla de Enter
+  { 0x46, VK_CANCEL              | KBDEXT },	// Tecla Escape
   { 0, 0 },
 };
 
 ROSDATA VSC_VK extcode1_to_vk[] = {
    { 0, 0 },
 };
-
 
 #define	TIDLE_CIRC		VK_OEM_2
 #define	ACUTE_GRAVE		VK_OEM_1
@@ -232,20 +222,18 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 #define	CLASSIC_QUOTES		VK_OEM_6
 #define	MATH_RELATE		VK_OEM_102
 
-
 #define	ACUTE_CHAR	0xB4
 #define	GRAVE_CHAR	0x60
 #define	CIRC_CHAR	0x5E
 #define	TIDLE_CHAR	0x7E
 #define	TREMA_CHAR	0xA8
 
-
 /* Modifiers */
 
 ROSDATA VK_TO_BIT modifier_keys[] = {
-  { VK_SHIFT,   KSHIFT },
-  { VK_CONTROL, KCTRL },
-  { VK_MENU,    KALT },
+  { VK_SHIFT,   KBDSHIFT },
+  { VK_CONTROL, KBDCTRL },
+  { VK_MENU,    KBDALT },
   { 0,  0 }
 };
 
@@ -255,10 +243,6 @@ ROSDATA MODIFIERS modifier_bits = {
   {     0,  1<<0, 1<<1, 1<<2, SHFT_INVALID, SHFT_INVALID,             3  }
   /* NONE, SHIFT, CTRL,  ALT,         MENU, SHIFT + MENU, SHIFT+CONTROL */
 };
-
-
-#define NOCAPS 0
-#define CAPS   KSHIFT /* Caps -> shift */
 
 ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
   { VK_NUMPAD0, 0, {'0'} },
@@ -279,98 +263,95 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
 
    /* The alphabet */
-  { 'A',    CAPS,   {'a', 'A'} },
-  { 'B',    CAPS,   {'b', 'B'} },
-  { 'C',    CAPS,   {'c', 'C'} },
-  { 'D',    CAPS,   {'d', 'D'} },
-  { 'F',    CAPS,   {'f', 'F'} },
-  { 'G',    CAPS,   {'g', 'G'} },
-  { 'H',    CAPS,   {'h', 'H'} },
-  { 'I',    CAPS,   {'i', 'I'} },
-  { 'J',    CAPS,   {'j', 'J'} },
-  { 'K',    CAPS,   {'k', 'K'} },
-  { 'L',    CAPS,   {'l', 'L'} },
-  { 'M',    CAPS,   {'m', 'M'} },
-  { 'N',    CAPS,   {'n', 'N'} },
-  { 'O',    CAPS,   {'o', 'O'} },
-  { 'P',    CAPS,   {'p', 'P'} },
-  { 'Q',    CAPS,   {'q', 'Q'} },
-  { 'R',    CAPS,   {'r', 'R'} },
-  { 'S',    CAPS,   {'s', 'S'} },
-  { 'T',    CAPS,   {'t', 'T'} },
-  { 'U',    CAPS,   {'u', 'U'} },
-  { 'V',    CAPS,   {'v', 'V'} },
-  { 'W',    CAPS,   {'w', 'W'} },
-  { 'X',    CAPS,   {'x', 'X'} },
-  { 'Y',    CAPS,   {'y', 'Y'} },
-  { 'Z',    CAPS,   {'z', 'Z'} },
+  { 'A',    CAPLOK,   {'a', 'A'} },
+  { 'B',    CAPLOK,   {'b', 'B'} },
+  { 'C',    CAPLOK,   {'c', 'C'} },
+  { 'D',    CAPLOK,   {'d', 'D'} },
+  { 'F',    CAPLOK,   {'f', 'F'} },
+  { 'G',    CAPLOK,   {'g', 'G'} },
+  { 'H',    CAPLOK,   {'h', 'H'} },
+  { 'I',    CAPLOK,   {'i', 'I'} },
+  { 'J',    CAPLOK,   {'j', 'J'} },
+  { 'K',    CAPLOK,   {'k', 'K'} },
+  { 'L',    CAPLOK,   {'l', 'L'} },
+  { 'M',    CAPLOK,   {'m', 'M'} },
+  { 'N',    CAPLOK,   {'n', 'N'} },
+  { 'O',    CAPLOK,   {'o', 'O'} },
+  { 'P',    CAPLOK,   {'p', 'P'} },
+  { 'Q',    CAPLOK,   {'q', 'Q'} },
+  { 'R',    CAPLOK,   {'r', 'R'} },
+  { 'S',    CAPLOK,   {'s', 'S'} },
+  { 'T',    CAPLOK,   {'t', 'T'} },
+  { 'U',    CAPLOK,   {'u', 'U'} },
+  { 'V',    CAPLOK,   {'v', 'V'} },
+  { 'W',    CAPLOK,   {'w', 'W'} },
+  { 'X',    CAPLOK,   {'x', 'X'} },
+  { 'Y',    CAPLOK,   {'y', 'Y'} },
+  { 'Z',    CAPLOK,   {'z', 'Z'} },
 
    /* The numbers */
   //De 2 ate 4 tem tres estados
-  { '1',  NOCAPS,   {'1', '!'} },
-  { '5',  NOCAPS,   {'5', '%'} },
-  { '6',  NOCAPS,   {'6', '&'} },
+  { '1',  0,   {'1', '!'} },
+  { '5',  0,   {'5', '%'} },
+  { '6',  0,   {'6', '&'} },
   //De 7 ate 0 tem tres estados
 
   /* Specials */
   /* Shift-_ generates PT */
-  { TIDLE_CIRC,		NOCAPS, {   WCH_DEAD,   WCH_DEAD} },
-  {   VK_EMPTY,		NOCAPS, { TIDLE_CHAR,  CIRC_CHAR} },
+  { TIDLE_CIRC,		0, {   WCH_DEAD,   WCH_DEAD} },
+  {   VK_EMPTY,		0, { TIDLE_CHAR,  CIRC_CHAR} },
 
-  { CCEDIL,		  CAPS, {       0xe7,       0xc7} }, // ç
-  { QUOTE,		NOCAPS, {       0xb4,        '?'} }, // ' ?
-  { BACKSLASH_BAR,	NOCAPS, {       0x5c,       0x7c} }, // \ |
-  { CLASSIC_QUOTES,	NOCAPS, {       0xab,       0xbb} }, // « »
+  { CCEDIL,		  CAPLOK, {       0xe7,       0xc7} }, // ç
+  { QUOTE,		0, {       0xb4,        '?'} }, // ' ?
+  { BACKSLASH_BAR,	0, {       0x5c,       0x7c} }, // \ |
+  { CLASSIC_QUOTES,	0, {       0xab,       0xbb} }, // « »
 
-  { ACUTE_GRAVE,  	NOCAPS, {   WCH_DEAD,   WCH_DEAD} }, // ` '
-  {    VK_EMPTY,  	NOCAPS, { ACUTE_CHAR, GRAVE_CHAR} },
+  { ACUTE_GRAVE,  	0, {   WCH_DEAD,   WCH_DEAD} }, // ` '
+  {    VK_EMPTY,  	0, { ACUTE_CHAR, GRAVE_CHAR} },
 
-  { ORDERN_SUPERSCRIPT,	NOCAPS, {       0xBA,       0xAA} }, // º ª
-  { MATH_RELATE,	NOCAPS, {        '<',        '>'} },
-  { VK_OEM_COMMA,	NOCAPS, {        ',',        ';'} },
-  { VK_OEM_PERIOD,	NOCAPS, {        '.',        ':'} },
-  { VK_OEM_MINUS,	NOCAPS, {        '-',        '_'} },
+  { ORDERN_SUPERSCRIPT,	0, {       0xBA,       0xAA} }, // º ª
+  { MATH_RELATE,	0, {        '<',        '>'} },
+  { VK_OEM_COMMA,	0, {        ',',        ';'} },
+  { VK_OEM_PERIOD,	0, {        '.',        ':'} },
+  { VK_OEM_MINUS,	0, {        '-',        '_'} },
 
   /* Keys that do not have shift states */
-  { VK_TAB,		NOCAPS, {        '\t',      '\t'} },
-  { VK_ADD,		NOCAPS, {         '+',       '+'} },
-  { VK_SUBTRACT,	NOCAPS, {         '-',       '-'} },
-  { VK_MULTIPLY,	NOCAPS, {         '*',       '*'} },
-  { VK_DIVIDE,		NOCAPS, {         '/',       '/'} },
-  { VK_ESCAPE,		NOCAPS, {      '\x1b',    '\x1b'} },
-  { VK_SPACE,		NOCAPS, {         ' ',       ' '} },
+  { VK_TAB,		0, {        '\t',      '\t'} },
+  { VK_ADD,		0, {         '+',       '+'} },
+  { VK_SUBTRACT,	0, {         '-',       '-'} },
+  { VK_MULTIPLY,	0, {         '*',       '*'} },
+  { VK_DIVIDE,		0, {         '/',       '/'} },
+  { VK_ESCAPE,		0, {      0x1b,    0x1b} },
+  { VK_SPACE,		0, {         ' ',       ' '} },
 
   { 0, 0 }
 };
-
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
 
   /* Legacy (telnet-style) ascii escapes */
-  { VK_RETURN,    NOCAPS, {'\r',     '\r',     '\n'} },
-  { VK_BACK,      NOCAPS, {'\b',     '\b',     0x7f} },
+  { VK_RETURN,    0, {'\r',     '\r',     '\n'} },
+  { VK_BACK,      0, {'\b',     '\b',     0x7f} },
   { 0,0 }
 };
-
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
                         /* Normal, Shift,  Control,   Alt+Gr */
 
-  {         '2', NOCAPS, {    '2',   '"', WCH_NONE,        '@' }  }, // 2 " @
-  {         '3', NOCAPS, {    '3',   '#', WCH_NONE,       0xa3 }  }, // 3 #
-  {         '4', NOCAPS, {    '4',   '$', WCH_NONE,       0xa7 }  }, // 4 $
-  {         '7', NOCAPS, {    '7',   '/', WCH_NONE,       0x7b }  }, // 7 &
-  {         '8', NOCAPS, {    '8',   '(', WCH_NONE,       0x5b }  }, // 8 (
-  {         '9', NOCAPS, {    '9',   ')', WCH_NONE,       0x5d }  }, // 9 )
-  {         '0', NOCAPS, {    '0',   '=', WCH_NONE,       0x7d }  }, // 0 =
-  {         'E',   CAPS, {    'e',   'E', WCH_NONE,     0x20ac }  }, // e E
+  {         '2', 0, {    '2',   '"', WCH_NONE,        '@' }  }, // 2 " @
+  {         '3', 0, {    '3',   '#', WCH_NONE,       0xa3 }  }, // 3 #
+  {         '4', 0, {    '4',   '$', WCH_NONE,       0xa7 }  }, // 4 $
+  {         '7', 0, {    '7',   '/', WCH_NONE,       0x7b }  }, // 7 &
+  {         '8', 0, {    '8',   '(', WCH_NONE,       0x5b }  }, // 8 (
+  {         '9', 0, {    '9',   ')', WCH_NONE,       0x5d }  }, // 9 )
+  {         '0', 0, {    '0',   '=', WCH_NONE,       0x7d }  }, // 0 =
+  {         'E',   CAPLOK, {    'e',   'E', WCH_NONE,     0x20ac }  }, // e E
 
-  { VK_OEM_PLUS, NOCAPS, {    '+',   '*', WCH_NONE,   WCH_DEAD }  }, // + * "
-  {    VK_EMPTY, NOCAPS, {    '+',   '*', WCH_NONE, TREMA_CHAR }  },
+  { VK_OEM_PLUS, 0, {    '+',   '*', WCH_NONE,   WCH_DEAD }  }, // + * "
+  {    VK_EMPTY, 0, {    '+',   '*', WCH_NONE, TREMA_CHAR }  },
   { 0, 0 }
 };
-
 
 #define vk_master(n,x) { (PVK_TO_WCHARS1)x, n, sizeof(x[0]) }
 
@@ -381,7 +362,6 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   vk_master(4,key_to_chars_4mod),
   { 0,0,0 }
 };
-
 
 #define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
 
@@ -453,7 +433,6 @@ ROSDATA DEADKEY  deadkey[] =
             { 0, 0, 0}
 };
 
-
 ROSDATA VSC_LPWSTR key_names[] = {
   { 0x01, L"Escape" },
   { 0x0e, L"BackSpace" },
@@ -465,7 +444,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x37, L"* Num" },
   { 0x38, L"Alt" },
   { 0x39, L"Espaco" },
-  { 0x3a, L"Caps Lock" },
+  { 0x3a, L"CAPLOK Lock" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
   { 0x3d, L"F3" },
@@ -550,7 +529,6 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
     NULL
 };
 
-
 /* Finally, the master table */
 ROSDATA KBDTABLES keyboard_layout_table = {
 
@@ -576,7 +554,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(1,1), /* Version 1.0 */
+  MAKELONG(KLLF_ALTGR, 1), /* Version 1.0 */
 
   /* Ligatures -- Portuguese doesn't have any, that i'm aware  */
   0,
@@ -584,7 +562,6 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   NULL
 };
-
 
 PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;

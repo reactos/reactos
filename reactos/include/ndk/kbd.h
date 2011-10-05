@@ -4,6 +4,20 @@
 extern "C" {
 #endif
 
+/* Virtual key flags */
+#define KBDEXT     0x100  /* Extended key code */
+#define KBDMULTIVK 0x200  /* Multi-key */
+#define KBDSPECIAL 0x400  /* Special key */
+#define KBDNUMPAD  0x800  /* Number-pad */
+
+/* Modifier bits */
+#define KBDSHIFT   0x001  /* Shift modifier */
+#define KBDCTRL    0x002  /* Ctrl modifier */
+#define KBDALT     0x004  /* Alt modifier */
+
+/* Invalid shift */
+#define SHFT_INVALID 0x0F
+
   typedef struct _VK_TO_BIT {
     BYTE Vk;
     BYTE ModBits;
@@ -74,9 +88,9 @@ typedef struct _LIGATURE ## i { \
 
 #define KBD_VERSION 1
 #define GET_KBD_VERSION(p) (HIWORD((p)->fLocalFlags))
-#define KLLF_ALTGR 1
-#define KLLF_SHIFTLOCK 2
-#define KLLF_LRM_RLM 4
+#define KLLF_ALTGR     0x1
+#define KLLF_SHIFTLOCK 0x2
+#define KLLF_LRM_RLM   0x4
 
   typedef struct _KBDTABLES {
     PMODIFIERS pCharModifiers;
@@ -89,26 +103,32 @@ typedef struct _LIGATURE ## i { \
     BYTE bMaxVSCtoVK;
     PVSC_VK pVSCtoVK_E0;
     PVSC_VK pVSCtoVK_E1;
-    DWORD fLocalFlags;
+    DWORD fLocaleFlags;
     BYTE nLgMaxd;
     BYTE cbLgEntry;
     PLIGATURE1 pLigature;
   } KBDTABLES, *PKBDTABLES;
 
-  /* Constants that help table decoding */
-#define WCH_NONE 0xf000
-#define WCH_DEAD 0xf001
-#define WCH_LGTR 0xf002
+/* Constants that help table decoding */
+#define WCH_NONE  0xf000
+#define WCH_DEAD  0xf001
+#define WCH_LGTR  0xf002
 
-#define CAPSLOK     1
-#define SGCAPS      2
-#define CAPLOKALTGR 4
-#define KANALOK     8
-#define GRPSELTAP   0x80
+/* VK_TO_WCHARS attributes */
+#define CAPLOK       0x01
+#define SGCAPS       0x02
+#define CAPLOKALTGR  0x04
+#define KANALOK      0x08
+#define GRPSELTAP    0x80
 
 #define VK_ABNT_C1  0xC1
 #define VK_ABNT_C2  0xC2
 
+/* Useful scancodes */
+#define SCANCODE_LSHIFT  0x2A
+#define SCANCODE_RSHIFT  0x36
+#define SCANCODE_CTRL    0x1D
+#define SCANCODE_ALT     0x38
 
 #ifdef __cplusplus
 };
