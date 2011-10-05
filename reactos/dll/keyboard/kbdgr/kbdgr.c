@@ -165,10 +165,10 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { 0xff,        0,      {'^', WCH_NONE} }, // FIXME - why doesn't this work?
   /* Normal vs Shifted */
   /* The numbers */
-  { '1',         0, {'1', '!'} },
+  { '1',         CAPLOK,   {'1', '!'} },
   /* Ctrl-2 generates NUL */
-  { '4',         0, {'4', '$'} },
-  { '5',         0, {'5', '%'} },
+  { '4',         CAPLOK,   {'4', '$'} },
+  { '5',         CAPLOK,   {'5', '%'} },
 
   { VK_OEM_6,    0, {WCH_DEAD, WCH_DEAD} },
   { 0xff,        0, {0xb4, '`'} },
@@ -215,7 +215,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  /* Normal, Shifted, Ctrl */
+  /* Normal, Shifted, Ctrl+Alt */
   /* Legacy (telnet-style) ascii escapes */
   { '3', CAPLOK, {'3', 0xa7, 0xb3} },
   { '7', CAPLOK, {'7', '/', '{'} },
