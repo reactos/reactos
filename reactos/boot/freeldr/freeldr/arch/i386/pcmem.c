@@ -340,7 +340,6 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
                           1024 * 1024 / PAGE_SIZE,
                           ExtendedMemorySizeAtOneMB * 1024 / PAGE_SIZE,
                           LoaderFree);
-      EntryCount++;
 
       if (ExtendedMemorySizeAtSixteenMB != 0)
       {
