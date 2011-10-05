@@ -28,13 +28,6 @@ DBG_DEFAULT_CHANNEL(HEAP);
 PVOID FrLdrDefaultHeap;
 PVOID FrLdrTempHeap;
 
-typedef struct _BLOCK_HEADER
-{
-    USHORT Size;
-    USHORT PreviousSize;
-    ULONG Tag;
-} BLOCK_HEADER, *PBLOCK_HEADER;
-
 typedef struct _BLOCK_DATA
 {
     ULONG Flink;
@@ -43,7 +36,9 @@ typedef struct _BLOCK_DATA
 
 typedef struct _HEAP_BLOCK
 {
-    BLOCK_HEADER;
+    USHORT Size;
+    USHORT PreviousSize;
+    ULONG Tag;
     BLOCK_DATA Data[];
 } HEAP_BLOCK, *PHEAP_BLOCK;
 
@@ -369,7 +364,6 @@ HeapFree(
 {
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block, PrevBlock, NextBlock;
-    USHORT PreviousSize = 0;
     ULONGLONG Time = __rdtsc();
     TRACE("HeapFree(%p, %p)\n", HeapHandle, Pointer);
     ASSERT(Tag != 'dnE#');
