@@ -32,7 +32,6 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 #define TAG_RTLREGISTRY 'vrqR'
 
 extern BOOLEAN ExpInTextModeSetup;
-extern BOOLEAN PnpSystemInit;
 
 USHORT IopGroupIndex;
 PLIST_ENTRY IopGroupTable;
@@ -516,8 +515,6 @@ IopInitializeDriverModule(
 
    /* Set the driver as initialized */
    IopReadyDeviceObjects(Driver);
-
-   if (PnpSystemInit) IopReinitializeDrivers();
 
    return STATUS_SUCCESS;
 }
