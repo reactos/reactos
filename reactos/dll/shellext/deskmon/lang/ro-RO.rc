@@ -1,7 +1,7 @@
 /* 
  * FILE:             dll/shellext/deskmon/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ?tefan (PM on ReactOS Forum to fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-09-02  initial translation
  */
 
@@ -24,6 +24,6 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_USEDEFFRQUENCY "Utilizează configura?ia fizică implicită"
+  IDS_USEDEFFRQUENCY "Utilizează configurația fizică implicită"
   IDS_FREQFMT "%u Hertz"
 END

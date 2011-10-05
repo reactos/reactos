@@ -1,7 +1,7 @@
 /* 
  * FILE:             dll/win32/netcfgx/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ?tefan (PM on ReactOS Forum to fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-09-06  initial translation
  */
 
@@ -20,7 +20,7 @@ BEGIN
  CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
  LTEXT "Mască de s&ubrețea:", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "Server ""gateway"" i&mplicit:", -1, 14, 105, 135, 8
+ LTEXT "Server „poartă” i&mplicit:", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
  CONTROL "O&bține automat adresa serverului DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
@@ -45,7 +45,7 @@ BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
     LTEXT "Mască de s&ubrețea:", -1, 14, 95, 135, 8
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
-    LTEXT "Server ""&gateway"" i&mplicit:", -1, 14, 115, 135, 8
+    LTEXT "Server „poartă” i&mplicit:", -1, 14, 115, 135, 8
     CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
     LTEXT "Server DNS &preferat:", -1, 14, 150, 135, 8
     CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
@@ -63,14 +63,14 @@ BEGIN
     PUSHBUTTON "&Adaugă...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Modifică...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Elimină", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
-    GROUPBOX "Servere ""&gateway"" im&plicite:", -1, 5, 100, 240, 90
+    GROUPBOX "Servere „poartă” im&plicite:", -1, 5, 100, 240, 90
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
     PUSHBUTTON "A&daugă...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "M&odifică...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "E&limină", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 200, 240, 30
     CHECKBOX "Metrică stabilită a&utomat", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Me&trica interfe?ei:", -1, 15, 215, 90, 12
+    LTEXT "Me&trica interfeței:", -1, 15, 215, 90, 12
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -129,11 +129,11 @@ END
 
 IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Server ""gateway"" TCP/IP"
+CAPTION "Server „poartă” TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
-    LTEXT "Adresă ""&gateway"":", -1, 5, 15, 70, 12
+    LTEXT "Adresa „porții”:", -1, 5, 15, 70, 12
     CHECKBOX "Metrică stabilită a&utomat", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metrică:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
@@ -205,13 +205,13 @@ END
 STRINGTABLE
 BEGIN
 	IDS_NET_CONNECT "Conexiune de rețea"
-	IDS_NO_IPADDR_SET   "Acest adaptor de re?ea solicită cel pu?in o adresă IP. Introduceți una."
+	IDS_NO_IPADDR_SET   "Acest adaptor de rețea solicită cel puțin o adresă IP. Introduceți una."
 	IDS_NO_SUBMASK_SET  "Ați introdus o adresă fără mască de subrețea. Adăugați o mască de subrețea."
-	IDS_TCPFILTERDESC   "Filtrarea TCP/IP permite controlul tipului de trafic TCP/IP din re?ea ce va fi recepționat de calculator."
+	IDS_TCPFILTERDESC   "Filtrarea TCP/IP permite controlul tipului de trafic TCP/IP din rețea ce va fi recepționat de calculator."
 	IDS_TCPFILTER       "Filtrare TCP/IP"
 	IDS_IPADDR          "Adresă IP"
 	IDS_SUBMASK         "Mască de subrețea"
-	IDS_GATEWAY         "Server ""gateway"""
+	IDS_GATEWAY         "Server „poartă”"
 	IDS_METRIC          "Metrică"
 	IDS_DHCPACTIVE      "DHCP activat"
 	IDS_AUTOMATIC       "automată"
@@ -224,13 +224,13 @@ BEGIN
 	IDS_IP_PROTO        "Protocol IP"
 	IDS_PORT_RANGE      "Numărul unui port trebuie să se fie între 0 și 65536. Introduceți un număr în această limită."
 	IDS_PROT_RANGE      "Numărul unui protocol trebuie să fie între 0 și 256. Introduceți un număr în această limită."
-	IDS_DUP_NUMBER      "Numărul pe care încercați să-l introduceți deja există în listă. Introduce?i un alt număr."
+	IDS_DUP_NUMBER      "Numărul pe care încercați să-l introduceți deja există în listă. Introduceți un alt număr."
 	IDS_DISABLE_FILTER  "Dezactivarea acestei opțiuni generale TCP/IP se va aplica pentru toate adaptoarele."
 	IDS_NO_SUFFIX       "Opțiunea curentă de căutare necesită cel puțin un sufix DNS. Specificați unul sau modificați opțiunea de căutare."
 	IDS_DOMAIN_SUFFIX   "Sufixul de domeniu nu este valid."
-	IDS_DNS_SUFFIX      "Numele domeniului DNS ""%s"" nu este valid."
+	IDS_DNS_SUFFIX      "Numele domeniului DNS „%s” nu este valid."
 	IDS_DUP_SUFFIX      "Sufixul DNS este deja în listă."
 	IDS_DUP_IPADDR      "Adresa IP este deja în listă."
-	IDS_DUP_GW          "Acest server ""gateway"" este deja în listă."
+	IDS_DUP_GW          "Acest server „poartă” este deja în listă."
 END
 

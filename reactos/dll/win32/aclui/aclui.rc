@@ -9,25 +9,4 @@
 
 IDB_USRGRPIMAGES BITMAP "res/usrgrp.bmp"
 
-#include "aclui_Bg.rc"
-#include "aclui_De.rc"
-#include "aclui_El.rc"
-#include "aclui_En.rc"
-#include "aclui_Es.rc"
-#include "aclui_Fr.rc"
-#include "aclui_Hu.rc"
-#include "aclui_Id.rc"
-#include "aclui_It.rc"
-#include "aclui_Ja.rc"
-#include "aclui_Lt.rc"
-#include "aclui_Nl.rc"
-#include "aclui_No.rc"
-#include "aclui_Sv.rc"
-#include "aclui_Th.rc"
-
-// UTF-8
-#pragma code_page(65001)
-#include "aclui_Pl.rc"
-#include "aclui_Ro.rc"
-#include "aclui_Ru.rc"
-#include "aclui_Uk.rc"
+#include "rsrc.rc"

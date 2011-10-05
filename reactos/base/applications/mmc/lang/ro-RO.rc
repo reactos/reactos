@@ -1,7 +1,7 @@
 /* 
  * FILE:             base/applications/mmc/lang/ro-RO.rc
                      ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ?tefan (PM on ReactOS Forum at fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
  */
  
@@ -9,10 +9,10 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDM_CONSOLEROOT MENU DISCARDABLE
 BEGIN
-    POPUP "&Fi?ier"
+    POPUP "&Fișier"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "I&e?ire\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "I&eșire\tAlt+F4", ID_FILE_EXIT
     END
 
     POPUP "&?"

@@ -20,7 +20,7 @@ CAPTION "Despre înregistrator audio ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "Înregistrator audio ReactOS, versiunea 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Înregistrator audio, versiunea 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
     LTEXT           "Drept de autor (C) 2009",IDC_STATIC,55,25,114,8
     DEFPUSHBUTTON   "Î&nchide",IDOK,139,54,50,14,WS_GROUP
 END

@@ -430,7 +430,7 @@ static MUI_ENTRY roRODevicePageEntries[] =
     {
         24,
         14,
-        "Config. tastaturÇ:",
+        " Aranj. tastaturÇ:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -1138,19 +1138,19 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Specificaîi pentru instalare o configuraîie implicitÇ a tastaturii.",
+        "Specificaîi pentru instalare un aranjament implicit al tastaturii.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Utilizaîi tastele SUS/JOS pentru a selecta o configuraîie",
+        "\x07  Utilizaîi tastele SUS/JOS pentru a selecta un aranjament",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    doritÇ de tastaturÇ, apoi apÇsaîi ENTER.",
+        "    dorit de tastaturÇ, apoi apÇsaîi ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1162,7 +1162,7 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
     {
         8,
         14,
-        "   a schimba configuraîia curentÇ a tastaturii.",
+        "   a schimba aranjamentul curent al tastaturii.",
         TEXT_STYLE_NORMAL
     },
     {

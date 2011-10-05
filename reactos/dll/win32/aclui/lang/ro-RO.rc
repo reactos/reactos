@@ -1,7 +1,7 @@
 /* 
  * FILE:             dll/win32/aclui/aclui_Ro.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ?tefan (PM on ReactOS Forum to fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-09-03  initial translation
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT

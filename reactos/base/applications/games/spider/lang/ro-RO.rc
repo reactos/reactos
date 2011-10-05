@@ -4,12 +4,11 @@
  * FILE:         base/applications/games/spider/lang/en-US.rc
  * TRANSLATOR:   Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:   2011-08-20  initial romanian translation
+ *               2011-09-09  technical correction - excluded "resource.h"
+ *               2011-09-12  accelerators, romanian qotes
  */
  
-#include "resource.h"
-
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
-
 
 /* Dialoguri */
 
@@ -30,8 +29,8 @@ BEGIN
     CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
-    DEFPUSHBUTTON "Confirmă", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Anulează", IDCANCEL, 126, 84, 54, 13
+    DEFPUSHBUTTON "Con&firmă", IDOK, 66, 84, 54, 13
+    PUSHBUTTON    "A&nulează", IDCANCEL, 126, 84, 54, 13
 END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
@@ -39,20 +38,20 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Joc la categoria"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Ușoară (o culoare)",   IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Medie (două culori)",  IDC_DIF_TWOCOLORS,  8, 23, 80, 10
-    AUTORADIOBUTTON "Grea (patru culori)", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    AUTORADIOBUTTON "&Ușoară (o culoare)",   IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Medie (două culori)",  IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "&Grea (patru culori)", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
-    DEFPUSHBUTTON   "Confirmă", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "Anulează", IDCANCEL, 58, 58, 40, 14
+    DEFPUSHBUTTON   "Con&firmă", IDOK, 8, 58, 40, 14
+    PUSHBUTTON      "A&nulează", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Șiruri */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Pasiență ""păianjen"""
-    IDS_SPI_ABOUT   "Pasiență ""păianjen"" de Gregor Schneider\n\nCardLib versiune 1.0"
+    IDS_SPI_NAME    "Pasiență „păianjen”"
+    IDS_SPI_ABOUT   "Pasiență „păianjen” de Gregor Schneider\n\nCardLib versiune 1.0"
     IDS_SPI_QUIT    "Abandonați jocul curent?"
     IDS_SPI_WIN     "Felicitări, ați câștigat!"
     IDS_SPI_DEAL    "O nouă rundă?"

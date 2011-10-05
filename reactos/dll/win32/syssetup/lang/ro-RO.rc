@@ -92,14 +92,14 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Localizarea regională trebuie să se potrivească cu limba aplicațiilor utilizate. De ea depinde cum vor apare numerele, valutele și data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Modificare particularizări de sistem și localizare.",
+    LTEXT "Modificarea configuraţiei de sistem și localizare.",
           IDC_STATIC, 53, 60, 186, 8
-    PUSHBUTTON "&Particularizări", IDC_CUSTOMLOCALE, 240, 57, 60, 14
+    PUSHBUTTON "&Configurează", IDC_CUSTOMLOCALE, 240, 57, 60, 14
     LTEXT "Configurări și localizări pentru tastatură, aranjamente de caractere asociate tastelor la dactilografiere.", IDC_STATIC, 53, 82, 253, 20
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Particularizarea configurațiilor de tastatură.",
+    LTEXT "Configurarea aranjamentelor de tastatură.",
           IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "&Configurează", IDC_CUSTOMLAYOUT, 240, 122, 60, 14
+    PUSHBUTTON "C&onfigurează", IDC_CUSTOMLAYOUT, 240, 122, 60, 14
 END
 
 
@@ -218,7 +218,7 @@ BEGIN
     IDS_SYS_TOOLS       "Instrumente de sistem"
     IDS_CMT_CHARMAP     "Deschide harta caracterelor"
     IDS_CMT_DXDIAG      "Deschide aplicația de diagnostic React-X"
-    IDS_CMT_KBSWITCH    "Comutatorul configurațiilor de tastatură"
+    IDS_CMT_KBSWITCH    "Comutatorul aranjamentelor de tastatură"
 END
 
 STRINGTABLE
@@ -258,7 +258,7 @@ BEGIN
     IDS_SHORT_DXDIAG     "Diagnostic ReactX.lnk"
     IDS_SHORT_EVENTVIEW  "Gestionar de evenimente.lnk"
     IDS_SHORT_EXPLORER   "Explorator ReactOS.lnk"
-    IDS_SHORT_KBSWITCH   "Comutator configurații de tastatură.lnk"
+    IDS_SHORT_KBSWITCH   "Comutator aranjamente de tastatură.lnk"
     IDS_SHORT_MAGNIFY    "Lupă.lnk"
     IDS_SHORT_MPLAY32    "Lector multimedia.lnk"
     IDS_SHORT_MSCONFIG   "Configurator de sistem.lnk"
