@@ -8,6 +8,59 @@
 #include <stdio.h>
 #include <wine/test.h>
 #include <windows.h>
+#include "helper.h"
+#include <undocuser.h>
+
+HWND hWnd1, hWnd2;
+
+/* FIXME: test for HWND_TOP, etc...*/
+static int get_iwnd(HWND hWnd)
+{
+    if(hWnd == hWnd1) return 1;
+    else if(hWnd == hWnd2) return 2;
+    else return 0;
+}
+
+LRESULT CALLBACK DWPTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    int iwnd = get_iwnd(hWnd);
+
+    if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    switch(message)
+    {
+    case WM_IME_SETCONTEXT:
+    case WM_IME_NOTIFY :
+    case WM_GETICON :
+    case WM_GETTEXT:
+        break;
+    case WM_WINDOWPOSCHANGING:
+    case WM_WINDOWPOSCHANGED:
+        {
+            WINDOWPOS* pwp = (WINDOWPOS*)lParam;
+            ok(wParam==0,"expected wParam=0\n");
+            record_message(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
+            break;
+        }
+    default:
+        record_message(iwnd, message, SENT, 0,0);
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+static void FlushMessages()
+{
+    MSG msg;
+
+    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    {
+        int iwnd = get_iwnd(msg.hwnd);
+        if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
+            record_message(iwnd, msg.message, POST,0,0);
+        DispatchMessageA( &msg );
+    }
+}
 
 #define ok_windowpos(hwnd, x, y, w, h, wnd) do { RECT rt; GetWindowRect(hwnd, &rt); \
                                                  ok(rt.left == (x) && rt.top == (y) && rt.right == (x)+(w) && rt.bottom == (y)+(h), \
@@ -15,7 +68,7 @@
 
 #define ok_lasterr(err, s) ok(GetLastError() == (err), "%s error = %lu\n", s, GetLastError())
 
-static void Test_DeferWindowPos(HWND hWnd, HWND hWnd2)
+static void Test_DWP_Error(HWND hWnd, HWND hWnd2)
 {
     HDWP hDwp;
     BOOL ret;
@@ -150,21 +203,116 @@ static void Test_DeferWindowPos(HWND hWnd, HWND hWnd2)
     ok_lasterr(ERROR_SUCCESS, "EndDeferWindowPos");
     ok_windowpos(hWnd, 50, 60, 230, 240, "Window 1");
     ok_windowpos(hWnd2, 70, 80, 250, 260, "Window 2");
+
+    FlushMessages();
+    empty_message_cache();
+}
+
+MSG_ENTRY move1_chain[]={
+    {1,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE},
+    {1,WM_GETMINMAXINFO},
+    {1,WM_WINDOWPOSCHANGED, SENT, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOCLIENTSIZE},
+    {1,WM_MOVE},
+    {0,0}};
+
+MSG_ENTRY resize1_chain[]={
+    {1,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE},
+    {1,WM_GETMINMAXINFO},
+    {1,WM_NCCALCSIZE},
+    {1,WM_WINDOWPOSCHANGED, SENT, 0, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCLIENTMOVE},
+    {1,WM_SIZE},
+    {1,WM_NCCALCSIZE},
+    {0,0}};
+
+MSG_ENTRY move1_2_chain[]={
+    {1,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE},
+    {1,WM_GETMINMAXINFO},
+    {2,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE},
+    {2,WM_GETMINMAXINFO},
+    {1,WM_WINDOWPOSCHANGED, SENT, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCLIENTSIZE},
+    {1,WM_MOVE},
+    {2,WM_WINDOWPOSCHANGED, SENT, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOCLIENTSIZE},
+    {2,WM_MOVE},
+    {0,0}};
+
+static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
+{
+    HDWP hdwp;
+    BOOL ret;
+
+    /* move hWnd1 */
+    hdwp = BeginDeferWindowPos(1);
+    ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 20, 30, 100, 100, SWP_NOACTIVATE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    ret = EndDeferWindowPos(hdwp);
+    ok(ret != 0, "EndDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(move1_chain);
+
+    /* resize hWnd1 */
+    hdwp = BeginDeferWindowPos(1);
+    ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 20, 30, 110, 110, SWP_NOACTIVATE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    ret = EndDeferWindowPos(hdwp);
+    ok(ret != 0, "EndDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(resize1_chain);
+
+
+    /* move both windows */
+    hdwp = BeginDeferWindowPos(1);
+    ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 30, 40, 110, 110, SWP_NOACTIVATE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    hdwp = DeferWindowPos(hdwp, hWnd2, HWND_TOP, 30, 40, 100, 100, SWP_NOACTIVATE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    ret = EndDeferWindowPos(hdwp);
+    ok(ret != 0, "EndDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(move1_2_chain);
 }
 
 START_TEST(DeferWindowPos)
 {
-    HWND hWnd = CreateWindowExW(0, L"EDIT", L"abc", 0, 10, 20,
-        200, 210, NULL, NULL, GetModuleHandle(NULL), NULL);
-    HWND hWnd2 = CreateWindowExW(0, L"EDIT", L"def", 0, 30, 40,
-        220, 230, NULL, NULL, GetModuleHandle(NULL), NULL);
-    ok(hWnd != NULL, "CreateWindow failed\n");
+    RegisterSimpleClass(DWPTestProc, L"ownertest"); 
+    hWnd1 = CreateWindowExW(0, L"ownertest", L"abc", 0, 10, 20,
+        200, 210, NULL, NULL, 0, NULL);
+    hWnd2 = CreateWindowExW(0, L"ownertest", L"def", 0, 30, 40,
+        220, 230, NULL, NULL, 0, NULL);
+    ok(hWnd1 != NULL, "CreateWindow failed\n");
     ok(hWnd2 != NULL, "CreateWindow failed\n");
-    ok_windowpos(hWnd, 10, 20, 200, 210, "Window 1");
+    ShowWindow(hWnd1, SW_SHOW);
+    ShowWindow(hWnd2, SW_SHOW);
+    ok_windowpos(hWnd1, 10, 20, 200, 210, "Window 1");
     ok_windowpos(hWnd2, 30, 40, 220, 230, "Window 2");
+    FlushMessages();
+    empty_message_cache();
 
-    Test_DeferWindowPos(hWnd, hWnd2);
+    Test_DWP_Error(hWnd1, hWnd2);
+
+    SetWindowPos(hWnd1, 0, 10,20,100,100,0);
+    SetWindowPos(hWnd2, 0, 10,20,100,100,0);
+    FlushMessages();
+    empty_message_cache();
+
+    Test_DWP_SimpleMsg(hWnd1, hWnd2);
     
     DestroyWindow(hWnd2);
-    DestroyWindow(hWnd);
-}
+    DestroyWindow(hWnd1);
+ }
