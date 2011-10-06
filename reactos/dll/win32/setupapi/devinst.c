@@ -4826,10 +4826,10 @@ SetupDiOpenDeviceInfoW(
         PLIST_ENTRY ItemList = list->ListHead.Flink;
         while (ItemList != &list->ListHead)
         {
-            // TODO
-            //if (good one)
-            //    break;
-            FIXME("not implemented\n");
+            deviceInfo = CONTAINING_RECORD(ItemList, struct DeviceInfo, ListEntry);
+            if (!wcscmp(deviceInfo->instanceId, DeviceInstanceId))
+                break;
+            deviceInfo = NULL;
             ItemList = ItemList->Flink;
         }
 
