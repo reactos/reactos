@@ -250,20 +250,25 @@ IntSetDIBits(
     INT         result = 0;
     RECT		rcDst;
     POINTL		ptSrc;
-    PVOID		pvBits;
     EXLATEOBJ	exlo;
+    HPALETTE    hpalDIB = 0;
+    PPALETTE    ppalDIB = 0;
 
-    SourceBitmap = DIB_CreateDIBSection(DC, bmi, ColorUse, &pvBits, NULL, 0, 0);
-    if (0 == SourceBitmap)
+    SourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
+                                     ScanLines,
+                                     0,
+                                     BitmapFormat(bmi->bmiHeader.biBitCount,
+                                                  bmi->bmiHeader.biCompression),
+                                     bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                     bmi->bmiHeader.biSizeImage,
+                                     (PVOID)Bits,
+                                     0);
+    if (!SourceBitmap)
     {
-        DPRINT1("Error : Could not create a DIBSection.\n");
+        DPRINT1("Error: Could not create a bitmap.\n");
         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
-
-    RtlCopyMemory(pvBits, Bits, DIB_GetDIBImageBytes(bmi->bmiHeader.biWidth,
-                  bmi->bmiHeader.biHeight,
-                  bmi->bmiHeader.biBitCount));
 
     psurfDst = SURFACE_ShareLockSurface(hBitmap);
     psurfSrc = SURFACE_ShareLockSurface(SourceBitmap);
@@ -274,16 +279,36 @@ IntSetDIBits(
         goto cleanup;
     }
 
+    /* Create a palette for the DIB */
+    hpalDIB = BuildDIBPalette(bmi);
+    if (!hpalDIB)
+    {
+        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
+        goto cleanup;
+    }
+
+    /* Lock the DIB palette */
+    ppalDIB = PALETTE_ShareLockPalette(hpalDIB);
+    if (!ppalDIB)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        goto cleanup;
+    }
+
+    /* Initialize EXLATEOBJ */
+    EXLATEOBJ_vInitialize(&exlo,
+                          ppalDIB,
+                          psurfDst->ppal,
+                          RGB(0xff, 0xff, 0xff),
+                          RGB(0xff, 0xff, 0xff), //DC->pdcattr->crBackgroundClr,
+                          0); // DC->pdcattr->crForegroundClr);
+
     rcDst.top = StartScan;
     rcDst.left = 0;
     rcDst.bottom = rcDst.top + ScanLines;
     rcDst.right = psurfDst->SurfObj.sizlBitmap.cx;
-
     ptSrc.x = 0;
     ptSrc.y = 0;
-
-    /* 1bpp bitmaps have 0 for white, 1 for black */
-    EXLATEOBJ_vInitialize(&exlo, psurfSrc->ppal, psurfDst->ppal, 0xFFFFFF, 0xFFFFFF, 0);
 
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
@@ -297,14 +322,10 @@ IntSetDIBits(
     EXLATEOBJ_vCleanup(&exlo);
 
 cleanup:
-    if(psurfSrc)
-    {
-        SURFACE_ShareUnlockSurface(psurfSrc);
-    }
-    if(psurfDst)
-    {
-        SURFACE_ShareUnlockSurface(psurfDst);
-    }
+    if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
+    if (hpalDIB) GreDeleteObject(hpalDIB);
+    if(psurfSrc) SURFACE_ShareUnlockSurface(psurfSrc);
+    if(psurfDst) SURFACE_ShareUnlockSurface(psurfDst);
     GreDeleteObject(SourceBitmap);
 
     return result;
