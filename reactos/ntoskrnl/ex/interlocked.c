@@ -210,6 +210,10 @@ ExInterlockedPopEntryList(
 
     /* Pop the first entry from the list */
     ListEntry = PopEntryList(ListHead);
+#if DBG
+    if (ListEntry)
+        ListEntry->Next = (PSINGLE_LIST_ENTRY)0xBADDD0FF;
+#endif
 
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
@@ -412,6 +416,10 @@ ExfInterlockedPopEntryList(
 
     /* Pop the first entry from the list */
     ListEntry = PopEntryList(ListHead);
+#if DBG
+    if (ListEntry)
+        ListEntry->Next = (PSINGLE_LIST_ENTRY)0xBADDD0FF;
+#endif
 
     /* Release the spinlock and restore interrupts */
     _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
