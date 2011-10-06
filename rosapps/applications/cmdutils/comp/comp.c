@@ -149,6 +149,7 @@ int _tmain (int argc, TCHAR *argv[])
     if ((fp2 = fopen(File2, "r")) == NULL)
     {
         _tprintf(_T("Can't find/open file: %s\n"), File2);
+        fclose(fp1);
         return EXIT_FAILURE;
     }
 
