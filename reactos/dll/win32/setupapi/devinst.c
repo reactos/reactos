@@ -5471,7 +5471,7 @@ SetupDiInstallDevice(
             NewFileName, MAX_PATH,
             NULL,
             NULL);
-        if (!Result)
+        if (!Result && GetLastError() != ERROR_FILE_EXISTS)
             goto cleanup;
         /* Create a new struct InfFileDetails, and set it to
          * SelectedDriver->InfFileDetails, to release use of
