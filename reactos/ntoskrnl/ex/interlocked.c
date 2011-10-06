@@ -183,6 +183,10 @@ ExInterlockedRemoveHeadList(
     {
         /* Remove the first entry from the list head */
         ListEntry = RemoveHeadList(ListHead);
+#if DBG
+        ListEntry->Flink = (PLIST_ENTRY)0xBADDD0FF;
+        ListEntry->Blink = (PLIST_ENTRY)0xBADDD0FF;
+#endif
     }
 
     /* Release the spinlock and restore interrupts */
@@ -381,6 +385,10 @@ ExfInterlockedRemoveHeadList(
     {
         /* Remove the first entry from the list head */
         ListEntry = RemoveHeadList(ListHead);
+#if DBG
+        ListEntry->Flink = (PLIST_ENTRY)0x0BADD0FF;
+        ListEntry->Blink = (PLIST_ENTRY)0x0BADD0FF;
+#endif
     }
 
     /* Release the spinlock and restore interrupts */
