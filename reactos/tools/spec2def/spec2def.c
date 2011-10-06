@@ -54,6 +54,7 @@ enum
     CC_STDCALL,
     CC_CDECL,
     CC_FASTCALL,
+    CC_THISCALL,
     CC_EXTERN,
     CC_STUB,
 };
@@ -65,7 +66,8 @@ enum
     ARG_STR,
     ARG_WSTR,
     ARG_DBL,
-    ARG_INT64
+    ARG_INT64,
+    ARG_FLOAT
 };
 
 char* astrCallingConventions[] =
@@ -73,6 +75,7 @@ char* astrCallingConventions[] =
     "STDCALL",
     "CDECL",
     "FASTCALL",
+    "THISCALL",
     "EXTERN"
 };
 
@@ -189,6 +192,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_STR:  fprintf(file, "char*"); break;
             case ARG_WSTR: fprintf(file, "wchar_t*"); break;
             case ARG_DBL: case ARG_INT64 :  fprintf(file, "__int64"); break;
+            case ARG_FLOAT: fprintf(file, "float"); break;
         }
         fprintf(file, " a%d", i);
     }
@@ -206,6 +210,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_WSTR: fprintf(file, "'%%ws'"); break;
             case ARG_DBL:  fprintf(file, "%%f"); break;
             case ARG_INT64: fprintf(file, "%%\"PRix64\""); break;
+            case ARG_FLOAT: fprintf(file, "%%f"); break;
         }
     }
     fprintf(file, ")\\n\"");
@@ -221,6 +226,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_WSTR: fprintf(file, "(wchar_t*)a%d", i); break;
             case ARG_DBL:  fprintf(file, "(double)a%d", i); break;
             case ARG_INT64: fprintf(file, "(__int64)a%d", i); break;
+            case ARG_FLOAT: fprintf(file, "(float)a%d", i); break;
         }
     }
     fprintf(file, ");\n");
@@ -452,6 +458,10 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         {
             exp.nCallingConvention = CC_FASTCALL;
         }
+        else if (CompareToken(pc, "thiscall"))
+        {
+            exp.nCallingConvention = CC_THISCALL;
+        }
         else if (CompareToken(pc, "extern"))
         {
             exp.nCallingConvention = CC_EXTERN;
@@ -589,6 +599,11 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                 {
                     exp.nStackBytes += 8;
                     exp.anArgs[exp.nArgCount] = ARG_INT64;
+                }
+                else if (CompareToken(pc, "float"))
+                {
+                    exp.nStackBytes += 4;
+                    exp.anArgs[exp.nArgCount] = ARG_FLOAT;
                 }
                 else
                     fprintf(stderr, "error: line %d, expected type, got: %.10s\n", nLine, pc);
