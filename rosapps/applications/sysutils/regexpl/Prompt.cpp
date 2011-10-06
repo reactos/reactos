@@ -32,7 +32,7 @@
 
 CPrompt::CPrompt(CRegistryTree& rTree, HRESULT& rhr):m_rTree(rTree)
 {
-  m_pszPrompt = new TCHAR[_tcslen(DEFAULT_PROMPT)+1];
+  m_pszPrompt = new (std::nothrow) TCHAR[_tcslen(DEFAULT_PROMPT)+1];
   if (!m_pszPrompt)
   {
     rhr = E_OUTOFMEMORY;
@@ -50,7 +50,7 @@ HRESULT CPrompt::SetPrompt(LPCTSTR pszPrompt)
     return E_UNEXPECTED;
   }
 
-  m_pszPrompt = new TCHAR[_tcslen(pszPrompt)+1];
+  m_pszPrompt = new (std::nothrow) TCHAR[_tcslen(pszPrompt)+1];
   if (!m_pszPrompt)
     return E_OUTOFMEMORY;
 
@@ -62,7 +62,7 @@ HRESULT CPrompt::SetPrompt(LPCTSTR pszPrompt)
 CPrompt::~CPrompt()
 {
   if (m_pszPrompt)
-    delete m_pszPrompt;
+    delete[] m_pszPrompt;
 }
 
 void CPrompt::ShowPrompt(CConsole &rConsole)

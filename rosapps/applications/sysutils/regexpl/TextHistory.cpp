@@ -39,7 +39,7 @@ CTextHistory::CTextHistory()
 
 CTextHistory::~CTextHistory()
 {
-	if (m_pHistoryBuffer) delete m_pHistoryBuffer;
+	if (m_pHistoryBuffer) delete[] m_pHistoryBuffer;
 }
 
 BOOL CTextHistory::Init(DWORD dwMaxHistoryLineSize, DWORD dwMaxHistoryLines)
@@ -49,13 +49,13 @@ BOOL CTextHistory::Init(DWORD dwMaxHistoryLineSize, DWORD dwMaxHistoryLines)
 		ASSERT(FALSE);
 		return FALSE;
 	}
-	if (m_pHistoryBuffer) delete m_pHistoryBuffer;
+	if (m_pHistoryBuffer) delete[] m_pHistoryBuffer;
 	m_dwFirstHistoryIndex = 0;
 	m_dwLastHistoryIndex = 0;
 	m_dwHisoryFull = 0;
 	m_dwMaxHistoryLines = dwMaxHistoryLines;
 	m_dwMaxHistoryLineSize = dwMaxHistoryLineSize;
-	m_pHistoryBuffer = new TCHAR [m_dwMaxHistoryLines*dwMaxHistoryLineSize];
+	m_pHistoryBuffer = new (std::nothrow) TCHAR [m_dwMaxHistoryLines*dwMaxHistoryLineSize];
 	if (!m_pHistoryBuffer) return FALSE;
 	return TRUE;
 }

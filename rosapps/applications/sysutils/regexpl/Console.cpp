@@ -71,11 +71,11 @@ CConsole::CConsole()
 CConsole::~CConsole()
 {
 	if (m_pchBuffer)
-		delete m_pchBuffer;
+		delete[] m_pchBuffer;
 	if (m_pchBuffer1)
-		delete m_pchBuffer1;
+		delete[] m_pchBuffer1;
 	if (m_pchBuffer2)
-		delete m_pchBuffer2;
+		delete[] m_pchBuffer2;
 
 	if (m_blnOldInputModeSaved)
 		SetConsoleMode(m_hStdIn,m_dwOldInputMode);
@@ -946,15 +946,15 @@ TCHAR * CConsole::Init(DWORD dwBufferSize, DWORD dwMaxHistoryLines)
 	if (m_pchBuffer2) delete m_pchBuffer2;
 	m_pchBuffer2 = NULL;
 
-	m_pchBuffer = new TCHAR [dwBufferSize];
+	m_pchBuffer = new (std::nothrow) TCHAR [dwBufferSize];
 	if (!m_pchBuffer) goto Abort;
 	m_pchBuffer[dwBufferSize-1] = 0;
 
-	m_pchBuffer1 = new TCHAR [dwBufferSize];
+	m_pchBuffer1 = new (std::nothrow) TCHAR [dwBufferSize];
 	if (!m_pchBuffer1) goto Abort;
 	m_pchBuffer1[dwBufferSize-1] = 0;
 
-	m_pchBuffer2 = new TCHAR [dwBufferSize];
+	m_pchBuffer2 = new (std::nothrow) TCHAR [dwBufferSize];
 	if (!m_pchBuffer2) goto Abort;
 	m_pchBuffer2[dwBufferSize-1] = 0;
 
@@ -972,13 +972,13 @@ Abort:
 	if (m_hStdOut != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(m_hStdOut));
 	m_hStdOut = INVALID_HANDLE_VALUE;
 
-	if (m_pchBuffer) delete m_pchBuffer;
+	if (m_pchBuffer) delete[] m_pchBuffer;
 	m_pchBuffer = NULL;
 
-	if (m_pchBuffer1) delete m_pchBuffer1;
+	if (m_pchBuffer1) delete[] m_pchBuffer1;
 	m_pchBuffer1 = NULL;
 
-	if (m_pchBuffer2) delete m_pchBuffer2;
+	if (m_pchBuffer2) delete[] m_pchBuffer2;
 	m_pchBuffer2 = NULL;
 
 	m_dwBufferSize = 0;

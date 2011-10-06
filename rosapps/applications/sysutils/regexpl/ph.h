@@ -27,7 +27,7 @@
 #include <winuser.h>
 #include <winreg.h>
 
-#include <assert.h>
+#include <cassert>
 #define ASSERT	assert
 #ifdef _DEBUG
 #define VERIFY ASSERT
@@ -36,11 +36,12 @@
 #endif
 
 #include <conio.h>
-#include <limits.h>
+#include <climits>
 #include <tchar.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <ctype.h>
+#include <new>
 
 // INHERITED_ACE is from windows 2000
 #ifndef INHERITED_ACE

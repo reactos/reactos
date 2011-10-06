@@ -220,7 +220,7 @@ CheckSACLArgument:
     goto Error;
   }
 
-  pSecurityDescriptor = (PISECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
+  pSecurityDescriptor = (PISECURITY_DESCRIPTOR) new (std::nothrow) unsigned char [dwSecurityDescriptorLength];
   if (!pSecurityDescriptor)
   {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
@@ -292,7 +292,7 @@ CheckSACLArgument:
     BOOL blnRet = GetTextualSid(pSID,NULL,&dwSIDStringSize);
     ASSERT(!blnRet);
     ASSERT(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-    TCHAR *pszSID = new TCHAR[dwSIDStringSize];
+    TCHAR *pszSID = new (std::nothrow) TCHAR[dwSIDStringSize];
 
     if (!pszSID)
     {
@@ -315,24 +315,25 @@ CheckSACLArgument:
       rConsole.Write(pszSID);
       rConsole.Write(_T("\n"));
     }
-    delete pszSID;
+    delete[] pszSID;
 
     TCHAR *pszName, *pszDomainName;
     DWORD dwNameBufferLength, dwDomainNameBufferLength;
     dwNameBufferLength = 1024;
     dwDomainNameBufferLength = 1024;
 
-    pszName = new TCHAR [dwNameBufferLength];
+    pszName = new (std::nothrow) TCHAR [dwNameBufferLength];
     if (!pszName)
     {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
       goto Error;
     }
 
-    pszDomainName = new TCHAR [dwDomainNameBufferLength];
+    pszDomainName = new (std::nothrow) TCHAR [dwDomainNameBufferLength];
     if (!pszDomainName)
     {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
+      delete[] pszName;
       goto Error;
     }
 
@@ -420,6 +421,9 @@ CheckSACLArgument:
     {
       rConsole.Write(_T("\t\tKEY_QUERY_VALUE\n"));
     }
+
+    delete[] pszName;
+    delete[] pszDomainName;
   }	// for
 
 AbortDumpSACL:

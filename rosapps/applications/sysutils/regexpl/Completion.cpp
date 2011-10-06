@@ -49,9 +49,9 @@ public:
     size_t s = _tcslen(pszText);
 
     if (m_pszText)
-      delete m_pszText;
+      delete[] m_pszText;
 
-    m_pszText = new TCHAR [s+(b?3:1)]; // if we have spaces in unique part, we need 2 addtional chars for "
+    m_pszText = new (std::nothrow) TCHAR [s+(b?3:1)]; // if we have spaces in unique part, we need 2 addtional chars for "
 
     if (!m_pszText)
       return FALSE;
@@ -75,7 +75,7 @@ public:
   ~CCompletionMatch()
   {
     if (m_pszText)
-      delete m_pszText;
+      delete[] m_pszText;
   }
 
 private:
@@ -129,20 +129,20 @@ CCompletionList::~CCompletionList()
   DeleteList();
 
   if (m_pszContext)
-    delete m_pszContext;
+    delete[] m_pszContext;
 
   if (m_pszBegin)
-    delete m_pszBegin;
+    delete[] m_pszBegin;
 
   if (m_pszCurrentKey)
-    delete m_pszCurrentKey;
+    delete[] m_pszCurrentKey;
 }
 
 void CCompletionList::Invalidate()
 {
   if (m_pszCurrentKey)
   {
-    delete m_pszCurrentKey;
+    delete[] m_pszCurrentKey;
     m_pszCurrentKey = NULL;
   }
 }
@@ -161,38 +161,48 @@ BOOL CCompletionList::IsNewCompletion(const TCHAR *pszContext, const TCHAR *pszB
     rblnNew = TRUE;
     if (m_pszContext)
     {
-      delete m_pszContext;
+      delete[] m_pszContext;
       m_pszContext = NULL;
     }
 
     if (m_pszBegin)
     {
-      delete m_pszBegin;
+      delete[] m_pszBegin;
       m_pszBegin = NULL;
     }
 
     if (m_pszCurrentKey)
     {
-      delete m_pszCurrentKey;
+      delete[] m_pszCurrentKey;
       m_pszCurrentKey = NULL;
     }
 
     size_t s = _tcslen(pszContext);
-    m_pszContext = new TCHAR[s+1];
+    m_pszContext = new (std::nothrow) TCHAR[s+1];
     if (!m_pszContext)
       return FALSE;
     _tcscpy(m_pszContext,pszContext);
 
     s = _tcslen(pszBegin);
-    m_pszBegin = new TCHAR[s+1];
+    m_pszBegin = new (std::nothrow) TCHAR[s+1];
     if (!m_pszBegin)
+    {
+      delete[] m_pszContext;
+      m_pszContext = NULL;
       return FALSE;
+    }
     _tcscpy(m_pszBegin,pszBegin);
 
     s = _tcslen(pszCurrentKey);
-    m_pszCurrentKey = new TCHAR[s+1];
+    m_pszCurrentKey = new (std::nothrow) TCHAR[s+1];
     if (!m_pszCurrentKey)
+    {
+      delete[] m_pszContext;
+      delete[] m_pszBegin;
+      m_pszContext = NULL;
+      m_pszBegin = NULL;
       return FALSE;
+    }
     _tcscpy(m_pszCurrentKey,pszCurrentKey);
 
     return TRUE;
@@ -206,7 +216,7 @@ BOOL CCompletionList::Add(const TCHAR *pszText, BOOL blnIsKey)
 {
   if (_tcsnicmp(pszText,m_pszBegin,_tcslen(m_pszBegin)) != 0)
     return TRUE;
-  CCompletionMatch *pNode = new CCompletionMatch;
+  CCompletionMatch *pNode = new (std::nothrow) CCompletionMatch;
   if (!pNode)
     return FALSE;
   if (!pNode->Init(pszText))
@@ -363,7 +373,7 @@ BOOL FillCompletion(const TCHAR *pszKey)
     if (nError != ERROR_SUCCESS)
       return FALSE;
 
-    pszSubkeyName = new TCHAR[nKeyNameSize+dwMaxSubkeyNameLength+1];
+    pszSubkeyName = new (std::nothrow) TCHAR[nKeyNameSize+dwMaxSubkeyNameLength+1];
     if (!pszSubkeyName)
       goto Abort;
 
@@ -393,7 +403,7 @@ BOOL FillCompletion(const TCHAR *pszKey)
       goto Abort;
     }
 
-    pszValueName = new TCHAR[nKeyNameSize+dwMaxValueNameSize+1];
+    pszValueName = new (std::nothrow) TCHAR[nKeyNameSize+dwMaxValueNameSize+1];
     if (!pszValueName)
       goto Abort;
 
@@ -415,15 +425,15 @@ BOOL FillCompletion(const TCHAR *pszKey)
   }
 
   if (pszValueName)
-    delete pszValueName;
+    delete[] pszValueName;
   if (pszSubkeyName)
-    delete pszSubkeyName;
+    delete[] pszSubkeyName;
   return TRUE;
 Abort:
   if (pszValueName)
-    delete pszValueName;
+    delete[] pszValueName;
   if (pszSubkeyName)
-    delete pszSubkeyName;
+    delete[] pszSubkeyName;
   return FALSE;
 }
 

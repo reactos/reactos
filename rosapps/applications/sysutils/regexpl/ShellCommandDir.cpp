@@ -200,7 +200,7 @@ CheckDirArgument:
     if (nError != ERROR_SUCCESS)
       throw nError;
 
-    TCHAR *pszSubkeyNameBuffer = new TCHAR[dwMaxSubkeyNameLength];
+    TCHAR *pszSubkeyNameBuffer = new (std::nothrow) TCHAR[dwMaxSubkeyNameLength];
     if (!pszSubkeyNameBuffer)
       throw ERROR_OUTOFMEMORY;
 
@@ -216,7 +216,7 @@ CheckDirArgument:
       }
     }
 
-    delete pszSubkeyNameBuffer;
+    delete[] pszSubkeyNameBuffer;
 
     if (nError != ERROR_NO_MORE_ITEMS)
       throw nError;
@@ -226,7 +226,7 @@ CheckDirArgument:
     if (nError != ERROR_SUCCESS)
       throw nError;
 
-    TCHAR *pchValueNameBuffer = new TCHAR[dwMaxValueNameBufferSize];
+    TCHAR *pchValueNameBuffer = new (std::nothrow) TCHAR[dwMaxValueNameBufferSize];
     if (!pchValueNameBuffer)
       throw ERROR_OUTOFMEMORY;
 
@@ -259,7 +259,7 @@ CheckDirArgument:
       }
     }
 
-    delete pchValueNameBuffer;
+    delete[] pchValueNameBuffer;
 
     if (nError != ERROR_NO_MORE_ITEMS)
       throw nError;

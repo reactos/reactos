@@ -226,7 +226,7 @@ CheckDACLArgument:
                 rConsole.Write(pchSID);
                 rConsole.Write(_T("\n"));
               }
-              delete pchSID;
+              delete[] pchSID;
               DWORD dwNameBufferLength, dwDomainNameBufferLength;
               dwNameBufferLength = 1024;
               dwDomainNameBufferLength = 1024;

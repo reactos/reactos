@@ -70,7 +70,7 @@ HRESULT CRegistryKey::InitRoot(const TCHAR *pszMachineName)
   { // copy machine name
     size_t size = _tcslen(pszMachineName);
 
-    m_pszMachineName = new TCHAR [size+2];
+    m_pszMachineName = new (std::nothrow) TCHAR [size+2];
     if (!m_pszMachineName)
       return E_OUTOFMEMORY;
     _tcscpy(m_pszMachineName,pszMachineName);
@@ -103,7 +103,7 @@ HRESULT CRegistryKey::Init(HKEY hKey, const TCHAR *pszPath, const TCHAR *pszKeyN
   if (pszPath)
     size += _tcslen(pszPath);
 
-  m_pszKeyName = new TCHAR [size+2];
+  m_pszKeyName = new (std::nothrow) TCHAR [size+2];
   if (!m_pszKeyName)
     return E_OUTOFMEMORY;
   _stprintf(m_pszKeyName,_T("%s%s\\"),pszPath?pszPath:_T(""),pszKeyName);
@@ -273,7 +273,7 @@ LONG CRegistryKey::OpenSubkey(REGSAM samDesired, const TCHAR *pszSubkeyName, CRe
   {
     const TCHAR *pszKeyName = GetKeyName();
     size_t size = _tcslen(pszKeyName) + _tcslen(pszSubkeyName) + 1;
-    TCHAR *pszSubkeyFullName = new TCHAR [size];
+    TCHAR *pszSubkeyFullName = new (std::nothrow) TCHAR [size];
     if (!pszSubkeyFullName)
     {
       nError = RegCloseKey(hKey);
@@ -283,7 +283,7 @@ LONG CRegistryKey::OpenSubkey(REGSAM samDesired, const TCHAR *pszSubkeyName, CRe
     _tcscpy(pszSubkeyFullName,pszKeyName);
     _tcscat(pszSubkeyFullName,pszSubkeyName);
     HRESULT hr = rKey.Init(hKey,GetKeyName(),pszSubkeyName,samDesired);
-    delete pszSubkeyName;
+    delete[] pszSubkeyName;
     if (FAILED(hr))
     {
       nError = RegCloseKey(hKey);

@@ -147,7 +147,7 @@ CheckValueArgument:
       return 0;
     }
 
-    TCHAR *pszValueName = new TCHAR[dwMaxValueNameLength];
+    TCHAR *pszValueName = new (std::nothrow) TCHAR[dwMaxValueNameLength];
     if (!pszValueName)
     {
       rConsole.Write("Out of memory.");

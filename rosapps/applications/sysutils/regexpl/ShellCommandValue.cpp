@@ -415,7 +415,7 @@ CheckValueArgument:
 
 SkipValueCommand:
 	if (pDataBuffer)
-		delete pDataBuffer;
+		delete[] pDataBuffer;
 	return 0;
 ValueCommandNAonRoot:
 	rConsole.Write(VALUE_CMD COMMAND_NA_ON_ROOT);

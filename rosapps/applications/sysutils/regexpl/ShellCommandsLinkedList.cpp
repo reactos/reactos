@@ -43,7 +43,7 @@ CShellCommandsLinkedList::~CShellCommandsLinkedList()
 void CShellCommandsLinkedList::AddCommand(CShellCommand *pCommand)
 {
 	// Create new node
-	SNode *pNewNode = new SNode;
+	SNode *pNewNode = new (std::nothrow) SNode;
 	if (pNewNode == NULL)
 		return;
 

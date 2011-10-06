@@ -64,7 +64,7 @@ CRegistryTree::CRegistryTree(const CRegistryTree& Tree)
 CRegistryTree::~CRegistryTree()
 {
 	if (m_pszMachineName)
-		delete m_pszMachineName;
+		delete[] m_pszMachineName;
 
 	CNode *pNode;
 	while(m_pCurrentKey->m_pUp)
@@ -98,7 +98,7 @@ BOOL CRegistryTree::ChangeCurrentKey(const TCHAR *pszRelativePath)
 	const TCHAR *pszSeps = _T("\\");
 
   // Make buffer and copy relative path into it.
-  TCHAR *pszBuffer = new TCHAR[_tcslen(pszRelativePath)+1];
+  TCHAR *pszBuffer = new (std::nothrow) TCHAR[_tcslen(pszRelativePath)+1];
   if (!pszBuffer)
   {
     SetError(ERROR_OUTOFMEMORY);
@@ -145,7 +145,7 @@ BOOL CRegistryTree::ChangeCurrentKey(const TCHAR *pszRelativePath)
 	return TRUE;
 
 Abort:
-  delete pszBuffer;
+  delete[] pszBuffer;
   return FALSE;
 }
 
@@ -179,7 +179,7 @@ BOOL CRegistryTree::SetMachineName(LPCTSTR pszMachineName)
   {
     // Delete previous machine name buffer if allocated.
     if (m_pszMachineName)
-      delete m_pszMachineName;
+      delete[] m_pszMachineName;
 
     m_pszMachineName = NULL;
     m_Root.m_Key.InitRoot();
@@ -192,9 +192,9 @@ BOOL CRegistryTree::SetMachineName(LPCTSTR pszMachineName)
 
   ASSERT(*pszMachineName);      // No machine name.
 
-  TCHAR *pszNewMachineName = new TCHAR[_tcslen(pszMachineName)+3]; // two leading backslashes + terminating null
+  TCHAR *pszNewMachineName = new (std::nothrow) TCHAR[_tcslen(pszMachineName)+3]; // two leading backslashes + terminating null
 
-  if (!pszMachineName)
+  if (!pszNewMachineName)
   {
     SetError(ERROR_OUTOFMEMORY);
     return FALSE;
@@ -202,7 +202,7 @@ BOOL CRegistryTree::SetMachineName(LPCTSTR pszMachineName)
 
   // Delete previous machine name buffer if allocated.
   if (m_pszMachineName)
-    delete m_pszMachineName;
+    delete[] m_pszMachineName;
 
   m_pszMachineName = pszNewMachineName;
 
@@ -283,7 +283,7 @@ BOOL CRegistryTree::DeleteSubkeys(CRegistryKey& rKey, const TCHAR *pszKeyPattern
     return FALSE;
   }
 
-  TCHAR *pszSubkeyName = new TCHAR [dwMaxSubkeyNameLength];
+  TCHAR *pszSubkeyName = new (std::nothrow) TCHAR [dwMaxSubkeyNameLength];
   rKey.InitSubkeyEnumeration(pszSubkeyName, dwMaxSubkeyNameLength);
   BOOL blnKeyDeleted = FALSE;
   while ((nError = rKey.GetNextSubkeyName()) == ERROR_SUCCESS)
@@ -393,7 +393,7 @@ void CRegistryTree::SetErrorCommandNAOnRoot(const TCHAR *pszCommand)
 BOOL CRegistryTree::InternalChangeCurrentKey(const TCHAR *pszSubkeyName, REGSAM DesiredAccess)
 {
   size_t size = _tcslen(pszSubkeyName);
-  TCHAR *pszSubkeyNameBuffer = new TCHAR[size+3];
+  TCHAR *pszSubkeyNameBuffer = new (std::nothrow) TCHAR[size+3];
   if (!pszSubkeyNameBuffer)
   {
     SetError(_T("Cannot open key : %s%s\nError %d (%s)\n"),
@@ -409,7 +409,7 @@ BOOL CRegistryTree::InternalChangeCurrentKey(const TCHAR *pszSubkeyName, REGSAM 
 
   if (_tcscmp(pszSubkeyName,_T(".")) == 0)
   {
-    delete pszSubkeyNameBuffer;
+    delete[] pszSubkeyNameBuffer;
     return TRUE;
   }
 
@@ -421,7 +421,7 @@ BOOL CRegistryTree::InternalChangeCurrentKey(const TCHAR *pszSubkeyName, REGSAM 
       // We are on root
       ASSERT(m_pCurrentKey->m_pUp == NULL);
       SetError(_T("Cannot open key. The root is not child.\n"));
-      delete pszSubkeyNameBuffer;
+      delete[] pszSubkeyNameBuffer;
       return FALSE;
     }
 
@@ -429,13 +429,13 @@ BOOL CRegistryTree::InternalChangeCurrentKey(const TCHAR *pszSubkeyName, REGSAM 
     if (!m_pCurrentKey->m_pUp)
     {
       SetInternalError();
-      delete pszSubkeyNameBuffer;
+      delete[] pszSubkeyNameBuffer;
       return FALSE;
     }
     CNode *pNode = m_pCurrentKey;
     m_pCurrentKey = m_pCurrentKey->m_pUp;
     delete pNode;
-    delete pszSubkeyNameBuffer;
+    delete[] pszSubkeyNameBuffer;
     return TRUE;
   }
 
@@ -444,20 +444,20 @@ BOOL CRegistryTree::InternalChangeCurrentKey(const TCHAR *pszSubkeyName, REGSAM 
   {
     SetError(_T("Cannot open key : %s%s\nError %d (%s)\n"),
              GetCurrentPath(),pszSubkeyName,ERROR_OUTOFMEMORY,GetErrorDescription(ERROR_OUTOFMEMORY));
-    delete pszSubkeyNameBuffer;
+    delete[] pszSubkeyNameBuffer;
     return FALSE;
   }
 
   if (!InternalGetSubkey(pszSubkeyName,DesiredAccess,pNewKey->m_Key))
   {
     delete pNewKey;
-    delete pszSubkeyNameBuffer;
+    delete[] pszSubkeyNameBuffer;
     return FALSE;
   }
   pNewKey->m_pUp = m_pCurrentKey;
   m_pCurrentKey = pNewKey;
 
-  delete pszSubkeyNameBuffer;
+  delete[] pszSubkeyNameBuffer;
   return TRUE;
 }
 
@@ -483,7 +483,7 @@ BOOL CRegistryTree::InternalGetSubkey(const TCHAR *pszSubkeyName, REGSAM Desired
   if (nError != ERROR_SUCCESS)
     goto SkipCaseUpdate;
 
-  pszSubkeyNameCaseUpdated = new TCHAR [dwMaxSubkeyNameLength];
+  pszSubkeyNameCaseUpdated = new (std::nothrow) TCHAR [dwMaxSubkeyNameLength];
   m_pCurrentKey->m_Key.InitSubkeyEnumeration(pszSubkeyNameCaseUpdated, dwMaxSubkeyNameLength);
   while ((nError = m_pCurrentKey->m_Key.GetNextSubkeyName()) == ERROR_SUCCESS)
     if (_tcsicmp(pszSubkeyNameCaseUpdated, pszSubkeyName) == 0)
@@ -491,7 +491,7 @@ BOOL CRegistryTree::InternalGetSubkey(const TCHAR *pszSubkeyName, REGSAM Desired
 
   if (nError != ERROR_SUCCESS)
   {
-    delete pszSubkeyNameCaseUpdated;
+    delete[] pszSubkeyNameCaseUpdated;
     pszSubkeyNameCaseUpdated = NULL;
   }
 
@@ -513,7 +513,7 @@ SkipCaseUpdate:
       goto Abort;
     }
 
-    delete pszSubkeyNameCaseUpdated;
+    delete[] pszSubkeyNameCaseUpdated;
   }
   else
   {
@@ -535,7 +535,7 @@ SkipCaseUpdate:
   return TRUE;
 Abort:
   if (pszSubkeyNameCaseUpdated)
-    delete pszSubkeyNameCaseUpdated;
+    delete[] pszSubkeyNameCaseUpdated;
 
   if (hNewKey)
   {
@@ -611,7 +611,7 @@ BOOL CRegistryTree::GetKey(const TCHAR *pszRelativePath, REGSAM DesiredAccess, C
     return FALSE;
   }
 
-  TCHAR *pszShortKeyName = new TCHAR [size+1];
+  TCHAR *pszShortKeyName = new (std::nothrow) TCHAR [size+1];
   if (!pszShortKeyName)
   {
     SetError(ERROR_OUTOFMEMORY);
@@ -624,6 +624,7 @@ BOOL CRegistryTree::GetKey(const TCHAR *pszRelativePath, REGSAM DesiredAccess, C
   // change to parent key
 	if (!Tree.InternalChangeCurrentKey(_T(".."),READ_CONTROL))
   {
+    delete[] pszShortKeyName;
     ASSERT(FALSE);
     SetInternalError();
     return FALSE;
@@ -632,10 +633,12 @@ BOOL CRegistryTree::GetKey(const TCHAR *pszRelativePath, REGSAM DesiredAccess, C
   // change back to target key
 	if (!Tree.InternalGetSubkey(pszShortKeyName,DesiredAccess,rKey))
   {
+    delete[] pszShortKeyName;
     SetError(Tree.GetLastErrorDescription());
     return FALSE;
   }
 
+  delete[] pszShortKeyName;
   return TRUE;
 }
 

@@ -138,7 +138,7 @@ int main ()
 
   CArgumentParser Parser;
 
-  pSettings = new CSettings();
+  pSettings = new (std::nothrow) CSettings();
   if (!pSettings)
 	{
 		_ftprintf(stderr,_T("Cannot initialize settings. Out of memory.\n"));
@@ -152,7 +152,7 @@ int main ()
 		goto Abort;
 	}
 
-  pPrompt = new CPrompt(Tree,hr);
+  pPrompt = new (std::nothrow) CPrompt(Tree,hr);
   if (!pPrompt)
 	{
 		_ftprintf(stderr,_T("Cannot initialize prompt. Out of memory.\n"));

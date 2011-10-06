@@ -47,7 +47,7 @@ HRESULT CSettings::Clean()
 {
   if (m_pszPrompt)
   {
-    delete m_pszPrompt;
+    delete[] m_pszPrompt;
     m_pszPrompt = NULL;
   }
 
@@ -75,7 +75,7 @@ HRESULT CSettings::Load(LPCTSTR pszLoadKey)
   nError = RegQueryValueEx(hKey,PROMPT_VALUE_NAME,NULL,&dwType,NULL,&dwSize);
   if (nError == ERROR_SUCCESS && dwType == REG_SZ)
   {
-    m_pszPrompt = (TCHAR *) new BYTE[dwSize];
+    m_pszPrompt = (TCHAR *) new (std::nothrow) BYTE[dwSize];
     if (!m_pszPrompt)
     {
       hr = E_OUTOFMEMORY;

@@ -395,7 +395,7 @@ CheckValueArgument:
 
 SkipCommand:
 	if (pDataBuffer)
-		delete pDataBuffer;
+		delete[] pDataBuffer;
 	return 0;
 
 CommandNAonRoot:
