@@ -1426,7 +1426,6 @@ DIB_CreateDIBSection(
     if (bi->biCompression == BI_RLE4 || bi->biCompression == BI_RLE8)
     {
         DPRINT1("no compressed format allowed\n");
-        __debugbreak();
         return (HBITMAP)NULL;
     }
 
