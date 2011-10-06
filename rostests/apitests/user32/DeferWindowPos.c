@@ -278,6 +278,19 @@ MSG_ENTRY move1_2_chain[]={
     {2,WM_MOVE},
     {0,0}};
 
+
+MSG_ENTRY ZOrder1_chain[]={
+      {1,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE},
+      {1,WM_WINDOWPOSCHANGED,  SENT, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE | SWP_NOCLIENTMOVE|SWP_NOCLIENTSIZE},
+      {0,0}};
+
+MSG_ENTRY ZOrder1and2_chain[]={
+      {1,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE},
+      {2,WM_WINDOWPOSCHANGING, SENT, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE},
+      {1,WM_WINDOWPOSCHANGED,  SENT, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE | SWP_NOCLIENTMOVE|SWP_NOCLIENTSIZE},
+      {2,WM_WINDOWPOSCHANGED,  SENT, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE | SWP_NOCLIENTMOVE|SWP_NOCLIENTSIZE},
+      {0,0}};
+
 static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
 {
     HDWP hdwp;
@@ -291,8 +304,6 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     /* move hWnd1 */
     hdwp = BeginDeferWindowPos(1);
     ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
     hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 20, 30, 100, 100, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
     FlushMessages();
@@ -305,8 +316,6 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     /* resize hWnd1 */
     hdwp = BeginDeferWindowPos(1);
     ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
     hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 20, 30, 110, 110, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
     FlushMessages();
@@ -316,16 +325,11 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     FlushMessages();
     COMPARE_CACHE(resize1_chain);
 
-
     /* move both windows */
     hdwp = BeginDeferWindowPos(1);
     ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
     hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 30, 40, 110, 110, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
     hdwp = DeferWindowPos(hdwp, hWnd2, HWND_TOP, 30, 40, 100, 100, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
     FlushMessages();
@@ -334,6 +338,33 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     ok(ret != 0, "EndDeferWindowPos failed\n");
     FlushMessages();
     COMPARE_CACHE(move1_2_chain);
+
+    /* change the z-order of the first window */
+    hdwp = BeginDeferWindowPos(1);
+    ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
+    hdwp = DeferWindowPos(hdwp, hWnd1, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    ret = EndDeferWindowPos(hdwp);
+    ok(ret != 0, "EndDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(ZOrder1_chain);
+
+    /* change the z-order of both windows */
+    hdwp = BeginDeferWindowPos(2);
+    ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
+    hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    hdwp = DeferWindowPos(hdwp, hWnd2, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE);
+    ok(hdwp != NULL, "DeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    ret = EndDeferWindowPos(hdwp);
+    ok(ret != 0, "EndDeferWindowPos failed\n");
+    FlushMessages();
+    COMPARE_CACHE(ZOrder1and2_chain);
+
 }
 
 #define OwnerZOrderAParams SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOSIZE
