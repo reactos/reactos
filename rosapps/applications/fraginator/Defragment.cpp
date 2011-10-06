@@ -328,7 +328,7 @@ void Defragment::Start (void)
             continue;
 
         // Can't defrag 0 byte files :)
-        if (Info.Fragments.size() == 0)
+        if (Info.Fragments.empty())
             continue;
 
         // If doing fast defrag, skip non-fragmented files
