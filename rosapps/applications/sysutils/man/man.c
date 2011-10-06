@@ -62,8 +62,8 @@ OpenF(char* name)
     else
      retval=-1;
 
- strcpy(manpath_local, manpath);
- return retval;
+    free(manpath_local);
+    return retval;
 }
 
 int
@@ -142,14 +142,12 @@ void th_outp(char *cur_string, char *THtag)
 
 void text_outp(char *cur_string)
 {
-    char TagFlag=0;
     int symbol=0;
 
     if(cur_string[0]=='.')
         while(cur_string[symbol]!=' ')
             symbol++;
 
-    if(symbol) TagFlag=1;
 
     for(;cur_string[symbol]!='\n'; symbol++)
         putchar(cur_string[symbol]);
@@ -212,6 +210,9 @@ AnalyzeFile()
      else text_outp(cur_string); // print plane text
      th_outp(cur_string, THtag);
 /* END of TAGs processing */
+     free(cur_string);
+     free(THtag);
+
      return 0;
 }
 
