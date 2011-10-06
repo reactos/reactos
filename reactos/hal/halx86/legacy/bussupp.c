@@ -736,9 +736,9 @@ HalpDebugPciDumpBus(IN ULONG i,
         VendorName += 7;
         p = strchr(VendorName, '\r');
         Length = p - VendorName;
-        if (Length > sizeof(bVendorName)) Length = sizeof(bVendorName);
+        if (Length >= sizeof(bVendorName)) Length = sizeof(bVendorName) - 1;
         strncpy(bVendorName, VendorName, Length);
-        bVendorName[Length ] = '\0';
+        bVendorName[Length] = '\0';
         
         /* Isolate the product name */
         sprintf(LookupString, "\t%04x", PciData->DeviceID);
@@ -749,7 +749,7 @@ HalpDebugPciDumpBus(IN ULONG i,
             ProductName += 7;
             p = strchr(ProductName, '\r');
             Length = p - ProductName;
-            if (Length > sizeof(bProductName)) Length = sizeof(bProductName);
+            if (Length >= sizeof(bProductName)) Length = sizeof(bProductName) - 1;
             strncpy(bProductName, ProductName, Length);
             bProductName[Length] = '\0';
             
@@ -765,7 +765,7 @@ HalpDebugPciDumpBus(IN ULONG i,
                 SubVendorName += 13;
                 p = strchr(SubVendorName, '\r');
                 Length = p - SubVendorName;
-                if (Length > sizeof(bSubVendorName)) Length = sizeof(bSubVendorName);
+                if (Length >= sizeof(bSubVendorName)) Length = sizeof(bSubVendorName) - 1;
                 strncpy(bSubVendorName, SubVendorName, Length);
                 bSubVendorName[Length] = '\0';
             }
@@ -801,7 +801,7 @@ HalpDebugPciDumpBus(IN ULONG i,
         PciData->u.type0.InterruptLine != 0 &&
         PciData->u.type0.InterruptLine != 0xFF) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
     DbgPrint("\n");
-    
+
     /* Scan addresses */
     Size = 0;
     for (b = 0; b < PCI_TYPE0_ADDRESSES; b++)
@@ -926,7 +926,7 @@ HalpInitializePciBus(VOID)
     {
         /* Get the bus handler */
         BusHandler = HalHandlerForBus(PCIBus, i);
-        
+
         /* Loop every device */
         for (j = 0; j < 32; j++)
         {
