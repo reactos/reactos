@@ -4014,6 +4014,7 @@ main (
 	       "%s: can not allocate memory.\n",
 	       argv[0]
 	);
+      fclose(my_fp);
       exit (0);
     }
   /*
@@ -4022,6 +4023,7 @@ main (
   printf ("\n\nDump of file: %s\n\n", argv[1]);
 
   n = fread (lpFile, fsize, 1, my_fp);
+  fclose(my_fp);
 
   if (n == -1)
     {
@@ -4030,6 +4032,7 @@ main (
 	       argv[0],
 	       argv[1]
 	);
+      free(lpFile);
       exit (0);
     }
 
@@ -4045,6 +4048,7 @@ main (
 		   "%s: This file is not in PE format; it looks like in DOS format.\n",
 		   argv[0]
 	    );
+      free(lpFile);
 	  exit (0);
 	}
     }
@@ -4055,6 +4059,7 @@ main (
 	       argv[0],
 	       dosHdr.e_magic
 	);
+      free(lpFile);
       exit (0);
     }
 
@@ -4067,6 +4072,7 @@ main (
 	       argv[0],
 	       fileType
 	);
+      free(lpFile);
       exit (0);
     }
 
@@ -4087,7 +4093,10 @@ main (
   entryPoint = poh->AddressOfEntryPoint;
 
   if (psh == NULL)
+  {
+    free(lpFile);
     return 0;
+  }
 
   /* store section headers */
 
