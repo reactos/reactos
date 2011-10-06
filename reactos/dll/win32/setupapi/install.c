@@ -2408,7 +2408,7 @@ BOOL WINAPI SetupCopyOEMInfW(
                     {
                         if (GetFileSizeEx(hDestFile, &DestFileSize)
                          && DestFileSize.QuadPart == SourceFileSize.QuadPart
-                         && compare_files(hSourceFile, hDestFile))
+                         && !compare_files(hSourceFile, hDestFile))
                         {
                             TRACE("%s already exists as %s\n",
                                 debugstr_w(SourceInfFileName), debugstr_w(pFileName));
