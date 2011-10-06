@@ -979,9 +979,12 @@ NtGdiStretchDIBitsInternal(
     SIZEL sizel;
     RECTL rcSrc, rcDst;
     PDC pdc;
-    HBITMAP hbmTmp;
-    PSURFACE psurfTmp, psurfDst;
+    HBITMAP hbmTmp = 0;
+    PSURFACE psurfTmp = 0, psurfDst = 0;
+    HPALETTE hpalDIB = 0;
+    PPALETTE ppalDIB = 0;
     EXLATEOBJ exlo;
+    PVOID pvBits;
 
     if (!(pdc = DC_LockDc(hdc)))
     {
@@ -1017,37 +1020,28 @@ NtGdiStretchDIBitsInternal(
                                               hcmXform);
     }
 
-    /* Create an intermediate bitmap from the DIB */
-    hbmTmp = NtGdiCreateDIBitmapInternal(hdc,
-                                         cxSrc,
-                                         cySrc,
-                                         CBM_INIT,
-                                         pjInit,
-                                         pbmi,
-                                         dwUsage,
-                                         cjMaxInfo,
-                                         cjMaxBits,
-                                         0,
-                                         hcmXform);
-    if (!hbmTmp)
+    pvBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, 'pmeT');
+    if (!pvBits)
     {
-        DPRINT1("NtGdiCreateDIBitmapInternal failed\n");
         return 0;
     }
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pjInit, cjMaxBits, 1);
+        RtlCopyMemory(pvBits, pjInit, cjMaxBits);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return 0);
+    }
+    _SEH2_END
 
     /* FIXME: locking twice is cheesy, coord tranlation in UM will fix it */
     if (!(pdc = DC_LockDc(hdc)))
     {
         DPRINT1("Could not lock dc\n");
         EngSetLastError(ERROR_INVALID_HANDLE);
-        GreDeleteObject(hbmTmp);
-        return 0;
-    }
-
-    psurfTmp = SURFACE_ShareLockSurface(hbmTmp);
-    if (!psurfTmp)
-    {
-        DPRINT1("Could not lock bitmap :-(\n");
         goto cleanup;
     }
 
@@ -1071,9 +1065,48 @@ NtGdiStretchDIBitsInternal(
     IntLPtoDP(pdc, (POINTL*)&rcDst, 2);
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
 
+    hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
+                               pbmi->bmiHeader.biHeight,
+                               0,
+                               BitmapFormat(pbmi->bmiHeader.biBitCount,
+                                            pbmi->bmiHeader.biCompression),
+                               pbmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                               pbmi->bmiHeader.biSizeImage,
+                               pvBits,
+                               0);
+
+    if (!hbmTmp)
+    {
+        bResult = FALSE;
+        goto cleanup;
+    }
+
+    psurfTmp = SURFACE_ShareLockSurface(hbmTmp);
+    if (!psurfTmp)
+    {
+        bResult = FALSE;
+        goto cleanup;
+    }
+
+    /* Create a palette for the DIB */
+    hpalDIB = BuildDIBPalette(pbmi);
+    if (!hpalDIB)
+    {
+        bResult = FALSE;
+        goto cleanup;
+    }
+
+    /* Lock the DIB palette */
+    ppalDIB = PALETTE_ShareLockPalette(hpalDIB);
+    if (!ppalDIB)
+    {
+        bResult = FALSE;
+        goto cleanup;
+    }
+
     /* Initialize XLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
-                          psurfTmp->ppal,
+                          ppalDIB,
                           psurfDst->ppal,
                           RGB(0xff, 0xff, 0xff),
                           pdc->pdcattr->crBackgroundClr,
@@ -1099,9 +1132,12 @@ NtGdiStretchDIBitsInternal(
     DC_vFinishBlit(pdc, NULL);
     EXLATEOBJ_vCleanup(&exlo);
 cleanup:
+    if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
+    if (hpalDIB) GreDeleteObject(hpalDIB);
     if (psurfTmp) SURFACE_ShareUnlockSurface(psurfTmp);
     if (hbmTmp) GreDeleteObject(hbmTmp);
     if (pdc) DC_UnlockDc(pdc);
+    ExFreePoolWithTag(pvBits, 'pmeT');
 
     return bResult;
 }
@@ -1390,6 +1426,7 @@ DIB_CreateDIBSection(
     if (bi->biCompression == BI_RLE4 || bi->biCompression == BI_RLE8)
     {
         DPRINT1("no compressed format allowed\n");
+        __debugbreak();
         return (HBITMAP)NULL;
     }
 
