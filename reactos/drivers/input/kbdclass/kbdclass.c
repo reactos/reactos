@@ -761,6 +761,7 @@ HandleReadIrp(
 {
 	PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 	NTSTATUS Status;
+	KIRQL OldIrql;
 
 	TRACE_(CLASS_NAME, "HandleReadIrp(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -804,18 +805,20 @@ HandleReadIrp(
 	}
 	else
 	{
-		IoMarkIrpPending(Irp);
-		DeviceExtension->PendingIrp = Irp;
-		(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
-		if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
+		IoAcquireCancelSpinLock(&OldIrql);
+		if (Irp->Cancel)
 		{
 			DeviceExtension->PendingIrp = NULL;
 			Status = STATUS_CANCELLED;
 		}
 		else
 		{
+			IoMarkIrpPending(Irp);
+			DeviceExtension->PendingIrp = Irp;
+			(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
 			Status = STATUS_PENDING;
 		}
+		IoReleaseCancelSpinLock(OldIrql);
 	}
 	return Status;
 }
