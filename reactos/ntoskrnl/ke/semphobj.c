@@ -26,7 +26,7 @@ KeInitializeSemaphore(IN PKSEMAPHORE Semaphore,
     /* Simply Initialize the Header */
     Semaphore->Header.Type = SemaphoreObject;
     Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(ULONG);
-    Semaphore->Header.SignalState = 0;
+    Semaphore->Header.SignalState = Count;
     InitializeListHead(&(Semaphore->Header.WaitListHead));
 
     /* Set the Limit */
