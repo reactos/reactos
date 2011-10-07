@@ -399,8 +399,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         /* Do now some process cleanup that requires a valid win32 thread */
         if(ptiCurrent->ppi->cThreads == 0)
         {
-            UserSetCursor(NULL, TRUE);
-
             /* Check if we have registered the user api hook */
             if(ptiCurrent->ppi == ppiUahServer)
             {

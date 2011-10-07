@@ -2094,9 +2094,19 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    {
        PCURICON_OBJECT pCursor = MessageQueue->CursorObject;
 
-       /* Change to another cursor if we going to dereference current one */
+       /* Change to another cursor if we going to dereference current one
+          Note: we can't use UserSetCursor because it uses current thread
+                message queue instead of queue given for cleanup */
        if (IntGetSysCursorInfo()->CurrentCursorObject == pCursor)
-           UserSetCursor(NULL, TRUE);
+       {
+           HDC hdcScreen;
+
+           /* Get the screen DC */
+           hdcScreen = IntGetScreenDC();
+           if (hdcScreen)
+               GreMovePointer(hdcScreen, -1, -1);
+           IntGetSysCursorInfo()->CurrentCursorObject = NULL;
+       }
 
        UserDereferenceObject(pCursor);
    }
