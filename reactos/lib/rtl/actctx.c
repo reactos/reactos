@@ -2005,7 +2005,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     UNICODE_STRING nameW;
     HANDLE file;
 
-    DPRINT1( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
+    DPRINT( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
            ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
 
     if ((status = lookup_winsxs(acl, ai)) != STATUS_NO_SUCH_FILE) return status;
