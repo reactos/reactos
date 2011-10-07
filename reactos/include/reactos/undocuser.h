@@ -55,6 +55,10 @@
 #define DCX_KEEPLAYOUT   0x40000000
 #define DCX_PROCESSOWNED 0x80000000
 
+/* NtUserCreateWindowEx dwFlags bits. */
+#define NUCWE_ANSI       0x00000001
+#define NUCWE_SIDEBYSIDE 0x40000000
+
 /* Caret timer ID */
 #define IDCARETTIMER (0xffff)
 #define ID_TME_TIMER (0xFFFA)
