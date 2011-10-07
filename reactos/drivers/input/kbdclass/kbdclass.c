@@ -804,6 +804,8 @@ HandleReadIrp(
 	}
 	else
 	{
+		IoMarkIrpPending(Irp);
+		DeviceExtension->PendingIrp = Irp;
 		(VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
 		if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
 		{
@@ -812,8 +814,6 @@ HandleReadIrp(
 		}
 		else
 		{
-			IoMarkIrpPending(Irp);
-			DeviceExtension->PendingIrp = Irp;
 			Status = STATUS_PENDING;
 		}
 	}
