@@ -78,4 +78,27 @@ IntAddGlobalAtom(LPWSTR lpBuffer, BOOL PinAtom)
    return Atom;
 }
 
+DWORD
+APIENTRY
+NtUserGetAtomName(
+    ATOM nAtom,
+    PUNICODE_STRING pBuffer)
+{
+   DWORD Ret;
+   UNICODE_STRING CapturedName = {0};
+   UserEnterShared();
+   _SEH2_TRY
+   {
+      CapturedName = ProbeForReadUnicodeString(pBuffer);
+      Ret = IntGetAtomName((RTL_ATOM)nAtom, CapturedName.Buffer, (ULONG)CapturedName.Length);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Ret = 0;
+   }
+   _SEH2_END
+   UserLeave();
+   return Ret;
+}
+
 /* EOF */

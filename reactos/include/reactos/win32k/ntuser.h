@@ -1825,7 +1825,7 @@ DWORD
 NTAPI
 NtUserGetAtomName(
     ATOM nAtom,
-    LPWSTR lpBuffer);
+    PUNICODE_STRING pBuffer);
 
 UINT
 NTAPI

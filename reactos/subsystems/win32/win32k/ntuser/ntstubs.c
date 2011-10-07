@@ -630,16 +630,6 @@ NtUserGetAppImeLevel(
 
 DWORD
 APIENTRY
-NtUserGetAtomName(
-    ATOM nAtom,
-    LPWSTR lpBuffer)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
 NtUserGetImeInfoEx(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
