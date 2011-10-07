@@ -1431,7 +1431,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     };
 #endif
 
-    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
+    KeGetCurrentThread()->Header.NpxIrql = KeGetCurrentIrql();
     return STATUS_SUCCESS;
 }
 
@@ -1443,7 +1443,7 @@ NTAPI
 KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState = *((PVOID *) Save);
-    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
+    ASSERT(KeGetCurrentThread()->Header.NpxIrql == KeGetCurrentIrql());
     DPRINT1("%s is not really implemented\n", __FUNCTION__);
 
 #ifdef __GNUC__

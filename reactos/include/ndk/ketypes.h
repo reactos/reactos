@@ -681,7 +681,7 @@ typedef struct _KEXECUTE_OPTIONS
 //
 typedef struct _KTHREAD
 {
-    DISPATCHER_HEADER DispatcherHeader;
+    DISPATCHER_HEADER Header;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG CycleTime;
     ULONG HighCycleTime;
@@ -929,7 +929,7 @@ typedef struct _KTHREAD
 } KTHREAD;
 
 #define ASSERT_THREAD(object) \
-    ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ThreadObject))
 
 //
 // Kernel Process (KPROCESS)

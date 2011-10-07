@@ -49,10 +49,11 @@ KeInitializeMutant(IN PKMUTANT Mutant,
     }
 
     /* Now we set up the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Mutant->Header,
-                                 MutantObject,
-                                 sizeof(KMUTANT) / sizeof(ULONG),
-                                 InitialOwner ? FALSE : TRUE);
+    Mutant->Header.Type = MutantObject;
+    Mutant->Header.Size = sizeof(KMUTANT) / sizeof(ULONG);
+    Mutant->Header.DpcActive = FALSE;
+    Mutant->Header.SignalState = InitialOwner ? 0 : 1;
+    InitializeListHead(&(Mutant->Header.WaitListHead));
 
     /* Initialize the default data */
     Mutant->Abandoned = FALSE;
@@ -68,10 +69,11 @@ KeInitializeMutex(IN PKMUTEX Mutex,
                   IN ULONG Level)
 {
     /* Set up the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Mutex->Header,
-                                 MutantObject,
-                                 sizeof(KMUTEX) / sizeof(ULONG),
-                                 TRUE);
+    Mutex->Header.Type = MutantObject;
+    Mutex->Header.Size = sizeof(KMUTEX) / sizeof(ULONG);
+    Mutex->Header.DpcActive = FALSE;
+    Mutex->Header.SignalState = 1;
+    InitializeListHead(&(Mutex->Header.WaitListHead));
 
     /* Initialize the default data */
     Mutex->OwnerThread = NULL;

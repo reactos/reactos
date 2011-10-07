@@ -958,7 +958,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
         FoundThread = CidEntry->Object;
 
         /* Make sure it's really a thread and this process' */
-        if ((FoundThread->Tcb.DispatcherHeader.Type == ThreadObject) &&
+        if ((FoundThread->Tcb.Header.Type == ThreadObject) &&
             (FoundThread->Cid.UniqueProcess == Cid->UniqueProcess))
         {
             /* Safe Reference and return it */

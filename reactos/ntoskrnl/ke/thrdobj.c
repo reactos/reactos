@@ -46,7 +46,6 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
-
 BOOLEAN
 NTAPI
 KeReadStateThread(IN PKTHREAD Thread)
@@ -54,7 +53,7 @@ KeReadStateThread(IN PKTHREAD Thread)
     ASSERT_THREAD(Thread);
 
     /* Return signal state */
-    return (BOOLEAN)Thread->DispatcherHeader.SignalState;
+    return (BOOLEAN)Thread->Header.SignalState;
 }
 
 KPRIORITY
@@ -726,10 +725,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     NTSTATUS Status;
 
     /* Initalize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
-                                 ThreadObject,
-                                 sizeof(KTHREAD) / sizeof(LONG),
-                                 FALSE);
+    Thread->Header.Type = ThreadObject;
+    Thread->Header.ThreadControlFlags = 0;
+    Thread->Header.DebugActive = FALSE;
+    Thread->Header.SignalState = 0;
+    InitializeListHead(&(Thread->Header.WaitListHead));
 
     /* Initialize the Mutant List */
     InitializeListHead(&Thread->MutantListHead);
@@ -1381,11 +1381,11 @@ KeTerminateThread(IN KPRIORITY Increment)
     }
 
     /* Signal the thread */
-    Thread->DispatcherHeader.SignalState = TRUE;
-    if (!IsListEmpty(&Thread->DispatcherHeader.WaitListHead))
+    Thread->Header.SignalState = TRUE;
+    if (!IsListEmpty(&Thread->Header.WaitListHead))
     {
         /* Unwait the threads */
-        KxUnwaitThread(&Thread->DispatcherHeader, Increment);
+        KxUnwaitThread(&Thread->Header, Increment);
     }
 
     /* Remove the thread from the list */

@@ -19,10 +19,11 @@ FASTCALL
 KeInitializeGate(IN PKGATE Gate)
 {
     /* Initialize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Gate->Header,
-                                 GateObject,
-                                 sizeof(KGATE) / sizeof(ULONG),
-                                 0);
+    Gate->Header.Type = GateObject;
+    Gate->Header.Signalling = FALSE;
+    Gate->Header.Size = sizeof(KGATE) / sizeof(ULONG);
+    Gate->Header.SignalState = 0;
+    InitializeListHead(&(Gate->Header.WaitListHead));
 }
 
 VOID

@@ -146,17 +146,6 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define AFFINITY_MASK(Id) KiMask32Array[Id]
 #define PRIORITY_MASK(Id) KiMask32Array[Id]
 
-/* The following macro initializes a dispatcher object's header */
-#define KeInitializeDispatcherHeader(Header, t, s, State)                   \
-{                                                                           \
-    (Header)->Type = t;                                                     \
-    (Header)->Absolute = 0;                                                 \
-    (Header)->Size = s;                                                     \
-    (Header)->Inserted = 0;                                                 \
-    (Header)->SignalState = State;                                          \
-    InitializeListHead(&((Header)->WaitListHead));                          \
-}
-
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
 

@@ -288,7 +288,7 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 
     /* Flush DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
-    if (__builtin_expect(KeGetCurrentThread()->DispatcherHeader.DebugActive & 0xFF, 0))
+    if (__builtin_expect(KeGetCurrentThread()->Header.DebugActive & 0xFF, 0))
     {
         DbgPrint("Need Hardware Breakpoint Support!\n");
         while (TRUE);
@@ -310,7 +310,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     
     /* Flush DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
-    if (__builtin_expect(KeGetCurrentThread()->DispatcherHeader.DebugActive & 0xFF, 0))
+    if (__builtin_expect(KeGetCurrentThread()->Header.DebugActive & 0xFF, 0))
     {
         DbgPrint("Need Hardware Breakpoint Support!\n");
         while (TRUE);

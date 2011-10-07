@@ -24,10 +24,10 @@ KeInitializeSemaphore(IN PKSEMAPHORE Semaphore,
                       IN LONG Limit)
 {
     /* Simply Initialize the Header */
-    KeInitializeDispatcherHeader(&Semaphore->Header,
-                                 SemaphoreObject,
-                                 sizeof(KSEMAPHORE) / sizeof(ULONG),
-                                 Count);
+    Semaphore->Header.Type = SemaphoreObject;
+    Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(ULONG);
+    Semaphore->Header.SignalState = 0;
+    InitializeListHead(&(Semaphore->Header.WaitListHead));
 
     /* Set the Limit */
     Semaphore->Limit = Limit;

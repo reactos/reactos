@@ -37,10 +37,11 @@ KeInitializeEvent(OUT PKEVENT Event,
                   IN BOOLEAN State)
 {
     /* Initialize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Event->Header,
-                                 Type,
-                                 sizeof(*Event) / sizeof(ULONG),
-                                 State);
+    Event->Header.Type = Type;
+    //Event->Header.Signalling = FALSE; // fails in kmtest
+    Event->Header.Size = sizeof(KEVENT) / sizeof(ULONG);
+    Event->Header.SignalState = State;
+    InitializeListHead(&(Event->Header.WaitListHead));
 }
 
 /*

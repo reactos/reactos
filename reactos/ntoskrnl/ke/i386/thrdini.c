@@ -163,7 +163,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
             /* Set the Thread's NPX State */
             Thread->NpxState = NPX_STATE_NOT_LOADED;
-            Thread->DispatcherHeader.NpxIrql = PASSIVE_LEVEL;
+            Thread->Header.NpxIrql = PASSIVE_LEVEL;
         }
         else
         {

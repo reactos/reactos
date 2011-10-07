@@ -125,10 +125,10 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
 #endif
 
     /* Initialize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Process->Header,
-                                 ProcessObject,
-                                 sizeof(KPROCESS),
-                                 FALSE);
+    Process->Header.Type = ProcessObject;
+    Process->Header.Size = sizeof(KPROCESS) / sizeof(ULONG);
+    Process->Header.SignalState = 0;
+    InitializeListHead(&(Process->Header.WaitListHead));
 
     /* Initialize Scheduler Data, Alignment Faults and Set the PDE */
     Process->Affinity = Affinity;
