@@ -29,6 +29,7 @@ KMT_TESTFUNC Test_KeEvent;
 KMT_TESTFUNC Test_KeGuardedMutex;
 KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
+KMT_TESTFUNC Test_KeTimer;
 KMT_TESTFUNC Test_KernelType;
 KMT_TESTFUNC Test_MmSection;
 KMT_TESTFUNC Test_ObReference;
@@ -63,6 +64,7 @@ const KMT_TEST TestList[] =
     { "KeGuardedMutex",                     Test_KeGuardedMutex },
     { "KeIrql",                             Test_KeIrql },
     { "-KeProcessor",                       Test_KeProcessor },
+    { "KeTimer",                            Test_KeTimer },
     { "-KernelType",                        Test_KernelType },
     { "MmSection",                          Test_MmSection },
     { "ObReference",                        Test_ObReference },

@@ -43,6 +43,7 @@
 		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>
 		<file>KeSpinLock.c</file>
+		<file>KeTimer.c</file>
 	</directory>
 	<directory name="ntos_mm">
 		<file>MmSection.c</file>
