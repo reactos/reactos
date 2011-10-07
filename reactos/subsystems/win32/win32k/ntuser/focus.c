@@ -73,7 +73,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       if (Window->spwndPrev != NULL)
          co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
-                               SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+                               SWP_NOSIZE | SWP_NOMOVE);
 
       if (!Window->spwndOwner && !IntGetParent(Window))
       {
