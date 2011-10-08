@@ -440,7 +440,7 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PULONG_PTR Cookie;
     LARGE_INTEGER Counter;
-    //ULONG NewCookie;
+    ULONG NewCookie;
 
     /* Fetch address of the cookie */
     Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
@@ -448,40 +448,39 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (Cookie)
     {
         /* Check if it's a default one */
-        if (*Cookie == DEFAULT_SECURITY_COOKIE ||
-            *Cookie == 0xBB40)
+        if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
+            (*Cookie == 0xBB40))
         {
-            /* We need to initialize it */
-
+            /* Make up a cookie from a bunch of values which may uniquely represent
+               current moment of time, environment, etc */
             NtQueryPerformanceCounter(&Counter, NULL);
-#if 0
-            GetSystemTimeAsFileTime (&systime.ft_struct);
-#ifdef _WIN64
-            cookie = systime.ft_scalar;
-#else
-            cookie = systime.ft_struct.dwLowDateTime;
-            cookie ^= systime.ft_struct.dwHighDateTime;
-#endif
 
-            cookie ^= GetCurrentProcessId ();
-            cookie ^= GetCurrentThreadId ();
-            cookie ^= GetTickCount ();
+            NewCookie = Counter.LowPart ^ Counter.HighPart;
+            NewCookie ^= (ULONG)NtCurrentTeb()->ClientId.UniqueProcess;
+            NewCookie ^= (ULONG)NtCurrentTeb()->ClientId.UniqueThread;
 
-            QueryPerformanceCounter (&perfctr);
-#ifdef _WIN64
-            cookie ^= perfctr.QuadPart;
-#else
-            cookie ^= perfctr.LowPart;
-            cookie ^= perfctr.HighPart;
-#endif
+            /* Loop like it's done in KeQueryTickCount(). We don't want to call it directly. */
+            while (SharedUserData->SystemTime.High1Time != SharedUserData->SystemTime.High2Time)
+            {
+                YieldProcessor();
+            };
 
-#ifdef _WIN64
-            cookie &= 0x0000ffffffffffffll;
-#endif
-#endif
-            *Cookie = Counter.LowPart;
+            /* Calculate the milliseconds value and xor it to the cookie */
+            NewCookie ^= Int64ShrlMod32(UInt32x32To64(SharedUserData->TickCountMultiplier, SharedUserData->TickCount.LowPart), 24) +
+                (SharedUserData->TickCountMultiplier * (SharedUserData->TickCount.High1Time << 8));
 
-            //Cookie = NULL;
+            /* Make the cookie 16bit if necessary */
+            if (*Cookie == 0xBB40) NewCookie &= 0xFFFF;
+
+            /* If the result is 0 or the same as we got, just subtract one from the existing value
+               and that's it */
+            if ((NewCookie == 0) || (NewCookie == *Cookie))
+            {
+                NewCookie = *Cookie - 1;
+            }
+
+            /* Set the new cookie value */
+            *Cookie = NewCookie;
         }
     }
 
