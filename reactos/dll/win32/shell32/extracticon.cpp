@@ -256,11 +256,12 @@ HRESULT STDMETHODCALLTYPE IconExtraction::Extract(
     UINT nIconSize)
 {
     LPWSTR pszFileW = NULL;
-    int nLength;
     HRESULT hr;
 
     if (pszFile)
     {
+        int nLength;
+
         nLength = MultiByteToWideChar(CP_ACP, 0, pszFile, -1, NULL, 0);
         if (nLength == 0)
             return E_FAIL;
@@ -273,9 +274,8 @@ HRESULT STDMETHODCALLTYPE IconExtraction::Extract(
             return E_FAIL;
         }
     }
-    
-    hr = Extract(
-         pszFileW, nIconIndex, phiconLarge, phiconSmall, nIconSize);
+
+    hr = Extract(pszFileW, nIconIndex, phiconLarge, phiconSmall, nIconSize);
 
     if (pszFileW)
         CoTaskMemFree(pszFileW);

@@ -130,7 +130,6 @@ BOOL IEnumIDListImpl::CreateFolderEnumList(
     LPCWSTR lpszPath,
     DWORD dwFlags)
 {
-    LPITEMIDLIST pidl=NULL;
     WIN32_FIND_DATAW stffile;
     HANDLE hFile;
     WCHAR  szPath[MAX_PATH];
@@ -157,6 +156,8 @@ BOOL IEnumIDListImpl::CreateFolderEnumList(
             if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
              || (dwFlags & SHCONTF_INCLUDEHIDDEN) )
             {
+                LPITEMIDLIST pidl = NULL;
+
                 if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
                  dwFlags & SHCONTF_FOLDERS &&
                  strcmpW(stffile.cFileName, dot) && strcmpW(stffile.cFileName, dotdot))
