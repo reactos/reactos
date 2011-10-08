@@ -90,7 +90,7 @@ static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
 
@@ -139,7 +139,7 @@ static const struct
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
     { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame addr", KdbpCmdBackTrace },
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
     { "dt", "dt [mod] [type] [addr]", "Print a struct.  Addr is optional.", KdbpCmdPrintStruct },
 #endif
 
@@ -460,7 +460,7 @@ KdbpCmdEvalExpression(
     return TRUE;
 }
 
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
 
 /*!\brief Print a struct
  */

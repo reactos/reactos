@@ -100,7 +100,7 @@ MiSimpleRead
  PLARGE_INTEGER FileOffset,
  PVOID Buffer,
  ULONG Length,
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
  BOOLEAN Paging,
 #endif
  PIO_STATUS_BLOCK ReadStatus)
@@ -145,7 +145,7 @@ MiSimpleRead
 		return STATUS_NO_MEMORY;
     }
 
-#ifndef __ROS_CMAKE__
+#ifndef __ROS_DWARF__
     Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
 #else
     Irp->Flags |= (Paging ? IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE : 0) | IRP_SYNCHRONOUS_API;
@@ -159,7 +159,7 @@ MiSimpleRead
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
 
-#ifdef __ROS_CMAKE__
+#ifdef __ROS_DWARF__
     ObReferenceObject(FileObject);
 #endif
 

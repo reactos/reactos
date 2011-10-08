@@ -389,7 +389,8 @@ if(NOT _WINKD_)
     endif()
 
     if(DBG OR KDBG)
-        list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        #list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
+        list(APPEND SOURCE kdbg/kdb_symbols.c)
     endif()
 
     list(APPEND SOURCE
