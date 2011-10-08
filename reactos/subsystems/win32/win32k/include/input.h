@@ -56,4 +56,4 @@ VOID FASTCALL DoTheScreenSaver(VOID);
 
 extern HANDLE ghKeyboardDevice;
 extern PTHREADINFO ptiRawInput;
-extern BYTE gKeyStateTable[0x100];
+extern BYTE gafAsyncKeyState[0x100];

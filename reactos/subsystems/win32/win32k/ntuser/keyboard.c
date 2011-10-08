@@ -10,7 +10,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserKbd);
 
-BYTE gKeyStateTable[0x100];
+BYTE gafAsyncKeyState[0x100];
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 
 /* FUNCTIONS *****************************************************************/
@@ -25,7 +25,7 @@ NTSTATUS
 NTAPI
 InitKeyboardImpl(VOID)
 {
-    RtlZeroMemory(&gKeyStateTable, sizeof(gKeyStateTable));
+    RtlZeroMemory(&gafAsyncKeyState, sizeof(gafAsyncKeyState));
     return STATUS_SUCCESS;
 }
 
@@ -636,9 +636,9 @@ IntGetAsyncKeyState(DWORD dwKey)
 
     if (dwKey < 0x100)
     {
-        if (gKeyStateTable[dwKey] & KS_DOWN_BIT)
+        if (gafAsyncKeyState[dwKey] & KS_DOWN_BIT)
             dwRet |= 0xFFFF8000; // If down, windows returns 0xFFFF8000.
-        if (gKeyStateTable[dwKey] & KS_LOCK_BIT)
+        if (gafAsyncKeyState[dwKey] & KS_LOCK_BIT)
             dwRet |= 0x1;
     }
     else
@@ -783,20 +783,20 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
         wSimpleVk = IntSimplifyVk(wVk);
         wVkOtherSide = IntGetVkOtherSide(wVk);
-        PrevKeyState = gKeyStateTable[wSimpleVk];
+        PrevKeyState = gafAsyncKeyState[wSimpleVk];
 
         /* Update global keyboard state. Begin from lock bit */
         if (!bKeyUp && !(PrevKeyState & KS_DOWN_BIT))
-            gKeyStateTable[wVk] ^= KS_LOCK_BIT;
+            gafAsyncKeyState[wVk] ^= KS_LOCK_BIT;
 
         /* Update down bit */
         if (bKeyUp)
-            gKeyStateTable[wVk] &= ~KS_DOWN_BIT;
+            gafAsyncKeyState[wVk] &= ~KS_DOWN_BIT;
         else
-            gKeyStateTable[wVk] |= KS_DOWN_BIT;
+            gafAsyncKeyState[wVk] |= KS_DOWN_BIT;
 
         /* Update key without shifts */
-        gKeyStateTable[wSimpleVk] = gKeyStateTable[wVk] | gKeyStateTable[wVkOtherSide];
+        gafAsyncKeyState[wSimpleVk] = gafAsyncKeyState[wVk] | gafAsyncKeyState[wVkOtherSide];
 
         if (!bKeyUp)
         {
@@ -806,7 +806,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
             if (gpKeyboardIndicatorTrans)
                 IntKeyboardUpdateLeds(ghKeyboardDevice,
                                       wScanCode,
-                                      gKeyStateTable[wSimpleVk] & KS_LOCK_BIT,
+                                      gafAsyncKeyState[wSimpleVk] & KS_LOCK_BIT,
                                       gpKeyboardIndicatorTrans);
         }
 
@@ -818,12 +818,12 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         {
             if (wVk == VK_LWIN || wVk == VK_RWIN)
                 IntKeyboardSendWinKeyMsg();
-            else if(wSimpleVk == VK_MENU && !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT))
+            else if(wSimpleVk == VK_MENU && !(gafAsyncKeyState[VK_CONTROL] & KS_DOWN_BIT))
                 co_IntKeyboardSendAltKeyMsg();
         }
 
         /* Check if it is a hotkey */
-        fModifiers = IntGetModifiers(gKeyStateTable);
+        fModifiers = IntGetModifiers(gafAsyncKeyState);
         if (GetHotKey(fModifiers, wSimpleVk, &Thread, &hWnd, &HotkeyId))
         {
             if (!bKeyUp)
@@ -848,8 +848,8 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         wSysKey = (pKbdTbl->fLocaleFlags & KLLF_ALTGR) ? VK_LMENU : VK_MENU;
         if (wVk == VK_F10 ||
             //uVkNoShift == VK_MENU || // FIXME: If only LALT is pressed WM_SYSKEYUP is generated instead of WM_KEYUP
-            ((gKeyStateTable[wSysKey] & KS_DOWN_BIT) && // FIXME
-            !(gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)))
+            ((gafAsyncKeyState[wSysKey] & KS_DOWN_BIT) && // FIXME
+            !(gafAsyncKeyState[VK_CONTROL] & KS_DOWN_BIT)))
         {
             if (bKeyUp)
                 Msg.message = WM_SYSKEYUP;
@@ -870,7 +870,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         {
             if (bExt)
                 Msg.lParam |= LP_EXT_BIT;
-            if (gKeyStateTable[VK_MENU] & KS_DOWN_BIT)
+            if (gafAsyncKeyState[VK_MENU] & KS_DOWN_BIT)
                 Msg.lParam |= LP_CONTEXT_BIT;
             if (PrevKeyState & KS_DOWN_BIT)
                 Msg.lParam |= LP_PREV_STATE_BIT;
@@ -947,7 +947,7 @@ UserProcessKeyboardInput(
         KEYBDINPUT KbdInput;
 
         /* Support numlock */
-        if ((wVk & KBDNUMPAD) && (gKeyStateTable[VK_NUMLOCK] & KS_LOCK_BIT))
+        if ((wVk & KBDNUMPAD) && (gafAsyncKeyState[VK_NUMLOCK] & KS_LOCK_BIT))
         {
             wVk = IntTranslateNumpadKey(wVk & 0xFF);
         }
@@ -1451,19 +1451,19 @@ UserGetMouseButtonsState(VOID)
 
     if (gpsi->aiSysMet[SM_SWAPBUTTON])
     {
-        if (gKeyStateTable[VK_RBUTTON] & KS_DOWN_BIT) ret |= MK_LBUTTON;
-        if (gKeyStateTable[VK_LBUTTON] & KS_DOWN_BIT) ret |= MK_RBUTTON;
+        if (gafAsyncKeyState[VK_RBUTTON] & KS_DOWN_BIT) ret |= MK_LBUTTON;
+        if (gafAsyncKeyState[VK_LBUTTON] & KS_DOWN_BIT) ret |= MK_RBUTTON;
     }
     else
     {
-        if (gKeyStateTable[VK_LBUTTON] & KS_DOWN_BIT) ret |= MK_LBUTTON;
-        if (gKeyStateTable[VK_RBUTTON] & KS_DOWN_BIT) ret |= MK_RBUTTON;
+        if (gafAsyncKeyState[VK_LBUTTON] & KS_DOWN_BIT) ret |= MK_LBUTTON;
+        if (gafAsyncKeyState[VK_RBUTTON] & KS_DOWN_BIT) ret |= MK_RBUTTON;
     }
-    if (gKeyStateTable[VK_MBUTTON]  & KS_DOWN_BIT) ret |= MK_MBUTTON;
-    if (gKeyStateTable[VK_SHIFT]    & KS_DOWN_BIT) ret |= MK_SHIFT;
-    if (gKeyStateTable[VK_CONTROL]  & KS_DOWN_BIT) ret |= MK_CONTROL;
-    if (gKeyStateTable[VK_XBUTTON1] & KS_DOWN_BIT) ret |= MK_XBUTTON1;
-    if (gKeyStateTable[VK_XBUTTON2] & KS_DOWN_BIT) ret |= MK_XBUTTON2;
+    if (gafAsyncKeyState[VK_MBUTTON]  & KS_DOWN_BIT) ret |= MK_MBUTTON;
+    if (gafAsyncKeyState[VK_SHIFT]    & KS_DOWN_BIT) ret |= MK_SHIFT;
+    if (gafAsyncKeyState[VK_CONTROL]  & KS_DOWN_BIT) ret |= MK_CONTROL;
+    if (gafAsyncKeyState[VK_XBUTTON1] & KS_DOWN_BIT) ret |= MK_XBUTTON1;
+    if (gafAsyncKeyState[VK_XBUTTON2] & KS_DOWN_BIT) ret |= MK_XBUTTON2;
     return ret;
 }
 

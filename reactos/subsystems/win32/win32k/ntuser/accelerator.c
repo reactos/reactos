@@ -110,7 +110,7 @@ co_IntTranslateAccelerator(
                                    &MenuItem,
                                    NULL);
        if (nPos != (UINT)-1)
-           hSubMenu = MenuItem->hSubMenu;
+           hSubMenu = SubMenu->head.h;
        else
            hMenu = NULL;
    }
@@ -129,7 +129,7 @@ co_IntTranslateAccelerator(
                                        &MenuItem,
                                        NULL);
            if (nPos != (UINT)-1)
-               hSubMenu = MenuItem->hSubMenu;
+               hSubMenu = SubMenu->head.h;
            else
                hMenu = NULL;
        }
@@ -138,7 +138,7 @@ co_IntTranslateAccelerator(
    /* If this is a menu item, there is no capturing enabled and
       window is not disabled, send WM_INITMENU */
    if (hMenu && !IntGetCaptureWindow())
-   {                                               
+   {
        co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
        if (hSubMenu)
        {
@@ -154,7 +154,7 @@ co_IntTranslateAccelerator(
       - this is window menu and window is minimized */
    if (!(Window->style & WS_DISABLED) &&
        !(hMenu && IntGetMenuState(hMenu, pAccel->cmd, MF_BYCOMMAND) & (MF_DISABLED|MF_GRAYED)) &&
-       !(hMenu && hMenu == (HMENU)Window->IDMenu && !(Window->style & WS_MINIMIZED)))
+       !(hMenu && hMenu == (HMENU)Window->IDMenu && (Window->style & WS_MINIMIZED)))
    {
        /* If this is system menu item, send WM_SYSCOMMAND, otherwise send WM_COMMAND */
        if (hMenu && hMenu == Window->SystemMenu)
@@ -426,8 +426,7 @@ NtUserTranslateAccelerator(
    {
       if (co_IntTranslateAccelerator(Window, &Message, &Accel->Table[i]))
       {
-         TRACE("NtUserTranslateAccelerator returns 1\n");
-         RETURN( 1);
+          RETURN( 1);
       }
 
       /* Undocumented feature... */
@@ -441,7 +440,7 @@ CLEANUP:
    if (Window) UserDerefObjectCo(Window);
    if (Accel) UserDerefObjectCo(Accel);
 
-   TRACE("NtUserTranslateAccelerator returns 0\n");
+   TRACE("NtUserTranslateAccelerator returns %d\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }

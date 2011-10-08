@@ -10,7 +10,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
-extern BYTE gKeyStateTable[];
 extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 extern PPROCESSINFO ppiScrnSaver;
 
@@ -684,12 +683,12 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
     Msg.pt = MousePos;
 
-    if (gKeyStateTable[VK_SHIFT] & KS_DOWN_BIT)
+    if (gafAsyncKeyState[VK_SHIFT] & KS_DOWN_BIT)
     {
         Msg.wParam |= MK_SHIFT;
     }
 
-    if (gKeyStateTable[VK_CONTROL] & KS_DOWN_BIT)
+    if (gafAsyncKeyState[VK_CONTROL] & KS_DOWN_BIT)
     {
         Msg.wParam |= MK_CONTROL;
     }
@@ -700,7 +699,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     }
     if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
     {
-        gKeyStateTable[VK_LBUTTON] |= KS_DOWN_BIT;
+        gafAsyncKeyState[VK_LBUTTON] |= KS_DOWN_BIT;
         Msg.message = SwapBtnMsg[0][SwapButtons];
         CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
         Msg.wParam |= CurInfo->ButtonsDown;
@@ -708,7 +707,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     }
     else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
     {
-        gKeyStateTable[VK_LBUTTON] &= ~KS_DOWN_BIT;
+        gafAsyncKeyState[VK_LBUTTON] &= ~KS_DOWN_BIT;
         Msg.message = SwapBtnMsg[1][SwapButtons];
         CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
         Msg.wParam |= CurInfo->ButtonsDown;
@@ -716,7 +715,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     }
     if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
     {
-        gKeyStateTable[VK_MBUTTON] |= KS_DOWN_BIT;
+        gafAsyncKeyState[VK_MBUTTON] |= KS_DOWN_BIT;
         Msg.message = WM_MBUTTONDOWN;
         CurInfo->ButtonsDown |= MK_MBUTTON;
         Msg.wParam |= CurInfo->ButtonsDown;
@@ -724,7 +723,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     }
     else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
     {
-        gKeyStateTable[VK_MBUTTON] &= ~KS_DOWN_BIT;
+        gafAsyncKeyState[VK_MBUTTON] &= ~KS_DOWN_BIT;
         Msg.message = WM_MBUTTONUP;
         CurInfo->ButtonsDown &= ~MK_MBUTTON;
         Msg.wParam |= CurInfo->ButtonsDown;
@@ -732,7 +731,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     }
     if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
     {
-        gKeyStateTable[VK_RBUTTON] |= KS_DOWN_BIT;
+        gafAsyncKeyState[VK_RBUTTON] |= KS_DOWN_BIT;
         Msg.message = SwapBtnMsg[0][!SwapButtons];
         CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
         Msg.wParam |= CurInfo->ButtonsDown;
@@ -740,7 +739,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
     }
     else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
     {
-        gKeyStateTable[VK_RBUTTON] &= ~KS_DOWN_BIT;
+        gafAsyncKeyState[VK_RBUTTON] &= ~KS_DOWN_BIT;
         Msg.message = SwapBtnMsg[1][!SwapButtons];
         CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
         Msg.wParam |= CurInfo->ButtonsDown;
@@ -759,14 +758,14 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
         Msg.message = WM_XBUTTONDOWN;
         if(mi->mouseData & XBUTTON1)
         {
-            gKeyStateTable[VK_XBUTTON1] |= KS_DOWN_BIT;
+            gafAsyncKeyState[VK_XBUTTON1] |= KS_DOWN_BIT;
             CurInfo->ButtonsDown |= MK_XBUTTON1;
             Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
             co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
         }
         if(mi->mouseData & XBUTTON2)
         {
-            gKeyStateTable[VK_XBUTTON2] |= KS_DOWN_BIT;
+            gafAsyncKeyState[VK_XBUTTON2] |= KS_DOWN_BIT;
             CurInfo->ButtonsDown |= MK_XBUTTON2;
             Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
             co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
@@ -777,14 +776,14 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
         Msg.message = WM_XBUTTONUP;
         if(mi->mouseData & XBUTTON1)
         {
-            gKeyStateTable[VK_XBUTTON1] &= ~KS_DOWN_BIT;
+            gafAsyncKeyState[VK_XBUTTON1] &= ~KS_DOWN_BIT;
             CurInfo->ButtonsDown &= ~MK_XBUTTON1;
             Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
             co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
         }
         if(mi->mouseData & XBUTTON2)
         {
-            gKeyStateTable[VK_XBUTTON2] &= ~KS_DOWN_BIT;
+            gafAsyncKeyState[VK_XBUTTON2] &= ~KS_DOWN_BIT;
             CurInfo->ButtonsDown &= ~MK_XBUTTON2;
             Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
             co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);

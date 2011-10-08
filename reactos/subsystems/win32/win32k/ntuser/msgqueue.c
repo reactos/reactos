@@ -1930,7 +1930,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->NewMessagesHandle = NULL;
    MessageQueue->ShowingCursor = 0;
    MessageQueue->CursorObject = NULL;
-   RtlCopyMemory(MessageQueue->KeyState, gKeyStateTable, sizeof(gKeyStateTable));
+   RtlCopyMemory(MessageQueue->KeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
                           NULL, SynchronizationEvent, FALSE);
