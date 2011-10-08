@@ -17,22 +17,28 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <precomp.h>
 
-const GUID CLSID_AdminFolderShortcut     = {0xD20EA4E1, 0x3957, 0x11D2, {0xA4, 0x0B, 0x0C, 0x50, 0x20, 0x52, 0x41, 0x53}};
-const GUID CLSID_StartMenu               = {0x4622AD11, 0xFF23, 0x11D0, {0x8D, 0x34, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19}};
-const GUID CLSID_MenuBandSite            = {0xE13EF4E4, 0xD2F2, 0x11d0, {0x98, 0x16, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72}};
-const GUID CLSID_OpenWith                = {0x09799AFB, 0xAD67, 0x11d1, {0xAB, 0xCD, 0x00, 0xC0, 0x4F, 0xC3, 0x09, 0x36}};
-const GUID CLSID_UnixFolder              = {0xcc702eb2, 0x7dc5, 0x11d9, {0xc6, 0x87, 0x00, 0x04, 0x23, 0x8a, 0x01, 0xcd}};
-const GUID CLSID_UnixDosFolder           = {0x9d20aae8, 0x0625, 0x44b0, {0x9c, 0xa7, 0x71, 0x88, 0x9c, 0x22, 0x54, 0xd9}};
-const GUID CLSID_FontsFolderShortcut     = {0xD20EA4E1, 0x3957, 0x11D2, {0xA4, 0x0B, 0x0C, 0x50, 0x20, 0x52, 0x41,0x52}};
-const GUID SHELL32_AdvtShortcutProduct   = {0x9db1186f, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
-const GUID SHELL32_AdvtShortcutComponent = {0x9db1186e, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
 
-#ifdef _MSC_VER
+#include <stdio.h>
+#include <shlobj.h>
+#include <shlobj_undoc.h>
+#include "shresdef.h"
+#include "wine/debug.h"
+
+#define CHARS_IN_GUID 39
+
+extern HRESULT SHELL_RegisterShellFolders(void);
+
+extern const GUID CLSID_AdminFolderShortcut;
+extern const GUID CLSID_StartMenu;
+extern const GUID CLSID_MenuBandSite;
+extern const GUID CLSID_OpenWith;
+extern const GUID CLSID_UnixFolder;
+extern const GUID CLSID_UnixDosFolder;
+extern const GUID CLSID_FontsFolderShortcut;
+extern const GUID SHELL32_AdvtShortcutProduct;
+extern const GUID SHELL32_AdvtShortcutComponent;
 extern const GUID CLSID_ShellFolderViewOC;
-#endif
-
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -757,7 +763,7 @@ static const WCHAR wszNethoodFolder[] = { 'N','e','t','h','o','o','d',' ','f','o
 static const WCHAR wszPrinters[] = { 'P','r','i','n','t','e','r','s',0 };
 static const WCHAR wszFonts[] = { 'F','o','n','t','s',0 };
 static const WCHAR wszAdminTools[] = { 'A','d','m','i','n','T','o','o','l','s',0 };
-const GUID CLSID_FolderOptions = { 0x6DFD7C5C, 0x2451, 0x11d3, {0xa2,0x99,0x00,0xC0,0x4F,0x8e,0xf6,0xaf} };
+extern const GUID CLSID_FolderOptions;
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
 #if 0

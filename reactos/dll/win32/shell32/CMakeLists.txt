@@ -69,6 +69,7 @@ list(APPEND SOURCE
     she_ocmenu.cpp
     shv_item_new.cpp
     folder_options.cpp
+    regsvr.c
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)

@@ -1848,7 +1848,7 @@ static void _SHCreateSymbolicLinks(void)
 /* Register the default values in the registry, as some apps seem to depend
  * on their presence.  The set registered was taken from Windows XP.
  */
-HRESULT SHELL_RegisterShellFolders(void)
+EXTERN_C HRESULT SHELL_RegisterShellFolders(void)
 {
     HRESULT hr;
 

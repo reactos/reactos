@@ -76,6 +76,7 @@
 	<file>startmenu.cpp</file>
 	<file>stubs.cpp</file>
 	<file>ros-systray.cpp</file>
+	<file>regsvr.c</file>
 	<file>fprop.cpp</file>
 	<file>drive.cpp</file>
 	<file>she_ocmenu.cpp</file>

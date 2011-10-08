@@ -1445,7 +1445,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     TRACE("-- pointer to class factory: %p\n", *ppv);
     return hResult;
 }
-
+#if 0
 /***********************************************************************
  *              DllRegisterServer (BROWSEUI.@)
  */
@@ -1461,7 +1461,7 @@ STDAPI DllUnregisterServer()
 {
     return gModule.DllUnregisterServer(FALSE);
 }
-
+#endif
 /*************************************************************************
  * DllInstall         [SHELL32.@]
  *
