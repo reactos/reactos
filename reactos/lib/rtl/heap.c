@@ -913,9 +913,9 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
 
     /* Initialise the Heap Entries contained within the Heap Segment */
     Segment->FirstEntry = &Segment->Entry + Segment->Entry.Size;
-    Segment->LastValidEntry = (PHEAP_ENTRY) ((ULONG_PTR) (Segment) + SegmentReserve);
+    Segment->LastValidEntry = (PHEAP_ENTRY)((ULONG_PTR)Segment + SegmentReserve);
 
-    if ((Segment->Entry.Size << HEAP_ENTRY_SHIFT) < SegmentCommit)
+    if (((SIZE_T)Segment->Entry.Size << HEAP_ENTRY_SHIFT) < SegmentCommit)
     {
         HeapEntry = Segment->FirstEntry;
 

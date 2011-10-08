@@ -1794,7 +1794,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileStandardInformation);
 
     if (status == STATUS_SUCCESS)
-        status = parse_manifest(acl, ai, filename, directory, shared, base, info.EndOfFile.QuadPart);
+        status = parse_manifest(acl, ai, filename, directory, shared, base, (SIZE_T)info.EndOfFile.QuadPart);
 
     NtUnmapViewOfSection( NtCurrentProcess(), base );
     NtClose( mapping );

@@ -118,7 +118,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 {
     ULONG InfoLength;
     SIZE_T Length, SpareLength, c;
-    LONG RequiredLength;
+    ULONG RequiredLength;
     PCHAR SpareData, DataEnd;
     ULONG Type;
     PWCHAR Name, p, ValueEnd;
@@ -341,7 +341,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 Status = RtlExpandEnvironmentStrings_U(Environment,
                                                        &Source,
                                                        &Destination,
-                                                       (PULONG)&RequiredLength);
+                                                       &RequiredLength);
                 Type = REG_SZ;
 
                 /* Check for success */

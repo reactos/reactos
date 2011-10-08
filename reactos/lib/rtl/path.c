@@ -47,7 +47,7 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
 {
     UNICODE_STRING PathCopy;
     PWCHAR Start, End;
-    ULONG PathChars, ColonCount = 0;
+    USHORT PathChars, ColonCount = 0;
     USHORT ReturnOffset = 0, ReturnLength;
     WCHAR c;
 
@@ -94,19 +94,18 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
     }
 
     /* Check for extension or space, and truncate */
-    c = PathCopy.Buffer[PathChars - 1];
     do
     {
         /* Stop if we hit something else than a space or period */
+        c = PathCopy.Buffer[PathChars - 1];
         if ((c != '.') && (c != ' ')) break;
 
-        /* Fixup the lengths and get the next character */
+        /* Fixup the lengths */
         PathCopy.Length -= sizeof(WCHAR);
-        if (--PathChars) c = PathCopy.Buffer[PathChars - 1];
 
         /* Remember this for later */
         ColonCount++;
-    } while (PathChars);
+    } while (--PathChars);
 
     /* Anything still left? */
     if (PathChars)

@@ -2495,8 +2495,7 @@ RtlFindCharInUnicodeString(
     IN PCUNICODE_STRING MatchString,
     OUT PUSHORT Position)
 {
-    SHORT i;
-    USHORT j;
+    USHORT i, j;
 
     switch (Flags)
     {
@@ -2520,7 +2519,7 @@ RtlFindCharInUnicodeString(
 
         case 1:
         {
-            for (i = SearchString->Length / sizeof(WCHAR) - 1; i >= 0; i--)
+            for (i = SearchString->Length / sizeof(WCHAR) - 1; (i + 1) > 0; i--)
             {
                 for (j = 0; j < MatchString->Length / sizeof(WCHAR); j++)
                 {
@@ -2561,7 +2560,7 @@ RtlFindCharInUnicodeString(
 
         case 3:
         {
-            for (i = SearchString->Length / sizeof(WCHAR) - 1; i >= 0; i--)
+            for (i = SearchString->Length / sizeof(WCHAR) - 1; (i + 1) > 0; i--)
             {
                 j = 0;
 
