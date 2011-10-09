@@ -383,9 +383,6 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(
 	LPCWSTR lpszShortName,
 	LPCWSTR lpszLongName);
 
-BOOL WINAPI PathQualifyA(LPCSTR path);
-BOOL WINAPI PathQualifyW(LPCWSTR path);
-#define PathQualify WINELIB_NAME_AW(PathQualify)
 BOOL  WINAPI PathQualifyAW(LPCVOID path);
 
 

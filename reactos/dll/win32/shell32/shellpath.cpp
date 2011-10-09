@@ -72,7 +72,7 @@ static LPSTR PathGetExtensionA(LPCSTR lpszPath)
 /*************************************************************************
  * PathGetExtensionW        [internal]
  */
-LPWSTR PathGetExtensionW(LPCWSTR lpszPath)
+static LPWSTR PathGetExtensionW(LPCWSTR lpszPath)
 {
     TRACE("(%s)\n",debugstr_w(lpszPath));
 
@@ -264,7 +264,7 @@ EXTERN_C BOOL WINAPI IsLFNDriveAW(LPCVOID lpszPath)
 /*************************************************************************
  * PathMakeUniqueNameA    [internal]
  */
-BOOL WINAPI PathMakeUniqueNameA(
+static BOOL PathMakeUniqueNameA(
     LPSTR lpszBuffer,
     DWORD dwBuffSize,
     LPCSTR lpszShortName,
@@ -280,7 +280,7 @@ BOOL WINAPI PathMakeUniqueNameA(
 /*************************************************************************
  * PathMakeUniqueNameW    [internal]
  */
-BOOL WINAPI PathMakeUniqueNameW(
+static BOOL PathMakeUniqueNameW(
     LPWSTR lpszBuffer,
     DWORD dwBuffSize,
     LPCWSTR lpszShortName,
@@ -407,7 +407,7 @@ int WINAPI PathCleanupSpec( LPCWSTR lpszPathW, LPWSTR lpszFileW )
 /*************************************************************************
  * PathQualifyA        [SHELL32]
  */
-BOOL WINAPI PathQualifyA(LPCSTR pszPath)
+static BOOL PathQualifyA(LPCSTR pszPath)
 {
     FIXME("%s\n",pszPath);
     return 0;
@@ -416,7 +416,7 @@ BOOL WINAPI PathQualifyA(LPCSTR pszPath)
 /*************************************************************************
  * PathQualifyW        [SHELL32]
  */
-BOOL WINAPI PathQualifyW(LPCWSTR pszPath)
+static BOOL PathQualifyW(LPCWSTR pszPath)
 {
     FIXME("%s\n",debugstr_w(pszPath));
     return 0;
@@ -435,7 +435,7 @@ BOOL WINAPI PathQualifyAW(LPCVOID pszPath)
 /*************************************************************************
  * PathResolveA [SHELL32.51]
  */
-BOOL WINAPI PathResolveA(
+static BOOL PathResolveA(
     LPSTR lpszPath,
     LPCSTR *alpszPaths,
     DWORD dwFlags)
@@ -448,7 +448,7 @@ BOOL WINAPI PathResolveA(
 /*************************************************************************
  * PathResolveW [SHELL32]
  */
-BOOL WINAPI PathResolveW(
+static BOOL PathResolveW(
     LPWSTR lpszPath,
     LPCWSTR *alpszPaths,
     DWORD dwFlags)
@@ -474,7 +474,7 @@ BOOL WINAPI PathResolveAW(
 /*************************************************************************
 *    PathProcessCommandA    [SHELL32.653]
 */
-LONG WINAPI PathProcessCommandA (
+static LONG PathProcessCommandA (
     LPCSTR lpszPath,
     LPSTR lpszBuff,
     DWORD dwBuffSize,
@@ -490,7 +490,7 @@ LONG WINAPI PathProcessCommandA (
 /*************************************************************************
 *    PathProcessCommandW
 */
-LONG WINAPI PathProcessCommandW (
+static LONG PathProcessCommandW (
     LPCWSTR lpszPath,
     LPWSTR lpszBuff,
     DWORD dwBuffSize,
@@ -546,7 +546,7 @@ static const WCHAR HistoryW[] = {'H','i','s','t','o','r','y','\0'};
 static const WCHAR Local_AppDataW[] = {'L','o','c','a','l',' ','A','p','p','D','a','t','a','\0'};
 static const WCHAR My_MusicW[] = {'M','y',' ','M','u','s','i','c','\0'};
 static const WCHAR My_PicturesW[] = {'M','y',' ','P','i','c','t','u','r','e','s','\0'};
-static const WCHAR My_VideoW[] = {'M','y',' ','V','i','d','e','o','\0'};
+static const WCHAR My_VideoW[] = {'M','y',' ','V','i','d','e','o','s','\0'};
 static const WCHAR NetHoodW[] = {'N','e','t','H','o','o','d','\0'};
 static const WCHAR PersonalW[] = {'P','e','r','s','o','n','a','l','\0'};
 static const WCHAR PrintHoodW[] = {'P','r','i','n','t','H','o','o','d','\0'};
