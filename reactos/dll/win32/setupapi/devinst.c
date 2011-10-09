@@ -113,6 +113,7 @@ GetErrorCodeFromCrCode(const IN CONFIGRET cr)
     case CR_NO_SUCH_VALUE:        return ERROR_FILE_NOT_FOUND;
     case CR_OUT_OF_MEMORY:        return ERROR_NOT_ENOUGH_MEMORY;
     case CR_REGISTRY_ERROR:       return ERROR_GEN_FAILURE;
+    case CR_ALREADY_SUCH_DEVINST: return ERROR_DEVINST_ALREADY_EXISTS;
     case CR_SUCCESS:              return ERROR_SUCCESS;
     default:                      return ERROR_GEN_FAILURE;
   }
@@ -1783,7 +1784,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
                                set->hMachine);
     if (cr != CR_SUCCESS)
     {
-        SetLastError(ERROR_INVALID_DATA);
+        SetLastError(GetErrorCodeFromCrCode(cr));
         return FALSE;
     }
 
@@ -1837,6 +1838,10 @@ BOOL WINAPI SetupDiRegisterDeviceInfo(
         PSP_DEVINFO_DATA DupDeviceInfoData)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    WCHAR DevInstId[MAX_DEVICE_ID_LEN];
+    DEVINST ParentDevInst;
+    CONFIGRET cr;
+    DWORD dwError = ERROR_SUCCESS;
 
     TRACE("%p %p %08x %p %p %p\n", DeviceInfoSet, DeviceInfoData, Flags,
             CompareProc, CompareContext, DupDeviceInfoData);
@@ -1857,10 +1862,43 @@ BOOL WINAPI SetupDiRegisterDeviceInfo(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    FIXME("Stub %p %p 0x%lx %p %p %p\n", DeviceInfoSet, DeviceInfoData, Flags,
-            CompareProc, CompareContext, DupDeviceInfoData);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+
+    if (Flags & ~SPRDI_FIND_DUPS)
+    {
+        TRACE("Unknown flags: 0x%08lx\n", Flags & ~SPRDI_FIND_DUPS);
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    if (Flags & SPRDI_FIND_DUPS)
+    {
+        FIXME("Unimplemented codepath!\n");
+    }
+
+    CM_Get_Device_ID_Ex(DeviceInfoData->DevInst,
+                        DevInstId,
+                        MAX_DEVICE_ID_LEN,
+                        0,
+                        set->hMachine);
+
+    CM_Get_Parent_Ex(&ParentDevInst,
+                     DeviceInfoData->DevInst,
+                     0,
+                     set->hMachine);
+
+    cr = CM_Create_DevInst_Ex(&DeviceInfoData->DevInst,
+                              DevInstId,
+                              ParentDevInst,
+                              CM_CREATE_DEVINST_NORMAL | CM_CREATE_DEVINST_DO_NOT_INSTALL,
+                              set->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        dwError = ERROR_NO_SUCH_DEVINST;
+    }
+
+    SetLastError(dwError);
+
+    return (dwError == ERROR_SUCCESS);
 }
 
 /***********************************************************************
