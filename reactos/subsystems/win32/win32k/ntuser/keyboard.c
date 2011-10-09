@@ -818,7 +818,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         }
 
         /* Call hook */
-        if (CallLowLevelKeyboardHook(&Msg, bInjected, pKbdInput->dwExtraInfo))
+        if (co_CallLowLevelKeyboardHook(&Msg, bInjected, pKbdInput->dwExtraInfo))
         {
             ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
                 Msg.message, Msg.wParam, Msg.lParam);
