@@ -309,6 +309,10 @@ IntTranslateChar(WORD wVirtKey,
 
     TRACE("TryToTranslate: %04x %x\n", wVirtKey, dwModBits);
 
+    /* If ALT without CTRL has ben used, remove ALT flag */
+    if ((dwModBits & (KBDALT|KBDCTRL)) == KBDALT)
+        dwModBits &= ~KBDALT;
+
     if (dwModBits > pKbdTbl->pCharModifiers->wMaxModBits)
     {
         TRACE("dwModBits %x > wMaxModBits %x\n", dwModBits, pKbdTbl->pCharModifiers->wMaxModBits);
@@ -333,10 +337,6 @@ IntTranslateChar(WORD wVirtKey,
                     /* Note: we use special value here instead of getting VK_SHIFT mod bit - it's verified */
                     dwVkModBits ^= KBDSHIFT;
                 }
-
-                /* If ALT without CTRL has ben used, remove ALT flag */
-                if ((dwVkModBits & (KBDALT|KBDCTRL)) == KBDALT)
-                    dwVkModBits &= ~KBDALT;
 
                 if (dwVkModBits > pKbdTbl->pCharModifiers->wMaxModBits)
                     break;

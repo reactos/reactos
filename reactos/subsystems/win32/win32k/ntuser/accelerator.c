@@ -397,9 +397,9 @@ NtUserTranslateAccelerator(
     _SEH2_END;
 
     if ((Message.message != WM_KEYDOWN) &&
-            (Message.message != WM_SYSKEYDOWN) &&
-            (Message.message != WM_SYSCHAR) &&
-            (Message.message != WM_CHAR))
+        (Message.message != WM_SYSKEYDOWN) &&
+        (Message.message != WM_SYSCHAR) &&
+        (Message.message != WM_CHAR))
     {
         RETURN( 0);
     }
