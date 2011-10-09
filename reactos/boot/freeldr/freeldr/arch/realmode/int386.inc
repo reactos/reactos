@@ -1,6 +1,10 @@
 
 #include "../../include/arch/pc/pcbios.h"
 
+#define EFLAGS_CF HEX(01)
+#define EFLAGS_ZF HEX(40)
+#define EFLAGS_SF HEX(80)
+
 Int386:
 	/* Save all registers + segment registers */
 	push ds
@@ -12,6 +16,20 @@ Int386:
     /* Get the interupt vector and patch the opcode */
     mov al, byte ptr ds:[BSS_IntVector]
     mov byte ptr ds:[Int386_vector_opcode], al
+
+	/* Get current EFLAGS and mask CF, ZF and SF */
+	pushf
+	pop cx
+	and cx, not (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
+
+	/* Get flags CF, ZF and SF from the REGS structure */
+	mov ax, word ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
+	and ax, (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
+
+	/* Combine flags and set them */
+	or ax, cx
+	push ax
+	popf
 
 	/* Setup the registers */
 	mov ax, word ptr cs:[BSS_RegisterSet + REGS_DS]
@@ -30,9 +48,6 @@ Int386:
 	mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
 	mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
 	mov ebp, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
-
-	/* Do not set the flags register */
-	/* only return its value in regsout */
 
 	/* Call the interrupt vector */
 	/*int		Int386_vector*/
