@@ -746,7 +746,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         wVkOtherSide = IntGetVkOtherSide(wVk);
         bWasDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
 
-        if (xxxDoHotKeyStuff(wSimpleVk, bIsDown))
+        if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
             bPostMsg = FALSE;
 
         /* Update key without shifts */

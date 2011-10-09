@@ -144,7 +144,7 @@ IntKeyboardSendWinKeyMsg()
 }
 
 BOOL NTAPI
-xxxDoHotKeyStuff(WORD wVk, BOOL bIsDown)
+co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 {
     UINT fModifiers;
     PHOT_KEY_ITEM pHotKey;

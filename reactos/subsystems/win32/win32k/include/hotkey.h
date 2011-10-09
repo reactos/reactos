@@ -17,7 +17,7 @@ INIT_FUNCTION NTSTATUS NTAPI InitHotkeyImpl(VOID);
 PHOT_KEY_ITEM FASTCALL IsHotKey(UINT fsModifiers, WORD wVk);
 VOID FASTCALL UnregisterWindowHotKeys(PWND Window);
 VOID FASTCALL UnregisterThreadHotKeys(struct _ETHREAD *Thread);
-BOOL NTAPI xxxDoHotKeyStuff(WORD wVk, BOOL bIsDown);
+BOOL NTAPI co_UserProcessHotKeys(WORD wVk, BOOL bIsDown);
 UINT FASTCALL DefWndGetHotKey(HWND hwnd);
 INT FASTCALL DefWndSetHotKey(PWND pWnd, WPARAM wParam);
 
