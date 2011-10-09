@@ -212,56 +212,57 @@ int UserShowCursor(BOOL bShow)
     return MessageQueue->ShowingCursor;
 }
 
-DWORD FASTCALL UserGetKeyState(DWORD key)
+DWORD FASTCALL
+UserGetKeyState(DWORD dwKey)
 {
-   DWORD ret = 0;
+   DWORD dwRet = 0;
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    pti = PsGetCurrentThreadWin32Thread();
    MessageQueue = pti->MessageQueue;
 
-   if (key < 0x100)
+   if (dwKey < 0x100)
    {
-       ret = (DWORD)MessageQueue->KeyState[key];
-       if (MessageQueue->KeyState[key] & KS_DOWN_BIT)
-           ret |= 0xFF80; // If down, windows returns 0xFF80.
-       if (MessageQueue->KeyState[key] & KS_LOCK_BIT)
-           ret |= 0x1;
+       if (IS_KEY_DOWN(MessageQueue->afKeyState, dwKey))
+           dwRet |= 0xFF80; // If down, windows returns 0xFF80.
+       if (IS_KEY_LOCKED(MessageQueue->afKeyState, dwKey))
+           dwRet |= 0x1;
    }
    else
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
    }
-   return ret;
+   return dwRet;
 }
 
 /* change the input key state for a given key */
-static void set_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, UCHAR key, BOOL down )
+static VOID
+UpdateKeyState(PUSER_MESSAGE_QUEUE MessageQueue, WORD wVk, BOOL bIsDown)
 {
-    TRACE("set_input_key_state key:%d, down:%d\n", key, down);
+    TRACE("UpdateKeyState wVk: %d, bIsDown: %d\n", wVk, bIsDown);
 
-    if (down)
+    if (bIsDown)
     {
-        if (!(MessageQueue->KeyState[key] & KS_DOWN_BIT))
-        {
-            MessageQueue->KeyState[key] ^= KS_LOCK_BIT;
-        }
-        MessageQueue->KeyState[key] |= KS_DOWN_BIT;
+        /* If it's first key down event, xor lock bit */
+        if (!IS_KEY_DOWN(MessageQueue->afKeyState, wVk))
+            SET_KEY_LOCKED(MessageQueue->afKeyState, wVk, !IS_KEY_LOCKED(MessageQueue->afKeyState, wVk));
+
+        SET_KEY_DOWN(MessageQueue->afKeyState, wVk, TRUE);
+        MessageQueue->afKeyRecentDown[wVk / 8] |= (1 << (wVk % 8));
     }
     else
-    {
-        MessageQueue->KeyState[key] &= ~KS_DOWN_BIT;
-    }
+        SET_KEY_DOWN(MessageQueue->afKeyState, wVk, FALSE);
 }
 
 /* update the input key state for a keyboard message */
-static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
+static VOID
+UpdateKeyStateFromMsg(PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg)
 {
     UCHAR key;
     BOOL down = 0;
 
-    TRACE("update_input_key_state message:%d\n", msg->message);
+    TRACE("UpdateKeyStateFromMsg message:%d\n", msg->message);
 
     switch (msg->message)
     {
@@ -269,28 +270,28 @@ static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
         down = 1;
         /* fall through */
     case WM_LBUTTONUP:
-        set_input_key_state( MessageQueue, VK_LBUTTON, down );
+        UpdateKeyState(MessageQueue, VK_LBUTTON, down);
         break;
     case WM_MBUTTONDOWN:
         down = 1;
         /* fall through */
     case WM_MBUTTONUP:
-        set_input_key_state( MessageQueue, VK_MBUTTON, down );
+        UpdateKeyState(MessageQueue, VK_MBUTTON, down);
         break;
     case WM_RBUTTONDOWN:
         down = 1;
         /* fall through */
     case WM_RBUTTONUP:
-        set_input_key_state( MessageQueue, VK_RBUTTON, down );
+        UpdateKeyState(MessageQueue, VK_RBUTTON, down);
         break;
     case WM_XBUTTONDOWN:
         down = 1;
         /* fall through */
     case WM_XBUTTONUP:
         if (msg->wParam == XBUTTON1)
-            set_input_key_state( MessageQueue, VK_XBUTTON1, down );
+            UpdateKeyState(MessageQueue, VK_XBUTTON1, down);
         else if (msg->wParam == XBUTTON2)
-            set_input_key_state( MessageQueue, VK_XBUTTON2, down );
+            UpdateKeyState(MessageQueue, VK_XBUTTON2, down);
         break;
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
@@ -299,23 +300,23 @@ static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
     case WM_KEYUP:
     case WM_SYSKEYUP:
         key = (UCHAR)msg->wParam;
-        set_input_key_state( MessageQueue, key, down );
+        UpdateKeyState(MessageQueue, key, down);
         switch(key)
         {
         case VK_LCONTROL:
         case VK_RCONTROL:
-            down = (MessageQueue->KeyState[VK_LCONTROL] | MessageQueue->KeyState[VK_RCONTROL]) & KS_DOWN_BIT;
-            set_input_key_state( MessageQueue, VK_CONTROL, down );
+            down = IS_KEY_DOWN(MessageQueue->afKeyState, VK_LCONTROL) || IS_KEY_DOWN(MessageQueue->afKeyState, VK_RCONTROL);
+            UpdateKeyState(MessageQueue, VK_CONTROL, down);
             break;
         case VK_LMENU:
         case VK_RMENU:
-            down = (MessageQueue->KeyState[VK_LMENU] | MessageQueue->KeyState[VK_RMENU]) & KS_DOWN_BIT;
-            set_input_key_state( MessageQueue, VK_MENU, down );
+            down = IS_KEY_DOWN(MessageQueue->afKeyState, VK_LMENU) || IS_KEY_DOWN(MessageQueue->afKeyState, VK_RMENU);
+            UpdateKeyState(MessageQueue, VK_MENU, down);
             break;
         case VK_LSHIFT:
         case VK_RSHIFT:
-            down = (MessageQueue->KeyState[VK_LSHIFT] | MessageQueue->KeyState[VK_RSHIFT]) & KS_DOWN_BIT;
-            set_input_key_state( MessageQueue, VK_SHIFT, down );
+            down = IS_KEY_DOWN(MessageQueue->afKeyState, VK_LSHIFT) || IS_KEY_DOWN(MessageQueue->afKeyState, VK_RSHIFT);
+            UpdateKeyState(MessageQueue, VK_SHIFT, down);
             break;
         }
         break;
@@ -625,84 +626,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    MouseHistoryOfMoves[gcur_count].dwExtraInfo = dwExtraInfo;
    if (++gcur_count == ARRAYSIZE(MouseHistoryOfMoves))
       gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
-}
-
-//
-// Note: Only called from input.c.
-//
-VOID FASTCALL
-co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL bInjected)
-{
-   PUSER_MESSAGE_QUEUE FocusMessageQueue;
-   MSG Msg;
-   LARGE_INTEGER LargeTickCount;
-   KBDLLHOOKSTRUCT KbdHookData;
-
-   TRACE("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
-          uMsg, wParam, lParam);
-
-   // Condition may arise when calling MsqPostMessage and waiting for an event.
-   ASSERT(UserIsEntered());
-
-   FocusMessageQueue = IntGetFocusMessageQueue();
-
-   Msg.hwnd = 0;
-
-   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
-       Msg.hwnd = FocusMessageQueue->FocusWindow;
-
-   Msg.message = uMsg;
-   Msg.wParam = wParam;
-   Msg.lParam = lParam;
-
-   KeQueryTickCount(&LargeTickCount);
-   Msg.time = MsqCalculateMessageTime(&LargeTickCount);
-
-   /* We can't get the Msg.pt point here since we don't know thread
-      (and thus the window station) the message will end up in yet. */
-
-   KbdHookData.vkCode = Msg.wParam;
-   KbdHookData.scanCode = (Msg.lParam >> 16) & 0xff;
-   KbdHookData.flags = 0;
-   if (Msg.lParam & 0x01000000)
-      KbdHookData.flags |= LLKHF_EXTENDED;
-   if (Msg.lParam & 0x20000000)
-      KbdHookData.flags |= LLKHF_ALTDOWN;
-   if (Msg.lParam & 0x80000000)
-      KbdHookData.flags |= LLKHF_UP;
-   if (bInjected)
-      KbdHookData.flags |= LLKHF_INJECTED;
-   KbdHookData.time = Msg.time;
-   KbdHookData.dwExtraInfo = 0;
-   if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
-   {
-      ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-             Msg.message, Msg.wParam, Msg.lParam);
-      return;
-   }
-
-   if (FocusMessageQueue == NULL)
-   {
-         TRACE("No focus message queue\n");
-         return;
-   }
-
-   if (FocusMessageQueue->FocusWindow != (HWND)0)
-   {
-         Msg.hwnd = FocusMessageQueue->FocusWindow;
-         TRACE("Msg.hwnd = %x\n", Msg.hwnd);
-
-         FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
-
-         Msg.pt = gpsi->ptCursor;
-         MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
-   }
-   else
-   {
-         TRACE("Invalid focus window handle\n");
-   }
-
-   return;
 }
 
 VOID FASTCALL
@@ -1293,7 +1216,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
 
-       update_input_key_state( MessageQueue, Msg );
+       UpdateKeyStateFromMsg( MessageQueue, Msg );
    }
 
    Message->QS_Flags = MessageBits;
@@ -1801,7 +1724,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
            if (Remove)
            {
-               update_input_key_state(MessageQueue, &msg);
+               UpdateKeyStateFromMsg(MessageQueue, &msg);
                RemoveEntryList(&CurrentMessage->ListEntry);
                ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
                MsqDestroyMessage(CurrentMessage);
@@ -1930,7 +1853,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->NewMessagesHandle = NULL;
    MessageQueue->ShowingCursor = 0;
    MessageQueue->CursorObject = NULL;
-   RtlCopyMemory(MessageQueue->KeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
+   RtlCopyMemory(MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
                           NULL, SynchronizationEvent, FALSE);
@@ -2281,7 +2204,7 @@ DWORD
 APIENTRY
 NtUserGetKeyboardState(LPBYTE lpKeyState)
 {
-   DWORD ret = TRUE;
+   DWORD i, ret = TRUE;
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
@@ -2292,8 +2215,16 @@ NtUserGetKeyboardState(LPBYTE lpKeyState)
 
    _SEH2_TRY
    {
-       ProbeForWrite(lpKeyState,sizeof(MessageQueue->KeyState) ,1);
-       RtlCopyMemory(lpKeyState,MessageQueue->KeyState,sizeof(MessageQueue->KeyState));
+       /* Probe and copy key state to an array */
+       ProbeForWrite(lpKeyState, 256 * sizeof(BYTE), 1);
+       for (i = 0; i < 256; ++i)
+       {
+           lpKeyState[i] = 0;
+           if (IS_KEY_DOWN(MessageQueue->afKeyState, i))
+               lpKeyState[i] |= KS_DOWN_BIT;
+           if (IS_KEY_LOCKED(MessageQueue->afKeyState, i))
+               lpKeyState[i] |= KS_LOCK_BIT;
+       }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -2309,9 +2240,10 @@ NtUserGetKeyboardState(LPBYTE lpKeyState)
 
 BOOL
 APIENTRY
-NtUserSetKeyboardState(LPBYTE lpKeyState)
+NtUserSetKeyboardState(LPBYTE pKeyState)
 {
-   DWORD ret = TRUE;
+   UINT i;
+   BOOL bRet = TRUE;
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
@@ -2322,19 +2254,23 @@ NtUserSetKeyboardState(LPBYTE lpKeyState)
 
    _SEH2_TRY
    {
-       ProbeForRead(lpKeyState,sizeof(MessageQueue->KeyState) ,1);
-       RtlCopyMemory(MessageQueue->KeyState,lpKeyState,sizeof(MessageQueue->KeyState));
+       ProbeForRead(pKeyState, 256 * sizeof(BYTE), 1);
+       for (i = 0; i < 256; ++i)
+       {
+            SET_KEY_DOWN(MessageQueue->afKeyState, i, pKeyState[i] & KS_DOWN_BIT);
+            SET_KEY_LOCKED(MessageQueue->afKeyState, i, pKeyState[i] & KS_LOCK_BIT);
+       }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
        SetLastNtError(_SEH2_GetExceptionCode());
-       ret = FALSE;
+       bRet = FALSE;
    }
    _SEH2_END;
 
    UserLeave();
 
-   return ret;
+   return bRet;
 }
 
 /* EOF */

@@ -106,7 +106,8 @@ typedef struct _USER_MESSAGE_QUEUE
   LPARAM ExtraInfo;
 
   /* state of each key */
-  UCHAR KeyState[256];
+  BYTE afKeyRecentDown[256 / 8]; // 1 bit per key
+  BYTE afKeyState[256 * 2 / 8]; // 2 bits per key
 
   /* showing cursor counter (value>=0 - cursor visible, value<0 - cursor hidden) */
   INT ShowingCursor;
@@ -220,7 +221,6 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
 
 LRESULT FASTCALL IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL IntTranslateKbdMessage(LPMSG lpMsg, UINT flags);
-VOID FASTCALL co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL bInjected);
 VOID FASTCALL MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL FASTCALL MsqIsClkLck(LPMSG Msg, BOOL Remove);

@@ -14,16 +14,11 @@ typedef struct _HOT_KEY_ITEM
 
 INIT_FUNCTION NTSTATUS NTAPI InitHotkeyImpl(VOID);
 
-BOOL FASTCALL
-GetHotKey (UINT fsModifiers,
-	   UINT vk,
-	   struct _ETHREAD **Thread,
-	   HWND *hWnd,
-	   int *id);
-
+PHOT_KEY_ITEM FASTCALL IsHotKey(UINT fsModifiers, WORD wVk);
 VOID FASTCALL UnregisterWindowHotKeys(PWND Window);
 VOID FASTCALL UnregisterThreadHotKeys(struct _ETHREAD *Thread);
+BOOL NTAPI xxxDoHotKeyStuff(WORD wVk, BOOL bIsDown);
 UINT FASTCALL DefWndGetHotKey(HWND hwnd);
-INT FASTCALL  DefWndSetHotKey( PWND pWnd, WPARAM wParam);
+INT FASTCALL DefWndSetHotKey(PWND pWnd, WPARAM wParam);
 
 /* EOF */

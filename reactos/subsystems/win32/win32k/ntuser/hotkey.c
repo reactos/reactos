@@ -42,34 +42,31 @@ CleanupHotKeys(VOID)
 }
 #endif
 
-BOOL FASTCALL
-GetHotKey (UINT fsModifiers,
-           UINT vk,
-           struct _ETHREAD **Thread,
-           HWND *hWnd,
-           int *id)
+/*
+ * IntGetModifiers
+ *
+ * Returns a value that indicates if the key is a modifier key, and
+ * which one.
+ */
+static
+UINT FASTCALL
+IntGetModifiers(PBYTE pKeyState)
 {
-   PHOT_KEY_ITEM HotKeyItem;
+    UINT fModifiers = 0;
+    
+    if (IS_KEY_DOWN(pKeyState, VK_SHIFT))
+        fModifiers |= MOD_SHIFT;
 
-   LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
-   {
-      if (HotKeyItem->fsModifiers == fsModifiers &&
-            HotKeyItem->vk == vk)
-      {
-         if (Thread != NULL)
-            *Thread = HotKeyItem->Thread;
+    if (IS_KEY_DOWN(pKeyState, VK_CONTROL))
+        fModifiers |= MOD_CONTROL;
 
-         if (hWnd != NULL)
-            *hWnd = HotKeyItem->hWnd;
+    if (IS_KEY_DOWN(pKeyState, VK_MENU))
+        fModifiers |= MOD_ALT;
 
-         if (id != NULL)
-            *id = HotKeyItem->id;
+    if (IS_KEY_DOWN(pKeyState, VK_LWIN) || IS_KEY_DOWN(pKeyState, VK_RWIN))
+        fModifiers |= MOD_WIN;
 
-         return TRUE;
-      }
-   }
-
-   return FALSE;
+    return fModifiers;
 }
 
 VOID FASTCALL
@@ -85,7 +82,6 @@ UnregisterWindowHotKeys(PWND Window)
          ExFreePool (HotKeyItem);
       }
    }
-
 }
 
 VOID FASTCALL
@@ -104,22 +100,78 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 
 }
 
-static
-BOOL FASTCALL
-IsHotKey (UINT fsModifiers, UINT vk)
+PHOT_KEY_ITEM FASTCALL
+IsHotKey(UINT fsModifiers, WORD wVk)
 {
-   PHOT_KEY_ITEM HotKeyItem;
+   PHOT_KEY_ITEM pHotKeyItem;
 
-   LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+   LIST_FOR_EACH(pHotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
    {
-      if (HotKeyItem->fsModifiers == fsModifiers && HotKeyItem->vk == vk)
+      if (pHotKeyItem->fsModifiers == fsModifiers && pHotKeyItem->vk == wVk)
       {
-         return TRUE;
+         return pHotKeyItem;
       }
    }
 
-   return FALSE;
+   return NULL;
 }
+
+/*
+ * IntKeyboardSendWinKeyMsg
+ *
+ * Sends syscommand to shell, when WIN key is pressed
+ */
+static
+VOID NTAPI
+IntKeyboardSendWinKeyMsg()
+{
+    PWND pWnd;
+    MSG Msg;
+
+    if (!(pWnd = UserGetWindowObject(InputWindowStation->ShellWindow)))
+    {
+        ERR("Couldn't find window to send Windows key message!\n");
+        return;
+    }
+
+    Msg.hwnd = InputWindowStation->ShellWindow;
+    Msg.message = WM_SYSCOMMAND;
+    Msg.wParam = SC_TASKLIST;
+    Msg.lParam = 0;
+
+    /* The QS_HOTKEY is just a guess */
+    MsqPostMessage(pWnd->head.pti->MessageQueue, &Msg, FALSE, QS_HOTKEY);
+}
+
+BOOL NTAPI
+xxxDoHotKeyStuff(WORD wVk, BOOL bIsDown)
+{
+    UINT fModifiers;
+    PHOT_KEY_ITEM pHotKey;
+
+    /* Check if it is a hotkey */
+    fModifiers = IntGetModifiers(gafAsyncKeyState);
+    pHotKey = IsHotKey(fModifiers, wVk);
+    if (pHotKey)
+    {
+        if (bIsDown)
+        {
+            TRACE("Hot key pressed (hWnd %lx, id %d)\n", pHotKey->hWnd, pHotKey->id);
+            MsqPostHotKeyMessage(pHotKey->Thread,
+                                 pHotKey->hWnd,
+                                 (WPARAM)pHotKey->id,
+                                 MAKELPARAM((WORD)fModifiers, wVk));
+        }
+
+        return TRUE; /* Don't send any message */
+    }
+
+    if ((wVk == VK_LWIN || wVk == VK_RWIN) && fModifiers == 0)
+        IntKeyboardSendWinKeyMsg();
+
+    return FALSE;
+}
+
 
 //
 // Get/SetHotKey message support.
@@ -258,12 +310,12 @@ NtUserRegisterHotKey(HWND hWnd,
    }
 
    /* Check for existing hotkey */
-   if (IsHotKey (fsModifiers, vk))
+   if (IsHotKey(fsModifiers, vk))
    {
       RETURN( FALSE);
    }
 
-   HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), USERTAG_HOTKEY);
+   HotKeyItem = ExAllocatePoolWithTag(PagedPool, sizeof(HOT_KEY_ITEM), USERTAG_HOTKEY);
    if (HotKeyItem == NULL)
    {
       RETURN( FALSE);
