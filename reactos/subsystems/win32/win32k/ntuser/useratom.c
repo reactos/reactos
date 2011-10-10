@@ -85,12 +85,15 @@ NtUserGetAtomName(
     PUNICODE_STRING pBuffer)
 {
    DWORD Ret;
+   WCHAR Buffer[256];
    UNICODE_STRING CapturedName = {0};
    UserEnterShared();
+   CapturedName.Buffer = (LPWSTR)&Buffer;
+   CapturedName.MaximumLength = sizeof(Buffer);
+   Ret = IntGetAtomName((RTL_ATOM)nAtom, CapturedName.Buffer, (ULONG)CapturedName.Length);
    _SEH2_TRY
    {
-      CapturedName = ProbeForReadUnicodeString(pBuffer);
-      Ret = IntGetAtomName((RTL_ATOM)nAtom, CapturedName.Buffer, (ULONG)CapturedName.Length);
+      RtlCopyMemory(pBuffer->Buffer, &Buffer, pBuffer->MaximumLength);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
