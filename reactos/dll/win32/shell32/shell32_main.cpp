@@ -1445,13 +1445,20 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     TRACE("-- pointer to class factory: %p\n", *ppv);
     return hResult;
 }
-#if 0
+
 /***********************************************************************
  *              DllRegisterServer (BROWSEUI.@)
  */
 STDAPI DllRegisterServer()
 {
-    return gModule.DllRegisterServer(FALSE);
+    HRESULT hr;
+
+    hr = gModule.DllRegisterServer(FALSE);
+    if (FAILED(hr))
+        return hr;
+
+    // extra registration stuff for the IShellFolder
+    return DoRegisterServer();
 }
 
 /***********************************************************************
@@ -1459,9 +1466,16 @@ STDAPI DllRegisterServer()
  */
 STDAPI DllUnregisterServer()
 {
-    return gModule.DllUnregisterServer(FALSE);
+    HRESULT hr;
+
+    hr = gModule.DllUnregisterServer(FALSE);
+    if (FAILED(hr))
+        return hr;
+
+    // extra stuff which is performed for IShellFolder
+    return DoUnregisterServer();
 }
-#endif
+
 /*************************************************************************
  * DllInstall         [SHELL32.@]
  *
