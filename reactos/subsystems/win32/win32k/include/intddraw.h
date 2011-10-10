@@ -1,5 +1,11 @@
 #pragma once
 
+#include <ddrawint.h>
+#include <ddkernel.h>
+#include <reactos/drivers/directx/directxint.h>
+#include <reactos/drivers/directx/dxg.h>
+#include <reactos/drivers/directx/dxeng.h>
+
 /* From ddraw.c */
 BOOL intEnableReactXDriver(HDC);
 NTSTATUS APIENTRY DxDdStartupDxGraphics(ULONG, PDRVENABLEDATA, ULONG, PDRVENABLEDATA, PULONG, PEPROCESS);
