@@ -369,6 +369,7 @@ struct StartMenuRoot : public StartMenuHandler
 
 	static HWND Create(HWND hwndDesktopBar, int icon_size);
 	void	TrackStartmenu();
+	int	Command(int id, int code);
 
 	HWND	_hwndStartButton;
 

@@ -63,6 +63,11 @@
 
 #define	IDC_FIRST_MENU			0x3000
 
+// hotkeys
+#define IDHK_EXPLORER 0
+#define IDHK_RUN 1
+#define IDHK_DESKTOP 2
+#define IDHK_LOGOFF 3
 
  /// desktop bar window, also known as "system tray"
 struct DesktopBar : public

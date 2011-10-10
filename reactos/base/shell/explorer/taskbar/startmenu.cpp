@@ -1692,6 +1692,10 @@ void StartMenuRoot::TrackStartmenu()
 	}
 }
 
+int StartMenuRoot::Command(int id, int code)
+{
+	return super::Command(id, code);
+}
 
 LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 {
@@ -2111,10 +2115,10 @@ void StartMenuHandler::ShowSearchComputer()
 		MessageBox(0, TEXT("SHFindComputer() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
-struct RunDialogThread : public Thread 
-{ 
-	int	Run(); 
-}; 
+struct RunDialogThread : public Thread
+{
+	int	Run();
+};
 
 int RunDialogThread::Run()
 {
