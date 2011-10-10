@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ndk/kbd.h>
-
 typedef struct _KBL
 {
   LIST_ENTRY List;

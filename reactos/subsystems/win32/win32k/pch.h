@@ -21,6 +21,7 @@
 #include <ntifs.h>
 #include <tvout.h>
 #include <ndk/exfuncs.h>
+#include <ndk/kbd.h>
 #include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/lpcfuncs.h>
@@ -81,6 +82,13 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Undocumented user definitions */
 #include <undocuser.h>
+
+/* DirectX headers */
+#include <ddrawint.h>
+#include <ddkernel.h>
+#include <reactos/drivers/directx/directxint.h>
+#include <reactos/drivers/directx/dxg.h>
+#include <reactos/drivers/directx/dxeng.h>
 
 /* Freetype headers*/
 #include <ft2build.h>
