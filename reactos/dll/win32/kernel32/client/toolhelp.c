@@ -409,9 +409,12 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       ProcessListEntry->dwFlags = 0; /* no longer used */
       if(ProcessInfo->ImageName.Buffer != NULL)
       {
-        lstrcpynW(ProcessListEntry->szExeFile,
-                  ProcessInfo->ImageName.Buffer,
-                  min(ProcessInfo->ImageName.Length / sizeof(WCHAR), sizeof(ProcessListEntry->szExeFile) / sizeof(ProcessListEntry->szExeFile[0])));
+        ULONG ExeFileLength = min(ProcessInfo->ImageName.Length,
+                                  sizeof(ProcessListEntry->szExeFile) - sizeof(WCHAR));
+        RtlCopyMemory(ProcessListEntry->szExeFile,
+                      ProcessInfo->ImageName.Buffer,
+                      ExeFileLength);
+        ProcessListEntry->szExeFile[ExeFileLength / sizeof(WCHAR)] = UNICODE_NULL;
       }
       else
       {
