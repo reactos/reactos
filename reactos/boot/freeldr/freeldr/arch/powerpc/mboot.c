@@ -425,7 +425,8 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     ULONG ImageSize;
     INT i, j;
     PLOADER_MODULE ModuleData;
-    int phsize, phnum, shsize, shnum, relsize, SectionAddr = 0;
+    //int phsize, phnum;
+    int shsize, shnum, relsize, SectionAddr = 0;
     PCHAR sptr;
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr;
@@ -457,8 +458,8 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     }
 
     /* Start by getting elf headers */
-    phsize = ehdr.e_phentsize;
-    phnum = ehdr.e_phnum;
+    //phsize = ehdr.e_phentsize;
+    //phnum = ehdr.e_phnum;
     shsize = ehdr.e_shentsize;
     shnum = ehdr.e_shnum;
     sptr = (PCHAR)MmHeapAlloc(shnum * shsize);
