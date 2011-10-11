@@ -23,10 +23,10 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "Nagy kÈpek",   FCIDM_SHVIEW_BIGICON
-	MENUITEM "Kis kÈpek",    FCIDM_SHVIEW_SMALLICON
+	MENUITEM "Nagy k√©pek",   FCIDM_SHVIEW_BIGICON
+	MENUITEM "Kis k√©pek",    FCIDM_SHVIEW_SMALLICON
 	MENUITEM "Lista",        FCIDM_SHVIEW_LISTVIEW
-	MENUITEM "RÈszletek",    FCIDM_SHVIEW_REPORTVIEW
+	MENUITEM "R√©szletek",    FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -34,31 +34,31 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "&NÈzet"
+		POPUP "&N√©zet"
 		BEGIN
-			MENUITEM "Nagy kÈpek",                 FCIDM_SHVIEW_BIGICON
-			MENUITEM "Kis kÈpek",                  FCIDM_SHVIEW_SMALLICON
+			MENUITEM "Nagy k√©pek",                 FCIDM_SHVIEW_BIGICON
+			MENUITEM "Kis k√©pek",                  FCIDM_SHVIEW_SMALLICON
 			MENUITEM "Lista",                      FCIDM_SHVIEW_LISTVIEW
-			MENUITEM "RÈszletek",                  FCIDM_SHVIEW_REPORTVIEW
+			MENUITEM "R√©szletek",                  FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "Ikonok rendezÈse"
+		POPUP "Ikonok rendez√©se"
 		BEGIN
-			MENUITEM "&NÈv szerint",               0x30  /* column 0 */
-			MENUITEM "&TÌpus szerint",             0x32  /* column 2 */
-			MENUITEM "&MÈret szerint",             0x31  /* ... */
-			MENUITEM "&LÈtrehoz·s ideje szerint",  0x33
+			MENUITEM "&N√©v szerint",               0x30  /* column 0 */
+			MENUITEM "&T√≠pus szerint",             0x32  /* column 2 */
+			MENUITEM "&M√©ret szerint",             0x31  /* ... */
+			MENUITEM "&L√©trehoz√°s ideje szerint",  0x33
 			MENUITEM SEPARATOR
-			MENUITEM "&Automatikus elrendezÈs",    FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "&Automatikus elrendez√©s",    FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "Ikonok igazit·sa",             FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "Ikonok igazit√°sa",             FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "FrissÌtÈs",                    FCIDM_SHVIEW_REFRESH
+		MENUITEM "Friss√≠t√©s",                    FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "BeillesztÈs",                  FCIDM_SHVIEW_INSERT
-		MENUITEM "Parancsikon beillesztÈse",     FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Beilleszt√©s",                  FCIDM_SHVIEW_INSERT
+		MENUITEM "Parancsikon beilleszt√©se",     FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Be·llÌt·sok",                  FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "Be√°ll√≠t√°sok",                  FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -67,27 +67,27 @@ MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "B&ˆngÈsz",                     FCIDM_SHVIEW_EXPLORE
+		MENUITEM "B&√∂ng√©sz",                     FCIDM_SHVIEW_EXPLORE
 		MENUITEM "Megnyit",                      FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
-		MENUITEM "Kiv·g·s",                      FCIDM_SHVIEW_CUT
-		MENUITEM "M·sol·s",                      FCIDM_SHVIEW_COPY
+		MENUITEM "Kiv√°g√°s",                      FCIDM_SHVIEW_CUT
+		MENUITEM "M√°sol√°s",                      FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
-		MENUITEM "Parancsikon lÈtrehoz·sa",      FCIDM_SHVIEW_CREATELINK
-		MENUITEM "TˆrlÈs",                       FCIDM_SHVIEW_DELETE
-		MENUITEM "¡tnevezÈs",                    FCIDM_SHVIEW_RENAME
+		MENUITEM "Parancsikon l√©trehoz√°sa",      FCIDM_SHVIEW_CREATELINK
+		MENUITEM "T√∂rl√©s",                       FCIDM_SHVIEW_DELETE
+		MENUITEM "√Åtnevez√©s",                    FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
-		MENUITEM "Tulajdons·gok",                FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "Tulajdons√°gok",                FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
 SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Mapp·k bˆngÈszÈse"
+CAPTION "Mapp√°k b√∂ng√©sz√©se"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "MÈgse", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "M√©gse", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
 	LTEXT "", IDD_TITLE, 4, 4, 180, 12
 	LTEXT "", IDD_STATUS, 4, 25, 180, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -128,8 +128,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
-	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
+	LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+	LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+	LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+	LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+	LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+	LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
+	LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -146,7 +152,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "A ReactOS kÈszÌtıi:", IDC_STATIC, 0, 0, 180, 10
+	LTEXT "A ReactOS k√©sz√≠t≈ëi:", IDC_STATIC, 0, 0, 180, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -156,12 +162,12 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Õrd be a program nevÈt, egy mapp·Èt, dokumentumÈt, vagy egy Internet cÌmet, Ès a ReactOS megnyitja.", 12289, 36, 11, 182, 18
-	LTEXT "&Megnyit·s:", 12305, 7, 39, 24, 10
+	LTEXT "√çrd be a program nev√©t, egy mapp√°√©t, dokumentum√©t, vagy egy Internet c√≠met, √©s a ReactOS megnyitja.", 12289, 36, 11, 182, 18
+	LTEXT "&Megnyit√°s:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "MÈgse", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "&BˆngÈszÈs...", 12288, 170, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "M√©gse", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "&B√∂ng√©sz√©s...", 12288, 170, 63, 50, 14, WS_TABSTOP
 END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
@@ -597,15 +603,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	/* columns in the shellview */
-	IDS_SHV_COLUMN1             "¡llom·ny"
-	IDS_SHV_COLUMN2             "MÈret"
-	IDS_SHV_COLUMN3             "TÌpus"
-	IDS_SHV_COLUMN4             "MÛdosÌtva"
-	IDS_SHV_COLUMN5             "Attrib˙tumok"
-	IDS_SHV_COLUMN6             "MÈret"
-	IDS_SHV_COLUMN7             "RendelkezÈsre ·llÛ hely"
-	IDS_SHV_COLUMN8             "NÈv"
-	IDS_SHV_COLUMN9             "MegjegyzÈsek"
+	IDS_SHV_COLUMN1             "√Ållom√°ny"
+	IDS_SHV_COLUMN2             "M√©ret"
+	IDS_SHV_COLUMN3             "T√≠pus"
+	IDS_SHV_COLUMN4             "M√≥dos√≠tva"
+	IDS_SHV_COLUMN5             "Attrib√∫tumok"
+	IDS_SHV_COLUMN6             "M√©ret"
+	IDS_SHV_COLUMN7             "Rendelkez√©sre √°ll√≥ hely"
+	IDS_SHV_COLUMN8             "N√©v"
+	IDS_SHV_COLUMN9             "Megjegyz√©sek"
 	IDS_SHV_COLUMN10            "Tulajdonos"
 	IDS_SHV_COLUMN11            "Csoport"
 	IDS_SHV_COLUMN12            "Filename"
@@ -623,48 +629,48 @@ BEGIN
 
 	/* special folders */
 	IDS_DESKTOP                 "Asztal"
-	IDS_MYCOMPUTER              "Sz·mÌtÛgÈp"
+	IDS_MYCOMPUTER              "Sz√°m√≠t√≥g√©p"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
 	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "Nagy kÈpek"
-	IDS_VIEW_SMALL              "Kis kÈpek"
+	IDS_VIEW_LARGE              "Nagy k√©pek"
+	IDS_VIEW_SMALL              "Kis k√©pek"
 	IDS_VIEW_LIST               "Lista"
-	IDS_VIEW_DETAILS            "RÈszletek"
-	IDS_SELECT                  "Kiv·laszt"
+	IDS_VIEW_DETAILS            "R√©szletek"
+	IDS_SELECT                  "Kiv√°laszt"
 	IDS_OPEN                    "Megnyit"
-	IDS_CREATELINK               "Parancsikon lÈtrehoz·sa"
-	IDS_COPY                    "M·sol·s"
-	IDS_DELETE                  "TˆrlÈs"
-	IDS_PROPERTIES              "Tulajdons·gok"
-	IDS_CUT                     "Kiv·g·s"
+	IDS_CREATELINK               "Parancsikon l√©trehoz√°sa"
+	IDS_COPY                    "M√°sol√°s"
+	IDS_DELETE                  "T√∂rl√©s"
+	IDS_PROPERTIES              "Tulajdons√°gok"
+	IDS_CUT                     "Kiv√°g√°s"
 	IDS_RESTORE                 "Restore"
 	IDS_FORMATDRIVE             "Format..."
 	IDS_RENAME                  "Rename"
 	IDS_INSERT                  "Insert"
 
-	IDS_CREATEFOLDER_DENIED     "Nem hozhatÛ lÈtre ˙j mappa: Nincs hozz· engedÈlyed."
-	IDS_CREATEFOLDER_CAPTION    "Hiba a mappa lÈtrehoz·sakor"
-	IDS_DELETEITEM_CAPTION      "¡llom·ny tˆrlÈse"
-	IDS_DELETEFOLDER_CAPTION    "Mappa tˆrlÈse"
-	IDS_DELETEITEM_TEXT         "Biztosan tˆrˆlni szeretnÈd?: '%1'?"
-	IDS_DELETEMULTIPLE_TEXT     "Biztosan tˆrˆlni szeretnÈd ezt a(z) %1 elemet?"
+	IDS_CREATEFOLDER_DENIED     "Nem hozhat√≥ l√©tre √∫j mappa: Nincs hozz√° enged√©lyed."
+	IDS_CREATEFOLDER_CAPTION    "Hiba a mappa l√©trehoz√°sakor"
+	IDS_DELETEITEM_CAPTION      "√Ållom√°ny t√∂rl√©se"
+	IDS_DELETEFOLDER_CAPTION    "Mappa t√∂rl√©se"
+	IDS_DELETEITEM_TEXT         "Biztosan t√∂r√∂lni szeretn√©d?: '%1'?"
+	IDS_DELETEMULTIPLE_TEXT     "Biztosan t√∂r√∂lni szeretn√©d ezt a(z) %1 elemet?"
 	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
 	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
 	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
 	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
 	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
 	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-	IDS_OVERWRITEFILE_CAPTION   "¡llom·ny fel¸lÌr·sa"
+	IDS_OVERWRITEFILE_CAPTION   "√Ållom√°ny fel√ºl√≠r√°sa"
 	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "⁄jraindÌt·s"
-	IDS_RESTART_PROMPT          "⁄jra szeretnÈd indÌtani a rendszert?"
-	IDS_SHUTDOWN_TITLE          "Kikapcsol·s"
-	IDS_SHUTDOWN_PROMPT         "Kiakarod kapcsolni sz·mÌtÛgÈpÈt?"
+	IDS_RESTART_TITLE           "√öjraind√≠t√°s"
+	IDS_RESTART_PROMPT          "√öjra szeretn√©d ind√≠tani a rendszert?"
+	IDS_SHUTDOWN_TITLE          "Kikapcsol√°s"
+	IDS_SHUTDOWN_PROMPT         "Kiakarod kapcsolni sz√°m√≠t√≥g√©p√©t?"
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
@@ -678,7 +684,7 @@ BEGIN
 	IDS_PROGRAMS                "Start Menu\\Programs"
 	IDS_PERSONAL                "Dokumentumok"
 	IDS_FAVORITES               "Kedvencek"
-	IDS_STARTUP                 "Start Menu\\Programs\\Automatikus indÌt·s" /* MS style: IndÌtÛpult */
+	IDS_STARTUP                 "Start Menu\\Programs\\Automatikus ind√≠t√°s" /* MS style: Ind√≠t√≥pult */
 	IDS_RECENT                  "Recent"
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Start Menu"
@@ -694,12 +700,12 @@ BEGIN
 	IDS_COOKIES                 "Cookies"
 	IDS_HISTORY                 "Local Settings\\History"
 	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "KÈpek"
+	IDS_MYPICTURES              "K√©pek"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Dokumentumok"
-	IDS_ADMINTOOLS              "Start Menu\\Programs\\Fel¸gyeleti eszkˆzˆk"
+	IDS_ADMINTOOLS              "Start Menu\\Programs\\Fel√ºgyeleti eszk√∂z√∂k"
 	IDS_COMMON_MUSIC            "Dokumentumok\\My Music"
-	IDS_COMMON_PICTURES         "Dokumentumok\\KÈpek"
+	IDS_COMMON_PICTURES         "Dokumentumok\\K√©pek"
 	IDS_COMMON_VIDEO            "Dokumentumok\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 	IDS_NETWORKPLACE            "My Network Places"
@@ -715,7 +721,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
-	FCIDM_SHVIEW_NEW 	    "⁄&j"
+	FCIDM_SHVIEW_NEW 	    "√ö&j"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Mappa"
 	FCIDM_SHVIEW_NEWLINK 	    "&Parancsikon"
 	IDS_FOLDER_OPTIONS          "Folder Options"
