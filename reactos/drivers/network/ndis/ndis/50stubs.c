@@ -243,7 +243,8 @@ NdisMWanIndicateReceive(
 VOID
 EXPORT
 NdisMWanIndicateReceiveComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle)
+    IN NDIS_HANDLE MiniportAdapterHandle,
+    IN NDIS_HANDLE NdisLinkContext)
 {
     UNIMPLEMENTED
 }

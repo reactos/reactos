@@ -4416,7 +4416,8 @@ NDISAPI
 VOID
 NTAPI
 NdisMWanIndicateReceiveComplete(
-  IN NDIS_HANDLE  MiniportAdapterHandle);
+  IN NDIS_HANDLE MiniportAdapterHandle,
+  IN NDIS_HANDLE NdisLinkContext);
 
 NDISAPI
 VOID

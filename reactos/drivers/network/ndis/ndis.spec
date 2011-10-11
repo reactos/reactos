@@ -223,7 +223,7 @@
  @ stdcall NdisMTransferDataComplete(ptr ptr long long)
  @ stdcall NdisMUnmapIoSpace(ptr ptr long)
  @ stdcall NdisMWanIndicateReceive(ptr ptr ptr ptr long)
- @ stdcall NdisMWanIndicateReceiveComplete(ptr)
+ @ stdcall NdisMWanIndicateReceiveComplete(ptr ptr)
  @ stdcall NdisMWanSendComplete(ptr ptr long)
  @ stdcall NdisMWriteLogData(ptr ptr long)
  @ stdcall NdisOpenAdapter(ptr ptr ptr ptr ptr long ptr ptr ptr long ptr)
