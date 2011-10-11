@@ -790,6 +790,12 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
             Msg.lParam |= LP_TRANSITION_BIT;
     }
 
+    /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */ 	 
+    if ( pFocusQueue && pFocusQueue->QF_flags & QF_DIALOGACTIVE ) 	 
+       Msg.lParam |= LP_DLGMODE; 	 
+    if ( pFocusQueue && pFocusQueue->MenuOwner )//pFocusQueue->MenuState ) // MenuState needs a start flag...
+       Msg.lParam |= LP_MENUMODE;
+
     /* Init wParam and cursor position */
     Msg.wParam = wVk; // Note: it's simplified by msg queue
     Msg.pt = gpsi->ptCursor;
@@ -832,6 +838,14 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         /* Support VK_*MENU keys */
         if (!bIsDown && wSimpleVk == VK_MENU && !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
             co_IntKeyboardSendAltKeyMsg();
+    }
+
+    /* Alt-Tab/Esc Check. Use FocusQueue or RIT Queue */
+    if (!(pKbdInput->dwFlags & KEYEVENTF_KEYUP) &&
+        HIWORD(Msg.lParam) & KF_ALTDOWN  &&
+        ( Msg.wParam == VK_ESCAPE || Msg.wParam == VK_TAB ) )
+    {
+       TRACE("Alt-Tab/Esc Pressed wParam %x\n",Msg.wParam);
     }
 
     /* If we have a focus queue, post a keyboard message */

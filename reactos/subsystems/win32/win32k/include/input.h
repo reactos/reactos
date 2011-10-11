@@ -33,11 +33,13 @@ extern PATTACHINFO gpai;
 /* Scan Codes */
 #define SC_KEY_UP        0x8000
 /* lParam bits */
-#define LP_EXT_BIT         (1<<24)
+#define LP_EXT_BIT         (KF_EXTENDED<<16)
 #define LP_DO_NOT_CARE_BIT (1<<25) // for GetKeyNameText
-#define LP_CONTEXT_BIT     (1<<29)
-#define LP_PREV_STATE_BIT  (1<<30)
-#define LP_TRANSITION_BIT  (1<<31)
+#define LP_DLGMODE         (KF_DLGMODE<<16)
+#define LP_MENUMODE        (KF_MENUMODE<<16)
+#define LP_CONTEXT_BIT     (KF_ALTDOWN<<16)
+#define LP_PREV_STATE_BIT  (KF_REPEAT<<16)
+#define LP_TRANSITION_BIT  (KF_UP<<16)
 
 
 INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);
