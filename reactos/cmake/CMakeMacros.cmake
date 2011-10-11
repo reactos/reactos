@@ -1,10 +1,12 @@
 
 macro(set_cpp)
-    include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
     set(IS_CPP 1)
-    add_definitions(
-        -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
-        -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
+    if(MSVC)
+        include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
+        add_definitions(
+            -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
+            -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
+    endif()
 endmacro()
 
 function(add_dependency_node _node)

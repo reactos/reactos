@@ -1,4 +1,6 @@
 
+set_cpp()
+
 add_definitions(
     -DRESOLVE_3D_TEXTURE_SUPPORT
     -DBUILD_GL32
@@ -109,10 +111,6 @@ list(APPEND SOURCE
 add_library(glu32 SHARED ${SOURCE})
 allow_warnings(glu32)
 set_module_type(glu32 win32dll ENTRYPOINT 0 )
-
-if(NOT MSVC)
-    target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 oldnames)
-endif()
 
 add_importlibs(glu32
     opengl32

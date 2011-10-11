@@ -150,7 +150,7 @@ endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
     if(IS_CPP)
-        target_link_libraries(${MODULE} stlport -lsupc++ -lgcc)
+        target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
     endif()
 
     if(${TYPE} STREQUAL kernelmodedriver)
