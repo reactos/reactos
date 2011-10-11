@@ -1391,7 +1391,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
     /* Give time values to our caller */
     TimeInfo->TimeIncrement = KeMaximumIncrement;
     TimeInfo->TimeAdjustment = KeTimeAdjustment;
-    TimeInfo->Enable = TRUE;
+    TimeInfo->Enable = !KiTimeAdjustmentEnabled;
 
     return STATUS_SUCCESS;
 }
@@ -1399,8 +1399,8 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    /*PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
-        (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;*/
+    PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
+        (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;
 
     /* Check size of a buffer, it must match our expectations */
     if (sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION) != Size)
@@ -1416,9 +1416,24 @@ SSI_DEF(SystemTimeAdjustmentInformation)
         }
     }
 
-    /* TODO: Set time adjustment information */
-    DPRINT1("Setting of SystemTimeAdjustmentInformation is not implemented yet!\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* FIXME: behaviour suggests the member be named 'Disable' */
+    if (TimeInfo->Enable)
+    {
+        /* Disable time adjustment and set default value */
+        KiTimeAdjustmentEnabled = FALSE;
+        KeTimeAdjustment = KeMaximumIncrement;
+    }
+    else
+    {
+        /* Check if a valid time adjustment value is given */
+        if (TimeInfo->TimeAdjustment == 0) return STATUS_INVALID_PARAMETER_2;
+
+        /* Enable time adjustment and set the adjustment value */
+        KiTimeAdjustmentEnabled = TRUE;
+        KeTimeAdjustment = TimeInfo->TimeAdjustment;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 29 - Summary Memory Information */
