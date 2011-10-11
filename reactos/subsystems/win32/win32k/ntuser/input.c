@@ -617,17 +617,17 @@ APIENTRY
 NtUserBlockInput(
     BOOL BlockIt)
 {
-    DECLARE_RETURN(BOOLEAN);
+    BOOL ret;
 
     TRACE("Enter NtUserBlockInput\n");
     UserEnterExclusive();
 
-    RETURN( IntBlockInput(PsGetCurrentThreadWin32Thread(), BlockIt));
+    ret = IntBlockInput(PsGetCurrentThreadWin32Thread(), BlockIt);
 
-CLEANUP:
-    TRACE("Leave NtUserBlockInput, ret=%i\n", _ret_);
     UserLeave();
-    END_CLEANUP;
+    TRACE("Leave NtUserBlockInput, ret=%i\n", ret);
+
+    return ret;
 }
 
 BOOL FASTCALL

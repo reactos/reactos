@@ -591,30 +591,28 @@ APIENTRY
 NtUserGetAsyncKeyState(INT Key)
 {
     WORD wRet = 0;
-    DECLARE_RETURN(SHORT);
 
     TRACE("Enter NtUserGetAsyncKeyState\n");
-    UserEnterExclusive();
 
-    if (Key < 0x100)
-    {
-        if (IS_KEY_DOWN(gafAsyncKeyState, Key))
-            wRet |= 0x8000; // If down, windows returns 0x8000.
-        if (gafAsyncKeyStateRecentDown[Key / 8] & (1 << (Key % 8)))
-            wRet |= 0x1;
-        gafAsyncKeyStateRecentDown[Key / 8] &= ~(1 << (Key % 8));
-    }
-    else
+    if (Key >= 0x100)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
+        ERR("Invalid parameter Key\n");
+        return 0;
     }
 
-    RETURN(wRet);
+    UserEnterExclusive();
 
-CLEANUP:
-    TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n", _ret_);
+    if (IS_KEY_DOWN(gafAsyncKeyState, Key))
+        wRet |= 0x8000; // If down, windows returns 0x8000.
+    if (gafAsyncKeyStateRecentDown[Key / 8] & (1 << (Key % 8)))
+        wRet |= 0x1;
+    gafAsyncKeyStateRecentDown[Key / 8] &= ~(1 << (Key % 8));
+
     UserLeave();
-    END_CLEANUP;
+
+    TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n", wRet);
+    return wRet;
 }
 
 /*
@@ -1101,7 +1099,7 @@ APIENTRY
 NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
 {
     PKBDTABLES pKbdTbl = NULL;
-    DECLARE_RETURN(UINT);
+    UINT ret = 0;
 
     TRACE("Enter NtUserMapVirtualKeyEx\n");
     UserEnterExclusive();
@@ -1123,15 +1121,12 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
             pKbdTbl = pKbl->KBTables;
     }
 
-    if (!pKbdTbl)
-        RETURN(0);
+    if (pKbdTbl)
+        ret = IntMapVirtualKeyEx(uCode, uType, pKbdTbl);
 
-    RETURN(IntMapVirtualKeyEx(uCode, uType, pKbdTbl));
-
-CLEANUP:
-    TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n", _ret_);
     UserLeave();
-    END_CLEANUP;
+    TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n", ret);
+    return ret;
 }
 
 /*
@@ -1155,16 +1150,14 @@ NtUserToUnicodeEx(
     PWCHAR pwszBuff = NULL;
     INT i, iRet = 0;
     PKBL pKbl = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-    DECLARE_RETURN(INT);
 
     TRACE("Enter NtUserSetKeyboardState\n");
-    UserEnterShared();
 
     /* Return 0 if SC_KEY_UP bit is set */
-    if (wScanCode & SC_KEY_UP)
+    if (wScanCode & SC_KEY_UP || wVirtKey >= 0x100)
     {
-        RETURN(0);
+        ERR("Invalid parameter\n");
+        return 0;
     }
 
     _SEH2_TRY
@@ -1181,55 +1174,45 @@ NtUserToUnicodeEx(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        ERR("Cannot copy key state\n");
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(return 0);
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
+    pwszBuff = ExAllocatePoolWithTag(NonPagedPool, sizeof(WCHAR) * cchBuff, TAG_STRING);
+    if (!pwszBuff)
     {
-        ERR("Cannot copy key state\n");
-        SetLastNtError(Status);
-        RETURN(0);
+        ERR("ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
+        return 0;
+    }
+    RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
+
+    UserEnterShared();
+
+    if (dwhkl)
+        pKbl = UserHklToKbl(dwhkl);
+
+    if (!pKbl)
+    {
+        pti = PsGetCurrentThreadWin32Thread();
+        pKbl = pti->KeyboardLayout;
     }
 
-    /* Virtual code is correct? */
-    if (wVirtKey < 0x100)
-    {
-        pwszBuff = ExAllocatePoolWithTag(NonPagedPool, sizeof(WCHAR) * cchBuff, TAG_STRING);
-        if (!pwszBuff)
-        {
-            ERR("ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
-            RETURN(0);
-        }
-        RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
+    iRet = IntToUnicodeEx(wVirtKey,
+                          wScanCode,
+                          afKeyState,
+                          pwszBuff,
+                          cchBuff,
+                          wFlags,
+                          pKbl ? pKbl->KBTables : NULL);
 
-        if (dwhkl)
-            pKbl = UserHklToKbl(dwhkl);
+    MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
+    ExFreePoolWithTag(pwszBuff, TAG_STRING);
 
-        if (!pKbl)
-        {
-            pti = PsGetCurrentThreadWin32Thread();
-            pKbl = pti->KeyboardLayout;
-        }
-
-        iRet = IntToUnicodeEx(wVirtKey,
-                              wScanCode,
-                              afKeyState,
-                              pwszBuff,
-                              cchBuff,
-                              wFlags,
-                              pKbl ? pKbl->KBTables : NULL);
-
-        MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
-        ExFreePoolWithTag(pwszBuff, TAG_STRING);
-    }
-
-    RETURN(iRet);
-
-CLEANUP:
-    TRACE("Leave NtUserSetKeyboardState, ret=%i\n", _ret_);
     UserLeave();
-    END_CLEANUP;
+    TRACE("Leave NtUserSetKeyboardState, ret=%i\n", iRet);
+    return iRet;
 }
 
 /*
@@ -1249,17 +1232,20 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
     VSC_LPWSTR *pKeyNames = NULL;
     CONST WCHAR *pKeyName = NULL;
     WCHAR KeyNameBuf[2];
-    DECLARE_RETURN(DWORD);
 
     TRACE("Enter NtUserGetKeyNameText\n");
-    UserEnterShared();
 
     /* Get current keyboard layout */
     pti = PsGetCurrentThreadWin32Thread();
     pKbdTbl = pti ? pti->KeyboardLayout->KBTables : 0;
 
     if (!pKbdTbl || cchSize < 1)
-        RETURN(0);
+    {
+        ERR("Invalid parameter\n");
+        return 0;
+    }
+
+    UserEnterShared();
 
     /* "Do not care" flag */
     if(lParam & LP_DO_NOT_CARE_BIT)
@@ -1323,12 +1309,9 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
         EngSetLastError(ERROR_INVALID_PARAMETER);
     }
 
-    RETURN(dwRet);
-
-CLEANUP:
-    TRACE("Leave NtUserGetKeyNameText, ret=%i\n", _ret_);
     UserLeave();
-    END_CLEANUP;
+    TRACE("Leave NtUserGetKeyNameText, ret=%i\n", dwRet);
+    return dwRet;
 }
 
 /*
