@@ -1948,6 +1948,26 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
                      IN OUT PULONG ReturnLength,
                      IN KPROCESSOR_MODE PreviousMode)
 {
+    /* handle sime internal commands */
+    if (Command == ' soR')
+    {
+        switch ((ULONG_PTR)InputBuffer)
+        {
+            case 0x30: // ManualBugCheck:
+                KeBugCheck(MANUALLY_INITIATED_CRASH);
+                break;
+
+             case 0x25: // EnterDebugger:
+                DbgBreakPoint();
+                break;
+
+            case 0x24:
+                MmDumpArmPfnDatabase(FALSE);
+                break;
+        }
+        return STATUS_SUCCESS;
+    }
+
     /* Local kernel debugging is not yet supported */
     DbgPrint("KdSystemDebugControl is unimplemented!\n");
     return STATUS_NOT_IMPLEMENTED;
