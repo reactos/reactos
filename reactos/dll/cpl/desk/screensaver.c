@@ -410,6 +410,7 @@ AddScreenSavers(HWND hwndDlg, PDATA pData)
 {
     HWND hwndScreenSavers = GetDlgItem(hwndDlg, IDC_SCREENS_LIST);
     TCHAR szSearchPath[MAX_PATH];
+    TCHAR szLocalPath[MAX_PATH];
     INT i;
     ScreenSaverItem *ScreenSaverItem = NULL;
     LPTSTR lpBackSlash;
@@ -437,22 +438,24 @@ AddScreenSavers(HWND hwndDlg, PDATA pData)
     // Initialize number of items into the list
     pData->ScreenSaverCount = 1;
 
-    // Add all the screensavers in the C:\ReactOS\System32 directory.
-    GetSystemDirectory(szSearchPath, MAX_PATH);
-    SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
-
-    // Add all the screensavers in the C:\ReactOS directory.
-    GetWindowsDirectory(szSearchPath, MAX_PATH);
-    SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
-
     // Add all the screensavers where the applet is stored.
-    GetModuleFileName(hApplet, szSearchPath, MAX_PATH);
-    lpBackSlash = _tcsrchr(szSearchPath, _T('\\'));
+    GetModuleFileName(hApplet, szLocalPath, MAX_PATH);
+    lpBackSlash = _tcsrchr(szLocalPath, _T('\\'));
     if (lpBackSlash != NULL)
     {
         *lpBackSlash = '\0';
-        SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
+        SearchScreenSavers(hwndScreenSavers, szLocalPath, pData);
     }
+
+    // Add all the screensavers in the C:\ReactOS\System32 directory.
+    GetSystemDirectory(szSearchPath, MAX_PATH);
+    if (lpBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
+        SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
+
+    // Add all the screensavers in the C:\ReactOS directory.
+    GetWindowsDirectory(szSearchPath, MAX_PATH);
+    if (lpBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
+        SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
 }
 
 
