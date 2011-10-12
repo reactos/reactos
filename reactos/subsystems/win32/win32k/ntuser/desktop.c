@@ -1060,7 +1060,7 @@ NtUserCreateDesktop(
    Cs.lpszName = (LPCWSTR) &WindowName;
    Cs.lpszClass = (LPCWSTR) &ClassName;
 
-   pWndDesktop = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName);
+   pWndDesktop = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL);
    if (!pWnd)
    {
       ERR("Failed to create Desktop window handle\n");
@@ -1088,7 +1088,7 @@ NtUserCreateDesktop(
    Cs.lpszName = (LPCWSTR) &WindowName;
    Cs.lpszClass = (LPCWSTR) &ClassName;
 
-   pWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName);
+   pWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL);
    if (!pWnd)
    {
       ERR("Failed to create Message window handle\n");

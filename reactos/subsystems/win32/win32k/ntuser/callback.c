@@ -87,7 +87,7 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
 // This will help user space programs speed up read access with the window object.
 //
 static VOID
-IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
+IntSetTebWndCallback (HWND * hWnd, PWND * pWnd, PVOID * pActCtx)
 {
   HWND hWndS = *hWnd;
   PWND Window = UserGetWindowObject(*hWnd);
@@ -95,18 +95,21 @@ IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
 
   *hWnd = ClientInfo->CallbackWnd.hWnd;
   *pWnd = ClientInfo->CallbackWnd.pWnd;
+  *pActCtx = ClientInfo->CallbackWnd.pActCtx;
 
   ClientInfo->CallbackWnd.hWnd  = hWndS;
   ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
+  ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
 }
 
 static VOID
-IntRestoreTebWndCallback (HWND hWnd, PWND pWnd)
+IntRestoreTebWndCallback (HWND hWnd, PWND pWnd, PVOID pActCtx)
 {
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ClientInfo->CallbackWnd.hWnd = hWnd;
   ClientInfo->CallbackWnd.pWnd = pWnd;
+  ClientInfo->CallbackWnd.pActCtx = pActCtx;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -227,7 +230,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pActCtx;
    PWND pWnd;
    ULONG ResultLength;
    NTSTATUS Status;
@@ -238,7 +241,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
    Arguments.Context = CompletionCallbackContext;
    Arguments.Result = Result;
 
-   IntSetTebWndCallback (&hWnd, &pWnd);
+   IntSetTebWndCallback (&hWnd, &pWnd, &pActCtx);
 
    UserLeaveCo();
 
@@ -250,7 +253,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
    UserEnterCo();
 
-   IntRestoreTebWndCallback (hWnd, pWnd);
+   IntRestoreTebWndCallback (hWnd, pWnd, pActCtx);
 
    if (!NT_SUCCESS(Status))
    {
@@ -271,7 +274,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pActCtx;
    PWND pWnd;
    ULONG ResultLength;
    ULONG ArgumentLength;
@@ -304,7 +307,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    ResultPointer = NULL;
    ResultLength = ArgumentLength;
 
-   IntSetTebWndCallback (&Wnd, &pWnd);
+   IntSetTebWndCallback (&Wnd, &pWnd, &pActCtx);
 
    UserLeaveCo();
 
@@ -328,7 +331,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    UserEnterCo();
 
-   IntRestoreTebWndCallback (Wnd, pWnd);
+   IntRestoreTebWndCallback (Wnd, pWnd, pActCtx);
 
    if (!NT_SUCCESS(Status))
    {

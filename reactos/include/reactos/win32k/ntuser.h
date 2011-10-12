@@ -6,7 +6,6 @@ typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
 
-
 #define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
 
@@ -247,6 +246,7 @@ typedef struct _CALLBACKWND
 {
      HWND hWnd;
      struct _WND *pWnd;
+     PVOID pActCtx;
 } CALLBACKWND, *PCALLBACKWND;
 
 #define CI_TRANSACTION       0x00000001
@@ -284,7 +284,7 @@ typedef struct _CLIENTINFO
     UCHAR achDbcsCF[2];
     MSG msgDbcsCB;
     LPDWORD lpdwRegisteredClasses;
-    ULONG Win32ClientInfo3[27];
+    ULONG Win32ClientInfo3[26];
 /* It's just a pointer reference not to be used w the structure in user space. */
     PPROCESSINFO ppi;
 } CLIENTINFO, *PCLIENTINFO;
@@ -591,7 +591,7 @@ typedef struct _WND
     struct _WND *spwndLastActive;
     //HIMC hImc; // Input context associated with this window.
     LONG dwUserData;
-    //PACTIVATION_CONTEXT pActCtx;
+    PVOID pActCtx;
     //PD3DMATRIX pTransForm;
     struct _WND *spwndClipboardListener;
     DWORD ExStyle2;

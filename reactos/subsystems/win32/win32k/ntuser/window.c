@@ -1557,7 +1557,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                         PLARGE_STRING WindowName,
                                         PCLS Class,
                                         PWND ParentWindow,
-                                        PWND OwnerWindow)
+                                        PWND OwnerWindow,
+                                        PVOID acbiBuffer)
 {
    PWND pWnd = NULL;
    HWND hWnd;
@@ -1642,6 +1643,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->style = Cs->style & ~WS_VISIBLE;
    pWnd->ExStyle = Cs->dwExStyle;
    pWnd->cbwndExtra = pWnd->pcls->cbwndExtra;
+   pWnd->pActCtx = acbiBuffer;
 
    IntReferenceMessageQueue(pWnd->head.pti->MessageQueue);
    if (pWnd->spwndParent != NULL && Cs->hwndParent != 0)
@@ -1835,7 +1837,8 @@ AllocError:
 PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                      PUNICODE_STRING ClassName,
-                     PLARGE_STRING WindowName)
+                     PLARGE_STRING WindowName,
+                     PVOID acbiBuffer)
 {
    PWND Window = NULL, ParentWindow = NULL, OwnerWindow;
    HWND hWnd, hWndParent, hWndOwner, hwndInsertAfter;
@@ -1914,7 +1917,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                             WindowName,
                             Class,
                             ParentWindow,
-                            OwnerWindow);
+                            OwnerWindow,
+                            acbiBuffer);
    if(!Window)
    {
        ERR("IntCreateWindow failed!\n");
@@ -2347,7 +2351,7 @@ NtUserCreateWindowEx(
     UserEnterExclusive();
 
     /* Call the internal function */
-    pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName);
+    pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName, acbiBuffer);
 
     if(!pwnd)
     {
