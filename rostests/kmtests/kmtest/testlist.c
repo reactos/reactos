@@ -12,6 +12,7 @@ KMT_TESTFUNC Test_IoDeviceObject;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlSplayTree;
+KMT_TESTFUNC Test_RtlUnicodeString;
 
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
@@ -21,5 +22,6 @@ const KMT_TEST TestList[] =
     { "RtlAvlTree",         Test_RtlAvlTree },
     { "RtlMemory",          Test_RtlMemory },
     { "RtlSplayTree",       Test_RtlSplayTree },
+    { "RtlUnicodeString",   Test_RtlUnicodeString },
     { NULL,                 NULL },
 };

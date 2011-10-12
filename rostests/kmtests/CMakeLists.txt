@@ -11,7 +11,8 @@ list(APPEND COMMON_SOURCE
     example/GuardedMemory.c
     rtl/RtlAvlTree.c
     rtl/RtlMemory.c
-    rtl/RtlSplayTree.c)
+    rtl/RtlSplayTree.c
+    rtl/RtlUnicodeString.c)
 
 #
 # kmtest_drv.sys driver

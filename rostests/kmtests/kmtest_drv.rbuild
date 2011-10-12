@@ -56,6 +56,7 @@
 		<file>RtlAvlTree.c</file>
 		<file>RtlMemory.c</file>
 		<file>RtlSplayTree.c</file>
+		<file>RtlUnicodeString.c</file>
 	</directory>
 </module>
 <module name="kmtest_printf" type="staticlibrary">
