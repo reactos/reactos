@@ -202,7 +202,6 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
 
         pServiceImage->dwImageRunCount = 1;
         pServiceImage->hControlPipe = INVALID_HANDLE_VALUE;
-        pServiceImage->hProcess = INVALID_HANDLE_VALUE;
 
         /* Set the image path */
         wcscpy(pServiceImage->szImagePath,
@@ -264,10 +263,6 @@ ScmDereferenceServiceImage(PSERVICE_IMAGE pServiceImage)
         /* Close the control pipe */
         if (pServiceImage->hControlPipe != INVALID_HANDLE_VALUE)
             CloseHandle(pServiceImage->hControlPipe);
-
-        /* Close the process handle */
-        if (pServiceImage->hProcess != INVALID_HANDLE_VALUE)
-            CloseHandle(pServiceImage->hProcess);
 
         /* Release the service image */
         HeapFree(GetProcessHeap(), 0, pServiceImage);
@@ -656,7 +651,7 @@ ScmDeleteMarkedServices(VOID)
                     HeapFree(GetProcessHeap(), 0, CurrentService);
                 }
             }
-            
+
             if (dwError != ERROR_SUCCESS)
                 DPRINT1("Delete service failed: %S\n", CurrentService->lpServiceName);
         }
@@ -1085,6 +1080,16 @@ ScmControlService(PSERVICE Service,
     {
         dwError = GetLastError();
         DPRINT("WriteFile() failed (Error %lu)\n", dwError);
+
+        if ((dwError == ERROR_GEN_FAILURE) &&
+            (dwControl == SERVICE_CONTROL_STOP))
+        {
+            /* Service is already terminated */
+            Service->Status.dwCurrentState = SERVICE_STOPPED;
+            Service->Status.dwControlsAccepted = 0;
+            Service->Status.dwWin32ExitCode = ERROR_SERVICE_NOT_ACTIVE;
+            dwError = ERROR_SUCCESS;
+        }
         goto Done;
     }
 
@@ -1572,7 +1577,6 @@ ScmStartUserModeService(PSERVICE Service,
 
     /* Get process handle and id */
     Service->lpImage->dwProcessId = ProcessInformation.dwProcessId;
-    Service->lpImage->hProcess = ProcessInformation.hProcess;
 
     /* Resume Thread */
     ResumeThread(ProcessInformation.hThread);
@@ -1590,12 +1594,11 @@ ScmStartUserModeService(PSERVICE Service,
     {
         DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
         Service->lpImage->dwProcessId = 0;
-        Service->lpImage->hProcess = NULL;
-        CloseHandle(ProcessInformation.hProcess);
     }
 
-    /* Close thread handle */
+    /* Close thread and process handle */
     CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
 
     return dwError;
 }
