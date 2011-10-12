@@ -1,5 +1,7 @@
 
-set_cpp()
+if(NOT MSVC)
+    set_cpp()
+endif()
 
 add_definitions(
     -DRESOLVE_3D_TEXTURE_SUPPORT
