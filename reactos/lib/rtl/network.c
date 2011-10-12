@@ -22,10 +22,15 @@ NTAPI
 RtlIpv4AddressToStringA(IN struct in_addr *Addr,
                         OUT PCHAR S)
 {
-    return S + sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                         Addr->S_un.S_un_b.s_b2,
-                                         Addr->S_un.S_un_b.s_b3,
-                                         Addr->S_un.S_un_b.s_b4);
+    CHAR Buffer[sizeof("255.255.255.255")];
+    INT Length;
+    Length = sprintf(Buffer, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
+                                            Addr->S_un.S_un_b.s_b2,
+                                            Addr->S_un.S_un_b.s_b3,
+                                            Addr->S_un.S_un_b.s_b4);
+    if (S)
+        strcpy(S, Buffer);
+    return S + Length;
 }
 
 /*
