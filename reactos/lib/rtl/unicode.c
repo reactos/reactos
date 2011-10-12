@@ -2486,6 +2486,31 @@ RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+static
+BOOLEAN
+RtlpIsCharInUnicodeString(
+    IN WCHAR Char,
+    IN PCUNICODE_STRING MatchString,
+    IN BOOLEAN CaseInSensitive)
+{
+    USHORT i;
+
+    if (CaseInSensitive)
+        Char = RtlUpcaseUnicodeChar(Char);
+
+    for (i = 0; i < MatchString->Length / sizeof(WCHAR); i++)
+    {
+        WCHAR OtherChar = MatchString->Buffer[i];
+        if (CaseInSensitive)
+            OtherChar = RtlUpcaseUnicodeChar(OtherChar);
+
+        if (Char == OtherChar)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 /*
  * @implemented
  */
@@ -2493,94 +2518,54 @@ NTSTATUS
 NTAPI
 RtlFindCharInUnicodeString(
     IN ULONG Flags,
-    IN PUNICODE_STRING SearchString,
+    IN PCUNICODE_STRING SearchString,
     IN PCUNICODE_STRING MatchString,
     OUT PUSHORT Position)
 {
-    USHORT i, j;
+    BOOLEAN Found;
+    const BOOLEAN WantToFind = (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_COMPLEMENT_CHAR_SET) == 0;
+    const BOOLEAN CaseInSensitive = (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE) != 0;
+    INT Length;
+    INT i;
 
-    switch (Flags)
+    DPRINT("RtlFindCharInUnicodeString(%u, '%wZ', '%wZ', %p)\n",
+           Flags, SearchString, MatchString, Position);
+
+    /* Parameter checks */
+    if (Position == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    *Position = 0;
+
+    if (Flags & ~(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END |
+                  RTL_FIND_CHAR_IN_UNICODE_STRING_COMPLEMENT_CHAR_SET |
+                  RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE))
+        return STATUS_INVALID_PARAMETER;
+
+    /* Search */
+    Length = SearchString->Length / sizeof(WCHAR);
+    if (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END)
     {
-        case 0:
+        for (i = Length - 1; i >= 0; i--)
         {
-            for (i = 0; i < SearchString->Length / sizeof(WCHAR); i++)
+            Found = RtlpIsCharInUnicodeString(SearchString->Buffer[i], MatchString, CaseInSensitive);
+            if (Found == WantToFind)
             {
-                for (j = 0; j < MatchString->Length / sizeof(WCHAR); j++)
-                {
-                    if (SearchString->Buffer[i] == MatchString->Buffer[j])
-                    {
-                        *Position = (i + 1) * sizeof(WCHAR);
-                        return STATUS_SUCCESS;
-                    }
-                }
+                *Position = i * sizeof(WCHAR);
+                return STATUS_SUCCESS;
             }
-
-            *Position = 0;
-            return STATUS_NOT_FOUND;
         }
-
-        case 1:
+    }
+    else
+    {
+        for (i = 0; i < Length; i++)
         {
-            for (i = SearchString->Length / sizeof(WCHAR) - 1; (i + 1) > 0; i--)
+            Found = RtlpIsCharInUnicodeString(SearchString->Buffer[i], MatchString, CaseInSensitive);
+            if (Found == WantToFind)
             {
-                for (j = 0; j < MatchString->Length / sizeof(WCHAR); j++)
-                {
-                    if (SearchString->Buffer[i] == MatchString->Buffer[j])
-                    {
-                        *Position = i * sizeof(WCHAR);
-                        return STATUS_SUCCESS;
-                    }
-                }
+                *Position = (i + 1) * sizeof(WCHAR);
+                return STATUS_SUCCESS;
             }
-
-            *Position = 0;
-            return STATUS_NOT_FOUND;
-        }
-
-        case 2:
-        {
-            for (i = 0; i < SearchString->Length / sizeof(WCHAR); i++)
-            {
-                j = 0;
-
-                while (j < MatchString->Length / sizeof(WCHAR) &&
-                       SearchString->Buffer[i] != MatchString->Buffer[j])
-                {
-                    j++;
-                }
-
-                if (j >= MatchString->Length / sizeof(WCHAR))
-                {
-                    *Position = (i + 1) * sizeof(WCHAR);
-                    return STATUS_SUCCESS;
-                }
-            }
-
-            *Position = 0;
-            return STATUS_NOT_FOUND;
-        }
-
-        case 3:
-        {
-            for (i = SearchString->Length / sizeof(WCHAR) - 1; (i + 1) > 0; i--)
-            {
-                j = 0;
-
-                while (j < MatchString->Length / sizeof(WCHAR) &&
-                       SearchString->Buffer[i] != MatchString->Buffer[j])
-                {
-                    j++;
-                }
-
-                if (j >= MatchString->Length / sizeof(WCHAR))
-                {
-                    *Position = i * sizeof(WCHAR);
-                    return STATUS_SUCCESS;
-                }
-            }
-
-            *Position = 0;
-            return STATUS_NOT_FOUND;
         }
     }
 

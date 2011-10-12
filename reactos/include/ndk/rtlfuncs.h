@@ -2026,7 +2026,7 @@ NTSTATUS
 NTAPI
 RtlFindCharInUnicodeString(
     IN ULONG Flags,
-    IN PUNICODE_STRING SearchString,
+    IN PCUNICODE_STRING SearchString,
     IN PCUNICODE_STRING MatchString,
     OUT PUSHORT Position
 );
