@@ -11,6 +11,7 @@ extern void func_generated(void);
 extern void func_ndr_marshall(void);
 extern void func_rpc(void);
 extern void func_rpc_async(void);
+extern void func_rpc_protseq(void);
 extern void func_server(void);
 
 const struct test winetest_testlist[] =
@@ -20,6 +21,7 @@ const struct test winetest_testlist[] =
     { "ndr_marshall", func_ndr_marshall },
     { "rpc", func_rpc },
     { "rpc_async", func_rpc_async },
+    { "rpc_protseq", func_rpc_protseq },
     { "server", func_server },
     { 0, 0 }
 };

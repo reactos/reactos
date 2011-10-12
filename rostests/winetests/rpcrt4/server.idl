@@ -162,6 +162,7 @@ cpp_quote("#endif")
   int sum_cs(cs_t *cs);
   int sum_cps(cps_t *cps);
   int sum_cpsc(cpsc_t *cpsc);
+  int get_cpsc(int n, [out] cpsc_t *cpsc );
   int sum_complex_array(int n, [size_is(n)] refpint_t pi[]);
 
   typedef [wire_marshal(int)] void *puint_t;
@@ -362,7 +363,8 @@ cpp_quote("#endif")
   const int RE_MAX = RE3;
   typedef [range(RE_MIN, RE_MAX)] enum renum renum_t;
   typedef [range(0, 100)] int rint_t;
-  rint_t echo_ranged_int([range(0, 100)] int n);
+  rint_t echo_ranged_int([range(0, 10)] int i, [range(0, 20)] int j, [range(0, 100)] int k);
+  rint_t echo_ranged_int2([range(0, 40)] int i);
   void get_ranged_enum([out] renum_t *re);
 
   void context_handle_test(void);

@@ -284,8 +284,7 @@ todo_wine {
     ok(level == RPC_C_AUTHN_LEVEL_PKT_PRIVACY, "expected RPC_C_AUTHN_LEVEL_PKT_PRIVACY, got %d\n", level);
     ok(authnsvc == RPC_C_AUTHN_WINNT, "expected RPC_C_AUTHN_WINNT, got %d\n", authnsvc);
     todo_wine ok(authzsvc == RPC_C_AUTHZ_NAME, "expected RPC_C_AUTHZ_NAME, got %d\n", authzsvc);
-
-    RpcStringFree(&principal);
+    if (status == RPC_S_OK) RpcStringFree(&principal);
 
     status = RpcMgmtStopServerListening(NULL);
     ok(status == RPC_S_OK, "RpcMgmtStopServerListening failed (%u)\n",
@@ -596,8 +595,10 @@ static void test_RpcStringBindingParseA(void)
     ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
     ok(!strcmp((char *)network_addr, "."), "network_addr should have been . instead of %s\n", network_addr);
     ok(!strcmp((char *)endpoint, "pipetest"), "endpoint should have been pipetest instead of %s\n", endpoint);
-    todo_wine
-    ok(options && !strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
+    if (options)
+        ok(!strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
+    else
+        todo_wine ok(FALSE, "options is NULL\n");
     RpcStringFreeA(&uuid);
     RpcStringFreeA(&protseq);
     RpcStringFreeA(&network_addr);
@@ -611,8 +612,10 @@ static void test_RpcStringBindingParseA(void)
     ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
     ok(!strcmp((char *)network_addr, "."), "network_addr should have been . instead of %s\n", network_addr);
     ok(!strcmp((char *)endpoint, "pipetest"), "endpoint should have been pipetest instead of %s\n", endpoint);
-    todo_wine
-    ok(options && !strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
+    if (options)
+        ok(!strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
+    else
+        todo_wine ok(FALSE, "options is NULL\n");
     RpcStringFreeA(&uuid);
     RpcStringFreeA(&protseq);
     RpcStringFreeA(&network_addr);
@@ -848,7 +851,7 @@ static void test_RpcBindingFree(void)
 
     status = RpcBindingFree(&binding);
     ok(status == RPC_S_INVALID_BINDING,
-       "RpcBindingFree should have retured RPC_S_INVALID_BINDING instead of %d\n",
+       "RpcBindingFree should have returned RPC_S_INVALID_BINDING instead of %d\n",
        status);
 }
 
