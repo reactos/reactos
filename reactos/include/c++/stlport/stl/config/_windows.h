@@ -99,6 +99,10 @@ extern "C" {
 #      if !defined(WIN32_NO_STATUS)
 #        define WIN32_NO_STATUS
 #      endif
+/* Don't let windows.h define its min and max macros. */
+#      if !defined (NOMINMAX)
+#        define NOMINMAX
+#      endif
 #      include <windef.h>
 
 #ifndef InterlockedIncrement
