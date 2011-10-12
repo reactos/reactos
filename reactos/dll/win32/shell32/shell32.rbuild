@@ -4,8 +4,8 @@
 	<importlibrary definition="shell32.spec" />
 	<include base="recyclebin">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-  <include base="atlnew">.</include>
-  <define name="_SHELL32_" />
+	<include base="atlnew">.</include>
+	<define name="_SHELL32_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="_WINE" />
 	<define name="UNICODE" />
