@@ -24,8 +24,6 @@
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
-#define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
-
 #define ACTCTX_FLAGS_ALL (\
     ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
     ACTCTX_FLAG_LANGID_VALID |\
@@ -2671,6 +2669,22 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
         return STATUS_NOT_IMPLEMENTED;
     }
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RtlQueryInformationActiveActivationContext(ULONG ulInfoClass,
+                                           PVOID pvBuffer,
+                                           SIZE_T cbBuffer OPTIONAL,
+                                           SIZE_T *pcbWrittenOrRequired OPTIONAL)
+{
+    return RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                                                NULL,
+                                                NULL,
+                                                ulInfoClass,
+                                                pvBuffer,
+                                                cbBuffer,
+                                                pcbWrittenOrRequired);
 }
 
 #define FIND_ACTCTX_RETURN_FLAGS 0x00000002
