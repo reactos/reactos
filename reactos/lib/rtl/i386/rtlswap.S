@@ -4,50 +4,55 @@
  * PURPOSE:           Byte swap functions
  * FILE:              lib/rtl/i386/rtlswap.S
  * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)
+ *                    Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-.intel_syntax noprefix
+#include <asm.inc>
 
-.globl @RtlUshortByteSwap@4
-.globl @RtlUlongByteSwap@4
-.globl @RtlUlonglongByteSwap@8
+PUBLIC @RtlUshortByteSwap@4
+PUBLIC @RtlUlongByteSwap@4
+PUBLIC @RtlUlonglongByteSwap@8
 
 /* FUNCTIONS ***************************************************************/
+.code
 
-.func @RtlUshortByteSwap@4, @RtlUshortByteSwap@4
 @RtlUshortByteSwap@4:
+FUNC RtlUshortByteSwap
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Swap high and low bits */
     mov ah, cl
     mov al, ch
     ret
-.endfunc
+ENDFUNC RtlUshortByteSwap
 
-.func @RtlUlongByteSwap@4, @RtlUlongByteSwap@4
 @RtlUlongByteSwap@4:
+FUNC RtlUlongByteSwap
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Swap high and low bits */
     mov eax, ecx
     bswap eax
     ret
-.endfunc
+ENDFUNC RtlUlongByteSwap
 
-.func @RtlUlonglongByteSwap@8, @RtlUlonglongByteSwap@8
 @RtlUlonglongByteSwap@8:
+FUNC RtlUlonglongByteSwap
+    FPO 0, 2, 0, 0, 0, FRAME_FPO
 
     /* Get 64-bit integer */
-    mov edx, [esp+8]
-    mov eax, [esp+4]
+    mov eax, [esp+8]
+    mov edx, [esp+4]
 
     /* Swap it */
     bswap edx
     bswap eax
 
-    /* Return it */
-    mov ecx, eax
-    mov eax, edx
-    mov edx, ecx
+    /* Return it (NOTE: this might look wrong, since fastcall functions
+       should clean up the stack, even if the first parameter is an ULONGLONG,
+       and therefore put on tthe stack instead of in ecx and edx,
+       but thats exactly how the function behaves on Windows! */
     ret
-.endfunc
+ENDFUNC RtlUlonglongByteSwap
 
-
+END
