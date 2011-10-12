@@ -87,7 +87,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
                        IN SECTION_INHERIT InheritDisposition,
                        IN ULONG AllocationType,
                        IN ULONG Protect);
-                       
+
 //
 // PeFmtCreateSection depends on the following:
 //
@@ -1633,7 +1633,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          {
             DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
          }
-		 
+
       }
       else
       {
@@ -1819,7 +1819,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    ULONG Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    
+
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
    /*
@@ -4625,6 +4625,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       ImageSectionObject->ImageSize = (ULONG)ImageSize;
+
+      /* Check for an illegal base address */
+      if ((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress)
+      {
+          ImageBase = PAGE_ROUND_DOWN((ULONG_PTR)MmHighestUserAddress - ImageSize);
+      }
 
       /* Check there is enough space to map the section at that point. */
       if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
