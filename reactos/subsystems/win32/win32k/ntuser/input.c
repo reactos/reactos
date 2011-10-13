@@ -24,8 +24,6 @@ HANDLE ghKeyboardDevice;
 
 static DWORD LastInputTick = 0;
 static HANDLE MouseDeviceHandle;
-static HANDLE RawInputThreadHandle;
-static CLIENT_ID RawInputThreadId;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 
@@ -216,14 +214,6 @@ MouseThreadMain(PVOID StartContext)
                             FILE_SYNCHRONOUS_IO_ALERT);
     } while (!NT_SUCCESS(Status));
 
-    /* Need to setup basic win32k for this thread to process WH_MOUSE_LL messages. */
-    /*Status = Win32kInitWin32Thread(PsGetCurrentThread());
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Win32K: Failed making mouse thread a win32 thread.\n");
-        return; //(Status);
-    }*/
-
     ptiMouse = PsGetCurrentThreadWin32Thread();
     ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
     TRACE("Mouse Thread 0x%x \n", ptiMouse);
@@ -330,22 +320,6 @@ KeyboardThreadMain(PVOID StartContext)
 
     UserInitKeyboard(ghKeyboardDevice);
 
-    /* Not sure if converting this thread to a win32 thread is such
-       a great idea. Since we're posting keyboard messages to the focus
-       window message queue, we'll be (indirectly) doing sendmessage
-       stuff from this thread (for WH_KEYBOARD_LL processing), which
-       means we need our own message queue. If keyboard messages were
-       instead queued to the system message queue, the thread removing
-       the message from the system message queue would be responsible
-       for WH_KEYBOARD_LL processing and we wouldn't need this thread
-       to be a win32 thread. */
-    /*Status = Win32kInitWin32Thread(PsGetCurrentThread());
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Win32K: Failed making keyboard thread a win32 thread.\n");
-        return; //(Status);
-    }*/
-
     ptiKeyboard = PsGetCurrentThreadWin32Thread();
     ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
     TRACE("Keyboard Thread 0x%x \n", ptiKeyboard);
@@ -447,17 +421,8 @@ RawInputThreadMain(PVOID StartContext)
         Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
     } while (!NT_SUCCESS(Status));
 
-
     Objects[0] = &InputThreadsStart;
     Objects[1] = MasterTimer;
-
-    // This thread requires win32k!
-    Status = Win32kInitWin32Thread(PsGetCurrentThread());
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Win32K: Failed making Raw Input thread a win32 thread.\n");
-        return; //(Status);
-    }
 
     ptiRawInput = PsGetCurrentThreadWin32Thread();
     ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
@@ -501,6 +466,7 @@ CreateSystemThreads(UINT Type)
     {
         case 0: KeyboardThreadMain(NULL); break;
         case 1: MouseThreadMain(NULL); break;
+        case 2: RawInputThreadMain(NULL); break;
         default: ERR("Wrong type: %x\n", Type);
     }
 
@@ -514,8 +480,6 @@ NTSTATUS
 NTAPI
 InitInputImpl(VOID)
 {
-    NTSTATUS Status;
-
     KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
     MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), USERTAG_SYSTEM);
@@ -531,18 +495,6 @@ InitInputImpl(VOID)
     if(!UserInitDefaultKeyboardLayout())
     {
         ERR("Failed to initialize default keyboard layout!\n");
-    }
-
-    Status = PsCreateSystemThread(&RawInputThreadHandle,
-                                  THREAD_ALL_ACCESS,
-                                  NULL,
-                                  NULL,
-                                  &RawInputThreadId,
-                                  RawInputThreadMain,
-                                  NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Win32K: Failed to create raw thread.\n");
     }
 
     InputThreadsRunning = TRUE;
