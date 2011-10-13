@@ -1703,6 +1703,28 @@ DispatchMessageW(CONST MSG *lpmsg)
 }
 
 
+static VOID
+IntConvertMsgToAnsi(LPMSG lpMsg)
+{
+    CHAR ch[2];
+    WCHAR wch[2];
+
+    switch (lpMsg->message)
+    {
+        case WM_CHAR:
+        case WM_DEADCHAR:
+        case WM_SYSCHAR:
+        case WM_SYSDEADCHAR:
+        case WM_MENUCHAR:
+            wch[0] = LOWORD(lpMsg->wParam);
+            wch[1] = HIWORD(lpMsg->wParam);
+            ch[0] = ch[1] = 0;
+            WideCharToMultiByte(CP_THREAD_ACP, 0, wch, 2, ch, 2, NULL, NULL);
+            lpMsg->wParam = MAKEWPARAM(ch[0] | (ch[1] << 8), 0);
+            break;
+    }
+}
+
 /*
  * @implemented
  */
@@ -1725,6 +1747,8 @@ GetMessageA(LPMSG lpMsg,
     {
       return Res;
     }
+
+  IntConvertMsgToAnsi(lpMsg);
 
   return Res;
 }

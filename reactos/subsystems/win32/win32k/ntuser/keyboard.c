@@ -1030,15 +1030,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         for (i = 0; i < cch; ++i)
         {
             TRACE("Msg: %x '%lc' (%04x) %08x\n", NewMsg.message, wch[i], wch[i], NewMsg.lParam);
-            if (pWnd->Unicode)
-                NewMsg.wParam = wch[i];
-            else
-            {
-                CHAR ch;
-                if (!NT_SUCCESS(RtlUnicodeToMultiByteN(&ch, sizeof(ch), NULL, &wch[i], sizeof(wch[i]))))
-                    WARN("RtlUnicodeToMultiByteN failed!\n");
-                NewMsg.wParam = ch;
-            }
+            NewMsg.wParam = wch[i];
             MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
         }
         bResult = TRUE;
