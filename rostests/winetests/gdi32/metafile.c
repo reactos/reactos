@@ -1654,26 +1654,27 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
        "expected nBytes %u, got %u\n", emh1->nBytes, emh2->nBytes);
     ok(emh1->nRecords == emh2->nRecords, "expected nRecords %u, got %u\n", emh1->nRecords, emh2->nRecords);
 
+    if(!winetest_interactive)
+    {
+        skip("skipping match_emf_record(), bug 5393\n");
+        return 0;
+    }
+
     offset1 = emh1->nSize;
     offset2 = emh2->nSize; /* Needed for Win9x/WinME/NT4 */
     while (offset1 < emh1->nBytes)
     {
-	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
-	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
+        const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
+        const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
-if(!winetest_interactive)
-    skip("skipping match_emf_record(), bug 5393\n");
-else
-{
-	trace("%s: EMF record %u, size %u/record %u, size %u\n",
+        trace("%s: EMF record %u, size %u/record %u, size %u\n",
               desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
 
         if (!match_emf_record(emr1, emr2, desc, ignore_scaling)) return -1;
-}
 
         /* We have already bailed out if iType or nSize don't match */
-	offset1 += emr1->nSize;
-	offset2 += emr2->nSize;
+        offset1 += emr1->nSize;
+        offset2 += emr2->nSize;
     }
     return 0;
 }
