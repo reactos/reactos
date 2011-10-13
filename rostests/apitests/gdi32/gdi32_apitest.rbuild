@@ -15,6 +15,7 @@
 	<file>CombineTransform.c</file>
 	<file>CreateBitmapIndirect.c</file>
 	<file>CreateCompatibleDC.c</file>
+	<file>CreateDIBitmap.c</file>
 	<file>CreateFont.c</file>
 	<file>CreateFontIndirect.c</file>
 	<file>CreatePen.c</file>
