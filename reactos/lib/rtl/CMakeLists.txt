@@ -70,7 +70,7 @@ if(ARCH MATCHES i386)
         i386/except.c
         i386/interlck.S
         i386/rtlmem.s
-        i386/rtlswap.s
+        i386/rtlswap.S
         i386/res_asm.s
         i386/thread.c)
 elseif(ARCH MATCHES amd64)
