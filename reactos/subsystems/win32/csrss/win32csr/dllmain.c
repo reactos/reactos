@@ -184,7 +184,6 @@ CreateSystemThreads(PVOID pParam)
 {
     NtUserCallOneParam((DWORD_PTR)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
     DPRINT1("This thread should not terminate!\n");
-    DbgBreakPoint();
     return 0;
 }
 
@@ -194,6 +193,10 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
+    HANDLE ServerThread;
+    CLIENT_ID ClientId;
+    NTSTATUS Status;
+
     CsrExports = *Exports;
     Win32CsrApiHeap = CsrssApiHeap;
 
@@ -211,32 +214,24 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
 
+    Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);
+    if (NT_SUCCESS(Status))
     {
-        HANDLE ServerThread;
-        CLIENT_ID ClientId;
-        NTSTATUS Status;
-        
-        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);
-        if (NT_SUCCESS(Status))
-        {
-            NtResumeThread(ServerThread, NULL);
-            NtClose(ServerThread);
-        }
-        else
-            DPRINT1("Cannot start keyboard thread!\n");
-
-        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)1, &ServerThread, &ClientId);
-        if (NT_SUCCESS(Status))
-        {
-            NtResumeThread(ServerThread, NULL);
-            NtClose(ServerThread);
-        }
-        else
-            DPRINT1("Cannot start mouse thread!\n");
-
-        DbgBreakPoint();
+        NtResumeThread(ServerThread, NULL);
+        NtClose(ServerThread);
     }
-    
+    else
+        DPRINT1("Cannot start keyboard thread!\n");
+
+    Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)1, &ServerThread, &ClientId);
+    if (NT_SUCCESS(Status))
+    {
+        NtResumeThread(ServerThread, NULL);
+        NtClose(ServerThread);
+    }
+    else
+        DPRINT1("Cannot start mouse thread!\n");
+
     return TRUE;
 }
 
