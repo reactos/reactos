@@ -332,6 +332,8 @@ KeyboardThreadMain(PVOID StartContext)
                             FILE_SYNCHRONOUS_IO_ALERT);
     } while (!NT_SUCCESS(Status));
 
+    UserInitKeyboard(ghKeyboardDevice);
+
     /* Not sure if converting this thread to a win32 thread is such
        a great idea. Since we're posting keyboard messages to the focus
        window message queue, we'll be (indirectly) doing sendmessage
@@ -355,22 +357,19 @@ KeyboardThreadMain(PVOID StartContext)
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY + 3);
 
-    //IntKeyboardGetIndicatorTrans(ghKeyboardDevice,
-   //                              &IndicatorTrans);
-
     for (;;)
     {
         /*
          * Wait to start input.
          */
-        TRACE( "Keyboard Input Thread Waiting for start event\n" );
+        TRACE("Keyboard Input Thread Waiting for start event\n");
         Status = KeWaitForSingleObject(&InputThreadsStart,
                                        0,
                                        KernelMode,
                                        TRUE,
                                        NULL);
 
-        TRACE( "Keyboard Input Thread Starting...\n" );
+        TRACE("Keyboard Input Thread Starting...\n");
         /*
          * Receive and process keyboard input.
          */
@@ -390,16 +389,16 @@ KeyboardThreadMain(PVOID StartContext)
                                  NULL,
                                  NULL);
 
-            if(Status == STATUS_ALERTED && !InputThreadsRunning)
+            if (Status == STATUS_ALERTED && !InputThreadsRunning)
             {
                 break;
             }
-            if(Status == STATUS_PENDING)
+            if (Status == STATUS_PENDING)
             {
                 NtWaitForSingleObject(ghKeyboardDevice, FALSE, NULL);
                 Status = Iosb.Status;
             }
-            if(!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
             {
                 ERR("Win32K: Failed to read from keyboard.\n");
                 return; //(Status);
@@ -427,7 +426,7 @@ KeyboardThreadMain(PVOID StartContext)
             UserLeave();
         }
 
-        TRACE( "KeyboardInput Thread Stopped...\n" );
+        TRACE("KeyboardInput Thread Stopped...\n");
     }
 }
 

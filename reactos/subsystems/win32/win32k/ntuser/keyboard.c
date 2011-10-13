@@ -11,8 +11,9 @@
 DBG_DEFAULT_CHANNEL(UserKbd);
 
 BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
-BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
+static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
+static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -97,42 +98,85 @@ IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
 static
 NTSTATUS APIENTRY
 IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
+                      WORD wVk,
                       WORD wScanCode,
-                      BOOL bEnabled,
-                      PKEYBOARD_INDICATOR_TRANSLATION pIndicatorTrans)
+                      BOOL bEnabled)
 {
     NTSTATUS Status;
     UINT i;
-    static KEYBOARD_INDICATOR_PARAMETERS Indicators;
+    USHORT LedFlag = 0;
     IO_STATUS_BLOCK Block;
 
-    if (!pIndicatorTrans)
+    if (!gpKeyboardIndicatorTrans)
         return STATUS_NOT_SUPPORTED;
 
-    for (i = 0; i < pIndicatorTrans->NumberOfIndicatorKeys; i++)
+    switch (wVk)
     {
-        if (pIndicatorTrans->IndicatorList[i].MakeCode == wScanCode)
-        {
-            if (bEnabled)
-                Indicators.LedFlags |= pIndicatorTrans->IndicatorList[i].IndicatorFlags;
-            else
-                Indicators.LedFlags = ~pIndicatorTrans->IndicatorList[i].IndicatorFlags;
+        case VK_CAPITAL: LedFlag = KEYBOARD_CAPS_LOCK_ON; break;
+        case VK_NUMLOCK: LedFlag = KEYBOARD_NUM_LOCK_ON; break;
+        case VK_SCROLL: LedFlag = KEYBOARD_SCROLL_LOCK_ON; break;
+        default:
+            for (i = 0; i < gpKeyboardIndicatorTrans->NumberOfIndicatorKeys; i++)
+            {
+                if (gpKeyboardIndicatorTrans->IndicatorList[i].MakeCode == wScanCode)
+                {
+                    LedFlag = gpKeyboardIndicatorTrans->IndicatorList[i].IndicatorFlags;
+                    break;
+                }
+            }
+    }
 
-            /* Update the lights on the hardware */
-            Status = NtDeviceIoControlFile(hKeyboardDevice,
-                                           NULL,
-                                           NULL,
-                                           NULL,
-                                           &Block,
-                                           IOCTL_KEYBOARD_SET_INDICATORS,
-                                           &Indicators, sizeof(Indicators),
-                                           NULL, 0);
+    if (LedFlag)
+    {
+        if (bEnabled)
+            gIndicators.LedFlags |= LedFlag;
+        else
+            gIndicators.LedFlags = ~LedFlag;
 
-            return Status;
-        }
+        /* Update the lights on the hardware */
+        Status = NtDeviceIoControlFile(hKeyboardDevice,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Block,
+                                       IOCTL_KEYBOARD_SET_INDICATORS,
+                                       &gIndicators, sizeof(gIndicators),
+                                       NULL, 0);
+
+        return Status;
     }
 
     return STATUS_SUCCESS;
+}
+
+/*
+ * UserInitKeyboard
+ *
+ * Initializes keyboard indicators translation and their state
+ */
+VOID NTAPI
+UserInitKeyboard(HANDLE hKeyboardDevice)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK Block;
+
+    IntKeyboardGetIndicatorTrans(hKeyboardDevice, &gpKeyboardIndicatorTrans);
+
+    Status = NtDeviceIoControlFile(hKeyboardDevice,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Block,
+                                   IOCTL_KEYBOARD_QUERY_INDICATORS,
+                                   NULL, 0,
+                                   &gIndicators, sizeof(gIndicators));
+
+    SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
+                   gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
+    SET_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK,
+                   gIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON);
+    SET_KEY_LOCKED(gafAsyncKeyState, VK_SCROLL,
+                   gIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON);
 }
 
 /*
@@ -189,30 +233,6 @@ IntFixVk(WORD wVk, BOOL bExt)
 }
 
 /*
- * IntGetVkOtherSide
- *
- * Gets other side of vk: right -> left, left -> right
- */
-static
-WORD
-IntGetVkOtherSide(WORD wVk)
-{
-    switch (wVk)
-    {
-        case VK_LSHIFT: return VK_RSHIFT;
-        case VK_RSHIFT: return VK_LSHIFT;
-
-        case VK_LCONTROL: return VK_RCONTROL;
-        case VK_RCONTROL: return VK_LCONTROL;
-
-        case VK_LMENU: return VK_RMENU;
-        case VK_RMENU: return VK_LMENU;
-
-        default: return wVk;
-    }
-}
-
-/*
  * IntTranslateNumpadKey
  *
  * Translates numpad keys when numlock is enabled
@@ -239,24 +259,6 @@ IntTranslateNumpadKey(WORD wVk)
 }
 
 /*
- * IntGetShiftBit
- *
- * Search the keyboard layout modifiers table for the shift bit
- */
-static
-DWORD FASTCALL
-IntGetShiftBit(PKBDTABLES pKbdTbl, WORD wVk)
-{
-    unsigned i;
-
-    for (i = 0; pKbdTbl->pCharModifiers->pVkToBit[i].Vk; i++)
-        if (pKbdTbl->pCharModifiers->pVkToBit[i].Vk == wVk)
-            return pKbdTbl->pCharModifiers->pVkToBit[i].ModBits;
-
-    return 0;
-}
-
-/*
  * IntGetModBits
  *
  * Gets layout specific modification bits, for example KBDSHIFT, KBDCTRL, KBDALT
@@ -272,10 +274,6 @@ IntGetModBits(PKBDTABLES pKbdTbl, PBYTE pKeyState)
     for (i = 0; pKbdTbl->pCharModifiers->pVkToBit[i].Vk; i++)
         if (IS_KEY_DOWN(pKeyState, pKbdTbl->pCharModifiers->pVkToBit[i].Vk))
             dwModBits |= pKbdTbl->pCharModifiers->pVkToBit[i].ModBits;
-
-    /* Handle Alt+Gr */
-    if ((pKbdTbl->fLocaleFlags & KLLF_ALTGR) && IS_KEY_DOWN(pKeyState, VK_RMENU))
-        dwModBits |= IntGetShiftBit(pKbdTbl, VK_CONTROL); /* Don't use KBDCTRL here */
 
     TRACE("Current Mod Bits: %lx\n", dwModBits);
 
@@ -616,20 +614,6 @@ NtUserGetAsyncKeyState(INT Key)
 }
 
 /*
- * co_IntKeyboardSendAltKeyMsg
- *
- * Sends syscommand enabling window menu
- */
-static
-VOID NTAPI
-co_IntKeyboardSendAltKeyMsg()
-{
-    FIXME("co_IntKeyboardSendAltKeyMsg\n");
-    //co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
-}
-
-
-/*
  * UpdateAsyncKeyState
  *
  * Updates gafAsyncKeyState array
@@ -651,26 +635,40 @@ UpdateAsyncKeyState(WORD wVk, BOOL bIsDown)
         SET_KEY_DOWN(gafAsyncKeyState, wVk, FALSE);
 }
 
-LRESULT
-co_CallLowLevelKeyboardHook(CONST MSG *pMsg, BOOL bInjected, DWORD dwExtraInfo)
+/*
+ * co_CallLowLevelKeyboardHook
+ *
+ * Calls WH_KEYBOARD_LL hook
+ */
+static LRESULT
+co_CallLowLevelKeyboardHook(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD dwTime, DWORD dwExtraInfo)
 {
     KBDLLHOOKSTRUCT KbdHookData;
+    UINT uMsg;
 
-    KbdHookData.vkCode = pMsg->wParam;
-    KbdHookData.scanCode = HIWORD(pMsg->lParam) & 0xFF;
+    KbdHookData.vkCode = wVk;
+    KbdHookData.scanCode = wScanCode;
     KbdHookData.flags = 0;
-    if (pMsg->lParam & LP_EXT_BIT)
+    if (dwFlags & KEYEVENTF_EXTENDEDKEY)
         KbdHookData.flags |= LLKHF_EXTENDED;
     if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU))
         KbdHookData.flags |= LLKHF_ALTDOWN;
-    if (pMsg->message == WM_KEYUP || pMsg->message == WM_SYSKEYUP)
+    if (dwFlags & KEYEVENTF_KEYUP)
         KbdHookData.flags |= LLKHF_UP;
     if (bInjected)
         KbdHookData.flags |= LLKHF_INJECTED;
-    KbdHookData.time = pMsg->time;
+    KbdHookData.time = dwTime;
     KbdHookData.dwExtraInfo = dwExtraInfo;
 
-    return co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, pMsg->message, (LPARAM) &KbdHookData);
+    /* Note: it doesnt support WM_SYSKEYUP */
+    if (dwFlags & KEYEVENTF_KEYUP)
+        uMsg = WM_KEYUP;
+    else if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) && !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
+        uMsg = WM_SYSKEYDOWN;
+    else
+        uMsg = WM_KEYDOWN;
+
+    return co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, uMsg, (LPARAM)&KbdHookData);
 }
 
 /*
@@ -679,18 +677,140 @@ co_CallLowLevelKeyboardHook(CONST MSG *pMsg, BOOL bInjected, DWORD dwExtraInfo)
  * Process keyboard input from input devices and SendInput API
  */
 BOOL NTAPI
+ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD dwTime, DWORD dwExtraInfo)
+{
+    WORD wSimpleVk = 0, wFixedVk, wVk2;
+    PUSER_MESSAGE_QUEUE pFocusQueue;
+    BOOL bExt = (dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
+    BOOL bIsDown = (dwFlags & KEYEVENTF_KEYUP) ? FALSE : TRUE;
+    BOOL bPacket = (dwFlags & KEYEVENTF_UNICODE) ? TRUE : FALSE;
+    BOOL bWasSimpleDown = FALSE, bPostMsg = TRUE, bIsSimpleDown;
+    MSG Msg;
+    static BOOL bMenuDownRecently = FALSE;
+
+    /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
+    wSimpleVk = IntSimplifyVk(wVk);
+    bWasSimpleDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
+
+    /* Update key without shifts */
+    wVk2 = IntFixVk(wSimpleVk, !bExt);
+    bIsSimpleDown = bIsDown || IS_KEY_DOWN(gafAsyncKeyState, wVk2);
+    UpdateAsyncKeyState(wSimpleVk, bIsSimpleDown);
+
+    if (bIsDown)
+    {
+        /* Update keyboard LEDs */
+        IntKeyboardUpdateLeds(ghKeyboardDevice,
+                              wSimpleVk,
+                              wScanCode,
+                              IS_KEY_LOCKED(gafAsyncKeyState, wSimpleVk));
+    }
+
+    /* Call WH_KEYBOARD_LL hook */
+    if (co_CallLowLevelKeyboardHook(wVk, wScanCode, dwFlags, bInjected, dwTime, dwExtraInfo))
+    {
+        ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+            Msg.message, Msg.wParam, Msg.lParam);
+        bPostMsg = FALSE;
+    }
+
+    /* Check if this is a hotkey */
+    if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
+        bPostMsg = FALSE;
+
+    wFixedVk = IntFixVk(wSimpleVk, bExt); /* LSHIFT + EXT = RSHIFT */
+    if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
+        bExt = FALSE;
+
+    /* If it is F10 or ALT is down and CTRL is up, it's a system key */
+    if (wVk == VK_F10 ||
+        (wSimpleVk == VK_MENU && bMenuDownRecently) ||
+        (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
+        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)))
+    {
+        bMenuDownRecently = FALSE; // reset
+        if (bIsDown)
+        {
+            Msg.message = WM_SYSKEYDOWN;
+            if (wSimpleVk == VK_MENU)
+            {
+                // Note: If only LALT is pressed WM_SYSKEYUP is generated instead of WM_KEYUP
+                bMenuDownRecently = TRUE;
+            }
+        }
+        else
+            Msg.message = WM_SYSKEYUP;
+    }
+    else
+    {
+        bMenuDownRecently = FALSE;
+        if (bIsDown)
+            Msg.message = WM_KEYDOWN;
+        else
+            Msg.message = WM_KEYUP;
+    }
+
+    /* Update async state of not simplified vk here.
+       See user32_apitest:GetKeyState */
+    UpdateAsyncKeyState(wFixedVk, bIsDown);
+
+    /* Alt-Tab/Esc Check. Use FocusQueue or RIT Queue */
+    if (bIsSimpleDown && !bWasSimpleDown &&
+        IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
+        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL) &&
+        (wVk == VK_ESCAPE || wVk == VK_TAB))
+    {
+       TRACE("Alt-Tab/Esc Pressed wParam %x\n",Msg.wParam);
+    }
+
+    /* If we have a focus queue, post a keyboard message */
+    pFocusQueue = IntGetFocusMessageQueue();
+    if (pFocusQueue && bPostMsg)
+    {
+        /* Init message */
+        Msg.hwnd = pFocusQueue->FocusWindow;
+        Msg.wParam = wFixedVk & 0xFF; /* Note: it's simplified by msg queue */
+        Msg.lParam = MAKELPARAM(1, wScanCode);
+        Msg.time = dwTime;
+        Msg.pt = gpsi->ptCursor;
+
+        /* If it is VK_PACKET, high word of wParam is used for wchar */
+        if (!bPacket)
+        {
+            if (bExt)
+                Msg.lParam |= KF_EXTENDED << 16;
+            if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU))
+                Msg.lParam |= KF_ALTDOWN << 16;
+            if (bWasSimpleDown)
+                Msg.lParam |= KF_REPEAT << 16;
+            if (!bIsDown)
+                Msg.lParam |= KF_UP << 16;
+            /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */ 	 
+            if (pFocusQueue->QF_flags & QF_DIALOGACTIVE) 	 
+                Msg.lParam |= KF_DLGMODE << 16;
+            if (pFocusQueue->MenuOwner)//pFocusQueue->MenuState) // MenuState needs a start flag...
+                Msg.lParam |= KF_MENUMODE << 16;
+        }
+
+        /* Post a keyboard message */
+        TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
+        MsqPostMessage(pFocusQueue, &Msg, TRUE, QS_KEY);
+    }
+
+    return TRUE;
+}
+
+BOOL NTAPI
 UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
 {
-    WORD wScanCode, wVk, wSimpleVk = 0, wVkOtherSide, wSysKey;
+    WORD wScanCode, wVk;
     PKBL pKbl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
     struct _ETHREAD *pFocusThread;
     LARGE_INTEGER LargeTickCount;
+    DWORD dwTime;
     BOOL bExt = (pKbdInput->dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
-    BOOL bIsDown = (pKbdInput->dwFlags & KEYEVENTF_KEYUP) ? FALSE : TRUE;
-    BOOL bWasDown = FALSE, bPostMsg = TRUE;
-    MSG Msg;
 
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
@@ -713,7 +833,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     pKbdTbl = pKbl->KBTables;
 
     /* Note: wScan field is always used */
-    wScanCode = pKbdInput->wScan & 0x7F;
+    wScanCode = pKbdInput->wScan;
 
     if (pKbdInput->dwFlags & KEYEVENTF_UNICODE)
     {
@@ -723,6 +843,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     }
     else
     {
+        wScanCode &= 0x7F;
         if (pKbdInput->dwFlags & KEYEVENTF_SCANCODE)
         {
             /* Don't ignore invalid scan codes */
@@ -733,129 +854,26 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         else
         {
             wVk = pKbdInput->wVk & 0xFF;
-
-            /* LSHIFT + EXT = RSHIFT */
-            wVk = IntSimplifyVk(wVk);
-            wVk = IntFixVk(wVk, bExt);
         }
-
-        /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
-        wSimpleVk = IntSimplifyVk(wVk);
-        wVkOtherSide = IntGetVkOtherSide(wVk);
-        bWasDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
-
-        if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
-            bPostMsg = FALSE;
-
-        /* Update key without shifts */
-        UpdateAsyncKeyState(wSimpleVk, bIsDown || IS_KEY_DOWN(gafAsyncKeyState, wVkOtherSide));
     }
-
-    /* If it is F10 or ALT is down and CTRL is up, it's a system key */
-    wSysKey = (pKbdTbl->fLocaleFlags & KLLF_ALTGR) ? VK_LMENU : VK_MENU;
-    if (wVk == VK_F10 ||
-        //uVkNoShift == VK_MENU || // FIXME: If only LALT is pressed WM_SYSKEYUP is generated instead of WM_KEYUP
-        (IS_KEY_DOWN(gafAsyncKeyState, wSysKey) && // FIXME
-        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)))
-    {
-        if (bIsDown)
-            Msg.message = WM_SYSKEYDOWN;
-        else
-            Msg.message = WM_SYSKEYUP;
-    }
-    else
-    {
-        if (bIsDown)
-            Msg.message = WM_KEYDOWN;
-        else
-            Msg.message = WM_KEYUP;
-    }
-
-    /* Init hwnd and lParam */
-    Msg.hwnd = pFocusQueue->FocusWindow;
-    Msg.lParam = MAKELPARAM(1, wScanCode);
-
-    /* If it is VK_PACKET, high word of wParam is used for wchar */
-    if (!(pKbdInput->dwFlags & KEYEVENTF_UNICODE))
-    {
-        if (bExt)
-            Msg.lParam |= LP_EXT_BIT;
-        if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU))
-            Msg.lParam |= LP_CONTEXT_BIT;
-        if (bWasDown)
-            Msg.lParam |= LP_PREV_STATE_BIT;
-        if (!bIsDown)
-            Msg.lParam |= LP_TRANSITION_BIT;
-    }
-
-    /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */ 	 
-    if ( pFocusQueue && pFocusQueue->QF_flags & QF_DIALOGACTIVE ) 	 
-       Msg.lParam |= LP_DLGMODE; 	 
-    if ( pFocusQueue && pFocusQueue->MenuOwner )//pFocusQueue->MenuState ) // MenuState needs a start flag...
-       Msg.lParam |= LP_MENUMODE;
-
-    /* Init wParam and cursor position */
-    Msg.wParam = wVk; // Note: it's simplified by msg queue
-    Msg.pt = gpsi->ptCursor;
 
     /* If time is given, use it */
     if (pKbdInput->time)
-        Msg.time = pKbdInput->time;
+        dwTime = pKbdInput->time;
     else
     {
         KeQueryTickCount(&LargeTickCount);
-        Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+        dwTime = MsqCalculateMessageTime(&LargeTickCount);
     }
 
-    if (!(pKbdInput->dwFlags & KEYEVENTF_UNICODE))
+    if (wVk == VK_RMENU && (pKbdTbl->fLocaleFlags & KLLF_ALTGR))
     {
-        if (bIsDown)
-        {
-            /* Update keyboard LEDs */
-            if (!gpKeyboardIndicatorTrans)
-                IntKeyboardGetIndicatorTrans(ghKeyboardDevice, &gpKeyboardIndicatorTrans);
-            if (gpKeyboardIndicatorTrans)
-                IntKeyboardUpdateLeds(ghKeyboardDevice,
-                                      wScanCode,
-                                      IS_KEY_LOCKED(gafAsyncKeyState, wVk),
-                                      gpKeyboardIndicatorTrans);
-        }
-
-        /* Call hook */
-        if (co_CallLowLevelKeyboardHook(&Msg, bInjected, pKbdInput->dwExtraInfo))
-        {
-            ERR("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-                Msg.message, Msg.wParam, Msg.lParam);
-            bPostMsg = FALSE;
-        }
-
-        /* Update async state of not simplified vk here.
-           See user32_apitest:GetKeyState */
-        UpdateAsyncKeyState(wVk, bIsDown);
-
-        /* Support VK_*MENU keys */
-        if (!bIsDown && wSimpleVk == VK_MENU && !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
-            co_IntKeyboardSendAltKeyMsg();
+        /* For AltGr keyboards RALT generates CTRL events */
+        ProcessKeyEvent(VK_LCONTROL, 0, pKbdInput->dwFlags & KEYEVENTF_KEYUP, bInjected, dwTime, 0);
     }
 
-    /* Alt-Tab/Esc Check. Use FocusQueue or RIT Queue */
-    if (!(pKbdInput->dwFlags & KEYEVENTF_KEYUP) &&
-        HIWORD(Msg.lParam) & KF_ALTDOWN  &&
-        ( Msg.wParam == VK_ESCAPE || Msg.wParam == VK_TAB ) )
-    {
-       TRACE("Alt-Tab/Esc Pressed wParam %x\n",Msg.wParam);
-    }
-
-    /* If we have a focus queue, post a keyboard message */
-    if (pFocusQueue && bPostMsg)
-    {
-        /* Post a keyboard message */
-        TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
-        //co_MsqPostKeyboardMessage(Msg.message, Msg.wParam, Msg.lParam, bInjected);
-        MsqPostMessage(pFocusQueue, &Msg, TRUE, QS_KEY);
-    }
-
-    return TRUE;
+    /* Finally process this key */
+    return ProcessKeyEvent(wVk, wScanCode, pKbdInput->dwFlags, bInjected, dwTime, pKbdInput->dwExtraInfo);
 }
 
 /* 
@@ -1102,7 +1120,7 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
     UINT ret = 0;
 
     TRACE("Enter NtUserMapVirtualKeyEx\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     if (!dwhkl)
     {
@@ -1188,7 +1206,7 @@ NtUserToUnicodeEx(
     }
     RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
 
-    UserEnterShared();
+    UserEnterExclusive(); // Note: we modify wchDead static variable
 
     if (dwhkl)
         pKbl = UserHklToKbl(dwhkl);
@@ -1227,13 +1245,15 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
     PTHREADINFO pti;
     DWORD i, cchKeyName, dwRet = 0;
     WORD wScanCode = (lParam >> 16) & 0xFF;
-    BOOL bExtKey = (lParam & LP_EXT_BIT) ? TRUE : FALSE;
+    BOOL bExtKey = (HIWORD(lParam) & KF_EXTENDED) ? TRUE : FALSE;
     PKBDTABLES pKbdTbl;
     VSC_LPWSTR *pKeyNames = NULL;
     CONST WCHAR *pKeyName = NULL;
     WCHAR KeyNameBuf[2];
 
     TRACE("Enter NtUserGetKeyNameText\n");
+
+    UserEnterShared();
 
     /* Get current keyboard layout */
     pti = PsGetCurrentThreadWin32Thread();
@@ -1242,10 +1262,8 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
     if (!pKbdTbl || cchSize < 1)
     {
         ERR("Invalid parameter\n");
-        return 0;
+        goto cleanup;
     }
-
-    UserEnterShared();
 
     /* "Do not care" flag */
     if(lParam & LP_DO_NOT_CARE_BIT)
@@ -1309,6 +1327,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
         EngSetLastError(ERROR_INVALID_PARAMETER);
     }
 
+cleanup:
     UserLeave();
     TRACE("Leave NtUserGetKeyNameText, ret=%i\n", dwRet);
     return dwRet;

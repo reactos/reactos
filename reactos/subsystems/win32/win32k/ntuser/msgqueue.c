@@ -663,10 +663,10 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    id = wParam; // Check for hot keys unrelated to the hot keys set by RegisterHotKey.
 
    Mesg.hwnd    = hWnd;
-   Mesg.message = id != IDHOT_REACTOS ? WM_HOTKEY : WM_SYSCOMMAND;
-   Mesg.wParam  = id != IDHOT_REACTOS ? wParam    : SC_HOTKEY;
-   Mesg.lParam  = id != IDHOT_REACTOS ? lParam    : (LPARAM)hWnd;
-   Type         = id != IDHOT_REACTOS ? QS_HOTKEY : QS_POSTMESSAGE;
+   Mesg.message = id != IDHK_REACTOS ? WM_HOTKEY : WM_SYSCOMMAND;
+   Mesg.wParam  = id != IDHK_REACTOS ? wParam    : SC_HOTKEY;
+   Mesg.lParam  = id != IDHK_REACTOS ? lParam    : (LPARAM)hWnd;
+   Type         = id != IDHK_REACTOS ? QS_HOTKEY : QS_POSTMESSAGE;
    KeQueryTickCount(&LargeTickCount);
    Mesg.time    = MsqCalculateMessageTime(&LargeTickCount);
    Mesg.pt      = gpsi->ptCursor;

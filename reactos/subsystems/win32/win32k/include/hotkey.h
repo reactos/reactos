@@ -1,22 +1,25 @@
 #pragma once
 
-typedef struct _HOT_KEY_ITEM
+typedef struct _HOT_KEY
 {
-  LIST_ENTRY ListEntry;
-  struct _ETHREAD *Thread;
-  HWND hWnd;
-  int id;
-  UINT fsModifiers;
-  UINT vk;
-} HOT_KEY_ITEM, *PHOT_KEY_ITEM;
+    struct _ETHREAD *pThread;
+    HWND hWnd;
+    UINT fsModifiers;
+    UINT vk;
+    INT id;
+    struct _HOT_KEY *pNext;
+} HOT_KEY, *PHOT_KEY;
 
-#define IDHOT_REACTOS (-9)
+/* Special Hot Keys */
+#define IDHK_F12       -5
+#define IDHK_SHIFTF12  -6
+#define IDHK_WINKEY    -7
+#define IDHK_REACTOS   -8
 
 INIT_FUNCTION NTSTATUS NTAPI InitHotkeyImpl(VOID);
 
-PHOT_KEY_ITEM FASTCALL IsHotKey(UINT fsModifiers, WORD wVk);
 VOID FASTCALL UnregisterWindowHotKeys(PWND Window);
-VOID FASTCALL UnregisterThreadHotKeys(struct _ETHREAD *Thread);
+VOID FASTCALL UnregisterThreadHotKeys(struct _ETHREAD *pThread);
 BOOL NTAPI co_UserProcessHotKeys(WORD wVk, BOOL bIsDown);
 UINT FASTCALL DefWndGetHotKey(HWND hwnd);
 INT FASTCALL DefWndSetHotKey(PWND pWnd, WPARAM wParam);

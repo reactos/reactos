@@ -33,17 +33,12 @@ extern PATTACHINFO gpai;
 /* Scan Codes */
 #define SC_KEY_UP        0x8000
 /* lParam bits */
-#define LP_EXT_BIT         (KF_EXTENDED<<16)
 #define LP_DO_NOT_CARE_BIT (1<<25) // for GetKeyNameText
-#define LP_DLGMODE         (KF_DLGMODE<<16)
-#define LP_MENUMODE        (KF_MENUMODE<<16)
-#define LP_CONTEXT_BIT     (KF_ALTDOWN<<16)
-#define LP_PREV_STATE_BIT  (KF_REPEAT<<16)
-#define LP_TRANSITION_BIT  (KF_UP<<16)
 
 
 INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);
 INIT_FUNCTION NTSTATUS NTAPI InitKeyboardImpl(VOID);
+VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
 PKBL W32kGetDefaultKeyLayout(VOID);
 VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);

@@ -19,7 +19,13 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY gHotkeyList;
+/* Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html */
+/*                   thread hwnd  modifiers  vk      id  next */
+HOT_KEY hkF12 =      {NULL, NULL, 0,         VK_F12, IDHK_F12,      NULL};
+HOT_KEY hkShiftF12 = {NULL, NULL, MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
+HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
+
+PHOT_KEY gphkFirst = &hkWinKey;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -28,19 +34,14 @@ NTSTATUS
 NTAPI
 InitHotkeyImpl(VOID)
 {
-    InitializeListHead(&gHotkeyList);
-
     return STATUS_SUCCESS;
 }
 
-#if 0 //not used
-NTSTATUS FASTCALL
+/*NTSTATUS FASTCALL
 CleanupHotKeys(VOID)
 {
-
     return STATUS_SUCCESS;
-}
-#endif
+}*/
 
 /*
  * IntGetModifiers
@@ -69,151 +70,235 @@ IntGetModifiers(PBYTE pKeyState)
     return fModifiers;
 }
 
+/*
+ * UnregisterWindowHotKeys
+ *
+ * Removes hotkeys registered by specified window on its cleanup
+ */
 VOID FASTCALL
-UnregisterWindowHotKeys(PWND Window)
+UnregisterWindowHotKeys(PWND pWnd)
 {
-    PHOT_KEY_ITEM HotKeyItem, tmp;
+    PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
+    HWND hWnd = pWnd->head.h;
 
-    LIST_FOR_EACH_SAFE(HotKeyItem, tmp, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+    while (pHotKey)
     {
-        if (HotKeyItem->hWnd == Window->head.h)
+        /* Save next ptr for later use */
+        phkNext = pHotKey->pNext;
+
+        /* Should we delete this hotkey? */
+        if (pHotKey->hWnd == hWnd)
         {
-            RemoveEntryList(&HotKeyItem->ListEntry);
-            ExFreePool(HotKeyItem);
+            /* Update next ptr for previous hotkey and free memory */
+            *pLink = phkNext;
+            ExFreePoolWithTag(pHotKey, USERTAG_HOTKEY);
         }
+        else /* This hotkey will stay, use its next ptr */
+            pLink = &pHotKey->pNext;
+
+        /* Move to the next entry */
+        pHotKey = phkNext;
     }
 }
 
+/*
+ * UnregisterThreadHotKeys
+ *
+ * Removes hotkeys registered by specified thread on its cleanup
+ */
 VOID FASTCALL
-UnregisterThreadHotKeys(struct _ETHREAD *Thread)
+UnregisterThreadHotKeys(struct _ETHREAD *pThread)
 {
-    PHOT_KEY_ITEM HotKeyItem, tmp;
+    PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
 
-    LIST_FOR_EACH_SAFE(HotKeyItem, tmp, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+    while (pHotKey)
     {
-        if (HotKeyItem->Thread == Thread)
-        {
-            RemoveEntryList(&HotKeyItem->ListEntry);
-            ExFreePool(HotKeyItem);
-        }
-    }
+        /* Save next ptr for later use */
+        phkNext = pHotKey->pNext;
 
+        /* Should we delete this hotkey? */
+        if (pHotKey->pThread == pThread)
+        {
+            /* Update next ptr for previous hotkey and free memory */
+            *pLink = phkNext;
+            ExFreePoolWithTag(pHotKey, USERTAG_HOTKEY);
+        }
+        else /* This hotkey will stay, use its next ptr */
+            pLink = &pHotKey->pNext;
+
+        /* Move to the next entry */
+        pHotKey = phkNext;
+    }
 }
 
-PHOT_KEY_ITEM FASTCALL
+/*
+ * IsHotKey
+ *
+ * Checks if given key and modificators have corresponding hotkey
+ */
+static PHOT_KEY FASTCALL
 IsHotKey(UINT fsModifiers, WORD wVk)
 {
-    PHOT_KEY_ITEM pHotKeyItem;
+    PHOT_KEY pHotKey = gphkFirst;
 
-    LIST_FOR_EACH(pHotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+    while (pHotKey)
     {
-        if (pHotKeyItem->fsModifiers == fsModifiers && pHotKeyItem->vk == wVk)
+        if (pHotKey->fsModifiers == fsModifiers &&
+            pHotKey->vk == wVk)
         {
-            return pHotKeyItem;
+            /* We have found it */
+            return pHotKey;
         }
+
+        /* Move to the next entry */
+        pHotKey = pHotKey->pNext;
     }
 
     return NULL;
 }
 
 /*
- * IntKeyboardSendWinKeyMsg
+ * SendSysCmdMsg
  *
- * Sends syscommand to shell, when WIN key is pressed
+ * Sends syscommand to specified window
  */
 static
 VOID NTAPI
-IntKeyboardSendWinKeyMsg()
+SendSysCmdMsg(HWND hWnd, WPARAM Cmd, LPARAM lParam)
 {
     PWND pWnd;
     MSG Msg;
+    LARGE_INTEGER LargeTickCount;
 
-    if (!(pWnd = UserGetWindowObject(InputWindowStation->ShellWindow)))
+    /* Get ptr to given window */
+    pWnd = UserGetWindowObject(hWnd);
+    if (!pWnd)
     {
-        ERR("Couldn't find window to send Windows key message!\n");
+        WARN("Invalid window!\n");
         return;
     }
 
-    Msg.hwnd = InputWindowStation->ShellWindow;
+    /* Prepare WM_SYSCOMMAND message */
+    Msg.hwnd = hWnd;
     Msg.message = WM_SYSCOMMAND;
-    Msg.wParam = SC_TASKLIST;
-    Msg.lParam = 0;
+    Msg.wParam = Cmd;
+    Msg.lParam = lParam;
+    KeQueryTickCount(&LargeTickCount);
+    Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+    Msg.pt = gpsi->ptCursor;
 
-    /* The QS_HOTKEY is just a guess */
-    MsqPostMessage(pWnd->head.pti->MessageQueue, &Msg, FALSE, QS_HOTKEY);
+    /* Post message to window */
+    MsqPostMessage(pWnd->head.pti->MessageQueue, &Msg, FALSE, QS_POSTMESSAGE);
 }
 
+/*
+ * co_UserProcessHotKeys
+ *
+ * Sends WM_HOTKEY message if given keys are hotkey
+ */
 BOOL NTAPI
 co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 {
     UINT fModifiers;
-    PHOT_KEY_ITEM pHotKey;
+    PHOT_KEY pHotKey;
+
+    if (wVk == VK_SHIFT || wVk == VK_CONTROL || wVk == VK_MENU ||
+        wVk == VK_LWIN || wVk == VK_RWIN)
+    {
+        /* Those keys are specified by modifiers */
+        wVk = 0;
+    }
 
     /* Check if it is a hotkey */
     fModifiers = IntGetModifiers(gafAsyncKeyState);
     pHotKey = IsHotKey(fModifiers, wVk);
     if (pHotKey)
     {
-        if (bIsDown)
+        /* Process hotkey if it is key up event */
+        if (!bIsDown)
         {
-            TRACE("Hot key pressed (hWnd %lx, id %d)\n", pHotKey->hWnd, pHotKey->id);
-            MsqPostHotKeyMessage(pHotKey->Thread,
-                                 pHotKey->hWnd,
-                                 (WPARAM)pHotKey->id,
-                                 MAKELPARAM((WORD)fModifiers, wVk));
+            TRACE("Hot key pressed (hWnd %p, id %d)\n", pHotKey->hWnd, pHotKey->id);
+
+            /* WIN and F12 keys are hardcoded here. See: http://ivanlef0u.fr/repo/windoz/VI20051005.html */
+            if (pHotKey == &hkWinKey)
+                SendSysCmdMsg(InputWindowStation->ShellWindow, SC_TASKLIST, 0);
+            else if (pHotKey == &hkF12 || pHotKey == &hkShiftF12)
+            {
+                //co_ActivateDebugger(); // FIXME
+            }
+            else if (pHotKey->id == IDHK_REACTOS && !pHotKey->pThread) // FIXME: those hotkeys doesn't depend on RegisterHotKey
+            {
+                SendSysCmdMsg(pHotKey->hWnd, SC_HOTKEY, (LPARAM)pHotKey->hWnd);
+            }
+            else
+            {
+                MsqPostHotKeyMessage(pHotKey->pThread,
+                                     pHotKey->hWnd,
+                                     (WPARAM)pHotKey->id,
+                                     MAKELPARAM((WORD)fModifiers, wVk));
+            }
         }
 
         return TRUE; /* Don't send any message */
     }
 
-    if ((wVk == VK_LWIN || wVk == VK_RWIN) && fModifiers == 0)
-        IntKeyboardSendWinKeyMsg();
-
     return FALSE;
 }
 
 
-//
-// Get/SetHotKey message support.
-//
+/*
+ * DefWndGetHotKey
+ *
+ * GetHotKey message support
+ */
 UINT FASTCALL
-DefWndGetHotKey(HWND hwnd)
+DefWndGetHotKey(HWND hWnd)
 {
-    PHOT_KEY_ITEM HotKeyItem;
+    PHOT_KEY pHotKey = gphkFirst;
 
-    ERR("DefWndGetHotKey\n");
+    WARN("DefWndGetHotKey\n");
 
-    if (IsListEmpty(&gHotkeyList)) return 0;
-
-    LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+    while (pHotKey)
     {
-        if (HotKeyItem->hWnd == hwnd &&
-            HotKeyItem->id == IDHOT_REACTOS)
+        if (pHotKey->hWnd == hWnd && pHotKey->id == IDHK_REACTOS)
         {
-            return MAKELONG(HotKeyItem->vk, HotKeyItem->fsModifiers);
+            /* We have found it */
+            return MAKELONG(pHotKey->vk, pHotKey->fsModifiers);
         }
+
+        /* Move to the next entry */
+        pHotKey = pHotKey->pNext;
     }
+
     return 0;
 }
 
+/*
+ * DefWndSetHotKey
+ *
+ * SetHotKey message support
+ */
 INT FASTCALL
 DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 {
     UINT fsModifiers, vk;
-    PHOT_KEY_ITEM HotKeyItem;
+    PHOT_KEY pHotKey, *pLink;
     HWND hWnd;
-    BOOL HaveSameWnd = FALSE;
-    INT Ret = 1;
+    INT iRet = 1;
 
-    ERR("DefWndSetHotKey wParam 0x%x\n", wParam);
+    WARN("DefWndSetHotKey wParam 0x%x\n", wParam);
 
     // A hot key cannot be associated with a child window.
-    if (pWnd->style & WS_CHILD) return 0;
+    if (pWnd->style & WS_CHILD)
+        return 0;
 
     // VK_ESCAPE, VK_SPACE, and VK_TAB are invalid hot keys.
     if (LOWORD(wParam) == VK_ESCAPE ||
         LOWORD(wParam) == VK_SPACE ||
-        LOWORD(wParam) == VK_TAB) return -1;
+        LOWORD(wParam) == VK_TAB)
+    {
+        return -1;
+    }
 
     vk = LOWORD(wParam);
     fsModifiers = HIWORD(wParam);
@@ -221,62 +306,68 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 
     if (wParam)
     {
-        LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+        pHotKey = gphkFirst;
+        while (pHotKey)
         {
-            if (HotKeyItem->fsModifiers == fsModifiers &&
-                HotKeyItem->vk == vk &&
-                HotKeyItem->id == IDHOT_REACTOS)
+            if (pHotKey->fsModifiers == fsModifiers &&
+                pHotKey->vk == vk &&
+                pHotKey->id == IDHK_REACTOS)
             {
-                if (HotKeyItem->hWnd != hWnd)
-                    Ret = 2; // Another window already has the same hot key.
+                if (pHotKey->hWnd != hWnd)
+                    iRet = 2; // Another window already has the same hot key.
                 break;
             }
+
+            /* Move to the next entry */
+            pHotKey = pHotKey->pNext;
         }
     }
-
-    LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+    
+    pHotKey = gphkFirst;
+    pLink = &gphkFirst;
+    while (pHotKey)
     {
-        if (HotKeyItem->hWnd == hWnd &&
-            HotKeyItem->id == IDHOT_REACTOS)
+        if (pHotKey->hWnd == hWnd &&
+            pHotKey->id == IDHK_REACTOS)
         {
-            HaveSameWnd = TRUE;
+            /* This window has already hotkey registered */
             break;
         }
+
+        /* Move to the next entry */
+        pLink = &pHotKey->pNext;
+        pHotKey = pHotKey->pNext;
     }
 
-    if (HaveSameWnd)
+    if (wParam)
     {
-        if (wParam == 0)
-        {   // Setting wParam to NULL removes the hot key associated with a window.
-            UnregisterWindowHotKeys(pWnd);
-        }
-        else
-        {   /* A window can only have one hot key. If the window already has a hot key
-               associated with it, the new hot key replaces the old one. */
-            HotKeyItem->fsModifiers = fsModifiers;
-            HotKeyItem->vk = vk;
-        }
-    }
-    else //
-    {
-        if (wParam == 0)
-            return 1; // Do nothing, exit.
-
-        HotKeyItem = ExAllocatePoolWithTag(PagedPool, sizeof(HOT_KEY_ITEM), USERTAG_HOTKEY);
-        if (HotKeyItem == NULL)
+        if (!pHotKey)
         {
-            return 0;
+            /* Create new hotkey */
+            pHotKey = ExAllocatePoolWithTag(PagedPool, sizeof(HOT_KEY), USERTAG_HOTKEY);
+            if (pHotKey == NULL)
+                return 0;
+
+            pHotKey->hWnd = hWnd;
+            pHotKey->id = IDHK_REACTOS; // Don't care, these hot keys are unrelated to the hot keys set by RegisterHotKey
+            pHotKey->pNext = gphkFirst;
+            gphkFirst = pHotKey;
         }
 
-        HotKeyItem->Thread = pWnd->head.pti->pEThread;
-        HotKeyItem->hWnd = hWnd;
-        HotKeyItem->id = IDHOT_REACTOS; // Don't care, these hot keys are unrelated to the hot keys set by RegisterHotKey.
-        HotKeyItem->fsModifiers = fsModifiers;
-        HotKeyItem->vk = vk;
-
-        InsertHeadList(&gHotkeyList, &HotKeyItem->ListEntry);
+        /* A window can only have one hot key. If the window already has a
+           hot key associated with it, the new hot key replaces the old one. */
+        pHotKey->pThread = NULL;
+        pHotKey->fsModifiers = fsModifiers;
+        pHotKey->vk = vk;
     }
-    return Ret;
+    else if (pHotKey)
+    {
+        /* Remove hotkey */
+        *pLink = pHotKey->pNext;
+        ExFreePoolWithTag(pHotKey, USERTAG_HOTKEY);
+    }
+
+    return iRet;
 }
 
 /* SYSCALLS *****************************************************************/
@@ -288,88 +379,110 @@ NtUserRegisterHotKey(HWND hWnd,
                      UINT fsModifiers,
                      UINT vk)
 {
-    PHOT_KEY_ITEM HotKeyItem;
-    PWND Window;
-    PETHREAD HotKeyThread;
-    DECLARE_RETURN(BOOL);
+    PHOT_KEY pHotKey;
+    PWND pWnd;
+    PETHREAD pHotKeyThread;
+    BOOL bRet = FALSE;
 
     TRACE("Enter NtUserRegisterHotKey\n");
+
+    if (fsModifiers & ~(MOD_ALT|MOD_CONTROL|MOD_SHIFT|MOD_WIN)) //FIXME: does win2k3 supports MOD_NOREPEAT?
+    {
+        WARN("Invalid modifiers: %x\n", fsModifiers);
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
     UserEnterExclusive();
 
+    /* Find hotkey thread */
     if (hWnd == NULL)
     {
-        HotKeyThread = PsGetCurrentThread();
+        pHotKeyThread = PsGetCurrentThread();
     }
     else
     {
-        if(!(Window = UserGetWindowObject(hWnd)))
-        {
-            RETURN( FALSE);
-        }
-        HotKeyThread = Window->head.pti->pEThread;
+        pWnd = UserGetWindowObject(hWnd);
+        if (!pWnd)
+            goto cleanup;
+
+        pHotKeyThread = pWnd->head.pti->pEThread;
     }
 
     /* Check for existing hotkey */
     if (IsHotKey(fsModifiers, vk))
     {
-        RETURN( FALSE);
+        EngSetLastError(ERROR_HOTKEY_ALREADY_REGISTERED);
+        WARN("Hotkey already exists\n");
+        goto cleanup;
     }
 
-    HotKeyItem = ExAllocatePoolWithTag(PagedPool, sizeof(HOT_KEY_ITEM), USERTAG_HOTKEY);
-    if (HotKeyItem == NULL)
+    /* Create new hotkey */
+    pHotKey = ExAllocatePoolWithTag(PagedPool, sizeof(HOT_KEY), USERTAG_HOTKEY);
+    if (pHotKey == NULL)
     {
-        RETURN( FALSE);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
     }
 
-    HotKeyItem->Thread = HotKeyThread;
-    HotKeyItem->hWnd = hWnd;
-    HotKeyItem->id = id;
-    HotKeyItem->fsModifiers = fsModifiers;
-    HotKeyItem->vk = vk;
+    pHotKey->pThread = pHotKeyThread;
+    pHotKey->hWnd = hWnd;
+    pHotKey->fsModifiers = fsModifiers;
+    pHotKey->vk = vk;
+    pHotKey->id = id;
 
-    InsertHeadList(&gHotkeyList, &HotKeyItem->ListEntry);
+    /* Insert hotkey to the global list */
+    pHotKey->pNext = gphkFirst;
+    gphkFirst = pHotKey;
 
-    RETURN( TRUE);
+    bRet = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserRegisterHotKey, ret=%i\n", _ret_);
+cleanup:
+    TRACE("Leave NtUserRegisterHotKey, ret=%i\n", bRet);
     UserLeave();
-    END_CLEANUP;
+    return bRet;
 }
 
 
 BOOL APIENTRY
 NtUserUnregisterHotKey(HWND hWnd, int id)
 {
-    PHOT_KEY_ITEM HotKeyItem;
-    PWND Window;
-    DECLARE_RETURN(BOOL);
+    PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
+    PWND pWnd;
+    BOOL bRet = FALSE;
 
     TRACE("Enter NtUserUnregisterHotKey\n");
     UserEnterExclusive();
 
-    if(!(Window = UserGetWindowObject(hWnd)))
-    {
-        RETURN( FALSE);
-    }
+    pWnd = UserGetWindowObject(hWnd);
+    if (!pWnd)
+        goto cleanup;
 
-    LIST_FOR_EACH(HotKeyItem, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
+    while (pHotKey)
     {
-        if (HotKeyItem->hWnd == hWnd && HotKeyItem->id == id)
+        /* Save next ptr for later use */
+        phkNext = pHotKey->pNext;
+
+        /* Should we delete this hotkey? */
+        if (pHotKey->hWnd == hWnd && pHotKey->id == id)
         {
-            RemoveEntryList(&HotKeyItem->ListEntry);
-            ExFreePoolWithTag(HotKeyItem, USERTAG_HOTKEY);
+            /* Update next ptr for previous hotkey and free memory */
+            *pLink = phkNext;
+            ExFreePoolWithTag(pHotKey, USERTAG_HOTKEY);
 
-            RETURN( TRUE);
+            bRet = TRUE;
         }
+        else /* This hotkey will stay, use its next ptr */
+            pLink = &pHotKey->pNext;
+
+        /* Move to the next entry */
+        pHotKey = phkNext;
     }
 
-    RETURN( FALSE);
-
-CLEANUP:
-    TRACE("Leave NtUserUnregisterHotKey, ret=%i\n", _ret_);
+cleanup:
+    TRACE("Leave NtUserUnregisterHotKey, ret=%i\n", bRet);
     UserLeave();
-    END_CLEANUP;
+    return bRet;
 }
 
 /* EOF */
