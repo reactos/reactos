@@ -151,7 +151,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
+IDI_COMPUTER            ICON    DISCARDABLE     "res/computer.ico"
 IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
 IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
 IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
@@ -173,7 +173,7 @@ IDI_FOLDER              ICON    DISCARDABLE     "res/folder.ico"
 IDI_SEARCH_DOC          ICON    DISCARDABLE     "res/search-doc.ico"
 IDI_PRINTER             ICON    DISCARDABLE     "res/printer.ico"
 IDI_NETWORK             ICON    DISCARDABLE     "res/network.ico"
-IDI_COMPUTER            ICON    DISCARDABLE     "res/computer.ico"
+IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
 IDI_SPEAKER             ICON    DISCARDABLE     "res/speaker.ico"
 IDI_DOT                 ICON    DISCARDABLE     "res/dot.ico"
 IDI_DOT_TRANS           ICON    DISCARDABLE     "res/dot_trans.ico"
