@@ -1388,6 +1388,7 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
         return HW_VENDOR_INTEL;
 
     if (strstr(gl_vendor_string, "Mesa")
+            || strstr(gl_vendor_string, "Brian Paul")
             || strstr(gl_vendor_string, "Tungsten Graphics, Inc")
             || strstr(gl_vendor_string, "VMware, Inc."))
         return HW_VENDOR_SOFTWARE;
