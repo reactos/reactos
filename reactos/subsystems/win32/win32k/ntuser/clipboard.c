@@ -377,23 +377,18 @@ cleanup:
     return Ret;
 }
 
-BOOL APIENTRY
-NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
+BOOL NTAPI
+UserOpenClipboard(HWND hWnd)
 {
     PWND pWindow = NULL;
     BOOL bRet = FALSE;
     PWINSTATION_OBJECT pWinStaObj = NULL;
 
-    UserEnterExclusive();
-
     if (hWnd)
     {
         pWindow = UserGetWindowObject(hWnd);
         if (!pWindow)
-        {
-            EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
             goto cleanup;
-        }
     }
 
     pWinStaObj = IntGetWinStaForCbAccess();
@@ -406,6 +401,7 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
         if (pWinStaObj->spwndClipOpen != pWindow)
         {
             EngSetLastError(ERROR_ACCESS_DENIED);
+            ERR("Access denied!\n");
             goto cleanup;
         }
     }
@@ -419,18 +415,26 @@ cleanup:
     if (pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
+    return bRet;
+}
+
+BOOL APIENTRY
+NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
+{
+    BOOL bRet;
+
+    UserEnterExclusive();
+    bRet = UserOpenClipboard(hWnd);
     UserLeave();
 
     return bRet;
 }
 
-BOOL APIENTRY
-NtUserCloseClipboard(VOID)
+BOOL NTAPI
+UserCloseClipboard(VOID)
 {
     BOOL bRet = FALSE;
     PWINSTATION_OBJECT pWinStaObj = NULL;
-
-    UserEnterExclusive();
 
     pWinStaObj = IntGetWinStaForCbAccess();
     if (!pWinStaObj)
@@ -466,6 +470,16 @@ cleanup:
     if (pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
+    return bRet;
+}
+
+BOOL APIENTRY
+NtUserCloseClipboard(VOID)
+{
+    BOOL bRet;
+    
+    UserEnterExclusive();
+    bRet = UserCloseClipboard();
     UserLeave();
 
     return bRet;
@@ -550,19 +564,15 @@ cleanup:
     return cFormats;
 }
 
-BOOL APIENTRY
-NtUserEmptyClipboard(VOID)
+BOOL NTAPI
+UserEmptyClipboard(VOID)
 {
     BOOL bRet = FALSE;
     PWINSTATION_OBJECT pWinStaObj;
 
-    TRACE("NtUserEmptyClipboard()\n");
-
-    UserEnterExclusive();
-
     pWinStaObj = IntGetWinStaForCbAccess();
     if (!pWinStaObj)
-        goto cleanup;
+        return FALSE;
 
     if (IntIsClipboardOpenByMe(pWinStaObj))
     {
@@ -588,7 +598,18 @@ NtUserEmptyClipboard(VOID)
 
     ObDereferenceObject(pWinStaObj);
 
-cleanup:
+    return bRet;
+}
+
+BOOL APIENTRY
+NtUserEmptyClipboard(VOID)
+{
+    BOOL bRet;
+
+    TRACE("NtUserEmptyClipboard()\n");
+
+    UserEnterExclusive();
+    bRet = UserEmptyClipboard();
     UserLeave();
 
     return bRet;
@@ -865,17 +886,11 @@ cleanup:
     return hRet;
 }
 
-HANDLE APIENTRY
-NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
+HANDLE NTAPI
+UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
 {
     HANDLE hRet = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
     PWINSTATION_OBJECT pWinStaObj = NULL;
-    BOOLEAN fGlobalHandle = FALSE;
-
-    TRACE("NtUserSetClipboardData(%x %p %p)\n", fmt, hData, scd);
-
-    UserEnterExclusive();
 
     pWinStaObj = IntGetWinStaForCbAccess();
     if (!pWinStaObj)
@@ -891,24 +906,8 @@ NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
         goto cleanup;
     }
 
-    _SEH2_TRY
-    {
-        ProbeForRead(scd, sizeof(*scd), 1);
-        fGlobalHandle = scd->fGlobalHandle;
-        if (scd->fIncSerialNumber)
-            pWinStaObj->iClipSerialNumber++;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        goto cleanup;
-    }
+    if (scd->fIncSerialNumber)
+        pWinStaObj->iClipSerialNumber++;
 
     /* Is it a delayed render? */
     if (hData)
@@ -921,7 +920,7 @@ NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
         }
 
         /* Save data in the clipboard */
-        IntAddFormatedData(pWinStaObj, fmt, hData, fGlobalHandle, FALSE);
+        IntAddFormatedData(pWinStaObj, fmt, hData, scd->fGlobalHandle, FALSE);
         TRACE("hData stored\n");
 
         pWinStaObj->iClipSequenceNumber++;
@@ -945,6 +944,41 @@ cleanup:
     if(pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
+    return hRet;
+}
+
+HANDLE APIENTRY
+NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA pUnsafeScd)
+{
+    SETCLIPBDATA scd;
+    NTSTATUS Status = STATUS_SUCCESS;
+    HANDLE hRet = NULL;
+
+    TRACE("NtUserSetClipboardData(%x %p %p)\n", fmt, hData, scd);
+
+    UserEnterExclusive();
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pUnsafeScd, sizeof(*pUnsafeScd), 1);
+        RtlCopyMemory(&scd, pUnsafeScd, sizeof(scd));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        goto cleanup;
+    }
+
+    /* Call internal function */
+    hRet = UserSetClipboardData(fmt, hData, &scd);
+
+cleanup:
     UserLeave();
 
     return hRet;
