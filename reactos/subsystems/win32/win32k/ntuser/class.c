@@ -1291,9 +1291,8 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
        if (lpwcx->style & CS_GLOBALCLASS)
        {
-          /* HACK: allow global classes to be re-registered*/
           Class = IntFindClass( ClassAtom,
-                                lpwcx->hInstance,
+                                NULL,
                                &pi->pclsPublicList,
                                 NULL);
 
