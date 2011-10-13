@@ -227,7 +227,8 @@ ReadRegistryEntries(
 	RTL_QUERY_REGISTRY_TABLE Parameters[4];
 	NTSTATUS Status;
 
-	ULONG DefaultConnectMultiplePorts = 0;
+	/* HACK: We don't support multiple devices with this disabled */
+	ULONG DefaultConnectMultiplePorts = 1;
 	ULONG DefaultDataQueueSize = 0x64;
 	PCWSTR DefaultDeviceBaseName = L"KeyboardClass";
 
