@@ -306,7 +306,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			else
 				return 0;			// disable any other resizing
 		} else if (wparam == SC_TASKLIST)
-			ShowStartMenu();
+			ShowOrHideStartMenu();
 		goto def;
 
 	  case WM_SIZE:
@@ -430,7 +430,7 @@ int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_START:
-		ShowStartMenu();
+		ShowOrHideStartMenu();
 		break;
 
 	  case ID_ABOUT_EXPLORER:
@@ -484,7 +484,7 @@ int DesktopBar::Command(int id, int code)
 }
 
 
-void DesktopBar::ShowStartMenu()
+void DesktopBar::ShowOrHideStartMenu()
 {
 	if (_startMenuRoot)
 	{
@@ -492,7 +492,10 @@ void DesktopBar::ShowStartMenu()
 		if (!Button_GetState(_hwndStartButton))
 			Button_SetState(_hwndStartButton, TRUE);
 
- 		_startMenuRoot->TrackStartmenu();
+        if (_startMenuRoot->IsStartMenuVisible())
+            _startMenuRoot->CloseStartMenu();
+        else
+            _startMenuRoot->TrackStartmenu();
 
 		// StartMenu was closed, release button state
 		Button_SetState(_hwndStartButton, false);

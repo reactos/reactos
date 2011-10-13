@@ -103,7 +103,7 @@ protected:
 	void	ControlResize(WPARAM wparam, LPARAM lparam);
 	void	RegisterHotkeys();
 	void	ProcessHotKey(int id_hotkey);
-	void	ShowStartMenu();
+	void	ShowOrHideStartMenu();
 	LRESULT	ProcessCopyData(COPYDATASTRUCT* pcd);
 
 	WindowHandle _hwndTaskBar;
