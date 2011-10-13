@@ -48,7 +48,7 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
     UNICODE_STRING PathCopy;
     PWCHAR Start, End;
     USHORT PathChars, ColonCount = 0;
-    USHORT ReturnOffset = 0, ReturnLength;
+    USHORT ReturnOffset = 0, ReturnLength, OriginalLength;
     WCHAR c;
 
     /* Validate the input */
@@ -77,6 +77,7 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
 
     /* Make a copy of the string */
     PathCopy = *PathString;
+    OriginalLength = PathString->Length;
 
     /* Return if there's no characters */
     PathChars = PathCopy.Length / sizeof(WCHAR);
@@ -124,16 +125,19 @@ RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
                 c = *End | ' '; // ' ' == ('z' - 'Z')
 
                 /* Check if it's a DOS device (LPT, COM, PRN, AUX, or NUL) */
-                if ((End < &PathCopy.Buffer[PathCopy.Length / sizeof(WCHAR)]) &&
+                if ((End < &PathCopy.Buffer[OriginalLength / sizeof(WCHAR)]) &&
                     ((c == 'l') || (c == 'c') || (c == 'p') || (c == 'a') || (c == 'n')))
                 {
                     /* Calculate the offset */
                     ReturnOffset = (PCHAR)End - (PCHAR)PathCopy.Buffer;
 
                     /* Build the final string */
-                    PathCopy.Length -= ReturnOffset;
-                    PathCopy.Length -= (ColonCount * sizeof(WCHAR));
+                    PathCopy.Length = OriginalLength - ReturnOffset - (ColonCount * sizeof(WCHAR));
                     PathCopy.Buffer = End;
+
+                    /* Save new amount of chars in the path */
+                    PathChars = PathCopy.Length / sizeof(WCHAR);
+
                     break;
                 }
                 else
