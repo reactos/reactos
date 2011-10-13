@@ -242,7 +242,7 @@ IntValidateWindowStationHandle(
 
    if (WindowStation == NULL)
    {
-      //      ERR("Invalid window station handle\n");
+      WARN("Invalid window station handle\n");
       EngSetLastError(ERROR_INVALID_HANDLE);
       return STATUS_INVALID_HANDLE;
    }
@@ -802,34 +802,11 @@ NtUserSetObjectInformation(
 HWINSTA FASTCALL
 UserGetProcessWindowStation(VOID)
 {
-   NTSTATUS Status;
-   PTHREADINFO pti;
-   HWINSTA WinSta;
+    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-   if(PsGetCurrentProcess() != CsrProcess)
-   {
-      return PsGetCurrentProcess()->Win32WindowStation;
-   }
-   else
-   {
-      ERR("Should use ObFindHandleForObject\n");
-      pti = PsGetCurrentThreadWin32Thread();
-      Status = ObOpenObjectByPointer(pti->rpdesk->rpwinstaParent,
-                                     0,
-                                     NULL,
-                                     WINSTA_ALL_ACCESS,
-                                     ExWindowStationObjectType,
-                                     UserMode,
-                                     (PHANDLE) &WinSta);
-      if (! NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         ERR("Unable to open handle for CSRSSs winsta, status 0x%08x\n",
-                 Status);
-         return NULL;
-      }
-      return WinSta;
-   }
+    //ASSERT(ppi->hwinsta);
+
+    return ppi->hwinsta;
 }
 
 
@@ -856,36 +833,19 @@ NtUserGetProcessWindowStation(VOID)
 PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
-   PWINSTATION_OBJECT WinStaObj;
-   PTHREADINFO Win32Thread;
-   PEPROCESS CurrentProcess;
-
-   /*
-    * just a temporary hack, this will be gone soon
-    */
-
-   Win32Thread = PsGetCurrentThreadWin32Thread();
-   if(Win32Thread != NULL && Win32Thread->rpdesk != NULL)
-   {
-      WinStaObj = Win32Thread->rpdesk->rpwinstaParent;
-      ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
-   }
-   else if((CurrentProcess = PsGetCurrentProcess()) != CsrProcess)
-   {
-      NTSTATUS Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
+    PWINSTATION_OBJECT WinStaObj;
+    NTSTATUS Status;
+   
+    Status = IntValidateWindowStationHandle(
+                        UserGetProcessWindowStation(),
                         KernelMode,
                         0,
                         &WinStaObj);
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         return NULL;
-      }
-   }
-   else
-   {
-      WinStaObj = NULL;
-   }
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return NULL;
+    }
 
    return WinStaObj;
 }
