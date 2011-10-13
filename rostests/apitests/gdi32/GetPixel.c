@@ -28,6 +28,13 @@ void Test_GetPixel_1bpp()
     color = GetPixel(hdc, 1, 0);
     ok(color == 0, "Wrong color at 1,0 : 0x%08x\n", (UINT)color);
 
+    SetBkColor(hdc, 0x12345678);
+    SetTextColor(hdc, 0x87654321);
+    color = GetPixel(hdc, 0, 0);
+    ok(color == 0xFFFFFF, "Wrong color at 0,0 : 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 1, 0);
+    ok(color == 0, "Wrong color at 1,0 : 0x%08x\n", (UINT)color);
+
     hbmp = SelectObject(hdc, hbmp);
     DeleteObject(hbmp);
     DeleteDC(hdc);

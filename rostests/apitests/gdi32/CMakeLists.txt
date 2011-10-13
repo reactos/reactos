@@ -8,6 +8,7 @@ list(APPEND SOURCE
     CombineTransform.c
     CreateBitmapIndirect.c
     CreateCompatibleDC.c
+    CreateDIBitmap.c
     CreateFont.c
     CreateFontIndirect.c
     CreatePen.c

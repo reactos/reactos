@@ -87,6 +87,36 @@ void Test_AddFontResourceA()
     result = AddFontResourceA(szFileNameA);
     ok(result == 0, "AddFontResourceA succeeded, result=%d\n", result);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
+
+
+    GetCurrentDirectoryA(MAX_PATH, szFileNameA);
+    strcpy(szFileNameFont1A, szFileNameA);
+    strcat(szFileNameFont1A, "\\testdata\\test.pfm");
+
+    strcpy(szFileNameFont2A, szFileNameA);
+    strcat(szFileNameFont2A, "\\testdata\\test.pfb");
+
+    SetLastError(ERROR_SUCCESS);
+
+    sprintf(szFileNameA,"%s|%s", szFileNameFont1A, szFileNameFont2A);
+    result = AddFontResourceA(szFileNameA);
+    ok(result == 1, "AddFontResourceA(\"%s|%s\") failed, result=%d\n",
+                    szFileNameFont1A, szFileNameFont2A, result);
+    ok(GetLastError() == ERROR_SUCCESS, "GetLastError()=%ld\n", GetLastError());
+
+    sprintf(szFileNameA,"%s | %s", szFileNameFont1A, szFileNameFont2A);
+    result = AddFontResourceA(szFileNameA);
+    ok(result == 0, "AddFontResourceA(\"%s | %s\") succeeded, result=%d\n",
+                    szFileNameFont1A, szFileNameFont2A, result);
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
+
+    sprintf(szFileNameA,"%s|%s", szFileNameFont2A, szFileNameFont1A);
+    result = AddFontResourceA(szFileNameA);
+    ok(result == 0, "AddFontResourceA(\"%s|%s\") succeeded, result=%d\n",
+                    szFileNameFont2A, szFileNameFont1A, result);
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
+
+
 }
 
 START_TEST(AddFontResource)
