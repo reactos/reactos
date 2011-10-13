@@ -46,6 +46,8 @@ BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
 BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi, BOOL Injected);
 BOOL UserInitDefaultKeyboardLayout(VOID);
 PKBL UserHklToKbl(HKL hKl);
+VOID NTAPI KeyboardThreadMain(PVOID StartContext);
+DWORD NTAPI CreateSystemThreads(UINT Type);
 BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
 VOID FASTCALL DoTheScreenSaver(VOID);
 #define ThreadHasInputAccess(W32Thread) (TRUE)

@@ -62,6 +62,7 @@ IntFreeElementData(PCLIP pElement)
         else if (pElement->fmt == CF_BITMAP || pElement->fmt == CF_PALETTE ||
                  pElement->fmt == CF_DSPBITMAP)
         {
+            GreSetObjectOwner(pElement->hData, GDI_OBJ_HMGR_POWNED);
             GreDeleteObject(pElement->hData);
         }
     }
