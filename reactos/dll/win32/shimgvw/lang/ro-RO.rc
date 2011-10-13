@@ -1,0 +1,25 @@
+/* 
+ * FILE:             dll/win32/shimgvw/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG:       2011-10-04  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE    "Vizualizare fax și imagini"
+    IDS_SETASDESKBG "Plasează ca decor de fundal"
+    IDS_PREVIEW     "Previzualizare"
+
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC   "Imaginea următare"
+    IDS_TOOLTIP_PREV_PIC   "Imaginea precedentă"
+    IDS_TOOLTIP_ZOOM_IN    "Mărire (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Micșorare (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Rotire în sens orar (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Rotire în sens antiorar (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "Imprimă (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Păstrează în... (Ctrl+S)"
+END
