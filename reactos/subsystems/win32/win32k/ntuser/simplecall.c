@@ -378,6 +378,8 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_MESSAGEBEEP:
           RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
 		  /* TODO: Implement sound sentry */
+      case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
+          RETURN(CreateSystemThreads(Param));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);

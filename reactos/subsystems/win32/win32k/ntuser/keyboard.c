@@ -672,6 +672,83 @@ co_CallLowLevelKeyboardHook(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjec
 }
 
 /*
+ * SnapWindow
+ *
+ * Saves snapshot of specified window or whole screen in the clipboard
+ */
+static VOID
+SnapWindow(HWND hWnd)
+{
+    HBITMAP hbm = NULL, hbmOld;
+    HDC hdc = NULL, hdcMem;
+    SETCLIPBDATA scd;
+    INT cx, cy;
+    PWND pWnd = NULL;
+
+    TRACE("SnapWindow(%p)\n", hWnd);
+
+    /* If no windows is given, make snapshot of desktop window */
+    if (!hWnd)
+        hWnd = IntGetDesktopWindow();
+
+    pWnd = UserGetWindowObject(hWnd);
+    if (!pWnd)
+    {
+        ERR("Invalid window\n");
+        goto cleanup;
+    }
+
+    hdc = UserGetDCEx(pWnd, NULL, DCX_USESTYLE | DCX_WINDOW);
+    if (!hdc)
+    {
+        ERR("UserGetDCEx failed!\n");
+        goto cleanup;
+    }
+
+    cx = pWnd->rcWindow.right - pWnd->rcWindow.left;
+    cy = pWnd->rcWindow.bottom - pWnd->rcWindow.top;
+
+    hbm = NtGdiCreateCompatibleBitmap(hdc, cx, cy);
+    if (!hbm)
+    {
+        ERR("NtGdiCreateCompatibleBitmap failed!\n");
+        goto cleanup;
+    }
+
+    hdcMem = NtGdiCreateCompatibleDC(hdc);
+    if (!hdcMem)
+    {
+        ERR("NtGdiCreateCompatibleDC failed!\n");
+        goto cleanup;
+    }
+
+    hbmOld = NtGdiSelectBitmap(hdcMem, hbm);
+    NtGdiBitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY, 0, 0);
+    NtGdiSelectBitmap(hdcMem, hbmOld);
+    IntGdiDeleteDC(hdcMem, FALSE);
+
+    /* Save snapshot in clipboard */
+    if (UserOpenClipboard(NULL))
+    {
+        UserEmptyClipboard();
+        scd.fIncSerialNumber = TRUE;
+        scd.fGlobalHandle = FALSE;
+        if (UserSetClipboardData(CF_BITMAP, hbm, &scd))
+        {
+            /* Bitmap is managed by system now */
+            hbm = NULL;
+        }
+        UserCloseClipboard();
+    }
+
+cleanup:
+    if (hbm)
+        GreDeleteObject(hbm);
+    if (hdc)
+        UserReleaseDC(hWnd, hdc, FALSE);
+}
+
+/*
  * UserSendKeyboardInput
  *
  * Process keyboard input from input devices and SendInput API
@@ -765,7 +842,18 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* If we have a focus queue, post a keyboard message */
     pFocusQueue = IntGetFocusMessageQueue();
-    if (pFocusQueue && bPostMsg)
+    if (bIsDown && wVk == VK_SNAPSHOT)
+    {
+        if (pFocusQueue &&
+            IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
+            !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
+        {
+            SnapWindow(pFocusQueue->FocusWindow);
+        }
+        else
+            SnapWindow(NULL);
+    }
+    else if (pFocusQueue && bPostMsg)
     {
         /* Init message */
         Msg.hwnd = pFocusQueue->FocusWindow;

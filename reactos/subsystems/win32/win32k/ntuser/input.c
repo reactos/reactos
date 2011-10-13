@@ -24,10 +24,6 @@ HANDLE ghKeyboardDevice;
 
 static DWORD LastInputTick = 0;
 static HANDLE MouseDeviceHandle;
-static HANDLE MouseThreadHandle;
-static CLIENT_ID MouseThreadId;
-static HANDLE KeyboardThreadHandle;
-static CLIENT_ID KeyboardThreadId;
 static HANDLE RawInputThreadHandle;
 static CLIENT_ID RawInputThreadId;
 static KEVENT InputThreadsStart;
@@ -212,7 +208,7 @@ MouseThreadMain(PVOID StartContext)
         DueTime.QuadPart = (LONGLONG)(-10000000);
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
-        Status = NtOpenFile(&MouseDeviceHandle,
+        Status = ZwOpenFile(&MouseDeviceHandle,
                             FILE_ALL_ACCESS,
                             &MouseObjectAttributes,
                             &Iosb,
@@ -221,12 +217,12 @@ MouseThreadMain(PVOID StartContext)
     } while (!NT_SUCCESS(Status));
 
     /* Need to setup basic win32k for this thread to process WH_MOUSE_LL messages. */
-    Status = Win32kInitWin32Thread(PsGetCurrentThread());
+    /*Status = Win32kInitWin32Thread(PsGetCurrentThread());
     if (!NT_SUCCESS(Status))
     {
         ERR("Win32K: Failed making mouse thread a win32 thread.\n");
         return; //(Status);
-    }
+    }*/
 
     ptiMouse = PsGetCurrentThreadWin32Thread();
     ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
@@ -249,7 +245,7 @@ MouseThreadMain(PVOID StartContext)
         TRACE("Mouse Input Thread Starting...\n");
 
         /*FIXME: Does mouse attributes need to be used for anything */
-        Status = NtDeviceIoControlFile(MouseDeviceHandle,
+        Status = ZwDeviceIoControlFile(MouseDeviceHandle,
                                        NULL,
                                        NULL,
                                        NULL,
@@ -268,7 +264,7 @@ MouseThreadMain(PVOID StartContext)
         while(InputThreadsRunning)
         {
             MOUSE_INPUT_DATA MouseInput;
-            Status = NtReadFile(MouseDeviceHandle,
+            Status = ZwReadFile(MouseDeviceHandle,
                                 NULL,
                                 NULL,
                                 NULL,
@@ -304,7 +300,7 @@ MouseThreadMain(PVOID StartContext)
     }
 }
 
-static VOID APIENTRY
+VOID NTAPI
 KeyboardThreadMain(PVOID StartContext)
 {
     UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
@@ -321,11 +317,11 @@ KeyboardThreadMain(PVOID StartContext)
     {
         LARGE_INTEGER DueTime;
         KEVENT Event;
-        DueTime.QuadPart = (LONGLONG)(-10000000);
+        DueTime.QuadPart = (LONGLONG)(-100000000);
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
-        Status = NtOpenFile(&ghKeyboardDevice,
-                            FILE_ALL_ACCESS,
+        Status = ZwOpenFile(&ghKeyboardDevice,
+                            FILE_READ_ACCESS,//FILE_ALL_ACCESS,
                             &KeyboardObjectAttributes,
                             &Iosb,
                             0,
@@ -343,12 +339,12 @@ KeyboardThreadMain(PVOID StartContext)
        the message from the system message queue would be responsible
        for WH_KEYBOARD_LL processing and we wouldn't need this thread
        to be a win32 thread. */
-    Status = Win32kInitWin32Thread(PsGetCurrentThread());
+    /*Status = Win32kInitWin32Thread(PsGetCurrentThread());
     if (!NT_SUCCESS(Status))
     {
         ERR("Win32K: Failed making keyboard thread a win32 thread.\n");
         return; //(Status);
-    }
+    }*/
 
     ptiKeyboard = PsGetCurrentThreadWin32Thread();
     ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
@@ -379,7 +375,7 @@ KeyboardThreadMain(PVOID StartContext)
 
             TRACE("KeyInput @ %08x\n", &KeyInput);
 
-            Status = NtReadFile (ghKeyboardDevice,
+            Status = ZwReadFile (ghKeyboardDevice,
                                  NULL,
                                  NULL,
                                  NULL,
@@ -479,7 +475,7 @@ RawInputThreadMain(PVOID StartContext)
     //
     for(;;)
     {
-        TRACE( "Raw Input Thread Waiting for start event\n" );
+        TRACE("Raw Input Thread Waiting for start event\n");
 
         Status = KeWaitForMultipleObjects( 2,
                                            Objects,
@@ -489,11 +485,28 @@ RawInputThreadMain(PVOID StartContext)
                                            TRUE,
                                            NULL,
                                            NULL);
-        TRACE( "Raw Input Thread Starting...\n" );
+        TRACE("Raw Input Thread Starting...\n");
 
         ProcessTimers();
     }
     ERR("Raw Input Thread Exit!\n");
+}
+
+DWORD NTAPI
+CreateSystemThreads(UINT Type)
+{
+    UserLeave();
+
+    switch (Type)
+    {
+        case 0: KeyboardThreadMain(NULL); break;
+        case 1: MouseThreadMain(NULL); break;
+        default: ERR("Wrong type: %x\n", Type);
+    }
+
+    UserEnterShared();
+
+    return 0;
 }
 
 INIT_FUNCTION
@@ -532,30 +545,6 @@ InitInputImpl(VOID)
         ERR("Win32K: Failed to create raw thread.\n");
     }
 
-    Status = PsCreateSystemThread(&KeyboardThreadHandle,
-                                  THREAD_ALL_ACCESS,
-                                  NULL,
-                                  NULL,
-                                  &KeyboardThreadId,
-                                  KeyboardThreadMain,
-                                  NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Win32K: Failed to create keyboard thread.\n");
-    }
-
-    Status = PsCreateSystemThread(&MouseThreadHandle,
-                                  THREAD_ALL_ACCESS,
-                                  NULL,
-                                  NULL,
-                                  &MouseThreadId,
-                                  MouseThreadMain,
-                                  NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Win32K: Failed to create mouse thread.\n");
-    }
-
     InputThreadsRunning = TRUE;
     KeSetEvent(&InputThreadsStart, IO_NO_INCREMENT, FALSE);
 
@@ -588,7 +577,7 @@ IntBlockInput(PTHREADINFO pti, BOOL BlockIt)
      *         e.g. services running in the service window station cannot block input
      */
     if(!ThreadHasInputAccess(pti) ||
-            !IntIsActiveDesktop(pti->rpdesk))
+       !IntIsActiveDesktop(pti->rpdesk))
     {
         EngSetLastError(ERROR_ACCESS_DENIED);
         return FALSE;

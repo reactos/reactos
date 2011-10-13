@@ -178,6 +178,16 @@ PrivateCsrssManualGuiCheck(LONG Check)
   NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
+DWORD
+WINAPI
+CreateSystemThreads(PVOID pParam)
+{
+    NtUserCallOneParam((DWORD_PTR)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    DPRINT1("This thread should not terminate!\n");
+    DbgBreakPoint();
+    return 0;
+}
+
 BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRPLUGIN_SERVER_PROCS ServerProcs,
@@ -200,6 +210,33 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
 
     RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
+
+    {
+        HANDLE ServerThread;
+        CLIENT_ID ClientId;
+        NTSTATUS Status;
+        
+        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);
+        if (NT_SUCCESS(Status))
+        {
+            NtResumeThread(ServerThread, NULL);
+            NtClose(ServerThread);
+        }
+        else
+            DPRINT1("Cannot start keyboard thread!\n");
+
+        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)1, &ServerThread, &ClientId);
+        if (NT_SUCCESS(Status))
+        {
+            NtResumeThread(ServerThread, NULL);
+            NtClose(ServerThread);
+        }
+        else
+            DPRINT1("Cannot start mouse thread!\n");
+
+        DbgBreakPoint();
+    }
+    
     return TRUE;
 }
 
