@@ -25,11 +25,11 @@ list(APPEND SOURCE
     keyboard.c
     usbdriver.rc)
 
-add_library(usbdriver SHARED ${SOURCE})
+add_library(usbdrv SHARED ${SOURCE})
 
-set_module_type(usbdriver kernelmodedriver)
-add_importlibs(usbdriver ntoskrnl hal)
+set_module_type(usbdrv kernelmodedriver)
+add_importlibs(usbdrv ntoskrnl hal)
 
-add_pch(usbdriver usbdriver.h)
+add_pch(usbdrv usbdriver.h)
 
-add_cd_file(TARGET usbdriver DESTINATION reactos/system32/drivers FOR all)
+add_cd_file(TARGET usbdrv DESTINATION reactos/system32/drivers NO_CAB FOR all)

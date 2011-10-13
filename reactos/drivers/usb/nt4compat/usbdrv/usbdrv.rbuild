@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="usbdriver" type="kernelmodedriver" installbase="system32/drivers" installname="usbdriver.sys">
+<module name="usbdrv" type="kernelmodedriver" installbase="system32/drivers" installname="usbdrv.sys">
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<define name="INCLUDE_EHCI" />
 	<define name="_MULTI_UHCI" />
 	<define name="_MULTI_EHCI" />
 	<define name="_X86" />
-	<include base="usbdriver">.</include>
+	<include base="usbdrv">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>ehci.c</file>
