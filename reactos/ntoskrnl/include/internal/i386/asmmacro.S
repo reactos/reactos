@@ -219,7 +219,7 @@ ENDM
 MACRO(TRAP_ENTRY, Trap, Flags)
     EXTERN @&Trap&Handler@4 :PROC
     PUBLIC _&Trap
-    .PROC &Trap
+    .PROC _&Trap
         /* Generate proper debugging symbols */
         FPO 0, 0, 0, 0, 1, FRAME_TRAP
 
@@ -228,7 +228,7 @@ MACRO(TRAP_ENTRY, Trap, Flags)
 
         /* Call the C handler */
         KiCallHandler @&Trap&Handler@4
-    .ENDP &Trap
+    .ENDP
 ENDM
 
 #define KI_RESTORE_EAX        HEX(001)

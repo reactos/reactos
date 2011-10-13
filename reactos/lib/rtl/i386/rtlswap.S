@@ -16,28 +16,25 @@ PUBLIC @RtlUlonglongByteSwap@8
 /* FUNCTIONS ***************************************************************/
 .code
 
-@RtlUshortByteSwap@4:
-FUNC RtlUshortByteSwap
+FUNC @RtlUshortByteSwap@4
     FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Swap high and low bits */
     mov ah, cl
     mov al, ch
     ret
-ENDFUNC RtlUshortByteSwap
+ENDFUNC
 
-@RtlUlongByteSwap@4:
-FUNC RtlUlongByteSwap
+FUNC @RtlUlongByteSwap@4
     FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Swap high and low bits */
     mov eax, ecx
     bswap eax
     ret
-ENDFUNC RtlUlongByteSwap
+ENDFUNC
 
-@RtlUlonglongByteSwap@8:
-FUNC RtlUlonglongByteSwap
+FUNC @RtlUlonglongByteSwap@8
     FPO 0, 2, 0, 0, 0, FRAME_FPO
 
     /* Get 64-bit integer */
@@ -53,6 +50,6 @@ FUNC RtlUlonglongByteSwap
        and therefore put on tthe stack instead of in ecx and edx,
        but thats exactly how the function behaves on Windows! */
     ret
-ENDFUNC RtlUlonglongByteSwap
+ENDFUNC
 
 END

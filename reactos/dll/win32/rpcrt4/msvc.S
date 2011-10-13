@@ -63,7 +63,7 @@ FUNC call_stubless_func
     call ndr_client_call
     add rsp, 38h
     ret
-ENDFUNC call_stubless_func
+ENDFUNC
 
 PUBLIC call_server_func
 FUNC call_server_func
@@ -102,7 +102,7 @@ FUNC call_server_func
     pop rsi
     pop rbp
     ret
-ENDFUNC call_server_func
+ENDFUNC
 
 
 PUBLIC NdrClientCall2
@@ -121,7 +121,7 @@ FUNC NdrClientCall2
 
     add rsp, 28h
     ret
-ENDFUNC NdrClientCall2
+ENDFUNC
 
 EXTERN ndr_async_client_call:PROC
 PUBLIC NdrAsyncClientCall
@@ -139,7 +139,7 @@ FUNC NdrAsyncClientCall
 
     add rsp, 28h
     ret
-ENDFUNC NdrAsyncClientCall
+ENDFUNC
 
 #endif
 

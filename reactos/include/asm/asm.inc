@@ -32,21 +32,18 @@ rip = 0
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .PROC MACRO name
+__current_function_name EQU %name
 #ifdef _M_IX86
-    _&name PROC
+    %name PROC
 #else
-    &name PROC FRAME
+    %name PROC FRAME
 #endif
 ENDM
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
-.ENDP MACRO name
-#ifdef _M_IX86
-    _&name ENDP
-#else
-    &name ENDP
-#endif
+.ENDP MACRO
+    %__current_function_name ENDP
 ENDM
 #define ENDFUNC .ENDP
 
@@ -203,17 +200,17 @@ ENDM
 .macro .PROC name
     .func \name
 #ifdef _X86_
+    /* x86 gas expects a label with _ prefix */
     _\name:
-#else
-    \name:
 #endif
+    \name:
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
-.macro .ENDP name
+.macro .ENDP
     .cfi_endproc
     .endfunc
 .endm

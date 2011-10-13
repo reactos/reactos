@@ -100,7 +100,7 @@ CalibrationISR_Exit:
     pop rbx
     pop rax
     iretq
-ENDFUNC TscCalibrationISR
+ENDFUNC
 #endif
 
 END

@@ -136,19 +136,19 @@ _KiInterruptTemplateDispatch:
 
 EXTERN @KiSystemServiceHandler@8:PROC
 PUBLIC _KiSystemService
-.PROC KiSystemService
+.PROC _KiSystemService
     FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_PUSH_FAKE_ERROR_CODE OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
     KiCallHandler @KiSystemServiceHandler@8
-.ENDP KiSystemService
+.ENDP
 
 EXTERN @KiFastCallEntryHandler@8:PROC
 PUBLIC _KiFastCallEntry
-.PROC KiFastCallEntry
+.PROC _KiFastCallEntry
     FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
     KiCallHandler @KiFastCallEntryHandler@8
-.ENDP KiFastCallEntry
+.ENDP
 
 
 PUBLIC _KiEndUnexpectedRange@0

@@ -22,31 +22,31 @@ PUBLIC _RtlpBreakWithStatusInstruction@0
 
 .code
 
-FUNC DbgBreakPointNoBugCheck@0
+FUNC _DbgBreakPointNoBugCheck@0
     FPO 0, 0, 0, 0, 0, FRAME_FPO
     int 3
     ret
-ENDFUNC DbgBreakPointNoBugCheck@0
+ENDFUNC
 
 _DbgUserBreakPoint@0:
-FUNC DbgBreakPoint@0
+FUNC _DbgBreakPoint@0
     FPO 0, 0, 0, 0, 0, FRAME_FPO
     int 3
     ret
-ENDFUNC DbgBreakPoint@0
+ENDFUNC
 
-FUNC DbgBreakPointWithStatus@4
+FUNC _DbgBreakPointWithStatus@4
     FPO 0, 1, 0, 0, 0, FRAME_FPO
     mov eax, [esp+4]
-ENDFUNC DbgBreakPointWithStatus@4
+ENDFUNC
 
-FUNC RtlpBreakWithStatusInstruction@0
+FUNC _RtlpBreakWithStatusInstruction@0
     FPO 0, 0, 0, 0, 0, FRAME_FPO
     int 3
     ret 4
-ENDFUNC RtlpBreakWithStatusInstruction@0
+ENDFUNC
 
-FUNC DebugService2@12
+FUNC _DebugService2@12
     FPO 0, 3, 3, 0, 1, FRAME_NONFPO
 
     /* Setup the stack */
@@ -63,9 +63,9 @@ FUNC DebugService2@12
     /* Restore stack */
     pop ebp
     ret 12
-ENDFUNC DebugService2@12
+ENDFUNC
 
-FUNC DebugService@20
+FUNC _DebugService@20
     FPO 0, 5, 3, 0, 1, FRAME_NONFPO
 
     /* Setup the stack */
@@ -92,6 +92,6 @@ FUNC DebugService@20
     /* Return */
     pop ebp
     ret 20
-ENDFUNC DebugService@20
+ENDFUNC
 
 END
