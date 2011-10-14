@@ -206,8 +206,6 @@ RemoveAssociation(LPTSTR extension)
 INT CommandAssoc (LPTSTR param)
 {
 
-	LPTSTR	lpEqualSign = NULL;
-
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -221,7 +219,7 @@ INT CommandAssoc (LPTSTR param)
 		PrintAllAssociations();
 	else
 	{
-		lpEqualSign = _tcschr(param, _T('='));
+		LPTSTR lpEqualSign = _tcschr(param, _T('='));
 		if(lpEqualSign != NULL)
 		{
 			LPTSTR fileType = lpEqualSign + 1;

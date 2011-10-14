@@ -209,7 +209,6 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	TCHAR path[MAX_PATH];
 	TCHAR fname[MAX_PATH];
 	TCHAR directory[MAX_PATH];
-	UINT   longestfname = 0;
 	SHORT screenwidth;
 
 	/* expand current file name */
@@ -277,6 +276,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	hFile = FindFirstFile (path, &file);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
+		UINT longestfname = 0;
 		/* Get the size of longest filename first. */
 		do
 		{
