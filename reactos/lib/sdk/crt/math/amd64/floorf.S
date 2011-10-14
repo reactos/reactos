@@ -36,6 +36,6 @@ FUNC floorf
 
     add rsp, 16
     ret
-ENDFUNC floorf
+ENDFUNC
 
 END

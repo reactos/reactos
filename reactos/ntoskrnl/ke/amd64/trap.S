@@ -135,7 +135,7 @@ ENDR
 
     add rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
     ret
-.ENDP InternalDispatchException
+.ENDP
 
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
@@ -153,7 +153,7 @@ FUNC KiDivideErrorFault
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiDivideErrorFault
+ENDFUNC
 
 
 PUBLIC KiDebugTrapOrFault
@@ -174,7 +174,7 @@ KiDebugTrapOrFaultKMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiDebugTrapOrFault
+ENDFUNC
 
 
 PUBLIC KiNmiInterrupt
@@ -187,7 +187,7 @@ FUNC KiNmiInterrupt
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiNmiInterrupt
+ENDFUNC
 
 
 PUBLIC KiBreakpointTrap
@@ -200,7 +200,7 @@ FUNC KiBreakpointTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiBreakpointTrap
+ENDFUNC
 
 
 PUBLIC KiOverflowTrap
@@ -216,7 +216,7 @@ FUNC KiOverflowTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiOverflowTrap
+ENDFUNC
 
 
 PUBLIC KiBoundFault
@@ -240,7 +240,7 @@ KiBoundFaultUserMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiBoundFault
+ENDFUNC
 
 
 PUBLIC KiInvalidOpcodeFault
@@ -265,7 +265,7 @@ KiInvalidOpcodeKernel:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiInvalidOpcodeFault
+ENDFUNC
 
 
 PUBLIC KiNpxNotAvailableFault
@@ -287,7 +287,7 @@ FUNC KiNpxNotAvailableFault
 KiNpxNotAvailableFaultExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiNpxNotAvailableFault
+ENDFUNC
 
 
 PUBLIC KiDoubleFaultAbort
@@ -298,7 +298,7 @@ FUNC KiDoubleFaultAbort
     /* Bugcheck */
     Fatal 8 // EXCEPTION_DOUBLE_FAULT
     jmp $
-ENDFUNC KiDoubleFaultAbort
+ENDFUNC
 
 
 PUBLIC KiNpxSegmentOverrunAbort
@@ -309,7 +309,7 @@ FUNC KiNpxSegmentOverrunAbort
     /* Bugcheck */
     Fatal EXCEPTION_NPX_OVERRUN
     jmp $
-ENDFUNC KiNpxSegmentOverrunAbort
+ENDFUNC
 
 
 PUBLIC KiInvalidTssFault
@@ -320,7 +320,7 @@ FUNC KiInvalidTssFault
     /* Bugcheck */
     Fatal EXCEPTION_INVALID_TSS
     jmp $
-ENDFUNC KiInvalidTssFault
+ENDFUNC
 
 
 PUBLIC KiSegmentNotPresentFault
@@ -331,7 +331,7 @@ FUNC KiSegmentNotPresentFault
     /* Bugcheck */
     Fatal EXCEPTION_SEGMENT_NOT_PRESENT
     jmp $
-ENDFUNC KiSegmentNotPresentFault
+ENDFUNC
 
 
 PUBLIC KiStackFault
@@ -342,7 +342,7 @@ FUNC KiStackFault
     /* Bugcheck */
     Fatal EXCEPTION_STACK_FAULT
     jmp $
-ENDFUNC KiStackFault
+ENDFUNC
 
 
 PUBLIC KiGeneralProtectionFault
@@ -376,7 +376,7 @@ KiGpfExit:
     /* Return */
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiGeneralProtectionFault
+ENDFUNC
 
 
 PUBLIC KiPageFault
@@ -435,7 +435,7 @@ SpecialCode:
 PageFaultReturn:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiPageFault
+ENDFUNC
 
 
 PUBLIC KiFloatingErrorFault
@@ -448,7 +448,7 @@ FUNC KiFloatingErrorFault
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiFloatingErrorFault
+ENDFUNC
 
 
 PUBLIC KiAlignmentFault
@@ -459,7 +459,7 @@ FUNC KiAlignmentFault
     /* Bugcheck */
     Fatal EXCEPTION_ALIGNMENT_CHECK
     jmp $
-ENDFUNC KiAlignmentFault
+ENDFUNC
 
 
 PUBLIC KiMcheckAbort
@@ -470,7 +470,7 @@ FUNC KiMcheckAbort
     /* Bugcheck */
     Fatal HEX(12)
     jmp $
-ENDFUNC KiMcheckAbort
+ENDFUNC
 
 
 PUBLIC KiXmmException
@@ -492,7 +492,7 @@ FUNC KiXmmException
 KiXmmExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiXmmException
+ENDFUNC
 
 
 PUBLIC KiRaiseAssertion
@@ -508,7 +508,7 @@ FUNC KiRaiseAssertion
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiRaiseAssertion
+ENDFUNC
 
 
 PUBLIC KiDebugServiceTrap
@@ -524,7 +524,7 @@ PUBLIC KiDebugServiceTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-.ENDP KiDebugServiceTrap
+.ENDP
 
 
 PUBLIC KiApcInterrupt
@@ -554,7 +554,7 @@ PUBLIC KiApcInterrupt
 
     /* Return */
     ExitTrap (TF_VOLATILES or TF_IRQL)
-.ENDP KiApcInterrupt
+.ENDP
 
 
 PUBLIC KiDpcInterrupt
@@ -576,7 +576,7 @@ PUBLIC KiDpcInterrupt
 
     /* Return */
     ExitTrap (TF_VOLATILES or TF_IRQL)
-.ENDP KiDpcInterrupt
+.ENDP
 
 
 PUBLIC KiIpiInterrupt
@@ -595,7 +595,7 @@ PUBLIC KiIpiInterrupt
 
     /* Return */
     ExitTrap (TF_VOLATILES or TF_IRQL)
-.ENDP KiIpiInterrupt
+.ENDP
 
 
 PUBLIC KiUnexpectedInterrupt
@@ -616,7 +616,7 @@ FUNC KiUnexpectedInterrupt
 #endif
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiUnexpectedInterrupt
+ENDFUNC
 
 #ifdef _MSC_VER
 #undef lgdt

@@ -17,7 +17,7 @@ FUNC BaseFiberStartup
     /* FIXME: TODO */
     ret
 
-ENDFUNC BaseFiberStartup
+ENDFUNC
 
 
 PUBLIC SwitchToFiber
@@ -27,6 +27,6 @@ FUNC SwitchToFiber
     UNIMPLEMENTED BaseFiberStartup
     /* FIXME: TODO */
     ret
-ENDFUNC SwitchToFiber
+ENDFUNC
 
 END

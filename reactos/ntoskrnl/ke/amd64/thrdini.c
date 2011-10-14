@@ -90,7 +90,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
         /* Set the Thread's NPX State */
         Thread->NpxState = 0xA;
-        Thread->DispatcherHeader.NpxIrql = PASSIVE_LEVEL;
+        Thread->Header.NpxIrql = PASSIVE_LEVEL;
 
         /* Disable any debug regiseters */
         Context->ContextFlags &= ~CONTEXT_DEBUG_REGISTERS;

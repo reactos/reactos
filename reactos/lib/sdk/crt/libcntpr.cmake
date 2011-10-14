@@ -9,6 +9,7 @@ list(APPEND LIBCNTPR_SOURCE
     mem/memccpy.c
     mem/memcmp.c
     mem/memicmp.c
+    misc/fltused.c
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
@@ -104,7 +105,6 @@ elseif(ARCH MATCHES amd64)
         setjmp/amd64/setjmp.s
         math/cos.c
         math/sin.c
-        math/amd64/alldiv.S
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S

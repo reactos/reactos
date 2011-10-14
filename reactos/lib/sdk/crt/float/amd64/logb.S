@@ -11,6 +11,6 @@ FUNC _logb
     fxtract
     fstp st
     ret
-ENDFUNC _logb
+ENDFUNC
 
 END

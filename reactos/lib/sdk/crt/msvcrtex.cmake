@@ -51,8 +51,7 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND MSVCRTEX_SOURCE
         except/amd64/chkstk_asm.s
-        except/amd64/chkstk_ms.s
-        math/amd64/alldiv.S)
+        except/amd64/chkstk_ms.s)
 endif()
 
 if(MSVC)

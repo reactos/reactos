@@ -36,7 +36,7 @@ PUBLIC KiSwitchToBootStack
 
     jmp KiSystemStartupBootStack
 
-.ENDP KiSwitchToBootStack
+.ENDP
 
 END
 

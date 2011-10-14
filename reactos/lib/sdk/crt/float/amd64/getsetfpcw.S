@@ -11,7 +11,7 @@ FUNC __getfpcw87
     mov rax, [rsp]
     add rsp, 8
     ret
-ENDFUNC __getfpcw87
+ENDFUNC
 
 PUBLIC __setfpcw87
 FUNC __setfpcw87
@@ -19,6 +19,6 @@ FUNC __setfpcw87
     .ENDPROLOG
     ldmxcsr [rsp + 8]
     ret
-ENDFUNC __setfpcw87
+ENDFUNC
 
 END

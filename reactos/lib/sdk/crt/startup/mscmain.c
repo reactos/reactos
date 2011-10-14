@@ -7,8 +7,6 @@
 #include <windows.h>
 #include <stdlib.h>
 
-int _fltused;
-
 int __mingw_init_ehandler (void)
 {
     /* Nothing to do */

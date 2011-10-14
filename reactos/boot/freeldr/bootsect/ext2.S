@@ -683,4 +683,6 @@ msgLoading:
 
     .word HEX(0aa55)       // BootSector signature
 
+.endcode16
+
 END

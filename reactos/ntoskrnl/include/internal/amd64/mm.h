@@ -78,7 +78,6 @@
 /* MMPTE related defines */
 #define MM_EMPTY_PTE_LIST  ((ULONG64)0xFFFFFFFF)
 #define MM_EMPTY_LIST  ((ULONG_PTR)-1)
-#define PTE_PER_PAGE 0x200
 
 #define ADDR_TO_PAGE_TABLE(v) ((ULONG)(((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
 #define ADDR_TO_PDE_OFFSET(v) ((ULONG)((((ULONG_PTR)(v)) / (512 * PAGE_SIZE))))

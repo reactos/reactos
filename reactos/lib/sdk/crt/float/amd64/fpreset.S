@@ -6,6 +6,6 @@
 FUNC _fpreset
     .endprolog
     fninit
-ENDFUNC _fpreset
+ENDFUNC
 
 END

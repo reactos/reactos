@@ -627,7 +627,7 @@
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
-@ cdecl -arch=x86_64 KeLowerIrql(long)
+@ cdecl -arch=x86_64 -private KeLowerIrql(long)
 @ extern KeNumberProcessors _KeNumberProcessors
 @ stdcall -arch=i386,arm KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
@@ -641,7 +641,7 @@
 @ stdcall -arch=i386,arm KeQuerySystemTime(ptr)
 @ stdcall -arch=i386,arm KeQueryTickCount(ptr)
 @ stdcall KeQueryTimeIncrement()
-@ cdecl -arch=x86_64 KeRaiseIrqlToDpcLevel()
+@ cdecl -arch=x86_64 -private KeRaiseIrqlToDpcLevel()
 @ stdcall KeRaiseUserException(long)
 @ stdcall KeReadStateEvent(ptr)
 @ stdcall KeReadStateMutant(ptr)
@@ -654,6 +654,7 @@
 @ stdcall KeRegisterNmiCallback(ptr ptr)
 @ fastcall KeReleaseGuardedMutex(ptr)
 @ fastcall KeReleaseGuardedMutexUnsafe(ptr)
+@ cdecl -arch=x86_64 KeReleaseInStackQueuedSpinLock(ptr)
 @ fastcall KeReleaseInStackQueuedSpinLockForDpc(ptr)
 @ fastcall KeReleaseInStackQueuedSpinLockFromDpcLevel(ptr)
 @ stdcall KeReleaseInterruptSpinLock(ptr long)
@@ -716,7 +717,7 @@
 @ fastcall -arch=i386,arm KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall -arch=i386,arm KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
-@ cdecl -arch=x86_64 KfRaiseIrql(long)
+@ cdecl -arch=x86_64 -private KfRaiseIrql(long)
 @ fastcall -arch=i386 KiEoiHelper(ptr)
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
@@ -1080,6 +1081,8 @@
 @ stdcall RtlConvertSidToUnicodeString(ptr ptr long)
 @ stdcall RtlConvertUlongToLargeInteger(long)
 @ stdcall RtlCopyLuid(ptr ptr)
+@ stdcall -arch=x86_64 RtlCopyMemory(ptr ptr int64) memmove
+@ stdcall -arch=x86_64 RtlCopyMemoryNonTemporal(ptr ptr int64) memmove
 @ stdcall RtlCopyRangeList(ptr ptr)
 @ stdcall RtlCopySid(long ptr ptr)
 @ stdcall RtlCopyString(ptr ptr)

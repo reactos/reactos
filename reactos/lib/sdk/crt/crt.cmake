@@ -123,6 +123,7 @@ list(APPEND CRT_SOURCE
     misc/amsg.c
     misc/assert.c
     misc/environ.c
+    misc/fltused.c
     misc/getargs.c
     misc/i10output.c
     misc/initterm.c
@@ -384,7 +385,6 @@ elseif(ARCH MATCHES amd64)
         float/amd64/fpreset.S
         float/amd64/logb.S
         float/i386/statfp.c
-        math/amd64/alldiv.S
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S
