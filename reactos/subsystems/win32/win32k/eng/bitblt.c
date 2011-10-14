@@ -349,16 +349,7 @@ EngBitBlt(SURFOBJ *DestObj,
     //DPRINT1("Rop4 : 0x%08x\n", Rop4);
 
     OutputRect = *DestRect;
-    if (OutputRect.right < OutputRect.left)
-    {
-        OutputRect.left = DestRect->right;
-        OutputRect.right = DestRect->left;
-    }
-    if (OutputRect.bottom < OutputRect.top)
-    {
-        OutputRect.left = DestRect->right;
-        OutputRect.right = DestRect->left;
-    }
+    RECTL_vMakeWellOrdered(&OutputRect);
 
     if (UsesSource)
     {
