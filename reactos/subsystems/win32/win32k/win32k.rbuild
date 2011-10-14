@@ -144,6 +144,7 @@
 		<file>metric.c</file>
 		<file>misc.c</file>
 		<file>monitor.c</file>
+		<file>mouse.c</file>
 		<file>msgqueue.c</file>
 		<file>ntstubs.c</file>
 		<file>ntuser.c</file>
