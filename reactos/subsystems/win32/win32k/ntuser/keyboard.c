@@ -820,7 +820,6 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     }
     else
     {
-        bMenuDownRecently = FALSE;
         if (bIsDown)
             Msg.message = WM_KEYDOWN;
         else
