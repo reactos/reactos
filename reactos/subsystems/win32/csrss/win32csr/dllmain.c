@@ -216,7 +216,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     InitializeListHead(&DosDeviceHistory);
 
     /* Start Keyboard, Mouse and Raw Input Threads */
-    for (i = 0; i < 2; ++i)
+    for (i = 0; i < 3; ++i)
     {
         Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)i, &ServerThread, &ClientId);
         if (NT_SUCCESS(Status))
