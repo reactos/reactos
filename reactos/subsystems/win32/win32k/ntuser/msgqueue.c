@@ -260,32 +260,32 @@ static VOID
 UpdateKeyStateFromMsg(PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg)
 {
     UCHAR key;
-    BOOL down = 0;
+    BOOL down = FALSE;
 
     TRACE("UpdateKeyStateFromMsg message:%d\n", msg->message);
 
     switch (msg->message)
     {
     case WM_LBUTTONDOWN:
-        down = 1;
+        down = TRUE;
         /* fall through */
     case WM_LBUTTONUP:
         UpdateKeyState(MessageQueue, VK_LBUTTON, down);
         break;
     case WM_MBUTTONDOWN:
-        down = 1;
+        down = TRUE;
         /* fall through */
     case WM_MBUTTONUP:
         UpdateKeyState(MessageQueue, VK_MBUTTON, down);
         break;
     case WM_RBUTTONDOWN:
-        down = 1;
+        down = TRUE;
         /* fall through */
     case WM_RBUTTONUP:
         UpdateKeyState(MessageQueue, VK_RBUTTON, down);
         break;
     case WM_XBUTTONDOWN:
-        down = 1;
+        down = TRUE;
         /* fall through */
     case WM_XBUTTONUP:
         if (msg->wParam == XBUTTON1)
@@ -295,7 +295,7 @@ UpdateKeyStateFromMsg(PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg)
         break;
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
-        down = 1;
+        down = TRUE;
         /* fall through */
     case WM_KEYUP:
     case WM_SYSKEYUP:
@@ -1215,8 +1215,6 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
    {
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
-
-       UpdateKeyStateFromMsg( MessageQueue, Msg );
    }
 
    Message->QS_Flags = MessageBits;
@@ -1720,11 +1718,11 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
         {
            msg = CurrentMessage->Msg;
 
+           UpdateKeyStateFromMsg(MessageQueue, &msg);
            AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
 
            if (Remove)
            {
-               UpdateKeyStateFromMsg(MessageQueue, &msg);
                RemoveEntryList(&CurrentMessage->ListEntry);
                ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
                MsqDestroyMessage(CurrentMessage);
@@ -2190,7 +2188,7 @@ NtUserGetKeyState(INT key)
 {
    DWORD Ret;
 
-   UserEnterExclusive();
+   UserEnterShared();
 
    Ret = UserGetKeyState(key);
 
