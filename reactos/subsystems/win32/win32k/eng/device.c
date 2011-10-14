@@ -148,13 +148,19 @@ EngpRegisterGraphicsDevice(
         pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
         pGraphicsDevice->pdevmodeInfo = pdminfo;
 
-        /* Count DEVMODEs */
+        /* Loop all DEVMODEs */
         pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
         for (pdm = pdminfo->adevmode;
              pdm + 1 <= pdmEnd;
              pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
         {
+            /* Count this DEVMODE */
             cModes++;
+
+            /* Some drivers like the VBox driver don't fill the dmDeviceName
+               with the name of the display driver. So fix that here. */
+            wcsncpy(pdm->dmDeviceName, pwsz, CCHDEVICENAME);
+            pdm->dmDeviceName[CCHDEVICENAME - 1] = 0;
         }
 
         // FIXME: release the driver again until it's used?
