@@ -316,6 +316,7 @@
 		<file>amsg.c</file>
 		<file>assert.c</file>
 		<file>environ.c</file>
+		<file>fltused.c</file>
 		<file>getargs.c</file>
 		<file>i10output.c</file>
 		<file>initterm.c</file>
