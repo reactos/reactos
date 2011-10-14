@@ -475,16 +475,16 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
     if (pti == ptiTo) return FALSE;
 
     /* Do not attach to system threads or between different desktops. */
-    if ( pti->TIF_flags & TIF_DONTATTACHQUEUE ||
+    if (pti->TIF_flags & TIF_DONTATTACHQUEUE ||
             ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
-            pti->rpdesk != ptiTo->rpdesk )
+            pti->rpdesk != ptiTo->rpdesk)
         return FALSE;
 
     /* If Attach set, allocate and link. */
-    if ( fAttach )
+    if (fAttach)
     {
         pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), USERTAG_ATTACHINFO);
-        if ( !pai ) return FALSE;
+        if (!pai) return FALSE;
 
         pai->paiNext = gpai;
         pai->pti1 = pti;
@@ -495,19 +495,19 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
     {
         PATTACHINFO paiprev = NULL;
 
-        if ( !gpai ) return FALSE;
+        if (!gpai) return FALSE;
 
         pai = gpai;
 
         /* Search list and free if found or return false. */
         do
         {
-            if ( pai->pti2 == ptiTo && pai->pti1 == pti ) break;
+            if (pai->pti2 == ptiTo && pai->pti1 == pti) break;
             paiprev = pai;
             pai = pai->paiNext;
         } while (pai);
 
-        if ( !pai ) return FALSE;
+        if (!pai) return FALSE;
 
         if (paiprev) paiprev->paiNext = pai->paiNext;
 
@@ -525,8 +525,7 @@ NtUserSendInput(
     INT cbSize)
 {
     PTHREADINFO pti;
-    UINT cnt;
-    DECLARE_RETURN(UINT);
+    UINT uRet = 0;
 
     TRACE("Enter NtUserSendInput\n");
     UserEnterExclusive();
@@ -536,13 +535,13 @@ NtUserSendInput(
 
     if (!pti->rpdesk)
     {
-        RETURN( 0);
+        goto cleanup;
     }
 
     if (!nInputs || !pInput || cbSize != sizeof(INPUT))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        RETURN( 0);
+        goto cleanup;
     }
 
     /*
@@ -553,10 +552,9 @@ NtUserSendInput(
         !IntIsActiveDesktop(pti->rpdesk))
     {
         EngSetLastError(ERROR_ACCESS_DENIED);
-        RETURN( 0);
+        goto cleanup;
     }
 
-    cnt = 0;
     while (nInputs--)
     {
         INPUT SafeInput;
@@ -566,18 +564,18 @@ NtUserSendInput(
         if (!NT_SUCCESS(Status))
         {
             SetLastNtError(Status);
-            RETURN( cnt);
+            goto cleanup;
         }
 
         switch (SafeInput.type)
         {
             case INPUT_MOUSE:
                 if (IntMouseInput(&SafeInput.mi, TRUE))
-                    cnt++;
+                    uRet++;
                 break;
             case INPUT_KEYBOARD:
                 if (UserSendKeyboardInput(&SafeInput.ki, TRUE))
-                    cnt++;
+                    uRet++;
                 break;
             case INPUT_HARDWARE:
                 FIXME("INPUT_HARDWARE not supported!");
@@ -588,12 +586,10 @@ NtUserSendInput(
         }
     }
 
-    RETURN( cnt);
-
-CLEANUP:
-    TRACE("Leave NtUserSendInput, ret=%i\n", _ret_);
+cleanup:
+    TRACE("Leave NtUserSendInput, ret=%i\n", uRet);
     UserLeave();
-    END_CLEANUP;
+    return uRet;
 }
 
 /* EOF */

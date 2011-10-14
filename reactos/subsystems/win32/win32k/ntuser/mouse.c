@@ -298,17 +298,17 @@ IntQueryTrackMouseEvent(
     RtlZeroMemory(lpEventTrack , sizeof(TRACKMOUSEEVENT));
     lpEventTrack->cbSize = sizeof(TRACKMOUSEEVENT);
 
-    if ( pDesk->dwDTFlags & (DF_TME_LEAVE | DF_TME_HOVER) &&
-            pDesk->spwndTrack &&
-            pti->MessageQueue == pDesk->spwndTrack->head.pti->MessageQueue )
+    if (pDesk->dwDTFlags & (DF_TME_LEAVE | DF_TME_HOVER) &&
+        pDesk->spwndTrack &&
+        pti->MessageQueue == pDesk->spwndTrack->head.pti->MessageQueue)
     {
-        if ( pDesk->htEx != HTCLIENT )
+        if (pDesk->htEx != HTCLIENT)
             lpEventTrack->dwFlags |= TME_NONCLIENT;
 
-        if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+        if (pDesk->dwDTFlags & DF_TME_LEAVE)
             lpEventTrack->dwFlags |= TME_LEAVE;
 
-        if ( pDesk->dwDTFlags & DF_TME_HOVER )
+        if (pDesk->dwDTFlags & DF_TME_HOVER)
         {
             lpEventTrack->dwFlags |= TME_HOVER;
             lpEventTrack->dwHoverTime = pDesk->dwMouseHoverTime;
@@ -335,14 +335,14 @@ IntTrackMouseEvent(
         return FALSE;
 
     /* Tracking spwndTrack same as pWnd */
-    if ( lpEventTrack->dwFlags & TME_CANCEL ) // Canceled mode.
+    if (lpEventTrack->dwFlags & TME_CANCEL) // Canceled mode.
     {
-        if ( lpEventTrack->dwFlags & TME_LEAVE )
+        if (lpEventTrack->dwFlags & TME_LEAVE)
             pDesk->dwDTFlags &= ~DF_TME_LEAVE;
 
-        if ( lpEventTrack->dwFlags & TME_HOVER )
+        if (lpEventTrack->dwFlags & TME_HOVER)
         {
-            if ( pDesk->dwDTFlags & DF_TME_HOVER )
+            if (pDesk->dwDTFlags & DF_TME_HOVER)
             {   // Kill hover timer.
                 IntKillTimer(pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
                 pDesk->dwDTFlags &= ~DF_TME_HOVER;
@@ -351,20 +351,20 @@ IntTrackMouseEvent(
     }
     else // Not Canceled.
     {
-       pDesk->spwndTrack = pWnd;
-        if ( lpEventTrack->dwFlags & TME_LEAVE )
+        pDesk->spwndTrack = pWnd;
+        if (lpEventTrack->dwFlags & TME_LEAVE)
             pDesk->dwDTFlags |= DF_TME_LEAVE;
 
-        if ( lpEventTrack->dwFlags & TME_HOVER )
+        if (lpEventTrack->dwFlags & TME_HOVER)
         {
             pDesk->dwDTFlags |= DF_TME_HOVER;
 
-            if ( !lpEventTrack->dwHoverTime || lpEventTrack->dwHoverTime == HOVER_DEFAULT )
+            if (!lpEventTrack->dwHoverTime || lpEventTrack->dwHoverTime == HOVER_DEFAULT)
                 pDesk->dwMouseHoverTime = gspv.iMouseHoverTime; // use the system default hover time-out.
             else
                 pDesk->dwMouseHoverTime = lpEventTrack->dwHoverTime;
             // Start timer for the hover period.
-            IntSetTimer( pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, pDesk->dwMouseHoverTime, SystemTimerProc, TMRF_SYSTEM);
+            IntSetTimer(pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, pDesk->dwMouseHoverTime, SystemTimerProc, TMRF_SYSTEM);
             // Get windows thread message points.
             point = pWnd->head.pti->ptLast;
             // Set desktop mouse hover from the system default hover rectangle.
@@ -383,60 +383,60 @@ APIENTRY
 NtUserTrackMouseEvent(
     LPTRACKMOUSEEVENT lpEventTrack)
 {
-    TRACKMOUSEEVENT saveTME;
-    BOOL Ret = FALSE;
+    TRACKMOUSEEVENT SafeTME;
+    BOOL bRet = FALSE;
 
     TRACE("Enter NtUserTrackMouseEvent\n");
-    UserEnterExclusive();
 
     _SEH2_TRY
     {
         ProbeForRead(lpEventTrack, sizeof(TRACKMOUSEEVENT), 1);
-        RtlCopyMemory(&saveTME, lpEventTrack, sizeof(TRACKMOUSEEVENT));
+        RtlCopyMemory(&SafeTME, lpEventTrack, sizeof(TRACKMOUSEEVENT));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        _SEH2_YIELD(goto Exit;)
+        _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
 
-    if ( saveTME.cbSize != sizeof(TRACKMOUSEEVENT) )
+    if (SafeTME.cbSize != sizeof(TRACKMOUSEEVENT))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        goto Exit;
+        return FALSE;
     }
 
-    if (saveTME.dwFlags & ~(TME_CANCEL | TME_QUERY | TME_NONCLIENT | TME_LEAVE | TME_HOVER) )
+    if (SafeTME.dwFlags & ~(TME_CANCEL | TME_QUERY | TME_NONCLIENT | TME_LEAVE | TME_HOVER) )
     {
         EngSetLastError(ERROR_INVALID_FLAGS);
-        goto Exit;
+        return FALSE;
     }
 
-    if ( saveTME.dwFlags & TME_QUERY )
+    UserEnterExclusive();
+
+    if (SafeTME.dwFlags & TME_QUERY)
     {
-        Ret = IntQueryTrackMouseEvent(&saveTME);
+        bRet = IntQueryTrackMouseEvent(&SafeTME);
         _SEH2_TRY
         {
             ProbeForWrite(lpEventTrack, sizeof(TRACKMOUSEEVENT), 1);
-            RtlCopyMemory(lpEventTrack, &saveTME, sizeof(TRACKMOUSEEVENT));
+            RtlCopyMemory(lpEventTrack, &SafeTME, sizeof(TRACKMOUSEEVENT));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             SetLastNtError(_SEH2_GetExceptionCode());
-            Ret = FALSE;
+            bRet = FALSE;
         }
         _SEH2_END;
     }
     else
     {
-        Ret = IntTrackMouseEvent(&saveTME);
+        bRet = IntTrackMouseEvent(&SafeTME);
     }
 
-Exit:
-    TRACE("Leave NtUserTrackMouseEvent, ret=%i\n", Ret);
+    TRACE("Leave NtUserTrackMouseEvent, ret=%i\n", bRet);
     UserLeave();
-    return Ret;
+    return bRet;
 }
 
 extern MOUSEMOVEPOINT MouseHistoryOfMoves[];
@@ -453,66 +453,66 @@ NtUserGetMouseMovePointsEx(
 {
     MOUSEMOVEPOINT Safeppt;
     //BOOL Hit;
-    INT Count = -1;
-    DECLARE_RETURN(DWORD);
+    INT iRet = -1;
 
     TRACE("Enter NtUserGetMouseMovePointsEx\n");
-    UserEnterExclusive();
 
     if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        RETURN( -1);
+        return (DWORD)-1;
     }
 
     if (!lpptIn || (!lpptOut && nBufPoints))
     {
         EngSetLastError(ERROR_NOACCESS);
-        RETURN( -1);
+        return (DWORD)-1;
     }
 
     _SEH2_TRY
     {
-        ProbeForRead( lpptIn, cbSize, 1);
+        ProbeForRead(lpptIn, cbSize, 1);
         RtlCopyMemory(&Safeppt, lpptIn, cbSize);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        _SEH2_YIELD(RETURN( -1))
+        _SEH2_YIELD(return (DWORD)-1);
     }
     _SEH2_END;
 
+    UserEnterShared();
+
     // http://msdn.microsoft.com/en-us/library/ms646259(v=vs.85).aspx
     // This explains the math issues in transforming points.
-    Count = gcur_count; // FIFO is forward so retrieve backward.
+    iRet = gcur_count; // FIFO is forward so retrieve backward.
     //Hit = FALSE;
     do
     {
         if (Safeppt.x == 0 && Safeppt.y == 0)
             break; // No test.
         // Finds the point, it returns the last nBufPoints prior to and including the supplied point.
-        if (MouseHistoryOfMoves[Count].x == Safeppt.x && MouseHistoryOfMoves[Count].y == Safeppt.y)
+        if (MouseHistoryOfMoves[iRet].x == Safeppt.x && MouseHistoryOfMoves[iRet].y == Safeppt.y)
         {
-            if ( Safeppt.time ) // Now test time and it seems to be absolute.
+            if (Safeppt.time) // Now test time and it seems to be absolute.
             {
-                if (Safeppt.time == MouseHistoryOfMoves[Count].time)
+                if (Safeppt.time == MouseHistoryOfMoves[iRet].time)
                 {
                     //Hit = TRUE;
                     break;
                 }
                 else
                 {
-                    if (--Count < 0) Count = 63;
+                    if (--iRet < 0) iRet = 63;
                     continue;
                 }
             }
             //Hit = TRUE;
             break;
         }
-        if (--Count < 0) Count = 63;
+        if (--iRet < 0) iRet = 63;
     }
-    while ( Count != gcur_count);
+    while (iRet != gcur_count);
 
     switch(resolution)
     {
@@ -526,23 +526,22 @@ NtUserGetMouseMovePointsEx(
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     SetLastNtError(_SEH2_GetExceptionCode());
-                    _SEH2_YIELD(RETURN( -1))
+                    iRet = -1;
+                    _SEH2_YIELD(goto cleanup);
                 }
                 _SEH2_END;
             }
-            Count = nBufPoints;
+            iRet = nBufPoints;
             break;
         case GMMP_USE_HIGH_RESOLUTION_POINTS:
             break;
         default:
             EngSetLastError(ERROR_POINT_NOT_FOUND);
-            RETURN( -1);
+            iRet = -1;
     }
 
-    RETURN( Count);
-
-CLEANUP:
-    TRACE("Leave NtUserGetMouseMovePointsEx, ret=%i\n", _ret_);
+cleanup:
+    TRACE("Leave NtUserGetMouseMovePointsEx, ret=%i\n", iRet);
     UserLeave();
-    END_CLEANUP;
+    return (DWORD)iRet;
 }
