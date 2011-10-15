@@ -345,14 +345,6 @@ SystemTimerProc(HWND hwnd,
                 pDesk->dwDTFlags &= ~DF_TME_HOVER;
                 break; // Kill this timer.
              }
-             else
-             {
-                 RECTL_vSetRect(&pDesk->rcMouseHover,
-                                Point.x - gspv.iMouseHoverWidth  / 2,
-                                Point.y - gspv.iMouseHoverHeight / 2,
-                                Point.x + gspv.iMouseHoverWidth  / 2,
-                                Point.y + gspv.iMouseHoverHeight / 2);
-             }
           }
        }
        return; // Not this window so just return.

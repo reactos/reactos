@@ -536,34 +536,22 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    if (pwnd)
    {
       /* If we a re tracking the mouse and it moves to another top level window */
-      if(pDesk->spwndTrack && 
-         UserGetAncestor(pDesk->spwndTrack, GA_ROOT) != pwnd)
+      PWND pwndTrack = IntChildrenWindowFromPoint(pwnd, Msg->pt.x, Msg->pt.y);
+
+      if ( pDesk->spwndTrack != pwndTrack && pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) )
       {
-          /* Generate a WM_MOUSELEAVE message */
-          if ( pDesk->dwDTFlags & DF_TME_LEAVE )
-          {
-              MSG msgMouseLeave;
+         if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+            UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
+                            (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
+                             0, 0);
 
-              TRACE("co_MsqInsertMouseMessage: generating WM_MOUSELEAVE\n");
+         if ( pDesk->dwDTFlags & DF_TME_HOVER )
+            IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
 
-              msgMouseLeave.hwnd = UserHMGetHandle(pDesk->spwndTrack);
-              msgMouseLeave.message = WM_MOUSELEAVE;
-              msgMouseLeave.pt = Msg->pt;
-              msgMouseLeave.time = Msg->time;
-              msgMouseLeave.lParam = msgMouseLeave.wParam = 0;
-
-              MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSE);
-          }
-
-          /* Stop tracking */
-          if ( pDesk->dwDTFlags & DF_TME_HOVER )
-          {
-              IntKillTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
-          }
-
-          pDesk->spwndTrack = NULL;
-          pDesk->htEx = 0;
+         pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
       }
+      pDesk->spwndTrack = pwndTrack;
+      pDesk->htEx = GetNCHitEx(pDesk->spwndTrack, Msg->pt);
    }
 
    hdcScreen = IntGetScreenDC();
@@ -1306,42 +1294,21 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     /* If we a re tracking the mouse and it moves to another window */
-    if(pDesk->spwndTrack && 
-       pDesk->spwndTrack != pwndMsg &&
-       msg->message != WM_MOUSELEAVE)
+    if ( pDesk->spwndTrack != pwndMsg && pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) &&
+         msg->message != WM_MOUSELEAVE )
     {
-        /* Generate a WM_MOUSELEAVE message */
-        if ( pDesk->dwDTFlags & DF_TME_LEAVE )
-        {
-            MSG msgMouseLeave;
+       if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+          UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
+                          (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
+                           0, 0);
 
-            TRACE("co_IntProcessMouseMessage: generating WM_MOUSELEAVE\n");
+       if ( pDesk->dwDTFlags & DF_TME_HOVER )
+          IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
 
-            msgMouseLeave.hwnd = UserHMGetHandle(pDesk->spwndTrack);
-            msgMouseLeave.message = WM_MOUSELEAVE;
-            msgMouseLeave.pt = msg->pt;
-            msgMouseLeave.time = msg->time;
-            msgMouseLeave.lParam = msgMouseLeave.wParam = 0;
+       pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
 
-            MsqPostMessage(pwndMsg->head.pti->MessageQueue, 
-                           &msgMouseLeave, 
-                           TRUE, 
-                           QS_MOUSE);
-        }
-
-        /* Stop tracking */
-        if ( pDesk->dwDTFlags & DF_TME_HOVER )
-        {
-            IntKillTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
-        }
-
-        pDesk->spwndTrack = NULL;
-        pDesk->htEx = 0;
-    }
-
-    if(pDesk->spwndTrack)
-    {
-        pDesk->htEx = hittest;
+       pDesk->spwndTrack = pwndMsg;
+       pDesk->htEx = hittest;
     }
 
     msg->hwnd = UserHMGetHandle(pwndMsg);

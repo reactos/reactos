@@ -34,10 +34,10 @@ typedef struct _DESKTOP
 // Desktop flags
 #define DF_TME_HOVER        0x00000400
 #define DF_TME_LEAVE        0x00000800
+#define DF_HOTTRACK         0x00004000
 #define DF_DESTROYED        0x00008000
 #define DF_DESKWNDDESTROYED 0x00010000
 #define DF_DYING            0x00020000
-
 
 extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
