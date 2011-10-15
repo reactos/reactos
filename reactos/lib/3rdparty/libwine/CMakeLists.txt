@@ -6,6 +6,7 @@ list(APPEND SOURCE
     config.c
     debug_ros.c
     loader.c
+    wctype.c
 #    string.c implements _stricmp, already shipped with crt
 )
 

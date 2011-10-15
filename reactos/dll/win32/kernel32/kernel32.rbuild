@@ -92,7 +92,6 @@
 	</directory>
 	<directory name="winnls">
 		<directory name="string">
-			<file>chartype.c</file>
 			<file>collation.c</file>
 			<file>casemap.c</file>
 			<file>fold.c</file>

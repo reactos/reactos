@@ -7,6 +7,7 @@
 	<file>config.c</file>
 	<file>debug_ros.c</file>
 	<file>loader.c</file>
+	<file>wctype.c</file>
 	<!--file>string.c</file-->
 </module>
 <module name="wineldr" type="staticlibrary">

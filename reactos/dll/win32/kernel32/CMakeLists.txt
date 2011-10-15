@@ -69,7 +69,6 @@ list(APPEND SOURCE
     wine/res.c
     wine/timezone.c
     winnls/string/casemap.c
-    winnls/string/chartype.c
     winnls/string/collation.c
     winnls/string/fold.c
     winnls/string/format_msg.c
