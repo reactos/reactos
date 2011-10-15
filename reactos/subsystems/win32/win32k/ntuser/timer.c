@@ -187,7 +187,7 @@ IntSetTimer( PWND Window,
   PTIMER pTmr;
   UINT Ret = IDEvent;
   LARGE_INTEGER DueTime;
-  DueTime.QuadPart = (LONGLONG)(-5000000);
+  DueTime.QuadPart = (LONGLONG)(-9000); // 1024hz .9765625 ms
 
 #if 0
   /* Windows NT/2k/XP behaviour */
@@ -448,7 +448,7 @@ ProcessTimers(VOID)
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
-  DueTime.QuadPart = (LONGLONG)(-500000);
+  DueTime.QuadPart = (LONGLONG)(-9000); // 1024hz .9765625 ms
 
   while(pLE != &TimersListHead)
   {
