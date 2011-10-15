@@ -118,7 +118,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     {
         /* Return the exception code */
         Status = _SEH2_GetExceptionCode();
-        SEH2_YIELD(goto Quickie);
+        _SEH2_YIELD(goto Quickie);
     }
     _SEH2_END;
 
