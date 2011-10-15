@@ -36,9 +36,6 @@
 #include <windows.h>
 
 #define WS_FD_SETSIZE FD_SETSIZE
-#define HAVE_GETPROTOBYNAME
-#define HAVE_GETPROTOBYNUMBER
-#define HAVE_GETSERVBYPORT
 typedef struct hostent WS_hostent;
 typedef struct servent WS_servent;
 typedef struct protoent WS_protoent;
