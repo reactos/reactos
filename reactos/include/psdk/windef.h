@@ -5,6 +5,7 @@
  */
 #ifndef _WINDEF_
 #define _WINDEF_
+#pragma once
 
 #define _WINDEF_H // wine ...
 
@@ -106,8 +107,6 @@ typedef int INT;
 #define PACKED
 #else
 #define PACKED
-#define _cdecl
-#define __cdecl
 #endif
 
 #ifdef __GNUC__
@@ -141,9 +140,9 @@ typedef int INT;
 #define near
 #define pascal __stdcall
 
-//#define cdecl _cdecl
+#define cdecl
 #ifndef CDECL
-#define CDECL _cdecl
+#define CDECL
 #endif
 
 #if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
