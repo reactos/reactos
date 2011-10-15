@@ -300,7 +300,7 @@ noconv:
 
 
 /* format a WCHAR string according to a printf format; helper for vsnprintfW */
-static int format_string( WCHAR *buffer, size_t len, const char *format, const WCHAR *str )
+static int format_string( WCHAR *buffer, size_t len, const char *format, const WCHAR *str, int str_len )
 {
     size_t count = 0;
     int i, left_align = 0, width = 0, max = 0;
@@ -316,13 +316,14 @@ static int format_string( WCHAR *buffer, size_t len, const char *format, const W
 
     while (isdigit(*format)) width = width * 10 + *format++ - '0';
 
+    if (str_len == -1) str_len = strlenW( str );
     if (*format == '.')
     {
         format++;
         while (isdigit(*format)) max = max * 10 + *format++ - '0';
-        for (i = 0; i < max; i++) if (!str[i]) max = i;
+        if (max > str_len) max = str_len;
     }
-    else max = strlenW(str);
+    else max = str_len;
 
     if (*format == 'h' || *format == 'l') format++;
 
@@ -425,7 +426,7 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
 
                 *fmta++ = 's';
                 *fmta = 0;
-                count = format_string( str, len - written, fmtbufa, wstr ? wstr : none );
+                count = format_string( str, len - written, fmtbufa, wstr ? wstr : none, -1 );
                 if (count == -1) return -1;
                 str += count;
                 written += count;
@@ -435,14 +436,13 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
 
             case 'c':
             {
-                WCHAR wstr[2];
+                WCHAR wstr;
                 int count;
 
-                wstr[0] = va_arg(valist, int);
-                wstr[1] = 0;
+                wstr = va_arg(valist, int);
                 *fmta++ = 's';
                 *fmta = 0;
-                count = format_string( str, len - written, fmtbufa, wstr );
+                count = format_string( str, len - written, fmtbufa, &wstr, 1 );
                 if (count == -1) return -1;
                 str += count;
                 written += count;
@@ -464,7 +464,7 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
                     *fmta = '\0';
                     if (*iter == 'a' || *iter == 'A' ||
                         *iter == 'e' || *iter == 'E' ||
-                        *iter == 'f' || *iter == 'F' ||
+                        *iter == 'f' || *iter == 'F' || 
                         *iter == 'g' || *iter == 'G')
                         sprintf(bufaiter, fmtbufa, va_arg(valist, double));
                     else

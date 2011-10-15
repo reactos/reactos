@@ -39,15 +39,25 @@ static int get_decomposition( WCHAR src, WCHAR *dst, unsigned int dstlen )
     return res;
 }
 
+/* check the code whether it is in Unicode Private Use Area (PUA). */
+/* MB_ERR_INVALID_CHARS raises an error converting from 1-byte character to PUA. */
+static inline int is_private_use_area_char(WCHAR code)
+{
+    return (code >= 0xe000 && code <= 0xf8ff);
+}
+
 /* check src string for invalid chars; return non-zero if invalid char found */
 static inline int check_invalid_chars_sbcs( const struct sbcs_table *table, int flags,
                                             const unsigned char *src, unsigned int srclen )
 {
     const WCHAR * const cp2uni = (flags & MB_USEGLYPHCHARS) ? table->cp2uni_glyphs : table->cp2uni;
+    const WCHAR def_unicode_char = table->info.def_unicode_char;
+    const unsigned char def_char = table->uni2cp_low[table->uni2cp_high[def_unicode_char >> 8]
+                                                     + (def_unicode_char & 0xff)];
     while (srclen)
     {
-        if (cp2uni[*src] == table->info.def_unicode_char && *src != table->info.def_char)
-            break;
+        if ((cp2uni[*src] == def_unicode_char && *src != def_char) ||
+            is_private_use_area_char(cp2uni[*src])) break;
         src++;
         srclen--;
     }
@@ -151,20 +161,22 @@ static inline int check_invalid_chars_dbcs( const struct dbcs_table *table,
 {
     const WCHAR * const cp2uni = table->cp2uni;
     const unsigned char * const cp2uni_lb = table->cp2uni_leadbytes;
-
+    const WCHAR def_unicode_char = table->info.def_unicode_char;
+    const unsigned short def_char = table->uni2cp_low[table->uni2cp_high[def_unicode_char >> 8]
+                                                      + (def_unicode_char & 0xff)];
     while (srclen)
     {
         unsigned char off = cp2uni_lb[*src];
         if (off)  /* multi-byte char */
         {
             if (srclen == 1) break;  /* partial char, error */
-            if (cp2uni[(off << 8) + src[1]] == table->info.def_unicode_char &&
-                ((src[0] << 8) | src[1]) != table->info.def_char) break;
+            if (cp2uni[(off << 8) + src[1]] == def_unicode_char &&
+                ((src[0] << 8) | src[1]) != def_char) break;
             src++;
             srclen--;
         }
-        else if (cp2uni[*src] == table->info.def_unicode_char &&
-                 *src != table->info.def_char) break;
+        else if ((cp2uni[*src] == def_unicode_char && *src != def_char) ||
+                 is_private_use_area_char(cp2uni[*src])) break;
         src++;
         srclen--;
     }
