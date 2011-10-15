@@ -44,7 +44,7 @@ typedef struct _DEVMODEINFO
     DEVMODEW adevmode[1];
 } DEVMODEINFO, *PDEVMODEINFO;
 
-typedef struct
+typedef struct _DEVMODEENTRY
 {
     DWORD dwFlags;
     PDEVMODEW pdm;

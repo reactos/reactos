@@ -151,7 +151,7 @@ EngpRegisterGraphicsDevice(
         /* Loop all DEVMODEs */
         pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
         for (pdm = pdminfo->adevmode;
-             pdm + 1 <= pdmEnd;
+             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
              pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
         {
             /* Count this DEVMODE */
@@ -195,7 +195,7 @@ EngpRegisterGraphicsDevice(
 
         /* Loop through the DEVMODEs */
         for (pdm = pdminfo->adevmode;
-             pdm + 1 <= pdmEnd;
+             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
              pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
         {
             /* Compare with the default entry */

@@ -74,6 +74,7 @@ InitDisplayDriver(
     ULONG cbSize;
     HKEY hkey;
     DEVMODEW dmDefault;
+    DWORD dwVga;
 
     ERR("InitDisplayDriver(%S, %S);\n",
             pwszDeviceName, pwszRegKey);
@@ -128,6 +129,11 @@ InitDisplayDriver(
     /* Query the default settings */
     RegReadDisplaySettings(hkey, &dmDefault);
 
+    /* Query if this is a VGA compatible driver */
+    cbSize = sizeof(DWORD);
+    Status = RegQueryValue(hkey, L"VgaCompatible", REG_DWORD, &dwVga, &cbSize);
+    if (!NT_SUCCESS(Status)) dwVga = 0;
+
     /* Close the registry key */
     ZwClose(hkey);
 
@@ -137,6 +143,10 @@ InitDisplayDriver(
                                                  &ustrDisplayDrivers,
                                                  &ustrDescription,
                                                  &dmDefault);
+    if (pGraphicsDevice && dwVga)
+    {
+        pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_VGA_COMPATIBLE;
+    }
 
     return pGraphicsDevice;
 }
@@ -197,7 +207,7 @@ InitVideo()
         ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
     }
 
-    TRACE("Found %ld devices\n", ulMaxObjectNumber);
+    TRACE("Found %ld devices\n", ulMaxObjectNumber + 1);
 
     /* Loop through all adapters */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
@@ -218,31 +228,30 @@ InitVideo()
         pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
         if (!pGraphicsDevice) continue;
 
-        /* Check if this is the VGA adapter */
-        if (iDevNum == iVGACompatible)
+        /* Check if this is a VGA compatible adapter */
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
         {
-            /* Set the VGA device as primary */
-            gpVgaGraphicsDevice = pGraphicsDevice;
-            ERR("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+            /* Save this as the VGA adapter */
+            if (!gpVgaGraphicsDevice)
+                gpVgaGraphicsDevice = pGraphicsDevice;
+            TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
         }
-
-        /* Set the first one as primary device */
-        if (!gpPrimaryGraphicsDevice)
-            gpPrimaryGraphicsDevice = pGraphicsDevice;
+        else
+        {
+            /* Set the first one as primary device */
+            if (!gpPrimaryGraphicsDevice)
+                gpPrimaryGraphicsDevice = pGraphicsDevice;
+            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
+        }
     }
 
     /* Close the device map registry key */
     ZwClose(hkey);
 
-    /* Check if we had any success */
-    if (!gpPrimaryGraphicsDevice)
-    {
-        ERR("No usable display driver was found.\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
+    /* Was VGA mode requested? */
     if (gbBaseVideo)
     {
+        /* Check if we found a VGA compatible device */
         if (gpVgaGraphicsDevice)
         {
             /* Set the VgaAdapter as primary */
@@ -252,6 +261,22 @@ InitVideo()
         else
         {
             ERR("Could not find VGA compatible driver. Trying normal.\n");
+        }
+    }
+
+    /* Check if we had any success */
+    if (!gpPrimaryGraphicsDevice)
+    {
+        /* Check if there is a VGA device we skipped */
+        if (gpVgaGraphicsDevice)
+        {
+            /* There is, use the VGA device */
+            gpPrimaryGraphicsDevice = gpVgaGraphicsDevice;
+        }
+        else
+        {
+            ERR("No usable display driver was found.\n");
+            return STATUS_UNSUCCESSFUL;
         }
     }
 
