@@ -220,7 +220,9 @@ EngpRegisterGraphicsDevice(
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
 
     /* Insert the device into the global list */
-    pGraphicsDevice->pNextGraphicsDevice = gpGraphicsDeviceLast;
+    pGraphicsDevice->pNextGraphicsDevice = NULL;
+    if (gpGraphicsDeviceLast)
+        gpGraphicsDeviceLast->pNextGraphicsDevice = pGraphicsDevice;
     gpGraphicsDeviceLast = pGraphicsDevice;
     if (!gpGraphicsDeviceFirst)
         gpGraphicsDeviceFirst = pGraphicsDevice;
@@ -246,11 +248,13 @@ EngpFindGraphicsDevice(
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
+    DPRINT("EngpFindGraphicsDevice('%wZ', %ld, 0x%lx)\n",
+           pustrDevice, iDevNum, dwFlags);
 
     /* Lock list */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
 
-    if (pustrDevice)
+    if (pustrDevice && pustrDevice->Buffer)
     {
         /* Loop through the list of devices */
         for (pGraphicsDevice = gpGraphicsDeviceFirst;

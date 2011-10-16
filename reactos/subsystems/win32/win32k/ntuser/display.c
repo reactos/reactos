@@ -307,7 +307,7 @@ UserEnumDisplayDevices(
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Open thhe device map registry key */
+    /* Open the device map registry key */
     Status = RegOpenKey(KEY_VIDEO, &hkey);
     if (!NT_SUCCESS(Status))
     {
@@ -353,10 +353,6 @@ NtUserEnumDisplayDevices(
 
     TRACE("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
            pustrDevice, iDevNum);
-
-    // FIXME: HACK, desk.cpl passes broken crap
-    if (pustrDevice && iDevNum != 0)
-        return FALSE;
 
     dispdev.cb = sizeof(dispdev);
 
@@ -423,7 +419,7 @@ NtUserEnumDisplayDevices(
         _SEH2_END
     }
 
-    ERR("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
+    TRACE("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
     /* Return the result */
 //    return Status;
     return NT_SUCCESS(Status); // FIXME
@@ -464,8 +460,8 @@ UserEnumDisplaySettings(
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
 
-    TRACE("Enter UserEnumDisplaySettings('%ls', %ld)\n",
-            pustrDevice ? pustrDevice->Buffer : NULL, iModeNum);
+    TRACE("Enter UserEnumDisplaySettings('%wZ', %ld)\n",
+            pustrDevice, iModeNum);
 
     /* Ask gdi for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
@@ -570,8 +566,8 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    TRACE("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
-            pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
+    TRACE("Enter NtUserEnumDisplaySettings(%wZ, %ld, %p, 0x%lx)\n",
+            pustrDevice, iModeNum, lpDevMode, dwFlags);
 
     if (pustrDevice)
     {
