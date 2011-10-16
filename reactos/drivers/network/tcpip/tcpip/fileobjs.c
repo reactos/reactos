@@ -35,10 +35,20 @@ PADDRESS_FILE AddrSearchFirst(
     USHORT Protocol,
     PAF_SEARCH SearchContext)
 {
+    KIRQL OldIrql;
+    
     SearchContext->Address  = Address;
     SearchContext->Port     = Port;
-    SearchContext->Next     = AddressFileListHead.Flink;
     SearchContext->Protocol = Protocol;
+
+    TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+
+    SearchContext->Next = AddressFileListHead.Flink;
+
+    if (!IsListEmpty(&AddressFileListHead))
+        ReferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
+
+    TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
     return AddrSearchNext(SearchContext);
 }
@@ -104,13 +114,19 @@ PADDRESS_FILE AddrSearchNext(
     KIRQL OldIrql;
     PADDRESS_FILE Current = NULL;
     BOOLEAN Found = FALSE;
+    
+    TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
-    if (IsListEmpty(SearchContext->Next))
+    if (SearchContext->Next == &AddressFileListHead)
+    {
+        TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
         return NULL;
+    }
+
+    /* Remove the extra reference we added to keep this address file in memory */
+    DereferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
 
     CurrentEntry = SearchContext->Next;
-
-    TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     while (CurrentEntry != &AddressFileListHead) {
         Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
@@ -136,13 +152,22 @@ PADDRESS_FILE AddrSearchNext(
         CurrentEntry = CurrentEntry->Flink;
     }
 
+    if (Found)
+    {
+        SearchContext->Next = CurrentEntry->Flink;
+
+        if (SearchContext->Next != &AddressFileListHead)
+        {
+            /* Reference the next address file to prevent the link from disappearing behind our back */
+            ReferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
+        }
+    }
+    else
+        Current = NULL;
+
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
-    if (Found) {
-        SearchContext->Next = CurrentEntry->Flink;
-        return Current;
-    } else
-        return NULL;
+    return Current;
 }
 
 VOID AddrFileFree(
