@@ -143,13 +143,6 @@ RawInputThreadMain()
     ByteOffset.QuadPart = (LONGLONG)0;
     WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
-    /*do
-    {
-        KEVENT Event;
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &WaitTimeout);
-    } while (!NT_SUCCESS(Status));*/
-
     ptiRawInput = PsGetCurrentThreadWin32Thread();
     ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
     TRACE("Raw Input Thread 0x%x\n", ptiRawInput);
