@@ -2,17 +2,17 @@
 
 #include <ndk/kbd.h>
 
-typedef struct _KBL
+typedef struct _KL
 {
   LIST_ENTRY List;
   DWORD Flags;
   WCHAR Name[KL_NAMELENGTH];    // used w GetKeyboardLayoutName same as wszKLID.
-  struct _KBDTABLES* KBTables;  // KBDTABLES in ndk/kbd.h
+  struct _KBDTABLES *KBTables;  // KBDTABLES in ndk/kbd.h
   HANDLE hModule;
   ULONG RefCount;
   HKL hkl;
   DWORD klid; // Low word - language id. High word - device id.
-} KBL, *PKBL;
+} KL, *PKL;
 
 typedef struct _ATTACHINFO
 {
@@ -39,14 +39,14 @@ extern PATTACHINFO gpai;
 INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);
 INIT_FUNCTION NTSTATUS NTAPI InitKeyboardImpl(VOID);
 VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
-PKBL W32kGetDefaultKeyLayout(VOID);
+PKL W32kGetDefaultKeyLayout(VOID);
 VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
 VOID NTAPI UserProcessMouseInput(PMOUSE_INPUT_DATA Data, ULONG InputCount);
 BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
 BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi, BOOL Injected);
 BOOL UserInitDefaultKeyboardLayout(VOID);
-PKBL UserHklToKbl(HKL hKl);
+PKL UserHklToKbl(HKL hKl);
 VOID NTAPI KeyboardThreadMain(PVOID StartContext);
 DWORD NTAPI CreateSystemThreads(UINT Type);
 BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);

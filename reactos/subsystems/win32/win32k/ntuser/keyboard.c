@@ -891,7 +891,7 @@ BOOL NTAPI
 UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
 {
     WORD wScanCode, wVk;
-    PKBL pKbl = NULL;
+    PKL pKbl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
     struct _ETHREAD *pFocusThread;
@@ -973,7 +973,7 @@ UserProcessKeyboardInput(
     PKEYBOARD_INPUT_DATA pKbdInputData)
 {
     WORD wScanCode, wVk;
-    PKBL pKbl = NULL;
+    PKL pKbl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
     struct _ETHREAD *pFocusThread;
@@ -1211,7 +1211,7 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
     }
     else
     {
-        PKBL pKbl;
+        PKL pKbl;
 
         pKbl = UserHklToKbl(dwhkl);
         if (pKbl)
@@ -1246,7 +1246,7 @@ NtUserToUnicodeEx(
     BYTE afKeyState[256 * 2 / 8] = {0};
     PWCHAR pwszBuff = NULL;
     INT i, iRet = 0;
-    PKBL pKbl = NULL;
+    PKL pKbl = NULL;
 
     TRACE("Enter NtUserSetKeyboardState\n");
 
@@ -1451,7 +1451,7 @@ NtUserVkKeyScanEx(
     PKBDTABLES pKbdTbl;
     PVK_TO_WCHAR_TABLE pVkToWchTbl;
     PVK_TO_WCHARS10 pVkToWch;
-    PKBL pKbl = NULL;
+    PKL pKbl = NULL;
     DWORD i, dwModBits = 0, dwModNumber = 0, Ret = (DWORD)-1;
 
     TRACE("NtUserVkKeyScanEx() wch %d, KbdLayout 0x%p\n", wch, dwhkl);

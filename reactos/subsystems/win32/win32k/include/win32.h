@@ -69,7 +69,7 @@ typedef struct _THREADINFO
     PTL                 ptl;
     PPROCESSINFO        ppi;
     struct _USER_MESSAGE_QUEUE* MessageQueue;
-    struct _KBL*        KeyboardLayout;
+    struct _KL*         KeyboardLayout;
     PCLIENTTHREADINFO   pcti;
     struct _DESKTOP*    rpdesk;
     PDESKTOPINFO        pDeskInfo;
@@ -188,7 +188,7 @@ typedef struct _PROCESSINFO
   LIST_ENTRY PrivateFontListHead;
   FAST_MUTEX DriverObjListLock;
   LIST_ENTRY DriverObjListHead;
-  struct _KBL* KeyboardLayout; // THREADINFO only
+  struct _KL* KeyboardLayout; // THREADINFO only
   W32HEAP_USER_MAPPING HeapMappings;
   struct _GDI_POOL *pPoolDcAttr;
   struct _GDI_POOL *pPoolBrushAttr;

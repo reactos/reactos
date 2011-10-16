@@ -5,251 +5,156 @@
  * PURPOSE:         Keyboard layout management
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
+ *                  Copyright 2011 Rafal Harabien
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
-PKBL KBLList = NULL; // Keyboard layout list.
+PKL gpklFirst = NULL; // Keyboard layout list.
 
-typedef PVOID (*KbdLayerDescriptor)(VOID);
+typedef PVOID (*PFNKBDLAYERDESCRIPTOR)(VOID);
 
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
-
-/*
- * Utility function to read a value from the registry more easily.
- *
- * IN  PUNICODE_STRING KeyName       -> Name of key to open
- * IN  PUNICODE_STRING ValueName     -> Name of value to open
- * OUT PUNICODE_STRING ReturnedValue -> String contained in registry
- *
- * Returns NTSTATUS
- */
-
-static NTSTATUS APIENTRY ReadRegistryValue( PUNICODE_STRING KeyName,
-        PUNICODE_STRING ValueName,
-        PUNICODE_STRING ReturnedValue )
+static BOOL
+UserLoadKbdDll(CONST WCHAR *wszKLID,
+               HANDLE *phModule,
+               PKBDTABLES *pKbdTables)
 {
     NTSTATUS Status;
-    HANDLE KeyHandle;
-    OBJECT_ATTRIBUTES KeyAttributes;
-    PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
-    ULONG Length = 0;
-    ULONG ResLength = 0;
-    PWCHAR ReturnBuffer;
+    HKEY hKey;
+    ULONG cbSize;
+    PFNKBDLAYERDESCRIPTOR pfnKbdLayerDescriptor;
+    WCHAR wszLayoutRegKey[256] = L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet\\"
+                                 L"Control\\Keyboard Layouts\\";
+    WCHAR wszLayoutPath[MAX_PATH] = L"\\SystemRoot\\System32\\";
 
-    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
-                               NULL, NULL);
-    Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+    /* Open layout registry key */
+    RtlStringCbCatW(wszLayoutRegKey, sizeof(wszLayoutRegKey), wszKLID);
+    Status = RegOpenKey(wszLayoutRegKey, &hKey);
     if (!NT_SUCCESS(Status))
     {
-        return Status;
-    }
-
-    Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
-                             0,
-                             0,
-                             &ResLength);
-
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        NtClose(KeyHandle);
-        return Status;
-    }
-
-    ResLength += sizeof(*KeyValuePartialInfo);
-    KeyValuePartialInfo =
-        ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
-    Length = ResLength;
-
-    if (!KeyValuePartialInfo)
-    {
-        NtClose(KeyHandle);
-        return STATUS_NO_MEMORY;
-    }
-
-    Status = ZwQueryValueKey(KeyHandle,
-                             ValueName,
-                             KeyValuePartialInformation,
-                             (PVOID)KeyValuePartialInfo,
-                             Length,
-                             &ResLength);
-
-    if (!NT_SUCCESS(Status))
-    {
-        NtClose(KeyHandle);
-        ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
-        return Status;
-    }
-
-    /* At this point, KeyValuePartialInfo->Data contains the key data */
-    ReturnBuffer = ExAllocatePoolWithTag(PagedPool,
-                                         KeyValuePartialInfo->DataLength,
-                                         TAG_STRING);
-
-    if (!ReturnBuffer)
-    {
-        NtClose(KeyHandle);
-        ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
-        return STATUS_NO_MEMORY;
-    }
-
-    RtlCopyMemory(ReturnBuffer,
-                  KeyValuePartialInfo->Data,
-                  KeyValuePartialInfo->DataLength);
-    RtlInitUnicodeString(ReturnedValue, ReturnBuffer);
-
-    ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
-    NtClose(KeyHandle);
-
-    return Status;
-}
-
-static BOOL UserLoadKbdDll(WCHAR *wsKLID,
-                           HANDLE *phModule,
-                           PKBDTABLES *pKbdTables)
-{
-    NTSTATUS Status;
-    KbdLayerDescriptor layerDescGetFn;
-    ANSI_STRING kbdProcedureName;
-    UNICODE_STRING LayoutKeyName;
-    UNICODE_STRING LayoutValueName;
-    UNICODE_STRING LayoutFile;
-    UNICODE_STRING FullLayoutPath;
-    UNICODE_STRING klid;
-    WCHAR LayoutPathBuffer[MAX_PATH] = L"\\SystemRoot\\System32\\";
-    WCHAR KeyNameBuffer[MAX_PATH] = L"\\REGISTRY\\Machine\\SYSTEM\\"
-                                    L"CurrentControlSet\\Control\\Keyboard Layouts\\";
-
-    RtlInitUnicodeString(&klid, wsKLID);
-    RtlInitUnicodeString(&LayoutValueName, L"Layout File");
-    RtlInitUnicodeString(&LayoutKeyName, KeyNameBuffer);
-    LayoutKeyName.MaximumLength = sizeof(KeyNameBuffer);
-
-    RtlAppendUnicodeStringToString(&LayoutKeyName, &klid);
-    Status = ReadRegistryValue(&LayoutKeyName, &LayoutValueName, &LayoutFile);
-
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("Can't get layout filename for %wZ. (%08lx)\n", klid, Status);
+        ERR("Failed to open keyboard layouts registry key %ws (%lx)\n", wszKLID, Status);
         return FALSE;
     }
 
-    TRACE("Read registry and got %wZ\n", &LayoutFile);
-    RtlInitUnicodeString(&FullLayoutPath, LayoutPathBuffer);
-    FullLayoutPath.MaximumLength = sizeof(LayoutPathBuffer);
-    RtlAppendUnicodeStringToString(&FullLayoutPath, &LayoutFile);
-    TRACE("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
-    ExFreePoolWithTag(LayoutFile.Buffer, TAG_STRING);
-
-    *phModule = EngLoadImage(FullLayoutPath.Buffer);
-
-    if (*phModule)
+    /* Read filename of layout DLL and close the key */
+    cbSize = sizeof(wszLayoutPath) - (wcslen(wszLayoutPath) + 1)*sizeof(WCHAR);
+    Status = RegQueryValue(hKey,
+                           L"Layout File",
+                           REG_SZ,
+                           wszLayoutPath + wcslen(wszLayoutPath),
+                           &cbSize);
+    ZwClose(hKey);
+    if (!NT_SUCCESS(Status))
     {
-        TRACE("Loaded %wZ\n", &FullLayoutPath);
+        TRACE("Can't get layout filename for %ws (%lx)\n", wszKLID, Status);
+        return FALSE;
+    }
 
-        RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
-        layerDescGetFn = EngFindImageProcAddress(*phModule, "KbdLayerDescriptor");
+    /* Load keyboard layout DLL */
+    TRACE("Loading Keyboard DLL %ws\n", wszLayoutPath);
+    *phModule = EngLoadImage(wszLayoutPath);
+    if (!(*phModule))
+    {
+        ERR("Failed to load dll %ws\n", wszLayoutPath);
+        return FALSE;
+    }
 
-        if (layerDescGetFn)
-        {
-            *pKbdTables = layerDescGetFn();
-        }
-        else
-        {
-            ERR("Error: %wZ has no KbdLayerDescriptor()\n", &FullLayoutPath);
-        }
+    /* Find KbdLayerDescriptor function and get layout tables */
+    TRACE("Loaded %ws\n", wszLayoutPath);
+    pfnKbdLayerDescriptor = EngFindImageProcAddress(*phModule, "KbdLayerDescriptor");
 
-        if (!layerDescGetFn || !*pKbdTables)
-        {
-            ERR("Failed to load the keyboard layout.\n");
-            EngUnloadImage(*phModule);
-            return FALSE;
-        }
+    if (pfnKbdLayerDescriptor)
+        *pKbdTables = pfnKbdLayerDescriptor();
+    else
+        ERR("Error: %ws has no KbdLayerDescriptor()\n", wszLayoutPath);
+
+    if (!pfnKbdLayerDescriptor || !*pKbdTables)
+    {
+        ERR("Failed to load the keyboard layout.\n");
+        EngUnloadImage(*phModule);
+        return FALSE;
+    }
 
 #if 0 // Dump keyboard layout
-        {
-            unsigned i;
-            PVK_TO_BIT pVkToBit = (*pKbdTables)->pCharModifiers->pVkToBit;
-            PVK_TO_WCHAR_TABLE pVkToWchTbl = (*pKbdTables)->pVkToWcharTable;
-            PVSC_VK pVscVk = (*pKbdTables)->pVSCtoVK_E0;
-            DbgPrint("Kbd layout: fLocaleFlags %x bMaxVSCtoVK %x\n", (*pKbdTables)->fLocaleFlags, (*pKbdTables)->bMaxVSCtoVK);
-            DbgPrint("wMaxModBits %x\n", (*pKbdTables)->pCharModifiers->wMaxModBits);
-            while (pVkToBit->Vk)
-            {
-                DbgPrint("VkToBit %x -> %x\n", pVkToBit->Vk, pVkToBit->ModBits);
-                ++pVkToBit;
-            }
-            for (i = 0; i <= (*pKbdTables)->pCharModifiers->wMaxModBits; ++i)
-                DbgPrint("ModNumber %x -> %x\n", i, (*pKbdTables)->pCharModifiers->ModNumber[i]);
-            while (pVkToWchTbl->pVkToWchars)
-            {
-                PVK_TO_WCHARS1 pVkToWch = pVkToWchTbl->pVkToWchars;
-                DbgPrint("pVkToWchTbl nModifications %x cbSize %x\n", pVkToWchTbl->nModifications, pVkToWchTbl->cbSize);
-                while (pVkToWch->VirtualKey)
-                {
-                    DbgPrint("pVkToWch VirtualKey %x Attributes %x wc { ", pVkToWch->VirtualKey, pVkToWch->Attributes);
-                    for (i = 0; i < pVkToWchTbl->nModifications; ++i)
-                        DbgPrint("%x ", pVkToWch->wch[i]);
-                    DbgPrint("}\n");
-                    pVkToWch = (PVK_TO_WCHARS1)(((PBYTE)pVkToWch) + pVkToWchTbl->cbSize);
-                }
-                ++pVkToWchTbl;
-            }
-            DbgPrint("pusVSCtoVK: { ");
-            for (i = 0; i < (*pKbdTables)->bMaxVSCtoVK; ++i)
-                DbgPrint("%x -> %x, ", i, (*pKbdTables)->pusVSCtoVK[i]);
-            DbgPrint("}\n");
-            DbgPrint("pVSCtoVK_E0: { ");
-            while (pVscVk->Vsc)
-            {
-                DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
-                ++pVscVk;
-            }
-            DbgPrint("}\n");
-            pVscVk = (*pKbdTables)->pVSCtoVK_E1;
-            DbgPrint("pVSCtoVK_E1: { ");
-            while (pVscVk->Vsc)
-            {
-                DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
-                ++pVscVk;
-            }
-            DbgPrint("}\n");
-        }
-        DbgBreakPoint();
-#endif
-    }
-    else
     {
-        ERR("Failed to load dll %wZ\n", &FullLayoutPath);
-        return FALSE;
+        unsigned i;
+        PVK_TO_BIT pVkToBit = (*pKbdTables)->pCharModifiers->pVkToBit;
+        PVK_TO_WCHAR_TABLE pVkToWchTbl = (*pKbdTables)->pVkToWcharTable;
+        PVSC_VK pVscVk = (*pKbdTables)->pVSCtoVK_E0;
+        DbgPrint("Kbd layout: fLocaleFlags %x bMaxVSCtoVK %x\n", (*pKbdTables)->fLocaleFlags, (*pKbdTables)->bMaxVSCtoVK);
+        DbgPrint("wMaxModBits %x\n", (*pKbdTables)->pCharModifiers->wMaxModBits);
+        while (pVkToBit->Vk)
+        {
+            DbgPrint("VkToBit %x -> %x\n", pVkToBit->Vk, pVkToBit->ModBits);
+            ++pVkToBit;
+        }
+        for (i = 0; i <= (*pKbdTables)->pCharModifiers->wMaxModBits; ++i)
+            DbgPrint("ModNumber %x -> %x\n", i, (*pKbdTables)->pCharModifiers->ModNumber[i]);
+        while (pVkToWchTbl->pVkToWchars)
+        {
+            PVK_TO_WCHARS1 pVkToWch = pVkToWchTbl->pVkToWchars;
+            DbgPrint("pVkToWchTbl nModifications %x cbSize %x\n", pVkToWchTbl->nModifications, pVkToWchTbl->cbSize);
+            while (pVkToWch->VirtualKey)
+            {
+                DbgPrint("pVkToWch VirtualKey %x Attributes %x wc { ", pVkToWch->VirtualKey, pVkToWch->Attributes);
+                for (i = 0; i < pVkToWchTbl->nModifications; ++i)
+                    DbgPrint("%x ", pVkToWch->wch[i]);
+                DbgPrint("}\n");
+                pVkToWch = (PVK_TO_WCHARS1)(((PBYTE)pVkToWch) + pVkToWchTbl->cbSize);
+            }
+            ++pVkToWchTbl;
+        }
+        DbgPrint("pusVSCtoVK: { ");
+        for (i = 0; i < (*pKbdTables)->bMaxVSCtoVK; ++i)
+        DbgPrint("%x -> %x, ", i, (*pKbdTables)->pusVSCtoVK[i]);
+        DbgPrint("}\n");
+        DbgPrint("pVSCtoVK_E0: { ");
+        while (pVscVk->Vsc)
+        {
+            DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
+            ++pVscVk;
+        }
+        DbgPrint("}\n");
+        pVscVk = (*pKbdTables)->pVSCtoVK_E1;
+        DbgPrint("pVSCtoVK_E1: { ");
+        while (pVscVk->Vsc)
+        {
+            DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
+            ++pVscVk;
+        }
+        DbgPrint("}\n");
+        DbgBreakPoint();
     }
+#endif
 
     return TRUE;
 }
 
-static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
+static PKL
+UserLoadDllAndCreateKbl(DWORD LocaleId)
 {
-    PKBL NewKbl;
+    PKL pNewKbl;
     ULONG hKl;
     LANGID langid;
 
-    NewKbl = ExAllocatePoolWithTag(PagedPool, sizeof(KBL), USERTAG_KBDLAYOUT);
+    pNewKbl = ExAllocatePoolWithTag(PagedPool, sizeof(KL), USERTAG_KBDLAYOUT);
 
-    if (!NewKbl)
+    if (!pNewKbl)
     {
-        ERR("%s: Can't allocate memory!\n", __FUNCTION__);
+        ERR("Can't allocate memory!\n");
         return NULL;
     }
 
-    swprintf(NewKbl->Name, L"%08lx", LocaleId);
+    swprintf(pNewKbl->Name, L"%08lx", LocaleId);
 
-    if (!UserLoadKbdDll(NewKbl->Name, &NewKbl->hModule, &NewKbl->KBTables))
+    if (!UserLoadKbdDll(pNewKbl->Name, &pNewKbl->hModule, &pNewKbl->KBTables))
     {
-        TRACE("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
-        ExFreePoolWithTag(NewKbl, USERTAG_KBDLAYOUT);
+        ERR("Failed to load %x dll!\n", LocaleId);
+        ExFreePoolWithTag(pNewKbl, USERTAG_KBDLAYOUT);
         return NULL;
     }
 
@@ -265,158 +170,155 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
         hKl |= 0xe001 << 16; /* FIXME */
     else hKl |= hKl << 16;
 
-    NewKbl->hkl = (HKL)(ULONG_PTR) hKl;
-    NewKbl->klid = LocaleId;
-    NewKbl->Flags = 0;
-    NewKbl->RefCount = 0;
+    pNewKbl->hkl = (HKL)(ULONG_PTR) hKl;
+    pNewKbl->klid = LocaleId;
+    pNewKbl->Flags = 0;
+    pNewKbl->RefCount = 0;
 
-    return NewKbl;
+    return pNewKbl;
 }
 
-BOOL UserInitDefaultKeyboardLayout()
+BOOL
+UserInitDefaultKeyboardLayout()
 {
     LCID LocaleId;
     NTSTATUS Status;
 
+    /* Load keyboard layout for default locale */
     Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Could not get default locale (%08lx).\n", Status);
-    }
-    else
+    if (NT_SUCCESS(Status))
     {
         TRACE("DefaultLocale = %08lx\n", LocaleId);
+        gpklFirst = UserLoadDllAndCreateKbl(LocaleId);
     }
+    else
+        ERR("Could not get default locale (%08lx).\n", Status);
 
-    if (!NT_SUCCESS(Status) || !(KBLList = UserLoadDllAndCreateKbl(LocaleId)))
+    if (!NT_SUCCESS(Status) || !gpklFirst)
     {
+        /* If failed load US keyboard layout */
         ERR("Trying to load US Keyboard Layout.\n");
         LocaleId = 0x409;
 
-        if (!(KBLList = UserLoadDllAndCreateKbl(LocaleId)))
+        if (!(gpklFirst = UserLoadDllAndCreateKbl(LocaleId)))
         {
             ERR("Failed to load any Keyboard Layout\n");
             return FALSE;
         }
     }
 
-    KBLList->Flags |= KBL_PRELOAD;
+    /* Add layout to the list */
+    gpklFirst->Flags |= KBL_PRELOAD;
+    InitializeListHead(&gpklFirst->List);
 
-    InitializeListHead(&KBLList->List);
     return TRUE;
 }
 
-PKBL W32kGetDefaultKeyLayout(VOID)
+PKL
+W32kGetDefaultKeyLayout(VOID)
 {
-    const WCHAR szKeyboardLayoutPath[] = L"\\Keyboard Layout\\Preload";
-    const WCHAR szDefaultUserPath[] = L"\\REGISTRY\\USER\\.DEFAULT";
-
-    HANDLE KeyHandle;
+    CONST WCHAR wszDefaultUserPath[] = L"\\REGISTRY\\USER\\.DEFAULT";
+    CONST WCHAR wszKeyboardLayoutPath[] = L"\\Keyboard Layout\\Preload";
+    WCHAR wszKbdLayoutKey[256], *pwsz;
+    size_t cbRemaining;
+    HKEY hKey;
+    ULONG cbValue;
     LCID LayoutLocaleId = 0;
     NTSTATUS Status;
-    OBJECT_ATTRIBUTES KeyAttributes;
-    PKBL pKbl;
+    PKL pKbl;
     UNICODE_STRING CurrentUserPath;
-    UNICODE_STRING FullKeyboardLayoutPath;
-    UNICODE_STRING LayoutValueName;
-    UNICODE_STRING LayoutLocaleIdString;
     WCHAR wszBuffer[MAX_PATH];
 
-    // Get the path to HKEY_CURRENT_USER
+    /* Try to get default alayout from HKCU\Keyboard Layout\Preload first */
     Status = RtlFormatCurrentUserKeyPath(&CurrentUserPath);
+    if (NT_SUCCESS(Status))
+    {
+        /* FIXME: We're called very early, so HKEY_CURRENT_USER might not be
+                  available yet. Check this first. */
+        RtlStringCbCopyNExW(wszKbdLayoutKey, sizeof(wszKbdLayoutKey),
+                            CurrentUserPath.Buffer, CurrentUserPath.Length,
+                            &pwsz, &cbRemaining, 0);
+        RtlStringCbCopyW(pwsz, cbRemaining, wszKeyboardLayoutPath);
+        Status = RegOpenKey(wszKbdLayoutKey, &hKey);
+
+        /* Free CurrentUserPath - we dont need it anymore */
+        RtlFreeUnicodeString(&CurrentUserPath);
+    }
+
+    /* If failed try HKU\.DEFAULT\Keyboard Layout\Preload */
+    if (!NT_SUCCESS(Status))
+    {
+        RtlStringCbCopyNExW(wszKbdLayoutKey, sizeof(wszKbdLayoutKey),
+                            wszDefaultUserPath, sizeof(wszDefaultUserPath),
+                            &pwsz, &cbRemaining, 0);
+        RtlStringCbCopyW(pwsz, cbRemaining, wszKeyboardLayoutPath);
+        Status = RegOpenKey(wszKbdLayoutKey, &hKey);
+    }
 
     if (NT_SUCCESS(Status))
     {
-        FullKeyboardLayoutPath.Buffer = wszBuffer;
-        FullKeyboardLayoutPath.MaximumLength = sizeof(wszBuffer);
-
-        // FIXME: Is this 100% correct?
-        // We're called very early, so HKEY_CURRENT_USER might not be available yet. Check this first.
-        InitializeObjectAttributes(&KeyAttributes, &CurrentUserPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
-        Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
-
-        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-        {
-            // It is not available, so read it from HKEY_USERS\.DEFAULT
-            FullKeyboardLayoutPath.Length = sizeof(szDefaultUserPath) - sizeof(UNICODE_NULL);
-            RtlCopyMemory(wszBuffer, szDefaultUserPath, sizeof(szDefaultUserPath));
-        }
-        else
-        {
-            // The path is available
-            ZwClose(KeyHandle);
-            RtlCopyUnicodeString(&FullKeyboardLayoutPath, &CurrentUserPath);
-        }
-
-        // Free CurrentUserPath - we dont need it anymore
-        RtlFreeUnicodeString(&CurrentUserPath);
-
-        Status = RtlAppendUnicodeToString(&FullKeyboardLayoutPath, szKeyboardLayoutPath);
-
+        /* Return the first keyboard layout listed there */
+        cbValue = sizeof(wszBuffer);
+        Status = RegQueryValue(hKey, L"1", REG_SZ, wszBuffer, &cbValue);
         if (NT_SUCCESS(Status))
-        {
-            // Return the first keyboard layout listed there
-            RtlInitUnicodeString(&LayoutValueName, L"1");
-
-            Status = ReadRegistryValue(&FullKeyboardLayoutPath, &LayoutValueName, &LayoutLocaleIdString);
-
-            if (NT_SUCCESS(Status))
-            {
-                RtlUnicodeStringToInteger(&LayoutLocaleIdString, 16, &LayoutLocaleId);
-                ExFreePoolWithTag(LayoutLocaleIdString.Buffer, TAG_STRING);
-            }
-            else
-                ERR("ReadRegistryValue failed! (%08lx).\n", Status);
-        }
+            LayoutLocaleId = (LCID)wcstol(wszBuffer, NULL, 16);
         else
-            ERR("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
+            ERR("RegQueryValue failed (%08lx)\n", Status);
+
+        /* Close the key */
+        ZwClose(hKey);
     }
     else
-        ERR("RtlFormatCurrentUserKeyPath failed! (%08lx)\n", Status);
+        ERR("Failed to open keyboard layout preload key (%08lx)\n", Status);
 
+    /* If we failed loading settings from registry use US layout */
     if (!LayoutLocaleId)
     {
         ERR("Assuming default locale for the keyboard layout (0x409 - US)\n");
         LayoutLocaleId = 0x409;
     }
 
-    pKbl = KBLList;
+    /* Check if layout is already loaded */
+    pKbl = gpklFirst;
     do
     {
         if (pKbl->klid == LayoutLocaleId)
-        {
             return pKbl;
-        }
 
-        pKbl = (PKBL) pKbl->List.Flink;
-    } while (pKbl != KBLList);
+        pKbl = CONTAINING_RECORD(pKbl->List.Flink, KL, List);
+    } while (pKbl != gpklFirst);
 
+    /* Load the keyboard layout */
     TRACE("Loading new default keyboard layout.\n");
     pKbl = UserLoadDllAndCreateKbl(LayoutLocaleId);
-
     if (!pKbl)
     {
-        TRACE("Failed to load %x!!! Returning any availableKL.\n", LayoutLocaleId);
-        return KBLList;
+        ERR("Failed to load %x!!! Returning any available KL.\n", LayoutLocaleId);
+        return gpklFirst;
     }
 
-    InsertTailList(&KBLList->List, &pKbl->List);
+    /* Add loaded layout to the list */
+    InsertTailList(&gpklFirst->List, &pKbl->List);
     return pKbl;
 }
 
-PKBL UserHklToKbl(HKL hKl)
+PKL
+UserHklToKbl(HKL hKl)
 {
-    PKBL pKbl = KBLList;
+    PKL pKbl = gpklFirst;
     do
     {
-        if (pKbl->hkl == hKl) return pKbl;
-        pKbl = (PKBL) pKbl->List.Flink;
-    } while (pKbl != KBLList);
+        if (pKbl->hkl == hKl)
+            return pKbl;
+
+        pKbl = CONTAINING_RECORD(pKbl->List.Flink, KL, List);
+    } while (pKbl != gpklFirst);
 
     return NULL;
 }
 
-BOOL UserUnloadKbl(PKBL pKbl)
+BOOL
+UserUnloadKbl(PKL pKbl)
 {
     /* According to msdn, UnloadKeyboardLayout can fail
        if the keyboard layout identifier was preloaded. */
@@ -444,13 +346,14 @@ BOOL UserUnloadKbl(PKBL pKbl)
     return TRUE;
 }
 
-static PKBL co_UserActivateKbl(PTHREADINFO w32Thread, PKBL pKbl, UINT Flags)
+static PKL
+co_UserActivateKbl(PTHREADINFO pti, PKL pKbl, UINT Flags)
 {
-    PKBL Prev;
+    PKL pklPrev;
 
-    Prev = w32Thread->KeyboardLayout;
-    Prev->RefCount--;
-    w32Thread->KeyboardLayout = pKbl;
+    pklPrev = pti->KeyboardLayout;
+    pklPrev->RefCount--;
+    pti->KeyboardLayout = pKbl;
     pKbl->RefCount++;
 
     if (Flags & KLF_SETFORPROCESS)
@@ -459,18 +362,18 @@ static PKBL co_UserActivateKbl(PTHREADINFO w32Thread, PKBL pKbl, UINT Flags)
 
     }
 
-    if (Prev->Flags & KBL_UNLOAD && Prev->RefCount == 0)
+    if (pklPrev->Flags & KBL_UNLOAD && pklPrev->RefCount == 0)
     {
-        UserUnloadKbl(Prev);
+        UserUnloadKbl(pklPrev);
     }
 
     // Send WM_INPUTLANGCHANGE to thread's focus window
-    co_IntSendMessage(w32Thread->MessageQueue->FocusWindow,
+    co_IntSendMessage(pti->MessageQueue->FocusWindow,
                       WM_INPUTLANGCHANGE,
                       0, // FIXME: put charset here (what is this?)
                       (LPARAM)pKbl->hkl); //klid
 
-    return Prev;
+    return pklPrev;
 }
 
 /* EXPORTS *******************************************************************/
@@ -481,13 +384,13 @@ UserGetKeyboardLayout(
 {
     NTSTATUS Status;
     PETHREAD Thread;
-    PTHREADINFO W32Thread;
+    PTHREADINFO pti;
     HKL Ret;
 
     if (!dwThreadId)
     {
-        W32Thread = PsGetCurrentThreadWin32Thread();
-        return W32Thread->KeyboardLayout->hkl;
+        pti = PsGetCurrentThreadWin32Thread();
+        return pti->KeyboardLayout->hkl;
     }
 
     Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
@@ -497,8 +400,8 @@ UserGetKeyboardLayout(
         return NULL;
     }
 
-    W32Thread = PsGetThreadWin32Thread(Thread);
-    Ret = W32Thread->KeyboardLayout->hkl;
+    pti = PsGetThreadWin32Thread(Thread);
+    Ret = pti->KeyboardLayout->hkl;
     ObDereferenceObject(Thread);
     return Ret;
 }
@@ -506,37 +409,41 @@ UserGetKeyboardLayout(
 UINT
 APIENTRY
 NtUserGetKeyboardLayoutList(
-    INT nItems,
+    INT nBuff,
     HKL* pHklBuff)
 {
-    UINT Ret = 0;
-    PKBL pKbl;
+    UINT uRet = 0;
+    PKL pKbl;
 
     UserEnterShared();
-    pKbl = KBLList;
+    pKbl = gpklFirst;
 
-    if (nItems == 0)
+    if (!pHklBuff)
+        nBuff = 0;
+
+    if (nBuff == 0)
     {
         do
         {
-            Ret++;
-            pKbl = (PKBL) pKbl->List.Flink;
-        } while (pKbl != KBLList);
+            uRet++;
+            pKbl = CONTAINING_RECORD(pKbl->List.Flink, KL, List);
+        } while (pKbl != gpklFirst);
     }
     else
     {
         _SEH2_TRY
         {
-            ProbeForWrite(pHklBuff, nItems*sizeof(HKL), 4);
+            ProbeForWrite(pHklBuff, nBuff*sizeof(HKL), 4);
 
-            while (Ret < nItems)
+            while (uRet < nBuff)
             {
                 if (!(pKbl->Flags & KBL_UNLOAD))
                 {
-                    pHklBuff[Ret] = pKbl->hkl;
-                    Ret++;
-                    pKbl = (PKBL) pKbl->List.Flink;
-                    if (pKbl == KBLList) break;
+                    pHklBuff[uRet] = pKbl->hkl;
+                    uRet++;
+                    pKbl = CONTAINING_RECORD(pKbl->List.Flink, KL, List);
+                    if (pKbl == gpklFirst)
+                        break;
                 }
             }
 
@@ -544,13 +451,13 @@ NtUserGetKeyboardLayoutList(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             SetLastNtError(_SEH2_GetExceptionCode());
-            Ret = 0;
+            uRet = 0;
         }
         _SEH2_END;
     }
 
     UserLeave();
-    return Ret;
+    return uRet;
 }
 
 BOOL
@@ -558,8 +465,8 @@ APIENTRY
 NtUserGetKeyboardLayoutName(
     LPWSTR lpszName)
 {
-    BOOL ret = FALSE;
-    PKBL pKbl;
+    BOOL bRet = FALSE;
+    PKL pKbl;
     PTHREADINFO pti;
 
     UserEnterShared();
@@ -569,20 +476,18 @@ NtUserGetKeyboardLayoutName(
         ProbeForWrite(lpszName, KL_NAMELENGTH*sizeof(WCHAR), 1);
         pti = PsGetCurrentThreadWin32Thread();
         pKbl = pti->KeyboardLayout;
-        RtlCopyMemory(lpszName,  pKbl->Name, KL_NAMELENGTH*sizeof(WCHAR));
-        ret = TRUE;
+        RtlCopyMemory(lpszName, pKbl->Name, KL_NAMELENGTH*sizeof(WCHAR));
+        bRet = TRUE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        ret = FALSE;
     }
     _SEH2_END;
 
     UserLeave();
-    return ret;
+    return bRet;
 }
-
 
 HKL
 APIENTRY
@@ -595,24 +500,32 @@ NtUserLoadKeyboardLayoutEx(
     IN DWORD dwKLID,
     IN UINT Flags)
 {
-    HKL Ret = NULL;
-    PKBL pKbl = NULL, Cur;
+    HKL hklRet = NULL;
+    PKL pKbl = NULL, pklCur;
+
+    if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
+                  KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS))
+    {
+        ERR("Invalid flags: %x\n", Flags);
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
 
     UserEnterExclusive();
 
     //Let's see if layout was already loaded.
-    Cur = KBLList;
+    pklCur = gpklFirst;
     do
     {
-        if (Cur->klid == dwKLID)
+        if (pklCur->klid == dwKLID)
         {
-            pKbl = Cur;
+            pKbl = pklCur;
             pKbl->Flags &= ~KBL_UNLOAD;
             break;
         }
 
-        Cur = (PKBL) Cur->List.Flink;
-    } while (Cur != KBLList);
+        pklCur = CONTAINING_RECORD(pKbl->List.Flink, KL, List);
+    } while (pklCur != gpklFirst);
 
     //It wasn't, so load it.
     if (!pKbl)
@@ -621,28 +534,28 @@ NtUserLoadKeyboardLayoutEx(
 
         if (!pKbl)
         {
-            goto the_end;
+            goto cleanup;
         }
 
-        InsertTailList(&KBLList->List, &pKbl->List);
+        InsertTailList(&gpklFirst->List, &pKbl->List);
     }
 
-    if (Flags & KLF_REORDER) KBLList = pKbl;
+    if (Flags & KLF_REORDER) gpklFirst = pKbl;
 
     if (Flags & KLF_ACTIVATE)
     {
         co_UserActivateKbl(PsGetCurrentThreadWin32Thread(), pKbl, Flags);
     }
 
-    Ret = pKbl->hkl;
+    hklRet = pKbl->hkl;
 
     //FIXME: KLF_NOTELLSHELL
     //       KLF_REPLACELANG
     //       KLF_SUBSTITUTE_OK
 
-the_end:
+cleanup:
     UserLeave();
-    return Ret;
+    return hklRet;
 }
 
 HKL
@@ -651,27 +564,27 @@ NtUserActivateKeyboardLayout(
     HKL hKl,
     ULONG Flags)
 {
-    PKBL pKbl;
-    HKL Ret = NULL;
-    PTHREADINFO pWThread;
+    PKL pKbl;
+    HKL hklRet = NULL;
+    PTHREADINFO pti;
 
     UserEnterExclusive();
 
-    pWThread = PsGetCurrentThreadWin32Thread();
+    pti = PsGetCurrentThreadWin32Thread();
 
-    if (pWThread->KeyboardLayout->hkl == hKl)
+    if (pti->KeyboardLayout->hkl == hKl)
     {
-        Ret = hKl;
-        goto the_end;
+        hklRet = hKl;
+        goto cleanup;
     }
 
     if (hKl == (HKL)HKL_NEXT)
     {
-        pKbl = (PKBL)pWThread->KeyboardLayout->List.Flink;
+        pKbl = CONTAINING_RECORD(pti->KeyboardLayout->List.Flink, KL, List);
     }
     else if (hKl == (HKL)HKL_PREV)
     {
-        pKbl = (PKBL)pWThread->KeyboardLayout->List.Blink;
+        pKbl = CONTAINING_RECORD(pti->KeyboardLayout->List.Blink, KL, List);
     }
     else pKbl = UserHklToKbl(hKl);
 
@@ -680,16 +593,16 @@ NtUserActivateKeyboardLayout(
     if (pKbl)
     {
         if (Flags & KLF_REORDER)
-            KBLList = pKbl;
+            gpklFirst = pKbl;
 
-        if (pKbl == pWThread->KeyboardLayout)
+        if (pKbl == pti->KeyboardLayout)
         {
-            Ret = pKbl->hkl;
+            hklRet = pKbl->hkl;
         }
         else
         {
-            pKbl = co_UserActivateKbl(pWThread, pKbl, Flags);
-            Ret = pKbl->hkl;
+            pKbl = co_UserActivateKbl(pti, pKbl, Flags);
+            hklRet = pKbl->hkl;
         }
     }
     else
@@ -697,9 +610,9 @@ NtUserActivateKeyboardLayout(
         ERR("Invalid HKL %x!\n", hKl);
     }
 
-the_end:
+cleanup:
     UserLeave();
-    return Ret;
+    return hklRet;
 }
 
 BOOL
@@ -707,14 +620,15 @@ APIENTRY
 NtUserUnloadKeyboardLayout(
     HKL hKl)
 {
-    PKBL pKbl;
-    BOOL Ret = FALSE;
+    PKL pKbl;
+    BOOL bRet = FALSE;
 
     UserEnterExclusive();
 
-    if ((pKbl = UserHklToKbl(hKl)))
+    pKbl = UserHklToKbl(hKl);
+    if (pKbl)
     {
-        Ret = UserUnloadKbl(pKbl);
+        bRet = UserUnloadKbl(pKbl);
     }
     else
     {
@@ -722,7 +636,7 @@ NtUserUnloadKeyboardLayout(
     }
 
     UserLeave();
-    return Ret;
+    return bRet;
 }
 
 /* EOF */
