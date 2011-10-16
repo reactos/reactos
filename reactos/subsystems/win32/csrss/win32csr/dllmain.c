@@ -182,7 +182,7 @@ DWORD
 WINAPI
 CreateSystemThreads(PVOID pParam)
 {
-    NtUserCallOneParam((DWORD_PTR)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
     DPRINT1("This thread should not terminate!\n");
     return 0;
 }
@@ -196,7 +196,6 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     HANDLE ServerThread;
     CLIENT_ID ClientId;
     NTSTATUS Status;
-    UINT i;
 
     CsrExports = *Exports;
     Win32CsrApiHeap = CsrssApiHeap;
@@ -215,18 +214,15 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
 
-    /* Start Keyboard, Mouse and Raw Input Threads */
-    for (i = 0; i < 3; ++i)
+    /* Start Raw Input Threads */
+    Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);
+    if (NT_SUCCESS(Status))
     {
-        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)i, &ServerThread, &ClientId);
-        if (NT_SUCCESS(Status))
-        {
-            NtResumeThread(ServerThread, NULL);
-            NtClose(ServerThread);
-        }
-        else
-            DPRINT1("Cannot start system thread: %u!\n", i);
+        NtResumeThread(ServerThread, NULL);
+        NtClose(ServerThread);
     }
+    else
+        DPRINT1("Cannot start Raw Input Thread!\n");
 
     return TRUE;
 }

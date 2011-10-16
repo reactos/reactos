@@ -23,12 +23,15 @@ PATTACHINFO gpai = NULL;
 HANDLE ghKeyboardDevice;
 
 static DWORD LastInputTick = 0;
-static HANDLE MouseDeviceHandle;
-static KEVENT InputThreadsStart;
-static BOOLEAN InputThreadsRunning = FALSE;
+static HANDLE ghMouseDevice;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * IntLastInputTick
+ *
+ * Updates or gets last input tick count
+ */
 static DWORD FASTCALL
 IntLastInputTick(BOOL bUpdate)
 {
@@ -42,6 +45,11 @@ IntLastInputTick(BOOL bUpdate)
     return LastInputTick;
 }
 
+/*
+ * DoTheScreenSaver
+ *
+ * Check if scrensaver should be started and sends message to SAS window
+ */
 VOID FASTCALL
 DoTheScreenSaver(VOID)
 {
@@ -78,210 +86,201 @@ DoTheScreenSaver(VOID)
     }
 }
 
-static VOID APIENTRY
-MouseThreadMain(PVOID StartContext)
+/*
+ * OpenInputDevice
+ *
+ * Opens input device for asynchronous access
+ */
+static
+NTAPI NTSTATUS
+OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceName)
 {
-    UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
-    OBJECT_ATTRIBUTES MouseObjectAttributes;
-    IO_STATUS_BLOCK Iosb;
+    UNICODE_STRING DeviceName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
-    MOUSE_ATTRIBUTES MouseAttr;
+    IO_STATUS_BLOCK Iosb;
 
-    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
-                        LOW_REALTIME_PRIORITY + 3);
+    RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
-    InitializeObjectAttributes(&MouseObjectAttributes,
-                               &MouseDeviceName,
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DeviceName,
                                0,
                                NULL,
                                NULL);
-    do
-    {
-        LARGE_INTEGER DueTime;
-        KEVENT Event;
-        DueTime.QuadPart = (LONGLONG)(-10000000);
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
-        Status = ZwOpenFile(&MouseDeviceHandle,
-                            FILE_ALL_ACCESS,
-                            &MouseObjectAttributes,
-                            &Iosb,
-                            0,
-                            FILE_SYNCHRONOUS_IO_ALERT);
-    } while (!NT_SUCCESS(Status));
 
-    ptiMouse = PsGetCurrentThreadWin32Thread();
-    ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
-    TRACE("Mouse Thread 0x%x \n", ptiMouse);
+    Status = ZwOpenFile(pHandle,
+                        FILE_ALL_ACCESS,
+                        &ObjectAttributes,
+                        &Iosb,
+                        0,
+                        0);
+    if (NT_SUCCESS(Status) && ppObject)
+    {
+        Status = ObReferenceObjectByHandle(*pHandle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)ppObject, NULL);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    return Status;
+}
+
+/*
+ * RawInputThreadMain
+ *
+ * Reads data from input devices and supports win32 timers
+ */
+VOID NTAPI
+RawInputThreadMain()
+{
+    NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
+    IO_STATUS_BLOCK MouIosb, KbdIosb;
+    PFILE_OBJECT pKbdDevice, pMouDevice;
+    LARGE_INTEGER WaitTimeout, ByteOffset;
+    PVOID WaitObjects[3], pSignaledObject = NULL;
+    ULONG cWaitObjects = 0, cMaxWaitObjects = 1;
+    MOUSE_INPUT_DATA MouseInput;
+    KEYBOARD_INPUT_DATA KeyInput;
+    
+    ByteOffset.QuadPart = (LONGLONG)0;
+    WaitTimeout.QuadPart = (LONGLONG)(-10000000);
+
+    /*do
+    {
+        KEVENT Event;
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+        Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &WaitTimeout);
+    } while (!NT_SUCCESS(Status));*/
+
+    ptiRawInput = PsGetCurrentThreadWin32Thread();
+    ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
+    TRACE("Raw Input Thread 0x%x\n", ptiRawInput);
 
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY + 3);
+
+    UserEnterExclusive();
+    StartTheTimers();
+    UserLeave();
 
     for(;;)
     {
-        /*
-         * Wait to start input.
-         */
-        TRACE("Mouse Input Thread Waiting for start event\n");
-        Status = KeWaitForSingleObject(&InputThreadsStart,
-                                       0,
-                                       KernelMode,
-                                       TRUE,
-                                       NULL);
-        TRACE("Mouse Input Thread Starting...\n");
-
-        /*FIXME: Does mouse attributes need to be used for anything */
-        Status = ZwDeviceIoControlFile(MouseDeviceHandle,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &Iosb,
-                                       IOCTL_MOUSE_QUERY_ATTRIBUTES,
-                                       &MouseAttr, sizeof(MOUSE_ATTRIBUTES),
-                                       NULL, 0);
-        if(!NT_SUCCESS(Status))
+        if (!ghMouseDevice)
         {
-            TRACE("Failed to get mouse attributes\n");
+            /* Check if mouse device already exists */
+            Status = OpenInputDevice(&ghMouseDevice, &pMouDevice, L"\\Device\\PointerClass0" );
+            if (NT_SUCCESS(Status))
+            {
+                ++cMaxWaitObjects;
+                TRACE("Mouse connected!\n");
+            }
+        }
+        if (!ghKeyboardDevice)
+        {
+            /* Check if keyboard device already exists */
+            Status = OpenInputDevice(&ghKeyboardDevice, &pKbdDevice, L"\\Device\\KeyboardClass0");
+            if (NT_SUCCESS(Status))
+            {
+                ++cMaxWaitObjects;
+                TRACE("Keyboard connected!\n");
+            }
         }
 
-        /*
-         * Receive and process mouse input.
-         */
-        while(InputThreadsRunning)
+        /* Reset WaitHandles array */
+        cWaitObjects = 0;
+        WaitObjects[cWaitObjects++] = MasterTimer;
+
+        if (ghMouseDevice)
         {
-            MOUSE_INPUT_DATA MouseInput;
-            Status = ZwReadFile(MouseDeviceHandle,
-                                NULL,
-                                NULL,
-                                NULL,
-                                &Iosb,
-                                &MouseInput,
-                                sizeof(MOUSE_INPUT_DATA),
-                                NULL,
-                                NULL);
-            if(Status == STATUS_ALERTED && !InputThreadsRunning)
+            /* Try to read from mouse if previous reading is not pending */
+            if (MouStatus != STATUS_PENDING)
             {
-                break;
+                MouStatus = ZwReadFile(ghMouseDevice,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &MouIosb,
+                                       &MouseInput,
+                                       sizeof(MOUSE_INPUT_DATA),
+                                       &ByteOffset,
+                                       NULL);
             }
-            if(Status == STATUS_PENDING)
+            
+            if (MouStatus == STATUS_PENDING)
+                WaitObjects[cWaitObjects++] = &pMouDevice->Event;
+        }
+
+        if (ghKeyboardDevice)
+        {
+            /* Try to read from keyboard if previous reading is not pending */
+            if (KbdStatus != STATUS_PENDING)
             {
-                NtWaitForSingleObject(MouseDeviceHandle, FALSE, NULL);
-                Status = Iosb.Status;
+                KbdStatus = ZwReadFile(ghKeyboardDevice,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &KbdIosb,
+                                       &KeyInput,
+                                       sizeof(KEYBOARD_INPUT_DATA),
+                                       &ByteOffset,
+                                       NULL);
+                
             }
-            if(!NT_SUCCESS(Status))
+            if (KbdStatus == STATUS_PENDING)
+                WaitObjects[cWaitObjects++] = &pKbdDevice->Event;
+        }
+
+        /* If all objects are pending, wait for them */
+        if (cWaitObjects == cMaxWaitObjects)
+        {
+            Status = KeWaitForMultipleObjects(cWaitObjects,
+                                              WaitObjects,
+                                              WaitAny,
+                                              UserRequest,
+                                              KernelMode,
+                                              TRUE,
+                                              NULL,//&WaitTimeout,
+                                              NULL);
+
+            if (Status >= STATUS_WAIT_0 && Status < STATUS_WAIT_0 + cWaitObjects)
             {
-                ERR("Win32K: Failed to read from mouse.\n");
-                return; //(Status);
+                /* Some device has finished reading */
+                pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
+
+                /* Check if it is mouse or keyboard and update status */
+                if (pSignaledObject == &pMouDevice->Event)
+                    MouStatus = MouIosb.Status;
+                else if (pSignaledObject == &pKbdDevice->Event)
+                    KbdStatus = KbdIosb.Status;
+                else if (pSignaledObject == MasterTimer)
+                {
+                    /* FIXME: where it should go? */
+                    ProcessTimers();
+                }
+                else ASSERT(FALSE);
             }
+        }
+
+        /* Have we successed reading from mouse? */
+        if (NT_SUCCESS(MouStatus) && MouStatus != STATUS_PENDING)
+        {
             TRACE("MouseEvent\n");
+
+            /* Set LastInputTick */
             IntLastInputTick(TRUE);
 
+            /* Process data */
             UserEnterExclusive();
-
-            UserProcessMouseInput(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
-
+            UserProcessMouseInput(&MouseInput, MouIosb.Information / sizeof(MOUSE_INPUT_DATA));
             UserLeave();
         }
-        TRACE("Mouse Input Thread Stopped...\n");
-    }
-}
+        else if (MouStatus != STATUS_PENDING)
+            ERR("Failed to read from mouse: %x.\n", MouStatus);
 
-VOID NTAPI
-KeyboardThreadMain(PVOID StartContext)
-{
-    UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
-    OBJECT_ATTRIBUTES KeyboardObjectAttributes;
-    IO_STATUS_BLOCK Iosb;
-    NTSTATUS Status;
-
-    InitializeObjectAttributes(&KeyboardObjectAttributes,
-                               &KeyboardDeviceName,
-                               0,
-                               NULL,
-                               NULL);
-    do
-    {
-        LARGE_INTEGER DueTime;
-        KEVENT Event;
-        DueTime.QuadPart = (LONGLONG)(-100000000);
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
-        Status = ZwOpenFile(&ghKeyboardDevice,
-                            FILE_READ_ACCESS,//FILE_ALL_ACCESS,
-                            &KeyboardObjectAttributes,
-                            &Iosb,
-                            0,
-                            FILE_SYNCHRONOUS_IO_ALERT);
-    } while (!NT_SUCCESS(Status));
-
-    UserInitKeyboard(ghKeyboardDevice);
-
-    ptiKeyboard = PsGetCurrentThreadWin32Thread();
-    ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
-    TRACE("Keyboard Thread 0x%x \n", ptiKeyboard);
-
-    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
-                        LOW_REALTIME_PRIORITY + 3);
-
-    for (;;)
-    {
-        /*
-         * Wait to start input.
-         */
-        TRACE("Keyboard Input Thread Waiting for start event\n");
-        Status = KeWaitForSingleObject(&InputThreadsStart,
-                                       0,
-                                       KernelMode,
-                                       TRUE,
-                                       NULL);
-
-        TRACE("Keyboard Input Thread Starting...\n");
-        /*
-         * Receive and process keyboard input.
-         */
-        while (InputThreadsRunning)
+        /* Have we successed reading from keyboard? */
+        if (NT_SUCCESS(KbdStatus) && KbdStatus != STATUS_PENDING)
         {
-            KEYBOARD_INPUT_DATA KeyInput;
-
-            TRACE("KeyInput @ %08x\n", &KeyInput);
-
-            Status = ZwReadFile (ghKeyboardDevice,
-                                 NULL,
-                                 NULL,
-                                 NULL,
-                                 &Iosb,
-                                 &KeyInput,
-                                 sizeof(KEYBOARD_INPUT_DATA),
-                                 NULL,
-                                 NULL);
-
-            if (Status == STATUS_ALERTED && !InputThreadsRunning)
-            {
-                break;
-            }
-            if (Status == STATUS_PENDING)
-            {
-                NtWaitForSingleObject(ghKeyboardDevice, FALSE, NULL);
-                Status = Iosb.Status;
-            }
-            if (!NT_SUCCESS(Status))
-            {
-                ERR("Win32K: Failed to read from keyboard.\n");
-                return; //(Status);
-            }
-
-            TRACE("KeyRaw: %s %04x\n",
+            TRACE("KeyboardEvent: %s %04x\n",
                   (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
-                  KeyInput.MakeCode );
-
-            if (Status == STATUS_ALERTED && !InputThreadsRunning)
-                break;
-
-            if (!NT_SUCCESS(Status))
-            {
-                ERR("Win32K: Failed to read from keyboard.\n");
-                return; //(Status);
-            }
+                  KeyInput.MakeCode);
 
             /* Set LastInputTick */
             IntLastInputTick(TRUE);
@@ -291,68 +290,18 @@ KeyboardThreadMain(PVOID StartContext)
             UserProcessKeyboardInput(&KeyInput);
             UserLeave();
         }
-
-        TRACE("KeyboardInput Thread Stopped...\n");
-    }
-}
-
-
-static PVOID Objects[2];
-/*
-    Raw Input Thread.
-    Since this relies on InputThreadsStart, just fake it.
- */
-static VOID APIENTRY
-RawInputThreadMain(PVOID StartContext)
-{
-    NTSTATUS Status;
-    LARGE_INTEGER DueTime;
-
-    DueTime.QuadPart = (LONGLONG)(-10000000);
-
-    do
-    {
-        KEVENT Event;
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
-    } while (!NT_SUCCESS(Status));
-
-    Objects[0] = &InputThreadsStart;
-    Objects[1] = MasterTimer;
-
-    ptiRawInput = PsGetCurrentThreadWin32Thread();
-    ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
-    TRACE("Raw Input Thread 0x%x \n", ptiRawInput);
-
-    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
-                        LOW_REALTIME_PRIORITY + 3);
-
-    UserEnterExclusive();
-    StartTheTimers();
-    UserLeave();
-
-    //
-    // ATM, we just have one job to handle, merge the other two later.
-    //
-    for(;;)
-    {
-        TRACE("Raw Input Thread Waiting for start event\n");
-
-        Status = KeWaitForMultipleObjects( 2,
-                                           Objects,
-                                           WaitAll, //WaitAny,
-                                           WrUserRequest,
-                                           KernelMode,
-                                           TRUE,
-                                           NULL,
-                                           NULL);
-        TRACE("Raw Input Thread Starting...\n");
-
-        ProcessTimers();
+        else if (KbdStatus != STATUS_PENDING)
+            ERR("Failed to read from keyboard: %x.\n", KbdStatus);
     }
     ERR("Raw Input Thread Exit!\n");
 }
 
+/*
+ * CreateSystemThreads
+ *
+ * Called form dedicated thread in CSRSS. RIT is started in context of this
+ * thread because it needs valid Win32 process with TEB initialized
+ */
 DWORD NTAPI
 CreateSystemThreads(UINT Type)
 {
@@ -360,9 +309,7 @@ CreateSystemThreads(UINT Type)
 
     switch (Type)
     {
-        case 0: KeyboardThreadMain(NULL); break;
-        case 1: MouseThreadMain(NULL); break;
-        case 2: RawInputThreadMain(NULL); break;
+        case 0: RawInputThreadMain(); break;
         default: ERR("Wrong type: %x\n", Type);
     }
 
@@ -371,38 +318,43 @@ CreateSystemThreads(UINT Type)
     return 0;
 }
 
+/*
+ * InitInputImpl
+ *
+ * Inits input implementation
+ */
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitInputImpl(VOID)
 {
-    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
-
     MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), USERTAG_SYSTEM);
     if (!MasterTimer)
     {
-        ERR("Win32K: Failed making Raw Input thread a win32 thread.\n");
+        ERR("Failed to allocate memory\n");
         ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
     KeInitializeTimer(MasterTimer);
 
     /* Initialize the default keyboard layout */
-    if(!UserInitDefaultKeyboardLayout())
+    if (!UserInitDefaultKeyboardLayout())
     {
         ERR("Failed to initialize default keyboard layout!\n");
     }
 
-    InputThreadsRunning = TRUE;
-    KeSetEvent(&InputThreadsStart, IO_NO_INCREMENT, FALSE);
-
     return STATUS_SUCCESS;
 }
 
+/*
+ * CleanupInputImp
+ *
+ * Cleans input implementation
+ */
 NTSTATUS FASTCALL
 CleanupInputImp(VOID)
 {
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 BOOL FASTCALL
@@ -517,6 +469,11 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
     return TRUE;
 }
 
+/*
+ * NtUserSendInput
+ *
+ * Generates input events from software
+ */
 UINT
 APIENTRY
 NtUserSendInput(
