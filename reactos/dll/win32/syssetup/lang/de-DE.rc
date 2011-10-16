@@ -69,7 +69,7 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben sie einen Computernamen ein (maximal 15 Zeichen). Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
+    LTEXT "Bitte geben Sie einen Computernamen ein (maximal 15 Zeichen). Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
@@ -171,14 +171,14 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Anerkennungen"
     IDS_ACKSUBTITLE      "Das Fundament, auf dem ReactOS gebaut ist, und Lizenzinformationen"
-    IDS_OWNERTITLE       "Personalisieren Sie ihre Software"
+    IDS_OWNERTITLE       "Personalisieren Sie Ihre Software"
     IDS_OWNERSUBTITLE    "Das Setup nutzt diese Informationen über Sie, um ReactOS zu personalisieren."
     IDS_COMPUTERTITLE    "Computername und Administratorpasswort"
-    IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für ihren Computer festlegen."
+    IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für Ihren Computer festlegen."
     IDS_LOCALETITLE      "Regionale Einstellungen"
     IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
     IDS_DATETIMETITLE    "Datum und Uhrzeit"
-    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für ihren Computer."
+    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für Ihren Computer."
     IDS_PROCESSTITLE     "Registriere Komponenten"
     IDS_PROCESSSUBTITLE  "Bitte warten..."
 END

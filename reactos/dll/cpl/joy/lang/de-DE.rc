@@ -25,7 +25,7 @@ CAPTION "Spielcontroller hinzufügen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Wählen Sie einen Spielcontroller aus der Liste und klicken Sie auf OK. Wenn ihr Spielcontroller nicht in der Liste erscheint, klicken Sie auf Benutzerdefiniert.", -1, 35, 7, 210, 33
+    LTEXT "Wählen Sie einen Spielcontroller aus der Liste und klicken Sie auf OK. Wenn Ihr Spielcontroller nicht in der Liste erscheint, klicken Sie auf Benutzerdefiniert.", -1, 35, 7, 210, 33
     LTEXT "&Spielcontroller:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Ruder und Pedale aktivieren", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 105, 10, WS_GROUP

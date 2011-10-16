@@ -369,7 +369,7 @@ STRINGTABLE
     IDS_SYSTEMFOLDERS       "System Ordner"
     IDS_LOCALHARDRIVES      "Lokale Festplatten"
     IDS_FILENOTFOUND        "Datei nicht gefunden"
-    IDS_VERIFYFILE          "Bitte überprüfen sie, ob der korrekte Dateiname angegeben wurde"
+    IDS_VERIFYFILE          "Bitte überprüfen Sie, ob der korrekte Dateiname angegeben wurde"
     IDS_CREATEFILE          "Die Datei existiert nicht.\nWollen Sie sie neu anlegen?"
     IDS_OVERWRITEFILE       "Die Datei existiert bereits.\nWollen Sie sie überschreiben?"
     IDS_INVALID_FILENAME_TITLE "Unzulässige Zeichen im Pfad"
@@ -393,7 +393,7 @@ STRINGTABLE
 
     PD32_VALUE_UREADABLE                  "Unlesbarer Eintrag"
     PD32_INVALID_PAGE_RANGE "Dieser Wert liegt nicht auf der Seite.\n\
-Bitte geben sie einen Wert zwischen %d und %d an."
+Bitte geben Sie einen Wert zwischen %d und %d an."
     PD32_FROM_NOT_ABOVE_TO                "Der 'von' Eintrag kann nicht größer sein als der 'bis' Eintrag."
     PD32_MARGINS_OVERLAP                  "Die Ränder überlappen oder sind außerhalb des Papiers.\nBitte die Ränder neu eingeben."
     PD32_NR_OF_COPIES_EMPTY               "Es muss ein Wert bei der Anzahl der Kopien angegeben werden."
