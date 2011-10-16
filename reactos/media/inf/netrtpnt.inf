@@ -53,3 +53,9 @@ ReactOS = "ReactOS Team"
 
 RealtekMfg = "Realtek Semiconductor Co., Ltd."
 PCI\VEN_10EC&DEV_8029.DeviceDesc = "RTL-8029(AS)"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"

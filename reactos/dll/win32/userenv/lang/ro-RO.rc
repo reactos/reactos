@@ -1,0 +1,37 @@
+/* 
+ * FILE:             dll/win32/userenv/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG:       2011-10-11  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Documente și preferințe"
+    IDS_APPDATA        "Date aplicații"
+    IDS_DESKTOP        "Birou"
+    IDS_FAVORITES      "Favorite"
+    IDS_STARTMENU      "Meniul pornire"
+    IDS_PROGRAMS       "Meniul pornire\\Programe"
+    IDS_ADMINTOOLS     "Meniul pornire\\Programe\\Administrative"
+    IDS_STARTUP        "Meniul pornire\\Programe\\Autolansate"
+    IDS_MYDOCUMENTS    "Documente"
+    IDS_MYPICTURES     "Documente\\Imagini"
+    IDS_MYMUSIC        "Documente\\Audio"
+    IDS_MYVIDEOS       "Documente\\Video"
+    IDS_TEMPLATES      "Șabloane"
+    IDS_RECENT         "Recente"
+    IDS_SENDTO         "Trimitere"
+    IDS_PRINTHOOD      "Imprimante"
+    IDS_NETHOOD        "Rețele"
+    IDS_LOCALSETTINGS  "Preferințe locale"
+    IDS_LOCALAPPDATA   "Preferințe locale\\Date aplicații"
+    IDS_TEMP           "Preferințe locale\\Temp"
+    IDS_CACHE          "Preferințe locale\\Fișiere de Internet temporare"
+    IDS_HISTORY        "Preferințe locale\\Istoric"
+    IDS_COOKIES        "Cookies"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Fișiere program"
+    IDS_COMMONFILES    "Fișiere comune"
+END

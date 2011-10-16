@@ -66,3 +66,9 @@ HKR,"Parameters","EnableSecurityFilters",0x00010001,0x00000000
 
 [Strings]
 ReactOS = "ReactOS Team"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
