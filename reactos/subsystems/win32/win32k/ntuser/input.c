@@ -92,7 +92,7 @@ DoTheScreenSaver(VOID)
  * Opens input device for asynchronous access
  */
 static
-NTAPI NTSTATUS
+NTSTATUS NTAPI
 OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceName)
 {
     UNICODE_STRING DeviceName;
