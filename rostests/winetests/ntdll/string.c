@@ -1165,7 +1165,7 @@ static void test_wcslwrupr(void)
     ok(p_wcsupr((LPWSTR)constemptyW) == constemptyW, "p_wcsupr returned different string\n");
 }
 
-static __cdecl int intcomparefunc(const void *a, const void *b)
+static int __cdecl intcomparefunc(const void *a, const void *b)
 {
     const int *p = a, *q = b;
 
@@ -1174,7 +1174,7 @@ static __cdecl int intcomparefunc(const void *a, const void *b)
     return *p - *q;
 }
 
-static __cdecl int charcomparefunc(const void *a, const void *b)
+static int __cdecl charcomparefunc(const void *a, const void *b)
 {
     const char *p = a, *q = b;
 
@@ -1183,7 +1183,7 @@ static __cdecl int charcomparefunc(const void *a, const void *b)
     return *p - *q;
 }
 
-static __cdecl int strcomparefunc(const void *a, const void *b)
+static int __cdecl strcomparefunc(const void *a, const void *b)
 {
     const char * const *p = a;
     const char * const *q = b;
