@@ -79,48 +79,58 @@ WINAPI
 ConvertThreadToFiberEx(LPVOID lpParameter, 
                        DWORD dwFlags)
 {
-    PTEB pTeb = NtCurrentTeb();
-    PFIBER pfCurFiber;
+    PTEB Teb;
+    PFIBER Fiber;
     DPRINT1("Converting Thread to Fiber\n");
 
-    /* the current thread is already a fiber */
-    if(pTeb->HasFiberData && pTeb->NtTib.FiberData) return pTeb->NtTib.FiberData;
+    /* Check for invalid flags */
+    if (dwFlags &~ FIBER_FLAG_FLOAT_SWITCH)
+    {
+        /* Fail */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-    /* allocate the fiber */
-    pfCurFiber = (PFIBER)RtlAllocateHeap(GetProcessHeap(), 
-                                         0,
-                                         sizeof(FIBER));
+    /* Are we already a fiber? */
+    Teb = NtCurrentTeb();
+    if (Teb->HasFiberData)
+    {
+        /* Fail */
+        SetLastError(ERROR_ALREADY_FIBER);
+        return NULL;
+    }
 
-    /* failure */
-    if (pfCurFiber == NULL)
+    /* Allocate the fiber */
+    Fiber = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(FIBER));
+    if (!Fiber)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 
-    /* copy some contextual data from the thread to the fiber */
-    pfCurFiber->Parameter = lpParameter;
-    pfCurFiber->ExceptionList = pTeb->NtTib.ExceptionList;
-    pfCurFiber->StackBase = pTeb->NtTib.StackBase;
-    pfCurFiber->StackLimit = pTeb->NtTib.StackLimit;
-    pfCurFiber->DeallocationStack = pTeb->DeallocationStack;
-    pfCurFiber->FlsData = pTeb->FlsData;
-    pfCurFiber->GuaranteedStackBytes = pTeb->GuaranteedStackBytes;
-    pfCurFiber->ActivationContextStack = pTeb->ActivationContextStackPointer;
-    pfCurFiber->Context.ContextFlags = CONTEXT_FULL;
+    /* Copy some contextual data from the thread to the fiber */
+    Fiber->Parameter = lpParameter;
+    Fiber->ExceptionList = Teb->NtTib.ExceptionList;
+    Fiber->StackBase = Teb->NtTib.StackBase;
+    Fiber->StackLimit = Teb->NtTib.StackLimit;
+    Fiber->DeallocationStack = Teb->DeallocationStack;
+    Fiber->FlsData = Teb->FlsData;
+    Fiber->GuaranteedStackBytes = Teb->GuaranteedStackBytes;
+    Fiber->ActivationContextStack = Teb->ActivationContextStackPointer;
+    Fiber->Context.ContextFlags = CONTEXT_FULL;
 
-    /* Save FPU State if requsted */
+    /* Save FPU State if requested */
     if (dwFlags & FIBER_FLAG_FLOAT_SWITCH)
     {
-        pfCurFiber->Context.ContextFlags |= CONTEXT_FLOATING_POINT;
+        Fiber->Context.ContextFlags |= CONTEXT_FLOATING_POINT;
     }
 
-    /* associate the fiber to the current thread */
-    pTeb->NtTib.FiberData = pfCurFiber;
-    pTeb->HasFiberData = TRUE;
+    /* Associate the fiber to the current thread */
+    Teb->NtTib.FiberData = Fiber;
+    Teb->HasFiberData = TRUE;
 
-    /* success */
-    return (LPVOID)pfCurFiber;
+    /* Return opaque fiber data */
+    return (LPVOID)Fiber;
 }
 
 /*
