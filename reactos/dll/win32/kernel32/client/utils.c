@@ -25,6 +25,34 @@ PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID
+NTAPI
+BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
+                       IN PVOID Context,
+                       OUT BOOLEAN *StopEnumeration)
+{
+    /* Make sure we get Entry, Context and valid StopEnumeration pointer */
+    ASSERT(Entry);
+    ASSERT(Context);
+    ASSERT(StopEnumeration);
+
+    /* If entry is already found - signal to stop */
+    if (BasepExeLdrEntry)
+    {
+        *StopEnumeration = TRUE;
+        return;
+    }
+
+    /* Otherwise keep enumerating until we find a match */
+    if (Entry->DllBase == Context)
+    {
+        /* It matches, so remember the ldr entry */
+        BasepExeLdrEntry = Entry;
+
+        /* And stop enumeration */
+        *StopEnumeration = TRUE;
+    }
+}
 
 /*
  * Converts an ANSI or OEM String to the TEB StaticUnicodeString

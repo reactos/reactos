@@ -374,37 +374,6 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
     }
 }
 
-VOID
-NTAPI
-BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
-                       IN PVOID Context,
-                       OUT BOOLEAN *StopEnumeration)
-{
-    /* Make sure we get Entry, Context and valid StopEnumeration pointer */
-    ASSERT(Entry);
-    ASSERT(Context);
-    ASSERT(StopEnumeration);
-
-    /* If entry is already found - signal to stop */
-    if (BasepExeLdrEntry)
-    {
-        /* Signal to stop enumeration and return */
-        *StopEnumeration = TRUE;
-        return;
-    }
-
-    /* We don't have a exe ldr entry, so try to see if this one is ours
-       by matching base address */
-    if (Entry->DllBase == Context)
-    {
-        /* It matches, so remember the ldr entry */
-        BasepExeLdrEntry = Entry;
-
-        /* And stop enumeration */
-        *StopEnumeration = TRUE;
-    }
-}
-
 LPWSTR
 WINAPI
 BasepGetProcessPath(DWORD Reserved,

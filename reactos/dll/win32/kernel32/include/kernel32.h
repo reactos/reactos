@@ -80,6 +80,20 @@ typedef struct _CODEPAGE_ENTRY
    CPTABLEINFO CodePageTable;
 } CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
 
+typedef struct tagLOADPARMS32 {
+  LPSTR lpEnvAddress;
+  LPSTR lpCmdLine;
+  WORD  wMagicValue;
+  WORD  wCmdShow;
+  DWORD dwReserved;
+} LOADPARMS32;
+
+
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
+
+
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 typedef
@@ -87,6 +101,10 @@ DWORD
 (*WaitForInputIdleType)(
     HANDLE hProcess,
     DWORD dwMilliseconds);
+
+
+extern BOOLEAN InWindows;
+extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
 
 /* GLOBAL VARIABLES **********************************************************/
 
@@ -259,4 +277,10 @@ DuplicateConsoleHandle(HANDLE hConsole,
                        DWORD dwDesiredAccess,
                        BOOL	bInheritHandle,
                        DWORD dwOptions);
+
+VOID
+NTAPI
+BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
+                       IN PVOID Context,
+                       OUT BOOLEAN *StopEnumeration);
 

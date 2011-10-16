@@ -11,27 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct tagLOADPARMS32 {
-  LPSTR lpEnvAddress;
-  LPSTR lpCmdLine;
-  WORD  wMagicValue;
-  WORD  wCmdShow;
-  DWORD dwReserved;
-} LOADPARMS32;
-
-extern BOOLEAN InWindows;
-extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
-
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
-
-VOID
-NTAPI
-BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
-                       IN PVOID Context,
-                       OUT BOOLEAN *StopEnumeration);
-
 /* FUNCTIONS ****************************************************************/
 
 DWORD
