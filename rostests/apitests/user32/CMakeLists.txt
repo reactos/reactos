@@ -16,6 +16,7 @@ list(APPEND SOURCE
     ScrollWindowEx.c
     SetCursorPos.c
     SetActiveWindow.c
+    SystemParametersInfo.c
     TrackMouseEvent.c
     WndProc.c
     testlist.c

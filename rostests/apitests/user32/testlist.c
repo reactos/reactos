@@ -16,6 +16,7 @@ extern void func_DeferWindowPos(void);
 extern void func_GetKeyState(void);
 extern void func_SetCursorPos(void);
 extern void func_SetActiveWindow(void);
+extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
 extern void func_WndProc(void);
 
@@ -32,6 +33,7 @@ const struct test winetest_testlist[] =
     { "GetKeyState", func_GetKeyState },
     { "SetCursorPos", func_SetCursorPos },
     { "SetActiveWindow", func_SetActiveWindow },
+    { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },
     { 0, 0 }

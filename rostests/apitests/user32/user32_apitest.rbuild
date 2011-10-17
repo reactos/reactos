@@ -22,6 +22,7 @@
 	<file>DeferWindowPos.c</file>
 	<file>SetActiveWindow.c</file>
 	<file>SetCursorPos.c</file>
+	<file>SystemParametersInfo.c</file>
 	<file>TrackMouseEvent.c</file>
 	<file>WndProc.c</file>
 

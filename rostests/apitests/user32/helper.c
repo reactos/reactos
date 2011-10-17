@@ -45,6 +45,9 @@ static char* get_msg_name(UINT msg)
         case WM_SYSTIMER: return "WM_SYSTIMER";
         case WM_GETMINMAXINFO: return "WM_GETMINMAXINFO";
         case WM_NCCALCSIZE: return "WM_NCCALCSIZE";
+        case WM_SETTINGCHANGE: return "WM_SETTINGCHANGE";
+        case WM_GETICON: return "WM_GETICON";
+        case WM_SETICON: return "WM_SETICON";
         default: return NULL;
     }
 }
