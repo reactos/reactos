@@ -206,7 +206,7 @@
 /* #undef HAVE_GETDIRENTRIES */
 
 /* Define to 1 if you have the `getnameinfo' function. */
-#define HAVE_GETNAMEINFO 1
+/* #undef HAVE_GETNAMEINFO */
 
 /* Define to 1 if you have the `getnetbyname' function. */
 /* #undef HAVE_GETNETBYNAME */
@@ -224,7 +224,7 @@
 #define HAVE_GETPROTOBYNAME 1
 
 /* Define to 1 if you have the `getprotobynumber' function. */
-#define HAVE_GETPROTOBYNUMBER `
+#define HAVE_GETPROTOBYNUMBER 1
 
 /* Define to 1 if you have the `getpwuid' function. */
 /* #undef HAVE_GETPWUID */
