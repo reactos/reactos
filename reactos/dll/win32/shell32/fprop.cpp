@@ -246,6 +246,15 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR *filext)
 
     /* file extension type */
     value[MAX_PATH - 1] = L'\0';
+    lvalue = wcslen(value);
+    lname = wcslen(filext);
+    if (MAX_PATH - lvalue - lname - 3 > 0)
+    {
+        wcscat(value, L" (");
+        wcscat(value, filext);
+        wcscat(value, L")");
+    }
+
     SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)value);
 
     return TRUE;
