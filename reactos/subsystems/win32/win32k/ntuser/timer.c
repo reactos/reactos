@@ -187,7 +187,7 @@ IntSetTimer( PWND Window,
   PTIMER pTmr;
   UINT Ret = IDEvent;
   LARGE_INTEGER DueTime;
-  DueTime.QuadPart = (LONGLONG)(-10000); // 1024hz .9765625 ms set to 1.1 ms
+  DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 
 #if 0
   /* Windows NT/2k/XP behaviour */
@@ -209,7 +209,7 @@ IntSetTimer( PWND Window,
   if (Elapse < 10)
   {
      TRACE("Adjusting uElapse\n");
-     Elapse = 10;
+     Elapse = 10; // 1024hz .9765625 ms, set to 10.0 ms (+/-)1 ms
   }
 
   /* Passing an IDEvent of 0 and the SetTimer returns 1.
@@ -448,7 +448,7 @@ ProcessTimers(VOID)
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
-  DueTime.QuadPart = (LONGLONG)(-10000); // 1024hz .9765625 ms set to 1.1 ms
+  DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 
   while(pLE != &TimersListHead)
   {
