@@ -221,11 +221,10 @@ NTSTATUS ICMPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
-    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, ICMPSendPacketComplete, NULL )))
-    {
-        FreeNdisPacket(Packet.NdisPacket);
+    Status = IPSendDatagram(&Packet, NCE);
+    FreeNdisPacket(Packet.NdisPacket);
+    if (!NT_SUCCESS(Status))
         return Status;
-    }
     
     *DataUsed = DataSize;
 
@@ -312,11 +311,8 @@ VOID ICMPTransmit(
     /* Get a route to the destination address */
     if ((NCE = RouteGetRouteToDestination(&IPPacket->DstAddr))) {
         /* Send the packet */
-	Status = IPSendDatagram(IPPacket, NCE, Complete, Context);
-	if (!NT_SUCCESS(Status))
-	{
-		Complete(Context, IPPacket->NdisPacket, Status);
-	}
+	Status = IPSendDatagram(IPPacket, NCE);
+	Complete(Context, IPPacket->NdisPacket, Status);
     } else {
         /* No route to destination (or no free resources) */
         TI_DbgPrint(DEBUG_ICMP, ("No route to destination address 0x%X.\n",

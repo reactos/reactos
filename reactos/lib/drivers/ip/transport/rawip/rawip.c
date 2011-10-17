@@ -167,11 +167,6 @@ NTSTATUS BuildRawIpPacket(
     return STATUS_SUCCESS;
 }
 
-VOID RawIpSendPacketComplete
-( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
-    FreeNdisPacket( Packet );
-}
-
 NTSTATUS RawIPSendDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -256,11 +251,10 @@ NTSTATUS RawIPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
-    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL )))
-    {
-        FreeNdisPacket(Packet.NdisPacket);
+    Status = IPSendDatagram(&Packet, NCE);
+    FreeNdisPacket(Packet.NdisPacket);
+    if (!NT_SUCCESS(Status))
         return Status;
-    }
     
     *DataUsed = DataSize;
 

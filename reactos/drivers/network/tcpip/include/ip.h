@@ -197,8 +197,7 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 #define IPPROTO_UDP     17  /* User Datagram Protocol */
 
 /* Timeout timer constants */
-#define IP_TICKS_SECOND 2                   /* Two ticks per second */
-#define IP_TIMEOUT (1000 / IP_TICKS_SECOND) /* Timeout in milliseconds */
+#define IP_TIMEOUT 1000 /* Timeout in milliseconds */
 #define IP_DEFAULT_LINK_SPEED  10000
 
 extern LIST_ENTRY InterfaceListHead;

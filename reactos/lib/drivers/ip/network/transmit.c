@@ -132,9 +132,7 @@ BOOLEAN PrepareNextFragment(
 NTSTATUS SendFragments(
     PIP_PACKET IPPacket,
     PNEIGHBOR_CACHE_ENTRY NCE,
-    UINT PathMTU,
-    PIP_TRANSMIT_COMPLETE Complete,
-    PVOID Context)
+    UINT PathMTU)
 /*
  * FUNCTION: Fragments and sends the first fragment of an IP datagram
  * ARGUMENTS:
@@ -214,13 +212,10 @@ NTSTATUS SendFragments(
     FreeNdisPacket(IFC->NdisPacket);
     ExFreePoolWithTag(IFC, IFC_TAG);
 
-    Complete(Context, IPPacket->NdisPacket, NdisStatus);
-
     return NdisStatus;
 }
 
-NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
-			PIP_TRANSMIT_COMPLETE Complete, PVOID Context)
+NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE)
 /*
  * FUNCTION: Sends an IP datagram to a remote address
  * ARGUMENTS:
@@ -252,8 +247,7 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
 
     NCE->Interface->Stats.OutBytes += PacketSize;
 
-    return SendFragments(IPPacket, NCE, NCE->Interface->MTU,
-			 Complete, Context);
+    return SendFragments(IPPacket, NCE, NCE->Interface->MTU);
 }
 
 /* EOF */

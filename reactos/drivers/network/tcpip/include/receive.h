@@ -9,8 +9,8 @@
 
 #include <ip.h>
 
-/* Number of timeout ticks before destroying the IPDR */
-#define MAX_TIMEOUT_COUNT 10
+/* Number of seconds before destroying the IPDR */
+#define MAX_TIMEOUT_COUNT 5
 
 /* IP datagram fragment descriptor. Used to store IP datagram fragments */
 typedef struct IP_FRAGMENT {

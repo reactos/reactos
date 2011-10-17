@@ -7,11 +7,6 @@
 #include "lwip/api.h"
 #include "lwip/tcpip.h"
 
-void TCPPacketSendComplete(PVOID Context, PNDIS_PACKET NdisPacket, NDIS_STATUS NdisStatus)
-{
-    FreeNdisPacket(NdisPacket);
-}
-
 err_t
 TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
 {
@@ -64,10 +59,11 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
     
-    if (!NT_SUCCESS(IPSendDatagram(&Packet, NCE, TCPPacketSendComplete, NULL)))
+    NdisStatus = IPSendDatagram(&Packet, NCE);
+    FreeNdisPacket(Packet.NdisPacket);
+    if (!NT_SUCCESS(NdisStatus))
     {
-        FreeNdisPacket(Packet.NdisPacket);
-        return ERR_IF;
+        return ERR_RTE;
     }
     
     return 0;

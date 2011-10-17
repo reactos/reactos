@@ -143,11 +143,6 @@ NTSTATUS BuildUDPPacket(
     return STATUS_SUCCESS;
 }
 
-VOID UDPSendPacketComplete
-( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
-    FreeNdisPacket( Packet );
-}
-
 NTSTATUS UDPSendDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -229,11 +224,10 @@ NTSTATUS UDPSendDatagram(
     if( !NT_SUCCESS(Status) )
 		return Status;
 
-    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL )))
-    {
-        FreeNdisPacket(Packet.NdisPacket);
+    Status = IPSendDatagram(&Packet, NCE);
+    FreeNdisPacket(Packet.NdisPacket);
+    if (!NT_SUCCESS(Status))
         return Status;
-    }
     
     *DataUsed = DataSize;
 

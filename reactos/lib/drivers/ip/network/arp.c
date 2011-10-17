@@ -229,7 +229,7 @@ VOID ARPReceive(
            may want to communicate with us soon, so add his address
            to our address cache */
         NCE = NBAddNeighbor(Interface, &SrcAddress, SenderHWAddress,
-            Header->HWAddrLen, 0, ARP_TIMEOUT);
+            Header->HWAddrLen, 0, ARP_COMPLETE_TIMEOUT);
     }
 
     if (Header->Opcode != ARP_OPCODE_REQUEST)
