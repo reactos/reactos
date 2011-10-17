@@ -634,7 +634,7 @@ void    MMDRV_Exit(void)
     }
 
     /* unload driver, in reverse order of loading */
-    i = sizeof(MMDrvs) / sizeof(MMDrvs[0]);
+    i = MMDrvsHi - 1;
     while (i-- > 0)
     {
         MMDRV_ExitPerType(&MMDrvs[i], MMDRV_AUX);
