@@ -20,7 +20,7 @@
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell1);
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
