@@ -197,7 +197,7 @@
 /* #undef HAVE_FUTIMESAT */
 
 /* Define to 1 if you have the `getaddrinfo' function. */
-#define HAVE_GETADDRINFO 1
+/* #undef HAVE_GETADDRINFO */
 
 /* Define to 1 if you have the `getattrlist' function. */
 /* #undef HAVE_GETATTRLIST */
