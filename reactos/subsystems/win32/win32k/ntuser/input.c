@@ -245,7 +245,6 @@ RawInputThreadMain()
                     KbdStatus = KbdIosb.Status;
                 else if (pSignaledObject == MasterTimer)
                 {
-                    /* FIXME: where it should go? */
                     ProcessTimers();
                 }
                 else ASSERT(FALSE);
