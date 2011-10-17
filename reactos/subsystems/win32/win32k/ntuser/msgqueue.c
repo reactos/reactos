@@ -16,6 +16,7 @@ DBG_DEFAULT_CHANNEL(UserMsgQ);
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
 MOUSEMOVEPOINT MouseHistoryOfMoves[64];
 INT gcur_count = 0;
+PUSER_MESSAGE_QUEUE gpqCursor;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -533,27 +534,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        if (pwnd) Msg->hwnd = pwnd->head.h;
    }
 
-   if (pwnd)
-   {
-      /* If we a re tracking the mouse and it moves to another top level window */
-      PWND pwndTrack = IntChildrenWindowFromPoint(pwnd, Msg->pt.x, Msg->pt.y);
-
-      if ( pDesk->spwndTrack != pwndTrack && pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) )
-      {
-         if ( pDesk->dwDTFlags & DF_TME_LEAVE )
-            UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
-                            (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
-                             0, 0);
-
-         if ( pDesk->dwDTFlags & DF_TME_HOVER )
-            IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
-
-         pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
-      }
-      pDesk->spwndTrack = pwndTrack;
-      pDesk->htEx = GetNCHitEx(pDesk->spwndTrack, Msg->pt);
-   }
-
    hdcScreen = IntGetScreenDC();
    CurInfo = IntGetSysCursorInfo();
 
@@ -590,6 +570,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
            /* Update global cursor info */
            CurInfo->ShowingCursor = MessageQueue->ShowingCursor;
            CurInfo->CurrentCursorObject = MessageQueue->CursorObject;
+           gpqCursor = MessageQueue;
 
            /* Mouse move is a special case */
            MsqPostMouseMove(MessageQueue, Msg);
@@ -1248,6 +1229,59 @@ static void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
     }
 }
 
+VOID
+FASTCALL
+IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
+{
+//   PWND pwndTrack = IntChildrenWindowFromPoint(pwndMsg, msg->pt.x, msg->pt.y);
+//   hittest = GetNCHitEx(pwndTrack, msg->pt);
+
+   if ( pDesk->spwndTrack != pwndTrack || // Change with tracking window or
+        msg->message != WM_MOUSEMOVE   || // Mouse click changes or
+        pDesk->htEx != hittest)           // Change in current hit test states.
+   {
+      TRACE("ITMM: Track Mouse Move!\n");
+
+      /* Handle only the changing window track and mouse move across a border. */
+      if ( pDesk->spwndTrack != pwndTrack ||
+          (pDesk->htEx == HTCLIENT) ^ (hittest == HTCLIENT) )
+      {
+         TRACE("ITMM: Another Wnd %d or Across Border %d\n",
+              pDesk->spwndTrack != pwndTrack,(pDesk->htEx == HTCLIENT) ^ (hittest == HTCLIENT));
+
+         if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+            UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
+                            (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
+                             0, 0);
+
+         if ( pDesk->dwDTFlags & DF_TME_HOVER )
+            IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+
+         /* Clear the flags to sign a change. */
+         pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
+      }
+      /* Set the Track window and hit test. */
+      pDesk->spwndTrack = pwndTrack;
+      pDesk->htEx = hittest;
+   }
+
+   /* Reset, Same Track window, Hover set and Mouse Clicks or Clobbered Hover box. */
+   if ( pDesk->spwndTrack == pwndTrack &&
+       ( msg->message != WM_MOUSEMOVE || !RECTL_bPointInRect(&pDesk->rcMouseHover, msg->pt.x, msg->pt.y)) &&
+        pDesk->dwDTFlags & DF_TME_HOVER )
+   {
+      TRACE("ITMM: Reset Hover points!\n");
+      // Restart timer for the hover period.
+      IntSetTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, pDesk->dwMouseHoverTime, SystemTimerProc, TMRF_SYSTEM);
+      // Reset desktop mouse hover from the system default hover rectangle.
+      RECTL_vSetRect(&pDesk->rcMouseHover,
+                      msg->pt.x - gspv.iMouseHoverWidth  / 2,
+                      msg->pt.y - gspv.iMouseHoverHeight / 2,
+                      msg->pt.x + gspv.iMouseHoverWidth  / 2,
+                      msg->pt.y + gspv.iMouseHoverHeight / 2);
+   }
+}
+
 BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT last)
 {
     MSG clk_msg;
@@ -1293,22 +1327,13 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         RETURN(FALSE);
     }
 
-    /* If we a re tracking the mouse and it moves to another window */
-    if ( pDesk->spwndTrack != pwndMsg && pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) &&
-         msg->message != WM_MOUSELEAVE )
+    if ( MessageQueue == gpqCursor ) // Cursor must use the same Queue!
     {
-       if ( pDesk->dwDTFlags & DF_TME_LEAVE )
-          UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
-                          (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
-                           0, 0);
-
-       if ( pDesk->dwDTFlags & DF_TME_HOVER )
-          IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
-
-       pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
-
-       pDesk->spwndTrack = pwndMsg;
-       pDesk->htEx = hittest;
+       IntTrackMouseMove(pwndMsg, pDesk, msg, hittest);
+    }
+    else
+    {
+       ERR("Not the same cursor!\n");
     }
 
     msg->hwnd = UserHMGetHandle(pwndMsg);
