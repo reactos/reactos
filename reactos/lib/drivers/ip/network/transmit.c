@@ -28,30 +28,14 @@ VOID IPSendComplete
  */
 {
     PIPFRAGMENT_CONTEXT IFC = (PIPFRAGMENT_CONTEXT)Context;
-    NTSTATUS Status;
 
     TI_DbgPrint
 	(MAX_TRACE,
 	 ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
 	  Context, NdisPacket, NdisStatus));
-
-    if (NT_SUCCESS(NdisStatus) && PrepareNextFragment(IFC)) {
-	    /* A fragment was prepared for transmission, so send it */
-	    Status = IPSendFragment(IFC->NdisPacket, IFC->NCE, IFC);
-        if (!NT_SUCCESS(Status))
-        {
-            FreeNdisPacket(IFC->NdisPacket);
-            IFC->Complete(IFC->Context, IFC->Datagram, Status);
-            ExFreePoolWithTag(IFC, IFC_TAG);
-        }
-    } else {
-	TI_DbgPrint(MAX_TRACE, ("Calling completion handler.\n"));
-
-	/* There are no more fragments to transmit, so call completion handler */
-	FreeNdisPacket(IFC->NdisPacket);
-	IFC->Complete(IFC->Context, IFC->Datagram, NdisStatus);
-	ExFreePoolWithTag(IFC, IFC_TAG);
-    }
+	  
+	IFC->Status = NdisStatus;
+	KeSetEvent(&IFC->Event, 0, FALSE);
 }
 
 NTSTATUS IPSendFragment(
@@ -202,8 +186,7 @@ NTSTATUS SendFragments(
     IFC->Position     = 0;
     IFC->BytesLeft    = IPPacket->TotalSize - IPPacket->HeaderSize;
     IFC->Data         = (PVOID)((ULONG_PTR)IFC->Header + IPPacket->HeaderSize);
-    IFC->Complete     = Complete;
-    IFC->Context      = Context;
+    KeInitializeEvent(&IFC->Event, NotificationEvent, FALSE);
 
     TI_DbgPrint(MID_TRACE,("Copying header from %x to %x (%d)\n",
 			   IPPacket->Header, IFC->Header,
@@ -211,19 +194,27 @@ NTSTATUS SendFragments(
 
     RtlCopyMemory( IFC->Header, IPPacket->Header, IPPacket->HeaderSize );
 
-    /* Prepare next fragment for transmission and send it */
-
-    if (!PrepareNextFragment(IFC)) {
-        FreeNdisPacket(IFC->NdisPacket);
-        ExFreePoolWithTag(IFC, IFC_TAG);
-        return NDIS_STATUS_FAILURE;
-    }
-
-    if (!NT_SUCCESS((NdisStatus = IPSendFragment(IFC->NdisPacket, NCE, IFC))))
+    while (PrepareNextFragment(IFC))
     {
-        FreeNdisPacket(IFC->NdisPacket);
-        ExFreePoolWithTag(IFC, IFC_TAG);
+        NdisStatus = IPSendFragment(IFC->NdisPacket, NCE, IFC);
+        if (NT_SUCCESS(NdisStatus))
+        {
+            KeWaitForSingleObject(&IFC->Event,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+            NdisStatus = IFC->Status;
+        }
+
+        if (!NT_SUCCESS(NdisStatus))
+            break;
     }
+
+    FreeNdisPacket(IFC->NdisPacket);
+    ExFreePoolWithTag(IFC, IFC_TAG);
+
+    Complete(Context, IPPacket->NdisPacket, NdisStatus);
 
     return NdisStatus;
 }
