@@ -20,7 +20,7 @@
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell1);
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
@@ -895,15 +895,16 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
         wFileName[wLength-1] = L'\0';
     }
 
+    if (PathIsRootW(wFileName))
+    {
+        return SH_ShowDriveProperties(wFileName, pidlFolder, apidl);
+    }
+
     if (PathIsDirectoryW(wFileName))
     {
         return SH_ShowFolderProperties(wFileName, pidlFolder, apidl);
     }
 
-    if (wcslen(wFileName) == 3)
-    {
-        return SH_ShowDriveProperties(wFileName, pidlFolder, apidl);
-    }
 
     pFileName = wcsrchr(wFileName, '\\');
 
