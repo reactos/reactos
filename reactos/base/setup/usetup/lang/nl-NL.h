@@ -1,3 +1,11 @@
+/*
+    De gebruikte codepagina is 850.
+    stip    = \x07
+    e-aigu  = \x82
+    e-trema = \x89
+    i-trema = \x8B
+*/
+
 #pragma once
 
 MUI_LAYOUTS nlNLLayouts[] =
@@ -25,7 +33,7 @@ static MUI_ENTRY nlNLLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Kies de taal die U voor de installatie wilt gebruiken.",
+        "\x07  Kies de taal die u voor de installatie wilt gebruiken.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -43,7 +51,7 @@ static MUI_ENTRY nlNLLanguagePageEntries[] =
     {
         0,
         0,
-        "ENTER=Doorgaan  F3=Afsluiten",
+        "ENTER = Doorgaan   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -71,13 +79,13 @@ static MUI_ENTRY nlNLWelcomePageEntries[] =
     {
         6,
         11,
-        "Dit gedeelte van Setup kopieeert het ReactOS besturingssysteem naar",
+        "Dit deel van de installatie kopieert ReactOS naar uw computer",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "uw computer en bereidt het tweede deel van setup voor.",
+        "en bereidt het tweede deel voor.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -95,13 +103,13 @@ static MUI_ENTRY nlNLWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Druk op L om de ReactOS Licensieovereenkomst te bekijken.",
+        "\x07  Druk op L om de ReactOS licentieovereenkomst te bekijken.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Druk op F3 als u Setup wilt afsluiten zonder Reactos te",
+        "\x07  Druk op F3 als u Setup wilt afsluiten zonder ReactOS te",
         TEXT_STYLE_NORMAL
     },
     {
@@ -125,7 +133,7 @@ static MUI_ENTRY nlNLWelcomePageEntries[] =
     {
         0,
         0,
-		"ENTER=Doorgaan  R=Herstellen  L = Licensie  F3=Afsluiten",
+        "ENTER = Doorgaan   R = Herstellen   L = Licentie   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -171,13 +179,13 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         13,
-        "- Setup kan niet meer dan 1 primaire partitie per harde schijf aan.",
+        "\x07  Setup kan niet meer dan 1 primaire partitie per vaste schijf aan.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- Setup kan geen primaire partitie van een schijf verwijderen",
+        "\x07  Setup kan geen primaire partitie van een schijf verwijderen",
         TEXT_STYLE_NORMAL
     },
     {
@@ -189,7 +197,7 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         16,
-        "- Setup kan de eerste uitgebreide partitie van een schijf niet",
+        "\x07  Setup kan de eerste uitgebreide partitie van een schijf niet",
         TEXT_STYLE_NORMAL
     },
     {
@@ -207,13 +215,13 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         19,
-        "- Setup ondersteunt alleen FAT bestandssystemen.",
+        "\x07  Setup ondersteunt alleen FAT bestandssystemen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "- Bestandssysteemcontrole is nog niet geimplementeerd.",
+        "\x07  Bestandssysteemcontrole is nog niet ge\x8Bmplementeerd.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -225,7 +233,7 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         25,
-        "\x07  Druk op F3 als u Setup wilt afsluiten zonder Reactos te",
+        "\x07  Druk op F3 als u Setup wilt afsluiten zonder ReactOS te",
         TEXT_STYLE_NORMAL
     },
     {
@@ -259,7 +267,7 @@ static MUI_ENTRY nlNLLicensePageEntries[] =
     {
         6,
         6,
-        "Licensie:",
+        "Licentie:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -424,13 +432,13 @@ static MUI_ENTRY nlNLDevicePageEntries[] =
     {
         6,
         19,
-        "Selecteer een apparaatinstelling door middel van de pijltjestoetsen",
+        "Selecteer een apparaatinstelling door middel van de pijltjestoetsen.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "Druk daarna op de ENTER toets om de instelling aan te passen",
+        "Druk daarna op de ENTER toets om de instelling aan te passen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -488,13 +496,13 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
     {
         6,
         12,
-        "De herstel functies zijn nog niet geimplementeerd.",
+        "De herstelfuncties zijn nog niet ge\x8Bmplementeerd.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Druk op U om Reactos bij te werken.",
+        "\x07  Druk op U om ReactOS bij te werken.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -518,7 +526,7 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Hoofdscherm  U = Bijwerken  R = Herstelconsole  ENTER = Reboot",
+        "ESC = Hoofdscherm   U = Bijwerken   R = Herstelconsole   ENTER = Reboot",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -539,19 +547,19 @@ static MUI_ENTRY nlNLComputerPageEntries[] =
     {
         6,
         8,
-        "U wilt het te installeren computer type instellen.",
+        "U wilt het te installeren computertype instellen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Selecteer het gewenste computer type met behulp van de",
+        "\x07  Selecteer het gewenste computertype met behulp van de",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   pijltjestoetsen en Druk daarna op ENTER.",
+        "   pijltjestoetsen en druk daarna op ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -563,7 +571,7 @@ static MUI_ENTRY nlNLComputerPageEntries[] =
     {
         8,
         14,
-        "   zonder het computer type te wijzigen.",
+        "   zonder het computertype te wijzigen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -591,25 +599,25 @@ static MUI_ENTRY nlNLFlushPageEntries[] =
     {
         10,
         6,
-        "Het systeem is alle gegegevens naar schijf aan het wegschrijven.",
+        "Het systeem is alle gegegevens naar de schijf aan het wegschrijven.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Dit kan enige minuten duren",
+        "Dit kan enige minuten duren.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Wanneer gereed, zal uw computer automatisch opnieuw opstarten",
+        "Wanneer gereed, zal uw computer automatisch opnieuw opstarten.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Cache wordt geleegd",
+        "Cache wordt geleegd.",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -631,19 +639,19 @@ static MUI_ENTRY nlNLQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS is niet volledig geinstalleerd",
+        "ReactOS is niet volledig ge\x8Bnstalleerd.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Verwijder de floppy disk uit Station A: en",
+        "Verwijder de diskette uit station A: en",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "alle CD-ROMs uit de CD-Stations.",
+        "alle cd-rom's uit de cd-stations.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -655,7 +663,7 @@ static MUI_ENTRY nlNLQuitPageEntries[] =
     {
         0,
         0,
-        "Een ogenblik geduld ...",
+        "Een ogenblik geduld...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -677,31 +685,31 @@ static MUI_ENTRY nlNLDisplayPageEntries[] =
     {
         6,
         8,
-        "U wilt het te installeren beeldscherm type instellen.",
+        "U wilt het te installeren beeldschermtype instellen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Selecteer het gewenste beeldscherm type met behulp van de",
+        "\x07  Selecteer het gewenste beeldschermtype met behulp van de",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   pijltjestoetsen en Druk daarna op ENTER.",
+        "   pijltjestoetsen en druk daarna op ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druk op de ESC toets om naar het vorige scherm te gaan",
+        "\x07  Druk op de ESC toets om naar het vorige scherm te gaan.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   zonder het beeldscherm type te wijzigen.",
+        "   zonder het beeldschermtype te wijzigen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -729,19 +737,19 @@ static MUI_ENTRY nlNLSuccessPageEntries[] =
     {
         10,
         6,
-        "De basisonderdelen van ReactOS zijn succesvol geinstalleerd.",
+        "De basisonderdelen van ReactOS zijn succesvol ge\x8Bnstalleerd.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Verwijder de floppy disk uit Station A: en",
+        "Verwijder de diskette uit station A: en",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "alle CD-ROMs uit de CD-Stations.",
+        "alle cd-rom's uit de cd-stations.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -753,7 +761,7 @@ static MUI_ENTRY nlNLSuccessPageEntries[] =
     {
         0,
         0,
-        "ENTER = Opnieuw op starten",
+        "ENTER = Opnieuw opstarten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -775,7 +783,7 @@ static MUI_ENTRY nlNLBootPageEntries[] =
     {
         6,
         8,
-        "Setup kan de bootloader niet op de harde schijf van uw computer",
+        "Setup kan de bootloader niet op de vaste schijf van uw computer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -787,13 +795,13 @@ static MUI_ENTRY nlNLBootPageEntries[] =
     {
         6,
         13,
-        "Voer een geformatteerde floppy disk in Station A: en",
+        "Voer een geformatteerde diskette in station A: in en",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Druk op ENTER.",
+        "druk op ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -822,7 +830,7 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         6,
         8,
-		"Onderstaande lijst bevat de huidige partities en ongebruikte",
+        "Onderstaande lijst bevat de huidige partities en ongebruikte",
         TEXT_STYLE_NORMAL
     },
     {
@@ -858,7 +866,7 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         0,
         0,
-        "Een ogenblik geduld ...",
+        "Een ogenblik geduld...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -920,19 +928,19 @@ static MUI_ENTRY nlNLInstallDirectoryEntries[] =
     {
         6,
         9,
-        "kies een directory waar ReactOS geinstalleerd moet worden:",
+        "Geef een pad op waar ReactOS ge\x8Bnstalleerd moet worden:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-		"Om de voorgestelde directory te wijzigen: druk op BACKSPACE om",
+        "Om het voorgestelde pad te wijzigen: druk op BACKSPACE om",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "karakters te verwijderen en voer dan de directory in waar u ReactOS",
+        "karakters te verwijderen en voer dan in waar u ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
@@ -966,13 +974,13 @@ static MUI_ENTRY nlNLFileCopyEntries[] =
     {
         0,
         12,
-        "Wacht u terwijl ReactOS Setup bestanden kopieeert naar",
+        "Bezig met het kopi\x89ren van bestanden naar uw ReactOS installatiemap.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         13,
-        "uw ReactOS installatie folder.",
+        "Even geduld alstublieft.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1006,25 +1014,25 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installeert de bootloader",
+        "Setup installeert de bootloader.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Op vaste schijf installeren (MBR en VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Op vaste schijf installeren (enkel VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Installeer de bootloader op een floppy disk.",
+        "Op een diskette installeren.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1058,13 +1066,13 @@ static MUI_ENTRY nlNLkeyboardSettingsEntries[] =
     {
         6,
         8,
-        "U wilt het te installeren toetsenbord type instellen.",
+        "U wilt het te installeren toetsenbordtype instellen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Selecteer het gewenste toetsenbord type met behulp van de",
+        "\x07  Selecteer het gewenste toetsenbordtype met behulp van de",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1082,7 +1090,7 @@ static MUI_ENTRY nlNLkeyboardSettingsEntries[] =
     {
         8,
         14,
-        "   zonder het toetsenbord type te wijzigen.",
+        "   zonder het toetsenbordtype te wijzigen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1122,7 +1130,7 @@ static MUI_ENTRY nlNLLayoutSettingsEntries[] =
     {
         8,
         11,
-        "   pijltjestoetsen en Druk daarna op ENTER.",
+        "   pijltjestoetsen en druk daarna op ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1163,13 +1171,13 @@ static MUI_ENTRY nlNLPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup bereidt uw computer voor op het kopieeren van ReactOS bestanden.",
+        "Setup bereidt uw computer voor op het kopi\x89ren van ReactOS bestanden.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Aanmaken van de lijst van te kopieeren bestanden...",
+        "Aanmaken van de lijst van te kopi\x89ren bestanden...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1239,7 +1247,7 @@ static MUI_ENTRY nlNLDeletePartitionEntries[] =
     {
         6,
         8,
-        "U wilt de partitie verwijderen",
+        "U wilt de partitie verwijderen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1263,7 +1271,7 @@ static MUI_ENTRY nlNLDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Delete Partitie   ESC = Annuleren   F3 = Afsluiten",
+        "D = Verwijder partitie   ESC = Annuleren   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1285,13 +1293,19 @@ static MUI_ENTRY nlNLRegistryEntries[] =
     {
         6,
         8,
-        "Setup is de systeemconfiguratie aan het bijwerken. ",
+        "Setup is de systeemconfiguratie aan het bijwerken.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Registry hives aanmaken...",
+        /*
+            Opmerking: de bestanden heten in het Engels hives omdat \x82\x82n van de
+            NT ontwikkelaars een hekel had aan bijen. Ja echt. Dus in het
+            Nederlands zouden ze korven moeten heten, maar ik zie de meerwaarde
+            boven het woord bestand eerlijk gezegd niet.
+        */
+        "Registerbestanden aanmaken...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1307,80 +1321,80 @@ MUI_ERROR nlNLErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS is niet geheel geinstalleerd op uw\n"
+        "ReactOS is niet geheel ge\x8Bnstalleerd op uw\n"
         "computer. Als u Setup nu afsluit moet u\n"
         "Setup opnieuw starten om ReactOS te installeren.\n"
         "\n"
         "  \x07  Druk op ENTER om door te gaan met Setup.\n"
         "  \x07  Druk op F3 om Setup af te sluiten.",
-        "F3 = Afsluiten  ENTER = Doorgaan"
+        "F3 = Afsluiten   ENTER = Doorgaan"
     },
     {
         //ERROR_NO_HDD
-        "Setup kan geen harde schijf vinden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan geen vaste schijf vinden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
         "Setup kan zijn station met bronbestanden niet vinden.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
         "Setup kan het bestand TXTSETUP.SIF niet laden.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
         "Setup heeft een ongeldig TXTSETUP.SIF gevonden.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup heeft een ongeldige signatuur in TXTSETUP.SIF gevonden.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup kan de systeem drive informatie niet laden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan de stationsinformatie niet laden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup kan de FAT bootcode op de system partitie niet installeren.",
-        "ENTER = Reboot computer"
+        "Setup kan de FAT bootcode op de systeempartitie niet installeren.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup kan de computer type lijst niet laden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan de computertype-lijst niet laden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup kan de beeldscherm instellingen lijst niet laden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan de beeldscherminstellingen-lijst niet laden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup kan de toetsenbord type lijst niet laden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan de toetsenbordtype-lijst niet laden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup kan de toetsenbord indeling lijst niet laden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan de toetsenbordindeling-lijst niet laden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup ontdekte dat ten minste 1 harde schijf een niet compatibel\n"
+          "Setup ontdekte dat ten minste \x82\x82n vaste schijf een niet compatibele\n"
           "partitietabel bevat dat niet goed wordt ondersteund!\n"
           "\n"
-          "Aanmaken of verwijderen van partities kan de partitie tabel\n"
+          "Aanmaken of verwijderen van partities kan de partitietabel\n"
           "vernietigen.\n"
           "\n"
           "  \x07  Druk op F3 om Setup af te sluiten.\n"
           "  \x07  Druk op ENTER om door te gaan.",
-          "F3= Afsluiten  ENTER = Doorgaan"
+          "F3 = Afsluiten   ENTER = Doorgaan"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1399,121 +1413,124 @@ MUI_ERROR nlNLErrorEntries[] =
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup kan de FAT bootcode op de systeem partitie niet installeren.",
-        "ENTER = Reboot computer"
+        "Setup kan de FAT bootcode op de systeempartitie niet installeren.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_NO_FLOPPY,
-        "Geen schijf in station A:.",
+        "Geen diskette in station A:.",
         "ENTER = Doorgaan"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup kan de toetsbord indeling instellingen niet bijwerken.",
-        "ENTER = Reboot computer"
+        "Setup kan de toetsenbordindeling instellingen niet bijwerken.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup kan de beeldscherm registry instellingen  niet bijwerken.",
-        "ENTER = Reboot computer"
+        "Setup kan de beeldscherminstellingen niet bijwerken.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup kan een hive bestand niet importeren.",
-        "ENTER = Reboot computer"
+        "Setup kan een registerbestand niet importeren.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Setup kan de registry data bestanden niet vinden.",
-        "ENTER = Reboot computer"
+        /*
+            This is about the hives, no?
+        */
+        "Setup kan de registerbestanden niet vinden.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup kan de registry hives niet aanmaken.",
-        "ENTER = Reboot computer"
+        "Setup kan de registerbestanden niet aanmaken.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup kan de registry niet initialiseren.",
-        "ENTER = Reboot computer"
+        "Setup kan het register niet initialiseren.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        "Cabinet bevat geen geldig .inf bestand.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CABINET_MISSING,
         "Cabinet bestand niet gevonden.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CABINET_SCRIPT,
         "Cabinet bestand heeft geen setup script.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup kan de ljst met te kopieeren bestanden niet vinden.\n",
-        "ENTER = Reboot computer"
+        "Setup kan de lijst met te kopi\x89ren bestanden niet vinden.\n",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup kan de installatie directories niet aanmaken.",
-        "ENTER = Reboot computer"
+        "Setup kan de installatiemappen niet aanmaken.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_TXTSETUP_SECTION,
         "Setup kan de 'Directories' sectie niet vinden\n"
         "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CABINET_SECTION,
         "Setup kan de 'Directories' sectie niet vinden\n"
         "in het cabinet bestand.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup kan de installatie directory niet aanmaken.",
-        "ENTER = Reboot computer"
+        "Setup kan de installatiemap niet aanmaken.",
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_FIND_SETUPDATA,
         "Setup kan de 'SetupData' sectie niet vinden\n"
         "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_WRITE_PTABLE,
         "Setup kan de partitietabellen niet schrijven.\n"
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup kan de codepagina niet toevoegen aan de registry.\n"
-        "ENTER = Reboot computer"
+        "Setup kan de codepagina niet toevoegen aan het register.\n"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
         "Setup kan de systeemtaal niet instellen.\n"
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup kan de toetsenbord indelingen niet toevoegen aan de registry.\n"
-        "ENTER = Reboot computer"
+        "Setup kan de toetsenbordindelingen niet toevoegen aan het register.\n"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_UPDATE_GEOID,
         "Setup kan de geografische positie niet instellen.\n"
-        "ENTER = Reboot computer"
+        "ENTER = Computer opnieuw opstarten"
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        "Onvoldoende vrije ruimte in de geselecteerde partitie.\n"
+        "  * Druk op een toets om door te gaan.",
         NULL
     },
     {
@@ -1632,7 +1649,7 @@ MUI_STRING nlNLStrings[] =
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installeren   D = Partitie verwijderen   F3 = Afsluiten"},
     {STRING_PARTITIONSIZE,
-     "Grotte nieuwe partitie:"},
+     "Grootte nieuwe partitie:"},
     {STRING_CHOOSENEWPARTITION,
      "U wilt een nieuwe partitie aanmaken op"},
     {STRING_HDDSIZE,
@@ -1648,69 +1665,69 @@ MUI_STRING nlNLStrings[] =
     {STRING_CHECKINGPART,
     "Setup controleert nu de geselecteerde partitie."},
     {STRING_QUITCONTINUE,
-    "F3= Afsluiten  ENTER = Doorgaan"},
+    "F3 = Afsluiten   ENTER = Doorgaan"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reboot computer"},
+    "ENTER = Computer opnieuw opstarten"},
     {STRING_TXTSETUPFAILED,
-    "Setup kan de  '%S' sectie niet vinden\nin TXTSETUP.SIF.\n"},
+    "Setup kan de '%S' sectie niet vinden\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "   Kopieeren bestand: %S"},
+     "   Kopi\x89ren bestand: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Setup is bestand aan het kopieeren..."},
+     "Setup is bestand aan het kopi\x89ren..."},
     {STRING_REGHIVEUPDATE,
-    "   Bijwerken registry hives..."},
+    "   Bijwerken registerbestanden..."},
     {STRING_IMPORTFILE,
     "   Importeren %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Bijwerken registry instellingen beeldscherm..."},
+    "   Bijwerken beeldscherminstellingen..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Bijwerken systeemtaal instellingen..."},
+    "   Bijwerken systeemtaalinstellingen..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Bijwerken toetsboard indeling..."},
+    "   Bijwerken toetsenbordindeling..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Toevoegen informatie codepagina aan registry..."},
+    "   Toevoegen informatie codepagina aan register..."},
     {STRING_DONE,
     "   Voltooid..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reboot computer"},
+    "   ENTER = Computer opnieuw opstarten"},
     {STRING_CONSOLEFAIL1,
-    "Kan console niet openen\n\n"},
+    "Kan console niet openen.\n\n"},
     {STRING_CONSOLEFAIL2,
-    "De meest voorkomende oorzaak is het gebruik van een USB toetsenbord\n"},
+    "De meest voorkomende oorzaak is het gebruik van een USB toetsenbord.\n"},
     {STRING_CONSOLEFAIL3,
-    "USB toetsenborden worden nog niet volledig ondersteund\n"},
+    "USB toetsenborden worden nog niet volledig ondersteund.\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is de harde schijf aan het formatteren"},
+    "Setup is de vaste schijf aan het formatteren."},
     {STRING_CHECKINGDISK,
-    "Setup is de harde schijf aan het controleren"},
+    "Setup is de vaste schijf aan het controleren."},
     {STRING_FORMATDISK1,
-    " Formatteer partition als %S bestandssysteem (snel) "},
+    " Formatteer partitie als %S bestandssysteem (snel) "},
     {STRING_FORMATDISK2,
-    " Formatteer partition als %S bestandssysteem "},
+    " Formatteer partitie als %S bestandssysteem "},
     {STRING_KEEPFORMAT,
     " Behoud huidig bestandssysteem (geen wijzigingen) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Schijf %lu  (Port=%hu, Bus=%hu, Id=%hu) op %wZ."},
+    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Schijf %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "op %I64u %s  Schijf %lu  (Port=%hu, Bus=%hu, Id=%hu) op %wZ."},
+    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ."},
     {STRING_HDDINFOUNK3,
-    "op %I64u %s  Schijf %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Schijf %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "op Schijf %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
     "%c%c  Type %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Schijf %lu  (Port=%hu, Bus=%hu, Id=%hu) op %S"},
+    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Schijf %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
     "Setup heeft een nieuwe partitie aangemaakt op"},
     {STRING_UNPSPACE,
@@ -1730,6 +1747,6 @@ MUI_STRING nlNLStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Toevoegen toetsenbord indelingen"},
+    "Toevoegen toetsenbordindelingen"},
     {0, 0}
 };
