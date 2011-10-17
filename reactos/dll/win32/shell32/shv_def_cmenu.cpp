@@ -1435,7 +1435,7 @@ IDefaultContextMenuImpl::DoProperties(
          ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
          return S_OK;
     }
-    else if (dcm.cidl == 0 && _ILIsDesktop(dcm.pidlFolder))
+    else if (dcm.cidl == 0 && dcm.pidlFolder != NULL && _ILIsDesktop(dcm.pidlFolder))
     {
         ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
         return S_OK;

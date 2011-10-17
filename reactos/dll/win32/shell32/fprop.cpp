@@ -846,6 +846,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     INT_PTR res;
     CComPtr<IDataObject>        pDataObj;
     HRESULT hResult;
+    DWORD wLength;
 
     TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(lpf));
 
@@ -871,6 +872,18 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     else
     {
         wcscpy(wFileName, lpf);
+    }
+
+    //
+    // get length
+    //
+    wLength = wcslen(wFileName);
+    if (wFileName[wLength-1] == L'\\' && wLength > 3)
+    {
+        //
+        // remove trailing \\ at the end of path
+        //
+        wFileName[wLength-1] = L'\0';
     }
 
     if (PathIsDirectoryW(wFileName))
