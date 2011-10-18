@@ -365,13 +365,19 @@ NtGdiSetDIBitsToDeviceInternal(
     EXLATEOBJ exlo;
     PPALETTE ppalDIB = NULL;
     HPALETTE hpalDIB = NULL;
+    LPBITMAPINFO pbmiSafe;
 
     if (!Bits) return 0;
+
+    pbmiSafe = ExAllocatePoolWithTag(PagedPool, cjMaxInfo, 'pmTG');
+    if (!pbmiSafe) return 0;
 
     _SEH2_TRY
     {
         ProbeForRead(bmi, cjMaxInfo, 1);
         ProbeForRead(Bits, cjMaxBits, 1);
+        RtlCopyMemory(pbmiSafe, bmi, cjMaxInfo);
+        bmi = pbmiSafe;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -381,19 +387,19 @@ NtGdiSetDIBitsToDeviceInternal(
 
     if (!NT_SUCCESS(Status))
     {
-        return 0;
+        goto Exit2;
     }
 
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
-        return 0;
+        goto Exit2;
     }
     if (pDC->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(pDC);
-        return 0;
+        goto Exit2;
     }
 
     pSurf = pDC->dclevel.pSurface;
@@ -505,7 +511,8 @@ Exit:
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
     if (hpalDIB) GreDeleteObject(hpalDIB);
     DC_UnlockDc(pDC);
-
+Exit2:
+    ExFreePool(pbmiSafe);
     return ret;
 }
 
