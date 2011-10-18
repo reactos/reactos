@@ -5,7 +5,6 @@ typedef struct _MONITOR
 {
     HEAD head;
 //
-    FAST_MUTEX     Lock;       /* R/W lock */
     UNICODE_STRING DeviceName; /* name of the monitor */
     PDEVOBJ     *GdiDevice;    /* pointer to the GDI device to
 	                          which this monitor is attached */
@@ -21,7 +20,7 @@ typedef struct _MONITOR
     RECT    rcMonitor;
     RECT    rcWork;
     HRGN    hrgnMonitor;
-    SHORT   Spare0;
+    SHORT   cFullScreen;
     SHORT   cWndStack;
     HDEV    hDev;
     HDEV    hDevReal;

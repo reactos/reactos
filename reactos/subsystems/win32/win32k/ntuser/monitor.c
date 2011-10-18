@@ -46,8 +46,6 @@ IntCreateMonitorObject()
         return NULL;
     }
 
-    ExInitializeFastMutex(&Monitor->Lock);
-
     return Monitor;
 }
 
@@ -187,9 +185,7 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     {
         PMONITOR NewPrimaryMonitor = (Monitor->Prev != NULL) ? (Monitor->Prev) : (Monitor->Next);
 
-        ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&NewPrimaryMonitor->Lock);
         NewPrimaryMonitor->IsPrimary = TRUE;
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&NewPrimaryMonitor->Lock);
     }
 
     if (gMonitorList == Monitor)
@@ -332,9 +328,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
     {
         RECTL MonitorRect, IntersectionRect;
 
-        ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Monitor->Lock);
         MonitorRect = Monitor->rcMonitor;
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
 
         TRACE("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
                MonitorRect.left, MonitorRect.top, MonitorRect.right, MonitorRect.bottom);
@@ -524,13 +518,15 @@ NtUserEnumDisplayMonitors(
     else
         myRect = &rect;
 
+    UserEnterShared();
+
     /* find intersecting monitors */
     numMonitors = IntGetMonitorsFromRect(myRect, NULL, NULL, 0, 0);
     if (numMonitors == 0 || listSize == 0 ||
             (hMonitorList == NULL && monitorRectList == NULL))
     {
         TRACE("numMonitors = %d\n", numMonitors);
-        return numMonitors;
+        goto cleanup;
     }
 
     if (hMonitorList != NULL && listSize != 0)
@@ -538,8 +534,9 @@ NtUserEnumDisplayMonitors(
         safeHMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * listSize, USERTAG_MONITORRECTS);
         if (safeHMonitorList == NULL)
         {
-            /* FIXME: EngSetLastError? */
-            return -1;
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            numMonitors = -1;
+            goto cleanup;
         }
     }
     if (monitorRectList != NULL && listSize != 0)
@@ -548,8 +545,9 @@ NtUserEnumDisplayMonitors(
         if (safeRectList == NULL)
         {
             ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
-            /* FIXME: EngSetLastError? */
-            return -1;
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            numMonitors = -1;
+            goto cleanup;
         }
     }
 
@@ -570,12 +568,13 @@ NtUserEnumDisplayMonitors(
     if (hMonitorList != NULL && listSize != 0)
     {
         status = MmCopyToCaller(hMonitorList, safeHMonitorList, sizeof (HMONITOR) * listSize);
-        ExFreePool(safeHMonitorList);
+        ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
         if (!NT_SUCCESS(status))
         {
             ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
             SetLastNtError(status);
-            return -1;
+            numMonitors = -1;
+            goto cleanup;
         }
     }
     if (monitorRectList != NULL && listSize != 0)
@@ -585,10 +584,12 @@ NtUserEnumDisplayMonitors(
         if (!NT_SUCCESS(status))
         {
             SetLastNtError(status);
-            return -1;
+            numMonitors = -1;
         }
     }
 
+cleanup:
+    UserLeave();
     return numMonitors;
 }
 
@@ -725,13 +726,14 @@ NtUserMonitorFromPoint(
     InRect.top = point.y;
     InRect.bottom = point.y + 1;
 
+    UserEnterShared();
+
     /* find intersecting monitor */
     NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL, 1, dwFlags);
     if (NumMonitors < 0)
-    {
-        return (HMONITOR)NULL;
-    }
+        hMonitor = NULL;
 
+    UserLeave();
     return hMonitor;
 }
 
@@ -759,8 +761,8 @@ NtUserMonitorFromRect(
     IN DWORD dwFlags)
 {
     ULONG numMonitors, iLargestArea = 0, i;
-    PRECTL rectList;
-    HMONITOR *hMonitorList;
+    PRECTL rectList = NULL;
+    HMONITOR *hMonitorList = NULL;
     HMONITOR hMonitor = NULL;
     RECTL rect;
     NTSTATUS status;
@@ -773,11 +775,13 @@ NtUserMonitorFromRect(
         return (HMONITOR)NULL;
     }
 
+    UserEnterShared();
+
     /* find intersecting monitors */
     numMonitors = IntGetMonitorsFromRect(&rect, &hMonitor, NULL, 1, dwFlags);
     if (numMonitors <= 1)
     {
-        return hMonitor;
+        goto cleanup;
     }
 
     hMonitorList = ExAllocatePoolWithTag(PagedPool,
@@ -785,8 +789,9 @@ NtUserMonitorFromRect(
                                          USERTAG_MONITORRECTS);
     if (hMonitorList == NULL)
     {
-        /* FIXME: EngSetLastError? */
-        return (HMONITOR)NULL;
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        hMonitor = NULL;
+        goto cleanup;
     }
 
     rectList = ExAllocatePoolWithTag(PagedPool,
@@ -794,9 +799,9 @@ NtUserMonitorFromRect(
                                      USERTAG_MONITORRECTS);
     if (rectList == NULL)
     {
-        ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-        /* FIXME: EngSetLastError? */
-        return (HMONITOR)NULL;
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        hMonitor = NULL;
+        goto cleanup;
     }
 
     /* get intersecting monitors */
@@ -804,9 +809,8 @@ NtUserMonitorFromRect(
                                          numMonitors, 0);
     if (numMonitors == 0)
     {
-        ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-        ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
-        return (HMONITOR)NULL;
+        hMonitor = NULL;
+        goto cleanup;
     }
 
     /* find largest intersection */
@@ -820,8 +824,12 @@ NtUserMonitorFromRect(
         }
     }
 
-    ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-    ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
+cleanup:
+    if (hMonitorList)
+        ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
+    if (rectList)
+        ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
+    UserLeave();
 
     return hMonitor;
 }
