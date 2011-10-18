@@ -1133,7 +1133,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   MSG UnicodeMsg;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
-  DWORD Data = 0;
+  DWORD Hit = 0, Data = 0;
 
   if (WndProc == NULL)
   {
@@ -1189,6 +1189,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 1;
       }
       _SEH2_END;
 
@@ -1237,6 +1238,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 2;
       }
       _SEH2_END;
 
@@ -1258,6 +1260,18 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
 Exit:
   if (Hook) EndUserApiHook();
+  if (Hit)
+  {
+     switch(Hit)
+     {
+     case 1:
+         ERR("CallWindowProcW Ansi Failed!\n");
+         break;
+     case 2:
+         ERR("CallWindowProcW Unicode Failed!\n");
+         break;
+     }
+  }
   return Result;
 }
 
@@ -1274,7 +1288,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   MSG UnicodeMsg;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
-  DWORD Data = 0;
+  DWORD Hit = 0, Data = 0;
 
   if (WndProc == NULL)
   {
@@ -1321,6 +1335,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 1;
       }
       _SEH2_END;
 
@@ -1374,6 +1389,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
+         Hit = 2;
       }
       _SEH2_END;
 
@@ -1400,6 +1416,18 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
 Exit:
   if (Hook) EndUserApiHook();
+  if (Hit)
+  {
+     switch(Hit)
+     {
+     case 1:
+         ERR("CallWindowProcA Ansi Failed!\n");
+         break;
+     case 2:
+         ERR("CallWindowProcA Unicode Failed!\n");
+         break;
+     }
+  }
   return Result;
 }
 
@@ -1562,6 +1590,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     LRESULT Ret = 0;
     MSG UnicodeMsg;
     PWND Wnd;
+    BOOL Hit = FALSE;
 
     if ( lpmsg->message & ~WM_MAXIMUM )
     {
@@ -1590,7 +1619,11 @@ DispatchMessageA(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam)) return 0;
+        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        {
+           WARN("Validating Timer Callback failed!\n");
+           return 0;
+        }
 
        _SEH2_TRY // wine does this. Hint: Prevents call to another thread....
        {
@@ -1601,6 +1634,7 @@ DispatchMessageA(CONST MSG *lpmsg)
        }
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
+           Hit = TRUE;
        }
        _SEH2_END;
     }
@@ -1630,6 +1664,11 @@ DispatchMessageA(CONST MSG *lpmsg)
           }
        }
     }
+
+    if (Hit)
+    {
+       WARN("Exception in Timer Callback WndProcA!\n");
+    }
     return Ret;
 }
 
@@ -1642,6 +1681,7 @@ DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
     PWND Wnd;
+    BOOL Hit = FALSE;
 
     if ( lpmsg->message & ~WM_MAXIMUM )
     {
@@ -1670,7 +1710,11 @@ DispatchMessageW(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG) lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam)) return 0;
+        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        {
+           WARN("Validating Timer Callback failed!\n");
+           return 0;
+        }
 
        _SEH2_TRY
        {
@@ -1681,6 +1725,7 @@ DispatchMessageW(CONST MSG *lpmsg)
        }
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
+          Hit = TRUE;
        }
        _SEH2_END;
     }
@@ -1699,6 +1744,10 @@ DispatchMessageW(CONST MSG *lpmsg)
          Ret = NtUserDispatchMessage( (PMSG) lpmsg );
     }
 
+    if (Hit)
+    {
+       WARN("Exception in Timer Callback WndProcW!\n");
+    }
     return Ret;
 }
 
