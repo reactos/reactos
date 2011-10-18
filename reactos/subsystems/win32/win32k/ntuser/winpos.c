@@ -570,7 +570,7 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos,
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
 
-      wvrFlags = co_IntSendMessageNoWait(Window->head.h, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
+      wvrFlags = co_IntSendMessage(Window->head.h, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
 
       /* If the application send back garbage, ignore it */
       if (params.rgrc[0].left <= params.rgrc[0].right &&
