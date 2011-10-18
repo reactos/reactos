@@ -1254,9 +1254,9 @@ static HRESULT MSSTYLES_GetFont (LPCWSTR lpCur, LPCWSTR lpEnd,
     pFont->lfCharSet = DEFAULT_CHARSET;
     while(MSSTYLES_GetNextToken(lpCur, lpEnd, &lpCur, attr, sizeof(attr)/sizeof(attr[0]))) {
         if(!lstrcmpiW(szBold, attr)) pFont->lfWeight = FW_BOLD;
-        else if(!!lstrcmpiW(szItalic, attr)) pFont->lfItalic = TRUE;
-        else if(!!lstrcmpiW(szUnderline, attr)) pFont->lfUnderline = TRUE;
-        else if(!!lstrcmpiW(szStrikeOut, attr)) pFont->lfStrikeOut = TRUE;
+        else if(!lstrcmpiW(szItalic, attr)) pFont->lfItalic = TRUE;
+        else if(!lstrcmpiW(szUnderline, attr)) pFont->lfUnderline = TRUE;
+        else if(!lstrcmpiW(szStrikeOut, attr)) pFont->lfStrikeOut = TRUE;
     }
     *lpValEnd = lpCur;
     return S_OK;
