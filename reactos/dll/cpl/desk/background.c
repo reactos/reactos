@@ -40,6 +40,9 @@ typedef struct
 
 typedef struct _DATA
 {
+    BOOL bWallpaperChanged;
+    BOOL bClrBackgroundChanged;
+
     BackgroundItem backgroundItems[MAX_BACKGROUNDS];
 
     PDIBITMAP pWallpaperBitmap;
@@ -365,6 +368,7 @@ OnColorButton(HWND hwndDlg, PDATA pData)
     {
         /* Save selected color to var */
         g_GlobalData.desktop_color = cc.rgbResult;
+        pData->bClrBackgroundChanged = TRUE;
 
         /* Apply button will be activated */
         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -509,6 +513,8 @@ ListViewItemChanged(HWND hwndDlg, PDATA pData, int itemIndex)
         if (pData->pWallpaperBitmap == NULL)
             return;
     }
+
+    pData->bWallpaperChanged = TRUE;
 
     InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW),
                    NULL, TRUE);
@@ -802,8 +808,10 @@ BackgroundPageProc(HWND hwndDlg,
                 switch(lpnm->code)
                 {
                     case PSN_APPLY:
-                        SetWallpaper(pData);
-                        SetDesktopBackColor(hwndDlg, pData);
+                        if(pData->bWallpaperChanged)
+                            SetWallpaper(pData);
+                        if(pData->bClrBackgroundChanged)
+                            SetDesktopBackColor(hwndDlg, pData);
                         return TRUE;
 
                     case LVN_ITEMCHANGED:
