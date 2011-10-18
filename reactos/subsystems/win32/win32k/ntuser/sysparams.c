@@ -694,6 +694,41 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     return (UINT_PTR)KEY_DESKTOP;
 }
 
+static BOOL
+SpiNotifyNCMetricsChanged()
+{
+    PWND pwndDesktop, pwndCurrent;
+    HWND *ahwnd;
+    USER_REFERENCE_ENTRY Ref;
+    int i;
+
+    pwndDesktop = UserGetDesktopWindow();
+    ASSERT(pwndDesktop);
+
+    ahwnd = IntWinListChildren(pwndDesktop);
+    if(!ahwnd)
+        return FALSE;
+
+    for (i = 0; ahwnd[i]; i++)
+    {
+        pwndCurrent = UserGetWindowObject(ahwnd[i]);
+        if(!pwndCurrent)
+            continue;
+
+        UserRefObjectCo(pwndCurrent, &Ref);
+        co_WinPosSetWindowPos(pwndCurrent, 0, pwndCurrent->rcWindow.left,pwndCurrent->rcWindow.top,
+                                              pwndCurrent->rcWindow.right-pwndCurrent->rcWindow.left
+                                              ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top, 
+                              SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|
+                              SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW);
+        UserDerefObjectCo(pwndCurrent);
+    }
+
+    ExFreePool(ahwnd);
+
+    return TRUE;
+}
+
 static
 UINT_PTR
 SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
@@ -863,6 +898,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreFont(L"StatusFont", &gspv.ncm.lfStatusFont);
                 SpiStoreFont(L"MessageFont", &gspv.ncm.lfMessageFont);
             }
+            if(!SpiNotifyNCMetricsChanged())
+                return 0;
             return (UINT_PTR)KEY_METRIC;
 
         case SPI_GETMINIMIZEDMETRICS:
