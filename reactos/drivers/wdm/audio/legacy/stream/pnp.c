@@ -264,7 +264,7 @@ StreamClassStartDevice(
         }
     }
 
-    if (!!bUseInterrupt || DriverObjectExtension->Data.HwInterrupt == NULL || Config->BusInterruptLevel == 0 || Config->BusInterruptVector == 0)
+    if (!bUseInterrupt || DriverObjectExtension->Data.HwInterrupt == NULL || Config->BusInterruptLevel == 0 || Config->BusInterruptVector == 0)
     {
         /* requirements not satisfied */
         DeviceExtension->SynchronizeFunction = StreamClassSynchronize;
