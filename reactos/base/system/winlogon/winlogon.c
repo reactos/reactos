@@ -267,6 +267,65 @@ WaitForLsass(VOID)
 }
 
 
+static BOOL
+InitKeyboardLayouts()
+{
+    WCHAR wszKeyName[12], wszKLID[10];
+	DWORD dwSize = sizeof(wszKLID), dwType, i;
+    HKEY hKey;
+    UINT Flags;
+    BOOL bRet = FALSE;
+
+    /* Open registry key with preloaded layouts */
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+	{
+	    ERR("RegOpenKeyExW failed!\n");
+	    return FALSE;
+	}
+
+    i = 1;
+    while(TRUE)
+    {
+        /* Read values with integer names only */
+        swprintf(wszKeyName, L"%d", i);
+        if (RegQueryValueExW(hKey, wszKeyName, NULL, &dwType, (LPBYTE)wszKLID, &dwSize) != ERROR_SUCCESS)
+        {
+            /* If we loaded at least one layout and there is no more
+               registry values return TRUE */
+            if (i > 1)
+                bRet = TRUE;
+            break;
+        }
+
+        /* Only REG_SZ values are valid */
+        if (dwType != REG_SZ)
+        {
+            ERR("Wrong type!\n");
+            break;
+        }
+
+        /* Load keyboard layout with given locale id */
+        Flags = KLF_SUBSTITUTE_OK;
+        if (i > 1)
+            Flags |= KLF_NOTELLSHELL|KLF_REPLACELANG;
+        else // First layout
+            Flags |= KLF_ACTIVATE; // |0x40000000
+        if (!LoadKeyboardLayoutW(wszKLID, Flags))
+        {
+            ERR("LoadKeyboardLayoutW failed!\n");
+            break;
+        }
+
+        /* Move to the next entry */
+        ++i;
+    }
+
+    /* Close the key now */
+	RegCloseKey(hKey);
+
+    return bRet;
+}
+
 BOOL
 DisplayStatusMessage(
 	IN PWLSESSION Session,
@@ -389,6 +448,14 @@ WinMain(
 		ExitProcess(1);
 	}
 	LockWorkstation(WLSession);
+
+    /* Load default keyboard layouts */
+    if (!InitKeyboardLayouts())
+    {
+        ERR("WL: Could not preload keyboard layouts\n");
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+		ExitProcess(1);
+    }
 
 	if (!StartServicesManager())
 	{

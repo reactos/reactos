@@ -1,31 +1,54 @@
 #pragma once
 
 #include <ndk/kbd.h>
-
-typedef struct _KL
+ 
+typedef struct tagKBDNLSLAYER
 {
-  LIST_ENTRY List;
-  DWORD Flags;
-  WCHAR Name[KL_NAMELENGTH];    // used w GetKeyboardLayoutName same as wszKLID.
-  struct _KBDTABLES *KBTables;  // KBDTABLES in ndk/kbd.h
-  HANDLE hModule;
-  ULONG RefCount;
-  HKL hkl;
-  DWORD klid; // Low word - language id. High word - device id.
+    USHORT OEMIdentifier;
+    USHORT LayoutInformation;
+    UINT NumOfVkToF;
+    struct _VK_TO_FUNCTION_TABLE *pVkToF;
+    INT NumOfMouseVKey;
+    PUSHORT pusMouseVKey;
+} KBDNLSLAYER, *PKBDNLSLAYER;
+ 
+typedef struct tagKBDFILE
+{
+    HEAD head;
+    struct tagKBDFILE *pkfNext;
+    WCHAR awchKF[20];
+    HANDLE hBase;
+    struct _KBDTABLES *pKbdTbl;
+    ULONG Size;
+    PKBDNLSLAYER pKbdNlsTbl;
+} KBDFILE, *PKBDFILE;
+
+typedef struct tagKL
+{
+    HEAD head;
+    struct tagKL *pklNext;
+    struct tagKL *pklPrev;
+    DWORD dwKL_Flags;
+    HKL hkl;
+    PKBDFILE spkf;
+    DWORD dwFontSigs;
+    UINT iBaseCharset;
+    USHORT CodePage;
+    WCHAR wchDiacritic;
+    //PIMEINFOEX piiex;
 } KL, *PKL;
 
 typedef struct _ATTACHINFO
 {
-  struct _ATTACHINFO* paiNext;
+  struct _ATTACHINFO *paiNext;
   PTHREADINFO pti1;
   PTHREADINFO pti2;
 } ATTACHINFO, *PATTACHINFO;
 
 extern PATTACHINFO gpai;
 
-#define KBL_UNLOAD 1
-#define KBL_PRELOAD 2
-#define KBL_RESET 4
+/* Keyboard layout undocumented flags */
+#define KLF_UNLOAD 0x20000000
 
 /* Key States */
 #define KS_DOWN_BIT      0x80

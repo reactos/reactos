@@ -29,6 +29,7 @@
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
+#include <stdio.h>
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>

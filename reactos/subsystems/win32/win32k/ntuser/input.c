@@ -329,12 +329,6 @@ InitInputImpl(VOID)
     }
     KeInitializeTimer(MasterTimer);
 
-    /* Initialize the default keyboard layout */
-    if (!UserInitDefaultKeyboardLayout())
-    {
-        ERR("Failed to initialize default keyboard layout!\n");
-    }
-
     return STATUS_SUCCESS;
 }
 

@@ -286,6 +286,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         }
         ptiCurrent->MessageQueue = MsqCreateMessageQueue(Thread);
         ptiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
+        if (ptiCurrent->KeyboardLayout)
+            UserReferenceObject(ptiCurrent->KeyboardLayout);
         ptiCurrent->pEThread = Thread;
 
         /* HAAAAAAAACK! This should go to Win32kProcessCallback */
@@ -421,6 +423,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         IntBlockInput(ptiCurrent, FALSE);
         MsqDestroyMessageQueue(ptiCurrent->MessageQueue);
         IntCleanupThreadCallbacks(ptiCurrent);
+        if (ptiCurrent->KeyboardLayout)
+            UserDereferenceObject(ptiCurrent->KeyboardLayout);
 
         /* cleanup user object references stack */
         psle = PopEntryList(&ptiCurrent->ReferencesList);

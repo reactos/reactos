@@ -423,6 +423,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000410","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout File",0x00000000,"kbdja.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout Text",0x00000000,"Japanese"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5061"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000411","Layout Id",0x00000000,"0001"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041c","Layout File",0x00000000,"kbdal.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041c","Layout Text",0x00000000,"Albanian"
@@ -625,6 +626,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000081a","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout File",0x00000000,"kbdko.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Text",0x00000000,"Korean"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5063"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Id",0x00000000,"0001"
 
 ; Keyboard layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout",,0x00000012

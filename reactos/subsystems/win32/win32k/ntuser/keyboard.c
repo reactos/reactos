@@ -891,7 +891,7 @@ BOOL NTAPI
 UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
 {
     WORD wScanCode, wVk;
-    PKL pKbl = NULL;
+    PKL pKl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
     struct _ETHREAD *pFocusThread;
@@ -906,18 +906,18 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     {
         pFocusThread = pFocusQueue->Thread;
         if (pFocusThread && pFocusThread->Tcb.Win32Thread)
-            pKbl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+            pKl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
     }
 
-    if (!pKbl)
-        pKbl = W32kGetDefaultKeyLayout();
-    if (!pKbl)
+    if (!pKl)
+        pKl = W32kGetDefaultKeyLayout();
+    if (!pKl)
     {
         ERR("No keyboard layout!\n");
         return FALSE;
     }
 
-    pKbdTbl = pKbl->KBTables;
+    pKbdTbl = pKl->spkf->pKbdTbl;
 
     /* Note: wScan field is always used */
     wScanCode = pKbdInput->wScan;
@@ -973,7 +973,7 @@ UserProcessKeyboardInput(
     PKEYBOARD_INPUT_DATA pKbdInputData)
 {
     WORD wScanCode, wVk;
-    PKL pKbl = NULL;
+    PKL pKl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
     struct _ETHREAD *pFocusThread;
@@ -992,15 +992,15 @@ UserProcessKeyboardInput(
     {
         pFocusThread = pFocusQueue->Thread;
         if (pFocusThread && pFocusThread->Tcb.Win32Thread)
-            pKbl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+            pKl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
     }
 
-    if (!pKbl)
-        pKbl = W32kGetDefaultKeyLayout();
-    if (!pKbl)
+    if (!pKl)
+        pKl = W32kGetDefaultKeyLayout();
+    if (!pKl)
         return;
 
-    pKbdTbl = pKbl->KBTables;
+    pKbdTbl = pKl->spkf->pKbdTbl;
 
     /* Convert scan code to virtual key.
        Note: we could call UserSendKeyboardInput using scan code,
@@ -1068,7 +1068,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     }
 
     pti = pWnd->head.pti;
-    pKbdTbl = pti->KeyboardLayout->KBTables;
+    pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
     if (!pKbdTbl)
         return FALSE;
 
@@ -1207,15 +1207,15 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
 
         pti = PsGetCurrentThreadWin32Thread();
         if (pti && pti->KeyboardLayout)
-            pKbdTbl = pti->KeyboardLayout->KBTables;
+            pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
     }
     else
     {
-        PKL pKbl;
+        PKL pKl;
 
-        pKbl = UserHklToKbl(dwhkl);
-        if (pKbl)
-            pKbdTbl = pKbl->KBTables;
+        pKl = UserHklToKbl(dwhkl);
+        if (pKl)
+            pKbdTbl = pKl->spkf->pKbdTbl;
     }
 
     if (pKbdTbl)
@@ -1246,7 +1246,7 @@ NtUserToUnicodeEx(
     BYTE afKeyState[256 * 2 / 8] = {0};
     PWCHAR pwszBuff = NULL;
     INT i, iRet = 0;
-    PKL pKbl = NULL;
+    PKL pKl = NULL;
 
     TRACE("Enter NtUserSetKeyboardState\n");
 
@@ -1288,12 +1288,12 @@ NtUserToUnicodeEx(
     UserEnterExclusive(); // Note: we modify wchDead static variable
 
     if (dwhkl)
-        pKbl = UserHklToKbl(dwhkl);
+        pKl = UserHklToKbl(dwhkl);
 
-    if (!pKbl)
+    if (!pKl)
     {
         pti = PsGetCurrentThreadWin32Thread();
-        pKbl = pti->KeyboardLayout;
+        pKl = pti->KeyboardLayout;
     }
 
     iRet = IntToUnicodeEx(wVirtKey,
@@ -1302,7 +1302,7 @@ NtUserToUnicodeEx(
                           pwszBuff,
                           cchBuff,
                           wFlags,
-                          pKbl ? pKbl->KBTables : NULL);
+                          pKl ? pKl->spkf->pKbdTbl : NULL);
 
     MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
     ExFreePoolWithTag(pwszBuff, TAG_STRING);
@@ -1336,7 +1336,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 
     /* Get current keyboard layout */
     pti = PsGetCurrentThreadWin32Thread();
-    pKbdTbl = pti ? pti->KeyboardLayout->KBTables : 0;
+    pKbdTbl = pti ? pti->KeyboardLayout->spkf->pKbdTbl : 0;
 
     if (!pKbdTbl || cchSize < 1)
     {
@@ -1451,7 +1451,7 @@ NtUserVkKeyScanEx(
     PKBDTABLES pKbdTbl;
     PVK_TO_WCHAR_TABLE pVkToWchTbl;
     PVK_TO_WCHARS10 pVkToWch;
-    PKL pKbl = NULL;
+    PKL pKl = NULL;
     DWORD i, dwModBits = 0, dwModNumber = 0, Ret = (DWORD)-1;
 
     TRACE("NtUserVkKeyScanEx() wch %d, KbdLayout 0x%p\n", wch, dwhkl);
@@ -1461,18 +1461,18 @@ NtUserVkKeyScanEx(
     {
         // Use given keyboard layout
         if (dwhkl)
-            pKbl = UserHklToKbl(dwhkl);
+            pKl = UserHklToKbl(dwhkl);
     }
     else
     {
         // Use thread keyboard layout
-        pKbl = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->KeyboardLayout;
+        pKl = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->KeyboardLayout;
     }
 
-    if (!pKbl)
+    if (!pKl)
         goto Exit;
 
-    pKbdTbl = pKbl->KBTables;
+    pKbdTbl = pKl->spkf->pKbdTbl;
 
     // Interate through all VkToWchar tables while pVkToWchars is not NULL
     for (i = 0; pKbdTbl->pVkToWcharTable[i].pVkToWchars; i++)
