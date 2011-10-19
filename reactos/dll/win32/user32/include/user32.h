@@ -21,6 +21,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <winnls32.h>
+#include <Strsafe.h>
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
