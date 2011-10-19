@@ -1909,7 +1909,6 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
 
      pt.x = x + int_from_fixed(header->pfxStart.x);
      pt.y = y - int_from_fixed(header->pfxStart.y);
-     IntLPtoDP(dc, &pt, 1);
      PATH_AddEntry(pPath, &pt, PT_MOVETO);
 
      curve = (TTPOLYCURVE *)(header + 1);
@@ -1928,7 +1927,6 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
               {
                  pt.x = x + int_from_fixed(curve->apfx[i].x);
                  pt.y = y - int_from_fixed(curve->apfx[i].y);
-                 IntLPtoDP(dc, &pt, 1);
                  PATH_AddEntry(pPath, &pt, PT_LINETO);
               }
               break;
@@ -1947,13 +1945,11 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
 
               pts[0].x = x + int_from_fixed(ptfx.x);
               pts[0].y = y - int_from_fixed(ptfx.y);
-              IntLPtoDP(dc, &pts[0], 1);
 
               for (i = 0; i < curve->cpfx; i++)
               {
                   pts[i + 1].x = x + int_from_fixed(curve->apfx[i].x);
                   pts[i + 1].y = y - int_from_fixed(curve->apfx[i].y);
-                  IntLPtoDP(dc, &pts[i + 1], 1);
               }
 
               PATH_BezierTo(pPath, pts, curve->cpfx + 1);
@@ -1986,37 +1982,13 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                      LPCWSTR str, UINT count, const INT *dx)
 {
     unsigned int idx;
-    double cosEsc, sinEsc;
-    PDC_ATTR pdcattr;
-    PTEXTOBJ TextObj;
-    LOGFONTW lf;
-    POINTL org;
-    INT offset = 0, xoff = 0, yoff = 0;
+    POINT offset = {0, 0};
 
     if (!count) return TRUE;
 
-    pdcattr = dc->pdcattr;
-
-    TextObj = RealizeFontInit( pdcattr->hlfntNew);
-    if ( !TextObj ) return FALSE;
-
-    FontGetObject( TextObj, sizeof(lf), &lf);
-    TEXTOBJ_UnlockText(TextObj);
-
-    if (lf.lfEscapement != 0)
-    {
-        cosEsc = cos(lf.lfEscapement * M_PI / 1800);
-        sinEsc = sin(lf.lfEscapement * M_PI / 1800);
-    } else
-    {
-        cosEsc = 1;
-        sinEsc = 0;
-    }
-
-    org = dc->ptlDCOrig;
-
     for (idx = 0; idx < count; idx++)
     {
+        MAT2 identity = { {0,1},{0,0},{0,0},{0,1} };
         GLYPHMETRICS gm;
         DWORD dwSize;
         void *outline;
@@ -2027,36 +1999,44 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                                        &gm,
                                        0,
                                        NULL,
-                                       NULL,
+                                       &identity,
                                        TRUE);
-        if (!dwSize) return FALSE;
+        if (dwSize == GDI_ERROR) return FALSE;
 
-        outline = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_PATH);
-        if (!outline) return FALSE;
+        /* add outline only if char is printable */
+        if (dwSize)
+        {
+           outline = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_PATH);
+           if (!outline) return FALSE;
 
-        ftGdiGetGlyphOutline( dc,
-                              str[idx],
-                              GGO_GLYPH_INDEX | GGO_NATIVE,
-                              &gm,
-                              dwSize,
-                              outline,
-                              NULL,
-                              TRUE);
+           ftGdiGetGlyphOutline( dc,
+                                 str[idx],
+                                 GGO_GLYPH_INDEX | GGO_NATIVE,
+                                 &gm,
+                                 dwSize,
+                                 outline,
+                                 &identity,
+                                 TRUE);
 
-        PATH_add_outline(dc, org.x + x + xoff, org.x + y + yoff, outline, dwSize);
+           PATH_add_outline(dc, x + offset.x, y + offset.y, outline, dwSize);
 
-        ExFreePoolWithTag(outline, TAG_PATH);
+           ExFreePoolWithTag(outline, TAG_PATH);
+        }
 
         if (dx)
         {
-            offset += dx[idx];
-            xoff = offset * cosEsc;
-            yoff = offset * -sinEsc;
+           if (flags & ETO_PDY)
+           {
+              offset.x += dx[idx * 2];
+              offset.y += dx[idx * 2 + 1];
+           }
+           else
+              offset.x += dx[idx];
         }
         else
         {
-            xoff += gm.gmCellIncX;
-            yoff += gm.gmCellIncY;
+           offset.x += gm.gmCellIncX;
+           offset.y += gm.gmCellIncY;
         }
     }
     return TRUE;
