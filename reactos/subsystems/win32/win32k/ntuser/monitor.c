@@ -10,12 +10,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMonitor);
 
-/* FIXME: find include file for these */
-#define MONITORINFOF_PRIMARY      1
-#define MONITOR_DEFAULTTONULL     0
-#define MONITOR_DEFAULTTOPRIMARY  1
-#define MONITOR_DEFAULTTONEAREST  2
-
 #define NDEBUG
 #include <debug.h>
 
