@@ -149,29 +149,24 @@ GetKeyNameTextA(LONG lParam,
                 LPSTR lpString,
                 int nSize)
 {
-    LPWSTR intermediateString =
-        HeapAlloc(GetProcessHeap(), 0, nSize * sizeof(WCHAR));
-    int ret = 0;
-    UINT wstrLen = 0;
+    LPWSTR pwszBuf;
+    UINT cchBuf = 0;
+    int iRet = 0;
     BOOL defChar = FALSE;
 
-    if (!intermediateString)
+    pwszBuf = HeapAlloc(GetProcessHeap(), 0, nSize * sizeof(WCHAR));
+    if (!pwszBuf)
         return 0;
-    ret = GetKeyNameTextW(lParam, intermediateString, nSize);
-    if (ret == 0)
-    {
-        lpString[0] = 0;
-        return 0;
-    }
 
-    wstrLen = wcslen(intermediateString);
-    ret = WideCharToMultiByte(CP_ACP, 0,
-                              intermediateString, wstrLen,
-                              lpString, nSize, ".", &defChar);
-    lpString[ret] = 0;
-    HeapFree(GetProcessHeap(), 0, intermediateString);
+    cchBuf = NtUserGetKeyNameText(lParam, pwszBuf, nSize);
 
-    return ret;
+    iRet = WideCharToMultiByte(CP_ACP, 0,
+                              pwszBuf, cchBuf,
+                              lpString, nSize, ".", &defChar); // FIXME: do we need defChar?
+    lpString[iRet] = 0;
+    HeapFree(GetProcessHeap(), 0, pwszBuf);
+
+    return iRet;
 }
 
 /*
@@ -211,7 +206,6 @@ GetKeyboardLayoutNameA(LPSTR pwszKLID)
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
@@ -220,7 +214,6 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
     return NtUserGetKeyboardLayoutName(pwszKLID);
 }
-
 
 /*
  * @implemented
@@ -253,12 +246,18 @@ GetLastInputInfo(PLASTINPUTINFO plii)
  * @implemented
  */
 HKL WINAPI
-LoadKeyboardLayoutA(LPCSTR pwszKLID,
+LoadKeyboardLayoutA(LPCSTR pszKLID,
                     UINT Flags)
 {
-    return NtUserLoadKeyboardLayoutEx(NULL, 0, NULL, NULL, NULL,
-                                      strtoul(pwszKLID, NULL, 16),
-                                      Flags);
+    WCHAR wszKLID[16];
+
+    if (!MultiByteToWideChar(CP_ACP, 0, pszKLID, -1,
+                             wszKLID, sizeof(wszKLID)/sizeof(wszKLID[0])))
+    {
+        return FALSE;
+    }
+
+    return LoadKeyboardLayoutW(wszKLID, Flags);
 }
 
 /*
@@ -268,11 +267,68 @@ HKL WINAPI
 LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                     UINT Flags)
 {
-    // Look at revision 25596 to see how it's done in windows.
-    // We will do things our own way. Also be compatible too!
-    return NtUserLoadKeyboardLayoutEx(NULL, 0, NULL, NULL, NULL,
-                                      wcstoul(pwszKLID, NULL, 16),
-                                      Flags);
+    DWORD dwhkl, dwType, dwSize;
+    UNICODE_STRING ustrKbdName;
+    UNICODE_STRING ustrKLID;
+    WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
+    WCHAR wszLayoutId[10], wszNewKLID[10];
+    HKEY hKey;
+
+    /* LOWORD of dwhkl is Locale Identifier */
+    dwhkl = wcstol(pwszKLID, NULL, 16);
+
+    if (Flags & KLF_SUBSTITUTE_OK)
+    {
+        /* Check substitutes key */
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0,
+                          KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            dwSize = sizeof(wszNewKLID);
+            if (RegQueryValueExW(hKey, pwszKLID, NULL, &dwType, (LPBYTE)wszNewKLID, &dwSize) == ERROR_SUCCESS)
+            {
+                /* Use new KLID value */
+                pwszKLID = wszNewKLID;
+            }
+
+            /* Close the key now */
+            RegCloseKey(hKey);
+        }
+    }
+
+    /* Append KLID at the end of registry key */
+    StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
+
+    /* Open layout registry key for read */
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0,
+                      KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(wszLayoutId);
+        if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId, &dwSize) == ERROR_SUCCESS)
+        {
+            /* If Layout Id is specified, use this value | f000 as HIWORD */
+            /* FIXME: Microsoft Office expects this value to be something specific
+             * for Japanese and Korean Windows with an IME the value is 0xe001
+             * We should probably check to see if an IME exists and if so then
+             * set this word properly.
+             */
+            dwhkl |= (0xf000 | wcstol(wszLayoutId, NULL, 16)) << 16;
+        }
+
+        /* Close the key now */
+        RegCloseKey(hKey);
+    }
+    else
+	    ERR("RegOpenKeyExW failed!\n");
+
+    /* If Layout Id is not given HIWORD == LOWORD (for dwhkl) */
+	if (!HIWORD(dwhkl))
+        dwhkl |= dwhkl << 16;
+
+    ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));
+    RtlInitUnicodeString(&ustrKLID, pwszKLID);
+    return NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
+                                      NULL, &ustrKLID,
+                                      dwhkl, Flags);
 }
 
 /*
@@ -477,7 +533,7 @@ SHORT WINAPI
 VkKeyScanExW(WCHAR ch,
              HKL dwhkl)
 {
-    return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, TRUE);
+    return (SHORT)NtUserVkKeyScanEx(ch, dwhkl, TRUE);
 }
 
 
@@ -487,7 +543,7 @@ VkKeyScanExW(WCHAR ch,
 SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
-    return (SHORT) NtUserVkKeyScanEx(ch, 0, FALSE);
+    return (SHORT)NtUserVkKeyScanEx(ch, 0, FALSE);
 }
 
 
