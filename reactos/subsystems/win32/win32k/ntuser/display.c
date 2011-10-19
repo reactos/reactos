@@ -11,7 +11,6 @@ DBG_DEFAULT_CHANNEL(UserDisplay);
 
 BOOL gbBaseVideo = 0;
 
-static const PWCHAR KEY_ROOT = L"";
 static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
 
 VOID
@@ -384,7 +383,7 @@ NtUserEnumDisplayDevices(
    }
 
     /* Acquire global USER lock */
-    UserEnterExclusive();
+    UserEnterShared();
 
     /* Call the internal function */
     Status = UserEnumDisplayDevices(pustrDevice, iDevNum, &dispdev, dwFlags);
@@ -551,7 +550,6 @@ UserEnumRegistryDisplaySettings(
     return Status ;
 }
 
-
 NTSTATUS
 APIENTRY
 NtUserEnumDisplaySettings(
@@ -593,7 +591,7 @@ NtUserEnumDisplaySettings(
    }
 
     /* Acquire global USER lock */
-    UserEnterExclusive();
+    UserEnterShared();
 
     if (iModeNum == ENUM_REGISTRY_SETTINGS)
     {
@@ -646,9 +644,6 @@ NtUserEnumDisplaySettings(
 
     return Status;
 }
-
-BOOL APIENTRY UserClipCursor(RECTL *prcl);
-VOID APIENTRY UserRedrawDesktop();
 
 LONG
 APIENTRY
