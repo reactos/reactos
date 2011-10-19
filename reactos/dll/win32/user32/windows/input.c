@@ -205,7 +205,7 @@ GetKeyboardLayoutNameA(LPSTR pwszKLID)
     if (!GetKeyboardLayoutNameW(buf))
         return FALSE;
 
-    if (!WideCharToMultiByte(CP_ACP, 0, buf, -1, pwszKLID, KL_NAMELENGTH, NULL, NULL));
+    if (!WideCharToMultiByte(CP_ACP, 0, buf, -1, pwszKLID, KL_NAMELENGTH, NULL, NULL))
         return FALSE;
 
     return TRUE;
