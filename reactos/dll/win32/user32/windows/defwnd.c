@@ -1984,7 +1984,15 @@ RealDefWindowProcA(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                /* FIXME: this is not 100% correct */
+                if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+                {
+                    SendMessage(hWnd, WM_NCUAHDRAWCAPTION,0,0);
+                }
+                else
+                {
+                    DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                }
             }
             Result = 1;
             break;
@@ -2130,7 +2138,15 @@ RealDefWindowProcW(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                /* FIXME: this is not 100% correct */
+                if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+                {
+                    SendMessage(hWnd, WM_NCUAHDRAWCAPTION,0,0);
+                }
+                else
+                {
+                    DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+                }
             }
             Result = 1;
             break;

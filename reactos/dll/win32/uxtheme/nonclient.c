@@ -1024,6 +1024,8 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
     {
     case WM_NCPAINT:
         return ThemeHandleNCPaint(hWnd, (HRGN)wParam);
+    case WM_NCUAHDRAWCAPTION:
+    case WM_NCUAHDRAWFRAME:
     case WM_NCACTIVATE:
         ThemeHandleNCPaint(hWnd, (HRGN)1);
         return TRUE;
@@ -1065,16 +1067,13 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
             Pt.x = (short)LOWORD(lParam);
             Pt.y = (short)HIWORD(lParam);
             NC_TrackScrollBar(hWnd, wParam, Pt);
+            return 0;
         }
         else
         {
             return DefWndProc(hWnd, Msg, wParam, lParam);
         }
     }
-    case WM_NCUAHDRAWCAPTION:
-    case WM_NCUAHDRAWFRAME:
-        /* FIXME: how should these be handled? */
-        return 0;
     default:
         return DefWndProc(hWnd, Msg, wParam, lParam);
     }
