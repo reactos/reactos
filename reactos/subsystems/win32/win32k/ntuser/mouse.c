@@ -10,6 +10,9 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
+MOUSEMOVEPOINT MouseHistoryOfMoves[64];
+INT gcur_count = 0;
+
 #define ClearMouseInput(mi) \
   mi.dx = 0; \
   mi.dy = 0; \
@@ -159,6 +162,14 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
             MousePos.y += mi->dy;
         }
     }
+
+    /* Do GetMouseMovePointsEx FIFO. */
+    MouseHistoryOfMoves[gcur_count].x = MousePos.x;
+    MouseHistoryOfMoves[gcur_count].y = MousePos.y;
+    MouseHistoryOfMoves[gcur_count].time = mi->time;
+    MouseHistoryOfMoves[gcur_count].dwExtraInfo = mi->dwExtraInfo;
+    if (++gcur_count == ARRAYSIZE(MouseHistoryOfMoves))
+       gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
 
     /*
      * Insert the messages into the system queue

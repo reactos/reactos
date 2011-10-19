@@ -14,8 +14,6 @@ DBG_DEFAULT_CHANNEL(UserMsgQ);
 /* GLOBALS *******************************************************************/
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
-MOUSEMOVEPOINT MouseHistoryOfMoves[64];
-INT gcur_count = 0;
 PUSER_MESSAGE_QUEUE gpqCursor;
 
 /* FUNCTIONS *****************************************************************/
@@ -587,14 +585,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
        CurInfo->ShowingCursor = 0;
    }
-
-   /* Do GetMouseMovePointsEx FIFO. */
-   MouseHistoryOfMoves[gcur_count].x = Msg->pt.x;
-   MouseHistoryOfMoves[gcur_count].y = Msg->pt.y;
-   MouseHistoryOfMoves[gcur_count].time = Msg->time;
-   MouseHistoryOfMoves[gcur_count].dwExtraInfo = dwExtraInfo;
-   if (++gcur_count == ARRAYSIZE(MouseHistoryOfMoves))
-      gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
 }
 
 VOID FASTCALL
