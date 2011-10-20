@@ -417,73 +417,110 @@ NtGdiPolyDraw(
     IN ULONG cCount)
 {
     PDC dc;
-    PPATH pPath;
-    BOOL result = FALSE;
-    POINT lastmove;
-    unsigned int i;
     PDC_ATTR pdcattr;
+    POINT *line_pts = NULL, *line_pts_old, *bzr_pts = NULL, bzr[4];
+    INT i, num_pts, num_bzr_pts, space, space_old, size;
+    BOOL result = FALSE;
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
     pdcattr = dc->pdcattr;
+
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+       DC_vUpdateFillBrush(dc);
+
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+       DC_vUpdateLineBrush(dc);
+
+    if (!cCount)
+    {
+       DC_UnlockDc(dc);
+       return TRUE;
+    }
 
     _SEH2_TRY
     {
         ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
         ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
 
-        /* check for each bezierto if there are two more points */
-        for ( i = 0; i < cCount; i++ )
+        if (PATH_IsPathOpen(dc->dclevel))
         {
-            if ( lpbTypes[i] != PT_MOVETO &&
-                 lpbTypes[i] & PT_BEZIERTO )
-            {
-                if ( cCount < i+3 ) _SEH2_LEAVE;
-                else i += 2;
-            }
+           result = PATH_PolyDraw(dc, (const POINT *)lppt, (const BYTE *)lpbTypes, cCount);
+           _SEH2_LEAVE;
         }
 
-        /* if no moveto occurs, we will close the figure here */
-        lastmove.x = pdcattr->ptlCurrent.x;
-        lastmove.y = pdcattr->ptlCurrent.y;
-
-        /* now let's draw */
-        for ( i = 0; i < cCount; i++ )
+        /* check for valid point types */
+        for (i = 0; i < cCount; i++)
         {
-            if ( lpbTypes[i] == PT_MOVETO )
-            {
-                IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL, FALSE );
-                lastmove.x = pdcattr->ptlCurrent.x;
-                lastmove.y = pdcattr->ptlCurrent.y;
-            }
-            else if ( lpbTypes[i] & PT_LINETO )
-                IntGdiLineTo( dc, lppt[i].x, lppt[i].y );
-            else if ( lpbTypes[i] & PT_BEZIERTO )
-            {
-                POINT pts[4];
-                pts[0].x = pdcattr->ptlCurrent.x;
-                pts[0].y = pdcattr->ptlCurrent.y;
-                RtlCopyMemory(pts + 1, &lppt[i], sizeof(POINT) * 3);
-                IntGdiPolyBezier(dc, pts, 4);
-                i += 2;
-            }
-            else _SEH2_LEAVE;
-
-            if ( lpbTypes[i] & PT_CLOSEFIGURE )
-            {
-                if ( PATH_IsPathOpen(dc->dclevel) )
-                {
-                    pPath = PATH_LockPath( dc->dclevel.hPath );
-                    if (pPath)
-                    {
-                       IntGdiCloseFigure( pPath );
-                       PATH_UnlockPath( pPath );
-                    }
-                }
-                else IntGdiLineTo( dc, lastmove.x, lastmove.y );
-            }
+           switch (lpbTypes[i])
+           {
+           case PT_MOVETO:
+           case PT_LINETO | PT_CLOSEFIGURE:
+           case PT_LINETO:
+               break;
+           case PT_BEZIERTO:
+               if((i + 2 < cCount) && (lpbTypes[i + 1] == PT_BEZIERTO) &&
+                  ((lpbTypes[i + 2] & ~PT_CLOSEFIGURE) == PT_BEZIERTO))
+               {
+                   i += 2;
+                   break;
+               }
+           default:
+               _SEH2_LEAVE;
+           }
         }
 
+        space = cCount + 300;
+        line_pts = ExAllocatePoolWithTag(PagedPool, space * sizeof(POINT), TAG_SHAPE);
+        num_pts = 1;
+
+        line_pts[0].x = pdcattr->ptlCurrent.x;
+        line_pts[0].y = pdcattr->ptlCurrent.y;
+
+        for ( i = 0; i < cCount; i++ )
+        {
+           switch (lpbTypes[i])
+           {
+           case PT_MOVETO:
+               if (num_pts >= 2) IntGdiPolyline( dc, line_pts, num_pts );
+               num_pts = 0;
+               line_pts[num_pts++] = lppt[i];
+               break;
+           case PT_LINETO:
+           case (PT_LINETO | PT_CLOSEFIGURE):
+               line_pts[num_pts++] = lppt[i];
+               break;
+           case PT_BEZIERTO:
+               bzr[0].x = line_pts[num_pts - 1].x;
+               bzr[0].y = line_pts[num_pts - 1].y;
+               RtlCopyMemory( &bzr[1], &lppt[i], 3 * sizeof(POINT) );
+
+               if ((bzr_pts = GDI_Bezier( bzr, 4, &num_bzr_pts )))
+               {
+                   size = num_pts + (cCount - i) + num_bzr_pts;
+                   if (space < size)
+                   {
+                      space_old = space;
+                      space = size * 2;
+                      line_pts_old = line_pts;
+                      line_pts = ExAllocatePoolWithTag(PagedPool, space * sizeof(POINT), TAG_SHAPE);
+                      if (!line_pts) _SEH2_LEAVE;
+                      RtlCopyMemory(line_pts, line_pts_old, space_old * sizeof(POINT));
+                      ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
+                   }
+                   RtlCopyMemory( &line_pts[num_pts], &bzr_pts[1], (num_bzr_pts - 1) * sizeof(POINT) );
+                   num_pts += num_bzr_pts - 1;
+                   ExFreePoolWithTag(bzr_pts, TAG_BEZIER);
+               }
+               i += 2;
+               break;
+           }
+           if (lpbTypes[i] & PT_CLOSEFIGURE) line_pts[num_pts++] = line_pts[0];
+        }
+
+        if (num_pts >= 2) IntGdiPolyline( dc, line_pts, num_pts );
+        IntGdiMoveToEx( dc, line_pts[num_pts - 1].x, line_pts[num_pts - 1].y, NULL, TRUE );
+        ExFreePoolWithTag(line_pts, TAG_SHAPE);
         result = TRUE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -497,8 +534,8 @@ NtGdiPolyDraw(
     return result;
 }
 
- /*
- * @unimplemented
+/*
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -508,8 +545,32 @@ NtGdiMoveTo(
     IN INT y,
     OUT OPTIONAL LPPOINT pptOut)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDC dc;
+    BOOL Ret;
+    POINT Point;
+
+    dc = DC_LockDc(hdc);
+    if (!dc) return FALSE;
+
+    Ret = IntGdiMoveToEx(dc, x, y, &Point, TRUE);
+
+    if (pptOut)
+    {
+       _SEH2_TRY
+       {
+           ProbeForWrite( pptOut, sizeof(POINT), 1);
+           RtlCopyMemory( pptOut, &Point, sizeof(POINT));
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+           SetLastNtError(_SEH2_GetExceptionCode());
+           Ret = FALSE;
+       }
+       _SEH2_END;
+    }
+    DC_UnlockDc(dc);
+
+    return Ret;
 }
 
 /* EOF */

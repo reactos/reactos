@@ -55,6 +55,7 @@ BOOL FASTCALL PATH_LineTo (PDC dc, INT x, INT y);
 BOOL FASTCALL PATH_MoveTo (PDC dc);
 BOOL FASTCALL PATH_PolyBezier (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyBezierTo (PDC dc, const POINT *pts, DWORD cbPoints);
+BOOL FASTCALL PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints);
 BOOL FASTCALL PATH_Polygon (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_Polyline (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolylineTo (PDC dc, const POINT *pts, DWORD cbPoints);

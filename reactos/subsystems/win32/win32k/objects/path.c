@@ -64,6 +64,18 @@ IntGdiCloseFigure(PPATH pPath)
    }
 }
 
+/* MSDN: This fails if the device coordinates exceed 27 bits, or if the converted
+         logical coordinates exceed 32 bits. */
+BOOL
+FASTCALL
+GdiPathDPtoLP(PDC pdc, PPOINT ppt, INT count)
+{
+  XFORMOBJ xo;
+   
+  XFORMOBJ_vInit(&xo, &pdc->dclevel.mxDeviceToWorld);
+  return XFORMOBJ_bApplyXform(&xo, XF_LTOL, count, (PPOINTL)ppt, (PPOINTL)ppt);
+}
+
 /* PATH_FillPath
  *
  *
@@ -718,6 +730,103 @@ PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
   }
   PATH_UnlockPath( pPath );
   return TRUE;
+}
+
+BOOL
+FASTCALL
+PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints)
+{
+  PPATH pPath;
+  POINT lastmove, orig_pos;
+  INT i;
+  PDC_ATTR pdcattr;
+  BOOL State = FALSE, Ret = FALSE;
+
+  pPath = PATH_LockPath( dc->dclevel.hPath );
+  if (!pPath) return FALSE;
+
+  if ( pPath->state != PATH_Open )
+  {
+    PATH_UnlockPath( pPath );
+    return FALSE;
+  }
+
+  pdcattr = dc->pdcattr;  
+
+  lastmove.x = orig_pos.x = pdcattr->ptlCurrent.x;
+  lastmove.y = orig_pos.y = pdcattr->ptlCurrent.y;
+
+  for (i = pPath->numEntriesUsed - 1; i >= 0; i--)
+  {
+      if (pPath->pFlags[i] == PT_MOVETO)
+      {
+         lastmove.x = pPath->pPoints[i].x;
+         lastmove.y = pPath->pPoints[i].y;
+         if (!GdiPathDPtoLP(dc, &lastmove, 1))
+         {
+            PATH_UnlockPath( pPath );
+            return FALSE;
+         }
+         break;
+       }
+  }
+
+  for (i = 0; i < cbPoints; i++)
+  {
+      if (types[i] == PT_MOVETO)
+      {
+                pPath->newStroke = TRUE;
+                lastmove.x = pts[i].x;
+                lastmove.y = pts[i].y;
+      }
+      else if((types[i] & ~PT_CLOSEFIGURE) == PT_LINETO)
+      {
+                PATH_LineTo(dc, pts[i].x, pts[i].y);
+      }
+      else if(types[i] == PT_BEZIERTO)
+      {
+          if (!((i + 2 < cbPoints) && (types[i + 1] == PT_BEZIERTO)
+              && ((types[i + 2] & ~PT_CLOSEFIGURE) == PT_BEZIERTO)))
+              goto err;
+          PATH_PolyBezierTo(dc, &(pts[i]), 3);
+          i += 2;
+      }
+      else
+         goto err;
+
+     pdcattr->ptlCurrent.x = pts[i].x;
+     pdcattr->ptlCurrent.y = pts[i].y;
+     State = TRUE;
+
+     if (types[i] & PT_CLOSEFIGURE)
+     {
+        pPath->pFlags[pPath->numEntriesUsed-1] |= PT_CLOSEFIGURE;
+        pPath->newStroke = TRUE;
+        pdcattr->ptlCurrent.x = lastmove.x;
+        pdcattr->ptlCurrent.y = lastmove.y;
+        State = TRUE;
+     }
+  }
+  Ret = TRUE;
+  goto Exit;
+
+err:
+  if ((pdcattr->ptlCurrent.x != orig_pos.x) || (pdcattr->ptlCurrent.y != orig_pos.y))
+  {
+     pPath->newStroke = TRUE;
+     pdcattr->ptlCurrent.x = orig_pos.x;
+     pdcattr->ptlCurrent.y = orig_pos.y;
+     State = TRUE;
+  }
+Exit:
+  if (State) // State change?
+  {
+     pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
+     CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
+     pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+  }
+  PATH_UnlockPath( pPath );
+  return Ret;
 }
 
 BOOL
@@ -1467,7 +1576,7 @@ BOOL
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    INT i, j, numStrokes, numOldStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
     PPATH pPath, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
@@ -1554,6 +1663,7 @@ PATH_WidenPath(DC *dc)
                 {
                     pStrokes[numStrokes - 1]->state = PATH_Closed;
                 }
+                numOldStrokes = numStrokes;
                 numStrokes++;
                 j = 0;
                 if (numStrokes == 1)
@@ -1563,7 +1673,7 @@ PATH_WidenPath(DC *dc)
                    pOldStrokes = pStrokes; // Save old pointer.
                    pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
                    if (!pStrokes) return FALSE;
-                   RtlCopyMemory(pStrokes, pOldStrokes, numStrokes * sizeof(PPATH));
+                   RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
                    ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
                 }
                 if (!pStrokes) return FALSE;
@@ -2392,7 +2502,11 @@ NtGdiGetPath(
          memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
 
          /* Convert the points to logical coordinates */
-         IntDPtoLP(dc, Points, pPath->numEntriesUsed);
+         if (!GdiPathDPtoLP(dc, Points, pPath->numEntriesUsed))
+         {
+            EngSetLastError(ERROR_ARITHMETIC_OVERFLOW);
+            _SEH2_LEAVE;
+         }
 
          ret = pPath->numEntriesUsed;
       }
