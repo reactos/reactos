@@ -9,7 +9,5 @@ add_subdirectory(libmpg123)
 add_subdirectory(libsamplerate)
 add_subdirectory(libwine)
 add_subdirectory(libxml2)
-if(MSVC)
-    add_subdirectory(stlport)
-endif()
+# add_subdirectory(stlport) FIXME: Add proper STL support
 add_subdirectory(zlib)
