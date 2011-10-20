@@ -51,7 +51,7 @@ private:
 
     LPWSTR szPath;
     SHELLNEW_ITEM *s_SnHead;
-	CComPtr<IUnknown>					fSite;
+    IUnknown*	fSite;
 public:
 	CNewMenu();
 	~CNewMenu();
@@ -60,7 +60,7 @@ public:
 	void UnloadShellItems();
 	BOOL LoadShellNewItems();
 	UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
-	HRESULT DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi);
+	HRESULT DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi, IShellView * psv);
 	HRESULT DoMeasureItem(HWND hWnd, MEASUREITEMSTRUCT *lpmis);
 	HRESULT DoDrawItem(HWND hWnd, DRAWITEMSTRUCT *drawItem);
 	void DoNewFolder(IShellView *psv);

@@ -336,7 +336,7 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu)
 }
 
 HRESULT
-CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi)
+CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi, IShellView *psv)
 {
   SHELLNEW_ITEM *pCurItem = s_SnHead;
   IPersistFolder3 * psf;
@@ -372,9 +372,9 @@ CNewMenu::DoShellNewCmd(LPCMINVOKECOMMANDINFO lpcmi)
   if (!pCurItem)
       return E_UNEXPECTED;
 
-    if (fSite == NULL)
-        return E_FAIL;
-    hResult = IUnknown_QueryService(fSite, SID_IFolderView, IID_IFolderView, (void **)&folderView);
+    //if (fSite == NULL)
+    //    return E_FAIL;
+    hResult = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&folderView);
     if (FAILED(hResult))
         return hResult;
     hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
@@ -575,9 +575,9 @@ void CNewMenu::DoNewFolder(
     CComPtr<IShellFolder>                parentFolder;
     HRESULT                                hResult;
 
-    if (fSite == NULL)
-        return;
-    hResult = IUnknown_QueryService(fSite, SID_IFolderView, IID_IFolderView, (void **)&folderView);
+    //if (fSite == NULL)
+    //    return;
+    hResult = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&folderView);
     if (FAILED(hResult))
         return;
     hResult = folderView->GetFolder(IID_IShellFolder, (void **)&parentFolder);
@@ -620,8 +620,8 @@ HRESULT STDMETHODCALLTYPE CNewMenu::GetSite(REFIID riid, void **ppvSite)
     if (ppvSite == NULL)
         return E_POINTER;
     *ppvSite = fSite;
-    if (fSite.p != NULL)
-        fSite.p->AddRef();
+    if (fSite != NULL)
+        fSite->AddRef();
     return S_OK;
 }
 
@@ -690,7 +690,7 @@ CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
         return S_OK;
     }
 
-    hr = DoShellNewCmd(lpici);
+    hr = DoShellNewCmd(lpici, lpSV);
     if (SUCCEEDED(hr) && lpSV)
     {
         lpSV->Refresh();
