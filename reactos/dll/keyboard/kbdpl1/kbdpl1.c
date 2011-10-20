@@ -264,7 +264,7 @@ ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
   { VK_NUMPAD7, 0, {'7'} },
   { VK_NUMPAD8, 0, {'8'} },
   { VK_NUMPAD9, 0, {'9'} },
-  { VK_DECIMAL, 0, {'.'} },
+  { VK_DECIMAL, 0, {','} },
   { VK_BACK,    0, {'\010'} },
   { 0, 0 }
 };
@@ -375,20 +375,21 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'e', L'~', 0x0119, 0x00) },
   { DEADTRANS(L'l', L'~', 0x0142, 0x00) },
   { DEADTRANS(L'n', L'~', 0x0144, 0x00) },
-  { DEADTRANS(L'o', L'~', 0xF3, 0x00) },
+  { DEADTRANS(L'o', L'~', 0xF3,   0x00) },
   { DEADTRANS(L's', L'~', 0x015B, 0x00) },
   { DEADTRANS(L'x', L'~', 0x017A, 0x00) },
   { DEADTRANS(L'z', L'~', 0x017C, 0x00) },
-
   { DEADTRANS(L'A', L'~', 0x0104, 0x00) },
   { DEADTRANS(L'C', L'~', 0x0106, 0x00) },
   { DEADTRANS(L'E', L'~', 0x0118, 0x00) },
   { DEADTRANS(L'L', L'~', 0x0141, 0x00) },
   { DEADTRANS(L'N', L'~', 0x0143, 0x00) },
-  { DEADTRANS(L'O', L'~', 0xD3, 0x00) },
+  { DEADTRANS(L'O', L'~', 0xD3,   0x00) },
   { DEADTRANS(L'S', L'~', 0x015A, 0x00) },
   { DEADTRANS(L'X', L'~', 0x0179, 0x00) },
   { DEADTRANS(L'Z', L'~', 0x017B, 0x00) },
+  { DEADTRANS(L' ', L'~', L'~',   0x00) },
+  { 0, 0, 0 },
 };
 
 /* Finally, the master table */
