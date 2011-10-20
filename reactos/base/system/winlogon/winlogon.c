@@ -271,57 +271,61 @@ static BOOL
 InitKeyboardLayouts()
 {
     WCHAR wszKeyName[12], wszKLID[10];
-	DWORD dwSize = sizeof(wszKLID), dwType, i;
+	DWORD dwSize = sizeof(wszKLID), dwType, i = 1;
     HKEY hKey;
     UINT Flags;
     BOOL bRet = FALSE;
 
     /* Open registry key with preloaded layouts */
-	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
 	{
-	    ERR("RegOpenKeyExW failed!\n");
-	    return FALSE;
-	}
-
-    i = 1;
-    while(TRUE)
-    {
-        /* Read values with integer names only */
-        swprintf(wszKeyName, L"%d", i);
-        if (RegQueryValueExW(hKey, wszKeyName, NULL, &dwType, (LPBYTE)wszKLID, &dwSize) != ERROR_SUCCESS)
+        while(TRUE)
         {
-            /* If we loaded at least one layout and there is no more
-               registry values return TRUE */
+            /* Read values with integer names only */
+            swprintf(wszKeyName, L"%d", i++);
+            if (RegQueryValueExW(hKey, wszKeyName, NULL, &dwType, (LPBYTE)wszKLID, &dwSize) != ERROR_SUCCESS)
+            {
+                /* There is no more entries */
+                break;
+            }
+
+            /* Only REG_SZ values are valid */
+            if (dwType != REG_SZ)
+            {
+                ERR("Wrong type: %ws!\n", wszKLID);
+                continue;
+            }
+
+            /* Load keyboard layout with given locale id */
+            Flags = KLF_SUBSTITUTE_OK;
             if (i > 1)
+                Flags |= KLF_NOTELLSHELL|KLF_REPLACELANG;
+            else // First layout
+                Flags |= KLF_ACTIVATE; // |0x40000000
+            if (!LoadKeyboardLayoutW(wszKLID, Flags))
+            {
+                ERR("LoadKeyboardLayoutW(%ws) failed!\n", wszKLID);
+                continue;
+            }
+            else
+            {
+                /* We loaded at least one layout - success */
                 bRet = TRUE;
-            break;
+            }
         }
 
-        /* Only REG_SZ values are valid */
-        if (dwType != REG_SZ)
-        {
-            ERR("Wrong type!\n");
-            break;
-        }
+        /* Close the key now */
+        RegCloseKey(hKey);
+	}
+	else
+	    WARN("RegOpenKeyExW(Keyboard Layout\\Preload) failed!\n");
 
-        /* Load keyboard layout with given locale id */
-        Flags = KLF_SUBSTITUTE_OK;
-        if (i > 1)
-            Flags |= KLF_NOTELLSHELL|KLF_REPLACELANG;
-        else // First layout
-            Flags |= KLF_ACTIVATE; // |0x40000000
-        if (!LoadKeyboardLayoutW(wszKLID, Flags))
-        {
-            ERR("LoadKeyboardLayoutW failed!\n");
-            break;
-        }
-
-        /* Move to the next entry */
-        ++i;
+    if (!bRet)
+    {
+        /* If we failed, load US keyboard layout */
+        if (LoadKeyboardLayoutW(L"00000409", 0x04090409))
+            bRet = TRUE;
     }
-
-    /* Close the key now */
-	RegCloseKey(hKey);
 
     return bRet;
 }
