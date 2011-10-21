@@ -1655,7 +1655,7 @@ MUI_STRING deDEStrings[] =
     {STRING_FORMATTINGDISK,
     "Setup formatiert Ihre Festplatte"},
     {STRING_CHECKINGDISK,
-    "Setup ¸berpr¸ft Ihre Festplatte"},
+    "Setup ÅberprÅft Ihre Festplatte"},
     {STRING_FORMATDISK1,
     " Formatiere Partition als %S-Dateisystem (Schnell) "},
     {STRING_FORMATDISK2,
@@ -1703,6 +1703,6 @@ MUI_STRING deDEStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Tastaturlayout hinzuf¸gen"},
+    "Tastaturlayout hinzufÅgen"},
     {0, 0}
 };
