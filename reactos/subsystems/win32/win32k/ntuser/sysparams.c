@@ -1167,8 +1167,19 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             break;
 
         case SPI_SETDEFAULTINPUTLANG:
-            ERR("SPI_SETDEFAULTINPUTLANG is unimplemented\n");
-            break;
+        {
+            HKL hkl;
+
+            if (!SpiSet(&hkl, pvParam, sizeof(hkl), fl))
+                return FALSE;
+
+            if (fl & SPIF_UPDATEINIFILE)
+            {
+                // FIXME: what to do?
+            }
+
+            return UserSetDefaultInputLang(hkl);
+        }
 
         case SPI_SETLANGTOGGLE:
             ERR("SPI_SETLANGTOGGLE is unimplemented\n");

@@ -324,6 +324,7 @@ W32kGetDefaultKeyLayout(VOID)
  * Gets KL object from hkl value
  */
 PKL
+NTAPI
 UserHklToKbl(HKL hKl)
 {
     PKL pKl = gspklBaseLayout;
@@ -340,6 +341,25 @@ UserHklToKbl(HKL hKl)
     } while (pKl != gspklBaseLayout);
 
     return NULL;
+}
+
+/*
+ * UserSetDefaultInputLang
+ *
+ * Sets default kyboard layout for system. Called from UserSystemParametersInfo.
+ */
+BOOL
+NTAPI
+UserSetDefaultInputLang(HKL hKl)
+{
+    PKL pKl;
+    
+    pKl = UserHklToKbl(hKl);
+    if (!pKl)
+        return FALSE;
+
+    gspklBaseLayout = pKl;
+    return TRUE;
 }
 
 /*
@@ -597,9 +617,6 @@ NtUserLoadKeyboardLayoutEx(
 
     /* If this layout was prepared to unload, undo it */
     pKl->dwKL_Flags &= ~KLF_UNLOAD;
-
-    /* Loaded keyboard layout became the default */
-    gspklBaseLayout = pKl;
 
     /* Activate this layout in current thread */
     if (Flags & KLF_ACTIVATE)

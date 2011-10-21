@@ -448,14 +448,13 @@ BOOL APIENTRY
 NtUserUnregisterHotKey(HWND hWnd, int id)
 {
     PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
-    PWND pWnd;
     BOOL bRet = FALSE;
 
     TRACE("Enter NtUserUnregisterHotKey\n");
     UserEnterExclusive();
 
-    pWnd = UserGetWindowObject(hWnd);
-    if (!pWnd)
+    /* Fail if given window is invalid */
+    if (hWnd && !UserGetWindowObject(hWnd))
         goto cleanup;
 
     while (pHotKey)
