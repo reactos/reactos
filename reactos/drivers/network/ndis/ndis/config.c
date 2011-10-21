@@ -482,7 +482,7 @@ NdisReadConfiguration(
     *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation, NULL, 0, &KeyDataLength);
     if(*Status != STATUS_BUFFER_OVERFLOW && *Status != STATUS_BUFFER_TOO_SMALL && *Status != STATUS_SUCCESS)
     {
-        NDIS_DbgPrint(MIN_TRACE,("ZwQueryValueKey #1 failed for %wZ, status 0x%x\n", Keyword, *Status));
+        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #1 failed for %wZ, status 0x%x\n", Keyword, *Status));
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
@@ -697,7 +697,7 @@ NdisReadNetworkAddress(
     NdisReadConfiguration(Status, &ParameterValue, ConfigurationHandle, &Keyword, NdisParameterString);
     if(*Status != NDIS_STATUS_SUCCESS)
     {
-        NDIS_DbgPrint(MIN_TRACE, ("NdisReadConfiguration failed (%x)\n", *Status));
+        NDIS_DbgPrint(MID_TRACE, ("NdisReadConfiguration failed (%x)\n", *Status));
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
