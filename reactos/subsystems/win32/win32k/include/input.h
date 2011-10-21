@@ -92,3 +92,6 @@ extern BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
                                                               ((ks)[GET_KS_BYTE(vk)] | GET_KS_LOCK_BIT(vk)) : \
                                                               ((ks)[GET_KS_BYTE(vk)] & ~GET_KS_LOCK_BIT(vk)))
 
+
+extern PKL gspklBaseLayout;
+

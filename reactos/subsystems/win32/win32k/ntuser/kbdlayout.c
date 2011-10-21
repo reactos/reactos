@@ -353,7 +353,7 @@ NTAPI
 UserSetDefaultInputLang(HKL hKl)
 {
     PKL pKl;
-    
+
     pKl = UserHklToKbl(hKl);
     if (!pKl)
         return FALSE;

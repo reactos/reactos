@@ -1163,8 +1163,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             break;
 
         case SPI_GETDEFAULTINPUTLANG:
-            ERR("SPI_GETDEFAULTINPUTLANG is unimplemented\n");
-            break;
+            if (!gspklBaseLayout)
+                return FALSE;
+
+            return SpiGet(pvParam, &gspklBaseLayout->hkl, sizeof(HKL), fl);
 
         case SPI_SETDEFAULTINPUTLANG:
         {
