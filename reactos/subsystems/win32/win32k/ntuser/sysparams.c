@@ -1172,13 +1172,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         {
             HKL hkl;
 
-            if (!SpiSet(&hkl, pvParam, sizeof(hkl), fl))
+            /* Note: SPIF_UPDATEINIFILE is not supported */
+            if ((fl & SPIF_UPDATEINIFILE) || !SpiSet(&hkl, pvParam, sizeof(hkl), fl))
                 return FALSE;
-
-            if (fl & SPIF_UPDATEINIFILE)
-            {
-                // FIXME: what to do?
-            }
 
             return UserSetDefaultInputLang(hkl);
         }
