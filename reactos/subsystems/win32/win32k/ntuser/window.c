@@ -2506,7 +2506,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 
     /* Generate mouse move message for the next window */
     msg.message = WM_MOUSEMOVE;
-    msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
+    msg.wParam = UserGetMouseButtonsState();
     msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
     msg.pt = gpsi->ptCursor;
     co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);

@@ -58,23 +58,27 @@ extern PATTACHINFO gpai;
 /* lParam bits */
 #define LP_DO_NOT_CARE_BIT (1<<25) // for GetKeyNameText
 
-
+/* General */
 INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);
+BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
+DWORD NTAPI CreateSystemThreads(UINT Type);
+BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
+VOID FASTCALL DoTheScreenSaver(VOID);
+#define ThreadHasInputAccess(W32Thread) (TRUE)
+
+/* Keyboard */
 INIT_FUNCTION NTSTATUS NTAPI InitKeyboardImpl(VOID);
 VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
 PKL W32kGetDefaultKeyLayout(VOID);
 VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
-VOID NTAPI UserProcessMouseInput(PMOUSE_INPUT_DATA Data, ULONG InputCount);
-BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
-BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi, BOOL Injected);
 PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
-VOID NTAPI KeyboardThreadMain(PVOID StartContext);
-DWORD NTAPI CreateSystemThreads(UINT Type);
-BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
-VOID FASTCALL DoTheScreenSaver(VOID);
-#define ThreadHasInputAccess(W32Thread) (TRUE)
+
+/* Mouse */
+WORD FASTCALL UserGetMouseButtonsState(VOID);
+VOID NTAPI UserProcessMouseInput(PMOUSE_INPUT_DATA pMouseInputData);
+BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
 
 extern HANDLE ghKeyboardDevice;
 extern PTHREADINFO ptiRawInput;

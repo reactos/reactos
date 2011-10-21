@@ -1317,7 +1317,7 @@ co_WinPosSetWindowPos(
       /* Generate mouse move message */
       MSG msg;
       msg.message = WM_MOUSEMOVE;
-      msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
+      msg.wParam = UserGetMouseButtonsState();
       msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
       msg.pt = gpsi->ptCursor;
       co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);

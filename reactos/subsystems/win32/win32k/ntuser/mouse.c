@@ -10,285 +10,331 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
-MOUSEMOVEPOINT MouseHistoryOfMoves[64];
-INT gcur_count = 0;
+MOUSEMOVEPOINT gMouseHistoryOfMoves[64];
+INT gcMouseHistoryOfMoves = 0;
 
-#define ClearMouseInput(mi) \
-  mi.dx = 0; \
-  mi.dy = 0; \
-  mi.mouseData = 0; \
-  mi.dwFlags = 0;
-
-#define SendMouseEvent(mi) \
-  if(mi.dx != 0 || mi.dy != 0) \
-    mi.dwFlags |= MOUSEEVENTF_MOVE; \
-  if(mi.dwFlags) \
-    IntMouseInput(&mi,FALSE); \
-  ClearMouseInput(mi);
-
-VOID NTAPI
-UserProcessMouseInput(PMOUSE_INPUT_DATA Data, ULONG InputCount)
+/*
+ * UserGetMouseButtonsState
+ *
+ * Returns bitfield of MK_* flags used in mouse messages
+ */
+WORD FASTCALL
+UserGetMouseButtonsState(VOID)
 {
-    PMOUSE_INPUT_DATA mid;
-    MOUSEINPUT mi;
-    ULONG i;
+    WORD wRet = 0;
 
-    ClearMouseInput(mi);
-    mi.time = 0;
-    mi.dwExtraInfo = 0;
-    for(i = 0; i < InputCount; i++)
-    {
-        mid = (Data + i);
-        mi.dx += mid->LastX;
-        mi.dy += mid->LastY;
+    wRet = IntGetSysCursorInfo()->ButtonsDown;
 
-        /* Check if the mouse move is absolute */
-        if (mid->Flags == MOUSE_MOVE_ABSOLUTE)
-        {
-            /* Set flag to convert to screen location */
-            mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
-        }
+    if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)) wRet |= MK_SHIFT;
+    if (IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)) wRet |= MK_CONTROL;
 
-        if(mid->ButtonFlags)
-        {
-            if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
-            {
-                mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
-            {
-                mi.dwFlags |= MOUSEEVENTF_LEFTUP;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
-            {
-                mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
-            {
-                mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
-            {
-                mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
-            {
-                mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_BUTTON_4_DOWN)
-            {
-                mi.mouseData |= XBUTTON1;
-                mi.dwFlags |= MOUSEEVENTF_XDOWN;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_BUTTON_4_UP)
-            {
-                mi.mouseData |= XBUTTON1;
-                mi.dwFlags |= MOUSEEVENTF_XUP;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_BUTTON_5_DOWN)
-            {
-                mi.mouseData |= XBUTTON2;
-                mi.dwFlags |= MOUSEEVENTF_XDOWN;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_BUTTON_5_UP)
-            {
-                mi.mouseData |= XBUTTON2;
-                mi.dwFlags |= MOUSEEVENTF_XUP;
-                SendMouseEvent(mi);
-            }
-            if(mid->ButtonFlags & MOUSE_WHEEL)
-            {
-                mi.mouseData = mid->ButtonData;
-                mi.dwFlags |= MOUSEEVENTF_WHEEL;
-                SendMouseEvent(mi);
-            }
-        }
-    }
-
-    SendMouseEvent(mi);
+    return wRet;
 }
 
-BOOL FASTCALL
-IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
+/*
+ * UserProcessMouseInput
+ *
+ * Process raw mouse input data
+ */
+VOID NTAPI
+UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
 {
-    const UINT SwapBtnMsg[2][2] =
-    {
-        {WM_LBUTTONDOWN, WM_RBUTTONDOWN},
-        {WM_LBUTTONUP, WM_RBUTTONUP}
-    };
-    const WPARAM SwapBtn[2] =
-    {
-        MK_LBUTTON, MK_RBUTTON
-    };
-    POINT MousePos;
-    PSYSTEM_CURSORINFO CurInfo;
-    BOOL SwapButtons;
-    MSG Msg;
+    MOUSEINPUT mi;
 
-    ASSERT(mi);
+    /* Convert MOUSE_INPUT_DATA to MOUSEINPUT. First init all fields. */
+    mi.dx = mid->LastX;
+    mi.dy = mid->LastY;
+    mi.mouseData = 0;
+    mi.dwFlags = 0;
+    mi.time = 0;
+    mi.dwExtraInfo = mid->ExtraInformation;
 
-    CurInfo = IntGetSysCursorInfo();
+    /* Mouse position */
+    if (mi.dx != 0 || mi.dy != 0)
+        mi.dwFlags |= MOUSEEVENTF_MOVE;
 
-    if(!mi->time)
+    /* Flags for absolute move */
+    if (mid->Flags & MOUSE_MOVE_ABSOLUTE)
+        mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
+    if (mid->Flags & MOUSE_VIRTUAL_DESKTOP)
+        mi.dwFlags |= MOUSEEVENTF_VIRTUALDESK;
+
+    /* Left button */
+    if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
+        mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
+    if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
+        mi.dwFlags |= MOUSEEVENTF_LEFTUP;
+
+    /* Middle button */
+    if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
+        mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
+    if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
+        mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
+
+    /* Right button */
+    if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
+        mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
+    if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
+        mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
+
+    /* Note: next buttons use mouseData field so they cannot be sent in one call */
+
+    /* Button 4 */
+    if (mid->ButtonFlags & MOUSE_BUTTON_4_DOWN)
     {
-        LARGE_INTEGER LargeTickCount;
-        KeQueryTickCount(&LargeTickCount);
-        mi->time = MsqCalculateMessageTime(&LargeTickCount);
+        mi.dwFlags |= MOUSEEVENTF_XDOWN;
+        mi.mouseData |= XBUTTON1;
+    }
+    if (mid->ButtonFlags & MOUSE_BUTTON_4_UP)
+    {
+        mi.dwFlags |= MOUSEEVENTF_XUP;
+        mi.mouseData |= XBUTTON1;
     }
 
-    SwapButtons = gspv.bMouseBtnSwap;
-
-    MousePos = gpsi->ptCursor;
-
-    if(mi->dwFlags & MOUSEEVENTF_MOVE)
+    /* If mouseData is used by button 4, send input and clear mi */
+    if (mi.dwFlags & (MOUSE_BUTTON_4_DOWN | MOUSE_BUTTON_4_UP))
     {
-        if(mi->dwFlags & MOUSEEVENTF_ABSOLUTE)
+        UserSendMouseInput(&mi, FALSE);
+        RtlZeroMemory(&mi, sizeof(mi));
+    }
+
+    /* Button 5 */
+    if (mid->ButtonFlags & MOUSE_BUTTON_5_DOWN)
+    {
+        mi.mouseData |= XBUTTON2;
+        mi.dwFlags |= MOUSEEVENTF_XDOWN;
+    }
+    if (mid->ButtonFlags & MOUSE_BUTTON_5_UP)
+    {
+        mi.mouseData |= XBUTTON2;
+        mi.dwFlags |= MOUSEEVENTF_XUP;
+    }
+
+    /* If mouseData is used by button 5, send input and clear mi */
+    if (mi.dwFlags & (MOUSE_BUTTON_5_DOWN | MOUSE_BUTTON_5_UP))
+    {
+        UserSendMouseInput(&mi, FALSE);
+        RtlZeroMemory(&mi, sizeof(mi));
+    }
+
+    /* Mouse wheel */
+    if (mid->ButtonFlags & MOUSE_WHEEL)
+    {
+        mi.mouseData = mid->ButtonData;
+        mi.dwFlags |= MOUSEEVENTF_WHEEL;
+    }
+
+    /* If something has changed, send input to user */
+    if (mi.dwFlags)
+        UserSendMouseInput(&mi, FALSE);
+}
+
+/*
+ * IntFixMouseInputButtons
+ *
+ * Helper function for supporting mouse button swap function
+ */
+DWORD
+IntFixMouseInputButtons(DWORD dwFlags)
+{
+    DWORD dwNewFlags;
+
+    if (!gspv.bMouseBtnSwap)
+        return dwFlags;
+
+    /* Buttons other than left and right are not affected */
+    dwNewFlags = dwFlags & ~(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP |
+                             MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP);
+
+    /* Swap buttons */
+    if (dwFlags & MOUSEEVENTF_LEFTDOWN)
+        dwNewFlags |= MOUSEEVENTF_RIGHTDOWN;
+    if (dwFlags & MOUSEEVENTF_LEFTUP)
+        dwNewFlags |= MOUSEEVENTF_RIGHTUP;
+    if (dwFlags & MOUSEEVENTF_RIGHTDOWN)
+        dwNewFlags |= MOUSEEVENTF_LEFTDOWN;
+    if (dwFlags & MOUSEEVENTF_RIGHTUP)
+        dwNewFlags |= MOUSEEVENTF_LEFTUP;
+
+    return dwNewFlags;
+}
+
+/*
+ * UserSendMouseInput
+ *
+ * Process mouse input from input devices and SendInput API
+ */
+BOOL NTAPI
+UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
+{
+    POINT ptCursor;
+    PSYSTEM_CURSORINFO pCurInfo;
+    MSG Msg;
+    DWORD dwFlags;
+
+    ASSERT(pmi);
+
+    pCurInfo = IntGetSysCursorInfo();
+    ptCursor = gpsi->ptCursor;
+    dwFlags = IntFixMouseInputButtons(pmi->dwFlags);
+
+    if (pmi->dwFlags & MOUSEEVENTF_MOVE)
+    {
+        /* Mouse has changes position */
+        if (!(pmi->dwFlags & MOUSEEVENTF_ABSOLUTE))
         {
-            MousePos.x = mi->dx * UserGetSystemMetrics(SM_CXVIRTUALSCREEN) >> 16;
-            MousePos.y = mi->dy * UserGetSystemMetrics(SM_CYVIRTUALSCREEN) >> 16;
+            /* Relative move */
+            ptCursor.x += pmi->dx;
+            ptCursor.y += pmi->dy;
+        }
+        else if (pmi->dwFlags & MOUSEEVENTF_VIRTUALDESK)
+        {
+            /* Absolute move in virtual screen units */
+            ptCursor.x = pmi->dx * UserGetSystemMetrics(SM_CXVIRTUALSCREEN) >> 16;
+            ptCursor.y = pmi->dy * UserGetSystemMetrics(SM_CYVIRTUALSCREEN) >> 16;
         }
         else
         {
-            MousePos.x += mi->dx;
-            MousePos.y += mi->dy;
+            /* Absolute move in primary monitor units */
+            ptCursor.x = pmi->dx * UserGetSystemMetrics(SM_CXSCREEN) >> 16;
+            ptCursor.y = pmi->dy * UserGetSystemMetrics(SM_CYSCREEN) >> 16;
         }
+    }
+
+    /* Init message fields */
+    Msg.wParam = UserGetMouseButtonsState();
+    Msg.lParam = MAKELPARAM(ptCursor.x, ptCursor.y);
+    Msg.pt = ptCursor;
+    Msg.time = pmi->time;
+    if (!Msg.time)
+    {
+        LARGE_INTEGER LargeTickCount;
+        KeQueryTickCount(&LargeTickCount);
+        Msg.time = MsqCalculateMessageTime(&LargeTickCount);
     }
 
     /* Do GetMouseMovePointsEx FIFO. */
-    MouseHistoryOfMoves[gcur_count].x = MousePos.x;
-    MouseHistoryOfMoves[gcur_count].y = MousePos.y;
-    MouseHistoryOfMoves[gcur_count].time = mi->time;
-    MouseHistoryOfMoves[gcur_count].dwExtraInfo = mi->dwExtraInfo;
-    if (++gcur_count == ARRAYSIZE(MouseHistoryOfMoves))
-       gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
+    gMouseHistoryOfMoves[gcMouseHistoryOfMoves].x = ptCursor.x;
+    gMouseHistoryOfMoves[gcMouseHistoryOfMoves].y = ptCursor.y;
+    gMouseHistoryOfMoves[gcMouseHistoryOfMoves].time = Msg.time;
+    gMouseHistoryOfMoves[gcMouseHistoryOfMoves].dwExtraInfo = pmi->dwExtraInfo;
+    if (++gcMouseHistoryOfMoves == ARRAYSIZE(gMouseHistoryOfMoves))
+       gcMouseHistoryOfMoves = 0; // 0 - 63 is 64, FIFO forwards.
 
-    /*
-     * Insert the messages into the system queue
-     */
-    Msg.wParam = 0;
-    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
-    Msg.pt = MousePos;
-
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+    /* Update cursor position */
+    if (dwFlags & MOUSEEVENTF_MOVE)
     {
-        Msg.wParam |= MK_SHIFT;
+        UserSetCursorPos(ptCursor.x, ptCursor.y, bInjected, pmi->dwExtraInfo, TRUE);
     }
 
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
-    {
-        Msg.wParam |= MK_CONTROL;
-    }
-
-    if(mi->dwFlags & MOUSEEVENTF_MOVE)
-    {
-        UserSetCursorPos(MousePos.x, MousePos.y, Injected, mi->dwExtraInfo, TRUE);
-    }
-    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
+    /* Left button */
+    if (dwFlags & MOUSEEVENTF_LEFTDOWN)
     {
         SET_KEY_DOWN(gafAsyncKeyState, VK_LBUTTON, TRUE);
-        Msg.message = SwapBtnMsg[0][SwapButtons];
-        CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
-        Msg.wParam |= CurInfo->ButtonsDown;
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+        Msg.message = WM_LBUTTONDOWN;
+        pCurInfo->ButtonsDown |= MK_LBUTTON;
+        Msg.wParam |= MK_LBUTTON;
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
     }
-    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
+    else if (dwFlags & MOUSEEVENTF_LEFTUP)
     {
         SET_KEY_DOWN(gafAsyncKeyState, VK_LBUTTON, FALSE);
-        Msg.message = SwapBtnMsg[1][SwapButtons];
-        CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
-        Msg.wParam |= CurInfo->ButtonsDown;
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+        Msg.message = WM_LBUTTONUP;
+        pCurInfo->ButtonsDown &= ~MK_LBUTTON;
+        Msg.wParam &= ~MK_LBUTTON;
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
     }
-    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
+
+    /* Middle button */
+    if (dwFlags & MOUSEEVENTF_MIDDLEDOWN)
     {
         SET_KEY_DOWN(gafAsyncKeyState, VK_MBUTTON, TRUE);
         Msg.message = WM_MBUTTONDOWN;
-        CurInfo->ButtonsDown |= MK_MBUTTON;
-        Msg.wParam |= CurInfo->ButtonsDown;
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+        pCurInfo->ButtonsDown |= MK_MBUTTON;
+        Msg.wParam |= MK_MBUTTON;
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
     }
-    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
+    else if (dwFlags & MOUSEEVENTF_MIDDLEUP)
     {
         SET_KEY_DOWN(gafAsyncKeyState, VK_MBUTTON, FALSE);
         Msg.message = WM_MBUTTONUP;
-        CurInfo->ButtonsDown &= ~MK_MBUTTON;
-        Msg.wParam |= CurInfo->ButtonsDown;
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
-    }
-    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
-    {
-        SET_KEY_DOWN(gafAsyncKeyState, VK_RBUTTON, TRUE);
-        Msg.message = SwapBtnMsg[0][!SwapButtons];
-        CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
-        Msg.wParam |= CurInfo->ButtonsDown;
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
-    }
-    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
-    {
-        SET_KEY_DOWN(gafAsyncKeyState, VK_RBUTTON, FALSE);
-        Msg.message = SwapBtnMsg[1][!SwapButtons];
-        CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
-        Msg.wParam |= CurInfo->ButtonsDown;
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+        pCurInfo->ButtonsDown &= ~MK_MBUTTON;
+        Msg.wParam &= ~MK_MBUTTON;
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
     }
 
-    if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
-            (mi->dwFlags & MOUSEEVENTF_WHEEL))
+    /* Right button */
+    if (dwFlags & MOUSEEVENTF_RIGHTDOWN)
     {
-        /* fail because both types of events use the mouseData field */
+        SET_KEY_DOWN(gafAsyncKeyState, VK_RBUTTON, TRUE);
+        Msg.message = WM_RBUTTONDOWN;
+        pCurInfo->ButtonsDown |= MK_RBUTTON;
+        Msg.wParam |= MK_RBUTTON;
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
+    }
+    else if (dwFlags & MOUSEEVENTF_RIGHTUP)
+    {
+        SET_KEY_DOWN(gafAsyncKeyState, VK_RBUTTON, FALSE);
+        Msg.message = WM_RBUTTONUP;
+        pCurInfo->ButtonsDown &= ~MK_RBUTTON;
+        Msg.wParam &= ~MK_RBUTTON;
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
+    }
+
+    if((dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
+       (dwFlags & MOUSEEVENTF_WHEEL))
+    {
+        /* Fail because both types of events use the mouseData field */
+        WARN("Invalid flags!\n");
         return FALSE;
     }
 
-    if(mi->dwFlags & MOUSEEVENTF_XDOWN)
+    /* X-Button (4 or 5) */
+    if (dwFlags & MOUSEEVENTF_XDOWN)
     {
         Msg.message = WM_XBUTTONDOWN;
-        if(mi->mouseData & XBUTTON1)
+        if (pmi->mouseData & XBUTTON1)
         {
             SET_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON1, TRUE);
-            CurInfo->ButtonsDown |= MK_XBUTTON1;
-            Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-            co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+            pCurInfo->ButtonsDown |= MK_XBUTTON1;
+            Msg.wParam |= MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
+            co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
         }
-        if(mi->mouseData & XBUTTON2)
+        if (pmi->mouseData & XBUTTON2)
         {
             SET_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON2, TRUE);
-            CurInfo->ButtonsDown |= MK_XBUTTON2;
-            Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-            co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+            pCurInfo->ButtonsDown |= MK_XBUTTON2;
+            Msg.wParam |= MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
+            co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
         }
     }
-    else if(mi->dwFlags & MOUSEEVENTF_XUP)
+    else if (dwFlags & MOUSEEVENTF_XUP)
     {
         Msg.message = WM_XBUTTONUP;
-        if(mi->mouseData & XBUTTON1)
+        if(pmi->mouseData & XBUTTON1)
         {
             SET_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON1, FALSE);
-            CurInfo->ButtonsDown &= ~MK_XBUTTON1;
-            Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-            co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+            pCurInfo->ButtonsDown &= ~MK_XBUTTON1;
+            Msg.wParam &= ~MK_XBUTTON1;
+            Msg.wParam |= MAKEWPARAM(0, XBUTTON2);
+            co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
         }
-        if(mi->mouseData & XBUTTON2)
+        if (pmi->mouseData & XBUTTON2)
         {
             SET_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON2, FALSE);
-            CurInfo->ButtonsDown &= ~MK_XBUTTON2;
-            Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-            co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+            pCurInfo->ButtonsDown &= ~MK_XBUTTON2;
+            Msg.wParam &= ~MK_XBUTTON2;
+            Msg.wParam |= MAKEWPARAM(0, XBUTTON2);
+            co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
         }
     }
-    if(mi->dwFlags & MOUSEEVENTF_WHEEL)
+
+    /* Mouse wheel */
+    if (dwFlags & MOUSEEVENTF_WHEEL)
     {
         Msg.message = WM_MOUSEWHEEL;
-        Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
-        co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
+        Msg.wParam = MAKEWPARAM(pCurInfo->ButtonsDown, pmi->mouseData);
+        co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
     }
 
     return TRUE;
@@ -462,9 +508,6 @@ NtUserTrackMouseEvent(
     return bRet;
 }
 
-extern MOUSEMOVEPOINT MouseHistoryOfMoves[];
-extern INT gcur_count;
-
 DWORD
 APIENTRY
 NtUserGetMouseMovePointsEx(
@@ -508,18 +551,18 @@ NtUserGetMouseMovePointsEx(
 
     // http://msdn.microsoft.com/en-us/library/ms646259(v=vs.85).aspx
     // This explains the math issues in transforming points.
-    iRet = gcur_count; // FIFO is forward so retrieve backward.
+    iRet = gcMouseHistoryOfMoves; // FIFO is forward so retrieve backward.
     //Hit = FALSE;
     do
     {
         if (Safeppt.x == 0 && Safeppt.y == 0)
             break; // No test.
         // Finds the point, it returns the last nBufPoints prior to and including the supplied point.
-        if (MouseHistoryOfMoves[iRet].x == Safeppt.x && MouseHistoryOfMoves[iRet].y == Safeppt.y)
+        if (gMouseHistoryOfMoves[iRet].x == Safeppt.x && gMouseHistoryOfMoves[iRet].y == Safeppt.y)
         {
             if (Safeppt.time) // Now test time and it seems to be absolute.
             {
-                if (Safeppt.time == MouseHistoryOfMoves[iRet].time)
+                if (Safeppt.time == gMouseHistoryOfMoves[iRet].time)
                 {
                     //Hit = TRUE;
                     break;
@@ -535,7 +578,7 @@ NtUserGetMouseMovePointsEx(
         }
         if (--iRet < 0) iRet = 63;
     }
-    while (iRet != gcur_count);
+    while (iRet != gcMouseHistoryOfMoves);
 
     switch(resolution)
     {

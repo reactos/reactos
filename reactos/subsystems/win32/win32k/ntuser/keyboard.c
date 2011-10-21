@@ -1502,32 +1502,4 @@ Exit:
     return Ret;
 }
 
-/*
- * UserGetMouseButtonsState
- *
- * Returns bitfield used in mouse messages
- */
-WORD FASTCALL
-UserGetMouseButtonsState(VOID)
-{
-    WORD wRet = 0;
-
-    if (gpsi->aiSysMet[SM_SWAPBUTTON])
-    {
-        if (IS_KEY_DOWN(gafAsyncKeyState, VK_RBUTTON)) wRet |= MK_LBUTTON;
-        if (IS_KEY_DOWN(gafAsyncKeyState, VK_LBUTTON)) wRet |= MK_RBUTTON;
-    }
-    else
-    {
-        if (IS_KEY_DOWN(gafAsyncKeyState, VK_LBUTTON)) wRet |= MK_LBUTTON;
-        if (IS_KEY_DOWN(gafAsyncKeyState, VK_RBUTTON)) wRet |= MK_RBUTTON;
-    }
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_MBUTTON)) wRet |= MK_MBUTTON;
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)) wRet |= MK_SHIFT;
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)) wRet |= MK_CONTROL;
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON1)) wRet |= MK_XBUTTON1;
-    if (IS_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON2)) wRet |= MK_XBUTTON2;
-    return wRet;
-}
-
 /* EOF */

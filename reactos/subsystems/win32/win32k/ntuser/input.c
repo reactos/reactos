@@ -261,7 +261,7 @@ RawInputThreadMain()
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessMouseInput(&MouseInput, MouIosb.Information / sizeof(MOUSE_INPUT_DATA));
+            UserProcessMouseInput(&MouseInput);
             UserLeave();
         }
         else if (MouStatus != STATUS_PENDING)
@@ -513,7 +513,7 @@ NtUserSendInput(
         switch (SafeInput.type)
         {
             case INPUT_MOUSE:
-                if (IntMouseInput(&SafeInput.mi, TRUE))
+                if (UserSendMouseInput(&SafeInput.mi, TRUE))
                     uRet++;
                 break;
             case INPUT_KEYBOARD:

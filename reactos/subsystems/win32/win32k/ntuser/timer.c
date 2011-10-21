@@ -11,8 +11,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserTimer);
 
-WORD FASTCALL UserGetMouseButtonsState(VOID);
-
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY TimersListHead;
