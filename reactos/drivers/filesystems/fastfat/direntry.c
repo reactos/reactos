@@ -181,7 +181,8 @@ FATGetNextDirEntry(PVOID *pContext,
     BOOLEAN Valid = TRUE;
     BOOLEAN Back = FALSE;
 
-    DirContext->LongNameU.Buffer[0] = 0;
+    DirContext->LongNameU.Length = 0;
+    DirContext->LongNameU.Buffer[0] = UNICODE_NULL;
 
     FileOffset.u.HighPart = 0;
     FileOffset.u.LowPart = ROUND_DOWN(DirContext->DirIndex * sizeof(FAT_DIR_ENTRY), PAGE_SIZE);
@@ -304,13 +305,29 @@ FATGetNextDirEntry(PVOID *pContext,
                     6, longNameEntry->name5_10,
                     2, longNameEntry->name11_12);
 
-                index = (longNameEntry->id & 0x1f) - 1;
-                dirMap |= 1 << index;
-                pName = DirContext->LongNameU.Buffer + 13 * index;
+                index = longNameEntry->id & 0x3f; // Note: it can be 0 for corrupted FS
+                
+                /* Make sure index is valid and we have enaugh space in buffer
+                  (we count one char for \0) */
+                if (index > 0 &&
+                    index * 13 < DirContext->LongNameU.MaximumLength / sizeof(WCHAR))
+                {
+                    index--; // make index 0 based
+                    dirMap |= 1 << index;
 
-                RtlCopyMemory(pName, longNameEntry->name0_4, 5 * sizeof(WCHAR));
-                RtlCopyMemory(pName + 5, longNameEntry->name5_10, 6 * sizeof(WCHAR));
-                RtlCopyMemory(pName + 11, longNameEntry->name11_12, 2 * sizeof(WCHAR));
+                    pName = DirContext->LongNameU.Buffer + index * 13;
+                    RtlCopyMemory(pName, longNameEntry->name0_4, 5 * sizeof(WCHAR));
+                    RtlCopyMemory(pName + 5, longNameEntry->name5_10, 6 * sizeof(WCHAR));
+                    RtlCopyMemory(pName + 11, longNameEntry->name11_12, 2 * sizeof(WCHAR));
+
+                    if (longNameEntry->id & 0x40)
+                    {
+                        /* It's last LFN entry. Terminate filename with \0 */
+                        pName[13] = UNICODE_NULL;
+                    }
+                }
+                else
+                    DPRINT1("Long name entry has invalid index: %x!\n", longNameEntry->id);
 
                 DPRINT ("  longName: [%S]\n", DirContext->LongNameU.Buffer);
 
@@ -372,22 +389,26 @@ FATGetNextDirEntry(PVOID *pContext,
         }
     }
 
+    /* Make sure filename is NULL terminate and calculate length */
+    DirContext->LongNameU.Buffer[DirContext->LongNameU.MaximumLength / sizeof(WCHAR) - 1]
+        = UNICODE_NULL;
     DirContext->LongNameU.Length = wcslen(DirContext->LongNameU.Buffer) * sizeof(WCHAR);
+    
+    /* Init short name */
     vfat8Dot3ToString(&DirContext->DirEntry.Fat, &DirContext->ShortNameU);
 
+    /* If we found no LFN, use short name as long */
     if (DirContext->LongNameU.Length == 0)
-    {
         RtlCopyUnicodeString(&DirContext->LongNameU, &DirContext->ShortNameU);
-    }
 
     return STATUS_SUCCESS;
 }
 
 NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
-			     PVOID * pPage,
+                             PVOID * pPage,
                              IN PVFATFCB pDirFcb,
-			     PVFAT_DIRENTRY_CONTEXT DirContext,
-			     BOOLEAN First)
+                             PVFAT_DIRENTRY_CONTEXT DirContext,
+                             BOOLEAN First)
 {
    LARGE_INTEGER FileOffset;
    PFATX_DIR_ENTRY fatxDirEntry;
@@ -405,7 +426,7 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
          {
             DirContext->ShortNameU.Buffer[0] = 0;
             DirContext->ShortNameU.Length = 0;
-            DirContext->LongNameU.Buffer[0] = L'.';
+            wcscpy(DirContext->LongNameU.Buffer, L".");
             DirContext->LongNameU.Length = sizeof(WCHAR);
             RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
             DirContext->DirEntry.FatX.Filename[0] = '.';
@@ -417,7 +438,7 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
          {
             DirContext->ShortNameU.Buffer[0] = 0;
             DirContext->ShortNameU.Length = 0;
-            DirContext->LongNameU.Buffer[0] = DirContext->LongNameU.Buffer[1] = L'.';
+            wcscpy(DirContext->LongNameU.Buffer, L"..");
             DirContext->LongNameU.Length = 2 * sizeof(WCHAR);
             RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
             DirContext->DirEntry.FatX.Filename[0] = DirContext->DirEntry.FatX.Filename[1] = '.';

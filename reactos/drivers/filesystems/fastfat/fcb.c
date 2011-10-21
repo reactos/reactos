@@ -604,8 +604,7 @@ vfatDirFindFile (
 		DPRINT ("  Index:%d  longName:%wZ\n",
 			DirContext.DirIndex,
 			&DirContext.LongNameU);
-		DirContext.LongNameU.Buffer[DirContext.LongNameU.Length / sizeof(WCHAR)] = 0;
-		DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
+
 		if (!ENTRY_VOLUME(pDeviceExt, &DirContext.DirEntry))
 		{
 			FoundLong = RtlEqualUnicodeString(FileToFindU, &DirContext.LongNameU, TRUE);
