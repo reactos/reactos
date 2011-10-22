@@ -37,9 +37,11 @@
 #include <rtlfuncs.h>
 #include <exfuncs.h>
 #include <setypes.h>
+#include <sefuncs.h>
 #include <ntsecapi.h>
 #include <accctrl.h>
 #include <aclapi.h>
+#include <strsafe.h>
 
 #include <reactos/undocuser.h>
 #include <reactos/winlogon.h>

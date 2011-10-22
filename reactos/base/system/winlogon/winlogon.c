@@ -23,125 +23,6 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL
-PlaySoundRoutine(
-	IN LPCWSTR FileName,
-	IN UINT bLogon,
-	IN UINT Flags)
-{
-	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
-	typedef UINT (WINAPI *WAVEOUTGETNUMDEVS)(VOID);
-	PLAYSOUNDW Play;
-	WAVEOUTGETNUMDEVS waveOutGetNumDevs;
-	UINT NumDevs;
-	HMODULE hLibrary;
-	BOOL Ret = FALSE;
-
-	hLibrary = LoadLibraryW(L"winmm.dll");
-	if (hLibrary)
-	{
-		waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
-		if (waveOutGetNumDevs)
-		{
-			NumDevs = waveOutGetNumDevs();
-			if (!NumDevs)
-			{
-				if (!bLogon)
-				{
-					Beep(500, 500);
-				}
-				FreeLibrary(hLibrary);
-				return FALSE;
-			}
-		}
-
-		Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
-		if (Play)
-		{
-			Ret = Play(FileName, NULL, Flags);
-		}
-		FreeLibrary(hLibrary);
-	}
-
-	return Ret;
-}
-
-DWORD
-WINAPI
-PlayLogonSoundThread(
-	IN LPVOID lpParameter)
-{
-	HKEY hKey;
-	WCHAR szBuffer[MAX_PATH] = {0};
-	WCHAR szDest[MAX_PATH];
-	DWORD dwSize = sizeof(szBuffer);
-	SERVICE_STATUS_PROCESS Info;
-
-	ULONG Index = 0;
-
-	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-	{
-		ExitThread(0);
-	}
-
-	if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szBuffer, &dwSize) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		ExitThread(0);
-	}
-
-
-	RegCloseKey(hKey);
-
-	if (!szBuffer[0])
-		ExitThread(0);
-
-
-	szBuffer[MAX_PATH-1] = L'\0';
-	if (ExpandEnvironmentStringsW(szBuffer, szDest, MAX_PATH))
-	{
-		SC_HANDLE hSCManager, hService;
-
-		hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-		if (!hSCManager)
-			ExitThread(0);;
-
-		hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
-		if (!hService)
-		{
-			CloseServiceHandle(hSCManager);
-			TRACE("WL: failed to open sysaudio Status %x\n", GetLastError());
-			ExitThread(0);
-		}
-
-		do
-		{
-			if (!QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&Info, sizeof(SERVICE_STATUS_PROCESS), &dwSize))
-			{
-				TRACE("WL: QueryServiceStatusEx failed %x\n", GetLastError());
-				break;
-			}
-
-			if (Info.dwCurrentState == SERVICE_RUNNING)
-				break;
-
-			Sleep(1000);
-
-		}while(Index++ < 20);
-
-		CloseServiceHandle(hService);
-		CloseServiceHandle(hSCManager);
-
-		if (Info.dwCurrentState != SERVICE_RUNNING)
-			ExitThread(0);
-
-		PlaySoundRoutine(szDest, TRUE, SND_FILENAME);
-	}
-	ExitThread(0);
-}
-
-
-
 static BOOL
 StartServicesManager(VOID)
 {
@@ -330,6 +211,7 @@ InitKeyboardLayouts()
     return bRet;
 }
 
+
 BOOL
 DisplayStatusMessage(
 	IN PWLSESSION Session,
@@ -420,7 +302,6 @@ WinMain(
 #endif
 	ULONG HardErrorResponse;
 	MSG Msg;
-	HANDLE hThread;
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -547,13 +428,6 @@ WinMain(
 	}
 	else
 		PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
-
-	/* Play logon sound */
-	hThread = CreateThread(NULL, 0, PlayLogonSoundThread, NULL, 0, NULL);
-	if (hThread)
-	{
-		CloseHandle(hThread);
-	}
 
 	/* Tell kernel that CurrentControlSet is good (needed
 	 * to support Last good known configuration boot) */
