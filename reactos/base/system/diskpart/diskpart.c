@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/diskpart.c
  * PURPOSE:         Manages all the partitions of the OS in
- *					an interactive way
+ *                  an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
 
@@ -30,7 +30,8 @@ PrintResourceString(INT resID, ...)
  * opens the file, reads the contents, convert the text into readable
  * code for the computer, and then execute commands in order.
  */
-BOOL run_script(LPCWSTR filename)
+BOOL
+run_script(LPCWSTR filename)
 {
     FILE *script_file;
     WCHAR tmp_string[MAX_STRING_SIZE];
@@ -58,18 +59,20 @@ BOOL run_script(LPCWSTR filename)
 }
 
 /*
- * main():
+ * wmain():
  * Main entry point of the application.
  */
 int wmain(int argc, const WCHAR *argv[])
 {
-    /* Gets the current name of the computer */
-    WCHAR comp_name[MAX_STRING_SIZE]; //used to store the name of the computer */
-    DWORD comp_size = MAX_STRING_SIZE; // used for the char size of comp_name */
-    BOOL interpreter_running = TRUE; //used for the main program loop */
+    WCHAR szComputerName[MAX_STRING_SIZE];
+    DWORD comp_size = MAX_STRING_SIZE;
+    BOOL interpreter_running = TRUE;
+    LPCWSTR file_name = NULL;
+    int i;
+    int timeout = 0;
 
     /* Get the name of the computer for us and change the value of comp_name */
-    GetComputerName(comp_name, &comp_size);
+    GetComputerName(szComputerName, &comp_size);
 
     /* TODO: Remove this section of code when program becomes stable enough for production use. */
     wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
@@ -77,30 +80,60 @@ int wmain(int argc, const WCHAR *argv[])
     /* Print the header information */
     PrintResourceString(IDS_APP_HEADER, DISKPART_VERSION);
     PrintResourceString(IDS_APP_LICENSE);
-    PrintResourceString(IDS_APP_CURR_COMPUTER, comp_name);
+    PrintResourceString(IDS_APP_CURR_COMPUTER, szComputerName);
 
-    /* Find out if the user is loading a script */
-    if (argc >= 2)
+    /* Process arguments */
+    for (i = 1; i < argc; i++)
     {
-        /* if there are arguments when starting the program
-           determine if the script flag is enabled */
-        if ((wcsicmp(argv[1], L"/s") == 0) ||
-            (wcsicmp(argv[1], L"-s") == 0))
+        if ((argv[i][0] == L'-') || (argv[i][0] == L'/'))
         {
-            /* see if the user has put anything after the script flag; if not,
-               then it doesn't run the run_script() command. */
-            /* Alternative comment: Fail if the script name is missing */
-            if (argc == 3)
-                return EXIT_FAILURE;
+            if (wcsicmp(&argv[i][1], L"s") == 0)
+            {
+                /*
+                 * Get the file name only if there is at least one more
+                 * argument and it is not another option
+                 */
+                if ((i + 1 < argc) &&
+                    (argv[i + 1][0] != L'-') &&
+                    (argv[i + 1][0] != L'/'))
+                {
+                    /* Next argument */
+                    i++;
 
-            interpreter_running = run_script(argv[2]);
+                    /* Get the file name */
+                    file_name = argv[i];
+                }
+            }
+            else if (wcsicmp(&argv[i][1], L"t") == 0)
+            {
+                /*
+                 * Get the timeout value only if there is at least one more
+                 * argument and it is not another option
+                 */
+                if ((i + 1 < argc) &&
+                    (argv[i + 1][0] != L'-') &&
+                    (argv[i + 1][0] != L'/'))
+                {
+                    /* Next argument */
+                    i++;
+
+                    /* Get the timeout value */
+                    timeout = _wtoi(argv[i]);
+                }
+            }
         }
     }
 
-    /* the main program loop */
-    while (interpreter_running)
+    /* Run the script if we got a script name or call the interpreter otherwise */
+    if (file_name != NULL)
     {
-        interpreter_running = interpret_main();
+        if (run_script(file_name) == FALSE)
+            return EXIT_FAILURE;
+    }
+    else
+    {
+        while (interpreter_running)
+            interpreter_running = interpret_main();
     }
 
     /* Let the user know the program is exiting */
