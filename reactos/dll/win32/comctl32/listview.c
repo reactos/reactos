@@ -10359,7 +10359,7 @@ static BOOL LISTVIEW_NCPaint(const LISTVIEW_INFO *infoPtr, HRGN region)
 
     cliprgn = CreateRectRgn (r.left + cxEdge, r.top + cyEdge,
         r.right - cxEdge, r.bottom - cyEdge);
-    if (region != (HRGN)1)
+    if (region > (HRGN)1)
         CombineRgn (cliprgn, cliprgn, region, RGN_AND);
     OffsetRect(&r, -r.left, -r.top);
 
