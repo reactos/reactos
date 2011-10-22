@@ -397,7 +397,7 @@ VideoPortGetAccessRanges(
    IN PVIDEO_ACCESS_RANGE AccessRanges,
    IN PVOID VendorId,
    IN PVOID DeviceId,
-   IN PULONG Slot)
+   OUT PULONG Slot)
 {
    PCI_SLOT_NUMBER PciSlotNumber;
    ULONG DeviceNumber;
@@ -411,7 +411,6 @@ VideoPortGetAccessRanges(
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    USHORT VendorIdToFind;
    USHORT DeviceIdToFind;
-   ULONG SlotIdToFind;
    ULONG ReturnedLength;
    BOOLEAN DeviceAndVendorFound = FALSE;
 
@@ -445,8 +444,12 @@ VideoPortGetAccessRanges(
          {
             VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
             DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
-            SlotIdToFind = Slot != NULL ? *Slot : 0;
-            PciSlotNumber.u.AsULONG = SlotIdToFind;
+
+            if (VendorIdToFind == 0 && DeviceIdToFind == 0)
+            {
+                /* We're screwed */
+                return ERROR_DEV_NOT_EXIST;
+            }
 
             INFO_(VIDEOPRT, "Looking for VendorId 0x%04x DeviceId 0x%04x\n",
                    VendorIdToFind, DeviceIdToFind);
@@ -457,7 +460,7 @@ VideoPortGetAccessRanges(
             for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
             {
                PciSlotNumber.u.bits.DeviceNumber = DeviceNumber;
-               for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
+               for (FunctionNumber = 0; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
                {
                   INFO_(VIDEOPRT, "- Function number: %d\n", FunctionNumber);
                   PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
@@ -488,7 +491,7 @@ VideoPortGetAccessRanges(
                }
                if (DeviceAndVendorFound) break;
             }
-            if (FunctionNumber == 8)
+            if (FunctionNumber == PCI_MAX_FUNCTION)
             {
                WARN_(VIDEOPRT, "Didn't find device.\n");
                return ERROR_DEV_NOT_EXIST;
@@ -511,6 +514,10 @@ VideoPortGetAccessRanges(
             return Status;
          }
          DeviceExtension->AllocatedResources = AllocatedResources;
+
+         /* Return the slot number if the caller wants it */
+         if (Slot != NULL) *Slot = PciSlotNumber.u.AsULONG;
+         
       }
       if (AllocatedResources == NULL)
          return ERROR_NOT_ENOUGH_MEMORY;
@@ -539,11 +546,6 @@ VideoPortGetAccessRanges(
             }
             if (Descriptor->Type == CmResourceTypeMemory)
             {
-               if (NumAccessRanges <= AssignedCount)
-               {
-                  WARN_(VIDEOPRT, "Too many access ranges found\n");
-                  return ERROR_NOT_ENOUGH_MEMORY;
-               }
                INFO_(VIDEOPRT, "Memory range starting at 0x%08x length 0x%08x\n",
                       Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
                AccessRanges[AssignedCount].RangeStart = Descriptor->u.Memory.Start;
@@ -552,17 +554,24 @@ VideoPortGetAccessRanges(
                AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
                AccessRanges[AssignedCount].RangeShareable =
                   (Descriptor->ShareDisposition == CmResourceShareShared);
+               AccessRanges[AssignedCount].RangePassive = 0;
                AssignedCount++;
             }
             else if (Descriptor->Type == CmResourceTypePort)
             {
                INFO_(VIDEOPRT, "Port range starting at 0x%04x length %d\n",
-                      Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
+                      Descriptor->u.Port.Start.u.LowPart, Descriptor->u.Port.Length);
                AccessRanges[AssignedCount].RangeStart = Descriptor->u.Port.Start;
                AccessRanges[AssignedCount].RangeLength = Descriptor->u.Port.Length;
                AccessRanges[AssignedCount].RangeInIoSpace = 1;
                AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
-               AccessRanges[AssignedCount].RangeShareable = 0;
+               AccessRanges[AssignedCount].RangeShareable =
+                  (Descriptor->ShareDisposition == CmResourceShareShared);
+               AccessRanges[AssignedCount].RangePassive = 0;
+               if (Descriptor->Flags & CM_RESOURCE_PORT_10_BIT_DECODE)
+                   AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_10_BIT_DECODE;
+               if (Descriptor->Flags & CM_RESOURCE_PORT_PASSIVE_DECODE)
+                   AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_PASSIVE_DECODE;
                AssignedCount++;
             }
             else if (Descriptor->Type == CmResourceTypeInterrupt)
