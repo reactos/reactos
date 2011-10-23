@@ -1,0 +1,8 @@
+#add_subdirectory(cmdutils)
+#add_subdirectory(devutils)
+#add_subdirectory(fraginator)
+#add_subdirectory(net)
+#add_subdirectory(notevil)
+add_subdirectory(screensavers)
+#add_subdirectory(sysutils)
+#add_subdirectory(winfile)
