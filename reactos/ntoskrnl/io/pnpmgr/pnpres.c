@@ -47,7 +47,7 @@ IopFindBusNumberResource(
    ASSERT(IoDesc->Type == CmResourceTypeBusNumber);
 
    for (Start = IoDesc->u.BusNumber.MinBusNumber;
-        Start < IoDesc->u.BusNumber.MaxBusNumber;
+        Start <= IoDesc->u.BusNumber.MaxBusNumber;
         Start++)
    {
         CmDesc->u.BusNumber.Length = IoDesc->u.BusNumber.Length;
@@ -78,9 +78,12 @@ IopFindMemoryResource(
    ASSERT(IoDesc->Type == CmDesc->Type);
    ASSERT(IoDesc->Type == CmResourceTypeMemory);
 
+   /* HACK */
+   if (IoDesc->u.Memory.Alignment == 0) IoDesc->u.Memory.Alignment = 1;
+
    for (Start = IoDesc->u.Memory.MinimumAddress.QuadPart;
-        Start < IoDesc->u.Memory.MaximumAddress.QuadPart;
-        Start++)
+        Start <= IoDesc->u.Memory.MaximumAddress.QuadPart;
+        Start += IoDesc->u.Memory.Alignment)
    {
         CmDesc->u.Memory.Length = IoDesc->u.Memory.Length;
         CmDesc->u.Memory.Start.QuadPart = Start;
@@ -110,10 +113,13 @@ IopFindPortResource(
 
    ASSERT(IoDesc->Type == CmDesc->Type);
    ASSERT(IoDesc->Type == CmResourceTypePort);
+    
+   /* HACK */
+   if (IoDesc->u.Port.Alignment == 0) IoDesc->u.Port.Alignment = 1;
 
    for (Start = IoDesc->u.Port.MinimumAddress.QuadPart;
-        Start < IoDesc->u.Port.MaximumAddress.QuadPart;
-        Start++)
+        Start <= IoDesc->u.Port.MaximumAddress.QuadPart;
+        Start += IoDesc->u.Port.Alignment)
    {
         CmDesc->u.Port.Length = IoDesc->u.Port.Length;
         CmDesc->u.Port.Start.QuadPart = Start;
@@ -143,7 +149,7 @@ IopFindDmaResource(
    ASSERT(IoDesc->Type == CmResourceTypeDma);
 
    for (Channel = IoDesc->u.Dma.MinimumChannel;
-        Channel < IoDesc->u.Dma.MaximumChannel;
+        Channel <= IoDesc->u.Dma.MaximumChannel;
         Channel++)
    {
         CmDesc->u.Dma.Channel = Channel;
@@ -168,7 +174,7 @@ IopFindInterruptResource(
    ASSERT(IoDesc->Type == CmResourceTypeInterrupt);
 
    for (Vector = IoDesc->u.Interrupt.MinimumVector;
-        Vector < IoDesc->u.Interrupt.MaximumVector;
+        Vector <= IoDesc->u.Interrupt.MaximumVector;
         Vector++)
    {
         CmDesc->u.Interrupt.Vector = Vector;
