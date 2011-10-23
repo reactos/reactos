@@ -679,6 +679,7 @@ VideoPortGetAccessRanges(
                 return Status;
             }
             DeviceExtension->AllocatedResources = AllocatedResources;
+            DeviceExtension->SystemIoSlotNumber = PciSlotNumber.u.AsULONG;
         }
     }
     else
