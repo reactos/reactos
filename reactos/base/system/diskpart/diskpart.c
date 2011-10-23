@@ -66,7 +66,6 @@ int wmain(int argc, const WCHAR *argv[])
 {
     WCHAR szComputerName[MAX_STRING_SIZE];
     DWORD comp_size = MAX_STRING_SIZE;
-    BOOL interpreter_running = TRUE;
     LPCWSTR file_name = NULL;
     int i;
     int timeout = 0;
@@ -121,6 +120,11 @@ int wmain(int argc, const WCHAR *argv[])
                     timeout = _wtoi(argv[i]);
                 }
             }
+            else if (wcscmp(&argv[i][1], L"?") == 0)
+            {
+                PrintResourceString(IDS_APP_USAGE);
+                return EXIT_SUCCESS;
+            }
         }
     }
 
@@ -132,8 +136,7 @@ int wmain(int argc, const WCHAR *argv[])
     }
     else
     {
-        while (interpreter_running)
-            interpreter_running = interpret_main();
+        interpret_main();
     }
 
     /* Let the user know the program is exiting */

@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/interpreter.c
  * PURPOSE:         Reads the user input and then envokes the selected
- *					command by the user.
+ *                  command by the user.
  * PROGRAMMERS:     Lee Schroeder
  */
 
@@ -52,7 +52,7 @@ COMMAND cmds[] =
     {L"setid",       setid_main,       help_setid},
     {L"shrink",      shrink_main,      help_shrink},
     {L"uniqueid",    uniqueid_main,    help_uniqueid},
-    {NULL,              NULL,             NULL}
+    {NULL,           NULL,             NULL}
 };
 
 
@@ -144,45 +144,49 @@ interpret_script(WCHAR *input_line)
  * it sends the string to interpret_line, where it determines what
  * command to use.
  */
-BOOL
+VOID
 interpret_main(VOID)
 {
     WCHAR input_line[MAX_STRING_SIZE];
     WCHAR *args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
+    BOOL bRun = TRUE;
     WCHAR *ptr;
 
-    memset(args_vector, 0, sizeof(args_vector));
-
-    /* shown just before the input where the user places commands */
-    PrintResourceString(IDS_APP_PROMPT);
-
-    /* gets input from the user. */
-    fgetws(input_line, MAX_STRING_SIZE, stdin);
-
-    ptr = input_line;
-    while (*ptr != 0)
+    while (bRun == TRUE)
     {
-        if (iswspace(*ptr) || *ptr == L'\n')
+        memset(args_vector, 0, sizeof(args_vector));
+
+        /* shown just before the input where the user places commands */
+        PrintResourceString(IDS_APP_PROMPT);
+
+        /* gets input from the user. */
+        fgetws(input_line, MAX_STRING_SIZE, stdin);
+
+        ptr = input_line;
+        while (*ptr != 0)
         {
-            *ptr = 0;
-            bWhiteSpace = TRUE;
-        }
-        else
-        {
-            if ((bWhiteSpace == TRUE) && (args_count < MAX_ARGS_COUNT))
+            if (iswspace(*ptr) || *ptr == L'\n')
             {
-                args_vector[args_count] = ptr;
-                args_count++;
+                *ptr = 0;
+                bWhiteSpace = TRUE;
+            }
+            else
+            {
+                if ((bWhiteSpace == TRUE) && (args_count < MAX_ARGS_COUNT))
+                {
+                    args_vector[args_count] = ptr;
+                    args_count++;
+                }
+
+                bWhiteSpace = FALSE;
             }
 
-            bWhiteSpace = FALSE;
+            ptr++;
         }
 
-        ptr++;
+        /* sends the string to find the command */
+        bRun = interpret_cmd(args_count, args_vector);
     }
-
-    /* sends the string to find the command */
-    return interpret_cmd(args_count, args_vector);
 }

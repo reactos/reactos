@@ -14,6 +14,11 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_HEADER, "\nReactOS DiskPart version %s\n"
+    IDS_APP_USAGE, "Diskpart command line syntax:\ndiskpart [/s <script file>] [/t <timeout value>] [/?]\n\
+/s <script file>   - Runs the given script file.\n\
+/t <timeout value> - Waits for the given time (in seconds) after running a\n\
+                     script file.\n\
+/?                 - Shows this help text."
     IDS_APP_LICENSE, "Licensed under the GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER, "On computer: %s\n\n"
     IDS_APP_LEAVING, "\nLeaving DiskPart...\n"

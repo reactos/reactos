@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/diskpart.c
  * PURPOSE:         Manages all the partitions of the OS in
- *					an interactive way
+ *                  an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
 #ifndef DISKPART_H
@@ -139,8 +139,8 @@ VOID help_inactive(INT argc, WCHAR **argv);
 
 /* interpreter.c */
 BOOL interpret_script(WCHAR *line);
-BOOL interpret_main(VOID);
 BOOL interpret_cmd(INT argc, WCHAR **argv);
+VOID interpret_main(VOID);
 
 /* list.c */
 BOOL list_main(INT argc, WCHAR **argv);

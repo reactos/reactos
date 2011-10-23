@@ -3,13 +3,14 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/lang/resource.h
  * PURPOSE:         Manages all the partitions of the OS in
- *					an interactive way
+ *                  an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
 #define IDS_APP_HEADER                  0
+#define IDS_APP_USAGE                   1
 #define IDS_APP_LICENSE                 2
 #define IDS_APP_CURR_COMPUTER           3
 #define IDS_APP_LEAVING                 4
