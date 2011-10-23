@@ -411,7 +411,7 @@ IntVideoPortFindAdapter(
    {
       ULONG BusNumber, MaxBuses;
 
-      MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? 8 : 1;
+      MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? PCI_MAX_BRIDGE_NUMBER : 1;
 
       for (BusNumber = 0; BusNumber < MaxBuses; BusNumber++)
       {
