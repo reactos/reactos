@@ -242,29 +242,6 @@ NdisReleaseAdapterResources(
 
 
 /*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisSetupDmaTransfer(
-    OUT PNDIS_STATUS    Status,
-    IN  PNDIS_HANDLE    NdisDmaHandle,
-    IN  PNDIS_BUFFER    Buffer,
-    IN  ULONG           Offset,
-    IN  ULONG           Length,
-    IN  BOOLEAN         WriteToDevice)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 4.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
  * @implemented
  */
 #undef NdisUpdateSharedMemory
