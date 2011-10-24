@@ -1801,7 +1801,15 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
      {
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
-  }    
+     else
+     {
+        if (pWnd->fnid != FNID_MENU)
+        {
+           ERR("Wrong window class for Menu!\n");
+           return 0;
+        }
+     }
+  }
 #endif    
 
   TRACE("YES! hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
@@ -1890,7 +1898,15 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
      {
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
-  }    
+     else
+     {
+        if (pWnd->fnid != FNID_MENU)
+        {
+           ERR("Wrong window class for Menu!\n");
+           return 0;
+        }
+     }
+  }
 #endif    
 
   TRACE("hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
