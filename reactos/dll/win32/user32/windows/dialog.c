@@ -138,27 +138,34 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
     PWND pWindow;
     DIALOGINFO* dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
 
-    if(!dlgInfo && create)
+    pWindow = ValidateHwnd( hWnd );
+    if (!pWindow)
     {
-        pWindow = ValidateHwnd( hWnd );
-        if (!pWindow)
-        {
-           SetLastError( ERROR_INVALID_WINDOW_HANDLE );
+       return NULL;
+    }
+
+    if (!dlgInfo && create)
+    {
+       if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
+       {
+           if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
+              return NULL;
+
+           SETDLGINFO( hWnd, dlgInfo );
+
+           NtUserxSetDialogPointer( hWnd, dlgInfo );
+       }
+       else
+       {
            return NULL;
-        }
-
-        if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
+       }
+    }
+    else
+    {
+        if (!(pWindow->state & WNDS_DIALOGWINDOW) || pWindow->fnid != FNID_DIALOG)
         {
-            if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
-                return NULL;
-
-            SETDLGINFO( hWnd, dlgInfo );
-
-            NtUserxSetDialogPointer( hWnd, dlgInfo );
-        }
-        else
-        {
-            return NULL;
+           ERR("Wrong window class for Dialog!\n");
+           return NULL;
         }
     }
     return dlgInfo;
@@ -2573,6 +2580,7 @@ SendDlgItemMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
 	HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageA( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
@@ -2591,6 +2599,7 @@ SendDlgItemMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
+  if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
 	HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageW( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
@@ -2627,7 +2636,9 @@ SetDlgItemTextA(
   int nIDDlgItem,
   LPCSTR lpString)
 {
-  return SendDlgItemMessageA( hDlg, nIDDlgItem, WM_SETTEXT, 0, (LPARAM)lpString );
+  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // ReactOS Themes
+  if (hwndCtrl) return SetWindowTextA( hwndCtrl, lpString );
+  return FALSE;
 }
 
 
@@ -2641,7 +2652,9 @@ SetDlgItemTextW(
   int nIDDlgItem,
   LPCWSTR lpString)
 {
-  return SendDlgItemMessageW( hDlg, nIDDlgItem, WM_SETTEXT, 0, (LPARAM)lpString );
+  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // ReactOS Themes
+  if (hwndCtrl) return SetWindowTextW( hwndCtrl, lpString );
+  return FALSE;
 }
 
 
