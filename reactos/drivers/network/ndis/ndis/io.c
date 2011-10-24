@@ -708,11 +708,11 @@ NdisMRegisterDmaChannel(
 
   DeviceDesc.Version = DEVICE_DESCRIPTION_VERSION;
   DeviceDesc.Master = (Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
-  DeviceDesc.ScatterGather = FALSE; //Is this correct?
+  DeviceDesc.ScatterGather = FALSE;
   DeviceDesc.DemandMode = DmaDescription->DemandMode;
   DeviceDesc.AutoInitialize = DmaDescription->AutoInitialize;
   DeviceDesc.Dma32BitAddresses = Dma32BitAddresses;
-  DeviceDesc.Dma64BitAddresses = !Dma32BitAddresses; //Is this correct?
+  DeviceDesc.Dma64BitAddresses = FALSE;
   DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
   DeviceDesc.DmaChannel = DmaDescription->DmaChannel;
   DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
