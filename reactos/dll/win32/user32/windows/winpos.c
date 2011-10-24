@@ -151,7 +151,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
     Delta.x = Delta.y = 0;
     mirror_from = mirror_to = FALSE;
 
-    if (FromWnd && FromWnd->fnid != FNID_DESKTOP)
+    if (FromWnd && hWndFrom != GetDesktopWindow()) // FromWnd->fnid != FNID_DESKTOP)
     {
        if (FromWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
@@ -163,7 +163,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
        Delta.y = FromWnd->rcClient.top;
     }
 
-    if (ToWnd && ToWnd->fnid != FNID_DESKTOP)
+    if (ToWnd && hWndTo != GetDesktopWindow()) // ToWnd->fnid != FNID_DESKTOP)
     {
        if (ToWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
@@ -207,7 +207,7 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
     if (!Wnd)
         return FALSE;
 
-    if (Wnd->fnid != FNID_DESKTOP)
+    if (hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
        if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
           lpPoint->x = Wnd->rcClient.right - lpPoint->x;
@@ -231,7 +231,7 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
     if (!Wnd)
         return FALSE;
 
-    if (Wnd->fnid != FNID_DESKTOP)
+    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
        if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
           lpPoint->x = Wnd->rcClient.right - lpPoint->x;
