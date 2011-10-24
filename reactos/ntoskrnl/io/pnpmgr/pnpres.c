@@ -256,7 +256,7 @@ IopCreateResourceListFromRequirements(
             case CmResourceTypePort:
               if (!IopFindPortResource(ReqDesc, ResDesc))
               {
-                  DPRINT1("Failed to find an available port resource (0x%x to 0x%x length: 0x%x)\n",
+                  DPRINT1("Failed to find an available port resource (0x%I64x to 0x%I64x length: 0x%x)\n",
                           ReqDesc->u.Port.MinimumAddress.QuadPart, ReqDesc->u.Port.MaximumAddress.QuadPart,
                           ReqDesc->u.Port.Length);
 
@@ -274,7 +274,7 @@ IopCreateResourceListFromRequirements(
             case CmResourceTypeMemory:
               if (!IopFindMemoryResource(ReqDesc, ResDesc))
               {
-                  DPRINT1("Failed to find an available memory resource (0x%x to 0x%x length: 0x%x)\n",
+                  DPRINT1("Failed to find an available memory resource (0x%I64x to 0x%I64x length: 0x%x)\n",
                           ReqDesc->u.Memory.MinimumAddress.QuadPart, ReqDesc->u.Memory.MaximumAddress.QuadPart,
                           ReqDesc->u.Memory.Length);
 
@@ -379,7 +379,7 @@ IopCheckResourceDescriptor(
                  {
                       if (!Silent)
                       {
-                          DPRINT1("Resource conflict: Memory (0x%x to 0x%x vs. 0x%x to 0x%x)\n",
+                          DPRINT1("Resource conflict: Memory (0x%I64x to 0x%I64x vs. 0x%I64x to 0x%I64x)\n",
                                   ResDesc->u.Memory.Start.QuadPart, ResDesc->u.Memory.Start.QuadPart +
                                   ResDesc->u.Memory.Length, ResDesc2->u.Memory.Start.QuadPart,
                                   ResDesc2->u.Memory.Start.QuadPart + ResDesc2->u.Memory.Length);
@@ -400,7 +400,7 @@ IopCheckResourceDescriptor(
                  {
                       if (!Silent)
                       {
-                          DPRINT1("Resource conflict: Port (0x%x to 0x%x vs. 0x%x to 0x%x)\n",
+                          DPRINT1("Resource conflict: Port (0x%I64x to 0x%I64x vs. 0x%I64x to 0x%I64x)\n",
                                   ResDesc->u.Port.Start.QuadPart, ResDesc->u.Port.Start.QuadPart +
                                   ResDesc->u.Port.Length, ResDesc2->u.Port.Start.QuadPart,
                                   ResDesc2->u.Port.Start.QuadPart + ResDesc2->u.Port.Length);
@@ -819,7 +819,7 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Memory.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
-                  DPRINT1("Failed to translate memory resource (Start: 0xI64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
+                  DPRINT1("Failed to translate memory resource (Start: 0x%I64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
                   goto cleanup;
                }
 
