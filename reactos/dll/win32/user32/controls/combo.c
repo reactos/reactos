@@ -1843,6 +1843,14 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
          {
             NtUserSetWindowFNID(hwnd, FNID_COMBOBOX);
          }
+         else
+         {
+            if (pWnd->fnid != FNID_COMBOBOX)
+            {
+               ERR("Wrong window class for ComboBox!\n");
+               return 0;
+            }
+         }
       }    
 #endif    
 

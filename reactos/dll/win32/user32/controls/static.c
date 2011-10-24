@@ -324,15 +324,26 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
     }
 }
 
+BOOL WINAPI GdiValidateHandle(HGDIOBJ hobj);
+
 static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
 {
+    PWND pwnd;
     HBRUSH hBrush;
     HWND parent = GetParent(hwnd);
 
     if (!parent) parent = hwnd;
+    // ReactOS
+    pwnd = ValidateHwnd(parent);
+    if (pwnd && !TestWindowProcess(pwnd))
+    {
+       return (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd);
+    }
+    ////
     hBrush = (HBRUSH) SendMessageW( parent,
                     WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
-    if (!hBrush) /* did the app forget to call DefWindowProc ? */
+    if (!hBrush || /* did the app forget to call DefWindowProc ? */
+        !GdiValidateHandle(hBrush)) // ReactOS
     {
         /* FIXME: DefWindowProc should return different colors if a
                   manifest is present */
@@ -387,6 +398,14 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
        if (!pWnd->fnid)
        {
           NtUserSetWindowFNID(hwnd, FNID_STATIC);
+       }
+       else
+       {
+          if (pWnd->fnid != FNID_STATIC)
+          {
+             ERR("Wrong window class for Static!\n");
+             return 0;
+          }
        }
     }
 #endif
@@ -505,10 +524,10 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	    if (HIWORD(lParam))
 	    {
 	        if(unicode)
-		     lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
+                    lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
                 else
                     lResult = DefWindowProcA( hwnd, uMsg, wParam, lParam );
-	        STATIC_TryPaintFcn( hwnd, full_style );
+                STATIC_TryPaintFcn( hwnd, full_style );
 	    }
 	}
         break;

@@ -21,6 +21,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
@@ -197,6 +198,14 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
        if (!pWnd->fnid)
        {
           NtUserSetWindowFNID(hWnd, FNID_ICONTITLE);
+       }
+       else
+       {
+          if (pWnd->fnid != FNID_ICONTITLE)
+          {
+             ERR("Wrong window class for IconTitle!\n");
+             return 0;
+          }
        }
     }    
 #endif    

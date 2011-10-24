@@ -266,6 +266,14 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
        {
           NtUserSetWindowFNID(hWnd, FNID_BUTTON);
        }
+       else
+       {
+          if (pWnd->fnid != FNID_BUTTON)
+          {
+             ERR("Wrong window class for Button!\n");
+             return 0;
+          }
+       }
     }    
 #endif    
 

@@ -1253,6 +1253,14 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
      {
         NtUserSetWindowFNID(Wnd, FNID_SCROLLBAR);
      }
+     else
+     {
+        if (pWnd->fnid != FNID_SCROLLBAR)
+        {
+           ERR("Wrong window class for Scrollbar!\n");
+           return 0;
+        }
+     }
   }    
 #endif    
 

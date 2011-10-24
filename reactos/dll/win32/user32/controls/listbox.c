@@ -2584,6 +2584,14 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
        {
           NtUserSetWindowFNID(hwnd, FNID_LISTBOX); // Could be FNID_COMBOLBOX by class.
        }
+       else
+       {
+          if (pWnd->fnid != FNID_LISTBOX)
+          {
+             ERR("Wrong window class for listbox!\n");
+             return 0;
+          }
+       }
     }    
 #endif    
 

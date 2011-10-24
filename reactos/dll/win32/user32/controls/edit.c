@@ -4477,6 +4477,14 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
            {
               NtUserSetWindowFNID(hwnd, FNID_EDIT);
            }
+           else
+           {
+              if (pWnd->fnid != FNID_EDIT)
+              {
+                 ERR("Wrong window class for Edit!\n");
+                 return 0;
+              }
+           }
         }
 #endif
 
