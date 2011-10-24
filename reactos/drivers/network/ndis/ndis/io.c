@@ -396,6 +396,38 @@ NdisMAllocateMapRegisters(
   return NDIS_STATUS_SUCCESS;
 }
 
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisMSetupDmaTransfer(OUT PNDIS_STATUS Status,
+                      IN NDIS_HANDLE MiniportDmaHandle,
+                      IN PNDIS_BUFFER Buffer,
+                      IN ULONG Offset,
+                      IN ULONG Length,
+                      IN BOOLEAN WriteToDevice)
+{
+    UNIMPLEMENTED
+    *Status = NDIS_STATUS_FAILURE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisMCompleteDmaTransfer(OUT PNDIS_STATUS Status,
+                         IN NDIS_HANDLE MiniportDmaHandle,
+                         IN PNDIS_BUFFER Buffer,
+                         IN ULONG Offset,
+                         IN ULONG Length,
+                         IN BOOLEAN WriteToDevice)
+{
+    UNIMPLEMENTED
+    *Status = NDIS_STATUS_FAILURE;
+}
 
 /*
  * @implemented
