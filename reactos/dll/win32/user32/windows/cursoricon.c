@@ -241,7 +241,9 @@ static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *compr  = 0;
         return 0;
     }
-    else if (header->biSize >= sizeof(BITMAPINFOHEADER))
+    else if (header->biSize == sizeof(BITMAPINFOHEADER) ||
+             header->biSize == sizeof(BITMAPV4HEADER) ||
+             header->biSize == sizeof(BITMAPV5HEADER))
     {
         *width  = header->biWidth;
         *height = header->biHeight;
