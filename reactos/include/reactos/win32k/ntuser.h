@@ -1907,13 +1907,13 @@ NtUserGetCPD(
   GETCPD Flags,   
   ULONG_PTR Proc);
 
-DWORD
+HCURSOR
 NTAPI
 NtUserGetCursorFrameInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HCURSOR hCursor,
+  DWORD istep,
+  PDWORD rate_jiffies,
+  INT *num_steps);
 
 BOOL
 NTAPI

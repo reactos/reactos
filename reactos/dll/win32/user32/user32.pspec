@@ -268,7 +268,7 @@
 @ stdcall GetClipboardViewer() NtUserGetClipboardViewer
 @ stdcall GetComboBoxInfo(long ptr) ; Direct call NtUserGetComboBoxInfo
 @ stdcall GetCursor()
-@ stub GetCursorFrameInfo
+@ stdcall GetCursorFrameInfo(long long long ptr ptr)
 @ stdcall GetCursorInfo(ptr) NtUserGetCursorInfo
 @ stdcall GetCursorPos(ptr)
 @ stdcall GetDC(long) NtUserGetDC
