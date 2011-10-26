@@ -146,7 +146,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
        || 0 == _wcsicmp(L"CONIN$", lpFileName))
    {
       return OpenConsoleW(lpFileName,
-                          dwDesiredAccess, 
+                          dwDesiredAccess,
                           lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE,
                           FILE_SHARE_READ | FILE_SHARE_WRITE);
    }
@@ -366,6 +366,10 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
   else if (dwCreationDisposition == FILE_OVERWRITE_IF)
   {
     SetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
+  }
+  else
+  {
+    SetLastError(0);
   }
 
   return FileHandle;
