@@ -133,10 +133,10 @@ const struct builtin_class_descr DIALOG_builtin_class =
 *
 * ReactOS
 */
-DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
+DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
 {
     PWND pWindow;
-    DIALOGINFO* dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+    DIALOGINFO* dlgInfo;
 
     pWindow = ValidateHwnd( hWnd );
     if (!pWindow)
@@ -144,14 +144,17 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
        return NULL;
     }
 
+    dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+
     if (!dlgInfo && create)
     {
-       if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
-       {
-           if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
-              return NULL;
+        if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA)
+        {
+            if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
+                return NULL;
 
-           SETDLGINFO( hWnd, dlgInfo );
+            dlgInfo->idResult = IDOK;
+            SETDLGINFO( hWnd, dlgInfo );
 
            NtUserxSetDialogPointer( hWnd, dlgInfo );
        }
@@ -353,14 +356,14 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             LPSTR class = (LPSTR)info.className;
             LPSTR caption = (LPSTR)info.windowName;
 
-            if (HIWORD(class))
+            if (!IS_INTRESOURCE(class))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.className, -1, NULL, 0, NULL, NULL );
                 class = HeapAlloc( GetProcessHeap(), 0, len );
                 if (class != NULL)
                     WideCharToMultiByte( CP_ACP, 0, info.className, -1, class, len, NULL, NULL );
             }
-            if (HIWORD(caption))
+            if (!IS_INTRESOURCE(caption))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.windowName, -1, NULL, 0, NULL, NULL );
                 caption = HeapAlloc( GetProcessHeap(), 0, len );
@@ -381,8 +384,8 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             }
             else
                 hwndCtrl = NULL;
-            if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
-            if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
+            if (!IS_INTRESOURCE(class)) HeapFree( GetProcessHeap(), 0, class );
+            if (!IS_INTRESOURCE(caption)) HeapFree( GetProcessHeap(), 0, caption );
         }
 
         if (info.windowNameFree)
@@ -511,7 +514,7 @@ static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
 
         pWnd = ValidateHwnd(hParent);
         // FIXME: Use pWnd->fnid == FNID_DESKTOP
-        if (!pWnd || hParent == GetDesktopWindow()) break;
+        if (!pWnd || !TestWindowProcess(pWnd) || hParent == GetDesktopWindow()) break;
 
         if (!(pWnd->state & WNDS_DIALOGWINDOW))
         {
@@ -934,14 +937,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         LPSTR class_tmp = NULL;
         LPSTR caption_tmp = NULL;
 
-        if (HIWORD(class))
+        if (!IS_INTRESOURCE(class))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.className, -1, NULL, 0, NULL, NULL );
             class_tmp = HeapAlloc( GetProcessHeap(), 0, len );
             WideCharToMultiByte( CP_ACP, 0, template.className, -1, class_tmp, len, NULL, NULL );
             class = class_tmp;
         }
-        if (HIWORD(caption))
+        if (!IS_INTRESOURCE(caption))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.caption, -1, NULL, 0, NULL, NULL );
             caption_tmp = HeapAlloc( GetProcessHeap(), 0, len );
@@ -967,6 +970,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     will be valid only after WM_CREATE message has been handled in DefDlgProc
     All the members of the structure get filled here using temp variables */
     dlgInfo = DIALOG_get_info( hwnd, TRUE );
+    // ReactOS
     if (dlgInfo == NULL)
     {
         if (hUserFont) DeleteObject( hUserFont );
@@ -974,13 +978,12 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
         return 0;
     }
-
+    //
     dlgInfo->hwndFocus   = 0;
     dlgInfo->hUserFont   = hUserFont;
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
 
     if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
@@ -1973,7 +1976,11 @@ EndDialog(
     DIALOGINFO * dlgInfo;
     HWND owner;
 
-    if (!(dlgInfo = GETDLGINFO(hDlg))) return FALSE;
+    if (!(dlgInfo = GETDLGINFO(hDlg)))
+    {
+        ERR("got invalid window handle (%p); buggy app !?\n", hDlg);
+        return FALSE;
+    }
 
     dlgInfo->idResult = nResult;
     dlgInfo->flags |= DF_END;
@@ -2073,7 +2080,7 @@ GetDlgItemInt(
 {
     char str[30];
     char * endptr;
-    long result = 0;
+    LONG_PTR result = 0;
 
     if (lpTranslated) *lpTranslated = FALSE;
     if (!SendDlgItemMessageA(hDlg, nIDDlgItem, WM_GETTEXT, sizeof(str), (LPARAM)str))
@@ -2259,16 +2266,26 @@ GetNextDlgTabItem(
   HWND hCtl,
   BOOL bPrevious)
 {
-	/* Undocumented but tested under Win2000 and WinME */
-	if (hDlg == hCtl) hCtl = NULL;
+    PWND pWindow;
+      
+    pWindow = ValidateHwnd( hDlg );
+    if (!pWindow) return NULL;
+    if (hCtl)
+    {
+       pWindow = ValidateHwnd( hCtl );
+       if (!pWindow) return NULL;
+    }
 
-	/* Contrary to MSDN documentation, tested under Win2000 and WinME
-	* NB GetLastError returns whatever was set before the function was
-	* called.
-	*/
-	if (!hCtl && bPrevious) return 0;
+    /* Undocumented but tested under Win2000 and WinME */
+    if (hDlg == hCtl) hCtl = NULL;
 
-	return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
+    /* Contrary to MSDN documentation, tested under Win2000 and WinME
+     * NB GetLastError returns whatever was set before the function was
+     * called.
+     */
+    if (!hCtl && bPrevious) return 0;
+
+    return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
 }
 
 
@@ -2409,6 +2426,14 @@ IsDialogMessageW(
          case VK_TAB:
             if (!(dlgCode & DLGC_WANTTAB))
             {
+                BOOL fIsDialog = TRUE;
+                WND *pWnd = ValidateHwnd(hDlg);
+
+                if (pWnd && TestWindowProcess(pWnd))
+                {
+                    fIsDialog = (GETDLGINFO(hDlg) != NULL);
+                }
+  
                 SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
 
                 /* I am not sure under which circumstances the TAB is handled
@@ -2416,7 +2441,7 @@ IsDialogMessageW(
                  * send WM_NEXTDLGCTL.  (Personally I have never yet seen it
                  * do so but I presume someone has)
                  */
-                if (GETDLGINFO(hDlg))
+                if (fIsDialog)
                     SendMessageW( hDlg, WM_NEXTDLGCTL, (GetKeyState(VK_SHIFT) & 0x8000), 0 );
                 else
                 {
@@ -2517,7 +2542,7 @@ IsDialogMessageW(
 //// ReactOS
      case WM_SYSKEYDOWN:
          /* If the ALT key is being pressed display the keyboard cues */
-         if (lpMsg->lParam & (1 << 29))
+         if (HIWORD(lpMsg->lParam) & KF_ALTDOWN)
              SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
          break;
 
