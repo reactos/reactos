@@ -361,15 +361,15 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
   */
   if (dwCreationDisposition == FILE_OPEN_IF)
   {
-    SetLastError(IoStatusBlock.Information == FILE_OPENED ? ERROR_ALREADY_EXISTS : 0);
+    SetLastError(IoStatusBlock.Information == FILE_OPENED ? ERROR_ALREADY_EXISTS : ERROR_SUCCESS);
   }
   else if (dwCreationDisposition == FILE_OVERWRITE_IF)
   {
-    SetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
+    SetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : ERROR_SUCCESS);
   }
   else
   {
-    SetLastError(0);
+    SetLastError(ERROR_SUCCESS);
   }
 
   return FileHandle;
