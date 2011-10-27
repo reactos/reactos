@@ -228,9 +228,7 @@ static HBRUSH EDIT_NotifyCtlColor(EDITSTATE *es, HDC hdc)
 		msg = WM_CTLCOLOREDIT;
 
 	/* why do we notify to es->hwndParent, and we send this one to GetParent()? */
-        hbrush = (HBRUSH)SendMessageW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
-        if (!hbrush)
-            hbrush = (HBRUSH)DefWindowProcW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
+        hbrush = GetControlBrush(es->hwndSelf, hdc, msg);
         return hbrush;
 }
 
@@ -4481,7 +4479,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
            {
               if (pWnd->fnid != FNID_EDIT)
               {
-                 ERR("Wrong window class for Edit!\n");
+                 ERR("Wrong window class for Edit! fnId 0x%x\n",pWnd->fnid);
                  return 0;
               }
            }

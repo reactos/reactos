@@ -1161,10 +1161,17 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 #ifdef __REACTOS__
           HeapFree( GetProcessHeap(), 0, ci );
           SetWindowLongPtrW( hwnd, 0, 0 );
-          NtUserSetWindowFNID(hwnd, FNID_DESTROY);
 #endif
           return 0;
       }
+
+#ifdef __REACTOS__
+      case WM_NCDESTROY:
+      {
+          NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+          return 0;
+      }
+#endif
 
       case WM_MDIACTIVATE:
       {

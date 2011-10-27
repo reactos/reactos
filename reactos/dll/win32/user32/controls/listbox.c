@@ -2588,7 +2588,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
        {
           if (pWnd->fnid != FNID_LISTBOX)
           {
-             ERR("Wrong window class for listbox!\n");
+             ERR("Wrong window class for listbox! fnId 0x%x\n",pWnd->fnid);
              return 0;
           }
        }
@@ -3008,9 +3008,6 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return 0;
 
     case WM_DESTROY:
-#ifdef __REACTOS__
-        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-#endif
         return LISTBOX_Destroy( descr );
 
     case WM_ENABLE:
@@ -3185,6 +3182,9 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case WM_NCDESTROY:
         if( lphc && (lphc->dwStyle & CBS_DROPDOWNLIST) != CBS_SIMPLE )
             lphc->hWndLBox = 0;
+#ifdef __REACTOS__
+        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
         break;
 
     case WM_NCACTIVATE:

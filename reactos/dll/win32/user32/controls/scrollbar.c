@@ -1277,8 +1277,11 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
 
 #ifdef __REACTOS__
       case WM_DESTROY:
-        NtUserSetWindowFNID(Wnd, FNID_DESTROY);
         return DefWindowProc(Wnd, Msg, wParam, lParam );
+
+      case WM_NCDESTROY:
+        NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+        break;
 #endif
 
 //#if 0 /* FIXME */

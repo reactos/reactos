@@ -867,9 +867,7 @@ static HBRUSH COMBO_PrepareColors(
    */
   if (CB_DISABLED(lphc))
   {
-    hBkgBrush = (HBRUSH)SendMessageW(lphc->owner, WM_CTLCOLORSTATIC,
-				     (WPARAM)hDC, (LPARAM)lphc->self );
-
+     hBkgBrush = GetControlColor(lphc->owner, lphc->self, hDC, WM_CTLCOLORSTATIC);
     /*
      * We have to change the text color since WM_CTLCOLORSTATIC will
      * set it to the "enabled" color. This is the same behavior as the
@@ -880,8 +878,7 @@ static HBRUSH COMBO_PrepareColors(
   else
   {
       /* FIXME: In which cases WM_CTLCOLORLISTBOX should be sent? */
-      hBkgBrush = (HBRUSH)SendMessageW(lphc->owner, WM_CTLCOLOREDIT,
-				       (WPARAM)hDC, (LPARAM)lphc->self );
+     hBkgBrush = GetControlColor(lphc->owner, lphc->self, hDC, WM_CTLCOLOREDIT);
   }
 
   /*
@@ -1847,7 +1844,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
          {
             if (pWnd->fnid != FNID_COMBOBOX)
             {
-               ERR("Wrong window class for ComboBox!\n");
+               ERR("Wrong window class for ComboBox! fnId 0x%x\n",pWnd->fnid);
                return 0;
             }
          }

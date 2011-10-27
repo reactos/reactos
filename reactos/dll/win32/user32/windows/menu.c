@@ -1852,10 +1852,13 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
-#ifdef __REACTOS__
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-#endif
       break;
+
+#ifdef __REACTOS__
+    case WM_NCDESTROY:
+      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+      break;
+#endif
 
     case WM_SHOWWINDOW:
       if (0 != wParam)
@@ -1949,10 +1952,13 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
-#ifdef __REACTOS__
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-#endif
       break;
+
+#ifdef __REACTOS__
+    case WM_NCDESTROY:
+      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+      break;
+#endif
 
     case WM_SHOWWINDOW:
       if (0 != wParam)

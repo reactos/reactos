@@ -270,7 +270,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
        {
           if (pWnd->fnid != FNID_BUTTON)
           {
-             ERR("Wrong window class for Button!\n");
+             ERR("Wrong window class for Button! fnId 0x%x\n",pWnd->fnid);
              return 0;
           }
        }
@@ -321,9 +321,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         return 0;
 
 #ifdef __REACTOS__
-    case WM_DESTROY:
     case WM_NCDESTROY:
         NtUserSetWindowFNID(hWnd, FNID_DESTROY);
+    case WM_DESTROY:
         break;
 #endif
 
@@ -442,27 +442,38 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_SETTEXT:
     {
         /* Clear an old text here as Windows does */
-        HDC hdc = GetDC(hWnd);
-        HBRUSH hbrush;
-        RECT client, rc;
-        HWND parent = GetParent(hWnd);
+//
+// wine Bug: http://bugs.winehq.org/show_bug.cgi?id=25790
+// Patch: http://source.winehq.org/patches/data/70889
+// By: Alexander LAW, Replicate Windows behavior of WM_SETTEXT handler regarding WM_CTLCOLOR*
+//
+        if (style & WS_VISIBLE)
+        {
+            HDC hdc = GetDC(hWnd);
+            HBRUSH hbrush;
+            RECT client, rc;
+            HWND parent = GetParent(hWnd);
+            UINT ctlMessage=(btn_type == BS_PUSHBUTTON ||
+                      btn_type == BS_DEFPUSHBUTTON ||
+                      btn_type == BS_PUSHLIKE ||
+                      btn_type == BS_USERBUTTON ||
+                      btn_type == BS_OWNERDRAW) ?
+                      WM_CTLCOLORBTN : WM_CTLCOLORSTATIC;
 
-        if (!parent) parent = hWnd;
-        hbrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
-				      (WPARAM)hdc, (LPARAM)hWnd);
-        if (!hbrush) /* did the app forget to call DefWindowProc ? */
-            hbrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
-					    (WPARAM)hdc, (LPARAM)hWnd);
+            if (!parent) parent = hWnd;
 
-        GetClientRect(hWnd, &client);
-        rc = client;
-        BUTTON_CalcLabelRect(hWnd, hdc, &rc);
-        /* Clip by client rect bounds */
-        if (rc.right > client.right) rc.right = client.right;
-        if (rc.bottom > client.bottom) rc.bottom = client.bottom;
-        FillRect(hdc, &rc, hbrush);
-        ReleaseDC(hWnd, hdc);
+            hbrush = GetControlColor( parent, hWnd, hdc, ctlMessage);
 
+            GetClientRect(hWnd, &client);
+            rc = client;
+            BUTTON_CalcLabelRect(hWnd, hdc, &rc);
+            /* Clip by client rect bounds */
+            if (rc.right > client.right) rc.right = client.right;
+            if (rc.bottom > client.bottom) rc.bottom = client.bottom;
+            FillRect(hdc, &rc, hbrush);
+            ReleaseDC(hWnd, hdc);
+        }
+////
         if (unicode) DefWindowProcW( hWnd, WM_SETTEXT, wParam, lParam );
         else DefWindowProcA( hWnd, WM_SETTEXT, wParam, lParam );
         if (btn_type == BS_GROUPBOX) /* Yes, only for BS_GROUPBOX */
@@ -974,11 +985,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
-    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
-				  (WPARAM)hDC, (LPARAM)hwnd);
-    if (!hBrush) /* did the app forget to call defwindowproc ? */
-        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
-					(WPARAM)hDC, (LPARAM)hwnd );
+    hBrush = GetControlColor( parent, hwnd, hDC, WM_CTLCOLORSTATIC);
     setup_clipping( hwnd, hDC );
 
     if (style & BS_LEFTTEXT)
@@ -1118,10 +1125,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     /* GroupBox acts like static control, so it sends CTLCOLORSTATIC */
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
-    hbr = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC, (WPARAM)hDC, (LPARAM)hwnd);
-    if (!hbr) /* did the app forget to call defwindowproc ? */
-        hbr = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
-				     (WPARAM)hDC, (LPARAM)hwnd);
+    hbr = GetControlColor( parent, hwnd, hDC, WM_CTLCOLORSTATIC);
     setup_clipping( hwnd, hDC );
 
     GetClientRect( hwnd, &rc);

@@ -224,8 +224,9 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
             }
             return (hIconTitleFont ? 0 : -1);
 #ifdef __REACTOS__
-        case WM_DESTROY:
+        case WM_NCDESTROY:
           NtUserSetWindowFNID(hWnd, FNID_DESTROY);
+        case WM_DESTROY:
           break;
 #endif
 	case WM_NCHITTEST:

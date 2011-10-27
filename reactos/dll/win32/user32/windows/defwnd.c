@@ -1901,6 +1901,15 @@ RealDefWindowProcA(HWND hWnd,
     LRESULT Result = 0;
     PWND Wnd;
 
+    Wnd = ValidateHwnd(hWnd);
+
+    if ( !Wnd &&
+         Msg != WM_CTLCOLORMSGBOX &&
+         Msg != WM_CTLCOLORBTN    &&
+         Msg != WM_CTLCOLORDLG    &&
+         Msg != WM_CTLCOLORSTATIC )
+       return 0;
+
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
     {
@@ -1925,7 +1934,6 @@ RealDefWindowProcA(HWND hWnd,
             PWSTR buf;
             ULONG len;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && Wnd->strName.Length != 0)
             {
                 buf = DesktopPtrToUser(Wnd->strName.Buffer);
@@ -1948,7 +1956,6 @@ RealDefWindowProcA(HWND hWnd,
             PSTR outbuf = (PSTR)lParam;
             UINT copy;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && wParam != 0)
             {
                 if (Wnd->strName.Buffer != NULL)
@@ -2061,6 +2068,15 @@ RealDefWindowProcW(HWND hWnd,
     LRESULT Result = 0;
     PWND Wnd;
 
+    Wnd = ValidateHwnd(hWnd);
+
+    if ( !Wnd &&
+         Msg != WM_CTLCOLORMSGBOX &&
+         Msg != WM_CTLCOLORBTN    &&
+         Msg != WM_CTLCOLORDLG    &&
+         Msg != WM_CTLCOLORSTATIC )
+       return 0;
+
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
     {
@@ -2085,7 +2101,6 @@ RealDefWindowProcW(HWND hWnd,
             PWSTR buf;
             ULONG len;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && Wnd->strName.Length != 0)
             {
                 buf = DesktopPtrToUser(Wnd->strName.Buffer);
@@ -2107,7 +2122,6 @@ RealDefWindowProcW(HWND hWnd,
             PWSTR buf = NULL;
             PWSTR outbuf = (PWSTR)lParam;
 
-            Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && wParam != 0)
             {
                 if (Wnd->strName.Buffer != NULL)

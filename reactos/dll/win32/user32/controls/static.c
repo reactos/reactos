@@ -324,33 +324,9 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
     }
 }
 
-BOOL WINAPI GdiValidateHandle(HGDIOBJ hobj);
-
 static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
 {
-    PWND pwnd;
-    HBRUSH hBrush;
-    HWND parent = GetParent(hwnd);
-
-    if (!parent) parent = hwnd;
-    // ReactOS
-    pwnd = ValidateHwnd(parent);
-    if (pwnd && !TestWindowProcess(pwnd))
-    {
-       return (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd);
-    }
-    ////
-    hBrush = (HBRUSH) SendMessageW( parent,
-                    WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
-    if (!hBrush || /* did the app forget to call DefWindowProc ? */
-        !GdiValidateHandle(hBrush)) // ReactOS
-    {
-        /* FIXME: DefWindowProc should return different colors if a
-                  manifest is present */
-        hBrush = (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC,
-                                        (WPARAM)hdc, (LPARAM)hwnd);
-    }
-    return hBrush;
+    return GetControlBrush( hwnd, hdc, WM_CTLCOLORSTATIC);
 }
 
 static VOID STATIC_InitColours(void)
@@ -403,7 +379,7 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
        {
           if (pWnd->fnid != FNID_STATIC)
           {
-             ERR("Wrong window class for Static!\n");
+             ERR("Wrong window class for Static! fnId 0x%x\n",pWnd->fnid);
              return 0;
           }
        }
@@ -642,6 +618,7 @@ LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 {
   DRAWITEMSTRUCT dis;
+  HBRUSH hBrush;
   HFONT font, oldFont = NULL;
   UINT id = (UINT)GetWindowLongPtrW( hwnd, GWLP_ID );
 
@@ -657,7 +634,7 @@ static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 
   font = (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
   if (font) oldFont = SelectObject( hdc, font );
-  SendMessageW( GetParent(hwnd), WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
+  hBrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
   SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
   if (font) SelectObject( hdc, oldFont );
 }
