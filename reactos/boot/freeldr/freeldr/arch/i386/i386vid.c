@@ -205,7 +205,7 @@ USHORT BiosIsVesaSupported(VOID)
 
 	if (Regs.w.ax != 0x004F)
 	{
-		TRACE("Failed.\n");
+		ERR("VESA BIOS call failed\n");
 		return 0x0000;
 	}
 
@@ -222,22 +222,18 @@ USHORT BiosIsVesaSupported(VOID)
 	TRACE("SvgaInfo->ProductRevisionStringPtr = 0x%x\n", SvgaInfo->ProductRevisionStringPtr);
 	TRACE("SvgaInfo->VBE/AF Version = 0x%x (BCD WORD)\n", SvgaInfo->VBE_AF_Version);
 
-	//TRACE("\nSupported VESA and OEM video modes:\n");
-	//VideoModes = (USHORT*)SvgaInfo->SupportedModeListPtr;
-	//for (Index=0; VideoModes[Index]!=0xFFFF; Index++)
-	//{
-	//	TRACE("Mode %d: 0x%x\n", Index, VideoModes[Index]);
-	//}
-
-	//if (SvgaInfo->VesaVersion >= 0x0200)
-	//{
-	//	TRACE("\nSupported accelerated video modes (VESA v2.0):\n");
-	//	VideoModes = (USHORT*)SvgaInfo->AcceleratedModeListPtr;
-	//	for (Index=0; VideoModes[Index]!=0xFFFF; Index++)
-	//	{
-	//		TRACE("Mode %d: 0x%x\n", Index, VideoModes[Index]);
-	//	}
-	//}
+    if (SvgaInfo->Signature[0] != 'V' ||
+        SvgaInfo->Signature[1] != 'E' ||
+        SvgaInfo->Signature[2] != 'S' ||
+        SvgaInfo->Signature[3] != 'A')
+    {
+        ERR("Bad signature in VESA information (%c%c%c%c)\n",
+            SvgaInfo->Signature[0],
+            SvgaInfo->Signature[1],
+            SvgaInfo->Signature[2],
+            SvgaInfo->Signature[3]);
+        return 0x0000;
+    }
 
 	return SvgaInfo->VesaVersion;
 }
