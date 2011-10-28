@@ -2605,8 +2605,9 @@ SendDlgItemMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
-  if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
-	HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
+	HWND hwndCtrl;
+	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
+	hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageA( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
 }
@@ -2624,8 +2625,9 @@ SendDlgItemMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
-  if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
-	HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
+	HWND hwndCtrl;
+	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
+	hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageW( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
 }
