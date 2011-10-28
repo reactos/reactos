@@ -29,8 +29,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
    PMMSUPPORT AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
-   BOOLEAN Locked = FromMdl;
-
+   
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
@@ -80,8 +79,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
          case MEMORY_AREA_SECTION_VIEW:
             Status = MmAccessFaultSectionView(AddressSpace,
                                               MemoryArea,
-                                              (PVOID)Address,
-                                              Locked);
+                                              (PVOID)Address);
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
@@ -124,7 +122,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    PMMSUPPORT AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
-   BOOLEAN Locked = FromMdl;
 
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -179,15 +176,13 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
          case MEMORY_AREA_SECTION_VIEW:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
-                                                  (PVOID)Address,
-                                                  Locked);
+                                                  (PVOID)Address);
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
             Status = MmNotPresentFaultVirtualMemory(AddressSpace,
                                                     MemoryArea,
-                                                    (PVOID)Address,
-                                                    Locked);
+                                                    (PVOID)Address);
             break;
 
 #ifdef  NEWCC

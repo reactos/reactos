@@ -161,8 +161,7 @@ NTSTATUS
 NTAPI
 MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
                                MEMORY_AREA* MemoryArea,
-                               PVOID Address,
-                               BOOLEAN Locked)
+                               PVOID Address)
 /*
  * FUNCTION: Move data into memory to satisfy a page not present fault
  * ARGUMENTS:

@@ -935,8 +935,7 @@ NTAPI
 MmNotPresentFaultVirtualMemory(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 NTSTATUS
@@ -1656,8 +1655,7 @@ NTAPI
 MmNotPresentFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 NTSTATUS
@@ -1678,8 +1676,7 @@ NTAPI
 MmAccessFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 VOID

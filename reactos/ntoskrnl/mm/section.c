@@ -1309,8 +1309,7 @@ NTSTATUS
 NTAPI
 MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                              MEMORY_AREA* MemoryArea,
-                             PVOID Address,
-                             BOOLEAN Locked)
+                             PVOID Address)
 {
    ULONG Offset;
    PFN_NUMBER Page;
@@ -1334,6 +1333,14 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    if (MmIsPagePresent(Process, Address))
    {
       return(STATUS_SUCCESS);
+   }
+   
+   /*
+    * Check for the virtual memory area being deleted.
+    */
+   if (MemoryArea->DeleteInProgress)
+   {
+      return(STATUS_UNSUCCESSFUL);
    }
 
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
@@ -1805,8 +1812,7 @@ NTSTATUS
 NTAPI
 MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                          MEMORY_AREA* MemoryArea,
-                         PVOID Address,
-                         BOOLEAN Locked)
+                         PVOID Address)
 {
    PMM_SECTION_SEGMENT Segment;
    PROS_SECTION_OBJECT Section;
@@ -1820,7 +1826,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    ULONG Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-   DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
+   DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address);
 
    /*
     * Check if the page has been paged out or has already been set readwrite
