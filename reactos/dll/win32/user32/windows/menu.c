@@ -1899,6 +1899,10 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
   {
      if (!pWnd->fnid)
      {
+        if (Message != WM_NCCREATE)
+        {
+           return DefWindowProcW(Wnd, Message, wParam, lParam);
+        }
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
      else
@@ -1953,12 +1957,6 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
           top_popup_hmenu = NULL;
         }
       break;
-
-#ifdef __REACTOS__
-    case WM_NCDESTROY:
-      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-      break;
-#endif
 
     case WM_SHOWWINDOW:
       if (0 != wParam)

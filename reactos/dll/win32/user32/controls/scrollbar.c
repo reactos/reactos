@@ -110,7 +110,7 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
     */
    if (nBar == SB_CTL)
    {
-      hBrush = (HBRUSH)SendMessageW(GetParent(hWnd), WM_CTLCOLORSCROLLBAR, (WPARAM)hDC, (LPARAM)hWnd);
+      hBrush = GetControlBrush( hWnd, hDC, WM_CTLCOLORSCROLLBAR);
       if (!hBrush)
          hBrush = GetSysColorBrush(COLOR_SCROLLBAR);
    }
@@ -1251,6 +1251,10 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
   {
      if (!pWnd->fnid)
      {
+        if (Msg != WM_CREATE)
+        {
+           return DefWindowProc(Wnd, Msg, wParam, lParam);
+        }
         NtUserSetWindowFNID(Wnd, FNID_SCROLLBAR);
      }
      else
@@ -1274,15 +1278,6 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
       case WM_CREATE:
         IntScrollCreateScrollBar(Wnd, (LPCREATESTRUCTW) lParam);
         break;
-
-#ifdef __REACTOS__
-      case WM_DESTROY:
-        return DefWindowProc(Wnd, Msg, wParam, lParam );
-
-      case WM_NCDESTROY:
-        NtUserSetWindowFNID(Wnd, FNID_DESTROY);
-        break;
-#endif
 
 //#if 0 /* FIXME */
       case WM_ENABLE:
