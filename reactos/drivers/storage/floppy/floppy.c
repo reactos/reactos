@@ -666,15 +666,22 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     UCHAR HeadLoadTime;
     UCHAR HeadUnloadTime;
     UCHAR StepRateTime;
+    UCHAR ControllerVersion;
 
     PAGED_CODE();
     ASSERT(ControllerInfo);
 
     TRACE_(FLOPPY, "InitController called with Controller 0x%p\n", ControllerInfo);
 
+    /* Get controller in a known state */
+    HwConfigure(ControllerInfo, FALSE, TRUE, TRUE, 0, 0);
+
+    /* Get the controller version */
+    ControllerVersion = HwGetVersion(ControllerInfo);
+
     KeClearEvent(&ControllerInfo->SynchEvent);
 
-    /* Reset the controller to avoid interrupt garbage on certain controllers */
+    /* Reset the controller */
     if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
         WARN_(FLOPPY, "InitController: unable to reset controller\n");
@@ -701,10 +708,10 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     INFO_(FLOPPY, "InitController: done sensing interrupts\n");
 
     /* Next, see if we have the right version to do implied seek */
-    if(HwGetVersion(ControllerInfo) == VERSION_ENHANCED)
+    if(ControllerVersion == VERSION_ENHANCED)
     {
         /* If so, set that up -- all defaults below except first TRUE for EIS */
-        if(HwConfigure(ControllerInfo, TRUE, TRUE, FALSE, 0, 0) != STATUS_SUCCESS)
+        if(HwConfigure(ControllerInfo, TRUE, TRUE, TRUE, 0, 0) != STATUS_SUCCESS)
         {
             WARN_(FLOPPY, "InitController: unable to set up implied seek\n");
             ControllerInfo->ImpliedSeeks = FALSE;
