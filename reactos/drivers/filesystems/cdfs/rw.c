@@ -75,6 +75,8 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         LARGE_INTEGER FileOffset;
         IO_STATUS_BLOCK IoStatus;
         CC_FILE_SIZES FileSizes;
+        
+        DPRINT("Using cache\n");
 
         if (ReadOffset + Length > Fcb->Entry.DataLengthL)
             Length = Fcb->Entry.DataLengthL - ReadOffset;
@@ -111,8 +113,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if ((ReadOffset % BLOCKSIZE) != 0 || (Length % BLOCKSIZE) != 0)
     {
         /* Then we need to do a partial or misaligned read ... */
-        PVOID PageBuf = ExAllocatePool(NonPagedPool, BLOCKSIZE);
-        PCHAR ReadInPage = (PCHAR)PageBuf + (ReadOffset & (BLOCKSIZE - 1));
+        PCHAR PageBuf = ExAllocatePool(NonPagedPool, BLOCKSIZE);
         PCHAR TargetRead = (PCHAR)Buffer;
         ULONG ActualReadOffset, EndOfExtent, ReadLen;
 
@@ -121,7 +122,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
             return STATUS_NO_MEMORY;
         }
 
-        ActualReadOffset = ReadOffset & ~(BLOCKSIZE - 1);
+        ActualReadOffset = ROUND_DOWN(ReadOffset, BLOCKSIZE);
         EndOfExtent = ReadOffset + Length;
 
         while (ActualReadOffset < EndOfExtent)
@@ -130,22 +131,23 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
                 (DeviceExt->StorageDevice,
                 Fcb->Entry.ExtentLocationL + (ActualReadOffset / BLOCKSIZE),
                 1,
-                PageBuf,
+                (PVOID)PageBuf,
                 FALSE);
 
             if (!NT_SUCCESS(Status))
                 break;
 
-            ReadLen = BLOCKSIZE - (ActualReadOffset & (BLOCKSIZE - 1));
-            if (ReadLen > EndOfExtent - ActualReadOffset)
+            ReadLen = BLOCKSIZE - (ReadOffset - ActualReadOffset);
+            if (ReadLen > EndOfExtent - ReadOffset)
             {
-                ReadLen = EndOfExtent - ActualReadOffset;
+                ReadLen = EndOfExtent - ReadOffset;
             }
+            DPRINT("Copying %d bytes.\n", ReadLen);
+            RtlCopyMemory(TargetRead, PageBuf + (ReadOffset - ActualReadOffset), ReadLen);
 
-            RtlCopyMemory(TargetRead, ReadInPage, ReadLen);
-
-            ActualReadOffset += ReadLen;
-            TargetRead += ReadLen;	  
+            ActualReadOffset += BLOCKSIZE;
+            TargetRead += ReadLen;
+            ReadOffset += ReadLen;
         }
 
         ExFreePool(PageBuf);
