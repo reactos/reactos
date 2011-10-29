@@ -783,9 +783,12 @@ IopTranslateDeviceResources(
                 
                if (AddressSpace == 0)
                {
-                   /* This is actually a memory resource */
-                   DescriptorRaw->Type = CmResourceTypeMemory;
-                   DescriptorTranslated->Type = CmResourceTypeMemory;
+                   DPRINT1("Guessed incorrect address space: 1 -> 0\n");
+
+                   /* FIXME: I think all other CM_RESOURCE_PORT_XXX flags are 
+                    * invalid for this state but I'm not 100% sure */
+                   DescriptorRaw->Flags =
+                   DescriptorTranslated->Flags = CM_RESOURCE_PORT_MEMORY;
                }
                break;
             }
@@ -825,9 +828,10 @@ IopTranslateDeviceResources(
 
                if (AddressSpace != 0)
                {
-                   /* This is actually an I/O port resource */
-                   DescriptorRaw->Type = CmResourceTypePort;
-                   DescriptorTranslated->Type = CmResourceTypePort;
+                   DPRINT1("Guessed incorrect address space: 0 -> 1\n");
+
+                   /* This should never happen for memory space */
+                   ASSERT(FALSE);
                }
             }
 
