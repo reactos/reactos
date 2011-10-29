@@ -674,38 +674,10 @@ InitController(PCONTROLLER_INFO ControllerInfo)
 
     KeClearEvent(&ControllerInfo->SynchEvent);
 
-    INFO_(FLOPPY, "InitController: resetting the controller\n");
-
-    /* Reset the controller */
-    if(HwReset(ControllerInfo) != STATUS_SUCCESS)
-    {
-        WARN_(FLOPPY, "InitController: unable to reset controller\n");
-        return STATUS_IO_DEVICE_ERROR;
-    }
-
-    /* All controllers should support this so
-     * if we get something strange back then we
-     * know that this isn't a floppy controller
-     */
-    if (HwGetVersion(ControllerInfo) <= 0)
-    {
-        WARN_(FLOPPY, "InitController: unable to contact controller\n");
-        return STATUS_NO_SUCH_DEVICE;
-    }
-
     /* Reset the controller to avoid interrupt garbage on certain controllers */
     if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
-        WARN_(FLOPPY, "InitController: unable to reset controller #2\n");
-        return STATUS_IO_DEVICE_ERROR;
-    }
-
-    INFO_(FLOPPY, "InitController: setting data rate\n");
-
-    /* Set data rate */
-    if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
-    {
-        WARN_(FLOPPY, "InitController: unable to set data rate\n");
+        WARN_(FLOPPY, "InitController: unable to reset controller\n");
         return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -776,6 +748,15 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     HeadLoadTime = SPECIFY_HLT_500K;
     HeadUnloadTime = SPECIFY_HUT_500K;
     StepRateTime = SPECIFY_SRT_500K;
+    
+    INFO_(FLOPPY, "InitController: setting data rate\n");
+    
+    /* Set data rate */
+    if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
+    {
+        WARN_(FLOPPY, "InitController: unable to set data rate\n");
+        return STATUS_IO_DEVICE_ERROR;
+    }
 
     INFO_(FLOPPY, "InitController: issuing specify command to controller\n");
 
@@ -850,7 +831,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
     }
 
     /* Now that we have a controller, set it up with the system */
-    for(i = 0; i < gNumberOfControllers; i++)
+    for(i = 0; i < gNumberOfControllers && gControllerInfo[i].NumberOfDrives > 0; i++)
     {
         /* 0: Report resource usage to the kernel, to make sure they aren't assigned to anyone else */
         /* FIXME: Implement me. */
@@ -994,7 +975,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
 
     INFO_(FLOPPY, "AddControllers: --------------------------------------------> finished adding controllers\n");
 
-    return TRUE;
+    return (IoGetConfigurationInformation()->FloppyCount != 0);
 }
 
 
