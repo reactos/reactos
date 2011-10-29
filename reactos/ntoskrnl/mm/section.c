@@ -4911,8 +4911,12 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
    DPRINT("MmUnmapViewInSystemSpace() called\n");
 
    AddressSpace = MmGetKernelAddressSpace();
+   
+   MmLockAddressSpace(AddressSpace);
 
    Status = MmUnmapViewOfSegment(AddressSpace, MappedBase);
+   
+   MmUnlockAddressSpace(AddressSpace);
 
    return Status;
 }
