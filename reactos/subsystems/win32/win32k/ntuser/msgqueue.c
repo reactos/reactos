@@ -663,6 +663,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
    PTHREADINFO pti;
+   BOOL Ret;
    LRESULT Result = 0;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
@@ -732,7 +733,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
          RemoveEntryList(&Message->ListEntry);
          InsertTailList(&Message->CallBackSenderQueue->SentMessagesListHead, &Message->ListEntry);
          TRACE("Callback Message not processed yet. Requeuing the message\n");
-         return (FALSE);
+         Ret = FALSE;
+         goto Exit;
       }
    }
    else
@@ -760,7 +762,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
          MsqWakeQueue(Message->CallBackSenderQueue, QS_SENDMESSAGE, TRUE);
          IntDereferenceMessageQueue(Message->CallBackSenderQueue);
       }
-      return (TRUE);
+      Ret = TRUE;
+      goto Exit;
    }
 
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
@@ -808,12 +811,13 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
    /* free the message */
    ExFreePoolWithTag(Message, TAG_USRMSG);
-
+   Ret = TRUE;
+Exit:
    /* do not hangup on the user if this is reentering */
    if (!SaveMsg) pti->pcti->CTI_flags &= ~CTI_INSENDMESSAGE;
    pti->pusmCurrent = SaveMsg;
 
-   return(TRUE);
+   return Ret;
 }
 
 VOID APIENTRY
