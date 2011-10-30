@@ -207,6 +207,8 @@ InitGdiHandleTable(void)
     gpaLookasideList = ExAllocatePoolWithTag(NonPagedPool,
                            GDIObjTypeTotal * sizeof(PAGED_LOOKASIDE_LIST),
                            TAG_GDIHNDTBLE);
+    if(!gpaLookasideList)
+        return STATUS_NO_MEMORY;
 
     InitLookasideList(GDIObjType_DC_TYPE, sizeof(DC));
     InitLookasideList(GDIObjType_RGN_TYPE, sizeof(REGION));

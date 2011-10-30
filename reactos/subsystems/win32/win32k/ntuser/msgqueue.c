@@ -13,7 +13,7 @@ DBG_DEFAULT_CHANNEL(UserMsgQ);
 
 /* GLOBALS *******************************************************************/
 
-static PAGED_LOOKASIDE_LIST MessageLookasideList;
+static PPAGED_LOOKASIDE_LIST pgMessageLookasideList;
 PUSER_MESSAGE_QUEUE gpqCursor;
 
 /* FUNCTIONS *****************************************************************/
@@ -23,7 +23,10 @@ NTSTATUS
 NTAPI
 MsqInitializeImpl(VOID)
 {
-   ExInitializePagedLookasideList(&MessageLookasideList,
+    pgMessageLookasideList = ExAllocatePoolWithTag(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST), TAG_USRMSG);
+    if(!pgMessageLookasideList)
+        return STATUS_NO_MEMORY;
+   ExInitializePagedLookasideList(pgMessageLookasideList,
                                   NULL,
                                   NULL,
                                   0,
@@ -640,7 +643,7 @@ MsqCreateMessage(LPMSG Msg)
 {
    PUSER_MESSAGE Message;
 
-   Message = ExAllocateFromPagedLookasideList(&MessageLookasideList);
+   Message = ExAllocateFromPagedLookasideList(pgMessageLookasideList);
    if (!Message)
    {
       return NULL;
@@ -654,7 +657,7 @@ MsqCreateMessage(LPMSG Msg)
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
-   ExFreeToPagedLookasideList(&MessageLookasideList, Message);
+   ExFreeToPagedLookasideList(pgMessageLookasideList, Message);
 }
 
 BOOLEAN FASTCALL

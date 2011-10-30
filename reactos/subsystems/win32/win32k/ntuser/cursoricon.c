@@ -27,7 +27,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserIcon);
 
-static PAGED_LOOKASIDE_LIST gProcessLookasideList;
+static PPAGED_LOOKASIDE_LIST pgProcessLookasideList;
 static LIST_ENTRY gCurIconList;
 
 SYSTEM_CURSORINFO gSysCursorInfo;
@@ -35,7 +35,11 @@ SYSTEM_CURSORINFO gSysCursorInfo;
 BOOL
 InitCursorImpl()
 {
-    ExInitializePagedLookasideList(&gProcessLookasideList,
+    pgProcessLookasideList = ExAllocatePool(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST));
+    if(!pgProcessLookasideList)
+        return FALSE;
+        
+    ExInitializePagedLookasideList(pgProcessLookasideList,
                                    NULL,
                                    NULL,
                                    0,
@@ -154,7 +158,7 @@ ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
     }
 
     /* Not registered yet */
-    Current = ExAllocateFromPagedLookasideList(&gProcessLookasideList);
+    Current = ExAllocateFromPagedLookasideList(pgProcessLookasideList);
     if (NULL == Current)
     {
         return FALSE;
@@ -266,7 +270,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOL ProcessCleanup)
         }
     }
 
-    ExFreeToPagedLookasideList(&gProcessLookasideList, Current);
+    ExFreeToPagedLookasideList(pgProcessLookasideList, Current);
 
     /* If there are still processes referencing this object we can't destroy it yet */
     if (! IsListEmpty(&CurIcon->ProcessList))
