@@ -457,8 +457,8 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
             Status = RtlExpandEnvironmentStrings_U(NULL, &SourceU, &DestU, &Length);
             if (NT_SUCCESS(Status))
             {
-                /* Get the ASCII length of the variable */
-                Result = RtlUnicodeStringToAnsiSize(&DestU);
+                /* Get the ASCII length of the variable, add a byte for NULL */
+                Result = RtlUnicodeStringToAnsiSize(&DestU) + sizeof(ANSI_NULL);
             }
         }
         else
@@ -475,16 +475,14 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
 
         /* Check the size */
         Result = RtlUnicodeStringToAnsiSize(&DestU);
-        if (Result <= nSize)
+        if (Result <= UniSize)
         {
             /* Convert the string */
             RtlInitEmptyAnsiString(&Dest, lpDst, UniSize);
             Status = RtlUnicodeStringToAnsiString(&Dest, &DestU, FALSE);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Clear the destination */
-                *lpDst = ANSI_NULL;
-            }
+            
+            /* Write a NULL-char in case of failure only */
+            if (!NT_SUCCESS(Status)) *lpDst = ANSI_NULL;
         }
     }
 Quickie:
