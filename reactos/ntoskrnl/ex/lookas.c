@@ -313,9 +313,9 @@ ExInitializePagedLookasideList(IN PPAGED_LOOKASIDE_LIST Lookaside,
     }
 
     /* Insert it into the list */
-    ExInterlockedInsertTailList(&ExpNonPagedLookasideListHead,
+    ExInterlockedInsertTailList(&ExpPagedLookasideListHead,
                                 &Lookaside->L.ListEntry,
-                                &ExpNonPagedLookasideListLock);
+                                &ExpPagedLookasideListLock);
 }
 
 /* EOF */
