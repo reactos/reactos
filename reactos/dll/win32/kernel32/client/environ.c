@@ -31,7 +31,8 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
     ANSI_STRING VarName, VarValue;
     UNICODE_STRING VarNameU, VarValueU;
     PWSTR Buffer;
-    ULONG Result = 0, UniSize = 0;
+    ULONG Result = 0;
+    USHORT UniSize;
     NTSTATUS Status;
 
     /* Initialize all the strings */
@@ -42,27 +43,37 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
     if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if the size is too big to fit */
-    if (nSize <= UNICODE_STRING_MAX_BYTES)
+    UniSize = UNICODE_STRING_MAX_CHARS - 2;
+    if (nSize <= UniSize)
     {
-        /* Keep the given size, minus a NULL-char */
-        if (nSize) UniSize = nSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
+        /* It fits, but was there a string at all? */
+        if (nSize)
+        {
+            /* Keep the given size, minus a NULL-char */
+            UniSize = nSize - 1;
+        }
+        else
+        {
+            /* No size */
+            UniSize = 0;
+        }
     }
     else
     {
-        /* Set the maximum possible */
-        UniSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
+        /* String is too big, so we need to return a NULL char as well */
+        UniSize--;
     }
 
     /* Allocate the value string buffer */
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UniSize);
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UniSize * sizeof(WCHAR));
     if (!Buffer)
     {
-        Status = STATUS_NO_MEMORY;
+        Status = STATUS_NO_MEMORY;;
         goto Quickie;
     }
 
     /* And initialize its string */
-    RtlInitEmptyUnicodeString(&VarValueU, Buffer, UniSize);
+    RtlInitEmptyUnicodeString(&VarValueU, Buffer, UniSize * sizeof(WCHAR));
 
     /* Acquire the PEB lock since we'll be querying variables now */
     RtlAcquirePebLock();
@@ -72,7 +83,7 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
     if ((NT_SUCCESS(Status)) && !(nSize)) Status = STATUS_BUFFER_TOO_SMALL;
 
     /* Check if we didn't have enough space */
-    if (Status == STATUS_BUFFER_TOO_SMALL)
+    if (!(NT_SUCCESS(Status)) && (Status == STATUS_BUFFER_TOO_SMALL))
     {
         /* Fixup the length that the API returned */
         VarValueU.MaximumLength = VarValueU.Length + 2;
@@ -99,26 +110,18 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
             Status = STATUS_NO_MEMORY;
         }
     }
-    else
+    else if (NT_SUCCESS(Status))
     {
         /* Check if the size is too big to fit */
-        if (nSize <= MAXULONG)
-        {
-            /* Keep the given size, minus a NULL-char */
-            if (nSize) nSize = nSize - sizeof(ANSI_NULL);
-        }
-        else
-        {
-            /* Set the maximum possible */
-            nSize = MAXULONG - sizeof(ANSI_NULL);
-        }
+        UniSize = UNICODE_STRING_MAX_BYTES - 1;
+        if (nSize <= UniSize) UniSize = nSize;
 
         /* Check the size */
         Result = RtlUnicodeStringToAnsiSize(&VarValueU);
-        if (Result <= nSize)
+        if (Result <= UniSize)
         {
             /* Convert the string */
-            RtlInitEmptyAnsiString(&VarValue, lpBuffer, nSize);
+            RtlInitEmptyAnsiString(&VarValue, lpBuffer, UniSize);
             Status = RtlUnicodeStringToAnsiString(&VarValue, &VarValueU, FALSE);
             if (NT_SUCCESS(Status))
             {
@@ -160,20 +163,28 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
 {
     UNICODE_STRING VarName, VarValue;
     NTSTATUS Status;
+    USHORT UniSize;
 
-    if (nSize <= UNICODE_STRING_MAX_BYTES)
+    if (nSize <= (UNICODE_STRING_MAX_CHARS - 1))
     {
-        if (nSize) nSize = nSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
+        if (nSize)
+        {
+            UniSize = nSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
+        }
+        else
+        {
+            UniSize = 0;
+        }
     }
     else
     {
-        nSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
+        UniSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
     }
 
     Status = RtlInitUnicodeStringEx(&VarName, lpName);
     if (NT_SUCCESS(Status))
     {
-        RtlInitEmptyUnicodeString(&VarValue, lpBuffer, nSize);
+        RtlInitEmptyUnicodeString(&VarValue, lpBuffer, UniSize);
 
         Status = RtlQueryEnvironmentVariable_U(NULL, &VarName, &VarValue);
         if (!NT_SUCCESS(Status))
@@ -384,9 +395,17 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
     ANSI_STRING Source, Dest;
     UNICODE_STRING SourceU, DestU;
     PWSTR Buffer;
-    ULONG Result = 0, UniSize = 0, Length;
+    ULONG Result = 0, Length;
+    USHORT UniSize;
     NTSTATUS Status;
 
+    /* Check if the size is too big to fit */
+    UniSize = UNICODE_STRING_MAX_CHARS - 2;
+    if (nSize <= UniSize) UniSize = nSize;
+    
+    /* Clear the input buffer */
+    if (lpDst) *lpDst = ANSI_NULL;
+    
     /* Initialize all the strings */
     RtlInitAnsiString(&Source, lpSrc);
     RtlInitUnicodeString(&SourceU, NULL);
@@ -394,20 +413,19 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
     Status = RtlAnsiStringToUnicodeString(&SourceU, &Source, TRUE);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    /* Check if the size is too big to fit */
-    if (nSize <= UNICODE_STRING_MAX_BYTES)
+    /* If the string fit in, make space for a NULL char */
+    if (UniSize)
     {
-        /* Keep the given size, minus a NULL-char */
-        if (nSize) UniSize = nSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
+        UniSize--;
     }
     else
     {
-        /* Set the maximum possible */
-        UniSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
+        /* No input size, so no string size */
+        UniSize = 0;
     }
 
     /* Allocate the value string buffer */
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UniSize);
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UniSize * sizeof(WCHAR));
     if (!Buffer)
     {
         Status = STATUS_NO_MEMORY;
@@ -415,14 +433,14 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
     }
 
     /* And initialize its string */
-    RtlInitEmptyUnicodeString(&DestU, Buffer, UniSize);
+    RtlInitEmptyUnicodeString(&DestU, Buffer, UniSize * sizeof(WCHAR));
 
     /* Query the variable */
     Length = 0;
     Status = RtlExpandEnvironmentStrings_U(NULL, &SourceU, &DestU, &Length);
 
     /* Check if we didn't have enough space */
-    if (Status == STATUS_BUFFER_TOO_SMALL)
+    if (!(NT_SUCCESS(Status)) && (Status == STATUS_BUFFER_TOO_SMALL))
     {
         /* Fixup the length that the API returned */
         DestU.MaximumLength = Length;
@@ -449,26 +467,18 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
             Status = STATUS_NO_MEMORY;
         }
     }
-    else
+    else if (NT_SUCCESS(Status))
     {
         /* Check if the size is too big to fit */
-        if (nSize <= MAXULONG)
-        {
-            /* Keep the given size, minus a NULL-char */
-            if (nSize) nSize = nSize - sizeof(ANSI_NULL);
-        }
-        else
-        {
-            /* Set the maximum possible */
-            nSize = MAXULONG - sizeof(ANSI_NULL);
-        }
+        UniSize = UNICODE_STRING_MAX_BYTES - 1;
+        if (nSize <= UniSize) UniSize = nSize;
 
         /* Check the size */
         Result = RtlUnicodeStringToAnsiSize(&DestU);
         if (Result <= nSize)
         {
             /* Convert the string */
-            RtlInitEmptyAnsiString(&Dest, lpDst, nSize);
+            RtlInitEmptyAnsiString(&Dest, lpDst, UniSize);
             Status = RtlUnicodeStringToAnsiString(&Dest, &DestU, FALSE);
             if (!NT_SUCCESS(Status))
             {
@@ -504,14 +514,15 @@ ExpandEnvironmentStringsW(IN LPCWSTR lpSrc,
                           IN DWORD nSize)
 {
     UNICODE_STRING Source, Destination;
-    NTSTATUS Status;;
+    NTSTATUS Status;
+    USHORT UniSize;
+    
+    UniSize = UNICODE_STRING_MAX_CHARS - 2;
+    if (nSize <= UniSize) UniSize = nSize;
 
     RtlInitUnicodeString(&Source, (LPWSTR)lpSrc);
-
-    /* make sure we don't overflow the maximum UNICODE_STRING size */
-    if (nSize > UNICODE_STRING_MAX_BYTES) nSize = UNICODE_STRING_MAX_BYTES;
-
-    RtlInitEmptyUnicodeString(&Destination, lpDst, nSize * sizeof(WCHAR));
+    RtlInitEmptyUnicodeString(&Destination, lpDst, UniSize * sizeof(WCHAR));
+    
     Status = RtlExpandEnvironmentStrings_U(NULL,
                                            &Source,
                                            &Destination,
@@ -521,9 +532,8 @@ ExpandEnvironmentStringsW(IN LPCWSTR lpSrc,
         return nSize / sizeof(WCHAR);
     }
 
-    BaseSetLastNTError (Status);
+    BaseSetLastNTError(Status);
     return 0;
-
 }
 
 /*
