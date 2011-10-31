@@ -1088,7 +1088,7 @@ InstallFat32BootCodeToFile(
                          NULL,
                          NULL,
                          &IoStatusBlock,
-                         (NewBootSector + SECTORSIZE),
+                         ((PUCHAR)NewBootSector + SECTORSIZE),
                          SECTORSIZE,
                          &FileOffset,
                          NULL);
