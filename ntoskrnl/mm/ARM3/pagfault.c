@@ -564,10 +564,12 @@ MiCopyPfn(
     MiReleaseSystemPtes(SysPtes, 2, SystemPteSpace);
 }
 
+static
 NTSTATUS
 NTAPI
 MiResolveDemandZeroFault(IN PVOID Address,
                          IN PMMPTE PointerPte,
+                         IN ULONG Protection,
                          IN PEPROCESS Process,
                          IN KIRQL OldIrql)
 {
@@ -689,7 +691,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* User fault, build a user PTE */
         MI_MAKE_HARDWARE_PTE_USER(&TempPte,
                                   PointerPte,
-                                  PointerPte->u.Soft.Protection,
+                                  Protection,
                                   PageFrameNumber);
     }
     else
@@ -697,7 +699,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* This is a user-mode PDE, create a kernel PTE for it */
         MI_MAKE_HARDWARE_PTE(&TempPte,
                              PointerPte,
-                             PointerPte->u.Soft.Protection,
+                             Protection,
                              PageFrameNumber);
     }
 
@@ -1246,6 +1248,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         /* Resolve the demand zero fault */
         Status = MiResolveDemandZeroFault(Address,
                                           PointerProtoPte,
+                                          (ULONG)TempPte.u.Soft.Protection,
                                           Process,
                                           OldIrql);
         ASSERT(NT_SUCCESS(Status));
@@ -1593,6 +1596,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     //
     Status = MiResolveDemandZeroFault(Address,
                                       PointerPte,
+                                      (ULONG)TempPte.u.Soft.Protection,
                                       Process,
                                       MM_NOIRQL);
     ASSERT(KeAreAllApcsDisabled() == TRUE);
@@ -2032,6 +2036,7 @@ UserFault:
 #if 0
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPpe,
+                                          PointerPxe,
                                           MM_READWRITE,
                                           CurrentProcess,
                                           MM_NOIRQL);
@@ -2052,6 +2057,7 @@ UserFault:
 #if 0
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPde,
+                                          PointerPpe,
                                           MM_READWRITE,
                                           CurrentProcess,
                                           MM_NOIRQL);
@@ -2061,7 +2067,7 @@ UserFault:
     }
 #endif
 
-    /* Check if the PDE is valid */
+    /* Check if the PDE is invalid */
     if (PointerPde->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PDE is totally empty */
@@ -2180,6 +2186,7 @@ UserFault:
         /* Resolve the fault */
         MiResolveDemandZeroFault(Address,
                                  PointerPte,
+                                 MM_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
 
