@@ -85,7 +85,7 @@
 @ stdcall LdrFindResource_U(long ptr long ptr)
 //@ stdcall LdrFlushAlternateResourceModules
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
-//@ stdcall LdrGetDllHandleEx
+@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 //@ stdcall LdrHotPatchRoutine
 //@ stdcall LdrInitShimEngineDynamic

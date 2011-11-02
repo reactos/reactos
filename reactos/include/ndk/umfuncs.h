@@ -218,6 +218,14 @@ LdrGetDllHandle(
 
 NTSTATUS
 NTAPI
+LdrGetDllHandleEx(IN ULONG Flags,
+                  IN PWSTR DllPath OPTIONAL,
+                  IN PULONG DllCharacteristics OPTIONAL,
+                  IN PUNICODE_STRING DllName,
+                  OUT PVOID *DllHandle OPTIONAL);
+
+NTSTATUS
+NTAPI
 LdrFindEntryForAddress(
     IN PVOID Address,
     OUT PLDR_DATA_TABLE_ENTRY *Module
