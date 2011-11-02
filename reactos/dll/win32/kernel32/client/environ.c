@@ -294,18 +294,18 @@ GetEnvironmentStringsA(VOID)
 
     do
     {
-        p += wcslen(Environment) + 1;
+        p += wcslen(p) + 1;
     } while (*p);
 
-    Length = p - Environment + sizeof(UNICODE_NULL);
+    Length = p - Environment + 1;
 
-    Status = RtlUnicodeToMultiByteSize(&Size, Environment, Length);
+    Status = RtlUnicodeToMultiByteSize(&Size, Environment, Length * sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {
         Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
         if (Buffer)
         {
-            Status = RtlUnicodeToOemN(Buffer, Size, 0, Environment, Length);
+            Status = RtlUnicodeToOemN(Buffer, Size, 0, Environment, Length * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
@@ -344,15 +344,15 @@ GetEnvironmentStringsW(VOID)
 
     do
     {
-        p += wcslen(Environment) + 1;
+        p += wcslen(p) + 1;
     } while (*p);
 
-    Length = p - Environment + sizeof(UNICODE_NULL);
+    Length = p - Environment + 1;
 
-    p = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    p = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
     if (p)
     {
-        RtlCopyMemory(p, Environment, Length);
+        RtlCopyMemory(p, Environment, Length * sizeof(WCHAR));
     }
     else
     {
