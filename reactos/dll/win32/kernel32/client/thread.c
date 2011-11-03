@@ -149,14 +149,14 @@ CreateRemoteThread(HANDLE hProcess,
     }
 
     /* Create Initial Context */
-    BasepInitializeContext(&Context,
+    BaseInitializeContext(&Context,
                            lpParameter,
                            lpStartAddress,
                            InitialTeb.StackBase,
                            1);
 
     /* initialize the attributes for the thread object */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes,
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
                                                     lpThreadAttributes,
                                                     NULL);
 
@@ -171,7 +171,7 @@ CreateRemoteThread(HANDLE hProcess,
                             TRUE);
     if(!NT_SUCCESS(Status))
     {
-        BasepFreeStack(hProcess, &InitialTeb);
+        BaseFreeThreadStack(hProcess, &InitialTeb);
         BaseSetLastNTError(Status);
         return NULL;
     }

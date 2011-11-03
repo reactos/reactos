@@ -62,60 +62,6 @@ BOOLEAN InWindows = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-WINAPI
-BaseGetNamedObjectDirectory(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status;
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &BaseStaticServerData->NamedObjectDirectory,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
-                                   DIRECTORY_ALL_ACCESS &
-                                   ~(DELETE | WRITE_DAC | WRITE_OWNER),
-                                   &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
-    return Status;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-BaseQueryModuleData(IN LPSTR ModuleName,
-                    IN LPSTR Unknown,
-                    IN PVOID Unknown2,
-                    IN PVOID Unknown3,
-                    IN PVOID Unknown4)
-{
-    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
-            ModuleName,
-            Unknown,
-            Unknown2,
-            Unknown3,
-            Unknown4);
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-BaseProcessInitPostImport(VOID)
-{
-    /* FIXME: Initialize TS pointers */
-    return STATUS_SUCCESS;
-}
-
 BOOL
 WINAPI
 BasepInitConsole(VOID)
@@ -388,9 +334,6 @@ DllMain(HANDLE hDll,
                     RtlDeleteCriticalSection (&ConsoleLock);
                 }
                 RtlDeleteCriticalSection (&BaseDllDirectoryLock);
-
-                /* Close object base directory */
-                NtClose(hBaseDir);
             }
             break;
 

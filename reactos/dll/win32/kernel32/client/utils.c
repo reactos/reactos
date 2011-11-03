@@ -7,7 +7,7 @@
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <k32.h>
 #ifdef _M_IX86
@@ -19,11 +19,34 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
+/* GLOBALS ********************************************************************/
 
 PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+WINAPI
+BaseGetNamedObjectDirectory(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &BaseStaticServerData->NamedObjectDirectory,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
+                                   DIRECTORY_ALL_ACCESS &
+                                   ~(DELETE | WRITE_DAC | WRITE_OWNER),
+                                   &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
+    return Status;
+}
 
 VOID
 NTAPI
@@ -66,21 +89,29 @@ Basep8BitStringToStaticUnicodeString(IN LPCSTR String)
     NTSTATUS Status;
 
     /* Initialize an ANSI String */
-    if (!NT_SUCCESS(RtlInitAnsiStringEx(&AnsiString, String)))
-    {
-        SetLastError(ERROR_FILENAME_EXCED_RANGE);
-        return NULL;
-    }
-
-    /* Convert it */
-    Status = Basep8BitStringToUnicodeString(StaticString, &AnsiString, FALSE);
+    Status = RtlInitAnsiStringEx(&AnsiString, String);
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError(Status);
-        return NULL;
+        Status = STATUS_BUFFER_OVERFLOW;
+    }
+    else
+    {
+        /* Convert it */
+        Status = Basep8BitStringToUnicodeString(StaticString, &AnsiString, FALSE);
     }
 
-    return StaticString;
+    if (NT_SUCCESS(Status)) return StaticString;
+
+    if (Status == STATUS_BUFFER_OVERFLOW)
+    {
+        SetLastError(ERROR_FILENAME_EXCED_RANGE);
+    }
+    else
+    {
+        BaseSetLastNTError(Status);
+    }
+
+    return NULL;
 }
 
 /*
@@ -93,33 +124,37 @@ Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
 {
     ANSI_STRING AnsiString;
     NTSTATUS Status;
-    
-    DPRINT("Basep8BitStringToDynamicUnicodeString\n");
 
     /* Initialize an ANSI String */
-    if (!NT_SUCCESS(RtlInitAnsiStringEx(&AnsiString, String)))
-    {
-        SetLastError(ERROR_BUFFER_OVERFLOW);
-        return FALSE;
-    }
-     
-    /* Convert it */
-    Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);    
-
-    /* Handle failure */
+    Status = RtlInitAnsiStringEx(&AnsiString, String);
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError(Status);
-        return FALSE;
+        Status = STATUS_BUFFER_OVERFLOW;
+    }
+    else
+    {
+        /* Convert it */
+        Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, FALSE);
     }
 
-    /* Return Status */
-    return TRUE;
+    if (NT_SUCCESS(Status)) return TRUE;
+
+    if (Status == STATUS_BUFFER_OVERFLOW)
+    {
+        SetLastError(ERROR_FILENAME_EXCED_RANGE);
+    }
+    else
+    {
+        BaseSetLastNTError(Status);
+    }
+
+    return FALSE;
 }
 
 /*
  * Allocates space from the Heap and converts an Ansi String into it
  */
+ /*NOTE: API IS A HACK */
 VOID
 WINAPI
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
@@ -127,12 +162,12 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
 {
     ANSI_STRING AnsiTemp;
     UNICODE_STRING UnicodeTemp;
-    
+
     DPRINT("BasepAnsiStringToHeapUnicodeString\n");
-    
+
     /* First create the ANSI_STRING */
     RtlInitAnsiString(&AnsiTemp, AnsiString);
-    
+
     if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeTemp,
                                                 &AnsiTemp,
                                                 TRUE)))
@@ -163,49 +198,48 @@ BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
  */
 POBJECT_ATTRIBUTES
 WINAPI
-BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
-                             IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
-                             IN PUNICODE_STRING ObjectName)
+BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
+                           IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
+                           IN PUNICODE_STRING ObjectName)
 {
-    ULONG Attributes = 0;
-    HANDLE RootDirectory = 0;
-    PVOID SecurityDescriptor = NULL;
-    BOOLEAN NeedOba = FALSE;
-    
-    DPRINT("BasepConvertObjectAttributes. Security: %p, Name: %p\n",
+    ULONG Attributes;
+    HANDLE RootDirectory;
+    PVOID SecurityDescriptor;
+    DPRINT("BaseFormatObjectAttributes. Security: %p, Name: %p\n",
             SecurityAttributes, ObjectName);
-    
+
     /* Get the attributes if present */
     if (SecurityAttributes)
     {
         Attributes = SecurityAttributes->bInheritHandle ? OBJ_INHERIT : 0;
         SecurityDescriptor = SecurityAttributes->lpSecurityDescriptor;
-        NeedOba = TRUE;
     }
-    
+    else
+    {
+        if (!ObjectName) return NULL;
+        Attributes = 0;
+        SecurityDescriptor = NULL;
+    }
+
     if (ObjectName)
     {
         Attributes |= OBJ_OPENIF;
         RootDirectory = hBaseDir;
-        NeedOba = TRUE;
     }
-    
-    DPRINT("Attributes: %lx, RootDirectory: %lx, SecurityDescriptor: %p\n",
-            Attributes, RootDirectory, SecurityDescriptor);
-    
-    /* Create the Object Attributes */
-    if (NeedOba)
+    else
     {
-        InitializeObjectAttributes(ObjectAttributes,
-                                   ObjectName,
-                                   Attributes,
-                                   RootDirectory,
-                                   SecurityDescriptor);
-        return ObjectAttributes;
+        RootDirectory = NULL;
     }
 
-    /* Nothing to return */
-    return NULL;    
+    /* Create the Object Attributes */
+    InitializeObjectAttributes(ObjectAttributes,
+                               ObjectName,
+                               Attributes,
+                               RootDirectory,
+                               SecurityDescriptor);
+    DPRINT("Attributes: %lx, RootDirectory: %lx, SecurityDescriptor: %p\n",
+            Attributes, RootDirectory, SecurityDescriptor);
+    return ObjectAttributes;
 }
 
 /*
@@ -223,10 +257,10 @@ BasepCreateStack(HANDLE hProcess,
     PIMAGE_NT_HEADERS Headers;
     ULONG_PTR Stack = 0;
     BOOLEAN UseGuard = FALSE;
-    
+
     DPRINT("BasepCreateStack (hProcess: %lx, Max: %lx, Current: %lx)\n",
             hProcess, StackReserve, StackCommit);
-    
+
     /* Get some memory information */
     Status = NtQuerySystemInformation(SystemBasicInformation,
                                       &SystemBasicInfo,
@@ -237,17 +271,17 @@ BasepCreateStack(HANDLE hProcess,
         DPRINT1("Failure to query system info\n");
         return Status;
     }
-    
+
     /* Use the Image Settings if we are dealing with the current Process */
     if (hProcess == NtCurrentProcess())
     {
         /* Get the Image Headers */
         Headers = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
-        
+
         /* If we didn't get the parameters, find them ourselves */
-        StackReserve = (StackReserve) ? 
+        StackReserve = (StackReserve) ?
                         StackReserve : Headers->OptionalHeader.SizeOfStackReserve;
-        StackCommit = (StackCommit) ? 
+        StackCommit = (StackCommit) ?
                        StackCommit : Headers->OptionalHeader.SizeOfStackCommit;
     }
     else
@@ -257,7 +291,7 @@ BasepCreateStack(HANDLE hProcess,
                                         SystemBasicInfo.AllocationGranularity;
         StackCommit = (StackCommit) ? StackCommit : SystemBasicInfo.PageSize;
     }
-    
+
     /* Align everything to Page Size */
     StackReserve = ROUND_UP(StackReserve, SystemBasicInfo.AllocationGranularity);
     StackCommit = ROUND_UP(StackCommit, SystemBasicInfo.PageSize);
@@ -265,7 +299,7 @@ BasepCreateStack(HANDLE hProcess,
     StackCommit = StackReserve;
     #endif
     DPRINT("StackReserve: %lx, StackCommit: %lx\n", StackReserve, StackCommit);
-    
+
     /* Reserve memory for the stack */
     Status = ZwAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
@@ -278,16 +312,16 @@ BasepCreateStack(HANDLE hProcess,
         DPRINT1("Failure to reserve stack\n");
         return Status;
     }
-    
+
     /* Now set up some basic Initial TEB Parameters */
     InitialTeb->AllocatedStackBase = (PVOID)Stack;
     InitialTeb->StackBase = (PVOID)(Stack + StackReserve);
     InitialTeb->PreviousStackBase = NULL;
     InitialTeb->PreviousStackLimit = NULL;
-    
+
     /* Update the Stack Position */
     Stack += StackReserve - StackCommit;
-    
+
     /* Check if we will need a guard page */
     if (StackReserve > StackCommit)
     {
@@ -295,7 +329,7 @@ BasepCreateStack(HANDLE hProcess,
         StackCommit += SystemBasicInfo.PageSize;
         UseGuard = TRUE;
     }
-    
+
     /* Allocate memory for the stack */
     Status = ZwAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
@@ -308,17 +342,17 @@ BasepCreateStack(HANDLE hProcess,
         DPRINT1("Failure to allocate stack\n");
         return Status;
     }
-    
+
     /* Now set the current Stack Limit */
     InitialTeb->StackLimit = (PVOID)Stack;
-    
+
     /* Create a guard page */
     if (UseGuard)
     {
         SIZE_T GuardPageSize = SystemBasicInfo.PageSize;
         ULONG Dummy;
-        
-        /* Attempt maximum space possible */        
+
+        /* Attempt maximum space possible */
         Status = ZwProtectVirtualMemory(hProcess,
                                         (PVOID*)&Stack,
                                         &GuardPageSize,
@@ -329,35 +363,35 @@ BasepCreateStack(HANDLE hProcess,
             DPRINT1("Failure to create guard page\n");
             return Status;
         }
-        
+
         /* Update the Stack Limit keeping in mind the Guard Page */
         InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit - GuardPageSize);
     }
-    
+
     /* We are done! */
     return STATUS_SUCCESS;
 }
 
 VOID
 WINAPI
-BasepFreeStack(HANDLE hProcess,
-               PINITIAL_TEB InitialTeb)
+BaseFreeThreadStack(IN HANDLE hProcess,
+                    IN PINITIAL_TEB InitialTeb)
 {
     SIZE_T Dummy = 0;
-    
+
     /* Free the Stack */
     NtFreeVirtualMemory(hProcess,
                         &InitialTeb->AllocatedStackBase,
                         &Dummy,
                         MEM_RELEASE);
 }
-               
+
 /*
  * Creates the Initial Context for a Thread or Fiber
  */
 VOID
 WINAPI
-BasepInitializeContext(IN PCONTEXT Context,
+BaseInitializeContext(IN PCONTEXT Context,
                        IN PVOID Parameter,
                        IN PVOID StartAddress,
                        IN PVOID StackAddress,
@@ -365,7 +399,7 @@ BasepInitializeContext(IN PCONTEXT Context,
 {
 #ifdef _M_IX86
     ULONG ContextFlags;
-    DPRINT("BasepInitializeContext: %p\n", Context);
+    DPRINT("BaseInitializeContext: %p\n", Context);
 
     /* Setup the Initial Win32 Thread Context */
     Context->Eax = (ULONG)StartAddress;
@@ -374,11 +408,11 @@ BasepInitializeContext(IN PCONTEXT Context,
     /* The other registers are undefined */
 
     /* Setup the Segments */
-    Context->SegFs = KGDT_R3_TEB | RPL_MASK;
-    Context->SegEs = KGDT_R3_DATA | RPL_MASK;
-    Context->SegDs = KGDT_R3_DATA | RPL_MASK;
-    Context->SegCs = KGDT_R3_CODE | RPL_MASK;
-    Context->SegSs = KGDT_R3_DATA | RPL_MASK;
+    Context->SegFs = KGDT_R3_TEB;
+    Context->SegEs = KGDT_R3_DATA;
+    Context->SegDs = KGDT_R3_DATA;
+    Context->SegCs = KGDT_R3_CODE;
+    Context->SegSs = KGDT_R3_DATA;
     Context->SegGs = 0;
 
     /* Set the Context Flags */
@@ -426,7 +460,7 @@ BasepInitializeContext(IN PCONTEXT Context,
     }
 
 #elif defined(_M_AMD64)
-    DPRINT("BasepInitializeContext: %p\n", Context);
+    DPRINT("BaseInitializeContext: %p\n", Context);
 
     /* Setup the Initial Win32 Thread Context */
     Context->Rax = (ULONG_PTR)StartAddress;
@@ -473,11 +507,24 @@ BasepInitializeContext(IN PCONTEXT Context,
 /*
  * Checks if the privilege for Real-Time Priority is there
  */
-BOOLEAN
+PVOID
 WINAPI
-BasepCheckRealTimePrivilege(VOID)
+BasepIsRealtimeAllowed(IN BOOLEAN Keep)
 {
-    return TRUE;
+    ULONG Privilege = SE_INC_BASE_PRIORITY_PRIVILEGE;
+    PVOID State;
+    NTSTATUS Status;
+
+    Status = RtlAcquirePrivilege(&Privilege, TRUE, FALSE, &State);
+    if (!NT_SUCCESS(Status)) return NULL;
+
+    if (Keep)
+    {
+        RtlReleasePrivilege(State);
+        State = (PVOID)TRUE;
+    }
+
+    return State;
 }
 
 /*
@@ -494,9 +541,9 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     NTSTATUS Status;
     HANDLE hFile = NULL;
     IO_STATUS_BLOCK IoStatusBlock;
-    
+
     DPRINT("BasepMapFile\n");
-    
+
     /* Zero out the Relative Directory */
     RelativeName.ContainingDirectory = NULL;
 
@@ -511,7 +558,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
 
     DPRINT("ApplicationName %wZ\n", ApplicationName);
     DPRINT("RelativeName %wZ\n", &RelativeName.RelativeName);
-    
+
     /* Did we get a relative name? */
     if (RelativeName.RelativeName.Length)
     {
@@ -538,7 +585,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
         BaseSetLastNTError(Status);
         return Status;
     }
-    
+
     /* Create a section for this file */
     Status = NtCreateSection(hSection,
                              SECTION_ALL_ACCESS,
@@ -548,7 +595,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
                              SEC_IMAGE,
                              hFile);
     NtClose(hFile);
-    
+
     /* Return status */
     DPRINT("Section: %lx for file: %lx\n", *hSection, hFile);
     return Status;

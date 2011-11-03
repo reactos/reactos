@@ -68,7 +68,7 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UniSize * sizeof(WCHAR));
     if (!Buffer)
     {
-        Status = STATUS_NO_MEMORY;;
+        Status = STATUS_NO_MEMORY;
         goto Quickie;
     }
 

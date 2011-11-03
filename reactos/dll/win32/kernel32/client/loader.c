@@ -1175,4 +1175,35 @@ VOID WINAPI UTUnRegister( HMODULE hModule )
     STUB;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BaseQueryModuleData(IN LPSTR ModuleName,
+                    IN LPSTR Unknown,
+                    IN PVOID Unknown2,
+                    IN PVOID Unknown3,
+                    IN PVOID Unknown4)
+{
+    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
+            ModuleName,
+            Unknown,
+            Unknown2,
+            Unknown3,
+            Unknown4);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+BaseProcessInitPostImport(VOID)
+{
+    /* FIXME: Initialize TS pointers */
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

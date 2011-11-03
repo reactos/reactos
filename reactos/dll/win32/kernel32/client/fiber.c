@@ -237,11 +237,11 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     Fiber->Context.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ? CONTEXT_FLOATING_POINT : 0;
 
     /* initialize the context for the fiber */
-    BasepInitializeContext(&Fiber->Context,
-                           lpParameter,
-                           lpStartAddress,
-                           InitialTeb.StackBase,
-                           2);
+    BaseInitializeContext(&Fiber->Context,
+                          lpParameter,
+                          lpStartAddress,
+                          InitialTeb.StackBase,
+                          2);
 
     /* Return the Fiber */
     return Fiber;

@@ -193,14 +193,14 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
                      &InitialTeb);
 
     /* Create the Thread's Context */
-    BasepInitializeContext(&Context,
+    BaseInitializeContext(&Context,
                            NtCurrentPeb(),
                            SectionImageInfo->TransferAddress,
                            InitialTeb.StackBase,
                            0);
 
     /* Convert the thread attributes */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes,
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
                                                     lpThreadAttributes,
                                                     NULL);
 
@@ -319,7 +319,7 @@ BasepConvertPriorityClass(IN ULONG dwCreationFlags)
     else if(dwCreationFlags & REALTIME_PRIORITY_CLASS)
     {
         /* Check for Privilege First */
-        if (BasepCheckRealTimePrivilege())
+        if (BasepIsRealtimeAllowed(TRUE))
         {
             ReturnClass = PROCESS_PRIORITY_CLASS_REALTIME;
         }
@@ -2654,7 +2654,7 @@ GetAppName:
     }
 
     /* Initialize the process object attributes */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes,
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
                                                     lpProcessAttributes,
                                                     NULL);
 

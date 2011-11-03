@@ -80,7 +80,7 @@ CreateFileMappingW(HANDLE hFile,
     if (lpName) RtlInitUnicodeString(&SectionName, lpName);
 
     /* Now convert the object attributes */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalAttributes,
                                                     lpFileMappingAttributes,
                                                     lpName ? &SectionName : NULL);
 
@@ -244,6 +244,7 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
 /*
  * @implemented
  */
+ /* FIXME: Convert to the new macros */
 HANDLE
 NTAPI
 OpenFileMappingA(DWORD dwDesiredAccess,
@@ -286,6 +287,7 @@ OpenFileMappingA(DWORD dwDesiredAccess,
 /*
  * @implemented
  */
+ /* FIXME: Convert to the new macros */
 HANDLE
 NTAPI
 OpenFileMappingW(DWORD dwDesiredAccess,

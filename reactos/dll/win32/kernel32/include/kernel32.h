@@ -167,7 +167,7 @@ BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
 
 POBJECT_ATTRIBUTES
 WINAPI
-BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
+BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                              IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
                              IN PUNICODE_STRING ObjectName);
                              
@@ -180,7 +180,7 @@ BasepCreateStack(HANDLE hProcess,
                  
 VOID
 WINAPI
-BasepInitializeContext(IN PCONTEXT Context,
+BaseInitializeContext(IN PCONTEXT Context,
                        IN PVOID Parameter,
                        IN PVOID StartAddress,
                        IN PVOID StackAddress,
@@ -202,8 +202,8 @@ BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   
 VOID
 WINAPI
-BasepFreeStack(HANDLE hProcess,
-               PINITIAL_TEB InitialTeb);
+BaseFreeThreadStack(IN HANDLE hProcess,
+                    IN PINITIAL_TEB InitialTeb);
 
 __declspec(noreturn)
 VOID
@@ -216,9 +216,9 @@ VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress);
                   
-BOOLEAN
+PVOID
 WINAPI
-BasepCheckRealTimePrivilege(VOID);
+BasepIsRealtimeAllowed(IN BOOLEAN Keep);
 
 VOID
 WINAPI
@@ -241,6 +241,11 @@ typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
                                               IN BOOLEAN AllocateMemory);
                                                 
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+extern HANDLE BaseNamedObjectDirectory;
+
+NTSTATUS
+WINAPI
+BaseGetNamedObjectDirectory(VOID);
 
 NTSTATUS
 WINAPI
