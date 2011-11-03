@@ -205,7 +205,7 @@ Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
     else
     {
         /* Convert it */
-        Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, FALSE);
+        Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);
     }
 
     if (NT_SUCCESS(Status)) return TRUE;
