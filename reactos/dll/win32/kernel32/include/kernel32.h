@@ -109,7 +109,6 @@ extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
 /* GLOBAL VARIABLES **********************************************************/
 
 extern BOOL bIsFileApiAnsi;
-extern HANDLE hBaseDir;
 extern HMODULE hCurrentModule;
 
 extern RTL_CRITICAL_SECTION BaseDllDirectoryLock;
@@ -243,7 +242,7 @@ typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 extern HANDLE BaseNamedObjectDirectory;
 
-NTSTATUS
+HANDLE
 WINAPI
 BaseGetNamedObjectDirectory(VOID);
 

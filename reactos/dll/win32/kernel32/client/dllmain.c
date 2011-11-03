@@ -31,7 +31,6 @@ WCHAR BaseDefaultPathBuffer[6140];
 HANDLE BaseNamedObjectDirectory;
 HMODULE hCurrentModule = NULL;
 HMODULE kernel32_handle = NULL;
-HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
@@ -287,15 +286,6 @@ DllMain(HANDLE hDll,
 
         /* Initialize command line */
         InitCommandLines();
-
-        /* Open object base directory */
-        Status = BaseGetNamedObjectDirectory();
-        hBaseDir = BaseNamedObjectDirectory;
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to open object base directory (Status %lx)\n", Status);
-            return FALSE;
-        }
 
         /* Initialize the DLL critical section */
         RtlInitializeCriticalSection(&BaseDllDirectoryLock);

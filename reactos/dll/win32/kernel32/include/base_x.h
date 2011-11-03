@@ -100,7 +100,7 @@
     POBJECT_ATTRIBUTES ObjectAttributes = &LocalAttributes;
 #define CreateNtObjectFromWin32ApiBody(ntobj, sec, name, access, ...)           \
     if (name) RtlInitUnicodeString(&ObjectName, name);                          \
-    ObjectAttributes = BaseFormatObjectAttributes(&LocalAttributes,           \
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalAttributes,             \
                                                     sec,                        \
                                                     name ? &ObjectName : NULL); \
     Status = NtCreate##ntobj(&Handle, access, ObjectAttributes, ##__VA_ARGS__);
@@ -113,7 +113,7 @@
             SetLastError(ERROR_SUCCESS);                                        \
         return Handle;                                                          \
     }                                                                           \
-    BaseSetLastNTError(Status);                                               \
+    BaseSetLastNTError(Status);                                                 \
     return NULL;                                                                \
 }
 
@@ -138,19 +138,19 @@
     CreateNtObjectFromWin32ApiPrologue                                          \
     if (!name)                                                                  \
     {                                                                           \
-        BaseSetLastNTError(STATUS_INVALID_PARAMETER);                         \
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);                           \
         return NULL;                                                            \
     }                                                                           \
     RtlInitUnicodeString(&ObjectName, name);                                    \
     InitializeObjectAttributes(ObjectAttributes,                                \
                                &ObjectName,                                     \
                                inh ? OBJ_INHERIT : 0,                           \
-                               hBaseDir,                                        \
+                               BaseGetNamedObjectDirectory(),                   \
                                NULL);                                           \
     Status = NtOpen##ntobj(&Handle, acc, ObjectAttributes);                     \
     if (!NT_SUCCESS(Status))                                                    \
     {                                                                           \
-        BaseSetLastNTError(Status);                                           \
+        BaseSetLastNTError(Status);                                             \
         return NULL;                                                            \
     }                                                                           \
     return Handle;                                                              \

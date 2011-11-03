@@ -22,15 +22,46 @@
 /* GLOBALS ********************************************************************/
 
 PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+UNICODE_STRING Restricted = RTL_CONSTANT_STRING(L"Restricted");
 
 /* FUNCTIONS ******************************************************************/
 
-NTSTATUS
+HANDLE
 WINAPI
 BaseGetNamedObjectDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
+    HANDLE DirHandle, BnoHandle, Token, NewToken;
+
+    if (BaseNamedObjectDirectory) return BaseNamedObjectDirectory;
+
+    if (NtCurrentTeb()->IsImpersonating)
+    {
+        Status = NtOpenThreadToken(NtCurrentThread(),
+                                   TOKEN_IMPERSONATE,
+                                   TRUE,
+                                   &Token);
+        if (!NT_SUCCESS(Status)) return BaseNamedObjectDirectory;
+
+        NewToken = NULL;
+        Status = NtSetInformationThread(NtCurrentThread(),
+                                        ThreadImpersonationToken,
+                                        &NewToken,
+                                        sizeof(HANDLE));
+        if (!NT_SUCCESS (Status))
+        {
+            NtClose(Token);
+            return BaseNamedObjectDirectory;
+        }
+    }
+    else
+    {
+        Token = NULL;
+    }
+
+    RtlAcquirePebLock();
+    if (BaseNamedObjectDirectory) goto Quickie;
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &BaseStaticServerData->NamedObjectDirectory,
@@ -38,14 +69,54 @@ BaseGetNamedObjectDirectory(VOID)
                                NULL,
                                NULL);
 
-    Status = NtOpenDirectoryObject(&BaseNamedObjectDirectory,
-                                   DIRECTORY_ALL_ACCESS &
-                                   ~(DELETE | WRITE_DAC | WRITE_OWNER),
+    Status = NtOpenDirectoryObject(&BnoHandle,
+                                   DIRECTORY_QUERY |
+                                   DIRECTORY_TRAVERSE |
+                                   DIRECTORY_CREATE_OBJECT |
+                                   DIRECTORY_CREATE_SUBDIRECTORY,
                                    &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        Status = NtOpenDirectoryObject(&DirHandle,
+                                       DIRECTORY_TRAVERSE,
+                                       &ObjectAttributes);
 
-    DPRINT("Opened BNO: %lx\n", BaseNamedObjectDirectory);
-    return Status;
+        if (NT_SUCCESS(Status))
+        {
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       (PUNICODE_STRING)&Restricted,
+                                       OBJ_CASE_INSENSITIVE,
+                                       DirHandle,
+                                       NULL);
+
+            Status = NtOpenDirectoryObject(&BnoHandle,
+                                           DIRECTORY_QUERY |
+                                           DIRECTORY_TRAVERSE |
+                                           DIRECTORY_CREATE_OBJECT |
+                                           DIRECTORY_CREATE_SUBDIRECTORY,
+                                           &ObjectAttributes);
+            NtClose(DirHandle);
+
+        }
+    }
+    
+    if (NT_SUCCESS(Status)) BaseNamedObjectDirectory = BnoHandle;
+
+Quickie:
+
+    RtlReleasePebLock();
+
+    if (Token)
+    {
+        NtSetInformationThread(NtCurrentThread(),
+                               ThreadImpersonationToken,
+                               &Token,
+                               sizeof(Token));
+
+        NtClose(Token);
+    }
+
+    return BaseNamedObjectDirectory;
 }
 
 VOID
@@ -224,7 +295,7 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
     if (ObjectName)
     {
         Attributes |= OBJ_OPENIF;
-        RootDirectory = hBaseDir;
+        RootDirectory = BaseGetNamedObjectDirectory();
     }
     else
     {
@@ -282,10 +353,10 @@ BaseCreateStack(HANDLE hProcess,
     {
         StackReserve = ROUND_UP(StackCommit, 1024 * 1024);
     }
-    
+
     StackCommit = ROUND_UP(StackCommit, PageSize);
     StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
-    
+
     GuaranteedStackCommit = NtCurrentTeb()->GuaranteedStackBytes;
     if ((GuaranteedStackCommit) && (StackCommit < GuaranteedStackCommit))
     {
@@ -299,7 +370,7 @@ BaseCreateStack(HANDLE hProcess,
 
     StackCommit = ROUND_UP(StackCommit, PageSize);
     StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
-    
+
     /* ROS Hack until we support guard page stack expansion */
     StackCommit = StackReserve;
 
@@ -337,7 +408,7 @@ BaseCreateStack(HANDLE hProcess,
     {
         UseGuard = FALSE;
     }
-    
+
     /* Allocate memory for the stack */
     Status = ZwAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
