@@ -137,7 +137,7 @@ CreateRemoteThread(HANDLE hProcess,
     ClientId.UniqueProcess = hProcess;
 
     /* Create the Stack */
-    Status = BasepCreateStack(hProcess,
+    Status = BaseCreateStack(hProcess,
                               dwStackSize,
                               dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
                               dwStackSize : 0,

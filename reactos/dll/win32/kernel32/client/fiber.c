@@ -201,7 +201,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* Create the stack for the fiber */
-    Status = BasepCreateStack(NtCurrentProcess(),
+    Status = BaseCreateStack(NtCurrentProcess(),
                               dwStackCommitSize,
                               dwStackReserveSize,
                               &InitialTeb);

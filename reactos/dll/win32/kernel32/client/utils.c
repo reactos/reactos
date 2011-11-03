@@ -247,60 +247,64 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
  */
 NTSTATUS
 WINAPI
-BasepCreateStack(HANDLE hProcess,
+BaseCreateStack(HANDLE hProcess,
                  SIZE_T StackReserve,
                  SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb)
 {
     NTSTATUS Status;
-    SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     PIMAGE_NT_HEADERS Headers;
-    ULONG_PTR Stack = 0;
-    BOOLEAN UseGuard = FALSE;
-
-    DPRINT("BasepCreateStack (hProcess: %lx, Max: %lx, Current: %lx)\n",
+    ULONG_PTR Stack;
+    BOOLEAN UseGuard;
+    ULONG PageSize, Dummy, AllocationGranularity;
+    SIZE_T StackReserveHeader, StackCommitHeader, GuardPageSize, GuaranteedStackCommit;
+    DPRINT("BaseCreateStack (hProcess: %lx, Max: %lx, Current: %lx)\n",
             hProcess, StackReserve, StackCommit);
 
-    /* Get some memory information */
-    Status = NtQuerySystemInformation(SystemBasicInformation,
-                                      &SystemBasicInfo,
-                                      sizeof(SYSTEM_BASIC_INFORMATION),
-                                      NULL);
-    if (!NT_SUCCESS(Status))
+    /* Read page size */
+    PageSize = BaseStaticServerData->SysInfo.PageSize;
+    AllocationGranularity = BaseStaticServerData->SysInfo.AllocationGranularity;
+
+    /* Get the Image Headers */
+    Headers = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
+    if (!Headers) return STATUS_INVALID_IMAGE_FORMAT;
+
+    StackCommitHeader = Headers->OptionalHeader.SizeOfStackCommit;
+    StackReserveHeader = Headers->OptionalHeader.SizeOfStackReserve;
+
+    if (!StackReserve) StackReserve = StackReserveHeader;
+
+    if (!StackCommit)
     {
-        DPRINT1("Failure to query system info\n");
-        return Status;
+        StackCommit = StackCommitHeader;
+    }
+    else if (StackCommit >= StackReserve)
+    {
+        StackReserve = ROUND_UP(StackCommit, 1024 * 1024);
+    }
+    
+    StackCommit = ROUND_UP(StackCommit, PageSize);
+    StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
+    
+    GuaranteedStackCommit = NtCurrentTeb()->GuaranteedStackBytes;
+    if ((GuaranteedStackCommit) && (StackCommit < GuaranteedStackCommit))
+    {
+        StackCommit = GuaranteedStackCommit;
     }
 
-    /* Use the Image Settings if we are dealing with the current Process */
-    if (hProcess == NtCurrentProcess())
+    if (StackCommit >= StackReserve)
     {
-        /* Get the Image Headers */
-        Headers = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
-
-        /* If we didn't get the parameters, find them ourselves */
-        StackReserve = (StackReserve) ?
-                        StackReserve : Headers->OptionalHeader.SizeOfStackReserve;
-        StackCommit = (StackCommit) ?
-                       StackCommit : Headers->OptionalHeader.SizeOfStackCommit;
-    }
-    else
-    {
-        /* Use the System Settings if needed */
-        StackReserve = (StackReserve) ? StackReserve :
-                                        SystemBasicInfo.AllocationGranularity;
-        StackCommit = (StackCommit) ? StackCommit : SystemBasicInfo.PageSize;
+        StackReserve = ROUND_UP(StackCommit, 1024 * 1024);
     }
 
-    /* Align everything to Page Size */
-    StackReserve = ROUND_UP(StackReserve, SystemBasicInfo.AllocationGranularity);
-    StackCommit = ROUND_UP(StackCommit, SystemBasicInfo.PageSize);
-    #if 1 // FIXME: Remove once Guard Page support is here
+    StackCommit = ROUND_UP(StackCommit, PageSize);
+    StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
+    
+    /* ROS Hack until we support guard page stack expansion */
     StackCommit = StackReserve;
-    #endif
-    DPRINT("StackReserve: %lx, StackCommit: %lx\n", StackReserve, StackCommit);
 
     /* Reserve memory for the stack */
+    Stack = 0;
     Status = ZwAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
                                      0,
@@ -309,7 +313,7 @@ BasepCreateStack(HANDLE hProcess,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failure to reserve stack\n");
+        DPRINT1("Failure to reserve stack: %lx\n", Status);
         return Status;
     }
 
@@ -325,11 +329,15 @@ BasepCreateStack(HANDLE hProcess,
     /* Check if we will need a guard page */
     if (StackReserve > StackCommit)
     {
-        Stack -= SystemBasicInfo.PageSize;
-        StackCommit += SystemBasicInfo.PageSize;
+        Stack -= PageSize;
+        StackCommit += PageSize;
         UseGuard = TRUE;
     }
-
+    else
+    {
+        UseGuard = FALSE;
+    }
+    
     /* Allocate memory for the stack */
     Status = ZwAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
@@ -340,6 +348,8 @@ BasepCreateStack(HANDLE hProcess,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failure to allocate stack\n");
+        GuardPageSize = 0;
+        ZwFreeVirtualMemory(hProcess, (PVOID*)&Stack, &GuardPageSize, MEM_RELEASE);
         return Status;
     }
 
@@ -349,10 +359,8 @@ BasepCreateStack(HANDLE hProcess,
     /* Create a guard page */
     if (UseGuard)
     {
-        SIZE_T GuardPageSize = SystemBasicInfo.PageSize;
-        ULONG Dummy;
-
-        /* Attempt maximum space possible */
+        /* Set the guard page */
+        GuardPageSize = PAGE_SIZE;
         Status = ZwProtectVirtualMemory(hProcess,
                                         (PVOID*)&Stack,
                                         &GuardPageSize,
@@ -360,12 +368,13 @@ BasepCreateStack(HANDLE hProcess,
                                         &Dummy);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failure to create guard page\n");
+            DPRINT1("Failure to set guard page\n");
             return Status;
         }
 
         /* Update the Stack Limit keeping in mind the Guard Page */
-        InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit - GuardPageSize);
+        InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit +
+                                         GuardPageSize);
     }
 
     /* We are done! */

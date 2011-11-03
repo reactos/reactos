@@ -173,7 +173,7 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                              
 NTSTATUS
 WINAPI
-BasepCreateStack(HANDLE hProcess,
+BaseCreateStack(HANDLE hProcess,
                  SIZE_T StackReserve,
                  SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb);

@@ -187,7 +187,7 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
 
     /* Create the Thread's Stack */
-    BasepCreateStack(ProcessHandle,
+    BaseCreateStack(ProcessHandle,
                      SectionImageInfo->MaximumStackSize,
                      SectionImageInfo->CommittedStackSize,
                      &InitialTeb);
