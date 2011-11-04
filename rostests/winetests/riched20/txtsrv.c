@@ -35,6 +35,24 @@
 #include <limits.h>
 
 static HMODULE hmoduleRichEdit;
+static IID *pIID_ITextServices;
+static IID *pIID_ITextHost;
+static IID *pIID_ITextHost2;
+
+static const char *debugstr_guid(REFIID riid)
+{
+    static char buf[50];
+
+    if(!riid)
+        return "(null)";
+
+    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
+            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
+            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+
+    return buf;
+}
 
 /* Define C Macros for ITextServices calls. */
 
@@ -75,17 +93,22 @@ static ITextServicesVtbl itextServicesStdcallVtbl;
 
 typedef struct ITextHostTestImpl
 {
-    ITextHostVtbl *lpVtbl;
+    ITextHost ITextHost_iface;
     LONG refCount;
 } ITextHostTestImpl;
+
+static inline ITextHostTestImpl *impl_from_ITextHost(ITextHost *iface)
+{
+    return CONTAINING_RECORD(iface, ITextHostTestImpl, ITextHost_iface);
+}
 
 static HRESULT WINAPI ITextHostImpl_QueryInterface(ITextHost *iface,
                                                    REFIID riid,
                                                    LPVOID *ppvObject)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
 
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_ITextHost)) {
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, pIID_ITextHost)) {
         *ppvObject = This;
         ITextHost_AddRef((ITextHost *)*ppvObject);
         return S_OK;
@@ -96,14 +119,14 @@ static HRESULT WINAPI ITextHostImpl_QueryInterface(ITextHost *iface,
 
 static ULONG WINAPI ITextHostImpl_AddRef(ITextHost *iface)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     ULONG refCount = InterlockedIncrement(&This->refCount);
     return refCount;
 }
 
 static ULONG WINAPI ITextHostImpl_Release(ITextHost *iface)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     ULONG refCount = InterlockedDecrement(&This->refCount);
 
     if (!refCount)
@@ -117,7 +140,7 @@ static ULONG WINAPI ITextHostImpl_Release(ITextHost *iface)
 
 static HDC WINAPI ITextHostImpl_TxGetDC(ITextHost *iface)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetDC(%p)\n", This);
     return NULL;
 }
@@ -125,7 +148,7 @@ static HDC WINAPI ITextHostImpl_TxGetDC(ITextHost *iface)
 static INT WINAPI ITextHostImpl_TxReleaseDC(ITextHost *iface,
                                             HDC hdc)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxReleaseDC(%p)\n", This);
     return 0;
 }
@@ -134,7 +157,7 @@ static BOOL WINAPI ITextHostImpl_TxShowScrollBar(ITextHost *iface,
                                                  INT fnBar,
                                                  BOOL fShow)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxShowScrollBar(%p, fnBar=%d, fShow=%d)\n",
                 This, fnBar, fShow);
     return FALSE;
@@ -144,7 +167,7 @@ static BOOL WINAPI ITextHostImpl_TxEnableScrollBar(ITextHost *iface,
                                                    INT fuSBFlags,
                                                    INT fuArrowflags)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxEnableScrollBar(%p, fuSBFlags=%d, fuArrowflags=%d)\n",
                This, fuSBFlags, fuArrowflags);
     return FALSE;
@@ -156,7 +179,7 @@ static BOOL WINAPI ITextHostImpl_TxSetScrollRange(ITextHost *iface,
                                                   INT nMaxPos,
                                                   BOOL fRedraw)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetScrollRange(%p, fnBar=%d, nMinPos=%d, nMaxPos=%d, fRedraw=%d)\n",
                This, fnBar, nMinPos, nMaxPos, fRedraw);
     return FALSE;
@@ -167,7 +190,7 @@ static BOOL WINAPI ITextHostImpl_TxSetScrollPos(ITextHost *iface,
                                                 INT nPos,
                                                 BOOL fRedraw)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetScrollPos(%p, fnBar=%d, nPos=%d, fRedraw=%d)\n",
                This, fnBar, nPos, fRedraw);
     return FALSE;
@@ -177,14 +200,14 @@ static void WINAPI ITextHostImpl_TxInvalidateRect(ITextHost *iface,
                                                   LPCRECT prc,
                                                   BOOL fMode)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxInvalidateRect(%p, prc=%p, fMode=%d)\n",
                This, prc, fMode);
 }
 
 static void WINAPI ITextHostImpl_TxViewChange(ITextHost *iface, BOOL fUpdate)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxViewChange(%p, fUpdate=%d)\n",
                This, fUpdate);
 }
@@ -193,7 +216,7 @@ static BOOL WINAPI ITextHostImpl_TxCreateCaret(ITextHost *iface,
                                                HBITMAP hbmp,
                                                INT xWidth, INT yHeight)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxCreateCaret(%p, nbmp=%p, xWidth=%d, yHeight=%d)\n",
                This, hbmp, xWidth, yHeight);
     return FALSE;
@@ -201,7 +224,7 @@ static BOOL WINAPI ITextHostImpl_TxCreateCaret(ITextHost *iface,
 
 static BOOL WINAPI ITextHostImpl_TxShowCaret(ITextHost *iface, BOOL fShow)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxShowCaret(%p, fShow=%d)\n",
                This, fShow);
     return FALSE;
@@ -210,7 +233,7 @@ static BOOL WINAPI ITextHostImpl_TxShowCaret(ITextHost *iface, BOOL fShow)
 static BOOL WINAPI ITextHostImpl_TxSetCaretPos(ITextHost *iface,
                                                INT x, INT y)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetCaretPos(%p, x=%d, y=%d)\n", This, x, y);
     return FALSE;
 }
@@ -218,7 +241,7 @@ static BOOL WINAPI ITextHostImpl_TxSetCaretPos(ITextHost *iface,
 static BOOL WINAPI ITextHostImpl_TxSetTimer(ITextHost *iface,
                                             UINT idTimer, UINT uTimeout)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetTimer(%p, idTimer=%u, uTimeout=%u)\n",
               This, idTimer, uTimeout);
     return FALSE;
@@ -226,7 +249,7 @@ static BOOL WINAPI ITextHostImpl_TxSetTimer(ITextHost *iface,
 
 static void WINAPI ITextHostImpl_TxKillTimer(ITextHost *iface, UINT idTimer)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxKillTimer(%p, idTimer=%u)\n", This, idTimer);
 }
 
@@ -238,20 +261,20 @@ static void WINAPI ITextHostImpl_TxScrollWindowEx(ITextHost *iface,
                                                   LPRECT lprcUpdate,
                                                   UINT fuScroll)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxScrollWindowEx(%p, %d, %d, %p, %p, %p, %p, %d)\n",
               This, dx, dy, lprcScroll, lprcClip, hRgnUpdate, lprcUpdate, fuScroll);
 }
 
 static void WINAPI ITextHostImpl_TxSetCapture(ITextHost *iface, BOOL fCapture)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetCapture(%p, fCapture=%d)\n", This, fCapture);
 }
 
 static void WINAPI ITextHostImpl_TxSetFocus(ITextHost *iface)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetFocus(%p)\n", This);
 }
 
@@ -259,7 +282,7 @@ static void WINAPI ITextHostImpl_TxSetCursor(ITextHost *iface,
                                              HCURSOR hcur,
                                              BOOL fText)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxSetCursor(%p, hcur=%p, fText=%d)\n",
               This, hcur, fText);
 }
@@ -267,7 +290,7 @@ static void WINAPI ITextHostImpl_TxSetCursor(ITextHost *iface,
 static BOOL WINAPI ITextHostImpl_TxScreenToClient(ITextHost *iface,
                                                   LPPOINT lppt)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxScreenToClient(%p, lppt=%p)\n", This, lppt);
     return FALSE;
 }
@@ -275,7 +298,7 @@ static BOOL WINAPI ITextHostImpl_TxScreenToClient(ITextHost *iface,
 static BOOL WINAPI ITextHostImpl_TxClientToScreen(ITextHost *iface,
                                                   LPPOINT lppt)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxClientToScreen(%p, lppt=%p)\n", This, lppt);
     return FALSE;
 }
@@ -283,7 +306,7 @@ static BOOL WINAPI ITextHostImpl_TxClientToScreen(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxActivate(ITextHost *iface,
                                                LONG *plOldState)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxActivate(%p, plOldState=%p)\n", This, plOldState);
     return E_NOTIMPL;
 }
@@ -291,7 +314,7 @@ static HRESULT WINAPI ITextHostImpl_TxActivate(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxDeactivate(ITextHost *iface,
                                                  LONG lNewState)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxDeactivate(%p, lNewState=%d)\n", This, lNewState);
     return E_NOTIMPL;
 }
@@ -299,7 +322,7 @@ static HRESULT WINAPI ITextHostImpl_TxDeactivate(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetClientRect(ITextHost *iface,
                                                     LPRECT prc)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetClientRect(%p, prc=%p)\n", This, prc);
     return E_NOTIMPL;
 }
@@ -307,7 +330,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetClientRect(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetViewInset(ITextHost *iface,
                                                    LPRECT prc)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetViewInset(%p, prc=%p)\n", This, prc);
     return E_NOTIMPL;
 }
@@ -315,7 +338,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetViewInset(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetCharFormat(ITextHost *iface,
                                                     const CHARFORMATW **ppCF)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetCharFormat(%p, ppCF=%p)\n", This, ppCF);
     return E_NOTIMPL;
 }
@@ -323,7 +346,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetCharFormat(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetParaFormat(ITextHost *iface,
                                                     const PARAFORMAT **ppPF)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetParaFormat(%p, ppPF=%p)\n", This, ppPF);
     return E_NOTIMPL;
 }
@@ -331,7 +354,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetParaFormat(ITextHost *iface,
 static COLORREF WINAPI ITextHostImpl_TxGetSysColor(ITextHost *iface,
                                                    int nIndex)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetSysColor(%p, nIndex=%d)\n", This, nIndex);
     return E_NOTIMPL;
 }
@@ -339,7 +362,7 @@ static COLORREF WINAPI ITextHostImpl_TxGetSysColor(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetBackStyle(ITextHost *iface,
                                                    TXTBACKSTYLE *pStyle)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetBackStyle(%p, pStyle=%p)\n", This, pStyle);
     return E_NOTIMPL;
 }
@@ -347,7 +370,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetBackStyle(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetMaxLength(ITextHost *iface,
                                                    DWORD *pLength)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetMaxLength(%p, pLength=%p)\n", This, pLength);
     return E_NOTIMPL;
 }
@@ -355,7 +378,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetMaxLength(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetScrollBars(ITextHost *iface,
                                                     DWORD *pdwScrollBar)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetScrollBars(%p, pdwScrollBar=%p)\n",
                This, pdwScrollBar);
     return E_NOTIMPL;
@@ -364,7 +387,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetScrollBars(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetPasswordChar(ITextHost *iface,
                                                       WCHAR *pch)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetPasswordChar(%p, pch=%p)\n", This, pch);
     return E_NOTIMPL;
 }
@@ -372,7 +395,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetPasswordChar(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetAcceleratorPos(ITextHost *iface,
                                                         LONG *pch)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetAcceleratorPos(%p, pch=%p)\n", This, pch);
     return E_NOTIMPL;
 }
@@ -380,7 +403,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetAcceleratorPos(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxGetExtent(ITextHost *iface,
                                                 LPSIZEL lpExtent)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetExtent(%p, lpExtent=%p)\n", This, lpExtent);
     return E_NOTIMPL;
 }
@@ -388,7 +411,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetExtent(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_OnTxCharFormatChange(ITextHost *iface,
                                                          const CHARFORMATW *pcf)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to OnTxCharFormatChange(%p, pcf=%p)\n", This, pcf);
     return E_NOTIMPL;
 }
@@ -396,7 +419,7 @@ static HRESULT WINAPI ITextHostImpl_OnTxCharFormatChange(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_OnTxParaFormatChange(ITextHost *iface,
                                                          const PARAFORMAT *ppf)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to OnTxParaFormatChange(%p, ppf=%p)\n", This, ppf);
     return E_NOTIMPL;
 }
@@ -407,7 +430,7 @@ static HRESULT WINAPI ITextHostImpl_TxGetPropertyBits(ITextHost *iface,
                                                       DWORD dwMask,
                                                       DWORD *pdwBits)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetPropertyBits(%p, dwMask=0x%08x, pdwBits=%p)\n",
               This, dwMask, pdwBits);
     *pdwBits = 0;
@@ -417,31 +440,31 @@ static HRESULT WINAPI ITextHostImpl_TxGetPropertyBits(ITextHost *iface,
 static HRESULT WINAPI ITextHostImpl_TxNotify(ITextHost *iface, DWORD iNotify,
                                              void *pv)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxNotify(%p, iNotify=%d, pv=%p)\n", This, iNotify, pv);
     return E_NOTIMPL;
 }
 
 static HIMC WINAPI ITextHostImpl_TxImmGetContext(ITextHost *iface)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxImmGetContext(%p)\n", This);
     return 0;
 }
 
 static void WINAPI ITextHostImpl_TxImmReleaseContext(ITextHost *iface, HIMC himc)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxImmReleaseContext(%p, himc=%p)\n", This, himc);
 }
 
 /* This function must set the variable pointed to by *lSelBarWidth.
-   Otherwise an uninitalized value will be used to calculate
+   Otherwise an uninitialized value will be used to calculate
    positions and sizes even if E_NOTIMPL is returned. */
 static HRESULT WINAPI ITextHostImpl_TxGetSelectionBarWidth(ITextHost *iface,
                                                            LONG *lSelBarWidth)
 {
-    ITextHostTestImpl *This = (ITextHostTestImpl *)iface;
+    ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetSelectionBarWidth(%p, lSelBarWidth=%p)\n",
                 This, lSelBarWidth);
     *lSelBarWidth = 0;
@@ -604,24 +627,24 @@ static BOOL init_texthost(void)
         skip("Insufficient memory to create ITextHost interface\n");
         return FALSE;
     }
-    dummyTextHost->lpVtbl = &itextHostVtbl;
+    dummyTextHost->ITextHost_iface.lpVtbl = &itextHostVtbl;
     dummyTextHost->refCount = 1;
 
     /* MSDN states that an IUnknown object is returned by
        CreateTextServices which is then queried to obtain a
        ITextServices object. */
     pCreateTextServices = (void*)GetProcAddress(hmoduleRichEdit, "CreateTextServices");
-    result = (*pCreateTextServices)(NULL,(ITextHost*)dummyTextHost, &init);
-    ok(result == S_OK, "Did not return OK when created. Returned %x\n", result);
+    result = (*pCreateTextServices)(NULL, &dummyTextHost->ITextHost_iface, &init);
+    ok(result == S_OK, "Did not return S_OK when created (result =  %x)\n", result);
     if (result != S_OK) {
         CoTaskMemFree(dummyTextHost);
         skip("CreateTextServices failed.\n");
         return FALSE;
     }
 
-    result = IUnknown_QueryInterface(init, &IID_ITextServices,
+    result = IUnknown_QueryInterface(init, pIID_ITextServices,
                                      (void **)&txtserv);
-    ok((result == S_OK) && (txtserv != NULL), "Querying interface failed\n");
+    ok((result == S_OK) && (txtserv != NULL), "Querying interface failed (result = %x, txtserv = %p)\n", result, txtserv);
     IUnknown_Release(init);
     if (!((result == S_OK) && (txtserv != NULL))) {
         CoTaskMemFree(dummyTextHost);
@@ -630,6 +653,12 @@ static BOOL init_texthost(void)
     }
 
     return TRUE;
+}
+
+static void free_texthost(void)
+{
+    IUnknown_Release(txtserv);
+    CoTaskMemFree(dummyTextHost);
 }
 
 static void test_TxGetText(void)
@@ -641,10 +670,9 @@ static void test_TxGetText(void)
         return;
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
-    ok(hres == S_OK, "ITextServices_TxGetText failed\n");
+    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
 
-    IUnknown_Release(txtserv);
-    CoTaskMemFree(dummyTextHost);
+    free_texthost();
 }
 
 static void test_TxSetText(void)
@@ -657,19 +685,18 @@ static void test_TxSetText(void)
         return;
 
     hres = ITextServices_TxSetText(txtserv, settext);
-    ok(hres == S_OK, "ITextServices_TxSetText failed\n");
+    ok(hres == S_OK, "ITextServices_TxSetText failed (result = %x)\n", hres);
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
-    ok(hres == S_OK, "ITextServices_TxGetText failed\n");
+    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
 
     ok(SysStringLen(rettext) == 4,
-                 "String returned of wrong length\n");
+                 "String returned of wrong length (expected 4, got %d)\n", SysStringLen(rettext));
     ok(memcmp(rettext,settext,SysStringByteLen(rettext)) == 0,
                  "String returned differs\n");
 
     SysFreeString(rettext);
-    IUnknown_Release(txtserv);
-    CoTaskMemFree(dummyTextHost);
+    free_texthost();
 }
 
 static void test_TxGetNaturalSize(void) {
@@ -708,9 +735,7 @@ static void test_TxGetNaturalSize(void) {
     ret = GetCharWidth32(hdcDraw,'A','Z',charwidth_caps_text);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
         win_skip("GetCharWidth32 is not available\n");
-        RestoreDC(hdcDraw,1);
-        ReleaseDC(NULL,hdcDraw);
-        return;
+        goto cleanup;
     }
 
     /* Make measurements in MM_TEXT */
@@ -718,13 +743,20 @@ static void test_TxGetNaturalSize(void) {
     xdim = 0; ydim = 0;
 
     result = ITextServices_TxSetText(txtserv, oneA);
-    ok(result == S_OK, "ITextServices_TxSetText failed\n");
+    ok(result == S_OK, "ITextServices_TxSetText failed (result = %x)\n", result);
+    if (result != S_OK) {
+        skip("Could not set text\n");
+        goto cleanup;
+    }
 
+    SetLastError(0xdeadbeef);
     result = ITextServices_TxGetNaturalSize(txtserv, DVASPECT_CONTENT,
                                             hdcDraw, NULL, NULL,
                                             TXTNS_FITTOCONTENT, &psizelExtent,
                                             &xdim, &ydim);
-    todo_wine ok(result == S_OK, "TxGetNaturalSize failed\n");
+    todo_wine ok(result == S_OK || broken(result == E_FAIL), /* WINXP Arabic Language */
+        "TxGetNaturalSize gave unexpected return value (result = %x)\n", result);
+    if (result == S_OK) {
     todo_wine ok(ydim == tmInfo_text.tmHeight,
                  "Height calculated incorrectly (expected %d, got %d)\n",
                  tmInfo_text.tmHeight, ydim);
@@ -732,12 +764,14 @@ static void test_TxGetNaturalSize(void) {
     todo_wine ok(xdim >= charwidth_caps_text[0] && xdim <= charwidth_caps_text[0] + 1,
                  "Width calculated incorrectly (expected %d {+1}, got %d)\n",
                  charwidth_caps_text[0], xdim);
+    } else
+        skip("TxGetNaturalSize measurements not performed (xdim = %d, ydim = %d, result = %x, error = %x)\n",
+             xdim, ydim, result, GetLastError());
 
+cleanup:
     RestoreDC(hdcDraw,1);
     ReleaseDC(NULL,hdcDraw);
-
-    IUnknown_Release(txtserv);
-    CoTaskMemFree(dummyTextHost);
+    free_texthost();
 }
 
 static void test_TxDraw(void)
@@ -757,13 +791,27 @@ static void test_TxDraw(void)
         result = ITextServices_TxDraw(txtserv, dwAspect, 0, pvAspect, ptd,
                                       tmphdc, hicTargetDev, &client, NULL,
                                       NULL, NULL, 0, 0);
-        ok(result == S_OK, "TxDraw failed\n");
+        ok(result == S_OK, "TxDraw failed (result = %x)\n", result);
     }
 
-    IUnknown_Release(txtserv);
-    CoTaskMemFree(dummyTextHost);
+    free_texthost();
 
 }
+
+DEFINE_GUID(expected_iid_itextservices, 0x8d33f740, 0xcf58, 0x11ce, 0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5);
+DEFINE_GUID(expected_iid_itexthost, 0x13e670f4,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0xb6,0x5e,0xa1);
+DEFINE_GUID(expected_iid_itexthost2, 0x13e670f5,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0xb6,0x5e,0xa1);
+
+static void test_IIDs(void)
+{
+    ok(IsEqualIID(pIID_ITextServices, &expected_iid_itextservices),
+       "unexpected value for IID_ITextServices: %s\n", debugstr_guid(pIID_ITextServices));
+    ok(IsEqualIID(pIID_ITextHost, &expected_iid_itexthost),
+       "unexpected value for IID_ITextHost: %s\n", debugstr_guid(pIID_ITextHost));
+    ok(IsEqualIID(pIID_ITextHost2, &expected_iid_itexthost2),
+       "unexpected value for IID_ITextHost2: %s\n", debugstr_guid(pIID_ITextHost2));
+}
+
 
 START_TEST( txtsrv )
 {
@@ -774,10 +822,14 @@ START_TEST( txtsrv )
     hmoduleRichEdit = LoadLibrary("RICHED20.DLL");
     ok(hmoduleRichEdit != NULL, "error: %d\n", (int) GetLastError());
 
+    pIID_ITextServices = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextServices");
+    pIID_ITextHost = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextHost");
+    pIID_ITextHost2 = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextHost2");
+    test_IIDs();
+
     if (init_texthost())
     {
-        IUnknown_Release(txtserv);
-        CoTaskMemFree(dummyTextHost);
+        free_texthost();
 
         test_TxGetText();
         test_TxSetText();
