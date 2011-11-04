@@ -100,7 +100,5 @@ BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 HWND* WIN_ListChildren (HWND hWndparent);
 VOID DeleteFrameBrushes(VOID);
 BOOL WINAPI GdiValidateHandle(HGDIOBJ);
-HBRUSH FASTCALL GetControlColor(HWND,HWND,HDC,UINT);
-HBRUSH FASTCALL GetControlBrush(HWND,HDC,UINT);
 
 /* EOF */

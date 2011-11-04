@@ -240,6 +240,16 @@ GetClipCursor(LPRECT lpRect)
     return NtUserGetClipCursor(lpRect);
 }
 
+EXTINLINE HBRUSH WINAPI GetControlBrush(HWND hwnd, HDC  hdc, UINT ctlType)
+{
+    return NtUserGetControlBrush(hwnd, hdc, ctlType);
+}
+
+EXTINLINE HBRUSH WINAPI GetControlColor(HWND hwndParent, HWND hwnd, HDC hdc, UINT CtlMsg)
+{
+    return NtUserGetControlColor(hwndParent, hwnd, hdc, CtlMsg);
+}
+
 EXTINLINE BOOL WINAPI
 GetCursorInfo(PCURSORINFO pci)
 {

@@ -208,35 +208,6 @@ NtUserGetAltTabInfo(
    return 0;
 }
 
-HBRUSH
-APIENTRY
-NtUserGetControlBrush(
-   HWND hwnd,
-   HDC  hdc,
-   UINT ctlType)
-{
-   STUB
-
-   return 0;
-}
-
-
-/*
- * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
- */
-HBRUSH
-APIENTRY
-NtUserGetControlColor(
-   HWND hwndParent,
-   HWND hwnd,
-   HDC hdc,
-   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
-{
-   STUB
-
-   return 0;
-}
-
 DWORD
 APIENTRY
 NtUserGetImeHotKey(

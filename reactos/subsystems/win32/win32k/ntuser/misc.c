@@ -55,6 +55,90 @@ IntGdiGetLanguageID(VOID)
   return (SHORT) Ret;
 }
 
+HBRUSH
+FASTCALL
+GetControlColor(
+   PWND pwndParent,
+   PWND pwnd,
+   HDC hdc,
+   UINT CtlMsg)
+{
+    HBRUSH hBrush;
+
+    if (!pwndParent) pwndParent = pwnd;
+
+    if ( pwndParent->head.pti->ppi != PsGetCurrentProcessWin32Process())
+    {
+       return (HBRUSH)IntDefWindowProc( pwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)UserHMGetHandle(pwnd), FALSE);
+    }
+
+    hBrush = (HBRUSH)co_IntSendMessage( UserHMGetHandle(pwndParent), CtlMsg, (WPARAM)hdc, (LPARAM)UserHMGetHandle(pwnd));
+
+    if (!hBrush || !GreIsHandleValid(hBrush))
+    {
+       hBrush = (HBRUSH)IntDefWindowProc( pwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)UserHMGetHandle(pwnd), FALSE);
+    }
+    return hBrush;
+}
+
+HBRUSH
+FASTCALL
+GetControlBrush(
+   PWND pwnd,
+   HDC  hdc,
+   UINT ctlType)
+{
+    PWND pwndParent = IntGetParent(pwnd);
+    return GetControlColor( pwndParent, pwnd, hdc, ctlType);
+}
+
+HBRUSH
+APIENTRY
+NtUserGetControlBrush(
+   HWND hwnd,
+   HDC  hdc,
+   UINT ctlType)
+{
+   PWND pwnd;
+   HBRUSH hBrush = NULL;
+
+   UserEnterExclusive();
+   if ( (pwnd = UserGetWindowObject(hwnd)) &&
+       ((ctlType - WM_CTLCOLORMSGBOX) < CTLCOLOR_MAX) &&
+        hdc )
+   {
+      hBrush = GetControlBrush(pwnd, hdc, ctlType);
+   }
+   UserLeave();
+   return hBrush;
+}
+
+/*
+ * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
+ */
+HBRUSH
+APIENTRY
+NtUserGetControlColor(
+   HWND hwndParent,
+   HWND hwnd,
+   HDC hdc,
+   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
+{
+   PWND pwnd, pwndParent = NULL;
+   HBRUSH hBrush = NULL;
+
+   UserEnterExclusive();
+   if ( (pwnd = UserGetWindowObject(hwnd)) &&
+       ((CtlMsg - WM_CTLCOLORMSGBOX) < CTLCOLOR_MAX) &&
+        hdc )
+   {
+      if (hwndParent) pwndParent = UserGetWindowObject(hwndParent);
+      hBrush = GetControlColor( pwndParent, pwnd, hdc, CtlMsg);
+   }
+   UserLeave();
+   return hBrush;
+}
+
 /*
  * @unimplemented
  */

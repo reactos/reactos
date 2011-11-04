@@ -335,10 +335,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             HBRUSH hBrush;
             HWND parent = GetParent(hWnd);
             if (!parent) parent = hWnd;
-            hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORBTN, (WPARAM)hdc, (LPARAM)hWnd);
-            if (!hBrush) /* did the app forget to call defwindowproc ? */
-                hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORBTN,
-                                                (WPARAM)hdc, (LPARAM)hWnd);
+            hBrush = GetControlColor( parent, hWnd, hdc, WM_CTLCOLORBTN);
             GetClientRect(hWnd, &rc);
             FillRect(hdc, &rc, hBrush);
         }
@@ -885,7 +882,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
-    SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
+    GetControlColor( parent, hwnd, hDC, WM_CTLCOLORBTN);
 
     setup_clipping( hwnd, hDC );
 #ifdef __REACTOS__
@@ -1175,10 +1172,7 @@ static void UB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
-    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd);
-    if (!hBrush) /* did the app forget to call defwindowproc ? */
-        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORBTN,
-					(WPARAM)hDC, (LPARAM)hwnd);
+    hBrush = GetControlColor( parent, hwnd, hDC, WM_CTLCOLORBTN);
 
     FillRect( hDC, &rc, hBrush );
     if ((action == ODA_FOCUS) ||
@@ -1219,7 +1213,7 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     if ((hFont = get_button_font( hwnd ))) hPrevFont = SelectObject( hDC, hFont );
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
-    SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
+    GetControlColor( parent, hwnd, hDC, WM_CTLCOLORBTN);
 
     setup_clipping( hwnd, hDC );
 

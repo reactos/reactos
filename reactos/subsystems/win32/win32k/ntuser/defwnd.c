@@ -94,6 +94,43 @@ IntClientShutdown(
    return lResult;
 }
 
+HBRUSH FASTCALL
+DefWndControlColor(HDC hDC, UINT ctlType)
+{
+  if (ctlType == CTLCOLOR_SCROLLBAR)
+  {
+      HBRUSH hb = IntGetSysColorBrush(COLOR_SCROLLBAR);
+      COLORREF bk = IntGetSysColor(COLOR_3DHILIGHT);
+      IntGdiSetTextColor(hDC, IntGetSysColor(COLOR_3DFACE));
+      IntGdiSetBkColor(hDC, bk);
+
+      /* if COLOR_WINDOW happens to be the same as COLOR_3DHILIGHT
+       * we better use 0x55aa bitmap brush to make scrollbar's background
+       * look different from the window background.
+       */
+      if ( bk == IntGetSysColor(COLOR_WINDOW))
+          return gpsi->hbrGray;
+
+      NtGdiUnrealizeObject( hb );
+      return hb;
+  }
+
+  IntGdiSetTextColor(hDC, IntGetSysColor(COLOR_WINDOWTEXT));
+
+  if ((ctlType == CTLCOLOR_EDIT) || (ctlType == CTLCOLOR_LISTBOX))
+  {
+      IntGdiSetBkColor(hDC, IntGetSysColor(COLOR_WINDOW));
+  }
+  else
+  {
+      IntGdiSetBkColor(hDC, IntGetSysColor(COLOR_3DFACE));
+      return IntGetSysColorBrush(COLOR_3DFACE);
+  }
+
+  return IntGetSysColorBrush(COLOR_WINDOW);
+}
+
+
 LRESULT FASTCALL
 DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -168,10 +205,30 @@ IntDefWindowProc(
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
 
+      case WM_CTLCOLORMSGBOX:
+      case WM_CTLCOLOREDIT:
+      case WM_CTLCOLORLISTBOX:
+      case WM_CTLCOLORBTN:
+      case WM_CTLCOLORDLG:
+      case WM_CTLCOLORSTATIC:
+      case WM_CTLCOLORSCROLLBAR:
+           return (LRESULT) DefWndControlColor((HDC)wParam, Msg - WM_CTLCOLORMSGBOX);
+
+      case WM_CTLCOLOR:
+           return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
+
       case WM_GETHOTKEY:
          return DefWndGetHotKey(UserHMGetHandle(Wnd));                
       case WM_SETHOTKEY:
          return DefWndSetHotKey(Wnd, wParam);
+
+      case WM_NCHITTEST:
+      {
+         POINT Point;
+         Point.x = GET_X_LPARAM(lParam);
+         Point.y = GET_Y_LPARAM(lParam);
+         return GetNCHitEx(Wnd, Point);
+      }
 
       /* ReactOS only. */
       case WM_CBT:

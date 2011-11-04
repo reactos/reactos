@@ -481,45 +481,6 @@ ValidateHwndOrDesk(HWND hwnd)
     return ValidateHwnd(hwnd);
 }
 
-HBRUSH
-FASTCALL
-GetControlColor(
-   HWND hwndParent,
-   HWND hwnd,
-   HDC hdc,
-   UINT CtlMsg)
-{
-    PWND pwnd;
-    HBRUSH hBrush;
-
-    if (!hwndParent) hwndParent = hwnd;
-
-    pwnd = ValidateHwnd(hwndParent);
-    if (pwnd && !TestWindowProcess(pwnd))
-    {
-       return (HBRUSH)DefWindowProcW( hwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)hwnd);
-    }
-
-    hBrush = (HBRUSH)SendMessageW( hwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)hwnd);
-
-    if (!hBrush || !GdiValidateHandle(hBrush))
-    {
-       hBrush = (HBRUSH)DefWindowProcW( hwndParent, CtlMsg, (WPARAM)hdc, (LPARAM)hwnd);
-    }
-    return hBrush;
-}
-
-HBRUSH
-FASTCALL
-GetControlBrush(
-   HWND hwnd,
-   HDC  hdc,
-   UINT ctlType)
-{
-    HWND hwndParent = GetParent(hwnd);
-    return GetControlColor( hwndParent, hwnd, hdc, ctlType);
-}
-
 /*
  * @implemented
  */
