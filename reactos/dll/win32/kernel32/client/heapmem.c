@@ -881,7 +881,7 @@ GlobalReAlloc(HGLOBAL hMem,
             else
             {
                 /* Otherwise, remove the flag */
-                HandleEntry->Flags &= BASE_HEAP_ENTRY_FLAG_REUSABLE;
+                HandleEntry->Flags &= ~BASE_HEAP_ENTRY_FLAG_REUSABLE;
             }
         }
         else
@@ -1642,7 +1642,7 @@ LocalReAlloc(HLOCAL hMem,
             else
             {
                 /* Otherwise, remove the flag */
-                HandleEntry->Flags &= BASE_HEAP_ENTRY_FLAG_REUSABLE;
+                HandleEntry->Flags &= ~BASE_HEAP_ENTRY_FLAG_REUSABLE;
             }
         }
         else
