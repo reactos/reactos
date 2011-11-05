@@ -426,7 +426,6 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
     if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {
         *pdwAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
-        *pdwAttributes &= ~SFGAO_CANLINK;
     }
     else
         *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
