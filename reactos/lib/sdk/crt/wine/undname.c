@@ -103,6 +103,8 @@ struct datatype_t
     const char*         right;
 };
 
+static BOOL symbol_demangle(struct parsed_symbol* sym);
+
 /******************************************************************
  *		und_alloc
  *
@@ -208,7 +210,7 @@ static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
     a->elts[a->num][len] = '\0';
     if (++a->num >= a->max) a->max = a->num;
     {
-        unsigned int i;
+        int i;
         char c;
 
         for (i = a->max - 1; i >= 0; i--)
@@ -414,11 +416,17 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
 
 /******************************************************************
  *		get_modifier
- * Parses the type modifier. Always returns a static string
+ * Parses the type modifier. Always returns static strings.
  */
-static BOOL get_modifier(char ch, const char** ret)
+static BOOL get_modifier(struct parsed_symbol *sym, const char **ret, const char **ptr_modif)
 {
-    switch (ch)
+    *ptr_modif = NULL;
+    if (*sym->current == 'E')
+    {
+        *ptr_modif = "__ptr64";
+        sym->current++;
+    }
+    switch (*sym->current++)
     {
     case 'A': *ret = NULL; break;
     case 'B': *ret = "const"; break;
@@ -434,20 +442,27 @@ static BOOL get_modified_type(struct datatype_t *ct, struct parsed_symbol* sym,
 {
     const char* modifier;
     const char* str_modif;
+    const char *ptr_modif = "";
+
+    if (*sym->current == 'E')
+    {
+        ptr_modif = " __ptr64";
+        sym->current++;
+    }
 
     switch (modif)
     {
-    case 'A': str_modif = " &"; break;
-    case 'B': str_modif = " & volatile"; break;
-    case 'P': str_modif = " *"; break;
-    case 'Q': str_modif = " * const"; break;
-    case 'R': str_modif = " * volatile"; break;
-    case 'S': str_modif = " * const volatile"; break;
+    case 'A': str_modif = str_printf(sym, " &%s", ptr_modif); break;
+    case 'B': str_modif = str_printf(sym, " &%s volatile", ptr_modif); break;
+    case 'P': str_modif = str_printf(sym, " *%s", ptr_modif); break;
+    case 'Q': str_modif = str_printf(sym, " *%s const", ptr_modif); break;
+    case 'R': str_modif = str_printf(sym, " *%s volatile", ptr_modif); break;
+    case 'S': str_modif = str_printf(sym, " *%s const volatile", ptr_modif); break;
     case '?': str_modif = ""; break;
     default: return FALSE;
     }
 
-    if (get_modifier(*sym->current++, &modifier))
+    if (get_modifier(sym, &modifier, &ptr_modif))
     {
         unsigned            mark = sym->stack.num;
         struct datatype_t   sub_ct;
@@ -582,12 +597,31 @@ static BOOL get_class(struct parsed_symbol* sym)
             name = str_array_get_ref(&sym->names, *sym->current++ - '0');
             break;
         case '?':
-            if (*++sym->current == '$')
+            switch (*++sym->current)
             {
+            case '$':
                 sym->current++;
                 if ((name = get_template_name(sym)) &&
                     !str_array_push(sym, name, -1, &sym->names))
                     return FALSE;
+                break;
+            case '?':
+                {
+                    struct array stack = sym->stack;
+                    unsigned int start = sym->names.start;
+                    unsigned int num = sym->names.num;
+
+                    str_array_init( &sym->stack );
+                    if (symbol_demangle( sym )) name = str_printf( sym, "`%s'", sym->result );
+                    sym->names.start = start;
+                    sym->names.num = num;
+                    sym->stack = stack;
+                }
+                break;
+            default:
+                if (!(name = get_number( sym ))) return FALSE;
+                name = str_printf( sym, "`%s'", name );
+                break;
             }
             break;
         default:
@@ -922,10 +956,10 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
         case '$':
             if (*sym->current == 'C')
             {
-                const char*   ptr;
+                const char *ptr, *ptr_modif;
 
                 sym->current++;
-                if (!get_modifier(*sym->current++, &ptr)) goto done;
+                if (!get_modifier(sym, &ptr, &ptr_modif)) goto done;
                 if (!demangle_datatype(sym, ct, pmt_ref, in_args)) goto done;
                 ct->left = str_printf(sym, "%s %s", ct->left, ptr);
             }
@@ -958,6 +992,7 @@ static BOOL handle_data(struct parsed_symbol* sym)
     const char*         access = NULL;
     const char*         member_type = NULL;
     const char*         modifier = NULL;
+    const char*         ptr_modif;
     struct datatype_t   ct;
     char*               name = NULL;
     BOOL                ret = FALSE;
@@ -1002,14 +1037,16 @@ static BOOL handle_data(struct parsed_symbol* sym)
             str_array_init(&pmt);
 
             if (!demangle_datatype(sym, &ct, &pmt, FALSE)) goto done;
-            if (!get_modifier(*sym->current++, &modifier)) goto done;
+            if (!get_modifier(sym, &modifier, &ptr_modif)) goto done;
+            if (modifier && ptr_modif) modifier = str_printf(sym, "%s %s", modifier, ptr_modif);
+            else if (!modifier) modifier = ptr_modif;
             sym->stack.num = mark;
         }
         break;
     case '6' : /* compiler generated static */
     case '7' : /* compiler generated static */
         ct.left = ct.right = NULL;
-        if (!get_modifier(*sym->current++, &modifier)) goto done;
+        if (!get_modifier(sym, &modifier, &ptr_modif)) goto done;
         if (*sym->current != '@')
         {
             char*       cls = NULL;
@@ -1121,10 +1158,11 @@ static BOOL handle_method(struct parsed_symbol* sym, BOOL cast_op)
     {
         if (((accmem - 'A') % 8) != 2 && ((accmem - 'A') % 8) != 3)
         {
+            const char *ptr_modif;
             /* Implicit 'this' pointer */
             /* If there is an implicit this pointer, const modifier follows */
-            if (!get_modifier(*sym->current, &modifier)) goto done;
-            sym->current++;
+            if (!get_modifier(sym, &modifier, &ptr_modif)) goto done;
+            if (modifier || ptr_modif) modifier = str_printf(sym, "%s %s", modifier, ptr_modif);
         }
     }
 
@@ -1162,12 +1200,11 @@ static BOOL handle_method(struct parsed_symbol* sym, BOOL cast_op)
     /* Note: '()' after 'Z' means 'throws', but we don't care here
      * Yet!!! FIXME
      */
-    sym->result = str_printf(sym, "%s%s%s%s%s%s%s%s%s%s%s%s",
+    sym->result = str_printf(sym, "%s%s%s%s%s%s%s%s%s%s%s",
                              access, member_type, ct_ret.left,
                              (ct_ret.left && !ct_ret.right) ? " " : NULL,
                              call_conv, call_conv ? " " : NULL, exported,
-                             name, args_str, modifier,
-                             modifier ? " " : NULL, ct_ret.right);
+                             name, args_str, modifier, ct_ret.right);
     ret = TRUE;
 done:
     return ret;
@@ -1182,7 +1219,8 @@ static BOOL handle_template(struct parsed_symbol* sym)
     const char* name;
     const char* args;
 
-    assert(*sym->current++ == '$');
+    assert(*sym->current == '$');
+    sym->current++;
     if (!(name = get_literal_string(sym))) return FALSE;
     if (!(args = get_args(sym, NULL, FALSE, '<', '>'))) return FALSE;
     sym->result = str_printf(sym, "%s%s", name, args);
@@ -1214,14 +1252,18 @@ static BOOL symbol_demangle(struct parsed_symbol* sym)
 
     /* MS mangled names always begin with '?' */
     if (*sym->current != '?') return FALSE;
-    str_array_init(&sym->names);
-    str_array_init(&sym->stack);
     sym->current++;
 
     /* Then function name or operator code */
-    if (*sym->current == '?' && sym->current[1] != '$')
+    if (*sym->current == '?' && (sym->current[1] != '$' || sym->current[2] == '?'))
     {
         const char* function_name = NULL;
+
+        if (sym->current[1] == '$')
+        {
+            do_after = 6;
+            sym->current += 2;
+        }
 
         /* C++ operator code (one character, or two if the first is '_') */
         switch (*++sym->current)
@@ -1355,6 +1397,17 @@ static BOOL symbol_demangle(struct parsed_symbol* sym)
             sym->result = (char*)function_name;
             ret = TRUE;
             goto done;
+        case 6:
+            {
+                char *args;
+                struct array array_pmt;
+
+                str_array_init(&array_pmt);
+                args = get_args(sym, &array_pmt, FALSE, '<', '>');
+                if (args != NULL) function_name = str_printf(sym, "%s%s", function_name, args);
+                sym->names.num = 0;
+            }
+            /* fall through */
         default:
             if (!str_array_push(sym, function_name, -1, &sym->stack))
                 return FALSE;
@@ -1400,7 +1453,7 @@ static BOOL symbol_demangle(struct parsed_symbol* sym)
         sym->flags &= ~UNDNAME_NO_FUNCTION_RETURNS;
         break;
     case 5:
-        sym->names.start = 1;
+        sym->names.start++;
         break;
     }
 
@@ -1461,6 +1514,8 @@ char* CDECL __unDNameEx(char* buffer, const char* mangled, int buflen,
     sym.mem_alloc_ptr = memget;
     sym.mem_free_ptr  = memfree;
     sym.current       = mangled;
+    str_array_init( &sym.names );
+    str_array_init( &sym.stack );
 
     result = symbol_demangle(&sym) ? sym.result : mangled;
     if (buffer && buflen)

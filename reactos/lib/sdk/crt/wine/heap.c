@@ -35,7 +35,8 @@
     ((((DWORD_PTR)((char *)ptr + alignment + sizeof(void *) + offset)) & \
       ~(alignment - 1)) - offset))
 
-typedef void (*MSVCRT_new_handler_func)(size_t size);
+
+typedef int (CDECL *MSVCRT_new_handler_func)(size_t size);
 
 static MSVCRT_new_handler_func MSVCRT_new_handler;
 static int MSVCRT_new_mode;
@@ -50,14 +51,28 @@ static size_t MSVCRT_sbh_threshold = 0;
  */
 void* CDECL MSVCRT_operator_new(size_t size)
 {
-  void *retval = HeapAlloc(GetProcessHeap(), 0, size);
-  TRACE("(%ld) returning %p\n", size, retval);
-  if(retval) return retval;
-  LOCK_HEAP;
-  if(MSVCRT_new_handler)
-    (*MSVCRT_new_handler)(size);
-  UNLOCK_HEAP;
-  return retval;
+  void *retval;
+  int freed;
+
+  do
+  {
+    retval = HeapAlloc(GetProcessHeap(), 0, size);
+    if(retval)
+    {
+      TRACE("(%ld) returning %p\n", size, retval);
+      return retval;
+    }
+
+    LOCK_HEAP;
+    if(MSVCRT_new_handler)
+      freed = (*MSVCRT_new_handler)(size);
+    else
+      freed = 0;
+    UNLOCK_HEAP;
+  } while(freed);
+
+  TRACE("(%ld) out of memory\n", size);
+  return NULL;
 }
 
 
@@ -148,7 +163,7 @@ int CDECL _callnewh(size_t size)
  */
 void* CDECL _expand(void* mem, size_t size)
 {
-  return HeapReAlloc(GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, mem, (DWORD)size);
+  return HeapReAlloc(GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, mem, size);
 }
 
 /*********************************************************************
@@ -194,7 +209,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
       !HeapValidate( GetProcessHeap(), 0, phe.lpData ))
   {
     UNLOCK_HEAP;
-   __set_errno(GetLastError());
+    __set_errno(GetLastError());
     return _HEAPBADNODE;
   }
 
@@ -273,7 +288,7 @@ size_t CDECL _msize(void* mem)
 /*********************************************************************
  *		calloc (MSVCRT.@)
  */
-void* CDECL calloc(size_t size,size_t count)
+void* CDECL calloc(size_t size, size_t count)
 {
   return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size * count );
 }
@@ -303,7 +318,7 @@ void* CDECL malloc(size_t size)
 void* CDECL realloc(void* ptr, size_t size)
 {
   if (!ptr) return malloc(size);
-  if (size) return HeapReAlloc(GetProcessHeap(), 0, ptr, (DWORD)size);
+  if (size) return HeapReAlloc(GetProcessHeap(), 0, ptr, size);
   free(ptr);
   return NULL;
 }
