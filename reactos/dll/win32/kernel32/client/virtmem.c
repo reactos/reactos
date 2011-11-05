@@ -27,7 +27,7 @@ VirtualAllocEx(IN HANDLE hProcess,
                IN DWORD flProtect)
 {
     NTSTATUS Status;
-    
+
     /* Make sure the address is within the granularity of the system (64K) */
     if ((lpAddress) &&
         (lpAddress < (PVOID)BaseStaticServerData->SysInfo.AllocationGranularity))
@@ -36,7 +36,7 @@ VirtualAllocEx(IN HANDLE hProcess,
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
-    
+
     /* Handle any possible exceptions */
     _SEH2_TRY
     {
@@ -53,7 +53,7 @@ VirtualAllocEx(IN HANDLE hProcess,
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
-    
+
     /* Check for status */
     if (!NT_SUCCESS(Status))
     {
@@ -193,7 +193,7 @@ VirtualLock(IN LPVOID lpAddress,
             IN SIZE_T dwSize)
 {
     NTSTATUS Status;
-    ULONG RegionSize = dwSize;
+    SIZE_T RegionSize = dwSize;
     PVOID BaseAddress = lpAddress;
 
     /* Lock the memory */
@@ -215,7 +215,7 @@ VirtualLock(IN LPVOID lpAddress,
 /*
  * @implemented
  */
-DWORD
+SIZE_T
 NTAPI
 VirtualQuery(IN LPCVOID lpAddress,
              OUT PMEMORY_BASIC_INFORMATION lpBuffer,
@@ -231,7 +231,7 @@ VirtualQuery(IN LPCVOID lpAddress,
 /*
  * @implemented
  */
-DWORD
+SIZE_T
 NTAPI
 VirtualQueryEx(IN HANDLE hProcess,
                IN LPCVOID lpAddress,
@@ -239,7 +239,7 @@ VirtualQueryEx(IN HANDLE hProcess,
                IN SIZE_T dwLength)
 {
     NTSTATUS Status;
-    ULONG ResultLength;
+    SIZE_T ResultLength;
 
     /* Query basic information */
     Status = NtQueryVirtualMemory(hProcess,
@@ -268,9 +268,9 @@ VirtualUnlock(IN LPVOID lpAddress,
               IN SIZE_T dwSize)
 {
     NTSTATUS Status;
-    ULONG RegionSize = dwSize;
+    SIZE_T RegionSize = dwSize;
     PVOID BaseAddress = lpAddress;
-    
+
     /* Lock the memory */
     Status = NtUnlockVirtualMemory(NtCurrentProcess(),
                                    &BaseAddress,
