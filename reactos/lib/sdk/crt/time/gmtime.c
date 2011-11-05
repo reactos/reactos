@@ -105,20 +105,19 @@ _gmtime64(const __time64_t * ptime)
 {
     PTHREADDATA pThreadData;
     struct tm *ptm;
-    __time64_t time = *ptime;
 
     /* Validate parameters */
-    if (time < 0)
+    if (!ptime || *ptime < 0)
     {
-        return 0;
+        return NULL;
     }
 
     /* Get pointer to TLS tm buffer */
     pThreadData = GetThreadData();
     ptm = &pThreadData->tmbuf;
 
-    /* Use _gmtime_worker to do the ral work */
-    return _gmtime_worker(ptm, time, 0);
+    /* Use _gmtime_worker to do the real work */
+    return _gmtime_worker(ptm, *ptime, 0);
 }
 
 /******************************************************************************
@@ -129,7 +128,11 @@ _gmtime64(const __time64_t * ptime)
 struct tm *
 _gmtime32(const __time32_t * ptime)
 {
-    __time64_t time64 = (__time64_t)*ptime;
+    __time64_t time64;
+
+    if (!ptime)
+        return NULL;
+    time64 = *ptime;
     return _gmtime64(&time64);
 }
 
@@ -141,6 +144,10 @@ _gmtime32(const __time32_t * ptime)
 struct tm *
 gmtime(const time_t * ptime)
 {
-    __time64_t time64 = (__time64_t)*ptime;
+    __time64_t time64;
+
+    if (!ptime)
+        return NULL;
+    time64 = *ptime;
     return _gmtime64(&time64);
 }
