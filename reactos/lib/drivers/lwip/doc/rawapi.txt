@@ -251,8 +251,9 @@ if a call to tcp_write() has failed because memory wasn't available,
 the application may use the polling functionality to call tcp_write()
 again when the connection has been idle for a while.
 
-- void tcp_poll(struct tcp_pcb *pcb, u8_t interval,
-                err_t (* poll)(void *arg, struct tcp_pcb *tpcb))
+- void tcp_poll(struct tcp_pcb *pcb, 
+                err_t (* poll)(void *arg, struct tcp_pcb *tpcb),
+				u8_t interval)
 
   Specifies the polling interval and the callback function that should
   be called to poll the application. The interval is specified in

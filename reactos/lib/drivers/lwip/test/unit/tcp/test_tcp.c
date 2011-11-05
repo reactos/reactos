@@ -1,6 +1,6 @@
 #include "test_tcp.h"
 
-#include "lwip/tcp.h"
+#include "lwip/tcp_impl.h"
 #include "lwip/stats.h"
 #include "tcp_helper.h"
 
@@ -50,7 +50,7 @@ START_TEST(test_tcp_recv_inseq)
   struct tcp_pcb* pcb;
   struct pbuf* p;
   char data[] = {1, 2, 3, 4};
-  struct ip_addr remote_ip, local_ip;
+  ip_addr_t remote_ip, local_ip;
   u16_t data_len;
   u16_t remote_port = 0x100, local_port = 0x101;
   struct netif netif;
@@ -76,7 +76,7 @@ START_TEST(test_tcp_recv_inseq)
   EXPECT(p != NULL);
   if (p != NULL) {
     /* pass the segment to tcp_input */
-    tcp_input(p, &netif);
+    test_tcp_input(p, &netif);
     /* check if counters are as expected */
     EXPECT(counters.close_calls == 0);
     EXPECT(counters.recv_calls == 1);

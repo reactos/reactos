@@ -21,16 +21,18 @@ struct test_tcp_counters {
 /* Helper functions */
 void tcp_remove_all(void);
 
-struct pbuf* tcp_create_segment(struct ip_addr* src_ip, struct ip_addr* dst_ip,
+struct pbuf* tcp_create_segment(ip_addr_t* src_ip, ip_addr_t* dst_ip,
                    u16_t src_port, u16_t dst_port, void* data, size_t data_len,
                    u32_t seqno, u32_t ackno, u8_t headerflags);
 struct pbuf* tcp_create_rx_segment(struct tcp_pcb* pcb, void* data, size_t data_len,
                    u32_t seqno_offset, u32_t ackno_offset, u8_t headerflags);
-void tcp_set_state(struct tcp_pcb* pcb, enum tcp_state state, struct ip_addr* local_ip,
-                   struct ip_addr* remote_ip, u16_t local_port, u16_t remote_port);
+void tcp_set_state(struct tcp_pcb* pcb, enum tcp_state state, ip_addr_t* local_ip,
+                   ip_addr_t* remote_ip, u16_t local_port, u16_t remote_port);
 void test_tcp_counters_err(void* arg, err_t err);
 err_t test_tcp_counters_recv(void* arg, struct tcp_pcb* pcb, struct pbuf* p, err_t err);
 
 struct tcp_pcb* test_tcp_new_counters_pcb(struct test_tcp_counters* counters);
+
+void test_tcp_input(struct pbuf *p, struct netif *inp);
 
 #endif
