@@ -49,12 +49,14 @@ static
 LONG BaseExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 {
     LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
+    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
 
-    if (GlobalTopLevelExceptionFilter != NULL)
+    if (RealFilter != NULL)
     {
         _SEH2_TRY
         {
-            ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
+            ExceptionDisposition = RealFilter(ExceptionInfo);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -62,7 +64,7 @@ LONG BaseExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
         _SEH2_END;
     }
     if ((ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH || ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER) &&
-        GlobalTopLevelExceptionFilter != UnhandledExceptionFilter)
+        RealFilter != UnhandledExceptionFilter)
     {
        ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
     }

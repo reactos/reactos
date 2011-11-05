@@ -29,12 +29,14 @@ static
 LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
 {
    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-
-   if (GlobalTopLevelExceptionFilter != NULL)
+   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+   RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+   
+   if (RealFilter != NULL)
    {
       _SEH2_TRY
       {
-         ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
+         ExceptionDisposition = RealFilter(ExceptionInfo);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {

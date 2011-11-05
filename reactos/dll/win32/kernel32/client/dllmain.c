@@ -209,6 +209,9 @@ DllMain(HANDLE hDll,
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+        
+        /* Set no filter intially */
+        GlobalTopLevelExceptionFilter = RtlEncodePointer(NULL);
 
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);
