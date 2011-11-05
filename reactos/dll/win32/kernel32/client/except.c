@@ -88,7 +88,7 @@ PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
     _dump_context (ContextRecord);
     _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
-    DbgPrint("Address:\n   %8x+%-8x   %s\n", 
+    DbgPrint("Address:\n   %8x+%-8x   %s\n",
              (PVOID)StartAddr,
              (ULONG_PTR)ExceptionRecord->ExceptionAddress - (ULONG_PTR)StartAddr,
              szMod);
@@ -242,6 +242,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ULONG_PTR ErrorParameters[4];
    ULONG ErrorResponse;
    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
 
    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
        ExceptionRecord->NumberParameters >= 2)
@@ -278,7 +279,6 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       return EXCEPTION_CONTINUE_SEARCH;
    }
 
-   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
    if (RealFilter)
    {
@@ -436,7 +436,7 @@ WINAPI
 SetUnhandledExceptionFilter(IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
     PVOID EncodedPointer, NewPointer;
-    
+
     EncodedPointer = RtlEncodePointer(lpTopLevelExceptionFilter);
     NewPointer = InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
                                             EncodedPointer);
@@ -475,7 +475,7 @@ IsBadReadPtr(IN LPCVOID lp,
     {
         /* Do an initial probe */
         *Current;
-        
+
         /* Align the addresses */
         Current = (volatile CHAR *)ROUND_DOWN(Current, PageSize);
         Last = (PCHAR)ROUND_DOWN(Last, PageSize);
@@ -553,7 +553,7 @@ IsBadWritePtr(IN LPVOID lp,
     {
         /* Do an initial probe */
         *Current = *Current;
-        
+
         /* Align the addresses */
         Current = (volatile CHAR *)ROUND_DOWN(Current, PageSize);
         Last = (PCHAR)ROUND_DOWN(Last, PageSize);
