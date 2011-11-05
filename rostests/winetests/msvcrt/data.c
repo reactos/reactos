@@ -34,6 +34,8 @@
 typedef void (__cdecl *_INITTERMFUN)(void);
 static void (__cdecl *p_initterm)(_INITTERMFUN *start, _INITTERMFUN *end);
 
+static int (__cdecl *p_get_pgmptr)(char **p);
+
 static int callbacked;
 
 static void __cdecl initcallback(void)
@@ -108,6 +110,20 @@ static void test_initvar( HMODULE hmsvcrt )
             osplatform, osvi.dwPlatformId);
 }
 
+static void test_get_pgmptr(void)
+{
+    char *pgm = NULL;
+    int res;
+
+    if (!p_get_pgmptr)
+        return;
+
+    res = p_get_pgmptr(&pgm);
+
+    ok( res == 0, "Wrong _get_pgmptr return value %d expected 0\n", res);
+    ok( pgm != NULL, "_get_pgmptr returned a NULL pointer\n" );
+}
+
 START_TEST(data)
 {
     HMODULE hmsvcrt;
@@ -116,7 +132,11 @@ START_TEST(data)
     if (!hmsvcrt)
         hmsvcrt = GetModuleHandleA("msvcrtd.dll");
     if (hmsvcrt)
+    {
         p_initterm=(void*)GetProcAddress(hmsvcrt, "_initterm");
+        p_get_pgmptr=(void*)GetProcAddress(hmsvcrt, "_get_pgmptr");
+    }
     test_initterm();
     test_initvar(hmsvcrt);
+    test_get_pgmptr();
 }

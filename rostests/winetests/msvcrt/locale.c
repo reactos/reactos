@@ -110,31 +110,32 @@ static void test_setlocale(void)
     ret = setlocale(LC_ALL, "chinese");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936")
+        ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936")
         || broken(!strcmp(ret, "Chinese_Taiwan.950")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "chinese-simplified");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936")
-        || broken(!strcmp(ret, "Chinese_People's Republic of China.936")), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936")
+        || broken(!strcmp(ret, "Chinese_People's Republic of China.936"))
+        || broken(!strcmp(ret, "Chinese_Taiwan.950")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "chinese-traditional");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Chinese (Traditional)_Taiwan.950")
+        ok(!strcmp(ret, "Chinese (Traditional)_Taiwan.950")
         || broken(!strcmp(ret, "Chinese_Taiwan.950")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "chs");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936")
+        ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936")
         || broken(!strcmp(ret, "Chinese_People's Republic of China.936")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "cht");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Chinese (Traditional)_Taiwan.950")
+        ok(!strcmp(ret, "Chinese (Traditional)_Taiwan.950")
         || broken(!strcmp(ret, "Chinese_Taiwan.950")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "csy");
@@ -389,12 +390,14 @@ static void test_setlocale(void)
     ret = setlocale(LC_ALL, "italian-swiss");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Italian_Switzerland.1252") || broken(!strcmp(ret, "Italian_Italy.1252")), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Italian_Switzerland.1252")
+        || broken(!strcmp(ret, "Italian_Italy.1252")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "its");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Italian_Switzerland.1252") || broken(!strcmp(ret, "Italian_Italy.1252")), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Italian_Switzerland.1252")
+        || broken(!strcmp(ret, "Italian_Italy.1252")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "japanese");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
@@ -430,30 +433,33 @@ static void test_setlocale(void)
     ret = setlocale(LC_ALL, "non");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok((!strcmp( ret, "Norwegian-Nynorsk_Norway.1252"))
-        || broken(!strcmp(ret, "Norwegian (Bokmål)_Norway.1252"))
-        || broken(!strcmp(ret, "Norwegian_Norway.1252"))
-        || broken(!strcmp(ret, "Norwegian (Nynorsk)_Norway.1252")), "ret = %s\n", ret);
+        ok(!strcmp( ret, "Norwegian-Nynorsk_Norway.1252")
+        || !strcmp(ret, "Norwegian (Nynorsk)_Norway.1252")
+        || broken(!strcmp(ret, "Norwegian (Bokm\xe5l)_Norway.1252"))
+        || broken(!strcmp(ret, "Norwegian_Norway.1252")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "nor");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Norwegian (Bokmål)_Norway.1252")
+        ok(!strcmp(ret, "Norwegian (Bokm\xe5l)_Norway.1252")
+        || !strcmp(ret, "Norwegian (Bokmal)_Norway.1252")
         || broken(!strcmp(ret, "Norwegian_Norway.1252")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "norwegian-bokmal");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Norwegian (Bokmål)_Norway.1252")
+        ok(!strcmp(ret, "Norwegian (Bokm\xe5l)_Norway.1252")
+        || !strcmp(ret, "Norwegian (Bokmal)_Norway.1252")
         || broken(!strcmp(ret, "Norwegian_Norway.1252")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "norwegian-nynorsk");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Norwegian-Nynorsk_Norway.1252")
+        ok(!strcmp(ret, "Norwegian-Nynorsk_Norway.1252")
+        || !strcmp(ret, "Norwegian (Nynorsk)_Norway.1252")
         || broken(!strcmp(ret, "Norwegian_Norway.1252"))
-        || broken(!strcmp(ret, "Norwegian (Nynorsk)_Norway.1252"))
-        || broken(!strcmp(ret, "Norwegian (Bokmål)_Norway.1252")), "ret = %s\n", ret);
+        || broken(!strcmp(ret, "Norwegian (Bokmal)_Norway.1252"))
+        || broken(!strcmp(ret, "Norwegian (Bokm\xe5l)_Norway.1252")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "plk");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
@@ -520,8 +526,8 @@ static void test_setlocale(void)
     ret = setlocale(LC_ALL, "spanish-modern");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        todo_wine ok(!strcmp(ret, "Spanish - Modern Sort_Spain.1252")
-        || broken(!strcmp(ret, "Spanish_Spain.1252")), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Spanish - Modern Sort_Spain.1252")
+           || !strcmp(ret, "Spanish_Spain.1252"), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "sve");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");

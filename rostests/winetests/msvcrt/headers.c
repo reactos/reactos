@@ -260,6 +260,7 @@ static void test_structs(void)
     CHECK_FIELD(_stat64, st_atime);
     CHECK_FIELD(_stat64, st_mtime);
     CHECK_FIELD(_stat64, st_ctime);
+    CHECK_SIZE(_CRT_FLOAT);
 }
 
 /************* Checking defines ***************/
@@ -339,6 +340,8 @@ static void test_defines(void)
     CHECK_DEF(_FREEENTRY);
     CHECK_DEF(_USEDENTRY);
     CHECK_DEF(_OUT_TO_DEFAULT);
+    CHECK_DEF(_OUT_TO_STDERR);
+    CHECK_DEF(_OUT_TO_MSGBOX);
     CHECK_DEF(_REPORT_ERRMODE);
     CHECK_DEF(_UPPER);
     CHECK_DEF(_LOWER);
@@ -425,7 +428,11 @@ static void test_defines(void)
     CHECK_DEF(_FPE_STACKOVERFLOW);
     CHECK_DEF(_FPE_STACKUNDERFLOW);
     CHECK_DEF(_FPE_EXPLICITGEN);
-#ifdef __i386__
+    CHECK_DEF(_MCW_EM);
+    CHECK_DEF(_MCW_IC);
+    CHECK_DEF(_MCW_RC);
+    CHECK_DEF(_MCW_PC);
+    CHECK_DEF(_MCW_DN);
     CHECK_DEF(_EM_INVALID);
     CHECK_DEF(_EM_DENORMAL);
     CHECK_DEF(_EM_ZERODIVIDE);
@@ -441,7 +448,16 @@ static void test_defines(void)
     CHECK_DEF(_PC_24);
     CHECK_DEF(_PC_53);
     CHECK_DEF(_PC_64);
-#endif
+    CHECK_DEF(_DN_SAVE);
+    CHECK_DEF(_DN_FLUSH);
+    CHECK_DEF(_DN_FLUSH_OPERANDS_SAVE_RESULTS);
+    CHECK_DEF(_DN_SAVE_OPERANDS_FLUSH_RESULTS);
+    CHECK_DEF(_EM_AMBIGUOUS);
+    CHECK_DEF(_OVERFLOW);
+    CHECK_DEF(_UNDERFLOW);
+    CHECK_DEF(_WRITE_ABORT_MSG);
+    CHECK_DEF(_CALL_REPORTFAULT);
+    CHECK_DEF(_TWO_DIGIT_EXPONENT);
 }
 
 #endif /* __WINE_USE_MSVCRT */

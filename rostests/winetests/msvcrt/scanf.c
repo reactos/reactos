@@ -93,11 +93,14 @@ static void test_sscanf( void )
 
     /* Check float */
     ret = sprintf(buffer,"%f %f",res1, res2);
+    ok( ret == 20, "expected 20, got %u\n", ret);
     ret = sscanf(buffer,"%f%f",&res11, &res12);
+    ok( ret == 2, "expected 2, got %u\n", ret);
     ok( (res11 == res1) && (res12 == res2), "Error reading floats\n");
 
     /* check strings */
     ret = sprintf(buffer," %s", pname);
+    ok( ret == 26, "expected 26, got %u\n", ret);
     ret = sscanf(buffer,"%*c%[^\n]",buffer1);
     ok( ret == 1, "Error with format \"%s\"\n","%*c%[^\n]");
     ok( strncmp(pname,buffer1,strlen(buffer1)) == 0, "Error with \"%s\" \"%s\"\n",pname, buffer1);
@@ -112,6 +115,7 @@ static void test_sscanf( void )
 
     /* check digits */
     ret = sprintf(buffer,"%d:%d:%d",hour,min,sec);
+    ok( ret == 8, "expected 8, got %u\n", ret);
     ret = sscanf(buffer,"%d%n",&number,&number_so_far);
     ok(ret == 1 , "problem with format arg \"%%d%%n\"\n");
     ok(number == hour,"Read wrong arg %d instead of %d\n",number, hour);
