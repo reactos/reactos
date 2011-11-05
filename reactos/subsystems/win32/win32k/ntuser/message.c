@@ -1188,7 +1188,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-    IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
     if ( NULL != Win32Thread &&
          Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
@@ -1198,6 +1197,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             /* Never send messages to exiting threads */
             RETURN( FALSE);
         }
+
+        IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
         /* See if this message type is present in the table */
         MsgMemoryEntry = FindMsgMemory(Msg);
@@ -1268,8 +1269,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
            !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME - Set window hung and add to a list.
-
-    IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
     if (STATUS_TIMEOUT == Status)
     {
@@ -1456,8 +1455,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
                                           Result);
         }
     }
-
-
 
     if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
