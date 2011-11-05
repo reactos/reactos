@@ -88,6 +88,8 @@ static inline int is_pointer_message( UINT message )
         return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
 
+#undef SET
+
 /* DDE message exchange
  *
  * - Session initialization
@@ -1031,6 +1033,48 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
   return TRUE;
 }
 
+/***********************************************************************
+ *		map_wparam_AtoW
+ *
+ * Convert the wparam of an ASCII message to Unicode.
+ */
+static WPARAM
+map_wparam_AtoW( UINT message, WPARAM wparam )
+{
+    switch(message)
+    {
+    case WM_CHARTOITEM:
+    case EM_SETPASSWORDCHAR:
+    case WM_CHAR:
+    case WM_DEADCHAR:
+    case WM_SYSCHAR:
+    case WM_SYSDEADCHAR:
+    case WM_MENUCHAR:
+        {
+            char ch[2];
+            WCHAR wch[2];
+            ch[0] = (wparam & 0xff);
+            ch[1] = (wparam >> 8);
+            MultiByteToWideChar(CP_ACP, 0, ch, 2, wch, 2);
+            wparam = MAKEWPARAM(wch[0], wch[1]);
+        }
+        break;
+    case WM_IME_CHAR:
+        {
+            char ch[2];
+            WCHAR wch;
+            ch[0] = (wparam >> 8);
+            ch[1] = (wparam & 0xff);
+            if (ch[0]) MultiByteToWideChar(CP_ACP, 0, ch, 2, &wch, 1);
+            else MultiByteToWideChar(CP_ACP, 0, &ch[1], 1, &wch, 1);
+            wparam = MAKEWPARAM( wch, HIWORD(wparam) );
+        }
+        break;
+    }
+    return wparam;
+}
+
+
 /*
  * @implemented
  */
@@ -1064,7 +1108,7 @@ GetMessageTime(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1083,7 +1127,7 @@ InSendMessage(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
@@ -1131,6 +1175,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
+  ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
   DWORD Hit = 0, Data = 0;
@@ -1139,6 +1184,14 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   {
       WARN("IntCallWindowsProcW() called with WndProc = NULL!\n");
       return FALSE;
+  }
+
+  // Safeguard against excessive recursions.
+  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
+  {
+     ERR("IntCallWindowsProcW() Exceeded Stack!\n");
+     return FALSE;
   }
 
   if (pWnd)
@@ -1286,6 +1339,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
+  ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
   DWORD Hit = 0, Data = 0;
@@ -1294,6 +1348,13 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   {
       WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");
       return FALSE;
+  }
+
+  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
+  {
+     ERR("IntCallWindowsProcA() Exceeded Stack!\n");
+     return FALSE;
   }
 
   if (pWnd)
@@ -1751,7 +1812,6 @@ DispatchMessageW(CONST MSG *lpmsg)
     return Ret;
 }
 
-
 static VOID
 IntConvertMsgToAnsi(LPMSG lpMsg)
 {
@@ -1793,9 +1853,9 @@ GetMessageA(LPMSG lpMsg,
 
   Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
-    {
+  {
       return Res;
-    }
+  }
 
   IntConvertMsgToAnsi(lpMsg);
 
@@ -1821,9 +1881,9 @@ GetMessageW(LPMSG lpMsg,
 
   Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
-    {
+  {
       return Res;
-    }
+  }
 
   return Res;
 }
@@ -1879,9 +1939,11 @@ PeekMessageA(LPMSG lpMsg,
 
   Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
-    {
+  {
       return FALSE;
-    }
+  }
+
+  IntConvertMsgToAnsi(lpMsg);
 
   return Res;
 }
@@ -1903,9 +1965,9 @@ PeekMessageW(
 
   Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
-    {
+  {
       return FALSE;
-    }
+  }
 
   return Res;
 }
@@ -2062,7 +2124,7 @@ SendMessageW(HWND Wnd,
      return 0;
   }
 
-  if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  if (Wnd != HWND_TOPMOST && Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(Wnd);
 
@@ -2127,7 +2189,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
      return 0;
   }
 
-  if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  if (Wnd != HWND_TOPMOST && Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(Wnd);
 
@@ -2291,7 +2353,8 @@ SendMessageTimeoutA(
   
   if (lpdwResult) *lpdwResult = 0;
 
-  if (hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  //// This is due to message system bug.
+  if (hWnd != HWND_TOPMOST && hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(hWnd);
 
@@ -2306,6 +2369,7 @@ SendMessageTimeoutA(
           return TRUE;
       }
   }
+  ////
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
@@ -2366,7 +2430,8 @@ SendMessageTimeoutW(
   
   if (lpdwResult) *lpdwResult = 0;
 
-  if (hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  //// This is due to message system bug.
+  if (hWnd != HWND_TOPMOST && hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
       Window = ValidateHwnd(hWnd);
 
@@ -2381,6 +2446,7 @@ SendMessageTimeoutW(
           return TRUE;
       }
   }
+  ////
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
@@ -2611,6 +2677,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
   MSG KMMsg, UMMsg;
   PWND pWnd = NULL;
+  ULONG_PTR LowLimit;
   PCLIENTINFO pci = GetWin32ClientInfo();
 
   /* Make sure we don't try to access mem beyond what we were given */
@@ -2618,6 +2685,13 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
       return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+  if (((ULONG_PTR)&ArgumentLength - LowLimit) < PAGE_SIZE )
+  {
+     ERR("Callback from Win32k Exceeded Stack!\n");
+     return STATUS_BAD_STACK;
+  }
 
   CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS) Arguments;
   KMMsg.hwnd = CallbackArgs->Wnd;
@@ -2912,47 +2986,6 @@ VOID FASTCALL MessageCleanup(VOID)
 {
   DeleteCriticalSection(&DdeCrst);
   DeleteCriticalSection(&gcsMPH);
-}
-
-/***********************************************************************
- *		map_wparam_AtoW
- *
- * Convert the wparam of an ASCII message to Unicode.
- */
-static WPARAM
-map_wparam_AtoW( UINT message, WPARAM wparam )
-{
-    switch(message)
-    {
-    case WM_CHARTOITEM:
-    case EM_SETPASSWORDCHAR:
-    case WM_CHAR:
-    case WM_DEADCHAR:
-    case WM_SYSCHAR:
-    case WM_SYSDEADCHAR:
-    case WM_MENUCHAR:
-        {
-            char ch[2];
-            WCHAR wch[2];
-            ch[0] = (wparam & 0xff);
-            ch[1] = (wparam >> 8);
-            MultiByteToWideChar(CP_ACP, 0, ch, 2, wch, 2);
-            wparam = MAKEWPARAM(wch[0], wch[1]);
-        }
-        break;
-    case WM_IME_CHAR:
-        {
-            char ch[2];
-            WCHAR wch;
-            ch[0] = (wparam >> 8);
-            ch[1] = (wparam & 0xff);
-            if (ch[0]) MultiByteToWideChar(CP_ACP, 0, ch, 2, &wch, 1);
-            else MultiByteToWideChar(CP_ACP, 0, &ch[1], 1, &wch, 1);
-            wparam = MAKEWPARAM( wch, HIWORD(wparam) );
-        }
-        break;
-    }
-    return wparam;
 }
 
 /*

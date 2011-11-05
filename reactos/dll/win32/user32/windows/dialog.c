@@ -45,6 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
+#define DLG_ISANSI 2
 void WINAPI WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
@@ -163,11 +164,11 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
            return NULL;
        }
     }
-    else
+    if (dlgInfo)
     {
         if (!(pWindow->state & WNDS_DIALOGWINDOW) || pWindow->fnid != FNID_DIALOG)
         {
-           ERR("Wrong window class for Dialog!\n");
+           ERR("Wrong window class for Dialog! fnId 0x%x\n", pWindow->fnid);
            return NULL;
         }
     }
@@ -264,11 +265,14 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         /* Windows treats dialog control class ids 0-5 same way as 0x80-0x85 */
         if ((id >= 0x80) && (id <= 0x85)) id -= 0x80;
         if (id <= 5)
+        {
             info->className = class_names[id];
+        }
         else
         {
             info->className = NULL;
             /* FIXME: load other classes here? */
+            ERR("Unknown built-in class id %04x\n", id );
         }
         p += 2;
     }
@@ -299,6 +303,11 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->windowNameFree = FALSE;
         p += strlenW( info->windowName ) + 1;
     }
+
+    TRACE("    %s %s %ld, %d, %d, %d, %d, %08x, %08x, %08x\n",
+          debugstr_w( info->className ), debugstr_w( info->windowName ),
+          info->id, info->x, info->y, info->cx, info->cy,
+          info->style, info->exStyle, info->helpId );
 
     if (GET_WORD(p))
     {
@@ -339,6 +348,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             info.style &= ~WS_BORDER;
             info.exStyle |= WS_EX_CLIENTEDGE;
         }
+
         if (unicode)
         {
             hwndCtrl = CreateWindowExW( info.exStyle | WS_EX_NOPARENTNOTIFY,
@@ -1147,8 +1157,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
     {
         case WM_ERASEBKGND:
         {
-            HBRUSH brush = (HBRUSH)SendMessageW( hwnd, WM_CTLCOLORDLG, wParam, (LPARAM)hwnd );
-            if (!brush) brush = (HBRUSH)DefWindowProcW( hwnd, WM_CTLCOLORDLG, wParam, (LPARAM)hwnd );
+            HBRUSH brush = GetControlColor( hwnd, hwnd, (HDC)wParam, WM_CTLCOLORDLG);
             if (brush)
             {
                 RECT rect;
@@ -1247,12 +1256,17 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
 /***********************************************************************
  *           DEFDLG_Epilog
  */
-static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, BOOL fResult)
+static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL fResult, BOOL fAnsi)
 {
-
-    // TODO: where's wine's WM_CTLCOLOR from?
     if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
-         msg == WM_CTLCOLOR || msg == WM_COMPAREITEM ||
+         msg == WM_CTLCOLOR)
+       {
+          if (fResult) return fResult;
+
+          return fAnsi ? DefWindowProcA(hwnd, msg, wParam, lParam):
+                         DefWindowProcW(hwnd, msg, wParam, lParam);
+       }
+    if ( msg == WM_COMPAREITEM ||
          msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
          msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
         return fResult;
@@ -1519,7 +1533,7 @@ CreateDialogIndirectParamAorW(
  *   Also wine has one more parameter identifying weather it should call
  *   the function with unicode or not
  */
-  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , !Flags, FALSE );
+  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , Flags == DLG_ISANSI ? FALSE : TRUE, FALSE );
 }
 
 
@@ -1535,7 +1549,7 @@ CreateDialogIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
-  return CreateDialogIndirectParamAorW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, 2 );
+  return CreateDialogIndirectParamAorW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, DLG_ISANSI);
 }
 
 
@@ -1653,7 +1667,7 @@ DefDlgProcA(
                  return DefWindowProcA( hDlg, Msg, wParam, lParam );
         }
     }
-    return DEFDLG_Epilog(hDlg, Msg, result);
+    return DEFDLG_Epilog(hDlg, Msg, wParam, lParam, result, TRUE);
 }
 
 
@@ -1713,7 +1727,7 @@ DefDlgProcW(
                  return DefWindowProcW( hDlg, Msg, wParam, lParam );
         }
     }
-    return DEFDLG_Epilog(hDlg, Msg, result);
+    return DEFDLG_Epilog(hDlg, Msg, wParam, lParam, result, FALSE);
 }
 
 
@@ -1735,7 +1749,7 @@ DialogBoxIndirectParamAorW(
  *  Also wine has one more parameter identifying weather it should call
  *  the function with unicode or not
  */
-  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, !Flags, TRUE );
+  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, Flags == DLG_ISANSI ? FALSE : TRUE, TRUE );
   if (hWnd) return DIALOG_DoDialogBox( hWnd, hWndParent );
   return -1;
 }
@@ -1753,7 +1767,7 @@ DialogBoxIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
-  return DialogBoxIndirectParamAorW( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, 2);
+  return DialogBoxIndirectParamAorW( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, DLG_ISANSI);
 }
 
 
@@ -2063,6 +2077,7 @@ GetDlgItem(
     for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
     ret = list[i];
     HeapFree(GetProcessHeap(), 0, list);
+//    if (!ret) SetLastError(ERROR_CONTROL_ID_NOT_FOUND);
     return ret;
 }
 
