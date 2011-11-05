@@ -92,6 +92,7 @@ add_importlibs(shell32
     user32
     comctl32
     comdlg32
+    shdocvw
     shlwapi
     devmgr
     winspool
@@ -99,6 +100,8 @@ add_importlibs(shell32
     msvcrt
     kernel32
     ntdll)
+
+add_dependencies(shdocvw shdocvw_v1)
 
 add_pch(shell32 precomp.h)
 

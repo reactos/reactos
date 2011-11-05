@@ -41,6 +41,9 @@ it from the view by handling the IncludeObject query to return S_FALSE. The enum
 always shows My Computer.
 */
 
+/* Undocumented functions from shdocvw */
+extern "C" HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpszDisplayName, LPBC pbc, LPITEMIDLIST *ppidl);
+
 /***********************************************************************
 *     Desktopfolder implementation
 */
@@ -296,6 +299,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
     WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
     LPITEMIDLIST pidlTemp = NULL;
+    PARSEDURLW urldata;
     HRESULT hr = S_OK;
     CLSID clsid;
 
@@ -316,6 +320,8 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
 
     if (pchEaten)
         *pchEaten = 0;        /* strange but like the original */
+
+    urldata.cbSize = sizeof(urldata);
 
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
     {
@@ -340,6 +346,17 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
         *ppidl = pidlTemp;
         return S_OK;
     }
+    else if (SUCCEEDED(ParseURLW(lpszDisplayName, &urldata)))
+    {
+        if (urldata.nScheme == URL_SCHEME_SHELL) /* handle shell: urls */
+        {
+            TRACE ("-- shell url: %s\n", debugstr_w(urldata.pszSuffix));
+            SHCLSIDFromStringW (urldata.pszSuffix+2, &clsid);
+            pidlTemp = _ILCreateGuid (PT_GUID, clsid);
+        }
+        else
+            return IEParseDisplayNameWithBCW(CP_ACP,lpszDisplayName,pbc,ppidl);
+    }
     else
     {
         /* it's a filesystem path on the desktop. Let a FSFolder parse it */
@@ -356,6 +373,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
             {
                 lstrcpynW(pathPtr, lpszDisplayName, MAX_PATH - (pathPtr - szPath));
                 hr = _ILCreateFromPathW(szPath, &pidlTemp);
+				__debugbreak();
             }
             else
             {
