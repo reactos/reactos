@@ -141,6 +141,7 @@ static HRESULT activate_inplace(WebBrowser *This, IOleClientSite *active_site)
 
     IOleInPlaceSite_OnInPlaceActivate(This->inplace);
 
+    This->frameinfo.cb = sizeof(OLEINPLACEFRAMEINFO);
     IOleInPlaceSite_GetWindowContext(This->inplace, &This->doc_host.frame, &This->uiwindow,
                                      &This->pos_rect, &This->clip_rect,
                                      &This->frameinfo);
