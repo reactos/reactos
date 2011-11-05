@@ -20,6 +20,7 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
+	<library>shdocvw</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
 	<library>version</library>

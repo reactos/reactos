@@ -373,7 +373,6 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
             {
                 lstrcpynW(pathPtr, lpszDisplayName, MAX_PATH - (pathPtr - szPath));
                 hr = _ILCreateFromPathW(szPath, &pidlTemp);
-				__debugbreak();
             }
             else
             {
