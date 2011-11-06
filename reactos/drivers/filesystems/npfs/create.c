@@ -191,6 +191,8 @@ NpfsOpenFileSystem(PNPFS_FCB Fcb,
         return;
     }
 
+    Ccb->FileObject = FileObject;
+
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = Ccb;
 
@@ -216,6 +218,8 @@ NpfsOpenRootDirectory(PNPFS_FCB Fcb,
         IoStatus->Status = STATUS_NO_MEMORY;
         return;
     }
+
+    Ccb->FileObject = FileObject;
 
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = Ccb;
@@ -336,6 +340,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         return STATUS_NO_MEMORY;
     }
 
+    ClientCcb->FileObject = FileObject;
     ClientCcb->Thread = (struct ETHREAD *)Irp->Tail.Overlay.Thread;
     ClientCcb->PipeEnd = FILE_PIPE_CLIENT_END;
 #ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
@@ -718,6 +723,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     Fcb->CurrentInstances++;
 
     Ccb->Fcb = Fcb;
+    Ccb->FileObject = FileObject;
     Ccb->PipeEnd = FILE_PIPE_SERVER_END;
     Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
 

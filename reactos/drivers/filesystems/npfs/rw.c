@@ -374,11 +374,11 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
             Context->WaitEvent = &Event;
             ExReleaseFastMutex(&Ccb->DataListLock);
             Status = KeWaitForSingleObject(&Event,
-                Executive,
+                UserRequest,
                 Irp->RequestorMode,
-                FALSE,
+                (FileObject->Flags & FO_ALERTABLE_IO),
                 NULL);
-            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
             {
                 Status = STATUS_CANCELLED;
                 goto done;
@@ -468,11 +468,11 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     Status = KeWaitForSingleObject(&Ccb->ReadEvent,
                         UserRequest,
                         Irp->RequestorMode,
-                        FALSE,
+                        (FileObject->Flags & FO_ALERTABLE_IO),
                         NULL);
                     DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
 
-                    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+                    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
                     {
                         Status = STATUS_CANCELLED;
                         break;
@@ -841,11 +841,11 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             Status = KeWaitForSingleObject(&Ccb->WriteEvent,
                 UserRequest,
                 Irp->RequestorMode,
-                FALSE,
+                (FileObject->Flags & FO_ALERTABLE_IO),
                 NULL);
             DPRINT("Write Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
 
-            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
             {
                 Status = STATUS_CANCELLED;
                 goto done;

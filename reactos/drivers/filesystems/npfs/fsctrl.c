@@ -186,7 +186,7 @@ NpfsConnectPipe(PIRP Irp,
         KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
             Irp->RequestorMode,
-            FALSE,
+            (Flags & FO_ALERTABLE_IO),
             NULL);
     }
 
@@ -405,8 +405,8 @@ NpfsWaitPipe(PIRP Irp,
 
      Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
                                     UserRequest,
-                                    KernelMode,
-                                    TRUE,
+                                    Irp->RequestorMode,
+                                    (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
                                     TimeOut);
 
     DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
@@ -523,8 +523,8 @@ NpfsWaitPipe2(PIRP Irp,
     /* Wait for one */
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
         UserRequest,
-        KernelMode,
-        FALSE,
+        Irp->RequestorMode,
+        (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
         &TimeOut);
 
     DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
