@@ -373,20 +373,11 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
             KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
             Context->WaitEvent = &Event;
             ExReleaseFastMutex(&Ccb->DataListLock);
-            Status = KeWaitForSingleObject(&Event,
-                UserRequest,
-                Irp->RequestorMode,
-                (FileObject->Flags & FO_ALERTABLE_IO),
+            KeWaitForSingleObject(&Event,
+                Executive,
+                KernelMode,
+                FALSE,
                 NULL);
-            if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
-            {
-                Status = STATUS_CANCELLED;
-                goto done;
-            }
-            if (!NT_SUCCESS(Status))
-            {
-                ASSERT(FALSE);
-            }
             ExAcquireFastMutex(&Ccb->DataListLock);
         }
         Irp->IoStatus.Information = 0;
@@ -661,9 +652,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Status = Status;
 
         ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
-
-        if (Status == STATUS_CANCELLED)
-            goto done;
 
         if (IoIsOperationSynchronous(Irp))
         {

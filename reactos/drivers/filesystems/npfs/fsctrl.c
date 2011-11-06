@@ -183,11 +183,13 @@ NpfsConnectPipe(PIRP Irp,
 
     if (Flags & FO_SYNCHRONOUS_IO)
     {
-        KeWaitForSingleObject(&Ccb->ConnectEvent,
+        Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
             Irp->RequestorMode,
             (Flags & FO_ALERTABLE_IO),
             NULL);
+        if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
+            Status = STATUS_CANCELLED;
     }
 
     DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
@@ -403,11 +405,13 @@ NpfsWaitPipe(PIRP Irp,
         TimeOut = NULL;
     }
 
-     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
-                                    UserRequest,
-                                    Irp->RequestorMode,
-                                    (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
-                                    TimeOut);
+    Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
+                                   UserRequest,
+                                   Irp->RequestorMode,
+                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
+                                   TimeOut);
+    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
+        Status = STATUS_CANCELLED;
 
     DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
 
@@ -526,6 +530,8 @@ NpfsWaitPipe2(PIRP Irp,
         Irp->RequestorMode,
         (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
         &TimeOut);
+    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
+        Status = STATUS_CANCELLED;
 
     DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
 
