@@ -132,7 +132,7 @@ QueryInformationJobObject(IN HANDLE hJob,
         ExpectedSize = sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION);
         JobInfo = &LocalInfo;
     }
-    else if (JobObjectInformationClass == JobObjectBasicLimitInformation)
+    else if (JobObjectInformationClass == JobObjectExtendedLimitInformation)
     {
         ExpectedSize = sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION);
         JobInfo = &LocalInfo;
@@ -226,7 +226,7 @@ SetInformationJobObject(IN HANDLE hJob,
         ExpectedSize = sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION);
         JobInfo = &LocalInfo;
     }
-    else if (JobObjectInformationClass == JobObjectBasicLimitInformation)
+    else if (JobObjectInformationClass == JobObjectExtendedLimitInformation)
     {
         ExpectedSize = sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION);
         JobInfo = &LocalInfo;
