@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "wine/test.h"
 #include "windef.h"
@@ -235,8 +236,7 @@ static void test_DefineDosDeviceA(void)
 
     /* Test with trailing '\' appended to TargetPath */
     dwMaskPrev = GetLogicalDrives();
-    strcpy_s(Buffer, MAX_PATH, Target);
-    strcat_s(Buffer, MAX_PATH, "\\\\\\");
+    snprintf(Buffer, sizeof(Buffer), "%s\\\\\\", Target);
     Result = DefineDosDeviceA(0, SUBST_DRIVE, Buffer);
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
@@ -256,9 +256,7 @@ static void test_DefineDosDeviceA(void)
 
     /* Test with trailing '\' appended to TargetPath and DDD_RAW_TARGET_PATH flag */
     dwMaskPrev = GetLogicalDrives();
-    strcpy_s(Buffer, MAX_PATH, "\\??\\");
-    strcat_s(Buffer, MAX_PATH, Target);
-    strcat_s(Buffer, MAX_PATH, "\\\\\\");
+    snprintf(Buffer, sizeof(Buffer), "\\??\\%s\\\\\\", Target);
     Result = DefineDosDeviceA(DDD_RAW_TARGET_PATH, SUBST_DRIVE, Buffer);
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
