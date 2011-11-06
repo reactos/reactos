@@ -28,10 +28,10 @@ BasepIsCurDirAllowedForPlainExeNames(VOID)
     UNICODE_STRING EmptyString;
 
     RtlInitEmptyUnicodeString(&EmptyString, NULL, 0);
-    Status = RtlQueryEnvironmentVariable_U(0,
+    Status = RtlQueryEnvironmentVariable_U(NULL,
                                            &NoDefaultCurrentDirectoryInExePath,
                                            &EmptyString);
-    return NT_SUCCESS(Status);
+    return !NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL;
 }
 
 /*
@@ -45,7 +45,7 @@ SetDllDirectoryW(IN LPCWSTR lpPathName)
 
     if (lpPathName)
     {
-        if (wcschr(lpPathName, ';'))
+        if (wcschr(lpPathName, L';'))
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
@@ -53,12 +53,12 @@ SetDllDirectoryW(IN LPCWSTR lpPathName)
         if (!RtlCreateUnicodeString(&DllDirectory, lpPathName))
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return 0;
+            return FALSE;
         }
     }
     else
     {
-        RtlInitUnicodeString(&DllDirectory, 0);
+        RtlInitUnicodeString(&DllDirectory, NULL);
     }
 
     RtlEnterCriticalSection(&BaseDllDirectoryLock);
@@ -69,7 +69,7 @@ SetDllDirectoryW(IN LPCWSTR lpPathName)
     RtlLeaveCriticalSection(&BaseDllDirectoryLock);
 
     RtlFreeUnicodeString(&OldDirectory);
-    return 1;
+    return TRUE;
 }
 
 /*
@@ -102,12 +102,12 @@ SetDllDirectoryA(IN LPCSTR lpPathName)
         if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
-            return 0;
+            return FALSE;
         }
     }
     else
     {
-        RtlInitUnicodeString(&DllDirectory, 0);
+        RtlInitUnicodeString(&DllDirectory, NULL);
     }
 
     RtlEnterCriticalSection(&BaseDllDirectoryLock);
@@ -118,7 +118,7 @@ SetDllDirectoryA(IN LPCSTR lpPathName)
     RtlLeaveCriticalSection(&BaseDllDirectoryLock);
 
     RtlFreeUnicodeString(&OldDirectory);
-    return 1;
+    return TRUE;
 }
 
 /*
@@ -132,11 +132,11 @@ GetDllDirectoryW(IN DWORD nBufferLength,
     ULONG Length;
 
     RtlEnterCriticalSection(&BaseDllDirectoryLock);
-    
+
     if ((nBufferLength * sizeof(WCHAR)) > BaseDllDirectory.Length)
     {
         RtlCopyMemory(lpBuffer, BaseDllDirectory.Buffer, BaseDllDirectory.Length);
-        Length = BaseDllDirectory.Length  / sizeof(WCHAR);
+        Length = BaseDllDirectory.Length / sizeof(WCHAR);
         lpBuffer[Length] = UNICODE_NULL;
     }
     else
@@ -144,7 +144,7 @@ GetDllDirectoryW(IN DWORD nBufferLength,
         Length = (BaseDllDirectory.Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR);
         if (lpBuffer) *lpBuffer = UNICODE_NULL;
     }
-    
+
     RtlLeaveCriticalSection(&BaseDllDirectoryLock);
     return Length;
 }
@@ -161,7 +161,7 @@ GetDllDirectoryA(IN DWORD nBufferLength,
     ANSI_STRING AnsiDllDirectory;
     ULONG Length;
 
-    RtlInitEmptyAnsiString(&AnsiDllDirectory, lpBuffer, 0);
+    RtlInitEmptyAnsiString(&AnsiDllDirectory, lpBuffer, nBufferLength);
 
     RtlEnterCriticalSection(&BaseDllDirectoryLock);
 
@@ -198,7 +198,7 @@ BOOL
 WINAPI
 NeedCurrentDirectoryForExePathW(IN LPCWSTR ExeName)
 {
-    if (wcschr(ExeName, '\\')) return TRUE;
+    if (wcschr(ExeName, L'\\')) return TRUE;
 
     return BasepIsCurDirAllowedForPlainExeNames();
 }
