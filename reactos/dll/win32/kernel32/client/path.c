@@ -57,7 +57,7 @@ IsShortName_U(IN PWCHAR Name,
     /* Sure, any emtpy name is a short name */
     if (!Length) return TRUE;
 
-    /* This could be . or .. or somethign else */
+    /* This could be . or .. or something else */
     if (*Name == L'.')
     {
         /* Which one is it */
@@ -101,7 +101,7 @@ IsShortName_U(IN PWCHAR Name,
         }
 
         /* Check for illegal characters */
-        if ((c > 0x7F) || (IllegalMask[c / 32] && (1 << (c % 32))))
+        if ((c > 0x7F) || (IllegalMask[c / 32] & (1 << (c % 32))))
         {
             return FALSE;
         }
@@ -171,14 +171,14 @@ FindLFNorSFN_U(IN PWCHAR Path,
     while (TRUE)
     {
         /* Loop within the path skipping slashes */
-        while ((*Path) && ((*Path == L'\\') || (*Path == L'/'))) Path++;
+        while ((*Path == L'\\') || (*Path == L'/')) Path++;
 
         /* Make sure there's something after the slashes too! */
         if (*Path == UNICODE_NULL) break;
 
-        /* Now do the same thing with the last marker */
+        /* Now skip past the file name until we get to the first slash */
         p = Path + 1;
-        while ((*p) && ((*p == L'\\') || (*p == L'/'))) p++;
+        while ((*p) && ((*p != L'\\') && (*p != L'/'))) p++;
 
         /* Whatever is in between those two is now the file name length */
         Length = p - Path;
@@ -804,7 +804,7 @@ GetLongPathNameW(IN LPCWSTR lpszShortPath,
     ErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     /* Do a simple check to see if the path exists */
-    if (GetFileAttributesW(lpszShortPath) == 0xFFFFFFF)
+    if (GetFileAttributesW(lpszShortPath) == INVALID_FILE_ATTRIBUTES)
     {
         /* It doesn't, so fail */
         ReturnLength = 0;
@@ -1111,7 +1111,7 @@ GetShortPathNameA(IN LPCSTR lpszLongPath,
         }
         else
         {
-            PathLength = GetLongPathNameW(LongPathUni.Buffer, ShortPath, PathLength);
+            PathLength = GetShortPathNameW(LongPathUni.Buffer, ShortPath, PathLength);
         }
     }
 
@@ -1183,7 +1183,7 @@ GetShortPathNameW(IN LPCWSTR lpszLongPath,
     ErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     /* Do a simple check to see if the path exists */
-    if (GetFileAttributesW(lpszShortPath) == 0xFFFFFFF)
+    if (GetFileAttributesW(lpszShortPath) == INVALID_FILE_ATTRIBUTES)
     {
         /* Windows checks for an application compatibility flag to allow this */
         if (!(NtCurrentPeb()) || !(NtCurrentPeb()->AppCompatFlags.LowPart & 1))
