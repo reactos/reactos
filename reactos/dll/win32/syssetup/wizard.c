@@ -2263,8 +2263,9 @@ GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
         wcscpy(szBuffer, szDrive);
         wcscat(szBuffer, L"reactos\\system32\\ntoskrnl.exe");
         LogItem(SYSSETUP_SEVERITY_INFORMATION, szBuffer);
-        if (FileExists(szBuffer, NULL))
+        if (GetFileAttributesW(szBuffer) != INVALID_FILE_ATTRIBUTES)
         {
+            /* the file exists, so this is the right drive */
             wcsncpy(szPath, szDrive, dwPathLength);
             return TRUE;
         }
