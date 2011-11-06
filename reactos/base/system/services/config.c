@@ -94,7 +94,7 @@ ScmCreateServiceKey(LPCWSTR lpServiceName,
 
 DWORD
 ScmWriteDependencies(HKEY hServiceKey,
-                     LPWSTR lpDependencies,
+                     LPCWSTR lpDependencies,
                      DWORD dwDependenciesLength)
 {
     DWORD dwError = ERROR_SUCCESS;
@@ -103,7 +103,7 @@ ScmWriteDependencies(HKEY hServiceKey,
     DWORD dwLength;
     LPWSTR lpGroupDeps;
     LPWSTR lpServiceDeps;
-    LPWSTR lpSrc;
+    LPCWSTR lpSrc;
     LPWSTR lpDst;
 
     if (*lpDependencies == 0)

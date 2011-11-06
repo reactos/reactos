@@ -288,14 +288,14 @@ ChangeServiceConfigA(SC_HANDLE hService,
     DWORD dwError;
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
-    LPSTR lpStr;
+    LPCSTR lpStr;
 
     TRACE("ChangeServiceConfigA() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
     {
-        lpStr = (LPSTR)lpDependencies;
+        lpStr = lpDependencies;
         while (*lpStr)
         {
             dwLength = strlen(lpStr) + 1;
@@ -362,14 +362,14 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwError;
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
-    LPWSTR lpStr;
+    LPCWSTR lpStr;
 
     TRACE("ChangeServiceConfigW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
     {
-        lpStr = (LPWSTR)lpDependencies;
+        lpStr = lpDependencies;
         while (*lpStr)
         {
             dwLength = wcslen(lpStr) + 1;
@@ -540,7 +540,7 @@ CreateServiceA(SC_HANDLE hSCManager,
     DWORD dwDependenciesLength = 0;
     DWORD dwError;
     DWORD dwLength;
-    LPSTR lpStr;
+    LPCSTR lpStr;
 
     TRACE("CreateServiceA() called\n");
     TRACE("%p %s %s\n", hSCManager, 
@@ -552,10 +552,10 @@ CreateServiceA(SC_HANDLE hSCManager,
         return NULL;
     }
 
-    /* Calculate the Dependencies length*/
+    /* Calculate the Dependencies length */
     if (lpDependencies != NULL)
     {
-        lpStr = (LPSTR)lpDependencies;
+        lpStr = lpDependencies;
         while (*lpStr)
         {
             dwLength = strlen(lpStr) + 1;
@@ -628,7 +628,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     DWORD dwDependenciesLength = 0;
     DWORD dwError;
     DWORD dwLength;
-    LPWSTR lpStr;
+    LPCWSTR lpStr;
 
     TRACE("CreateServiceW() called\n");
     TRACE("%p %S %S\n", hSCManager, 
@@ -640,10 +640,10 @@ CreateServiceW(SC_HANDLE hSCManager,
         return NULL;
     }
 
-    /* Calculate the Dependencies length*/
+    /* Calculate the Dependencies length */
     if (lpDependencies != NULL)
     {
-        lpStr = (LPWSTR)lpDependencies;
+        lpStr = lpDependencies;
         while (*lpStr)
         {
             dwLength = wcslen(lpStr) + 1;

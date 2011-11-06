@@ -144,16 +144,16 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
     if (_wcsicmp(lpDatabaseName, SERVICES_FAILED_DATABASEW) == 0)
     {
-        DPRINT("Database %S, does not exist\n",lpDatabaseName);
+        DPRINT("Database %S, does not exist\n", lpDatabaseName);
         return ERROR_DATABASE_DOES_NOT_EXIST;
     }
     else if (_wcsicmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
     {
-        DPRINT("Invalid Database name %S.\n",lpDatabaseName);
+        DPRINT("Invalid Database name %S.\n", lpDatabaseName);
         return ERROR_INVALID_NAME;
     }
 
-    Ptr = (MANAGER_HANDLE*) HeapAlloc(GetProcessHeap(),
+    Ptr = HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
                     sizeof(MANAGER_HANDLE) + (wcslen(lpDatabaseName) + 1) * sizeof(WCHAR));
     if (Ptr == NULL)
@@ -175,7 +175,7 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
 {
     PSERVICE_HANDLE Ptr;
 
-    Ptr = (SERVICE_HANDLE*) HeapAlloc(GetProcessHeap(),
+    Ptr = HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
                     sizeof(SERVICE_HANDLE));
     if (Ptr == NULL)
@@ -629,7 +629,7 @@ DWORD RCloseServiceHandle(
                                            &pcbBytesNeeded,
                                            &dwServicesReturned);
 
-                /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service*/
+                /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service */
                 if (pcbBytesNeeded)
                 {
                     DPRINT("Deletion failed due to running dependencies.\n");
@@ -1400,9 +1400,9 @@ DWORD RChangeServiceConfigW(
                        (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
 
         /* Update the display name */
-        lpDisplayNameW = (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                           0,
-                                           (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(),
+                                   0,
+                                   (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpDisplayNameW == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -2083,7 +2083,7 @@ DWORD RCreateServiceW(
         *lpDisplayName != 0 &&
         _wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
     {
-        lpService->lpDisplayName = (WCHAR*) HeapAlloc(GetProcessHeap(), 0,
+        lpService->lpDisplayName = HeapAlloc(GetProcessHeap(), 0,
                                              (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpService->lpDisplayName == NULL)
         {
@@ -2212,7 +2212,7 @@ DWORD RCreateServiceW(
     if (lpDependencies != NULL && *lpDependencies != 0)
     {
         dwError = ScmWriteDependencies(hServiceKey,
-                                       (LPWSTR)lpDependencies,
+                                       (LPCWSTR)lpDependencies,
                                        dwDependSize);
         if (dwError != ERROR_SUCCESS)
             goto done;
@@ -3519,7 +3519,7 @@ DWORD RCreateServiceA(
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
     int len;
-    LPSTR lpStr;
+    LPCSTR lpStr;
 
     if (lpServiceName)
     {
@@ -3571,7 +3571,7 @@ DWORD RCreateServiceA(
 
     if (lpDependencies)
     {
-        lpStr = (LPSTR)lpDependencies;
+        lpStr = (LPCSTR)lpDependencies;
         while (*lpStr)
         {
             dwLength = strlen(lpStr) + 1;
@@ -3586,7 +3586,7 @@ DWORD RCreateServiceA(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
-        MultiByteToWideChar(CP_ACP, 0, (LPSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
+        MultiByteToWideChar(CP_ACP, 0, (LPCSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
     }
 
     if (lpServiceStartName)

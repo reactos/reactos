@@ -191,9 +191,9 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     if (pServiceImage == NULL)
     {
         /* Create a new service image */
-        pServiceImage = (PSERVICE_IMAGE)HeapAlloc(GetProcessHeap(),
-                                                  HEAP_ZERO_MEMORY,
-                                                  sizeof(SERVICE_IMAGE) + ((wcslen(ImagePath.Buffer) + 1) * sizeof(WCHAR)));
+        pServiceImage = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  sizeof(SERVICE_IMAGE) + ((wcslen(ImagePath.Buffer) + 1) * sizeof(WCHAR)));
         if (pServiceImage == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -366,7 +366,7 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
     DPRINT("Service: '%S'\n", lpServiceName);
 
     /* Allocate service entry */
-    lpService = (SERVICE*)HeapAlloc(GetProcessHeap(),
+    lpService = HeapAlloc(GetProcessHeap(),
                           HEAP_ZERO_MEMORY,
                           sizeof(SERVICE) + ((wcslen(lpServiceName) + 1) * sizeof(WCHAR)));
     if (lpService == NULL)
@@ -584,15 +584,17 @@ ScmDeleteRegKey(HKEY hKey, LPCWSTR lpszSubKey)
     {
         /* Find the maximum subkey length so that we can allocate a buffer */
         dwRet = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
-                                                         &dwMaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL);
+                                 &dwMaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL);
         if (!dwRet)
         {
             dwMaxSubkeyLen++;
-            if (dwMaxSubkeyLen > sizeof(szNameBuf)/sizeof(WCHAR))
+            if (dwMaxSubkeyLen > sizeof(szNameBuf) / sizeof(WCHAR))
+            {
                 /* Name too big: alloc a buffer for it */
-                lpszName = HeapAlloc(GetProcessHeap(), 0, dwMaxSubkeyLen*sizeof(WCHAR));
+                lpszName = HeapAlloc(GetProcessHeap(), 0, dwMaxSubkeyLen * sizeof(WCHAR));
+            }
 
-            if(!lpszName)
+            if (!lpszName)
                 dwRet = ERROR_NOT_ENOUGH_MEMORY;
             else
             {
@@ -835,7 +837,7 @@ ScmCheckDriver(PSERVICE Service)
 
     BufferLength = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                    2 * MAX_PATH * sizeof(WCHAR);
-    DirInfo = (OBJECT_DIRECTORY_INFORMATION*) HeapAlloc(GetProcessHeap(),
+    DirInfo = HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
                         BufferLength);
 
@@ -942,9 +944,9 @@ ScmControlService(PSERVICE Service,
     PacketSize = sizeof(SCM_CONTROL_PACKET);
     PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
 
-    ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
-                                                   HEAP_ZERO_MEMORY,
-                                                   PacketSize);
+    ControlPacket = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              PacketSize);
     if (ControlPacket == NULL)
     {
         LeaveCriticalSection(&ControlServiceCriticalSection);
@@ -1171,9 +1173,9 @@ ScmSendStartCommand(PSERVICE Service,
     }
 
     /* Allocate a control packet */
-    ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
-                                                   HEAP_ZERO_MEMORY,
-                                                   PacketSize);
+    ControlPacket = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              PacketSize);
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
