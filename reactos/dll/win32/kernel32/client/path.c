@@ -18,7 +18,241 @@
 UNICODE_STRING BaseDllDirectory;
 UNICODE_STRING NoDefaultCurrentDirectoryInExePath = RTL_CONSTANT_STRING(L"NoDefaultCurrentDirectoryInExePath");
 
+/* This is bitmask for each illegal filename character */
+/* If someone has time, please feel free to use 0b notation */
+DWORD IllegalMask[4] =
+{
+    0xFFFFFFFF, // None allowed (00 to 1F)
+    0xFC009C05, // 20, 22, 2A, 2B, 2C, 2F, 3A, 3B, 3C, 3D, 3E, 3F not allowed
+    0x38000000, // 5B, 5C, 5D not allowed
+    0x10000000  // 7C not allowed
+};
+
 /* FUNCTIONS ******************************************************************/
+
+/*
+ * Why not use RtlIsNameLegalDOS8Dot3? In fact the actual algorithm body is
+ * identical (other than the Rtl can optionally check for spaces), however the
+ * Rtl will always convert to OEM, while kernel32 has two possible file modes
+ * (ANSI or OEM). Therefore we must duplicate the algorithm body to get
+ * the correct compatible results
+ */
+BOOL
+WINAPI
+IsShortName_U(IN PWCHAR Name,
+              IN ULONG Length)
+{
+    BOOLEAN HasExtension;
+    WCHAR c;
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeName;
+    ANSI_STRING AnsiName;
+    ULONG i, Dots;
+    CHAR AnsiBuffer[MAX_PATH];
+    ASSERT(Name);
+
+    /* What do you think 8.3 means? */
+    if (Length > 12) return FALSE;
+
+    /* Sure, any emtpy name is a short name */
+    if (!Length) return TRUE;
+
+    /* This could be . or .. or somethign else */
+    if (*Name == L'.')
+    {
+        /* Which one is it */
+        if ((Length == 1) || ((Length == 2) && *(Name + 1) == L'.'))
+        {
+            /* . or .., this is good */
+            return TRUE;
+        }
+
+        /* Some other bizare dot-based name, not good */
+        return FALSE;
+    }
+
+    /* Initialize our two strings */
+    RtlInitEmptyAnsiString(&AnsiName, AnsiBuffer, MAX_PATH);
+    RtlInitEmptyUnicodeString(&UnicodeName, Name, Length * sizeof(WCHAR));
+    UnicodeName.Length = UnicodeName.MaximumLength;
+
+    /* Now do the conversion */
+    Status = BasepUnicodeStringTo8BitString(&AnsiName, &UnicodeName, FALSE);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Now we loop the name */
+    HasExtension = FALSE;
+    for (i = 0, Dots = Length - 1; i < AnsiName.Length; i++, Dots--)
+    {
+        /* Read the current byte */
+        c = AnsiName.Buffer[i];
+
+        /* Is it DBCS? */
+        if (IsDBCSLeadByte(c))
+        {
+            /* If we're near the end of the string, we can't allow a DBCS */
+            if ((!(HasExtension) && (i >= 7)) || (i == AnsiName.Length - 1))
+            {
+                return FALSE;
+            }
+
+            /* Otherwise we skip over it */
+            continue;
+        }
+
+        /* Check for illegal characters */
+        if ((c > 0x7F) || (IllegalMask[c / 32] && (1 << (c % 32))))
+        {
+            return FALSE;
+        }
+
+        /* Check if this is perhaps an extension? */
+        if (c == L'.')
+        {
+            /* Unless the extension is too large or there's more than one */
+            if ((HasExtension) || (Dots > 3)) return FALSE;
+
+            /* This looks like an extension */
+            HasExtension = TRUE;
+        }
+
+        /* 8.3 length was validated, but now we must guard against 9.2 or similar */
+        if ((i >= 8) && !(HasExtension)) return FALSE;
+    }
+
+    /* You survived the loop, this is a good short name */
+    return TRUE;
+}
+
+BOOL
+WINAPI
+IsLongName_U(IN PWCHAR FileName,
+             IN ULONG Length)
+{
+    BOOLEAN HasExtension;
+    ULONG i, Dots;
+
+    /* More than 8.3, any combination of dots, and NULL names are all long */
+    if (!(Length) || (Length > 12) || (*FileName == L'.')) return TRUE;
+
+    /* Otherwise, initialize our scanning loop */
+    HasExtension = FALSE;
+    for (i = 0, Dots = Length - 1; i < Length; i++, Dots--)
+    {
+        /* Check if this could be an extension */
+        if (*FileName == '.')
+        {
+            /* Unlike the short case, we WANT more than one extension, or a long one */
+            if ((HasExtension) || (Dots > 3)) return TRUE;
+            HasExtension = TRUE;
+        }
+
+        /* Check if this would violate the "8" in 8.3, ie. 9.2 */
+        if ((i >= 8) && (!HasExtension)) return TRUE;
+    }
+
+    /* The name *seems* to conform to 8.3 */
+    return FALSE;
+}
+
+BOOL
+WINAPI
+FindLFNorSFN_U(IN PWCHAR Path,
+               OUT PWCHAR *First,
+               OUT PWCHAR *Last,
+               IN BOOL UseShort)
+{
+    PWCHAR p;
+    ULONG Length;
+    BOOL Found = 0;
+    ASSERT(Path);
+
+    /* Loop while there is something in the path */
+    while (TRUE)
+    {
+        /* Loop within the path skipping slashes */
+        while ((*Path) && ((*Path == L'\\') || (*Path == L'/'))) Path++;
+
+        /* Make sure there's something after the slashes too! */
+        if (*Path == UNICODE_NULL) break;
+
+        /* Now do the same thing with the last marker */
+        p = Path + 1;
+        while ((*p) && ((*p == L'\\') || (*p == L'/'))) p++;
+
+        /* Whatever is in between those two is now the file name length */
+        Length = p - Path;
+
+        /*
+         * Check if it is valid
+         * Note that !IsShortName != IsLongName, these two functions simply help
+         * us determine if a conversion is necessary or not.
+         */
+        Found = UseShort ? IsShortName_U(Path, Length) : IsLongName_U(Path, Length);
+
+        /* "Found" really means: "Is a conversion necessary?", hence the ! */
+        if (!Found)
+        {
+            /* It is! did the caller request to know the markers? */
+            if ((First) && (Last))
+            {
+                /* Return them */
+                *First = Path;
+                *Last = p;
+            }
+            break;
+        }
+
+        /* Is there anything else following this sub-path/filename? */
+        if (*p == UNICODE_NULL) break;
+
+        /* Yes, keep going */
+        Path = p + 1;
+    }
+
+    /* Return if anything was found and valid */
+    return !Found;
+}
+
+PWCHAR
+WINAPI
+SkipPathTypeIndicator_U(IN PWCHAR Path)
+{
+    PWCHAR ReturnPath;
+    ULONG i;
+
+    /* Check what kind of path this is and how many slashes to skip */
+    switch (RtlDetermineDosPathNameType_U(Path))
+    {
+        case RtlPathTypeDriveAbsolute:
+            return Path + 3;
+
+        case RtlPathTypeDriveRelative:
+            return Path + 2;
+
+        case RtlPathTypeRooted:
+            return Path + 1;
+
+        case RtlPathTypeRelative:
+            return Path;
+
+        case RtlPathTypeRootLocalDevice:
+        default:
+            return NULL;
+
+        case RtlPathTypeUncAbsolute:
+        case RtlPathTypeLocalDevice:
+
+            /* Keep going until we bypass the path indicators */
+            for (ReturnPath = Path + 2, i = 2; (i > 0) && (*ReturnPath); ReturnPath++)
+            {
+                /* We look for 2 slashes, so keep at it until we find them */
+                if ((*ReturnPath == L'\\') || (*ReturnPath == L'/')) i--;
+            }
+
+            return ReturnPath;
+    }
+}
 
 BOOL
 WINAPI
@@ -536,108 +770,221 @@ SearchPathW(LPCWSTR lpPath,
     return ret;
 }
 
-/***********************************************************************
+/*
  * @implemented
- *
- *           GetLongPathNameW   (KERNEL32.@)
- *
- * NOTES
- *  observed (Win2000):
- *  shortpath=NULL: LastError=ERROR_INVALID_PARAMETER, ret=0
- *  shortpath="":   LastError=ERROR_PATH_NOT_FOUND, ret=0
  */
-DWORD WINAPI GetLongPathNameW( LPCWSTR shortpath, LPWSTR longpath, DWORD longlen )
+DWORD
+WINAPI
+GetLongPathNameW(IN LPCWSTR lpszShortPath,
+                 IN LPWSTR lpszLongPath,
+                 IN DWORD cchBuffer)
 {
-#define    MAX_PATHNAME_LEN 1024
+    PWCHAR Path, Original, First, Last, Buffer, Src, Dst;
+    ULONG Length;
+    WCHAR LastChar;
+    HANDLE FindHandle;
+    DWORD ReturnLength;
+    ULONG ErrorMode;
+    BOOLEAN Found;
+    WIN32_FIND_DATAW FindFileData;
 
-    WCHAR               tmplongpath[MAX_PATHNAME_LEN];
-    LPCWSTR             p;
-    DWORD               sp = 0, lp = 0;
-    DWORD               tmplen;
-    BOOL                unixabsolute;
-    WIN32_FIND_DATAW    wfd;
-    HANDLE              goit;
+    /* Initialize so Quickie knows there's nothing to do */
+    Buffer = Original = NULL;
+    ReturnLength = 0;
 
-    if (!shortpath)
+    /* First check if the input path was obviously NULL */
+    if (!lpszShortPath)
     {
+        /* Fail the request */
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-    if (!shortpath[0])
+
+    /* We will be touching removed, removable drives -- don't warn the user */
+    ErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+
+    /* Do a simple check to see if the path exists */
+    if (GetFileAttributesW(lpszShortPath) == 0xFFFFFFF)
     {
-        SetLastError(ERROR_PATH_NOT_FOUND);
-        return 0;
+        /* It doesn't, so fail */
+        ReturnLength = 0;
+        goto Quickie;
     }
 
-    DPRINT("GetLongPathNameW(%s,%p,%ld)\n", shortpath, longpath, longlen);
+    /* Now get a pointer to the actual path, skipping indicators */
+    Path = SkipPathTypeIndicator_U((PWCHAR)lpszShortPath);
 
-    if (shortpath[0] == '\\' && shortpath[1] == '\\')
-    {
-        DPRINT1("ERR: UNC pathname %s\n", shortpath);
-        lstrcpynW( longpath, shortpath, longlen );
-        return wcslen(longpath);
-    }
-    unixabsolute = (shortpath[0] == '/');
-    /* check for drive letter */
-    if (!unixabsolute && shortpath[1] == ':' )
-    {
-        tmplongpath[0] = shortpath[0];
-        tmplongpath[1] = ':';
-        lp = sp = 2;
-    }
+    /* Try to find a file name in there */
+    if (Path) Found = FindLFNorSFN_U(Path, &First, &Last, FALSE);
 
-    while (shortpath[sp])
+    /* Is there any path or filename in there? */
+    if (!(Path) || (*Path == UNICODE_NULL) || !(Found))
     {
-        /* check for path delimiters and reproduce them */
-        if (shortpath[sp] == '\\' || shortpath[sp] == '/')
+        /* There isn't, so the long path is simply the short path */
+        ReturnLength = wcslen(lpszShortPath);
+
+        /* Is there space for it? */
+        if ((cchBuffer > ReturnLength) && (lpszLongPath))
         {
-            if (!lp || tmplongpath[lp-1] != '\\')
+            /* Make sure the pointers aren't already the same */
+            if (lpszLongPath != lpszShortPath)
             {
-                /* strip double "\\" */
-                tmplongpath[lp++] = '\\';
+                /* They're not -- copy the short path into the long path */
+                RtlMoveMemory(lpszLongPath,
+                              lpszShortPath,
+                              ReturnLength * sizeof(WCHAR) + sizeof(UNICODE_NULL));
             }
-            tmplongpath[lp] = 0; /* terminate string */
-            sp++;
-            continue;
         }
-
-        p = shortpath + sp;
-        if (sp == 0 && p[0] == '.' && (p[1] == '/' || p[1] == '\\'))
+        else
         {
-            tmplongpath[lp++] = *p++;
-            tmplongpath[lp++] = *p++;
+            /* Otherwise, let caller know we need a bigger buffer, include NULL */
+            ReturnLength++;
         }
-        for (; *p && *p != '/' && *p != '\\'; p++);
-        tmplen = p - (shortpath + sp);
-        lstrcpynW(tmplongpath + lp, shortpath + sp, tmplen + 1);
-        /* Check if the file exists and use the existing file name */
-        goit = FindFirstFileW(tmplongpath, &wfd);
-        if (goit == INVALID_HANDLE_VALUE)
-        {
-            DPRINT("not found %s!\n", tmplongpath);
-            SetLastError ( ERROR_FILE_NOT_FOUND );
-            return 0;
-        }
-        FindClose(goit);
-        wcscpy(tmplongpath + lp, wfd.cFileName);
-        lp += wcslen(tmplongpath + lp);
-        sp += tmplen;
+        goto Quickie;
     }
-    tmplen = wcslen(shortpath) - 1;
-    if ((shortpath[tmplen] == '/' || shortpath[tmplen] == '\\') &&
-        (tmplongpath[lp - 1] != '/' && tmplongpath[lp - 1] != '\\'))
-        tmplongpath[lp++] = shortpath[tmplen];
-    tmplongpath[lp] = 0;
 
-    tmplen = wcslen(tmplongpath) + 1;
-    if (tmplen <= longlen)
+    /* We are still in the game -- compute the current size */
+    Length = wcslen(lpszShortPath) + sizeof(ANSI_NULL);
+    Original = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+    if (!Original) goto ErrorQuickie;
+
+    /* Make a copy ofi t */
+    RtlMoveMemory(Original, lpszShortPath, Length * sizeof(WCHAR));
+
+    /* Compute the new first and last markers */
+    First = &Original[First - lpszShortPath];
+    Last = &Original[Last - lpszShortPath];
+
+    /* Set the current destination pointer for a copy */
+    Dst = lpszLongPath;
+
+    /*
+     * Windows allows the paths to overlap -- we have to be careful with this and
+     * see if it's same to do so, and if not, allocate our own internal buffer
+     * that we'll return at the end.
+     *
+     * This is also why we use RtlMoveMemory everywhere. Don't use RtlCopyMemory!
+     */
+    if ((cchBuffer) && (lpszLongPath) &&
+        (((lpszLongPath >= lpszShortPath) && (lpszLongPath < &lpszShortPath[Length])) ||
+         ((lpszLongPath < lpszShortPath) && (&lpszLongPath[cchBuffer] >= lpszShortPath))))
     {
-        wcscpy(longpath, tmplongpath);
-        DPRINT("returning %s\n", longpath);
-        tmplen--; /* length without 0 */
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, cchBuffer * sizeof(WCHAR));
+        if (!Buffer) goto ErrorQuickie;
+
+        /* New destination */
+        Dst = Buffer;
     }
 
-    return tmplen;
+    /* Prepare for the loop */
+    Src = Original;
+    ReturnLength = 0;
+    while (TRUE)
+    {
+        /* Current delta in the loop */
+        Length = First - Src;
+
+        /* Update the return length by it */
+        ReturnLength += Length;
+
+        /* Is there a delta? If so, is there space and buffer for it? */
+        if ((Length) && (cchBuffer > ReturnLength) && (lpszLongPath))
+        {
+            RtlMoveMemory(Dst, Src, Length * sizeof(WCHAR));
+            Dst += Length;
+        }
+
+        /* "Terminate" this portion of the path's substring so we can do a find */
+        LastChar = *Last;
+        *Last = UNICODE_NULL;
+        FindHandle = FindFirstFileW(Original, &FindFileData);
+        *Last = LastChar;
+
+        /* This portion wasn't found, so fail */
+        if (FindHandle == INVALID_HANDLE_VALUE)
+        {
+            ReturnLength = 0;
+            break;
+        }
+
+        /* Close the find handle */
+        FindClose(FindHandle);
+
+        /* Now check the length of the long name */
+        Length = wcslen(FindFileData.cFileName);
+        if (Length)
+        {
+            /* This is our new first marker */
+            First = FindFileData.cFileName;
+        }
+        else
+        {
+            /* Otherwise, the name is the delta between our current markers */
+            Length = Last - First;
+        }
+
+        /* Update the return length with the short name length, if any */
+        ReturnLength += Length;
+
+        /* Once again check for appropriate space and buffer */
+        if ((cchBuffer > ReturnLength) && (lpszLongPath))
+        {
+            /* And do the copy if there is */
+            RtlMoveMemory(Dst, First, Length * sizeof(WCHAR));
+            Dst += Length;
+        }
+
+        /* Now update the source pointer */
+        Src = Last;
+        if (*Src == UNICODE_NULL) break;
+
+        /* Are there more names in there? */
+        Found = FindLFNorSFN_U(Src, &First, &Last, FALSE);
+        if (!Found) break;
+    }
+
+    /* The loop is done, is there anything left? */
+    if (ReturnLength)
+    {
+        /* Get the length of the straggling path */
+        Length = wcslen(Src);
+        ReturnLength += Length;
+
+        /* Once again check for appropriate space and buffer */
+        if ((cchBuffer > ReturnLength) && (lpszLongPath))
+        {
+            /* And do the copy if there is -- accounting for NULL here */
+            RtlMoveMemory(Dst, Src, Length * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+
+            /* What about our buffer? */
+            if (Buffer)
+            {
+                /* Copy it into the caller's long path */
+                RtlMoveMemory(lpszLongPath,
+                              Buffer,
+                              ReturnLength * sizeof(WCHAR)  + sizeof(UNICODE_NULL));
+            }
+        }
+        else
+        {
+            /* Buffer is too small, let the caller know, making space for NULL */
+            ReturnLength++;
+        }
+    }
+
+    /* We're all done */
+    goto Quickie;
+
+ErrorQuickie:
+    /* This is the goto for memory failures */
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+
+Quickie:
+    /* General function end: free memory, restore error mode, return length */
+    if (Original) RtlFreeHeap(RtlGetProcessHeap(), 0, Original);
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    SetErrorMode(ErrorMode);
+    return ReturnLength;
 }
 
 /*
@@ -660,13 +1007,13 @@ GetLongPathNameA(IN LPCSTR lpszShortPath,
     LongPathAnsi.Buffer = NULL;
     ShortPathUni.Buffer = NULL;
     Result = 0;
-    
+
     if (!lpszShortPath)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-    
+
     Status = Basep8BitStringToDynamicUnicodeString(&ShortPathUni, lpszShortPath);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
@@ -686,7 +1033,7 @@ GetLongPathNameA(IN LPCSTR lpszShortPath,
             PathLength = GetLongPathNameW(ShortPathUni.Buffer, LongPath, PathLength);
         }
     }
-        
+
     if (!PathLength) goto Quickie;
 
     ShortPathUni.MaximumLength = PathLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
@@ -741,13 +1088,13 @@ GetShortPathNameA(IN LPCSTR lpszLongPath,
     ShortPathAnsi.Buffer = NULL;
     LongPathUni.Buffer = NULL;
     Result = 0;
-    
+
     if (!lpszLongPath)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-    
+
     Status = Basep8BitStringToDynamicUnicodeString(&LongPathUni, lpszLongPath);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
@@ -767,7 +1114,7 @@ GetShortPathNameA(IN LPCSTR lpszLongPath,
             PathLength = GetLongPathNameW(LongPathUni.Buffer, ShortPath, PathLength);
         }
     }
-        
+
     if (!PathLength) goto Quickie;
 
     LongPathUni.MaximumLength = PathLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
@@ -802,109 +1149,225 @@ Quickie:
     return Result;
 }
 
-
 /*
- * NOTE: Copied from Wine.
  * @implemented
  */
 DWORD
 WINAPI
-GetShortPathNameW (
-        LPCWSTR longpath,
-        LPWSTR  shortpath,
-        DWORD   shortlen
-        )
+GetShortPathNameW(IN LPCWSTR lpszLongPath,
+                  IN LPWSTR lpszShortPath,
+                  IN DWORD cchBuffer)
 {
-    WCHAR               tmpshortpath[MAX_PATH];
-    LPCWSTR             p;
-    DWORD               sp = 0, lp = 0;
-    DWORD               tmplen;
-    WIN32_FIND_DATAW    wfd;
-    HANDLE              goit;
-    UNICODE_STRING      ustr;
-    WCHAR               ustr_buf[8+1+3+1];
+    PWCHAR Path, Original, First, Last, Buffer, Src, Dst;
+    ULONG Length;
+    WCHAR LastChar;
+    HANDLE FindHandle;
+    DWORD ReturnLength;
+    ULONG ErrorMode;
+    BOOLEAN Found;
+    WIN32_FIND_DATAW FindFileData;
 
-   DPRINT("GetShortPathNameW: %S\n",longpath);
+    /* Initialize so Quickie knows there's nothing to do */
+    Buffer = Original = NULL;
+    ReturnLength = 0;
 
-    if (!longpath)
+    /* First check if the input path was obviously NULL */
+    if (!lpszLongPath)
     {
+        /* Fail the request */
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-    if (!longpath[0])
-    {
-        SetLastError(ERROR_BAD_PATHNAME);
-        return 0;
-    }
 
-    /* check for drive letter */
-    if (longpath[0] != '/' && longpath[1] == ':' )
-    {
-        tmpshortpath[0] = longpath[0];
-        tmpshortpath[1] = ':';
-        sp = lp = 2;
-    }
+    /* We will be touching removed, removable drives -- don't warn the user */
+    ErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
-    ustr.Buffer = ustr_buf;
-    ustr.Length = 0;
-    ustr.MaximumLength = sizeof(ustr_buf);
-
-    while (longpath[lp])
+    /* Do a simple check to see if the path exists */
+    if (GetFileAttributesW(lpszShortPath) == 0xFFFFFFF)
     {
-        /* check for path delimiters and reproduce them */
-        if (longpath[lp] == '\\' || longpath[lp] == '/')
+        /* Windows checks for an application compatibility flag to allow this */
+        if (!(NtCurrentPeb()) || !(NtCurrentPeb()->AppCompatFlags.LowPart & 1))
         {
-            if (!sp || tmpshortpath[sp-1] != '\\')
-            {
-                /* strip double "\\" */
-                tmpshortpath[sp] = '\\';
-                sp++;
-            }
-            tmpshortpath[sp] = 0; /* terminate string */
-            lp++;
-            continue;
+            /* It doesn't, so fail */
+            ReturnLength = 0;
+            goto Quickie;
         }
+    }
 
-        for (p = longpath + lp; *p && *p != '/' && *p != '\\'; p++);
-        tmplen = p - (longpath + lp);
-        lstrcpynW(tmpshortpath + sp, longpath + lp, tmplen + 1);
-        /* Check, if the current element is a valid dos name */
-        if (tmplen <= 8+1+3)
+    /* Now get a pointer to the actual path, skipping indicators */
+    Path = SkipPathTypeIndicator_U((PWCHAR)lpszShortPath);
+
+    /* Try to find a file name in there */
+    if (Path) Found = FindLFNorSFN_U(Path, &First, &Last, TRUE);
+
+    /* Is there any path or filename in there? */
+    if (!(Path) || (*Path == UNICODE_NULL) || !(Found))
+    {
+        /* There isn't, so the long path is simply the short path */
+        ReturnLength = wcslen(lpszLongPath);
+
+        /* Is there space for it? */
+        if ((cchBuffer > ReturnLength) && (lpszLongPath))
         {
-            BOOLEAN spaces;
-            memcpy(ustr_buf, longpath + lp, tmplen * sizeof(WCHAR));
-            ustr_buf[tmplen] = '\0';
-            ustr.Length = (USHORT)tmplen * sizeof(WCHAR);
-            if (RtlIsNameLegalDOS8Dot3(&ustr, NULL, &spaces) && !spaces)
+            /* Make sure the pointers aren't already the same */
+            if (lpszLongPath != lpszShortPath)
             {
-                sp += tmplen;
-                lp += tmplen;
-                continue;
+                /* They're not -- copy the short path into the long path */
+                RtlMoveMemory(lpszShortPath,
+                              lpszLongPath,
+                              ReturnLength * sizeof(WCHAR) + sizeof(UNICODE_NULL));
             }
         }
-
-        /* Check if the file exists and use the existing short file name */
-        goit = FindFirstFileW(tmpshortpath, &wfd);
-        if (goit == INVALID_HANDLE_VALUE) goto notfound;
-        FindClose(goit);
-        lstrcpyW(tmpshortpath + sp, wfd.cAlternateFileName);
-        sp += lstrlenW(tmpshortpath + sp);
-        lp += tmplen;
+        else
+        {
+            /* Otherwise, let caller know we need a bigger buffer, include NULL */
+            ReturnLength++;
+        }
+        goto Quickie;
     }
-    tmpshortpath[sp] = 0;
 
-    tmplen = lstrlenW(tmpshortpath) + 1;
-    if (tmplen <= shortlen)
+    /* We are still in the game -- compute the current size */
+    Length = wcslen(lpszLongPath) + sizeof(ANSI_NULL);
+    Original = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+    if (!Original) goto ErrorQuickie;
+
+    /* Make a copy of it */
+    wcsncpy(Original, lpszLongPath, Length);
+
+    /* Compute the new first and last markers */
+    First = &Original[First - lpszLongPath];
+    Last = &Original[Last - lpszLongPath];
+
+    /* Set the current destination pointer for a copy */
+    Dst = lpszShortPath;
+
+    /*
+     * Windows allows the paths to overlap -- we have to be careful with this and
+     * see if it's same to do so, and if not, allocate our own internal buffer
+     * that we'll return at the end.
+     *
+     * This is also why we use RtlMoveMemory everywhere. Don't use RtlCopyMemory!
+     */
+    if ((cchBuffer) && (lpszShortPath) &&
+        (((lpszShortPath >= lpszLongPath) && (lpszShortPath < &lpszLongPath[Length])) ||
+         ((lpszShortPath < lpszLongPath) && (&lpszShortPath[cchBuffer] >= lpszLongPath))))
     {
-        lstrcpyW(shortpath, tmpshortpath);
-        tmplen--; /* length without 0 */
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, cchBuffer * sizeof(WCHAR));
+        if (!Buffer) goto ErrorQuickie;
+
+        /* New destination */
+        Dst = Buffer;
     }
 
-    return tmplen;
+    /* Prepare for the loop */
+    Src = Original;
+    ReturnLength = 0;
+    while (TRUE)
+    {
+        /* Current delta in the loop */
+        Length = First - Src;
 
- notfound:
-    SetLastError ( ERROR_FILE_NOT_FOUND );
-    return 0;
+        /* Update the return length by it */
+        ReturnLength += Length;
+
+        /* Is there a delta? If so, is there space and buffer for it? */
+        if ((Length) && (cchBuffer > ReturnLength) && (lpszShortPath))
+        {
+            RtlMoveMemory(Dst, Src, Length * sizeof(WCHAR));
+            Dst += Length;
+        }
+
+        /* "Terminate" this portion of the path's substring so we can do a find */
+        LastChar = *Last;
+        *Last = UNICODE_NULL;
+        FindHandle = FindFirstFileW(Original, &FindFileData);
+        *Last = LastChar;
+
+        /* This portion wasn't found, so fail */
+        if (FindHandle == INVALID_HANDLE_VALUE)
+        {
+            ReturnLength = 0;
+            break;
+        }
+
+        /* Close the find handle */
+        FindClose(FindHandle);
+
+        /* Now check the length of the short name */
+        Length = wcslen(FindFileData.cAlternateFileName);
+        if (Length)
+        {
+            /* This is our new first marker */
+            First = FindFileData.cAlternateFileName;
+        }
+        else
+        {
+            /* Otherwise, the name is the delta between our current markers */
+            Length = Last - First;
+        }
+
+        /* Update the return length with the short name length, if any */
+        ReturnLength += Length;
+
+        /* Once again check for appropriate space and buffer */
+        if ((cchBuffer > ReturnLength) && (lpszShortPath))
+        {
+            /* And do the copy if there is */
+            RtlMoveMemory(Dst, First, Length * sizeof(WCHAR));
+            Dst += Length;
+        }
+
+        /* Now update the source pointer */
+        Src = Last;
+        if (*Src == UNICODE_NULL) break;
+
+        /* Are there more names in there? */
+        Found = FindLFNorSFN_U(Src, &First, &Last, TRUE);
+        if (!Found) break;
+    }
+
+    /* The loop is done, is there anything left? */
+    if (ReturnLength)
+    {
+        /* Get the length of the straggling path */
+        Length = wcslen(Src);
+        ReturnLength += Length;
+
+        /* Once again check for appropriate space and buffer */
+        if ((cchBuffer > ReturnLength) && (lpszShortPath))
+        {
+            /* And do the copy if there is -- accounting for NULL here */
+            RtlMoveMemory(Dst, Src, Length * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+
+            /* What about our buffer? */
+            if (Buffer)
+            {
+                /* Copy it into the caller's long path */
+                RtlMoveMemory(lpszShortPath,
+                              Buffer,
+                              ReturnLength * sizeof(WCHAR)  + sizeof(UNICODE_NULL));
+            }
+        }
+        else
+        {
+            /* Buffer is too small, let the caller know, making space for NULL */
+            ReturnLength++;
+        }
+    }
+
+    /* We're all done */
+    goto Quickie;
+
+ErrorQuickie:
+    /* This is the goto for memory failures */
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+
+Quickie:
+    /* General function end: free memory, restore error mode, return length */
+    if (Original) RtlFreeHeap(RtlGetProcessHeap(), 0, Original);
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    SetErrorMode(ErrorMode);
+    return ReturnLength;
 }
 
 /* EOF */
