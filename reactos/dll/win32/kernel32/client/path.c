@@ -28,7 +28,7 @@ DWORD IllegalMask[4] =
     0x10000000  // 7C not allowed
 };
 
-/* FUNCTIONS ******************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /*
  * Why not use RtlIsNameLegalDOS8Dot3? In fact the actual algorithm body is
@@ -267,6 +267,8 @@ BasepIsCurDirAllowedForPlainExeNames(VOID)
     return !NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL;
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
+
 /*
  * @implemented
  */
@@ -450,6 +452,18 @@ NeedCurrentDirectoryForExePathA(IN LPCSTR ExeName)
 
 /*
  * @implemented
+ * 
+ * NOTE: Many of these A functions may seem to do rather complex A<->W mapping
+ * beyond what you would usually expect. There are two main reasons:
+ *
+ * First, these APIs are subject to the ANSI/OEM File API selection status that
+ * the caller has chosen, so we must use the "8BitString" internal Base APIs.
+ *
+ * Secondly, the Wide APIs (coming from the 9x world) are coded to return the
+ * length of the paths in "ANSI" by dividing their internal Wide character count
+ * by two... this is usually correct when dealing with pure-ASCII codepages but
+ * not necessarily when dealing with MBCS pre-Unicode sets, which NT supports
+ * for CJK, for example.
  */
 DWORD
 WINAPI
@@ -545,7 +559,7 @@ GetFullPathNameA(IN LPCSTR lpFileName,
         /* Conversion worked, now copy the ANSI/OEM buffer into the buffer */
         RtlCopyMemory(lpBuffer, AnsiString.Buffer, PathSize + 1);
         RtlFreeAnsiString(&AnsiString);
-        
+
         /* And finally, did the caller request file part information? */
         if (lpFilePart)
         {
@@ -583,149 +597,175 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
  */
 DWORD
 WINAPI
-SearchPathA (
-        LPCSTR  lpPath,
-        LPCSTR  lpFileName,
-        LPCSTR  lpExtension,
-        DWORD   nBufferLength,
-        LPSTR   lpBuffer,
-        LPSTR   *lpFilePart
-        )
+SearchPathA(IN LPCSTR lpPath,
+            IN LPCSTR lpFileName,
+            IN LPCSTR lpExtension,
+            IN DWORD nBufferLength,
+            IN LPSTR lpBuffer,
+            OUT LPSTR *lpFilePart)
 {
-        UNICODE_STRING PathU      = { 0, 0, NULL };
-        UNICODE_STRING FileNameU  = { 0, 0, NULL };
-        UNICODE_STRING ExtensionU = { 0, 0, NULL };
-        UNICODE_STRING BufferU    = { 0, 0, NULL };
-        ANSI_STRING Path;
-        ANSI_STRING FileName;
-        ANSI_STRING Extension;
-        ANSI_STRING Buffer;
-        PWCHAR FilePartW;
-        DWORD RetValue = 0;
-        NTSTATUS Status = STATUS_SUCCESS;
+    PUNICODE_STRING FileNameString;
+    UNICODE_STRING PathString, ExtensionString;
+    NTSTATUS Status;
+    ULONG PathSize, FilePartSize, AnsiLength;
+    PWCHAR LocalFilePart, Buffer;
+    PWCHAR* FilePart;
 
-        if (!lpFileName)
+    /* If the caller wants filepart, use a local wide buffer since this is A */
+    FilePart = lpFilePart != NULL ? &LocalFilePart : NULL;
+
+    /* Initialize stuff for Quickie */
+    PathSize = 0;
+    Buffer = NULL;
+    ExtensionString.Buffer = PathString.Buffer = NULL;
+
+    /* Get the UNICODE_STRING file name */
+    FileNameString = Basep8BitStringToStaticUnicodeString(lpFileName);
+    if (!FileNameString) return 0;
+
+    /* Did the caller specify an extension */
+    if (lpExtension)
+    {
+        /* Yup, convert it into UNICODE_STRING */
+        Status = Basep8BitStringToDynamicUnicodeString(&ExtensionString,
+                                                       lpExtension);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+    }
+
+    /* Did the caller specify a path */
+    if (lpPath)
+    {
+        /* Yup, convert it into UNICODE_STRING */
+        Status = Basep8BitStringToDynamicUnicodeString(&PathString, lpPath);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+    }
+
+    /* Allocate our output buffer */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nBufferLength * sizeof(WCHAR));
+    if (!Buffer)
+    {
+        /* It failed, bail out */
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        goto Quickie;
+    }
+
+    /* Now run the Wide search with the input buffer lengths */
+    PathSize = SearchPathW(PathString.Buffer,
+                           FileNameString->Buffer,
+                           ExtensionString.Buffer,
+                           nBufferLength,
+                           Buffer,
+                           FilePart);
+    if (PathSize <= nBufferLength)
+    {
+        /* It fits, but is it empty? If so, bail out */
+        if (!PathSize) goto Quickie;
+
+        /* The length above is inexact, we need it in ANSI */
+        Status = RtlUnicodeToMultiByteSize(&AnsiLength, Buffer, PathSize * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
         {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
+            /* Conversion failed, fail the call */
+            PathSize = 0;
+            BaseSetLastNTError(Status);
+            goto Quickie;
         }
 
-        RtlInitAnsiString (&Path,
-                           (LPSTR)lpPath);
-        RtlInitAnsiString (&FileName,
-                           (LPSTR)lpFileName);
-        RtlInitAnsiString (&Extension,
-                           (LPSTR)lpExtension);
-
-        /* convert ansi (or oem) strings to unicode */
-        if (bIsFileApiAnsi)
+        /* If the correct ANSI size is too big, return requird length plus a NULL */
+        if (AnsiLength >= nBufferLength)
         {
-                Status = RtlAnsiStringToUnicodeString (&PathU,
-                                                       &Path,
-                                                       TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
+            PathSize = AnsiLength + 1;
+            goto Quickie;
+        }
 
-                Status = RtlAnsiStringToUnicodeString (&FileNameU,
-                                                       &FileName,
-                                                       TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
+        /* Now apply the final conversion to ANSI */
+        Status = RtlUnicodeToMultiByteN(lpBuffer,
+                                        nBufferLength - 1,
+                                        &AnsiLength,
+                                        Buffer,
+                                        PathSize * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
+        {
+            /* Conversion failed, fail the whole call */
+            PathSize = 0;
+            BaseSetLastNTError(STATUS_NO_MEMORY);
+            goto Quickie;
+        }
 
-                Status = RtlAnsiStringToUnicodeString (&ExtensionU,
-                                                       &Extension,
-                                                       TRUE);
+        /* NULL-terminate and return the real ANSI length */
+        lpBuffer[AnsiLength] = ANSI_NULL;
+        PathSize = AnsiLength;
+
+        /* Now check if the user wanted file part size as well */
+        if (lpFilePart)
+        {
+            /* If we didn't get a file part, clear the caller's */
+            if (!LocalFilePart)
+            {
+                *lpFilePart = NULL;
+            }
+            else
+            {
+                /* Yep, so in this case get the length of the file part too */
+                Status = RtlUnicodeToMultiByteSize(&FilePartSize,
+                                                   Buffer,
+                                                   (LocalFilePart - Buffer) *
+                                                   sizeof(WCHAR));
                 if (!NT_SUCCESS(Status))
-                    goto Cleanup;
+                {
+                    /* We failed to do that, so fail the whole call */
+                    BaseSetLastNTError(Status);
+                    PathSize = 0;
+                }
+
+                /* Return the file part buffer */
+                *lpFilePart = lpBuffer + FilePartSize;
+            }
+        }
+    }
+    else
+    {
+        /* Our initial buffer guess was too small, allocate a bigger one */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize * sizeof(WCHAR));
+        if (!Buffer)
+        {
+            /* Out of memory, fail everything */
+            BaseSetLastNTError(STATUS_NO_MEMORY);
+            goto Quickie;
+        }
+
+        /* Do the search again -- it will fail, we just want the path size */
+        PathSize = SearchPathW(PathString.Buffer,
+                               FileNameString->Buffer,
+                               ExtensionString.Buffer,
+                               PathSize,
+                               Buffer,
+                               FilePart);
+        if (!PathSize) goto Quickie;
+
+        /* Convert it to a correct size */
+        Status = RtlUnicodeToMultiByteSize(&PathSize, Buffer, PathSize * sizeof(WCHAR));
+        if (NT_SUCCESS(Status))
+        {
+            /* Make space for the NULL-char */
+            PathSize++;
         }
         else
         {
-                Status = RtlOemStringToUnicodeString (&PathU,
-                                                      &Path,
-                                                      TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-                Status = RtlOemStringToUnicodeString (&FileNameU,
-                                                      &FileName,
-                                                      TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-
-                Status = RtlOemStringToUnicodeString (&ExtensionU,
-                                                      &Extension,
-                                                      TRUE);
-                if (!NT_SUCCESS(Status))
-                    goto Cleanup;
-        }
-
-        BufferU.MaximumLength = min(nBufferLength * sizeof(WCHAR), USHRT_MAX);
-        BufferU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-                                          0,
-                                          BufferU.MaximumLength);
-        if (BufferU.Buffer == NULL)
-        {
-            Status = STATUS_NO_MEMORY;
-            goto Cleanup;
-        }
-
-        Buffer.MaximumLength = min(nBufferLength, USHRT_MAX);
-        Buffer.Buffer = lpBuffer;
-
-        RetValue = SearchPathW (NULL == lpPath ? NULL : PathU.Buffer,
-                                NULL == lpFileName ? NULL : FileNameU.Buffer,
-                                NULL == lpExtension ? NULL : ExtensionU.Buffer,
-                                nBufferLength,
-                                BufferU.Buffer,
-                                &FilePartW);
-
-        if (0 != RetValue)
-        {
-                BufferU.Length = wcslen(BufferU.Buffer) * sizeof(WCHAR);
-                /* convert ansi (or oem) string to unicode */
-                if (bIsFileApiAnsi)
-                    Status = RtlUnicodeStringToAnsiString(&Buffer,
-                                                          &BufferU,
-                                                          FALSE);
-                else
-                    Status = RtlUnicodeStringToOemString(&Buffer,
-                                                         &BufferU,
-                                                         FALSE);
-
-                if (NT_SUCCESS(Status) && Buffer.Buffer)
-                {
-                    /* nul-terminate ascii string */
-                    Buffer.Buffer[BufferU.Length / sizeof(WCHAR)] = '\0';
-
-                    if (NULL != lpFilePart && BufferU.Length != 0)
-                    {
-                        *lpFilePart = strrchr (lpBuffer, '\\') + 1;
-                    }
-                }
-        }
-
-Cleanup:
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     PathU.Buffer);
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     FileNameU.Buffer);
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     ExtensionU.Buffer);
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     BufferU.Buffer);
-
-        if (!NT_SUCCESS(Status))
-        {
+            /* Conversion failed for some reason, fail the call */
             BaseSetLastNTError(Status);
-            return 0;
+            PathSize = 0;
         }
+    }
 
-        return RetValue;
+Quickie:
+    /* Cleanup/complete path */
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    if (ExtensionString.Buffer) RtlFreeUnicodeString(&ExtensionString);
+    if (PathString.Buffer) RtlFreeUnicodeString(&PathString);
+    return PathSize;
 }
-
 
 /***********************************************************************
  *           ContainsPath (Wine name: contains_pathW)
