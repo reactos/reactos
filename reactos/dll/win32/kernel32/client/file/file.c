@@ -175,6 +175,33 @@ FilenameW2A_N(
     return ret;
 }
 
+ULONG
+NTAPI
+BasepUnicodeStringToOemSize(IN PUNICODE_STRING String)
+{
+    return RtlUnicodeStringToOemSize(String);
+}
+
+ULONG
+NTAPI
+BasepOemStringToUnicodeSize(IN PANSI_STRING String)
+{
+    return RtlOemStringToUnicodeSize(String);
+}
+
+ULONG
+NTAPI
+BasepUnicodeStringToAnsiSize(IN PUNICODE_STRING String)
+{
+    return RtlUnicodeStringToAnsiSize(String);
+}
+
+ULONG
+NTAPI
+BasepAnsiStringToUnicodeSize(IN PANSI_STRING String)
+{
+    return RtlAnsiStringToUnicodeSize(String);
+}
 
 /*
  * @implemented
@@ -185,6 +212,9 @@ SetFileApisToOEM(VOID)
 {
     /* Set the correct Base Api */
     Basep8BitStringToUnicodeString = (PRTL_CONVERT_STRING)RtlOemStringToUnicodeString;
+    BasepUnicodeStringTo8BitString = RtlUnicodeStringToOemString;
+    BasepUnicodeStringTo8BitSize = BasepUnicodeStringToOemSize;
+    Basep8BitStringToUnicodeSize = BasepOemStringToUnicodeSize;
 
     /* FIXME: Old, deprecated way */
     bIsFileApiAnsi = FALSE;
@@ -200,7 +230,10 @@ SetFileApisToANSI(VOID)
 {
     /* Set the correct Base Api */
     Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
-
+    BasepUnicodeStringTo8BitString = RtlUnicodeStringToAnsiString;
+    BasepUnicodeStringTo8BitSize = BasepUnicodeStringToAnsiSize;
+    Basep8BitStringToUnicodeSize = BasepAnsiStringToUnicodeSize;
+    
     /* FIXME: Old, deprecated way */
     bIsFileApiAnsi = TRUE;
 }

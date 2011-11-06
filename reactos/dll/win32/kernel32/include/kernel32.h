@@ -25,9 +25,9 @@
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
   DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
 
-#define debugstr_a  
+#define debugstr_a
 #define debugstr_w
-#define wine_dbgstr_w  
+#define wine_dbgstr_w
 #define debugstr_guid
 
 #include "wine/unicode.h"
@@ -70,7 +70,7 @@
 
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
-  
+
 typedef struct _CODEPAGE_ENTRY
 {
    LIST_ENTRY Entry;
@@ -169,14 +169,14 @@ WINAPI
 BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                              IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
                              IN PUNICODE_STRING ObjectName);
-                             
+
 NTSTATUS
 WINAPI
 BaseCreateStack(HANDLE hProcess,
                  SIZE_T StackReserve,
                  SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb);
-                 
+
 VOID
 WINAPI
 BaseInitializeContext(IN PCONTEXT Context,
@@ -184,7 +184,7 @@ BaseInitializeContext(IN PCONTEXT Context,
                        IN PVOID StartAddress,
                        IN PVOID StackAddress,
                        IN ULONG ContextType);
-                
+
 VOID
 WINAPI
 BaseThreadStartupThunk(VOID);
@@ -192,13 +192,13 @@ BaseThreadStartupThunk(VOID);
 VOID
 WINAPI
 BaseProcessStartThunk(VOID);
-        
+
 __declspec(noreturn)
 VOID
 WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter);
-                  
+
 VOID
 WINAPI
 BaseFreeThreadStack(IN HANDLE hProcess,
@@ -214,7 +214,7 @@ typedef UINT (WINAPI *PPROCESS_START_ROUTINE)(VOID);
 VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress);
-                  
+
 PVOID
 WINAPI
 BasepIsRealtimeAllowed(IN BOOLEAN Keep);
@@ -223,7 +223,7 @@ VOID
 WINAPI
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
                                    OUT LPWSTR* UnicodeString);
-                                   
+
 PUNICODE_STRING
 WINAPI
 Basep8BitStringToStaticUnicodeString(IN LPCSTR AnsiString);
@@ -232,14 +232,25 @@ BOOLEAN
 WINAPI
 Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                       IN LPCSTR String);
- 
-#define BasepUnicodeStringTo8BitString RtlUnicodeStringToAnsiString
 
 typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
                                               IN PANSI_STRING AnsiString,
                                               IN BOOLEAN AllocateMemory);
-                                                
+
+typedef ULONG (NTAPI *PRTL_COUNT_STRING)(IN PUNICODE_STRING UnicodeString);
+
+typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRINGA)(IN PANSI_STRING AnsiString,
+                                              IN PCUNICODE_STRING UnicodeString,
+                                              IN BOOLEAN AllocateMemory);
+
+typedef ULONG (NTAPI *PRTL_COUNT_STRINGA)(IN PANSI_STRING UnicodeString);
+
+
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
+extern PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString;
+extern PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize;
+extern PRTL_COUNT_STRINGA Basep8BitStringToUnicodeSize;
+
 extern HANDLE BaseNamedObjectDirectory;
 
 HANDLE
