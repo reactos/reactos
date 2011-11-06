@@ -155,7 +155,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
     Ptr = HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
-                    sizeof(MANAGER_HANDLE) + (wcslen(lpDatabaseName) + 1) * sizeof(WCHAR));
+                    FIELD_OFFSET(MANAGER_HANDLE, DatabaseName[wcslen(lpDatabaseName) + 1]));
     if (Ptr == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -1999,6 +1999,12 @@ DWORD RCreateServiceW(
         return ERROR_INVALID_PARAMETER;
     }
 
+    if ((dwServiceType & SERVICE_KERNEL_DRIVER) &&
+        (dwServiceType & SERVICE_FILE_SYSTEM_DRIVER))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
     if ((dwServiceType == (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
         (lpServiceStartName))
     {
@@ -2267,9 +2273,12 @@ done:;
     }
     else
     {
-        /* Release the display name buffer */
-        if (lpService->lpServiceName != NULL)
+        if (lpService != NULL &&
+            lpService->lpServiceName != NULL)
+        {
+            /* Release the display name buffer */
             HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
+        }
 
         if (hServiceHandle)
         {
@@ -2366,7 +2375,7 @@ DWORD REnumDependentServicesW(
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
-        DPRINT("Could not allocate a buffer!!\n");
+        DPRINT1("Could not allocate a buffer!!\n");
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto Done;
     }
@@ -4550,8 +4559,8 @@ DWORD RChangeServiceConfig2A(
             dwLength = (strlen(Info.lpDescription) + 1) * sizeof(WCHAR);
 
             lpServiceDescriptonW = HeapAlloc(GetProcessHeap(),
-                                            0,
-                                            dwLength + sizeof(SERVICE_DESCRIPTIONW));
+                                             0,
+                                             dwLength + sizeof(SERVICE_DESCRIPTIONW));
             if (!lpServiceDescriptonW)
             {
                 return ERROR_NOT_ENOUGH_MEMORY;

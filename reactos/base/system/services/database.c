@@ -193,7 +193,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         /* Create a new service image */
         pServiceImage = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  sizeof(SERVICE_IMAGE) + ((wcslen(ImagePath.Buffer) + 1) * sizeof(WCHAR)));
+                                  FIELD_OFFSET(SERVICE_IMAGE, szImagePath[wcslen(ImagePath.Buffer) + 1]));
         if (pServiceImage == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -368,7 +368,7 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
     /* Allocate service entry */
     lpService = HeapAlloc(GetProcessHeap(),
                           HEAP_ZERO_MEMORY,
-                          sizeof(SERVICE) + ((wcslen(lpServiceName) + 1) * sizeof(WCHAR)));
+                          FIELD_OFFSET(SERVICE, szServiceName[wcslen(lpServiceName) + 1]));
     if (lpService == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
