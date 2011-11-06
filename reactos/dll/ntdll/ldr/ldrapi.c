@@ -19,8 +19,17 @@ LIST_ENTRY LdrpUnloadHead;
 LONG LdrpLoaderLockAcquisitonCount;
 BOOLEAN LdrpShowRecursiveLoads, LdrpBreakOnRecursiveDllLoads;
 UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
+ULONG AlternateResourceModuleCount;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+LdrAlternateResourcesEnabled(VOID)
+{
+    /* ReactOS does not support this */
+    return FALSE;
+}
 
 ULONG_PTR
 FORCEINLINE
@@ -1524,15 +1533,46 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
 {
-    //static BOOLEAN WarnedOnce = FALSE;
-    //if (WarnedOnce == FALSE) { UNIMPLEMENTED; WarnedOnce = TRUE; }
-    return FALSE;
+    ULONG_PTR Cookie;
+    
+    /* Acquire the loader lock */
+    LdrLockLoaderLock(TRUE, NULL, &Cookie);
+    
+    /* Check if there's any alternate resources loaded */
+    if (AlternateResourceModuleCount)
+    {
+        UNIMPLEMENTED;
+    }
+    
+    /* Release the loader lock */
+    LdrUnlockLoaderLock(1, Cookie);
+    
+    /* All done */
+    return TRUE;
 }
 
+/* FIXME: Add to ntstatus.mc */
+#define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrLoadAlternateResourceModule(IN PVOID Module,
+                               IN PWSTR Buffer)
+{
+    /* Is MUI Support enabled? */
+    if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
+    
+    UNIMPLEMENTED;
+    return STATUS_MUI_FILE_NOT_FOUND;
+}
+    
 /* EOF */

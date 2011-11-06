@@ -252,6 +252,11 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK          0x00000001
 
 //
+// RtlDosApplyFileIsolationRedirection_Ustr Flags
+//
+#define RTL_DOS_APPLY_FILE_REDIRECTION_USTR_FLAG_RESPECT_DOT_LOCAL  0x01
+
+//
 // Codepages
 //
 #define NLS_MB_CODE_PAGE_TAG                                NlsMbCodePageTag

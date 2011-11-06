@@ -58,6 +58,13 @@ LdrFindResourceDirectory_U(
     OUT PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
 );
 
+NTSTATUS
+NTAPI
+LdrLoadAlternateResourceModule(
+    IN PVOID Module,
+    IN PWSTR Buffer
+);
+
 BOOLEAN
 NTAPI
 LdrUnloadAlternateResourceModule(

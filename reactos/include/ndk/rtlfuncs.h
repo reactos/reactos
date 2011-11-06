@@ -3275,15 +3275,15 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlDosApplyFileIsolationRedirection_Ustr(
-    IN BOOLEAN Unknown,
+    IN ULONG Flags,
     IN PUNICODE_STRING OriginalName,
     IN PUNICODE_STRING Extension,
-    IN OUT PUNICODE_STRING RedirectedName,
-    IN OUT PUNICODE_STRING RedirectedName2,
-    IN OUT PUNICODE_STRING *OriginalName2,
-    IN PVOID Unknown1,
-    IN PVOID Unknown2,
-    IN PVOID Unknown3
+    IN OUT PUNICODE_STRING StaticString,
+    IN OUT PUNICODE_STRING DynamicString,
+    IN OUT PUNICODE_STRING *NewName,
+    IN PULONG NewFlags,
+    IN PSIZE_T FileNameSize,
+    IN PSIZE_T RequiredLength
 );
 
 NTSYSAPI

@@ -88,7 +88,7 @@
 ;@ stdcall LdrHotPatchRoutine
 ;@ stdcall LdrInitShimEngineDynamic
 @ stdcall LdrInitializeThunk(long long long long)
-;@ stdcall LdrLoadAlternateResourceModule
+@ stdcall LdrLoadAlternateResourceModule(ptr ptr)
 @ stdcall LdrLoadDll(wstr long ptr ptr)
 @ stdcall LdrLockLoaderLock(long ptr ptr)
 ;@ stdcall LdrOpenImageFileOptionsKey ; 5.2 SP1 and higher
@@ -566,7 +566,7 @@
 @ stdcall RtlDllShutdownInProgress()
 @ stdcall RtlDnsHostNameToComputerName(ptr ptr long)
 @ stdcall RtlDoesFileExists_U(wstr)
-;@ stdcall RtlDosApplyFileIsolationRedirection_Ustr
+@ stdcall RtlDosApplyFileIsolationRedirection_Ustr(long ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlDosPathNameToNtPathName_U(wstr ptr ptr ptr)
 ;@ stdcall RtlDosPathNameToNtPathName_U_WithStatus ; 5.2 SP1, and higher
 @ stdcall RtlDosPathNameToRelativeNtPathName_U(ptr ptr ptr ptr) ; CHECKME
@@ -690,7 +690,7 @@
 @ stdcall RtlIdentifierAuthoritySid(ptr)
 @ stdcall RtlImageDirectoryEntryToData(long long long ptr)
 @ stdcall RtlImageNtHeader(long)
-;@ stdcall RtlImageNtHeaderEx
+@ stdcall RtlImageNtHeaderEx(long ptr double ptr)
 @ stdcall RtlImageRvaToSection(ptr long long)
 @ stdcall RtlImageRvaToVa(ptr long long ptr)
 @ stdcall RtlImpersonateSelf(long)
