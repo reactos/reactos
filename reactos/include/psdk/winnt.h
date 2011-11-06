@@ -3223,6 +3223,12 @@ typedef enum tagTOKEN_TYPE {
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
 
+typedef enum _TOKEN_ELEVATION_TYPE {
+    TokenElevationTypeDefault = 1,
+    TokenElevationTypeFull,
+    TokenElevationTypeLimited,
+} TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
+
 #include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
   LUID TokenId;
