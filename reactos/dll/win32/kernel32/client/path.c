@@ -187,11 +187,10 @@ FindLFNorSFN_U(IN PWCHAR Path,
          * Check if it is valid
          * Note that !IsShortName != IsLongName, these two functions simply help
          * us determine if a conversion is necessary or not.
+         * "Found" really means: "Is a conversion necessary?", hence the "!"
          */
-        Found = UseShort ? IsShortName_U(Path, Length) : IsLongName_U(Path, Length);
-
-        /* "Found" really means: "Is a conversion necessary?", hence the ! */
-        if (!Found)
+        Found = UseShort ? !IsShortName_U(Path, Length) : !IsLongName_U(Path, Length);
+        if (Found)
         {
             /* It is! did the caller request to know the markers? */
             if ((First) && (Last))
@@ -211,7 +210,7 @@ FindLFNorSFN_U(IN PWCHAR Path,
     }
 
     /* Return if anything was found and valid */
-    return !Found;
+    return Found;
 }
 
 PWCHAR
@@ -454,52 +453,113 @@ NeedCurrentDirectoryForExePathA(IN LPCSTR ExeName)
  */
 DWORD
 WINAPI
-GetFullPathNameA (
-        LPCSTR  lpFileName,
-        DWORD   nBufferLength,
-        LPSTR   lpBuffer,
-        LPSTR   *lpFilePart
-        )
+GetFullPathNameA(IN LPCSTR lpFileName,
+                 IN DWORD nBufferLength,
+                 IN LPSTR lpBuffer,
+                 IN LPSTR *lpFilePart)
 {
-   WCHAR BufferW[MAX_PATH];
-   PWCHAR FileNameW;
-   DWORD ret;
-   LPWSTR FilePartW = NULL;
+    NTSTATUS Status;
+    PWCHAR Buffer;
+    ULONG PathSize, FilePartSize;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING FileNameString, UniString;
+    PWCHAR LocalFilePart;
+    PWCHAR* FilePart;
 
-   DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
-        "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+    /* If the caller wants filepart, use a local wide buffer since this is A */
+    FilePart = lpFilePart != NULL ? &LocalFilePart : NULL;
 
-   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
-      return 0;
+    /* Initialize for Quickie */
+    FilePartSize = PathSize = 0;
+    FileNameString.Buffer = NULL;
 
-   ret = GetFullPathNameW(FileNameW, MAX_PATH, BufferW, &FilePartW);
+    /* First get our string in Unicode */
+    Status = Basep8BitStringToDynamicUnicodeString(&FileNameString, lpFileName);
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
-   if (!ret)
-      return 0;
+    /* Allocate a buffer to hold teh path name */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                             0,
+                             MAX_PATH * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (!Buffer)
+    {
+        BaseSetLastNTError(STATUS_INSUFFICIENT_RESOURCES);
+        goto Quickie;
+    }
 
-   if (ret > MAX_PATH)
-   {
-      SetLastError(ERROR_FILENAME_EXCED_RANGE);
-      return 0;
-   }
+    /* Call into RTL to get the full Unicode path name */
+    PathSize = RtlGetFullPathName_U(FileNameString.Buffer,
+                                    MAX_PATH * sizeof(WCHAR),
+                                    Buffer,
+                                    FilePart);
+    if (PathSize <= (MAX_PATH * sizeof(WCHAR)))
+    {
+        /* The buffer will fit, get the real ANSI string size now */
+        Status = RtlUnicodeToMultiByteSize(&PathSize, Buffer, PathSize);
+        if (NT_SUCCESS(Status))
+        {
+            /* Now check if the user wanted file part size as well */
+            if ((PathSize) && (lpFilePart) && (LocalFilePart))
+            {
+                /* Yep, so in this case get the length of the file part too */
+                Status = RtlUnicodeToMultiByteSize(&FilePartSize,
+                                                   Buffer,
+                                                   (LocalFilePart - Buffer) *
+                                                   sizeof(WCHAR));
+                if (!NT_SUCCESS(Status))
+                {
+                    /* We failed to do that, so fail the whole call */
+                    BaseSetLastNTError(Status);
+                    PathSize = 0;
+                }
+            }
+        }
+    }
+    else
+    {
+        /* Reset the path size since the buffer is not large enough */
+        PathSize = 0;
+    }
 
-   ret = FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
+    /* Either no path, or local buffer was too small, enter failure code */
+    if (!PathSize) goto Quickie;
 
-   if (ret < nBufferLength && lpFilePart)
-   {
-      /* if the path closed with '\', FilePart is NULL */
-      if (!FilePartW)
-         *lpFilePart=NULL;
-      else
-         *lpFilePart = (FilePartW - BufferW) + lpBuffer;
-   }
+    /* If the *caller's* buffer was too small, fail, but add in space for NULL */
+    if (PathSize < nBufferLength)
+    {
+        PathSize++;
+        goto Quickie;
+    }
 
-   DPRINT("GetFullPathNameA ret: lpBuffer %s lpFilePart %s\n",
-        lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart);
+    /* So far so good, initialize a unicode string to convert back to ANSI/OEM */
+    RtlInitUnicodeString(&UniString, Buffer);
+    Status = BasepUnicodeStringTo8BitString(&AnsiString, &UniString, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Final conversion failed, fail the call */
+        BaseSetLastNTError(Status);
+        PathSize = 0;
+    }
+    else
+    {
+        /* Conversion worked, now copy the ANSI/OEM buffer into the buffer */
+        RtlCopyMemory(lpBuffer, AnsiString.Buffer, PathSize + 1);
+        RtlFreeAnsiString(&AnsiString);
+        
+        /* And finally, did the caller request file part information? */
+        if (lpFilePart)
+        {
+            /* Use the size we computed earlier and add it to the buffer */
+            *lpFilePart = LocalFilePart ? &lpBuffer[FilePartSize] : 0;
+        }
+    }
 
-   return ret;
+Quickie:
+    /* Cleanup and return the path size */
+    if (FileNameString.Buffer) RtlFreeUnicodeString(&FileNameString);
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    return PathSize;
 }
-
 
 /*
  * @implemented
@@ -511,6 +571,7 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
                  IN LPWSTR lpBuffer,
                  OUT LPWSTR *lpFilePart)
 {
+    /* Call Rtl to do the work */
     return RtlGetFullPathName_U((LPWSTR)lpFileName,
                                 nBufferLength * sizeof(WCHAR),
                                 lpBuffer,
