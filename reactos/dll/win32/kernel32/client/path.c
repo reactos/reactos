@@ -17,6 +17,10 @@
 
 UNICODE_STRING BaseDllDirectory;
 UNICODE_STRING NoDefaultCurrentDirectoryInExePath = RTL_CONSTANT_STRING(L"NoDefaultCurrentDirectoryInExePath");
+UNICODE_STRING SystemDirectory;
+UNICODE_STRING WindowsDirectory;
+UNICODE_STRING BaseDefaultPathAppend;
+UNICODE_STRING BaseDefaultPath;
 
 /* This is bitmask for each illegal filename character */
 /* If someone has time, please feel free to use 0b notation */
@@ -452,7 +456,7 @@ NeedCurrentDirectoryForExePathA(IN LPCSTR ExeName)
 
 /*
  * @implemented
- * 
+ *
  * NOTE: Many of these A functions may seem to do rather complex A<->W mapping
  * beyond what you would usually expect. There are two main reasons:
  *
@@ -1469,6 +1473,295 @@ Quickie:
     if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
     SetErrorMode(ErrorMode);
     return ReturnLength;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetCurrentDirectoryA(IN DWORD nBufferLength,
+                     IN LPSTR lpBuffer)
+{
+   WCHAR BufferW[MAX_PATH];
+   DWORD ret;
+
+   ret = GetCurrentDirectoryW(MAX_PATH, BufferW);
+
+   if (!ret) return 0;
+   if (ret > MAX_PATH)
+   {
+      SetLastError(ERROR_FILENAME_EXCED_RANGE);
+      return 0;
+   }
+
+   return FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetCurrentDirectoryW(IN DWORD nBufferLength,
+                     IN LPWSTR lpBuffer)
+{
+    ULONG Length;
+
+    Length = RtlGetCurrentDirectory_U (nBufferLength * sizeof(WCHAR), lpBuffer);
+    return (Length / sizeof (WCHAR));
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetCurrentDirectoryA(IN LPCSTR lpPathName)
+{
+   PWCHAR PathNameW;
+
+   DPRINT("setcurrdir: %s\n",lpPathName);
+
+   if (!(PathNameW = FilenameA2W(lpPathName, FALSE))) return FALSE;
+
+   return SetCurrentDirectoryW(PathNameW);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetCurrentDirectoryW(IN LPCWSTR lpPathName)
+{
+    UNICODE_STRING UnicodeString;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&UnicodeString, lpPathName);
+
+    Status = RtlSetCurrentDirectory_U(&UnicodeString);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError (Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * NOTE: Windows returns a dos/short (8.3) path
+ */
+DWORD
+WINAPI
+GetTempPathA(IN DWORD nBufferLength,
+             IN LPSTR lpBuffer)
+{
+   WCHAR BufferW[MAX_PATH];
+   DWORD ret;
+
+   ret = GetTempPathW(MAX_PATH, BufferW);
+
+   if (!ret) return 0;
+
+   if (ret > MAX_PATH)
+   {
+      SetLastError(ERROR_FILENAME_EXCED_RANGE);
+      return 0;
+   }
+
+   return FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
+}
+
+/*
+ * @implemented
+ *
+ * ripped from wine
+ */
+DWORD
+WINAPI
+GetTempPathW(IN DWORD count,
+             IN LPWSTR path)
+{
+    static const WCHAR tmp[]  = { 'T', 'M', 'P', 0 };
+    static const WCHAR temp[] = { 'T', 'E', 'M', 'P', 0 };
+    static const WCHAR userprofile[] = { 'U','S','E','R','P','R','O','F','I','L','E',0 };
+    WCHAR tmp_path[MAX_PATH];
+    UINT ret;
+
+    DPRINT("%u,%p\n", count, path);
+
+    if (!(ret = GetEnvironmentVariableW( tmp, tmp_path, MAX_PATH )) &&
+        !(ret = GetEnvironmentVariableW( temp, tmp_path, MAX_PATH )) &&
+        !(ret = GetEnvironmentVariableW( userprofile, tmp_path, MAX_PATH )) &&
+        !(ret = GetWindowsDirectoryW( tmp_path, MAX_PATH )))
+        return 0;
+
+   if (ret > MAX_PATH)
+   {
+     SetLastError(ERROR_FILENAME_EXCED_RANGE);
+     return 0;
+   }
+
+   ret = GetFullPathNameW(tmp_path, MAX_PATH, tmp_path, NULL);
+   if (!ret) return 0;
+
+   if (ret > MAX_PATH - 2)
+   {
+     SetLastError(ERROR_FILENAME_EXCED_RANGE);
+     return 0;
+   }
+
+   if (tmp_path[ret-1] != '\\')
+   {
+     tmp_path[ret++] = '\\';
+     tmp_path[ret]   = '\0';
+   }
+
+   ret++; /* add space for terminating 0 */
+
+   if (count)
+   {
+     lstrcpynW(path, tmp_path, count);
+     if (count >= ret)
+         ret--; /* return length without 0 */
+     else if (count < 4)
+         path[0] = 0; /* avoid returning ambiguous "X:" */
+   }
+
+   DPRINT("GetTempPathW returning %u, %S\n", ret, path);
+   return ret;
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetSystemDirectoryA(IN LPSTR lpBuffer,
+                    IN UINT uSize)
+{
+   return FilenameU2A_FitOrFail(lpBuffer, uSize, &SystemDirectory);
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetSystemDirectoryW(IN LPWSTR lpBuffer,
+                    IN UINT uSize)
+{
+    ULONG Length;
+
+    Length = SystemDirectory.Length / sizeof (WCHAR);
+
+    if (lpBuffer == NULL) return Length + 1;
+
+    if (uSize > Length)
+    {
+        memmove(lpBuffer, SystemDirectory.Buffer, SystemDirectory.Length);
+        lpBuffer[Length] = 0;
+
+        return Length;	  //good: ret chars excl. nullchar
+    }
+
+    return Length+1;	 //bad: ret space needed incl. nullchar
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetWindowsDirectoryA(IN LPSTR lpBuffer,
+                     IN UINT uSize)
+{
+   return FilenameU2A_FitOrFail(lpBuffer, uSize, &WindowsDirectory);
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetWindowsDirectoryW(IN LPWSTR lpBuffer,
+                     IN UINT uSize)
+{
+    ULONG Length;
+
+    Length = WindowsDirectory.Length / sizeof (WCHAR);
+
+    if (lpBuffer == NULL) return Length + 1;
+
+    if (uSize > Length)
+    {
+        memmove(lpBuffer, WindowsDirectory.Buffer, WindowsDirectory.Length);
+        lpBuffer[Length] = 0;
+
+        return Length;	  //good: ret chars excl. nullchar
+    }
+
+    return Length+1;	//bad: ret space needed incl. nullchar
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetSystemWindowsDirectoryA(IN LPSTR lpBuffer,
+                           IN UINT uSize)
+{
+    return GetWindowsDirectoryA(lpBuffer, uSize);
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetSystemWindowsDirectoryW(IN LPWSTR lpBuffer,
+                           IN UINT uSize)
+{
+    return GetWindowsDirectoryW(lpBuffer, uSize);
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetSystemWow64DirectoryW(IN LPWSTR lpBuffer,
+                         IN UINT uSize)
+{
+#ifdef _WIN64
+    UNIMPLEMENTED;
+    return 0;
+#else
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+#endif
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetSystemWow64DirectoryA(IN LPSTR lpBuffer,
+                         IN UINT uSize)
+{
+#ifdef _WIN64
+    UNIMPLEMENTED;
+    return 0;
+#else
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+#endif
 }
 
 /* EOF */

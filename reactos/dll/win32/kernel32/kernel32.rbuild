@@ -61,7 +61,6 @@
 			<file>copy.c</file>
 			<file>console.c</file>
 			<file>create.c</file>
-			<file>curdir.c</file>
 			<file>delete.c</file>
 			<file>deviceio.c</file>
 			<file>dir.c</file>

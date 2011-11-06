@@ -43,7 +43,6 @@ list(APPEND SOURCE
     client/file/copy.c
     client/file/console.c
     client/file/create.c
-    client/file/curdir.c
     client/file/delete.c
     client/file/deviceio.c
     client/file/dir.c
