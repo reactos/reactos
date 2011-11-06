@@ -63,6 +63,8 @@ endif()
 add_library(msvcrtex ${MSVCRTEX_SOURCE})
 add_target_compile_definitions(msvcrtex _DLL)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
+set_source_files_properties(startup/crtexe.c
+                            startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)

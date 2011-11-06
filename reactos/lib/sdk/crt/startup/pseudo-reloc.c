@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <memory.h>
+#include <malloc.h>
 
 #if defined(__CYGWIN__)
 #include <wchar.h>
@@ -46,10 +47,7 @@
 
 extern char __RUNTIME_PSEUDO_RELOC_LIST__;
 extern char __RUNTIME_PSEUDO_RELOC_LIST_END__;
-#ifndef _MSC_VER
-#define __ImageBase __MINGW_LSYMBOL(_image_base__)
-#endif
-extern char __ImageBase;
+extern char __MINGW_LSYMBOL(_image_base__);
 
 void _pei386_runtime_relocator (void);
 
@@ -466,7 +464,12 @@ _pei386_runtime_relocator (void)
 
   do_pseudo_reloc (&__RUNTIME_PSEUDO_RELOC_LIST__,
 		   &__RUNTIME_PSEUDO_RELOC_LIST_END__,
-		   &__MINGW_LSYMBOL(_image_base__));
+#ifdef __GNUC__
+		   &__MINGW_LSYMBOL(_image_base__)
+#else
+		   &__ImageBase
+#endif
+		   );
 #ifdef __MINGW64_VERSION_MAJOR
   restore_modified_sections ();
 #endif /* __MINGW64_VERSION_MAJOR */
