@@ -20,6 +20,7 @@ list(APPEND SOURCE
     client/heapmem.c
     client/job.c
 	client/loader.c
+	client/path.c
 	client/perfcnt.c
 	client/power.c
     client/proc.c

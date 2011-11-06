@@ -37,6 +37,7 @@
 		<file>heapmem.c</file>
 		<file>job.c</file>
 		<file>loader.c</file>
+		<file>path.c</file>
 		<file>perfcnt.c</file>
 		<file>power.c</file>
 		<file>proc.c</file>
