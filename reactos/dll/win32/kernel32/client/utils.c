@@ -21,11 +21,6 @@
 
 /* GLOBALS ********************************************************************/
 
-PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
-PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString;
-PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize;
-PRTL_COUNT_STRINGA Basep8BitStringToUnicodeSize;
-
 UNICODE_STRING Restricted = RTL_CONSTANT_STRING(L"Restricted");
 
 /* FUNCTIONS ******************************************************************/

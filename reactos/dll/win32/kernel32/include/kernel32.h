@@ -245,6 +245,13 @@ typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRINGA)(IN PANSI_STRING AnsiString,
 
 typedef ULONG (NTAPI *PRTL_COUNT_STRINGA)(IN PANSI_STRING UnicodeString);
 
+ULONG
+NTAPI
+BasepUnicodeStringToAnsiSize(IN PUNICODE_STRING String);
+
+ULONG
+NTAPI
+BasepAnsiStringToUnicodeSize(IN PANSI_STRING String);
 
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 extern PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString;
