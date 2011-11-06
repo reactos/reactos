@@ -1,3 +1,5 @@
+#include <precomp.h>
+
 /*********************************************************************
 *              _chkesp (MSVCRT.@)
 *
@@ -33,3 +35,14 @@ void _chkesp(void)
 }
 
 #endif  /* __i386__ */
+
+/*********************************************************************
+ * _resetstkoflw (MSVCRT.@)
+ */
+int CDECL _resetstkoflw(void)
+{
+    int stack_addr;
+
+    /* causes stack fault that updates NtCurrentTeb()->Tib.StackLimit */
+    return VirtualProtect( &stack_addr, 1, PAGE_GUARD|PAGE_READWRITE, NULL );
+}

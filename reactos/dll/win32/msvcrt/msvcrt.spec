@@ -783,7 +783,7 @@
 # extern _pwctype
 @ cdecl _read(long ptr long)
 # stub _realloc_dbg
-# stub _resetstkoflw
+@ cdecl _resetstkoflw()
 @ cdecl _rmdir(str)
 @ cdecl _rmtmp()
 @ cdecl _rotl(long long)

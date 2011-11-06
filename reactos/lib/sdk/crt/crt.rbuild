@@ -77,11 +77,11 @@
 	</directory>
 	<directory name="except">
 		<file>abnorter.c</file>
-		<file>checkesp.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
 		<file>except.c</file>
 		<file>matherr.c</file>
+		<file>stack.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>prolog.s</file>

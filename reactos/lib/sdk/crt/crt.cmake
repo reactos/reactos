@@ -21,11 +21,11 @@ list(APPEND CRT_SOURCE
     direct/wmkdir.c
     direct/wrmdir.c
     except/abnorter.c
-    except/checkesp.c
     except/cpp.c
     except/cppexcept.c
     except/except.c
     except/matherr.c
+    except/stack.c
     except/xcptfil.c
     float/chgsign.c
     float/copysign.c
