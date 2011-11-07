@@ -1516,14 +1516,11 @@ NTSTATUS DispTdiSetInformationEx(
         return Irp->IoStatus.Status;
     }
 
-    Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);
-    if (NT_SUCCESS(Status)) {
-        Request.RequestNotifyObject = DispDataRequestComplete;
-        Request.RequestContext      = Irp;
+    Request.RequestNotifyObject = NULL;
+    Request.RequestContext      = NULL;
 
-        Status = InfoTdiSetInformationEx(&Request, &Info->ID,
+    Status = InfoTdiSetInformationEx(&Request, &Info->ID,
             &Info->Buffer, Info->BufferSize);
-    }
 
     return Status;
 }
