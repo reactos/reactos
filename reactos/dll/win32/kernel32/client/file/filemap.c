@@ -85,8 +85,7 @@ CreateFileMappingW(HANDLE hFile,
         /* Give it */
         DesiredAccess |= SECTION_MAP_EXECUTE;
     }
-
-    if ((flProtect != PAGE_READONLY) && (flProtect != PAGE_WRITECOPY))
+    else if ((flProtect != PAGE_READONLY) && (flProtect != PAGE_WRITECOPY))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
