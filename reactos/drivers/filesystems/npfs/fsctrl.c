@@ -57,12 +57,11 @@ NpfsAddListeningServerInstance(PIRP Irp,
 
     KeLockMutex(&Ccb->Fcb->CcbListLock);
 
-    IoMarkIrpPending(Irp);
-    InsertTailList(&Ccb->Fcb->WaiterListHead, &Entry->Entry);
-
     IoAcquireCancelSpinLock(&oldIrql);
     if (!Irp->Cancel)
     {
+        IoMarkIrpPending(Irp);
+        InsertTailList(&Ccb->Fcb->WaiterListHead, &Entry->Entry);
         (void)IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
         IoReleaseCancelSpinLock(oldIrql);
         KeUnlockMutex(&Ccb->Fcb->CcbListLock);
@@ -289,7 +288,7 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
             {
                 RemoveEntryList(Entry);
                 Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DriverContext);
-                Complete = (NULL == IoSetCancelRoutine(Irp, NULL));
+                Complete = (NULL != IoSetCancelRoutine(Irp, NULL));
                 break;
             }
             Entry = Entry->Flink;

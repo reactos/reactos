@@ -133,9 +133,11 @@ NpfsFindListeningServerInstance(PNPFS_FCB Fcb)
             IoAcquireCancelSpinLock(&oldIrql);
             if (!Irp->Cancel)
             {
-                (void)IoSetCancelRoutine(Irp, NULL);
-                IoReleaseCancelSpinLock(oldIrql);
-                return Waiter->Ccb;
+                if (IoSetCancelRoutine(Irp, NULL) != NULL)
+                {
+                    IoReleaseCancelSpinLock(oldIrql);
+                    return Waiter->Ccb;
+                }
             }
             IoReleaseCancelSpinLock(oldIrql);
         }
@@ -868,11 +870,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
                 RemoveEntryList(Entry);
                 tmpIrp = CONTAINING_RECORD(WaitEntry, IRP, Tail.Overlay.DriverContext);
                 IoAcquireCancelSpinLock(&oldIrql);
-                if (!tmpIrp->Cancel)
-                {
-                    (void)IoSetCancelRoutine(tmpIrp, NULL);
-                    Complete = TRUE;
-                }
+                Complete = (NULL != IoSetCancelRoutine(tmpIrp, NULL));
                 IoReleaseCancelSpinLock(oldIrql);
                 if (Complete)
                 {
