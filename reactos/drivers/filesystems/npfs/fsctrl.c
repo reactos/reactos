@@ -92,6 +92,7 @@ NpfsConnectPipe(PIRP Irp,
     PNPFS_FCB Fcb;
     PNPFS_CCB ClientCcb;
     NTSTATUS Status;
+    KPROCESSOR_MODE WaitMode;
 
     DPRINT("NpfsConnectPipe()\n");
 
@@ -124,6 +125,7 @@ NpfsConnectPipe(PIRP Irp,
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
     Flags = FileObject->Flags;
+    WaitMode = Irp->RequestorMode;
 
     /* search for a listening client fcb */
     KeLockMutex(&Fcb->CcbListLock);
@@ -183,7 +185,7 @@ NpfsConnectPipe(PIRP Irp,
     {
         KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
-            Irp->RequestorMode,
+            WaitMode,
             (Flags & FO_ALERTABLE_IO),
             NULL);
     }
