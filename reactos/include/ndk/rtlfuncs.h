@@ -3317,6 +3317,23 @@ RtlZombifyActivationContext(
     PVOID Context
 );
 
+//
+// WOW64 Functions
+//
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirection(
+    IN BOOLEAN Wow64FsEnableRedirection
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirectionEx(
+    IN PVOID Wow64FsEnableRedirection,
+    OUT PVOID *OldFsRedirectionLevel
+);
 
 #endif
 
