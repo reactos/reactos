@@ -60,6 +60,7 @@ NpfsAddListeningServerInstance(PIRP Irp,
     IoAcquireCancelSpinLock(&oldIrql);
     if (!Irp->Cancel)
     {
+        Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
         IoMarkIrpPending(Irp);
         InsertTailList(&Ccb->Fcb->WaiterListHead, &Entry->Entry);
         (void)IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
@@ -174,21 +175,17 @@ NpfsConnectPipe(PIRP Irp,
     /* no listening client fcb found */
     DPRINT("No listening client fcb found -- waiting for client\n");
 
-    Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
-
     Status = NpfsAddListeningServerInstance(Irp, Ccb);
 
     KeUnlockMutex(&Fcb->CcbListLock);
 
-    if (Flags & FO_SYNCHRONOUS_IO)
+    if ((Status == STATUS_PENDING) && (Flags & FO_SYNCHRONOUS_IO))
     {
-        Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
+        KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
             Irp->RequestorMode,
             (Flags & FO_ALERTABLE_IO),
             NULL);
-        if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
-            Status = STATUS_CANCELLED;
     }
 
     DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
