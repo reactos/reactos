@@ -144,10 +144,13 @@ IsLongName_U(IN PWCHAR FileName,
     for (i = 0, Dots = Length - 1; i < Length; i++, Dots--)
     {
         /* Check if this could be an extension */
-        if (*FileName == '.')
+        if (FileName[i] == '.')
         {
             /* Unlike the short case, we WANT more than one extension, or a long one */
-            if ((HasExtension) || (Dots > 3)) return TRUE;
+            if ((HasExtension) || (Dots > 3))
+            {
+                return TRUE;
+            }
             HasExtension = TRUE;
         }
 
@@ -219,7 +222,7 @@ FindLFNorSFN_U(IN PWCHAR Path,
 
 PWCHAR
 WINAPI
-SkipPathTypeIndicator_U(IN PWCHAR Path)
+SkipPathTypeIndicator_U(IN LPWSTR Path)
 {
     PWCHAR ReturnPath;
     ULONG i;
@@ -543,7 +546,7 @@ GetFullPathNameA(IN LPCSTR lpFileName,
     if (!PathSize) goto Quickie;
 
     /* If the *caller's* buffer was too small, fail, but add in space for NULL */
-    if (PathSize < nBufferLength)
+    if (PathSize >= nBufferLength)
     {
         PathSize++;
         goto Quickie;
@@ -890,7 +893,7 @@ GetLongPathNameW(IN LPCWSTR lpszShortPath,
     HANDLE FindHandle;
     DWORD ReturnLength;
     ULONG ErrorMode;
-    BOOLEAN Found;
+    BOOLEAN Found = FALSE;
     WIN32_FIND_DATAW FindFileData;
 
     /* Initialize so Quickie knows there's nothing to do */
@@ -917,13 +920,12 @@ GetLongPathNameW(IN LPCWSTR lpszShortPath,
     }
 
     /* Now get a pointer to the actual path, skipping indicators */
-    Path = SkipPathTypeIndicator_U((PWCHAR)lpszShortPath);
-
-    /* Try to find a file name in there */
-    if (Path) Found = FindLFNorSFN_U(Path, &First, &Last, FALSE);
+    Path = SkipPathTypeIndicator_U((LPWSTR)lpszShortPath);
 
     /* Is there any path or filename in there? */
-    if (!(Path) || (*Path == UNICODE_NULL) || !(Found))
+    if (!(Path) ||
+        (*Path == UNICODE_NULL) ||
+        !(FindLFNorSFN_U(Path, &First, &Last, FALSE)))
     {
         /* There isn't, so the long path is simply the short path */
         ReturnLength = wcslen(lpszShortPath);
@@ -953,7 +955,7 @@ GetLongPathNameW(IN LPCWSTR lpszShortPath,
     Original = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
     if (!Original) goto ErrorQuickie;
 
-    /* Make a copy ofi t */
+    /* Make a copy of it */
     RtlMoveMemory(Original, lpszShortPath, Length * sizeof(WCHAR));
 
     /* Compute the new first and last markers */
@@ -1269,7 +1271,7 @@ GetShortPathNameW(IN LPCWSTR lpszLongPath,
     HANDLE FindHandle;
     DWORD ReturnLength;
     ULONG ErrorMode;
-    BOOLEAN Found;
+    BOOLEAN Found = FALSE;
     WIN32_FIND_DATAW FindFileData;
 
     /* Initialize so Quickie knows there's nothing to do */
@@ -1288,7 +1290,7 @@ GetShortPathNameW(IN LPCWSTR lpszLongPath,
     ErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     /* Do a simple check to see if the path exists */
-    if (GetFileAttributesW(lpszShortPath) == INVALID_FILE_ATTRIBUTES)
+    if (GetFileAttributesW(lpszLongPath) == INVALID_FILE_ATTRIBUTES)
     {
         /* Windows checks for an application compatibility flag to allow this */
         if (!(NtCurrentPeb()) || !(NtCurrentPeb()->AppCompatFlags.LowPart & 1))
@@ -1300,19 +1302,18 @@ GetShortPathNameW(IN LPCWSTR lpszLongPath,
     }
 
     /* Now get a pointer to the actual path, skipping indicators */
-    Path = SkipPathTypeIndicator_U((PWCHAR)lpszShortPath);
-
-    /* Try to find a file name in there */
-    if (Path) Found = FindLFNorSFN_U(Path, &First, &Last, TRUE);
+    Path = SkipPathTypeIndicator_U((LPWSTR)lpszLongPath);
 
     /* Is there any path or filename in there? */
-    if (!(Path) || (*Path == UNICODE_NULL) || !(Found))
+    if (!(Path) ||
+        (*Path == UNICODE_NULL) ||
+        !(FindLFNorSFN_U(Path, &First, &Last, TRUE)))
     {
         /* There isn't, so the long path is simply the short path */
         ReturnLength = wcslen(lpszLongPath);
 
         /* Is there space for it? */
-        if ((cchBuffer > ReturnLength) && (lpszLongPath))
+        if ((cchBuffer > ReturnLength) && (lpszShortPath))
         {
             /* Make sure the pointers aren't already the same */
             if (lpszLongPath != lpszShortPath)
