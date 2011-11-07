@@ -351,4 +351,89 @@ ReadFileEx(IN HANDLE hFile,
    return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ReadFileScatter(HANDLE hFile,
+                FILE_SEGMENT_ELEMENT aSegmentArray[],
+                DWORD nNumberOfBytesToRead,
+                LPDWORD lpReserved,
+                LPOVERLAPPED lpOverlapped)
+{
+    PIO_STATUS_BLOCK pIOStatus;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    DPRINT("(%p %p %u %p)\n", hFile, aSegmentArray, nNumberOfBytesToRead, lpOverlapped);
+
+    Offset.LowPart  = lpOverlapped->Offset;
+    Offset.HighPart = lpOverlapped->OffsetHigh;
+    pIOStatus = (PIO_STATUS_BLOCK) lpOverlapped;
+    pIOStatus->Status = STATUS_PENDING;
+    pIOStatus->Information = 0;
+
+    Status = NtReadFileScatter(hFile,
+                               NULL,
+                               NULL,
+                               NULL,
+                               pIOStatus,
+                               aSegmentArray,
+                               nNumberOfBytesToRead,
+                               &Offset,
+                               NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+WriteFileGather(HANDLE hFile,
+                FILE_SEGMENT_ELEMENT aSegmentArray[],
+                DWORD nNumberOfBytesToWrite,
+                LPDWORD lpReserved,
+                LPOVERLAPPED lpOverlapped)
+{
+    PIO_STATUS_BLOCK IOStatus;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    DPRINT("%p %p %u %p\n", hFile, aSegmentArray, nNumberOfBytesToWrite, lpOverlapped);
+
+    Offset.LowPart = lpOverlapped->Offset;
+    Offset.HighPart = lpOverlapped->OffsetHigh;
+    IOStatus = (PIO_STATUS_BLOCK) lpOverlapped;
+    IOStatus->Status = STATUS_PENDING;
+    IOStatus->Information = 0;
+
+    Status = NtWriteFileGather(hFile,
+                               NULL,
+                               NULL,
+                               NULL,
+                               IOStatus,
+                               aSegmentArray,
+                               nNumberOfBytesToWrite,
+                               &Offset,
+                               NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /* EOF */

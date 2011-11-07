@@ -242,68 +242,24 @@ DeviceIoControl(IN HANDLE hDevice,
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetOverlappedResult(IN HANDLE hFile,
-                    IN LPOVERLAPPED lpOverlapped,
-                    OUT LPDWORD lpNumberOfBytesTransferred,
-                    IN BOOL bWait)
+CancelIo(IN HANDLE hFile)
 {
-    DWORD WaitStatus;
-    HANDLE hObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
 
-
-    /* Check for pending operation */
-    if (lpOverlapped->Internal == STATUS_PENDING)
+    Status = NtCancelIoFile(hFile, &IoStatusBlock);
+    if (!NT_SUCCESS(Status))
     {
-        /* Check if the caller is okay with waiting */
-        if (!bWait)
-        {
-            /* Set timeout */
-            WaitStatus = WAIT_TIMEOUT;
-        }
-        else
-        {
-            /* Wait for the result */
-            hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
-            WaitStatus = WaitForSingleObject(hObject, INFINITE);
-        }
-
-
-        /* Check for timeout */
-        if (WaitStatus == WAIT_TIMEOUT)
-        {
-            /* We have to override the last error with INCOMPLETE instead */
-            SetLastError(ERROR_IO_INCOMPLETE);
-            return FALSE;
-        }
-
-
-        /* Fail if we had an error -- the last error is already set */
-        if (WaitStatus != 0) return FALSE;
-    }
-
-
-    /* Return bytes transferred */
-    *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
-
-
-    /* Check for failure during I/O */
-    if (!NT_SUCCESS(lpOverlapped->Internal))
-    {
-        /* Set the error and fail */
-        BaseSetLastNTError(lpOverlapped->Internal);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
-
-    /* All done */
     return TRUE;
 }
 
 /* EOF */
-

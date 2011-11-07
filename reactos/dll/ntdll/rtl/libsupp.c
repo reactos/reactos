@@ -536,3 +536,30 @@ RtlDosApplyFileIsolationRedirection_Ustr(IN ULONG Flags,
 {
     return STATUS_SXS_KEY_NOT_FOUND;
 }
+
+/*
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirection(IN BOOLEAN Wow64FsEnableRedirection)
+{
+    /* This is what Windows returns on x86 */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64EnableFsRedirectionEx(IN PVOID Wow64FsEnableRedirection,
+                              OUT PVOID *OldFsRedirectionLevel)
+{
+    /* This is what Windows returns on x86 */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/* EOF */

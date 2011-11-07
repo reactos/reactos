@@ -30,6 +30,7 @@
 		<file>compname.c</file>
 		<file>debugger.c</file>
 		<file>dllmain.c</file>
+		<file>dosdev.c</file>
 		<file>environ.c</file>
 		<file>except.c</file>
 		<file>fiber.c</file>
@@ -56,7 +57,6 @@
 		<file>vista.c</file>
 		<directory name="file">
 			<file>backup.c</file>
-			<file>bintype.c</file>
 			<file>cnotify.c</file>
 			<file>copy.c</file>
 			<file>console.c</file>
@@ -64,9 +64,9 @@
 			<file>delete.c</file>
 			<file>deviceio.c</file>
 			<file>dir.c</file>
-			<file>dosdev.c</file>
-			<file>file.c</file>
+			<file>fileinfo.c</file>
 			<file>filemap.c</file>
+			<file>filename.c</file>
 			<file>find.c</file>
 			<file>hardlink.c</file>
 			<file>iocompl.c</file>
@@ -75,7 +75,6 @@
 			<file>mailslot.c</file>
 			<file>move.c</file>
 			<file>npipe.c</file>
-			<file>pipe.c</file>
 			<file>rw.c</file>
 			<file>tape.c</file>
 			<file>volume.c</file>

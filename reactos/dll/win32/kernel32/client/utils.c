@@ -22,8 +22,41 @@
 /* GLOBALS ********************************************************************/
 
 UNICODE_STRING Restricted = RTL_CONSTANT_STRING(L"Restricted");
+BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
+PRTL_CONVERT_STRING Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
+PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString = RtlUnicodeStringToAnsiString;
+PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize = BasepUnicodeStringToAnsiSize;
+PRTL_COUNT_STRINGA Basep8BitStringToUnicodeSize = BasepAnsiStringToUnicodeSize;
 
 /* FUNCTIONS ******************************************************************/
+
+ULONG
+NTAPI
+BasepUnicodeStringToOemSize(IN PUNICODE_STRING String)
+{
+    return RtlUnicodeStringToOemSize(String);
+}
+
+ULONG
+NTAPI
+BasepOemStringToUnicodeSize(IN PANSI_STRING String)
+{
+    return RtlOemStringToUnicodeSize(String);
+}
+
+ULONG
+NTAPI
+BasepUnicodeStringToAnsiSize(IN PUNICODE_STRING String)
+{
+    return RtlUnicodeStringToAnsiSize(String);
+}
+
+ULONG
+NTAPI
+BasepAnsiStringToUnicodeSize(IN PANSI_STRING String)
+{
+    return RtlAnsiStringToUnicodeSize(String);
+}
 
 HANDLE
 WINAPI
@@ -678,6 +711,120 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     /* Return status */
     DPRINT("Section: %lx for file: %lx\n", *hSection, hFile);
     return Status;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+WINAPI
+Wow64EnableWow64FsRedirection(IN BOOLEAN Wow64EnableWow64FsRedirection)
+{
+    NTSTATUS Status;
+    BOOL Result;
+
+    Status = RtlWow64EnableFsRedirection(Wow64EnableWow64FsRedirection);
+    if (NT_SUCCESS(Status))
+    {
+        Result = TRUE;
+    }
+    else
+    {
+        BaseSetLastNTError(Status);
+        Result = FALSE;
+    }
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+Wow64DisableWow64FsRedirection(IN PVOID *OldValue)
+{
+    NTSTATUS Status;
+    BOOL Result;
+
+    Status = RtlWow64EnableFsRedirectionEx((PVOID)TRUE, OldValue);
+    if (NT_SUCCESS(Status))
+    {
+        Result = TRUE;
+    }
+    else
+    {
+        BaseSetLastNTError(Status);
+        Result = FALSE;
+    }
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+Wow64RevertWow64FsRedirection(IN PVOID OldValue)
+{
+    NTSTATUS Status;
+    BOOL Result;
+
+    Status = RtlWow64EnableFsRedirectionEx(OldValue, &OldValue);
+    if (NT_SUCCESS(Status))
+    {
+        Result = TRUE;
+    }
+    else
+    {
+        BaseSetLastNTError(Status);
+        Result = FALSE;
+    }
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+SetFileApisToOEM(VOID)
+{
+    /* Set the correct Base Api */
+    Basep8BitStringToUnicodeString = (PRTL_CONVERT_STRING)RtlOemStringToUnicodeString;
+    BasepUnicodeStringTo8BitString = RtlUnicodeStringToOemString;
+    BasepUnicodeStringTo8BitSize = BasepUnicodeStringToOemSize;
+    Basep8BitStringToUnicodeSize = BasepOemStringToUnicodeSize;
+
+    /* FIXME: Old, deprecated way */
+    bIsFileApiAnsi = FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+SetFileApisToANSI(VOID)
+{
+    /* Set the correct Base Api */
+    Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
+    BasepUnicodeStringTo8BitString = RtlUnicodeStringToAnsiString;
+    BasepUnicodeStringTo8BitSize = BasepUnicodeStringToAnsiSize;
+    Basep8BitStringToUnicodeSize = BasepAnsiStringToUnicodeSize;
+    
+    /* FIXME: Old, deprecated way */
+    bIsFileApiAnsi = TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+AreFileApisANSI(VOID)
+{
+   return Basep8BitStringToUnicodeString == RtlAnsiStringToUnicodeString;
 }
 
 /*

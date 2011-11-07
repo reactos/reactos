@@ -12,6 +12,7 @@ list(APPEND SOURCE
 	client/atom.c
 	client/compname.c
     client/debugger.c
+    client/dosdev.c
 	client/dllmain.c
 	client/environ.c
     client/except.c
@@ -38,7 +39,6 @@ list(APPEND SOURCE
     client/virtmem.c
     client/vista.c
     client/file/backup.c
-    client/file/bintype.c
     client/file/cnotify.c
     client/file/copy.c
     client/file/console.c
@@ -46,9 +46,9 @@ list(APPEND SOURCE
     client/file/delete.c
     client/file/deviceio.c
     client/file/dir.c
-    client/file/dosdev.c
-    client/file/file.c
+    client/file/fileinfo.c
     client/file/filemap.c
+    client/file/filename.c
     client/file/find.c
     client/file/hardlink.c
     client/file/iocompl.c
@@ -57,7 +57,6 @@ list(APPEND SOURCE
     client/file/mailslot.c
     client/file/move.c
     client/file/npipe.c
-    client/file/pipe.c
     client/file/rw.c
     client/file/tape.c
     client/file/volume.c

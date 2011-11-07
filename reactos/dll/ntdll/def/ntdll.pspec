@@ -972,8 +972,8 @@
 @ stdcall -arch=x86_64 RtlVirtualUnwind(long long long ptr ptr ptr ptr ptr)
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWalkHeap(long ptr)
-//@ stdcall RtlWow64EnableFsRedirection(long)
-//@ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
+@ stdcall RtlWow64EnableFsRedirection(long)
+@ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
 //@ stdcall RtlWriteMemoryStream
