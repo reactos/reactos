@@ -111,7 +111,7 @@ IsShortName_U(IN PWCHAR Name,
         }
 
         /* Check if this is perhaps an extension? */
-        if (c == L'.')
+        if (c == '.')
         {
             /* Unless the extension is too large or there's more than one */
             if ((HasExtension) || (Dots > 3)) return FALSE;
@@ -144,7 +144,7 @@ IsLongName_U(IN PWCHAR FileName,
     for (i = 0, Dots = Length - 1; i < Length; i++, Dots--)
     {
         /* Check if this could be an extension */
-        if (FileName[i] == '.')
+        if (FileName[i] == L'.')
         {
             /* Unlike the short case, we WANT more than one extension, or a long one */
             if ((HasExtension) || (Dots > 3))
