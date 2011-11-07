@@ -19,9 +19,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern UNICODE_STRING SystemDirectory;
-extern UNICODE_STRING WindowsDirectory;
-
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 BOOLEAN BaseRunningInServerProcess;
@@ -34,7 +31,6 @@ HMODULE kernel32_handle = NULL;
 PPEB Peb;
 ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
-UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
 static BOOL DllInitialized = FALSE;
 
 BOOL WINAPI
@@ -271,12 +267,10 @@ DllMain(HANDLE hDll,
         /* Set the directories */
         BaseWindowsDirectory = BaseStaticServerData->WindowsDirectory;
         BaseWindowsSystemDirectory = BaseStaticServerData->WindowsSystemDirectory;
-        SystemDirectory = BaseWindowsSystemDirectory;
-        WindowsDirectory = BaseWindowsDirectory;
 
         /* Construct the default path (using the static buffer) */
         _snwprintf(BaseDefaultPathBuffer, sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
-            L".;%wZ;%wZ\\system;%wZ;", &SystemDirectory, &WindowsDirectory, &WindowsDirectory);
+            L".;%wZ;%wZ\\system;%wZ;", &BaseWindowsSystemDirectory, &BaseWindowsDirectory, &BaseWindowsDirectory);
 
         BaseDefaultPath.Buffer = BaseDefaultPathBuffer;
         BaseDefaultPath.Length = wcslen(BaseDefaultPathBuffer) * sizeof(WCHAR);
@@ -335,52 +329,6 @@ DllMain(HANDLE hDll,
     }
 
     return TRUE;
-}
-
-#undef InterlockedIncrement
-#undef InterlockedDecrement
-#undef InterlockedExchange
-#undef InterlockedExchangeAdd
-#undef InterlockedCompareExchange
-
-LONG
-WINAPI
-InterlockedIncrement(IN OUT LONG volatile *lpAddend)
-{
-    return _InterlockedIncrement(lpAddend);
-}
-
-LONG
-WINAPI
-InterlockedDecrement(IN OUT LONG volatile *lpAddend)
-{
-    return _InterlockedDecrement(lpAddend);
-}
-
-#undef InterlockedExchange
-LONG
-WINAPI
-InterlockedExchange(IN OUT LONG volatile *Target,
-                    IN LONG Value)
-{
-    return _InterlockedExchange(Target, Value);
-}
-
-LONG
-WINAPI
-InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
-                       IN LONG Value)
-{
-    return _InterlockedExchangeAdd(Addend, Value);
-}
-
-LONG
-WINAPI
-InterlockedCompareExchange(IN OUT LONG volatile *Destination,
-                           IN LONG Exchange,
-                           IN LONG Comperand)
-{
-    return _InterlockedCompareExchange(Destination, Exchange, Comperand);
 }
 
 /* EOF */

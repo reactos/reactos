@@ -258,6 +258,7 @@ extern PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString;
 extern PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize;
 extern PRTL_COUNT_STRINGA Basep8BitStringToUnicodeSize;
 
+extern UNICODE_STRING BaseWindowsDirectory, BaseWindowsSystemDirectory;
 extern HANDLE BaseNamedObjectDirectory;
 
 HANDLE

@@ -15,12 +15,13 @@
 
 /* GLOBALS ********************************************************************/
 
-UNICODE_STRING BaseDllDirectory;
 UNICODE_STRING NoDefaultCurrentDirectoryInExePath = RTL_CONSTANT_STRING(L"NoDefaultCurrentDirectoryInExePath");
-UNICODE_STRING SystemDirectory;
-UNICODE_STRING WindowsDirectory;
-UNICODE_STRING BaseDefaultPathAppend;
-UNICODE_STRING BaseDefaultPath;
+
+UNICODE_STRING BaseWindowsSystemDirectory, BaseWindowsDirectory;
+UNICODE_STRING BaseDefaultPathAppend, BaseDefaultPath, BaseDllDirectory;
+
+PVOID gpTermsrvGetWindowsDirectoryA;
+PVOID gpTermsrvGetWindowsDirectoryW;
 
 /* This is bitmask for each illegal filename character */
 /* If someone has time, please feel free to use 0b notation */
@@ -33,6 +34,41 @@ DWORD IllegalMask[4] =
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+BOOLEAN
+WINAPI
+CheckForSameCurdir(IN PUNICODE_STRING DirName)
+{
+    PUNICODE_STRING CurDir;
+    USHORT CurLength;
+    BOOLEAN Result;
+    UNICODE_STRING CurDirCopy;
+
+    CurDir = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
+    
+    CurLength = CurDir->Length;
+    if (CurDir->Length <= 6)
+    {
+        if (CurLength != DirName->Length) return FALSE;
+    }
+    else
+    {
+        if ((CurLength - 2) != DirName->Length) return FALSE;
+    }
+    
+    RtlAcquirePebLock();
+
+    CurDirCopy = *CurDir;
+    if (CurDirCopy.Length > 6) CurDirCopy.Length -= 2;
+    
+    Result = 0;
+
+    if (RtlEqualUnicodeString(&CurDirCopy, DirName, TRUE)) Result = TRUE;
+
+    RtlReleasePebLock();
+
+    return Result;
+}
 
 /*
  * Why not use RtlIsNameLegalDOS8Dot3? In fact the actual algorithm body is
@@ -790,7 +826,6 @@ ContainsPath(LPCWSTR name)
     return (name[1] == '.' && (name[2] == '/' || name[2] == '\\'));
 }
 
-
 /*
  * @implemented
  */
@@ -1478,81 +1513,6 @@ Quickie:
 
 /*
  * @implemented
- */
-DWORD
-WINAPI
-GetCurrentDirectoryA(IN DWORD nBufferLength,
-                     IN LPSTR lpBuffer)
-{
-   WCHAR BufferW[MAX_PATH];
-   DWORD ret;
-
-   ret = GetCurrentDirectoryW(MAX_PATH, BufferW);
-
-   if (!ret) return 0;
-   if (ret > MAX_PATH)
-   {
-      SetLastError(ERROR_FILENAME_EXCED_RANGE);
-      return 0;
-   }
-
-   return FilenameW2A_FitOrFail(lpBuffer, nBufferLength, BufferW, ret+1);
-}
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetCurrentDirectoryW(IN DWORD nBufferLength,
-                     IN LPWSTR lpBuffer)
-{
-    ULONG Length;
-
-    Length = RtlGetCurrentDirectory_U (nBufferLength * sizeof(WCHAR), lpBuffer);
-    return (Length / sizeof (WCHAR));
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetCurrentDirectoryA(IN LPCSTR lpPathName)
-{
-   PWCHAR PathNameW;
-
-   DPRINT("setcurrdir: %s\n",lpPathName);
-
-   if (!(PathNameW = FilenameA2W(lpPathName, FALSE))) return FALSE;
-
-   return SetCurrentDirectoryW(PathNameW);
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetCurrentDirectoryW(IN LPCWSTR lpPathName)
-{
-    UNICODE_STRING UnicodeString;
-    NTSTATUS Status;
-
-    RtlInitUnicodeString(&UnicodeString, lpPathName);
-
-    Status = RtlSetCurrentDirectory_U(&UnicodeString);
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError (Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-/*
- * @implemented
  *
  * NOTE: Windows returns a dos/short (8.3) path
  */
@@ -1640,12 +1600,168 @@ GetTempPathW(IN DWORD count,
 /*
  * @implemented
  */
+DWORD
+WINAPI
+GetCurrentDirectoryA(IN DWORD nBufferLength,
+                     IN LPSTR lpBuffer)
+{
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
+    PUNICODE_STRING StaticString;
+    ULONG MaxLength;
+
+    StaticString = &NtCurrentTeb()->StaticUnicodeString;
+
+    MaxLength = nBufferLength;
+    if (nBufferLength >= UNICODE_STRING_MAX_BYTES)
+    {
+        MaxLength = UNICODE_STRING_MAX_BYTES - 1;
+    }
+
+    StaticString->Length = RtlGetCurrentDirectory_U(StaticString->MaximumLength,
+                                                    StaticString->Buffer);
+    Status = RtlUnicodeToMultiByteSize(&nBufferLength,
+                                       StaticString->Buffer,
+                                       StaticString->Length);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
+
+    if (MaxLength <= nBufferLength)
+    {
+        return nBufferLength + 1;
+    }
+
+    AnsiString.Buffer = lpBuffer;
+    AnsiString.MaximumLength = MaxLength;
+    Status = BasepUnicodeStringTo8BitString(&AnsiString, StaticString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
+
+    return AnsiString.Length;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetCurrentDirectoryW(IN DWORD nBufferLength,
+                     IN LPWSTR lpBuffer)
+{
+    return RtlGetCurrentDirectory_U(nBufferLength * sizeof(WCHAR), lpBuffer) / sizeof(WCHAR);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetCurrentDirectoryA(IN LPCSTR lpPathName)
+{
+    PUNICODE_STRING DirName;
+    NTSTATUS Status;
+
+    if (!lpPathName)
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return FALSE;
+    }
+    
+    DirName = Basep8BitStringToStaticUnicodeString(lpPathName);
+    if (!DirName) return FALSE;
+    
+    if (CheckForSameCurdir(DirName)) return FALSE;
+    
+    Status = RtlSetCurrentDirectory_U(DirName);
+    if (NT_SUCCESS(Status)) return TRUE;
+    
+    if ((*DirName->Buffer != L'"') || (DirName->Length <= 2))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
+        
+    DirName = Basep8BitStringToStaticUnicodeString(lpPathName + 1);
+    if (!DirName) return FALSE;
+
+    Status = RtlSetCurrentDirectory_U(DirName);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetCurrentDirectoryW(IN LPCWSTR lpPathName)
+{
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+
+    if (!lpPathName)
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = RtlInitUnicodeStringEx(&UnicodeString, lpPathName);
+    if (NT_SUCCESS(Status))
+    {
+        if (!CheckForSameCurdir(&UnicodeString))
+        {
+            Status = RtlSetCurrentDirectory_U(&UnicodeString);
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 UINT
 WINAPI
 GetSystemDirectoryA(IN LPSTR lpBuffer,
                     IN UINT uSize)
 {
-   return FilenameU2A_FitOrFail(lpBuffer, uSize, &SystemDirectory);
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
+    ULONG AnsiLength;
+
+    /* Get the correct size of the Unicode Base directory */
+    Status = RtlUnicodeToMultiByteSize(&AnsiLength,
+                                       BaseWindowsSystemDirectory.Buffer,
+                                       BaseWindowsSystemDirectory.MaximumLength);
+    if (!NT_SUCCESS(Status)) return 0;
+
+    if (uSize < AnsiLength) return AnsiLength;
+
+    RtlInitEmptyAnsiString(&AnsiString, lpBuffer, uSize);
+
+    Status = BasepUnicodeStringTo8BitString(&AnsiString,
+                                            &BaseWindowsSystemDirectory,
+                                            FALSE);
+    if (!NT_SUCCESS(Status)) return 0;
+
+    return AnsiString.Length;
 }
 
 /*
@@ -1656,21 +1772,20 @@ WINAPI
 GetSystemDirectoryW(IN LPWSTR lpBuffer,
                     IN UINT uSize)
 {
-    ULONG Length;
+    ULONG ReturnLength;
 
-    Length = SystemDirectory.Length / sizeof (WCHAR);
-
-    if (lpBuffer == NULL) return Length + 1;
-
-    if (uSize > Length)
+    ReturnLength = BaseWindowsSystemDirectory.MaximumLength;
+    if ((uSize * sizeof(WCHAR)) >= ReturnLength)
     {
-        memmove(lpBuffer, SystemDirectory.Buffer, SystemDirectory.Length);
-        lpBuffer[Length] = 0;
+        RtlCopyMemory(lpBuffer,
+                      BaseWindowsSystemDirectory.Buffer,
+                      BaseWindowsSystemDirectory.Length);
+        lpBuffer[BaseWindowsSystemDirectory.Length / sizeof(WCHAR)] = ANSI_NULL;
 
-        return Length;	  //good: ret chars excl. nullchar
+        ReturnLength = BaseWindowsSystemDirectory.Length;
     }
 
-    return Length+1;	 //bad: ret space needed incl. nullchar
+    return ReturnLength / sizeof(WCHAR);
 }
 
 /*
@@ -1681,7 +1796,11 @@ WINAPI
 GetWindowsDirectoryA(IN LPSTR lpBuffer,
                      IN UINT uSize)
 {
-   return FilenameU2A_FitOrFail(lpBuffer, uSize, &WindowsDirectory);
+    /* Is this a TS installation? */
+    if (gpTermsrvGetWindowsDirectoryA) UNIMPLEMENTED;
+
+    /* Otherwise, call the System API */
+    return GetSystemWindowsDirectoryA(lpBuffer, uSize);
 }
 
 /*
@@ -1692,21 +1811,11 @@ WINAPI
 GetWindowsDirectoryW(IN LPWSTR lpBuffer,
                      IN UINT uSize)
 {
-    ULONG Length;
+    /* Is this a TS installation? */
+    if (gpTermsrvGetWindowsDirectoryW) UNIMPLEMENTED;
 
-    Length = WindowsDirectory.Length / sizeof (WCHAR);
-
-    if (lpBuffer == NULL) return Length + 1;
-
-    if (uSize > Length)
-    {
-        memmove(lpBuffer, WindowsDirectory.Buffer, WindowsDirectory.Length);
-        lpBuffer[Length] = 0;
-
-        return Length;	  //good: ret chars excl. nullchar
-    }
-
-    return Length+1;	//bad: ret space needed incl. nullchar
+    /* Otherwise, call the System API */
+    return GetSystemWindowsDirectoryW(lpBuffer, uSize);
 }
 
 /*
@@ -1717,7 +1826,26 @@ WINAPI
 GetSystemWindowsDirectoryA(IN LPSTR lpBuffer,
                            IN UINT uSize)
 {
-    return GetWindowsDirectoryA(lpBuffer, uSize);
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
+    ULONG AnsiLength;
+
+    /* Get the correct size of the Unicode Base directory */
+    Status = RtlUnicodeToMultiByteSize(&AnsiLength,
+                                       BaseWindowsDirectory.Buffer,
+                                       BaseWindowsDirectory.MaximumLength);
+    if (!NT_SUCCESS(Status)) return 0;
+
+    if (uSize < AnsiLength) return AnsiLength;
+
+    RtlInitEmptyAnsiString(&AnsiString, lpBuffer, uSize);
+
+    Status = BasepUnicodeStringTo8BitString(&AnsiString,
+                                            &BaseWindowsDirectory,
+                                            FALSE);
+    if (!NT_SUCCESS(Status)) return 0;
+
+    return AnsiString.Length;
 }
 
 /*
@@ -1728,7 +1856,20 @@ WINAPI
 GetSystemWindowsDirectoryW(IN LPWSTR lpBuffer,
                            IN UINT uSize)
 {
-    return GetWindowsDirectoryW(lpBuffer, uSize);
+    ULONG ReturnLength;
+
+    ReturnLength = BaseWindowsDirectory.MaximumLength;
+    if ((uSize * sizeof(WCHAR)) >= ReturnLength)
+    {
+        RtlCopyMemory(lpBuffer,
+                      BaseWindowsDirectory.Buffer,
+                      BaseWindowsDirectory.Length);
+        lpBuffer[BaseWindowsDirectory.Length / sizeof(WCHAR)] = ANSI_NULL;
+
+        ReturnLength = BaseWindowsDirectory.Length;
+    }
+
+    return ReturnLength / sizeof(WCHAR);
 }
 
 /*

@@ -12,7 +12,67 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef InterlockedIncrement
+#undef InterlockedDecrement
+#undef InterlockedExchange
+#undef InterlockedExchangeAdd
+#undef InterlockedCompareExchange
+
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+InterlockedIncrement(IN OUT LONG volatile *lpAddend)
+{
+    return _InterlockedIncrement(lpAddend);
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+InterlockedDecrement(IN OUT LONG volatile *lpAddend)
+{
+    return _InterlockedDecrement(lpAddend);
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+InterlockedExchange(IN OUT LONG volatile *Target,
+                    IN LONG Value)
+{
+    return _InterlockedExchange(Target, Value);
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
+                       IN LONG Value)
+{
+    return _InterlockedExchangeAdd(Addend, Value);
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+InterlockedCompareExchange(IN OUT LONG volatile *Destination,
+                           IN LONG Exchange,
+                           IN LONG Comperand)
+{
+    return _InterlockedCompareExchange(Destination, Exchange, Comperand);
+}
 
 /*
  * @implemented
