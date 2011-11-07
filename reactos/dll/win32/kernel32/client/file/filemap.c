@@ -314,11 +314,14 @@ OpenFileMappingW(IN DWORD dwDesiredAccess,
                                NULL);
 
     /* Convert COPY to READ */
-    if (dwDesiredAccess == FILE_MAP_COPY) dwDesiredAccess = SECTION_MAP_READ;
-
-    /* Fixup execute */
-    if (dwDesiredAccess == FILE_MAP_EXECUTE)
+    if (dwDesiredAccess == FILE_MAP_COPY)
     {
+        /* Fixup copy */
+        dwDesiredAccess = SECTION_MAP_READ;
+    }
+    else if (dwDesiredAccess & FILE_MAP_EXECUTE)
+    {
+        /* Fixup execute */
         dwDesiredAccess = (dwDesiredAccess & ~FILE_MAP_EXECUTE) | SECTION_MAP_EXECUTE;
     }
 
