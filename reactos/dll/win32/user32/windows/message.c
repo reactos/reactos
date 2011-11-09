@@ -1512,7 +1512,7 @@ IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN 
       This is the message exchange for user32. If there's a need to monitor messages,
       do it here!
    */
-    TRACE("HWND 0x%x, MSG %d, WPARAM 0x%x, LPARAM 0x%x, Ansi &d\n",hWnd,Msg,wParam,lParam,Ansi);
+    TRACE("HWND %p, MSG %u, WPARAM %p, LPARAM %p, Ansi %d\n", hWnd, Msg, wParam, lParam, Ansi);
 //    if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON )
     if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_FIRST )
     {
