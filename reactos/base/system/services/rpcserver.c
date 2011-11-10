@@ -1578,7 +1578,9 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     if (ServiceNameLen > 12 &&
         !_wcsnicmp(L"\\SystemRoot\\", CanonName, 12))
     {
-        *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
+        *RelativeName = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  (ServiceNameLen + 1) * sizeof(WCHAR));
         if (*RelativeName == NULL)
         {
             DPRINT("Error allocating memory for boot driver name!\n");
@@ -1597,7 +1599,9 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         !_wcsnicmp(L"%SystemRoot%\\", CanonName, 13))
     {
         /* There is no +sizeof(wchar_t) because the name is less by 1 wchar */
-        *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR));
+        *RelativeName = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  ServiceNameLen * sizeof(WCHAR));
 
         if (*RelativeName == NULL)
         {
@@ -1623,7 +1627,9 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     }
 
     /* Allocate memory, since the size is known now */
-    Expanded = LocalAlloc(LMEM_ZEROINIT, BufferSize * sizeof(WCHAR) + sizeof(WCHAR));
+    Expanded = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         (BufferSize + 1) * sizeof(WCHAR));
     if (!Expanded)
     {
         DPRINT("Error allocating memory for boot driver name!\n");
@@ -1635,7 +1641,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         BufferSize)
     {
         DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
-        LocalFree(Expanded);
+        HeapFree(GetProcessHeap(), 0, Expanded);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
@@ -1649,10 +1655,12 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     DPRINT("Converted to NT-style %wZ\n", &NtPathName);
 
     /* No need to keep the dos-path anymore */
-    LocalFree(Expanded);
+    HeapFree(GetProcessHeap(), 0, Expanded);
 
     /* Copy it to the allocated place */
-    Expanded = LocalAlloc(LMEM_ZEROINIT, NtPathName.Length + sizeof(WCHAR));
+    Expanded = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         NtPathName.Length + sizeof(UNICODE_NULL));
     if (!Expanded)
     {
             DPRINT("Error allocating memory for boot driver name!\n");
@@ -1661,18 +1669,19 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     ExpandedLen = NtPathName.Length / sizeof(WCHAR);
     wcsncpy(Expanded, NtPathName.Buffer, ExpandedLen);
-    Expanded[ExpandedLen] = 0;
+    Expanded[ExpandedLen] = UNICODE_NULL;
 
     if (ServiceNameLen > ExpandedLen &&
         !_wcsnicmp(Expanded, CanonName, ExpandedLen))
     {
         /* Only \SystemRoot\ is missing */
-        *RelativeName = LocalAlloc(LMEM_ZEROINIT,
-            (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
+        *RelativeName = HeapAlloc(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
         if (*RelativeName == NULL)
         {
             DPRINT("Error allocating memory for boot driver name!\n");
-            LocalFree(Expanded);
+            HeapFree(GetProcessHeap(), 0, Expanded);
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -1711,24 +1720,25 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                 *RelativeName = 0;
 
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                LocalFree(Expanded);
+                HeapFree(GetProcessHeap(), 0, Expanded);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
             /* Alloc the string */
-            LinkTarget.Buffer = LocalAlloc(LMEM_ZEROINIT, BufferSize + sizeof(WCHAR));
+            LinkTarget.Length = (USHORT)BufferSize;
+            LinkTarget.MaximumLength = LinkTarget.Length + sizeof(UNICODE_NULL);
+            LinkTarget.Buffer = HeapAlloc(GetProcessHeap(),
+                                          HEAP_ZERO_MEMORY,
+                                          LinkTarget.MaximumLength);
             if (!LinkTarget.Buffer)
             {
                 DPRINT("Unable to alloc buffer\n");
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                LocalFree(Expanded);
+                HeapFree(GetProcessHeap(), 0, Expanded);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
             /* Do a real query now */
-            LinkTarget.Length = (USHORT)BufferSize;
-            LinkTarget.MaximumLength = LinkTarget.Length + sizeof(WCHAR);
-
             Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
             if (NT_SUCCESS(Status))
             {
@@ -1738,14 +1748,15 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                 if ((ServiceNameLen > ExpandedLen) &&
                     !_wcsnicmp(LinkTarget.Buffer, CanonName, ExpandedLen))
                 {
-                    *RelativeName = LocalAlloc(LMEM_ZEROINIT,
-                       (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
+                    *RelativeName = HeapAlloc(GetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
 
                     if (*RelativeName == NULL)
                     {
                         DPRINT("Unable to alloc buffer\n");
                         if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                        LocalFree(Expanded);
+                        HeapFree(GetProcessHeap(), 0, Expanded);
                         RtlFreeUnicodeString(&NtPathName);
                         return ERROR_NOT_ENOUGH_MEMORY;
                     }
@@ -1757,7 +1768,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
                     /* Cleanup */
                     if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    LocalFree(Expanded);
+                    HeapFree(GetProcessHeap(), 0, Expanded);
                     RtlFreeUnicodeString(&NtPathName);
 
                     /* Return success */
@@ -1766,7 +1777,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                 else
                 {
                     if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    LocalFree(Expanded);
+                    HeapFree(GetProcessHeap(), 0, Expanded);
                     RtlFreeUnicodeString(&NtPathName);
                     return ERROR_INVALID_PARAMETER;
                 }
@@ -1775,7 +1786,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             {
                 DPRINT("Error, Status = %08X\n", Status);
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                LocalFree(Expanded);
+                HeapFree(GetProcessHeap(), 0, Expanded);
                 RtlFreeUnicodeString(&NtPathName);
                 return ERROR_INVALID_PARAMETER;
             }
@@ -1784,7 +1795,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         {
             DPRINT("Error, Status = %08X\n", Status);
             if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-            LocalFree(Expanded);
+            HeapFree(GetProcessHeap(), 0, Expanded);
             RtlFreeUnicodeString(&NtPathName);
             return ERROR_INVALID_PARAMETER;
         }
@@ -1792,7 +1803,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     else
     {
         DPRINT("Error, Status = %08X\n", Status);
-        LocalFree(Expanded);
+        HeapFree(GetProcessHeap(), 0, Expanded);
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -1819,8 +1830,9 @@ ScmCanonDriverImagePath(DWORD dwStartType,
         !_wcsnicmp(L"\\SystemRoot\\", lpServiceName, 12))
     {
         /* SystemRoot prefix is already included */
-
-        *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
+        *lpCanonName = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 (ServiceNameLen + 1) * sizeof(WCHAR));
 
         if (*lpCanonName == NULL)
         {
@@ -1841,10 +1853,12 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
     /* Check if it has %SystemRoot% (len=13) */
     if (ServiceNameLen > 13 &&
-        !_wcsnicmp(L"%%SystemRoot%%\\", lpServiceName, 13))
+        !_wcsnicmp(L"%SystemRoot%\\", lpServiceName, 13))
     {
         /* Substitute %SystemRoot% with \\SystemRoot\\ */
-        *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
+        *lpCanonName = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 (ServiceNameLen + 1) * sizeof(WCHAR));
 
         if (*lpCanonName == NULL)
         {
@@ -1865,7 +1879,9 @@ ScmCanonDriverImagePath(DWORD dwStartType,
     /* Check if it's a relative path name */
     if (lpServiceName[0] != L'\\' && lpServiceName[1] != L':')
     {
-        *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
+        *lpCanonName = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 (ServiceNameLen + 1) * sizeof(WCHAR));
 
         if (*lpCanonName == NULL)
         {
@@ -1886,7 +1902,9 @@ ScmCanonDriverImagePath(DWORD dwStartType,
         return ERROR_INVALID_PARAMETER;
     }
 
-    *lpCanonName = LocalAlloc(LMEM_ZEROINIT, NtServiceName.Length + sizeof(WCHAR));
+    *lpCanonName = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             NtServiceName.Length + sizeof(WCHAR));
 
     if (*lpCanonName == NULL)
     {
@@ -1912,7 +1930,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
     if (Result)
     {
         /* There is a problem, free name and return */
-        LocalFree(*lpCanonName);
+        HeapFree(GetProcessHeap(), 0, *lpCanonName);
         DPRINT("Error converting named!\n");
         return Result;
     }
@@ -1923,7 +1941,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
     wcscpy(*lpCanonName, RelativeName + 12);
 
     /* Free the allocated buffer */
-    LocalFree(RelativeName);
+    HeapFree(GetProcessHeap(), 0, RelativeName);
 
     DPRINT("Canonicalized name %S\n", *lpCanonName);
 

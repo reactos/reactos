@@ -193,7 +193,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         /* Create a new service image */
         pServiceImage = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  FIELD_OFFSET(SERVICE_IMAGE, szImagePath[wcslen(ImagePath.Buffer) + 1]));
+                                  FIELD_OFFSET(SERVICE_IMAGE, szImagePath[ImagePath.Length / sizeof(WCHAR) + 1]));
         if (pServiceImage == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -1407,7 +1407,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
                 return ERROR_SERVICE_REQUEST_TIMEOUT;
             }
-            else if (dwError == ERROR_SUCCESS)
+            else if (dwError == WAIT_OBJECT_0)
             {
                 bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
                                               &Overlapped,
@@ -1570,10 +1570,10 @@ ScmStartUserModeService(PSERVICE Service,
         return dwError;
     }
 
-    DPRINT("Process Id: %lu  Handle %lx\n",
+    DPRINT("Process Id: %lu  Handle %p\n",
            ProcessInformation.dwProcessId,
            ProcessInformation.hProcess);
-    DPRINT("Thread Id: %lu  Handle %lx\n",
+    DPRINT("Thread Id: %lu  Handle %p\n",
            ProcessInformation.dwThreadId,
            ProcessInformation.hThread);
 
