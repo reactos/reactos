@@ -1730,6 +1730,7 @@ DWORD RChangeServiceConfigW(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpDisplayNameW = NULL;
+    LPWSTR lpImagePathW = NULL;
 
     DPRINT("RChangeServiceConfigW() called\n");
     DPRINT("dwServiceType = %lu\n", dwServiceType);
@@ -1852,39 +1853,34 @@ DWORD RChangeServiceConfigW(
         lpService->dwErrorControl = dwErrorControl;
     }
 
-#if 0
-    /* FIXME: set the new ImagePath value */
+    if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+    {
+        /* Set the image path */
+        lpImagePathW = lpBinaryPathName;
 
-    /* Set the image path */
-    if (dwServiceType & SERVICE_WIN32)
-    {
-        if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+        if (lpService->Status.dwServiceType & SERVICE_DRIVER)
         {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpBinaryPathName,
-                                     (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+            dwError = ScmCanonDriverImagePath(lpService->dwStartType,
+                                              lpBinaryPathName,
+                                              &lpImagePathW);
+
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
+
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ImagePath",
+                                 0,
+                                 REG_EXPAND_SZ,
+                                 (LPBYTE)lpImagePathW,
+                                 (wcslen(lpImagePathW) + 1) * sizeof(WCHAR));
+
+        if (lpImagePathW != lpBinaryPathName)
+            HeapFree(GetProcessHeap(), 0, lpImagePathW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
-    else if (dwServiceType & SERVICE_DRIVER)
-    {
-        if (lpImagePath != NULL && *lpImagePath != 0)
-        {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpImagePath,
-                                     (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-        }
-    }
-#endif
 
     /* Set the group name */
     if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
@@ -3258,7 +3254,8 @@ DWORD RChangeServiceConfigA(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpDisplayNameW = NULL;
-    // LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpCanonicalImagePathW = NULL;
     LPWSTR lpLoadOrderGroupW = NULL;
     LPWSTR lpDependenciesW = NULL;
     // LPWSTR lpPasswordW = NULL;
@@ -3392,41 +3389,51 @@ DWORD RChangeServiceConfigA(
         lpService->dwErrorControl = dwErrorControl;
     }
 
-#if 0
-    /* FIXME: set the new ImagePath value */
+    if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+    {
+        /* Set the image path */
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(),
+                                      0,
+                                      (strlen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+        if (lpBinaryPathNameW == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
 
-    /* Set the image path */
-    if (dwServiceType & SERVICE_WIN32)
-    {
-        if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+        MultiByteToWideChar(CP_ACP,
+                            0,
+                            lpBinaryPathName,
+                            -1,
+                            lpBinaryPathNameW,
+                            strlen(lpBinaryPathName) + 1);
+
+        if (lpService->Status.dwServiceType & SERVICE_DRIVER)
         {
-            lpBinaryPathNameW=HeapAlloc(GetProcessHeap(),0, (strlen(lpBinaryPathName)+1) * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, strlen(lpBinaryPathName)+1);
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpBinaryPathNameW,
-                                     (wcslen(lpBinaryPathNameW) + 1) * sizeof(WCHAR));
+            dwError = ScmCanonDriverImagePath(lpService->dwStartType,
+                                              lpBinaryPathNameW,
+                                              &lpCanonicalImagePathW);
+
+            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+
             if (dwError != ERROR_SUCCESS)
                 goto done;
+
+            lpBinaryPathNameW = lpCanonicalImagePathW;
         }
+
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ImagePath",
+                                 0,
+                                 REG_EXPAND_SZ,
+                                 (LPBYTE)lpBinaryPathNameW,
+                                 (wcslen(lpBinaryPathNameW) + 1) * sizeof(WCHAR));
+
+        HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
-    else if (dwServiceType & SERVICE_DRIVER)
-    {
-        if (lpImagePath != NULL && *lpImagePath != 0)
-        {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"ImagePath",
-                                     0,
-                                     REG_EXPAND_SZ,
-                                     (LPBYTE)lpImagePath,
-                                     (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-        }
-    }
-#endif
 
     /* Set the group name */
     if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
