@@ -39,6 +39,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static const WCHAR autocomplete_propertyW[] = {'W','i','n','e',' ','A','u','t','o',
+                                               'c','o','m','p','l','e','t','e',' ',
+                                               'c','o','n','t','r','o','l',0};
+
 /**************************************************************************
  *  IAutoComplete_Constructor
  */
@@ -63,6 +67,8 @@ CAutoComplete::~CAutoComplete()
     TRACE(" destroying IAutoComplete(%p)\n", this);
     HeapFree(GetProcessHeap(), 0, quickComplete);
     HeapFree(GetProcessHeap(), 0, txtbackup);
+    RemovePropW(hwndEdit, autocomplete_propertyW);
+    SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR)wpOrigEditProc);
     if (hwndListBox)
         DestroyWindow(hwndListBox);
 }
@@ -125,7 +131,8 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
     this->hwndEdit = hwndEdit;
     this->initialized = TRUE;
     wpOrigEditProc = (WNDPROC)SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR) ACEditSubclassProc);
-    SetWindowLongPtrW(hwndEdit, GWLP_USERDATA, (LONG_PTR)this);
+//    SetWindowLongPtrW(hwndEdit, GWLP_USERDATA, (LONG_PTR)this);
+    SetPropW( hwndEdit, autocomplete_propertyW, (HANDLE)this );
 
     if (options & ACO_AUTOSUGGEST)
     {
@@ -249,7 +256,7 @@ HRESULT WINAPI CAutoComplete::SetOptions(DWORD dwFlag)
  */
 LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    CAutoComplete            *pThis = (CAutoComplete *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    CAutoComplete            *pThis = (CAutoComplete *)GetPropW(hwnd, autocomplete_propertyW);;//GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     LPOLESTR strs;
     HRESULT hr;
     WCHAR hwndText[255];
