@@ -909,14 +909,13 @@ RtlpDphSetProtectionBeforeUse(PDPH_HEAP_ROOT DphRoot, PUCHAR VirtualBlock, ULONG
     ULONG Protection;
     PVOID Base;
 
-    // FIXME: Check this, when we should add up usersize and when we shouldn't!
-    if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
+    if (DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN)
     {
-        Base = VirtualBlock;
+        Base = VirtualBlock + PAGE_SIZE;
     }
     else
     {
-        Base = VirtualBlock + PAGE_SIZE;
+        Base = VirtualBlock;
     }
 
     // FIXME: It should be different, but for now it's fine
@@ -928,6 +927,8 @@ RtlpDphSetProtectionBeforeUse(PDPH_HEAP_ROOT DphRoot, PUCHAR VirtualBlock, ULONG
 NTSTATUS NTAPI
 RtlpDphSetProtectionAfterUse(PDPH_HEAP_ROOT DphRoot, /*PUCHAR VirtualBlock*/PDPH_HEAP_BLOCK Node)
 {
+    ASSERT((Node->nVirtualAccessSize + PAGE_SIZE) <= Node->nVirtualBlockSize);
+
     // FIXME: Bring stuff here
     if (DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN)
     {
@@ -1679,7 +1680,6 @@ RtlpPageHeapAllocate(IN PVOID HeapPtr,
     if (!DphRoot) return NULL;
 
     /* Acquire the heap lock */
-    //RtlpDphEnterCriticalSection(DphRoot, Flags);
     RtlpDphPreProcessing(DphRoot, Flags);
 
     /* Perform internal validation if specified by flags */
@@ -1881,7 +1881,7 @@ RtlpPageHeapFree(HANDLE HeapPtr,
     }
 
     /* Set new protection */
-    RtlpDphSetProtectionAfterUse(DphRoot, Node);
+    //RtlpDphSetProtectionAfterUse(DphRoot, Node);
 
     /* Remove it from the list of busy nodes */
     RtlpDphRemoveFromBusyList(DphRoot, Node);
