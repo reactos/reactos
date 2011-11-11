@@ -31,7 +31,7 @@ ULONG NrCtrlHandlers;
 ULONG NrAllocatedHandlers;
 
 #define INPUTEXENAME_BUFLEN 256
-static WCHAR InputExeName[INPUTEXENAME_BUFLEN] = L"";
+static WCHAR InputExeName[INPUTEXENAME_BUFLEN];
 
 /* Default Console Control Handler *******************************************/
 
