@@ -5,9 +5,10 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#ifndef _M_AMD64
 __declspec(dllimport) void __stdcall KeRaiseIrql(unsigned char, unsigned char *);
 __declspec(dllimport) void __stdcall KeLowerIrql(unsigned char);
-#ifdef _M_AMD64
+#else
 #define CLOCK1_LEVEL CLOCK_LEVEL
 #define CLOCK2_LEVEL CLOCK_LEVEL
 #endif
@@ -137,6 +138,7 @@ START_TEST(KeIrql)
         KeLowerIrql(PASSIVE_LEVEL);
     }
 
+#ifndef _M_AMD64
     /* try the actual exports, not only the fastcall versions */
     ok_irql(PASSIVE_LEVEL);
     (KeRaiseIrql)(HIGH_LEVEL, &Irql);
@@ -144,6 +146,7 @@ START_TEST(KeIrql)
     ok_eq_uint(Irql, PASSIVE_LEVEL);
     (KeLowerIrql)(Irql);
     ok_irql(PASSIVE_LEVEL);
+#endif
 
     /* make sure we exit gracefully */
     ok_irql(PASSIVE_LEVEL);

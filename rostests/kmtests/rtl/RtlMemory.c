@@ -440,6 +440,8 @@ START_TEST(RtlMemory)
     ok_eq_hex(Status, STATUS_SUCCESS);
     KeRaiseIrql(HIGH_LEVEL, &Irql);
 
+    /* TODO: fix NDK. This should work! */
+#if !defined _M_AMD64 || defined KMT_KERNEL_MODE
     /* RtlFillMemoryUlong */
     MakeBuffer(Buffer, Size, 0, 0);
     RtlFillMemoryUlong(Buffer, HalfSize, 0x01234567LU);
@@ -459,6 +461,7 @@ START_TEST(RtlMemory)
     } _SEH2_END;
     ok_eq_hex(Status, STATUS_SUCCESS);
     KeRaiseIrql(HIGH_LEVEL, &Irql);
+#endif
 
     /* RtlFillMemoryUlonglong */
     /* TODO: this function doesn't exist in 2k3/x86? wdm.h error? */

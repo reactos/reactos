@@ -122,8 +122,13 @@ DEFINE_RELEASE(ReleaseForDpc,         TRUE,  KeReleaseSpinLockForDpc(SpinLock, C
 DEFINE_ACQUIRE(AcquireInStackForDpc,  FALSE, KeAcquireInStackQueuedSpinLockForDpc(SpinLock, &CheckData->QueueHandle))
 DEFINE_RELEASE(ReleaseInStackForDpc,  FALSE, KeReleaseInStackQueuedSpinLockForDpc(&CheckData->QueueHandle))
 
+#ifdef _X86_
 DEFINE_ACQUIRE(AcquireInt,            FALSE, KiAcquireSpinLock(SpinLock))
 DEFINE_RELEASE(ReleaseInt,            FALSE, KiReleaseSpinLock(SpinLock))
+#else
+DEFINE_ACQUIRE(AcquireInt,            TRUE,  KeAcquireSpinLock(SpinLock, &CheckData->Irql))
+DEFINE_RELEASE(ReleaseInt,            TRUE,  KeReleaseSpinLock(SpinLock, CheckData->Irql))
+#endif
 
 BOOLEAN TryQueued(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
     LOGICAL Ret = KeTryToAcquireQueuedSpinLock(CheckData->QueueNumber, &CheckData->Irql);
