@@ -2115,7 +2115,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
             /* Device has a ClassGUID value, but no Service value.
              * Suppose it is using the NULL driver, so state the
              * device is started */
-            DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
+            DPRINT("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
             IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
          }
          else
