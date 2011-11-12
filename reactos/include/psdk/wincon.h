@@ -201,6 +201,8 @@ DWORD WINAPI GetConsoleTitleA(LPSTR,DWORD);
 DWORD WINAPI GetConsoleTitleW(LPWSTR,DWORD);
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetConsoleWindow(void);
+WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(OUT LPDWORD lpModeFlags);
+BOOL APIENTRY SetConsoleDisplayMode(IN HANDLE hConsoleOutput,IN DWORD dwFlags, OUT PCOORD lpNewScreenBufferDimensions);
 #endif
 COORD WINAPI GetLargestConsoleWindowSize(HANDLE);
 BOOL WINAPI GetNumberOfConsoleInputEvents(HANDLE,PDWORD);
@@ -239,6 +241,11 @@ BOOL WINAPI WriteConsoleOutputW(HANDLE,const CHAR_INFO*,COORD,COORD,PSMALL_RECT)
 BOOL WINAPI WriteConsoleOutputAttribute(HANDLE,const WORD*,DWORD,COORD,PDWORD);
 BOOL WINAPI WriteConsoleOutputCharacterA(HANDLE,LPCSTR,DWORD,COORD,PDWORD);
 BOOL WINAPI WriteConsoleOutputCharacterW(HANDLE,LPCWSTR,DWORD,COORD,PDWORD);
+
+#define CONSOLE_FULLSCREEN 1
+#define CONSOLE_FULLSCREEN_HARDWARE 2
+#define CONSOLE_FULLSCREEN_MODE 1
+#define CONSOLE_WINDOWED_MODE 2
 
 #ifdef UNICODE
 #define FillConsoleOutputCharacter FillConsoleOutputCharacterW

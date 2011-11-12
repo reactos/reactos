@@ -525,6 +525,11 @@ typedef struct
     DWORD dwFlags;
 } CSRSS_DEFINE_DOS_DEVICE, *PCSRSS_DEFINE_DOS_DEVICE;
 
+typedef struct
+{
+    ULONG VideoMode;
+} CSRSS_SOUND_SENTRY, *PCSRSS_SOUND_SENTRY;
+
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
@@ -606,6 +611,7 @@ typedef struct
 #define SET_HISTORY_INFO              (0x47)
 #define GET_TEMP_FILE                 (0x48)
 #define DEFINE_DOS_DEVICE			  (0X49)
+#define SOUND_SENTRY                  (0x50)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -689,6 +695,7 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_HISTORY_INFO SetHistoryInfo;
         CSRSS_GET_TEMP_FILE GetTempFile;
         CSRSS_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
+        CSRSS_SOUND_SENTRY SoundSentryRequest;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 
