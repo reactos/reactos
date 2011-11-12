@@ -14,12 +14,35 @@
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+WINAPI
+NotifySoundSentry(VOID)
+{
+    CSR_API_MESSAGE ApiMessage;
+
+    /* Get the video mode */
+    if (!GetConsoleDisplayMode(&ApiMessage.Data.SoundSentryRequest.VideoMode))
+    {
+        ApiMessage.Data.SoundSentryRequest.VideoMode = 0;
+    }
+
+    /* Make sure it's not fullscreen, and send the message if not */
+    if (ApiMessage.Data.SoundSentryRequest.VideoMode == 0)
+    {
+        CsrClientCallServer(&ApiMessage,
+                            NULL,
+                            MAKE_CSR_API(SOUND_SENTRY, CSR_NATIVE),
+                            sizeof(CSR_API_MESSAGE));
+    }
+}
+
 /*
  * @implemented
  */
 BOOL
 WINAPI
-Beep (DWORD dwFreq, DWORD dwDuration)
+Beep(IN DWORD dwFreq,
+     IN DWORD dwDuration)
 {
     HANDLE hBeep;
     UNICODE_STRING BeepDevice;
@@ -27,69 +50,77 @@ Beep (DWORD dwFreq, DWORD dwDuration)
     IO_STATUS_BLOCK IoStatusBlock;
     BEEP_SET_PARAMETERS BeepSetParameters;
     NTSTATUS Status;
+    
+    //
+    // On TS systems, we need to Load Winsta.dll and call WinstationBeepOpen
+    // after doing a GetProcAddress for it
+    //
+
+    /* Open the device */
+    RtlInitUnicodeString(&BeepDevice, L"\\Device\\Beep");
+    InitializeObjectAttributes(&ObjectAttributes, &BeepDevice, 0, NULL, NULL);
+    Status = NtCreateFile(&hBeep,
+                          FILE_READ_DATA | FILE_WRITE_DATA,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN_IF,
+                          0,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
     /* check the parameters */
     if ((dwFreq >= 0x25 && dwFreq <= 0x7FFF) ||
         (dwFreq == 0x0 && dwDuration == 0x0))
     {
-        /* open the device */
-        RtlInitUnicodeString(&BeepDevice,
-                             L"\\Device\\Beep");
+        /* Set beep data */
+        BeepSetParameters.Frequency = dwFreq;
+        BeepSetParameters.Duration = dwDuration;
 
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &BeepDevice,
-                                   0,
-                                   NULL,
-                                   NULL);
-
-        Status = NtCreateFile(&hBeep,
-                              FILE_READ_DATA | FILE_WRITE_DATA,
-                              &ObjectAttributes,
-                              &IoStatusBlock,
-                              NULL,
-                              0,
-                              FILE_SHARE_READ | FILE_SHARE_WRITE,
-                              FILE_OPEN_IF,
-                              0,
-                              NULL,
-                              0);
-        if (NT_SUCCESS(Status))
-        {
-            /* Set beep data */
-            BeepSetParameters.Frequency = dwFreq;
-            BeepSetParameters.Duration = dwDuration;
-
-            Status = NtDeviceIoControlFile(hBeep,
-                                           NULL,
-                                           NULL,
-                                           NULL,
-                                           &IoStatusBlock,
-                                           IOCTL_BEEP_SET,
-                                           &BeepSetParameters,
-                                           sizeof(BEEP_SET_PARAMETERS),
-                                           NULL,
-                                           0);
-
-            /* do an alertable wait if necessary */
-            if (NT_SUCCESS(Status) &&
-                (dwFreq != 0x0 || dwDuration != 0x0) && dwDuration != MAXDWORD)
-            {
-                SleepEx(dwDuration,
-                        TRUE);
-            }
-
-            NtClose(hBeep);
-        }
+        /* Send the beep */
+        Status = NtDeviceIoControlFile(hBeep,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_BEEP_SET,
+                                       &BeepSetParameters,
+                                       sizeof(BeepSetParameters),
+                                       NULL,
+                                       0);
     }
     else
+    {
+        /* We'll fail the call, but still notify the sound sentry */
         Status = STATUS_INVALID_PARAMETER;
+    }
 
+    /* Notify the sound sentry */
+    NotifySoundSentry();
+
+    /* Bail out if the hardware beep failed */
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError (Status);
+        NtClose(hBeep);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* If an actual beep was emitted, wait for it */
+    if (((dwFreq != 0x0) || (dwDuration != 0x0)) && (dwDuration != MAXDWORD))
+    {
+        SleepEx(dwDuration, TRUE);
+    }
+
+    /* Close the handle and return success */
+    NtClose(hBeep);
     return TRUE;
 }
 
@@ -112,6 +143,13 @@ DeviceIoControl(IN HANDLE hDevice,
     PVOID ApcContext;
     IO_STATUS_BLOCK Iosb;
 
+    //
+    // Note: on a TS Machine, we should call IsTSAppCompatEnabled and unless the
+    // IOCTLs are IOCTL_STORAGE_EJECT_MEDIA, IOCTL_DISK_EJECT_MEDIA, FSCTL_DISMOUNT_VOLUME
+    // we should call IsCallerAdminOrSystem and return STATUS_ACCESS_DENIED for
+    // any other IOCTLs.
+    //
+
     /* Check what kind of IOCTL to send */
     FsIoCtl = ((dwIoControlCode >> 16) == FILE_DEVICE_FILE_SYSTEM);
 
@@ -121,11 +159,9 @@ DeviceIoControl(IN HANDLE hDevice,
         /* Set pending status */
         lpOverlapped->Internal = STATUS_PENDING;
 
-        
         /* Check if there's an APC context */
         ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
 
-        
         /* Send file system control? */
         if (FsIoCtl)
         {
