@@ -3554,7 +3554,17 @@ RtlEnlargedUnsignedMultiply(
     Product.QuadPart = (ULONGLONG)Multiplicand * (ULONGLONG)Multiplier;
     return Product;
 }
+
 #endif
+
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlExtendedLargeIntegerDivide(
+    IN LARGE_INTEGER Dividend,
+    IN ULONG Divisor,
+    OUT PULONG Remainder OPTIONAL
+);
 
 NTSYSAPI
 ULONG
