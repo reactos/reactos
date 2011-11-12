@@ -201,7 +201,7 @@ DWORD WINAPI GetConsoleTitleA(LPSTR,DWORD);
 DWORD WINAPI GetConsoleTitleW(LPWSTR,DWORD);
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetConsoleWindow(void);
-BOOL APIENTRY GetConsoleDisplayMode(OUT LPDWORD lpModeFlags);
+WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(OUT LPDWORD lpModeFlags);
 BOOL APIENTRY SetConsoleDisplayMode(IN HANDLE hConsoleOutput,IN DWORD dwFlags, OUT PCOORD lpNewScreenBufferDimensions);
 #endif
 COORD WINAPI GetLargestConsoleWindowSize(HANDLE);
