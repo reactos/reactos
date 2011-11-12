@@ -91,6 +91,7 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
     CSRSS_DEFINE_API(GET_TEMP_FILE,                CsrGetTempFile),
     CSRSS_DEFINE_API(DEFINE_DOS_DEVICE,            CsrDefineDosDevice),
+    CSRSS_DEFINE_API(SOUND_SENTRY,                 CsrSoundSentry),
     { 0, 0, NULL }
 };
 

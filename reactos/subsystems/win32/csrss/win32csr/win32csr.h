@@ -75,5 +75,6 @@ CSR_API(CsrExitReactos);
 CSR_API(CsrSetLogonNotifyWindow);
 CSR_API(CsrRegisterLogonProcess);
 
+CSR_API(CsrSoundSentry);
 
 /* EOF */

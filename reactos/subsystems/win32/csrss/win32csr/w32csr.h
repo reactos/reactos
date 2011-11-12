@@ -5,7 +5,7 @@
 #include <ndk/mmtypes.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
-
+#include <ndk/umfuncs.h>
 #include <psapi.h>
 
 /* External Winlogon Header */
