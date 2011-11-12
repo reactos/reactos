@@ -4,6 +4,7 @@
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
  *                   2011-08-30  technical correction (checkbox in preferences)
+ *                   2011-10-30  minor correnctions
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -24,12 +25,12 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Elimină din registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "Împ&rospătare",         ID_REFRESH
+		MENUITEM "Împ&rospătează",         ID_REFRESH
 	END
 	POPUP "&?"
 	BEGIN
 		MENUITEM "&Manual",               ID_HELP, GRAYED
-		MENUITEM "&Despre",               ID_ABOUT
+		MENUITEM "&Despre...",               ID_ABOUT
 	END
 END
 
@@ -52,7 +53,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Elimină din registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "Împ&rospătare",         ID_REFRESH
+		MENUITEM "Împ&rospătează",         ID_REFRESH
 	END
 END
 
@@ -64,7 +65,7 @@ BEGIN
 	GROUPBOX "Generale", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "Pă&strează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
 	AUTOCHECKBOX "Act&ualizează la pornire lista aplicațiilor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-	AUTOCHECKBOX "Menține jurna&l de instalare/eliminare de aplicații", IDC_LOG_ENABLED, 15, 46, 219, 12
+	AUTOCHECKBOX "Menține jurna&l de instalare/dezinstalare a aplicațiilor", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Descărcări", -1, 4, 65, 240, 51
 	LTEXT "Dosarul pentru descărcări:", -1, 16, 75, 100, 9
@@ -117,7 +118,7 @@ BEGIN
 	IDS_TOOLTIP_UNINSTALL "Dezinstalează"
 	IDS_TOOLTIP_MODIFY "Modifică"
 	IDS_TOOLTIP_SETTINGS "Preferințe"
-	IDS_TOOLTIP_REFRESH "Împrospătare"
+	IDS_TOOLTIP_REFRESH "Împrospătează"
 	IDS_TOOLTIP_EXIT "Ieșire"
 END
 

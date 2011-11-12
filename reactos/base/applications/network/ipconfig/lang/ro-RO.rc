@@ -1,19 +1,20 @@
- /* 
+/* 
  * FILE:             base/applications/network/ipconfig/lang/ro-RO.rc
                      ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ştefan (PM on ReactOS Forum at fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
+ *                   2011-10-26  diacritics correction, other minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Mixed"
-  IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "unknown"
+  IDS_BCAST   "Difuzare"
+  IDS_P2P     "Egal la egal"
+  IDS_MIXED   "Mixtă"
+  IDS_HYBRID  "Hibridă"
+  IDS_UNKNOWN "necunoscută"
 END
 
 STRINGTABLE DISCARDABLE
@@ -39,39 +40,39 @@ BEGIN
     \n \
     unde\n \
         adaptor         Numele conexiunii\n \
-                       (sunt permise metacaracterele * şi ?, vezi exemple)\n \
+                       (sunt permise metacaracterele * și ?, vezi exemple)\n \
     \n \
-        Opţiuni:\n \
-           /?           Afişează acest manual.\n \
-           /all         Afişează toată informaţia de configurare.\n \
-           /release     Detaşează adresa IP pentru adaptorul specificat.\n \
-           /renew       Reînnoieşte adresa IP pentru adaptorul specificat.\n \
-           /flushdns    Curăţă memoria rezolvatorului DNS.\n \
-           /registerdns Reîmprospătează toate alocările DHCP şi\n \
+        Opțiuni:\n \
+           /?           Afișează acest manual.\n \
+           /all         Afișează toată informația de configurare.\n \
+           /release     Detașează adresa IP pentru adaptorul specificat.\n \
+           /renew       Reînnoiește adresa IP pentru adaptorul specificat.\n \
+           /flushdns    Curăță memoria rezolvatorului DNS.\n \
+           /registerdns Reîmprospătează toate alocările DHCP și\n \
                         repetă înregistrarea numelor DNS.\n \
-           /displaydns  Afişează conţinutul memoriei rezolvatorului DNS.\n \
-           /showclassid Afişează toate identităţile de clasă dhcp permise\n \
+           /displaydns  Afișează conținutul memoriei rezolvatorului DNS.\n \
+           /showclassid Afișează toate identitățile de clasă dhcp permise\n \
                         pentru adaptor.\n \
            /setclassid  Modifică identitatea de clasă (id_clasă) dhcp.\n \
     \n \
-    În mod implicit sunt afişate doar adresa IP, masca de subreţea şi\n \
-    ieşirea ""gateway"" implicită pentru fiecare adaptor ce suportă TCP/IP.\n \
+    În mod implicit sunt afișate doar adresa IP, masca de subrețea și\n \
+    ieșirea ""gateway"" implicită pentru fiecare adaptor ce suportă TCP/IP.\n \
     \n \
-    Pentru ""Release"" şi ""Renew"", dacă nu este specificat nici un adaptor,\n \
-    atunci vor fi detaşate sau reînnoite toate alocările de adrese IP pentru\n \
-    toate adaptoarele ce suportă TCP/IP.\n \
+    Pentru ""Release"" și ""Renew"", dacă nu este specificat nici un adaptor,\n \
+    atunci vor fi detașate sau reînnoite toate alocările de adrese IP pentru\n \
+    toate adaptoarele care suportă TCP/IP.\n \
     \n \
-    Dacă pentru Setclassid nu se specifică şi identitatea de clasă, atunci\n \
+    Dacă pentru Setclassid nu se specifică și identitatea de clasă, atunci\n \
     identitatea de clasă se elimină.\n \
     \n \
     Exemple:\n \
-        > ipconfig                   ... Afişează informaţii.\n \
-        > ipconfig /all              ... Afişează informaţii detaliate.\n \
-        > ipconfig /renew            ... Reînnoieşte toate adaptoarele.\n \
-        > ipconfig /renew EL*        ... Reînnoieşte toate conexiunile care\n \
+        > ipconfig                   ... Afișează informații.\n \
+        > ipconfig /all              ... Afișează informații detaliate.\n \
+        > ipconfig /renew            ... Reînnoiește toate adaptoarele.\n \
+        > ipconfig /renew EL*        ... Reînnoiește toate conexiunile care\n \
                                          au numele începând cu ""EL"".\n \
-        > ipconfig /release *Con*    ... Detaşează conexiunile care conţin în\n \
-                                         numele lor secvenţa ""Con"".\n \
+        > ipconfig /release *Con*    ... Detașează conexiunile care conțin în\n \
+                                         numele lor secvența ""Con"".\n \
                                          ex. ""Local Area Connection 1"" sau\n \
                                              ""Local Area Connection 2""\n"
 END

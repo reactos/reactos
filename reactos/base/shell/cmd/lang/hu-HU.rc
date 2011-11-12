@@ -1,5 +1,5 @@
 /*
- * Hungarian resource ·llom·ny for CMD
+ * Hungarian resource √°llom√°ny for CMD
  * Translation by Robert Horvath (talley at cubeclub.hu) 2005
  */
 
@@ -15,246 +15,246 @@ assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
 
-STRING_ATTRIB_HELP,    "¡llom·nyok attrib˙tumok megjelenÌtÈse vagy be·llÌt·sai.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] ·llom·ny ...\n\
+STRING_ATTRIB_HELP,    "√Ållom√°nyok attrib√∫tumok megjelen√≠t√©se vagy be√°ll√≠t√°sai.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] √°llom√°ny ...\n\
        [/S [/D]]\n\n\
-  +   bekapcsol egy attrib˙tumot\n\
-  -   kikapcsol egy attrib˙tumot\n\
-  R   Õr·svÈdett ·llom·ny\n\
-  A   Archiv·landÛ ·llom·ny\n\
-  S   Rendszer ·llom·ny\n\
-  H   Rejtett ·llom·ny\n\
-  /S  Minden ·llom·ny mÛdosÌt·sa a mapp·ban Ès minden\n\
-      almapp·banban\n\
-  /D  Mapp·kra is ÈrvÈnyesÌti\n\n\
-Ha ATTRIB-ot paramÈter nÈlk¸l Ìrod be, megjelenÌti a mapp·ban tal·lhatÛ ˆsszes ·llom·nyt Ès annak attrib˙tum·t.\n"
+  +   bekapcsol egy attrib√∫tumot\n\
+  -   kikapcsol egy attrib√∫tumot\n\
+  R   √çr√°sv√©dett √°llom√°ny\n\
+  A   Archiv√°land√≥ √°llom√°ny\n\
+  S   Rendszer √°llom√°ny\n\
+  H   Rejtett √°llom√°ny\n\
+  /S  Minden √°llom√°ny m√≥dos√≠t√°sa a mapp√°ban √©s minden\n\
+      almapp√°banban\n\
+  /D  Mapp√°kra is √©rv√©nyes√≠ti\n\n\
+Ha ATTRIB-ot param√©ter n√©lk√ºl √≠rod be, megjelen√≠ti a mapp√°ban tal√°lhat√≥ √∂sszes √°llom√°nyt √©s annak attrib√∫tum√°t.\n"
 
-STRING_ALIAS_HELP,  "Aliasok megjelenÌtÈse, hozz·ad·sa Ès tˆrlÈse\n\n\
+STRING_ALIAS_HELP,  "Aliasok megjelen√≠t√©se, hozz√°ad√°sa √©s t√∂rl√©se\n\n\
 ALIAS [alias=[parancs]]\n\n\
   alias    Alias neve.\n\
-  parancs  A szˆveg amit behelyettesÌt.\n\n\
-Aliasok megjelenÌtÈse:\n\
+  parancs  A sz√∂veg amit behelyettes√≠t.\n\n\
+Aliasok megjelen√≠t√©se:\n\
   ALIAS\n\n\
-Egy ˙j hozz·ad·sa vagy meglÈvı helyettesÌtlse:\n\
+Egy √∫j hozz√°ad√°sa vagy megl√©v√µ helyettes√≠tlse:\n\
   ALIAS da=dir a:\n\n\
-Egy alias tˆrlÈse:\n\
+Egy alias t√∂rl√©se:\n\
   ALIAS da="
 
-STRING_BEEP_HELP, "HangjelzÈs lead·sa a speakerbıl.\n\nBEEP\n"
+STRING_BEEP_HELP, "Hangjelz√©s lead√°sa a speakerb√µl.\n\nBEEP\n"
 
-STRING_CALL_HELP, "Kˆtegelt parancsf·jl meghÌv·sa egy m·sikbÛl.\n\n\
-CALL [kˆtet:][elÈrÈsi_˙t]·llom·ny [paramÈterek]\n\n\
-  paramÈterek  Itt adhatÛ meg a sz¸ksÈges paramÈterlista"
+STRING_CALL_HELP, "K√∂tegelt parancsf√°jl megh√≠v√°sa egy m√°sikb√≥l.\n\n\
+CALL [k√∂tet:][el√©r√©si_√∫t]√°llom√°ny [param√©terek]\n\n\
+  param√©terek  Itt adhat√≥ meg a sz√ºks√©ges param√©terlista"
 
-STRING_CD_HELP,      "Az aktu·lis mappa nevÈnek a megjelenÌtÈse vagy v·lt·s m·sikra\n\n\
-CHDIR [/D][meghajtÛ:][elÈrÈsi_˙t]\n\
+STRING_CD_HELP,      "Az aktu√°lis mappa nev√©nek a megjelen√≠t√©se vagy v√°lt√°s m√°sikra\n\n\
+CHDIR [/D][meghajt√≥:][el√©r√©si_√∫t]\n\
 CHDIR[..|.]\n\
-CD [/D][meghajtÛ:][elÈrÈsi_˙t]\n\
+CD [/D][meghajt√≥:][el√©r√©si_√∫t]\n\
 CD[..|.]\n\n\
-  ..   Sz¸lı mappa\n\
-  /D   Megv·ltoztatja az aktu·lis mapp·t Ès meghajtÛt is.\n\n\
-Õrd be, hogy 'CD meghajtÛ:' hogy ki Ìrja az aktu·lis mapp·t.\n\
-Õrd be a CD-t paramÈterek nÈlk¸l, hogy megjelenÌtse az aktu·lis meghajtÛt Ès mapp·t (ugyanaz mint az elızı).\n"
+  ..   Sz√ºl√µ mappa\n\
+  /D   Megv√°ltoztatja az aktu√°lis mapp√°t √©s meghajt√≥t is.\n\n\
+√çrd be, hogy 'CD meghajt√≥:' hogy ki √≠rja az aktu√°lis mapp√°t.\n\
+√çrd be a CD-t param√©terek n√©lk√ºl, hogy megjelen√≠tse az aktu√°lis meghajt√≥t √©s mapp√°t (ugyanaz mint az el√µz√µ).\n"
 
-STRING_CHCP_HELP,   "MegjelenÌti vagy megv·ltoztatja az aktÌv kÛdlapot.\n\n\
+STRING_CHCP_HELP,   "Megjelen√≠ti vagy megv√°ltoztatja az akt√≠v k√≥dlapot.\n\n\
 CHCP [nnn]\n\n\
-  nnn   A haszn·lni kÌv·nt kÛdlap sz·ma.\n\n\
-Õrd be a  CHCP paramÈterek nÈlk¸l, hogy megjelenÌtse az aktÌv kÛdlapot.\n"
+  nnn   A haszn√°lni k√≠v√°nt k√≥dlap sz√°ma.\n\n\
+√çrd be a  CHCP param√©terek n√©lk√ºl, hogy megjelen√≠tse az akt√≠v k√≥dlapot.\n"
 
-STRING_CHOICE_HELP, "V·r a felhaszn·lÛra, hogy v·lasszon a felkÌn·lt lehetısÈgek kˆz¸l.\n\n\
-CHOICE  [/C[:]v·laszt·si lehetısÈgek][/N][/S][/T[:]c,nn][szˆveg]\n\n\
-  /C[:]v·laszt·si lehetısÈgek  Megengedett billenty˚k. AlapÈrtelmezett: YN. <-- Yes->Igen\n\
-  /N                           Elrejti a v·laszt·si lehetısÈgeket Ès a kÈrdıjelet.\n\
-  /S                           Kis- Ès nagybet˚k megk¸lˆnbˆztetÈse.\n\
-  /T[:]v,nn                    A v lehetısÈget v·lasztja nn m·sodperc ut·n.\n\
-  szˆveg                       MegjelenÌtendı szˆveg.\n\n\
-Az ERRORLEVEL a v·lasz sorsz·m·ra lesz be·llÌtva.\n"
+STRING_CHOICE_HELP, "V√°r a felhaszn√°l√≥ra, hogy v√°lasszon a felk√≠n√°lt lehet√µs√©gek k√∂z√ºl.\n\n\
+CHOICE  [/C[:]v√°laszt√°si lehet√µs√©gek][/N][/S][/T[:]c,nn][sz√∂veg]\n\n\
+  /C[:]v√°laszt√°si lehet√µs√©gek  Megengedett billenty√ªk. Alap√©rtelmezett: YN. <-- Yes->Igen\n\
+  /N                           Elrejti a v√°laszt√°si lehet√µs√©geket √©s a k√©rd√µjelet.\n\
+  /S                           Kis- √©s nagybet√ªk megk√ºl√∂nb√∂ztet√©se.\n\
+  /T[:]v,nn                    A v lehet√µs√©get v√°lasztja nn m√°sodperc ut√°n.\n\
+  sz√∂veg                       Megjelen√≠tend√µ sz√∂veg.\n\n\
+Az ERRORLEVEL a v√°lasz sorsz√°m√°ra lesz be√°ll√≠tva.\n"
 
-STRING_CLS_HELP, "Tˆrli a kÈpernyıt.\n\nCLS\n"
+STRING_CLS_HELP, "T√∂rli a k√©perny√µt.\n\nCLS\n"
 
-STRING_CMD_HELP1, "\nElÈrhetı belsı parancsok:\n"
+STRING_CMD_HELP1, "\nEl√©rhet√µ bels√µ parancsok:\n"
 
-STRING_CMD_HELP2, "\nElÈrhetı lehetısÈgek:"
+STRING_CMD_HELP2, "\nEl√©rhet√µ lehet√µs√©gek:"
 
 STRING_CMD_HELP3,"  [aliasok]"
 
-STRING_CMD_HELP4,"  [elızmÈnyek]"
+STRING_CMD_HELP4,"  [el√µzm√©nyek]"
 
-STRING_CMD_HELP5,"  [unix tÌpus˙ ·llom·nynÈv kiegÈszÌtÈs]"
+STRING_CMD_HELP5,"  [unix t√≠pus√∫ √°llom√°nyn√©v kieg√©sz√≠t√©s]"
 
-STRING_CMD_HELP6,"  [mappa t·r]"
+STRING_CMD_HELP6,"  [mappa t√°r]"
 
-STRING_CMD_HELP7,"  [·tir·nyÌt·sok Ès csıvezetÈkek]"
+STRING_CMD_HELP7,"  [√°tir√°ny√≠t√°sok √©s cs√µvezet√©kek]"
 
-STRING_CMD_HELP8, "ElindÌt egy ˙j ReactOS parancssor Èrtelmezı.\n\n\
+STRING_CMD_HELP8, "Elind√≠t egy √∫j ReactOS parancssor √©rtelmez√µ.\n\n\
 CMD [/[C|K] parancs][/P][/Q][/T:eh]\n\n\
-  /C parancs  VÈgrehajtja a parancsot, majd kilÈp.\n\
-  /K parancs  VÈgrehajtja a parancsot, Ès tov·bb fut az Èrtelmezı.\n\
-  /P          …rtelmezi az autoexec.bat ·llom·nyt Ès a memÛri·ban marad.\n\
-  /T:eh       COLOR parancs haszn·lata.\n"
+  /C parancs  V√©grehajtja a parancsot, majd kil√©p.\n\
+  /K parancs  V√©grehajtja a parancsot, √©s tov√°bb fut az √©rtelmez√µ.\n\
+  /P          √ârtelmezi az autoexec.bat √°llom√°nyt √©s a mem√≥ri√°ban marad.\n\
+  /T:eh       COLOR parancs haszn√°lata.\n"
 
-STRING_COLOR_HELP1, "A konzol elı- Ès h·ttÈrszÌnÈt ·llÌtja be.\n\n\
+STRING_COLOR_HELP1, "A konzol el√µ- √©s h√°tt√©rsz√≠n√©t √°ll√≠tja be.\n\n\
 COLOR [eh [/-F]] \n\n\
-  eh          A konzol elı- Ès h·ttÈrszÌnÈt ·llÌtja be.\n\
-  /-F         Nem frissÌti az egÈsz kÈpernyıt\n\n\
-A szÌnt kÈt hexadecim·lis sz·mjeggyel lehet be·llÌtani\n\n\
-Az elÈrhetı szÌnek:\n\
-hex  nÈv             hex  nÈv\n\
-0    Fekete          8    Sz¸rke\n\
-1    SˆtÈtkÈk        9    KÈk\n\
-2    SˆtÈtzˆld       A    Zˆld\n\
-3    SˆtÈtlila       B    T¸rkÌzkÈk\n\
-4    BordÛ           C    Vˆrˆs\n\
-5    Cikl·men        D    Cikl·men\n\
-6    OlÌva		     E    S·rga\n\
-7    Vil·gos sz¸rke  F    FehÈr\n"
+  eh          A konzol el√µ- √©s h√°tt√©rsz√≠n√©t √°ll√≠tja be.\n\
+  /-F         Nem friss√≠ti az eg√©sz k√©perny√µt\n\n\
+A sz√≠nt k√©t hexadecim√°lis sz√°mjeggyel lehet be√°ll√≠tani\n\n\
+Az el√©rhet√µ sz√≠nek:\n\
+hex  n√©v             hex  n√©v\n\
+0    Fekete          8    Sz√ºrke\n\
+1    S√∂t√©tk√©k        9    K√©k\n\
+2    S√∂t√©tz√∂ld       A    Z√∂ld\n\
+3    S√∂t√©tlila       B    T√ºrk√≠zk√©k\n\
+4    Bord√≥           C    V√∂r√∂s\n\
+5    Cikl√°men        D    Cikl√°men\n\
+6    Ol√≠va		     E    S√°rga\n\
+7    Vil√°gos sz√ºrke  F    Feh√©r\n"
 
-STRING_COPY_HELP1,  "Fel¸lÌrja a kˆvetkezıt: %s (Igen/Nem/Mind)? "
+STRING_COPY_HELP1,  "Fel√ºl√≠rja a k√∂vetkez√µt: %s (Igen/Nem/Mind)? "
 
-STRING_COPY_HELP2, "Egy vagy tˆbb ·llom·nyt m·sol a megadott helyre.\n\n\
-COPY [/V][/Y|/-Y][/A|/B] forr·s [/A|/B]\n\
-     [+ forr·s [/A|/B] [+ ...]] [cÈl [/A|/B]]\n\n\
-  forr·s       Megadott ·llom·ny(ok)at fogja m·solni.\n\
-  /A           Ez ASCII szˆveg ·llom·ny.\n\
-  /B           Ez bin·ris ·llom·ny.\n\
-  cÈl          Megadja a cÈl mapp·t Ès/vagy az (˙j) ·llom·nynevet.\n\
-  /V           Ellenırzi a m·sol·st.\n\
-  /Y           Igennel v·laszol kÈrdÈsnÈl.\n\
-  /-Y          Nemmel v·laszol kÈrdÈsnÈl.\n\n\
-Az /Y kapcsolÛt a COPYCMD kˆrnyezeti v·ltozÛban is haszn·lhatÛ.\n"
+STRING_COPY_HELP2, "Egy vagy t√∂bb √°llom√°nyt m√°sol a megadott helyre.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] forr√°s [/A|/B]\n\
+     [+ forr√°s [/A|/B] [+ ...]] [c√©l [/A|/B]]\n\n\
+  forr√°s       Megadott √°llom√°ny(ok)at fogja m√°solni.\n\
+  /A           Ez ASCII sz√∂veg √°llom√°ny.\n\
+  /B           Ez bin√°ris √°llom√°ny.\n\
+  c√©l          Megadja a c√©l mapp√°t √©s/vagy az (√∫j) √°llom√°nynevet.\n\
+  /V           Ellen√µrzi a m√°sol√°st.\n\
+  /Y           Igennel v√°laszol k√©rd√©sn√©l.\n\
+  /-Y          Nemmel v√°laszol k√©rd√©sn√©l.\n\n\
+Az /Y kapcsol√≥t a COPYCMD k√∂rnyezeti v√°ltoz√≥ban is haszn√°lhat√≥.\n"
 
-STRING_DATE_HELP1, "\n⁄j d·tum (hh%cnn%cÈÈÈÈ): "
+STRING_DATE_HELP1, "\n√öj d√°tum (hh%cnn%c√©√©√©√©): "
 
-STRING_DATE_HELP2, "\n⁄j d·tum (nn%chh%cÈÈÈÈ): "
+STRING_DATE_HELP2, "\n√öj d√°tum (nn%chh%c√©√©√©√©): "
 
-STRING_DATE_HELP3, "\n⁄j d·tum (ÈÈÈÈ%chh%cnn): "
+STRING_DATE_HELP3, "\n√öj d√°tum (√©√©√©√©%chh%cnn): "
 
-STRING_DATE_HELP4, "MegjelenÌti vagy be·llÌtja a rendszerd·tumot.\n\n\
-DATE [/T][d·tum]\n\n\
-  /T    Csak megjelenÌti\n\n\
-Õrd be a DATE parancsot paramÈter nÈlk¸l, hogy megjelenÌtse a rendszer d·tumot Ès bekÈrjen egy ˙jat.\n\
-Nyomj ENTERT-t, ha nem akarsz v·ltoztatni.\n"
+STRING_DATE_HELP4, "Megjelen√≠ti vagy be√°ll√≠tja a rendszerd√°tumot.\n\n\
+DATE [/T][d√°tum]\n\n\
+  /T    Csak megjelen√≠ti\n\n\
+√çrd be a DATE parancsot param√©ter n√©lk√ºl, hogy megjelen√≠tse a rendszer d√°tumot √©s bek√©rjen egy √∫jat.\n\
+Nyomj ENTERT-t, ha nem akarsz v√°ltoztatni.\n"
 
-STRING_DEL_HELP1, "Elt·volÌt egy vagy tˆbb ·llom·nyt.\n\n\
-DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attrib˙tumok]] ·llom·ny ...\n\
-DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attrib˙tumok]] ·llom·ny ...\n\
-ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attrib˙tumok]] ·llom·ny ...\n\n\
-      ·llom·ny  TˆrlÈsre kijelˆl ·llom·ny(ok).\n\n\
-  /N    Nem csin·l semmit.\n\
-  /P    R·kÈrdezÈs minden ·llom·nyn·l.\n\
-  /T    Statisztika megjelenÌtÈse a vÈgÈn.\n\
-  /Q    Csendes ¸zemmÛd.\n\
-  /W    Wipe. Overwrite the ·llom·ny with random numbers before deleting it.\n\
-  /Y    Minden v·laszra igen. Figyelem, *.*-ot is tˆrli!!\n\
-  /F    Rejtett, csak olvashatÛ Ès rendszer ·llom·nyokat is tˆrˆl.\n\
-  /S    Almapp·kban is tˆrli az ·llom·nyokat\n\
-  /A    Attrib˙tumok alapj·n tˆrli az ·llom·nyokat.\n\
+STRING_DEL_HELP1, "Elt√°vol√≠t egy vagy t√∂bb √°llom√°nyt.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attrib√∫tumok]] √°llom√°ny ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attrib√∫tumok]] √°llom√°ny ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attrib√∫tumok]] √°llom√°ny ...\n\n\
+      √°llom√°ny  T√∂rl√©sre kijel√∂l √°llom√°ny(ok).\n\n\
+  /N    Nem csin√°l semmit.\n\
+  /P    R√°k√©rdez√©s minden √°llom√°nyn√°l.\n\
+  /T    Statisztika megjelen√≠t√©se a v√©g√©n.\n\
+  /Q    Csendes √ºzemm√≥d.\n\
+  /W    Wipe. Overwrite the √°llom√°ny with random numbers before deleting it.\n\
+  /Y    Minden v√°laszra igen. Figyelem, *.*-ot is t√∂rli!!\n\
+  /F    Rejtett, csak olvashat√≥ √©s rendszer √°llom√°nyokat is t√∂r√∂l.\n\
+  /S    Almapp√°kban is t√∂rli az √°llom√°nyokat\n\
+  /A    Attrib√∫tumok alapj√°n t√∂rli az √°llom√°nyokat.\n\
         attributes\n\
-        R     Csak olvashatÛ ·llom·nys\n\
-        S     Rendszer ·llom·ny\n\
-        A     Archiv·lt ·llom·ny\n\
-        H     Rejtett ·llom·nys\n\
+        R     Csak olvashat√≥ √°llom√°nys\n\
+        S     Rendszer √°llom√°ny\n\
+        A     Archiv√°lt √°llom√°ny\n\
+        H     Rejtett √°llom√°nys\n\
         -     ""Nem"" prefix\n"
 
-STRING_DEL_HELP2, "Minden ·llom·ny tˆrˆlve lesz a mapp·ban!\nBiztosan ezt akarod (I/N)?"
-STRING_DEL_HELP3, "    %lu ·llom·ny tˆrˆlve\n"
-STRING_DEL_HELP4, "    %lu ·llom·ny tˆrˆlve\n"
+STRING_DEL_HELP2, "Minden √°llom√°ny t√∂r√∂lve lesz a mapp√°ban!\nBiztosan ezt akarod (I/N)?"
+STRING_DEL_HELP3, "    %lu √°llom√°ny t√∂r√∂lve\n"
+STRING_DEL_HELP4, "    %lu √°llom√°ny t√∂r√∂lve\n"
 
 STRING_DELAY_HELP, "pause for n seconds or milliseconds\n\
 DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
               otherwise n are seconds\n"
 
-STRING_DIR_HELP1, "DIR [meghajtÛ:][elÈrÈsi_˙t][·llom·nynÈv] [/A[[:]attrib˙tumok]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]rendezÈsi_feltÈtel]] [/P] [/Q] [/S] [/T[[:]idı]] [/W] [/X] [/4]\n\n\
-  [meghajtÛ:][elÈrÈsi_˙t][·llom·nyname]\n\
-              Az adott hely ·llom·nyait Ès mapp·it jelenÌti meg.\n\n\
-  /A          A megadott attrib˙tumu ·llom·nyokat jelenÌti csak meg.\n\
-  attributes   D  Mapp·k                         R  Csak olvashatÛ ·llom·ny\n\
-               H  Rejtett ·llom·ny               A  Archiv·landÛ ·llom·ny\n\
-               S  Rendszer ·llom·ny               -  ""Nem"" prefix\n\
-  /B          FejlÈc Ès ˆsszefoglalÛ nÈlk¸l.\n\
-  /C          Ezres elv·lasztÛ jel haszn·lata. Ez az alapÈrtelmezett, /-C a kikapcsol·sa.\n\
-  /D          SzÈles megjelenÌtÈs, oszlop szerint rendezve.\n\
-  /L          Kisbet˚k haszn·lata.\n\
-  /N          New long list format where ·llom·nynames are on the far right.\n\
-  /O          RendezÈs az al·bbiak szerint.\n\
-  sortorder    N  NÈv alapj·n (ABC sorrend)           S  MÈret alapj·n (nˆvekvı)\n\
-               E  KiterjesztÈs alapj·n (ABC sorrend)  D  D·tum/idı alapj·n (legrÈgebbi elejÈn)\n\
-               G  Mapp·k legelıl                      -  ""Nem"" prefixel fordÌtott rendezÈs\n\
-  /P          Csak egy kÈpernyınyi adat megjelenÌtÈse egyszerre.\n\
-  /Q          ¡llom·ny tulajdonsos·nak megjelenÌtÈse.\n\
-  /S          Almapp·k tartalm·t is megjelenÌti.\n\
+STRING_DIR_HELP1, "DIR [meghajt√≥:][el√©r√©si_√∫t][√°llom√°nyn√©v] [/A[[:]attrib√∫tumok]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]rendez√©si_felt√©tel]] [/P] [/Q] [/S] [/T[[:]id√µ]] [/W] [/X] [/4]\n\n\
+  [meghajt√≥:][el√©r√©si_√∫t][√°llom√°nyname]\n\
+              Az adott hely √°llom√°nyait √©s mapp√°it jelen√≠ti meg.\n\n\
+  /A          A megadott attrib√∫tumu √°llom√°nyokat jelen√≠ti csak meg.\n\
+  attributes   D  Mapp√°k                         R  Csak olvashat√≥ √°llom√°ny\n\
+               H  Rejtett √°llom√°ny               A  Archiv√°land√≥ √°llom√°ny\n\
+               S  Rendszer √°llom√°ny               -  ""Nem"" prefix\n\
+  /B          Fejl√©c √©s √∂sszefoglal√≥ n√©lk√ºl.\n\
+  /C          Ezres elv√°laszt√≥ jel haszn√°lata. Ez az alap√©rtelmezett, /-C a kikapcsol√°sa.\n\
+  /D          Sz√©les megjelen√≠t√©s, oszlop szerint rendezve.\n\
+  /L          Kisbet√ªk haszn√°lata.\n\
+  /N          New long list format where √°llom√°nynames are on the far right.\n\
+  /O          Rendez√©s az al√°bbiak szerint.\n\
+  sortorder    N  N√©v alapj√°n (ABC sorrend)           S  M√©ret alapj√°n (n√∂vekv√µ)\n\
+               E  Kiterjeszt√©s alapj√°n (ABC sorrend)  D  D√°tum/id√µ alapj√°n (legr√©gebbi elej√©n)\n\
+               G  Mapp√°k legel√µl                      -  ""Nem"" prefixel ford√≠tott rendez√©s\n\
+  /P          Csak egy k√©perny√µnyi adat megjelen√≠t√©se egyszerre.\n\
+  /Q          √Ållom√°ny tulajdonsos√°nak megjelen√≠t√©se.\n\
+  /S          Almapp√°k tartalm√°t is megjelen√≠ti.\n\
   /T          Controls which time field displayed or used for sorting\n\
-  timefield   C  LÈtrehoz·s\n\
-              A  UtolsÛ megtekintÈs\n\
-              W  UtolsÛ mÛdosÌt·s\n\
-  /W          SzÈles megjelenÌtÈs.\n\
-  /X          This displays the short names generated for non-8dot3 ·llom·ny\n\
+  timefield   C  L√©trehoz√°s\n\
+              A  Utols√≥ megtekint√©s\n\
+              W  Utols√≥ m√≥dos√≠t√°s\n\
+  /W          Sz√©les megjelen√≠t√©s.\n\
+  /X          This displays the short names generated for non-8dot3 √°llom√°ny\n\
               names.  The format is that of /N with the short name inserted\n\
               before the long name. If no short name is present, blanks are\n\
               displayed in its place.\n\
-  /4          NÈgy sz·mjegy˚ Èv\n\n\
-A kapcsolÛk a DIRCMD kˆrnyezeti v·ltozÛban is lehetnek.\n"
+  /4          N√©gy sz√°mjegy√ª √©v\n\n\
+A kapcsol√≥k a DIRCMD k√∂rnyezeti v√°ltoz√≥ban is lehetnek.\n"
 
-STRING_DIR_HELP2, " A (%c) meghajtÛban tal·lhatÛ kˆtet %s\n"
-STRING_DIR_HELP3, " A (%c) meghajtÛban tal·lhatÛ kˆtetnek nincs cÌmkÈje.\n"
-STRING_DIR_HELP4, " A kˆtet sorozatsz·ma: %04X-%04X\n"
-STRING_DIR_HELP5, "\n     ÷sszes ·llom·ny:\n%16i ¡llom·ny(ok)% 14s b·jt\n"
-STRING_DIR_HELP6, "%16i Mappa %15s b·jt"
+STRING_DIR_HELP2, " A (%c) meghajt√≥ban tal√°lhat√≥ k√∂tet %s\n"
+STRING_DIR_HELP3, " A (%c) meghajt√≥ban tal√°lhat√≥ k√∂tetnek nincs c√≠mk√©je.\n"
+STRING_DIR_HELP4, " A k√∂tet sorozatsz√°ma: %04X-%04X\n"
+STRING_DIR_HELP5, "\n     √ñsszes √°llom√°ny:\n%16i √Ållom√°ny(ok)% 14s b√°jt\n"
+STRING_DIR_HELP6, "%16i Mappa %15s b√°jt"
 STRING_DIR_HELP7, "\n %s tartalma\n\n"
-STRING_DIR_HELP8, "%16i ¡llom·ny %14s b·jt\n"
+STRING_DIR_HELP8, "%16i √Ållom√°ny %14s b√°jt\n"
 
-STRING_DIRSTACK_HELP1, "Megjegyzi az aktu·lis mapp·t, majd ·tv·lt egy m·asikra.\n\n\
-PUSHD [elÈrÈsi_˙t | ..]\n\n\
-  elÈrÈsi_˙t        Ebbe a mapp·ba fog ·tv·ltani\n"
+STRING_DIRSTACK_HELP1, "Megjegyzi az aktu√°lis mapp√°t, majd √°tv√°lt egy m√°asikra.\n\n\
+PUSHD [el√©r√©si_√∫t | ..]\n\n\
+  el√©r√©si_√∫t        Ebbe a mapp√°ba fog √°tv√°ltani\n"
 
-STRING_DIRSTACK_HELP2, "VisszalÈp a PUSHD ·ltal megjegyzett mapp·ba.\n\nPOPD"
+STRING_DIRSTACK_HELP2, "Visszal√©p a PUSHD √°ltal megjegyzett mapp√°ba.\n\nPOPD"
 
-STRING_DIRSTACK_HELP3, "MegjelenÌti a megjegyzett mapp·kat.\n\nDIRS"
+STRING_DIRSTACK_HELP3, "Megjelen√≠ti a megjegyzett mapp√°kat.\n\nDIRS"
 
-STRING_DIRSTACK_HELP4, "‹res a t·r"
+STRING_DIRSTACK_HELP4, "√úres a t√°r"
 
-STRING_ECHO_HELP1,  "MegjelenÌti a szˆveget ˙j sor nÈlk¸l.\n\n\
-  ECHOS szˆveg"
+STRING_ECHO_HELP1,  "Megjelen√≠ti a sz√∂veget √∫j sor n√©lk√ºl.\n\n\
+  ECHOS sz√∂veg"
 
 STRING_ECHO_HELP2,  "Displays a message to the standard error.\n\n\
-  ECHOERR szˆveg\n\
-  ECHOERR.           ⁄j sor"
+  ECHOERR sz√∂veg\n\
+  ECHOERR.           √öj sor"
 
 STRING_ECHO_HELP3, "Prints a messages to standard error output without trailing carridge return and line feed.\n\n\
   ECHOSERR message"
 
-STRING_ECHO_HELP4, "MegjelenÌt egy szˆveget, vagy be·llÌtja a visszhangot.\n\n\
+STRING_ECHO_HELP4, "Megjelen√≠t egy sz√∂veget, vagy be√°ll√≠tja a visszhangot.\n\n\
   ECHO [ON | OFF]\n\
-  ECHO [¸zenet]\n\
-  ECHO.             ⁄j sor\n\n\
-ParamÈter nÈlk¸l megjelenÌti a visszang ·llapot·t."
+  ECHO [√ºzenet]\n\
+  ECHO.             √öj sor\n\n\
+Param√©ter n√©lk√ºl megjelen√≠ti a visszang √°llapot√°t."
 
 STRING_ECHO_HELP5, "Az ECHO %s\n"
 
-STRING_EXIT_HELP, "KilÈp a parancssor Èrtelmezıbıl.\n\nEXIT\n"
+STRING_EXIT_HELP, "Kil√©p a parancssor √©rtelmez√µb√µl.\n\nEXIT\n"
 
-STRING_FOR_HELP1, "VÈgrehajt egy parancsot az ˆsszes f·jlban a megadott mapp·kban\n\n\
-FOR %v·ltozÛ IN (csoport) DO parancs [paramÈterek]\n\n\
-  %v·ltozÛ    A cserÈlhetı paramÈter.\n\
-  (csoport)   ¡llom·nyok csoportja. Joker-karakterek megengedettek EZT KURV¡RA ¡TKELL FORDÕTANI :)) wildcardok helyett?.\n\
-  parancs     Ezt a parancsot hajtja vÈgre minden egyes ·llom·nnyal.\n\
-  paramÈterek Ezeket a paramÈtereket adja meg a parancsnak.\n\n\
-A batch ·llom·nyban valÛ hasz·lathoz %%v·ltozÛ kell a %v·ltozÛ helyett.\n"
+STRING_FOR_HELP1, "V√©grehajt egy parancsot az √∂sszes f√°jlban a megadott mapp√°kban\n\n\
+FOR %v√°ltoz√≥ IN (csoport) DO parancs [param√©terek]\n\n\
+  %v√°ltoz√≥    A cser√©lhet√µ param√©ter.\n\
+  (csoport)   √Ållom√°nyok csoportja. Joker-karakterek megengedettek EZT KURV√ÅRA √ÅTKELL FORD√çTANI :)) wildcardok helyett?.\n\
+  parancs     Ezt a parancsot hajtja v√©gre minden egyes √°llom√°nnyal.\n\
+  param√©terek Ezeket a param√©tereket adja meg a parancsnak.\n\n\
+A batch √°llom√°nyban val√≥ hasz√°lathoz %%v√°ltoz√≥ kell a %v√°ltoz√≥ helyett.\n"
 
-STRING_FREE_HELP1, "\nA (%s) meghajtÛban lÈvı kˆtet cÌmkÈje %-11s\n\
- Sorozatsz·m: %s\n\
-  %16s b·jt a teljes hely\n\
-  %16s b·jt haszn·lva\n\
-  %16s b·jt szabad\n"
+STRING_FREE_HELP1, "\nA (%s) meghajt√≥ban l√©v√µ k√∂tet c√≠mk√©je %-11s\n\
+ Sorozatsz√°m: %s\n\
+  %16s b√°jt a teljes hely\n\
+  %16s b√°jt haszn√°lva\n\
+  %16s b√°jt szabad\n"
 
-STRING_FREE_HELP2, "Kˆtet mÈret inform·ciÛk.\n\nFREE [meghajtÛ: ...]\n"
+STRING_FREE_HELP2, "K√∂tet m√©ret inform√°ci√≥k.\n\nFREE [meghajt√≥: ...]\n"
 
 STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
-  IF [NOT] EXIST ·llom·nyname command\n\
+  IF [NOT] EXIST √°llom√°nyname command\n\
   IF [NOT] DEFINED variable command\n\n\
 NOT               Specifies that CMD should carry out the command only if\n\
                   the condition is false\n\
@@ -263,27 +263,27 @@ ERRORLEVEL number Specifies a true condition if the last program run returned\n\
 command           Specifies the command to carry out if the condition is met.\n\
 string1==string2  Specifies a true condition if the specified text strings\n\
                   match.\n\
-EXIST ·llom·nyname    Specifies a true condition if the specified ·llom·nyname exists.\n\
+EXIST √°llom√°nyname    Specifies a true condition if the specified √°llom√°nyname exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
 
-STRING_GOTO_HELP1,  "¡tir·nyÌt egy m·sik cÌmkÈre a batch ·llom·nyban.\n\n\
-GOTO cÌmke\n\n\
-  cÌmke  A megadott cÌmkÈre fog ugrani az Èrtelmezı.\n\n\
-Egy cÌmkÈt egy sorban lehet megadni, ':' -tal kezdve."
+STRING_GOTO_HELP1,  "√Åtir√°ny√≠t egy m√°sik c√≠mk√©re a batch √°llom√°nyban.\n\n\
+GOTO c√≠mke\n\n\
+  c√≠mke  A megadott c√≠mk√©re fog ugrani az √©rtelmez√µ.\n\n\
+Egy c√≠mk√©t egy sorban lehet megadni, ':' -tal kezdve."
 
-STRING_LABEL_HELP1, "A kˆtet cÌmkÈjÈt megjelenÌti, vagy megv·ltoztatja.\n\n\
-LABEL [meghajtÛ:] [˙j_cÌmke]\n"
+STRING_LABEL_HELP1, "A k√∂tet c√≠mk√©j√©t megjelen√≠ti, vagy megv√°ltoztatja.\n\n\
+LABEL [meghajt√≥:] [√∫j_c√≠mke]\n"
 
-STRING_LABEL_HELP2, "A (%c) meghajtÛban lÈvı kˆtet cÌmkÈje %s\n"
-STRING_LABEL_HELP3, "A (%c) megjajtÛban lÈvı kˆtetnek nincs cÌmkÈje.\n"
-STRING_LABEL_HELP4, "A kˆtet sorozatsz·ma %04X-%04X\n"
-STRING_LABEL_HELP5, "⁄j kˆtetcÌmke (11 bet˚, ENTER ha ¸res)? "
+STRING_LABEL_HELP2, "A (%c) meghajt√≥ban l√©v√µ k√∂tet c√≠mk√©je %s\n"
+STRING_LABEL_HELP3, "A (%c) megjajt√≥ban l√©v√µ k√∂tetnek nincs c√≠mk√©je.\n"
+STRING_LABEL_HELP4, "A k√∂tet sorozatsz√°ma %04X-%04X\n"
+STRING_LABEL_HELP5, "√öj k√∂tetc√≠mke (11 bet√ª, ENTER ha √ºres)? "
 
-STRING_LOCALE_HELP1, "Az aktu·lis idı:"
+STRING_LOCALE_HELP1, "Az aktu√°lis id√µ:"
 
-STRING_MKDIR_HELP,   "LÈtrehoz egy ˙j mapp·t.\n\n\
-MKDIR [meghajtÛ:]path\nMD [meghajtÛ:]path"
+STRING_MKDIR_HELP,   "L√©trehoz egy √∫j mapp√°t.\n\n\
+MKDIR [meghajt√≥:]path\nMD [meghajt√≥:]path"
 
 STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
 MKLINK [/D | /H | /J] linkname target\n\n\
@@ -292,29 +292,29 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
 
-STRING_MEMMORY_HELP1, "MegjelenÌti a memÛria statisztik·t.\n\nMEMORY"
+STRING_MEMMORY_HELP1, "Megjelen√≠ti a mem√≥ria statisztik√°t.\n\nMEMORY"
 
-STRING_MEMMORY_HELP2, "\n A memÛria %12s%%-a foglalt.\n\n\
-  %13s b·jtnyi teljes fizikai memÛria.\n\
-  %13s b·jtnyi elÈrhetı memÛria.\n\n\
-  %13s b·jt a lapozÛ·llom·ny.\n\
-  %13s b·jtnyi elÈrhetı a lapozÛ·llom·nyban.\n\n\
-  %13s b·jt a teljes virtu·lis memÛria.\n\
-  %13s b·jtnyi elÈrhetı a virtu·lis memÛri·bÛl.\n"
+STRING_MEMMORY_HELP2, "\n A mem√≥ria %12s%%-a foglalt.\n\n\
+  %13s b√°jtnyi teljes fizikai mem√≥ria.\n\
+  %13s b√°jtnyi el√©rhet√µ mem√≥ria.\n\n\
+  %13s b√°jt a lapoz√≥√°llom√°ny.\n\
+  %13s b√°jtnyi el√©rhet√µ a lapoz√≥√°llom√°nyban.\n\n\
+  %13s b√°jt a teljes virtu√°lis mem√≥ria.\n\
+  %13s b√°jtnyi el√©rhet√µ a virtu√°lis mem√≥ri√°b√≥l.\n"
 
-STRING_MISC_HELP1, "A folytat·shoz nyomj meg egy billenty˚t . . .\n"
+STRING_MISC_HELP1, "A folytat√°shoz nyomj meg egy billenty√ªt . . .\n"
 
-STRING_MOVE_HELP1, "Fel¸lÌrja %s (Igen/Nem/Mind)? "
+STRING_MOVE_HELP1, "Fel√ºl√≠rja %s (Igen/Nem/Mind)? "
 
-STRING_MOVE_HELP2, "¡thelyezi Ès ·tnevezi az ·llom·nyokat a mapp·kban.\n\n\
-Egy vagy tˆbb ·llom·ny ·thelyezÈsÈhez:\n\
-MOVE [/N][meghajtÛ:][elÈrÈsi_˙t]·llom·ny1[,...] cÈl\n\n\
-Mappa ·tnevezÈse:\n\
-MOVE [/N][meghajtÛ:][elÈrÈsi_˙t]mappa1 mappa2\n\n\
-  [meghajtÛ:][elÈrÈsi_˙t]·llom·ny1  ¡tnevezendı ·llom·nyok forr·sa.\n\
-  /N                    Nem helyez ·t semmit.\n\n\
-Hi·nyoss·gok:\n\
-  - Nem lehet meghajtÛk kˆzˆtt ·thelyezni ·llom·nyokat.\n"
+STRING_MOVE_HELP2, "√Åthelyezi √©s √°tnevezi az √°llom√°nyokat a mapp√°kban.\n\n\
+Egy vagy t√∂bb √°llom√°ny √°thelyez√©s√©hez:\n\
+MOVE [/N][meghajt√≥:][el√©r√©si_√∫t]√°llom√°ny1[,...] c√©l\n\n\
+Mappa √°tnevez√©se:\n\
+MOVE [/N][meghajt√≥:][el√©r√©si_√∫t]mappa1 mappa2\n\n\
+  [meghajt√≥:][el√©r√©si_√∫t]√°llom√°ny1  √Åtnevezend√µ √°llom√°nyok forr√°sa.\n\
+  /N                    Nem helyez √°t semmit.\n\n\
+Hi√°nyoss√°gok:\n\
+  - Nem lehet meghajt√≥k k√∂z√∂tt √°thelyezni √°llom√°nyokat.\n"
 
 STRING_MSGBOX_HELP, "display a message box and return user responce\n\n\
 MSGBOX type ['title'] prompt\n\n\
@@ -327,105 +327,105 @@ ERRORLEVEL is set according the button pressed:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
 
-STRING_PATH_HELP1, "MegjelenÌti vagy be·llÌtja a keresÈsi ˙tvonalakat.\n\n\
-PATH [[meghajtÛ:]elÈrÈsi_˙t[;...]]\n\
-PATH ; KeresÈsi ˙tvonalak tˆrlÈse\n\n\
-A PATH tˆrlÈsÈhez a kˆvetkezıt Ìrd be: PATH ;\n\
-Õgy csak az aktu·lis mapp·ban fog keresni a CMD.\
-ParamÈterek nÈlk¸l az ÈrvÈnyes keresÈsi ˙tvonalakat mutatja meg.\n"
+STRING_PATH_HELP1, "Megjelen√≠ti vagy be√°ll√≠tja a keres√©si √∫tvonalakat.\n\n\
+PATH [[meghajt√≥:]el√©r√©si_√∫t[;...]]\n\
+PATH ; Keres√©si √∫tvonalak t√∂rl√©se\n\n\
+A PATH t√∂rl√©s√©hez a k√∂vetkez√µt √≠rd be: PATH ;\n\
+√çgy csak az aktu√°lis mapp√°ban fog keresni a CMD.\
+Param√©terek n√©lk√ºl az √©rv√©nyes keres√©si √∫tvonalakat mutatja meg.\n"
 
-STRING_PROMPT_HELP1, "Parancssor be·llÌt·sa.\n\n\
-PROMPT [szˆveg]\n\n\
-  szˆveg    Az ˙j parancssor megad·sa.\n\n\
-A parancssor speci·lis kÛdokat is tartalmazhat:\n\n\
-  $A   & (Ès jel)\n\
-  $B   | (csı)\n\
-  $C   ( (kezdı r·zÛjel)\n\
-  $D   Aktu·lis d·tum\n\
-  $E   Escape-kÛd (ASCII 27-es kÛd)\n\
-  $F   ) (z·rÛ z·rÛjel)\n\
+STRING_PROMPT_HELP1, "Parancssor be√°ll√≠t√°sa.\n\n\
+PROMPT [sz√∂veg]\n\n\
+  sz√∂veg    Az √∫j parancssor megad√°sa.\n\n\
+A parancssor speci√°lis k√≥dokat is tartalmazhat:\n\n\
+  $A   & (√©s jel)\n\
+  $B   | (cs√µ)\n\
+  $C   ( (kezd√µ r√°z√≥jel)\n\
+  $D   Aktu√°lis d√°tum\n\
+  $E   Escape-k√≥d (ASCII 27-es k√≥d)\n\
+  $F   ) (z√°r√≥ z√°r√≥jel)\n\
   $G   > ('nagyobb' jel)\n\
-  $H   TˆrlÈs (elˆtte lÈvı karaktert tˆrli)\n\
+  $H   T√∂rl√©s (el√∂tte l√©v√µ karaktert t√∂rli)\n\
   $L   < ('kissebb' jel)\n\
-  $N   Aktu·lis meghajtÛ\n\
-  $P   Aktu·lis meghajtÛ Ès mappa\n\
-  $Q   = (egyenlısÈg jel)\n\
-  $T   Aktu·lis idı\n\
-  $V   OS verziÛsz·m\n\
-  $_   ⁄jsor\n\
-  $$   $ (doll·r jel)\n"
+  $N   Aktu√°lis meghajt√≥\n\
+  $P   Aktu√°lis meghajt√≥ √©s mappa\n\
+  $Q   = (egyenl√µs√©g jel)\n\
+  $T   Aktu√°lis id√µ\n\
+  $V   OS verzi√≥sz√°m\n\
+  $_   √öjsor\n\
+  $$   $ (doll√°r jel)\n"
 
-STRING_PAUSE_HELP1, "Felf¸ggeszti a fut·st, Ès v·r a felhaszn·lÛra. A kˆvetkezı ¸zenet jelenik meg:\n\
-'A folytat·shoz nyomj meg egy billenty˚t . . .' vagy egy ·ltalad v·lasztott ¸zenet.\n\n\
+STRING_PAUSE_HELP1, "Felf√ºggeszti a fut√°st, √©s v√°r a felhaszn√°l√≥ra. A k√∂vetkez√µ √ºzenet jelenik meg:\n\
+'A folytat√°shoz nyomj meg egy billenty√ªt . . .' vagy egy √°ltalad v√°lasztott √ºzenet.\n\n\
 PAUSE [message]"
 
 STRING_PROMPT_HELP2, "  $+   Displays the current depth of the directory stack"
 
-STRING_PROMPT_HELP3, "\nHa paramÈter nÈlk¸l beÌrod a PROMPT parancsot, vissza ·ll az alapÈrtelmezettre a kijelzÈs."
+STRING_PROMPT_HELP3, "\nHa param√©ter n√©lk√ºl be√≠rod a PROMPT parancsot, vissza √°ll az alap√©rtelmezettre a kijelz√©s."
 
-STRING_REM_HELP, "MegjegyzÈst jelˆlı sor batch f·jlokban.\n\nREM [megjegyzÈs]"
+STRING_REM_HELP, "Megjegyz√©st jel√∂l√µ sor batch f√°jlokban.\n\nREM [megjegyz√©s]"
 
-STRING_RMDIR_HELP,   "Elt·volÌt egy mapp·t.\n\n\
-RMDIR [meghajtÛ:]elÈrÈsi_˙t\nRD [meghajtÛ:]elÈrÈsi_˙t"
+STRING_RMDIR_HELP,   "Elt√°vol√≠t egy mapp√°t.\n\n\
+RMDIR [meghajt√≥:]el√©r√©si_√∫t\nRD [meghajt√≥:]el√©r√©si_√∫t"
 
-STRING_REN_HELP1, "¡tnevez egy ·llom·nyt.\n\n\
-RENAME [/E /N /P /Q /S /T] rÈgi_nÈv ... ˙j_nÈv\n\
-REN [/E /N /P /Q /S /T] rÈgi_nÈv ... ˙j_nÈv\n\n\
-  /E    Hiba¸zenetek elrejtÈse.\n\
-  /N    Ne csin·ljon semmit	.\n\
-  /P    Minden ·llom·nyn·l r·kÈrdez. (MÈg NEM m˚kˆdik!!)\n\
-  /Q    Csendes m˚kˆdÈs.\n\
-  /S    Almapp·kat is ·tnevez.\n\
-  /T    ÷sszes ·tnevezett f·jl Ès ·llom·ny.\n\n\
-Csak az aktu·lis meghajtÛn Ès mapp·ban fog m˚kˆdni.\n\
-Ha ez nem elÈg, haszn·ld a MOVE parancsot."
+STRING_REN_HELP1, "√Åtnevez egy √°llom√°nyt.\n\n\
+RENAME [/E /N /P /Q /S /T] r√©gi_n√©v ... √∫j_n√©v\n\
+REN [/E /N /P /Q /S /T] r√©gi_n√©v ... √∫j_n√©v\n\n\
+  /E    Hiba√ºzenetek elrejt√©se.\n\
+  /N    Ne csin√°ljon semmit	.\n\
+  /P    Minden √°llom√°nyn√°l r√°k√©rdez. (M√©g NEM m√ªk√∂dik!!)\n\
+  /Q    Csendes m√ªk√∂d√©s.\n\
+  /S    Almapp√°kat is √°tnevez.\n\
+  /T    √ñsszes √°tnevezett f√°jl √©s √°llom√°ny.\n\n\
+Csak az aktu√°lis meghajt√≥n √©s mapp√°ban fog m√ªk√∂dni.\n\
+Ha ez nem el√©g, haszn√°ld a MOVE parancsot."
 
-STRING_REN_HELP2, "    %lu ·llom·ny ·tnevezve\n"
+STRING_REN_HELP2, "    %lu √°llom√°ny √°tnevezve\n"
 
-STRING_REN_HELP3, "    %lu ·llom·ny ·tnevezve\n"
+STRING_REN_HELP3, "    %lu √°llom√°ny √°tnevezve\n"
 
-STRING_SHIFT_HELP, "Eltolja a helyettesÌthetı paramÈterek pozÌciÛj·t a batch ·llom·nyban.\n\n\
+STRING_SHIFT_HELP, "Eltolja a helyettes√≠thet√µ param√©terek poz√≠ci√≥j√°t a batch √°llom√°nyban.\n\n\
 SHIFT [DOWN]"
 
-STRING_SCREEN_HELP, "Megv·ltoztatja a kurzos pozÌciÛj·t, vagy megjelenÌt adott pozÌciÛban egy szˆveget.\n\n\
-SCREEN sor oszlop [szˆveg]\n\n\
-  sor         Ugr·s sora\n\
-  oszlop      Ugr·s oszlopa"
+STRING_SCREEN_HELP, "Megv√°ltoztatja a kurzos poz√≠ci√≥j√°t, vagy megjelen√≠t adott poz√≠ci√≥ban egy sz√∂veget.\n\n\
+SCREEN sor oszlop [sz√∂veg]\n\n\
+  sor         Ugr√°s sora\n\
+  oszlop      Ugr√°s oszlopa"
 
-STRING_SET_HELP, "MegjelenÌti vagy be·llÌtja a kˆrnyezeti v·ltozÛkat.\n\n\
-SET [v·ltozÛ[=][ÈrtÈk]]\n\n\
-  v·ltozÛ  Kˆrnyezeti v·ltozÛ neve.\n\
-  ÈrtÈk    A be·llÌtandÛ ÈrtÈk.\n\n\
-ParamÈterek nÈlk¸l megjelenÌti az ˆsszes kˆrnyezetiv·ltozÛt.\n"
+STRING_SET_HELP, "Megjelen√≠ti vagy be√°ll√≠tja a k√∂rnyezeti v√°ltoz√≥kat.\n\n\
+SET [v√°ltoz√≥[=][√©rt√©k]]\n\n\
+  v√°ltoz√≥  K√∂rnyezeti v√°ltoz√≥ neve.\n\
+  √©rt√©k    A be√°ll√≠tand√≥ √©rt√©k.\n\n\
+Param√©terek n√©lk√ºl megjelen√≠ti az √∂sszes k√∂rnyezetiv√°ltoz√≥t.\n"
 
-STRING_START_HELP1, "VÈgrehajt egy parancsot.\n\n\
+STRING_START_HELP1, "V√©grehajt egy parancsot.\n\n\
 START parancs\n\n\
-  parancs     VÈgrehajtja a megadott parancsot.\n\n\
-Jelenleg minden parancs aszinkron hajtÛdik vÈgre.\n"
+  parancs     V√©grehajtja a megadott parancsot.\n\n\
+Jelenleg minden parancs aszinkron hajt√≥dik v√©gre.\n"
 
-STRING_TITLE_HELP, "Be·llÌtja az ablak cÌmsor·nak szˆvegÈt.\n\n\
-TITLE [szˆveg]\n\n\
-szˆveg       Be·llÌtja az ablak cÌmsor·nak szˆvegÈt.\n"
+STRING_TITLE_HELP, "Be√°ll√≠tja az ablak c√≠msor√°nak sz√∂veg√©t.\n\n\
+TITLE [sz√∂veg]\n\n\
+sz√∂veg       Be√°ll√≠tja az ablak c√≠msor√°nak sz√∂veg√©t.\n"
 
-STRING_TIME_HELP1, "MegjelenÌti vagy be·llÌtja a rendszeridıt.\n\n\
-TIME [/T][idı]\n\n\
-  /T    Csaj megjelenÌti\n\n\
-ParamÈterek nÈlk¸l megjelenÌti az aktu·lis idıt Ès kÈr egy ˙jat.\n\
-Csak egy ENTER megnyom·s·val nem ·llÌtja ·t.\n"
+STRING_TIME_HELP1, "Megjelen√≠ti vagy be√°ll√≠tja a rendszerid√µt.\n\n\
+TIME [/T][id√µ]\n\n\
+  /T    Csaj megjelen√≠ti\n\n\
+Param√©terek n√©lk√ºl megjelen√≠ti az aktu√°lis id√µt √©s k√©r egy √∫jat.\n\
+Csak egy ENTER megnyom√°s√°val nem √°ll√≠tja √°t.\n"
 
-STRING_TIME_HELP2, "⁄j idı: "
+STRING_TIME_HELP2, "√öj id√µ: "
 
-STRING_TIMER_HELP1, "Eltelt %d ezred m·sodperc\n"
+STRING_TIMER_HELP1, "Eltelt %d ezred m√°sodperc\n"
 
 STRING_TIMER_HELP2, "Eltelt: %02d%c%02d%c%02d%c%02d\n"
 
 STRING_TIMER_HELP3, "allow the use of ten stopwatches.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          Stopper bekapcsol·sa\n\
-  OFF         Stopper kikapcsol·sa\n\
+  ON          Stopper bekapcsol√°sa\n\
+  OFF         Stopper kikapcsol√°sa\n\
   /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
-  /n          Stopper azonosÌtÛ megad·sa.\n\
+  /n          Stopper azonos√≠t√≥ megad√°sa.\n\
               Stopwatches avaliable are 0 to 9\n\
               If it is not specified default is 1\n\
   /Fn         Format for output\n\
@@ -435,24 +435,24 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
 if none of ON, OFF or /S is specified the command\n\
 will toggle stopwatch state\n\n"
 
-STRING_TYPE_HELP1, "MegjelenÌti az ·llom·nyok tartalm·t.\n\n\
-TYPE [meghajtÛ:][elÈrÈsi_˙t]·llom·nynÈv \n\
-  /P 		  Csak egy kÈpernyınyi tartalmat jelenÌt meg egyszerre.\n"
+STRING_TYPE_HELP1, "Megjelen√≠ti az √°llom√°nyok tartalm√°t.\n\n\
+TYPE [meghajt√≥:][el√©r√©si_√∫t]√°llom√°nyn√©v \n\
+  /P 		  Csak egy k√©perny√µnyi tartalmat jelen√≠t meg egyszerre.\n"
 
-STRING_VERIFY_HELP1, "Ez a parancs mÈg nem m˚kˆdik!!\n\
-Lemezre Ìr·s ut·ni ellenırzÈst ·llÌtja be.\n\n\
+STRING_VERIFY_HELP1, "Ez a parancs m√©g nem m√ªk√∂dik!!\n\
+Lemezre √≠r√°s ut√°ni ellen√µrz√©st √°ll√≠tja be.\n\n\
 VERIFY [ON | OFF]\n\n\
-Õrd be a VERIFY-t paramÈterek nÈlk¸l, hogy megjelenÌtse aktu·lis ·llapot·t.\n"
+√çrd be a VERIFY-t param√©terek n√©lk√ºl, hogy megjelen√≠tse aktu√°lis √°llapot√°t.\n"
 
-STRING_VERIFY_HELP2, "Az ellenırzÈs jelenleg %s.\n"
+STRING_VERIFY_HELP2, "Az ellen√µrz√©s jelenleg %s.\n"
 
 STRING_VERIFY_HELP3, "Csak az ON vagy OFF elfogadott."
 
-STRING_VERSION_HELP1, "A ReactOS verziÛinform·ciÛit jelenÌti meg\n\n\
+STRING_VERSION_HELP1, "A ReactOS verzi√≥inform√°ci√≥it jelen√≠ti meg\n\n\
 VER [/C][/R][/W]\n\n\
-  /C  KÈszÌtık nÈvsora.\n\
-  /R  TerjesztÈsi inform·ciÛk.\n\
-  /W  JÛt·ll·si inform·ciÛk."
+  /C  K√©sz√≠t√µk n√©vsora.\n\
+  /R  Terjeszt√©si inform√°ci√≥k.\n\
+  /W  J√≥t√°ll√°si inform√°ci√≥k."
 
 STRING_VERSION_HELP2, " comes with ABSOLUTELY NO WARRANTY; for details\n\
 type: `ver /w'. This is free software, and you are welcome to redistribute\n\
@@ -469,17 +469,17 @@ STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version.\n"
 
-STRING_VERSION_HELP5, "\nHib·krÛl E-Maileket ide k¸ldhetsz: <ros-dev@reactos.org>.\n\
-FrissÌtÈsek Ès egyÈb inform·ciÛk: http://www.reactos.org"
+STRING_VERSION_HELP5, "\nHib√°kr√≥l E-Maileket ide k√ºldhetsz: <ros-dev@reactos.org>.\n\
+Friss√≠t√©sek √©s egy√©b inform√°ci√≥k: http://www.reactos.org"
 
-STRING_VERSION_HELP6, "\nA FreeDOS kÈszÌtıi:\n"
+STRING_VERSION_HELP6, "\nA FreeDOS k√©sz√≠t√µi:\n"
 
-STRING_VERSION_HELP7, "\nA ReactOS kÈszÌtıi:\n"
+STRING_VERSION_HELP7, "\nA ReactOS k√©sz√≠t√µi:\n"
 
-STRING_VOL_HELP1, " A (%c) meghajtÛban lÈvı kˆtet: %s\n"
-STRING_VOL_HELP2, " A (%c) meghajtÛban lÈvı kˆtetnek nincs cÌmkÈje\n"
-STRING_VOL_HELP3, " A kˆtet sorozatsz·ma %04X-%04X\n"
-STRING_VOL_HELP4, "A kˆtet cÌmkÈjÈnek Ès sorozatsz·m·nak megjelenÌtÈse, ha lÈteznek.\n\nVOL [meghajtÛ:]"
+STRING_VOL_HELP1, " A (%c) meghajt√≥ban l√©v√µ k√∂tet: %s\n"
+STRING_VOL_HELP2, " A (%c) meghajt√≥ban l√©v√µ k√∂tetnek nincs c√≠mk√©je\n"
+STRING_VOL_HELP3, " A k√∂tet sorozatsz√°ma %04X-%04X\n"
+STRING_VOL_HELP4, "A k√∂tet c√≠mk√©j√©nek √©s sorozatsz√°m√°nak megjelen√≠t√©se, ha l√©teznek.\n\nVOL [meghajt√≥:]"
 
 STRING_WINDOW_HELP1, "change console window aspect\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
@@ -500,140 +500,140 @@ RESTORE       restore the window\n\
 title         new title\n"
 
 
-STRING_HELP1, "T·mogatott parancsok megjelenÌtÈse\n\n\
-  parancs /?     Tˆbb (rÈszletes) inform·ciÛ megtekintÈsÈhez haszn·ld ezt.\n\n\
-?        Minden t·mogatott parancs megjelenÌtÈse (rÈszletek nÈlk¸l).\n\
-ALIAS    MegjelenÌti, vagy megv·ltoztatja az aliasokat.\n\
-ATTRIB   MegjelenÌti vagy megv·ltoztatja az ·llom·nyok attrib˙tum·t.\n\
-BEEP     MegszÛlaltatja a hangszÛrÛt.\n\
-CALL     Batch ·llom·nybÛl egy m·sik batch ·llom·ny meghÌv·sa.\n\
-CD       MegjelenÌti vagy ·tv·lt egy m·sik mapp·ba.\n\
-CHCP     MegjelenÌti vagy megv·ltoztatja az aktÌv kÛdlapot.\n\
-CHOICE   V·r a felhaszn·lÛra, hogy v·lasszon a felkÌn·lt lehetısÈgek kˆz¸l.\n\
-CLS      Letˆrli a kÈpernyıt.\n\
-CMD      Egy ˙j pÈld·nyt indÌt a ReactOS parancsÈrtelmezıjÈbıl.\n\
-COLOR    A konzol elı- Ès h·ttÈrszÌnÈt ·llÌtja be.\n\
-COPY     Egy vagy tˆbb ·llom·nyt m·sol a megadott helyre.\n\
-DATE     MegjelenÌti vagy be·llÌtja a rendszerd·tumot.\n\
-DELETE   Elt·volÌt egy vagy tˆbb ·llom·nyt.\n\
-DIR      MegjelenÌti a mapp·ban tal·lhatÛ almapp·kat Ès ·llom·nyokat.\n\
-ECHO     MegjelenÌt egy szˆveget, vagy be·llÌtja a visszhangot.\n\
-ERASE    Elt·volÌt egy vagy tˆbb f·jlt.\n\
-EXIT     KilÈp a parancssor Èrtelmezıbıl.\n\
-FOR      VÈgrehajt egy parancsot az ˆsszes f·jlban a megadott mapp·kban.\n\
-FREE     MegjelenÌti a szabad hely mÈretÈt.\n\
-GOTO     ¡tir·nyÌt egy m·sik cÌmkÈre a batch ·llom·nyban.\n\
-HELP     SegÌtsÈget ad a ReactOS parancsairÛl.\n\
-HISTORY  MegjelenÌti az ebben az ablakban kiadott parancsok list·j·t.\n\
-IF       FeltÈteles vÈgrehajt·s batch ·llom·nyokban.\n\
-LABEL    Be·llÌtja egy kˆtet cÌmkÈjÈt.\n\
-MD       LÈtrehoz egy ˙j mapp·t.\n\
-MKDIR    LÈtrehoz egy ˙j mapp·t.\n\
+STRING_HELP1, "T√°mogatott parancsok megjelen√≠t√©se\n\n\
+  parancs /?     T√∂bb (r√©szletes) inform√°ci√≥ megtekint√©s√©hez haszn√°ld ezt.\n\n\
+?        Minden t√°mogatott parancs megjelen√≠t√©se (r√©szletek n√©lk√ºl).\n\
+ALIAS    Megjelen√≠ti, vagy megv√°ltoztatja az aliasokat.\n\
+ATTRIB   Megjelen√≠ti vagy megv√°ltoztatja az √°llom√°nyok attrib√∫tum√°t.\n\
+BEEP     Megsz√≥laltatja a hangsz√≥r√≥t.\n\
+CALL     Batch √°llom√°nyb√≥l egy m√°sik batch √°llom√°ny megh√≠v√°sa.\n\
+CD       Megjelen√≠ti vagy √°tv√°lt egy m√°sik mapp√°ba.\n\
+CHCP     Megjelen√≠ti vagy megv√°ltoztatja az akt√≠v k√≥dlapot.\n\
+CHOICE   V√°r a felhaszn√°l√≥ra, hogy v√°lasszon a felk√≠n√°lt lehet√µs√©gek k√∂z√ºl.\n\
+CLS      Let√∂rli a k√©perny√µt.\n\
+CMD      Egy √∫j p√©ld√°nyt ind√≠t a ReactOS parancs√©rtelmez√µj√©b√µl.\n\
+COLOR    A konzol el√µ- √©s h√°tt√©rsz√≠n√©t √°ll√≠tja be.\n\
+COPY     Egy vagy t√∂bb √°llom√°nyt m√°sol a megadott helyre.\n\
+DATE     Megjelen√≠ti vagy be√°ll√≠tja a rendszerd√°tumot.\n\
+DELETE   Elt√°vol√≠t egy vagy t√∂bb √°llom√°nyt.\n\
+DIR      Megjelen√≠ti a mapp√°ban tal√°lhat√≥ almapp√°kat √©s √°llom√°nyokat.\n\
+ECHO     Megjelen√≠t egy sz√∂veget, vagy be√°ll√≠tja a visszhangot.\n\
+ERASE    Elt√°vol√≠t egy vagy t√∂bb f√°jlt.\n\
+EXIT     Kil√©p a parancssor √©rtelmez√µb√µl.\n\
+FOR      V√©grehajt egy parancsot az √∂sszes f√°jlban a megadott mapp√°kban.\n\
+FREE     Megjelen√≠ti a szabad hely m√©ret√©t.\n\
+GOTO     √Åtir√°ny√≠t egy m√°sik c√≠mk√©re a batch √°llom√°nyban.\n\
+HELP     Seg√≠ts√©get ad a ReactOS parancsair√≥l.\n\
+HISTORY  Megjelen√≠ti az ebben az ablakban kiadott parancsok list√°j√°t.\n\
+IF       Felt√©teles v√©grehajt√°s batch √°llom√°nyokban.\n\
+LABEL    Be√°ll√≠tja egy k√∂tet c√≠mk√©j√©t.\n\
+MD       L√©trehoz egy √∫j mapp√°t.\n\
+MKDIR    L√©trehoz egy √∫j mapp√°t.\n\
 MKLINK   Creates a filesystem link object.\n\
-MOVE     ¡thelyez egy vagy tˆbb ·llom·nyt az egyik mapp·bÛl a m·sikba.\n\
-PATH     MegjelenÌti vagy be·llÌtja a keresÈsi ˙tvonalakat.\n\
-PAUSE    Felf¸ggeszti a fut·st, Ès v·r a felhaszn·lÛra.\n\
-POPD     VisszalÈp a PUSHD ·ltal megjegyzett mapp·ba.\n\
-PROMPT   Parancssor be·llÌt·sa.\n\
-PUSHD    Megjegyzi az aktu·lis mapp·t, majd ·tv·lt egy m·asikra.\n\
-RD       Tˆrˆl egy mapp·t.\n\
-REM      MegjegyzÈst jelˆlı sor batch f·jlokban.\n\
-REN      ¡tnevez egy ·llom·nyt.\n\
-RENAME   ¡tnevez egy ·llom·nyt.\n\
-RMDIR    Tˆrˆl egy mapp·t.\n\
-SCREEN   Megv·ltoztatja a kurzos pozÌciÛj·t, vagy megjelenÌt adott pozÌciÛban egy szˆveget.\n\
-SET      MegjelenÌti vagy be·llÌtja a kˆrnyezeti v·ltozÛkat.\n\
-SHIFT    Eltolja a helyettesÌthetı paramÈterek pozÌciÛj·t a batch ·llom·nyban.\n"
-STRING_HELP2, "START    Egy ˙j ablakban hajtha vÈgre a parancsot.\n\
-TIME     MegjelenÌti vagy be·llÌtja a rendszeridıt.\n\
-TIMER    IdızÌtık kezelÈsÈt teszi lehetıve.\n\
-TITLE    Be·llÌtja az ablak cÌmsor·nak szˆvegÈt.\n\
-TYPE     MegjelenÌti egy ·llom·ny tartalm·t.\n\
-VER      MegjelenÌti a ReactOS verziÛ inform·ciÛj·t.\n\
-VERIFY   Õr·si m˚veletek ellenırzÈsÈt vezÈrli\n\
-VOL      MegjelenÌti egy kˆtet cÌmkÈjÈt Ès sorozatsz·m·t.\n"
+MOVE     √Åthelyez egy vagy t√∂bb √°llom√°nyt az egyik mapp√°b√≥l a m√°sikba.\n\
+PATH     Megjelen√≠ti vagy be√°ll√≠tja a keres√©si √∫tvonalakat.\n\
+PAUSE    Felf√ºggeszti a fut√°st, √©s v√°r a felhaszn√°l√≥ra.\n\
+POPD     Visszal√©p a PUSHD √°ltal megjegyzett mapp√°ba.\n\
+PROMPT   Parancssor be√°ll√≠t√°sa.\n\
+PUSHD    Megjegyzi az aktu√°lis mapp√°t, majd √°tv√°lt egy m√°asikra.\n\
+RD       T√∂r√∂l egy mapp√°t.\n\
+REM      Megjegyz√©st jel√∂l√µ sor batch f√°jlokban.\n\
+REN      √Åtnevez egy √°llom√°nyt.\n\
+RENAME   √Åtnevez egy √°llom√°nyt.\n\
+RMDIR    T√∂r√∂l egy mapp√°t.\n\
+SCREEN   Megv√°ltoztatja a kurzos poz√≠ci√≥j√°t, vagy megjelen√≠t adott poz√≠ci√≥ban egy sz√∂veget.\n\
+SET      Megjelen√≠ti vagy be√°ll√≠tja a k√∂rnyezeti v√°ltoz√≥kat.\n\
+SHIFT    Eltolja a helyettes√≠thet√µ param√©terek poz√≠ci√≥j√°t a batch √°llom√°nyban.\n"
+STRING_HELP2, "START    Egy √∫j ablakban hajtha v√©gre a parancsot.\n\
+TIME     Megjelen√≠ti vagy be√°ll√≠tja a rendszerid√µt.\n\
+TIMER    Id√µz√≠t√µk kezel√©s√©t teszi lehet√µve.\n\
+TITLE    Be√°ll√≠tja az ablak c√≠msor√°nak sz√∂veg√©t.\n\
+TYPE     Megjelen√≠ti egy √°llom√°ny tartalm√°t.\n\
+VER      Megjelen√≠ti a ReactOS verzi√≥ inform√°ci√≥j√°t.\n\
+VERIFY   √çr√°si m√ªveletek ellen√µrz√©s√©t vez√©rli\n\
+VOL      Megjelen√≠ti egy k√∂tet c√≠mk√©j√©t √©s sorozatsz√°m√°t.\n"
 
 
 STRING_CHOICE_OPTION,         "IN"
 STRING_COPY_OPTION,           "INM"
 
 
-STRING_ALIAS_ERROR,          "A parancssor t˙l hossz˙ az alias kibont·sakor!\n"
+STRING_ALIAS_ERROR,          "A parancssor t√∫l hossz√∫ az alias kibont√°sakor!\n"
 STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
-STRING_BATCH_ERROR,          "Hiba a batch ·llom·ny megnyit·sakor\n"
-STRING_CHCP_ERROR1,          "AktÌv kÛdlap: %u\n"
-STRING_CHCP_ERROR4,          "…rvÈnytelen kÛdlap\n"
-STRING_CHOICE_ERROR,         "…rvÈnytelen paramÈter. V·rt form·tum: /C[:]v·laszt·si lehetısÈgek"
-STRING_CHOICE_ERROR_TXT,     "…rvÈnytelen paramÈter. V·rt form·tum: /T[:]v,nn"
-STRING_CHOICE_ERROR_OPTION,  "…rvÈnytelen paramÈter: %s"
-STRING_CMD_ERROR1,           "Nem lehet ·tir·nyÌtani a bevitelt a(z) %s ·llom·nybÛl\n"
-STRING_CMD_ERROR2,           "Hiba a csıvezetÈkhez tartozÛ ideiglenes ·llom·ny lÈtrehoz·sakor\n"
-STRING_CMD_ERROR3,           "Nem lehet a(z) %s ·llom·nyba ·tir·nyÌtani\n"
-STRING_CMD_ERROR4,           "%s futtat·sa...\n"
-STRING_CMD_ERROR5,           "cmdexit.bat futtat·sa...\n"
-STRING_COLOR_ERROR1,         "Ugyanaz a szÌn nem lehet! (Az elı- Ès h·ttÈrszÌn nem lehet ugyanolyan)"
-STRING_COLOR_ERROR2,         "Hib·s szÌn megad·s"
-STRING_COLOR_ERROR3,         "SzÌn %x\n"
-STRING_COLOR_ERROR4,         "Ugyanaz a szÌn nem lehet!"
+STRING_BATCH_ERROR,          "Hiba a batch √°llom√°ny megnyit√°sakor\n"
+STRING_CHCP_ERROR1,          "Akt√≠v k√≥dlap: %u\n"
+STRING_CHCP_ERROR4,          "√ârv√©nytelen k√≥dlap\n"
+STRING_CHOICE_ERROR,         "√ârv√©nytelen param√©ter. V√°rt form√°tum: /C[:]v√°laszt√°si lehet√µs√©gek"
+STRING_CHOICE_ERROR_TXT,     "√ârv√©nytelen param√©ter. V√°rt form√°tum: /T[:]v,nn"
+STRING_CHOICE_ERROR_OPTION,  "√ârv√©nytelen param√©ter: %s"
+STRING_CMD_ERROR1,           "Nem lehet √°tir√°ny√≠tani a bevitelt a(z) %s √°llom√°nyb√≥l\n"
+STRING_CMD_ERROR2,           "Hiba a cs√µvezet√©khez tartoz√≥ ideiglenes √°llom√°ny l√©trehoz√°sakor\n"
+STRING_CMD_ERROR3,           "Nem lehet a(z) %s √°llom√°nyba √°tir√°ny√≠tani\n"
+STRING_CMD_ERROR4,           "%s futtat√°sa...\n"
+STRING_CMD_ERROR5,           "cmdexit.bat futtat√°sa...\n"
+STRING_COLOR_ERROR1,         "Ugyanaz a sz√≠n nem lehet! (Az el√µ- √©s h√°tt√©rsz√≠n nem lehet ugyanolyan)"
+STRING_COLOR_ERROR2,         "Hib√°s sz√≠n megad√°s"
+STRING_COLOR_ERROR3,         "Sz√≠n %x\n"
+STRING_COLOR_ERROR4,         "Ugyanaz a sz√≠n nem lehet!"
 STRING_CONSOLE_ERROR,        "Ismeretlen hiba: %d\n"
-STRING_COPY_ERROR1,          "Hiba: a forr·s nem nyithatÛ meg - %s!\n"
-STRING_COPY_ERROR2,          "Hiba: nem m·solhatod ˆnmag·ra az ·llom·nyt!\n"
-STRING_COPY_ERROR3,          "Hiba a cÈl Ìr·sa kˆzben!\n"
-STRING_COPY_ERROR4,          "Hiba: ez mÈg nem m˚kˆdik!\n"
-STRING_DATE_ERROR,           "…rvÈnytelen d·tum."
-STRING_DEL_ERROR5,           "A(z) %s ·llom·ny tˆrˆlve lesz! "
+STRING_COPY_ERROR1,          "Hiba: a forr√°s nem nyithat√≥ meg - %s!\n"
+STRING_COPY_ERROR2,          "Hiba: nem m√°solhatod √∂nmag√°ra az √°llom√°nyt!\n"
+STRING_COPY_ERROR3,          "Hiba a c√©l √≠r√°sa k√∂zben!\n"
+STRING_COPY_ERROR4,          "Hiba: ez m√©g nem m√ªk√∂dik!\n"
+STRING_DATE_ERROR,           "√ârv√©nytelen d√°tum."
+STRING_DEL_ERROR5,           "A(z) %s √°llom√°ny t√∂r√∂lve lesz! "
 STRING_DEL_ERROR6,           "Biztos vagy benne (I/N)?"
-STRING_DEL_ERROR7,           "TˆrlÈs: %s\n"
-STRING_ERROR_ERROR1,         "Ismeretlen hiba! Hiba kÛd: 0x%lx\n"
+STRING_DEL_ERROR7,           "T√∂rl√©s: %s\n"
+STRING_ERROR_ERROR1,         "Ismeretlen hiba! Hiba k√≥d: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Szintaxis hiba"
-STRING_FOR_ERROR1,           "az 'in' ut·n hi·nyzik a feltÈtel."
-STRING_FOR_ERROR2,           "nincs z·rÛjel megadva."
-STRING_FOR_ERROR3,           "a 'do' hi·nyzik."
-STRING_FOR_ERROR4,           "nincs parancs a  'do' ut·n."
-STRING_FREE_ERROR1,          "…rvÈnytelen meghajtÛ"
-STRING_FREE_ERROR2,          "nincs cimkÈzve"
-STRING_GOTO_ERROR1,          "Nem lett cimke megadva a  GOTO ut·n"
-STRING_GOTO_ERROR2,          "A '%s' cimke nem tal·lhatÛ\n"
+STRING_FOR_ERROR1,           "az 'in' ut√°n hi√°nyzik a felt√©tel."
+STRING_FOR_ERROR2,           "nincs z√°r√≥jel megadva."
+STRING_FOR_ERROR3,           "a 'do' hi√°nyzik."
+STRING_FOR_ERROR4,           "nincs parancs a  'do' ut√°n."
+STRING_FREE_ERROR1,          "√ârv√©nytelen meghajt√≥"
+STRING_FREE_ERROR2,          "nincs cimk√©zve"
+STRING_GOTO_ERROR1,          "Nem lett cimke megadva a  GOTO ut√°n"
+STRING_GOTO_ERROR2,          "A '%s' cimke nem tal√°lhat√≥\n"
 
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[HIBA]\n"
 
-STRING_REN_ERROR1,           "Move¡llom·ny() sikertelen. Hiba: %lu\n"
+STRING_REN_ERROR1,           "Move√Ållom√°ny() sikertelen. Hiba: %lu\n"
 
-STRING_START_ERROR1,         "Nincs batch t·mogat·s jelenleg!"
+STRING_START_ERROR1,         "Nincs batch t√°mogat√°s jelenleg!"
 
-STRING_TIME_ERROR1,          "…rvÈnytelen idı."
+STRING_TIME_ERROR1,          "√ârv√©nytelen id√µ."
 
-STRING_TYPE_ERROR1,          "…rvÈnytelen be·llÌt·s '/%s'\n"
+STRING_TYPE_ERROR1,          "√ârv√©nytelen be√°ll√≠t√°s '/%s'\n"
 
-STRING_WINDOW_ERROR1,        "Az ablak nem tal·lhatÛ"
+STRING_WINDOW_ERROR1,        "Az ablak nem tal√°lhat√≥"
 
 
-STRING_ERROR_PARAMETERF_ERROR,     "A paramÈter megad·s hib·s - %c\n"
-STRING_ERROR_INVALID_SWITCH,       "…rvÈnytelen kapcsolÛ - /%c\n"
-STRING_ERROR_TOO_MANY_PARAMETERS,  "T˙l sok paramÈter - %s\n"
-STRING_ERROR_PATH_NOT_FOUND,       "Az elÈrÈsi_˙t nem hal·lhatÛ\n"
-STRING_ERROR_FILE_NOT_FOUND,       "Az ·llom·ny nem tal·lhatÛ\n"
-STRING_ERROR_REQ_PARAM_MISSING,    "Egy sz¸ksÈges paramÈter hi·nyzik\n"
-STRING_ERROR_INVALID_DRIVE,        "…rvÈnytelen meghajtÛ\n"
-STRING_ERROR_INVALID_PARAM_FORMAT, "…rvÈnytelen paramÈter megad·s - %s\n"
-STRING_ERROR_BADCOMMAND,           "Ismeretlen parancs vagy ·llom·ny nÈv - %s\n"
-STRING_ERROR_OUT_OF_MEMORY,        "Nincs elÈg memÛria.\n"
-STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary ·llom·ny!\n"
-STRING_ERROR_D_PAUSEMSG,           "A folytat·shoz nyomj meg egy billenty˚t . . ."
-STRING_ERROR_DRIVER_NOT_READY,     "A meghajtÛ nem ·ll kÈszen"
+STRING_ERROR_PARAMETERF_ERROR,     "A param√©ter megad√°s hib√°s - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "√ârv√©nytelen kapcsol√≥ - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "T√∫l sok param√©ter - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Az el√©r√©si_√∫t nem hal√°lhat√≥\n"
+STRING_ERROR_FILE_NOT_FOUND,       "Az √°llom√°ny nem tal√°lhat√≥\n"
+STRING_ERROR_REQ_PARAM_MISSING,    "Egy sz√ºks√©ges param√©ter hi√°nyzik\n"
+STRING_ERROR_INVALID_DRIVE,        "√ârv√©nytelen meghajt√≥\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "√ârv√©nytelen param√©ter megad√°s - %s\n"
+STRING_ERROR_BADCOMMAND,           "Ismeretlen parancs vagy √°llom√°ny n√©v - %s\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Nincs el√©g mem√≥ria.\n"
+STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary √°llom√°ny!\n"
+STRING_ERROR_D_PAUSEMSG,           "A folytat√°shoz nyomj meg egy billenty√ªt . . ."
+STRING_ERROR_DRIVER_NOT_READY,     "A meghajt√≥ nem √°ll k√©szen"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
 STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\nReactOS Parancssor Èrtelmezı\nVersion %s %s"
+STRING_CMD_SHELLINFO,              "\nReactOS Parancssor √©rtelmez√µ\nVersion %s %s"
 STRING_VERSION_RUNVER,             " running on %s"
-STRING_COPY_FILE ,                 "        %d ·llom·ny m·solva\n"
+STRING_COPY_FILE ,                 "        %d √°llom√°ny m√°solva\n"
 STRING_DELETE_WIPE,                "wiped"
-STRING_FOR_ERROR,                  "Hib·s v·ltozÛ."
-STRING_SCREEN_COL,                 "…rvÈnytelen ÈrtÈk oszlopnak"
-STRING_SCREEN_ROW,                 "…rvÈnytelen ÈrtÈk sornak"
-STRING_TIMER_TIME                  "IdızÌtı %d ÈrtÈke %s: "
+STRING_FOR_ERROR,                  "Hib√°s v√°ltoz√≥."
+STRING_SCREEN_COL,                 "√ârv√©nytelen √©rt√©k oszlopnak"
+STRING_SCREEN_ROW,                 "√ârv√©nytelen √©rt√©k sornak"
+STRING_TIMER_TIME                  "Id√µz√≠t√µ %d √©rt√©ke %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"

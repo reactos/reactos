@@ -3,9 +3,10 @@
  * LICENSE:     Freeware, permission to use under Public Domain
  * FILE:        base/applications/games/solitaire/lang/ro-RO.rc
  * PURPOSE:     Romanian Language File for Solitaire
+ *              2011-10-18  minor changes (Fulea Ștefan)
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
@@ -16,18 +17,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Cărți", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Desenare &una", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Desenare &trei", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    AUTORADIOBUTTON "Desenare t&rei", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "&Afișare timp", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "B&ară de stare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Afișează &timp", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Bară de &stare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
-    DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Anulare", IDCANCEL, 101, 97, 50, 14
+    DEFPUSHBUTTON   "Con&firmă", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "A&nulează", IDCANCEL, 101, 97, 50, 14
 END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Alegeți setul de cărți"
+CAPTION "Selectați culoarea dorsală"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -43,8 +44,8 @@ BEGIN
     CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
-    DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Anulare", IDCANCEL, 126, 84, 54, 13
+    DEFPUSHBUTTON "Con&firmă", IDOK, 66, 84, 54, 13
+    PUSHBUTTON    "A&nulează", IDCANCEL, 126, 84, 54, 13
 END
 
 
@@ -52,11 +53,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire de J Brown\nTradus de Petru Dimitriu\nCardLib versiunea 1.0."
-    IDS_SOL_QUIT    "Părăsiți jocul curent?"
+    IDS_SOL_NAME    "Pasiență"
+    IDS_SOL_ABOUT   "Pasiență de J Brown\nTradus de Petru Dimitriu\nCardLib versiunea 1.0."
+    IDS_SOL_QUIT    "Abandonați jocul curent?"
     IDS_SOL_WIN     "Felicitări, ați câștigat!"
-    IDS_SOL_DEAL    "Jucați din nou?"
+    IDS_SOL_DEAL    "O nouă rundă?"
 END
 
 
@@ -64,19 +65,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Joc"
+    POPUP "J&oc"
     BEGIN
-        MENUITEM "&Joc\tF2",                   IDM_GAME_NEW
+        MENUITEM "Rundă &nouă\tF2",           IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Set&...",                    IDM_GAME_DECK
-        MENUITEM "&Opțiuni...",                 IDM_GAME_OPTIONS
+        MENUITEM "Culoare &dorsală...",       IDM_GAME_DECK
+        MENUITEM "&Opțiuni...",               IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Ieșire",                       IDM_GAME_EXIT
+        MENUITEM "I&eșire",                   IDM_GAME_EXIT
     END
-    POPUP "&Ajutor"
+    POPUP "&?"
     BEGIN
-        MENUITEM "&Conținut\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "&Despre",                      IDM_HELP_ABOUT
+        MENUITEM "&Manual\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&Despre...",                IDM_HELP_ABOUT
     END
 END
 

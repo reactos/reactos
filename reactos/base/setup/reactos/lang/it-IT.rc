@@ -6,7 +6,7 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Benvenuto al wizard di installazione di ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Non Ë ancora possibile installare ReactOS direttamente da questo CD! E' necessario riavviare il computer da questo CD per procedere alla installazione di ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Non √® ancora possibile installare ReactOS direttamente da questo CD! E' necessario riavviare il computer da questo CD per procedere alla installazione di ReactOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Cliccare Fine per uscire.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -123,9 +123,9 @@ CAPTION "Completamento della installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Completamento della prima fase della installazione di ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "La prima fase Ë stata completata in modo regolare.", IDC_STATIC, 20, 50, 277, 10
+    LTEXT "La prima fase √® stata completata in modo regolare.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "Quando verr‡ premuto fine il computer si riavvier‡.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "Quando verr√† premuto fine il computer si riavvier√†.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
     LTEXT "Se presente rimuovere il CD dal lettore e cliccare Fine per riavviare il computer.", IDC_STATIC, 10, 180, 297, 20
 END
@@ -143,10 +143,10 @@ BEGIN
     IDS_PROCESSTITLE    "Preparazione della partizione, copia dei file e configurazione del sistema"
     IDS_PROCESSSUBTITLE "Creazione e formattazione della partizione, copia dei file, installazione del Boot loader"
     IDS_RESTARTTITLE    "Prima fase della installazione completata"
-    IDS_RESTARTSUBTITLE "La prima fase della installazione Ë stata completata, riavviare il computer per procedere alla seconda fase"
+    IDS_RESTARTSUBTITLE "La prima fase della installazione √® stata completata, riavviare il computer per procedere alla seconda fase"
     IDS_SUMMARYTITLE    "Sintesi della installazione"
-    IDS_SUMMARYSUBTITLE "Lista delle propriet‡ della installazione da controllare prima che siano eseguite sul dispositivo di installazione"
-    IDS_ABORTSETUP      "ReactOS non Ë installato completamente sul computer. Se interropete l'installazione ora sar‡ necessario eseguire l'installazione di nuovo. Volete procedere?"
+    IDS_SUMMARYSUBTITLE "Lista delle propriet√† della installazione da controllare prima che siano eseguite sul dispositivo di installazione"
+    IDS_ABORTSETUP      "ReactOS non √® installato completamente sul computer. Se interropete l'installazione ora sar√† necessario eseguire l'installazione di nuovo. Volete procedere?"
     IDS_ABORTSETUP2     "Volete interrompere l'installazione?"
 END
 /* EOF */

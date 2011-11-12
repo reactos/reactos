@@ -1,3 +1,4 @@
+//2011.10.30 - Fulea ∏tefan: minor changes
 #pragma once
 
 MUI_LAYOUTS roROLayouts[] =
@@ -70,7 +71,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         6,
         11,
-        "Aceast« prim« parte din instalarea ReactOS va copia fi≠ierele",
+        "Aceast« prim« etap« din instalarea ReactOS va copia fi≠ierele",
         TEXT_STYLE_NORMAL
     },
     {
@@ -82,7 +83,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         6,
         13,
-        "cea de-a doua parte a instal«rii.",
+        "cea de-a doua etap« a instal«rii.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -717,7 +718,7 @@ static MUI_ENTRY roRODisplayPageEntries[] =
     {
         8,
         11,
-        "   un set de parametri, apoi ap«saÓi ENTER.",
+        "   un grup de parametri, apoi ap«saÓi ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -960,13 +961,13 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
     {
         6,
         14,
-        "PuteÓi indica un alt director. Ap«saÓi BACKSPACE pentru",
+        "PuteÓi indica un alt director, ap«sÉnd BACKSPACE pentru",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "a ≠terge caractere, apoi scrieÓi calea directorului unde",
+        "a ≠terge caractere, apoi scriind calea directorului unde",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1000,13 +1001,13 @@ static MUI_ENTRY roROFileCopyEntries[] =
     {
         0,
         12,
-        "Transferarea fi≠ierelor ån directorul ReactOS specificat.",
+        "A≠teptaÓi copierea de fi≠iere ån directorul ReactOS specificat.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         13,
-        "(poate dura cÉteva minute)",
+        "(aceasta poate dura cÉteva minute)",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {

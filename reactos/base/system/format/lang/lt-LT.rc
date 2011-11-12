@@ -1,69 +1,67 @@
-/* Translation by Vytis 'CMan' Girdşijauskas cman@cman.us */
-
-#include "resource.h"
+/* Translation by Vytis 'CMan' GirdÃ¾ijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Naudojimas: %s diskas: [-FS:bylø-sistema] [-V:şymë] [-Q] [-A:dydis] [-C]\n\n\
-  [diskas:]        Nurodo diskà formavimui.\n\
-  -FS:bylø-sistema Nurodo bylø sistemos tipà (%s).\n\
-  -V:şymë          Nurodo tomo şymæ.\n\
+STRING_HELP,  "Naudojimas: %s diskas: [-FS:bylÃ¸-sistema] [-V:Ã¾ymÃ«] [-Q] [-A:dydis] [-C]\n\n\
+  [diskas:]        Nurodo diskÃ  formavimui.\n\
+  -FS:bylÃ¸-sistema Nurodo bylÃ¸ sistemos tipÃ  (%s).\n\
+  -V:Ã¾ymÃ«          Nurodo tomo Ã¾ymÃ¦.\n\
   -Q               Atliekamas spartus formavimas.\n\
-  -A:dydis         Pakeièia numatytàjá klasterio dydá. Bendram naudojimui\n\
+  -A:dydis         PakeiÃ¨ia numatytÃ jÃ¡ klasterio dydÃ¡. Bendram naudojimui\n\
                    rekomenduojami numatytieji nustatymai\n\
                    NTFS palaiko 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT palaiko 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   NTFS glaudinimas nëra palaikomas klasteriams, kuriø dydis\n\
-                   virğija 4096.\n\
-  -C               Naujai sukurtos bylos bus automatiğkai suglaudintos.\n\n"
+                   NTFS glaudinimas nÃ«ra palaikomas klasteriams, kuriÃ¸ dydis\n\
+                   virÃ°ija 4096.\n\
+  -C               Naujai sukurtos bylos bus automatiÃ°kai suglaudintos.\n\n"
 
-STRING_COMPLETE   "%lu procentø baigta.\r"
+STRING_COMPLETE   "%lu procentÃ¸ baigta.\r"
 
-STRING_FORMAT_FAIL "FormatEx nepavyko sëkmingai uşbaigti operacijos.\n\n"
+STRING_FORMAT_FAIL "FormatEx nepavyko sÃ«kmingai uÃ¾baigti operacijos.\n\n"
 
 STRING_NO_SUPPORT  "Operacija nepalaikoma"
 
-STRING_FMIFS_FAIL  "Nepavyko rasti FMIFS áëjimo tağkø.\n\n"
+STRING_FMIFS_FAIL  "Nepavyko rasti FMIFS Ã¡Ã«jimo taÃ°kÃ¸.\n\n"
 
-STRING_UNKNOW_ARG  "Neşinomas parametras: %s\n"
+STRING_UNKNOW_ARG  "NeÃ¾inomas parametras: %s\n"
 
-STRING_DRIVE_PARM  "Trûksta reikiamo disko parametro.\n\n"
+STRING_DRIVE_PARM  "TrÃ»ksta reikiamo disko parametro.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Nepavyko nustatyti disko tipo"
 
-STRING_INSERT_DISK       "Á árenginá %C:\nádëkite naujà diskelá ir paspaukite Enter..."
+STRING_INSERT_DISK       "Ã Ã¡renginÃ¡ %C:\nÃ¡dÃ«kite naujÃ  diskelÃ¡ ir paspaukite Enter..."
 
-STRING_NO_VOLUME         "Nepavyko kreiptis á tomà"
+STRING_NO_VOLUME         "Nepavyko kreiptis Ã¡ tomÃ "
 
-STRING_NO_VOLUME_SIZE    "Nepavyko nustatyti tomo dydşio"
+STRING_NO_VOLUME_SIZE    "Nepavyko nustatyti tomo dydÃ¾io"
 
-STRING_FILESYSTEM        "Bylø sistemos tipas yra %s.\n"
+STRING_FILESYSTEM        "BylÃ¸ sistemos tipas yra %s.\n"
 
-STRING_LABEL_NAME_EDIT  "Áveskite dabartinæ tomo şymæ diskui %C: "
+STRING_LABEL_NAME_EDIT  "Ãveskite dabartinÃ¦ tomo Ã¾ymÃ¦ diskui %C: "
 
-STRING_ERROR_LABEL     "Ávesta netinkama ğiam diskui tomo şymë.\n"
+STRING_ERROR_LABEL     "Ãvesta netinkama Ã°iam diskui tomo Ã¾ymÃ«.\n"
 
-STRING_YN_FORMAT       "\nDËMESIO, VISA INFORMACIJA, ESANTI\n\
-DISKE %C: BUS SUNAIKINTA!\nTæsti formavimà (T/N)? "
+STRING_YN_FORMAT       "\nDÃ‹MESIO, VISA INFORMACIJA, ESANTI\n\
+DISKE %C: BUS SUNAIKINTA!\nTÃ¦sti formavimÃ  (T/N)? "
 
 STRING_YES_NO_FAQ      "TN"
 
-STRING_VERIFYING       "Perşiûrima"
+STRING_VERIFYING       "PerÃ¾iÃ»rima"
 
 STRING_FAST_FMT        "Spartus formavimas"
 
-STRING_CREATE_FSYS     "Kuriama bylø sistemos struktûra.\n"
+STRING_CREATE_FSYS     "Kuriama bylÃ¸ sistemos struktÃ»ra.\n"
 
 STRING_FMT_COMPLETE    "Formavimas baigtas.\n"
 
 STRING_VOL_COMPRESS    "Tomas nepalaiko glaudinimo.\n"
 
-STRING_ENTER_LABEL     "Tomo şymë (11 simboliø, Enter - be şymës)? "
+STRING_ENTER_LABEL     "Tomo Ã¾ymÃ« (11 simboliÃ¸, Enter - be Ã¾ymÃ«s)? "
 
-STRING_NO_LABEL        "Nepavyko paşymëti tomo"
+STRING_NO_LABEL        "Nepavyko paÃ¾ymÃ«ti tomo"
 
-STRING_FREE_SPACE     "\n%I64d baitai iğ viso diske.\n%I64d baitai laisvos vietos diske.\n"
+STRING_FREE_SPACE     "\n%I64d baitai iÃ° viso diske.\n%I64d baitai laisvos vietos diske.\n"
 
 STRING_SERIAL_NUMBER   "\nTomo serijos numeris yra %04X-%04X\n"
 END

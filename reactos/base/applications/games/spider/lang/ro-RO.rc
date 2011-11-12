@@ -62,7 +62,7 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Joc"
+    POPUP "J&oc"
     BEGIN
         MENUITEM "Rundă &nouă\tF2",             IDM_GAME_NEW
         MENUITEM SEPARATOR
@@ -72,8 +72,8 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Cuprins\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "&Despre joc",                 IDM_HELP_ABOUT
+        MENUITEM "&Manual\tF1",                IDM_HELP_CONTENTS
+        MENUITEM "&Despre...",                 IDM_HELP_ABOUT
     END
 END
 

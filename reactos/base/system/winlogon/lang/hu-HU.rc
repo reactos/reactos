@@ -6,44 +6,44 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Sz·mÌtÛgÈp kikapcsol·sa"
+CAPTION "Sz√°m√≠t√≥g√©p kikapcsol√°sa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Mostm·r biztons·gos a gÈp kikapcsol·sa.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Mostm√°r biztons√°gos a g√©p kikapcsol√°sa.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON "&⁄jraindÌt·s", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "&√öjraind√≠t√°s", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Felhaszn·lÛi fel¸letet Èrintı hiba"
+CAPTION "Felhaszn√°l√≥i fel√ºletet √©rint√µ hiba"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A Felhaszn·lÛ belÈptetÈsÈt kezelı DLL (%s) nem tudott betˆltıdni.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "…rtesÌtsd a rendszergazd·t, hogy javÌtsa ki a DLL ·llom·nyt.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&⁄jraindÌt·s", 1, 80, 91, 68, 14
+    LTEXT "A Felhaszn√°l√≥ bel√©ptet√©s√©t kezel√µ DLL (%s) nem tudott bet√∂lt√µdni.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "√ârtes√≠tsd a rendszergazd√°t, hogy jav√≠tsa ki a DLL √°llom√°nyt.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&√öjraind√≠t√°s", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "H·lÛzati kapcsolatok elıkÈszÌtÈse..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Be·llÌt·sok ÈrvÈnyesÌtÈse..."
-    IDS_RUNNINGSTARTUPSCRIPTS "IndÌtÛ szkriptek futtat·sa..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "Le·llÌtÛ szkriptek futtat·sa..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "SzemÈlyes be·llÌt·sok ÈrvÈnyesÌtÈse..."
-    IDS_RUNNINGLOGOFFSCRIPTS "KijelentkezÈsi szkriptek futtat·sa..."
-    IDS_RUNNINGLOGONSCRIPTS "BejelentkezÈsi szkriptek futtat·sa..."
-    IDS_LOADINGYOURPERSONALSETTINGS "SzemÈlyes be·llÌt·sok betˆltÈse..."
-    IDS_CLOSINGNETWORKCONNECTIONS "H·lÛzati kapcsolatok lez·r·sa..."
-    IDS_REACTOSISSHUTTINGDOWN "A ReactOS le·ll..."
-    IDS_PREPARETOSTANDBY "KÈszenlÈti ¸zemmÛd elıkÈszÌtÈse..."
-    IDS_PREPARETOHIBERNATE "Hibern·l·s elıkÈszÌtÈse..."
-    IDS_SAVEYOURSETTINGS "Be·llÌt·sok mentÈse..."
+    IDS_PREPARENETWORKCONNECTIONS "H√°l√≥zati kapcsolatok el√µk√©sz√≠t√©se..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Be√°ll√≠t√°sok √©rv√©nyes√≠t√©se..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Ind√≠t√≥ szkriptek futtat√°sa..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Le√°ll√≠t√≥ szkriptek futtat√°sa..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Szem√©lyes be√°ll√≠t√°sok √©rv√©nyes√≠t√©se..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Kijelentkez√©si szkriptek futtat√°sa..."
+    IDS_RUNNINGLOGONSCRIPTS "Bejelentkez√©si szkriptek futtat√°sa..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Szem√©lyes be√°ll√≠t√°sok bet√∂lt√©se..."
+    IDS_CLOSINGNETWORKCONNECTIONS "H√°l√≥zati kapcsolatok lez√°r√°sa..."
+    IDS_REACTOSISSHUTTINGDOWN "A ReactOS le√°ll..."
+    IDS_PREPARETOSTANDBY "K√©szenl√©ti √ºzemm√≥d el√µk√©sz√≠t√©se..."
+    IDS_PREPARETOHIBERNATE "Hibern√°l√°s el√µk√©sz√≠t√©se..."
+    IDS_SAVEYOURSETTINGS "Be√°ll√≠t√°sok ment√©se..."
     IDS_REACTOSISSTARTINGUP "A ReactOS indul..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "A Winlogon nemtudta elindÌtani a felhaszn·lÛi fel¸letet!"
+    IDS_FAILEDACTIVATEUSERSHELL "A Winlogon nemtudta elind√≠tani a felhaszn√°l√≥i fel√ºletet!"
 END
 

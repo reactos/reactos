@@ -1,30 +1,28 @@
-/* Translation by Vytis 'CMan' Girdþijauskas cman@cman.us */
-
-#include "resource.h"
+/* Translation by Vytis 'CMan' GirdÃ¾ijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nNaudojimas: regsvr32 [/u] [/s] [/c] [/n] [/i[:parametras]] dll_bylos_vardas\n\
-/u -	Iðregistruoti serverá\n\
-/s -	Tylus; nerodomi praneðimø langai\n\
-/c -	Iðvedimas á konsolæ\n\
-/i -	Iðkviesti DllInstall perduodant nebûtinà [parametras]; kai naudojama su /u iðkvieèia dll uninstall\n\
-/n -	Neiðkviesti DllRegisterServer; ði parinktis turi bûti naudojama su /i"
+/u -	IÃ°registruoti serverÃ¡\n\
+/s -	Tylus; nerodomi praneÃ°imÃ¸ langai\n\
+/c -	IÃ°vedimas Ã¡ konsolÃ¦\n\
+/i -	IÃ°kviesti DllInstall perduodant nebÃ»tinÃ  [parametras]; kai naudojama su /u iÃ°kvieÃ¨ia dll uninstall\n\
+/n -	NeiÃ°kviesti DllRegisterServer; Ã°i parinktis turi bÃ»ti naudojama su /i"
 
 IDS_NoDllSpecified,  "Nenurodytas DLL bylos vardas."
 
-IDS_InvalidFlag,     "Neatpaþintas parametras: %s"
+IDS_InvalidFlag,     "NeatpaÃ¾intas parametras: %s"
 
-IDS_SwitchN_NoI,     "Neatpaþintas parametras: /n turi bûti naudojama kartu su /i"
+IDS_SwitchN_NoI,     "NeatpaÃ¾intas parametras: /n turi bÃ»ti naudojama kartu su /i"
 
-IDS_DllNotLoaded,    "LoadLibrary('%s') nepavyko.\nGetLastError graþino 0x%08x."
+IDS_DllNotLoaded,    "LoadLibrary('%s') nepavyko.\nGetLastError graÃ¾ino 0x%08x."
 
-IDS_MissingEntry,    "%s ákelta, bet %s áëjimo taðkas nerastas.\n\n\
-%s neeksportuota, arba atmintyje yra sugadinta %s versija. Klaidos aptikimui ir paðalinimui siûloma naudoti PView."
+IDS_MissingEntry,    "%s Ã¡kelta, bet %s Ã¡Ã«jimo taÃ°kas nerastas.\n\n\
+%s neeksportuota, arba atmintyje yra sugadinta %s versija. Klaidos aptikimui ir paÃ°alinimui siÃ»loma naudoti PView."
 
-IDS_FailureMessage,  "%s in %s nepavyko.\nGraþino: 0x%08x"
+IDS_FailureMessage,  "%s in %s nepavyko.\nGraÃ¾ino: 0x%08x"
 
-IDS_SuccessMessage   "%s in %s pavyko."
+IDS_SuccessMessage,  "%s in %s pavyko."
 END

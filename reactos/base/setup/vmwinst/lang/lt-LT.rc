@@ -1,27 +1,27 @@
-// Translation by Vytis 'CMan' Gird˛ijauskas cman@cman.us
+// Translation by Vytis 'CMan' Gird√æijauskas cman@cman.us
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "ReactOS nustatÎ, kad J˚s diegiate ReactOS virtualioje VMware(r) mainoje.", -1, 117, 8, 140, 24
-  LTEXT "Jei norite ·diegti VMware(r) SVGA vaizdo tvarkyklÊ, spauskite 'Next', kitu atveju spauskite 'Cancel'.", -1, 117, 140, 140, 24
+  LTEXT "ReactOS nustat√´, kad J√ªs diegiate ReactOS virtualioje VMware(r) ma√∞inoje.", -1, 117, 8, 140, 24
+  LTEXT "Jei norite √°diegti VMware(r) SVGA vaizdo tvarkykl√¶, spauskite 'Next', kitu atveju spauskite 'Cancel'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "ReactOS ·diegimas neturi VMware(r) SVGA vaizdo tvarkyklÎs.\n\nPasirinkite 'Install VMware tools...' punkt‡ i 'VM' meniu virtualioje VMware(r) mainoje.\n\n\nNorÎdami tÊsti, spauskite 'Next'. Jei norite praleisti SVGA tvarkyklÎs diegim‡, spauskite 'Cancel'.",-1,25,25,225,85
+  LTEXT "ReactOS √°diegimas neturi VMware(r) SVGA vaizdo tvarkykl√´s.\n\nPasirinkite 'Install VMware tools...' punkt√† i√∞ 'VM' meniu virtualioje VMware(r) ma√∞inoje.\n\n\nNor√´dami t√¶sti, spauskite 'Next'. Jei norite praleisti SVGA tvarkykl√´s diegim√†, spauskite 'Cancel'.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
@@ -30,10 +30,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "VMware(r) SVGA vaizdo tvarkyklÎ ·diegta sÎkmingai. Pasirinkite norim‡ ekrano skiriam‡j‡ geb‡:",-1,25,5,225,20
+  LTEXT "VMware(r) SVGA vaizdo tvarkykl√´ √°diegta s√´kmingai. Pasirinkite norim√† ekrano skiriam√†j√† geb√†:",-1,25,5,225,20
   PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -45,89 +45,89 @@ BEGIN
   PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-  LTEXT "Pasirinkite norim‡ spalvos kokybÊ:", -1, 25, 93, 225, 12
+  LTEXT "Pasirinkite norim√† spalvos kokyb√¶:", -1, 25, 93, 225, 12
   COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "VMware(r) SVGA vaizdo tvarkyklÎs ·diegti nepavyko.\n\n\nSpauskite 'Finish', kad pratÊstumÎte ReactOS ·diegimo proces‡.",-1,25,25,225,85
+  LTEXT "VMware(r) SVGA vaizdo tvarkykl√´s √°diegti nepavyko.\n\n\nSpauskite 'Finish', kad prat√¶stum√´te ReactOS √°diegimo proces√†.",-1,25,25,225,85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "VMware(r) SVGA vaizdo tvarkyklÎ jau ·diegta.\n\nPasirinkite, k‡ norite atlikti:",-1,25,5,225,30
-  PUSHBUTTON "Konfig˚ruoti ekrano nustatymus", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "Naudoti kit‡ vaizdo tvarkyklÊ", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "Paalinti VMware(r) SVGA vaizdo tvarkyklÊ", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Spauskite 'Next', norÎdami tÊsti, arba 'Cancel', kad ieitumÎte.", -1, 25, 93, 225, 19
+  LTEXT "VMware(r) SVGA vaizdo tvarkykl√´ jau √°diegta.\n\nPasirinkite, k√† norite atlikti:",-1,25,5,225,30
+  PUSHBUTTON "Konfig√ªruoti ekrano nustatymus", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Naudoti kit√† vaizdo tvarkykl√¶", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Pa√∞alinti VMware(r) SVGA vaizdo tvarkykl√¶", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "Spauskite 'Next', nor√´dami t√¶sti, arba 'Cancel', kad i√∞eitum√´te.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Pasirinkite vaizdo tvarkyklÊ, kuri‡ norite naudoti:",-1,25,25,225,15
-  PUSHBUTTON "ReactOS VGA tvarkyklÎ", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "ReactOS VBE tvarkyklÎ (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "Spauskite 'Finish', kad u˛baigtumÎte proces‡ arba 'Cancel', kad u˛baigtumÎte diegim‡ be pakeitim¯.", -1, 25, 93, 225, 20
+  LTEXT "Pasirinkite vaizdo tvarkykl√¶, kuri√† norite naudoti:",-1,25,25,225,15
+  PUSHBUTTON "ReactOS VGA tvarkykl√´", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "ReactOS VBE tvarkykl√´ (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  LTEXT "Spauskite 'Finish', kad u√æbaigtum√´te proces√† arba 'Cancel', kad u√æbaigtum√´te diegim√† be pakeitim√∏.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vaizdo TvarkyklÎs ¡diegimas"
+CAPTION "Vaizdo Tvarkykl√´s √Ådiegimas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "VMware(r) SVGA vaizdo tvarkyklÎ bus paalinta!!!\n\n\nSpauskite 'Finish', kad paalintumÎte tvarkyklÊ arba 'Cancel', kad paliktumÎte kaip yra.",-1,25,25,225,85
+  LTEXT "VMware(r) SVGA vaizdo tvarkykl√´ bus pa√∞alinta!!!\n\n\nSpauskite 'Finish', kad pa√∞alintum√´te tvarkykl√¶ arba 'Cancel', kad paliktum√´te kaip yra.",-1,25,25,225,85
 END
 
 STRINGTABLE
 BEGIN
   IDS_WIZARD_NAME "VMware(r) aptikta"
-  IDS_FAILEDTOLOCATEDRIVERS "Nepavyko rasti reikiam¯ byl¯.\n¡sitikinkite, kad VMware(r) ·ranki¯ diskas ·dÎtas."
-  IDS_FAILEDTOCOPYFILES "Nepavyko nukopijuoti reikiam¯ byl¯.\n¡sitikinkite, kad VMware(r) ·ranki¯ diskas ·dÎtas.\n"
-  IDS_FAILEDTOACTIVATEDRIVER "Nepavyko aktyvuoti VMware(r) SVGA vaizdo tvarkyklÎs!"
-  IDS_FAILEDTOSELVGADRIVER "Nepavyko aktyvuoti ReactOS VGA tvarkyklÎs!"
-  IDS_FAILEDTOSELVBEDRIVER "Nepavyko aktyvuoti ReactOS VBE tvarkyklÎs!"
-  IDS_UNINSTNOTICE "VMware(r) SVGA vaizdo tvarkyklÎs bylos nebuvo itrintos.\nItrinkite jas patys po pakartotinio sistemos paleidimo."
-  IDS_FAILEDTOADDREGENTRIES "Nepavyko sukurti VMware(r) SVGA vaizdo tvarkyklÎs registro ·ra¯!"
+  IDS_FAILEDTOLOCATEDRIVERS "Nepavyko rasti reikiam√∏ byl√∏.\n√Åsitikinkite, kad VMware(r) √°ranki√∏ diskas √°d√´tas."
+  IDS_FAILEDTOCOPYFILES "Nepavyko nukopijuoti reikiam√∏ byl√∏.\n√Åsitikinkite, kad VMware(r) √°ranki√∏ diskas √°d√´tas.\n"
+  IDS_FAILEDTOACTIVATEDRIVER "Nepavyko aktyvuoti VMware(r) SVGA vaizdo tvarkykl√´s!"
+  IDS_FAILEDTOSELVGADRIVER "Nepavyko aktyvuoti ReactOS VGA tvarkykl√´s!"
+  IDS_FAILEDTOSELVBEDRIVER "Nepavyko aktyvuoti ReactOS VBE tvarkykl√´s!"
+  IDS_UNINSTNOTICE "VMware(r) SVGA vaizdo tvarkykl√´s bylos nebuvo i√∞trintos.\nI√∞trinkite jas patys po pakartotinio sistemos paleidimo."
+  IDS_FAILEDTOADDREGENTRIES "Nepavyko sukurti VMware(r) SVGA vaizdo tvarkykl√´s registro √°ra√∞√∏!"
 END
 
 STRINGTABLE
 BEGIN
-  10001 "ﬁemiausia (8BPP)"
-  10002 "VidutinÎ (16BPP)"
-  10003 "AukËiausia (32BPP)"
+  10001 "√ûemiausia (8BPP)"
+  10002 "Vidutin√´ (16BPP)"
+  10003 "Auk√∞√®iausia (32BPP)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_SEARCHINGFORCDROM "Iekoma VMware(r) ·ranki¯ disko..."
+  IDS_SEARCHINGFORCDROM "Ie√∞koma VMware(r) √°ranki√∏ disko..."
   IDS_COPYINGFILES      "Kopijuojamos bylos..."
-  IDS_ENABLINGDRIVER    "Aktyvuojama VMware(r) SVGA vaizdo tvarkyklÎ..."
+  IDS_ENABLINGDRIVER    "Aktyvuojama VMware(r) SVGA vaizdo tvarkykl√´..."
 END
 
 STRINGTABLE
 BEGIN
-  IDD_INSERT_VMWARE_TOOLSTITLE          "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "¡dÎkite VMware(r) ·ranki¯ disk‡."
-  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Surasti ir nukopijuoti VMware(r) SVGA vaizdo tvarkyklÊ."
-  IDD_CONFIGTITLE                       "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_CONFIGSUBTITLE                    "Pasirinkite norim‡ ekrano skiriam‡j‡ geb‡."
-  IDD_INSTALLATION_FAILEDTITLE          "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_INSTALLATION_FAILEDSUBTITLE       "VMware(r) SVGA vaizdo tvarkyklÎs ·diegimas nepavyko."
-  IDD_CHOOSEACTIONTITLE                 "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_CHOOSEACTIONSUBTITLE              "Pasirinkite, k‡ norite atlikti."
-  IDD_SELECTDRIVERTITLE                 "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_SELECTDRIVERSUBTITLE              "Pasirinkite tvarkyklÊ."
-  IDD_DOUNINSTALLTITLE                  "VMware(r) SVGA vaizdo tvarkyklÎs diegimo vedlys"
-  IDD_DOUNINSTALLSUBTITLE               "Paalinti tvarkyklÊ."
+  IDD_INSERT_VMWARE_TOOLSTITLE          "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "√Åd√´kite VMware(r) √°ranki√∏ disk√†."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Surasti ir nukopijuoti VMware(r) SVGA vaizdo tvarkykl√¶."
+  IDD_CONFIGTITLE                       "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_CONFIGSUBTITLE                    "Pasirinkite norim√† ekrano skiriam√†j√† geb√†."
+  IDD_INSTALLATION_FAILEDTITLE          "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "VMware(r) SVGA vaizdo tvarkykl√´s √°diegimas nepavyko."
+  IDD_CHOOSEACTIONTITLE                 "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_CHOOSEACTIONSUBTITLE              "Pasirinkite, k√† norite atlikti."
+  IDD_SELECTDRIVERTITLE                 "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_SELECTDRIVERSUBTITLE              "Pasirinkite tvarkykl√¶."
+  IDD_DOUNINSTALLTITLE                  "VMware(r) SVGA vaizdo tvarkykl√´s diegimo vedlys"
+  IDD_DOUNINSTALLSUBTITLE               "Pa√∞alinti tvarkykl√¶."
 END

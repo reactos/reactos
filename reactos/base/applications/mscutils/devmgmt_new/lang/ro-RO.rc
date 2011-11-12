@@ -1,27 +1,28 @@
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+//2011.10.19 - Fulea È˜tefan: minor changes
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Fiºier"
+  POPUP "&FiÈ™ier"
   BEGIN
-    MENUITEM "I&eºire",                   IDC_EXIT
+    MENUITEM "I&eÈ™ire",                   IDC_EXIT
   END
-  POPUP "Acþiune"
+  POPUP "A&cÈ›iune"
   BEGIN
-    MENUITEM "Imprimare",                   IDC_PRINT, GRAYED
+    MENUITEM "Im&primare",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Proprietãþi",              IDC_PROP, GRAYED
+    MENUITEM "P&roprietÄƒÈ›i",              IDC_PROP, GRAYED
   END
-  POPUP "Vizualizare"
+  POPUP "&AfiÈ™are"
   BEGIN
-    MENUITEM "Dispozitive dupã tip",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispozitive dupã conexiune",   IDC_STATIC, GRAYED
-    MENUITEM "Resurse dupã tip",       IDC_STATIC, GRAYED
-    MENUITEM "Resurse dupã conexiune", IDC_STATIC, GRAYED
+    MENUITEM "Dispozitive dupÄƒ &tip",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Dispozitive dupÄƒ &conexiune",   IDC_STATIC, GRAYED
+    MENUITEM "Resurse dupÄƒ t&ip",       IDC_STATIC, GRAYED
+    MENUITEM "Resurse dupÄƒ c&onexiune", IDC_STATIC, GRAYED
   END
-  POPUP "Ajutor"
+  POPUP "&?"
   BEGIN
-    MENUITEM "Despre",                   IDC_ABOUT
+    MENUITEM "Despre...",                   IDC_ABOUT
   END
 END
 
@@ -29,49 +30,49 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Proprietãþi",              IDC_PROP, GRAYED
+    MENUITEM "&ProprietÄƒÈ›i",              IDC_PROP, GRAYED
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Despre Gestionarul de Dispozitive"
+CAPTION "Despre Gestionarul de dispozitive"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Gestionar de Dispozitive v0.1\nDrept de autor (C) 2006\nde Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
-  PUSHBUTTON "Închidere", IDOK, 75, 162, 44, 15
+  LTEXT "Gestionar de Dispozitive v0.1\nDrept de autor (C) 2006\nde Ged Murphy (gedmurphy@gmail.com)\nTraducere de Petru Dimitriu", IDC_STATIC, 48, 7, 130, 35
+  PUSHBUTTON "ÃŽ&nchide", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
-  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+  EDITTEXT IDC_LICENSE_EDIT, 8, 47, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Tradus în limba românã de Petru Dimitriu.\r\nAcest program este software liber; puteþi redistribui sau modifica programul sub termenii licenþei publice GNU aºa cum este publicatã de Free Software Foundation - fie versiunea 2 a licenþei, sau (la alegerea dvs.) oricare versiune ulterioarã.\r\n\r\nAcest program este distribuit în speranþa cã va fi de folos, dar FÃRÃ NICIO GARANÞIE, nici mãcar garanþia VANDABILITÃÞII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vedeþi Licenþa GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui sã fi primit o copie a licenþei împreunã cu acest program; dacã nu, scrieþi la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "AceastÄƒ aplicaÈ›ie este software public; este permisÄƒ modificarea È™i/sau (re)distribuÈ›ia sa Ã®n termenii LicenÈ›ei Publice Generale GNU publicatÄƒ de Free Software Foundation; sau versiunea 2 a LicenÈ›ei, sau (la alegere) a oricÄƒrei versiuni ulterioare.\r\n\r\nAceastÄƒ aplicaÈ›ie este distribuitÄƒ doar Ã®n speranÈ›a de a fi utilÄƒ, FÄ‚RÄ‚ Ã®nsÄƒ NICI O GARANÈšIE; nici mÄƒcar cu garanÈ›ia implicitÄƒ a VANDABILITÄ‚ÈšII sau a UTILITÄ‚ÈšII ÃŽNTR-UN SCOP ANUME. Pentru mai multe detalii consultaÈ›i LicenÈ›a PublicÄƒ GeneralÄƒ GNU.\r\n\r\nPuteÈ›i vedea aceastÄƒ licenÈ›Äƒ aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteÈ›i consulta traduceri neoficiale ale aceste licenÈ›e aici:\r\nhttp://www.gnu.org/licenses/translations.html"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Proprietãþi"
-  IDS_TOOLTIP_REFRESH   "Reîmprospãtare"
-  IDS_TOOLTIP_HELP      "Ajutor"
-  IDS_TOOLTIP_EXIT      "Ieºire"
+  IDS_TOOLTIP_PROP      "ProprietÄƒÈ›i"
+  IDS_TOOLTIP_REFRESH   "ÃŽmprospÄƒtare"
+  IDS_TOOLTIP_HELP      "Manual de utilizare"
+  IDS_TOOLTIP_EXIT      "IeÈ™ire"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Gestionarul de Dispozitive ReactOS"
+  IDS_APPNAME "Gestionar de dispozitive ReactOS"
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXIT         " Pãrãseºte programul."
-  IDS_HINT_REFRESH      " Reîmprospãteazã lista de servicii."
-  IDS_HINT_PROP         " Afieazã tabel cu proprietãþi pentru selecþia curentã."
-  IDS_HINT_HELP         " Afiºeazã fereastra de ajutor."
-  IDS_HINT_ABOUT        " Despre Gestionarul de Dispozitive ReactOS."
+  IDS_HINT_EXIT         " PÄƒrÄƒseÈ™te programul."
+  IDS_HINT_REFRESH      " ÃŽmprospÄƒteazÄƒ lista de servicii."
+  IDS_HINT_PROP         " AfiÈ™eazÄƒ tabel cu proprietÄƒÈ›i pentru selecÈ›ia curentÄƒ."
+  IDS_HINT_HELP         " AfiÈ™eazÄƒ manualul de utilizare."
+  IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
 
-  IDS_HINT_SYS_RESTORE  " Aduce fereastra la mãrimea normalã."
-  IDS_HINT_SYS_MOVE     " Mutã fereastra."
-  IDS_HINT_SYS_SIZE     " Redimensioneazã fereastra."
-  IDS_HINT_SYS_MINIMIZE " Reduce fereastra la o pictogramã pe ecran."
-  IDS_HINT_SYS_MAXIMIZE " Mãreºte fereastra astfel încât aceasta sã ocupe tot ecranul."
-  IDS_HINT_SYS_CLOSE    " Închide fereastra."
+  IDS_HINT_SYS_RESTORE  " Aduce fereastra la mÄƒrime normalÄƒ."
+  IDS_HINT_SYS_MOVE     " MutÄƒ fereastra."
+  IDS_HINT_SYS_SIZE     " RedimensioneazÄƒ fereastra."
+  IDS_HINT_SYS_MINIMIZE " Reduce fereastra la minim."
+  IDS_HINT_SYS_MAXIMIZE " MÄƒreÈ™te fereastra la maxim."
+  IDS_HINT_SYS_CLOSE    " ÃŽnchide fereastra."
 END

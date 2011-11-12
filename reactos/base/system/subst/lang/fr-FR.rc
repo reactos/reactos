@@ -1,16 +1,15 @@
-#include "resource.h"
 LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INCORRECT_PARAMETER_COUNT "Nombre incorrect de paramËtres - %s\n"
-    IDS_INVALID_PARAMETER "Nombre incorrect de paramËtres - %s\n"
-    IDS_INVALID_PARAMETER2 "ParamËtre incorrect - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Disque dÈj‡ substituÈ\n"
-    IDS_FAILED_WITH_ERROCODE "…choue avec le code d'erreur 0x%x: %s\n"
+    IDS_INCORRECT_PARAMETER_COUNT "Nombre incorrect de param√®tres - %s\n"
+    IDS_INVALID_PARAMETER "Nombre incorrect de param√®tres - %s\n"
+    IDS_INVALID_PARAMETER2 "Param√®tre incorrect - %s\n"
+    IDS_DRIVE_ALREAD_SUBSTED "Disque d√©j√† substitu√©\n"
+    IDS_FAILED_WITH_ERROCODE "√âchoue avec le code d'erreur 0x%x: %s\n"
     IDS_USAGE "Associe un chemin avec une lettre de lecteur.\n\nSUBST [disque1: [disque2:]chemin]\nSUBST dique1: /D\n\n   disque1:        \
-               SpÈcifie un lecteur virtuel auquel vous voulez affecter un chemin.\n   \
-               [disque2:]chemin  SpÈcifie un disque physique et le chemin que vous souhaitez attribuer ‡\n                  \
+               Sp√©cifie un lecteur virtuel auquel vous voulez affecter un chemin.\n   \
+               [disque2:]chemin  Sp√©cifie un disque physique et le chemin que vous souhaitez attribuer √†\n                  \
                un disque virtuel.\n   /D             \
-               Supprime un disque (virtuel) substituÈ.\n\nTapez SUBST sans paramËtres pour afficher la liste des lecteurs virtuels en cours.\n"
+               Supprime un disque (virtuel) substitu√©.\n\nTapez SUBST sans param√®tres pour afficher la liste des lecteurs virtuels en cours.\n"
 END

@@ -1,7 +1,7 @@
 /* 
  * FILE:             base/setup/vmwinst/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ?tefan (PM on ReactOS Forum to fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-08-25  initial translation
  */
  
@@ -12,7 +12,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalarea de module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Instalatorul ReactOS a descoperit faptul că rulați ReactOS în interiorul VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Instalatorul ReactOS a descoperit faptul că ReactOS este executat în VMware(r).", -1, 117, 8, 140, 24
   LTEXT "Dacă doriți instalarea modulelor pilot VMware(r) SVGA, apăsați pe „Înainte”, altfel omiteți această instalare apăsând „Anulează”.", -1, 117, 130, 140, 34
 END
 
@@ -21,7 +21,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalarea de module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Instalatorul ReactOS nu are inclus modulul pilot VMware(r) SVGA.\n\nDe aceea, mergeți la „VM” din meniul stației de lucru VMware(r) și alegeți instalarea instrumentelor WMware\n\n\nApăsați „Înainte” pentru a continua sau „Anulează” pentru a omite instalarea modulului pilot video SVGA.",-1,25,25,225,85
+  LTEXT "Instalatorul ReactOS nu are inclus modulul pilot VMware(r) SVGA.\n\nDe aceea, mergeți la „VM” din meniul stației de lucru VMware(r) și alegeți instalarea instrumentelor VMware\n\n\nApăsați „Înainte” pentru a continua sau „Anulează” pentru a omite instalarea modulului pilot video SVGA.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -50,7 +50,7 @@ BEGIN
   PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-  LTEXT "Alege?i calitatea culorii:", -1, 25, 93, 225, 12
+  LTEXT "Alegeți calitatea culorii:", -1, 25, 93, 225, 12
   COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
@@ -59,7 +59,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalarea de module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Instalatorul ReactOS nu a reușit instalarea modulului pilot VMware(r) SVGA.\n\n\nAlegeți „Închide” pentru a termina procesul de instalare.",-1,25,25,225,85
+  LTEXT "Instalatorul ReactOS nu a reușit instalarea modulului pilot VMware(r) SVGA.\n\n\nAlegeți „Termină” pentru a reveni la instalarea ReactOS.",-1,25,25,225,85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -67,7 +67,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalarea de module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Modulul pilot video VMware(r) SVGA este deja instalat.\n\nPute?i în continuare să:",-1,25,5,225,30
+  LTEXT "Modulul pilot video VMware(r) SVGA este deja instalat.\n\nPuteți în continuare să:",-1,25,5,225,30
   PUSHBUTTON "Configurați preferințele ecranului", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Utilizați un alt modul pilot video", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Dezinstalați modulul pilot VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
@@ -97,7 +97,7 @@ STRINGTABLE
 BEGIN
   IDS_WIZARD_NAME "VMware(r) depistat"
   IDS_FAILEDTOLOCATEDRIVERS "Instalatorul ReactOS Setup nu a reușit găsirea fișierelor necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r)."
-  IDS_FAILEDTOCOPYFILES "Instalatorul ReactOS a eșuat la copierea fișierelor necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r).\n"
+  IDS_FAILEDTOCOPYFILES "Instalatorul ReactOS nu a reușit să copieze fișierele necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r).\n"
   IDS_FAILEDTOACTIVATEDRIVER "Activarea modulului pilot VMware(r) SVGA a eșuat!"
   IDS_FAILEDTOSELVGADRIVER "Activarea modulului pilot VMware(r) VGA a eșuat!"
   IDS_FAILEDTOSELVBEDRIVER "Activarea modulului pilot VMware(r) VBE a eșuat!"
@@ -126,7 +126,7 @@ BEGIN
   IDD_INSTALLING_VMWARE_TOOLSTITLE      "Expertul de instalare al modulului pilot VMware (r) SVGA"
   IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Căutarea și copierea modulului pilot VMware (r) SVGA."
   IDD_CONFIGTITLE                       "Expertul de instalare al modulului pilot VMware (r) SVGA"
-  IDD_CONFIGSUBTITLE                    "Alegeți rezolu?ia preferată a ecranului."
+  IDD_CONFIGSUBTITLE                    "Alegeți rezoluția preferată a ecranului."
   IDD_INSTALLATION_FAILEDTITLE          "Expertul de instalare al modulului pilot VMware (r) SVGA"
   IDD_INSTALLATION_FAILEDSUBTITLE       "Instalarea modulului pilot VMware (r) SVGA a eșuat."
   IDD_CHOOSEACTIONTITLE                 "Expertul de instalare al modulului pilot VMware (r) SVGA"

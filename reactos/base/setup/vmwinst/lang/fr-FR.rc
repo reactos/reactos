@@ -2,24 +2,24 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "L'installateur de ReactOS a dÈtectÈ que vous exÈcutez ReactOS sous VMware(r).", -1, 117, 8, 140, 24
-  LTEXT "Si vous dÈsirez installer le pilote SVGA de VMware(r) SVGA, cliquez sur 'Suivant', autrement cliquez sur 'Annuler'.", -1, 117, 140, 140, 24
+  LTEXT "L'installateur de ReactOS a d√©tect√© que vous ex√©cutez ReactOS sous VMware(r).", -1, 117, 8, 140, 24
+  LTEXT "Si vous d√©sirez installer le pilote SVGA de VMware(r) SVGA, cliquez sur 'Suivant', autrement cliquez sur 'Annuler'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "L'installateur de ReactOS n'est pas fourni avec le pilote SVGA de VMware(r).\n\nC'est pourquoi, vous devez vous rendre ‡ l'ÈlÈment 'VM' de la barre de menu de votre station de travail VMware(r) puis sÈlectionner 'Install VMware tools...'\n\n\nCliquez sur 'Suivant' pour continuer ou sur 'Annuler' pour sauter l'installation du pilote SVGA.",-1,25,25,225,85
+  LTEXT "L'installateur de ReactOS n'est pas fourni avec le pilote SVGA de VMware(r).\n\nC'est pourquoi, vous devez vous rendre √† l'√©l√©ment 'VM' de la barre de menu de votre station de travail VMware(r) puis s√©lectionner 'Install VMware tools...'\n\n\nCliquez sur 'Suivant' pour continuer ou sur 'Annuler' pour sauter l'installation du pilote SVGA.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
@@ -28,10 +28,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Le pilote SVGA de VMware(r) a ÈtÈ installÈ avec succËs. Veuillez choisir votre rÈsolution d'Ècran favorite:",-1,25,5,225,20
+  LTEXT "Le pilote SVGA de VMware(r) a √©t√© install√© avec succ√®s. Veuillez choisir votre r√©solution d'√©cran favorite:",-1,25,5,225,20
   PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -43,13 +43,13 @@ BEGIN
   PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-  LTEXT "Veuillez sÈlectionner votre qualitÈ de couleurs prÈfÈrÈe:", -1, 25, 93, 225, 12
+  LTEXT "Veuillez s√©lectionner votre qualit√© de couleurs pr√©f√©r√©e:", -1, 25, 93, 225, 12
   COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "L'installateur de ReactOS n'a pu installer le pilote SVGA de VMware(r).\n\n\nCliquez sur 'Terminer' pour continuer le processus d'installation.",-1,25,25,225,85
@@ -57,45 +57,45 @@ END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Le pilote SVGA de VMware(r) est dÈj‡ installÈ.\n\nVeuillez choisir ce que vous dÈsirez faire:",-1,25,5,225,30
-  PUSHBUTTON "Configurer les paramËtres de l'Ècran", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "Utiliser un pilote graphique diffÈrent", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-  PUSHBUTTON "DÈsinstaller le pilote SVGA de VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "Le pilote SVGA de VMware(r) est d√©j√† install√©.\n\nVeuillez choisir ce que vous d√©sirez faire:",-1,25,5,225,30
+  PUSHBUTTON "Configurer les param√®tres de l'√©cran", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Utiliser un pilote graphique diff√©rent", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "D√©sinstaller le pilote SVGA de VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
   LTEXT "Cliquez sur 'Suivant' pour continuer ou sur 'Annuler' pour quitter l'assistant.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Veuillez sÈlectionner le pilote graphique que vous dÈsirez utiliser:",-1,25,25,225,15
+  LTEXT "Veuillez s√©lectionner le pilote graphique que vous d√©sirez utiliser:",-1,25,25,225,15
   PUSHBUTTON "Pilote VGA de ReactOS", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Pilote VBE de ReactOS (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "Cliquez sur 'Terminer' pour terminer l'opÈration ou sur 'Annuler' pour quitter l'installation sans conserver les changements.", -1, 25, 93, 225, 20
+  LTEXT "Cliquez sur 'Terminer' pour terminer l'op√©ration ou sur 'Annuler' pour quitter l'installation sans conserver les changements.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Installation du pilote vidÈo"
+CAPTION "Installation du pilote vid√©o"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "L'installateur de ReactOS est sur le point de dÈsinstaller le pilote SVGA de VMware(r) !!!\n\n\nCliquez sur 'Terminer' pour dÈsinstaller le pilote ou sur 'Annuler' pour le conserver.",-1,25,25,225,85
+  LTEXT "L'installateur de ReactOS est sur le point de d√©sinstaller le pilote SVGA de VMware(r) !!!\n\n\nCliquez sur 'Terminer' pour d√©sinstaller le pilote ou sur 'Annuler' pour le conserver.",-1,25,25,225,85
 END
 
 STRINGTABLE
 BEGIN
-  IDS_WIZARD_NAME "VMware(r) dÈtectÈ"
-  IDS_FAILEDTOLOCATEDRIVERS "L'installateur de ReactOS n'a pu trouver les fichiers requis.\nVeuillez vous assurer que le CD-ROM d'outils de VMware(r) est bien insÈrÈ."
-  IDS_FAILEDTOCOPYFILES "L'installateur de ReactOS n'a pu copier les fichiers requis.\nVeuillez vous assurer que le CD-ROM d'outils de VMware(r) est bien insÈrÈ.\n"
-  IDS_FAILEDTOACTIVATEDRIVER "…chec lors de l'activation du pilote SVGA de VMware(r) !"
-  IDS_FAILEDTOSELVGADRIVER "…chec lors de l'activation du pilote VGA de ReactOS!"
-  IDS_FAILEDTOSELVBEDRIVER "…chec lors de l'activation du pilote VBE de ReactOS!"
-  IDS_UNINSTNOTICE "Le fichiers du pilote SVGA de VMware(r) n'ont pas encore ÈtÈ supprimÈs.\nVeuillez les supprimer manuellement aprËs avoir redÈmarrÈ."
-  IDS_FAILEDTOADDREGENTRIES "…chec lors de la crÈation des entries registre pour le pilote SVGA de VMware(r)!"
+  IDS_WIZARD_NAME "VMware(r) d√©tect√©"
+  IDS_FAILEDTOLOCATEDRIVERS "L'installateur de ReactOS n'a pu trouver les fichiers requis.\nVeuillez vous assurer que le CD-ROM d'outils de VMware(r) est bien ins√©r√©."
+  IDS_FAILEDTOCOPYFILES "L'installateur de ReactOS n'a pu copier les fichiers requis.\nVeuillez vous assurer que le CD-ROM d'outils de VMware(r) est bien ins√©r√©.\n"
+  IDS_FAILEDTOACTIVATEDRIVER "√âchec lors de l'activation du pilote SVGA de VMware(r) !"
+  IDS_FAILEDTOSELVGADRIVER "√âchec lors de l'activation du pilote VGA de ReactOS!"
+  IDS_FAILEDTOSELVBEDRIVER "√âchec lors de l'activation du pilote VBE de ReactOS!"
+  IDS_UNINSTNOTICE "Le fichiers du pilote SVGA de VMware(r) n'ont pas encore √©t√© supprim√©s.\nVeuillez les supprimer manuellement apr√®s avoir red√©marr√©."
+  IDS_FAILEDTOADDREGENTRIES "√âchec lors de la cr√©ation des entries registre pour le pilote SVGA de VMware(r)!"
 END
 
 STRINGTABLE
@@ -115,17 +115,17 @@ END
 STRINGTABLE
 BEGIN
   IDD_INSERT_VMWARE_TOOLSTITLE     	"Assistant d'installation du pilote SVGA de VMware (r)"
-  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Veuillez insÈrer le CD-ROM d'outils de VMware."
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Veuillez ins√©rer le CD-ROM d'outils de VMware."
   IDD_INSTALLING_VMWARE_TOOLSTITLE      "Assistant d'installation du pilote SVGA de VMware (r)"
   IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Recherche et copie du pilote SVGA de VMware (r)."
   IDD_CONFIGTITLE     			"Assistant d'installation du pilote SVGA de VMware (r)"
-  IDD_CONFIGSUBTITLE     		"SÈlectionnez votre rÈsolution d'Ècran favorite."
+  IDD_CONFIGSUBTITLE     		"S√©lectionnez votre r√©solution d'√©cran favorite."
   IDD_INSTALLATION_FAILEDTITLE     	"Assistant d'installation du pilote SVGA de VMware (r)"
-  IDD_INSTALLATION_FAILEDSUBTITLE       "L'installation du pilote SVGA de VMware (r) a ÈchouÈ."
+  IDD_INSTALLATION_FAILEDSUBTITLE       "L'installation du pilote SVGA de VMware (r) a √©chou√©."
   IDD_CHOOSEACTIONTITLE    	        "Assistant d'installation du pilote SVGA de VMware (r)"
-  IDD_CHOOSEACTIONSUBTITLE              "Choisissez ce que vous dÈsirez faire."
+  IDD_CHOOSEACTIONSUBTITLE              "Choisissez ce que vous d√©sirez faire."
   IDD_SELECTDRIVERTITLE                 "Assistant d'installation du pilote SVGA de VMware (r)"
-  IDD_SELECTDRIVERSUBTITLE              "SÈlectionnez un pilote."
+  IDD_SELECTDRIVERSUBTITLE              "S√©lectionnez un pilote."
   IDD_DOUNINSTALLTITLE                  "Assistant d'installation du pilote SVGA de VMware (r)"
-  IDD_DOUNINSTALLSUBTITLE               "DÈsinstaller le pilote."
+  IDD_DOUNINSTALLSUBTITLE               "D√©sinstaller le pilote."
 END

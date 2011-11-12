@@ -25,9 +25,9 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 /* Default settings */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE            "ReactOS - V‰lkommen"
+    IDS_APPTITLE            "ReactOS - V√§lkommen"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "V‰lkommen till React Operating System.\n\nKlicka pÂ ett avsnitt till v‰nster."
+    IDS_DEFAULTTOPICDESC    "V√§lkommen till React Operating System.\n\nKlicka p√• ett avsnitt till v√§nster."
 //    IDS_CHECKTEXT           "Show this dialog again"
 //    IDS_CLOSETEXT           "Exit"
 END
@@ -65,9 +65,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Skapa en ny ReactOS installation pÂ den h‰r datorn eller uppgradera en befintlig."
+    IDS_TOPICDESC0          "Skapa en ny ReactOS installation p√• den h√§r datorn eller uppgradera en befintlig."
     IDS_TOPICDESC1          "Utforska skivan."
-    IDS_TOPICDESC2          "Avsluta det h‰r programmet."
+    IDS_TOPICDESC2          "Avsluta det h√§r programmet."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."

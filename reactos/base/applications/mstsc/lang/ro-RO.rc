@@ -3,6 +3,7 @@
                      ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * CHANGE LOG:       2011-08-21  initial translation
+ *                   2011-10-18  minor changes
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -18,9 +19,9 @@ BEGIN
     LTEXT           "Server:",IDC_STATIC,47,41,25,8
     LTEXT           "Nume utilizator:",IDC_STATIC,47,58,58,8
     COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Păstrează",IDC_SAVE,57,139,50,14
-    PUSHBUTTON      "Păstrează în...",IDC_SAVEAS,112,139,60,14
-    PUSHBUTTON      "Deschide...",IDC_OPEN,177,139,50,14
+    PUSHBUTTON      "Pă&strează",IDC_SAVE,57,139,50,14
+    PUSHBUTTON      "Păstrea&ză în...",IDC_SAVEAS,112,139,60,14
+    PUSHBUTTON      "&Deschide...",IDC_OPEN,177,139,50,14
     ICON            "", IDC_CONNICON, 16,114,20,20
 	LTEXT           "Puteți păstra preferințele curente de conectare sau să deschideți preferințe existente",IDC_STATIC,50,115,172,20
 END
@@ -48,7 +49,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Conectare pentru control la distanță"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Conectare",IDOK,147,245,50,14
+    DEFPUSHBUTTON   "&Conectează",IDOK,147,245,50,14
     PUSHBUTTON      "A&nulează",IDCANCEL,203,245,50,14
     CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
 END

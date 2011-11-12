@@ -1,43 +1,43 @@
-/* Translation by Vytis 'CMan' Gird˛ijauskas cman@cman.us */
+/* Translation by Vytis 'CMan' Gird√æijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ijungti kompiuter·"
+CAPTION "I√∞jungti kompiuter√°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dabar saugu ijungti kompiuter·.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Dabar saugu i√∞jungti kompiuter√°.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
     DEFPUSHBUTTON "&Perkrauti", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Vartotojo s‡sajos sutrikimas"
+CAPTION "Vartotojo s√†sajos sutrikimas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Nepavyko ·kelti prisijungimo prie vartotojo aplinkos DLL %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Susisiekite su sistemos administratoriumi, kuris pakeist¯ arba atstatyt¯ originali‡ DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "Nepavyko √°kelti prisijungimo prie vartotojo aplinkos DLL %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Susisiekite su sistemos administratoriumi, kuris pakeist√∏ arba atstatyt√∏ originali√† DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Perkrauti", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Ruoiami tinklo susijungimai..."
+    IDS_PREPARENETWORKCONNECTIONS "Ruo√∞iami tinklo susijungimai..."
     IDS_APPLYINGCOMPUTERSETTINGS "Pritaikomos kompiuterio nuostatos..."
     IDS_RUNNINGSTARTUPSCRIPTS "Vykdomi paleisties scenarijai..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Vykdomi stabdymo scenarijai..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Pritaikomos asmeninÎs nuostatos..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Pritaikomos asmenin√´s nuostatos..."
     IDS_RUNNINGLOGOFFSCRIPTS "Vykdomi atsijungimo scenarijai..."
     IDS_RUNNINGLOGONSCRIPTS "Vykdomi prisijungimo scenarijai..."
-    IDS_LOADINGYOURPERSONALSETTINGS "¡keliamos asmeninÎs nuostatos..."
-    IDS_CLOSINGNETWORKCONNECTIONS "U˛daromi tinklo susijungimai..."
+    IDS_LOADINGYOURPERSONALSETTINGS "√Åkeliamos asmenin√´s nuostatos..."
+    IDS_CLOSINGNETWORKCONNECTIONS "U√ædaromi tinklo susijungimai..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS stabdoma..."
-    IDS_PREPARETOSTANDBY "Ruoiamasi pristabdyti..."
-    IDS_PREPARETOHIBERNATE "Ruoiamasi ijungti ·raant..."
-    IDS_SAVEYOURSETTINGS "Isaugomos nuostatos..."
-    IDS_REACTOSISSTARTINGUP "Paleid˛iama ReactOS..."
+    IDS_PREPARETOSTANDBY "Ruo√∞iamasi pristabdyti..."
+    IDS_PREPARETOHIBERNATE "Ruo√∞iamasi i√∞jungti √°ra√∞ant..."
+    IDS_SAVEYOURSETTINGS "I√∞saugomos nuostatos..."
+    IDS_REACTOSISSTARTINGUP "Paleid√æiama ReactOS..."
 END
 
 STRINGTABLE

@@ -6,7 +6,7 @@ CAPTION "ReactOS Asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Et voi asentaa ReactOS:‰ suoraan t‰lt‰ CDlevylt‰! K‰ynnist‰ tietokoneesi t‰lt‰ CD levylt‰ asentaaksesi ReactOS:‰.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Et voi asentaa ReactOS:√§ suoraan t√§lt√§ CDlevylt√§! K√§ynnist√§ tietokoneesi t√§lt√§ CD levylt√§ asentaaksesi ReactOS:√§.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Click Finish to exit the Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 

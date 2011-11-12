@@ -1,6 +1,6 @@
 /*
  *  reactos (Simplified Chinese resources)
- *  (¼òÌåÖÐÎÄ×ÊÔ´)
+ *  (ç®€ä½“ä¸­æ–‡èµ„æº)
  *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
  *
  * This program is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 /* String Tables */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CAPTION  " ReactOS °²×° "
-    IDS_TEXT     " ²»ÄÜÖ±½Ó´ÓÕâ¸ö CD °²×° ReactOS! \n\n ÇëÖØÐÂÆô¶¯ÄãµÄ¼ÆËã»úÑ¡Ôñ´Ó¹âÅÌÒýµ¼À´°²×° ReactOS¡£"
+    IDS_CAPTION  " ReactOS å®‰è£… "
+    IDS_TEXT     " ä¸èƒ½ç›´æŽ¥ä»Žè¿™ä¸ª CD å®‰è£… ReactOS! \n\n è¯·é‡æ–°å¯åŠ¨ä½ çš„è®¡ç®—æœºé€‰æ‹©ä»Žå…‰ç›˜å¼•å¯¼æ¥å®‰è£… ReactOSã€‚"
 END
 
 /* EOF */

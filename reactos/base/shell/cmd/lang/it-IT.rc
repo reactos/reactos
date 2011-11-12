@@ -65,7 +65,7 @@ CHOICE  [/C[:]scelta][/N][/S][/T[:]c,nn][testo]\n\n\
   /S            Considera i tasti di scelta come sensibili al case.\n\
   /T[:]s,nn     Scelta predefinita a S dopo nn secondi.\n\
   testo         Messaggio di richiesta da visualizzare.\n\n\
-ERRORLEVEL è valorizzato alla posizione in elenco delle scelta dell'utente.\n"
+ERRORLEVEL Ã¨ valorizzato alla posizione in elenco delle scelta dell'utente.\n"
 
 STRING_CLS_HELP, "Cancella lo schermo.\n\nCLS\n"
 
@@ -88,7 +88,7 @@ CMD [/[C|K] comando][/P][/Q][/T:bf]\n\n\
   /C comando  Esegue il comando indicato e poi termina.\n\
   /K comando  Esegue il comando indicato e poi rimane in esecuzione.\n\
   /P          CMD rimane permanente ed esegue autoexec.bat\n\
-              (non può essere fermato).\n\
+              (non puÃ² essere fermato).\n\
   /T:bf       Definisce i colori di primo piano e sfondo\n\
               (vedi anche il comando COLOR).\n"
 
@@ -113,7 +113,7 @@ dec  esa  name       dec  esa  nome\n\
 
 STRING_COPY_HELP1,  "Sovrascrivi %s (Si/No/Tutti)? "
 
-STRING_COPY_HELP2, "Copia uno o più file in un'altra destinazione.\n\n\
+STRING_COPY_HELP2, "Copia uno o piÃ¹ file in un'altra destinazione.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] sorgente [/A|/B]\n\
      [+ sorgente [/A|/B] [+ ...]] [destinazione [/A|/B]]\n\n\
   sorgente     Inica il file o i file da copiare.\n\
@@ -122,10 +122,10 @@ COPY [/V][/Y|/-Y][/A|/B] sorgente [/A|/B]\n\
   destinazione Indica la cartella e/o il nome di file per i nuovi/o file.\n\
   /V           Verifica che i file sono stati scritti correttamente.\n\
   /Y           Elimina le richieste di conferma per le sovrascrittura\n\
-               di un file di destinazione già esistente.\n\
+               di un file di destinazione giÃ  esistente.\n\
   /-Y          Effettua le richieste di conferma per le sovrascrittura\n\
-               di un file di destinazione già esistente.\n\n\
-La selezione  /Y può trovarsi nella variabile di ambiente  COPYCMD .\n\
+               di un file di destinazione giÃ  esistente.\n\n\
+La selezione  /Y puÃ² trovarsi nella variabile di ambiente  COPYCMD .\n\
 ...\n"
 
 STRING_DATE_HELP1, "\nScrivi la nuova data (mm%cdd%cyyyy): "
@@ -140,7 +140,7 @@ DATE [/T][data]\n\n\
 Scrivi  DATE senza parametri per visualizzare la data attuale e\n\
 chiedere quella nuova. Premi ENTER per mantenerla inalterata.\n"
 
-STRING_DEL_HELP1,  "Cancella uno o più file.\n\n\
+STRING_DEL_HELP1,  "Cancella uno o piÃ¹ file.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\n\
@@ -167,8 +167,8 @@ STRING_DEL_HELP4, "    %lu file cancellati\n"
 
 STRING_DELAY_HELP, "aspetta per il tempo indicato in secondi o millisecondi\n\
 DELAY [/m]n\n\n\
-  /m          precisa che n è in millisecondi\n\
-              altrimenti n è in secondi\n"
+  /m          precisa che n Ã¨ in millisecondi\n\
+              altrimenti n Ã¨ in secondi\n"
 
 STRING_DIR_HELP1, "DIR [disco:][percorso][nomefilen] [/A[[:]attributi]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]orderinamento]] [/P] [/Q] [/S] [/T[[:]tempo]] [/W] [/X] [/4]\n\n\
@@ -180,32 +180,32 @@ STRING_DIR_HELP1, "DIR [disco:][percorso][nomefilen] [/A[[:]attributi]] [/B] [/C
                S  file di sistema         -  Prefisso con il significato di non\n\
   /B          Formato essenziale (nessuna intestazione o sintesi).\n\
   /C          Visualizza il separatore delle migliaia nella dimensione dei file.\n\
-              Questa è la norma.  Usa /-C per non visualizzarlo.\n\
+              Questa Ã¨ la norma.  Usa /-C per non visualizzarlo.\n\
   /D          Ugualmente largo ma i file sono ordinati per colonne.\n\
   /L          Usa minuscole.\n\
   /N          Nuovo formato con i nomi dei file sulla estrema destra.\n\
   /O          Elenca i file ordinati.\n\
-  sortorder    N  Per nome (alfabetico)    S  Dimensione (per primo il più piccolo)\n\
-               E  Estensione (alfabetico)  D  By date/time (per primo il più vecchio)\n\
+  sortorder    N  Per nome (alfabetico)    S  Dimensione (per primo il piÃ¹ piccolo)\n\
+               E  Estensione (alfabetico)  D  By date/time (per primo il piÃ¹ vecchio)\n\
                G  Le cartelle per prime    -  Prefisso per invertire l'ordine\n\
   /P          Pasa dopo ogni schermata piena.\n\
   /Q          Visualizza il proprietario del file.\n\
   /S          Visualizza i file nella cartella indicata e nelle sottocartelle.\n\
-  /T          Sceglie quale campo di tempo è usato per gli ordinamenti.\n\
+  /T          Sceglie quale campo di tempo Ã¨ usato per gli ordinamenti.\n\
   timefield   C  Creazione\n\
               A  Ultimo Accesso\n\
               W  Ultima scrittura\n\
   /W          Usa il formato largo.\n\
   /X          Visualizza i nomi brevi corrispondenti a quelli estesi non-8.3\n\
-              Il formato è analogo a quello di  /N con inseriti i nomi brevi\n\
-              prima dei nomi lunghi. Se non c'è un nome breve vengono messi degli spazi\n\
+              Il formato Ã¨ analogo a quello di  /N con inseriti i nomi brevi\n\
+              prima dei nomi lunghi. Se non c'Ã¨ un nome breve vengono messi degli spazi\n\
   /4          Visualizza gli anni su quattro cifre\n\n\
 Le selezioni possono trovarsi nella variabile di ambienteDIRCMD.  Sovrascrivi\n\
 le selezioni preimpostate mettendo - (trattino) prima della selezione per esempio, /-W.\n"
 
-STRING_DIR_HELP2, " Il Volume nel disco %c è %s\n"
+STRING_DIR_HELP2, " Il Volume nel disco %c Ã¨ %s\n"
 STRING_DIR_HELP3, " Il Volume nel disco %c non ha etichetta.\n"
-STRING_DIR_HELP4, " Il numero di serie del Volume è %04X-%04X\n"
+STRING_DIR_HELP4, " Il numero di serie del Volume Ã¨ %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Numero dei file elencati:\n%16i % 14s byte\n"
 STRING_DIR_HELP6, "%16i Cartelle% 15s byte\n"
 STRING_DIR_HELP7, "\n Cartelle di %s\n\n"
@@ -239,25 +239,25 @@ STRING_ECHO_HELP4, "Visualizza un messaggio o abilita e disabilita la\n\
   ECHO.             Stampa una linea vuota\n\n\
 Usa ECHO senza parametri pr visualizzare lo stato attuale di ECHO."
 
-STRING_ECHO_HELP5, "ECHO è %s\n"
+STRING_ECHO_HELP5, "ECHO Ã¨ %s\n"
 
 STRING_EXIT_HELP, "Esce dall'interprete dei comandi.\n\n\
   EXIT [/b] [ExitCode]\n\n\
     /B            Esce solo dalle procedure batch.\n\
                   Se eseguito al di fuori di un batch esce da cmd.exe\n\
-    ExitCode      Verrà assegnato a ERRORLEVEL"
+    ExitCode      VerrÃ  assegnato a ERRORLEVEL"
 
 STRING_FOR_HELP1, "Esegue un comand specifico per ogni file indicato\n\n\
 FOR %variabile IN (listafile) DO comando [parametri]\n\n\
   %variabile Indica un parametro sostituibile.\n\
-  (listafile)Indica un insieme di uno o più file. Si possono usare i\
+  (listafile)Indica un insieme di uno o piÃ¹ file. Si possono usare i\
              caratteri jolly.\n\
   comando    Indica un comando da eseguire per ogni file.\n\
   parametri  Indica i parametri o le selezioni per il comando.\n\n\
 Per usare FOR in un batch usare %%variable invece di %variable.\n"
 
-STRING_FREE_HELP1, "\nIl Volume del disco %s è %-11s\n\
- Il numero di serie è %s\n\
+STRING_FREE_HELP1, "\nIl Volume del disco %s Ã¨ %-11s\n\
+ Il numero di serie Ã¨ %s\n\
   %16s bytes totali su disco \n\
   %16s bytes usati\n\
   %16s bytes liberi\n"
@@ -270,14 +270,14 @@ STRING_IF_HELP1, "Esegue una elaborazione condizionale nei batch.\n\n\
   IF [NOT] EXIST nomefile comando\n\
   IF [NOT] DEFINED variabile comando\n\n\
 NOT               Indica che il comando deve essere eseguito solo se \n\
-                  la condizione è falsa\n\
-ERRORLEVEL number La condizione è verificata se l'ultimo programma eseguito\n\
+                  la condizione Ã¨ falsa\n\
+ERRORLEVEL number La condizione Ã¨ verificata se l'ultimo programma eseguito\n\
                   ha lasciato un codice d'uscita maggiore o uguale a quello\n\
                   indicato.\n\
-command           E' il comando da eseguire se la condizione è verificata.\n\
+command           E' il comando da eseguire se la condizione Ã¨ verificata.\n\
 string1==string2  E' verificata se sono uguali le due stringhe\n\
 EXIST nomefile    E' verificata se il file esiste.\n\
-DEFINED variabile E' verificata se la variabile è definita.\n"
+DEFINED variabile E' verificata se la variabile Ã¨ definita.\n"
 
 STRING_GOTO_HELP1,  "Porta l'esecuzione di un batch alla linea con l'etichetta\n\
                      indicata.\n\n\
@@ -288,24 +288,24 @@ Nel batch questa deve trovarsi da sola in una linea con davanti due punti :.\n"
 STRING_LABEL_HELP1, "Visualizza o modifica l'etichetta di un disco.\n\n\
 LABEL [disco:][etichetta]\n"
 
-STRING_LABEL_HELP2, "Il Volume nel disco %c: è %s\n"
+STRING_LABEL_HELP2, "Il Volume nel disco %c: Ã¨ %s\n"
 STRING_LABEL_HELP3, "Il Volume nel disco %c: non ha etichetta\n"
-STRING_LABEL_HELP4, "Il numero di serie del Volume è %04X-%04X\n"
+STRING_LABEL_HELP4, "Il numero di serie del Volume Ã¨ %04X-%04X\n"
 STRING_LABEL_HELP5, "Etichetta del disco (11 Caratteri, INVIO per nessuna)? "
 
-STRING_LOCALE_HELP1, "L'ora attuale è"
+STRING_LOCALE_HELP1, "L'ora attuale Ã¨"
 
 STRING_MKDIR_HELP,   "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"
 
 STRING_MKLINK_HELP, "Crea un oggetto di collegamento nel filesystem.\n\n\
 MKLINK [/D | /H | /J] nomelink target\n\n\
-  /D  Indica che il link simbolico è riferito a una cartella.\n\
+  /D  Indica che il link simbolico Ã¨ riferito a una cartella.\n\
   /H  Crea un hard link.\n\
   /J  Crea una directory junction.\n\n\
-Se non sono specificati ne /H ne /J verrà creato un link simbolico."
+Se non sono specificati ne /H ne /J verrÃ  creato un link simbolico."
 
-STRING_MEMMORY_HELP1, "Visualizza la quantità della memoria di sistema.\n\n\
+STRING_MEMMORY_HELP1, "Visualizza la quantitÃ  della memoria di sistema.\n\n\
 MEMORY"
 
 STRING_MEMMORY_HELP2, "\n  %12s%% carico di memoria.\n\n\
@@ -321,7 +321,7 @@ STRING_MISC_HELP1, "Premi un tasto per continuare...\n"
 STRING_MOVE_HELP1, "Sovrascrivi %s (Si/No/Tutti)? "
 
 STRING_MOVE_HELP2, "Sposta i file o cambia il nome a file e cartelle.\n\n\
-Per spostare uno o più file:\n\
+Per spostare uno o piÃ¹ file:\n\
 MOVE [/N][disco:][percorso]nomefile1[,...] destinazione\n\n\
 Per rinominare una cartella:\n\
 MOVE [/N][disco:][percorso]]cartella1 cartella2\n\n\
@@ -330,7 +330,7 @@ MOVE [/N][disco:][percorso]]cartella1 cartella2\n\n\
   /N                           Nulla. Effettua il comando ma senza alterare\n\
                                file e cartelle.\n\n\
 Limitazioni attuali:\n\
-  - Non è possibile spostare file e cartelle da un disco a un altero.\n"
+  - Non Ã¨ possibile spostare file e cartelle da un disco a un altero.\n"
 
 STRING_MSGBOX_HELP, "Visualizza un messaggio e restituisce la risposta\n\
 dell'utente\n\n\
@@ -355,7 +355,7 @@ PATH senza parametri visualizza i percorsi attualmente impostati.\n"
 STRING_PROMPT_HELP1, "Modifica il messaggio di pronto a eseguire comandi.\n\n\
 PROMPT [testo]\n\n\
   testo   Indica il nuovo messaggio.\n\n\
-Può essere composto da un testo qualunque e dai seguenti codici speciali:\n\n\
+PuÃ² essere composto da un testo qualunque e dai seguenti codici speciali:\n\n\
   $A   & (E commerciale)\n\
   $B   | (pipe)\n\
   $C   ( (parentesi sinistra)\n\
@@ -377,7 +377,7 @@ STRING_PAUSE_HELP1, "Ferma l'esecuzione del batch e mostra il seguente messaggio
 'Premi un tasto per continuare...' o il messaggio indicato.\n\n\
 PAUSE [messaggio]"
 
-STRING_PROMPT_HELP2, "  $+   Mostra la profondità attuale dello stack delle cartelle"
+STRING_PROMPT_HELP2, "  $+   Mostra la profonditÃ  attuale dello stack delle cartelle"
 
 STRING_PROMPT_HELP3, "\nUsa PROMPT senza parametri per attivare quello predefinito."
 
@@ -388,7 +388,7 @@ STRING_RMDIR_HELP,   "Cancella una cartella.\n\n\
 RMDIR [disco:]percorso\nRD [disco:]percorso\n\
 /S			cancella tutti i file e le cartelle indicate\n\
 /Q			non chiede conferma\n"
-STRING_RMDIR_HELP2,	"La cartella non è vuota!\n"
+STRING_RMDIR_HELP2,	"La cartella non Ã¨ vuota!\n"
 
 STRING_REN_HELP1, "Rinomina file/cartella or file/cartelle.\n\n\
 RENAME [/E /N /P /Q /S /T] vecchio_nome ... nuovo_nome\n\
@@ -400,7 +400,7 @@ REN    [/E /N /P /Q /S /T] vecchio_nome ... nuovo_nome\n\n\
   /Q    Silente.\n\
   /S    Rinomina le sottocartelle.\n\
   /T    Visualizza il numero totale di file rinominati.\n\n\
-Non è possibile indicare un nuovo disco o percorso nella destinazione.\n\
+Non Ã¨ possibile indicare un nuovo disco o percorso nella destinazione.\n\
 Usare il comando MOVE.\n"
 
 STRING_REN_HELP2, "    %lu file rinominato\n"
@@ -413,20 +413,20 @@ REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/P] [/R] [/S] [/W] [/
   [drive1:][path1]nomefile Specifica il o i file sorgenti.\n\
   [disco2:][percorso2]     Specifica la cartella dove i file devono essere\n\
                            sostituiti.\n\
-  /A                       Aggiunge i file alla cartella di destinazione. Non può\n\
+  /A                       Aggiunge i file alla cartella di destinazione. Non puÃ²\n\
                            essere usato con /S o /U .\n\
   /P                       Chiede conferma prima di sostituire o aggiungere\n\
                            un file.\n\
   /R                       Sostituisce sia i file in sola lettura che quelli\n\
                            non protetti.\n\
   /S                       Sostituisce i file in tutte le sottocartelle\n\
-                           della cartella di destinazione. Non può essere\n\
+                           della cartella di destinazione. Non puÃ² essere\n\
                            usato con /A .\n\
   /W                       Aspetta che sia inserito un disco prima di iniziare.\n\
-  /U                       Sostituisce (aggiorna) solo i file più vecchi\n\
-                           dei file sorgenti. Non può essere usato con /A .\n"
+  /U                       Sostituisce (aggiorna) solo i file piÃ¹ vecchi\n\
+                           dei file sorgenti. Non puÃ² essere usato con /A .\n"
 
-STRING_REPLACE_HELP2, "Il percorso sorgente è obbligatorio\n"
+STRING_REPLACE_HELP2, "Il percorso sorgente Ã¨ obbligatorio\n"
 
 STRING_REPLACE_HELP3, "Nessun file sostituito\n"
 
@@ -473,7 +473,7 @@ stringa      Indica il titolo.\n"
 STRING_TIME_HELP1, "Visualizza o assegna l'ora di sistema.\n\n\
 TIME [/T][ora]\n\n\
   /T    Visualizza solo\n\n\
-Se TIME è usato senza parametri viene visualizzata l'ora attuale e richiesta\n\
+Se TIME Ã¨ usato senza parametri viene visualizzata l'ora attuale e richiesta\n\
 quella nuova. Premere INVIO per non modificarla.\n"
 
 STRING_TIME_HELP2, "Inserisci la nuova ora: "
@@ -490,25 +490,25 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
               senza fermare il cronometro\n\
   /n          Indica quale cronometro.\n\
               Sono validi i numeri da 0 a 9\n\
-              Se non indicato è predefinito 1\n\
+              Se non indicato Ã¨ predefinito 1\n\
   /Fn         tipo di formato \n\
-              n può essere:\n\
+              n puÃ² essere:\n\
                     0    millisecondi\n\
                     1    hh%cmm%css%cdd\n\n\
-se non sono indicati ON, OFF o /S verrà commutato lo stato\n\
+se non sono indicati ON, OFF o /S verrÃ  commutato lo stato\n\
 del cronometro da attivo a fermo o viceversa\n\n"
 
 STRING_TYPE_HELP1, "Visualizza il contenuto di un file di testo.\n\n\
 TYPE [disco:][percorso]nomefile \n\
   /P 		  Mostra una schermata alla volta.\n"
 
-STRING_VERIFY_HELP1, "Questo comando non è implementato!!\n\
+STRING_VERIFY_HELP1, "Questo comando non Ã¨ implementato!!\n\
 Attiva o disattiva la verifica automatica della scrittura dei file\n\
 su disco.\n\n\
 VERIFY [ON | OFF]\n\n\
 Usa VERIFY senza parametri per visualizzare l'impostazione corrente.\n"
 
-STRING_VERIFY_HELP2, "VERIFY è %s.\n"
+STRING_VERIFY_HELP2, "VERIFY Ã¨ %s.\n"
 
 STRING_VERIFY_HELP3, "E' necessario indicare ON o OFF."
 
@@ -519,7 +519,7 @@ VER [/C][/R][/W]\n\n\
   /W  Visualizza le informazioni di garanzia."
 
 STRING_VERSION_HELP2, " disponibile PRIVO DI OGNI GARANZIA; per i dettagli\n\
-usare: `ver /w'. Questo è software libero, e siete i benvenuti se lo distribuite\n\
+usare: `ver /w'. Questo Ã¨ software libero, e siete i benvenuti se lo distribuite\n\
 con alcune condizioni; usare `ver /r' per i dettagli. Usare `ver /c' per un\n\
 elenco dei crediti."
 
@@ -528,8 +528,8 @@ STRING_VERSION_HELP3, "\n Questo programma e' distribuito con la speranza che po
  VENDIBILITA o ADEGUATEZZA PER UN PARTICOLARE SCOPO.  Vedere\n\
  la 'GNU General Public License' per ulteriori dettagli."
 
-STRING_VERSION_HELP4, "\n Questo è software libero; potete distribuirlo e/o modificarlo\n\
- nell'ambito della licenza 'GNU General Public License' così come pubblicata da \n\
+STRING_VERSION_HELP4, "\n Questo Ã¨ software libero; potete distribuirlo e/o modificarlo\n\
+ nell'ambito della licenza 'GNU General Public License' cosÃ¬ come pubblicata da \n\
  Free Software Foundation; a scelta la versione 2 della licenza o una\n\
  qualunque successiva.\n"
 
@@ -540,9 +540,9 @@ STRING_VERSION_HELP6, "\nVersione FreeDOS scritto da:\n"
 
 STRING_VERSION_HELP7, "\nVersione ReactOS scritto da:\n"
 
-STRING_VOL_HELP1, " Il Volume del disco %c è %s\n"
+STRING_VOL_HELP1, " Il Volume del disco %c Ã¨ %s\n"
 STRING_VOL_HELP2, " Il Volume del disco %c non ha etichetta\n"
-STRING_VOL_HELP3, " Il numero di serie del Volume è %04X-%04X\n"
+STRING_VOL_HELP3, " Il numero di serie del Volume Ã¨ %04X-%04X\n"
 STRING_VOL_HELP4, "Visualizza l'etichetta del volume del disco e il numero di serie se disponibili.\n\n\
 VOL [disco:]"
 
@@ -579,12 +579,12 @@ CHOICE   Aspetta che l'utente scelga una tra le opzioni disponibili.\n\
 CLS      Cancella lo schermo.\n\
 CMD      Esegue un altro interprete dei comandi.\n\
 COLOR    Imposta i colori della console.\n\
-COPY     Copia uno o più file in un'altra destinazione.\n\
+COPY     Copia uno o piÃ¹ file in un'altra destinazione.\n\
 DATE     Visualizza o modifica la data.\n\
-DELETE   Cancella uno o più file.\n\
+DELETE   Cancella uno o piÃ¹ file.\n\
 DIR      Visualizza un elenco di file e sottocartelle in una cartella.\n\
 ECHO     Visualizza messaggi o abilita e disabilita la visualizzazione dei comandi.\n\
-ERASE    Cancella uno o più file.\n\
+ERASE    Cancella uno o piÃ¹ file.\n\
 EXIT     Esce dall'interprete dei comandi.\n\
 FOR      Esegue un comando per ognuno dei file indicati.\n\
 FREE     Spazio libero.\n\
@@ -596,7 +596,7 @@ LABEL    Crea, modifica, o cancella l'etichetta di un disco.\n\
 MD       Crea una cartella.\n\
 MKDIR    Crea una cartella.\n\
 MKLINK   Crea un oggetto di collegamento nel filesystem.\n\
-MOVE     Muove uno o più file da una cartella a un'altra\n\
+MOVE     Muove uno o piÃ¹ file da una cartella a un'altra\n\
 PATH     Visualizza o imposta i percorsi di ricerca per gli eseguibili.\n\
 PAUSE    Ferma l'esecuzione di un batch e visualizza un messaggio.\n\
 POPD     Ripristina il valore precedente della cartella corrente salvato da\n\
@@ -605,8 +605,8 @@ PROMPT   Cambia il messaggio di pronto per i comandi.\n\
 PUSHD    Salva la cartella corrente e poi la cambia.\n\
 RD       Rimuove una cartella.\n\
 REM      Commenti in un batch.\n\
-REN      Rinomina uno più file.\n\
-RENAME   Rinomina uno più file.\n\
+REN      Rinomina uno piÃ¹ file.\n\
+RENAME   Rinomina uno piÃ¹ file.\n\
 RMDIR    Rimuove una cartella.\n\
 SCREEN   Sposta il cursore e visualizza un testo.\n\
 SET      Visualizza, modifica, o cancella le variabili di ambiente.\n\
@@ -634,7 +634,7 @@ STRING_CHCP_ERROR4,          "Tabella dei codici non valida\n"
 STRING_CHOICE_ERROR,         "Opzione non valida. Formato atteso: /C[:]opzioni"
 STRING_CHOICE_ERROR_TXT,     "Opzione non valida. Formato atteso: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Opzione non valida: %s"
-STRING_MD_ERROR,             "Una cartella o file esiste già.\n"
+STRING_MD_ERROR,             "Una cartella o file esiste giÃ .\n"
 STRING_MD_ERROR2,            "Il percorso della nuova cartella non esiste.\n"
 STRING_CMD_ERROR1,           "Impossibile ridirigere dal file %s\n"
 STRING_CMD_ERROR2,           "Errore nella creazione del file temporaneo per la ridirezione\n"
@@ -651,7 +651,7 @@ STRING_COPY_ERROR2,          "Errore: Impossibile copiare un file su se stesso!\
 STRING_COPY_ERROR3,          "Errore durante la scrittura della destinazione!\n"
 STRING_COPY_ERROR4,          "Errore: Non ancora implementato!\n"
 STRING_DATE_ERROR,           "Data non valida."
-STRING_DEL_ERROR5,           "Il file %s sarà cancellato! "
+STRING_DEL_ERROR5,           "Il file %s sarÃ  cancellato! "
 STRING_DEL_ERROR6,           "Sei sicuro (S/N)?"
 STRING_DEL_ERROR7,           "Cancellazione di: %s\n"
 STRING_ERROR_ERROR1,         "Errore sconosciuto! Codice errore: 0x%lx\n"
@@ -697,7 +697,7 @@ STRING_PATH_ERROR,                 "CMD: Non nell'ambiente '%s'\n"
 
 STRING_REPLACE_ERROR1, "Parametro non valido - %s\n"
 STRING_REPLACE_ERROR2, "Percorso non trovato - %s\n"
-STRING_REPLACE_ERROR3, "Il nome del file, della cartella o della etichetta di volume è errato.\n"
+STRING_REPLACE_ERROR3, "Il nome del file, della cartella o della etichetta di volume Ã¨ errato.\n"
 STRING_REPLACE_ERROR4, "Combinazione di parametri non valida\n"
 STRING_REPLACE_ERROR5, "Accesso negato - %s\n"
 STRING_REPLACE_ERROR6, "Nessun file trovato - %s\n"
@@ -711,7 +711,7 @@ STRING_DELETE_WIPE,                "resi illeggibili"
 STRING_FOR_ERROR,                  "variabile non valida."
 STRING_SCREEN_COL,                 "valore non valido per colonna"
 STRING_SCREEN_ROW,                 "valore non valido per riga"
-STRING_TIMER_TIME                  "Timer %d è %s: "
+STRING_TIMER_TIME                  "Timer %d Ã¨ %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Link simbolico creato per %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link creato per %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction creato per %s <<===>> %s\n"
@@ -721,6 +721,6 @@ STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break.  Interrompere il file batch?
 STRING_INVALID_OPERAND,            "Operando non valido."
 STRING_EXPECTED_CLOSE_PAREN,       "Attesa una ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Attesa un numero o un nome di variabile."
-STRING_SYNTAX_COMMAND_INCORRECT,   "La sintassi del comando è errata."
+STRING_SYNTAX_COMMAND_INCORRECT,   "La sintassi del comando Ã¨ errata."
 
 END

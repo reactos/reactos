@@ -3,8 +3,8 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 /* String Tables */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CAPTION  "ReactOS ƒZƒbƒgƒAƒbƒv"
-    IDS_TEXT     "‚±‚Ì CD ‚©‚ç’¼Ú ReactOS ‚ðƒCƒ“ƒXƒg[ƒ‹‚·‚é‚±‚Æ‚Í‚Å‚«‚Ü‚¹‚ñ!\n\nReactOS ‚ðƒCƒ“ƒXƒg[ƒ‹‚·‚é‚É‚ÍAƒRƒ“ƒsƒ…[ƒ^‚ðˆê’UI—¹‚³‚¹A‚±‚Ì CD ‚©‚ç‹N“®‚³‚¹‚Ä‚­‚¾‚³‚¢B"
+    IDS_CAPTION  "ReactOS ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—"
+    IDS_TEXT     "ã“ã® CD ã‹ã‚‰ç›´æŽ¥ ReactOS ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ã“ã¨ã¯ã§ãã¾ã›ã‚“!\n\nReactOS ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ã«ã¯ã€ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ã‚’ä¸€æ—¦çµ‚äº†ã•ã›ã€ã“ã® CD ã‹ã‚‰èµ·å‹•ã•ã›ã¦ãã ã•ã„ã€‚"
 END
 
 /* EOF */

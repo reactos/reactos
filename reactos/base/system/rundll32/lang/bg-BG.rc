@@ -1,8 +1,6 @@
-#include "resource.h"
-
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "Неуспешно зареждане на библиотека '%s'"
-    IDS_MissingEntry,   "Липсваща входна точка:%s\nв %s"
+    IDS_DllNotLoaded,   "РќРµСѓСЃРїРµС€РЅРѕ Р·Р°СЂРµР¶РґР°РЅРµ РЅР° Р±РёР±Р»РёРѕС‚РµРєР° '%s'"
+    IDS_MissingEntry,   "Р›РёРїСЃРІР°С‰Р° РІС…РѕРґРЅР° С‚РѕС‡РєР°:%s\nРІ %s"
 END

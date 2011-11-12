@@ -1,8 +1,6 @@
-#include "resource.h"
-
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary a échoué lors du chargement de '%s'"
-    IDS_MissingEntry,   "Point d'entrée manquant:%s\ndans %s"
+    IDS_DllNotLoaded,   "LoadLibrary a Ã©chouÃ© lors du chargement de '%s'"
+    IDS_MissingEntry,   "Point d'entrÃ©e manquant:%s\ndans %s"
 END

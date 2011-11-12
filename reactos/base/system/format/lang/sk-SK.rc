@@ -1,74 +1,72 @@
-/* TRANSLATOR :  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  15-02-2008
  * LAST CHANGE:  10-08-2010
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-/* menovka zvÑzku = volume label, drive = jednotka */
-STRING_HELP,  "Poußitie: %s jednotka: [-FS:systÇm s£borov] [-V:menovka] [-Q] [-A:veñkosú] [-C]\n\n\
-  [jednotka:]         Urüuje jednotku k naform†tovaniu.\n\
-  -FS:systÇm s£borov  Urüuje typ s£borovÇho systÇmu (%s).\n\
-  -V:menovka          Urüuje menovku zvÑzku.\n\
-  -Q                  Vykon†va rÏchle form†tovanie.\n\
-  -A:veñkosú          Prep°Áe predvolen£ veñkosú alokaünej jednotky. Pre vÁeobecnÇ\n\
-                      poußitie s£ dìrazne odpor£üanÇ predvolenÇ nastavenia\n\
+/* menovka zv√§zku = volume label, drive = jednotka */
+STRING_HELP,  "Pou≈æitie: %s jednotka: [-FS:syst√©m s√∫borov] [-V:menovka] [-Q] [-A:veƒækos≈•] [-C]\n\n\
+  [jednotka:]         Urƒçuje jednotku k naform√°tovaniu.\n\
+  -FS:syst√©m s√∫borov  Urƒçuje typ s√∫borov√©ho syst√©mu (%s).\n\
+  -V:menovka          Urƒçuje menovku zv√§zku.\n\
+  -Q                  Vykon√°va r√Ωchle form√°tovanie.\n\
+  -A:veƒækos≈•          Prep√≠≈°e predvolen√∫ veƒækos≈• alokaƒçnej jednotky. Pre v≈°eobecn√©\n\
+                      pou≈æitie s√∫ d√¥razne odpor√∫ƒçan√© predvolen√© nastavenia\n\
                       NTFS podporuje 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                       FAT podporuje 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                      NTFS kompresia nie je podporovan† pre veñkosti alokaünej\n\
+                      NTFS kompresia nie je podporovan√° pre veƒækosti alokaƒçnej\n\
                       jednotky nad 4096.\n\
-  -C                  S£bory vytvorenÇ na novom zvÑzku bud£ automaticky\n\
-                      komprimovanÇ.\n\n"
+  -C                  S√∫bory vytvoren√© na novom zv√§zku bud√∫ automaticky\n\
+                      komprimovan√©.\n\n"
 
-STRING_COMPLETE   "DokonüenÇ na %lu percent.\r"
+STRING_COMPLETE   "Dokonƒçen√© na %lu percent.\r"
 
-STRING_FORMAT_FAIL "FormatEx nebol schopnÏ £speÁne skonüiú.\n\n"
+STRING_FORMAT_FAIL "FormatEx nebol schopn√Ω √∫spe≈°ne skonƒçi≈•.\n\n"
 
-STRING_NO_SUPPORT  "Oper†cia nie je podporovan†"
+STRING_NO_SUPPORT  "Oper√°cia nie je podporovan√°"
 
-STRING_FMIFS_FAIL  "Nepodarilo sa lokalizovaú vstupnÇ body FMIFS.\n\n"
+STRING_FMIFS_FAIL  "Nepodarilo sa lokalizova≈• vstupn√© body FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Nezn†my argument: %s\n"
+STRING_UNKNOW_ARG  "Nezn√°my argument: %s\n"
 
-STRING_DRIVE_PARM  "ChÏba nevyhnutnÏ parameter jednotky.\n\n"
+STRING_DRIVE_PARM  "Ch√Ωba nevyhnutn√Ω parameter jednotky.\n\n"
 
-STRING_ERROR_DRIVE_TYPE  "Nemoßno z°skaú typ jednotky"
+STRING_ERROR_DRIVE_TYPE  "Nemo≈æno z√≠ska≈• typ jednotky"
 
-STRING_INSERT_DISK       "Vloßte nov£ disketu do jednotky %C:\na potom stlaüte ENTER..."
+STRING_INSERT_DISK       "Vlo≈æte nov√∫ disketu do jednotky %C:\na potom stlaƒçte ENTER..."
 
-STRING_NO_VOLUME         "Nemoßno dotazovaú zvÑzok"
+STRING_NO_VOLUME         "Nemo≈æno dotazova≈• zv√§zok"
 
-STRING_NO_VOLUME_SIZE    "Nemoßno dotazovaú veñkosú zvÑzku"
+STRING_NO_VOLUME_SIZE    "Nemo≈æno dotazova≈• veƒækos≈• zv√§zku"
 
-STRING_FILESYSTEM        "Typ systÇmu s£borov je %s.\n"
+STRING_FILESYSTEM        "Typ syst√©mu s√∫borov je %s.\n"
 
-STRING_LABEL_NAME_EDIT  "Vloßte s£üasn£ menovku zvÑzku pre jednotku %C: "
+STRING_LABEL_NAME_EDIT  "Vlo≈æte s√∫ƒçasn√∫ menovku zv√§zku pre jednotku %C: "
 
-STRING_ERROR_LABEL     "Bola zadan† nespr†vna menovka zvÑzku pre t£to jednotku.\n"
+STRING_ERROR_LABEL     "Bola zadan√° nespr√°vna menovka zv√§zku pre t√∫to jednotku.\n"
 
-STRING_YN_FORMAT       "\nUPOZORNENIE: VÊETKY ÈDAJE NA NIE_VYMENITEïNEJ DISKOVEJ\n\
-JEDNOTKE %C: BUDÈ STRATENê!\nPokraüovaú s form†tovan°m (A/N)? "
+STRING_YN_FORMAT       "\nUPOZORNENIE: V≈†ETKY √öDAJE NA NIE_VYMENITEƒΩNEJ DISKOVEJ\n\
+JEDNOTKE %C: BUD√ö STRATEN√â!\nPokraƒçova≈• s form√°tovan√≠m (A/N)? "
 
 STRING_YES_NO_FAQ      "AN"
 
 STRING_VERIFYING       "Overovanie"
 
-STRING_FAST_FMT        "RÏchle form†tovanie"
+STRING_FAST_FMT        "R√Ωchle form√°tovanie"
 
-STRING_CREATE_FSYS     "Vytv†ram Átrukt£ru s£borovÇho systÇmu.\n"
+STRING_CREATE_FSYS     "Vytv√°ram ≈°trukt√∫ru s√∫borov√©ho syst√©mu.\n"
 
-STRING_FMT_COMPLETE    "Form†tovanie dokonüenÇ.\n"
+STRING_FMT_COMPLETE    "Form√°tovanie dokonƒçen√©.\n"
 
-STRING_VOL_COMPRESS    "ZvÑzok nepodporuje kompresiu.\n"
+STRING_VOL_COMPRESS    "Zv√§zok nepodporuje kompresiu.\n"
 
-STRING_ENTER_LABEL     "Menovka zvÑzku (11 znakov, ak nechcete zadaú, stlaüte ENTER)? "
+STRING_ENTER_LABEL     "Menovka zv√§zku (11 znakov, ak nechcete zada≈•, stlaƒçte ENTER)? "
 
-STRING_NO_LABEL        "ZvÑzok sa ned† pomenovaú"
+STRING_NO_LABEL        "Zv√§zok sa ned√° pomenova≈•"
 
-STRING_FREE_SPACE     "\nCelkovÇ diskovÇ miesto: %I64d bajtov.\nDostupnÇ miesto na disku: %I64d bajtov.\n"
+STRING_FREE_SPACE     "\nCelkov√© diskov√© miesto: %I64d bajtov.\nDostupn√© miesto na disku: %I64d bajtov.\n"
 
-STRING_SERIAL_NUMBER   "\nSÇriovÇ ü°slo zvÑzku je %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nS√©riov√© ƒç√≠slo zv√§zku je %04X-%04X\n"
 END

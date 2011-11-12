@@ -4,4 +4,7 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT	"(C) 2011 Lee Schroeder\0"
 #include <reactos/version.rc>
 
+// UTF-8
+#pragma code_page(65001)
 #include "lang/en-US.rc"
+#include "lang/ro-RO.rc"

@@ -31,7 +31,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Installazione Video Driver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Il driver SVGA di VMware(r) Ë stato installato con successo, ora scegliere la risoluzione desiderata:",-1,25,5,225,20
+  LTEXT "Il driver SVGA di VMware(r) √® stato installato con successo, ora scegliere la risoluzione desiderata:",-1,25,5,225,20
   PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -60,7 +60,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Installazione Video Driver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Il driver SVGA di VMware(r) Ë gi‡ installato.\n\nScegliete cosa desiderate fare:",-1,25,5,225,30
+  LTEXT "Il driver SVGA di VMware(r) √® gi√† installato.\n\nScegliete cosa desiderate fare:",-1,25,5,225,30
   PUSHBUTTON "Configurare le impostazioni per lo schermo", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Usare un driver differente", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Disinstallare il driver SVGA di VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
@@ -84,7 +84,7 @@ CAPTION "Installazione Video Driver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "Il setup di ReactOS sta per disinstallare il driver SVGA di VMware(r)!!!\n\n\
-Cliccate 'Fine' per disinstallare il driver o 'Annulla' per lasciarlo come Ë.",-1,25,25,225,85
+Cliccate 'Fine' per disinstallare il driver o 'Annulla' per lasciarlo come √®.",-1,25,25,225,85
 END
 
 STRINGTABLE

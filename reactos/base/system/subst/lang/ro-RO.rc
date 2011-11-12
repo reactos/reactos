@@ -3,25 +3,26 @@
  * FILE:         base/system/subst/lang/ro-RO.rc
  *               ReactOS Project (http://www.reactos.org)
  * AUTHOR:       Magnus Olsen, 2005
- * TRANSLATOR:   Fulea ∏tefan (PM on ReactOS Forum to fulea.stefan)
+ * TRANSLATOR:   Fulea »òtefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:   2011-08-29  initial translation
+ *               2011-11-05  UTF-8 encoding (with diacritics conversion)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INCORRECT_PARAMETER_COUNT "Num«r eronat de parametri - %s\n"
-    IDS_INVALID_PARAMETER "Num«r eronat de parametri - %s\n"
+    IDS_INCORRECT_PARAMETER_COUNT "NumƒÉr eronat de parametri - %s\n"
+    IDS_INVALID_PARAMETER "NumƒÉr eronat de parametri - %s\n"
     IDS_INVALID_PARAMETER2 "Parametru eronat - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Unitatea este deja SUBSTituit«\n"
-    IDS_FAILED_WITH_ERROCODE "OperaÓia a e≠uat. Codul de eroare 0x%x: %s\n"
+    IDS_DRIVE_ALREAD_SUBSTED "Unitatea este deja SUBSTituitƒÉ\n"
+    IDS_FAILED_WITH_ERROCODE "Opera»õia a e»ôuat. Codul de eroare 0x%x: %s\n"
     IDS_USAGE "Substituie un director cu o unitate de stocare.\n\n\
 SUBST [unitate1: [unitate2:]cale]\n\
 SUBST unitate1: /D\n\n\
-  unitate1:        Unitatea virtual« ce va fi asociat« directorului.\n\
-  [unitate:]cale   Unitatea fizic« ≠i calea directorului substituit\n\
-                   cu unitatea virtual«.\n\
-  /D               ≠terge o unitate (virtual«) de substituÓie.\n\n\
-TastaÓi SUBST f«r« argumente pentru a enumera unit«Óile virtuale curente.\n"
+  unitate1:        Unitatea virtualƒÉ ce va fi asociatƒÉ directorului.\n\
+  [unitate:]cale   Unitatea fizicƒÉ »ôi calea directorului substituit\n\
+                   cu unitatea virtualƒÉ.\n\
+  /D               »ôterge o unitate (virtualƒÉ) de substitu»õie.\n\n\
+Tasta»õi SUBST fƒÉrƒÉ argumente pentru a enumera unitƒÉ»õile virtuale curente.\n"
 END

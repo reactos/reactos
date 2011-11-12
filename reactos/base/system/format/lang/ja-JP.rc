@@ -1,75 +1,69 @@
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005
- */
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Žg—p–@: %s ƒhƒ‰ƒCƒu: [-FS:ƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€] [-V:ƒ‰ƒxƒ‹] [-Q] [-A:ƒTƒCƒY] [-C]\n\n\
-  [ƒhƒ‰ƒCƒu:]         ƒtƒH[ƒ}ƒbƒg‚·‚éƒhƒ‰ƒCƒu‚ðŽw’è‚µ‚Ü‚·B\n\
-  -FS:ƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€\n\
-                   ƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€‚ÌŽí—Þ‚ðŽw’è‚µ‚Ü‚· (%s)B\n\
-  -V:ƒ‰ƒxƒ‹        ƒ{ƒŠƒ…[ƒ€ ƒ‰ƒxƒ‹‚ðŽw’è‚µ‚Ü‚·B\n\
-  -Q               ƒNƒCƒbƒN ƒtƒH[ƒ}ƒbƒg‚ðŽÀs‚µ‚Ü‚·B\n\
-  -A:ƒTƒCƒY        ‹K’è‚ÌƒAƒƒP[ƒVƒ‡ƒ“ ƒ†ƒjƒbƒg ƒTƒCƒY‚ðã‘‚«‚µ‚Ü‚·B\n\
-                   ˆê”Ê“I‚É‚Í‹K’è‚ÌÝ’è‚ð—p‚¢‚é‚±‚Æ‚ð‹­‚­„§‚µ‚Ü‚·B\n\
-                   NTFS ‚Í 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K ‚ð\n\
-                   ƒTƒ|[ƒg‚µ‚Ü‚·B\n\
-                   FAT ‚Í 8192, 16K, 32K, 64K, 128K, 256K ‚ð\n\
-                   ƒTƒ|[ƒg‚µ‚Ü‚·B
-                   NTFS ˆ³k‚Í 4096 ‚æ‚è‚à‘å‚«‚¢ƒAƒƒP[ƒVƒ‡ƒ“ ƒ†ƒjƒbƒg\n\
-                   ƒTƒCƒY‚É‚Í‘Î‰ž‚µ‚Ä‚¢‚Ü‚¹‚ñB
-  -C               ƒfƒtƒHƒ‹ƒg‚ÅV‚µ‚¢ƒ{ƒŠƒ…[ƒ€‚Éì¬‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ð\n\
-                   ˆ³k‚µ‚Ü‚·B\n\n"
+STRING_HELP,  "ä½¿ç”¨æ³•: %s ãƒ‰ãƒ©ã‚¤ãƒ–: [-FS:ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ] [-V:ãƒ©ãƒ™ãƒ«] [-Q] [-A:ã‚µã‚¤ã‚º] [-C]\n\n\
+  [ãƒ‰ãƒ©ã‚¤ãƒ–:]         ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆã™ã‚‹ãƒ‰ãƒ©ã‚¤ãƒ–ã‚’æŒ‡å®šã—ã¾ã™ã€‚\n\
+  -FS:ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ \n\
+                   ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã®ç¨®é¡žã‚’æŒ‡å®šã—ã¾ã™ (%s)ã€‚\n\
+  -V:ãƒ©ãƒ™ãƒ«        ãƒœãƒªãƒ¥ãƒ¼ãƒ  ãƒ©ãƒ™ãƒ«ã‚’æŒ‡å®šã—ã¾ã™ã€‚\n\
+  -Q               ã‚¯ã‚¤ãƒƒã‚¯ ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆã‚’å®Ÿè¡Œã—ã¾ã™ã€‚\n\
+  -A:ã‚µã‚¤ã‚º        è¦å®šã®ã‚¢ãƒ­ã‚±ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ¦ãƒ‹ãƒƒãƒˆ ã‚µã‚¤ã‚ºã‚’ä¸Šæ›¸ãã—ã¾ã™ã€‚\n\
+                   ä¸€èˆ¬çš„ã«ã¯è¦å®šã®è¨­å®šã‚’ç”¨ã„ã‚‹ã“ã¨ã‚’å¼·ãæŽ¨å¥¨ã—ã¾ã™ã€‚\n\
+                   NTFS ã¯ 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K ã‚’\n\
+                   ã‚µãƒãƒ¼ãƒˆã—ã¾ã™ã€‚\n\
+                   FAT ã¯ 8192, 16K, 32K, 64K, 128K, 256K ã‚’\n\
+                   ã‚µãƒãƒ¼ãƒˆã—ã¾ã™ã€‚\n\
+                   NTFS åœ§ç¸®ã¯ 4096 ã‚ˆã‚Šã‚‚å¤§ãã„ã‚¢ãƒ­ã‚±ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ¦ãƒ‹ãƒƒãƒˆ\n\
+                   ã‚µã‚¤ã‚ºã«ã¯å¯¾å¿œã—ã¦ã„ã¾ã›ã‚“ã€‚\n\
+  -C               ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§æ–°ã—ã„ãƒœãƒªãƒ¥ãƒ¼ãƒ ã«ä½œæˆã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’\n\
+                   åœ§ç¸®ã—ã¾ã™ã€‚\n\n"
 
-STRING_COMPLETE   "%lu % Š®—¹B\r"
+STRING_COMPLETE   "%lu % å®Œäº†ã€‚\r"
 
-STRING_FORMAT_FAIL "FormatEx ‚Í³í‚ÉI—¹‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B\n\n"
+STRING_FORMAT_FAIL "FormatEx ã¯æ­£å¸¸ã«çµ‚äº†ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚\n\n"
 
-STRING_NO_SUPPORT  "ˆ—‚ªƒTƒ|[ƒg‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB"
+STRING_NO_SUPPORT  "å‡¦ç†ãŒã‚µãƒãƒ¼ãƒˆã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚"
 
-STRING_FMIFS_FAIL  "FMIFS ƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg ‚ðÝ’è‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B\n\n"
+STRING_FMIFS_FAIL  "FMIFS ã‚¨ãƒ³ãƒˆãƒª ãƒã‚¤ãƒ³ãƒˆ ã‚’è¨­å®šã§ãã¾ã›ã‚“ã§ã—ãŸã€‚\n\n"
 
-STRING_UNKNOW_ARG  "•s–¾‚Èˆø”: %s\n"
+STRING_UNKNOW_ARG  "ä¸æ˜Žãªå¼•æ•°: %s\n"
 
-STRING_DRIVE_PARM  "•K—v‚Èƒhƒ‰ƒCƒu‚ðŽw’è‚·‚éƒpƒ‰ƒ[ƒ^‚ª•s‘«‚µ‚Ä‚¢‚Ü‚·B\n\n"
+STRING_DRIVE_PARM  "å¿…è¦ãªãƒ‰ãƒ©ã‚¤ãƒ–ã‚’æŒ‡å®šã™ã‚‹ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒä¸è¶³ã—ã¦ã„ã¾ã™ã€‚\n\n"
 
-STRING_ERROR_DRIVE_TYPE  "ƒhƒ‰ƒCƒu‚ÌŽí—Þ‚ª‚í‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½"
+STRING_ERROR_DRIVE_TYPE  "ãƒ‰ãƒ©ã‚¤ãƒ–ã®ç¨®é¡žãŒã‚ã‹ã‚Šã¾ã›ã‚“ã§ã—ãŸ"
 
-STRING_INSERT_DISK       "%C: ƒhƒ‰ƒCƒu‚ÉV‚µ‚¢ƒtƒƒbƒs[‚ð‘}“ü‚µ‚Ä‚­‚¾‚³‚¢B\n€”õ‚ª‚Å‚«‚½‚çA[Enter] ƒL[‚ð‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢..."
+STRING_INSERT_DISK       "%C: ãƒ‰ãƒ©ã‚¤ãƒ–ã«æ–°ã—ã„ãƒ•ãƒ­ãƒƒãƒ”ãƒ¼ã‚’æŒ¿å…¥ã—ã¦ãã ã•ã„ã€‚\næº–å‚™ãŒã§ããŸã‚‰ã€[Enter] ã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãã ã•ã„..."
 
-STRING_NO_VOLUME         "ƒ{ƒŠƒ…[ƒ€‚Ì–â‚¢‡‚í‚¹‚ª‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½"
+STRING_NO_VOLUME         "ãƒœãƒªãƒ¥ãƒ¼ãƒ ã®å•ã„åˆã‚ã›ãŒã§ãã¾ã›ã‚“ã§ã—ãŸ"
 
-STRING_NO_VOLUME_SIZE    "ƒ{ƒŠƒ…[ƒ€ ƒTƒCƒY‚Ì–â‚¢‡‚í‚¹‚ª‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½"
+STRING_NO_VOLUME_SIZE    "ãƒœãƒªãƒ¥ãƒ¼ãƒ  ã‚µã‚¤ã‚ºã®å•ã„åˆã‚ã›ãŒã§ãã¾ã›ã‚“ã§ã—ãŸ"
 
-STRING_FILESYSTEM        "ƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€‚Ìƒ^ƒCƒv‚Í %s ‚Å‚·B\n"
+STRING_FILESYSTEM        "ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã®ã‚¿ã‚¤ãƒ—ã¯ %s ã§ã™ã€‚\n"
 
-STRING_LABEL_NAME_EDIT  "ƒhƒ‰ƒCƒu D: ‚ÌŒ»Ý‚Ìƒ{ƒŠƒ…[ƒ€ ƒ‰ƒxƒ‹‚ð“ü—Í‚µ‚Ä‚­‚¾‚³‚¢ "
+STRING_LABEL_NAME_EDIT  "ãƒ‰ãƒ©ã‚¤ãƒ– D: ã®ç¾åœ¨ã®ãƒœãƒªãƒ¥ãƒ¼ãƒ  ãƒ©ãƒ™ãƒ«ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ "
 
-STRING_ERROR_LABEL     "‚±‚Ìƒhƒ‰ƒCƒu‚É‘Î‚µ‚ÄA–³Œø‚Èƒ{ƒŠƒ…[ƒ€ ƒ‰ƒxƒ‹‚ª“ü—Í‚³‚ê‚Ü‚µ‚½B\n"
+STRING_ERROR_LABEL     "ã“ã®ãƒ‰ãƒ©ã‚¤ãƒ–ã«å¯¾ã—ã¦ã€ç„¡åŠ¹ãªãƒœãƒªãƒ¥ãƒ¼ãƒ  ãƒ©ãƒ™ãƒ«ãŒå…¥åŠ›ã•ã‚Œã¾ã—ãŸã€‚\n"
 
-STRING_YN_FORMAT       "\nŒx!! ŒÅ’èƒfƒBƒXƒN‚Ì %C: ƒhƒ‰ƒCƒu‚Ì‘S‚Ä‚Ìƒf[ƒ^‚ª\n\
-Ž¸‚í‚ê‚Ü‚·! \nƒtƒH[ƒ}ƒbƒg‚ðŠJŽn‚µ‚Ü‚·‚© (Y/N)? "
+STRING_YN_FORMAT       "\nè­¦å‘Š!! å›ºå®šãƒ‡ã‚£ã‚¹ã‚¯ã® %C: ãƒ‰ãƒ©ã‚¤ãƒ–ã®å…¨ã¦ã®ãƒ‡ãƒ¼ã‚¿ãŒ\n\
+å¤±ã‚ã‚Œã¾ã™! \nãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆã‚’é–‹å§‹ã—ã¾ã™ã‹ (Y/N)? "
 
 STRING_YES_NO_FAQ      "YN"
 
-STRING_VERIFYING       "ƒxƒŠƒtƒ@ƒC‚µ‚Ä‚¢‚Ü‚·"
+STRING_VERIFYING       "ãƒ™ãƒªãƒ•ã‚¡ã‚¤ã—ã¦ã„ã¾ã™"
 
-STRING_FAST_FMT        "ƒNƒCƒbƒNƒtƒH[ƒ}ƒbƒg‚µ‚Ä‚¢‚Ü‚·"
+STRING_FAST_FMT        "ã‚¯ã‚¤ãƒƒã‚¯ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆã—ã¦ã„ã¾ã™"
 
-STRING_CREATE_FSYS     "ƒtƒ@ƒCƒ‹ƒVƒXƒeƒ€‚ð\\¬‚µ‚Ä‚¢‚Ü‚·B\n"
+STRING_CREATE_FSYS     "ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã‚’æ§‹æˆã—ã¦ã„ã¾ã™ã€‚\n"
 
-STRING_FMT_COMPLETE    "ƒtƒH[ƒ}ƒbƒg‚ªŠ®—¹‚µ‚Ü‚µ‚½B\n"
+STRING_FMT_COMPLETE    "ãƒ•ã‚©ãƒ¼ãƒžãƒƒãƒˆãŒå®Œäº†ã—ã¾ã—ãŸã€‚\n"
 
-STRING_VOL_COMPRESS    "ƒ{ƒŠƒ…[ƒ€‚Íˆ³k‚ðƒTƒ|[ƒg‚µ‚Ä‚¢‚Ü‚¹‚ñB\n"
+STRING_VOL_COMPRESS    "ãƒœãƒªãƒ¥ãƒ¼ãƒ ã¯åœ§ç¸®ã‚’ã‚µãƒãƒ¼ãƒˆã—ã¦ã„ã¾ã›ã‚“ã€‚\n"
 
-STRING_ENTER_LABEL     "ƒ{ƒŠƒ…[ƒ€ ƒ‰ƒxƒ‹ (11 •¶ŽšAÝ’è‚µ‚È‚¢ê‡‚Í [Enter] ƒL[)? "
+STRING_ENTER_LABEL     "ãƒœãƒªãƒ¥ãƒ¼ãƒ  ãƒ©ãƒ™ãƒ« (11 æ–‡å­—ã€è¨­å®šã—ãªã„å ´åˆã¯ [Enter] ã‚­ãƒ¼)? "
 
-STRING_NO_LABEL        "ƒ{ƒŠƒ…[ƒ€‚Éƒ‰ƒxƒ‹‚ð‚Â‚¯‚ç‚ê‚Ü‚¹‚ñ‚Å‚µ‚½B"
+STRING_NO_LABEL        "ãƒœãƒªãƒ¥ãƒ¼ãƒ ã«ãƒ©ãƒ™ãƒ«ã‚’ã¤ã‘ã‚‰ã‚Œã¾ã›ã‚“ã§ã—ãŸã€‚"
 
-STRING_FREE_SPACE      "\nƒfƒBƒXƒN—Ìˆæ‚Í‡Œv‚Å %I64d ƒoƒCƒg‚Å‚·B\n‚»‚Ì‚¤‚¿ %I64d ƒoƒCƒg‚ªŽg—p‰Â”\\‚Å‚·B\n"
+STRING_FREE_SPACE      "\nãƒ‡ã‚£ã‚¹ã‚¯é ˜åŸŸã¯åˆè¨ˆã§ %I64d ãƒã‚¤ãƒˆã§ã™ã€‚\nãã®ã†ã¡ %I64d ãƒã‚¤ãƒˆãŒä½¿ç”¨å¯èƒ½ã§ã™ã€‚\n"
 
-STRING_SERIAL_NUMBER   "\nƒ{ƒŠƒ…[ƒ€ ƒVƒŠƒAƒ‹”Ô†‚Í  %04X-%04X ‚Å‚·\n"
+STRING_SERIAL_NUMBER   "\nãƒœãƒªãƒ¥ãƒ¼ãƒ  ã‚·ãƒªã‚¢ãƒ«ç•ªå·ã¯  %04X-%04X ã§ã™\n"
 END

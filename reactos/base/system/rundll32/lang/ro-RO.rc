@@ -1,14 +1,15 @@
 /*
  * ReactOS rundll32
  * Copyright (C) 2009 Petru Dimitriu (Romanian translation)
+ *                    Fulea »òtefan (2011.11.05): UTF-8 encoding, minor changes
  */
 
 #include "resource.h"
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary nu a putut Ónc„rca '%s'"
-    IDS_MissingEntry,   "Lips„ punct de intrare: %s\nÓn %s"
+    IDS_DllNotLoaded,   "LoadLibrary nu a putut √ÆncƒÉrca ‚Äû%s‚Äù"
+    IDS_MissingEntry,   "LipsƒÉ punct de intrare: %s\n√Æn %s"
 END

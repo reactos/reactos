@@ -4,6 +4,7 @@
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-08-25  initial translation
  *                   2011-08-30  technical correction (icon)
+ *                   2011-10-30  minor changes
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -16,7 +17,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre înregistrator audio ReactOS"
+CAPTION "Despre înregistratorul audio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDI_SNDREC32,-1,19,14,21,20

@@ -19,6 +19,7 @@
  *
  * Translated by Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
  * Changelog:	2011-08-23 initial translation
+ *              2011-10-30 minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -93,7 +94,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copie numele cheii",             ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "Găsește\tCtrl+&F",                ID_EDIT_FIND
+        MENUITEM "Găsire...\tCtrl+&F",              ID_EDIT_FIND
         MENUITEM "Găsește &următorul\tF3",          ID_EDIT_FINDNEXT
     END
     POPUP "&Afișare"
@@ -153,7 +154,7 @@ BEGIN
             MENUITEM "Valoare &multi-șir",          ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valoare șir &extensibil",     ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Găsește",                        ID_EDIT_FIND
+        MENUITEM "&Găsire...",                      ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "Șter&ge",                         ID_TREE_DELETE
         MENUITEM "&Redenumește",                    ID_TREE_RENAME
@@ -299,7 +300,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Editorul de registru"
+    IDS_APP_TITLE           "Editor de registru"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
@@ -356,8 +357,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Eroare"
     IDS_WARNING		    "Avertisment"
-    IDS_BAD_KEY             "Nu se poate citi cheia '%s'"
-    IDS_BAD_VALUE           "Nu se poate citi valoarea '%s'"
+    IDS_BAD_KEY             "Nu se poate citi cheia „%s”"
+    IDS_BAD_VALUE           "Nu se poate citi valoarea „%s”"
     IDS_UNSUPPORTED_TYPE    "Nu se poate edita acest tip de cheie (%ld)"
     IDS_TOO_BIG_VALUE       "Valoarea este prea mare (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data de tip REG_MULTI_SZ nu poate conține șiruri goale.\nȘirurile goale au fost eliminate din listă."
@@ -396,7 +397,7 @@ BEGIN
     IDS_FLT_REGFILES_FLT    "*.reg"
     IDS_FLT_REGEDIT4        "Fișiere registru Win9x/NT4 (REGEDIT4)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "Toate tipurile de fișier (*.*)"
+    IDS_FLT_ALLFILES        "Orice fișier (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
@@ -427,7 +428,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_EXPAND                     "&Extinde"
   IDS_COLLAPSE                   "&Restrânge"
-  IDS_GOTO_SUGGESTED_KEY         "&Salt la '%s'"
+  IDS_GOTO_SUGGESTED_KEY         "&Salt la „%s”"
   IDS_FINISHEDFIND               "Căutarea în registru a fost finalizată."
 END
 
@@ -488,7 +489,7 @@ BEGIN
     IDS_BUS_INTERNALPOWERBUS      "Alimentare internă"
     IDS_BUS_PNPISABUS             "PnP-ISA Bus"
     IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Necunoscută"
+    IDS_BUS_UNKNOWNTYPE           "Nespecificat"
 END
 
 /*****************************************************************/
@@ -550,7 +551,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Găsire"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Găsește",IDOK,197,7,50,14
+    DEFPUSHBUTTON   "&Găsește",IDOK,197,7,50,14
     PUSHBUTTON      "Î&nchide",IDCANCEL,197,24,50,14
     GROUPBOX        "Caută în",IDC_STATIC,7,25,42,51
     LTEXT           "Cau&tă conținutul:",IDC_STATIC,7,8,57,10

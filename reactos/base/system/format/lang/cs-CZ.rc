@@ -3,74 +3,68 @@
  * UPDATED:     2008-04-21
  */
 
-#include "resource.h"
-/*
- * Moved all hardcoded strings to En.rc.
- * By Magnus Olsen  2005
- */
-
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "PouûitÌ: %s jednotka: [-FS:filesystem] [-V:jmenovka] [-Q] [-A:velikost] [-C]\n\n\
-  [jednotka:]   UrËÌ jednotku, kter· bude zform·tov·na.\n\
-  -FS:typfs     UrËÌ typ souborovÈho systÈmu (%s).\n\
-  -V:jmenovka   UrËÌ jmenovku svazku.\n\
-  -Q            Provede rychlÈ form·tov·nÌ.\n\
-  -A:velikost   P¯epÌöe implicitnÌ velikost alokaËnÌ jednotky. Pro bÏûnÈ\n\
-                pouûitÌ silnÏ doporuËujeme implicitnÌ hodnoty.\n\
+STRING_HELP,  "Pou≈æit√≠: %s jednotka: [-FS:filesystem] [-V:jmenovka] [-Q] [-A:velikost] [-C]\n\n\
+  [jednotka:]   Ur√®√≠ jednotku, kter√° bude zform√°tov√°na.\n\
+  -FS:typfs     Ur√®√≠ typ souborov√©ho syst√©mu (%s).\n\
+  -V:jmenovka   Ur√®√≠ jmenovku svazku.\n\
+  -Q            Provede rychl√© form√°tov√°n√≠.\n\
+  -A:velikost   P√∏ep√≠≈°e implicitn√≠ velikost aloka√®n√≠ jednotky. Pro b√¨≈æn√©\n\
+                pou≈æit√≠ siln√¨ doporu√®ujeme implicitn√≠ hodnoty.\n\
                 NTFS podporuje 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                 FAT podporuje 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                Pro alokaËnÌ jednotky p¯es 4096 nenÌ podporov·na NTFS komprese.\n\
-  -C            Soubory vytvo¯enÈ na novÈm svazku budou implicitnÏ\n\
-                komprimov·ny.\n\n"
+                Pro aloka√®n√≠ jednotky p√∏es 4096 nen√≠ podporov√°na NTFS komprese.\n\
+  -C            Soubory vytvo√∏en√© na nov√©m svazku budou implicitn√¨\n\
+                komprimov√°ny.\n\n"
 
-STRING_COMPLETE    "%lu procent dokonËeno.\r"
+STRING_COMPLETE    "%lu procent dokon√®eno.\r"
 
-STRING_FORMAT_FAIL "FormatEx nedok·zal ˙spÏönÏ skonËit.\n\n"
+STRING_FORMAT_FAIL "FormatEx nedok√°zal √∫sp√¨≈°n√¨ skon√®it.\n\n"
 
-STRING_NO_SUPPORT  "Operace nenÌ podporov·na"
+STRING_NO_SUPPORT  "Operace nen√≠ podporov√°na"
 
-STRING_FMIFS_FAIL  "Nelze najÌt vstupnÌ body FMIFS.\n\n"
+STRING_FMIFS_FAIL  "Nelze naj√≠t vstupn√≠ body FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Nezn·m˝ agrument: %s\n"
+STRING_UNKNOW_ARG  "Nezn√°m√Ω agrument: %s\n"
 
-STRING_DRIVE_PARM  "Sch·zÌ nutn˝ parametr disku.\n\n"
+STRING_DRIVE_PARM  "Sch√°z√≠ nutn√Ω parametr disku.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Nelze zjistit typ disku"
 
-STRING_INSERT_DISK       "Vloûte novou disketu do jednotky %C:\na potÈ stisknÏte kl·vesu ENTER..."
+STRING_INSERT_DISK       "Vlo≈æte novou disketu do jednotky %C:\na pot√© stiskn√¨te kl√°vesu ENTER..."
 
 STRING_NO_VOLUME         "Nelze zjistit svazek"
 
 STRING_NO_VOLUME_SIZE    "Nelze zjistit velikost svazku"
 
-STRING_FILESYSTEM        "Souborov˝ systÈm je typu %s.\n"
+STRING_FILESYSTEM        "Souborov√Ω syst√©m je typu %s.\n"
 
-STRING_LABEL_NAME_EDIT  "Vloûte nynÏjöÌ jmenovku svazku pro jednotku %C: "
+STRING_LABEL_NAME_EDIT  "Vlo≈æte nyn√¨j≈°√≠ jmenovku svazku pro jednotku %C: "
 
-STRING_ERROR_LABEL     "Pro tuto jednotku byla zad·na nespr·vn· jmenovka svazku.\n"
+STRING_ERROR_LABEL     "Pro tuto jednotku byla zad√°na nespr√°vn√° jmenovka svazku.\n"
 
-STRING_YN_FORMAT       "\nPOZOR, VäECHNA DATA NA PEVN…M DISKU\n\
-NA JEDNOTCE %C: BUDOU ZTRACENA!\nPokroËit k form·tov·nÌ (A/N)? "
+STRING_YN_FORMAT       "\nPOZOR, V≈†ECHNA DATA NA PEVN√âM DISKU\n\
+NA JEDNOTCE %C: BUDOU ZTRACENA!\nPokro√®it k form√°tov√°n√≠ (A/N)? "
 
 STRING_YES_NO_FAQ      "AN"
 
-STRING_VERIFYING       "OvÏ¯uji"
+STRING_VERIFYING       "Ov√¨√∏uji"
 
-STRING_FAST_FMT        "Rychloform·tov·nÌ"
+STRING_FAST_FMT        "Rychloform√°tov√°n√≠"
 
-STRING_CREATE_FSYS     "Vytv·¯Ìm strukturu souborovÈho systÈmu.\n"
+STRING_CREATE_FSYS     "Vytv√°√∏√≠m strukturu souborov√©ho syst√©mu.\n"
 
-STRING_FMT_COMPLETE    "Form·tov·nÌ dokonËeno.\n"
+STRING_FMT_COMPLETE    "Form√°tov√°n√≠ dokon√®eno.\n"
 
 STRING_VOL_COMPRESS    "Svazek nepodporuje kompresi.\n"
 
-STRING_ENTER_LABEL     "Jmenovka svazku (11 znak˘, ENTER pro û·dn˝)? "
+STRING_ENTER_LABEL     "Jmenovka svazku (11 znak√π, ENTER pro ≈æ√°dn√Ω)? "
 
 STRING_NO_LABEL        "Nelze nastavit jmenovku svazku"
 
-STRING_FREE_SPACE      "\nCelkovÈ mÌsto na disku: %I64d bajt˘.\nDostupnÈ mÌsto: %I64d bajt˘.\n"
+STRING_FREE_SPACE      "\nCelkov√© m√≠sto na disku: %I64d bajt√π.\nDostupn√© m√≠sto: %I64d bajt√π.\n"
 
-STRING_SERIAL_NUMBER   "\nSÈriovÈ ËÌslo svazku je %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nS√©riov√© √®√≠slo svazku je %04X-%04X\n"
 END

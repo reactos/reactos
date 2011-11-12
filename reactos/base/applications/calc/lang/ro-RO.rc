@@ -1,10 +1,12 @@
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+//2011.10.17 - Fulea Ștefan: minor changes
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 // Dialog
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Calculatorul ReactOS"
+CAPTION "Minicalculator"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -24,7 +26,7 @@ BEGIN
                     WS_EX_CLIENTEDGE
     PUSHBUTTON      "Sta",IDC_BUTTON_STA,5,60,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Ave",IDC_BUTTON_AVE,5,80,24,18,BS_CENTER | BS_VCENTER | 
+    PUSHBUTTON      "Med",IDC_BUTTON_AVE,5,80,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "Sum",IDC_BUTTON_SUM,5,100,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
@@ -42,7 +44,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "tan",IDC_BUTTON_TAN,38,140,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "(",IDC_BUTTON_LEFTPAR,64,64,24,18,BS_CENTER | 
+    PUSHBUTTON      "(",IDC_BUTTON_LEFTPAR,64,60,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "Exp",IDC_BUTTON_EXP,64,80,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -52,7 +54,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "x^3",IDC_BUTTON_Xe3,64,140,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      ")",IDC_BUTTON_RIGHTPAR,90,64,24,18,BS_CENTER | 
+    PUSHBUTTON      ")",IDC_BUTTON_RIGHTPAR,90,60,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "ln",IDC_BUTTON_LN,90,80,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -122,24 +124,24 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "E",IDC_BUTTON_E,260,140,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Şi",IDC_BUTTON_AND,286,60,24,18,BS_CENTER | BS_VCENTER | 
+    PUSHBUTTON      "Și",IDC_BUTTON_AND,286,60,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Xor",IDC_BUTTON_XOR,286,80,24,18,BS_CENTER | BS_VCENTER | 
+    PUSHBUTTON      "SauX",IDC_BUTTON_XOR,286,80,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Not",IDC_BUTTON_NOT,286,102,24,18,BS_CENTER | 
+    PUSHBUTTON      "Neg",IDC_BUTTON_NOT,286,102,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "Int",IDC_BUTTON_INT,286,121,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "F",IDC_BUTTON_F,286,140,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     GROUPBOX        "",IDC_STATIC,147,14,163,20
-    CONTROL         "Qword",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "64 biți",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
                     NOT WS_VISIBLE,150,21,38,10
-    CONTROL         "Dword",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "32 biți",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
                     NOT WS_VISIBLE,190,21,38,10
-    CONTROL         "Word",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
+    CONTROL         "16 biți",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,230,21,38,10
-    CONTROL         "Octet",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
+    CONTROL         "8 biți",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,270,21,38,10
     CONTROL         "Grade",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,
                     150,21,45,10
@@ -160,7 +162,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Calculatorul ReactOS"
+CAPTION "Minicalculator"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -180,7 +182,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "0",IDC_BUTTON_0,36,105,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "8",IDC_BUTTON_8,62,48,24,18,BS_CENTER | BS_VCENTER | 
+    PUSHBUTTON      "8",IDC_BUTTON_8,62,45,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "5",IDC_BUTTON_5,62,65,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -188,7 +190,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,62,105,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "9",IDC_BUTTON_9,88,48,24,18,BS_CENTER | BS_VCENTER | 
+    PUSHBUTTON      "9",IDC_BUTTON_9,88,45,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "6",IDC_BUTTON_6,88,65,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -204,7 +206,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "+",IDC_BUTTON_ADD,114,105,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Radical",IDC_BUTTON_SQRT,140,45,24,18,BS_CENTER | 
+    PUSHBUTTON      "√",IDC_BUTTON_SQRT,140,45,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "%",IDC_BUTTON_PERCENT,140,65,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -227,11 +229,11 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Calculatorul ReactOS"
+CAPTION "Minicalculator"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON      "Conversie",IDC_BUTTON_CONVERT,35,105,76,17
+    PUSHBUTTON      "Convertește",IDC_BUTTON_CONVERT,35,105,76,17
     COMBOBOX        IDC_COMBO_CATEGORY,5,31,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT           "Categorie:",IDC_STATIC,5,20,56,8
@@ -240,7 +242,7 @@ BEGIN
     LTEXT           "Conversie din:",IDC_STATIC,5,49,56,8
     COMBOBOX        IDC_COMBO_TO,5,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
-    LTEXT           "Conversie in:",IDC_STATIC,5,76,56,8
+    LTEXT           "Conversie în:",IDC_STATIC,5,76,56,8
     CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
@@ -282,7 +284,7 @@ BEGIN
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,86,24,18
     CONTROL         "+",IDC_BUTTON_ADD,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,105,24,18
-    CONTROL         "Radical",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER | 
+    CONTROL         "√",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,48,24,18
     CONTROL         "%",IDC_BUTTON_PERCENT,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,67,24,18
@@ -305,16 +307,18 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Calc"
+CAPTION "Despre Minicalculator"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
+    DEFPUSHBUTTON   "Î&nchide",IDOK,105,148,52,16
     CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
-    LTEXT           "Calculatorul ReactOS",IDC_STATIC,120,12,132,8,
+    LTEXT           "Minicalculator ReactOS",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
     LTEXT           "Versiune ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
-    LTEXT           "Scris de Carlo Bramini",IDC_STATIC,120,32,132,8,
+    LTEXT           "Scris de Carlo Bramini",IDC_STATIC,120,30,132,8,
+                    SS_CENTERIMAGE
+	LTEXT           "Traducere de Petru Dimitriu",IDC_STATIC,120,38,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
     GROUPBOX        "",IDC_STATIC,5,56,256,88
@@ -324,7 +328,7 @@ END
 
 IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Statistics box"
+CAPTION "Statistici"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT | 
@@ -341,89 +345,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
-    POPUP "Editare"
+    POPUP "&Editare"
     BEGIN
-        MENUITEM "Copiere\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Lipire\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "&Copie\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Li&pește\tCTRL-V",               IDM_EDIT_PASTE
     END
-    POPUP "Vizualizare"
+    POPUP "&Afișare"
     BEGIN
-        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Ştiințific",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
+        MENUITEM "Mod s&tandard",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Mod științifi&c",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Con&versie",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Zecimal\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Octal\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binar\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Hexazecimal\tF5",                     IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Zecimal\tF6",                 IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Octal\tF7",                   IDM_VIEW_OCT, CHECKED
+        MENUITEM "&Binar\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grade\tF2",                 IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radiani\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Gradiani\tF4",                IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Grad&e\tF2",                 IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Radiani\tF3",                 IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Gradiani\tF4",                IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grupează c&ifre",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Ajutor"
+    POPUP "&?"
     BEGIN
-        MENUITEM "Topici de ajutor",                 IDM_HELP_HELP
+        MENUITEM "&Manual",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Despre Calculatorul ReactOS",          IDM_HELP_ABOUT
+        MENUITEM "&Despre...",          IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
 BEGIN
-    POPUP "Editare"
+    POPUP "&Editare"
     BEGIN
-        MENUITEM "Copiere\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Lipire\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "&Copie\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Li&pește\tCTRL-V",               IDM_EDIT_PASTE
     END
-    POPUP "Vizualizare"
+    POPUP "&Afișare"
     BEGIN
-        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Ştiințific",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
+        MENUITEM "Mod s&tandard",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Mod științifi&c",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Con&versie",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Hex\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Zecimal\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Octal\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binar\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Hexazecimal\tF5",                     IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Zecimal\tF6",                 IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Octal\tF7",                   IDM_VIEW_OCT, CHECKED
+        MENUITEM "&Binar\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
-        MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
-        MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
-        MENUITEM "Octet\tF4",                    IDM_VIEW_BYTE, CHECKED
+        MENUITEM "&64 biți\tF12",                  IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&32 biți\tF2",                   IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&16 biți\tF3",                    IDM_VIEW_WORD, CHECKED
+        MENUITEM "&8 biți\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grupează c&ifre",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Ajutor"
+    POPUP "&?"
     BEGIN
-        MENUITEM "Topici de ajutor",                 IDM_HELP_HELP
+        MENUITEM "&Manual",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Despre Calculatorul ReactOS",          IDM_HELP_ABOUT
+        MENUITEM "&Despre...",          IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU DISCARDABLE 
 BEGIN
-    POPUP "Editare"
+    POPUP "&Editare"
     BEGIN
-        MENUITEM "Copiere\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Lipire\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "&Copie\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Li&pește\tCTRL-V",               IDM_EDIT_PASTE
     END
-    POPUP "Vizualizare"
+    POPUP "&Afișare"
     BEGIN
-        MENUITEM "Standard",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Ştiințific",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversie",                  IDM_VIEW_CONVERSION
+        MENUITEM "Mod s&tandard",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Mod științifi&c",                  IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Con&versie",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Grupare cifre",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grupează c&ifre",                IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Ajutor"
+    POPUP "&?"
     BEGIN
-        MENUITEM "Topici de ajutor",                 IDM_HELP_HELP
+        MENUITEM "&Manual",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Despre Calculatorul ReactOS",          IDM_HELP_ABOUT
+        MENUITEM "&Despre...",          IDM_HELP_ABOUT
     END
 END
 
@@ -431,9 +435,9 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS Calc este software liber sub licența GNU GPL. \r\n\r\nGăsiți o copie a acestei licențe aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea găsiți traduceri ale aceste licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html\r\nTraducerea în limba română de Petru Dimitriu."
+    IDS_STRING_LICENSE      "Această aplicație este software public; este permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nPuteți consulta traduceri neoficiale ale aceste licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Eroare"
-    IDS_QUICKHELP           "Ajutor rapid"
+    IDS_QUICKHELP           "Manual"
 END
 
 // Types of conversion
@@ -449,7 +453,7 @@ BEGIN
     IDS_CONV_PRESSURE       "Presiune"
     IDS_CONV_TEMPERATURE    "Temperatură"
     IDS_CONV_TIME           "Timp"
-    IDS_CONV_VELOCITY       "Velocitate"
+    IDS_CONV_VELOCITY       "Viteză"
     IDS_CONV_VOLUME         "Volum"
     IDS_CONV_WEIGHT         "Masă"
 END
@@ -487,7 +491,7 @@ BEGIN
     IDS_AREA_SQUARE_FATHOMS         "Fathomi pătrați"
     IDS_AREA_SQUARE_FATHOMS_HUNGARY "Fathomi pătrați (Ungaria)"
     IDS_AREA_SQUARE_FEET            "Picioare pătrate"
-    IDS_AREA_SQUARE_INCHES          "țoli pătrați"
+    IDS_AREA_SQUARE_INCHES          "Țoli pătrați"
     IDS_AREA_SQUARE_KILOMETERS      "Kilometri pătrați"
     IDS_AREA_SQUARE_LAR             "Lar pătrați"
     IDS_AREA_SQUARE_METER           "Metri pătrați"
@@ -513,7 +517,7 @@ END
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Şiling autriac"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Șiling autriac"
     IDS_CURRENCY_BELGIAN_FRANC      "Franc belgian"
     IDS_CURRENCY_CYPRIOT_POUND      "Liră cipriotă"
     IDS_CURRENCY_CZECH_KORUNA       "Coroană cehă"
@@ -538,16 +542,16 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES        "Calorii 15 °C"
     IDS_ENERGY_BTUS                 "Unități termale britanice"
-    IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_EVS                  "Electron-Volți"
+    IDS_ENERGY_ERGS                 "Erg"
+    IDS_ENERGY_EVS                  "Electroni-Volt"
     IDS_ENERGY_FOOT_POUNDS          "Picioare-Livră"
     IDS_ENERGY_IT_CALORIES          "Calorii Tabel Internațional"
     IDS_ENERGY_IT_KILOCALORIES      "Kilocalorii Tabel Internațional"
     IDS_ENERGY_JOULES               "Jouli"
-    IDS_ENERGY_KILOJOULES           "KiloJouli"
-    IDS_ENERGY_KILOWATT_HOURS       "Kilowatt ore"
-    IDS_ENERGY_NUTRITION_CALORIES   "Calorii nutriție"
-    IDS_ENERGY_TH_CALORIES          "Calorie termochimică"
+    IDS_ENERGY_KILOJOULES           "Kilojouli"
+    IDS_ENERGY_KILOWATT_HOURS       "Kilowați-oră"
+    IDS_ENERGY_NUTRITION_CALORIES   "Calorii nutriționale"
+    IDS_ENERGY_TH_CALORIES          "Calorii termochimice"
 END
 
 // TYPES OF LENGTHS
@@ -555,21 +559,21 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Ångströms"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Unități astronomice"
-    IDS_LENGTH_BARLEYCORNS          "Barleycorns"
+    IDS_LENGTH_BARLEYCORNS          "Grani"
     IDS_LENGTH_CENTIMETERS          "Centimetri"
     IDS_LENGTH_CHAINS_UK            "Chains (Marea Britanie)"
     IDS_LENGTH_CHI                  "Chi"
     IDS_LENGTH_CHOU                 "Chou"
     IDS_LENGTH_CHR                  "Chr"
     IDS_LENGTH_CUN                  "Cun"
-    IDS_LENGTH_FATHOMS              "Fathoms"
-    IDS_LENGTH_FATHOMS_HUNGARY      "Fathoms (Ungaria)"
+    IDS_LENGTH_FATHOMS              "Fathom"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Fathom (Ungaria)"
     IDS_LENGTH_FEET                 "Picioare"
-    IDS_LENGTH_FURLONGS             "Furlongs"
+    IDS_LENGTH_FURLONGS             "Furlong"
     IDS_LENGTH_GAN                  "Gan"
-    IDS_LENGTH_HANDS                "Hands"
+    IDS_LENGTH_HANDS                "Palme"
     IDS_LENGTH_HUNH                 "Hunh"
-    IDS_LENGTH_INCHES               "Incii (țoli)"
+    IDS_LENGTH_INCHES               "Țoli"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
     IDS_LENGTH_KABIET               "Kabiet"
@@ -589,7 +593,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japonia)"
     IDS_LENGTH_RI_KOREA             "Ri (Corea)"
-    IDS_LENGTH_RODS                 "Rods"
+    IDS_LENGTH_RODS                 "Rod"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -597,7 +601,7 @@ BEGIN
     IDS_LENGTH_SUN                  "Sun"
     IDS_LENGTH_TSUEN                "Tsuen"
     IDS_LENGTH_VA                   "Va"
-    IDS_LENGTH_YARDS                "Yards"
+    IDS_LENGTH_YARDS                "Yard"
     IDS_LENGTH_YOTE                 "Yote"
     IDS_LENGTH_ZHANG                "Zhang"
 END
@@ -654,7 +658,7 @@ BEGIN
     IDS_VELOCITY_CMS_SECOND         "Centimetri/oră"
     IDS_VELOCITY_FEET_HOUR          "Picioare/oră"
     IDS_VELOCITY_FEET_SECOND        "Picioare/secundă"
-    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometri/ore"
+    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometri/oră"
     IDS_VELOCITY_KNOTS              "Nod"
     IDS_VELOCITY_MACH               "Mach"
     IDS_VELOCITY_METERS_SECOND      "Metri/secundă"
@@ -667,16 +671,16 @@ BEGIN
     IDS_VOLUME_BARRELS_UK           "Barili (Marea Britanie)"
     IDS_VOLUME_BARRELS_OIL          "Barili de petrol"
     IDS_VOLUME_BUN                  "Bun"
-    IDS_VOLUME_BUSHELS_UK           "Bushels (Marea Britanie)"
-    IDS_VOLUME_BUSHELS_US           "Bushels (SUA)"
+    IDS_VOLUME_BUSHELS_UK           "Bushel (Marea Britanie)"
+    IDS_VOLUME_BUSHELS_US           "Bushel (SUA)"
     IDS_VOLUME_CUBIC_CENTIMETERS    "Centrimetri cubi"
     IDS_VOLUME_CUBIC_FEET           "Picioare^3"
-    IDS_VOLUME_CUBIC_INCHES         "țoli cubi"
+    IDS_VOLUME_CUBIC_INCHES         "Țoli cubi"
     IDS_VOLUME_CUBIC_METERS         "Metri cubi"
     IDS_VOLUME_CUBIC_YARDS          "Yarzi cubi"
     IDS_VOLUME_DOE                  "Doe"
-    IDS_VOLUME_FLUID_OUNCES_UK      "Fluid ounces (Marea Britanie)"
-    IDS_VOLUME_FLUID_OUNCES_US      "Fluid ounces (SUA)"
+    IDS_VOLUME_FLUID_OUNCES_UK      "Uncii fluide (Marea Britanie)"
+    IDS_VOLUME_FLUID_OUNCES_US      "Uncii fluide (SUA)"
     IDS_VOLUME_GALLONS_UK           "Galoni (Marea Britanie)"
     IDS_VOLUME_GALLONS_DRY_US       "Galoni, uscat (SUA)"
     IDS_VOLUME_GALLONS_LIQUID_US    "Galoni, lichid (SUA)"
@@ -726,7 +730,7 @@ BEGIN
     IDS_WEIGHT_SALOUNG              "Saloung"
     IDS_WEIGHT_STONES               "Stones"
     IDS_WEIGHT_TAMLUNG              "Tamlung"
-    IDS_WEIGHT_TONNES               "Tonnes"
+    IDS_WEIGHT_TONNES               "Tonni"
     IDS_WEIGHT_TONS_UK              "Tone (Marea Britanie)"
     IDS_WEIGHT_TONS_US              "Tone (SUA)"
 END

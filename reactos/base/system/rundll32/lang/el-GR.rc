@@ -1,11 +1,10 @@
-#include "resource.h"
 /*
- * Gr.rc by Dj Apal®
+ * el-GR.rc by Dj ApalΒ®
  */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary δεν κατάφερε να φορτώσει '%s'"
-    IDS_MissingEntry,   "Λείπει το σημείο εκκίνησης:%s\nIn %s"
+    IDS_DllNotLoaded,   "LoadLibrary Ξ΄ΞµΞ½ ΞΊΞ±Ο„Ξ¬Ο†ΞµΟΞµ Ξ½Ξ± Ο†ΞΏΟΟ„ΟΟƒΞµΞΉ '%s'"
+    IDS_MissingEntry,   "Ξ›ΞµΞ―Ο€ΞµΞΉ Ο„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ ΞµΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ·Ο‚:%s\nIn %s"
 END

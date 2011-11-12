@@ -2,44 +2,44 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изключване на компютъра"
+CAPTION "РР·РєР»СЋС‡РІР°РЅРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Вече е безопасно да изключите компютъра.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Р’РµС‡Рµ Рµ Р±РµР·РѕРїР°СЃРЅРѕ РґР° РёР·РєР»СЋС‡РёС‚Рµ РєРѕРјРїСЋС‚СЉСЂР°.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON "Пре&запуск", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "РџСЂРµ&Р·Р°РїСѓСЃРє", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Неуспех с потребителския интерфейс"
+CAPTION "РќРµСѓСЃРїРµС… СЃ РїРѕС‚СЂРµР±РёС‚РµР»СЃРєРёСЏ РёРЅС‚РµСЂС„РµР№СЃ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "БДС (DLL) за потребителско влизане %s не се зареди.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Свържете се със системният си управник, за да смени БДС (DLL) или да възстанови първоначалната такава.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "Пре&запуск", 1, 80, 91, 68, 14
+    LTEXT "Р‘Р”РЎ (DLL) Р·Р° РїРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ РІР»РёР·Р°РЅРµ %s РЅРµ СЃРµ Р·Р°СЂРµРґРё.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "РЎРІСЉСЂР¶РµС‚Рµ СЃРµ СЃСЉСЃ СЃРёСЃС‚РµРјРЅРёСЏС‚ СЃРё СѓРїСЂР°РІРЅРёРє, Р·Р° РґР° СЃРјРµРЅРё Р‘Р”РЎ (DLL) РёР»Рё РґР° РІСЉР·СЃС‚Р°РЅРѕРІРё РїСЉСЂРІРѕРЅР°С‡Р°Р»РЅР°С‚Р° С‚Р°РєР°РІР°.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "РџСЂРµ&Р·Р°РїСѓСЃРє", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Подготовка на мрежовите свързвания..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Прилагане настройките на компютъра..."
-    IDS_RUNNINGSTARTUPSCRIPTS "Изпълняване на пусковите писания..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "Изпълняване на изключващите писания..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Прилагане на личните ви настройки..."
-    IDS_RUNNINGLOGOFFSCRIPTS "Изпълняване на писанията за вход..."
-    IDS_RUNNINGLOGONSCRIPTS "Изпълняване на писанията за изход..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Зареждане на личните ви настройки..."
-    IDS_CLOSINGNETWORKCONNECTIONS "Затваряне на мрежовите свързвания..."
-    IDS_REACTOSISSHUTTINGDOWN "РеактОС се изключва..."
-    IDS_PREPARETOSTANDBY "Приготвяне за изчакване..."
-    IDS_PREPARETOHIBERNATE "Приготвяне за сън..."
-    IDS_SAVEYOURSETTINGS "Записване на настройките ви..."
-    IDS_REACTOSISSTARTINGUP "РеактОС тръгва..."
+    IDS_PREPARENETWORKCONNECTIONS "РџРѕРґРіРѕС‚РѕРІРєР° РЅР° РјСЂРµР¶РѕРІРёС‚Рµ СЃРІСЉСЂР·РІР°РЅРёСЏ..."
+    IDS_APPLYINGCOMPUTERSETTINGS "РџСЂРёР»Р°РіР°РЅРµ РЅР°СЃС‚СЂРѕР№РєРёС‚Рµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°..."
+    IDS_RUNNINGSTARTUPSCRIPTS "РР·РїСЉР»РЅСЏРІР°РЅРµ РЅР° РїСѓСЃРєРѕРІРёС‚Рµ РїРёСЃР°РЅРёСЏ..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "РР·РїСЉР»РЅСЏРІР°РЅРµ РЅР° РёР·РєР»СЋС‡РІР°С‰РёС‚Рµ РїРёСЃР°РЅРёСЏ..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "РџСЂРёР»Р°РіР°РЅРµ РЅР° Р»РёС‡РЅРёС‚Рµ РІРё РЅР°СЃС‚СЂРѕР№РєРё..."
+    IDS_RUNNINGLOGOFFSCRIPTS "РР·РїСЉР»РЅСЏРІР°РЅРµ РЅР° РїРёСЃР°РЅРёСЏС‚Р° Р·Р° РІС…РѕРґ..."
+    IDS_RUNNINGLOGONSCRIPTS "РР·РїСЉР»РЅСЏРІР°РЅРµ РЅР° РїРёСЃР°РЅРёСЏС‚Р° Р·Р° РёР·С…РѕРґ..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Р—Р°СЂРµР¶РґР°РЅРµ РЅР° Р»РёС‡РЅРёС‚Рµ РІРё РЅР°СЃС‚СЂРѕР№РєРё..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Р—Р°С‚РІР°СЂСЏРЅРµ РЅР° РјСЂРµР¶РѕРІРёС‚Рµ СЃРІСЉСЂР·РІР°РЅРёСЏ..."
+    IDS_REACTOSISSHUTTINGDOWN "Р РµР°РєС‚РћРЎ СЃРµ РёР·РєР»СЋС‡РІР°..."
+    IDS_PREPARETOSTANDBY "РџСЂРёРіРѕС‚РІСЏРЅРµ Р·Р° РёР·С‡Р°РєРІР°РЅРµ..."
+    IDS_PREPARETOHIBERNATE "РџСЂРёРіРѕС‚РІСЏРЅРµ Р·Р° СЃСЉРЅ..."
+    IDS_SAVEYOURSETTINGS "Р—Р°РїРёСЃРІР°РЅРµ РЅР° РЅР°СЃС‚СЂРѕР№РєРёС‚Рµ РІРё..."
+    IDS_REACTOSISSTARTINGUP "Р РµР°РєС‚РћРЎ С‚СЂСЉРіРІР°..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Уьинлогон не успя да задейства потребителската обвивка!"
+    IDS_FAILEDACTIVATEUSERSHELL "РЈСЊРёРЅР»РѕРіРѕРЅ РЅРµ СѓСЃРїСЏ РґР° Р·Р°РґРµР№СЃС‚РІР° РїРѕС‚СЂРµР±РёС‚РµР»СЃРєР°С‚Р° РѕР±РІРёРІРєР°!"
 END
 
