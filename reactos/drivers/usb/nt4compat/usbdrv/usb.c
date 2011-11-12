@@ -982,31 +982,17 @@ usb_count_list(PLIST_HEAD list_head)
 __inline BOOLEAN
 usb_query_clicks(PLARGE_INTEGER clicks)
 {
-    BOOLEAN ret_val;
+    BOOLEAN ret_val = FALSE;
+    int cpu_info[4];
     //so we have to use intel's cpu???
-    ret_val = FALSE;
 
-#ifdef _MSC_VER
-    __asm
+#if defined(_M_IX86) || defined(_M_AMD64)
+    __cpuid(cpu_info, 1);
+    if (cpu_info[3] & 0x10) // Time Stamp Counter (TSC) bit
     {
-        push ebx;
-        push eax;
-        mov eax, 1;             //read version
-        cpuid;
-        test edx, 0x10;         //timer stamp
-        jz LBL_OUT;
-        // cpuid                                //serialization
-        rdtsc;
-        mov ebx, dword ptr[clicks];
-        mov dword ptr[ebx], eax;
-        mov dword ptr[ebx + 4], edx;
-        mov dword ptr[ret_val], TRUE;
-LBL_OUT:
-        pop eax;
-        pop ebx;
+        clicks->QuadPart = __rdtsc();
+        ret_val = TRUE;
     }
-#else
-    ret_val = FALSE;
 #endif
     return ret_val;
 }
