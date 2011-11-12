@@ -44,7 +44,7 @@ TestFastMutex(
     ExReleaseFastMutex(Mutex);
     CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
 
-#ifdef _M_X86
+#ifdef _M_IX86
     /* ntoskrnl's fastcall version */
     ExiAcquireFastMutex(Mutex);
     CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);

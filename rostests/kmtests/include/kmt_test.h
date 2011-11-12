@@ -83,6 +83,7 @@ typedef struct
 extern BOOLEAN KmtIsCheckedBuild;
 extern BOOLEAN KmtIsMultiProcessorBuild;
 extern PCSTR KmtMajorFunctionNames[];
+extern PDRIVER_OBJECT KmtDriverObject;
 
 VOID KmtSetIrql(IN KIRQL NewIrql);
 BOOLEAN KmtAreInterruptsEnabled(VOID);

@@ -96,7 +96,7 @@ START_TEST(KeIrql)
     /* on x86, you can raise to _any_ possible KIRQL value */
     /* on x64, anything with more than the least significant 4 bits set bugchecked, last time I tried */
     /* TODO: other platforms? */
-#if defined _M_X86
+#if defined _M_IX86
     for (Irql = PASSIVE_LEVEL; Irql <= (KIRQL)-1; ++Irql)
     {
         DPRINT("Raising to %u\n", Irql);
@@ -105,7 +105,7 @@ START_TEST(KeIrql)
         KeLowerIrql(Irql2);
         ok_irql(PrevIrql);
     }
-#endif /* defined _M_X86 */
+#endif /* defined _M_IX86 */
 
     /* test KeRaiseIrqlToDpcLevel */
     ok_irql(PASSIVE_LEVEL);

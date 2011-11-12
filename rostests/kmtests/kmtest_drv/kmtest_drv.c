@@ -28,6 +28,7 @@ static DRIVER_DISPATCH DriverIoControl;
 
 /* Globals */
 static PDEVICE_OBJECT MainDeviceObject;
+PDRIVER_OBJECT KmtDriverObject = NULL;
 
 /* Entry */
 /**
@@ -62,6 +63,7 @@ DriverEntry(
     Prcb = KeGetCurrentPrcb();
     KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
     KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
+    KmtDriverObject = DriverObject;
 
     RtlInitUnicodeString(&DeviceName, KMTEST_DEVICE_DRIVER_PATH);
     Status = IoCreateDevice(DriverObject, sizeof(KMT_DEVICE_EXTENSION),
