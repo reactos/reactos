@@ -646,6 +646,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     return ERROR_INVALID_PARAMETER;
 }
 
+
 DWORD
 ScmCanonDriverImagePath(DWORD dwStartType,
                         const wchar_t *lpServiceName,
@@ -1178,6 +1179,10 @@ DWORD RControlService(
     {
         dwControlsAccepted = lpService->Status.dwControlsAccepted;
         dwCurrentState = lpService->Status.dwCurrentState;
+
+        /* Return ERROR_SERVICE_NOT_ACTIVE if the service has not been started */
+        if (lpService->lpImage == NULL || dwCurrentState == SERVICE_STOPPED)
+            return ERROR_SERVICE_NOT_ACTIVE;
 
         /* Check the current state before sending a control request */
         switch (dwCurrentState)
@@ -2064,9 +2069,10 @@ DWORD RCreateServiceW(
         /* Unlock the service database */
         ScmUnlockDatabase();
 
-        /* check if it is marked for deletion */
+        /* Check if it is marked for deletion */
         if (lpService->bDeleted)
             return ERROR_SERVICE_MARKED_FOR_DELETE;
+
         /* Return Error exist */
         return ERROR_SERVICE_EXISTS;
     }
