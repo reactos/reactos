@@ -1095,7 +1095,6 @@ DWORD RControlService(
         return ERROR_INVALID_HANDLE;
     }
 
-
     /* Check the service entry point */
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
@@ -1131,6 +1130,11 @@ DWORD RControlService(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
         return ERROR_ACCESS_DENIED;
+
+    /* Return the current service status information */
+    RtlCopyMemory(lpServiceStatus,
+                  &lpService->Status,
+                  sizeof(SERVICE_STATUS));
 
     if (dwControl == SERVICE_CONTROL_STOP)
     {
