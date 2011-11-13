@@ -614,9 +614,12 @@ HalGetAdapter(IN PDEVICE_DESCRIPTION DeviceDescription,
      * Also note that we check for channel number since there are only 8 DMA
      * channels on ISA, so any request above this requires new adapter.
      */
-    if ((DeviceDescription->InterfaceType == Isa) || !(DeviceDescription->Master))
+    if (((DeviceDescription->InterfaceType == Eisa) ||
+         (DeviceDescription->InterfaceType == Isa)) || !(DeviceDescription->Master))
     {
-        if ((DeviceDescription->InterfaceType == Isa) && (DeviceDescription->DmaChannel >= 8))
+        if (((DeviceDescription->InterfaceType == Isa) ||
+             (DeviceDescription->InterfaceType == Eisa)) &&
+            (DeviceDescription->DmaChannel >= 8))
         {
             EisaAdapter = FALSE;
         }
@@ -1208,7 +1211,7 @@ HalpGrowMapBufferWorker(IN PVOID DeferredContext)
      */
     KeWaitForSingleObject(&HalpDmaLock, Executive, KernelMode, FALSE, NULL);
     Succeeded = HalpGrowMapBuffers(WorkItem->AdapterObject->MasterAdapter,
-                                   WorkItem->NumberOfMapRegisters);
+                                   WorkItem->NumberOfMapRegisters << PAGE_SHIFT);
     KeSetEvent(&HalpDmaLock, 0, 0);
 
     if (Succeeded)
