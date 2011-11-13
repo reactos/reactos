@@ -5304,13 +5304,16 @@ DWORD REnumServicesStatusExW(
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
 
-    if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
+    if ((dwServiceType == 0) ||
+        ((dwServiceType & ~(SERVICE_DRIVER | SERVICE_WIN32)) != 0))
     {
         DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
+    if ((dwServiceState != SERVICE_ACTIVE) &&
+        (dwServiceState != SERVICE_INACTIVE) &&
+        (dwServiceState != SERVICE_STATE_ALL))
     {
         DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;
