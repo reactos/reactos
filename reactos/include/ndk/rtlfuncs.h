@@ -3555,8 +3555,23 @@ RtlEnlargedUnsignedMultiply(
     return Product;
 }
 
-#endif
+#if defined(_AMD64_) || defined(_IA64_)
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlExtendedLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN ULONG Divisor,
+  OUT PULONG Remainder OPTIONAL)
+{
+  LARGE_INTEGER ret;
+  ret.QuadPart = (ULONG64)Dividend.QuadPart / Divisor;
+  if (Remainder)
+    *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
+  return ret;
+}
 
+#else
 NTSYSAPI
 LARGE_INTEGER
 NTAPI
@@ -3565,6 +3580,11 @@ RtlExtendedLargeIntegerDivide(
     IN ULONG Divisor,
     OUT PULONG Remainder OPTIONAL
 );
+
+#endif /* defined(_AMD64_) || defined(_IA64_) */
+
+#endif
+
 
 NTSYSAPI
 ULONG
