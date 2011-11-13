@@ -39,8 +39,8 @@ BEGIN
         BEGIN
             MENUITEM "&Ovládací panely", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Zabezpeèení...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Síová pøipojení", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Zabezpečení...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Síťová připojení", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Tiskárny a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Hlavní panel a nabídka Start", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
@@ -48,13 +48,13 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Nápovìd&a a odborná pomoc", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Nápověd&a a odborná pomoc", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Spustit...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&ynchronizovat", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "Odh&lásit %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "Odpoj&it...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Odpo&jit poèítaè z doku", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Odpo&jit počítač z doku", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "&Vypnout...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
@@ -70,8 +70,8 @@ BEGIN
     AUTOCHECKBOX    "Uzamknout &hlavní panel", IDC_TASKBARPROP_LOCK, 13,45,200,10
     AUTOCHECKBOX    "&Automaticky sktývat hlavní panel", IDC_TASKBARPROP_HIDE, 13,58,200,10
     AUTOCHECKBOX    "&Zobrazit hlavní panel nad ostatními okny", IDC_TASKBARPROP_ONTOP, 13,71,200,10
-    AUTOCHECKBOX    "&Seskupovat podobná tlaèítka hlavního panelu", IDC_TASKBARPROP_GROUP, 13,84,200,10
-    AUTOCHECKBOX    "Zobrazit &panel Snadné spuštìní", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "&Seskupovat podobná tlačítka hlavního panelu", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "Zobrazit &panel Snadné spuštění", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
     AUTOCHECKBOX    "Zobrazit &náhledy oken", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
@@ -81,14 +81,14 @@ CAPTION "Start Menu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     AUTORADIOBUTTON "Start &menu", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "Tento styl menu umožòuje snadný pøístup ke složkám, oblíbeným programùm a vyhledávání.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    LTEXT           "Tento styl menu umožňuje snadný přístup ke složkám, oblíbeným programům a vyhledávání.", IDC_STATIC, 20,17,150,24, WS_DISABLED
     PUSHBUTTON      "&Upravit...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
     AUTORADIOBUTTON "&Klasické Start menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "Tento styl menu umožòuje používat klasický vzhled a funkce",-1,20,57,150,24, WS_DISABLED
+    LTEXT           "Tento styl menu umožňuje používat klasický vzhled a funkce",-1,20,57,150,24, WS_DISABLED
     PUSHBUTTON      "Up&ravit...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
     GROUPBOX        "Soukromí",IDC_STATIC, 7,100,238,42
-    AUTOCHECKBOX    "Uložit a zobrazit seznam naposledy otevøených &souborù", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
-    AUTOCHECKBOX    "Uložit a zobrazit seznam naposledy spuštìných &programù",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Uložit a zobrazit seznam naposledy otevřených &souborů", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Uložit a zobrazit seznam naposledy spuštěných &programů",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
@@ -98,24 +98,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
     GROUPBOX        "Ikony", IDC_STATIC, 6,33,240,58, WS_DISABLED
-    LTEXT           "Pøehledost oznamovací oblasti lze zachovat pomocí skrytí nepoužívaných ikon.", IDC_STATIC, 13,48,223,16, WS_DISABLED
+    LTEXT           "Přehledost oznamovací oblasti lze zachovat pomocí skrytí nepoužívaných ikon.", IDC_STATIC, 13,48,223,16, WS_DISABLED
     AUTOCHECKBOX    "Sk&rýt neaktivní ikony", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
     PUSHBUTTON      "&Upravit...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
     GROUPBOX        "Systémové ikony", IDC_STATIC, 6,97,240,84, WS_DISABLED
     LTEXT           "Vyberte systémové ikony, které se mají vždy zobrazit.", IDC_STATIC, 13,112,223,16, WS_DISABLED
     AUTOCHECKBOX    "&Hodiny", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
     AUTOCHECKBOX    "H&lasitost", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
-    AUTOCHECKBOX    "S&í", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
+    AUTOCHECKBOX    "S&íť", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
     AUTOCHECKBOX    "&Napájení", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
 
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Panely nástrojù"
+CAPTION "Panely nástrojů"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Vyberte panely nástrojù, které mají být pøídány na hlavní panel.", IDC_STATIC, 7,7,223,12, WS_DISABLED
+    LTEXT           "Vyberte panely nástrojů, které mají být přídány na hlavní panel.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
 END
 
@@ -124,7 +124,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_START             "Start"
     IDS_PROPERTIES        "Vl&astnosti"
-    IDS_OPEN_ALL_USERS    "Ote&vøít složku All Users"
+    IDS_OPEN_ALL_USERS    "Ote&vřít složku All Users"
     IDS_EXPLORE_ALL_USERS "Pro&cházet složku All Users"
     IDS_STARTUP_ERROR     "Systém nemohl spustit proces Explorer, protože registry jsou poškozené nebo nedostupné."
 END

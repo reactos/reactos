@@ -11,9 +11,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Vítejte v prùvodci instalace systému ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Systém ReactOS zatím nelze nainstalovat pøímo z tohoto CD! Pro instalaci restartuje poèítaè z tohoto CD.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Klepnutím na Dokonèit ukonèíte instalaci.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Vítejte v průvodci instalace systému ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Systém ReactOS zatím nelze nainstalovat přímo z tohoto CD! Pro instalaci restartuje počítač z tohoto CD.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Klepnutím na Dokončit ukončíte instalaci.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -24,7 +24,7 @@ BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
     CONTROL "Jazyk instalace:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
     CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
-    CONTROL "Klávesnice èi metoda zadávání:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
+    CONTROL "Klávesnice či metoda zadávání:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
     CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
     LTEXT "Po klepnutí na Další bude možné zvolit typ instalace.", IDC_STATIC, 10, 180 ,297, 10
 END
@@ -37,7 +37,7 @@ BEGIN
     CONTROL "Typ instalace", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     CONTROL "Nainstalovat systém ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
     CONTROL "Opravit nebo aktualizovat již nainstalovaný systém ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT "Po klepnutí na Další bude možné nastavit zaøízení.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Po klepnutí na Další bude možné nastavit zařízení.", IDC_STATIC, 10, 180 ,297, 10
 END
 
 IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -45,14 +45,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Nastavení zaøízení", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Poèítaè:", IDC_STATIC, 20,15, 80, 10
+    CONTROL "Nastavení zařízení", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Počítač:", IDC_STATIC, 20,15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
     LTEXT "Obrazovka:", IDC_STATIC, 20,35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
     LTEXT "Klávesnice:", IDC_STATIC, 20,55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
-    LTEXT "Po klepnutí na Další bude možné nastavit instalaèní zaøízení.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Po klepnutí na Další bude možné nastavit instalační zařízení.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -62,20 +62,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Oddíl, do kterého bude systém ReactOS nainstalován", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Vytvoøit", IDC_PARTCREATE, 20,155,50,15
+    PUSHBUTTON "&Vytvořit", IDC_PARTCREATE, 20,155,50,15
     PUSHBUTTON "&Smazat", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON "&Ovladaè", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
-    PUSHBUTTON "&Pokroèilé volby...", IDC_PARTMOREOPTS, 218,155,80,15
+    PUSHBUTTON "&Ovladač", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "&Pokročilé volby...", IDC_PARTMOREOPTS, 218,155,80,15
     LTEXT "Po klepnutí na Další bude možné zkontrolovat všechna nastavení.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Vytvoøit oddíl"
+CAPTION "Vytvořit oddíl"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-    CONTROL "Vytvoøit a naformátovat oddíl",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    CONTROL "Vytvořit a naformátovat oddíl",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
     LTEXT "Velikost:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
     LTEXT "GB",IDC_UNIT, 117,24,14,9
@@ -87,17 +87,17 @@ END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 116
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Pokroèilá nastavení oddílu"
+CAPTION "Pokročilá nastavení oddílu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Instalaèní složka", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
+    CONTROL "Instalační složka", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
     EDITTEXT IDC_PATH, 10,11,278,13, WS_VISIBLE
 
-    CONTROL "Instalace zavadìèe", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
+    CONTROL "Instalace zavaděče", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
 
-    CONTROL "Nainstalovat zavadìè na pevný disk (MBR a VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Nainstalovat zavadìè na pevný disk (jen VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
-    CONTROL "Zavadìè neinstalovat", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
+    CONTROL "Nainstalovat zavaděč na pevný disk (MBR a VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Nainstalovat zavaděč na pevný disk (jen VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
+    CONTROL "Zavaděč neinstalovat", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
     PUSHBUTTON "&OK", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Storno", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
 END
@@ -108,7 +108,7 @@ CAPTION "Instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Shrnutí instalace", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Klepnutím na Další zahájíte instalaèní proces.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Klepnutím na Další zahájíte instalační proces.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -117,7 +117,7 @@ CAPTION "Instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Akce instalace", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Instalace souborù...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Instalace souborů...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -125,34 +125,34 @@ END
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Dokonèení instalace systému ReactOS"
+CAPTION "Dokončení instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Dokonèení první èásti instalace systému ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "První èást instalace systému ReactOS byla úspìšnì dokonèena.", IDC_STATIC, 20, 50, 277, 10
+    CONTROL "Dokončení první části instalace systému ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "První část instalace systému ReactOS byla úspěšně dokončena.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "Po klepnutí na Dokonèit bude poèítaè restartován.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "Po klepnutí na Dokončit bude počítač restartován.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Pokud je v mechanice instalaèní CD, vyjmìte jej. Poté kliknutím na Dokonèit restartujte poèítaè.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Pokud je v mechanice instalační CD, vyjměte jej. Poté kliknutím na Dokončit restartujte počítač.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE       "Výbìr jazyka"
-    IDS_LANGSUBTITLE    "Volba jazyka, který bude použit pøi instalaci a ve výsledném systému."
-    IDS_TYPETITLE       "Vítejte v prùvodci instalace systému ReactOS"
+    IDS_LANGTITLE       "Výběr jazyka"
+    IDS_LANGSUBTITLE    "Volba jazyka, který bude použit při instalaci a ve výsledném systému."
+    IDS_TYPETITLE       "Vítejte v průvodci instalace systému ReactOS"
     IDS_TYPESUBTITLE    "Volba typu instalace."
-    IDS_DEVICETITLE     "Nastavení základních zaøízení"
+    IDS_DEVICETITLE     "Nastavení základních zařízení"
     IDS_DEVICESUBTITLE  "Volba nastavení obrazovky a klávesnice."
-    IDS_DRIVETITLE      "Nastavení instalaèního oddílu a systémové složky"
-    IDS_DRIVESUBTITLE   "Pøíprava instalaèního oddílu, systémové složky a zavadìèe."
-    IDS_PROCESSTITLE    "Pøíprava oddílu, kopírování souborù a nastavení systému"
-    IDS_PROCESSSUBTITLE "Vytvoøení a naformátování oddílu, kopírování souborù, instalace a nastavení zavadìèe"
-    IDS_RESTARTTITLE    "První èást instalace dokonèena"
-    IDS_RESTARTSUBTITLE "První èást instalace byla dokonèena, po restartování poèítaèe se bude pokraèovat druhou èástí"
+    IDS_DRIVETITLE      "Nastavení instalačního oddílu a systémové složky"
+    IDS_DRIVESUBTITLE   "Příprava instalačního oddílu, systémové složky a zavaděče."
+    IDS_PROCESSTITLE    "Příprava oddílu, kopírování souborů a nastavení systému"
+    IDS_PROCESSSUBTITLE "Vytvoření a naformátování oddílu, kopírování souborů, instalace a nastavení zavaděče"
+    IDS_RESTARTTITLE    "První část instalace dokončena"
+    IDS_RESTARTSUBTITLE "První část instalace byla dokončena, po restartování počítače se bude pokračovat druhou částí"
     IDS_SUMMARYTITLE    "Shrnutí instalace"
-    IDS_SUMMARYSUBTITLE "Výpis voleb instalace k ovìøení pøed tím, než zaène instalace"
-    IDS_ABORTSETUP      "Systém ReactOS není na tomto poèítaèi kompletnì nainstalovaný. Pokud nyní ukonèíte instalaci, bude ji pro nainstalování systému ReactOS nutné provést znova. Opravdu ukonèit?"
-    IDS_ABORTSETUP2     "Pøerušit instalaci?"
+    IDS_SUMMARYSUBTITLE "Výpis voleb instalace k ověření před tím, než začne instalace"
+    IDS_ABORTSETUP      "Systém ReactOS není na tomto počítači kompletně nainstalovaný. Pokud nyní ukončíte instalaci, bude ji pro nainstalování systému ReactOS nutné provést znova. Opravdu ukončit?"
+    IDS_ABORTSETUP2     "Přerušit instalaci?"
 END
 /* EOF */

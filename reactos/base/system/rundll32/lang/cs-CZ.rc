@@ -6,6 +6,6 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary se nepodaøilo naèíst '%s'"
+    IDS_DllNotLoaded,   "LoadLibrary se nepodařilo načíst '%s'"
     IDS_MissingEntry,   "Chybí vstupní bod:%s\nV %s"
 END
