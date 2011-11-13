@@ -831,6 +831,7 @@ EXPORT
 NdisMReadDmaCounter(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
+  /* NOTE: Unlike NdisMGetDmaAlignment() below, this is a handle to the DMA block */
   PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
   PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
 
@@ -846,10 +847,11 @@ NdisMReadDmaCounter(
 ULONG
 EXPORT
 NdisMGetDmaAlignment(
-    IN  NDIS_HANDLE MiniportDmaHandle)
+    IN  NDIS_HANDLE MiniportAdapterHandle)
 {
-  PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
-  PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
+  /* NOTE: Unlike NdisMReadDmaCounter() above, this is a handle to the NDIS miniport block */
+  PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+  PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)Adapter->NdisMiniportBlock.SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
