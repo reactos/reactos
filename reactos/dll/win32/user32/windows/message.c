@@ -2728,7 +2728,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
   if (pci->CallbackWnd.hWnd == UMMsg.hwnd)
      pWnd  = pci->CallbackWnd.pWnd;
-    
+
   CallbackArgs->Result = IntCallWindowProcW( CallbackArgs->IsAnsiProc,
                                              CallbackArgs->Proc,
                                              pWnd,
@@ -3059,16 +3059,13 @@ IntBroadcastSystemMessage(
 
     if (dwflags & BSF_LUID) parm.luid = pBSMInfo->luid;
 
-    if (*lpdwRecipients & BSM_APPLICATIONS)
-    {
-        ret = NtUserMessageCall(GetDesktopWindow(),
-                                         uiMessage,
-                                            wParam,
-                                            lParam,
-                                  (ULONG_PTR)&parm,
-                       FNID_BROADCASTSYSTEMMESSAGE,
-                                              Ansi);
-    }
+    ret = NtUserMessageCall(GetDesktopWindow(),
+                                     uiMessage,
+                                        wParam,
+                                        lParam,
+                              (ULONG_PTR)&parm,
+                   FNID_BROADCASTSYSTEMMESSAGE,
+                                          Ansi);
 
     if (!ret)
     {

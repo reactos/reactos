@@ -2066,7 +2066,7 @@ NtUserMessageCall( HWND hWnd,
         break;
     case FNID_BROADCASTSYSTEMMESSAGE:
         {
-            BROADCASTPARM parm;
+            BROADCASTPARM parm, *retparam;
             DWORD_PTR RetVal = 0;
 
             if (ResultInfo)
@@ -2086,53 +2086,286 @@ NtUserMessageCall( HWND hWnd,
                 break;
 
             if ( parm.recipients & BSM_ALLDESKTOPS ||
-                    parm.recipients == BSM_ALLCOMPONENTS )
+                 parm.recipients == BSM_ALLCOMPONENTS )
             {
+               PLIST_ENTRY DesktopEntry;
+               PDESKTOP rpdesk;
+               HWND *List, hwndDenied = NULL;
+               HDESK hDesk = NULL;
+               PWND pwnd, pwndDesk;
+               ULONG i;
+               UINT fuFlags;
+
+               for (DesktopEntry = InputWindowStation->DesktopListHead.Flink;
+                    DesktopEntry != &InputWindowStation->DesktopListHead;
+                    DesktopEntry = DesktopEntry->Flink)
+               {
+                  rpdesk = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
+                  pwndDesk = rpdesk->pDeskInfo->spwnd;
+                  List = IntWinListChildren(pwndDesk);
+
+                  if (parm.flags & BSF_QUERY)
+                  {
+                     if (List != NULL)
+                     {
+                        if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
+                        {
+                           fuFlags = SMTO_ABORTIFHUNG;
+                        }
+                        else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
+                        {
+                           fuFlags = SMTO_NOTIMEOUTIFNOTHUNG;
+                        }
+                        else
+                        {
+                           fuFlags = SMTO_NORMAL;
+                        }
+                        co_IntSendMessageTimeout( UserHMGetHandle(pwndDesk),
+                                                  Msg,
+                                                  wParam,
+                                                  lParam,
+                                                  fuFlags,
+                                                  2000,
+                                                 &RetVal);
+                        Ret = TRUE;
+                        for (i = 0; List[i]; i++)
+                        {
+                           pwnd = UserGetWindowObject(List[i]);
+                           if (!pwnd) continue;
+
+                           if ( pwnd->fnid == FNID_MENU ||
+                                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                              continue;
+
+                           if ( parm.flags & BSF_IGNORECURRENTTASK )
+                           {
+                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                                 continue;
+                           }
+                           co_IntSendMessageTimeout( List[i],
+                                                     Msg,
+                                                     wParam,
+                                                     lParam,
+                                                     fuFlags,
+                                                     2000,
+                                                    &RetVal);
+
+                           if (!RetVal && EngGetLastError() == ERROR_TIMEOUT)
+                           {
+                              if (!(parm.flags & BSF_FORCEIFHUNG))
+                                 Ret = FALSE;
+                           }
+                           if (RetVal == BROADCAST_QUERY_DENY)
+                           {
+                              hwndDenied = List[i];
+                              hDesk = UserHMGetHandle(pwndDesk);
+                              Ret = FALSE;
+                           }
+                        }
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                        _SEH2_TRY
+                        {
+                           retparam = (PBROADCASTPARM) ResultInfo;
+                           retparam->hDesk = hDesk;
+                           retparam->hWnd = hwndDenied;
+                        }
+                        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                        {
+                           _SEH2_YIELD(break);
+                        }
+                        _SEH2_END;
+                        if (!Ret) break; // Have a hit! Let everyone know!
+                     }
+                  }
+                  else if (parm.flags & BSF_POSTMESSAGE)
+                  {
+                     if (List != NULL)
+                     {
+                        UserPostMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                        for (i = 0; List[i]; i++)
+                        {
+                           pwnd = UserGetWindowObject(List[i]);
+                           if (!pwnd) continue;
+
+                           if ( pwnd->fnid == FNID_MENU ||
+                                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                              continue;
+
+                           if ( parm.flags & BSF_IGNORECURRENTTASK )
+                           {
+                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                                 continue;
+                           }
+                           UserPostMessage(List[i], Msg, wParam, lParam);
+                        }
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     }
+                     Ret = TRUE;
+                  }
+                  else
+                  {
+                     if (List != NULL)
+                     {
+                        UserSendNotifyMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                        for (i = 0; List[i]; i++)
+                        {
+                           pwnd = UserGetWindowObject(List[i]);
+                           if (!pwnd) continue;
+
+                           if ( pwnd->fnid == FNID_MENU ||
+                                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                              continue;
+
+                           if ( parm.flags & BSF_IGNORECURRENTTASK )
+                           {
+                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                                 continue;
+                           }
+                           UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+                        }
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     }
+                     Ret = TRUE;
+                  }
+               }
             }
             else if (parm.recipients & BSM_APPLICATIONS)
             {
-                if (parm.flags & BSF_QUERY)
-                {
-                    if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
-                    {
-                        co_IntSendMessageTimeout( HWND_BROADCAST,
+               HWND *List, hwndDenied = NULL;
+               HDESK hDesk = NULL;
+               PWND pwnd, pwndDesk;
+               ULONG i;
+               UINT fuFlags;
+
+               pwndDesk = UserGetWindowObject(IntGetDesktopWindow());
+               List = IntWinListChildren(pwndDesk);
+
+               if (parm.flags & BSF_QUERY)
+               {
+                  if (List != NULL)
+                  {
+                     if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
+                     {
+                        fuFlags = SMTO_ABORTIFHUNG;
+                     }
+                     else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
+                     {
+                        fuFlags = SMTO_NOTIMEOUTIFNOTHUNG;
+                     }
+                     else
+                     {
+                        fuFlags = SMTO_NORMAL;
+                     }
+                     co_IntSendMessageTimeout( UserHMGetHandle(pwndDesk),
+                                               Msg,
+                                               wParam,
+                                               lParam,
+                                               fuFlags,
+                                               2000,
+                                              &RetVal);
+                     Ret = TRUE;
+                     for (i = 0; List[i]; i++)
+                     {
+                        pwnd = UserGetWindowObject(List[i]);
+                        if (!pwnd) continue;
+
+                        if ( pwnd->fnid == FNID_MENU ||
+                             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                           continue;
+
+                        if ( parm.flags & BSF_IGNORECURRENTTASK )
+                        {
+                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              continue;
+                        }
+                        co_IntSendMessageTimeout( List[i],
                                                   Msg,
                                                   wParam,
                                                   lParam,
-                                                  SMTO_ABORTIFHUNG,
+                                                  fuFlags,
                                                   2000,
                                                  &RetVal);
-                    }
-                    else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
-                    {
-                        co_IntSendMessageTimeout( HWND_BROADCAST,
-                                                  Msg,
-                                                  wParam,
-                                                  lParam,
-                                                  SMTO_NOTIMEOUTIFNOTHUNG,
-                                                  2000,
-                                                 &RetVal);
-                    }
-                    else
-                    {
-                        co_IntSendMessageTimeout( HWND_BROADCAST,
-                                                  Msg,
-			                          wParam,
-                                                  lParam,
-                                                  SMTO_NORMAL,
-                                                  2000,
-                                                 &RetVal);
-                    }
-                    Ret = RetVal;
-                }
-                else if (parm.flags & BSF_POSTMESSAGE)
-                {
-                    Ret = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
-                }
-                else //Everything else,,,, if ( parm.flags & BSF_SENDNOTIFYMESSAGE)
-                {
-                    Ret = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
-                }
+
+                        if (!RetVal && EngGetLastError() == ERROR_TIMEOUT)
+                        {
+                           if (!(parm.flags & BSF_FORCEIFHUNG))
+                              Ret = FALSE;
+                        }
+                        if (RetVal == BROADCAST_QUERY_DENY)
+                        {
+                           hwndDenied = List[i];
+                           hDesk = UserHMGetHandle(pwndDesk);
+                           Ret = FALSE;
+                        }
+                     }
+                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     _SEH2_TRY
+                     {
+                        retparam = (PBROADCASTPARM) ResultInfo;
+                        retparam->hDesk = hDesk;
+                        retparam->hWnd = hwndDenied;
+                     }
+                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                     {
+                        _SEH2_YIELD(break);
+                     }
+                     _SEH2_END;
+                  }
+               }
+               else if (parm.flags & BSF_POSTMESSAGE)
+               {
+                  if (List != NULL)
+                  {
+                     UserPostMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                     for (i = 0; List[i]; i++)
+                     {
+                        pwnd = UserGetWindowObject(List[i]);
+                        if (!pwnd) continue;
+
+                        if ( pwnd->fnid == FNID_MENU ||
+                             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                           continue;
+
+                        if ( parm.flags & BSF_IGNORECURRENTTASK )
+                        {
+                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              continue;
+                        }
+                        UserPostMessage(List[i], Msg, wParam, lParam);
+                     }
+                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                  }
+                  Ret = TRUE;
+               }
+               else
+               {
+                  if (List != NULL)
+                  {
+                     UserSendNotifyMessage(UserHMGetHandle(pwndDesk), Msg, wParam, lParam);
+
+                     for (i = 0; List[i]; i++)
+                     {
+                        pwnd = UserGetWindowObject(List[i]);
+                        if (!pwnd) continue;
+
+                        if ( pwnd->fnid == FNID_MENU ||
+                             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                           continue;
+
+                        if ( parm.flags & BSF_IGNORECURRENTTASK )
+                        {
+                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              continue;
+                        }
+                        UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+                     }
+                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                  }
+                  Ret = TRUE;
+               }
             }
         }
         break;
