@@ -22,8 +22,8 @@
 #ifndef _SHFLDR_RECYCLEBIN_H_
 #define _SHFLDR_RECYCLEBIN_H_
 
-class CBitBucket :
-	public CComCoClass<CBitBucket, &CLSID_RecycleBin>,
+class CRecycleBin :
+	public CComCoClass<CRecycleBin, &CLSID_RecycleBin>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IShellFolder2,
 	public IPersistFolder2,
@@ -36,8 +36,8 @@ private:
     INT iIdEmpty;
 
 public:
-	CBitBucket();
-	~CBitBucket();
+	CRecycleBin();
+	~CRecycleBin();
 
 	// IPersistFolder
 	virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
@@ -80,11 +80,11 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
 DECLARE_REGISTRY_RESOURCEID(IDR_RECYCLEBIN)
-DECLARE_NOT_AGGREGATABLE(CBitBucket)
+DECLARE_NOT_AGGREGATABLE(CRecycleBin)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CBitBucket)
+BEGIN_COM_MAP(CRecycleBin)
     COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
 	COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
 	COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)

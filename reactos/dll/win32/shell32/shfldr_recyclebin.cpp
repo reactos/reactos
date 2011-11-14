@@ -23,7 +23,7 @@
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(CBitBucket);
+WINE_DEFAULT_DEBUG_CHANNEL(CRecycleBin);
 
 typedef struct
 {
@@ -35,7 +35,7 @@ typedef struct
     int cxChars;
 } columninfo;
 
-static const columninfo CBitBucketColumns[] =
+static const columninfo RecycleBinColumns[] =
 {
     {IDS_SHV_COLUMN1,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR|SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
     {IDS_SHV_COLUMN_DELFROM, &FMTID_Displaced, PID_DISPLACED_FROM, SHCOLSTATE_TYPE_STR|SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
@@ -60,31 +60,31 @@ static const columninfo CBitBucketColumns[] =
  * Recycle Bin folder
  */
 
-class CBitBucketEnum :
+class CRecycleBinEnum :
     public IEnumIDListImpl
 {
 private:
 public:
-    CBitBucketEnum();
-    ~CBitBucketEnum();
+    CRecycleBinEnum();
+    ~CRecycleBinEnum();
     HRESULT WINAPI Initialize(DWORD dwFlags);
-    static BOOL WINAPI CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile);
-    BOOL WINAPI CBEnumBitBucket(IN HANDLE hDeletedFile);
+    static BOOL WINAPI CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
+    BOOL WINAPI CBEnumRecycleBin(IN HANDLE hDeletedFile);
 
-BEGIN_COM_MAP(CBitBucketEnum)
+BEGIN_COM_MAP(CRecycleBinEnum)
     COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };
 
-class CCBitBucketItemContextMenu :
+class CRecycleBinItemContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu2
 {
 private:
     LPITEMIDLIST                        apidl;
 public:
-    CCBitBucketItemContextMenu();
-    ~CCBitBucketItemContextMenu();
+    CRecycleBinItemContextMenu();
+    ~CRecycleBinItemContextMenu();
     HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
     // IContextMenu
@@ -95,7 +95,7 @@ public:
     // IContextMenu2
     virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-BEGIN_COM_MAP(CCBitBucketItemContextMenu)
+BEGIN_COM_MAP(CRecycleBinItemContextMenu)
     COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
 END_COM_MAP()
@@ -115,7 +115,7 @@ typedef struct
     DWORD dwMaxCapacity;
 }DRIVE_ITEM_CONTEXT, *PDRIVE_ITEM_CONTEXT;
 
-BOOL WINAPI CBSearchBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
+BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
 {
     PSEARCH_CONTEXT pContext = (PSEARCH_CONTEXT)Context;
 
@@ -173,15 +173,15 @@ static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl)
     return NULL;
 }
 
-CBitBucketEnum::CBitBucketEnum()
+CRecycleBinEnum::CRecycleBinEnum()
 {
 }
 
-CBitBucketEnum::~CBitBucketEnum()
+CRecycleBinEnum::~CRecycleBinEnum()
 {
 }
 
-HRESULT WINAPI CBitBucketEnum::Initialize(DWORD dwFlags)
+HRESULT WINAPI CRecycleBinEnum::Initialize(DWORD dwFlags)
 {
     static LPCWSTR szDrive = L"C:\\";
 
@@ -189,9 +189,9 @@ HRESULT WINAPI CBitBucketEnum::Initialize(DWORD dwFlags)
     {
         TRACE("Starting Enumeration\n");
 
-        if (!EnumerateRecycleBinW(szDrive /* FIXME */ , CBEnumBitBucket, (PVOID)this))
+        if (!EnumerateRecycleBinW(szDrive /* FIXME */ , CBEnumRecycleBin, (PVOID)this))
         {
-            WARN("Error: EnumerateCBitBucketW failed\n");
+            WARN("Error: EnumerateCRecycleBinW failed\n");
             return E_FAIL;
         }
     }
@@ -227,12 +227,12 @@ static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
     return pidl;
 }
 
-BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
+BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
 {
-    return ((CBitBucketEnum *)Context)->CBEnumBitBucket(hDeletedFile);
+    return ((CRecycleBinEnum *)Context)->CBEnumRecycleBin(hDeletedFile);
 }
 
-BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN HANDLE hDeletedFile)
+BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN HANDLE hDeletedFile)
 {
     PDELETED_FILE_DETAILS_W pFileDetails;
     DWORD dwSize;
@@ -287,17 +287,17 @@ BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN HANDLE hDeletedFile)
 * IContextMenu2 Bitbucket Item Implementation
 */
 
-CCBitBucketItemContextMenu::CCBitBucketItemContextMenu()
+CRecycleBinItemContextMenu::CRecycleBinItemContextMenu()
 {
     apidl = NULL;
 }
 
-CCBitBucketItemContextMenu::~CCBitBucketItemContextMenu()
+CRecycleBinItemContextMenu::~CRecycleBinItemContextMenu()
 {
     ILFree(apidl);
 }
 
-HRESULT WINAPI CCBitBucketItemContextMenu::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CRecycleBinItemContextMenu::Initialize(LPCITEMIDLIST pidl)
 {
     apidl = ILClone(pidl);
     if (apidl == NULL)
@@ -305,7 +305,7 @@ HRESULT WINAPI CCBitBucketItemContextMenu::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT WINAPI CCBitBucketItemContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+HRESULT WINAPI CRecycleBinItemContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     WCHAR szBuffer[30] = {0};
     ULONG Count = 1;
@@ -343,7 +343,7 @@ HRESULT WINAPI CCBitBucketItemContextMenu::QueryContextMenu(HMENU hMenu, UINT in
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
 }
 
-HRESULT WINAPI CCBitBucketItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     SEARCH_CONTEXT Context;
     static LPCWSTR szDrive = L"C:\\";
@@ -355,7 +355,7 @@ HRESULT WINAPI CCBitBucketItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
         Context.pFileDetails = _ILGetRecycleStruct(apidl);
         Context.bFound = FALSE;
 
-        EnumerateRecycleBinW(szDrive, CBSearchBitBucket, (PVOID)&Context);
+        EnumerateRecycleBinW(szDrive, CBSearchRecycleBin, (PVOID)&Context);
         if (!Context.bFound)
             return E_FAIL;
 
@@ -387,23 +387,23 @@ HRESULT WINAPI CCBitBucketItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
     return S_OK;
 }
 
-HRESULT WINAPI CCBitBucketItemContextMenu::GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+HRESULT WINAPI CRecycleBinItemContextMenu::GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
     TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
     return E_FAIL;
 }
 
-HRESULT WINAPI CCBitBucketItemContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT WINAPI CRecycleBinItemContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("CBitBucket_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",this, uMsg, wParam, lParam);
+    TRACE("CRecycleBin_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",this, uMsg, wParam, lParam);
 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI CBitBucketItemContextMenuConstructor(REFIID riid, LPCITEMIDLIST pidl, LPVOID *ppv)
+static HRESULT WINAPI CRecycleBinItemContextMenuConstructor(REFIID riid, LPCITEMIDLIST pidl, LPVOID *ppv)
 {
-    CComObject<CCBitBucketItemContextMenu>    *theMenu;
+    CComObject<CRecycleBinItemContextMenu>    *theMenu;
     CComPtr<IUnknown>                        result;
     HRESULT                                    hResult;
 
@@ -412,7 +412,7 @@ static HRESULT WINAPI CBitBucketItemContextMenuConstructor(REFIID riid, LPCITEMI
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(theMenu = new CComObject<CCBitBucketItemContextMenu>);
+    ATLTRY(theMenu = new CComObject<CRecycleBinItemContextMenu>);
     if (theMenu == NULL)
         return E_OUTOFMEMORY;
     hResult = theMenu->QueryInterface(riid, (void **)&result);
@@ -429,23 +429,23 @@ static HRESULT WINAPI CBitBucketItemContextMenuConstructor(REFIID riid, LPCITEMI
     return S_OK;
 }
 
-CBitBucket::CBitBucket()
+CRecycleBin::CRecycleBin()
 {
     pidl = NULL;
     iIdEmpty = 0;
 }
 
-CBitBucket::~CBitBucket()
+CRecycleBin::~CRecycleBin()
 {
 /*    InterlockedDecrement(&objCount);*/
     SHFree(pidl);
 }
 
 /*************************************************************************
- * BitBucket IPersistFolder2 interface
+ * RecycleBin IPersistFolder2 interface
  */
 
-HRESULT WINAPI CBitBucket::GetClassID(CLSID *pClassID)
+HRESULT WINAPI CRecycleBin::GetClassID(CLSID *pClassID)
 {
     TRACE("(%p, %p)\n", this, pClassID);
     if (pClassID == NULL)
@@ -454,7 +454,7 @@ HRESULT WINAPI CBitBucket::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidl)
 {
     TRACE("(%p, %p)\n", this, pidl);
 
@@ -465,7 +465,7 @@ HRESULT WINAPI CBitBucket::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::GetCurFolder(LPITEMIDLIST *ppidl)
+HRESULT WINAPI CRecycleBin::GetCurFolder(LPITEMIDLIST *ppidl)
 {
     TRACE("\n");
     *ppidl = ILClone(pidl);
@@ -473,10 +473,10 @@ HRESULT WINAPI CBitBucket::GetCurFolder(LPITEMIDLIST *ppidl)
 }
 
 /*************************************************************************
- * BitBucket IShellFolder2 interface
+ * RecycleBin IShellFolder2 interface
  */
 
-HRESULT WINAPI CBitBucket::ParseDisplayName(HWND hwnd, LPBC pbc,
+HRESULT WINAPI CRecycleBin::ParseDisplayName(HWND hwnd, LPBC pbc,
             LPOLESTR pszDisplayName, ULONG *pchEaten, LPITEMIDLIST *ppidl,
             ULONG *pdwAttributes)
 {
@@ -491,9 +491,9 @@ UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
     return (PDELETED_FILE_DETAILS_W)&pidl->mkid.abID;
 }
 
-HRESULT WINAPI CBitBucket::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
+HRESULT WINAPI CRecycleBin::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CBitBucketEnum>                *theEnumerator;
+    CComObject<CRecycleBinEnum>                *theEnumerator;
     CComPtr<IEnumIDList>                    result;
     HRESULT                                    hResult;
 
@@ -502,7 +502,7 @@ HRESULT WINAPI CBitBucket::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
     if (ppEnumIDList == NULL)
         return E_POINTER;
     *ppEnumIDList = NULL;
-    ATLTRY (theEnumerator = new CComObject<CBitBucketEnum>);
+    ATLTRY (theEnumerator = new CComObject<CRecycleBinEnum>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
     hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
@@ -521,19 +521,19 @@ HRESULT WINAPI CBitBucket::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::BindToObject(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
+HRESULT WINAPI CRecycleBin::BindToObject(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
 {
     FIXME("(%p, %p, %p, %s, %p) - stub\n", this, pidl, pbc, debugstr_guid(&riid), ppv);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CBitBucket::BindToStorage(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
+HRESULT WINAPI CRecycleBin::BindToStorage(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
 {
     FIXME("(%p, %p, %p, %s, %p) - stub\n", this, pidl, pbc, debugstr_guid(&riid), ppv);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CBitBucket::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     /* TODO */
     TRACE("(%p, %p, %p, %p)\n", this, (void *)lParam, pidl1, pidl2);
@@ -542,7 +542,7 @@ HRESULT WINAPI CBitBucket::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITE
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (unsigned short)memcmp(pidl1->mkid.abID, pidl2->mkid.abID, pidl1->mkid.cb));
 }
 
-HRESULT WINAPI CBitBucket::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)
+HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)
 {
     LPSHELLVIEW pShellView;
     HRESULT hr = E_NOINTERFACE;
@@ -579,7 +579,7 @@ HRESULT WINAPI CBitBucket::CreateViewObject(HWND hwndOwner, REFIID riid, void **
 
 }
 
-HRESULT WINAPI CBitBucket::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
                                    SFGAOF *rgfInOut)
 {
     TRACE("(%p, %d, {%p, ...}, {%x})\n", this, cidl, apidl ? apidl[0] : NULL, (unsigned int)*rgfInOut);
@@ -587,7 +587,7 @@ HRESULT WINAPI CBitBucket::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
                       REFIID riid, UINT *prgfInOut, void **ppv)
 {
     IUnknown *pObj = NULL;
@@ -603,7 +603,7 @@ HRESULT WINAPI CBitBucket::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIS
 
     if ((IsEqualIID (riid, IID_IContextMenu) || IsEqualIID(riid, IID_IContextMenu2)) && (cidl >= 1))
     {
-        hr = CBitBucketItemContextMenuConstructor(riid, apidl[0], (void **)&pObj);
+        hr = CRecycleBinItemContextMenuConstructor(riid, apidl[0], (void **)&pObj);
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
@@ -620,7 +620,7 @@ HRESULT WINAPI CBitBucket::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIS
     return hr;
 }
 
-HRESULT WINAPI CBitBucket::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, STRRET *pName)
+HRESULT WINAPI CRecycleBin::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, STRRET *pName)
 {
     PIDLRecycleStruct *pFileDetails;
     LPWSTR pFileName;
@@ -664,27 +664,27 @@ HRESULT WINAPI CBitBucket::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, S
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::SetNameOf(HWND hwnd, LPCITEMIDLIST pidl, LPCOLESTR pszName,
+HRESULT WINAPI CRecycleBin::SetNameOf(HWND hwnd, LPCITEMIDLIST pidl, LPCOLESTR pszName,
             SHGDNF uFlags, LPITEMIDLIST *ppidlOut)
 {
     TRACE("\n");
     return E_FAIL; /* not supported */
 }
 
-HRESULT WINAPI CBitBucket::GetDefaultSearchGUID(GUID *pguid)
+HRESULT WINAPI CRecycleBin::GetDefaultSearchGUID(GUID *pguid)
 {
     FIXME("stub\n");
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CBitBucket::EnumSearches(IEnumExtraSearch **ppEnum)
+HRESULT WINAPI CRecycleBin::EnumSearches(IEnumExtraSearch **ppEnum)
 {
     FIXME("stub\n");
     *ppEnum = NULL;
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CBitBucket::GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay)
+HRESULT WINAPI CRecycleBin::GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay)
 {
     TRACE("(%p, %x, %p, %p)\n", this, (unsigned int)dwReserved, pSort, pDisplay);
     *pSort = 0;
@@ -692,16 +692,16 @@ HRESULT WINAPI CBitBucket::GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULON
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
+HRESULT WINAPI CRecycleBin::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
 {
     TRACE("(%p, %d, %p)\n", this, iColumn, pcsFlags);
     if (iColumn >= COLUMNS_COUNT)
         return E_INVALIDARG;
-    *pcsFlags = CBitBucketColumns[iColumn].pcsFlags;
+    *pcsFlags = RecycleBinColumns[iColumn].pcsFlags;
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CRecycleBin::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME("stub\n");
     return E_NOTIMPL;
@@ -727,7 +727,7 @@ static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME * ft)
     return (ret!=0 ? E_FAIL : S_OK);
 }
 
-HRESULT WINAPI CBitBucket::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHELLDETAILS pDetails)
+HRESULT WINAPI CRecycleBin::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHELLDETAILS pDetails)
 {
     PIDLRecycleStruct * pFileDetails;
     WCHAR buffer[MAX_PATH];
@@ -738,12 +738,12 @@ HRESULT WINAPI CBitBucket::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHEL
     TRACE("(%p, %p, %d, %p)\n", this, pidl, iColumn, pDetails);
     if (iColumn >= COLUMNS_COUNT)
         return E_FAIL;
-    pDetails->fmt = CBitBucketColumns[iColumn].fmt;
-    pDetails->cxChar = CBitBucketColumns[iColumn].cxChars;
+    pDetails->fmt = RecycleBinColumns[iColumn].fmt;
+    pDetails->cxChar = RecycleBinColumns[iColumn].cxChars;
     if (pidl == NULL)
     {
         pDetails->str.uType = STRRET_WSTR;
-        LoadStringW(shell32_hInstance, CBitBucketColumns[iColumn].column_name_id, buffer, MAX_PATH);
+        LoadStringW(shell32_hInstance, RecycleBinColumns[iColumn].column_name_id, buffer, MAX_PATH);
         return SHStrDupW(buffer, &pDetails->str.pOleStr);
     }
 
@@ -791,21 +791,21 @@ HRESULT WINAPI CBitBucket::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHEL
     return SHStrDupW(buffer, &pDetails->str.pOleStr);
 }
 
-HRESULT WINAPI CBitBucket::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
+HRESULT WINAPI CRecycleBin::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
 {
     TRACE("(%p, %d, %p)\n", this, iColumn, pscid);
     if (iColumn>=COLUMNS_COUNT)
         return E_INVALIDARG;
-    pscid->fmtid = *CBitBucketColumns[iColumn].fmtId;
-    pscid->pid = CBitBucketColumns[iColumn].pid;
+    pscid->fmtid = *RecycleBinColumns[iColumn].fmtId;
+    pscid->pid = RecycleBinColumns[iColumn].pid;
     return S_OK;
 }
 
 /*************************************************************************
- * BitBucket IContextMenu interface
+ * RecycleBin IContextMenu interface
  */
 
-HRESULT WINAPI CBitBucket::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     WCHAR szBuffer[100];
     MENUITEMINFOW mii;
@@ -835,7 +835,7 @@ HRESULT WINAPI CBitBucket::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT id
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
 }
 
-HRESULT WINAPI CBitBucket::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     HRESULT hr;
     LPSHELLBROWSER    lpSB;
@@ -859,7 +859,7 @@ HRESULT WINAPI CBitBucket::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+HRESULT WINAPI CRecycleBin::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
     FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
@@ -867,17 +867,17 @@ HRESULT WINAPI CBitBucket::GetCommandString(UINT_PTR idCommand, UINT uFlags, UIN
 }
 
 /*************************************************************************
- * BitBucket IShellPropSheetExt interface
+ * RecycleBin IShellPropSheetExt interface
  */
 
-HRESULT WINAPI CBitBucket::AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+HRESULT WINAPI CRecycleBin::AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     FIXME("%p %p %lu\n", this, pfnAddPage, lParam);
 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CBitBucket::ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam)
+HRESULT WINAPI CRecycleBin::ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam)
 {
     FIXME("%p %lu %p %lu\n", this, uPageID, pfnReplaceWith, lParam);
 
@@ -885,10 +885,10 @@ HRESULT WINAPI CBitBucket::ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfn
 }
 
 /*************************************************************************
- * BitBucket IShellExtInit interface
+ * RecycleBin IShellExtInit interface
  */
 
-HRESULT WINAPI CBitBucket::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     TRACE("%p %p %p %p\n", this, pidlFolder, pdtobj, hkeyProgID );
     return S_OK;
@@ -912,7 +912,7 @@ void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
 
 
 void
-InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
+InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
 {
    WCHAR CurDrive = L'A';
    WCHAR szDrive[] = L"A:\\";
@@ -1132,7 +1132,7 @@ GetDefaultItem(HWND hwndDlg, LVITEMW * li)
 
 INT_PTR
 CALLBACK
-BitBucketDlg(
+RecycleBinDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -1152,7 +1152,7 @@ BitBucketDlg(
     {
     case WM_INITDIALOG:    
         page = (PROPSHEETPAGE*)lParam;
-        InitializeBitBucketDlg(hwndDlg, (WCHAR)page->lParam);
+        InitializeRecycleBinDlg(hwndDlg, (WCHAR)page->lParam);
         dwStyle = (DWORD) SendDlgItemMessage(hwndDlg, 14000, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
         SendDlgItemMessage(hwndDlg, 14000, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
@@ -1260,7 +1260,7 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
    psh.phpage = hpsp;
    psh.hInstance = shell32_hInstance;
 
-   hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", BitBucketDlg, (LPARAM)sDrive, NULL);
+   hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", RecycleBinDlg, (LPARAM)sDrive, NULL);
    if (!hprop)
    {
        ERR("Failed to create property sheet\n");
@@ -1362,7 +1362,7 @@ TRASH_TrashFile(LPCWSTR wszPath)
 }
 
 /*************************************************************************
- * SHUpdateCBitBucketIcon                                [SHELL32.@]
+ * SHUpdateCRecycleBinIcon                                [SHELL32.@]
  *
  * Undocumented
  */
