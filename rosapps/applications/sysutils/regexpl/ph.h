@@ -21,8 +21,8 @@
 #include <stdarg.h>
 
 #include <windef.h>
-#include <wincon.h>
 #include <winbase.h>
+#include <wincon.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <winreg.h>
