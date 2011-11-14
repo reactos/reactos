@@ -145,7 +145,8 @@ static void test_open_svc(void)
     /* Proper SCM handle but different access rights */
     scm_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_CONNECT);
     SetLastError(0xdeadbeef);
-    svc_handle = OpenServiceA(scm_handle, "Spooler", GENERIC_WRITE);
+    /* ReactOS. See top of the file */
+    svc_handle = OpenServiceA(scm_handle, spooler, GENERIC_WRITE);
     if (!svc_handle && (GetLastError() == ERROR_ACCESS_DENIED))
         skip("Not enough rights to get a handle to the service\n");
     else
@@ -433,7 +434,8 @@ static void test_get_displayname(void)
     WCHAR displaynameW[2048];
     DWORD displaysize, tempsize, tempsizeW;
     static const CHAR deadbeef[] = "Deadbeef";
-    static const WCHAR spoolerW[] = {'S','p','o','o','l','e','r',0};
+    /* ReactOS. See top of the file */
+    static const WCHAR spoolerW[] = {'E','v','e','n','t','l','o','g',0};
     static const WCHAR deadbeefW[] = {'D','e','a','d','b','e','e','f',0};
     static const WCHAR abcW[] = {'A','B','C',0};
     static const CHAR servicename[] = "Winetest";
