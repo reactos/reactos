@@ -27,13 +27,24 @@ class CBitBucket :
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IShellFolder2,
 	public IPersistFolder2,
+	public IContextMenu,
+	public IShellPropSheetExt,
 	public IShellExtInit
 {
 private:
     LPITEMIDLIST pidl;
+    INT iIdEmpty;
+
 public:
 	CBitBucket();
 	~CBitBucket();
+
+	// IPersistFolder
+	virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
+	virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+
+	// IPersistFolder2
+	virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
 	// IShellFolder
 	virtual HRESULT WINAPI ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes);
@@ -47,7 +58,7 @@ public:
 	virtual HRESULT WINAPI GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
 	virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl, LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut);
 
-    /* ShellFolder2 */
+    // IShellFolder2
 	virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
 	virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
 	virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
@@ -56,14 +67,14 @@ public:
 	virtual HRESULT WINAPI GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd);
 	virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
 
-	// IPersist
-	virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
+    // IContextMenu
+    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
-	// IPersistFolder
-	virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
-
-	// IPersistFolder2
-	virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+    // IShellPropSheetExt
+    virtual HRESULT WINAPI AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
+    virtual HRESULT WINAPI ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam);
 
 	// IShellExtInit
 	virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
@@ -74,11 +85,12 @@ DECLARE_NOT_AGGREGATABLE(CBitBucket)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CBitBucket)
-	COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
-	COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
-	COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
+    COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
 	COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
-	COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+	COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
+	COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
+	COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+	COM_INTERFACE_ENTRY_IID(IID_IShellPropSheetExt, IShellPropSheetExt)
 	COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
 END_COM_MAP()
 };

@@ -54,7 +54,7 @@ public:
 	virtual HRESULT WINAPI GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
 	virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl, LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut);
 
-	// *** ShellFolder2 methods ***
+	// *** IShellFolder2 methods ***
 	virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
 	virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
 	virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);

@@ -76,30 +76,6 @@ BEGIN_COM_MAP(CBitBucketEnum)
 END_COM_MAP()
 };
 
-class CCBitBucketBackgroundContextMenu :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu2
-{
-private:
-    INT                                    iIdEmpty;
-public:
-    CCBitBucketBackgroundContextMenu();
-    ~CCBitBucketBackgroundContextMenu();
-
-    // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
-
-    // IContextMenu2
-    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-BEGIN_COM_MAP(CCBitBucketBackgroundContextMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
-END_COM_MAP()
-};
-
 class CCBitBucketItemContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu2
@@ -307,113 +283,6 @@ BOOL WINAPI CBitBucketEnum::CBEnumBitBucket(IN HANDLE hDeletedFile)
     return ret;
 }
 
-/*************************************************************************
- * BitBucket context menu
- *
- */
-
-CCBitBucketBackgroundContextMenu::CCBitBucketBackgroundContextMenu()
-{
-    iIdEmpty = 0;
-}
-
-CCBitBucketBackgroundContextMenu::~CCBitBucketBackgroundContextMenu()
-{
-}
-
-HRESULT WINAPI CCBitBucketBackgroundContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
-{
-    WCHAR szBuffer[100];
-    MENUITEMINFOW mii;
-    int id = 1;
-
-    TRACE("%p %p %u %u %u %u\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
-
-    if (!hMenu)
-        return E_INVALIDARG;
-
-    memset(&mii, 0, sizeof(mii));
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-    mii.fState = MFS_ENABLED;
-    szBuffer[0] = L'\0';
-    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
-    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-    mii.dwTypeData = szBuffer;
-    mii.cch = wcslen( mii.dwTypeData );
-    mii.wID = idCmdFirst + id++;
-    mii.fType = MFT_STRING;
-    iIdEmpty = 1;
-
-    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
-        return E_FAIL;
-
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
-}
-
-HRESULT WINAPI CCBitBucketBackgroundContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
-{
-    HRESULT hr;
-    LPSHELLBROWSER    lpSB;
-    LPSHELLVIEW lpSV = NULL;
-
-    TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
-
-    if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
-    {
-        // FIXME
-        // path & flags
-        hr = SHEmptyRecycleBinW(lpcmi->hwnd, L"C:\\", 0);
-        TRACE("result %x\n", hr);
-        if (hr != S_OK)
-            return hr;
-
-        lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-        if (lpSB && SUCCEEDED(lpSB->QueryActiveShellView(&lpSV)))
-            lpSV->Refresh();
-    }
-    return S_OK;
-}
-
-HRESULT WINAPI CCBitBucketBackgroundContextMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
-{
-    FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
-
-    return E_NOTIMPL;
-}
-
-HRESULT WINAPI CCBitBucketBackgroundContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    TRACE("CBitBucket_IContextMenu2Item_IContextMenu2Folder_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
-
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI CBitBucketBackgroundContextMenuConstructor(REFIID riid, LPVOID *ppv)
-{
-    CComObject<CCBitBucketBackgroundContextMenu>    *theMenu;
-    CComPtr<IUnknown>                        result;
-    HRESULT                                    hResult;
-
-    TRACE("%s\n", shdebugstr_guid(&riid));
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(theMenu = new CComObject<CCBitBucketBackgroundContextMenu>);
-    if (theMenu == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenu->QueryInterface(riid, (void **)&result);
-    if (FAILED(hResult))
-    {
-        delete theMenu;
-        return hResult;
-    }
-    *ppv = result.Detach();
-    TRACE ("--(%p)\n", *ppv);
-    return S_OK;
-}
-
 /**************************************************************************
 * IContextMenu2 Bitbucket Item Implementation
 */
@@ -563,6 +432,7 @@ static HRESULT WINAPI CBitBucketItemContextMenuConstructor(REFIID riid, LPCITEMI
 CBitBucket::CBitBucket()
 {
     pidl = NULL;
+    iIdEmpty = 0;
 }
 
 CBitBucket::~CBitBucket()
@@ -570,6 +440,41 @@ CBitBucket::~CBitBucket()
 /*    InterlockedDecrement(&objCount);*/
     SHFree(pidl);
 }
+
+/*************************************************************************
+ * BitBucket IPersistFolder2 interface
+ */
+
+HRESULT WINAPI CBitBucket::GetClassID(CLSID *pClassID)
+{
+    TRACE("(%p, %p)\n", this, pClassID);
+    if (pClassID == NULL)
+        return E_INVALIDARG;
+    memcpy(pClassID, &CLSID_RecycleBin, sizeof(CLSID));
+    return S_OK;
+}
+
+HRESULT WINAPI CBitBucket::Initialize(LPCITEMIDLIST pidl)
+{
+    TRACE("(%p, %p)\n", this, pidl);
+
+    SHFree((LPVOID)this->pidl);
+    this->pidl = ILClone(pidl);
+    if (this->pidl == NULL)
+        return E_OUTOFMEMORY;
+    return S_OK;
+}
+
+HRESULT WINAPI CBitBucket::GetCurFolder(LPITEMIDLIST *ppidl)
+{
+    TRACE("\n");
+    *ppidl = ILClone(pidl);
+    return S_OK;
+}
+
+/*************************************************************************
+ * BitBucket IShellFolder2 interface
+ */
 
 HRESULT WINAPI CBitBucket::ParseDisplayName(HWND hwnd, LPBC pbc,
             LPOLESTR pszDisplayName, ULONG *pchEaten, LPITEMIDLIST *ppidl,
@@ -656,7 +561,7 @@ HRESULT WINAPI CBitBucket::CreateViewObject(HWND hwndOwner, REFIID riid, void **
     }
     else if (IsEqualIID (riid, IID_IContextMenu) || IsEqualIID (riid, IID_IContextMenu2))
     {
-        hr = CBitBucketBackgroundContextMenuConstructor(riid, ppv);
+        hr = this->QueryInterface(riid, ppv);
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
@@ -896,31 +801,87 @@ HRESULT WINAPI CBitBucket::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::GetClassID(CLSID *pClassID)
+/*************************************************************************
+ * BitBucket IContextMenu interface
+ */
+
+HRESULT WINAPI CBitBucket::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
-    TRACE("(%p, %p)\n", this, pClassID);
-    if (pClassID == NULL)
+    WCHAR szBuffer[100];
+    MENUITEMINFOW mii;
+    int id = 1;
+
+    TRACE("%p %p %u %u %u %u\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
+
+    if (!hMenu)
         return E_INVALIDARG;
-    memcpy(pClassID, &CLSID_RecycleBin, sizeof(CLSID));
+
+    memset(&mii, 0, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+    mii.fState = MFS_ENABLED;
+    szBuffer[0] = L'\0';
+    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
+    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+    mii.dwTypeData = szBuffer;
+    mii.cch = wcslen( mii.dwTypeData );
+    mii.wID = idCmdFirst + id++;
+    mii.fType = MFT_STRING;
+    iIdEmpty = 1;
+
+    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
+        return E_FAIL;
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
+}
+
+HRESULT WINAPI CBitBucket::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+{
+    HRESULT hr;
+    LPSHELLBROWSER    lpSB;
+    LPSHELLVIEW lpSV = NULL;
+
+    TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
+
+    if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
+    {
+        // FIXME
+        // path & flags
+        hr = SHEmptyRecycleBinW(lpcmi->hwnd, L"C:\\", 0);
+        TRACE("result %x\n", hr);
+        if (hr != S_OK)
+            return hr;
+
+        lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+        if (lpSB && SUCCEEDED(lpSB->QueryActiveShellView(&lpSV)))
+            lpSV->Refresh();
+    }
     return S_OK;
 }
 
-HRESULT WINAPI CBitBucket::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CBitBucket::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
-    TRACE("(%p, %p)\n", this, pidl);
+    FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
-    SHFree((LPVOID)this->pidl);
-    this->pidl = ILClone(pidl);
-    if (this->pidl == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
+    return E_NOTIMPL;
 }
 
-HRESULT WINAPI CBitBucket::GetCurFolder(LPITEMIDLIST *ppidl)
+/*************************************************************************
+ * BitBucket IShellPropSheetExt interface
+ */
+
+HRESULT WINAPI CBitBucket::AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    TRACE("\n");
-    *ppidl = ILClone(pidl);
-    return S_OK;
+    FIXME("%p %p %lu\n", this, pfnAddPage, lParam);
+
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CBitBucket::ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam)
+{
+    FIXME("%p %lu %p %lu\n", this, uPageID, pfnReplaceWith, lParam);
+
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
