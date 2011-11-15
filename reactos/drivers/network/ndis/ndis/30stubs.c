@@ -73,24 +73,6 @@ FddiFilterDprIndicateReceiveComplete(
 /*
  * @unimplemented
  */
-NDIS_STATUS
-EXPORT
-NdisPciAssignResources(
-    IN  NDIS_HANDLE         NdisMacHandle,
-    IN  NDIS_HANDLE         NdisWrapperHandle,
-    IN  NDIS_HANDLE         WrapperConfigurationContext,
-    IN  ULONG               SlotNumber,
-    OUT PNDIS_RESOURCE_LIST *AssignedResources)
-{
-    UNIMPLEMENTED
-
-	return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
 VOID
 EXPORT
 NdisReadBindingInformation (
