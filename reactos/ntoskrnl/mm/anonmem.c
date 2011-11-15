@@ -683,6 +683,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         {
             /* Fail without it */
             DPRINT1("Privilege not held for MEM_LARGE_PAGES\n");
+            if (Attached) KeUnstackDetachProcess(&ApcState);
             if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
             return STATUS_PRIVILEGE_NOT_HELD;
         }
@@ -701,6 +702,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             (Protect & (PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY)))
     {
         DPRINT1("Copy on write is not supported by VirtualAlloc\n");
+        if (Attached) KeUnstackDetachProcess(&ApcState);
+        if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
         return STATUS_INVALID_PAGE_PROTECTION;
     }
 
