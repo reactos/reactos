@@ -737,7 +737,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
 cleanup:
     MessageBoxW(
         NULL,
-        L"You can shutdown your computer, or press ENTER to reboot",
+        L"Failed to load LiveCD! You can shutdown your computer, or press ENTER to reboot.",
         L"ReactOS LiveCD",
         MB_OK);
     return 0;
@@ -958,7 +958,7 @@ InstallReactOS(HINSTANCE hInstance)
             PROFILEINFOW ProfileInfo;
             HANDLE hToken;
             BOOL ret;
-#define LOGON32_LOGON_NETWORK 3
+
             ret = LogonUserW(L"Administrator", L"", L"", LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, &hToken);
             if (!ret)
             {
