@@ -253,7 +253,6 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
             }
-            DPRINT1("Pt : %p, *pt %x, ret %p, *ret %x\n", Pt, *Pt, (char*)Pt + ADDR_TO_PTE_OFFSET(Address), *((char*)Pt + ADDR_TO_PTE_OFFSET(Address)));
             return Pt + MiAddressToPteOffset(Address);
         }
         /* This is for our process */
@@ -386,8 +385,6 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_PRESENT, Pte));
-    Pte = *Pt;
-    Pte = InterlockedExchangePte(Pt, Pte & ~((ULONG)PA_PRESENT));
     
     MiFlushTlb(Pt, Address);
     
@@ -788,7 +785,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         PdeOffset = ADDR_TO_PDE_OFFSET(Addr);
         if (oldPdeOffset != PdeOffset)
         {
-            //MmUnmapPageTable(Pt);
             Pt = MmGetPageTableForProcess(Process, Addr, TRUE);
             if (Pt == NULL)
             {
