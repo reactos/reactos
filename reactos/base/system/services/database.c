@@ -1515,6 +1515,11 @@ ScmWaitForServiceConnect(PSERVICE Service)
             DPRINT1("Reading the service control pipe failed (Error %lu)\n",
                     dwError);
         }
+        else
+        {
+            dwError = ERROR_SUCCESS;
+            DPRINT("Read control pipe successfully\n");
+        }
     }
     else
     {
