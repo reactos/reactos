@@ -803,7 +803,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         /* flush if currently mapped, just continue editing if hyperspace
          * NOTE : Do not call MiFlushTlb, as it will unmap the page table,
          * and we might need it afterwards */
-        if (Address > MmSystemRangeStart ||
+        if (Address >= MmSystemRangeStart ||
             (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
         {
             KeInvalidateTlbEntry(Addr);
