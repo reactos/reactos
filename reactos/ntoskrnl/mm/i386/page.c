@@ -284,37 +284,34 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     PageDir = (PULONG)MiAddressToPde(Address);
     if (0 == InterlockedCompareExchangePte(PageDir, 0, 0))
     {
-        if (Address >= MmSystemRangeStart)
+        if (0 == InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
         {
-            if (0 == InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
+            if (Create == FALSE)
             {
-                if (Create == FALSE)
-                {
-                    return NULL;
-                }
-                MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-                if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-                if (!Process) MI_SET_PROCESS2("Kernel Legacy");
-                Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
-                if (!NT_SUCCESS(Status) || Pfn == 0)
-                {
-                    KeBugCheck(MEMORY_MANAGEMENT);
-                }
-                Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-                if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
-                {
-                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-                }
-                InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
-                RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
-                return (PULONG)MiAddressToPte(Address);
+                return NULL;
+            }
+            MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
+            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
+            Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
+            if (!NT_SUCCESS(Status) || Pfn == 0)
+            {
+                KeBugCheck(MEMORY_MANAGEMENT);
+            }
+            Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
+            if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
+            {
+                MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
             }
             InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+            /* Flush it before accessing it */
+            KeInvalidateTlbEntry(MiPteToAddress(PageDir));
+            RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
+            return (PULONG)MiAddressToPte(Address);
         }
-        else
-        {
-            
-        }
+        InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+        /* Flush it before accessing it */
+        KeInvalidateTlbEntry(MiPteToAddress(PageDir));
     }
     return (PULONG)MiAddressToPte(Address);
 }
@@ -700,15 +697,8 @@ MmCreatePageFileMapping(PEPROCESS Process,
     }
     Pte = *Pt;
     InterlockedExchangePte(Pt, SwapEntry << 1);
-    if (Pte != 0)
-    {
-        MiFlushTlb(Pt, Address);
-    }
-    else
-    {
-        MmUnmapPageTable(Pt);
-    }
-    
+    MiFlushTlb(Pt, Address);
+        
     return(STATUS_SUCCESS);
 }
 
@@ -729,6 +719,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG Pte;
     DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
+           
+    ASSERT(((ULONG_PTR)Address % PAGE_SIZE) == 0);
     
     if (Process == NULL)
     {
@@ -772,6 +764,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     }
     
     Addr = Address;
+    /* MmGetPageTableForProcess should be called on the first run, so
+     * let this trigger it */
     oldPdeOffset = ADDR_TO_PDE_OFFSET(Addr) + 1;
     for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
     {
@@ -785,6 +779,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         PdeOffset = ADDR_TO_PDE_OFFSET(Addr);
         if (oldPdeOffset != PdeOffset)
         {
+            if(Pt) MmUnmapPageTable(Pt);
             Pt = MmGetPageTableForProcess(Process, Addr, TRUE);
             if (Pt == NULL)
             {
@@ -805,8 +800,18 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-        MiFlushTlb(Pt, Addr);
+        /* flush if currently mapped, just continue editing if hyperspace
+         * NOTE : Do not call MiFlushTlb, as it will unmap the page table,
+         * and we might need it afterwards */
+        if (Address > MmSystemRangeStart ||
+            (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
+        {
+            KeInvalidateTlbEntry(Addr);
+        }
     }
+    
+    ASSERT(Addr > Address);
+    MmUnmapPageTable(Pt);
     
     return(STATUS_SUCCESS);
 }
