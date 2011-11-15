@@ -183,7 +183,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     * address space when another thread could load the page so we check
     * that.
     */
-    if (MmIsPagePresent(NULL, Address))
+    if (MmIsPagePresent(Process, Address))
     {
         return(STATUS_SUCCESS);
     }
@@ -301,7 +301,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     /*
     * Handle swapped out pages.
     */
-    if (MmIsPageSwapEntry(NULL, Address))
+    if (MmIsPageSwapEntry(Process, Address))
     {
         SWAPENTRY SwapEntry;
 
@@ -327,7 +327,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     {
         MmUnlockAddressSpace(AddressSpace);
         Status = MmCreateVirtualMapping(Process,
-            Address,
+            (PVOID)PAGE_ROUND_DOWN(Address),
             Region->Protect,
             &Page,
             1);

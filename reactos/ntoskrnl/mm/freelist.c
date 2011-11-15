@@ -92,6 +92,7 @@ MmInsertLRULastUserPage(PFN_NUMBER Pfn)
     /* Set the page as a user page */
     ASSERT(Pfn != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Pfn));
+    ASSERT(!RtlCheckBit(&MiUserPfnBitMap, (ULONG)Pfn));
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     RtlSetBit(&MiUserPfnBitMap, (ULONG)Pfn);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -123,6 +124,7 @@ MmRemoveLRUUserPage(PFN_NUMBER Page)
     /* Unset the page as a user page */
     ASSERT(Page != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
+    ASSERT(RtlCheckBit(&MiUserPfnBitMap, (ULONG)Page));
     RtlClearBit(&MiUserPfnBitMap, (ULONG)Page);
 }
 

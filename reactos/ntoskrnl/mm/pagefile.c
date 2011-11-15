@@ -113,7 +113,7 @@ static PFN_COUNT MiReservedSwapPages;
  */
 #define FILE_FROM_ENTRY(i) ((i) & 0x0f)
 #define OFFSET_FROM_ENTRY(i) ((i) >> 11)
-#define ENTRY_FROM_FILE_OFFSET(i, j) ((i) | (j) << 11 | 0x400)
+#define ENTRY_FROM_FILE_OFFSET(i, j) ((i) | ((j) << 11) | 0x400)
 
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 

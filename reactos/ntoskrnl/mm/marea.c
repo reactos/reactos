@@ -893,7 +893,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    Granularity = (MEMORY_AREA_VIRTUAL_MEMORY == Type ? MM_VIRTMEM_GRANULARITY : PAGE_SIZE);
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
-      tmpLength = PAGE_ROUND_UP(Length);
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, Granularity);
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
@@ -908,6 +908,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    {
       tmpLength = Length + ((ULONG_PTR) *BaseAddress
                          - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(tmpLength, Granularity);
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
       if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
@@ -986,6 +987,8 @@ MmMapMemoryArea(PVOID BaseAddress,
 {
    ULONG i;
    NTSTATUS Status;
+   
+   ASSERT(((ULONG_PTR)BaseAddress % PAGE_SIZE) == 0);
 
    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
    {
