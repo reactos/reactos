@@ -209,18 +209,59 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     ULONG Entry;
     PULONG Pt, PageDir;
     
-    if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
+    if (Address < MmSystemRangeStart)
     {
-        PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-        if (PageDir == NULL)
+        /* We should have a process for user land addresses */
+        ASSERT(Process != NULL);
+        
+        if(Process != PsGetCurrentProcess())
         {
-            KeBugCheck(MEMORY_MANAGEMENT);
+            PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+            if (PageDir == NULL)
+            {
+                KeBugCheck(MEMORY_MANAGEMENT);
+            }
+            if (0 == InterlockedCompareExchangePte(&PageDir[PdeOffset], 0, 0))
+            {
+                if (Create == FALSE)
+                {
+                    MmDeleteHyperspaceMapping(PageDir);
+                    return NULL;
+                }
+                MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
+                if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+                if (!Process) MI_SET_PROCESS2("Kernel Legacy");
+                Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
+                if (!NT_SUCCESS(Status) || Pfn == 0)
+                {
+                    KeBugCheck(MEMORY_MANAGEMENT);
+                }
+                Entry = InterlockedCompareExchangePte(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
+                if (Entry != 0)
+                {
+                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
+                    Pfn = PTE_TO_PFN(Entry);
+                }
+            }
+            else
+            {
+                Pfn = PTE_TO_PFN(PageDir[PdeOffset]);
+            }
+            MmDeleteHyperspaceMapping(PageDir);
+            Pt = MmCreateHyperspaceMapping(Pfn);
+            if (Pt == NULL)
+            {
+                KeBugCheck(MEMORY_MANAGEMENT);
+            }
+            DPRINT1("Pt : %p, *pt %x, ret %p, *ret %x\n", Pt, *Pt, (char*)Pt + ADDR_TO_PTE_OFFSET(Address), *((char*)Pt + ADDR_TO_PTE_OFFSET(Address)));
+            return Pt + MiAddressToPteOffset(Address);
         }
-        if (0 == InterlockedCompareExchangePte(&PageDir[PdeOffset], 0, 0))
+        /* This is for our process */
+        PageDir = (PULONG)MiAddressToPde(Address);
+        if (0 == InterlockedCompareExchangePte(PageDir, 0, 0))
         {
             if (Create == FALSE)
             {
-                MmDeleteHyperspaceMapping(PageDir);
                 return NULL;
             }
             MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
@@ -231,25 +272,16 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
             }
-            Entry = InterlockedCompareExchangePte(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
+            Entry = InterlockedCompareExchangePte(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
                 MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-                Pfn = PTE_TO_PFN(Entry);
             }
         }
-        else
-        {
-            Pfn = PTE_TO_PFN(PageDir[PdeOffset]);
-        }
-        MmDeleteHyperspaceMapping(PageDir);
-        Pt = MmCreateHyperspaceMapping(Pfn);
-        if (Pt == NULL)
-        {
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        return Pt + ADDR_TO_PTE_OFFSET(Address);
+        return (PULONG)MiAddressToPte(Address);
     }
+    
+    /* This is for kernel land address */
     PageDir = (PULONG)MiAddressToPde(Address);
     if (0 == InterlockedCompareExchangePte(PageDir, 0, 0))
     {
@@ -282,23 +314,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
         }
         else
         {
-            if (Create == FALSE)
-            {
-                return NULL;
-            }
-            MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
-            Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
-            if (!NT_SUCCESS(Status) || Pfn == 0)
-            {
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
-            Entry = InterlockedCompareExchangePte(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
-            if (Entry != 0)
-            {
-                MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-            }
+            
         }
     }
     return (PULONG)MiAddressToPte(Address);
@@ -370,8 +386,11 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_PRESENT, Pte));
+    Pte = *Pt;
+    Pte = InterlockedExchangePte(Pt, Pte & ~((ULONG)PA_PRESENT));
     
     MiFlushTlb(Pt, Address);
+    
     WasValid = (PAGE_MASK(Pte) != 0);
     if (!WasValid)
     {
@@ -769,7 +788,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         PdeOffset = ADDR_TO_PDE_OFFSET(Addr);
         if (oldPdeOffset != PdeOffset)
         {
-            MmUnmapPageTable(Pt);
+            //MmUnmapPageTable(Pt);
             Pt = MmGetPageTableForProcess(Process, Addr, TRUE);
             if (Pt == NULL)
             {
@@ -783,24 +802,14 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         oldPdeOffset = PdeOffset;
         
         Pte = *Pt;
-        if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
+        /* There should not be anything valid here */
+        if ((Pte & PA_PRESENT) || (Pte & 0x800))
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-        if (Pte != 0)
-        {
-            if (Address > MmSystemRangeStart ||
-                (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
-            {
-                MiFlushTlb(Pt, Address);
-            }
-        }
-    }
-    if (Addr > Address)
-    {
-        MmUnmapPageTable(Pt);
+        MiFlushTlb(Pt, Addr);
     }
     
     return(STATUS_SUCCESS);

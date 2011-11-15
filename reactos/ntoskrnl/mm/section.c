@@ -1829,10 +1829,9 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address);
 
    /*
-    * Check if the page has been paged out or has already been set readwrite
+    * Check if the page has already been set readwrite
     */
-   if (!MmIsPagePresent(Process, Address) ||
-         MmGetPageProtect(Process, Address) & PAGE_READWRITE)
+   if (MmGetPageProtect(Process, Address) & PAGE_READWRITE)
    {
       DPRINT("Address 0x%.8X\n", Address);
       return(STATUS_SUCCESS);
@@ -1855,7 +1854,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     */
    MmLockSectionSegment(Segment);
 
-   OldPage = MmGetPfnForProcess(NULL, Address);
+   OldPage = MmGetPfnForProcess(Process, Address);
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
 
    MmUnlockSectionSegment(Segment);
