@@ -1,4 +1,4 @@
-/* $Id$
+/*
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -221,8 +221,16 @@ HalpGrowMapBuffers(IN PADAPTER_OBJECT AdapterObject,
     KIRQL OldIrql;
     ULONG MapRegisterCount;
 
-    /* FIXME: Check if enough map register slots are available. */
+    /* Check if enough map register slots are available. */
     MapRegisterCount = BYTES_TO_PAGES(SizeOfMapBuffers);
+    if (MapRegisterCount + AdapterObject->NumberOfMapRegisters > MAX_MAP_REGISTERS)
+    {
+        DPRINT("No more map register slots available! (Current: %d | Requested: %d | Limit: %d)\n",
+               AdapterObject->NumberOfMapRegisters,
+               MapRegisterCount,
+               MAX_MAP_REGISTERS);
+        return FALSE;
+    }
 
     /*
      * Allocate memory for the new map registers. For 32-bit adapters we use
@@ -599,7 +607,6 @@ HalGetAdapter(IN PDEVICE_DESCRIPTION DeviceDescription,
               OUT PULONG NumberOfMapRegisters)
 {
     PADAPTER_OBJECT AdapterObject = NULL;
-    PADAPTER_OBJECT MasterAdapter;
     BOOLEAN EisaAdapter;
     ULONG MapRegisters;
     ULONG MaximumLength;
@@ -711,21 +718,7 @@ HalGetAdapter(IN PDEVICE_DESCRIPTION DeviceDescription,
         if (MapRegisters > 0)
         {
             AdapterObject->NeedsMapRegisters = TRUE;
-            MasterAdapter = HalpMasterAdapter;
             AdapterObject->MapRegistersPerChannel = MapRegisters;
-
-            /*
-             * FIXME: Verify that the following makes sense. Actually
-             * MasterAdapter->NumberOfMapRegisters contains even the number
-             * of gaps, so this will not work correctly all the time. It
-             * doesn't matter much since it's only optimization to avoid
-             * queuing work items in HalAllocateAdapterChannel.
-             */
-            MasterAdapter->CommittedMapRegisters += MapRegisters;
-            if (MasterAdapter->CommittedMapRegisters > MasterAdapter->NumberOfMapRegisters)
-            {
-                HalpGrowMapBuffers(MasterAdapter, 0x10000);
-            }
         }
         else
         {
@@ -1333,24 +1326,19 @@ HalAllocateAdapterChannel(IN PADAPTER_OBJECT AdapterObject,
 
         if (Index == MAXULONG)
         {
+            InsertTailList(&MasterAdapter->AdapterQueue, &AdapterObject->AdapterQueue);
+            
             WorkItem = ExAllocatePoolWithTag(NonPagedPool,
                                              sizeof(GROW_WORK_ITEM),
                                              TAG_DMA);
-            if (!WorkItem)
+            if (WorkItem)
             {
-                KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
-                AdapterObject->NumberOfMapRegisters = 0;
-                IoFreeAdapterChannel(AdapterObject);
-                return STATUS_INSUFFICIENT_RESOURCES;
+                ExInitializeWorkItem(&WorkItem->WorkQueueItem, HalpGrowMapBufferWorker, WorkItem);
+                WorkItem->AdapterObject = AdapterObject;
+                WorkItem->NumberOfMapRegisters = NumberOfMapRegisters;
+
+                ExQueueWorkItem(&WorkItem->WorkQueueItem, DelayedWorkQueue);
             }
-
-            InsertTailList(&MasterAdapter->AdapterQueue, &AdapterObject->AdapterQueue);
-
-            ExInitializeWorkItem(&WorkItem->WorkQueueItem, HalpGrowMapBufferWorker, WorkItem);
-            WorkItem->AdapterObject = AdapterObject;
-            WorkItem->NumberOfMapRegisters = NumberOfMapRegisters;
-
-            ExQueueWorkItem(&WorkItem->WorkQueueItem, DelayedWorkQueue);
 
             KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
 
@@ -1574,7 +1562,7 @@ IoFreeMapRegisters(IN PADAPTER_OBJECT AdapterObject,
 
         Index = RtlFindClearBitsAndSet(MasterAdapter->MapRegisters,
                                        AdapterObject->NumberOfMapRegisters,
-                                       MasterAdapter->NumberOfMapRegisters);
+                                       0);
         if (Index == MAXULONG)
         {
             InsertHeadList(&MasterAdapter->AdapterQueue, ListEntry);
