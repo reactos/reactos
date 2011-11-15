@@ -38,20 +38,20 @@ HINSTANCE hDllInstance;
 
 BOOL WINAPI
 DllMain (HINSTANCE hInstance,
-	 DWORD dwReason,
-	 LPVOID lpReserved)
+         DWORD dwReason,
+         LPVOID lpReserved)
 {
-  if (dwReason == DLL_PROCESS_ATTACH)
-  {
-    INITCOMMONCONTROLSEX InitControls;
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
+        INITCOMMONCONTROLSEX InitControls;
 
-    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
-    InitCommonControlsEx(&InitControls);
-    hDllInstance = hInstance;
-  }
+        InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
+        InitCommonControlsEx(&InitControls);
+        hDllInstance = hInstance;
+    }
 
-   return TRUE;
+    return TRUE;
 }
 
 /* EOF */
