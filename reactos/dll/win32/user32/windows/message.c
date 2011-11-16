@@ -234,36 +234,24 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
         {
           PKMDDELPARAM DdeLparam;
           DdeLparam = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDELPARAM));
-          if (NULL == DdeLparam)
+          if (NULL == DdeLparam || !UnpackDDElParam(
+          	UMMsg->message, UMMsg->lParam,
+          	&DdeLparam->uiLo, &DdeLparam->uiHi)) return FALSE;
+          /*
+          	If this is a reply to WM_DDE_EXECUTE then
+          	uiHi will contain a hMem, hence >= 0x10000.
+          	Otherwise, it will be be an atom, a 16-bit value.
+          */
+          if(DdeLparam->uiHi >= 0x10000)
             {
-              return FALSE;
-            }
-          if (Posted)
-            {
-              DdeLparam->Packed = TRUE;
-              if (! UnpackDDElParam(UMMsg->message, UMMsg->lParam,
-                                    &DdeLparam->Value.Packed.uiLo,
-                                    &DdeLparam->Value.Packed.uiHi))
-                {
-                  return FALSE;
-                }
-              if (0 != HIWORD(DdeLparam->Value.Packed.uiHi))
-                {
-                  /* uiHi should contain a hMem from WM_DDE_EXECUTE */
-                  HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->Value.Packed.uiHi);
+              HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
                   if (NULL != h)
                     {
-                      GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->Value.Packed.uiHi);
-                      DdeLparam->Value.Packed.uiHi = (UINT_PTR) h;
+                  GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
+                  DdeLparam->uiHi = (UINT_PTR) h;
                     }
                 }
               FreeDDElParam(UMMsg->message, UMMsg->lParam);
-            }
-          else
-            {
-              DdeLparam->Packed = FALSE;
-              DdeLparam->Value.Unpacked = UMMsg->lParam;
-            }
           KMMsg->lParam = (LPARAM) DdeLparam;
         }
         break;
@@ -376,17 +364,8 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
       case WM_DDE_ACK:
         {
           PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;
-          if (DdeLparam->Packed)
-            {
-              UMMsg->lParam = PackDDElParam(KMMsg->message,
-                                            DdeLparam->Value.Packed.uiLo,
-                                            DdeLparam->Value.Packed.uiHi);
+          UMMsg->lParam = PackDDElParam(KMMsg->message, DdeLparam->uiLo, DdeLparam->uiHi);
             }
-          else
-            {
-              UMMsg->lParam = DdeLparam->Value.Unpacked;
-            }
-        }
         break;
 
       case WM_DDE_EXECUTE:

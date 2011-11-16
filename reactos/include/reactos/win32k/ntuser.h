@@ -488,7 +488,7 @@ typedef struct _SBINFOEX
 #define WNDS_HASCREATESTRUCTNAME     0X00020000
 #define WNDS_SERVERSIDEWINDOWPROC    0x00040000 // Call proc inside win32k.
 #define WNDS_ANSIWINDOWPROC          0x00080000
-#define WNDS_BEGINGACTIVATED         0x00100000
+#define WNDS_BEINGACTIVATED          0x00100000
 #define WNDS_HASPALETTE              0x00200000
 #define WNDS_PAINTNOTPROCESSED       0x00400000
 #define WNDS_SYNCPAINTPENDING        0x00800000
@@ -2692,15 +2692,15 @@ NtUserSetCursorContents(
   HANDLE Handle,
   PICONINFO IconInfo);
 
+#if 0 // Correct type.
 BOOL
 NTAPI
 NtUserSetCursorIconData(
-  HANDLE Handle,
-  PBOOL fIcon,
-  POINT *Hotspot,
-  HMODULE hModule,
-  HRSRC hRsrc,
-  HRSRC hGroupRsrc);
+  HCURSOR hCursor,
+  PUNICODE_STRING ModuleName,
+  PUNICODE_STRING ResourceName,
+  PCURSORDATA pCursorData);
+#endif
 
 DWORD
 NTAPI
@@ -3178,16 +3178,8 @@ typedef struct tagKMDDEEXECUTEDATA
 
 typedef struct tagKMDDELPARAM
 {
-  BOOL Packed;
-  union
-    {
-      struct
-        {
           UINT_PTR uiLo;
           UINT_PTR uiHi;
-        } Packed;
-      LPARAM Unpacked;
-    } Value;
 } KMDDELPARAM, *PKMDDELPARAM;
 
 
@@ -3328,6 +3320,16 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
+
+BOOL
+NTAPI
+NtUserSetCursorIconData(
+  HANDLE Handle,
+  PBOOL fIcon,
+  POINT *Hotspot,
+  HMODULE hModule,
+  HRSRC hRsrc,
+  HRSRC hGroupRsrc);
 
 typedef struct _SETSCROLLBARINFO
 {
