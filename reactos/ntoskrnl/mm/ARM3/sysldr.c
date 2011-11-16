@@ -158,7 +158,12 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     /* Reserve system PTEs needed */
     PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
-    if (!PointerPte) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!PointerPte)
+    {
+        DPRINT1("MiReserveSystemPtes failed\n");
+        KeUnstackDetachProcess(&ApcState);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* New driver base */
     LastPte = PointerPte + PteCount;
