@@ -463,6 +463,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                         NULL);
                     DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
 
+                    ExAcquireFastMutex(&Ccb->DataListLock);
+
                     if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
                     {
                         Status = STATUS_CANCELLED;
@@ -472,7 +474,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     {
                         ASSERT(FALSE);
                     }
-                    ExAcquireFastMutex(&Ccb->DataListLock);
                 }
                 else
                 {
