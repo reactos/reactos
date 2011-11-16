@@ -27,10 +27,10 @@ Author:
 // KPCR Access for non-IA64 builds
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-#define PCR                     ((KPCR * const)K0IPCR)
+#define PCR                     ((KPCR *)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
 #undef  KeGetPcr
-#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
+#define KeGetPcr()              ((KPCR *)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
 #endif
 
 //

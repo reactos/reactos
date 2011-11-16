@@ -849,9 +849,10 @@ public:
 			return 0;
 		m_ppUnk = newArray;
 		memset(&m_ppUnk[m_nSize], 0, (newSize - m_nSize) * sizeof(IUnknown *));
+		curCookie = m_nSize + 1;
 		m_nSize = newSize;
-		m_ppUnk[m_nSize] = pUnk;
-		return m_nSize + 1;
+		m_ppUnk[curCookie - 1] = pUnk;
+		return curCookie;
 	}
 
 	BOOL Remove(DWORD dwCookie)

@@ -128,7 +128,7 @@ typedef CCHAR KPROCESSOR_MODE;
 //
 // Dereferencable pointer to KUSER_SHARED_DATA in User-Mode
 //
-#define SharedUserData                  ((KUSER_SHARED_DATA *CONST)USER_SHARED_DATA)
+#define SharedUserData                  ((KUSER_SHARED_DATA *)USER_SHARED_DATA)
 
 //
 // Maximum WOW64 Entries in KUSER_SHARED_DATA
