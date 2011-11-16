@@ -2418,7 +2418,8 @@ NtUserMessageCall( HWND hWnd,
             }
             break;
         }
-    case FNID_SENDMESSAGETIMEOUT:
+    case FNID_SENDMESSAGEFF:
+    case FNID_SENDMESSAGEWTOOPTION:
         {
             DOSENDMESSAGE dsm, *pdsm = (PDOSENDMESSAGE)ResultInfo;
             if (ResultInfo)

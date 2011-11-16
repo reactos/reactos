@@ -696,7 +696,7 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define FNID_SENDMESSAGEFF          0x02B2
 // Kernel has option to use TimeOut or normal msg send, based on type of msg.
 #define FNID_SENDMESSAGEWTOOPTION   0x02B3
-#define FNID_SENDMESSAGETIMEOUT     0x02B4
+#define FNID_SENDMESSAGECALLPROC    0x02B4
 #define FNID_BROADCASTSYSTEMMESSAGE 0x02B5
 #define FNID_TOOLTIPS               0x02B6 
 #define FNID_SENDNOTIFYMESSAGE      0x02B7
@@ -894,7 +894,7 @@ PPROCESSINFO GetW32ProcessInfo(VOID);
 typedef struct _WNDMSG
 {
   DWORD maxMsgs;
-  DWORD abMsgs;
+  PINT abMsgs;
 } WNDMSG, *PWNDMSG;
 
 typedef struct _SHAREDINFO

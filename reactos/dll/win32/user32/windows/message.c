@@ -2369,7 +2369,7 @@ SendMessageTimeoutA(
                               UcMsg.wParam,
                               UcMsg.lParam,
                              (ULONG_PTR)&dsm,
-                              FNID_SENDMESSAGETIMEOUT,
+                              FNID_SENDMESSAGEWTOOPTION,
                               TRUE);
 
   MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
@@ -2436,7 +2436,7 @@ SendMessageTimeoutW(
                               wParam,
                               lParam,
                              (ULONG_PTR)&dsm,
-                              FNID_SENDMESSAGETIMEOUT,
+                              FNID_SENDMESSAGEWTOOPTION,
                               FALSE);
 
   if (lpdwResult) *lpdwResult = dsm.Result;
