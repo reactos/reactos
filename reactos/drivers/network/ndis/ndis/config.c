@@ -320,6 +320,97 @@ NdisOpenProtocolConfiguration(
     *Status = NDIS_STATUS_SUCCESS;
 }
 
+UCHAR UnicodeToHexByte(WCHAR chr)
+/*
+ * FUNCTION: Converts a unicode hex character to its numerical value
+ * ARGUMENTS:
+ *     chr: Unicode character to convert
+ * RETURNS:
+ *     The numerical value of chr
+ */
+{
+    switch(chr)
+    {
+        case L'0': return 0;
+        case L'1': return 1;
+        case L'2': return 2;
+        case L'3': return 3;
+        case L'4': return 4;
+        case L'5': return 5;
+        case L'6': return 6;
+        case L'7': return 7;
+        case L'8': return 8;
+        case L'9': return 9;
+        case L'A':
+        case L'a':
+            return 10;
+        case L'B':
+        case L'b':
+            return 11;
+        case L'C':
+        case L'c':
+            return 12;
+        case L'D':
+        case L'd':
+            return 13;
+        case L'E':
+        case L'e':
+            return 14;
+        case L'F':
+        case L'f':
+            return 15;
+    }
+    return 0xFF;
+}
+
+BOOLEAN
+IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
+/*
+ * FUNCTION: Determines if a string is a valid number
+ * ARGUMENTS:
+ *     String: Unicode string to evaluate
+ * RETURNS:
+ *     TRUE if it is valid, FALSE if not
+ */
+{
+    ULONG i;
+
+    /* I don't think this will ever happen, but we warn it if it does */
+    if (String->Length == 0)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Got an empty string; not sure what to do here\n"));
+        return FALSE;
+    }
+
+    /* Set the default parameter type */
+    *ParameterType = NdisParameterInteger;
+
+    for (i = 0; i < String->Length / sizeof(WCHAR); i++)
+    {
+        /* Look at the second character for the base */
+        if (i == 1)
+        {
+            if (String->Buffer[i] == L'X' ||
+                String->Buffer[i] == L'x')
+            {
+                NDIS_DbgPrint(MID_TRACE, ("Identified hex string\n"));
+                *ParameterType = NdisParameterHexInteger;
+                continue;
+            }
+        }
+
+        /* Skip any NULL characters we find */
+        if (String->Buffer[i] == UNICODE_NULL)
+            continue;
+
+        /* Make sure the character is valid for a numeric string */
+        if (UnicodeToHexByte(String->Buffer[i]) == 0xFF)
+            return FALSE;
+    }
+
+    /* It's valid */
+    return TRUE;
+}
 
 /*
  * @implemented
@@ -577,12 +668,13 @@ NdisReadConfiguration(
          str.Length = str.MaximumLength = (USHORT)KeyInformation->DataLength;
          str.Buffer = (PWCHAR)KeyInformation->Data;
 
-         if ((*Status = RtlUnicodeStringToInteger(&str, 0,
-                             &(*ParameterValue)->ParameterData.IntegerData)) == STATUS_SUCCESS)
+         if (IsValidNumericString(&str, &(*ParameterValue)->ParameterType) &&
+             ((*Status = RtlUnicodeStringToInteger(&str, 0,
+                             &(*ParameterValue)->ParameterData.IntegerData)) == STATUS_SUCCESS))
          {
-             NDIS_DbgPrint(MAX_TRACE, ("NdisParameterInteger\n"));
+             NDIS_DbgPrint(MAX_TRACE, ("NdisParameter(Hex)Integer\n"));
 
-             (*ParameterValue)->ParameterType = NdisParameterInteger;
+             /* IsValidNumericString sets the parameter type when parsing the string */
          }
          else
          {
@@ -616,51 +708,6 @@ NdisReadConfiguration(
 
     *Status = NDIS_STATUS_SUCCESS;
 }
-
-
-UCHAR UnicodeToHexByte(WCHAR chr)
-/*
- * FUNCTION: Converts a unicode hex character to its numerical value
- * ARGUMENTS:
- *     chr: Unicode character to convert
- * RETURNS:
- *     The numerical value of chr
- */
-{
-    switch(chr)
-    {
-        case L'0': return 0;
-        case L'1': return 1;
-        case L'2': return 2;
-        case L'3': return 3;
-        case L'4': return 4;
-        case L'5': return 5;
-        case L'6': return 6;
-        case L'7': return 7;
-        case L'8': return 8;
-        case L'9': return 9;
-        case L'A':
-        case L'a':
-            return 10;
-        case L'B':
-        case L'b':
-            return 11;
-        case L'C':
-        case L'c':
-            return 12;
-        case L'D':
-        case L'd':
-            return 13;
-        case L'E':
-        case L'e':
-            return 14;
-        case L'F':
-        case L'f':
-            return 15;
-    }
-    return -1;
-}
-
 
 /*
  * @implemented
