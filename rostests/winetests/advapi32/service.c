@@ -32,9 +32,8 @@
 
 #include "wine/test.h"
 
-//static const CHAR spooler[] = "Spooler"; /* Should be available on all platforms */
-static const CHAR spooler[] = "Eventlog"; /* All platform except reactos :-/ */
-static const CHAR* selfname;
+static const CHAR spooler[] = "Spooler"; /* Should be available on all platforms */
+static CHAR selfname[MAX_PATH];
 
 static BOOL (WINAPI *pChangeServiceConfig2A)(SC_HANDLE,DWORD,LPVOID);
 static BOOL (WINAPI *pEnumServicesStatusExA)(SC_HANDLE, SC_ENUM_TYPE, DWORD,
@@ -145,7 +144,6 @@ static void test_open_svc(void)
     /* Proper SCM handle but different access rights */
     scm_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_CONNECT);
     SetLastError(0xdeadbeef);
-    /* ReactOS. See top of the file */
     svc_handle = OpenServiceA(scm_handle, spooler, GENERIC_WRITE);
     if (!svc_handle && (GetLastError() == ERROR_ACCESS_DENIED))
         skip("Not enough rights to get a handle to the service\n");
@@ -434,8 +432,7 @@ static void test_get_displayname(void)
     WCHAR displaynameW[2048];
     DWORD displaysize, tempsize, tempsizeW;
     static const CHAR deadbeef[] = "Deadbeef";
-    /* ReactOS. See top of the file */
-    static const WCHAR spoolerW[] = {'E','v','e','n','t','l','o','g',0};
+    static const WCHAR spoolerW[] = {'S','p','o','o','l','e','r',0};
     static const WCHAR deadbeefW[] = {'D','e','a','d','b','e','e','f',0};
     static const WCHAR abcW[] = {'A','B','C',0};
     static const CHAR servicename[] = "Winetest";
@@ -1035,6 +1032,14 @@ static void test_query_svc(void)
     else
         ok(statusproc->dwProcessId == 0,
            "Expect no process id for this stopped service\n");
+
+    /* same call with null needed pointer */
+    SetLastError(0xdeadbeef);
+    ret = pQueryServiceStatusEx(svc_handle, SC_STATUS_PROCESS_INFO, (BYTE*)statusproc, bufsize, NULL);
+    ok(!ret, "Expected failure\n");
+    ok(broken(GetLastError() == ERROR_INVALID_PARAMETER) /* NT4 */ ||
+       GetLastError() == ERROR_INVALID_ADDRESS, "got %d\n", GetLastError());
+
     HeapFree(GetProcessHeap(), 0, statusproc);
 
     CloseServiceHandle(svc_handle);
@@ -2316,7 +2321,7 @@ START_TEST(service)
     char** myARGV;
 
     myARGC = winetest_get_mainargs(&myARGV);
-    selfname = myARGV[0];
+    GetFullPathNameA(myARGV[0], sizeof(selfname), selfname, NULL);
     if (myARGC >= 3)
     {
         if (strcmp(myARGV[2], "sleep") == 0)
