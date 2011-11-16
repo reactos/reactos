@@ -4,5 +4,5 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Sigla ReactOS"
-    IDS_TEXT        "Acest ecran de veghe nu are opțiuni."
+    IDS_TEXT        "Această animație de ecran inactiv nu are opțiuni."
 END

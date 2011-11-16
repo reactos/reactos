@@ -53,5 +53,5 @@ BEGIN
 	IDS_CPLSYSTEMNAME "Gestionar de aplicații"
 	IDS_CPLSYSTEMDESCRIPTION "Instalează programe și crează scurtături."
     IDS_CREATE_SHORTCUT "Creare scurtătură"
-    IDS_ERROR_NOT_FOUND "Elementul %s nu poate fi localizat."
+    IDS_ERROR_NOT_FOUND "Elementul „%s” nu poate fi localizat."
 END

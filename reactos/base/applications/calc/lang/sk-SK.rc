@@ -1,6 +1,6 @@
 /* TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-01-2008
- * LAST CHANGE:  17-09-2010
+ * LAST CHANGE:  09-08-2011
  * ---------------------------------------
  * TODO:
  * pridanie navigačných značiek "&" ?
@@ -551,8 +551,8 @@ BEGIN
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
     IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
-    IDS_ENERGY_JOULES               "Joules"
-    IDS_ENERGY_KILOJOULES           "Kilojoules"
+    IDS_ENERGY_JOULES               "Jouly"
+    IDS_ENERGY_KILOJOULES           "Kilojouly"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatthodiny"
     IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calories"
     IDS_ENERGY_TH_CALORIES          "Thermochemical calorie"

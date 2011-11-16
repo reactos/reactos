@@ -294,7 +294,7 @@ BEGIN
   IDS_CPLSYSTEMNAME "Accesibilitate"
   IDS_CPLSYSTEMDESCRIPTION "Modificarea opțiunilor de accesibilitate pentru acest calculator."
 
-  IDS_SENTRY_NONE "[Nici una]"
+  IDS_SENTRY_NONE "[nespecificată]"
   IDS_SENTRY_TITLE "Clipire bară de titlu"
   IDS_SENTRY_WINDOW "Clipire fereastră activă"
   IDS_SENTRY_DISPLAY "Clipire spațiu de lucru"

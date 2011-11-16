@@ -10,6 +10,6 @@ BEGIN
     BEGIN
         MENUITEM "&Nastavenia...",  ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Zavrie",            ID_EXIT
+        MENUITEM "&Zavrieť",            ID_EXIT
     END
 END

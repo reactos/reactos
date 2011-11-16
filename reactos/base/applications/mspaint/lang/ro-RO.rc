@@ -64,7 +64,7 @@ BEGIN
             MENUITEM "Afișează &grilă", IDM_VIEWSHOWGRID
             MENUITEM "Afișează &miniatură", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Pe tot ecranul\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Pe &tot ecranul\tCtrl+F", IDM_VIEWFULLSCREEN
     END
     
     POPUP "&Imagine"

@@ -5,7 +5,7 @@ IDC_MAGNIFIER MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "Ieșire",                       IDM_EXIT
+        MENUITEM "I&eșire",                       IDM_EXIT
         MENUITEM "&Opțiuni",                    IDM_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Despre ...",                  IDM_ABOUT

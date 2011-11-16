@@ -13,7 +13,7 @@ BEGIN
     POPUP "&Súbor"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Skonči\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "&Skončiť\tAlt+F4", ID_FILE_EXIT
     END
 
     POPUP "&Pomocník"

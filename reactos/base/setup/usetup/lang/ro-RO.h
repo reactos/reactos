@@ -25,7 +25,7 @@ static MUI_ENTRY roROLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  VÇ rugÇm selectaîi limba pentru procesul de instalare.",
+        "\x07  Selectaîi limba pentru procesul de instalare.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1006,7 +1006,7 @@ static MUI_ENTRY roROFileCopyEntries[] =
     },
     {
         0,
-        13,
+        14,
         "(aceasta poate dura cƒteva minute)",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },

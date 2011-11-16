@@ -14,16 +14,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
     PUSHBUTTON "&Pomocník", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "Ďalia stra&na", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Uloi vetky informácie...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Skonči", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "Ďalšia stra&na", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Uložiť všetky informácie...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Skončiť", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tento nástroj hlási detailné informácie o komponentoch a oládačoch ReactX naintalovaných do systému.", -1, 10, 10, 443, 17
+    LTEXT "Tento nástroj hlási detailné informácie o komponentoch a oládačoch ReactX nainštalovaných do systému.", -1, 10, 10, 443, 17
     LTEXT "If you know what area is causing the problem, click the appropiate tab above. Otherwise you can use the ""Next Page"" button below to visit each page in sequence.", -1, 10, 30, 443, 25
     GROUPBOX "Systémové informácie", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Aktuálny dátum/čas:", -1, 70, 70, 80, 10, SS_RIGHT
@@ -34,7 +34,7 @@ BEGIN
     LTEXT "Model systému:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "Procesor:", -1, 70, 140, 80, 10, SS_RIGHT
-    LTEXT "Pamä:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "Pamäť:", -1, 70, 150, 80, 10, SS_RIGHT
     LTEXT "Stránkovací súbor:", -1, 70, 160, 80, 10, SS_RIGHT
     LTEXT "ReactX - verzia:", -1, 70, 170, 80, 10, SS_RIGHT
     LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
@@ -59,7 +59,7 @@ BEGIN
     RTEXT "Výrobca:", -1, 20, 35, 70, 10
     RTEXT "Typ čipu:", -1, 20, 45, 70, 10
     RTEXT "Typ D-A konvertora:", -1, 20, 55, 70, 10
-    RTEXT "Pribl. celková pamä:", -1, 20, 65, 70, 10
+    RTEXT "Pribl. celková pamäť:", -1, 20, 65, 70, 10
     RTEXT "Súčasný mód obrazovky:", -1, 20, 75, 70, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
@@ -87,9 +87,9 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
 
     GROUPBOX "ReactX - funkcie", -1, 10, 115, 450, 60
-    RTEXT "DirectDraw urýchžovanie:", -1, 15, 130, 110, 12
-    RTEXT "Direct3D urýchžovanie:", -1, 15, 145, 110, 12
-    RTEXT "AGP urýchžovanie textúr:", -1, 15, 160, 110, 12
+    RTEXT "DirectDraw urýchľovanie:", -1, 15, 130, 110, 12
+    RTEXT "Direct3D urýchľovanie:", -1, 15, 145, 110, 12
+    RTEXT "AGP urýchľovanie textúr:", -1, 15, 160, 110, 12
     LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
     LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
     LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
@@ -183,10 +183,10 @@ BEGIN
 	IDS_SOUND_DIALOG "Zvuk"
 	IDS_MUSIC_DIALOG "Hudba"
 	IDS_INPUT_DIALOG "Vstup"
-	IDS_NETWORK_DIALOG "Sie"
+	IDS_NETWORK_DIALOG "Sieť"
 	IDS_HELP_DIALOG "Pomocník"
 	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB pouité, %I64u MB dostupné"
+	IDS_FORMAT_SWAP "%I64u MB použité, %I64u MB dostupné"
 	IDS_FORMAT_UNIPROC "%s (%u procesor)"
 	IDS_FORMAT_MPPROC  "%s (%u procesory)"
 	IDS_VERSION_UNKNOWN "Neznáma verzia"

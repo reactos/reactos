@@ -207,7 +207,7 @@ BEGIN
   IDS_NUM_SERVICES "Nr. servicii: %d"
   IDS_STOP_DEPENDS "Dacă %s se oprește aceste procese se vor opri de asemenea."
   IDS_NO_DEPENDS "<Fără dependențe>"
-  IDS_LICENSE "Această aplicație este software public; este permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale aceste licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
+  IDS_LICENSE "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
 END
 
 STRINGTABLE DISCARDABLE

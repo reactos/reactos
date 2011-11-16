@@ -52,7 +52,7 @@ BEGIN
         MENUITEM "Aranjări &verticale",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimizează",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizează",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjări în &cascadă",           ID_WINDOWS_CASCADE
+        MENUITEM "Aranjare în &cascadă",           ID_WINDOWS_CASCADE
         MENUITEM "&Aduce în prim plan",            ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&?"
@@ -69,7 +69,7 @@ BEGIN
     MENUITEM "Aranjări &verticale",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimizează",                   ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ximizează",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "Aranjări în &cascadă",           ID_WINDOWS_CASCADE
+    MENUITEM "Aranjare în &cascadă",           ID_WINDOWS_CASCADE
     MENUITEM "&Aduce în prim plan",            ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "Aranjări &verticale",           ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimizare",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizare",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjări în &cascadă",          ID_WINDOWS_CASCADE
+        MENUITEM "Aranjare în &cascadă",          ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Termină",                      ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Salt la proces",               ID_APPLICATION_PAGE_GOTOPROCESS
@@ -584,7 +584,7 @@ BEGIN
     IDS_TAB_APPS                  "Aplicații"
     IDS_TAB_PROCESSES             "Procese"
     IDS_TAB_PERFORMANCE           "Performanță"
-    IDS_TAB_TASK                  "Aplicație"
+    IDS_TAB_TASK                  "Activitate"
     IDS_TAB_STATUS                "Stare"
     IDS_TAB_IMAGENAME             "Nume proces"
     IDS_TAB_PID                   "PID"

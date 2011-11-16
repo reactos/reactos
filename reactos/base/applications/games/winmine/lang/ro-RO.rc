@@ -38,7 +38,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "În&cepător",     IDM_BEGINNER
         MENUITEM "&Avansat",       IDM_ADVANCED
-        MENUITEM "&Expert",        IDM_EXPERT
+        MENUITEM "E&xpert",        IDM_EXPERT
         MENUITEM "&Personalizat",  IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+X", IDM_EXIT

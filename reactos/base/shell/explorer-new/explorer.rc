@@ -41,3 +41,4 @@ IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP DISCARDABLE res/nolock_group_ql.bmp
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"

@@ -9,10 +9,10 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Súbor"
 	BEGIN
-		MENUITEM "&Otvori...", IDM_OPEN_FILE
-		MENUITEM "&Zavrie",    IDM_CLOSE_FILE
+		MENUITEM "&Otvoriť...", IDM_OPEN_FILE
+		MENUITEM "&Zavrieť",    IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "S&konči",    IDM_EXIT
+		MENUITEM "S&končiť",    IDM_EXIT
 	END
 	POPUP "&Pomocník"
 	BEGIN
@@ -22,14 +22,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Vetky podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Prehra"
-	IDS_TOOLTIP_STOP "Zastavi"
-	IDS_TOOLTIP_EJECT "Vysunú"
-	IDS_TOOLTIP_BACKWARD "Preskoči dozadu"
-	IDS_TOOLTIP_SEEKBACK "Vyhžada dozadu"
-	IDS_TOOLTIP_SEEKFORW "Vyhžada dopredu"
-	IDS_TOOLTIP_FORWARD "Preskoči dopredu"
+	IDS_ALL_TYPES_FILTER "Všetky podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Prehrať"
+	IDS_TOOLTIP_STOP "Zastaviť"
+	IDS_TOOLTIP_EJECT "Vysunúť"
+	IDS_TOOLTIP_BACKWARD "Preskočiť dozadu"
+	IDS_TOOLTIP_SEEKBACK "Vyhľadať dozadu"
+	IDS_TOOLTIP_SEEKFORW "Vyhľadať dopredu"
+	IDS_TOOLTIP_FORWARD "Preskočiť dopredu"
     IDS_APPTITLE "Multimediálny prehrávač systému ReactOS"
-	IDS_PLAY "Prehra"
+	IDS_PLAY "Prehrať"
 END

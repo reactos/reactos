@@ -90,7 +90,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "2",IDC_BUTTON_2,182,100,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,182,121,24,18,BS_CENTER | 
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,182,120,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "B",IDC_BUTTON_B,182,140,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -118,7 +118,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "Sau",IDC_BUTTON_OR,260,80,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Lsh",IDC_BUTTON_LSH,260,102,24,18,BS_CENTER | 
+    PUSHBUTTON      "Lsh",IDC_BUTTON_LSH,260,100,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "=",IDC_BUTTON_EQU,260,120,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -128,9 +128,9 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "SauX",IDC_BUTTON_XOR,286,80,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Neg",IDC_BUTTON_NOT,286,102,24,18,BS_CENTER | 
+    PUSHBUTTON      "Neg",IDC_BUTTON_NOT,286,100,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Int",IDC_BUTTON_INT,286,121,24,18,BS_CENTER | 
+    PUSHBUTTON      "Int",IDC_BUTTON_INT,286,120,24,18,BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "F",IDC_BUTTON_F,286,140,24,18,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -435,7 +435,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "Această aplicație este software public; este permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nPuteți consulta traduceri neoficiale ale aceste licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Eroare"
     IDS_QUICKHELP           "Manual"
 END

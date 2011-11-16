@@ -173,7 +173,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE             "Această aplicație este un soft public; poate fi redistribuită și/sau modificată respectând termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau respectând Licența în versiunea 2, sau (la alegere) o altă versiune ulterioară.\r\n\r\nAceastă aplicație este distribuită în speranța că va fi utilă, FĂRĂ însă NICI O GARANŢIE; nici măcar cu garanția implicită a VANDABILITĂŢII sau a UTILITĂŢII ÎNTR-UN SCOP ANUME.  Consultați Licența Publică Generală GNU pentru mai multe detalii.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE             "Această aplicație este un soft public; poate fi redistribuită și/sau modificată respectând termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau respectând Licența în versiunea 2, sau (la alegere) o altă versiune ulterioară.\r\n\r\nAceastă aplicație este distribuită în speranța că va fi utilă, FĂRĂ însă NICI O GARANŢIE; nici măcar cu garanția implicită a VANDABILITĂŢII sau a UTILITĂŢII ÎNTR-UN SCOP ANUME.  Consultați Licența Publică Generală GNU pentru mai multe detalii.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
 END
 
 #endif    // Romanian resource file
