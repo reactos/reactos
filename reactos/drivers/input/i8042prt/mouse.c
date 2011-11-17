@@ -458,7 +458,7 @@ i8042MouInternalDeviceControl(
 
 			IoMarkIrpPending(Irp);
 			DeviceExtension->MouseState = MouseResetting;
-			DeviceExtension->MouseResetState = 1100;
+			DeviceExtension->MouseResetState = ExpectingReset;
 			DeviceExtension->MouseHook.IsrWritePort = i8042MouIsrWritePort;
 			DeviceExtension->MouseHook.QueueMousePacket = i8042MouQueuePacket;
 			DeviceExtension->MouseHook.CallContext = DeviceExtension;
@@ -640,10 +640,13 @@ i8042MouResetIsr(
 
 	switch ((ULONG)DeviceExtension->MouseResetState)
 	{
-		case 1100: /* the first ack, drop it. */
-			DeviceExtension->MouseResetState = ExpectingReset;
-			return TRUE;
 		case ExpectingReset:
+			if (MOUSE_ACK == Value)
+			{
+				WARN_(I8042PRT, "Dropping extra ACK\n");
+				return TRUE;
+			}
+
 			/* First, 0xFF is sent. The mouse is supposed to say AA00 if ok, FC00 if not. */
 			if (0xAA == Value)
 			{
@@ -657,6 +660,12 @@ i8042MouResetIsr(
 			}
 			return TRUE;
 		case ExpectingResetId:
+			if (MOUSE_ACK == Value)
+			{
+				WARN_(I8042PRT, "Dropping extra ACK #2\n");
+				return TRUE;
+			}
+
 			if (0x00 == Value)
 			{
 				DeviceExtension->MouseResetState++;
