@@ -1377,6 +1377,11 @@ HINSTANCE    shell32_hInstance;
 HIMAGELIST   ShellSmallIconList = 0;
 HIMAGELIST   ShellBigIconList = 0;
 
+void *operator new (size_t, void *buf)
+{
+    return buf;
+}
+
 /*************************************************************************
  * SHELL32 DllMain
  *
@@ -1388,6 +1393,12 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
     if (dwReason == DLL_PROCESS_ATTACH)
     {
+        /* HACK - the global constructors don't run, so I placement new them here */
+        new (&gModule) CShell32Module;
+        new (&_AtlWinModule) CAtlWinModule;
+        new (&_AtlBaseModule) CAtlBaseModule;
+        new (&_AtlComModule) CAtlComModule;
+
         shell32_hInstance = hInstance;
         gModule.Init(ObjectMap, hInstance, NULL);
 
