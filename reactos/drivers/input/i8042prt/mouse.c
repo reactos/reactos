@@ -361,12 +361,8 @@ i8042DpcRoutineMouseTimeout(
 
 	Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
 
-	WARN_(I8042PRT, "Mouse initialization timeout! (substate %x). Disabling mouse.\n",
+	WARN_(I8042PRT, "Mouse initialization timeout! (substate %x)\n",
 		DeviceExtension->MouseResetState);
-
-	i8042Flush(PortDeviceExtension);
-	i8042ChangeMode(PortDeviceExtension, CCB_MOUSE_INT_ENAB, CCB_MOUSE_DISAB);
-	i8042Flush(PortDeviceExtension);
 
 	PortDeviceExtension->Flags &= ~MOUSE_PRESENT;
 
@@ -633,8 +629,21 @@ i8042MouResetIsr(
 	if (i8042MouCallIsrHook(DeviceExtension, Status, Value, &ToReturn))
 		return ToReturn;
 
-	if (MouseResetting != DeviceExtension->MouseState)
+	if (MouseIdle == DeviceExtension->MouseState)
+	{
+		/* Magic packet value that indicates a reset */
+		if (0xAA == Value)
+		{
+			WARN_(I8042PRT, "Hot plugged mouse!\n");
+			DeviceExtension->MouseState = MouseResetting;
+			DeviceExtension->MouseResetState = ExpectingReset;
+		}
+		else
+			return FALSE;
+	}
+	else if (MouseResetting != DeviceExtension->MouseState)
 		return FALSE;
+
 	DeviceExtension->MouseTimeoutState = TimeoutStart;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
@@ -870,6 +879,7 @@ i8042MouResetIsr(
 			DeviceExtension->MouseResetState = ExpectingEnableACK;
 			return TRUE;
 		case ExpectingEnableACK:
+			PortDeviceExtension->Flags |= MOUSE_PRESENT;
 			DeviceExtension->MouseState = MouseIdle;
 			DeviceExtension->MouseTimeoutState = TimeoutCancel;
 			INFO_(I8042PRT, "Mouse type = %u\n", DeviceExtension->MouseType);
