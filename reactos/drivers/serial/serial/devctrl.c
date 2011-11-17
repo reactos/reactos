@@ -374,8 +374,24 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_GET_CHARS:
 		{
 			/* FIXME */
+			PSERIAL_CHARS pSerialChars;
 			ERR_(SERIAL, "IOCTL_SERIAL_GET_CHARS not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			if (LengthOut < sizeof(SERIAL_CHARS))
+				Status = STATUS_BUFFER_TOO_SMALL;
+			else if (BufferOut == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else
+			{
+				pSerialChars = (PSERIAL_CHARS)BufferOut;
+				pSerialChars->EofChar = 0;
+				pSerialChars->ErrorChar = 0;
+				pSerialChars->BreakChar = 0;
+				pSerialChars->EventChar = 0;
+				pSerialChars->XonChar = 0;
+				pSerialChars->XoffChar = 0;
+				Information = sizeof(SERIAL_CHARS);
+				Status = STATUS_SUCCESS;
+			}
 			break;
 		}
 		case IOCTL_SERIAL_GET_COMMSTATUS:
@@ -414,8 +430,22 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_GET_HANDFLOW:
 		{
 			/* FIXME */
+			PSERIAL_HANDFLOW pSerialHandflow;
 			ERR_(SERIAL, "IOCTL_SERIAL_GET_HANDFLOW not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			if (LengthOut < sizeof(SERIAL_HANDFLOW))
+				Status = STATUS_BUFFER_TOO_SMALL;
+			else if (BufferOut == NULL)
+				Status = STATUS_INVALID_PARAMETER;
+			else
+			{
+				pSerialHandflow = (PSERIAL_HANDFLOW)BufferOut;
+				pSerialHandflow->ControlHandShake = 0;
+				pSerialHandflow->FlowReplace = 0;
+				pSerialHandflow->XonLimit = 0;
+				pSerialHandflow->XoffLimit = 0;
+				Information = sizeof(SERIAL_HANDFLOW);
+				Status = STATUS_SUCCESS;
+			}
 			break;
 		}
 		case IOCTL_SERIAL_GET_LINE_CONTROL:
@@ -623,7 +653,7 @@ SerialDeviceControl(
 		{
 			/* FIXME */
 			ERR_(SERIAL, "IOCTL_SERIAL_SET_CHARS not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_SET_DTR:
@@ -665,7 +695,7 @@ SerialDeviceControl(
 		{
 			/* FIXME */
 			ERR_(SERIAL, "IOCTL_SERIAL_SET_HANDFLOW not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_SET_LINE_CONTROL:
