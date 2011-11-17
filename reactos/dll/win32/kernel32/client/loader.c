@@ -80,7 +80,7 @@ BasepMapModuleHandle(HMODULE hModule, BOOLEAN AsDataFile)
 LPWSTR
 GetDllLoadPath(LPCWSTR lpModule)
 {
-	ULONG Pos = 0, Length = 0;
+	ULONG Pos = 0, Length = 4, Tmp;
 	PWCHAR EnvironmentBufferW = NULL;
 	LPCWSTR lpModuleEnd = NULL;
 	UNICODE_STRING ModuleName;
@@ -88,7 +88,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 
     // FIXME: This function is used only by SearchPathW, and is deprecated and will be deleted ASAP.
 
-	if ((lpModule != NULL) && (wcslen(lpModule) > 2) && (lpModule[1] == ':'))
+	if (lpModule != NULL && wcslen(lpModule) > 2 && lpModule[1] == ':')
 	{
 		lpModuleEnd = lpModule + wcslen(lpModule);
 	}
@@ -116,10 +116,10 @@ GetDllLoadPath(LPCWSTR lpModule)
 	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
 
 	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-	                                     Length * sizeof(WCHAR));
+	                                     (Length + 1) * sizeof(WCHAR));
 	if (EnvironmentBufferW == NULL)
 	{
-		return NULL;
+	    return NULL;
 	}
 
 	if (lpModule)
@@ -130,15 +130,39 @@ GetDllLoadPath(LPCWSTR lpModule)
 		EnvironmentBufferW[Pos++] = L';';
 	}
 
-	Pos += GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	EnvironmentBufferW[Pos++] = L';';
-	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
+    Tmp = GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
+
+	/* Make sure buffer is null terminated */
+    EnvironmentBufferW[Pos++] = UNICODE_NULL;
+
 
 	SetLastError(LastError);
 	return EnvironmentBufferW;

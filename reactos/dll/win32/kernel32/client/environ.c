@@ -182,11 +182,10 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
         UniSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
     }
 
+    RtlInitEmptyUnicodeString(&VarValue, lpBuffer, UniSize);
     Status = RtlInitUnicodeStringEx(&VarName, lpName);
     if (NT_SUCCESS(Status))
     {
-        RtlInitEmptyUnicodeString(&VarValue, lpBuffer, UniSize);
-
         Status = RtlQueryEnvironmentVariable_U(NULL, &VarName, &VarValue);
         if (!NT_SUCCESS(Status))
         {
