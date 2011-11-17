@@ -32,7 +32,7 @@ HKLM
 				{
 					NoRemove Explorer
 					{
-						NoRemove Desktop
+						NoRemove ControlPanel
 						{
 							NoRemove NameSpace
 							{
