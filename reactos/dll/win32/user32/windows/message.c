@@ -1297,10 +1297,10 @@ Exit:
      switch(Hit)
      {
      case 1:
-         ERR("CallWindowProcW Ansi Failed!\n");
+         ERR("CallWindowProcW Ansi Failed! WndProc %p\n",WndProc);
          break;
      case 2:
-         ERR("CallWindowProcW Unicode Failed!\n");
+         ERR("CallWindowProcW Unicode Failed! WndProc %p\n",WndProc);
          break;
      }
   }
@@ -1461,10 +1461,10 @@ Exit:
      switch(Hit)
      {
      case 1:
-         ERR("CallWindowProcA Ansi Failed!\n");
+         ERR("CallWindowProcA Ansi Failed! WndProc %p\n",WndProc);
          break;
      case 2:
-         ERR("CallWindowProcA Unicode Failed!\n");
+         ERR("CallWindowProcA Unicode Failed! WndProc %p\n",WndProc);
          break;
      }
   }
