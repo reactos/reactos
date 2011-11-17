@@ -50,7 +50,7 @@ int _isnanl(long double __x)
      exponent and a nonzero mantissa.  */
 
 	return (( x.x->exponent == 0x7fff)
-	  && ( (x.x->mantissah & 0x80000000) != 0)
+	  && ( (x.x->mantissah & 0x80000) != 0)
 	  && ( (x.x->mantissah & (unsigned int)0x7fffffff) != 0  || x.x->mantissal != 0 ));
 }
 
@@ -91,7 +91,7 @@ int _isinfl(long double __x)
      maximum possible value and a zero mantissa.  */
 
 
-	if ( x.x->exponent == 0x7fff  && ( (x.x->mantissah == 0x80000000 )   && x.x->mantissal == 0 ))
+	if ( x.x->exponent == 0x7fff  && ( (x.x->mantissah == 0x80000 )   && x.x->mantissal == 0 ))
 		return x.x->sign ? -1 : 1;
 	return 0;
 }

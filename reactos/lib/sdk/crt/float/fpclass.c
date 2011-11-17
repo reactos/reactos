@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
- * PURPOSE:     Unknown
+ * FILE:        lib/sdk/crt/float/fpclass.c
+ * PURPOSE:     Floating-point classes
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
  *              25/11/05: Added license header
@@ -55,32 +55,28 @@ fpclass_t _fpclass(double __d)
 	d.__d = &__d;
 
 	if ( d.d->exponent == 0 ) {
-		if ( d.d->mantissah == 0 &&  d.d->mantissal == 0 ) {
-			if ( d.d->sign ==0 )
-				return FP_NZERO;
-			else
+		if ( d.d->mantissah == 0 && d.d->mantissal == 0 ) {
+			if ( d.d->sign == 0 )
 				return FP_PZERO;
-		} else {
-			if ( d.d->sign ==0 )
-				return FP_NDENORM;
 			else
+				return FP_NZERO;
+		} else {
+			if ( d.d->sign == 0 )
 				return FP_PDENORM;
+			else
+				return FP_NDENORM;
 		}
 	}
-	if (d.d->exponent == 0x7ff ) {
-		if ( d.d->mantissah == 0 &&  d.d->mantissal == 0 ) {
-			if ( d.d->sign ==0 )
-				return FP_NINF;
-			else
+	else if (d.d->exponent == 0x7ff ) {
+		if ( d.d->mantissah == 0 && d.d->mantissal == 0 ) {
+			if ( d.d->sign == 0 )
 				return FP_PINF;
+			else
+				return FP_NINF;
 		}
-		else if ( d.d->mantissah == 0 &&  d.d->mantissal != 0 ) {
+		else if ( (d.d->mantissah & 0x80000) != 0 ) {
 			return FP_QNAN;
 		}
-		else if ( d.d->mantissah == 0 &&  d.d->mantissal != 0 ) {
-			return FP_SNAN;
-		}
-
 	}
-	return 0;
+	return FP_SNAN;
 }
