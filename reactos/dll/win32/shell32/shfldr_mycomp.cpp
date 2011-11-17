@@ -93,7 +93,7 @@ static const WCHAR MyComputer_NameSpaceW[] = { 'S','O','F','T','W','A','R','E',
 
 BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 {
-    BOOL ret = TRUE;
+    BOOL bRet = TRUE;
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
 
@@ -102,52 +102,57 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
     {
         WCHAR wszDriveName[] = {'A', ':', '\\', '\0'};
         DWORD dwDrivemap = GetLogicalDrives();
-        HKEY hkey;
+        HKEY hKey;
         UINT i;
 
-        while (ret && wszDriveName[0]<='Z')
+        while (bRet && wszDriveName[0]<='Z')
         {
             if(dwDrivemap & 0x00000001L)
-                ret = AddToEnumList(_ILCreateDrive(wszDriveName));
+                bRet = AddToEnumList(_ILCreateDrive(wszDriveName));
             wszDriveName[0]++;
             dwDrivemap = dwDrivemap >> 1;
         }
 
         TRACE("-- (%p)-> enumerate (mycomputer shell extensions)\n", this);
-        for (i=0; i<2; i++)
+        for (i = 0; i < 2; i++)
         {
-            if (ret && !RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
-                                      MyComputer_NameSpaceW, 0, KEY_READ, &hkey))
+            if (bRet && ERROR_SUCCESS == RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
+                                      MyComputer_NameSpaceW, 0, KEY_READ, &hKey))
             {
-                WCHAR iid[50];
-                int i=0;
+                WCHAR wszBuf[50];
+                DWORD dwSize, j = 0;
+                LONG ErrorCode;
+                LPITEMIDLIST pidl;
 
-                while (ret)
+                while (bRet)
                 {
-                    DWORD size;
-                    LONG r;
-
-                    size = sizeof(iid) / sizeof(iid[0]);
-                    r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
-                    if (ERROR_SUCCESS == r)
+                    dwSize = sizeof(wszBuf) / sizeof(wszBuf[0]);
+                    ErrorCode = RegEnumKeyExW(hKey, j, wszBuf, &dwSize, 0, NULL, NULL, NULL);
+                    if (ERROR_SUCCESS == ErrorCode)
                     {
+                        if (wszBuf[0] != L'{')
+                        {
+                            dwSize = sizeof(wszBuf);
+                            RegGetValueW(hKey, wszBuf, NULL, RRF_RT_REG_SZ, NULL, wszBuf, &dwSize);
+                        }
+
                         /* FIXME: shell extensions, shouldn't the type be
                          * PT_SHELLEXT? */
-                        LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
+                        pidl = _ILCreateGuidFromStrW(wszBuf);
                         if (pidl != NULL)
-                            ret = AddToEnumList(pidl);
-                        i++;
+                            bRet = AddToEnumList(pidl);
+                        j++;
                     }
-                    else if (ERROR_NO_MORE_ITEMS == r)
+                    else if (ERROR_NO_MORE_ITEMS == ErrorCode)
                         break;
                     else
-                        ret = FALSE;
+                        bRet = FALSE;
                 }
-                RegCloseKey(hkey);
+                RegCloseKey(hKey);
             }
         }
     }
-    return ret;
+    return bRet;
 }
 
 CDrivesFolder::CDrivesFolder()
