@@ -7,6 +7,7 @@
 	<library>pseh</library>
 	<file>testlist.c</file>
 
+	<file>ieee.c</file>
 	<file>splitpath.c</file>
 
 </module>
