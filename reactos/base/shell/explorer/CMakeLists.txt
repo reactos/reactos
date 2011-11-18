@@ -49,7 +49,6 @@ list(APPEND SOURCE
     utility/dragdropimpl.cpp
     utility/utility.cpp
     utility/xmlstorage.cpp
-#   utility/splitpath.c     msvcrt has _wsplitpath already
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
