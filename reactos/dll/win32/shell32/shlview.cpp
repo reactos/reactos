@@ -1143,7 +1143,6 @@ HRESULT CDefView::OpenSelectedItems()
             DestroyMenu( hmenu );
             hr = IUnknown_SetSite(cm, NULL);
         }
-        cm->Release();
     }
 
 
