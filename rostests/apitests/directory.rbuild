@@ -18,6 +18,10 @@
 		<xi:include href="gdi32/gdi32_apitest.rbuild" />
 	</directory>
 
+	<directory name="msvcrt">
+		<xi:include href="msvcrt/msvcrt_apitest.rbuild" />
+	</directory>
+
 	<directory name="ntdll">
 		<xi:include href="ntdll/ntdll_apitest.rbuild" />
 	</directory>
