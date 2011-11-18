@@ -2014,6 +2014,9 @@ LPSTR _ILGetTextPointer(LPCITEMIDLIST pidl)
     case PT_NETPROVIDER:
     case PT_SHARE:
         return pdata->u.network.szNames;
+
+    case PT_CPLAPPLET:
+        return pdata->u.cpanel.szName;
     }
     return NULL;
 }
