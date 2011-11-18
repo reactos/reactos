@@ -41,9 +41,9 @@ public:
     CControlPanelEnum();
     ~CControlPanelEnum();
     HRESULT WINAPI Initialize(DWORD dwFlags);
-    BOOL SHELL_RegisterCPanelApp(LPCSTR path);
-    int SHELL_RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPath);
-    int SHELL_RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath);
+    BOOL RegisterCPanelApp(LPCSTR path);
+    int RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPath);
+    int RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath);
     BOOL CreateCPanelEnumList(DWORD dwFlags);
 
 BEGIN_COM_MAP(CControlPanelEnum)
@@ -77,43 +77,41 @@ HRESULT WINAPI CControlPanelEnum::Initialize(DWORD dwFlags)
     return S_OK;
 }
 
-static LPITEMIDLIST _ILCreateCPanelApplet(LPCSTR name, LPCSTR displayName, LPCSTR comment, int iconIdx)
+static LPITEMIDLIST _ILCreateCPanelApplet(LPCSTR pszName, LPCSTR pszDisplayName, LPCSTR pszComment, int iIconIdx)
 {
-    PIDLCPanelStruct *p;
+    PIDLCPanelStruct *pCP;
     LPITEMIDLIST pidl;
-    PIDLDATA tmp;
-    int size0 = (char*)&tmp.u.cpanel.szName - (char*)&tmp.u.cpanel;
-    int size = size0;
-    int l;
+    LPPIDLDATA pData;
+    int cchName, cchDisplayName, cchComment, cbData;
 
-    tmp.type = PT_CPLAPPLET;
-    tmp.u.cpanel.dummy = 0;
-    tmp.u.cpanel.iconIdx = iconIdx;
+    /* Calculate lengths of given strings */
+    cchName = strlen(pszName);
+    cchDisplayName = strlen(pszDisplayName);
+    cchComment = strlen(pszComment);
 
-    l = strlen(name);
-    size += l + 1;
-
-    tmp.u.cpanel.offsDispName = l+1;
-    l = strlen(displayName);
-    size += l + 1;
-
-    tmp.u.cpanel.offsComment = tmp.u.cpanel.offsDispName + 1 + l;
-    l = strlen(comment);
-    size += l + 1;
-
-    pidl = (LPITEMIDLIST)SHAlloc(size + 4);
+    /* Allocate PIDL */
+    cbData = sizeof(pidl->mkid.cb) + sizeof(pData->type) + sizeof(pData->u.cpanel) - sizeof(pData->u.cpanel.szName)
+           + cchName + cchDisplayName + cchComment + 3;
+    pidl = (LPITEMIDLIST)SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
         return NULL;
 
-    pidl->mkid.cb = size + 2;
-    memcpy(pidl->mkid.abID, &tmp, 2 + size0);
+    /* Copy data to allocated memory */
+    pidl->mkid.cb = cbData;
+    pData = (PIDLDATA *)pidl->mkid.abID;
+    pData->type = PT_CPLAPPLET;
 
-    p = &((PIDLDATA *)pidl->mkid.abID)->u.cpanel;
-    strcpy(p->szName, name);
-    strcpy(p->szName+tmp.u.cpanel.offsDispName, displayName);
-    strcpy(p->szName+tmp.u.cpanel.offsComment, comment);
+    pCP = &pData->u.cpanel;
+    pCP->dummy = 0;
+    pCP->iconIdx = iIconIdx;
+    strcpy(pCP->szName, pszName);
+    pCP->offsDispName = cchName + 1;
+    strcpy(pCP->szName + pCP->offsDispName, pszDisplayName);
+    pCP->offsComment = pCP->offsDispName + cchDisplayName + 1;
+    strcpy(pCP->szName + pCP->offsComment, pszComment);
 
-    *(WORD*)((char*)pidl + (size + 2)) = 0;
+    /* Add PIDL NULL terminator */
+    *(WORD*)(pCP->szName + pCP->offsComment + cchComment + 1) = 0;
 
     pcheck(pidl);
 
@@ -134,7 +132,7 @@ static PIDLCPanelStruct *_ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
-BOOL CControlPanelEnum::SHELL_RegisterCPanelApp(LPCSTR path)
+BOOL CControlPanelEnum::RegisterCPanelApp(LPCSTR path)
 {
     LPITEMIDLIST pidl;
     CPlApplet* applet;
@@ -177,7 +175,7 @@ BOOL CControlPanelEnum::SHELL_RegisterCPanelApp(LPCSTR path)
     return TRUE;
 }
 
-int CControlPanelEnum::SHELL_RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPath)
+int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPath)
 {
     char name[MAX_PATH];
     char value[MAX_PATH];
@@ -197,7 +195,7 @@ int CControlPanelEnum::SHELL_RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR s
             if (RegEnumValueA(hkey, idx, name, &nameLen, NULL, NULL, (LPBYTE)&value, &valueLen) != ERROR_SUCCESS)
                 break;
 
-            if (SHELL_RegisterCPanelApp(value))
+            if (RegisterCPanelApp(value))
                 ++cnt;
         }
         RegCloseKey(hkey);
@@ -206,7 +204,7 @@ int CControlPanelEnum::SHELL_RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR s
     return cnt;
 }
 
-int CControlPanelEnum::SHELL_RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath)
+int CControlPanelEnum::RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath)
 {
     char name[MAX_PATH];
     HKEY hkey;
@@ -249,7 +247,7 @@ BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
 
     /* enumerate control panel folders */
     if (dwFlags & SHCONTF_FOLDERS)
-        SHELL_RegisterCPanelFolders(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
+        RegisterCPanelFolders(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
 
     /* enumerate the control panel applets */
     if (dwFlags & SHCONTF_NONFOLDERS)
@@ -273,14 +271,14 @@ BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
                 if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
                     strcpy(p, wfd.cFileName);
                     if (strcmp(wfd.cFileName, "ncpa.cpl"))
-                        SHELL_RegisterCPanelApp(szPath);
+                        RegisterCPanelApp(szPath);
                 }
             } while(FindNextFileA(hFile, &wfd));
             FindClose(hFile);
         }
 
-        SHELL_RegisterRegistryCPanelApps(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
-        SHELL_RegisterRegistryCPanelApps(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
+        RegisterRegistryCPanelApps(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
+        RegisterRegistryCPanelApps(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls");
     }
     return TRUE;
 }
