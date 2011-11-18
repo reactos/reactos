@@ -665,26 +665,30 @@ KfLowerIrql(IN KIRQL OldIrql)
 
     /* Set old IRQL */
     Pcr->Irql = OldIrql;
-    
-    /* Check for pending software interrupts and compare with current IRQL */
-    PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[OldIrql];
-    if (PendingIrqlMask)
+
+    /* Make sure interrupts were enabled */
+    if (EFlags & EFLAGS_INTERRUPT_MASK)
     {
-        /* Check if pending IRQL affects hardware state */
-        BitScanReverse(&PendingIrql, PendingIrqlMask);
-        if (PendingIrql > DISPATCH_LEVEL)
+        /* Check for pending software interrupts and compare with current IRQL */
+        PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[OldIrql];
+        if (PendingIrqlMask)
         {
-            /* Set new PIC mask */
-            Mask.Both = Pcr->IDR;
-            __outbyte(PIC1_DATA_PORT, Mask.Master);
-            __outbyte(PIC2_DATA_PORT, Mask.Slave);
-            
-            /* Clear IRR bit */
-            Pcr->IRR ^= (1 << PendingIrql);
+            /* Check if pending IRQL affects hardware state */
+            BitScanReverse(&PendingIrql, PendingIrqlMask);
+            if (PendingIrql > DISPATCH_LEVEL)
+            {
+                /* Set new PIC mask */
+                Mask.Both = Pcr->IDR;
+                __outbyte(PIC1_DATA_PORT, Mask.Master);
+                __outbyte(PIC2_DATA_PORT, Mask.Slave);
+
+                /* Clear IRR bit */
+                Pcr->IRR ^= (1 << PendingIrql);
+            }
+
+            /* Now handle pending interrupt */
+            SWInterruptHandlerTable[PendingIrql]();
         }
-    
-        /* Now handle pending interrupt */
-        SWInterruptHandlerTable[PendingIrql]();
     }
 
     /* Restore interrupt state */
