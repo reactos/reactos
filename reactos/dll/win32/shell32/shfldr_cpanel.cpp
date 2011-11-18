@@ -566,11 +566,11 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
 */
 HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    CHAR szPath[MAX_PATH];
-    WCHAR wszPath[MAX_PATH+1]; /* +1 for potential backslash */
-    PIDLCPanelStruct* pcpanel;
+    CHAR szName[MAX_PATH];
+    WCHAR wszName[MAX_PATH+1]; /* +1 for potential backslash */
+    PIDLCPanelStruct *pCPanel;
 
-    *szPath = '\0';
+    *szName = '\0';
 
     TRACE("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump(pidl);
@@ -578,14 +578,13 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
     if (!pidl || !strRet)
     return E_INVALIDARG;
 
-    pcpanel = _ILGetCPanelPointer(pidl);
+    pCPanel = _ILGetCPanelPointer(pidl);
 
-    if (pcpanel)
+    if (pCPanel)
     {
-        lstrcpyA(szPath, pcpanel->szName+pcpanel->offsDispName);
-
-        if (!(dwFlags & SHGDN_FORPARSING))
-            FIXME("retrieve display name from control panel app\n");
+        /* copy display name from pidl - it was retrived from applet before;
+           SHGDN_FORPARSING does not need special handling */
+        lstrcpyA(szName, pCPanel->szName + pCPanel->offsDispName);
     }
     /* take names of special folders only if it's only this folder */
     else if (_ILIsSpecialFolder(pidl))
@@ -594,7 +593,7 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
 
         if (bSimplePidl)
         {
-            _ILSimpleGetTextW(pidl, wszPath, MAX_PATH);    /* append my own path */
+            _ILSimpleGetTextW(pidl, wszName, MAX_PATH);    /* append my own path */
         }
         else
         {
@@ -606,29 +605,29 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
             /* go deeper if needed */
             int len = 0;
 
-            PathAddBackslashW(wszPath);
-            len = wcslen(wszPath);
+            PathAddBackslashW(wszName);
+            len = wcslen(wszName);
 
-            if (!SUCCEEDED(SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszPath + len, MAX_PATH + 1 - len)))
+            if (!SUCCEEDED(SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszName + len, MAX_PATH + 1 - len)))
                 return E_OUTOFMEMORY;
             
-            if (!WideCharToMultiByte(CP_ACP, 0, wszPath, -1, szPath, MAX_PATH, NULL, NULL))
-                wszPath[0] = '\0';
+            if (!WideCharToMultiByte(CP_ACP, 0, wszName, -1, szName, MAX_PATH, NULL, NULL))
+                wszName[0] = '\0';
         }
         else
         {
             if (bSimplePidl)
             {
-                if (!WideCharToMultiByte(CP_ACP, 0, wszPath, -1, szPath, MAX_PATH, NULL, NULL))
-                    wszPath[0] = '\0';
+                if (!WideCharToMultiByte(CP_ACP, 0, wszName, -1, szName, MAX_PATH, NULL, NULL))
+                    wszName[0] = '\0';
             }
         }
     }
 
     strRet->uType = STRRET_CSTR;
-    lstrcpynA(strRet->cStr, szPath, MAX_PATH);
+    lstrcpynA(strRet->cStr, szName, MAX_PATH);
 
-    TRACE("--(%p)->(%s)\n", this, szPath);
+    TRACE("--(%p)->(%s)\n", this, szName);
     return S_OK;
 }
 
