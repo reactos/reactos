@@ -54,7 +54,10 @@ int _isnanl(long double __x)
 	  && ( (x.x->mantissah & (unsigned int)0x7fffffff) != 0  || x.x->mantissal != 0 ));
 }
 
-int _isinf(double __x)
+/*
+ * @implemented
+ */
+int _finite(double __x)
 {
 	union
 	{
@@ -63,15 +66,8 @@ int _isinf(double __x)
 	} x;
 
 	x.__x = &__x;
-	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
-}
 
-/*
- * @implemented
- */
-int _finite( double x )
-{
-	return !_isinf(x);
+    return ((x.x->exponent & 0x7ff) != 0x7ff);
 }
 
 int _isinfl(long double __x)
