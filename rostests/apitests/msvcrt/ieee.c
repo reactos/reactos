@@ -22,6 +22,8 @@ void test_finite(void)
     ok(_finite(tested.d) == FALSE, "_finite = TRUE\n");
     tested.l = 0xFFF8000000000001LL;
     ok(_finite(tested.d) == FALSE, "_finite = TRUE\n");
+    tested.l = 0xFFF8000000000000LL;
+    ok(_finite(tested.d) == FALSE, "_finite = TRUE\n");
     tested.l = 0xFFF7FFFFFFFFFFFFLL;
     ok(_finite(tested.d) == FALSE, "_finite = TRUE\n");
     tested.l = 0xFFF0000000000001LL;
@@ -70,6 +72,12 @@ void test_fpclass(void)
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
     tested.l = 0xFFF8000000000001LL;
     class = _fpclass(tested.d);
+    ok(class == _FPCLASS_QNAN, "class = %d\n", class);
+    tested.l = 0xFFF8000000000000LL;
+    class = _fpclass(tested.d);
+    /* Normally it has no class, but w2k3 defines it
+     * like that
+     */
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
     tested.l = 0xFFF7FFFFFFFFFFFFLL;
     class = _fpclass(tested.d);
@@ -150,6 +158,8 @@ void test_isnan(void)
     tested.l = 0xFFFFFFFFFFFFFFFFLL;
     ok(_isnan(tested.d) == TRUE, "_isnan = FALSE\n");
     tested.l = 0xFFF8000000000001LL;
+    ok(_isnan(tested.d) == TRUE, "_isnan = FALSE\n");
+    tested.l = 0xFFF8000000000000LL;
     ok(_isnan(tested.d) == TRUE, "_isnan = FALSE\n");
     tested.l = 0xFFF7FFFFFFFFFFFFLL;
     ok(_isnan(tested.d) == TRUE, "_isnan = FALSE\n");
