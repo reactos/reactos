@@ -23,6 +23,9 @@ START_TEST(splitpath)
     char dir[64];
     char fname[32];
     char ext[10];
+    DWORD Major;
+
+    Major = (DWORD)(LOBYTE(LOWORD(GetVersion())));
 
     _splitpath("c:\\dir1\\dir2\\file.ext", drive, dir, fname, ext);
     ok_str(drive, "c:");
@@ -34,17 +37,32 @@ START_TEST(splitpath)
     _splitpath("c:\\dir1\\dir2\\file.ext", 0, 0, 0, 0);
     ok_int(*_errno(), 0);
 
-    *_errno() = 0;
-    _splitpath(0, drive, dir, fname, ext);
-    ok_int(*_errno(), EINVAL);
-    ok_str(drive, "");
-    ok_str(dir, "");
-    ok_str(fname, "");
-    ok_str(ext, "");
+    if (Major >= 6)
+    {
+        *_errno() = 0;
+        _splitpath(0, drive, dir, fname, ext);
+        ok_int(*_errno(), EINVAL);
+        ok_str(drive, "");
+        ok_str(dir, "");
+        ok_str(fname, "");
+        ok_str(ext, "");
+    }
+    else
+    {
+        win_skip("This test only succeed on NT6+\n");
+    }
 
     _splitpath("\\\\?\\c:\\dir1\\dir2\\file.ext", drive, dir, fname, ext);
-    ok_str(drive, "c:");
-    ok_str(dir, "\\dir1\\dir2\\");
+    if (Major >= 6)
+    {
+        ok_str(drive, "c:");
+        ok_str(dir, "\\dir1\\dir2\\");
+    }
+    else
+    {
+        ok_str(drive, "");
+        ok_str(dir, "\\\\?\\c:\\dir1\\dir2\\");
+    }
     ok_str(fname, "file");
     ok_str(ext, ".ext");
 
@@ -61,8 +79,16 @@ START_TEST(splitpath)
     ok_str(ext, ".ext");
 
     _splitpath("\\\\?\\0:/dir1\\dir2/file.", drive, dir, fname, ext);
-    ok_str(drive, "0:");
-    ok_str(dir, "/dir1\\dir2/");
+    if (Major >= 6)
+    {
+        ok_str(drive, "0:");
+        ok_str(dir, "/dir1\\dir2/");
+    }
+    else
+    {
+        ok_str(drive, "");
+        ok_str(dir, "\\\\?\\0:/dir1\\dir2/");
+    }
     ok_str(fname, "file");
     ok_str(ext, ".");
 
