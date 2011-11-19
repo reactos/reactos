@@ -1722,15 +1722,31 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
 
 PHEAP_ENTRY NTAPI
 RtlpSplitEntry(PHEAP Heap,
+               ULONG Flags,
                PHEAP_FREE_ENTRY FreeBlock,
                SIZE_T AllocationSize,
                SIZE_T Index,
                SIZE_T Size)
 {
     PHEAP_FREE_ENTRY SplitBlock, SplitBlock2;
-    UCHAR FreeFlags;
+    UCHAR FreeFlags, EntryFlags = HEAP_ENTRY_BUSY;
     PHEAP_ENTRY InUseEntry;
     SIZE_T FreeSize;
+
+    /* Add extra flags in case of settable user value feature is requested,
+       or there is a tag (small or normal) or there is a request to
+       capture stack backtraces */
+    if ((Flags & HEAP_EXTRA_FLAGS_MASK) ||
+        Heap->PseudoTagEntries)
+    {
+        /* Add flag which means that the entry will have extra stuff attached */
+        EntryFlags |= HEAP_ENTRY_EXTRA_PRESENT;
+
+        /* NB! AllocationSize is already adjusted by RtlAllocateHeap */
+    }
+
+    /* Add settable user flags, if any */
+    EntryFlags |= (Flags & HEAP_SETTABLE_USER_FLAGS) >> 4;
 
     /* Save flags, update total free size */
     FreeFlags = FreeBlock->Flags;
@@ -1738,7 +1754,7 @@ RtlpSplitEntry(PHEAP Heap,
 
     /* Make this block an in-use one */
     InUseEntry = (PHEAP_ENTRY)FreeBlock;
-    InUseEntry->Flags = HEAP_ENTRY_BUSY;
+    InUseEntry->Flags = EntryFlags;
     InUseEntry->SmallTagIndex = 0;
 
     /* Calculate the extra amount */
@@ -1877,7 +1893,7 @@ RtlpAllocateNonDedicated(PHEAP Heap,
                     RemoveEntryList(&FreeBlock->FreeList);
 
                     /* Split it */
-                    InUseEntry = RtlpSplitEntry(Heap, FreeBlock, AllocationSize, Index, Size);
+                    InUseEntry = RtlpSplitEntry(Heap, Flags, FreeBlock, AllocationSize, Index, Size);
 
                     /* Release the lock */
                     if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
@@ -1926,7 +1942,7 @@ RtlpAllocateNonDedicated(PHEAP Heap,
         RemoveEntryList(&FreeBlock->FreeList);
 
         /* Split it */
-        InUseEntry = RtlpSplitEntry(Heap, FreeBlock, AllocationSize, Index, Size);
+        InUseEntry = RtlpSplitEntry(Heap, Flags, FreeBlock, AllocationSize, Index, Size);
 
         /* Release the lock */
         if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
@@ -2003,7 +2019,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     PLIST_ENTRY FreeListHead;
     PHEAP_ENTRY InUseEntry;
     PHEAP_FREE_ENTRY FreeBlock;
-    UCHAR FreeFlags;
+    UCHAR FreeFlags, EntryFlags = HEAP_ENTRY_BUSY;
     EXCEPTION_RECORD ExceptionRecord;
     BOOLEAN HeapLocked = FALSE;
     PHEAP_VIRTUAL_ALLOC_ENTRY VirtualBlock = NULL;
@@ -2039,6 +2055,23 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     else
         AllocationSize = 1;
     AllocationSize = (AllocationSize + Heap->AlignRound) & Heap->AlignMask;
+
+    /* Add extra flags in case of settable user value feature is requested,
+       or there is a tag (small or normal) or there is a request to
+       capture stack backtraces */
+    if ((Flags & HEAP_EXTRA_FLAGS_MASK) ||
+        Heap->PseudoTagEntries)
+    {
+        /* Add flag which means that the entry will have extra stuff attached */
+        EntryFlags |= HEAP_ENTRY_EXTRA_PRESENT;
+
+        /* Account for extra stuff size */
+        AllocationSize += sizeof(HEAP_ENTRY_EXTRA);
+    }
+
+    /* Add settable user flags, if any */
+    EntryFlags |= (Flags & HEAP_SETTABLE_USER_FLAGS) >> 4;
+
     Index = AllocationSize >>  HEAP_ENTRY_SHIFT;
 
     /* Acquire the lock if necessary */
@@ -2070,7 +2103,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
 
             /* Initialize this block */
             InUseEntry = (PHEAP_ENTRY)FreeBlock;
-            InUseEntry->Flags = HEAP_ENTRY_BUSY | (FreeFlags & HEAP_ENTRY_LAST_ENTRY);
+            InUseEntry->Flags = EntryFlags | (FreeFlags & HEAP_ENTRY_LAST_ENTRY);
             InUseEntry->UnusedBytes = (UCHAR)(AllocationSize - Size);
             InUseEntry->SmallTagIndex = 0;
         }
@@ -2113,7 +2146,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
             RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, FALSE);
 
             /* Split it */
-            InUseEntry = RtlpSplitEntry(Heap, FreeBlock, AllocationSize, Index, Size);
+            InUseEntry = RtlpSplitEntry(Heap, Flags, FreeBlock, AllocationSize, Index, Size);
         }
 
         /* Release the lock */
@@ -2175,7 +2208,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
 
         /* Initialize the newly allocated block */
         VirtualBlock->BusyBlock.Size = (USHORT)(AllocationSize - Size);
-        VirtualBlock->BusyBlock.Flags = HEAP_ENTRY_VIRTUAL_ALLOC | HEAP_ENTRY_EXTRA_PRESENT | HEAP_ENTRY_BUSY;
+        VirtualBlock->BusyBlock.Flags = EntryFlags | HEAP_ENTRY_VIRTUAL_ALLOC | HEAP_ENTRY_EXTRA_PRESENT;
         VirtualBlock->CommitSize = AllocationSize;
         VirtualBlock->ReserveSize = AllocationSize;
 
@@ -2536,10 +2569,6 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
         }
     }
 
-    /* Copy user settable flags */
-    InUseEntry->Flags &= ~HEAP_ENTRY_SETTABLE_FLAGS;
-    InUseEntry->Flags |= ((Flags & HEAP_SETTABLE_USER_FLAGS) >> 4);
-
     /* Properly "zero out" (and fill!) the space */
     if (Flags & HEAP_ZERO_MEMORY)
     {
@@ -2571,6 +2600,10 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
                       HEAP_ENTRY_SIZE,
                       HEAP_TAIL_FILL);
     }
+
+    /* Copy user settable flags */
+    InUseEntry->Flags &= ~HEAP_ENTRY_SETTABLE_FLAGS;
+    InUseEntry->Flags |= ((Flags & HEAP_SETTABLE_USER_FLAGS) >> 4);
 
     /* Return success */
     return TRUE;
@@ -3728,7 +3761,7 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
     PHEAP Heap = (PHEAP)HeapHandle;
     PHEAP_ENTRY HeapEntry;
     PHEAP_ENTRY_EXTRA Extra;
-    BOOLEAN HeapLocked = FALSE;
+    BOOLEAN HeapLocked = FALSE, ValueSet = FALSE;
 
     /* Force flags */
     Flags |= Heap->Flags;
@@ -3765,13 +3798,16 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
         /* Use extra to store the value */
         Extra = RtlpGetExtraStuffPointer(HeapEntry);
         Extra->Settable = (ULONG_PTR)UserValue;
+
+        /* Indicate that value was set */
+        ValueSet = TRUE;
     }
 
     /* Release the heap lock if it was acquired */
     if (HeapLocked)
         RtlLeaveHeapLock(Heap->LockVariable);
 
-    return TRUE;
+    return ValueSet;
 }
 
 /*

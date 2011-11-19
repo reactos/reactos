@@ -31,10 +31,11 @@
 #define HEAP_GLOBAL_TAG                 0x0800
 #define HEAP_PSEUDO_TAG_FLAG            0x8000
 #define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
+#define HEAP_TAGS_MASK                 (HEAP_TAG_MASK ^ (0xFF << HEAP_TAG_SHIFT))
 
 #define HEAP_EXTRA_FLAGS_MASK (HEAP_CAPTURE_STACK_BACKTRACES | \
                                HEAP_SETTABLE_USER_VALUE | \
-                               (HEAP_TAG_MASK ^ (0xFF << HEAP_TAG_SHIFT)))
+                               HEAP_TAGS_MASK)
 
 /* Heap entry flags */
 #define HEAP_ENTRY_BUSY           0x01
