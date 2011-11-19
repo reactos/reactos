@@ -308,7 +308,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
      */
     if ((CcCanIWrite(FileObject, Length, Wait, FALSE) == FALSE) ||
         (CcCopyWriteWontFlush(FileObject, FileOffset, Length) == FALSE) ||
-        ((FileObject->Flags & FO_WRITE_THROUGH) == TRUE))
+        ((FileObject->Flags & FO_WRITE_THROUGH)))
     {
         return FALSE;
     }
