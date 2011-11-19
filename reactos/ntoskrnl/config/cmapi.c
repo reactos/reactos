@@ -1787,6 +1787,7 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     }
     else
     {
+        DPRINT1("CmpLinkHiveToMaster failed, Status %lx\n", Status);
         /* FIXME: TODO */
         ASSERT(FALSE);
     }

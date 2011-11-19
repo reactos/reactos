@@ -343,7 +343,19 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
                           FILE_SYNCHRONOUS_IO_NONALERT | IoFlags,
                           NULL,
                           0);
-    if ((NT_SUCCESS(Status)) && (MarkAsSystemHive))
+    /* Check if anything failed until now */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Close handles and free buffers */
+        if (NameBuffer) ExFreePool(NameBuffer);
+        ObDereferenceObject(Event);
+        ZwClose(EventHandle);
+        DPRINT1("ZwCreateFile failed : %lx.\n", Status);
+        *Primary = NULL;
+        return Status;
+    }
+                          
+    if (MarkAsSystemHive)
     {
         /* We opened it, mark it as a system hive */
         Status = ZwFsControlFile(*Primary,
@@ -370,18 +382,16 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         /* If we don't support it, ignore the failure */
         if (Status == STATUS_INVALID_DEVICE_REQUEST) Status = STATUS_SUCCESS;
 
-        /* If we failed, close the handle */
-        if (!NT_SUCCESS(Status)) ZwClose(*Primary);
-    }
-
-    /* Check if anything failed until now */
-    if (!NT_SUCCESS(Status))
-    {
-        /* Close handles and free buffers */
-        if (NameBuffer) ExFreePool(NameBuffer);
-        ObDereferenceObject(Event);
-        ZwClose(EventHandle);
-        return Status;
+        if (!NT_SUCCESS(Status))
+        {
+            /* Close handles and free buffers */
+            if (NameBuffer) ExFreePool(NameBuffer);
+            ObDereferenceObject(Event);
+            ZwClose(EventHandle);
+            ZwClose(*Primary);
+            *Primary = NULL;
+            return Status;
+        }
     }
 
     /* Disable compression */
