@@ -2554,6 +2554,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
+   ASSERT(MemoryArea);
    Segment = MemoryArea->Data.SectionData.Segment;
 
    if ((Segment->WriteCopy) &&
