@@ -48,5 +48,5 @@ int _fpclass(double __d)
 			return _FPCLASS_QNAN;
 		}
 	}
-	return _FPCLASS_SNAN;
+	return _FPCLASS_QNAN;
 }
