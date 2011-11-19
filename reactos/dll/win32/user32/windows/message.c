@@ -1896,33 +1896,6 @@ DispatchMessageW(CONST MSG *lpmsg)
     return Ret;
 }
 
-LRESULT
-WINAPI
-DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-  LRESULT Result;
-  MSG AnsiMsg, UcMsg;
-
-  ERR("Desktop A Class Atom! hWnd 0x%x, Msg %d\n", hwnd, message);
-
-  AnsiMsg.hwnd = hwnd;
-  AnsiMsg.message = message;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-
-  // Desktop is always Unicode so convert Ansi here.
-  if (!MsgiAnsiToUnicodeMessage(hwnd, &UcMsg, &AnsiMsg))
-  {
-     return FALSE;
-  }
-
-  Result = DesktopWndProcW(hwnd, message, UcMsg.wParam, UcMsg.lParam);
-
-  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-
-  return Result;
-}
-
 static VOID
 IntConvertMsgToAnsi(LPMSG lpMsg)
 {
