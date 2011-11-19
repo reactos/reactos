@@ -312,7 +312,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     IoFlags = FILE_OPEN_FOR_BACKUP_INTENT |
               FILE_NO_COMPRESSION |
               FILE_RANDOM_ACCESS |
-              (NoBuffering) ? FILE_NO_INTERMEDIATE_BUFFERING : 0;
+              (NoBuffering ? FILE_NO_INTERMEDIATE_BUFFERING : 0);
 
     /* Set share and access modes */
     if ((CmpMiniNTBoot) && (CmpShareSystemHives))
