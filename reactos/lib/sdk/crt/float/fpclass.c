@@ -3,9 +3,8 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/float/fpclass.c
  * PURPOSE:     Floating-point classes
- * PROGRAMER:   Unknown
- * UPDATE HISTORY:
- *              25/11/05: Added license header
+ * PROGRAMER:   Pierre Schweitzer (pierre@reactos.org)
+ * REFERENCE:   http://babbage.cs.qc.cuny.edu/IEEE-754/References.xhtml
  */
 
 #include <precomp.h>
@@ -24,29 +23,36 @@ int _fpclass(double __d)
 	} d;
 	d.__d = &__d;
 
-	if ( d.d->exponent == 0 ) {
-		if ( d.d->mantissah == 0 && d.d->mantissal == 0 ) {
-			if ( d.d->sign == 0 )
-				return _FPCLASS_PZ;
-			else
-				return _FPCLASS_NZ;
-		} else {
-			if ( d.d->sign == 0 )
-				return _FPCLASS_PD;
-			else
-				return _FPCLASS_ND;
-		}
-	}
-	else if (d.d->exponent == 0x7ff ) {
-		if ( d.d->mantissah == 0 && d.d->mantissal == 0 ) {
-			if ( d.d->sign == 0 )
-				return _FPCLASS_PINF;
-			else
-				return _FPCLASS_NINF;
-		}
-		else if ( (d.d->mantissah & 0x80000) != 0 ) {
-			return _FPCLASS_QNAN;
-		}
-	}
-	return _FPCLASS_QNAN;
+
+    /* With 0x7ff, it can only be infinity or NaN */
+    if (d.d->exponent == 0x7ff)
+    {
+        if (d.d->mantissah == 0 && d.d->mantissal == 0)
+        {
+            return (d.d->sign == 0) ? _FPCLASS_PINF : _FPCLASS_NINF;
+        }
+        /* Windows will never return Signaling NaN */
+        else
+        {
+            return _FPCLASS_QNAN;
+        }
+    }
+
+    /* With 0, it can only be zero or denormalized number */
+    if (d.d->exponent == 0)
+    {
+        if (d.d->mantissah == 0 && d.d->mantissal == 0)
+        {
+            return (d.d->sign == 0) ? _FPCLASS_PZ : _FPCLASS_NZ;
+        }
+        else
+        {
+            return (d.d->sign == 0) ? _FPCLASS_PD : _FPCLASS_ND;
+        }
+    }
+    /* Only remain normalized numbers */
+    else
+    {
+        return (d.d->sign == 0) ? _FPCLASS_PN : _FPCLASS_NN;
+    }
 }
