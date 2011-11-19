@@ -309,6 +309,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     }
 
     /* Setup the flags */
+    // FIXME : FILE_OPEN_FOR_BACKUP_INTENT is unimplemented and breaks 3rd stage boot
     IoFlags = //FILE_OPEN_FOR_BACKUP_INTENT |
               FILE_NO_COMPRESSION |
               FILE_RANDOM_ACCESS |
