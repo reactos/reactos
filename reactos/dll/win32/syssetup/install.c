@@ -44,57 +44,64 @@ HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 /* FUNCTIONS ****************************************************************/
 
 static VOID
-DebugPrint(char* fmt,...)
+FatalError(char *pszFmt,...)
 {
-    char buffer[512];
+    char szBuffer[512];
     va_list ap;
 
-    va_start(ap, fmt);
-    vsprintf(buffer, fmt, ap);
+    va_start(ap, pszFmt);
+    vsprintf(szBuffer, pszFmt, ap);
     va_end(ap);
 
     LogItem(SYSSETUP_SEVERITY_FATAL_ERROR, L"Failed");
 
-    strcat(buffer, "\nRebooting now!");
+    strcat(szBuffer, "\nRebooting now!");
     MessageBoxA(NULL,
-                buffer,
+                szBuffer,
                 "ReactOS Setup",
                 MB_OK);
 }
 
-
-HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir, LPCTSTR iconPath, int icon_nr, LPCTSTR comment)
+static HRESULT
+CreateShellLink(
+    LPCTSTR pszLinkPath,
+    LPCTSTR pszCmd,
+    LPCTSTR pszArg,
+    LPCTSTR pszDir,
+    LPCTSTR pszIconPath,
+    int iIconNr,
+    LPCTSTR pszComment)
 {
-    IShellLink* psl;
-    IPersistFile* ppf;
+    IShellLink *psl;
+    IPersistFile *ppf;
 #ifndef _UNICODE
-    WCHAR buffer[MAX_PATH];
+    WCHAR wszBuf[MAX_PATH];
 #endif /* _UNICODE */
 
     HRESULT hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
 
     if (SUCCEEDED(hr))
     {
-        hr = psl->lpVtbl->SetPath(psl, cmd);
+        hr = psl->lpVtbl->SetPath(psl, pszCmd);
 
-        if (arg)
+        if (pszArg)
         {
-            hr = psl->lpVtbl->SetArguments(psl, arg);
+            hr = psl->lpVtbl->SetArguments(psl, pszArg);
         }
 
-        if (dir)
+        if (pszDir)
         {
-            hr = psl->lpVtbl->SetWorkingDirectory(psl, dir);
+            hr = psl->lpVtbl->SetWorkingDirectory(psl, pszDir);
         }
 
-        if (iconPath)
+        if (pszIconPath)
         {
-            hr = psl->lpVtbl->SetIconLocation(psl, iconPath, icon_nr);
+            hr = psl->lpVtbl->SetIconLocation(psl, pszIconPath, iIconNr);
         }
 
-        if (comment)
+        if (pszComment)
         {
-            hr = psl->lpVtbl->SetDescription(psl, comment);
+            hr = psl->lpVtbl->SetDescription(psl, pszComment);
         }
 
         hr = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
@@ -102,11 +109,11 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
         if (SUCCEEDED(hr))
         {
 #ifdef _UNICODE
-            hr = ppf->lpVtbl->Save(ppf, linkPath, TRUE);
+            hr = ppf->lpVtbl->Save(ppf, pszLinkPath, TRUE);
 #else /* _UNICODE */
-            MultiByteToWideChar(CP_ACP, 0, linkPath, -1, buffer, MAX_PATH);
+            MultiByteToWideChar(CP_ACP, 0, pszLinkPath, -1, wszBuf, MAX_PATH);
 
-            hr = ppf->lpVtbl->Save(ppf, buffer, TRUE);
+            hr = ppf->lpVtbl->Save(ppf, wszBuf, TRUE);
 #endif /* _UNICODE */
 
             ppf->lpVtbl->Release(ppf);
@@ -120,101 +127,105 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
 
 
 static BOOL
-CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nIdTitle, BOOL bCheckExistence, INT iIconNr)
+CreateShortcut(
+    int csidl,
+    LPCTSTR pszFolder,
+    UINT nIdName,
+    LPCTSTR pszCommand,
+    UINT nIdTitle,
+    BOOL bCheckExistence,
+    INT iIconNr)
 {
-    TCHAR path[MAX_PATH];
-    TCHAR exeName[MAX_PATH];
-    TCHAR title[256];
-    TCHAR name[256];
-    LPTSTR p = path;
-    TCHAR szWorkingDir[MAX_PATH];
-    LPTSTR lpWorkingDir = NULL;
+    TCHAR szPath[MAX_PATH];
+    TCHAR szExeName[MAX_PATH];
+    TCHAR szTitle[256];
+    TCHAR szName[256];
+    LPTSTR Ptr = szPath;
+    TCHAR szWorkingDirBuf[MAX_PATH];
+    LPTSTR pszWorkingDir = NULL;
     LPTSTR lpFilePart;
     DWORD dwLen;
 
-    if (ExpandEnvironmentStrings(command,
-                                 path,
-                                 sizeof(path) / sizeof(path[0])) == 0)
+    if (ExpandEnvironmentStrings(pszCommand,
+                                 szPath,
+                                 sizeof(szPath) / sizeof(szPath[0])) == 0)
     {
-        _tcscpy(path,
-                command);
+        _tcscpy(szPath, pszCommand);
     }
 
     if (bCheckExistence)
     {
-        if ((_taccess(path, 0 )) == -1)
+        if ((_taccess(szPath, 0 )) == -1)
             /* Expected error, don't return FALSE */
             return TRUE;
     }
 
-    dwLen = GetFullPathName(path,
-                            sizeof(szWorkingDir) / sizeof(szWorkingDir[0]),
-                            szWorkingDir,
+    dwLen = GetFullPathName(szPath,
+                            sizeof(szWorkingDirBuf) / sizeof(szWorkingDirBuf[0]),
+                            szWorkingDirBuf,
                             &lpFilePart);
-    if (dwLen != 0 && dwLen <= sizeof(szWorkingDir) / sizeof(szWorkingDir[0]))
+    if (dwLen != 0 && dwLen <= sizeof(szWorkingDirBuf) / sizeof(szWorkingDirBuf[0]))
     {
         /* Since those should only be called with (.exe) files,
            lpFilePart has not to be NULL */
         ASSERT(lpFilePart != NULL);
 
         /* Save the file name */
-        _tcscpy(exeName, lpFilePart);
+        _tcscpy(szExeName, lpFilePart);
 
         /* We're only interested in the path. Cut the file name off.
            Also remove the trailing backslash unless the working directory
            is only going to be a drive, ie. C:\ */
         *(lpFilePart--) = _T('\0');
-        if (!(lpFilePart - szWorkingDir == 2 && szWorkingDir[1] == _T(':') &&
-              szWorkingDir[2] == _T('\\')))
+        if (!(lpFilePart - szWorkingDirBuf == 2 && szWorkingDirBuf[1] == _T(':') &&
+              szWorkingDirBuf[2] == _T('\\')))
         {
             *lpFilePart = _T('\0');
         }
 
-        lpWorkingDir = szWorkingDir;
+        pszWorkingDir = szWorkingDirBuf;
     }
 
 
-    if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+    if (!SHGetSpecialFolderPath(0, szPath, csidl, TRUE))
         return FALSE;
 
-    if (folder)
+    if (pszFolder)
     {
-        p = PathAddBackslash(p);
-        _tcscpy(p, folder);
+        Ptr = PathAddBackslash(Ptr);
+        _tcscpy(Ptr, pszFolder);
     }
 
-    p = PathAddBackslash(p);
+    Ptr = PathAddBackslash(Ptr);
 
-    if (!LoadString(hDllInstance, nIdName, name, sizeof(name)/sizeof(name[0])))
+    if (!LoadString(hDllInstance, nIdName, szName, sizeof(szName)/sizeof(szName[0])))
         return FALSE;
-    _tcscpy(p, name);
+    _tcscpy(Ptr, szName);
 
-    if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
+    if (!LoadString(hDllInstance, nIdTitle, szTitle, sizeof(szTitle)/sizeof(szTitle[0])))
         return FALSE;
 
     // FIXME: we should pass 'command' straight in here, but shell32 doesn't expand it
-    return SUCCEEDED(CreateShellLink(path, exeName, _T(""), lpWorkingDir, exeName, iIconNr, title));
+    return SUCCEEDED(CreateShellLink(szPath, szExeName, _T(""), pszWorkingDir, szExeName, iIconNr, szTitle));
 }
-
 
 static BOOL
-CreateShortcutFolder(int csidl, UINT nID, LPTSTR name, int nameLen)
+CreateShortcutFolder(int csidl, UINT nID, LPTSTR pszName, int cchNameLen)
 {
-    TCHAR path[MAX_PATH];
+    TCHAR szPath[MAX_PATH];
     LPTSTR p;
 
-    if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+    if (!SHGetSpecialFolderPath(0, szPath, csidl, TRUE))
         return FALSE;
 
-    if (!LoadString(hDllInstance, nID, name, nameLen))
+    if (!LoadString(hDllInstance, nID, pszName, cchNameLen))
         return FALSE;
 
-    p = PathAddBackslash(path);
-    _tcscpy(p, name);
+    p = PathAddBackslash(szPath);
+    _tcscpy(p, pszName);
 
-    return CreateDirectory(path, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
+    return CreateDirectory(szPath, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
 }
-
 
 static BOOL
 CreateRandomSid(
@@ -242,7 +253,6 @@ CreateRandomSid(
         Sid);
     return NT_SUCCESS(Status);
 }
-
 
 static VOID
 AppendRidToSid(
@@ -279,7 +289,6 @@ AppendRidToSid(
         Dst);
 }
 
-
 static VOID
 CreateTempDir(
     IN LPCWSTR VarName)
@@ -293,9 +302,9 @@ CreateTempDir(
                      L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
                      0,
                      KEY_QUERY_VALUE,
-                     &hKey))
+                     &hKey) != ERROR_SUCCESS)
     {
-        DebugPrint("Error: %lu\n", GetLastError());
+        FatalError("Error: %lu\n", GetLastError());
         return;
     }
 
@@ -306,11 +315,10 @@ CreateTempDir(
                         NULL,
                         NULL,
                         (LPBYTE)szBuffer,
-                        &dwLength))
+                        &dwLength) != ERROR_SUCCESS)
     {
-        DebugPrint("Error: %lu\n", GetLastError());
-        RegCloseKey(hKey);
-        return;
+        FatalError("Error: %lu\n", GetLastError());
+        goto cleanup;
     }
 
     /* Expand it */
@@ -318,9 +326,8 @@ CreateTempDir(
                                   szTempDir,
                                   MAX_PATH))
     {
-        DebugPrint("Error: %lu\n", GetLastError());
-        RegCloseKey(hKey);
-        return;
+        FatalError("Error: %lu\n", GetLastError());
+        goto cleanup;
     }
 
     /* Create profiles directory */
@@ -328,22 +335,21 @@ CreateTempDir(
     {
         if (GetLastError() != ERROR_ALREADY_EXISTS)
         {
-            DebugPrint("Error: %lu\n", GetLastError());
-            RegCloseKey(hKey);
-            return;
+            FatalError("Error: %lu\n", GetLastError());
+            goto cleanup;
         }
     }
 
+cleanup:
     RegCloseKey(hKey);
 }
 
-
-BOOL
+static BOOL
 InstallSysSetupInfDevices(VOID)
 {
     INFCONTEXT InfContext;
-    WCHAR LineBuffer[256];
-    DWORD LineLength;
+    WCHAR szLineBuffer[256];
+    DWORD dwLineLength;
 
     if (!SetupFindFirstLineW(hSysSetupInf,
                             L"DeviceInfsToInstall",
@@ -357,14 +363,14 @@ InstallSysSetupInfDevices(VOID)
     {
         if (!SetupGetStringFieldW(&InfContext,
                                  0,
-                                 LineBuffer,
-                                 sizeof(LineBuffer)/sizeof(LineBuffer[0]),
-                                 &LineLength))
+                                 szLineBuffer,
+                                 sizeof(szLineBuffer)/sizeof(szLineBuffer[0]),
+                                 &dwLineLength))
         {
             return FALSE;
         }
 
-        if (!SetupDiInstallClassW(NULL, LineBuffer, DI_QUIETINSTALL, NULL))
+        if (!SetupDiInstallClassW(NULL, szLineBuffer, DI_QUIETINSTALL, NULL))
         {
             return FALSE;
         }
@@ -373,12 +379,13 @@ InstallSysSetupInfDevices(VOID)
 
     return TRUE;
 }
-BOOL
+
+static BOOL
 InstallSysSetupInfComponents(VOID)
 {
     INFCONTEXT InfContext;
-    WCHAR NameBuffer[256];
-    WCHAR SectionBuffer[256];
+    WCHAR szNameBuffer[256];
+    WCHAR szSectionBuffer[256];
     HINF hComponentInf = INVALID_HANDLE_VALUE;
 
     if (!SetupFindFirstLineW(hSysSetupInf,
@@ -394,40 +401,40 @@ InstallSysSetupInfComponents(VOID)
         {
             if (!SetupGetStringFieldW(&InfContext,
                                      1, // Get the component name
-                                     NameBuffer,
-                                     sizeof(NameBuffer)/sizeof(NameBuffer[0]),
+                                     szNameBuffer,
+                                     sizeof(szNameBuffer)/sizeof(szNameBuffer[0]),
                                      NULL))
             {
-                DebugPrint("Error while trying to get component name \n");
+                FatalError("Error while trying to get component name \n");
                 return FALSE;
             }
 
             if (!SetupGetStringFieldW(&InfContext,
                                      2, // Get the component install section
-                                     SectionBuffer,
-                                     sizeof(SectionBuffer)/sizeof(SectionBuffer[0]),
+                                     szSectionBuffer,
+                                     sizeof(szSectionBuffer)/sizeof(szSectionBuffer[0]),
                                      NULL))
             {
-                DebugPrint("Error while trying to get component install section \n");
+                FatalError("Error while trying to get component install section \n");
                 return FALSE;
             }
 
-            DPRINT("Trying to execute install section '%S' from '%S' \n", SectionBuffer , NameBuffer);
+            DPRINT("Trying to execute install section '%S' from '%S' \n", szSectionBuffer, szNameBuffer);
 
-            hComponentInf = SetupOpenInfFileW(NameBuffer,
+            hComponentInf = SetupOpenInfFileW(szNameBuffer,
                                               NULL,
                                               INF_STYLE_WIN4,
                                               NULL);
 
             if (hComponentInf == INVALID_HANDLE_VALUE)
             {
-                DebugPrint("SetupOpenInfFileW() failed to open '%S' (Error: %lu)\n", NameBuffer ,GetLastError());
+                FatalError("SetupOpenInfFileW() failed to open '%S' (Error: %lu)\n", szNameBuffer, GetLastError());
                 return FALSE;
             }
 
             if (!SetupInstallFromInfSectionW(NULL,
                                             hComponentInf,
-                                            SectionBuffer,
+                                            szSectionBuffer,
                                             SPINST_ALL,
                                             NULL,
                                             NULL,
@@ -437,7 +444,7 @@ InstallSysSetupInfComponents(VOID)
                                             NULL,
                                             NULL))
            {
-                DebugPrint("Error while trying to install : %S (Error: %lu)\n", NameBuffer, GetLastError());
+                FatalError("Error while trying to install : %S (Error: %lu)\n", szNameBuffer, GetLastError());
                 SetupCloseInfFile(hComponentInf);
                 return FALSE;
            }
@@ -455,7 +462,7 @@ EnableUserModePnpManager(VOID)
 {
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
-    BOOL ret = FALSE;
+    BOOL bRet = FALSE;
 
     hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
@@ -474,35 +481,34 @@ EnableUserModePnpManager(VOID)
         goto cleanup;
     }
 
-    ret = ChangeServiceConfigW(hService,
+    bRet = ChangeServiceConfigW(hService,
                                SERVICE_NO_CHANGE,
                                SERVICE_AUTO_START,
                                SERVICE_NO_CHANGE,
                                NULL, NULL, NULL,
                                NULL, NULL, NULL, NULL);
-    if (!ret)
+    if (!bRet)
     {
         DPRINT1("Unable to change the service configuration\n");
         goto cleanup;
     }
 
-    ret = StartServiceW(hService, 0, NULL);
-    if ((!ret) && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
+    bRet = StartServiceW(hService, 0, NULL);
+    if (!bRet && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
     {
         DPRINT1("Unable to start service\n");
         goto cleanup;
     }
 
-    ret = TRUE;
+    bRet = TRUE;
 
 cleanup:
     if (hSCManager != NULL)
         CloseServiceHandle(hSCManager);
     if (hService != NULL)
         CloseServiceHandle(hService);
-    return ret;
+    return bRet;
 }
-
 
 static INT_PTR CALLBACK
 StatusMessageWindowProc(
@@ -527,7 +533,6 @@ StatusMessageWindowProc(
     }
     return FALSE;
 }
-
 
 static DWORD WINAPI
 ShowStatusMessageThread(
@@ -568,7 +573,7 @@ ReadRegSzKey(
     LONG rc;
     DWORD dwType;
     DWORD cbData = 0;
-    LPWSTR Value;
+    LPWSTR pwszValue;
 
     if (!pValue)
         return ERROR_INVALID_PARAMETER;
@@ -579,29 +584,29 @@ ReadRegSzKey(
         return rc;
     if (dwType != REG_SZ)
         return ERROR_FILE_NOT_FOUND;
-    Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
-    if (!Value)
+    pwszValue = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
+    if (!pwszValue)
         return ERROR_NOT_ENOUGH_MEMORY;
-    rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
+    rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)pwszValue, &cbData);
     if (rc != ERROR_SUCCESS)
     {
-        HeapFree(GetProcessHeap(), 0, Value);
+        HeapFree(GetProcessHeap(), 0, pwszValue);
         return rc;
     }
     /* NULL-terminate the string */
-    Value[cbData / sizeof(WCHAR)] = '\0';
+    pwszValue[cbData / sizeof(WCHAR)] = '\0';
 
-    *pValue = Value;
+    *pValue = pwszValue;
     return ERROR_SUCCESS;
 }
 
 static BOOL
 IsConsoleBoot(VOID)
 {
-    HKEY ControlKey = NULL;
-    LPWSTR SystemStartOptions = NULL;
-    LPWSTR CurrentOption, NextOption; /* Pointers into SystemStartOptions */
-    BOOL ConsoleBoot = FALSE;
+    HKEY hControlKey = NULL;
+    LPWSTR pwszSystemStartOptions = NULL;
+    LPWSTR pwszCurrentOption, pwszNextOption; /* Pointers into SystemStartOptions */
+    BOOL bConsoleBoot = FALSE;
     LONG rc;
 
     rc = RegOpenKeyExW(
@@ -609,33 +614,36 @@ IsConsoleBoot(VOID)
         L"SYSTEM\\CurrentControlSet\\Control",
         0,
         KEY_QUERY_VALUE,
-        &ControlKey);
+        &hControlKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
 
-    rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
+    rc = ReadRegSzKey(hControlKey, L"SystemStartOptions", &pwszSystemStartOptions);
     if (rc != ERROR_SUCCESS)
         goto cleanup;
 
     /* Check for CMDCONS in SystemStartOptions */
-    CurrentOption = SystemStartOptions;
-    while (CurrentOption)
+    pwszCurrentOption = pwszSystemStartOptions;
+    while (pwszCurrentOption)
     {
-        NextOption = wcschr(CurrentOption, L' ');
-        if (NextOption)
-            *NextOption = L'\0';
-        if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
+        pwszNextOption = wcschr(pwszCurrentOption, L' ');
+        if (pwszNextOption)
+            *pwszNextOption = L'\0';
+        if (wcsicmp(pwszCurrentOption, L"CONSOLE") == 0)
         {
-            DPRINT("Found %S. Switching to console boot\n", CurrentOption);
-            ConsoleBoot = TRUE;
+            DPRINT("Found %S. Switching to console boot\n", pwszCurrentOption);
+            bConsoleBoot = TRUE;
             goto cleanup;
         }
-        CurrentOption = NextOption ? NextOption + 1 : NULL;
+        pwszCurrentOption = pwszNextOption ? pwszNextOption + 1 : NULL;
     }
 
 cleanup:
-    if (ControlKey != NULL)
-        RegCloseKey(ControlKey);
-    HeapFree(GetProcessHeap(), 0, SystemStartOptions);
-    return ConsoleBoot;
+    if (hControlKey != NULL)
+        RegCloseKey(hControlKey);
+    if (pwszSystemStartOptions)
+        HeapFree(GetProcessHeap(), 0, pwszSystemStartOptions);
+    return bConsoleBoot;
 }
 
 static BOOL
@@ -650,53 +658,58 @@ CommonInstall(VOID)
         NULL);
     if (hSysSetupInf == INVALID_HANDLE_VALUE)
     {
-        DebugPrint("SetupOpenInfFileW() failed to open 'syssetup.inf' (Error: %lu)\n", GetLastError());
+        FatalError("SetupOpenInfFileW() failed to open 'syssetup.inf' (Error: %lu)\n", GetLastError());
         return FALSE;
     }
 
     if (!InstallSysSetupInfDevices())
     {
-        DebugPrint("InstallSysSetupInfDevices() failed!\n");
-        SetupCloseInfFile(hSysSetupInf);
-        return FALSE;
+        FatalError("InstallSysSetupInfDevices() failed!\n");
+        goto error;
     }
 
     if(!InstallSysSetupInfComponents())
     {
-        DebugPrint("InstallSysSetupInfComponents() failed!\n");
-        SetupCloseInfFile(hSysSetupInf);
-        return FALSE;
+        FatalError("InstallSysSetupInfComponents() failed!\n");
+        goto error;
     }
 
     if (!IsConsoleBoot())
     {
-        CreateThread(
+        HANDLE hThread;
+
+        hThread = CreateThread(
             NULL,
             0,
             ShowStatusMessageThread,
             (LPVOID)&hWnd,
             0,
             NULL);
+
+        if (hThread)
+            CloseHandle(hThread);
     }
 
     if (!EnableUserModePnpManager())
     {
-       DebugPrint("EnableUserModePnpManager() failed!\n");
-       SetupCloseInfFile(hSysSetupInf);
-       EndDialog(hWnd, 0);
-       return FALSE;
+        FatalError("EnableUserModePnpManager() failed!\n");
+        goto error;
     }
 
     if (CMP_WaitNoPendingInstallEvents(INFINITE) != WAIT_OBJECT_0)
     {
-      DebugPrint("CMP_WaitNoPendingInstallEvents() failed!\n");
-      SetupCloseInfFile(hSysSetupInf);
-      EndDialog(hWnd, 0);
-      return FALSE;
+        FatalError("CMP_WaitNoPendingInstallEvents() failed!\n");
+        goto error;
     }
 
     EndDialog(hWnd, 0);
     return TRUE;
+
+error:
+    if (hWnd)
+        EndDialog(hWnd, 0);
+    SetupCloseInfFile(hSysSetupInf);
+    return FALSE;
 }
 
 DWORD WINAPI
@@ -704,10 +717,10 @@ InstallLiveCD(IN HINSTANCE hInstance)
 {
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
-    BOOL res;
+    BOOL bRes;
 
     if (!CommonInstall())
-        goto cleanup;
+        goto error;
     SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
@@ -718,7 +731,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
     StartupInfo.dwFlags = 0;
     StartupInfo.cbReserved2 = 0;
     StartupInfo.lpReserved2 = 0;
-    res = CreateProcessW(
+    bRes = CreateProcessW(
         L"userinit.exe",
         NULL,
         NULL,
@@ -729,12 +742,15 @@ InstallLiveCD(IN HINSTANCE hInstance)
         NULL,
         &StartupInfo,
         &ProcessInformation);
-    if (!res)
-        goto cleanup;
+    if (!bRes)
+        goto error;
+
+    CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
 
     return 0;
 
-cleanup:
+error:
     MessageBoxW(
         NULL,
         L"Failed to load LiveCD! You can shutdown your computer, or press ENTER to reboot.",
@@ -855,34 +871,34 @@ InstallReactOS(HINSTANCE hInstance)
 
     if (!InitializeProfiles())
     {
-        DebugPrint("InitializeProfiles() failed");
+        FatalError("InitializeProfiles() failed");
         return 0;
     }
 
     if (!CreateShortcuts())
     {
-        DebugPrint("InitializeProfiles() failed");
+        FatalError("InitializeProfiles() failed");
         return 0;
     }
 
     /* Initialize the Security Account Manager (SAM) */
     if (!SamInitializeSAM())
     {
-        DebugPrint("SamInitializeSAM() failed!");
+        FatalError("SamInitializeSAM() failed!");
         return 0;
     }
 
     /* Create the semi-random Domain-SID */
     if (!CreateRandomSid(&DomainSid))
     {
-        DebugPrint("Domain-SID creation failed!");
+        FatalError("Domain-SID creation failed!");
         return 0;
     }
 
     /* Set the Domain SID (aka Computer SID) */
     if (!SamSetDomainSid(DomainSid))
     {
-        DebugPrint("SamSetDomainSid() failed!");
+        FatalError("SamSetDomainSid() failed!");
         RtlFreeSid(DomainSid);
         return 0;
     }
@@ -939,7 +955,7 @@ InstallReactOS(HINSTANCE hInstance)
         LastError = GetLastError();
         if (LastError != ERROR_USER_EXISTS)
         {
-            DebugPrint("SamCreateUser() failed!");
+            FatalError("SamCreateUser() failed!");
             RtlFreeSid(AdminSid);
             RtlFreeSid(DomainSid);
             return 0;
@@ -962,7 +978,7 @@ InstallReactOS(HINSTANCE hInstance)
             ret = LogonUserW(L"Administrator", L"", L"", LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, &hToken);
             if (!ret)
             {
-                DebugPrint("LogonUserW() failed!");
+                FatalError("LogonUserW() failed!");
                 return 0;
             }
             ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
@@ -988,7 +1004,7 @@ InstallReactOS(HINSTANCE hInstance)
     /* Get shutdown privilege */
     if (! OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
     {
-        DebugPrint("OpenProcessToken() failed!");
+        FatalError("OpenProcessToken() failed!");
         return 0;
     }
     if (!LookupPrivilegeValue(
@@ -996,7 +1012,7 @@ InstallReactOS(HINSTANCE hInstance)
         SE_SHUTDOWN_NAME,
         &privs.Privileges[0].Luid))
     {
-        DebugPrint("LookupPrivilegeValue() failed!");
+        FatalError("LookupPrivilegeValue() failed!");
         return 0;
     }
     privs.PrivilegeCount = 1;
@@ -1009,7 +1025,7 @@ InstallReactOS(HINSTANCE hInstance)
         (PTOKEN_PRIVILEGES)NULL,
         NULL) == 0)
     {
-        DebugPrint("AdjustTokenPrivileges() failed!");
+        FatalError("AdjustTokenPrivileges() failed!");
         return 0;
     }
 
