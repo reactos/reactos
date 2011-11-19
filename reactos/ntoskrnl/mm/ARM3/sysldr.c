@@ -1208,7 +1208,7 @@ CheckDllState:
                 Loaded = TRUE;
 
                 /* Sanity check */
-                ASSERT(DllBase = DllEntry->DllBase);
+                ASSERT(DllBase == DllEntry->DllBase);
 
                 /* Call the initialization routines */
                 Status = MmCallDllInitialize(DllEntry, &PsLoadedModuleList);
