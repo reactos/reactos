@@ -5,6 +5,7 @@
 	<include base="msvcrt_apitest">.</include>
 	<library>wine</library>
 	<library>pseh</library>
+	<library>msvcrt</library>
 	<file>testlist.c</file>
 
 	<file>ieee.c</file>
