@@ -103,7 +103,11 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
                           NULL,
                           INSERT_LAST,
                           L"DefaultOS",
+#ifndef _WINKD_
                           L"ReactOS_KdSerial");
+#else
+                          L"ReactOS_Debug");
+#endif
     }
     else
 #endif
