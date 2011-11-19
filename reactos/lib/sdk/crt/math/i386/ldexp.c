@@ -26,6 +26,9 @@
 double ldexp (double value, int exp)
 {
     register double result;
+#ifndef __GNUC__
+    register double __dy = (double)exp;
+#endif
 
     /* Check for value correctness
      * and set errno if required
@@ -49,7 +52,6 @@ double ldexp (double value, int exp)
          : "1");
 #endif
 #else /* !__GNUC__ */
-    register double __dy = (double)exp;
     __asm
     {
         fld __dy
