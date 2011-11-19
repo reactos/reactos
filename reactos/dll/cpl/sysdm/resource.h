@@ -149,10 +149,17 @@
 #define IDC_HRDPROFUPDWN                1112
 
 
+/* copy profile */
+#define IDD_COPYPROFILE                 1200
+#define IDC_COPYPROFILEFROM             1201
+#define IDC_COPYPROFILETO               1202
+
+
 /* rename profile */
-#define IDD_RENAMEPROFILE               1200
-#define IDC_RENPROFEDITFROM             1201
-#define IDC_RENPROFEDITTO               1202
+#define IDD_RENAMEPROFILE               1300
+#define IDC_RENPROFEDITFROM             1301
+#define IDC_RENPROFEDITTO               1302
+
 
 /* licence */
 #define IDD_LICENCE                     1500
