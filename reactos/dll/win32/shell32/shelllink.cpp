@@ -588,6 +588,7 @@ HRESULT WINAPI ShellLink::Load(IStream *stm)
     HeapFree(GetProcessHeap(), 0, sComponent);
     sComponent = NULL;
 
+    iShowCmd = hdr.fStartup;
     wHotKey = (WORD)hdr.wHotKey;
     iIcoNdx = hdr.nIcon;
     FileTimeToSystemTime (&hdr.Time1, &time1);
