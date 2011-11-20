@@ -871,6 +871,7 @@ modules\rostests\winetests\wldap32\wldap32_winetest.exe                    7   o
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 modules\rostests\winetests\xmllite\xmllite_winetest.exe                    7   optional
 
+modules\rostests\apitests\advapi32\advapi32_apitest.exe                    7   optional
 modules\rostests\apitests\dciman32\dciman32_apitest.exe                    7   optional
 modules\rostests\apitests\gdi32\gdi32_apitest.exe                          7   optional
 modules\rostests\apitests\kernel32\kernel32_apitest.exe                    7   optional
