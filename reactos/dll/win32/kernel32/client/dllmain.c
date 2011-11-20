@@ -67,6 +67,7 @@ BasepInitConsole(VOID)
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
+    STARTUPINFO si;
 
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
@@ -86,8 +87,9 @@ BasepInitConsole(VOID)
     else
     {
         /* Assume one is needed */
+        GetStartupInfo(&si);
         Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
-        Request.Data.AllocConsoleRequest.Visible = TRUE;
+        Request.Data.AllocConsoleRequest.ShowCmd = si.wShowWindow;
 
         /* Handle the special flags given to us by BasepInitializeEnvironment */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -108,7 +110,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            Request.Data.AllocConsoleRequest.Visible = FALSE;
+            Request.Data.AllocConsoleRequest.ShowCmd = SW_HIDE;
         }
         else
         {

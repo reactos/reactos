@@ -83,7 +83,7 @@ typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
    BOOLEAN ConsoleNeeded;
-   BOOLEAN Visible;
+   INT ShowCmd;
    HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;
