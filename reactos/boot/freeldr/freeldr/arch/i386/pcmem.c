@@ -248,10 +248,10 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
       /* Copy data to global buffer */
       RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
 
-      TRACE("BaseAddress: 0x%p\n", (PVOID)(ULONG_PTR)PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
-      TRACE("Length: 0x%p\n", (PVOID)(ULONG_PTR)PcBiosMemoryMap[PcBiosMapCount].Length);
-      TRACE("Type: 0x%x\n", PcBiosMemoryMap[PcBiosMapCount].Type);
-      TRACE("Reserved: 0x%x\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
+      TRACE("BaseAddress: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
+      TRACE("Length: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].Length);
+      TRACE("Type: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Type);
+      TRACE("Reserved: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
       TRACE("\n");
 
       /* Check if this is free memory */
@@ -260,13 +260,12 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
           MemoryType = LoaderFree;
 
           /* Align up base of memory area */
-          RealBaseAddress = ALIGN_UP_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
-                                        MM_PAGE_SIZE);
+          RealBaseAddress = PcBiosMemoryMap[PcBiosMapCount].BaseAddress & ~(MM_PAGE_SIZE - 1ULL);
 
           /* Calculate the length after aligning the base */
           RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
                      PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
-          RealSize = ALIGN_DOWN_BY(RealSize, MM_PAGE_SIZE);
+          RealSize = (RealSize + MM_PAGE_SIZE - 1) & ~(MM_PAGE_SIZE - 1ULL);
       }
       else
       {
@@ -276,13 +275,11 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
              MemoryType = LoaderSpecialMemory;
 
           /* Align down base of memory area */
-          RealBaseAddress = ALIGN_DOWN_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
-                                          MM_PAGE_SIZE);
-
+          RealBaseAddress = PcBiosMemoryMap[PcBiosMapCount].BaseAddress & ~(MM_PAGE_SIZE - 1ULL);
           /* Calculate the length after aligning the base */
           RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
                      PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
-          RealSize = ALIGN_UP_BY(RealSize, MM_PAGE_SIZE);
+          RealSize = (RealSize + MM_PAGE_SIZE - 1) & ~(MM_PAGE_SIZE - 1ULL);
       }
 
       /* Check if we can add this descriptor */
