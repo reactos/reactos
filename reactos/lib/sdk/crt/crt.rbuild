@@ -5,7 +5,7 @@
 	<directory name="except">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-                <file>chkesp.s</file>
+				<file>chkesp.s</file>
 				<file>chkstk_asm.s</file>
 				<file>chkstk_ms.s</file>
 			</directory>
@@ -160,11 +160,11 @@
 		<file>tanh.c</file>
 		<file>powl.c</file>
 
-        <directory name="ieee754">
-            <file>j0_y0.c</file>
-            <file>j1_y1.c</file>
-            <file>jn_yn.c</file>
-        </directory>
+		<directory name="ieee754">
+			<file>j0_y0.c</file>
+			<file>j1_y1.c</file>
+			<file>jn_yn.c</file>
+		</directory>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -225,10 +225,6 @@
 				<file>sqrtf.S</file>
 				<file>tan.S</file>
 			</directory>
-			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
-			<!--<file>j0_y0.c</file>
-			<file>j1_y1.c</file>
-			<file>jn_yn.c</file>-->
 		</if>
 		<ifnot property="ARCH" value="i386">
 			<file>stubs.c</file>
