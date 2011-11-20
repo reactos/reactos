@@ -478,7 +478,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 }
 
                 /* Check if we had a Vendor ID */
-                if (Prcb->VendorString)
+                if (Prcb->VendorString[0])
                 {
                     /* Convert it to Unicode */
                     RtlInitAnsiString(&TempString, Prcb->VendorString);
