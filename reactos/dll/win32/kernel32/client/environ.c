@@ -181,24 +181,28 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
     {
         UniSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
     }
+    
+    Status = RtlInitUnicodeStringEx(&VarName, lpName);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
 
     RtlInitEmptyUnicodeString(&VarValue, lpBuffer, UniSize);
-    Status = RtlInitUnicodeStringEx(&VarName, lpName);
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlQueryEnvironmentVariable_U(NULL, &VarName, &VarValue);
-        if (!NT_SUCCESS(Status))
-        {
-            if (Status == STATUS_BUFFER_TOO_SMALL)
-            {
-                return (VarValue.Length / sizeof(WCHAR)) + sizeof(ANSI_NULL);
-            }
-            BaseSetLastNTError (Status);
-            return 0;
-        }
 
-        lpBuffer[VarValue.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    Status = RtlQueryEnvironmentVariable_U(NULL, &VarName, &VarValue);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            return (VarValue.Length / sizeof(WCHAR)) + sizeof(ANSI_NULL);
+        }
+        BaseSetLastNTError (Status);
+        return 0;
     }
+
+    lpBuffer[VarValue.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     return (VarValue.Length / sizeof(WCHAR));
 }
