@@ -1188,7 +1188,7 @@ HalpInitializePciStubs(VOID)
                                                sizeof(ULONG)))
                 {
                     /* Validate the vendor ID */
-                    if ((USHORT)VendorId != PCI_INVALID_VENDORID)
+                    if ((VendorId & 0xFFFF) != PCI_INVALID_VENDORID)
                     {
                         /* Set this as the maximum ID */
                         MaxPciBusNumber = i;
