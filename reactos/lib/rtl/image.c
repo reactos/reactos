@@ -369,7 +369,7 @@ LdrProcessRelocationBlockLongLong(
 {
     SHORT Offset;
     USHORT Type;
-    USHORT i;
+    ULONG i;
     PUSHORT ShortPtr;
     PULONG LongPtr;
     PULONGLONG LongLongPtr;
@@ -379,7 +379,6 @@ LdrProcessRelocationBlockLongLong(
         Offset = SWAPW(*TypeOffset) & 0xFFF;
         Type = SWAPW(*TypeOffset) >> 12;
         ShortPtr = (PUSHORT)(RVA(Address, Offset));
-
         /*
         * Don't relocate within the relocation section itself.
         * GCC/LD generates sometimes relocation records for the relocation section.
@@ -398,16 +397,16 @@ LdrProcessRelocationBlockLongLong(
             break;
 
         case IMAGE_REL_BASED_HIGH:
-            *ShortPtr = HIWORD(MAKELONG(0, *ShortPtr) + (LONG)Delta);
+            *ShortPtr = HIWORD(MAKELONG(0, *ShortPtr) + (Delta & 0xFFFFFFFF));
             break;
 
         case IMAGE_REL_BASED_LOW:
-            *ShortPtr = SWAPW(*ShortPtr) + LOWORD(Delta);
+            *ShortPtr = SWAPW(*ShortPtr) + LOWORD(Delta & 0xFFFF);
             break;
 
         case IMAGE_REL_BASED_HIGHLOW:
             LongPtr = (PULONG)RVA(Address, Offset);
-            *LongPtr = SWAPD(*LongPtr) + (ULONG)Delta;
+            *LongPtr = SWAPD(*LongPtr) + (Delta & 0xFFFFFFFF);
             break;
 
         case IMAGE_REL_BASED_DIR64:
