@@ -5,6 +5,7 @@
 	<directory name="except">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+                <file>chkesp.s</file>
 				<file>chkstk_asm.s</file>
 				<file>chkstk_ms.s</file>
 			</directory>

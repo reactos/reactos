@@ -24,14 +24,10 @@
 
 #ifdef __i386__
 
-void _chkesp(void)
+void _chkesp_failed(void)
 {
-}
-
-#else
-
-void _chkesp(void)
-{
+    ERR("stack got corrupted!\n");
+    __debugbreak();
 }
 
 #endif  /* __i386__ */

@@ -306,6 +306,7 @@ list(APPEND CRT_SOURCE
 
 if(ARCH MATCHES i386)
     list(APPEND CRT_SOURCE
+        except/i386/chkesp.s
         except/i386/prolog.s
         except/i386/seh.s
         except/i386/seh_prolog.s
