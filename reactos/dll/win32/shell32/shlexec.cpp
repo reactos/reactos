@@ -475,7 +475,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     }
     else if ((retval = GetLastError()) >= 32)
     {
-        TRACE("CreateProcess returned error %ld\n", retval);
+        WARN("CreateProcess returned error %ld\n", retval);
         retval = ERROR_BAD_FORMAT;
     }
 
@@ -1906,7 +1906,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     lpFile = wfileName;
 
     wcmd = wcmdBuffer;
-    len = lstrlenW(wszApplicationName) + 1;
+    len = lstrlenW(wszApplicationName) + 3;
     if (sei_tmp.lpParameters[0])
         len += 1 + lstrlenW(wszParameters);
     if (len > wcmdLen)
@@ -1914,7 +1914,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         wcmd = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         wcmdLen = len;
     }
-    strcpyW(wcmd, wszApplicationName);
+    swprintf(wcmd, L"\"%s\"", wszApplicationName);
     if (sei_tmp.lpParameters[0])
     {
         strcatW(wcmd, wSpace);
