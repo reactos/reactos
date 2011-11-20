@@ -68,6 +68,8 @@ NdisWriteConfiguration(
     WCHAR Buff[11];
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    NDIS_DbgPrint(MID_TRACE, ("Parameter type: %d\n", ParameterValue->ParameterType));
 
     /* reset parameter type to standard reg types */
     switch(ParameterValue->ParameterType)
@@ -373,7 +375,7 @@ IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
  *     TRUE if it is valid, FALSE if not
  */
 {
-    ULONG i;
+    ULONG i, Base;
 
     /* I don't think this will ever happen, but we warn it if it does */
     if (String->Length == 0)
@@ -384,6 +386,7 @@ IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
 
     /* Set the default parameter type */
     *ParameterType = NdisParameterInteger;
+    Base = 10;
 
     for (i = 0; i < String->Length / sizeof(WCHAR); i++)
     {
@@ -395,6 +398,7 @@ IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
             {
                 NDIS_DbgPrint(MID_TRACE, ("Identified hex string\n"));
                 *ParameterType = NdisParameterHexInteger;
+                Base = 0x10;
                 continue;
             }
         }
@@ -403,8 +407,8 @@ IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
         if (String->Buffer[i] == UNICODE_NULL)
             continue;
 
-        /* Make sure the character is valid for a numeric string */
-        if (UnicodeToHexByte(String->Buffer[i]) == 0xFF)
+        /* Make sure the character is valid for a numeric string of this base */
+        if (UnicodeToHexByte(String->Buffer[i]) >= Base)
             return FALSE;
     }
 
@@ -449,6 +453,7 @@ NdisReadConfiguration(
     *Status = NDIS_STATUS_FAILURE;
 
     NDIS_DbgPrint(MAX_TRACE,("requested read of %wZ\n", Keyword));
+    NDIS_DbgPrint(MID_TRACE,("requested parameter type: %d\n", ParameterType));
 
     if (ConfigurationContext == NULL)
     {
@@ -661,7 +666,7 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
         (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
     }
-    else
+    else if (KeyInformation->Type == REG_SZ)
     {
          UNICODE_STRING str;
 
@@ -697,6 +702,22 @@ NdisReadConfiguration(
              (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
              (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
          }
+    }
+    else
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Invalid type for NdisReadConfiguration (%d)\n", KeyInformation->Type));
+        NDIS_DbgPrint(MIN_TRACE, ("Requested type: %d\n", ParameterType));
+        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: %wZ\n", Keyword));
+        *Status = NDIS_STATUS_FAILURE;
+        ExFreePool(KeyInformation);
+        return;
+    }
+    
+    if ((*ParameterValue)->ParameterType != ParameterType)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Parameter type mismatch! (Requested: %d | Received: %d)\n",
+                                  ParameterType, (*ParameterValue)->ParameterType));
+        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: %wZ\n", Keyword));
     }
 
     MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
