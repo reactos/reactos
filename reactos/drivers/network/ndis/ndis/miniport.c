@@ -610,6 +610,8 @@ MiniLocateDevice(
         return NULL;
     }
 
+    NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
+
     KeAcquireSpinLock(&AdapterListLock, &OldIrql);
     {
         CurrentEntry = AdapterListHead.Flink;
@@ -621,9 +623,9 @@ MiniLocateDevice(
             ASSERT(Adapter);
 
             NDIS_DbgPrint(DEBUG_MINIPORT, ("Examining adapter 0x%lx\n", Adapter));
-            NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
-            NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
 
+            /* We're technically not allowed to call this above PASSIVE_LEVEL, but it doesn't break
+             * right now and I'd rather use a working API than reimplement it here */
             if (RtlCompareUnicodeString(AdapterName, &Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0)
             {
                 break;
