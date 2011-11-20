@@ -508,7 +508,7 @@ MiniTransferDataComplete(
     KeLowerIrql(OldIrql);
 }
 
-
+
 BOOLEAN
 MiniAdapterHasAddress(
     PLOGICAL_ADAPTER Adapter,
@@ -522,68 +522,67 @@ MiniAdapterHasAddress(
  *     TRUE if the destination address is that of the adapter, FALSE if not
  */
 {
-  UINT Length;
-  PUCHAR Start1;
-  PUCHAR Start2;
-  PNDIS_BUFFER NdisBuffer;
-  UINT BufferLength;
+    UINT Length;
+    PUCHAR Start1;
+    PUCHAR Start2;
+    PNDIS_BUFFER NdisBuffer;
+    UINT BufferLength;
 
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+    NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
 #if DBG
-  if(!Adapter)
+    if(!Adapter)
     {
-      NDIS_DbgPrint(MIN_TRACE, ("Adapter object was null\n"));
-      return FALSE;
-    }
-
-  if(!Packet)
-    {
-      NDIS_DbgPrint(MIN_TRACE, ("Packet was null\n"));
-      return FALSE;
-    }
-#endif
-
-  NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
-
-  if (!NdisBuffer)
-    {
-      NDIS_DbgPrint(MIN_TRACE, ("Packet contains no buffers.\n"));
-      return FALSE;
-    }
-
-  NdisQueryBuffer(NdisBuffer, (PVOID)&Start2, &BufferLength);
-
-  /* FIXME: Should handle fragmented packets */
-
-  switch (Adapter->NdisMiniportBlock.MediaType)
-    {
-      case NdisMedium802_3:
-        Length = ETH_LENGTH_OF_ADDRESS;
-        /* Destination address is the first field */
-        break;
-
-      default:
-        NDIS_DbgPrint(MIN_TRACE, ("Adapter has unsupported media type (0x%X).\n", Adapter->NdisMiniportBlock.MediaType));
+        NDIS_DbgPrint(MIN_TRACE, ("Adapter object was null\n"));
         return FALSE;
     }
 
-  if (BufferLength < Length)
+    if(!Packet)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Packet was null\n"));
+        return FALSE;
+    }
+#endif
+
+    NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
+
+    if (!NdisBuffer)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Packet contains no buffers.\n"));
+        return FALSE;
+    }
+
+    NdisQueryBuffer(NdisBuffer, (PVOID)&Start2, &BufferLength);
+
+    /* FIXME: Should handle fragmented packets */
+
+    switch (Adapter->NdisMiniportBlock.MediaType)
+    {
+        case NdisMedium802_3:
+            Length = ETH_LENGTH_OF_ADDRESS;
+            /* Destination address is the first field */
+            break;
+
+        default:
+            NDIS_DbgPrint(MIN_TRACE, ("Adapter has unsupported media type (0x%X).\n", Adapter->NdisMiniportBlock.MediaType));
+            return FALSE;
+    }
+
+    if (BufferLength < Length)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Buffer is too small.\n"));
         return FALSE;
     }
 
-  Start1 = (PUCHAR)&Adapter->Address;
-  NDIS_DbgPrint(MAX_TRACE, ("packet address: %x:%x:%x:%x:%x:%x adapter address: %x:%x:%x:%x:%x:%x\n",
-      *((char *)Start1), *(((char *)Start1)+1), *(((char *)Start1)+2), *(((char *)Start1)+3), *(((char *)Start1)+4), *(((char *)Start1)+5),
-      *((char *)Start2), *(((char *)Start2)+1), *(((char *)Start2)+2), *(((char *)Start2)+3), *(((char *)Start2)+4), *(((char *)Start2)+5))
-  );
+    Start1 = (PUCHAR)&Adapter->Address;
+    NDIS_DbgPrint(MAX_TRACE, ("packet address: %x:%x:%x:%x:%x:%x adapter address: %x:%x:%x:%x:%x:%x\n",
+                              *((char *)Start1), *(((char *)Start1)+1), *(((char *)Start1)+2), *(((char *)Start1)+3), *(((char *)Start1)+4), *(((char *)Start1)+5),
+                              *((char *)Start2), *(((char *)Start2)+1), *(((char *)Start2)+2), *(((char *)Start2)+3), *(((char *)Start2)+4), *(((char *)Start2)+5)));
 
-  return (RtlCompareMemory((PVOID)Start1, (PVOID)Start2, Length) == Length);
+    return (RtlCompareMemory((PVOID)Start1, (PVOID)Start2, Length) == Length);
 }
 
-
+
 PLOGICAL_ADAPTER
 MiniLocateDevice(
     PNDIS_STRING AdapterName)
@@ -597,55 +596,55 @@ MiniLocateDevice(
  *     is responsible for dereferencing after use
  */
 {
-  KIRQL OldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PLOGICAL_ADAPTER Adapter = 0;
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PLOGICAL_ADAPTER Adapter = 0;
 
-  ASSERT(AdapterName);
+    ASSERT(AdapterName);
 
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+    NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  if(IsListEmpty(&AdapterListHead))
+    if(IsListEmpty(&AdapterListHead))
     {
-      NDIS_DbgPrint(MIN_TRACE, ("No registered miniports for protocol to bind to\n"));
-      return NULL;
+        NDIS_DbgPrint(MIN_TRACE, ("No registered miniports for protocol to bind to\n"));
+        return NULL;
     }
 
-  KeAcquireSpinLock(&AdapterListLock, &OldIrql);
+    KeAcquireSpinLock(&AdapterListLock, &OldIrql);
     {
-      CurrentEntry = AdapterListHead.Flink;
-
-      while (CurrentEntry != &AdapterListHead)
+        CurrentEntry = AdapterListHead.Flink;
+        
+        while (CurrentEntry != &AdapterListHead)
         {
-	  Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
+            Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
 
-	  ASSERT(Adapter);
+            ASSERT(Adapter);
 
-	  NDIS_DbgPrint(DEBUG_MINIPORT, ("Examining adapter 0x%lx\n", Adapter));
-	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
-	  NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
+            NDIS_DbgPrint(DEBUG_MINIPORT, ("Examining adapter 0x%lx\n", Adapter));
+            NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
+            NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
 
-	  if (RtlCompareUnicodeString(AdapterName, &Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0)
-	    {
-	      break;
-	    }
+            if (RtlCompareUnicodeString(AdapterName, &Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0)
+            {
+                break;
+            }
 
-	  Adapter = NULL;
-	  CurrentEntry = CurrentEntry->Flink;
+            Adapter = NULL;
+            CurrentEntry = CurrentEntry->Flink;
         }
     }
-  KeReleaseSpinLock(&AdapterListLock, OldIrql);
+    KeReleaseSpinLock(&AdapterListLock, OldIrql);
 
-  if(Adapter)
+    if(Adapter)
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Leaving. Adapter found at 0x%x\n", Adapter));
+        NDIS_DbgPrint(DEBUG_MINIPORT, ("Leaving. Adapter found at 0x%x\n", Adapter));
     }
-  else
+    else
     {
-      NDIS_DbgPrint(MIN_TRACE, ("Leaving (adapter not found for %wZ).\n", AdapterName));
+        NDIS_DbgPrint(MIN_TRACE, ("Leaving (adapter not found for %wZ).\n", AdapterName));
     }
 
-  return Adapter;
+    return Adapter;
 }
 
 NDIS_STATUS
