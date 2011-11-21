@@ -377,7 +377,7 @@ VOID
 NTAPI
 HalpStoreAndClearIopm(VOID)
 {
-    ULONG i, j;
+    USHORT i, j;
     PUSHORT Entry = HalpSavedIoMap;
 
     //
@@ -394,7 +394,7 @@ HalpStoreAndClearIopm(VOID)
             // Save it
             //
             ASSERT(j < 32);
-            HalpSavedIoMapData[j][0] = (UCHAR)i;
+            HalpSavedIoMapData[j][0] = i;
             HalpSavedIoMapData[j][1] = *Entry;
             j++;
         }
