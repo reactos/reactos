@@ -190,7 +190,7 @@ HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
     {
         /* Fill out the PTE */
         PointerPte = HalAddressToPte(BaseAddress);
-        PointerPte->PageFrameNumber = PhysicalAddress.QuadPart >> PAGE_SHIFT;
+        PointerPte->PageFrameNumber = (ULONG_PTR)PhysicalAddress.QuadPart >> PAGE_SHIFT;
         PointerPte->Valid = 1;
         PointerPte->Write = 1;
 

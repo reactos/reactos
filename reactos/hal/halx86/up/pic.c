@@ -678,7 +678,7 @@ KfLowerIrql(IN KIRQL OldIrql)
             if (PendingIrql > DISPATCH_LEVEL)
             {
                 /* Set new PIC mask */
-                Mask.Both = Pcr->IDR;
+                Mask.Both = Pcr->IDR & 0xFFFF;
                 __outbyte(PIC1_DATA_PORT, Mask.Master);
                 __outbyte(PIC2_DATA_PORT, Mask.Slave);
 
@@ -761,7 +761,7 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
         if (PendingIrql > DISPATCH_LEVEL)
         {
             /* Set new PIC mask */
-            Mask.Both = Pcr->IDR;
+            Mask.Both = Pcr->IDR & 0xFFFF;
             __outbyte(PIC1_DATA_PORT, Mask.Master);
             __outbyte(PIC2_DATA_PORT, Mask.Slave);
 
@@ -815,7 +815,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
         if (Irq > 8)
         {
             /* Send the EOI for the IRQ */
-            __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | (Irq - 8));
+            __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | ((Irq - 8) & 0xFF));
     
             /* Send the EOI for IRQ2 on the master because this was cascaded */
             __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | 2);
@@ -823,7 +823,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
         else
         {
             /* Send the EOI for the IRQ */
-            __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | Irq);
+            __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | (Irq &0xFF));
         }
     
         /* Enable interrupts and return success */
@@ -835,7 +835,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
     Pcr->IRR |= (1 << (Irq + 4));
     
     /* Set new PIC mask to real IRQL level, since the optimization is lost now */
-    Mask.Both = KiI8259MaskTable[CurrentIrql] | Pcr->IDR;
+    Mask.Both = (KiI8259MaskTable[CurrentIrql] | Pcr->IDR) & 0xFFFF;
     __outbyte(PIC1_DATA_PORT, Mask.Master);
     __outbyte(PIC2_DATA_PORT, Mask.Slave);
     
@@ -941,7 +941,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
     PKPCR Pcr = KeGetPcr();
 
     /* Update the PIC */
-    Mask.Both = KiI8259MaskTable[Irql] | Pcr->IDR;
+    Mask.Both = (KiI8259MaskTable[Irql] | Pcr->IDR) & 0xFFFF;
     __outbyte(PIC1_DATA_PORT, Mask.Master);
     __outbyte(PIC2_DATA_PORT, Mask.Slave);
     
@@ -959,7 +959,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
     if (Irq > 8)
     {
         /* Send the EOI for the IRQ */
-        __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | (Irq - 8));
+        __outbyte(PIC2_CONTROL_PORT, Ocw2.Bits | ((Irq - 8) & 0xFF));
 
         /* Send the EOI for IRQ2 on the master because this was cascaded */
         __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | 2);
@@ -967,7 +967,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
     else
     {
         /* Send the EOI for the IRQ */
-        __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | Irq);
+        __outbyte(PIC1_CONTROL_PORT, Ocw2.Bits | (Irq & 0xFF));
     }
 
     /* Check if this interrupt should be allowed to happen */
@@ -1129,7 +1129,7 @@ HalEnableSystemInterrupt(IN ULONG Vector,
     Pcr->IDR &= ~(1 << Irq);
 
     /* Set new PIC mask */
-    PicMask.Both = KiI8259MaskTable[Pcr->Irql] | Pcr->IDR;
+    PicMask.Both = (KiI8259MaskTable[Pcr->Irql] | Pcr->IDR) & 0xFFFF;
     __outbyte(PIC1_DATA_PORT, PicMask.Master);
     __outbyte(PIC2_DATA_PORT, PicMask.Slave);
     
@@ -1219,7 +1219,7 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
             if (PendingIrql > DISPATCH_LEVEL)
             {
                 /* Set new PIC mask */
-                Mask.Both = Pcr->IDR;
+                Mask.Both = Pcr->IDR & 0xFFFF;
                 __outbyte(PIC1_DATA_PORT, Mask.Master);
                 __outbyte(PIC2_DATA_PORT, Mask.Slave);
                 
@@ -1371,7 +1371,7 @@ HalpDispatchInterrupt2(VOID)
         if (PendingIrql > DISPATCH_LEVEL)
         {
             /* Set new PIC mask */
-            Mask.Both = Pcr->IDR;
+            Mask.Both = Pcr->IDR & 0xFFFF;
             __outbyte(PIC1_DATA_PORT, Mask.Master);
             __outbyte(PIC2_DATA_PORT, Mask.Slave);
             

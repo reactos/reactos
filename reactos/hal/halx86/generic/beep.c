@@ -91,7 +91,7 @@ HalMakeBeep(IN ULONG Frequency)
             // Next we write the reload value for channel 2
             //
             __outbyte(TIMER_CHANNEL2_DATA_PORT, Divider & 0xFF);
-            __outbyte(TIMER_CHANNEL2_DATA_PORT, Divider >> 8);
+            __outbyte(TIMER_CHANNEL2_DATA_PORT, (Divider >> 8) & 0xFF);
 
             //
             // Reconnect the speaker to the timer and re-enable the output pin

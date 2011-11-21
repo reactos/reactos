@@ -394,8 +394,9 @@ HalpStoreAndClearIopm(VOID)
             // Save it
             //
             ASSERT(j < 32);
-            HalpSavedIoMapData[j][0] = i;
+            HalpSavedIoMapData[j][0] = (UCHAR)i;
             HalpSavedIoMapData[j][1] = *Entry;
+            j++;
         }
 
         //
@@ -656,7 +657,7 @@ HalpBiosDisplayReset(VOID)
     // invalid op-code handler.
     //
     IdtPte = HalAddressToPte(((PKIPCR)KeGetPcr())->IDT);
-    RestoreWriteProtection = IdtPte->Write;
+    RestoreWriteProtection = IdtPte->Write != 0;
     IdtPte->Write = 1;
 
     //
