@@ -486,6 +486,12 @@ CreateFreeLoaderIniForReactos(
                           L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
 #endif
 
+    /* ReactOS_Screen */
+    CreateFreeLoaderEntry(IniCache, IniSection,
+                          L"ReactOS_Screen", L"\"ReactOS (Screen)\"",
+                          L"Windows2003", ArcPath,
+                          L"/DEBUG /DEBUGPORT=SCREEN /SOS");
+
     /* ReactOS_LogFile */
     CreateFreeLoaderEntry(IniCache, IniSection,
                           L"ReactOS_LogFile", L"\"ReactOS (Log file)\"",

@@ -107,6 +107,7 @@ static LONG KdbCommandHistoryIndex = 0;
 static ULONG KdbNumberOfRowsPrinted = 0;
 static ULONG KdbNumberOfColsPrinted = 0;
 static BOOLEAN KdbOutputAborted = FALSE;
+static BOOLEAN KdbRepeatLastCommand = FALSE;
 static LONG KdbNumberOfRowsTerminal = -1;
 static LONG KdbNumberOfColsTerminal = -1;
 
@@ -2469,6 +2470,8 @@ KdbpPrint(
         if (KdbNumberOfRowsTerminal > 0 &&
             (LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
         {
+            KdbRepeatLastCommand = FALSE;
+
             if (KdbNumberOfColsPrinted > 0)
                 DbgPrint("\n");
 
@@ -2789,6 +2792,8 @@ KdbpPager(
         if (KdbNumberOfRowsTerminal > 0 &&
             (LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
         {
+            KdbRepeatLastCommand = FALSE;
+
             if (KdbNumberOfColsPrinted > 0)
                 DbgPrint("\n");
 
@@ -2987,7 +2992,7 @@ KdbpReadCommand(
     PCHAR Orig = Buffer;
     ULONG ScanCode = 0;
     BOOLEAN EchoOn;
-    static CHAR LastCommand[1024] = "";
+    static CHAR LastCommand[1024];
     static CHAR NextKey = '\0';
     INT CmdHistIndex = -1;
     INT i;
@@ -3059,15 +3064,16 @@ KdbpReadCommand(
              * Repeat the last command if the user presses enter. Reduces the
              * risk of RSI when single-stepping.
              */
-            if (Buffer == Orig)
+            if (Buffer != Orig)
             {
-                RtlStringCbCopyA(Buffer, Size, LastCommand);
-            }
-            else
-            {
-                *Buffer = '\0';
+                KdbRepeatLastCommand = TRUE;
                 RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Orig);
+                *Buffer = '\0';
             }
+            else if (KdbRepeatLastCommand)
+                RtlStringCbCopyA(Buffer, Size, LastCommand);
+            else
+                *Buffer = '\0';
 
             return;
         }
