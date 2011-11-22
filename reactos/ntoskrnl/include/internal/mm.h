@@ -88,6 +88,7 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_PAGEOP_PAGEOUT                   (2)
 #define MM_PAGEOP_PAGESYNCH                 (3)
 #define MM_PAGEOP_ACCESSFAULT               (4)
+#define MM_PAGEOP_CHANGEPROTECT             (5)
 
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
@@ -1635,15 +1636,6 @@ MmProtectSectionView(
     SIZE_T Length,
     ULONG Protect,
     PULONG OldProtect
-);
-
-NTSTATUS
-NTAPI
-MmWritePageSectionView(
-    PMMSUPPORT AddressSpace,
-    PMEMORY_AREA MArea,
-    PVOID Address,
-    PMM_PAGEOP PageOp
 );
 
 NTSTATUS
