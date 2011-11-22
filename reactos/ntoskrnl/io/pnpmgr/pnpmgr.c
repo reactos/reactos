@@ -1245,7 +1245,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
 {
    ULONG KeyNameBufferLength;
    PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
-   UNICODE_STRING KeyName;
+   UNICODE_STRING KeyName = {0, 0, NULL};
    UNICODE_STRING KeyValue;
    UNICODE_STRING ValueName;
    HANDLE hKey = NULL;
@@ -1267,10 +1267,8 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
    ParentIdPrefixInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
    if (!ParentIdPrefixInformation)
    {
-       Status = STATUS_INSUFFICIENT_RESOURCES;
-       goto cleanup;
+       return STATUS_INSUFFICIENT_RESOURCES;
    }
-
 
    KeyName.Buffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
    if (!KeyName.Buffer)
