@@ -64,15 +64,29 @@ KdpGetDebugMode(PCHAR Currentp2)
     {
         /* Gheck for a valid Serial Port */
         p2 += 3;
-        Value = (ULONG)atol(p2);
-        if (Value > 0 && Value < 5)
+        if (*p2 != ':')
         {
-            /* Valid port found, enable Serial Debugging */
-            KdpDebugMode.Serial = TRUE;
+            Value = (ULONG)atol(p2);
+            if (Value > 0 && Value < 5)
+            {
+                /* Valid port found, enable Serial Debugging */
+                KdpDebugMode.Serial = TRUE;
 
-            /* Set the port to use */
-            SerialPortInfo.ComPort = Value;
-            KdpPort = Value;
+                /* Set the port to use */
+                SerialPortInfo.ComPort = Value;
+                KdpPort = Value;
+            }
+        }
+        else
+        {
+            Value = strtoul(p2 + 1, NULL, 0);
+            if (Value)
+            {
+                KdpDebugMode.Serial = TRUE;
+                SerialPortInfo.BaseAddress = Value;
+                SerialPortInfo.ComPort = 0;
+                KdpPort = 0;
+            }
         }
     }
 
