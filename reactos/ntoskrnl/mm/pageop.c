@@ -145,6 +145,8 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    ULONG_PTR Hash;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
+   
+   Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    /*
     * Calcuate the hash value for pageop structure

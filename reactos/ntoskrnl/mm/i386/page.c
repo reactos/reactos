@@ -304,21 +304,17 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
             }
             InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
-            /* Flush it before accessing it */
-            KeInvalidateTlbEntry(MiPteToAddress(PageDir));
             RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
             return (PULONG)MiAddressToPte(Address);
         }
         InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
-        /* Flush it before accessing it */
-        KeInvalidateTlbEntry(MiPteToAddress(PageDir));
     }
     return (PULONG)MiAddressToPte(Address);
 }
 
 BOOLEAN MmUnmapPageTable(PULONG Pt)
 {
-    if (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024)
+    if (!IS_HYPERSPACE(Pt))
     {
         return TRUE;
     }
@@ -383,7 +379,10 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_PRESENT, Pte));
     
-    MiFlushTlb(Pt, Address);
+    if(Pte & PA_PRESENT)
+        MiFlushTlb(Pt, Address);
+    else
+        MmUnmapPageTable(Pt);
     
     WasValid = (PAGE_MASK(Pte) != 0);
     if (!WasValid)
@@ -457,16 +456,17 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
      */
     Pte = InterlockedExchangePte(Pt, 0);
     
-    MiFlushTlb(Pt, Address);
     
     WasValid = (PAGE_MASK(Pte) != 0);
     if (WasValid)
     {
         Pfn = PTE_TO_PFN(Pte);
+        MiFlushTlb(Pt, Address);
     }
     else
     {
         Pfn = 0;
+        MmUnmapPageTable(Pt);
     }
     
     if (FreePage && WasValid)
@@ -523,7 +523,13 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
      */
     Pte = InterlockedExchangePte(Pt, 0);
     
-    MiFlushTlb(Pt, Address);
+    //MiFlushTlb(Pt, Address);
+    MmUnmapPageTable(Pt);
+    
+    if(!(Pte & 0x800))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
     
     /*
      * Return some information to the caller
@@ -632,8 +638,14 @@ MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     if (Pt == NULL)
     {
-        KeBugCheck(MEMORY_MANAGEMENT);
+        //HACK to get DPH working, waiting for MM rewrite :-/
+        //KeBugCheck(MEMORY_MANAGEMENT);
+        return;
     }
+    
+    /* Do not mark a 0 page as present */
+    if(0 == InterlockedCompareExchangePte(Pt, 0, 0))
+        return;
     
     do
     {
@@ -695,9 +707,13 @@ MmCreatePageFileMapping(PEPROCESS Process,
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    Pte = *Pt;
-    InterlockedExchangePte(Pt, SwapEntry << 1);
-    MiFlushTlb(Pt, Address);
+    Pte = InterlockedExchangePte(Pt, SwapEntry << 1);
+    if(PAGE_MASK(Pte))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    //MiFlushTlb(Pt, Address);
+    MmUnmapPageTable(Pt);
         
     return(STATUS_SUCCESS);
 }
@@ -792,19 +808,19 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         }
         oldPdeOffset = PdeOffset;
         
-        Pte = *Pt;
+        Pte = InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);;
         /* There should not be anything valid here */
-        if ((Pte & PA_PRESENT) || (Pte & 0x800))
+        if (PAGE_MASK(Pte) != 0)
         {
+            PMMPFN Pfn1 = MiGetPfnEntry(PTE_TO_PFN(Pte));
+            (void)Pfn1;
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-        InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         /* flush if currently mapped, just continue editing if hyperspace
-         * NOTE : Do not call MiFlushTlb, as it will unmap the page table,
-         * and we might need it afterwards */
-        if (Address >= MmSystemRangeStart ||
-            (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
+         * NOTE : This check is similar to what is done in MiFlushTlb, but we 
+         * don't use it because it would unmap the page table */
+        if (Addr >= MmSystemRangeStart || (!IS_HYPERSPACE(Pt)))
         {
             KeInvalidateTlbEntry(Addr);
         }
@@ -889,6 +905,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
     ULONG Attributes = 0;
     PULONG Pt;
+    ULONG Pte;
     
     DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
            Process, Address, flProtect);
@@ -910,8 +927,17 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
-    MiFlushTlb(Pt, Address);
+    Pte = InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
+    
+    if(!PAGE_MASK(Pte))
+    {
+        DPRINT1("Invalid Pte %lx\n", Pte);
+        __debugbreak();
+    }
+    if((Pte & Attributes) != Attributes)
+        MiFlushTlb(Pt, Address);
+    else
+        MmUnmapPageTable(Pt);
 }
 
 /*

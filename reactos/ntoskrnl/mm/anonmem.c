@@ -420,16 +420,42 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
             OldProtect != NewProtect)
     {
         ULONG i;
+        PMM_PAGEOP PageOp;
+        PMEMORY_AREA MArea;
+        char* addr = (char*)BaseAddress;
 
         for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
         {
-            if (MmIsPagePresent(Process,
-                        (char*)BaseAddress + (i*PAGE_SIZE)))
+            MArea = MmLocateMemoryAreaByAddress(AddressSpace, addr);
+            do
             {
-                MmSetPageProtect(Process,
-                (char*)BaseAddress + (i*PAGE_SIZE),
-                NewProtect);
+                PageOp = MmGetPageOp(MArea, Process->UniqueProcessId, addr,
+                    NULL, 0, MM_PAGEOP_CHANGEPROTECT, TRUE);
+            } while(PageOp == NULL);
+            
+            /* Should we enable/disable virtual mapping? */
+            if((NewProtect & PAGE_NOACCESS) && 
+                !(OldProtect & PAGE_NOACCESS) && 
+                (MmIsPagePresent(Process, addr)))
+            {
+                /* Set other flags if any */
+                if(NewProtect != PAGE_NOACCESS)
+                    MmSetPageProtect(Process, addr, NewProtect & ~PAGE_NOACCESS);
+                MmDisableVirtualMapping(Process, addr, NULL, NULL);
             }
+            else if((OldProtect & PAGE_NOACCESS) && !(NewProtect & PAGE_NOACCESS))
+            {
+                MmEnableVirtualMapping(Process, addr);
+            }
+            
+            /* Set new protection flags */
+            if(MmIsPagePresent(Process, addr))
+            {
+                MmSetPageProtect(Process, addr, NewProtect);
+            }
+            KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+            MmReleasePageOp(PageOp);
+            addr += PAGE_SIZE;
         }
     }
 }
