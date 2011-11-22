@@ -2902,7 +2902,7 @@ GetAppName:
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSR Notification Failed");
+        DPRINT1("CSR Notification Failed\n");
         BaseSetLastNTError(Status);
         goto Cleanup;
     }
