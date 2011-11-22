@@ -158,6 +158,8 @@ Win32CsrReleaseConsole(
         LeaveCriticalSection(&Console->Lock);
         if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
             ConioDeleteConsole(&Console->Header);
+        CloseHandle(ProcessData->ConsoleEvent);
+        ProcessData->ConsoleEvent = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_SUCCESS;
     }

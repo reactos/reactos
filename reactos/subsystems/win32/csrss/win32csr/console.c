@@ -140,7 +140,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
             GuiMode = TRUE;
         }
     }
-    if (GuiMode)
+    else /* GuiMode */
     {
         Status = GuiInitConsole(Console, ShowCmd);
         if (! NT_SUCCESS(Status))
