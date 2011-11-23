@@ -271,7 +271,7 @@ ScmAssignNewTag(PSERVICE lpService)
     DWORD dwFreeTag = 0;
     DWORD dwTagUsedBase = 1;
     BOOLEAN TagUsed[TAG_ARRAY_SIZE];
-    DWORD dwTagOffset;
+    INT nTagOffset;
     DWORD i;
     DWORD cbDataSize;
     PLIST_ENTRY ServiceEntry;
@@ -333,9 +333,9 @@ findFreeTag:
         /* mark tags in GroupOrderList as used */
         for (i = 1; i <= dwGroupTagCount; i++)
         {
-            dwTagOffset = pdwGroupTags[i] - dwTagUsedBase;
-            if (dwTagOffset >= 0 && dwTagOffset < TAG_ARRAY_SIZE)
-                TagUsed[dwTagOffset] = TRUE;
+            nTagOffset = pdwGroupTags[i] - dwTagUsedBase;
+            if (nTagOffset >= 0 && nTagOffset < TAG_ARRAY_SIZE)
+                TagUsed[nTagOffset] = TRUE;
         }
 
         /* mark tags in service list as used */
@@ -346,9 +346,9 @@ findFreeTag:
             CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
             if (CurrentService->lpGroup == lpService->lpGroup)
             {
-                dwTagOffset = CurrentService->dwTag - dwTagUsedBase;
-                if (dwTagOffset >= 0 && dwTagOffset < TAG_ARRAY_SIZE)
-                    TagUsed[dwTagOffset] = TRUE;
+                nTagOffset = CurrentService->dwTag - dwTagUsedBase;
+                if (nTagOffset >= 0 && nTagOffset < TAG_ARRAY_SIZE)
+                    TagUsed[nTagOffset] = TRUE;
             }
 
             ServiceEntry = ServiceEntry->Flink;
@@ -365,8 +365,7 @@ findFreeTag:
         }
 
         dwTagUsedBase += TAG_ARRAY_SIZE;
-    }
-    while (!dwFreeTag);
+    } while (!dwFreeTag);
 
 cleanup:
     if (pdwGroupTags)
