@@ -147,6 +147,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PMM_PAGEOP PageOp;
    
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
+   Offset = PAGE_ROUND_DOWN(Offset);
 
    /*
     * Calcuate the hash value for pageop structure
