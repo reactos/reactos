@@ -2511,13 +2511,16 @@ DWORD REnumServicesStatusW(
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
 
-    if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
+    if ((dwServiceType == 0) ||
+        ((dwServiceType & ~(SERVICE_DRIVER | SERVICE_WIN32)) != 0))
     {
         DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
+    if ((dwServiceState != SERVICE_ACTIVE) &&
+        (dwServiceState != SERVICE_INACTIVE) &&
+        (dwServiceState != SERVICE_STATE_ALL))
     {
         DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;
@@ -2667,7 +2670,7 @@ DWORD REnumServicesStatusW(
         dwRequiredSize += dwSize;
     }
 
-    if (dwError == 0)
+    if (dwError == ERROR_SUCCESS)
     {
         *pcbBytesNeeded = 0;
         if (lpResumeHandle) *lpResumeHandle = 0;
@@ -4800,7 +4803,6 @@ DWORD RQueryServiceConfig2A(
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpDescriptionW = NULL;
-    LPSTR lpDescription = NULL;
 
     DPRINT("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
@@ -4894,8 +4896,8 @@ done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    if (lpDescription != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDescription);
+    if (lpDescriptionW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDescriptionW);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
