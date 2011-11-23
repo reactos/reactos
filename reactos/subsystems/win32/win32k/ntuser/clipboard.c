@@ -780,7 +780,6 @@ cleanup:
 HANDLE APIENTRY
 NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
     HANDLE hRet = NULL;
     PCLIP pElement;
     PWINSTATION_OBJECT pWinStaObj = NULL;
@@ -861,20 +860,14 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
             if (pPaletteEl && !IS_DATA_DELAYED(pPaletteEl))
                 pgcd->hPalette = pPaletteEl->hData;
         }
+
+        hRet = pElement->hData;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
     _SEH2_END
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        goto cleanup;
-    }
-
-    hRet = pElement->hData;
 
 cleanup:
     if(pWinStaObj)
@@ -882,7 +875,7 @@ cleanup:
 
     UserLeave();
 
-    TRACE("Ret: %p\n", hRet);
+    TRACE("NtUserGetClipboardData returns %p\n", hRet);
 
     return hRet;
 }
@@ -952,12 +945,9 @@ HANDLE APIENTRY
 NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA pUnsafeScd)
 {
     SETCLIPBDATA scd;
-    NTSTATUS Status = STATUS_SUCCESS;
-    HANDLE hRet = NULL;
+    HANDLE hRet;
 
-    TRACE("NtUserSetClipboardData(%x %p %p)\n", fmt, hData, scd);
-
-    UserEnterExclusive();
+    TRACE("NtUserSetClipboardData(%x %p %p)\n", fmt, hData, pUnsafeScd);
 
     _SEH2_TRY
     {
@@ -966,20 +956,16 @@ NtUserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA pUnsafeScd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(return NULL;)
     }
     _SEH2_END
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        goto cleanup;
-    }
+    UserEnterExclusive();
 
     /* Call internal function */
     hRet = UserSetClipboardData(fmt, hData, &scd);
 
-cleanup:
     UserLeave();
 
     return hRet;

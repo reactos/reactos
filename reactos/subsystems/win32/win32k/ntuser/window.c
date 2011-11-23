@@ -3683,6 +3683,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
       case QUERY_WINDOW_REAL_ID:
          Result = (DWORD)pWnd->head.pti->pEThread->Cid.UniqueProcess;
+         break;
 
       default:
          Result = (DWORD)NULL;
