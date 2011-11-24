@@ -31,7 +31,7 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "表\示(&V)"
+		POPUP "表示(&V)"
 		BEGIN
 			MENUITEM "大きいアイコン(&G)",      FCIDM_SHVIEW_BIGICON
 			MENUITEM "小さいアイコン(&M)",      FCIDM_SHVIEW_SMALLICON
@@ -52,8 +52,8 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "最新の情報に更新",          FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "貼\り付け",                 FCIDM_SHVIEW_INSERT
-		MENUITEM "ショートカットの貼\り付け", FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "貼り付け",                 FCIDM_SHVIEW_INSERT
+		MENUITEM "ショートカットの貼り付け", FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
 		MENUITEM "プロパティ",                FCIDM_SHVIEW_PROPERTIES
 	END
@@ -159,7 +159,7 @@ CAPTION ""
 FONT 9, "MS UI Gothic"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "実行するプログラム名、または開くフォルダや文書名、インターネット リソ\ース名を入力してください。", 12289, 36, 11, 182, 18
+	LTEXT "実行するプログラム名、または開くフォルダや文書名、インターネット リソース名を入力してください。", 12289, 36, 11, 182, 18
 	LTEXT "名前(&O):", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -336,7 +336,7 @@ BEGIN
 	LTEXT "このプログラムを実行するユーザーアカウントを選択してください", -1, 10, 20, 220, 20
 	CHECKBOX "現在のユーザー (%s)", 14000, 10, 45, 150, 10
 	LTEXT "許可されていないプログラムの活動からコンピュータとデータを保護する", -1, 25, 57, 200, 10, WS_DISABLED
-	CHECKBOX "このオプションはコンピュータや個人データに危害をもたらすコンピュータウイルスを未然に防止することができます。ただし、このオプションを選択するとプログラムが正常に機能\しなくなる可能\性があります。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "このオプションはコンピュータや個人データに危害をもたらすコンピュータウイルスを未然に防止することができます。ただし、このオプションを選択するとプログラムが正常に機能しなくなる可能性があります。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "次のユーザー:", 14002, 10, 100, 90, 10
 	LTEXT "ユーザー名:", -1, 20, 118, 54, 10
 	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -360,7 +360,7 @@ BEGIN
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "最大サイズ(MB)(&A):", -1, 20, 105, 70, 10
 	RADIOBUTTON "ファイルをごみ箱に・ﾚ動せずにすぐに削除する。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "削除の確認ダイアログを表\示する(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
+	AUTOCHECKBOX "削除の確認ダイアログを表示する(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -386,7 +386,7 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
 	GROUPBOX "タスク", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "フォルダに共通のタスクを表\示する(&F)", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "フォルダに共通のタスクを表示する(&F)", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
 	AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "フォルダの参照", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
@@ -403,12 +403,12 @@ END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "表\示"
+CAPTION "表示"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-GROUPBOX "フォルダの表\示方法", -1, 7, 10, 249, 60
+GROUPBOX "フォルダの表示方法", -1, 7, 10, 249, 60
 //ICON
-LTEXT "このフォルダに使用している表\示方法(詳細表\示や並べて表\示など)\nをすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
+LTEXT "このフォルダに使用している表示方法(詳細表示や並べて表示など)\nをすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
 PUSHBUTTON "すべてのフォルダに適用(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
 PUSHBUTTON "すべてのフォルダをリセット(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
 LTEXT "詳細設定:", -1, 7, 80, 100, 10
@@ -510,7 +510,7 @@ CAPTION "混在したコンテンツ"
 FONT 9, "MS UI Gothic"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS はディスクが挿入される、もしくはこのファイルの種類のデバイスが接続されたとき毎回同じ動作が可能\です:", 1001, 30, 7, 193, 20
+	LTEXT "ReactOS はディスクが挿入される、もしくはこのファイルの種類のデバイスが接続されたとき毎回同じ動作が可能です:", 1001, 30, 7, 193, 20
 	ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
 	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
 	LTEXT "ReactOS が実行する動作を選択してください", 1002, 32, 41, 190, 8
@@ -526,7 +526,7 @@ CAPTION "自動再生"
 FONT 9, "MS UI Gothic"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS はこのデバイスが接続されたとき毎回同じ動作が可能\です。", 1001, 32, 7, 190, 22
+	LTEXT "ReactOS はこのデバイスが接続されたとき毎回同じ動作が可能です。", 1001, 32, 7, 190, 22
 	LTEXT "ReactOS が実行する動作を選択してください(&W)", 1002, 32, 31, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
 	AUTOCHECKBOX "常に選択した動作を行う(&A)", 1004, 32, 143, 190, 8
@@ -727,21 +727,21 @@ BEGIN
 	IDS_EMPTY_BITBUCKET         "ごみ箱を空にする"
 	IDS_PICK_ICON_TITLE         "アイコンの選択"
 	IDS_PICK_ICON_FILTER        "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-	IDS_OPEN_WITH_FILTER        "実行可能\ ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "実行可能 ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "フォルダ"
 	IDS_VIRTUAL_DRIVER          "仮想 デバイス ドライバ"
 	IDS_BAT_FILE                "ReactOS バッチ ファイル"
 	IDS_CMD_FILE                "ReactOS コマンド スクリプト"
 	IDS_COM_FILE                "Dos アプリケーション"
 	IDS_CPL_FILE                "コントロール パネルの項目"
-	IDS_CUR_FILE                "カーソ\ル"
+	IDS_CUR_FILE                "カーソル"
 	IDS_DLL_FILE                "アプリケーション 拡張"
 	IDS_DRV_FILE                "デバイス ドライバ"
 	IDS_EXE_FILE                "アプリケーション"
 	IDS_FON_FILE                "フォント ファイル"
 	IDS_TTF_FILE                "TrueType フォント ファイル"
 	IDS_HLP_FILE                "ヘルプ ファイル"
-	IDS_INI_FILE                "構\成設定"
+	IDS_INI_FILE                "構成設定"
 	IDS_LNK_FILE                "ショートカット"
 	IDS_SYS_FILE                "システム ファイル"
 
