@@ -1,7 +1,7 @@
 /* 
  * FILE:             dll/win32/netid/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea ?tefan (PM on ReactOS Forum to fulea.stefan)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-09-09  initial translation
  */
 
@@ -29,7 +29,7 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Schimbarea identită?ii calculatorului"
+CAPTION "Schimbarea identității calculatorului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1017, 7, 5, 218, 30
@@ -74,10 +74,10 @@ BEGIN
     22 "Bun venit în grupul de lucru %1."
     23 "Bun venit în domeniul %1."
     24 "Repornirea calculatorului este necesară pentru a aplica schimbările aduse."
-    25 "Puteți schimba numele ?i apartenen?a acestui calculator la un domeniu sau grup de lucru. Schimbările pot afecta accesul la resursele rețelei."
+    25 "Puteți schimba numele și apartenența acestui calculator la un domeniu sau grup de lucru. Schimbările pot afecta accesul la resursele rețelei."
     1021 "Notă: Doar administratorii pot schimba identitatea calculatorului."
     1022 "Notă: Identitatea calculatorului nu poate fi schimbată deoarece:"
-    1030 "Noul nume ""%s"" con?ine caractere nepermise. Caracterele nepermise sunt ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / ?i ?"
+    1030 "Noul nume ""%s"" conține caractere nepermise. Caracterele nepermise sunt ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / și ?"
 //Windows allows using these characters, although it displays a warning message. Forbidding the use of these characters means incompatibility with Windows.
     3210 "&Detalii >>"
     3220 "<< &Detalii"

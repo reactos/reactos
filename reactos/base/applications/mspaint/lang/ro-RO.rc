@@ -5,6 +5,7 @@
  * PURPOSE:     Romanian Language resource file
  * TRANSLATORS: Petru Dimitriu
  *              Fulea Ștefan (2011-10-21): minor changes
+ *              Fulea Ștefan (2011-11-20): minor change
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -16,7 +17,7 @@ BEGIN
         MENUITEM "&Nou\tCtrl+N", IDM_FILENEW
         MENUITEM "&Deschidere...\tCtrl+D", IDM_FILEOPEN
         MENUITEM "Pă&strează\tCtrl+S", IDM_FILESAVE
-        MENUITEM "&Păstrează în...", IDM_FILESAVEAS
+        MENUITEM "&Păstrare în...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Pune pe fundal (în ca&rou)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Pune pe fundal (&centrat)", IDM_FILEASWALLPAPERCENTERED

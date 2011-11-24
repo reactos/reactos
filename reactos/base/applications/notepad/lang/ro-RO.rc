@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *      Fulea Ștefan (2011-10-26): minor changes
+ *      Fulea Ștefan (2011-11-20): minor change
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -47,7 +48,7 @@ BEGIN
         MENUITEM "&Nou\tCtrl+N",      CMD_NEW
         MENUITEM "&Deschidere...\tCtrl+D",  CMD_OPEN
         MENUITEM "Pă&strează\tCtrl+S",     CMD_SAVE
-        MENUITEM "&Păstrează în...",       CMD_SAVE_AS
+        MENUITEM "&Păstrare în...",       CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Configurare pagină...",    CMD_PAGE_SETUP
         MENUITEM "&Imprimă\tCtrl+P",    CMD_PRINT

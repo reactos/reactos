@@ -190,7 +190,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Accesorii"
-    IDS_CMT_CALC        "Deschide aplicația Calculator"
+    IDS_CMT_CALC        "Deschide Minicalculator"
     IDS_CMT_CMD         "Deschide linia de comandă"
     IDS_CMT_DEVMGMT     "Deschide gestionarul de dispozitive"
     IDS_CMT_EVENTVIEW   "Deschide gestionarul de evenimente"
@@ -239,7 +239,7 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP           "Instalare ReactOS"
     IDS_UNKNOWN_ERROR           "Eroare necunoscută"
-    IDS_REGISTERING_COMPONENTS  "Înregistrare componente..."
+    IDS_REGISTERING_COMPONENTS  "Înregistrarea componentelor..."
     IDS_LOADLIBRARY_FAILED      "LoadLibrary a eșuat: "
     IDS_GETPROCADDR_FAILED      "GetProcAddr a eșuat: "
     IDS_REGSVR_FAILED           "DllRegisterServer a eșuat: "
@@ -250,7 +250,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CALC       "Calculator.lnk"
+    IDS_SHORT_CALC       "Minicalculator.lnk"
     IDS_SHORT_CHARMAP    "Harta caracterelor.lnk"
     IDS_SHORT_CMD        "Linie de comandă.lnk"
     IDS_SHORT_DEVICE     "Gestionar de dispozitive.lnk"

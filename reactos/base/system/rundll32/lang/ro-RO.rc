@@ -4,8 +4,6 @@
  *                    Fulea Ștefan (2011.11.05): UTF-8 encoding, minor changes
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE

@@ -3,6 +3,7 @@
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-09-02  initial translation
+ *                   2011-11-20  minor change
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -30,5 +31,5 @@ STRINGTABLE
 BEGIN
   IDS_CPLNAME_1 "Gestionar de licențe"
   IDS_CPLDESCRIPTION_1 "Gestionar de licențe"
-  IDS_REACTOS "ReactOS - SoftPublic"
+  IDS_REACTOS "ReactOS - S.O. Public"
 END
