@@ -747,19 +747,22 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* Use HAL heap */
         HalpUnmapVirtualAddress(MappedAddress, TableLength);
+
+        LoaderExtension = LoaderBlock->Extension;
     }
     else
     {
         /* Use Mm */
         MmUnmapIoSpace(MappedAddress, TableLength << PAGE_SHIFT);
+
+        LoaderExtension = NULL;
     }
     
     /* Cache the RSDT */
     HalpAcpiCacheTable(&Rsdt->Header);
     
     /* Check for compatible loader block extension */
-    LoaderExtension = LoaderBlock->Extension;
-    if (LoaderExtension->Size >= 0x58)
+    if (LoaderExtension && (LoaderExtension->Size >= 0x58))
     {
         /* Compatible loader: did it provide an ACPI table override? */
         if ((LoaderExtension->AcpiTable) && (LoaderExtension->AcpiTableSize))
