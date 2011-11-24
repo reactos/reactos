@@ -171,6 +171,11 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
                                    NULL, 0,
                                    &gIndicators, sizeof(gIndicators));
 
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("NtDeviceIoControlFile() failed, ignored\n");
+    }
+
     SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
                    gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK,

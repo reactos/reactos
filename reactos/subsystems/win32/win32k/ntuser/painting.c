@@ -951,7 +951,7 @@ CLEANUP:
 BOOL APIENTRY
 NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
-   PWND pWnd;
+   //PWND pWnd;
    FLASHWINFO finfo = {0};
    BOOL Ret = TRUE;
 
@@ -971,7 +971,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 
    if (!Ret) goto Exit;
 
-   if (!(pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+   if (!(/* pWnd = */ (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
         finfo.cbSize != sizeof(FLASHWINFO) ||
         finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
    {

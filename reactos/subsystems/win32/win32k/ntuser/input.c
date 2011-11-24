@@ -134,14 +134,15 @@ RawInputThreadMain()
     NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
     IO_STATUS_BLOCK MouIosb, KbdIosb;
     PFILE_OBJECT pKbdDevice, pMouDevice;
-    LARGE_INTEGER WaitTimeout, ByteOffset;
+    LARGE_INTEGER ByteOffset;
+    //LARGE_INTEGER WaitTimeout;
     PVOID WaitObjects[3], pSignaledObject = NULL;
     ULONG cWaitObjects = 0, cMaxWaitObjects = 1;
     MOUSE_INPUT_DATA MouseInput;
     KEYBOARD_INPUT_DATA KeyInput;
     
     ByteOffset.QuadPart = (LONGLONG)0;
-    WaitTimeout.QuadPart = (LONGLONG)(-10000000);
+    //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
     ptiRawInput = PsGetCurrentThreadWin32Thread();
     ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
