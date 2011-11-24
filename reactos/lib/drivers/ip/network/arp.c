@@ -228,8 +228,8 @@ VOID ARPReceive(
         /* The packet had our protocol address as target. The sender
            may want to communicate with us soon, so add his address
            to our address cache */
-        NCE = NBAddNeighbor(Interface, &SrcAddress, SenderHWAddress,
-            Header->HWAddrLen, 0, ARP_COMPLETE_TIMEOUT);
+        NBAddNeighbor(Interface, &SrcAddress, SenderHWAddress,
+                      Header->HWAddrLen, 0, ARP_COMPLETE_TIMEOUT);
     }
 
     if (Header->Opcode != ARP_OPCODE_REQUEST)
