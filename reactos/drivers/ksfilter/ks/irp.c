@@ -1963,6 +1963,7 @@ KspDispatchIrp(
             break;
         case IRP_MJ_PNP:
             Dispatch = KsDefaultDispatchPnp;
+            break;
         default:
             Dispatch = NULL;
     }
