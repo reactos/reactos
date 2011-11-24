@@ -120,7 +120,7 @@ static CRITICAL_SECTION FILE_cs;
 
 static inline BOOL is_valid_fd(int fd)
 {
-  return fd >= 0 && fd < fdend && (fdesc[fd].wxflag & WX_OPEN);
+    return fd >= 0 && fd < fdend && (fdesc[fd].wxflag & WX_OPEN);
 }
 
 /* INTERNAL: Get the HANDLE for a fd
@@ -177,6 +177,7 @@ static int alloc_fd_from(HANDLE hand, int flag, int fd)
     WARN(":files exhausted!\n");
     return -1;
   }
+
   fdesc[fd].handle = hand;
   fdesc[fd].wxflag = WX_OPEN | (flag & (WX_DONTINHERIT | WX_APPEND | WX_TEXT));
 
@@ -233,6 +234,7 @@ static FILE* alloc_fp(void)
       return fstreams[i];
     }
   }
+
   return NULL;
 }
 
@@ -341,9 +343,10 @@ void msvcrt_init_io(void)
   if (!(fdesc[0].wxflag & WX_OPEN) || fdesc[0].handle == INVALID_HANDLE_VALUE)
   {
 #ifndef __REACTOS__
-    DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_INPUT_HANDLE),
-                    GetCurrentProcess(), &fdesc[0].handle, 0, TRUE,
-                    DUPLICATE_SAME_ACCESS);
+      HANDLE std = GetStdHandle(STD_INPUT_HANDLE);
+      if (std != INVALID_HANDLE_VALUE && DuplicateHandle(GetCurrentProcess(), std,
+                                                         GetCurrentProcess(), &fdesc[0].handle,
+                                                         0, TRUE, DUPLICATE_SAME_ACCESS))
 #else
       fdesc[0].handle = GetStdHandle(STD_INPUT_HANDLE);
       if (fdesc[0].handle == NULL)
@@ -351,12 +354,14 @@ void msvcrt_init_io(void)
 #endif
     fdesc[0].wxflag = WX_OPEN | WX_TEXT;
   }
+
   if (!(fdesc[1].wxflag & WX_OPEN) || fdesc[1].handle == INVALID_HANDLE_VALUE)
   {
 #ifndef __REACTOS__
-      DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_OUTPUT_HANDLE),
-                    GetCurrentProcess(), &fdesc[1].handle, 0, TRUE,
-                    DUPLICATE_SAME_ACCESS);
+      HANDLE std = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (std != INVALID_HANDLE_VALUE && DuplicateHandle(GetCurrentProcess(), std,
+                                                         GetCurrentProcess(), &fdesc[1].handle,
+                                                         0, TRUE, DUPLICATE_SAME_ACCESS))
 #else
       fdesc[1].handle = GetStdHandle(STD_OUTPUT_HANDLE);
       if (fdesc[1].handle == NULL)
@@ -364,12 +369,14 @@ void msvcrt_init_io(void)
 #endif
     fdesc[1].wxflag = WX_OPEN | WX_TEXT;
   }
+
   if (!(fdesc[2].wxflag & WX_OPEN) || fdesc[2].handle == INVALID_HANDLE_VALUE)
   {
 #ifndef __REACTOS__
-      DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_ERROR_HANDLE),
-                    GetCurrentProcess(), &fdesc[2].handle, 0, TRUE,
-                    DUPLICATE_SAME_ACCESS);
+      HANDLE std = GetStdHandle(STD_ERROR_HANDLE);
+      if (std != INVALID_HANDLE_VALUE && DuplicateHandle(GetCurrentProcess(), std,
+                                                         GetCurrentProcess(), &fdesc[2].handle,
+                                                         0, TRUE, DUPLICATE_SAME_ACCESS))
 #else
       fdesc[2].handle = GetStdHandle(STD_ERROR_HANDLE);
       if (fdesc[2].handle == NULL)
@@ -378,8 +385,8 @@ void msvcrt_init_io(void)
     fdesc[2].wxflag = WX_OPEN | WX_TEXT;
   }
 
-  TRACE(":handles (%p)(%p)(%p)\n",fdesc[0].handle,
-	fdesc[1].handle,fdesc[2].handle);
+  TRACE(":handles (%p)(%p)(%p)\n", fdesc[0].handle,
+	fdesc[1].handle, fdesc[2].handle);
 
   memset(_iob,0,3*sizeof(FILE));
   for (i = 0; i < 3; i++)
@@ -425,7 +432,7 @@ void alloc_buffer(FILE* file)
 }
 
 /* INTERNAL: Convert integer to base32 string (0-9a-v), 0 becomes "" */
-static void int_to_base32(int num, char *str)
+static int int_to_base32(int num, char *str)
 {
   char *p;
   int n = num;
@@ -445,6 +452,8 @@ static void int_to_base32(int num, char *str)
       *p += ('a' - '0' - 10);
     num >>= 5;
   }
+
+  return digits;
 }
 
 /*********************************************************************
@@ -1953,12 +1962,13 @@ char * CDECL fgets(char *s, int size, FILE* file)
  */
 wint_t CDECL fgetwc(FILE* file)
 {
-  char c;
+  int c;
 
   if (!(fdesc[file->_file].wxflag & WX_TEXT))
     {
       wchar_t wc;
-      int i,j;
+      unsigned int i;
+      int j;
       char *chp, *wcp;
       wcp = (char *)&wc;
       for(i=0; i<sizeof(wc); i++)
