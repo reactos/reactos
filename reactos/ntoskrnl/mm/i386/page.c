@@ -213,7 +213,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     {
         /* We should have a process for user land addresses */
         ASSERT(Process != NULL);
-        
+
         if(Process != PsGetCurrentProcess())
         {
             PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
@@ -229,8 +229,9 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                     return NULL;
                 }
                 MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-                if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-                if (!Process) MI_SET_PROCESS2("Kernel Legacy");
+
+                MI_SET_PROCESS2(Process->ImageFileName);
+
                 Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
                 if (!NT_SUCCESS(Status) || Pfn == 0)
                 {
@@ -264,8 +265,8 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 return NULL;
             }
             MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
-            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
+            MI_SET_PROCESS2(Process->ImageFileName);
+
             Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
             if (!NT_SUCCESS(Status) || Pfn == 0)
             {
