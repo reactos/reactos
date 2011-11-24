@@ -580,37 +580,35 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR TargetId,
 		       IN UCHAR Lun)
 {
-    UNIMPLEMENTED;
-#if 0
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PLIST_ENTRY Entry;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
 
-  DPRINT("ScsiPortGetLogicalUnit() called\n");
+    DPRINT("ScsiPortGetLogicalUnit() called\n");
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
-  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
-    return NULL;
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
-  Entry = DeviceExtension->LunExtensionListHead.Flink;
-  while (Entry != &DeviceExtension->LunExtensionListHead)
+    /* Check the extension size */
+    if (!DeviceExtension->LunExtensionSize)
     {
-      LunExtension = CONTAINING_RECORD(Entry,
-				       SCSI_PORT_LUN_EXTENSION,
-				       List);
-      if (LunExtension->PathId == PathId &&
-	  LunExtension->TargetId == TargetId &&
-	  LunExtension->Lun == Lun)
-	{
-	  return (PVOID)&LunExtension->MiniportLunExtension;
-	}
-
-      Entry = Entry->Flink;
+        /* They didn't want one */
+        return NULL;
     }
-#endif
-  return NULL;
+
+    LunExtension = SpiGetLunExtension(DeviceExtension,
+                                      PathId,
+                                      TargetId,
+                                      Lun);
+    /* Check that the logical unit exists */
+    if (!LunExtension)
+    {
+        /* Nope, return NULL */
+        return NULL;
+    }
+
+    /* Return the logical unit miniport extension */
+    return (LunExtension + 1);
 }
 
 
