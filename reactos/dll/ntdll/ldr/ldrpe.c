@@ -24,7 +24,7 @@ NTAPI
 AVrfPageHeapDllNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     /* Check if page heap dll notification is turned on */
-    if (!(RtlpDphGlobalFlags && DPH_FLAG_DLL_NOTIFY))
+    if (!(RtlpDphGlobalFlags & DPH_FLAG_DLL_NOTIFY))
         return;
 
     /* We don't support this flag currently */
