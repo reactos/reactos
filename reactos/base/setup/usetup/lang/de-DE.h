@@ -24,13 +24,13 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Bitte w„hlen Sie die Sprache, die Sie w„hrend des Setups verwenden wollen.",
+        "\x07  Bitte w„hlen Sie die Sprache, die Sie w„hrend des Setups verwenden",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Dann drcken Sie ENTER.",
+        "wollen.  Dann drcken Sie ENTER.",
         TEXT_STYLE_NORMAL
     },
     {

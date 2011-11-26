@@ -269,6 +269,25 @@ CONSOLE_SetTextXY(
 		&Written);
 }
 
+static
+VOID
+CONSOLE_ClearTextXY(IN SHORT x,
+                    IN SHORT y,
+                    IN SHORT Length)
+{
+    COORD coPos;
+    DWORD Written;
+
+    coPos.X = x;
+    coPos.Y = y;
+
+    FillConsoleOutputCharacterA(StdOutput,
+                                ' ',
+                                Length,
+                                coPos,
+                                &Written);
+}
+
 VOID
 CONSOLE_SetInputTextXY(
 	IN SHORT x,
@@ -430,6 +449,25 @@ CONSOLE_SetStatusTextX(
 		coPos,
 		&Written);
 }
+
+static
+VOID
+CONSOLE_ClearStatusTextX(IN SHORT x,
+                         IN SHORT Length)
+{
+    COORD coPos;
+    DWORD Written;
+
+    coPos.X = x;
+    coPos.Y = yScreen - 1;
+
+    FillConsoleOutputCharacterA(StdOutput,
+                                ' ',
+                                Length,
+                                coPos,
+                                &Written);
+}
+
 
 VOID
 CONSOLE_SetStatusTextAutoFitX(
@@ -667,6 +705,76 @@ CONSOLE_SetStyledText(
         {
             CONSOLE_SetTextXY(coPos.X, coPos.Y, Text);
         }
+    }
+}
+
+
+VOID
+CONSOLE_ClearStyledText(IN SHORT x,
+                        IN SHORT y,
+                        IN INT Flags,
+                        IN SHORT Length)
+{
+    COORD coPos;
+
+    coPos.X = x;
+    coPos.Y = y;
+
+    if (Flags & TEXT_TYPE_STATUS)
+    {
+        coPos.X = x;
+        coPos.Y = yScreen - 1;
+    }
+    else /* TEXT_TYPE_REGULAR (Default) */
+    {
+        coPos.X = x;
+        coPos.Y = y;
+    }
+
+    if (Flags & TEXT_ALIGN_CENTER)
+    {
+        coPos.X = (xScreen - Length) /2;
+    }
+    else if(Flags & TEXT_ALIGN_RIGHT)
+    {
+        coPos.X = coPos.X - Length;
+
+        if (Flags & TEXT_PADDING_SMALL)
+        {
+            coPos.X -= 1;
+        }
+        else if (Flags & TEXT_PADDING_MEDIUM)
+        {
+            coPos.X -= 2;
+        }
+        else if (Flags & TEXT_PADDING_BIG)
+        {
+            coPos.X -= 3;
+        }
+    }
+    else /* TEXT_ALIGN_LEFT (Default) */
+    {
+        if (Flags & TEXT_PADDING_SMALL)
+        {
+            coPos.X += 1;
+        }
+        else if (Flags & TEXT_PADDING_MEDIUM)
+        {
+            coPos.X += 2;
+        }
+        else if (Flags & TEXT_PADDING_BIG)
+        {
+            coPos.X += 3;
+        }
+    }
+
+    if (Flags & TEXT_TYPE_STATUS)
+    {
+        CONSOLE_ClearStatusTextX(coPos.X, Length);
+    }
+    else /* TEXT_TYPE_REGULAR (Default) */
+    {
+        CONSOLE_ClearTextXY(coPos.X, coPos.Y, Length);
     }
 }
 

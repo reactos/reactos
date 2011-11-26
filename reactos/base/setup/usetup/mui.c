@@ -40,7 +40,7 @@ PopupError(IN PCCH Text,
 
 static
 ULONG
-FindLanguageIndex()
+FindLanguageIndex(VOID)
 {
     ULONG lngIndex = 0;
 
@@ -124,6 +124,34 @@ MUIGetLayoutsList(VOID)
 }
 
 VOID
+MUIClearPage(IN ULONG page)
+{
+    const MUI_ENTRY * entry;
+    int index;
+
+    entry = FindMUIEntriesOfPage(page);
+    if (!entry)
+    {
+        PopupError("Error: Failed to find translated page",
+                   NULL,
+                   NULL,
+                   POPUP_WAIT_NONE);
+        return;
+    }
+
+    index = 0;
+    do
+    {
+        CONSOLE_ClearStyledText(entry[index].X,
+                                entry[index].Y,
+                                entry[index].Flags,
+                                strlen(entry[index].Buffer));
+        index++;
+    }
+    while (entry[index].Buffer != NULL);
+}
+
+VOID
 MUIDisplayPage(IN ULONG page)
 {
     const MUI_ENTRY * entry;
@@ -142,11 +170,10 @@ MUIDisplayPage(IN ULONG page)
     index = 0;
     do
     {
-        CONSOLE_SetStyledText (
-		    entry[index].X,
-		    entry[index].Y,
-		    entry[index].Flags,
-		    entry[index].Buffer);
+        CONSOLE_SetStyledText(entry[index].X,
+                              entry[index].Y,
+                              entry[index].Flags,
+                              entry[index].Buffer);
 
         index++;
     }
