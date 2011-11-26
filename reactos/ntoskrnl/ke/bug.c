@@ -798,7 +798,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     /* Check if this is power failure simulation */
     if (BugCheckCode == POWER_FAILURE_SIMULATE)
     {
-        /* Call the Callbacks and reboot */;
+        /* Call the Callbacks and reboot */
         KiDoBugCheckCallbacks();
         HalReturnToFirmware(HalRebootRoutine);
     }
