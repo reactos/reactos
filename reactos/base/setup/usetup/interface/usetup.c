@@ -623,6 +623,10 @@ LanguagePage(PINPUT_RECORD Ir)
         }
     }
 
+    /* Load the font */
+    SelectedLanguageId = DefaultLanguage;
+    SetConsoleCodePage();
+
     DrawGenericList(LanguageList,
                     2,
                     18,
