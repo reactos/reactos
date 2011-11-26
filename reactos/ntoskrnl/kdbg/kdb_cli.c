@@ -948,6 +948,86 @@ KdbpCmdRegs(
     return TRUE;
 }
 
+static BOOLEAN
+KdbpTrapFrameFromPrevTss(
+    PKTRAP_FRAME TrapFrame)
+{
+    ULONG_PTR Eip, Ebp;
+    KDESCRIPTOR Gdtr;
+    KGDTENTRY Desc;
+    USHORT Sel;
+    PKTSS Tss;
+
+    Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+    Sel = Ke386GetTr();
+
+    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
+        (Sel < sizeof(KGDTENTRY)) ||
+        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+        return FALSE;
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
+                                       (PVOID)(Gdtr.Base + Sel),
+                                       sizeof(KGDTENTRY))))
+        return FALSE;
+
+    if (Desc.HighWord.Bits.Type != 0xB)
+        return FALSE;
+
+    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
+                             Desc.HighWord.Bytes.BaseMid << 16 |
+                             Desc.HighWord.Bytes.BaseHi << 24);
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Sel,
+                                       (PVOID)&Tss->Backlink,
+                                       sizeof(USHORT))))
+        return FALSE;
+
+    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
+        (Sel < sizeof(KGDTENTRY)) ||
+        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+        return FALSE;
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
+                                       (PVOID)(Gdtr.Base + Sel),
+                                       sizeof(KGDTENTRY))))
+        return FALSE;
+
+    if (Desc.HighWord.Bits.Type != 0xB)
+        return FALSE;
+
+    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
+                             Desc.HighWord.Bytes.BaseMid << 16 |
+                             Desc.HighWord.Bytes.BaseHi << 24);
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Eip,
+                                       (PVOID)&Tss->Eip,
+                                       sizeof(ULONG_PTR))))
+        return FALSE;
+
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Ebp,
+                                       (PVOID)&Tss->Ebp,
+                                       sizeof(ULONG_PTR))))
+        return FALSE;
+
+    TrapFrame->Eip = Eip;
+    TrapFrame->Ebp = Ebp;
+    return TRUE;
+}
+
+VOID __cdecl KiTrap02(VOID);
+VOID FASTCALL KiTrap03Handler(IN PKTRAP_FRAME);
+VOID __cdecl KiTrap08(VOID);
+VOID __cdecl KiTrap09(VOID);
+
+static BOOLEAN
+KdbpInNmiOrDoubleFaultHandler(
+    ULONG_PTR Address)
+{
+    return (Address > (ULONG_PTR)KiTrap02 && Address < (ULONG_PTR)KiTrap03Handler) ||
+           (Address > (ULONG_PTR)KiTrap08 && Address < (ULONG_PTR)KiTrap09);
+}
+
 /*!\brief Displays a backtrace.
  */
 static BOOLEAN
@@ -1054,6 +1134,20 @@ KdbpCmdBackTrace(
 
         if (Address == 0)
             break;
+
+        if (KdbpInNmiOrDoubleFaultHandler(Address))
+        {
+            if ((GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame)))
+            {
+                Address = TrapFrame.Eip;
+                Frame = TrapFrame.Ebp;
+
+                if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
+                    KdbpPrint("<%08x>\n", Address);
+                else
+                    KdbpPrint("\n");
+            }
+        }
 
         if (!GotNextFrame)
         {
