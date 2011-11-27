@@ -139,25 +139,25 @@ int main(int argc, const char *argv[])
     {
         if (argv[i][0] != '-' && argv[i][0] != '/')
             pszTarget = argv[i];
-        else if (!stricmp(argv[i] + 1, "h"))
+        else if (!strcmp(argv[i] + 1, "h"))
             bHelp = 1;
-        else if (!stricmp(argv[i] + 1, "o") && i + 1 < argc)
+        else if (!strcmp(argv[i] + 1, "o") && i + 1 < argc)
             pszOutputPath = argv[++i];
-        else if (!stricmp(argv[i] + 1, "d") && i + 1 < argc)
+        else if (!strcmp(argv[i] + 1, "d") && i + 1 < argc)
             pszDescription = argv[++i];
-        else if (!stricmp(argv[i] + 1, "w") && i + 1 < argc)
+        else if (!strcmp(argv[i] + 1, "w") && i + 1 < argc)
             pszWorkingDir = argv[++i];
-        else if (!stricmp(argv[i] + 1, "c") && i + 1 < argc)
+        else if (!strcmp(argv[i] + 1, "c") && i + 1 < argc)
             pszCmdLineArgs = argv[++i];
-        else if (!stricmp(argv[i] + 1, "i") && i + 1 < argc)
+        else if (!strcmp(argv[i] + 1, "i") && i + 1 < argc)
         {
             pszIcon = argv[++i];
             if (i + 1 < argc && isdigit(argv[i + 1][0]))
                 IconNr = atoi(argv[++i]);
         }
-        else if (!stricmp(argv[i] + 1, "m"))
+        else if (!strcmp(argv[i] + 1, "m"))
             bMinimized = 1;
-        else if (!stricmp(argv[i] + 1, "g") && i + 1 < argc)
+        else if (!strcmp(argv[i] + 1, "g") && i + 1 < argc)
         {
             unsigned Data4Tmp[8], j;
             
