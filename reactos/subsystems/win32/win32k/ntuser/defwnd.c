@@ -295,11 +295,20 @@ GetNCHitEx(PWND pWnd, POINT pt)
 
    if (!pWnd) return HTNOWHERE;
 
-   rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
-   rcWindow.right = pWnd->rcWindow.right;
-   rcWindow.bottom = pWnd->rcWindow.bottom;
-   rcClient.right = pWnd->rcClient.right;
-   rcClient.bottom = pWnd->rcClient.bottom;
+   if (pWnd == UserGetDesktopWindow())//pWnd->fnid == FNID_DESKTOP)
+   {
+      rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
+      rcWindow.right  = UserGetSystemMetrics(SM_CXSCREEN);
+      rcWindow.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+      rcClient.right  = UserGetSystemMetrics(SM_CXSCREEN);
+      rcClient.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+   }
+   else
+   {
+      IntGetClientRect(pWnd, &rcClient); // This or
+      //rcClient = pWnd->rcClient;       // this one?
+      rcWindow = pWnd->rcWindow;
+   }
 
    if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y)) return HTNOWHERE;
 
