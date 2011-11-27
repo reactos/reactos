@@ -6,9 +6,24 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
-#include <windows.h>
+#include <stdint.h>
+
+#define SW_SHOWNORMAL 1
+#define SW_SHOWMINNOACTIVE 7
+
+typedef struct _GUID {
+    uint32_t Data1;
+    uint16_t  Data2;
+    uint16_t  Data3;
+    uint8_t  Data4[8];
+} GUID;
+
+typedef struct _FILETIME {
+    uint32_t dwLowDateTime;
+    uint32_t dwHighDateTime;
+} FILETIME, *PFILETIME;
 
 #define DEFINE_GUID2(name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) const GUID name = { l,w1,w2,{ b1,b2,b3,b4,b5,b6,b7,b8 } }
 DEFINE_GUID2(CLSID_ShellLink,0x00021401L,0,0,0xC0,0,0,0,0,0,0,0x46);
@@ -32,39 +47,39 @@ DEFINE_GUID2(CLSID_MyComputer,0x20D04FE0,0x3AEA,0x1069,0xA2,0xD8,0x08,0x00,0x2B,
 
 typedef struct _LNK_HEADER
 {
-    DWORD Signature;
+    uint32_t Signature;
     GUID Guid;
-    DWORD Flags;
-    DWORD Attributes;
+    uint32_t Flags;
+    uint32_t Attributes;
     FILETIME CreationTime;
     FILETIME ModificationTime;
     FILETIME LastAccessTime;
-    DWORD FileSize;
-    DWORD IconNr;
-    DWORD Show;
-    DWORD Hotkey;
-    DWORD Unknown;
-    DWORD Unknown2;
+    uint32_t FileSize;
+    uint32_t IconNr;
+    uint32_t Show;
+    uint32_t Hotkey;
+    uint32_t Unknown;
+    uint32_t Unknown2;
 } LNK_HEADER;
 
 typedef struct _LNK_LOCATOR_INFO
 {
-    DWORD Size;
-    DWORD DataOffset;
-    DWORD Flags;
-    DWORD LocalVolumeInfoOffset;
-    DWORD LocalBasePathnameOffset;
-    DWORD NetworkVolumeInfoOffset;
-    DWORD RemainingPathnameOffset;
+    uint32_t Size;
+    uint32_t DataOffset;
+    uint32_t Flags;
+    uint32_t LocalVolumeInfoOffset;
+    uint32_t LocalBasePathnameOffset;
+    uint32_t NetworkVolumeInfoOffset;
+    uint32_t RemainingPathnameOffset;
     char Data[0];
 } LNK_LOCATOR_INFO;
 
 typedef struct _LNK_LOCAL_VOLUME_INFO
 {
-    DWORD Size;
-    DWORD VolumeType; /* See GetDriveType */
-    DWORD SerialNumber;
-    DWORD VolumeNameOffset;
+    uint32_t Size;
+    uint32_t VolumeType; /* See GetDriveType */
+    uint32_t SerialNumber;
+    uint32_t VolumeNameOffset;
     char VolumeLabel[0];
 } LNK_LOCAL_VOLUME_INFO;
 
@@ -75,30 +90,30 @@ typedef struct _LNK_LOCAL_VOLUME_INFO
 
 typedef struct _ID_LIST_FILE
 {
-    WORD Size;
-    BYTE Type;
-    BYTE dummy;
-    DWORD dwFileSize;
-    WORD uFileDate;
-    WORD uFileTime;
-    WORD uFileAttribs;
+    uint16_t Size;
+    uint8_t Type;
+    uint8_t dummy;
+    uint32_t dwFileSize;
+    uint16_t uFileDate;
+    uint16_t uFileTime;
+    uint16_t uFileAttribs;
     char szName[0];
 } ID_LIST_FILE;
 
 typedef struct _ID_LIST_GUID
 {
-    WORD Size;
-    BYTE Type;
-    BYTE dummy;
+    uint16_t Size;
+    uint8_t Type;
+    uint8_t dummy;
     GUID guid;
 } ID_LIST_GUID;
 
 typedef struct _ID_LIST_DRIVE
 {
-    WORD Size;
-    BYTE Type;
-    CHAR szDriveName[20];
-    WORD unknown;
+    uint16_t Size;
+    uint8_t Type;
+    char szDriveName[20];
+    uint16_t unknown;
 } ID_LIST_DRIVE;
 
 #pragma pack(pop)
@@ -114,18 +129,18 @@ int main(int argc, const char *argv[])
     const char *pszIcon = NULL;
     int IconNr = 0;
     GUID Guid = CLSID_MyComputer;
-    BOOL bHelp = FALSE, bMinimized = FALSE;
+    int bHelp = 0, bMinimized = 0;
     FILE *pFile;
     LNK_HEADER Header;
-    USHORT uhTmp;
-    DWORD dwTmp;
+    uint16_t uhTmp;
+    uint32_t dwTmp;
     
     for (i = 1; i < argc; ++i)
     {
         if (argv[i][0] != '-' && argv[i][0] != '/')
             pszTarget = argv[i];
         else if (!stricmp(argv[i] + 1, "h"))
-            bHelp = TRUE;
+            bHelp = 1;
         else if (!stricmp(argv[i] + 1, "o") && i + 1 < argc)
             pszOutputPath = argv[++i];
         else if (!stricmp(argv[i] + 1, "d") && i + 1 < argc)
@@ -141,7 +156,7 @@ int main(int argc, const char *argv[])
                 IconNr = atoi(argv[++i]);
         }
         else if (!stricmp(argv[i] + 1, "m"))
-            bMinimized = TRUE;
+            bMinimized = 1;
         else if (!stricmp(argv[i] + 1, "g") && i + 1 < argc)
         {
             unsigned Data4Tmp[8], j;
@@ -151,7 +166,7 @@ int main(int argc, const char *argv[])
                   &Data4Tmp[0], &Data4Tmp[1], &Data4Tmp[2], &Data4Tmp[3],
                   &Data4Tmp[4], &Data4Tmp[5], &Data4Tmp[6], &Data4Tmp[7]);
             for (j = 0; j < 8; ++j)
-                Guid.Data4[j] = (BYTE)Data4Tmp[j];
+                Guid.Data4[j] = (uint8_t)Data4Tmp[j];
         }
         else
             printf("Invalid option: %s\n", argv[i]);
@@ -180,7 +195,7 @@ int main(int argc, const char *argv[])
     
     // Header
     memset(&Header, 0, sizeof(Header));
-    Header.Signature = (DWORD)'L';
+    Header.Signature = (uint32_t)'L';
     Header.Guid = CLSID_ShellLink;
     Header.Flags = LINK_ID_LIST;
     if (pszDescription)
@@ -200,7 +215,7 @@ int main(int argc, const char *argv[])
         ID_LIST_FILE IdListFile;
         ID_LIST_GUID IdListGuid;
         ID_LIST_DRIVE IdListDrive;
-        unsigned cbListSize = sizeof(IdListGuid) + sizeof(WORD), cchName;
+        unsigned cbListSize = sizeof(IdListGuid) + sizeof(uint16_t), cchName;
         const char *pszName = pszTarget;
         
         // ID list
