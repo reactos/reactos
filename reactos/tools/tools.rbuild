@@ -46,4 +46,7 @@
 <directory name="rbuild_helper">
 	<xi:include href="rbuild_helper/rbuild_helper.rbuild" />
 </directory>
+<directory name="mkshelllink">
+	<xi:include href="mkshelllink/mkshelllink.rbuild" />
+</directory>
 </group>

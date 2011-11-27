@@ -13,6 +13,7 @@ add_subdirectory(mkhive)
 add_subdirectory(obj2bin)
 add_subdirectory(spec2def)
 add_subdirectory(unicode)
+add_subdirectory(mkshelllink)
 
 if(NOT MSVC)
 add_subdirectory(rsym)
