@@ -56,6 +56,35 @@ function(add_message_headers _type)
     endforeach()
 endfunction()
 
+function(add_link)
+	cmake_parse_arguments(_LINK "MINIMIZE" "NAME;PATH;CMD_LINE_ARGS;ICON;GUID" "" ${ARGN})
+    if(NOT _LINK_NAME OR NOT _LINK_PATH)
+        message(FATAL_ERROR "You must provide name and path")
+    endif()
+
+	if(_LINK_CMD_LINE_ARGS)
+		set(_LINK_CMD_LINE_ARGS -c ${_LINK_CMD_LINE_ARGS})
+	endif()
+
+	if(_LINK_ICON)
+		set(_LINK_ICON -i ${_LINK_ICON})
+	endif()
+
+	if(_LINK_GUID)
+		set(_LINK_GUID -g ${_LINK_GUID})
+	endif()
+
+	if(_LINK_MINIMIZE)
+		set(_LINK_MINIMIZE "-m")
+	endif()
+
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk
+        COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk ${_LINK_CMD_LINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${_LINK_PATH}
+        DEPENDS native-mkshelllink)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
+endfunction()
+
 macro(dir_to_num dir var)
     if(${dir} STREQUAL reactos/system32)
         set(${var} 1)

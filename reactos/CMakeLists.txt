@@ -61,9 +61,9 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(lib)
 
     if(NOT MSVC)
-        export(TARGETS widl wrc gendib cabman cdmake mkhive obj2bin spec2def geninc rsym FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS widl wrc gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
