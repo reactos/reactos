@@ -167,11 +167,6 @@ typedef enum _PAGE_NUMBER
 #define POPUP_WAIT_ANY_KEY 1
 #define POPUP_WAIT_ENTER   2
 
-#define LIST_FOR_EACH(elem, list, type, field) \
-    for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
-         &(elem)->field != (list) || (elem == NULL); \
-         (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
-
 #define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
 {\
   PLIST_ENTRY current;\
