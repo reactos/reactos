@@ -302,11 +302,24 @@ BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULON
 BOOLEAN
 PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
+  EXTENDED_GEOMETRY ExtGeometry;
   REGS RegsIn;
   REGS RegsOut;
   ULONG Cylinders;
 
   TRACE("DiskGetDriveGeometry()\n");
+
+  /* Try to get the extended geometry first */
+  ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
+  if (DiskGetExtendedDriveParameters(DriveNumber, &ExtGeometry, ExtGeometry.Size))
+  {
+    Geometry->Cylinders = ExtGeometry.Cylinders;
+    Geometry->Heads = ExtGeometry.Heads;
+    Geometry->Sectors = ExtGeometry.SectorsPerTrack;
+    Geometry->BytesPerSector = ExtGeometry.BytesPerSector;
+
+    return TRUE;
+  }
 
   /* BIOS Int 13h, function 08h - Get drive parameters
    * AH = 08h
