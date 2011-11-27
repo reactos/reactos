@@ -33,5 +33,6 @@ NTSTATUS IntDetachMonitor(PDEVOBJ *pGdiDevice);
 NTSTATUS IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice);
 PMONITOR FASTCALL UserGetMonitorObject(IN HMONITOR);
 PMONITOR FASTCALL IntGetPrimaryMonitor(VOID);
+PMONITOR FASTCALL IntMonitorFromRect(PRECTL,DWORD);
 
 /* EOF */

@@ -403,6 +403,83 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
     return cMonitors;
 }
 
+PMONITOR
+FASTCALL
+IntMonitorFromRect(
+    PRECTL pRect,
+    DWORD dwFlags)
+{
+    ULONG cMonitors, LargestArea = 0, i;
+    PRECTL prcMonitorList = NULL;
+    HMONITOR *phMonitorList = NULL;
+    HMONITOR hMonitor = NULL;
+
+    /* Check if flags are valid */
+    if (dwFlags != MONITOR_DEFAULTTONULL &&
+        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
+        dwFlags != MONITOR_DEFAULTTONEAREST)
+    {
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        return NULL;
+    }
+
+    /* Find intersecting monitors */
+    cMonitors = IntGetMonitorsFromRect(pRect, &hMonitor, NULL, 1, dwFlags);
+    if (cMonitors <= 1)
+    {
+        /* No or one monitor found. Just return handle. */
+        goto cleanup;
+    }
+
+    /* There is more than one monitor. Find monitor with largest intersection.
+       Temporary reset hMonitor */
+    hMonitor = NULL;
+
+    /* Allocate helper buffers */
+    phMonitorList = ExAllocatePoolWithTag(PagedPool,
+                                          sizeof(HMONITOR) * cMonitors,
+                                          USERTAG_MONITORRECTS);
+    if (phMonitorList == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+
+    prcMonitorList = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(RECT) * cMonitors,
+                                           USERTAG_MONITORRECTS);
+    if (prcMonitorList == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+
+    /* Get intersecting monitors again but now with rectangle list */
+    cMonitors = IntGetMonitorsFromRect(pRect, phMonitorList, prcMonitorList,
+                                       cMonitors, 0);
+
+    /* Find largest intersection */
+    for (i = 0; i < cMonitors; i++)
+    {
+        ULONG Area = (prcMonitorList[i].right - prcMonitorList[i].left) *
+                     (prcMonitorList[i].bottom - prcMonitorList[i].top);
+        if (Area >= LargestArea)
+        {
+            hMonitor = phMonitorList[i];
+            LargestArea = Area;
+        }
+    }
+
+cleanup:
+    if (phMonitorList)
+        ExFreePoolWithTag(phMonitorList, USERTAG_MONITORRECTS);
+    if (prcMonitorList)
+        ExFreePoolWithTag(prcMonitorList, USERTAG_MONITORRECTS);
+
+    return UserGetMonitorObject(hMonitor);
+}
+
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /* NtUserEnumDisplayMonitors
