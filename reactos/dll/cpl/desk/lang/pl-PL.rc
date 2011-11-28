@@ -40,16 +40,16 @@ BEGIN
     PUSHBUTTON      "&Ustawienia", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Podgląd", IDC_SCREENS_TESTSC, 175, 103, 50, 13
     LTEXT           "&Czekaj", IDC_WAITTEXT, 14, 125, 20, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 35, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "", IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
+                    WS_BORDER | WS_GROUP, 55, 123, 12, 13
     LTEXT           "minut", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Ochrona &hasłem.", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL         "Po wznowieniu chroń &hasłem", IDC_SCREENS_USEPASSCHK, "button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX        "&Zasilanie monitora", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Kliknij przycisk Zasilanie, aby dopasować ustawienia zasilania dla monitora i oszczędzanie energii.",
-                    IDC_STATIC, 14, 166, 146, 20
+                    IDC_STATIC, 14, 166, 146, 25
     PUSHBUTTON      "Z&asilanie...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
