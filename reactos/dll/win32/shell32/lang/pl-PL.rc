@@ -394,19 +394,19 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Zadania", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Pokaż podstawowe zadania w &katalogach", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Użyj klasycznych katalogów &ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Pokaż podstawowe zadania w &katalogach", 14001, 40, 25, 180, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Użyj klasycznych katalogów &ReactOS", 14002, 40, 37, 180, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Przeglądaj katalogi", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Otwórz każdy katalog w tym &samym oknie", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Otwórz każdy katalog w tym &samym oknie", 14004, 40, 70, 180, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", 14005, 40, 82, 180, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Działanie przycisków myszki", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Podkreś&laj tytuły ikon tak jak w przeglądarce", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
-	PUSHBUTTON "&Ustawienia domyślne", 14011, 180, 180, 60, 14, WS_TABSTOP
+	AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", 14007, 40, 120, 180, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Podkreś&laj tytuły ikon tak jak w przeglądarce", 14008, 50, 132, 180, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 180, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", 14010, 40, 156, 180, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "Przywróć &domyślne", 14011, 180, 180, 80, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -416,12 +416,12 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 GROUPBOX "Podgląd folderów", -1, 7, 10, 249, 60
 //ICON
-LTEXT "Możesz użyć podglądów (takich jak Detale lub Tytuły) które\nsą ustawione dla tego katalogu, dla pozostałych.", -1, 60, 20, 180, 20
-PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 60, 50, 80, 14, WS_TABSTOP
+LTEXT "Możesz użyć podglądów (takich jak Detale lub Tytuły)\nktóre są ustawione dla tego katalogu, dla pozostałych.", -1, 20, 20, 210, 20
+PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 50, 50, 80, 14, WS_TABSTOP
 PUSHBUTTON "Z&resetuj ustawienia", 14002, 150, 50, 80, 14, WS_TABSTOP
 LTEXT "Zaawansowane:", -1, 7, 80, 100, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Odtwórz &domyślne", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "Przywróć &domyślne", 14004, 180, 210, 90, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
@@ -429,17 +429,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Typy plików"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Zarejestruj &typy plików:", -1, 7, 10, 70, 10
+LTEXT "Zarejestrowane &typy plików:", -1, 7, 10, 196, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Nowy", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Skasuj", 14002, 180, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Nowy", 14001, 120, 110, 60, 14, WS_TABSTOP
+PUSHBUTTON "&Skasuj", 14002, 180, 110, 60, 14, WS_TABSTOP
 GROUPBOX "Szczegóły dla rozszerzenia '%s'", 14003, 7, 130, 249, 70
 LTEXT "Otwiera z:", -1, 12, 140, 40, 10
 //ICON
-LTEXT "Nazwa Aplikacji", 14005, 100, 140, 40, 10
-PUSHBUTTON "Z&mień", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Nazwa Aplikacji", 14005, 100, 140, 80, 10
+PUSHBUTTON "Z&mień", 14006, 190, 140, 60, 14, WS_TABSTOP
 LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "Zaawa&nsowane", 14008, 180, 175, 50, 14, WS_TABSTOP
+PUSHBUTTON "Zaawa&nsowane", 14008, 190, 175, 60, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
@@ -692,7 +692,7 @@ BEGIN
 	IDS_STARTUP                 "Menu Start\\Programy\\AutoStart"
 	IDS_RECENT                  "Ostatnie"
 	IDS_SENDTO                  "Wyślij do"
-	IDS_STARTMENU               "Menu"
+	IDS_STARTMENU               "Menu Start"
 	IDS_MYMUSIC                 "Moja muzyka"
 	IDS_MYVIDEO                 "Moje wideo"
 	IDS_DESKTOPDIRECTORY        "Pulpit"
@@ -729,7 +729,7 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "&Nowy"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Folder"
 	FCIDM_SHVIEW_NEWLINK 	    "&Skrót"
-	IDS_FOLDER_OPTIONS          "Opcje katalogów"
+	IDS_FOLDER_OPTIONS          "Opcje folderów"
 	IDS_RECYCLEBIN_LOCATION     "Lokalizacja kosza"
 	IDS_RECYCLEBIN_DISKSPACE    "Pozostało wolnego miejsca"
 	IDS_EMPTY_BITBUCKET         "Opróżnij Kosz"
