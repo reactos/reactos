@@ -42,7 +42,6 @@
 #define IDS_SHV_COLUMN_DELDATE      19
 
 #define IDS_DESKTOP                 20
-#define IDS_MYCOMPUTER              21
 
 #define IDS_SELECT                  22
 #define IDS_OPEN                    23
@@ -57,7 +56,6 @@
 #define IDS_SHUTDOWN_PROMPT         43
 
 #define IDS_PROGRAMS                45
-#define IDS_PERSONAL                46
 #define IDS_FAVORITES               47
 #define IDS_STARTUP                 48
 #define IDS_RECENT                  49
@@ -86,9 +84,6 @@
 #define IDS_DRIVE_FIXED             72
 #define IDS_DRIVE_CDROM             73
 #define IDS_DRIVE_NETWORK           74
-#define IDS_NETWORKPLACE            75
-#define IDS_FONTS                   76
-#define IDS_PRINTERS                77
 
 #define IDS_LOGOFF_TITLE            78
 #define IDS_LOGOFF_PROMPT           79
@@ -115,7 +110,6 @@
 #define FCIDM_SHVIEW_VIEW           147
 #define IDS_CONTROLPANEL            148
 #define IDS_NEWFOLDER               149
-#define IDS_FOLDER_OPTIONS          150
 #define IDS_COLUMN_EXTENSION        151
 #define IDS_NO_EXTENSION            152
 #define IDS_RECYCLEBIN_LOCATION     153
@@ -174,15 +168,21 @@
 #define IDS_CUT                     324
 #define IDS_RESTORE                 325
 #define IDS_DEFAULT_CLUSTER_SIZE    326
-#define IDS_ADMINISTRATIVETOOLS     327
 #define IDS_FORMATDRIVE             328
 #define IDS_RENAME                  329
 #define IDS_INSERT                  330
 #define IDS_DESCRIPTION             331
 #define IDS_COPY_OF                 332
 
-/* Note: this string is referenced from the registry */
-#define IDS_RECYCLEBIN_FOLDER_NAME   8964
+/* Note: those strings are referenced from the registry */
+#define IDS_RECYCLEBIN_FOLDER_NAME  8964
+#define IDS_ADMINISTRATIVETOOLS     22982
+#define IDS_FOLDER_OPTIONS          22985
+#define IDS_FONTS                   22981
+#define IDS_PRINTERS                9319
+#define IDS_MYCOMPUTER              9216
+#define IDS_PERSONAL                9227
+#define IDS_NETWORKPLACE            9217
 
 #define IDD_ICON                    0x4300
 #define IDD_MESSAGE                 0x4301

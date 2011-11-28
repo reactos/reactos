@@ -713,7 +713,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Dokumenty\\Moje obrazy"
 	IDS_COMMON_VIDEO            "Dokumenty\\Moje wideo"
 	IDS_CDBURN_AREA             "Ustawienia lokalne\\Dane aplikacji\\Microsoft\\Nagrywanie dysków CD"
-	IDS_NETWORKPLACE            "Moja sieć"
+	IDS_NETWORKPLACE            "Moje miejsca sieciowe"
 
 	IDS_NEWFOLDER               "Nowy katalog"
 
