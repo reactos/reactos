@@ -305,8 +305,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
    }
    else
    {
-      IntGetClientRect(pWnd, &rcClient); // This or
-      //rcClient = pWnd->rcClient;       // this one?
+      rcClient = pWnd->rcClient;
       rcWindow = pWnd->rcWindow;
    }
 
