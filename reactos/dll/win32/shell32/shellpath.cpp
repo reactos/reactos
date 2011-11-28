@@ -1563,13 +1563,15 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
                     hr = HRESULT_FROM_WIN32(ret);
                 else
                 {
-                    hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
-                     hToken, SHGFP_TYPE_DEFAULT, path);
-                    ret = RegSetValueExW(hKey,
-                     CSIDL_Data[folders[i]].szValueName, 0, REG_SZ,
-                     (LPBYTE)path, (wcslen(path) + 1) * sizeof(WCHAR));
-                    if (ret)
-                        hr = HRESULT_FROM_WIN32(ret);
+                    // Don't fail if folder can't be created
+                    if (SUCCEEDED(SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
+                        hToken, SHGFP_TYPE_DEFAULT, path)))
+                    {
+                        ret = RegSetValueExW(hKey, CSIDL_Data[folders[i]].szValueName, 0, REG_SZ,
+                              (LPBYTE)path, (wcslen(path) + 1) * sizeof(WCHAR));
+                        if (ret)
+                            hr = HRESULT_FROM_WIN32(ret);
+                    }
                 }
             }
         }
