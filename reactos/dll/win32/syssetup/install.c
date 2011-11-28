@@ -721,6 +721,24 @@ InstallLiveCD(IN HINSTANCE hInstance)
 
     if (!CommonInstall())
         goto error;
+    
+    /* Register components */
+    _SEH2_TRY
+    {
+        if (!SetupInstallFromInfSectionW(NULL,
+            hSysSetupInf, L"RegistrationPhase2",
+            SPINST_ALL,
+            0, NULL, 0, NULL, NULL, NULL, NULL))
+        {
+            DPRINT1("SetupInstallFromInfSectionW failed!\n");
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Catching exception\n");
+    }
+    _SEH2_END;
+    
     SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
