@@ -335,6 +335,12 @@ private:
 	                                       std::vector<FileLocation>& destinations );
 	void OutputLoaderCommands ( std::string& livecdDirectory,
 	                            std::vector<FileLocation>& destinations );
+    void OutputMakeLinkCommand ( const std::string name,
+                                 const std::string application,
+                                 const std::string &path,
+                                 std::vector<FileLocation>& destinations );
+	void OutputShortcutCommands ( std::string& livecdDirectory,
+                                  std::vector<FileLocation>& destinations );
 	void OutputRegistryCommands ( std::string& livecdDirectory );
 };
 
