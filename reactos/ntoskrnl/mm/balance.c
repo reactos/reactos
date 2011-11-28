@@ -216,8 +216,8 @@ MmRebalanceMemoryConsumers(VOID)
 static BOOLEAN
 MiIsBalancerThread(VOID)
 {
-   return MiBalancerThreadHandle != NULL &&
-          PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
+   return (MiBalancerThreadHandle != NULL) &&
+          (PsGetCurrentThreadId() == MiBalancerThreadId.UniqueThread);
 }
 
 NTSTATUS
