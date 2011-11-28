@@ -3315,6 +3315,9 @@ typedef struct tagNONCLIENTMETRICSA {
 	LOGFONTA lfMenuFont;
 	LOGFONTA lfStatusFont;
 	LOGFONTA lfMessageFont;
+#if (WINVER >= 0x0600)
+        int iPaddedBorderWidth;
+#endif
 } NONCLIENTMETRICSA, *PNONCLIENTMETRICSA,*LPNONCLIENTMETRICSA;
 
 typedef struct tagNONCLIENTMETRICSW {
@@ -3333,6 +3336,9 @@ typedef struct tagNONCLIENTMETRICSW {
 	LOGFONTW lfMenuFont;
 	LOGFONTW lfStatusFont;
 	LOGFONTW lfMessageFont;
+#if (WINVER >= 0x0600)
+        int iPaddedBorderWidth;
+#endif
 } NONCLIENTMETRICSW, *PNONCLIENTMETRICSW,*LPNONCLIENTMETRICSW;
 
 #ifdef UNICODE
