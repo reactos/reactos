@@ -523,12 +523,12 @@ static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wPar
         if (poainfo->pcszFile)
         {
              szBuffer[0] = L'\0';
-             SendDlgItemMessageW(hwndDlg, 14001, WM_GETTEXT, sizeof(szBuffer), (LPARAM)szBuffer);
+             GetDlgItemTextW(hwndDlg, 14001, szBuffer, sizeof(szBuffer)/sizeof(szBuffer[0]));
              index = wcslen(szBuffer);
              if (index + wcslen(poainfo->pcszFile) + 1 < sizeof(szBuffer)/sizeof(szBuffer[0]))
                  wcscat(szBuffer, poainfo->pcszFile);
              szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-             SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)szBuffer);
+             SetDlgItemTextW(hwndDlg, 14001, szBuffer);
              ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
              Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
              LoadOWItems(&Context, poainfo->pcszFile);

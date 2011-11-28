@@ -276,7 +276,7 @@ ChkDskDlg(
 
 
 static
-ULONGLONG
+ULONG
 GetFreeBytesShare(ULONGLONG TotalNumberOfFreeBytes, ULONGLONG TotalNumberOfBytes)
 {
    ULONGLONG Temp;
@@ -293,7 +293,7 @@ GetFreeBytesShare(ULONGLONG TotalNumberOfFreeBytes, ULONGLONG TotalNumberOfBytes
    }
    else
    {
-      return TotalNumberOfFreeBytes / Temp;
+      return (ULONG)(TotalNumberOfFreeBytes / Temp);
    }
 }
 
@@ -333,7 +333,7 @@ PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT drawItem)
       hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
       hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
 
-      SendDlgItemMessageW(hwndDlg, 14006, WM_GETTEXT, 20, (LPARAM)szBuffer);
+      GetDlgItemTextW(hwndDlg, 14006, szBuffer, 20);
       Result = _wtoi(szBuffer);
 
       CopyRect(&rect, &drawItem->rcItem);
@@ -363,17 +363,17 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
    BOOL ret;
    UINT DriveType;
    ULARGE_INTEGER FreeBytesAvailable;
-   LARGE_INTEGER TotalNumberOfFreeBytes;
-   LARGE_INTEGER TotalNumberOfBytes;
+   ULARGE_INTEGER TotalNumberOfFreeBytes;
+   ULARGE_INTEGER TotalNumberOfBytes;
 
    ret = GetVolumeInformationW(szDrive, szVolumeName, MAX_PATH+1, NULL, &MaxComponentLength, &FileSystemFlags, FileSystemName, MAX_PATH+1);
    if (ret)
    {
       /* set volume label */
-      SendDlgItemMessageW(hwndDlg, 14000, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szVolumeName);
+      SetDlgItemTextW(hwndDlg, 14000, szVolumeName);
 
       /* set filesystem type */
-      SendDlgItemMessageW(hwndDlg, 14002, WM_SETTEXT, (WPARAM)NULL, (LPARAM)FileSystemName);
+      SetDlgItemTextW(hwndDlg, 14002, FileSystemName);
 
    }
 
@@ -381,10 +381,10 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
    if (DriveType == DRIVE_FIXED || DriveType == DRIVE_CDROM)
    {
 
-      if(GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, (PULARGE_INTEGER)&TotalNumberOfBytes, (PULARGE_INTEGER)&TotalNumberOfFreeBytes))
+      if(GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
       {
          WCHAR szResult[128];
-         LONGLONG Result;
+         ULONG Result;
          HANDLE hVolume;
          DWORD BytesReturned = 0;
 
@@ -394,7 +394,7 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          {
             ret = DeviceIoControl(hVolume, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, (LPVOID)&TotalNumberOfBytes, sizeof(ULARGE_INTEGER), &BytesReturned, NULL);
             if (ret && StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
-               SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
+               SetDlgItemTextW(hwndDlg, 14007, szResult);
 
             CloseHandle(hVolume);
          }
@@ -402,35 +402,35 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          TRACE("szResult %s hVOlume %p ret %d LengthInformation %ul Bytesreturned %d\n", debugstr_w(szResult), hVolume, ret, TotalNumberOfBytes.QuadPart, BytesReturned);
 
          if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
-             SendDlgItemMessageW(hwndDlg, 14003, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
+             SetDlgItemTextW(hwndDlg, 14003, szResult);
 
          if (StrFormatByteSizeW(FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
-             SendDlgItemMessageW(hwndDlg, 14005, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
+             SetDlgItemTextW(hwndDlg, 14005, szResult);
 
          Result = GetFreeBytesShare(TotalNumberOfFreeBytes.QuadPart, TotalNumberOfBytes.QuadPart);
          /* set free bytes percentage */
-         swprintf(szResult, L"%02d%%", Result);
-         SendDlgItemMessageW(hwndDlg, 14006, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
+         swprintf(szResult, L"%02u%%", Result);
+         SetDlgItemTextW(hwndDlg, 14006, szResult);
          /* store used share amount */
          Result = 100 - Result;
-         swprintf(szResult, L"%02d%%", Result);
-         SendDlgItemMessageW(hwndDlg, 14004, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
+         swprintf(szResult, L"%02u%%", Result);
+         SetDlgItemTextW(hwndDlg, 14004, szResult);
          if (DriveType == DRIVE_FIXED)
          {
             if (LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-               SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, (WPARAM)0, (LPARAM)szBuffer);
+               SetDlgItemTextW(hwndDlg, 14001, szBuffer);
          }
          else /* DriveType == DRIVE_CDROM) */
          {
             if (LoadStringW(shell32_hInstance, IDS_DRIVE_CDROM, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-               SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, (WPARAM)0, (LPARAM)szBuffer);
+               SetDlgItemTextW(hwndDlg, 14001, szBuffer);
          }
       }
    }
    /* set drive description */
-   SendDlgItemMessageW(hwndDlg, 14009, WM_GETTEXT, (WPARAM)50, (LPARAM)szFormat);
+   GetDlgItemTextW(hwndDlg, 14009, szFormat, 50);
    swprintf(szBuffer, szFormat, szDrive);
-   SendDlgItemMessageW(hwndDlg, 14009, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szBuffer);
+   SetDlgItemTextW(hwndDlg, 14009, szBuffer);
 }
 
 
@@ -503,7 +503,7 @@ DriveGeneralDlg(
         if (lppsn->hdr.code == PSN_APPLY)
         {
            lpstr = (LPWSTR)GetWindowLongPtr(hwndDlg, DWLP_USER);
-           if (lpstr && SendDlgItemMessageW(hwndDlg, 14000, WM_GETTEXT, sizeof(szPath)/sizeof(WCHAR), (LPARAM)szPath))
+           if (lpstr && GetDlgItemTextW(hwndDlg, 14000, szPath, sizeof(szPath)/sizeof(WCHAR)))
            {
               szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
               SetVolumeLabelW(lpstr, szPath);
@@ -943,7 +943,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         {
             /* set volume label */
             szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
-            SendDlgItemMessageW(hwndDlg, 28679, WM_SETTEXT, 0, (LPARAM)&szText[Length+1]);
+            SetDlgItemTextW(hwndDlg, 28679, &szText[Length+1]);
         }
         Length += TempLength + 1;
     }

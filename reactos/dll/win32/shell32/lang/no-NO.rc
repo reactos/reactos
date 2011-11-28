@@ -769,4 +769,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END

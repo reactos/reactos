@@ -766,5 +766,6 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Fișierele cu extensia '%s' sunt de tipul '%s'. Pentru a schimbat setări care vor afecta toate fișierele '%s', clic pe Avansat."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END
 

@@ -234,9 +234,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Tipo del file:", 14004, 8, 35, 50, 10
+	LTEXT "Tipo di file:", 14004, 8, 35, 50, 10
 	LTEXT "File", 14005, 68, 35, 160, 10
-	LTEXT "Si apre con:", 14006, 8, 53, 50, 10
+	LTEXT "Apri con:", 14006, 8, 53, 50, 10
 	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Posizione:", 14008, 8, 72, 45, 10
 	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
@@ -437,7 +437,7 @@ CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGEL
 PUSHBUTTON "&Nuovo", 14001, 120, 110, 50, 14, WS_TABSTOP
 PUSHBUTTON "&Cancella", 14002, 180, 110, 50, 14, WS_TABSTOP
 GROUPBOX "Dettagli per l'estensione '%s'", 14003, 7, 130, 249, 70
-LTEXT "Si apre con:", -1, 12, 140, 40, 10
+LTEXT "Apri con:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nome", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Cambia...", 14006, 180, 140, 50, 14, WS_TABSTOP
@@ -777,4 +777,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "I files con estensione '%s' sono di tipo '%s'. Per modificare le impostazioni per tutti i file '%s', cliccare su Avanzate."
 	IDS_FILE_TYPES              "Tipi di file"
 	IDS_COLUMN_EXTENSION        "Estensioni"
+	IDS_BYTES_FORMAT            "byte"
 END

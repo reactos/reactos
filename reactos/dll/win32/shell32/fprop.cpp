@@ -70,22 +70,123 @@ static LONG SH_GetAssociatedApplication(WCHAR *fileext, WCHAR *wAssocApp)
 
 static LONG SH_FileGeneralOpensWith(HWND hwndDlg, WCHAR *fileext)
 {
-    HWND hDlgCtrl;
     LONG result;
     WCHAR wAppName[MAX_PATH] = {0};
     WCHAR wAssocApp[MAX_PATH] = {0};
     
-    hDlgCtrl = GetDlgItem(hwndDlg, 14007);
     result = SH_GetAssociatedApplication(fileext, wAssocApp);
     
     if (result == ERROR_SUCCESS)
     {
         _wsplitpath(wAssocApp, NULL, NULL, wAppName, NULL);
     
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)wAppName);
+        SetDlgItemTextW(hwndDlg, 14007, wAppName);
     }
 
     return result;
+}
+
+/*************************************************************************
+ *
+ * SH_FormatFileSizeWithBytes
+ *
+ * Format a size in bytes to string.
+ *
+ * lpQwSize = Pointer to 64bit large integer to format
+ * pszBuf   = Buffer to fill with output string
+ * cchBuf   = size of pszBuf in characters
+ *
+ */
+
+LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf)
+{
+    NUMBERFMTW nf;
+    WCHAR      szNumber[24];
+    WCHAR      szDecimalSep[8];
+    WCHAR      szThousandSep[8];
+    WCHAR      szGrouping[12];
+    int        Len, cchFormatted, i;
+    size_t     cchRemaining;
+    LPWSTR     Ptr;
+
+    // Try to build first Format byte string
+    if (StrFormatByteSizeW(lpQwSize->QuadPart, pszBuf, cchBuf) == NULL)
+        return NULL;
+
+    // If there is less bytes than 1KB, we have nothing to do
+    if (lpQwSize->QuadPart < 1024)
+        return pszBuf;
+
+    // Print the number in uniform mode
+    swprintf(szNumber, L"%I64u", lpQwSize->QuadPart);
+
+    // Get system strings for decimal and thousand separators.
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSep, sizeof(szDecimalSep)/sizeof(*szDecimalSep));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, szThousandSep, sizeof(szThousandSep)/sizeof(*szThousandSep));
+
+    // Initialize format for printing the number in bytes
+    ZeroMemory(&nf, sizeof(nf));
+    nf.NumDigits     = 0;
+    nf.LeadingZero   = 0;
+    nf.Grouping      = 0;
+    nf.lpDecimalSep  = szDecimalSep;
+    nf.lpThousandSep = szThousandSep;
+    nf.NegativeOrder = 0;
+
+    // Get system string for groups separator
+    Len = GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                         LOCALE_SGROUPING,
+                         szGrouping,
+                         sizeof(szGrouping)/sizeof(*szGrouping));
+
+    // Convert grouping specs from string to integer
+    for (i = 0; i < Len; i++)
+    {
+        WCHAR wch = szGrouping[i];
+
+        if (wch >= L'0' && wch <= L'9')
+            nf.Grouping = nf.Grouping * 10 + (wch - L'0');
+        else if (wch != L';')
+            break;
+    }
+
+    if ((nf.Grouping % 10) == 0)
+        nf.Grouping /= 10;
+    else
+        nf.Grouping *= 10;
+
+    // Concate " (" at the end of buffer
+    Len = wcslen(pszBuf);
+    Ptr = pszBuf + Len;
+    cchRemaining = cchBuf - Len;
+    StringCchCopyExW(Ptr, cchRemaining, L" (", &Ptr, &cchRemaining, 0);
+
+    // Save formatted number of bytes in buffer
+    cchFormatted = GetNumberFormatW(LOCALE_USER_DEFAULT,
+                                    0,
+                                    szNumber,
+                                    &nf,
+                                    Ptr,
+                                    cchRemaining);
+
+    if (cchFormatted == 0)
+        return NULL;
+
+    // cchFormatted is number of characters including NULL - make it a real length
+    --cchFormatted;
+
+    // Copy ' ' to buffer
+    Ptr += cchFormatted;
+    cchRemaining -= cchFormatted;
+    StringCchCopyExW(Ptr, cchRemaining, L" ", &Ptr, &cchRemaining, 0);
+
+    // Copy 'bytes' string and remaining ')'
+    Len = LoadStringW(shell32_hInstance, IDS_BYTES_FORMAT, Ptr, cchRemaining);
+    Ptr += Len;
+    cchRemaining -= Len;
+    StringCchCopy(Ptr, cchRemaining, L")");
+
+    return pszBuf;
 }
 
 /*************************************************************************
@@ -309,7 +410,6 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
     int plength;
     WCHAR *lpdir;
     WCHAR buff[MAX_PATH];
-    HWND hDlgCtrl;
 
     if (lpstr == NULL)
         return FALSE;
@@ -330,16 +430,14 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR *lpstr)
             wcscat(buff, L"\\");
         }
 
-        hDlgCtrl = GetDlgItem(hwndDlg, 14009);
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)buff);
+        SetDlgItemTextW(hwndDlg, 14009, buff);
     }
 
     if (flength > 1)
     {
         /* text filename field */
         wcsncpy(buff, &lpdir[1], flength);
-        hDlgCtrl = GetDlgItem(hwndDlg, 14001);
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)buff);
+        SetDlgItemTextW(hwndDlg, 14001, buff);
     }
 
     return TRUE;
@@ -362,7 +460,6 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER l
     FILETIME accessed_time;
     FILETIME write_time;
     WCHAR resultstr[MAX_PATH];
-    HWND hDlgCtrl;
     LARGE_INTEGER file_size;
 
     if (lpfilename == NULL)
@@ -392,20 +489,17 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER l
 
     if (SHFileGeneralGetFileTimeString(&create_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14015);
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
+        SetDlgItemTextW(hwndDlg, 14015, resultstr);
     }
 
     if (SHFileGeneralGetFileTimeString(&accessed_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14019);
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
+        SetDlgItemTextW(hwndDlg, 14019, resultstr);
     }
 
     if (SHFileGeneralGetFileTimeString(&write_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14017);
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
+        SetDlgItemTextW(hwndDlg, 14017, resultstr);
     }
 
     if (!GetFileSizeEx(hFile, &file_size))
@@ -417,15 +511,13 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER l
 
     CloseHandle(hFile);
 
-    if (!StrFormatByteSizeW(file_size.QuadPart,
-                            resultstr,
-                            sizeof(resultstr) / sizeof(WCHAR)))
+    if (!SH_FormatFileSizeWithBytes((PULARGE_INTEGER)&file_size,
+                                    resultstr,
+                                    sizeof(resultstr) / sizeof(WCHAR)))
         return FALSE;
 
-    hDlgCtrl = GetDlgItem(hwndDlg, 14011);
-
     TRACE("result size %u resultstr %s\n", file_size.QuadPart, debugstr_w(resultstr));
-    SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
+    SetDlgItemTextW(hwndDlg, 14011, resultstr);
 
     if (lpfilesize)
         lpfilesize->QuadPart = (ULONGLONG)file_size.QuadPart;
@@ -444,7 +536,6 @@ BOOL
 SH_FileVersionQuerySetText(HWND hwndDlg, DWORD dlgId, LPVOID pInfo, WCHAR *text, WCHAR **resptr)
 {
     UINT reslen;
-    HWND hDlgCtrl;
 
     if (hwndDlg == NULL || resptr == NULL || text == NULL)
         return FALSE;
@@ -452,9 +543,8 @@ SH_FileVersionQuerySetText(HWND hwndDlg, DWORD dlgId, LPVOID pInfo, WCHAR *text,
     if (VerQueryValueW(pInfo, text, (LPVOID *)resptr, &reslen))
     {
         /* file description property */
-        hDlgCtrl = GetDlgItem(hwndDlg, dlgId);
         TRACE("%s :: %s\n", debugstr_w(text), debugstr_w(*resptr));
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)0, (LPARAM)*resptr);
+        SetDlgItemTextW(hwndDlg, dlgId, *resptr);
         return TRUE;
     }
 
@@ -576,9 +666,8 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
                                        LOWORD(inf->dwFileVersionMS),
                                        HIWORD(inf->dwFileVersionLS),
                                        LOWORD(inf->dwFileVersionLS));
-        hDlgCtrl = GetDlgItem(hwndDlg, 14001);
         TRACE("MS %x LS %x res %s \n", inf->dwFileVersionMS, inf->dwFileVersionLS, debugstr_w(buff));
-        SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)buff);
+        SetDlgItemTextW(hwndDlg, 14001, buff);
     }
 
     if (VerQueryValueW(pBuf, const_cast<LPWSTR>(wTranslation), (LPVOID *)&lplangcode, &infolen))
@@ -613,8 +702,7 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
     hDlgCtrl = GetDlgItem(hwndDlg, 14009);
     SendMessageW(hDlgCtrl, LB_SETCURSEL, 0, 0);
     str = (WCHAR *) SendMessageW(hDlgCtrl, LB_GETITEMDATA, (WPARAM)0, (LPARAM)NULL);
-    hDlgCtrl = GetDlgItem(hwndDlg, 14010);
-    SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)str);
+    SetDlgItemTextW(hwndDlg, 14010, str);
 
     return TRUE;
 }
@@ -672,9 +760,8 @@ SH_FileVersionDlgProc(HWND hwndDlg,
                 if (str == NULL)
                     break;
 
-                hDlgCtrl = GetDlgItem(hwndDlg, 14010);
                 TRACE("hDlgCtrl %x string %s \n", hDlgCtrl, debugstr_w(str));
-                SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)str);
+                SetDlgItemTextW(hwndDlg, 14010, str);
 
                 return TRUE;
             }

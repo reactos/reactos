@@ -754,4 +754,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Soubory s příponou '%s' jsou typu '%s'. Kliknutím na tlačítko Pokročilé lze změnit nastavení pro všechny soubory '%s'."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END

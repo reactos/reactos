@@ -769,4 +769,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
 	IDS_FILE_TYPES              "FileTypes"
 	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_BYTES_FORMAT            "bytes"
 END

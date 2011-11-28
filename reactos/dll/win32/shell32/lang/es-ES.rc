@@ -779,4 +779,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Los archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas."
 	IDS_FILE_TYPES              "Tipos de archivos"
 	IDS_COLUMN_EXTENSION        "Extensiones"
+	IDS_BYTES_FORMAT            "bytes"
 END

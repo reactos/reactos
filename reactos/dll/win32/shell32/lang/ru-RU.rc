@@ -765,4 +765,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Файлы с расширением '%s' имеют тип '%s'. Для изменения параметров всех файлов '%s', нажмите 'Дополнительно'."
 	IDS_FILE_TYPES              "Типы файлов"
 	IDS_COLUMN_EXTENSION        "Расширения"
+	IDS_BYTES_FORMAT            "bytes"
 END

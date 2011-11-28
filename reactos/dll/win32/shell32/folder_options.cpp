@@ -36,7 +36,7 @@ typedef struct
 {
    DWORD cFiles;
    DWORD cFolder;
-   LARGE_INTEGER bSize;
+   ULARGE_INTEGER bSize;
    HWND hwndDlg;
    WCHAR szFolderPath[MAX_PATH];
 }FOLDER_PROPERTIES_CONTEXT, *PFOLDER_PROPERTIES_CONTEXT;
@@ -452,7 +452,7 @@ FolderOptionsFileTypesDlg(
                         /* format buffer */
                         swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
                         /* update dialog */
-                        SendDlgItemMessageW(hwndDlg, 14003, WM_SETTEXT, 0, (LPARAM)Buffer);
+                        SetDlgItemTextW(hwndDlg, 14003, Buffer);
 
                         if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
                         {
@@ -462,7 +462,7 @@ FolderOptionsFileTypesDlg(
                         /* format buffer */
                         swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
                         /* update dialog */
-                        SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, 0, (LPARAM)Buffer); 
+                        SetDlgItemTextW(hwndDlg, 14007, Buffer); 
                     }
            }
            break;
@@ -559,6 +559,7 @@ CountFolderAndFiles(LPVOID lParam)
     LPWSTR pOffset;
     BOOL ret;
     PFOLDER_PROPERTIES_CONTEXT pContext = (PFOLDER_PROPERTIES_CONTEXT) lParam;
+    ULARGE_INTEGER FileSize;
 
     pOffset = PathAddBackslashW(pContext->szFolderPath);
     if (!pOffset)
@@ -589,9 +590,11 @@ CountFolderAndFiles(LPVOID lParam)
             }
             else
             {
+                FileSize.u.LowPart  = FindData.nFileSizeLow;
+                FileSize.u.HighPart = FindData.nFileSizeHigh;
+
                 pContext->cFiles++;
-                pContext->bSize.u.LowPart += FindData.nFileSizeLow;
-                pContext->bSize.u.HighPart += FindData.nFileSizeHigh;
+                pContext->bSize.QuadPart += FileSize.QuadPart;
             }    
         }
         else if (GetLastError() == ERROR_NO_MORE_FILES)
@@ -622,7 +625,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
         return;
 
     /* set folder name */
-    SendDlgItemMessageW(pContext->hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM) (pFolderName + 1));
+    SetDlgItemTextW(pContext->hwndDlg, 14001, pFolderName + 1);
     /* set folder location */
     pFolderName[0] = L'\0';
     if (wcslen(pContext->szFolderPath) == 2)
@@ -630,11 +633,11 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
         /* folder is located at root */
         WCHAR szDrive[4] = {L'C',L':',L'\\',L'\0'};
         szDrive[0] = pContext->szFolderPath[0];
-        SendDlgItemMessageW(pContext->hwndDlg, 14007, WM_SETTEXT, 0, (LPARAM) szDrive);
+        SetDlgItemTextW(pContext->hwndDlg, 14007, szDrive);
     }
     else
     {
-        SendDlgItemMessageW(pContext->hwndDlg, 14007, WM_SETTEXT, 0, (LPARAM) pContext->szFolderPath);
+        SetDlgItemTextW(pContext->hwndDlg, 14007, pContext->szFolderPath);
     }
     pFolderName[0] = L'\\';
     /* get folder properties */
@@ -656,7 +659,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
        {
            FileTimeToSystemTime(&ft, &dt);
            swprintf (szBuffer, wFormat, dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
-           SendDlgItemMessageW(pContext->hwndDlg, 14015, WM_SETTEXT, 0, (LPARAM) szBuffer);
+           SetDlgItemTextW(pContext->hwndDlg, 14015, szBuffer);
        }
     }
     /* now enumerate enumerate contents */
@@ -667,12 +670,12 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
     LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, szFormat, sizeof(szFormat)/sizeof(WCHAR));
     szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
     swprintf(szBuffer, szFormat, pContext->cFiles, pContext->cFolder);
-    SendDlgItemMessageW(pContext->hwndDlg, 14011, WM_SETTEXT, 0, (LPARAM) szBuffer);
+    SetDlgItemTextW(pContext->hwndDlg, 14011, szBuffer);
 
-    if (StrFormatByteSizeW(pContext->bSize.QuadPart, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (SH_FormatFileSizeWithBytes(&pContext->bSize, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         /* store folder size */
-        SendDlgItemMessageW(pContext->hwndDlg, 14009, WM_SETTEXT, 0, (LPARAM) szBuffer);
+        SetDlgItemTextW(pContext->hwndDlg, 14009, szBuffer);
     }
 }
 

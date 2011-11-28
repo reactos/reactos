@@ -774,4 +774,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Pliki z rozszerzeniem '%s' są typu '%s'. Aby zmienić ustawienia, które dotyczą wszystkich plików '%s', kliknij przycisk Zaawansowane."
 	IDS_FILE_TYPES              "Typy plików"
 	IDS_COLUMN_EXTENSION        "Rozszerzenia"
+	IDS_BYTES_FORMAT            "bajtów"
 END

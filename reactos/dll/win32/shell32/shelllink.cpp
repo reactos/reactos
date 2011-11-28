@@ -2033,8 +2033,7 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
             wchar_t * wTrgtLocat;
             const int ch = '\\';
             wTrgtLocat = wcsrchr(pThis->sWorkDir, ch)+1;
-            hDlgCtrl = GetDlgItem( hwndDlg, 14007 );
-            SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)wTrgtLocat);
+            SetDlgItemTextW(hwndDlg, 14007, wTrgtLocat);
 
             /* target path */
             hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
@@ -2058,12 +2057,10 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
             if ( lppsn->hdr.code == PSN_APPLY )
             {
                 /* set working directory */
-                hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
-                SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer );
+                GetDlgItemTextW(hwndDlg, 14011, szBuffer, MAX_PATH);
                 pThis->SetWorkingDirectory(szBuffer);
                 /* set link destination */
-                hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
-                SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer);
+                GetDlgItemTextW(hwndDlg, 14009, szBuffer, MAX_PATH);
                 if ( !SHELL_ExistsFileW(szBuffer) )
                 {
                     //FIXME load localized error msg

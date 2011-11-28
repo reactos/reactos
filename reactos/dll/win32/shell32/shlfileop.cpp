@@ -612,7 +612,7 @@ QueueFile(
         to = &Context->to->feFiles[Context->Index];
 
     /* update status */
-    SendDlgItemMessageW(Context->hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)from->szFullPath);
+    SetDlgItemTextW(Context->hwndDlg, 14001, from->szFullPath);
 
     if (Context->op->req->wFunc == FO_COPY)
     {

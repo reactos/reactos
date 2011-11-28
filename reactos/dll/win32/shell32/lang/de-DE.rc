@@ -771,4 +771,5 @@ BEGIN
 	IDS_FILE_DETAILSADV         "Um die Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
 	IDS_FILE_TYPES              "Dateitypen"
 	IDS_COLUMN_EXTENSION        "Erweiterungen"
+	IDS_BYTES_FORMAT            "Bytes"
 END

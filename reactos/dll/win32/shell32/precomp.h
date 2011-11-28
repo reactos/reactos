@@ -46,6 +46,7 @@
 #include <sddl.h>
 
 #include <tchar.h>
+#include <strsafe.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>

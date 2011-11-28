@@ -119,9 +119,9 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
-            SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
+            SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
         else
-            SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)pIconContext->szName);
+            SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
 
         count = SendMessage(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
         if (count != LB_ERR)
@@ -138,7 +138,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         case IDOK:
             index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
             pIconContext->Index = index;
-            SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_GETTEXT, MAX_PATH, (LPARAM)pIconContext->szName);
+            GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName, MAX_PATH);
             DestroyIconList(pIconContext->hDlgCtrl);
             EndDialog(hwndDlg, 1);
             break;
@@ -179,9 +179,9 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 wcscpy(pIconContext->szName, szText);
                 EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
                 if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
-                    SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
+                    SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
                 else
-                    SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)pIconContext->szName);
+                    SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
 
                 SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
             }
