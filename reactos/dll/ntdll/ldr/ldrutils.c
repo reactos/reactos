@@ -1251,7 +1251,7 @@ SkipCheck:
                     /* Stuff the image name in the TIB, for the debugger */
                     ArbitraryUserPointer = Teb->NtTib.ArbitraryUserPointer;
                     Teb->NtTib.ArbitraryUserPointer = FullDllName.Buffer;
-
+#if 0
                     /* Map the DLL */
                     Status = NtMapViewOfSection(SectionHandle,
                                                 NtCurrentProcess(),
@@ -1263,7 +1263,7 @@ SkipCheck:
                                                 ViewShare,
                                                 0,
                                                 PAGE_READWRITE);
-
+#endif
                     /* Restore */
                     Teb->NtTib.ArbitraryUserPointer = ArbitraryUserPointer;
 
@@ -1301,7 +1301,7 @@ NoRelocNeeded:
             /* Stuff the image name in the TIB, for the debugger */
             ArbitraryUserPointer = Teb->NtTib.ArbitraryUserPointer;
             Teb->NtTib.ArbitraryUserPointer = FullDllName.Buffer;
-
+#if 0
             /* Map the DLL */
             Status = NtMapViewOfSection(SectionHandle,
                                         NtCurrentProcess(),
@@ -1313,7 +1313,7 @@ NoRelocNeeded:
                                         ViewShare,
                                         0,
                                         PAGE_READWRITE);
-
+#endif
             /* Restore */
             Teb->NtTib.ArbitraryUserPointer = ArbitraryUserPointer;
 
