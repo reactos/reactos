@@ -130,7 +130,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
    else
    {
       KeReleaseSpinLock(&AllocationListLock, OldIrql);
-      if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmDereferencePage(Page);
       KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
