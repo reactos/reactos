@@ -136,9 +136,9 @@ BEGIN
   IDS_SIZEBYTS "%i bajtov"
   IDS_SIZEMB "%i MB"
 
-  IDS_NOACTION "Nerob niË" //Do nothing
+  IDS_NOACTION "Nerob niË" // Do nothing
 
-  IDS_PowerActionNone1 "Bez akcie" //No action
+  IDS_PowerActionNone1 "Bez akcie" // No action
   IDS_PowerActionUnknown "Nezn·me"
   IDS_PowerActionSleep "⁄sporn˝ reûim"
   IDS_PowerActionHibernate "Dlhodob˝ sp·nok"
@@ -146,7 +146,7 @@ BEGIN
   IDS_PowerActionRestart "Reötartovaù"
   IDS_PowerActionShutdownOff "Vypn˙ù a odpojiù zdroj"
   IDS_PowerActionWarmEject "Zobraziù v˝zvu na akciu"
-  IDS_PowerActionNone2 "NiË" //None
+  IDS_PowerActionNone2 "NiË" // None
 
   IDS_TIMEOUT1 "Po 1 min˙te"
   IDS_TIMEOUT2 "Po 2 min˙tach"
@@ -164,7 +164,7 @@ BEGIN
   IDS_TIMEOUT14 "Po 4 hodin·ch"
   IDS_TIMEOUT15 "Po 5 hodin·ch"
   IDS_TIMEOUT16 "Nikdy"
-  
+
   IDS_DEL_SCHEME "Ste si ist˝, ûe chcete vymazaù schÈmu nap·jania?"
   IDS_DEL_SCHEME_TITLE "Vymazaù schÈmu"
 END

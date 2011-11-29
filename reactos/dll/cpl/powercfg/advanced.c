@@ -180,8 +180,6 @@ SaveCurrentPowerActionPolicy(IN HWND hDlgCtrl,
 }
 
 
-
-
 //-------------------------------------------------------------------
 
 VOID
@@ -393,7 +391,6 @@ Adv_InitDialog(VOID)
 		ShowCurrentPowerActionPolicies(hAdv);
 	}
 }
-
 
 static VOID
 Adv_SaveData(HWND hwndDlg)

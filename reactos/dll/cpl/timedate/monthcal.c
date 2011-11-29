@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/monthcal.c
+ * FILE:        dll/cpl/timedate/monthcal.c
  * PURPOSE:     Calander implementation
  * COPYRIGHT:   Copyright 2006 Thomas Weidenmueller <w3seek@reactos.com>
  *
@@ -76,7 +76,7 @@ MonthCalNotifyControlParent(IN PMONTHCALWND infoPtr,
 }
 
 /*
- * for the year range 1..9999
+ * For the year range 1..9999
  * return 1 if is leap year otherwise 0
  */
 static WORD LeapYear(IN WORD Year)
@@ -100,7 +100,7 @@ MonthCalMonthLength(IN WORD Month,
     {
 #ifdef WITH_1752
         if ((Year == 1752) && (Month == 9))
-	   return 19; // special case: September 1752 has no 3rd-13th
+	   return 19; // Special case: September 1752 has no 3rd-13th
 	else
 #endif
      	   return MonthDays[Month - 1];
@@ -180,7 +180,7 @@ MonthCalUpdate(IN PMONTHCALWND infoPtr)
         RepaintHeader = TRUE;
     }
 
-    /* update the days layout of the current month */
+    /* Update the days layout of the current month */
     ZeroMemory(infoPtr->Days,
                sizeof(infoPtr->Days));
 
@@ -199,7 +199,7 @@ MonthCalUpdate(IN PMONTHCALWND infoPtr)
         *(pDay++) = (BYTE)++d;
     }
 
-    /* repaint the control */
+    /* Repaint the control */
     if (RepaintHeader)
     {
         InvalidateRect(infoPtr->hSelf,
@@ -227,10 +227,10 @@ MonthCalSetupDayTimer(IN PMONTHCALWND infoPtr)
     SYSTEMTIME LocalTime = {0};
     UINT uElapse;
 
-    /* update the current date */
+    /* Update the current date */
     GetLocalTime(&LocalTime);
 
-    /* calculate the number of remaining milliseconds until midnight */
+    /* Calculate the number of remaining milliseconds until midnight */
     uElapse = 1000 - (UINT)LocalTime.wMilliseconds;
     uElapse += (59 - (UINT)LocalTime.wSecond) * 1000;
     uElapse += (59 - (UINT)LocalTime.wMinute) * 60 * 1000;
@@ -241,7 +241,7 @@ MonthCalSetupDayTimer(IN PMONTHCALWND infoPtr)
     else
         uElapse += 100; /* Add a delay of 0.1 seconds */
 
-    /* setup the new timer */
+    /* Setup the new timer */
     if (SetTimer(infoPtr->hSelf,
                  ID_DAYTIMER,
                  uElapse,
@@ -263,7 +263,7 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
                                             0,
                                             0);
 
-    /* cache the configuration */
+    /* Cache the configuration */
     infoPtr->FirstDayOfWeek = MonthCalFirstDayOfWeek();
 
     infoPtr->hbHeader = GetSysColorBrush(infoPtr->Enabled ? MONTHCAL_HEADERBG : MONTHCAL_DISABLED_HEADERBG);
@@ -281,7 +281,7 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
         }
     }
 
-    /* update the control */
+    /* Update the control */
     MonthCalUpdate(infoPtr);
 }
 
@@ -317,7 +317,7 @@ MonthCalChange(IN PMONTHCALWND infoPtr)
 {
     infoPtr->Changed = TRUE;
 
-    /* kill the day timer */
+    /* Kill the day timer */
     if (infoPtr->DayTimerSet)
     {
         KillTimer(infoPtr->hSelf,
@@ -343,12 +343,12 @@ MonthCalSetDate(IN PMONTHCALWND infoPtr,
     sc.NewMonth = Month;
     sc.NewYear = Year;
 
-    /* notify the parent */
+    /* Notify the parent */
     if (!MonthCalNotifyControlParent(infoPtr,
                                      MCCN_SELCHANGE,
                                      &sc))
     {
-        /* check if we actually need to update */
+        /* Check if we actually need to update */
         if (infoPtr->Month != sc.NewMonth ||
             infoPtr->Year != sc.NewYear)
         {
@@ -358,7 +358,7 @@ MonthCalSetDate(IN PMONTHCALWND infoPtr,
 
             MonthCalChange(infoPtr);
 
-            /* repaint the entire control */
+            /* Repaint the entire control */
             MonthCalUpdate(infoPtr);
 
             Ret = TRUE;
@@ -375,7 +375,7 @@ MonthCalSetDate(IN PMONTHCALWND infoPtr,
                                    sc.OldDay,
                                    &rcUpdate))
             {
-                /* repaint the day cells that need to be updated */
+                /* Repaint the day cells that need to be updated */
                 InvalidateRect(infoPtr->hSelf,
                                &rcUpdate,
                                TRUE);
@@ -419,7 +419,7 @@ MonthCalSetLocalTime(IN PMONTHCALWND infoPtr,
         }
     }
 
-    /* kill the day timer */
+    /* Kill the day timer */
     if (infoPtr->DayTimerSet)
     {
         KillTimer(infoPtr->hSelf,
@@ -427,7 +427,7 @@ MonthCalSetLocalTime(IN PMONTHCALWND infoPtr,
         infoPtr->DayTimerSet = FALSE;
     }
 
-    /* setup the new day timer */
+    /* Setup the new day timer */
     MonthCalSetupDayTimer(infoPtr);
 
     if (Time != NULL)
@@ -488,7 +488,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
         {
             RECT rcHeader;
 
-            /* paint the header */
+            /* Paint the header */
             rcHeader.left = prcUpdate->left;
             rcHeader.top = rcCell.top;
             rcHeader.right = prcUpdate->right;
@@ -508,7 +508,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
                 rcCell.left = x * infoPtr->CellSize.cx;
                 rcCell.right = rcCell.left + infoPtr->CellSize.cx;
 
-                /* write the first letter of each weekday */
+                /* Write the first letter of each weekday */
                 DrawTextW(hDC,
                           &infoPtr->Week[x],
                           1,
@@ -536,7 +536,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
                 rcCell.left = x * infoPtr->CellSize.cx;
                 rcCell.right = rcCell.left + infoPtr->CellSize.cx;
 
-                /* write the day number */
+                /* Write the day number */
                 if (Day != 0 && Day < 100)
                 {
                     WCHAR szDay[3];
@@ -588,14 +588,14 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
                                 goto FailNoHighlight;
                             }
 
-                            /* highlight the selected day */
+                            /* Highlight the selected day */
                             crOldText = SetTextColor(hDC,
                                                      GetSysColor(infoPtr->Enabled ? MONTHCAL_SELFG : MONTHCAL_DISABLED_SELFG));
                         }
                         else
                         {
 FailNoHighlight:
-                            /* don't change the text color, we're not highlighting it... */
+                            /* Don't change the text color, we're not highlighting it... */
                             crOldText = CLR_INVALID;
                         }
 
@@ -764,7 +764,7 @@ MonthCalWndProc(IN HWND hwnd,
                                 infoPtr->Year);
             }
 
-            /* fall through */
+            /* Fall through */
         }
 
         case WM_MBUTTONDOWN:
@@ -822,7 +822,7 @@ MonthCalWndProc(IN HWND hwnd,
                 }
             }
 
-            /* update the selection */
+            /* Update the selection */
             if (NewDay != 0)
             {
                 MonthCalSetDate(infoPtr,
@@ -843,7 +843,7 @@ MonthCalWndProc(IN HWND hwnd,
             {
                 case VK_TAB:
                 {
-                    /* change the UI status */
+                    /* Change the UI status */
                     SendMessageW(GetAncestor(hwnd,
                                              GA_PARENT),
                                  WM_CHANGEUISTATE,
@@ -972,18 +972,18 @@ MonthCalWndProc(IN HWND hwnd,
             {
                 case ID_DAYTIMER:
                 {
-                    /* kill the timer */
+                    /* Kill the timer */
                     KillTimer(hwnd,
                               ID_DAYTIMER);
                     infoPtr->DayTimerSet = FALSE;
 
                     if (!infoPtr->Changed)
                     {
-                        /* update the system time and setup the new day timer */
+                        /* Update the system time and setup the new day timer */
                         MonthCalSetLocalTime(infoPtr,
                                              NULL);
 
-                        /* update the control */
+                        /* Update the control */
                         MonthCalUpdate(infoPtr);
                     }
                     break;
@@ -1007,7 +1007,7 @@ MonthCalWndProc(IN HWND hwnd,
             infoPtr->CellSize.cx = infoPtr->ClientSize.cx / 7;
             infoPtr->CellSize.cy = infoPtr->ClientSize.cy / 7;
 
-            /* repaint the control */
+            /* Repaint the control */
             InvalidateRect(hwnd,
                            NULL,
                            TRUE);

@@ -1,4 +1,4 @@
-//2011.11.08 - Fulea Ștefan: minor changes
+// 2011.11.08 - Fulea Ștefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186

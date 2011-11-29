@@ -164,7 +164,7 @@ BEGIN
   IDS_TIMEOUT14 "через 4 години"
   IDS_TIMEOUT15 "через 5 годин"
   IDS_TIMEOUT16 "ніколи"
-  
+
   IDS_DEL_SCHEME "Ви дійсно бажаєте видалити схему керування електроживленням?"
   IDS_DEL_SCHEME_TITLE "Видалення схеми"
 END

@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/numbers.c
+ * FILE:            dll/cpl/intl/numbers.c
  * PURPOSE:         Numbers property page
  * PROGRAMMER:      Eric Kohl
  */
@@ -95,7 +95,7 @@ InitNumDecimalSepCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)(LPCSTR)szNumSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
@@ -132,7 +132,7 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
     /* Create standard list of fractional symbols */
     for (nCBIndex = 0; nCBIndex < MAX_FRAC_NUM_SAMPLES; nCBIndex++)
     {
-        /* convert to wide char */
+        /* Convert to wide char */
         _itot(nCBIndex, szFracCount, DECIMAL_RADIX);
 
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
@@ -189,7 +189,7 @@ InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szFieldSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not success, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
@@ -243,7 +243,7 @@ InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)pszFieldDigNumSmpl);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
@@ -300,7 +300,7 @@ InitNegSignCB(HWND hwndDlg, LCID lcid)
                            -1,
                            (LPARAM)szNegSign);
 
-    /* if is not success, add new value to list and select them */
+    /* If  it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
@@ -464,7 +464,7 @@ InitListSepCB(HWND hwndDlg,
                            -1,
                            (LPARAM)szListSep);
 
-    /* if is not success, add new value to list and select them */
+    /* If it is not successful, add new values to list and select them */
     if (nRetCode == CB_ERR)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
@@ -584,7 +584,7 @@ SetFracSymNum(HWND hwndDlg,
                            (WPARAM)0,
                            (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szFracSymNum, DECIMAL_RADIX);
 
     /* Save number of fractional symbols */
@@ -687,7 +687,7 @@ SetNumLeadZero(HWND hwndDlg,
                             (WPARAM)0,
                             (LPARAM)0);
 
-    /* convert to wide char */
+    /* Convert to wide char */
     _itot(nCurrSel, szLeadZero, DECIMAL_RADIX);
 
     /* Save leading zero format */

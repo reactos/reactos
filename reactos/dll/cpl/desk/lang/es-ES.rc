@@ -45,7 +45,7 @@ BEGIN
                     WS_BORDER | WS_GROUP, 61, 123, 12, 13
     LTEXT           "minutos", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL         "Pr&oteger con contraseña al reanudar",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19 //104
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19 // 104
     GROUPBOX        "Energía del monitor ", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Para ajustar la configuración de energía del monitor y ahorrar energía, haga clic en Energía.",
                     IDC_STATIC, 14, 166, 146, 24
@@ -61,7 +61,7 @@ BEGIN
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Com&binación de colores", IDC_STATIC, 7, 160, 90, 7 //64
+    LTEXT           "Com&binación de colores", IDC_STATIC, 7, 160, 90, 7 // 64
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Efectos...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Opciones &avanzadas", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15

@@ -567,8 +567,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             {
                 int ret;
 
-                ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-                if (ret == IDOK)
+                ret = MessageBox(hwnd, MsgQuit, szAppName, MB_YESNO|MB_ICONQUESTION);
+                if (ret == IDYES)
                 {
                     WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
                     DestroyWindow(hwnd);

@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/intl.c
+ * FILE:            dll/cpl/intl/intl.c
  * PURPOSE:         Property sheet code
  * PROGRAMMER:      Eric Kohl
  */
@@ -207,4 +207,3 @@ DllMain(HINSTANCE hinstDLL,
 
   return TRUE;
 }
-

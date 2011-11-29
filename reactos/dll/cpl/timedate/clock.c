@@ -54,24 +54,24 @@ DrawClock(HDC hdc, PCLOCKDATA pClockData)
      HBRUSH hBrushOld;
      HPEN hPenOld = NULL;
 
-     /* grey brush to fill the dots */
+     /* Grey brush to fill the dots */
      hBrushOld = SelectObject(hdc, pClockData->hGreyBrush);
 
      hPenOld = GetCurrentObject(hdc, OBJ_PEN);
 
-     // TODO: check if this conversion is correct resp. usable
+     // TODO: Check if this conversion is correct resp. usable
      Radius = min(pClockData->cxClient,pClockData->cyClient) * 2;
 
      for (iAngle = 0; iAngle < 360; iAngle += 6)
      {
-          /* starting coords */
+          /* Starting coords */
           pt[0].x = 0;
           pt[0].y = Radius;
 
-          /* rotate start coords */
+          /* Rotate start coords */
           RotatePoint(pt, 1, iAngle);
 
-          /* determine whether it's a big dot or a little dot
+          /* Determine whether it's a big dot or a little dot
            * i.e. 1-4 or 5, 6-9 or 10, 11-14 or 15 */
           if (iAngle % 5)
           {
@@ -174,7 +174,7 @@ ClockWndProc(HWND hwnd,
             if (hdcMem)
             {
                 HBITMAP hBmp, hBmpOld;
-                
+
                 hBmp = CreateCompatibleBitmap(hdc,
                                               pClockData->cxClient,
                                               pClockData->cyClient);

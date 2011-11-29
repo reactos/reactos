@@ -7,7 +7,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 IDD_PROPPAGEMAIN DIALOGEX 0, 0, 252, 205
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Hracie zariadenia" //Game Controllers
+CAPTION "Hracie zariadenia" // Game Controllers
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
@@ -18,7 +18,7 @@ BEGIN
     PUSHBUTTON "O&dstr·niù", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "&Spresniù...", IDC_ADVANCED_BUTTON, 96, 157, 65, 14
-    PUSHBUTTON "&Rieöenie problÈmov...", IDC_TROUBLESHOOT_BUTTON, 165, 157, 80, 14 //Troubleshoot = Rieöenie problÈmov
+    PUSHBUTTON "&Rieöenie problÈmov...", IDC_TROUBLESHOOT_BUTTON, 165, 157, 80, 14 // Troubleshoot = Rieöenie problÈmov
     PUSHBUTTON "OK", IDOK, 195, 185, 50, 14
 END
 
@@ -47,7 +47,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "VlastnÈ hracie zariadenie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Charakter zariadenia", -1, 7, 7, 245, 52 //Special characteristics
+    GROUPBOX "Charakter zariadenia", -1, 7, 7, 245, 52 // Special characteristics
     AUTORADIOBUTTON "&P·kov˝ ovl·daË", IDC_JOYSTICK_RADIO, 17, 23, 80, 10
     AUTORADIOBUTTON "O&vl·dacia p·ka lietadla", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
     AUTORADIOBUTTON "&Gamepad", IDC_GAME_PAD_RADIO, 17, 40, 65, 10

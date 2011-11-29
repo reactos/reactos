@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS International Control Panel
- * FILE:            lib/cpl/intl/generalp.c
+ * FILE:            dll/cpl/intl/generalp.c
  * PURPOSE:         General property page
  * PROGRAMMER:      Eric Kohl
  *                  Klemens Friedl
@@ -176,7 +176,7 @@ SetNewLocale(LCID lcid)
     ret = RegOpenKey(HKEY_CURRENT_USER, _T("Control Panel\\International"), &localeKey);
     if (ret != ERROR_SUCCESS)
     {
-        // some serious error
+        // Some serious error
         MessageBox(NULL, _T("Problem opening HKCU\\Control Panel\\International key"),
                    _T("Big Problem"), MB_OK);
         return;
@@ -191,7 +191,7 @@ SetNewLocale(LCID lcid)
     ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
     if (ret != ERROR_SUCCESS)
     {
-        // some serious error
+        // Some serious error
         MessageBox(NULL, _T("Problem opening HKU\\.DEFAULT\\Control Panel\\International key"),
                    _T("Big Problem"), MB_OK);
         return;
@@ -450,6 +450,5 @@ GeneralPageProc(HWND hwndDlg,
 
     return FALSE;
 }
-
 
 /* EOF */

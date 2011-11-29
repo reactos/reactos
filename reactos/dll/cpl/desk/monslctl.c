@@ -750,7 +750,7 @@ MonSelDrawDisabledRect(IN OUT PMONITORSELWND infoPtr,
 
     if (infoPtr->hbrDisabled != NULL)
     {
-        /* FIXME - implement */
+        /* FIXME: Implement */
     }
 
     return Ret;
@@ -1242,7 +1242,7 @@ MonitorSelWndProc(IN HWND hwnd,
             if (!(infoPtr->ControlExStyle & MSLM_EX_SELECTONRIGHTCLICK))
                 break;
 
-            /* fall through */
+            /* Fall through */
         }
 
         case WM_LBUTTONDBLCLK:
@@ -1274,7 +1274,7 @@ MonitorSelWndProc(IN HWND hwnd,
                                    &pt);
             }
 
-            /* fall through */
+            /* Fall through */
         }
 
         case WM_MBUTTONDOWN:
@@ -1308,7 +1308,7 @@ MonitorSelWndProc(IN HWND hwnd,
             {
                 case VK_TAB:
                 {
-                    /* change the UI status */
+                    /* Change the UI status */
                     SendMessage(GetAncestor(hwnd,
                                             GA_PARENT),
                                 WM_CHANGEUISTATE,

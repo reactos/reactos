@@ -173,7 +173,7 @@ BEGIN
   IDS_TIMEOUT14 "Dopo 4 ore"
   IDS_TIMEOUT15 "Dopo 5 ore"
   IDS_TIMEOUT16 "Mai"
-  
+
   IDS_DEL_SCHEME "Siete sicuro di voler cancellare lo schema?"
   IDS_DEL_SCHEME_TITLE "Cancellazione schema"
 END

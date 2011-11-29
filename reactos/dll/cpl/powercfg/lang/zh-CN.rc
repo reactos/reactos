@@ -161,7 +161,7 @@ BEGIN
   IDS_TIMEOUT14 "4 小时之后"
   IDS_TIMEOUT15 "5 小时之后"
   IDS_TIMEOUT16 "从不"
-  
+
   IDS_DEL_SCHEME "您确定要删除电源使用方案吗?"
   IDS_DEL_SCHEME_TITLE "删除方案"
 END

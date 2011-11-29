@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/theme.c
+ * FILE:            dll/cpl/desk/theme.c
  * PURPOSE:         Handling themes
  *
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -122,7 +122,7 @@ VOID LoadCurrentScheme(COLOR_SCHEME* scheme)
 	scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
 	scheme->Effects.bTooltipFade	   = scheme->Effects.bMenuFade;
 
-	/* show content of windows during dragging */
+	/* Show content of windows during dragging */
 	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &scheme->Effects.bDragFullWindows, 0);
 
 	/* "Hide underlined letters for keyboard navigation until I press the Alt key" */
@@ -306,7 +306,7 @@ VOID ApplyScheme(COLOR_SCHEME* scheme, INT SchemeId)
 
 BOOL SaveScheme(COLOR_SCHEME* scheme, LPCTSTR strLegacyName)
 {
-	/* FIXME: implement */
+	/* FIXME: Implement */
 	return FALSE;
 }
 
@@ -341,7 +341,7 @@ INT LoadSchemePresetEntries(LPTSTR pszSelectedStyle)
 		while((RegEnumKeyEx(hkNewSchemes, iStyle, g_ColorSchemes[iTemplateIndex].strKeyName, &dwLength,
 							NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) && (iTemplateIndex < MAX_TEMPLATES))
 		{
-			/* is it really a template or one of the other entries */
+			/* Is it really a template or one of the other entries */
 			if (dwLength <= 4)
 			{
 				if (RegOpenKeyEx(hkNewSchemes, g_ColorSchemes[iTemplateIndex].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)

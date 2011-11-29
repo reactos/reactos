@@ -60,7 +60,7 @@ GetSystemDrive(WCHAR **szSystemDrive)
 {
     DWORD dwBufSize;
 
-    /* get Path to freeldr.ini or boot.ini */
+    /* Get Path to freeldr.ini or boot.ini */
     *szSystemDrive = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
     if (*szSystemDrive != NULL)
     {
@@ -108,7 +108,7 @@ ReadFreeldrSection(HINF hInf, WCHAR *szSectionName)
                             NULL,
                             &InfContext))
     {
-        /* failed to find section */
+        /* Failed to find section */
         return NULL;
     }
 
@@ -144,7 +144,7 @@ ReadFreeldrSection(HINF hInf, WCHAR *szSectionName)
         {
             if (!_wcsnicmp(szValue, L"ReactOS", 7))
             {
-                //FIXME store as enum
+                // FIXME: Store as enum
                 pRecord->BootType = 1;
             }
             else
@@ -158,7 +158,7 @@ ReadFreeldrSection(HINF hInf, WCHAR *szSectionName)
         }
         else if (!_wcsnicmp(szName, L"Options", 7))
         {
-            //FIXME store flags as values
+            // FIXME: Store flags as values
             wcscpy(pRecord->szOptions, szValue);
         }
 
@@ -186,7 +186,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                            L"DefaultOS",
                            &InfContext))
     {
-        /* failed to find default os */
+        /* Failed to find default os */
         return FALSE;
     }
 
@@ -196,7 +196,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                              sizeof(szDefaultOs) / sizeof(WCHAR),
                              &LineLength))
     {
-        /* no key */
+        /* No key */
         return FALSE;
     }
 
@@ -205,7 +205,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                            L"TimeOut",
                            &InfContext))
     {
-        /* expected to find timeout value */
+        /* Expected to find timeout value */
         return FALSE;
     }
 
@@ -214,7 +214,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                           1,
                           (PINT)&TimeOut))
     {
-        /* failed to retrieve timeout */
+        /* Failed to retrieve timeout */
         return FALSE;
     }
 
@@ -223,7 +223,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                            NULL,
                            &InfContext))
     {
-       /* expected list of operating systems */
+       /* Expected list of operating systems */
        return FALSE;
     }
 
@@ -235,7 +235,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                                  sizeof(szName) / sizeof(WCHAR),
                                  &LineLength))
         {
-            /* the ini file is messed up */
+            /* The ini file is messed up */
             return FALSE;
         }
 
@@ -245,7 +245,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                                  sizeof(szValue) / sizeof(WCHAR),
                                  &LineLength))
         {
-            /* the ini file is messed up */
+            /* The ini file is messed up */
             return FALSE;
         }
 
@@ -258,7 +258,7 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
                 SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)pRecord);
                 if (!wcscmp(szDefaultOs, szName))
                 {
-                    /* we store the friendly name as key */
+                    /* We store the friendly name as key */
                     wcscpy(szDefaultOs, szValue);
                 }
             }
@@ -270,11 +270,11 @@ LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
     }
     while (SetupFindNextLine(&InfContext, &InfContext));
 
-    /* find default os in list */
+    /* Find default os in list */
     lResult = SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_FINDSTRING, (WPARAM)-1, (LPARAM)szDefaultOs);
     if (lResult != CB_ERR)
     {
-       /* set cur sel */
+       /* Set cur sel */
        SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
     }
 
@@ -347,7 +347,7 @@ LoadBootSettings(HINF hInf, HWND hwndDlg)
                             NULL,
                             &InfContext))
     {
-        /* failed to find operating systems section */
+        /* Failed to find operating systems section */
         return FALSE;
     }
 
@@ -405,11 +405,11 @@ LoadBootSettings(HINF hInf, HWND hwndDlg)
     }
     while (SetupFindNextLine(&InfContext, &InfContext));
 
-    /* find default os in list */
+    /* Find default os in list */
     lResult = SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_FINDSTRING, (WPARAM)0, (LPARAM)szDefaultOS);
     if (lResult != CB_ERR)
     {
-       /* set cur sel */
+       /* Set cur sel */
        SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
     }
 
@@ -462,7 +462,7 @@ LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
 
     if (PathFileExistsW(pStartInfo->szFreeldrIni))
     {
-        /* free resource previously allocated by GetSystemDrive() */
+        /* Free resource previously allocated by GetSystemDrive() */
         HeapFree(GetProcessHeap(), 0, szSystemDrive);
         /* freeldr.ini exists */
         hInf = SetupOpenInfFileW(pStartInfo->szFreeldrIni,
@@ -480,16 +480,16 @@ LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
         return FALSE;
     }
 
-    /* try load boot.ini settings */
+    /* Try loading boot.ini settings */
     wcscpy(pStartInfo->szFreeldrIni, szSystemDrive);
     wcscat(pStartInfo->szFreeldrIni, L"\\boot.ini");
 
-    /* free resource previously allocated by GetSystemDrive() */
+    /* Free resource previously allocated by GetSystemDrive() */
     HeapFree(GetProcessHeap(), 0, szSystemDrive);
 
     if (PathFileExistsW(pStartInfo->szFreeldrIni))
     {
-        /* load boot.ini settings */
+        /* Load boot.ini settings */
         hInf = SetupOpenInfFileW(pStartInfo->szFreeldrIni,
                                 NULL,
                                 INF_STYLE_OLDNT,
@@ -514,20 +514,20 @@ SetCrashDlgItems(HWND hwnd, PSTARTINFO pStartInfo)
 {
     if (pStartInfo->dwCrashDumpEnabled == 0)
     {
-        /* no crash information required */
+        /* No crash information required */
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), FALSE);
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECOVERWRITE), FALSE);
     }
     else if (pStartInfo->dwCrashDumpEnabled == 3)
     {
-        /* minidump type */
+        /* Minidump type */
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), TRUE);
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECOVERWRITE), FALSE);
         SendMessageW(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), WM_SETTEXT, (WPARAM)0, (LPARAM)pStartInfo->szMinidumpDir);
     }
     else if (pStartInfo->dwCrashDumpEnabled == 1 || pStartInfo->dwCrashDumpEnabled == 2)
     {
-        /* kernel or complete dump */
+        /* Kernel or complete dump */
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), TRUE);
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECOVERWRITE), TRUE);
         SendMessageW(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), WM_SETTEXT, (WPARAM)0, (LPARAM)pStartInfo->szDumpFile);
@@ -547,7 +547,7 @@ WriteStartupRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
                      KEY_WRITE,
                      &hKey) != ERROR_SUCCESS)
     {
-        /* failed to open key */
+        /* Failed to open key */
         return;
     }
 
@@ -592,7 +592,7 @@ LoadRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
                      KEY_READ,
                      &hKey) != ERROR_SUCCESS)
     {
-        /* failed to open key */
+        /* Failed to open key */
         return;
     }
 
@@ -690,13 +690,13 @@ StartRecDlgProc(HWND hwndDlg,
             {
                 case IDC_STRRECEDIT:
                     ShellExecuteW(0, L"open", L"notepad", pStartInfo->szFreeldrIni, NULL, SW_SHOWNORMAL);
-                    // FIXME use CreateProcess and wait untill finished
+                    // FIXME: Use CreateProcess and wait untill finished
                     //  DeleteBootRecords(hwndDlg);
                     //  LoadOSList(hwndDlg);
                     break;
 
                 case IDOK:
-                    /* save timeout */
+                    /* Save timeout */
                     if (SendDlgItemMessage(hwndDlg, IDC_STRECLIST, BM_GETCHECK, (WPARAM)0, (LPARAM)0) == BST_CHECKED)
                         iTimeout = SendDlgItemMessage(hwndDlg, IDC_STRRECLISTUPDWN, UDM_GETPOS, (WPARAM)0, (LPARAM)0);
                     else
@@ -717,12 +717,12 @@ StartRecDlgProc(HWND hwndDlg,
                     {
                         if (pStartInfo->iFreeLdrIni == 1) // FreeLdrIni style
                         {
-                            /* set default timeout */
+                            /* Set default timeout */
                             WritePrivateProfileStringW(L"FREELOADER",
                                                       L"TimeOut",
                                                       szTimeout,
                                                       pStartInfo->szFreeldrIni);
-                            /* set default os */
+                            /* Set default OS */
                             WritePrivateProfileStringW(L"FREELOADER",
                                                       L"DefaultOS",
                                                       pRecord->szSectionName,
@@ -731,12 +731,12 @@ StartRecDlgProc(HWND hwndDlg,
                         }
                         else if (pStartInfo->iFreeLdrIni == 2) // BootIni style
                         {
-                            /* set default timeout */
+                            /* Set default timeout */
                             WritePrivateProfileStringW(L"boot loader",
                                                       L"timeout",
                                                       szTimeout,
                                                       pStartInfo->szFreeldrIni);
-                            /* set default os */
+                            /* Set default OS */
                             WritePrivateProfileStringW(L"boot loader",
                                                       L"default",
                                                       pRecord->szBootPath,

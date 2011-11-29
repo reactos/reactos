@@ -158,7 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "σε 4 ώρες"
   IDS_TIMEOUT15 "σε 5 ώρες"
   IDS_TIMEOUT16 "Ποτέ"
-  
+
   IDS_DEL_SCHEME "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτόν τον συνδιασμό τροφοδοσίας;"
   IDS_DEL_SCHEME_TITLE "Διαγραφή συνδιασμού"
 END

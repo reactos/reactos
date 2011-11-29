@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/appearance.c
+ * FILE:            dll/cpl/desk/appearance.c
  * PURPOSE:         Appearance property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
@@ -18,7 +18,7 @@ AppearancePage_ShowColorScemes(GLOBALS *g, HWND hwndColor, INT ThemeId)
 	int i, iListIndex;
 
 	SendMessage(hwndColor, CB_RESETCONTENT , 0, 0);
-	
+
 	if(g->bThemeActive == FALSE)
 	{
 		for(i = 0; i < g_TemplateCount; i++)
@@ -183,7 +183,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if(g->bThemeActive == FALSE)
 						{
 							COLOR_SCHEME Scheme;
-							
+
 							g->bSchemeChanged = TRUE;
 							if (SchemeId != -1 && LoadSchemeFromReg(&Scheme, SchemeId))
 							{
@@ -233,7 +233,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						PTHEME pTheme = (PTHEME)DSA_GetItemPtr(g->Themes, g->ThemeId);
 						ActivateTheme(pTheme, g->SchemeId, 0);
 					}
-					
+
 					SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Scheme);
 					g->bThemeChanged = FALSE;
 					g->bSchemeChanged = FALSE;

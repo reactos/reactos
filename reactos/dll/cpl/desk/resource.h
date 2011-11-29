@@ -1,6 +1,6 @@
 #pragma once
 
-/* metrics */
+/* Metrics */
 #define PROPSHEETWIDTH                  246
 #define PROPSHEETHEIGHT                 228
 #define PROPSHEETPADDING                6

@@ -1,4 +1,4 @@
-// English (en) resources by Lohegrim (Lohnegrim at gmx dot net)
+// Bulgarian resources
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
@@ -158,7 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "След 4 часа"
   IDS_TIMEOUT15 "След 5 часа"
   IDS_TIMEOUT16 "Никога"
-  
+
   IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
   IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END

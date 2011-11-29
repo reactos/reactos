@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Network Control Panel
- * FILE:            lib/cpl/system/ncpa.c
+ * FILE:            dll/cpl/ncpa/ncpa.c
  * PURPOSE:         ReactOS Network Control Panel
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  * UPDATE HISTORY:
@@ -19,8 +19,7 @@ LONG CALLBACK
 DisplayApplet(VOID)
 {
 	WCHAR szParameters[160];
-	//FIXME
-	// use correct path
+	// FIXME: Use correct path
 	//::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}
 
 	wcscpy(szParameters, L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}");

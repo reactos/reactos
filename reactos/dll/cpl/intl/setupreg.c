@@ -65,7 +65,7 @@ InsSpacesFmt(const TCHAR *szSourceStr, const TCHAR *szFmtStr)
 
     _tcscpy(pszDestStr, szSourceStr);
 
-    /* if format is clean return source string */
+    /* If format is clean return source string */
     if (!*szFmtStr)
         return pszDestStr;
 
@@ -93,12 +93,12 @@ InsSpacesFmt(const TCHAR *szSourceStr, const TCHAR *szFmtStr)
             szFmtVal[nValCount] = _T('\0');
             nValCount=0;
 
-            /* insert space to finded position plus all pos before */
+            /* Insert space to finded position plus all pos before */
             pszTempStr = InsSpacePos(pszDestStr, nSpaceOffset);
             _tcscpy(pszDestStr, pszTempStr);
             free(pszTempStr);
 
-            /* num of spaces total increment */
+            /* Num of spaces total increment */
             if (!wasNul)
             {
                 nSpaceOffset++;

@@ -1,4 +1,3 @@
-
 #include "intl.h"
 
 typedef struct CPStruct

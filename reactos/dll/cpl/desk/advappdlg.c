@@ -356,7 +356,7 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
 	g->SchemeAdv = g->Scheme;
 
 	SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-	
+
 
 	/* Add the elements to the combo */
 	for (iElement = 0; iElement < NUM_ELEMENTS; iElement++)

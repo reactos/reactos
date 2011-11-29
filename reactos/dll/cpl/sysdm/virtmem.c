@@ -104,9 +104,9 @@ GetPageFileSizes(LPTSTR lpPageFiles,
 static VOID
 ParseMemSettings(PVIRTMEM pVirtMem)
 {
-    TCHAR szDrives[1024];    // all drives
+    TCHAR szDrives[1024];    // All drives
     LPTSTR DrivePtr = szDrives;
-    TCHAR szDrive[3]; // single drive
+    TCHAR szDrive[3];        // Single drive
     TCHAR szVolume[MAX_PATH];
     TCHAR *szDisplayString;
     INT InitialSize = 0;
@@ -130,15 +130,15 @@ ParseMemSettings(PVIRTMEM pVirtMem)
 
         DrivePtr = _tcsupr(DrivePtr);
 
-        /* copy the 'X:' portion */
+        /* Copy the 'X:' portion */
         lstrcpyn(szDrive, DrivePtr, sizeof(szDrive) / sizeof(TCHAR));
 
         if (GetDriveType(DrivePtr) == DRIVE_FIXED)
         {
-            /* does drive match the one in the registry ? */
+            /* Does drive match the one in the registry ? */
             if (!_tcsncmp(pVirtMem->szPagingFiles, szDrive, 2))
             {
-                /* FIXME: we only check the first available pagefile in the reg */
+                /* FIXME: We only check the first available pagefile in the reg */
                 GetPageFileSizes(pVirtMem->szPagingFiles,
                                  &InitialSize,
                                  &MaximumSize);
@@ -159,7 +159,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
             _tcscpy(szDisplayString, szDrive);
             _tcscat(szDisplayString, _T("\t"));
 
-            /* set a volume label if there is one */
+            /* Set a volume label if there is one */
             if (GetVolumeInformation(DrivePtr,
                                      szVolume,
                                      255,
@@ -224,7 +224,7 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
             /* Record the position where the next string will start */
             nPos += (INT)lstrlen(szText) + 1;
 
-            /* add another NULL for REG_MULTI_SZ */
+            /* Add another NULL for REG_MULTI_SZ */
             szPagingFiles[nPos] = _T('\0');
             nPos++;
         }
@@ -313,7 +313,7 @@ OnSet(PVIRTMEM pVirtMem)
                                      0);
     if (Index >= 0 && Index < pVirtMem->Count)
     {
-        /* check if custom settings are checked */
+        /* Check if custom settings are checked */
         if (IsDlgButtonChecked(pVirtMem->hSelf,
                                IDC_CUSTOM) == BST_CHECKED)
         {
@@ -417,11 +417,11 @@ OnSet(PVIRTMEM pVirtMem)
         }
         else
         {
-            /* set sizes to 0 */
+            /* Set sizes to 0 */
             pVirtMem->Pagefile[Index].InitialSize = 0;
             pVirtMem->Pagefile[Index].MaximumSize = 0;
 
-            // check to see if this drive is used for a paging file
+            // Check to see if this drive is used for a paging file
             if (IsDlgButtonChecked(pVirtMem->hSelf,
                                    IDC_NOPAGEFILE) == BST_UNCHECKED)
             {
@@ -468,7 +468,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         if (pVirtMem->Pagefile[Index].InitialSize != 0 &&
             pVirtMem->Pagefile[Index].MaximumSize != 0)
         {
-            /* enable and fill the custom values */
+            /* Enable and fill the custom values */
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_MAXSIZE), TRUE);
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_INITIALSIZE), TRUE);
 
@@ -492,7 +492,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_MAXSIZE), FALSE);
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_INITIALSIZE), FALSE);
 
-            /* is it system managed */
+            /* Is it system managed */
             if (pVirtMem->Pagefile[Index].bUsed)
             {
                 CheckDlgButton(pVirtMem->hSelf,

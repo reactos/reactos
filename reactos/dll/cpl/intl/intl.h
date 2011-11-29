@@ -12,7 +12,7 @@
 
 #define DECIMAL_RADIX          10
 
-/* limits */
+/* Limits */
 #define MAX_FMT_SIZE           30
 #define MAX_STR_SIZE          128
 #define MAX_SAMPLES_STR_SIZE   70

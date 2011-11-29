@@ -164,7 +164,7 @@ BEGIN
   IDS_TIMEOUT14 "Po 4 godzinach"
   IDS_TIMEOUT15 "Po 5 godzinach"
   IDS_TIMEOUT16 "Nigdy"
-  
+
   IDS_DEL_SCHEME "Czy na pewno chcesz skasować schemat oszczędzania energii?"
   IDS_DEL_SCHEME_TITLE "Skasuj schemat"
 END

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/draw.c
+ * FILE:            dll/cpl/desk/draw.c
  * PURPOSE:         Providing drawing functions
  *
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -257,22 +257,22 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lstrcpy(lf.lfFaceName, TEXT("Marlett"));
 	hFont = CreateFontIndirect(&lf);
-	/* save font and text color */
+	/* Save font and text color */
 	hOldFont = SelectObject(dc, hFont);
 	clrsave = GetTextColor(dc);
 	bkmode = GetBkMode(dc);
-	/* set color and drawing mode */
+	/* Set color and drawing mode */
 	SetBkMode(dc, TRANSPARENT);
 	if(uFlags & DFCS_INACTIVE)
 	{
-		/* draw shadow */
+		/* Draw shadow */
 		SetTextColor(dc, scheme->crColor[COLOR_BTNHIGHLIGHT]);
 		TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
 	}
 	SetTextColor(dc, scheme->crColor[(uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT]);
-	/* draw selected symbol */
+	/* Draw selected symbol */
 	TextOut(dc, myr.left, myr.top, &Symbol, 1);
-	/* restore previous settings */
+	/* Restore previous settings */
 	SetTextColor(dc, clrsave);
 	SelectObject(dc, hOldFont);
 	SetBkMode(dc, bkmode);
@@ -325,20 +325,20 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lstrcpy(lf.lfFaceName, TEXT("Marlett"));
 	hFont = CreateFontIndirect(&lf);
-	/* save font and text color */
+	/* Save font and text color */
 	hOldFont = SelectObject(dc, hFont);
 	clrsave = GetTextColor(dc);
 	bkmode = GetBkMode(dc);
-	/* set color and drawing mode */
+	/* Set color and drawing mode */
 	SetBkMode(dc, TRANSPARENT);
 	if(uFlags & DFCS_INACTIVE)
 	{
-		/* draw shadow */
+		/* Draw shadow */
 		SetTextColor(dc, scheme->crColor[COLOR_BTNHIGHLIGHT]);
 		TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
 	}
 	SetTextColor(dc, scheme->crColor[(uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT]);
-	/* draw selected symbol */
+	/* Draw selected symbol */
 	TextOut(dc, myr.left, myr.top, &Symbol, 1);
 	/* restore previous settings */
 	SetTextColor(dc, clrsave);

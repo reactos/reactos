@@ -1,7 +1,7 @@
 /*
-* COPYRIGHT:       See COPYING in the top level directory
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/devsett.c
+ * FILE:            dll/cpl/desk/devsett.c
  * PURPOSE:         ReactOS Display Control Panel Shell Extension Support
  */
 
@@ -17,15 +17,15 @@ typedef struct _CDevSettings
     const struct IDataObjectVtbl *lpIDataObjectVtbl;
     DWORD ref;
 
-    CLIPFORMAT cfExtInterface; /* "Desk.cpl extension interface" */
-    CLIPFORMAT cfDisplayDevice; /* "Display Device" */
-    CLIPFORMAT cfDisplayName; /* "Display Name" */
-    CLIPFORMAT cfDisplayId; /* "Display ID" */
-    CLIPFORMAT cfMonitorName; /* "Monitor Name" */
-    CLIPFORMAT cfMonitorDevice; /* "Monitor Device" */
-    CLIPFORMAT cfDisplayKey; /* "Display Key" */
+    CLIPFORMAT cfExtInterface;      /* "Desk.cpl extension interface" */
+    CLIPFORMAT cfDisplayDevice;     /* "Display Device" */
+    CLIPFORMAT cfDisplayName;       /* "Display Name" */
+    CLIPFORMAT cfDisplayId;         /* "Display ID" */
+    CLIPFORMAT cfMonitorName;       /* "Monitor Name" */
+    CLIPFORMAT cfMonitorDevice;     /* "Monitor Device" */
+    CLIPFORMAT cfDisplayKey;        /* "Display Key" */
     CLIPFORMAT cfDisplayStateFlags; /* "Display State Flags" */
-    CLIPFORMAT cfPruningMode; /* "Pruning Mode" */
+    CLIPFORMAT cfPruningMode;       /* "Pruning Mode" */
 
     PWSTR pDisplayDevice;
     PWSTR pDisplayName;

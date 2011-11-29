@@ -1,5 +1,6 @@
-//update jansssens
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
+// Vertaald door Lionel Lowie
+// Update jansssens
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION

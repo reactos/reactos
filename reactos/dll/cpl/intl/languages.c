@@ -1,4 +1,3 @@
-
 #include "intl.h"
 
 /* Property page dialog callback */
@@ -40,7 +39,6 @@ LanguagesPageProc(HWND hwndDlg,
             }
             break;
     }
-
     return FALSE;
 }
 

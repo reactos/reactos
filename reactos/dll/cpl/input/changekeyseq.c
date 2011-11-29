@@ -183,7 +183,7 @@ ChangeKeySeqDlgProc(HWND hDlg,
                         }
                     }
                     break;
-                
+
                 case IDC_SWITCH_KBLAYOUTS_CB:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {

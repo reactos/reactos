@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/timedate.c
+ * FILE:        dll/cpl/timedate/timedate.c
  * PURPOSE:     ReactOS Timedate Control Panel
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>

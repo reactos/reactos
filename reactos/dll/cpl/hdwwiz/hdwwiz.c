@@ -319,7 +319,7 @@ InitProbeListPage(HWND hwndDlg)
 
     if (hDevInfo == INVALID_HANDLE_VALUE) return;
 
-    /* get the device image List */
+    /* Get the device image List */
     ImageListData.cbSize = sizeof(ImageListData);
     SetupDiGetClassImageList(&ImageListData);
 
@@ -335,7 +335,7 @@ InitProbeListPage(HWND hwndDlg)
             if (ulStatus & DN_NO_SHOW_IN_DM) continue;
         }
 
-        /* get the device's friendly name */
+        /* Get the device's friendly name */
         if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
                                               &DevInfoData,
                                               SPDRP_FRIENDLYNAME,
@@ -344,7 +344,7 @@ InitProbeListPage(HWND hwndDlg)
                                               MAX_STR_SIZE,
                                               NULL))
         {
-            /* if the friendly name fails, try the description instead */
+            /* If the friendly name fails, try the description instead */
             SetupDiGetDeviceRegistryProperty(hDevInfo,
                                              &DevInfoData,
                                              SPDRP_DEVICEDESC,
@@ -574,7 +574,7 @@ EnumDeviceClasses(INT ClassIndex,
                                0);
     if (Ret != CR_SUCCESS)
     {
-        /* all classes enumerated */
+        /* All classes enumerated */
         if(Ret == CR_NO_SUCH_VALUE)
         {
             hDevInfoTypes = NULL;
@@ -583,10 +583,10 @@ EnumDeviceClasses(INT ClassIndex,
 
         if (Ret == CR_INVALID_DATA)
         {
-            ; /*FIXME: what should we do here? */
+            ; /* FIXME: What should we do here? */
         }
 
-        /* handle other errors... */
+        /* Handle other errors... */
     }
 
     if (SetupDiClassNameFromGuid(&ClassGuid,
@@ -601,9 +601,9 @@ EnumDeviceClasses(INT ClassIndex,
                                    &ClassGuid,
                                    ClassImage))
     {
-        /* FIXME: can we do this?
+        /* FIXME: Can we do this?
          * Set the blank icon: IDI_SETUPAPI_BLANK = 41
-         * it'll be image 24 in the imagelist */
+         * It'll be image 24 in the imagelist */
         *ClassImage = 24;
     }
 
@@ -696,7 +696,7 @@ InitHardWareTypesPage(HWND hwndDlg)
 
             (VOID) ListView_InsertItem(hList, &Item);
 
-            /* kill InfoList initialized in EnumDeviceClasses */
+            /* Kill InfoList initialized in EnumDeviceClasses */
             if (hDevInfoTypes)
             {
                 SetupDiDestroyDeviceInfoList(hDevInfoTypes);

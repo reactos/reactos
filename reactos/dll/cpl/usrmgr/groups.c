@@ -275,7 +275,7 @@ GroupDelete(HWND hwndDlg)
                          szGroupName,
                          UNLEN);
 
-    /* Display a warning message because the delete operation cannot be reverted */
+    /* Display a warning message, because the delete operation cannot be reverted */
     wsprintf(szText, TEXT("Dou you really want to delete the user group \"%s\"?"), szGroupName);
     if (MessageBox(NULL, szText, TEXT("User Groups"), MB_ICONWARNING | MB_YESNO) == IDNO)
         return FALSE;

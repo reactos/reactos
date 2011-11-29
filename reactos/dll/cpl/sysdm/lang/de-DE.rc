@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS System Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/sysdm/de.rc
+ * FILE:            dll/cpl/sysdm/lang/de-DE.rc
  * PURPOSE:         German language file for sysdm.cpl
  * PROGRAMMERS:     Eric Kohl
  * TRANSLATOR:      Colin Finck <mail@colinfinck.de>

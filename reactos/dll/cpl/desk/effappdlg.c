@@ -17,9 +17,9 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
     WPARAM state;
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATION, BM_GETCHECK, 0, 0);
     g->SchemeAdv.Effects.bMenuAnimation = (state == BST_CHECKED) ? TRUE : FALSE;
-	EnableWindow(GetDlgItem(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE), g->SchemeAdv.Effects.bMenuAnimation);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE), g->SchemeAdv.Effects.bMenuAnimation);
 
-    //A boolean as an index for a 2-value list:
+    // A boolean as an index for a 2-value list:
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_SETCURSEL, (WPARAM)g->SchemeAdv.Effects.bMenuFade, 0);
 
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_GETCHECK, 0, 0);
@@ -38,15 +38,15 @@ SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 static VOID
 AddToCombo(HWND hwndDlg, INT From, INT To, INT Combo)
 {
-	INT iElement, iListIndex, i=0;
-	TCHAR tstrText[80];
+    INT iElement, iListIndex, i=0;
+    TCHAR tstrText[80];
 
     for (iElement = From; iElement<=To; iElement++)
-	{
-		LoadString(hApplet, iElement, (LPTSTR)tstrText, 80);
-		iListIndex = SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
-		SendDlgItemMessage(hwndDlg, Combo, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)i++ );
-	}
+    {
+        LoadString(hApplet, iElement, (LPTSTR)tstrText, 80);
+        iListIndex = SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
+        SendDlgItemMessage(hwndDlg, Combo, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)i++ );
+    }
 }
 
 /* Initialize the effects appearance dialog */

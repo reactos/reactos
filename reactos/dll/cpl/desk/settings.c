@@ -336,7 +336,7 @@ OnInitDialog(IN HWND hwndDlg)
 				   1,
 				   (LPARAM)&monitors);
 	}
-	else /* FIXME: incomplete! */
+	else /* FIXME: Incomplete! */
 	{
 		PMONSL_MONINFO pMonitors;
 		DWORD i;
@@ -424,7 +424,7 @@ ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PDATA pD
 static VOID
 OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 {
-	/* if new BPP is not compatible with resolution:
+	/* If new BPP is not compatible with resolution:
 	 * 1) try to find the nearest smaller matching resolution
 	 * 2) otherwise, get the nearest bigger resolution
 	 */
@@ -444,11 +444,11 @@ OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 	GetClientRect(hSpectrumControl, &client);
 	ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pData);
 
-	/* find if new parameters are valid */
+	/* Find if new parameters are valid */
 	Current = pData->CurrentDisplayDevice->CurrentSettings;
 	if (dmNewBitsPerPel == Current->dmBitsPerPel)
 	{
-		/* no change */
+		/* No change */
 		return;
 	}
 
@@ -487,7 +487,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 		}
 	}
 
-	/* search smaller resolution compatible with current color depth */
+	/* Search smaller resolution compatible with current color depth */
 	Current = pData->CurrentDisplayDevice->CurrentSettings->Blink;
 	while (Current != NULL)
 	{
@@ -500,7 +500,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 		Current = Current->Blink;
 	}
 
-	/* search bigger resolution compatible with current color depth */
+	/* Search bigger resolution compatible with current color depth */
 	Current = pData->CurrentDisplayDevice->CurrentSettings->Flink;
 	while (Current != NULL)
 	{
@@ -513,14 +513,14 @@ OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 		Current = Current->Flink;
 	}
 
-	/* we shouldn't go there */
+	/* We shouldn't go there */
 }
 
 static VOID
 OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
                     IN BOOL bUpdateThumb)
 {
-	/* if new resolution is not compatible with color depth:
+	/* If new resolution is not compatible with color depth:
 	 * 1) try to find the nearest bigger matching color depth
 	 * 2) otherwise, get the nearest smaller color depth
 	 */
@@ -528,11 +528,11 @@ OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
 	DWORD dmNewPelsHeight = pData->CurrentDisplayDevice->Resolutions[NewPosition].dmPelsHeight;
 	DWORD dmNewPelsWidth = pData->CurrentDisplayDevice->Resolutions[NewPosition].dmPelsWidth;
 
-	/* find if new parameters are valid */
+	/* Find if new parameters are valid */
 	Current = pData->CurrentDisplayDevice->CurrentSettings;
 	if (dmNewPelsHeight == Current->dmPelsHeight && dmNewPelsWidth == Current->dmPelsWidth)
 	{
-		/* no change */
+		/* No change */
 		return;
 	}
 
@@ -571,7 +571,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
 		}
 	}
 
-	/* search bigger color depth compatible with current resolution */
+	/* Search bigger color depth compatible with current resolution */
 	Current = pData->CurrentDisplayDevice->CurrentSettings->Flink;
 	while (Current != NULL)
 	{
@@ -584,7 +584,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
 		Current = Current->Flink;
 	}
 
-	/* search smaller color depth compatible with current resolution */
+	/* Search smaller color depth compatible with current resolution */
 	Current = pData->CurrentDisplayDevice->CurrentSettings->Blink;
 	while (Current != NULL)
 	{
@@ -597,7 +597,7 @@ OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
 		Current = Current->Blink;
 	}
 
-	/* we shouldn't go there */
+	/* We shouldn't go there */
 }
 
 /* Property sheet page callback */
@@ -764,7 +764,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 					}
 					else
 						pt.x = pt.y = 0;
-	
+
 					MapWindowPoints(hwndMonSel,
 					                NULL,
 					                &pt,

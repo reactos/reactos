@@ -1,5 +1,6 @@
-//Swedish resources by Kris Engeman 2005-04-28
-//Updated 2008 by Andreas Bjerkeholt (Harteex)
+// Swedish resources by Kris Engeman 2005-04-28
+// Updated 2008 by Andreas Bjerkeholt (Harteex)
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218

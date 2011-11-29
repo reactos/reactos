@@ -5,7 +5,7 @@
  *         IRC: irc.freenode.net #reactos-pl;
  *         UTF-8 conversion by Caemyr (May, 2011)
  */
- 
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230

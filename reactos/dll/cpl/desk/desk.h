@@ -83,7 +83,7 @@ typedef struct _DISPLAY_DEVICE_ENTRY
 	LPTSTR DeviceKey;
 	LPTSTR DeviceID;
 	DWORD DeviceStateFlags;
-	PSETTINGS_ENTRY Settings; /* sorted by increasing dmPelsHeight, BPP */
+	PSETTINGS_ENTRY Settings; /* Sorted by increasing dmPelsHeight, BPP */
 	DWORD SettingsCount;
 	PRESOLUTION_INFO Resolutions;
 	DWORD ResolutionsCount;

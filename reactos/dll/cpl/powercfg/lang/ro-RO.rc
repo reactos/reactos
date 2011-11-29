@@ -158,7 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "După 4 ore"
   IDS_TIMEOUT15 "După 5 ore"
   IDS_TIMEOUT16 "Niciodată"
-  
+
   IDS_DEL_SCHEME "Sunteți sigur că vreți să eliminați această schemă?"
   IDS_DEL_SCHEME_TITLE "Eliminare schemă"
 END

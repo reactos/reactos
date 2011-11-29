@@ -1,9 +1,9 @@
 #pragma once
 
-/* icons */
+/* Icons */
 #define IDI_CPLSYSTEM	100
 
-/* strings */
+/* Strings */
 #define IDS_CPLSYSTEMNAME			1001
 #define IDS_CPLSYSTEMDESCRIPTION	2001
 

@@ -26,7 +26,7 @@ CAPTION "RozöÌrenÈ nastavenia kl·vesov"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Vypnutie funkcie Caps Lock", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "StlaËenÌm kl·vesu CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP  //ten kl·ves, nie t· kl·vesa
+    AUTORADIOBUTTON "StlaËenÌm kl·vesu CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP  // Ten kl·ves, nie t· kl·vesa
     AUTORADIOBUTTON " StlaËenÌm kl·vesu SHI&FT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "Kl·vesovÈ skratky pre vstupnÈ jazyky", -1, 7, 37, 258, 95
     LTEXT "Akcia", -1, 14, 47, 60, 9
@@ -95,7 +95,7 @@ BEGIN
     IDS_LANGUAGE             "Jazyk"
     IDS_LAYOUT               "Rozloûenie kl·vesnice"
     IDS_REM_QUESTION         "Chcete odstr·niù vybranÈ rozloûenie kl·vesnice?"
-    IDS_CONFIRMATION         "Potvrdenie" //Confirmation
+    IDS_CONFIRMATION         "Potvrdenie" // Confirmation
     IDS_LAYOUT_EXISTS        "Toto rozloûenie uû existuje."
     IDS_LAYOUT_EXISTS2       "Toto rozloûenie uû existuje a nemÙûe byù pridanÈ."
     IDS_CTRL_SHIFT           "Ctrl+Shift"
@@ -114,7 +114,7 @@ BEGIN
     IDS_ARMENIAN_WESTERN_LAYOUT,                    "ArmÈnske Western"
     IDS_ASSAMESE_LAYOUT,                            "Assamese"
     IDS_AZERI_CYRILLIC_LAYOUT,                      "Azeri Cyrillic"
-    IDS_AZERI_LATIN_LAYOUT,                         "Azeri Latin" //latinka ?
+    IDS_AZERI_LATIN_LAYOUT,                         "Azeri Latin" // Latinka?
     IDS_BELGIAN_COMMA_LAYOUT,                       "Belgian (Comma)"
     IDS_BELGIAN_FRENCH_LAYOUT,                      "BelgickÈ French"
     IDS_BELGIAN_LAYOUT,                             "BelgickÈ (Period)"
@@ -240,7 +240,7 @@ BEGIN
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "United States-Dvorak for right hand"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "United States-International"
     IDS_URDU_LAYOUT,                                "Urdu"
-    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US English Table for IBM Arabic 238_L" //ArabskÈ
+    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US English Table for IBM Arabic 238_L" // ArabskÈ
     IDS_UZBEK_CYRILLIC_LAYOUT,                      "Uzbek Cyrillic"
     IDS_VIETNAMESE_LAYOUT,                          "Vietnamese"
 END

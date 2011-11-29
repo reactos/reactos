@@ -1,7 +1,7 @@
 /* $Id: main.c 12852 2005-01-06 13:58:04Z mf $
  *
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            lib/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
@@ -60,6 +60,7 @@ InitImageInfo(PIMGINFO ImgInfo)
     }
 }
 
+
 VOID
 GetMuteControl(PGLOBAL_DATA pGlobalData)
 {
@@ -89,6 +90,7 @@ GetMuteControl(PGLOBAL_DATA pGlobalData)
     pGlobalData->muteControlID = mxc.dwControlID;
 }
 
+
 VOID
 GetMuteState(PGLOBAL_DATA pGlobalData)
 {
@@ -112,6 +114,7 @@ GetMuteState(PGLOBAL_DATA pGlobalData)
     pGlobalData->muteVal = mxcdMute.fValue;
 }
 
+
 VOID
 SwitchMuteState(PGLOBAL_DATA pGlobalData)
 {
@@ -132,6 +135,7 @@ SwitchMuteState(PGLOBAL_DATA pGlobalData)
 
     pGlobalData->muteVal = mxcdMute.fValue;
 }
+
 
 VOID
 GetVolumeControl(PGLOBAL_DATA pGlobalData)
@@ -164,6 +168,7 @@ GetVolumeControl(PGLOBAL_DATA pGlobalData)
     pGlobalData->volumeControlID = mxc.dwControlID;
 }
 
+
 VOID
 GetVolumeValue(PGLOBAL_DATA pGlobalData)
 {
@@ -186,6 +191,7 @@ GetVolumeValue(PGLOBAL_DATA pGlobalData)
 
     pGlobalData->volumeValue = mxcdVolume.dwValue;
 }
+
 
 VOID
 SetVolumeValue(PGLOBAL_DATA pGlobalData){
@@ -269,6 +275,7 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pGlobalData->volumeValue/VOLUME_DIVIDER);
 }
 
+
 VOID
 LaunchSoundControl(HWND hwndDlg)
 {
@@ -322,10 +329,10 @@ VolumeDlgProc(HWND hwndDlg,
         {
             pGlobalData = (GLOBAL_DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
-            
+
             pGlobalData->hIconUnMuted = LoadImage(hApplet, MAKEINTRESOURCE(IDI_CPLICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pGlobalData->hIconMuted = LoadImage(hApplet, MAKEINTRESOURCE(IDI_MUTED_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-            
+
             InitImageInfo(&ImgInfo);
             InitVolumeControls(hwndDlg, pGlobalData);
             break;
@@ -340,7 +347,7 @@ VolumeDlgProc(HWND hwndDlg,
                 HDC hdcMem;
                 LONG left;
 
-                /* position image in centre of dialog */
+                /* Position image in centre of dialog */
                 left = (lpDrawItem->rcItem.right - ImgInfo.cxSource) / 2;
 
                 hdcMem = CreateCompatibleDC(lpDrawItem->hDC);

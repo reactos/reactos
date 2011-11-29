@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/dibitmap.c
+ * FILE:            dll/cpl/desk/dibitmap.c
  * PURPOSE:         DIB loading
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)

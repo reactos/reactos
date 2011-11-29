@@ -158,7 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "Après 4 heures"
   IDS_TIMEOUT15 "Après 5 heures"
   IDS_TIMEOUT16 "Jamais"
-  
+
   IDS_DEL_SCHEME "Êtes-vous sûr de vouloir supprimer le profil d'alimentation ?"
   IDS_DEL_SCHEME_TITLE "Supprimer le profil"
 END

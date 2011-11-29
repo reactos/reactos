@@ -473,8 +473,8 @@ DxEngGetDCState(HDC hDC,
                 break;
             }
             default:
-                /* if a valid type is not found, zero is returned */
-                DPRINT1("Warning did not find type %d\n",type);
+                /* If a valid type is not found, zero is returned */
+                DPRINT1("Warning: did not find type %d\n",type);
                 break;
         }
         DC_UnlockDc(pDC);
@@ -593,12 +593,12 @@ DxEngReferenceHdev(HDEV hDev)
 /* DxEngNUIsTermSrv                                                     */
 /************************************************************************/
 
-/* Notes : Check see if termal server got a connections or not */
+/* Notes: Check if terminal server got connections or not */
 BOOLEAN
 APIENTRY
 DxEngNUIsTermSrv()
 {
-    /* FIXME ReactOS does not suport terminal server yet, we can not check if we got a connections or not */
+    /* FIXME: ReactOS does not suport terminal server yet, we can not check if we got connections or not */
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -607,7 +607,7 @@ DxEngNUIsTermSrv()
 /* DxEngRedrawDesktop                                                   */
 /************************************************************************/
 
-/* Notes : it always returns TRUE, and it updates whole screen
+/* Notes: it always returns TRUE, and it updates whole screen
    (redraws current desktop) */
 BOOLEAN
 APIENTRY
@@ -623,7 +623,7 @@ ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
 /************************************************************************/
 /* DxEngVisRgnUniq                                                      */
 /************************************************************************/
-/* Notes :  returns the VisRgnUniq counter for win32k */
+/* Notes: returns the VisRgnUniq counter for win32k */
 ULONG
 APIENTRY
 DxEngVisRgnUniq()
@@ -641,7 +641,7 @@ HDEV *
 APIENTRY
 DxEngEnumerateHdev(HDEV *hdev)
 {
-    /* FIXME Enumerate all drivers in win32k */
+    /* FIXME: Enumerate all drivers in win32k */
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -663,7 +663,7 @@ DWORD APIENTRY DxEngScreenAccessCheck()
 {
     UNIMPLEMENTED;
 
-    /* we cheating here and tell dxg.sys it have always premitions to access the screen */
+    /* We're cheating here and telling dxg.sys it has always had permissions to access the screen */
     return TRUE;
 }
 
@@ -673,7 +673,7 @@ DWORD APIENTRY DxEngScreenAccessCheck()
 BOOLEAN
 APIENTRY
 DxEngIsHdevLockedByCurrentThread(HDEV hDev)
-{   // base on EngIsSemaphoreOwnedByCurrentThread w/o the Ex call.
+{   // Based on EngIsSemaphoreOwnedByCurrentThread w/o the Ex call.
     PERESOURCE pSem = ((PPDEVOBJ)hDev)->hsemDevLock;
     return pSem->OwnerEntry.OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread();
 }

@@ -158,7 +158,7 @@ BEGIN
   IDS_TIMEOUT14 "Etter 4 timer"
   IDS_TIMEOUT15 "Etter 5 timer"
   IDS_TIMEOUT16 "Aldri"
-  
+
   IDS_DEL_SCHEME "Er du sikker på at du vil slette strømplanen?"
   IDS_DEL_SCHEME_TITLE "Slett planen"
 END

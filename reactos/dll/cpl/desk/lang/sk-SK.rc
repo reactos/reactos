@@ -156,7 +156,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "VöeobecnÈ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zobrazenie", -1, 7, 6, 237, 56, WS_GROUP //Display=viac v˝znamov
+    GROUPBOX "Zobrazenie", -1, 7, 6, 237, 56, WS_GROUP // Display=viac v˝znamov
     LTEXT "Veækosù pÌsma", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
@@ -188,8 +188,8 @@ END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Pos˙vanie" //Slide effect
-    IDS_FADEEFFECT  "Vytr·canie" //Fade effect
+    IDS_SLIDEEFFECT "Pos˙vanie"  // Slide effect
+    IDS_FADEEFFECT  "Vytr·canie" // Fade effect
 END
 
 STRINGTABLE DISCARDABLE
@@ -207,7 +207,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Obrazovka" //Display
+    IDS_CPLNAME "Obrazovka" // Display
     IDS_CPLDESCRIPTION "UmoûÚuje prispÙsobiù vzhæad, pozadie a öetriË obrazovky."
     IDS_NONE "(Nie je)"
     IDS_CENTER "V strede"
@@ -255,7 +255,7 @@ BEGIN
     IDS_ELEMENT_10 "PriestorovÈ objekty"
     IDS_ELEMENT_11 "N·zov palety"
     IDS_ELEMENT_12 "N·zov tlaËidla"
-    IDS_ELEMENT_13 "Ovl·dacie tlaËidl·" //old=Liöta znaËiek
+    IDS_ELEMENT_13 "Ovl·dacie tlaËidl·" // old=Liöta znaËiek
     IDS_ELEMENT_14 "NedostupnÈ poloûky ponuky"
     IDS_ELEMENT_15 "PolÌËko s hl·senÌm"
     IDS_ELEMENT_16 "Ovl·danie pos˙vaËa"

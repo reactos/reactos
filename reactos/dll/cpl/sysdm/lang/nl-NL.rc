@@ -1,4 +1,5 @@
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
+// Vertaald door Lionel Lowie
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 

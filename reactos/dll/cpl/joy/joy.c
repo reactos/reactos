@@ -103,7 +103,7 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case SC_CONTEXTHELP:
-                    // not implemented
+                    // Not implemented yet
                     break;
             }
             break;
@@ -141,7 +141,7 @@ CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case SC_CONTEXTHELP:
-                    // not implemented
+                    // Not implemented yet
                     break;
             }
             break;
@@ -186,7 +186,7 @@ AddPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case SC_CONTEXTHELP:
-                    // not implemented
+                    // Not implemented yet
                     break;
             }
             break;
@@ -240,7 +240,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case SC_CONTEXTHELP:
-                    // not implemented
+                    // Not implemented yet
                     break;
             }
             break;

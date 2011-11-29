@@ -545,7 +545,7 @@ SaveInputLang(HWND hDlg)
     _ultot(OldLayoutNum, szLayoutNum, 10);
     if (!GetLayoutID(szLayoutNum, szLayoutID)) return;
 
-    // if old layout = selected layout
+    // If old layout = selected layout
     if (_tcscmp(szLayoutID, pts) == 0) return;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"), 0,
