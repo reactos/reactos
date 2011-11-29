@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Ver en pantalla completa\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "I&rudia"
     BEGIN
         MENUITEM "Irauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Marraztu opako", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Koloreak"
     BEGIN
         MENUITEM "Editatu koloreak...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Laguntza"
     BEGIN
         MENUITEM "Laguntza-gaiak", IDM_HELPHELPTOPICS

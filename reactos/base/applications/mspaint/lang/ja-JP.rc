@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "全画面表\示\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "画像(&I)"
     BEGIN
         MENUITEM "回転と反転\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "画像の削除\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "不透明色を描画する", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "色(&C)"
     BEGIN
         MENUITEM "パレットの編集", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "ヘルプ トピック", IDM_HELPHELPTOPICS

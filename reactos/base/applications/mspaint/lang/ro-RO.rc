@@ -62,12 +62,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Afișează &grilă", IDM_VIEWSHOWGRID
+            MENUITEM "Afișează &grilă\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Afișează &miniatură", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Pe &tot ecranul\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Imagine"
     BEGIN
         MENUITEM "R&otire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -78,12 +78,12 @@ BEGIN
         MENUITEM "Șt&erge imaginea", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Desen opac", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Culori"
     BEGIN
         MENUITEM "Editare &paletă...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "&Manual", IDM_HELPHELPTOPICS

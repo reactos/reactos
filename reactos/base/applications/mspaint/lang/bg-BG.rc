@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Цял екран", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "Из&ображение"
     BEGIN
         MENUITEM "Завъртане/Огледало\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Изтриване на изображението\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Непрозрачно изчертаване", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Цветове"
     BEGIN
         MENUITEM "Промяна на палитрите...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Помощ", IDM_HELPHELPTOPICS

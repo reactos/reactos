@@ -60,12 +60,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Показати сітку", IDM_VIEWSHOWGRID
+            MENUITEM "Показати сітку\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Показати в мініатюрі", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "На весь екран\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Зображення"
     BEGIN
         MENUITEM "Відобразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Видалити малюнок\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Непрозоре тло", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Кольори"
     BEGIN
         MENUITEM "Змінити палітру...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Довідка"
     BEGIN
         MENUITEM "Виклик довідки", IDM_HELPHELPTOPICS
@@ -104,6 +104,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE

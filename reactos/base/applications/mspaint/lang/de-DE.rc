@@ -60,12 +60,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Raster anzeigen", IDM_VIEWSHOWGRID
+            MENUITEM "Raster anzeigen\tStrg+R", IDM_VIEWSHOWGRID
             MENUITEM "Miniaturansicht anzeigen", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Gesamtbild\tStrg+G", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "B&ild"
     BEGIN
         MENUITEM "Drehen/Spiegeln...\tStrg+D", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Bild löschen\tStrg+Umschalt+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Deckend zeichnen", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Farben"
     BEGIN
         MENUITEM "Palette bearbeiten...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Hilfethemen", IDM_HELPHELPTOPICS
@@ -104,6 +104,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^W", IDM_VIEWTOOLBOX
     "^F", IDM_VIEWCOLORPALETTE
+    "^R", IDM_VIEWSHOWGRID
     "^G", IDM_VIEWFULLSCREEN
     "^D", IDM_IMAGEROTATEMIRROR
     "^K", IDM_IMAGECHANGESIZE

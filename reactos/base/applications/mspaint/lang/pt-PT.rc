@@ -60,12 +60,12 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
+            MENUITEM "Show grid\tCtrl+M", IDM_VIEWSHOWGRID
             MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "&Ver mapa de bits\tCtrl+B", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Imagem"
     BEGIN
         MENUITEM "I&nverter/rodar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -81,7 +81,7 @@ BEGIN
     BEGIN
         MENUITEM "&Editar cores...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Ajuda"
     BEGIN
         MENUITEM "&Tópicos da Ajuda", IDM_HELPHELPTOPICS
@@ -104,6 +104,7 @@ BEGIN
     "^T", IDM_EDITSELECTALL
     "^F", IDM_VIEWTOOLBOX
     "^D", IDM_VIEWCOLORPALETTE
+    "^M", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE

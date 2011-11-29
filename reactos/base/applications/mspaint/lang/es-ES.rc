@@ -5,7 +5,7 @@
  * PURPOSE:     Spanish Language resource file
  * TRANSLATORS: Gabriel Ilardi
  */
- 
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 ID_MENU MENU
@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Ver en pantalla completa\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Imagen"
     BEGIN
         MENUITEM "Rotar/Invertir...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Borrar imagen\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Dibujar figuras opacas", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Colores"
     BEGIN
         MENUITEM "Editar paleta...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "Ay&uda"
     BEGIN
         MENUITEM "Ayuda", IDM_HELPHELPTOPICS

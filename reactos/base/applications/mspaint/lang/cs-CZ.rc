@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Celá obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Obrázek"
     BEGIN
         MENUITEM "Překlopit nebo otočit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Vymazat obrázek", IDM_IMAGEDELETEIMAGE
         MENUITEM "Kreslit neprůhledně", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Barvy"
     BEGIN
         MENUITEM "Upravit paletu...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&Nápověda"
     BEGIN
         MENUITEM "Témata nápovědy", IDM_HELPHELPTOPICS

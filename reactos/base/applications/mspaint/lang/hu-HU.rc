@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Teljes képernyõ\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Kép"
     BEGIN
         MENUITEM "Forgatás/Tükrözés...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Kép törlése\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Nem átlátszó", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "Szín&ek"
     BEGIN
         MENUITEM "Paletta szerkesztése...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Témakörök", IDM_HELPHELPTOPICS
