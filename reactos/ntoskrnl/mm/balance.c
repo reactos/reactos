@@ -146,12 +146,9 @@ MiTrimMemoryConsumer(ULONG Consumer)
    LONG Target;
    ULONG NrFreedPages;
 
-   Target = MiMemoryConsumers[Consumer].PagesUsed -
-            MiMemoryConsumers[Consumer].PagesTarget;
-   if (Target < 1)
-   {
-      Target = 1;
-   }
+   Target = max(MiMinimumPagesPerRun,
+                MiMemoryConsumers[Consumer].PagesUsed -
+                MiMemoryConsumers[Consumer].PagesTarget);
 
    if (MiMemoryConsumers[Consumer].Trim != NULL)
    {
