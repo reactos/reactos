@@ -33,7 +33,120 @@ DWORD IllegalMask[4] =
     0x10000000  // 7C not allowed
 };
 
+BASE_SEARCH_PATH_TYPE BaseDllOrderCurrent[BaseCurrentDirMax][BaseSearchPathMax] =
+{
+    {
+        BaseSearchPathApp,
+        BaseSearchPathCurrent,
+        BaseSearchPathDefault,
+        BaseSearchPathEnv,
+        BaseSearchPathInvalid
+    },
+    {
+        BaseSearchPathApp,
+        BaseSearchPathDefault,
+        BaseSearchPathCurrent,
+        BaseSearchPathEnv,
+        BaseSearchPathInvalid
+    }
+};
+
+BASE_SEARCH_PATH_TYPE BaseProcessOrderNoCurrent[BaseSearchPathMax] =
+{
+    BaseSearchPathApp,
+    BaseSearchPathDefault,
+    BaseSearchPathEnv,
+    BaseSearchPathInvalid,
+    BaseSearchPathInvalid
+};
+
+BASE_SEARCH_PATH_TYPE BaseDllOrderNoCurrent[BaseSearchPathMax] =
+{
+    BaseSearchPathApp,
+    BaseSearchPathDll,
+    BaseSearchPathDefault,
+    BaseSearchPathEnv,
+    BaseSearchPathInvalid
+};
+
+BASE_SEARCH_PATH_TYPE BaseProcessOrder[BaseSearchPathMax] =
+{
+    BaseSearchPathApp,
+    BaseSearchPathCurrent,
+    BaseSearchPathDefault,
+    BaseSearchPathEnv,
+    BaseSearchPathInvalid
+};
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+LPWSTR
+WINAPI
+BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
+                        IN LPWSTR AppName,
+                        IN LPVOID Environment)
+{
+    return NULL;
+}
+
+LPWSTR
+WINAPI
+BaseComputeProcessSearchPath(VOID)
+{
+    DPRINT1("Computing Process Search path\n");
+    
+    /* Compute the path using default process order */
+    return BasepComputeProcessPath(BaseProcessOrder, NULL, NULL);
+}
+
+LPWSTR
+WINAPI
+BaseComputeProcessExePath(IN LPWSTR FullPath)
+{
+    PBASE_SEARCH_PATH_TYPE PathOrder;
+    DPRINT1("Computing EXE path: %wZ\n", FullPath);
+
+    /* Check if we should use the current directory */
+    PathOrder = NeedCurrentDirectoryForExePathW(FullPath) ?
+                BaseProcessOrder : BaseProcessOrderNoCurrent;
+
+    /* And now compute the path */
+    return BasepComputeProcessPath(PathOrder, NULL, NULL);
+}
+
+LPWSTR
+WINAPI
+BaseComputeProcessDllPath(IN LPWSTR FullPath,
+                          IN PVOID Environment)
+{
+    LPWSTR DllPath = NULL;
+    DPRINT1("Computing DLL path: %wZ with BaseDll: %wZ\n", FullPath, &BaseDllDirectory);
+
+    /* Acquire DLL directory lock */
+    RtlEnterCriticalSection(&BaseDllDirectoryLock);
+
+    /* Check if we have a base dll directory */
+    if (BaseDllDirectory.Buffer)
+    {
+        /* Then compute the process path using DLL order (without curdir) */
+        DllPath = BasepComputeProcessPath(BaseDllOrderNoCurrent, FullPath, Environment);
+
+        /* Release DLL directory lock */
+        RtlLeaveCriticalSection(&BaseDllDirectoryLock);
+
+        /* Return dll path */
+        return DllPath;
+    }
+
+    /* Release DLL directory lock */
+    RtlLeaveCriticalSection(&BaseDllDirectoryLock);
+
+    /* There is no base DLL directory */
+    UNIMPLEMENTED;
+
+    /* Return dll path */
+    return DllPath;
+}
 
 BOOLEAN
 WINAPI
@@ -45,7 +158,7 @@ CheckForSameCurdir(IN PUNICODE_STRING DirName)
     UNICODE_STRING CurDirCopy;
 
     CurDir = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
-    
+
     CurLength = CurDir->Length;
     if (CurDir->Length <= 6)
     {
@@ -55,12 +168,12 @@ CheckForSameCurdir(IN PUNICODE_STRING DirName)
     {
         if ((CurLength - 2) != DirName->Length) return FALSE;
     }
-    
+
     RtlAcquirePebLock();
 
     CurDirCopy = *CurDir;
     if (CurDirCopy.Length > 6) CurDirCopy.Length -= 2;
-    
+
     Result = 0;
 
     if (RtlEqualUnicodeString(&CurDirCopy, DirName, TRUE)) Result = TRUE;
@@ -1672,21 +1785,21 @@ SetCurrentDirectoryA(IN LPCSTR lpPathName)
         BaseSetLastNTError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
-    
+
     DirName = Basep8BitStringToStaticUnicodeString(lpPathName);
     if (!DirName) return FALSE;
-    
+
     if (CheckForSameCurdir(DirName)) return FALSE;
-    
+
     Status = RtlSetCurrentDirectory_U(DirName);
     if (NT_SUCCESS(Status)) return TRUE;
-    
+
     if ((*DirName->Buffer != L'"') || (DirName->Length <= 2))
     {
         BaseSetLastNTError(Status);
         return 0;
     }
-        
+
     DirName = Basep8BitStringToStaticUnicodeString(lpPathName + 1);
     if (!DirName) return FALSE;
 

@@ -88,6 +88,24 @@ typedef struct tagLOADPARMS32 {
   DWORD dwReserved;
 } LOADPARMS32;
 
+typedef enum _BASE_CURRENT_DIR_PRIORITY
+{
+    BaseCurrentDirInvalid = -1,
+    BaseCurrentDirFirst,
+    BaseCurrentDirLast,
+    BaseCurrentDirMax
+} BASE_CURRENT_DIR_PRIORITY;
+
+typedef enum _BASE_SEARCH_PATH_TYPE
+{
+    BaseSearchPathInvalid,
+    BaseSearchPathDll,
+    BaseSearchPathApp,
+    BaseSearchPathDefault,
+    BaseSearchPathEnv,
+    BaseSearchPathCurrent,
+    BaseSearchPathMax
+} BASE_SEARCH_PATH_TYPE, *PBASE_SEARCH_PATH_TYPE;
 
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
