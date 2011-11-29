@@ -39,20 +39,20 @@ typedef struct
    ULARGE_INTEGER bSize;
    HWND hwndDlg;
    WCHAR szFolderPath[MAX_PATH];
-}FOLDER_PROPERTIES_CONTEXT, *PFOLDER_PROPERTIES_CONTEXT;
+} FOLDER_PROPERTIES_CONTEXT, *PFOLDER_PROPERTIES_CONTEXT;
 
 typedef struct
 {
     WCHAR FileExtension[30];
     WCHAR FileDescription[100];
     WCHAR ClassKey[MAX_PATH];
-}FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
+} FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
 
 typedef struct
 {
     LPCWSTR szKeyName;
     UINT ResourceID;
-}FOLDER_VIEW_ENTRY, PFOLDER_VIEW_ENTRY;
+} FOLDER_VIEW_ENTRY, PFOLDER_VIEW_ENTRY;
 /*
 static FOLDER_VIEW_ENTRY s_Options[] =
 {
@@ -92,6 +92,7 @@ static FOLDER_VIEW_ENTRY s_Options[] =
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
+static
 INT_PTR
 CALLBACK
 FolderOptionsGeneralDlg(
@@ -101,9 +102,6 @@ FolderOptionsGeneralDlg(
     LPARAM lParam
 )
 {
-
-
-
     return FALSE;
 }
 
@@ -135,7 +133,7 @@ InitializeFolderOptionsListCtrl(HWND hwndDlg)
 
 }
 
-
+static
 INT_PTR
 CALLBACK
 FolderOptionsViewDlg(
@@ -156,6 +154,7 @@ FolderOptionsViewDlg(
 
 }
 
+static
 VOID
 InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
 {
@@ -215,6 +214,7 @@ FindItem(HWND hDlgCtrl, WCHAR * ItemName)
     return ListView_FindItem(hDlgCtrl, 0, &findInfo);
 }
 
+static
 VOID
 InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
 {
@@ -308,6 +308,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     (*iItem)++;
 }
 
+static
 int
 CALLBACK
 ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
@@ -320,6 +321,7 @@ ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     return wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
 }
 
+static
 BOOL
 InitializeFileTypesListCtrl(HWND hwndDlg)
 {
@@ -364,6 +366,7 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     return TRUE;
 }
 
+static
 PFOLDER_FILE_TYPE_ENTRY
 FindSelectedItem(
     HWND hDlgCtrl)
@@ -390,6 +393,7 @@ FindSelectedItem(
     return NULL;
 }
 
+static
 INT_PTR
 CALLBACK
 FolderOptionsFileTypesDlg(
@@ -471,7 +475,7 @@ FolderOptionsFileTypesDlg(
     return FALSE;
 }
 
-
+static
 VOID
 ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
 {
@@ -507,6 +511,7 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     PropertySheetW(&pinfo);
 }
 
+static
 VOID
 Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
 {
@@ -679,7 +684,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
     }
 }
 
-
+static
 INT_PTR
 CALLBACK
 FolderPropertiesGeneralDlg(

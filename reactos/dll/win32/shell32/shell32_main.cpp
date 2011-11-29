@@ -1458,6 +1458,10 @@ STDAPI DllRegisterServer()
     if (FAILED(hr))
         return hr;
 
+    hr = gModule.UpdateRegistryFromResource(IDR_FOLDEROPTIONS, TRUE, NULL);
+    if (FAILED(hr))
+        return hr;
+
     // extra registration stuff for the IShellFolder
     return DoRegisterServer();
 }
@@ -1470,6 +1474,10 @@ STDAPI DllUnregisterServer()
     HRESULT hr;
 
     hr = gModule.DllUnregisterServer(FALSE);
+    if (FAILED(hr))
+        return hr;
+
+    hr = gModule.UpdateRegistryFromResource(IDR_FOLDEROPTIONS, FALSE, NULL);
     if (FAILED(hr))
         return hr;
 
