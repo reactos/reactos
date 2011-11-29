@@ -262,7 +262,8 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       if (Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
       if (MmAvailablePages <= MiMinimumAvailablePages &&
-            MiBalancerThreadHandle != NULL)
+          MiBalancerThreadHandle != NULL &&
+          !MiIsBalancerThread())
       {
          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
       }
@@ -311,6 +312,13 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);
+       
+      if (MmAvailablePages <= MiMinimumAvailablePages &&
+          MiBalancerThreadHandle != NULL &&
+          !MiIsBalancerThread())
+      {
+          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
+      }
 
       return(STATUS_SUCCESS);
    }
@@ -327,6 +335,13 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    }
    if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
    *AllocatedPage = Page;
+    
+   if (MmAvailablePages <= MiMinimumAvailablePages &&
+       MiBalancerThreadHandle != NULL &&
+       !MiIsBalancerThread())
+   {
+       KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
+   }
 
    return(STATUS_SUCCESS);
 }
