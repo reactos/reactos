@@ -848,16 +848,22 @@ MiAllocatePfn(IN PMMPTE PointerPte,
 
     /* Make an empty software PTE */
     MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
-
-    /* Lock the PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
+    
     /* Check if we're running low on pages */
     if (MmAvailablePages < 128)
     {
         DPRINT1("Warning, running low on memory: %d pages left\n", MmAvailablePages);
+
         //MiEnsureAvailablePageOrWait(NULL, OldIrql);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
+
+        DPRINT1("Rebalance complete: %d pages left\n", MmAvailablePages);
     }
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Grab a page */
     ASSERT_LIST_INVARIANT(&MmFreePageListHead);
