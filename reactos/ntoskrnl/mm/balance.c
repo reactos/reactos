@@ -122,7 +122,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
          Entry = RemoveHeadList(&AllocationListHead);
          Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
          KeReleaseSpinLock(&AllocationListLock, OldIrql);
-         if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
          MiZeroPhysicalPage(Page);
          Request->Page = Page;
          KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
@@ -256,6 +255,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       {
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
+      if (Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
       if (MmAvailablePages <= MiMinimumAvailablePages &&
             MiBalancerThreadHandle != NULL)
@@ -304,10 +304,10 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       {
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
-      /* Update the Consumer and make the page active */
-      if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
+
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);
+
       return(STATUS_SUCCESS);
    }
 
