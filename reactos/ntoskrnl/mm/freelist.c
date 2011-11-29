@@ -121,11 +121,15 @@ VOID
 NTAPI
 MmRemoveLRUUserPage(PFN_NUMBER Page)
 {
+    KIRQL OldIrql;
+
     /* Unset the page as a user page */
     ASSERT(Page != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
     ASSERT(RtlCheckBit(&MiUserPfnBitMap, (ULONG)Page));
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     RtlClearBit(&MiUserPfnBitMap, (ULONG)Page);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
 BOOLEAN
