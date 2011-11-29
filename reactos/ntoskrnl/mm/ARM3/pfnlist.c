@@ -848,7 +848,10 @@ MiAllocatePfn(IN PMMPTE PointerPte,
 
     /* Make an empty software PTE */
     MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
-    
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
     /* Check if we're running low on pages */
     if (MmAvailablePages < 128)
     {
@@ -858,12 +861,7 @@ MiAllocatePfn(IN PMMPTE PointerPte,
 
         /* Call RosMm and see if it can release any pages for us */
         MmRebalanceMemoryConsumers();
-
-        DPRINT1("Rebalance complete: %d pages left\n", MmAvailablePages);
     }
-
-    /* Lock the PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Grab a page */
     ASSERT_LIST_INVARIANT(&MmFreePageListHead);
