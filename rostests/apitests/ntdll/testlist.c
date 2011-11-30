@@ -5,17 +5,19 @@
 #define STANDALONE
 #include "wine/test.h"
 
-extern void func_RtlInitializeBitMap(void);
-extern void func_ZwContinue(void);
+extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtSystemInformation(void);
+extern void func_RtlInitializeBitMap(void);
+extern void func_ZwContinue(void);
 
 const struct test winetest_testlist[] =
 {
-    { "RtlInitializeBitMap", func_RtlInitializeBitMap },
-    { "ZwContinue", func_ZwContinue },
-    { "NtFreeVirtualMemory", func_NtFreeVirtualMemory },
-    { "NtSystemInformation", func_NtSystemInformation },
+    { "NtAllocateVirtualMemory",    func_NtAllocateVirtualMemory },
+    { "NtFreeVirtualMemory",        func_NtFreeVirtualMemory },
+    { "NtSystemInformation",        func_NtSystemInformation },
+    { "RtlInitializeBitMap",        func_RtlInitializeBitMap },
+    { "ZwContinue",                 func_ZwContinue },
 
     { 0, 0 }
 };

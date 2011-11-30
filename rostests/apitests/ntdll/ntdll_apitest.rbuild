@@ -10,7 +10,8 @@
 	<library>pseh</library>
 	<file>testlist.c</file>
 
-    <file>NtFreeVirtualMemory.c</file>
+	<file>NtAllocateVirtualMemory.c</file>
+	<file>NtFreeVirtualMemory.c</file>
 	<file>RtlInitializeBitMap.c</file>
 	<file>ZwContinue.c</file>
 	<file>SystemInfo.c</file>
