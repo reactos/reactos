@@ -1,52 +1,52 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 // Dialog
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 292, 282
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Параметры заставки"
+CAPTION "РџР°СЂР°РјРµС‚СЂС‹ Р·Р°СЃС‚Р°РІРєРё"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Настройки",IDC_STATIC,16,100,260,76
-    RTEXT           "Количество звёзд:",IDC_STATIC,24,116,68,12,
+    GROUPBOX        "РќР°СЃС‚СЂРѕР№РєРё",IDC_STATIC,16,100,260,76
+    RTEXT           "РљРѕР»РёС‡РµСЃС‚РІРѕ Р·РІС‘Р·Рґ:",IDC_STATIC,24,116,68,12,
                     SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_NUM_OF_STARS,"msctls_trackbar32",
                     TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
     CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
                     SS_CENTERIMAGE,WS_EX_STATICEDGE
-    RTEXT           "Скорость:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    RTEXT           "РЎРєРѕСЂРѕСЃС‚СЊ:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,96,137,140,12
     CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    RTEXT           "Вращение:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
+    RTEXT           "Р’СЂР°С‰РµРЅРёРµ:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
     COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST | 
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
-    GROUPBOX        "Advanced",IDC_STATIC,16,180,260,72
-    CONTROL         "Enable background blending",IDC_CHECK_DOBLENDING,
+    GROUPBOX        "Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё",IDC_STATIC,16,180,260,72
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ С„РѕРЅРѕРІРѕРµ СЃРјРµС€РёРІР°РЅРёРµ",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,110,10
-    CONTROL         "Enable accurate perspective correction",
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ С‚РѕС‡РЅСѓСЋ РєРѕСЂСЂРµРєС†РёСЋ РїРµСЂСЃРїРµРєС‚РёРІС‹",
                     IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,24,208,142,10
-    CONTROL         "Enable texture filtering",IDC_CHECK_FILTERING,
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ С„РёР»СЊС‚СЂР°С†РёСЋ С‚РµРєСЃС‚СѓСЂ",IDC_CHECK_FILTERING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,90,10
-    CONTROL         "Enable smooth shading",IDC_CHECK_SHADING,"Button",
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ РјСЏРіРєРёРµ С‚РµРЅРё",IDC_CHECK_SHADING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,24,232,100,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
-    PUSHBUTTON      "Отмена",IDCANCEL,120,260,52,16
-    PUSHBUTTON      "О программе",IDC_BUTTON_ABOUT,179,260,52,16
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL,120,260,52,16
+    PUSHBUTTON      "Рћ РїСЂРѕРіСЂР°РјРјРµ",IDC_BUTTON_ABOUT,179,260,52,16
 END
 
 // String Tables
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DESCRIPTION         "Звёздное поле"
-    IDS_ROTATION_NONE       "Отсутствует"
-    IDS_ROTATION_LINEAR     "Линейное"
-    IDS_ROTATION_PERIODIC   "Периодическое"
-    IDS_LICENSE             "Звёздное поле - это свободное ПО, распространяемое под лицензией GNU GPL."
-    IDS_AUTHOR              "Заставку создал Carlo Bramini"
+    IDS_DESCRIPTION         "Р—РІС‘Р·РґРЅРѕРµ РїРѕР»Рµ"
+    IDS_ROTATION_NONE       "РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚"
+    IDS_ROTATION_LINEAR     "Р›РёРЅРµР№РЅРѕРµ"
+    IDS_ROTATION_PERIODIC   "РџРµСЂРёРѕРґРёС‡РµСЃРєРѕРµ"
+    IDS_LICENSE             "Р—РІС‘Р·РґРЅРѕРµ РїРѕР»Рµ вЂ” СЌС‚Рѕ СЃРІРѕР±РѕРґРЅРѕРµ РџРћ, СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµРјРѕРµ РїРѕРґ Р»РёС†РµРЅР·РёРµР№ GNU GPL."
+    IDS_AUTHOR              "Р—Р°СЃС‚Р°РІРєСѓ СЃРѕР·РґР°Р» РљР°СЂР»Рѕ Р‘СЂР°РјРёРЅРё"
 END
