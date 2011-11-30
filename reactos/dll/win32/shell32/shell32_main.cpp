@@ -1287,7 +1287,7 @@ OBJECT_ENTRY(CLSID_AdminFolderShortcut, CAdminToolsFolder)
 OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin)
 OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu)
 OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
-OBJECT_ENTRY(CLSID_StartMenu, CStartMenuCallback)
+OBJECT_ENTRY(CLSID_StartMenu, CStartMenu)
 OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
 END_OBJECT_MAP()
 
