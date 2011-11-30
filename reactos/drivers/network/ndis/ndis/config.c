@@ -366,7 +366,7 @@ UCHAR UnicodeToHexByte(WCHAR chr)
 }
 
 BOOLEAN
-IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
+IsValidNumericString(PNDIS_STRING String, ULONG Base)
 /*
  * FUNCTION: Determines if a string is a valid number
  * ARGUMENTS:
@@ -375,7 +375,7 @@ IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
  *     TRUE if it is valid, FALSE if not
  */
 {
-    ULONG i, Base;
+    ULONG i;
 
     /* I don't think this will ever happen, but we warn it if it does */
     if (String->Length == 0)
@@ -384,25 +384,8 @@ IsValidNumericString(PNDIS_STRING String, NDIS_PARAMETER_TYPE *ParameterType)
         return FALSE;
     }
 
-    /* Set the default parameter type */
-    *ParameterType = NdisParameterInteger;
-    Base = 10;
-
     for (i = 0; i < String->Length / sizeof(WCHAR); i++)
     {
-        /* Look at the second character for the base */
-        if (i == 1)
-        {
-            if (String->Buffer[i] == L'X' ||
-                String->Buffer[i] == L'x')
-            {
-                NDIS_DbgPrint(MID_TRACE, ("Identified hex string\n"));
-                *ParameterType = NdisParameterHexInteger;
-                Base = 0x10;
-                continue;
-            }
-        }
-
         /* Skip any NULL characters we find */
         if (String->Buffer[i] == UNICODE_NULL)
             continue;
@@ -669,17 +652,25 @@ NdisReadConfiguration(
     else if (KeyInformation->Type == REG_SZ)
     {
          UNICODE_STRING str;
+         ULONG Base;
+        
+         if (ParameterType == NdisParameterInteger)
+             Base = 10;
+         else if (ParameterType == NdisParameterHexInteger)
+             Base = 16;
+         else
+             Base = 0;
 
          str.Length = str.MaximumLength = (USHORT)KeyInformation->DataLength;
          str.Buffer = (PWCHAR)KeyInformation->Data;
 
-         if (IsValidNumericString(&str, &(*ParameterValue)->ParameterType) &&
-             ((*Status = RtlUnicodeStringToInteger(&str, 0,
+         if (Base != 0 && IsValidNumericString(&str, Base) &&
+             ((*Status = RtlUnicodeStringToInteger(&str, Base,
                              &(*ParameterValue)->ParameterData.IntegerData)) == STATUS_SUCCESS))
          {
              NDIS_DbgPrint(MAX_TRACE, ("NdisParameter(Hex)Integer\n"));
 
-             /* IsValidNumericString sets the parameter type when parsing the string */
+             (*ParameterValue)->ParameterType = ParameterType;
          }
          else
          {
