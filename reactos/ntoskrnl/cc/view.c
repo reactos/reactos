@@ -302,79 +302,80 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     ULONG PagesFreed;
     KIRQL oldIrql;
     LIST_ENTRY FreeList;
-    
+    PFN_NUMBER Page;
+    ULONG i;
+
     DPRINT("CcRosTrimCache(Target %d)\n", Target);
-    
-    *NrFreed = 0;
-    
+
     InitializeListHead(&FreeList);
 
-    KeAcquireGuardedMutex(&ViewLock);
-    current_entry = CacheSegmentLRUListHead.Flink;
-    while (current_entry != &CacheSegmentLRUListHead && Target > 0)
-    {
-        current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
-                                    CacheSegmentLRUListEntry);
-        current_entry = current_entry->Flink;
-        
-        KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
-
-        if (current->MappedCount > 0 && !current->Dirty && !current->PageOut)
-        {
-            ULONG i;
-            
-            CcRosCacheSegmentIncRefCount(current);
-            current->PageOut = TRUE;
-            KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
-            KeReleaseGuardedMutex(&ViewLock);
-            for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
-            {
-                PFN_NUMBER Page;
-                Page = (PFN_NUMBER)(MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT);
-                MmPageOutPhysicalAddress(Page);
-            }
-            KeAcquireGuardedMutex(&ViewLock);
-            KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
-            CcRosCacheSegmentDecRefCount(current);
-        }
-        
-        if (current->ReferenceCount == 0)
-        {
-            PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
-            //            PagesFreed = PagesPerSegment;
-            PagesFreed = min(PagesPerSegment, Target);
-            Target -= PagesFreed;
-            (*NrFreed) += PagesFreed;            
-        }
-        
-        KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
-    }
+    /* Flush dirty pages to disk */
+    CcRosFlushDirtyPages(Target, NrFreed);
     
+    if ((*NrFreed) != 0) DPRINT1("Flushed %d dirty cache pages to disk\n", (*NrFreed));
+
+    *NrFreed = 0;
+
+    KeAcquireGuardedMutex(&ViewLock);
+
     current_entry = CacheSegmentLRUListHead.Flink;
     while (current_entry != &CacheSegmentLRUListHead)
     {
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     CacheSegmentLRUListEntry);
-        current->PageOut = FALSE;
         current_entry = current_entry->Flink;
-        
+
         KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
+
+        /* Reference the cache segment */
+        CcRosCacheSegmentIncRefCount(current);
+
+        /* Check if it's mapped and not dirty */
+        if (current->MappedCount > 0 && !current->Dirty)
+        {
+            /* We have to break these locks because Cc sucks */
+            KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
+            KeReleaseGuardedMutex(&ViewLock);
+
+            /* Page out the segment */
+            for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
+            {
+                Page = (PFN_NUMBER)(MmGetPhysicalAddress((PUCHAR)current->BaseAddress + (i * PAGE_SIZE)).QuadPart >> PAGE_SHIFT);
+
+                MmPageOutPhysicalAddress(Page);
+            }
+
+            /* Reacquire the locks */
+            KeAcquireGuardedMutex(&ViewLock);
+            KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
+        }
+
+        /* Dereference the cache segment */
+        CcRosCacheSegmentDecRefCount(current);
+
+        /* Check if we can free this entry now */
         if (current->ReferenceCount == 0)
         {
+            ASSERT(!current->Dirty);
+            ASSERT(!current->MappedCount);
+
             RemoveEntryList(&current->BcbSegmentListEntry);
-            KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
             RemoveEntryList(&current->CacheSegmentListEntry);
             RemoveEntryList(&current->CacheSegmentLRUListEntry);
             InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
+
+            /* Calculate how many pages we freed for Mm */
+            PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
+            PagesFreed = min(PagesPerSegment, Target);
+            Target -= PagesFreed;
+            (*NrFreed) += PagesFreed;
         }
-        else
-        {
-            KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
-        }
+
+        KeReleaseSpinLock(&current->Bcb->BcbLock, oldIrql);
     }
-    
+
     KeReleaseGuardedMutex(&ViewLock);
-    
+
     while (!IsListEmpty(&FreeList))
     {
         current_entry = RemoveHeadList(&FreeList);
@@ -382,7 +383,9 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
                                     BcbSegmentListEntry);
         CcRosInternalFreeCacheSegment(current);
     }
-    
+
+    DPRINT1("Evicted %d cache pages\n", (*NrFreed));
+
     return(STATUS_SUCCESS);
 }
 
