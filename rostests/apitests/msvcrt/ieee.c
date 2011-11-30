@@ -3,6 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Tests for IEEE floatting-point functions
  * PROGRAMMER:      Pierre Schweitzer (pierre@reactos.org)
+ * REFERENCES:      http://msdn.microsoft.com/en-US/library/h7zkk1bz%28v=VS.80%29.aspx
  */
 
 #include <wine/test.h>
@@ -61,6 +62,9 @@ void test_finite(void)
     ok(_finite(tested.d) == FALSE, "_finite = TRUE\n");
     tested.l = 0x7FFFFFFFFFFFFFFFLL;
     ok(_finite(tested.d) == FALSE, "_finite = TRUE\n");
+
+    /* MSDN example */
+    ok(_finite(2.387000) == TRUE, "_finite = FALSE\n");
 }
 
 void test_fpclass(void)
@@ -150,6 +154,10 @@ void test_fpclass(void)
     tested.l = 0x7FFFFFFFFFFFFFFFLL;
     class = _fpclass(tested.d);
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
+
+    /* MSDN example */
+    class = _fpclass(2.387000);
+    ok(class == _FPCLASS_PN, "class = %d\n", class);
 }
 
 void test_isnan(void)
@@ -198,6 +206,9 @@ void test_isnan(void)
     ok(_isnan(tested.d) == TRUE, "_isnan = FALSE\n");
     tested.l = 0x7FFFFFFFFFFFFFFFLL;
     ok(_isnan(tested.d) == TRUE, "_isnan = FALSE\n");
+
+    /* MSDN example */
+    ok(_isnan(2.387000) == FALSE, "_isnan = TRUE\n");
 }
 
 void test_j0(void)
@@ -334,6 +345,14 @@ void test_j0(void)
     result.d =  _j0(tested.d);
     ok(result.l == expected.l, "_j0 returned: %I64x\n", result.l);
     ok(errno == EDOM, "errno: %d\n", errno);
+
+    /* MSDN example */
+    errno = 0xDEADBEEF;
+    tested.d = 2.387000;
+    expected.l = 0x3F83059F9F6F30CALL;
+    result.d =  _j0(tested.d);
+    ok(result.l == expected.l, "_j0 returned: %I64x\n", result.l);
+    ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
 }
 
 void test_j1(void)
@@ -470,6 +489,14 @@ void test_j1(void)
     result.d =  _j1(tested.d);
     ok(result.l == expected.l, "_j1 returned: %I64x\n", result.l);
     ok(errno == EDOM, "errno: %d\n", errno);
+
+    /* MSDN example */
+    errno = 0xDEADBEEF;
+    tested.d = 2.387000;
+    expected.l = 0x3FE0BBEFC62ABAB1LL;
+    result.d =  _j1(tested.d);
+    ok(result.l == expected.l, "_j1 returned: %I64x\n", result.l);
+    ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
 }
 
 void test_scalb(void)
@@ -606,6 +633,14 @@ void test_scalb(void)
     result.d =  _scalb(tested.d, 3);
     ok(result.l == expected.l, "_scalb returned: %I64x\n", result.l);
     ok(errno == EDOM, "errno: %d\n", errno);
+
+    /* MSDN example */
+    errno = 0xDEADBEEF;
+    tested.d = 2.387000;
+    expected.l = 0x4033189374BC6A7FLL;
+    result.d =  _scalb(tested.d, 3);
+    ok(result.l == expected.l, "_scalb returned: %I64x\n", result.l);
+    ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
 }
 
 void test_y0(void)
@@ -742,6 +777,14 @@ void test_y0(void)
     result.d =  _y0(tested.d);
     ok(result.l == expected.l, "_y0 returned: %I64x\n", result.l);
     ok(errno == EDOM, "errno: %d\n", errno);
+
+    /* MSDN example */
+    errno = 0xDEADBEEF;
+    tested.d = 2.387000;
+    expected.l = 0x3FE05FB1B1E49E66LL;
+    result.d =  _y0(tested.d);
+    ok(result.l == expected.l, "_y0 returned: %I64x\n", result.l);
+    ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
 }
 
 void test_y1(void)
@@ -878,6 +921,14 @@ void test_y1(void)
     result.d =  _y1(tested.d);
     ok(result.l == expected.l, "_y1 returned: %I64x\n", result.l);
     ok(errno == EDOM, "errno: %d\n", errno);
+
+    /* MSDN example */
+    errno = 0xDEADBEEF;
+    tested.d = 2.387000;
+    expected.l = 0x3FB828EC13723EE6LL;
+    result.d =  _y1(tested.d);
+    ok(result.l == expected.l, "_y1 returned: %I64x\n", result.l);
+    ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
 }
 
 START_TEST(ieee)
