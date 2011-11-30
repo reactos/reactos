@@ -304,18 +304,15 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     LIST_ENTRY FreeList;
     PFN_NUMBER Page;
     ULONG i;
+    BOOLEAN FlushedPages = FALSE;
 
     DPRINT("CcRosTrimCache(Target %d)\n", Target);
 
     InitializeListHead(&FreeList);
 
-    /* Flush dirty pages to disk */
-    CcRosFlushDirtyPages(Target, NrFreed);
-    
-    if ((*NrFreed) != 0) DPRINT1("Flushed %d dirty cache pages to disk\n", (*NrFreed));
-
     *NrFreed = 0;
 
+retry:
     KeAcquireGuardedMutex(&ViewLock);
 
     current_entry = CacheSegmentLRUListHead.Flink;
@@ -375,6 +372,25 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     }
 
     KeReleaseGuardedMutex(&ViewLock);
+
+    /* Try flushing pages if we haven't met our target */
+    if (Target > 0 && !FlushedPages)
+    {
+        /* Flush dirty pages to disk */
+        CcRosFlushDirtyPages(Target, &PagesFreed);
+        FlushedPages = TRUE;
+
+        /* We can only swap as many pages as we flushed */
+        if (PagesFreed < Target) Target = PagesFreed;
+
+        /* Check if we flushed anything */
+        if (PagesFreed != 0)
+        {
+            /* Try again after flushing dirty pages */
+            DPRINT1("Flushed %d dirty cache pages to disk\n", PagesFreed);
+            goto retry;
+        }
+    }
 
     while (!IsListEmpty(&FreeList))
     {
