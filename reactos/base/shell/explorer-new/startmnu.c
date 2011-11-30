@@ -843,110 +843,120 @@ CreateStartMenu(IN ITrayWindow *Tray,
                 IN HBITMAP hbmBanner  OPTIONAL,
                 IN BOOL bSmallIcons)
 {
-    HRESULT hRet;
+    HRESULT hr;
     IObjectWithSite *pOws = NULL;
     IMenuPopup *pMp = NULL;
     IStartMenuSite *pSms = NULL;
     IMenuBand *pMb = NULL;
     IInitializeObject *pIo;
-    IUnknown *pUnk;
-    IBandSite *pBs;
+    IUnknown *pUnk = NULL;
+    IBandSite *pBs = NULL;
     DWORD dwBandId = 0;
 
     pSms = CreateStartMenuSite(Tray);
     if (pSms == NULL)
         return NULL;
 
-    hRet = CoCreateInstance(&CLSID_StartMenu,
-                            NULL,
-                            CLSCTX_INPROC_SERVER,
-                            &IID_IMenuPopup,
-                            (PVOID*)&pMp);
-    if (SUCCEEDED(hRet))
+    hr = CoCreateInstance(&CLSID_StartMenu,
+                          NULL,
+                          CLSCTX_INPROC_SERVER,
+                          &IID_IMenuPopup,
+                          (PVOID*)&pMp);
+    if (FAILED(hr))
     {
-        hRet = IMenuPopup_QueryInterface(pMp,
-                                         &IID_IObjectWithSite,
-                                         (PVOID*)&pOws);
-        if (SUCCEEDED(hRet))
-        {
-            /* Set the menu site so we can handle messages */
-            hRet = IObjectWithSite_SetSite(pOws,
-                                           (IUnknown*)pSms);
-            if (SUCCEEDED(hRet))
-            {
-                /* Initialize the menu object */
-                hRet = IMenuPopup_QueryInterface(pMp,
-                                                 &IID_IInitializeObject,
-                                                 (PVOID*)&pIo);
-                if (SUCCEEDED(hRet))
-                {
-                    //hRet = IInitializeObject_Initialize(pIo);
-                    hRet = pIo->lpVtbl->Initialize(pIo);
-
-                    //IInitializeObject_Release(pIo);
-                    pIo->lpVtbl->Release(pIo);
-                }
-                else
-                    hRet = S_OK;
-
-                /* Everything is initialized now. Let's get the IMenuBand interface. */
-                if (SUCCEEDED(hRet))
-                {
-                    hRet = IMenuPopup_GetClient(pMp,
-                                                &pUnk);
-
-                    if (SUCCEEDED(hRet))
-                    {
-                        hRet = IUnknown_QueryInterface(pUnk,
-                                                       &IID_IBandSite,
-                                                       (PVOID*)&pBs);
-
-                        if (SUCCEEDED(hRet))
-                        {
-                            /* Finally we have the IBandSite interface, there's only one
-                               band in it that apparently provides the IMenuBand interface */
-                            hRet = IBandSite_EnumBands(pBs,
-                                                       0,
-                                                       &dwBandId);
-                            if (SUCCEEDED(hRet))
-                            {
-                                hRet = IBandSite_GetBandObject(pBs,
-                                                               dwBandId,
-                                                               &IID_IMenuBand,
-                                                               (PVOID*)&pMb);
-                            }
-
-                            IBandSite_Release(pBs);
-                        }
-
-                        IUnknown_Release(pUnk);
-                    }
-                }
-            }
-
-            IObjectWithSite_Release(pOws);
-        }
+        DbgPrint("CoCreateInstance failed: %x\n", hr);
+        goto cleanup;
     }
 
-    IStartMenuSite_Release(pSms);
-
-    if (!SUCCEEDED(hRet))
+    hr = IMenuPopup_QueryInterface(pMp,
+                                   &IID_IObjectWithSite,
+                                   (PVOID*)&pOws);
+    if (FAILED(hr))
     {
-        DbgPrint("Failed to initialize the start menu: 0x%x!\n", hRet);
+        DbgPrint("IMenuPopup_QueryInterface failed: %x\n", hr);
+        goto cleanup;
+    }
 
-        if (pMp != NULL)
-            IMenuPopup_Release(pMp);
+    /* Set the menu site so we can handle messages */
+    hr = IObjectWithSite_SetSite(pOws, (IUnknown*)pSms);
+    if (FAILED(hr))
+    {
+        DbgPrint("IObjectWithSite_SetSite failed: %x\n", hr);
+        goto cleanup;
+    }
 
-        if (pMb != NULL)
-            IMenuBand_Release(pMb);
+    /* Initialize the menu object */
+    hr = IMenuPopup_QueryInterface(pMp, &IID_IInitializeObject, (PVOID*)&pIo);
+    if (SUCCEEDED(hr))
+    {
+        //hr = IInitializeObject_Initialize(pIo);
+        hr = pIo->lpVtbl->Initialize(pIo);
 
-        return NULL;
+        //IInitializeObject_Release(pIo);
+        pIo->lpVtbl->Release(pIo);
+    }
+    else
+        hr = S_OK;
+
+    /* Everything is initialized now. Let's get the IMenuBand interface. */
+    if (FAILED(hr))
+    {
+        DbgPrint("IMenuPopup_QueryInterface failed: %x\n", hr);
+        goto cleanup;
+    }
+
+    hr = IMenuPopup_GetClient(pMp, &pUnk);
+    if (FAILED(hr))
+    {
+        DbgPrint("IMenuPopup_GetClient failed: %x\n", hr);
+        goto cleanup;
+    }
+
+    hr = IUnknown_QueryInterface(pUnk, &IID_IBandSite, (PVOID*)&pBs);
+    if (FAILED(hr))
+    {
+        DbgPrint("IUnknown_QueryInterface pBs failed: %x\n", hr);
+        goto cleanup;
+    }
+
+    /* Finally we have the IBandSite interface, there's only one
+       band in it that apparently provides the IMenuBand interface */
+    hr = IBandSite_EnumBands(pBs, 0, &dwBandId);
+    if (FAILED(hr))
+    {
+        DbgPrint("IBandSite_EnumBands failed: %x\n", hr);
+        goto cleanup;
+    }
+
+    hr = IBandSite_GetBandObject(pBs, dwBandId, &IID_IMenuBand, (PVOID*)&pMb);
+    if (FAILED(hr))
+    {
+        DbgPrint("IBandSite_GetBandObject failed: %x\n", hr);
+        goto cleanup;
     }
 
     UpdateStartMenu(pMp,
                     hbmBanner,
                     bSmallIcons);
 
-    *ppMenuBand = pMb;
+cleanup:
+    if (SUCCEEDED(hr))
+        *ppMenuBand = pMb;
+    else if (pMb != NULL)
+        IMenuBand_Release(pMb);
+
+    if (pBs != NULL)
+        IBandSite_Release(pBs);
+    if (pUnk != NULL)
+        IUnknown_Release(pUnk);
+    if (pOws != NULL)
+        IObjectWithSite_Release(pOws);
+    if (pMp != NULL)
+        IMenuPopup_Release(pMp);
+    if (pSms != NULL)
+        IStartMenuSite_Release(pSms);
+
+    if (FAILED(hr))
+        return NULL;
     return pMp;
 }
