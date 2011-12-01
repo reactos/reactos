@@ -239,10 +239,32 @@ NdisMFreeSharedMemory(
 {
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PMINIPORT_SHARED_MEMORY Memory;
+  PDMA_ADAPTER DmaAdapter = Adapter->NdisMiniportBlock.SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+    
+  /* Call FreeCommonBuffer synchronously if we are at PASSIVE_LEVEL */
+  if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+  {
+      /* We need this case because we free shared memory asynchronously
+       * and the miniport (and DMA adapter object) could be freed before
+       * our work item executes. Lucky for us, the scenarios where the
+       * freeing needs to be synchronous (failed init, MiniportHalt,
+       * and driver unload) are all at PASSIVE_LEVEL so we can just
+       * call FreeCommonBuffer synchronously and not have to worry
+       * about the miniport falling out from under us */
+
+      NDIS_DbgPrint(MID_TRACE,("Freeing shared memory synchronously\n"));
+
+      DmaAdapter->DmaOperations->FreeCommonBuffer(DmaAdapter,
+                                                  Length,
+                                                  PhysicalAddress,
+                                                  VirtualAddress,
+                                                  Cached);
+      return;
+  }
 
   /* Must be NonpagedPool because by definition we're at DISPATCH_LEVEL */
   Memory = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_SHARED_MEMORY));
