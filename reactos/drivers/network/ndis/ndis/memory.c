@@ -188,6 +188,7 @@ NdisMAllocateSharedMemory(
 VOID
 NTAPI
 NdisMFreeSharedMemoryPassive(
+    PDEVICE_OBJECT DeviceObject,
     PVOID Context)
 /*
  * FUNCTION:  Free a common buffer
@@ -198,7 +199,6 @@ NdisMFreeSharedMemoryPassive(
  */
 {
   PMINIPORT_SHARED_MEMORY Memory = (PMINIPORT_SHARED_MEMORY)Context;
-  PRKEVENT Event = Memory->Event;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -208,11 +208,8 @@ NdisMFreeSharedMemoryPassive(
       Memory->AdapterObject, Memory->Length, Memory->PhysicalAddress,
       Memory->VirtualAddress, Memory->Cached);
 
+  IoFreeWorkItem(Memory->WorkItem);
   ExFreePool(Memory);
-
-  KeSetEvent(Event,
-             IO_NO_INCREMENT,
-             FALSE);
 }
 
 
@@ -240,10 +237,8 @@ NdisMFreeSharedMemory(
  *       Therefore we have to do this in a worker thread.
  */
 {
-  HANDLE ThreadHandle;
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PMINIPORT_SHARED_MEMORY Memory;
-  KEVENT Event;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
@@ -258,29 +253,31 @@ NdisMFreeSharedMemory(
       return;
     }
 
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
   Memory->AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
   Memory->Length = Length;
   Memory->PhysicalAddress = PhysicalAddress;
   Memory->VirtualAddress = VirtualAddress;
   Memory->Cached = Cached;
   Memory->Adapter = &Adapter->NdisMiniportBlock;
-  Memory->Event = &Event;
 
-  PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMFreeSharedMemoryPassive, Memory);
-  ZwClose(ThreadHandle);
+  Memory->WorkItem = IoAllocateWorkItem(Adapter->NdisMiniportBlock.DeviceObject);
+  if (!Memory->WorkItem)
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
+      ExFreePool(Memory);
+      return;
+  }
 
-  KeWaitForSingleObject(&Event,
-                        Executive,
-                        KernelMode,
-                        FALSE,
-                        NULL);
+  IoQueueWorkItem(Memory->WorkItem,
+                  NdisMFreeSharedMemoryPassive,
+                  CriticalWorkQueue,
+                  Memory);
 }
 
 VOID
 NTAPI
 NdisMAllocateSharedMemoryPassive(
+    PDEVICE_OBJECT DeviceObject,
     PVOID Context)
 /*
  * FUNCTION:  Allocate a common buffer
@@ -304,6 +301,7 @@ NdisMAllocateSharedMemoryPassive(
              Memory->Adapter->MiniportAdapterContext, Memory->VirtualAddress, 
              &Memory->PhysicalAddress, Memory->Length, Memory->Context);
 
+  IoFreeWorkItem(Memory->WorkItem);
   ExFreePool(Memory);
 }
 
@@ -319,7 +317,6 @@ NdisMAllocateSharedMemoryAsync(
     IN  BOOLEAN     Cached,
     IN  PVOID       Context)
 {
-  HANDLE ThreadHandle;
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PMINIPORT_SHARED_MEMORY Memory;
 
@@ -342,8 +339,18 @@ NdisMAllocateSharedMemoryAsync(
   Memory->Adapter = &Adapter->NdisMiniportBlock;
   Memory->Context = Context;
 
-  PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMAllocateSharedMemoryPassive, Memory);
-  ZwClose(ThreadHandle);
+  Memory->WorkItem = IoAllocateWorkItem(Adapter->NdisMiniportBlock.DeviceObject);
+  if (!Memory->WorkItem)
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
+      ExFreePool(Memory);
+      return NDIS_STATUS_FAILURE;
+  }
+
+  IoQueueWorkItem(Memory->WorkItem,
+                  NdisMAllocateSharedMemoryPassive,
+                  DelayedWorkQueue,
+                  Memory);
 
   return NDIS_STATUS_PENDING;
 }
