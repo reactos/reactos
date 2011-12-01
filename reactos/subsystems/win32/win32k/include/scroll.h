@@ -1,25 +1,5 @@
 #pragma once
 
-typedef struct tagSBCALC
-{
-    INT posMin;
-    INT posMax;
-    INT page;
-    INT pos;
-    INT pxTop;
-    INT pxBottom;
-    INT pxLeft;
-    INT pxRight;
-    INT cpxThumb;
-    INT pxUpArrow;
-    INT pxDownArrow;
-    INT pxStart;
-    INT pxThumbBottom;
-    INT pxThumbTop;
-    INT cpx;
-    INT pxMin;
-} SBCALC, *PSBCALC;
-
 typedef VOID (NEAR NTAPI *PFN_SCROLLBAR)(PWND, UINT, WPARAM, LPARAM, PSBCALC);
 
 typedef struct tagSBTRACK

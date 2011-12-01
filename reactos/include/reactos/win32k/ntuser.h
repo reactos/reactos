@@ -397,6 +397,26 @@ typedef struct tagSBINFO
   SBDATA Vert;
 } SBINFO, *PSBINFO;
 
+typedef struct tagSBCALC
+{
+  INT posMin;
+  INT posMax;
+  INT page;
+  INT pos;
+  INT pxTop;
+  INT pxBottom;
+  INT pxLeft;
+  INT pxRight;
+  INT cpxThumb;
+  INT pxUpArrow;
+  INT pxDownArrow;
+  INT pxStart;
+  INT pxThumbBottom;
+  INT pxThumbTop;
+  INT cpx;
+  INT pxMin;
+} SBCALC, *PSBCALC;
+
 typedef enum _GETCPD
 {
     UserGetCPDA2U      = 0x01, // " Unicode "
@@ -615,6 +635,14 @@ typedef struct _WND
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
 } WND, *PWND;
+
+typedef struct _SBWND
+{
+  WND    wnd;
+  BOOL   fVert;
+  UINT   wDisableFlags;
+  SBCALC SBCalc;
+} SBWND, *PSBWND;
 
 typedef struct _PFNCLIENT
 {

@@ -1,5 +1,4 @@
-/* $Id $
- *
+/*
  * ReactOS User32 Library
  * - ScrollBar control
  *
@@ -80,7 +79,7 @@ const struct builtin_class_descr SCROLL_builtin_class =
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style */
     ScrollBarWndProcA,      /* procA */
     ScrollBarWndProcW,      /* procW */
-    0,                      /* extra */
+    sizeof(SBWND)-sizeof(WND), /* extra */
     IDC_ARROW,              /* cursor */
     0                       /* brush */
 };
@@ -310,6 +309,7 @@ IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
 void
 IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
 {
+  //PSBTRACK pSBTrack;
   //INT ThumbSize;
   SCROLLBARINFO Info;
   BOOL Vertical;
@@ -344,7 +344,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
       return;
     }
 
-  //ThumbSize = Info.xyThumbBottom - Info.xyThumbTop;
+  //ThumbSize = pSBTrack->pSBCalc->pxThumbBottom - pSBTrack->pSBCalc->pxThumbTop;
 
   /*
    * Draw the arrows.
@@ -1175,11 +1175,8 @@ IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_RANGE;
   Result = NtUserSBGetParms(Wnd, Bar, NULL, &ScrollInfo);
-  if (Result)
-    {
-      *MinPos = ScrollInfo.nMin;
-      *MaxPos = ScrollInfo.nMax;
-    }
+  *MinPos = Result ? ScrollInfo.nMin : 0;
+  *MaxPos = Result ? ScrollInfo.nMax : 0;
 
   return Result;
 }
@@ -1200,13 +1197,11 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 
   if (SBType != SB_CTL)
   {
-      PWND pwnd = ValidateHwnd(Wnd);
-      if (!pwnd) return;
-      XOffset = pwnd->rcClient.left - pwnd->rcWindow.left;
-      YOffset = pwnd->rcClient.top - pwnd->rcWindow.top;
+      RECT rect;
+      GetClientRect(Wnd, &rect);
       ScreenToClient(Wnd, &Pt);
-      Pt.x += XOffset;
-      Pt.y += YOffset;
+      Pt.x -= rect.left;
+      Pt.y -= rect.top;
   }
 
   IntScrollHandleScrollEvent(Wnd, SBType, WM_LBUTTONDOWN, Pt);
@@ -1241,7 +1236,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
  *           ScrollBarWndProc
  */
 LRESULT WINAPI
-ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
 #ifdef __REACTOS__ // Do this now, remove after Server side is fixed.
   PWND pWnd;
@@ -1279,26 +1274,14 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
         IntScrollCreateScrollBar(Wnd, (LPCREATESTRUCTW) lParam);
         break;
 
-//#if 0 /* FIXME */
       case WM_ENABLE:
         {
-//          SCROLLBAR_INFO *infoPtr;
-//          if ((infoPtr = SCROLL_GetScrollBarInfo( hwnd, SB_CTL )))
-//            {
-//              infoPtr->flags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
-//              SCROLL_RefreshScrollBar(hwnd, SB_CTL, TRUE, TRUE);
-//            }
-          HDC hdc;
-          DbgPrint("ScrollBarWndProc WM_ENABLE\n");
+          TRACE("ScrollBarWndProc WM_ENABLE\n");
           NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
           /* Refresh Scrollbars. */
-          hdc = GetDCEx( Wnd, 0, DCX_CACHE );
-          if (!hdc) return 1;
-          IntDrawScrollBar( Wnd, hdc, SB_CTL);
-          ReleaseDC( Wnd, hdc );
+          SCROLL_RefreshScrollBar(Wnd, SB_CTL, TRUE, TRUE);
 	}
 	return 0;
-//#endif
 
       case WM_LBUTTONDBLCLK:
       case WM_LBUTTONDOWN:
@@ -1430,9 +1413,9 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
 
       case SBM_GETRANGE:
         return IntScrollGetScrollRange(Wnd, SB_CTL, (LPINT) wParam, (LPINT) lParam);
-
+ 
       case SBM_ENABLE_ARROWS:
-        return EnableScrollBar(Wnd, SB_CTL, wParam);
+        return EnableScrollBar( Wnd, SB_CTL, wParam );
 
       case SBM_SETSCROLLINFO:
         return NtUserSetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam, wParam);
@@ -1460,7 +1443,10 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
           {
             WARN("unknown msg %04x wp=%04lx lp=%08lx\n", Msg, wParam, lParam);
           }
-        return DefWindowProc(Wnd, Msg, wParam, lParam );
+        if (unicode)
+            return DefWindowProcW( Wnd, Msg, wParam, lParam );
+        else
+            return DefWindowProcA( Wnd, Msg, wParam, lParam );
     }
 
   return 0;
@@ -1469,13 +1455,13 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
 LRESULT WINAPI
 ScrollBarWndProcW(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  return ScrollBarWndProc(DefWindowProcW, Wnd, Msg, wParam, lParam);
+  return ScrollBarWndProc_common(DefWindowProcW, Wnd, Msg, wParam, lParam, TRUE);
 }
 
 LRESULT WINAPI
 ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  return ScrollBarWndProc(DefWindowProcA, Wnd, Msg, wParam, lParam);
+  return ScrollBarWndProc_common(DefWindowProcA, Wnd, Msg, wParam, lParam, FALSE);
 }
 
 
@@ -1493,8 +1479,14 @@ BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
    Hook = BeginIfHookedUserApiHook();
 
      /* Bypass SEH and go direct. */
-   if (!Hook) return NtUserEnableScrollBar(hwnd, nBar, flags);
-
+   if (!Hook)
+   {
+      Ret = NtUserEnableScrollBar(hwnd, nBar, flags);
+      if (GetLastError() == ERROR_INVALID_PARAMETER) return Ret;
+      if (nBar == SB_CTL) return Ret;
+      SCROLL_RefreshScrollBar( hwnd, nBar, TRUE, TRUE );
+      return Ret;
+   }
    _SEH2_TRY
    {
       Ret = guah.EnableScrollBar(hwnd, nBar, flags);

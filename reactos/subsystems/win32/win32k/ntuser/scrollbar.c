@@ -12,6 +12,12 @@ DBG_DEFAULT_CHANNEL(UserScrollbar);
 
 #define MINTRACKTHUMB    8               /* Minimum size of the rectangle between the arrows */
 
+ /* What to do after SetScrollInfo() */
+ #define SA_SSI_HIDE             0x0001
+ #define SA_SSI_SHOW             0x0002
+ #define SA_SSI_REFRESH          0x0004
+ #define SA_SSI_REPAINT_ARROWS   0x0008
+
 #define SBRG_SCROLLBAR     0 /* the scrollbar itself */
 #define SBRG_TOPRIGHTBTN   1 /* the top or right button */
 #define SBRG_PAGEUPRIGHT   2 /* the page up or page right region */
@@ -160,6 +166,7 @@ IntUpdateSBInfo(PWND Window, int wBar)
    LPSCROLLINFO psi;
 
    ASSERT(Window);
+   ASSERT(Window->pSBInfo);
    ASSERT(Window->pSBInfoex);
 
    sbi = IntGetScrollbarInfoFromWindow(Window, wBar);
@@ -183,10 +190,7 @@ co_IntGetScrollInfo(PWND Window, INT nBar, LPSCROLLINFO lpsi)
       return FALSE;
    }
 
-   if(!co_IntCreateScrollBars(Window))
-   {
-      return FALSE;
-   }
+   if (!Window->pSBInfo) return FALSE;
 
    psi = IntGetScrollInfoFromWindow(Window, nBar);
 
@@ -240,6 +244,8 @@ NEWco_IntGetScrollInfo(
      return FALSE;
   }
 
+  if (!pWnd->pSBInfo || !pSBTrack) return FALSE;
+
   Mask = lpsi->fMask;
 
   if (0 != (Mask & SIF_PAGE))
@@ -280,7 +286,8 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 
    LPSCROLLINFO Info;
    PSCROLLBARINFO psbi;
-   /*   UINT new_flags;*/
+   UINT new_flags;
+   INT action = 0;
    BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
 
    ASSERT_REFS_CO(Window);
@@ -313,7 +320,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    Info = IntGetScrollInfoFromWindow(Window, nBar);
 
    /* Set the page size */
-   if (0 != (lpsi->fMask & SIF_PAGE))
+   if (lpsi->fMask & SIF_PAGE)
    {
       if (Info->nPage != lpsi->nPage)
       {
@@ -323,20 +330,21 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    }
 
    /* Set the scroll pos */
-   if (0 != (lpsi->fMask & SIF_POS))
+   if (lpsi->fMask & SIF_POS)
    {
       if (Info->nPos != lpsi->nPos)
       {
          Info->nPos = lpsi->nPos;
+         bChangeParams = TRUE;
       }
    }
 
    /* Set the scroll range */
-   if (0 != (lpsi->fMask & SIF_RANGE))
+   if (lpsi->fMask & SIF_RANGE)
    {
       /* Invalid range -> range is set to (0,0) */
-      if (lpsi->nMin > lpsi->nMax ||
-            0x80000000 <= (UINT)(lpsi->nMax - lpsi->nMin))
+      if ((lpsi->nMin > lpsi->nMax) ||
+                  ((UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000))
       {
          Info->nMin = 0;
          Info->nMax = 0;
@@ -351,7 +359,9 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    }
 
    /* Make sure the page size is valid */
-   if (Info->nMax - Info->nMin + 1 < Info->nPage)
+   if (Info->nPage < 0)
+      Info->nPage = 0;
+   else if (Info->nMax - Info->nMin + 1 < Info->nPage)
    {
       Info->nPage = Info->nMax - Info->nMin + 1;
    }
@@ -370,56 +380,77 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
     * Don't change the scrollbar state if SetScrollInfo is just called
     * with SIF_DISABLENOSCROLL
     */
-   if (0 == (lpsi->fMask & SIF_ALL))
+   if (!(lpsi->fMask & SIF_ALL))
    {
-      return Info->nPos;
+      goto done; //return Info->nPos;
    }
 
    /* Check if the scrollbar should be hidden or disabled */
-   if (0 != (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL)))
+   if (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL))
    {
+      new_flags = Window->pSBInfo->WSBflags;
       if (Info->nMin >= (int)(Info->nMax - max(Info->nPage - 1, 0)))
       {
          /* Hide or disable scroll-bar */
-         if (0 != (lpsi->fMask & SIF_DISABLENOSCROLL))
+         if (lpsi->fMask & SIF_DISABLENOSCROLL)
          {
-            /*            new_flags = ESB_DISABLE_BOTH;*/
+            new_flags = ESB_DISABLE_BOTH;
+            bChangeParams = TRUE;
          }
          else if ((nBar != SB_CTL) && bChangeParams)
          {
-            co_UserShowScrollBar(Window, nBar, FALSE);
-            return Info->nPos;
+            action = SA_SSI_HIDE;
+            //co_UserShowScrollBar(Window, nBar, FALSE);
+            //return Info->nPos;
          }
       }
-      else  /* Show and enable scroll-bar */
+      else /* Show and enable scroll-bar only if no page only changed. */
+      if (lpsi->fMask != SIF_PAGE)
       {
-         /*         new_flags = 0;*/
+         new_flags = ESB_ENABLE_BOTH;
          if ((nBar != SB_CTL) && bChangeParams)
          {
-            co_UserShowScrollBar(Window, nBar, TRUE);
+            action |= SA_SSI_SHOW;
+            //co_UserShowScrollBar(Window, nBar, TRUE);
          }
       }
 
-#if 0
-      if (infoPtr->flags != new_flags) /* check arrow flags */
+      if (Window->pSBInfo->WSBflags != new_flags) /* check arrow flags */
       {
-         infoPtr->flags = new_flags;
-         *Action |= SA_SSI_REPAINT_ARROWS;
+         Window->pSBInfo->WSBflags = new_flags;
+         action |= SA_SSI_REPAINT_ARROWS;
       }
-#endif
-
    }
 
-   if (bRedraw)
+done:
+   if ( action & SA_SSI_HIDE )
+   { 
+      co_UserShowScrollBar(Window, nBar, FALSE);
+   }
+   else
    {
-      RECTL UpdateRect = psbi->rcScrollBar;
-      UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
-      UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
-      UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
-      UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
-      co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+      if ( action & SA_SSI_SHOW )
+         if ( co_UserShowScrollBar(Window, nBar, TRUE) )
+            return Info->nPos; /* SetWindowPos() already did the painting */
+      if (bRedraw)
+      { // FIXME: Arrows and interior.
+         RECTL UpdateRect = psbi->rcScrollBar;
+         UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
+         UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
+         UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
+         UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
+         co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+      } // FIXME: Arrows
+      else if( action & SA_SSI_REPAINT_ARROWS )
+      {
+         RECTL UpdateRect = psbi->rcScrollBar;
+         UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
+         UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
+         UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
+         UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
+         co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+      }
    }
-
    /* Return current position */
    return Info->nPos;
 }
@@ -430,7 +461,6 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
    INT Bar;
    PSCROLLBARINFO sbi;
    LPSCROLLINFO psi;
-
    ASSERT_REFS_CO(Window);
 
    Bar = SBOBJ_TO_SBID(idObject);
@@ -468,7 +498,7 @@ co_IntCreateScrollBars(PWND Window)
 
    ASSERT_REFS_CO(Window);
 
-   if(Window->pSBInfoex)
+   if (Window->pSBInfo && Window->pSBInfoex)
    {
       /* no need to create it anymore */
       return TRUE;
@@ -483,6 +513,14 @@ co_IntCreateScrollBars(PWND Window)
    }
 
    RtlZeroMemory(Window->pSBInfoex, Size);
+
+   if(!(Window->pSBInfo = DesktopHeapAlloc( Window->head.rpdesk, sizeof(SBINFO))))
+   {
+      ERR("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->head.h);
+      return FALSE;
+   }
+
+   RtlZeroMemory(Window->pSBInfo, sizeof(SBINFO));
 
    co_WinPosGetNonClientSize(Window,
                              &Window->rcWindow,
@@ -509,8 +547,10 @@ co_IntCreateScrollBars(PWND Window)
 BOOL FASTCALL
 IntDestroyScrollBars(PWND Window)
 {
-   if(Window->pSBInfoex)
+   if (Window->pSBInfo && Window->pSBInfoex)
    {
+      DesktopHeapFree(Window->head.rpdesk, Window->pSBInfo);
+      Window->pSBInfo = NULL;
       ExFreePool(Window->pSBInfoex);
       Window->pSBInfoex = NULL;
       return TRUE;
@@ -662,7 +702,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
 BOOL
 APIENTRY
 NtUserEnableScrollBar(
@@ -679,19 +718,23 @@ NtUserEnableScrollBar(
    TRACE("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
 
-   if(!(Window = UserGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN(FALSE);
    }
    UserRefObjectCo(Window, &Ref);
 
-   if(wSBflags == SB_CTL)
+   if (!co_IntCreateScrollBars(Window))
    {
-      /* FIXME Enable or Disable SB Ctrl*/
-      ERR("Enable Scrollbar SB_CTL\n");
-      InfoV = IntGetScrollbarInfoFromWindow(Window, SB_CTL);
-      Chg = IntEnableScrollBar(FALSE, InfoV ,wArrows);
-      /* Chg? Scrollbar is Refresh in user32/controls/scrollbar.c. */
+      RETURN( FALSE);
+   }
+
+   Window->pSBInfo->WSBflags = wArrows;
+
+   if (wSBflags == SB_CTL)
+   {
+      if ((wArrows == ESB_DISABLE_BOTH || wArrows == ESB_ENABLE_BOTH))
+         IntEnableWindow(hWnd, (wArrows == ESB_ENABLE_BOTH));
 
       RETURN(TRUE);
    }
@@ -707,6 +750,8 @@ NtUserEnableScrollBar(
    {
       RETURN( FALSE);
    }
+
+   Window->pSBInfo->WSBflags = wArrows;
 
    switch(wSBflags)
    {
@@ -728,10 +773,11 @@ NtUserEnableScrollBar(
 
    if(InfoH)
       Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
-
-   //if(Chg && (Window->style & WS_VISIBLE))
-   /* FIXME - repaint scrollbars */
-
+     
+   ERR("FIXME: EnableScrollBar wSBflags %d wArrows %d\n",wSBflags,wArrows);
+// Done in user32:
+//   SCROLL_RefreshScrollBar( hwnd, nBar, TRUE, TRUE );
+   
    RETURN( TRUE);
 
 CLEANUP:
@@ -875,14 +921,9 @@ co_UserShowScrollBar(PWND Wnd, int wBar, DWORD bShow)
          return( FALSE);
    }
 
-   if(!co_IntCreateScrollBars(Wnd))
-   {
-      return( FALSE);
-   }
-
    if (wBar == SB_CTL)
    {
-      IntUpdateSBInfo(Wnd, SB_CTL);
+      if (Wnd->pSBInfo) IntUpdateSBInfo(Wnd, SB_CTL);
 
       co_WinPosShowWindow(Wnd, bShow ? SW_SHOW : SW_HIDE);
       return( TRUE);

@@ -41,7 +41,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
   { L"ScrollBar",
     CS_DBLCLKS|CS_VREDRAW|CS_HREDRAW|CS_PARENTDC,
     NULL, // Use User32 procs
-    0,
+    sizeof(SBWND)-sizeof(WND),
     IDC_ARROW,
     NULL,
     FNID_SCROLLBAR,
