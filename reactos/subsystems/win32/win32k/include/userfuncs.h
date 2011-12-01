@@ -107,6 +107,6 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 /*************** SCROLLBAR.C ***************/
 
 DWORD FASTCALL
-co_UserShowScrollBar(PWND Window, int wBar, DWORD bShow);
+co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV);
 
 /* EOF */

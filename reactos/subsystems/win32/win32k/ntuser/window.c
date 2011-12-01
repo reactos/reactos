@@ -2148,11 +2148,11 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    /* Initialize and show the window's scrollbars */
    if (Window->style & WS_VSCROLL)
    {
-      co_UserShowScrollBar(Window, SB_VERT, TRUE);
+      co_UserShowScrollBar(Window, SB_VERT, FALSE, TRUE);
    }
    if (Window->style & WS_HSCROLL)
    {
-      co_UserShowScrollBar(Window, SB_HORZ, TRUE);
+      co_UserShowScrollBar(Window, SB_HORZ, TRUE, FALSE);
    }
 
    /* Show the new window */

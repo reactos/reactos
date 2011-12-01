@@ -400,8 +400,6 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          else if ((nBar != SB_CTL) && bChangeParams)
          {
             action = SA_SSI_HIDE;
-            //co_UserShowScrollBar(Window, nBar, FALSE);
-            //return Info->nPos;
          }
       }
       else /* Show and enable scroll-bar only if no page only changed. */
@@ -411,7 +409,6 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          if ((nBar != SB_CTL) && bChangeParams)
          {
             action |= SA_SSI_SHOW;
-            //co_UserShowScrollBar(Window, nBar, TRUE);
          }
       }
 
@@ -425,12 +422,12 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 done:
    if ( action & SA_SSI_HIDE )
    { 
-      co_UserShowScrollBar(Window, nBar, FALSE);
+      co_UserShowScrollBar(Window, nBar, FALSE, FALSE);
    }
    else
    {
       if ( action & SA_SSI_SHOW )
-         if ( co_UserShowScrollBar(Window, nBar, TRUE) )
+         if ( co_UserShowScrollBar(Window, nBar, TRUE, TRUE) )
             return Info->nPos; /* SetWindowPos() already did the painting */
       if (bRedraw)
       { // FIXME: Arrows and interior.
@@ -521,6 +518,8 @@ co_IntCreateScrollBars(PWND Window)
    }
 
    RtlZeroMemory(Window->pSBInfo, sizeof(SBINFO));
+   Window->pSBInfo->Vert.posMax = 100;
+   Window->pSBInfo->Horz.posMax = 100;
 
    co_WinPosGetNonClientSize(Window,
                              &Window->rcWindow,
@@ -596,6 +595,62 @@ IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
    return Chg;
 }
 
+/* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
+DWORD FASTCALL
+co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
+{
+   ULONG old_style, set_bits = 0, clear_bits = 0;
+
+   ASSERT_REFS_CO(Wnd);
+
+   switch(nBar)
+   {
+      case SB_CTL:
+         {
+            if (Wnd->pSBInfo) IntUpdateSBInfo(Wnd, SB_CTL); // Is this needed? Was tested w/o!
+
+            co_WinPosShowWindow(Wnd, fShowH ? SW_SHOW : SW_HIDE);
+            return TRUE;
+         }
+      case SB_BOTH:
+      case SB_HORZ:
+         if (fShowH) set_bits |= WS_HSCROLL;
+         else clear_bits |= WS_HSCROLL;
+         if( nBar == SB_HORZ ) break;  
+      /* fall through */
+      case SB_VERT:
+         if (fShowV) set_bits |= WS_VSCROLL;
+         else clear_bits |= WS_VSCROLL;
+         break;
+      default:
+         EngSetLastError(ERROR_INVALID_PARAMETER);
+         return FALSE;
+   }
+
+
+   old_style = Wnd->style;
+   Wnd->style = (Wnd->style | set_bits) & ~clear_bits;
+
+   if (fShowH || fShowV)
+   {
+      if (!Wnd->pSBInfo) co_IntCreateScrollBars(Wnd);
+   }
+
+   if ((old_style & clear_bits) != 0 || (old_style & set_bits) != set_bits)
+   {
+      /////  Is this needed? Was tested w/o!
+      if (Wnd->style & WS_HSCROLL) IntUpdateSBInfo(Wnd, SB_HORZ);
+      if (Wnd->style & WS_VSCROLL) IntUpdateSBInfo(Wnd, SB_VERT);
+      /////
+         /* Frame has been changed, let the window redraw itself */
+      co_WinPosSetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+      return TRUE;
+   }
+   return FALSE;
+}
+
+////
 
 BOOL
 APIENTRY
@@ -642,7 +697,6 @@ CLEANUP:
    END_CLEANUP;
 
 }
-
 
 BOOL
 APIENTRY
@@ -709,6 +763,7 @@ NtUserEnableScrollBar(
    UINT wSBflags,
    UINT wArrows)
 {
+   UINT OrigArrows;
    PWND Window = NULL;
    PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
    BOOL Chg = FALSE;
@@ -729,6 +784,7 @@ NtUserEnableScrollBar(
       RETURN( FALSE);
    }
 
+   OrigArrows = Window->pSBInfo->WSBflags;
    Window->pSBInfo->WSBflags = wArrows;
 
    if (wSBflags == SB_CTL)
@@ -745,13 +801,6 @@ NtUserEnableScrollBar(
       ERR("Trying to set scrollinfo for unknown scrollbar type %d", wSBflags);
       RETURN(FALSE);
    }
-
-   if(!co_IntCreateScrollBars(Window))
-   {
-      RETURN( FALSE);
-   }
-
-   Window->pSBInfo->WSBflags = wArrows;
 
    switch(wSBflags)
    {
@@ -774,10 +823,11 @@ NtUserEnableScrollBar(
    if(InfoH)
       Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
      
-   ERR("FIXME: EnableScrollBar wSBflags %d wArrows %d\n",wSBflags,wArrows);
+   ERR("FIXME: EnableScrollBar wSBflags %d wArrows %d Chg %d\n",wSBflags,wArrows, Chg);
 // Done in user32:
 //   SCROLL_RefreshScrollBar( hwnd, nBar, TRUE, TRUE );
    
+   if (OrigArrows == wArrows) RETURN( FALSE);
    RETURN( TRUE);
 
 CLEANUP:
@@ -788,6 +838,81 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
+
+DWORD
+APIENTRY
+NtUserSetScrollInfo(
+   HWND hWnd,
+   int fnBar,
+   LPCSCROLLINFO lpsi,
+   BOOL bRedraw)
+{
+   PWND Window = NULL;
+   NTSTATUS Status;
+   SCROLLINFO ScrollInfo;
+   DECLARE_RETURN(DWORD);
+   USER_REFERENCE_ENTRY Ref;
+
+   TRACE("Enter NtUserSetScrollInfo\n");
+   UserEnterExclusive();
+
+   if(!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN( 0);
+   }
+   UserRefObjectCo(Window, &Ref);
+
+   Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
+   if(!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      RETURN( 0);
+   }
+
+   RETURN(co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw));
+
+CLEANUP:
+   if (Window)
+      UserDerefObjectCo(Window);
+
+   TRACE("Leave NtUserSetScrollInfo, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+
+}
+
+DWORD APIENTRY
+NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
+{
+   PWND Window;
+   DECLARE_RETURN(DWORD);
+   DWORD ret;
+   USER_REFERENCE_ENTRY Ref;
+
+   TRACE("Enter NtUserShowScrollBar\n");
+   UserEnterExclusive();
+
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN(0);
+   }
+
+   UserRefObjectCo(Window, &Ref);
+   ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
+                                            (nBar == SB_HORZ) ? 0 : bShow);
+   UserDerefObjectCo(Window);
+
+   RETURN(ret);
+
+CLEANUP:
+   TRACE("Leave NtUserShowScrollBar,  ret%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+
+}
+
+
+//// Ugly NtUser API ////
 
 BOOL
 APIENTRY
@@ -852,134 +977,4 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD
-APIENTRY
-NtUserSetScrollInfo(
-   HWND hWnd,
-   int fnBar,
-   LPCSCROLLINFO lpsi,
-   BOOL bRedraw)
-{
-   PWND Window = NULL;
-   NTSTATUS Status;
-   SCROLLINFO ScrollInfo;
-   DECLARE_RETURN(DWORD);
-   USER_REFERENCE_ENTRY Ref;
-
-   TRACE("Enter NtUserSetScrollInfo\n");
-   UserEnterExclusive();
-
-   if(!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN( 0);
-   }
-   UserRefObjectCo(Window, &Ref);
-
-   Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( 0);
-   }
-
-   RETURN(co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw));
-
-CLEANUP:
-   if (Window)
-      UserDerefObjectCo(Window);
-
-   TRACE("Leave NtUserSetScrollInfo, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-
-}
-
-/* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
-DWORD FASTCALL
-co_UserShowScrollBar(PWND Wnd, int wBar, DWORD bShow)
-{
-   DWORD Style, OldStyle;
-
-   ASSERT_REFS_CO(Wnd);
-
-   switch(wBar)
-   {
-      case SB_HORZ:
-         Style = WS_HSCROLL;
-         break;
-      case SB_VERT:
-         Style = WS_VSCROLL;
-         break;
-      case SB_BOTH:
-         Style = WS_HSCROLL | WS_VSCROLL;
-         break;
-      case SB_CTL:
-         Style = 0;
-         break;
-      default:
-         EngSetLastError(ERROR_INVALID_PARAMETER);
-         return( FALSE);
-   }
-
-   if (wBar == SB_CTL)
-   {
-      if (Wnd->pSBInfo) IntUpdateSBInfo(Wnd, SB_CTL);
-
-      co_WinPosShowWindow(Wnd, bShow ? SW_SHOW : SW_HIDE);
-      return( TRUE);
-   }
-
-   OldStyle = Wnd->style;
-   if(bShow)
-      Wnd->style |= Style;
-   else
-      Wnd->style &= ~Style;
-
-   if(Wnd->style != OldStyle)
-   {
-      if(Wnd->style & WS_HSCROLL)
-         IntUpdateSBInfo(Wnd, SB_HORZ);
-      if(Wnd->style & WS_VSCROLL)
-         IntUpdateSBInfo(Wnd, SB_VERT);
-
-      if(Wnd->style & WS_VISIBLE)
-      {
-         /* Frame has been changed, let the window redraw itself */
-         co_WinPosSetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                               SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
-      }
-   }
-
-   return( TRUE);
-}
-
-
-DWORD APIENTRY
-NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
-{
-   PWND Window;
-   DECLARE_RETURN(DWORD);
-   DWORD ret;
-   USER_REFERENCE_ENTRY Ref;
-
-   TRACE("Enter NtUserShowScrollBar\n");
-   UserEnterExclusive();
-
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN(0);
-   }
-
-   UserRefObjectCo(Window, &Ref);
-   ret = co_UserShowScrollBar(Window, wBar, bShow);
-   UserDerefObjectCo(Window);
-
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowScrollBar,  ret%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-
-}
 /* EOF */

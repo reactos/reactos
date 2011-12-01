@@ -2044,6 +2044,22 @@ NtUserMessageCall( HWND hWnd,
 
     switch(dwType)
     {
+    case FNID_SCROLLBAR:
+        {
+           switch(Msg)
+           {
+               case WM_ENABLE:
+                  {
+                     Window = UserGetWindowObject(hWnd);
+                     if (Window->pSBInfo)
+                     {
+                        Window->pSBInfo->WSBflags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
+                     }
+                  }
+                  break;
+           }
+           break;
+        }
     case FNID_DEFWINDOWPROC:
         /* Validate input */
         if (hWnd)

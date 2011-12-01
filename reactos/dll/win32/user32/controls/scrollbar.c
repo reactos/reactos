@@ -309,7 +309,7 @@ IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
 void
 IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
 {
-  //PSBTRACK pSBTrack;
+  //PSBWND pSBWnd;
   //INT ThumbSize;
   SCROLLBARINFO Info;
   BOOL Vertical;
@@ -344,7 +344,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
       return;
     }
 
-  //ThumbSize = pSBTrack->pSBCalc->pxThumbBottom - pSBTrack->pSBCalc->pxThumbTop;
+  //ThumbSize = pSBWnd->pSBCalc->pxThumbBottom - pSBWnd->pSBCalc->pxThumbTop;
 
   /*
    * Draw the arrows.
@@ -482,6 +482,11 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
   RECT ClientRect;
   RECT WindowRect;
   DWORD Style, ExStyle;
+  PWND pWnd;
+  PSBINFO pSBInfo;
+
+  pWnd = ValidateHwnd( Wnd );
+  pSBInfo = DesktopPtrToUser(pWnd->pSBInfo);
 
   GetClientRect(Wnd, &ClientRect);
   if (SB_HORZ == Bar || SB_VERT == Bar)
@@ -587,12 +592,8 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
           *ThumbSize = GetSystemMetrics(SM_CXVSCROLL);
         }
 
-#if 0 /* FIXME */
-      if (((pixels -= *ThumbSize ) < 0) ||
-          ((info->flags & ESB_DISABLE_BOTH) == ESB_DISABLE_BOTH))
-#else
-      if ((Pixels -= *ThumbSize ) < 0)
-#endif
+      if (((Pixels -= *ThumbSize ) < 0) ||
+          (( pSBInfo->WSBflags & ESB_DISABLE_BOTH) == ESB_DISABLE_BOTH))
         {
           /* Rectangle too small or scrollbar disabled -> no thumb */
           *ThumbPos = *ThumbSize = 0;
@@ -1090,13 +1091,13 @@ static void IntScrollCreateScrollBar(
 
   TRACE("hwnd=%p lpCreate=%p\n", Wnd, lpCreate);
 
-#if 0 /* FIXME */
   if (lpCreate->style & WS_DISABLED)
-    {
-      info->flags = ESB_DISABLE_BOTH;
-      TRACE("Created WS_DISABLED scrollbar\n");
-    }
-#endif
+  {
+  //    info->flags = ESB_DISABLE_BOTH;
+      //NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
+      NtUserMessageCall( Wnd, WM_ENABLE, FALSE, 0, 0, FNID_SCROLLBAR, FALSE);
+      ERR("Created WS_DISABLED scrollbar\n");
+  }
 
   if (0 != (lpCreate->style & (SBS_SIZEGRIP | SBS_SIZEBOX)))
     {
@@ -1152,10 +1153,10 @@ IntScrollGetScrollPos(HWND Wnd, INT Bar)
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_POS;
-  if (! NtUserSBGetParms(Wnd, Bar, NULL, &ScrollInfo))
-    {
+  if (!NtUserSBGetParms(Wnd, Bar, NULL, &ScrollInfo))
+  {
       return 0;
-    }
+  }
 
   return ScrollInfo.nPos;
 }
@@ -1167,10 +1168,10 @@ IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
   SCROLLINFO ScrollInfo;
 
   if (NULL == MinPos || NULL == MaxPos)
-    {
+  {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
-    }
+  }
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_RANGE;
@@ -1276,10 +1277,15 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
 
       case WM_ENABLE:
         {
-          TRACE("ScrollBarWndProc WM_ENABLE\n");
-          NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
-          /* Refresh Scrollbars. */
-          SCROLL_RefreshScrollBar(Wnd, SB_CTL, TRUE, TRUE);
+          PWND pWnd = ValidateHwnd(Wnd);
+          if (pWnd->pSBInfo)
+          { 
+             ERR("ScrollBarWndProc WM_ENABLE\n");
+             //NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
+             NtUserMessageCall( Wnd, Msg, wParam, lParam, 0, FNID_SCROLLBAR, !unicode);
+             /* Refresh Scrollbars. */
+             SCROLL_RefreshScrollBar(Wnd, SB_CTL, TRUE, TRUE);
+          }
 	}
 	return 0;
 
@@ -1641,8 +1647,12 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 INT WINAPI
 SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 {
+  PWND pWnd;
   INT Result = 0;
   SCROLLINFO ScrollInfo;
+
+  pWnd = ValidateHwnd(hWnd);
+  if ( !pWnd || !pWnd->pSBInfo ) return 0;
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_POS;
@@ -1652,15 +1662,15 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
    * we will later return.
    */
   if (NtUserSBGetParms(hWnd, nBar, NULL, &ScrollInfo))
-    {
+  {
       Result = ScrollInfo.nPos;
       if (Result != nPos)
-        {
+      {
           ScrollInfo.nPos = nPos;
           /* Finally set the new position */
           NtUserSetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw);
-        }
-    }
+      }
+  }
 
   return Result;
 }
@@ -1671,13 +1681,23 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 BOOL WINAPI
 SetScrollRange(HWND hWnd, INT nBar, INT nMinPos, INT nMaxPos, BOOL bRedraw)
 {
+  PWND pWnd;
   SCROLLINFO ScrollInfo;
+
+  pWnd = ValidateHwnd(hWnd);
+  if ( !pWnd ) return FALSE;
+
+  if ((nMaxPos - nMinPos) > MAXLONG)
+  {
+     SetLastError(ERROR_INVALID_SCROLLBAR_RANGE);
+     return FALSE;
+  }
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_RANGE;
   ScrollInfo.nMin = nMinPos;
   ScrollInfo.nMax = nMaxPos;
-  NtUserSetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw);
+  SetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw); // do not bypass themes.
 
   return TRUE;
 }
