@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * dllmain.c
  *
  * ReactOS MSVCRT.DLL Compatibility Library
@@ -14,10 +13,6 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.24 $
- * $Author$
- * $Date$
- *
  */
 
 #include <precomp.h>
@@ -29,7 +24,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 extern int BlockEnvToEnvironA(void);
 extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
-extern void _atexit_cleanup(void);
 
 extern unsigned int _osplatform;
 extern unsigned int _osver;
@@ -45,12 +39,6 @@ extern char** __initenv;     /* pointer to initial environment block */
 extern wchar_t** _wenviron;  /* pointer to environment block */
 extern wchar_t** __winitenv; /* pointer to initial environment block */
 
-
-/* LIBRARY GLOBAL VARIABLES ***************************************************/
-
-HANDLE hHeap = NULL;        /* handle for heap */
-
-
 /* LIBRARY ENTRY POINT ********************************************************/
 
 BOOL
@@ -60,10 +48,9 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
     OSVERSIONINFOW osvi;
     switch (dwReason)
     {
-    case DLL_PROCESS_ATTACH://1
+    case DLL_PROCESS_ATTACH:
         /* initialize version info */
-        //DPRINT1("Process Attach %d\n", nAttachCount);
-        //DPRINT1("Process Attach\n");
+        TRACE("Process Attach\n");
         osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
         GetVersionExW( &osvi );
         _winver     = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
@@ -71,13 +58,10 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         _winminor   = osvi.dwMinorVersion;
         _osplatform = osvi.dwPlatformId;
         _osver      = osvi.dwBuildNumber;
-        hHeap = HeapCreate(0, 100000, 0);
-        if (hHeap == NULL)
-            return FALSE;
 
         /* create tls stuff */
-        if (!CreateThreadData())
-            return FALSE;
+        if (!msvcrt_init_tls())
+          return FALSE;
 
         if (BlockEnvToEnvironA() < 0)
             return FALSE;
@@ -91,50 +75,52 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         _acmdln = _strdup(GetCommandLineA());
         _wcmdln = _wcsdup(GetCommandLineW());
 
-        /* FIXME: more initializations... */
-
         /* Initialization of the WINE code */
         msvcrt_init_mt_locks();
+        //if(!msvcrt_init_locale()) {
+        //    msvcrt_free_mt_locks();
+        //    msvcrt_free_tls_mem();
+        //    return FALSE;
+        //}
+        //msvcrt_init_math();
         msvcrt_init_io();
-        setlocale(0, "C");
-        //_setmbcp(_MB_CP_LOCALE);
-
+        //msvcrt_init_console();
+        //msvcrt_init_args();
+        //msvcrt_init_signals();
+        _setmbcp(_MB_CP_LOCALE);
         TRACE("Attach done\n");
         break;
 
     case DLL_THREAD_ATTACH:
+        //msvcrt_get_thread_data creates data when first called
         break;
 
     case DLL_THREAD_DETACH:
-        FreeThreadData(NULL);
+        msvcrt_free_tls_mem();
         break;
 
     case DLL_PROCESS_DETACH:
-        //DPRINT1("Detach %d\n", nAttachCount);
-        //DPRINT("Detach\n");
-        /* FIXME: more cleanup... */
+        TRACE("Detach\n");
         /* Deinit of the WINE code */
         msvcrt_free_io();
         msvcrt_free_mt_locks();
+        //msvcrt_free_console();
+        //msvcrt_free_args();
+        //msvcrt_free_signals();
+        msvcrt_free_tls_mem();
+        if (!msvcrt_free_tls())
+          return FALSE;
+        //MSVCRT__free_locale(MSVCRT_locale);
 
-        _atexit_cleanup();
-
-
-        /* destroy tls stuff */
-        DestroyThreadData();
-
-	if (__winitenv && __winitenv != _wenviron)
+    if (__winitenv && __winitenv != _wenviron)
             FreeEnvironment((char**)__winitenv);
         if (_wenviron)
             FreeEnvironment((char**)_wenviron);
 
-	if (__initenv && __initenv != _environ)
+    if (__initenv && __initenv != _environ)
             FreeEnvironment(__initenv);
         if (_environ)
             FreeEnvironment(_environ);
-
-        /* destroy heap */
-        HeapDestroy(hHeap);
 
         TRACE("Detach done\n");
         break;

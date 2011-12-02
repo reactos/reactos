@@ -239,25 +239,6 @@ wchar_t* CDECL wcspbrk( const wchar_t* str, const wchar_t* accept )
 }
 
 #ifndef _LIBCNT_
-/*********************************************************************
- *		wcstok  (MSVCRT.@)
- */
-wchar_t * CDECL wcstok( wchar_t *str, const wchar_t *delim )
-{
-    MSVCRT_thread_data *data = msvcrt_get_thread_data();
-    wchar_t *ret;
-
-    if (!str)
-        if (!(str = data->wcstok_next)) return NULL;
-
-    while (*str && strchrW( delim, *str )) str++;
-    if (!*str) return NULL;
-    ret = str++;
-    while (*str && !strchrW( delim, *str )) str++;
-    if (*str) *str++ = 0;
-    data->wcstok_next = str;
-    return ret;
-}
 
 /*********************************************************************
  *		wctomb (MSVCRT.@)

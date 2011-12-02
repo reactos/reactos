@@ -9,12 +9,11 @@
  */
 
 #include <precomp.h>
-#include <internal/tls.h>
 
 /*
  * @implemented
  */
 int * __fpecode(void)
 {
-  return(&(GetThreadData()->fpecode));
+    return &msvcrt_get_thread_data()->fpecode;
 }

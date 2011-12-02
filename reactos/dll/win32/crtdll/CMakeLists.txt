@@ -21,7 +21,7 @@ add_library(crtdll SHARED ${SOURCE})
 
 set_module_type(crtdll win32dll ENTRYPOINT DllMain 12)
 
-target_link_libraries(crtdll wine crt)
+target_link_libraries(crtdll crt wine)
 
 if(MSVC)
     add_importlibs(crtdll msvcrt)

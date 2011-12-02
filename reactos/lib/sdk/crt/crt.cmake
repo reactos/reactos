@@ -217,7 +217,6 @@ list(APPEND CRT_SOURCE
     string/ctype.c
     string/itoa.c
     string/itow.c
-    string/lasttok.c
     string/scanf.c
     string/splitp.c
     string/strcoll.c
@@ -300,7 +299,6 @@ list(APPEND CRT_SOURCE
     wstring/wcstok.c
     wstring/wcsupr.c
     wstring/wcsxfrm.c
-    wstring/wlasttok.c
     wine/heap.c
     wine/undname.c)
 

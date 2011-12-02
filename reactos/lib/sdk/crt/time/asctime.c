@@ -149,16 +149,17 @@ _tasctime_s(
 _TCHAR *
 _tasctime(const struct tm *ptm)
 {
-    PTHREADDATA pThreadData;
+    thread_data_t *data = msvcrt_get_thread_data();
     _TCHAR *pstr;
 
-    /* Get pointer to TLS buffer */
-    pThreadData = GetThreadData();
 #ifndef _UNICODE
-    pstr = pThreadData->asctimebuf;
+    pstr = data->asctime_buffer;
 #else
-    pstr = pThreadData->wasctimebuf;
+    pstr = data->wasctime_buffer;
 #endif
+
+    if(!pstr)
+        pstr = malloc(sizeof(struct tm));
 
     /* Fill the buffer */
     FillBuf((timebuf_t*)pstr, ptm);

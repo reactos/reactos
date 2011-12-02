@@ -27,6 +27,9 @@
 
 void CDECL _global_unwind2(EXCEPTION_REGISTRATION_RECORD* frame);
 
+typedef void (__cdecl *MSVCRT_security_error_handler)(int, void *);
+static MSVCRT_security_error_handler security_error_handler;
+
 /* VC++ extensions to Win32 SEH */
 typedef struct _SCOPETABLE
 {
@@ -261,6 +264,23 @@ int CDECL _except_handler4_common( ULONG *cookie, void (*check_cookie)(void),
 
 #endif
 
+/*******************************************************************
+ *		_local_unwind4 (MSVCRT.@)
+ */
+void CDECL _local_unwind4( ULONG *cookie, MSVCRT_EXCEPTION_FRAME* frame, int trylevel )
+{
+    msvcrt_local_unwind4( cookie, frame, trylevel, &frame->_ebp );
+}
+
+/*********************************************************************
+ *		_seh_longjmp_unwind4 (MSVCRT.@)
+ */
+void __stdcall _seh_longjmp_unwind4(struct __JUMP_BUFFER *jmp)
+{
+    msvcrt_local_unwind4( (void *)jmp->Cookie, (MSVCRT_EXCEPTION_FRAME *)jmp->Registration,
+                          jmp->TryLevel, (void *)jmp->Ebp );
+}
+
 /******************************************************************
  *		__uncaught_exception
  */
@@ -269,3 +289,14 @@ BOOL CDECL __uncaught_exception(void)
     return FALSE;
 }
 
+/* _set_security_error_handler - not exported in native msvcrt, added in msvcr70 */
+MSVCRT_security_error_handler CDECL _set_security_error_handler(
+    MSVCRT_security_error_handler handler )
+{
+    MSVCRT_security_error_handler old = security_error_handler;
+
+    TRACE("(%p)\n", handler);
+
+    security_error_handler = handler;
+    return old;
+}

@@ -1,71 +1,38 @@
-/*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
- * PURPOSE:     Unknown
- * PROGRAMER:   Unknown
- * UPDATE HISTORY:
- *              25/11/05: Added license header
- */
+/* taken from wine wcs.c */
 
 #include <precomp.h>
 
-wchar_t** _wlasttoken(); /* wlasttok.c */
-
-/*
- * @implemented
+/*********************************************************************
+ *		wcstok_s  (MSVCRT.@)
  */
-wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
+wchar_t * CDECL wcstok_s( wchar_t *str, const wchar_t *delim,
+                                 wchar_t **next_token )
 {
-	const wchar_t *spanp;
-	int c, sc;
-	wchar_t *tok;
-#if 1
-	wchar_t ** wlasttoken = _wlasttoken();
-#else
-	PTHREADDATA ThreadData = GetThreadData();
-	wchar_t ** wlasttoken = &ThreadData->wlasttoken;
+    wchar_t *ret;
+
+#if 0
+    if (!MSVCRT_CHECK_PMT(delim != NULL) || !MSVCRT_CHECK_PMT(next_token != NULL) ||
+        !MSVCRT_CHECK_PMT(str != NULL || *next_token != NULL))
+    {
+        _set_errno(EINVAL);
+        return NULL;
+    }
 #endif
+    if (!str) str = *next_token;
 
-	if (s == NULL && (s = *wlasttoken) == NULL)
-		return (NULL);
+    while (*str && strchrW( delim, *str )) str++;
+    if (!*str) return NULL;
+    ret = str++;
+    while (*str && !strchrW( delim, *str )) str++;
+    if (*str) *str++ = 0;
+    *next_token = str;
+    return ret;
+}
 
-	/*
-	 * Skip (span) leading ctiters (s += strspn(s, ct), sort of).
-	 */
-	cont:
-	c = *s;
-	s++;
-	for (spanp = ct; (sc = *spanp) != 0;spanp++) {
-		if (c == sc)
-			goto cont;
-	}
-
-	if (c == 0) {			/* no non-ctiter characters */
-		*wlasttoken = NULL;
-		return (NULL);
-	}
-	tok = s - 1;
-
-	/*
-	 * Scan token (scan for ctiters: s += strcspn(s, ct), sort of).
-	 * Note that ct must have one NUL; we stop if we see that, too.
-	 */
-	for (;;) {
-		c = *s;
-		s++;
-		spanp = ct;
-		do {
-			if ((sc = *spanp) == c) {
-				if (c == 0)
-					s = NULL;
-				else
-					s[-1] = 0;
-				*wlasttoken = s;
-				return (tok);
-			}
-			spanp++;
-		} while (sc != 0);
-	}
-	/* NOTREACHED */
+/*********************************************************************
+ *		wcstok  (MSVCRT.@)
+ */
+wchar_t * CDECL wcstok( wchar_t *str, const wchar_t *delim )
+{
+    return wcstok_s(str, delim, &msvcrt_get_thread_data()->wcstok_next);
 }

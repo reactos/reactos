@@ -12,9 +12,8 @@
 	<!--	__MINGW_IMPORT needs to be defined differently because it's defined
 		as dllimport by default, which is invalid from GCC 4.1.0 on!	-->
 	<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
-
-	<library>crt</library>
 	<library>wine</library>
+	<library>crt</library>
 	<library>ntdll</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>

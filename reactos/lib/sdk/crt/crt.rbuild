@@ -457,7 +457,6 @@
 		<file>ctype.c</file>
 		<file>itoa.c</file>
 		<file>itow.c</file>
-		<file>lasttok.c</file>
 		<file>scanf.c</file>
 		<file>splitp.c</file>
 		<file>strcoll.c</file>
@@ -546,7 +545,6 @@
 		<file>wcstok.c</file>
 		<file>wcsupr.c</file>
 		<file>wcsxfrm.c</file>
-		<file>wlasttok.c</file>
 	</directory>
 	<directory name="wine">
 		<file>heap.c</file>

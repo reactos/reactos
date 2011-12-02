@@ -103,8 +103,7 @@ _gmtime_worker(struct tm *ptm, __time64_t time, int do_dst)
 struct tm *
 _gmtime64(const __time64_t * ptime)
 {
-    PTHREADDATA pThreadData;
-    struct tm *ptm;
+    thread_data_t *data = msvcrt_get_thread_data();
 
     /* Validate parameters */
     if (!ptime || *ptime < 0)
@@ -112,12 +111,11 @@ _gmtime64(const __time64_t * ptime)
         return NULL;
     }
 
-    /* Get pointer to TLS tm buffer */
-    pThreadData = GetThreadData();
-    ptm = &pThreadData->tmbuf;
+    if(!data->time_buffer)
+        data->time_buffer = malloc(sizeof(struct tm));
 
     /* Use _gmtime_worker to do the real work */
-    return _gmtime_worker(ptm, *ptime, 0);
+    return _gmtime_worker(data->time_buffer, *ptime, 0);
 }
 
 /******************************************************************************

@@ -352,7 +352,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame 
     void *addr, *object = (void *)rec->ExceptionInformation[1];
     struct catch_func_nested_frame nested_frame;
     int trylevel = frame->trylevel;
-    MSVCRT_thread_data *thread_data = msvcrt_get_thread_data();
+    thread_data_t *thread_data = msvcrt_get_thread_data();
     DWORD save_esp = ((DWORD*)frame)[-1];
 
     for (i = 0; i < descr->tryblock_count; i++)
@@ -529,7 +529,7 @@ __ASM_GLOBAL_FUNC( __CxxFrameHandler,
  *
  * Callback meant to be used as UnwindFunc for setjmp/longjmp.
  */
-void __stdcall __CxxLongjmpUnwind( const struct MSVCRT___JUMP_BUFFER *buf )
+void __stdcall __CxxLongjmpUnwind( const struct __JUMP_BUFFER *buf )
 {
     cxx_exception_frame *frame = (cxx_exception_frame *)buf->Registration;
     const cxx_function_descr *descr = (const cxx_function_descr *)buf->UnwindData[0];
