@@ -14,7 +14,7 @@
 #include <winbase.h>
 #include <winnt.h>
 
-#include <internal\wine\eh.h>
+#include <internal/wine/eh.h>
 
 typedef struct MSVCRT_threadlocaleinfostruct {
     int refcount;
