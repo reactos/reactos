@@ -15,11 +15,9 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
-    UINT i;
-    struct pbuf *p1;
-    
+
     /* The caller frees the pbuf struct */
-    
+
     if (((*(u8_t*)p->payload) & 0xF0) == 0x40)
     {
         Header = p->payload;
@@ -47,18 +45,17 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     }
     
     GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.ContigSize);
-    
-    for (i = 0, p1 = p; i < p->tot_len; i += p1->len, p1 = p1->next)
-    {
-        ASSERT(p1);
-        RtlCopyMemory(((PUCHAR)Packet.Header) + i, p1->payload, p1->len);
-    }
-    
+
+    ASSERT(p->tot_len == p->len);
+    ASSERT(Packet.ContigSize == p->len);
+
+    RtlCopyMemory(Packet.Header, p->payload, p->len);
+
     Packet.HeaderSize = sizeof(IPv4_HEADER);
     Packet.TotalSize = p->tot_len;
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
-    
+
     NdisStatus = IPSendDatagram(&Packet, NCE);
     FreeNdisPacket(Packet.NdisPacket);
     if (!NT_SUCCESS(NdisStatus))
