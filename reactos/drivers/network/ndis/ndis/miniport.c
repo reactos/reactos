@@ -2790,8 +2790,9 @@ NdisMSetAttributesEx(
   if (CheckForHangTimeInSeconds > 0)
       Adapter->NdisMiniportBlock.CheckForHangSeconds = CheckForHangTimeInSeconds;
   if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
-    NDIS_DbgPrint(MAX_TRACE, ("Intermediate drivers not supported yet.\n"));
+    NDIS_DbgPrint(MIN_TRACE, ("Intermediate drivers not supported yet.\n"));
 
+  NDIS_DbgPrint(MIN_TRACE, ("Miniport attribute flags: 0x%x\n", AttributeFlags));
 
   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.AdapterShutdownHandler)
   {
