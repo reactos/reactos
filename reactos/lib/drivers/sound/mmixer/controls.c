@@ -468,6 +468,15 @@ MMixerCountMixerControls(
     /* get next nodes */
     MMixerGetNextNodesFromPinIndex(MixerContext, Topology, PinId, bUpStream, &NodesCount, Nodes);
 
+    if (NodesCount > 1)
+    {
+        /* FIXME: the pin is connected by several nodes */
+        DPRINT1("Topology split detected at Pin %lu bUpStream %lu NodesCount %lu", PinId, bUpStream, NodesCount);
+        for(NodeIndex = 0; NodeIndex < NodesCount; NodeIndex++)
+           DPRINT1("Pin Connected from Node %lu", Nodes[NodeIndex]);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+
     /* assume no topology split before getting line terminator */
     ASSERT(NodesCount == 1);
 
@@ -1168,7 +1177,7 @@ MMixerAddMixerControlsToDestinationLine(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* out of memory */
-        return MM_STATUS_NO_MEMORY;
+        return Status;
     }
 
     /* get all destination line controls */
