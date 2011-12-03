@@ -1033,11 +1033,11 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         /* Check for user-mode parameters */
         if (PreviousMode != KernelMode)
         {
-            /* Make sure they are writable */
-            ProbeForWritePointer(UBaseAddress);
-            ProbeForWriteUlong(URegionSize);
+            /* Make sure they are readable */
+            ProbeForReadPointer(UBaseAddress);
+            ProbeForReadUlong(URegionSize);
         }
-        
+
         /* Capture their values */
         PBaseAddress = *UBaseAddress;
         PRegionSize = *URegionSize;
@@ -1183,9 +1183,27 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         goto unlock_deref_and_return;
     }
 
-    /* Copy rounded values back in success case */
-    *UBaseAddress = BaseAddress;
-    *URegionSize = RegionSize;
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Check for user-mode parameters */
+        if (PreviousMode != KernelMode)
+        {
+            /* Make sure they are writable */
+            ProbeForWritePointer(UBaseAddress);
+            ProbeForWriteUlong(URegionSize);
+        }
+
+        /* Copy rounded values back in success case */
+        *UBaseAddress = BaseAddress;
+        *URegionSize = RegionSize;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Failed to copy values back! (Status: 0x%x)\n", Status);
+    }
+    _SEH2_END;
 
 unlock_deref_and_return:
     MmUnlockAddressSpace(AddressSpace);
