@@ -20,7 +20,8 @@ FindPropertyHandler(
     IN ULONG OutputBufferLength,
     OUT PVOID OutputBuffer,
     OUT PFNKSHANDLER *PropertyHandler,
-    OUT PKSPROPERTY_SET * Set)
+    OUT PKSPROPERTY_SET * Set,
+    OUT PKSPROPERTY_ITEM *PropertyItem)
 {
     ULONG Index, ItemIndex;
 
@@ -50,6 +51,7 @@ FindPropertyHandler(
 
                     /* store property set */
                     *Set = (PKSPROPERTY_SET)&PropertySet[Index];
+                    *PropertyItem = (PKSPROPERTY_ITEM)&PropertySet[Index].PropertyItem[ItemIndex];
 
                     if (Property->Flags & KSPROPERTY_TYPE_SET)
                     {
@@ -132,12 +134,14 @@ KspPropertyHandler(
     IN  ULONG PropertyItemSize OPTIONAL)
 {
     PKSPROPERTY Property;
+    PKSPROPERTY_ITEM PropertyItem;
     PKSPROPERTY_SET Set;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
     PFNKSHANDLER PropertyHandler = NULL;
     ULONG Index, InputBufferLength, OutputBufferLength, TotalSize;
     LPGUID Guid;
+    //UNICODE_STRING GuidBuffer;
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -248,19 +252,33 @@ KspPropertyHandler(
         Property = (PKSPROPERTY)((ULONG_PTR)Irp->AssociatedIrp.SystemBuffer + OutputBufferLength);
     }
 
-    DPRINT("KspPropertyHandler Irp %p PropertySetsCount %u PropertySet %p Allocator %p PropertyItemSize %u ExpectedPropertyItemSize %u\n", Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize, sizeof(KSPROPERTY_ITEM));
+    //RtlStringFromGUID(&Property->Set, &GuidBuffer);
+
+    //DPRINT("KspPropertyHandler Irp %p PropertySetsCount %u PropertySet %p Allocator %p PropertyItemSize %u ExpectedPropertyItemSize %u\n", Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize, sizeof(KSPROPERTY_ITEM));
+    //DPRINT("PropertyId %lu PropertyFlags %x Guid %S\n", Property->Id, Property->Flags, GuidBuffer.Buffer);
+
+    //RtlFreeUnicodeString(&GuidBuffer);
 
     /* sanity check */
     ASSERT(PropertyItemSize == 0 || PropertyItemSize == sizeof(KSPROPERTY_ITEM));
 
     /* find the property handler */
-    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, InputBufferLength, OutputBufferLength, Irp->AssociatedIrp.SystemBuffer, &PropertyHandler, &Set);
+    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, InputBufferLength, OutputBufferLength, Irp->AssociatedIrp.SystemBuffer, &PropertyHandler, &Set, &PropertyItem);
 
     if (NT_SUCCESS(Status) && PropertyHandler)
     {
-        /* call property handler */
+        /* store set */
         KSPROPERTY_SET_IRP_STORAGE(Irp) = Set;
-        Status = PropertyHandler(Irp, Property, Irp->AssociatedIrp.SystemBuffer);
+
+        /* are any custom property item sizes used */
+        if (PropertyItemSize)
+        {
+            /* store custom property item */
+            KSPROPERTY_ITEM_IRP_STORAGE(Irp) = PropertyItem;
+        }
+
+        /* call property handler */
+        Status = PropertyHandler(Irp, Property, (OutputBufferLength > 0 ? Irp->AssociatedIrp.SystemBuffer : NULL));
 
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
