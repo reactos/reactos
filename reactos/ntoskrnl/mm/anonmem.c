@@ -1090,8 +1090,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     BaseAddress = (PVOID)PAGE_ROUND_DOWN((PBaseAddress));
-    RegionSize = PAGE_ROUND_UP((ULONG_PTR)(PBaseAddress) + (PRegionSize)) -
-        PAGE_ROUND_DOWN((PBaseAddress));
 
     AddressSpace = &Process->Vm;
 
@@ -1099,26 +1097,69 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
     if (MemoryArea == NULL)
     {
-        Status = STATUS_UNSUCCESSFUL;
+        DPRINT1("Unable to find memory area from address 0x%p\n", BaseAddress);
+        Status = STATUS_UNABLE_TO_FREE_VM;
         goto unlock_deref_and_return;
+    }
+
+    if (PRegionSize != 0)
+    {
+        /* Use the region the caller wanted, rounded to whole pages */
+        RegionSize = PAGE_ROUND_UP((ULONG_PTR)(PBaseAddress) + (PRegionSize)) -
+        PAGE_ROUND_DOWN((PBaseAddress));
+    }
+    else
+    {
+        /* The caller wanted the whole memory area */
+        RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+                     (ULONG_PTR)MemoryArea->StartingAddress;
     }
 
     switch (FreeType)
     {
     case MEM_RELEASE:
-        /* We can only free a memory area in one step. */
-        if (MemoryArea->StartingAddress != BaseAddress ||
-                MemoryArea->Type != MEMORY_AREA_VIRTUAL_MEMORY)
+        /* MEM_RELEASE must be used with the exact base and length
+         * that was returned by NtAllocateVirtualMemory */
+            
+        /* Verify the base address is correct */
+        if (MemoryArea->StartingAddress != BaseAddress)
         {
-            Status = STATUS_UNSUCCESSFUL;
+            DPRINT1("Base address is illegal for MEM_RELEASE (0x%p != 0x%p)\n",
+                    MemoryArea->StartingAddress,
+                    BaseAddress);
+            Status = STATUS_UNABLE_TO_FREE_VM;
+            goto unlock_deref_and_return;
+        }
+
+        /* Verify the region size is correct */
+        if ((ULONG_PTR)MemoryArea->StartingAddress + RegionSize !=
+            (ULONG_PTR)MemoryArea->EndingAddress)
+        {
+            DPRINT1("Region size is illegal for MEM_RELEASE (0x%x)\n", RegionSize);
+            Status = STATUS_UNABLE_TO_FREE_VM;
+            //goto unlock_deref_and_return;
+        }
+
+        if (MemoryArea->Type != MEMORY_AREA_VIRTUAL_MEMORY)
+        {
+            DPRINT1("Memory area is not VM\n");
+            Status = STATUS_UNABLE_TO_FREE_VM;
             goto unlock_deref_and_return;
         }
 
         MmFreeVirtualMemory(Process, MemoryArea);
         Status = STATUS_SUCCESS;
-        goto unlock_deref_and_return;
+        break;
 
     case MEM_DECOMMIT:
+        if ((ULONG_PTR)BaseAddress + RegionSize >
+            (ULONG_PTR)MemoryArea->EndingAddress)
+        {
+            DPRINT1("Invald base address (0x%p) and region size (0x%x) for MEM_DECOMMIT\n",
+                    BaseAddress, RegionSize);
+            Status = STATUS_UNABLE_TO_FREE_VM;
+            goto unlock_deref_and_return;
+        }
         Status = MmAlterRegion(AddressSpace,
             MemoryArea->StartingAddress,
             (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW) ?
@@ -1129,13 +1170,24 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
             MEM_RESERVE,
             PAGE_NOACCESS,
             MmModifyAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("MmAlterRegion failed with status 0x%x\n", Status);
+            Status = STATUS_UNABLE_TO_FREE_VM;
+            goto unlock_deref_and_return;
+        }
+        break;
+
+    default:
+        Status = STATUS_NOT_IMPLEMENTED;
         goto unlock_deref_and_return;
     }
 
-    Status = STATUS_NOT_IMPLEMENTED;
+    /* Copy rounded values back in success case */
+    *UBaseAddress = BaseAddress;
+    *URegionSize = RegionSize;
 
-    unlock_deref_and_return:
-
+unlock_deref_and_return:
     MmUnlockAddressSpace(AddressSpace);
     if (Attached) KeUnstackDetachProcess(&ApcState);
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
