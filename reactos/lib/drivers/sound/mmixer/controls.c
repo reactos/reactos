@@ -468,12 +468,15 @@ MMixerCountMixerControls(
     /* get next nodes */
     MMixerGetNextNodesFromPinIndex(MixerContext, Topology, PinId, bUpStream, &NodesCount, Nodes);
 
-    if (NodesCount > 1)
+    if (NodesCount == 0)
     {
-        /* FIXME: the pin is connected by several nodes */
-        DPRINT1("Topology split detected at Pin %lu bUpStream %lu NodesCount %lu", PinId, bUpStream, NodesCount);
-        for(NodeIndex = 0; NodeIndex < NodesCount; NodeIndex++)
-           DPRINT1("Pin Connected from Node %lu", Nodes[NodeIndex]);
+        /* a pin which is not connected from any node
+         * a) it is a topology bug (driver bug)
+         * b) the request is from an alternative mixer
+              alternative mixer code scans all pins which have not been used and tries to build lines
+         */
+        DPRINT1("MMixerCountMixerControls PinId %lu is not connected by any node\n", PinId);
+        MMixerPrintTopology(Topology);
         return MM_STATUS_UNSUCCESSFUL;
     }
 
