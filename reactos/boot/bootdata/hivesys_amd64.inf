@@ -981,10 +981,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x000006
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Boot Bus Extender", \
  "System Bus Extender", \
- "SCSI Port", \
  "SCSI Miniport", \
  "Primary Disk", \
- "SCSI Class Helper", \
  "SCSI Class", \
  "Boot File System", \
  "Base", \
@@ -1149,13 +1147,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Type",0x00010001,0x00000001
 
-; Class2 driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Group",0x00000000,"SCSI Class Helper"
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ImagePath",0x00020000,"system32\drivers\class2.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Type",0x00010001,0x00000001
-
 ; Debug output driver
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Group",0x00000000,"Debug"
@@ -1309,13 +1300,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Group",0x00000000," RPC Service"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
-
-; Scsiport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group",0x00000000,"SCSI Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system32\drivers\scsiport.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
 
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"

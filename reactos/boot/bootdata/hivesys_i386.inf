@@ -1080,10 +1080,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x000006
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Boot Bus Extender", \
  "System Bus Extender", \
- "SCSI Port", \
  "SCSI Miniport", \
  "Primary Disk", \
- "SCSI Class Helper", \
  "SCSI Class", \
  "Boot File System", \
  "Base", \
@@ -1248,13 +1246,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Group",0x00000000,"SCSI Class"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ImagePath",0x00020000,"system32\drivers\cdrom.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Type",0x00010001,0x00000001
-
-; Class2 driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Group",0x00000000,"SCSI Class Helper"
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ImagePath",0x00020000,"system32\drivers\class2.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Type",0x00010001,0x00000001
 
 ; Debug output driver
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ErrorControl",0x00010001,0x00000000
@@ -1619,13 +1610,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ObjectName",0x00000000,"LocalSys
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
-; Scsiport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group",0x00000000,"SCSI Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system32\drivers\scsiport.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
-
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DisplayName",0x00000000,"Printer Spooler"
@@ -1777,6 +1761,6 @@ HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 
 ; Debug channels
-;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+advapi,+testsvc,+wkssvc"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+ole,+rpc"
 
 ; EOF
