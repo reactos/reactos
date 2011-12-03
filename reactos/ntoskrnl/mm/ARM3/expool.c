@@ -686,7 +686,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     // There were no free entries left, so we have to allocate a new fresh page
     //
     Entry = MiAllocatePoolPages(PoolType, PAGE_SIZE);
-    ASSERT(Entry != NULL);
+    if (Entry == NULL)
+        return NULL;
+
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
     Entry->PoolType = PoolType + 1;
