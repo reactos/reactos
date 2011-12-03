@@ -7,6 +7,7 @@ list(APPEND SOURCE
     debug_ros.c
     loader.c
     wctype.c
+    register.c
 #    string.c implements _stricmp, already shipped with crt
 )
 
