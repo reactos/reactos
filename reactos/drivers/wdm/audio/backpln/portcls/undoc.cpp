@@ -6,6 +6,8 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#undef NDEBUG
+#define YDEBUG
 #include "private.hpp"
 
 NTSTATUS
@@ -92,6 +94,7 @@ PcHandlePropertyWithTable(
     // store device descriptor
     KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
 
+
     // then try KsPropertyHandler 
     return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 }
@@ -154,7 +157,7 @@ PropertyItemDispatch(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     // get input property request
-    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    Property = (PKSPROPERTY)Request;
 
     // get property set
     PropertySet = (PKSPROPERTY_SET)KSPROPERTY_SET_IRP_STORAGE(Irp);
@@ -209,7 +212,7 @@ PropertyItemDispatch(
 
     // store value size
     PropertyRequest->ValueSize = ValueSize;
-    PropertyRequest->Value = (ValueSize != 0 ? Irp->UserBuffer : NULL);
+    PropertyRequest->Value = Data;
 
     // now scan the property set for the attached property set item stored in Relations member
     if (PropertySet)
@@ -273,14 +276,14 @@ PropertyItemDispatch(
     if (PropertyRequest->PropertyItem && PropertyRequest->PropertyItem->Handler)
     {
         // now call the handler
-        //UNICODE_STRING GuidBuffer;
-        //RtlStringFromGUID(Property->Set, &GuidBuffer);
-        //DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
-        //        PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
-        //        PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
-
+        UNICODE_STRING GuidBuffer;
+        RtlStringFromGUID(Property->Set, &GuidBuffer);
+        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+                PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
+                PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
+        RtlFreeUnicodeString(&GuidBuffer);
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
-        //DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
+        DPRINT1("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
         if (Status != STATUS_PENDING)
@@ -652,7 +655,7 @@ PcCreateSubdeviceDescriptor(
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
     Descriptor->InterfaceCount = InterfaceCount;
 
-    //DumpFilterDescriptor(FilterDescription);
+    DumpFilterDescriptor(FilterDescription);
 
     // are any property sets supported by the portcls
     if (FilterPropertiesCount)
