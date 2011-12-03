@@ -3,6 +3,7 @@
 <group>
 <module name="psdk" type="idlheader">
 	<dependency>bugcodes</dependency>
+	<file>atliface.idl</file>
 	<file>activaut.idl</file>
 	<file>activdbg.idl</file>
 	<file>activscp.idl</file>
@@ -35,6 +36,7 @@
 	<file>mstask.idl</file>
 	<file>msxml.idl</file>
 	<file>msxml2.idl</file>
+	<file>msxml6.idl</file>
 	<file>netfw.idl</file>
 	<file>netcon.idl</file>
 	<file>oaidl.idl</file>
@@ -70,7 +72,6 @@
 	<file>mimeole.idl</file>
 	<file>mscoree.idl</file>
 	<file>mshtmhst.idl</file>
-	<file>msxml6.idl</file>
 	<file>exdisp.idl</file>
 	<file>winsxs.idl</file>
 	<file>wtypes.idl</file>

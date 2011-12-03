@@ -11,6 +11,7 @@ list(APPEND SOURCE
     asptlb.idl
 #   asynot.idl
 #   asysta.idl
+    atliface.idl
     bdaiface.idl
 #   binres.idl
     bits.idl
