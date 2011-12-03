@@ -116,16 +116,16 @@ END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy Profile"
+CAPTION "Kopírovat profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT        "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "Z:", IDC_STATIC, 5, 10, 20, 8
     LTEXT        "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT        "To:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT        "Do:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT     IDC_COPYPROFILETO, 30, 30, 160, 12
 
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
-    PUSHBUTTON   "Cancel", IDCANCEL, 199, 30, 50, 14
+    PUSHBUTTON   "Storno", IDCANCEL, 199, 30, 50, 14
 END
 
 
@@ -308,6 +308,6 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Systémový aplet kontrolních panelù"
     IDS_WARNINITIALSIZE "Zadejte èíselnou hodnotu pro úvodní velikost stránkovacího souboru."
     IDS_WARNMAXIMUMSIZE "Zadejte èíselnou hodnotu pro maximální velikost stránkovacího souboru."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB and must not exceed the available space on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size and must not exceed the available space on the selected drive."
+    IDS_WARNINITIALRANGE "Výchozí velikost stránkovacího souboru nesmí být menší než 2 MB a nesmí pøekroèit množství volného místa na zvolené diskové jednotce."
+    IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost výchozí a nesmí pøekroèit množství volného místa na zvolené diskové jednotce."
 END

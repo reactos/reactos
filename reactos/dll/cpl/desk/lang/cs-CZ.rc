@@ -11,18 +11,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Pozadí"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "", IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 80, 0
-    CONTROL         "", IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
+    CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
     LTEXT           "Vyberte obrázek, který chcete použít jako pozadí",
                     IDC_STATIC, 8, 103, 180, 9
-    PUSHBUTTON      "&Vybrat...",IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&Barva...",IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "Umístìní",IDC_STATIC, 188, 138, 36, 9
+    PUSHBUTTON      "&Vybrat...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Barva...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "Umístìní", IDC_STATIC, 188, 138, 36, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
-					CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
@@ -42,10 +42,10 @@ BEGIN
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
     LTEXT           "minut", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Chránit &heslem.", IDC_SCREENS_USEPASSCHK, "button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+    CONTROL         "Chránit &heslem", IDC_SCREENS_USEPASSCHK, "button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
     GROUPBOX        "Napájení monitoru", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "Pro nastavení napájení Vašeho monitoru, kliknìte na Napájení.",
+    LTEXT           "Pro nastavení napájení Vašeho monitoru, kliknìte na Napájení",
                     IDC_STATIC, 14, 166, 146, 20
     PUSHBUTTON      "Na&pájení...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
@@ -57,11 +57,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-	LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
+    LTEXT           "Styl", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Položka", IDC_STATIC, 7, 160, 64, 7
+    LTEXT           "Schéma", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "&Efekty...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Upøesnit", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
@@ -132,13 +132,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Tažením nastavte ikony monitorù, aby odpovídaly fyzickému uspoøádání vašich monitorù.",-1,3,3,240,10
+    LTEXT           "Tažením nastavte ikony monitorù, aby odpovídaly fyzickému uspoøádání vašich monitorù.",-1,3,3,240,20
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Obrazovka",1820,3,107,38,8
     LTEXT           "<není>",IDC_SETTINGS_DEVICE,9,116,224,8
     GROUPBOX        "&Velikost obrazovky",1818,3,127,115,43
-    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    30,137,58,17
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT           "Menší",1815,9,137,18,8,NOT WS_GROUP
     LTEXT           "Vìtší",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
@@ -146,7 +146,7 @@ BEGIN
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
-    PUSHBUTTON      "R&ozšíøené nastavení...",IDC_SETTINGS_ADVANCED,170,174,70,14
+    PUSHBUTTON      "&Upøesnit",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
