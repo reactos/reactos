@@ -899,13 +899,13 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
         {
             /* Call has no space for it, fail, add the trailing slash */
             RtlReleasePebLock();
-            return Bytes + sizeof(L'\\');
+            return Bytes + sizeof(OBJ_NAME_PATH_SEPARATOR);
         }
     }
     else
     {
         /* Check if caller does not have enough space */
-        if (MaximumLength <= Bytes)
+        if (MaximumLength < Bytes)
         {
             /* Call has no space for it, fail */
             RtlReleasePebLock();
@@ -917,7 +917,7 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
     RtlCopyMemory(Buffer, CurDirName, Bytes);
 
     /* The buffer should end with a path separator */
-    ASSERT(Buffer[Length - 1] == L'\\');
+    ASSERT(Buffer[Length - 1] == OBJ_NAME_PATH_SEPARATOR);
 
     /* Again check for our two cases (drive root vs path) */
     if ((Length <= 1) || (Buffer[Length - 2] != L':'))
