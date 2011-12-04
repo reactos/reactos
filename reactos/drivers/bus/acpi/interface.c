@@ -139,6 +139,6 @@ Bus_PDO_QueryInterface(PPDO_DEVICE_DATA DeviceData,
   else
   {
       DPRINT1("Invalid GUID\n");
-      return STATUS_INVALID_PARAMETER;
+      return STATUS_NOT_SUPPORTED;
   }
 }
