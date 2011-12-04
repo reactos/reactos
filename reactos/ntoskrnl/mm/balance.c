@@ -239,7 +239,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    /*
     * Make sure we don't exceed our individual target.
     */
-   PagesUsed = InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed) + 1;
+   PagesUsed = InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
    if (PagesUsed > MiMemoryConsumers[Consumer].PagesTarget &&
        !MiIsBalancerThread())
    {
@@ -275,6 +275,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       if (!CanWait)
       {
          (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+         MmRebalanceMemoryConsumers();
          return(STATUS_NO_MEMORY);
       }
 
