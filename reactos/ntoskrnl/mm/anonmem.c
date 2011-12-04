@@ -1033,9 +1033,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         /* Check for user-mode parameters */
         if (PreviousMode != KernelMode)
         {
-            /* Make sure they are readable */
-            ProbeForReadPointer(UBaseAddress);
-            ProbeForReadUlong(URegionSize);
+            /* Make sure they are writeable */
+            ProbeForWritePointer(UBaseAddress);
+            ProbeForWriteUlong(URegionSize);
         }
 
         /* Capture their values */
@@ -1186,14 +1186,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     /* Enter SEH */
     _SEH2_TRY
     {
-        /* Check for user-mode parameters */
-        if (PreviousMode != KernelMode)
-        {
-            /* Make sure they are writable */
-            ProbeForWritePointer(UBaseAddress);
-            ProbeForWriteUlong(URegionSize);
-        }
-
         /* Copy rounded values back in success case */
         *UBaseAddress = BaseAddress;
         *URegionSize = RegionSize;
