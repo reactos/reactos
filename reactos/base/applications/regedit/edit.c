@@ -1127,7 +1127,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
             size_t llen, listlen, nl_len;
             LPTSTR src, lines = NULL;
 
-            if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+            if (!(stringValueData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, valueDataLen + sizeof(TCHAR))))
             {
                 error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
                 goto done;

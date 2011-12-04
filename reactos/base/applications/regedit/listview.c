@@ -186,7 +186,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             if(dwCount >= 2)
             {
                 src = (LPTSTR)ValBuf;
-                str = HeapAlloc(GetProcessHeap(), 0, dwCount);
+                str = HeapAlloc(GetProcessHeap(), 0, dwCount + sizeof(TCHAR));
                 if(str != NULL)
                 {
                     *str = _T('\0');
