@@ -890,7 +890,14 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
     Length = CurDir->DosPath.Length / sizeof(WCHAR);
     ASSERT((CurDirName != NULL) && (Length > 0));
 
-    /* Check for x:\ vs x:\path\foo (note the trailing slash) */
+    /* 
+     * DosPath.Buffer should always have a trailing slash. There is an assert
+     * below which checks for this.
+     *
+     * This function either returns x:\ for a root (keeping the original buffer)
+     * or it returns x:\path\foo for a directory (replacing the trailing slash
+     * with a NULL.
+     */
     Bytes = Length * sizeof(WCHAR);
     if ((Length <= 1) || (CurDirName[Length - 2] == L':'))
     {
