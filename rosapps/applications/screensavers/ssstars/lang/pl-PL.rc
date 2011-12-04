@@ -25,14 +25,14 @@ BEGIN
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
     GROUPBOX        "Zaawansowane",IDC_STATIC,16,180,260,72
-    CONTROL         "W³¹cz ³¹czenie t³a",IDC_CHECK_DOBLENDING,
+    CONTROL         "WÅ‚Ä…cz Å‚Ä…czenie tÅ‚a",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,110,10
-    CONTROL         "W³¹cz precyzyjn¹ poprawê perspektywy",
+    CONTROL         "WÅ‚Ä…cz precyzyjnÄ… poprawÄ™ perspektywy",
                     IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,24,208,142,10
-    CONTROL         "W³¹cz filtrowanie tekstur",IDC_CHECK_FILTERING,
+    CONTROL         "WÅ‚Ä…cz filtrowanie tekstur",IDC_CHECK_FILTERING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,90,10
-    CONTROL         "W³¹cz wyg³adzanie cieni",IDC_CHECK_SHADING,"Button",
+    CONTROL         "WÅ‚Ä…cz wygÅ‚adzanie cieni",IDC_CHECK_SHADING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,24,232,100,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
     PUSHBUTTON      "Anuluj",IDCANCEL,120,260,52,16

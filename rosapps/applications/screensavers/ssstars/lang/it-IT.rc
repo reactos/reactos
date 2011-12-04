@@ -14,7 +14,7 @@ BEGIN
                     TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
     CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
                     SS_CENTERIMAGE,WS_EX_STATICEDGE
-    RTEXT           "Velocit‡:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    RTEXT           "Velocit≈ï:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,96,137,140,12
     CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
