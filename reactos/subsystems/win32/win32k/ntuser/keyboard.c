@@ -841,7 +841,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL) &&
         (wVk == VK_ESCAPE || wVk == VK_TAB))
     {
-       TRACE("Alt-Tab/Esc Pressed wParam %x\n",Msg.wParam);
+       TRACE("Alt-Tab/Esc Pressed wParam %x\n",wVk);
     }
 
     /* If we have a focus queue, post a keyboard message */
@@ -1065,6 +1065,17 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     LARGE_INTEGER LargeTickCount;
     BOOL bResult = FALSE;
 
+    switch(lpMsg->message)
+    {
+       case WM_KEYDOWN:
+       case WM_KEYUP:
+       case WM_SYSKEYDOWN:
+       case WM_SYSKEYUP:
+          break;
+       default:
+          return FALSE;
+    }
+
     pWnd = UserGetWindowObject(lpMsg->hwnd);
     if (!pWnd) // Must have a window!
     {
@@ -1073,7 +1084,14 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     }
 
     pti = pWnd->head.pti;
-    pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
+
+    if (!pti->KeyboardLayout)
+    {
+       pti->KeyboardLayout = W32kGetDefaultKeyLayout();
+       pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
+    }
+    else
+       pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
     if (!pKbdTbl)
         return FALSE;
 
