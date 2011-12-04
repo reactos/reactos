@@ -16,13 +16,13 @@
 #define NDEBUG
 #include <debug.h>
 
-
 typedef INT (WINAPI *MessageBoxW_Proc) (HWND, LPCWSTR, LPCWSTR, UINT);
 
 /* GLOBALS *******************************************************************/
 
 static UNICODE_STRING CommandLineStringW;
 static ANSI_STRING CommandLineStringA;
+UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
 
 static BOOL bCommandLineInitialized = FALSE;
 
@@ -33,7 +33,6 @@ LPSTARTUPINFOA lpLocalStartupInfo = NULL;
 VOID WINAPI
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
-UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
 PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 #define CMD_STRING L"cmd /c "
@@ -219,13 +218,13 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     {
         return NULL;
     }
-    
+
     Status = BasepNotifyCsrOfThread(hThread, ClientId);
     if (!NT_SUCCESS(Status))
     {
         ASSERT(FALSE);
     }
-    
+
     /* Success */
     return hThread;
 }
@@ -580,15 +579,17 @@ BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
     DPRINT("BasepCopyHandles %p %p, %d\n", Params, PebParams, InheritHandles);
 
     /* Copy the handle if we are inheriting or if it's a console handle */
-    if (InheritHandles || IsConsoleHandle(PebParams->StandardInput))
+    if ((InheritHandles) || (IsConsoleHandle(PebParams->StandardInput)))
     {
         Params->StandardInput = PebParams->StandardInput;
     }
-    if (InheritHandles || IsConsoleHandle(PebParams->StandardOutput))
+
+    if ((InheritHandles) || (IsConsoleHandle(PebParams->StandardOutput)))
     {
         Params->StandardOutput = PebParams->StandardOutput;
     }
-    if (InheritHandles || IsConsoleHandle(PebParams->StandardError))
+
+    if ((InheritHandles) || (IsConsoleHandle(PebParams->StandardError)))
     {
         Params->StandardError = PebParams->StandardError;
     }
@@ -596,18 +597,18 @@ BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
 
 NTSTATUS
 WINAPI
-BasepInitializeEnvironment(HANDLE ProcessHandle,
-                           PPEB Peb,
-                           LPWSTR ApplicationPathName,
-                           LPWSTR lpCurrentDirectory,
-                           LPWSTR lpCommandLine,
-                           LPVOID lpEnvironment,
-                           SIZE_T EnvSize,
-                           LPSTARTUPINFOW StartupInfo,
-                           DWORD CreationFlags,
-                           BOOL InheritHandles)
+BasePushProcessParameters(IN HANDLE ProcessHandle,
+                          IN PPEB Peb,
+                          IN LPWSTR ApplicationPathName,
+                          IN LPWSTR lpCurrentDirectory,
+                          IN LPWSTR lpCommandLine,
+                          IN LPVOID lpEnvironment,
+                          IN SIZE_T EnvSize,
+                          IN LPSTARTUPINFOW StartupInfo,
+                          IN DWORD CreationFlags,
+                          IN BOOL InheritHandles)
 {
-    WCHAR FullPath[MAX_PATH];
+    WCHAR FullPath[MAX_PATH + 5];
     LPWSTR Remaining;
     LPWSTR DllPathString;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
@@ -620,23 +621,34 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     UNICODE_STRING Desktop, Shell, Runtime, Title;
     PPEB OurPeb = NtCurrentPeb();
     LPVOID Environment = lpEnvironment;
-
-    DPRINT("BasepInitializeEnvironment\n");
+    DPRINT("BasePushProcessParameters\n");
 
     /* Get the full path name */
-    GetFullPathNameW(ApplicationPathName,
-                     MAX_PATH,
-                     FullPath,
-                     &Remaining);
-    DPRINT("ApplicationPathName: %S, FullPath: %S\n", ApplicationPathName,
-            FullPath);
+    Size = GetFullPathNameW(ApplicationPathName,
+                            MAX_PATH + 4,
+                            FullPath,
+                            &Remaining);
+    if ((Size) && (Size <= (MAX_PATH + 4)))
+    {
+        /* Get the DLL Path */
+        DllPathString = BasepGetDllPath(ApplicationPathName, Environment);
 
-    /* Get the DLL Path */
-    DllPathString = BasepGetDllPath(FullPath, Environment);
+        /* Initialize Strings */
+        RtlInitUnicodeString(&DllPath, DllPathString);
+        RtlInitUnicodeString(&ImageName, ApplicationPathName);
+    }
+    else
+    {
+        /* Get the DLL Path */
+        DllPathString = BasepGetDllPath(FullPath, Environment);
+
+        /* Initialize Strings */
+        RtlInitUnicodeString(&DllPath, DllPathString);
+        RtlInitUnicodeString(&ImageName, FullPath);
+    }
+    DPRINT("DllPath: %wZ, ImageName: %wZ\n", DllPath, ImageName);
 
     /* Initialize Strings */
-    RtlInitUnicodeString(&DllPath, DllPathString);
-    RtlInitUnicodeString(&ImageName, FullPath);
     RtlInitUnicodeString(&CommandLine, lpCommandLine);
     RtlInitUnicodeString(&CurrentDirectory, lpCurrentDirectory);
 
@@ -663,7 +675,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     }
     else
     {
-        RtlInitUnicodeString(&Title, L"");
+        RtlInitUnicodeString(&Title, ApplicationPathName);
     }
 
     /* This one is special because the length can differ */
@@ -685,50 +697,22 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
                                         &Desktop,
                                         &Shell,
                                         &Runtime);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create process parameters!\n");
         return Status;
     }
 
-    /* Check if we got an environment. If not, use ours */
+    /* Clear the current directory handle if not inheriting */
+    if (!InheritHandles) ProcessParameters->CurrentDirectory.Handle = NULL;
+
+    /* Save pointer and start lookup */
+    Environment = ScanChar = ProcessParameters->Environment;
     if (Environment)
     {
-        /* Save pointer and start lookup */
-        Environment = ScanChar = ProcessParameters->Environment;
-    }
-    else
-    {
-        /* Save pointer and start lookup */
-        Environment = ScanChar = OurPeb->ProcessParameters->Environment;
-    }
-
-    /* Find the environment size */
-    if (ScanChar)
-    {
-        if (EnvSize && Environment == lpEnvironment)
-        {
-            /* its a converted ansi environment, bypass the length calculation */
-            EnviroSize = EnvSize;
-        }
-        else
-        {
-            while (*ScanChar)
-            {
-                ScanChar += wcslen(ScanChar) + 1;
-            }
-
-            /* Calculate the size of the block */
-            if (ScanChar == Environment)
-            {
-                EnviroSize = 2 * sizeof(WCHAR);
-            }
-            else
-            {
-                EnviroSize = (ULONG)((ULONG_PTR)ScanChar - (ULONG_PTR)Environment + sizeof(WCHAR));
-            }
-        }
+        /* Find the environment size */
+        while (*ScanChar) ScanChar += wcslen(ScanChar) + 1;
+        EnviroSize = (ULONG_PTR)ScanChar - (ULONG_PTR)Environment;
         DPRINT("EnvironmentSize %ld\n", EnviroSize);
 
         /* Allocate and Initialize new Environment Block */
@@ -743,15 +727,20 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to allocate Environment Block\n");
-            return(Status);
+            return Status;
         }
 
         /* Write the Environment Block */
-        ZwWriteVirtualMemory(ProcessHandle,
-                             ProcessParameters->Environment,
-                             Environment,
-                             EnviroSize,
-                             NULL);
+        Status = ZwWriteVirtualMemory(ProcessHandle,
+                                      ProcessParameters->Environment,
+                                      Environment,
+                                      EnviroSize,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to write Environment Block\n");
+            return Status;
+        }
     }
 
     /* Write new parameters */
@@ -766,7 +755,8 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     ProcessParameters->ShowWindowFlags = StartupInfo->wShowWindow;
 
     /* Write the handles only if we have to */
-    if (StartupInfo->dwFlags & STARTF_USESTDHANDLES)
+    if (StartupInfo->dwFlags &
+        (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE))
     {
         DPRINT("Using Standard Handles\n");
         ProcessParameters->StandardInput = StartupInfo->hStdInput;
@@ -794,7 +784,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
 
         /* Is the shell trampling on our Handles? */
         if (!(StartupInfo->dwFlags &
-              (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE)))
+             (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE)))
         {
             /* Use handles from PEB, if inheriting or they are console */
             DPRINT("Copying handles from parent\n");
@@ -805,9 +795,22 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     }
 
     /* Also set the Console Flag */
-    if (CreationFlags & CREATE_NEW_PROCESS_GROUP)
+    if ((CreationFlags & CREATE_NEW_PROCESS_GROUP) &&
+        (!(CreationFlags & CREATE_NEW_CONSOLE)))
     {
         ProcessParameters->ConsoleFlags = 1;
+    }
+    
+    /* See if the first 1MB should be reserved */
+    if ((ULONG_PTR)ApplicationPathName & 1)
+    {
+        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
+    }
+
+    /* See if the first 16MB should be reserved */
+    if ((ULONG_PTR)ApplicationPathName & 2)
+    {
+        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_16MB;
     }
 
     /* Allocate memory for the parameter block */
@@ -821,14 +824,13 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to allocate Parameters Block\n");
-        return(Status);
+        return Status;
     }
 
     /* Set the allocated size */
     ProcessParameters->MaximumLength = Size;
 
     /* Handle some Parameter Flags */
-    ProcessParameters->ConsoleFlags = (CreationFlags & CREATE_NEW_PROCESS_GROUP);
     ProcessParameters->Flags |= (CreationFlags & PROFILE_USER) ?
                                  RTL_USER_PROCESS_PARAMETERS_PROFILE_USER : 0;
     ProcessParameters->Flags |= (CreationFlags & PROFILE_KERNEL) ?
@@ -844,6 +846,11 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
                                   ProcessParameters,
                                   ProcessParameters->Length,
                                   NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write Parameters Block\n");
+        return Status;
+    }
 
     /* Write the PEB Pointer */
     Status = NtWriteVirtualMemory(ProcessHandle,
@@ -851,6 +858,14 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
                                   &RemoteParameters,
                                   sizeof(PVOID),
                                   NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write Parameters Block\n");
+        return Status;
+    }
+
+    /* FIXME: Write Peb->ImageSubSystem */
+
 
     /* Cleanup */
     RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath.Buffer);
@@ -2836,17 +2851,17 @@ GetAppName:
 
     /* Create Process Environment */
     RemotePeb = ProcessBasicInfo.PebBaseAddress;
-    Status = BasepInitializeEnvironment(hProcess,
-                                        RemotePeb,
-                                        (LPWSTR)lpApplicationName,
-                                        CurrentDirectory,
-                                        (QuotesNeeded || CmdLineIsAppName || Escape) ?
-                                        QuotedCmdLine : lpCommandLine,
-                                        lpEnvironment,
-                                        EnvSize,
-                                        &StartupInfo,
-                                        dwCreationFlags,
-                                        bInheritHandles);
+    Status = BasePushProcessParameters(hProcess,
+                                       RemotePeb,
+                                       (LPWSTR)lpApplicationName,
+                                       CurrentDirectory,
+                                       (QuotesNeeded || CmdLineIsAppName || Escape) ?
+                                       QuotedCmdLine : lpCommandLine,
+                                       lpEnvironment,
+                                       EnvSize,
+                                       &StartupInfo,
+                                       dwCreationFlags,
+                                       bInheritHandles);
 
     /* Cleanup Environment */
     if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
@@ -2906,7 +2921,7 @@ GetAppName:
         BaseSetLastNTError(Status);
         goto Cleanup;
     }
-    
+
     /* Create the first thread */
     DPRINT("Creating thread for process (EntryPoint = 0x%p)\n",
             SectionImageInfo.TransferAddress);
