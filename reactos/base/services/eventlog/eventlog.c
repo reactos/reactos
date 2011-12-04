@@ -63,6 +63,12 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
+
+            LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                            0,
+                            EVENT_EventlogStopped, 0, NULL, 0, NULL);
+
+
             /* Stop listening to incoming RPC messages */
             RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
@@ -86,6 +92,11 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT("  SERVICE_CONTROL_SHUTDOWN received\n");
+
+            LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                            0,
+                            EVENT_EventlogStopped, 0, NULL, 0, NULL);
+
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 

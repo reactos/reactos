@@ -104,6 +104,13 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
                 break;
             }
         }
+
+        /* Use the application log if the desired log does not exist */
+        if (lpLogHandle->LogFile == NULL)
+        {
+            lpLogHandle->LogFile = LogfListItemByName(L"Application");
+            lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
+        }
     }
 
     if (!lpLogHandle->LogFile)
