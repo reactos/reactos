@@ -89,10 +89,10 @@ VOID FreeIPDR(
     /* Unlink it from the list */
     RemoveEntryList(CurrentEntry);
 
-    TI_DbgPrint(DEBUG_IP, ("Freeing fragment data at (0x%X).\n", CurrentF->Data));
+    TI_DbgPrint(DEBUG_IP, ("Freeing fragment packet at (0x%X).\n", CurrentF->Packet));
 
     /* Free the fragment data buffer */
-    ExFreePoolWithTag(CurrentF->Data, FRAGMENT_DATA_TAG);
+    FreeNdisPacket(CurrentF->Packet);
 
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment at (0x%X).\n", CurrentF));
 
@@ -186,20 +186,16 @@ ReassembleDatagram(
  */
 {
   PLIST_ENTRY CurrentEntry;
-  PIP_FRAGMENT Current;
-  PVOID Data;
+  PIP_FRAGMENT Fragment;
+  PCHAR Data;
 
   TI_DbgPrint(DEBUG_IP, ("Reassembling datagram from IPDR at (0x%X).\n", IPDR));
   TI_DbgPrint(DEBUG_IP, ("IPDR->HeaderSize = %d\n", IPDR->HeaderSize));
   TI_DbgPrint(DEBUG_IP, ("IPDR->DataSize = %d\n", IPDR->DataSize));
 
-  TI_DbgPrint(DEBUG_IP, ("Fragment header:\n"));
-  //OskitDumpBuffer((PCHAR)IPDR->IPv4Header, IPDR->HeaderSize);
-
   IPPacket->TotalSize  = IPDR->HeaderSize + IPDR->DataSize;
   IPPacket->ContigSize = IPPacket->TotalSize;
   IPPacket->HeaderSize = IPDR->HeaderSize;
-  /*IPPacket->Position   = IPDR->HeaderSize;*/
 
   RtlCopyMemory(&IPPacket->SrcAddr, &IPDR->SrcAddr, sizeof(IP_ADDRESS));
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
@@ -221,15 +217,14 @@ ReassembleDatagram(
   /* Copy data from all fragments into buffer */
   CurrentEntry = IPDR->FragmentListHead.Flink;
   while (CurrentEntry != &IPDR->FragmentListHead) {
-    Current = CONTAINING_RECORD(CurrentEntry, IP_FRAGMENT, ListEntry);
+    Fragment = CONTAINING_RECORD(CurrentEntry, IP_FRAGMENT, ListEntry);
 
-    TI_DbgPrint(DEBUG_IP, ("Copying (%d) bytes of fragment data from (0x%X) to offset (%d).\n",
-      Current->Size, Data, Current->Offset));
-    /* Copy fragment data to the destination buffer at the correct offset */
-    RtlCopyMemory((PVOID)((ULONG_PTR)Data + Current->Offset),
-		  Current->Data,
-		  Current->Size);
-    //OskitDumpBuffer( Data, Current->Offset + Current->Size );
+    /* Copy fragment data into datagram buffer */
+    CopyPacketToBuffer(Data + Fragment->Offset,
+                       Fragment->Packet,
+                       Fragment->PacketOffset,
+                       Fragment->Size);
+
     CurrentEntry = CurrentEntry->Flink;
   }
 
@@ -410,24 +405,12 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Fragment descriptor allocated at (0x%X).\n", Fragment));
 
     Fragment->Size = IPPacket->TotalSize - IPPacket->HeaderSize;
-    Fragment->Data = ExAllocatePoolWithTag(NonPagedPool, Fragment->Size, FRAGMENT_DATA_TAG);
-    if (!Fragment->Data) {
-      /* We don't have the resources to process this packet, discard it */
-      ExFreeToNPagedLookasideList(&IPFragmentList, Fragment);
-      Cleanup(&IPDR->Lock, OldIrql, IPDR);
-      return;
-    }
-
-    /* Position here is an offset from the NdisPacket start, not the header */
-    TI_DbgPrint(DEBUG_IP, ("Fragment data buffer allocated at (0x%X)  Size (%d) Pos (%d).\n",
-			   Fragment->Data, Fragment->Size, IPPacket->Position));
-
-    /* Copy datagram data into fragment buffer */
-    CopyPacketToBuffer(Fragment->Data,
-		       IPPacket->NdisPacket,
-		       IPPacket->HeaderSize,
-		       Fragment->Size);
+    Fragment->Packet = IPPacket->NdisPacket;
+    Fragment->PacketOffset = IPPacket->Position + IPPacket->HeaderSize;
     Fragment->Offset = FragFirst;
+
+    /* Disassociate the NDIS packet so it isn't freed upon return from IPReceive() */
+    IPPacket->NdisPacket = NULL;
 
     /* If this is the last fragment, compute and save the datagram data size */
     if (!MoreFragments)
@@ -581,7 +564,6 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
     AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
 
-    IPPacket->Position += IPPacket->HeaderSize;
     IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
 
     TI_DbgPrint(MID_TRACE,("IPPacket->Position = %d\n",

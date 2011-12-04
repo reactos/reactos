@@ -278,22 +278,21 @@ VOID LanReceiveWorker( PVOID Context ) {
 	 ("Ether Type = %x ContigSize = %d Total = %d\n",
 	  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
 
+    /* NDIS packet is freed in all of these cases */
     switch (PacketType) {
-    case ETYPE_IPv4:
-    case ETYPE_IPv6:
-	TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
-	IPReceive(Adapter->Context, &IPPacket);
-	break;
-    case ETYPE_ARP:
-	TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
-	ARPReceive(Adapter->Context, &IPPacket);
-    break;
-    default:
-        IPPacket.Free(&IPPacket);
-	break;
+        case ETYPE_IPv4:
+        case ETYPE_IPv6:
+            TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
+            IPReceive(Adapter->Context, &IPPacket);
+            break;
+        case ETYPE_ARP:
+            TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
+            ARPReceive(Adapter->Context, &IPPacket);
+            break;
+        default:
+            IPPacket.Free(&IPPacket);
+            break;
     }
-
-    FreeNdisPacket( Packet );
 }
 
 VOID LanSubmitReceiveWork(

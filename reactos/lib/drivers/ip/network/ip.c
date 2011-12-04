@@ -30,14 +30,22 @@ TCPRegisterInterface(PIP_INTERFACE IF);
 VOID
 TCPUnregisterInterface(PIP_INTERFACE IF);
 
-VOID DontFreePacket(
+VOID DeinitializePacket(
     PVOID Object)
 /*
- * FUNCTION: Do nothing for when the IPPacket struct is part of another
+ * FUNCTION: Frees buffers attached to the packet
  * ARGUMENTS:
  *     Object = Pointer to an IP packet structure
  */
 {
+    PIP_PACKET IPPacket = Object;
+
+    /* Detect double free */
+    ASSERT(IPPacket->Type != 0xFF);
+    IPPacket->Type = 0xFF;
+
+    if (IPPacket->NdisPacket != NULL)
+        FreeNdisPacket(IPPacket->NdisPacket);
 }
 
 VOID FreeIF(
@@ -62,10 +70,9 @@ PIP_PACKET IPInitializePacket(
  *     Pointer to the created IP packet. NULL if there was not enough free resources.
  */
 {
-    /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
 
-    IPPacket->Free     = DontFreePacket;
+    IPPacket->Free     = DeinitializePacket;
     IPPacket->Type     = Type;
 
     return IPPacket;
