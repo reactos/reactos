@@ -1004,8 +1004,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     PEPROCESS Process;
     PMMSUPPORT AddressSpace;
-    PVOID BaseAddress, PBaseAddress;
-    SIZE_T RegionSize, PRegionSize;
+    PVOID BaseAddress = NULL, PBaseAddress;
+    SIZE_T RegionSize = 0, PRegionSize;
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     KAPC_STATE ApcState;
@@ -1183,22 +1183,26 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         goto unlock_deref_and_return;
     }
 
-    /* Enter SEH */
-    _SEH2_TRY
-    {
-        /* Copy rounded values back in success case */
-        *UBaseAddress = BaseAddress;
-        *URegionSize = RegionSize;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-        DPRINT1("Failed to copy values back! (Status: 0x%x)\n", Status);
-    }
-    _SEH2_END;
-
 unlock_deref_and_return:
     MmUnlockAddressSpace(AddressSpace);
+
+    /* Copy rounded values back in success case */
+    if (NT_SUCCESS(Status))
+    {
+        /* Enter SEH */
+        _SEH2_TRY
+        {
+            *UBaseAddress = BaseAddress;
+            *URegionSize = RegionSize;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            DPRINT1("Failed to copy values back! (Status: 0x%x)\n", Status);
+        }
+        _SEH2_END;
+    }
+
     if (Attached) KeUnstackDetachProcess(&ApcState);
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
