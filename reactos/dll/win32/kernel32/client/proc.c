@@ -375,201 +375,6 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
     }
 }
 
-LPWSTR
-WINAPI
-BasepGetProcessPath(DWORD Reserved,
-                    LPWSTR FullPath,
-                    PVOID Environment)
-{
-    NTSTATUS Status;
-    LPWSTR AllocatedPath = NULL, ch;
-    ULONG DefaultLength = BaseDefaultPath.Length;
-    ULONG AppLength = 0;
-    UNICODE_STRING EnvPath;
-    LPWSTR NamePtr;
-    LPWSTR PathBuffer;
-    BOOLEAN SecondAttempt = FALSE;
-    PPEB Peb = NtCurrentPeb();
-
-    if (!Environment) RtlAcquirePebLock();
-
-    /* Query PATH env var into append path */
-    Status = RtlQueryEnvironmentVariable_U(Environment,
-                                           &BasePathVariableName,
-                                           &BaseDefaultPathAppend);
-    if (NT_SUCCESS(Status))
-    {
-        /* Add up PATH environment length */
-        DefaultLength += BaseDefaultPathAppend.Length;
-    }
-    else if (Status == STATUS_BUFFER_TOO_SMALL)
-    {
-        /* We have to allocate path dynamically */
-        AllocatedPath = RtlAllocateHeap(RtlGetProcessHeap(), 0, BaseDefaultPathAppend.Length + sizeof(UNICODE_NULL));
-
-        if (AllocatedPath)
-        {
-            /* Set up EnvPath */
-            EnvPath.Buffer = AllocatedPath;
-            EnvPath.Length = BaseDefaultPathAppend.Length + sizeof(UNICODE_NULL);
-            EnvPath.MaximumLength = EnvPath.Length;
-
-            /* Query PATH env var into newly allocated path */
-            Status = RtlQueryEnvironmentVariable_U(Environment,
-                                                   &BasePathVariableName,
-                                                   &EnvPath);
-
-            if (NT_SUCCESS(Status))
-            {
-                DefaultLength += EnvPath.Length;
-            }
-            else
-            {
-                /* Free newly allocated path, it didn't work */
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPath);
-                AllocatedPath = NULL;
-                Status = STATUS_NO_MEMORY;
-            }
-        }
-    }
-
-secondattempt:
-    if (!FullPath)
-    {
-        /* Initialize BasepExeLdrEntry if necessary */
-        if (!BasepExeLdrEntry)
-            LdrEnumerateLoadedModules(0, BasepLocateExeLdrEntry, Peb->ImageBaseAddress);
-
-        DPRINT("Found BasepExeLdrEntry %wZ\n", &BasepExeLdrEntry->FullDllName);
-
-        /* Set name pointer to the full dll path */
-        NamePtr = BasepExeLdrEntry->FullDllName.Buffer;
-    }
-    else
-    {
-        /* Set name pointer to the provided path */
-        NamePtr = FullPath;
-    }
-
-    /* Determine application path length */
-    if (NamePtr)
-    {
-        ch = NamePtr;
-        while (*ch)
-        {
-            /* Check if there is a slash */
-            if (*ch == L'\\')
-            {
-                /* Update app length */
-                AppLength = (ULONG_PTR)ch - (ULONG_PTR)NamePtr + sizeof(WCHAR);
-            }
-
-            ch++;
-        }
-    }
-
-    /* Now check, if we found a valid path in the provided full path */
-    if (!AppLength && FullPath && !SecondAttempt)
-    {
-        /* We were provided with a bad full path, retry again using just this app's path */
-        FullPath = NULL;
-        SecondAttempt = TRUE;
-        goto secondattempt;
-    }
-
-    /* Allocate the path buffer */
-    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, DefaultLength + AppLength + 2*sizeof(WCHAR));
-    if (!PathBuffer)
-    {
-        /* Fail */
-        if (!Environment) RtlReleasePebLock();
-        if (AllocatedPath) RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPath);
-        return NULL;
-    }
-
-    /* Copy contents there */
-    if (AppLength)
-    {
-        /* Remove trailing slashes if it's not root dir */
-        if (AppLength != 3*sizeof(WCHAR))
-            AppLength -= sizeof(WCHAR);
-
-        /* Copy contents */
-        RtlMoveMemory(PathBuffer, NamePtr, AppLength);
-    }
-
-    /* Release the lock */
-    if (!Environment) RtlReleasePebLock();
-
-    /* Finish preparing the path string */
-    NamePtr = &PathBuffer[AppLength / sizeof(WCHAR)];
-
-    /* Put a separating ";" if something was added */
-    if (AppLength)
-    {
-        *NamePtr = L';';
-        NamePtr++;
-    }
-
-    if (AllocatedPath)
-    {
-        /* Dynamically allocated env path, copy from the static buffer,
-           concatenate with dynamic buffer and free it */
-        RtlMoveMemory(NamePtr, BaseDefaultPath.Buffer, BaseDefaultPath.Length);
-        RtlMoveMemory(&NamePtr[BaseDefaultPath.Length / sizeof(WCHAR)], AllocatedPath, EnvPath.Length);
-
-        /* Free it */
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPath);
-    }
-    else
-    {
-        /* Static env path string, copy directly from BaseDefaultPath */
-        RtlMoveMemory(NamePtr, BaseDefaultPath.Buffer, DefaultLength);
-    }
-
-    /* Null terminate the string */
-    NamePtr[DefaultLength / sizeof(WCHAR)] = 0;
-
-    return PathBuffer;
-}
-
-LPWSTR
-WINAPI
-BasepGetDllPath(LPWSTR FullPath,
-                PVOID Environment)
-{
-#if 0
-    LPWSTR DllPath = NULL;
-
-    /* Acquire DLL directory lock */
-    RtlEnterCriticalSection(&BaseDllDirectoryLock);
-
-    /* Check if we have a base dll directory */
-    if (BaseDllDirectory.Buffer)
-    {
-        /* Then get process path */
-        DllPath = BasepGetProcessPath(0, FullPath, Environment);
-
-        /* Release DLL directory lock */
-        RtlLeaveCriticalSection(&BaseDllDirectoryLock);
-
-        /* Return dll path */
-        return DllPath;
-    }
-
-    /* Release DLL directory lock */
-    RtlLeaveCriticalSection(&BaseDllDirectoryLock);
-
-    /* There is no base DLL directory */
-    UNIMPLEMENTED;
-
-    /* Return dll path */
-    return DllPath;
-#else
-    return BasepGetProcessPath(0, FullPath, Environment);
-#endif
-}
-
 VOID
 WINAPI
 BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
@@ -631,7 +436,9 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     if ((Size) && (Size <= (MAX_PATH + 4)))
     {
         /* Get the DLL Path */
-        DllPathString = BasepGetDllPath(ApplicationPathName, Environment);
+        DllPathString = BaseComputeProcessDllPath(ApplicationPathName,
+                                                  Environment);
+        if (!DllPathString) return STATUS_NO_MEMORY;
 
         /* Initialize Strings */
         RtlInitUnicodeString(&DllPath, DllPathString);
@@ -640,7 +447,8 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     else
     {
         /* Get the DLL Path */
-        DllPathString = BasepGetDllPath(FullPath, Environment);
+        DllPathString = BaseComputeProcessDllPath(FullPath, Environment);
+        if (!DllPathString) return STATUS_NO_MEMORY;
 
         /* Initialize Strings */
         RtlInitUnicodeString(&DllPath, DllPathString);

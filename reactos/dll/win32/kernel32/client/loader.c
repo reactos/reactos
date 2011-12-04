@@ -69,105 +69,6 @@ BasepMapModuleHandle(HMODULE hModule, BOOLEAN AsDataFile)
     return hModule;
 }
 
-/**
- * @name GetDllLoadPath
- *
- * Internal function to compute the load path to use for a given dll.
- *
- * @remarks Returned pointer must be freed by caller.
- */
-
-LPWSTR
-GetDllLoadPath(LPCWSTR lpModule)
-{
-	ULONG Pos = 0, Length = 4, Tmp;
-	PWCHAR EnvironmentBufferW = NULL;
-	LPCWSTR lpModuleEnd = NULL;
-	UNICODE_STRING ModuleName;
-	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
-
-    // FIXME: This function is used only by SearchPathW, and is deprecated and will be deleted ASAP.
-
-	if (lpModule != NULL && wcslen(lpModule) > 2 && lpModule[1] == ':')
-	{
-		lpModuleEnd = lpModule + wcslen(lpModule);
-	}
-	else
-	{
-		ModuleName = NtCurrentPeb()->ProcessParameters->ImagePathName;
-		lpModule = ModuleName.Buffer;
-		lpModuleEnd = lpModule + (ModuleName.Length / sizeof(WCHAR));
-	}
-
-	if (lpModule != NULL)
-	{
-		while (lpModuleEnd > lpModule && *lpModuleEnd != L'/' &&
-		       *lpModuleEnd != L'\\' && *lpModuleEnd != L':')
-		{
-			--lpModuleEnd;
-		}
-		Length = (lpModuleEnd - lpModule) + 1;
-	}
-
-	Length += GetCurrentDirectoryW(0, NULL);
-	Length += GetDllDirectoryW(0, NULL);
-	Length += GetSystemDirectoryW(NULL, 0);
-	Length += GetWindowsDirectoryW(NULL, 0);
-	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
-
-	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-	                                     (Length + 1) * sizeof(WCHAR));
-	if (EnvironmentBufferW == NULL)
-	{
-	    return NULL;
-	}
-
-	if (lpModule)
-	{
-		RtlCopyMemory(EnvironmentBufferW, lpModule,
-		              (lpModuleEnd - lpModule) * sizeof(WCHAR));
-		Pos += lpModuleEnd - lpModule;
-		EnvironmentBufferW[Pos++] = L';';
-	}
-
-    Tmp = GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
-
-	/* Make sure buffer is null terminated */
-    EnvironmentBufferW[Pos++] = UNICODE_NULL;
-
-
-	SetLastError(LastError);
-	return EnvironmentBufferW;
-}
-
 /*
  * @implemented
  */
@@ -421,9 +322,9 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
     }
 
     /* Compute the load path */
-    SearchPath = BasepGetDllPath((dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH) ? (LPWSTR)lpLibFileName : NULL,
-                                 NULL);
-
+    SearchPath = BaseComputeProcessDllPath((dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH) ?
+                                           DllName.Buffer : NULL,
+                                           NULL);
     if (!SearchPath)
     {
         /* Getting DLL path failed, so set last error, free mem and return */
@@ -766,20 +667,24 @@ GetModuleHandleForUnicodeString(PUNICODE_STRING ModuleName)
     if (NT_SUCCESS(Status)) return Module;
 
     /* If not, then the path should be computed */
-    DllPath = BasepGetDllPath(NULL, 0);
-
-    /* Call LdrGetHandle() again providing the computed DllPath
-       and wrapped into SEH */
-    _SEH2_TRY
+    DllPath = BaseComputeProcessDllPath(NULL, 0);
+    if (!DllPath)
     {
-        Status = LdrGetDllHandle(DllPath, NULL, ModuleName, &Module);
+        Status = STATUS_NO_MEMORY;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        /* Fail with the SEH error */
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_TRY
+        {
+            Status = LdrGetDllHandle(DllPath, NULL, ModuleName, &Module);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Fail with the SEH error */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
-    _SEH2_END;
 
     /* Free the DllPath */
     RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath);

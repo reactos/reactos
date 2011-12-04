@@ -33,7 +33,7 @@ DWORD IllegalMask[4] =
     0x10000000  // 7C not allowed
 };
 
-BASE_SEARCH_PATH_TYPE BaseDllOrderCurrent[BaseCurrentDirMax][BaseSearchPathMax] =
+BASE_SEARCH_PATH_TYPE BaseDllOrderCurrent[BaseCurrentDirPlacementMax][BaseSearchPathMax] =
 {
     {
         BaseSearchPathApp,
@@ -78,7 +78,38 @@ BASE_SEARCH_PATH_TYPE BaseProcessOrder[BaseSearchPathMax] =
     BaseSearchPathInvalid
 };
 
+BASE_CURRENT_DIR_PLACEMENT BasepDllCurrentDirPlacement = BaseCurrentDirPlacementInvalid;
+
+extern UNICODE_STRING BasePathVariableName;
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+PWCHAR
+WINAPI
+BasepEndOfDirName(IN PWCHAR FileName)
+{
+    PWCHAR FileNameEnd, FileNameSeparator;
+
+    /* Find the first slash */
+    FileNameSeparator = wcschr(FileName, OBJ_NAME_PATH_SEPARATOR);
+    if (FileNameSeparator)
+    {
+        /* Find the last one */
+        FileNameEnd = wcsrchr(FileNameSeparator, OBJ_NAME_PATH_SEPARATOR);
+        ASSERT(FileNameEnd);
+
+        /* Handle the case where they are one and the same */
+        if (FileNameEnd == FileNameSeparator) FileNameEnd++;
+    }
+    else
+    {
+        /* No directory was specified */
+        FileNameEnd = NULL;
+    }
+
+    /* Return where the directory ends and the filename starts */
+    return FileNameEnd;
+}
 
 LPWSTR
 WINAPI
@@ -86,7 +117,274 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
                         IN LPWSTR AppName,
                         IN LPVOID Environment)
 {
-    return NULL;
+    PWCHAR PathBuffer, Buffer, AppNameEnd, PathCurrent;
+    ULONG PathLengthInBytes;
+    NTSTATUS Status;
+    UNICODE_STRING EnvPath;
+    PBASE_SEARCH_PATH_TYPE Order;
+
+    /* Initialize state */
+    AppNameEnd = Buffer = PathBuffer = NULL;
+    Status = STATUS_SUCCESS;
+    PathLengthInBytes = 0;
+
+    /* Loop the ordering array */
+    for (Order = PathOrder; *Order != BaseSearchPathInvalid; Order++) {
+    switch (*Order)
+    {
+        /* Compute the size of the DLL path */
+        case BaseSearchPathDll:
+
+            /* This path only gets called if SetDllDirectory was called */
+            ASSERT(BaseDllDirectory.Buffer != NULL);
+
+            /* Make sure there's a DLL directory size */
+            if (BaseDllDirectory.Length)
+            {
+                /* Add it, plus the separator */
+                PathLengthInBytes += BaseDllDirectory.Length + sizeof(L';');
+            }
+            break;
+
+        /* Compute the size of the current path */
+        case BaseSearchPathCurrent:
+
+            /* Add ".;" */
+            PathLengthInBytes += (2 * sizeof(WCHAR));
+            break;
+
+        /* Compute the size of the "PATH" environment variable */
+        case BaseSearchPathEnv:
+
+            /* Grab PEB lock if one wasn't passed in */
+            if (!Environment) RtlAcquirePebLock();
+
+            /* Query the size first */
+            EnvPath.MaximumLength = 0;
+            Status = RtlQueryEnvironmentVariable_U(Environment,
+                                                   &BasePathVariableName,
+                                                   &EnvPath);
+            if (Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                /* Compute the size we'll need for the environment */
+                EnvPath.MaximumLength = EnvPath.Length + sizeof(WCHAR);
+                if ((EnvPath.Length + sizeof(WCHAR)) > UNICODE_STRING_MAX_BYTES)
+                {
+                    /* Don't let it overflow */
+                    EnvPath.MaximumLength = EnvPath.Length;
+                }
+
+                /* Allocate the environment buffer */
+                Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                         0,
+                                         EnvPath.MaximumLength);
+                if (Buffer)
+                {
+                    /* Now query the PATH environment variable */
+                    EnvPath.Buffer = Buffer;
+                    Status = RtlQueryEnvironmentVariable_U(Environment,
+                                                           &BasePathVariableName,
+                                                           &EnvPath);
+                }
+                else
+                {
+                    /* Failure case */
+                    Status = STATUS_NO_MEMORY;
+                }
+            }
+
+            /* Release the PEB lock from above */
+            if (!Environment) RtlReleasePebLock();
+
+            /* There might not be a PATH */
+            if (Status == STATUS_VARIABLE_NOT_FOUND)
+            {
+                /* In this case, skip this PathOrder */
+                EnvPath.Length = EnvPath.MaximumLength = 0;
+                Status = STATUS_SUCCESS;
+            }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* An early failure, go to exit code */
+                goto Quickie;
+            }
+            else
+            {
+                /* Add the length of the PATH variable */
+                ASSERT(!(EnvPath.Length & 1));
+                PathLengthInBytes += (EnvPath.Length + sizeof(L';'));
+            }
+            break;
+
+        /* Compute the size of the default search path */
+        case BaseSearchPathDefault:
+
+            /* Just add it... it already has a ';' at the end */
+            ASSERT(!(BaseDefaultPath.Length & 1));
+            PathLengthInBytes += BaseDefaultPath.Length;
+            break;
+
+        /* Compute the size of the current app directory */
+        case BaseSearchPathApp:
+            /* Find out where the app name ends, to get only the directory */
+            if (AppName) AppNameEnd = BasepEndOfDirName(AppName);
+
+            /* Check if there was no application name passed in */
+            if (!(AppName) || !(AppNameEnd))
+            {
+                /* Do we have a per-thread CURDIR to use? */
+                if (NtCurrentTeb()->NtTib.SubSystemTib)
+                {
+                    /* This means someone added RTL_PERTHREAD_CURDIR */
+                    UNIMPLEMENTED;
+                    while (TRUE);
+                }
+
+                /* We do not. Do we have the LDR_ENTRY for the executable? */
+                if (!BasepExeLdrEntry)
+                {
+                    /* We do not. Grab it */
+                    LdrEnumerateLoadedModules(0,
+                                              BasepLocateExeLdrEntry,
+                                              NtCurrentPeb()->ImageBaseAddress);
+                }
+
+                /* Now do we have it? */
+                if (BasepExeLdrEntry)
+                {
+                    /* Yes, so read the name out of it */
+                    AppName = BasepExeLdrEntry->FullDllName.Buffer;
+                }
+
+                /* Find out where the app name ends, to get only the directory */
+                if (AppName) AppNameEnd = BasepEndOfDirName(AppName);
+            }
+
+            /* So, do we have an application name and its directory? */
+            if ((AppName) && (AppNameEnd))
+            {
+                /* Add the size of the app's directory, plus the separator */
+                PathLengthInBytes += ((AppNameEnd - AppName) * sizeof(WCHAR)) + sizeof(L';');
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /* Bam, all done, we now have the final path size */
+    ASSERT(PathLengthInBytes > 0);
+    ASSERT(!(PathLengthInBytes & 1));
+
+    /* Allocate the buffer to hold it */
+    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathLengthInBytes);
+    if (!PathBuffer)
+    {
+        /* Failure path */
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Now we loop again, this time to copy the data */
+    PathCurrent = PathBuffer;
+    for (Order = PathOrder; *Order != BaseSearchPathInvalid; Order++) {
+    switch (*Order)
+    {
+        /* Add the DLL path */
+        case BaseSearchPathDll:
+            if (BaseDllDirectory.Length)
+            {
+                /* Copy it in the buffer, ASSERT there's enough space */
+                ASSERT((((PathCurrent - PathBuffer + 1) * sizeof(WCHAR)) + BaseDllDirectory.Length) <= PathLengthInBytes);
+                RtlCopyMemory(PathCurrent,
+                              BaseDllDirectory.Buffer,
+                              BaseDllDirectory.Length);
+
+                /* Update the current pointer, add a separator */
+                PathCurrent += (BaseDllDirectory.Length / sizeof(WCHAR));
+                *PathCurrent++ = ';';
+            }
+            break;
+
+        /* Add the current applicaiton path */
+        case BaseSearchPathApp:
+            if ((AppName) && (AppNameEnd))
+            {
+                /* Copy it in the buffer, ASSERT there's enough space */
+                ASSERT(((PathCurrent - PathBuffer + 1 + (AppNameEnd - AppName)) * sizeof(WCHAR)) <= PathLengthInBytes);
+                RtlCopyMemory(PathCurrent,
+                              AppName,
+                              (AppNameEnd - AppName) * sizeof(WCHAR));
+
+                /* Update the current pointer, add a separator */
+                PathCurrent += AppNameEnd - AppName;
+                *PathCurrent++ = ';';
+            }
+            break;
+
+        /* Add the default search path */
+        case BaseSearchPathDefault:
+            /* Copy it in the buffer, ASSERT there's enough space */
+            ASSERT((((PathCurrent - PathBuffer) * sizeof(WCHAR)) + BaseDefaultPath.Length) <= PathLengthInBytes);
+            RtlCopyMemory(PathCurrent, BaseDefaultPath.Buffer, BaseDefaultPath.Length);
+
+            /* Update the current pointer. The default path already has a ";" */
+            PathCurrent += (BaseDefaultPath.Length / sizeof(WCHAR));
+            break;
+
+        /* Add the path in the PATH environment variable */
+        case BaseSearchPathEnv:
+            if (EnvPath.Length)
+            {
+                /* Copy it in the buffer, ASSERT there's enough space */
+                ASSERT((((PathCurrent - PathBuffer + 1) * sizeof(WCHAR)) + EnvPath.Length) <= PathLengthInBytes);
+                RtlCopyMemory(PathCurrent, EnvPath.Buffer, EnvPath.Length);
+
+                /* Update the current pointer, add a separator */
+                PathCurrent += (EnvPath.Length / sizeof(WCHAR));
+                *PathCurrent++ = ';';
+            }
+            break;
+
+        /* Add the current dierctory */
+        case BaseSearchPathCurrent:
+
+            /* Copy it in the buffer, ASSERT there's enough space */
+            ASSERT(((PathCurrent - PathBuffer + 2) * sizeof(WCHAR)) <= PathLengthInBytes);
+            *PathCurrent++ = '.';
+
+            /* Add the path separator */
+            *PathCurrent++ = ';';
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /* Everything should've perfectly fit in there */
+    ASSERT((PathCurrent - PathBuffer) * sizeof(WCHAR) == PathLengthInBytes);
+    ASSERT(PathCurrent > PathBuffer);
+
+    /* Terminate the whole thing */
+    PathCurrent[-1] = UNICODE_NULL;
+
+Quickie:
+    /* Exit path: free our buffers */
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    if (PathBuffer)
+    {
+        /* This only gets freed in the failure path, since caller wants it */
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+            PathBuffer = NULL;
+        }
+    }
+
+    /* Return the path! */
+    return PathBuffer;
 }
 
 LPWSTR
@@ -94,7 +392,7 @@ WINAPI
 BaseComputeProcessSearchPath(VOID)
 {
     DPRINT1("Computing Process Search path\n");
-    
+
     /* Compute the path using default process order */
     return BasepComputeProcessPath(BaseProcessOrder, NULL, NULL);
 }
@@ -120,7 +418,14 @@ BaseComputeProcessDllPath(IN LPWSTR FullPath,
                           IN PVOID Environment)
 {
     LPWSTR DllPath = NULL;
-    DPRINT1("Computing DLL path: %wZ with BaseDll: %wZ\n", FullPath, &BaseDllDirectory);
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SafeDllSearchMode");
+    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE);
+    KEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    ULONG ResultLength;
+    BASE_CURRENT_DIR_PLACEMENT CurrentDirPlacement, OldCurrentDirPlacement;
 
     /* Acquire DLL directory lock */
     RtlEnterCriticalSection(&BaseDllDirectoryLock);
@@ -141,8 +446,65 @@ BaseComputeProcessDllPath(IN LPWSTR FullPath,
     /* Release DLL directory lock */
     RtlLeaveCriticalSection(&BaseDllDirectoryLock);
 
-    /* There is no base DLL directory */
-    UNIMPLEMENTED;
+    /* Read the current placement */
+    CurrentDirPlacement = BasepDllCurrentDirPlacement;
+    if (CurrentDirPlacement == BaseCurrentDirPlacementInvalid)
+    {
+        /* Open the configuration key */
+        Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Query if safe search is enabled */
+            Status = NtQueryValueKey(KeyHandle,
+                                     &ValueName,
+                                     KeyValuePartialInformation,
+                                     &PartialInfo,
+                                     sizeof(PartialInfo),
+                                     &ResultLength);
+            if (NT_SUCCESS(Status))
+            {
+                /* Read the value if the size is OK */
+                if (ResultLength == sizeof(PartialInfo))
+                {
+                    CurrentDirPlacement = *(PULONG)PartialInfo.Data;
+                }
+            }
+
+            /* Close the handle */
+            NtClose(KeyHandle);
+
+            /* Validate the registry value */
+            if ((CurrentDirPlacement <= BaseCurrentDirPlacementInvalid) ||
+                (CurrentDirPlacement >= BaseCurrentDirPlacementMax))
+            {
+                /* Default to safe search */
+                CurrentDirPlacement = BaseCurrentDirPlacementSafe;
+            }
+        }
+
+        /* Update the placement and read the old one */
+        OldCurrentDirPlacement = InterlockedCompareExchange((PLONG)&BasepDllCurrentDirPlacement,
+                                                            CurrentDirPlacement,
+                                                            BaseCurrentDirPlacementInvalid);
+        if (OldCurrentDirPlacement != BaseCurrentDirPlacementInvalid)
+        {
+            /* If there already was a placement, use it */
+            CurrentDirPlacement = OldCurrentDirPlacement;
+        }
+    }
+
+    /* Check if the placement is invalid or not set */
+    if ((CurrentDirPlacement <= BaseCurrentDirPlacementInvalid) ||
+        (CurrentDirPlacement >= BaseCurrentDirPlacementMax))
+    {
+        /* Default to safe search */
+        CurrentDirPlacement = BaseCurrentDirPlacementSafe;
+    }
+
+    /* Compute the process path using either normal or safe search */
+    DllPath = BasepComputeProcessPath(BaseDllOrderCurrent[CurrentDirPlacement],
+                                      FullPath,
+                                      Environment);
 
     /* Return dll path */
     return DllPath;
@@ -937,6 +1299,105 @@ ContainsPath(LPCWSTR name)
     if (name[0] != '.') return FALSE;
     if (name[1] == '/' || name[1] == '\\' || name[1] == '\0') return TRUE;
     return (name[1] == '.' && (name[2] == '/' || name[2] == '\\'));
+}
+
+/**
+ * @name GetDllLoadPath
+ *
+ * Internal function to compute the load path to use for a given dll.
+ *
+ * @remarks Returned pointer must be freed by caller.
+ */
+
+LPWSTR
+GetDllLoadPath(LPCWSTR lpModule)
+{
+	ULONG Pos = 0, Length = 4, Tmp;
+	PWCHAR EnvironmentBufferW = NULL;
+	LPCWSTR lpModuleEnd = NULL;
+	UNICODE_STRING ModuleName;
+	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
+
+    // FIXME: This function is used only by SearchPathW, and is deprecated and will be deleted ASAP.
+
+	if (lpModule != NULL && wcslen(lpModule) > 2 && lpModule[1] == ':')
+	{
+		lpModuleEnd = lpModule + wcslen(lpModule);
+	}
+	else
+	{
+		ModuleName = NtCurrentPeb()->ProcessParameters->ImagePathName;
+		lpModule = ModuleName.Buffer;
+		lpModuleEnd = lpModule + (ModuleName.Length / sizeof(WCHAR));
+	}
+
+	if (lpModule != NULL)
+	{
+		while (lpModuleEnd > lpModule && *lpModuleEnd != L'/' &&
+		       *lpModuleEnd != L'\\' && *lpModuleEnd != L':')
+		{
+			--lpModuleEnd;
+		}
+		Length = (lpModuleEnd - lpModule) + 1;
+	}
+
+	Length += GetCurrentDirectoryW(0, NULL);
+	Length += GetDllDirectoryW(0, NULL);
+	Length += GetSystemDirectoryW(NULL, 0);
+	Length += GetWindowsDirectoryW(NULL, 0);
+	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
+
+	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+	                                     (Length + 1) * sizeof(WCHAR));
+	if (EnvironmentBufferW == NULL)
+	{
+	    return NULL;
+	}
+
+	if (lpModule)
+	{
+		RtlCopyMemory(EnvironmentBufferW, lpModule,
+		              (lpModuleEnd - lpModule) * sizeof(WCHAR));
+		Pos += lpModuleEnd - lpModule;
+		EnvironmentBufferW[Pos++] = L';';
+	}
+
+    Tmp = GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
+	if(Tmp > 0 && Tmp < Length - Pos)
+	{
+	    Pos += Tmp;
+	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
+	}
+
+	Tmp = GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
+
+	/* Make sure buffer is null terminated */
+    EnvironmentBufferW[Pos++] = UNICODE_NULL;
+
+
+	SetLastError(LastError);
+	return EnvironmentBufferW;
 }
 
 /*
