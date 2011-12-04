@@ -206,6 +206,11 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     if (--MmAvailablePages < MmMinimumFreePages)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
+
+        DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
     }
 
 #if MI_TRACE_PFNS
@@ -330,6 +335,11 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     if (--MmAvailablePages < MmMinimumFreePages)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
+
+        DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
     }
 
 #if MI_TRACE_PFNS
