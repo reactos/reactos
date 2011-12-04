@@ -5,7 +5,7 @@
  * CHANGE LOG:       2011-10-30  initial translation
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* String Tables */
 

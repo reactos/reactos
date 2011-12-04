@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/screensavers/3dtext/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" Girdžijauskas (cman@cman.us)
  * DATE:        2007-12-02
  */
 
@@ -11,7 +11,7 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 136, 58
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ekrano uþsklandos nustatymai"
+CAPTION "Ekrano užsklandos nustatymai"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Gerai",IDOK,14,38,50,14

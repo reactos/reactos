@@ -1,5 +1,5 @@
 //2011.10.18 - Fulea Ștefan: minor changes
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDC_MAGNIFIER MENU
 BEGIN
@@ -8,7 +8,7 @@ BEGIN
         MENUITEM "I&eșire",                       IDM_EXIT
         MENUITEM "&Opțiuni",                    IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre ...",                  IDM_ABOUT
+        MENUITEM "&Despre…",                  IDM_ABOUT
     END
 END
 
@@ -61,5 +61,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Lupă"
+    IDS_APP_TITLE   "Lupă"
 END

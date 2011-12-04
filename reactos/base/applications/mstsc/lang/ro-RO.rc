@@ -6,7 +6,7 @@
  *                   2011-10-18  minor changes
  */
  
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_GENERAL DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
@@ -20,8 +20,8 @@ BEGIN
     LTEXT           "Nume utilizator:",IDC_STATIC,47,58,58,8
     COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Pă&strează",IDC_SAVE,57,139,50,14
-    PUSHBUTTON      "Păstrea&ză în...",IDC_SAVEAS,112,139,60,14
-    PUSHBUTTON      "&Deschide...",IDC_OPEN,177,139,50,14
+    PUSHBUTTON      "&Păstrare în…",IDC_SAVEAS,112,139,60,14
+    PUSHBUTTON      "&Deschidere…",IDC_OPEN,177,139,50,14
     ICON            "", IDC_CONNICON, 16,114,20,20
 	LTEXT           "Puteți păstra preferințele curente de conectare sau să deschideți preferințe existente",IDC_STATIC,50,115,172,20
 END
@@ -65,7 +65,7 @@ BEGIN
     IDS_HIGHCOLOR24         "16,777,216 culori (24 biți)"
     IDS_PIXEL               "%lux%lu pixeli"
     IDS_FULLSCREEN          "Pe tot ecranul"
-    IDS_BROWSESERVER        "<Caută mai multe...>"
+    IDS_BROWSESERVER        "<Căutare mai multe…>"
 	IDS_HEADERTEXT1         ""
     IDS_HEADERTEXT2         ""
 END

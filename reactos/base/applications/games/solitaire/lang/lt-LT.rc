@@ -4,7 +4,7 @@
  * FILE:        base/applications/games/solitaire/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
- * TRANSLATORS: Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * TRANSLATORS: Vytis "CMan" Girdžijauskas (cman@cman.us)
  */
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
@@ -17,11 +17,11 @@ CAPTION "Nuostatos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Kortos", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Dalinti po &vienà", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Dalinti po &vieną", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Dalinti po &tris", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "&Rodyti laikà", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "&Bûsenos juosta", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Rodyti laiką", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "&Būsenos juosta", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "Gerai", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Atsisakyti", IDCANCEL, 101, 97, 50, 14
@@ -29,7 +29,7 @@ END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Kortø virðelio pasirinkimas"
+CAPTION "Kortų viršelio pasirinkimas"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -56,9 +56,9 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
     IDS_SOL_ABOUT   "Solitaire\n\nSukurta J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Baigti þaidimà?"
-    IDS_SOL_WIN     "Sveikiname, jûs laimëjote!!"
-    IDS_SOL_DEAL    "Dalinti vël?"
+    IDS_SOL_QUIT    "Baigti žaidimą?"
+    IDS_SOL_WIN     "Sveikiname, jūs laimėjote!!"
+    IDS_SOL_DEAL    "Dalinti vėl?"
 END
 
 
@@ -66,7 +66,7 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Þaidimas"
+    POPUP "&Žaidimas"
     BEGIN
         MENUITEM "&Dalinti\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR

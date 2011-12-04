@@ -1,4 +1,6 @@
-/* Translation by Vytis 'CMan' Girdþijauskas cman@cman.us */
+/* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
+
+#include "resource.h"
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE

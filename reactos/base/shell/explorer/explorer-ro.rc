@@ -29,7 +29,7 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "E&xecutare...",                 ID_EXECUTE
+        MENUITEM "E&xecutare…",                 ID_EXECUTE
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",                       ID_FILE_EXIT
     END
@@ -60,9 +60,9 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "Întrebări &frecvente...",        ID_EXPLORER_FAQ
-        MENUITEM "&Despre Explorator...",          ID_ABOUT_EXPLORER
-        MENUITEM "Despre &SO...",             ID_ABOUT_WINDOWS
+        MENUITEM "Întrebări &frecvente…",        ID_EXPLORER_FAQ
+        MENUITEM "&Despre Explorator…",          ID_ABOUT_EXPLORER
+        MENUITEM "Despre &SO…",             ID_ABOUT_WINDOWS
     END
 END
 
@@ -70,10 +70,10 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Preferințe...",                 ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Gestionar de activități...",    ID_TASKMGR
+        MENUITEM "&Preferințe…",                 ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Gestionar de activități…",    ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Explorator...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Despre Explorator…",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -92,10 +92,10 @@ BEGIN
     BEGIN
         MENUITEM "&Arată pictogramele ascunse", ID_SHOW_HIDDEN_ICONS
         MENUITEM "Arată &butonul pictogramă",   ID_SHOW_ICON_BUTTON
-        MENUITEM "&Configurare notificări...",  ID_CONFIG_NOTIFYAREA
-        MENUITEM "Ajustare &Dată/Oră...",        ID_CONFIG_TIME
+        MENUITEM "&Configurare notificări…",  ID_CONFIG_NOTIFYAREA
+        MENUITEM "Ajustare &Dată/Oră…",        ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Explorator...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Despre Explorator…",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -103,7 +103,7 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "E&xecutare...",               ID_EXECUTE
+        MENUITEM "E&xecutare…",               ID_EXECUTE
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",                     ID_FILE_EXIT
     END
@@ -123,9 +123,9 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "Întrebări &frecvente...",      ID_EXPLORER_FAQ
-        MENUITEM "&Despre Explorator...",         ID_ABOUT_EXPLORER
-        MENUITEM "Despre &SO...",               ID_ABOUT_WINDOWS
+        MENUITEM "Întrebări &frecvente…",      ID_EXPLORER_FAQ
+        MENUITEM "&Despre Explorator…",         ID_ABOUT_EXPLORER
+        MENUITEM "Despre &SO…",               ID_ABOUT_WINDOWS
     END
 END
 
@@ -211,7 +211,7 @@ BEGIN
     CONTROL         "&Ascunde notificatoarele inactive",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,174,141,10
-    PUSHBUTTON      "&Notificări...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+    PUSHBUTTON      "&Notificări…",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX DISCARDABLE  0, 0, 210, 194
@@ -327,12 +327,12 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "Explorator ReactOS"
     IDS_START               "Pornire"
-    IDS_LOGOFF              "Deautentificare..."
-    IDS_SHUTDOWN            "Închidere calculator..."
-    IDS_RESTART             "Repornire calculator..."
-    IDS_LAUNCH              "Executare..."
+    IDS_LOGOFF              "Deautentificare…"
+    IDS_SHUTDOWN            "Închidere calculator…"
+    IDS_RESTART             "Repornire calculator…"
+    IDS_LAUNCH              "Executare…"
     IDS_START_HELP          "Manuale de utilizare"
-    IDS_SEARCH_FILES        "Fișier..."
+    IDS_SEARCH_FILES        "Fișier…"
     IDS_DOCUMENTS           "Documente"
     IDS_FAVORITES           "Favorite"
     IDS_PROGRAMS            "Programe"
@@ -366,15 +366,15 @@ BEGIN
     IDS_NETWORK             "Rețea"
     IDS_CONNECTIONS         "Conexuni în rețea"
     IDS_DRIVES              "Unități"
-    IDS_SEARCH_COMPUTER     "Calculator..."
+    IDS_SEARCH_COMPUTER     "Calculator…"
     IDS_SETTINGS_MENU       "Meniu configurare"
     IDS_CONTROL_PANEL       "Panou de control"
     IDS_PRINTERS            "Imprimante"
     IDS_BROWSE              "Răsfoire prin fișiere"
-    IDS_SEARCH_PRG          "Program..."
+    IDS_SEARCH_PRG          "Program…"
     IDS_ALL_USERS           "Toți utilizatorii\\"
     IDS_SEARCH              "Căutare"
-    IDS_ABOUT_EXPLORER      "&Despre Explorator..."
+    IDS_ABOUT_EXPLORER      "&Despre Explorator…"
     IDS_LAUNCH_MANY_PROGRAMS
                             "Ați ales mai mult de un program.\nSigur doriți să le porniți pe toate?"
     IDS_DESKTOPBAR_SETTINGS "Configurare birou"

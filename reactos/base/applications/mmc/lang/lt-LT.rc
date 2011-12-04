@@ -1,4 +1,4 @@
-/* Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) */
+/* Translation by Vytis "CMan" Girdžijauskas (cman@cman.us) */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
@@ -12,7 +12,7 @@ BEGIN
 
     POPUP "&Pagalba"
     BEGIN
-        MENUITEM "&Apie ReactOS Valdymo Pultà...", ID_HELP_ABOUT
+        MENUITEM "&Apie ReactOS Valdymo Pultą...", ID_HELP_ABOUT
     END
 END
 

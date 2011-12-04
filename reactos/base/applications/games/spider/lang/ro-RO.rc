@@ -8,7 +8,7 @@
  *               2011-09-12  accelerators, romanian qotes
  */
  
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Dialoguri */
 
@@ -66,14 +66,14 @@ BEGIN
     BEGIN
         MENUITEM "Rundă &nouă\tF2",             IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Culoare &dorsală...",         IDM_GAME_DECK
+        MENUITEM "Culoare &dorsală…",         IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",                     IDM_GAME_EXIT
     END
     POPUP "&?"
     BEGIN
         MENUITEM "&Manual\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "&Despre...",                 IDM_HELP_ABOUT
+        MENUITEM "&Despre…",                 IDM_HELP_ABOUT
     END
 END
 

@@ -21,7 +21,7 @@
  *      Fulea Ștefan (2011-11-20): minor change
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -46,13 +46,13 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Nou\tCtrl+N",      CMD_NEW
-        MENUITEM "&Deschidere...\tCtrl+D",  CMD_OPEN
+        MENUITEM "&Deschidere…\tCtrl+D",  CMD_OPEN
         MENUITEM "Pă&strează\tCtrl+S",     CMD_SAVE
-        MENUITEM "&Păstrare în...",       CMD_SAVE_AS
+        MENUITEM "&Păstrare în…",       CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Configurare pagină...",    CMD_PAGE_SETUP
+        MENUITEM "&Configurare pagină…",    CMD_PAGE_SETUP
         MENUITEM "&Imprimă\tCtrl+P",    CMD_PRINT
-        MENUITEM "Configurare i&mprimantă...", CMD_PRINTER_SETUP
+        MENUITEM "Configurare i&mprimantă…", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",             CMD_EXIT
     END
@@ -65,10 +65,10 @@ BEGIN
         MENUITEM "&Lipește\tCtrl+V",      CMD_PASTE
         MENUITEM "Șt&erge\tDel",        CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Găsire...\tCtrl+F",    CMD_SEARCH
+        MENUITEM "&Găsire…\tCtrl+F",    CMD_SEARCH
         MENUITEM "Găsește &următoarea\tF3",      CMD_SEARCH_NEXT
         MENUITEM "Înlocuieș&te\tCtrl+H",     CMD_REPLACE
-        MENUITEM "&Salt la...\tCtrl+G",    CMD_GOTO
+        MENUITEM "&Salt la…\tCtrl+G",    CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Selecte&ază tot\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Inserează &oră și dată\tF5",      CMD_TIME_DATE
@@ -76,7 +76,7 @@ BEGIN
     POPUP "F&ormatare"
     BEGIN
         MENUITEM "Îm&pachetează textul", CMD_WRAP
-        MENUITEM "&Font...",         CMD_FONT
+        MENUITEM "&Font…",         CMD_FONT
     END
     POPUP "&Afișare"
     BEGIN
@@ -85,10 +85,10 @@ BEGIN
     POPUP "&?"
     BEGIN
         MENUITEM "&Manual",     CMD_HELP_CONTENTS
-        MENUITEM "&Căutare...",    CMD_HELP_SEARCH
+        MENUITEM "&Căutare…",    CMD_HELP_SEARCH
         MENUITEM "M&anualul manualului", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre...",        CMD_ABOUT
+        MENUITEM "&Despre…",        CMD_ABOUT
         MENUITEM "Inf&o",         CMD_ABOUT_WINE
     END
 END
@@ -169,39 +169,39 @@ STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Pagină &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,     "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,      "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Carnețel"
-STRING_ERROR,                                   "EROARE"
-STRING_WARNING,                                 "ATENțIONARE"
-STRING_INFO,                                    "Informație"
+STRING_NOTEPAD,              "Carnețel"
+STRING_ERROR,                "EROARE"
+STRING_WARNING,              "ATENțIONARE"
+STRING_INFO,                 "Informație"
 
-STRING_UNTITLED,                                "(neintitulat)"
+STRING_UNTITLED,             "(neintitulat)"
 
-STRING_ALL_FILES,                               "Orice fișier (*.*)"
-STRING_TEXT_FILES_TXT,                  "Fișiere text (*.txt)"
+STRING_ALL_FILES,            "Orice fișier (*.*)"
+STRING_TEXT_FILES_TXT,       "Fișiere text (*.txt)"
 
-STRING_TOOLARGE,                                "Fișierul „%s” este prea mare.\n \
+STRING_TOOLARGE,             "Fișierul „%s” este prea mare.\n \
 Încercați un alt editor."
-STRING_NOTEXT,                                  "Nu ați scris nimic. \
+STRING_NOTEXT,               "Nu ați scris nimic. \
 \nScrieți ceva apoi încercați din nou."
-STRING_DOESNOTEXIST,                            "Fișierul „%s”\nnu există.\n\n \
+STRING_DOESNOTEXIST,         "Fișierul „%s”\nnu există.\n\n \
 Creați un nou fișier ?"
-STRING_NOTSAVED,                                "Fișierul „%s”\na fost modificat\n\n \
+STRING_NOTSAVED,             "Fișierul „%s”\na fost modificat\n\n \
 Păstrați modificările aduse?"
-STRING_NOTFOUND,                                        "„%s” nu poate fi găsit."
-STRING_OUT_OF_MEMORY,                   "Nu există suficientă memorie pentru a efectua această operație. \
+STRING_NOTFOUND,             "„%s” nu poate fi găsit."
+STRING_OUT_OF_MEMORY,        "Nu există suficientă memorie pentru a efectua această operație. \
 \nÎnchideți una sau mai multe aplicații pentru a elibera memorie."
-STRING_CANNOTFIND                               "Nu se poate găsi „%s”"
-STRING_ANSI,                                    "ANSI"
-STRING_UNICODE,                                 "Unicode"
-STRING_UNICODE_BE,                              "Unicode (big endian)"
-STRING_UTF8,                                    "UTF-8"
-STRING_CRLF,                                    "Windows"
-STRING_LF,                                      "Unix"
-STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Linie %d, coloană %d"
+STRING_CANNOTFIND            "Nu se poate găsi „%s”"
+STRING_ANSI,                 "ANSI"
+STRING_UNICODE,              "Unicode"
+STRING_UNICODE_BE,           "Unicode (big endian)"
+STRING_UTF8,                 "UTF-8"
+STRING_CRLF,                 "Windows"
+STRING_LF,                   "Unix"
+STRING_CR,                   "Mac"
+STRING_LINE_COLUMN,          "Linie %d, coloană %d"
 END

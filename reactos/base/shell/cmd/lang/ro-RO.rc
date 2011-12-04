@@ -7,7 +7,7 @@
  *               2011-10-30  UTF-8 encoding (with diacritics conversion), minor changes
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
@@ -742,7 +742,7 @@ STRING_REPLACE_ERROR5, "Acces nepermis - %s\n"
 STRING_REPLACE_ERROR6, "Fișierele nu au fost găsite - %s\n"
 STRING_REPLACE_ERROR7, "Eroare Extinsă 32\n"
 
-STRING_REACTOS_VERSION,            "Sistemul de Operare React [Versiunea %s-%s]\n"
+STRING_REACTOS_VERSION,            "ReactOS [Versiunea %s-%s]\n"
 STRING_CMD_SHELLINFO,              "\nInterpretorul de comenzi ReactOS\nVersiunea %s %s"
 STRING_VERSION_RUNVER,             " operând pe %s"
 STRING_COPY_FILE ,                 "        %d fișier(e) copiat(e)\n"

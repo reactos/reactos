@@ -7,7 +7,7 @@
  *                   2011-10-30  minor changes
  */
  
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
@@ -31,9 +31,9 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Nou",                         ID_NEW
-        MENUITEM "&Deschide...",                 ID_FILE_OPEN
+        MENUITEM "&Deschidere…",                 ID_FILE_OPEN
         MENUITEM "Pă&strează",                   ID_FILE_SAVE, GRAYED
-        MENUITEM "Păstre&ază în...",             ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Păstrare în…",             ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",                      ID_EXIT
     END
@@ -41,7 +41,7 @@ BEGIN
     MENUITEM "todo2",                       0
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre...",                   ID__ABOUT
+        MENUITEM "&Despre…",                   ID__ABOUT
     END
 END
 

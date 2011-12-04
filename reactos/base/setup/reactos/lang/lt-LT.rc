@@ -1,10 +1,10 @@
-// Translation by Vytis 'CMan' Girdþijauskas cman@cman.us
+// Translation by Vytis 'CMan' Girdžijauskas cman@cman.us
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 /* String Tables */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CAPTION  "ReactOS Ádiegimas"
-    IDS_TEXT     "Jûs negalite ádiegti ReactOS tiesiogiai ið ðio CD!\n\nNorëdami ádiegti ReactOS, praðome perkrauti Jûsø kompiuterá su ðiuo CD."
+    IDS_CAPTION  "ReactOS Įdiegimas"
+    IDS_TEXT     "Jūs negalite įdiegti ReactOS tiesiogiai iš šio CD!\n\nNorėdami įdiegti ReactOS, prašome perkrauti Jūsų kompiuterį su šiuo CD."
 END

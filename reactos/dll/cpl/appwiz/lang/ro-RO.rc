@@ -5,7 +5,7 @@
  * CHANGE LOG:       2011-09-02  initial translation
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -31,11 +31,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Crearea unei scurtături"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Acest expert vă va asista în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
-  LTEXT "Scrieți adresa elementului:", -1, 120, 50, 120, 10
-  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "&Caută...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Clic pe Înainte pentru a continua.", -1, 120, 97, 162, 10
+  LTEXT       "Acest expert vă va asista în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
+  LTEXT       "Scrieți adresa elementului:", -1, 120, 50, 120, 10
+  EDITTEXT    IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+  PUSHBUTTON  "&Căutare…", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT       "Clic pe Înainte pentru a continua.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -43,15 +43,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Titlul scurtăturii"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Scrieți un &nume pentru scurtătură:", -1, 120, 15, 150, 10
-  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Apăsați pe Termină pentru a crea scurtătura.", -1, 118, 97, 178, 17
+  LTEXT     "Scrieți un &nume pentru scurtătură:", -1, 120, 15, 150, 10
+  EDITTEXT  IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+  LTEXT     "Apăsați pe Termină pentru a crea scurtătura.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Gestionar de aplicații"
-	IDS_CPLSYSTEMDESCRIPTION "Instalează programe și crează scurtături."
-    IDS_CREATE_SHORTCUT "Creare scurtătură"
-    IDS_ERROR_NOT_FOUND "Elementul „%s” nu poate fi localizat."
+	IDS_CPLSYSTEMNAME         "Gestionar de aplicații"
+	IDS_CPLSYSTEMDESCRIPTION  "Instalează programe și crează scurtături."
+    IDS_CREATE_SHORTCUT       "Creare scurtătură"
+    IDS_ERROR_NOT_FOUND       "Elementul „%s” nu poate fi localizat."
 END

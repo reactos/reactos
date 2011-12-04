@@ -1,6 +1,6 @@
 //2011.10.17 - Fulea Ștefan: minor changes
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 // Dialog
 
@@ -371,7 +371,7 @@ BEGIN
     BEGIN
         MENUITEM "&Manual",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre...",          IDM_HELP_ABOUT
+        MENUITEM "&Despre…",          IDM_HELP_ABOUT
     END
 END
 
@@ -404,7 +404,7 @@ BEGIN
     BEGIN
         MENUITEM "&Manual",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre...",          IDM_HELP_ABOUT
+        MENUITEM "&Despre…",          IDM_HELP_ABOUT
     END
 END
 
@@ -427,7 +427,7 @@ BEGIN
     BEGIN
         MENUITEM "&Manual",                 IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre...",          IDM_HELP_ABOUT
+        MENUITEM "&Despre…",          IDM_HELP_ABOUT
     END
 END
 

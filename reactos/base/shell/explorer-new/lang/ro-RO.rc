@@ -1,5 +1,5 @@
 //2011.11.01 - Fulea Ștefan: minor changes
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDM_TRAYWND MENU DISCARDABLE
 BEGIN
@@ -34,7 +34,7 @@ BEGIN
         BEGIN
             MENUITEM "Panou de &control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Securitate...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Securitate…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "Conexiuni în &rețea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Imprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Bară de activități și Meniul Pornire", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
@@ -44,13 +44,13 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Manuale de utilizare", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "E&xecutare...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "E&xecutare…", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "&Sincronizează", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "De&autentificare %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "Dec&onectare...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "De&autentificare %s…", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Dec&onectare…", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "De&tașare calculator", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "Î&nchidere calculator...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "Î&nchidere calculator…", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -77,10 +77,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     AUTORADIOBUTTON "&Meniu Pornire", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
     LTEXT           "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_STATIC, 20,17,150,24, WS_DISABLED
-    PUSHBUTTON      "P&articularizare...", IDC_TASKBARPROP_STARTMENUCUST, 182,4,63,14, WS_DISABLED
+    PUSHBUTTON      "P&articularizare…", IDC_TASKBARPROP_STARTMENUCUST, 182,4,63,14, WS_DISABLED
     AUTORADIOBUTTON "Meniu Pornire &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
     LTEXT           "Acest model de meniu vă oferă aspectul și funcționalitatea clasică",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "Pa&rticularizare...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 182,44,63,14, WS_DISABLED
+    PUSHBUTTON      "Pa&rticularizare…", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 182,44,63,14, WS_DISABLED
     GROUPBOX        "Intimitate",IDC_STATIC, 7,100,238,42
     AUTOCHECKBOX    "Păstrează și afișează o listă a &fișierelor deschise recent", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
     AUTOCHECKBOX    "Păstrează și afișează o listă a &programelor deschise recent",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
@@ -95,7 +95,7 @@ BEGIN
     GROUPBOX        "Pictograme", IDC_STATIC, 6,33,240,58, WS_DISABLED
     LTEXT           "Puteți menține ordonată zona de notificare prin ascunderea pictogramelor neaccesate recent.", IDC_STATIC, 13,48,223,16, WS_DISABLED
     AUTOCHECKBOX    "&Ascunde pictogramele neaccesate", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
-    PUSHBUTTON      "&Particularizare...", IDC_TASKBARPROP_ICONCUST, 168,70,70,14, WS_DISABLED
+    PUSHBUTTON      "&Particularizare…", IDC_TASKBARPROP_ICONCUST, 168,70,70,14, WS_DISABLED
     GROUPBOX        "Pictograme de sistem", IDC_STATIC, 6,97,240,84, WS_DISABLED
     LTEXT           "Specificați care dintre pictogramele de sistem le doriți expuse.", IDC_STATIC, 13,112,223,16, WS_DISABLED
     AUTOCHECKBOX    "&Ceas", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
