@@ -108,6 +108,12 @@ VOID FreeIPDR(
     CurrentEntry = NextEntry;
   }
 
+  if (IPDR->IPv4Header)
+  {
+      TI_DbgPrint(DEBUG_IP, ("Freeing IPDR header at (0x%X).\n", IPDR->IPv4Header));
+      ExFreePoolWithTag(IPDR->IPv4Header, PACKET_BUFFER_TAG);
+  }
+
   TI_DbgPrint(DEBUG_IP, ("Freeing IPDR data at (0x%X).\n", IPDR));
 
   ExFreeToNPagedLookasideList(&IPDRList, IPDR);
@@ -218,7 +224,7 @@ ReassembleDatagram(
   IPPacket->MappedHeader = FALSE;
 
   /* Copy the header into the buffer */
-  RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, sizeof(IPDR->IPv4Header));
+  RtlCopyMemory(IPPacket->Header, IPDR->IPv4Header, IPDR->HeaderSize);
 
   Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPDR->HeaderSize);
   IPPacket->Data = Data;
@@ -394,11 +400,21 @@ VOID ProcessFragment(
 
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
-      TI_DbgPrint(DEBUG_IP, ("First fragment found. Header buffer is at (0x%X). "
-        "Header size is (%d).\n", &IPDR->IPv4Header, IPPacket->HeaderSize));
+        IPDR->IPv4Header = ExAllocatePoolWithTag(NonPagedPool,
+                                                 IPPacket->HeaderSize,
+                                                 PACKET_BUFFER_TAG);
+        if (!IPDR->IPv4Header)
+        {
+            Cleanup(&IPDR->Lock, OldIrql, IPDR);
+            return;
+        }
 
-      RtlCopyMemory(&IPDR->IPv4Header, IPPacket->Header, sizeof(IPDR->IPv4Header));
-      IPDR->HeaderSize = sizeof(IPDR->IPv4Header);
+        RtlCopyMemory(IPDR->IPv4Header, IPPacket->Header, IPPacket->HeaderSize);
+        IPDR->HeaderSize = IPPacket->HeaderSize;
+
+        TI_DbgPrint(DEBUG_IP, ("First fragment found. Header buffer is at (0x%X). "
+                               "Header size is (%d).\n", &IPDR->IPv4Header, IPPacket->HeaderSize));
+
     }
 
     /* Create a buffer, copy the data into it and put it
