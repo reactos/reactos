@@ -311,29 +311,6 @@ UINT ResizePacket(
     return OldSize;
 }
 
-NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
-			   BOOLEAN Copy ) {
-    PNDIS_BUFFER Buffer;
-    NDIS_STATUS Status;
-    PCHAR NewBuf;
-
-    if( Copy ) {
-	NewBuf = ExAllocatePoolWithTag( NonPagedPool, Length, PACKET_BUFFER_TAG );
-	if( !NewBuf ) return NDIS_STATUS_RESOURCES;
-	RtlCopyMemory( NewBuf, Data, Length );
-    } else NewBuf = Data;
-
-    NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewBuf, Length );
-    if( Status != NDIS_STATUS_SUCCESS ) {
-        if (Copy) ExFreePoolWithTag(NewBuf, PACKET_BUFFER_TAG);
-        return Status;
-    }
-
-    NdisChainBufferAtFront( Packet, Buffer );
-
-    return STATUS_SUCCESS;
-}
-
 void GetDataPtr( PNDIS_PACKET Packet,
 		 UINT Offset,
 		 PCHAR *DataOut,

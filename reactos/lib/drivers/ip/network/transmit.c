@@ -155,22 +155,26 @@ NTSTATUS SendFragments(
         IPPacket, NCE, PathMTU));
 
     /* Make a smaller buffer if we will only send one fragment */
-    GetDataPtr( IPPacket->NdisPacket, 0, &InData, &InSize );
+    GetDataPtr( IPPacket->NdisPacket, IPPacket->Position, &InData, &InSize );
     if( InSize < BufferSize ) BufferSize = InSize;
 
     TI_DbgPrint(MAX_TRACE, ("Fragment buffer is %d bytes\n", BufferSize));
 
     IFC = ExAllocatePoolWithTag(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT), IFC_TAG);
     if (IFC == NULL)
+    {
+        IPPacket->Free(IPPacket);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Allocate NDIS packet */
     NdisStatus = AllocatePacketWithBuffer
 	( &IFC->NdisPacket, NULL, BufferSize );
 
     if( !NT_SUCCESS(NdisStatus) ) {
-	ExFreePoolWithTag( IFC, IFC_TAG );
-	return NdisStatus;
+        IPPacket->Free(IPPacket);
+        ExFreePoolWithTag( IFC, IFC_TAG );
+        return NdisStatus;
     }
 
     GetDataPtr( IFC->NdisPacket, 0, (PCHAR *)&Data, &InSize );
@@ -211,6 +215,7 @@ NTSTATUS SendFragments(
 
     FreeNdisPacket(IFC->NdisPacket);
     ExFreePoolWithTag(IFC, IFC_TAG);
+    IPPacket->Free(IPPacket);
 
     return NdisStatus;
 }
@@ -234,16 +239,11 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE)
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)\n", IPPacket, NCE));
 
     DISPLAY_IP_PACKET(IPPacket);
-    /*OskitDumpBuffer( IPPacket->Header, IPPacket->TotalSize );*/
 
     /* Fetch path MTU now, because it may change */
     TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", NCE->Interface->MTU));
 
-    NdisQueryPacket(IPPacket->NdisPacket,
-                    NULL,
-                    NULL,
-                    NULL,
-                    &PacketSize);
+    NdisQueryPacketLength(IPPacket->NdisPacket, &PacketSize);
 
     NCE->Interface->Stats.OutBytes += PacketSize;
 

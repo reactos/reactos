@@ -44,7 +44,6 @@ VOID LoopTransmit(
     PNDIS_PACKET XmitPacket;
     NDIS_STATUS NdisStatus;
     PIP_PACKET IPPacket;
-    PNDIS_BUFFER NdisBuffer;
 
     ASSERT_KM_POINTER(NdisPacket);
     ASSERT_KM_POINTER(PC(NdisPacket));
@@ -65,11 +64,12 @@ VOID LoopTransmit(
 
             IPPacket->NdisPacket = XmitPacket;
 
-            NdisGetFirstBufferFromPacket(XmitPacket,
-                                         &NdisBuffer,
-                                         &IPPacket->Header,
-                                         &IPPacket->ContigSize,
-                                         &IPPacket->TotalSize);
+            GetDataPtr(IPPacket->NdisPacket,
+                       0,
+                       (PCHAR*)&IPPacket->Header,
+                       &IPPacket->TotalSize);
+
+            IPPacket->MappedHeader = TRUE;
 
             if (!ChewCreate(LoopPassiveWorker, IPPacket))
             {

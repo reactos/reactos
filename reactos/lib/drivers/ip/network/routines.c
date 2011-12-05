@@ -60,10 +60,7 @@ VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
 #if DBG
-    PCHAR p;
     UINT Length;
-    PNDIS_BUFFER Buffer;
-    PNDIS_BUFFER NextBuffer;
     PCHAR CharBuffer;
 
     if ((DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) != TRUE) ||
@@ -76,28 +73,14 @@ VOID DisplayIPPacket(
         return;
     }
 
-	  TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
+    TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
     TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
     TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
     TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
-    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
     TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
 
-    if (IPPacket->NdisPacket) {
-        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
-        for (; Buffer != NULL; Buffer = NextBuffer) {
-            NdisGetNextBuffer(Buffer, &NextBuffer);
-            NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
-	    //OskitDumpBuffer( p, Length );
-        }
-    } else {
-        p      = IPPacket->Header;
-        Length = IPPacket->ContigSize;
-	//OskitDumpBuffer( p, Length );
-    }
-
     CharBuffer = IPPacket->Header;
-    Length = IPPacket->ContigSize;
+    Length = IPPacket->HeaderSize;
     DisplayIPHeader(CharBuffer, Length);
 #endif
 }

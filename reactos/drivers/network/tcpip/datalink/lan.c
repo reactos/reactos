@@ -12,35 +12,16 @@
 
 UINT TransferDataCalled = 0;
 UINT TransferDataCompleteCalled = 0;
-UINT LanReceiveWorkerCalled = 0;
-BOOLEAN LanReceiveWorkerBusy = FALSE;
 
 #define CCS_ROOT L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet"
 #define TCPIP_GUID L"{4D36E972-E325-11CE-BFC1-08002BE10318}"
-
-#define NGFP(_Packet)                                             \
-    {                                                             \
-        PVOID _Header;                                            \
-        ULONG _ContigSize, _TotalSize;                            \
-        PNDIS_BUFFER _NdisBuffer;                                 \
-                                                                  \
-        TI_DbgPrint(MID_TRACE,("Checking Packet %x\n", _Packet)); \
-	NdisGetFirstBufferFromPacket(_Packet,                     \
-				     &_NdisBuffer,                \
-				     &_Header,                    \
-				     &_ContigSize,                \
-				     &_TotalSize);                \
-        TI_DbgPrint(MID_TRACE,("NdisBuffer: %x\n", _NdisBuffer)); \
-        TI_DbgPrint(MID_TRACE,("Header    : %x\n", _Header));     \
-        TI_DbgPrint(MID_TRACE,("ContigSize: %x\n", _ContigSize)); \
-        TI_DbgPrint(MID_TRACE,("TotalSize : %x\n", _TotalSize));  \
-    }
 
 typedef struct _LAN_WQ_ITEM {
     LIST_ENTRY ListEntry;
     PNDIS_PACKET Packet;
     PLAN_ADAPTER Adapter;
     UINT BytesTransferred;
+    BOOLEAN LegacyReceive;
 } LAN_WQ_ITEM, *PLAN_WQ_ITEM;
 
 NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
@@ -97,6 +78,83 @@ NDIS_STATUS NDISCall(
     }
 
     return NdisStatus;
+}
+
+/* Used by legacy ProtocolReceive for packet type */
+NDIS_STATUS
+GetPacketTypeFromHeaderBuffer(PLAN_ADAPTER Adapter,
+                              PVOID HeaderBuffer,
+                              ULONG HeaderBufferSize,
+                              PULONG PacketType)
+{
+    PETH_HEADER EthHeader = HeaderBuffer;
+
+    if (HeaderBufferSize < Adapter->HeaderSize)
+    {
+        TI_DbgPrint(DEBUG_DATALINK, ("Runt frame (size %d).\n", HeaderBufferSize));
+        return NDIS_STATUS_NOT_ACCEPTED;
+    }
+
+    switch (Adapter->Media)
+    {
+        case NdisMedium802_3:
+            /* Ethernet and IEEE 802.3 frames can be destinguished by
+               looking at the IEEE 802.3 length field. This field is
+               less than or equal to 1500 for a valid IEEE 802.3 frame
+               and larger than 1500 is it's a valid EtherType value.
+               See RFC 1122, section 2.3.3 for more information */
+
+            *PacketType = EthHeader->EType;
+            break;
+
+        default:
+            TI_DbgPrint(MIN_TRACE, ("Unsupported media.\n"));
+
+            /* FIXME: Support other medias */
+            return NDIS_STATUS_NOT_ACCEPTED;
+    }
+    
+    TI_DbgPrint(DEBUG_DATALINK, ("EtherType (0x%X).\n", *PacketType));
+    
+    return NDIS_STATUS_SUCCESS;
+}
+
+/* Used by ProtocolReceivePacket for packet type */
+NDIS_STATUS
+GetPacketTypeFromNdisPacket(PLAN_ADAPTER Adapter,
+                            PNDIS_PACKET NdisPacket,
+                            PULONG PacketType)
+{
+    PVOID HeaderBuffer;
+    ULONG BytesCopied;
+    NDIS_STATUS Status;
+    
+    HeaderBuffer = ExAllocatePool(NonPagedPool,
+                                  Adapter->HeaderSize);
+    if (!HeaderBuffer)
+        return NDIS_STATUS_RESOURCES;
+    
+    /* Copy the media header */
+    BytesCopied = CopyPacketToBuffer(HeaderBuffer,
+                                     NdisPacket,
+                                     0,
+                                     Adapter->HeaderSize);
+    if (BytesCopied != Adapter->HeaderSize)
+    {
+        /* Runt frame */
+        ExFreePool(HeaderBuffer);
+        TI_DbgPrint(DEBUG_DATALINK, ("Runt frame (size %d).\n", BytesCopied));
+        return NDIS_STATUS_NOT_ACCEPTED;
+    }
+
+    Status = GetPacketTypeFromHeaderBuffer(Adapter,
+                                           HeaderBuffer,
+                                           BytesCopied,
+                                           PacketType);
+    
+    ExFreePool(HeaderBuffer);
+    
+    return Status;
 }
 
 
@@ -235,48 +293,67 @@ VOID NTAPI ProtocolSendComplete(
 }
 
 VOID LanReceiveWorker( PVOID Context ) {
-    UINT PacketType;
+    ULONG PacketType;
     PLAN_WQ_ITEM WorkItem = (PLAN_WQ_ITEM)Context;
     PNDIS_PACKET Packet;
     PLAN_ADAPTER Adapter;
     UINT BytesTransferred;
-    PNDIS_BUFFER NdisBuffer;
     IP_PACKET IPPacket;
+    BOOLEAN LegacyReceive;
+    PIP_INTERFACE Interface;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
     Packet = WorkItem->Packet;
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
+    LegacyReceive = WorkItem->LegacyReceive;
 
     ExFreePoolWithTag(WorkItem, WQ_CONTEXT_TAG);
+
+    Interface = Adapter->Context;
 
     IPInitializePacket(&IPPacket, 0);
 
     IPPacket.NdisPacket = Packet;
+    IPPacket.ReturnPacket = !LegacyReceive;
 
-    NdisGetFirstBufferFromPacket(Packet,
-				 &NdisBuffer,
-				 &IPPacket.Header,
-				 &IPPacket.ContigSize,
-				 &IPPacket.TotalSize);
+    if (LegacyReceive)
+    {
+        /* Packet type is precomputed */
+        PacketType = PC(IPPacket.NdisPacket)->PacketType;
 
-    IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
-    /* Determine which upper layer protocol that should receive
-       this packet and pass it to the correct receive handler */
+        /* Data is at position 0 */
+        IPPacket.Position = 0;
 
-    TI_DbgPrint(MID_TRACE,
-		("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
-		 IPPacket.ContigSize, IPPacket.TotalSize,
-		 BytesTransferred));
+        /* Packet size is determined by bytes transferred */
+        IPPacket.TotalSize = BytesTransferred;
+    }
+    else
+    {
+        /* Determine packet type from media header */
+        if (GetPacketTypeFromNdisPacket(Adapter,
+                                        IPPacket.NdisPacket,
+                                        &PacketType) != NDIS_STATUS_SUCCESS)
+        {
+            /* Bad packet */
+            IPPacket.Free(&IPPacket);
+            return;
+        }
 
-    PacketType = PC(IPPacket.NdisPacket)->PacketType;
-    IPPacket.Position = 0;
+        /* Data is at the end of the media header */
+        IPPacket.Position = Adapter->HeaderSize;
+
+        /* Calculate packet size (excluding media header) */
+        NdisQueryPacketLength(IPPacket.NdisPacket, &IPPacket.TotalSize);
+    }
 
     TI_DbgPrint
 	(DEBUG_DATALINK,
-	 ("Ether Type = %x ContigSize = %d Total = %d\n",
-	  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
+	 ("Ether Type = %x Total = %d\n",
+	  PacketType, IPPacket.TotalSize));
+
+    Interface->Stats.InBytes += IPPacket.TotalSize;
 
     /* NDIS packet is freed in all of these cases */
     switch (PacketType) {
@@ -298,8 +375,8 @@ VOID LanReceiveWorker( PVOID Context ) {
 VOID LanSubmitReceiveWork(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
-    NDIS_STATUS Status,
-    UINT BytesTransferred) {
+    UINT BytesTransferred,
+    BOOLEAN LegacyReceive) {
     PLAN_WQ_ITEM WQItem = ExAllocatePoolWithTag(NonPagedPool, sizeof(LAN_WQ_ITEM),
                                                 WQ_CONTEXT_TAG);
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
@@ -311,6 +388,7 @@ VOID LanSubmitReceiveWork(
     WQItem->Packet = Packet;
     WQItem->Adapter = Adapter;
     WQItem->BytesTransferred = BytesTransferred;
+    WQItem->LegacyReceive = LegacyReceive;
 
     if (!ChewCreate( LanReceiveWorker, WQItem ))
         ExFreePoolWithTag(WQItem, WQ_CONTEXT_TAG);
@@ -342,7 +420,30 @@ VOID NTAPI ProtocolTransferDataComplete(
 
     if( Status != NDIS_STATUS_SUCCESS ) return;
 
-    LanSubmitReceiveWork( BindingContext, Packet, Status, BytesTransferred );
+    LanSubmitReceiveWork(BindingContext,
+                         Packet,
+                         BytesTransferred,
+                         TRUE);
+}
+
+INT NTAPI ProtocolReceivePacket(
+    NDIS_HANDLE BindingContext,
+    PNDIS_PACKET NdisPacket)
+{
+    PLAN_ADAPTER Adapter = BindingContext;
+
+    if (Adapter->State != LAN_STATE_STARTED) {
+        TI_DbgPrint(DEBUG_DATALINK, ("Adapter is stopped.\n"));
+        return 0;
+    }
+
+    LanSubmitReceiveWork(BindingContext,
+                         NdisPacket,
+                         0, /* Unused */
+                         FALSE);
+
+    /* Hold 1 reference on this packet */
+    return 1;
 }
 
 NDIS_STATUS NTAPI ProtocolReceive(
@@ -367,15 +468,12 @@ NDIS_STATUS NTAPI ProtocolReceive(
  *     Status of operation
  */
 {
-    USHORT EType;
-    UINT PacketType, BytesTransferred;
-    UINT temp;
-    //IP_PACKET IPPacket;
+    ULONG PacketType;
+    UINT BytesTransferred;
     PCHAR BufferData;
     NDIS_STATUS NdisStatus;
     PNDIS_PACKET NdisPacket;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    PETH_HEADER EHeader  = (PETH_HEADER)HeaderBuffer;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called. (packetsize %d)\n",PacketSize));
 
@@ -389,30 +487,17 @@ NDIS_STATUS NTAPI ProtocolReceive(
         return NDIS_STATUS_NOT_ACCEPTED;
     }
 
-    if (Adapter->Media == NdisMedium802_3) {
-        /* Ethernet and IEEE 802.3 frames can be destinguished by
-           looking at the IEEE 802.3 length field. This field is
-           less than or equal to 1500 for a valid IEEE 802.3 frame
-           and larger than 1500 is it's a valid EtherType value.
-           See RFC 1122, section 2.3.3 for more information */
-        /* FIXME: Test for Ethernet and IEEE 802.3 frame */
-        if (((EType = EHeader->EType) != ETYPE_IPv4) && (EType != ETYPE_ARP)) {
-            TI_DbgPrint(DEBUG_DATALINK, ("Not IP or ARP frame. EtherType (0x%X).\n", EType));
-            return NDIS_STATUS_NOT_ACCEPTED;
-        }
-        /* We use EtherType constants to destinguish packet types */
-        PacketType = EType;
-    } else {
-        TI_DbgPrint(MIN_TRACE, ("Unsupported media.\n"));
-        /* FIXME: Support other medias */
+    NdisStatus = GetPacketTypeFromHeaderBuffer(Adapter,
+                                               HeaderBuffer,
+                                               HeaderBufferSize,
+                                               &PacketType);
+    if (NdisStatus != NDIS_STATUS_SUCCESS)
         return NDIS_STATUS_NOT_ACCEPTED;
-    }
-
-    /* Get a transfer data packet */
 
     TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n",
 				 Adapter, Adapter->MTU));
 
+    /* Get a transfer data packet */
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL,
                                            PacketSize );
     if( NdisStatus != NDIS_STATUS_SUCCESS ) {
@@ -423,10 +508,7 @@ NDIS_STATUS NTAPI ProtocolReceive(
 
     TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
 
-    GetDataPtr( NdisPacket, 0, &BufferData, &temp );
-
-    //IPPacket.NdisPacket = NdisPacket;
-    //IPPacket.Position = 0;
+    GetDataPtr( NdisPacket, 0, &BufferData, &PacketSize );
 
     TransferDataCalled++;
 
@@ -1486,6 +1568,7 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.RequestCompleteHandler         = ProtocolRequestComplete;
     ProtChars.SendCompleteHandler            = ProtocolSendComplete;
     ProtChars.TransferDataCompleteHandler    = ProtocolTransferDataComplete;
+    ProtChars.ReceivePacketHandler           = ProtocolReceivePacket;
     ProtChars.ReceiveHandler                 = ProtocolReceive;
     ProtChars.ReceiveCompleteHandler         = ProtocolReceiveComplete;
     ProtChars.StatusHandler                  = ProtocolStatus;

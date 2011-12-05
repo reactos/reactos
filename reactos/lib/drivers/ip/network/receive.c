@@ -92,7 +92,14 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment packet at (0x%X).\n", CurrentF->Packet));
 
     /* Free the fragment data buffer */
-    FreeNdisPacket(CurrentF->Packet);
+    if (CurrentF->ReturnPacket)
+    {
+        NdisReturnPackets(&CurrentF->Packet, 1);
+    }
+    else
+    {
+        FreeNdisPacket(CurrentF->Packet);
+    }
 
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment at (0x%X).\n", CurrentF));
 
@@ -189,27 +196,29 @@ ReassembleDatagram(
   PIP_FRAGMENT Fragment;
   PCHAR Data;
 
+  PAGED_CODE();
+
   TI_DbgPrint(DEBUG_IP, ("Reassembling datagram from IPDR at (0x%X).\n", IPDR));
   TI_DbgPrint(DEBUG_IP, ("IPDR->HeaderSize = %d\n", IPDR->HeaderSize));
   TI_DbgPrint(DEBUG_IP, ("IPDR->DataSize = %d\n", IPDR->DataSize));
 
   IPPacket->TotalSize  = IPDR->HeaderSize + IPDR->DataSize;
-  IPPacket->ContigSize = IPPacket->TotalSize;
   IPPacket->HeaderSize = IPDR->HeaderSize;
 
   RtlCopyMemory(&IPPacket->SrcAddr, &IPDR->SrcAddr, sizeof(IP_ADDRESS));
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
 
   /* Allocate space for full IP datagram */
-  IPPacket->Header = ExAllocatePoolWithTag(NonPagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
+  IPPacket->Header = ExAllocatePoolWithTag(PagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
   if (!IPPacket->Header) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     (*IPPacket->Free)(IPPacket);
     return FALSE;
   }
+  IPPacket->MappedHeader = FALSE;
 
   /* Copy the header into the buffer */
-  RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, IPDR->HeaderSize);
+  RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, sizeof(IPDR->IPv4Header));
 
   Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPDR->HeaderSize);
   IPPacket->Data = Data;
@@ -388,8 +397,8 @@ VOID ProcessFragment(
       TI_DbgPrint(DEBUG_IP, ("First fragment found. Header buffer is at (0x%X). "
         "Header size is (%d).\n", &IPDR->IPv4Header, IPPacket->HeaderSize));
 
-      RtlCopyMemory(&IPDR->IPv4Header, IPPacket->Header, IPPacket->HeaderSize);
-      IPDR->HeaderSize = IPPacket->HeaderSize;
+      RtlCopyMemory(&IPDR->IPv4Header, IPPacket->Header, sizeof(IPDR->IPv4Header));
+      IPDR->HeaderSize = sizeof(IPDR->IPv4Header);
     }
 
     /* Create a buffer, copy the data into it and put it
@@ -406,6 +415,7 @@ VOID ProcessFragment(
 
     Fragment->Size = IPPacket->TotalSize - IPPacket->HeaderSize;
     Fragment->Packet = IPPacket->NdisPacket;
+    Fragment->ReturnPacket = IPPacket->ReturnPacket;
     Fragment->PacketOffset = IPPacket->Position + IPPacket->HeaderSize;
     Fragment->Offset = FragFirst;
 
@@ -428,14 +438,14 @@ VOID ProcessFragment(
        Assemble the datagram and pass it to an upper layer protocol */
 
     TI_DbgPrint(DEBUG_IP, ("Complete datagram received.\n"));
+      
+    RemoveIPDR(IPDR);
+    TcpipReleaseSpinLock(&IPDR->Lock, OldIrql);
 
     /* FIXME: Assumes IPv4 */
     IPInitializePacket(&Datagram, IP_ADDRESS_V4);
 
     Success = ReassembleDatagram(&Datagram, IPDR);
-
-    RemoveIPDR(IPDR);
-    TcpipReleaseSpinLock(&IPDR->Lock, OldIrql);
 
     FreeIPDR(IPDR);
 
@@ -448,12 +458,9 @@ VOID ProcessFragment(
     /* Give the packet to the protocol dispatcher */
     IPDispatchProtocol(IF, &Datagram);
 
-    IF->Stats.InBytes += Datagram.TotalSize;
-
     /* We're done with this datagram */
-    ExFreePoolWithTag(Datagram.Header, PACKET_BUFFER_TAG);
     TI_DbgPrint(MAX_TRACE, ("Freeing datagram at (0x%X).\n", Datagram));
-    (*Datagram.Free)(&Datagram);
+    Datagram.Free(&Datagram);
   } else
     TcpipReleaseSpinLock(&IPDR->Lock, OldIrql);
 }
@@ -535,69 +542,78 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
  *     IPPacket = Pointer to IP packet
  */
 {
+    UCHAR FirstByte;
+    ULONG BytesCopied;
+    
     TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
+    
+    /* Read in the first IP header byte for size information */
+    BytesCopied = CopyPacketToBuffer((PCHAR)&FirstByte,
+                                     IPPacket->NdisPacket,
+                                     IPPacket->Position,
+                                     sizeof(UCHAR));
+    if (BytesCopied != sizeof(UCHAR))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to copy in first byte\n"));
+        /* Discard packet */
+        return;
+    }
 
-    IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
+    IPPacket->HeaderSize = (FirstByte & 0x0F) << 2;
     TI_DbgPrint(DEBUG_IP, ("IPPacket->HeaderSize = %d\n", IPPacket->HeaderSize));
 
     if (IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE) {
-	TI_DbgPrint
-	    (MIN_TRACE,
-	     ("Datagram received with incorrect header size (%d).\n",
+        TI_DbgPrint(MIN_TRACE, ("Datagram received with incorrect header size (%d).\n",
 	      IPPacket->HeaderSize));
-	/* Discard packet */
-	return;
+        /* Discard packet */
+        return;
+    }
+
+    /* This is freed by IPPacket->Free() */
+    IPPacket->Header = ExAllocatePoolWithTag(NonPagedPool,
+                                             IPPacket->HeaderSize,
+                                             PACKET_BUFFER_TAG);
+    if (!IPPacket->Header)
+    {
+        TI_DbgPrint(MIN_TRACE, ("No resources to allocate header\n"));
+        /* Discard packet */
+        return;
+    }
+
+    IPPacket->MappedHeader = FALSE;
+
+    BytesCopied = CopyPacketToBuffer((PCHAR)IPPacket->Header,
+                                     IPPacket->NdisPacket,
+                                     IPPacket->Position,
+                                     IPPacket->HeaderSize);
+    if (BytesCopied != IPPacket->HeaderSize)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to copy in header\n"));
+        /* Discard packet */
+        return;
     }
 
     /* Checksum IPv4 header */
     if (!IPv4CorrectChecksum(IPPacket->Header, IPPacket->HeaderSize)) {
-	TI_DbgPrint
-	    (MIN_TRACE,
-	     ("Datagram received with bad checksum. Checksum field (0x%X)\n",
+        TI_DbgPrint(MIN_TRACE, ("Datagram received with bad checksum. Checksum field (0x%X)\n",
 	      WN2H(((PIPv4_HEADER)IPPacket->Header)->Checksum)));
-	/* Discard packet */
-	return;
+        /* Discard packet */
+        return;
     }
 
     IPPacket->TotalSize = WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength);
 
     AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
-
-    IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
-
+    
     TI_DbgPrint(MID_TRACE,("IPPacket->Position = %d\n",
-			   IPPacket->Position));
-
-    //OskitDumpBuffer(IPPacket->Header, IPPacket->TotalSize);
+                           IPPacket->Position));
 
     /* FIXME: Possibly forward packets with multicast addresses */
 
     /* FIXME: Should we allow packets to be received on the wrong interface? */
     /* XXX Find out if this packet is destined for us */
     ProcessFragment(IF, IPPacket);
-#if 0
-    } else {
-	/* This packet is not destined for us. If we are a router,
-	   try to find a route and forward the packet */
-
-	/* FIXME: Check if acting as a router */
-	NCE = NULL;
-	if (NCE) {
-	    PROUTE_CACHE_NODE RCN;
-
-	    /* FIXME: Possibly fragment datagram */
-	    /* Forward the packet */
-	    if(!RouteGetRouteToDestination( &IPPacket->DstAddr, NULL, &RCN ))
-		IPSendDatagram(IPPacket, RCN, ReflectPacketComplete, IPPacket);
-	} else {
-	    TI_DbgPrint(MIN_TRACE, ("No route to destination (0x%X).\n",
-				    IPPacket->DstAddr.Address.IPv4Address));
-
-	    /* FIXME: Send ICMP error code */
-	}
-    }
-#endif
 }
 
 
@@ -609,26 +625,39 @@ VOID IPReceive( PIP_INTERFACE IF, PIP_PACKET IPPacket )
  *     IPPacket = Pointer to IP packet
  */
 {
-  UINT Version;
+    UCHAR FirstByte;
+    UINT Version, BytesCopied;
 
-  /* Check that IP header has a supported version */
-  Version = (((PIPv4_HEADER)IPPacket->Header)->VerIHL >> 4);
+    /* Read in the first IP header byte for version information */
+    BytesCopied = CopyPacketToBuffer((PCHAR)&FirstByte,
+                                     IPPacket->NdisPacket,
+                                     IPPacket->Position,
+                                     sizeof(UCHAR));
+    if (BytesCopied != sizeof(UCHAR))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to copy in first byte\n"));
+        IPPacket->Free(IPPacket);
+        return;
+    }
 
-  switch (Version) {
-  case 4:
-    IPPacket->Type = IP_ADDRESS_V4;
-    IPv4Receive(IF, IPPacket);
-    break;
-  case 6:
-    IPPacket->Type = IP_ADDRESS_V6;
-    TI_DbgPrint(MAX_TRACE, ("Datagram of type IPv6 discarded.\n"));
-    break;
-  default:
-	  TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));
-    break;
-  }
+    /* Check that IP header has a supported version */
+    Version = (FirstByte >> 4);
 
-  IPPacket->Free(IPPacket);
+    switch (Version) {
+        case 4:
+            IPPacket->Type = IP_ADDRESS_V4;
+            IPv4Receive(IF, IPPacket);
+            break;
+        case 6:
+            IPPacket->Type = IP_ADDRESS_V6;
+            TI_DbgPrint(MAX_TRACE, ("Datagram of type IPv6 discarded.\n"));
+            break;
+        default:
+            TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));
+            break;
+    }
+
+    IPPacket->Free(IPPacket);
 }
 
 /* EOF */

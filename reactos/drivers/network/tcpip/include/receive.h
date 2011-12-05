@@ -10,12 +10,13 @@
 #include <ip.h>
 
 /* Number of seconds before destroying the IPDR */
-#define MAX_TIMEOUT_COUNT 5
+#define MAX_TIMEOUT_COUNT 3
 
 /* IP datagram fragment descriptor. Used to store IP datagram fragments */
 typedef struct IP_FRAGMENT {
     LIST_ENTRY ListEntry; /* Entry on list */
     PNDIS_PACKET Packet;  /* NDIS packet containing fragment data */
+    BOOLEAN ReturnPacket; /* States whether to call NdisReturnPackets */
     UINT PacketOffset;    /* Offset into NDIS packet where data is */
     UINT Offset;          /* Offset into datagram where this fragment is */
     UINT Size;            /* Size of this fragment */

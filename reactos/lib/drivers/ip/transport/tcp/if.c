@@ -12,7 +12,7 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
 {
     NDIS_STATUS NdisStatus;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    IP_PACKET Packet = { 0 };
+    IP_PACKET Packet;
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
 
@@ -33,6 +33,8 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
         return ERR_IF;
     }
 
+    IPInitializePacket(&Packet, LocalAddress.Type);
+
     if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
     {
         return ERR_RTE;
@@ -43,11 +45,12 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     {
         return ERR_MEM;
     }
-    
-    GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.ContigSize);
+
+    GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.TotalSize);
+    Packet.MappedHeader = TRUE;
 
     ASSERT(p->tot_len == p->len);
-    ASSERT(Packet.ContigSize == p->len);
+    ASSERT(Packet.TotalSize == p->len);
 
     RtlCopyMemory(Packet.Header, p->payload, p->len);
 
@@ -57,12 +60,12 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     Packet.DstAddr = RemoteAddress;
 
     NdisStatus = IPSendDatagram(&Packet, NCE);
-    FreeNdisPacket(Packet.NdisPacket);
     if (!NT_SUCCESS(NdisStatus))
     {
+        Packet.Free(&Packet);
         return ERR_RTE;
     }
-    
+
     return 0;
 }
 

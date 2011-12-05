@@ -84,15 +84,16 @@ BOOLEAN PrepareICMPPacket(
     if( !NT_SUCCESS(NdisStatus) ) return FALSE;
 
     IPPacket->NdisPacket = NdisPacket;
+    IPPacket->MappedHeader = TRUE;
 
     GetDataPtr( IPPacket->NdisPacket, 0,
-		(PCHAR *)&IPPacket->Header, &IPPacket->ContigSize );
+		(PCHAR *)&IPPacket->Header, &IPPacket->TotalSize );
+    ASSERT(IPPacket->TotalSize == Size);
 
     TI_DbgPrint(DEBUG_ICMP, ("Size (%d). Data at (0x%X).\n", Size, Data));
     TI_DbgPrint(DEBUG_ICMP, ("NdisPacket at (0x%X).\n", NdisPacket));
 
     IPPacket->HeaderSize = sizeof(IPv4_HEADER);
-    IPPacket->TotalSize  = Size;
     IPPacket->Data = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
 
     TI_DbgPrint(DEBUG_ICMP, ("Copying Address: %x -> %x\n",
@@ -133,11 +134,6 @@ BOOLEAN PrepareICMPPacket(
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
 
     return TRUE;
-}
-
-VOID ICMPSendPacketComplete
-( PVOID Context, PNDIS_PACKET Packet, NDIS_STATUS Status ) {
-    FreeNdisPacket( Packet );
 }
 
 NTSTATUS ICMPSendDatagram(
@@ -192,8 +188,8 @@ NTSTATUS ICMPSendDatagram(
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
         {
-             UnlockObject(AddrFile, OldIrql);
-	     return STATUS_NETWORK_UNREACHABLE;
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_NETWORK_UNREACHABLE;
         }
 
         LocalAddress = NCE->Interface->Unicast;
@@ -202,8 +198,8 @@ NTSTATUS ICMPSendDatagram(
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress )))
         {
-             UnlockObject(AddrFile, OldIrql);
-	     return STATUS_INVALID_PARAMETER;
+            UnlockObject(AddrFile, OldIrql);
+            return STATUS_INVALID_PARAMETER;
         }
     }
 
@@ -217,14 +213,16 @@ NTSTATUS ICMPSendDatagram(
     UnlockObject(AddrFile, OldIrql);
 
     if( !NT_SUCCESS(Status) )
-	return Status;
+        return Status;
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
     Status = IPSendDatagram(&Packet, NCE);
-    FreeNdisPacket(Packet.NdisPacket);
     if (!NT_SUCCESS(Status))
+    {
+        Packet.Free(&Packet);
         return Status;
+    }
     
     *DataUsed = DataSize;
 
@@ -232,7 +230,6 @@ NTSTATUS ICMPSendDatagram(
 
     return STATUS_SUCCESS;
 }
-
 
 
 VOID ICMPReceive(
@@ -261,8 +258,6 @@ VOID ICMPReceive(
 
     TI_DbgPrint(DEBUG_ICMP, ("Checksum (0x%X).\n", ICMPHeader->Checksum));
 
-    RawIpReceive(Interface, IPPacket);
-
     /* Checksum ICMP header and data */
     if (!IPv4CorrectChecksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize)) {
         TI_DbgPrint(DEBUG_ICMP, ("Bad ICMP checksum.\n"));
@@ -270,20 +265,22 @@ VOID ICMPReceive(
         return;
     }
 
+    RawIpReceive(Interface, IPPacket);
+
     switch (ICMPHeader->Type) {
-    case ICMP_TYPE_ECHO_REQUEST:
-	ICMPReply( Interface, IPPacket, ICMP_TYPE_ECHO_REPLY, 0 );
-        return;
+        case ICMP_TYPE_ECHO_REQUEST:
+            ICMPReply( Interface, IPPacket, ICMP_TYPE_ECHO_REPLY, 0 );
+            break;
 
-    case ICMP_TYPE_ECHO_REPLY:
-        break;
+        case ICMP_TYPE_ECHO_REPLY:
+            break;
 
-    default:
-        TI_DbgPrint(DEBUG_ICMP,
-		    ("Discarded ICMP datagram of unknown type %d.\n",
-		     ICMPHeader->Type));
-        /* Discard packet */
-        break;
+        default:
+            TI_DbgPrint(DEBUG_ICMP,
+                        ("Discarded ICMP datagram of unknown type %d.\n",
+                         ICMPHeader->Type));
+            /* Discard packet */
+            break;
     }
 }
 
@@ -300,7 +297,6 @@ VOID ICMPTransmit(
  */
 {
     PNEIGHBOR_CACHE_ENTRY NCE;
-    NTSTATUS Status;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
@@ -311,14 +307,12 @@ VOID ICMPTransmit(
     /* Get a route to the destination address */
     if ((NCE = RouteGetRouteToDestination(&IPPacket->DstAddr))) {
         /* Send the packet */
-	Status = IPSendDatagram(IPPacket, NCE);
-	Complete(Context, IPPacket->NdisPacket, Status);
+        IPSendDatagram(IPPacket, NCE);
     } else {
         /* No route to destination (or no free resources) */
         TI_DbgPrint(DEBUG_ICMP, ("No route to destination address 0x%X.\n",
-				 IPPacket->DstAddr.Address.IPv4Address));
-        /* Discard packet */
-	Complete( Context, IPPacket->NdisPacket, NDIS_STATUS_NOT_ACCEPTED );
+                                 IPPacket->DstAddr.Address.IPv4Address));
+        IPPacket->Free(IPPacket);
     }
 }
 
@@ -343,7 +337,7 @@ VOID ICMPReply(
  */
 {
     UINT DataSize;
-    IP_PACKET NewPacket = *IPPacket;
+    IP_PACKET NewPacket;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called. Type (%d)  Code (%d).\n", Type, Code));
 
@@ -356,7 +350,7 @@ VOID ICMPReply(
     ((PICMP_HEADER)NewPacket.Data)->Code     = Code;
     ((PICMP_HEADER)NewPacket.Data)->Checksum = 0;
 
-    ICMPTransmit(&NewPacket, SendICMPComplete, NULL);
+    ICMPTransmit(&NewPacket, NULL, NULL);
 }
 
 /* EOF */

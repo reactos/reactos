@@ -78,11 +78,12 @@ typedef struct _IP_PACKET {
     OBJECT_FREE_ROUTINE Free;           /* Routine used to free resources for the object */
     UCHAR Type;                         /* Type of IP packet (see IP_ADDRESS_xx above) */
     UCHAR Flags;                        /* Flags for packet (see IP_PACKET_FLAG_xx below)*/
+    BOOLEAN MappedHeader;               /* States whether Header is from an MDL or allocated from pool */
+    BOOLEAN ReturnPacket;               /* States whether NdisPacket should be passed to NdisReturnPackets */
     PVOID Header;                       /* Pointer to IP header for this packet */
     UINT HeaderSize;                    /* Size of IP header */
     PVOID Data;                         /* Current pointer into packet data */
     UINT TotalSize;                     /* Total amount of data in packet (IP header and data) */
-    UINT ContigSize;                    /* Number of contiguous bytes left in current buffer */
     UINT Position;                      /* Current logical offset into packet */
     PNDIS_PACKET NdisPacket;            /* Pointer to NDIS packet */
     IP_ADDRESS SrcAddr;                 /* Source address */
