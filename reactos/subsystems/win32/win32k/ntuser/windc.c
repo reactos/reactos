@@ -973,12 +973,15 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
   PWNDGDI pWndgdi;
   PWND Wnd;
   HWND hWnd;
+  PPROPERTY pprop;
 
   hWnd = IntWindowFromDC(hdc);
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-     pWndgdi = (WNDGDI *)IntGetProp(Wnd, AtomWndObj);
+     pprop = IntGetProp(Wnd, AtomWndObj);
+
+     pWndgdi = (WNDGDI *)pprop->Data;
 
      if ( pWndgdi && pWndgdi->Hwnd == hWnd )
      {

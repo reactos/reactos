@@ -135,14 +135,19 @@ IntEngWindowChanged(
   PWND  Window,
   FLONG           flChanged)
 {
+  PPROPERTY pprop;
   WNDGDI *Current;
   HWND hWnd;
 
   ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
   hWnd = Window->head.h;
-  Current = (WNDGDI *)IntGetProp(Window, AtomWndObj);
-
+  pprop = IntGetProp(Window, AtomWndObj);
+  if (!pprop)
+  {
+     return;
+  }
+  Current = (WNDGDI *)pprop->Data;
   if ( gcountPWO &&
        Current &&
        Current->Hwnd == hWnd &&

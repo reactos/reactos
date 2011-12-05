@@ -633,7 +633,7 @@ NtUserCallHwnd(
          
          UserDerefObjectCo(Window);
          UserLeave();
-         return (DWORD)HelpId;
+         return (DWORD)HelpId->Data;
       }
       case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
          if (IntIsWindow(hWnd))
