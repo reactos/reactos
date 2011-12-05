@@ -262,6 +262,7 @@ NdisReturnPackets(
 {
     UINT i;
     PLOGICAL_ADAPTER Adapter;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(MID_TRACE, ("Returning %d packets\n", NumberOfPackets));
 
@@ -274,9 +275,11 @@ NdisReturnPackets(
 
             NDIS_DbgPrint(MAX_TRACE, ("Freeing packet %d (adapter = 0x%p)\n", i, Adapter));
 
+            KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
             Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ReturnPacketHandler(
                   Adapter->NdisMiniportBlock.MiniportAdapterContext,
                   PacketsToReturn[i]);
+            KeLowerIrql(OldIrql);
         }
     }
 }
