@@ -815,6 +815,13 @@ typedef struct tagDPISERVERINFO
     UINT wMaxBtnSize;                    /* 014 */
 } DPISERVERINFO, *PDPISERVERINFO;
 
+// PUSIFlags:
+#define PUSIF_PALETTEDISPLAY         0x01
+#define PUSIF_SNAPTO                 0x02
+#define PUSIF_COMBOBOXANIMATION      0x04
+#define PUSIF_LISTBOXSMOOTHSCROLLING 0x08
+#define PUSIF_KEYBOARDCUES           0x20
+
 typedef struct _PERUSERSERVERINFO
 {
     INT           aiSysMet[SM_CMETRICS];
