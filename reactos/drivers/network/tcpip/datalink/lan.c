@@ -353,7 +353,8 @@ VOID LanReceiveWorker( PVOID Context ) {
 	 ("Ether Type = %x Total = %d\n",
 	  PacketType, IPPacket.TotalSize));
 
-    Interface->Stats.InBytes += IPPacket.TotalSize;
+    /* Update interface stats */
+    Interface->Stats.InBytes += IPPacket.TotalSize + Adapter->HeaderSize;
 
     /* NDIS packet is freed in all of these cases */
     switch (PacketType) {
@@ -680,6 +681,7 @@ VOID LANTransmit(
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
     KIRQL OldIrql;
     PNDIS_PACKET XmitPacket;
+    PIP_INTERFACE Interface = Adapter->Context;
 
     TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
@@ -713,7 +715,7 @@ VOID LANTransmit(
 
     (*PC(NdisPacket)->DLComplete)(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_SUCCESS);
 
-        switch (Adapter->Media) {
+    switch (Adapter->Media) {
         case NdisMedium802_3:
             EHeader = (PETH_HEADER)Data;
 
@@ -728,25 +730,25 @@ VOID LANTransmit(
             RtlCopyMemory(EHeader->SrcAddr, Adapter->HWAddress, IEEE_802_ADDR_LENGTH);
 
             switch (Type) {
-            case LAN_PROTO_IPv4:
-                EHeader->EType = ETYPE_IPv4;
-                break;
-            case LAN_PROTO_ARP:
-                EHeader->EType = ETYPE_ARP;
-                break;
-            case LAN_PROTO_IPv6:
-                EHeader->EType = ETYPE_IPv6;
-                break;
-            default:
-                ASSERT(FALSE);
-                return;
+                case LAN_PROTO_IPv4:
+                    EHeader->EType = ETYPE_IPv4;
+                    break;
+                case LAN_PROTO_ARP:
+                    EHeader->EType = ETYPE_ARP;
+                    break;
+                case LAN_PROTO_IPv6:
+                    EHeader->EType = ETYPE_IPv6;
+                    break;
+                default:
+                    ASSERT(FALSE);
+                    return;
             }
             break;
 
         default:
             /* FIXME: Support other medias */
             break;
-        }
+    }
 
 	TI_DbgPrint( MID_TRACE, ("LinkAddress: %x\n", LinkAddress));
 	if( LinkAddress ) {
@@ -761,11 +763,14 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
 
-        if (Adapter->MTU < Size) {
-            /* This is NOT a pointer. MSDN explicitly says so. */
-            NDIS_PER_PACKET_INFO_FROM_PACKET(NdisPacket,
-                                             TcpLargeSendPacketInfo) = (PVOID)((ULONG_PTR)Adapter->MTU);
-        }
+    if (Adapter->MTU < Size) {
+        /* This is NOT a pointer. MSDN explicitly says so. */
+        NDIS_PER_PACKET_INFO_FROM_PACKET(NdisPacket,
+                                         TcpLargeSendPacketInfo) = (PVOID)((ULONG_PTR)Adapter->MTU);
+    }
+
+    /* Update interface stats */
+    Interface->Stats.OutBytes += Size;
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
