@@ -225,7 +225,8 @@ WinLdrGetNLSNames(LPSTR AnsiName,
 	if (rc != ERROR_SUCCESS)
 	{
 		//strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
-		return FALSE;
+		//return FALSE;
+		wcscpy(NameBuffer, L"c_1252.nls"); // HACK: ReactOS bug #6727
 	}
 	sprintf(AnsiName, "%S", NameBuffer);
 
@@ -243,7 +244,8 @@ WinLdrGetNLSNames(LPSTR AnsiName,
 	if (rc != ERROR_SUCCESS)
 	{
 		//strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
-		return FALSE;
+		//return FALSE;
+		wcscpy(NameBuffer, L"c_437.nls"); // HACK: ReactOS bug #6727
 	}
 	sprintf(OemName, "%S", NameBuffer);
 
