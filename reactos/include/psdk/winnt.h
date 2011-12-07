@@ -916,6 +916,7 @@ typedef enum {
 #define LANG_ORIYA   0x48
 #define LANG_PASHTO   0x63
 #define LANG_FARSI   0x29
+#define LANG_PERSIAN 0x29
 #define LANG_POLISH   0x15
 #define LANG_PORTUGUESE   0x16
 #define LANG_PUNJABI   0x46
