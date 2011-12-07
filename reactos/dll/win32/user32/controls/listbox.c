@@ -540,9 +540,7 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         after they are done, so a region has better to exist
         else everything ends clipped */
         GetClientRect(descr->self, &r);
-        hrgn = CreateRectRgnIndirect(&r);
-        SelectClipRgn( hdc, hrgn);
-        DeleteObject( hrgn );
+        hrgn = set_control_clipping( hdc, &r );
 
         dis.CtlType      = ODT_LISTBOX;
         dis.CtlID        = GetWindowLongPtrW( descr->self, GWLP_ID );
@@ -562,6 +560,8 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
               descr->self, index, item ? debugstr_w(item->str) : "", action,
               dis.itemState, wine_dbgstr_rect(rect) );
         SendMessageW(descr->owner, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
+        SelectClipRgn( hdc, hrgn );
+        if (hrgn) DeleteObject( hrgn );
     }
     else
     {

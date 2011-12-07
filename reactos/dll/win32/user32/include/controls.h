@@ -88,6 +88,8 @@ extern BOOL COMBO_FlipListbox( LPHEADCOMBO, BOOL, BOOL );
 #define LB_ADDSTRING_UPPER        0x1AC
 #define LB_ADDSTRING_LOWER        0x1AD
 
+HRGN set_control_clipping( HDC hdc, const RECT *rect );
+
 LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI User32DefWindowProc(HWND,UINT,WPARAM,LPARAM,BOOL);
 BOOL WINAPI RegisterClientPFN(VOID);

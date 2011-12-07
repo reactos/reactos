@@ -1453,31 +1453,31 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         // the size of the mask bitmap always determines the icon size!
         width = bmpAnd.bmWidth;
         height = bmpAnd.bmHeight;
-        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
+        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1 )
         {
             color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
-			if(!color)
-			{
-				ERR("Unable to create color bitmap!\n");
-				return NULL;
-			}
+            if(!color)
+            {
+                ERR("Unable to create color bitmap!\n");
+		return NULL;
+            }
             mask = CreateBitmap( width, height, 1, 1, NULL );
-			if(!mask)
-			{
-				ERR("Unable to create mask bitmap!\n");
-				DeleteObject(color);
-				return NULL;
-			}
+	    if(!mask)
+	    {
+               ERR("Unable to create mask bitmap!\n");
+               DeleteObject(color);
+               return NULL;
+	    }
         }
         else 
-		{
-			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
-			if(!mask)
-			{
-				ERR("Unable to create mask bitmap!\n");
-				return NULL;
-			}
-		}
+	{
+           mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+           if(!mask)
+           {
+              ERR("Unable to create mask bitmap!\n");
+              return NULL;
+           }
+        }
     }
     else
     {

@@ -342,7 +342,9 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
     {
         template = (LPCSTR)DIALOG_GetControl32( (const WORD *)template, &info,
                                                 dlgTemplate->dialogEx );
-        /* Is this it? */
+        info.style &= ~WS_POPUP;
+        info.style |= WS_CHILD;
+
         if (info.style & WS_BORDER)
         {
             info.style &= ~WS_BORDER;
@@ -405,6 +407,8 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
 
         if (!hwndCtrl)
         {
+            WARN("control %s %s creation failed\n", debugstr_w(info.className),
+                  debugstr_w(info.windowName));
             if (dlgTemplate->style & DS_NOFAILCREATE) continue;
             return FALSE;
         }
@@ -1013,6 +1017,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (dlgProc)
         {
             HWND focus = GetNextDlgTabItem( hwnd, 0, FALSE );
+            if (!focus) focus = GetNextDlgGroupItem( hwnd, 0, FALSE );
             if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) && IsWindow( hwnd ) &&
                 ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
             {
@@ -1020,6 +1025,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                  * WM_INITDIALOG may have changed the tab order, so find the first
                  * tabstop control again. */
                 dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+                if (!dlgInfo->hwndFocus) dlgInfo->hwndFocus = GetNextDlgGroupItem( hwnd, 0, FALSE );
                 if( dlgInfo->hwndFocus )
                     SetFocus( dlgInfo->hwndFocus );
             }
@@ -1983,41 +1989,52 @@ DlgDirSelectExW(
 BOOL
 WINAPI
 EndDialog(
-  HWND hDlg,
-  INT_PTR nResult)
+  HWND hwnd,
+  INT_PTR retval)
 {
     BOOL wasEnabled = TRUE;
     DIALOGINFO * dlgInfo;
     HWND owner;
 
-    if (!(dlgInfo = GETDLGINFO(hDlg)))
+    TRACE("%p %ld\n", hwnd, retval );
+
+    if (!(dlgInfo = GETDLGINFO(hwnd)))
     {
-        ERR("got invalid window handle (%p); buggy app !?\n", hDlg);
+        ERR("got invalid window handle (%p); buggy app !?\n", hwnd);
         return FALSE;
     }
-
-    dlgInfo->idResult = nResult;
+    dlgInfo->idResult = retval;
     dlgInfo->flags |= DF_END;
     wasEnabled = (dlgInfo->flags & DF_OWNERENABLED);
 
-    if (wasEnabled && (owner = GetWindow( hDlg, GW_OWNER )))
+    owner = GetWindow( hwnd, GW_OWNER );
+    if (wasEnabled && owner)
         DIALOG_EnableOwner( owner );
 
     /* Windows sets the focus to the dialog itself in EndDialog */
 
-    if (IsChild(hDlg, GetFocus()))
-       SetFocus( hDlg );
+    if (IsChild(hwnd, GetFocus()))
+       SetFocus( hwnd );
 
     /* Don't have to send a ShowWindow(SW_HIDE), just do
        SetWindowPos with SWP_HIDEWINDOW as done in Windows */
 
-    SetWindowPos(hDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
+    SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
                  | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
 
-    if (hDlg == GetActiveWindow()) WinPosActivateOtherWindow( hDlg );
+    if (hwnd == GetActiveWindow())
+    {
+        /* If this dialog was given an owner then set the focus to that owner
+           even when the owner is disabled (normally when a window closes any
+           disabled windows cannot receive the focus). */
+        if (owner)
+            SetForegroundWindow( owner );
+        else
+            WinPosActivateOtherWindow( hwnd );
+    }
 
     /* unblock dialog loop */
-    PostMessageA(hDlg, WM_NULL, 0, 0);
+    PostMessageA(hwnd, WM_NULL, 0, 0);
     return TRUE;
 }
 

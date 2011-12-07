@@ -9,6 +9,7 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>imm32</library>
+	<library>usp10</library>
 	<library>win32ksys</library>
 	<library>pseh</library>
 	<library>ntdll</library>

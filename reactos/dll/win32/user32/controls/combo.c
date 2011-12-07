@@ -751,19 +751,6 @@ static void CBPaintText(
 	    !(lphc->wState & CBF_DROPPED) )
 	   itemState |= ODS_SELECTED | ODS_FOCUS;
 
-       /*
-	* Save the current clip region.
-	* To retrieve the clip region, we need to create one "dummy"
-	* clip region.
-	*/
-       clipRegion = CreateRectRgnIndirect(&rectEdit);
-
-       if (GetClipRgn(hdc, clipRegion)!=1)
-       {
-	 DeleteObject(clipRegion);
-	 clipRegion=NULL;
-       }
-
        if (!IsWindowEnabled(lphc->self)) itemState |= ODS_DISABLED;
 
        dis.CtlType	= ODT_COMBOBOX;
@@ -774,22 +761,17 @@ static void CBPaintText(
        dis.itemState	= itemState;
        dis.hDC		= hdc;
        dis.rcItem	= rectEdit;
-       dis.itemData	= SendMessageW(lphc->hWndLBox, LB_GETITEMDATA,
-					(WPARAM)id, 0 );
+       dis.itemData	= SendMessageW(lphc->hWndLBox, LB_GETITEMDATA, id, 0 );
 
        /*
 	* Clip the DC and have the parent draw the item.
 	*/
-       IntersectClipRect(hdc,
-			 rectEdit.left,  rectEdit.top,
-			 rectEdit.right, rectEdit.bottom);
+       clipRegion = set_control_clipping( hdc, &rectEdit );
 
        SendMessageW(lphc->owner, WM_DRAWITEM, ctlid, (LPARAM)&dis );
 
-       /*
-	* Reset the clipping region.
-	*/
-       SelectClipRgn(hdc, clipRegion);
+       SelectClipRgn( hdc, clipRegion);
+       if (clipRegion) DeleteObject( clipRegion );
      }
      else
      {
@@ -2153,14 +2135,24 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 		return SendMessageW(lphc->hWndLBox, LB_GETLOCALE, 0, 0);
 	case CB_SETLOCALE:
 		return SendMessageW(lphc->hWndLBox, LB_SETLOCALE, wParam, 0);
+        case CB_SETDROPPEDWIDTH:
+                if( (CB_GETTYPE(lphc) == CBS_SIMPLE) ||
+                    (INT)wParam >= 32768 )
+                    return CB_ERR;
+                /* new value must be higher than combobox width */
+                if((INT)wParam >= lphc->droppedRect.right - lphc->droppedRect.left)
+                    lphc->droppedWidth = wParam;
+                else if(wParam)
+                    lphc->droppedWidth = 0;
+
+                /* recalculate the combobox area */
+                CBCalcPlacement(hwnd, lphc, &lphc->textRect, &lphc->buttonRect, &lphc->droppedRect );
+
+                /* fall through */
 	case CB_GETDROPPEDWIDTH:
 		if( lphc->droppedWidth )
                     return  lphc->droppedWidth;
 		return  lphc->droppedRect.right - lphc->droppedRect.left;
-	case CB_SETDROPPEDWIDTH:
-		if( (CB_GETTYPE(lphc) != CBS_SIMPLE) &&
-		    (INT)wParam < 32768 ) lphc->droppedWidth = (INT)wParam;
-		return  CB_ERR;
 	case CB_GETDROPPEDCONTROLRECT:
 		if( lParam ) CBGetDroppedControlRect(lphc, (LPRECT)lParam );
 		return  CB_OKAY;
@@ -2233,7 +2225,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 	case CB_LIMITTEXT:
 		if( lphc->wState & CBF_EDIT )
 			return SendMessageW(lphc->hWndEdit, EM_LIMITTEXT, wParam, lParam);
-                break; // ReactOS!!! removed at revision 38715
+                return  TRUE;
 
     case WM_UPDATEUISTATE:
         if (unicode)
