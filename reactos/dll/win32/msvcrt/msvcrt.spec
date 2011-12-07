@@ -581,7 +581,7 @@
 # stub _lfind_s
 @ cdecl _loaddll(str)
 @ cdecl -i386 _local_unwind2(ptr long)
-@ cdecl -i386 _local_unwind4(ptr ptr long) msvcrt_local_unwind4
+@ cdecl -i386 _local_unwind4(ptr ptr long)
 @ cdecl _localtime32(ptr)
 # stub _localtime32_s
 @ cdecl _localtime64(ptr)
@@ -805,7 +805,7 @@
 # stub _scwprintf_p_l
 @ cdecl _searchenv(str str ptr)
 # stub _searchenv_s
-# stub _seh_longjmp_unwind4
+@ stdcall -i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 # stub _set_SSE2_enable
 # stub _set_controlfp
