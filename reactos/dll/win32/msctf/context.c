@@ -1013,7 +1013,10 @@ static HRESULT WINAPI TextStoreACPSink_OnLockGranted(ITextStoreACPSink *iface,
 
     sinkcookie = HeapAlloc(GetProcessHeap(),0,sizeof(EditCookie));
     if (!sinkcookie)
+    {
+        HeapFree(GetProcessHeap(), 0, cookie);
         return E_OUTOFMEMORY;
+    }
 
     cookie->lockType = dwLockFlags;
     cookie->pOwningContext = This->pContext;
