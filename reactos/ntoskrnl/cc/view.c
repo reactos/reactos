@@ -430,8 +430,6 @@ CcRosReleaseCacheSegment(PBCB Bcb,
       InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
       DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
     }
-  RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
-  InsertTailList(&CacheSegmentLRUListHead, &CacheSeg->CacheSegmentLRUListEntry);
 
   if (Mapped)
   {
@@ -517,6 +515,13 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
      KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
   }
 
+  KeAcquireGuardedMutex(&ViewLock);
+
+  /* Move to the tail of the LRU list */
+  RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
+  InsertTailList(&CacheSegmentLRUListHead, &CacheSeg->CacheSegmentLRUListEntry);
+
+  KeReleaseGuardedMutex(&ViewLock);
 
   CacheSeg->Dirty = TRUE;
   ExReleasePushLock(&CacheSeg->Lock);
@@ -770,6 +775,14 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
       current = CcRosLookupCacheSegment(Bcb, CurrentOffset);
       if (current != NULL)
 	{
+	  KeAcquireGuardedMutex(&ViewLock);
+
+	  /* Move to tail of LRU list */
+	  RemoveEntryList(&current->CacheSegmentLRUListEntry);
+	  InsertTailList(&CacheSegmentLRUListHead, &current->CacheSegmentLRUListEntry);
+
+	  KeReleaseGuardedMutex(&ViewLock);
+
 	  CacheSegList[i] = current;
 	}
       else
@@ -829,6 +842,15 @@ CcRosGetCacheSegment(PBCB Bcb,
 	return Status;
       }
    }
+
+   KeAcquireGuardedMutex(&ViewLock);
+
+   /* Move to the tail of the LRU list */
+   RemoveEntryList(&current->CacheSegmentLRUListEntry);
+   InsertTailList(&CacheSegmentLRUListHead, &current->CacheSegmentLRUListEntry);
+
+   KeReleaseGuardedMutex(&ViewLock);
+
    /*
     * Return information about the segment to the caller.
     */
