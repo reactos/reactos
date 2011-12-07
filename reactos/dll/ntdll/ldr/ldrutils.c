@@ -663,12 +663,13 @@ LdrpFetchAddressOfEntryPoint(IN PVOID ImageBase)
     return (PVOID)EntryPoint;
 }
 
-/* NOTE: This function is broken, wrong number of parameters, no SxS, etc */
-HANDLE
+/* NOTE: This function is partially missing SxS */
+NTSTATUS
 NTAPI
 LdrpCheckForKnownDll(PWSTR DllName,
                      PUNICODE_STRING FullDllName,
-                     PUNICODE_STRING BaseDllName)
+                     PUNICODE_STRING BaseDllName,
+                     HANDLE *SectionHandle)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE Section = NULL;
@@ -677,8 +678,34 @@ LdrpCheckForKnownDll(PWSTR DllName,
     PCHAR p1;
     PWCHAR p2;
 
+    /* Zero initialize provided parameters */
+    if (SectionHandle) *SectionHandle = 0;
+
+    if (FullDllName)
+    {
+        FullDllName->Length = 0;
+        FullDllName->MaximumLength = 0;
+        FullDllName->Buffer = NULL;
+    }
+
+    if (BaseDllName)
+    {
+        BaseDllName->Length = 0;
+        BaseDllName->MaximumLength = 0;
+        BaseDllName->Buffer = NULL;
+    }
+
+    /* If any of these three params are missing then fail */
+    if (!SectionHandle || !FullDllName || !BaseDllName)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Check the Loader Lock */
+    LdrpEnsureLoaderLockIsHeld();
+
     /* Upgrade DllName to a unicode string */
     RtlInitUnicodeString(&DllNameUnic, DllName);
+
+    /* FIXME: Missing RtlComputePrivatizedDllName_U related functionality */
 
     /* Get the activation context */
     Status = RtlFindActivationContextSectionString(0,
@@ -691,13 +718,21 @@ LdrpCheckForKnownDll(PWSTR DllName,
     if (Status == STATUS_SXS_SECTION_NOT_FOUND ||
         Status == STATUS_SXS_KEY_NOT_FOUND)
     {
+        /* NOTE: Here it's beneficial to allocate one big unicode string
+                 using LdrpAllocateUnicodeString instead of fragmenting the heap
+                 with two allocations as it's done now. */
+
         /* Set up BaseDllName */
         BaseDllName->Length = DllNameUnic.Length;
         BaseDllName->MaximumLength = DllNameUnic.MaximumLength;
         BaseDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                               0,
                                               DllNameUnic.MaximumLength);
-        if (!BaseDllName->Buffer) return NULL;
+        if (!BaseDllName->Buffer)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Failure;
+        }
 
         /* Copy the contents there */
         RtlMoveMemory(BaseDllName->Buffer, DllNameUnic.Buffer, DllNameUnic.MaximumLength);
@@ -708,9 +743,8 @@ LdrpCheckForKnownDll(PWSTR DllName,
         FullDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, FullDllName->MaximumLength);
         if (!FullDllName->Buffer)
         {
-            /* Free base name and fail */
-            RtlFreeHeap(RtlGetProcessHeap(), 0, BaseDllName->Buffer);
-            return NULL;
+            Status = STATUS_NO_MEMORY;
+            goto Failure;
         }
 
         RtlMoveMemory(FullDllName->Buffer, LdrpKnownDllPath.Buffer, LdrpKnownDllPath.Length);
@@ -741,19 +775,26 @@ LdrpCheckForKnownDll(PWSTR DllName,
                                &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            /* Opening failed, free resources */
-            Section = NULL;
-            RtlFreeHeap(RtlGetProcessHeap(), 0, BaseDllName->Buffer);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, FullDllName->Buffer);
+            /* Clear status in case it was just not found */
+            if (Status == STATUS_OBJECT_NAME_NOT_FOUND) Status = STATUS_SUCCESS;
+            goto Failure;
         }
-    }
-    else
-    {
-        if (!NT_SUCCESS(Status)) Section = NULL;
+
+        /* Pass section handle to the caller and return success */
+        *SectionHandle = Section;
+        return STATUS_SUCCESS;
     }
 
-    /* Return section handle */
-    return Section;
+Failure:
+    /* Close section object if it was opened */
+    if (Section) NtClose(Section);
+
+    /* Free string resources */
+    if (BaseDllName->Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, BaseDllName->Buffer);
+    if (FullDllName->Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, FullDllName->Buffer);
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -893,9 +934,23 @@ LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
         }
 
         /* Try to find a Known DLL */
-        SectionHandle = LdrpCheckForKnownDll(DllName,
-                                             &FullDllName,
-                                             &BaseDllName);
+        Status = LdrpCheckForKnownDll(DllName,
+                                      &FullDllName,
+                                      &BaseDllName,
+                                      &SectionHandle);
+
+        if (!NT_SUCCESS(Status) && (Status != STATUS_DLL_NOT_FOUND))
+        {
+            /* Failure */
+            DbgPrintEx(81, //DPFLTR_LDR_ID,
+                       0,
+                       "LDR: %s - call to LdrpCheckForKnownDll(\"%ws\", ...) failed with status %x\n",
+                        __FUNCTION__,
+                        DllName,
+                        Status);
+
+            return Status;
+        }
     }
 
 SkipCheck:
