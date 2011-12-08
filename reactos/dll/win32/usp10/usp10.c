@@ -1439,7 +1439,10 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
     {
         int tab_x = 0;
         if (!(analysis->glyphs = heap_alloc_zero(sizeof(StringGlyphs) * analysis->numItems)))
+        {
+            heap_free(BidiLevel);
             goto error;
+        }
 
         for (i = 0; i < analysis->numItems; i++)
         {
@@ -2422,8 +2425,16 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
             if (!(pwOutGlyphs[i] = get_cache_glyph(psc, chInput)))
             {
                 WORD glyph;
-                if (!hdc) return E_PENDING;
-                if (GetGlyphIndicesW(hdc, &chInput, 1, &glyph, 0) == GDI_ERROR) return S_FALSE;
+                if (!hdc)
+                {
+                    heap_free(rChars);
+                    return E_PENDING;
+                }
+                if (GetGlyphIndicesW(hdc, &chInput, 1, &glyph, 0) == GDI_ERROR)
+                {
+                    heap_free(rChars);
+                    return S_FALSE;
+                }
                 pwOutGlyphs[i] = set_cache_glyph(psc, chInput, glyph);
             }
             rChars[i] = chInput;
@@ -2487,7 +2498,11 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
     charProps = heap_alloc_zero(sizeof(SCRIPT_CHARPROP)*cChars);
     if (!charProps) return E_OUTOFMEMORY;
     glyphProps = heap_alloc_zero(sizeof(SCRIPT_GLYPHPROP)*cMaxGlyphs);
-    if (!glyphProps) return E_OUTOFMEMORY;
+    if (!glyphProps)
+    {
+        heap_free(charProps);
+        return E_OUTOFMEMORY;
+    }
 
     hr = ScriptShapeOpenType(hdc, psc, psa, scriptInformation[psa->eScript].scriptTag, 0, NULL, NULL, 0, pwcChars, cChars, cMaxGlyphs, pwLogClust, charProps, pwOutGlyphs, glyphProps, pcGlyphs);
 
