@@ -393,10 +393,11 @@ WSAStringToAddressA(IN     LPSTR AddressString,
 
     if (lpProtocolInfo)
     {
-        len =   WSAPROTOCOL_LEN+1;
+        len = WSAPROTOCOL_LEN+1;
         lpProtoInfoW = HeapAlloc(GetProcessHeap(),
                                  0,
-                                 len * sizeof(WCHAR) );
+                                 FIELD_OFFSET(WSAPROTOCOL_INFOW, szProtocol) +
+                                 (len * sizeof(WCHAR)));
 
         memcpy(lpProtoInfoW,
                lpProtocolInfo,
