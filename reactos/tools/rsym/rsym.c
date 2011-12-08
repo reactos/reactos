@@ -432,6 +432,34 @@ FindSectionForRVA(DWORD RVA, unsigned NumberOfSections, PIMAGE_SECTION_HEADER Se
 }
 
 static int
+IncludeRelocationsForSection(PIMAGE_SECTION_HEADER SectionHeader)
+{
+  static char *BlacklistedSections[] =
+    {
+      ".edata",
+      ".reloc"
+    };
+  char SectionName[IMAGE_SIZEOF_SHORT_NAME];
+  unsigned i;
+
+  if (0 != (SectionHeader->Characteristics & IMAGE_SCN_LNK_REMOVE))
+    {
+      return 0;
+    }
+
+  for (i = 0; i < sizeof(BlacklistedSections) / sizeof(BlacklistedSections[0]); i++)
+    {
+      strncpy(SectionName, BlacklistedSections[i], IMAGE_SIZEOF_SHORT_NAME);
+      if (0 == memcmp(SectionName, SectionHeader->Name, IMAGE_SIZEOF_SHORT_NAME))
+        {
+          return 0;
+        }
+    }
+
+  return 1;
+}
+
+static int
 ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
                    void *RawData, PIMAGE_OPTIONAL_HEADER OptHeader,
                    unsigned NumberOfSections, PIMAGE_SECTION_HEADER SectionHeaders)
@@ -476,7 +504,7 @@ ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
     {
       TargetSectionHeader = FindSectionForRVA(BaseReloc->VirtualAddress, NumberOfSections,
                                               SectionHeaders);
-      if (NULL != TargetSectionHeader)
+      if (NULL != TargetSectionHeader && IncludeRelocationsForSection(TargetSectionHeader))
         {
           AcceptedRelocs = *ProcessedRelocs;
           Found = 0;
