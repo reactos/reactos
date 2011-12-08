@@ -182,7 +182,7 @@ CreateRemoteThread(HANDLE hProcess,
     if (hProcess == NtCurrentProcess())
     {
         PTEB Teb;
-        PVOID ActivationContextStack;
+        PVOID ActivationContextStack = NULL;
         THREAD_BASIC_INFORMATION ThreadBasicInfo;
 #ifndef SXS_SUPPORT_FIXME
         ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
