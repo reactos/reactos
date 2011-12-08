@@ -587,7 +587,7 @@ NtGdiScaleViewportExtEx(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
+            ProbeForWrite(pSize, sizeof(SIZE), 1);
 
             pSize->cx = pdcattr->szlViewportExt.cx;
             pSize->cy = pdcattr->szlViewportExt.cy;
@@ -633,7 +633,7 @@ NtGdiScaleWindowExtEx(
 
         _SEH2_TRY
         {
-            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
+            ProbeForWrite(pSize, sizeof(SIZE), 1);
 
             X = pdcattr->szlWindowExt.cx;
             if (pdcattr->dwLayout & LAYOUT_RTL) X = -X;
