@@ -371,7 +371,7 @@ WSAStringToAddressA(IN     LPSTR AddressString,
 {
     INT ret, len;
     LPWSTR szTemp;
-    LPWSAPROTOCOL_INFOW lpProtoInfoW = NULL;
+    WSAPROTOCOL_INFOW ProtoInfoW;
 
     len = MultiByteToWideChar(CP_ACP,
                               0,
@@ -393,13 +393,7 @@ WSAStringToAddressA(IN     LPSTR AddressString,
 
     if (lpProtocolInfo)
     {
-        len = WSAPROTOCOL_LEN+1;
-        lpProtoInfoW = HeapAlloc(GetProcessHeap(),
-                                 0,
-                                 FIELD_OFFSET(WSAPROTOCOL_INFOW, szProtocol) +
-                                 (len * sizeof(WCHAR)));
-
-        memcpy(lpProtoInfoW,
+        memcpy(&ProtoInfoW,
                lpProtocolInfo,
                FIELD_OFFSET(WSAPROTOCOL_INFOA, szProtocol));
 
@@ -407,24 +401,19 @@ WSAStringToAddressA(IN     LPSTR AddressString,
                             0,
                             lpProtocolInfo->szProtocol,
                             -1,
-                            lpProtoInfoW->szProtocol,
-                            len);
+                            ProtoInfoW.szProtocol,
+                            WSAPROTOCOL_LEN + 1);
     }
 
     ret = WSAStringToAddressW(szTemp,
                               AddressFamily,
-                              lpProtoInfoW,
+                              &ProtoInfoW,
                               lpAddress,
                               lpAddressLength);
 
     HeapFree(GetProcessHeap(),
              0,
              szTemp );
-
-    if (lpProtocolInfo)
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpProtoInfoW);
 
     WSASetLastError(ret);
     return ret;
