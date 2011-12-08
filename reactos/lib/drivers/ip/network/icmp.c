@@ -24,29 +24,6 @@ NTSTATUS ICMPShutdown()
     return STATUS_SUCCESS;
 }
 
-VOID SendICMPComplete(
-    PVOID Context,
-    PNDIS_PACKET Packet,
-    NDIS_STATUS NdisStatus)
-/*
- * FUNCTION: ICMP datagram transmit completion handler
- * ARGUMENTS:
- *     Context    = Pointer to context infomation (IP_PACKET)
- *     Packet     = Pointer to NDIS packet
- *     NdisStatus = Status of transmit operation
- * NOTES:
- *     This routine is called by IP when a ICMP send completes
- */
-{
-    TI_DbgPrint(DEBUG_ICMP, ("Freeing NDIS packet (%X).\n", Packet));
-
-    /* Free packet */
-    FreeNdisPacket(Packet);
-
-    TI_DbgPrint(DEBUG_ICMP, ("Done\n"));
-}
-
-
 BOOLEAN PrepareICMPPacket(
     PADDRESS_FILE AddrFile,
     PIP_INTERFACE Interface,
@@ -219,10 +196,7 @@ NTSTATUS ICMPSendDatagram(
 
     Status = IPSendDatagram(&Packet, NCE);
     if (!NT_SUCCESS(Status))
-    {
-        Packet.Free(&Packet);
         return Status;
-    }
     
     *DataUsed = DataSize;
 

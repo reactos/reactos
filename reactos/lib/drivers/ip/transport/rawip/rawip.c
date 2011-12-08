@@ -254,10 +254,7 @@ NTSTATUS RawIPSendDatagram(
 
     Status = IPSendDatagram(&Packet, NCE);
     if (!NT_SUCCESS(Status))
-    {
-        Packet.Free(&Packet);
         return Status;
-    }
 
     *DataUsed = DataSize;
 

@@ -61,10 +61,7 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
 
     NdisStatus = IPSendDatagram(&Packet, NCE);
     if (!NT_SUCCESS(NdisStatus))
-    {
-        Packet.Free(&Packet);
         return ERR_RTE;
-    }
 
     return 0;
 }
