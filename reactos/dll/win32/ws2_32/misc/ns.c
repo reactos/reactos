@@ -401,7 +401,7 @@ WSAStringToAddressA(IN     LPSTR AddressString,
 
         memcpy(lpProtoInfoW,
                lpProtocolInfo,
-               sizeof(LPWSAPROTOCOL_INFOA));
+               FIELD_OFFSET(WSAPROTOCOL_INFOA, szProtocol));
 
         MultiByteToWideChar(CP_ACP,
                             0,
@@ -427,7 +427,7 @@ WSAStringToAddressA(IN     LPSTR AddressString,
                  lpProtoInfoW);
 
     WSASetLastError(ret);
-        return ret;
+    return ret;
 }
 
 
@@ -459,9 +459,9 @@ WSAStringToAddressW(IN      LPWSTR AddressString,
 
     /* Set right adress family */
     if (lpProtocolInfo!=NULL)
-       sockaddr->sin_family = lpProtocolInfo->iAddressFamily;
-
-    else sockaddr->sin_family = AddressFamily;
+        sockaddr->sin_family = lpProtocolInfo->iAddressFamily;
+    else
+        sockaddr->sin_family = AddressFamily;
 
     /* Report size */
     if (AddressFamily == AF_INET)
@@ -513,7 +513,7 @@ WSAStringToAddressW(IN      LPWSTR AddressString,
 
     WSASetLastError(res);
     if (!res) return 0;
-        return SOCKET_ERROR;
+    return SOCKET_ERROR;
 }
 
 void check_hostent(struct hostent **he)
@@ -923,13 +923,12 @@ gethostbyname(IN  CONST CHAR FAR* name)
     if(name == NULL)
     {
         ret = gethostname(p->Hostent->h_name, MAX_HOSTNAME_LEN);
+        if(ret)
+        {
+            WSASetLastError( WSAHOST_NOT_FOUND ); //WSANO_DATA  ??
+            return NULL;
+        }
         return p->Hostent;
-    }
-
-    if(ret)
-    {
-        WSASetLastError( WSAHOST_NOT_FOUND ); //WSANO_DATA  ??
-        return NULL;
     }
 
     /* Is it an IPv6 address? */
