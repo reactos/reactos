@@ -1464,6 +1464,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
 
             if (!glyphs || !pwLogClust || !piAdvance || !psva || !pGoffset || !abc)
             {
+                heap_free (BidiLevel);
                 heap_free (glyphs);
                 heap_free (pwLogClust);
                 heap_free (piAdvance);
