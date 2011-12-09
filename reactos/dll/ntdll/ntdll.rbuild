@@ -4,9 +4,9 @@
 	<module name="ntdll" type="nativedll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
 		<importlibrary definition="def/ntdll.pspec" />
+		<include base="ReactOS">include/reactos/subsys</include>
 		<include base="ntdll">include</include>
 		<include base="ntdll" root="intermediate"></include>
-		<include base="ReactOS">include/reactos/subsys</include>
 		<define name="__NTDLL__" />
 		<define name="_NTOSKRNL_" />
 		<define name="CRTDLL" />
