@@ -1397,8 +1397,8 @@ SkipCheck:
                 }
             }
 
-            /* Check if this was a non-relocatable DLL or a known dll */
-            if (!RelocatableDll || KnownDll)
+            /* Known DLLs are not allowed to be relocated */
+            if (KnownDll && !RelocatableDll)
             {
                 /* Setup for hard error */
                 HardErrorParameters[0] = (ULONG_PTR)&IllegalDll;
