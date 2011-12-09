@@ -2801,10 +2801,6 @@ RtlAllocateActivationContextStack(IN PVOID *Context)
 
     *Context = ContextStack;
 
-    /* FIXME: Documentation on MSDN reads that activation contexts are only created
-              for modules that have a valid manifest file or resource */
-    actctx_init();
-
     return STATUS_SUCCESS;
 }
 
