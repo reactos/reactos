@@ -191,8 +191,10 @@ ULONG CabinetOpen(VOID);
 VOID CabinetClose(VOID);
 /* Locates the first file in the current cabinet file that matches a search criteria */
 ULONG CabinetFindFirst(PWCHAR FileName, PCAB_SEARCH Search);
-/* Locates the next file in the current cabinet file */
+/* Locates the next file that matches the current search criteria */
 ULONG CabinetFindNext(PCAB_SEARCH Search);
+/* Locates the next file in the current cabinet file sequentially */
+ULONG CabinetFindNextFileSequential(PWCHAR FileName, PCAB_SEARCH Search);
 /* Extracts a file from the current cabinet file */
 ULONG CabinetExtractFile(PCAB_SEARCH Search);
 /* Select codec engine to use */

@@ -694,6 +694,23 @@ CabinetFindFirst(PWCHAR FileName,
 }
 
 /*
+ * FUNCTION: Finds the next file in the cabinet that matches a search criteria
+ * ARGUMENTS:
+ *     FileName = Pointer to search criteria
+ *     Search   = Pointer to search structure
+ * RETURNS:
+ *     Status of operation
+ */
+ULONG
+CabinetFindNextFileSequential(PWCHAR FileName,
+                              PCAB_SEARCH Search)
+{
+    DPRINT("CabinetFindNextFileSequential( FileName = %S )\n", FileName);
+    wcsncpy(Search->Search, FileName, MAX_PATH);
+    return CabinetFindNext(Search);
+}
+
+/*
  * FUNCTION: Finds next file in the cabinet that matches a search criteria
  * ARGUMENTS:
  *     Search = Pointer to search structure
@@ -703,7 +720,6 @@ CabinetFindFirst(PWCHAR FileName,
 ULONG
 CabinetFindNext(PCAB_SEARCH Search)
 {
-    ULONG Status;
     PCFFILE Prev;
     ANSI_STRING AnsiString;
     UNICODE_STRING UnicodeString;
@@ -766,33 +782,9 @@ CabinetFindNext(PCAB_SEARCH Search)
         Search->Index++;
         if (Search->Index >= PCABHeader->FileCount)
         {
-            /* we have reached the end of this cabinet, try to open the next */
+            /* we have reached the end of this cabinet */
             DPRINT("End of cabinet reached\n");
-            if (wcslen(DiskNext) > 0)
-            {
-                CloseCabinet();
-
-                CabinetSetCabinetName(CabinetNext);
-                wcscpy(Search->Cabinet, CabinetName);
-
-                if (DiskChangeHandler != NULL)
-                {
-                    DiskChangeHandler(CabinetNext, DiskNext);
-                }
-
-                Status = CabinetOpen();
-                if (Status != CAB_STATUS_SUCCESS)
-                    return Status;
-            }
-            else
-            {
-                return CAB_STATUS_NOFILE;
-            }
-
-            /* starting new search or cabinet */
-            Search->File = (PCFFILE)(FileBuffer + PCABHeader->FileTableOffset);
-            Search->Index = 0;
-            Prev = 0;
+            return CAB_STATUS_NOFILE;
         }
         else
             Search->File = (PCFFILE)(strchr((char *)(Search->File + 1), 0) + 1);
