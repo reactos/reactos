@@ -87,6 +87,7 @@ ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
 
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
+void actctx_init(void);
 
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
@@ -504,19 +505,11 @@ LdrpInitializeThread(IN PCONTEXT Context)
             NtCurrentTeb()->RealClientId.UniqueThread);
 
     /* Allocate an Activation Context Stack */
-    /* FIXME: This is a hack for Wine's actctx stuff */
     DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
-    if (!(NtCurrentTeb()->ActivationContextStackPointer))
+    Status = RtlAllocateActivationContextStack((PVOID*)&NtCurrentTeb()->ActivationContextStackPointer);
+    if (!NT_SUCCESS(Status))
     {
-        Status = RtlAllocateActivationContextStack((PVOID*)&NtCurrentTeb()->ActivationContextStackPointer);
-        if (NT_SUCCESS(Status))
-        {
-            DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
-            DPRINT("ActiveFrame %p\n", ((PACTIVATION_CONTEXT_STACK)NtCurrentTeb()->ActivationContextStackPointer)->ActiveFrame);
-            NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NULL;
-        }
-        else
-            DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
+        DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
     }
 
     /* Make sure we are not shutting down */
@@ -1945,6 +1938,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Link the Init Order List */
     InsertHeadList(&Peb->Ldr->InInitializationOrderModuleList,
                    &LdrpNtDllDataTableEntry->InInitializationOrderModuleList);
+
+    /* Initialize Wine's active context implementation for the current process */
+    actctx_init();
 
     /* Set the current directory */
     Status = RtlSetCurrentDirectory_U(&CurrentDirectory);

@@ -20,6 +20,122 @@ BOOLEAN g_ShimsEnabled;
 
 /* FUNCTIONS *****************************************************************/
 
+/* NOTE: Remove those two once our actctx support becomes better */
+NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module )
+{
+    NTSTATUS status;
+    LDR_RESOURCE_INFO info;
+    IMAGE_RESOURCE_DATA_ENTRY *entry;
+
+    info.Type = (ULONG)RT_MANIFEST;
+    info.Name = (ULONG)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+    info.Language = 0;
+    if (!(status = LdrFindResource_U( module->DllBase, &info, 3, &entry )))
+    {
+        ACTCTXW ctx;
+        ctx.cbSize   = sizeof(ctx);
+        ctx.lpSource = NULL;
+        ctx.dwFlags  = ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_HMODULE_VALID;
+        ctx.hModule  = module->DllBase;
+        ctx.lpResourceName = (LPCWSTR)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+        status = RtlCreateActivationContext( &module->EntryPointActivationContext, &ctx );
+    }
+    return status;
+}
+
+NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
+{
+    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\',0};
+    static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
+
+    ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *info;
+    ACTCTX_SECTION_KEYED_DATA data;
+    UNICODE_STRING nameW;
+    NTSTATUS status;
+    SIZE_T needed, size = 1024;
+    WCHAR *p;
+
+    RtlInitUnicodeString( &nameW, libname );
+    data.cbSize = sizeof(data);
+    status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, NULL,
+                                                    ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION,
+                                                    &nameW, &data );
+    if (status != STATUS_SUCCESS) return status;
+
+    for (;;)
+    {
+        if (!(info = RtlAllocateHeap( RtlGetProcessHeap(), 0, size )))
+        {
+            status = STATUS_NO_MEMORY;
+            goto done;
+        }
+        status = RtlQueryInformationActivationContext( 0, data.hActCtx, &data.ulAssemblyRosterIndex,
+                                                       AssemblyDetailedInformationInActivationContext,
+                                                       info, size, &needed );
+        if (status == STATUS_SUCCESS) break;
+        if (status != STATUS_BUFFER_TOO_SMALL) goto done;
+        RtlFreeHeap( RtlGetProcessHeap(), 0, info );
+        size = needed;
+    }
+
+    DPRINT("manifestpath === %S\n", info->lpAssemblyManifestPath);
+    DPRINT("DirectoryName === %S\n", info->lpAssemblyDirectoryName);
+    if (!info->lpAssemblyManifestPath || !info->lpAssemblyDirectoryName)
+    {
+        status = STATUS_SXS_KEY_NOT_FOUND;
+        goto done;
+    }
+
+    if ((p = wcsrchr( info->lpAssemblyManifestPath, '\\' )))
+    {
+        DWORD dirlen = info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
+
+        p++;
+        if (_wcsnicmp( p, info->lpAssemblyDirectoryName, dirlen ) || wcsicmp( p + dirlen, dotManifestW ))
+        {
+            /* manifest name does not match directory name, so it's not a global
+             * windows/winsxs manifest; use the manifest directory name instead */
+            dirlen = p - info->lpAssemblyManifestPath;
+            needed = (dirlen + 1) * sizeof(WCHAR) + nameW.Length;
+
+            p = fullname;
+            /*if (!(*fullname = p = RtlAllocateHeap( GetProcessHeap(), 0, needed )))
+            {
+                status = STATUS_NO_MEMORY;
+                goto done;
+            }*/
+            memcpy( p, info->lpAssemblyManifestPath, dirlen * sizeof(WCHAR) );
+            p += dirlen;
+            wcscpy( p, libname );
+            goto done;
+        }
+    }
+
+    needed = (wcslen(SharedUserData->NtSystemRoot) * sizeof(WCHAR) +
+              sizeof(winsxsW) + info->ulAssemblyDirectoryNameLength + nameW.Length + 2*sizeof(WCHAR));
+
+    //if (!(*fullname = p = RtlAllocateHeap( GetProcessHeap(), 0, needed )))
+    //{
+        //status = STATUS_NO_MEMORY;
+        //goto done;
+    //}
+    wcscpy( p, SharedUserData->NtSystemRoot );
+    p += wcslen(p);
+    memcpy( p, winsxsW, sizeof(winsxsW) );
+    p += sizeof(winsxsW) / sizeof(WCHAR);
+    memcpy( p, info->lpAssemblyDirectoryName, info->ulAssemblyDirectoryNameLength );
+    p += info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
+    *p++ = '\\';
+    wcscpy( p, libname );
+
+done:
+    RtlFreeHeap( RtlGetProcessHeap(), 0, info );
+    RtlReleaseActivationContext( data.hActCtx );
+    DPRINT("%S\n", fullname);
+    return status;
+}
+
+
 NTSTATUS
 NTAPI
 LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
@@ -559,6 +675,7 @@ LdrpResolveDllName(PWSTR DllPath,
     PWCHAR NameBuffer, p1, p2 = 0;
     ULONG Length;
     ULONG BufSize = 500;
+    NTSTATUS Status;
 
     /* Allocate space for full DLL name */
     FullDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufSize + sizeof(UNICODE_NULL));
@@ -573,14 +690,25 @@ LdrpResolveDllName(PWSTR DllPath,
 
     if (!Length || Length > BufSize)
     {
-        if (ShowSnaps)
+        /* HACK: Try to find active context dll */
+        Status = find_actctx_dll(DllName, FullDllName->Buffer);
+        if(Status == STATUS_SUCCESS)
         {
-            DPRINT1("LDR: LdrResolveDllName - Unable to find ");
-            DPRINT1("%ws from %ws\n", DllName, DllPath ? DllPath : LdrpDefaultPath.Buffer);
+            Length = wcslen(FullDllName->Buffer) * sizeof(WCHAR);
+            DPRINT1("found %S for %S\n", FullDllName->Buffer, DllName);
         }
+        else
+        {
+            /* NOTE: This code should remain after removing the hack */
+            if (ShowSnaps)
+            {
+                DPRINT1("LDR: LdrResolveDllName - Unable to find ");
+                DPRINT1("%ws from %ws\n", DllName, DllPath ? DllPath : LdrpDefaultPath.Buffer);
+            }
 
-        RtlFreeUnicodeString(FullDllName);
-        return FALSE;
+            RtlFreeUnicodeString(FullDllName);
+            return FALSE;
+        }
     }
 
     /* Construct full DLL name */
@@ -1269,7 +1397,7 @@ SkipCheck:
             }
 
             /* Check if this was a non-relocatable DLL or a known dll */
-            if (!RelocatableDll && KnownDll)
+            if (!RelocatableDll || KnownDll)
             {
                 /* Setup for hard error */
                 HardErrorParameters[0] = (ULONG_PTR)&IllegalDll;
@@ -1847,7 +1975,7 @@ LdrpCheckForLoadedDll(IN PWSTR DllPath,
     PVOID ViewBase = NULL;
     SIZE_T ViewSize = 0;
     PIMAGE_NT_HEADERS NtHeader, NtHeader2;
-    DPRINT("LdrpCheckForLoadedDll('%S' '%wZ' %d %d %p)\n", DllPath, DllName, Flag, RedirectedDll, LdrEntry);
+    DPRINT("LdrpCheckForLoadedDll('%S' '%wZ' %d %d %p)\n", DllPath ? ((ULONG_PTR)DllPath == 1 ? L"" : DllPath) : L"", DllName, Flag, RedirectedDll, LdrEntry);
 
     /* Check if a dll name was provided */
     if (!(DllName->Buffer) || !(DllName->Buffer[0])) return FALSE;
@@ -1910,6 +2038,16 @@ lookinhash:
             /* Check if that was successful */
             if (!(Length) || (Length > (sizeof(NameBuf) - sizeof(UNICODE_NULL))))
             {
+                /* HACK: Try to find active context dll */
+                Status = find_actctx_dll(DllName->Buffer, FullDllName.Buffer);
+                if(Status == STATUS_SUCCESS)
+                {
+                    Length = wcslen(FullDllName.Buffer) * sizeof(WCHAR);
+                    DPRINT1("found %S for %S\n", FullDllName.Buffer, DllName->Buffer);
+                }
+                else
+                {
+
                 if (ShowSnaps)
                 {
                     DPRINT1("LDR: LdrpCheckForLoadedDll - Unable To Locate %ws: 0x%08x\n",
@@ -1918,6 +2056,7 @@ lookinhash:
 
                 /* Return failure */
                 return FALSE;
+                }
             }
 
             /* Full dll name is found */
