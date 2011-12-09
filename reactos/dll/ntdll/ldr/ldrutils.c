@@ -114,6 +114,7 @@ NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
     needed = (wcslen(SharedUserData->NtSystemRoot) * sizeof(WCHAR) +
               sizeof(winsxsW) + info->ulAssemblyDirectoryNameLength + nameW.Length + 2*sizeof(WCHAR));
 
+    p = fullname;
     //if (!(*fullname = p = RtlAllocateHeap( GetProcessHeap(), 0, needed )))
     //{
         //status = STATUS_NO_MEMORY;
