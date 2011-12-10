@@ -622,7 +622,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
        }
     }
     return 0;
-}        
+}
 
 LRESULT FASTCALL
 IntDispatchMessage(PMSG pMsg)
@@ -632,6 +632,7 @@ IntDispatchMessage(PMSG pMsg)
     LRESULT retval = 0;
     PTHREADINFO pti;
     PWND Window = NULL;
+    HRGN hrgn;
 
     if (pMsg->hwnd)
     {
@@ -705,7 +706,7 @@ IntDispatchMessage(PMSG pMsg)
     {
         Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
-        HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
+        hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
         GreDeleteObject(hrgn);
     }
@@ -1447,7 +1448,7 @@ co_IntSendMessageNoWait(HWND hWnd,
                                        &Result))
     {
        Result = ((ULONG_PTR)-1);
-    } 
+    }
     return Result;
 }
 /* MSDN:
@@ -1528,7 +1529,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         {
            ERR("SMWCB: Internal Message!\n");
            Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
-           if (uResult) *uResult = Result;                              
+           if (uResult) *uResult = Result;
            RETURN( TRUE);
         }
 
@@ -1616,7 +1617,7 @@ CLEANUP:
 /*
   This HACK function posts a message if the destination's message queue belongs to
   another thread, otherwise it sends the message. It does not support broadcast
-  messages! 
+  messages!
 */
 LRESULT FASTCALL
 co_IntPostOrSendMessage( HWND hWnd,
