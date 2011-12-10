@@ -745,7 +745,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-  WINDOWPLACEMENT wp;
+//  WINDOWPLACEMENT wp;
   POINT Pt;
   LRESULT lResult;
 
@@ -763,30 +763,24 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_SIZE:
 	DefWndDoSizeMove(hWnd, wParam);
 	break;
-      case SC_MINIMIZE:
-        wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
-        {
-          wp.showCmd = SW_MINIMIZE;
-          SetWindowPlacement(hWnd, &wp);
-        }
+    case SC_MINIMIZE:
+        if (hWnd == GetActiveWindow())
+            ShowOwnedPopups(hWnd,FALSE);
+        ShowWindow( hWnd, SW_MINIMIZE );
         break;
-      case SC_MAXIMIZE:
-        wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
-        {
-          wp.showCmd = SW_MAXIMIZE;
-          SetWindowPlacement(hWnd, &wp);
-        }
+
+    case SC_MAXIMIZE:
+        if (IsIconic(hWnd) && hWnd == GetActiveWindow())
+            ShowOwnedPopups(hWnd,TRUE);
+        ShowWindow( hWnd, SW_MAXIMIZE );
         break;
-      case SC_RESTORE:
-        wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
-        {
-          wp.showCmd = SW_RESTORE;
-          SetWindowPlacement(hWnd, &wp);
-        }
+
+    case SC_RESTORE:
+        if (IsIconic(hWnd) && hWnd == GetActiveWindow())
+            ShowOwnedPopups(hWnd,TRUE);
+        ShowWindow( hWnd, SW_RESTORE );
         break;
+
       case SC_CLOSE:
         return SendMessageW(hWnd, WM_CLOSE, 0, 0);
 //      case SC_DEFAULT:
