@@ -108,6 +108,8 @@ typedef struct _CAB_SEARCH
   WCHAR        Cabinet[MAX_PATH];
   USHORT       Index;
   PCFFILE      File;               // Pointer to current CFFILE
+  PCFDATA      CFData;
+  ULONG        Offset;
 } CAB_SEARCH, *PCAB_SEARCH;
 
 

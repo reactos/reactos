@@ -757,6 +757,12 @@ CabinetFindNext(PCAB_SEARCH Search)
             // FIXME: check for match against search criteria
             if (Search->File != Prev)
             {
+                if (Prev == NULL || Search->File->FolderIndex != Prev->FolderIndex)
+                {
+                    Search->CFData = NULL;
+                    Search->Offset = 0;
+                }
+                
                 /* don't match the file we started with */
                 if (wcscmp(Search->Search, L"*") == 0)
                 {
@@ -1011,10 +1017,12 @@ CabinetExtractFile(PCAB_SEARCH Search)
         ExtractHandler(Search->File, DestName);
     }
 
-    /* find the starting block of the file
-       start with the first data block of the folder */
-    CFData = (PCFDATA)(CabinetFolders[Search->File->FolderIndex].DataOffset + FileBuffer);
-    CurrentOffset = 0;
+    if (Search->CFData)
+        CFData = Search->CFData;
+    else
+        CFData = (PCFDATA)(CabinetFolders[Search->File->FolderIndex].DataOffset + FileBuffer);
+
+    CurrentOffset = Search->Offset;
     while (CurrentOffset + CFData->UncompSize <= Search->File->FileOffset)
     {
         /* walk the data blocks until we reach
@@ -1022,6 +1030,9 @@ CabinetExtractFile(PCAB_SEARCH Search)
         CurrentOffset += CFData->UncompSize;
         CFData = (PCFDATA)((char *)(CFData + 1) + DataReserved + CFData->CompSize);
     }
+    
+    Search->CFData = CFData;
+    Search->Offset = CurrentOffset;
 
     /* now decompress and discard any data in
        the block before the start of the file */
