@@ -2148,8 +2148,10 @@ GetDlgItemTextA(
   LPSTR lpString,
   int nMaxCount)
 {
-  if (lpString && (nMaxCount > 0)) lpString[0] = '\0';
-  return (UINT)SendDlgItemMessageA( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
+  HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
+  if ( hWnd ) return GetWindowTextA(hWnd, lpString, nMaxCount);
+  if ( nMaxCount ) *lpString = 0;
+  return 0;
 }
 
 
@@ -2164,8 +2166,10 @@ GetDlgItemTextW(
   LPWSTR lpString,
   int nMaxCount)
 {
-  if (lpString && (nMaxCount > 0)) lpString[0] = '\0';
-  return (UINT)SendDlgItemMessageW( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
+  HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
+  if ( hWnd ) return GetWindowTextW(hWnd, lpString, nMaxCount);
+  if ( nMaxCount ) *lpString = 0;
+  return 0;
 }
 
 /*
