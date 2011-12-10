@@ -52,10 +52,12 @@ void MakeWindowActive(HWND hwnd)
 {
    WINDOWPLACEMENT wpl;
 
+   wpl.length = sizeof(WINDOWPLACEMENT);
    GetWindowPlacement(hwnd, &wpl);
-
+  
+   TRACE("GetWindowPlacement wpl.showCmd %d\n",wpl.showCmd);
    if (wpl.showCmd == SW_SHOWMINIMIZED)
-      ShowWindow(hwnd, SW_RESTORE);
+      ShowWindowAsync(hwnd, SW_RESTORE);
 
    BringWindowToTop(hwnd);  // same as: SetWindowPos(hwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE); ?
    SetForegroundWindow(hwnd);
