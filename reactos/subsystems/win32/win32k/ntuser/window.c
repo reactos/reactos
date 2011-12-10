@@ -108,6 +108,25 @@ IntIsWindow(HWND hWnd)
    return TRUE;
 }
 
+BOOL FASTCALL
+IntIsWindowVisible(PWND Wnd)
+{
+   BOOL Ret = TRUE;
+   do
+   {
+      if (!(Wnd->style & WS_VISIBLE))
+      {
+         Ret = FALSE;
+         break;
+      }
+      if (Wnd->spwndParent != NULL)
+         Wnd = Wnd->spwndParent;
+      else
+         break;
+   }
+   while (Wnd != NULL);
+   return Ret;
+}
 
 PWND FASTCALL
 IntGetParent(PWND Wnd)
@@ -138,7 +157,7 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
    }
 
    /* check if updating is needed */
-   bIsDisabled = (pWnd->style & WS_DISABLED);
+   bIsDisabled = !!(pWnd->style & WS_DISABLED);
    Update = bIsDisabled;
 
     if (bEnable)
@@ -758,8 +777,6 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
    }
 }
 
-
-
 /*!
  * Internal function.
  * Returns client window rectangle relative to the upper-left corner of client area.
@@ -767,16 +784,33 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
  * \note Does not check the validity of the parameters
 */
 VOID FASTCALL
-IntGetClientRect(PWND Window, RECTL *Rect)
+IntGetClientRect(PWND Wnd, RECTL *Rect)
 {
-   ASSERT( Window );
+   ASSERT( Wnd );
    ASSERT( Rect );
-
-   Rect->left = Rect->top = 0;
-   Rect->right = Window->rcClient.right - Window->rcClient.left;
-   Rect->bottom = Window->rcClient.bottom - Window->rcClient.top;
+   if (Wnd->style & WS_MINIMIZED)
+   {
+      Rect->left = Rect->top = 0;
+      Rect->right = UserGetSystemMetrics(SM_CXMINIMIZED);
+      Rect->bottom = UserGetSystemMetrics(SM_CYMINIMIZED);
+      return;
+   }
+   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
+   {
+      *Rect = Wnd->rcClient;
+      RECTL_vOffsetRect(Rect, -Wnd->rcClient.left, -Wnd->rcClient.top);
+   }
+   else
+   {
+      Rect->left = Rect->top = 0;
+      Rect->right  = Wnd->rcClient.right;
+      Rect->bottom = Wnd->rcClient.bottom;
+   /* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
+      Rect->right  = UserGetSystemMetrics(SM_CXSCREEN);
+      Rect->bottom = UserGetSystemMetrics(SM_CYSCREEN);
+   */
+   }
 }
-
 
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
@@ -1125,6 +1159,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
     * FIXME: a WM_MOVE is also generated (in the DefWindowProc handler
     * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE
     */
+   if (WasVisible) co_WinPosShowWindow(Wnd, SW_SHOWNORMAL);
 
    return WndOldParent;
 }
@@ -1637,13 +1672,15 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->spwndOwner = OwnerWindow;
    pWnd->fnid = 0;
    pWnd->hWndLastActive = hWnd;
-   pWnd->state2 |= WNDS2_WIN40COMPAT;
+   pWnd->state2 |= WNDS2_WIN40COMPAT; // FIXME!!!
    pWnd->pcls = Class;
    pWnd->hModule = Cs->hInstance;
    pWnd->style = Cs->style & ~WS_VISIBLE;
    pWnd->ExStyle = Cs->dwExStyle;
    pWnd->cbwndExtra = pWnd->pcls->cbwndExtra;
    pWnd->pActCtx = acbiBuffer;
+   pWnd->InternalPos.MaxPos.x  = pWnd->InternalPos.MaxPos.y  = -1;
+   pWnd->InternalPos.IconPos.x = pWnd->InternalPos.IconPos.y = -1;
 
    IntReferenceMessageQueue(pWnd->head.pti->MessageQueue);
    if (pWnd->spwndParent != NULL && Cs->hwndParent != 0)
@@ -1759,15 +1796,22 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       if (!(pWnd->style & WS_POPUP))
       {
          pWnd->style |= WS_CAPTION;
-         pWnd->state |= WNDS_SENDSIZEMOVEMSGS;
       }
    }
+
+  /*
+   * WS_EX_WINDOWEDGE appears to be enforced based on the other styles, so
+   * why does the user get to set it?
+   */
 
    if ((pWnd->ExStyle & WS_EX_DLGMODALFRAME) ||
           (pWnd->style & (WS_DLGFRAME | WS_THICKFRAME)))
         pWnd->ExStyle |= WS_EX_WINDOWEDGE;
     else
         pWnd->ExStyle &= ~WS_EX_WINDOWEDGE;
+
+   if (!(pWnd->style & (WS_CHILD | WS_POPUP)))
+      pWnd->state |= WNDS_SENDSIZEMOVEMSGS;
 
    /* create system menu */
    if((Cs->style & WS_SYSMENU) )//&& (dwStyle & WS_CAPTION) == WS_CAPTION)
@@ -3670,11 +3714,11 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ACTIVE:
-         Result = (DWORD)UserGetActiveWindow();
+         Result = (DWORD)pWnd->head.pti->MessageQueue->ActiveWindow;
          break;
 
       case QUERY_WINDOW_FOCUS:
-         Result = (DWORD)IntGetFocusWindow();
+         Result = (DWORD)pWnd->head.pti->MessageQueue->FocusWindow;
          break;
 
       case QUERY_WINDOW_ISHUNG:

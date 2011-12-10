@@ -23,6 +23,8 @@ DBG_DEFAULT_CHANNEL(UserWinpos);
 #define  SWP_AGG_STATUSFLAGS \
     (SWP_AGG_NOPOSCHANGE | SWP_FRAMECHANGED | SWP_HIDEWINDOW | SWP_SHOWWINDOW)
 
+#define EMPTYPOINT(pt) ((pt).x == -1 && (pt).y == -1)
+
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
@@ -325,6 +327,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                      return 0;
                   }
                   Wnd->style &= ~WS_MAXIMIZE;
+                  Wnd->state2 &= ~WNDS2_MAXIMIZEBUTTONDOWN;
                   *NewPos = Wnd->InternalPos.NormalRect;
                   NewPos->right -= NewPos->left;
                   NewPos->bottom -= NewPos->top;
@@ -452,9 +455,9 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
     MinMax.ptMaxPosition.x = -xinc;
     MinMax.ptMaxPosition.y = -yinc;
 
-    //if (!EMPTYPOINT(win->max_pos)) MinMax.ptMaxPosition = win->max_pos;
+    if (!EMPTYPOINT(Window->InternalPos.MaxPos)) MinMax.ptMaxPosition = Window->InternalPos.MaxPos;
 
-   co_IntSendMessage(Window->head.h, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
+    co_IntSendMessage(Window->head.h, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 
     /* if the app didn't change the values, adapt them for the current monitor */
     if ((monitor = IntGetPrimaryMonitor()))
@@ -1374,11 +1377,13 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    UINT Swp = 0;
    RECTL NewPos;
    BOOLEAN ShowFlag;
+   LONG style;
    //  HRGN VisibleRgn;
 
    ASSERT_REFS_CO(Wnd);
 
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
+   style = Wnd->style;
 
    switch (Cmd)
    {
@@ -1403,7 +1408,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       case SW_MINIMIZE:
          {
             Swp |= SWP_NOACTIVATE;
-            if (!(Wnd->style & WS_MINIMIZE))
+            if (!(style & WS_MINIMIZE))
             {
                Swp |= co_WinPosMinMaximize(Wnd, SW_MINIMIZE, &NewPos) |
                       SWP_FRAMECHANGED;
@@ -1422,7 +1427,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       case SW_SHOWMAXIMIZED:
          {
             Swp |= SWP_SHOWWINDOW;
-            if (!(Wnd->style & WS_MAXIMIZE))
+            if (!(style & WS_MAXIMIZE))
             {
                Swp |= co_WinPosMinMaximize(Wnd, SW_MAXIMIZE, &NewPos) |
                       SWP_FRAMECHANGED;
@@ -1445,9 +1450,11 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             if (WasVisible) return(TRUE); // Nothing to do!
          Swp |= SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE;
          /* Don't activate the topmost window. */
+         if (style & WS_CHILD) Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          break;
 
       case SW_SHOWNOACTIVATE:
+         Wnd->state2 &= ~WNDS2_MAXIMIZEBUTTONDOWN;
          //Swp |= SWP_NOZORDER;
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
@@ -1455,7 +1462,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       case SW_SHOWDEFAULT:
       case SW_RESTORE:
          Swp |= SWP_SHOWWINDOW;
-         if (Wnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
+         if (style & (WS_MINIMIZE | WS_MAXIMIZE))
          {
             Swp |= co_WinPosMinMaximize(Wnd, SW_RESTORE, &NewPos) |
                    SWP_FRAMECHANGED;
@@ -1476,6 +1483,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    if (ShowFlag != WasVisible)
    {
       co_IntSendMessageNoWait(Wnd->head.h, WM_SHOWWINDOW, ShowFlag, 0);
+      if (!(Wnd->state2 & WNDS2_WIN31COMPAT))
+         co_IntSendMessageNoWait(Wnd->head.h, WM_SETVISIBLE, ShowFlag, 0);
    }
 
    /* We can't activate a child window */
@@ -1484,7 +1493,15 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    {
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
    }
-
+#if 0 // Explorer issues with common controls. Someone does not know how CS_SAVEBITS works.
+   if ((Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
+        Wnd->pcls->style & CS_SAVEBITS &&
+        ((Cmd == SW_SHOW) || (Cmd == SW_NORMAL)))
+   {
+      co_IntSetActiveWindow(Wnd);
+      Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+   }
+#endif
    co_WinPosSetWindowPos(Wnd, 0 != (Wnd->ExStyle & WS_EX_TOPMOST)
                          ? HWND_TOPMOST : HWND_TOP,
                          NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
@@ -1508,8 +1525,10 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       ThreadFocusWindow = UserGetWindowObject(IntGetThreadFocusWindow());
 
       /* Revert focus to parent */
-      if (ThreadFocusWindow && (Wnd == ThreadFocusWindow ||
+/*      if (ThreadFocusWindow && (Wnd == ThreadFocusWindow ||
             IntIsChildWindow(Wnd, ThreadFocusWindow)))
+*/
+      if (Wnd == ThreadFocusWindow)
       {
          //faxme: as long as we have ref on Window, we also, indirectly, have ref on parent...
          co_UserSetFocus(Wnd->spwndParent);
@@ -1524,13 +1543,9 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
         co_WinPosSendSizeMove(Wnd);
    }
 
-   /* Activate the window if activation is not requested and the window is not minimized */
-   /*
-     if (!(Swp & (SWP_NOACTIVATE | SWP_HIDEWINDOW)) && !(Window->style & WS_MINIMIZE))
-       {
-         WinPosChangeActiveWindow(Wnd, FALSE);
-       }
-   */
+   /* if previous state was minimized Windows sets focus to the window */
+   if (style & WS_MINIMIZE) co_UserSetFocus(Wnd);
+
    return(WasVisible);
 }
 
@@ -1744,8 +1759,8 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp )
                winpos->pos.cx, winpos->pos.cy, winpos->pos.flags);
         
         pwnd = UserGetWindowObject(winpos->pos.hwnd);
-        if(!pwnd)
-            continue;
+        if (!pwnd)
+           continue;
 
         UserRefObjectCo(pwnd, &Ref);
 
