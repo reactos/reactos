@@ -150,12 +150,8 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
 
   _SEH2_TRY
   {
-     ProbeForWrite( Ramp,
-                    sizeof(PVOID),
-                    1);
-     RtlCopyMemory( Ramp,
-                    SafeRamp,
-                    sizeof(GAMMARAMP));
+     ProbeForWrite(Ramp, sizeof(GAMMARAMP), 1);
+     RtlCopyMemory(Ramp, SafeRamp, sizeof(GAMMARAMP));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
@@ -376,12 +372,8 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   }
   _SEH2_TRY
   {
-     ProbeForRead( Ramp,
-                   sizeof(PVOID),
-                   1);
-     RtlCopyMemory( SafeRamp,
-                    Ramp,
-                    sizeof(GAMMARAMP));
+     ProbeForRead(Ramp, sizeof(GAMMARAMP), 1);
+     RtlCopyMemory(SafeRamp, Ramp, sizeof(GAMMARAMP));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
