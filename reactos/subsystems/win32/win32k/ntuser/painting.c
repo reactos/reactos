@@ -776,6 +776,31 @@ IntPrintWindow(
     return TRUE;
 }
 
+BOOL
+FASTCALL 
+IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
+{
+   PPROPERTY pprop;
+   DWORD FlashState;
+   BOOL Ret = FALSE;
+
+   pprop = IntGetProp(pWnd, AtomFlashWndState);
+   if (!pprop)
+   {
+      FlashState = pfwi->dwFlags;
+      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
+      return TRUE;
+   }
+
+   FlashState = (DWORD)pprop->Data;
+   if ( pfwi->dwFlags == FLASHW_STOP )
+   {
+      IntRemoveProp(pWnd, AtomFlashWndState);
+      Ret = TRUE;
+   }
+   return Ret;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -951,7 +976,7 @@ CLEANUP:
 BOOL APIENTRY
 NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
-   //PWND pWnd;
+   PWND pWnd;
    FLASHWINFO finfo = {0};
    BOOL Ret = TRUE;
 
@@ -971,7 +996,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 
    if (!Ret) goto Exit;
 
-   if (!(/* pWnd = */ (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+   if (!( pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
         finfo.cbSize != sizeof(FLASHWINFO) ||
         finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
    {
@@ -980,7 +1005,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
       goto Exit;
    }
 
-   //Ret = IntFlashWindowEx(pWnd, &finfo);
+   Ret = IntFlashWindowEx(pWnd, &finfo);
 
 Exit:
    UserLeave();

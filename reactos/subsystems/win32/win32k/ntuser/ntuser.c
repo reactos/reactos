@@ -41,6 +41,11 @@ InitUserAtoms(VOID)
   /* System Context Help Id Atom */
   gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
+  gpsi->atomIconSmProp = IntAddGlobalAtom(L"SysICS", TRUE);
+  gpsi->atomIconProp = IntAddGlobalAtom(L"SysIC", TRUE);
+
+  gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
+  
   AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
   AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
   AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
