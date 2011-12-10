@@ -959,6 +959,13 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
     PWND Wnd = ValidateHwnd(hWnd);
 
     if (!Wnd) return FALSE;
+    if (Wnd->style & WS_MINIMIZED)
+    {
+       lpRect->left = lpRect->top = 0;
+       lpRect->right = GetSystemMetrics(SM_CXMINIMIZED);
+       lpRect->bottom = GetSystemMetrics(SM_CYMINIMIZED);
+       return TRUE;
+    }
     if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
     {
 /*        lpRect->left = lpRect->top = 0;

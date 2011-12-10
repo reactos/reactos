@@ -142,6 +142,13 @@ typedef struct _USER_MESSAGE_QUEUE
 #define QF_CAPTURELOCKED          0x00100000
 #define QF_ACTIVEWNDTRACKING      0x00200000
 
+/* internal messages codes */
+enum internal_event_message
+{
+    WM_ASYNC_SHOWWINDOW = 0x80000000,
+    WM_ASYNC_SETWINDOWPOS
+};
+
 BOOL FASTCALL MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
 VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);
 NTSTATUS FASTCALL co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,

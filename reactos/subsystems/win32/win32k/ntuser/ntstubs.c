@@ -1043,21 +1043,6 @@ NtUserSetImeOwnerWindow(DWORD Unknown0,
 /*
  * @unimplemented
  */
-DWORD APIENTRY
-NtUserSetInternalWindowPos(
-   HWND    hwnd,
-   UINT    showCmd,
-   LPRECT  rect,
-   LPPOINT pt)
-{
-   STUB
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL APIENTRY
 NtUserSetLayeredWindowAttributes(HWND hwnd,
 			   COLORREF crKey,

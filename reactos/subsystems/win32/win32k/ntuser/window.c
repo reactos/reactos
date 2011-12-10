@@ -1262,51 +1262,6 @@ IntUnlinkWindow(PWND Wnd)
    Wnd->spwndPrev = Wnd->spwndNext = NULL;
 }
 
-BOOL
-FASTCALL
-IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
-{
-   POINT Size;
-
-   if (!Wnd) return FALSE;
-
-   if(lpwndpl->length != sizeof(WINDOWPLACEMENT))
-   {
-      return FALSE;
-   }
-
-   lpwndpl->flags = 0;
-   if (0 == (Wnd->style & WS_VISIBLE))
-   {
-      lpwndpl->showCmd = SW_HIDE;
-   }
-   else if (0 != (Wnd->state2 & WNDS2_MAXIMIZEBUTTONDOWN) ||
-            0 != (Wnd->style & WS_MAXIMIZE))
-   {
-      lpwndpl->showCmd = SW_MAXIMIZE;
-   }
-   else if (0 != (Wnd->style & WS_MINIMIZE))
-   {
-      lpwndpl->showCmd = SW_MINIMIZE;
-   }
-   else if (0 != (Wnd->style & WS_VISIBLE))
-   {
-      lpwndpl->showCmd = SW_SHOWNORMAL;
-   }
-
-   Size.x = Wnd->rcWindow.left;
-   Size.y = Wnd->rcWindow.top;
-   WinPosInitInternalPos(Wnd, &Size,
-                         &Wnd->rcWindow);
-
-   lpwndpl->rcNormalPosition = Wnd->InternalPos.NormalRect;
-   lpwndpl->ptMinPosition = Wnd->InternalPos.IconPos;
-   lpwndpl->ptMaxPosition = Wnd->InternalPos.MaxPos;
-
-   return TRUE;
-}
-
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -3019,80 +2974,6 @@ CLEANUP:
 }
 
 
-/*
- * @implemented
- */
-DWORD APIENTRY
-NtUserGetInternalWindowPos( HWND hWnd,
-                            LPRECT rectWnd,
-                            LPPOINT ptIcon)
-{
-   PWND Window;
-   DWORD Ret = 0;
-   BOOL Hit = FALSE;
-   WINDOWPLACEMENT wndpl;
-
-   UserEnterShared();
-
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      Hit = FALSE;
-      goto Exit;
-   }
-
-   _SEH2_TRY
-   {
-       if(rectWnd)
-       {
-          ProbeForWrite(rectWnd,
-                        sizeof(RECT),
-                        1);
-       }
-       if(ptIcon)
-       {
-          ProbeForWrite(ptIcon,
-                        sizeof(POINT),
-                        1);
-       }
-
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-       SetLastNtError(_SEH2_GetExceptionCode());
-       Hit = TRUE;
-   }
-   _SEH2_END;
-
-   wndpl.length = sizeof(WINDOWPLACEMENT);
-
-   if (IntGetWindowPlacement(Window, &wndpl) && !Hit)
-   {
-      _SEH2_TRY
-      {
-          if (rectWnd)
-          {
-             RtlCopyMemory(rectWnd, &wndpl.rcNormalPosition , sizeof(RECT));
-          }
-          if (ptIcon)
-          {
-             RtlCopyMemory(ptIcon, &wndpl.ptMinPosition, sizeof(POINT));
-          }
-
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-          SetLastNtError(_SEH2_GetExceptionCode());
-          Hit = TRUE;
-      }
-      _SEH2_END;
-
-      if (!Hit) Ret = wndpl.showCmd;
-   }
-Exit:
-   UserLeave();
-   return Ret;
-}
-
 DWORD
 APIENTRY
 NtUserGetListBoxInfo(
@@ -3596,82 +3477,6 @@ CLEANUP:
 }
 
 /*
- * @implemented
- */
-BOOL APIENTRY
-NtUserGetWindowPlacement(HWND hWnd,
-                         WINDOWPLACEMENT *lpwndpl)
-{
-   PWND Wnd;
-   POINT Size;
-   WINDOWPLACEMENT Safepl;
-   NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
-
-   TRACE("Enter NtUserGetWindowPlacement\n");
-   UserEnterShared();
-
-   if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
-      RETURN( FALSE);
-   }
-
-   Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( FALSE);
-   }
-   if(Safepl.length != sizeof(WINDOWPLACEMENT))
-   {
-      RETURN( FALSE);
-   }
-
-   Safepl.flags = 0;
-   if (0 == (Wnd->style & WS_VISIBLE))
-   {
-      Safepl.showCmd = SW_HIDE;
-   }
-   else if ((0 != (Wnd->state2 & WNDS2_MAXIMIZEBUTTONDOWN) ||
-            0 != (Wnd->style & WS_MAXIMIZE)) &&
-            0 == (Wnd->style & WS_MINIMIZE))
-   {
-      Safepl.showCmd = SW_SHOWMAXIMIZED;
-   }
-   else if (0 != (Wnd->style & WS_MINIMIZE))
-   {
-      Safepl.showCmd = SW_SHOWMINIMIZED;
-   }
-   else if (0 != (Wnd->style & WS_VISIBLE))
-   {
-      Safepl.showCmd = SW_SHOWNORMAL;
-   }
-
-   Size.x = Wnd->rcWindow.left;
-   Size.y = Wnd->rcWindow.top;
-   WinPosInitInternalPos(Wnd, &Size,
-                         &Wnd->rcWindow);
-
-   Safepl.rcNormalPosition = Wnd->InternalPos.NormalRect;
-   Safepl.ptMinPosition = Wnd->InternalPos.IconPos;
-   Safepl.ptMaxPosition = Wnd->InternalPos.MaxPos;
-
-   Status = MmCopyToCaller(lpwndpl, &Safepl, sizeof(WINDOWPLACEMENT));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( FALSE);
-   }
-
-   RETURN( TRUE);
-
-CLEANUP:
-   TRACE("Leave NtUserGetWindowPlacement, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-/*
  QueryWindow based on KJK::Hyperion and James Tabor.
 
  0 = QWUniqueProcessId
@@ -3827,7 +3632,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
 /*
  * @implemented
  */
@@ -3871,57 +3675,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
-/*
- *    @implemented
- */
-HWND APIENTRY
-NtUserWindowFromPoint(LONG X, LONG Y)
-{
-   POINT pt;
-   HWND Ret;
-   PWND DesktopWindow = NULL, Window = NULL;
-   USHORT hittest;
-   DECLARE_RETURN(HWND);
-   USER_REFERENCE_ENTRY Ref;
-
-   TRACE("Enter NtUserWindowFromPoint\n");
-   UserEnterExclusive();
-
-   if ((DesktopWindow = UserGetWindowObject(IntGetDesktopWindow())))
-   {
-      //PTHREADINFO pti;
-
-      pt.x = X;
-      pt.y = Y;
-
-      //hmm... threads live on desktops thus we have a reference on the desktop and indirectly the desktop window
-      //its possible this referencing is useless, thou it shouldnt hurt...
-      UserRefObjectCo(DesktopWindow, &Ref);
-
-      //pti = PsGetCurrentThreadWin32Thread();
-      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
-
-      if(Window)
-      {
-         Ret = Window->head.h;
-
-         RETURN( Ret);
-      }
-   }
-
-   RETURN( NULL);
-
-CLEANUP:
-   if (Window) UserDereferenceObject(Window);
-   if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
-
-   TRACE("Leave NtUserWindowFromPoint, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-
-}
-
 
 /*
  * NtUserDefSetText

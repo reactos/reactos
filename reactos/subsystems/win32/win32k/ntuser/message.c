@@ -99,6 +99,7 @@ static inline int is_pointer_message( UINT message )
     if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
         return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
+#undef SET
 
 #define MMS_SIZE_WPARAM      -1
 #define MMS_SIZE_WPARAMWCHAR -2
@@ -590,6 +591,39 @@ IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
     co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
 }
 
+static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPARAM lparam )
+{
+    LRESULT lRes;
+
+    if (!pWnd ||
+         pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
+         pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+       return 0;
+
+    ERR("Internal Event Msg %p\n",msg);
+
+    switch(msg)
+    {
+       case WM_ASYNC_SHOWWINDOW:
+          return co_WinPosShowWindow( pWnd, wparam );
+       case WM_ASYNC_SETWINDOWPOS:
+       {
+          PWINDOWPOS winpos = (PWINDOWPOS)lparam;
+          if (!winpos) return 0;
+          lRes = co_WinPosSetWindowPos( pWnd,
+                                        winpos->hwndInsertAfter,
+                                        winpos->x,
+                                        winpos->y,
+                                        winpos->cx,
+                                        winpos->cy,
+                                        winpos->flags);
+          ExFreePoolWithTag(winpos, USERTAG_SWP);
+          return lRes;
+       }
+    }
+    return 0;
+}        
+
 LRESULT FASTCALL
 IntDispatchMessage(PMSG pMsg)
 {
@@ -648,6 +682,13 @@ IntDispatchMessage(PMSG pMsg)
     // Need a window!
     if ( !Window ) return 0;
 
+    if (pMsg->message == WM_PAINT) Window->state |= WNDS_PAINTNOTPROCESSED;
+
+    if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+    {
+       TRACE("Dispatch: Server Side Window Procedure\n");
+    }
+
     /* Since we are doing a callback on the same thread right away, there is
        no need to copy the lparam to kernel mode and then back to usermode.
        We just pretend it isn't a pointer */
@@ -662,6 +703,7 @@ IntDispatchMessage(PMSG pMsg)
 
     if (pMsg->message == WM_PAINT)
     {
+        Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
         HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
@@ -1096,7 +1138,7 @@ UserPostMessage( HWND Wnd,
         PWND DesktopWindow;
         ULONG i;
 
-        DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+        DesktopWindow = UserGetDesktopWindow();
         List = IntWinListChildren(DesktopWindow);
 
         if (List != NULL)
@@ -1104,6 +1146,13 @@ UserPostMessage( HWND Wnd,
             UserPostMessage(DesktopWindow->head.h, Msg, wParam, lParam);
             for (i = 0; List[i]; i++)
             {
+                PWND pwnd = UserGetWindowObject(List[i]);
+                if (!pwnd) continue;
+
+                if ( pwnd->fnid == FNID_MENU || // Also need pwnd->pcls->atomClassName == gaOleMainThreadWndClass
+                     pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                   continue;
+
                 UserPostMessage(List[i], Msg, wParam, lParam);
             }
             ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
@@ -1145,7 +1194,6 @@ UserPostMessage( HWND Wnd,
     return TRUE;
 }
 
-
 LRESULT FASTCALL
 co_IntSendMessage( HWND hWnd,
                    UINT Msg,
@@ -1175,7 +1223,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     INT lParamBufferSize;
     LPARAM lParamPacked;
     PTHREADINFO Win32Thread;
-    ULONG_PTR Result = 0;
+    ULONG_PTR Hi, Lo, Result = 0;
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
 
@@ -1188,8 +1236,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-
-    if ( NULL != Win32Thread &&
+    if ( Win32Thread &&
          Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
@@ -1198,23 +1245,44 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             RETURN( FALSE);
         }
 
+        if (Msg & 0x80000000)
+        {
+           ERR("SMTS: Internal Message!\n");
+           Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
+           if (uResult) *uResult = Result;
+           RETURN( TRUE);
+        }
+
+        // Only happens when calling the client!
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
+        if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+        {
+           TRACE("SMT: Server Side Window Procedure\n");
+           IoGetStackLimits(&Lo, &Hi);
+           // Handle it here. Safeguard against excessive recursions.
+           if (((ULONG_PTR)&uResult - Lo) < 4096 )
+           {
+              ERR("Server Callback Exceeded Stack!\n");
+              RETURN( FALSE);
+           }
+           /* Return after server side call, IntCallWndProcRet will not be called. */
+        }
         /* See if this message type is present in the table */
         MsgMemoryEntry = FindMsgMemory(Msg);
         if (NULL == MsgMemoryEntry)
         {
-            lParamBufferSize = -1;
+           lParamBufferSize = -1;
         }
         else
         {
-            lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+           lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
         }
 
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
         {
-            ERR("Failed to pack message parameters\n");
-            RETURN( FALSE);
+           ERR("Failed to pack message parameters\n");
+           RETURN( FALSE);
         }
 
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
@@ -1229,13 +1297,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             *uResult = Result;
         }
 
-        IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
-
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
             ERR("Failed to unpack message parameters\n");
             RETURN( TRUE);
         }
+
+        // Only happens when calling the client!
+        IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
         RETURN( TRUE);
     }
@@ -1283,7 +1352,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         EngSetLastError(ERROR_TIMEOUT);
         RETURN( FALSE);
     }
-    else if (! NT_SUCCESS(Status))
+    else if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
         RETURN( FALSE);
@@ -1309,20 +1378,23 @@ co_IntSendMessageTimeout( HWND hWnd,
     HWND *Children;
     HWND *Child;
 
-    if (HWND_BROADCAST != hWnd)
+    if (hWnd != HWND_BROADCAST && hWnd != HWND_TOPMOST)
     {
         return co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
     }
 
-    DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+    DesktopWindow = UserGetDesktopWindow();
     if (NULL == DesktopWindow)
     {
-        EngSetLastError(ERROR_INTERNAL_ERROR);
-        return 0;
+       EngSetLastError(ERROR_INTERNAL_ERROR);
+       return 0;
     }
 
-    /* Send message to the desktop window too! */
-    co_IntSendMessageTimeoutSingle(DesktopWindow->head.h, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+    if (hWnd != HWND_TOPMOST)
+    {
+       /* Send message to the desktop window too! */
+       co_IntSendMessageTimeoutSingle(DesktopWindow->head.h, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+    }
 
     Children = IntWinListChildren(DesktopWindow);
     if (NULL == Children)
@@ -1332,7 +1404,26 @@ co_IntSendMessageTimeout( HWND hWnd,
 
     for (Child = Children; NULL != *Child; Child++)
     {
-        co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+        if (hWnd == HWND_TOPMOST)
+        {
+           DesktopWindow = UserGetWindowObject(*Child);
+           if (DesktopWindow && DesktopWindow->ExStyle & WS_EX_TOPMOST)
+           {
+              ERR("HWND_TOPMOST Found\n");
+              co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+           }
+        }
+        else
+        {
+           PWND pwnd = UserGetWindowObject(*Child);
+           if (!pwnd) continue;
+
+           if ( pwnd->fnid == FNID_MENU ||
+                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+              continue;
+
+           co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+        }
     }
 
     ExFreePool(Children);
@@ -1347,13 +1438,16 @@ co_IntSendMessageNoWait(HWND hWnd,
                         LPARAM lParam)
 {
     ULONG_PTR Result = 0;
-    co_IntSendMessageWithCallBack(hWnd,
-                                  Msg,
-                                  wParam,
-                                  lParam,
-                                  NULL,
-                                  0,
-                                  &Result);
+    if (!co_IntSendMessageWithCallBack( hWnd,
+                                        Msg,
+                                        wParam,
+                                        lParam,
+                                        NULL,
+                                        0,
+                                       &Result))
+    {
+       Result = ((ULONG_PTR)-1);
+    } 
     return Result;
 }
 /* MSDN:
@@ -1430,7 +1524,20 @@ co_IntSendMessageWithCallBack( HWND hWnd,
             RETURN(FALSE);
         }
 
+        if (Msg & 0x80000000)
+        {
+           ERR("SMWCB: Internal Message!\n");
+           Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
+           if (uResult) *uResult = Result;                              
+           RETURN( TRUE);
+        }
+
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
+        if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+        {
+           TRACE("SMWCB: Server Side Window Procedure\n");
+        }
 
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
@@ -1505,9 +1612,12 @@ CLEANUP:
     END_CLEANUP;
 }
 
-/* This function posts a message if the destination's message queue belongs to
-another thread, otherwise it sends the message. It does not support broadcast
-messages! */
+
+/*
+  This HACK function posts a message if the destination's message queue belongs to
+  another thread, otherwise it sends the message. It does not support broadcast
+  messages! 
+*/
 LRESULT FASTCALL
 co_IntPostOrSendMessage( HWND hWnd,
                          UINT Msg,
@@ -1561,7 +1671,7 @@ co_IntDoSendMessage( HWND hWnd,
     MSG KernelModeMsg;
     PMSGMEMORY MsgMemoryEntry;
 
-    if (HWND_BROADCAST != hWnd)
+    if (hWnd != HWND_BROADCAST && hWnd != HWND_TOPMOST)
     {
         Window = UserGetWindowObject(hWnd);
         if ( !Window )
@@ -1641,7 +1751,7 @@ UserSendNotifyMessage( HWND hWnd,
         PWND DesktopWindow;
         ULONG i;
 
-        DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+        DesktopWindow = UserGetDesktopWindow();
         List = IntWinListChildren(DesktopWindow);
 
         if (List != NULL)
@@ -1649,21 +1759,22 @@ UserSendNotifyMessage( HWND hWnd,
             UserSendNotifyMessage(DesktopWindow->head.h, Msg, wParam, lParam);
             for (i = 0; List[i]; i++)
             {
-                Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+               PWND pwnd = UserGetWindowObject(List[i]);
+               if (!pwnd) continue;
+
+               if ( pwnd->fnid == FNID_MENU ||
+                    pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+                  continue;
+
+               Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
             }
             ExFreePool(List);
         }
     }
     else
     {
-        ULONG_PTR lResult = 0;
-        Ret = co_IntSendMessageWithCallBack( hWnd,
-                                             Msg,
-                                             wParam,
-                                             lParam,
-                                             NULL,
-                                             0,
-                                            &lResult);
+        Ret = co_IntSendMessageNoWait( hWnd, Msg, wParam, lParam);
+        if (-1 == (int) Ret || !Ret) Ret = FALSE;
     }
     return Ret;
 }
@@ -2255,7 +2366,7 @@ NtUserMessageCall( HWND hWnd,
                ULONG i;
                UINT fuFlags;
 
-               pwndDesk = UserGetWindowObject(IntGetDesktopWindow());
+               pwndDesk = UserGetDesktopWindow();
                List = IntWinListChildren(pwndDesk);
 
                if (parm.flags & BSF_QUERY)

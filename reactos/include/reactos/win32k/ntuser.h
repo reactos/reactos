@@ -132,6 +132,7 @@ typedef struct _DESKTOPINFO
     WCHAR szDesktopName[1];
 } DESKTOPINFO, *PDESKTOPINFO;
 
+#define CTI_THREADSYSLOCK 0x0001
 #define CTI_INSENDMESSAGE 0x0002
 
 typedef struct _CLIENTTHREADINFO
@@ -567,6 +568,9 @@ typedef struct _SBINFOEX
 #define WS_EX2_CONSOLEWINDOW            0X00000400
 #define WS_EX2_CHILDNOACTIVATE          0X00000800
 
+#define WPF_MININIT    0x0008
+#define WPF_MAXINIT    0x0010
+
 typedef struct _WND
 {
     THRDESKHEAD head;
@@ -622,10 +626,10 @@ typedef struct _WND
         RECT NormalRect;
         POINT IconPos;
         POINT MaxPos;
+        UINT flags; // WPF_ flags.
     } InternalPos;
 
     UINT Unicode : 1; // !(WNDS_ANSICREATOR|WNDS_ANSIWINDOWPROC) ?
-    /* Indicates whether the window is derived from a system class */
     UINT InternalPosInitialized : 1;
     UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
     UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
@@ -3213,8 +3217,8 @@ typedef struct tagKMDDEEXECUTEDATA
 
 typedef struct tagKMDDELPARAM
 {
-          UINT_PTR uiLo;
-          UINT_PTR uiHi;
+  UINT_PTR uiLo;
+  UINT_PTR uiHi;
 } KMDDELPARAM, *PKMDDELPARAM;
 
 
@@ -3257,13 +3261,6 @@ NtUserGetMenuDefaultItem(
   HMENU hMenu,
   UINT fByPos,
   UINT gmdiFlags);
-
-BOOL
-NTAPI
-NtUserGetMinMaxInfo(
-  HWND hwnd,
-  MINMAXINFO *MinMaxInfo,
-  BOOL SendMessage);
 
 BOOL
 NTAPI

@@ -557,8 +557,6 @@ keybd_event(
     BYTE bScan,
     DWORD dwFlags,
     ULONG_PTR dwExtraInfo)
-
-
 {
     INPUT Input;
 

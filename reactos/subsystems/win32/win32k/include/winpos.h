@@ -54,4 +54,3 @@ BOOLEAN FASTCALL co_WinPosShowWindow(PWND Window, INT Cmd);
 void FASTCALL co_WinPosSendSizeMove(PWND Window);
 PWND FASTCALL co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest);
 VOID FASTCALL co_WinPosActivateOtherWindow(PWND Window);
-VOID FASTCALL WinPosInitInternalPos(PWND WindowObject, POINT *pt, RECTL *RestoreRect);
