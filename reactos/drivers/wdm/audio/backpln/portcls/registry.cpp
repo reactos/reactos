@@ -54,6 +54,8 @@ CRegistryKey::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    UNICODE_STRING GuidString;
+
     DPRINT("CRegistryKey::QueryInterface entered\n");
     if (IsEqualGUIDAligned(refiid, IID_IRegistryKey) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
@@ -63,7 +65,12 @@ CRegistryKey::QueryInterface(
         return STATUS_SUCCESS;
     }
 
-    DPRINT("IRegistryKey_QueryInterface: This %p\n", this);
+    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
+    {
+        DPRINT1("CRegistryKey::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        RtlFreeUnicodeString(&GuidString);
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 
