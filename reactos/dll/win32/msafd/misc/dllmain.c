@@ -2203,7 +2203,19 @@ WSPSetSockOpt(
                             sizeof(struct linger));
               return 0;
 
+           case SO_SNDBUF:
+              if (optlen < sizeof(DWORD))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+
+              /* TODO: The total per-socket buffer space reserved for sends */
+              AFD_DbgPrint(MIN_TRACE,("Setting send buf to %x is not implemented yet\n", optval));
+              return 0;
+
            default:
+              AFD_DbgPrint(MIN_TRACE,("Unknown optname %x\n", optname));
               break;
         }
     }
