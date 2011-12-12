@@ -940,7 +940,7 @@ ReportEventA(IN HANDLE hEventLog,
              IN LPVOID lpRawData)
 {
     NTSTATUS Status;
-    ANSI_STRING *Strings;
+    PANSI_STRING *Strings;
     ANSI_STRING ComputerName;
     WORD i;
     CHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
@@ -951,8 +951,8 @@ ReportEventA(IN HANDLE hEventLog,
           wNumStrings, dwDataSize, lpStrings, lpRawData);
 
     Strings = HeapAlloc(GetProcessHeap(),
-                        0,
-                        wNumStrings * sizeof(ANSI_STRING));
+                        HEAP_ZERO_MEMORY,
+                        wNumStrings * sizeof(PANSI_STRING));
     if (!Strings)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -960,7 +960,15 @@ ReportEventA(IN HANDLE hEventLog,
     }
 
     for (i = 0; i < wNumStrings; i++)
-        RtlInitAnsiString(&Strings[i], lpStrings[i]);
+    {
+        Strings[i] = HeapAlloc(GetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               sizeof(ANSI_STRING));
+        if (Strings[i])
+        {
+            RtlInitAnsiString(Strings[i], lpStrings[i]);
+        }
+    }
 
     dwSize = MAX_COMPUTERNAME_LENGTH + 1;
     GetComputerNameA(szComputerName, &dwSize);
@@ -975,9 +983,9 @@ ReportEventA(IN HANDLE hEventLog,
                                   dwEventID,
                                   wNumStrings,
                                   dwDataSize,
-                                  (PRPC_STRING) &ComputerName,
+                                  (PRPC_STRING)&ComputerName,
                                   lpUserSid,
-                                  (PRPC_STRING*) &Strings,
+                                  (PRPC_STRING*)Strings,
                                   lpRawData,
                                   0,
                                   NULL,
@@ -988,6 +996,12 @@ ReportEventA(IN HANDLE hEventLog,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    for (i = 0; i < wNumStrings; i++)
+    {
+        if (Strings[i] != NULL)
+            HeapFree(GetProcessHeap(), 0, Strings[i]);
+    }
 
     HeapFree(GetProcessHeap(), 0, Strings);
 
@@ -1027,7 +1041,7 @@ ReportEventW(IN HANDLE hEventLog,
              IN LPVOID lpRawData)
 {
     NTSTATUS Status;
-    UNICODE_STRING *Strings;
+    PUNICODE_STRING *Strings;
     UNICODE_STRING ComputerName;
     WORD i;
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
@@ -1039,7 +1053,7 @@ ReportEventW(IN HANDLE hEventLog,
 
     Strings = HeapAlloc(GetProcessHeap(),
                         0,
-                        wNumStrings * sizeof(UNICODE_STRING));
+                        wNumStrings * sizeof(PUNICODE_STRING));
     if (!Strings)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1047,7 +1061,15 @@ ReportEventW(IN HANDLE hEventLog,
     }
 
     for (i = 0; i < wNumStrings; i++)
-        RtlInitUnicodeString(&Strings[i], lpStrings[i]);
+    {
+        Strings[i] = HeapAlloc(GetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               sizeof(ANSI_STRING));
+        if (Strings[i])
+        {
+            RtlInitUnicodeString(Strings[i], lpStrings[i]);
+        }
+    }
 
     dwSize = MAX_COMPUTERNAME_LENGTH + 1;
     GetComputerNameW(szComputerName, &dwSize);
@@ -1062,9 +1084,9 @@ ReportEventW(IN HANDLE hEventLog,
                                   dwEventID,
                                   wNumStrings,
                                   dwDataSize,
-                                  (PRPC_UNICODE_STRING) &ComputerName,
+                                  (PRPC_UNICODE_STRING)&ComputerName,
                                   lpUserSid,
-                                  (PRPC_UNICODE_STRING*) &Strings,
+                                  (PRPC_UNICODE_STRING*)Strings,
                                   lpRawData,
                                   0,
                                   NULL,
@@ -1075,6 +1097,12 @@ ReportEventW(IN HANDLE hEventLog,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    for (i = 0; i < wNumStrings; i++)
+    {
+        if (Strings[i] != NULL)
+            HeapFree(GetProcessHeap(), 0, Strings[i]);
+    }
 
     HeapFree(GetProcessHeap(), 0, Strings);
 
