@@ -1,4 +1,4 @@
-/* FILE:        system/regsvr32/lang/cs-CZ.rc
+/* FILE:        base/system/regsvr32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2008-04-21
  */
@@ -27,5 +27,5 @@ IDS_MissingEntry,    "%s bylo načteno, ale vstupní bod %s nebyl nalezen.\n\n\
 
 IDS_FailureMessage,  "%s v %s selhalo.\nNávratový kód je: 0x%08x"
 
-IDS_SuccessMessage   "%s v %s uspělo."
+IDS_SuccessMessage,  "%s v %s uspělo."
 END

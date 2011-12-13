@@ -1,6 +1,6 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-IDC_EVENTVWR MENU 
+IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Дневник"
     BEGIN
@@ -23,7 +23,7 @@ BEGIN
     END
 END
 
-IDC_EVENTVWR ACCELERATORS 
+IDC_EVENTVWR ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -41,11 +41,11 @@ BEGIN
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER 
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
 CAPTION "Почакайте..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Зареждане на събитията. Почакайте...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
+    CTEXT           "Зареждане на събитията. Почакайте...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
 END
 
 

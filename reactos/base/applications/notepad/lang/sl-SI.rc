@@ -47,8 +47,8 @@ BEGIN
         MENUITEM "&Shrani\tCtrl+S",      CMD_SAVE
         MENUITEM "Shrani &kot ...",      CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Na&tisni\tCtrl+P",     CMD_PRINT
         MENUITEM "P&riprava strani ...", CMD_PAGE_SETUP
+        MENUITEM "Na&tisni\tCtrl+P",     CMD_PRINT
         MENUITEM "&Tiskalnik ...",       CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "Iz&hod",               CMD_EXIT
@@ -119,8 +119,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN

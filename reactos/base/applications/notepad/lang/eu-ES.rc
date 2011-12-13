@@ -27,8 +27,8 @@ BEGIN
         MENUITEM "&Gorde\tCtrl+S",              CMD_SAVE
         MENUITEM "Gorde &honela...",            CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Inprimatu\tCtrl+P",          CMD_PRINT
         MENUITEM "Prestatu &orrialdea...",      CMD_PAGE_SETUP
+        MENUITEM "&Inprimatu\tCtrl+P",          CMD_PRINT
         MENUITEM "Inprimatzeko &aurrebista...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Irten",                      CMD_EXIT
@@ -99,8 +99,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Kodifikazioa"
 BEGIN

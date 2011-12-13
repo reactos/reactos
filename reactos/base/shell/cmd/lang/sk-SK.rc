@@ -3,7 +3,7 @@
  * DATE OF TR:  21-03-2009
  * LastChange:  10-08-2010
  * _________________________________________________________________
- * NOTE      :  this file is not fully translated
+ * NOTE      :  This file is not fully translated
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -625,16 +625,14 @@ VOL      Displays a disk volume label and serial number.\n"
 STRING_CHOICE_OPTION,         "YN"
 STRING_COPY_OPTION,           "YNA"
 
-STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
+STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
 STRING_BATCH_ERROR,          "Error opening batch file\n"
 STRING_CHCP_ERROR1,          "Active code page: %u\n"
 STRING_CHCP_ERROR4,          "Invalid code page\n"
 STRING_CHOICE_ERROR,         "Invalid option. Expected format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Invalid option. Expected format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Illegal Option: %s"
-STRING_MD_ERROR,             "A subdirectory or file already exists.\n"
-STRING_MD_ERROR2,            "The path to the new folder does not exist.\n"
 STRING_CMD_ERROR1,           "Can't redirect input from file %s\n"
 STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
 STRING_CMD_ERROR3,           "Can't redirect to file %s\n"
@@ -664,6 +662,8 @@ STRING_FREE_ERROR2,          "unlabeled"
 STRING_GOTO_ERROR1,          "No label specified for GOTO"
 STRING_GOTO_ERROR2,          "Label '%s' not found\n"
 
+STRING_MD_ERROR,             "A subdirectory or file already exists.\n"
+STRING_MD_ERROR2,            "The path to the new folder does not exist.\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Chyba]\n"
 

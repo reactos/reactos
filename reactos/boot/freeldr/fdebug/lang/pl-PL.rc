@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
-// Polish (P.L.) resources
+// Polish resources
 // 2005 Emil Kaczmarek
-// UTF-8 conversion by Caemyr (May, 2011) 
+// UTF-8 conversion by Caemyr (May, 2011)
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -137,8 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Wprowadź port COM (np. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Wprowadź szybkość portu w bodach (np. 115200):",IDC_STATIC,7,38,114,
-                    8
+    LTEXT           "Wprowadź szybkość portu w bodach (np. 115200):",IDC_STATIC,7,38,114,8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,100,79,50,14
@@ -176,7 +175,7 @@ BEGIN
 
 	END
 
-#endif    // English (U.S.) resources
+#endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 
 

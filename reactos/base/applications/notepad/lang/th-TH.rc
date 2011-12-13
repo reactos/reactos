@@ -47,8 +47,8 @@ BEGIN
         MENUITEM "บันทืก\tCtrl+S",          CMD_SAVE
         MENUITEM "บันทืกเป็น...",           CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "พิมพ์\tCtrl+P",           CMD_PRINT
         MENUITEM "ปรับแต่งหน้า...",         CMD_PAGE_SETUP
+        MENUITEM "พิมพ์\tCtrl+P",           CMD_PRINT
         MENUITEM "ปรับแต่งเครื่องพิมพ์...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "ออก",                     CMD_EXIT
@@ -119,8 +119,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN

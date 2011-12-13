@@ -65,5 +65,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Magnifier"
-    IDC_MAGNIFIER           "MAGNIFIER"
 END

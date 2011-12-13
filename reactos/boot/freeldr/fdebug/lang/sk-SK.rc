@@ -137,8 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Zadajte COM port (napr. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Zadajte baudov˙ r˝chlosù (napr. 115200):",IDC_STATIC,7,38,114,
-                    8
+    LTEXT           "Zadajte baudov˙ r˝chlosù (napr. 115200):",IDC_STATIC,7,38,114,8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
     PUSHBUTTON      "Zruöiù",IDCANCEL,100,79,50,14
@@ -174,7 +173,7 @@ BEGIN
     IDS_LICENSE             "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-#endif    // English (U.S.) resources
+#endif    // Slovak resources
 /////////////////////////////////////////////////////////////////////////////
 
 

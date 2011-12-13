@@ -52,8 +52,8 @@ BEGIN
         MENUITEM "&Salva\tCtrl+S",               CMD_SAVE
         MENUITEM "Sal&va con nome...",           CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "S&tampa\tCtrl+P",              CMD_PRINT
         MENUITEM "I&mposta pagina...",           CMD_PAGE_SETUP
+        MENUITEM "S&tampa\tCtrl+P",              CMD_PRINT
         MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Esci",                        CMD_EXIT
@@ -124,8 +124,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Codifica"
 BEGIN

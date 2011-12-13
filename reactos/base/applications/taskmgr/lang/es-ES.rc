@@ -43,7 +43,8 @@ BEGIN
         BEGIN
             MENUITEM "&Una Gráfica, Todas las CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Una Gráfica, &Por CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "Una Gráfica, &Por CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            , CHECKED
         END
         MENUITEM "&Mostrar tiempos del Núcleo",      ID_VIEW_SHOWKERNELTIMES
     END

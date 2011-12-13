@@ -1,4 +1,4 @@
-// Deutsch resource file by Klemens Friedl   (frik85@reactos.at; http://frik85.reactos.at)
+// Deutsch resource file by Klemens Friedl (frik85@reactos.at; http://frik85.reactos.at)
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
@@ -42,7 +42,8 @@ BEGIN
         BEGIN
             MENUITEM "&Alle CPUs in einem Diagramm",  ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "&Ein Diagramm pro CPU",         ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "&Ein Diagramm pro CPU",         ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            , CHECKED
         END
         MENUITEM "K&ernel-Zeiten anzeigen",           ID_VIEW_SHOWKERNELTIMES
     END
@@ -159,8 +160,7 @@ CAPTION "Task-Manager"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL
-"Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
+    CONTROL         "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -168,8 +168,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | WS_BORDER |
-WS_TABSTOP,7,7,233,177
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Neuer Task...",IDC_NEWTASK,187,189,53,14
     PUSHBUTTON      "&Wechseln zu",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
     PUSHBUTTON      "&Task beenden",IDC_ENDTASK,75,189,53,14,WS_DISABLED
@@ -250,9 +249,8 @@ CAPTION "Debug-Kanäle"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER |
-WS_TABSTOP |
-		    LVS_SORTASCENDING,7,7,233,177
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
+                    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Schließen",IDOK,171,189,69,14
 END
 
@@ -681,5 +679,4 @@ BEGIN
     IDS_STATUS_PROCESSES          "Prozesse: %d"
     IDS_Not_Responding            "Keine Rückmeldung"
     IDS_Running                   "Wird ausgeführt"
-
 END

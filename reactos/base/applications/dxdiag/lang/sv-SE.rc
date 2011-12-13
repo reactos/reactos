@@ -1,6 +1,6 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            base\applications\dxdiag\lang\sv-SE.rc
+ * PROJECT:         ReactX Diagnosis Application
+ * FILE:            base/applications/dxdiag/lang/sv-SE.rc
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
@@ -99,7 +99,7 @@ BEGIN
     PUSHBUTTON "Aktiverad", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
     PUSHBUTTON "Aktiverad", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Testa DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Testa Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+    PUSHBUTTON "Testa Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
     GROUPBOX "Anmärkningar", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP

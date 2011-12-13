@@ -47,8 +47,8 @@ BEGIN
         MENUITEM "O&pslaan\tCtrl+S",       CMD_SAVE
         MENUITEM "Ops&laan als...",        CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Afdrukken\tCtrl+P",     CMD_PRINT
         MENUITEM "Pagina-in&stelling...",  CMD_PAGE_SETUP
+        MENUITEM "&Afdrukken\tCtrl+P",     CMD_PRINT
         MENUITEM "Printerinstellingen...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Afsluiten",             CMD_EXIT
@@ -119,8 +119,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN

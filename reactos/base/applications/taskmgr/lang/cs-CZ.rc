@@ -233,10 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Historie využití CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Historie využití paměti",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Zobrazení využití CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Zobrazení využití paměti",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Zobrazení využití CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Zobrazení využití paměti",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Historie využití CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Historie využití paměti",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -638,4 +636,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE           "Využití paměti: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Využití CPU: %3d%%"
     IDS_STATUS_PROCESSES          "Procesy: %d"
+    IDS_Not_Responding            "Not Responding"
+    IDS_Running                   "Running"
 END

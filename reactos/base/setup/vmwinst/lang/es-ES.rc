@@ -1,5 +1,5 @@
-//encoded=samcharly_at_hotmail_dot_com
-//Spanish Language Resource
+// encoded=samcharly_at_hotmail_dot_com
+// Spanish Language Resource
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -98,6 +98,7 @@ BEGIN
   IDS_FAILEDTOSELVGADRIVER "Fallo al activar el controlador VGA de ReactOS!"
   IDS_FAILEDTOSELVBEDRIVER "Fallo al activar el controlador VBE de ReactOS!"
   IDS_UNINSTNOTICE "Los archivos del controlador SVGA VMware(r) aun no han sido eliminados.\nPor favor elimínelos manualmente despues de reiniciar el sistema."
+  IDS_FAILEDTOADDREGENTRIES "Failed to create registry entries for the VMware(r) SVGA driver!"//FIXME
 END
 
 STRINGTABLE

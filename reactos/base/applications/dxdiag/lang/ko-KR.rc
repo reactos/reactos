@@ -1,5 +1,5 @@
 /*
- * Korean translation by Seungju Kim(www.seungjukim.com) admin at manateeshome {dot} com
+ * Korean translation by Seungju Kim (www.seungjukim.com), admin at manateeshome {dot} com.
  * I like manatees, how about you?
  */
 
@@ -97,7 +97,7 @@ BEGIN
     PUSHBUTTON "활성화", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
     PUSHBUTTON "활성화", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "DirectDraw 시험", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Direct3D 시험", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+    PUSHBUTTON "Direct3D 시험", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
     GROUPBOX "참고", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -226,4 +226,6 @@ BEGIN
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u 비트)(%uHz)"
 	IDS_OPTION_NO "아니오"
+	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
+	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
 END

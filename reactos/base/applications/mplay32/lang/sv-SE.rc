@@ -32,5 +32,6 @@ BEGIN
 	IDS_TOOLTIP_SEEKBACK "Sök bakåt"
 	IDS_TOOLTIP_SEEKFORW "Sök framåt"
 	IDS_TOOLTIP_FORWARD "Spola fremåt"
-    IDS_APPTITLE "ReactOS Multimediaspelare"
+	IDS_APPTITLE "ReactOS Multimediaspelare"
+	IDS_PLAY "Play"
 END

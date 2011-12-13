@@ -30,5 +30,5 @@ Fie %s nu a fost exportat, fie %s nu este corect. Pentru detectarea problemei/co
 
 IDS_FailureMessage,  "%s in %s nu s-a realizat.\nCodul de eroare este: 0x%08x"
 
-IDS_SuccessMessage   "%s in %s s-a realizat cu succes."
+IDS_SuccessMessage,  "%s in %s s-a realizat cu succes."
 END

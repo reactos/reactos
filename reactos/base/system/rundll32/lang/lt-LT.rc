@@ -1,7 +1,5 @@
 /* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
 
-#include "resource.h"
-
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN

@@ -632,7 +632,7 @@ VERIFY   Spécifie à ReactOS s'il faut vérifier que les fichiers sont correcte
 VOL      Affiche le nom de volume d'un disque et son numéro de série.\n"
 
 
-STRING_CHOICE_OPTION         "ON"
+STRING_CHOICE_OPTION,        "ON"
 STRING_COPY_OPTION,          "ONT"
 
 
@@ -644,8 +644,6 @@ STRING_CHCP_ERROR4,          "Page de codes invalide \n"
 STRING_CHOICE_ERROR,         "Option invalide. Format attendu : /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Option invalide. Format attendu : /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Option invalide : %s"
-STRING_MD_ERROR,             "Un sous répertoire ou un fichier existe déjà.\n"
-STRING_MD_ERROR2,            "Le chemin vers le nouveau répertoire n'existe pas.\n"
 STRING_CMD_ERROR1,           "Ne peut rediriger l'entrée depuis le fichier %s\n"
 STRING_CMD_ERROR2,           "Erreur à la création du fichier temporaire pour les données du pipe\n"
 STRING_CMD_ERROR3,           "Ne peut rediriger vers le fichier %s\n"
@@ -675,6 +673,8 @@ STRING_FREE_ERROR2,          "sans nom"
 STRING_GOTO_ERROR1,          "Pas de label indiqué pour GOTO"
 STRING_GOTO_ERROR2,          "Label '%s' non trouvé\n"
 
+STRING_MD_ERROR,             "Un sous répertoire ou un fichier existe déjà.\n"
+STRING_MD_ERROR2,            "Le chemin vers le nouveau répertoire n'existe pas.\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Erreur]\n"
 

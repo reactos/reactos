@@ -338,7 +338,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "확인",IDOK,84,178,50,14
     PUSHBUTTON      "취소",IDCANCEL,138,178,50,14
-    LTEXT           "작업 관리자의 프로세스 페이지에 나올 열을 선택하세요.", 
+    LTEXT           "작업 관리자의 프로세스 페이지에 나올 열을 선택하세요.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "이미지 이름(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
@@ -513,7 +513,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "작업 관리자" 
+    IDS_APP_TITLE           "작업 관리자"
     IDC_TASKMGR             "작업 관리자"
     IDS_IDLE_PROCESS        "System Idle Process"
 END

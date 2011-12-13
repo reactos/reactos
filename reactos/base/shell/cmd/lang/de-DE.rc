@@ -374,6 +374,7 @@ STRING_REM_HELP, "Leitet Kommentare in einer Batchdatei ein.\n\nREM [Kommentar]"
 
 STRING_RMDIR_HELP,   "Löscht ein Verzeichnis.\n\n\
 RMDIR [Laufwerk:]Pfad\nRD [Laufwerk:]Pfad"
+STRING_RMDIR_HELP2,  "Directory is not empty!\n"//FIXME
 
 STRING_REN_HELP1, "Benennt Dateien und Verzeichnisse um.\n\n\
 RENAME [/E /N /P /Q /S /T] alter_Name ... neuer_Name\n\
@@ -621,7 +622,6 @@ STRING_CHCP_ERROR4,          "Ungültige Codepage\n"
 STRING_CHOICE_ERROR,         "Ungültige Option. Erwartetes Format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Ungültige Option. Erwartetes Format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Ungültige Option: %s"
-STRING_MD_ERROR,             "Unterverzeichnis oder Datei existiert bereits.\n"
 STRING_CMD_ERROR1,           "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
 STRING_CMD_ERROR2,           "Ein Fehler ist beim Erstellen der temporären Datei für Pipedaten aufgetreten\n"
 STRING_CMD_ERROR3,           "%s kann nicht in die Datei umgeleitet werden \n"
@@ -650,6 +650,9 @@ STRING_FREE_ERROR1,          "Ungültiges Laufwerk"
 STRING_FREE_ERROR2,          "keine Bezeichnung"
 STRING_GOTO_ERROR1,          "Keine Sprungmarke für GOTO gesetzt"
 STRING_GOTO_ERROR2,          "Sprungmarke '%s' wurde nicht gefunden\n"
+
+STRING_MD_ERROR,             "Unterverzeichnis oder Datei existiert bereits.\n"
+STRING_MD_ERROR2,            "The path to the new folder does not exist.\n"//FIXME
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[FEHLER]\n"
 STRING_REN_ERROR1,           "MoveFile() ist fehlgeschlagen. Fehler: %lu\n"

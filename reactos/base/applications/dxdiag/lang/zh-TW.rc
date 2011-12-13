@@ -5,7 +5,7 @@
  * PURPOSE:     Chinese (Traditional) Language File for ReactX-Diagnostic program
  * TRANSLATOR:  Elton Chung <elton328@gmail.com>
  */
- 
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280

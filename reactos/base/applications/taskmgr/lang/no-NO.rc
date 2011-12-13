@@ -233,10 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Logg for bruk av prosessor",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Logg for bruk av fysisk minne",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Vis prosessorbruk",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Vis minnebruk",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Vis prosessorbruk",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Vis minnebruk",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Logg for prosessorbruk",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Minne bruk historie",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -639,5 +637,5 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Prosessorbruk: %3d%%"
     IDS_STATUS_PROCESSES          "Prosesser: %d"
     IDS_Not_Responding            "Ingen reaksjon"
-    IDS_Running                   "Kjører"  
+    IDS_Running                   "Kjører"
 END

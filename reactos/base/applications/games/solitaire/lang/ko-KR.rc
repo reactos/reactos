@@ -1,5 +1,5 @@
 /*
- *Korean translation of solitaire by Seungju Kim(manatails007) (www.seungjukim.com)
+ * Korean translation of solitaire by Seungju Kim (manatails007) (www.seungjukim.com)
  */
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
@@ -33,7 +33,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
     CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32 
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
     CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
     CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
     CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
@@ -65,7 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "새 게임(&D)\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        /*FIXME : is 덱 correct?*/
+        /* FIXME: is 덱 correct? */
         MENUITEM "덱(&C)...",                    IDM_GAME_DECK
         MENUITEM "옵션(&O)...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

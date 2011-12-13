@@ -367,6 +367,7 @@ STRING_REM_HELP, "Megjegyzést jelölõ sor batch fájlokban.\n\nREM [megjegyzé
 
 STRING_RMDIR_HELP,   "Eltávolít egy mappát.\n\n\
 RMDIR [meghajtó:]elérési_út\nRD [meghajtó:]elérési_út"
+STRING_RMDIR_HELP2,  "Directory is not empty!\n"//FIXME
 
 STRING_REN_HELP1, "Átnevez egy állományt.\n\n\
 RENAME [/E /N /P /Q /S /T] régi_név ... új_név\n\
@@ -383,6 +384,47 @@ Ha ez nem elég, használd a MOVE parancsot."
 STRING_REN_HELP2, "    %lu állomány átnevezve\n"
 
 STRING_REN_HELP3, "    %lu állomány átnevezve\n"
+
+//FIXME
+STRING_REPLACE_HELP1, "Replaces files.\n\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [drive1:][path1]filename Specifies the source file or files.\n\
+  [drive2:][path2]         Specifies the directory where files are to be\n\
+                           replaced.\n\
+  /A                       Adds new files to destination directory. Cannot\n\
+                           use with /S or /U switches.\n\
+  /P                       Prompts for confirmation before replacing a file or\n\
+                           adding a source file.\n\
+  /R                       Replaces read-only files as well as unprotected\n\
+                           files.\n\
+  /S                       Replaces files in all subdirectories of the\n\
+                           destination directory. Cannot use with the /A\n\
+                           switch.\n\
+  /W                       Waits for you to insert a disk before beginning.\n\
+  /U                       Replaces (updates) only files that are older than\n\
+                           source files. Cannot use with the /A switch.\n"
+
+STRING_REPLACE_HELP2, "Source path required\n"
+
+STRING_REPLACE_HELP3, "No files replaced\n"
+
+STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
+
+STRING_REPLACE_HELP5, "Replacing %s\n"
+
+STRING_REPLACE_HELP6, "Replace %s\n"
+
+STRING_REPLACE_HELP7, "No files added\n"
+
+STRING_REPLACE_HELP8, "%lu file(s) added\n"
+
+STRING_REPLACE_HELP9, "Add %s (Y/N) "
+
+STRING_REPLACE_HELP10, "Replace %s (Y/N) "
+
+STRING_REPLACE_HELP11, "Adding %s\n"
+
 
 STRING_SHIFT_HELP, "Eltolja a helyettesíthetõ paraméterek pozícióját a batch állományban.\n\n\
 SHIFT [DOWN]"
@@ -595,6 +637,8 @@ STRING_FREE_ERROR2,          "nincs cimkézve"
 STRING_GOTO_ERROR1,          "Nem lett cimke megadva a  GOTO után"
 STRING_GOTO_ERROR2,          "A '%s' cimke nem található\n"
 
+STRING_MD_ERROR,             "A subdirectory or file already exists.\n"//FIXME
+STRING_MD_ERROR2,            "The path to the new folder does not exist.\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[HIBA]\n"
 
@@ -625,6 +669,14 @@ STRING_ERROR_DRIVER_NOT_READY,     "A meghajtó nem áll készen"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
+STRING_REPLACE_ERROR1, "Invalid switch - %s\n"//FIXME
+STRING_REPLACE_ERROR2, "Path not found - %s\n"
+STRING_REPLACE_ERROR3, "The filename, directory name, or volume label syntax is incorrect.\n"
+STRING_REPLACE_ERROR4, "Invalid parameter combination\n"
+STRING_REPLACE_ERROR5, "Access denied - %s\n"
+STRING_REPLACE_ERROR6, "No files found - %s\n"
+STRING_REPLACE_ERROR7, "Extended Error 32\n"
+
 STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
 STRING_CMD_SHELLINFO,              "\nReactOS Parancssor értelmezõ\nVersion %s %s"
 STRING_VERSION_RUNVER,             " running on %s"
@@ -639,5 +691,10 @@ STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 STRING_MORE,                       "More? "
 STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Igen/Nem/Mind) "
+
+STRING_INVALID_OPERAND,            "Invalid operand."//FIXME
+STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Expected number or variable name."
+STRING_SYNTAX_COMMAND_INCORRECT,   "The syntax of the command is incorrect."
 
 END

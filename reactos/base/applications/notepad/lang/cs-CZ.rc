@@ -51,8 +51,8 @@ BEGIN
         MENUITEM "&Uložit\tCtrl+S",        CMD_SAVE
         MENUITEM "Uložit j&ako...",        CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Tisk\tCtrl+P",          CMD_PRINT
         MENUITEM "Nas&tavení stránky...",  CMD_PAGE_SETUP
+        MENUITEM "&Tisk\tCtrl+P",          CMD_PRINT
         MENUITEM "Nastavení tiská&rny...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Konec",                 CMD_EXIT
@@ -123,8 +123,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Kódování"
 BEGIN

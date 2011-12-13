@@ -1,10 +1,10 @@
-/* 
+/*
  * FILE:             base/setup/vmwinst/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
  * CHANGE LOG:       2011-08-25  initial translation
  */
- 
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

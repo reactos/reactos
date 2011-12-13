@@ -5,7 +5,7 @@
  *
  *         updated by Caemyr - Olaf Siejka (Jan, 2008)
  *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *         UTF-8 conversion by Caemyr (May, 2011) 
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -31,7 +31,7 @@ BEGIN
     MENUITEM "Odśwież",     ID_REFRESH
     MENUITEM SEPARATOR
     MENUITEM "Edycja...",     ID_EDIT, GRAYED
-    MENUITEM "Utwórz...",   ID_CREATE
+    MENUITEM "Utwórz...",   ID_CREATE, GRAYED
     MENUITEM "Usuń...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Właściwości...", ID_PROP, GRAYED
@@ -108,6 +108,7 @@ BEGIN
   LTEXT "Możesz określić parametry początkowe, które będą użyte przy uruchomieniu usługi z tego miejsca.",IDC_STATIC, 6,177,240,15
   LTEXT "Parametry uruchomienia:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
@@ -153,7 +154,7 @@ BEGIN
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
   PUSHBUTTON "Tak", IDOK, 26, 129, 54, 13
-  PUSHBUTTON "Nie", IDCANCEL, 102, 129, 54, 13
+  DEFPUSHBUTTON "Nie", IDCANCEL, 102, 129, 54, 13
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
@@ -245,30 +246,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HELP_OPTIONS "OPCJE TWORZENIA:\r\nUWAGA: Nazwa opcji zawiera znak równości.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (domyślnie = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (domyślnie = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (domyślnie = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(oddzielone / (slash))>\r\n obj= <AccountName|ObjectName>\r\n       (domyślnie = LocalSystem)\r\n password= <password>\r\n"
 END
-#define IDS_HINT_BLANK          20000
-#define IDS_HINT_EXPORT         20001
-#define IDS_HINT_EXIT           20002
 
-#define IDS_HINT_CONNECT        20011
-#define IDS_HINT_START          20012
-#define IDS_HINT_STOP           21013
-#define IDS_HINT_PAUSE          21014
-#define IDS_HINT_RESUME         20015
-#define IDS_HINT_RESTART        20016
-#define IDS_HINT_REFRESH        20017
-#define IDS_HINT_EDIT           20018
-#define IDS_HINT_CREATE         20019
-#define IDS_HINT_DELETE         20020
-#define IDS_HINT_PROP           20021
-
-#define IDS_HINT_LARGE          20030
-#define IDS_HINT_SMALL          20031
-#define IDS_HINT_LIST           20032
-#define IDS_HINT_DETAILS        20033
-#define IDS_HINT_CUST           20034
-
-#define IDS_HINT_HELP           20040
-#define IDS_HINT_ABOUT          20041
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN

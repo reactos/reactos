@@ -48,8 +48,8 @@ BEGIN
         MENUITEM "Ta&lleta\tCtrl+S",           CMD_SAVE
         MENUITEM "Talleta &nimellä...",        CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "T&ulosta\tCtrl+P",           CMD_PRINT
         MENUITEM "&Sivun asetukset...",        CMD_PAGE_SETUP
+        MENUITEM "T&ulosta\tCtrl+P",           CMD_PRINT
         MENUITEM "&Kirjoittimen asetukset...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Poistu",                    CMD_EXIT
@@ -120,8 +120,7 @@ END
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Encoding"
 BEGIN

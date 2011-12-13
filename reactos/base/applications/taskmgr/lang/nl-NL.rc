@@ -233,10 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Geschiedenis van CPU gebruik",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Geschiedenis van wisselbestandsgebruik",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Weergave van CPU-gebruik",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Weergave van wisselbestandsgebruik",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Weergave van CPU-gebruik",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Weergave van wisselbestandsgebruik",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Geschiedenis van CPU gebruik",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Geschiedenis van wisselbestandsgebruik",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -250,8 +248,8 @@ CAPTION "Debug kanalen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING,
-                    7,7,233,177
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
+                    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Sluit",IDOK,171,189,69,14
 END
 

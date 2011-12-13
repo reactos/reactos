@@ -9,15 +9,6 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_FDEBUG              ICON    DISCARDABLE     "fdebug.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Menu
 //
 
@@ -146,8 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Entrée le port COM (p.e. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Entrée le taux du débit (p.e. 115200):",IDC_STATIC,7,38,114,
-                    8
+    LTEXT           "Entrée le taux du débit (p.e. 115200):",IDC_STATIC,7,38,114,8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,100,79,50,14
@@ -197,5 +187,4 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-
 
