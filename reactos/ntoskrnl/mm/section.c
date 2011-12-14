@@ -2107,6 +2107,18 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    SwapEntry = MmGetSavedSwapEntryPage(Page);
 
    /*
+    * Check the reference count to ensure this page can be paged out
+    */
+   if (MmGetReferenceCountPage(Page) != 1)
+   {
+       DPRINT1("Cannot page out locked section page: 0x%p (RefCount: %d)\n",
+               Page, MmGetReferenceCountPage(Page));
+       PageOp->Status = STATUS_UNSUCCESSFUL;
+       MmspCompleteAndReleasePageOp(PageOp);
+       return STATUS_UNSUCCESSFUL;
+   }
+
+   /*
     * Prepare the context structure for the rmap delete call.
     */
    Context.WasDirty = FALSE;

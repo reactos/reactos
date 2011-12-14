@@ -74,6 +74,20 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
         MmReleasePageOp(PageOp);
         return(STATUS_UNSUCCESSFUL);
     }
+    
+    /*
+     * Check the reference count to ensure this page can be paged out
+     */
+    Page = MmGetPfnForProcess(Process, Address);
+    if (MmGetReferenceCountPage(Page) != 1)
+    {
+        DPRINT1("Cannot page out locked virtual memory page: 0x%p (RefCount: %d)\n",
+                Page, MmGetReferenceCountPage(Page));
+        PageOp->Status = STATUS_UNSUCCESSFUL;
+        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+        MmReleasePageOp(PageOp);
+        return(STATUS_UNSUCCESSFUL);
+    }
 
     /*
     * Disable the virtual mapping.
