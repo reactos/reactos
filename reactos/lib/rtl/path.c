@@ -890,7 +890,7 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
     Length = CurDir->DosPath.Length / sizeof(WCHAR);
     ASSERT((CurDirName != NULL) && (Length > 0));
 
-    /* 
+    /*
      * DosPath.Buffer should always have a trailing slash. There is an assert
      * below which checks for this.
      *
@@ -1610,6 +1610,725 @@ RtlDosSearchPath_U(IN PCWSTR Path,
     /* Free the allocation and return the length */
     RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
     return Length;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
+                          IN PUNICODE_STRING StaticString,
+                          IN PUNICODE_STRING DynamicString,
+                          IN PUNICODE_STRING *StringUsed,
+                          IN PSIZE_T FilePartSize,
+                          OUT PBOOLEAN NameInvalid,
+                          OUT RTL_PATH_TYPE* PathType,
+                          OUT PULONG LengthNeeded)
+{
+    NTSTATUS Status;
+    PWCHAR StaticBuffer;
+    PCWCH ShortName;
+    ULONG Length;
+    USHORT StaticLength;
+    UNICODE_STRING TempDynamicString;
+
+    /* Initialize all our locals */
+    ShortName = NULL;
+    StaticBuffer = NULL;
+    TempDynamicString.Buffer = NULL;
+
+    /* Initialize the input parameters */
+    if (StringUsed) *StringUsed = NULL;
+    if (LengthNeeded) *LengthNeeded = 0;
+    if (FilePartSize) *FilePartSize = 0;
+
+    /* Check for invalid parameters */
+    if ((DynamicString) && !(StringUsed) && (StaticString))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if we did not get an input string */
+    if (!StaticString)
+    {
+        /* Allocate one */
+        StaticLength = MAX_PATH * sizeof(WCHAR);
+        StaticBuffer = RtlpAllocateStringMemory(MAX_PATH * sizeof(WCHAR), TAG_USTR);
+        if (!StaticBuffer) return STATUS_NO_MEMORY;
+    }
+    else
+    {
+        /* Use the one we received */
+        StaticBuffer = StaticString->Buffer;
+        StaticLength = StaticString->MaximumLength;
+    }
+
+    /* Call the lower-level function */
+    Length = RtlGetFullPathName_Ustr(FileName,
+                                     StaticLength,
+                                     StaticBuffer,
+                                     &ShortName,
+                                     NameInvalid,
+                                     PathType);
+    DPRINT("Length: %d StaticBuffer: %S\n", Length, StaticBuffer);
+    if (!Length)
+    {
+        /* Fail if it failed */
+        DbgPrint("%s(%d) - RtlGetFullPathName_Ustr() returned 0\n",
+                 __FUNCTION__,
+                 __LINE__);
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Quickie;
+    }
+
+    /* Check if it fits inside our static string */
+    if ((StaticString) && (Length < StaticLength))
+    {
+        /* Set the final length */
+        StaticString->Length = Length;
+
+        /* Set the file part size */
+        if (FilePartSize) *FilePartSize = ShortName ? (ShortName - StaticString->Buffer) : 0;
+
+        /* Return the static string if requested */
+        if (StringUsed) *StringUsed = StaticString;
+
+        /* We are done with success */
+        Status = STATUS_SUCCESS;
+        goto Quickie;
+    }
+
+    /* Did we not have an input dynamic string ?*/
+    if (!DynamicString)
+    {
+        /* Return the length we need */
+        if (LengthNeeded) *LengthNeeded = Length;
+
+        /* And fail such that the caller can try again */
+        Status = STATUS_BUFFER_TOO_SMALL;
+        goto Quickie;
+    }
+
+    /* Check if it fits in our static buffer */
+    if ((StaticBuffer) && (Length < StaticLength))
+    {
+        /* NULL-terminate it */
+        StaticBuffer[Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+        /* Set the settings for the dynamic string the caller sent */
+        DynamicString->MaximumLength = StaticLength;
+        DynamicString->Length = Length;
+        DynamicString->Buffer = StaticBuffer;
+
+        /* Set the part size */
+        if (FilePartSize) *FilePartSize = ShortName ? (ShortName - StaticBuffer) : 0;
+
+        /* Return the dynamic string if requested */
+        if (StringUsed) *StringUsed = DynamicString;
+
+        /* Do not free the static buffer on exit, and return success */
+        StaticBuffer = NULL;
+        Status = STATUS_SUCCESS;
+        goto Quickie;
+    }
+
+    /* Now try again under the PEB lock */
+    RtlAcquirePebLock();
+    Length = RtlGetFullPathName_Ustr(FileName,
+                                     StaticLength,
+                                     StaticBuffer,
+                                     &ShortName,
+                                     NameInvalid,
+                                     PathType);
+    if (!Length)
+    {
+        /* It failed */
+        DbgPrint("%s line %d: RtlGetFullPathName_Ustr() returned 0\n",
+                 __FUNCTION__, __LINE__);
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Release;
+    }
+
+    /* Check if it fits inside our static string now */
+    if ((StaticString) && (Length < StaticLength))
+    {
+        /* Set the final length */
+        StaticString->Length = Length;
+
+        /* Set the file part size */
+        if (FilePartSize) *FilePartSize = ShortName ? (ShortName - StaticString->Buffer) : 0;
+
+        /* Return the static string if requested */
+        if (StringUsed) *StringUsed = StaticString;
+
+        /* We are done with success */
+        Status = STATUS_SUCCESS;
+        goto Release;
+    }
+
+    /* Check if the path won't even fit in a real string */
+    if ((Length + sizeof(WCHAR)) > UNICODE_STRING_MAX_BYTES)
+    {
+        /* Name is way too long, fail */
+        Status = STATUS_NAME_TOO_LONG;
+        goto Release;
+    }
+
+    /* Allocate the string to hold the path name now */
+    TempDynamicString.Buffer = RtlpAllocateStringMemory(Length + sizeof(WCHAR),
+                                                        TAG_USTR);
+    if (!TempDynamicString.Buffer)
+    {
+        /* Out of memory, fail */
+        Status = STATUS_NO_MEMORY;
+        goto Release;
+    }
+
+    /* Add space for a NULL terminator, and now check the full path */
+    TempDynamicString.MaximumLength = Length + sizeof(UNICODE_NULL);
+    Length = RtlGetFullPathName_Ustr(FileName,
+                                     Length,
+                                     TempDynamicString.Buffer,
+                                     &ShortName,
+                                     NameInvalid,
+                                     PathType);
+    if (!Length)
+    {
+        /* Some path error, so fail out */
+        DbgPrint("%s line %d: RtlGetFullPathName_Ustr() returned 0\n",
+                 __FUNCTION__, __LINE__);
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Release;
+    }
+
+    /* It should fit in the string we just allocated */
+    ASSERT(Length < (TempDynamicString.MaximumLength - sizeof(WCHAR)));
+    if (Length > TempDynamicString.MaximumLength)
+    {
+        /* This is really weird and would mean some kind of race */
+        Status = STATUS_INTERNAL_ERROR;
+        goto Release;
+    }
+
+    /* Return the file part size */
+    if (FilePartSize) *FilePartSize = ShortName ? (ShortName - TempDynamicString.Buffer) : 0;
+
+    /* Terminate the whole string now */
+    TempDynamicString.Buffer[Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Finalize the string and return it to the user */
+    DynamicString->Buffer = TempDynamicString.Buffer;
+    DynamicString->Length = Length;
+    DynamicString->MaximumLength = TempDynamicString.MaximumLength;
+    if (StringUsed) *StringUsed = DynamicString;
+
+    /* Return success and make sure we don't free the buffer on exit */
+    TempDynamicString.Buffer = NULL;
+    Status = STATUS_SUCCESS;
+
+Release:
+    /* Release the PEB lock */
+    RtlReleasePebLock();
+
+Quickie:
+    /* Free any buffers we should be freeing */
+    DPRINT("Status: %lx %S %S\n", Status, StaticBuffer, TempDynamicString.Buffer);
+    if ((StaticBuffer) && (StaticBuffer != StaticString->Buffer))
+    {
+        RtlpFreeMemory(StaticBuffer, TAG_USTR);
+    }
+    if (TempDynamicString.Buffer)
+    {
+        RtlpFreeMemory(TempDynamicString.Buffer, TAG_USTR);
+    }
+
+    /* Print out any unusual errors */
+    if ((NT_ERROR(Status)) &&
+        (Status != STATUS_NO_SUCH_FILE) && (Status != STATUS_BUFFER_TOO_SMALL))
+    {
+        DbgPrint("RTL: %s - failing on filename %wZ with status %08lx\n",
+                __FUNCTION__, FileName, Status);
+    }
+
+    /* Return, we're all done */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlDosSearchPath_Ustr(IN ULONG Flags,
+                      IN PUNICODE_STRING PathString,
+                      IN PUNICODE_STRING FileNameString,
+                      IN PUNICODE_STRING ExtensionString,
+                      IN PUNICODE_STRING CallerBuffer,
+                      IN OUT PUNICODE_STRING DynamicString OPTIONAL,
+                      OUT PUNICODE_STRING* FullNameOut OPTIONAL,
+                      OUT PULONG FilePartSize OPTIONAL,
+                      OUT PULONG LengthNeeded OPTIONAL)
+{
+    WCHAR StaticCandidateBuffer[MAX_PATH];
+    UNICODE_STRING StaticCandidateString;
+    NTSTATUS Status;
+    RTL_PATH_TYPE PathType;
+    PWCHAR p, End, CandidateEnd, SegmentEnd;
+    ULONG SegmentSize, NamePlusExtLength, PathSize, MaxPathSize = 0, WorstCaseLength, ByteCount;
+    USHORT ExtensionLength = 0;
+    PUNICODE_STRING FullIsolatedPath;
+    DPRINT("DOS Path Search: %lx %wZ %wZ %wZ %wZ %wZ\n",
+            Flags, PathString, FileNameString, ExtensionString, CallerBuffer, DynamicString);
+
+    /* Initialize the input string */
+    RtlInitEmptyUnicodeString(&StaticCandidateString,
+                              StaticCandidateBuffer,
+                              sizeof(StaticCandidateBuffer));
+
+    /* Initialize optional arguments */
+    if (FullNameOut) *FullNameOut = NULL;
+    if (FilePartSize) *FilePartSize = 0;
+    if (DynamicString)
+    {
+        DynamicString->Length = DynamicString->MaximumLength = 0;
+        DynamicString->Buffer = NULL;
+    }
+
+    /* Check for invalid parameters */
+    if ((Flags & ~7) ||
+        !(PathString) ||
+        !(FileNameString) ||
+        ((CallerBuffer) && (DynamicString) && !(FullNameOut)))
+    {
+        /* Fail */
+        DbgPrint("%s: Invalid parameters passed\n", __FUNCTION__);
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* First check what kind of path this is */
+    PathType = RtlDetermineDosPathNameType_Ustr(FileNameString);
+
+    /* Check if the caller wants to prevent relative .\ and ..\ paths */
+    if ((Flags & 2) &&
+         (PathType == RtlPathTypeRelative) &&
+         (FileNameString->Length >= (2 * sizeof(WCHAR))) &&
+         (FileNameString->Buffer[0] == L'.') &&
+         ((IS_PATH_SEPARATOR(FileNameString->Buffer[1])) ||
+          ((FileNameString->Buffer[1] == L'.') &&
+           ((FileNameString->Length >= (3 * sizeof(WCHAR))) &&
+           (IS_PATH_SEPARATOR(FileNameString->Buffer[2]))))))
+    {
+        /* Yes, and this path is like that, so make it seem unknown */
+        PathType = RtlPathTypeUnknown;
+    }
+
+    /* Now check relative vs non-relative paths */
+    if (PathType == RtlPathTypeRelative)
+    {
+        /* Does the caller want SxS? */
+        if (Flags & 1)
+        {
+            /* Apply the SxS magic */
+            FullIsolatedPath = NULL;
+            Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                              FileNameString,
+                                                              ExtensionString,
+                                                              CallerBuffer,
+                                                              DynamicString,
+                                                              &FullIsolatedPath,
+                                                              NULL,
+                                                              FilePartSize,
+                                                              LengthNeeded);
+            if (NT_SUCCESS(Status))
+            {
+                /* We found the SxS path, return it */
+                if (FullNameOut) *FullNameOut = FullIsolatedPath;
+                goto Quickie;
+            }
+            else if (Status != STATUS_SXS_KEY_NOT_FOUND)
+            {
+                /* Critical SxS error, fail */
+                DbgPrint("%s: Failing because call to "
+                         "RtlDosApplyIsolationRedirection_Ustr(%wZ) failed with "
+                          "status 0x%08lx\n",
+                         __FUNCTION__,
+                         FileNameString,
+                         Status);
+                goto Quickie;
+            }
+        }
+
+        /* No SxS key found, or not requested, check if there's an extension */
+        if (ExtensionString)
+        {
+            /* Save the extension length, and check if there's a file name */
+            ExtensionLength = ExtensionString->Length;
+            if (FileNameString->Length)
+            {
+                /* Start parsing the file name */
+                End = &FileNameString->Buffer[FileNameString->Length / sizeof(WCHAR)];
+                while (End > FileNameString->Buffer)
+                {
+                    /* If we find a path separator, there's no extension */
+                    if (IS_PATH_SEPARATOR(*--End)) break;
+
+                    /* Otherwise, did we find an extension dot? */
+                    if (*End == L'.')
+                    {
+                        /* Ignore what the caller sent it, use the filename's */
+                        ExtensionString = NULL;
+                        ExtensionLength = 0;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /* Check if we got a path */
+        if (PathString->Length)
+        {
+            /* Start parsing the path name, looking for path separators */
+            End = &PathString->Buffer[PathString->Length / sizeof(WCHAR)];
+            p = End;
+            while ((p > PathString->Buffer) && (*--p == L';'))
+            {
+                /* This is the size of the path -- handle a trailing slash */
+                PathSize = End - p - 1;
+                if ((PathSize) && !(IS_PATH_SEPARATOR(*(End - 1)))) PathSize++;
+
+                /* Check if we found a bigger path than before */
+                if (PathSize > MaxPathSize) MaxPathSize = PathSize;
+
+                /* Keep going with the path after this path separator */
+                End = p;
+            }
+
+            /* This is the trailing path, run the same code as above */
+            PathSize = End - p;
+            if ((PathSize) && !(IS_PATH_SEPARATOR(*(End - 1)))) PathSize++;
+            if (PathSize > MaxPathSize) MaxPathSize = PathSize;
+
+            /* Finally, convert the largest path size into WCHAR */
+            MaxPathSize *= sizeof(WCHAR);
+        }
+
+        /* Use the extension, the file name, and the largest path as the size */
+        WorstCaseLength = ExtensionLength +
+                          FileNameString->Length +
+                          MaxPathSize +
+                          sizeof(UNICODE_NULL);
+        if (WorstCaseLength > UNICODE_STRING_MAX_BYTES)
+        {
+            /* It has to fit in a registry string, if not, fail here */
+            DbgPrint("%s returning STATUS_NAME_TOO_LONG because the computed "
+                     "worst case file name length is %Iu bytes\n",
+                     __FUNCTION__,
+                     WorstCaseLength);
+            Status = STATUS_NAME_TOO_LONG;
+            goto Quickie;
+        }
+
+        /* Scan the path now, to see if we can find the file */
+        p = PathString->Buffer;
+        End = &p[PathString->Length / sizeof(WCHAR)];
+        while (p < End)
+        {
+            /* Find out where this path ends */
+            for (SegmentEnd = p;
+                 ((SegmentEnd != End) && (*SegmentEnd != L';'));
+                 SegmentEnd++);
+
+            /* Compute the size of this path */
+            ByteCount = SegmentSize = (SegmentEnd - p) * sizeof(WCHAR);
+
+            /* Handle trailing slash if there isn't one */
+            if ((SegmentSize) && !(IS_PATH_SEPARATOR(*(SegmentEnd - 1))))
+            {
+                /* Add space for one */
+                SegmentSize += sizeof(OBJ_NAME_PATH_SEPARATOR);
+            }
+
+            /* Now check if our initial static buffer is too small */
+            if (StaticCandidateString.MaximumLength <
+                (SegmentSize + ExtensionLength + FileNameString->Length))
+            {
+                /* At this point we should've been using our static buffer */
+                ASSERT(StaticCandidateString.Buffer == StaticCandidateBuffer);
+                if (StaticCandidateString.Buffer != StaticCandidateBuffer)
+                {
+                    /* Something is really messed up if this was the dynamic string */
+                    DbgPrint("%s: internal error #1; "
+                             "CandidateString.Buffer = %p; "
+                             "StaticCandidateBuffer = %p\n",
+                            __FUNCTION__,
+                            StaticCandidateString.Buffer,
+                            StaticCandidateBuffer);
+                    Status = STATUS_INTERNAL_ERROR;
+                    goto Quickie;
+                }
+
+                /* We checked before that the maximum possible size shoudl fit! */
+                ASSERT((SegmentSize + FileNameString->Length + ExtensionLength) <
+                        UNICODE_STRING_MAX_BYTES);
+                if ((SegmentSize + ExtensionLength + FileNameString->Length) >
+                    (UNICODE_STRING_MAX_BYTES - sizeof(WCHAR)))
+                {
+                    /* For some reason it's not fitting anymore. Something messed up */
+                    DbgPrint("%s: internal error #2; SegmentSize = %u, "
+                             "FileName->Length = %u, DefaultExtensionLength = %u\n",
+                             __FUNCTION__,
+                             SegmentSize,
+                             FileNameString->Length,
+                             ExtensionLength);
+                    Status = STATUS_INTERNAL_ERROR;
+                    goto Quickie;
+                }
+
+                /* Now allocate the dynamic string */
+                StaticCandidateString.MaximumLength = FileNameString->Length +
+                                                      WorstCaseLength;
+                StaticCandidateString.Buffer = RtlpAllocateStringMemory(WorstCaseLength,
+                                                                        TAG_USTR);
+                if (!StaticCandidateString.Buffer)
+                {
+                    /* Out of memory, fail */
+                    DbgPrint("%s: Unable to allocate %u byte buffer for path candidate\n",
+                             __FUNCTION__,
+                             StaticCandidateString.MaximumLength);
+                    Status = STATUS_NO_MEMORY;
+                    goto Quickie;
+                }
+            }
+
+            /* Copy the path in the string */
+            RtlCopyMemory(StaticCandidateString.Buffer, p, ByteCount);
+
+            /* Get to the end of the string, and add the trailing slash if missing */
+            CandidateEnd = &StaticCandidateString.Buffer[ByteCount / sizeof(WCHAR)];
+            if ((SegmentSize) && (SegmentSize != ByteCount))
+            {
+                *CandidateEnd++ = OBJ_NAME_PATH_SEPARATOR;
+            }
+
+            /* Copy the filename now */
+            RtlCopyMemory(CandidateEnd,
+                          FileNameString->Buffer,
+                          FileNameString->Length);
+            CandidateEnd += (FileNameString->Length / sizeof(WCHAR));
+
+            /* Check if there was an extension */
+            if (ExtensionString)
+            {
+                /* Copy the extension too */
+                RtlCopyMemory(CandidateEnd,
+                              ExtensionString->Buffer,
+                              ExtensionString->Length);
+                          CandidateEnd += (ExtensionString->Length / sizeof(WCHAR));
+            }
+
+            /* We are done, terminate it */
+            *CandidateEnd = UNICODE_NULL;
+
+            /* Now set the final length of the string so it becomes valid */
+            StaticCandidateString.Length = (CandidateEnd -
+                                            StaticCandidateString.Buffer) *
+                                           sizeof(WCHAR);
+
+            /* Check if this file exists */
+            DPRINT("BUFFER: %S\n", StaticCandidateString.Buffer);
+            if (RtlDoesFileExists_UEx(StaticCandidateString.Buffer, FALSE))
+            {
+                /* Awesome, it does, now get the full path */
+                Status = RtlGetFullPathName_UstrEx(&StaticCandidateString,
+                                                   CallerBuffer,
+                                                   DynamicString,
+                                                   (PUNICODE_STRING*)FullNameOut,
+                                                   FilePartSize,
+                                                   NULL,
+                                                   &PathType,
+                                                   LengthNeeded);
+                if (!(NT_SUCCESS(Status)) &&
+                    ((Status != STATUS_NO_SUCH_FILE) &&
+                     (Status != STATUS_BUFFER_TOO_SMALL)))
+                {
+                    DbgPrint("%s: Failing because we thought we found %wZ on "
+                             "the search path, but RtlGetfullPathNameUStrEx() "
+                             "returned %08lx\n",
+                             __FUNCTION__,
+                             Status);
+                }
+                DPRINT("STatus: %lx BUFFER: %S\n", Status, CallerBuffer->Buffer);
+                goto Quickie;
+            }
+            else
+            {
+                /* Otherwise, move to the next path */
+                if (SegmentEnd != End)
+                {
+                    /* Handle the case of the path separator trailing */
+                    p = SegmentEnd + 1;
+                }
+                else
+                {
+                    p = SegmentEnd;
+                }
+            }
+        }
+
+        /* Loop finished and we didn't break out -- fail */
+        Status = STATUS_NO_SUCH_FILE;
+    }
+    else
+    {
+        /* We have a full path, so check if it does exist */
+        DPRINT("%wZ\n", FileNameString);
+        if (!RtlDoesFileExists_UstrEx(FileNameString, TRUE))
+        {
+            /* It doesn't exist, did we have an extension? */
+            if (!(ExtensionString) || !(ExtensionString->Length))
+            {
+                /* No extension, so just fail */
+                Status = STATUS_NO_SUCH_FILE;
+                goto Quickie;
+            }
+
+            /* There was an extension, check if the filename already had one */
+            if (!(Flags & 4) && (FileNameString->Length))
+            {
+                /* Parse the filename */
+                p = FileNameString->Buffer;
+                End = &p[FileNameString->Length / sizeof(WCHAR)];
+                while (End > p)
+                {
+                    /* If there's a path separator, there's no extension */
+                    if (IS_PATH_SEPARATOR(*--End)) break;
+
+                    /* Othwerwise, did we find an extension dot? */
+                    if (*End == L'.')
+                    {
+                        /* File already had an extension, so fail */
+                        Status = STATUS_NO_SUCH_FILE;
+                        goto Quickie;
+                    }
+                }
+            }
+
+            /* So there is an extension, we'll try again by adding it */
+            NamePlusExtLength = FileNameString->Length +
+                                ExtensionString->Length +
+                                sizeof(UNICODE_NULL);
+            if (NamePlusExtLength > UNICODE_STRING_MAX_BYTES)
+            {
+                /* It won't fit in any kind of valid string, so fail */
+                DbgPrint("%s: Failing because filename plus extension (%Iu bytes) is too big\n",
+                         __FUNCTION__,
+                         NamePlusExtLength);
+                Status = STATUS_NAME_TOO_LONG;
+                goto Quickie;
+            }
+
+            /* Fill it fit in our temporary string? */
+            if (NamePlusExtLength > StaticCandidateString.MaximumLength)
+            {
+                /* It won't fit anymore, allocate a dynamic string for it */
+                StaticCandidateString.MaximumLength = NamePlusExtLength;
+                StaticCandidateString.Buffer = RtlpAllocateStringMemory(NamePlusExtLength,
+                                                                        TAG_USTR);
+                if (!StaticCandidateString.Buffer)
+                {
+                    /* Ran out of memory, so fail */
+                    DbgPrint("%s: Failing because allocating the dynamic filename buffer failed\n",
+                             __FUNCTION__);
+                    Status = STATUS_NO_MEMORY;
+                    goto Quickie;
+                }
+            }
+
+            /* Copy the filename */
+            RtlCopyMemory(StaticCandidateString.Buffer,
+                          FileNameString->Buffer,
+                          FileNameString->Length);
+
+            /* Copy the extension */
+            RtlCopyMemory(&StaticCandidateString.Buffer[FileNameString->Length / sizeof(WCHAR)],
+                          ExtensionString->Buffer,
+                          ExtensionString->Length);
+
+            /* Now NULL-terminate */
+            StaticCandidateString.Buffer[StaticCandidateString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            /* Finalize the length of the string to make it valid */
+            StaticCandidateString.Length = FileNameString->Length + ExtensionString->Length;
+            DPRINT("SB: %wZ\n", &StaticCandidateString);
+
+            /* And check if this file now exists */
+            if (!RtlDoesFileExists_UstrEx(&StaticCandidateString, TRUE))
+            {
+                /* Still no joy, fail out */
+                Status = STATUS_NO_SUCH_FILE;
+                goto Quickie;
+            }
+
+            /* File was found, get the final full path */
+            Status = RtlGetFullPathName_UstrEx(&StaticCandidateString,
+                                               CallerBuffer,
+                                               DynamicString,
+                                               (PUNICODE_STRING*)FullNameOut,
+                                               FilePartSize,
+                                               NULL,
+                                               &PathType,
+                                               LengthNeeded);
+            if (!(NT_SUCCESS(Status)) && (Status != STATUS_NO_SUCH_FILE))
+            {
+                DbgPrint("%s: Failing on \"%wZ\" because RtlGetfullPathNameUStrEx() "
+                         "failed with status %08lx\n",
+                         __FUNCTION__,
+                         &StaticCandidateString,
+                         Status);
+            }
+            DPRINT("STatus: %lx BUFFER: %S\n", Status, CallerBuffer->Buffer);
+        }
+        else
+        {
+            /* File was found on the first try, get the final full path */
+            Status = RtlGetFullPathName_UstrEx(FileNameString,
+                                               CallerBuffer,
+                                               DynamicString,
+                                               (PUNICODE_STRING*)FullNameOut,
+                                               FilePartSize,
+                                               NULL,
+                                               &PathType,
+                                               LengthNeeded);
+            if (!(NT_SUCCESS(Status)) &&
+                ((Status != STATUS_NO_SUCH_FILE) &&
+                (Status != STATUS_BUFFER_TOO_SMALL)))
+            {
+                DbgPrint("%s: Failing because RtlGetfullPathNameUStrEx() on %wZ "
+                         "failed with status %08lx\n",
+                         __FUNCTION__,
+                         FileNameString,
+                         Status);
+            }
+            DPRINT("STatus: %lx BUFFER: %S\n", Status, CallerBuffer->Buffer);
+        }
+    }
+
+Quickie:
+    /* Anything that was not an error, turn into STATUS_SUCCESS */
+    if (NT_SUCCESS(Status)) Status = STATUS_SUCCESS;
+
+    /* Check if we had a dynamic string */
+    if ((StaticCandidateString.Buffer) &&
+        (StaticCandidateString.Buffer != StaticCandidateBuffer))
+    {
+        /* Free it */
+        RtlFreeUnicodeString(&StaticCandidateString);
+    }
+
+    /* Return the status */
+    return Status;
 }
 
 /*

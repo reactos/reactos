@@ -2483,6 +2483,20 @@ RtlDosSearchPath_U(
     OUT PWSTR *PartName
 );
 
+ULONG
+NTAPI
+RtlDosSearchPath_Ustr(
+    IN ULONG Flags,
+    IN PUNICODE_STRING PathString,
+    IN PUNICODE_STRING FileNameString,
+    IN PUNICODE_STRING ExtensionString,
+    IN PUNICODE_STRING CallerBuffer,
+    IN OUT PUNICODE_STRING DynamicString OPTIONAL,
+    OUT PUNICODE_STRING* FullNameOut OPTIONAL,
+    OUT PULONG FilePartSize OPTIONAL,
+    OUT PULONG LengthNeeded OPTIONAL
+);
+
 NTSYSAPI
 BOOLEAN
 NTAPI
