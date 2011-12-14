@@ -8,7 +8,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#ifndef _MSC_VER
 #include <stdint.h>
+#else
+typedef unsigned __int8 uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+#endif
 
 #define SW_SHOWNORMAL 1
 #define SW_SHOWMINNOACTIVE 7
