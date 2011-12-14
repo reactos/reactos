@@ -1,6 +1,6 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window painting function
  *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
@@ -697,7 +697,7 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
 
    WndCaret = UserGetWindowObject(hWndCaret);
 
-   //fix: check for WndCaret can be null
+   // FIXME: Check for WndCaret can be NULL
    if (WndCaret == Window ||
          ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window, WndCaret)))
    {
@@ -1694,7 +1694,7 @@ UserDrawCaptionText(
       OldTextColor = IntGdiSetTextColor(hDc, IntGetSysColor(uFlags & DC_ACTIVE
          ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
 
-   //FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
+   // FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
    GreGetTextExtentW(hDc, Text->Buffer, Text->Length/sizeof(WCHAR), &Size, 0);
    GreExtTextOutW(hDc,
                   lpRc->left, (lpRc->top + lpRc->bottom)/2 - Size.cy/2,

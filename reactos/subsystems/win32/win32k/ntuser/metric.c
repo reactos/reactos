@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/metric.c
+ * FILE:             subsystems/win32/win32k/ntuser/metric.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -21,12 +21,12 @@ InitMetrics(VOID)
     INT *piSysMet = gpsi->aiSysMet;
     ULONG Width, Height;
 
-    /* note: used for the SM_CLEANBOOT metric */
+    /* Note: used for the SM_CLEANBOOT metric */
     DWORD dwValue = 0;
     HKEY hKey = 0;
 
     /* Clean boot */
-    piSysMet[SM_CLEANBOOT] = 0; // fallback value of 0 (normal mode)
+    piSysMet[SM_CLEANBOOT] = 0; // Fallback value of 0 (normal mode)
     if(NT_SUCCESS(RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option", &hKey)))
     {
         if(RegReadDWORD(hKey, L"OptionValue", &dwValue)) piSysMet[SM_CLEANBOOT] = (INT)dwValue;
@@ -54,14 +54,14 @@ InitMetrics(VOID)
     piSysMet[SM_CYVIRTUALSCREEN] = Height;
 
     /* NC area sizes */
-    piSysMet[SM_CYCAPTION] = gspv.ncm.iCaptionHeight + 1; // 19
-    piSysMet[SM_CYSMCAPTION] = gspv.ncm.iSmCaptionHeight + 1; // 15;
-    piSysMet[SM_CXSIZE] = gspv.ncm.iCaptionHeight; // 18;
-    piSysMet[SM_CYSIZE] = gspv.ncm.iCaptionHeight; // 18;
-    piSysMet[SM_CXSMSIZE] = gspv.ncm.iSmCaptionWidth; // 12; xp: piSysMet(SM_CYSMCAPTION) - 1
-    piSysMet[SM_CYSMSIZE] = gspv.ncm.iSmCaptionHeight; // 14;
-    piSysMet[SM_CXBORDER] = 1; // seems to be hardcoded
-    piSysMet[SM_CYBORDER] = 1; // seems to be hardcoded
+    piSysMet[SM_CYCAPTION] = gspv.ncm.iCaptionHeight + 1;       // 19
+    piSysMet[SM_CYSMCAPTION] = gspv.ncm.iSmCaptionHeight + 1;   // 15;
+    piSysMet[SM_CXSIZE] = gspv.ncm.iCaptionHeight;              // 18;
+    piSysMet[SM_CYSIZE] = gspv.ncm.iCaptionHeight;              // 18;
+    piSysMet[SM_CXSMSIZE] = gspv.ncm.iSmCaptionWidth;   // 12; XP: piSysMet(SM_CYSMCAPTION) - 1
+    piSysMet[SM_CYSMSIZE] = gspv.ncm.iSmCaptionHeight;  // 14;
+    piSysMet[SM_CXBORDER] = 1; // Seems to be hardcoded
+    piSysMet[SM_CYBORDER] = 1; // Seems to be hardcoded
     piSysMet[SM_CXFOCUSBORDER] = 1;
     piSysMet[SM_CYFOCUSBORDER] = 1;
     piSysMet[SM_CXDLGFRAME] = 3;
@@ -82,7 +82,7 @@ InitMetrics(VOID)
                          + piSysMet[SM_CYSIZE] + 4
                          + 4 * gspv.tmCaptionFont.tmAveCharWidth
                          + 2 * piSysMet[SM_CXFRAME];
-    piSysMet[SM_CYMIN] = piSysMet[SM_CYCAPTION] + 2 * piSysMet[SM_CYFRAME];// 27
+    piSysMet[SM_CYMIN] = piSysMet[SM_CYCAPTION] + 2 * piSysMet[SM_CYFRAME]; // 27
     piSysMet[SM_CXMAXIMIZED] = piSysMet[SM_CXSCREEN] + 2 * piSysMet[SM_CXFRAME];
     piSysMet[SM_CYMAXIMIZED] = piSysMet[SM_CYSCREEN] - 20;
     piSysMet[SM_CXFULLSCREEN] = piSysMet[SM_CXSCREEN];
@@ -98,34 +98,34 @@ InitMetrics(VOID)
                               + 2 * piSysMet[SM_CYFRAME];
 
     /* Icon */
-    piSysMet[SM_CXVSCROLL] = gspv.ncm.iScrollWidth; //16;
-    piSysMet[SM_CYVTHUMB] = gspv.ncm.iScrollHeight; //16;
-    piSysMet[SM_CYHSCROLL] = gspv.ncm.iScrollWidth; //16;
-    piSysMet[SM_CXHTHUMB] = gspv.ncm.iScrollHeight; //16;
-    piSysMet[SM_CYVSCROLL] = gspv.ncm.iScrollHeight; // 16
-    piSysMet[SM_CXHSCROLL] = gspv.ncm.iScrollHeight; // 16;
+    piSysMet[SM_CXVSCROLL] = gspv.ncm.iScrollWidth;     // 16;
+    piSysMet[SM_CYVTHUMB] = gspv.ncm.iScrollHeight;     // 16;
+    piSysMet[SM_CYHSCROLL] = gspv.ncm.iScrollWidth;     // 16;
+    piSysMet[SM_CXHTHUMB] = gspv.ncm.iScrollHeight;     // 16;
+    piSysMet[SM_CYVSCROLL] = gspv.ncm.iScrollHeight;    // 16
+    piSysMet[SM_CXHSCROLL] = gspv.ncm.iScrollHeight;    // 16;
     piSysMet[SM_CXICON] = 32;
     piSysMet[SM_CYICON] = 32;
     piSysMet[SM_CXSMICON] = 16;
     piSysMet[SM_CYSMICON] = 16;
-    piSysMet[SM_CXICONSPACING] = gspv.im.iHorzSpacing;// 64;
-    piSysMet[SM_CYICONSPACING] = gspv.im.iVertSpacing; // 64;
+    piSysMet[SM_CXICONSPACING] = gspv.im.iHorzSpacing;  // 64;
+    piSysMet[SM_CYICONSPACING] = gspv.im.iVertSpacing;  // 64;
     piSysMet[SM_CXCURSOR] = 32;
     piSysMet[SM_CYCURSOR] = 32;
-    piSysMet[SM_CXMINTRACK] = piSysMet[SM_CXMIN]; // 117
-    piSysMet[SM_CYMINTRACK] = piSysMet[SM_CYMIN]; // 27
+    piSysMet[SM_CXMINTRACK] = piSysMet[SM_CXMIN];       // 117
+    piSysMet[SM_CYMINTRACK] = piSysMet[SM_CYMIN];       // 27
     piSysMet[SM_CXDRAG] = 4;
     piSysMet[SM_CYDRAG] = 4;
-    piSysMet[SM_ARRANGE] = gspv.mm.iArrange; // 8;
+    piSysMet[SM_ARRANGE] = gspv.mm.iArrange;            // 8;
 
     /* Menu */
-    piSysMet[SM_CYMENU] = gspv.ncm.iMenuHeight + 1;//19;
+    piSysMet[SM_CYMENU] = gspv.ncm.iMenuHeight + 1;     // 19;
     piSysMet[SM_MENUDROPALIGNMENT] = gspv.bMenuDropAlign;
     piSysMet[SM_CXMENUCHECK] = ((1 + gspv.tmMenuFont.tmHeight +
                                  gspv.tmMenuFont.tmExternalLeading) & ~1) - 1; // 13;
     piSysMet[SM_CYMENUCHECK] = piSysMet[SM_CXMENUCHECK];
-    piSysMet[SM_CXMENUSIZE] = gspv.ncm.iMenuWidth; //18;
-    piSysMet[SM_CYMENUSIZE] = gspv.ncm.iMenuHeight; //18;
+    piSysMet[SM_CXMENUSIZE] = gspv.ncm.iMenuWidth;      // 18;
+    piSysMet[SM_CYMENUSIZE] = gspv.ncm.iMenuHeight;     // 18;
 
     /* Mouse */
     piSysMet[SM_MOUSEPRESENT] = 1;

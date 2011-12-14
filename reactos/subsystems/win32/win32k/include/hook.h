@@ -5,7 +5,7 @@
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 #define ISITHOOKED(HookId) (((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks & HOOKID_TO_FLAG(HookId))
 
-/* NOTE: the following definition is not a real hook but
+/* NOTE: The following definition is not a real hook but
          a pseudo-id that will be used only for 
          injecting user api hook module to all processes.
          It is used internally in win32k */

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           ENG misc Functions
  * FILE:              subsystems/win32/win32k/eng/engmisc.c
  * PROGRAMER:         ReactOS Team
@@ -223,7 +223,7 @@ EngGetProcessHandle(VOID)
 {
   /* http://www.osr.com/ddk/graphics/gdifncs_3tif.htm
      In Windows 2000 and later, the EngGetProcessHandle function always returns NULL.
-     FIXME - what does NT4 return? */
+     FIXME: What does NT4 return? */
   return NULL;
 }
 
@@ -285,8 +285,5 @@ EngGetTickCount(VOID)
     return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
             (Multiplier * (TickCount.HighPart << 8)));
 }
-
-
-
 
 /* EOF */

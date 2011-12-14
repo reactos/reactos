@@ -56,7 +56,7 @@ extern PATTACHINFO gpai;
 /* Scan Codes */
 #define SC_KEY_UP        0x8000
 /* lParam bits */
-#define LP_DO_NOT_CARE_BIT (1<<25) // for GetKeyNameText
+#define LP_DO_NOT_CARE_BIT (1<<25) // For GetKeyNameText
 
 /* General */
 INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);

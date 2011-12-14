@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/gdidbg.c
- * PURPOSE:         Special debugging functions for gdi
+ * PURPOSE:         Special debugging functions for GDI
  * PROGRAMMERS:     Timo Kreuzer
  */
 
@@ -17,7 +17,7 @@ extern ULONG gulFirstUnused;
 
 ULONG gulLogUnique = 0;
 
-/* note the following values need to be sorted */
+/* Note: the following values need to be sorted */
 DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"EngBlt", DbgChEngBlt},
     {L"EngBrush", DbgChEngBrush},
@@ -125,12 +125,12 @@ DbgDumpGdiHandleTable(void)
 
     if (leak_reported)
     {
-        DPRINT1("gdi handle abusers already reported!\n");
+        DPRINT1("GDI handle abusers already reported!\n");
         return;
     }
 
     leak_reported = 1;
-    DPRINT1("reporting gdi handle abusers:\n");
+    DPRINT1("Reporting GDI handle abusers:\n");
 
     /* We've got serious business to do */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -200,7 +200,7 @@ DbgDumpGdiHandleTable(void)
     }
 
     if (i < nTraces)
-        DbgPrint("(list terminated - the remaining entries have 1 allocation only)\n");
+        DbgPrint("(List terminated - the remaining entries have 1 allocation only)\n");
 
     KeLowerIrql(OldIrql);
 
@@ -238,7 +238,7 @@ DbgGdiHTIntegrityCheck()
 
 	KeEnterCriticalRegion();
 
-	/* FIXME: check reserved entries */
+	/* FIXME: Check reserved entries */
 
 	/* Now go through the deleted objects */
 	i = gulFirstFree & 0xffff;
@@ -522,7 +522,7 @@ QueryEnvironmentVariable(PUNICODE_STRING Name,
    PPEB Peb;
    PWSTR Environment; 
 
-   /* Ugly hack for reactos system threads */
+   /* Ugly HACK for ReactOS system threads */
    if(!NtCurrentTeb())
    {
        return(STATUS_VARIABLE_NOT_FOUND);
@@ -704,7 +704,7 @@ BOOL DbgInitDebugChannels()
         /* Get the env var again */
         Status = QueryEnvironmentVariable(&Name, &Value);
     }
-    
+
    /* Check for error */
     if(!NT_SUCCESS(Status))
     {
@@ -719,7 +719,7 @@ BOOL DbgInitDebugChannels()
     /* Parse the variable */
     ret = DbgParseDebugChannels(ppi, &Value);
 
-    /* Clean up*/
+    /* Clean up */
     if(Value.Buffer != valBuffer)
     {
         ExFreePool(Value.Buffer);
@@ -728,3 +728,4 @@ BOOL DbgInitDebugChannels()
     return ret;
 }
 
+/* EOF */

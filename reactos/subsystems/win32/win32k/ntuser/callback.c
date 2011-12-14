@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Callback to usermode support
- * FILE:             subsys/win32k/ntuser/callback.c
+ * FILE:             subsystems/win32/win32k/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * NOTES:            Please use the Callback Memory Management functions for
@@ -17,7 +17,7 @@ DBG_DEFAULT_CHANNEL(UserCallback);
 
 typedef struct _INT_CALLBACK_HEADER
 {
-   /* list entry in the THREADINFO structure */
+   /* List entry in the THREADINFO structure */
    LIST_ENTRY ListEntry;
 }
 INT_CALLBACK_HEADER, *PINT_CALLBACK_HEADER;
@@ -37,7 +37,7 @@ IntCbAllocateMemory(ULONG Size)
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   /* insert the callback memory into the thread's callback list */
+   /* Insert the callback memory into the thread's callback list */
 
    InsertTailList(&W32Thread->W32CallbackListHead, &Mem->ListEntry);
 
@@ -57,10 +57,10 @@ IntCbFreeMemory(PVOID Data)
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   /* remove the memory block from the thread's callback list */
+   /* Remove the memory block from the thread's callback list */
    RemoveEntryList(&Mem->ListEntry);
 
-   /* free memory */
+   /* Free memory */
    ExFreePoolWithTag(Mem, USERTAG_CALLBACK);
 }
 
@@ -76,11 +76,10 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
       Mem = CONTAINING_RECORD(CurrentEntry, INT_CALLBACK_HEADER,
                               ListEntry);
 
-      /* free memory */
+      /* Free memory */
       ExFreePool(Mem);
    }
 }
-
 
 //
 // Pass the Current Window handle and pointer to the Client Callback.
@@ -114,7 +113,7 @@ IntRestoreTebWndCallback (HWND hWnd, PWND pWnd, PVOID pActCtx)
 
 /* FUNCTIONS *****************************************************************/
 
-/* calls ClientLoadLibrary in user32 */
+/* Calls ClientLoadLibrary in user32 */
 HMODULE
 co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName, 
                         PUNICODE_STRING pstrInitFunc, 
@@ -144,7 +143,7 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
        ArgumentLength += pstrInitFunc->Length + sizeof(WCHAR);
    }
 
-   /* Allocate the argument*/
+   /* Allocate the argument */
    pArguments = IntCbAllocateMemory(ArgumentLength);
    if(pArguments == NULL)
    {
@@ -824,6 +823,5 @@ co_IntClientThreadSetup(VOID)
 
    return Status;
 }
-
 
 /* EOF */

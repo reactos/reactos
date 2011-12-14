@@ -95,28 +95,28 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Message Queue Flags */
   DWORD QF_flags;
 
-  /* queue state tracking */
+  /* Queue state tracking */
   // Send list QS_SENDMESSAGE
   // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
   // Hard list QS_MOUSE|QS_KEY only
   // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
   DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
 
-  /* extra message information */
+  /* Extra message information */
   LPARAM ExtraInfo;
 
-  /* state of each key */
+  /* State of each key */
   BYTE afKeyRecentDown[256 / 8]; // 1 bit per key
   BYTE afKeyState[256 * 2 / 8]; // 2 bits per key
 
-  /* showing cursor counter (value>=0 - cursor visible, value<0 - cursor hidden) */
+  /* Showing cursor counter (value>=0 - cursor visible, value<0 - cursor hidden) */
   INT ShowingCursor;
-  /* cursor object */
+  /* Cursor object */
   PCURICON_OBJECT CursorObject;
 
-  /* messages that are currently dispatched by other threads */
+  /* Messages that are currently dispatched by other threads */
   LIST_ENTRY DispatchingMessagesHead;
-  /* messages that are currently dispatched by this message queue, required for cleanup */
+  /* Messages that are currently dispatched by this message queue, required for cleanup */
   LIST_ENTRY LocalDispatchingMessagesHead;
 
   /* Desktop that the message queue is attached to */
@@ -142,7 +142,7 @@ typedef struct _USER_MESSAGE_QUEUE
 #define QF_CAPTURELOCKED          0x00100000
 #define QF_ACTIVEWNDTRACKING      0x00200000
 
-/* internal messages codes */
+/* Internal messages codes */
 enum internal_event_message
 {
     WM_ASYNC_SHOWWINDOW = 0x80000000,

@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Native User stubs
- * FILE:             subsys/win32k/ntuser/stubs.c
+ * FILE:             subsystems/win32/win32k/ntuser/ntstubs.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -256,7 +256,7 @@ NtUserInitializeClientPfnArrays(
       RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
       RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
 
-      //// FIXME! HAX! Temporary until server side is finished.
+      //// FIXME: HAX! Temporary until server side is finished.
       //// Copy the client side procs for now.
       RtlCopyMemory(&gpsi->aStoCidPfn, pfnClientW, sizeof(gpsi->aStoCidPfn));
 
@@ -982,7 +982,7 @@ NtUserDrawMenuBarTemp(
    HMENU hMenu,
    HFONT hFont)
 {
-   /* we'll use this function just for caching the menu bar */
+   /* We'll use this function just for caching the menu bar */
    STUB
    return 0;
 }

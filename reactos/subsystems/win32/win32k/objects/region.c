@@ -181,10 +181,10 @@ HRGN        hrgnDefault = NULL;
  *  we traverse an entire pixel.
  */
 #define BRESINITPGON(dy, x1, x2, xStart, d, m, m1, incr1, incr2) { \
-    int dx;      /* local storage */ \
+    int dx;      /* Local storage */ \
 \
     /* \
-     *  if the edge is horizontal, then it is ignored \
+     *  If the edge is horizontal, then it is ignored \
      *  and assumed not to be processed.  Otherwise, do this stuff. \
      */ \
     if ((dy) != 0) { \
@@ -237,10 +237,10 @@ HRGN        hrgnDefault = NULL;
  */
 typedef struct
 {
-    INT minor_axis;	/* minor axis        */
-    INT d;		/* decision variable */
-    INT m, m1;       	/* slope and slope+1 */
-    INT incr1, incr2;	/* error increments */
+    INT minor_axis;	/* Minor axis        */
+    INT d;		/* Decision variable */
+    INT m, m1;       	/* Slope and slope+1 */
+    INT incr1, incr2;	/* Error increments */
 } BRESINFO;
 
 
@@ -300,7 +300,7 @@ typedef struct
  */
 
 /*
- * for the winding number rule
+ * For the winding number rule
  */
 #define CLOCKWISE          1
 #define COUNTERCLOCKWISE  -1
@@ -309,18 +309,18 @@ typedef struct _EdgeTableEntry
 {
      INT ymax;             /* ycoord at which we exit this edge. */
      BRESINFO bres;        /* Bresenham info to run the edge     */
-     struct _EdgeTableEntry *next;       /* next in the list     */
-     struct _EdgeTableEntry *back;       /* for insertion sort   */
-     struct _EdgeTableEntry *nextWETE;   /* for winding num rule */
-     int ClockWise;        /* flag for winding number rule       */
+     struct _EdgeTableEntry *next;       /* Next in the list     */
+     struct _EdgeTableEntry *back;       /* For insertion sort   */
+     struct _EdgeTableEntry *nextWETE;   /* For winding num rule */
+     int ClockWise;        /* Flag for winding number rule       */
 } EdgeTableEntry;
 
 
 typedef struct _ScanLineList
 {
-     INT scanline;                /* the scanline represented */
-     EdgeTableEntry *edgelist;    /* header node              */
-     struct _ScanLineList *next;  /* next in the list       */
+     INT scanline;                /* The scanline represented */
+     EdgeTableEntry *edgelist;    /* Header node              */
+     struct _ScanLineList *next;  /* Next in the list       */
 } ScanLineList;
 
 
@@ -328,7 +328,7 @@ typedef struct
 {
      INT ymax;                 /* ymax for the polygon     */
      INT ymin;                 /* ymin for the polygon     */
-     ScanLineList scanlines;   /* header node              */
+     ScanLineList scanlines;   /* Header node              */
 } EdgeTable;
 
 
@@ -347,8 +347,7 @@ typedef struct _ScanLineListBlock
 
 
 /*
- *
- *     a few macros for the inner loops of the fill code where
+ *     A few macros for the inner loops of the fill code where
  *     performance considerations don't allow a procedure call.
  *
  *     Evaluate the given edge at the given scanline.
@@ -360,7 +359,7 @@ typedef struct _ScanLineListBlock
  *     can reorder the Winding Active Edge Table.
  */
 #define EVALUATEEDGEWINDING(pAET, pPrevAET, y, fixWAET) { \
-   if (pAET->ymax == y) {          /* leaving this edge */ \
+   if (pAET->ymax == y) {          /* Leaving this edge */ \
       pPrevAET->next = pAET->next; \
       pAET = pPrevAET->next; \
       fixWAET = 1; \
@@ -383,7 +382,7 @@ typedef struct _ScanLineListBlock
  *     The even-odd rule is in effect.
  */
 #define EVALUATEEDGEEVENODD(pAET, pPrevAET, y) { \
-   if (pAET->ymax == y) {          /* leaving this edge */ \
+   if (pAET->ymax == y) {          /* Leaving this edge */ \
       pPrevAET->next = pAET->next; \
       pAET = pPrevAET->next; \
       if (pAET) \
@@ -449,7 +448,7 @@ typedef void (FASTCALL *nonOverlapProcp)(PROSRGNDATA, PRECT, PRECT, INT, INT);
 
 #define RGN_DEFAULT_RECTS	2
 
-// used to allocate buffers for points and link the buffers together
+// Used to allocate buffers for points and link the buffers together
 
 typedef struct _POINTBLOCK
 {
@@ -484,7 +483,7 @@ IntDumpRegion(HRGN hRgn)
 
     RGNOBJAPI_Unlock(Data);
 }
-#endif /* not NDEBUG */
+#endif /* Not NDEBUG */
 
 
 INT
@@ -509,7 +508,7 @@ REGION_CopyRegion(
     PROSRGNDATA src
 )
 {
-    if (dst != src) //  don't want to copy to itself
+    if (dst != src) // Don't want to copy to itself
     {
         if (dst->rdh.nRgnSize < src->rdh.nCount * sizeof(RECT))
         {
@@ -520,11 +519,11 @@ REGION_CopyRegion(
                 return FALSE;
 
             if (dst->Buffer && dst->Buffer != &dst->rdh.rcBound)
-                ExFreePoolWithTag(dst->Buffer, TAG_REGION);	//free the old buffer
+                ExFreePoolWithTag(dst->Buffer, TAG_REGION);     // Free the old buffer
             dst->Buffer = temp;
-            dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT);  //size of region buffer
+            dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT); // Size of region buffer
         }
-        dst->rdh.nCount = src->rdh.nCount;                 //number of rectangles present in Buffer
+        dst->rdh.nCount = src->rdh.nCount;                      // Number of rectangles present in Buffer
         dst->rdh.rcBound.left = src->rdh.rcBound.left;
         dst->rdh.rcBound.top = src->rdh.rcBound.top;
         dst->rdh.rcBound.right = src->rdh.rcBound.right;
@@ -594,7 +593,7 @@ REGION_CropAndOffsetRegion(
 
     if (!off) off = &pt;
 
-    if (!rect) // just copy and offset
+    if (!rect) // Just copy and offset
     {
         PRECTL xrect;
         if (rgnDst == rgnSrc)
@@ -610,7 +609,7 @@ REGION_CropAndOffsetRegion(
 			if(!xrect)
 				return FALSE;
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer. will be assigned to xrect below.
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); // Free the old buffer. Will be assigned to xrect below.
         }
 
         if (rgnDst != rgnSrc)
@@ -646,7 +645,7 @@ REGION_CropAndOffsetRegion(
     {
         goto empty;
     }
-    else // region box and clipping rect appear to intersect
+    else // Region box and clipping rect appear to intersect
     {
         PRECTL lpr, rpr;
         ULONG i, j, clipa, clipb;
@@ -654,7 +653,7 @@ REGION_CropAndOffsetRegion(
         INT right = rgnSrc->rdh.rcBound.left + off->x;
 
         for (clipa = 0; (rgnSrc->Buffer + clipa)->bottom <= rect->top; clipa++)
-            //region and rect intersect so we stop before clipa > rgnSrc->rdh.nCount
+            // Region and rect intersect so we stop before clipa > rgnSrc->rdh.nCount
             ; // skip bands above the clipping rectangle
 
         for (clipb = clipa; clipb < rgnSrc->rdh.nCount; clipb++)
@@ -672,7 +671,7 @@ REGION_CropAndOffsetRegion(
                 return FALSE;
 
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); // free the old buffer
             rgnDst->Buffer = temp;
             rgnDst->rdh.nCount = i;
             rgnDst->rdh.nRgnSize = i * sizeof(RECT);
@@ -709,13 +708,13 @@ REGION_CropAndOffsetRegion(
         right = rect->bottom + off->y;
 
         rgnDst->rdh.nCount = j--;
-        for (i = 0; i <= j; i++) // fixup top band
+        for (i = 0; i <= j; i++) // Fixup top band
             if ((rgnDst->Buffer + i)->top < left)
                 (rgnDst->Buffer + i)->top = left;
             else
                 break;
 
-        for (i = j; i > 0; i--) // fixup bottom band
+        for (i = j; i > 0; i--) // Fixup bottom band
             if ((rgnDst->Buffer + i)->bottom > right)
                 (rgnDst->Buffer + i)->bottom = right;
             else
@@ -772,7 +771,7 @@ REGION_Coalesce(
     RECTL *pRegEnd;            /* End of region */
     INT curNumRects;          /* Number of rectangles in current band */
     INT prevNumRects;         /* Number of rectangles in previous band */
-    INT bandtop;               /* top coordinate for current band */
+    INT bandtop;               /* Top coordinate for current band */
 
     pRegEnd = pReg->Buffer + pReg->rdh.nCount;
     pPrevRect = pReg->Buffer + prevStart;
@@ -925,7 +924,7 @@ REGION_RegionOp(
     INT ytop;                         /* Top of intersection */
     RECTL *oldRects;                   /* Old rects for newReg */
     ULONG prevBand;                   /* Index of start of
-						 * previous band in newReg */
+						 * Previous band in newReg */
     ULONG curBand;                    /* Index of start of current band in newReg */
     RECTL *r1BandEnd;                  /* End of current band in r1 */
     RECTL *r2BandEnd;                  /* End of current band in r2 */
@@ -1274,7 +1273,7 @@ REGION_IntersectRegion(
     ROSRGNDATA *reg2
 )
 {
-    /* check for trivial reject */
+    /* Check for trivial reject */
     if ( (!(reg1->rdh.nCount)) || (!(reg2->rdh.nCount))  ||
          (!EXTENTCHECK(&reg1->rdh.rcBound, &reg2->rdh.rcBound)) )
         newReg->rdh.nCount = 0;
@@ -1424,7 +1423,7 @@ REGION_UnionRegion(
     ROSRGNDATA *reg2
 )
 {
-    /*  checks all the simple cases */
+    /* Checks all the simple cases */
 
     /*
      * Region 1 and 2 are the same or region 1 is empty
@@ -1441,7 +1440,7 @@ REGION_UnionRegion(
     }
 
     /*
-     * if nothing to union (region 2 empty)
+     * If nothing to union (region 2 empty)
      */
     if (0 == reg2->rdh.nCount ||
             reg2->rdh.rcBound.right <= reg2->rdh.rcBound.left ||
@@ -1690,7 +1689,7 @@ REGION_SubtractRegion(
     ROSRGNDATA *regS
 )
 {
-    /* check for trivial reject */
+    /* Check for trivial reject */
     if ( (!(regM->rdh.nCount)) || (!(regS->rdh.nCount))  ||
          (!EXTENTCHECK(&regM->rdh.rcBound, &regS->rdh.rcBound)) )
     {
@@ -1724,7 +1723,7 @@ REGION_XorRegion(
     HRGN htra, htrb;
     ROSRGNDATA *tra, *trb;
 
-    // FIXME: don't use a handle
+    // FIXME: Don't use a handle
     tra = REGION_AllocRgnWithHandle(sra->rdh.nCount + 1);
     if (!tra )
     {
@@ -1732,7 +1731,7 @@ REGION_XorRegion(
     }
     htra = tra->BaseObject.hHmgr;
 
-    // FIXME: don't use a handle
+    // FIXME: Don't use a handle
     trb = REGION_AllocRgnWithHandle(srb->rdh.nCount + 1);
     if (!trb)
     {
@@ -1791,7 +1790,7 @@ REGION_CreateSimpleFrameRgn(
         {
             if (y != 0)
             {
-                /* top rectangle */
+                /* Top rectangle */
                 prc->left = rgn->rdh.rcBound.left;
                 prc->top = rgn->rdh.rcBound.top;
                 prc->right = rgn->rdh.rcBound.right;
@@ -1801,14 +1800,14 @@ REGION_CreateSimpleFrameRgn(
 
             if (x != 0)
             {
-                /* left rectangle */
+                /* Left rectangle */
                 prc->left = rgn->rdh.rcBound.left;
                 prc->top = rgn->rdh.rcBound.top + y;
                 prc->right = prc->left + x;
                 prc->bottom = rgn->rdh.rcBound.bottom - y;
                 prc++;
 
-                /* right rectangle */
+                /* Right rectangle */
                 prc->left = rgn->rdh.rcBound.right - x;
                 prc->top = rgn->rdh.rcBound.top + y;
                 prc->right = rgn->rdh.rcBound.right;
@@ -1818,7 +1817,7 @@ REGION_CreateSimpleFrameRgn(
 
             if (y != 0)
             {
-                /* bottom rectangle */
+                /* Bottom rectangle */
                 prc->left = rgn->rdh.rcBound.left;
                 prc->top = rgn->rdh.rcBound.bottom - y;
                 prc->right = rgn->rdh.rcBound.right;
@@ -2455,7 +2454,7 @@ REGION_GetRgnBox(
 
         return ret;
     }
-    return 0; //if invalid region return zero
+    return 0; // If invalid region return zero
 }
 
 INT APIENTRY
@@ -2525,13 +2524,13 @@ IntGdiPaintRgn(
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
     psurf = dc->dclevel.pSurface;
-    /* FIXME - Handle psurf == NULL !!!! */
+    /* FIXME: Handle psurf == NULL !!!! */
 
     bRet = IntEngPaint(&psurf->SurfObj,
                        ClipRegion,
                        &dc->eboFill.BrushObject,
                        &BrushOrigin,
-                       0xFFFF);//FIXME:don't know what to put here
+                       0xFFFF); // FIXME: Don't know what to put here
 
     RGNOBJAPI_Unlock(visrgn);
     GreDeleteObject(tmpVisRgn);
@@ -2550,7 +2549,7 @@ REGION_RectInRegion(
     PRECTL pCurRect, pRectEnd;
     RECT rc;
 
-    /* swap the coordinates to make right >= left and bottom >= top */
+    /* Swap the coordinates to make right >= left and bottom >= top */
     /* (region building rectangles are normalized the same way) */
     if( rect->top > rect->bottom) {
         rc.top = rect->bottom;
@@ -2567,20 +2566,20 @@ REGION_RectInRegion(
         rc.left = rect->left;
     }
 
-    /* this is (just) a useful optimization */
+    /* This is (just) a useful optimization */
     if ((Rgn->rdh.nCount > 0) && EXTENTCHECK(&Rgn->rdh.rcBound, &rc))
     {
         for (pCurRect = Rgn->Buffer, pRectEnd = pCurRect +
          Rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
         {
             if (pCurRect->bottom <= rc.top)
-            continue;             /* not far enough down yet */
+            continue;             /* Not far enough down yet */
 
             if (pCurRect->top >= rc.bottom)
-                break;                /* too far down */
+                break;                /* Too far down */
 
             if (pCurRect->right <= rc.left)
-                continue;              /* not far enough over yet */
+                continue;              /* Not far enough over yet */
 
             if (pCurRect->left >= rc.right) {
                 continue;
@@ -2691,7 +2690,7 @@ REGION_InsertEdgeInET(
     ScanLineListBlock *tmpSLLBlock;
 
     /*
-     * find the right bucket to put the edge into
+     * Find the right bucket to put the edge into
      */
     pPrevSLL = &ET->scanlines;
     pSLL = pPrevSLL->next;
@@ -2702,7 +2701,7 @@ REGION_InsertEdgeInET(
     }
 
     /*
-     * reassign pSLL (pointer to ScanLineList) if necessary
+     * Reassign pSLL (pointer to ScanLineList) if necessary
      */
     if ((!pSLL) || (pSLL->scanline > scanline))
     {
@@ -2712,7 +2711,7 @@ REGION_InsertEdgeInET(
             if (!tmpSLLBlock)
             {
                 DPRINT1("REGION_InsertEdgeInETL(): Can't alloc SLLB\n");
-                /* FIXME - free resources? */
+                /* FIXME: Free resources? */
                 return;
             }
             (*SLLBlock)->next = tmpSLLBlock;
@@ -2729,7 +2728,7 @@ REGION_InsertEdgeInET(
     pSLL->scanline = scanline;
 
     /*
-     * now insert the edge in the right bucket
+     * Now insert the edge in the right bucket
      */
     prev = (EdgeTableEntry *)NULL;
     start = pSLL->edgelist;
@@ -2936,7 +2935,7 @@ REGION_PtsToRegion(
 
     for ( ; numFullPtBlocks >= 0; numFullPtBlocks--)
     {
-        /* the loop uses 2 points per iteration */
+        /* The loop uses 2 points per iteration */
         i = NUMPTSTOBUFFER >> 1;
         if (!numFullPtBlocks)
             i = iCurPtBlock >> 1;
@@ -3026,7 +3025,7 @@ REGION_CreateETandAET(
 
 
     /*
-     *  initialize the Active Edge Table
+     *  Initialize the Active Edge Table
      */
     AET->next = (EdgeTableEntry *)NULL;
     AET->back = (EdgeTableEntry *)NULL;
@@ -3034,7 +3033,7 @@ REGION_CreateETandAET(
     AET->bres.minor_axis = SMALL_COORDINATE;
 
     /*
-     *  initialize the Edge Table.
+     *  Initialize the Edge Table.
      */
     ET->scanlines.next = (ScanLineList *)NULL;
     ET->ymax = SMALL_COORDINATE;
@@ -3052,7 +3051,7 @@ REGION_CreateETandAET(
         PrevPt = EndPt;
 
         /*
-         *  for each vertex in the array of points.
+         *  For each vertex in the array of points.
          *  In this loop we are dealing with two vertices at
          *  a time -- these make up one edge of the polygon.
          */
@@ -3061,7 +3060,7 @@ REGION_CreateETandAET(
             CurrPt = pts++;
 
             /*
-             *  find out which point is above and which is below.
+             *  Find out which point is above and which is below.
              */
             if (PrevPt->y > CurrPt->y)
             {
@@ -3075,7 +3074,7 @@ REGION_CreateETandAET(
             }
 
             /*
-             * don't add horizontal edges to the Edge table.
+             * Don't add horizontal edges to the Edge table.
              */
             if (bottom->y != top->y)
             {
@@ -3083,7 +3082,7 @@ REGION_CreateETandAET(
                 /* -1 so we don't get last scanline */
 
                 /*
-                 *  initialize integer edge algorithm
+                 *  Initialize integer edge algorithm
                  */
                 dy = bottom->y - top->y;
                 BRESINITPGONSTRUCT(dy, top->x, bottom->x, pETEs->bres);
@@ -3113,19 +3112,19 @@ IntCreatePolyPolygonRgn(
 {
     HRGN hrgn;
     ROSRGNDATA *region;
-    EdgeTableEntry *pAET;     /* Active Edge Table       */
-    INT y;                    /* current scanline        */
-    int iPts = 0;             /* number of pts in buffer */
-    EdgeTableEntry *pWETE;    /* Winding Edge Table Entry*/
-    ScanLineList *pSLL;       /* current scanLineList    */
-    POINT *pts;               /* output buffer           */
-    EdgeTableEntry *pPrevAET; /* ptr to previous AET     */
-    EdgeTable ET;             /* header node for ET      */
-    EdgeTableEntry AET;       /* header node for AET     */
-    EdgeTableEntry *pETEs;    /* EdgeTableEntries pool   */
-    ScanLineListBlock SLLBlock; /* header for scanlinelist */
+    EdgeTableEntry *pAET;                       /* Active Edge Table        */
+    INT y;                                      /* Current scanline         */
+    int iPts = 0;                               /* Number of pts in buffer  */
+    EdgeTableEntry *pWETE;                      /* Winding Edge Table Entry */
+    ScanLineList *pSLL;                         /* Current scanLineList     */
+    POINT *pts;                                 /* Output buffer            */
+    EdgeTableEntry *pPrevAET;                   /* Pointer to previous AET  */
+    EdgeTable ET;                               /* Header node for ET       */
+    EdgeTableEntry AET;                         /* Header node for AET      */
+    EdgeTableEntry *pETEs;                      /* EdgeTableEntries pool    */
+    ScanLineListBlock SLLBlock;                 /* Header for scanlinelist  */
     int fixWAET = FALSE;
-    POINTBLOCK FirstPtBlock, *curPtBlock; /* PtBlock buffers    */
+    POINTBLOCK FirstPtBlock, *curPtBlock;       /* PtBlock buffers          */
     POINTBLOCK *tmpPtBlock;
     int numFullPtBlocks = 0;
     INT poly, total;
@@ -3136,7 +3135,7 @@ IntCreatePolyPolygonRgn(
         return 0;
     hrgn = region->BaseObject.hHmgr;
 
-    /* special case a rectangle */
+    /* Special case a rectangle */
 
     if (((nbpolygons == 1) && ((*Count == 4) ||
                                ((*Count == 5) && (Pts[4].x == Pts[0].x) && (Pts[4].y == Pts[0].y)))) &&
@@ -3170,7 +3169,7 @@ IntCreatePolyPolygonRgn(
     if (mode != WINDING)
     {
         /*
-         *  for each scanline
+         *  For each scanline
          */
         for (y = ET.ymin; y < ET.ymax; y++)
         {
@@ -3187,7 +3186,7 @@ IntCreatePolyPolygonRgn(
             pAET = AET.next;
 
             /*
-             *  for each active edge
+             *  For each active edge
              */
             while (pAET)
             {
@@ -3195,7 +3194,7 @@ IntCreatePolyPolygonRgn(
                 pts++, iPts++;
 
                 /*
-                 *  send out the buffer
+                 *  Send out the buffer
                  */
                 if (iPts == NUMPTSTOBUFFER)
                 {
@@ -3220,7 +3219,7 @@ IntCreatePolyPolygonRgn(
     else
     {
         /*
-         *  for each scanline
+         *  For each scanline
          */
         for (y = ET.ymin; y < ET.ymax; y++)
         {
@@ -3239,12 +3238,12 @@ IntCreatePolyPolygonRgn(
             pWETE = pAET;
 
             /*
-             *  for each active edge
+             *  For each active edge
              */
             while (pAET)
             {
                 /*
-                 *  add to the buffer only those edges that
+                 *  Add to the buffer only those edges that
                  *  are in the Winding active edge table.
                  */
                 if (pWETE == pAET)
@@ -3253,7 +3252,7 @@ IntCreatePolyPolygonRgn(
                     pts++, iPts++;
 
                     /*
-                     *  send out the buffer
+                     *  Send out the buffer
                      */
                     if (iPts == NUMPTSTOBUFFER)
                     {
@@ -3278,7 +3277,7 @@ IntCreatePolyPolygonRgn(
             }
 
             /*
-             *  recompute the winding active edge table if
+             *  Recompute the winding active edge table if
              *  we just resorted or have exited an edge.
              */
             if (REGION_InsertionSort(&AET) || fixWAET)
@@ -3478,9 +3477,9 @@ NtGdiCreateRoundRectRgn(
 
     while (xd < yd)
     {
-        if (d > 0)  /* if nearest pixel is toward the center */
+        if (d > 0)  /* If nearest pixel is toward the center */
         {
-            /* move toward center */
+            /* Move toward center */
             rect.top = top++;
             rect.bottom = rect.top + 1;
             REGION_UnionRectWithRgn(obj, &rect);
@@ -3490,7 +3489,7 @@ NtGdiCreateRoundRectRgn(
             yd -= 2*asq;
             d  -= yd;
         }
-        rect.left--;        /* next horiz point */
+        rect.left--;        /* Next horiz point */
         rect.right++;
         xd += 2*bsq;
         d  += bsq + xd;
@@ -3507,9 +3506,9 @@ NtGdiCreateRoundRectRgn(
         rect.top = --bottom;
         rect.bottom = rect.top + 1;
         REGION_UnionRectWithRgn(obj, &rect);
-        if (d < 0)   /* if nearest pixel is outside ellipse */
+        if (d < 0)   /* If nearest pixel is outside ellipse */
         {
-            rect.left--;     /* move away from center */
+            rect.left--;     /* Move away from center */
             rect.right++;
             xd += 2*bsq;
             d  += xd;
@@ -3893,7 +3892,7 @@ NtGdiRectInRegion(
     LPRECTL unsaferc
 )
 {
-    RECTL rc = {0};
+    RECTL rc = { 0 };
     NTSTATUS Status = STATUS_SUCCESS;
 
     _SEH2_TRY
@@ -3910,7 +3909,7 @@ NtGdiRectInRegion(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        DPRINT1("NtGdiRectInRegion: bogus rc\n");
+        DPRINT1("NtGdiRectInRegion: Bogus rc\n");
         return ERROR;
     }
 
@@ -3931,7 +3930,7 @@ NtGdiSetRectRgn(
 
     if ( !(rgn = RGNOBJAPI_Lock(hRgn, NULL)) )
     {
-        return 0; //per documentation
+        return 0; // Per documentation
     }
 
     REGION_SetRectRgn(rgn, LeftRect, TopRect, RightRect, BottomRect);
@@ -3946,7 +3945,7 @@ NtGdiUnionRectWithRgn(
     const RECTL *UnsafeRect
 )
 {
-    RECTL SafeRect = {0};
+    RECTL SafeRect = { 0 };
     PROSRGNDATA Rgn;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -4007,9 +4006,9 @@ NtGdiGetRegionData(
     if (count < (size + sizeof(RGNDATAHEADER)) || rgndata == NULL)
     {
         RGNOBJAPI_Unlock(obj);
-        if (rgndata) /* buffer is too small, signal it by return 0 */
+        if (rgndata) /* Buffer is too small, signal it by return 0 */
             return 0;
-        else         /* user requested buffer size with rgndata NULL */
+        else         /* User requested buffer size with rgndata NULL */
             return size + sizeof(RGNDATAHEADER);
     }
 

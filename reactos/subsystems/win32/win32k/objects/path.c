@@ -369,7 +369,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
  * Should be called when a call to RoundRect is performed on a DC that has
  * an open path. Returns TRUE if successful, else FALSE.
  *
- * FIXME: it adds the same entries to the path as windows does, but there
+ * FIXME: It adds the same entries to the path as windows does, but there
  * is an error in the bezier drawing code so that there are small pixel-size
  * gaps when the resulting path is drawn by StrokePath()
  */
@@ -971,7 +971,7 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
       if(point == 0) startpt = pt;
         PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
-    /* win98 adds an extra line to close the figure for some reason */
+    /* Win98 adds an extra line to close the figure for some reason */
     PATH_AddEntry(pPath, &startpt, PT_LINETO | PT_CLOSEFIGURE);
   }
   PATH_UnlockPath( pPath );
@@ -1688,7 +1688,7 @@ PATH_WidenPath(DC *dc)
                 PATH_AddEntry(pStrokes[numStrokes - 1], &point, pPath->pFlags[i]);
                 break;
             case PT_BEZIERTO:
-                /* should never happen because of the FlattenPath call */
+                /* Should never happen because of the FlattenPath call */
                 DPRINT1("Should never happen\n");
                 break;
             default:
@@ -1946,7 +1946,7 @@ static inline INT int_from_fixed(FIXED f)
 /**********************************************************************
  *      PATH_BezierTo
  *
- * internally used by PATH_add_outline
+ * Internally used by PATH_add_outline
  */
 static
 VOID
@@ -2113,7 +2113,7 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                                        TRUE);
         if (dwSize == GDI_ERROR) return FALSE;
 
-        /* add outline only if char is printable */
+        /* Add outline only if char is printable */
         if (dwSize)
         {
            outline = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_PATH);
@@ -2254,7 +2254,7 @@ BOOL
 APIENTRY
 NtGdiCloseFigure(HDC hDC)
 {
-  BOOL Ret = FALSE; // default to failure
+  BOOL Ret = FALSE; // Default to failure
   PDC pDc;
   PPATH pPath;
 
@@ -2280,7 +2280,7 @@ NtGdiCloseFigure(HDC hDC)
   }
   else
   {
-     // FIXME: check if lasterror is set correctly
+     // FIXME: Check if lasterror is set correctly
      EngSetLastError(ERROR_CAN_NOT_COMPLETE);
   }
 
@@ -2552,7 +2552,7 @@ NtGdiPathToRegion(HDC  hDC)
 
   if (pPath->state!=PATH_Closed)
   {
-     //FIXME: check that setlasterror is being called correctly
+     // FIXME: Check that setlasterror is being called correctly
      EngSetLastError(ERROR_CAN_NOT_COMPLETE);
   }
   else

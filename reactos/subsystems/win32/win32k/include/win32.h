@@ -41,7 +41,7 @@ extern BOOL RegisteredSysClasses;
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 
 #include <pshpack1.h>
-// FIXME! Move to ntuser.h
+// FIXME: Move to ntuser.h
 typedef struct _TL
 {
     struct _TL* next;

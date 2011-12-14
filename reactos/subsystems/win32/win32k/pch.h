@@ -2,8 +2,8 @@
 #define __W32K_H
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Graphics Subsystem
- * FILE:            subsys/win32k/pch.h
+ * PROJECT:         ReactOS Win32k subsystem
+ * FILE:            subsystems/win32/win32k/pch.h
  * PURPOSE:         Main Win32K Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -12,7 +12,7 @@
 
 #define _NO_COM
 
-/* DDK/NDK/SDK Headers */
+/* DDK/NDK/SDK headers */
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
 #include <ntddk.h>
@@ -32,7 +32,7 @@
 #include <ntddkbd.h>
 #include <bugcodes.h>
 
-/* Win32 Headers */
+/* Win32 headers */
 /* FIXME: Defines in winbase.h that we need... */
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define WINBASEAPI
@@ -65,13 +65,13 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
 
-/* SEH Support with PSEH */
+/* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-/* CSRSS Header */
+/* CSRSS header */
 #include <csrss/csrss.h>
 
-/* Public Win32K Headers */
+/* Public Win32K headers */
 #include <win32k/callback.h>
 #include <win32k/ntusrtyp.h>
 #include <win32k/ntuser.h>
@@ -83,7 +83,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* Undocumented user definitions */
 #include <undocuser.h>
 
-/* Freetype headers*/
+/* Freetype headers */
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -96,7 +96,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <freetype/ftwinfnt.h>
 #include <freetype/freetype.h>
 
-/* Internal Win32K Header */
+/* Internal Win32K header */
 #include "include/win32kp.h"
 
 #endif /* __W32K_H */

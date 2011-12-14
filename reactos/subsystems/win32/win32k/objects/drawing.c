@@ -59,8 +59,8 @@ SUCH DAMAGE.
 
 typedef struct _Rect
 {
-    int x, y;		/* top-left point inside rect */
-    int width, height;	/* width and height of rect */
+    int x, y;		/* Top-left point inside rect */
+    int width, height;	/* Width and height of rect */
 } Rect, *PRect;
 
 int FASTCALL IntFillRect(DC *dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush, BOOL Pen);
@@ -186,21 +186,21 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
 
             if (T + A2*Y < XCRIT) /* E(X+1,Y-1/2) <= 0 */
             {
-                /* move outwards to encounter edge */
+                /* Move outwards to encounter edge */
                 X += 1;
                 T += DXT;
                 DXT += D2XT;
             }
             else if (T - B2*X >= YCRIT) /* e(x+1/2,y-1) > 0 */
             {
-                /* drop down one line */
+                /* Drop down one line */
                 Y -= 1;
                 T += DYT;
                 DYT += D2YT;
             }
             else
             {
-                /* drop diagonally down and out */
+                /* Drop diagonally down and out */
                 X += 1;
                 Y -= 1;
                 T += DXT + DYT;
@@ -219,7 +219,7 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
 
         if (t + a2*y < xcrit) /* e(x+1,y-1/2) <= 0 */
         {
-            /* move outwards to encounter edge */
+            /* Move outwards to encounter edge */
             x += 1;
             t += dxt;
             dxt += d2xt;
@@ -228,7 +228,7 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
         }
         else if (t - b2*x >= ycrit) /* e(x+1/2,y-1) > 0 */
         {
-            /* drop down one line */
+            /* Drop down one line */
             y -= 1;
             t += dyt;
             dyt += d2yt;
@@ -237,7 +237,7 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
         }
         else
         {
-            /* drop diagonally down and out */
+            /* Drop diagonally down and out */
             x += 1;
             y -= 1;
             t += dxt + dyt;
@@ -279,7 +279,7 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
             }
             else if (r1.y+r1.height < r2.y)
             {
-                /* draw distinct rectangles */
+                /* Draw distinct rectangles */
                 result &= app_fill_rect(g, rect(r1.x,r1.y,
                                                 W,1), pbrush, TRUE);
                 result &= app_fill_rect(g, rect(
@@ -293,14 +293,14 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
                 prevy = r1.y;
             }
 
-            /* move down */
+            /* Move down */
             r1.y += 1;
             r2.y -= 1;
         }
 
         if (moveout)
         {
-            /* move outwards */
+            /* Move outwards */
             r1.x -= 1;
             r1.width += 2;
             r2.x -= 1;
@@ -309,7 +309,7 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
     }
     if ((x <= a) && (prevy < r2.y))
     {
-        /* draw final line */
+        /* Draw final line */
         r1.height = r1.y+r1.height-r2.y;
         r1.y = r2.y;
 
@@ -390,11 +390,11 @@ app_fill_arc_rect(DC *g,
 
     if (r.y <= p0.y) //
     {
-        /* in top half of arc ellipse */
+        /* In top half of arc ellipse */
 
         if (p1.y <= r.y)
         {
-            /* start_line is in the top half and is */
+            /* Start_line is in the top half and is */
             /* intersected by the current Y scan line */
             if (rise1 == 0)
                 x1 = p1.x;
@@ -404,13 +404,13 @@ app_fill_arc_rect(DC *g,
         }
         else if ((start_angle >= 0) && (start_angle <= 180))
         {
-            /* start_line is above middle */
+            /* Start_line is above middle */
             x1 = p1.x;
             start_above = 1;
         }
         else
         {
-            /* start_line is below middle */
+            /* Start_line is below middle */
             x1 = r.x + r.width;
             start_above = 0;
         }
@@ -450,7 +450,7 @@ app_fill_arc_rect(DC *g,
         {
             if (start_angle > end_angle)
             {
-                /* fill outsides of wedge */
+                /* Fill outsides of wedge */
                 if (! app_fill_rect(g, rect(r.x, r.y,
                                             x1-r.x, r.height), pbrush, Pen))
                     return 0;
@@ -459,7 +459,7 @@ app_fill_arc_rect(DC *g,
             }
             else
             {
-                /* fill inside of wedge */
+                /* Fill inside of wedge */
                 r.width = x1-x2;
                 r.x = x2;
                 return app_fill_rect(g, r, pbrush, Pen);
@@ -467,13 +467,13 @@ app_fill_arc_rect(DC *g,
         }
         else if (start_above)
         {
-            /* fill to the left of the start_line */
+            /* Fill to the left of the start_line */
             r.width = x1-r.x;
             return app_fill_rect(g, r, pbrush, Pen);
         }
         else if (end_above)
         {
-            /* fill right of end_line */
+            /* Fill right of end_line */
             r.width = r.x+r.width-x2;
             r.x = x2;
             return app_fill_rect(g, r, pbrush, Pen);
@@ -488,7 +488,7 @@ app_fill_arc_rect(DC *g,
     }
     else
     {
-        /* in lower half of arc ellipse */
+        /* In lower half of arc ellipse */
 
         if (p1.y >= r.y)
         {
@@ -553,13 +553,13 @@ app_fill_arc_rect(DC *g,
         }
         else if (start_above)
         {
-            /* fill to the left of end_line */
+            /* Fill to the left of end_line */
             r.width = x2-r.x;
             return app_fill_rect(g,r, pbrush, Pen);
         }
         else if (end_above)
         {
-            /* fill right of start_line */
+            /* Fill right of start_line */
             r.width = r.x+r.width-x1;
             r.x = x1;
             return app_fill_rect(g,r, pbrush, Pen);
@@ -568,7 +568,7 @@ app_fill_arc_rect(DC *g,
         {
             if (start_angle > end_angle)
             {
-                /* fill outsides of wedge */
+                /* Fill outsides of wedge */
                 if (! app_fill_rect(g, rect(r.x, r.y,
                                             x2-r.x, r.height), pbrush, Pen))
                     return 0;
@@ -577,7 +577,7 @@ app_fill_arc_rect(DC *g,
             }
             else
             {
-                /* fill inside of wedge */
+                /* Fill inside of wedge */
                 r.width = x2-x1;
                 r.x = x1;
                 return app_fill_rect(g, r, pbrush, Pen);
@@ -653,12 +653,12 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
     {
         if (t + a2*y < xcrit)   /* e(x+1,y-1/2) <= 0 */
         {
-            /* move outwards to encounter edge */
+            /* Move outwards to encounter edge */
             x += 1;
             t += dxt;
             dxt += d2xt;
 
-            /* move outwards */
+            /* Move outwards */
             r1.x -= 1;
             r1.width += 2;
             r2.x -= 1;
@@ -666,19 +666,19 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
         }
         else if (t - b2*x >= ycrit)   /* e(x+1/2,y-1) > 0 */
         {
-            /* drop down one line */
+            /* Drop down one line */
             y -= 1;
             t += dyt;
             dyt += d2yt;
 
-            /* enlarge rectangles */
+            /* Enlarge rectangles */
             r1.height += 1;
             r2.height += 1;
             r2.y -= 1;
         }
         else
         {
-            /* drop diagonally down and out */
+            /* Drop diagonally down and out */
             x += 1;
             y -= 1;
             t += dxt + dyt;
@@ -687,16 +687,16 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
 
             if ((r1.width > 0) && (r1.height > 0))
             {
-                /* draw rectangles first */
+                /* Draw rectangles first */
 
                 if (r1.y+r1.height < r2.y)
                 {
-                    /* distinct rectangles */
+                    /* Distinct rectangles */
                     result &= app_fill_rect(g, r1, pbrush, FALSE);
                     result &= app_fill_rect(g, r2, pbrush, FALSE);
                 }
 
-                /* move down */
+                /* Move down */
                 r1.y += r1.height;
                 r1.height = 1;
                 r2.y -= 1;
@@ -704,15 +704,15 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
             }
             else
             {
-                /* skipped pixels on initial diagonal */
+                /* Skipped pixels on initial diagonal */
 
-                /* enlarge, rather than moving down */
+                /* Enlarge, rather than moving down */
                 r1.height += 1;
                 r2.height += 1;
                 r2.y -= 1;
             }
 
-            /* move outwards */
+            /* Move outwards */
             r1.x -= 1;
             r1.width += 2;
             r2.x -= 1;
@@ -721,7 +721,7 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
     }
     if (r1.y < r2.y)
     {
-        /* overlap */
+        /* Overlap */
         r1.x = r.x;
         r1.width = r.width;
         r1.height = r2.y+r2.height-r1.y;
@@ -729,7 +729,7 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
     }
     else if (x <= a)
     {
-        /* crossover, draw final line */
+        /* Crossover, draw final line */
         r1.x = r.x;
         r1.width = r.width;
         r1.height = r1.y+r1.height-r2.y;
@@ -807,33 +807,33 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
     int movedown, moveout;
     int result = 1;
 
-    /* line descriptions */
+    /* Line descriptions */
     POINT p0, p1, p2;
 
 //	START_DEBUG();
 
-    /* if angles differ by 360 degrees or more, close the shape */
+    /* If angles differ by 360 degrees or more, close the shape */
     if ((start_angle + 360 <= end_angle) ||
             (start_angle - 360 >= end_angle))
     {
         return app_fill_ellipse(g, r, pbrush);
     }
 
-    /* make start_angle >= 0 and <= 360 */
+    /* Make start_angle >= 0 and <= 360 */
     while (start_angle < 0)
         start_angle += 360;
     start_angle %= 360;
 
-    /* make end_angle >= 0 and <= 360 */
+    /* Make end_angle >= 0 and <= 360 */
     while (end_angle < 0)
         end_angle += 360;
     end_angle %= 360;
 
-    /* draw nothing if the angles are equal */
+    /* Draw nothing if the angles are equal */
     if (start_angle == end_angle)
         return 1;
 
-    /* find arc wedge line end points */
+    /* Find arc wedge line end points */
     p1 = app_boundary_point(r, start_angle);
     p2 = app_boundary_point(r, end_angle);
     if (Chord)
@@ -841,7 +841,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
     else
         p0 = pt(r.x + r.width/2, r.y + r.height/2);
 
-    /* initialise rectangles to be drawn */
+    /* Initialise rectangles to be drawn */
     r1.x = r.x + a;
     r1.y = r.y;
     r1.width = r.width & 1; /* i.e. if width is odd */
@@ -856,7 +856,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
 
         if (t + a2*y < xcrit)   /* e(x+1,y-1/2) <= 0 */
         {
-            /* move outwards to encounter edge */
+            /* Move outwards to encounter edge */
             x += 1;
             t += dxt;
             dxt += d2xt;
@@ -865,7 +865,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
         }
         else if (t - b2*x >= ycrit)   /* e(x+1/2,y-1) > 0 */
         {
-            /* drop down one line */
+            /* Drop down one line */
             y -= 1;
             t += dyt;
             dyt += d2yt;
@@ -874,7 +874,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
         }
         else
         {
-            /* drop diagonally down and out */
+            /* Drop diagonally down and out */
             x += 1;
             y -= 1;
             t += dxt + dyt;
@@ -908,7 +908,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
 
             if ((r1.width > 0) && (r1.y+r1.height < r2.y))
             {
-                /* distinct rectangles */
+                /* Distinct rectangles */
                 result &= app_fill_arc_rect(g, r1,
                                             p0, p1, p2,
                                             start_angle, end_angle, pbrush, FALSE);
@@ -917,14 +917,14 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
                                             start_angle, end_angle, pbrush, FALSE);
             }
 
-            /* move down */
+            /* Move down */
             r1.y += 1;
             r2.y -= 1;
         }
 
         if (moveout)
         {
-            /* move outwards */
+            /* Move outwards */
             r1.x -= 1;
             r1.width += 2;
             r2.x -= 1;
@@ -933,7 +933,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
     }
     if (r1.y < r2.y)
     {
-        /* overlap */
+        /* Overlap */
         r1.x = r.x;
         r1.width = r.width;
         r1.height = r2.y+r2.height-r1.y;
@@ -948,7 +948,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
     }
     else if (x <= a)
     {
-        /* crossover, draw final line */
+        /* Crossover, draw final line */
         r1.x = r.x;
         r1.width = r.width;
         r1.height = r1.y+r1.height-r2.y;
@@ -1001,39 +1001,39 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
     int D2XT = B2+B2;
     int D2YT = A2+A2;
 
-    /* arc rectangle calculations */
+    /* Arc rectangle calculations */
     int movedown, moveout;
     int innerX = 0, prevx, prevy, W;
     Rect r1, r2;
     int result = 1;
 
-    /* line descriptions */
+    /* Line descriptions */
     POINT p0, p1, p2;
 
 //	START_DEBUG();
 
-    /* if angles differ by 360 degrees or more, close the shape */
+    /* If angles differ by 360 degrees or more, close the shape */
     if ((start_angle + 360 <= end_angle) ||
             (start_angle - 360 >= end_angle))
     {
         return app_draw_ellipse(g, r, pbrushPen);
     }
 
-    /* make start_angle >= 0 and <= 360 */
+    /* Make start_angle >= 0 and <= 360 */
     while (start_angle < 0)
         start_angle += 360;
     start_angle %= 360;
 
-    /* make end_angle >= 0 and <= 360 */
+    /* Make end_angle >= 0 and <= 360 */
     while (end_angle < 0)
         end_angle += 360;
     end_angle %= 360;
 
-    /* draw nothing if the angles are equal */
+    /* Draw nothing if the angles are equal */
     if (start_angle == end_angle)
         return 1;
 
-    /* find arc wedge line end points */
+    /* Find arc wedge line end points */
     p1 = app_boundary_point(r, start_angle);
     p2 = app_boundary_point(r, end_angle);
     if (Chord)
@@ -1041,7 +1041,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
     else
         p0 = pt(r.x + r.width/2, r.y + r.height/2);
 
-    /* determine ellipse rectangles */
+    /* Determine ellipse rectangles */
     r1.x = r.x + a;
     r1.y = r.y;
     r1.width = r.width & 1; /* i.e. if width is odd */
@@ -1061,21 +1061,21 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
 
             if (T + A2*Y < XCRIT) /* E(X+1,Y-1/2) <= 0 */
             {
-                /* move outwards to encounter edge */
+                /* Move outwards to encounter edge */
                 X += 1;
                 T += DXT;
                 DXT += D2XT;
             }
             else if (T - B2*X >= YCRIT) /* e(x+1/2,y-1) > 0 */
             {
-                /* drop down one line */
+                /* Drop down one line */
                 Y -= 1;
                 T += DYT;
                 DYT += D2YT;
             }
             else
             {
-                /* drop diagonally down and out */
+                /* Drop diagonally down and out */
                 X += 1;
                 Y -= 1;
                 T += DXT + DYT;
@@ -1094,7 +1094,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
 
         if (t + a2*y < xcrit) /* e(x+1,y-1/2) <= 0 */
         {
-            /* move outwards to encounter edge */
+            /* Move outwards to encounter edge */
             x += 1;
             t += dxt;
             dxt += d2xt;
@@ -1103,7 +1103,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
         }
         else if (t - b2*x >= ycrit) /* e(x+1/2,y-1) > 0 */
         {
-            /* drop down one line */
+            /* Drop down one line */
             y -= 1;
             t += dyt;
             dyt += d2yt;
@@ -1112,7 +1112,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
         }
         else
         {
-            /* drop diagonally down and out */
+            /* Drop diagonally down and out */
             x += 1;
             y -= 1;
             t += dxt + dyt;
@@ -1158,7 +1158,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
             }
             else if (r1.y+r1.height < r2.y)
             {
-                /* draw distinct rectangles */
+                /* Draw distinct rectangles */
                 result &= app_fill_arc_rect(g, rect(
                                                 r1.x,r1.y,W,1),
                                             p0, p1, p2,
@@ -1180,14 +1180,14 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
                 prevy = r1.y;
             }
 
-            /* move down */
+            /* Move down */
             r1.y += 1;
             r2.y -= 1;
         }
 
         if (moveout)
         {
-            /* move outwards */
+            /* Move outwards */
             r1.x -= 1;
             r1.width += 2;
             r2.x -= 1;
@@ -1196,7 +1196,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
     }
     if ((x <= a) && (prevy < r2.y))
     {
-        /* draw final lines */
+        /* Draw final lines */
         r1.height = r1.y+r1.height-r2.y;
         r1.y = r2.y;
 
@@ -1267,7 +1267,7 @@ IntFillRect( DC *dc,
     {
         pdcattr = dc->pdcattr;
 
-        /* fix negative spaces */
+        /* Fix negative spaces */
         if (Width < 0)
         {
             XLeft += Width;
@@ -1402,7 +1402,7 @@ IntFillRoundRect( PDC dc,
                   PBRUSH pbrush)
 {
     Rect r;
-    int rx, ry; /* radius in x and y directions */
+    int rx, ry; /* Radius in x and y directions */
 
     //           x    y          Width          Height
     r = rect( Left, Top, abs(Right-Left), abs(Bottom-Top));
@@ -1468,7 +1468,7 @@ IntDrawRoundRect( PDC dc,
                   PBRUSH pbrushPen)
 {
     Rect r;
-    int rx, ry; /* radius in x and y directions */
+    int rx, ry; /* Radius in x and y directions */
     int w = pbrushPen->ptPenWidth.x;
 
     r = rect( Left, Top, abs(Right-Left), abs(Bottom-Top));

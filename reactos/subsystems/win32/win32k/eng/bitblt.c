@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI BitBlt Functions
- * FILE:             subsys/win32k/eng/bitblt.c
+ * FILE:             subsystems/win32/win32k/eng/bitblt.c
  * PROGRAMER:        Jason Filby
  *                   Timo Kreuzer
  */
@@ -235,7 +235,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
         }
         else
         {
-            /* FIXME - What to do here? */
+            /* FIXME: What to do here? */
         }
     }
     else

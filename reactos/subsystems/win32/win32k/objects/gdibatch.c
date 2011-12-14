@@ -6,7 +6,6 @@
 
 
 //
-//
 // Gdi Batch Flush support functions.
 //
 
@@ -217,7 +216,7 @@ NtGdiFlushUserBatch(VOID)
     }
   }
 
-  // FIXME: on xp the function returns &pTeb->RealClientId, maybe VOID?
+  // FIXME: On Windows XP the function returns &pTeb->RealClientId, maybe VOID?
   return STATUS_SUCCESS;
 }
 

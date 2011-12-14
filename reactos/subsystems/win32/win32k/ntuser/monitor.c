@@ -138,7 +138,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
 
     TRACE("Attaching monitor...\n");
 
-    /* create new monitor object */
+    /* Create new monitor object */
     pMonitor = IntCreateMonitorObject();
     if (pMonitor == NULL)
     {
@@ -565,10 +565,10 @@ NtUserEnumDisplayMonitors(
             return 0;
         if (iRgnType == COMPLEXREGION)
         {
-            /* TODO: warning */
+            /* TODO: Warning */
         }
 
-        /* if hdc and pRect are given the area of interest is pRect with
+        /* If hdc and pRect are given the area of interest is pRect with
            coordinate origin at the DC position */
         if (pUnsafeRect != NULL)
         {
@@ -577,7 +577,7 @@ NtUserEnumDisplayMonitors(
             rc.top += DcRect.top;
             rc.bottom += DcRect.top;
         }
-        /* if hdc is given and pRect is not the area of interest is the
+        /* If hdc is given and pRect is not the area of interest is the
            bounding rect of hdc */
         else
         {

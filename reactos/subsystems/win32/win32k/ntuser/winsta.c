@@ -1,8 +1,8 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window stations
- *  FILE:             subsys/win32k/ntuser/winsta.c
+ *  FILE:             subsystems/win32/win32k/ntuser/winsta.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *  TODO:             The process window station is created on
  *                    the first USER32/GDI32 call not related
@@ -17,7 +17,7 @@ DBG_DEFAULT_CHANNEL(UserWinsta);
 /* Currently active window station */
 PWINSTATION_OBJECT InputWindowStation = NULL;
 
-/* Winlogon sas window*/
+/* Winlogon SAS window */
 HWND hwndSAS = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
@@ -301,7 +301,7 @@ co_IntInitializeDesktopGraphics(VOID)
    NtGdiSelectFont(hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
    GreSetDCOwner(hSystemBM, GDI_OBJ_HMGR_PUBLIC);
 
-   // FIXME! Move these to a update routine.
+   // FIXME: Move these to a update routine.
    gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
    gpsi->BitsPixel     = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
    gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
@@ -898,7 +898,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
    }
 
    /*
-    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
+    * FIXME: Don't allow changing the window station if there are threads that are attached to desktops and own GUI objects.
     */
 
    PsSetProcessWindowStation(ppi->peProcess, hWindowStation);

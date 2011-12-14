@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Clip region functions
- * FILE:             subsys/win32k/objects/cliprgn.c
+ * FILE:             subsystems/win32/win32k/objects/cliprgn.c
  * PROGRAMER:        Unknown
  */
 
@@ -18,9 +18,9 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    //HRGN hRgnVis;
    PREGION prgnClip, prgnGCClip;
 
-    // would prefer this, but the rest of the code sucks
-//    ASSERT(Dc->rosdc.hGCClipRgn);
-//    ASSERT(Dc->rosdc.hClipRgn);
+    /* Would prefer this, but the rest of the code sucks... */
+    //ASSERT(Dc->rosdc.hGCClipRgn);
+    //ASSERT(Dc->rosdc.hClipRgn);
    ASSERT(Dc->prgnVis);
    //hRgnVis = Dc->prgnVis->BaseObject.hHmgr;
 
@@ -34,7 +34,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       IntGdiCombineRgn(prgnGCClip, Dc->prgnVis, NULL, RGN_COPY);
    else
    {
-      prgnClip = REGION_LockRgn(Dc->rosdc.hClipRgn); // FIXME: locking order, ugh
+      prgnClip = REGION_LockRgn(Dc->rosdc.hClipRgn); // FIXME: Locking order, ugh!
       IntGdiCombineRgn(prgnGCClip, Dc->prgnVis, prgnClip, RGN_AND);
       REGION_UnlockRgn(prgnClip);
    }
@@ -107,7 +107,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
                                  HRGN hrgn,
                                  int fnMode)
 {
-  //  dc->fs &= ~DC_FLAG_DIRTY_RAO;
+  // dc->fs &= ~DC_FLAG_DIRTY_RAO;
 
   if (!hrgn)
   {
@@ -132,7 +132,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
       RECTL rect;
       if(dc->prgnVis)
       {
-		REGION_GetRgnBox(dc->prgnVis, &rect);
+        REGION_GetRgnBox(dc->prgnVis, &rect);
         dc->rosdc.hClipRgn = IntSysCreateRectRgnIndirect(&rect);
       }
       else
@@ -177,14 +177,14 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
    INT retval;
    PDC dc;
    PROSRGNDATA pRgnNew, pRgn = NULL;
-   BOOL Unlock = FALSE; //Small hack
+   BOOL Unlock = FALSE; // Small HACK
 
    if (!(dc = DC_LockDc(hDC)))
    {
       return ERROR;
    }
 
-   /* FIXME! Rao and Vis only! */
+   /* FIXME: Rao and Vis only! */
    if (dc->prgnAPI) // APIRGN
    {
       pRgn = dc->prgnAPI;

@@ -124,7 +124,7 @@ NtGdiAlphaBlend(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     /* Perform the alpha blend operation */
-    DPRINT("Performing the alpha Blend\n");
+    DPRINT("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
                                DCDest->rosdc.CombinedClip,
@@ -158,7 +158,7 @@ NtGdiBitBlt(
     IN FLONG fl)
 {
     /* Forward to NtGdiMaskBlt */
-    // TODO : what's fl for?
+    // TODO: What's fl for?
     return NtGdiMaskBlt(hDCDest,
                         XDest,
                         YDest,
@@ -860,7 +860,6 @@ IntGdiPolyPatBlt(
     return TRUE;
 }
 
-
 BOOL APIENTRY
 NtGdiPatBlt(
     HDC hDC,
@@ -878,7 +877,7 @@ NtGdiPatBlt(
     BOOL UsesSource = ROP_USES_SOURCE(ROP);
     if (UsesSource)
     {
-        /* in this case we call on GdiMaskBlt */
+        /* In this case we call on GdiMaskBlt */
         return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
     }
 

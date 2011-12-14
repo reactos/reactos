@@ -598,7 +598,7 @@ InitTimerImpl(VOID)
                        WindowLessTimersBitMapBuffer,
                        BitmapBytes * 8);
 
-   /* yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
+   /* Yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
 
    ExInitializeResourceLite(&TimerLock);
@@ -694,6 +694,5 @@ NtUserValidateTimerCallback(
   UserLeave();
   return Ret;
 }
-
 
 /* EOF */

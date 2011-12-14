@@ -13,7 +13,7 @@
 WNDPROC
 GetCallProcHandle(IN PCALLPROCDATA CallProc)
 {
-    /* FIXME - check for 64 bit architectures... */
+    /* FIXME: Check for 64 bit architectures... */
     return (WNDPROC)((ULONG_PTR)UserHMGetHandle(CallProc) | 0xFFFF0000);
 }
 

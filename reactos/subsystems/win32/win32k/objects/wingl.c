@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/wingl.c
- * PURPOSE:         wingl api
+ * PURPOSE:         WinGL API
  * PROGRAMMER:      
  */
 

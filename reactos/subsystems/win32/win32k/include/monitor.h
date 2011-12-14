@@ -1,6 +1,6 @@
 #pragma once
 
-/* monitor object */
+/* Monitor object */
 typedef struct _MONITOR
 {
     HEAD head;
@@ -12,7 +12,7 @@ typedef struct _MONITOR
         {
             DWORD   IsVisible: 1;
             DWORD   IsPalette: 1;
-            DWORD   IsPrimary: 1; /* wether this is the primary monitor */
+            DWORD   IsPrimary: 1; /* Whether this is the primary monitor */
         };
     };
     RECT    rcMonitor;
@@ -23,8 +23,8 @@ typedef struct _MONITOR
     HDEV    hDev;
 
     // ReactOS specific fields:
-    UNICODE_STRING DeviceName;  /* name of the monitor */
-    PDEVOBJ        *GdiDevice;  /* pointer to the GDI device to
+    UNICODE_STRING DeviceName;  /* Name of the monitor */
+    PDEVOBJ        *GdiDevice;  /* Pointer to the GDI device to
                                    which this monitor is attached */
 } MONITOR, *PMONITOR;
 

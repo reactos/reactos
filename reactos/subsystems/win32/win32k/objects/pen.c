@@ -81,7 +81,7 @@ IntGdiExtCreatePen(
    pbrushPen->ulPenStyle = dwPenStyle;
    pbrushPen->BrushAttr.lbColor = ulColor;
    pbrushPen->ulStyle = ulBrushStyle;
-   // FIXME: copy the bitmap first ?
+   // FIXME: Copy the bitmap first ?
    pbrushPen->hbmClient = (HANDLE)ulClientHatch;
    pbrushPen->dwStyleCount = dwStyleCount;
    pbrushPen->pStyle = pStyle;
@@ -155,7 +155,7 @@ IntGdiExtCreatePen(
                 goto ExitCleanup;
             }
          }
-         /* FIXME: what style here? */
+         /* FIXME: What style here? */
          pbrushPen->flAttrs |= 0;
          break;
 
@@ -369,7 +369,5 @@ NtGdiExtCreatePen(
    }
    return hPen;
 }
-
-
 
 /* EOF */

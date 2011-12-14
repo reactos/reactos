@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Cursor and icon functions
- * FILE:             subsystem/win32/win32k/ntuser/cursoricon.c
+ * FILE:             subsystems/win32/win32k/ntuser/cursoricon.c
  * PROGRAMER:        ReactOS Team
  */
 /*
@@ -80,7 +80,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, otCursorIcon);
     if (!CurIcon)
     {
-        /* we never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
+        /* We never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
         EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
@@ -178,7 +178,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
     LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
     {
 
-        //    if(NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon))) //<- huh????
+        // if (NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon))) // <- huh????
 //      UserReferenceObject(  CurIcon);
 //      {
         if ((CurIcon->hModule == hModule) && (CurIcon->hRsrc == hRsrc))
@@ -295,7 +295,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOL ProcessCleanup)
     bmpMask = CurIcon->IconInfo.hbmMask;
     bmpColor = CurIcon->IconInfo.hbmColor;
 
-    /* delete bitmaps */
+    /* Delete bitmaps */
     if (bmpMask)
     {
         GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
@@ -358,9 +358,9 @@ APIENTRY
 NtUserGetIconInfo(
     HANDLE hCurIcon,
     PICONINFO IconInfo,
-    PUNICODE_STRING lpInstName, // optional
-    PUNICODE_STRING lpResName,  // optional
-    LPDWORD pbpp,               // optional
+    PUNICODE_STRING lpInstName, // Optional
+    PUNICODE_STRING lpResName,  // Optional
+    LPDWORD pbpp,               // Optional
     BOOL bInternal)
 {
     ICONINFO ii;
@@ -473,7 +473,7 @@ NtUserGetIconSize(
     if (NT_SUCCESS(Status))
         bRet = TRUE;
     else
-        SetLastNtError(Status); // maybe not, test this
+        SetLastNtError(Status); // Maybe not, test this
 
     UserDereferenceObject(CurIcon);
 
@@ -547,7 +547,7 @@ APIENTRY
 UserClipCursor(
     RECTL *prcl)
 {
-    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+    /* FIXME: Check if process has WINSTA_WRITEATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     PWND DesktopWindow = NULL;
 
@@ -684,7 +684,7 @@ NtUserFindExistingCursorIcon(
     {
         Ret = CurIcon->Self;
 
-//      IntReleaseCurIconObject(CurIcon);//faxme: is this correct? does IntFindExistingCurIconObject add a ref?
+//      IntReleaseCurIconObject(CurIcon); // FIXME: Is this correct? Does IntFindExistingCurIconObject add a ref?
         RETURN(Ret);
     }
 
@@ -706,7 +706,7 @@ APIENTRY
 NtUserGetClipCursor(
     RECTL *lpRect)
 {
-    /* FIXME - check if process has WINSTA_READATTRIBUTES */
+    /* FIXME: Check if process has WINSTA_READATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
     NTSTATUS Status;
@@ -1157,8 +1157,8 @@ UserDrawIconEx(
     }
 
     /* Set Background/foreground colors */
-    iOldTxtColor = IntGdiSetTextColor(hDc, 0); //black
-    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF); //white
+    iOldTxtColor = IntGdiSetTextColor(hDc, 0);          // Black
+    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF);    // White
 
 	if(bAlpha && (diFlags & DI_IMAGE))
 	{
@@ -1183,7 +1183,7 @@ UserDrawIconEx(
             goto CleanupAlpha;
         }
 
-        /* premultiply with the alpha channel value */
+        /* Premultiply with the alpha channel value */
         for (i = 0; i < psurf->SurfObj.sizlBitmap.cy; i++)
         {
 			ptr = (PBYTE)psurf->SurfObj.pvScan0 + i*psurf->SurfObj.lDelta;
@@ -1350,3 +1350,4 @@ NtUserDrawIconEx(
     return Ret;
 }
 
+/* EOF */

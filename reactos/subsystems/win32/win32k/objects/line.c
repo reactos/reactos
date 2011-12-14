@@ -30,7 +30,7 @@ IntGdiMoveToEx(DC      *dc,
         {
             Point->x = pdcattr->ptfxCurrent.x; // ret prev before change.
             Point->y = pdcattr->ptfxCurrent.y;
-            IntDPtoLP ( dc, Point, 1);         // reconvert back.
+            IntDPtoLP ( dc, Point, 1);         // Reconvert back.
         }
         else
         {
@@ -91,7 +91,7 @@ IntGdiLineTo(DC  *dc,
         Ret = PATH_LineTo(dc, XEnd, YEnd);
         if (Ret)
         {
-            // FIXME - PATH_LineTo should maybe do this? No
+            // FIXME: PATH_LineTo should maybe do this? No
             pdcattr->ptlCurrent.x = XEnd;
             pdcattr->ptlCurrent.y = YEnd;
             pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
@@ -127,7 +127,7 @@ IntGdiLineTo(DC  *dc,
         Bounds.right = max(Points[0].x, Points[1].x);
         Bounds.bottom = max(Points[0].y, Points[1].y);
 
-        /* get BRUSH from current pen. */
+        /* Get BRUSH from current pen. */
         pbrLine = dc->dclevel.pbrLine;
         ASSERT(pbrLine);
 
@@ -161,7 +161,7 @@ IntGdiPolyBezier(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count)
 {
-    BOOL ret = FALSE; // default to FAILURE
+    BOOL ret = FALSE; // Default to FAILURE
 
     if ( PATH_IsPathOpen(dc->dclevel) )
     {
@@ -189,7 +189,7 @@ IntGdiPolyBezierTo(DC      *dc,
                    LPPOINT pt,
                    DWORD  Count)
 {
-    BOOL ret = FALSE; // default to failure
+    BOOL ret = FALSE; // Default to failure
     PDC_ATTR pdcattr = dc->pdcattr;
 
     if ( PATH_IsPathOpen(dc->dclevel) )
@@ -255,7 +255,7 @@ IntGdiPolyline(DC      *dc,
         if (Points != NULL)
         {
             psurf = dc->dclevel.pSurface;
-            /* FIXME - psurf can be NULL!!!!
+            /* FIXME: psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
             ASSERT(psurf);
 
@@ -294,14 +294,14 @@ IntGdiPolylineTo(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count)
 {
-    BOOL ret = FALSE; // default to failure
+    BOOL ret = FALSE; // Default to failure
     PDC_ATTR pdcattr = dc->pdcattr;
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
         ret = PATH_PolylineTo(dc, pt, Count);
     }
-    else /* do it using Polyline */
+    else /* Do it using Polyline */
     {
         POINT *pts = ExAllocatePoolWithTag(PagedPool,
                                            sizeof(POINT) * (Count + 1),
@@ -337,7 +337,7 @@ IntGdiPolyPolyline(DC      *dc,
     int i;
     LPPOINT pts;
     PULONG pc;
-    BOOL ret = FALSE; // default to failure
+    BOOL ret = FALSE; // Default to failure
     pts = pt;
     pc = PolyPoints;
 
@@ -449,7 +449,7 @@ NtGdiPolyDraw(
            _SEH2_LEAVE;
         }
 
-        /* check for valid point types */
+        /* Check for valid point types */
         for (i = 0; i < cCount; i++)
         {
            switch (lpbTypes[i])

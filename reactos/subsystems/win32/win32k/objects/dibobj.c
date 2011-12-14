@@ -275,7 +275,7 @@ IntSetDIBits(
 
     if(!(psurfSrc && psurfDst))
     {
-        DPRINT1("Error, could not lock surfaces\n");
+        DPRINT1("Error: Could not lock surfaces\n");
         goto cleanup;
     }
 
@@ -998,7 +998,7 @@ NtGdiStretchDIBitsInternal(
     IN OPTIONAL LPBYTE pjInit,
     IN LPBITMAPINFO pbmi,
     IN DWORD dwUsage,
-    IN DWORD dwRop, // ms ntgdi.h says dwRop4(?)
+    IN DWORD dwRop, // MS ntgdi.h says dwRop4(?)
     IN UINT cjMaxInfo,
     IN UINT cjMaxBits,
     IN HANDLE hcmXform)
@@ -1065,7 +1065,7 @@ NtGdiStretchDIBitsInternal(
     }
     _SEH2_END
 
-    /* FIXME: locking twice is cheesy, coord tranlation in UM will fix it */
+    /* FIXME: Locking twice is cheesy, coord tranlation in UM will fix it */
     if (!(pdc = DC_LockDc(hdc)))
     {
         DPRINT1("Could not lock dc\n");
@@ -1543,7 +1543,7 @@ DIB_CreateDIBSection(
         else
         {
             /* For DIB Brushes */
-            DPRINT1("FIXME : Unsupported DIB_PAL_COLORS without a DC to map colors.\n");
+            DPRINT1("FIXME: Unsupported DIB_PAL_COLORS without a DC to map colors.\n");
             /* HACK */
             hpal = (HPALETTE) 0xFFFFFFFF;
         }
@@ -1555,7 +1555,7 @@ DIB_CreateDIBSection(
 
     if(!hpal)
     {
-        DPRINT1("Error : Could not create a palette for the DIB.\n");
+        DPRINT1("Error: Could not create a palette for the DIB.\n");
         goto cleanup;
     }
 
@@ -1608,7 +1608,7 @@ DIB_CreateDIBSection(
 cleanup:
     if (!res || !bmp || !bm.bmBits)
     {
-        DPRINT("got an error res=%08x, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
+        DPRINT("Got an error res=%08x, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
         if (bm.bmBits)
         {
             // MmUnsecureVirtualMemory(hSecure); // FIXME: Implement this!
@@ -1667,7 +1667,7 @@ DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *size   = 0;
         return 0;
     }
-    if (header->biSize >= sizeof(BITMAPINFOHEADER)) /* assume BITMAPINFOHEADER */
+    if (header->biSize >= sizeof(BITMAPINFOHEADER)) /* Assume BITMAPINFOHEADER */
     {
         *width  = header->biWidth;
         *height = header->biHeight;
@@ -1711,7 +1711,7 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
         return sizeof(BITMAPCOREHEADER) + colors *
                ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBTRIPLE) : sizeof(WORD));
     }
-    else  /* assume BITMAPINFOHEADER */
+    else  /* Assume BITMAPINFOHEADER */
     {
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) colors = 256;
@@ -1888,7 +1888,7 @@ DIB_ConvertBitmapInfo (CONST BITMAPINFO* pbmi, DWORD Usage)
     }
     else if (Usage == DIB_PAL_COLORS)
     {
-        /* Invalid at high Res */
+        /* Invalid at high-res */
         return NULL;
     }
 
@@ -1933,10 +1933,5 @@ DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig)
     if(converted != orig)
         ExFreePoolWithTag(converted, TAG_DIB);
 }
-
-
-
-
-
 
 /* EOF */

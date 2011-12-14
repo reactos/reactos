@@ -18,12 +18,12 @@ DBG_DEFAULT_CHANNEL(UserScrollbar);
  #define SA_SSI_REFRESH          0x0004
  #define SA_SSI_REPAINT_ARROWS   0x0008
 
-#define SBRG_SCROLLBAR     0 /* the scrollbar itself */
-#define SBRG_TOPRIGHTBTN   1 /* the top or right button */
-#define SBRG_PAGEUPRIGHT   2 /* the page up or page right region */
-#define SBRG_SCROLLBOX     3 /* the scroll box */
-#define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
-#define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
+#define SBRG_SCROLLBAR     0 /* The scrollbar itself */
+#define SBRG_TOPRIGHTBTN   1 /* The top or right button */
+#define SBRG_PAGEUPRIGHT   2 /* The page up or page right region */
+#define SBRG_SCROLLBOX     3 /* The scroll box */
+#define SBRG_PAGEDOWNLEFT  4 /* The page down or page left region */
+#define SBRG_BOTTOMLEFTBTN 5 /* The bottom or left button */
 
 #define CHANGERGSTATE(item, status) \
   if(Info->rgstate[(item)] != (status)) \
@@ -117,7 +117,7 @@ IntCalculateThumb(PWND Wnd, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi
    }
 
    ThumbPos = Thumb;
-   /* calculate Thumb */
+   /* Calculate Thumb */
    if(cxy <= (2 * Thumb))
    {
       Thumb = cxy / 2;
@@ -288,7 +288,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    PSCROLLBARINFO psbi;
    UINT new_flags;
    INT action = 0;
-   BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
+   BOOL bChangeParams = FALSE; /* Don't show/hide scrollbar if params don't change */
 
    ASSERT_REFS_CO(Window);
 
@@ -412,7 +412,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          }
       }
 
-      if (Window->pSBInfo->WSBflags != new_flags) /* check arrow flags */
+      if (Window->pSBInfo->WSBflags != new_flags) /* Check arrow flags */
       {
          Window->pSBInfo->WSBflags = new_flags;
          action |= SA_SSI_REPAINT_ARROWS;
@@ -497,11 +497,11 @@ co_IntCreateScrollBars(PWND Window)
 
    if (Window->pSBInfo && Window->pSBInfoex)
    {
-      /* no need to create it anymore */
+      /* No need to create it anymore */
       return TRUE;
    }
 
-   /* allocate memory for all scrollbars (HORZ, VERT, CONTROL) */
+   /* Allocate memory for all scrollbars (HORZ, VERT, CONTROL) */
    Size = 3 * (sizeof(SBINFOEX));
    if(!(Window->pSBInfoex = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
    {
@@ -617,7 +617,7 @@ co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
          if (fShowH) set_bits |= WS_HSCROLL;
          else clear_bits |= WS_HSCROLL;
          if( nBar == SB_HORZ ) break;  
-      /* fall through */
+      /* Fall through */
       case SB_VERT:
          if (fShowV) set_bits |= WS_VSCROLL;
          else clear_bits |= WS_VSCROLL;
@@ -806,7 +806,7 @@ NtUserEnableScrollBar(
    {
       case SB_BOTH:
          InfoV = IntGetScrollbarInfoFromWindow(Window, SB_VERT);
-         /* fall through */
+         /* Fall through */
       case SB_HORZ:
          InfoH = IntGetScrollbarInfoFromWindow(Window, SB_HORZ);
          break;

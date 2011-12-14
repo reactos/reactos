@@ -1,6 +1,6 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Desktops
  *  FILE:             subsystems/win32/win32k/ntuser/desktop.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -300,7 +300,7 @@ IntParseDesktopPath(PEPROCESS Process,
    if(!WinStaPresent)
    {
 #if 0
-      /* search the process handle table for (inherited) window station
+      /* Search the process handle table for (inherited) window station
          handles, use a more appropriate one than WinSta0 if possible. */
       if (!ObFindHandleForObject(Process,
                                  NULL,
@@ -309,7 +309,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                  (PHANDLE)hWinSta))
 #endif
       {
-            /* we had no luck searching for opened handles, use WinSta0 now */
+            /* We had no luck searching for opened handles, use WinSta0 now */
             RtlInitUnicodeString(&WinSta, L"WinSta0");
       }
    }
@@ -317,7 +317,7 @@ IntParseDesktopPath(PEPROCESS Process,
    if(!DesktopPresent && hDesktop != NULL)
    {
 #if 0
-      /* search the process handle table for (inherited) desktop
+      /* Search the process handle table for (inherited) desktop
          handles, use a more appropriate one than Default if possible. */
       if (!ObFindHandleForObject(Process,
                                  NULL,
@@ -326,7 +326,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                  (PHANDLE)hDesktop))
 #endif
       {
-         /* we had no luck searching for opened handles, use Desktop now */
+         /* We had no luck searching for opened handles, use Desktop now */
          RtlInitUnicodeString(&Desktop, L"Default");
       }
    }
@@ -338,7 +338,7 @@ IntParseDesktopPath(PEPROCESS Process,
          return STATUS_INSUFFICIENT_RESOURCES;
       }
 
-      /* open the window station */
+      /* Open the window station */
       InitializeObjectAttributes(&ObjectAttributes,
                                  &FullName,
                                  OBJ_CASE_INSENSITIVE,
@@ -372,7 +372,7 @@ IntParseDesktopPath(PEPROCESS Process,
          return STATUS_INSUFFICIENT_RESOURCES;
       }
 
-      /* open the desktop object */
+      /* Open the desktop object */
       InitializeObjectAttributes(&ObjectAttributes,
                                  &FullName,
                                  OBJ_CASE_INSENSITIVE,
@@ -443,7 +443,7 @@ IntGetActiveDesktop(VOID)
 }
 
 /*
- * returns or creates a handle to the desktop object
+ * Returns or creates a handle to the desktop object
  */
 HDESK FASTCALL
 IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
@@ -468,7 +468,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
                                      (PHANDLE)&Ret);
       if(!NT_SUCCESS(Status))
       {
-         /* unable to create a handle */
+         /* Unable to create a handle */
          ERR("Unable to create a desktop handle\n");
          return NULL;
       }
@@ -698,7 +698,7 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
    PSHELL_HOOK_WINDOW Current;
    HWND* list;
 
-   /* fixme: if we save nb elements in desktop, we dont have to loop to find nb entries */
+   /* FIXME: If we save nb elements in desktop, we dont have to loop to find nb entries */
    LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
       entries++;
 
@@ -712,7 +712,7 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
       LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
          *cursor++ = Current->hWnd;
 
-      *cursor = NULL; /* nullterm list */
+      *cursor = NULL; /* Nullterm list */
    }
 
    return list;
@@ -731,7 +731,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
    if (!gpsi->uiShellMsg)
    {
 
-      /* Too bad, this doesn't work.*/
+      /* Too bad, this doesn't work. */
 #if 0
       UNICODE_STRING Str;
       RtlInitUnicodeString(&Str, L"SHELLHOOK");
@@ -1002,7 +1002,7 @@ NtUserCreateDesktop(
       InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
    }
 
-//// why is this here?
+//// Why is this here?
 #if 0
    if (! NT_SUCCESS(Status))
    {
@@ -1395,12 +1395,12 @@ NtUserPaintDesktop(HDC hDC)
             {
                 HBITMAP hOldBitmap;
 
-                /* fill in the area that the bitmap is not going to cover */
+                /* Fill in the area that the bitmap is not going to cover */
                 if (x > 0 || y > 0)
                 {
-                   /* FIXME - clip out the bitmap
-                                                can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
-                                                once we support DSTINVERT */
+                   /* FIXME: Clip out the bitmap
+                                               can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                                               once we support DSTINVERT */
                   PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
                   NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
                   NtGdiSelectBrush(hDC, PreviousBrush);
@@ -1430,7 +1430,7 @@ NtUserPaintDesktop(HDC hDC)
                 }
                 else if (WinSta->WallpaperMode == wmTile)
                 {
-                    /* paint the bitmap across the screen then down */
+                    /* Paint the bitmap across the screen then down */
                     for(y = 0; y < Rect.bottom; y += WinSta->cyWallpaper)
                     {
                         for(x = 0; x < Rect.right; x += WinSta->cxWallpaper)
@@ -1666,14 +1666,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 
    if(Thread->ThreadsProcess == PsGetCurrentProcess())
    {
-      /* just return the handle, we queried the desktop handle of a thread running
+      /* Just return the handle, we queried the desktop handle of a thread running
          in the same context */
       Ret = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk;
       ObDereferenceObject(Thread);
       RETURN(Ret);
    }
 
-   /* get the desktop handle and the desktop of the thread */
+   /* Get the desktop handle and the desktop of the thread */
    if(!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk) ||
          !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk))
    {
@@ -1682,9 +1682,9 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
       RETURN(NULL);
    }
 
-   /* we could just use DesktopObject instead of looking up the handle, but latter
+   /* We could just use DesktopObject instead of looking up the handle, but latter
       may be a bit safer (e.g. when the desktop is being destroyed */
-   /* switch into the context of the thread we're trying to get the desktop from,
+   /* Switch into the context of the thread we're trying to get the desktop from,
       so we can use the handle */
    KeAttachProcess(&Thread->ThreadsProcess->Pcb);
    Status = ObReferenceObjectByHandle(hThreadDesktop,
@@ -1695,18 +1695,18 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
                                       &HandleInformation);
    KeDetachProcess();
 
-   /* the handle couldn't be found, there's nothing to get... */
+   /* The handle couldn't be found, there's nothing to get... */
    if(!NT_SUCCESS(Status))
    {
       ObDereferenceObject(Thread);
       RETURN(NULL);
    }
 
-   /* lookup our handle table if we can find a handle to the desktop object,
+   /* Lookup our handle table if we can find a handle to the desktop object,
       if not, create one */
    Ret = IntGetDesktopObjectHandle(DesktopObject);
 
-   /* all done, we got a valid handle to the desktop */
+   /* All done, we got a valid handle to the desktop */
    ObDereferenceObject(DesktopObject);
    ObDereferenceObject(Thread);
    RETURN(Ret);
@@ -1730,7 +1730,7 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
     CurrentWin32Process = PsGetCurrentProcessWin32Process();
     PrevLink = &CurrentWin32Process->HeapMappings.Next;
 
-    /* unmap if we're the last thread using the desktop */
+    /* Unmap if we're the last thread using the desktop */
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1777,7 +1777,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     CurrentWin32Process = PsGetCurrentProcessWin32Process();
     PrevLink = &CurrentWin32Process->HeapMappings.Next;
 
-    /* find out if another thread already mapped the desktop heap */
+    /* Find out if another thread already mapped the desktop heap */
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1791,7 +1791,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
         HeapMapping = HeapMapping->Next;
     }
 
-    /* we're the first, map the heap */
+    /* We're the first, map the heap */
     TRACE("Noone mapped the desktop heap %p yet, so - map it!\n", DesktopObject->pheapDesktop);
     Offset.QuadPart = 0;
     Status = MmMapViewOfSection(DesktopObject->hsectionDesktop,
@@ -1803,14 +1803,14 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to map desktop\n");
         return Status;
     }
 
-    /* add the mapping */
+    /* Add the mapping */
     HeapMapping = UserHeapAlloc(sizeof(W32HEAP_USER_MAPPING));
     if (HeapMapping == NULL)
     {
@@ -1930,7 +1930,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     {
         ERR("Failed to move process classes to shared heap!\n");
 
-        /* failed to move desktop classes to the shared heap,
+        /* Failed to move desktop classes to the shared heap,
             unmap the view and return the error */
         if (MapHeap && DesktopObject != NULL)
             IntUnmapDesktopView(DesktopObject);

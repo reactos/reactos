@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Misc User funcs
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Miscellaneous User functions
  * FILE:             subsystems/win32/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
@@ -167,7 +167,7 @@ NtUserGetThreadState(
          ret = (DWORD_PTR)IntGetThreadFocusWindow();
          break;
       case THREADSTATE_CAPTUREWINDOW:
-         /* FIXME should use UserEnterShared */
+         /* FIXME: Should use UserEnterShared */
          ret = (DWORD_PTR)IntGetCapture();
          break;
       case THREADSTATE_PROGMANWINDOW:
@@ -197,7 +197,7 @@ NtUserGetThreadState(
                 else
                    ret = ISMEX_NOTIFY;
              }
-             /* if ReplyMessage */
+             /* If ReplyMessage */
              if (Message->QS_Flags & QS_SMRESULT) ret |= ISMEX_REPLIED;
            }
 
@@ -276,7 +276,7 @@ NtUserGetDoubleClickTime(VOID)
 BOOL
 APIENTRY
 NtUserGetGUIThreadInfo(
-   DWORD idThread, /* if NULL use foreground thread */
+   DWORD idThread, /* If NULL use foreground thread */
    LPGUITHREADINFO lpgui)
 {
    NTSTATUS Status;
@@ -317,7 +317,7 @@ NtUserGetGUIThreadInfo(
       Desktop = W32Thread->rpdesk;
    }
    else
-   {  /* get the foreground thread */
+   {  /* Get the foreground thread */
       Thread = PsGetCurrentThread();
       W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
       Desktop = W32Thread->rpdesk;
@@ -348,7 +348,7 @@ NtUserGetGUIThreadInfo(
    if (MsgQueue->MoveSize)
       SafeGui.flags |= GUI_INMOVESIZE;
 
-   /* FIXME add flag GUI_16BITTASK */
+   /* FIXME: Add flag GUI_16BITTASK */
 
    SafeGui.hwndActive = MsgQueue->ActiveWindow;
    SafeGui.hwndFocus = MsgQueue->FocusWindow;
@@ -488,7 +488,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
       return STATUS_SUCCESS;
    }
 
-   /* string is empty */
+   /* String is empty */
    return STATUS_SUCCESS;
 }
 
@@ -531,14 +531,14 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
          return Status;
       }
 
-      /* make sure the string is null-terminated */
+      /* Make sure the string is null-terminated */
       Src = (PWSTR)((PBYTE)Dest->Buffer + Dest->Length);
       *Src = L'\0';
 
       return STATUS_SUCCESS;
    }
 
-   /* string is empty */
+   /* String is empty */
    return STATUS_SUCCESS;
 }
 
@@ -558,10 +558,10 @@ GetW32ThreadInfo(VOID)
 
     if (pti == NULL)
     {
-        /* FIXME - temporary hack for system threads... */
+        /* FIXME: Temporary hack for system threads... */
         return NULL;
     }
-    /* initialize it */
+    /* Initialize it */
     pti->ppi = ppi = GetW32ProcessInfo();
 
     if (pti->rpdesk != NULL)
@@ -572,7 +572,7 @@ GetW32ThreadInfo(VOID)
     {
        pti->pDeskInfo = NULL;
     }
-    /* update the TEB */
+    /* Update the TEB */
     Teb = NtCurrentTeb();
     pci = GetWin32ClientInfo();
     pti->pClientInfo = pci;
@@ -612,6 +612,5 @@ GetW32ThreadInfo(VOID)
 
     return pti;
 }
-
 
 /* EOF */

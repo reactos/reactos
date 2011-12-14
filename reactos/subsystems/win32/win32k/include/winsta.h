@@ -16,7 +16,7 @@ typedef enum
 
 typedef struct _WINSTATION_OBJECT
 {
-    PVOID SharedHeap; /* points to kmode memory! */
+    PVOID SharedHeap; /* Points to kmode memory! */
 
     CSHORT Type;
     CSHORT Size;
@@ -30,7 +30,7 @@ typedef struct _WINSTATION_OBJECT
     HANDLE ShellListView;
 
     /* Effects */
-    BOOL FontSmoothing; /* enable */
+    BOOL FontSmoothing; /* Enable */
     UINT FontSmoothingType; /* 1:Standard,2:ClearType */
     /* FIXME: Big Icons (SPI_GETICONMETRICS?) */
     BOOL DropShadow;

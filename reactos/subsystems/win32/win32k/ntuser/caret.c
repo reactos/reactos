@@ -1,8 +1,8 @@
 /* 
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
- * FILE:             subsys/win32k/ntuser/caret.c
+ * FILE:             subsystems/win32/win32k/ntuser/caret.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 
@@ -63,7 +63,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    PWINSTATION_OBJECT WinStaObject = pti->rpdesk->rpwinstaParent;
 
-   /* windows doesn't do this check */
+   /* Windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -157,11 +157,11 @@ IntGetCaretBlinkTime(VOID)
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)
    {
-      /* load it from the registry the first call only! */
+      /* Load it from the registry the first call only! */
       Ret = WinStaObject->CaretBlinkRate = IntQueryCaretBlinkRate();
    }
 
-   /* windows doesn't do this check */
+   /* Windows doesn't do this check */
    if((Ret < MIN_CARETBLINKRATE) || (Ret > MAX_CARETBLINKRATE))
    {
       Ret = DEFAULT_CARETBLINKRATE;
@@ -219,7 +219,7 @@ IntSwitchCaretShowing(PVOID Info)
    return FALSE;
 }
 
-#if 0 //unused
+#if 0 // Unused
 static
 VOID FASTCALL
 co_IntDrawCaret(HWND hWnd)

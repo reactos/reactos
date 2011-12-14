@@ -35,7 +35,7 @@
         ULONG Id;
     } DBG_CHANNEL;
 
-    /* note: the following values don't need to be sorted */
+    /* Note: The following values don't need to be sorted */
     enum _DEBUGCHANNELS
     {
         DbgChEngBlt,

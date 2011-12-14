@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Clipping Functions
- * FILE:              subsys/win32k/eng/clip.c
+ * FILE:              subsystems/win32/win32k/eng/clip.c
  * PROGRAMER:         Jason Filby
  */
 
@@ -346,7 +346,7 @@ CLIPOBJ_bEnum(
     ULONG nCopy, i;
     ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
 
-    //calculate how many rectangles we should copy
+    // Calculate how many rectangles we should copy
     nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
             min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
             (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
@@ -356,7 +356,7 @@ CLIPOBJ_bEnum(
         return FALSE;
     }
 
-    /* copy rectangles */
+    /* Copy rectangles */
     src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
     for(i = 0, dest = pERects->arcl; i < nCopy; i++, dest++, src++)
     {

@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Misc User funcs
- * FILE:             subsystem/win32/win32k/ntuser/defwnd.c
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Miscellaneous User functions
+ * FILE:             subsystems/win32/win32k/ntuser/defwnd.c
  * PROGRAMER:
  */
 
@@ -18,8 +18,8 @@ DBG_DEFAULT_CHANNEL(UserDefwnd);
 #define MCSR_DONOTSHUTDOWN    3
 
 /*
-  Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
-  Apparently CSRSS sends out messages to do this w/o going into win32k internals.
+ * Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
+ * Apparently CSRSS sends out messages to do this w/o going into win32k internals.
  */
 static
 LRESULT FASTCALL
@@ -295,7 +295,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
 
    if (!pWnd) return HTNOWHERE;
 
-   if (pWnd == UserGetDesktopWindow())//pWnd->fnid == FNID_DESKTOP)
+   if (pWnd == UserGetDesktopWindow()) // pWnd->fnid == FNID_DESKTOP)
    {
       rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
       rcWindow.right  = UserGetSystemMetrics(SM_CXSCREEN);
@@ -392,7 +392,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
                 }
 
                 /* Check maximize box */
-                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                /* In Win95 there is automatically a Maximize button when there is a minimize one */
                 if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
                 {
                     rcWindow.left += UserGetSystemMetrics(SM_CXSIZE);
@@ -423,7 +423,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
                 }
 
                 /* Check maximize box */
-                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                /* In Win95 there is automatically a Maximize button when there is a minimize one */
                 if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
                 {
                     rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);

@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Keyboard functions
- * FILE:             subsys/win32k/ntuser/keyboard.c
+ * FILE:             subsystems/win32/win32k/ntuser/keyboard.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */
@@ -458,7 +458,7 @@ IntToUnicodeEx(UINT wVirtKey,
         TRACE("Final char: %lc (%x)\n", wchTranslatedChar, wchTranslatedChar);
     }
 
-    /* dead char has not been not found */
+    /* Dead char has not been not found */
     if (wchDead)
     {
         /* Treat both characters normally */
@@ -467,7 +467,7 @@ IntToUnicodeEx(UINT wVirtKey,
         bDead = FALSE;
     }
 
-    /* add character to the buffer */
+    /* Add character to the buffer */
     if (cchBuff > iRet)
         pwszBuff[iRet++] = wchTranslatedChar;
 
@@ -861,7 +861,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     {
         /* Init message */
         Msg.hwnd = pFocusQueue->FocusWindow;
-        Msg.wParam = wFixedVk & 0xFF; /* Note: it's simplified by msg queue */
+        Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
         Msg.lParam = MAKELPARAM(1, wScanCode);
         Msg.time = dwTime;
         Msg.pt = gpsi->ptCursor;
@@ -877,10 +877,10 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
                 Msg.lParam |= KF_REPEAT << 16;
             if (!bIsDown)
                 Msg.lParam |= KF_UP << 16;
-            /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */ 	 
+            /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */ 	 
             if (pFocusQueue->QF_flags & QF_DIALOGACTIVE) 	 
                 Msg.lParam |= KF_DLGMODE << 16;
-            if (pFocusQueue->MenuOwner)//pFocusQueue->MenuState) // MenuState needs a start flag...
+            if (pFocusQueue->MenuOwner) // pFocusQueue->MenuState) // MenuState needs a start flag...
                 Msg.lParam |= KF_MENUMODE << 16;
         }
 
@@ -1008,7 +1008,7 @@ UserProcessKeyboardInput(
     pKbdTbl = pKl->spkf->pKbdTbl;
 
     /* Convert scan code to virtual key.
-       Note: we could call UserSendKeyboardInput using scan code,
+       Note: We could call UserSendKeyboardInput using scan code,
              but it wouldn't interpret E1 key(s) properly */
     wVk = IntVscToVk(wScanCode, pKbdTbl);
     TRACE("UserProcessKeyboardInput: %x (break: %u) -> %x\n",
@@ -1179,7 +1179,7 @@ IntMapVirtualKeyEx(UINT uCode, UINT Type, PKBDTABLES pKbdTbl)
         case MAPVK_VK_TO_VSC:
             uCode = IntFixVk(uCode, FALSE);
             uRet = IntVkToVsc(uCode, pKbdTbl);
-            if (uRet > 0xFF) // fail for scancodes with prefix (e0, e1)
+            if (uRet > 0xFF) // Fail for scancodes with prefix (e0, e1)
                 uRet = 0;
             break;
 
@@ -1308,7 +1308,7 @@ NtUserToUnicodeEx(
     }
     RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
 
-    UserEnterExclusive(); // Note: we modify wchDead static variable
+    UserEnterExclusive(); // Note: We modify wchDead static variable
 
     if (dwhkl)
         pKl = UserHklToKbl(dwhkl);
@@ -1370,7 +1370,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
     /* "Do not care" flag */
     if(lParam & LP_DO_NOT_CARE_BIT)
     {
-        /* Note: we could do vsc -> vk -> vsc conversion, instead of using
+        /* Note: We could do vsc -> vk -> vsc conversion, instead of using
                  hardcoded scan codes, but it's not what Windows does */
         if (wScanCode == SCANCODE_RSHIFT && !bExtKey)
             wScanCode = SCANCODE_LSHIFT;
@@ -1409,7 +1409,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
     {
         cchKeyName = wcslen(pKeyName);
         if (cchKeyName > cchSize - 1)
-            cchKeyName = cchSize - 1; // don't count '\0'
+            cchKeyName = cchSize - 1; // Don't count '\0'
 
         _SEH2_TRY
         {

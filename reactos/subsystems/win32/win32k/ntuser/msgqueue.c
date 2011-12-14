@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Message queues
  * FILE:             subsystems/win32/win32k/ntuser/msgqueue.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -1005,7 +1005,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
 
-   /* FIXME - increase reference counter of sender's message queue here */
+   /* FIXME: Increase reference counter of sender's message queue here */
 
    Message->Msg.hwnd = Wnd;
    Message->Msg.message = Msg;
@@ -1025,22 +1025,22 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    IntReferenceMessageQueue(MessageQueue);
 
-   /* add it to the list of pending messages */
+   /* Add it to the list of pending messages */
    InsertTailList(&ThreadQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
 
-   /* queue it in the destination's message queue */
+   /* Queue it in the destination's message queue */
    InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
 
    Message->QS_Flags = QS_SENDMESSAGE;
    MsqWakeQueue(MessageQueue, QS_SENDMESSAGE, TRUE);
 
-   /* we can't access the Message anymore since it could have already been deleted! */
+   /* We can't access the Message anymore since it could have already been deleted! */
 
    if(Block)
    {
       UserLeaveCo();
 
-      /* don't process messages sent to the thread */
+      /* Don't process messages sent to the thread */
       WaitStatus = KeWaitForSingleObject(&CompletionEvent, UserRequest, UserMode,
                                          FALSE, (uTimeout ? &Timeout : NULL));
 
@@ -1048,7 +1048,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
       if(WaitStatus == STATUS_TIMEOUT)
       {
-         /* look up if the message has not yet dispatched, if so
+         /* Look up if the message has not yet dispatched, if so
             make sure it can't pass a result and it must not set the completion event anymore */
          Entry = MessageQueue->SentMessagesListHead.Flink;
          while (Entry != &MessageQueue->SentMessagesListHead)
@@ -1056,7 +1056,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
             if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
                   == Message)
             {
-               /* we can access Message here, it's secure because the message queue is locked
+               /* We can access Message here, it's secure because the message queue is locked
                   and the message is still hasn't been dispatched */
                Message->CompletionEvent = NULL;
                Message->Result = NULL;
@@ -1065,7 +1065,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
             Entry = Entry->Flink;
          }
 
-         /* remove from the local dispatching list so the other thread knows,
+         /* Remove from the local dispatching list so the other thread knows,
             it can't pass a result and it must not set the completion event anymore */
          Entry = ThreadQueue->DispatchingMessagesHead.Flink;
          while (Entry != &ThreadQueue->DispatchingMessagesHead)
@@ -1073,10 +1073,10 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
             if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
                   == Message)
             {
-               /* we can access Message here, it's secure because the sender's message is locked
+               /* We can access Message here, it's secure because the sender's message is locked
                   and the message has definitely not yet been destroyed, otherwise it would
                   have been removed from this list by the dispatching routine right after
-               dispatching the message */
+                  dispatching the message */
                Message->CompletionEvent = NULL;
                Message->Result = NULL;
                RemoveEntryList(&Message->DispatchingListEntry);
@@ -1108,7 +1108,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
          if(WaitStatus == STATUS_TIMEOUT)
          {
-            /* look up if the message has not yet been dispatched, if so
+            /* Look up if the message has not yet been dispatched, if so
                make sure it can't pass a result and it must not set the completion event anymore */
             Entry = MessageQueue->SentMessagesListHead.Flink;
             while (Entry != &MessageQueue->SentMessagesListHead)
@@ -1116,7 +1116,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
                      == Message)
                {
-                  /* we can access Message here, it's secure because the message queue is locked
+                  /* We can access Message here, it's secure because the message queue is locked
                      and the message is still hasn't been dispatched */
                   Message->CompletionEvent = NULL;
                   Message->Result = NULL;
@@ -1125,7 +1125,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                Entry = Entry->Flink;
             }
 
-            /* remove from the local dispatching list so the other thread knows,
+            /* Remove from the local dispatching list so the other thread knows,
                it can't pass a result and it must not set the completion event anymore */
             Entry = ThreadQueue->DispatchingMessagesHead.Flink;
             while (Entry != &ThreadQueue->DispatchingMessagesHead)
@@ -1133,10 +1133,10 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
                      == Message)
                {
-                  /* we can access Message here, it's secure because the sender's message is locked
+                  /* We can access Message here, it's secure because the sender's message is locked
                      and the message has definitely not yet been destroyed, otherwise it would
                      have been removed from this list by the dispatching routine right after
-                  dispatching the message */
+                     dispatching the message */
                   Message->CompletionEvent = NULL;
                   Message->Result = NULL;
                   RemoveEntryList(&Message->DispatchingListEntry);
@@ -1456,14 +1456,14 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     hook.pt           = msg->pt;
     hook.hwnd         = msg->hwnd;
     hook.wHitTestCode = hittest;
-    hook.dwExtraInfo  = 0/*extra_info*/;
+    hook.dwExtraInfo  = 0 /* extra_info */ ;
     if (co_HOOK_CallHooks( WH_MOUSE, *RemoveMessages ? HC_ACTION : HC_NOREMOVE,
                         message, (LPARAM)&hook ))
     {
         hook.pt           = msg->pt;
         hook.hwnd         = msg->hwnd;
         hook.wHitTestCode = hittest;
-        hook.dwExtraInfo  = 0/*extra_info*/;
+        hook.dwExtraInfo  = 0 /* extra_info */ ;
         co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, message, (LPARAM)&hook );
 
         ERR("WH_MOUSE dorpped mouse message!\n");

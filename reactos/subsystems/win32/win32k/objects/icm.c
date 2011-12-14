@@ -268,7 +268,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
 //
 // ICM registry subkey sets internal brightness range, gamma range is 128 or
 // 256 when icm is init.
-INT IcmGammaRangeSet = 128; // <- make it global
+INT IcmGammaRangeSet = 128; // <- Make it global
 
 BOOL
 FASTCALL
@@ -401,7 +401,7 @@ NtGdiSetIcmMode(HDC  hDC,
                 ULONG nCommand,
                 ULONG EnableICM) // ulMode
 {
-  /* FIXME: this should be coded someday  */
+  /* FIXME: This should be coded someday  */
   if (EnableICM == ICM_OFF)
     {
       return  ICM_OFF;

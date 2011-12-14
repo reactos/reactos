@@ -1,10 +1,10 @@
 /*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* PURPOSE:          Messages
-* FILE:             subsystems/win32/win32k/ntuser/message.c
-* PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
-*/
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Messages
+ * FILE:             subsystems/win32/win32k/ntuser/message.c
+ * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMsg);
@@ -764,7 +764,7 @@ co_IntPeekMessage( PMSG Msg,
         if (ProcessMask & QS_POSTMESSAGE)
         {
            pti->pcti->fsChangeBits &= ~(QS_POSTMESSAGE | QS_HOTKEY | QS_TIMER);
-           if (MsgFilterMin == 0 && MsgFilterMax == 0) // wine hack does this; ~0U)
+           if (MsgFilterMin == 0 && MsgFilterMax == 0) // Wine hack does this; ~0U)
            {
               pti->pcti->fsChangeBits &= ~QS_ALLPOSTMESSAGE;
            }
@@ -1023,7 +1023,7 @@ co_IntGetPeekMessage( PMSG pMsg,
     {
        // Clear the spin cycle to fix the mix.
        pti->pClientInfo->cSpins = 0;
-       //if (!(pti->TIF_flags & TIF_SPINNING)) FIXME need to swap vinyl..
+       //if (!(pti->TIF_flags & TIF_SPINNING)) // FIXME: Need to swap vinyl...
     }
     return Present;
 }
@@ -1179,7 +1179,7 @@ UserPostMessage( HWND Wnd,
         if ( Window->state & WNDS_DESTROYED )
         {
             ERR("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
-            /* FIXME - last error code? */
+            /* FIXME: Last error code? */
             return FALSE;
         }
 
@@ -1312,14 +1312,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti->MessageQueue))
     {
-        // FIXME - Set window hung and add to a list.
-        /* FIXME - Set a LastError? */
+        // FIXME: Set window hung and add to a list.
+        /* FIXME: Set a LastError? */
         RETURN( FALSE);
     }
 
     if (Window->state & WNDS_DESTROYED)
     {
-        /* FIXME - last error? */
+        /* FIXME: Last error? */
         ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
         RETURN( FALSE);
     }
@@ -1338,18 +1338,18 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME - Set window hung and add to a list.
+           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME: Set window hung and add to a list.
 
     if (STATUS_TIMEOUT == Status)
     {
 /*
-    MSDN says:
-    Microsoft Windows 2000: If GetLastError returns zero, then the function
-    timed out.
-    XP+ : If the function fails or times out, the return value is zero.
-    To get extended error information, call GetLastError. If GetLastError
-    returns ERROR_TIMEOUT, then the function timed out.
-*/
+ *  MSDN says:
+ *  Microsoft Windows 2000: If GetLastError returns zero, then the function
+ *  timed out.
+ *  XP+ : If the function fails or times out, the return value is zero.
+ *  To get extended error information, call GetLastError. If GetLastError
+ *  returns ERROR_TIMEOUT, then the function timed out.
+ */
         EngSetLastError(ERROR_TIMEOUT);
         RETURN( FALSE);
     }
@@ -1486,7 +1486,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if (Window->state & WNDS_DESTROYED)
     {
-        /* FIXME - last error? */
+        /* FIXME: last error? */
         ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
         RETURN(FALSE);
     }
@@ -1746,7 +1746,7 @@ UserSendNotifyMessage( HWND hWnd,
     }
 
     // Basicly the same as IntPostOrSendMessage
-    if (hWnd == HWND_BROADCAST) //Handle Broadcast
+    if (hWnd == HWND_BROADCAST) // Handle Broadcast
     {
         HWND *List;
         PWND DesktopWindow;

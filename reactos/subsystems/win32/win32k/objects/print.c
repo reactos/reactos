@@ -68,7 +68,7 @@ NtGdiEscape(HDC  hDC,
     return SP_ERROR;
   }
 
-  /* TODO FIXME - don't pass umode buffer to an Int function */
+  /* TODO: FIXME: Don't pass umode buffer to an Int function */
   ret = IntGdiEscape(dc, Escape, InSize, InData, OutData);
 
   DC_UnlockDc( dc );
@@ -172,7 +172,7 @@ NtGdiExtEscape(
 
       _SEH2_TRY
       {
-        /* pointers were already probed! */
+        /* Pointers were already probed! */
         RtlCopyMemory(SafeInData,
                       UnsafeInData,
                       InSize);
@@ -235,7 +235,7 @@ freeout:
    {
       _SEH2_TRY
       {
-        /* pointers were already probed! */
+        /* Pointers were already probed! */
         RtlCopyMemory(UnsafeOutData,
                       SafeOutData,
                       OutSize);

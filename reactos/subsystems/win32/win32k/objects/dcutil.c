@@ -1,4 +1,3 @@
-
 #include <win32k.h>
 
 #define NDEBUG
@@ -141,7 +140,7 @@ IntSetDefaultRegion(PDC pdc)
     rclWnd.bottom = pdc->dclevel.sizl.cy;
     rclClip = rclWnd;
 
-//    EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
+    //EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
     if (pdc->ppdev->flFlags & PDEV_META_DEVICE)
     {
         pSurface = pdc->dclevel.pSurface;
@@ -153,7 +152,7 @@ IntSetDefaultRegion(PDC pdc)
             rclClip.bottom += pdc->ppdev->ptlOrigion.y;
         }
     }
-//    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+    //EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
 
     prgn = pdc->prgnVis;
 
@@ -180,7 +179,7 @@ IntSetDefaultRegion(PDC pdc)
         pdc->ptlDCOrig.y = 0;
         pdc->erclWindow = rclWnd;
         pdc->erclClip = rclClip;
-        /* Might be an InitDC or DCE....*/
+        /* Might be an InitDC or DCE... */
         pdc->ptlFillOrigin.x = pdc->dcattr.VisRectRegion.Rect.right;
         pdc->ptlFillOrigin.y = pdc->dcattr.VisRectRegion.Rect.bottom;
         return TRUE;
@@ -211,11 +210,9 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
         return 0;
     }
 
-    wRet = dc->fs & DC_FLAG_DIRTY_RAO; // Fixme wrong flag!
+    wRet = dc->fs & DC_FLAG_DIRTY_RAO; // FIXME: Wrong flag!
 
-    /* "Undocumented Windows" info is slightly confusing.
-     */
-
+    /* Info in "Undocumented Windows" is slightly confusing. */
     DPRINT("DC %p, Flags %04x\n", hDC, Flags);
 
     if (Flags & DCHF_INVALIDATEVISRGN)

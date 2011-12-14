@@ -11,7 +11,7 @@ DBG_DEFAULT_CHANNEL(UserMenu);
 
 /* INTERNAL ******************************************************************/
 
-/* maximum number of menu items a menu can contain */
+/* Maximum number of menu items a menu can contain */
 #define MAX_MENU_ITEMS (0x4000)
 #define MAX_GOINTOSUBMENU (0x10)
 
@@ -208,8 +208,8 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
       PWINSTATION_OBJECT WindowStation;
       NTSTATUS Status;
 
-      /* remove all menu items */
-      IntDeleteMenuItems(Menu, bRecurse); /* do not destroy submenus */
+      /* Remove all menu items */
+      IntDeleteMenuItems(Menu, bRecurse); /* Do not destroy submenus */
 
       if(RemoveFromProcess)
       {
@@ -260,14 +260,14 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    }
 
    Menu->Process = PsGetCurrentProcess();
-   Menu->RtoL = FALSE; /* default */
-   Menu->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
-   Menu->MenuInfo.fMask = 0; /* not used */
+   Menu->RtoL = FALSE; /* Default */
+   Menu->MenuInfo.cbSize = sizeof(MENUINFO); /* Not used */
+   Menu->MenuInfo.fMask = 0; /* Not used */
    Menu->MenuInfo.dwStyle = 0; /* FIXME */
-   Menu->MenuInfo.cyMax = 0; /* default */
-   Menu->MenuInfo.hbrBack = NULL; /* no brush */
-   Menu->MenuInfo.dwContextHelpID = 0; /* default */
-   Menu->MenuInfo.dwMenuData = 0; /* default */
+   Menu->MenuInfo.cyMax = 0; /* Default */
+   Menu->MenuInfo.hbrBack = NULL; /* No brush */
+   Menu->MenuInfo.dwContextHelpID = 0; /* Default */
+   Menu->MenuInfo.dwMenuData = 0; /* Default */
    Menu->MenuInfo.Self = *Handle;
    Menu->MenuInfo.FocusedItem = NO_SELECTED_ITEM;
    Menu->MenuInfo.Flags = (IsMenuBar ? 0 : MF_POPUP);
@@ -369,7 +369,7 @@ IntCloneMenu(PMENU_OBJECT Source)
 
    Menu->Process = PsGetCurrentProcess();
    Menu->RtoL = Source->RtoL;
-   Menu->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
+   Menu->MenuInfo.cbSize = sizeof(MENUINFO); /* Not used */
    Menu->MenuInfo.fMask = Source->MenuInfo.fMask;
    Menu->MenuInfo.dwStyle = Source->MenuInfo.dwStyle;
    Menu->MenuInfo.cyMax = Source->MenuInfo.cyMax;
@@ -568,12 +568,12 @@ IntInsertMenuItemToList(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, int pos)
 
    if(LastItem)
    {
-      /* insert the item after LastItem */
+      /* Insert the item after LastItem */
       LastItem->Next = MenuItem;
    }
    else
    {
-      /* insert at the beginning */
+      /* Insert at the beginning */
       Menu->MenuItemList = MenuItem;
    }
    MenuItem->Next = CurItem;
@@ -668,7 +668,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       if (lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
       {
          ERR("IntSetMenuItemInfo: Invalid combination of fMask bits used\n");
-         /* this does not happen on Win9x/ME */
+         /* This does not happen on Win9x/ME */
          SetLastNtError( ERROR_INVALID_PARAMETER);
          return FALSE;
       }
@@ -722,11 +722,11 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    }
    if(lpmii->fMask & MIIM_STATE)
    {
-      /* remove MFS_DEFAULT flag from all other menu items if this item
+      /* Remove MFS_DEFAULT flag from all other menu items if this item
          has the MFS_DEFAULT state */
       if(lpmii->fState & MFS_DEFAULT)
          UserSetMenuDefaultItem(MenuObject, -1, 0);
-      /* update the menu item state flags */
+      /* Update the menu item state flags */
       UpdateMenuItemState(MenuItem->fState, lpmii->fState);
    }
 
@@ -829,7 +829,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    }
    if (SubMenu == NULL)
    {
-       /* default to last position of menu */
+       /* Default to last position of menu */
       SubMenu = MenuObject;
       pos = MenuObject->MenuInfo.MenuItemCount;
    }
@@ -965,7 +965,7 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
          if (0 != CurItem->Text.Length
                && (nMax >= CurItem->Text.Length + sizeof(WCHAR)))
          {
-            /* copy string */
+            /* Copy string */
             Status = MmCopyToCaller(StrOut, CurItem->Text.Buffer,
                                     CurItem->Text.Length);
             if (! NT_SUCCESS(Status))
@@ -1049,7 +1049,7 @@ IntHiliteMenuItem(PWND WindowObject, PMENU_OBJECT MenuObject,
       MenuItem->fState &= ~MF_HILITE;
    }
 
-   /* FIXME - update the window's menu */
+   /* FIXME: Update the window's menu */
 
    return TRUE;
 }
@@ -1161,12 +1161,12 @@ VOID FASTCALL
 co_IntInitTracking(PWND Window, PMENU_OBJECT Menu, BOOL Popup,
                    UINT Flags)
 {
-   /* FIXME - hide caret */
+   /* FIXME: Hide caret */
 
    if(!(Flags & TPM_NONOTIFY))
       co_IntSendMessage(Window->head.h, WM_SETCURSOR, (WPARAM)Window->head.h, HTCAPTION);
 
-   /* FIXME - send WM_SETCURSOR message */
+   /* FIXME: Send WM_SETCURSOR message */
 
    if(!(Flags & TPM_NONOTIFY))
       co_IntSendMessage(Window->head.h, WM_INITMENU, (WPARAM)Menu->MenuInfo.Self, 0);
@@ -1179,7 +1179,7 @@ co_IntExitTracking(PWND Window, PMENU_OBJECT Menu, BOOL Popup,
    if(!(Flags & TPM_NONOTIFY))
       co_IntSendMessage(Window->head.h, WM_EXITMENULOOP, 0 /* FIXME */, 0);
 
-   /* FIXME - Show caret again */
+   /* FIXME: Show caret again */
 }
 
 INT FASTCALL
@@ -1254,23 +1254,23 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
         bti->rcTitleBar.right  = pWindowObject->rcWindow.right - pWindowObject->rcWindow.left;
         bti->rcTitleBar.bottom = pWindowObject->rcWindow.bottom - pWindowObject->rcWindow.top;
 
-        /* is it iconiced ? */ 
+        /* Is it iconiced ? */ 
         if ((dwStyle & WS_ICONIC)!=WS_ICONIC)
         {
             /* Remove frame from rectangle */
             if (HAS_THICKFRAME( dwStyle, dwExStyle ))
             {
-                /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXFRAME) and UserGetSystemMetrics(SM_CYFRAME) */
+                /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXFRAME) and UserGetSystemMetrics(SM_CYFRAME) */
                 RECTL_vInflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
             }
             else if (HAS_DLGFRAME( dwStyle, dwExStyle ))
             {
-                /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXDLGFRAME) and UserGetSystemMetrics(SM_CYDLGFRAME) */
+                /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXDLGFRAME) and UserGetSystemMetrics(SM_CYDLGFRAME) */
                 RECTL_vInflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
             }
             else if (HAS_THINFRAME( dwStyle, dwExStyle))
             {
-                /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
+                /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
                 RECTL_vInflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER) );
             }
 
@@ -1281,13 +1281,13 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
             {
                 if (dwExStyle & WS_EX_CLIENTEDGE)
                 {
-                    /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXEDGE) and UserGetSystemMetrics(SM_CYEDGE) */
+                    /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXEDGE) and UserGetSystemMetrics(SM_CYEDGE) */
                     RECTL_vInflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
                 }
 
                 if (dwExStyle & WS_EX_STATICEDGE)
                 {
-                    /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
+                    /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
                     RECTL_vInflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
                 }
             }
@@ -1300,12 +1300,12 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
         bti->rcTitleBar.bottom = bti->rcTitleBar.top;
         if (dwExStyle & WS_EX_TOOLWINDOW)
         {
-            /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYSMCAPTION) */
+            /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYSMCAPTION) */
             bti->rcTitleBar.bottom += UserGetSystemMetrics(SM_CYSMCAPTION);
         }
         else 
         {
-            /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYCAPTION) and UserGetSystemMetrics(SM_CXSIZE) */
+            /* FIXME: Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CYCAPTION) and UserGetSystemMetrics(SM_CXSIZE) */
             bti->rcTitleBar.bottom += UserGetSystemMetrics(SM_CYCAPTION);
             bti->rcTitleBar.left += UserGetSystemMetrics(SM_CXSIZE);
         }

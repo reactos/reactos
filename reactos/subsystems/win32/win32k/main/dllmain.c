@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Driver entry and initialization of win32k
  * FILE:             subsystems/win32/win32k/main/main.c
  * PROGRAMER:
@@ -46,7 +46,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     /* Allocate one if needed */
     if (!Win32Process)
     {
-        /* FIXME - lock the process */
+        /* FIXME: Lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
                                              sizeof(PROCESSINFO),
                                              USERTAG_PROCESSINFO);
@@ -56,7 +56,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
 
         PsSetProcessWin32Process(Process, Win32Process);
-        /* FIXME - unlock the process */
+        /* FIXME: Unlock the process */
     }
 
     if (Create)
@@ -238,7 +238,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     /* Allocate one if needed */
     if (!ptiCurrent)
     {
-        /* FIXME - lock the process */
+        /* FIXME: Lock the process */
         ptiCurrent = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(THREADINFO),
                                            USERTAG_THREADINFO);
@@ -252,7 +252,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         RtlZeroMemory(ptiCurrent, sizeof(THREADINFO));
 
         PsSetThreadWin32Thread(Thread, ptiCurrent);
-        /* FIXME - unlock the process */
+        /* FIXME: Unlock the process */
     }
 
     if (Type == PsW32ThreadCalloutInitialize)
@@ -463,14 +463,14 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
     if (Process->Win32Process == NULL)
     {
-        /* FIXME - lock the process */
+        /* FIXME: Lock the process */
         Process->Win32Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(PROCESSINFO), USERTAG_PROCESSINFO);
 
         if (Process->Win32Process == NULL)
             return STATUS_NO_MEMORY;
 
         RtlZeroMemory(Process->Win32Process, sizeof(PROCESSINFO));
-        /* FIXME - unlock the process */
+        /* FIXME: Unlock the process */
 
         Win32kProcessCallback(Process, TRUE);
     }
@@ -557,7 +557,7 @@ DriverEntry(
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
                                     &GlobalUserHeapBase,
-                                    1 * 1024 * 1024); /* FIXME - 1 MB for now... */
+                                    1 * 1024 * 1024); /* FIXME: 1 MB for now... */
     if (GlobalUserHeap == NULL)
     {
         DPRINT1("Failed to initialize the global heap!\n");

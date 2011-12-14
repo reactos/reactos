@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Focus functions
- * FILE:             subsystem/win32/win32k/ntuser/focus.c
+ * FILE:             subsystems/win32/win32k/ntuser/focus.c
  * PROGRAMER:        ReactOS Team
  */
 
@@ -247,7 +247,7 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
       return TRUE;
    }
 
-   /* call CBT hook chain */
+   /* Call CBT hook chain */
    cbt.fMouse     = MouseActivate;
    cbt.hWndActive = hWndPrev;
    if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
@@ -284,7 +284,7 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, PWND FocusWindow, BOOL MouseActivate
 }
 
 BOOL FASTCALL
-co_IntSetForegroundWindow(PWND Window)//FIXME: can Window be NULL??
+co_IntSetForegroundWindow(PWND Window) // FIXME: Can Window be NULL??
 {
    /*if (Window)*/ ASSERT_REFS_CO(Window);
 
@@ -366,7 +366,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL)
       return hWndPrev;
    }
 
-   /* call CBT hook chain */
+   /* Call CBT hook chain */
    cbt.fMouse     = FALSE;
    cbt.hWndActive = hWndPrev;
    if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
@@ -407,7 +407,7 @@ co_UserSetFocus(PWND Window)
    {
       if (hWndPrev == Window->head.h)
       {
-         return hWndPrev; /* nothing to do */
+         return hWndPrev; /* Nothing to do */
       }
 
       /* Check if we can set the focus to this window */
@@ -423,7 +423,7 @@ co_UserSetFocus(PWND Window)
          return 0;
       }
 
-      /* activate pwndTop if needed. */
+      /* Activate pwndTop if needed. */
       if (pwndTop->head.h != ThreadQueue->ActiveWindow)
       {
          co_IntSetActiveWindow(pwndTop);
@@ -542,8 +542,8 @@ co_UserSetCapture(HWND hWnd)
    if (hWnd == NULL) // Release mode.
    {
       MOUSEINPUT mi;
-   /// These are hacks!
-      /* also remove other windows if not capturing anymore */
+   /// These are HACKS!
+      /* Also remove other windows if not capturing anymore */
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
    ///

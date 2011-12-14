@@ -112,9 +112,9 @@ done:
    if (WndTo) UserRefObjectCo(WndTo, &Ref);
 
    Fg = UserGetForegroundWindow();
-   if ((!Fg || Wnd->head.h == Fg) && WndTo)//fixme: ok if WndTo is NULL??
+   if ((!Fg || Wnd->head.h == Fg) && WndTo) // FIXME: Ok if WndTo is NULL??
    {
-      /* fixme: wine can pass WndTo=NULL to co_IntSetForegroundWindow. hmm */
+      /* FIXME: Wine can pass WndTo = NULL to co_IntSetForegroundWindow. Hmm... */
       if (co_IntSetForegroundWindow(WndTo))
       {
          UserDerefObjectCo(WndTo);
@@ -122,7 +122,7 @@ done:
       }
    }
 
-   if (!co_IntSetActiveWindow(WndTo))  /* ok for WndTo to be NULL here */
+   if (!co_IntSetActiveWindow(WndTo))  /* Ok for WndTo to be NULL here */
       co_IntSetActiveWindow(0);
 
    if (WndTo) UserDerefObjectCo(WndTo);
@@ -782,7 +782,7 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
    if (MaxTrack)
       *MaxTrack = MinMax.ptMaxTrackSize;
 
-   return 0; //FIXME: what does it return?
+   return 0; // FIXME: What does it return?
 }
 
 static
@@ -1808,7 +1808,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       }
 
 
-      //temphack
+      // Temp HACK
       ThreadFocusWindow = UserGetWindowObject(IntGetThreadFocusWindow());
 
       /* Revert focus to parent */
@@ -1817,7 +1817,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 */
       if (Wnd == ThreadFocusWindow)
       {
-         //faxme: as long as we have ref on Window, we also, indirectly, have ref on parent...
+         // FIXME: As long as we have ref on Window, we also, indirectly, have ref on parent...
          co_UserSetFocus(Wnd->spwndParent);
       }
    }
@@ -2779,8 +2779,8 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       pt.x = X;
       pt.y = Y;
 
-      //hmm... threads live on desktops thus we have a reference on the desktop and indirectly the desktop window
-      //its possible this referencing is useless, thou it shouldnt hurt...
+      // Hmm... Threads live on desktops thus we have a reference on the desktop and indirectly the desktop window.
+      // It is possible this referencing is useless, though it should not hurt...
       UserRefObjectCo(DesktopWindow, &Ref);
 
       //pti = PsGetCurrentThreadWin32Thread();

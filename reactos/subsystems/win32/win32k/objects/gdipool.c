@@ -33,7 +33,7 @@ typedef struct _GDI_POOL
     ULONG cjSectionSize; // 32 * cjAllocSize, rounded up to pages
     ULONG cSlotsPerSection;
     ULONG cEmptySections;
-    EX_PUSH_LOCK pushlock; // for pool growth
+    EX_PUSH_LOCK pushlock; // For pool growth
 #if DBG_ENABLE_EVENT_LOGGING
     SLIST_HEADER slhLog;
 #endif

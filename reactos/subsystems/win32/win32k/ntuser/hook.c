@@ -103,9 +103,9 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
     {
         ptiCurrent = CONTAINING_RECORD(ListEntry, THREADINFO, PtiLink);
 
-        /* FIXME: do some more security checks here */
+        /* FIXME: Do some more security checks here */
 
-        /* FIXME: the first check is a reactos specific hack for system threads */
+        /* FIXME: The first check is a reactos specific hack for system threads */
         if(!PsIsSystemProcess(ptiCurrent->ppi->peProcess) && 
            ptiCurrent->ppi != ppiCsr)
         {
@@ -181,7 +181,7 @@ UserRegisterUserApiHook(
             }
             ptiCurrent = pwndCurrent->head.pti;
 
-           /* FIXME: the first check is a reactos specific hack for system threads */
+           /* FIXME: The first check is a reactos specific hack for system threads */
             if(PsIsSystemProcess(ptiCurrent->ppi->peProcess) ||
                 ptiCurrent->ppi == ppiCsr)
             {
@@ -191,7 +191,7 @@ UserRegisterUserApiHook(
             co_MsqSendMessageAsync( ptiCurrent,
                                     0,
                                     WH_APIHOOK,
-                                    FALSE,   /* load the module */
+                                    FALSE,   /* Load the module */
                                     0,
                                     NULL,
                                     0,
@@ -295,7 +295,7 @@ co_IntCallLowLevelHook(PHOOK Hook,
        if (pHP->pHookStructs) RtlCopyMemory(pHP->pHookStructs, (PVOID)lParam, Size);
     }
 
-    /* FIXME should get timeout from
+    /* FIXME: Should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
     Status = co_MsqSendMessage( pti->MessageQueue,
                                 IntToPtr(Code), // hWnd
@@ -439,7 +439,7 @@ co_IntCallDebugHook(PHOOK Hook,
                     Size = sizeof(CBTACTIVATESTRUCT); 
                     break;
 
-                case HCBT_CREATEWND: /* Handle Ansi? */
+                case HCBT_CREATEWND: /* Handle ANSI? */
                     Size = sizeof(CBT_CREATEWND);
                     /* What shall we do? Size += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS); same as CREATESTRUCTEX */
                     break;
@@ -983,7 +983,7 @@ IntGetGlobalHookHandles(PDESKTOP pdo, int HookId)
     return pList;
 }
 
-/* find the next hook in the chain  */
+/* Find the next hook in the chain  */
 PHOOK
 FASTCALL
 IntGetNextHook(PHOOK Hook)
@@ -1009,7 +1009,7 @@ IntGetNextHook(PHOOK Hook)
     return NULL;
 }
 
-/* free a hook, removing it from its chain */
+/* Free a hook, removing it from its chain */
 static
 VOID
 FASTCALL
@@ -1025,7 +1025,7 @@ IntFreeHook(PHOOK Hook)
     UserDeleteObject(UserHMGetHandle(Hook), otHook);
 }
 
-/* remove a hook, freeing it from the chain */
+/* Remove a hook, freeing it from the chain */
 static
 VOID
 FASTCALL
@@ -1118,7 +1118,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
          while (pElem != pGLE)
          {
             HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
-            pElem = HookObj->Chain.Flink; // get next element before hook is destroyed
+            pElem = HookObj->Chain.Flink; // Get next element before hook is destroyed
             if (HookObj->head.pti == pti)
             {
                IntRemoveHook(HookObj);
@@ -1538,7 +1538,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           }
        }
     }
-    else  /* system-global hook */
+    else  /* System-global hook */
     {                                                                                
        ptiHook = pti; // gptiCurrent;
        if ( !Mod &&
@@ -1587,7 +1587,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
     TRACE("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n",pti->rpdesk, pti->pDeskInfo,Hook->head.rpdesk);
 
-    if (ThreadId)  /* thread-local hook */
+    if (ThreadId)  /* Thread-local hook */
     {
        InsertHeadList(&ptiHook->aphkStart[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
        ptiHook->sphkCurrent = NULL;
@@ -1674,7 +1674,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        }
 
        Hook->ModuleName.Length = ModuleName.Length;
-       /* make proc relative to the module base */
+       /* Make proc relative to the module base */
        Hook->offPfn = (ULONG_PTR)((char *)HookProc - (char *)Mod);
     }
     else
@@ -1778,6 +1778,5 @@ NtUserUnregisterUserApiHook(VOID)
 
     return ret;
 }
-
 
 /* EOF */

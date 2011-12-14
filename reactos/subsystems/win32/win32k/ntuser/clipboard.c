@@ -36,7 +36,7 @@ IntGetWinStaForCbAccess()
     return pWinStaObj;
 }
 
-/* if format exists, returns a non zero value (pointing to formated object) */
+/* If format exists, returns a non zero value (pointing to formated object) */
 PCLIP static FASTCALL
 IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
 {
@@ -68,7 +68,7 @@ IntFreeElementData(PCLIP pElement)
     }
 }
 
-/* adds a new format and data to the clipboard */
+/* Adds a new format and data to the clipboard */
 PCLIP static NTAPI
 IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEAN fGlobalHandle, BOOL bEnd)
 {
@@ -124,7 +124,7 @@ IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEA
 BOOL static FASTCALL
 IntIsClipboardOpenByMe(PWINSTATION_OBJECT pWinSta)
 {
-    /* check if current thread has opened the clipboard */
+    /* Check if current thread has opened the clipboard */
     if (pWinSta->ptiClipLock &&
         pWinSta->ptiClipLock == PsGetCurrentThreadWin32Thread())
     {
@@ -285,7 +285,7 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
     if (!pBmEl && pDibEl)
         IntAddFormatedData(pWinStaObj, CF_BITMAP, DATA_SYNTH_KRNL, FALSE, TRUE);
 
-    /* Note: we need to render the DIB or DIBV5 format as soon as possible
+    /* Note: We need to render the DIB or DIBV5 format as soon as possible
        because pallette information may change */
     if (!pDibEl && pBmEl)
         IntSynthesizeDib(pWinStaObj, pBmEl->hData);
@@ -319,19 +319,19 @@ UserClipboardFreeWindow(PWND pWindow)
     if (!pWinStaObj)
         return;
 
-    /* check if clipboard is not locked by this window, if yes, unlock it */
+    /* Check if clipboard is not locked by this window, if yes, unlock it */
     if (pWindow == pWinStaObj->spwndClipOpen)
     {
-        /* the window that opens the clipboard was destroyed */
+        /* The window that opens the clipboard was destroyed */
         pWinStaObj->spwndClipOpen = NULL;
         pWinStaObj->ptiClipLock = NULL;
     }
     if (pWindow == pWinStaObj->spwndClipOwner)
     {
-        /* the owner window was destroyed */
+        /* The owner window was destroyed */
         pWinStaObj->spwndClipOwner = NULL;
     }
-    /* remove window from window chain */
+    /* Remove window from window chain */
     if (pWindow == pWinStaObj->spwndClipViewer)
         pWinStaObj->spwndClipViewer = NULL;
 
@@ -623,10 +623,10 @@ NtUserGetClipboardFormatName(UINT fmt, LPWSTR lpszFormatName, INT cchMaxCount)
 
     UserEnterShared();
 
-    /* if the format is built-in we fail */
+    /* If the format is built-in we fail */
     if (fmt < 0xc000)
     {
-        /* registetrated formats are >= 0xc000 */
+        /* Registetrated formats are >= 0xc000 */
         goto cleanup;
     }
 
@@ -801,12 +801,12 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     pElement = IntIsFormatAvailable(pWinStaObj, fmt);
     if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
     {
-        /* send WM_RENDERFORMAT message */
+        /* Send WM_RENDERFORMAT message */
         pWinStaObj->fInDelayedRendering = TRUE;
         co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)fmt, 0);
         pWinStaObj->fInDelayedRendering = FALSE;
 
-        /* data should be in clipboard now */
+        /* Data should be in clipboard now */
         pElement = IntIsFormatAvailable(pWinStaObj, fmt);
     }
 
@@ -816,7 +816,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
 
     if (IS_DATA_SYNTHESIZED(pElement))
     {
-        /* Note: data is synthesized in usermode */
+        /* Note: Data is synthesized in usermode */
         /* TODO: Add more formats */
         switch (fmt)
         {
@@ -920,7 +920,7 @@ UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
         pWinStaObj->iClipSequenceNumber++;
         pWinStaObj->fClipboardChanged = TRUE;
 
-        /* Note: synthesized formats are added in NtUserCloseClipboard */
+        /* Note: Synthesized formats are added in NtUserCloseClipboard */
     }
     else
     {

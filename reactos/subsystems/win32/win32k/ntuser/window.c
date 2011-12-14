@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Windows
  * FILE:             subsystems/win32/win32k/ntuser/window.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -59,7 +59,7 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd)
    return Window;
 }
 
-/* temp hack */
+/* Temp HACK */
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
     PWND Window;
@@ -759,21 +759,21 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
 
       TRACE("thread cleanup: while destroy wnds, wnd=0x%x\n",Wnd);
 
-      /* window removes itself from the list */
+      /* Window removes itself from the list */
 
       /*
-      fixme: it is critical that the window removes itself! if now, we will loop
-      here forever...
-      */
+       * FIXME: It is critical that the window removes itself! If now, we will loop
+       * here forever...
+       */
 
       //ASSERT(co_UserDestroyWindow(Wnd));
 
-      UserRefObjectCo(Wnd, &Ref);//faxme: temp hack??
+      UserRefObjectCo(Wnd, &Ref); // FIXME: Temp HACK??
       if (!co_UserDestroyWindow(Wnd))
       {
          ERR("Unable to destroy window 0x%x at thread cleanup... This is _VERY_ bad!\n", Wnd);
       }
-      UserDerefObjectCo(Wnd);//faxme: temp hack??
+      UserDerefObjectCo(Wnd); // FIXME: Temp HACK??
    }
 }
 
@@ -839,7 +839,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
 
       if(W32Thread->rpdesk->rpwinstaParent->SystemMenuTemplate)
       {
-         /* clone system menu */
+         /* Clone system menu */
          Menu = UserGetMenuObject(W32Thread->rpdesk->rpwinstaParent->SystemMenuTemplate);
          if(!Menu)
             return NULL;
@@ -941,7 +941,7 @@ IntIsChildWindow(PWND Parent, PWND BaseWindow)
 }
 
 /*
-   link the window into siblings list
+   Link the window into siblings list
    children and parent are kept in place.
 */
 VOID FASTCALL
@@ -1130,7 +1130,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    WndOldParent = Wnd->spwndParent;
 
-   if (WndOldParent) UserReferenceObject(WndOldParent); /* caller must deref */
+   if (WndOldParent) UserReferenceObject(WndOldParent); /* Caller must deref */
 
    if (WndNewParent != WndOldParent)
    {
@@ -1140,7 +1140,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       /* Set the new parent */
       Wnd->spwndParent = WndNewParent;
 
-      /* Link the window with its new siblings*/
+      /* Link the window with its new siblings */
       IntLinkHwnd(Wnd, HWND_TOP);
 
    }
@@ -1156,8 +1156,8 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
                          | (WasVisible ? SWP_SHOWWINDOW : 0));
 
    /*
-    * FIXME: a WM_MOVE is also generated (in the DefWindowProc handler
-    * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE
+    * FIXME: A WM_MOVE is also generated (in the DefWindowProc handler
+    * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE.
     */
    if (WasVisible) co_WinPosShowWindow(Wnd, SW_SHOWNORMAL);
 
@@ -1236,7 +1236,7 @@ IntSetSystemMenu(PWND Window, PMENU_OBJECT Menu)
 
    if(Menu)
    {
-      /* FIXME check window style, propably return FALSE ? */
+      /* FIXME: Check window style, propably return FALSE? */
       Window->SystemMenu = Menu->MenuInfo.Self;
       Menu->MenuInfo.Flags |= MF_SYSMENU;
    }
@@ -1246,7 +1246,7 @@ IntSetSystemMenu(PWND Window, PMENU_OBJECT Menu)
    return TRUE;
 }
 
-/* unlink the window from siblings. children and parent are kept in place. */
+/* Unlink the window from siblings. children and parent are kept in place. */
 VOID FASTCALL
 IntUnlinkWindow(PWND Wnd)
 {
@@ -1542,7 +1542,7 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
 #undef IS_DEFAULT
 }
 
-/* Allocates and initializes a window*/
+/* Allocates and initializes a window */
 PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                         PLARGE_STRING WindowName,
                                         PCLS Class,
@@ -1569,12 +1569,12 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
             Cs->dwExStyle |= WS_EX_LAYOUTRTL;
       }
       else
-      {/*
-        Note from MSDN http://msdn.microsoft.com/en-us/library/aa913269.aspx :
-
-        Dialog boxes and message boxes do not inherit layout, so you must
-        set the layout explicitly.
-       */
+      { /*
+         * Note from MSDN <http://msdn.microsoft.com/en-us/library/aa913269.aspx>:
+         *
+         * Dialog boxes and message boxes do not inherit layout, so you must
+         * set the layout explicitly.
+         */
          if ( Class->fnid != FNID_DIALOG)
          {
             PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
@@ -1613,7 +1613,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    TRACE("Created object with handle %X\n", hWnd);
 
    if (NULL == pti->rpdesk->DesktopWindow)
-   {  /*HACK! Helper for win32csr/desktopbg.c */
+   {  /* HACK: Helper for win32csr/desktopbg.c */
       /* If there is no desktop window yet, we must be creating it */
       pti->rpdesk->DesktopWindow = hWnd;
       pti->rpdesk->pDeskInfo->spwnd = pWnd;
@@ -1622,7 +1622,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    /*
     * Fill out the structure describing it.
     */
-   /* Remember, pWnd->head is setup in object.c ...*/
+   /* Remember, pWnd->head is setup in object.c ... */
    pWnd->spwndParent = ParentWindow;
    pWnd->spwndOwner = OwnerWindow;
    pWnd->fnid = 0;
@@ -1653,7 +1653,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
     No where can I see in code or through testing does the window change back
     to ANSI after being created as UNICODE in ROS. I didnt do more testing to
-    see what problems this would cause.*/
+    see what problems this would cause. */
 
    // Set WndProc from Class.
    pWnd->lpfnWndProc  = pWnd->pcls->lpfnWndProc;
@@ -1684,9 +1684,9 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
    else
    { /*
-       It seems there can be both an Ansi creator and Unicode Class Window
-       WndProc, unless the following overriding conditions occur:
-     */
+      * It seems there can be both an Ansi creator and Unicode Class Window
+      * WndProc, unless the following overriding conditions occur:
+      */
       if ( !bUnicodeWindow &&
           ( Class->atomClassName == gpsi->atomSysClass[ICLS_BUTTON]    ||
             Class->atomClassName == gpsi->atomSysClass[ICLS_COMBOBOX]  ||
@@ -1768,8 +1768,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    if (!(pWnd->style & (WS_CHILD | WS_POPUP)))
       pWnd->state |= WNDS_SENDSIZEMOVEMSGS;
 
-   /* create system menu */
-   if((Cs->style & WS_SYSMENU) )//&& (dwStyle & WS_CAPTION) == WS_CAPTION)
+   /* Create system menu */
+   if ((Cs->style & WS_SYSMENU)) // && (dwStyle & WS_CAPTION) == WS_CAPTION)
    {
       SystemMenu = IntGetSystemMenu(pWnd, TRUE, TRUE);
       if(SystemMenu)
@@ -1809,7 +1809,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    /* Insert the window into the thread's window list. */
    InsertTailList (&pti->WindowListHead, &pWnd->ThreadListEntry);
 
-   /*  Handle "CS_CLASSDC", it is tested first. */
+   /* Handle "CS_CLASSDC", it is tested first. */
    if ( (pWnd->pcls->style & CS_CLASSDC) && !(pWnd->pcls->pdce) )
    {  /* One DCE per class to have CLASS. */
       pWnd->pcls->pdce = DceAllocDCE( pWnd, DCE_CLASS_DC );
@@ -1859,7 +1859,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if (pti == NULL || pti->rpdesk == NULL)
    {
       ERR("Thread is not attached to a desktop! Cannot create window!\n");
-      return NULL; //There is nothing to cleanup
+      return NULL; // There is nothing to cleanup.
    }
    WinSta = pti->rpdesk->rpwinstaParent;
    ObReferenceObjectByPointer(WinSta, KernelMode, ExWindowStationObjectType, 0);
@@ -1867,7 +1867,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    pCsw = NULL;
    pCbtCreate = NULL;
 
-   /* Get the class and reference it*/
+   /* Get the class and reference it */
    Class = IntGetAndReferenceClass(ClassName, Cs->hInstance);
    if(!Class)
    {
@@ -1900,7 +1900,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     ParentWindow = hWndParent ? UserGetWindowObject(hWndParent): NULL;
     OwnerWindow = hWndOwner ? UserGetWindowObject(hWndOwner): NULL;
 
-    /* FIXME: is this correct?*/
+    /* FIXME: Is this correct? */
     if(OwnerWindow)
         OwnerWindow = UserGetAncestor(OwnerWindow, GA_ROOT);
 
@@ -2040,7 +2040,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Cs->lpszName = (LPCWSTR) WindowName;
    Cs->lpszClass = (LPCWSTR) ClassName;
 
-   /* Send the WM_GETMINMAXINFO message*/
+   /* Send the WM_GETMINMAXINFO message */
    Size.cx = Cs->cx;
    Size.cy = Cs->cy;
 
@@ -2067,10 +2067,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
    Window->rcClient = Window->rcWindow;
 
-   /* Link the window*/
+   /* Link the window */
    if (NULL != ParentWindow)
    {
-      /* link the window into the siblings list */
+      /* Link the window into the siblings list */
       if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
           IntLinkHwnd(Window, HWND_BOTTOM);
       else
@@ -2103,7 +2103,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       goto cleanup;
    }
 
-   /* Send the EVENT_OBJECT_CREATE event*/
+   /* Send the EVENT_OBJECT_CREATE event */
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_WINDOW, CHILDID_SELF, 0);
 
    /* By setting the flag below it can be examined to determine if the window
@@ -2380,7 +2380,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    PTHREADINFO ti;
    MSG msg;
 
-   ASSERT_REFS_CO(Window); // FIXME: temp hack?
+   ASSERT_REFS_CO(Window); // FIXME: Temp HACK?
 
    hWnd = Window->head.h;
 
@@ -2480,9 +2480,9 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
                if (IntWndBelongsToThread(Child, PsGetCurrentThreadWin32Thread()))
                {
                   USER_REFERENCE_ENTRY ChildRef;
-                  UserRefObjectCo(Child, &ChildRef);//temp hack?
+                  UserRefObjectCo(Child, &ChildRef); // Temp HACK?
                   co_UserDestroyWindow(Child);
-                  UserDerefObjectCo(Child);//temp hack?
+                  UserDerefObjectCo(Child); // Temp HACK?
 
                   GotOne = TRUE;
                   continue;
@@ -2541,9 +2541,9 @@ NtUserDestroyWindow(HWND Wnd)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window, &Ref);//faxme: dunno if win should be reffed during destroy..
+   UserRefObjectCo(Window, &Ref); // FIXME: Dunno if win should be reffed during destroy...
    ret = co_UserDestroyWindow(Window);
-   UserDerefObjectCo(Window);//faxme: dunno if win should be reffed during destroy..
+   UserDerefObjectCo(Window); // FIXME: Dunno if win should be reffed during destroy...
 
    RETURN(ret);
 
@@ -2805,7 +2805,7 @@ NtUserFindWindowEx(HWND hwndParent,
 
        if(Ret == NULL && hwndParent == NULL && hwndChildAfter == NULL)
        {
-          /* FIXME - if both hwndParent and hwndChildAfter are NULL, we also should
+          /* FIXME:  If both hwndParent and hwndChildAfter are NULL, we also should
                      search the message-only windows. Should this also be done if
                      Parent is the desktop window??? */
           PWND MsgWindows;
@@ -3795,7 +3795,7 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
           Wnd->strName.Buffer[0] = L'\0';
    }
 
-   // HAX! FIXME! Windows does not do this in here!
+   // FIXME: HAX! Windows does not do this in here!
    // In User32, these are called after: NotifyWinEvent EVENT_OBJECT_NAMECHANGE than
    // RepaintButton, StaticRepaint, NtUserCallHwndLock HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK, etc.
    /* Send shell notifications */

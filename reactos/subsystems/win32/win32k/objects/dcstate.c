@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for saving and restoring dc states
- * FILE:              subsystem/win32/win32k/objects/dcstate.c
+ * FILE:              subsystems/win32/win32k/objects/dcstate.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -45,7 +45,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     DC_vSelectLineBrush(pdcDst, pdcSrc->dclevel.pbrLine);
     DC_vSelectPalette(pdcDst, pdcSrc->dclevel.ppal);
 
-    // FIXME: handle refs
+    // FIXME: Handle refs
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
@@ -56,7 +56,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
            pdcDst->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
            NtGdiCombineRgn(pdcDst->rosdc.hClipRgn, pdcSrc->rosdc.hClipRgn, 0, RGN_COPY);
         }
-        // FIXME! Handle prgnMeta!
+        // FIXME: Handle prgnMeta!
     }
     else // Copy "!To" RestoreDC state.
     {  /* The VisRectRegion field needs to be set to a valid state */
@@ -250,13 +250,13 @@ NtGdiSaveDC(
     DC_vInitDc(pdcSave, DCTYPE_MEMORY, pdc->ppdev);
 
     /* Handle references here correctly */
-//    pdcSrc->dclevel.pSurface = NULL;
-//    pdcSrc->dclevel.pbrFill = NULL;
-//    pdcSrc->dclevel.pbrLine = NULL;
-//    pdcSrc->dclevel.ppal = NULL;
+      //pdcSrc->dclevel.pSurface = NULL;
+      //pdcSrc->dclevel.pbrFill = NULL;
+      //pdcSrc->dclevel.pbrLine = NULL;
+      //pdcSrc->dclevel.ppal = NULL;
 
     /* Make it a kernel handle
-       (FIXME: windows handles this different, see wiki)*/
+       (FIXME: Windows handles this differently, see Wiki) */
     GreSetObjectOwner(hdcSave, GDI_OBJ_HMGR_PUBLIC);
 
     /* Copy the current state */
@@ -266,7 +266,8 @@ NtGdiSaveDC(
     if (pdc->dctype == DCTYPE_MEMORY)
         DC_vSelectSurface(pdcSave, pdc->dclevel.pSurface);
 
-    /* Copy path. FIXME: why this way? */
+    /* Copy path */ 
+    /* FIXME: Why this way? */
     pdcSave->dclevel.hPath = pdc->dclevel.hPath;
     pdcSave->dclevel.flPath = pdc->dclevel.flPath | DCPATH_SAVESTATE;
     if (pdcSave->dclevel.hPath) pdcSave->dclevel.flPath |= DCPATH_SAVE;
@@ -285,3 +286,4 @@ NtGdiSaveDC(
     return lSaveDepth;
 }
 
+/* EOF */

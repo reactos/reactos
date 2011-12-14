@@ -4,7 +4,7 @@
 #include <debug.h>
 
 /*
- * a couple macros to fill a single pixel or a line
+ * A couple of macros to fill a single pixel or a line
  */
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \

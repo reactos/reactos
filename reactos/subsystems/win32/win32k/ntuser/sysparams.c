@@ -2,14 +2,14 @@
  * COPYRIGHT:        GPL, see COPYING in the top level directory
  * PROJECT:          ReactOS win32 kernel mode subsystem server
  * PURPOSE:          System parameters functions
- * FILE:             subsystem/win32/win32k/ntuser/sysparams.c
+ * FILE:             subsystems/win32/win32k/ntuser/sysparams.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 // TODO:
-// - check all values that are in Winsta in ros
-// - does setting invalid fonts work?
-// - save appropriate text metrics
+// - Check all values that are in Winsta in ROS.
+// - Does setting invalid fonts work?
+// - Save appropriate text metrics.
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserSysparams);
@@ -189,7 +189,7 @@ SpiFixupValues()
 //                               gspv.tmMenuFont.tmExternalLeading);
     if (gspv.iDblClickTime == 0) gspv.iDblClickTime = 500;
 
-    // FIXME: hack!!!
+    // FIXME: Hack!!!
     gspv.tmMenuFont.tmHeight = 11;
     gspv.tmMenuFont.tmExternalLeading = 2;
 
@@ -948,8 +948,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETWORKAREA:
         {
-            /*FIXME: we should set the work area of the monitor
-                     that contains the specified rectangle*/
+            /* FIXME: We should set the work area of the monitor
+                      that contains the specified rectangle */
             PMONITOR pmonitor = IntGetPrimaryMonitor();
             RECT rcWorkArea;
 
@@ -971,7 +971,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             pmonitor->rcWork = rcWorkArea;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
         }
@@ -988,7 +988,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1000,7 +1000,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1012,7 +1012,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1032,7 +1032,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1046,7 +1046,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1058,7 +1058,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1070,7 +1070,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1082,7 +1082,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1106,7 +1106,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: what to do?
+                // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1215,7 +1215,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseHoverTime, fl);
 
         case SPI_SETMOUSEHOVERTIME:
-           /* see http://msdn2.microsoft.com/en-us/library/ms724947.aspx
+           /* See http://msdn2.microsoft.com/en-us/library/ms724947.aspx
             * copy text from it, if some agument why xp and 2003 behovir diffent
             * only if they do not have SP install
             * " Windows Server 2003 and Windows XP: The operating system does not
@@ -1597,7 +1597,7 @@ NtUserSystemParametersInfo(
     TRACE("Enter NtUserSystemParametersInfo(%d)\n", uiAction);
     UserEnterExclusive();
 
-    // FIXME: get rid of the flags and only use this from um. kernel can access data directly.
+    // FIXME: Get rid of the flags and only use this from um. kernel can access data directly.
     /* Set UM memory protection flag */
     fWinIni |= SPIF_PROTECT;
 
@@ -1609,3 +1609,5 @@ NtUserSystemParametersInfo(
     
     return bResult;
 }
+
+/* EOF */

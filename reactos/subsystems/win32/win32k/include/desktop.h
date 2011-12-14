@@ -15,7 +15,7 @@ typedef struct _DESKTOP
     PWIN32HEAP pheapDesktop;
     ULONG_PTR ulHeapSize;
     LIST_ENTRY PtiList;
-    /* use for tracking mouse moves. */
+    /* Use for tracking mouse moves. */
     PWND spwndTrack;
     DWORD htEx;
     RECT rcMouseHover;

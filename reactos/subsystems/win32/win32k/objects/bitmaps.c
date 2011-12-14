@@ -145,10 +145,10 @@ GreCreateBitmap(
     /* Call the extended function */
     return GreCreateBitmapEx(nWidth,
                              nHeight,
-                             0, /* auto width */
+                             0, /* Auto width */
                              BitmapFormat(cBitsPixel * cPlanes, BI_RGB),
-                             0, /* no bitmap flags */
-                             0, /* auto size */
+                             0, /* No bitmap flags */
+                             0, /* Auto size */
                              pvBits,
                              DDB_SURFACE /* DDB */);
 }
@@ -238,7 +238,7 @@ IntCreateCompatibleBitmap(
         psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
         /* Set flags */
         psurf->flags = API_BITMAP;
-        psurf->hdc = NULL; // Fixme
+        psurf->hdc = NULL; // FIXME:
         SURFACE_ShareUnlockSurface(psurf);
     }
     else
@@ -264,7 +264,7 @@ IntCreateCompatibleBitmap(
             GDIOBJ_vReferenceObjectByPointer((POBJ)psurf->ppal);
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
-            psurfBmp->hdc = NULL; // Fixme
+            psurfBmp->hdc = NULL; // FIXME:
             SURFACE_ShareUnlockSurface(psurfBmp);
         }
         else if (Count == sizeof(DIBSECTION))
@@ -403,7 +403,7 @@ COLORREF APIENTRY
 NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 {
     PDC dc = NULL;
-    COLORREF Result = (COLORREF)CLR_INVALID; // default to failure
+    COLORREF Result = (COLORREF)CLR_INVALID; // Default to failure
     BOOL bInRect = FALSE;
     SURFACE *psurf;
     SURFOBJ *pso;
@@ -435,7 +435,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
         {
 			pso = &psurf->SurfObj;
             EXLATEOBJ_vInitialize(&exlo, psurf->ppal, &gpalRGB, 0, 0xffffff, 0);
-            // check if this DC has a DIB behind it...
+            // Check if this DC has a DIB behind it...
             if (pso->pvScan0) // STYPE_BITMAP == pso->iType
             {
                 ASSERT(pso->lDelta);
@@ -448,7 +448,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     }
     DC_UnlockDc(dc);
 
-    // if Result is still CLR_INVALID, then the "quick" method above didn't work
+    // If Result is still CLR_INVALID, then the "quick" method above didn't work
     if (bInRect && Result == CLR_INVALID)
     {
         // FIXME: create a 1x1 32BPP DIB, and blit to it
@@ -481,7 +481,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
                     NtGdiBitBlt(hDCTmp, 0, 0, 1, 1, hDC, XPos, YPos, SRCCOPY, 0, 0);
                     NtGdiSelectBitmap(hDCTmp, hBmpOld);
 
-                    // our bitmap is no longer selected, so we can access it's stuff...
+                    // Our bitmap is no longer selected, so we can access it's stuff...
                     psurf = SURFACE_ShareLockSurface(hBmpTmp);
                     if (psurf)
                     {
@@ -564,7 +564,7 @@ NtGdiGetBitmapBits(
     /* Don't copy more bytes than the buffer has */
     Bytes = min(Bytes, bmSize);
 
-    // FIXME: use MmSecureVirtualMemory
+    // FIXME: Use MmSecureVirtualMemory
     _SEH2_TRY
     {
         ProbeForWrite(pUnsafeBits, Bytes, 1);
@@ -843,7 +843,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
     if (!buffer) return sizeof(BITMAP);
     if ((UINT)Count < sizeof(BITMAP)) return 0;
 
-    /* always fill a basic BITMAP structure */
+    /* Always fill a basic BITMAP structure */
     pBitmap = buffer;
     pBitmap->bmType = 0;
     pBitmap->bmWidth = psurf->SurfObj.sizlBitmap.cx;
@@ -908,7 +908,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
                    pds->dsBmih.biCompression = BI_PNG;
                    break;
                 default:
-                    ASSERT(FALSE); /* this shouldn't happen */
+                    ASSERT(FALSE); /* This shouldn't happen */
             }
 
             pds->dsBmih.biSizeImage = psurf->SurfObj.cjBits;
@@ -927,7 +927,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
     }
     else
     {
-        /* not set according to wine test, confirmed in win2k */
+        /* Not set according to wine test, confirmed in win2k */
         pBitmap->bmBits = NULL;
     }
 

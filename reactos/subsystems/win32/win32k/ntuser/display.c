@@ -462,7 +462,7 @@ UserEnumDisplaySettings(
     TRACE("Enter UserEnumDisplaySettings('%wZ', %ld)\n",
             pustrDevice, iModeNum);
 
-    /* Ask gdi for the GRAPHICS_DEVICE */
+    /* Ask GDI for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
 
     if (!pGraphicsDevice)
@@ -480,7 +480,7 @@ UserEnumDisplaySettings(
     {
         pdmentry = &pGraphicsDevice->pDevModeList[i];
 
-        /* FIXME: consider EDS_RAWMODE */
+        /* FIXME: Consider EDS_RAWMODE */
 #if 0
         if ((!(dwFlags & EDS_RAWMODE) && (pdmentry->dwFlags & 1)) ||!
             (dwFlags & EDS_RAWMODE))
@@ -520,7 +520,7 @@ UserOpenDisplaySettingsKey(
 
     if (bGlobal)
     {
-        // FIXME: need to fix the registry key somehow
+        // FIXME: Need to fix the registry key somehow
     }
 
     /* Open the registry key */
@@ -627,7 +627,7 @@ NtUserEnumDisplaySettings(
             /* Output what we got */
             RtlCopyMemory(lpDevMode, pdm, min(cbSize, pdm->dmSize));
 
-            /* output private/extra driver data */
+            /* Output private/extra driver data */
             if (cbExtra > 0 && pdm->dmDriverExtra > 0)
             {
                 RtlCopyMemory((PCHAR)lpDevMode + cbSize,
@@ -680,7 +680,7 @@ UserChangeDisplaySettings(
     /* Check params */
     if ((dm.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT)) != (DM_PELSWIDTH | DM_PELSHEIGHT))
     {
-        ERR("devmode doesn't specify the resolution.\n");
+        ERR("Devmode doesn't specify the resolution.\n");
         return DISP_CHANGE_BADMODE;
     }
 
@@ -688,7 +688,7 @@ UserChangeDisplaySettings(
     ppdev = EngpGetPDEV(pustrDevice);
     if (!ppdev)
     {
-        ERR("failed to get PDEV\n");
+        ERR("Failed to get PDEV\n");
         return DISP_CHANGE_BADPARAM;
     }
 
@@ -762,7 +762,7 @@ UserChangeDisplaySettings(
         /* Check for failure */
         if (!ulResult)
         {
-            ERR("failed to set mode\n");
+            ERR("Failed to set mode\n");
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
 

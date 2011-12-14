@@ -297,7 +297,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_hSpooler:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_hSpooler\n");
-        retVal = 0;//(DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
+        retVal = 0; // (DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
         break;
       case DxEGShDevData_DitherFmt:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");

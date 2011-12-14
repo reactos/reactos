@@ -1,18 +1,17 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          HotKey support
- * FILE:             subsys/win32k/ntuser/hotkey.c
+ * FILE:             subsystems/win32/win32k/ntuser/hotkey.c
  * PROGRAMER:        Eric Kohl
  */
 
 /*
-FIXME: Hotkey notifications are triggered by keyboard input (physical or programatically)
-and since only desktops on WinSta0 can recieve input in seems very wrong to allow
-windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve notifications).
-
--Gunnar
-*/
+ * FIXME: Hotkey notifications are triggered by keyboard input (physical or programatically)
+ * and since only desktops on WinSta0 can recieve input in seems very wrong to allow
+ * windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve notifications).
+ *     -- Gunnar
+ */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserHotkey);
@@ -226,7 +225,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
             {
                 //co_ActivateDebugger(); // FIXME
             }
-            else if (pHotKey->id == IDHK_REACTOS && !pHotKey->pThread) // FIXME: those hotkeys doesn't depend on RegisterHotKey
+            else if (pHotKey->id == IDHK_REACTOS && !pHotKey->pThread) // FIXME: Those hotkeys doesn't depend on RegisterHotKey
             {
                 SendSysCmdMsg(pHotKey->hWnd, SC_HOTKEY, (LPARAM)pHotKey->hWnd);
             }
@@ -386,7 +385,7 @@ NtUserRegisterHotKey(HWND hWnd,
 
     TRACE("Enter NtUserRegisterHotKey\n");
 
-    if (fsModifiers & ~(MOD_ALT|MOD_CONTROL|MOD_SHIFT|MOD_WIN)) //FIXME: does win2k3 supports MOD_NOREPEAT?
+    if (fsModifiers & ~(MOD_ALT|MOD_CONTROL|MOD_SHIFT|MOD_WIN)) // FIXME: Does Win2k3 support MOD_NOREPEAT?
     {
         WARN("Invalid modifiers: %x\n", fsModifiers);
         EngSetLastError(ERROR_INVALID_FLAGS);

@@ -22,7 +22,7 @@
 #define DBG_ENABLE_EVENT_LOGGING 0
 #define DBG_ENABLE_SERVICE_HOOKS 0
 
-/* misc headers  */
+/* Misc headers  */
 #include <include/win32kdebug.h>
 #include <include/mmcopy.h>
 #include <include/tags.h>

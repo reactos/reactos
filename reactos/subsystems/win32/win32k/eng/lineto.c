@@ -586,7 +586,7 @@ IntEngPolyline(SURFOBJ *psoDest,
     RECTL rect;
     BOOL ret = FALSE;
 
-    //Draw the Polyline with a call to IntEngLineTo for each segment.
+    // Draw the Polyline with a call to IntEngLineTo for each segment.
     for (i = 1; i < dCount; i++)
     {
         rect.left = min(pt[i-1].x, pt[i].x);

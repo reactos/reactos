@@ -77,7 +77,7 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
         mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
 
-    /* Note: next buttons use mouseData field so they cannot be sent in one call */
+    /* Note: Next buttons use mouseData field so they cannot be sent in one call */
 
     /* Button 4 */
     if (mid->ButtonFlags & MOUSE_BUTTON_4_DOWN)

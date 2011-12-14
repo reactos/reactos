@@ -49,7 +49,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       return entry;
    }
 
-   if (ht->nb_handles >= ht->allocated_handles)  /* need to grow the array */
+   if (ht->nb_handles >= ht->allocated_handles)  /* Need to grow the array */
    {
 /**/
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
@@ -103,7 +103,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       return NULL;
 #if 0
       PUSER_HANDLE_ENTRY new_handles;
-      /* grow array by 50% (but at minimum 32 entries) */
+      /* Grow array by 50% (but at minimum 32 entries) */
       int growth = max( 32, ht->allocated_handles / 2 );
       int new_size = min( ht->allocated_handles + growth, (LAST_USER_HANDLE-FIRST_USER_HANDLE+1) >> 1 );
       if (new_size <= ht->allocated_handles)
@@ -219,7 +219,7 @@ PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type 
 }
 
 
-/* get the full handle (32bit) for a possibly truncated (16bit) handle */
+/* Get the full handle (32bit) for a possibly truncated (16bit) handle */
 HANDLE get_user_full_handle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
 {
    PUSER_HANDLE_ENTRY entry;
@@ -232,7 +232,7 @@ HANDLE get_user_full_handle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
 }
 
 
-/* same as get_user_object plus set the handle to the full 32-bit value */
+/* Same as get_user_object plus set the handle to the full 32-bit value */
 void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT_TYPE type )
 {
    PUSER_HANDLE_ENTRY entry;
@@ -250,7 +250,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
 
    PVOID mem;
 
-   //FIXME: dont alloc all at once! must be mapped into umode also...
+   // FIXME: Don't alloc all at once! Must be mapped into umode also...
    mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
@@ -266,7 +266,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
        return FALSE;
    }
 
-   //FIXME: make auto growable
+   // FIXME: Make auto growable
    UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
@@ -353,7 +353,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    }
    /* Now set default headers. */
    ((PHEAD)Object)->h = hi;
-   ((PHEAD)Object)->cLockObj = 2; // we need this, because we create 2 refs: handle and pointer!
+   ((PHEAD)Object)->cLockObj = 2; // We need this, because we create 2 refs: handle and pointer!
 
    if (h)
       *h = hi;
@@ -376,10 +376,10 @@ UserDereferenceObject(PVOID object)
 
      if (!entry)
      {
-        ERR("warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
+        ERR("Warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
         return FALSE;
      }
-     TRACE("warning! Dereference to zero! Obj -> 0x%x\n", object);
+     TRACE("Warning! Dereference to zero! Obj -> 0x%x\n", object);
 
      ((PHEAD)object)->cLockObj = 0;
 

@@ -24,9 +24,9 @@
  */
 
  /*
-  * some macro definitions for bezier drawing
+  * Some macro definitions for bezier drawing.
   *
-  * to avoid trucation errors the coordinates are
+  * To avoid trucation errors the coordinates are
   * shifted upwards. When used in drawing they are
   * shifted down again, including correct rounding
   * and avoiding floating point arithmatic
@@ -39,14 +39,14 @@
 #define BEZIERSHIFTUP(x)    ((x)<<BEZIERSHIFTBITS)
 #define BEZIERPIXEL        BEZIERSHIFTUP(1)
 #define BEZIERSHIFTDOWN(x)  (((x)+(1<<(BEZIERSHIFTBITS-1)))>>BEZIERSHIFTBITS)
-/* maximum depth of recursion */
+/* Maximum depth of recursion */
 #define BEZIERMAXDEPTH  8
 
-/* size of array to store points on */
+/* Size of array to store points on */
 /* enough for one curve */
 #define BEZIER_INITBUFSIZE    (150)
 
-/* calculate Bezier average, in this case the middle
+/* Calculate Bezier average, in this case the middle
  * correctly rounded...
  * */
 
@@ -68,9 +68,9 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
 
   dx=Points[3].x-Points[0].x;
   dy=Points[3].y-Points[0].y;
-  if ( abs(dy) <= abs(dx) ) /* shallow line */
+  if ( abs(dy) <= abs(dx) ) /* Shallow line */
   {
-    /* check that control points are between begin and end */
+    /* Check that control points are between begin and end */
     if ( Points[1].x < Points[0].x )
     {
       if ( Points[1].x < Points[3].x )
@@ -98,8 +98,9 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
         return TRUE;
   }
   else
-  { /* steep line */
-      /* check that control points are between begin and end */
+  {   
+      /* Steep line */
+      /* Check that control points are between begin and end */
       if(Points[1].y < Points[0].y)
       {
         if(Points[1].y < Points[3].y)
@@ -149,7 +150,7 @@ static void APIENTRY GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwO
     (*PtsOut)[*nPtsOut].y = BEZIERSHIFTDOWN(Points[3].y);
     (*nPtsOut) ++;
   } else {
-    POINT Points2[4]; /* for the second recursive call */
+    POINT Points2[4]; /* For the second recursive call */
     Points2[3]=Points[3];
     BEZIERMIDDLE(Points2[2], Points[2], Points[3]);
     BEZIERMIDDLE(Points2[0], Points[1], Points[2]);
@@ -161,7 +162,7 @@ static void APIENTRY GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwO
 
     Points2[0]=Points[3];
 
-    /* do the two halves */
+    /* Do the two halves */
     GDI_InternalBezier(Points, PtsOut, dwOut, nPtsOut, level-1);
     GDI_InternalBezier(Points2, PtsOut, dwOut, nPtsOut, level-1);
   }

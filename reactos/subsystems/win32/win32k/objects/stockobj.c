@@ -64,12 +64,12 @@ static LOGPEN NullPen =
 static LOGFONTW OEMFixedFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
       0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
-    }; //Bitstream Vera Sans Mono
+    }; // Bitstream Vera Sans Mono
 
 static LOGFONTW AnsiFixedFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
-    }; //Bitstream Vera Sans Mono
+    }; // Bitstream Vera Sans Mono
 
 static LOGFONTW AnsiVarFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
@@ -79,23 +79,23 @@ static LOGFONTW AnsiVarFont =
 static LOGFONTW SystemFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Courier New"
-    }; //Bitstream Vera Sans
+    }; // Bitstream Vera Sans
 
 static LOGFONTW DeviceDefaultFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif"
-    }; //Bitstream Vera Sans
+    }; // Bitstream Vera Sans
 
 static LOGFONTW SystemFixedFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
-    }; //Bitstream Vera Sans Mono
+    }; // Bitstream Vera Sans Mono
 
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
     { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif"
-    }; //Bitstream Vera Sans
+    }; // Bitstream Vera Sans
 
 HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 

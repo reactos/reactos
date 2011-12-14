@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/ntuser/kbdlayout.c
  * PURPOSE:         Keyboard layout management
@@ -381,14 +381,14 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
 
     if (Flags & KLF_SETFORPROCESS)
     {
-        //FIXME
+        // FIXME
     }
 
     // Send WM_INPUTLANGCHANGE to thread's focus window
     co_IntSendMessage(pti->MessageQueue->FocusWindow,
                       WM_INPUTLANGCHANGE,
-                      (WPARAM)pKl->iBaseCharset, // FIXME: how to set it?
-                      (LPARAM)pKl->hkl); //hkl
+                      (WPARAM)pKl->iBaseCharset, // FIXME: How to set it?
+                      (LPARAM)pKl->hkl); // hkl
 
     return pklPrev;
 }
@@ -537,8 +537,8 @@ HKL
 APIENTRY
 NtUserLoadKeyboardLayoutEx(
     IN HANDLE Handle, // hFile (See downloads.securityfocus.com/vulnerabilities/exploits/43774.c)
-    IN DWORD offTable, // offset to KbdTables
-    IN PUNICODE_STRING puszKeyboardName, // not used?
+    IN DWORD offTable, // Offset to KbdTables
+    IN PUNICODE_STRING puszKeyboardName, // Not used?
     IN HKL hklUnload,
     IN PUNICODE_STRING pustrKLID,
     IN DWORD hkl,
@@ -558,7 +558,7 @@ NtUserLoadKeyboardLayoutEx(
         return NULL;
     }
 
-    /* FIXME: it seems KLF_RESET is only supported for WINLOGON */
+    /* FIXME: It seems KLF_RESET is only supported for WINLOGON */
 
     RtlInitEmptyUnicodeString(&ustrSafeKLID, Buffer, sizeof(Buffer));
     _SEH2_TRY

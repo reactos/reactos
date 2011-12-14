@@ -100,7 +100,7 @@ NtUserBuildPropList(HWND hWnd,
          RETURN( STATUS_INVALID_PARAMETER);
       }
 
-      /* copy list */
+      /* Copy list */
       li = (PROPLISTITEM *)Buffer;
       ListEntry = Window->PropListHead.Flink;
       while((BufferSize >= sizeof(PROPLISTITEM)) && (ListEntry != &Window->PropListHead))

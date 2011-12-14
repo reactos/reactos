@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          General input functions
  * FILE:             subsystems/win32/win32k/ntuser/input.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -353,15 +353,15 @@ IntBlockInput(PTHREADINFO pti, BOOL BlockIt)
     if(!pti->rpdesk || ((pti->TIF_flags & TIF_INCLEANUP) && BlockIt))
     {
         /*
-         * fail blocking if exiting the thread
+         * Fail blocking if exiting the thread
          */
 
         return FALSE;
     }
 
     /*
-     * FIXME - check access rights of the window station
-     *         e.g. services running in the service window station cannot block input
+     * FIXME: Check access rights of the window station
+     *        e.g. services running in the service window station cannot block input
      */
     if(!ThreadHasInputAccess(pti) ||
        !IntIsActiveDesktop(pti->rpdesk))
@@ -410,7 +410,7 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
 {
     PATTACHINFO pai;
 
-    /* Can not be the same thread.*/
+    /* Can not be the same thread. */
     if (pti == ptiTo) return FALSE;
 
     /* Do not attach to system threads or between different desktops. */
@@ -489,8 +489,8 @@ NtUserSendInput(
     }
 
     /*
-     * FIXME - check access rights of the window station
-     *         e.g. services running in the service window station cannot block input
+     * FIXME: Check access rights of the window station
+     *        e.g. services running in the service window station cannot block input
      */
     if (!ThreadHasInputAccess(pti) ||
         !IntIsActiveDesktop(pti->rpdesk))
