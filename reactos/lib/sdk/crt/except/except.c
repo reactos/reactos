@@ -262,8 +262,6 @@ int CDECL _except_handler4_common( ULONG *cookie, void (*check_cookie)(void),
     return ExceptionContinueSearch;
 }
 
-#endif
-
 /*******************************************************************
  *		_local_unwind4 (MSVCRT.@)
  */
@@ -280,6 +278,8 @@ void __stdcall _seh_longjmp_unwind4(struct __JUMP_BUFFER *jmp)
     msvcrt_local_unwind4( (void *)jmp->Cookie, (MSVCRT_EXCEPTION_FRAME *)jmp->Registration,
                           jmp->TryLevel, (void *)jmp->Ebp );
 }
+
+#endif
 
 /******************************************************************
  *		__uncaught_exception
