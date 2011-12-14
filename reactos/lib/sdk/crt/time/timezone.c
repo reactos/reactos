@@ -27,7 +27,7 @@ char * _tzname[2] = {
 /******************************************************************************
  * \var _daylight
  */
-int _daylight = 1;
+int _daylight = 0;
 
 /******************************************************************************
  * \name __p__daylight
@@ -214,3 +214,36 @@ _tzset(void)
     _tz_is_set = 1;
 }
 
+/*********************************************************************
+ *		_get_tzname (MSVCRT.@)
+ */
+int CDECL _get_tzname(size_t *ret, char *buf, size_t bufsize, int index)
+{
+    char *timezone;
+
+    switch(index)
+    {
+    case 0:
+        timezone = tz_name;
+        break;
+    case 1:
+        timezone = tz_dst_name;
+        break;
+    default:
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    if(!ret || (!buf && bufsize > 0) || (buf && !bufsize))
+    {
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    *ret = strlen(timezone)+1;
+    if(!buf && !bufsize)
+        return 0;
+
+    strcpy(buf, timezone);
+    return 0;
+}

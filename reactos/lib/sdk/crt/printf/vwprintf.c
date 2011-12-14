@@ -4,16 +4,21 @@
  * FILE:            lib/sdk/crt/printf/vwprintf.c
  * PURPOSE:         Implementation of vwprintf
  * PROGRAMMER:      Timo Kreuzer
+ *                  Samuel Serapión
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
+#include <precomp.h>
 
 int
 __cdecl
-vwprintf(const wchar_t *format, va_list argptr)
+vwprintf(const wchar_t *format, va_list valist)
 {
-    return wstreamout(stdout, format, argptr);
+    return vfwprintf(stdout,format,valist);
+}
+
+int
+__cdecl
+vwprintf_s(const wchar_t *format, va_list valist)
+{
+    return vfwprintf_s(stdout,format,valist);
 }

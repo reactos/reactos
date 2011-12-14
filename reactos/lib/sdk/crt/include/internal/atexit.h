@@ -1,4 +1,3 @@
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #ifndef __CRT_INTERNAL_ATEXIT_H
 #define __CRT_INTERNAL_ATEXIT_H
 
@@ -6,12 +5,13 @@
 #error DO NOT INCLUDE THIS HEADER DIRECTLY
 #endif
 
-struct __atexit {
-    struct __atexit* __next;
-    void (*__function)(void);
-};
+#define LOCK_EXIT   _mlock(_EXIT_LOCK1)
+#define UNLOCK_EXIT _munlock(_EXIT_LOCK1)
 
-extern struct __atexit* __atexit_ptr;
+extern _onexit_t *atexit_table;
+extern int atexit_table_size;
+extern int atexit_registered; /* Points to free slot */
 
+void __call_atexit(void);
 
 #endif

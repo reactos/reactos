@@ -55,6 +55,7 @@ LCID MSVCRT_current_lc_all_lcid = 0;
 int MSVCRT___lc_codepage = 0;
 int MSVCRT___lc_collate_cp = 0;
 HANDLE MSVCRT___lc_handle[MSVCRT_LC_MAX - MSVCRT_LC_MIN + 1] = { 0 };
+int __mb_cur_max = 1;
 
 /* MT */
 #define LOCK_LOCALE   _mlock(_SETLOCALE_LOCK);
@@ -668,7 +669,7 @@ int CDECL _setmbcp(int cp)
   if (!GetCPInfo(newcp, &cpi))
   {
     ERR("Codepage %d not found\n", newcp);
-    __set_errno(EINVAL);
+    _set_errno(EINVAL);
     return -1;
   }
 

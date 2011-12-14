@@ -26,7 +26,7 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     if (!path)
     {
 #ifndef _LIBCNT_
-        __set_errno(EINVAL);
+        _set_errno(EINVAL);
 #endif
         return;
     }

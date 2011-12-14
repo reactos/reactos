@@ -7,9 +7,13 @@
 #define _INC_UTIME_INL
 #define _INC_TIME_INL
 
+/* needed to expose _s api definitions */
+#define MINGW_HAS_SECURE_API 1
+
 /* Headers to be compiled */
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <conio.h>
 #include <errno.h>
@@ -33,11 +37,10 @@
   #include <stdint.h>
 #endif
 
+/* kernelmode libcnt should not include Wine stuff */
+#ifndef _LIBCNT_
 #include "wine/unicode.h"
 #include "wine/config.h"
-
-/* kernelmode libcnt should not include Wine-debugging crap */
-#ifndef _LIBCNT_
 #define WINE_NO_TRACE_MSGS
 #include "wine/debug.h"
 #ifndef __WINE_DEBUG_CHANNEL__
@@ -53,7 +56,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 /* CRT Internal data */
 #include <internal/atexit.h>
 #include <internal/console.h>
-#include <internal/file.h>
 #include <internal/ieee.h>
 #include <internal/math.h>
 #include <internal/mbstring.h>
@@ -64,6 +66,5 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #if !defined(_LIBCNT_) && !defined(_MSVCRTEX_)
 #include <internal/tls.h>
 #endif
-#include <internal/printf.h>
 
 #endif /* _CRT_PRECOMP_H */

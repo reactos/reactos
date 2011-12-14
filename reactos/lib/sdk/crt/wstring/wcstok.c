@@ -10,14 +10,12 @@ wchar_t * CDECL wcstok_s( wchar_t *str, const wchar_t *delim,
 {
     wchar_t *ret;
 
-#if 0
     if (!MSVCRT_CHECK_PMT(delim != NULL) || !MSVCRT_CHECK_PMT(next_token != NULL) ||
         !MSVCRT_CHECK_PMT(str != NULL || *next_token != NULL))
     {
         _set_errno(EINVAL);
         return NULL;
     }
-#endif
     if (!str) str = *next_token;
 
     while (*str && strchrW( delim, *str )) str++;

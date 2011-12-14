@@ -351,18 +351,16 @@ extern "C" {
 #endif
 #endif
 
-  struct threadlocaleinfostruct;
-  typedef struct threadlocaleinfostruct *pthreadlocinfo;
+  typedef struct threadmbcinfostruct {
+    int refcount;
+    int mbcodepage;
+    int ismbcodepage;
+    int mblcid;
+    unsigned short mbulinfo[6];
+    char mbctype[257];
+    char mbcasemap[256];
+} threadmbcinfo, *pthreadmbcinfo;
 
-  struct threadmbcinfostruct;
-  typedef struct threadmbcinfostruct *pthreadmbcinfo;
-
-  struct __lc_time_data;
-
-  typedef struct localeinfo_struct {
-    pthreadlocinfo locinfo;
-    pthreadmbcinfo mbcinfo;
-  } _locale_tstruct,*_locale_t;
 
 #ifndef _TAGLC_ID_DEFINED
 #define _TAGLC_ID_DEFINED
@@ -399,9 +397,15 @@ extern "C" {
     const unsigned char *pclmap;
     const unsigned char *pcumap;
     struct __lc_time_data *lc_time_curr;
-  } threadlocinfo;
+  } threadlocinfo, *pthreadlocinfo;
 #endif
 
+struct __lc_time_data;
+
+typedef struct localeinfo_struct {
+    pthreadlocinfo locinfo;
+    pthreadmbcinfo mbcinfo;
+}_locale_tstruct,*_locale_t;
 
 #ifdef __cplusplus
 }

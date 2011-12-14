@@ -1,7 +1,6 @@
 #include <precomp.h>
-#include <ctype.h>
-#include <direct.h>
 #include <tchar.h>
+#include <process.h>
 
 /*
  * @implemented

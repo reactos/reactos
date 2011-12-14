@@ -65,7 +65,7 @@ errno_t CDECL _get_errno(int *pValue)
 /*
  * @implemented
  */
-int CDECL __set_errno(int error)
+int CDECL _set_errno(int error)
 {
     *_errno() = error;
     return error;
@@ -88,7 +88,7 @@ void CDECL _dosmaperr(unsigned long oserror)
 	for (base=0, lim=sizeof(doserrmap)/sizeof(doserrmap[0]); lim; lim >>= 1) {
 		pos = base+(lim >> 1);
 		if (doserrmap[pos].winerr == oserror) {
-			__set_errno(doserrmap[pos].en);
+			_set_errno(doserrmap[pos].en);
 			return;
 		} else if (doserrmap[pos].winerr < oserror) {
 			base = pos + 1;
@@ -96,7 +96,7 @@ void CDECL _dosmaperr(unsigned long oserror)
 		}
 	}
 	/* EINVAL appears to be the default */
-	__set_errno(EINVAL);
+	_set_errno(EINVAL);
 }
 
 /******************************************************************************

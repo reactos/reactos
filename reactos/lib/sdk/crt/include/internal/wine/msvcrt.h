@@ -34,19 +34,32 @@ void __cdecl _purecall(void);
 void __cdecl _amsg_exit(int errnum);
 
 extern char **_environ;
-#ifndef __REACTOS__
 extern wchar_t **_wenviron;
 extern char ** SnapshotOfEnvironmentA(char **);
 extern wchar_t ** SnapshotOfEnvironmentW(wchar_t **);
-#endif
 
-wchar_t *wstrdupa(const char *);
+/* Application type flags */
+#define _UNKNOWN_APP    0
+#define _CONSOLE_APP    1
+#define _GUI_APP        2
 
-/* FIXME: This should be declared in new.h but it's not an extern "C" so
- * it would not be much use anyway. Even for Winelib applications.
- */
-int __cdecl _set_new_mode(int mode);
+/* I/O Streamming flags missing from stdio.h */
+#define _IOYOURBUF      0x0100
+#define _IOAPPEND       0x0200
+#define _IOSETVBUF      0x0400
+#define _IOFEOF         0x0800
+#define _IOFLRTN        0x1000
+#define _IOCTRLZ        0x2000
+#define _IOCOMMIT       0x4000
+#define _IOFREE         0x10000
 
+//wchar_t *wstrdupa(const char *);
+//
+///* FIXME: This should be declared in new.h but it's not an extern "C" so
+// * it would not be much use anyway. Even for Winelib applications.
+// */
+//int __cdecl _set_new_mode(int mode);
+//
 void* __cdecl MSVCRT_operator_new(size_t);
 void __cdecl MSVCRT_operator_delete(void*);
 typedef void* (*__cdecl malloc_func_t)(size_t);

@@ -29,6 +29,8 @@
 
 #define MK_STR(s) #s
 
+int access_dirT(const _TCHAR *_path);
+
 _TCHAR const* extT[] =
    {
       _T(""),
@@ -200,18 +202,18 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
 
    if (mode != _P_NOWAIT && mode != _P_NOWAITO && mode != _P_WAIT && mode != _P_DETACH && mode != _P_OVERLAY)
    {
-      __set_errno ( EINVAL );
+      _set_errno ( EINVAL );
       return( -1);
    }
 
    if (0 != _taccess(cmdname, F_OK))
    {
-      __set_errno ( ENOENT );
+      _set_errno ( ENOENT );
       return(-1);
    }
    if (0 == access_dirT(cmdname))
    {
-      __set_errno ( EISDIR );
+      _set_errno ( EISDIR );
       return(-1);
    }
 
@@ -234,7 +236,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
       StartupInfo.lpReserved2 = malloc(StartupInfo.cbReserved2);
       if (StartupInfo.lpReserved2 == NULL)
       {
-         __set_errno ( ENOMEM );
+         _set_errno ( ENOMEM );
          return -1;
       }
 

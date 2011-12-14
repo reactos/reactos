@@ -534,7 +534,7 @@
 @ cdecl -arch=i386 __p__dstbias()
 @ cdecl -arch=i386 __p__environ()
 @ cdecl -arch=i386 __p__fmode()
-@ cdecl -arch=i386 __p__iob()
+@ cdecl -arch=i386 __p__iob() __iob_func
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
 @ cdecl -arch=i386 __p__pctype()

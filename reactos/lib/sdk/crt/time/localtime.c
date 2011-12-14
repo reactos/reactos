@@ -4,29 +4,41 @@
  * FILE:        lib/sdk/crt/time/localtime.c
  * PURPOSE:     Implementation of localtime, localtime_s
  * PROGRAMERS:  Timo Kreuzer
+ *              Samuel Serapión
  */
 #include <precomp.h>
 #include <time.h>
 #include "bitsfixup.h"
 
+//fix me: header?
+#define _MAX__TIME64_T     0x793406fffLL     /* number of seconds from
+                                                 00:00:00, 01/01/1970 UTC to
+                                                 23:59:59. 12/31/3000 UTC */
+
+
 errno_t
 localtime_s(struct tm* _tm, const time_t *ptime)
 {
-
-    /* Validate parameters */
-    if (!_tm || !ptime)
+    /* check for NULL */
+    if (!_tm || !ptime )
     {
-#if 0
+        if(_tm) memset(_tm, 0xFF, sizeof(struct tm));
         _invalid_parameter(NULL,
                            0,//__FUNCTION__, 
                            _CRT_WIDE(__FILE__), 
                            __LINE__, 
                            0);
-#endif
         return EINVAL;
     }
 
+    /* Validate input */
+    if (*ptime < 0 || *ptime > _MAX__TIME64_T)
+    {
+        memset(_tm, 0xFF, sizeof(struct tm));
+        return EINVAL;
+    }
 
+    _tm = localtime(ptime);
     return 0;
 }
 

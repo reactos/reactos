@@ -86,7 +86,7 @@ _futime(int fd, struct _utimbuf *filetime)
 
     if (!SetFileTime(handle, NULL, &at, &wt))
     {
-        __set_errno(GetLastError());
+        _set_errno(GetLastError());
         return -1 ;
     }
 

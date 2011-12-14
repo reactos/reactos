@@ -34,6 +34,7 @@
 		<file>_snprintf.c</file>
 		<file>_snwprintf.c</file>
 		<file>_vcprintf.c</file>
+		<file>_vsprintf_p.c</file>
 		<file>_vsnprintf.c</file>
 		<file>_vsnwprintf.c</file>
 		<file>fprintf.c</file>
@@ -77,7 +78,6 @@
 		<file>wrmdir.c</file>
 	</directory>
 	<directory name="except">
-		<file>abnorter.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
 		<file>except.c</file>
@@ -374,7 +374,6 @@
 		<file>wpopen.c</file>
 		<file>wstat.c</file>
 		<file>wstat64.c</file>
-		<file>lock_file.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>
@@ -519,7 +518,6 @@
 		<file>time64.c</file>
 		<file>time.c</file>
 		<file>timezone.c</file>
-		<file>tzname.c</file>
 		<file>utime32.c</file>
 		<file>utime64.c</file>
 		<file>utime.c</file>

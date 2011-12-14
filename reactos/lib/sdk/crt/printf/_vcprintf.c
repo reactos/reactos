@@ -3,16 +3,22 @@
  * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/_vcprintf.c
  * PURPOSE:         Implementation of _vcprintf
- * PROGRAMMER:      Timo Kreuzer
+ * PROGRAMMER:      Samuel Serapión
  */
 
+#include <stdio.h>
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 _vcprintf(const char* format, va_list va)
 {
-    return 0;
+    return vfprintf(stdout, format, va);
 }
 
-
+int
+__cdecl
+_vcwprintf(const wchar_t* format, va_list va)
+{
+    return vfwprintf(stdout, format, va);
+}

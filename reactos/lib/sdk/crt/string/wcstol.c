@@ -16,7 +16,7 @@ long
 wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
 {
   const wchar_t *s = nptr;
-  unsigned long acc;
+  long acc;
   int c;
   unsigned long cutoff;
   int neg = 0, any, cutlim;
@@ -76,7 +76,7 @@ wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
       break;
     if (c >= base)
       break;
-    if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+    if (any < 0 || (unsigned long)acc > cutoff || (acc == cutoff && c > cutlim))
       any = -1;
     else
     {

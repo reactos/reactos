@@ -118,6 +118,31 @@ _gmtime64(const __time64_t * ptime)
     return _gmtime_worker(data->time_buffer, *ptime, 0);
 }
 
+errno_t
+_gmtime64_s(
+   struct tm* ptm,
+   const __time64_t* ptime)
+{
+    __time64_t time = *ptime;
+    if (!ptm)
+    {
+        _set_errno(ERROR_BAD_COMMAND);
+        MSVCRT_INVALID_PMT("ptm == NULL");
+        return ERROR_BAD_COMMAND;
+    }
+
+    if (!ptime)
+    {
+        _set_errno(ERROR_BAD_COMMAND);
+        MSVCRT_INVALID_PMT("ptime == NULL");
+        return ERROR_BAD_COMMAND;
+    }
+
+    _gmtime_worker(ptm, time, 0);
+
+    return ERROR_SUCCESS;
+}
+
 /******************************************************************************
  * \name _gmtime32
  * \brief
@@ -132,6 +157,31 @@ _gmtime32(const __time32_t * ptime)
         return NULL;
     time64 = *ptime;
     return _gmtime64(&time64);
+}
+
+errno_t
+_gmtime32_s(
+   struct tm* ptm,
+   const __time32_t* ptime)
+{
+    __time64_t time = *ptime;
+    if (!ptm)
+    {
+        _set_errno(ERROR_BAD_COMMAND);
+        MSVCRT_INVALID_PMT("ptm == NULL");
+        return ERROR_BAD_COMMAND;
+    }
+
+    if (!ptime)
+    {
+        _set_errno(ERROR_BAD_COMMAND);
+        MSVCRT_INVALID_PMT("ptime == NULL");
+        return ERROR_BAD_COMMAND;
+    }
+
+    _gmtime_worker(ptm, time, 0);
+
+    return ERROR_SUCCESS;
 }
 
 /******************************************************************************

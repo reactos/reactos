@@ -6,7 +6,6 @@
  * PROGRAMERS:  Timo Kreuzer
  */
 #include <precomp.h>
-#include <sec_api/time_s.h>
 #include <sys/timeb.h>
 #include "bitsfixup.h"
 
@@ -18,6 +17,7 @@
  * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
  */
 errno_t
+CDECL
 _ftime_s(struct _timeb *ptimeb)
 {
     DWORD ret;
@@ -25,15 +25,9 @@ _ftime_s(struct _timeb *ptimeb)
     FILETIME SystemTime;
 
     /* Validate parameters */
-    if (!ptimeb)
+    if (!MSVCRT_CHECK_PMT( ptimeb != NULL ))
     {
-#if 0
-        _invalid_parameter(0,
-                           0,//__FUNCTION__,
-                           _CRT_WIDE(__FILE__),
-                           __LINE__,
-                           0);
-#endif
+        *_errno() = EINVAL;
         return EINVAL;
     }
 
@@ -57,6 +51,7 @@ _ftime_s(struct _timeb *ptimeb)
  * \sa http://msdn.microsoft.com/en-us/library/z54t9z5f.aspx
  */
 void
+CDECL
 _ftime(struct _timeb *ptimeb)
 {
     _ftime_s(ptimeb);

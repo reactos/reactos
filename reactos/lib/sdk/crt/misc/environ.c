@@ -1,15 +1,11 @@
-/* $Id$
- *
+/* 
  * environ.c
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
 
 #include <precomp.h>
-#include <internal/tls.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include <internal/wine/msvcrt.h>
 
 unsigned int _osplatform = 0;
 unsigned int _osver = 0;
@@ -17,7 +13,8 @@ unsigned int _winminor = 0;
 unsigned int _winmajor = 0;
 unsigned int _winver = 0;
 
-
+unsigned int __setlc_active = 0;
+unsigned int __unguarded_readlc_active = 0;
 char *_acmdln = NULL;        /* pointer to ascii command line */
 wchar_t *_wcmdln = NULL;     /* pointer to wide character command line */
 #undef _environ
@@ -30,9 +27,7 @@ wchar_t **__winitenv = NULL; /* pointer to initial environment block */
 char *_pgmptr = NULL;        /* pointer to program name */
 #undef _wpgmptr
 wchar_t *_wpgmptr = NULL;    /* pointer to program name */
-int __app_type = 0; //_UNKNOWN_APP; /* application type */
-int __mb_cur_max = 1;
-
+int __app_type = _UNKNOWN_APP; /* application type */
 int _commode = _IOCOMMIT;
 
 
@@ -415,6 +410,20 @@ wchar_t ***__p___winitenv(void)
 /*
  * @implemented
  */
+errno_t _get_osplatform(unsigned int *pValue)
+{
+    if (!MSVCRT_CHECK_PMT(pValue != NULL)) {
+        *_errno() = EINVAL;
+        return EINVAL;
+    }
+
+    *pValue = _osplatform;
+    return 0;
+}
+
+/*
+ * @implemented
+ */
 int *__p___mb_cur_max(void)
 {
     return &__mb_cur_max;
@@ -439,9 +448,39 @@ char **__p__pgmptr(void)
 /*
  * @implemented
  */
+int _get_pgmptr(char** p)
+{
+  if (!MSVCRT_CHECK_PMT(p))
+  {
+    *_errno() = EINVAL;
+    return EINVAL;
+  }
+
+  *p = _pgmptr;
+  return 0;
+}
+
+/*
+ * @implemented
+ */
 wchar_t **__p__wpgmptr(void)
 {
     return &_wpgmptr;
+}
+
+/*
+ * @implemented
+ */
+int _get_wpgmptr(WCHAR** p)
+{
+  if (!MSVCRT_CHECK_PMT(p))
+  {
+    *_errno() = EINVAL;
+    return EINVAL;
+  }
+
+  *p = _wpgmptr;
+  return 0;
 }
 
 /*

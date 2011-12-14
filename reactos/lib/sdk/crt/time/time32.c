@@ -6,5 +6,5 @@
  * PROGRAMER:   
  */
 
-#define _USE_EXPLITIT_32BIT_TIME
+#define _USE_EXPLICIT_32BIT_TIME
 #include "time.c"

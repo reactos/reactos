@@ -6,9 +6,7 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <io.h>
-#include <tchar.h>
+#include <precomp.h>
 
 void __cdecl alloc_buffer(FILE *stream);
 

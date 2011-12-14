@@ -20,7 +20,6 @@ list(APPEND CRT_SOURCE
     direct/wgetdcwd.c
     direct/wmkdir.c
     direct/wrmdir.c
-    except/abnorter.c
     except/cpp.c
     except/cppexcept.c
     except/except.c
@@ -135,6 +134,7 @@ list(APPEND CRT_SOURCE
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
+	printf/_vsprintf_p.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
     printf/fprintf.c
@@ -173,7 +173,6 @@ list(APPEND CRT_SOURCE
     stdio/find64.c
     stdio/findi64.c
     stdio/fmode.c
-    stdio/lock_file.c
     stdio/perror.c
     stdio/popen.c
     stdio/stat.c
@@ -275,7 +274,6 @@ list(APPEND CRT_SOURCE
     time/time64.c
     time/time.c
     time/timezone.c
-    time/tzname.c
     time/utime32.c
     time/utime64.c
     time/utime.c

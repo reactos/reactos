@@ -64,7 +64,7 @@ strtoul(const char *nptr, char **endptr, int base)
   {
     acc = ULONG_MAX;
 #ifndef _LIBCNT_
-    __set_errno(ERANGE);
+    _set_errno(ERANGE);
 #endif
   }
   else if (neg)

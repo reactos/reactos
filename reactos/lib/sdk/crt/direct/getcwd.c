@@ -1,6 +1,6 @@
 #include <precomp.h>
 #include <direct.h>
-#include <stdlib.h>
+#include <process.h>
 #include <tchar.h>
 
 /*
@@ -24,7 +24,7 @@ _TCHAR* _tgetcwd(_TCHAR* buf, int size)
 
   if (dir_len >= (DWORD)size)
   {
-    __set_errno(ERANGE);
+    _set_errno(ERANGE);
     return NULL; /* buf too small */
   }
 

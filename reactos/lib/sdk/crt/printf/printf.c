@@ -4,13 +4,10 @@
  * FILE:            lib/sdk/crt/printf/printf.c
  * PURPOSE:         Implementation of printf
  * PROGRAMMER:      Timo Kreuzer
+ *                  Samuel Serapión
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <tchar.h>
-
-int _cdecl streamout(FILE *stream, const char *format, va_list argptr);
+#include <precomp.h>
 
 int
 _cdecl
@@ -20,9 +17,22 @@ printf(const char *format, ...)
     int result;
 
     va_start(argptr, format);
-    result = streamout(stdout, format, argptr);
+    result = vprintf(format, argptr);
     va_end(argptr);
 
     return result;
+}
+
+int
+_cdecl
+printf_s(const char *format, ...)
+{
+    va_list argptr;
+    int res;
+
+    va_start(argptr, format);
+    res = vprintf_s(format, argptr);
+    va_end(argptr);
+    return res;
 }
 

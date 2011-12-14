@@ -4,21 +4,32 @@
  * FILE:            lib/sdk/crt/printf/fprintf.c
  * PURPOSE:         Implementation of fprintf
  * PROGRAMMER:      Timo Kreuzer
+ *                  Samuel Serapión
  */
 
-#include <stdio.h>
-#include <stdarg.h>
+#include <precomp.h>
 
 int
-_cdecl
-fprintf(FILE *stream, const char *format, ...)
+__cdecl
+fprintf(FILE *file, const char *format, ...)
 {
     va_list argptr;
     int result;
 
     va_start(argptr, format);
-    result = vfprintf(stream, format, argptr);
+    result = vfprintf(file, format, argptr);
     va_end(argptr);
     return result;
 }
 
+int
+__cdecl
+fprintf_s(FILE* file, const char *format, ...)
+{
+    va_list argptr;
+    int result;
+    va_start(argptr, format);
+    result = vfprintf_s(file, format, argptr);
+    va_end(argptr);
+    return result;
+}

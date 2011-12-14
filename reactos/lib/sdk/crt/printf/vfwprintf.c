@@ -4,17 +4,43 @@
  * FILE:            lib/sdk/crt/printf/vfwprintf.c
  * PURPOSE:         Implementation of vfwprintf
  * PROGRAMMER:      Timo Kreuzer
+ *                  Samuel Serapión
  */
 
-#include <stdio.h>
-#include <stdarg.h>
+#include <precomp.h>
+#include <wchar.h>
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
+void CDECL _lock_file(FILE* file);
+void CDECL _unlock_file(FILE* file);
+int CDECL wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
 int
-__cdecl
+CDECL
 vfwprintf(FILE* file, const wchar_t *format, va_list argptr)
 {
-    return wstreamout(file, format, argptr);
+     int ret;
+
+    _lock_file(file);
+    ret = wstreamout(file, format, argptr);
+    _unlock_file(file);
+
+    return ret;
 }
 
+int
+CDECL
+vfwprintf_s(FILE* file, const wchar_t *format, va_list argptr)
+{
+    int ret;
+
+    if(!MSVCRT_CHECK_PMT( file != NULL)) {
+        *_errno() = EINVAL;
+        return -1;
+    }
+
+    _lock_file(file);
+    ret = wstreamout(file, format, argptr);
+    _unlock_file(file);
+
+    return ret;
+}

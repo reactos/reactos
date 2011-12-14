@@ -173,7 +173,7 @@ int CDECL _heapchk(void)
 {
   if (!HeapValidate( GetProcessHeap(), 0, NULL))
   {
-    __set_errno(GetLastError());
+    _set_errno(GetLastError());
     return _HEAPBADNODE;
   }
   return _HEAPOK;
@@ -187,7 +187,7 @@ int CDECL _heapmin(void)
   if (!HeapCompact( GetProcessHeap(), 0 ))
   {
     if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
-      __set_errno(GetLastError());
+      _set_errno(GetLastError());
     return -1;
   }
   return 0;
@@ -209,7 +209,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
       !HeapValidate( GetProcessHeap(), 0, phe.lpData ))
   {
     UNLOCK_HEAP;
-    __set_errno(GetLastError());
+    _set_errno(GetLastError());
     return _HEAPBADNODE;
   }
 
@@ -220,7 +220,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
       UNLOCK_HEAP;
       if (GetLastError() == ERROR_NO_MORE_ITEMS)
          return _HEAPEND;
-      __set_errno(GetLastError());
+      _set_errno(GetLastError());
       if (!phe.lpData)
         return _HEAPBADBEGIN;
       return _HEAPBADNODE;
@@ -583,8 +583,8 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
     if(!count)
         return 0;
 
-    if(!dest || !src || !numberOfElements) {
-        _invalid_parameter(NULL, NULL, NULL, 0, 0);
+    if (!MSVCRT_CHECK_PMT(dest != NULL) || !MSVCRT_CHECK_PMT(src != NULL) ||
+        !MSVCRT_CHECK_PMT(numberOfElements != 0)) {
         *_errno() = EINVAL;
         return EINVAL;
     }
@@ -602,7 +602,7 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
         return 0;
     }
 
-    _invalid_parameter(NULL, NULL, NULL, 0, 0);
+    MSVCRT_INVALID_PMT("dest[numberOfElements] is too small");
     dest[0] = '\0';
     *_errno() = EINVAL;
     return EINVAL;
