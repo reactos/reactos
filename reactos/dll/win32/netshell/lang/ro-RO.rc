@@ -1,52 +1,53 @@
+//2011.12.10 - Fulea »òtefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 246
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "Connectare folosing:", -1, 9,9,217,8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&Configurare", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Componentele verificate sunt folosite de aceast„ conexiune:", -1, 9, 59, 217, 8
-    PUSHBUTTON "&Instalare", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Dezinstalare", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Propriet„˛i", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Descriere", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Descriere...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Afi∫are pictogram„ Ón tray", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Notificare la probleme de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL     "",                IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    LTEXT       "Conexiune realizatƒÉ prin:", -1, 9,9,217,8
+    EDITTEXT                       IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON  "&Configurare‚Ä¶",   IDC_CONFIGURE, 179, 38, 60, 14
+    LTEXT       "Componente utilizate √Æn aceastƒÉ conexiune:", -1, 9, 59, 217, 8
+    PUSHBUTTON  "&Instalare‚Ä¶",     IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON  "&DezinstaleazƒÉ",  IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON  "&ProprietƒÉ»õi‚Ä¶",   IDC_PROPERTIES, 174, 130, 65, 14
+    GROUPBOX    "Descriere",                                   -1, 9, 153, 230, 46, BS_GROUPBOX
+    LTEXT       "Descrierea componentelor‚Ä¶",                   IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+    CHECKBOX    "&Afi»ôeazƒÉ pictogramƒÉ √Æn zona de notificare",  IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX    "N&otificƒÉ problemele de conectivitate",       IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
 IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Conexiune", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Stare:", -1, 19, 20, 60, 8
-    LTEXT "Durat„:", -1, 19, 34, 60, 8
-    LTEXT "Vitez„:", -1, 19, 48, 60, 8
-    GROUPBOX "Activitate", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Trimis", -1, 26, 90, 60, 8
-    ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Primit", -1, 149, 90, 37, 8
-    LTEXT "Octe˛i:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Propriet„˛i", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Dezactivare", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    GROUPBOX    "Conexiune",      -1, 9, 8, 182, 58, BS_GROUPBOX
+    LTEXT       "Stare:",         -1, 19, 20, 60, 8
+    LTEXT       "DuratƒÉ:",        -1, 19, 34, 60, 8
+    LTEXT       "VitezƒÉ:",        -1, 19, 48, 60, 8
+    GROUPBOX    "Activitate",     -1, 9, 74, 182, 70, BS_GROUPBOX
+    RTEXT       "Transmis",       -1, 21, 90, 60, 8
+    ICON        "",               IDC_NETSTAT, 105, 85, 32, 32
+    LTEXT       "Recep»õionat",    -1, 144, 90, 40, 8
+    LTEXT       "Octe»õi:",        -1, 17, 115, 32, 8
+    RTEXT       "000.000.000",    IDC_SEND, 43, 115, 44, 8
+    RTEXT       "000.000.000",    IDC_RECEIVED, 139, 115, 44, 8
+    PUSHBUTTON  "&ProprietƒÉ»õi‚Ä¶",  IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON  "&DezactiveazƒÉ",  IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT       "",               IDC_STATUS,83,20,98,8
+    RTEXT       "",               IDC_DURATION,83,34,98,8
+    RTEXT       "",               IDC_SPEED,83,48,98,8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
@@ -54,73 +55,73 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suport"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Stare conexiune", -1, 9, 8, 200, 88, BS_GROUPBOX
-    LTEXT "Tip adres„:", -1, 22, 20, 80, 8
-    LTEXT "Adres„ IP:", -1, 22, 34, 80, 8
-    LTEXT "Masc„ subre˛ea:", -1, 22, 48, 80, 8
-    LTEXT "Poart„ implicit„:", -1, 22, 62, 80, 8
+    GROUPBOX  "Stare conexiune",            -1, 9, 8, 182, 88, BS_GROUPBOX
+    LTEXT     "Tip adresƒÉ:",                -1, 22, 20, 80, 8
+    LTEXT     "AdresƒÉ IP:",                 -1, 22, 34, 80, 8
+    LTEXT     "MascƒÉ subre»õea:",            -1, 22, 48, 80, 8
+    LTEXT     "Server ‚ÄûpoartƒÉ‚Äù implicit:",  -1, 22, 62, 80, 8
 
-    RTEXT "f„r„", IDC_DETAILSTYPE, 122, 20, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
-    RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+    RTEXT     "fƒÉrƒÉ",             IDC_DETAILSTYPE, 102, 20, 80, 8
+    RTEXT     "000.000.000.000",  IDC_DETAILSIP, 102, 34, 80, 8
+    RTEXT     "000.000.000.000",  IDC_DETAILSSUBNET, 102, 48, 80, 8
+    RTEXT     "",                 IDC_DETAILSGATEWAY, 102, 62, 80, 8
 
-    PUSHBUTTON "&Detalii...", IDC_DETAILS, 22, 76, 62, 14
+    PUSHBUTTON "&Detalii‚Ä¶", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Detalii conexiune re˛ea"
+CAPTION "Detalii conexiune re»õea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Detalii conexiune re˛ea:", -1, 15, 9, 170, 12
-    CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
-    PUSHBUTTON "&Œnchidere", IDC_CLOSE, 125, 165, 62, 14
+    LTEXT       "Detalii de conexiune:",  -1, 15, 9, 170, 12
+    CONTROL     "",                       IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
+    PUSHBUTTON  "√é&nchide",               IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Adres„ fizic„"
-    IDS_IP_ADDRESS              "Adres„ de IP"
-    IDS_SUBNET_MASK             "Masc„ subre˛ea"
-    IDS_DEF_GATEWAY             "Poart„ implicit„"
+    IDS_PHYSICAL_ADDRESS        "AdresƒÉ fizicƒÉ"
+    IDS_IP_ADDRESS              "AdresƒÉ IP"
+    IDS_SUBNET_MASK             "MascƒÉ subre»õea"
+    IDS_DEF_GATEWAY             "Server ‚ÄûpoartƒÉ‚Äù implicit"
     IDS_DHCP_SERVER             "Server DHCP"
-    IDS_LEASE_OBTAINED          "Permis ob˛inut"
-    IDS_LEASE_EXPIRES           "Permis expir„"
+    IDS_LEASE_OBTAINED          "Permis ob»õinut"
+    IDS_LEASE_EXPIRES           "Permis expirƒÉ"
     IDS_DNS_SERVERS             "Servere DNS"
     IDS_WINS_SERVERS            "Servere WINS"
     IDS_PROPERTY                "Proprietate"
     IDS_VALUE                   "Valoare"
-    IDS_NETWORKCONNECTION       "Conexiuni la re˛ea"
+    IDS_NETWORKCONNECTION       "Conexiuni la re»õea"
     IDS_SHV_COLUMN_NAME         "Nume"
     IDS_SHV_COLUMN_TYPE         "Tipe"
     IDS_SHV_COLUMN_STATE        "Stare"
     IDS_SHV_COLUMN_DEVNAME      "Nume dispozitiv"
-    IDS_SHV_COLUMN_PHONE        "Nr. tel. sau adres„ de gazd„"
+    IDS_SHV_COLUMN_PHONE        "Tel. sau adresa gazdei"
     IDS_SHV_COLUMN_OWNER        "Proprietar"
-    IDS_TYPE_ETHERNET           "LAN sau internet de mare vitez„"
+    IDS_TYPE_ETHERNET           "LAN sau Internet de mare vitezƒÉ"
     IDS_STATUS_NON_OPERATIONAL  "Dezactivat"
     IDS_STATUS_UNREACHABLE      "Neconectat"
-    IDS_STATUS_DISCONNECTED     "Cablu de re˛ea scos"
-    IDS_STATUS_CONNECTING       "Determinare adres„ re˛ea"
+    IDS_STATUS_DISCONNECTED     "Cablu de re»õea deconectat"
+    IDS_STATUS_CONNECTING       "Determinare adresƒÉ re»õea"
     IDS_STATUS_CONNECTED        "Conectat"
-    IDS_STATUS_OPERATIONAL      "Conectat"
+    IDS_STATUS_OPERATIONAL      "Opera»õional"
 
     IDS_NET_ACTIVATE            "Activare"
     IDS_NET_DEACTIVATE          "Dezactivare"
     IDS_NET_STATUS              "Stare"
-    IDS_NET_REPAIR              "Reparare"
-    IDS_NET_CREATELINK          "Creare leg„tur„"
-    IDS_NET_DELETE              "™tergere"
-    IDS_NET_RENAME              "Redenumire"
-    IDS_NET_PROPERTIES          "Propriet„˛i"
+    IDS_NET_REPAIR              "ReparƒÉ"
+    IDS_NET_CREATELINK          "CreazƒÉ legƒÉturƒÉ"
+    IDS_NET_DELETE              "»òterge"
+    IDS_NET_RENAME              "Redenume»ôte"
+    IDS_NET_PROPERTIES          "ProprietƒÉ»õi"
 
-    IDS_FORMAT_BIT              "%u Bi˛i/s"
-    IDS_FORMAT_KBIT             "%u KBi˛i/s"
-    IDS_FORMAT_MBIT             "%u MBi˛i/s"
-    IDS_FORMAT_GBIT             "%u GBi˛i/s"
+    IDS_FORMAT_BIT              "%u bi»õi/s"
+    IDS_FORMAT_KBIT             "%u kbi»õi/s"
+    IDS_FORMAT_MBIT             "%u Mbi»õi/s"
+    IDS_FORMAT_GBIT             "%u Gbi»õi/s"
     IDS_DURATION_DAY            "%d zi %s"
     IDS_DURATION_DAYS           "%d zile %s"
-    IDS_ASSIGNED_DHCP           "Atribuit de DHCP"
-    IDS_ASSIGNED_MANUAL         "Configurat manual"
+    IDS_ASSIGNED_DHCP           "AlocatƒÉ de DHCP"
+    IDS_ASSIGNED_MANUAL         "Config. manual"
 END

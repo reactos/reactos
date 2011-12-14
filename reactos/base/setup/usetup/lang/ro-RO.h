@@ -633,13 +633,13 @@ static MUI_ENTRY roROFlushPageEntries[] =
     {
         10,
         9,
-        "VÇ rugÇm sÇ a­teptaîi.",
+        "A­teptaîi...",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Eliberare memorie...",
+        "Eliberarea memoriei...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -685,7 +685,7 @@ static MUI_ENTRY roROQuitPageEntries[] =
     {
         0,
         0,
-        "VÇ rugÇm sÇ a­teptaîi...",
+        "A­teptaîi...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -816,13 +816,13 @@ static MUI_ENTRY roROBootPageEntries[] =
     {
         6,
         13,
-        "Sunteîi rugaîi sÇ introduceîi un disc flexibil formatat",
+        "Introduceîi un disc flexibil formatat Œn",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Œn unitatea A: apoi sÇ apÇsaîi ENTER.",
+        "unitatea A: apoi sÇ apÇsaîi ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -887,7 +887,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         0,
         0,
-        "Va rugÇm sÇ a­teptaîi...",
+        "A­teptaîi...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1001,7 +1001,7 @@ static MUI_ENTRY roROFileCopyEntries[] =
     {
         0,
         12,
-        "A­teptaîi copierea de fi­iere Œn directorul ReactOS specificat.",
+        " A­teptaîi copierea de fi­iere Œn directorul ReactOS specificat.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1013,7 +1013,7 @@ static MUI_ENTRY roROFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 VÇ rugÇm sÇ a­teptaîi...    ",
+        "\xB3 A­teptaîi...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1675,7 +1675,7 @@ MUI_PAGE roROPages[] =
 MUI_STRING roROStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   VÇ rugÇm sÇ a­teptaîi..."},
+     "   A­teptaîi..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Instalare   C = Creare partiîie   F3 = Ie­ire"},
     {STRING_INSTALLDELETEPARTITION,
@@ -1685,7 +1685,7 @@ MUI_STRING roROStrings[] =
     {STRING_CHOOSENEWPARTITION,
      "Aîi ales crearea unei noi partiîii pe"},
     {STRING_HDDSIZE,
-    "VÇ rugÇm sÇ introduceîi mÇrimea noii partiîii Œn megaocteîi."},
+    "Introduceîi mÇrimea noii partiîii Œn megaocteîi."},
     {STRING_CREATEPARTITION,
      "   ENTER = Creare partiîie   ESC = Anulare   F3 = Ie­ire"},
     {STRING_PARTFORMAT,
@@ -1705,7 +1705,7 @@ MUI_STRING roROStrings[] =
     {STRING_COPYING,
      "   Copiere fi­ier: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Copiere fi­iere..."},
+     "Copierea fi­ierelor..."},
     {STRING_REGHIVEUPDATE,
     "   Actualizare registrului..."},
     {STRING_IMPORTFILE,

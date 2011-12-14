@@ -52,7 +52,7 @@ BEGIN
         MENUITEM "Aranjări &verticale",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimizează",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizează",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjare în &cascadă",           ID_WINDOWS_CASCADE
+        MENUITEM "Aranjare în casca&dă",           ID_WINDOWS_CASCADE
         MENUITEM "&Aduce în prim plan",            ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&?"
@@ -69,7 +69,7 @@ BEGIN
     MENUITEM "Aranjări &verticale",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimizează",                   ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ximizează",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "Aranjare în &cascadă",           ID_WINDOWS_CASCADE
+    MENUITEM "Aranjare în casca&dă",           ID_WINDOWS_CASCADE
     MENUITEM "&Aduce în prim plan",            ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -89,14 +89,14 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "Comută &la",                    ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&Comută la",                    ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Aduce în prim plan",           ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
         MENUITEM "Aranjări &orizontale",          ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Aranjări &verticale",           ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimizare",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximizare",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjare în &cascadă",          ID_WINDOWS_CASCADE
+        MENUITEM "&Minimizează",                  ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizează",                  ID_WINDOWS_MAXIMIZE
+        MENUITEM "Aranjează în casca&dă",         ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Termină",                      ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Salt la proces",               ID_APPLICATION_PAGE_GOTOPROCESS
@@ -169,7 +169,7 @@ BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "E&xecutare…",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "Comută &la",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Comută la",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
     PUSHBUTTON      "&Temină",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
 
@@ -611,7 +611,7 @@ BEGIN
     IDS_MENU_CPUHISTORY           "Istoric &procesor"
     IDS_MENU_SHOWKERNELTIMES      "Afișează &timpi nucleu"
     IDS_CREATENEWTASK             "Creare activitate nouă"
-    IDS_CREATENEWTASK_DESC        "Tastați numele unui program, dosar, document, sau pagină web, iar Gestionarul de activități o va deschide."
+    IDS_CREATENEWTASK_DESC        "Tastați numele unui program, dosar, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS."
     IDS_MSG_ACCESSPROCESSAFF      "Nu se poate accesa/stabili afinitatea."
     IDS_MSG_PROCESSONEPRO         "Procesul trebuie să aibă o afinitate de cel puțin un procesor."
     IDS_MSG_INVALIDOPTION         "Opțiune nevalidă"

@@ -11,24 +11,24 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDC_EVENTVWR MENU
 BEGIN
-	POPUP "&Jurnal"
+	POPUP "J&urnal"
 	BEGIN
 		MENUITEM "&Aplicație",              ID_LOG_APPLICATION
-		MENUITEM "&Securitate",             ID_LOG_SECURITY
+		MENUITEM "Se&curitate",             ID_LOG_SECURITY
 		MENUITEM "&Sistem",                 ID_LOG_SYSTEM
 		MENUITEM SEPARATOR
 		MENUITEM "I&eșire",                 IDM_EXIT
 	END
 	POPUP "&Afișare"
 	BEGIN
-		MENUITEM "Îm&prospătare",           IDM_REFRESH
+		MENUITEM "Împ&rospătare",           IDM_REFRESH
 	END
 	MENUITEM "&Opțiuni",                    ID_OPTIONS
 	POPUP "&?"
 	BEGIN
-		MENUITEM "&Manual",                     IDM_HELP
+		MENUITEM "&Manual",                 IDM_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&Despre…",                 IDM_ABOUT
+		MENUITEM "&Despre…",                IDM_ABOUT
 	END
 END
 
@@ -40,18 +40,18 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre Vizualizatorul de evenimente"
+CAPTION "Despre Observator de evenimente"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "Vizualizator de Evenimente ReactOS Versiunea 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-	LTEXT           "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+	LTEXT           "Observator de Evenimente ReactOS Versiunea 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,150,22
 	DEFPUSHBUTTON   "Î&nchide",IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
-CAPTION "Așteptați.."
+CAPTION "Așteptați…"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CTEXT           "Se încarcă jurnalul de evenimentele…",IDC_STATIC,0,15,230,8,SS_NOPREFIX
@@ -65,7 +65,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 	DEFPUSHBUTTON   "Î&nchide",IDOK,12,258,50,14
 	PUSHBUTTON      "&Precedent",IDPREVIOUS,78,258,50,14
-	PUSHBUTTON      "&Următor",IDNEXT,144,258,50,14
+	PUSHBUTTON      "U&rmător",IDNEXT,144,258,50,14
 	PUSHBUTTON      "&Manual",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
 	LTEXT           "&Descriere:",IDC_STATIC,15,70,39,8
@@ -73,7 +73,7 @@ BEGIN
 	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
 	LTEXT           "Oră:",IDC_STATIC,14,27,36,8
 	LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
-	LTEXT           "U&tilizator:",IDC_STATIC,14,41,36,8
+	LTEXT           "&Utilizator:",IDC_STATIC,14,41,36,8
 	LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
 	LTEXT           "&Calculator:",IDC_STATIC,14,54,36,8
 	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
@@ -93,7 +93,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_APP_TITLE                  "Vizualizator de evenimente"
+	IDS_APP_TITLE                  "Observator de evenimente"
 	IDS_EVENTSTRINGIDNOTFOUND      "Nu se poate găsi descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea."
 	IDS_EVENTLOG_ERROR_TYPE        "Eroare"
 	IDS_EVENTLOG_WARNING_TYPE      "Avertisment"

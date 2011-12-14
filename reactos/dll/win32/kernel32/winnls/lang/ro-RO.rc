@@ -5,7 +5,7 @@
  * CHANGE LOG:       2011-09-05  initial translation
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -66,7 +66,7 @@ BEGIN
   1026  "1026  (IBM EBCDIC - turcesc (latin-5))"
   1047  "1047  (IBM EBCDIC - latin-1/Open System)"
   1140  "1140  (IBM EBCDIC - SUA/canadian (37 + Euro))"
-  1141  "1141  (IBM EBCDIC - nemțesc (20273 + Euro))"
+  1141  "1141  (IBM EBCDIC - german (20273 + Euro))"
   1142  "1142  (IBM EBCDIC - danez/norvegian (20277 + Euro))"
   1143  "1143  (IBM EBCDIC - finlandez/suedez (20278 + Euro))"
   1144  "1144  (IBM EBCDIC - italian (20280 + Euro))"
@@ -75,7 +75,7 @@ BEGIN
   1147  "1147  (IBM EBCDIC - francez (20297 + Euro))"
   1148  "1148  (IBM EBCDIC - internațional (500 + Euro))"
   1149  "1149  (IBM EBCDIC - islandez (20871 + Euro))"
-  20273 "20273 (IBM EBCDIC - nemțesc)"
+  20273 "20273 (IBM EBCDIC - german)"
   20277 "20277 (IBM EBCDIC - danez/norvegian)"
   20278 "20278 (IBM EBCDIC - finlandez/suedez)"
   20280 "20280 (IBM EBCDIC - italian)"
@@ -111,7 +111,7 @@ BEGIN
   38598 "38598 (ISO 8859-8 ebraic: ordonare logică)"
 
   20105 "20105 (IA5 alfabetul internațional IRV Nr.5)"
-  20106 "20106 (IA5 nemțesc)"
+  20106 "20106 (IA5 german)"
   20107 "20107 (IA5 suedez)"
   20108 "20108 (IA5 norvegian)"
 
