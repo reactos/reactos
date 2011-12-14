@@ -81,7 +81,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
     Page = MmGetPfnForProcess(Process, Address);
     if (MmGetReferenceCountPage(Page) != 1)
     {
-        DPRINT1("Cannot page out locked virtual memory page: 0x%p (RefCount: %d)\n",
+        DPRINT("Cannot page out locked virtual memory page: 0x%p (RefCount: %d)\n",
                 Page, MmGetReferenceCountPage(Page));
         PageOp->Status = STATUS_UNSUCCESSFUL;
         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);

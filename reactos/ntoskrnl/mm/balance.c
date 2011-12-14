@@ -164,10 +164,10 @@ MiTrimMemoryConsumer(ULONG Consumer)
         /* Now swap the pages out */
         Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
 
-        DPRINT1("Trimming consumer %d: Freed %d pages with a target of %d pages\n", Consumer, NrFreedPages, Target);
+        DPRINT("Trimming consumer %d: Freed %d pages with a target of %d pages\n", Consumer, NrFreedPages, Target);
 
-		if (NrFreedPages == 0)
-		    DPRINT1("Ran out of pages to swap! Complete memory exhaustion is imminent!\n");
+        if (NrFreedPages == 0)
+            DPRINT1("Ran out of pages to swap!\n");
 
         if (!NT_SUCCESS(Status))
         {

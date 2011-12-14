@@ -2111,7 +2111,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (MmGetReferenceCountPage(Page) != 1)
    {
-       DPRINT1("Cannot page out locked section page: 0x%p (RefCount: %d)\n",
+       DPRINT("Cannot page out locked section page: 0x%p (RefCount: %d)\n",
                Page, MmGetReferenceCountPage(Page));
        PageOp->Status = STATUS_UNSUCCESSFUL;
        MmspCompleteAndReleasePageOp(PageOp);

@@ -387,7 +387,7 @@ retry:
         if (PagesFreed != 0)
         {
             /* Try again after flushing dirty pages */
-            DPRINT1("Flushed %d dirty cache pages to disk\n", PagesFreed);
+            DPRINT("Flushed %d dirty cache pages to disk\n", PagesFreed);
             goto retry;
         }
     }
@@ -400,7 +400,7 @@ retry:
         CcRosInternalFreeCacheSegment(current);
     }
 
-    DPRINT1("Evicted %d cache pages\n", (*NrFreed));
+    DPRINT("Evicted %d cache pages\n", (*NrFreed));
 
     return(STATUS_SUCCESS);
 }
