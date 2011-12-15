@@ -160,8 +160,25 @@ NTSTATUS ElfrClearELFW(
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLOGHANDLE lpLogHandle;
+    PLOGFILE lpLogFile;
+
+    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    if (!lpLogHandle)
+    {
+        return STATUS_INVALID_HANDLE;
+    }
+
+    lpLogFile = lpLogHandle->LogFile;
+
+    if (BackupFileName->Length > 0)
+    {
+        /* FIXME: Write a backup file */
+    }
+
+    LogfInitializeNew(lpLogFile);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -301,7 +318,7 @@ NTSTATUS ElfrRegisterEventSourceW(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    DPRINT1("ElfrRegisterEventSourceW()\n");
+    DPRINT("ElfrRegisterEventSourceW()\n");
 
     if ((MajorVersion != 1) || (MinorVersion != 1))
         return STATUS_INVALID_PARAMETER;
@@ -310,7 +327,7 @@ NTSTATUS ElfrRegisterEventSourceW(
     if (RegModuleName->Length > 0)
         return STATUS_INVALID_PARAMETER;
 
-    DPRINT1("ModuleName: %S\n", ModuleName->Buffer);
+    DPRINT("ModuleName: %S\n", ModuleName->Buffer);
 
     /*FIXME: UNCServerName must specify the server or empty for local */
 
@@ -500,8 +517,21 @@ NTSTATUS ElfrClearELFA(
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING BackupFileNameW;
+    NTSTATUS Status;
+
+    Status = RtlAnsiStringToUnicodeString(&BackupFileNameW,
+                                          (PANSI_STRING)BackupFileName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = ElfrClearELFW(LogHandle,
+                           (PRPC_UNICODE_STRING)&BackupFileNameW);
+
+    RtlFreeUnicodeString(&BackupFileNameW);
+
+    return Status;
 }
 
 
@@ -525,6 +555,7 @@ NTSTATUS ElfrOpenELA(
     IELF_HANDLE *LogHandle)
 {
     UNICODE_STRING ModuleNameW;
+    NTSTATUS Status;
 
     if ((MajorVersion != 1) || (MinorVersion != 1))
         return STATUS_INVALID_PARAMETER;
@@ -533,7 +564,9 @@ NTSTATUS ElfrOpenELA(
     if (RegModuleName->Length > 0)
         return STATUS_INVALID_PARAMETER;
 
-    RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* FIXME: Must verify that caller has read access */
 
@@ -559,12 +592,16 @@ NTSTATUS ElfrRegisterEventSourceA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNICODE_STRING ModuleNameW    = { 0, 0, NULL };
+    UNICODE_STRING ModuleNameW;
+    NTSTATUS Status;
 
-    if (ModuleName &&
-        !RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE))
+    Status = RtlAnsiStringToUnicodeString(&ModuleNameW,
+                                          (PANSI_STRING)ModuleName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
     {
-        return STATUS_NO_MEMORY;
+        DPRINT1("RtlAnsiStringToUnicodeString failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     /* RegModuleName must be an empty string */
