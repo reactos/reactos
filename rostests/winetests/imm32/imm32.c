@@ -22,11 +22,13 @@
 
 #include "wine/test.h"
 #include "winuser.h"
+#include "wingdi.h"
 #include "imm.h"
 
 #define NUMELEMS(array) (sizeof((array))/sizeof((array)[0]))
 
 static BOOL (WINAPI *pImmAssociateContextEx)(HWND,HIMC,DWORD);
+static BOOL (WINAPI *pImmIsUIMessageA)(HWND,UINT,WPARAM,LPARAM);
 
 /*
  * msgspy - record and analyse message traces sent to a certain window
@@ -135,6 +137,19 @@ static void msg_spy_cleanup(void) {
 static const char wndcls[] = "winetest_imm32_wndcls";
 static HWND hwnd;
 
+static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+        case WM_IME_SETCONTEXT:
+        case WM_NCCREATE:
+        case WM_CREATE:
+            return TRUE;
+    }
+
+    return DefWindowProcA(hwnd,msg,wParam,lParam);
+}
+
 static BOOL init(void) {
     WNDCLASSEX wc;
     HIMC imc;
@@ -142,10 +157,11 @@ static BOOL init(void) {
 
     hmod = GetModuleHandleA("imm32.dll");
     pImmAssociateContextEx = (void*)GetProcAddress(hmod, "ImmAssociateContextEx");
+    pImmIsUIMessageA = (void*)GetProcAddress(hmod, "ImmIsUIMessageA");
 
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = 0;
-    wc.lpfnWndProc   = DefWindowProc;
+    wc.lpfnWndProc   = wndProc;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = GetModuleHandle(0);
@@ -209,9 +225,7 @@ static void test_ImmNotifyIME(void) {
     msg_spy_flush_msgs();
 
     ImmNotifyIME(imc, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
-    ok(!msg_spy_find_msg(WM_IME_COMPOSITION), "Windows does not post "
-       "WM_IME_COMPOSITION in response to NI_COMPOSITIONSTR / CPS_CANCEL, if "
-       "the composition string being canceled is non empty.\n");
+    msg_spy_flush_msgs();
 
     /* behavior differs between win9x and NT */
     ret = ImmGetCompositionString(imc, GCS_COMPSTR, resstr, sizeof(resstr));
@@ -345,6 +359,220 @@ static void test_ImmAssociateContextEx(void)
     ImmReleaseContext(hwnd,imc);
 }
 
+typedef struct _igc_threadinfo {
+    HWND hwnd;
+    HANDLE event;
+    HIMC himc;
+} igc_threadinfo;
+
+
+static DWORD WINAPI ImmGetContextThreadFunc( LPVOID lpParam)
+{
+    HIMC h1,h2;
+    HWND hwnd2;
+    COMPOSITIONFORM cf;
+    POINT pt;
+    igc_threadinfo *info= (igc_threadinfo*)lpParam;
+    info->hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, NULL, NULL, GetModuleHandle(0), NULL);
+
+    h1 = ImmGetContext(hwnd);
+    todo_wine ok(info->himc == h1, "hwnd context changed in new thread\n");
+    h2 = ImmGetContext(info->hwnd);
+    todo_wine ok(h2 != h1, "new hwnd in new thread should have different context\n");
+    info->himc = h2;
+    ImmReleaseContext(hwnd,h1);
+
+    hwnd2 = CreateWindowEx(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, NULL, NULL, GetModuleHandle(0), NULL);
+    h1 = ImmGetContext(hwnd2);
+
+    ok(h1 == h2, "Windows in same thread should have same default context\n");
+    ImmReleaseContext(hwnd2,h1);
+    ImmReleaseContext(info->hwnd,h2);
+    DestroyWindow(hwnd2);
+
+    /* priming for later tests */
+    ImmSetCompositionWindow(h1, &cf);
+    ImmSetStatusWindowPos(h1, &pt);
+
+    SetEvent(info->event);
+    Sleep(INFINITE);
+    return 1;
+}
+
+static void test_ImmThreads(void)
+{
+    HIMC himc, otherHimc, h1;
+    igc_threadinfo threadinfo;
+    HANDLE hThread;
+    DWORD dwThreadId;
+    BOOL rc;
+    LOGFONT lf;
+    COMPOSITIONFORM cf;
+    DWORD status, sentence;
+    POINT pt;
+
+    himc = ImmGetContext(hwnd);
+    threadinfo.event = CreateEvent(NULL, TRUE, FALSE, NULL);
+    threadinfo.himc = himc;
+    hThread = CreateThread(NULL, 0, ImmGetContextThreadFunc, &threadinfo, 0, &dwThreadId );
+    WaitForSingleObject(threadinfo.event, INFINITE);
+
+    otherHimc = ImmGetContext(threadinfo.hwnd);
+
+    todo_wine ok(himc != otherHimc, "Windows from other threads should have different himc\n");
+    todo_wine ok(otherHimc == threadinfo.himc, "Context from other thread should not change in main thread\n");
+
+    if (0) /* FIXME: Causes wine to hang */
+    {
+    h1 = ImmAssociateContext(hwnd,otherHimc);
+    ok(h1 == NULL, "Should fail to be able to Associate a default context from a different thread\n");
+    h1 = ImmGetContext(hwnd);
+    ok(h1 == himc, "Context for window should remain unchanged\n");
+    ImmReleaseContext(hwnd,h1);
+    }
+
+
+    /* OpenStatus */
+    rc = ImmSetOpenStatus(himc, TRUE);
+    ok(rc != 0, "ImmSetOpenStatus failed\n");
+    rc = ImmGetOpenStatus(himc);
+    ok(rc != 0, "ImmGetOpenStatus failed\n");
+    rc = ImmSetOpenStatus(himc, FALSE);
+    ok(rc != 0, "ImmSetOpenStatus failed\n");
+    rc = ImmGetOpenStatus(himc);
+    ok(rc == 0, "ImmGetOpenStatus failed\n");
+
+    rc = ImmSetOpenStatus(otherHimc, TRUE);
+    todo_wine ok(rc == 0, "ImmSetOpenStatus should fail\n");
+    rc = ImmGetOpenStatus(otherHimc);
+    todo_wine ok(rc == 0, "ImmGetOpenStatus failed\n");
+    rc = ImmSetOpenStatus(otherHimc, FALSE);
+    todo_wine ok(rc == 0, "ImmSetOpenStatus should fail\n");
+    rc = ImmGetOpenStatus(otherHimc);
+    ok(rc == 0, "ImmGetOpenStatus failed\n");
+
+    /* CompositionFont */
+    rc = ImmGetCompositionFont(himc, &lf);
+    ok(rc != 0, "ImmGetCompositionFont failed\n");
+    rc = ImmSetCompositionFont(himc, &lf);
+    ok(rc != 0, "ImmSetCompositionFont failed\n");
+
+    rc = ImmGetCompositionFont(otherHimc, &lf);
+    ok(rc != 0 || broken(rc == 0), "ImmGetCompositionFont failed\n");
+    rc = ImmSetCompositionFont(otherHimc, &lf);
+    todo_wine ok(rc == 0, "ImmSetCompositionFont should fail\n");
+
+    /* CompositionWindow */
+    rc = ImmSetCompositionWindow(himc, &cf);
+    ok(rc != 0, "ImmSetCompositionWindow failed\n");
+    rc = ImmGetCompositionWindow(himc, &cf);
+    ok(rc != 0, "ImmGetCompositionWindow failed\n");
+
+    rc = ImmSetCompositionWindow(otherHimc, &cf);
+    todo_wine ok(rc == 0, "ImmSetCompositionWindow should fail\n");
+    rc = ImmGetCompositionWindow(otherHimc, &cf);
+    ok(rc != 0 || broken(rc == 0), "ImmGetCompositionWindow failed\n");
+
+    /* ConversionStatus */
+    rc = ImmGetConversionStatus(himc, &status, &sentence);
+    ok(rc != 0, "ImmGetConversionStatus failed\n");
+    rc = ImmSetConversionStatus(himc, status, sentence);
+    ok(rc != 0, "ImmSetConversionStatus failed\n");
+
+    rc = ImmGetConversionStatus(otherHimc, &status, &sentence);
+    ok(rc != 0 || broken(rc == 0), "ImmGetConversionStatus failed\n");
+    rc = ImmSetConversionStatus(otherHimc, status, sentence);
+    todo_wine ok(rc == 0, "ImmSetConversionStatus should fail\n");
+
+    /* StatusWindowPos */
+    rc = ImmSetStatusWindowPos(himc, &pt);
+    ok(rc != 0, "ImmSetStatusWindowPos failed\n");
+    rc = ImmGetStatusWindowPos(himc, &pt);
+    ok(rc != 0, "ImmGetStatusWindowPos failed\n");
+
+    rc = ImmSetStatusWindowPos(otherHimc, &pt);
+    todo_wine ok(rc == 0, "ImmSetStatusWindowPos should fail\n");
+    rc = ImmGetStatusWindowPos(otherHimc, &pt);
+    ok(rc != 0 || broken(rc == 0), "ImmGetStatusWindowPos failed\n");
+
+    ImmReleaseContext(threadinfo.hwnd,otherHimc);
+    ImmReleaseContext(hwnd,himc);
+
+    DestroyWindow(threadinfo.hwnd);
+    TerminateThread(hThread, 1);
+
+    himc = ImmGetContext(GetDesktopWindow());
+    todo_wine ok(himc == NULL, "Should not be able to get himc from other process window\n");
+}
+
+static void test_ImmIsUIMessage(void)
+{
+    struct test
+    {
+        UINT msg;
+        BOOL ret;
+    };
+
+    static const struct test tests[] =
+    {
+        { WM_MOUSEMOVE,            FALSE },
+        { WM_IME_STARTCOMPOSITION, TRUE  },
+        { WM_IME_ENDCOMPOSITION,   TRUE  },
+        { WM_IME_COMPOSITION,      TRUE  },
+        { WM_IME_SETCONTEXT,       TRUE  },
+        { WM_IME_NOTIFY,           TRUE  },
+        { WM_IME_CONTROL,          FALSE },
+        { WM_IME_COMPOSITIONFULL,  TRUE  },
+        { WM_IME_SELECT,           TRUE  },
+        { WM_IME_CHAR,             FALSE },
+        { 0x287 /* FIXME */,       TRUE  },
+        { WM_IME_REQUEST,          FALSE },
+        { WM_IME_KEYDOWN,          FALSE },
+        { WM_IME_KEYUP,            FALSE },
+        { 0, FALSE } /* mark the end */
+    };
+
+    const struct test *test;
+    BOOL ret;
+
+    if (!pImmIsUIMessageA) return;
+
+    for (test = tests; test->msg; test++)
+    {
+        msg_spy_flush_msgs();
+        ret = pImmIsUIMessageA(NULL, test->msg, 0, 0);
+        ok(ret == test->ret, "ImmIsUIMessageA returned %x for %x\n", ret, test->msg);
+        ok(!msg_spy_find_msg(test->msg), "Windows does not send 0x%x for NULL hwnd\n", test->msg);
+
+        ret = pImmIsUIMessageA(hwnd, test->msg, 0, 0);
+        ok(ret == test->ret, "ImmIsUIMessageA returned %x for %x\n", ret, test->msg);
+        if (ret)
+            ok(msg_spy_find_msg(test->msg) != NULL, "Windows does send 0x%x\n", test->msg);
+        else
+            ok(!msg_spy_find_msg(test->msg), "Windows does not send 0x%x\n", test->msg);
+    }
+}
+
+static void test_ImmGetContext(void)
+{
+    HIMC himc;
+    DWORD err;
+
+    SetLastError(0xdeadbeef);
+    himc = ImmGetContext((HWND)0xffffffff);
+    err = GetLastError();
+    ok(himc == NULL, "ImmGetContext succeeded\n");
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "got %u\n", err);
+
+    himc = ImmGetContext(hwnd);
+    ok(himc != NULL, "ImmGetContext failed\n");
+    ok(ImmReleaseContext(hwnd, himc), "ImmReleaseContext failed\n");
+}
+
 START_TEST(imm32) {
     if (init())
     {
@@ -353,6 +581,9 @@ START_TEST(imm32) {
         test_ImmSetCompositionString();
         test_ImmIME();
         test_ImmAssociateContextEx();
+        test_ImmThreads();
+        test_ImmIsUIMessage();
+        test_ImmGetContext();
     }
     cleanup();
 }
