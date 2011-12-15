@@ -108,7 +108,7 @@ BEGIN
   LTEXT "Możesz określić parametry początkowe, które będą użyte przy uruchomieniu usługi z tego miejsca.",IDC_STATIC, 6,177,240,15
   LTEXT "Parametry uruchomienia:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+  PUSHBUTTON "Edytuj", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
