@@ -156,20 +156,18 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
 
             dlgInfo->idResult = IDOK;
             SETDLGINFO( hWnd, dlgInfo );
-
-           NtUserxSetDialogPointer( hWnd, dlgInfo );
        }
        else
        {
            return NULL;
        }
     }
+
     if (dlgInfo)
     {
-        if (!(pWindow->state & WNDS_DIALOGWINDOW) || pWindow->fnid != FNID_DIALOG)
+        if (!(pWindow->state & WNDS_DIALOGWINDOW))
         {
-           ERR("Wrong window class for Dialog! fnId 0x%x\n", pWindow->fnid);
-           return NULL;
+           NtUserxSetDialogPointer( hWnd, dlgInfo );
         }
     }
     return dlgInfo;
