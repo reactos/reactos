@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/_vcprintf.c
- * PURPOSE:         Implementation of _vcprintf
+ * FILE:            lib/sdk/crt/printf/_vcwprintf.c
+ * PURPOSE:         Implementation of _vcwprintf
  * PROGRAMMER:      Samuel Serapión
  */
 
@@ -11,7 +11,7 @@
 
 int
 __cdecl
-_vcprintf(const char* format, va_list va)
+_vcwprintf(const wchar_t* format, va_list va)
 {
-    return vfprintf(stdout, format, va);
+    return vfwprintf(stdout, format, va);
 }

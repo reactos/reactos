@@ -15,7 +15,6 @@
                                                  00:00:00, 01/01/1970 UTC to
                                                  23:59:59. 12/31/3000 UTC */
 
-
 errno_t
 localtime_s(struct tm* _tm, const time_t *ptime)
 {
@@ -28,6 +27,7 @@ localtime_s(struct tm* _tm, const time_t *ptime)
                            _CRT_WIDE(__FILE__), 
                            __LINE__, 
                            0);
+        _set_errno(EINVAL);
         return EINVAL;
     }
 
@@ -35,6 +35,7 @@ localtime_s(struct tm* _tm, const time_t *ptime)
     if (*ptime < 0 || *ptime > _MAX__TIME64_T)
     {
         memset(_tm, 0xFF, sizeof(struct tm));
+        _set_errno(EINVAL);
         return EINVAL;
     }
 

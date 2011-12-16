@@ -173,7 +173,7 @@ int CDECL _heapchk(void)
 {
   if (!HeapValidate( GetProcessHeap(), 0, NULL))
   {
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return _HEAPBADNODE;
   }
   return _HEAPOK;
@@ -187,7 +187,7 @@ int CDECL _heapmin(void)
   if (!HeapCompact( GetProcessHeap(), 0 ))
   {
     if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
-      _set_errno(GetLastError());
+      _dosmaperr(GetLastError());
     return -1;
   }
   return 0;
@@ -209,7 +209,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
       !HeapValidate( GetProcessHeap(), 0, phe.lpData ))
   {
     UNLOCK_HEAP;
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return _HEAPBADNODE;
   }
 
@@ -220,7 +220,7 @@ int CDECL _heapwalk(_HEAPINFO* next)
       UNLOCK_HEAP;
       if (GetLastError() == ERROR_NO_MORE_ITEMS)
          return _HEAPEND;
-      _set_errno(GetLastError());
+      _dosmaperr(GetLastError());
       if (!phe.lpData)
         return _HEAPBADBEGIN;
       return _HEAPBADNODE;

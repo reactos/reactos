@@ -71,7 +71,7 @@ int _tsearchenv_s(const _TCHAR* file, const _TCHAR* env, _TCHAR *buf, size_t cou
   if (GetFileAttributes( file ) != INVALID_FILE_ATTRIBUTES)
   {
     GetFullPathName( file, MAX_PATH, buf, NULL );
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return 0;
   }
 

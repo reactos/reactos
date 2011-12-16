@@ -428,9 +428,9 @@
 # @ varargs _fwscanf_s_l(ptr wstr ptr)
 @ cdecl _gcvt(double long str)
 # stub _gcvt_s
-# stub _get_doserrno
+@ cdecl _get_doserrno(ptr)
 # stub _get_environ
-# stub _get_errno
+@ cdecl _get_errno(ptr)
 # stub _get_fileinfo
 # stub _get_fmode
 # @ cdecl _get_heap_handle()
@@ -466,7 +466,7 @@
 @ cdecl _getws(ptr)
 @ cdecl -i386 _global_unwind2(ptr)
 @ cdecl _gmtime32(ptr)
-# stub _gmtime32_s
+@ cdecl _gmtime32_s(ptr ptr)
 @ cdecl _gmtime64(ptr)
 @ cdecl _gmtime64_s(ptr ptr)
 @ cdecl _heapadd(ptr long)
@@ -812,7 +812,7 @@
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 # stub _set_SSE2_enable
 # stub _set_controlfp
-# stub _set_doserrno
+@ cdecl _set_doserrno(long)
 @ cdecl _set_errno(long)
 @ cdecl _set_error_mode(long)
 # stub _set_fileinfo

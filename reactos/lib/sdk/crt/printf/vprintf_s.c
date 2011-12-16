@@ -3,15 +3,17 @@
  * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/vprintf.c
  * PURPOSE:         Implementation of vprintf
- * PROGRAMMER:      Timo Kreuzer
+ * PROGRAMMER:      Samuel Serapión
  */
+
+#define MINGW_HAS_SECURE_API 1
 
 #include <stdio.h>
 #include <stdarg.h>
 
 int
 _cdecl
-vprintf(const char *format, va_list argptr)
+vprintf_s(const char *format, va_list valist)
 {
-    return vfprintf(stdout, format, argptr);
+    return vfprintf_s(stdout,format,valist);
 }

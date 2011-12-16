@@ -3,15 +3,17 @@
  * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/vwprintf.c
  * PURPOSE:         Implementation of vwprintf
- * PROGRAMMER:      Timo Kreuzer
+ * PROGRAMMER:      Samuel Serapión
  */
+
+#define MINGW_HAS_SECURE_API 1
 
 #include <stdio.h>
 #include <stdarg.h>
 
 int
 _cdecl
-vwprintf(const wchar_t *format, va_list valist)
+vwprintf_s(const wchar_t *format, va_list valist)
 {
-    return vfwprintf(stdout,format,valist);
+    return vfwprintf_s(stdout,format,valist);
 }

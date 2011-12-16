@@ -4,13 +4,13 @@
  * FILE:            lib/sdk/crt/printf/fwprintf.c
  * PURPOSE:         Implementation of fwprintf
  * PROGRAMMER:      Timo Kreuzer
- *                  Samuel Serapión
  */
 
-#include <precomp.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 int
-__cdecl
+_cdecl
 fwprintf(FILE* file, const wchar_t *format, ...)
 {
     va_list argptr;
@@ -22,14 +22,3 @@ fwprintf(FILE* file, const wchar_t *format, ...)
     return result;
 }
 
-int
-__cdecl
-fwprintf_s(FILE* file, const wchar_t *format, ...)
-{
-    va_list valist;
-    int res;
-    va_start(valist, format);
-    res = vfwprintf_s(file, format, valist);
-    va_end(valist);
-    return res;
-}

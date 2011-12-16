@@ -131,25 +131,35 @@ list(APPEND CRT_SOURCE
     misc/stubs.c
     misc/tls.c
     printf/_cprintf.c
+	printf/_cwprintf.c
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
-	printf/_vsprintf_p.c
+	printf/_vcwprintf.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
+    printf/_vsprintf_p.c
     printf/fprintf.c
+    printf/fprintf_s.c
     printf/fwprintf.c
+    printf/fwprintf_s.c
     printf/printf.c
+    printf/printf_s.c
     printf/sprintf.c
     printf/streamout.c
     printf/swprintf.c
     printf/vfprintf.c
+    printf/vfprintf_s.c
     printf/vfwprintf.c
+    printf/vfwprintf_s.c
     printf/vprintf.c
+    printf/vprintf_s.c
     printf/vsprintf.c
     printf/vswprintf.c
     printf/vwprintf.c
+    printf/vwprintf_s.c
     printf/wprintf.c
+    printf/wprintf_s.c
     printf/wstreamout.c
     process/_cwait.c
     process/_system.c

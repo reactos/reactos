@@ -596,7 +596,7 @@ int CDECL _access(const char *filename, int mode)
 
   if (!filename || attr == INVALID_FILE_ATTRIBUTES)
   {
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return -1;
   }
   if ((attr & FILE_ATTRIBUTE_READONLY) && (mode & W_OK))
@@ -633,7 +633,7 @@ int CDECL _waccess(const wchar_t *filename, int mode)
 
   if (!filename || attr == INVALID_FILE_ATTRIBUTES)
   {
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return -1;
   }
   if ((attr & FILE_ATTRIBUTE_READONLY) && (mode & W_OK))
@@ -674,7 +674,7 @@ int CDECL _chmod(const char *path, int flags)
     if (newFlags == oldFlags || SetFileAttributesA(path, newFlags))
       return 0;
   }
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -693,7 +693,7 @@ int CDECL _wchmod(const wchar_t *path, int flags)
     if (newFlags == oldFlags || SetFileAttributesW(path, newFlags))
       return 0;
   }
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -706,7 +706,7 @@ int CDECL _unlink(const char *path)
   if(DeleteFileA(path))
     return 0;
   TRACE("failed (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -719,7 +719,7 @@ int CDECL _wunlink(const wchar_t *path)
   if(DeleteFileW(path))
     return 0;
   TRACE("failed (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -787,7 +787,7 @@ int CDECL _close(int fd)
   else if (!CloseHandle(hand))
   {
     WARN(":failed-last error (%d)\n",GetLastError());
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     ret = -1;
   }
   else
@@ -821,7 +821,7 @@ int CDECL _commit(int fd)
       return 0;
     }
     TRACE(":failed-last error (%d)\n",GetLastError());
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return -1;
   }
   TRACE(":ok\n");
@@ -867,7 +867,7 @@ int CDECL _dup2(int od, int nd)
     else
     {
       ret = -1;
-      _set_errno(GetLastError());
+      _dosmaperr(GetLastError());
     }
   }
   else
@@ -1008,7 +1008,7 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
     return ofs.QuadPart;
   }
   TRACE(":error-last error (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -1172,7 +1172,7 @@ int CDECL _chsize(int fd, long size)
             if (pos >= 0)
             {
                 ret = SetEndOfFile(handle);
-                if (!ret) _set_errno(GetLastError());
+                if (!ret) _dosmaperr(GetLastError());
             }
 
             /* restore the file pointer */
@@ -1507,7 +1507,7 @@ int CDECL _pipe(int *pfds, unsigned int psize, int textmode)
     UNLOCK_FILES();
   }
   else
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
 
   return ret;
 }
@@ -1598,7 +1598,7 @@ int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmod
   hand = CreateFileA(path, access, sharing, &sa, creation, attrib, 0);
   if (hand == INVALID_HANDLE_VALUE)  {
     WARN(":failed-last error (%d)\n", GetLastError());
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return *_errno();
   }
 
@@ -1718,7 +1718,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
 
   if (hand == INVALID_HANDLE_VALUE)  {
     WARN(":failed-last error (%d)\n",GetLastError());
-    _set_errno(GetLastError());
+    _dosmaperr(GetLastError());
     return *_errno();
   }
 
@@ -2783,7 +2783,7 @@ FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode, FILE* file)
       {
           file->_flag = 0;
           WARN(":failed-last error (%d)\n",GetLastError());
-          _set_errno(GetLastError());
+          _dosmaperr(GetLastError());
           file = NULL;
       }
     }
@@ -3103,7 +3103,7 @@ int CDECL remove(const char *path)
   if (DeleteFileA(path))
     return 0;
   TRACE(":failed (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -3116,7 +3116,7 @@ int CDECL _wremove(const wchar_t *path)
   if (DeleteFileW(path))
     return 0;
   TRACE(":failed (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -3129,7 +3129,7 @@ int CDECL rename(const char *oldpath,const char *newpath)
   if (MoveFileExA(oldpath, newpath, MOVEFILE_COPY_ALLOWED))
     return 0;
   TRACE(":failed (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 
@@ -3142,7 +3142,7 @@ int CDECL _wrename(const wchar_t *oldpath,const wchar_t *newpath)
   if (MoveFileExW(oldpath, newpath, MOVEFILE_COPY_ALLOWED))
     return 0;
   TRACE(":failed (%d)\n",GetLastError());
-  _set_errno(GetLastError());
+  _dosmaperr(GetLastError());
   return -1;
 }
 

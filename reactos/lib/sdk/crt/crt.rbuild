@@ -31,25 +31,35 @@
 
 	<directory name="printf">
 		<file>_cprintf.c</file>
+		<file>_cwprintf.c</file>
 		<file>_snprintf.c</file>
 		<file>_snwprintf.c</file>
 		<file>_vcprintf.c</file>
-		<file>_vsprintf_p.c</file>
+		<file>_vcwprintf.c</file>
 		<file>_vsnprintf.c</file>
 		<file>_vsnwprintf.c</file>
+		<file>_vsprintf_p.c</file>
 		<file>fprintf.c</file>
+		<file>fprintf_s.c</file>
 		<file>fwprintf.c</file>
+		<file>fwprintf_s.c</file>
 		<file>printf.c</file>
+		<file>printf_s.c</file>
 		<file>sprintf.c</file>
 		<file>streamout.c</file>
 		<file>swprintf.c</file>
 		<file>vfprintf.c</file>
+		<file>vfprintf_s.c</file>
 		<file>vfwprintf.c</file>
+		<file>vfwprintf_s.c</file>
 		<file>vprintf.c</file>
+		<file>vprintf_s.c</file>
 		<file>vsprintf.c</file>
 		<file>vswprintf.c</file>
 		<file>vwprintf.c</file>
+		<file>vwprintf_s.c</file>
 		<file>wprintf.c</file>
+		<file>wprintf_s.c</file>
 		<file>wstreamout.c</file>
 	</directory>
 

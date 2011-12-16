@@ -47,7 +47,7 @@ errno_t CDECL _get_doserrno(unsigned long *pValue)
 errno_t CDECL _set_doserrno(unsigned long error)
 {
     *__doserrno() = error;
-    return error;
+    return 0;
 }
 
 /*
@@ -68,7 +68,7 @@ errno_t CDECL _get_errno(int *pValue)
 int CDECL _set_errno(int error)
 {
     *_errno() = error;
-    return error;
+    return 0;
 }
 
 /*
