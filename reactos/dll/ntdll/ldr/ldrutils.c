@@ -45,7 +45,7 @@ NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module )
 
 NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
 {
-    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\',0};
+    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\'};
     static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
 
     ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *info;
