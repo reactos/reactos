@@ -540,8 +540,21 @@ NTSTATUS ElfrBackupELFA(
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING BackupFileNameW;
+    NTSTATUS Status;
+
+    Status = RtlAnsiStringToUnicodeString(&BackupFileNameW,
+                                          (PANSI_STRING)BackupFileName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = ElfrBackupELFW(LogHandle,
+                            (PRPC_UNICODE_STRING)&BackupFileNameW);
+
+    RtlFreeUnicodeString(&BackupFileNameW);
+
+    return Status;
 }
 
 
@@ -673,8 +686,104 @@ NTSTATUS ElfrReportEventA(
     DWORD *RecordNumber,
     DWORD *TimeWritten)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING ComputerNameW;
+    PUNICODE_STRING *StringsArrayW = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+    USHORT i;
+
+    DPRINT("ElfrReportEventA(%hu)\n", NumStrings);
+
+#if 0
+    for (i = 0; i < NumStrings; i++)
+    {
+        if (Strings[i] == NULL)
+        {
+            DPRINT1("String %hu is null\n", i);
+        }
+        else
+        {
+            DPRINT1("String %hu: %Z\n", i, Strings[i]);
+        }
+    }
+#endif
+
+    Status = RtlAnsiStringToUnicodeString((PUNICODE_STRING)&ComputerNameW,
+                                          (PANSI_STRING)ComputerName,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (NumStrings != 0)
+    {
+        StringsArrayW = HeapAlloc(MyHeap,
+                                  HEAP_ZERO_MEMORY,
+                                  NumStrings * sizeof (PUNICODE_STRING));
+        if (StringsArrayW == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Done;
+        }
+
+        for (i = 0; i < NumStrings; i++)
+        {
+            if (Strings[i] != NULL)
+            {
+                StringsArrayW[i] = HeapAlloc(MyHeap,
+                                             HEAP_ZERO_MEMORY,
+                                             sizeof(UNICODE_STRING));
+                if (StringsArrayW[i] == NULL)
+                {
+                    Status = STATUS_NO_MEMORY;
+                    break;
+                }
+
+                Status = RtlAnsiStringToUnicodeString(StringsArrayW[i],
+                                                      (PANSI_STRING)Strings[i],
+                                                      TRUE);
+            }
+
+            if (!NT_SUCCESS(Status))
+                break;
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        Status = ElfrReportEventW(LogHandle,
+                                  Time,
+                                  EventType,
+                                  EventCategory,
+                                  EventID,
+                                  NumStrings,
+                                  DataSize,
+                                  (PRPC_UNICODE_STRING)&ComputerNameW,
+                                  UserSID,
+                                  (PRPC_UNICODE_STRING*)StringsArrayW,
+                                  Data,
+                                  Flags,
+                                  RecordNumber,
+                                  TimeWritten);
+    }
+
+Done:
+    for (i = 0; i < NumStrings; i++)
+    {
+        if (StringsArrayW[i] != NULL)
+        {
+            if (StringsArrayW[i]->Buffer)
+            {
+                RtlFreeUnicodeString(StringsArrayW[i]);
+                HeapFree(MyHeap, 0, StringsArrayW[i]);
+            }
+        }
+    }
+
+    if (StringsArrayW != NULL)
+        HeapFree(MyHeap, 0, StringsArrayW);
+
+    RtlFreeUnicodeString(&ComputerNameW);
+
+    return Status;
 }
 
 
