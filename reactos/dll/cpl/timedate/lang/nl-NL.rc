@@ -45,9 +45,9 @@ CAPTION "Internet Tijd"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 55, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Klok &automatisch met een tijdserver op het Internet synchroniseren.", IDC_AUTOSYNC,
-                    "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
-    LTEXT           "Server:", -1, 24, 22, 28, 13
+    AUTOCHECKBOX    "Klok &automatisch met een tijdserver op het Internet synchroniseren.", IDC_AUTOSYNC,
+                    11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+    LTEXT           "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON      "&Nu synchroniseren", IDC_UPDATEBUTTON, 177, 22, 69, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12

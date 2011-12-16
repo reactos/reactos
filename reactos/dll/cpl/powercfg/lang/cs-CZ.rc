@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Vyberte napájecí schéma, které se nejvíce hodí pro tento poèítaè. Všechny zmìny nastavení se uloží do vybraného schématu.",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "&Schéma napájení", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Uložit jako...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED

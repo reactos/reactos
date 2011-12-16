@@ -1,5 +1,5 @@
 // Romanian (ro-RO) resources
-//2011.11.26 - Fulea Ștefan: minor changes
+// 2011.11.26 - Fulea Ștefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON        IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT       "Alegeți un regim de consum energetic cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.",
-	-1,37, 6, 209, 36
+              -1, 37, 6, 209, 36
   GROUPBOX    "&Regimuri de consum", -1, 6, 43, 240, 50
   COMBOBOX    IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON  "Pă&strare…", IDC_SAVEAS_BTN, 124, 72, 55, 14, WS_DISABLED

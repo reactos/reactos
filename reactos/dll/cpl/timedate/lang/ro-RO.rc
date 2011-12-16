@@ -1,4 +1,4 @@
-//2011.11.27 - Fulea Ștefan: minor changes
+// 2011.11.27 - Fulea Ștefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX    "Permite &sincronizarea automată cu un server de oră:", IDC_AUTOSYNC,
-                    11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+                    11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT           "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON      "A&ctualizează", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23

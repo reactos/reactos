@@ -10,7 +10,7 @@ BEGIN
                     -1,40,8,194,36
     GROUPBOX        "Schema di gestione dell'energia",-1,8,48,240,48
     COMBOBOX        IDC_ENERGYLIST,15,61,224,92,CBS_DROPDOWNLIST |
-                    WS_VSCROLL | WS_TABSTOP
+                    CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON      "&Salva come...",IDC_SAVEAS_BTN,101,76,75,15,WS_DISABLED
     PUSHBUTTON      "&Cancella",IDC_DELETE_BTN,181,76,55,15,WS_DISABLED
     GROUPBOX        "sconosciuto",IDC_GRPDETAIL,8,100,240,112
@@ -53,7 +53,7 @@ BEGIN
     LTEXT           "sconosciuto",IDC_ALARMVALUE1,200,25,40,10
     LTEXT           "0%",-1,20,40,15,15
     CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
+                    TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
     PUSHBUTTON      "Azione allarmi...",-1,20,70,70,15,WS_DISABLED
     LTEXT           "Notifiche:",-1,95,70,50,10
@@ -68,7 +68,7 @@ BEGIN
     LTEXT           "unknown",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
     CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
+                    TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
     PUSHBUTTON      "Azione allarmi...",-1,20,170,70,15,WS_DISABLED
     LTEXT           "Notifiche:",-1,95,170,50,10
@@ -117,7 +117,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sospensione"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE,5,5,20,20
     LTEXT           "Quando il computer viene sospeso, il contenuto della RAM viene salvato su disco e poi il sistema si spegne. Alla riaccensione il computer si ripresenta nello stato in cui si trovava.",
                     -1,35,5,195,35
     GROUPBOX        "Sospensione",-1,5,45,239,25

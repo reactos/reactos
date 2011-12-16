@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/desk/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Display Control Panel Applet
- * TRANSLATOR:  Artem Reznikov, Sakara Yevhen, Igor Paliychuk 
+ * TRANSLATOR:  Artem Reznikov, Sakara Yevhen, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -139,8 +139,8 @@ BEGIN
     LTEXT           "&Дисплей",1820,3,107,30,8
     LTEXT           "<немає>",IDC_SETTINGS_DEVICE,9,116,224,8
     GROUPBOX        "&Область екрану",1818,3,127,115,43
-    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    30,137,58,17
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30,137,58,17
     LTEXT           "Менше",1815,9,137,24,8,NOT WS_GROUP
     LTEXT           "Більше",1816,93,137,24,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10, NOT WS_GROUP | SS_CENTER

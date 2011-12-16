@@ -10,7 +10,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "P&ower schemes", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Save As...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -163,5 +163,3 @@ BEGIN
   IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
   IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END
-
-

@@ -5,7 +5,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Allm‰nt"
+CAPTION "Allm√§nt"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
@@ -20,30 +20,54 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Besˆk <A HREF=""http://www.reactos.org/"">ReactOS hemsida</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL     "Bes√∂k <A HREF=""http://www.reactos.org/"">ReactOS hemsida</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON  "Visa &licens...", IDC_LICENCE, 170, 199, 78, 13
 END
 
 
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "HÂrdvara"
+CAPTION "H√•rdvara"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX    "Enhetshanteraren", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "Enhetshanteraren visar all hÂrdvara i din dator. Anv‰nd enhetshanteraren fˆr att ‰ndra egenskaper pÂ dina enheter.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT       "Enhetshanteraren visar all h√•rdvara i din dator. Anv√§nd enhetshanteraren f√∂r att √§ndra egenskaper p√• dina enheter.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON  "&Enhetshanteraren...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
 
-    GROUPBOX    "Guiden anslut ny hÂrdvara", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX    "Guiden anslut ny h√•rdvara", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "Guiden anslut ny hÂrdvara hj‰lper dig att installera, avinstallera, reparera, koppla ur, mata ut och konfigurera din hÂrdvara.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Guiden anslut ny hÂrdvara...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    LTEXT       "Guiden anslut ny h√•rdvara hj√§lper dig att installera, avinstallera, reparera, koppla ur, mata ut och konfigurera din h√•rdvara.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON  "&Guiden anslut ny h√•rdvara...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
 
-    GROUPBOX    "HÂrdvaruprofiler", IDC_STATIC, 6, 149, 244, 61
+    GROUPBOX    "H√•rdvaruprofiler", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "HÂrdvaruprofiler ger dig mˆjligheten att konfigurera och lagra olika hÂrdvarukonfigurationer.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&HÂrdvaruprofiler...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+    LTEXT       "H√•rdvaruprofiler ger dig m√∂jligheten att konfigurera och lagra olika h√•rdvarukonfigurationer.", IDC_STATIC, 42, 160, 204, 24
+    PUSHBUTTON  "&H√•rdvaruprofiler...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+END
+
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Avancerat"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "Administrat√∂rsr√§ttigheter kr√§vs f√∂r de flesta av dessa inst√§llningar.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX    "Prestanda", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "Prestandainst√§llningar kontrollerar hur program anv√§nder minne, vilket p√•verkar din dators hastighet.", IDC_STATIC, 16, 29, 228, 17
+    PUSHBUTTON  "Inst√§llningar", IDC_PERFOR, 194, 48, 50, 15
+
+    GROUPBOX    "Anv√§ndarprofiler", IDC_STATIC, 6,75,244,48
+    LTEXT       "Skrivbordsinst√§llningar f√∂r ditt anv√§ndarkonto", IDC_STATIC, 16, 88, 228, 20
+    PUSHBUTTON  "Inst√§llningar", IDC_USERPROFILE, 194, 103, 50, 15
+
+    GROUPBOX    "Start och √•terst√§llning", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Start och √•terst√§llning st√§ller in hur din dator ska starta och hur den ska bete sig om den st√∂ter p√• ett fel.", IDC_STATIC, 16, 144, 228, 19
+    PUSHBUTTON  "Inst√§llningar", IDC_STAREC, 194, 162, 50, 15
+
+    PUSHBUTTON  "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
+    PUSHBUTTON  "Milj√∂variabler", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON  "Felrapportering", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 
@@ -59,37 +83,14 @@ BEGIN
 END
 
 
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Avancerat"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    LTEXT       "Administratˆrsr‰ttigheter kr‰vs fˆr de flesta av dessa inst‰llningar.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX    "Prestanda", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Prestandainst‰llningar kontrollerar hur program anv‰nder minne, vilket pÂverkar din dators hastighet.", IDC_STATIC, 16, 29, 228, 17
-    PUSHBUTTON  "Inst‰llningar", IDC_PERFOR, 194, 48, 50, 15
-
-    GROUPBOX    "Anv‰ndarprofiler", IDC_STATIC, 6,75,244,48
-    LTEXT       "Skrivbordsinst‰llningar fˆr ditt anv‰ndarkonto", IDC_STATIC, 16, 88, 228, 20
-    PUSHBUTTON  "Inst‰llningar", IDC_USERPROFILE, 194, 103, 50, 15
-
-    GROUPBOX    "Start och Âterst‰llning", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Start och Âterst‰llning st‰ller in hur din dator ska starta och hur den ska bete sig om den stˆter pÂ ett fel.", IDC_STATIC, 16, 144, 228, 19
-    PUSHBUTTON  "Inst‰llningar", IDC_STAREC, 194, 162, 50, 15
-
-    PUSHBUTTON  "Miljˆvariabler", IDC_ENVVAR, 84, 192, 80, 15
-    PUSHBUTTON  "Felrapportering", IDC_ERRORREPORT, 170, 192, 80, 15
-END
-
-
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "HÂrdvaruprofiler"
+CAPTION "H√•rdvaruprofiler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Du kan st‰lla in hÂrdvaruprofiler fˆr olika hÂrdvarukonfigurationer. Du kan v‰lja vilken profil du vill anv‰nda vid start.", IDC_STATIC, 46, 11, 188, 25
-    LTEXT       "Tillg‰ngliga hÂrdvaruprofiler:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT       "Du kan st√§lla in h√•rdvaruprofiler f√∂r olika h√•rdvarukonfigurationer. Du kan v√§lja vilken profil du vill anv√§nda vid start.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "Tillg√§ngliga h√•rdvaruprofiler:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
@@ -98,10 +99,10 @@ BEGIN
     PUSHBUTTON  "&Byt namn", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON  "&Ta bort", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
 
-    GROUPBOX    "Val av hÂrdvaruprofiler", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "N‰r ReactOS startar:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&V‰nta tills jag v‰ljer en hÂrdvaruprofil", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "&Anv‰nd den fˆrsta profilen i listan om jag inte v‰ljer en profil", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    GROUPBOX    "Val av h√•rdvaruprofiler", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "N√§r ReactOS startar:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "&V√§nta tills jag v√§ljer en h√•rdvaruprofil", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Anv√§nd den f√∂rsta profilen i listan om jag inte v√§ljer en profil", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT       "sekunder", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -131,7 +132,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Byt namn"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT        "FrÂn:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "Fr√•n:", IDC_STATIC, 5, 10, 20, 8
     LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
     LTEXT        "Till:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
@@ -143,20 +144,20 @@ END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Anv‰ndarprofiler"
+CAPTION "Anv√§ndarprofiler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Anv‰ndarprofiler innehÂller skrivbordsinst‰llningar och annan information specifikt fˆr ditt anv‰ndarkonto. Du kan skapa en ny profil fˆr varje dator du anv‰nder, eller sÂ kan du anv‰nda en central profil som ‰r lika pÂ alla datorer.",
+    LTEXT       "Anv√§ndarprofiler inneh√•ller skrivbordsinst√§llningar och annan information specifikt f√∂r ditt anv√§ndarkonto. Du kan skapa en ny profil f√∂r varje dator du anv√§nder, eller s√• kan du anv√§nda en central profil som √§r lika p√• alla datorer.",
                     IDC_STATIC, 40, 11, 211, 35
-    LTEXT       "Profiler lagrade pÂ den h‰r datorn:", IDC_STATIC, 16, 51, 204, 9
+    LTEXT       "Profiler lagrade p√• den h√§r datorn:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "ƒndra typ", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
+    PUSHBUTTON  "√Ñndra typ", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
     PUSHBUTTON  "Ta bort", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
     PUSHBUTTON  "Kopiera till", IDC_USERPROFILE_COPY, 200, 156, 50, 13
 
-    CONTROL     "Fˆr att skapa nya anv‰ndarkonton, anv‰nd <A>anv‰ndarkonton</A> i kontrollpanelen.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
+    CONTROL     "F√∂r att skapa nya anv√§ndarkonton, anv√§nd <A>anv√§ndarkonton</A> i kontrollpanelen.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
     PUSHBUTTON  "Avbryt", IDCANCEL, 196, 200, 54, 13
@@ -165,7 +166,7 @@ END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Start och Âterst‰llning"
+CAPTION "Start och √•terst√§llning"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX    "Systemstart", IDC_STATIC, 7, 12, 238, 95
@@ -175,23 +176,23 @@ BEGIN
     EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sek.", IDC_STATIC, 223, 56, 18, 8
-    AUTOCHECKBOX "Tid att &visa Âterst‰llningsalternativ:", IDC_STRRECREC, 14, 70, 170, 8
+    AUTOCHECKBOX "Tid att &visa √•terst√§llningsalternativ:", IDC_STRRECREC, 14, 70, 170, 8
     EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sek.", IDC_STATIC, 223, 70, 18, 8
-    LTEXT       "Fˆr att redigera startalternativen manuellt, tryck pÂ redigera.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "F√∂r att redigera startalternativen manuellt, tryck p√• redigera.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON  "&Redigera", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Systemfel", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "Skriv en &h‰ndelse i loggboken", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "Skriv en &h√§ndelse i loggboken", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
     AUTOCHECKBOX "Skicka en &administrativ varning", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "S&tarta om automatiskt", IDC_STRRECRESTART, 14, 152, 145, 10
 
-    GROUPBOX    "Skriv information fˆr debugging", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Skriv information f√∂r debugging", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "Dump&fil:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    AUTOCHECKBOX "Skriv &ˆver om filen finns", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "Skriv &√∂ver om filen finns", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Avbryt", IDCANCEL, 195, 259, 50, 14
@@ -204,24 +205,24 @@ CAPTION "Virtuellt minne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Enhet  [Etikett]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "V‰xlingsfilsstorlek (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT       "V√§xlingsfilsstorlek (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX    "V‰xlingsfilsstorlek fˆr vald enhet", IDC_DRIVEGROUP, 10, 70, 204, 104
+    GROUPBOX    "V√§xlingsfilsstorlek f√∂r vald enhet", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Enhet:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Tillg‰ngligt utrymme:", IDC_STATIC, 20, 92, 56, 9
+    LTEXT       "Tillg√§ngligt utrymme:", IDC_STATIC, 20, 92, 56, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT       "&Ursprunglig storlek (MB):", -1, 22, 118, 75, 9
     LTEXT       "Ma&ximal storlek (MB):", -1, 22, 131, 75, 9
     AUTORADIOBUTTON "&Egen storlek", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
-    AUTORADIOBUTTON "LÂt &systemet hantera storleken", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Ingen v‰xlingsfil", IDC_NOPAGEFILE, 20, 158, 78,9
+    AUTORADIOBUTTON "L√•t &systemet hantera storleken", IDC_SYSMANSIZE, 20, 145, 88, 9
+    AUTORADIOBUTTON "&Ingen v√§xlingsfil", IDC_NOPAGEFILE, 20, 158, 78,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "V‰lj", IDC_SET, 158, 155, 50, 13
+    PUSHBUTTON  "V√§lj", IDC_SET, 158, 155, 50, 13
 
-    GROUPBOX    "Total v‰xlingsfilsstorlek fˆr alla enheter", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT       "Minsta tillÂtna:", IDC_STATIC, 18, 188, 58, 9
+    GROUPBOX    "Total v√§xlingsfilsstorlek f√∂r alla enheter", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT       "Minsta till√•tna:", IDC_STATIC, 18, 188, 58, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Rekommenderad:", IDC_STATIC, 18, 199, 52, 9
     LTEXT       "", IDC_RECOMMENDED, 88, 199, 100, 9
@@ -235,10 +236,10 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Miljˆvariabler"
+CAPTION "Milj√∂variabler"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Anv‰ndarvariabler", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX    "Anv√§ndarvariabler", IDC_STATIC, 7, 12, 238, 100
 
     CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
@@ -266,7 +267,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Variabel&namn:", IDC_STATIC, 7, 14, 50, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "Variabel&v‰rde:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT       "Variabel&v√§rde:", IDC_STATIC, 7, 32, 50, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
     PUSHBUTTON  "Avbryt", IDCANCEL, 170, 50, 50, 14
@@ -286,13 +287,13 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
-    IDS_CPLSYSTEMDESCRIPTION "Se information om din dator och ‰ndra olika system- och hÂrdvaruinst‰llningar."
+    IDS_CPLSYSTEMDESCRIPTION "Se information om din dator och √§ndra olika system- och h√•rdvaruinst√§llningar."
     IDS_MEGABYTE "MB RAM"
     IDS_GIGABYTE "GB RAM"
     IDS_TERABYTE "TB RAM"
     IDS_PETABYTE "PB RAM"
     IDS_VARIABLE "Variabel"
-    IDS_VALUE    "V‰rde"
+    IDS_VALUE    "V√§rde"
     IDS_NO_DUMP "(None)"
     IDS_MINI_DUMP "Minidump(64KB)"
     IDS_KERNEL_DUMP "Kerneldump"
@@ -301,10 +302,11 @@ BEGIN
     IDS_USERPROFILE_SIZE "Storlek"
     IDS_USERPROFILE_TYPE "Typ"
     IDS_USERPROFILE_STATUS "Status"
-    IDS_USERPROFILE_MODIFIED "ƒndrad"
+    IDS_USERPROFILE_MODIFIED "√Ñndrad"
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
     IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size and must not exceed the available space on the selected drive."
+    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHerv√© Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Bl√ºmel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nG√© van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
 END

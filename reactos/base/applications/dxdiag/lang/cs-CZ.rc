@@ -1,6 +1,6 @@
 /* FILE:        applications/dxdiag/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-06-05
+ * UPDATED:     2011-12-15
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -226,6 +226,6 @@ BEGIN
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 	IDS_OPTION_NO "Ne"
-	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
-	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
+	IDS_D3DTEST_DESCRIPTION "Spustí se test rozhraní Direct3D. Pokračovat?"
+	IDS_D3DTEST_D3Dx "Tento test použije hardwarově akcelerované rozhraní Direct3D %u."
 END

@@ -10,7 +10,6 @@ BEGIN
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
     LTEXT       "Versjon ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
-    LTEXT       "32 bits operativsystem", IDC_STATIC, 10, 173, 85, 9
     LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
     LTEXT       "Maskin:", IDC_STATIC, 124, 132, 34, 9
     LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
@@ -18,7 +17,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Besøk <A HREF=""http://www.reactos.org/no/index.html"">ReactOS Hjemmesiden</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL     "BesÃ¸k <A HREF=""http://www.reactos.org/no/index.html"">ReactOS Hjemmesiden</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON  "Vis &lisensen...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -30,18 +29,42 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX    "Enhetsbehandler", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "Enhetsbehandler viser alt av maskinvare enheter som er innstallert på din datamaskin. Bruk enhetsbehandleren for å endre egenskapene for alle enhetene.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT       "Enhetsbehandler viser alt av maskinvare enheter som er innstallert pÃ¥ din datamaskin. Bruk enhetsbehandleren for Ã¥ endre egenskapene for alle enhetene.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON  "&Enhetsbehandler...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
 
     GROUPBOX    "Maskinvare veiviser", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "Maskinvare veiviseren hjelper deg å installere, avinnstallere, reparere, koble fra, utløse, og konfigurere din maskinvare.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT       "Maskinvare veiviseren hjelper deg Ã¥ installere, avinnstallere, reparere, koble fra, utlÃ¸se, og konfigurere din maskinvare.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON  "&Maskinvare veiviser...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
 
     GROUPBOX    "Maskinvare profiler", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "Maskinvare profiler hjelper deg å sette opp og lagre forskjellige maskinvare konfigurasjon.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT       "Maskinvare profiler hjelper deg Ã¥ sette opp og lagre forskjellige maskinvare konfigurasjon.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON  "Maskin&vare profiler...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+END
+
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Avansert"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "Du mÃ¥ vÃ¦re logget pÃ¥ som administrator for Ã¥ kunne endre innstillingene.", IDC_STATIC, 12, 5, 255, 8
+    GROUPBOX    "Ytelse", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "Visuelle effekter, prosesorplanlegging, minnebruk og virtuelt minne.", IDC_STATIC, 16, 29, 228, 17
+    PUSHBUTTON  "Innstillinger", IDC_PERFOR, 194, 48, 50, 15
+
+    GROUPBOX    "Brukerprofiler", IDC_STATIC, 6,75,244,48
+    LTEXT       "Skrivebordinnstillinger som er relatert til din pÃ¥logging", IDC_STATIC, 16, 88, 228, 20
+    PUSHBUTTON  "Innstillinger", IDC_USERPROFILE, 194, 103, 50, 15
+
+    GROUPBOX    "Oppstart og gjenoppretting", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Oppstart og gjenoppretting forteller hvordan man kan fÃ¥ startet og hva som lagde problemet med din datamaskin.", IDC_STATIC, 16, 144, 228, 19
+    PUSHBUTTON  "Innstillinger", IDC_STAREC, 194, 162, 50, 15
+
+    PUSHBUTTON  "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
+    PUSHBUTTON  "MiljÃ¸variabler", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON  "Feil rapporteringer", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 
@@ -54,29 +77,6 @@ BEGIN
     CONTROL         "Report as Workstation",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
     LTEXT           "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.",IDC_STATIC,15,15,183,41
     PUSHBUTTON      "OK",IDOK,166,83,50,14
-END
-
-
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Avansert"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    LTEXT       "Du må være logget på som administrator for å kunne endre innstillingene.", IDC_STATIC, 12, 5, 255, 8
-    GROUPBOX    "Ytelse", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Visuelle effekter, prosesorplanlegging, minnebruk og virtuelt minne.", IDC_STATIC, 16, 29, 228, 17
-    PUSHBUTTON  "Innstillinger", IDC_PERFOR, 194, 48, 50, 15
-
-    GROUPBOX    "Brukerprofiler", IDC_STATIC, 6,75,244,48
-    LTEXT       "Skrivebordinnstillinger som er relatert til din pålogging", IDC_STATIC, 16, 88, 228, 20
-    PUSHBUTTON  "Innstillinger", IDC_USERPROFILE, 194, 103, 50, 15
-
-    GROUPBOX    "Oppstart og gjenoppretting", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Oppstart og gjenoppretting forteller hvordan man kan få startet og hva som lagde problemet med din datamaskin.", IDC_STATIC, 16, 144, 228, 19
-    PUSHBUTTON  "Innstillinger", IDC_STAREC, 194, 162, 50, 15
-
-    PUSHBUTTON  "Miljøvariabler", IDC_ENVVAR, 84, 192, 80, 15
-    PUSHBUTTON  "Feil rapporteringer", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 
@@ -97,9 +97,9 @@ BEGIN
     PUSHBUTTON  "&Slett", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
 
     GROUPBOX    "Valg av maskinvareprofil", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "Når ReactOS starter:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT       "NÃ¥r ReactOS starter:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Vent til jeg velger en maskinvareprofil", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "&Velg første profil i listen ovenfor hvis jeg ikke velger profil innen", IDC_HRDPROFSELECT, 14, 173, 220, 8
+    AUTORADIOBUTTON "&Velg fÃ¸rste profil i listen ovenfor hvis jeg ikke velger profil innen", IDC_HRDPROFSELECT, 14, 173, 220, 8
     LTEXT       "Sekunder", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -145,16 +145,16 @@ CAPTION "Brukerprofil"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Brukerprofilene lagrer innstillinger for skrivebord og annen informasjon tilknyttet brukerkontoen din. Du kan opprette seperate profiler for hver datamaskin du bruker, eller du kan velge en sentral profil som er den samme på alle maskinene.",
+    LTEXT       "Brukerprofilene lagrer innstillinger for skrivebord og annen informasjon tilknyttet brukerkontoen din. Du kan opprette seperate profiler for hver datamaskin du bruker, eller du kan velge en sentral profil som er den samme pÃ¥ alle maskinene.",
                     IDC_STATIC, 40, 11, 211, 35
-    LTEXT       "Profiler som er lagret på denne maskinen:", IDC_STATIC, 16, 51, 204, 9
+    LTEXT       "Profiler som er lagret pÃ¥ denne maskinen:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Endre type", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
     PUSHBUTTON  "Slett", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
     PUSHBUTTON  "Kopier til", IDC_USERPROFILE_COPY, 200, 156, 50, 13
 
-    CONTROL     "Åpne <A>Brukerkontoer</A> i Kontrollpanel for å opprette nye brukerkontoer.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
+    CONTROL     "Ã…pne <A>Brukerkontoer</A> i Kontrollpanel for Ã¥ opprette nye brukerkontoer.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
     PUSHBUTTON  "Avbryt", IDCANCEL, 196, 200, 54, 13
@@ -170,22 +170,22 @@ BEGIN
     LTEXT       "Standard operativ&system:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     AUTOCHECKBOX "&Tiden operativsystemlisten skal vises:", IDC_STRECLIST, 14, 56, 160, 8
-    EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12
+    EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sek.", IDC_STATIC, 223, 56, 18, 8
     AUTOCHECKBOX "Tiden &gjenopprettingsalternativene skal vises:", IDC_STRRECREC, 14, 70, 170, 8
-    EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12
+    EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sek.", IDC_STATIC, 223, 70, 18, 8
-    LTEXT       "Klikk på rediger for å redigere oppstartsalternativfilen.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "Klikk pÃ¥ rediger for Ã¥ redigere oppstartsalternativfilen.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON  "&Rediger", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Systemfeil", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "&Skriv en heldelse til systemloggen", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
     AUTOCHECKBOX "Se&nd et administrativt varsel", IDC_STRRECSENDALERT, 14, 138, 148, 10
-    AUTOCHECKBOX "Start på nytt &automatisk", IDC_STRRECRESTART, 14, 152, 145, 10
+    AUTOCHECKBOX "Start pÃ¥ nytt &automatisk", IDC_STRRECRESTART, 14, 152, 145, 10
 
-    GROUPBOX    "Skriv feilsøkingsinformasjon", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Skriv feilsÃ¸kingsinformasjon", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "Dump &fil:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
@@ -202,28 +202,28 @@ CAPTION "Virtuell minne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Stasjon  [Volumnavn]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Sidevekslingsfilstørrelse (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT       "SidevekslingsfilstÃ¸rrelse (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX    "Sidevekslingsfilstørrelse for valgte enhet", IDC_DRIVEGROUP, 10, 70, 204, 104
+    GROUPBOX    "SidevekslingsfilstÃ¸rrelse for valgte enhet", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Stasjon:", IDC_STATIC, 20, 80, 24, 8
     LTEXT       "", IDC_DRIVE, 100, 81, 100, 9
     LTEXT       "Tilgjengelig ledig plass:", IDC_STATIC, 20, 92, 75, 9
     LTEXT       "", IDC_SPACEAVAIL, 100, 92, 104, 9
-    LTEXT       "&Startstørrelse (MB):", -1, 22, 118, 75, 9
-    LTEXT       "Ma&ksimalt størrelse (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Tilpass størrelse", IDC_CUSTOM, 20, 105, 69, 9, WS_GROUP
-    AUTORADIOBUTTON "S&ystem styrt størrelse", IDC_SYSMANSIZE, 20, 145, 88, 9
+    LTEXT       "&StartstÃ¸rrelse (MB):", -1, 22, 118, 75, 9
+    LTEXT       "Ma&ksimalt stÃ¸rrelse (MB):", -1, 22, 131, 75, 9
+    AUTORADIOBUTTON "&Tilpass stÃ¸rrelse", IDC_CUSTOM, 20, 105, 69, 9, WS_GROUP
+    AUTORADIOBUTTON "S&ystem styrt stÃ¸rrelse", IDC_SYSMANSIZE, 20, 145, 88, 9
     AUTORADIOBUTTON "&Ingen sidevekslingsfil", IDC_NOPAGEFILE, 20, 158, 79,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Still", IDC_SET, 158, 155, 50, 13
 
-    GROUPBOX    "Total størrelse på sidevekslingsfil for alle enheter", IDC_TOTALGROUP, 10, 177, 204, 46
+    GROUPBOX    "Total stÃ¸rrelse pÃ¥ sidevekslingsfil for alle enheter", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Minste tilatte:", IDC_STATIC, 18, 188, 58, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Anbefalt:", IDC_STATIC, 18, 199, 52, 9
     LTEXT       "", IDC_RECOMMENDED, 88, 199, 100, 9
-    LTEXT       "Tildelt nå:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT       "Tildelt nÃ¥:", IDC_STATIC, 18, 210, 66, 9
     LTEXT       "", IDC_CURRENT, 88, 210, 100, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
@@ -233,7 +233,7 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Miljøvariabel"
+CAPTION "MiljÃ¸variabel"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX    "Brukervariabeler", IDC_STATIC, 7, 12, 238, 100
@@ -296,7 +296,7 @@ BEGIN
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Fullstendig dump"
     IDS_USERPROFILE_NAME "Navn"
-    IDS_USERPROFILE_SIZE "Størrelse"
+    IDS_USERPROFILE_SIZE "StÃ¸rrelse"
     IDS_USERPROFILE_TYPE "Type"
     IDS_USERPROFILE_STATUS "Status"
     IDS_USERPROFILE_MODIFIED "Modifisert"
@@ -305,4 +305,5 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
     IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size and must not exceed the available space on the selected drive."
+    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervÃ© Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas BlÃ¼mel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGÃ© van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
 END

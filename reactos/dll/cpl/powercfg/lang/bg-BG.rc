@@ -9,9 +9,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
   LTEXT "Изберете най- подходящата настройка за този компютър. Обърнете внимание, че промяната на долните настройки ще променят избраната наредба.",
-	-1,45,13,194,36
-  GROUPBOX "За&хранване", -1, 7,57,240,46
-  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+        -1,45,13,194,36
+  GROUPBOX "За&хранване", -1, 7, 57, 240, 46
+  COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Запис като...", IDC_SAVEAS_BTN, 100,85,75,15,WS_DISABLED
   PUSHBUTTON "&Изтриване", IDC_DELETE_BTN, 180,85,55,15,WS_DISABLED
   GROUPBOX "Неизвестно", IDC_GRPDETAIL, 7,108,240,105
@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Заспиване"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT           "Когато компютърът ви заспи, той съхранява съдържанието на паметта си на твърдия диск, а когато се събуди го връща обратно.",
                     -1,35,5,195,35
     GROUPBOX        "Заспиване",-1,5,45,235,25
@@ -162,7 +162,3 @@ BEGIN
   IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
   IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END
-
-
-
-

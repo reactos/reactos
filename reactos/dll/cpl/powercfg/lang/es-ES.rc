@@ -12,7 +12,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.",
-	-1,37, 6, 209, 36
+    -1, 37, 6, 209, 36
   GROUPBOX "C&ombinaciones de energía ", -1, 6, 43, 250, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -165,6 +165,3 @@ BEGIN
   IDS_DEL_SCHEME "¿Está seguro de que desea eliminar la combinación de energía?"
   IDS_DEL_SCHEME_TITLE "Eliminar combinación"
 END
-
-
-

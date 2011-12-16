@@ -1,4 +1,4 @@
-// Norwegian (no) resources by LMH1 
+// Norwegian (no) resources by LMH1
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Velg Strømstyringsplan med den mest passende innstilling for denne datamaskinen. Vær oppmerksom på å endre innstillingene under vil forandre valgte plan.",
-	-1,37, 6, 209, 36
+        -1, 37, 6, 209, 36
   GROUPBOX "S&trømstyringsplan", -1, 6, 43, 240, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Lagre som...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
@@ -162,5 +162,3 @@ BEGIN
   IDS_DEL_SCHEME "Er du sikker på at du vil slette strømplanen?"
   IDS_DEL_SCHEME_TITLE "Slett planen"
 END
-
-

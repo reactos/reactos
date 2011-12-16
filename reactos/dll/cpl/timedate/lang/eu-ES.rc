@@ -43,7 +43,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX    "Interneteko ordutegi zerbitzari  batekin automatikoki sinkronizatu", IDC_AUTOSYNC,
-                    11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+                    11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT           "Zerbitzaria:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON      "Orain eguneratu", IDC_UPDATEBUTTON, 187, 22, 58, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23

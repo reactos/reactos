@@ -1,4 +1,4 @@
-﻿//2011.11.26 - Fulea Ștefan: minor changes
+// 2011.11.26 - Fulea Ștefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
@@ -63,6 +63,7 @@ BEGIN
     LTEXT       "Aceste opțiuni determină modul în care sistemul se deschide, acțiunile în caz de eroare, și alte informații de depanare.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON  "Opți&uni…", IDC_STAREC, 194, 162, 50, 15
 
+    PUSHBUTTON  "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
     PUSHBUTTON  "&Variabile de mediu…", IDC_ENVVAR, 84, 192, 80, 15
     PUSHBUTTON  "&Raportare erori…", IDC_ERRORREPORT, 170, 192, 80, 15
 END
@@ -153,7 +154,7 @@ BEGIN
     PUSHBUTTON     "S&chimbare tip…", IDC_USERPROFILE_CHANGE, 60, 156, 60, 13
     PUSHBUTTON     "&Eliminare…", IDC_USERPROFILE_DELETE, 125, 156, 60, 13
     PUSHBUTTON     "&Copiere în…", IDC_USERPROFILE_COPY, 190, 156, 60, 13
-                   
+
     CONTROL        "Pentru crearea de noi conturi de utilizator, vedeți <A>Conturi de utilizator</A> în Panoul de control.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
 
     DEFPUSHBUTTON  "Con&firmă", IDOK, 134, 200, 54, 13

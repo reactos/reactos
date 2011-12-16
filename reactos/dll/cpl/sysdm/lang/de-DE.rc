@@ -36,10 +36,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Geräte-Manager", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX    "GerÃ¤te-Manager", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "Der Geräte-Manager zeigt alle Hardware-Geräte ihres Computers an. Benutzen Sie den Geräte-Manager, um die Eigenschaften eines Gerätes zu ändern.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "&Geräte-Manager...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
+    LTEXT       "Der GerÃ¤te-Manager zeigt alle Hardware-GerÃ¤te ihres Computers an. Benutzen Sie den GerÃ¤te-Manager, um die Eigenschaften eines GerÃ¤tes zu Ã¤ndern.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON  "&GerÃ¤te-Manager...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
 
     GROUPBOX    "Hardware-Assistent", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
@@ -48,8 +48,32 @@ BEGIN
 
     GROUPBOX    "Hardware-Profile", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "Mit Hardware-Profilen können Sie mehrere verschiedene Hardware-Konfigurationen einrichten und speichern.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT       "Mit Hardware-Profilen kÃ¶nnen Sie mehrere verschiedene Hardware-Konfigurationen einrichten und speichern.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON  "Hard&ware-Profile...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
+END
+
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Erweitert"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "Administratorrechte werden fÃ¼r die meisten dieser Einstellungen benÃ¶tigt.", IDC_STATIC, 12, 5, 242, 8
+    GROUPBOX    "Leistung", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "Mit Leistungsoptionen kÃ¶nnen Sie einstellen, wie Programme Speicher benutzen sollen. Diese Einstellungen beeinflussen die Leistung ihres Computers.", IDC_STATIC, 16, 29, 210, 24
+    PUSHBUTTON  "Einstellungen", IDC_PERFOR, 194, 48, 50, 14
+
+    GROUPBOX    "Benutzerprofile", IDC_STATIC, 6,75,244,48
+    LTEXT       "Desktop-Einstellungen bezÃ¼glich der Anmeldung.", IDC_STATIC, 16, 88, 210, 20
+    PUSHBUTTON  "Einstellungen", IDC_USERPROFILE, 194, 103, 50, 14
+
+    GROUPBOX    "Starten und Wiederherstellen", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Start- und Wiederherstellungseinstellungen regeln, wie der Computer gestartet werden soll und was passieren soll, wenn ein Fehler auftritt.", IDC_STATIC, 16, 144, 210, 27
+    PUSHBUTTON  "Einstellungen", IDC_STAREC, 194, 162, 50, 14
+
+    PUSHBUTTON  "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
+    PUSHBUTTON  "Umgebungsvariablen", IDC_ENVVAR, 84, 192, 80, 14
+    PUSHBUTTON  "Fehler melden", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
 
@@ -60,31 +84,8 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX    "Versionsinfo",IDC_STATIC,6,3,210,73
     CONTROL     "Als Workstation identifizieren",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,110,10
-    LTEXT       "ReactOS ist als Serversystem konzipiert worden und identifiziert sich auch als solches. Diese Einstellung ändert das Verhalten für Anwendungen.",IDC_STATIC,15,15,183,41
+    LTEXT       "ReactOS ist als Serversystem konzipiert worden und identifiziert sich auch als solches. Diese Einstellung Ã¤ndert das Verhalten fÃ¼r Anwendungen.",IDC_STATIC,15,15,183,41
     PUSHBUTTON  "OK",IDOK,166,83,50,14
-END
-
-
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Erweitert"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    LTEXT       "Administratorrechte werden für die meisten dieser Einstellungen benötigt.", IDC_STATIC, 12, 5, 242, 8
-    GROUPBOX    "Leistung", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Mit Leistungsoptionen können Sie einstellen, wie Programme Speicher benutzen sollen. Diese Einstellungen beeinflussen die Leistung ihres Computers.", IDC_STATIC, 16, 29, 210, 24
-    PUSHBUTTON  "Einstellungen", IDC_PERFOR, 194, 48, 50, 14
-
-    GROUPBOX    "Benutzerprofile", IDC_STATIC, 6,75,244,48
-    LTEXT       "Desktop-Einstellungen bezüglich der Anmeldung.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON  "Einstellungen", IDC_USERPROFILE, 194, 103, 50, 14
-
-    GROUPBOX    "Starten und Wiederherstellen", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Start- und Wiederherstellungseinstellungen regeln, wie der Computer gestartet werden soll und was passieren soll, wenn ein Fehler auftritt.", IDC_STATIC, 16, 144, 210, 27
-    PUSHBUTTON  "Einstellungen", IDC_STAREC, 194, 162, 50, 14
-
-    PUSHBUTTON  "Umgebungsvariablen", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON  "Fehler melden", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
 
@@ -94,21 +95,21 @@ CAPTION "Hardwareprofile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Sie können Hardwareprofile für verschiedene Hardware-Konfigurationen einrichten. Beim Starten können Sie dann das Profil auswählen, welches benutzt werden soll.", IDC_STATIC, 46, 11, 200, 25
-    LTEXT       "Verfügbare Hardwareprofile:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT       "Sie kÃ¶nnen Hardwareprofile fÃ¼r verschiedene Hardware-Konfigurationen einrichten. Beim Starten kÃ¶nnen Sie dann das Profil auswÃ¤hlen, welches benutzt werden soll.", IDC_STATIC, 46, 11, 200, 25
+    LTEXT       "VerfÃ¼gbare Hardwareprofile:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON  "&Eigenschaften", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
     PUSHBUTTON  "&Kopieren", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
     PUSHBUTTON  "&Umbenennen", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
-    PUSHBUTTON  "&Löschen", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON  "&LÃ¶schen", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
 
     GROUPBOX    "Hardwareprofil-Auswahl", IDC_STATIC, 7, 130, 240, 75
     LTEXT       "Wenn ReactOS startet:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Warten, bis ein Hardwareprofil gewählt wird", IDC_HRDPROFWAIT, 14, 158, 170, 8, WS_GROUP
-    AUTORADIOBUTTON "&Das erste Profil aus der Liste auswählen, wenn ich kein Profil innerhalb von", IDC_HRDPROFSELECT, 14, 173, 200, 8
-    LTEXT       "Sekunden gewählt habe", IDC_STATIC, 65, 187, 80, 8
+    AUTORADIOBUTTON "&Warten, bis ein Hardwareprofil gewÃ¤hlt wird", IDC_HRDPROFWAIT, 14, 158, 170, 8, WS_GROUP
+    AUTORADIOBUTTON "&Das erste Profil aus der Liste auswÃ¤hlen, wenn ich kein Profil innerhalb von", IDC_HRDPROFSELECT, 14, 173, 200, 8
+    LTEXT       "Sekunden gewÃ¤hlt habe", IDC_STATIC, 65, 187, 80, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
 
@@ -153,16 +154,16 @@ CAPTION "Benutzerprofile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile, für jeden Computer, den Sie benutzen, einrichten, oder aber auch ein einziges Profil wählen, welches auf jedem Computer gleich ist.",
+    LTEXT       "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezÃ¼glich ihrer Anmeldung. Sie kÃ¶nnen unterschiedliche Profile, fÃ¼r jeden Computer, den Sie benutzen, einrichten, oder aber auch ein einziges Profil wÃ¤hlen, welches auf jedem Computer gleich ist.",
                     IDC_STATIC, 40, 7, 204, 40
     LTEXT       "Auf diesem Computer gespeicherte Profile:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Typ ändern", IDC_USERPROFILE_CHANGE, 74, 156, 56, 14
-    PUSHBUTTON  "Löschen", IDC_USERPROFILE_DELETE, 134, 156, 56, 14
+    PUSHBUTTON  "Typ Ã¤ndern", IDC_USERPROFILE_CHANGE, 74, 156, 56, 14
+    PUSHBUTTON  "LÃ¶schen", IDC_USERPROFILE_DELETE, 134, 156, 56, 14
     PUSHBUTTON  "Kopieren nach", IDC_USERPROFILE_COPY, 194, 156, 56, 14
 
-    CONTROL     "Um neue Benutzerprofile zu erstellen, öffnen Sie <A>Benutzerkonten</A> in der Systemsteuerung.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
+    CONTROL     "Um neue Benutzerprofile zu erstellen, Ã¶ffnen Sie <A>Benutzerkonten</A> in der Systemsteuerung.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 14
     PUSHBUTTON  "Abbrechen", IDCANCEL, 196, 200, 54, 14
@@ -197,7 +198,7 @@ BEGIN
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "Dump-&Datei:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    AUTOCHECKBOX "Vorhandene Dateien &überschreiben", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "Vorhandene Dateien &Ã¼berschreiben", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Abbrechen", IDCANCEL, 195, 259, 50, 14
@@ -212,21 +213,21 @@ BEGIN
     LTEXT       "Laufwerk [Bezeichnung]", IDC_STATIC, 12, 5, 96, 9
     LTEXT       "Auslagerungsdatei (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX    "Größe der Auslagerungsdatei für das gewählte Laufwerk", IDC_DRIVEGROUP, 10, 70, 204, 104
+    GROUPBOX    "GrÃ¶ÃŸe der Auslagerungsdatei fÃ¼r das gewÃ¤hlte Laufwerk", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Laufwerk:", IDC_STATIC, 20, 81, 40, 9
     LTEXT       "", IDC_DRIVE, 105, 81, 100, 9
-    LTEXT       "Verfügbarer Speicherplatz:", IDC_STATIC, 20, 92, 130, 9
+    LTEXT       "VerfÃ¼gbarer Speicherplatz:", IDC_STATIC, 20, 92, 130, 9
     LTEXT       "", IDC_SPACEAVAIL, 105, 92, 104, 9
-    LTEXT       "&Anfangsgröße (MB):", -1, 22, 118, 70, 9
-    LTEXT       "Ma&ximale Größe (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Benutzerdefinierte Größe", IDC_CUSTOM, 20, 105, 95, 9, WS_GROUP
-    AUTORADIOBUTTON "Größe wird vom &System verwaltet", IDC_SYSMANSIZE, 20, 145, 120, 9
+    LTEXT       "&AnfangsgrÃ¶ÃŸe (MB):", -1, 22, 118, 70, 9
+    LTEXT       "Ma&ximale GrÃ¶ÃŸe (MB):", -1, 22, 131, 75, 9
+    AUTORADIOBUTTON "&Benutzerdefinierte GrÃ¶ÃŸe", IDC_CUSTOM, 20, 105, 95, 9, WS_GROUP
+    AUTORADIOBUTTON "GrÃ¶ÃŸe wird vom &System verwaltet", IDC_SYSMANSIZE, 20, 145, 120, 9
     AUTORADIOBUTTON "&Keine Auslagerungsdatei", IDC_NOPAGEFILE, 20, 158, 90, 9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Einstellen", IDC_SET, 158, 155, 50, 14
 
-    GROUPBOX    "Gesamtgröße der Auslagerungsdatei für alle Laufwerke", IDC_TOTALGROUP, 10, 177, 204, 46
+    GROUPBOX    "GesamtgrÃ¶ÃŸe der Auslagerungsdatei fÃ¼r alle Laufwerke", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Minimal zugelassen:", IDC_STATIC, 18, 188, 70, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Empfohlen:", IDC_STATIC, 18, 199, 52, 9
@@ -250,14 +251,14 @@ BEGIN
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&Neu...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON  "Be&arbeiten...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
-    PUSHBUTTON  "&Löschen", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    PUSHBUTTON  "&LÃ¶schen", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
     GROUPBOX    "Systemvariablen", IDC_STATIC, 7, 116, 238, 100
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "N&eu...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
     PUSHBUTTON  "Bea&rbeiten...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
-    PUSHBUTTON  "Lös&chen", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    PUSHBUTTON  "LÃ¶s&chen", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
     DEFPUSHBUTTON  "OK", IDOK, 141, 224, 50, 14, WS_GROUP
     PUSHBUTTON  "Abbrechen", IDCANCEL, 195, 224, 50, 14
 END
@@ -290,7 +291,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
-    IDS_CPLSYSTEMDESCRIPTION "Zeigt Informationen über Ihren Computer an und ändert verschiedene Computer- und Hardware-Einstellungen"
+    IDS_CPLSYSTEMDESCRIPTION "Zeigt Informationen Ã¼ber Ihren Computer an und Ã¤ndert verschiedene Computer- und Hardware-Einstellungen"
     IDS_MEGABYTE "MB RAM"
     IDS_GIGABYTE "GB RAM"
     IDS_TERABYTE "TB RAM"
@@ -300,16 +301,16 @@ BEGIN
     IDS_NO_DUMP "(Keine)"
     IDS_MINI_DUMP "Kleines Speicherabbild (64KB)"
     IDS_KERNEL_DUMP "Kernelspeicherabbild"
-    IDS_FULL_DUMP "Vollständiges Speicherabbild"
+    IDS_FULL_DUMP "VollstÃ¤ndiges Speicherabbild"
     IDS_USERPROFILE_NAME "Name"
-    IDS_USERPROFILE_SIZE "Größe"
+    IDS_USERPROFILE_SIZE "GrÃ¶ÃŸe"
     IDS_USERPROFILE_TYPE "Typ"
     IDS_USERPROFILE_STATUS "Status"
-    IDS_USERPROFILE_MODIFIED "Geändert"
+    IDS_USERPROFILE_MODIFIED "GeÃ¤ndert"
     IDS_MESSAGEBOXTITLE "Systemsteuerungsoption ""System"""
-    IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."
-    IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert für die Maximalgröße der Auslagerungsdatei an."
-    IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei darf nicht kleiner als 2 MB sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
-    IDS_WARNMAXIMUMRANGE "Die Maximalgröße der Auslagerungsdatei darf nicht kleiner als die Anfangsgröße sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
-    IDS_DEVS "\nReactOS Team\n\nProjektkoordinator\n\nAleksey Bragin\n\nEntwicklerteam\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Verantwortliche\n\nColin Finck\nZ98\n\nWebseitenteam\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedienteam\n\nMindflyer\nWierd_W\n\nweiterer Dank geht an\n\nalle Mitwirkenden\nWine Team\n\n"
+    IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert fÃ¼r die AnfangsgrÃ¶ÃŸe der Auslagerungsdatei an."
+    IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert fÃ¼r die MaximalgrÃ¶ÃŸe der Auslagerungsdatei an."
+    IDS_WARNINITIALRANGE "Die AnfangsgrÃ¶ÃŸe der Auslagerungsdatei darf nicht kleiner als 2 MB sein und darf den verfÃ¼gbaren Speicherplatz auf dem gewÃ¤hlten Laufwerk nicht Ã¼berschreiten."
+    IDS_WARNMAXIMUMRANGE "Die MaximalgrÃ¶ÃŸe der Auslagerungsdatei darf nicht kleiner als die AnfangsgrÃ¶ÃŸe sein und darf den verfÃ¼gbaren Speicherplatz auf dem gewÃ¤hlten Laufwerk nicht Ã¼berschreiten."
+    IDS_DEVS "\nReactOS Team\n\nProjektkoordinator\n\nAleksey Bragin\n\nEntwicklerteam\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervÃ© Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas BlÃ¼mel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGÃ© van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Verantwortliche\n\nColin Finck\nZ98\n\nWebseitenteam\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedienteam\n\nMindflyer\nWierd_W\n\nweiterer Dank geht an\n\nalle Mitwirkenden\nWine Team\n\n"
 END
