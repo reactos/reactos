@@ -29,7 +29,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
                                      (PVOID*)&Buf,
                                      0,
                                      &ViewSize,
-                                     MEM_COMMIT,
+                                     MEM_RESERVE | MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status)) return NULL;
 
@@ -49,12 +49,13 @@ NTAPI
 RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_INFORMATION Buf)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    SIZE_T ViewSize = 0;
 
     if (NULL != Buf)
     {
         Status = NtFreeVirtualMemory(NtCurrentProcess(),
-                                     (PVOID)Buf,
-                                     (PSIZE_T)&Buf->ViewSize, /* FIXME: not portable! */
+                                     (PVOID*)&Buf,
+                                     &ViewSize,
                                      MEM_RELEASE);
     }
     if (!NT_SUCCESS(Status))
