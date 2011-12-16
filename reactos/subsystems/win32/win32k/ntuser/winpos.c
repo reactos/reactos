@@ -153,7 +153,7 @@ FASTCALL
 co_WinPosArrangeIconicWindows(PWND parent)
 {
    RECTL rectParent;
-   INT i, x, y, xspacing, yspacing;
+   INT i, x, y, xspacing, yspacing, sx, sy;
    HWND *List = IntWinListChildren(parent);
 
    ASSERT_REFS_CO(parent);
@@ -168,8 +168,8 @@ co_WinPosArrangeIconicWindows(PWND parent)
    x = rectParent.left;
    y = rectParent.bottom;
 
-   xspacing = UserGetSystemMetrics(SM_CXICONSPACING);
-   yspacing = UserGetSystemMetrics(SM_CYICONSPACING);
+   xspacing = (UserGetSystemMetrics(SM_CXMINSPACING)/2)+UserGetSystemMetrics(SM_CXBORDER);
+   yspacing = (UserGetSystemMetrics(SM_CYMINSPACING)/2)+UserGetSystemMetrics(SM_CYBORDER);
 
    TRACE("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
 
@@ -185,29 +185,31 @@ co_WinPosArrangeIconicWindows(PWND parent)
          USER_REFERENCE_ENTRY Ref;
          UserRefObjectCo(Child, &Ref);
 
-         co_WinPosSetWindowPos( Child,
-                                0,
-                                x + (xspacing - UserGetSystemMetrics(SM_CXICON)) / 2,
-                                y - yspacing - UserGetSystemMetrics(SM_CYICON) / 2,
-                                0,
-                                0,
+         sx = x + UserGetSystemMetrics(SM_CXBORDER);
+         sy = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
+
+         co_WinPosSetWindowPos( Child, 0, sx, sy, 0, 0,
                                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
+
+         Child->InternalPos.IconPos.x = sx;
+         Child->InternalPos.IconPos.y = sy;
+         Child->InternalPos.flags |= WPF_MININIT;
 
          UserDerefObjectCo(Child);
 
-         if (x <= rectParent.right - xspacing)
+         if (x <= rectParent.right - UserGetSystemMetrics(SM_CXMINSPACING))
             x += xspacing;
          else
          {
             x = rectParent.left;
             y -= yspacing;
          }
+         TRACE("X:%d Y:%d\n",x,y);
       }
    }
    ExFreePool(List);
    return yspacing;
 }
-
 
 static VOID FASTCALL
 WinPosFindIconPos(PWND Window, POINT *Pos)
