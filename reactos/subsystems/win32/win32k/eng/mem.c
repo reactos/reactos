@@ -19,16 +19,19 @@ EngAllocMem(ULONG Flags,
 	    ULONG MemSize,
 	    ULONG Tag)
 {
-  PVOID newMem;
+    PVOID newMem;
 
-  newMem = ExAllocatePoolWithTag(PagedPool, MemSize, Tag);
+    newMem = ExAllocatePoolWithTag((Flags & FL_NONPAGED_MEMORY) ? NonPagedPool : PagedPool,
+                                   MemSize,
+                                   Tag);
 
-  if (Flags == FL_ZERO_MEMORY && NULL != newMem)
-  {
-    RtlZeroMemory(newMem, MemSize);
-  }
+    if (newMem == NULL)
+        return NULL;
 
-  return newMem;
+    if (Flags & FL_ZERO_MEMORY)
+        RtlZeroMemory(newMem, MemSize);
+
+    return newMem;
 }
 
 /*
