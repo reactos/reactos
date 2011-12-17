@@ -511,7 +511,7 @@ PLOGFILE LogfListItemByIndex(INT Index)
     return Result;
 }
 
-INT LogfListItemCount()
+INT LogfListItemCount(VOID)
 {
     PLIST_ENTRY CurrentEntry;
     INT i = 0;
@@ -543,13 +543,171 @@ VOID LogfListRemoveItem(PLOGFILE Item)
     LeaveCriticalSection(&LogFileListCs);
 }
 
+static BOOL
+ReadAnsiLogEntry(HANDLE hFile,
+                 LPVOID lpBuffer,
+                 DWORD nNumberOfBytesToRead,
+                 LPDWORD lpNumberOfBytesRead)
+{
+    PEVENTLOGRECORD Dst;
+    PEVENTLOGRECORD Src;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringW;
+    LPWSTR SrcPtr;
+    LPSTR DstPtr;
+    LPWSTR SrcString;
+    LPSTR DstString;
+    LPVOID lpUnicodeBuffer = NULL;
+    DWORD dwRead = 0;
+    DWORD i;
+    DWORD dwPadding;
+    DWORD dwEntryLength;
+    PDWORD pLength;
+    NTSTATUS Status;
+    BOOL ret = TRUE;
+
+    *lpNumberOfBytesRead = 0;
+
+    lpUnicodeBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nNumberOfBytesToRead);
+    if (lpUnicodeBuffer == NULL)
+    {
+        DPRINT1("Alloc failed!\n");
+        return FALSE;
+    }
+
+    if (!ReadFile(hFile, lpUnicodeBuffer, nNumberOfBytesToRead, &dwRead, NULL))
+    {
+        DPRINT1("Read failed!\n");
+        ret = FALSE;
+        goto done;
+    }
+
+    Dst = (PEVENTLOGRECORD)lpBuffer;
+    Src = (PEVENTLOGRECORD)lpUnicodeBuffer;
+
+    Dst->TimeGenerated = Src->TimeGenerated;
+    Dst->Reserved = Src->Reserved;
+    Dst->RecordNumber = Src->RecordNumber;
+    Dst->TimeWritten = Src->TimeWritten;
+    Dst->EventID = Src->EventID;
+    Dst->EventType = Src->EventType;
+    Dst->EventCategory = Src->EventCategory;
+    Dst->NumStrings = Src->NumStrings;
+    Dst->UserSidLength = Src->UserSidLength;
+    Dst->DataLength = Src->DataLength;
+
+    SrcPtr = (LPWSTR)((DWORD_PTR)Src + sizeof(EVENTLOGRECORD));
+    DstPtr = (LPSTR)((DWORD_PTR)Dst + sizeof(EVENTLOGRECORD));
+
+    /* Convert the module name */
+    RtlInitUnicodeString(&StringW, SrcPtr);
+    Status = RtlUnicodeStringToAnsiString(&StringA, &StringW, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        RtlCopyMemory(DstPtr, StringA.Buffer, StringA.MaximumLength);
+
+        DstPtr = (PVOID)((DWORD_PTR)DstPtr + StringA.MaximumLength);
+
+        RtlFreeAnsiString(&StringA);
+    }
+
+    /* Convert the computer name */
+    if (NT_SUCCESS(Status))
+    {
+        SrcPtr = (PWSTR)((DWORD_PTR)SrcPtr + StringW.MaximumLength);
+
+        RtlInitUnicodeString(&StringW, SrcPtr);
+        Status = RtlUnicodeStringToAnsiString(&StringA, &StringW, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            RtlCopyMemory(DstPtr, StringA.Buffer, StringA.MaximumLength);
+
+            DstPtr = (PVOID)((DWORD_PTR)DstPtr + StringA.MaximumLength);
+
+            RtlFreeAnsiString(&StringA);
+        }
+    }
+
+    /* Add the padding and the User SID*/
+    if (NT_SUCCESS(Status))
+    {
+        dwPadding = sizeof(DWORD) - (((DWORD_PTR)DstPtr - (DWORD_PTR)Dst) % sizeof(DWORD));
+        RtlZeroMemory(DstPtr, dwPadding);
+
+        DstPtr = (LPSTR)((DWORD_PTR)DstPtr + dwPadding);
+        RtlCopyMemory(DstPtr,
+                      (PVOID)((DWORD_PTR)Src + Src->UserSidOffset),
+                      Src->UserSidLength);
+
+        Dst->UserSidOffset = (DWORD)((DWORD_PTR)DstPtr - (DWORD_PTR)Dst);
+    }
+
+
+    /* Convert the strings */
+    if (NT_SUCCESS(Status))
+    {
+        DstPtr = (PVOID)((DWORD_PTR)DstPtr + Src->UserSidLength);
+
+        SrcString = (LPWSTR)((DWORD_PTR)Src + (DWORD)Src->StringOffset);
+        DstString = (LPSTR)DstPtr;
+
+        for (i = 0; i < Dst->NumStrings; i++)
+        {
+            RtlInitUnicodeString(&StringW, SrcString);
+
+            RtlUnicodeStringToAnsiString(&StringA, &StringW, TRUE);
+
+            RtlCopyMemory(DstString, StringA.Buffer, StringA.MaximumLength);
+
+            SrcString = (LPWSTR)((DWORD_PTR)SrcString +
+                                 (DWORD)StringW.MaximumLength);
+
+            DstString = (LPSTR)((DWORD_PTR)DstString +
+                                (DWORD)StringA.MaximumLength);
+
+            RtlFreeAnsiString(&StringA);
+        }
+
+        Dst->StringOffset = (DWORD)((DWORD_PTR)DstPtr - (DWORD_PTR)Dst);
+
+
+        /* Copy the binary data */
+        DstPtr = (PVOID)DstString;
+        Dst->DataOffset = (DWORD_PTR)DstPtr - (DWORD_PTR)Dst;
+
+        RtlCopyMemory(DstPtr, (PVOID)((DWORD_PTR)Src + Src->DataOffset), Src->DataLength);
+
+        /* Add the padding */
+        DstPtr = (PVOID)((DWORD_PTR)DstPtr + Src->DataLength);
+        dwPadding = sizeof(DWORD) - (((DWORD_PTR)DstPtr-(DWORD_PTR)Dst) % sizeof(DWORD));
+        RtlZeroMemory(DstPtr, dwPadding);
+
+        dwEntryLength = (DWORD)((DWORD_PTR)DstPtr + dwPadding + sizeof(DWORD) - (DWORD_PTR)Dst);
+
+        /* Set the entry length at the end of the entry*/
+        pLength = (PDWORD)((DWORD_PTR)DstPtr + dwPadding);
+        *pLength = dwEntryLength;
+        Dst->Length = dwEntryLength;
+
+        *lpNumberOfBytesRead = dwEntryLength;
+    }
+
+done:
+    if (lpUnicodeBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, lpUnicodeBuffer);
+
+    return ret;
+}
+
+
 DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD Flags,
                    DWORD * RecordNumber,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
-                   DWORD * BytesNeeded)
+                   DWORD * BytesNeeded,
+                   BOOL Ansi)
 {
     DWORD dwOffset, dwRead, dwRecSize;
     DWORD dwBufferUsage = 0, dwRecNum;
@@ -611,10 +769,21 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
         goto Done;
     }
 
-    if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
+    if (Ansi == TRUE)
     {
-        DPRINT1("ReadFile() failed!\n");
-        goto Done;
+        if (!ReadAnsiLogEntry(LogFile->hFile, Buffer, dwRecSize, &dwRead))
+        {
+            DPRINT1("ReadAnsiLogEntry() failed!\n");
+            goto Done;
+        }
+    }
+    else
+    {
+        if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
+        {
+            DPRINT1("ReadFile() failed!\n");
+            goto Done;
+        }
     }
 
     dwBufferUsage += dwRead;
@@ -659,14 +828,28 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
             goto Done;
         }
 
-        if (!ReadFile(LogFile->hFile,
-                      Buffer + dwBufferUsage,
-                      dwRecSize,
-                      &dwRead,
-                      NULL))
+        if (Ansi == TRUE)
         {
-            DPRINT1("ReadFile() failed!\n");
-            goto Done;
+            if (!ReadAnsiLogEntry(LogFile->hFile,
+                                  Buffer + dwBufferUsage,
+                                  dwRecSize,
+                                  &dwRead))
+            {
+                DPRINT1("ReadAnsiLogEntry() failed!\n");
+                goto Done;
+            }
+        }
+        else
+        {
+            if (!ReadFile(LogFile->hFile,
+                          Buffer + dwBufferUsage,
+                          dwRecSize,
+                          &dwRead,
+                          NULL))
+            {
+                DPRINT1("ReadFile() failed!\n");
+                goto Done;
+            }
         }
 
         dwBufferUsage += dwRead;
@@ -870,9 +1053,8 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     return TRUE;
 }
 
-ULONG LogfOffsetByNumber(PLOGFILE LogFile, DWORD RecordNumber)
-
 /* Returns 0 if nothing found. */
+ULONG LogfOffsetByNumber(PLOGFILE LogFile, DWORD RecordNumber)
 {
     DWORD i;
 
@@ -1012,10 +1194,12 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     pos += (lstrlenW(ComputerName) + 1) * sizeof(WCHAR);
 
     pRec->UserSidOffset = pos;
+
+    if (pos % 4 != 0)
+        pos += 4 - (pos % 4);
+
     if (dwSidLength)
     {
-        if (pos % 4 != 0)
-            pos += 4 - (pos % 4);
         CopyMemory(Buffer + pos, lpUserSid, dwSidLength);
         pRec->UserSidLength = dwSidLength;
         pRec->UserSidOffset = pos;

@@ -225,6 +225,8 @@ NTSTATUS ElfrNumberOfRecords(
     PLOGHANDLE lpLogHandle;
     PLOGFILE lpLogFile;
 
+    DPRINT("ElfrNumberOfRecords()");
+
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
     {
@@ -232,6 +234,10 @@ NTSTATUS ElfrNumberOfRecords(
     }
 
     lpLogFile = lpLogHandle->LogFile;
+
+    DPRINT("Oldest: %lu  Current: %lu\n",
+           lpLogFile->Header.OldestRecordNumber,
+           lpLogFile->Header.CurrentRecordNumber);
 
     if (lpLogFile->Header.OldestRecordNumber == 0)
         *NumberOfRecords = 0;
@@ -372,8 +378,8 @@ NTSTATUS ElfrReadELW(
         return STATUS_INVALID_HANDLE;
     }
 
-    if (!Buffer) 
-        return I_RpcMapWin32Status(ERROR_INVALID_PARAMETER);
+    if (!Buffer)
+        return STATUS_INVALID_PARAMETER;
 
     /* If sequential read, retrieve the CurrentRecord from this log handle */
     if (ReadFlags & EVENTLOG_SEQUENTIAL_READ)
@@ -386,13 +392,18 @@ NTSTATUS ElfrReadELW(
     }
 
     dwError = LogfReadEvent(lpLogHandle->LogFile, ReadFlags, &RecordNumber,
-                            NumberOfBytesToRead, Buffer, NumberOfBytesRead, MinNumberOfBytesNeeded);
+                            NumberOfBytesToRead, Buffer, NumberOfBytesRead, MinNumberOfBytesNeeded,
+                            FALSE);
 
     /* Update the handles CurrentRecord if success*/
     if (dwError == ERROR_SUCCESS)
     {
         lpLogHandle->CurrentRecord = RecordNumber;
     }
+
+    /* HACK!!! */
+    if (dwError == ERROR_HANDLE_EOF)
+        return STATUS_END_OF_FILE;
 
     return I_RpcMapWin32Status(dwError);
 }
@@ -664,8 +675,49 @@ NTSTATUS ElfrReadELA(
     DWORD *NumberOfBytesRead,
     DWORD *MinNumberOfBytesNeeded)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLOGHANDLE lpLogHandle;
+    DWORD dwError;
+    DWORD RecordNumber;
+
+    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    if (!lpLogHandle)
+    {
+        return STATUS_INVALID_HANDLE;
+    }
+
+    if (!Buffer)
+        return STATUS_INVALID_PARAMETER;
+
+    /* If sequential read, retrieve the CurrentRecord from this log handle */
+    if (ReadFlags & EVENTLOG_SEQUENTIAL_READ)
+    {
+        RecordNumber = lpLogHandle->CurrentRecord;
+    }
+    else
+    {
+        RecordNumber = RecordOffset;
+    }
+
+    dwError = LogfReadEvent(lpLogHandle->LogFile,
+                            ReadFlags,
+                            &RecordNumber,
+                            NumberOfBytesToRead,
+                            Buffer,
+                            NumberOfBytesRead,
+                            MinNumberOfBytesNeeded,
+                            TRUE);
+
+    /* Update the handles CurrentRecord if success*/
+    if (dwError == ERROR_SUCCESS)
+    {
+        lpLogHandle->CurrentRecord = RecordNumber;
+    }
+
+    /* HACK!!! */
+    if (dwError == ERROR_HANDLE_EOF)
+        return STATUS_END_OF_FILE;
+
+    return I_RpcMapWin32Status(dwError);
 }
 
 

@@ -134,7 +134,8 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
-                   DWORD * BytesNeeded);
+                   DWORD * BytesNeeded,
+                   BOOL Ansi);
 
 BOOL LogfWriteData(PLOGFILE LogFile,
                    DWORD BufSize,
