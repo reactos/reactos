@@ -993,76 +993,76 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
  */
 VOID NTAPI
 CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
-	     IN PLARGE_INTEGER FileOffset OPTIONAL,
-	     IN ULONG Length,
-	     OUT PIO_STATUS_BLOCK IoStatus)
+             IN PLARGE_INTEGER FileOffset OPTIONAL,
+             IN ULONG Length,
+             OUT PIO_STATUS_BLOCK IoStatus)
 {
-   PBCB Bcb;
-   LARGE_INTEGER Offset;
-   PCACHE_SEGMENT current;
-   NTSTATUS Status;
-   KIRQL oldIrql;
+    PBCB Bcb;
+    LARGE_INTEGER Offset;
+    PCACHE_SEGMENT current;
+    NTSTATUS Status;
+    KIRQL oldIrql;
 
-   DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
+    DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
            SectionObjectPointers, FileOffset, Length, IoStatus);
 
-   if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
-   {
-      Bcb = (PBCB)SectionObjectPointers->SharedCacheMap;
-      ASSERT(Bcb);
-      if (FileOffset)
-      {
-	 Offset = *FileOffset;
-      }
-      else
-      {
-	 Offset.QuadPart = (LONGLONG)0;
-	 Length = Bcb->FileSize.u.LowPart;
-      }
+    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
+    {
+        Bcb = (PBCB)SectionObjectPointers->SharedCacheMap;
+        ASSERT(Bcb);
+        if (FileOffset)
+        {
+            Offset = *FileOffset;
+        }
+        else
+        {
+            Offset.QuadPart = (LONGLONG)0;
+            Length = Bcb->FileSize.u.LowPart;
+        }
 
-      if (IoStatus)
-      {
-	 IoStatus->Status = STATUS_SUCCESS;
-	 IoStatus->Information = 0;
-      }
+        if (IoStatus)
+        {
+            IoStatus->Status = STATUS_SUCCESS;
+            IoStatus->Information = 0;
+        }
 
-      while (Length > 0)
-      {
-	 current = CcRosLookupCacheSegment (Bcb, Offset.u.LowPart);
-	 if (current != NULL)
-	 {
-	    if (current->Dirty)
-	    {
-	       Status = CcRosFlushCacheSegment(current);
-	       if (!NT_SUCCESS(Status) && IoStatus != NULL)
-	       {
-		   IoStatus->Status = Status;
-	       }
-	    }
-            KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
-	    ExReleasePushLock(&current->Lock);
-            CcRosCacheSegmentDecRefCount(current);
-	    KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
-	 }
+        while (Length > 0)
+        {
+            current = CcRosLookupCacheSegment (Bcb, Offset.u.LowPart);
+            if (current != NULL)
+            {
+                if (current->Dirty)
+                {
+                    Status = CcRosFlushCacheSegment(current);
+                    if (!NT_SUCCESS(Status) && IoStatus != NULL)
+                    {
+                        IoStatus->Status = Status;
+                    }
+                }
+                KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+                ExReleasePushLock(&current->Lock);
+                CcRosCacheSegmentDecRefCount(current);
+                KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+            }
 
-	 Offset.QuadPart += Bcb->CacheSegmentSize;
-	 if (Length > Bcb->CacheSegmentSize)
-	 {
-	    Length -= Bcb->CacheSegmentSize;
-	 }
-	 else
-	 {
-	    Length = 0;
-	 }
-      }
-   }
-   else
-   {
-      if (IoStatus)
-      {
-	 IoStatus->Status = STATUS_INVALID_PARAMETER;
-      }
-   }
+            Offset.QuadPart += Bcb->CacheSegmentSize;
+            if (Length > Bcb->CacheSegmentSize)
+            {
+                Length -= Bcb->CacheSegmentSize;
+            }
+            else
+            {
+                Length = 0;
+            }
+        }
+    }
+    else
+    {
+        if (IoStatus)
+        {
+            IoStatus->Status = STATUS_INVALID_PARAMETER;
+        }
+    }
 }
 
 NTSTATUS
@@ -1072,68 +1072,68 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
  * FUNCTION: Releases the BCB associated with a file object
  */
 {
-   PLIST_ENTRY current_entry;
-   PCACHE_SEGMENT current;
-   LIST_ENTRY FreeList;
-   KIRQL oldIrql;
+    PLIST_ENTRY current_entry;
+    PCACHE_SEGMENT current;
+    LIST_ENTRY FreeList;
+    KIRQL oldIrql;
 
-   ASSERT(Bcb);
+    ASSERT(Bcb);
 
-   Bcb->RefCount++;
-   KeReleaseGuardedMutex(&ViewLock);
+    Bcb->RefCount++;
+    KeReleaseGuardedMutex(&ViewLock);
 
-   CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, NULL);
+    CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, NULL);
 
-   KeAcquireGuardedMutex(&ViewLock);
-   Bcb->RefCount--;
-   if (Bcb->RefCount == 0)
-   {
-      if (Bcb->BcbRemoveListEntry.Flink != NULL)
-      {
-	 RemoveEntryList(&Bcb->BcbRemoveListEntry);
-         Bcb->BcbRemoveListEntry.Flink = NULL;
-      }
+    KeAcquireGuardedMutex(&ViewLock);
+    Bcb->RefCount--;
+    if (Bcb->RefCount == 0)
+    {
+        if (Bcb->BcbRemoveListEntry.Flink != NULL)
+        {
+            RemoveEntryList(&Bcb->BcbRemoveListEntry);
+            Bcb->BcbRemoveListEntry.Flink = NULL;
+        }
 
-      FileObject->SectionObjectPointer->SharedCacheMap = NULL;
+        FileObject->SectionObjectPointer->SharedCacheMap = NULL;
 
-      /*
-       * Release all cache segments.
-       */
-      InitializeListHead(&FreeList);
-      KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
-      current_entry = Bcb->BcbSegmentListHead.Flink;
-      while (!IsListEmpty(&Bcb->BcbSegmentListHead))
-      {
-         current_entry = RemoveTailList(&Bcb->BcbSegmentListHead);
-         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
-         RemoveEntryList(&current->CacheSegmentListEntry);
-         RemoveEntryList(&current->CacheSegmentLRUListEntry);
-         if (current->Dirty)
-	 {
-            RemoveEntryList(&current->DirtySegmentListEntry);
-            DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
-	    DPRINT1("Freeing dirty segment\n");
-	 }
-         InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
-      }
+        /*
+         * Release all cache segments.
+         */
+        InitializeListHead(&FreeList);
+        KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+        current_entry = Bcb->BcbSegmentListHead.Flink;
+        while (!IsListEmpty(&Bcb->BcbSegmentListHead))
+        {
+            current_entry = RemoveTailList(&Bcb->BcbSegmentListHead);
+            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            RemoveEntryList(&current->CacheSegmentListEntry);
+            RemoveEntryList(&current->CacheSegmentLRUListEntry);
+            if (current->Dirty)
+            {
+                RemoveEntryList(&current->DirtySegmentListEntry);
+                DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+                DPRINT1("Freeing dirty segment\n");
+            }
+            InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
+        }
 #if DBG
-      Bcb->Trace = FALSE;
+        Bcb->Trace = FALSE;
 #endif
-      KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+        KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
 
-      KeReleaseGuardedMutex(&ViewLock);
-      ObDereferenceObject (Bcb->FileObject);
+        KeReleaseGuardedMutex(&ViewLock);
+        ObDereferenceObject (Bcb->FileObject);
 
-      while (!IsListEmpty(&FreeList))
-      {
-         current_entry = RemoveTailList(&FreeList);
-         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
-         CcRosInternalFreeCacheSegment(current);
-      }
-      ExFreeToNPagedLookasideList(&BcbLookasideList, Bcb);
-      KeAcquireGuardedMutex(&ViewLock);
-   }
-   return(STATUS_SUCCESS);
+        while (!IsListEmpty(&FreeList))
+        {
+            current_entry = RemoveTailList(&FreeList);
+            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            CcRosInternalFreeCacheSegment(current);
+        }
+        ExFreeToNPagedLookasideList(&BcbLookasideList, Bcb);
+        KeAcquireGuardedMutex(&ViewLock);
+    }
+    return(STATUS_SUCCESS);
 }
 
 VOID
