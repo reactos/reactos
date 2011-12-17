@@ -94,7 +94,7 @@ RtlDebugCreateHeap(ULONG Flags,
 BOOLEAN NTAPI
 RtlDebugDestroyHeap(HANDLE HeapPtr)
 {
-    SIZE_T Size;
+    SIZE_T Size = 0;
     PHEAP Heap = (PHEAP)HeapPtr;
 
     if (Heap == RtlGetCurrentPeb()->ProcessHeap)
