@@ -208,12 +208,12 @@ RtlConvertUlongToLuid(ULONG Ulong)
 
 #define ASSERT( exp ) \
     ((void)((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
+        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \
         TRUE))
 
 #define ASSERTMSG( msg, exp ) \
     ((void)((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, msg ),FALSE) : \
+        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ),FALSE) : \
         TRUE))
 
 #else
