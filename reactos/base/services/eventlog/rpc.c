@@ -496,6 +496,7 @@ NTSTATUS ElfrReportEventW(
     if (UserSID)
         dwUserSidLength = FIELD_OFFSET(SID, SubAuthority[UserSID->SubAuthorityCount]);
     LogBuffer = LogfAllocAndBuildNewRecord(&recSize,
+                                           Time,
                                            lastRec,
                                            EventType,
                                            EventCategory,

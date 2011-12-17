@@ -945,6 +945,8 @@ ReportEventA(IN HANDLE hEventLog,
     WORD i;
     CHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwSize;
+    LARGE_INTEGER SystemTime;
+    ULONG Seconds;
 
     TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
           hEventLog, wType, wCategory, dwEventID, lpUserSid,
@@ -974,10 +976,13 @@ ReportEventA(IN HANDLE hEventLog,
     GetComputerNameA(szComputerName, &dwSize);
     RtlInitAnsiString(&ComputerName, szComputerName);
 
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToSecondsSince1970(&SystemTime, &Seconds);
+
     RpcTryExcept
     {
         Status = ElfrReportEventA(hEventLog,
-                                  0, /* FIXME: Time */
+                                  Seconds,
                                   wType,
                                   wCategory,
                                   dwEventID,
@@ -1046,6 +1051,8 @@ ReportEventW(IN HANDLE hEventLog,
     WORD i;
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwSize;
+    LARGE_INTEGER SystemTime;
+    ULONG Seconds;
 
     TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
           hEventLog, wType, wCategory, dwEventID, lpUserSid,
@@ -1075,10 +1082,13 @@ ReportEventW(IN HANDLE hEventLog,
     GetComputerNameW(szComputerName, &dwSize);
     RtlInitUnicodeString(&ComputerName, szComputerName);
 
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToSecondsSince1970(&SystemTime, &Seconds);
+
     RpcTryExcept
     {
         Status = ElfrReportEventW(hEventLog,
-                                  0, /* FIXME: Time */
+                                  Seconds,
                                   wType,
                                   wCategory,
                                   dwEventID,

@@ -16,6 +16,7 @@
 #include <windows.h>
 #include <netevent.h>
 #include <lpctypes.h>
+#include <kefuncs.h>
 #include <lpcfuncs.h>
 #include <rtlfuncs.h>
 #include <obfuncs.h>
@@ -168,6 +169,7 @@ BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile,
 
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwRecordNumber,
+                                 DWORD dwTime,
                                  WORD wType,
                                  WORD wCategory,
                                  DWORD dwEventId,
@@ -198,9 +200,6 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
 
 VOID EventTimeToSystemTime(DWORD EventTime,
                            SYSTEMTIME * SystemTime);
-
-VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
-                           DWORD * pEventTime);
 
 /* eventsource.c */
 VOID InitEventSourceList(VOID);
