@@ -34,11 +34,11 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
 typedef struct
 {
-   DWORD cFiles;
-   DWORD cFolder;
-   ULARGE_INTEGER bSize;
-   HWND hwndDlg;
-   WCHAR szFolderPath[MAX_PATH];
+    DWORD cFiles;
+    DWORD cFolder;
+    ULARGE_INTEGER bSize;
+    HWND hwndDlg;
+    WCHAR szFolderPath[MAX_PATH];
 } FOLDER_PROPERTIES_CONTEXT, *PFOLDER_PROPERTIES_CONTEXT;
 
 typedef struct
@@ -57,8 +57,8 @@ typedef struct
 static FOLDER_VIEW_ENTRY s_Options[] =
 {
     { L"AlwaysShowMenus", IDS_ALWAYSSHOWMENUS },
-    { L"AutoCheckSelect", -1 }, 
-    { L"ClassicViewState", -1 }, 
+    { L"AutoCheckSelect", -1 },
+    { L"ClassicViewState", -1 },
     { L"DontPrettyPath",  -1 },
     { L"Filter", -1 },
     { L"FolderContentsInfoTip", IDS_FOLDERCONTENTSTIP },
@@ -105,7 +105,7 @@ FolderOptionsGeneralDlg(
     return FALSE;
 }
 
-static 
+static
 VOID
 InitializeFolderOptionsListCtrl(HWND hwndDlg)
 {
@@ -191,16 +191,16 @@ InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
         wcscpy(szName, L"FileTypes");
     }
 
-   col.iSubItem   = 1;
-   col.cx         = clientRect.right - clientRect.left - columnSize;
-   col.cchTextMax = wcslen(szName);
-   col.pszText    = szName;
-   (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
+    col.iSubItem   = 1;
+    col.cx         = clientRect.right - clientRect.left - columnSize;
+    col.cchTextMax = wcslen(szName);
+    col.pszText    = szName;
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
 
-   /* set full select style */
-   dwStyle = (DWORD) SendMessage(hDlgCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
-   dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
-   SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
+    /* set full select style */
+    dwStyle = (DWORD) SendMessage(hDlgCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+    dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
+    SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 }
 
 INT
@@ -228,7 +228,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
         /* FIXME handle URL protocol handlers */
         return;
     }
- 
+
     /* allocate file type entry */
     Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
 
@@ -248,8 +248,8 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     dwSize = sizeof(Entry->ClassKey);
     if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)Entry->ClassKey, &dwSize) != ERROR_SUCCESS)
     {
-         /* no link available */
-         Entry->ClassKey[0] = 0;
+        /* no link available */
+        Entry->ClassKey[0] = 0;
     }
 
     if (Entry->ClassKey[0])
@@ -358,8 +358,8 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     /* select first item */
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_STATE;
-    lvItem.stateMask = (UINT)-1;
-    lvItem.state = LVIS_FOCUSED|LVIS_SELECTED;
+    lvItem.stateMask = (UINT) - 1;
+    lvItem.state = LVIS_FOCUSED | LVIS_SELECTED;
     lvItem.iItem = 0;
     (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&lvItem);
 
@@ -381,12 +381,12 @@ FindSelectedItem(
         ZeroMemory(&lvItem, sizeof(LVITEM));
         lvItem.mask = LVIF_PARAM | LVIF_STATE;
         lvItem.iItem = Index;
-        lvItem.stateMask = (UINT)-1;
+        lvItem.stateMask = (UINT) - 1;
 
         if (ListView_GetItem(hDlgCtrl, &lvItem))
         {
             if (lvItem.state & LVIS_SELECTED)
-               return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+                return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
         }
     }
 
@@ -429,47 +429,47 @@ FolderOptionsFileTypesDlg(
             }
 
             break;
-       case WM_NOTIFY:
+        case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
 
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
-                    ZeroMemory(&lvItem, sizeof(LVITEM));
-                    lvItem.mask = LVIF_PARAM;
-                    lvItem.iItem = lppl->iItem;
-                    if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&lvItem))
-                        return TRUE;
+                ZeroMemory(&lvItem, sizeof(LVITEM));
+                lvItem.mask = LVIF_PARAM;
+                lvItem.iItem = lppl->iItem;
+                if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&lvItem))
+                    return TRUE;
 
-                    pItem = (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-                    if (!pItem)
-                        return TRUE;
+                pItem = (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+                if (!pItem)
+                    return TRUE;
 
-                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
+                if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
+                {
+                    /* new focused item */
+                    if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
                     {
-                        /* new focused item */
-                        if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
-                        {
-                            /* use default english format string */
-                            wcscpy(FormatBuffer, L"Details for '%s' extension");
-                        }
-
-                        /* format buffer */
-                        swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
-                        /* update dialog */
-                        SetDlgItemTextW(hwndDlg, 14003, Buffer);
-
-                        if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
-                        {
-                            /* use default english format string */
-                            wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
-                        }
-                        /* format buffer */
-                        swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
-                        /* update dialog */
-                        SetDlgItemTextW(hwndDlg, 14007, Buffer); 
+                        /* use default english format string */
+                        wcscpy(FormatBuffer, L"Details for '%s' extension");
                     }
-           }
-           break;
+
+                    /* format buffer */
+                    swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
+                    /* update dialog */
+                    SetDlgItemTextW(hwndDlg, 14003, Buffer);
+
+                    if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                    {
+                        /* use default english format string */
+                        wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
+                    }
+                    /* format buffer */
+                    swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
+                    /* update dialog */
+                    SetDlgItemTextW(hwndDlg, 14007, Buffer);
+                }
+            }
+            break;
     }
 
     return FALSE;
@@ -517,16 +517,16 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
 {
     switch(fOptions)
     {
-    case 0:
-        ShowFolderOptionsDialog(hWnd, hInst);
-        break;
-    case 1:
-        // show taskbar options dialog
-        FIXME("notify explorer to show taskbar options dialog");
-        //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
-        break;
-    default:
-        FIXME("unrecognized options id %d\n", fOptions);
+        case 0:
+            ShowFolderOptionsDialog(hWnd, hInst);
+            break;
+        case 1:
+            // show taskbar options dialog
+            FIXME("notify explorer to show taskbar options dialog");
+            //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
+            break;
+        default:
+            FIXME("unrecognized options id %d\n", fOptions);
     }
 }
 
@@ -568,14 +568,14 @@ CountFolderAndFiles(LPVOID lParam)
 
     pOffset = PathAddBackslashW(pContext->szFolderPath);
     if (!pOffset)
-       return 0;
+        return 0;
 
     Length = pOffset - pContext->szFolderPath;
 
     wcscpy(pOffset, L"*.*");
     hFile = FindFirstFileW(pContext->szFolderPath, &FindData);
     if (hFile == INVALID_HANDLE_VALUE)
-       return 0;
+        return 0;
 
     do
     {
@@ -585,7 +585,7 @@ CountFolderAndFiles(LPVOID lParam)
             if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
                 if (FindData.cFileName[0] == L'.' && FindData.cFileName[1] == L'.' &&
-                    FindData.cFileName[2] == L'\0')
+                        FindData.cFileName[2] == L'\0')
                     continue;
 
                 pContext->cFolder++;
@@ -600,13 +600,13 @@ CountFolderAndFiles(LPVOID lParam)
 
                 pContext->cFiles++;
                 pContext->bSize.QuadPart += FileSize.QuadPart;
-            }    
+            }
         }
         else if (GetLastError() == ERROR_NO_MORE_FILES)
         {
             break;
         }
-    }while(1);
+    } while(1);
 
     FindClose(hFile);
     return 1;
@@ -623,7 +623,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
     WCHAR szBuffer[MAX_PATH+5];
     WCHAR szFormat[30] = {0};
 
-    static const WCHAR wFormat[] = {'%','0','2','d','/','%','0','2','d','/','%','0','4','d',' ',' ','%','0','2','d',':','%','0','2','u',0};
+    static const WCHAR wFormat[] = {'%', '0', '2', 'd', '/', '%', '0', '2', 'd', '/', '%', '0', '4', 'd', ' ', ' ', '%', '0', '2', 'd', ':', '%', '0', '2', 'u', 0};
 
     pFolderName = wcsrchr(pContext->szFolderPath, L'\\');
     if (!pFolderName)
@@ -636,7 +636,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
     if (wcslen(pContext->szFolderPath) == 2)
     {
         /* folder is located at root */
-        WCHAR szDrive[4] = {L'C',L':',L'\\',L'\0'};
+        WCHAR szDrive[4] = {L'C', L':', L'\\', L'\0'};
         szDrive[0] = pContext->szFolderPath[0];
         SetDlgItemTextW(pContext->hwndDlg, 14007, szDrive);
     }
@@ -660,24 +660,24 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
             SendDlgItemMessage(pContext->hwndDlg, 14022, BM_SETCHECK, BST_CHECKED, 0);
         }
 
-       if (FileTimeToLocalFileTime(&FolderAttribute.ftCreationTime, &ft))
-       {
-           FileTimeToSystemTime(&ft, &dt);
-           swprintf (szBuffer, wFormat, dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
-           SetDlgItemTextW(pContext->hwndDlg, 14015, szBuffer);
-       }
+        if (FileTimeToLocalFileTime(&FolderAttribute.ftCreationTime, &ft))
+        {
+            FileTimeToSystemTime(&ft, &dt);
+            swprintf (szBuffer, wFormat, dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
+            SetDlgItemTextW(pContext->hwndDlg, 14015, szBuffer);
+        }
     }
     /* now enumerate enumerate contents */
     wcscpy(szBuffer, pContext->szFolderPath);
     CountFolderAndFiles((LPVOID)pContext);
     wcscpy(pContext->szFolderPath, szBuffer);
     /* set folder details */
-    LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, szFormat, sizeof(szFormat)/sizeof(WCHAR));
+    LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, szFormat, sizeof(szFormat) / sizeof(WCHAR));
     szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
     swprintf(szBuffer, szFormat, pContext->cFiles, pContext->cFolder);
     SetDlgItemTextW(pContext->hwndDlg, 14011, szBuffer);
 
-    if (SH_FormatFileSizeWithBytes(&pContext->bSize, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (SH_FormatFileSizeWithBytes(&pContext->bSize, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         /* store folder size */
         SetDlgItemTextW(pContext->hwndDlg, 14009, szBuffer);
@@ -710,7 +710,7 @@ FolderPropertiesGeneralDlg(
                 break;
             hIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPEN));
             if (hIcon)
-               SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON,  (WPARAM)hIcon, 0);
+                SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON,  (WPARAM)hIcon, 0);
 
             pContext = (FOLDER_PROPERTIES_CONTEXT *)SHAlloc(sizeof(FOLDER_PROPERTIES_CONTEXT));
             if (pContext)
@@ -725,7 +725,7 @@ FolderPropertiesGeneralDlg(
         case WM_COMMAND:
             if (HIWORD(wParam) == BN_CLICKED)
             {
-               PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             }
             break;
         case WM_DESTROY:
@@ -751,8 +751,8 @@ FolderPropertiesGeneralDlg(
                     else
                         FolderAttribute.dwFileAttributes &= (~FILE_ATTRIBUTE_HIDDEN);
 
-                    Attribute = FolderAttribute.dwFileAttributes & 
-(FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_NORMAL|FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_SYSTEM|FILE_ATTRIBUTE_TEMPORARY);
+                    Attribute = FolderAttribute.dwFileAttributes &
+                                (FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_TEMPORARY);
 
                     SetFileAttributesW(pContext->szFolderPath, Attribute);
                 }
@@ -815,19 +815,19 @@ SH_ShowFolderProperties(LPWSTR pwszFolder,  LPCITEMIDLIST pidlFolder, LPCITEMIDL
 
     if (SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_IDataObject, (void**)&pDataObj) == S_OK)
     {
-        hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Directory", MAX_PROPERTY_SHEET_PAGE-1, pDataObj);
+        hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Directory", MAX_PROPERTY_SHEET_PAGE - 1, pDataObj);
         if (hpsx)
         {
             SHAddFromPropSheetExtArray(hpsx,
-                                      (LPFNADDPROPSHEETPAGE)FolderAddPropSheetPageProc,
-                                      (LPARAM)&psh);
+                                       (LPFNADDPROPSHEETPAGE)FolderAddPropSheetPageProc,
+                                       (LPARAM)&psh);
         }
     }
 
     ret = PropertySheetW(&psh);
 
-   if (hpsx)
-       SHDestroyPropSheetExtArray(hpsx);
+    if (hpsx)
+        SHDestroyPropSheetExtArray(hpsx);
 
     if (ret < 0)
         return FALSE;

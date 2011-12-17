@@ -42,16 +42,16 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 class CDrivesFolderEnum :
     public IEnumIDListImpl
 {
-private:
-public:
-    CDrivesFolderEnum();
-    ~CDrivesFolderEnum();
-    HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
-    BOOL CreateMyCompEnumList(DWORD dwFlags);
+    private:
+    public:
+        CDrivesFolderEnum();
+        ~CDrivesFolderEnum();
+        HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
+        BOOL CreateMyCompEnumList(DWORD dwFlags);
 
-BEGIN_COM_MAP(CDrivesFolderEnum)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CDrivesFolderEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 /***********************************************************************
@@ -85,11 +85,12 @@ HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
 /**************************************************************************
  *  CreateMyCompEnumList()
  */
-static const WCHAR MyComputer_NameSpaceW[] = { 'S','O','F','T','W','A','R','E',
- '\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
- 'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l',
- 'o','r','e','r','\\','M','y','C','o','m','p','u','t','e','r','\\','N','a','m',
- 'e','s','p','a','c','e','\0' };
+static const WCHAR MyComputer_NameSpaceW[] = { 'S', 'O', 'F', 'T', 'W', 'A', 'R', 'E',
+        '\\', 'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', '\\', 'W', 'i', 'n', 'd', 'o', 'w', 's', '\\',
+        'C', 'u', 'r', 'r', 'e', 'n', 't', 'V', 'e', 'r', 's', 'i', 'o', 'n', '\\', 'E', 'x', 'p', 'l',
+        'o', 'r', 'e', 'r', '\\', 'M', 'y', 'C', 'o', 'm', 'p', 'u', 't', 'e', 'r', '\\', 'N', 'a', 'm',
+        'e', 's', 'p', 'a', 'c', 'e', '\0'
+                                             };
 
 BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 {
@@ -105,7 +106,7 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
         HKEY hKey;
         UINT i;
 
-        while (bRet && wszDriveName[0]<='Z')
+        while (bRet && wszDriveName[0] <= 'Z')
         {
             if(dwDrivemap & 0x00000001L)
                 bRet = AddToEnumList(_ILCreateDrive(wszDriveName));
@@ -117,7 +118,7 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
         for (i = 0; i < 2; i++)
         {
             if (bRet && ERROR_SUCCESS == RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
-                                      MyComputer_NameSpaceW, 0, KEY_READ, &hKey))
+                    MyComputer_NameSpaceW, 0, KEY_READ, &hKey))
             {
                 WCHAR wszBuf[50];
                 DWORD dwSize, j = 0;
@@ -180,7 +181,7 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
         return E_OUTOFMEMORY;
 
     i = swprintf(wszMyCompKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\");
-    StringFromGUID2(CLSID_MyComputer, wszMyCompKey + i, sizeof(wszMyCompKey)/sizeof(wszMyCompKey[0]) - i);
+    StringFromGUID2(CLSID_MyComputer, wszMyCompKey + i, sizeof(wszMyCompKey) / sizeof(wszMyCompKey[0]) - i);
     dwSize = sizeof(szName);
     if (RegGetValueW(HKEY_CURRENT_USER, wszMyCompKey,
                      NULL, RRF_RT_REG_SZ, NULL, szName, &dwSize) == ERROR_SUCCESS)
@@ -199,7 +200,7 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
 *    ISF_MyComputer_fnParseDisplayName
 */
 HRESULT WINAPI CDrivesFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-               DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
@@ -225,7 +226,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
     }
     /* do we have an absolute path name ? */
     else if (PathGetDriveNumberW (lpszDisplayName) >= 0 &&
-              lpszDisplayName[2] == (WCHAR) '\\')
+             lpszDisplayName[2] == (WCHAR) '\\')
     {
         szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
         /* make drive letter uppercase to enable PIDL comparison */
@@ -236,7 +237,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
     if (szNext && *szNext)
     {
         hr = SHELL32_ParseNextElement (this, hwndOwner, pbc, &pidlTemp,
-                              (LPOLESTR) szNext, pchEaten, pdwAttributes);
+                                       (LPOLESTR) szNext, pchEaten, pdwAttributes);
     }
     else
     {
@@ -266,13 +267,13 @@ HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUM
 
     if (ppEnumIDList == NULL)
         return E_POINTER;
-    
+
     *ppEnumIDList = NULL;
     ATLTRY (theEnumerator = new CComObject<CDrivesFolderEnum>);
-    
+
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    
+
     hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
     if (FAILED (hResult))
     {
@@ -419,7 +420,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf (UINT cidl, LPCITEMIDLIST * apidl,
 *
 */
 HRESULT WINAPI CDrivesFolder::GetUIObjectOf (HWND hwndOwner, UINT cidl, LPCITEMIDLIST * apidl, REFIID riid,
-                UINT * prgfInOut, LPVOID * ppvOut)
+        UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
@@ -440,7 +441,7 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf (HWND hwndOwner, UINT cidl, LPCITEMI
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
         hr = IDataObject_Constructor (hwndOwner,
-                                              pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+                                      pidlRoot, apidl, cidl, (IDataObject **)&pObj);
     }
     else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
     {
@@ -459,10 +460,10 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf (HWND hwndOwner, UINT cidl, LPCITEMI
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
         hr = this->QueryInterface(IID_IDropTarget,
-                                          (LPVOID *) &pObj);
+                                  (LPVOID *) &pObj);
     }
-    else if ((IsEqualIID(riid,IID_IShellLinkW) ||
-              IsEqualIID(riid,IID_IShellLinkA)) && (cidl == 1))
+    else if ((IsEqualIID(riid, IID_IShellLinkW) ||
+              IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
         hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*) &pObj);
@@ -493,7 +494,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
     if (!strRet)
         return E_INVALIDARG;
 
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH +1) * sizeof(WCHAR));
+    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
 
@@ -519,12 +520,13 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
                 if (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING)
                 {
                     static const WCHAR clsidW[] =
-                     { 'C','L','S','I','D','\\',0 };
+                    { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
                     static const WCHAR shellfolderW[] =
-                     { '\\','s','h','e','l','l','f','o','l','d','e','r',0 };
+                    { '\\', 's', 'h', 'e', 'l', 'l', 'f', 'o', 'l', 'd', 'e', 'r', 0 };
                     static const WCHAR wantsForParsingW[] =
-                     { 'W','a','n','t','s','F','o','r','P','a','r','s','i','n',
-                     'g',0 };
+                    {   'W', 'a', 'n', 't', 's', 'F', 'o', 'r', 'P', 'a', 'r', 's', 'i', 'n',
+                        'g', 0
+                    };
                     int bWantsForParsing = FALSE;
                     WCHAR szRegPath[100];
                     LONG r;
@@ -549,14 +551,14 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
                         bWantsForParsing = TRUE;
 
                     if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                        bWantsForParsing)
+                            bWantsForParsing)
                     {
                         /*
                          * We need the filesystem path to the destination folder
                          * Only the folder itself can know it
                          */
                         hr = SHELL32_GetDisplayNameOfChild (this, pidl,
-                                                dwFlags, pszPath, MAX_PATH);
+                                                            dwFlags, pszPath, MAX_PATH);
                     }
                     else
                     {
@@ -603,15 +605,15 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
             {
                 WCHAR wszDrive[18] = {0};
                 DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
-                static const WCHAR wszOpenBracket[] = {' ','(',0};
-                static const WCHAR wszCloseBracket[] = {')',0};
+                static const WCHAR wszOpenBracket[] = {' ', '(', 0};
+                static const WCHAR wszCloseBracket[] = {')', 0};
 
                 lstrcpynW(wszDrive, pszPath, 4);
                 pszPath[0] = L'\0';
                 GetVolumeInformationW (wszDrive, pszPath,
-                           MAX_PATH - 7,
-                           &dwVolumeSerialNumber,
-                           &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
+                                       MAX_PATH - 7,
+                                       &dwVolumeSerialNumber,
+                                       &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
                 pszPath[MAX_PATH-1] = L'\0';
                 if (!wcslen(pszPath))
                 {
@@ -683,7 +685,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
 *  ppidlOut   [out]  simple pidl returned
 */
 HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
-               LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+                                        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     LPWSTR sName;
     HKEY hKey;
@@ -695,13 +697,13 @@ HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
 
     if (_ILIsDrive(pidl))
     {
-       if (_ILSimpleGetTextW(pidl, szName, sizeof(szName)/sizeof(WCHAR)))
-       {
-           SetVolumeLabelW(szName, lpName);
-       }
-       if (pPidlOut)
-           *pPidlOut = _ILCreateDrive(szName);
-       return S_OK;
+        if (_ILSimpleGetTextW(pidl, szName, sizeof(szName) / sizeof(WCHAR)))
+        {
+            SetVolumeLabelW(szName, lpName);
+        }
+        if (pPidlOut)
+            *pPidlOut = _ILCreateDrive(szName);
+        return S_OK;
     }
 
 
@@ -717,7 +719,7 @@ HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
     {
         return E_OUTOFMEMORY;
     }
-    
+
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
                       0,
@@ -756,7 +758,7 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG
     TRACE ("(%p)\n", this);
 
     if (pSort)
-         *pSort = 0;
+        *pSort = 0;
     if (pDisplay)
         *pDisplay = 0;
     return S_OK;
@@ -806,29 +808,29 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHE
         psd->str.uType = STRRET_CSTR;
         switch (iColumn)
         {
-        case 0:        /* name */
-            hr = GetDisplayNameOf(pidl,
-                       SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-            break;
-        case 1:        /* type */
-            _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 2:        /* total size */
-            if (_ILIsDrive (pidl))
-            {
-                _ILSimpleGetText (pidl, szPath, MAX_PATH);
-                GetDiskFreeSpaceExA (szPath, NULL, &ulBytes, NULL);
-                StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
-            }
-            break;
-        case 3:        /* free size */
-            if (_ILIsDrive (pidl))
-            {
-                _ILSimpleGetText (pidl, szPath, MAX_PATH);
-                GetDiskFreeSpaceExA (szPath, &ulBytes, NULL, NULL);
-                StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
-            }
-            break;
+            case 0:        /* name */
+                hr = GetDisplayNameOf(pidl,
+                                      SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+                break;
+            case 1:        /* type */
+                _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case 2:        /* total size */
+                if (_ILIsDrive (pidl))
+                {
+                    _ILSimpleGetText (pidl, szPath, MAX_PATH);
+                    GetDiskFreeSpaceExA (szPath, NULL, &ulBytes, NULL);
+                    StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
+                }
+                break;
+            case 3:        /* free size */
+                if (_ILIsDrive (pidl))
+                {
+                    _ILSimpleGetText (pidl, szPath, MAX_PATH);
+                    GetDiskFreeSpaceExA (szPath, &ulBytes, NULL, NULL);
+                    StrFormatByteSizeA (ulBytes.LowPart, psd->str.cStr, MAX_PATH);
+                }
+                break;
         }
         hr = S_OK;
     }
@@ -850,7 +852,7 @@ HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
     TRACE ("(%p)\n", this);
 
     if (!lpClassId)
-    return E_POINTER;
+        return E_POINTER;
     *lpClassId = CLSID_MyComputer;
 
     return S_OK;

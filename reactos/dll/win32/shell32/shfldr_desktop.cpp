@@ -53,17 +53,17 @@ class CDesktopFolder;
 class CDesktopFolderEnum :
     public IEnumIDListImpl
 {
-private:
+    private:
 //    CComPtr                                fDesktopEnumerator;
 //    CComPtr                                fCommonDesktopEnumerator;
-public:
-    CDesktopFolderEnum();
-    ~CDesktopFolderEnum();
-    HRESULT WINAPI Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags);
+    public:
+        CDesktopFolderEnum();
+        ~CDesktopFolderEnum();
+        HRESULT WINAPI Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags);
 
-BEGIN_COM_MAP(CDesktopFolderEnum)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CDesktopFolderEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
@@ -87,11 +87,12 @@ CDesktopFolderEnum::~CDesktopFolderEnum()
 {
 }
 
-static const WCHAR ClassicStartMenuW[] =  {'S','O','F','T','W','A','R','E','\\',
- 'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
- 'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r',
- '\\','H','i','d','e','D','e','s','k','t','o','p','I','c','o','n','s','\\',
- 'C','l','a','s','s','i','c','S','t','a','r','t','M','e','n','u','\0' };
+static const WCHAR ClassicStartMenuW[] =  {'S', 'O', 'F', 'T', 'W', 'A', 'R', 'E', '\\',
+        'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', '\\', 'W', 'i', 'n', 'd', 'o', 'w', 's', '\\',
+        'C', 'u', 'r', 'r', 'e', 'n', 't', 'V', 'e', 'r', 's', 'i', 'o', 'n', '\\', 'E', 'x', 'p', 'l', 'o', 'r', 'e', 'r',
+        '\\', 'H', 'i', 'd', 'e', 'D', 'e', 's', 'k', 't', 'o', 'p', 'I', 'c', 'o', 'n', 's', '\\',
+        'C', 'l', 'a', 's', 's', 'i', 'c', 'S', 't', 'a', 'r', 't', 'M', 'e', 'n', 'u', '\0'
+                                          };
 
 INT
 IsNamespaceExtensionHidden(WCHAR *iid)
@@ -107,9 +108,9 @@ IsNamespaceExtensionHidden(WCHAR *iid)
                      &Result,
                      &dwResult) != ERROR_SUCCESS)
     {
-        return -1;     
+        return -1;
     }
-    
+
     return Result;
 }
 
@@ -129,11 +130,12 @@ SetNamespaceExtensionVisibleStatus(const WCHAR * iid, DWORD dwStatus)
 /**************************************************************************
  *  CreateDesktopEnumList()
  */
-static const WCHAR Desktop_NameSpaceW[] = { 'S','O','F','T','W','A','R','E',
- '\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
- 'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l',
- 'o','r','e','r','\\','D','e','s','k','t','o','p','\\','N','a','m','e','s','p',
- 'a','c','e','\0' };
+static const WCHAR Desktop_NameSpaceW[] = { 'S', 'O', 'F', 'T', 'W', 'A', 'R', 'E',
+        '\\', 'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', '\\', 'W', 'i', 'n', 'd', 'o', 'w', 's', '\\',
+        'C', 'u', 'r', 'r', 'e', 'n', 't', 'V', 'e', 'r', 's', 'i', 'o', 'n', '\\', 'E', 'x', 'p', 'l',
+        'o', 'r', 'e', 'r', '\\', 'D', 'e', 's', 'k', 't', 'o', 'p', '\\', 'N', 'a', 'm', 'e', 's', 'p',
+        'a', 'c', 'e', '\0'
+                                          };
 
 HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags)
 {
@@ -162,14 +164,14 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
         {
             if (i == 0)
                 dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
-            else 
+            else
                 dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
 
             if (dwResult == ERROR_SUCCESS)
             {
                 WCHAR iid[50];
                 LPITEMIDLIST pidl;
-                int i=0;
+                int i = 0;
 
                 while (ret)
                 {
@@ -182,19 +184,19 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
                     {
                         if (IsNamespaceExtensionHidden(iid) < 1)
                         {
-                           pidl = _ILCreateGuidFromStrW(iid);
+                            pidl = _ILCreateGuidFromStrW(iid);
                             if (pidl != NULL)
                             {
-                               if (!HasItemWithCLSID(pidl))
-                               {
-                                   ret = AddToEnumList(pidl);
-                               }
-                               else
-                               {
+                                if (!HasItemWithCLSID(pidl))
+                                {
+                                    ret = AddToEnumList(pidl);
+                                }
+                                else
+                                {
                                     SHFree(pidl);
-                              }
+                                }
                             }
-                       }
+                        }
                     }
                     else if (ERROR_NO_MORE_ITEMS == r)
                         break;
@@ -209,7 +211,7 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
         {
             if (i == 0)
                 dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ClassicStartMenuW, 0, KEY_READ, &hkey);
-            else 
+            else
                 dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, ClassicStartMenuW, 0, KEY_READ, &hkey);
 
             if (dwResult == ERROR_SUCCESS)
@@ -233,7 +235,7 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
                             {
                                 if (!HasItemWithCLSID(pidl))
                                 {
-                                   AddToEnumList(pidl);
+                                    AddToEnumList(pidl);
                                 }
                                 else
                                 {
@@ -294,7 +296,7 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
  *    to MyComputer
  */
 HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-                DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes)
+        DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes)
 {
     WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
@@ -351,11 +353,11 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
         if (urldata.nScheme == URL_SCHEME_SHELL) /* handle shell: urls */
         {
             TRACE ("-- shell url: %s\n", debugstr_w(urldata.pszSuffix));
-            SHCLSIDFromStringW (urldata.pszSuffix+2, &clsid);
+            SHCLSIDFromStringW (urldata.pszSuffix + 2, &clsid);
             pidlTemp = _ILCreateGuid (PT_GUID, clsid);
         }
         else
-            return IEParseDisplayNameWithBCW(CP_ACP,lpszDisplayName,pbc,ppidl);
+            return IEParseDisplayNameWithBCW(CP_ACP, lpszDisplayName, pbc, ppidl);
     }
     else
     {
@@ -391,7 +393,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLE
         if (szNext && *szNext)
         {
             hr = SHELL32_ParseNextElement(this, hwndOwner, pbc,
-                    &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
+                                          &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
         }
         else
         {
@@ -425,19 +427,19 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     if (ppEnumIDList == NULL)
         return E_POINTER;
     *ppEnumIDList = NULL;
-    
+
     ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnum>);
-    
+
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    
+
     hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
     if (FAILED (hResult))
     {
         delete theEnumerator;
         return hResult;
     }
-    
+
     hResult = theEnumerator->Initialize (this, hwndOwner, dwFlags);
     if (FAILED (hResult))
         return hResult;
@@ -581,14 +583,14 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf (UINT cidl, LPCITEMIDLIST *apidl,
  *
  */
 HRESULT WINAPI CDesktopFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
-                REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
+        REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
-       this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
+           this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -656,14 +658,14 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
     if (!strRet)
         return E_INVALIDARG;
 
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH +1) * sizeof(WCHAR));
+    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
 
     if (_ILIsDesktop (pidl))
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-            (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
+                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
             wcscpy(pszPath, sPathTarget);
         else
             HCR_GetClassNameW(CLSID_ShellDesktop, pszPath, MAX_PATH);
@@ -693,12 +695,13 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
                 {
                     /* get the "WantsFORPARSING" flag from the registry */
                     static const WCHAR clsidW[] =
-                     { 'C','L','S','I','D','\\',0 };
+                    { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
                     static const WCHAR shellfolderW[] =
-                     { '\\','s','h','e','l','l','f','o','l','d','e','r',0 };
+                    { '\\', 's', 'h', 'e', 'l', 'l', 'f', 'o', 'l', 'd', 'e', 'r', 0 };
                     static const WCHAR wantsForParsingW[] =
-                     { 'W','a','n','t','s','F','o','r','P','a','r','s','i','n',
-                     'g',0 };
+                    {   'W', 'a', 'n', 't', 's', 'F', 'o', 'r', 'P', 'a', 'r', 's', 'i', 'n',
+                        'g', 0
+                    };
                     WCHAR szRegPath[100];
                     LONG r;
 
@@ -714,7 +717,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
                 }
 
                 if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                     bWantsForParsing)
+                        bWantsForParsing)
                 {
                     /*
                      * we need the filesystem path to the destination folder.
@@ -744,7 +747,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
 
             /* file system folder or file rooted at the desktop */
             if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
-                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
+                    (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
             {
                 lstrcpynW(pszPath, sPathTarget, MAX_PATH - 1);
                 PathAddBackslashW(pszPath);
@@ -759,7 +762,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
             {
                 /* file system folder or file rooted at the AllUsers desktop */
                 if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
-                    (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
+                        (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
                 {
                     SHGetSpecialFolderPathW(0, pszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
                     PathAddBackslashW(pszPath);
@@ -769,7 +772,8 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
                 _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
                 if (!_ILIsFolder(pidl))
                     SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-            }        }
+            }
+        }
     }
     else
     {
@@ -799,8 +803,8 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
         CoTaskMemFree(pszPath);
 
     TRACE ("-- (%p)->(%s,0x%08x)\n", this,
-     strRet->uType == STRRET_CSTR ? strRet->cStr :
-     debugstr_w(strRet->pOleStr), hr);
+           strRet->uType == STRRET_CSTR ? strRet->cStr :
+           debugstr_w(strRet->pOleStr), hr);
     return hr;
 }
 
@@ -817,7 +821,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
  *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
  */
 HRESULT WINAPI CDesktopFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
-                LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut)
+        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut)
 {
     CComPtr<IShellFolder2>                psf;
     HRESULT hr;
@@ -860,7 +864,7 @@ HRESULT WINAPI CDesktopFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    
         }
     }
 
-    if (!memcmp(szSrc, szDest, (wcslen(szDest)+1) * sizeof(WCHAR)))
+    if (!memcmp(szSrc, szDest, (wcslen(szDest) + 1) * sizeof(WCHAR)))
     {
         /* src and destination is the same */
         hr = S_OK;
@@ -879,7 +883,7 @@ HRESULT WINAPI CDesktopFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    
             hr = _ILCreateFromPathW(szDest, pPidlOut);
 
         SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-         SHCNF_PATHW, szSrc, szDest);
+                        SHCNF_PATHW, szSrc, szDest);
 
         return hr;
     }
@@ -915,7 +919,7 @@ HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFla
     TRACE ("(%p)\n", this);
 
     if (!pcsFlags || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
-    return E_INVALIDARG;
+        return E_INVALIDARG;
 
     *pcsFlags = DesktopSFHeader[iColumn].pcsFlags;
 
@@ -952,22 +956,22 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SH
     psd->str.uType = STRRET_CSTR;
     switch (iColumn)
     {
-    case 0:        /* name */
-        hr = GetDisplayNameOf(pidl,
-                   SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        break;
-    case 1:        /* size */
-        _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
-        break;
-    case 2:        /* type */
-        _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
-        break;
-    case 3:        /* date */
-        _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
-        break;
-    case 4:        /* attributes */
-        _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
-        break;
+        case 0:        /* name */
+            hr = GetDisplayNameOf(pidl,
+                                  SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+            break;
+        case 1:        /* size */
+            _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
+            break;
+        case 2:        /* type */
+            _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
+            break;
+        case 3:        /* date */
+            _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
+            break;
+        case 4:        /* attributes */
+            _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
+            break;
     }
 
     return hr;
@@ -1013,19 +1017,19 @@ HRESULT WINAPI CDesktopFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
     HRESULT hr;
     WCHAR wszText[MAX_PATH];
     WCHAR wszNewFolder[25];
-    const WCHAR wszFormat[] = {'%','s',' ','%','d',0 };
+    const WCHAR wszFormat[] = {'%', 's', ' ', '%', 'd', 0 };
 
-    LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder,  sizeof(wszNewFolder)/sizeof(WCHAR));
+    LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder,  sizeof(wszNewFolder) / sizeof(WCHAR));
 
     TRACE ("(%p)(%p %u)\n", this, pwszName, uLen);
 
-    if (uLen < sizeof(wszNewFolder)/sizeof(WCHAR) + 3)
+    if (uLen < sizeof(wszNewFolder) / sizeof(WCHAR) + 3)
         return E_POINTER;
 
     lstrcpynW (pwszName, wszNewFolder, uLen);
 
     hr = EnumObjects(0,
-     SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penum);
+                     SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penum);
     if (penum) {
         LPITEMIDLIST pidl;
         DWORD dwFetched;
@@ -1034,7 +1038,7 @@ HRESULT WINAPI CDesktopFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
 next:
         penum->Reset ();
         while (S_OK == penum->Next(1, &pidl, &dwFetched) &&
-         dwFetched) {
+                dwFetched) {
             _ILSimpleGetTextW (pidl, wszText, MAX_PATH);
             if (0 == lstrcmpiW (wszText, pwszName)) {
                 _snwprintf (pwszName, uLen, wszFormat, wszNewFolder, i++);
@@ -1063,12 +1067,12 @@ HRESULT WINAPI CDesktopFolder::AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLI
         lstrcpynW(wszNewDir, sPathTarget, MAX_PATH);
     PathAppendW(wszNewDir, pwszName);
     bRes = CreateDirectoryW (wszNewDir, NULL);
-    if (bRes) 
+    if (bRes)
     {
         SHChangeNotify (SHCNE_MKDIR, SHCNF_PATHW, wszNewDir, NULL);
         hres = S_OK;
         if (ppidlOut)
-                hres = _ILCreateFromPathW(wszNewDir, ppidlOut);
+            hres = _ILCreateFromPathW(wszNewDir, ppidlOut);
     }
 
     return hres;
@@ -1087,7 +1091,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
     int res;
 
     TRACE ("(%p)(%u %p)\n", this, cidl, apidl);
-    if (cidl==0) return S_OK;
+    if (cidl == 0) return S_OK;
 
     for(i = 0; i < cidl; i++)
     {
@@ -1104,10 +1108,10 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
         /* FIXME use FormatMessage
          * use a similar message resource as in windows
          */
-        LoadStringW(shell32_hInstance, IDS_DELETEMULTIPLE_TEXT, wszPath, sizeof(wszPath)/sizeof(WCHAR));
+        LoadStringW(shell32_hInstance, IDS_DELETEMULTIPLE_TEXT, wszPath, sizeof(wszPath) / sizeof(WCHAR));
         wszPath[(sizeof(wszPath)/sizeof(WCHAR))-1] = 0;
 
-        LoadStringW(shell32_hInstance, IDS_DELETEITEM_CAPTION, wszCaption, sizeof(wszCaption)/sizeof(WCHAR));
+        LoadStringW(shell32_hInstance, IDS_DELETEITEM_CAPTION, wszCaption, sizeof(wszCaption) / sizeof(WCHAR));
         wszCaption[(sizeof(wszCaption)/sizeof(WCHAR))-1] = 0;
 
         res = SHELL_ConfirmMsgBox(GetActiveWindow(), wszPath, wszCaption, NULL, cidl > 1);
@@ -1166,7 +1170,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
             SHFree(pidl);
         }
 
-        wszCurrentPath += wcslen(wszCurrentPath)+1;
+        wszCurrentPath += wcslen(wszCurrentPath) + 1;
     }
     HeapFree(GetProcessHeap(), 0, wszPathsList);
     return ret;
@@ -1186,7 +1190,7 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
     TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
 
     pSFFrom->QueryInterface(IID_IPersistFolder2, (LPVOID *)&ppf2);
-    if (ppf2) 
+    if (ppf2)
     {
         if (FAILED(ppf2->GetCurFolder(&pidl)))
             return E_FAIL;

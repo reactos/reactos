@@ -66,13 +66,13 @@ HRESULT WINAPI CNetFolder::FinalConstruct()
 *    ISF_NetworkPlaces_fnParseDisplayName
 */
 HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LPOLESTR lpszDisplayName,
-               DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_UNEXPECTED;
 
     TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
-            hwndOwner, pbcReserved, lpszDisplayName, debugstr_w (lpszDisplayName),
-            pchEaten, ppidl, pdwAttributes);
+           hwndOwner, pbcReserved, lpszDisplayName, debugstr_w (lpszDisplayName),
+           pchEaten, ppidl, pdwAttributes);
 
     *ppidl = 0;
     if (pchEaten)
@@ -89,13 +89,13 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
 HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this,
-            hwndOwner, dwFlags, ppEnumIDList);
+           hwndOwner, dwFlags, ppEnumIDList);
 
     *ppEnumIDList = NULL; //IEnumIDList_Constructor();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
- return S_FALSE;
-   // return (*ppEnumIDList) ? S_OK : E_OUTOFMEMORY;
+    return S_FALSE;
+    // return (*ppEnumIDList) ? S_OK : E_OUTOFMEMORY;
 }
 
 /**************************************************************************
@@ -104,7 +104,7 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 HRESULT WINAPI CNetFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     return SHELL32_BindToChild (pidlRoot, NULL, pidl, riid, ppvOut);
 }
@@ -115,7 +115,7 @@ HRESULT WINAPI CNetFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, RE
 HRESULT WINAPI CNetFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n", this,
-            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     *ppvOut = NULL;
     return E_NOTIMPL;
@@ -180,12 +180,12 @@ HRESULT WINAPI CNetFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID 
 HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
 {
     static const DWORD dwNethoodAttributes =
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | 
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
     HRESULT hr = S_OK;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n", this,
-            cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
+           cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
     if (!rgfInOut)
         return E_INVALIDARG;
@@ -229,14 +229,14 @@ HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWOR
 *
 */
 HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl, REFIID riid,
-               UINT * prgfInOut, LPVOID * ppvOut)
+        UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n", this,
-            hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
+           hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -308,10 +308,10 @@ HRESULT WINAPI CNetFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, L
 *  ppidlOut  [out] simple pidl returned
 */
 HRESULT WINAPI CNetFolder::SetNameOf (HWND hwndOwner, LPCITEMIDLIST pidl,    /*simple pidl */
-               LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+                                      LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this,
-            hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
+           hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
     return E_FAIL;
 }
 

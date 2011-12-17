@@ -33,25 +33,25 @@ class IExtractIconWImpl :
     public IExtractIconW,
     public IExtractIconA
 {
-private:
-    LPITEMIDLIST                        pidl;
-public:
-    IExtractIconWImpl();
-    ~IExtractIconWImpl();
-    HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+    private:
+        LPITEMIDLIST                        pidl;
+    public:
+        IExtractIconWImpl();
+        ~IExtractIconWImpl();
+        HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
-    // IExtractIconW
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-    virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+        // IExtractIconW
+        virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+        virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
-    // IExtractIconA
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-    virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+        // IExtractIconA
+        virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+        virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
-BEGIN_COM_MAP(IExtractIconWImpl)
-    COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
-    COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
-END_COM_MAP()
+        BEGIN_COM_MAP(IExtractIconWImpl)
+        COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
+        COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
+        END_COM_MAP()
 };
 
 static shvheader PrinterSFHeader[] = {
@@ -119,8 +119,8 @@ HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,        /* GIL_ fl
  *  IExtractIconW_Extract
  */
 HRESULT WINAPI IExtractIconWImpl::Extract(LPCWSTR pszFile,
-                                             UINT nIconIndex, HICON *phiconLarge,
-                                             HICON *phiconSmall, UINT nIconSize)
+        UINT nIconIndex, HICON *phiconLarge,
+        HICON *phiconSmall, UINT nIconSize)
 {
     int index;
 
@@ -142,10 +142,10 @@ HRESULT WINAPI IExtractIconWImpl::Extract(LPCWSTR pszFile,
  *  IExtractIconA_GetIconLocation
  */
 HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,
-    LPSTR szIconFile,
-    UINT cchMax,
-    int * piIndex,
-    UINT * pwFlags)
+        LPSTR szIconFile,
+        UINT cchMax,
+        int * piIndex,
+        UINT * pwFlags)
 {
     HRESULT ret;
     LPWSTR lpwstrFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchMax * sizeof(WCHAR));
@@ -163,8 +163,8 @@ HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,
  *  IExtractIconA_Extract
  */
 HRESULT WINAPI IExtractIconWImpl::Extract(LPCSTR pszFile,
-                                     UINT nIconIndex, HICON *phiconLarge,
-                                     HICON *phiconSmall, UINT nIconSize)
+        UINT nIconIndex, HICON *phiconLarge,
+        HICON *phiconSmall, UINT nIconSize)
 {
     HRESULT ret;
     INT len = MultiByteToWideChar(CP_ACP, 0, pszFile, -1, NULL, 0);
@@ -213,16 +213,16 @@ static HRESULT WINAPI IEI_Printers_Constructor(LPCITEMIDLIST pidl, REFIID riid, 
 class CPrintersEnum :
     public IEnumIDListImpl
 {
-private:
-public:
-    CPrintersEnum();
-    ~CPrintersEnum();
-    HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
-    BOOL CreatePrintersEnumList(DWORD dwFlags);
+    private:
+    public:
+        CPrintersEnum();
+        ~CPrintersEnum();
+        HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
+        BOOL CreatePrintersEnumList(DWORD dwFlags);
 
-BEGIN_COM_MAP(CPrintersEnum)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CPrintersEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 CPrintersEnum::CPrintersEnum()
@@ -245,7 +245,7 @@ static LPITEMIDLIST _ILCreatePrinterItem(PRINTER_INFO_4W *pi)
     PIDLDATA tmp;
     LPITEMIDLIST pidl;
     PIDLPrinterStruct * p;
-    int size0 = (char*)&tmp.u.cprinter.szName-(char*)&tmp.u.cprinter;
+    int size0 = (char*)&tmp.u.cprinter.szName - (char*)&tmp.u.cprinter;
     int size = size0;
 
     tmp.type = 0x00;
@@ -265,8 +265,8 @@ static LPITEMIDLIST _ILCreatePrinterItem(PRINTER_INFO_4W *pi)
     if (!pidl)
         return pidl;
 
-    pidl->mkid.cb = size+2;
-    memcpy(pidl->mkid.abID, &tmp, 2+size0);
+    pidl->mkid.cb = size + 2;
+    memcpy(pidl->mkid.abID, &tmp, 2 + size0);
 
     p = &((PIDLDATA*)pidl->mkid.abID)->u.cprinter;
 
@@ -281,7 +281,7 @@ static LPITEMIDLIST _ILCreatePrinterItem(PRINTER_INFO_4W *pi)
     else
         p->szName[p->offsServer] = L'\0';
 
-    *(WORD*)((char*)pidl+(size+2)) = 0;
+    *(WORD*)((char*)pidl + (size + 2)) = 0;
     return pidl;
 }
 
@@ -351,11 +351,11 @@ HRESULT WINAPI CPrinterFolder::FinalConstruct()
  * This is E_NOTIMPL in Windows too.
  */
 HRESULT WINAPI CPrinterFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-                DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
-           this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
-           pchEaten, ppidl, pdwAttributes);
+          this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
+          pchEaten, ppidl, pdwAttributes);
 
     *ppidl = 0;
     if (pchEaten)
@@ -368,8 +368,8 @@ static PIDLPrinterStruct * _ILGetPrinterStruct(LPCITEMIDLIST pidl)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
 
-    if (pdata && pdata->type==0x00)
-        return (PIDLPrinterStruct*)&(pdata->u.cfont);
+    if (pdata && pdata->type == 0x00)
+        return (PIDLPrinterStruct*) & (pdata->u.cfont);
 
     return NULL;
 }
@@ -413,7 +413,7 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
 HRESULT WINAPI CPrinterFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     return SHELL32_BindToChild (pidlRoot, NULL, pidl, riid, ppvOut);
 }
@@ -452,7 +452,7 @@ HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPV
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this,
-            hwndOwner, shdebugstr_guid (&riid), ppvOut);
+           hwndOwner, shdebugstr_guid (&riid), ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -515,13 +515,13 @@ HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, 
  *
  */
 HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
-                REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
+        REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     IUnknown *pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
-       this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
+           this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -607,7 +607,7 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
  *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
  */
 HRESULT WINAPI CPrinterFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
-                LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
            debugstr_w (lpName), dwFlags, pPidlOut);

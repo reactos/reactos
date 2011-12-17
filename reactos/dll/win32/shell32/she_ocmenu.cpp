@@ -41,7 +41,7 @@ typedef struct
     UINT  Count;
     BOOL NoOpen;
     UINT idCmdFirst;
-}OPEN_WITH_CONTEXT, *POPEN_WITH_CONTEXT;
+} OPEN_WITH_CONTEXT, *POPEN_WITH_CONTEXT;
 
 #define MANUFACTURER_NAME_SIZE    100
 
@@ -50,11 +50,11 @@ typedef struct
     HICON hIcon;
     WCHAR szAppName[MAX_PATH];
     WCHAR szManufacturer[MANUFACTURER_NAME_SIZE];
-}OPEN_ITEM_CONTEXT, *POPEN_ITEM_CONTEXT;
+} OPEN_ITEM_CONTEXT, *POPEN_ITEM_CONTEXT;
 
 
 typedef struct _LANGANDCODEPAGE_
-  {
+{
     WORD lang;
     WORD code;
 } LANGANDCODEPAGE, *LPLANGANDCODEPAGE;
@@ -81,7 +81,7 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
 {
     MENUITEMINFOW mii;
     WCHAR szBuffer[MAX_PATH];
-    static const WCHAR szChoose[] = { 'C','h','o','o','s','e',' ','P','r','o','g','r','a','m','.','.','.',0 };
+    static const WCHAR szChoose[] = { 'C', 'h', 'o', 'o', 's', 'e', ' ', 'P', 'r', 'o', 'g', 'r', 'a', 'm', '.', '.', '.', 0 };
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
@@ -91,7 +91,7 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 
     if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH_CHOOSE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-       wcscpy(szBuffer, szChoose);
+        wcscpy(szBuffer, szChoose);
 
     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
 
@@ -105,7 +105,7 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 }
 
-static 
+static
 void
 LoadOWItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
 {
@@ -152,11 +152,11 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     INT pos;
     HMENU hSubMenu = NULL;
     OPEN_WITH_CONTEXT Context;
-    
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
-       ERR("failed to load string\n");
-       return E_FAIL;
+        ERR("failed to load string\n");
+        return E_FAIL;
     }
 
     hSubMenu = CreatePopupMenu();
@@ -181,7 +181,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
         AddItem(hSubMenu, Context.idCmdFirst++);
         count = Context.idCmdFirst - idCmdFirst;
         /* verb start at index zero */
-        wId = count -1;
+        wId = count - 1;
         hSubMenu = hSubMenu;
     }
 
@@ -192,8 +192,8 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
     if (hSubMenu)
     {
-       mii.fMask |= MIIM_SUBMENU;
-       mii.hSubMenu = hSubMenu;
+        mii.fMask |= MIIM_SUBMENU;
+        mii.hSubMenu = hSubMenu;
     }
     mii.dwTypeData = (LPWSTR) szBuffer;
     mii.fState = MFS_ENABLED;
@@ -205,7 +205,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     mii.wID = Context.idCmdFirst;
     mii.fType = MFT_STRING;
     if (InsertMenuItemW( hmenu, pos, TRUE, &mii))
-       Context.Count++;
+        Context.Count++;
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Context.Count);
 }
@@ -236,11 +236,11 @@ FreeListItems(HWND hwndDlg)
 
 BOOL HideApplicationFromList(WCHAR * pFileName)
 {
-    WCHAR szBuffer[100] = {'A','p','p','l','i','c','a','t','i','o','n','s','\\',0};
+    WCHAR szBuffer[100] = {'A', 'p', 'p', 'l', 'i', 'c', 'a', 't', 'i', 'o', 'n', 's', '\\', 0};
     DWORD dwSize = 0;
     LONG result;
 
-    if (wcslen(pFileName) > (sizeof(szBuffer)/sizeof(WCHAR)) - 14)
+    if (wcslen(pFileName) > (sizeof(szBuffer) / sizeof(WCHAR)) - 14)
     {
         ERR("insufficient buffer\n");
         return FALSE;
@@ -262,10 +262,10 @@ WriteStaticShellExtensionKey(HKEY hRootKey, const WCHAR * pVerb, WCHAR *pFullPat
 {
     HKEY hShell;
     LONG result;
-    WCHAR szBuffer[MAX_PATH+10] = {'s','h','e','l','l','\\', 0 };
+    WCHAR szBuffer[MAX_PATH+10] = {'s', 'h', 'e', 'l', 'l', '\\', 0 };
 
-    if (wcslen(pVerb) > (sizeof(szBuffer)/sizeof(WCHAR)) - 15 ||
-        wcslen(pFullPath) > (sizeof(szBuffer)/sizeof(WCHAR)) - 4)
+    if (wcslen(pVerb) > (sizeof(szBuffer) / sizeof(WCHAR)) - 15 ||
+            wcslen(pFullPath) > (sizeof(szBuffer) / sizeof(WCHAR)) - 4)
     {
         ERR("insufficient buffer\n");
         return;
@@ -283,7 +283,7 @@ WriteStaticShellExtensionKey(HKEY hRootKey, const WCHAR * pVerb, WCHAR *pFullPat
     wcscpy(szBuffer, pFullPath);
     wcscat(szBuffer, L" %1");
 
-    result = RegSetValueExW(hShell, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer)+1)* sizeof(WCHAR));
+    result = RegSetValueExW(hShell, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
     RegCloseKey(hShell);
 }
 
@@ -298,7 +298,7 @@ StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
 
     /* get file extension */
     pFileExt = wcsrchr(szFileName, L'.');
-    if (wcslen(pFileExt) > (sizeof(szBuffer)/sizeof(WCHAR)) - 60)
+    if (wcslen(pFileExt) > (sizeof(szBuffer) / sizeof(WCHAR)) - 60)
     {
         ERR("insufficient buffer\n");
         return;
@@ -352,7 +352,7 @@ SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
         /* a new entry was created create the prog key id */
         wcscpy(szBuffer, &pFileExt[1]);
         wcscat(szBuffer, L"_auto_file");
-        if (RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+        if (RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return;
@@ -453,7 +453,7 @@ BrowseForApplication(HWND hwndDlg)
 POPEN_ITEM_CONTEXT
 GetCurrentOpenItemContext(HWND hwndDlg)
 {
-     LRESULT result;
+    LRESULT result;
 
     /* get current item */
     result = SendDlgItemMessage(hwndDlg, 14002, LB_GETCURSEL, 0, 0);
@@ -495,8 +495,8 @@ ExecuteOpenItem(POPEN_ITEM_CONTEXT pItemContext, LPCWSTR FileName)
 
 static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    LPMEASUREITEMSTRUCT lpmis; 
-    LPDRAWITEMSTRUCT lpdis; 
+    LPMEASUREITEMSTRUCT lpmis;
+    LPDRAWITEMSTRUCT lpdis;
     INT index;
     WCHAR szBuffer[MAX_PATH + 30] = { 0 };
     OPENASINFO *poainfo;
@@ -510,128 +510,128 @@ static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wPar
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:
-        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
-        poainfo = (OPENASINFO*)lParam;
-        if (!(poainfo->oaifInFlags & OAIF_ALLOW_REGISTRATION))
-            EnableWindow(GetDlgItem(hwndDlg, 14003), FALSE);
-        if (poainfo->oaifInFlags & OAIF_FORCE_REGISTRATION)
-            SendDlgItemMessage(hwndDlg, 14003, BM_SETCHECK, BST_CHECKED, 0);
-        if (poainfo->oaifInFlags & OAIF_HIDE_REGISTRATION)
-            ShowWindow(GetDlgItem(hwndDlg, 14003), SW_HIDE);
-        if (poainfo->pcszFile)
-        {
-             szBuffer[0] = L'\0';
-             GetDlgItemTextW(hwndDlg, 14001, szBuffer, sizeof(szBuffer)/sizeof(szBuffer[0]));
-             index = wcslen(szBuffer);
-             if (index + wcslen(poainfo->pcszFile) + 1 < sizeof(szBuffer)/sizeof(szBuffer[0]))
-                 wcscat(szBuffer, poainfo->pcszFile);
-             szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-             SetDlgItemTextW(hwndDlg, 14001, szBuffer);
-             ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
-             Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
-             LoadOWItems(&Context, poainfo->pcszFile);
-             SendMessage(Context.hDlgCtrl, LB_SETCURSEL, 0, 0);
-        }
-        return TRUE;
-    case WM_MEASUREITEM:
-            lpmis = (LPMEASUREITEMSTRUCT) lParam; 
-            lpmis->itemHeight = 64;
-            return TRUE; 
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case 14004: /* browse */
-            BrowseForApplication(hwndDlg);
-            return TRUE;
-        case 14002:
-            if (HIWORD(wParam) == LBN_SELCHANGE)
-                InvalidateRect((HWND)lParam, NULL, TRUE); // FIXME USE UPDATE RECT
-            break;
-        case 14005: /* ok */
-            pItemContext = GetCurrentOpenItemContext(hwndDlg);
-            if (pItemContext)
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
+            poainfo = (OPENASINFO*)lParam;
+            if (!(poainfo->oaifInFlags & OAIF_ALLOW_REGISTRATION))
+                EnableWindow(GetDlgItem(hwndDlg, 14003), FALSE);
+            if (poainfo->oaifInFlags & OAIF_FORCE_REGISTRATION)
+                SendDlgItemMessage(hwndDlg, 14003, BM_SETCHECK, BST_CHECKED, 0);
+            if (poainfo->oaifInFlags & OAIF_HIDE_REGISTRATION)
+                ShowWindow(GetDlgItem(hwndDlg, 14003), SW_HIDE);
+            if (poainfo->pcszFile)
             {
-                /* store settings in HKCU path */
-                StoreNewSettings(poainfo->pcszFile, pItemContext->szAppName);
-
-                if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                {
-                    /* set programm as default handler */
-                    SetProgrammAsDefaultHandler(poainfo->pcszFile, pItemContext->szAppName);
-                }
-
-                if (poainfo->oaifInFlags & OAIF_EXEC)
-                    ExecuteOpenItem(pItemContext, poainfo->pcszFile);
+                szBuffer[0] = L'\0';
+                GetDlgItemTextW(hwndDlg, 14001, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]));
+                index = wcslen(szBuffer);
+                if (index + wcslen(poainfo->pcszFile) + 1 < sizeof(szBuffer) / sizeof(szBuffer[0]))
+                    wcscat(szBuffer, poainfo->pcszFile);
+                szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+                SetDlgItemTextW(hwndDlg, 14001, szBuffer);
+                ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
+                Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
+                LoadOWItems(&Context, poainfo->pcszFile);
+                SendMessage(Context.hDlgCtrl, LB_SETCURSEL, 0, 0);
             }
-            FreeListItems(hwndDlg);
-            EndDialog(hwndDlg, 1);
             return TRUE;
-        case 14006: /* cancel */
+        case WM_MEASUREITEM:
+            lpmis = (LPMEASUREITEMSTRUCT) lParam;
+            lpmis->itemHeight = 64;
+            return TRUE;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case 14004: /* browse */
+                    BrowseForApplication(hwndDlg);
+                    return TRUE;
+                case 14002:
+                    if (HIWORD(wParam) == LBN_SELCHANGE)
+                        InvalidateRect((HWND)lParam, NULL, TRUE); // FIXME USE UPDATE RECT
+                    break;
+                case 14005: /* ok */
+                    pItemContext = GetCurrentOpenItemContext(hwndDlg);
+                    if (pItemContext)
+                    {
+                        /* store settings in HKCU path */
+                        StoreNewSettings(poainfo->pcszFile, pItemContext->szAppName);
+
+                        if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        {
+                            /* set programm as default handler */
+                            SetProgrammAsDefaultHandler(poainfo->pcszFile, pItemContext->szAppName);
+                        }
+
+                        if (poainfo->oaifInFlags & OAIF_EXEC)
+                            ExecuteOpenItem(pItemContext, poainfo->pcszFile);
+                    }
+                    FreeListItems(hwndDlg);
+                    EndDialog(hwndDlg, 1);
+                    return TRUE;
+                case 14006: /* cancel */
+                    FreeListItems(hwndDlg);
+                    EndDialog(hwndDlg, 0);
+                    return TRUE;
+                default:
+                    break;
+            }
+            break;
+        case WM_DRAWITEM:
+            lpdis = (LPDRAWITEMSTRUCT) lParam;
+            if ((int)lpdis->itemID == -1)
+                break;
+
+            switch (lpdis->itemAction)
+            {
+                case ODA_SELECT:
+                case ODA_DRAWENTIRE:
+                    index = SendMessageW(lpdis->hwndItem, LB_GETCURSEL, 0, 0);
+                    pItemContext = (POPEN_ITEM_CONTEXT)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM) 0);
+
+                    if ((int)lpdis->itemID == index)
+                    {
+                        /* paint focused item with standard background colour */
+                        HBRUSH hBrush;
+                        hBrush = CreateSolidBrush(RGB(46, 104, 160));
+                        FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
+                        DeleteObject(hBrush);
+                        preBkColor = SetBkColor(lpdis->hDC, RGB(46, 104, 160));
+                    }
+                    else
+                    {
+                        /* paint non focused item with white background */
+                        HBRUSH hBrush;
+                        hBrush = CreateSolidBrush(RGB(255, 255, 255));
+                        FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
+                        DeleteObject(hBrush);
+                        preBkColor = SetBkColor(lpdis->hDC, RGB(255, 255, 255));
+                    }
+
+                    SendMessageW(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM) szBuffer);
+                    /* paint the icon */
+                    DrawIconEx(lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, pItemContext->hIcon, 0, 0, 0, NULL, DI_NORMAL);
+                    /* get text size */
+                    GetTextMetrics(lpdis->hDC, &mt);
+                    /* paint app name */
+                    YOffset = lpdis->rcItem.top + mt.tmHeight / 2;
+                    TextOutW(lpdis->hDC, 45, YOffset, szBuffer, wcslen(szBuffer));
+                    /* paint manufacturer description */
+                    YOffset += mt.tmHeight + 2;
+                    preColor = SetTextColor(lpdis->hDC, RGB(192, 192, 192));
+                    if (pItemContext->szManufacturer[0])
+                        TextOutW(lpdis->hDC, 45, YOffset, pItemContext->szManufacturer, wcslen(pItemContext->szManufacturer));
+                    else
+                        TextOutW(lpdis->hDC, 45, YOffset, pItemContext->szAppName, wcslen(pItemContext->szAppName));
+                    SetTextColor(lpdis->hDC, preColor);
+                    SetBkColor(lpdis->hDC, preBkColor);
+                    break;
+            }
+            break;
+        case WM_CLOSE:
             FreeListItems(hwndDlg);
             EndDialog(hwndDlg, 0);
             return TRUE;
         default:
             break;
-        }
-        break;
-    case WM_DRAWITEM:
-        lpdis = (LPDRAWITEMSTRUCT) lParam; 
-         if ((int)lpdis->itemID == -1) 
-            break; 
-
-         switch (lpdis->itemAction) 
-         { 
-             case ODA_SELECT: 
-             case ODA_DRAWENTIRE:
-                 index = SendMessageW(lpdis->hwndItem, LB_GETCURSEL, 0, 0);
-                 pItemContext =(POPEN_ITEM_CONTEXT)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM) 0);
-
-                 if ((int)lpdis->itemID == index)
-                 {
-                     /* paint focused item with standard background colour */
-                     HBRUSH hBrush;
-                     hBrush = CreateSolidBrush(RGB(46, 104, 160));
-                     FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
-                     DeleteObject(hBrush);
-                     preBkColor = SetBkColor(lpdis->hDC, RGB(46, 104, 160));
-                 }
-                 else
-                 {
-                     /* paint non focused item with white background */
-                     HBRUSH hBrush;
-                     hBrush = CreateSolidBrush(RGB(255, 255, 255));
-                     FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
-                     DeleteObject(hBrush);
-                     preBkColor = SetBkColor(lpdis->hDC, RGB(255, 255, 255));
-                 }
-
-                 SendMessageW(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM) szBuffer); 
-                 /* paint the icon */
-                 DrawIconEx(lpdis->hDC, lpdis->rcItem.left,lpdis->rcItem.top, pItemContext->hIcon, 0, 0, 0, NULL, DI_NORMAL);
-                 /* get text size */
-                 GetTextMetrics(lpdis->hDC, &mt);
-                 /* paint app name */
-                 YOffset = lpdis->rcItem.top + mt.tmHeight/2;
-                 TextOutW(lpdis->hDC, 45, YOffset, szBuffer, wcslen(szBuffer));
-                 /* paint manufacturer description */
-                 YOffset += mt.tmHeight + 2;
-                 preColor = SetTextColor(lpdis->hDC, RGB(192, 192, 192));
-                 if (pItemContext->szManufacturer[0])
-                     TextOutW(lpdis->hDC, 45, YOffset, pItemContext->szManufacturer, wcslen(pItemContext->szManufacturer));
-                 else
-                     TextOutW(lpdis->hDC, 45, YOffset, pItemContext->szAppName, wcslen(pItemContext->szAppName));
-                 SetTextColor(lpdis->hDC, preColor);
-                 SetBkColor(lpdis->hDC, preBkColor);
-                 break;
-         }
-         break;
-    case WM_CLOSE:
-        FreeListItems(hwndDlg);
-        EndDialog(hwndDlg, 0);
-        return TRUE;
-    default:
-        break;
     }
     return FALSE;
 }
@@ -655,12 +655,12 @@ FreeMenuItemContext(HMENU hMenu)
 
     for(Index = 0; Index < Count; Index++)
     {
-       if (GetMenuItemInfoW(hMenu, Index, TRUE, &mii))
-       {
-           if ((mii.fType & MFT_SEPARATOR) || mii.dwItemData == 0)
-               continue;
-           HeapFree(GetProcessHeap(), 0, (LPVOID)mii.dwItemData);
-       }
+        if (GetMenuItemInfoW(hMenu, Index, TRUE, &mii))
+        {
+            if ((mii.fType & MFT_SEPARATOR) || mii.dwItemData == 0)
+                continue;
+            HeapFree(GetProcessHeap(), 0, (LPVOID)mii.dwItemData);
+        }
     }
 }
 
@@ -707,7 +707,7 @@ COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici )
 
 HRESULT WINAPI
 COpenWithMenu::GetCommandString(UINT_PTR idCmd, UINT uType,
-                            UINT* pwReserved, LPSTR pszName, UINT cchMax )
+                                UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
     FIXME("%p %lu %u %p %p %u\n", this,
           idCmd, uType, pwReserved, pszName, cchMax );
@@ -720,7 +720,7 @@ HRESULT WINAPI COpenWithMenu::HandleMenuMsg(
     WPARAM wParam,
     LPARAM lParam)
 {
-    TRACE("This %p uMsg %x\n",this, uMsg);
+    TRACE("This %p uMsg %x\n", this, uMsg);
 
     return E_NOTIMPL;
 }
@@ -768,17 +768,17 @@ GetManufacturer(WCHAR * szAppName, POPEN_ITEM_CONTEXT pContext)
     /* query lang code */
     if(VerQueryValueW(pBuf, const_cast<LPWSTR>(wTranslation), (LPVOID *)&lplangcode, &VerSize))
     {
-       /* FIXME find language from current locale / if not available,
-        * default to english
-        * for now default to first available language
-        */
-       lang = lplangcode->lang;
-       code = lplangcode->code;
+        /* FIXME find language from current locale / if not available,
+         * default to english
+         * for now default to first available language
+         */
+        lang = lplangcode->lang;
+        code = lplangcode->code;
     }
     /* set up format */
     swprintf(szBuffer, wFormat, lang, code);
     /* query manufacturer */
-     pResult = NULL;
+    pResult = NULL;
     bResult = VerQueryValueW(pBuf, szBuffer, (LPVOID *)&pResult, &VerSize);
 
     if (VerSize && bResult && pResult)
@@ -833,9 +833,9 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
     }
     else
     {
-         /* get default icon */
-         pItemContext->hIcon = ExtractIconW(shell32_hInstance, szAppName, 0);
-         /* get manufacturer */
+        /* get default icon */
+        pItemContext->hIcon = ExtractIconW(shell32_hInstance, szAppName, 0);
+        /* get manufacturer */
         GetManufacturer(pItemContext->szAppName, pItemContext);
         index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)Buffer);
         if (index != LB_ERR)
@@ -846,7 +846,7 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
 void
 AddItemFromProgIDList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 {
-   FIXME("implement me :)))\n");
+    FIXME("implement me :)))\n");
 }
 
 HANDLE
@@ -1020,11 +1020,11 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
     HRESULT hr;
     LPIDA pida;
     LPCITEMIDLIST pidl_folder;
-    LPCITEMIDLIST pidl_child; 
-    LPCITEMIDLIST pidl; 
+    LPCITEMIDLIST pidl_child;
+    LPCITEMIDLIST pidl;
     DWORD dwType;
     LPWSTR pszExt;
-    static const WCHAR szShortCut[] = { '.','l','n','k', 0 };
+    static const WCHAR szShortCut[] = { '.', 'l', 'n', 'k', 0 };
 
     fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     fmt.ptd = NULL;
@@ -1041,7 +1041,7 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
     }
 
     pida = (LPIDA)GlobalLock(medium.hGlobal);
-    ASSERT(pida->cidl==1);
+    ASSERT(pida->cidl == 1);
 
     pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
     pidl_child = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
@@ -1057,7 +1057,7 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
         return E_OUTOFMEMORY;
     }
     if (_ILIsDesktop(pidl) || _ILIsMyDocuments(pidl) || _ILIsControlPanel(pidl) || _ILIsNetHood(pidl) ||
-        _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl))
+            _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl))
     {
         TRACE("pidl is a folder\n");
         SHFree((void*)pidl);
@@ -1123,12 +1123,12 @@ SHOpenWithDialog(HWND hwndParent,
     }
     ShowWindow(hwnd, SW_SHOWNORMAL);
 
-    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0) 
-    { 
-        if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg)) 
+    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+    {
+        if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg))
         {
-            TranslateMessage(&msg); 
-            DispatchMessage(&msg); 
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
     }
     return S_OK;

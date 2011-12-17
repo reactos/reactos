@@ -21,21 +21,21 @@
 
 #include <precomp.h>
 
- /* copy data structure for tray notifications */
+/* copy data structure for tray notifications */
 typedef struct TrayNotifyCDS_Dummy {
     DWORD    cookie;
     DWORD    notify_code;
     DWORD    nicon_data[1];    // placeholder for NOTIFYICONDATA structure
 } TrayNotifyCDS_Dummy;
 
- /* The only difference between Shell_NotifyIconA and Shell_NotifyIconW is the call to SendMessageA/W. */
+/* The only difference between Shell_NotifyIconA and Shell_NotifyIconW is the call to SendMessageA/W. */
 static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, int nid_size, BOOL unicode)
 {
     HWND hwnd;
     COPYDATASTRUCT data;
 
     BOOL ret = FALSE;
-    int len = sizeof(TrayNotifyCDS_Dummy)-sizeof(DWORD)+nid_size;
+    int len = sizeof(TrayNotifyCDS_Dummy) - sizeof(DWORD) + nid_size;
 
     TrayNotifyCDS_Dummy* pnotify_data = (TrayNotifyCDS_Dummy*) alloca(len);
 
@@ -47,8 +47,8 @@ static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, int nid
     data.cbData = len;
     data.lpData = pnotify_data;
 
-    for(hwnd=0; (hwnd=FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL)); )
-        if ((unicode?SendMessageW:SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
+    for(hwnd = 0; (hwnd = FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL)); )
+        if ((unicode ? SendMessageW : SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
             ret = TRUE;
 
     return ret;

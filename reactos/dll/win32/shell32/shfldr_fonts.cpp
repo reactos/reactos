@@ -37,16 +37,16 @@ is what we normally see. However, the folder is a perfectly normal CFSFolder.
 class CDesktopFolderEnumZ :
     public IEnumIDListImpl
 {
-private:
-public:
-    CDesktopFolderEnumZ();
-    ~CDesktopFolderEnumZ();
-    HRESULT WINAPI Initialize(DWORD dwFlags);
-    BOOL CreateFontsEnumList(DWORD dwFlags);
+    private:
+    public:
+        CDesktopFolderEnumZ();
+        ~CDesktopFolderEnumZ();
+        HRESULT WINAPI Initialize(DWORD dwFlags);
+        BOOL CreateFontsEnumList(DWORD dwFlags);
 
-BEGIN_COM_MAP(CDesktopFolderEnumZ)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CDesktopFolderEnumZ)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 static shvheader FontsSFHeader[] = {
@@ -83,7 +83,7 @@ static LPITEMIDLIST _ILCreateFontItem(LPWSTR pszFont, LPWSTR pszFile)
     PIDLDATA tmp;
     LPITEMIDLIST pidl;
     PIDLFontStruct * p;
-    int size0 = (char*)&tmp.u.cfont.szName-(char*)&tmp.u.cfont;
+    int size0 = (char*)&tmp.u.cfont.szName - (char*)&tmp.u.cfont;
     int size = size0;
 
     tmp.type = 0x00;
@@ -96,14 +96,14 @@ static LPITEMIDLIST _ILCreateFontItem(LPWSTR pszFont, LPWSTR pszFile)
     if (!pidl)
         return pidl;
 
-    pidl->mkid.cb = size+2;
-    memcpy(pidl->mkid.abID, &tmp, 2+size0);
+    pidl->mkid.cb = size + 2;
+    memcpy(pidl->mkid.abID, &tmp, 2 + size0);
 
     p = &((PIDLDATA*)pidl->mkid.abID)->u.cfont;
     wcscpy(p->szName, pszFont);
     wcscpy(p->szName + tmp.u.cfont.offsFile, pszFile);
 
-    *(WORD*)((char*)pidl+(size+2)) = 0;
+    *(WORD*)((char*)pidl + (size + 2)) = 0;
     return pidl;
 }
 
@@ -111,8 +111,8 @@ static PIDLFontStruct * _ILGetFontStruct(LPCITEMIDLIST pidl)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
 
-    if (pdata && pdata->type==0x00)
-        return (PIDLFontStruct*)&(pdata->u.cfont);
+    if (pdata && pdata->type == 0x00)
+        return (PIDLFontStruct*) & (pdata->u.cfont);
 
     return NULL;
 }
@@ -140,20 +140,20 @@ BOOL CDesktopFolderEnumZ::CreateFontsEnumList(DWORD dwFlags)
         pszPath = PathAddBackslashW(szPath);
         if (!pszPath)
             return FALSE;
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", 0, KEY_READ, &hKey)!= ERROR_SUCCESS)
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
             return FALSE;
 
         Length = pszPath - szPath;
         dwIndex = 0;
         do
         {
-            dwName = sizeof(szName)/sizeof(WCHAR);
-            dwFile = sizeof(szFile)/sizeof(WCHAR);
+            dwName = sizeof(szName) / sizeof(WCHAR);
+            dwFile = sizeof(szFile) / sizeof(WCHAR);
             ret = RegEnumValueW(hKey, dwIndex++, szName, &dwName, NULL, &dwType, (LPBYTE)szFile, &dwFile);
             if (ret == ERROR_SUCCESS)
             {
                 szFile[(sizeof(szFile)/sizeof(WCHAR))-1] = L'\0';
-                if (dwType == REG_SZ && wcslen(szFile) + Length + 1< (sizeof(szPath)/sizeof(WCHAR)))
+                if (dwType == REG_SZ && wcslen(szFile) + Length + 1 < (sizeof(szPath) / sizeof(WCHAR)))
                 {
                     wcscpy(&szPath[Length], szFile);
                     pidl = _ILCreateFontItem(szName, szPath);
@@ -165,7 +165,7 @@ BOOL CDesktopFolderEnumZ::CreateFontsEnumList(DWORD dwFlags)
                     }
                 }
             }
-        }while(ret != ERROR_NO_MORE_ITEMS);
+        } while(ret != ERROR_NO_MORE_ITEMS);
         RegCloseKey(hKey);
 
     }
@@ -196,13 +196,13 @@ HRESULT WINAPI CFontsFolder::FinalConstruct()
 *    ISF_Fonts_fnParseDisplayName
 */
 HRESULT WINAPI CFontsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LPOLESTR lpszDisplayName,
-               DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_UNEXPECTED;
 
     TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
-            hwndOwner, pbcReserved, lpszDisplayName, debugstr_w (lpszDisplayName),
-            pchEaten, ppidl, pdwAttributes);
+           hwndOwner, pbcReserved, lpszDisplayName, debugstr_w (lpszDisplayName),
+           pchEaten, ppidl, pdwAttributes);
 
     *ppidl = 0;
     if (pchEaten)
@@ -252,7 +252,7 @@ HRESULT WINAPI CFontsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMID
 HRESULT WINAPI CFontsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     return SHELL32_BindToChild (pidlRoot, NULL, pidl, riid, ppvOut);
 }
@@ -263,7 +263,7 @@ HRESULT WINAPI CFontsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, 
 HRESULT WINAPI CFontsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n", this,
-            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     *ppvOut = NULL;
     return E_NOTIMPL;
@@ -292,7 +292,7 @@ HRESULT WINAPI CFontsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOI
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this,
-            hwndOwner, shdebugstr_guid (&riid), ppvOut);
+           hwndOwner, shdebugstr_guid (&riid), ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -327,7 +327,7 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DW
     HRESULT hr = S_OK;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n", this,
-            cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
+           cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
     if (!rgfInOut)
         return E_INVALIDARG;
@@ -377,14 +377,14 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DW
 *
 */
 HRESULT WINAPI CFontsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl, REFIID riid,
-               UINT * prgfInOut, LPVOID * ppvOut)
+        UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     CComPtr<IUnknown>                    pObj;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n", this,
-            hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
+           hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -447,7 +447,7 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags,
     pFont = _ILGetFontStruct(pidl);
     if (pFont)
     {
-        strRet->pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(pFont->szName)+1) * sizeof(WCHAR));
+        strRet->pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(pFont->szName) + 1) * sizeof(WCHAR));
         if (!strRet->pOleStr)
             return E_OUTOFMEMORY;
 
@@ -459,7 +459,7 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags,
         WCHAR wszPath[MAX_PATH];
 
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-            (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
+                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
         {
             if (!SHGetSpecialFolderPathW(NULL, wszPath, CSIDL_FONTS, FALSE))
                 return E_FAIL;
@@ -493,10 +493,10 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags,
 *  ppidlOut  [out] simple pidl returned
 */
 HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /*simple pidl */
-               LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+                                       LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this,
-            hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
+           hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
     return E_FAIL;
 }
 
@@ -582,7 +582,7 @@ HRESULT WINAPI CFontsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHEL
             {
                 if (SHGetFileInfoW(pfont->szName + pfont->offsFile, 0, &fi, sizeof(fi), SHGFI_TYPENAME))
                 {
-                    psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(fi.szTypeName)+1) * sizeof(WCHAR));
+                    psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(fi.szTypeName) + 1) * sizeof(WCHAR));
                     if (!psd->str.pOleStr)
                         return E_OUTOFMEMORY;
                     wcscpy(psd->str.pOleStr, fi.szTypeName);
@@ -600,7 +600,7 @@ HRESULT WINAPI CFontsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHEL
                 {
                     if (GetFileSizeEx(hFile, &FileSize))
                     {
-                        if (StrFormatByteSizeW(FileSize.QuadPart, buffer, sizeof(buffer)/sizeof(WCHAR)))
+                        if (StrFormatByteSizeW(FileSize.QuadPart, buffer, sizeof(buffer) / sizeof(WCHAR)))
                         {
                             psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(wcslen(buffer) + 1);
                             if (!psd->str.pOleStr)
@@ -630,7 +630,7 @@ HRESULT WINAPI CFontsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHEL
                     return E_OUTOFMEMORY;
             }
             break;
-     }
+    }
 
     return E_FAIL;
 }
@@ -699,34 +699,34 @@ HRESULT WINAPI CFontsFolder::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT 
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
           this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
         Count++;
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_PRINT_VERB, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_PRINT_VERB, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_COPY, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_COPY, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
@@ -745,7 +745,7 @@ HRESULT WINAPI CFontsFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     PIDLFontStruct * pfont;
     SHFILEOPSTRUCTW op;
 
-    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",this,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(2) || lpcmi->lpVerb == MAKEINTRESOURCEA(7))
     {
@@ -764,7 +764,7 @@ HRESULT WINAPI CFontsFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         sei.lpFile = pfont->szName + pfont->offsFile;
 
         if (ShellExecuteExW(&sei) == FALSE)
-           return E_FAIL;
+            return E_FAIL;
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(4))
     {
@@ -773,13 +773,13 @@ HRESULT WINAPI CFontsFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(6))
     {
-       ZeroMemory(&op, sizeof(op));
-       op.hwnd = lpcmi->hwnd;
-       op.wFunc = FO_DELETE;
-       op.fFlags = FOF_ALLOWUNDO;
-       pfont = _ILGetFontStruct(apidl);
-       op.pFrom = pfont->szName + pfont->offsFile;
-       SHFileOperationW(&op);
+        ZeroMemory(&op, sizeof(op));
+        op.hwnd = lpcmi->hwnd;
+        op.wFunc = FO_DELETE;
+        op.fFlags = FOF_ALLOWUNDO;
+        pfont = _ILGetFontStruct(apidl);
+        op.pFrom = pfont->szName + pfont->offsFile;
+        SHFileOperationW(&op);
     }
 
     return S_OK;
@@ -789,9 +789,9 @@ HRESULT WINAPI CFontsFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
  *  ISF_Fonts_IContextMenu_GetCommandString()
  *
  */
-HRESULT WINAPI CFontsFolder::GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+HRESULT WINAPI CFontsFolder::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
-    TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+    TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
     return E_FAIL;
 }
@@ -801,7 +801,7 @@ HRESULT WINAPI CFontsFolder::GetCommandString(UINT_PTR idCommand,UINT uFlags, UI
 */
 HRESULT WINAPI CFontsFolder::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("ISF_Fonts_IContextMenu_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",this, uMsg, wParam, lParam);
+    TRACE("ISF_Fonts_IContextMenu_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
 
     return E_NOTIMPL;
 }

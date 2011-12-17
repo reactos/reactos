@@ -38,15 +38,15 @@ be inserted in a removable drive.
 class CFileSysEnum :
     public IEnumIDListImpl
 {
-private:
-public:
-    CFileSysEnum();
-    ~CFileSysEnum();
-    HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags);
+    private:
+    public:
+        CFileSysEnum();
+        ~CFileSysEnum();
+        HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags);
 
-BEGIN_COM_MAP(CFileSysEnum)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CFileSysEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 CFileSysEnum::CFileSysEnum()
@@ -112,8 +112,9 @@ static const shvheader GenericSFHeader[] = {
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
 {
     static WCHAR szfsbc[] = {
-        'F','i','l','e',' ','S','y','s','t','e','m',' ',
-        'B','i','n','d',' ','D','a','t','a',0 };
+        'F', 'i', 'l', 'e', ' ', 'S', 'y', 's', 't', 'e', 'm', ' ',
+        'B', 'i', 'n', 'd', ' ', 'D', 'a', 't', 'a', 0
+    };
     IFileSystemBindData *fsbd = NULL;
     LPITEMIDLIST pidl = NULL;
     IUnknown *param = NULL;
@@ -131,7 +132,7 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
         return NULL;
 
     r = param->QueryInterface(IID_IFileSystemBindData,
-                                 (LPVOID*) &fsbd );
+                              (LPVOID*) &fsbd );
     if (SUCCEEDED(r))
     {
         r = fsbd->GetFindData(&wfd );
@@ -172,10 +173,10 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
 *    pchEaten is not set like in windows
 */
 HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
-                                 LPBC pbc,
-                                 LPOLESTR lpszDisplayName,
-                                 DWORD *pchEaten, LPITEMIDLIST *ppidl,
-                                 DWORD *pdwAttributes)
+        LPBC pbc,
+        LPOLESTR lpszDisplayName,
+        DWORD *pchEaten, LPITEMIDLIST *ppidl,
+        DWORD *pdwAttributes)
 {
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
@@ -185,8 +186,8 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
     DWORD len;
 
     TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
-     this, hwndOwner, pbc, lpszDisplayName, debugstr_w (lpszDisplayName),
-     pchEaten, ppidl, pdwAttributes);
+           this, hwndOwner, pbc, lpszDisplayName, debugstr_w (lpszDisplayName),
+           pchEaten, ppidl, pdwAttributes);
 
     if (!ppidl)
         return E_INVALIDARG;
@@ -221,12 +222,12 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
             if (szNext && *szNext) {
                 /* try to analyse the next element */
                 hr = SHELL32_ParseNextElement (this, hwndOwner, pbc,
-                 &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
+                                               &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
             } else {
                 /* it's the last element */
                 if (pdwAttributes && *pdwAttributes) {
                     hr = SHELL32_GetItemAttributes (this,
-                     pidlTemp, pdwAttributes);
+                                                    pidlTemp, pdwAttributes);
                 }
             }
         }
@@ -250,7 +251,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
 *  LPENUMIDLIST* ppenumIDList  //[out] IEnumIDList interface
 */
 HRESULT WINAPI CFSFolder::EnumObjects (HWND hwndOwner,
-                            DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
+                                       DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
 {
     CComObject<CFileSysEnum>                *theEnumerator;
     CComPtr<IEnumIDList>                    result;
@@ -289,13 +290,13 @@ HRESULT WINAPI CFSFolder::EnumObjects (HWND hwndOwner,
 *  LPVOID*       ppvObject   //[out] Interface*
 */
 HRESULT WINAPI CFSFolder::BindToObject(LPCITEMIDLIST pidl,
-                             LPBC pbc, REFIID riid, LPVOID * ppvOut)
+                                       LPBC pbc, REFIID riid, LPVOID * ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this, pidl, pbc,
-     shdebugstr_guid (&riid), ppvOut);
+           shdebugstr_guid (&riid), ppvOut);
 
     return SHELL32_BindToChild (pidlRoot, sPathTarget, pidl, riid,
-     ppvOut);
+                                ppvOut);
 }
 
 /**************************************************************************
@@ -307,10 +308,10 @@ HRESULT WINAPI CFSFolder::BindToObject(LPCITEMIDLIST pidl,
 *  LPVOID*       ppvObject   //[out] Interface* returned
 */
 HRESULT WINAPI CFSFolder::BindToStorage(LPCITEMIDLIST pidl,
-                              LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+                                        LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n", this, pidl, pbcReserved,
-     shdebugstr_guid (&riid), ppvOut);
+           shdebugstr_guid (&riid), ppvOut);
 
     *ppvOut = NULL;
     return E_NOTIMPL;
@@ -321,7 +322,7 @@ HRESULT WINAPI CFSFolder::BindToStorage(LPCITEMIDLIST pidl,
 */
 
 HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
-                           LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+                                     LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     int nReturn;
 
@@ -335,13 +336,13 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
 * IShellFolder_fnCreateViewObject
 */
 HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
-                                 REFIID riid, LPVOID * ppvOut)
+        REFIID riid, LPVOID * ppvOut)
 {
     LPSHELLVIEW pShellView;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this, hwndOwner, shdebugstr_guid (&riid),
-     ppvOut);
+           ppvOut);
 
     if (ppvOut) {
         *ppvOut = NULL;
@@ -373,12 +374,12 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
 *
 */
 HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
-                                LPCITEMIDLIST * apidl, DWORD * rgfInOut)
+        LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
     HRESULT hr = S_OK;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n", this, cidl, apidl,
-     rgfInOut, rgfInOut ? *rgfInOut : 0);
+           rgfInOut, rgfInOut ? *rgfInOut : 0);
 
     if (!rgfInOut)
         return E_INVALIDARG;
@@ -388,7 +389,7 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    if(cidl == 0){
+    if(cidl == 0) {
         IShellFolder *psfParent = NULL;
         LPCITEMIDLIST rpidl = NULL;
 
@@ -438,24 +439,24 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
 *  needs the positions.
 */
 HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
-                              UINT cidl, LPCITEMIDLIST * apidl, REFIID riid,
-                              UINT * prgfInOut, LPVOID * ppvOut)
+                                        UINT cidl, LPCITEMIDLIST * apidl, REFIID riid,
+                                        UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
-     this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
+           this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
 
     if (ppvOut) {
         *ppvOut = NULL;
 
         if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1)) {
             hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
-        } else if (IsEqualIID (riid, IID_IDataObject)){
+        } else if (IsEqualIID (riid, IID_IDataObject)) {
             if (cidl >= 1) {
-            hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+                hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
             }
             else
             {
@@ -473,9 +474,9 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
             hr = S_OK;
         } else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1)) {
             hr = this->QueryInterface(IID_IDropTarget,
-             (LPVOID *) & pObj);
-        } else if ((IsEqualIID(riid,IID_IShellLinkW) ||
-         IsEqualIID(riid,IID_IShellLinkA)) && (cidl == 1)) {
+                                      (LPVOID *) & pObj);
+        } else if ((IsEqualIID(riid, IID_IShellLinkW) ||
+                    IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1)) {
             pidl = ILCombine (pidlRoot, apidl[0]);
             hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
             SHFree (pidl);
@@ -492,14 +493,17 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
     return hr;
 }
 
-static const WCHAR AdvancedW[] = { 'S','O','F','T','W','A','R','E',
- '\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
- 'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l',
- 'o','r','e','r','\\','A','d','v','a','n','c','e','d',0 };
-static const WCHAR HideFileExtW[] = { 'H','i','d','e','F','i','l','e','E','x',
- 't',0 };
-static const WCHAR NeverShowExtW[] = { 'N','e','v','e','r','S','h','o','w','E',
- 'x','t',0 };
+static const WCHAR AdvancedW[] = { 'S', 'O', 'F', 'T', 'W', 'A', 'R', 'E',
+                                   '\\', 'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', '\\', 'W', 'i', 'n', 'd', 'o', 'w', 's', '\\',
+                                   'C', 'u', 'r', 'r', 'e', 'n', 't', 'V', 'e', 'r', 's', 'i', 'o', 'n', '\\', 'E', 'x', 'p', 'l',
+                                   'o', 'r', 'e', 'r', '\\', 'A', 'd', 'v', 'a', 'n', 'c', 'e', 'd', 0
+                                 };
+static const WCHAR HideFileExtW[] = { 'H', 'i', 'd', 'e', 'F', 'i', 'l', 'e', 'E', 'x',
+                                      't', 0
+                                    };
+static const WCHAR NeverShowExtW[] = { 'N', 'e', 'v', 'e', 'r', 'S', 'h', 'o', 'w', 'E',
+                                       'x', 't', 0
+                                     };
 
 /******************************************************************************
  * SHELL_FS_HideExtension [Internal]
@@ -549,7 +553,7 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 {
     /*FIXME: MSDN also mentions SHGDN_FOREDITING which is not yet handled. */
     if (!(dwFlags & SHGDN_FORPARSING) &&
-        ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
+            ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
         if (SHELL_FS_HideExtension(szPath) && szPath[0] != '.')
             PathRemoveExtensionW(szPath);
     }
@@ -569,7 +573,7 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 */
 
 HRESULT WINAPI CFSFolder::GetDisplayNameOf(LPCITEMIDLIST pidl,
-                                 DWORD dwFlags, LPSTRRET strRet)
+        DWORD dwFlags, LPSTRRET strRet)
 {
     LPWSTR pszPath;
 
@@ -588,7 +592,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(LPCITEMIDLIST pidl,
 
     if (_ILIsDesktop(pidl)) { /* empty pidl */
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
+                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
         {
             if (sPathTarget)
                 lstrcpynW(pszPath, sPathTarget, MAX_PATH);
@@ -598,8 +602,8 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(LPCITEMIDLIST pidl,
         }
     } else if (_ILIsPidlSimple(pidl)) {
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
-            sPathTarget)
+                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
+                sPathTarget)
         {
             lstrcpynW(pszPath, sPathTarget, MAX_PATH);
             PathAddBackslashW(pszPath);
@@ -616,7 +620,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(LPCITEMIDLIST pidl,
         if (GetVersion() & 0x80000000) {
             strRet->uType = STRRET_CSTR;
             if (!WideCharToMultiByte(CP_ACP, 0, pszPath, -1, strRet->cStr, MAX_PATH,
-                 NULL, NULL))
+                                     NULL, NULL))
                 strRet->cStr[0] = '\0';
             CoTaskMemFree(pszPath);
         } else {
@@ -643,17 +647,17 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(LPCITEMIDLIST pidl,
 *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
 */
 HRESULT WINAPI CFSFolder::SetNameOf (HWND hwndOwner,
-                                                LPCITEMIDLIST pidl,
-                                                LPCOLESTR lpName,
-                                                DWORD dwFlags,
-                                                LPITEMIDLIST * pPidlOut)
+                                     LPCITEMIDLIST pidl,
+                                     LPCOLESTR lpName,
+                                     DWORD dwFlags,
+                                     LPITEMIDLIST * pPidlOut)
 {
     WCHAR szSrc[MAX_PATH + 1], szDest[MAX_PATH + 1];
     LPWSTR ptr;
     BOOL bIsFolder = _ILIsFolder (ILFindLastID (pidl));
 
     TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl,
-     debugstr_w (lpName), dwFlags, pPidlOut);
+           debugstr_w (lpName), dwFlags, pPidlOut);
 
     /* build source path */
     lstrcpynW(szSrc, sPathTarget, MAX_PATH);
@@ -679,7 +683,7 @@ HRESULT WINAPI CFSFolder::SetNameOf (HWND hwndOwner,
     }
 
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
-    if (!memcmp(szSrc, szDest, (wcslen(szDest)+1) * sizeof(WCHAR)))
+    if (!memcmp(szSrc, szDest, (wcslen(szDest) + 1) * sizeof(WCHAR)))
     {
         /* src and destination is the same */
         HRESULT hr = S_OK;
@@ -697,7 +701,7 @@ HRESULT WINAPI CFSFolder::SetNameOf (HWND hwndOwner,
             hr = _ILCreateFromPathW(szDest, pPidlOut);
 
         SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-         SHCNF_PATHW, szSrc, szDest);
+                        SHCNF_PATHW, szSrc, szDest);
 
         return hr;
     }
@@ -718,7 +722,7 @@ HRESULT WINAPI CFSFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 }
 
 HRESULT WINAPI CFSFolder::GetDefaultColumn(DWORD dwRes,
-                                 ULONG * pSort, ULONG * pDisplay)
+        ULONG * pSort, ULONG * pDisplay)
 {
     TRACE ("(%p)\n", this);
 
@@ -731,7 +735,7 @@ HRESULT WINAPI CFSFolder::GetDefaultColumn(DWORD dwRes,
 }
 
 HRESULT WINAPI CFSFolder::GetDefaultColumnState(UINT iColumn,
-                                      DWORD * pcsFlags)
+        DWORD * pcsFlags)
 {
     TRACE ("(%p)\n", this);
 
@@ -744,7 +748,7 @@ HRESULT WINAPI CFSFolder::GetDefaultColumnState(UINT iColumn,
 }
 
 HRESULT WINAPI CFSFolder::GetDetailsEx(LPCITEMIDLIST pidl,
-                             const SHCOLUMNID * pscid, VARIANT * pv)
+                                       const SHCOLUMNID * pscid, VARIANT * pv)
 {
     FIXME ("(%p)\n", this);
 
@@ -752,7 +756,7 @@ HRESULT WINAPI CFSFolder::GetDetailsEx(LPCITEMIDLIST pidl,
 }
 
 HRESULT WINAPI CFSFolder::GetDetailsOf(LPCITEMIDLIST pidl,
-                             UINT iColumn, SHELLDETAILS * psd)
+                                       UINT iColumn, SHELLDETAILS * psd)
 {
     HRESULT hr = E_FAIL;
 
@@ -767,29 +771,29 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(LPCITEMIDLIST pidl,
         psd->cxChar = GenericSFHeader[iColumn].cxChar;
         psd->str.uType = STRRET_CSTR;
         LoadStringA (shell32_hInstance, GenericSFHeader[iColumn].colnameid,
-         psd->str.cStr, MAX_PATH);
+                     psd->str.cStr, MAX_PATH);
         return S_OK;
     } else {
         hr = S_OK;
         psd->str.uType = STRRET_CSTR;
         /* the data from the pidl */
         switch (iColumn) {
-        case 0:                /* name */
-            hr = GetDisplayNameOf (pidl,
-             SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-            break;
-        case 1:                /* size */
-            _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 2:                /* type */
-            _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 3:                /* date */
-            _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 4:                /* attributes */
-            _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
-            break;
+            case 0:                /* name */
+                hr = GetDisplayNameOf (pidl,
+                                       SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+                break;
+            case 1:                /* size */
+                _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case 2:                /* type */
+                _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case 3:                /* date */
+                _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case 4:                /* attributes */
+                _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
+                break;
         }
     }
 
@@ -797,7 +801,7 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(LPCITEMIDLIST pidl,
 }
 
 HRESULT WINAPI CFSFolder::MapColumnToSCID (UINT column,
-                                SHCOLUMNID * pscid)
+        SHCOLUMNID * pscid)
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
@@ -819,19 +823,19 @@ HRESULT WINAPI CFSFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
     HRESULT hr;
     WCHAR wszText[MAX_PATH];
     WCHAR wszNewFolder[25];
-    const WCHAR wszFormat[] = {'%','s',' ','%','d',0 };
+    const WCHAR wszFormat[] = {'%', 's', ' ', '%', 'd', 0 };
 
-    LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder,  sizeof(wszNewFolder)/sizeof(WCHAR));
+    LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder,  sizeof(wszNewFolder) / sizeof(WCHAR));
 
     TRACE ("(%p)(%p %u)\n", this, pwszName, uLen);
 
-    if (uLen < sizeof(wszNewFolder)/sizeof(WCHAR) + 3)
+    if (uLen < sizeof(wszNewFolder) / sizeof(WCHAR) + 3)
         return E_POINTER;
 
     lstrcpynW (pwszName, wszNewFolder, uLen);
 
     hr = EnumObjects(0,
-     SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penum);
+                     SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penum);
     if (penum) {
         LPITEMIDLIST pidl;
         DWORD dwFetched;
@@ -840,7 +844,7 @@ HRESULT WINAPI CFSFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
 next:
         penum->Reset ();
         while (S_OK == penum->Next(1, &pidl, &dwFetched) &&
-         dwFetched) {
+                dwFetched) {
             _ILSimpleGetTextW (pidl, wszText, MAX_PATH);
             if (0 == lstrcmpiW (wszText, pwszName)) {
                 _snwprintf (pwszName, uLen, wszFormat, wszNewFolder, i++);
@@ -864,7 +868,7 @@ next:
  */
 
 HRESULT WINAPI CFSFolder::AddFolder(HWND hwnd, LPCWSTR pwszName,
-                       LPITEMIDLIST * ppidlOut)
+                                    LPITEMIDLIST * ppidlOut)
 {
     WCHAR wszNewDir[MAX_PATH];
     DWORD bRes;
@@ -884,7 +888,7 @@ HRESULT WINAPI CFSFolder::AddFolder(HWND hwnd, LPCWSTR pwszName,
         hres = S_OK;
 
         if (ppidlOut)
-                hres = _ILCreateFromPathW(wszNewDir, ppidlOut);
+            hres = _ILCreateFromPathW(wszNewDir, ppidlOut);
     } else {
         WCHAR wszText[128 + MAX_PATH];
         WCHAR wszTempText[128];
@@ -892,9 +896,9 @@ HRESULT WINAPI CFSFolder::AddFolder(HWND hwnd, LPCWSTR pwszName,
 
         /* Cannot Create folder because of permissions */
         LoadStringW (shell32_hInstance, IDS_CREATEFOLDER_DENIED, wszTempText,
-         sizeof (wszTempText));
+                     sizeof (wszTempText));
         LoadStringW (shell32_hInstance, IDS_CREATEFOLDER_CAPTION, wszCaption,
-         sizeof (wszCaption));
+                     sizeof (wszCaption));
         swprintf (wszText, wszTempText, wszNewDir);
         MessageBoxW (hwnd, wszText, wszCaption, MB_OK | MB_ICONEXCLAMATION);
     }
@@ -916,7 +920,7 @@ WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
     int i;
 
     iPathLen = wcslen(wszBasePath);
-    wszPathsList = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, MAX_PATH*sizeof(WCHAR)*cidl+1);
+    wszPathsList = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
     wszListPos = wszPathsList;
 
     for (i = 0; i < cidl; i++) {
@@ -925,10 +929,10 @@ WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
 
         lstrcpynW(wszListPos, wszBasePath, MAX_PATH);
         /* FIXME: abort if path too long */
-        _ILSimpleGetTextW(pidls[i], wszListPos+iPathLen, MAX_PATH-iPathLen);
-        wszListPos += wcslen(wszListPos)+1;
+        _ILSimpleGetTextW(pidls[i], wszListPos + iPathLen, MAX_PATH - iPathLen);
+        wszListPos += wcslen(wszListPos) + 1;
     }
-    *wszListPos=0;
+    *wszListPos = 0;
     return wszPathsList;
 }
 
@@ -947,7 +951,7 @@ HRESULT WINAPI CFSFolder::DeleteItems(UINT cidl, LPCITEMIDLIST * apidl)
     WCHAR *wszCurrentPath;
 
     TRACE ("(%p)(%u %p)\n", this, cidl, apidl);
-    if (cidl==0) return S_OK;
+    if (cidl == 0) return S_OK;
 
     if (sPathTarget)
         lstrcpynW(wszPath, sPathTarget, MAX_PATH);
@@ -990,7 +994,7 @@ HRESULT WINAPI CFSFolder::DeleteItems(UINT cidl, LPCITEMIDLIST * apidl)
             SHFree(pidl);
         }
 
-        wszCurrentPath += wcslen(wszCurrentPath)+1;
+        wszCurrentPath += wcslen(wszCurrentPath) + 1;
     }
     HeapFree(GetProcessHeap(), 0, wszPathsList);
     return ret;
@@ -1002,7 +1006,7 @@ HRESULT WINAPI CFSFolder::DeleteItems(UINT cidl, LPCITEMIDLIST * apidl)
  * copies items to this folder
  */
 HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
-                       LPCITEMIDLIST * apidl)
+                                    LPCITEMIDLIST * apidl)
 {
     IPersistFolder2 *ppf2 = NULL;
     WCHAR szSrcPath[MAX_PATH];
@@ -1189,16 +1193,16 @@ HRESULT WINAPI CFSFolder::GetCurFolder(LPITEMIDLIST * pidl)
  * FIXME: error handling
  */
 HRESULT WINAPI CFSFolder::InitializeEx(IBindCtx * pbc, LPCITEMIDLIST pidlRootx,
-                                     const PERSIST_FOLDER_TARGET_INFO * ppfti)
+                                       const PERSIST_FOLDER_TARGET_INFO * ppfti)
 {
     WCHAR wszTemp[MAX_PATH];
 
     TRACE ("(%p)->(%p,%p,%p)\n", this, pbc, pidlRootx, ppfti);
     if (ppfti)
         TRACE ("--%p %s %s 0x%08x 0x%08x\n",
-         ppfti->pidlTargetFolder, debugstr_w (ppfti->szTargetParsingName),
-         debugstr_w (ppfti->szNetworkProvider), ppfti->dwAttributes,
-         ppfti->csidl);
+               ppfti->pidlTargetFolder, debugstr_w (ppfti->szTargetParsingName),
+               debugstr_w (ppfti->szNetworkProvider), ppfti->dwAttributes,
+               ppfti->csidl);
 
     pdump (pidlRootx);
     if (ppfti && ppfti->pidlTargetFolder)
@@ -1221,7 +1225,7 @@ HRESULT WINAPI CFSFolder::InitializeEx(IBindCtx * pbc, LPCITEMIDLIST pidlRootx,
     if (ppfti) {
         if (ppfti->csidl != -1) {
             if (SHGetSpecialFolderPathW (0, wszTemp, ppfti->csidl,
-             ppfti->csidl & CSIDL_FLAG_CREATE)) {
+                                         ppfti->csidl & CSIDL_FLAG_CREATE)) {
                 int len = wcslen(wszTemp);
                 sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
                 if (!sPathTarget)
@@ -1262,7 +1266,7 @@ HRESULT WINAPI CFSFolder::GetFolderTargetInfo(PERSIST_FOLDER_TARGET_INFO * ppfti
  * ISFDropTarget implementation
  */
 BOOL CFSFolder::QueryDrop (DWORD dwKeyState,
-                         LPDWORD pdwEffect)
+                           LPDWORD pdwEffect)
 {
     DWORD dwEffect = *pdwEffect;
 
@@ -1280,7 +1284,7 @@ BOOL CFSFolder::QueryDrop (DWORD dwKeyState,
 }
 
 HRESULT WINAPI CFSFolder::DragEnter (IDataObject * pDataObject,
-                         DWORD dwKeyState, POINTL pt, DWORD * pdwEffect)
+                                     DWORD dwKeyState, POINTL pt, DWORD * pdwEffect)
 {
     FORMATETC fmt;
 
@@ -1289,7 +1293,7 @@ HRESULT WINAPI CFSFolder::DragEnter (IDataObject * pDataObject,
     InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
 
     fAcceptFmt = (S_OK == pDataObject->QueryGetData(&fmt)) ?
-     TRUE : FALSE;
+                 TRUE : FALSE;
 
     QueryDrop(dwKeyState, pdwEffect);
 
@@ -1297,7 +1301,7 @@ HRESULT WINAPI CFSFolder::DragEnter (IDataObject * pDataObject,
 }
 
 HRESULT WINAPI CFSFolder::DragOver (DWORD dwKeyState, POINTL pt,
-                        DWORD * pdwEffect)
+                                    DWORD * pdwEffect)
 {
     TRACE ("(%p)\n", this);
 
@@ -1319,7 +1323,7 @@ HRESULT WINAPI CFSFolder::DragLeave ()
 }
 
 HRESULT WINAPI CFSFolder::Drop (IDataObject * pDataObject,
-                    DWORD dwKeyState, POINTL pt, DWORD * pdwEffect)
+                                DWORD dwKeyState, POINTL pt, DWORD * pdwEffect)
 {
     FIXME ("(%p) object dropped\n", this);
 

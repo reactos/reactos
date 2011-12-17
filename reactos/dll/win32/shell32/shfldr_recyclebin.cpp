@@ -37,14 +37,14 @@ typedef struct
 
 static const columninfo RecycleBinColumns[] =
 {
-    {IDS_SHV_COLUMN1,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR|SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
-    {IDS_SHV_COLUMN_DELFROM, &FMTID_Displaced, PID_DISPLACED_FROM, SHCOLSTATE_TYPE_STR|SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
-    {IDS_SHV_COLUMN_DELDATE, &FMTID_Displaced, PID_DISPLACED_DATE, SHCOLSTATE_TYPE_DATE|SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN2,        &FMTID_Storage,   PID_STG_SIZE,       SHCOLSTATE_TYPE_INT|SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
-    {IDS_SHV_COLUMN3,        &FMTID_Storage,   PID_STG_STORAGETYPE,SHCOLSTATE_TYPE_INT|SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN4,        &FMTID_Storage,   PID_STG_WRITETIME,  SHCOLSTATE_TYPE_DATE|SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-/*    {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE,                        LVCFMT_LEFT,  20}, */
-/*    {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,                         LVCFMT_LEFT,  20},       */
+    {IDS_SHV_COLUMN1,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
+    {IDS_SHV_COLUMN_DELFROM, &FMTID_Displaced, PID_DISPLACED_FROM, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
+    {IDS_SHV_COLUMN_DELDATE, &FMTID_Displaced, PID_DISPLACED_DATE, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
+    {IDS_SHV_COLUMN2,        &FMTID_Storage,   PID_STG_SIZE,       SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
+    {IDS_SHV_COLUMN3,        &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
+    {IDS_SHV_COLUMN4,        &FMTID_Storage,   PID_STG_WRITETIME,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
+    /*    {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE,                        LVCFMT_LEFT,  20}, */
+    /*    {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,                         LVCFMT_LEFT,  20},       */
 };
 
 #define COLUMN_NAME    0
@@ -63,42 +63,42 @@ static const columninfo RecycleBinColumns[] =
 class CRecycleBinEnum :
     public IEnumIDListImpl
 {
-private:
-public:
-    CRecycleBinEnum();
-    ~CRecycleBinEnum();
-    HRESULT WINAPI Initialize(DWORD dwFlags);
-    static BOOL WINAPI CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
-    BOOL WINAPI CBEnumRecycleBin(IN HANDLE hDeletedFile);
+    private:
+    public:
+        CRecycleBinEnum();
+        ~CRecycleBinEnum();
+        HRESULT WINAPI Initialize(DWORD dwFlags);
+        static BOOL WINAPI CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
+        BOOL WINAPI CBEnumRecycleBin(IN HANDLE hDeletedFile);
 
-BEGIN_COM_MAP(CRecycleBinEnum)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CRecycleBinEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 class CRecycleBinItemContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu2
 {
-private:
-    LPITEMIDLIST                        apidl;
-public:
-    CRecycleBinItemContextMenu();
-    ~CRecycleBinItemContextMenu();
-    HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+    private:
+        LPITEMIDLIST                        apidl;
+    public:
+        CRecycleBinItemContextMenu();
+        ~CRecycleBinItemContextMenu();
+        HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
-    // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+        // IContextMenu
+        virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+        virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+        virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
-    // IContextMenu2
-    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        // IContextMenu2
+        virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-BEGIN_COM_MAP(CRecycleBinItemContextMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
-END_COM_MAP()
+        BEGIN_COM_MAP(CRecycleBinItemContextMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+        END_COM_MAP()
 };
 
 typedef struct
@@ -106,14 +106,14 @@ typedef struct
     PIDLRecycleStruct *pFileDetails;
     HANDLE hDeletedFile;
     BOOL bFound;
-}SEARCH_CONTEXT, *PSEARCH_CONTEXT;
+} SEARCH_CONTEXT, *PSEARCH_CONTEXT;
 
 typedef struct
 {
     DWORD dwNukeOnDelete;
     DWORD dwSerial;
     DWORD dwMaxCapacity;
-}DRIVE_ITEM_CONTEXT, *PDRIVE_ITEM_CONTEXT;
+} DRIVE_ITEM_CONTEXT, *PDRIVE_ITEM_CONTEXT;
 
 BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
 {
@@ -127,7 +127,7 @@ BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
                                 0,
                                 NULL,
                                 &dwSize) &&
-        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         ERR("GetDeletedFileDetailsW failed\n");
         return FALSE;
@@ -167,8 +167,8 @@ static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
 
-    if (pdata && pdata->type==0x00)
-        return (PIDLRecycleStruct*)&(pdata->u.crecycle);
+    if (pdata && pdata->type == 0x00)
+        return (PIDLRecycleStruct*) & (pdata->u.crecycle);
 
     return NULL;
 }
@@ -207,7 +207,7 @@ static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
     PIDLDATA tmp;
     LPITEMIDLIST pidl;
     PIDLRecycleStruct * p;
-    int size0 = (char*)&tmp.u.crecycle.szName-(char*)&tmp.u.crecycle;
+    int size0 = (char*)&tmp.u.crecycle.szName - (char*)&tmp.u.crecycle;
     int size = size0;
 
     tmp.type = 0x00;
@@ -217,13 +217,13 @@ static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
     if (!pidl)
         return pidl;
 
-    pidl->mkid.cb = size+2;
-    memcpy(pidl->mkid.abID, &tmp, 2+size0);
+    pidl->mkid.cb = size + 2;
+    memcpy(pidl->mkid.abID, &tmp, 2 + size0);
 
     p = &((PIDLDATA*)pidl->mkid.abID)->u.crecycle;
     RtlCopyMemory(p, pFileDetails, sizeof(DELETED_FILE_DETAILS_W));
     wcscpy(p->szName, pFileDetails->FileName);
-    *(WORD*)((char*)pidl+(size+2)) = 0;
+    *(WORD*)((char*)pidl + (size + 2)) = 0;
     return pidl;
 }
 
@@ -243,7 +243,7 @@ BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN HANDLE hDeletedFile)
                                 0,
                                 NULL,
                                 &dwSize) &&
-        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         ERR("GetDeletedFileDetailsW failed\n");
         return FALSE;
@@ -312,28 +312,28 @@ HRESULT WINAPI CRecycleBinItemContextMenu::QueryContextMenu(HMENU hMenu, UINT in
 
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
         Count++;
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
@@ -348,9 +348,9 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
     SEARCH_CONTEXT Context;
     static LPCWSTR szDrive = L"C:\\";
 
-    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",this,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(5)) 
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(5))
     {
         Context.pFileDetails = _ILGetRecycleStruct(apidl);
         Context.bFound = FALSE;
@@ -373,7 +373,7 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
             return E_NOTIMPL;
         }
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(3)) 
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(3))
     {
         FIXME("implement cut\n");
         return E_NOTIMPL;
@@ -387,16 +387,16 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBinItemContextMenu::GetCommandString(UINT_PTR idCommand,UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+HRESULT WINAPI CRecycleBinItemContextMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
-    TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+    TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
     return E_FAIL;
 }
 
 HRESULT WINAPI CRecycleBinItemContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("CRecycleBin_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",this, uMsg, wParam, lParam);
+    TRACE("CRecycleBin_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
 
     return E_NOTIMPL;
 }
@@ -437,7 +437,7 @@ CRecycleBin::CRecycleBin()
 
 CRecycleBin::~CRecycleBin()
 {
-/*    InterlockedDecrement(&objCount);*/
+    /*    InterlockedDecrement(&objCount);*/
     SHFree(pidl);
 }
 
@@ -477,8 +477,8 @@ HRESULT WINAPI CRecycleBin::GetCurFolder(LPITEMIDLIST *ppidl)
  */
 
 HRESULT WINAPI CRecycleBin::ParseDisplayName(HWND hwnd, LPBC pbc,
-            LPOLESTR pszDisplayName, ULONG *pchEaten, LPITEMIDLIST *ppidl,
-            ULONG *pdwAttributes)
+        LPOLESTR pszDisplayName, ULONG *pchEaten, LPITEMIDLIST *ppidl,
+        ULONG *pdwAttributes)
 {
     FIXME("stub\n");
     return E_NOTIMPL;
@@ -580,21 +580,21 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
 }
 
 HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
-                                   SFGAOF *rgfInOut)
+        SFGAOF *rgfInOut)
 {
     TRACE("(%p, %d, {%p, ...}, {%x})\n", this, cidl, apidl ? apidl[0] : NULL, (unsigned int)*rgfInOut);
-    *rgfInOut &= SFGAO_CANMOVE|SFGAO_CANDELETE|SFGAO_HASPROPSHEET|SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    *rgfInOut &= SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
     return S_OK;
 }
 
 HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
-                      REFIID riid, UINT *prgfInOut, void **ppv)
+        REFIID riid, UINT *prgfInOut, void **ppv)
 {
     IUnknown *pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p, %p %p)\n", this,
-            hwndOwner, cidl, apidl, prgfInOut, ppv);
+           hwndOwner, cidl, apidl, prgfInOut, ppv);
 
     if (!ppv)
         return hr;
@@ -630,14 +630,14 @@ HRESULT WINAPI CRecycleBin::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, 
 
     if (_ILIsBitBucket (pidl))
     {
-       WCHAR pszPath[100];
+        WCHAR pszPath[100];
 
-       if (HCR_GetClassNameW(CLSID_RecycleBin, pszPath, MAX_PATH))
-       {
-           pName->uType = STRRET_WSTR;
-           pName->pOleStr = StrDupW(pszPath);
-           return S_OK;
-       }
+        if (HCR_GetClassNameW(CLSID_RecycleBin, pszPath, MAX_PATH))
+        {
+            pName->uType = STRRET_WSTR;
+            pName->pOleStr = StrDupW(pszPath);
+            return S_OK;
+        }
     }
 
     pFileDetails = _ILGetRecycleStruct(pidl);
@@ -665,7 +665,7 @@ HRESULT WINAPI CRecycleBin::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, 
 }
 
 HRESULT WINAPI CRecycleBin::SetNameOf(HWND hwnd, LPCITEMIDLIST pidl, LPCOLESTR pszName,
-            SHGDNF uFlags, LPITEMIDLIST *ppidlOut)
+                                      SHGDNF uFlags, LPITEMIDLIST *ppidlOut)
 {
     TRACE("\n");
     return E_FAIL; /* not supported */
@@ -717,14 +717,14 @@ static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME * ft)
     FileTimeToSystemTime(&lft, &time);
 
     ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, buffer, size);
-    if (ret>0 && ret<size)
+    if (ret > 0 && ret < size)
     {
         /* Append space + time without seconds */
         buffer[ret-1] = ' ';
         GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &buffer[ret], size - ret);
     }
 
-    return (ret!=0 ? E_FAIL : S_OK);
+    return (ret != 0 ? E_FAIL : S_OK);
 }
 
 HRESULT WINAPI CRecycleBin::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHELLDETAILS pDetails)
@@ -770,14 +770,14 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHE
             break;
         case COLUMN_TYPE:
             szTypeName[0] = L'\0';
-            wcscpy(buffer,PathFindExtensionW(pFileDetails->szName));
-            if (!( HCR_MapTypeToValueW(buffer, buffer, sizeof(buffer)/sizeof(WCHAR), TRUE) &&
-                   HCR_MapTypeToValueW(buffer, szTypeName, sizeof(szTypeName)/sizeof(WCHAR), FALSE )))
+            wcscpy(buffer, PathFindExtensionW(pFileDetails->szName));
+            if (!( HCR_MapTypeToValueW(buffer, buffer, sizeof(buffer) / sizeof(WCHAR), TRUE) &&
+                    HCR_MapTypeToValueW(buffer, szTypeName, sizeof(szTypeName) / sizeof(WCHAR), FALSE )))
             {
                 wcscpy (szTypeName, PathFindExtensionW(pFileDetails->szName));
                 wcscat(szTypeName, L"-");
                 Length = wcslen(szTypeName);
-                if (LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, &szTypeName[Length], (sizeof(szTypeName)/sizeof(WCHAR))- Length))
+                if (LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, &szTypeName[Length], (sizeof(szTypeName) / sizeof(WCHAR)) - Length))
                     szTypeName[(sizeof(szTypeName)/sizeof(WCHAR))-1] = L'\0';
             }
             pDetails->str.uType = STRRET_WSTR;
@@ -794,7 +794,7 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHE
 HRESULT WINAPI CRecycleBin::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
 {
     TRACE("(%p, %d, %p)\n", this, iColumn, pscid);
-    if (iColumn>=COLUMNS_COUNT)
+    if (iColumn >= COLUMNS_COUNT)
         return E_INVALIDARG;
     pscid->fmtid = *RecycleBinColumns[iColumn].fmtId;
     pscid->pid = RecycleBinColumns[iColumn].pid;
@@ -821,7 +821,7 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
     mii.fState = MFS_ENABLED;
     szBuffer[0] = L'\0';
-    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
+    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
     mii.dwTypeData = szBuffer;
     mii.cch = wcslen( mii.dwTypeData );
@@ -914,219 +914,219 @@ void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
 void
 InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
 {
-   WCHAR CurDrive = L'A';
-   WCHAR szDrive[] = L"A:\\";
-   DWORD dwDrives;
-   WCHAR szName[100];
-   WCHAR szVolume[100];
-   DWORD MaxComponent, Flags;
-   DWORD dwSerial;
-   LVCOLUMNW lc;
-   HWND hDlgCtrl;
-   LVITEMW li;
-   INT itemCount;
-   ULARGE_INTEGER TotalNumberOfFreeBytes, TotalNumberOfBytes, FreeBytesAvailable;
-   RECT rect;
-   int columnSize;
-   int defIndex = 0;
-   DWORD dwSize;
-   PDRIVE_ITEM_CONTEXT pItem = NULL, pDefault = NULL, pFirst = NULL;
+    WCHAR CurDrive = L'A';
+    WCHAR szDrive[] = L"A:\\";
+    DWORD dwDrives;
+    WCHAR szName[100];
+    WCHAR szVolume[100];
+    DWORD MaxComponent, Flags;
+    DWORD dwSerial;
+    LVCOLUMNW lc;
+    HWND hDlgCtrl;
+    LVITEMW li;
+    INT itemCount;
+    ULARGE_INTEGER TotalNumberOfFreeBytes, TotalNumberOfBytes, FreeBytesAvailable;
+    RECT rect;
+    int columnSize;
+    int defIndex = 0;
+    DWORD dwSize;
+    PDRIVE_ITEM_CONTEXT pItem = NULL, pDefault = NULL, pFirst = NULL;
 
-   hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+    hDlgCtrl = GetDlgItem(hwndDlg, 14000);
 
-   if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_LOCATION, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
-       szVolume[0] = 0;
+    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_LOCATION, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+        szVolume[0] = 0;
 
-   GetClientRect(hDlgCtrl, &rect);
+    GetClientRect(hDlgCtrl, &rect);
 
-   memset(&lc, 0, sizeof(LV_COLUMN) );
-   lc.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
+    memset(&lc, 0, sizeof(LV_COLUMN) );
+    lc.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
 
-   columnSize = 140; //FIXME
-   lc.iSubItem   = 0;
-   lc.fmt = LVCFMT_FIXED_WIDTH;
-   lc.cx         = columnSize;
-   lc.cchTextMax = wcslen(szVolume);
-   lc.pszText    = szVolume;
-   (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&lc);
+    columnSize = 140; //FIXME
+    lc.iSubItem   = 0;
+    lc.fmt = LVCFMT_FIXED_WIDTH;
+    lc.cx         = columnSize;
+    lc.cchTextMax = wcslen(szVolume);
+    lc.pszText    = szVolume;
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&lc);
 
-   if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_DISKSPACE, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
-       szVolume[0] = 0;
+    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_DISKSPACE, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+        szVolume[0] = 0;
 
-   lc.iSubItem   = 1;
-   lc.cx         = rect.right - rect.left - columnSize;
-   lc.cchTextMax = wcslen(szVolume);
-   lc.pszText    = szVolume;
-   (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&lc);
+    lc.iSubItem   = 1;
+    lc.cx         = rect.right - rect.left - columnSize;
+    lc.cchTextMax = wcslen(szVolume);
+    lc.pszText    = szVolume;
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&lc);
 
-   dwDrives = GetLogicalDrives();
-   itemCount = 0;
-   do
-   {
-     if ((dwDrives & 0x1))
-     {
-        UINT Type = GetDriveTypeW(szDrive);
-        if (Type == DRIVE_FIXED) //FIXME
+    dwDrives = GetLogicalDrives();
+    itemCount = 0;
+    do
+    {
+        if ((dwDrives & 0x1))
         {
-            if (!GetVolumeInformationW(szDrive, szName, sizeof(szName) / sizeof(WCHAR), &dwSerial, &MaxComponent, &Flags, NULL, 0))
+            UINT Type = GetDriveTypeW(szDrive);
+            if (Type == DRIVE_FIXED) //FIXME
             {
-                szName[0] = 0;
-                dwSerial = -1;
-            }
-
-            swprintf(szVolume, L"%s (%c)", szName, szDrive[0]);
-            memset(&li, 0x0, sizeof(LVITEMW));
-            li.mask = LVIF_TEXT | LVIF_PARAM;
-            li.iSubItem = 0;
-            li.pszText = szVolume;
-            li.iItem = itemCount;
-            (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
-            if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
-            {
-                if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+                if (!GetVolumeInformationW(szDrive, szName, sizeof(szName) / sizeof(WCHAR), &dwSerial, &MaxComponent, &Flags, NULL, 0))
                 {
-
-                    pItem = (DRIVE_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DRIVE_ITEM_CONTEXT));
-                    if (pItem)
-                    {
-                        swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
-                        dwSize = sizeof(DWORD);
-                        RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize);
-                        dwSize = sizeof(DWORD);
-                        RegGetValueW(HKEY_CURRENT_USER, szName, L"NukeOnDelete", RRF_RT_DWORD, NULL, &pItem->dwNukeOnDelete, &dwSize);
-                        pItem->dwSerial = dwSerial;
-                        li.mask = LVIF_PARAM;
-                        li.lParam = (LPARAM)pItem;
-                        (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
-                        if (CurDrive == DefaultDrive)
-                        {
-                            defIndex = itemCount;
-                            pDefault = pItem;
-                        }
-                    }
-                    if (!pFirst)
-                        pFirst = pItem;
-
-                    li.mask = LVIF_TEXT;
-                    li.iSubItem = 1;
-                    li.pszText = szVolume;
-                    li.iItem = itemCount;
-                    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                    szName[0] = 0;
+                    dwSerial = -1;
                 }
-            }
-            itemCount++;
-        }
-     }
-     CurDrive++;
-     szDrive[0] = CurDrive;
-     dwDrives = (dwDrives >> 1);
-   }while(dwDrives);
 
-   if (!pDefault)
-       pDefault = pFirst;
-   if (pDefault)
-   {
-       toggleNukeOnDeleteOption(hwndDlg, pDefault->dwNukeOnDelete);
-       SetDlgItemInt(hwndDlg, 14002, pDefault->dwMaxCapacity, FALSE);
-   }
-   ZeroMemory(&li, sizeof(li));
-   li.mask = LVIF_STATE;
-   li.stateMask = (UINT)-1;
-   li.state = LVIS_FOCUSED|LVIS_SELECTED;
-   li.iItem = defIndex;
-   (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                swprintf(szVolume, L"%s (%c)", szName, szDrive[0]);
+                memset(&li, 0x0, sizeof(LVITEMW));
+                li.mask = LVIF_TEXT | LVIF_PARAM;
+                li.iSubItem = 0;
+                li.pszText = szVolume;
+                li.iItem = itemCount;
+                (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
+                if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
+                {
+                    if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+                    {
+
+                        pItem = (DRIVE_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DRIVE_ITEM_CONTEXT));
+                        if (pItem)
+                        {
+                            swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
+                            dwSize = sizeof(DWORD);
+                            RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize);
+                            dwSize = sizeof(DWORD);
+                            RegGetValueW(HKEY_CURRENT_USER, szName, L"NukeOnDelete", RRF_RT_DWORD, NULL, &pItem->dwNukeOnDelete, &dwSize);
+                            pItem->dwSerial = dwSerial;
+                            li.mask = LVIF_PARAM;
+                            li.lParam = (LPARAM)pItem;
+                            (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                            if (CurDrive == DefaultDrive)
+                            {
+                                defIndex = itemCount;
+                                pDefault = pItem;
+                            }
+                        }
+                        if (!pFirst)
+                            pFirst = pItem;
+
+                        li.mask = LVIF_TEXT;
+                        li.iSubItem = 1;
+                        li.pszText = szVolume;
+                        li.iItem = itemCount;
+                        (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                    }
+                }
+                itemCount++;
+            }
+        }
+        CurDrive++;
+        szDrive[0] = CurDrive;
+        dwDrives = (dwDrives >> 1);
+    } while(dwDrives);
+
+    if (!pDefault)
+        pDefault = pFirst;
+    if (pDefault)
+    {
+        toggleNukeOnDeleteOption(hwndDlg, pDefault->dwNukeOnDelete);
+        SetDlgItemInt(hwndDlg, 14002, pDefault->dwMaxCapacity, FALSE);
+    }
+    ZeroMemory(&li, sizeof(li));
+    li.mask = LVIF_STATE;
+    li.stateMask = (UINT) - 1;
+    li.state = LVIS_FOCUSED | LVIS_SELECTED;
+    li.iItem = defIndex;
+    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
 
 }
 
 static BOOL StoreDriveSettings(HWND hwndDlg)
 {
-   int iCount, iIndex;
-   HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
-   LVITEMW li;
-   PDRIVE_ITEM_CONTEXT pItem;
-   HKEY hKey, hSubKey;
-   WCHAR szSerial[20];
-   DWORD dwSize;
+    int iCount, iIndex;
+    HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+    LVITEMW li;
+    PDRIVE_ITEM_CONTEXT pItem;
+    HKEY hKey, hSubKey;
+    WCHAR szSerial[20];
+    DWORD dwSize;
 
 
-   if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
-      return FALSE;
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return FALSE;
 
-   iCount = ListView_GetItemCount(hDlgCtrl);
+    iCount = ListView_GetItemCount(hDlgCtrl);
 
-   ZeroMemory(&li, sizeof(li));
-   li.mask = LVIF_PARAM;
+    ZeroMemory(&li, sizeof(li));
+    li.mask = LVIF_PARAM;
 
-   for(iIndex = 0; iIndex < iCount; iIndex++)
-   {
-       li.iItem = iIndex;
-       if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
-       {
-           pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
-           swprintf(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
-           if (RegCreateKeyExW(hKey, szSerial, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
-           {
-               dwSize = sizeof(DWORD);
-               RegSetValueExW(hSubKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&pItem->dwNukeOnDelete, dwSize);
-               dwSize = sizeof(DWORD);
-               RegSetValueExW(hSubKey, L"MaxCapacity", 0, REG_DWORD, (LPBYTE)&pItem->dwMaxCapacity, dwSize);
-               RegCloseKey(hSubKey);
-           }
-       }
-   }
-   RegCloseKey(hKey);
-   return TRUE;
+    for(iIndex = 0; iIndex < iCount; iIndex++)
+    {
+        li.iItem = iIndex;
+        if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
+        {
+            pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
+            swprintf(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
+            if (RegCreateKeyExW(hKey, szSerial, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+            {
+                dwSize = sizeof(DWORD);
+                RegSetValueExW(hSubKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&pItem->dwNukeOnDelete, dwSize);
+                dwSize = sizeof(DWORD);
+                RegSetValueExW(hSubKey, L"MaxCapacity", 0, REG_DWORD, (LPBYTE)&pItem->dwMaxCapacity, dwSize);
+                RegCloseKey(hSubKey);
+            }
+        }
+    }
+    RegCloseKey(hKey);
+    return TRUE;
 
 }
 
 static VOID FreeDriveItemContext(HWND hwndDlg)
 {
-   int iCount, iIndex;
-   HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
-   LVITEMW li;
+    int iCount, iIndex;
+    HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+    LVITEMW li;
 
-   iCount = ListView_GetItemCount(hDlgCtrl);
+    iCount = ListView_GetItemCount(hDlgCtrl);
 
-   ZeroMemory(&li, sizeof(li));
-   li.mask = LVIF_PARAM;
+    ZeroMemory(&li, sizeof(li));
+    li.mask = LVIF_PARAM;
 
-   for(iIndex = 0; iIndex < iCount; iIndex++)
-   {
-       li.iItem = iIndex;
-       if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
-       {
-           HeapFree(GetProcessHeap(), 0, (LPVOID)li.lParam);
-       }
-   }
+    for(iIndex = 0; iIndex < iCount; iIndex++)
+    {
+        li.iItem = iIndex;
+        if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
+        {
+            HeapFree(GetProcessHeap(), 0, (LPVOID)li.lParam);
+        }
+    }
 }
 
 INT
 GetDefaultItem(HWND hwndDlg, LVITEMW * li)
 {
-   HWND hDlgCtrl;
-   UINT iItemCount, iIndex;
+    HWND hDlgCtrl;
+    UINT iItemCount, iIndex;
 
-   hDlgCtrl = GetDlgItem(hwndDlg, 14000);
-   if (!hDlgCtrl)
-       return -1;
+    hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+    if (!hDlgCtrl)
+        return -1;
 
-   iItemCount = ListView_GetItemCount(hDlgCtrl);
-   if (!iItemCount)
-       return -1;
-   
-   ZeroMemory(li, sizeof(LVITEMW));
-   li->mask = LVIF_PARAM | LVIF_STATE;
-   li->stateMask = (UINT)-1;
-   for (iIndex = 0; iIndex < iItemCount; iIndex++)
-   {
-       li->iItem = iIndex;
-       if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)li))
-       {
-           if (li->state & LVIS_SELECTED)
-               return iIndex;
-       }
-   }
-   return -1;
+    iItemCount = ListView_GetItemCount(hDlgCtrl);
+    if (!iItemCount)
+        return -1;
+
+    ZeroMemory(li, sizeof(LVITEMW));
+    li->mask = LVIF_PARAM | LVIF_STATE;
+    li->stateMask = (UINT) - 1;
+    for (iIndex = 0; iIndex < iItemCount; iIndex++)
+    {
+        li->iItem = iIndex;
+        if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)li))
+        {
+            if (li->state & LVIS_SELECTED)
+                return iIndex;
+        }
+    }
+    return -1;
 
 }
 
@@ -1150,35 +1150,35 @@ RecycleBinDlg(
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:    
-        page = (PROPSHEETPAGE*)lParam;
-        InitializeRecycleBinDlg(hwndDlg, (WCHAR)page->lParam);
-        dwStyle = (DWORD) SendDlgItemMessage(hwndDlg, 14000, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
-        dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
-        SendDlgItemMessage(hwndDlg, 14000, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
-        if (GetDlgCtrlID((HWND)wParam) != 14000)
-        {
-            SetFocus(GetDlgItem(hwndDlg, 14000));
-            return FALSE;
-        }
-        return TRUE;
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case 14001:
-            toggleNukeOnDeleteOption(hwndDlg, FALSE);
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+        case WM_INITDIALOG:
+            page = (PROPSHEETPAGE*)lParam;
+            InitializeRecycleBinDlg(hwndDlg, (WCHAR)page->lParam);
+            dwStyle = (DWORD) SendDlgItemMessage(hwndDlg, 14000, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+            dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
+            SendDlgItemMessage(hwndDlg, 14000, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
+            if (GetDlgCtrlID((HWND)wParam) != 14000)
+            {
+                SetFocus(GetDlgItem(hwndDlg, 14000));
+                return FALSE;
+            }
+            return TRUE;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case 14001:
+                    toggleNukeOnDeleteOption(hwndDlg, FALSE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+                case 14003:
+                    toggleNukeOnDeleteOption(hwndDlg, TRUE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+                case 14004:
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+            }
             break;
-        case 14003:
-            toggleNukeOnDeleteOption(hwndDlg, TRUE);
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            break;
-        case 14004:
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            break;
-        }
-        break;
-       case WM_NOTIFY:
+        case WM_NOTIFY:
             lppsn = (LPPSHNOTIFY) lParam;
             lppl = (LPNMLISTVIEW) lParam;
             if (lppsn->hdr.code == PSN_APPLY)
@@ -1205,38 +1205,38 @@ RecycleBinDlg(
             }
             else if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
-                    ZeroMemory(&li, sizeof(li));
-                    li.mask = LVIF_PARAM;
-                    li.iItem = lppl->iItem;
-                    if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&li))
-                        return TRUE;
-
-                    pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
-                    if (!pItem)
-                        return TRUE;
-
-                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
-                    {
-                        /* new focused item */
-                        toggleNukeOnDeleteOption(lppl->hdr.hwndFrom, pItem->dwNukeOnDelete);
-                        SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
-                    }
-                    else if ((lppl->uOldState & LVIS_FOCUSED) && !(lppl->uNewState & LVIS_FOCUSED))
-                    {
-                        /* kill focus */
-                        uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
-                        if (bSuccess)
-                            pItem->dwMaxCapacity = uResult;
-                        if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                            pItem->dwNukeOnDelete = TRUE;
-                        else
-                            pItem->dwNukeOnDelete = FALSE;
-                    }
+                ZeroMemory(&li, sizeof(li));
+                li.mask = LVIF_PARAM;
+                li.iItem = lppl->iItem;
+                if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&li))
                     return TRUE;
+
+                pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
+                if (!pItem)
+                    return TRUE;
+
+                if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
+                {
+                    /* new focused item */
+                    toggleNukeOnDeleteOption(lppl->hdr.hwndFrom, pItem->dwNukeOnDelete);
+                    SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+                }
+                else if ((lppl->uOldState & LVIS_FOCUSED) && !(lppl->uNewState & LVIS_FOCUSED))
+                {
+                    /* kill focus */
+                    uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
+                    if (bSuccess)
+                        pItem->dwMaxCapacity = uResult;
+                    if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        pItem->dwNukeOnDelete = TRUE;
+                    else
+                        pItem->dwNukeOnDelete = FALSE;
+                }
+                return TRUE;
 
             }
             break;
-       case WM_DESTROY:
+        case WM_DESTROY:
             FreeDriveItemContext(hwndDlg);
             break;
     }
@@ -1245,120 +1245,120 @@ RecycleBinDlg(
 
 BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
 {
-   HPROPSHEETPAGE hpsp[1];
-   PROPSHEETHEADERW psh;
-   HPROPSHEETPAGE hprop;
+    HPROPSHEETPAGE hpsp[1];
+    PROPSHEETHEADERW psh;
+    HPROPSHEETPAGE hprop;
 
-   BOOL ret;
-
-
-   ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
-   psh.dwSize = sizeof(PROPSHEETHEADERW);
-   psh.dwFlags = PSP_DEFAULT | PSH_PROPTITLE;
-   psh.pszCaption = MAKEINTRESOURCEW(IDS_RECYCLEBIN_FOLDER_NAME);
-   psh.hwndParent = NULL;
-   psh.phpage = hpsp;
-   psh.hInstance = shell32_hInstance;
-
-   hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", RecycleBinDlg, (LPARAM)sDrive, NULL);
-   if (!hprop)
-   {
-       ERR("Failed to create property sheet\n");
-       return FALSE;
-   }
-   hpsp[psh.nPages] = hprop;
-   psh.nPages++;
+    BOOL ret;
 
 
-   ret = PropertySheetW(&psh);
-   if (ret < 0)
-       return FALSE;
-   else
-       return TRUE;
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
+    psh.dwFlags = PSP_DEFAULT | PSH_PROPTITLE;
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_RECYCLEBIN_FOLDER_NAME);
+    psh.hwndParent = NULL;
+    psh.phpage = hpsp;
+    psh.hInstance = shell32_hInstance;
+
+    hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", RecycleBinDlg, (LPARAM)sDrive, NULL);
+    if (!hprop)
+    {
+        ERR("Failed to create property sheet\n");
+        return FALSE;
+    }
+    hpsp[psh.nPages] = hprop;
+    psh.nPages++;
+
+
+    ret = PropertySheetW(&psh);
+    if (ret < 0)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 BOOL
 TRASH_CanTrashFile(LPCWSTR wszPath)
 {
-   LONG ret;
-   DWORD dwNukeOnDelete, dwType, VolSerialNumber, MaxComponentLength;
-   DWORD FileSystemFlags, dwSize, dwDisposition;
-   HKEY hKey;
-   WCHAR szBuffer[10];
-   WCHAR szKey[150] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\";
+    LONG ret;
+    DWORD dwNukeOnDelete, dwType, VolSerialNumber, MaxComponentLength;
+    DWORD FileSystemFlags, dwSize, dwDisposition;
+    HKEY hKey;
+    WCHAR szBuffer[10];
+    WCHAR szKey[150] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\";
 
-   if (wszPath[1] != L':')
-   {
-       /* path is UNC */
-       return FALSE;
-   }
+    if (wszPath[1] != L':')
+    {
+        /* path is UNC */
+        return FALSE;
+    }
 
-   if (GetDriveTypeW(wszPath) != DRIVE_FIXED)
-   {
-       /* no bitbucket on removable media */
-       return FALSE;
-   }
+    if (GetDriveTypeW(wszPath) != DRIVE_FIXED)
+    {
+        /* no bitbucket on removable media */
+        return FALSE;
+    }
 
-   if (!GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
-   {
-       ERR("GetVolumeInformationW failed with %u\n", GetLastError());
-       return FALSE;
-   }
+    if (!GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
+    {
+        ERR("GetVolumeInformationW failed with %u\n", GetLastError());
+        return FALSE;
+    }
 
-   swprintf(szBuffer, L"%04X-%04X", LOWORD(VolSerialNumber), HIWORD(VolSerialNumber));
-   wcscat(szKey, szBuffer);
+    swprintf(szBuffer, L"%04X-%04X", LOWORD(VolSerialNumber), HIWORD(VolSerialNumber));
+    wcscat(szKey, szBuffer);
 
-   if (RegCreateKeyExW(HKEY_CURRENT_USER, szKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
-   {
-       ERR("RegCreateKeyExW failed\n");
-       return FALSE;
-   }
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, szKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
+    {
+        ERR("RegCreateKeyExW failed\n");
+        return FALSE;
+    }
 
-   if (dwDisposition  & REG_CREATED_NEW_KEY)
-   {
-       /* per default move to bitbucket */
-       dwNukeOnDelete = 0;
-       RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
-       /* per default unlimited size */
-       dwSize = -1;
-       RegSetValueExW(hKey, L"MaxCapacity", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
-       RegCloseKey(hKey);
-       return TRUE;
-   }
-   else 
-   {
-       dwSize = sizeof(dwNukeOnDelete);
-       ret = RegQueryValueExW(hKey, L"NukeOnDelete", NULL, &dwType, (LPBYTE)&dwNukeOnDelete, &dwSize);
-       if (ret != ERROR_SUCCESS)
-       {
-           if (ret ==  ERROR_FILE_NOT_FOUND)
-           {
-               /* restore key and enable bitbucket */
-               dwNukeOnDelete = 0;
-               RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
-           }
-           RegCloseKey(hKey);
-           return TRUE;
-       }
-       else if (dwNukeOnDelete)
-       {
-           /* do not delete to bitbucket */
-           RegCloseKey(hKey);
-           return FALSE;
-       }
-       /* FIXME 
-        * check if bitbucket is full
-        */
-       RegCloseKey(hKey);
-       return TRUE;
-   }
+    if (dwDisposition  & REG_CREATED_NEW_KEY)
+    {
+        /* per default move to bitbucket */
+        dwNukeOnDelete = 0;
+        RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
+        /* per default unlimited size */
+        dwSize = -1;
+        RegSetValueExW(hKey, L"MaxCapacity", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+    else
+    {
+        dwSize = sizeof(dwNukeOnDelete);
+        ret = RegQueryValueExW(hKey, L"NukeOnDelete", NULL, &dwType, (LPBYTE)&dwNukeOnDelete, &dwSize);
+        if (ret != ERROR_SUCCESS)
+        {
+            if (ret ==  ERROR_FILE_NOT_FOUND)
+            {
+                /* restore key and enable bitbucket */
+                dwNukeOnDelete = 0;
+                RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
+            }
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+        else if (dwNukeOnDelete)
+        {
+            /* do not delete to bitbucket */
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+        /* FIXME
+         * check if bitbucket is full
+         */
+        RegCloseKey(hKey);
+        return TRUE;
+    }
 }
 
 BOOL
 TRASH_TrashFile(LPCWSTR wszPath)
 {
-   TRACE("(%s)\n", debugstr_w(wszPath));
-   return DeleteFileToRecycleBin(wszPath);
+    TRACE("(%s)\n", debugstr_w(wszPath));
+    return DeleteFileToRecycleBin(wszPath);
 }
 
 /*************************************************************************

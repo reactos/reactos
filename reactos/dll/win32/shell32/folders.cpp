@@ -27,40 +27,40 @@ DWORD NumIconOverlayHandlers = 0;
 IShellIconOverlayIdentifier ** Handlers = NULL;
 
 static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
- LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+                                        LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     int icon_idx;
     WCHAR wszPath[MAX_PATH];
     WCHAR wszCLSIDValue[CHARS_IN_GUID];
-    static const WCHAR shellClassInfo[] = { '.','S','h','e','l','l','C','l','a','s','s','I','n','f','o',0 };
-    static const WCHAR iconFile[] = { 'I','c','o','n','F','i','l','e',0 };
-    static const WCHAR clsid[] = { 'C','L','S','I','D',0 };
-    static const WCHAR clsid2[] = { 'C','L','S','I','D','2',0 };
-    static const WCHAR iconIndex[] = { 'I','c','o','n','I','n','d','e','x',0 };
+    static const WCHAR shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
+    static const WCHAR iconFile[] = { 'I', 'c', 'o', 'n', 'F', 'i', 'l', 'e', 0 };
+    static const WCHAR clsid[] = { 'C', 'L', 'S', 'I', 'D', 0 };
+    static const WCHAR clsid2[] = { 'C', 'L', 'S', 'I', 'D', '2', 0 };
+    static const WCHAR iconIndex[] = { 'I', 'c', 'o', 'n', 'I', 'n', 'd', 'e', 'x', 0 };
 
     if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconFile,
-        wszPath, MAX_PATH))
+                                         wszPath, MAX_PATH))
     {
         WCHAR wszIconIndex[10];
         SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconIndex,
-            wszIconIndex, 10);
+                                         wszIconIndex, 10);
         *piIndex = _wtoi(wszIconIndex);
     }
     else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid,
-        wszCLSIDValue, CHARS_IN_GUID) &&
-        HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &icon_idx))
+             wszCLSIDValue, CHARS_IN_GUID) &&
+             HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &icon_idx))
     {
-       *piIndex = icon_idx;
+        *piIndex = icon_idx;
     }
     else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid2,
-        wszCLSIDValue, CHARS_IN_GUID) &&
-        HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &icon_idx))
+             wszCLSIDValue, CHARS_IN_GUID) &&
+             HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &icon_idx))
     {
-       *piIndex = icon_idx;
+        *piIndex = icon_idx;
     }
     else
     {
-        static const WCHAR folder[] = { 'F','o','l','d','e','r',0 };
+        static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
 
         if (!HCR_GetDefaultIconW(folder, szIconFile, cchMax, &icon_idx))
         {
@@ -69,7 +69,7 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
         }
 
         if (uFlags & GIL_OPENICON)
-            *piIndex = icon_idx<0? icon_idx-1: icon_idx+1;
+            *piIndex = icon_idx < 0 ? icon_idx - 1 : icon_idx + 1;
         else
             *piIndex = icon_idx;
     }
@@ -86,7 +86,7 @@ void InitIconOverlays(void)
     CLSID clsid;
     IShellIconOverlayIdentifier * Overlay;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers",0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return;
 
     if (RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &dwResult, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
@@ -132,7 +132,7 @@ void InitIconOverlays(void)
 
         dwIndex++;
 
-    }while(1);
+    } while(1);
 
     RegCloseKey(hKey);
 }
@@ -212,48 +212,59 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
     else if ((riid = _ILGetGUIDPointer(pSimplePidl)))
     {
         /* my computer and other shell extensions */
-        static const WCHAR fmt[] = { 'C','L','S','I','D','\\',
-            '{','%','0','8','l','x','-','%','0','4','x','-','%','0','4','x','-',
-            '%','0','2','x','%','0','2','x','-','%','0','2','x', '%','0','2','x',
-            '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x','}',0 };
-            WCHAR xriid[50];
+        static const WCHAR fmt[] = { 'C', 'L', 'S', 'I', 'D', '\\',
+                                     '{', '%', '0', '8', 'l', 'x', '-', '%', '0', '4', 'x', '-', '%', '0', '4', 'x', '-',
+                                     '%', '0', '2', 'x', '%', '0', '2', 'x', '-', '%', '0', '2', 'x', '%', '0', '2', 'x',
+                                     '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '}', 0
+                                   };
+        WCHAR xriid[50];
 
-            swprintf(xriid, fmt,
-                riid->Data1, riid->Data2, riid->Data3,
-                riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-                riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+        swprintf(xriid, fmt,
+                 riid->Data1, riid->Data2, riid->Data3,
+                 riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
+                 riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
 
-            if (HCR_GetDefaultIconW(xriid, wTemp, MAX_PATH, &icon_idx))
-            {
-                initIcon->SetNormalIcon(wTemp, icon_idx);
-            }
+        if (HCR_GetDefaultIconW(xriid, wTemp, MAX_PATH, &icon_idx))
+        {
+            initIcon->SetNormalIcon(wTemp, icon_idx);
+        }
+        else
+        {
+            if (IsEqualGUID(*riid, CLSID_MyComputer))
+                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
+            else if (IsEqualGUID(*riid, CLSID_MyDocuments))
+                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
+            else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
+                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
             else
-            {
-                if (IsEqualGUID(*riid, CLSID_MyComputer))
-                    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
-                else if (IsEqualGUID(*riid, CLSID_MyDocuments))
-                    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
-                else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
-                    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
-                else
-                    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
-            }
+                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
+        }
     }
 
     else if (_ILIsDrive (pSimplePidl))
     {
-        static const WCHAR drive[] = { 'D','r','i','v','e',0 };
+        static const WCHAR drive[] = { 'D', 'r', 'i', 'v', 'e', 0 };
         int icon_idx = -1;
 
         if (_ILGetDrive(pSimplePidl, sTemp, MAX_PATH))
         {
             switch(GetDriveTypeA(sTemp))
             {
-                case DRIVE_REMOVABLE:   icon_idx = IDI_SHELL_FLOPPY;        break;
-                case DRIVE_CDROM:       icon_idx = IDI_SHELL_CDROM;         break;
-                case DRIVE_REMOTE:      icon_idx = IDI_SHELL_NETDRIVE;      break;
-                case DRIVE_RAMDISK:     icon_idx = IDI_SHELL_RAMDISK;       break;
-                case DRIVE_NO_ROOT_DIR: icon_idx = IDI_SHELL_CDROM;         break;
+                case DRIVE_REMOVABLE:
+                    icon_idx = IDI_SHELL_FLOPPY;
+                    break;
+                case DRIVE_CDROM:
+                    icon_idx = IDI_SHELL_CDROM;
+                    break;
+                case DRIVE_REMOTE:
+                    icon_idx = IDI_SHELL_NETDRIVE;
+                    break;
+                case DRIVE_RAMDISK:
+                    icon_idx = IDI_SHELL_RAMDISK;
+                    break;
+                case DRIVE_NO_ROOT_DIR:
+                    icon_idx = IDI_SHELL_CDROM;
+                    break;
             }
         }
 
@@ -273,30 +284,30 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
     else if (_ILIsFolder (pSimplePidl))
     {
         if (SUCCEEDED(getIconLocationForFolder(
-                       pidl, 0, wTemp, MAX_PATH,
-                       &icon_idx,
-                       &flags)))
+                          pidl, 0, wTemp, MAX_PATH,
+                          &icon_idx,
+                          &flags)))
         {
             initIcon->SetNormalIcon(wTemp, icon_idx);
         }
         if (SUCCEEDED(getIconLocationForFolder(
-                       pidl, GIL_DEFAULTICON, wTemp, MAX_PATH,
-                       &icon_idx,
-                       &flags)))
+                          pidl, GIL_DEFAULTICON, wTemp, MAX_PATH,
+                          &icon_idx,
+                          &flags)))
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
         if (SUCCEEDED(getIconLocationForFolder(
-                       pidl, GIL_FORSHORTCUT, wTemp, MAX_PATH,
-                       &icon_idx,
-                       &flags)))
+                          pidl, GIL_FORSHORTCUT, wTemp, MAX_PATH,
+                          &icon_idx,
+                          &flags)))
         {
             initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
         if (SUCCEEDED(getIconLocationForFolder(
-                       pidl, GIL_OPENICON, wTemp, MAX_PATH,
-                       &icon_idx,
-                       &flags)))
+                          pidl, GIL_OPENICON, wTemp, MAX_PATH,
+                          &icon_idx,
+                          &flags)))
         {
             initIcon->SetOpenIcon(wTemp, icon_idx);
         }
@@ -313,7 +324,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
         else if (_ILGetExtension(pSimplePidl, sTemp, MAX_PATH))
         {
             if (HCR_MapTypeToValueA(sTemp, sTemp, MAX_PATH, TRUE)
-                && HCR_GetDefaultIconA(sTemp, sTemp, MAX_PATH, &icon_idx))
+                    && HCR_GetDefaultIconA(sTemp, sTemp, MAX_PATH, &icon_idx))
             {
                 if (!lstrcmpA("%1", sTemp)) /* icon is in the file */
                 {

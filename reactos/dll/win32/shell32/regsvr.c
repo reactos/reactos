@@ -575,7 +575,7 @@ static GUID const CLSID_Shortcut = {
     0x00021401, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
 
 static struct regsvr_coclass const coclass_list[] = {
-    {   &CLSID_Desktop,
+    /*{   &CLSID_Desktop,
 	"Desktop",
 	IDS_DESKTOP,
 	NULL,
@@ -634,7 +634,7 @@ static struct regsvr_coclass const coclass_list[] = {
         NULL,
         NULL,
         IDI_SHELL_MY_NETWORK_PLACES
-    },
+    },*/
     {  &CLSID_FontsFolderShortcut,
        "Fonts",
        IDS_FONTS,
@@ -648,7 +648,7 @@ static struct regsvr_coclass const coclass_list[] = {
        NULL,
        IDI_SHELL_FONTS_FOLDER
     },
-    {  &CLSID_AdminFolderShortcut,
+    /*{  &CLSID_AdminFolderShortcut,
        "Administrative Tools",
        IDS_ADMINISTRATIVETOOLS,
        NULL,
@@ -660,8 +660,8 @@ static struct regsvr_coclass const coclass_list[] = {
        NULL,
        NULL,
        IDI_SHELL_ADMINTOOLS //FIXME
-    },
-    {   &CLSID_Shortcut,
+    },*/
+    /*{   &CLSID_Shortcut,
 	"Shortcut",
 	0,
 	NULL,
@@ -737,7 +737,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"shell32.dll",
 	"Apartment"
-    },
+    },*/
     { NULL }			/* list terminator */
 };
 
@@ -818,17 +818,17 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
 
 HRESULT WINAPI DoRegisterServer(void)
 {
-    HRESULT hr;
+    HRESULT hr = S_OK;
 
     TRACE("\n");
 
-    hr = register_coclasses(coclass_list);
-    if (SUCCEEDED(hr))
-	hr = register_interfaces(interface_list);
-    if (SUCCEEDED(hr))
-	hr = SHELL_RegisterShellFolders();
-    if (SUCCEEDED(hr))
-        hr = register_namespace_extensions(namespace_extensions_list);
+    //hr = register_coclasses(coclass_list);
+    //if (SUCCEEDED(hr))
+    //    hr = register_interfaces(interface_list);
+    //if (SUCCEEDED(hr))
+    //    hr = SHELL_RegisterShellFolders();
+    //if (SUCCEEDED(hr))
+    //    hr = register_namespace_extensions(namespace_extensions_list);
     return hr;
 }
 

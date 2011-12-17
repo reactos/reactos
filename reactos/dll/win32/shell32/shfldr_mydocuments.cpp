@@ -36,15 +36,15 @@ CFSFolder::EnumObjects.
 class CFileSysEnumX :
     public IEnumIDListImpl
 {
-private:
-public:
-    CFileSysEnumX();
-    ~CFileSysEnumX();
-    HRESULT WINAPI Initialize(DWORD dwFlags);
+    private:
+    public:
+        CFileSysEnumX();
+        ~CFileSysEnumX();
+        HRESULT WINAPI Initialize(DWORD dwFlags);
 
-BEGIN_COM_MAP(CFileSysEnumX)
-    COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-END_COM_MAP()
+        BEGIN_COM_MAP(CFileSysEnumX)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
 };
 
 static const shvheader MyDocumentsSFHeader[] = {
@@ -102,7 +102,7 @@ HRESULT WINAPI CMyDocsFolder::FinalConstruct()
 }
 
 HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-                DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
@@ -168,7 +168,7 @@ HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
         if (szNext && *szNext)
         {
             hr = SHELL32_ParseNextElement(this, hwndOwner, pbc,
-                    &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
+                                          &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
         }
         else
         {
@@ -349,14 +349,14 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, D
  *
  */
 HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
-                REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
+        REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
-       this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
+           this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
 
     if (!ppvOut)
         return hr;
@@ -370,7 +370,7 @@ HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMID
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
         hr = IDataObject_Constructor( hwndOwner,
-                                                  pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+                                      pidlRoot, apidl, cidl, (IDataObject **)&pObj);
     }
     else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
     {
@@ -419,16 +419,16 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
     if (!strRet)
         return E_INVALIDARG;
 
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH +1) * sizeof(WCHAR));
+    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
 
-    ZeroMemory(pszPath, (MAX_PATH +1) * sizeof(WCHAR));
+    ZeroMemory(pszPath, (MAX_PATH + 1) * sizeof(WCHAR));
 
     if (_ILIsMyDocuments (pidl))
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-            (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
+                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
             wcscpy(pszPath, sPathTarget);
         else
             HCR_GetClassNameW(CLSID_MyDocuments, pszPath, MAX_PATH);
@@ -459,12 +459,13 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
                 {
                     /* get the "WantsFORPARSING" flag from the registry */
                     static const WCHAR clsidW[] =
-                     { 'C','L','S','I','D','\\',0 };
+                    { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
                     static const WCHAR shellfolderW[] =
-                     { '\\','s','h','e','l','l','f','o','l','d','e','r',0 };
+                    { '\\', 's', 'h', 'e', 'l', 'l', 'f', 'o', 'l', 'd', 'e', 'r', 0 };
                     static const WCHAR wantsForParsingW[] =
-                     { 'W','a','n','t','s','F','o','r','P','a','r','s','i','n',
-                     'g',0 };
+                    {   'W', 'a', 'n', 't', 's', 'F', 'o', 'r', 'P', 'a', 'r', 's', 'i', 'n',
+                        'g', 0
+                    };
                     WCHAR szRegPath[100];
                     LONG r;
 
@@ -480,7 +481,7 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
                 }
 
                 if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                     bWantsForParsing)
+                        bWantsForParsing)
                 {
                     /*
                      * we need the filesystem path to the destination folder.
@@ -489,7 +490,7 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
                     hr = SHELL32_GetDisplayNameOfChild (this, pidl, dwFlags,
                                                         pszPath,
                                                         MAX_PATH);
-                            TRACE("CP\n");
+                    TRACE("CP\n");
                 }
                 else
                 {
@@ -497,14 +498,14 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
                     pszPath[0] = ':';
                     pszPath[1] = ':';
                     SHELL32_GUIDToStringW (*clsid, &pszPath[2]);
-                            TRACE("CP\n");
+                    TRACE("CP\n");
                 }
             }
             else
             {
                 /* user friendly name */
                 HCR_GetClassNameW (*clsid, pszPath, MAX_PATH);
-                        TRACE("CP\n");
+                TRACE("CP\n");
             }
         }
         else
@@ -513,7 +514,7 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
 
             /* file system folder or file rooted at the desktop */
             if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
-                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
+                    (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
             {
                 lstrcpynW(pszPath, sPathTarget, MAX_PATH - 1);
                 TRACE("CP %s\n", debugstr_w(pszPath));
@@ -527,7 +528,7 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
                 if (!_ILIsFolder(pidl))
                 {
                     SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-                            TRACE("CP\n");
+                    TRACE("CP\n");
                 }
             }
         }
@@ -537,7 +538,7 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
         /* a complex pidl, let the subfolder do the work */
         hr = SHELL32_GetDisplayNameOfChild (this, pidl, dwFlags,
                                             pszPath, MAX_PATH);
-                        TRACE("CP\n");                                
+        TRACE("CP\n");
     }
 
     if (SUCCEEDED(hr))
@@ -553,7 +554,7 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
 }
 
 HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
-                LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+                                        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl,
            debugstr_w (lpName), dwFlags, pPidlOut);
@@ -590,7 +591,7 @@ HRESULT WINAPI CMyDocsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlag
     TRACE ("(%p)\n", this);
 
     if (!pcsFlags || iColumn >= MYDOCUMENTSSHELLVIEWCOLUMNS)
-    return E_INVALIDARG;
+        return E_INVALIDARG;
 
     *pcsFlags = MyDocumentsSFHeader[iColumn].pcsFlags;
 
@@ -627,22 +628,22 @@ HRESULT WINAPI CMyDocsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHE
     psd->str.uType = STRRET_CSTR;
     switch (iColumn)
     {
-    case 0:        /* name */
-        hr = GetDisplayNameOf(pidl,
-                   SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        break;
-    case 1:        /* size */
-        _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
-        break;
-    case 2:        /* type */
-        _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
-        break;
-    case 3:        /* date */
-        _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
-        break;
-    case 4:        /* attributes */
-        _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
-        break;
+        case 0:        /* name */
+            hr = GetDisplayNameOf(pidl,
+                                  SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+            break;
+        case 1:        /* size */
+            _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
+            break;
+        case 2:        /* type */
+            _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
+            break;
+        case 3:        /* date */
+            _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
+            break;
+        case 4:        /* attributes */
+            _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
+            break;
     }
 
     return hr;
@@ -656,8 +657,8 @@ HRESULT WINAPI CMyDocsFolder::MapColumnToSCID (UINT column, SHCOLUMNID *pscid)
 
 HRESULT WINAPI CMyDocsFolder::GetClassID(CLSID *lpClassId)
 {
-    static GUID const CLSID_MyDocuments = 
-    { 0x450d8fba, 0xad25, 0x11d0, {0x98,0xa8,0x08,0x00,0x36,0x1b,0x11,0x03} };
+    static GUID const CLSID_MyDocuments =
+    { 0x450d8fba, 0xad25, 0x11d0, {0x98, 0xa8, 0x08, 0x00, 0x36, 0x1b, 0x11, 0x03} };
 
     TRACE ("(%p)\n", this);
 
