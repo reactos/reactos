@@ -436,7 +436,7 @@ HRESULT WINAPI CFontsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDL
 */
 HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    PIDLFontStruct * pfont;
+    PIDLFontStruct *pFont;
 
     TRACE("ISF_Fonts_fnGetDisplayNameOf (%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump (pidl);
@@ -444,16 +444,38 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags,
     if (!strRet)
         return E_INVALIDARG;
 
-    pfont = _ILGetFontStruct(pidl);
-    if (!pfont)
+    pFont = _ILGetFontStruct(pidl);
+    if (pFont)
+    {
+        strRet->pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(pFont->szName)+1) * sizeof(WCHAR));
+        if (!strRet->pOleStr)
+            return E_OUTOFMEMORY;
+
+        wcscpy(strRet->pOleStr, pFont->szName);
+        strRet->uType = STRRET_WSTR;
+    }
+    else if (!pidl->mkid.cb)
+    {
+        WCHAR wszPath[MAX_PATH];
+
+        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
+            (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
+        {
+            if (!SHGetSpecialFolderPathW(NULL, wszPath, CSIDL_FONTS, FALSE))
+                return E_FAIL;
+        }
+        else if (!HCR_GetClassNameW(CLSID_FontsFolderShortcut, wszPath, MAX_PATH))
+            return E_FAIL;
+
+        strRet->pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(wszPath) + 1) * sizeof(WCHAR));
+        if (!strRet->pOleStr)
+            return E_OUTOFMEMORY;
+
+        wcscpy(strRet->pOleStr, wszPath);
+        strRet->uType = STRRET_WSTR;
+    }
+    else
         return E_INVALIDARG;
-
-    strRet->pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(pfont->szName)+1) * sizeof(WCHAR));
-    if (!strRet->pOleStr)
-        return E_OUTOFMEMORY;
-
-    wcscpy(strRet->pOleStr, pfont->szName);
-    strRet->uType = STRRET_WSTR;
 
     return S_OK;
 }

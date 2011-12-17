@@ -1131,13 +1131,18 @@ HRESULT CDefView::OpenSelectedItems()
                     ici.lpVerb = MAKEINTRESOURCEA( def );
                     ici.hwnd = m_hWnd;
 
-                    if (cm->InvokeCommand((LPCMINVOKECOMMANDINFO) &ici ) == S_OK)
+                    hr = cm->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
+                    if (hr == S_OK)
                     {
-                        DestroyMenu( hmenu );
+                        DestroyMenu(hmenu);
                         hr = IUnknown_SetSite(cm, NULL);
                         return S_OK;
                     }
+                    else
+                        ERR("InvokeCommand failed: %x\n", hr);
                 }
+                else
+                    ERR("No default context menu item\n");
                 
             }
             DestroyMenu( hmenu );
@@ -1160,7 +1165,7 @@ HRESULT CDefView::OpenSelectedItems()
     {
         CF_IDLIST = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     }
-    
+
     fetc.cfFormat = CF_IDLIST;
     fetc.ptd = NULL;
     fetc.dwAspect = DVASPECT_CONTENT;

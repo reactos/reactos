@@ -23,7 +23,7 @@ HKCR
 			}
 			'ShellFolder'
 			{
-				val Attributes = d '&H60000100'
+				val Attributes = d '&H60000000'
 				val WantsFORPARSING = s ''
 			}
 		}

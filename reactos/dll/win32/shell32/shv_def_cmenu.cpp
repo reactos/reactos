@@ -309,6 +309,7 @@ HasClipboardData()
     return ret;
 }
 
+static
 VOID
 DisablePasteOptions(HMENU hMenu)
 {
@@ -338,28 +339,25 @@ IDefaultContextMenuImpl::IsShellExtensionAlreadyLoaded(const CLSID * szClass)
 
 
 HRESULT
-IDefaultContextMenuImpl::SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, BOOL bExternalInit)
+IDefaultContextMenuImpl::SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * pClass, BOOL bExternalInit)
 {
   HRESULT hr;
   IContextMenu * cmobj;
   IShellExtInit *shext;
   PDynamicShellEntry curEntry;
-  //WCHAR szTemp[100];
   LPOLESTR pstr;
 
-  StringFromCLSID(*szClass, &pstr);
+  StringFromCLSID(*pClass, &pstr);
 
-  TRACE("SH_LoadDynamicContextMenuHandler entered with This %p hKey %p szClass %s bExternalInit %u\n",this, hKey, wine_dbgstr_guid(szClass), bExternalInit);
-  //swprintf(szTemp, L"This %p hKey %p szClass %s bExternalInit %u", this, hKey, pstr, bExternalInit);
-  //MessageBoxW(NULL, szTemp, NULL, MB_OK);
+  TRACE("SH_LoadDynamicContextMenuHandler entered with This %p hKey %p pClass %s bExternalInit %u\n", this, hKey, wine_dbgstr_guid(pClass), bExternalInit);
 
-  if (IsShellExtensionAlreadyLoaded(szClass))
+  if (IsShellExtensionAlreadyLoaded(pClass))
       return S_OK;
 
-  hr = SHCoCreateInstance(NULL, szClass, NULL, IID_IContextMenu, (void**)&cmobj);
+  hr = SHCoCreateInstance(NULL, pClass, NULL, IID_IContextMenu, (void**)&cmobj);
   if (hr != S_OK)
   {
-      TRACE("SHCoCreateInstance failed %x\n", GetLastError());
+      ERR("SHCoCreateInstance failed %x\n", GetLastError());
       return hr;
   }
 
@@ -368,7 +366,7 @@ IDefaultContextMenuImpl::SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID
       hr = cmobj->QueryInterface(IID_IShellExtInit, (void**)&shext);
       if (hr != S_OK)
       {
-        TRACE("Failed to query for interface IID_IShellExtInit\n");
+        ERR("Failed to query for interface IID_IShellExtInit hr %x pClass %s\n", hr, wine_dbgstr_guid(pClass));
         cmobj->Release();
         return FALSE;
       }
@@ -376,7 +374,7 @@ IDefaultContextMenuImpl::SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID
       shext->Release();
       if (hr != S_OK)
       {
-        TRACE("Failed to initialize shell extension error %x\n", hr);
+        TRACE("Failed to initialize shell extension error %x pClass %s\n", hr, wine_dbgstr_guid(pClass));
         cmobj->Release();
         return hr;
       }
@@ -393,7 +391,7 @@ IDefaultContextMenuImpl::SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID
   curEntry->Next = NULL;
   curEntry->NumIds = 0;
   curEntry->CMenu = cmobj;
-  memcpy(&curEntry->ClassID, szClass, sizeof(CLSID));
+  memcpy(&curEntry->ClassID, pClass, sizeof(CLSID));
 
   if (dhead)
   {
@@ -660,7 +658,7 @@ IDefaultContextMenuImpl::AddStaticContextMenusToMenu(
             }
             else
             {
-                TRACE("Failed to load string, defaulting to NULL value for mii.dwTypeData\n");
+                ERR("Failed to load string, defaulting to NULL value for mii.dwTypeData\n");
             }
         }
         else
@@ -728,7 +726,7 @@ void WINAPI _InsertMenuItemW (
             }
             else
             {
-                TRACE("failed to load string %p\n", dwTypeData);
+                ERR("failed to load string %p\n", dwTypeData);
                 return;
             }
         }
@@ -766,9 +764,11 @@ IDefaultContextMenuImpl::BuildShellItemContextMenu(
 
     TRACE("BuildShellItemContextMenu entered\n");
 
-    if (dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strFile) == S_OK)
+    hr = dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strFile);
+    if (hr == S_OK)
     {
-        if (StrRetToBufW(&strFile, dcm.apidl[0], szPath, MAX_PATH) == S_OK)
+        hr = StrRetToBufW(&strFile, dcm.apidl[0], szPath, MAX_PATH);
+        if (hr == S_OK)
         {
             pOffset = wcsrchr(szPath, L'.');
             if (pOffset)
@@ -803,6 +803,8 @@ IDefaultContextMenuImpl::BuildShellItemContextMenu(
             }
         }
     }
+    else
+        ERR("GetDisplayNameOf failed: %x\n", hr);
 
     guid = _ILGetGUIDPointer(dcm.apidl[0]);
     if (guid)
@@ -841,10 +843,13 @@ IDefaultContextMenuImpl::BuildShellItemContextMenu(
     /* add static actions */
     rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
     hr = dcm.psf->GetAttributesOf(dcm.cidl, dcm.apidl, &rfg);
-    if (!SUCCEEDED(hr))
+    if (FAILED(hr))
+    {
+        WARN("GetAttributesOf failed: %x\n", hr);
         rfg = 0;
+    }
 
-    if (rfg & SFGAO_FOLDER)
+    if ((rfg & SFGAO_FOLDER) || _ILIsControlPanel(dcm.apidl[dcm.cidl]))
     {
         /* add the default verbs open / explore */
         SH_AddStaticEntryForFileClass(L"Folder");
@@ -1156,8 +1161,7 @@ HRESULT
 IDefaultContextMenuImpl::DoOpenOrExplore(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-
-
+    UNIMPLEMENTED;
     return E_FAIL;
 }
 
@@ -1450,7 +1454,7 @@ IDefaultContextMenuImpl::DoProperties(
     {
         //FIXME path!
         ShellExecuteW(NULL, L"open", L"explorer.exe",
-                      L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", 
+                      L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", 
                       NULL, SW_SHOWDEFAULT);
         return S_OK;
     }
@@ -1697,7 +1701,7 @@ SHCreateDefaultContextMenu(
 
    *ppv = NULL;
    hr = IDefaultContextMenu_Constructor( pdcm, riid, ppv );
-
+   if (FAILED(hr)) WARN("IDefaultContextMenu_Constructor failed: %x\n", hr);
    TRACE("pcm %p hr %x\n", pdcm, hr);
    return hr;
 }

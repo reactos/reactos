@@ -1222,11 +1222,17 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
         return FALSE;
 
     hr = SHBindToParent(pidl, IID_IShellFolder, (VOID**)&psfFolder, &pidlLast);
-    if (FAILED(hr)) return FALSE;
+    if (FAILED(hr))
+    {
+        ERR("SHBindToParent failed: %x\n", hr);
+        return FALSE;
+    }
 
     dwAttributes = SFGAO_FILESYSTEM;
     hr = psfFolder->GetAttributesOf(1, &pidlLast, &dwAttributes);
-    if (FAILED(hr) || !(dwAttributes & SFGAO_FILESYSTEM)) {
+    if (FAILED(hr) || !(dwAttributes & SFGAO_FILESYSTEM))
+    {
+        WARN("Wrong dwAttributes or GetAttributesOf failed: %x\n", hr);
         return FALSE;
     }
 
@@ -1592,7 +1598,7 @@ BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
 {
     TRACE("(%p)\n",pidl);
 
-    return pidl && pidl->mkid.cb  ? 0 : 1;
+    return pidl && pidl->mkid.cb ? 0 : 1;
 }
 
 BOOL _ILIsMyDocuments(LPCITEMIDLIST pidl)

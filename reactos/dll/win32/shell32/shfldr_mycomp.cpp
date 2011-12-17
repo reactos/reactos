@@ -136,11 +136,12 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
                             RegGetValueW(hKey, wszBuf, NULL, RRF_RT_REG_SZ, NULL, wszBuf, &dwSize);
                         }
 
-                        /* FIXME: shell extensions, shouldn't the type be
-                         * PT_SHELLEXT? */
+                        /* FIXME: shell extensions - the type should be PT_SHELLEXT (tested) */
                         pidl = _ILCreateGuidFromStrW(wszBuf);
                         if (pidl != NULL)
                             bRet = AddToEnumList(pidl);
+                        else
+                            ERR("Invalid MyComputer namespace extesion: %s\n", wszBuf);
                         j++;
                     }
                     else if (ERROR_NO_MORE_ITEMS == ErrorCode)
@@ -171,17 +172,19 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
 {
     DWORD dwSize;
     WCHAR szName[MAX_PATH];
+    WCHAR wszMyCompKey[256];
+    INT i;
 
     pidlRoot = _ILCreateMyComputer();    /* my qualified pidl */
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
+    i = swprintf(wszMyCompKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\");
+    StringFromGUID2(CLSID_MyComputer, wszMyCompKey + i, sizeof(wszMyCompKey)/sizeof(wszMyCompKey[0]) - i);
     dwSize = sizeof(szName);
-    if (RegGetValueW(HKEY_CURRENT_USER,
-                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+    if (RegGetValueW(HKEY_CURRENT_USER, wszMyCompKey,
                      NULL, RRF_RT_REG_SZ, NULL, szName, &dwSize) == ERROR_SUCCESS)
     {
-        szName[MAX_PATH - 1] = 0;
         sName = (LPWSTR)SHAlloc((wcslen(szName) + 1) * sizeof(WCHAR));
         if (sName)
         {
@@ -384,10 +387,12 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf (UINT cidl, LPCITEMIDLIST * apidl,
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    if(cidl == 0) {
+    if(cidl == 0)
         *rgfInOut &= dwComputerAttributes;
-    } else {
-        while (cidl > 0 && *apidl) {
+    else
+    {
+        while (cidl > 0 && *apidl)
+        {
             pdump (*apidl);
             SHELL32_GetItemAttributes (this, *apidl, rgfInOut);
             apidl++;

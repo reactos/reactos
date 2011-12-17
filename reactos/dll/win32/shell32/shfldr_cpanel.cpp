@@ -480,13 +480,14 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * a
         return E_INVALIDARG;
 
     if (*rgfInOut == 0)
-    *rgfInOut = ~0;
+        *rgfInOut = ~0;
 
-    while(cidl > 0 && *apidl) {
-    pdump(*apidl);
-    SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
-    apidl++;
-    cidl--;
+    while(cidl > 0 && *apidl)
+    {
+        pdump(*apidl);
+        SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+        apidl++;
+        cidl--;
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
@@ -567,14 +568,15 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
     CHAR szName[MAX_PATH];
     WCHAR wszName[MAX_PATH+1]; /* +1 for potential backslash */
     PIDLCPanelStruct *pCPanel;
+    HRESULT hr;
 
     *szName = '\0';
 
     TRACE("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump(pidl);
 
-    if (!pidl || !strRet)
-    return E_INVALIDARG;
+    if (!pidl)
+        return S_FALSE;
 
     pCPanel = _ILGetCPanelPointer(pidl);
 
@@ -588,38 +590,38 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
     else if (_ILIsSpecialFolder(pidl))
     {
         BOOL bSimplePidl = _ILIsPidlSimple(pidl);
-
-        if (bSimplePidl)
+        SFGAOF Attr = SFGAO_FILESYSTEM;
+        
+        SHELL32_GetItemAttributes(this, pidl, &Attr);
+        if (Attr & SFGAO_FILESYSTEM)
+        {
+            hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszName, sizeof(wszName));
+            if (FAILED(hr))
+                return hr;
+        }
+        else if (bSimplePidl)
         {
             _ILSimpleGetTextW(pidl, wszName, MAX_PATH);    /* append my own path */
         }
         else
         {
             FIXME("special pidl\n");
-        }
-
-        if ((dwFlags & SHGDN_FORPARSING) && !bSimplePidl)
-        {
-            /* go deeper if needed */
-            int len = 0;
-
-            PathAddBackslashW(wszName);
-            len = wcslen(wszName);
-
-            if (!SUCCEEDED(SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszName + len, MAX_PATH + 1 - len)))
-                return E_OUTOFMEMORY;
-            
-            if (!WideCharToMultiByte(CP_ACP, 0, wszName, -1, szName, MAX_PATH, NULL, NULL))
-                wszName[0] = '\0';
-        }
-        else
-        {
-            if (bSimplePidl)
+            if (dwFlags & SHGDN_FORPARSING)
             {
-                if (!WideCharToMultiByte(CP_ACP, 0, wszName, -1, szName, MAX_PATH, NULL, NULL))
-                    wszName[0] = '\0';
+                /* go deeper if needed */
+                int cchName;
+
+                PathAddBackslashW(wszName);
+                cchName = wcslen(wszName);
+
+                hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, wszName + cchName, MAX_PATH + 1 - cchName);
+                if (FAILED(hr))
+                    return hr;
             }
         }
+
+        if (!WideCharToMultiByte(CP_ACP, 0, wszName, -1, szName, MAX_PATH, NULL, NULL))
+            szName[0] = '\0';
     }
 
     strRet->uType = STRRET_CSTR;
@@ -796,14 +798,9 @@ ExecuteAppletFromCLSID(LPOLESTR pOleStr)
     dwSize = sizeof(szCmd);
     if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, NULL, RRF_RT_REG_SZ, &dwType, (PVOID)szCmd, &dwSize) != ERROR_SUCCESS)
     {
-        ERR("RegGetValueW failed with %u\n", GetLastError());
+        ERR("RegGetValueW(%ls) failed with %u\n", szBuffer, GetLastError());
         return E_FAIL;
     }
-
-#if 0
-    if (dwType != RRF_RT_REG_SZ && dwType != RRF_RT_REG_EXPAND_SZ)
-        return E_FAIL;
-#endif
 
     if (!ExpandEnvironmentStringsW(szCmd, szExpCmd, sizeof(szExpCmd)/sizeof(WCHAR)))
         return E_FAIL;
@@ -846,7 +843,6 @@ HRESULT WINAPI CControlPanelFolder::Execute(LPSHELLEXECUTEINFOW psei)
             return E_INVALIDARG;
         if (StringFromCLSID(*iid, &pOleStr) == S_OK)
         {
-
             hr = ExecuteAppletFromCLSID(pOleStr);
             CoTaskMemFree(pOleStr);
             return hr;

@@ -318,25 +318,28 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
     TRACE ("(%p)->(pidl=%p 0x%08x %p 0x%08x)\n", psf, pidl, dwFlags, szOut, dwOutLen);
     pdump (pidl);
 
-    pidlFirst = ILCloneFirst (pidl);
-    if (pidlFirst) {
-    IShellFolder2 *psfChild;
+    pidlFirst = ILCloneFirst(pidl);
+    if (pidlFirst)
+    {
+        IShellFolder *psfChild;
 
-    hr = psf->BindToObject(pidlFirst, NULL, IID_IShellFolder, (LPVOID *) & psfChild);
-    if (SUCCEEDED (hr)) {
-        STRRET strTemp;
-        LPITEMIDLIST pidlNext = ILGetNext (pidl);
+        hr = psf->BindToObject(pidlFirst, NULL, IID_IShellFolder, (LPVOID *) & psfChild);
+        if (SUCCEEDED (hr))
+        {
+            STRRET strTemp;
+            LPITEMIDLIST pidlNext = ILGetNext (pidl);
 
-        hr = psfChild->GetDisplayNameOf(pidlNext, dwFlags, &strTemp);
-        if (SUCCEEDED (hr)) {
-        if(!StrRetToStrNW (szOut, dwOutLen, &strTemp, pidlNext))
+            hr = psfChild->GetDisplayNameOf(pidlNext, dwFlags, &strTemp);
+            if (SUCCEEDED (hr))
+            {
+                if(!StrRetToStrNW (szOut, dwOutLen, &strTemp, pidlNext))
                     hr = E_FAIL;
+            }
+            psfChild->Release();
         }
-        psfChild->Release();
-    }
-    ILFree (pidlFirst);
+        ILFree (pidlFirst);
     } else
-    hr = E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
 
     TRACE ("-- ret=0x%08x %s\n", hr, debugstr_w(szOut));
 
@@ -394,13 +397,20 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 
     dwAttributes = *pdwAttributes;
 
-    if (_ILIsDrive (pidl)) {
+    /* Attributes of some special folders are hardcoded */
+    if (_ILIsDrive(pidl)) {
         *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
-        SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME;
+                          SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME;
+    } else if (_ILIsMyComputer(pidl) || _ILIsNetHood(pidl)) {
+        *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
+                          SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANDELETE|
+                          SFGAO_CANRENAME|SFGAO_CANLINK;
+    } else if (_ILIsControlPanel(pidl)) {
+        *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_CANLINK;
     } else if (has_guid && HCR_GetFolderAttributes(pidl, &dwAttributes)) {
-    *pdwAttributes = dwAttributes;
-    } else if (_ILGetDataPointer (pidl)) {
-    dwAttributes = _ILGetFileAttributes (pidl, NULL, 0);
+        *pdwAttributes = dwAttributes;
+    } else if (_ILGetDataPointer(pidl)) {
+        dwAttributes = _ILGetFileAttributes(pidl, NULL, 0);
 
         if (!dwAttributes && has_guid) {
         WCHAR path[MAX_PATH];
@@ -419,9 +429,9 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
         }
     }
 
-        /* Set common attributes */
-        *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
-                          SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
+    /* Set common attributes */
+    *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
+                      SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
 
     if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {

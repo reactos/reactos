@@ -561,7 +561,7 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
         return E_INVALIDARG;
     }
 
-    if (_ILIsPrinter(pidl))
+    if (!pidl->mkid.cb)
     {
         pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
         if (!pszName)

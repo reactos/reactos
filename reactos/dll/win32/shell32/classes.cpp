@@ -324,7 +324,7 @@ static const WCHAR swEmpty[] = {0};
 
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 {
-    HKEY    hkey;
+    HKEY hkey;
     BOOL ret = FALSE;
     DWORD buflen = len;
     WCHAR szName[100];
@@ -346,8 +346,8 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
     {
       static const WCHAR wszLocalizedString[] =
       { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
-      if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
-              !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
+      if (RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) == ERROR_SUCCESS ||
+          !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len) == ERROR_SUCCESS)
       {
         ret = TRUE;
       }
@@ -386,8 +386,8 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
         if(LoadStringW(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
           ret = TRUE;
       }
-
     }
+
     TRACE("-- %s\n", debugstr_w(szDest));
     return ret;
 }

@@ -365,9 +365,9 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwF
     if (!pszPath)
         return E_OUTOFMEMORY;
 
-    ZeroMemory(pszPath, (MAX_PATH +1) * sizeof(WCHAR));
+    ZeroMemory(pszPath, (MAX_PATH + 1) * sizeof(WCHAR));
 
-    if (_ILIsAdminTools (pidl))
+    if (!pidl->mkid.cb)
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
             (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))

@@ -153,12 +153,11 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     HMENU hSubMenu = NULL;
     OPEN_WITH_CONTEXT Context;
     
-    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)) < 0)
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-       TRACE("failed to load string\n");
+       ERR("failed to load string\n");
        return E_FAIL;
     }
-    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
 
     hSubMenu = CreatePopupMenu();
 
@@ -798,7 +797,7 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
     MENUITEMINFOW mii;
     POPEN_ITEM_CONTEXT pItemContext;
     LRESULT index;
-    WCHAR * Offset;
+    WCHAR *pwszExt;
     WCHAR Buffer[_MAX_FNAME];
 
     pItemContext = (OPEN_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), 0, sizeof(OPEN_ITEM_CONTEXT));
@@ -807,13 +806,11 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
 
     /* store app path */
     wcscpy(pItemContext->szAppName, szAppName);
-    /* null terminate it */
-    pItemContext->szAppName[MAX_PATH-1] = 0;
     /* extract path name */
     _wsplitpath(szAppName, NULL, NULL, Buffer, NULL);
-    Offset = wcsrchr(Buffer, '.');
-    if (Offset)
-        Offset[0] = L'\0';
+    pwszExt = wcsrchr(Buffer, '.');
+    if (pwszExt)
+        pwszExt[0] = L'\0';
     Buffer[0] = towupper(Buffer[0]);
 
     if (pContext->bMenu)
@@ -840,7 +837,7 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
          pItemContext->hIcon = ExtractIconW(shell32_hInstance, szAppName, 0);
          /* get manufacturer */
         GetManufacturer(pItemContext->szAppName, pItemContext);
-         index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)Buffer);
+        index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)Buffer);
         if (index != LB_ERR)
             SendMessageW(pContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pItemContext);
     }
@@ -879,7 +876,10 @@ AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
     /* open mru list */
     hList = OpenMRUList(hKey);
     if (!hList)
+    {
+        ERR("OpenMRUList failed\n");
         return;
+    }
 
     /* get list count */
     nCount = EnumMRUListW(hList, -1, NULL, 0);
@@ -933,11 +933,11 @@ LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
 
         if (RegGetValueW(hSubKey, NULL, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szBuffer, &dwBuffer) == ERROR_SUCCESS)
         {
-            WCHAR * Ext = wcsrchr(szBuffer, ' ');
-            if (Ext)
+            WCHAR * pszSpace = wcsrchr(szBuffer, ' ');
+            if (pszSpace)
             {
                 /* erase %1 or extra arguments */
-                Ext[0] = 0;
+                *pszSpace = 0; // FIXME: what about '"'
             }
             if(!HideApplicationFromList(szBuffer))
                 InsertOpenWithItem(pContext, szBuffer);
@@ -1022,8 +1022,8 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
     LPCITEMIDLIST pidl_folder;
     LPCITEMIDLIST pidl_child; 
     LPCITEMIDLIST pidl; 
-    DWORD dwPath;
-    LPWSTR szPtr;
+    DWORD dwType;
+    LPWSTR pszExt;
     static const WCHAR szShortCut[] = { '.','l','n','k', 0 };
 
     fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
@@ -1040,11 +1040,11 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
         return hr;
     }
 
-        /*assert(pida->cidl==1);*/
     pida = (LPIDA)GlobalLock(medium.hGlobal);
+    ASSERT(pida->cidl==1);
 
-    pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
-    pidl_child = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[1]);
+    pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
+    pidl_child = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
 
     pidl = ILCombine(pidl_folder, pidl_child);
 
@@ -1057,7 +1057,7 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
         return E_OUTOFMEMORY;
     }
     if (_ILIsDesktop(pidl) || _ILIsMyDocuments(pidl) || _ILIsControlPanel(pidl) || _ILIsNetHood(pidl) ||
-        _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl) || _ILIsControlPanel(pidl))
+        _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl))
     {
         TRACE("pidl is a folder\n");
         SHFree((void*)pidl);
@@ -1066,35 +1066,35 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
 
     if (!SHGetPathFromIDListW(pidl, szPath))
     {
+        IID *iid = _ILGetGUIDPointer(pidl);
         SHFree((void*)pidl);
-        ERR("SHGetPathFromIDListW failed\n");
+        ERR("SHGetPathFromIDListW failed %s\n", iid ? shdebugstr_guid(iid) : "");
         return E_FAIL;
     }
-    
+
     SHFree((void*)pidl);
     TRACE("szPath %s\n", debugstr_w(szPath));
 
-    if (GetBinaryTypeW(szPath, &dwPath))
+    if (GetBinaryTypeW(szPath, &dwType))
     {
-        TRACE("path is a executable %x\n", dwPath);
+        TRACE("path is a executable %x\n", dwType);
         return E_FAIL;
     }
 
-    szPtr = wcsrchr(szPath, '.');
-    if (szPtr)
+    pszExt = wcsrchr(szPath, L'.');
+    if (pszExt && !_wcsicmp(pszExt, szShortCut))
     {
-        if (!_wcsicmp(szPtr, szShortCut))
-        {
-            FIXME("pidl is a shortcut\n");
-            return E_FAIL;
-        }
+        FIXME("pidl is a shortcut\n");
+        return E_FAIL;
     }
+
     return S_OK;
 }
 
 HRESULT WINAPI
 COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
-                              IDataObject *pdtobj, HKEY hkeyProgID )
+                          IDataObject *pdtobj,
+                          HKEY hkeyProgID)
 {
     TRACE("This %p\n", this);
 
@@ -1103,10 +1103,9 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     return SHEOW_LoadOpenWithItems(pdtobj);
 }
 
-HRESULT WINAPI SHOpenWithDialog(
-  HWND hwndParent,
-  const OPENASINFO *poainfo
-)
+HRESULT WINAPI
+SHOpenWithDialog(HWND hwndParent,
+                 const OPENASINFO *poainfo)
 {
     MSG msg;
     BOOL bRet;

@@ -1462,8 +1462,11 @@ STDAPI DllRegisterServer()
     if (FAILED(hr))
         return hr;
 
-    // extra registration stuff for the IShellFolder
-    return DoRegisterServer();
+    hr = SHELL_RegisterShellFolders();
+    if (FAILED(hr))
+        return hr;
+
+    return S_OK;
 }
 
 /***********************************************************************
@@ -1481,8 +1484,7 @@ STDAPI DllUnregisterServer()
     if (FAILED(hr))
         return hr;
 
-    // extra stuff which is performed for IShellFolder
-    return DoUnregisterServer();
+    return S_OK;
 }
 
 /*************************************************************************
