@@ -347,7 +347,7 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
       static const WCHAR wszLocalizedString[] =
       { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
       if (RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) == ERROR_SUCCESS ||
-          !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len) == ERROR_SUCCESS)
+          RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len) == ERROR_SUCCESS)
       {
         ret = TRUE;
       }
