@@ -583,7 +583,7 @@ HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
         SFGAOF *rgfInOut)
 {
     TRACE("(%p, %d, {%p, ...}, {%x})\n", this, cidl, apidl ? apidl[0] : NULL, (unsigned int)*rgfInOut);
-    *rgfInOut &= SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    *rgfInOut &= SFGAO_FOLDER|SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANLINK;
     return S_OK;
 }
 

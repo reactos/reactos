@@ -858,7 +858,6 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         }
     }
 
-
     if (rfg & SFGAO_FILESYSTEM)
     {
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"AllFilesystemObjects", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -899,14 +898,12 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         bAddSep = TRUE;
     }
 
-
     if (rfg & SFGAO_CANLINK)
     {
         bAddSep = FALSE;
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, FCIDM_SHVIEW_CREATELINK, MFT_STRING, MAKEINTRESOURCEW(IDS_CREATELINK), MFS_ENABLED);
     }
-
 
     if (rfg & SFGAO_CANDELETE)
     {
