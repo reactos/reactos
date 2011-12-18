@@ -382,6 +382,10 @@ NtUserEnumDisplayDevices(
             pustrDevice = NULL;
    }
 
+    /* If name is given only iDevNum==0 gives results */
+    if (pustrDevice && iDevNum != 0)
+        return FALSE;
+
     /* Acquire global USER lock */
     UserEnterShared();
 
