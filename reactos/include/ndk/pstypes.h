@@ -223,6 +223,12 @@ Author:
 #define STA_OWNS_WORKING_SET_BITS               0x1F8
 
 //
+// Kernel Process flags (maybe in ketypes.h?)
+//
+#define KPSF_AUTO_ALIGNMENT_BIT                 0
+#define KPSF_DISABLE_BOOST_BIT                  1
+
+//
 // Process Flags
 //
 #define PSF_CREATE_REPORTED_BIT                 0x1
@@ -761,6 +767,11 @@ typedef struct _PROCESS_PRIORITY_CLASS
     BOOLEAN Foreground;
     UCHAR PriorityClass;
 } PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
+
+typedef struct _PROCESS_FOREGROUND_BACKGROUND
+{
+    BOOLEAN Foreground;
+} PROCESS_FOREGROUND_BACKGROUND, *PPROCESS_FOREGROUND_BACKGROUND;
 
 //
 // Thread Information Structures for NtQueryProcessInformation

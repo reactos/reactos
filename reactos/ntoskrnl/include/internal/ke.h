@@ -269,6 +269,34 @@ KeSetDisableBoostThread(
     IN BOOLEAN Disable
 );
 
+BOOLEAN
+NTAPI
+KeSetDisableBoostProcess(
+    IN PKPROCESS Process,
+    IN BOOLEAN Disable
+);
+
+BOOLEAN
+NTAPI
+KeSetAutoAlignmentProcess(
+    IN PKPROCESS Process,
+    IN BOOLEAN Enable
+);
+
+KAFFINITY
+NTAPI
+KeSetAffinityProcess(
+    IN PKPROCESS Process,
+    IN KAFFINITY Affinity
+);
+
+VOID
+NTAPI
+KeBoostPriorityThread(
+    IN PKTHREAD Thread,
+    IN KPRIORITY Increment
+);
+
 VOID
 NTAPI
 KeBalanceSetManager(IN PVOID Context);
