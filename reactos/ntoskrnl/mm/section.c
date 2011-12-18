@@ -3165,7 +3165,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
       Segment->Protection = SectionPageProtection;
       Segment->Flags = MM_DATAFILE_SEGMENT;
       Segment->Characteristics = 0;
-      Segment->WriteCopy = FALSE;
+      Segment->WriteCopy = (SectionPageProtection & (PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY));
       if (AllocationAttributes & SEC_RESERVE)
       {
          Segment->Length = Segment->RawLength = 0;
@@ -4058,6 +4058,23 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
    PMEMORY_AREA MArea;
    NTSTATUS Status;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+
+   if (Segment->WriteCopy)
+   {
+       /* We have to do this because the not present fault
+        * and access fault handlers depend on the protection
+        * that should be granted AFTER the COW fault takes
+        * place to be in Region->Protect. The not present fault
+        * handler changes this to the correct protection for COW when
+        * mapping the pages into the process's address space. If a COW
+        * fault takes place, the access fault handler sets the page protection
+        * to these values for the newly copied pages
+        */
+       if (Protect == PAGE_WRITECOPY)
+           Protect = PAGE_READWRITE;
+       else if (Protect == PAGE_EXECUTE_WRITECOPY)
+           Protect = PAGE_EXECUTE_READWRITE;
+   }
 
    BoundaryAddressMultiple.QuadPart = 0;
 
