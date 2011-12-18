@@ -56,16 +56,18 @@
 	<file>shellpath.cpp</file>
 	<file>shellreg.cpp</file>
 	<file>shellstring.cpp</file>
-	<file>shfldr_desktop.cpp</file>
-	<file>shfldr_fs.cpp</file>
-	<file>shfldr_mycomp.cpp</file>
-	<file>shfldr_mydocuments.cpp</file>
-	<file>shfldr_printers.cpp</file>
-	<file>shfldr_admintools.cpp</file>
-	<file>shfldr_netplaces.cpp</file>
-	<file>shfldr_fonts.cpp</file>
-	<file>shfldr_cpanel.cpp</file>
-	<file>shfldr_recyclebin.cpp</file>
+	<directory name="folders">
+		<file>desktop.cpp</file>
+		<file>fs.cpp</file>
+		<file>mycomp.cpp</file>
+		<file>mydocuments.cpp</file>
+		<file>printers.cpp</file>
+		<file>admintools.cpp</file>
+		<file>netplaces.cpp</file>
+		<file>fonts.cpp</file>
+		<file>cpanel.cpp</file>
+		<file>recyclebin.cpp</file>
+	</directory>
 	<file>shlexec.cpp</file>
 	<file>shlfileop.cpp</file>
 	<file>shlfolder.cpp</file>
@@ -73,15 +75,14 @@
 	<file>shlmenu.cpp</file>
 	<file>shlview.cpp</file>
 	<file>shpolicy.cpp</file>
-	<file>shv_def_cmenu.cpp</file>
-	<file>startmenu.cpp</file>
 	<file>stubs.cpp</file>
-	<file>ros-systray.cpp</file>
-	<file>regsvr.c</file>
+	<file>systray.cpp</file>
 	<file>fprop.cpp</file>
 	<file>drive.cpp</file>
-	<file>she_ocmenu.cpp</file>
-	<file>shv_item_new.cpp</file>
+	<file>defcontextmenu.cpp</file>
+	<file>startmenu.cpp</file>
+	<file>openwithmenu.cpp</file>
+	<file>newmenu.cpp</file>
 	<file>folder_options.cpp</file>
 	<file>shell32.rc</file>
 </module>

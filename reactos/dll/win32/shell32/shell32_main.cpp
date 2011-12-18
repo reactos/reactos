@@ -1258,7 +1258,7 @@ EXTERN_C void WINAPI FreeIconList( DWORD dw )
 /*************************************************************************
  * SHLoadNonloadedIconOverlayIdentifiers (SHELL32.@)
  */
-EXTERN_C HRESULT WINAPI SHLoadNonloadedIconOverlayIdentifiers( VOID )
+EXTERN_C HRESULT WINAPI SHLoadNonloadedIconOverlayIdentifiers(VOID)
 {
     FIXME("stub\n");
     return S_OK;
@@ -1293,32 +1293,6 @@ END_OBJECT_MAP()
 
 CShell32Module                                gModule;
 
-
-/*
-static const struct {
-    REFIID            riid;
-    LPFNCREATEINSTANCE    lpfnCI;
-} InterfaceTable[] = {
-    {CLSID_ShellFSFolder,    &IFSFolder_Constructor},
-    {CLSID_MyComputer,    &ISF_MyComputer_Constructor},
-    {CLSID_ShellDesktop,    &ISF_Desktop_Constructor},
-    {CLSID_ShellItem,    &IShellItem_Constructor},
-    {CLSID_ShellLink,    &IShellLink_Constructor},
-    {CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
-    {CLSID_ControlPanel,    &IControlPanel_Constructor},
-    {CLSID_AutoComplete,   &IAutoComplete_Constructor},
-    {CLSID_MyDocuments,    &ISF_MyDocuments_Constructor},
-    {CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
-    {CLSID_FontsFolderShortcut, &ISF_Fonts_Constructor},
-    {CLSID_Printers,       &ISF_Printers_Constructor},
-    {CLSID_AdminFolderShortcut, &ISF_AdminTools_Constructor},
-    {CLSID_RecycleBin,     &RecycleBin_Constructor},
-    {CLSID_OpenWithMenu,   &SHEOW_Constructor},
-    {CLSID_NewMenu,        &INewItem_Constructor},
-    {CLSID_StartMenu,      &StartMenu_Constructor},
-    {CLSID_MenuBandSite,   &MenuBandSite_Constructor},
-};
-*/
 
 /***********************************************************************
  * DllGetVersion [SHELL32.@]

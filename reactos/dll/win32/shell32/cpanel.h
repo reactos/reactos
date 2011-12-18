@@ -22,26 +22,28 @@
 
 #include "cpl.h"
 
-typedef struct CPlApplet {
-    struct CPlApplet*   next;		/* linked list */
-    HWND		hWnd;
-    unsigned		count;		/* number of subprograms */
-    HMODULE     	hModule;	/* module of loaded applet */
-    APPLET_PROC		proc;		/* entry point address */
-    NEWCPLINFOW		info[1];	/* array of count information.
-					 * dwSize field is 0 if entry is invalid */
+typedef struct CPlApplet
+{
+    struct CPlApplet *next;       /* linked list */
+    HWND              hWnd;
+    unsigned          count;      /* number of subprograms */
+    HMODULE           hModule;    /* module of loaded applet */
+    APPLET_PROC       proc;       /* entry point address */
+    NEWCPLINFOW       info[1];    /* array of count information.
+                     * dwSize field is 0 if entry is invalid */
 } CPlApplet;
 
-typedef struct CPanel {
-    CPlApplet*		first;		/* linked list */
-    HWND		hWnd;
-    unsigned            status;
-    CPlApplet*		clkApplet;
-    unsigned            clkSP;
+typedef struct CPanel
+{
+    CPlApplet *first;      /* linked list */
+    HWND       hWnd;
+    unsigned   status;
+    CPlApplet *clkApplet;
+    unsigned   clkSP;
 } CPanel;
 
 
-CPlApplet* Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel);
-CPlApplet* Control_UnloadApplet(CPlApplet* applet);
+CPlApplet *Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel);
+CPlApplet *Control_UnloadApplet(CPlApplet* applet);
 
 #endif /* __WINE_SHELL_CPANEL_H */

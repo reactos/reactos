@@ -43,16 +43,16 @@ list(APPEND SOURCE
     shellpath.cpp
     shellreg.cpp
     shellstring.cpp
-    shfldr_desktop.cpp
-    shfldr_fs.cpp
-    shfldr_mycomp.cpp
-    shfldr_mydocuments.cpp
-    shfldr_printers.cpp
-    shfldr_admintools.cpp
-    shfldr_netplaces.cpp
-    shfldr_fonts.cpp
-    shfldr_cpanel.cpp
-    shfldr_recyclebin.cpp
+    folders/desktop.cpp
+    folders/fs.cpp
+    folders/mycomp.cpp
+    folders/mydocuments.cpp
+    folders/printers.cpp
+    folders/admintools.cpp
+    folders/netplaces.cpp
+    folders/fonts.cpp
+    folders/cpanel.cpp
+    folders/recyclebin.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp
@@ -60,16 +60,15 @@ list(APPEND SOURCE
     shlmenu.cpp
     shlview.cpp
     shpolicy.cpp
-    shv_def_cmenu.cpp
-    startmenu.cpp
     stubs.cpp
-    ros-systray.cpp
+    systray.cpp
     fprop.cpp
     drive.cpp
-    she_ocmenu.cpp
-    shv_item_new.cpp
+    defcontextmenu.cpp
+    openwithmenu.cpp
+    newmenu.cpp
+    startmenu.cpp
     folder_options.cpp
-    regsvr.c
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)

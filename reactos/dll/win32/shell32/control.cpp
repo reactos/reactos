@@ -350,7 +350,7 @@ static void Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
     Control_DoInterface(panel, hWnd, hInst);
 }
 
-static    void    Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
+static void Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
    /* forms to parse:
     *    foo.cpl,@sp,str
     *    foo.cpl,@sp

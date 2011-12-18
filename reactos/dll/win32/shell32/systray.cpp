@@ -1,9 +1,8 @@
 /*
- * Systray handling
+ * Copyright 2004 Martin Fuchs
  *
- * Copyright 1999 Kai Morich	<kai.morich@bigfoot.de>
- * Copyright 2004 Mike Hearn, for CodeWeavers
- * Copyright 2005 Robert Shearman
+ * Pass on icon notification messages to the systray implementation
+ * in the currently running shell.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,168 +16,58 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(systray);
+/* copy data structure for tray notifications */
+typedef struct TrayNotifyCDS_Dummy {
+    DWORD    cookie;
+    DWORD    notify_code;
+    DWORD    nicon_data[1];    // placeholder for NOTIFYICONDATA structure
+} TrayNotifyCDS_Dummy;
 
-static const WCHAR classname[] = /* Shell_TrayWnd */ {'S','h','e','l','l','_','T','r','a','y','W','n','d','\0'};
+/* The only difference between Shell_NotifyIconA and Shell_NotifyIconW is the call to SendMessageA/W. */
+static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, int nid_size, BOOL unicode)
+{
+    HWND hwnd;
+    COPYDATASTRUCT data;
+
+    BOOL ret = FALSE;
+    int len = sizeof(TrayNotifyCDS_Dummy) - sizeof(DWORD) + nid_size;
+
+    TrayNotifyCDS_Dummy* pnotify_data = (TrayNotifyCDS_Dummy*) alloca(len);
+
+    pnotify_data->cookie = 1;
+    pnotify_data->notify_code = dwMessage;
+    memcpy(&pnotify_data->nicon_data, pnid, nid_size);
+
+    data.dwData = 1;
+    data.cbData = len;
+    data.lpData = pnotify_data;
+
+    for(hwnd = 0; (hwnd = FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL)); )
+        if ((unicode ? SendMessageW : SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
+            ret = TRUE;
+
+    return ret;
+}
+
 
 /*************************************************************************
- * Shell_NotifyIcon			[SHELL32.296]
- * Shell_NotifyIconA			[SHELL32.297]
+ * Shell_NotifyIcon            [SHELL32.296]
+ * Shell_NotifyIconA            [SHELL32.297]
  */
 BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
 {
-    NOTIFYICONDATAW nidW;
-    INT cbSize;
-
-    /* Validate the cbSize as Windows XP does */
-    if (pnid->cbSize != NOTIFYICONDATAA_V1_SIZE &&
-        pnid->cbSize != NOTIFYICONDATAA_V2_SIZE &&
-        pnid->cbSize != NOTIFYICONDATAA_V3_SIZE &&
-        pnid->cbSize != sizeof(NOTIFYICONDATAA))
-    {
-        WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
-            pnid->cbSize, NOTIFYICONDATAA_V1_SIZE);
-        cbSize = NOTIFYICONDATAA_V1_SIZE;
-    }
-    else
-        cbSize = pnid->cbSize;
-
-    ZeroMemory(&nidW, sizeof(nidW));
-    nidW.cbSize = sizeof(nidW);
-    nidW.hWnd   = pnid->hWnd;
-    nidW.uID    = pnid->uID;
-    nidW.uFlags = pnid->uFlags;
-    nidW.uCallbackMessage = pnid->uCallbackMessage;
-    nidW.hIcon  = pnid->hIcon;
-
-    /* szTip */
-    if (pnid->uFlags & NIF_TIP)
-        MultiByteToWideChar(CP_ACP, 0, pnid->szTip, -1, nidW.szTip, sizeof(nidW.szTip)/sizeof(WCHAR));
-
-    if (cbSize >= NOTIFYICONDATAA_V2_SIZE)
-    {
-        nidW.dwState      = pnid->dwState;
-        nidW.dwStateMask  = pnid->dwStateMask;
-
-        /* szInfo, szInfoTitle */
-        if (pnid->uFlags & NIF_INFO)
-        {
-            MultiByteToWideChar(CP_ACP, 0, pnid->szInfo, -1,  nidW.szInfo, sizeof(nidW.szInfo)/sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, pnid->szInfoTitle, -1, nidW.szInfoTitle, sizeof(nidW.szInfoTitle)/sizeof(WCHAR));
-        }
-
-        nidW.u.uTimeout = pnid->u.uTimeout;
-        nidW.dwInfoFlags = pnid->dwInfoFlags;
-    }
-
-    if (cbSize >= NOTIFYICONDATAA_V3_SIZE)
-        nidW.guidItem = pnid->guidItem;
-
-    if (cbSize >= sizeof(NOTIFYICONDATAA))
-        nidW.hBalloonIcon = pnid->hBalloonIcon;
-    return Shell_NotifyIconW(dwMessage, &nidW);
+    return SHELL_NotifyIcon(dwMessage, pnid, pnid->hWnd, pnid->cbSize, FALSE);
 }
 
 /*************************************************************************
- * Shell_NotifyIconW			[SHELL32.298]
+ * Shell_NotifyIconW            [SHELL32.298]
  */
-BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW nid)
+BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
 {
-    HWND tray;
-    COPYDATASTRUCT cds;
-    char *buffer = NULL;
-    BOOL ret;
-
-    TRACE("dwMessage = %d, nid->cbSize=%d\n", dwMessage, nid->cbSize);
-
-    /* Validate the cbSize so that WM_COPYDATA doesn't crash the application */
-    if (nid->cbSize != NOTIFYICONDATAW_V1_SIZE &&
-        nid->cbSize != NOTIFYICONDATAW_V2_SIZE &&
-        nid->cbSize != NOTIFYICONDATAW_V3_SIZE &&
-        nid->cbSize != sizeof(NOTIFYICONDATAW))
-    {
-        NOTIFYICONDATAW newNid;
-
-        WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
-            nid->cbSize, NOTIFYICONDATAW_V1_SIZE);
-        CopyMemory(&newNid, nid, NOTIFYICONDATAW_V1_SIZE);
-        newNid.cbSize = NOTIFYICONDATAW_V1_SIZE;
-        return Shell_NotifyIconW(dwMessage, &newNid);
-    }
-
-    tray = FindWindowExW(0, NULL, classname, NULL);
-    if (!tray) return FALSE;
-
-    cds.dwData = dwMessage;
-
-    /* FIXME: if statement only needed because we don't support interprocess
-     * icon handles */
-    if (nid->uFlags & NIF_ICON)
-    {
-        ICONINFO iconinfo;
-        BITMAP bmMask;
-        BITMAP bmColour;
-        LONG cbMaskBits;
-        LONG cbColourBits;
-
-        if (!GetIconInfo(nid->hIcon, &iconinfo))
-            goto noicon;
-
-        if (!GetObjectW(iconinfo.hbmMask, sizeof(bmMask), &bmMask) ||
-            !GetObjectW(iconinfo.hbmColor, sizeof(bmColour), &bmColour))
-        {
-            DeleteObject(iconinfo.hbmMask);
-            DeleteObject(iconinfo.hbmColor);
-            goto noicon;
-        }
-
-        cbMaskBits = (bmMask.bmPlanes * bmMask.bmWidth * bmMask.bmHeight * bmMask.bmBitsPixel) / 8;
-        cbColourBits = (bmColour.bmPlanes * bmColour.bmWidth * bmColour.bmHeight * bmColour.bmBitsPixel) / 8;
-        cds.cbData = nid->cbSize + 2*sizeof(BITMAP) + cbMaskBits + cbColourBits;
-        buffer = HeapAlloc(GetProcessHeap(), 0, cds.cbData);
-        if (!buffer)
-        {
-            DeleteObject(iconinfo.hbmMask);
-            DeleteObject(iconinfo.hbmColor);
-            return FALSE;
-        }
-        cds.lpData = buffer;
-
-        memcpy(buffer, nid, nid->cbSize);
-        buffer += nid->cbSize;
-        memcpy(buffer, &bmMask, sizeof(bmMask));
-        buffer += sizeof(bmMask);
-        memcpy(buffer, &bmColour, sizeof(bmColour));
-        buffer += sizeof(bmColour);
-        GetBitmapBits(iconinfo.hbmMask, cbMaskBits, buffer);
-        buffer += cbMaskBits;
-        GetBitmapBits(iconinfo.hbmColor, cbColourBits, buffer);
-
-        /* Reset pointer to allocated block so it can be freed later.
-         * Note that cds.lpData cannot be passed to HeapFree since it
-         * points to nid when no icon info is found. */
-        buffer = cds.lpData;
-
-        DeleteObject(iconinfo.hbmMask);
-        DeleteObject(iconinfo.hbmColor);
-    }
-    else
-    {
-noicon:
-        cds.cbData = nid->cbSize;
-        cds.lpData = nid;
-    }
-
-    ret = SendMessageW(tray, WM_COPYDATA, (WPARAM)nid->hWnd, (LPARAM)&cds);
-
-    /* FIXME: if statement only needed because we don't support interprocess
-     * icon handles */
-    HeapFree(GetProcessHeap(), 0, buffer);
-
-    return ret;
+    return SHELL_NotifyIcon(dwMessage, pnid, pnid->hWnd, pnid->cbSize, TRUE);
 }
