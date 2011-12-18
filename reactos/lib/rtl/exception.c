@@ -15,6 +15,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *****************************************************************/
+
+PRTLP_UNHANDLED_EXCEPTION_FILTER RtlpUnhandledExceptionFilter;
+
 /* FUNCTIONS ***************************************************************/
 
 #if !defined(_M_IX86) && !defined(_M_AMD64)
@@ -172,17 +176,18 @@ LONG
 NTAPI
 RtlUnhandledExceptionFilter(IN struct _EXCEPTION_POINTERS* ExceptionInfo)
 {
+    /* This is used by the security cookie checks, and calso called externally */
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-PVOID
+VOID
 NTAPI
-RtlSetUnhandledExceptionFilter(IN PVOID TopLevelExceptionFilter)
+RtlSetUnhandledExceptionFilter(IN PRTLP_UNHANDLED_EXCEPTION_FILTER TopLevelExceptionFilter)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    /* Set the filter which is used by the CriticalSection package */
+    RtlpUnhandledExceptionFilter = RtlEncodePointer(TopLevelExceptionFilter);
 }

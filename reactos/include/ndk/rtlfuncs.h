@@ -604,10 +604,10 @@ RtlAssert(
 );
 
 NTSYSAPI
-PVOID
+VOID
 NTAPI
 RtlSetUnhandledExceptionFilter(
-    IN PVOID TopLevelExceptionFilter
+    IN PRTLP_UNHANDLED_EXCEPTION_FILTER TopLevelExceptionFilter
 );
 
 NTSYSAPI

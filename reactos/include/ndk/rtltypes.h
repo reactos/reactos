@@ -473,6 +473,15 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #endif /* NTOS_MODE_USER */
 
 //
+// Unhandled Exception Filter
+//
+typedef ULONG
+(NTAPI *RTLP_UNHANDLED_EXCEPTION_FILTER)(
+    IN struct _EXCEPTION_POINTERS *ExceptionInfo
+);
+typedef RTLP_UNHANDLED_EXCEPTION_FILTER *PRTLP_UNHANDLED_EXCEPTION_FILTER;
+
+//
 // Callback for RTL Heap Enumeration
 //
 typedef NTSTATUS
