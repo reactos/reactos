@@ -473,7 +473,7 @@ private:
 	inline unsigned int HexToBin(char a)
 	{
 		if (a >= '0' && a <= '9')
-			return a - 0x30;
+			return a - '0';
 		if (a >= 'A' && a <= 'F')
 			return a - 'A' + 10;
 		if (a >= 'a' && a <= 'f')
@@ -630,7 +630,7 @@ private:
 									return DISP_E_EXCEPTION;
 								count = count / 2;
 								for (curIndex = 0; curIndex < count; curIndex++)
-									buf->str[curIndex] = (HexToBin(buf->str[curIndex * 2]) << 4) | HexToBin(buf->str[curIndex * 2 + 1]);
+									((BYTE*)buf->str)[curIndex] = (HexToBin(buf->str[curIndex * 2]) << 4) | HexToBin(buf->str[curIndex * 2 + 1]);
 								lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_BINARY, (PBYTE)buf->str, count);
 								if (lres != ERROR_SUCCESS)
 									hres = HRESULT_FROM_WIN32(lres);
