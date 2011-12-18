@@ -23,10 +23,17 @@ HKCR
 			}
 			'shellex'
 			{
-				'find' = e '@%%SystemRoot%%\system32\SHELL32.dll,-29188'
+				'ContextMenuHandlers'
 				{
-					'ContextMenuHandlers'
-					'PropertySheetHandlers'
+					'{645FF040-5081-101B-9F08-00AA002F954E}'
+					{
+					}
+				}
+				'PropertySheetHandlers'
+				{
+					'{645FF040-5081-101B-9F08-00AA002F954E}'
+					{
+					}
 				}
 			}
 		}
