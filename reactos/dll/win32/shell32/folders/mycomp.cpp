@@ -42,7 +42,6 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 class CDrivesFolderEnum :
     public IEnumIDListImpl
 {
-    private:
     public:
         CDrivesFolderEnum();
         ~CDrivesFolderEnum();
@@ -79,17 +78,18 @@ HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
 {
     if (CreateMyCompEnumList(dwFlags) == FALSE)
         return E_FAIL;
+
     return S_OK;
 }
 
 /**************************************************************************
  *  CDrivesFolderEnum::CreateMyCompEnumList()
  */
-static const WCHAR MyComputer_NameSpaceW[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\Namespace";
 
 BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 {
     BOOL bRet = TRUE;
+    static const WCHAR MyComputer_NameSpaceW[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\Namespace";
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
 
@@ -361,9 +361,9 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 }
 
 /**************************************************************************
-*  ISF_MyComputer_fnGetAttributesOf
+*  CDrivesFolder::GetAttributesOf
 */
-HRESULT WINAPI CDrivesFolder::GetAttributesOf (UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
+HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
     HRESULT hr = S_OK;
     static const DWORD dwComputerAttributes =
@@ -662,7 +662,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
 }
 
 /**************************************************************************
-*  ISF_MyComputer_fnSetNameOf
+*  CDrivesFolder::SetNameOf
 *  Changes the name of a file object or subfolder, possibly changing its item
 *  identifier in the process.
 *

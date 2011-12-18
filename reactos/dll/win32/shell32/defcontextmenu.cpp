@@ -139,7 +139,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
 }
 
 void
-CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR * szClass)
+CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
 {
     PStaticShellEntry curEntry;
     PStaticShellEntry lastEntry = NULL;
@@ -178,16 +178,10 @@ CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR * szClass)
         return;
     }
 
-
-
     if (lastEntry)
-    {
         lastEntry->Next = curEntry;
-    }
     else
-    {
         shead = curEntry;
-    }
 }
 
 void
@@ -196,19 +190,17 @@ CDefaultContextMenu::AddStaticEntryForKey(HKEY hKey, const WCHAR * szClass)
     LONG result;
     DWORD dwIndex;
     WCHAR szName[40];
-    DWORD dwName;
+    DWORD dwSize;
 
     dwIndex = 0;
     do
     {
         szName[0] = 0;
-        dwName = sizeof(szName) / sizeof(WCHAR);
-        result = RegEnumKeyExW(hKey, dwIndex, szName, &dwName, NULL, NULL, NULL, NULL);
-        szName[(sizeof(szName)/sizeof(WCHAR))-1] = 0;
+        dwSize = sizeof(szName) / sizeof(WCHAR);
+        result = RegEnumKeyExW(hKey, dwIndex, szName, &dwSize, NULL, NULL, NULL, NULL);
         if (result == ERROR_SUCCESS)
-        {
             AddStaticEntry(szName, szClass);
-        }
+
         dwIndex++;
     } while(result == ERROR_SUCCESS);
 }
@@ -600,7 +592,6 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     UINT idResource;
     PStaticShellEntry curEntry;
     WCHAR szVerb[40];
-    WCHAR szTemp[50];
     DWORD dwSize;
     UINT fState;
     UINT Length;
@@ -618,6 +609,8 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     while(curEntry)
     {
         fState = MFS_ENABLED;
+        mii.dwTypeData = NULL;
+
         if (!wcsicmp(curEntry->szVerb, L"open"))
         {
             fState |= MFS_DEFAULT;
@@ -644,38 +637,26 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         if (idResource > 0)
         {
             if (LoadStringW(shell32_hInstance, idResource, szVerb, sizeof(szVerb) / sizeof(WCHAR)))
-            {
-                /* use translated verb */
-                szVerb[(sizeof(szVerb)/sizeof(WCHAR))-1] = L'\0';
-                mii.dwTypeData = szVerb;
-            }
+                mii.dwTypeData = szVerb; /* use translated verb */
             else
-            {
                 ERR("Failed to load string, defaulting to NULL value for mii.dwTypeData\n");
-            }
         }
         else
         {
+            WCHAR wszKey[256];
             Length = wcslen(curEntry->szClass) + wcslen(curEntry->szVerb) + 8;
-            if (Length < sizeof(szTemp) / sizeof(WCHAR))
+            if (Length < sizeof(wszKey) / sizeof(WCHAR))
             {
-                wcscpy(szTemp, curEntry->szClass);
-                wcscat(szTemp, L"\\shell\\");
-                wcscat(szTemp, curEntry->szVerb);
+                wcscpy(wszKey, curEntry->szClass);
+                wcscat(wszKey, L"\\shell\\");
+                wcscat(wszKey, curEntry->szVerb);
                 dwSize = sizeof(szVerb);
 
-                if (RegGetValueW(HKEY_CLASSES_ROOT, szTemp, NULL, RRF_RT_REG_SZ, NULL, szVerb, &dwSize) == ERROR_SUCCESS)
-                {
-                    /* use description for the menu entry */
-                    mii.dwTypeData = szVerb;
-                }
+                if (RegGetValueW(HKEY_CLASSES_ROOT, wszKey, NULL, RRF_RT_REG_SZ, NULL, szVerb, &dwSize) == ERROR_SUCCESS)
+                    mii.dwTypeData = szVerb; /* use description for the menu entry */
                 else
-                {
-                    /* use verb for the menu entry */
-                    mii.dwTypeData = curEntry->szVerb;
-                }
+                    mii.dwTypeData = curEntry->szVerb; /* use verb for the menu entry */
             }
-
         }
 
         mii.cch = wcslen(mii.dwTypeData);
@@ -689,7 +670,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     return indexMenu;
 }
 
-void WINAPI _InsertMenuItemW (
+void WINAPI _InsertMenuItemW(
     HMENU hmenu,
     UINT indexMenu,
     BOOL fByPosition,

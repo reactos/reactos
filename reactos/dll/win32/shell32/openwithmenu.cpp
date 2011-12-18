@@ -59,11 +59,11 @@ typedef struct _LANGANDCODEPAGE_
     WORD code;
 } LANGANDCODEPAGE, *LPLANGANDCODEPAGE;
 
-HANDLE OpenMRUList(HKEY hKey);
+static HANDLE OpenMRUList(HKEY hKey);
 
-void LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt);
-void LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt);
-void InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName);
+static VOID LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt);
+static VOID LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt);
+static VOID InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName);
 
 COpenWithMenu::COpenWithMenu()
 {
@@ -76,7 +76,7 @@ COpenWithMenu::~COpenWithMenu()
     TRACE(" destroying IContextMenu(%p)\n", this);
 }
 
-VOID
+static VOID
 AddItem(HMENU hMenu, UINT idCmdFirst)
 {
     MENUITEMINFOW mii;
@@ -105,8 +105,7 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 }
 
-static
-void
+static VOID
 LoadOWItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
 {
     const WCHAR * szExt;
@@ -137,8 +136,6 @@ LoadOWItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
         LoadItemFromHKCR(pContext, szPath);
     }
 }
-
-
 
 HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     HMENU hmenu,
@@ -204,13 +201,13 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
 
     mii.wID = Context.idCmdFirst;
     mii.fType = MFT_STRING;
-    if (InsertMenuItemW( hmenu, pos, TRUE, &mii))
+    if (InsertMenuItemW(hmenu, pos, TRUE, &mii))
         Context.Count++;
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Context.Count);
 }
 
-void
+static VOID
 FreeListItems(HWND hwndDlg)
 {
     HWND hList;
@@ -234,7 +231,8 @@ FreeListItems(HWND hwndDlg)
     }
 }
 
-BOOL HideApplicationFromList(WCHAR * pFileName)
+static BOOL
+HideApplicationFromList(WCHAR * pFileName)
 {
     WCHAR szBuffer[100] = {'A', 'p', 'p', 'l', 'i', 'c', 'a', 't', 'i', 'o', 'n', 's', '\\', 0};
     DWORD dwSize = 0;
@@ -257,7 +255,7 @@ BOOL HideApplicationFromList(WCHAR * pFileName)
         return FALSE;
 }
 
-VOID
+static VOID
 WriteStaticShellExtensionKey(HKEY hRootKey, const WCHAR * pVerb, WCHAR *pFullPath)
 {
     HKEY hShell;
@@ -287,7 +285,7 @@ WriteStaticShellExtensionKey(HKEY hRootKey, const WCHAR * pVerb, WCHAR *pFullPat
     RegCloseKey(hShell);
 }
 
-VOID
+static VOID
 StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
 {
     WCHAR szBuffer[100] = { L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\"};
@@ -326,7 +324,7 @@ StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
     RegCloseKey(hKey);
 }
 
-VOID
+static VOID
 SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
 {
     HKEY hKey;
@@ -404,7 +402,7 @@ SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
     RegCloseKey(hKey);
 }
 
-void
+static VOID
 BrowseForApplication(HWND hwndDlg)
 {
     WCHAR szBuffer[64] = {0};
@@ -450,7 +448,7 @@ BrowseForApplication(HWND hwndDlg)
     SendMessage(Context.hDlgCtrl, LB_SETCURSEL, count, 0);
 }
 
-POPEN_ITEM_CONTEXT
+static POPEN_ITEM_CONTEXT
 GetCurrentOpenItemContext(HWND hwndDlg)
 {
     LRESULT result;
@@ -468,7 +466,7 @@ GetCurrentOpenItemContext(HWND hwndDlg)
     return (POPEN_ITEM_CONTEXT)result;
 }
 
-void
+static VOID
 ExecuteOpenItem(POPEN_ITEM_CONTEXT pItemContext, LPCWSTR FileName)
 {
     STARTUPINFOW si;
@@ -492,8 +490,8 @@ ExecuteOpenItem(POPEN_ITEM_CONTEXT pItemContext, LPCWSTR FileName)
     }
 }
 
-
-static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK
+OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPMEASUREITEMSTRUCT lpmis;
     LPDRAWITEMSTRUCT lpdis;
@@ -636,7 +634,7 @@ static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wPar
     return FALSE;
 }
 
-void
+static VOID
 FreeMenuItemContext(HMENU hMenu)
 {
     INT Count;
@@ -663,7 +661,6 @@ FreeMenuItemContext(HMENU hMenu)
         }
     }
 }
-
 
 HRESULT WINAPI
 COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici )
@@ -788,10 +785,7 @@ GetManufacturer(WCHAR * szAppName, POPEN_ITEM_CONTEXT pContext)
     HeapFree(GetProcessHeap(), 0, pBuf);
 }
 
-
-
-
-void
+static VOID
 InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
 {
     MENUITEMINFOW mii;
@@ -843,13 +837,13 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
     }
 }
 
-void
+static VOID
 AddItemFromProgIDList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 {
     FIXME("implement me :)))\n");
 }
 
-HANDLE
+static HANDLE
 OpenMRUList(HKEY hKey)
 {
     CREATEMRULISTW info;
@@ -866,7 +860,7 @@ OpenMRUList(HKEY hKey)
     return CreateMRUListW(&info);
 }
 
-void
+static VOID
 AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 {
     HANDLE hList;
@@ -900,9 +894,7 @@ AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
     FreeMRUList(hList);
 }
 
-
-
-void
+static VOID
 LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
 {
     HKEY hKey;
@@ -986,7 +978,7 @@ LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
     }
 }
 
-void
+static VOID
 LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
 {
     WCHAR szBuffer[MAX_PATH];
@@ -1013,7 +1005,7 @@ LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
 }
 
 HRESULT
-COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
+COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
 {
     STGMEDIUM medium;
     FORMATETC fmt;
@@ -1024,7 +1016,7 @@ COpenWithMenu::SHEOW_LoadOpenWithItems(IDataObject *pdtobj)
     LPCITEMIDLIST pidl;
     DWORD dwType;
     LPWSTR pszExt;
-    static const WCHAR szShortCut[] = { '.', 'l', 'n', 'k', 0 };
+    static const WCHAR szShortCut[] = L".lnk";
 
     fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     fmt.ptd = NULL;
@@ -1100,7 +1092,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
 
     if (pdtobj == NULL)
         return E_INVALIDARG;
-    return SHEOW_LoadOpenWithItems(pdtobj);
+    return LoadOpenWithItems(pdtobj);
 }
 
 HRESULT WINAPI
