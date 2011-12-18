@@ -113,10 +113,10 @@ HRESULT WINAPI CAdminToolsFolder::FinalConstruct()
 }
 
 /**************************************************************************
- *    ISF_AdminTools_fnParseDisplayName
+ *    CAdminToolsFolder::ParseDisplayName
  *
  */
-HRESULT WINAPI CAdminToolsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
+HRESULT WINAPI CAdminToolsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
@@ -133,13 +133,13 @@ HRESULT WINAPI CAdminToolsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LP
 }
 
 /**************************************************************************
- *        ISF_AdminTools_fnEnumObjects
+ *        CAdminToolsFolder::EnumObjects
  */
 HRESULT WINAPI CAdminToolsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CDesktopFolderEnumY>            *theEnumerator;
+    CComObject<CDesktopFolderEnumY>        *theEnumerator;
     CComPtr<IEnumIDList>                    result;
-    HRESULT                                    hResult;
+    HRESULT                                 hResult;
 
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
@@ -166,18 +166,18 @@ HRESULT WINAPI CAdminToolsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPE
 }
 
 /**************************************************************************
- *        ISF_AdminTools_fnBindToObject
+ *        CAdminToolsFolder::BindToObject
  */
 HRESULT WINAPI CAdminToolsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
-    return SHELL32_BindToChild (pidlRoot, NULL, pidl, riid, ppvOut);
+    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
 }
 
 /**************************************************************************
- *    ISF_AdminTools_fnBindToStorage
+ *    CAdminToolsFolder::BindToStorage
  */
 HRESULT WINAPI CAdminToolsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
@@ -189,7 +189,7 @@ HRESULT WINAPI CAdminToolsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcRese
 }
 
 /**************************************************************************
- *     ISF_AdminTools_fnCompareIDs
+ *     CAdminToolsFolder::CompareIDs
  */
 HRESULT WINAPI CAdminToolsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
@@ -202,7 +202,7 @@ HRESULT WINAPI CAdminToolsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1,
 }
 
 /**************************************************************************
- *    ISF_AdminTools_fnCreateViewObject
+ *    CAdminToolsFolder::CreateViewObject
  */
 HRESULT WINAPI CAdminToolsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
@@ -276,7 +276,7 @@ HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apid
 }
 
 /**************************************************************************
- *    ISF_AdminTools_fnGetUIObjectOf
+ *    CAdminToolsFolder::GetUIObjectOf
  *
  * PARAMETERS
  *  HWND           hwndOwner, //[in ] Parent window for any output
@@ -347,7 +347,7 @@ HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCIT
 }
 
 /**************************************************************************
- *    ISF_AdminTools_fnGetDisplayNameOf
+ *    CAdminToolsFolder::GetDisplayNameOf
  *
  */
 HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
@@ -441,7 +441,7 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwF
 }
 
 /**************************************************************************
- *  ISF_AdminTools_fnSetNameOf
+ *  CAdminToolsFolder::SetNameOf
  *  Changes the name of a file object or subfolder, possibly changing its item
  *  identifier in the process.
  *
@@ -452,7 +452,7 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwF
  *  DWORD         dwFlags,    //[in ] SHGNO formatting flags
  *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
  */
-HRESULT WINAPI CAdminToolsFolder::SetNameOf (HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
+HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
         LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
@@ -473,7 +473,7 @@ HRESULT WINAPI CAdminToolsFolder::EnumSearches(IEnumExtraSearch ** ppenum)
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CAdminToolsFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
+HRESULT WINAPI CAdminToolsFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
     if (pSort)
         *pSort = 0;
@@ -498,7 +498,7 @@ HRESULT WINAPI CAdminToolsFolder::GetDetailsEx (LPCITEMIDLIST pidl, const SHCOLU
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CAdminToolsFolder::GetDetailsOf (LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CAdminToolsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;
@@ -548,7 +548,7 @@ HRESULT WINAPI CAdminToolsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid
 }
 
 /************************************************************************
- *    IPF_AdminTools_GetClassID
+ *    CAdminToolsFolder::GetClassID
  */
 HRESULT WINAPI CAdminToolsFolder::GetClassID(CLSID *lpClassId)
 {
@@ -560,7 +560,7 @@ HRESULT WINAPI CAdminToolsFolder::GetClassID(CLSID *lpClassId)
 }
 
 /************************************************************************
- *    IPF_AdminTools_Initialize
+ *    CAdminToolsFolder::Initialize
  *
  */
 HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
@@ -573,7 +573,7 @@ HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *    IPF_AdminTools_fnGetCurFolder
+ *    CAdminToolsFolder::GetCurFolder
  */
 HRESULT WINAPI CAdminToolsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {

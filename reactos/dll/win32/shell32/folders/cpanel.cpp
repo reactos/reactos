@@ -235,7 +235,7 @@ int CControlPanelEnum::RegisterCPanelFolders(HKEY hkey_root, LPCSTR szRepPath)
 }
 
 /**************************************************************************
- *  CreateCPanelEnumList()
+ *  CControlPanelEnum::CreateCPanelEnumList()
  */
 BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
 {
@@ -306,12 +306,15 @@ HRESULT WINAPI CControlPanelFolder::FinalConstruct()
 }
 
 /**************************************************************************
-*    ISF_ControlPanel_fnParseDisplayName
+*    CControlPanelFolder::ParseDisplayName
 */
-HRESULT WINAPI CControlPanelFolder::ParseDisplayName(HWND hwndOwner,
-        LPBC pbc,
-        LPOLESTR lpszDisplayName,
-        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
+    HWND hwndOwner,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    LPITEMIDLIST *ppidl,
+    DWORD *pdwAttributes)
 {
     WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
@@ -367,9 +370,12 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(HWND hwndOwner,
 }
 
 /**************************************************************************
-*        ISF_ControlPanel_fnEnumObjects
+*        CControlPanelFolder::EnumObjects
 */
-HRESULT WINAPI CControlPanelFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
+HRESULT WINAPI CControlPanelFolder::EnumObjects(
+    HWND hwndOwner,
+    DWORD dwFlags,
+    LPENUMIDLIST *ppEnumIDList)
 {
     CComObject<CControlPanelEnum>            *theEnumerator;
     CComPtr<IEnumIDList>                    result;
@@ -400,9 +406,13 @@ HRESULT WINAPI CControlPanelFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, L
 }
 
 /**************************************************************************
-*        ISF_ControlPanel_fnBindToObject
+*        CControlPanelFolder::BindToObject
 */
-HRESULT WINAPI CControlPanelFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+HRESULT WINAPI CControlPanelFolder::BindToObject(
+    LPCITEMIDLIST pidl,
+    LPBC pbcReserved,
+    REFIID riid,
+    LPVOID *ppvOut)
 {
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this, pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
 
@@ -410,9 +420,13 @@ HRESULT WINAPI CControlPanelFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcRes
 }
 
 /**************************************************************************
-*    ISF_ControlPanel_fnBindToStorage
+*    CControlPanelFolder::BindToStorage
 */
-HRESULT WINAPI CControlPanelFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+HRESULT WINAPI CControlPanelFolder::BindToStorage(
+    LPCITEMIDLIST pidl,
+    LPBC pbcReserved,
+    REFIID riid,
+    LPVOID *ppvOut)
 {
     FIXME("(%p)->(pidl=%p,%p,%s,%p) stub\n", this, pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
 
@@ -421,7 +435,7 @@ HRESULT WINAPI CControlPanelFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcRe
 }
 
 /**************************************************************************
-*     ISF_ControlPanel_fnCompareIDs
+*     CControlPanelFolder::CompareIDs
 */
 
 HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
@@ -435,7 +449,7 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl
 }
 
 /**************************************************************************
-*    ISF_ControlPanel_fnCreateViewObject
+*    CControlPanelFolder::CreateViewObject
 */
 HRESULT WINAPI CControlPanelFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID * ppvOut)
 {
@@ -465,7 +479,7 @@ HRESULT WINAPI CControlPanelFolder::CreateViewObject(HWND hwndOwner, REFIID riid
 }
 
 /**************************************************************************
-*  ISF_ControlPanel_fnGetAttributesOf
+*  CControlPanelFolder::GetAttributesOf
 */
 HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
@@ -497,7 +511,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * a
 }
 
 /**************************************************************************
-*    ISF_ControlPanel_fnGetUIObjectOf
+*    CControlPanelFolder::GetUIObjectOf
 *
 * PARAMETERS
 *  HWND           hwndOwner, //[in ] Parent window for any output
@@ -561,7 +575,7 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
 }
 
 /**************************************************************************
-*    ISF_ControlPanel_fnGetDisplayNameOf
+*    CControlPanelFolder::GetDisplayNameOf
 */
 HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
@@ -632,7 +646,7 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
 }
 
 /**************************************************************************
-*  ISF_ControlPanel_fnSetNameOf
+*  CControlPanelFolder::SetNameOf
 *  Changes the name of a file object or subfolder, possibly changing its item
 *  identifier in the process.
 *
@@ -717,6 +731,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColum
 
     return hr;
 }
+
 HRESULT WINAPI CControlPanelFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
     FIXME("(%p)\n", this);
@@ -724,7 +739,7 @@ HRESULT WINAPI CControlPanelFolder::MapColumnToSCID(UINT column, SHCOLUMNID *psc
 }
 
 /************************************************************************
- *    ICPanel_PersistFolder2_GetClassID
+ *    CControlPanelFolder::GetClassID
  */
 HRESULT WINAPI CControlPanelFolder::GetClassID(CLSID *lpClassId)
 {
@@ -738,7 +753,7 @@ HRESULT WINAPI CControlPanelFolder::GetClassID(CLSID *lpClassId)
 }
 
 /************************************************************************
- *    ICPanel_PersistFolder2_Initialize
+ *    CControlPanelFolder::Initialize
  *
  * NOTES: it makes no sense to change the pidl
  */
@@ -752,7 +767,7 @@ HRESULT WINAPI CControlPanelFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *    IPersistFolder2_fnGetCurFolder
+ *    CControlPanelFolder::GetCurFolder
  */
 HRESULT WINAPI CControlPanelFolder::GetCurFolder(LPITEMIDLIST * pidl)
 {
@@ -782,7 +797,7 @@ HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST pidl, LPWSTR szIconFile, UINT cchM
 * IShellExecuteHookW Implementation
 */
 
-HRESULT
+static HRESULT
 ExecuteAppletFromCLSID(LPOLESTR pOleStr)
 {
     WCHAR szCmd[MAX_PATH];

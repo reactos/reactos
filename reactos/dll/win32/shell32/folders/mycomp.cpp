@@ -83,14 +83,9 @@ HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
 }
 
 /**************************************************************************
- *  CreateMyCompEnumList()
+ *  CDrivesFolderEnum::CreateMyCompEnumList()
  */
-static const WCHAR MyComputer_NameSpaceW[] = { 'S', 'O', 'F', 'T', 'W', 'A', 'R', 'E',
-        '\\', 'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', '\\', 'W', 'i', 'n', 'd', 'o', 'w', 's', '\\',
-        'C', 'u', 'r', 'r', 'e', 'n', 't', 'V', 'e', 'r', 's', 'i', 'o', 'n', '\\', 'E', 'x', 'p', 'l',
-        'o', 'r', 'e', 'r', '\\', 'M', 'y', 'C', 'o', 'm', 'p', 'u', 't', 'e', 'r', '\\', 'N', 'a', 'm',
-        'e', 's', 'p', 'a', 'c', 'e', '\0'
-                                             };
+static const WCHAR MyComputer_NameSpaceW[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\Namespace";
 
 BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 {
@@ -188,18 +183,16 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     {
         sName = (LPWSTR)SHAlloc((wcslen(szName) + 1) * sizeof(WCHAR));
         if (sName)
-        {
             wcscpy(sName, szName);
-        }
         TRACE("sName %s\n", debugstr_w(sName));
     }
     return S_OK;
 }
 
 /**************************************************************************
-*    ISF_MyComputer_fnParseDisplayName
+*    CDrivesFolder::ParseDisplayName
 */
-HRESULT WINAPI CDrivesFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
+HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_INVALIDARG;
@@ -255,13 +248,13 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
 }
 
 /**************************************************************************
-*        ISF_MyComputer_fnEnumObjects
+*        CDrivesFolder::EnumObjects
 */
-HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
+HRESULT WINAPI CDrivesFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CDrivesFolderEnum>            *theEnumerator;
-    CComPtr<IEnumIDList>                    result;
-    HRESULT                                    hResult;
+    CComObject<CDrivesFolderEnum> *theEnumerator;
+    CComPtr<IEnumIDList>          result;
+    HRESULT                       hResult;
 
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
@@ -269,43 +262,43 @@ HRESULT WINAPI CDrivesFolder::EnumObjects (HWND hwndOwner, DWORD dwFlags, LPENUM
         return E_POINTER;
 
     *ppEnumIDList = NULL;
-    ATLTRY (theEnumerator = new CComObject<CDrivesFolderEnum>);
+    ATLTRY(theEnumerator = new CComObject<CDrivesFolderEnum>);
 
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
 
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-    if (FAILED (hResult))
+    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
+    if (FAILED(hResult))
     {
         delete theEnumerator;
         return hResult;
     }
 
-    hResult = theEnumerator->Initialize (hwndOwner, dwFlags);
-    if (FAILED (hResult))
+    hResult = theEnumerator->Initialize(hwndOwner, dwFlags);
+    if (FAILED(hResult))
         return hResult;
-    *ppEnumIDList = result.Detach ();
+    *ppEnumIDList = result.Detach();
 
-    TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
+    TRACE("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
     return S_OK;
 }
 
 /**************************************************************************
-*        ISF_MyComputer_fnBindToObject
+*        CDrivesFolder::BindToObject
 */
-HRESULT WINAPI CDrivesFolder::BindToObject (LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CDrivesFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-          pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+          pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
 
-    return SHELL32_BindToChild (pidlRoot, NULL, pidl, riid, ppvOut);
+    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
 }
 
 /**************************************************************************
-*    ISF_MyComputer_fnBindToStorage
+*    CDrivesFolder::BindToStorage
 */
-HRESULT WINAPI CDrivesFolder::BindToStorage (LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CDrivesFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME("(%p)->(pidl=%p,%p,%s,%p) stub\n", this,
           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -315,23 +308,23 @@ HRESULT WINAPI CDrivesFolder::BindToStorage (LPCITEMIDLIST pidl, LPBC pbcReserve
 }
 
 /**************************************************************************
-*     ISF_MyComputer_fnCompareIDs
+*     CDrivesFolder::CompareIDs
 */
 
-HRESULT WINAPI CDrivesFolder::CompareIDs (LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     int nReturn;
 
-    TRACE ("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
+    TRACE("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
     nReturn = SHELL32_CompareIDs (this, lParam, pidl1, pidl2);
-    TRACE ("-- %i\n", nReturn);
+    TRACE("-- %i\n", nReturn);
     return nReturn;
 }
 
 /**************************************************************************
-*    ISF_MyComputer_fnCreateViewObject
+*    CDrivesFolder::CreateViewObject
 */
-HRESULT WINAPI CDrivesFolder::CreateViewObject (HWND hwndOwner, REFIID riid, LPVOID * ppvOut)
+HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID * ppvOut)
 {
     LPSHELLVIEW pShellView;
     HRESULT hr = E_INVALIDARG;
@@ -344,17 +337,17 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject (HWND hwndOwner, REFIID riid, LPV
 
     *ppvOut = NULL;
 
-    if (IsEqualIID (riid, IID_IDropTarget))
+    if (IsEqualIID(riid, IID_IDropTarget))
     {
-        WARN ("IDropTarget not implemented\n");
+        WARN("IDropTarget not implemented\n");
         hr = E_NOTIMPL;
     }
-    else if (IsEqualIID (riid, IID_IContextMenu))
+    else if (IsEqualIID(riid, IID_IContextMenu))
     {
-        WARN ("IContextMenu not implemented\n");
+        WARN("IContextMenu not implemented\n");
         hr = E_NOTIMPL;
     }
-    else if (IsEqualIID (riid, IID_IShellView))
+    else if (IsEqualIID(riid, IID_IShellView))
     {
         hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
         if (pShellView)
@@ -408,7 +401,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf (UINT cidl, LPCITEMIDLIST * apidl,
 }
 
 /**************************************************************************
-*    ISF_MyComputer_fnGetUIObjectOf
+*    CDrivesFolder::GetUIObjectOf
 *
 * PARAMETERS
 *  hwndOwner [in]  Parent window for any output
@@ -419,8 +412,9 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf (UINT cidl, LPCITEMIDLIST * apidl,
 *  ppvObject [out] Resulting Interface
 *
 */
-HRESULT WINAPI CDrivesFolder::GetUIObjectOf (HWND hwndOwner, UINT cidl, LPCITEMIDLIST * apidl, REFIID riid,
-        UINT * prgfInOut, LPVOID * ppvOut)
+HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
+    UINT cidl, LPCITEMIDLIST *apidl,
+    REFIID riid, UINT *prgfInOut, LPVOID *ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
@@ -481,9 +475,9 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf (HWND hwndOwner, UINT cidl, LPCITEMI
 }
 
 /**************************************************************************
-*    ISF_MyComputer_fnGetDisplayNameOf
+*    CDrivesFolder::GetDisplayNameOf
 */
-HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     LPWSTR pszPath;
     HRESULT hr = S_OK;
@@ -519,15 +513,10 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
             {
                 if (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING)
                 {
-                    static const WCHAR clsidW[] =
-                    { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
-                    static const WCHAR shellfolderW[] =
-                    { '\\', 's', 'h', 'e', 'l', 'l', 'f', 'o', 'l', 'd', 'e', 'r', 0 };
-                    static const WCHAR wantsForParsingW[] =
-                    {   'W', 'a', 'n', 't', 's', 'F', 'o', 'r', 'P', 'a', 'r', 's', 'i', 'n',
-                        'g', 0
-                    };
-                    int bWantsForParsing = FALSE;
+                    static const WCHAR clsidW[] = L"CLSID\\";
+                    static const WCHAR shellfolderW[] = L"\\shellfolder";
+                    static const WCHAR wantsForParsingW[] = L"WantsForParsing";
+                    BOOL bWantsForParsing = FALSE;
                     WCHAR szRegPath[100];
                     LONG r;
 
@@ -542,11 +531,11 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
                      * Get the "WantsFORPARSING" flag from the registry
                      */
 
-                    wcscpy (szRegPath, clsidW);
-                    SHELL32_GUIDToStringW (*clsid, &szRegPath[6]);
-                    wcscat (szRegPath, shellfolderW);
-                    r = SHGetValueW (HKEY_CLASSES_ROOT, szRegPath,
-                                     wantsForParsingW, NULL, NULL, NULL);
+                    wcscpy(szRegPath, clsidW);
+                    SHELL32_GUIDToStringW(*clsid, &szRegPath[6]);
+                    wcscat(szRegPath, shellfolderW);
+                    r = SHGetValueW(HKEY_CLASSES_ROOT, szRegPath,
+                                    wantsForParsingW, NULL, NULL, NULL);
                     if (r == ERROR_SUCCESS)
                         bWantsForParsing = TRUE;
 
@@ -593,13 +582,13 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
             else
             {
                 /* append my own path */
-                _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);
+                _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);
             }
         }
         else if (_ILIsDrive(pidl))
         {
 
-            _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);    /* append my own path */
+            _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);    /* append my own path */
             /* long view "lw_name (C:)" */
             if (!(dwFlags & SHGDN_FORPARSING))
             {
@@ -610,10 +599,10 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
 
                 lstrcpynW(wszDrive, pszPath, 4);
                 pszPath[0] = L'\0';
-                GetVolumeInformationW (wszDrive, pszPath,
-                                       MAX_PATH - 7,
-                                       &dwVolumeSerialNumber,
-                                       &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
+                GetVolumeInformationW(wszDrive, pszPath,
+                                      MAX_PATH - 7,
+                                      &dwVolumeSerialNumber,
+                                      &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
                 pszPath[MAX_PATH-1] = L'\0';
                 if (!wcslen(pszPath))
                 {
@@ -660,7 +649,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
         hr = SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, pszPath, MAX_PATH);
     }
 
-    if (SUCCEEDED (hr))
+    if (SUCCEEDED(hr))
     {
         strRet->uType = STRRET_WSTR;
         strRet->pOleStr = pszPath;
@@ -668,7 +657,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
     else
         CoTaskMemFree(pszPath);
 
-    TRACE ("-- (%p)->(%s)\n", this, strRet->uType == STRRET_CSTR ? strRet->cStr : debugstr_w(strRet->pOleStr));
+    TRACE("-- (%p)->(%s)\n", this, strRet->uType == STRRET_CSTR ? strRet->cStr : debugstr_w(strRet->pOleStr));
     return hr;
 }
 
@@ -685,22 +674,20 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf (LPCITEMIDLIST pidl, DWORD dwFlag
 *  ppidlOut   [out]  simple pidl returned
 */
 HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
-                                        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+                                        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut)
 {
     LPWSTR sName;
     HKEY hKey;
     UINT length;
     WCHAR szName[30];
 
-    TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this,
-           hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
+    TRACE("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this,
+          hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
 
     if (_ILIsDrive(pidl))
     {
-        if (_ILSimpleGetTextW(pidl, szName, sizeof(szName) / sizeof(WCHAR)))
-        {
+        if (_ILSimpleGetTextW(pidl, szName, _countof(szName)))
             SetVolumeLabelW(szName, lpName);
-        }
         if (pPidlOut)
             *pPidlOut = _ILCreateDrive(szName);
         return S_OK;
@@ -708,17 +695,13 @@ HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
 
 
     if (pPidlOut != NULL)
-    {
         *pPidlOut = _ILCreateMyComputer();
-    }
 
     length = (wcslen(lpName) + 1) * sizeof(WCHAR);
     sName = (LPWSTR)SHAlloc(length);
 
     if (!sName)
-    {
         return E_OUTOFMEMORY;
-    }
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
@@ -781,7 +764,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID 
 }
 
 /* FIXME: drive size >4GB is rolling over */
-HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS * psd)
+HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     HRESULT hr;
 
@@ -795,8 +778,8 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHE
         psd->fmt = MyComputerSFHeader[iColumn].fmt;
         psd->cxChar = MyComputerSFHeader[iColumn].cxChar;
         psd->str.uType = STRRET_CSTR;
-        LoadStringA (shell32_hInstance, MyComputerSFHeader[iColumn].colnameid,
-                     psd->str.cStr, MAX_PATH);
+        LoadStringA(shell32_hInstance, MyComputerSFHeader[iColumn].colnameid,
+                    psd->str.cStr, MAX_PATH);
         return S_OK;
     }
     else
@@ -813,10 +796,10 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHE
                                       SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case 1:        /* type */
-                _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
                 break;
             case 2:        /* total size */
-                if (_ILIsDrive (pidl))
+                if (_ILIsDrive(pidl))
                 {
                     _ILSimpleGetText (pidl, szPath, MAX_PATH);
                     GetDiskFreeSpaceExA (szPath, NULL, &ulBytes, NULL);
@@ -824,7 +807,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHE
                 }
                 break;
             case 3:        /* free size */
-                if (_ILIsDrive (pidl))
+                if (_ILIsDrive(pidl))
                 {
                     _ILSimpleGetText (pidl, szPath, MAX_PATH);
                     GetDiskFreeSpaceExA (szPath, &ulBytes, NULL, NULL);
@@ -840,12 +823,12 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHE
 
 HRESULT WINAPI CDrivesFolder::MapColumnToSCID(UINT column, SHCOLUMNID * pscid)
 {
-    FIXME ("(%p)\n", this);
+    FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
 /************************************************************************
- *    IMCFldr_PersistFolder2_GetClassID
+ *    CDrivesFolder::GetClassID
  */
 HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
 {
@@ -853,13 +836,13 @@ HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
 
     if (!lpClassId)
         return E_POINTER;
-    *lpClassId = CLSID_MyComputer;
 
+    *lpClassId = CLSID_MyComputer;
     return S_OK;
 }
 
 /************************************************************************
- *    IMCFldr_PersistFolder2_Initialize
+ *    CDrivesFolder::Initialize
  *
  * NOTES: it makes no sense to change the pidl
  */
@@ -875,14 +858,15 @@ HRESULT WINAPI CDrivesFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *    IPersistFolder2_fnGetCurFolder
+ *    CDrivesFolder::GetCurFolder
  */
 HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
+    TRACE("(%p)->(%p)\n", this, pidl);
 
     if (!pidl)
         return E_POINTER;
-    *pidl = ILClone (pidlRoot);
+
+    *pidl = ILClone(pidlRoot);
     return S_OK;
 }

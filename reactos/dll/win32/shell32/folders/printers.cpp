@@ -28,7 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 /***********************************************************************
  *   Printers_IExtractIconW implementation
  */
-class IExtractIconWImpl :
+class CPrintersExtractIconW :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IExtractIconW,
     public IExtractIconA
@@ -36,8 +36,8 @@ class IExtractIconWImpl :
     private:
         LPITEMIDLIST                        pidl;
     public:
-        IExtractIconWImpl();
-        ~IExtractIconWImpl();
+        CPrintersExtractIconW();
+        ~CPrintersExtractIconW();
         HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
         // IExtractIconW
@@ -48,7 +48,7 @@ class IExtractIconWImpl :
         virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
         virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
-        BEGIN_COM_MAP(IExtractIconWImpl)
+        BEGIN_COM_MAP(CPrintersExtractIconW)
         COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
         COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
         END_COM_MAP()
@@ -73,18 +73,18 @@ static shvheader PrinterSFHeader[] = {
 
 #define PrinterSHELLVIEWCOLUMNS (6)
 
-IExtractIconWImpl::IExtractIconWImpl()
+CPrintersExtractIconW::CPrintersExtractIconW()
 {
     pidl = NULL;
 }
 
-IExtractIconWImpl::~IExtractIconWImpl()
+CPrintersExtractIconW::~CPrintersExtractIconW()
 {
     TRACE(" destroying IExtractIcon(%p)\n", this);
     SHFree(pidl);
 }
 
-HRESULT WINAPI IExtractIconWImpl::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CPrintersExtractIconW::Initialize(LPCITEMIDLIST pidl)
 {
     pidl = ILClone(pidl);
 
@@ -93,11 +93,11 @@ HRESULT WINAPI IExtractIconWImpl::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *  IExtractIconW_GetIconLocation
+ *  CPrintersExtractIconW::GetIconLocation
  *
  * mapping filetype to icon
  */
-HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,        /* GIL_ flags */
+HRESULT WINAPI CPrintersExtractIconW::GetIconLocation(UINT uFlags,        /* GIL_ flags */
         LPWSTR szIconFile,
         UINT cchMax,
         int *piIndex,
@@ -116,9 +116,9 @@ HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,        /* GIL_ fl
 }
 
 /**************************************************************************
- *  IExtractIconW_Extract
+ *  CPrintersExtractIconW::Extract
  */
-HRESULT WINAPI IExtractIconWImpl::Extract(LPCWSTR pszFile,
+HRESULT WINAPI CPrintersExtractIconW::Extract(LPCWSTR pszFile,
         UINT nIconIndex, HICON *phiconLarge,
         HICON *phiconSmall, UINT nIconSize)
 {
@@ -139,9 +139,9 @@ HRESULT WINAPI IExtractIconWImpl::Extract(LPCWSTR pszFile,
 }
 
 /**************************************************************************
- *  IExtractIconA_GetIconLocation
+ *  CPrintersExtractIconW::GetIconLocation
  */
-HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,
+HRESULT WINAPI CPrintersExtractIconW::GetIconLocation(UINT uFlags,
         LPSTR szIconFile,
         UINT cchMax,
         int * piIndex,
@@ -160,9 +160,9 @@ HRESULT WINAPI IExtractIconWImpl::GetIconLocation(UINT uFlags,
     return ret;
 }
 /**************************************************************************
- *  IExtractIconA_Extract
+ *  CPrintersExtractIconW::Extract
  */
-HRESULT WINAPI IExtractIconWImpl::Extract(LPCSTR pszFile,
+HRESULT WINAPI CPrintersExtractIconW::Extract(LPCSTR pszFile,
         UINT nIconIndex, HICON *phiconLarge,
         HICON *phiconSmall, UINT nIconSize)
 {
@@ -183,26 +183,26 @@ HRESULT WINAPI IExtractIconWImpl::Extract(LPCSTR pszFile,
  */
 static HRESULT WINAPI IEI_Printers_Constructor(LPCITEMIDLIST pidl, REFIID riid, IUnknown **ppv)
 {
-    CComObject<IExtractIconWImpl>            *theExtractor;
-    CComPtr<IUnknown>                        result;
-    HRESULT                                    hResult;
+    CComObject<CPrintersExtractIconW> *theExtractor;
+    CComPtr<IUnknown>                 result;
+    HRESULT                           hResult;
 
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY (theExtractor = new CComObject<IExtractIconWImpl>);
+    ATLTRY (theExtractor = new CComObject<CPrintersExtractIconW>);
     if (theExtractor == NULL)
         return E_OUTOFMEMORY;
-    hResult = theExtractor->QueryInterface (riid, (void **)&result);
+    hResult = theExtractor->QueryInterface(riid, (void **)&result);
     if (FAILED (hResult))
     {
         delete theExtractor;
         return hResult;
     }
-    hResult = theExtractor->Initialize (pidl);
+    hResult = theExtractor->Initialize(pidl);
     if (FAILED (hResult))
         return hResult;
-    *ppv = result.Detach ();
+    *ppv = result.Detach();
     return S_OK;
 }
 
@@ -210,10 +210,8 @@ static HRESULT WINAPI IEI_Printers_Constructor(LPCITEMIDLIST pidl, REFIID riid, 
  *     Printers folder implementation
  */
 
-class CPrintersEnum :
-    public IEnumIDListImpl
+class CPrintersEnum: public IEnumIDListImpl
 {
-    private:
     public:
         CPrintersEnum();
         ~CPrintersEnum();
@@ -257,7 +255,7 @@ static LPITEMIDLIST _ILCreatePrinterItem(PRINTER_INFO_4W *pi)
 
     size += tmp.u.cprinter.offsServer * sizeof(WCHAR);
     if (pi->pServerName)
-        size += ( + wcslen(pi->pServerName) + 1) * sizeof(WCHAR);
+        size += (wcslen(pi->pServerName) + 1) * sizeof(WCHAR);
     else
         size += sizeof(WCHAR);
 
@@ -286,7 +284,7 @@ static LPITEMIDLIST _ILCreatePrinterItem(PRINTER_INFO_4W *pi)
 }
 
 /**************************************************************************
- *  CreatePrintersEnumList()
+ *  CPrintersEnum::CreatePrintersEnumList()
  */
 BOOL CPrintersEnum::CreatePrintersEnumList(DWORD dwFlags)
 {
@@ -346,7 +344,7 @@ HRESULT WINAPI CPrinterFolder::FinalConstruct()
 }
 
 /**************************************************************************
- *    ISF_Printers_fnParseDisplayName
+ *    CPrinterFolder::ParseDisplayName
  *
  * This is E_NOTIMPL in Windows too.
  */
@@ -375,13 +373,13 @@ static PIDLPrinterStruct * _ILGetPrinterStruct(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *        ISF_Printers_fnEnumObjects
+ *        CPrinterFolder::EnumObjects
  */
 HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
 {
-    CComObject<CPrintersEnum>                *theEnumerator;
-    CComPtr<IEnumIDList>                    result;
-    HRESULT                                    hResult;
+    CComObject<CPrintersEnum> *theEnumerator;
+    CComPtr<IEnumIDList>      result;
+    HRESULT                   hResult;
 
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
@@ -391,16 +389,16 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     ATLTRY (theEnumerator = new CComObject<CPrintersEnum>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
     if (FAILED (hResult))
     {
         delete theEnumerator;
         return hResult;
     }
-    hResult = theEnumerator->Initialize (hwndOwner, dwFlags);
+    hResult = theEnumerator->Initialize(hwndOwner, dwFlags);
     if (FAILED (hResult))
         return hResult;
-    *ppEnumIDList = result.Detach ();
+    *ppEnumIDList = result.Detach();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
@@ -408,14 +406,14 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
 }
 
 /**************************************************************************
- *        ISF_Printers_fnBindToObject
+ *        CPrinterFolder::BindToObject
  */
 HRESULT WINAPI CPrinterFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
-    return SHELL32_BindToChild (pidlRoot, NULL, pidl, riid, ppvOut);
+    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
 }
 
 /**************************************************************************
@@ -431,9 +429,9 @@ HRESULT WINAPI CPrinterFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserve
 }
 
 /**************************************************************************
- *     ISF_Printers_fnCompareIDs
+ *     CPrinterFolder::CompareIDs
  */
-HRESULT WINAPI CPrinterFolder::CompareIDs (LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CPrinterFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     int nReturn;
 
@@ -444,34 +442,34 @@ HRESULT WINAPI CPrinterFolder::CompareIDs (LPARAM lParam, LPCITEMIDLIST pidl1, L
 }
 
 /**************************************************************************
- *    ISF_Printers_fnCreateViewObject
+ *    CPrinterFolder::CreateViewObject
  */
 HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID * ppvOut)
 {
     LPSHELLVIEW pShellView;
     HRESULT hr = E_INVALIDARG;
 
-    TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this,
-           hwndOwner, shdebugstr_guid (&riid), ppvOut);
+    TRACE("(%p)->(hwnd=%p,%s,%p)\n", this,
+          hwndOwner, shdebugstr_guid (&riid), ppvOut);
 
     if (!ppvOut)
         return hr;
 
     *ppvOut = NULL;
 
-    if (IsEqualIID (riid, IID_IDropTarget))
+    if (IsEqualIID(riid, IID_IDropTarget))
     {
-        WARN ("IDropTarget not implemented\n");
+        WARN("IDropTarget not implemented\n");
         hr = E_NOTIMPL;
     }
-    else if (IsEqualIID (riid, IID_IContextMenu))
+    else if(IsEqualIID(riid, IID_IContextMenu))
     {
-        WARN ("IContextMenu not implemented\n");
+        WARN("IContextMenu not implemented\n");
         hr = E_NOTIMPL;
     }
-    else if (IsEqualIID (riid, IID_IShellView))
+    else if(IsEqualIID(riid, IID_IShellView))
     {
-        hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
+        hr = IShellView_Constructor((IShellFolder *)this, &pShellView);
         if (pShellView)
         {
             hr = pShellView->QueryInterface(riid, ppvOut);
@@ -483,7 +481,7 @@ HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPV
 }
 
 /**************************************************************************
- *  ISF_Printers_fnGetAttributesOf
+ *  CPrinterFolder::GetAttributesOf
  */
 HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
 {
@@ -503,7 +501,7 @@ HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, 
 }
 
 /**************************************************************************
- *    ISF_Printers_fnGetUIObjectOf
+ *    CPrinterFolder::GetUIObjectOf
  *
  * PARAMETERS
  *  HWND           hwndOwner, //[in ] Parent window for any output
@@ -528,10 +526,8 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMI
 
     *ppvOut = NULL;
 
-    if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1))
-    {
+    if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && cidl == 1)
         hr = IEI_Printers_Constructor(apidl[0], riid, &pObj);
-    }
     else
         hr = E_NOINTERFACE;
 
@@ -544,7 +540,7 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMI
 }
 
 /**************************************************************************
- *    ISF_Printers_fnGetDisplayNameOf
+ *    CPrinterFolder::GetDisplayNameOf
  *
  */
 HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
@@ -595,7 +591,7 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
 }
 
 /**************************************************************************
- *  ISF_Printers_fnSetNameOf
+ *  CPrinterFolder::SetNameOf
  *  Changes the name of a file object or subfolder, possibly changing its item
  *  identifier in the process.
  *
@@ -609,25 +605,25 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
 HRESULT WINAPI CPrinterFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
         LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
-    FIXME ("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
-           debugstr_w (lpName), dwFlags, pPidlOut);
+    FIXME("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
+          debugstr_w (lpName), dwFlags, pPidlOut);
 
     return E_FAIL;
 }
 
 HRESULT WINAPI CPrinterFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    FIXME ("(%p)\n", this);
+    FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CPrinterFolder::EnumSearches (IEnumExtraSearch **ppenum)
+HRESULT WINAPI CPrinterFolder::EnumSearches(IEnumExtraSearch **ppenum)
 {
-    FIXME ("(%p)\n", this);
+    FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CPrinterFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
+HRESULT WINAPI CPrinterFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
     if (pSort)
         *pSort = 0;
@@ -637,7 +633,7 @@ HRESULT WINAPI CPrinterFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULON
     return S_OK;
 }
 
-HRESULT WINAPI CPrinterFolder::GetDefaultColumnState (UINT iColumn, DWORD *pcsFlags)
+HRESULT WINAPI CPrinterFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
     if (!pcsFlags || iColumn >= PrinterSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
@@ -648,7 +644,7 @@ HRESULT WINAPI CPrinterFolder::GetDefaultColumnState (UINT iColumn, DWORD *pcsFl
 
 HRESULT WINAPI CPrinterFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    FIXME ("(%p): stub\n", this);
+    FIXME("(%p): stub\n", this);
 
     return E_NOTIMPL;
 }
@@ -693,9 +689,9 @@ HRESULT WINAPI CPrinterFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 }
 
 /************************************************************************
- *    IPF_Printers_GetClassID
+ *    CPrinterFolder::GetClassID
  */
-HRESULT WINAPI CPrinterFolder::GetClassID (CLSID *lpClassId)
+HRESULT WINAPI CPrinterFolder::GetClassID(CLSID *lpClassId)
 {
     TRACE ("(%p)\n", this);
 
@@ -705,8 +701,7 @@ HRESULT WINAPI CPrinterFolder::GetClassID (CLSID *lpClassId)
 }
 
 /************************************************************************
- *    IPF_Printers_Initialize
- *
+ *    CPrinterFolder::Initialize
  */
 HRESULT WINAPI CPrinterFolder::Initialize(LPCITEMIDLIST pidl)
 {
@@ -718,7 +713,7 @@ HRESULT WINAPI CPrinterFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *    IPF_Printers_fnGetCurFolder
+ *    CPrinterFolder::GetCurFolder
  */
 HRESULT WINAPI CPrinterFolder::GetCurFolder(LPITEMIDLIST * pidl)
 {

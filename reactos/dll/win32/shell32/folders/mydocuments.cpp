@@ -125,8 +125,8 @@ HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
     {
         szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
-        TRACE ("-- element: %s\n", debugstr_w (szElement));
-        CLSIDFromString (szElement + 2, &clsid);
+        TRACE("-- element: %s\n", debugstr_w (szElement));
+        CLSIDFromString(szElement + 2, &clsid);
         pidlTemp = _ILCreateGuid (PT_GUID, clsid);
     }
     else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
@@ -173,8 +173,7 @@ HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLES
         else
         {
             if (pdwAttributes && *pdwAttributes)
-                hr = SHELL32_GetItemAttributes(this,
-                                               pidlTemp, pdwAttributes);
+                hr = SHELL32_GetItemAttributes(this, pidlTemp, pdwAttributes);
         }
     }
 
@@ -194,7 +193,7 @@ HRESULT WINAPI CMyDocsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMI
     CComPtr<IEnumIDList>                    result;
     HRESULT                                    hResult;
 
-    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
+    TRACE("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
 
     if (ppEnumIDList == NULL)
         return E_POINTER;
@@ -202,39 +201,39 @@ HRESULT WINAPI CMyDocsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMI
     ATLTRY (theEnumerator = new CComObject<CFileSysEnumX>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
     if (FAILED (hResult))
     {
         delete theEnumerator;
         return hResult;
     }
-    hResult = theEnumerator->Initialize (dwFlags);
+    hResult = theEnumerator->Initialize(dwFlags);
     if (FAILED (hResult))
         return hResult;
-    *ppEnumIDList = result.Detach ();
+    *ppEnumIDList = result.Detach();
 
-    TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
+    TRACE("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
 
     return S_OK;
 }
 
 /**************************************************************************
- *        ISF_MyDocuments_fnBindToObject
+ *        CMyDocsFolder::BindToObject
  */
 HRESULT WINAPI CMyDocsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
-    TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n",
+    TRACE("(%p)->(pidl=%p,%p,%s,%p)\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     return SHELL32_BindToChild( pidlRoot, sPathTarget, pidl, riid, ppvOut );
 }
 
 /**************************************************************************
- *    ISF_MyDocuments_fnBindToStorage
+ *    CMyDocsFolder::BindToStorage
  */
 HRESULT WINAPI CMyDocsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
-    FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n",
+    FIXME("(%p)->(pidl=%p,%p,%s,%p) stub\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
     *ppvOut = NULL;
@@ -242,7 +241,7 @@ HRESULT WINAPI CMyDocsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved
 }
 
 /**************************************************************************
- *     ISF_MyDocuments_fnCompareIDs
+ *     CMyDocsFolder::CompareIDs
  */
 HRESULT WINAPI CMyDocsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
@@ -255,7 +254,7 @@ HRESULT WINAPI CMyDocsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPC
 }
 
 /**************************************************************************
- *    ISF_MyDocuments_fnCreateViewObject
+ *    CMyDocsFolder::CreateViewObject
  */
 HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
@@ -294,7 +293,7 @@ HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 }
 
 /**************************************************************************
- *  ISF_MyDocuments_fnGetAttributesOf
+ *  CMyDocsFolder::GetAttributesOf
  */
 HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
 {
@@ -337,7 +336,7 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, D
 }
 
 /**************************************************************************
- *    ISF_MyDocuments_fnGetUIObjectOf
+ *    CMyDocsFolder::GetUIObjectOf
  *
  * PARAMETERS
  *  HWND           hwndOwner, //[in ] Parent window for any output
@@ -458,14 +457,9 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
                 else
                 {
                     /* get the "WantsFORPARSING" flag from the registry */
-                    static const WCHAR clsidW[] =
-                    { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
-                    static const WCHAR shellfolderW[] =
-                    { '\\', 's', 'h', 'e', 'l', 'l', 'f', 'o', 'l', 'd', 'e', 'r', 0 };
-                    static const WCHAR wantsForParsingW[] =
-                    {   'W', 'a', 'n', 't', 's', 'F', 'o', 'r', 'P', 'a', 'r', 's', 'i', 'n',
-                        'g', 0
-                    };
+                    static const WCHAR clsidW[] = L"CLSID\\";
+                    static const WCHAR shellfolderW[] = L"shellfolder";
+                    static const WCHAR wantsForParsingW[] = L"WantsForParsing";
                     WCHAR szRegPath[100];
                     LONG r;
 

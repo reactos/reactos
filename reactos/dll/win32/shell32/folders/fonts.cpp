@@ -34,10 +34,8 @@ is what we normally see. However, the folder is a perfectly normal CFSFolder.
 *   IShellFolder implementation
 */
 
-class CDesktopFolderEnumZ :
-    public IEnumIDListImpl
+class CDesktopFolderEnumZ: public IEnumIDListImpl
 {
-    private:
     public:
         CDesktopFolderEnumZ();
         ~CDesktopFolderEnumZ();
@@ -118,7 +116,7 @@ static PIDLFontStruct * _ILGetFontStruct(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *  CreateFontsEnumListss()
+ *  CDesktopFolderEnumZ::CreateFontsEnumList()
  */
 BOOL CDesktopFolderEnumZ::CreateFontsEnumList(DWORD dwFlags)
 {
@@ -193,10 +191,15 @@ HRESULT WINAPI CFontsFolder::FinalConstruct()
 }
 
 /**************************************************************************
-*    ISF_Fonts_fnParseDisplayName
+*    CFontsFolder::ParseDisplayName
 */
-HRESULT WINAPI CFontsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LPOLESTR lpszDisplayName,
-        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+HRESULT WINAPI CFontsFolder::ParseDisplayName(
+    HWND hwndOwner,
+    LPBC pbcReserved,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    LPITEMIDLIST *ppidl,
+    DWORD * pdwAttributes)
 {
     HRESULT hr = E_UNEXPECTED;
 
@@ -214,7 +217,7 @@ HRESULT WINAPI CFontsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, 
 }
 
 /**************************************************************************
-*        ISF_Fonts_fnEnumObjects
+*        CFontsFolder::EnumObjects
 */
 HRESULT WINAPI CFontsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
@@ -247,7 +250,7 @@ HRESULT WINAPI CFontsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMID
 }
 
 /**************************************************************************
-*        ISF_Fonts_fnBindToObject
+*        CFontsFolder::BindToObject
 */
 HRESULT WINAPI CFontsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
@@ -258,7 +261,7 @@ HRESULT WINAPI CFontsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, 
 }
 
 /**************************************************************************
-*    ISF_Fonts_fnBindToStorage
+*    CFontsFolder::BindToStorage
 */
 HRESULT WINAPI CFontsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
@@ -270,7 +273,7 @@ HRESULT WINAPI CFontsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved,
 }
 
 /**************************************************************************
-*     ISF_Fonts_fnCompareIDs
+*     CFontsFolder::CompareIDs
 */
 
 HRESULT WINAPI CFontsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
@@ -284,7 +287,7 @@ HRESULT WINAPI CFontsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCI
 }
 
 /**************************************************************************
-*    ISF_Fonts_fnCreateViewObject
+*    CFontsFolder::CreateViewObject
 */
 HRESULT WINAPI CFontsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
@@ -320,7 +323,7 @@ HRESULT WINAPI CFontsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOI
 }
 
 /**************************************************************************
-*  ISF_Fonts_fnGetAttributesOf
+*  CFontsFolder::GetAttributesOf
 */
 HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
 {
@@ -365,7 +368,7 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DW
 }
 
 /**************************************************************************
-*    ISF_Fonts_fnGetUIObjectOf
+*    CFontsFolder::GetUIObjectOf
 *
 * PARAMETERS
 *  hwndOwner [in]  Parent window for any output
@@ -376,8 +379,10 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DW
 *  ppvObject [out] Resulting Interface
 *
 */
-HRESULT WINAPI CFontsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl, REFIID riid,
-        UINT * prgfInOut, LPVOID * ppvOut)
+HRESULT WINAPI CFontsFolder::GetUIObjectOf(
+    HWND hwndOwner,
+    UINT cidl, LPCITEMIDLIST *apidl,
+    REFIID riid, UINT *prgfInOut, LPVOID *ppvOut)
 {
     LPITEMIDLIST pidl;
     CComPtr<IUnknown>                    pObj;
@@ -431,14 +436,14 @@ HRESULT WINAPI CFontsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDL
 }
 
 /**************************************************************************
-*    ISF_Fonts_fnGetDisplayNameOf
+*    CFontsFolder::GetDisplayNameOf
 *
 */
 HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     PIDLFontStruct *pFont;
 
-    TRACE("ISF_Fonts_fnGetDisplayNameOf (%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
+    TRACE("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump (pidl);
 
     if (!strRet)
@@ -481,7 +486,7 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags,
 }
 
 /**************************************************************************
-*  ISF_Fonts_fnSetNameOf
+*  CFontsFolder::SetNameOf
 *  Changes the name of a file object or subfolder, possibly changing its item
 *  identifier in the process.
 *
@@ -643,7 +648,7 @@ HRESULT WINAPI CFontsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 }
 
 /************************************************************************
- *    INPFldr_PersistFolder2_GetClassID
+ *    CFontsFolder::GetClassID
  */
 HRESULT WINAPI CFontsFolder::GetClassID(CLSID *lpClassId)
 {
@@ -658,7 +663,7 @@ HRESULT WINAPI CFontsFolder::GetClassID(CLSID *lpClassId)
 }
 
 /************************************************************************
- *    INPFldr_PersistFolder2_Initialize
+ *    CFontsFolder::Initialize
  *
  * NOTES: it makes no sense to change the pidl
  */
@@ -670,16 +675,16 @@ HRESULT WINAPI CFontsFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *    IPersistFolder2_fnGetCurFolder
+ *    CFontsFolder::GetCurFolder
  */
-HRESULT WINAPI CFontsFolder::GetCurFolder (LPITEMIDLIST *pidl)
+HRESULT WINAPI CFontsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
     if (!pidl)
         return E_POINTER;
 
-    *pidl = ILClone (pidlRoot);
+    *pidl = ILClone(pidlRoot);
 
     return S_OK;
 }
@@ -689,7 +694,7 @@ HRESULT WINAPI CFontsFolder::GetCurFolder (LPITEMIDLIST *pidl)
 */
 
 /**************************************************************************
-* ISF_Fonts_IContextMenu_QueryContextMenu()
+* CFontsFolder::QueryContextMenu()
 */
 HRESULT WINAPI CFontsFolder::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
@@ -737,7 +742,7 @@ HRESULT WINAPI CFontsFolder::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT 
 }
 
 /**************************************************************************
-* ISF_Fonts_IContextMenu_InvokeCommand()
+* CFontsFolder::InvokeCommand()
 */
 HRESULT WINAPI CFontsFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
@@ -786,7 +791,7 @@ HRESULT WINAPI CFontsFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 }
 
 /**************************************************************************
- *  ISF_Fonts_IContextMenu_GetCommandString()
+ *  CFontsFolder::GetCommandString()
  *
  */
 HRESULT WINAPI CFontsFolder::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
@@ -797,11 +802,11 @@ HRESULT WINAPI CFontsFolder::GetCommandString(UINT_PTR idCommand, UINT uFlags, U
 }
 
 /**************************************************************************
-* ISF_Fonts_IContextMenu_HandleMenuMsg()
+* CFontsFolder::HandleMenuMsg()
 */
 HRESULT WINAPI CFontsFolder::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("ISF_Fonts_IContextMenu_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
+    TRACE("(%p)->(msg=%x wp=%lx lp=%lx)\n", this, uMsg, wParam, lParam);
 
     return E_NOTIMPL;
 }

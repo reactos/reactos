@@ -811,7 +811,7 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
     MENUITEMINFOW mii;
     int id = 1;
 
-    TRACE("%p %p %u %u %u %u\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
+    TRACE("QueryContextMenu %p %p %u %u %u %u\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
 
     if (!hMenu)
         return E_INVALIDARG;
@@ -822,9 +822,8 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
     mii.fState = MFS_ENABLED;
     szBuffer[0] = L'\0';
     LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
-    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
     mii.dwTypeData = szBuffer;
-    mii.cch = wcslen( mii.dwTypeData );
+    mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmdFirst + id++;
     mii.fType = MFT_STRING;
     iIdEmpty = 1;
@@ -838,7 +837,7 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
 HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     HRESULT hr;
-    LPSHELLBROWSER    lpSB;
+    LPSHELLBROWSER lpSB;
     LPSHELLVIEW lpSV = NULL;
 
     TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
@@ -911,7 +910,7 @@ void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
 }
 
 
-void
+static VOID
 InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
 {
     WCHAR CurDrive = L'A';
@@ -980,7 +979,7 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                 li.iSubItem = 0;
                 li.pszText = szVolume;
                 li.iItem = itemCount;
-                (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
+                SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
                 if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
                 {
                     if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
@@ -1100,7 +1099,7 @@ static VOID FreeDriveItemContext(HWND hwndDlg)
     }
 }
 
-INT
+static INT
 GetDefaultItem(HWND hwndDlg, LVITEMW * li)
 {
     HWND hDlgCtrl;
@@ -1130,8 +1129,7 @@ GetDefaultItem(HWND hwndDlg, LVITEMW * li)
 
 }
 
-INT_PTR
-CALLBACK
+static INT_PTR CALLBACK
 RecycleBinDlg(
     HWND hwndDlg,
     UINT uMsg,
