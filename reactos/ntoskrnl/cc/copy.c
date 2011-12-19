@@ -645,7 +645,10 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
              Status = Iosb.Status;
 	  }
+        if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+        {
           MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+        }
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(FALSE);

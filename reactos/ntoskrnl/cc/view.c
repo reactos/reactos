@@ -899,6 +899,7 @@ CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
   ASSERT(SwapEntry == 0);
   if (Page != 0)
     {
+        ASSERT(MmGetReferenceCountPage(Page) == 1);
       MmReleasePageMemoryConsumer(MC_CACHE, Page);
     }
 }
