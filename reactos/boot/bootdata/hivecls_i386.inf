@@ -4,10 +4,8 @@ Signature="$ReactOS$
 [AddReg]
 HKLM,"SOFTWARE\Classes",,0x00000010
 
-
 ; Default key
 HKCR,"*","",0x00000000,""
-HKCR,"*\shellex\ContextMenuHandlers\Open With","",0x00000000,"{09799AFB-AD67-11d1-ABCD-00C04FC30936}"
 
 ; Folders
 HKCR,"Folder","",0x00000000,"Folder"
@@ -333,10 +331,6 @@ HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\shell\RunAs\command","",0x000
 HKCR,"CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}\ShellFolder","Attributes",0x00010001,0x00000000
 
 ; Open With shell extension
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}","",0x00000000,"Open With Context Menu Handler"
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\shellex\MayChangeDefaultMenu","",0x00000000,""
 HKCR,"SystemFileAssociations","",0x00000000,""
 HKCR,"Applications","",0x00000000,""
 

@@ -1049,7 +1049,7 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
         return E_OUTOFMEMORY;
     }
     if (_ILIsDesktop(pidl) || _ILIsMyDocuments(pidl) || _ILIsControlPanel(pidl) || _ILIsNetHood(pidl) ||
-            _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl))
+        _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl))
     {
         TRACE("pidl is a folder\n");
         SHFree((void*)pidl);
@@ -1076,7 +1076,7 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
     pszExt = wcsrchr(szPath, L'.');
     if (pszExt && !_wcsicmp(pszExt, szShortCut))
     {
-        FIXME("pidl is a shortcut\n");
+        TRACE("pidl is a shortcut\n");
         return E_FAIL;
     }
 
@@ -1105,7 +1105,6 @@ SHOpenWithDialog(HWND hwndParent,
 
     if (poainfo->pcszClass == NULL && poainfo->pcszFile == NULL)
         return E_FAIL;
-
 
     hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(OPEN_WITH_PROGRAMM_DLG), hwndParent, OpenWithProgrammDlg, (LPARAM)poainfo);
     if (hwnd == NULL)

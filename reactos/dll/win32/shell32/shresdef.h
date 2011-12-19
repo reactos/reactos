@@ -471,5 +471,6 @@ FIXME: Need to add them, but for now just let them use the same: searching.avi
 #define IDR_SHELLFSFOLDER       143
 #define IDR_SHELLLINK           144
 #define IDR_STARTMENU           145
+#define IDR_OPENWITHMENU        146
 
 #endif

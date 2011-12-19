@@ -51,7 +51,7 @@ class COpenWithMenu :
         // IShellExtInit
         virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
-        DECLARE_NO_REGISTRY()
+        DECLARE_REGISTRY_RESOURCEID(IDR_OPENWITHMENU)
         DECLARE_NOT_AGGREGATABLE(COpenWithMenu)
 
         DECLARE_PROTECT_FINAL_CONSTRUCT()

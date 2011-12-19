@@ -721,7 +721,7 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Dysk sieciowy"
 
-	IDS_OPEN_WITH               "Otwórz z"
+	IDS_OPEN_WITH               "Otwórz za pomocą"
 	IDS_OPEN_WITH_CHOOSE        "Wybierz program..."
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autorzy"
