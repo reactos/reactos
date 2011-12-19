@@ -443,55 +443,56 @@ DriveGeneralDlg(
     LPARAM lParam
 )
 {
-    LPPROPSHEETPAGEW ppsp;
-    LPDRAWITEMSTRUCT drawItem;
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    WCHAR * lpstr;
-    WCHAR szPath[MAX_PATH];
-    UINT length;
-    LPPSHNOTIFY lppsn;
-
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            ppsp = (LPPROPSHEETPAGEW)lParam;
+        {
+            LPPROPSHEETPAGEW ppsp = (LPPROPSHEETPAGEW)lParam;
             if (ppsp == NULL)
                 break;
-            lpstr = (WCHAR *)ppsp->lParam;
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lpstr);
-            InitializeGeneralDriveDialog(hwndDlg, lpstr);
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)ppsp->lParam);
+            InitializeGeneralDriveDialog(hwndDlg, (LPWSTR)ppsp->lParam);
             return TRUE;
+        }
         case WM_DRAWITEM:
-            drawItem = (LPDRAWITEMSTRUCT)lParam;
+        {
+            LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
+
             if (drawItem->CtlID >= 14013 && drawItem->CtlID <= 14015)
             {
                 PaintStaticControls(hwndDlg, drawItem);
                 return TRUE;
             }
             break;
+        }
+
         case WM_COMMAND:
             if (LOWORD(wParam) == 14010) /* Disk Cleanup */
             {
-                lpstr = (WCHAR*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                ZeroMemory( &si, sizeof(si) );
+                UINT length;
+                STARTUPINFOW si;
+                PROCESS_INFORMATION pi;
+                WCHAR wszPath[MAX_PATH];
+                LPWSTR lpStr = (WCHAR*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+                ZeroMemory(&si, sizeof(si));
                 si.cb = sizeof(si);
-                ZeroMemory( &pi, sizeof(pi) );
-                if (!GetSystemDirectoryW(szPath, MAX_PATH))
+                ZeroMemory(&pi, sizeof(pi));
+                if (!GetSystemDirectoryW(wszPath, MAX_PATH))
                     break;
-                wcscat(szPath, L"\\cleanmgr.exe /D ");
-                length = wcslen(szPath);
-                szPath[length] = lpstr[0];
-                szPath[length+1] = L'\0';
-                if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                wcscat(wszPath, L"\\cleanmgr.exe /D ");
+                length = wcslen(wszPath);
+                wszPath[length] = lpStr[0];
+                wszPath[length+1] = L'\0';
+                if (CreateProcessW(NULL, wszPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
                 {
                     CloseHandle(pi.hProcess);
                     CloseHandle(pi.hThread);
                 }
-                break;
             }
+            break;
         case WM_NOTIFY:
-            lppsn = (LPPSHNOTIFY) lParam;
             if (LOWORD(wParam) == 14000)
             {
                 if (HIWORD(wParam) == EN_CHANGE)
@@ -500,23 +501,27 @@ DriveGeneralDlg(
                 }
                 break;
             }
-            if (lppsn->hdr.code == PSN_APPLY)
+            else if (((LPNMHDR)lParam)->hwndFrom == GetParent(hwndDlg))
             {
-                lpstr = (LPWSTR)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                if (lpstr && GetDlgItemTextW(hwndDlg, 14000, szPath, sizeof(szPath) / sizeof(WCHAR)))
+                /* Property Sheet */
+                LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
+                
+                if (lppsn->hdr.code == PSN_APPLY)
                 {
-                    szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
-                    SetVolumeLabelW(lpstr, szPath);
+                    LPWSTR lpstr = (LPWSTR)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                    WCHAR buf[256];
+
+                    if (lpstr && GetDlgItemTextW(hwndDlg, 14000, buf, sizeof(buf) / sizeof(WCHAR)))
+                        SetVolumeLabelW(lpstr, buf);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                    return TRUE;
                 }
-                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
-                return TRUE;
             }
             break;
 
         default:
             break;
     }
-
 
     return FALSE;
 }
@@ -665,21 +670,21 @@ AddPropSheetPageProc(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 BOOL
-SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl)
+SH_ShowDriveProperties(WCHAR *drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
 {
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
     PROPSHEETHEADERW psh;
-    BOOL ret;
+    HWND hwnd;
     UINT i;
     WCHAR szName[MAX_PATH+6];
     DWORD dwMaxComponent, dwFileSysFlags;
-    CComPtr<IDataObject>        pDataObj;
+    CComPtr<IDataObject> pDataObj;
     UINT DriveType;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
     psh.dwSize = sizeof(PROPSHEETHEADERW);
-    //psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE;
+    psh.dwFlags = 0; // FIXME: make it modeless
     psh.hwndParent = NULL;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
@@ -691,25 +696,17 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
         psh.dwFlags |= PSH_PROPTITLE;
         if (!wcslen(szName))
         {
-            /* FIXME
-             * check if disk is a really a local hdd
-             */
+            /* FIXME: check if disk is a really a local hdd */
             i = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szName, sizeof(szName) / sizeof(WCHAR) - 6);
             if (i > 0 && i < (sizeof(szName) / sizeof(WCHAR)) - 6)
-            {
-                szName[i] = L' ';
-                szName[i+1] = L'(';
-                wcscpy(&szName[i+2], drive);
-                szName[i+4] = L')';
-                szName[i+5] = L'\0';
-            }
+                wsprintf(szName + i, L" (%s)", drive);
         }
     }
 
     DriveType = GetDriveTypeW(drive);
     for (i = 0; i < DRIVE_PROPERTY_PAGES; i++)
     {
-        if (PropPages[i].DriveType == (UINT) - 1 || (PropPages[i].DriveType != (UINT) - 1 &&  PropPages[i].DriveType == DriveType))
+        if (PropPages[i].DriveType == (UINT)-1 || PropPages[i].DriveType == DriveType)
         {
             HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
             if (hprop)
@@ -724,20 +721,17 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
     {
         hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE - DRIVE_PROPERTY_PAGES, pDataObj);
         if (hpsx)
-        {
             SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageProc, (LPARAM)&psh);
-        }
     }
 
-    ret = PropertySheetW(&psh);
+    hwnd = (HWND)PropertySheetW(&psh);
 
     if (hpsx)
         SHDestroyPropSheetExtArray(hpsx);
 
-    if (ret < 0)
+    if (!hwnd)
         return FALSE;
-    else
-        return TRUE;
+    return TRUE;
 }
 
 BOOL
@@ -803,7 +797,6 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
     *pClusterSize = ClusterSize;
     return TRUE;
 }
-
 
 VOID
 InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
@@ -1011,9 +1004,8 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     ShowWindow(GetDlgItem(hwndDlg, 28678), SW_HIDE);
 }
 
-HWND FormatDrvDialog = NULL;
-BOOLEAN bSuccess = FALSE;
-
+static HWND FormatDrvDialog = NULL;
+static BOOLEAN bSuccess = FALSE;
 
 BOOLEAN
 NTAPI
@@ -1049,10 +1041,6 @@ FormatExCB(
 
     return TRUE;
 }
-
-
-
-
 
 VOID
 FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
@@ -1155,7 +1143,6 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
 }
 
-
 INT_PTR
 CALLBACK
 FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1190,7 +1177,6 @@ FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return FALSE;
 }
-
 
 BOOL
 InitializeFmifsLibrary(PFORMAT_DRIVE_CONTEXT pContext)
