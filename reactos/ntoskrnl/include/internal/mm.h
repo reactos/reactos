@@ -1261,8 +1261,8 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
-                             IN PFN_NUMBER NumberOfPages);
+MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
+                      IN PFN_NUMBER NumberOfPages);
 
 VOID
 NTAPI

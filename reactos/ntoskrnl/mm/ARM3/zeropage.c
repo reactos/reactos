@@ -87,7 +87,7 @@ MmZeroPageThread(VOID)
             Pfn1->u1.Flink = LIST_HEAD;
             KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-            ZeroAddress = MiMapPagesToZeroInHyperSpace(Pfn1, 1);
+            ZeroAddress = MiMapPagesInZeroSpace(Pfn1, 1);
             ASSERT(ZeroAddress);
             RtlZeroMemory(ZeroAddress, PAGE_SIZE);
             MiUnmapPagesInZeroSpace(ZeroAddress, 1);
