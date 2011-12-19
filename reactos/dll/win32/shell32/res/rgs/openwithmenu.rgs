@@ -18,6 +18,10 @@ HKCR
 				}
 			}
 		}
+		
+		ForceRemove Applications
+		{
+		}
 	}
 	NoRemove *
 	{
