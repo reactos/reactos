@@ -245,7 +245,7 @@ ChkDskNow(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
     DWORD ClusterSize = 0;
     WCHAR szFs[30];
-    WCHAR szDrive[] = L"C:\\"
+    WCHAR szDrive[] = L"C:\\";
     ULARGE_INTEGER TotalNumberOfFreeBytes, FreeBytesAvailableUser;
     BOOLEAN bCorrectErrors = FALSE, bScanDrive = FALSE;
 
