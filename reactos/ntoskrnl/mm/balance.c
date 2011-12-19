@@ -108,8 +108,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
    {
       if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
       (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-      if (MmAvailablePages < MiMinimumAvailablePages ||
-	     (Entry = ExInterlockedRemoveHeadList(&AllocationListHead, &AllocationListLock)) == NULL)
+      if ((Entry = ExInterlockedRemoveHeadList(&AllocationListHead, &AllocationListLock)) == NULL)
       {
          OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmDereferencePage(Page);
@@ -165,9 +164,6 @@ MiTrimMemoryConsumer(ULONG Consumer)
         Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
 
         DPRINT("Trimming consumer %d: Freed %d pages with a target of %d pages\n", Consumer, NrFreedPages, Target);
-
-        if (NrFreedPages == 0)
-            DPRINT1("Ran out of pages to swap!\n");
 
         if (!NT_SUCCESS(Status))
         {
@@ -355,6 +351,12 @@ MiBalancerThread(PVOID Unused)
           for (i = 0; i < MC_MAXIMUM; i++)
           {
               MiTrimMemoryConsumer(i);
+          }
+
+          if (MmAvailablePages < MiMinimumAvailablePages)
+          {
+              /* This is really bad... */
+              DPRINT1("Balancer failed to resolve low memory condition! Complete memory exhaustion is imminent!\n");
           }
       }
       else
