@@ -572,7 +572,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
       *ThumbPos = *ThumbSize = 0;
     }
   else
-    {
+  {
       SCROLLINFO Info;
 
       NtUserSBGetParms(Wnd, Bar, NULL, &Info);
@@ -580,39 +580,43 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
       Pixels -= (2 * GetSystemMetrics(SM_CXVSCROLL));
 
       if (0 != Info.nPage)
-        {
+      {
           *ThumbSize = MulDiv(Pixels, Info.nPage, (Info.nMax - Info.nMin + 1));
           if (*ThumbSize < SCROLL_MIN_THUMB)
-            {
+          {
               *ThumbSize = SCROLL_MIN_THUMB;
-            }
-        }
+          }
+      }
       else
-        {
+      {
           *ThumbSize = GetSystemMetrics(SM_CXVSCROLL);
-        }
+      }
 
+//#if 0 /* FIXME */
       if (((Pixels -= *ThumbSize ) < 0) ||
           (( pSBInfo->WSBflags & ESB_DISABLE_BOTH) == ESB_DISABLE_BOTH))
-        {
+//#else
+//      if ((Pixels -= *ThumbSize ) < 0)
+//#endif
+      {
           /* Rectangle too small or scrollbar disabled -> no thumb */
           *ThumbPos = *ThumbSize = 0;
-        }
+      }
       else
-        {
+      {
           INT Max = Info.nMax - max(Info.nPage - 1, 0);
           if (Max <= Info.nMin)
-            {
+          {
               *ThumbPos = *ArrowSize;
-            }
+          }
           else
-            {
+          {
               *ThumbPos = *ArrowSize
                           + MulDiv(Pixels, (Info.nPos - Info.nMin),
                                    (Max - Info.nMin));
-            }
-        }
-    }
+          }
+      }
+  }
 
   return Vertical;
 }
@@ -806,23 +810,22 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   SETSCROLLBARINFO NewInfo;
 
   if (! IntGetScrollBarInfo(Wnd, SBType, &ScrollBarInfo))
-    {
-      return;
-    }
-  if (SCROLL_NOWHERE == ScrollTrackHitTest && WM_LBUTTONDOWN != Msg)
-    {
-      return;
-    }
+  {
+     return;
+  }
+  if ((ScrollTrackHitTest == SCROLL_NOWHERE) && (Msg != WM_LBUTTONDOWN))
+  {
+     return;
+  }
 
   NewInfo.nTrackPos = ScrollTrackingVal;
   NewInfo.reserved = ScrollBarInfo.reserved;
   memcpy(NewInfo.rgstate, ScrollBarInfo.rgstate, (CCHILDREN_SCROLLBAR + 1) * sizeof(DWORD));
 
-  if (SB_CTL == SBType
-      && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
-    {
+  if (SB_CTL == SBType  && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
+  {
       switch(Msg)
-        {
+      {
           case WM_LBUTTONDOWN:  /* Initialise mouse tracking */
             HideCaret(Wnd);  /* hide caret while holding down LBUTTON */
             SetCapture(Wnd);
@@ -836,36 +839,33 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
           case WM_LBUTTONUP:
             ReleaseCapture();
             ScrollTrackHitTest = HitTest = SCROLL_NOWHERE;
-            if (Wnd == GetFocus())
-              {
-                ShowCaret(Wnd);
-              }
+            if (Wnd == GetFocus()) ShowCaret(Wnd);
             break;
           case WM_SYSTIMER:
             Pt = PrevPt;
             break;
-          }
+      }
       return;
-    }
+  }
 
   Dc = GetDCEx(Wnd, 0, DCX_CACHE | ((SB_CTL == SBType) ? 0 : DCX_WINDOW));
   if (SB_VERT == SBType)
-    {
+  {
       Vertical = TRUE;
-    }
+  }
   else if (SB_HORZ == SBType)
-    {
+  {
       Vertical = FALSE;
-    }
+  }
   else
-    {
+  {
       Vertical = (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_VERT));
-    }
+  }
   WndOwner = (SB_CTL == SBType) ? GetParent(Wnd) : Wnd;
   WndCtl   = (SB_CTL == SBType) ? Wnd : NULL;
 
   switch (Msg)
-    {
+  {
       case WM_LBUTTONDOWN:  /* Initialise mouse tracking */
         HideCaret(Wnd);     /* hide caret while holding down LBUTTON */
         ScrollTrackVertical = Vertical;
@@ -875,10 +875,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         LastMousePos  = LastClickPos;
         TrackThumbPos = ScrollBarInfo.xyThumbTop;
         PrevPt = Pt;
-        if (SB_CTL == SBType && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP))
-          {
-            SetFocus(Wnd);
-          }
+        if (SB_CTL == SBType && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
         SetCapture(Wnd);
         ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
         NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
@@ -894,10 +891,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         HitTest = SCROLL_NOWHERE;
         ReleaseCapture();
         /* if scrollbar has focus, show back caret */
-        if (Wnd == GetFocus())
-          {
-            ShowCaret(Wnd);
-          }
+        if (Wnd == GetFocus()) ShowCaret(Wnd);
         ScrollBarInfo.rgstate[ScrollTrackHitTest] &= ~STATE_SYSTEM_PRESSED;
         NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
         NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
@@ -910,7 +904,10 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
 
       default:
           return;  /* Should never happen */
-    }
+  }
+
+  TRACE("Event: hwnd=%p bar=%d msg=%s pt=%d,%d hit=%d\n",
+            Wnd, SBType, SPY_GetMsgName(Msg,Wnd), Pt.x, Pt.y, HitTest );
 
   switch (ScrollTrackHitTest)
     {
@@ -954,7 +951,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         break;
 
       case SCROLL_THUMB:
-        if (WM_LBUTTONDOWN == Msg)
+        if (Msg == WM_LBUTTONDOWN)
           {
             ScrollTrackingWin = Wnd;
             ScrollTrackingBar = SBType;
@@ -965,7 +962,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
             NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
             IntScrollDrawMovingThumb(Dc, &ScrollBarInfo, Vertical);
           }
-        else if (WM_LBUTTONUP == Msg)
+        else if (Msg == WM_LBUTTONUP)
           {
             ScrollTrackingWin = 0;
             ScrollTrackingVal = 0;
@@ -1004,7 +1001,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
       case SCROLL_BOTTOM_RECT:
         if (HitTest == ScrollTrackHitTest)
           {
-            if ((WM_LBUTTONDOWN == Msg) || (WM_SYSTIMER == Msg))
+            if ((Msg == WM_LBUTTONDOWN) || (Msg == WM_SYSTIMER))
               {
                 SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                              SB_PAGEDOWN, (LPARAM) WndCtl);
@@ -1022,7 +1019,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
       case SCROLL_BOTTOM_ARROW:
         if (HitTest == ScrollTrackHitTest)
           {
-            if ((WM_LBUTTONDOWN == Msg) || (WM_SYSTIMER == Msg))
+            if ((Msg == WM_LBUTTONDOWN) || (Msg == WM_SYSTIMER))
               {
                 SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                              SB_LINEDOWN, (LPARAM) WndCtl);
@@ -1031,14 +1028,11 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
                            SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
                            (TIMERPROC) NULL);
           }
-        else
-          {
-            KillSystemTimer(Wnd, SCROLL_TIMER);
-          }
+        else KillSystemTimer(Wnd, SCROLL_TIMER);
         break;
     }
 
-  if (WM_LBUTTONDOWN == Msg)
+  if (Msg == WM_LBUTTONDOWN)
     {
       if (SCROLL_THUMB == HitTest)
         {
@@ -1049,7 +1043,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         }
     }
 
-  if (WM_LBUTTONUP == Msg)
+  if (Msg == WM_LBUTTONUP)
     {
       HitTest = ScrollTrackHitTest;
       ScrollTrackHitTest = SCROLL_NOWHERE;  /* Terminate tracking */
@@ -1061,8 +1055,12 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
           SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                        MAKEWPARAM(SB_THUMBPOSITION, Val), (LPARAM) WndCtl);
         }
+      /* SB_ENDSCROLL doesn't report thumb position */
       SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                    SB_ENDSCROLL, (LPARAM) WndCtl);
+
+      /* Terminate tracking */
+      ScrollTrackingWin = 0;
     }
 
   ReleaseDC(Wnd, Dc);
@@ -1091,6 +1089,7 @@ static void IntScrollCreateScrollBar(
 
   TRACE("hwnd=%p lpCreate=%p\n", Wnd, lpCreate);
 
+//#if 0 /* FIXME */
   if (lpCreate->style & WS_DISABLED)
   {
   //    info->flags = ESB_DISABLE_BOTH;
@@ -1098,7 +1097,7 @@ static void IntScrollCreateScrollBar(
       NtUserMessageCall( Wnd, WM_ENABLE, FALSE, 0, 0, FNID_SCROLLBAR, FALSE);
       ERR("Created WS_DISABLED scrollbar\n");
   }
-
+//#endif
   if (0 != (lpCreate->style & (SBS_SIZEGRIP | SBS_SIZEBOX)))
     {
       if (0 != (lpCreate->style & SBS_SIZEBOXTOPLEFTALIGN))
@@ -1197,12 +1196,18 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
   UINT XOffset = 0, YOffset = 0;
 
   if (SBType != SB_CTL)
-  {
-      RECT rect;
-      GetClientRect(Wnd, &rect);
+  { // Replace HAX for CMD mouse tracking.
+      PWND pwnd = ValidateHwnd(Wnd);
+      if (!pwnd) return;
+      XOffset = pwnd->rcClient.left - pwnd->rcWindow.left;
+      YOffset = pwnd->rcClient.top - pwnd->rcWindow.top;
+//      RECT rect;
+//      GetClientRect(Wnd, &rect);
       ScreenToClient(Wnd, &Pt);
-      Pt.x -= rect.left;
-      Pt.y -= rect.top;
+//      Pt.x -= rect.left;
+//      Pt.y -= rect.top;
+      Pt.x += XOffset;
+      Pt.y += YOffset;
   }
 
   IntScrollHandleScrollEvent(Wnd, SBType, WM_LBUTTONDOWN, Pt);
