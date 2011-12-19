@@ -27,8 +27,8 @@
 #include <time.h>
 #include <math.h>
 
-#include <gl/gl.h>
-#include <gl/glu.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 #include "resource.h"
 #include "settings.h"
