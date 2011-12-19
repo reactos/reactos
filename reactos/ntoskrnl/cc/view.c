@@ -448,6 +448,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
   KeReleaseGuardedMutex(&ViewLock);
   ExReleasePushLock(&CacheSeg->Lock);
+  KeLeaveCriticalRegion();
 
   return(STATUS_SUCCESS);
 }
@@ -476,6 +477,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
         {
             CcRosCacheSegmentIncRefCount(current);
             KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+            KeEnterCriticalRegion();
             ExAcquirePushLockExclusive(&current->Lock);
             return(current);
         }
@@ -525,6 +527,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
 
   CacheSeg->Dirty = TRUE;
   ExReleasePushLock(&CacheSeg->Lock);
+  KeLeaveCriticalRegion();
 
   return(STATUS_SUCCESS);
 }
@@ -574,6 +577,8 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
 
   ExReleasePushLock(&CacheSeg->Lock);
+  KeLeaveCriticalRegion();
+
   return(STATUS_SUCCESS);
 }
 
@@ -621,6 +626,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   current->DirtySegmentListEntry.Blink = NULL;
   current->ReferenceCount = 1;
   ExInitializePushLock(&current->Lock);
+  KeEnterCriticalRegion();
   ExAcquirePushLockExclusive(&current->Lock);
   KeAcquireGuardedMutex(&ViewLock);
 
@@ -655,7 +661,8 @@ CcRosCreateCacheSegment(PBCB Bcb,
 	KeReleaseGuardedMutex(&ViewLock);
 	ExFreeToNPagedLookasideList(&CacheSegLookasideList, *CacheSeg);
 	*CacheSeg = current;
-        ExAcquirePushLockExclusive(&current->Lock);
+    /* We're still in the critical region from above */
+    ExAcquirePushLockExclusive(&current->Lock);
 	return STATUS_SUCCESS;
      }
      if (current->FileOffset < FileOffset)
@@ -1040,8 +1047,9 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
                         IoStatus->Status = Status;
                     }
                 }
-                KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
                 ExReleasePushLock(&current->Lock);
+                KeLeaveCriticalRegion();
+                KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
                 CcRosCacheSegmentDecRefCount(current);
                 KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
             }

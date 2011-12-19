@@ -240,6 +240,7 @@ CcUnpinRepinnedBcb (
       IoStatus->Information = 0;
       if (WriteThrough)
         {
+          KeEnterCriticalRegion();
           ExAcquirePushLockExclusive(&iBcb->CacheSegment->Lock);
           if (iBcb->CacheSegment->Dirty)
             {
@@ -250,6 +251,7 @@ CcUnpinRepinnedBcb (
               IoStatus->Status = STATUS_SUCCESS;
             }
           ExReleasePushLockExclusive(&iBcb->CacheSegment->Lock);
+          KeLeaveCriticalRegion();
         }
       else
         {
