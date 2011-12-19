@@ -1011,8 +1011,8 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
     FORMATETC fmt;
     HRESULT hr;
     LPIDA pida;
-    LPCITEMIDLIST pidl_folder;
-    LPCITEMIDLIST pidl_child;
+    LPCITEMIDLIST pidlFolder;
+    LPCITEMIDLIST pidlChild;
     LPCITEMIDLIST pidl;
     DWORD dwType;
     LPWSTR pszExt;
@@ -1035,10 +1035,10 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
     pida = (LPIDA)GlobalLock(medium.hGlobal);
     ASSERT(pida->cidl == 1);
 
-    pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
-    pidl_child = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
+    pidlFolder = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
+    pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
 
-    pidl = ILCombine(pidl_folder, pidl_child);
+    pidl = ILCombine(pidlFolder, pidlChild);
 
     GlobalUnlock(medium.hGlobal);
     GlobalFree(medium.hGlobal);
@@ -1048,8 +1048,9 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
         ERR("no mem\n");
         return E_OUTOFMEMORY;
     }
-    if (_ILIsDesktop(pidl) || _ILIsMyDocuments(pidl) || _ILIsControlPanel(pidl) || _ILIsNetHood(pidl) ||
-        _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl))
+    if (_ILIsDesktop(pidlChild) || _ILIsMyDocuments(pidlChild) || _ILIsControlPanel(pidlChild) ||
+        _ILIsNetHood(pidlChild) || _ILIsBitBucket(pidlChild) || _ILIsDrive(pidlChild) ||
+        _ILIsCPanelStruct(pidlChild) || _ILIsFolder(pidlChild) || _ILIsMyComputer(pidlChild))
     {
         TRACE("pidl is a folder\n");
         SHFree((void*)pidl);
