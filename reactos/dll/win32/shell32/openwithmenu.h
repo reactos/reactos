@@ -38,7 +38,6 @@ class COpenWithMenu :
     public:
         COpenWithMenu();
         ~COpenWithMenu();
-        HRESULT LoadOpenWithItems(IDataObject *pdtobj);
 
         // IContextMenu
         virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);

@@ -77,11 +77,10 @@ COpenWithMenu::~COpenWithMenu()
 }
 
 static VOID
-AddItem(HMENU hMenu, UINT idCmdFirst)
+AddChooseProgramItem(HMENU hMenu, UINT idCmdFirst)
 {
     MENUITEMINFOW mii;
     WCHAR szBuffer[MAX_PATH];
-    static const WCHAR szChoose[] = { 'C', 'h', 'o', 'o', 's', 'e', ' ', 'P', 'r', 'o', 'g', 'r', 'a', 'm', '.', '.', '.', 0 };
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
@@ -91,11 +90,9 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 
     if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH_CHOOSE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-        wcscpy(szBuffer, szChoose);
+        wcscpy(szBuffer, L"Choose Program...");
 
-    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-
-    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
+    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_STRING;
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
     mii.wID = idCmdFirst;
@@ -106,7 +103,7 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
 }
 
 static VOID
-LoadOWItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
+LoadOpenWithItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
 {
     const WCHAR * szExt;
     WCHAR szPath[100];
@@ -165,7 +162,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     Context.hMenu = hSubMenu;
     Context.idCmdFirst = idCmdFirst;
     /* load items */
-    LoadOWItems(&Context, szPath);
+    LoadOpenWithItems(&Context, szPath);
     if (!Context.Count)
     {
         DestroyMenu(hSubMenu);
@@ -175,7 +172,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     }
     else
     {
-        AddItem(hSubMenu, Context.idCmdFirst++);
+        AddChooseProgramItem(hSubMenu, Context.idCmdFirst++);
         count = Context.idCmdFirst - idCmdFirst;
         /* verb start at index zero */
         wId = count - 1;
@@ -232,9 +229,9 @@ FreeListItems(HWND hwndDlg)
 }
 
 static BOOL
-HideApplicationFromList(WCHAR * pFileName)
+HideApplicationFromList(WCHAR *pFileName)
 {
-    WCHAR szBuffer[100] = {'A', 'p', 'p', 'l', 'i', 'c', 'a', 't', 'i', 'o', 'n', 's', '\\', 0};
+    WCHAR szBuffer[100] = L"Applications\\";
     DWORD dwSize = 0;
     LONG result;
 
@@ -260,10 +257,10 @@ WriteStaticShellExtensionKey(HKEY hRootKey, const WCHAR * pVerb, WCHAR *pFullPat
 {
     HKEY hShell;
     LONG result;
-    WCHAR szBuffer[MAX_PATH+10] = {'s', 'h', 'e', 'l', 'l', '\\', 0 };
+    WCHAR szBuffer[MAX_PATH+10] = L"shell\\";
 
     if (wcslen(pVerb) > (sizeof(szBuffer) / sizeof(WCHAR)) - 15 ||
-            wcslen(pFullPath) > (sizeof(szBuffer) / sizeof(WCHAR)) - 4)
+        wcslen(pFullPath) > (sizeof(szBuffer) / sizeof(WCHAR)) - 4)
     {
         ERR("insufficient buffer\n");
         return;
@@ -528,7 +525,7 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 SetDlgItemTextW(hwndDlg, 14001, szBuffer);
                 ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
                 Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
-                LoadOWItems(&Context, poainfo->pcszFile);
+                LoadOpenWithItems(&Context, poainfo->pcszFile);
                 SendMessage(Context.hDlgCtrl, LB_SETCURSEL, 0, 0);
             }
             return TRUE;
@@ -563,11 +560,11 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             ExecuteOpenItem(pItemContext, poainfo->pcszFile);
                     }
                     FreeListItems(hwndDlg);
-                    EndDialog(hwndDlg, 1);
+                    DestroyWindow(hwndDlg);
                     return TRUE;
                 case 14006: /* cancel */
                     FreeListItems(hwndDlg);
-                    EndDialog(hwndDlg, 0);
+                    DestroyWindow(hwndDlg);
                     return TRUE;
                 default:
                     break;
@@ -626,7 +623,7 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         case WM_CLOSE:
             FreeListItems(hwndDlg);
-            EndDialog(hwndDlg, 0);
+            DestroyWindow(hwndDlg);
             return TRUE;
         default:
             break;
@@ -663,13 +660,13 @@ FreeMenuItemContext(HMENU hMenu)
 }
 
 HRESULT WINAPI
-COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici )
+COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     MENUITEMINFOW mii;
 
     ERR("This %p wId %x count %u verb %x\n", this, wId, count, LOWORD(lpici->lpVerb));
 
-    if (wId < LOWORD(lpici->lpVerb))
+    if (HIWORD(lpici->lpVerb) != 0 || LOWORD(lpici->lpVerb) > wId)
         return E_FAIL;
 
     if (wId == LOWORD(lpici->lpVerb))
@@ -1004,19 +1001,24 @@ LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
     }
 }
 
-HRESULT
-COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
+HRESULT WINAPI
+COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
+                          IDataObject *pdtobj,
+                          HKEY hkeyProgID)
 {
     STGMEDIUM medium;
     FORMATETC fmt;
     HRESULT hr;
     LPIDA pida;
-    LPCITEMIDLIST pidlFolder;
+    LPCITEMIDLIST pidlFolder2;
     LPCITEMIDLIST pidlChild;
     LPCITEMIDLIST pidl;
-    DWORD dwType;
     LPWSTR pszExt;
-    static const WCHAR szShortCut[] = L".lnk";
+    
+    TRACE("This %p\n", this);
+
+    if (pdtobj == NULL)
+        return E_INVALIDARG;
 
     fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     fmt.ptd = NULL;
@@ -1035,10 +1037,10 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
     pida = (LPIDA)GlobalLock(medium.hGlobal);
     ASSERT(pida->cidl == 1);
 
-    pidlFolder = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
+    pidlFolder2 = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
     pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
 
-    pidl = ILCombine(pidlFolder, pidlChild);
+    pidl = ILCombine(pidlFolder2, pidlChild);
 
     GlobalUnlock(medium.hGlobal);
     GlobalFree(medium.hGlobal);
@@ -1068,32 +1070,18 @@ COpenWithMenu::LoadOpenWithItems(IDataObject *pdtobj)
     SHFree((void*)pidl);
     TRACE("szPath %s\n", debugstr_w(szPath));
 
-    if (GetBinaryTypeW(szPath, &dwType))
-    {
-        TRACE("path is a executable %x\n", dwType);
-        return E_FAIL;
-    }
-
     pszExt = wcsrchr(szPath, L'.');
-    if (pszExt && !_wcsicmp(pszExt, szShortCut))
+
+    if (pszExt)
     {
-        TRACE("pidl is a shortcut\n");
-        return E_FAIL;
+        if (!_wcsicmp(pszExt, L".exe") || !_wcsicmp(pszExt, L".lnk"))
+        {
+            TRACE("path is a executable or shortcut\n");
+            return E_FAIL;
+        }
     }
 
     return S_OK;
-}
-
-HRESULT WINAPI
-COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
-                          IDataObject *pdtobj,
-                          HKEY hkeyProgID)
-{
-    TRACE("This %p\n", this);
-
-    if (pdtobj == NULL)
-        return E_INVALIDARG;
-    return LoadOpenWithItems(pdtobj);
 }
 
 HRESULT WINAPI
@@ -1101,7 +1089,6 @@ SHOpenWithDialog(HWND hwndParent,
                  const OPENASINFO *poainfo)
 {
     MSG msg;
-    BOOL bRet;
     HWND hwnd;
 
     if (poainfo->pcszClass == NULL && poainfo->pcszFile == NULL)
@@ -1113,15 +1100,17 @@ SHOpenWithDialog(HWND hwndParent,
         ERR("Failed to create dialog\n");
         return E_FAIL;
     }
+
     ShowWindow(hwnd, SW_SHOWNORMAL);
 
-    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+    while (GetMessage(&msg, NULL, 0, 0) != 0 && IsWindow(hwnd))
     {
-        if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg))
+        if (!IsDialogMessage(hwnd, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
+
     return S_OK;
 }
