@@ -23,15 +23,15 @@
 #ifndef _DRAGDROPHELPER_H_
 #define _DRAGDROPHELPER_H_
 
-class IDropTargetHelperImpl :
-	public CComCoClass<IDropTargetHelperImpl, &CLSID_DragDropHelper>,
+class CDropTargetHelper :
+	public CComCoClass<CDropTargetHelper, &CLSID_DragDropHelper>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IDropTargetHelper
 {
 private:
 public:
-	IDropTargetHelperImpl();
-	~IDropTargetHelperImpl();
+	CDropTargetHelper();
+	~CDropTargetHelper();
 
 	////////
 	virtual HRESULT WINAPI DragEnter (HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect);
@@ -41,11 +41,11 @@ public:
 	virtual HRESULT WINAPI Show(BOOL fShow);
 
 DECLARE_REGISTRY_RESOURCEID(IDR_DRAGDROPHELPER)
-DECLARE_NOT_AGGREGATABLE(IDropTargetHelperImpl)
+DECLARE_NOT_AGGREGATABLE(CDropTargetHelper)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(IDropTargetHelperImpl)
+BEGIN_COM_MAP(CDropTargetHelper)
 	COM_INTERFACE_ENTRY_IID(IID_IDropTargetHelper, IDropTargetHelper)
 END_COM_MAP()
 };

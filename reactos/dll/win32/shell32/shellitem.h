@@ -22,8 +22,8 @@
 #ifndef _SHELLITEM_H_
 #define _SHELLITEM_H_
 
-class ShellItem :
-	public CComCoClass<ShellItem, &CLSID_ShellItem>,
+class CShellItem :
+	public CComCoClass<CShellItem, &CLSID_ShellItem>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IShellItem,
 	public IPersistIDList
@@ -31,8 +31,8 @@ class ShellItem :
 private:
     LPITEMIDLIST            pidl;
 public:
-	ShellItem();
-	~ShellItem();
+	CShellItem();
+	~CShellItem();
 	HRESULT get_parent_pidl(LPITEMIDLIST *parent_pidl);
 	HRESULT get_parent_shellfolder(IShellFolder **ppsf);
 
@@ -49,11 +49,11 @@ public:
 	virtual HRESULT WINAPI GetIDList(LPITEMIDLIST *ppidl);
 
 DECLARE_NO_REGISTRY()
-DECLARE_NOT_AGGREGATABLE(ShellItem)
+DECLARE_NOT_AGGREGATABLE(CShellItem)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(ShellItem)
+BEGIN_COM_MAP(CShellItem)
 	COM_INTERFACE_ENTRY_IID(IID_IShellItem, IShellItem)
 	COM_INTERFACE_ENTRY_IID(IID_IPersistIDList, IPersistIDList)
 END_COM_MAP()

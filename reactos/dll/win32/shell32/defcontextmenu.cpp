@@ -1219,7 +1219,7 @@ CDefaultContextMenu::DoCreateLink(
         if (!GetUniqueFileName(szPath, szLnk, szTarget, TRUE))
             return E_FAIL;
 
-        hr = ShellLink::_CreatorClass::CreateInstance(NULL, IID_IShellLinkW, (void**)&nLink);
+        hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_IShellLinkW, (void**)&nLink);
         if (hr != S_OK)
             return hr;
 

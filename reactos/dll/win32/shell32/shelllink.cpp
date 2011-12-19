@@ -120,7 +120,7 @@ static LPWSTR __inline strdupW( LPCWSTR src )
     return dest;
 }
 
-ShellLink::ShellLink()
+CShellLink::CShellLink()
 {
     pPidl = NULL;
     wHotKey = 0;
@@ -144,7 +144,7 @@ ShellLink::ShellLink()
     iIdOpen = -1;
 }
 
-ShellLink::~ShellLink()
+CShellLink::~CShellLink()
 {
     TRACE("-- destroying IShellLink(%p)\n", this);
 
@@ -159,7 +159,7 @@ ShellLink::~ShellLink()
         ILFree(pPidl);
 }
 
-HRESULT WINAPI ShellLink::GetClassID(CLSID *pclsid )
+HRESULT WINAPI CShellLink::GetClassID(CLSID *pclsid )
 {
     TRACE("%p %p\n", this, pclsid);
 
@@ -169,7 +169,7 @@ HRESULT WINAPI ShellLink::GetClassID(CLSID *pclsid )
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::IsDirty()
+HRESULT WINAPI CShellLink::IsDirty()
 {
     TRACE("(%p)\n",this);
 
@@ -179,7 +179,7 @@ HRESULT WINAPI ShellLink::IsDirty()
     return S_FALSE;
 }
 
-HRESULT WINAPI ShellLink::Load(LPCOLESTR pszFileName, DWORD dwMode)
+HRESULT WINAPI CShellLink::Load(LPCOLESTR pszFileName, DWORD dwMode)
 {
     HRESULT r;
     CComPtr<IStream>        stm;
@@ -237,7 +237,7 @@ static BOOL StartLinkProcessor( LPCOLESTR szLink )
     return ret;
 }
 
-HRESULT WINAPI ShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
+HRESULT WINAPI CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 {
     HRESULT r;
     CComPtr<IStream>        stm;
@@ -278,13 +278,13 @@ HRESULT WINAPI ShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
     return r;
 }
 
-HRESULT WINAPI ShellLink::SaveCompleted(LPCOLESTR pszFileName)
+HRESULT WINAPI CShellLink::SaveCompleted(LPCOLESTR pszFileName)
 {
     FIXME("(%p)->(%s)\n", this, debugstr_w(pszFileName));
     return NOERROR;
 }
 
-HRESULT WINAPI ShellLink::GetCurFile(LPOLESTR *ppszFileName)
+HRESULT WINAPI CShellLink::GetCurFile(LPOLESTR *ppszFileName)
 {
     *ppszFileName = NULL;
 
@@ -403,7 +403,7 @@ static HRESULT Stream_ReadChunk( IStream* stm, LPVOID *data )
     return S_OK;
 }
 
-static BOOL Stream_LoadVolume( LOCAL_VOLUME_INFO *vol, ShellLink::volume_info *volume )
+static BOOL Stream_LoadVolume( LOCAL_VOLUME_INFO *vol, CShellLink::volume_info *volume )
 {
     const int label_sz = sizeof volume->label/sizeof volume->label[0];
     LPSTR label;
@@ -442,7 +442,7 @@ static LPWSTR Stream_LoadPath( LPCSTR p, DWORD maxlen )
 }
 
 static HRESULT Stream_LoadLocation( IStream *stm,
-                                   ShellLink::volume_info *volume, LPWSTR *path )
+                                   CShellLink::volume_info *volume, LPWSTR *path )
 {
     char *p = NULL;
     LOCATION_INFO *loc;
@@ -542,7 +542,7 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
 /************************************************************************
  * IPersistStream_Load (IPersistStream)
  */
-HRESULT WINAPI ShellLink::Load(IStream *stm)
+HRESULT WINAPI CShellLink::Load(IStream *stm)
 {
     LINK_HEADER hdr;
     ULONG    dwBytesRead;
@@ -739,7 +739,7 @@ static HRESULT Stream_WriteString( IStream* stm, LPCWSTR str )
  *        Figure out how Windows deals with unicode paths here.
  */
 static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCWSTR path,
-                                         ShellLink::volume_info *volume )
+                                         CShellLink::volume_info *volume )
 {
     DWORD total_size, path_size, volume_info_size, label_size, final_path_size;
     LOCAL_VOLUME_INFO *vol;
@@ -824,7 +824,7 @@ static HRESULT Stream_WriteAdvertiseInfo( IStream* stm, LPCWSTR string, DWORD ma
  *
  * FIXME: makes assumptions about byte order
  */
-HRESULT WINAPI ShellLink::Save(IStream *stm, BOOL fClearDirty)
+HRESULT WINAPI CShellLink::Save(IStream *stm, BOOL fClearDirty)
 {
     LINK_HEADER header;
     ULONG   count;
@@ -921,7 +921,7 @@ HRESULT WINAPI ShellLink::Save(IStream *stm, BOOL fClearDirty)
 /************************************************************************
  * IPersistStream_GetSizeMax (IPersistStream)
  */
-HRESULT WINAPI ShellLink::GetSizeMax(ULARGE_INTEGER *pcbSize)
+HRESULT WINAPI CShellLink::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
     TRACE("(%p)\n", this);
 
@@ -986,7 +986,7 @@ static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWor
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAA *pfd, DWORD fFlags)
+HRESULT WINAPI CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAA *pfd, DWORD fFlags)
 {
     TRACE("(%p)->(pfile=%p len=%u find_data=%p flags=%u)(%s)\n",
           this, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(sPath));
@@ -1005,7 +1005,7 @@ HRESULT WINAPI ShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN32_FIND_DATA
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetIDList(LPITEMIDLIST * ppidl)
+HRESULT WINAPI CShellLink::GetIDList(LPITEMIDLIST * ppidl)
 {
     TRACE("(%p)->(ppidl=%p)\n",this, ppidl);
 
@@ -1018,7 +1018,7 @@ HRESULT WINAPI ShellLink::GetIDList(LPITEMIDLIST * ppidl)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetIDList(LPCITEMIDLIST pidl)
+HRESULT WINAPI CShellLink::SetIDList(LPCITEMIDLIST pidl)
 {
     TRACE("(%p)->(pidl=%p)\n",this, pidl);
 
@@ -1033,7 +1033,7 @@ HRESULT WINAPI ShellLink::SetIDList(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetDescription(LPSTR pszName,INT cchMaxName)
+HRESULT WINAPI CShellLink::GetDescription(LPSTR pszName,INT cchMaxName)
 {
     TRACE("(%p)->(%p len=%u)\n",this, pszName, cchMaxName);
 
@@ -1046,7 +1046,7 @@ HRESULT WINAPI ShellLink::GetDescription(LPSTR pszName,INT cchMaxName)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetDescription(LPCSTR pszName)
+HRESULT WINAPI CShellLink::SetDescription(LPCSTR pszName)
 {
     TRACE("(%p)->(pName=%s)\n", this, pszName);
 
@@ -1063,7 +1063,7 @@ HRESULT WINAPI ShellLink::SetDescription(LPCSTR pszName)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetWorkingDirectory(LPSTR pszDir,INT cchMaxPath)
+HRESULT WINAPI CShellLink::GetWorkingDirectory(LPSTR pszDir,INT cchMaxPath)
 {
     TRACE("(%p)->(%p len=%u)\n", this, pszDir, cchMaxPath);
 
@@ -1076,7 +1076,7 @@ HRESULT WINAPI ShellLink::GetWorkingDirectory(LPSTR pszDir,INT cchMaxPath)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetWorkingDirectory(LPCSTR pszDir)
+HRESULT WINAPI CShellLink::SetWorkingDirectory(LPCSTR pszDir)
 {
     TRACE("(%p)->(dir=%s)\n",this, pszDir);
 
@@ -1093,7 +1093,7 @@ HRESULT WINAPI ShellLink::SetWorkingDirectory(LPCSTR pszDir)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetArguments(LPSTR pszArgs,INT cchMaxPath)
+HRESULT WINAPI CShellLink::GetArguments(LPSTR pszArgs,INT cchMaxPath)
 {
     TRACE("(%p)->(%p len=%u)\n", this, pszArgs, cchMaxPath);
 
@@ -1106,7 +1106,7 @@ HRESULT WINAPI ShellLink::GetArguments(LPSTR pszArgs,INT cchMaxPath)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetArguments(LPCSTR pszArgs)
+HRESULT WINAPI CShellLink::SetArguments(LPCSTR pszArgs)
 {
     TRACE("(%p)->(args=%s)\n",this, pszArgs);
 
@@ -1124,7 +1124,7 @@ HRESULT WINAPI ShellLink::SetArguments(LPCSTR pszArgs)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetHotkey(WORD *pwHotkey)
+HRESULT WINAPI CShellLink::GetHotkey(WORD *pwHotkey)
 {
     TRACE("(%p)->(%p)(0x%08x)\n",this, pwHotkey, wHotKey);
 
@@ -1133,7 +1133,7 @@ HRESULT WINAPI ShellLink::GetHotkey(WORD *pwHotkey)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetHotkey(WORD wHotkey)
+HRESULT WINAPI CShellLink::SetHotkey(WORD wHotkey)
 {
     TRACE("(%p)->(hotkey=%x)\n",this, wHotkey);
 
@@ -1143,14 +1143,14 @@ HRESULT WINAPI ShellLink::SetHotkey(WORD wHotkey)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetShowCmd(INT *piShowCmd)
+HRESULT WINAPI CShellLink::GetShowCmd(INT *piShowCmd)
 {
     TRACE("(%p)->(%p)\n",this, piShowCmd);
     *piShowCmd = iShowCmd;
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetShowCmd(INT iShowCmd)
+HRESULT WINAPI CShellLink::SetShowCmd(INT iShowCmd)
 {
     TRACE("(%p) %d\n",this, iShowCmd);
 
@@ -1182,7 +1182,7 @@ static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPCITEMIDLIST pidl,
     return hr;
 }
 
-HRESULT WINAPI ShellLink::GetIconLocation(LPSTR pszIconPath,INT cchIconPath,INT *piIcon)
+HRESULT WINAPI CShellLink::GetIconLocation(LPSTR pszIconPath,INT cchIconPath,INT *piIcon)
 {
     TRACE("(%p)->(%p len=%u iicon=%p)\n", this, pszIconPath, cchIconPath, piIcon);
 
@@ -1230,7 +1230,7 @@ HRESULT WINAPI ShellLink::GetIconLocation(LPSTR pszIconPath,INT cchIconPath,INT 
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetIconLocation(LPCSTR pszIconPath,INT iIcon)
+HRESULT WINAPI CShellLink::SetIconLocation(LPCSTR pszIconPath,INT iIcon)
 {
     TRACE("(%p)->(path=%s iicon=%u)\n",this, pszIconPath, iIcon);
 
@@ -1250,7 +1250,7 @@ HRESULT WINAPI ShellLink::SetIconLocation(LPCSTR pszIconPath,INT iIcon)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetRelativePath(LPCSTR pszPathRel, DWORD dwReserved)
+HRESULT WINAPI CShellLink::SetRelativePath(LPCSTR pszPathRel, DWORD dwReserved)
 {
     TRACE("(%p)->(path=%s %x)\n",this, pszPathRel, dwReserved);
 
@@ -1266,7 +1266,7 @@ HRESULT WINAPI ShellLink::SetRelativePath(LPCSTR pszPathRel, DWORD dwReserved)
     return ShellLink_UpdatePath(sPathRel, sPath, sWorkDir, &sPath);
 }
 
-HRESULT WINAPI ShellLink::Resolve(HWND hwnd, DWORD fFlags)
+HRESULT WINAPI CShellLink::Resolve(HWND hwnd, DWORD fFlags)
 {
     HRESULT hr = S_OK;
     BOOL bSuccess;
@@ -1312,7 +1312,7 @@ HRESULT WINAPI ShellLink::Resolve(HWND hwnd, DWORD fFlags)
     return hr;
 }
 
-HRESULT WINAPI ShellLink::SetPath(LPCSTR pszFile)
+HRESULT WINAPI CShellLink::SetPath(LPCSTR pszFile)
 {
     HRESULT r;
     LPWSTR str;
@@ -1331,7 +1331,7 @@ HRESULT WINAPI ShellLink::SetPath(LPCSTR pszFile)
     return r;
 }
 
-HRESULT WINAPI ShellLink::GetPath(LPWSTR pszFile,INT cchMaxPath, WIN32_FIND_DATAW *pfd, DWORD fFlags)
+HRESULT WINAPI CShellLink::GetPath(LPWSTR pszFile,INT cchMaxPath, WIN32_FIND_DATAW *pfd, DWORD fFlags)
 {
     TRACE("(%p)->(pfile=%p len=%u find_data=%p flags=%u)(%s)\n",
           this, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(sPath));
@@ -1350,7 +1350,7 @@ HRESULT WINAPI ShellLink::GetPath(LPWSTR pszFile,INT cchMaxPath, WIN32_FIND_DATA
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetDescription(LPWSTR pszName,INT cchMaxName)
+HRESULT WINAPI CShellLink::GetDescription(LPWSTR pszName,INT cchMaxName)
 {
     TRACE("(%p)->(%p len=%u)\n",this, pszName, cchMaxName);
 
@@ -1361,7 +1361,7 @@ HRESULT WINAPI ShellLink::GetDescription(LPWSTR pszName,INT cchMaxName)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetDescription(LPCWSTR pszName)
+HRESULT WINAPI CShellLink::SetDescription(LPCWSTR pszName)
 {
     TRACE("(%p)->(desc=%s)\n",this, debugstr_w(pszName));
 
@@ -1377,7 +1377,7 @@ HRESULT WINAPI ShellLink::SetDescription(LPCWSTR pszName)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetWorkingDirectory(LPWSTR pszDir,INT cchMaxPath)
+HRESULT WINAPI CShellLink::GetWorkingDirectory(LPWSTR pszDir,INT cchMaxPath)
 {
     TRACE("(%p)->(%p len %u)\n", this, pszDir, cchMaxPath);
 
@@ -1389,7 +1389,7 @@ HRESULT WINAPI ShellLink::GetWorkingDirectory(LPWSTR pszDir,INT cchMaxPath)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetWorkingDirectory(LPCWSTR pszDir)
+HRESULT WINAPI CShellLink::SetWorkingDirectory(LPCWSTR pszDir)
 {
     TRACE("(%p)->(dir=%s)\n",this, debugstr_w(pszDir));
 
@@ -1404,7 +1404,7 @@ HRESULT WINAPI ShellLink::SetWorkingDirectory(LPCWSTR pszDir)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetArguments(LPWSTR pszArgs,INT cchMaxPath)
+HRESULT WINAPI CShellLink::GetArguments(LPWSTR pszArgs,INT cchMaxPath)
 {
     TRACE("(%p)->(%p len=%u)\n", this, pszArgs, cchMaxPath);
 
@@ -1416,7 +1416,7 @@ HRESULT WINAPI ShellLink::GetArguments(LPWSTR pszArgs,INT cchMaxPath)
     return NOERROR;
 }
 
-HRESULT WINAPI ShellLink::SetArguments(LPCWSTR pszArgs)
+HRESULT WINAPI CShellLink::SetArguments(LPCWSTR pszArgs)
 {
     TRACE("(%p)->(args=%s)\n",this, debugstr_w(pszArgs));
 
@@ -1454,7 +1454,7 @@ static HRESULT SHELL_PidlGeticonLocationW(IShellFolder* psf, LPCITEMIDLIST pidl,
     return hr;
 }
 
-HRESULT WINAPI ShellLink::GetIconLocation(LPWSTR pszIconPath,INT cchIconPath,INT *piIcon)
+HRESULT WINAPI CShellLink::GetIconLocation(LPWSTR pszIconPath,INT cchIconPath,INT *piIcon)
 {
     TRACE("(%p)->(%p len=%u iicon=%p)\n", this, pszIconPath, cchIconPath, piIcon);
 
@@ -1501,7 +1501,7 @@ HRESULT WINAPI ShellLink::GetIconLocation(LPWSTR pszIconPath,INT cchIconPath,INT
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetIconLocation(LPCWSTR pszIconPath,INT iIcon)
+HRESULT WINAPI CShellLink::SetIconLocation(LPCWSTR pszIconPath,INT iIcon)
 {
     TRACE("(%p)->(path=%s iicon=%u)\n",this, debugstr_w(pszIconPath), iIcon);
 
@@ -1518,7 +1518,7 @@ HRESULT WINAPI ShellLink::SetIconLocation(LPCWSTR pszIconPath,INT iIcon)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD dwReserved)
+HRESULT WINAPI CShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD dwReserved)
 {
     TRACE("(%p)->(path=%s %x)\n",this, debugstr_w(pszPathRel), dwReserved);
 
@@ -1533,7 +1533,7 @@ HRESULT WINAPI ShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD dwReserved)
     return ShellLink_UpdatePath(sPathRel, sPath, sWorkDir, &sPath);
 }
 
-LPWSTR ShellLink::ShellLink_GetAdvertisedArg(LPCWSTR str)
+LPWSTR CShellLink::ShellLink_GetAdvertisedArg(LPCWSTR str)
 {
     LPWSTR ret;
     LPCWSTR p;
@@ -1554,7 +1554,7 @@ LPWSTR ShellLink::ShellLink_GetAdvertisedArg(LPCWSTR str)
     return ret;
 }
 
-HRESULT ShellLink::ShellLink_SetAdvertiseInfo(LPCWSTR str)
+HRESULT CShellLink::ShellLink_SetAdvertiseInfo(LPCWSTR str)
 {
     LPCWSTR szComponent = NULL, szProduct = NULL, p;
     WCHAR szGuid[39];
@@ -1616,7 +1616,7 @@ HRESULT ShellLink::ShellLink_SetAdvertiseInfo(LPCWSTR str)
     return S_OK;
 }
 
-static BOOL ShellLink_GetVolumeInfo(LPCWSTR path, ShellLink::volume_info *volume)
+static BOOL ShellLink_GetVolumeInfo(LPCWSTR path, CShellLink::volume_info *volume)
 {
     const int label_sz = sizeof volume->label/sizeof volume->label[0];
     WCHAR drive[4] = { path[0], ':', '\\', 0 };
@@ -1629,7 +1629,7 @@ static BOOL ShellLink_GetVolumeInfo(LPCWSTR path, ShellLink::volume_info *volume
     return r;
 }
 
-HRESULT WINAPI ShellLink::SetPath(LPCWSTR pszFile)
+HRESULT WINAPI CShellLink::SetPath(LPCWSTR pszFile)
 {
     WCHAR buffer[MAX_PATH];
     LPWSTR fname, unquoted = NULL;
@@ -1692,13 +1692,13 @@ HRESULT WINAPI ShellLink::SetPath(LPCWSTR pszFile)
     return hr;
 }
 
-HRESULT WINAPI ShellLink::AddDataBlock(void* pDataBlock )
+HRESULT WINAPI CShellLink::AddDataBlock(void* pDataBlock )
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI ShellLink::CopyDataBlock(DWORD dwSig, void** ppDataBlock )
+HRESULT WINAPI CShellLink::CopyDataBlock(DWORD dwSig, void** ppDataBlock )
 {
     LPVOID block = NULL;
     HRESULT r = E_FAIL;
@@ -1727,13 +1727,13 @@ HRESULT WINAPI ShellLink::CopyDataBlock(DWORD dwSig, void** ppDataBlock )
     return r;
 }
 
-HRESULT WINAPI ShellLink::RemoveDataBlock(DWORD dwSig )
+HRESULT WINAPI CShellLink::RemoveDataBlock(DWORD dwSig )
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI ShellLink::GetFlags(DWORD* pdwFlags )
+HRESULT WINAPI CShellLink::GetFlags(DWORD* pdwFlags )
 {
     DWORD flags = 0;
 
@@ -1758,18 +1758,18 @@ HRESULT WINAPI ShellLink::GetFlags(DWORD* pdwFlags )
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::SetFlags(DWORD dwFlags )
+HRESULT WINAPI CShellLink::SetFlags(DWORD dwFlags )
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
 /**************************************************************************
- * ShellLink implementation of IShellExtInit::Initialize()
+ * CShellLink implementation of IShellExtInit::Initialize()
  *
  * Loads the shelllink from the dataobject the shell is pointing to.
  */
-HRESULT WINAPI ShellLink::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID )
+HRESULT WINAPI CShellLink::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID )
 {
     FORMATETC format;
     STGMEDIUM stgm;
@@ -1810,7 +1810,7 @@ HRESULT WINAPI ShellLink::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdto
     return r;
 }
 
-HRESULT WINAPI ShellLink::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+HRESULT WINAPI CShellLink::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     WCHAR szOpen[20];
     MENUITEMINFOW mii;
@@ -1866,7 +1866,7 @@ shelllink_get_msi_component_path( LPWSTR component )
     return path;
 }
 
-HRESULT WINAPI ShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+HRESULT WINAPI CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     static const WCHAR szOpen[] = { 'o','p','e','n',0 };
     static const WCHAR szCplOpen[] = { 'c','p','l','o','p','e','n',0 };
@@ -1949,7 +1949,7 @@ HRESULT WINAPI ShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     return r;
 }
 
-HRESULT WINAPI ShellLink::GetCommandString(UINT_PTR idCmd, UINT uType, UINT* pwReserved, LPSTR pszName, UINT cchMax)
+HRESULT WINAPI CShellLink::GetCommandString(UINT_PTR idCmd, UINT uType, UINT* pwReserved, LPSTR pszName, UINT cchMax)
 {
     FIXME("%p %lu %u %p %p %u\n", this, idCmd, uType, pwReserved, pszName, cchMax );
 
@@ -2000,18 +2000,18 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
  * dialog proc of the shortcut property dialog
  */
 
-INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPPROPSHEETPAGEW ppsp;
     LPPSHNOTIFY lppsn;
-    ShellLink *pThis;
+    CShellLink *pThis;
     HWND hDlgCtrl;
     WCHAR szBuffer[MAX_PATH];
     WCHAR * ptr;
     int IconIndex;
     INT_PTR result;
 
-    pThis = (ShellLink *)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pThis = (CShellLink *)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
@@ -2023,7 +2023,7 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
 
             TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n",hwndDlg, lParam, ppsp->lParam);
 
-            pThis = (ShellLink *)ppsp->lParam;
+            pThis = (CShellLink *)ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
 
             TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", pThis->sArgs, pThis->sComponent, pThis->sDescription,
@@ -2135,7 +2135,7 @@ INT_PTR CALLBACK ShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
  * ShellLink_IShellPropSheetExt interface
  */
 
-HRESULT WINAPI ShellLink::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+HRESULT WINAPI CShellLink::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     HPROPSHEETPAGE hPage;
     BOOL bRet;
@@ -2154,13 +2154,13 @@ HRESULT WINAPI ShellLink::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lPara
        return E_FAIL;
 }
 
-HRESULT WINAPI ShellLink::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)
+HRESULT WINAPI CShellLink::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)
 {
     TRACE("(%p) (uPageID %u, pfnReplacePage %p lParam %p\n", this, uPageID, pfnReplacePage, lParam);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI ShellLink::SetSite(IUnknown *punk)
+HRESULT WINAPI CShellLink::SetSite(IUnknown *punk)
 {
     TRACE("%p %p\n", this, punk);
 
@@ -2169,7 +2169,7 @@ HRESULT WINAPI ShellLink::SetSite(IUnknown *punk)
     return S_OK;
 }
 
-HRESULT WINAPI ShellLink::GetSite(REFIID iid, void ** ppvSite)
+HRESULT WINAPI CShellLink::GetSite(REFIID iid, void ** ppvSite)
 {
     TRACE("%p %s %p\n", this, debugstr_guid(&iid), ppvSite );
 
@@ -2185,7 +2185,7 @@ HRESULT WINAPI IShellLink_ConstructFromFile(IUnknown *pUnkOuter, REFIID riid, LP
 {
     CComPtr<IUnknown>                psl;
 
-    HRESULT hr = ShellLink::_CreatorClass::CreateInstance(NULL, riid, (void**)&psl);
+    HRESULT hr = CShellLink::_CreatorClass::CreateInstance(NULL, riid, (void**)&psl);
 
     if (SUCCEEDED(hr))
     {

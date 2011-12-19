@@ -26,17 +26,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 EXTERN_C HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
     IShellFolder *psfParent, LPCITEMIDLIST pidl, IShellItem **ppsi);
 
-ShellItem::ShellItem()
+CShellItem::CShellItem()
 {
     pidl = NULL;
 }
 
-ShellItem::~ShellItem()
+CShellItem::~CShellItem()
 {
     ILFree(pidl);
 }
 
-HRESULT ShellItem::get_parent_pidl(LPITEMIDLIST *parent_pidl)
+HRESULT CShellItem::get_parent_pidl(LPITEMIDLIST *parent_pidl)
 {
     *parent_pidl = ILClone(pidl);
     if (*parent_pidl)
@@ -57,7 +57,7 @@ HRESULT ShellItem::get_parent_pidl(LPITEMIDLIST *parent_pidl)
     }
 }
 
-HRESULT ShellItem::get_parent_shellfolder(IShellFolder **ppsf)
+HRESULT CShellItem::get_parent_shellfolder(IShellFolder **ppsf)
 {
     LPITEMIDLIST parent_pidl;
     CComPtr<IShellFolder>        desktop;
@@ -75,7 +75,7 @@ HRESULT ShellItem::get_parent_shellfolder(IShellFolder **ppsf)
     return ret;
 }
 
-HRESULT WINAPI ShellItem::BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut)
+HRESULT WINAPI CShellItem::BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut)
 {
     FIXME("(%p,%p,%s,%p,%p)\n", this, pbc, shdebugstr_guid(&rbhid), riid, ppvOut);
 
@@ -84,7 +84,7 @@ HRESULT WINAPI ShellItem::BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID rii
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI ShellItem::GetParent(IShellItem **ppsi)
+HRESULT WINAPI CShellItem::GetParent(IShellItem **ppsi)
 {
     LPITEMIDLIST parent_pidl;
     HRESULT ret;
@@ -101,7 +101,7 @@ HRESULT WINAPI ShellItem::GetParent(IShellItem **ppsi)
     return ret;
 }
 
-HRESULT WINAPI ShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
+HRESULT WINAPI CShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
 {
     FIXME("(%p,%x,%p)\n", this, sigdnName, ppszName);
 
@@ -110,7 +110,7 @@ HRESULT WINAPI ShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI ShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
+HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
 {
     CComPtr<IShellFolder>        parent_folder;
     LPITEMIDLIST child_pidl;
@@ -129,14 +129,14 @@ HRESULT WINAPI ShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
     return ret;
 }
 
-HRESULT WINAPI ShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
+HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
 {
     FIXME("(%p,%p,%x,%p)\n", this, oth, hint, piOrder);
 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI ShellItem::GetClassID(CLSID *pClassID)
+HRESULT WINAPI CShellItem::GetClassID(CLSID *pClassID)
 {
     TRACE("(%p,%p)\n", this, pClassID);
 
@@ -145,7 +145,7 @@ HRESULT WINAPI ShellItem::GetClassID(CLSID *pClassID)
 }
 
 
-HRESULT WINAPI ShellItem::SetIDList(LPCITEMIDLIST pidlx)
+HRESULT WINAPI CShellItem::SetIDList(LPCITEMIDLIST pidlx)
 {
     LPITEMIDLIST new_pidl;
 
@@ -163,7 +163,7 @@ HRESULT WINAPI ShellItem::SetIDList(LPCITEMIDLIST pidlx)
         return E_OUTOFMEMORY;
 }
 
-HRESULT WINAPI ShellItem::GetIDList(LPITEMIDLIST *ppidl)
+HRESULT WINAPI CShellItem::GetIDList(LPITEMIDLIST *ppidl)
 {
     TRACE("(%p,%p)\n", this, ppidl);
 
@@ -223,7 +223,7 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
             return E_OUTOFMEMORY;
     }
 
-    ret = ShellItem::_CreatorClass::CreateInstance(NULL, IID_IShellItem, (void**)&newShellItem);
+    ret = CShellItem::_CreatorClass::CreateInstance(NULL, IID_IShellItem, (void**)&newShellItem);
     if (FAILED(ret))
     {
         *ppsi = NULL;

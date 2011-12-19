@@ -24,8 +24,8 @@
 #ifndef _SHELLLINK_H_
 #define _SHELLLINK_H_
 
-class ShellLink :
-	public CComCoClass<ShellLink, &CLSID_ShellLink>,
+class CShellLink :
+	public CComCoClass<CShellLink, &CLSID_ShellLink>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IShellLinkA,
 	public IShellLinkW,
@@ -76,8 +76,8 @@ private:
 	INT           iIdOpen;  /* id of the "Open" entry in the context menu */
 	CComPtr<IUnknown>		site;
 public:
-	ShellLink();
-	~ShellLink();
+	CShellLink();
+	~CShellLink();
 	LPWSTR ShellLink_GetAdvertisedArg(LPCWSTR str);
 	HRESULT ShellLink_SetAdvertiseInfo(LPCWSTR str);
 	static INT_PTR CALLBACK SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -161,11 +161,11 @@ public:
 	virtual HRESULT WINAPI GetSite(REFIID iid, void **ppvSite);
 
 DECLARE_REGISTRY_RESOURCEID(IDR_SHELLLINK)
-DECLARE_NOT_AGGREGATABLE(ShellLink)
+DECLARE_NOT_AGGREGATABLE(CShellLink)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(ShellLink)
+BEGIN_COM_MAP(CShellLink)
 	COM_INTERFACE_ENTRY2_IID(IID_IPersist, IPersist, IPersistFile)
 	COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
 	COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)

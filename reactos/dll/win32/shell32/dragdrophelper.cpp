@@ -28,39 +28,39 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 *   IDropTargetHelper implementation
 */
 
-IDropTargetHelperImpl::IDropTargetHelperImpl()
+CDropTargetHelper::CDropTargetHelper()
 {
 }
 
-IDropTargetHelperImpl::~IDropTargetHelperImpl()
+CDropTargetHelper::~CDropTargetHelper()
 {
 }
 
-HRESULT WINAPI IDropTargetHelperImpl::DragEnter (HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect)
+HRESULT WINAPI CDropTargetHelper::DragEnter (HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect)
 {
     FIXME ("(%p)->(%p %p %p 0x%08x)\n", this, hwndTarget, pDataObject, ppt, dwEffect);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDropTargetHelperImpl::DragLeave()
+HRESULT WINAPI CDropTargetHelper::DragLeave()
 {
     FIXME ("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDropTargetHelperImpl::DragOver(POINT *ppt, DWORD dwEffect)
+HRESULT WINAPI CDropTargetHelper::DragOver(POINT *ppt, DWORD dwEffect)
 {
     FIXME ("(%p)->(%p 0x%08x)\n", this, ppt, dwEffect);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDropTargetHelperImpl::Drop(IDataObject* pDataObject, POINT* ppt, DWORD dwEffect)
+HRESULT WINAPI CDropTargetHelper::Drop(IDataObject* pDataObject, POINT* ppt, DWORD dwEffect)
 {
     FIXME ("(%p)->(%p %p 0x%08x)\n", this, pDataObject, ppt, dwEffect);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDropTargetHelperImpl::Show(BOOL fShow)
+HRESULT WINAPI CDropTargetHelper::Show(BOOL fShow)
 {
     FIXME ("(%p)->(%u)\n", this, fShow);
     return E_NOTIMPL;

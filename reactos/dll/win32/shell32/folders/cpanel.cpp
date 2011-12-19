@@ -1047,7 +1047,7 @@ HRESULT WINAPI CControlPanelFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
             FIXME("Couldn't retrieve pointer to cpl structure\n");
             return E_FAIL;
         }
-        hResult = ShellLink::_CreatorClass::CreateInstance(NULL, IID_IShellLinkA, (void **)&isl);
+        hResult = CShellLink::_CreatorClass::CreateInstance(NULL, IID_IShellLinkA, (void **)&isl);
         if (SUCCEEDED(hResult))
         {
             isl->SetPath(szTarget);
