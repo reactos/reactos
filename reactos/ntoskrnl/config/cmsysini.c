@@ -1933,9 +1933,13 @@ VOID
 NTAPI
 CmShutdownSystem(VOID)
 {
-    /* Kill the workers and flush all hives */
+    /* Kill the workers */
     if (!CmFirstTime) CmpShutdownWorkers();
+
+    /* Flush all hives */
+    CmpLockRegistryExclusive();
     CmpDoFlushAll(TRUE);
+    CmpUnlockRegistry();
 }
 
 VOID
