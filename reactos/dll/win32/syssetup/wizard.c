@@ -1806,19 +1806,20 @@ StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
     RegistrationThread = NULL;
     RegistrationData = HeapAlloc(GetProcessHeap(), 0,
                                  sizeof(REGISTRATIONDATA));
-    if (NULL != RegistrationData)
+    if (RegistrationData != NULL)
     {
         RegistrationData->hwndDlg = hwndDlg;
         RegistrationData->DllCount = DllCount;
         RegistrationThread = CreateThread(NULL, 0, RegistrationProc,
                                           (LPVOID) RegistrationData, 0, NULL);
-        if (NULL != RegistrationThread)
+        if (RegistrationThread != NULL)
         {
             CloseHandle(RegistrationThread);
         }
         else
         {
             DPRINT1("CreateThread failed, error %u\n", GetLastError());
+            HeapFree(GetProcessHeap(), 0, RegistrationData);
             return FALSE;
         }
     }
