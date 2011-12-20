@@ -847,7 +847,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
         if (fmt == CF_TEXT)
         {
             PCLIP pLocaleEl;
-            
+
             pLocaleEl = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
             if (pLocaleEl && !IS_DATA_DELAYED(pLocaleEl))
                 pgcd->hLocale = pLocaleEl->hData;
@@ -855,7 +855,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
         else if (fmt == CF_BITMAP)
         {
             PCLIP pPaletteEl;
-            
+
             pPaletteEl = IntIsFormatAvailable(pWinStaObj, CF_PALETTE);
             if (pPaletteEl && !IS_DATA_DELAYED(pPaletteEl))
                 pgcd->hPalette = pPaletteEl->hData;
@@ -867,7 +867,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH2_END
+    _SEH2_END;
 
 cleanup:
     if(pWinStaObj)
