@@ -15,7 +15,293 @@
 
 /* TYPES **********************************************************************/
 
+typedef struct _ENV_INFO
+{
+    ULONG NameType;
+    ULONG NameLength;
+    PWCHAR Name;
+} ENV_INFO, *PENV_INFO;
+
+/* GLOBALS ********************************************************************/
+
+ENV_INFO BasepEnvNameType[] =
+{
+    {3, sizeof(L"PATH"), L"PATH"},
+    {2, sizeof(L"WINDIR"), L"WINDIR"},
+    {2, sizeof(L"SYSTEMROOT"), L"SYSTEMROOT"},
+    {3, sizeof(L"TEMP"), L"TEMP"},
+    {3, sizeof(L"TMP"), L"TMP"},
+};
+
+UNICODE_STRING BaseDotComSuffixName = RTL_CONSTANT_STRING(L".com");
+UNICODE_STRING BaseDotPifSuffixName = RTL_CONSTANT_STRING(L".pif");
+UNICODE_STRING BaseDotExeSuffixName = RTL_CONSTANT_STRING(L".exe");
+
 /* FUNCTIONS ******************************************************************/
+
+ULONG
+WINAPI
+BaseIsDosApplication(IN PUNICODE_STRING PathName,
+                     IN NTSTATUS Status)
+{
+    UNICODE_STRING String;
+
+    /* Is it a .com? */
+    String.Length = BaseDotComSuffixName.Length;
+    String.Buffer = &PathName->Buffer[(PathName->Length - String.Length) / sizeof(WCHAR)];
+    if (RtlEqualUnicodeString(&String, &BaseDotComSuffixName, TRUE)) return 2;
+
+    /* Is it a .pif? */
+    String.Length = BaseDotPifSuffixName.Length;
+    String.Buffer = &PathName->Buffer[(PathName->Length - String.Length) / sizeof(WCHAR)];
+    if (RtlEqualUnicodeString(&String, &BaseDotPifSuffixName, TRUE)) return 3;
+
+    /* Is it an exe? */
+    String.Length = BaseDotExeSuffixName.Length;
+    String.Buffer = &PathName->Buffer[(PathName->Length - String.Length) / sizeof(WCHAR)];
+    if (RtlEqualUnicodeString(&String, &BaseDotExeSuffixName, TRUE)) return 1;
+    return 0;
+}
+
+BOOL
+WINAPI
+BaseCheckForVDM(IN HANDLE hProcess,
+                OUT LPDWORD lpExitCode)
+{
+    NTSTATUS Status;
+    EVENT_BASIC_INFORMATION EventBasicInfo;
+
+    /* It's VDM if the process is actually a wait handle (an event) */
+    Status = NtQueryEvent(hProcess,
+                          EventBasicInformation,
+                          &EventBasicInfo,
+                          sizeof(EventBasicInfo),
+                          NULL);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* FIXME: Send a message to csrss */
+    return FALSE;
+}
+
+BOOL
+WINAPI
+BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
+                     IN ULONG DosSeqId,
+                     IN ULONG BinaryType,
+                     IN PUNICODE_STRING CmdLineString,
+                     OUT PULONG VdmSize)
+{
+    WCHAR Buffer[MAX_PATH];
+    WCHAR CommandLine[MAX_PATH * 2];
+    ULONG Length;
+
+    /* Clear the buffer in case we fail */
+    CmdLineString->Buffer = 0;
+    
+    /* Always return the same size */
+    *VdmSize = 0x1000000;
+
+    /* Get the system directory */
+    Length = GetSystemDirectoryW(Buffer, MAX_PATH);
+    if (!(Length) || (Length >= MAX_PATH))
+    {
+        /* Eliminate no path or path too big */
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
+    
+    /* Check if this is VDM with a DOS Sequence ID */
+    if (DosSeqId)
+    {
+        /* Build the VDM string for it */
+        _snwprintf(CommandLine,
+                   sizeof(CommandLine),
+                   L"\"%s\\ntvdm.exe\" -i%lx %s%c",
+                   Buffer,
+                   DosSeqId,
+                   (BinaryType == 0x10) ? L" " : L"-w",
+                   (BinaryType == 0x40) ? 's' : ' ');
+    }
+    else
+    {
+        /* Non-DOS, build the stirng for it without the task ID */
+        _snwprintf(CommandLine,
+                   sizeof(CommandLine),
+                   L"\"%s\\ntvdm.exe\"  %s%c",
+                   Buffer,
+                   (BinaryType == 0x10) ? L" " : L"-w",
+                   (BinaryType == 0x40) ? 's' : ' ');
+    }
+    
+    /* Create the actual string */
+    return RtlCreateUnicodeString(CmdLineString, CommandLine);
+}
+
+UINT
+WINAPI
+BaseGetEnvNameType_U(IN PWCHAR Name,
+                     IN ULONG NameLength)
+{
+    PENV_INFO EnvInfo;
+    ULONG NameType, i;
+
+    /* Start by assuming unknown type */
+    NameType = 1;
+    
+    /* Loop all the environment names */
+    for (i = 0; i < (sizeof(BasepEnvNameType) / sizeof(ENV_INFO)); i++)
+    {
+        /* Get this entry */
+        EnvInfo = &BasepEnvNameType[i];
+        
+        /* Check if it matches the name */
+        if ((EnvInfo->NameLength == NameLength) &&
+            !(_wcsnicmp(EnvInfo->Name, Name, NameLength)))
+        {
+            /* It does, return the type */
+            NameType = EnvInfo->NameType;
+            break;
+        }
+    }
+    
+    /* Return what we found, or unknown if nothing */
+    return NameType;
+}
+
+BOOL
+NTAPI
+BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
+                          IN PUNICODE_STRING UnicodeEnv)
+{
+    ULONG Dummy = 0;
+    
+    /* Clear the ASCII buffer since Rtl creates this for us */
+    if (AnsiEnv->Buffer) RtlFreeAnsiString(AnsiEnv);
+    
+    /* The Unicode buffer is build by hand, though */
+    if (UnicodeEnv->Buffer)
+    {
+        /* So clear it through the API */
+        NtFreeVirtualMemory(NtCurrentProcess(),
+                            (PVOID*)&UnicodeEnv->Buffer,
+                            &Dummy,
+                            MEM_RELEASE);
+    }
+
+    /* All done */
+    return TRUE;
+}
+
+BOOL
+NTAPI
+BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
+                         IN PANSI_STRING AnsiEnv,
+                         IN PUNICODE_STRING UnicodeEnv)
+{
+    BOOL Result;
+    ULONG RegionSize, EnvironmentSize = 0;
+    PWCHAR p, Environment, NewEnvironment;
+    NTSTATUS Status;
+
+    /* Make sure we have both strings */
+    if (!(AnsiEnv) || !(UnicodeEnv))
+    {
+        /* Fail */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Check if an environment was passed in */
+    if (!lpEnvironment)
+    {
+        /* Nope, create one */
+        Status = RtlCreateEnvironment(TRUE, (PWCHAR*)&Environment);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+    }
+    else
+    {
+        /* Use the one we got */
+        Environment = lpEnvironment;
+    }
+
+    /* Do we have something now ? */
+    if (!Environment)
+    {
+        /* Still not, fail out */
+        SetLastError(ERROR_BAD_ENVIRONMENT);
+        goto Quickie;
+    }
+    
+    /* Count how much space the whole environment takes */
+    p = Environment;
+    while ((*p++ != UNICODE_NULL) && (*p != UNICODE_NULL)) EnvironmentSize++;
+    EnvironmentSize += sizeof(UNICODE_NULL);
+
+    /* Allocate a new copy */
+    RegionSize = (EnvironmentSize + MAX_PATH) * sizeof(WCHAR);
+    if (!NT_SUCCESS(NtAllocateVirtualMemory(NtCurrentProcess(),
+                                            (PVOID*)&NewEnvironment,
+                                            0,
+                                            &RegionSize,
+                                            MEM_COMMIT,
+                                            PAGE_READWRITE)))
+    {
+        /* We failed, bail out */
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        NewEnvironment = NULL;
+        goto Quickie;
+    }
+    
+    /* Begin parsing the new environment */
+    p = NewEnvironment;
+
+    /* FIXME: Code here */
+
+    /* Terminate it */
+    *p++ = UNICODE_NULL;
+    
+    /* Initialize the unicode string to hold it */
+    EnvironmentSize = (p - NewEnvironment) * sizeof(WCHAR);
+    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, EnvironmentSize);
+    UnicodeEnv->Length = EnvironmentSize;
+ 
+    /* Create the ASCII version of it */
+    Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set last error if conversion failure */
+        BaseSetLastNTError(Status);
+    }
+    else
+    {
+        /* Everything went okay, so return success */
+        Result = TRUE;
+        NewEnvironment = NULL;
+    }
+
+Quickie:
+    /* Cleanup path starts here, start by destroying the envrionment copy */
+    if (!(lpEnvironment) && (Environment)) RtlDestroyEnvironment(Environment);
+    
+    /* See if we are here due to failure */
+    if (NewEnvironment)
+    {
+        /* Initialize the paths to be empty */
+        RtlInitEmptyUnicodeString(UnicodeEnv, NULL, 0);
+        RtlInitEmptyAnsiString(AnsiEnv, NULL, 0);
+        
+        /* Free the environment copy */
+        RegionSize = 0;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(),
+                                     (PVOID*)&NewEnvironment,
+                                     &RegionSize,
+                                     MEM_RELEASE);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    
+    /* Return the result */
+    return Result;
+}
 
 
 /* Check whether a file is an OS/2 or a very old Windows executable
