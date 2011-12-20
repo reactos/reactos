@@ -137,14 +137,18 @@ static void WaitForConnect(void)
 /* Function: UserLogin */
 static void UserLogin(int client_socket)
 {
-  DWORD      threadID;
+  HANDLE     threadHandle;
   client_t  *client = malloc(sizeof(client_t));
 
   if (client == NULL)
     ErrorExit("failed to allocate memory for client");
 
   client->socket = client_socket;
-  CreateThread(NULL, 0, UserLoginThread, client, 0, &threadID);
+  threadHandle = CreateThread(NULL, 0, UserLoginThread, client, 0, NULL);
+  if (threadHandle == NULL)
+    free(client);
+  else
+    CloseHandle(threadHandle);
 }
 
 /* Function: UserLoginThread */
