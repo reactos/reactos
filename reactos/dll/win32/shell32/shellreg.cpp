@@ -135,10 +135,54 @@ EXTERN_C HRESULT WINAPI SHRegDeleteKeyW(
 
 /*************************************************************************
  * SHRegCloseKey            [SHELL32.505] NT 4.0
- *
  */
 EXTERN_C HRESULT WINAPI SHRegCloseKey (HKEY hkey)
 {
     TRACE("%p\n",hkey);
     return RegCloseKey( hkey );
+}
+
+/*************************************************************************
+ * SHCreateSessionKey            [SHELL32.723]
+ */
+EXTERN_C HRESULT
+WINAPI
+SHCreateSessionKey(REGSAM samDesired, PHKEY phKey)
+{
+    static HKEY hSessionKey = NULL;
+    HRESULT hr = S_OK;
+
+    if (!hSessionKey)
+    {
+        HANDLE hToken;
+
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken))
+        {
+            TOKEN_STATISTICS Stats;
+            DWORD ReturnLength;
+
+            if (GetTokenInformation(hToken, TokenStatistics, &Stats, sizeof(Stats), &ReturnLength))
+            {
+                WCHAR wszBuf[256];
+                LONG Error;
+
+                swprintf(wszBuf,
+                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\%08x%08x",
+                         Stats.AuthenticationId.HighPart, Stats.AuthenticationId.LowPart);
+
+                Error = RegCreateKeyExW(HKEY_LOCAL_MACHINE, wszBuf, 0, NULL, REG_OPTION_VOLATILE, samDesired, NULL, &hSessionKey, NULL);
+                if (Error != ERROR_SUCCESS)
+                    hr = HRESULT_FROM_WIN32(Error);
+            }
+            else
+                hr = HRESULT_FROM_WIN32(GetLastError());
+
+            CloseHandle(hToken);
+        }
+        else
+            hr = HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    *phKey = hSessionKey;
+    return hr;
 }

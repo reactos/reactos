@@ -213,17 +213,6 @@ SHIsTempDisplayMode(VOID)
 /*
  * Unimplemented
  */
-EXTERN_C LONG
-WINAPI
-SHCreateSessionKey(REGSAM regSam, PHKEY phKey)
-{
-    FIXME("SHCreateSessionKey() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 MakeShellURLFromPathW(LPCWSTR lpPath, LPWSTR lpUrl, INT cchMax)
