@@ -1810,36 +1810,34 @@ HRESULT WINAPI CShellLink::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdt
     return r;
 }
 
-HRESULT WINAPI CShellLink::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+HRESULT WINAPI CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
-    WCHAR szOpen[20];
+    WCHAR wszOpen[20];
     MENUITEMINFOW mii;
     int id = 1;
 
     TRACE("%p %p %u %u %u %u\n", this,
-          hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
+          hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
 
-    if ( !hmenu )
+    if (!hMenu)
         return E_INVALIDARG;
 
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_VERB, szOpen, sizeof(szOpen)/sizeof(WCHAR)))
-        szOpen[0] = L'\0';
-    else
-        szOpen[(sizeof(szOpen)/sizeof(WCHAR))-1] = L'\0';
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_VERB, wszOpen, sizeof(wszOpen)/sizeof(WCHAR)))
+        wszOpen[0] = L'\0';
 
     memset( &mii, 0, sizeof(mii) );
     mii.cbSize = sizeof (mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-    mii.dwTypeData = (LPWSTR)szOpen;
-    mii.cch = wcslen( mii.dwTypeData );
+    mii.dwTypeData = wszOpen;
+    mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmdFirst + id++;
     mii.fState = MFS_DEFAULT | MFS_ENABLED;
     mii.fType = MFT_STRING;
-    if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
+    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
         return E_FAIL;
     iIdOpen = 1;
 
-    return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
 }
 
 static LPWSTR

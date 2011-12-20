@@ -32,38 +32,29 @@ typedef struct _LANGANDCODEPAGE_
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
-static LONG SH_GetAssociatedApplication(WCHAR *fileext, WCHAR *wAssocApp)
+static LONG SH_GetAssociatedApplication(WCHAR *pwszFileExt, WCHAR *pwszAssocApp)
 {
-    WCHAR wDataType[MAX_PATH] = {0};
-    HKEY hkey;
+    WCHAR wszBuf[MAX_PATH] = {0};
     LONG result;
-    DWORD dwLen = MAX_PATH * sizeof(WCHAR);
+    DWORD dwSize = sizeof(wszBuf);
 
-    wAssocApp[0] = '\0';
-    RegCreateKeyExW(HKEY_CLASSES_ROOT, fileext, 0, NULL, 0, KEY_READ, NULL, &hkey, NULL);
-    result = RegQueryValueExW(hkey, L"", NULL, NULL, (LPBYTE)wDataType, &dwLen);
-    RegCloseKey(hkey);
-    
+    result = RegGetValueW(HKEY_CLASSES_ROOT, pwszFileExt, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize);
+
     if (result == ERROR_SUCCESS)
     {
-        wcscat(wDataType, L"\\shell\\open\\command");
-        dwLen = MAX_PATH * sizeof(WCHAR);
-        RegCreateKeyExW(HKEY_CLASSES_ROOT, wDataType, 0, NULL, 0, KEY_READ, NULL, &hkey, NULL);
-        result = (RegQueryValueExW(hkey, NULL, NULL, NULL, (LPBYTE)wAssocApp, &dwLen));
-        RegCloseKey(hkey);
-        
-        if (result != ERROR_SUCCESS)
-        {
-            /* FIXME: Make it return full path instead of
-               notepad.exe "%1"
-               %systemroot%\notepad.exe "%1"
-               etc
-               Maybe there is code to do that somewhere? 
-               dll\win32\shell32\shlexec.c for example?
-            */
-            wAssocApp[0] = '\0';
-        }
+        StringCbCat(wszBuf, sizeof(wszBuf), L"\\shell\\open\\command");
+        dwSize = MAX_PATH * sizeof(WCHAR);
+        result = RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, L"", RRF_RT_REG_SZ, NULL, pwszAssocApp, &dwSize);
+        /* FIXME: Make it return full path instead of
+           notepad.exe "%1"
+           %systemroot%\notepad.exe "%1"
+           etc
+           Maybe there is code to do that somewhere? 
+           dll\win32\shell32\shlexec.c for example? */
     }
+
+    if (result != ERROR_SUCCESS)
+        pwszAssocApp[0] = '\0';
 
     return result;
 }

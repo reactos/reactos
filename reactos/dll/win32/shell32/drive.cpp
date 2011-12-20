@@ -107,23 +107,23 @@ static const GUID GUID_DEVCLASS_DISKDRIVE = {0x4d36e967L, 0xe325, 0x11ce, {0xbf,
 
 
 static VOID
-GetDriveNameWithLetter(LPWSTR szText, UINT cchTextMax, WCHAR Drive)
+GetDriveNameWithLetter(LPWSTR szText, UINT cchTextMax, WCHAR wchDrive)
 {
     WCHAR szDrive[] = L"C:\\";
     DWORD dwMaxComp, dwFileSys, cchText = 0;
 
-    szDrive[0] = Drive;
+    szDrive[0] = wchDrive;
     if (GetVolumeInformationW(szDrive, szText, cchTextMax, NULL, &dwMaxComp, &dwFileSys, NULL, 0))
     {
         cchText = wcslen(szText);
-        if (cchText == cchText)
+        if (cchText == 0)
         {
             /* load default volume label */
-            cchText = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, &szText[cchTextMax+1], (sizeof(szText) / sizeof(WCHAR)) - cchTextMax - 2);
+            cchText = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szText, cchTextMax);
         }
     }
 
-    StringCchPrintfW(szText + cchText, cchTextMax - cchText, L" (%c)", Drive);
+    StringCchPrintfW(szText + cchText, cchTextMax - cchText, L" (%c)", wchDrive);
 }
 
 static VOID

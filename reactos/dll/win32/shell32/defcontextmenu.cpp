@@ -40,19 +40,16 @@ class CDefaultContextMenu :
     public IContextMenu2
 {
     private:
-        DEFCONTEXTMENU dcm;
-        IDataObject *pDataObj;
-        DWORD bGroupPolicyActive;
-        PDynamicShellEntry dhead; /* first dynamic shell extension entry */
-        UINT iIdSHEFirst; /* first used id */
-        UINT iIdSHELast; /* last used id */
-        PStaticShellEntry shead; /* first static shell extension entry */
-        UINT iIdSCMFirst; /* first static used id */
-        UINT iIdSCMLast; /* last static used id */
-    public:
-        CDefaultContextMenu();
-        ~CDefaultContextMenu();
-        HRESULT WINAPI Initialize(const DEFCONTEXTMENU *pdcm);
+        DEFCONTEXTMENU m_Dcm;
+        IDataObject *m_pDataObj;
+        DWORD m_bGroupPolicyActive;
+        PDynamicShellEntry m_pDynamicEntries; /* first dynamic shell extension entry */
+        UINT m_iIdSHEFirst; /* first used id */
+        UINT m_iIdSHELast; /* last used id */
+        PStaticShellEntry m_pStaticEntries; /* first static shell extension entry */
+        UINT m_iIdSCMFirst; /* first static used id */
+        UINT m_iIdSCMLast; /* last static used id */
+
         void AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass);
         void AddStaticEntryForKey(HKEY hKey, const WCHAR *szClass);
         void AddStaticEntryForFileClass(const WCHAR *szExt);
@@ -74,6 +71,11 @@ class CDefaultContextMenu :
         HRESULT DoDynamicShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoStaticShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
 
+    public:
+        CDefaultContextMenu();
+        ~CDefaultContextMenu();
+        HRESULT WINAPI Initialize(const DEFCONTEXTMENU *pdcm);
+
         // IContextMenu
         virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
         virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
@@ -90,15 +92,15 @@ class CDefaultContextMenu :
 
 CDefaultContextMenu::CDefaultContextMenu()
 {
-    memset (&dcm, 0, sizeof(dcm));
-    pDataObj = NULL;
-    bGroupPolicyActive = 0;
-    dhead = NULL;
-    iIdSHEFirst = 0;
-    iIdSHELast = 0;
-    shead = NULL;
-    iIdSCMFirst = 0;
-    iIdSCMLast = 0;
+    memset (&m_Dcm, 0, sizeof(m_Dcm));
+    m_pDataObj = NULL;
+    m_bGroupPolicyActive = 0;
+    m_pDynamicEntries = NULL;
+    m_iIdSHEFirst = 0;
+    m_iIdSHELast = 0;
+    m_pStaticEntries = NULL;
+    m_iIdSCMFirst = 0;
+    m_iIdSCMLast = 0;
 }
 
 CDefaultContextMenu::~CDefaultContextMenu()
@@ -107,7 +109,7 @@ CDefaultContextMenu::~CDefaultContextMenu()
     PStaticShellEntry sEntry, sNext;
 
     /* free dynamic shell extension entries */
-    dEntry = dhead;
+    dEntry = m_pDynamicEntries;
     while (dEntry)
     {
         dNext = dEntry->Next;
@@ -116,7 +118,7 @@ CDefaultContextMenu::~CDefaultContextMenu()
         dEntry = dNext;
     }
     /* free static shell extension entries */
-    sEntry = shead;
+    sEntry = m_pStaticEntries;
     while (sEntry)
     {
         sNext = sEntry->Next;
@@ -129,12 +131,12 @@ CDefaultContextMenu::~CDefaultContextMenu()
 
 HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
 {
-    IDataObject *newDataObj;
+    IDataObject *pDataObj;
 
-    TRACE("cidl %u\n", dcm.cidl);
-    if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_IDataObject, (void**)&newDataObj)))
-        pDataObj = newDataObj;
-    CopyMemory(&dcm, pdcm, sizeof(DEFCONTEXTMENU));
+    TRACE("cidl %u\n", pdcm->cidl);
+    if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_IDataObject, (void**)&pDataObj)))
+        m_pDataObj = pDataObj;
+    CopyMemory(&m_Dcm, pdcm, sizeof(DEFCONTEXTMENU));
     return S_OK;
 }
 
@@ -144,7 +146,7 @@ CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
     PStaticShellEntry curEntry;
     PStaticShellEntry lastEntry = NULL;
 
-    curEntry = shead;
+    curEntry = m_pStaticEntries;
     while(curEntry)
     {
         if (!wcsicmp(curEntry->szVerb, szVerb))
@@ -173,33 +175,32 @@ CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
     if (!wcsicmp(szVerb, L"open"))
     {
         /* open verb is always inserted in front */
-        curEntry->Next = shead;
-        shead = curEntry;
-        return;
+        curEntry->Next = m_pStaticEntries;
+        m_pStaticEntries = curEntry;
     }
-
-    if (lastEntry)
+    else if (lastEntry)
         lastEntry->Next = curEntry;
     else
-        shead = curEntry;
+        m_pStaticEntries = curEntry;
 }
 
 void
-CDefaultContextMenu::AddStaticEntryForKey(HKEY hKey, const WCHAR * szClass)
+CDefaultContextMenu::AddStaticEntryForKey(HKEY hKey, const WCHAR *pwszClass)
 {
     LONG result;
     DWORD dwIndex;
-    WCHAR szName[40];
+    WCHAR wszName[40];
     DWORD dwSize;
+
+    TRACE("AddStaticEntryForKey %x %ls\n", hKey, pwszClass);
 
     dwIndex = 0;
     do
     {
-        szName[0] = 0;
-        dwSize = sizeof(szName) / sizeof(WCHAR);
-        result = RegEnumKeyExW(hKey, dwIndex, szName, &dwSize, NULL, NULL, NULL, NULL);
+        dwSize = sizeof(wszName) / sizeof(WCHAR);
+        result = RegEnumKeyExW(hKey, dwIndex, wszName, &dwSize, NULL, NULL, NULL, NULL);
         if (result == ERROR_SUCCESS)
-            AddStaticEntry(szName, szClass);
+            AddStaticEntry(wszName, pwszClass);
 
         dwIndex++;
     } while(result == ERROR_SUCCESS);
@@ -316,7 +317,7 @@ DisablePasteOptions(HMENU hMenu)
 BOOL
 CDefaultContextMenu::IsShellExtensionAlreadyLoaded(const CLSID * szClass)
 {
-    PDynamicShellEntry curEntry = dhead;
+    PDynamicShellEntry curEntry = m_pDynamicEntries;
 
     while(curEntry)
     {
@@ -361,7 +362,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pClas
             return hr;
         }
 
-        hr = shext->Initialize(NULL, pDataObj, hKey);
+        hr = shext->Initialize(NULL, m_pDataObj, hKey);
         shext->Release();
         if (hr != S_OK)
         {
@@ -384,9 +385,9 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pClas
     curEntry->CMenu = cmobj;
     memcpy(&curEntry->ClassID, pClass, sizeof(CLSID));
 
-    if (dhead)
+    if (m_pDynamicEntries)
     {
-        PDynamicShellEntry pEntry = dhead;
+        PDynamicShellEntry pEntry = m_pDynamicEntries;
 
         while (pEntry->Next)
             pEntry = pEntry->Next;
@@ -394,7 +395,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pClas
         pEntry->Next = curEntry;
     }
     else
-        dhead = curEntry;
+        m_pDynamicEntries = curEntry;
 
     return hr;
 }
@@ -436,7 +437,7 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
             }
             if (SUCCEEDED(hResult))
             {
-                if (bGroupPolicyActive)
+                if (m_bGroupPolicyActive)
                 {
                     if (RegGetValueW(HKEY_LOCAL_MACHINE,
                                      L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
@@ -468,17 +469,17 @@ CDefaultContextMenu::InsertMenuItemsOfDynamicContextMenuExtension(HMENU hMenu, U
     PDynamicShellEntry curEntry;
     HRESULT hResult;
 
-    if (!dhead)
+    if (!m_pDynamicEntries)
     {
-        iIdSHEFirst = 0;
-        iIdSHELast = 0;
+        m_iIdSHEFirst = 0;
+        m_iIdSHELast = 0;
         return indexMenu;
     }
 
-    curEntry = dhead;
+    curEntry = m_pDynamicEntries;
     idCmdFirst = 0x5000;
     idCmdLast =  0x6000;
-    iIdSHEFirst = idCmdFirst;
+    m_iIdSHEFirst = idCmdFirst;
     do
     {
         hResult = curEntry->CMenu->QueryContextMenu(hMenu, indexMenu++, idCmdFirst, idCmdLast, CMF_NORMAL);
@@ -493,8 +494,8 @@ CDefaultContextMenu::InsertMenuItemsOfDynamicContextMenuExtension(HMENU hMenu, U
         curEntry = curEntry->Next;
     } while(curEntry);
 
-    iIdSHELast = idCmdFirst;
-    TRACE("SH_LoadContextMenuHandlers first %x last %x\n", iIdSHEFirst, iIdSHELast);
+    m_iIdSHELast = idCmdFirst;
+    TRACE("SH_LoadContextMenuHandlers first %x last %x\n", m_iIdSHEFirst, m_iIdSHELast);
     return indexMenu;
 }
 
@@ -515,7 +516,7 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
 
     TRACE("BuildBackgroundContextMenu entered\n");
 
-    if (!_ILIsDesktop(dcm.pidlFolder))
+    if (!_ILIsDesktop(m_Dcm.pidlFolder))
     {
         /* view option is only available in browsing mode */
         hSubMenu = LoadMenuA(shell32_hInstance, "MENU_001");
@@ -602,9 +603,9 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     mii.fState = MFS_ENABLED;
     mii.wID = 0x4000;
     mii.dwTypeData = NULL;
-    iIdSCMFirst = mii.wID;
+    m_iIdSCMFirst = mii.wID;
 
-    curEntry = shead;
+    curEntry = m_pStaticEntries;
 
     while(curEntry)
     {
@@ -666,7 +667,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         mii.wID++;
         curEntry = curEntry->Next;
     }
-    iIdSCMLast = mii.wID - 1;
+    m_iIdSCMLast = mii.wID - 1;
     return indexMenu;
 }
 
@@ -738,10 +739,10 @@ CDefaultContextMenu::BuildShellItemContextMenu(
 
     TRACE("BuildShellItemContextMenu entered\n");
 
-    hr = dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strFile);
+    hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile);
     if (hr == S_OK)
     {
-        hr = StrRetToBufW(&strFile, dcm.apidl[0], szPath, MAX_PATH);
+        hr = StrRetToBufW(&strFile, m_Dcm.apidl[0], szPath, MAX_PATH);
         if (hr == S_OK)
         {
             pOffset = wcsrchr(szPath, L'.');
@@ -780,7 +781,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     else
         ERR("GetDisplayNameOf failed: %x\n", hr);
 
-    guid = _ILGetGUIDPointer(dcm.apidl[0]);
+    guid = _ILGetGUIDPointer(m_Dcm.apidl[0]);
     if (guid)
     {
         LPOLESTR pwszCLSID;
@@ -802,7 +803,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         }
     }
 
-    if (_ILIsDrive(dcm.apidl[0]))
+    if (_ILIsDrive(m_Dcm.apidl[0]))
     {
         AddStaticEntryForFileClass(L"Drive");
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Drive", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -815,14 +816,14 @@ CDefaultContextMenu::BuildShellItemContextMenu(
 
     /* add static actions */
     rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
-    hr = dcm.psf->GetAttributesOf(dcm.cidl, dcm.apidl, &rfg);
+    hr = m_Dcm.psf->GetAttributesOf(m_Dcm.cidl, m_Dcm.apidl, &rfg);
     if (FAILED(hr))
     {
         ERR("GetAttributesOf failed: %x\n", hr);
         rfg = 0;
     }
 
-    if ((rfg & SFGAO_FOLDER) || _ILIsControlPanel(dcm.apidl[dcm.cidl]))
+    if ((rfg & SFGAO_FOLDER) || _ILIsControlPanel(m_Dcm.apidl[m_Dcm.cidl]))
     {
         /* add the default verbs open / explore */
         AddStaticEntryForFileClass(L"Folder");
@@ -855,7 +856,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     indexMenu = InsertMenuItemsOfDynamicContextMenuExtension(hMenu, indexMenu, iIdCmdFirst, iIdCmdLast);
     TRACE("indexMenu %d\n", indexMenu);
 
-    if (_ILIsDrive(dcm.apidl[0]))
+    if (_ILIsDrive(m_Dcm.apidl[0]))
     {
         /* The 'Format' option must be always available,
          * thus it is not registered as a static shell extension
@@ -924,7 +925,7 @@ CDefaultContextMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    if (dcm.cidl)
+    if (m_Dcm.cidl)
     {
         idCmdFirst = BuildShellItemContextMenu(hmenu, idCmdFirst, idCmdLast, uFlags);
     }
@@ -1033,10 +1034,10 @@ CDefaultContextMenu::DoPaste(
         return E_FAIL;
     }
 
-    if (dcm.cidl)
+    if (m_Dcm.cidl)
     {
         psfDesktop->Release();
-        hr = dcm.psf->BindToObject(dcm.apidl[0], NULL, IID_IShellFolder, (LPVOID*)&psfTarget);
+        hr = m_Dcm.psf->BindToObject(m_Dcm.apidl[0], NULL, IID_IShellFolder, (LPVOID*)&psfTarget);
     }
     else
     {
@@ -1044,7 +1045,7 @@ CDefaultContextMenu::DoPaste(
         LPITEMIDLIST pidl;
 
         /* cidl is zero due to explorer view */
-        hr = dcm.psf->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
+        hr = m_Dcm.psf->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
         if (SUCCEEDED(hr))
         {
             hr = ppf2->GetCurFolder(&pidl);
@@ -1189,13 +1190,13 @@ CDefaultContextMenu::DoCreateLink(
     IPersistFile * ipf;
     static WCHAR szLnk[] = L"lnk";
 
-    if (dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strFile) != S_OK)
+    if (m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile) != S_OK)
     {
         ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
         return E_FAIL;
     }
 
-    if (StrRetToBufW(&strFile, dcm.apidl[0], szPath, MAX_PATH) != S_OK)
+    if (StrRetToBufW(&strFile, m_Dcm.apidl[0], szPath, MAX_PATH) != S_OK)
         return E_FAIL;
 
     pszExt = wcsrchr(szPath, L'.');
@@ -1205,7 +1206,7 @@ CDefaultContextMenu::DoCreateLink(
         if (!GetUniqueFileName(szPath, pszExt + 1, szTarget, TRUE))
             return E_FAIL;
 
-        hr = IShellLink_ConstructFromFile(NULL, IID_IPersistFile, dcm.apidl[0], (LPVOID*)&ipf);
+        hr = IShellLink_ConstructFromFile(NULL, IID_IPersistFile, m_Dcm.apidl[0], (LPVOID*)&ipf);
         if (hr != S_OK)
             return hr;
 
@@ -1255,14 +1256,14 @@ CDefaultContextMenu::DoDelete(
     HWND hwnd;
 
 
-    hr = dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strTemp);
+    hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strTemp);
     if(hr != S_OK)
     {
         ERR("IShellFolder_GetDisplayNameOf failed with %x\n", hr);
         return hr;
     }
     ZeroMemory(szPath, sizeof(szPath));
-    hr = StrRetToBufW(&strTemp, dcm.apidl[0], szPath, MAX_PATH);
+    hr = StrRetToBufW(&strTemp, m_Dcm.apidl[0], szPath, MAX_PATH);
     if (hr != S_OK)
     {
         ERR("StrRetToBufW failed with %x\n", hr);
@@ -1276,7 +1277,7 @@ CDefaultContextMenu::DoDelete(
         *(wszPos + 1) = '\0';
     }
 
-    wszPath = BuildPathsList(szPath, dcm.cidl, dcm.apidl);
+    wszPath = BuildPathsList(szPath, m_Dcm.cidl, m_Dcm.apidl);
 
     ZeroMemory(&op, sizeof(op));
     op.hwnd = GetActiveWindow();
@@ -1321,7 +1322,7 @@ CDefaultContextMenu::DoCopyOrCut(
     LPDATAOBJECT pDataObj;
     HRESULT hr;
 
-    if (SUCCEEDED(SHCreateDataObject(dcm.pidlFolder, dcm.cidl, dcm.apidl, NULL, IID_IDataObject, (void**)&pDataObj)))
+    if (SUCCEEDED(SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_IDataObject, (void**)&pDataObj)))
     {
         hr = OleSetClipboard(pDataObj);
         pDataObj->Release();
@@ -1382,7 +1383,7 @@ CDefaultContextMenu::DoRename(
 
         if(SUCCEEDED(lpSB->QueryActiveShellView(&lpSV)))
         {
-            lpSV->SelectItem(dcm.apidl[0],
+            lpSV->SelectItem(m_Dcm.apidl[0],
                              SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT);
             lpSV->Release();
             return S_OK;
@@ -1398,23 +1399,23 @@ CDefaultContextMenu::DoProperties(
     WCHAR szDrive[MAX_PATH];
     STRRET strFile;
 
-    if (dcm.cidl && _ILIsMyComputer(dcm.apidl[0]))
+    if (m_Dcm.cidl && _ILIsMyComputer(m_Dcm.apidl[0]))
     {
         ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
         return S_OK;
     }
-    else if (dcm.cidl == 0 && dcm.pidlFolder != NULL && _ILIsDesktop(dcm.pidlFolder))
+    else if (m_Dcm.cidl == 0 && m_Dcm.pidlFolder != NULL && _ILIsDesktop(m_Dcm.pidlFolder))
     {
         ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
         return S_OK;
     }
-    else if (_ILIsDrive(dcm.apidl[0]))
+    else if (_ILIsDrive(m_Dcm.apidl[0]))
     {
-        ILGetDisplayName(dcm.apidl[0], szDrive);
-        SH_ShowDriveProperties(szDrive, dcm.pidlFolder, dcm.apidl);
+        ILGetDisplayName(m_Dcm.apidl[0], szDrive);
+        SH_ShowDriveProperties(szDrive, m_Dcm.pidlFolder, m_Dcm.apidl);
         return S_OK;
     }
-    else if (_ILIsNetHood(dcm.apidl[0]))
+    else if (_ILIsNetHood(m_Dcm.apidl[0]))
     {
         //FIXME path!
         ShellExecuteW(NULL, L"open", L"explorer.exe",
@@ -1422,7 +1423,7 @@ CDefaultContextMenu::DoProperties(
                       NULL, SW_SHOWDEFAULT);
         return S_OK;
     }
-    else if (_ILIsBitBucket(dcm.apidl[0]))
+    else if (_ILIsBitBucket(m_Dcm.apidl[0]))
     {
         /* FIXME
          * detect the drive path of bitbucket if appropiate
@@ -1432,19 +1433,19 @@ CDefaultContextMenu::DoProperties(
         return S_OK;
     }
 
-    if (dcm.cidl > 1)
+    if (m_Dcm.cidl > 1)
         WARN("SHMultiFileProperties is not yet implemented\n");
 
-    if (dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strFile) != S_OK)
+    if (m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile) != S_OK)
     {
         ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
         return E_FAIL;
     }
 
-    if (StrRetToBufW(&strFile, dcm.apidl[0], szDrive, MAX_PATH) != S_OK)
+    if (StrRetToBufW(&strFile, m_Dcm.apidl[0], szDrive, MAX_PATH) != S_OK)
         return E_FAIL;
 
-    return SH_ShowPropertiesDialog(szDrive, dcm.pidlFolder, dcm.apidl);
+    return SH_ShowPropertiesDialog(szDrive, m_Dcm.pidlFolder, m_Dcm.apidl);
 }
 
 HRESULT
@@ -1453,7 +1454,7 @@ CDefaultContextMenu::DoFormat(
 {
     char sDrive[5] = {0};
 
-    if (!_ILGetDrive(dcm.apidl[0], sDrive, sizeof(sDrive)))
+    if (!_ILGetDrive(m_Dcm.apidl[0], sDrive, sizeof(sDrive)))
     {
         ERR("pidl is not a drive\n");
         return E_FAIL;
@@ -1468,9 +1469,9 @@ CDefaultContextMenu::DoDynamicShellExtensions(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
     UINT verb = LOWORD(lpcmi->lpVerb);
-    PDynamicShellEntry pCurrent = dhead;
+    PDynamicShellEntry pCurrent = m_pDynamicEntries;
 
-    TRACE("verb %p first %x last %x", lpcmi->lpVerb, iIdSHEFirst, iIdSHELast);
+    TRACE("verb %p first %x last %x", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
 
     while(pCurrent && verb > pCurrent->iIdCmdFirst + pCurrent->NumIds)
         pCurrent = pCurrent->Next;
@@ -1497,8 +1498,8 @@ CDefaultContextMenu::DoStaticShellExtensions(
     WCHAR szPath[MAX_PATH];
     WCHAR szDir[MAX_PATH];
     SHELLEXECUTEINFOW sei;
-    PStaticShellEntry pCurrent = shead;
-    int verb = LOWORD(lpcmi->lpVerb) - iIdSCMFirst;
+    PStaticShellEntry pCurrent = m_pStaticEntries;
+    int verb = LOWORD(lpcmi->lpVerb) - m_iIdSCMFirst;
     HRESULT hr;
 
     while(pCurrent && verb-- > 0)
@@ -1507,14 +1508,14 @@ CDefaultContextMenu::DoStaticShellExtensions(
     if (verb > 0)
         return E_FAIL;
 
-    hr = dcm.psf->GetDisplayNameOf(dcm.apidl[0], SHGDN_FORPARSING, &strFile);
+    hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile);
     if (hr != S_OK)
     {
         ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
         return hr;
     }
 
-    hr = StrRetToBufW(&strFile, dcm.apidl[0], szPath, MAX_PATH);
+    hr = StrRetToBufW(&strFile, m_Dcm.apidl[0], szPath, MAX_PATH);
     if (hr != S_OK)
         return hr;
 
@@ -1574,17 +1575,17 @@ CDefaultContextMenu::InvokeCommand(
             return DoFormat(lpcmi);
     }
 
-    if (iIdSHEFirst && iIdSHELast)
+    if (m_iIdSHEFirst && m_iIdSHELast)
     {
-        if (LOWORD(lpcmi->lpVerb) >= iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= iIdSHELast)
+        if (LOWORD(lpcmi->lpVerb) >= m_iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= m_iIdSHELast)
         {
             return DoDynamicShellExtensions(lpcmi);
         }
     }
 
-    if (iIdSCMFirst && iIdSCMLast)
+    if (m_iIdSCMFirst && m_iIdSCMLast)
     {
-        if (LOWORD(lpcmi->lpVerb) >= iIdSCMFirst && LOWORD(lpcmi->lpVerb) <= iIdSCMLast)
+        if (LOWORD(lpcmi->lpVerb) >= m_iIdSCMFirst && LOWORD(lpcmi->lpVerb) <= m_iIdSCMLast)
         {
             return DoStaticShellExtensions(lpcmi);
         }
