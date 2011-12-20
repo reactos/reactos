@@ -893,12 +893,6 @@ InstallReactOS(HINSTANCE hInstance)
         return 0;
     }
 
-    if (!CreateShortcuts())
-    {
-        FatalError("InitializeProfiles() failed");
-        return 0;
-    }
-
     /* Initialize the Security Account Manager (SAM) */
     if (!SamInitializeSAM())
     {
@@ -983,6 +977,12 @@ InstallReactOS(HINSTANCE hInstance)
     RtlFreeSid(AdminSid);
     RtlFreeSid(DomainSid);
 
+    if (!CreateShortcuts())
+    {
+        FatalError("CreateShortcuts() failed");
+        return 0;
+    }
+
     /* ROS HACK, as long as NtUnloadKey is not implemented */
     {
         NTSTATUS Status = NtUnloadKey(NULL);
@@ -1020,7 +1020,7 @@ InstallReactOS(HINSTANCE hInstance)
     TerminateSetupActionLog();
 
     /* Get shutdown privilege */
-    if (! OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
     {
         FatalError("OpenProcessToken() failed!");
         return 0;
