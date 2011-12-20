@@ -356,7 +356,7 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
-    } _SEH2_END
+    } _SEH2_END;
 
 
 done:
