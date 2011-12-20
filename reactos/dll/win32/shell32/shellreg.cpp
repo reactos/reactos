@@ -149,10 +149,11 @@ EXTERN_C HRESULT
 WINAPI
 SHCreateSessionKey(REGSAM samDesired, PHKEY phKey)
 {
-    static HKEY hSessionKey = NULL;
     HRESULT hr = S_OK;
+    static WCHAR wszSessionKey[256];
+    LONG Error;
 
-    if (!hSessionKey)
+    if (!wszSessionKey[0]) // FIXME: Critical Section
     {
         HANDLE hToken;
 
@@ -163,16 +164,9 @@ SHCreateSessionKey(REGSAM samDesired, PHKEY phKey)
 
             if (GetTokenInformation(hToken, TokenStatistics, &Stats, sizeof(Stats), &ReturnLength))
             {
-                WCHAR wszBuf[256];
-                LONG Error;
-
-                swprintf(wszBuf,
+                swprintf(wszSessionKey,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\%08x%08x",
                          Stats.AuthenticationId.HighPart, Stats.AuthenticationId.LowPart);
-
-                Error = RegCreateKeyExW(HKEY_LOCAL_MACHINE, wszBuf, 0, NULL, REG_OPTION_VOLATILE, samDesired, NULL, &hSessionKey, NULL);
-                if (Error != ERROR_SUCCESS)
-                    hr = HRESULT_FROM_WIN32(Error);
             }
             else
                 hr = HRESULT_FROM_WIN32(GetLastError());
@@ -183,6 +177,13 @@ SHCreateSessionKey(REGSAM samDesired, PHKEY phKey)
             hr = HRESULT_FROM_WIN32(GetLastError());
     }
 
-    *phKey = hSessionKey;
+    if(SUCCEEDED(hr))
+    {
+        Error = RegCreateKeyExW(HKEY_LOCAL_MACHINE, wszSessionKey, 0, NULL,
+                                REG_OPTION_VOLATILE, samDesired, NULL, phKey, NULL);
+        if (Error != ERROR_SUCCESS)
+            hr = HRESULT_FROM_WIN32(Error);
+    }
+
     return hr;
 }

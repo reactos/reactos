@@ -56,6 +56,8 @@
 #include <windows.h>
 #include <ctype.h>
 
+EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
+
 /**
  * Performs the rename operations dictated in %SystemRoot%\Wininit.ini.
  * Returns FALSE if there was an error, or otherwise if all is ok.
@@ -429,6 +431,8 @@ int startup(int argc, const char *argv[])
     /* First, set the current directory to SystemRoot */
     TCHAR gen_path[MAX_PATH];
     DWORD res;
+    HKEY hSessionKey, hKey;
+    HRESULT hr;
 
     res = GetWindowsDirectory(gen_path, sizeof(gen_path));
 
@@ -440,13 +444,6 @@ int startup(int argc, const char *argv[])
 		return 100;
     }
 
-    if (res>=sizeof(gen_path))
-    {
-		printf("Windows path too long (%ld)\n", res);
-
-		return 100;
-    }
-
     if (!SetCurrentDirectory(gen_path))
     {
         wprintf(L"Cannot set the dir to %s (%ld)\n", gen_path, GetLastError());
@@ -454,42 +451,64 @@ int startup(int argc, const char *argv[])
         return 100;
     }
 
-    if (argc>1)
+    hr = SHCreateSessionKey(KEY_WRITE, &hSessionKey);
+    if (SUCCEEDED(hr))
+    {
+        LONG Error;
+        DWORD dwDisp;
+
+        Error = RegCreateKeyEx(hSessionKey, L"StartupHasBeenRun", 0, NULL, REG_OPTION_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp);
+        RegCloseKey(hSessionKey);
+        if (Error == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            if (dwDisp == REG_OPENED_EXISTING_KEY)
+            {
+                /* Startup programs has already been run */
+                return 0;
+            }
+        }
+    }
+
+    if (argc > 1)
     {
         switch(argv[1][0])
         {
         case 'r': /* Restart */
-            ops=SETUP;
+            ops = SETUP;
             break;
         case 's': /* Full start */
-            ops=SESSION_START;
+            ops = SESSION_START;
             break;
         default:
-            ops=DEFAULT;
+            ops = DEFAULT;
             break;
         }
     } else
-        ops=DEFAULT;
+        ops = DEFAULT;
 
     /* do not run certain items in Safe Mode */
     if(GetSystemMetrics(SM_CLEANBOOT)) ops.startup = FALSE;
 
     /* Perform the ops by order, stopping if one fails, skipping if necessary */
     /* Shachar: Sorry for the perl syntax */
-    res=(ops.ntonly || !ops.preboot || wininit()) &&
-        (ops.w9xonly || !ops.preboot || pendingRename()) &&
-        (ops.ntonly || !ops.prelogin ||
-         ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICESONCE], TRUE, FALSE)) &&
-        (ops.ntonly || !ops.prelogin || !ops.startup ||
-         ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICES], FALSE, FALSE)) &&
-        (!ops.postlogin ||
-         ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNONCE], TRUE, TRUE)) &&
-        (!ops.postlogin || !ops.startup ||
-         ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN], FALSE, FALSE)) &&
-        (!ops.postlogin || !ops.startup ||
-         ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN], FALSE, FALSE));
+    res = TRUE;
+    if (res && !ops.ntonly && ops.preboot)
+         res = wininit();
+    if (res && !ops.w9xonly && ops.preboot)
+         res = pendingRename();
+    if (res && !ops.ntonly && ops.prelogin)
+         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICESONCE], TRUE, FALSE);
+    if (res && !ops.ntonly && ops.prelogin && ops.startup)
+         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICES], FALSE, FALSE);
+    if (res && ops.postlogin)
+         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNONCE], TRUE, TRUE);
+    if (res && ops.postlogin && ops.startup)
+         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
+    if (res && ops.postlogin && ops.startup)
+         res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
 
     printf("Operation done\n");
 
-    return res?0:101;
+    return res ? 0 : 101;
 }
