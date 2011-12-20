@@ -121,6 +121,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 IN KPROCESSOR_MODE PreviousMode)
 {
     PUNICODE_STRING KeyName;
+    ULONG BytesToCopy;
     NTSTATUS Status = STATUS_SUCCESS;
     PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)ObjectBody;
     PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
@@ -155,16 +156,32 @@ CmpQueryKeyName(IN PVOID ObjectBody,
     /* Set the returned length */
     *ReturnLength = KeyName->Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
 
-    /* Check if it fits into the provided buffer */
-    if ((Length < sizeof(OBJECT_NAME_INFORMATION)) ||
-        (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
+    /* Calculate amount of bytes to copy into the buffer */
+    BytesToCopy = KeyName->Length + sizeof(WCHAR);
+
+    /* Check if the provided buffer is too small to fit even anything */
+    if ((Length <= sizeof(OBJECT_NAME_INFORMATION)) ||
+        ((Length < (*ReturnLength)) && (BytesToCopy < sizeof(WCHAR))))
     {
         /* Free the buffer allocated by CmpConstructName */
         ExFreePool(KeyName);
 
-        /* Return buffer length failure */
+        /* Return buffer length failure without writing anything there because nothing fits */
         return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+    /* Check if the provided buffer can be partially written */
+    if (Length < (*ReturnLength))
+    {
+        /* Yes, indicate so in the return status */
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+
+        /* Calculate amount of bytes which the provided buffer could handle */
+        BytesToCopy = Length - sizeof(OBJECT_NAME_INFORMATION);
+    }
+
+    /* Remove the null termination character from the size */
+    BytesToCopy -= sizeof(WCHAR);
 
     /* Fill in the result */
     _SEH2_TRY
@@ -177,7 +194,10 @@ CmpQueryKeyName(IN PVOID ObjectBody,
         /* Copy string content*/
         RtlCopyMemory(ObjectNameInfo->Name.Buffer,
                       KeyName->Buffer,
-                      *ReturnLength);
+                      BytesToCopy);
+
+        /* Null terminate it */
+        ObjectNameInfo->Name.Buffer[BytesToCopy / sizeof(WCHAR)] = 0;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
