@@ -359,7 +359,7 @@ static int ReceiveLine(int sock, char *buffer, int len, EchoMode echo)
 */
 static void RunShell(client_t *client) 
 { 
-   DWORD                 threadID;
+   HANDLE                threadHandle;
    HANDLE                hChildStdinRd;
    HANDLE                hChildStdinWr;
    HANDLE                hChildStdoutRd;
@@ -432,9 +432,17 @@ static void RunShell(client_t *client)
    if (!CloseHandle(hChildStdinRd)) 
      ErrorExit("Closing handle failed");  
 
-   CreateThread(NULL, 0, WriteToPipeThread, client, 0, &threadID);
-   CreateThread(NULL, 0, ReadFromPipeThread, client, 0, &threadID);
-   CreateThread(NULL, 0, MonitorChildThread, client, 0, &threadID);
+   threadHandle = CreateThread(NULL, 0, WriteToPipeThread, client, 0, NULL);
+   if (threadHandle != NULL)
+     CloseHandle(threadHandle);
+
+   threadHandle = CreateThread(NULL, 0, ReadFromPipeThread, client, 0, NULL);
+   if (threadHandle != NULL)
+     CloseHandle(threadHandle);
+
+   threadHandle = CreateThread(NULL, 0, MonitorChildThread, client, 0, NULL);
+   if (threadHandle != NULL)
+     CloseHandle(threadHandle);
 } 
 
 /*
