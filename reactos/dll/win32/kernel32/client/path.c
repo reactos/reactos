@@ -1285,206 +1285,161 @@ Quickie:
     return PathSize;
 }
 
-/***********************************************************************
- *           ContainsPath (Wine name: contains_pathW)
- *
- * Check if the file name contains a path; helper for SearchPathW.
- * A relative path is not considered a path unless it starts with ./ or ../
- */
-static
-BOOL
-ContainsPath(LPCWSTR name)
-{
-    if (RtlDetermineDosPathNameType_U(name) != RtlPathTypeRelative) return TRUE;
-    if (name[0] != '.') return FALSE;
-    if (name[1] == '/' || name[1] == '\\' || name[1] == '\0') return TRUE;
-    return (name[1] == '.' && (name[2] == '/' || name[2] == '\\'));
-}
-
-/**
- * @name GetDllLoadPath
- *
- * Internal function to compute the load path to use for a given dll.
- *
- * @remarks Returned pointer must be freed by caller.
- */
-
-LPWSTR
-GetDllLoadPath(LPCWSTR lpModule)
-{
-	ULONG Pos = 0, Length = 4, Tmp;
-	PWCHAR EnvironmentBufferW = NULL;
-	LPCWSTR lpModuleEnd = NULL;
-	UNICODE_STRING ModuleName;
-	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
-
-    // FIXME: This function is used only by SearchPathW, and is deprecated and will be deleted ASAP.
-
-	if (lpModule != NULL && wcslen(lpModule) > 2 && lpModule[1] == ':')
-	{
-		lpModuleEnd = lpModule + wcslen(lpModule);
-	}
-	else
-	{
-		ModuleName = NtCurrentPeb()->ProcessParameters->ImagePathName;
-		lpModule = ModuleName.Buffer;
-		lpModuleEnd = lpModule + (ModuleName.Length / sizeof(WCHAR));
-	}
-
-	if (lpModule != NULL)
-	{
-		while (lpModuleEnd > lpModule && *lpModuleEnd != L'/' &&
-		       *lpModuleEnd != L'\\' && *lpModuleEnd != L':')
-		{
-			--lpModuleEnd;
-		}
-		Length = (lpModuleEnd - lpModule) + 1;
-	}
-
-	Length += GetCurrentDirectoryW(0, NULL);
-	Length += GetDllDirectoryW(0, NULL);
-	Length += GetSystemDirectoryW(NULL, 0);
-	Length += GetWindowsDirectoryW(NULL, 0);
-	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
-
-	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-	                                     (Length + 1) * sizeof(WCHAR));
-	if (EnvironmentBufferW == NULL)
-	{
-	    return NULL;
-	}
-
-	if (lpModule)
-	{
-		RtlCopyMemory(EnvironmentBufferW, lpModule,
-		              (lpModuleEnd - lpModule) * sizeof(WCHAR));
-		Pos += lpModuleEnd - lpModule;
-		EnvironmentBufferW[Pos++] = L';';
-	}
-
-    Tmp = GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
-	if(Tmp > 0 && Tmp < Length - Pos)
-	{
-	    Pos += Tmp;
-	    if(Pos < Length) EnvironmentBufferW[Pos++] = L';';
-	}
-
-	Tmp = GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
-
-	/* Make sure buffer is null terminated */
-    EnvironmentBufferW[Pos++] = UNICODE_NULL;
-
-
-	SetLastError(LastError);
-	return EnvironmentBufferW;
-}
-
 /*
  * @implemented
  */
 DWORD
 WINAPI
-SearchPathW(LPCWSTR lpPath,
-            LPCWSTR lpFileName,
-            LPCWSTR lpExtension,
-            DWORD nBufferLength,
-            LPWSTR lpBuffer,
-            LPWSTR *lpFilePart)
+SearchPathW(IN LPCWSTR lpPath,
+            IN LPCWSTR lpFileName,
+            IN LPCWSTR lpExtension,
+            IN DWORD nBufferLength,
+            IN LPWSTR lpBuffer,
+            OUT LPWSTR *lpFilePart)
 {
-    DWORD ret = 0;
+    UNICODE_STRING FileNameString, ExtensionString, PathString, CallerBuffer;
+    ULONG Flags, LengthNeeded, FilePartSize;
+    NTSTATUS Status;
+    DWORD Result = 0;
 
-    if (!lpFileName || !lpFileName[0])
+    /* Default flags for RtlDosSearchPath_Ustr */
+    Flags = 6;
+
+    /* Clear file part in case we fail */
+    if (lpFilePart) *lpFilePart = NULL;
+
+    /* Initialize path buffer for free later */
+    PathString.Buffer = NULL;
+
+    /* Convert filename to a unicode string and eliminate trailing spaces */
+    RtlInitUnicodeString(&FileNameString, lpFileName);
+    while ((FileNameString.Length >= sizeof(WCHAR)) &&
+           (FileNameString.Buffer[(FileNameString.Length / sizeof(WCHAR)) - 1] == L' '))
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        FileNameString.Length -= sizeof(WCHAR);
     }
 
-    /* If the name contains an explicit path, ignore the path */
-    if (ContainsPath(lpFileName))
+    /* Was it all just spaces? */
+    if (!FileNameString.Length)
     {
-        /* try first without extension */
-        if (RtlDoesFileExists_U(lpFileName))
-            return GetFullPathNameW(lpFileName, nBufferLength, lpBuffer, lpFilePart);
+        /* Fail out */
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        goto Quickie;
+    }
 
-        if (lpExtension)
+    /* Convert extension to a unicode string */
+    RtlInitUnicodeString(&ExtensionString, lpExtension);
+
+    /* Check if the user sent a path */
+    if (lpPath)
+    {
+        /* Convert it to a unicode string too */
+        Status = RtlInitUnicodeStringEx(&PathString, lpPath);
+        if (NT_ERROR(Status))
         {
-            LPCWSTR p = wcsrchr(lpFileName, '.');
-            if (p && !strchr((const char *)p, '/') && !wcschr( p, '\\' ))
-                lpExtension = NULL;  /* Ignore the specified extension */
+            /* Fail if it was too long */
+            BaseSetLastNTError(Status);
+            goto Quickie;
+        }
+    }
+    else
+    {
+        /* A path wasn't sent, so compute it ourselves */
+        PathString.Buffer = BaseComputeProcessSearchPath();
+        if (!PathString.Buffer)
+        {
+            /* Fail if we couldn't compute it */
+            BaseSetLastNTError(STATUS_NO_MEMORY);
+            goto Quickie;
         }
 
-        /* Allocate a buffer for the file name and extension */
-        if (lpExtension)
+        /* See how big the computed path is */
+        LengthNeeded = lstrlenW(PathString.Buffer);
+        if (LengthNeeded > UNICODE_STRING_MAX_CHARS)
         {
-            LPWSTR tmp;
-            DWORD len = wcslen(lpFileName) + wcslen(lpExtension);
-
-            if (!(tmp = RtlAllocateHeap(RtlGetProcessHeap(), 0, (len + 1) * sizeof(WCHAR))))
-            {
-                SetLastError(ERROR_OUTOFMEMORY);
-                return 0;
-            }
-            wcscpy(tmp, lpFileName);
-            wcscat(tmp, lpExtension);
-            if (RtlDoesFileExists_U(tmp))
-                ret = GetFullPathNameW(tmp, nBufferLength, lpBuffer, lpFilePart);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, tmp);
+            /* Fail if it's too long */
+            BaseSetLastNTError(STATUS_NAME_TOO_LONG);
+            goto Quickie;
         }
-    }
-    else if (lpPath && lpPath[0])  /* search in the specified path */
-    {
-        ret = RtlDosSearchPath_U(lpPath,
-                                 lpFileName,
-                                 lpExtension,
-                                 nBufferLength * sizeof(WCHAR),
-                                 lpBuffer,
-                                 lpFilePart) / sizeof(WCHAR);
-    }
-    else  /* search in the default path */
-    {
-        WCHAR *DllPath = GetDllLoadPath(NULL);
 
-        if (DllPath)
+        /* Set the path size now that we have it */
+        PathString.MaximumLength = PathString.Length = LengthNeeded * sizeof(WCHAR);
+
+        /* Request SxS isolation from RtlDosSearchPath_Ustr */
+        Flags |= 1;
+    }
+
+    /* Create the string that describes the output buffer from the caller */
+    CallerBuffer.Length = 0;
+    CallerBuffer.Buffer = lpBuffer;
+    
+    /* How much space does the caller have? */
+    if (nBufferLength <= UNICODE_STRING_MAX_CHARS)
+    {
+        /* Add it into the string */
+        CallerBuffer.MaximumLength = nBufferLength * sizeof(WCHAR);
+    }
+    else
+    {
+        /* Caller wants too much, limit it to the maximum length of a string */
+        CallerBuffer.MaximumLength = UNICODE_STRING_MAX_BYTES;
+    }
+
+    /* Call Rtl to do the work */
+    Status = RtlDosSearchPath_Ustr(Flags,
+                                   &PathString,
+                                   &FileNameString,
+                                   &ExtensionString,
+                                   &CallerBuffer,
+                                   NULL,
+                                   NULL,
+                                   &FilePartSize,
+                                   &LengthNeeded);
+    if (NT_ERROR(Status))
+    {
+        /* Check for unusual status codes */
+        if ((Status != STATUS_NO_SUCH_FILE) && (Status != STATUS_BUFFER_TOO_SMALL))
         {
-            ret = RtlDosSearchPath_U(DllPath,
-                                     lpFileName,
-                                     lpExtension,
-                                     nBufferLength * sizeof(WCHAR),
-                                     lpBuffer,
-                                     lpFilePart) / sizeof(WCHAR);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath);
+            /* Print them out since maybe an app needs fixing */
+            DbgPrint("%s on file %wZ failed; NTSTATUS = %08lx\n",
+                     __FUNCTION__,
+                     &FileNameString,
+                     Status);
+            DbgPrint("    Path = %wZ\n", &PathString);
+        }
+        
+        /* Check if the failure was due to a small buffer */
+        if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            /* Check if the length was actually too big for Rtl to work with */
+            Result = LengthNeeded / sizeof(WCHAR);
+            if (Result > 0xFFFFFFFF) BaseSetLastNTError(STATUS_NAME_TOO_LONG);
         }
         else
         {
-            SetLastError(ERROR_OUTOFMEMORY);
-            return 0;
+            /* Some other error, set the error code */
+            BaseSetLastNTError(Status);
         }
     }
+    else
+    {
+        /* It worked! Write the file part now */
+        if (lpFilePart) *lpFilePart = &lpBuffer[FilePartSize];
+        
+        /* Convert the final result length */
+        Result = CallerBuffer.Length / sizeof(WCHAR);
+    }
 
-    if (!ret) SetLastError(ERROR_FILE_NOT_FOUND);
+Quickie:
+    /* Check if there was a dynamic path stirng to free */
+    if ((PathString.Buffer != lpPath) && (PathString.Buffer))
+    {
+        /* And free it */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathString.Buffer);
+    }
 
-    return ret;
+    /* Return the final result lenght */
+    return Result;
 }
 
 /*
