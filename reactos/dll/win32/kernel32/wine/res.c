@@ -359,7 +359,7 @@ BOOL WINAPI EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfu
         ret = FALSE;
         status = STATUS_ACCESS_VIOLATION;
     }
-    __ENDTRY
+    __ENDTRY;
 
 done:
     HeapFree( GetProcessHeap(), 0, name );
