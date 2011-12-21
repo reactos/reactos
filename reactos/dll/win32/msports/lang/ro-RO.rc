@@ -18,10 +18,10 @@ BEGIN
     COMBOBOX                             IDC_SERIAL_DATABITS, 139, 38, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
     RTEXT       "&Paritate:",            -1, 74, 61, 62, 8
     COMBOBOX                             IDC_SERIAL_PARITY, 139, 59, 106, 62, WS_TABSTOP | CBS_DROPDOWNLIST
-    RTEXT       "Biți de &stop:",        -1, 74, 82, 62, 8
+    RTEXT       "Biți de st&op:",        -1, 74, 82, 62, 8
     COMBOBOX                             IDC_SERIAL_STOPBITS, 139, 80, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
     RTEXT       "&Controlul fluxului:",  - 1, 74, 102, 62, 8
     COMBOBOX                             IDC_SERIAL_FLOWCONTROL, 139, 100, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
     PUSHBUTTON  "A&vansate…",            IDC_SERIAL_ADVANCED, 111, 130, 65, 14,WS_GROUP
-    PUSHBUTTON  "Valo&ri implicite",     IDC_SERIAL_RESTORE, 180, 130, 65, 14, WS_GROUP
+    PUSHBUTTON  "Valori i&mplicite",     IDC_SERIAL_RESTORE, 180, 130, 65, 14, WS_GROUP
 END

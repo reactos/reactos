@@ -5,27 +5,27 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&Fișier"
   BEGIN
-    MENUITEM "I&eșire",                   IDC_EXIT
+    MENUITEM "I&eșire",                       IDC_EXIT
   END
   POPUP "A&cțiune"
   BEGIN
-    MENUITEM "Im&primare",                   IDC_PRINT, GRAYED
+    MENUITEM "Im&primare",                    IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "P&roprietăți",              IDC_PROP, GRAYED
+    MENUITEM "P&roprietăți",                  IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&?",                    IDC_PROGHELP, GRAYED
+    MENUITEM "&?",                            IDC_PROGHELP, GRAYED
   END
   POPUP "&Afișare"
   BEGIN
     MENUITEM "Dispozitive după &tip",         IDC_DEVBYTYPE, CHECKED
     MENUITEM "Dispozitive după &conexiune",   IDC_STATIC, GRAYED
-    MENUITEM "Resurse după t&ip",       IDC_STATIC, GRAYED
-    MENUITEM "Resurse după c&onexiune", IDC_STATIC, GRAYED
+    MENUITEM "Resurse după t&ip",             IDC_STATIC, GRAYED
+    MENUITEM "Resurse după c&onexiune",       IDC_STATIC, GRAYED
   END
   POPUP "&?"
   BEGIN
-    MENUITEM "&Manual",                    IDC_PROGHELP
-    MENUITEM "Despre…",                   IDC_ABOUT
+    MENUITEM "&Manual",                       IDC_PROGHELP
+    MENUITEM "Despre…",                       IDC_ABOUT
   END
 END
 
@@ -33,9 +33,9 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "&Proprietăți",              IDC_PROP, GRAYED
+    MENUITEM "&Proprietăți",                  IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Manual",                   IDC_PROGHELP
+    MENUITEM "&Manual",                       IDC_PROGHELP
   END
 END
 
@@ -45,9 +45,9 @@ FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT       "Gestionar de dispozitive v0.1\nDrept de autor (C) 2006\nde Ged Murphy (gedmurphy@gmail.com)\nTraducere de Petru Dimitriu", IDC_STATIC, 48, 7, 130, 35
-  PUSHBUTTON  "Î&nchide", IDOK, 75, 162, 44, 15
-  ICON        IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
-  EDITTEXT    IDC_LICENSE_EDIT, 8, 47, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+  PUSHBUTTON  "Î&nchide",  IDOK, 75, 162, 44, 15
+  ICON                     IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT                 IDC_LICENSE_EDIT, 8, 47, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE DISCARDABLE

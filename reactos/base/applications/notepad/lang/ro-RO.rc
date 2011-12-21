@@ -17,8 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *      Fulea Ștefan (2011-10-26): minor changes
- *      Fulea Ștefan (2011-11-20): minor change
+ *      Fulea Ștefan (2011-12-19): minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -45,51 +44,51 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou\tCtrl+N",      CMD_NEW
-        MENUITEM "&Deschidere…\tCtrl+D",  CMD_OPEN
-        MENUITEM "Pă&strează\tCtrl+S",     CMD_SAVE
-        MENUITEM "&Păstrare în…",       CMD_SAVE_AS
+        MENUITEM "&Nou\tCtrl+N",                 CMD_NEW
+        MENUITEM "&Deschidere…\tCtrl+D",         CMD_OPEN
+        MENUITEM "Pă&strează\tCtrl+S",           CMD_SAVE
+        MENUITEM "&Păstrare în…",                CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Configurare pagină…",    CMD_PAGE_SETUP
-        MENUITEM "&Imprimă\tCtrl+P",    CMD_PRINT
-        MENUITEM "Configurare i&mprimantă…", CMD_PRINTER_SETUP
+        MENUITEM "&Configurare pagină…",         CMD_PAGE_SETUP
+        MENUITEM "&Imprimă\tCtrl+P",             CMD_PRINT
+        MENUITEM "Configurare i&mprimantă…",     CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire",             CMD_EXIT
+        MENUITEM "I&eșire",                      CMD_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "A&nulează\tCtrl+Z",       CMD_UNDO
+        MENUITEM "Des&face\tCtrl+Z",             CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează\tCtrl+X",        CMD_CUT
-        MENUITEM "&Copie\tCtrl+C",       CMD_COPY
-        MENUITEM "&Lipește\tCtrl+V",      CMD_PASTE
-        MENUITEM "Șt&erge\tDel",        CMD_DELETE
+        MENUITEM "&Decupează\tCtrl+X",           CMD_CUT
+        MENUITEM "&Copiază\tCtrl+C",             CMD_COPY
+        MENUITEM "&Lipește\tCtrl+V",             CMD_PASTE
+        MENUITEM "Șt&erge\tDel",                 CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Găsire…\tCtrl+F",    CMD_SEARCH
+        MENUITEM "&Găsire…\tCtrl+F",             CMD_SEARCH
         MENUITEM "Găsește &următoarea\tF3",      CMD_SEARCH_NEXT
-        MENUITEM "Înlocuieș&te\tCtrl+H",     CMD_REPLACE
-        MENUITEM "&Salt la…\tCtrl+G",    CMD_GOTO
+        MENUITEM "Î&nlocuiește\tCtrl+H",         CMD_REPLACE
+        MENUITEM "&Salt la…\tCtrl+G",            CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Selecte&ază tot\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "Inserează &oră și dată\tF5",      CMD_TIME_DATE
+        MENUITEM "Selecte&ază tot\tCtrl+A",      CMD_SELECT_ALL
+        MENUITEM "Inserează &oră și dată\tF5",   CMD_TIME_DATE
     END
     POPUP "F&ormatare"
     BEGIN
-        MENUITEM "Îm&pachetează textul", CMD_WRAP
-        MENUITEM "&Font…",         CMD_FONT
+        MENUITEM "Mod te&xt încadrat",           CMD_WRAP
+        MENUITEM "&Font…",                       CMD_FONT
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Bară de &stare", CMD_STATUSBAR
+        MENUITEM "&Bară de stare",               CMD_STATUSBAR
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Manual",     CMD_HELP_CONTENTS
-        MENUITEM "&Căutare…",    CMD_HELP_SEARCH
-        MENUITEM "M&anualul manualului", CMD_HELP_ON_HELP
+        MENUITEM "&Manual…",                     CMD_HELP_CONTENTS
+        MENUITEM "&Căutare…",                    CMD_HELP_SEARCH
+        MENUITEM "M&anualul manualului",         CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…",        CMD_ABOUT
-        MENUITEM "Inf&o",         CMD_ABOUT_WINE
+        MENUITEM "&Despre…",                     CMD_ABOUT
+        MENUITEM "&Info…",                       CMD_ABOUT_WINE
     END
 END
 
@@ -100,24 +99,24 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Configurare pagină"
 BEGIN
-LTEXT    "&Antet:",  0x140,   10, 07, 40, 15
-EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Subsol:",  0x142,   10, 24, 40, 15
-EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Antet:",    0x140, 10, 07, 40, 15
+EDITTEXT               0x141, 60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Subsol:",   0x142, 10, 24, 40, 15
+EDITTEXT               0x143, 60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "&Margini:",      0x144,     10, 43,160, 45
-LTEXT    "S&tânga:",        0x145,   20, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "S&us:",         0x148,    20, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Dreapta:",       0x14B, 100, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+GROUPBOX "&Margini:",  0x144, 10, 43,160, 45
+LTEXT    "S&tânga:",   0x145, 20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "S&us:",      0x148, 20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A, 50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Dreapta:",  0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D, 130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "J&os:",      0x14E,100, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150, 130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "Con&firmă",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "A&nulează",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Manual",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "Con&firmă",     IDOK, 180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "A&nulează",     IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Manual",       IDHELP, 180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
@@ -126,10 +125,10 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_S
 FONT 8, "MS Shell Dlg"
 CAPTION "Codificare"
 BEGIN
-COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Codificare:",0x155,5,2,41,12
-COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Terminație:",0x156,5,20,41,12
+COMBOBOX                       ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Codificare:", 0x155,5,2,41,12
+COMBOBOX                       ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Terminație:", 0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
@@ -138,10 +137,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Salt la poziție"
 BEGIN
-EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Număr linie:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
-DEFPUSHBUTTON   "Con&firmă", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "A&nulează", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+EDITTEXT                         ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Număr linie:",  0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "Con&firmă",     IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "A&nulează",     IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,294,170
@@ -150,13 +149,12 @@ CAPTION "Despre Carnețelul ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Carnețelul ReactOS v1.0\r\nDrept de autor 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nDrept de autor 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nDrept de autor 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nDrept de autor 2002 Andriy Palamarchuk\r\n",
-                    -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,242,39
-    CONTROL         " ",
-                    -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Î&nchide",IDOK,119,149,44,15,WS_GROUP
-    ICON            IDI_NPICON,-1,12,9,20,30
-    EDITTEXT        IDC_LICENSE,8,64,282,81,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+                            -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,242,39
+    CONTROL         " ",    -1,"Static",0x50000000,8,48,272,11
+    DEFPUSHBUTTON   "Î&nchide", IDOK,119,149,44,15,WS_GROUP
+    ICON                    IDI_NPICON,-1,12,9,20,30
+    EDITTEXT                IDC_LICENSE,8,64,282,81,ES_MULTILINE |
+                            ES_READONLY | WS_VSCROLL
 END
 
 STRINGTABLE DISCARDABLE

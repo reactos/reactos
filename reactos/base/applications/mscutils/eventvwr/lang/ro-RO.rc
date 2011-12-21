@@ -4,7 +4,7 @@
  * FILE:        base/applications/mscutils/eventvwr/lang/en-US.rc
  * PURPOSE:     Romanian Language File for ReactOS Event Viewer
  * TRANSLATORS: Dimitriu Petru
- *              Fulea Ștefan - minor changes (2011.10.19)
+ *              Fulea Ștefan - minor changes (2011.12.19)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -43,10 +43,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre Observator de evenimente"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+	ICON                          IDI_EVENTVWR,IDC_MYICON,14,9,21,20
 	LTEXT           "Observator de Evenimente ReactOS Versiunea 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
 	LTEXT           "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,150,22
-	DEFPUSHBUTTON   "Î&nchide",IDOK,90,48,42,16,WS_GROUP
+	DEFPUSHBUTTON   "Î&nchide",   IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -63,32 +63,32 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Detalii eveniment"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-	DEFPUSHBUTTON   "Î&nchide",IDOK,12,258,50,14
-	PUSHBUTTON      "&Precedent",IDPREVIOUS,78,258,50,14
-	PUSHBUTTON      "U&rmător",IDNEXT,144,258,50,14
-	PUSHBUTTON      "&Manual",IDHELP,210,258,50,14
-	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-	LTEXT           "&Descriere:",IDC_STATIC,15,70,39,8
-	LTEXT           "Dată:",IDC_STATIC,14,14,36,8
-	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
-	LTEXT           "Oră:",IDC_STATIC,14,27,36,8
-	LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
-	LTEXT           "&Utilizator:",IDC_STATIC,14,41,36,8
-	LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
-	LTEXT           "&Calculator:",IDC_STATIC,14,54,36,8
-	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
-	LTEXT           "ID Eveniment:",IDC_STATIC,133,15,46,8
-	LTEXT           "Static",IDC_EVENTIDSTATIC,185,15,77,8
-	LTEXT           "Sursă:",IDC_STATIC,133,28,46,8
-	LTEXT           "Static",IDC_EVENTSOURCESTATIC,185,28,77,8
-	LTEXT           "Tip:",IDC_STATIC,133,42,46,8
-	LTEXT           "Static",IDC_EVENTTYPESTATIC,185,42,77,8
-	LTEXT           "Categorie:",IDC_STATIC,133,55,46,8
-	LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,185,55,77,8
-	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
-	LTEXT           "D&ate",IDC_STATIC,14,194,20,8
-	CONTROL         "&8 biți",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
-	CONTROL         "&16 biți",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+	DEFPUSHBUTTON   "Î&nchide",      IDOK,12,258,50,14
+	PUSHBUTTON      "&Precedent",    IDPREVIOUS,78,258,50,14
+	PUSHBUTTON      "U&rmător",      IDNEXT,144,258,50,14
+	PUSHBUTTON      "&Manual",       IDHELP,210,258,50,14
+	EDITTEXT                         IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+	LTEXT           "&Descriere:",   IDC_STATIC,15,70,39,8
+	LTEXT           "Dată:",         IDC_STATIC,14,14,36,8
+	LTEXT           "Static",        IDC_EVENTDATESTATIC,56,14,72,8
+	LTEXT           "Oră:",          IDC_STATIC,14,27,36,8
+	LTEXT           "Static",        IDC_EVENTTIMESTATIC,56,27,72,8
+	LTEXT           "&Utilizator:",  IDC_STATIC,14,41,36,8
+	LTEXT           "Static",        IDC_EVENTUSERSTATIC,56,41,72,8
+	LTEXT           "&Calculator:",  IDC_STATIC,14,54,36,8
+	LTEXT           "Static",        IDC_EVENTCOMPUTERSTATIC,56,54,72,8
+	LTEXT           "ID Eveniment:", IDC_STATIC,133,15,46,8
+	LTEXT           "Static",        IDC_EVENTIDSTATIC,185,15,77,8
+	LTEXT           "Sursă:",        IDC_STATIC,133,28,46,8
+	LTEXT           "Static",        IDC_EVENTSOURCESTATIC,185,28,77,8
+	LTEXT           "Tip:",          IDC_STATIC,133,42,46,8
+	LTEXT           "Static",        IDC_EVENTTYPESTATIC,185,42,77,8
+	LTEXT           "Categorie:",    IDC_STATIC,133,55,46,8
+	LTEXT           "Static",        IDC_EVENTCATEGORYSTATIC,185,55,77,8
+	EDITTEXT                         IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+	LTEXT           "D&ate",         IDC_STATIC,14,194,20,8
+	CONTROL         "&8 biți",       IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
+	CONTROL         "&16 biți",      IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
 END
 
 STRINGTABLE

@@ -79,11 +79,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX                                                        IDC_DNSADDRLIST, 5, 15, 180, 55, LBS_NOTIFY
+    LISTBOX                      IDC_DNSADDRLIST, 5, 15, 180, 55, LBS_NOTIFY
     LTEXT       "Adrese de ser&vere DNS, în ordinea utilizării:",  -1, 5, 5, 180, 12
     PUSHBUTTON  "&Sus",          IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
     PUSHBUTTON  "&Jos",          IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
-    PUSHBUTTON  "&Adăugare…",    IDC_DNSADDRADD, 25, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON  "&Adăugare…",    IDC_DNSADDRADD, 5, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON  "&Modificare…",  IDC_DNSADDRMOD, 70, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON  "&Elimină",      IDC_DNSADDRDEL, 135, 70, 50, 14, WS_TABSTOP
     LTEXT       "Următoarele opțiuni sunt aplicate tuturor conexiunilor cu TCP/IP active. Pentru rezoluția numelor necalificate:", -1, 5, 90, 220, 24
@@ -96,7 +96,7 @@ BEGIN
     PUSHBUTTON  "A&dăugare…",     IDC_DNSSUFFIXADD, 5, 205, 50, 14, WS_TABSTOP
     PUSHBUTTON  "Mod&ificare…",   IDC_DNSSUFFIXMOD, 70, 205, 50, 14, WS_TABSTOP
     PUSHBUTTON  "E&limină",       IDC_DNSSUFFIXDEL, 135, 205, 50, 14, WS_TABSTOP
-    LTEXT       "Sufi&xul DNS al conexiunii curente:",                    -1, 5, 225, 110, 14
+    LTEXT       "Sufixul DNS al conexiunii curente:",                     -1, 5, 225, 110, 14
     EDITTEXT                                                              IDC_SUFFIX, 130, 225, 90, 12, WS_TABSTOP
     CHECKBOX    "În&registrează adresele conexiunii în DNS",              IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX    "La înregistrare, utili&zează sufixul DNS al conexiunii", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP

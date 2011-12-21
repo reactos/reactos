@@ -136,7 +136,7 @@ COLOR 8F /-F\n"
 
 STRING_COPY_HELP1,  "Suprascrieți „%s”? (Da|Nu|Toate)"
 
-STRING_COPY_HELP2, "Copie unul sau mai multe fișiere într-un alt loc.\n\n\
+STRING_COPY_HELP2, "Copiază unul sau mai multe fișiere într-un alt loc.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] sursă [/A|/B]\n\
      [+ sursă [/A|/B] [+ ...]] [destinație [/A|/B]]\n\n\
   sursă       Fișierul sau fișierele de copiat.\n\
@@ -608,7 +608,7 @@ CHOICE    Așteaptă alegerea unei opțiuni (din mai multe furnizate).\n\
 CLS       Curăță ecranul.\n\
 CMD       Lansează o nouă instanță a interpretorului de comenzi ReactOS.\n\
 COLOR     Stabilește culorile implicite pentru text și fundal.\n\
-COPY      Copie unul sau mai multe fișiere dintr-un loc în altul.\n\
+COPY      Copiază unul sau mai multe fișiere dintr-un loc în altul.\n\
 DATE      Afișează sau stabilește data.\n\
 DEL       Șterge unul sau mai multe fișiere.\n\
 DELETE    Șterge unul sau mai multe fișiere.\n\

@@ -2,8 +2,7 @@
  * FILE:             base/applications/mplay32/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-21  initial translation
- *                   2011-10-18  minor changes
+ * LAST CHANGE:      2011-12-19  minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -12,14 +11,14 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Fișier"
 	BEGIN
-		MENUITEM "&Deschide…", IDM_OPEN_FILE
-		MENUITEM "Î&nchide", IDM_CLOSE_FILE
+		MENUITEM "&Deschidere…", IDM_OPEN_FILE
+		MENUITEM "Î&nchide",     IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "I&eșire", IDM_EXIT
+		MENUITEM "I&eșire",      IDM_EXIT
 	END
 	POPUP "&?"
 	BEGIN
-		MENUITEM "&Despre…", IDM_ABOUT
+		MENUITEM "&Despre…",     IDM_ABOUT
 	END
 END
 

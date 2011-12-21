@@ -2,10 +2,10 @@
  * FILE:             dll/win32/shimgvw/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:       2011-10-04  initial translation
+ * LAST CHANGE:      2011-12-17  small correction
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
@@ -21,5 +21,5 @@ BEGIN
     IDS_TOOLTIP_ROT_CLOCKW "Rotire în sens orar (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Rotire în sens antiorar (Ctrl+L)"
     IDS_TOOLTIP_PRINT      "Imprimă (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Păstrează în... (Ctrl+S)"
+    IDS_TOOLTIP_SAVEAS     "Păstrare în… (Ctrl+S)"
 END

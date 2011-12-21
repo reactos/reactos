@@ -7,13 +7,13 @@ CAPTION "Configurare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT       "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 9, 6, 238, 25
-    CONTROL     "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL     "TEXT",           IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
     PUSHBUTTON  "Re&stabilește opțiunile implicite", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON  "&Adaugă", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON  "&Elimină", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON  "&Proprietăți", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX    "Preferințe", -1, 7, 185, 240, 36
-    PUSHBUTTON  "&Combinație de taste…", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON  "A&dăugare…",     IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON  "&Elimină",       IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON  "&Proprietăți…",  IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX    "Preferințe",     -1, 7, 185, 240, 36
+    PUSHBUTTON  "&Combinații de taste…", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -25,45 +25,45 @@ BEGIN
     AUTORADIOBUTTON  "Voi apăsa din nou CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 125, 11, WS_GROUP
     AUTORADIOBUTTON  "Voi apăsa tasta S&HIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX         "Combinații de taste", -1, 7, 37, 258, 95
-    LTEXT            "Acțiune", -1, 14, 47, 60, 9
+    LTEXT            "Acțiune",        -1, 14, 47, 60, 9
     RTEXT            "Combinație de taste", -1, 177, 47, 79, 9
-    CONTROL          "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
+    CONTROL          "",               IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
     PUSHBUTTON       "&Modificare combinație…", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
-    DEFPUSHBUTTON    "Con&firmă", IDOK, 66, 140, 70, 14
-    PUSHBUTTON       "A&nulează", IDCANCEL, 146, 140, 70, 14
+    DEFPUSHBUTTON    "Con&firmă",      IDOK, 66, 140, 70, 14
+    PUSHBUTTON       "A&nulează",      IDCANCEL, 146, 140, 70, 14
 END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Adăguarea unei limbi de intrare"
+CAPTION "Adăguare limbă de intrare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT          "&Limbă:", -1, 7, 7, 61, 10
-    COMBOBOX       IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT          "&Limbă:",     -1, 7, 7, 61, 10
+    COMBOBOX                      IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT          "&Aranjament de tastatură/IME:", -1, 7, 36, 110, 10
-    COMBOBOX       IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON  "Con&firmă", IDOK, 116, 68, 50, 14
-    PUSHBUTTON     "A&nulează", IDCANCEL, 169, 68, 50, 14
+    COMBOBOX                      IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON  "Con&firmă",   IDOK, 116, 68, 50, 14
+    PUSHBUTTON     "A&nulează",   IDCANCEL, 169, 68, 50, 14
 END
 
-IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
+IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 240, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Modificarea combinației de taste"
+CAPTION "Modificare combinație de taste"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX     "Co&mutare limbă", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
-    LTEXT            "Shift", -1, 73, 37, 27, 12
-    CTEXT            "+", -1, 62, 37, 8, 9
-    AUTORADIOBUTTON  "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
-    AUTORADIOBUTTON  "Left &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX     "C&omutare șabloane", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
-    LTEXT            "Shift", -1, 74, 87, 27, 12
-    CTEXT            "+", -1, 63, 87, 8, 9
-    AUTORADIOBUTTON  "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
-    AUTORADIOBUTTON  "Left A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
-    DEFPUSHBUTTON    "Con&firmă", IDOK, 172, 9, 50, 14
-    PUSHBUTTON       "A&nulează", IDCANCEL, 172, 27, 50, 14
+    GROUPBOX         "",               -1, 9, 5, 165, 110
+    AUTOCHECKBOX     "Permite combinație de co&mutare limbă", IDC_SWITCH_INPUT_LANG_CB, 16, 15, 155, 12
+    LTEXT            "«Shift»",        -1, 93, 37, 27, 12
+    CTEXT            "+",              -1, 82, 37, 8, 9
+    AUTORADIOBUTTON  "«&Ctrl»",        IDC_CTRL_LANG, 29, 31, 35, 11
+    AUTORADIOBUTTON  "«&Alt» (stâng)", IDC_LEFT_ALT_LANG, 29, 45, 66, 12
+    AUTOCHECKBOX     "Permite combinație de c&omutare șabloane", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 155, 12
+    LTEXT            "«Shift»",        -1, 94, 87, 27, 12
+    CTEXT            "+",              -1, 83, 87, 8, 9
+    AUTORADIOBUTTON  "«C&trl»",        IDC_CTRL_LAYOUT, 30, 81, 35, 11
+    AUTORADIOBUTTON  "«A&lt» (stâng)", IDC_LEFT_ALT_LAYOUT, 30, 95, 66, 12
+    DEFPUSHBUTTON    "Con&firmă",      IDOK, 182, 9, 50, 14
+    PUSHBUTTON       "A&nulează",      IDCANCEL, 182, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -71,12 +71,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Proprietăți limbă de introducere"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT          "Limbă:", -1, 7, 7, 61, 8
-    LTEXT          "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
+    LTEXT          "Limbă:",      -1, 7, 7, 37, 8
+    LTEXT          "",            IDC_INPUT_LANG_STR, 30, 7, 129, 8
     LTEXT          "&Aranjament de tastatură/IME:", -1, 7, 21, 110, 10
-    COMBOBOX       IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON  "Con&firmă", IDOK, 116, 53, 52, 14
-    PUSHBUTTON     "A&nulează", IDCANCEL, 169, 53, 52, 14
+    COMBOBOX                      IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON  "Con&firmă",   IDOK, 116, 53, 52, 14
+    PUSHBUTTON     "A&nulează",   IDCANCEL, 169, 53, 52, 14
 END
 
 STRINGTABLE
@@ -96,7 +96,7 @@ BEGIN
     IDS_LAYOUT_EXISTS2       "Un asemenea aranjament de tastatură deja există și nu poate fi readăugat."
     IDS_CTRL_SHIFT           "«Ctrl» + «Shift»"
     IDS_LEFT_ALT_SHIFT       "«Alt» (stâng) + «Shift»"
-    IDS_SWITCH_BET_INLANG    "Comută între limbile de intrare"
+    IDS_SWITCH_BET_INLANG    "Comutarea între limbile de intrare"
 END
 
 STRINGTABLE

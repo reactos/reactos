@@ -17,7 +17,7 @@ BEGIN
 
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre…", ID_HELP_ABOUT
+        MENUITEM "&Despre…",        ID_HELP_ABOUT
     END
 END
 

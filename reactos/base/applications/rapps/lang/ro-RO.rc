@@ -2,9 +2,7 @@
  * FILE:             base/applications/rapps/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-21  Initial translation
- *                   2011-08-30  Technical correction (checkbox in preferences)
- *                   2011-10-30  Minor correnctions
+ * LAST CHANGE:      2011-12-18  small correnctions
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -13,23 +11,23 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Fișier"
 	BEGIN
-		MENUITEM "&Preferințe…",        ID_SETTINGS
+		MENUITEM "&Preferințe…",           ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "I&eșire",               ID_EXIT
+		MENUITEM "I&eșire",                ID_EXIT
 	END
-	POPUP "A&plicații"
+	POPUP "&Programe"
 	BEGIN
-		MENUITEM "&Instalează",           ID_INSTALL
-		MENUITEM "&Dezinstalează",        ID_UNINSTALL
-		MENUITEM "&Modifică",             ID_MODIFY
+		MENUITEM "&Instalează",            ID_INSTALL
+		MENUITEM "&Dezinstalează",         ID_UNINSTALL
+		MENUITEM "&Modifică",              ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Elimină din registru", ID_REGREMOVE
+		MENUITEM "&Elimină din registru",  ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "Împ&rospătează",         ID_REFRESH
 	END
 	POPUP "&?"
 	BEGIN
-		MENUITEM "&Manual",               ID_HELP, GRAYED
+		MENUITEM "&Manual",                ID_HELP, GRAYED
 		MENUITEM "&Despre…",               ID_ABOUT
 	END
 END
@@ -39,7 +37,7 @@ BEGIN
 	POPUP "popup"
 	BEGIN
 		MENUITEM "&Deschide în navigator",   ID_OPEN_LINK
-		MENUITEM "&Copie în memorie",        ID_COPY_LINK
+		MENUITEM "&Copiază în memorie",      ID_COPY_LINK
 	END
 END
 
@@ -53,7 +51,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Elimină din registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "Împ&rospătează",         ID_REFRESH
+		MENUITEM "Împ&rospătează",        ID_REFRESH
 	END
 END
 
@@ -63,19 +61,19 @@ CAPTION "Preferințe"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX      "Generale", -1, 4, 2, 240, 61
-	AUTOCHECKBOX  "Pă&strează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX  "Act&ualizează la pornire lista aplicațiilor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-	AUTOCHECKBOX  "Menține jurna&l de instalare/dezinstalare a aplicațiilor", IDC_LOG_ENABLED, 15, 46, 219, 12
+	AUTOCHECKBOX  "&Păstrează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX  "&Actualizează la pornire lista aplicațiilor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+	AUTOCHECKBOX  "&Menține jurnal de instalare/dezinstalare a aplicațiilor", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX      "Descărcări", -1, 4, 65, 240, 51
 	LTEXT         "Dosarul pentru descărcări:", -1, 16, 75, 100, 9
 	EDITTEXT      IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON    "Sp&ecificare…", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX  "Șterge instalatorul aplicației &după instalare", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON    "Spe&cificare…", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX  "Șt&erge instalatorul aplicației după instalare", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
 	PUSHBUTTON  "&Implicite", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
-	PUSHBUTTON  "Con&firmă", IDOK, 116, 124, 60, 14
-	PUSHBUTTON  "A&nulează", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON  "Con&firmă",  IDOK, 116, 124, 60, 14
+	PUSHBUTTON  "A&nulează",  IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
@@ -83,7 +81,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalare aplicație"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT            "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+	LTEXT            "...",       IDC_INSTALL_TEXT, 4, 5, 209, 35
 
 	AUTORADIOBUTTON  "&Instalează de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
 	AUTORADIOBUTTON  "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
@@ -97,9 +95,9 @@ STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU 
 CAPTION "Descărcare…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL     "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
-    LTEXT       "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
-    PUSHBUTTON  "A&nulează", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+    CONTROL     "Progress1",  IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    LTEXT       "",           IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
+    PUSHBUTTON  "A&nulează",  IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
@@ -108,8 +106,8 @@ CAPTION "Despre gestionarul de aplicații ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT       "Gestionar de aplicații ReactOS\nDrept de autor (C) 2009\nde către Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON  "Î&nchide", IDOK, 133, 46, 50, 14
-	ICON        IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+	PUSHBUTTON  "Î&nchide",  IDOK, 133, 46, 50, 14
+	ICON                     IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
 STRINGTABLE DISCARDABLE

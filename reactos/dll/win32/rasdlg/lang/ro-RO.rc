@@ -42,7 +42,7 @@ END
 
 104 DIALOGEX 6, 18, 269, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Tratarea erorilor de conectare"
+CAPTION "Tratare erori de conectare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON                        32516, 1031, 7, 7, 20, 20
@@ -111,7 +111,7 @@ END
 
 108 DIALOGEX 6, 18, 222, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Schimbarea parolei"
+CAPTION "Schimbare parolă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT          "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați „Confirmă” pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 210, 24
@@ -125,7 +125,7 @@ END
 
 109 DIALOGEX 6, 18, 223, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Schimbarea parolei"
+CAPTION "Schimbare parolă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT          "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați „Confirmă” pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 212, 29
@@ -141,7 +141,7 @@ END
 
 110 DIALOGEX 12, 16, 230, 105
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Retroapelarea"
+CAPTION "Retroapelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT          "Aveți aleasă opțiunea numărului specificat de către apelat.  Apăsați „Confirmă” pentru a fi apelat de către server la numărul de mai jos. Apăsați „Anulează” pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
@@ -165,7 +165,7 @@ END
 
 112 DIALOGEX 6, 18, 263, 219
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Apelarea și închiderea automată"
+CAPTION "Apelare și închidere automată"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT          "ReactOS poate apela/închide automat dispozitivele în funcție de cantitatea de informație transmisă și recepționată.", 1085, 9, 7, 253, 30
@@ -371,7 +371,7 @@ END
 
 125 DIALOGEX 12, 16, 261, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Configurarea modemului"
+CAPTION "Configurare modem"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON                                     15102, 1238, 7, 7, 20, 20
@@ -393,7 +393,7 @@ END
 
 126 DIALOGEX 0, 0, 270, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Alegerea tipului componentei de rețea"
+CAPTION "Alegere tip de componentă de rețea"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT          "Selectați tipul componentei de rețea pe care o doriți instalată:", -1, 8, 7, 258, 8
@@ -474,7 +474,7 @@ END
 
 147 DIALOGEX 6, 18, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Apelarea"
+CAPTION "Apelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT     "Aceste preferințe se aplică pentru „Autentificare utilizând rețeaua comutată” la autentificarea Ctrl-Alt-Del.  Ca administrator, veți avea acces la această pagină.", 1007, 7, 4, 221, 40, NOT WS_GROUP
@@ -488,7 +488,7 @@ END
 
 148 DIALOGEX 6, 18, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Retroapelarea"
+CAPTION "Retroapelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Unele servere vă pot oferi un retroapel în scopul sporirii securității sau pentru a vă reduce din cheltuieli. Specificați dacă doriți retroapelare.\nRetroapelarea nu este admisă în cazul conexiunilor la rețelele virtuale private (VPN).", 1043, 8, 4, 219, 43
@@ -640,7 +640,7 @@ BEGIN
 	AUTOCHECKBOX     "E&xecută script:",                         1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
 	COMBOBOX                                                     1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 	PUSHBUTTON       "&Editare…",                                1182, 87, 187, 60, 14
-	PUSHBUTTON       "&Căutare…",                                1181, 151, 187, 60, 14
+	PUSHBUTTON       "&Răsfoire…",                                1181, 151, 187, 60, 14
 END
 
 163 DIALOGEX 0, 0, 317, 143
@@ -707,7 +707,7 @@ END
 
 168 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT     "Introduceți mai jos numărul de telefon. ", -1, 7, 4, 306, 14
@@ -722,11 +722,11 @@ CAPTION "Agendă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Utilizează această agendă:",    1326, 8, 8, 222, 8
-	AUTORADIOBUTTON  "Agenda &sistemului",            1325, 14, 22, 216, 10, WS_GROUP
+	AUTORADIOBUTTON  "Agenda siste&mului",            1325, 14, 22, 216, 10, WS_GROUP
 	AUTORADIOBUTTON  "Agenda p&ersonală",             1324, 14, 34, 216, 10
 	AUTORADIOBUTTON  "Această agendă &alternativă:",  1323, 14, 46, 217, 10
 	COMBOBOX                                          1321, 26, 61, 201, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
-	PUSHBUTTON       "&Căutare…",                     1322, 167, 81, 60, 14
+	PUSHBUTTON       "&Răsfoire…",                     1322, 167, 81, 60, 14
 END
 
 170 DIALOGEX 6, 18, 235, 135
@@ -735,10 +735,10 @@ CAPTION "Agendă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Utilizează această agendă:",   1326, 8, 8, 223, 8
-	AUTORADIOBUTTON  "Agenda &sistemului",           1325, 14, 22, 217, 10, WS_GROUP
+	AUTORADIOBUTTON  "Agenda siste&mului",           1325, 14, 22, 217, 10, WS_GROUP
 	AUTORADIOBUTTON  "Această agendă &alternativă:", 1323, 14, 36, 216, 10
 	COMBOBOX                                         1321, 26, 51, 203, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
-	PUSHBUTTON       "&Căutare…",                    1322, 169, 69, 60, 14
+	PUSHBUTTON       "&Răsfoire…",                    1322, 169, 69, 60, 14
 END
 
 171 DIALOGEX 6, 18, 317, 144
@@ -760,7 +760,7 @@ BEGIN
 	AUTOCHECKBOX  "E&xecută scriptul:",            1463, 15, 45, 78, 10
 	COMBOBOX                     1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 	PUSHBUTTON    "&Editare…",   1335, 180, 77, 60, 14
-	PUSHBUTTON    "&Căutare…",   1465, 244, 77, 60, 14
+	PUSHBUTTON    "&Răsfoire…",   1465, 244, 77, 60, 14
 END
 
 173 DIALOGEX 6, 18, 230, 215
@@ -872,7 +872,7 @@ END
 
 186 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Utilizarea conexiunii create poate fi limitată doar pentru (contul de utilizator al) dumneavoastră, fiind disponibilă doar după autentificare.", -1, 7, 4, 306, 23
@@ -930,7 +930,7 @@ END
 
 509 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Specificați rolul acestui calculator:", -1, 10, 5, 275, 9
@@ -960,7 +960,7 @@ END
 
 532 DIALOGEX 0, 0, 263, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Retroapelarea pentru serverul de redirecționare"
+CAPTION "Retroapelare pentru server de redirecționare"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "La apelarea unui server de redirecționare, vi se poate oferi un apel de răspuns pentru a vă reduce costurile de telefonie sau pentru a spori securitatea.  Specificați dacă acceptați sau nu acest lucru.", 1043, 7, 5, 253, 24
@@ -1052,7 +1052,7 @@ END
 
 544 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT         "„Partajarea conexiunii de Internet” permite altor calculatoare din rețeaua locală să acceseze resurse externe prin această conexiune.", -1, 10, 5, 300, 22
@@ -1063,7 +1063,7 @@ END
 
 545 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT     "Accesul partajat permite altor calculatoare din rețeaua locală să acceseze resurse externe prin această conexiune de linie comutată. Puteți activa accesul partajat pentru o singură conexiune, pentru o singură rețea.", -1, 10, 5, 300, 25
@@ -1222,7 +1222,7 @@ END
 
 557 DIALOGEX 0, 0, 217, 164
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Configurarea serviciilor"
+CAPTION "Configurare servicii"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "&Descrierea serviciului de rețea:", -1, 7, 5, 203, 8
@@ -1276,7 +1276,7 @@ END
 
 567 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT     "Scrieți numele serviciului în următorul câmp de text. Dacă veți lăsa acet câmp necompletat, ReactOS va detecta și va configura automat serviciul în momentul conectării efective.", -1, 10, 7, 301, 25
@@ -1333,12 +1333,12 @@ CAPTION "Jurnalul de securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX      "Opțiuni de înregistrare:", -1, 6, 8, 216, 47
-	AUTOCHECKBOX  "Înr&egistrează conexiunile nereușite din exterior", 1642, 14, 22, 201, 10
-	AUTOCHECKBOX  "În&registrează conexiunile reușite spre exterior", 1641, 14, 37, 200, 10
+	AUTOCHECKBOX  "Înregistrează conexiunile nereușite &din exterior", 1642, 14, 22, 201, 10
+	AUTOCHECKBOX  "Înregistrează conexiunile reușite spr&e exterior", 1641, 14, 37, 200, 10
 	GROUPBOX      "Opțiuni ale fișierului jurnal:", -1, 7, 64, 215, 91
 	LTEXT         "N&ume:",       -1, 14, 78, 199, 8
 	EDITTEXT                      1674, 14, 90, 199, 14, ES_READONLY
-	PUSHBUTTON    "&Căutare…",    1639, 153, 108, 60, 14
+	PUSHBUTTON    "&Răsfoire…",    1639, 153, 108, 60, 14
 	LTEXT         "&Limită dimensiune:", -1, 14, 133, 67, 8
 	EDITTEXT                      1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
 	LTEXT         "kocteți",      -1, 140, 133, 25, 8
@@ -1366,7 +1366,7 @@ END
 
 577 DIALOGEX 0, 0, 312, 144
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT    "Tastați numele furnizorului de Internet în următorul câmp de text.", 1681, 10, 3, 296, 11
@@ -1499,7 +1499,7 @@ END
 
 1428 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Înainte de a stabili o conexiune virtuală, se poate mai întâi stabili automat o legătură la Internet sau la o altă rețea publică.", -1, 10, 6, 275, 24
@@ -1586,7 +1586,7 @@ END
 
 1469 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	AUTORADIOBUTTON "Rețea privată prin linie &comutată.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
@@ -1612,7 +1612,7 @@ END
 
 1481 DIALOGEX 0, 0, 321, 157
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Crearea unei noi conexiuni"
+CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT         "Introduceți numele și parola contului unui furnizor de Internet, apoi scrieți aceste informații și păstrați-le.\n(Dacă ați uitat o parolă sau un nume de cont, contactați furnizorul de servicii de Internet)", 1689, 10, 4, 308, 25

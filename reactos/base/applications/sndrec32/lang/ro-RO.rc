@@ -30,18 +30,18 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou",                         ID_NEW
-        MENUITEM "&Deschidere…",                 ID_FILE_OPEN
-        MENUITEM "Pă&strează",                   ID_FILE_SAVE, GRAYED
-        MENUITEM "&Păstrare în…",             ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Nou",             ID_NEW
+        MENUITEM "&Deschidere…",     ID_FILE_OPEN
+        MENUITEM "Pă&strează",       ID_FILE_SAVE, GRAYED
+        MENUITEM "&Păstrare în…",    ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire",                      ID_EXIT
+        MENUITEM "I&eșire",          ID_EXIT
     END
-    MENUITEM "todo1",                       0
-    MENUITEM "todo2",                       0
+    MENUITEM "todo1",                0
+    MENUITEM "todo2",                0
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre…",                   ID__ABOUT
+        MENUITEM "&Despre…",         ID__ABOUT
     END
 END
 

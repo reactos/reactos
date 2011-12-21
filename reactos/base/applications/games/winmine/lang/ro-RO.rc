@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- *    2011-10-18  Fulea Ștefan: correcting diacritics, minor changes
+ *    2011-12-18  Fulea Ștefan: minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -34,7 +34,7 @@ BEGIN
     POPUP "J&oc" BEGIN
         MENUITEM "&Nou\tF2",       IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Marcaje „?”", IDM_MARKQ
+        MENUITEM "&Marcaje „?”",   IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "În&cepător",     IDM_BEGINNER
         MENUITEM "&Avansat",       IDM_ADVANCED
@@ -44,8 +44,8 @@ BEGIN
         MENUITEM "I&eșire\tAlt+X", IDM_EXIT
     END
     POPUP "&?" BEGIN
-        MENUITEM "Scoruri &maxime", IDM_TIMES
-        MENUITEM "&Despre…",         IDM_ABOUT
+        MENUITEM "Scoruri ma&xime", IDM_TIMES
+        MENUITEM "&Despre…",        IDM_ABOUT
     END
 END
 
@@ -55,7 +55,7 @@ CAPTION "Scoruri maxime"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Scoruri maxime", -1,  10,  10, 140,  45
-    LTEXT           "Începător",     -1,  20,  20,  40,   8
+    LTEXT           "Începător",      -1,  20,  20,  40,   8
     LTEXT           "Avansat",        -1,  20,  30,  40,   8
     LTEXT           "Expert",         -1,  20,  40,  40,   8
     LTEXT           "999",            IDC_TIME1, 70,  20,  15,   8
@@ -82,9 +82,9 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Joc personalizat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Linii",   -1,   5,   5,  30,  10
-    LTEXT           "Coloane", -1,   5,  35,  30,  10
-    LTEXT           "Mine",    -1,   5,  65,  30,  10
+    LTEXT           "Linii",      -1,   5,   5,  30,  10
+    LTEXT           "Coloane",    -1,   5,  35,  30,  10
+    LTEXT           "Mine",       -1,   5,  65,  30,  10
     EDITTEXT                      IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
     EDITTEXT                      IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
     EDITTEXT                      IDC_EDITMINES,  5,  75,  20,  12, ES_NUMBER

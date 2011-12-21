@@ -3,11 +3,11 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT  "Bun venit la expertul de adăugare a componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT  "Acest expert vă va asista la:", -1, 114, 40, 182, 8
+	LTEXT  "Bun venit la Expertul de adăugare a componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT  "Acest Expert vă va asista la:", -1, 114, 40, 182, 8
 	LTEXT  "1) Instalarea componentelor logice compatibile cu cele fizice pe care le adăugați calculatorului", -1, 121, 56, 184, 16
 	LTEXT  "2) Depanarea problemelor pe care le-ați putea întâmpina la instalarea componentelor fizice", -1, 121, 78, 185, 19
 	ICON   IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
@@ -17,7 +17,7 @@ END
 
 IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT  "", IDC_STATUSTEXT, 21, 8, 275, 32
@@ -26,7 +26,7 @@ END
 
 IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Componenta fizică este conectată la calculator?", -1, 20, 11, 275, 8
@@ -36,7 +36,7 @@ END
 
 IDD_PROBELISTPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT    "Alegeți din lista de mai jos un dispozitiv instalat, apoi apăsați „Înainte” pentru a-i inspecta proprietățile sau pentru a depana o posibilă problemă.", -1, 21, 8, 275, 22
@@ -47,7 +47,7 @@ END
 
 IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT            "Expertul poate încerca detectarea și instalarea automată a componentelor fizice. Altfel, dacă știți exact modelul dispozitivului, îl veți putea manual alege dintr-o listă.", -1, 21, 8, 280, 24
@@ -58,7 +58,7 @@ END
 
 IDD_DETECTEDHWPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT    "", IDC_STATUSTEXT, 21, 9, 275, 40
@@ -68,7 +68,7 @@ END
 
 IDD_HWTYPESPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT    "Dacă nu regăsiți categoria pe care o căutați, specificați „afișează toate”.", IDC_STATUSTEXT, 21, 9, 275, 18
@@ -78,7 +78,7 @@ END
 
 IDD_PROGRESSPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT    "Căutarea componentei fizice poate dura câteva minute.", -1, 21, 8, 275, 15
@@ -90,7 +90,7 @@ END
 
 IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT  "Încheiere expert", IDC_FINISHTITLE, 114, 8, 203, 24
@@ -101,7 +101,7 @@ END
 
 IDD_ISFOUNDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT    "Încheiere expert", IDC_FINISHTITLE, 114, 8, 203, 24
@@ -112,7 +112,7 @@ END
 
 IDD_HWSTATUSPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT     "Încheire expertiză", IDC_FINISHTITLE, 114, 8, 195, 28
@@ -124,7 +124,7 @@ END
 
 IDD_NOTCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugarea componentelor fizice"
+CAPTION "Adăugare componente fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT         "Nu se mai poate continua Adăugarea componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 28
@@ -136,7 +136,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLNAME         "Adăugarea componentelor fizice"
+	IDS_CPLNAME         "Adăugare componente fizice"
 	IDS_CPLDESCRIPTION  "Adaugarea de componente fizice la calculator."
 	IDS_SEARCHTITLE     "Așteptați căutarea de componente fizice…"
 	IDS_SEARCHTEXT      "Expertul caută dispozitive recent conectate, care nu au fost încă instalate."

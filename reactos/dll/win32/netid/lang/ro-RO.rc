@@ -29,7 +29,7 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Schimbarea identității calculatorului"
+CAPTION "Schimbare identitate calculator"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT            "",                         1017, 7, 5, 218, 30
@@ -60,7 +60,7 @@ BEGIN
     EDITTEXT                             1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON  "Con&firmă",          1, 153, 104, 50, 14
     PUSHBUTTON     "A&nulează",          2, 209, 104, 50, 14
-    LTEXT          "Acest nume este utilizat pentru interoperabilitatea cu servicii vechi.", 13, 7, 88, 253, 8
+    LTEXT          "Acest nume este utilizat pentru interoperabilitatea cu servicii mai vechi.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE

@@ -3,9 +3,7 @@
  * LICENSE:      See COPYING in top level directory
  * FILE:         base/applications/games/spider/lang/en-US.rc
  * TRANSLATOR:   Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:   2011-08-20  Initial Romanian translation
- *               2011-09-09  Technical correction - excluded "resource.h"
- *               2011-09-12  Accelerators, Romanian quotes
+ * LAST CHANGE:  2011-12-18  corrections
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -13,7 +11,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 /* Dialoguri */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Selectați culoarea dorsală"
+CAPTION "Selectare culoare dorsală"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -50,8 +48,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Pasiență „păianjen”"
-    IDS_SPI_ABOUT   "Pasiență „păianjen” de Gregor Schneider\n\nCardLib versiune 1.0"
+    IDS_SPI_NAME    "Pasiență-păianjen"
+    IDS_SPI_ABOUT   "Pasiență-păianjen de Gregor Schneider\n\nCardLib versiune 1.0"
     IDS_SPI_QUIT    "Abandonați jocul curent?"
     IDS_SPI_WIN     "Felicitări, ați câștigat!"
     IDS_SPI_DEAL    "O nouă rundă?"
@@ -64,16 +62,16 @@ IDR_MENU1 MENU DISCARDABLE
 BEGIN
     POPUP "J&oc"
     BEGIN
-        MENUITEM "Rundă &nouă\tF2",             IDM_GAME_NEW
+        MENUITEM "Rundă &nouă\tF2",       IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Culoare &dorsală…",         IDM_GAME_DECK
+        MENUITEM "Culoare &dorsală…",     IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire",                     IDM_GAME_EXIT
+        MENUITEM "I&eșire",               IDM_GAME_EXIT
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Manual\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "&Despre…",                 IDM_HELP_ABOUT
+        MENUITEM "&Manual…\tF1",          IDM_HELP_CONTENTS
+        MENUITEM "&Despre…",              IDM_HELP_ABOUT
     END
 END
 

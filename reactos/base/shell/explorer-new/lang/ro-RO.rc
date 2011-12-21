@@ -17,40 +17,40 @@ IDM_STARTMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "&Programe", IDM_PROGRAMS
+        MENUITEM "",                   -1, MFT_SEPARATOR
+        POPUP "&Programe",             IDM_PROGRAMS
         BEGIN
-            MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Gol)",          -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Favorite", IDM_FAVORITES
+        POPUP "&Favorite",             IDM_FAVORITES
         BEGIN
-            MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Gol)",          -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Documente", IDM_DOCUMENTS
+        POPUP "&Documentele mele",     IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Gol)",          -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "C&onfigurație", IDM_SETTINGS
+        POPUP "C&onfigurație",         IDM_SETTINGS
         BEGIN
-            MENUITEM "Panou de &control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
-            MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Securitate…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "Conexiuni în &rețea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Imprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "Panou de &control",       IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "",                        -1, MFT_SEPARATOR
+            MENUITEM "&Securitate…",            IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "Conexiuni în &rețea",     IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Imprimante și faxuri",   IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Bară de activități și Meniul Pornire", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&Căut&are", IDM_SEARCH
+        POPUP "&Căut&are",                      IDM_SEARCH
         BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "",                        -1, MFT_SEPARATOR
         END
-        MENUITEM "&Manuale de utilizare", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "E&xecutare…", IDM_RUN, MFT_STRING, MFS_ENABLED
-        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
-        MENUITEM "&Sincronizează", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "De&autentificare %s…", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "Dec&onectare…", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "De&tașare calculator", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "Î&nchidere calculator…", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Manuale de utilizare",       IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "E&xecutare…",                 IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "",                            450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Sincronizează",              IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "De&autentificare %s…",        IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Dec&onectare…",               IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "De&tașare calculator",        IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Î&nchidere calculator…",      IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 

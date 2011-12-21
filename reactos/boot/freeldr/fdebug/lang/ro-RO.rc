@@ -18,21 +18,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Conectare", IDM_FILE_CONNECT
-        MENUITEM "&Deconectare", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Conectare",         IDM_FILE_CONNECT
+        MENUITEM "&Deconectare",       IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "C&urăță ecran", IDM_FILE_CLEARDISPLAY
+        MENUITEM "C&urăță ecran",      IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Pornește captură", IDM_FILE_STARTCAPTURE
-        MENUITEM "&Oprește captură", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Pornește captură",  IDM_FILE_STARTCAPTURE
+        MENUITEM "&Oprește captură",   IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ecou &local", IDM_FILE_LOCALECHO
+        MENUITEM "Ecou &local",        IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire", IDM_EXIT
+        MENUITEM "I&eșire",            IDM_EXIT
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre…", IDM_ABOUT
+        MENUITEM "&Despre…",           IDM_ABOUT
     END
 END
 
@@ -124,12 +124,11 @@ CAPTION "Despre depanatorul FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Depanatorul FreeLoader v1.0\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "Î&nchide",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+                                 IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,122,26
+    DEFPUSHBUTTON   "Î&nchide",  IDOK,183,189,44,14,WS_GROUP
+    ICON                         IDI_FDEBUG,IDC_STATIC,19,30,20,20
+    EDITTEXT                     IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
+                                 ES_READONLY | WS_VSCROLL
 END
 
 IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
@@ -138,11 +137,11 @@ CAPTION "Opțiuni de conectare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Alegeți portul COM (ex. COM1):",IDC_STATIC,7,7,108,8
-    EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
+    EDITTEXT                       IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
     LTEXT           "Rata baud (ex. 115200):",IDC_STATIC,7,38,114,8
-    EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Con&firmă",IDOK,45,79,50,14
-    PUSHBUTTON      "A&nulează",IDCANCEL,100,79,50,14
+    EDITTEXT                       IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Con&firmă",   IDOK,45,79,50,14
+    PUSHBUTTON      "A&nulează",   IDCANCEL,100,79,50,14
 END
 
 IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
@@ -151,10 +150,10 @@ CAPTION "Fișierul de captură"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Numele fișierului:",IDC_STATIC,7,17,62,8
-    EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Caută",IDC_BROWSE,194,26,50,14
-    DEFPUSHBUTTON   "Con&firmă",IDOK,139,74,50,14
-    PUSHBUTTON      "A&nulează",IDCANCEL,194,74,50,14
+    EDITTEXT                      IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Caută",     IDC_BROWSE,194,26,50,14
+    DEFPUSHBUTTON   "Con&firmă",  IDOK,139,74,50,14
+    PUSHBUTTON      "A&nulează",  IDCANCEL,194,74,50,14
 END
 
 
