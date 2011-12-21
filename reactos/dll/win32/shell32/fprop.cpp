@@ -931,7 +931,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     WCHAR *pFileName;
     HPSXA hpsxa[3];
     INT_PTR res;
-    CComPtr<IDataObject>        pDataObj;
+    CComPtr<IDataObject> pDataObj;
     HRESULT hResult;
     DWORD wLength;
 

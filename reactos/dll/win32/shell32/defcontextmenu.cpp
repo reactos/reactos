@@ -738,6 +738,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     DWORD dwSize;
 
     TRACE("BuildShellItemContextMenu entered\n");
+    ASSERT(m_Dcm.cidl >= 1);
 
     hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile);
     if (hr == S_OK)
@@ -823,7 +824,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         rfg = 0;
     }
 
-    if ((rfg & SFGAO_FOLDER) || _ILIsControlPanel(m_Dcm.apidl[m_Dcm.cidl]))
+    if ((rfg & SFGAO_FOLDER) || _ILIsControlPanel(m_Dcm.apidl[0]))
     {
         /* add the default verbs open / explore */
         AddStaticEntryForFileClass(L"Folder");
@@ -926,13 +927,9 @@ CDefaultContextMenu::QueryContextMenu(
     UINT uFlags)
 {
     if (m_Dcm.cidl)
-    {
         idCmdFirst = BuildShellItemContextMenu(hmenu, idCmdFirst, idCmdLast, uFlags);
-    }
     else
-    {
         idCmdFirst = BuildBackgroundContextMenu(hmenu, idCmdFirst, idCmdLast, uFlags);
-    }
 
     return S_OK;
 }
@@ -1396,56 +1393,91 @@ HRESULT
 CDefaultContextMenu::DoProperties(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    WCHAR szDrive[MAX_PATH];
+    WCHAR wszBuf[MAX_PATH];
     STRRET strFile;
+    const ITEMIDLIST *pidlParent, *pidlChild;
+    HRESULT hr = S_OK;
 
-    if (m_Dcm.cidl && _ILIsMyComputer(m_Dcm.apidl[0]))
+    pidlParent = m_Dcm.pidlFolder;
+    if (!pidlParent)
     {
-        ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
-        return S_OK;
-    }
-    else if (m_Dcm.cidl == 0 && m_Dcm.pidlFolder != NULL && _ILIsDesktop(m_Dcm.pidlFolder))
-    {
-        ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
-        return S_OK;
-    }
-    else if (_ILIsDrive(m_Dcm.apidl[0]))
-    {
-        ILGetDisplayName(m_Dcm.apidl[0], szDrive);
-        SH_ShowDriveProperties(szDrive, m_Dcm.pidlFolder, m_Dcm.apidl);
-        return S_OK;
-    }
-    else if (_ILIsNetHood(m_Dcm.apidl[0]))
-    {
-        //FIXME path!
-        ShellExecuteW(NULL, L"open", L"explorer.exe",
-                      L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
-                      NULL, SW_SHOWDEFAULT);
-        return S_OK;
-    }
-    else if (_ILIsBitBucket(m_Dcm.apidl[0]))
-    {
-        /* FIXME
-         * detect the drive path of bitbucket if appropiate
-         */
-
-        SH_ShowRecycleBinProperties(L'C');
-        return S_OK;
+        IPersistFolder2 *pf;
+        
+        /* pidlFolder is optional */
+        if (SUCCEEDED(m_Dcm.psf->QueryInterface(IID_IPersistFolder2, (PVOID*)&pf)))
+        {
+            pf->GetCurFolder((_ITEMIDLIST**)&pidlParent);
+            pf->Release();
+        }
     }
 
-    if (m_Dcm.cidl > 1)
-        WARN("SHMultiFileProperties is not yet implemented\n");
-
-    if (m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile) != S_OK)
+    if (m_Dcm.cidl > 0)
+        pidlChild = m_Dcm.apidl[0];
+    else
     {
-        ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
-        return E_FAIL;
+        /* Set pidlChild to last pidl of current folder */
+        if (pidlParent == m_Dcm.pidlFolder)
+            pidlParent = (ITEMIDLIST*)ILClone(pidlParent);
+
+        pidlChild = (ITEMIDLIST*)ILClone(ILFindLastID(pidlParent));
+        ILRemoveLastID((ITEMIDLIST*)pidlParent);
     }
 
-    if (StrRetToBufW(&strFile, m_Dcm.apidl[0], szDrive, MAX_PATH) != S_OK)
-        return E_FAIL;
+    if (_ILIsMyComputer(pidlChild))
+    {
+        if (32 >= (UINT)ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL))
+            hr = E_FAIL;
+    }
+    else if (_ILIsDesktop(pidlChild))
+    {
+        if (32 >= (UINT)ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
+            hr = E_FAIL;
+    }
+    else if (_ILIsDrive(pidlChild))
+    {
+        ILGetDisplayName(pidlChild, wszBuf);
+        if (!SH_ShowDriveProperties(wszBuf, pidlParent, &pidlChild))
+            hr = E_FAIL;
+    }
+    else if (_ILIsNetHood(pidlChild))
+    {
+        // FIXME path!
+        if (32 >= (UINT)ShellExecuteW(NULL, L"open", L"explorer.exe",
+                                      L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
+                                      NULL, SW_SHOWDEFAULT))
+            hr = E_FAIL;
+    }
+    else if (_ILIsBitBucket(pidlChild))
+    {
+        /* FIXME: detect the drive path of bitbucket if appropiate */
+        if(!SH_ShowRecycleBinProperties(L'C'))
+            hr = E_FAIL;
+    }
+    else
+    {
+        if (m_Dcm.cidl > 1)
+            WARN("SHMultiFileProperties is not yet implemented\n");
 
-    return SH_ShowPropertiesDialog(szDrive, m_Dcm.pidlFolder, m_Dcm.apidl);
+        hr = m_Dcm.psf->GetDisplayNameOf(pidlChild, SHGDN_FORPARSING, &strFile);
+        if (SUCCEEDED(hr))
+        {
+            hr = StrRetToBufW(&strFile, pidlChild, wszBuf, _countof(wszBuf));
+            if (SUCCEEDED(hr))
+                hr = SH_ShowPropertiesDialog(wszBuf, pidlParent, &pidlChild);
+            else
+                ERR("StrRetToBufW failed\n");
+        }
+        else
+            ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
+    }
+
+    /* Free allocated PIDLs */
+    if (pidlParent != m_Dcm.pidlFolder)
+        ILFree((ITEMIDLIST*)pidlParent);
+    if (m_Dcm.cidl < 1 || pidlChild != m_Dcm.apidl[0])
+        ILFree((ITEMIDLIST*)pidlChild);
+
+    return hr;
 }
 
 HRESULT

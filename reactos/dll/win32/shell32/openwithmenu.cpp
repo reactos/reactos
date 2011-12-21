@@ -1035,7 +1035,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     }
 
     pida = (LPIDA)GlobalLock(medium.hGlobal);
-    ASSERT(pida->cidl == 1);
+    ASSERT(pida->cidl >= 1);
 
     pidlFolder2 = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
     pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
