@@ -4029,8 +4029,8 @@ RegQueryValueExA(HKEY hkeyorg,
     RtlInitAnsiString( &nameA, name );
     if ((status = RtlAnsiStringToUnicodeString( &nameW, &nameA, TRUE )))
     {
-        return RtlNtStatusToDosError(status);
         ClosePredefKey(hkey);
+        return RtlNtStatusToDosError(status);
     }
 
     status = NtQueryValueKey( hkey, &nameW, KeyValuePartialInformation,

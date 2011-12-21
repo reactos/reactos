@@ -743,7 +743,6 @@ ComputerPageDlgProc(HWND hwndDlg,
                             MessageBoxW(hwndDlg, WrongPassword, Title, MB_ICONERROR | MB_OK);
                             SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
                             return TRUE;
-                            break;
                         }
                         Password++;
                     }
