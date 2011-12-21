@@ -902,7 +902,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         
 #ifndef NEWCC
         /* Flush dirty cache pages */
-        CcRosFlushDirtyPages(-1, &Dummy, TRUE);
+        CcRosFlushDirtyPages(-1, &Dummy, FALSE); //HACK: We really should wait here!
 #else
         Dummy = 0;
 #endif
