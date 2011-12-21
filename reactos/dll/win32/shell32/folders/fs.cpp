@@ -514,7 +514,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
     return hr;
 }
 
-static const WCHAR AdvancedW[] = L"SORFWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
+static const WCHAR AdvancedW[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
 static const WCHAR HideFileExtW[] = L"HideFileExt";
 static const WCHAR NeverShowExtW[] = L"NeverShowExt";
 
