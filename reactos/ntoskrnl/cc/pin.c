@@ -240,8 +240,11 @@ CcUnpinRepinnedBcb (
       IoStatus->Information = 0;
       if (WriteThrough)
         {
-          KeEnterCriticalRegion();
-          ExAcquirePushLockExclusive(&iBcb->CacheSegment->Lock);
+            KeWaitForSingleObject(&iBcb->CacheSegment->Mutex,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
           if (iBcb->CacheSegment->Dirty)
             {
               IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
@@ -250,8 +253,7 @@ CcUnpinRepinnedBcb (
             {
               IoStatus->Status = STATUS_SUCCESS;
             }
-          ExReleasePushLockExclusive(&iBcb->CacheSegment->Lock);
-          KeLeaveCriticalRegion();
+          KeReleaseMutex(&iBcb->CacheSegment->Mutex, 0);
         }
       else
         {
