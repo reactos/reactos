@@ -87,7 +87,7 @@ CDesktopFolderEnum::~CDesktopFolderEnum()
 }
 
 static const WCHAR ClassicStartMenuW[] = L"SOFTWARE\\Microsoft\\Windows\\"
-    "CurrentVersion\\Explorer\\HideDesktopIcons\\ClassicStartMenu";
+    L"CurrentVersion\\Explorer\\HideDesktopIcons\\ClassicStartMenu";
 
 static INT
 IsNamespaceExtensionHidden(const WCHAR *iid)
