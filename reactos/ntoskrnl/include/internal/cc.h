@@ -261,7 +261,8 @@ NTSTATUS
 NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
-    PULONG Count
+    PULONG Count,
+    BOOLEAN Wait
 );
 
 VOID

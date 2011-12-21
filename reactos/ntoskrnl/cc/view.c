@@ -175,42 +175,22 @@ CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
 
 NTSTATUS
 NTAPI
-CcRosFlushDirtyPages(ULONG Target, PULONG Count)
+CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
 {
     PLIST_ENTRY current_entry;
     PCACHE_SEGMENT current;
     ULONG PagesPerSegment;
     BOOLEAN Locked;
     NTSTATUS Status;
-    static ULONG WriteCount[4] = {0, 0, 0, 0};
-    ULONG NewTarget;
+    LARGE_INTEGER ZeroTimeout;
     
     DPRINT("CcRosFlushDirtyPages(Target %d)\n", Target);
     
     (*Count) = 0;
+    ZeroTimeout.QuadPart = 0;
     
     KeEnterCriticalRegion();
     KeAcquireGuardedMutex(&ViewLock);
-    
-    WriteCount[0] = WriteCount[1];
-    WriteCount[1] = WriteCount[2];
-    WriteCount[2] = WriteCount[3];
-    WriteCount[3] = 0;
-    
-    NewTarget = WriteCount[0] + WriteCount[1] + WriteCount[2];
-    
-    if (NewTarget < DirtyPageCount)
-    {
-        NewTarget = (DirtyPageCount - NewTarget + 3) / 4;
-        WriteCount[0] += NewTarget;
-        WriteCount[1] += NewTarget;
-        WriteCount[2] += NewTarget;
-        WriteCount[3] += NewTarget;
-    }
-    
-    NewTarget = WriteCount[0];
-    
-    Target = max(NewTarget, Target);
     
     current_entry = DirtySegmentListHead.Flink;
     if (current_entry == &DirtySegmentListHead)
@@ -225,17 +205,23 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         current_entry = current_entry->Flink;
 
         Locked = current->Bcb->Callbacks->AcquireForLazyWrite(
-            current->Bcb->LazyWriteContext, TRUE);
+            current->Bcb->LazyWriteContext, Wait);
         if (!Locked)
         {
             continue;
         }
 
-        KeWaitForSingleObject(&current->Mutex,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
+        Status = KeWaitForSingleObject(&current->Mutex,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       Wait ? NULL : &ZeroTimeout);
+        if (Status != STATUS_SUCCESS)
+        {
+            current->Bcb->Callbacks->ReleaseFromLazyWrite(
+                current->Bcb->LazyWriteContext);
+            continue;
+        }
 
         ASSERT(current->Dirty);
         if (current->ReferenceCount > 1)
@@ -268,11 +254,6 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         
         KeAcquireGuardedMutex(&ViewLock);
         current_entry = DirtySegmentListHead.Flink;
-    }
-    
-    if (*Count < NewTarget)
-    {
-        WriteCount[1] += (NewTarget - *Count);
     }
     
     KeReleaseGuardedMutex(&ViewLock);
@@ -374,7 +355,7 @@ retry:
     if (Target > 0 && !FlushedPages)
     {
         /* Flush dirty pages to disk */
-        CcRosFlushDirtyPages(Target, &PagesFreed);
+        CcRosFlushDirtyPages(Target, &PagesFreed, FALSE);
         FlushedPages = TRUE;
 
         /* We can only swap as many pages as we flushed */
