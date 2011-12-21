@@ -560,17 +560,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 
    DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
-   if (Fcb->Flags & FCB_IS_PAGE_FILE)
-   {
-      PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
-      IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
-      IoSkipCurrentIrpStackLocation(IrpContext->Irp);
-      DPRINT("Read from page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart);
-      Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
-      VfatFreeIrpContext(IrpContext);
-      return Status;
-   }
-
    ByteOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
    Length = IrpContext->Stack->Parameters.Read.Length;
    BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
@@ -772,17 +761,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    ASSERT(Fcb);
 
    DPRINT("<%wZ>\n", &Fcb->PathNameU);
-
-   if (Fcb->Flags & FCB_IS_PAGE_FILE)
-   {
-      PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
-      IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
-      IoSkipCurrentIrpStackLocation(IrpContext->Irp);
-      DPRINT("Write to page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart);
-      Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
-      VfatFreeIrpContext(IrpContext);
-      return Status;
-   }
 
   /* fail if file is a directory and no paged read */
    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
