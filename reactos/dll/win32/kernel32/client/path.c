@@ -391,7 +391,7 @@ LPWSTR
 WINAPI
 BaseComputeProcessSearchPath(VOID)
 {
-    DPRINT1("Computing Process Search path\n");
+    DPRINT("Computing Process Search path\n");
 
     /* Compute the path using default process order */
     return BasepComputeProcessPath(BaseProcessOrder, NULL, NULL);
