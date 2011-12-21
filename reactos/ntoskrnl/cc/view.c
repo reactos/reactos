@@ -225,20 +225,13 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         current_entry = current_entry->Flink;
 
         Locked = current->Bcb->Callbacks->AcquireForLazyWrite(
-            current->Bcb->LazyWriteContext, FALSE);
+            current->Bcb->LazyWriteContext, TRUE);
         if (!Locked)
         {
             continue;
         }
         
-        Locked = ExTryToAcquirePushLockExclusive(&current->Lock);
-        if (!Locked)
-        {
-            current->Bcb->Callbacks->ReleaseFromLazyWrite(
-                current->Bcb->LazyWriteContext);
-
-            continue;
-        }
+        ExAcquirePushLockExclusive(&current->Lock);
         
         ASSERT(current->Dirty);
         if (current->ReferenceCount > 1)
