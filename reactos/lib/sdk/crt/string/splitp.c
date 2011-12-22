@@ -63,8 +63,10 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     }
 
     /* Check if we got a file name / extension */
-    if (!file_start) file_start = path;
-    if (!ext_start || ext_start < file_start) ext_start = path;
+    if (!file_start)
+        file_start = dir_start;
+    if (!ext_start || ext_start < file_start)
+        ext_start = path;
 
     if (dir)
     {
