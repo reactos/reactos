@@ -108,12 +108,12 @@ enum directions
 
 /* the character type contains the C1_* flags in the low 12 bits */
 /* and the C2_* type in the high 4 bits */
-static __inline unsigned short get_char_typeW( WCHAR ch )
+/*static __inline unsigned short get_char_typeW( WCHAR ch )
 {
     WORD CharType;
     GetStringTypeW(CT_CTYPE1, &ch, 1, &CharType);
     return CharType;
-}
+}*/
 
 /* Convert the libwine information to the direction enum */
 static void classify(LPCWSTR lpString, WORD *chartype, DWORD uCount)
