@@ -43,6 +43,7 @@ typedef struct _HIDP_DEVICE_DESC
 }HIDP_DEVICE_DESC, *PHIDP_DEVICE_DESC;
 
 NTSTATUS
+NTAPI
 HidP_GetCollectionDescription(
     IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
     IN ULONG DescLength,
