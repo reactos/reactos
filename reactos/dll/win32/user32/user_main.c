@@ -368,3 +368,7 @@ BOOL WINAPI ClientThreadSetup()
     return TRUE;
 }
 
+BOOL WINAPI UnregisterUserApiHook(VOID)
+{
+    return TRUE;
+}

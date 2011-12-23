@@ -27,6 +27,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
+#include <windowsx.h>
 #include "winternl.h"
 
 #define GET_WORD(ptr)  (*(const WORD *)(ptr))
@@ -34,8 +35,8 @@
 
 #ifndef __REACTOS__
 #define WM_SYSTIMER	    0x0118
-#endif
 #define WM_POPUPSYSTEMMENU  0x0313
+#endif
 
 /* internal messages codes */
 enum wine_internal_message
