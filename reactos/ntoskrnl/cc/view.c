@@ -204,10 +204,13 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
                                     DirtySegmentListEntry);
         current_entry = current_entry->Flink;
 
+        CcRosCacheSegmentIncRefCount(current);
+
         Locked = current->Bcb->Callbacks->AcquireForLazyWrite(
             current->Bcb->LazyWriteContext, Wait);
         if (!Locked)
         {
+            CcRosCacheSegmentDecRefCount(current);
             continue;
         }
 
@@ -220,6 +223,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
         {
             current->Bcb->Callbacks->ReleaseFromLazyWrite(
                 current->Bcb->LazyWriteContext);
+            CcRosCacheSegmentDecRefCount(current);
             continue;
         }
 
@@ -229,6 +233,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
             KeReleaseMutex(&current->Mutex, 0);
             current->Bcb->Callbacks->ReleaseFromLazyWrite(
                 current->Bcb->LazyWriteContext);
+            CcRosCacheSegmentDecRefCount(current);
             continue;
         }
 
@@ -241,6 +246,9 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
         KeReleaseMutex(&current->Mutex, 0);
         current->Bcb->Callbacks->ReleaseFromLazyWrite(
             current->Bcb->LazyWriteContext);
+        
+        KeAcquireGuardedMutex(&ViewLock);
+        CcRosCacheSegmentDecRefCount(current);
 
         if (!NT_SUCCESS(Status) &&  (Status != STATUS_END_OF_FILE))
         {
@@ -251,8 +259,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
             (*Count) += PagesPerSegment;
             Target -= PagesPerSegment;
         }
-        
-        KeAcquireGuardedMutex(&ViewLock);
+
         current_entry = DirtySegmentListHead.Flink;
     }
     
