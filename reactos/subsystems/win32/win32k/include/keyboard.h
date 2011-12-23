@@ -1,7 +1,7 @@
 #ifndef _WIN32K_KBD_H
 #define _WIN32K_KBD_H
 
-#include <internal/kbd.h>
+#include <ndk/kbd.h>
 
 typedef struct _KBL
 {

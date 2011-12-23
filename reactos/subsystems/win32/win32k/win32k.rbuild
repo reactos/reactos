@@ -20,7 +20,7 @@
 
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<library>freetype</library>
+	<library>freetype_s</library>
 	<library>libcntpr</library>
 	<library>pseh</library>
 
@@ -155,5 +155,9 @@
 		<file>winstation.c</file>
 	</directory>
 	<file>win32k.rc</file>
+</module>
+<module name="win32ksys" type="staticlibrary">
+	<include base="ReactOS">include/reactos</include>
+	<file>sys-stubs.S</file>
 </module>
 </group>

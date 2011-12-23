@@ -684,7 +684,6 @@ EXLATEOBJ_vInitXlateFromDCs(
     PALETTE_ShareUnlockPalette(ppalSrc);
 }
 
-
 VOID
 NTAPI
 EXLATEOBJ_vInitBrushXlate(
