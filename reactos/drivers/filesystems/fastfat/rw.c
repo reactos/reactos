@@ -558,6 +558,17 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    Fcb = IrpContext->FileObject->FsContext;
    ASSERT(Fcb);
 
+   if (Fcb->Flags & FCB_IS_PAGE_FILE)
+   {
+      PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
+      IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
+      IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+      DPRINT("Read from page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart);
+      Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
+      VfatFreeIrpContext(IrpContext);
+      return Status;
+   }
+
    DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
    ByteOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
@@ -759,6 +770,17 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    ASSERT(IrpContext->FileObject);
    Fcb = IrpContext->FileObject->FsContext;
    ASSERT(Fcb);
+
+   if (Fcb->Flags & FCB_IS_PAGE_FILE)
+   {
+       PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
+       IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
+       IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+       DPRINT("Write to page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart);
+       Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
+       VfatFreeIrpContext(IrpContext);
+       return Status;
+   }
 
    DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
