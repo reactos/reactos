@@ -60,11 +60,13 @@ Allocate(
     Status = NtAllocateVirtualMemory(NtCurrentProcess(), &FirstPageStart, 0, &Size, MEM_COMMIT, PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        Size = 0;
+        AllocationSize = 0;
         Status = NtFreeVirtualMemory(NtCurrentProcess(), &AllocationStart, &AllocationSize, MEM_RELEASE);
         ASSERT(Status == STATUS_SUCCESS);
         return NULL;
     }
+    ASSERT(Size % sizeof(ULONG) == 0);
+    ASSERT(RtlCompareMemoryUlong(FirstPageStart, Size, 0) == Size);
 
     UserBuffer = AllocationStart;
     UserBuffer += AllocationSize - PAGE_SIZE - DataSize;
