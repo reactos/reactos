@@ -669,6 +669,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
 
             while (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
             {
+                ASSERT(LastEntry->Size != 0);
                 LastEntry += LastEntry->Size;
             }
             ASSERT((LastEntry + LastEntry->Size) == FirstEntry);
@@ -683,7 +684,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
             DPRINT("Updating UcrDescriptor %p, new Address %p, size %d\n",
                 UcrDescriptor, UcrDescriptor->Address, UcrDescriptor->Size);
 
-            /* Set various first entry fields*/
+            /* Set various first entry fields */
             FirstEntry->SegmentOffset = LastEntry->SegmentOffset;
             FirstEntry->Size = (USHORT)(*Size >> HEAP_ENTRY_SHIFT);
             FirstEntry->PreviousSize = LastEntry->Size;
