@@ -228,7 +228,9 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count, BOOLEAN Wait)
         }
 
         ASSERT(current->Dirty);
-        if (current->ReferenceCount > 1)
+
+        /* One reference is added above */
+        if (current->ReferenceCount > 2)
         {
             KeReleaseMutex(&current->Mutex, 0);
             current->Bcb->Callbacks->ReleaseFromLazyWrite(
