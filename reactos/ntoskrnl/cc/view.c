@@ -398,7 +398,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
 			 BOOLEAN Dirty,
 			 BOOLEAN Mapped)
 {
-  BOOLEAN WasDirty = CacheSeg->Dirty;
+  BOOLEAN WasDirty;
   KIRQL oldIrql;
 
   ASSERT(Bcb);
@@ -406,10 +406,14 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   DPRINT("CcReleaseCacheSegment(Bcb 0x%p, CacheSeg 0x%p, Valid %d)\n",
 	 Bcb, CacheSeg, Valid);
 
+  KeAcquireGuardedMutex(&ViewLock);
+  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+
   CacheSeg->Valid = Valid;
+
+  WasDirty = CacheSeg->Dirty;
   CacheSeg->Dirty = CacheSeg->Dirty || Dirty;
 
-  KeAcquireGuardedMutex(&ViewLock);
   if (!WasDirty && CacheSeg->Dirty)
     {
       InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
@@ -420,7 +424,6 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   {
      CacheSeg->MappedCount++;
   }
-  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   CcRosCacheSegmentDecRefCount(CacheSeg);
   if (Mapped && CacheSeg->MappedCount == 1)
   {
@@ -430,6 +433,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   {
       CcRosCacheSegmentIncRefCount(CacheSeg);
   }
+
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
   KeReleaseGuardedMutex(&ViewLock);
   KeReleaseMutex(&CacheSeg->Mutex, 0);
@@ -449,8 +453,10 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
     ASSERT(Bcb);
     
     DPRINT("CcRosLookupCacheSegment(Bcb -x%p, FileOffset %d)\n", Bcb, FileOffset);
-    
+
+    KeAcquireGuardedMutex(&ViewLock);
     KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+
     current_entry = Bcb->BcbSegmentListHead.Flink;
     while (current_entry != &Bcb->BcbSegmentListHead)
     {
@@ -461,6 +467,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
         {
             CcRosCacheSegmentIncRefCount(current);
             KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+            KeReleaseGuardedMutex(&ViewLock);
             KeWaitForSingleObject(&current->Mutex,
                                   Executive,
                                   KernelMode,
@@ -470,7 +477,10 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
         }
         current_entry = current_entry->Flink;
     }
+
     KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+    KeReleaseGuardedMutex(&ViewLock);
+
     return(NULL);
 }
 
@@ -490,29 +500,28 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
     {
       KeBugCheck(CACHE_MANAGER);
     }
-  if (!CacheSeg->Dirty)
-    {
-      KeAcquireGuardedMutex(&ViewLock);
-      InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
-      DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
-      KeReleaseGuardedMutex(&ViewLock);
-    }
-  else
-  {
-     KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
-     CcRosCacheSegmentDecRefCount(CacheSeg);
-     KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
-  }
 
   KeAcquireGuardedMutex(&ViewLock);
+  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+
+  if (!CacheSeg->Dirty)
+  {
+      InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
+      DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
+  }
+  else
+  {
+      CcRosCacheSegmentDecRefCount(CacheSeg);
+  }
 
   /* Move to the tail of the LRU list */
   RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
   InsertTailList(&CacheSegmentLRUListHead, &CacheSeg->CacheSegmentLRUListEntry);
 
-  KeReleaseGuardedMutex(&ViewLock);
-
   CacheSeg->Dirty = TRUE;
+
+  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+  KeReleaseGuardedMutex(&ViewLock);
   KeReleaseMutex(&CacheSeg->Mutex, 0);
 
   return(STATUS_SUCCESS);
@@ -537,6 +546,9 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
       return(STATUS_UNSUCCESSFUL);
     }
 
+  KeAcquireGuardedMutex(&ViewLock);
+  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+
   WasDirty = CacheSeg->Dirty;
   CacheSeg->Dirty = CacheSeg->Dirty || NowDirty;
 
@@ -544,13 +556,10 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 
   if (!WasDirty && NowDirty)
   {
-     KeAcquireGuardedMutex(&ViewLock);
      InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
      DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
-     KeReleaseGuardedMutex(&ViewLock);
   }
 
-  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   CcRosCacheSegmentDecRefCount(CacheSeg);
   if (!WasDirty && NowDirty)
   {
@@ -560,8 +569,9 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   {
      CcRosCacheSegmentDecRefCount(CacheSeg);
   }
-  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
 
+  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+  KeReleaseGuardedMutex(&ViewLock);
   KeReleaseMutex(&CacheSeg->Mutex, 0);
 
   return(STATUS_SUCCESS);
@@ -1039,9 +1049,12 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
                     }
                 }
                 KeReleaseMutex(&current->Mutex, 0);
+                
+                KeAcquireGuardedMutex(&ViewLock);
                 KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
                 CcRosCacheSegmentDecRefCount(current);
                 KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+                KeReleaseGuardedMutex(&ViewLock);
             }
 
             Offset.QuadPart += Bcb->CacheSegmentSize;
