@@ -89,7 +89,7 @@ HidSystemControl(
     //
     // submit request
     //
-    return IoCallDriver(DeviceExtension->NextDeviceObject);
+    return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 }
 
 NTSTATUS

@@ -1,2 +1,3 @@
+add_subdirectory(hidclass)
 add_subdirectory(hidparse)
 add_subdirectory(hidusb)
