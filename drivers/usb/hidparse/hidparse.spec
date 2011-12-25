@@ -10,7 +10,7 @@
 @ stdcall HidP_GetSpecificValueCaps(long long long long ptr ptr ptr)
 @ stdcall HidP_GetUsageValue(long long long long ptr ptr ptr long)
 @ stdcall HidP_GetUsageValueArray(long long long long ptr long ptr ptr long)
-@ stdcall HidP_GetUsages(long long ptr ptr ptr ptr long)
+@ stdcall HidP_GetUsages(long long long ptr ptr ptr ptr long)
 @ stdcall HidP_GetUsagesEx(long long ptr ptr ptr ptr long)
 @ stdcall HidP_GetValueCaps(long ptr ptr ptr)
 @ stdcall HidP_InitializeReportForID(long long ptr ptr long)

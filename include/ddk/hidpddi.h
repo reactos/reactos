@@ -52,11 +52,13 @@ HidP_GetCollectionDescription(
 );
 
 VOID
+NTAPI
 HidP_FreeCollectionDescription (
     IN PHIDP_DEVICE_DESC DeviceDescription
 );
 
 NTSTATUS
+NTAPI
 HidP_SysPowerEvent (
     IN PCHAR HidPacket,
     IN USHORT HidPacketLength,
@@ -65,6 +67,7 @@ HidP_SysPowerEvent (
 );
 
 NTSTATUS
+NTAPI
 HidP_SysPowerCaps (
     IN PHIDP_PREPARSED_DATA Ppd,
     OUT PULONG OutputBuffer
