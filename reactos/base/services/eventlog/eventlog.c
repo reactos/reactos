@@ -465,6 +465,20 @@ VOID EventTimeToSystemTime(DWORD EventTime, SYSTEMTIME * pSystemTime)
     FileTimeToSystemTime(&ftLocal, pSystemTime);
 }
 
+VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime, DWORD * pEventTime)
+{
+    SYSTEMTIME st1970 = { 1970, 1, 0, 1, 0, 0, 0, 0 };
+    union
+    {
+        FILETIME ft;
+        ULONGLONG ll;
+    } Time, u1970;
+
+    SystemTimeToFileTime(pSystemTime, &Time.ft);
+    SystemTimeToFileTime(&st1970, &u1970.ft);
+    *pEventTime = (DWORD)((Time.ll - u1970.ll) / 10000000ull);
+}
+
 VOID PRINT_HEADER(PEVENTLOGHEADER header)
 {
     DPRINT("HeaderSize = %d\n", header->HeaderSize);

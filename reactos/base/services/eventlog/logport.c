@@ -109,8 +109,6 @@ NTSTATUS ProcessPortMessage(VOID)
     DWORD dwRecSize;
     NTSTATUS Status;
     PLOGFILE SystemLog = NULL;
-    LARGE_INTEGER SystemTime;
-    ULONG Seconds;
 
     DPRINT("ProcessPortMessage() called\n");
 
@@ -147,10 +145,7 @@ NTSTATUS ProcessPortMessage(VOID)
             Message = (PIO_ERROR_LOG_MESSAGE) & Request.Message;
             ulRecNum = SystemLog ? SystemLog->Header.CurrentRecordNumber : 0;
 
-            NtQuerySystemTime(&SystemTime);
-            RtlTimeToSecondsSince1970(&SystemTime, &Seconds);
-
-            pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(&dwRecSize, Seconds,
+            pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(&dwRecSize,
                     ulRecNum, Message->Type, Message->EntryData.EventCategory,
                     Message->EntryData.ErrorCode,
                     (WCHAR *) (((PBYTE) Message) + Message->DriverNameOffset),

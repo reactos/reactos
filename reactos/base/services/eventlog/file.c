@@ -870,18 +870,18 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
 {
     DWORD dwWritten;
     DWORD dwRead;
+    SYSTEMTIME st;
     EVENTLOGEOF EofRec;
     PEVENTLOGRECORD RecBuf;
     LARGE_INTEGER logFileSize;
-    LARGE_INTEGER SystemTime;
     ULONG RecOffSet;
     ULONG WriteOffSet;
 
     if (!Buffer)
         return FALSE;
 
-    NtQuerySystemTime(&SystemTime);
-    RtlTimeToSecondsSince1970(&SystemTime, &((PEVENTLOGRECORD) Buffer)->TimeWritten);
+    GetSystemTime(&st);
+    SystemTimeToEventTime(&st, &((PEVENTLOGRECORD) Buffer)->TimeWritten);
 
     EnterCriticalSection(&LogFile->cs);
 
@@ -1125,7 +1125,6 @@ BOOL LogfAddOffsetInformation(PLOGFILE LogFile, ULONG ulNumber, ULONG ulOffset)
 
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD   dwRecordNumber,
-                                 DWORD   dwTime,
                                  WORD    wType,
                                  WORD    wCategory,
                                  DWORD   dwEventId,
@@ -1140,6 +1139,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 {
     DWORD dwRecSize;
     PEVENTLOGRECORD pRec;
+    SYSTEMTIME SysTime;
     WCHAR *str;
     UINT i, pos;
     PBYTE Buffer;
@@ -1148,8 +1148,8 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
         sizeof(EVENTLOGRECORD) + (lstrlenW(ComputerName) +
                                   lstrlenW(SourceName) + 2) * sizeof(WCHAR);
 
-    if (dwRecSize % sizeof(DWORD) != 0)
-        dwRecSize += sizeof(DWORD) - (dwRecSize % sizeof(DWORD));
+    if (dwRecSize % 4 != 0)
+        dwRecSize += 4 - (dwRecSize % 4);
 
     dwRecSize += dwSidLength;
 
@@ -1160,10 +1160,10 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     }
 
     dwRecSize += dwDataSize;
-    if (dwRecSize % sizeof(DWORD) != 0)
-        dwRecSize += sizeof(DWORD) - (dwRecSize % sizeof(DWORD));
+    if (dwRecSize % 4 != 0)
+        dwRecSize += 4 - (dwRecSize % 4);
 
-    dwRecSize += sizeof(DWORD);
+    dwRecSize += 4;
 
     Buffer = HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
 
@@ -1178,8 +1178,9 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     pRec->Reserved = LOGFILE_SIGNATURE;
     pRec->RecordNumber = dwRecordNumber;
 
-    pRec->TimeGenerated = dwTime;
-    pRec->TimeWritten = dwTime;
+    GetSystemTime(&SysTime);
+    SystemTimeToEventTime(&SysTime, &pRec->TimeGenerated);
+    SystemTimeToEventTime(&SysTime, &pRec->TimeWritten);
 
     pRec->EventID = dwEventId;
     pRec->EventType = wType;
@@ -1194,8 +1195,8 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     pRec->UserSidOffset = pos;
 
-    if (pos % sizeof(DWORD) != 0)
-        pos += sizeof(DWORD) - (pos % sizeof(DWORD));
+    if (pos % 4 != 0)
+        pos += 4 - (pos % 4);
 
     if (dwSidLength)
     {
@@ -1222,8 +1223,8 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
         pos += dwDataSize;
     }
 
-    if (pos % sizeof(DWORD) != 0)
-        pos += sizeof(DWORD) - (pos % sizeof(DWORD));
+    if (pos % 4 != 0)
+        pos += 4 - (pos % 4);
 
     *((PDWORD) (Buffer + pos)) = dwRecSize;
 
@@ -1248,8 +1249,6 @@ LogfReportEvent(WORD wType,
     DWORD lastRec;
     DWORD recSize;
     DWORD dwError;
-    DWORD dwTime;
-    LARGE_INTEGER SystemTime;
 
     if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
     {
@@ -1262,13 +1261,9 @@ LogfReportEvent(WORD wType,
         return;
     }
 
-    NtQuerySystemTime(&SystemTime);
-    RtlTimeToSecondsSince1970(&SystemTime, &dwTime);
-
     lastRec = LogfGetCurrentRecord(pEventSource->LogFile);
 
     logBuffer = LogfAllocAndBuildNewRecord(&recSize,
-                                           dwTime,
                                            lastRec,
                                            wType,
                                            wCategory,
