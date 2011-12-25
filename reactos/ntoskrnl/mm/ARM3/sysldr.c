@@ -718,7 +718,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Copy the procedure name */
         RtlStringCbCopyA(*MissingApi,
                          MAXIMUM_FILENAME_LENGTH,
-						 (PCHAR)&NameImport->Name[0]);
+                         (PCHAR)&NameImport->Name[0]);
 
         /* Setup name tables */
         DPRINT("Import name: %s\n", NameImport->Name);

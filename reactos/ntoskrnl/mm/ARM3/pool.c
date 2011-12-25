@@ -33,7 +33,7 @@ BOOLEAN MmProtectFreedNonPagedPool;
 VOID
 NTAPI
 MiProtectFreeNonPagedPool(IN PVOID VirtualAddress,
-						  IN ULONG PageCount)
+                          IN ULONG PageCount)
 {
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte;
@@ -62,7 +62,7 @@ MiProtectFreeNonPagedPool(IN PVOID VirtualAddress,
 BOOLEAN
 NTAPI
 MiUnProtectFreeNonPagedPool(IN PVOID VirtualAddress,
-	   					  	IN ULONG PageCount)
+                            IN ULONG PageCount)
 {
     PMMPTE PointerPte;
     MMPTE TempPte;
@@ -1184,8 +1184,8 @@ NTAPI
 MmAllocateMappingAddress(IN SIZE_T NumberOfBytes,
                          IN ULONG PoolTag)
 {
-	UNIMPLEMENTED;
-	return NULL;
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /*
@@ -1196,7 +1196,7 @@ NTAPI
 MmFreeMappingAddress(IN PVOID BaseAddress,
                      IN ULONG PoolTag)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /* EOF */

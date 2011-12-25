@@ -429,8 +429,8 @@ MmFreeSwapPage(SWAPENTRY Entry)
 
    if (i >= MAX_PAGING_FILES)
    {
-	DPRINT1("Bad swap entry 0x%.8X\n", Entry);
-	KeBugCheck(MEMORY_MANAGEMENT);
+      DPRINT1("Bad swap entry 0x%.8X\n", Entry);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);

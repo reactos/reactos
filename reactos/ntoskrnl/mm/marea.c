@@ -722,12 +722,12 @@ MmFreeMemoryArea(
    PMEMORY_AREA *ParentReplace;
    ULONG_PTR Address;
    PVOID EndAddress;
-   
+
    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
    {
        PEPROCESS CurrentProcess = PsGetCurrentProcess();
        PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-        
+
        if (Process != NULL &&
            Process != CurrentProcess)
        {
@@ -768,14 +768,14 @@ MmFreeMemoryArea(
        {
            ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
            ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-           
+
            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
            ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
            if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
            {
                MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
            }
-           
+
            ExFreePoolWithTag(MemoryArea->Vad, TAG_MVAD);
            MemoryArea->Vad = NULL;
        }
@@ -936,7 +936,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
          return STATUS_CONFLICTING_ADDRESSES;
       }
    }
-    
+
     //
     // Is this a static memory area?
     //
@@ -987,7 +987,7 @@ MmMapMemoryArea(PVOID BaseAddress,
 {
    ULONG i;
    NTSTATUS Status;
-   
+
    ASSERT(((ULONG_PTR)BaseAddress % PAGE_SIZE) == 0);
 
    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)

@@ -60,9 +60,9 @@ void KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
 
     /* get the faulting address */
     if (trap == 4) /* Instruction miss */
-	VirtualAddr = frame->srr0;
+        VirtualAddr = frame->srr0;
     else /* Data miss */
-	VirtualAddr = frame->dar;
+        VirtualAddr = frame->dar;
 
     /* MSR_PR */
     Mode = frame->srr1 & 0x4000 ? UserMode : KernelMode;
@@ -71,11 +71,11 @@ void KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
     /* handle the fault */
     if (AccessFault)
     {
-	Status = MmAccessFault(Mode, (PVOID)VirtualAddr, FALSE, TrapInfo);
+        Status = MmAccessFault(Mode, (PVOID)VirtualAddr, FALSE, TrapInfo);
     }
     else
     {
-	Status = MmNotPresentFault(Mode, VirtualAddr, FALSE);
+        Status = MmNotPresentFault(Mode, VirtualAddr, FALSE);
     }
 
     if (NT_SUCCESS(Status))

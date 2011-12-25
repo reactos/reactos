@@ -60,7 +60,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
     SWAPENTRY SwapEntry;
     NTSTATUS Status;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    
+
     DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
         Address, Process->UniqueProcessId);
 
@@ -74,7 +74,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
         MmReleasePageOp(PageOp);
         return(STATUS_UNSUCCESSFUL);
     }
-    
+
     /*
      * Check the reference count to ensure this page can be paged out
      */
@@ -191,7 +191,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     PMM_REGION Region;
     PMM_PAGEOP PageOp;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    
+
     /*
     * There is a window between taking the page fault and locking the
     * address space when another thread could load the page so we check
@@ -381,7 +381,7 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
 */
 {
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    
+
     /*
     * If we are switching a previously committed region to reserved then
     * free any allocated pages within the region
@@ -446,10 +446,10 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
                 PageOp = MmGetPageOp(MArea, Process->UniqueProcessId, addr,
                     NULL, 0, MM_PAGEOP_CHANGEPROTECT, TRUE);
             } while(PageOp == NULL);
-            
+
             /* Should we enable/disable virtual mapping? */
-            if((NewProtect & PAGE_NOACCESS) && 
-                !(OldProtect & PAGE_NOACCESS) && 
+            if((NewProtect & PAGE_NOACCESS) &&
+                !(OldProtect & PAGE_NOACCESS) &&
                 (MmIsPagePresent(Process, addr)))
             {
                 /* Set other flags if any */
@@ -461,7 +461,7 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
             {
                 MmEnableVirtualMapping(Process, addr);
             }
-            
+
             /* Set new protection flags */
             if(MmIsPagePresent(Process, addr))
             {
@@ -597,7 +597,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             DPRINT1("Must supply MEM_COMMIT with MEM_LARGE_PAGES\n");
             return STATUS_INVALID_PARAMETER_5;
         }
-        
+
         /* These flags are not allowed with large page allocations */
         if (AllocationType & (MEM_PHYSICAL | MEM_RESET | MEM_WRITE_WATCH))
         {
@@ -656,7 +656,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             ProbeForWritePointer(UBaseAddress);
             ProbeForWriteUlong(URegionSize);
         }
-        
+
         /* Capture their values */
         PBaseAddress = *UBaseAddress;
         PRegionSize = *URegionSize;
@@ -667,21 +667,21 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    
+
     /* Make sure the allocation isn't past the VAD area */
     if (PBaseAddress >= MM_HIGHEST_VAD_ADDRESS)
     {
         DPRINT1("Virtual allocation base above User Space\n");
         return STATUS_INVALID_PARAMETER_2;
     }
-    
+
     /* Make sure the allocation wouldn't overflow past the VAD area */
     if ((((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) - (ULONG_PTR)PBaseAddress) < PRegionSize)
     {
         DPRINT1("Region size would overflow into kernel-memory\n");
         return STATUS_INVALID_PARAMETER_4;
     }
-    
+
     /* Make sure there's a size specified */
     if (!PRegionSize)
     {
@@ -705,7 +705,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             (PVOID*)&Process,
             NULL);
         if (!NT_SUCCESS(Status)) return Status;
-        
+
         /* Check if not running in the current process */
         if (CurrentProcess != Process)
         {
@@ -714,7 +714,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             Attached = TRUE;
         }
     }
-    
+
     /* Check for large page allocations */
     if (AllocationType & MEM_LARGE_PAGES)
     {
@@ -1093,7 +1093,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
             (PVOID*)&Process,
             NULL);
         if (!NT_SUCCESS(Status)) return Status;
-        
+
         /* Check if not running in the current process */
         if (CurrentProcess != Process)
         {
@@ -1134,7 +1134,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     case MEM_RELEASE:
         /* MEM_RELEASE must be used with the exact base and length
          * that was returned by NtAllocateVirtualMemory */
-            
+
         /* Verify the base address is correct */
         if (MemoryArea->StartingAddress != BaseAddress)
         {

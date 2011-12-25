@@ -18,12 +18,12 @@
 #if DBG
 #define ASSERT_LIST_INVARIANT(x) \
 do { \
-	ASSERT(((x)->Total == 0 && \
+    ASSERT(((x)->Total == 0 && \
             (x)->Flink == LIST_HEAD && \
-			(x)->Blink == LIST_HEAD) || \
-		   ((x)->Total != 0 && \
-			(x)->Flink != LIST_HEAD && \
-			(x)->Blink != LIST_HEAD)); \
+            (x)->Blink == LIST_HEAD) || \
+           ((x)->Total != 0 && \
+            (x)->Flink != LIST_HEAD && \
+            (x)->Blink != LIST_HEAD)); \
 } while (0)
 #else
 #define ASSERT_LIST_INVARIANT(x)
@@ -285,7 +285,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     }
 
     /* We are not on a list anymore */
-	ASSERT_LIST_INVARIANT(ListHead);
+    ASSERT_LIST_INVARIANT(ListHead);
     Pfn1->u1.Flink = Pfn1->u2.Blink = 0;
 
     /* Zero flags but restore color and cache */

@@ -29,7 +29,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
    PMMSUPPORT AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
-   
+
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
@@ -87,15 +87,15 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
             break;
 
 #ifdef NEWCC
-	     case MEMORY_AREA_CACHE:
-			// This code locks for itself to keep from having to break a lock
-			// passed in.
-			if (!FromMdl)
-				MmUnlockAddressSpace(AddressSpace);
-		    Status = MmAccessFaultCacheSection(Mode, Address, Locked);
-			if (!FromMdl)
-				MmLockAddressSpace(AddressSpace);
-			break;
+         case MEMORY_AREA_CACHE:
+            // This code locks for itself to keep from having to break a lock
+            // passed in.
+            if (!FromMdl)
+               MmUnlockAddressSpace(AddressSpace);
+            Status = MmAccessFaultCacheSection(Mode, Address, Locked);
+            if (!FromMdl)
+               MmLockAddressSpace(AddressSpace);
+            break;
 #endif
 
          default:
@@ -141,7 +141,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
-	 DPRINT1("Address: %x\n", Address);
+         DPRINT1("Address: %x\n", Address);
          return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();
@@ -186,15 +186,15 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
 #ifdef  NEWCC
-	    case MEMORY_AREA_CACHE:
-			// This code locks for itself to keep from having to break a lock
-			// passed in.
-			if (!FromMdl)
-				MmUnlockAddressSpace(AddressSpace);
-		    Status = MmNotPresentFaultCacheSection(Mode, Address, Locked);
-			if (!FromMdl)
-				MmLockAddressSpace(AddressSpace);
-			break;
+         case MEMORY_AREA_CACHE:
+            // This code locks for itself to keep from having to break a lock
+            // passed in.
+            if (!FromMdl)
+               MmUnlockAddressSpace(AddressSpace);
+            Status = MmNotPresentFaultCacheSection(Mode, Address, Locked);
+            if (!FromMdl)
+               MmLockAddressSpace(AddressSpace);
+            break;
 #endif
 
          default:
@@ -235,7 +235,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
         }
 #endif
     }
-    
+
     /* Is there a ReactOS address space yet? */
     if (MmGetKernelAddressSpace())
     {
@@ -247,7 +247,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
             MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
         }
     }
-    
+
     /* Is this an ARM3 memory area, or is there no address space yet? */
     if (((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)) ||
         (!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||

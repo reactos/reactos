@@ -394,10 +394,10 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     HighVpn = BoundaryAddress >> PAGE_SHIFT;
 
     /* Starting from the root, go down until the right-most child
-	 * which is just behind the boundary*/
+     * which is just behind the boundary*/
     LowestNode = Node = RtlRightChildAvl(&Table->BalancedRoot);
     while (((Child = RtlRightChildAvl(Node)) != 0 )
-			&& (Node->EndingVpn < HighVpn )) Node = Child;
+            && (Node->EndingVpn < HighVpn )) Node = Child;
 
     /* Now loop the Vad nodes */
     while (Node)
