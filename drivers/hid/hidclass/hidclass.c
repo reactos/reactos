@@ -11,6 +11,7 @@
 #include "precomp.h"
 
 static LPWSTR ClientIdentificationAddress = L"HIDCLASS";
+static ULONG HidClassDeviceNumber = 0;
 
 ULONG
 NTAPI
@@ -32,9 +33,82 @@ HidClassAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    WCHAR CharDeviceName[64];
+    NTSTATUS Status;
+    UNICODE_STRING DeviceName;
+    PDEVICE_OBJECT NewDeviceObject;
+    PHIDCLASS_DEVICE_EXTENSION DeviceExtension;
+    ULONG DeviceExtensionSize;
+    PHIDCLASS_DRIVER_EXTENSION DriverExtension;
+
+
+    /* increment device number */
+    InterlockedIncrement((PLONG)&HidClassDeviceNumber);
+
+    /* construct device name */
+    swprintf(CharDeviceName, L"\\Device\\_HID%08x", HidClassDeviceNumber);
+
+    /* initialize device name */
+    RtlInitUnicodeString(&DeviceName, CharDeviceName);
+
+    /* get driver object extension */
+    DriverExtension = (PHIDCLASS_DRIVER_EXTENSION) IoGetDriverObjectExtension(DriverObject, ClientIdentificationAddress);
+    if (!DriverExtension)
+    {
+        /* device removed */
+        ASSERT(FALSE);
+        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    }
+
+    /* calculate device extension size */
+    DeviceExtensionSize = sizeof(HIDCLASS_DEVICE_EXTENSION) + DriverExtension->DeviceExtensionSize;
+
+    /* now create the device */
+    Status = IoCreateDevice(DriverObject, DeviceExtensionSize, &DeviceName, FILE_DEVICE_UNKNOWN, 0, FALSE, &NewDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to create device object */
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    /* get device extension */
+    DeviceExtension = (PHIDCLASS_DEVICE_EXTENSION)NewDeviceObject->DeviceExtension;
+
+    /* zero device extension */
+    RtlZeroMemory(DeviceExtension, sizeof(HIDCLASS_DEVICE_EXTENSION));
+
+    /* initialize device extension */
+    DeviceExtension->HidDeviceExtension.PhysicalDeviceObject = PhysicalDeviceObject;
+    DeviceExtension->HidDeviceExtension.MiniDeviceExtension = (PVOID)((ULONG_PTR)DeviceExtension + sizeof(HIDCLASS_DEVICE_EXTENSION));
+    DeviceExtension->HidDeviceExtension.NextDeviceObject = IoAttachDeviceToDeviceStack(NewDeviceObject, PhysicalDeviceObject);
+    DeviceExtension->IsFDO = TRUE;
+    DeviceExtension->DriverExtension = DriverExtension;
+
+    /* sanity check */
+    ASSERT(DeviceExtension->HidDeviceExtension.NextDeviceObject);
+
+    /* increment stack size */
+    NewDeviceObject->StackSize++;
+
+    /* init device object */
+    NewDeviceObject->Flags |= DO_BUFFERED_IO | DO_POWER_PAGABLE;
+    NewDeviceObject->Flags  &= ~DO_DEVICE_INITIALIZING;
+
+    /* now call driver provided add device routine */
+    ASSERT(DriverExtension->AddDevice != 0);
+    Status = DriverExtension->AddDevice(DriverObject, NewDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        DPRINT1("HIDCLASS: AddDevice failed with %x\n", Status);
+        IoDetachDevice(DeviceExtension->HidDeviceExtension.NextDeviceObject);
+        IoDeleteDevice(NewDeviceObject);
+        return Status;
+    }
+
+    /* succeeded */
+    return Status;
 }
 
 NTSTATUS
