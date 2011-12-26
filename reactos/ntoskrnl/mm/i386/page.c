@@ -457,22 +457,26 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
      */
     Pte = InterlockedExchangePte(Pt, 0);
 
-
     WasValid = (PAGE_MASK(Pte) != 0);
     if (WasValid)
     {
-        Pfn = PTE_TO_PFN(Pte);
+        /* Flush the TLB since we transitioned this PTE
+         * from valid to invalid so any stale translations
+         * are removed from the cache */
         MiFlushTlb(Pt, Address);
+
+        Pfn = PTE_TO_PFN(Pte);
+
+        if (FreePage)
+        {
+            MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
+            Pfn = 0;
+        }
     }
     else
     {
-        Pfn = 0;
         MmUnmapPageTable(Pt);
-    }
-
-    if (FreePage && WasValid)
-    {
-        MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
+        Pfn = 0;
     }
 
     /*
@@ -524,7 +528,8 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
      */
     Pte = InterlockedExchangePte(Pt, 0);
 
-    //MiFlushTlb(Pt, Address);
+    /* We don't need to flush here because page file entries
+     * are invalid translations, so the processor won't cache them */
     MmUnmapPageTable(Pt);
 
     if(!(Pte & 0x800))
@@ -652,14 +657,10 @@ MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_PRESENT, Pte));
-    if (!(Pte & PA_PRESENT))
-    {
-        MiFlushTlb(Pt, Address);
-    }
-    else
-    {
-        MmUnmapPageTable(Pt);
-    }
+
+    /* We don't need to flush the TLB here because it
+     * won't cache translations for non-present pages */
+    MmUnmapPageTable(Pt);
 }
 
 BOOLEAN
@@ -713,7 +714,10 @@ MmCreatePageFileMapping(PEPROCESS Process,
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    //MiFlushTlb(Pt, Address);
+
+    /* We don't need to flush the TLB here because it
+     * only caches valid translations and a zero PTE
+     * is not a valid translation */
     MmUnmapPageTable(Pt);
 
     return(STATUS_SUCCESS);
@@ -809,22 +813,16 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         }
         oldPdeOffset = PdeOffset;
 
-        Pte = InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);;
+        Pte = InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         /* There should not be anything valid here */
         if (PAGE_MASK(Pte) != 0)
         {
-            PMMPFN Pfn1 = MiGetPfnEntry(PTE_TO_PFN(Pte));
-            (void)Pfn1;
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-        /* flush if currently mapped, just continue editing if hyperspace
-         * NOTE : This check is similar to what is done in MiFlushTlb, but we
-         * don't use it because it would unmap the page table */
-        if (Addr >= MmSystemRangeStart || (!IS_HYPERSPACE(Pt)))
-        {
-            KeInvalidateTlbEntry(Addr);
-        }
+
+        /* We don't need to flush the TLB here because it only caches valid translations
+         * and we're moving this PTE from invalid to valid so it can't be cached right now */
     }
 
     ASSERT(Addr > Address);
@@ -933,8 +931,9 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     if(!PAGE_MASK(Pte))
     {
         DPRINT1("Invalid Pte %lx\n", Pte);
-        __debugbreak();
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
+
     if((Pte & Attributes) != Attributes)
         MiFlushTlb(Pt, Address);
     else
@@ -955,7 +954,7 @@ MmGetPhysicalAddress(PVOID vaddr)
 
     DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
     Pte = MmGetPageEntryForProcess(NULL, vaddr);
-    if (Pte != 0 && Pte & PA_PRESENT)
+    if (Pte != 0 && (Pte & PA_PRESENT))
     {
         p.QuadPart = PAGE_MASK(Pte);
         p.u.LowPart |= (ULONG_PTR)vaddr & (PAGE_SIZE - 1);
