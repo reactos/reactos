@@ -88,7 +88,7 @@ typedef struct _LOGFILE
     EVENTLOGHEADER Header;
     WCHAR *LogName;
     WCHAR *FileName;
-    CRITICAL_SECTION cs;
+    RTL_RESOURCE Lock;
     PEVENT_OFFSET_INFO OffsetInfo;
     ULONG OffsetInfoSize;
     ULONG OffsetInfoNext;
@@ -140,6 +140,14 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
 BOOL LogfWriteData(PLOGFILE LogFile,
                    DWORD BufSize,
                    PBYTE Buffer);
+
+NTSTATUS
+LogfClearFile(PLOGFILE LogFile,
+              PUNICODE_STRING BackupFileName);
+
+NTSTATUS
+LogfBackupFile(PLOGFILE LogFile,
+               PUNICODE_STRING BackupFileName);
 
 PLOGFILE LogfCreate(WCHAR * LogName,
                     WCHAR * FileName);

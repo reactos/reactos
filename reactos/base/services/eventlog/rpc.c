@@ -161,7 +161,8 @@ NTSTATUS ElfrClearELFW(
     PRPC_UNICODE_STRING BackupFileName)
 {
     PLOGHANDLE lpLogHandle;
-    PLOGFILE lpLogFile;
+
+    DPRINT("ElfrClearELFW()\n");
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
@@ -169,16 +170,8 @@ NTSTATUS ElfrClearELFW(
         return STATUS_INVALID_HANDLE;
     }
 
-    lpLogFile = lpLogHandle->LogFile;
-
-    if (BackupFileName->Length > 0)
-    {
-        /* FIXME: Write a backup file */
-    }
-
-    LogfInitializeNew(lpLogFile);
-
-    return STATUS_SUCCESS;
+    return LogfClearFile(lpLogHandle->LogFile,
+                         (PUNICODE_STRING)BackupFileName);
 }
 
 
@@ -187,9 +180,20 @@ NTSTATUS ElfrBackupELFW(
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLOGHANDLE lpLogHandle;
+
+    DPRINT("ElfrBackupELFW()\n");
+
+    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    if (!lpLogHandle)
+    {
+        return STATUS_INVALID_HANDLE;
+    }
+
+    return LogfBackupFile(lpLogHandle->LogFile,
+                          (PUNICODE_STRING)BackupFileName);
 }
+
 
 /* Function 2 */
 NTSTATUS ElfrCloseEL(
@@ -279,6 +283,8 @@ NTSTATUS ElfrChangeNotify(
     RPC_CLIENT_ID ClientId,
     DWORD Event)
 {
+    DPRINT("ElfrChangeNotify()");
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }

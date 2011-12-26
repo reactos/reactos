@@ -364,7 +364,8 @@ PLOGFILE LogfCreate(WCHAR * LogName, WCHAR * FileName)
     if (!bResult)
         goto fail;
 
-    InitializeCriticalSection(&LogFile->cs);
+    RtlInitializeResource(&LogFile->Lock);
+
     LogfListAddItem(LogFile);
     return LogFile;
 
@@ -391,13 +392,13 @@ VOID LogfClose(PLOGFILE LogFile)
     if (LogFile == NULL)
         return;
 
-    EnterCriticalSection(&LogFile->cs);
+    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
 
     FlushFileBuffers(LogFile->hFile);
     CloseHandle(LogFile->hFile);
     LogfListRemoveItem(LogFile);
 
-    DeleteCriticalSection(&LogFile->cs);
+    RtlDeleteResource(&LogFile->Lock);
 
     HeapFree(MyHeap, 0, LogFile->LogName);
     HeapFree(MyHeap, 0, LogFile->FileName);
@@ -727,7 +728,8 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
     }
 
     dwRecNum = *RecordNumber;
-    EnterCriticalSection(&LogFile->cs);
+
+    RtlAcquireResourceShared(&LogFile->Lock, TRUE);
 
     *BytesRead = 0;
     *BytesNeeded = 0;
@@ -736,7 +738,7 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
 
     if (!dwOffset)
     {
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return ERROR_HANDLE_EOF;
     }
 
@@ -756,7 +758,7 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
     if (dwRecSize > BufSize)
     {
         *BytesNeeded = dwRecSize;
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return ERROR_INSUFFICIENT_BUFFER;
     }
 
@@ -857,12 +859,12 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
 
     *BytesRead = dwBufferUsage;
     * RecordNumber = dwRecNum;
-    LeaveCriticalSection(&LogFile->cs);
+    RtlReleaseResource(&LogFile->Lock);
     return ERROR_SUCCESS;
 
 Done:
     DPRINT1("LogfReadEvent failed with %x\n",GetLastError());
-    LeaveCriticalSection(&LogFile->cs);
+    RtlReleaseResource(&LogFile->Lock);
     return GetLastError();
 }
 
@@ -883,11 +885,11 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     GetSystemTime(&st);
     SystemTimeToEventTime(&st, &((PEVENTLOGRECORD) Buffer)->TimeWritten);
 
-    EnterCriticalSection(&LogFile->cs);
+    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
 
     if (!GetFileSizeEx(LogFile->hFile, &logFileSize))
     {
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
@@ -906,7 +908,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
             {
                 DPRINT1("Failed to allocate buffer for OldestRecord!\n");
                 HeapFree(GetProcessHeap(), 0, RecBuf);
-                LeaveCriticalSection(&LogFile->cs);
+                RtlReleaseResource(&LogFile->Lock);
                 return FALSE;
             }
 
@@ -920,7 +922,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
             {
                 DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
                 HeapFree(GetProcessHeap(), 0, RecBuf);
-                LeaveCriticalSection(&LogFile->cs);
+                RtlReleaseResource(&LogFile->Lock);
                 return FALSE;
             }
 
@@ -928,14 +930,14 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
             {
                 DPRINT1("ReadFile() failed!\n");
                 HeapFree(GetProcessHeap(), 0, RecBuf);
-                LeaveCriticalSection(&LogFile->cs);
+                RtlReleaseResource(&LogFile->Lock);
                 return FALSE;
             }
 
             if (RecBuf->Reserved != LOGFILE_SIGNATURE)
             {
                 DPRINT1("LogFile corrupt!\n");
-                LeaveCriticalSection(&LogFile->cs);
+                RtlReleaseResource(&LogFile->Lock);
                 return FALSE;
             }
 
@@ -963,14 +965,14 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
                        FILE_BEGIN) == INVALID_SET_FILE_POINTER)
     {
         DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
     if (!WriteFile(LogFile->hFile, Buffer, BufSize, &dwWritten, NULL))
     {
         DPRINT1("WriteFile() failed! %d\n", GetLastError());
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
@@ -978,7 +980,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
                                   LogFile->Header.CurrentRecordNumber,
                                   WriteOffSet))
     {
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
@@ -997,7 +999,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
                        FILE_BEGIN) == INVALID_SET_FILE_POINTER)
     {
         DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
@@ -1019,7 +1021,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
                    NULL))
     {
         DPRINT1("WriteFile() failed! %d\n", GetLastError());
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
@@ -1027,7 +1029,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
         INVALID_SET_FILE_POINTER)
     {
         DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
@@ -1038,20 +1040,54 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
                    NULL))
     {
         DPRINT1("WriteFile failed! LastError = %d\n", GetLastError());
-        LeaveCriticalSection(&LogFile->cs);
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
     if (!FlushFileBuffers(LogFile->hFile))
     {
-        LeaveCriticalSection(&LogFile->cs);
         DPRINT1("FlushFileBuffers() failed! %d\n", GetLastError());
+        RtlReleaseResource(&LogFile->Lock);
         return FALSE;
     }
 
-    LeaveCriticalSection(&LogFile->cs);
+    RtlReleaseResource(&LogFile->Lock);
     return TRUE;
 }
+
+
+NTSTATUS
+LogfClearFile(PLOGFILE LogFile,
+              PUNICODE_STRING BackupFileName)
+{
+    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
+
+    if (BackupFileName->Length > 0)
+    {
+        /* FIXME: Write a backup file */
+    }
+
+    LogfInitializeNew(LogFile);
+
+    RtlReleaseResource(&LogFile->Lock);
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+LogfBackupFile(PLOGFILE LogFile,
+               PUNICODE_STRING BackupFileName)
+{
+//    RtlAcquireResourceShared(&LogFile->Lock, TRUE);
+
+    /* FIXME: Write a backup file */
+
+//    RtlReleaseResource(&LogFile->Lock);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* Returns 0 if nothing found. */
 ULONG LogfOffsetByNumber(PLOGFILE LogFile, DWORD RecordNumber)
