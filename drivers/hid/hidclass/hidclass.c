@@ -111,14 +111,13 @@ HidClassAddDevice(
     return Status;
 }
 
-NTSTATUS
+VOID
 NTAPI
 HidClassDriverUnload(
     IN PDRIVER_OBJECT DriverObject)
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
