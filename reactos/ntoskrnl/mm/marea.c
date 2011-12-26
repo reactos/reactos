@@ -781,6 +781,9 @@ MmFreeMemoryArea(
        }
     }
 
+    /* There must be no page ops in progress */
+    ASSERT(MemoryArea->PageOpCount == 0);
+
    /* Remove the tree item. */
    {
       if (MemoryArea->Parent != NULL)

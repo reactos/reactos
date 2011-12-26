@@ -149,6 +149,9 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
    Offset = PAGE_ROUND_DOWN(Offset);
 
+   /* Making a page op during marea destruction is illegal */
+   ASSERT(!MArea->DeleteInProgress);
+
    /*
     * Calcuate the hash value for pageop structure
     */

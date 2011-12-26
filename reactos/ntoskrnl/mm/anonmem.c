@@ -495,7 +495,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
-    if (MemoryArea == NULL)
+    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
     {
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_UNSUCCESSFUL;
