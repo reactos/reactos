@@ -18,5 +18,14 @@ typedef struct
     //
     LIST_ENTRY PendingRequests;
 
+    //
+    // hid descriptor
+    //
+    PHID_DESCRIPTOR HidDescriptor;
+
+    USHORT VendorID;
+    USHORT ProductID;
+    USHORT VersionNumber;
+
 }HID_USB_DEVICE_EXTENSION, *PHID_USB_DEVICE_EXTENSION;
 
