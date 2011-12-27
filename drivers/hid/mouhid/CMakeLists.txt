@@ -6,7 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 add_library(mouhid SHARED mouhid.c mouhid.rc)
 
 set_module_type(mouhid kernelmodedriver)
-add_importlibs(mouhid ntoskrnl hidparse)
+add_importlibs(mouhid ntoskrnl hal hidparse)
 add_cab_target(mouhid 2)
 
 add_cab_target(mouhid 2)

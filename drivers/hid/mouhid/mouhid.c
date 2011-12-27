@@ -10,6 +10,135 @@
 
 #include "mouhid.h"
 
+static USHORT MouHid_ButtonDownFlags[] = 
+{
+    MOUSE_LEFT_BUTTON_DOWN,
+    MOUSE_RIGHT_BUTTON_DOWN,
+    MOUSE_MIDDLE_BUTTON_DOWN,
+    MOUSE_BUTTON_4_DOWN,
+    MOUSE_BUTTON_5_DOWN
+};
+
+static USHORT MouHid_ButtonUpFlags[] = 
+{
+    MOUSE_LEFT_BUTTON_UP,
+    MOUSE_RIGHT_BUTTON_UP,
+    MOUSE_MIDDLE_BUTTON_UP,
+    MOUSE_BUTTON_4_UP,
+    MOUSE_BUTTON_5_UP
+};
+
+VOID
+MouHid_GetButtonFlags(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PUSHORT ButtonFlags)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    USAGE Usage;
+    ULONG Index;
+    PUSAGE TempList;
+    ULONG CurrentUsageListLength;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* init flags */
+    *ButtonFlags = 0;
+
+    /* get usages */
+    CurrentUsageListLength = DeviceExtension->UsageListLength;
+    Status = HidP_GetUsages(HidP_Input, HID_USAGE_PAGE_BUTTON, HIDP_LINK_COLLECTION_UNSPECIFIED, DeviceExtension->CurrentUsageList, &CurrentUsageListLength, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+    if (Status != HIDP_STATUS_SUCCESS)
+    {
+        DPRINT1("MouHid_GetButtonFlags failed to get usages with %x\n", Status);
+        return;
+    }
+
+    /* extract usage list difference */
+    Status = HidP_UsageListDifference(DeviceExtension->PreviousUsageList, DeviceExtension->CurrentUsageList, DeviceExtension->BreakUsageList, DeviceExtension->MakeUsageList, DeviceExtension->UsageListLength);
+    if (Status != HIDP_STATUS_SUCCESS)
+    {
+        DPRINT1("MouHid_GetButtonFlags failed to get usages with %x\n", Status);
+        return;
+    }
+
+    if (DeviceExtension->UsageListLength)
+    {
+        Index = 0;
+        do
+        {
+            /* get usage */
+            Usage = DeviceExtension->BreakUsageList[Index];
+            if (!Usage)
+                break;
+
+            if (Usage <= 5)
+            {
+                /* max 5 buttons supported */
+                *ButtonFlags |= MouHid_ButtonDownFlags[Usage];
+            }
+
+            /* move to next index*/
+            Index++;
+        }while(Index < DeviceExtension->UsageListLength);
+    }
+
+    if (DeviceExtension->UsageListLength)
+    {
+        Index = 0;
+        do
+        {
+            /* get usage */
+            Usage = DeviceExtension->MakeUsageList[Index];
+            if (!Usage)
+                break;
+
+            if (Usage <= 5)
+            {
+                /* max 5 buttons supported */
+                *ButtonFlags |= MouHid_ButtonUpFlags[Usage];
+            }
+
+            /* move to next index*/
+            Index++;
+        }while(Index < DeviceExtension->UsageListLength);
+    }
+
+    /* now switch the previous list with current list */
+    TempList = DeviceExtension->CurrentUsageList;
+    DeviceExtension->CurrentUsageList = DeviceExtension->PreviousUsageList;
+    DeviceExtension->PreviousUsageList = TempList;
+}
+
+VOID
+MouHid_DispatchInputData(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PMOUSE_INPUT_DATA InputData)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+    KIRQL OldIrql;
+    ULONG InputDataConsumed;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* sanity check */
+    ASSERT(DeviceExtension->ClassService);
+    ASSERT(DeviceExtension->ClassDeviceObject);
+
+    /* raise irql */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* dispatch input data */
+    (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassService)(DeviceExtension->ClassDeviceObject, InputData, InputData + 1, &InputDataConsumed);
+
+    /* lower irql to previous level */
+    KeLowerIrql(OldIrql);
+}
+
+
+
 NTSTATUS
 NTAPI
 MouHid_Create(
@@ -69,7 +198,7 @@ MouHid_DeviceControl(
          Attributes->MouseIdentifier = DeviceExtension->MouseIdentifier;
 
          /* number of buttons */
-         Attributes->NumberOfButtons = DeviceExtension->Buttons;
+         Attributes->NumberOfButtons = DeviceExtension->UsageListLength;
 
          /* sample rate not used for usb */
          Attributes->SampleRate = 0;
@@ -227,6 +356,7 @@ MouHid_StartDevice(
     ULONG ValueCapsLength;
     HIDP_VALUE_CAPS ValueCaps;
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
+    PUSHORT Buffer;
 
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -273,11 +403,44 @@ MouHid_StartDevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* get number of buttons */
+    /* init input report*/
+    DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
+    ASSERT(DeviceExtension->ReportLength);
+    DeviceExtension->Report = (PUCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
+    ASSERT(DeviceExtension->Report);
+    RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
+    DeviceExtension->ReportMDL = IoAllocateMdl(DeviceExtension->Report, DeviceExtension->ReportLength, FALSE, FALSE, NULL);
+    ASSERT(DeviceExtension->ReportMDL);
+
+
+    /* get max number of buttons */
     Buttons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_BUTTON, PreparsedData);
     ASSERT(Buttons > 0);
+
+    /* now allocate an array for those buttons */
+    Buffer = ExAllocatePool(NonPagedPool, sizeof(USAGE) * 4 * Buttons);
+    if (!Buffer)
+    {
+        /* no memory */
+        ExFreePool(PreparsedData);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* init usage lists */
+    RtlZeroMemory(Buffer, sizeof(USAGE) * 4 * Buttons);
+    DeviceExtension->CurrentUsageList = Buffer;
+    Buffer += Buttons;
+    DeviceExtension->PreviousUsageList = Buffer;
+    Buffer += Buttons;
+    DeviceExtension->MakeUsageList = Buffer;
+    Buffer += Buttons;
+    DeviceExtension->BreakUsageList = Buffer;
+
     /* store number of buttons */
-    DeviceExtension->Buttons = (USHORT)Buttons;
+    DeviceExtension->UsageListLength = (USHORT)Buttons;
+
+    /* store preparsed data */
+    DeviceExtension->PreparsedData = PreparsedData;
 
     ValueCapsLength = 1;
     HidP_GetSpecificValueCaps(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_X, &ValueCaps, &ValueCapsLength, PreparsedData);
@@ -456,7 +619,6 @@ MouHid_AddDevice(
 
     /* init device extension */
     DeviceExtension->MouseIdentifier = MOUSE_HID_HARDWARE;
-    DeviceExtension->Buttons = 0;
     DeviceExtension->WheelUsagePage = 0;
     DeviceExtension->NextDeviceObject = NextDeviceObject;
     KeInitializeEvent(&DeviceExtension->Event, NotificationEvent, FALSE);

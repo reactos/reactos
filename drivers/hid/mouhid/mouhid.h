@@ -17,7 +17,19 @@ typedef struct
     KEVENT Event;
     PDEVICE_OBJECT ClassDeviceObject;
     PVOID ClassService;
-    USHORT Buttons;
     USHORT MouseIdentifier;
     USHORT WheelUsagePage;
+
+    USHORT UsageListLength;
+    PUSAGE CurrentUsageList;
+    PUSAGE PreviousUsageList;
+    PUSAGE BreakUsageList;
+    PUSAGE MakeUsageList;
+    PVOID PreparsedData;
+
+    PMDL ReportMDL;
+    PUCHAR Report;
+    ULONG ReportLength;
+
+
 }MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
