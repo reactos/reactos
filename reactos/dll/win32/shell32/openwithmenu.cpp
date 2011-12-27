@@ -47,8 +47,8 @@ typedef struct
 typedef struct
 {
     HICON hIcon;
-    WCHAR szAppName[MAX_PATH];
-    WCHAR szManufacturer[MANUFACTURER_NAME_SIZE];
+    WCHAR wszAppPath[MAX_PATH];
+    WCHAR wszManufacturer[MANUFACTURER_NAME_SIZE];
 } OPEN_ITEM_CONTEXT, *POPEN_ITEM_CONTEXT;
 
 typedef struct _LANGANDCODEPAGE_
@@ -522,10 +522,10 @@ ExecuteOpenItem(POPEN_ITEM_CONTEXT pItemContext, LPCWSTR pwszPath)
 
     /* Build the command line. Don't use applcation name as first parameter of
        CreateProcessW, because it have to be an absolute path. */
-    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"\"%s\" \"%s\"", pItemContext->szAppName, pwszPath);
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"\"%s\" \"%s\"", pItemContext->wszAppPath, pwszPath);
 
     /* Start the application now */
-    TRACE("AppName %ls Path %ls\n", pItemContext->szAppName, pwszPath);
+    TRACE("AppName %ls Path %ls\n", pItemContext->wszAppPath, pwszPath);
     if (CreateProcessW(NULL, wszBuf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
         CloseHandle(pi.hThread);
@@ -595,12 +595,12 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         OPENASINFO *poainfo = (OPENASINFO*)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
                         /* store settings in HKCU path */
-                        StoreNewSettings(poainfo->pcszFile, pItemContext->szAppName);
+                        StoreNewSettings(poainfo->pcszFile, pItemContext->wszAppPath);
 
                         if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
                         {
                             /* set programm as default handler */
-                            SetProgramAsDefaultHandler(poainfo->pcszFile, pItemContext->szAppName);
+                            SetProgramAsDefaultHandler(poainfo->pcszFile, pItemContext->wszAppPath);
                         }
 
                         if (poainfo->oaifInFlags & OAIF_EXEC)
@@ -668,10 +668,10 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     /* paint manufacturer description */
                     cyOffset += mt.tmHeight + 2;
                     preColor = SetTextColor(lpdis->hDC, RGB(192, 192, 192));
-                    if (pItemContext->szManufacturer[0])
-                        TextOutW(lpdis->hDC, 45, cyOffset, pItemContext->szManufacturer, wcslen(pItemContext->szManufacturer));
+                    if (pItemContext->wszManufacturer[0])
+                        TextOutW(lpdis->hDC, 45, cyOffset, pItemContext->wszManufacturer, wcslen(pItemContext->wszManufacturer));
                     else
-                        TextOutW(lpdis->hDC, 45, cyOffset, pItemContext->szAppName, wcslen(pItemContext->szAppName));
+                        TextOutW(lpdis->hDC, 45, cyOffset, pItemContext->wszAppPath, wcslen(pItemContext->wszAppPath));
                     SetTextColor(lpdis->hDC, preColor);
                     SetBkColor(lpdis->hDC, preBkColor);
                     break;
@@ -747,8 +747,8 @@ HRESULT WINAPI COpenWithMenu::HandleMenuMsg(
     return E_NOTIMPL;
 }
 
-VOID
-GetManufacturer(LPCWSTR pwszAppName, POPEN_ITEM_CONTEXT pContext)
+static VOID
+LoadFileInfo(LPCWSTR pwszAppPath, POPEN_ITEM_CONTEXT pContext, LPWSTR pwszAppName, unsigned cchAppName)
 {
     UINT cbSize;
     LPVOID pBuf;
@@ -758,10 +758,10 @@ GetManufacturer(LPCWSTR pwszAppName, POPEN_ITEM_CONTEXT pContext)
     WCHAR *pResult;
 
     /* Clear manufacturer */
-    pContext->szManufacturer[0] = 0;
+    pContext->wszManufacturer[0] = 0;
 
     /* query version info size */
-    cbSize = GetFileVersionInfoSizeW(pwszAppName, NULL);
+    cbSize = GetFileVersionInfoSizeW(pwszAppPath, NULL);
     if (!cbSize)
         return;
 
@@ -771,7 +771,7 @@ GetManufacturer(LPCWSTR pwszAppName, POPEN_ITEM_CONTEXT pContext)
         return;
 
     /* query version info */
-    if(!GetFileVersionInfoW(pwszAppName, 0, cbSize, pBuf))
+    if(!GetFileVersionInfoW(pwszAppPath, 0, cbSize, pBuf))
     {
         HeapFree(GetProcessHeap(), 0, pBuf);
         return;
@@ -788,38 +788,34 @@ GetManufacturer(LPCWSTR pwszAppName, POPEN_ITEM_CONTEXT pContext)
         wCode = lpLangCode->code;
     }
 
+    /* Query name */
+    swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
+    if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cbSize))
+        StringCchCopyNW(pwszAppName, cchAppName, pResult, cbSize);
+
     /* Query manufacturer */
     swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\CompanyName", wLang, wCode);
 
     if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cbSize))
-        StringCbCopyNW(pContext->szManufacturer, sizeof(pContext->szManufacturer), pResult, cbSize);
+        StringCbCopyNW(pContext->wszManufacturer, sizeof(pContext->wszManufacturer), pResult, cbSize);
     HeapFree(GetProcessHeap(), 0, pBuf);
 }
 
 static VOID
-InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszAppName)
+InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszAppPath)
 {
     POPEN_ITEM_CONTEXT pItemContext;
-    WCHAR *pwszExt;
-    WCHAR wszFileName[_MAX_FNAME];
+    WCHAR wszAppName[256];
 
+    /* Allocate new item context */
     pItemContext = (OPEN_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), 0, sizeof(OPEN_ITEM_CONTEXT));
     if (!pItemContext)
         return;
 
     /* Store app path and icon */
-    wcscpy(pItemContext->szAppName, pwszAppName);
-    pItemContext->hIcon = ExtractIconW(shell32_hInstance, pwszAppName, 0);
-    pItemContext->szManufacturer[0] = 0;
-
-    /* Extract path name */
-    _wsplitpath(pwszAppName, NULL, NULL, wszFileName, NULL);
-
-    /* Build application name from filename. FIXME: do it properly */
-    pwszExt = wcsrchr(wszFileName, '.');
-    if (pwszExt)
-        pwszExt[0] = L'\0';
-    wszFileName[0] = towupper(wszFileName[0]);
+    wcscpy(pItemContext->wszAppPath, pwszAppPath);
+    pItemContext->hIcon = ExtractIconW(shell32_hInstance, pwszAppPath, 0);
+    LoadFileInfo(pwszAppPath, pItemContext, wszAppName, _countof(wszAppName));
 
     /* Add item to the list */
     if (pContext->bMenu)
@@ -832,8 +828,8 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszAppName)
         mii.fType = MFT_STRING; //MFT_OWNERDRAW;
         mii.fState = MFS_ENABLED;
         mii.wID = pContext->idCmd;
-        mii.dwTypeData = wszFileName;
-        mii.cch = wcslen(wszFileName);
+        mii.dwTypeData = wszAppName;
+        mii.cch = wcslen(wszAppName);
         mii.dwItemData = (ULONG_PTR)pItemContext;
         mii.hbmpChecked = mii.hbmpUnchecked = IconToBitmap(pItemContext->hIcon);
 
@@ -844,9 +840,7 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszAppName)
     {
         LRESULT Index;
 
-        /* get manufacturer */
-        GetManufacturer(pwszAppName, pItemContext);
-        Index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)wszFileName);
+        Index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)wszAppName);
         if (Index != LB_ERR)
             SendMessageW(pContext->hDlgCtrl, LB_SETITEMDATA, Index, (LPARAM)pItemContext);
     }
