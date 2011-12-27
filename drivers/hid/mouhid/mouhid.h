@@ -32,4 +32,11 @@ typedef struct
     ULONG ReportLength;
 
 
+    PFILE_OBJECT FileObject;
+
 }MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
+
+
+NTSTATUS
+MouHid_InitiateRead(
+    IN PDEVICE_OBJECT DeviceObject);

@@ -137,6 +137,89 @@ MouHid_DispatchInputData(
     KeLowerIrql(OldIrql);
 }
 
+NTSTATUS
+NTAPI
+MouHid_ReadCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+    USHORT ButtonFlags;
+    MOUSE_INPUT_DATA MouseInputData;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get mouse change flags */
+    MouHid_GetButtonFlags(DeviceObject, &ButtonFlags);
+
+    /* FIXME detect mouse move change */
+    /* FIXME detect mouse wheel change */
+
+    /* init input data */
+    RtlZeroMemory(&MouseInputData, sizeof(MOUSE_INPUT_DATA));
+
+    /* init input data */
+    MouseInputData.ButtonFlags = ButtonFlags;
+
+    /* dispatch mouse action */
+    MouHid_DispatchInputData(DeviceObject, &MouseInputData);
+
+    /* re-init read */
+    MouHid_InitiateRead(DeviceObject);
+
+    /* stop completion */
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+MouHid_InitiateRead(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* re-use irp */
+    IoReuseIrp(DeviceExtension->Irp, STATUS_SUCCESS);
+
+    /* init irp */
+    DeviceExtension->Irp->MdlAddress = DeviceExtension->ReportMDL;
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(DeviceExtension->Irp);
+
+    /* init stack location */
+    IoStack->Parameters.Read.Length = DeviceExtension->ReportLength;
+    IoStack->Parameters.Read.Key = 0;
+    IoStack->Parameters.Read.ByteOffset.QuadPart = 0LL;
+    IoStack->MajorFunction = IRP_MJ_READ;
+    IoStack->FileObject = DeviceExtension->FileObject;
+
+    /* set completion routine */
+    IoSetCompletionRoutine(DeviceExtension->Irp, MouHid_ReadCompletion, DeviceExtension, TRUE, TRUE, TRUE);
+
+    /* start the read */
+    Status = IoCallDriver(DeviceExtension->NextDeviceObject, DeviceExtension->Irp);
+
+    /* done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MouHid_CreateCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    KeSetEvent((PKEVENT)Context, 0, FALSE);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
 
 
 NTSTATUS
@@ -145,9 +228,68 @@ MouHid_Create(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    KEVENT Event;
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+
+    DPRINT1("MOUHID: IRP_MJ_CREATE\n");
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* copy stack location to next */
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+    /* init event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* prepare irp */
+    IoSetCompletionRoutine(Irp, MouHid_CreateCompletion, &Event, TRUE, TRUE, TRUE);
+
+    /* call lower driver */
+    Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* request pending */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+    }
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    /* is the driver already in use */
+    if (DeviceExtension->FileObject == NULL)
+    {
+         /* did the caller specify correct attributes */
+         if (IoStack->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY)
+         {
+             /* store file object */
+             DeviceExtension->FileObject = IoStack->FileObject;
+
+             /* initiating read */
+             Status = MouHid_InitiateRead(DeviceObject);
+         }
+         else
+         {
+             /* wrong mode */
+             DPRINT1("MOUHID: wrong attributes: %x\n", IoStack->Parameters.Create.FileAttributes);
+         }
+    }
+
+    /* complete request */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
 
 
@@ -157,9 +299,21 @@ MouHid_Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* FIXME: cancel irp */
+
+    /* remove file object */
+    DeviceExtension->FileObject = NULL;
+
+    /* skip location */
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    /* pass irp to down the stack */
+    return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 }
 
 NTSTATUS
