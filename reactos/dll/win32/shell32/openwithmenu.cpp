@@ -37,13 +37,12 @@ typedef struct
 {
     BOOL bMenu;
     HMENU hMenu;
-    HWND  hDlgCtrl;
-    UINT  Count;
-    BOOL NoOpen;
-    UINT idCmdFirst;
+    HWND hDlgCtrl;
+    BOOL bNoOpen;
+    UINT idCmd;
 } OPEN_WITH_CONTEXT, *POPEN_WITH_CONTEXT;
 
-#define MANUFACTURER_NAME_SIZE    100
+#define MANUFACTURER_NAME_SIZE 100
 
 typedef struct
 {
@@ -51,7 +50,6 @@ typedef struct
     WCHAR szAppName[MAX_PATH];
     WCHAR szManufacturer[MANUFACTURER_NAME_SIZE];
 } OPEN_ITEM_CONTEXT, *POPEN_ITEM_CONTEXT;
-
 
 typedef struct _LANGANDCODEPAGE_
 {
@@ -61,26 +59,83 @@ typedef struct _LANGANDCODEPAGE_
 
 static HANDLE OpenMRUList(HKEY hKey);
 
-static VOID LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt);
-static VOID LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt);
-static VOID InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName);
+static VOID LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszExt);
+static VOID LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszExt);
+static VOID InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszAppName);
+static VOID FreeMenuItemContext(HMENU hMenu);
 
 COpenWithMenu::COpenWithMenu()
 {
-    count = 0;
-    wId = 0;
+    m_idCmdFirst = 0;
+    m_idCmdLast = 0;
 }
 
 COpenWithMenu::~COpenWithMenu()
 {
-    TRACE(" destroying IContextMenu(%p)\n", this);
+    TRACE("Destroying IContextMenu(%p)\n", this);
+    if (m_hSubMenu)
+        FreeMenuItemContext(m_hSubMenu);
 }
 
 static VOID
-AddChooseProgramItem(HMENU hMenu, UINT idCmdFirst)
+FreeMenuItemContext(HMENU hMenu)
+{
+    INT Count, Index;
+    MENUITEMINFOW mii;
+
+    /* get item count */
+    Count = GetMenuItemCount(hMenu);
+    if (Count == -1)
+        return;
+
+    /* setup menuitem info */
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_CHECKMARKS;
+
+    for(Index = 0; Index < Count; Index++)
+    {
+        if (GetMenuItemInfoW(hMenu, Index, TRUE, &mii))
+        {
+            if (mii.dwItemData)
+                HeapFree(GetProcessHeap(), 0, (LPVOID)mii.dwItemData);
+            if (mii.hbmpChecked)
+                DeleteObject(mii.hbmpChecked);
+        }
+    }
+}
+
+static HBITMAP
+IconToBitmap(HICON hIcon)
+{
+    HDC hdc, hdcScr;
+    HBITMAP hbm, hbmOld;
+    RECT rc;
+
+    hdcScr = GetDC(NULL);
+    hdc = CreateCompatibleDC(hdcScr);
+    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXMENUCHECK), GetSystemMetrics(SM_CYMENUCHECK));
+    hbm = CreateCompatibleBitmap(hdcScr, rc.right, rc.bottom);
+    ReleaseDC(NULL, hdcScr);
+
+    hbmOld = (HBITMAP)SelectObject(hdc, hbm);
+    FillRect(hdc, &rc, (HBRUSH)(COLOR_MENU + 1));
+    if(!DrawIconEx(hdc, 0, 0, hIcon, rc.right, rc.bottom, 0, NULL, DI_NORMAL))
+        ERR("DrawIcon failed: %x\n", GetLastError());
+    SelectObject(hdc, hbmOld);
+
+    DeleteDC(hdc);
+
+    return hbm;
+}
+
+static VOID
+AddChooseProgramItem(HMENU hMenu, UINT idCmd)
 {
     MENUITEMINFOW mii;
-    WCHAR szBuffer[MAX_PATH];
+    WCHAR wszBuf[128];
+
+    TRACE("hMenu %p idCmd %u\n", hMenu, idCmd);
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
@@ -89,15 +144,18 @@ AddChooseProgramItem(HMENU hMenu, UINT idCmdFirst)
     mii.wID = -1;
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH_CHOOSE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-        wcscpy(szBuffer, L"Choose Program...");
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH_CHOOSE, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
+    {
+        ERR("Failed to load string\n");
+        return;
+    }
 
-    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_STRING;
+    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
-    mii.wID = idCmdFirst;
-    mii.dwTypeData = (LPWSTR)szBuffer;
-    mii.cch = wcslen(szBuffer);
+    mii.wID = idCmd;
+    mii.dwTypeData = (LPWSTR)wszBuf;
+    mii.cch = wcslen(wszBuf);
 
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 }
@@ -105,51 +163,47 @@ AddChooseProgramItem(HMENU hMenu, UINT idCmdFirst)
 static VOID
 LoadOpenWithItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
 {
-    const WCHAR * szExt;
-    WCHAR szPath[100];
-    DWORD dwPath;
+    const WCHAR *pwszExt;
+    WCHAR wszPath[100];
+    DWORD dwSize;
 
-    szExt = wcsrchr(szName, '.');
-    if (!szExt)
+    pwszExt = wcsrchr(szName, '.');
+    if (!pwszExt)
     {
-        /* FIXME
-         * show default list of available programs
-         */
+        /* FIXME: show default list of available programs */
         return;
     }
 
     /* load programs directly associated from HKCU */
-    LoadItemFromHKCU(pContext, szExt);
+    LoadItemFromHKCU(pContext, pwszExt);
 
     /* load programs associated from HKCR\Extension */
-    LoadItemFromHKCR(pContext, szExt);
+    LoadItemFromHKCR(pContext, pwszExt);
 
     /* load programs referenced from HKCR\ProgId */
-    dwPath = sizeof(szPath);
-    szPath[0] = 0;
-    if (RegGetValueW(HKEY_CLASSES_ROOT, szExt, NULL, RRF_RT_REG_SZ, NULL, szPath, &dwPath) == ERROR_SUCCESS)
-    {
-        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
-        LoadItemFromHKCR(pContext, szPath);
-    }
+    dwSize = sizeof(wszPath);
+    if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, NULL, RRF_RT_REG_SZ, NULL, wszPath, &dwSize) == ERROR_SUCCESS)
+        LoadItemFromHKCR(pContext, wszPath);
 }
 
 HRESULT WINAPI COpenWithMenu::QueryContextMenu(
-    HMENU hmenu,
+    HMENU hMenu,
     UINT indexMenu,
     UINT idCmdFirst,
     UINT idCmdLast,
     UINT uFlags)
 {
     MENUITEMINFOW mii;
-    WCHAR szBuffer[100] = {0};
-    INT pos;
-    HMENU hSubMenu = NULL;
+    WCHAR wszBuf[100];
+    INT DefaultPos;
+    HMENU hSubMenu;
     OPEN_WITH_CONTEXT Context;
 
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+    TRACE("hMenu %p indexMenu %u idFirst %u idLast %u uFlags %u\n", hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszBuf, sizeof(wszBuf) / sizeof(WCHAR)))
     {
-        ERR("failed to load string\n");
+        ERR("Failed to load string\n");
         return E_FAIL;
     }
 
@@ -158,50 +212,52 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     /* set up context */
     ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
     Context.bMenu = TRUE;
-    Context.Count = 0;
     Context.hMenu = hSubMenu;
-    Context.idCmdFirst = idCmdFirst;
+    Context.idCmd = idCmdFirst;
+
     /* load items */
-    LoadOpenWithItems(&Context, szPath);
-    if (!Context.Count)
+    LoadOpenWithItems(&Context, m_wszPath);
+    if (Context.idCmd == idCmdFirst)
     {
+        /* No items has been added */
         DestroyMenu(hSubMenu);
-        hSubMenu = NULL;
-        wId = 0;
-        count = 0;
+        m_hSubMenu = NULL;
+        m_idCmdFirst = idCmdFirst;
+        m_idCmdLast = idCmdFirst;
     }
     else
     {
-        AddChooseProgramItem(hSubMenu, Context.idCmdFirst++);
-        count = Context.idCmdFirst - idCmdFirst;
-        /* verb start at index zero */
-        wId = count - 1;
-        hSubMenu = hSubMenu;
+        AddChooseProgramItem(hSubMenu, Context.idCmd);
+        m_idCmdFirst = idCmdFirst;
+        m_idCmdLast = Context.idCmd;
+        m_hSubMenu = hSubMenu;
     }
 
-    pos = GetMenuDefaultItem(hmenu, TRUE, 0) + 1;
+    DefaultPos = GetMenuDefaultItem(hMenu, TRUE, 0);
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
-    if (hSubMenu)
+    if (m_hSubMenu)
     {
         mii.fMask |= MIIM_SUBMENU;
-        mii.hSubMenu = hSubMenu;
+        mii.hSubMenu = m_hSubMenu;
+        mii.wID = -1;
     }
-    mii.dwTypeData = (LPWSTR) szBuffer;
-    mii.fState = MFS_ENABLED;
-    if (!pos)
-    {
-        mii.fState |= MFS_DEFAULT;
-    }
+    else
+        mii.wID = m_idCmdLast;
 
-    mii.wID = Context.idCmdFirst;
     mii.fType = MFT_STRING;
-    if (InsertMenuItemW(hmenu, pos, TRUE, &mii))
-        Context.Count++;
+    mii.dwTypeData = (LPWSTR)wszBuf;
+    mii.cch = wcslen(wszBuf);
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Context.Count);
+    mii.fState = MFS_ENABLED;
+    if (DefaultPos == -1)
+        mii.fState |= MFS_DEFAULT;
+
+    InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii);
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - idCmdFirst + 1);
 }
 
 static VOID
@@ -229,22 +285,21 @@ FreeListItems(HWND hwndDlg)
 }
 
 static BOOL
-HideApplicationFromList(WCHAR *pFileName)
+IsAppHidden(LPCWSTR pwszFileName)
 {
-    WCHAR szBuffer[100] = L"Applications\\";
+    WCHAR wszBuf[100];
     DWORD dwSize = 0;
     LONG result;
 
-    if (wcslen(pFileName) > (sizeof(szBuffer) / sizeof(WCHAR)) - 14)
+    if (FAILED(StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Applications\\%s", pwszFileName)))
     {
         ERR("insufficient buffer\n");
         return FALSE;
     }
-    wcscpy(&szBuffer[13], pFileName);
 
-    result = RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, L"NoOpenWith", RRF_RT_REG_SZ, NULL, NULL, &dwSize);
+    result = RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, L"NoOpenWith", RRF_RT_REG_SZ, NULL, NULL, &dwSize);
 
-    TRACE("result %d szBuffer %s\n", result, debugstr_w(szBuffer));
+    TRACE("result %d wszBuf %s\n", result, wszBuf);
 
     if (result == ERROR_SUCCESS)
         return TRUE;
@@ -253,101 +308,95 @@ HideApplicationFromList(WCHAR *pFileName)
 }
 
 static VOID
-WriteStaticShellExtensionKey(HKEY hRootKey, const WCHAR * pVerb, WCHAR *pFullPath)
+WriteStaticShellExtensionKey(HKEY hRootKey, LPCWSTR pwszVerb, LPCWSTR pwszFullPath)
 {
     HKEY hShell;
-    LONG result;
-    WCHAR szBuffer[MAX_PATH+10] = L"shell\\";
+    WCHAR wszBuf[MAX_PATH];
 
-    if (wcslen(pVerb) > (sizeof(szBuffer) / sizeof(WCHAR)) - 15 ||
-        wcslen(pFullPath) > (sizeof(szBuffer) / sizeof(WCHAR)) - 4)
+    /* construct verb reg path */
+    if (FAILED(StringCbPrintfW(wszBuf, sizeof(wszBuf), L"shell\\%s\\command", pwszVerb)))
     {
         ERR("insufficient buffer\n");
         return;
     }
 
-    /* construct verb reg path */
-    wcscpy(&szBuffer[6], pVerb);
-    wcscat(szBuffer, L"\\command");
-
     /* create verb reg key */
-    if (RegCreateKeyExW(hRootKey, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hShell, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyExW(hRootKey, wszBuf, 0, NULL, 0, KEY_WRITE, NULL, &hShell, NULL) != ERROR_SUCCESS)
         return;
 
     /* build command buffer */
-    wcscpy(szBuffer, pFullPath);
-    wcscat(szBuffer, L" %1");
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s %%1", pwszFullPath);
 
-    result = RegSetValueExW(hShell, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+    RegSetValueExW(hShell, NULL, 0, REG_SZ, (const BYTE*)wszBuf, (wcslen(wszBuf) + 1) * sizeof(WCHAR));
     RegCloseKey(hShell);
 }
 
 static VOID
-StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
+StoreNewSettings(LPCWSTR pwszFileName, LPCWSTR pwszAppName)
 {
-    WCHAR szBuffer[100] = { L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\"};
-    const WCHAR * pFileExt;
+    WCHAR wszBuf[100];
+    LPCWSTR pwszExt;
     HKEY hKey;
-    LONG result;
     HANDLE hList;
 
-    /* get file extension */
-    pFileExt = wcsrchr(szFileName, L'.');
-    if (wcslen(pFileExt) > (sizeof(szBuffer) / sizeof(WCHAR)) - 60)
+    /* Get file extension */
+    pwszExt = wcsrchr(pwszFileName, L'.');
+    if (!pwszExt)
+        return;
+
+    /* Build registry key */
+    if (FAILED(StringCbPrintfW(wszBuf, sizeof(wszBuf),
+                               L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s",
+                               pwszExt)))
     {
         ERR("insufficient buffer\n");
         return;
     }
-    wcscpy(&szBuffer[60], pFileExt);
-    /* open  base key for this file extension */
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, szBuffer, 0, NULL, 0, KEY_WRITE | KEY_READ, NULL, &hKey, NULL) != ERROR_SUCCESS)
+
+    /* Open base key for this file extension */
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, wszBuf, 0, NULL, 0, KEY_WRITE | KEY_READ, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return;
 
-    /* open mru list */
+    /* Open MRU list */
     hList = OpenMRUList(hKey);
-
-    if (!hList)
+    if (hList)
     {
-        RegCloseKey(hKey);
-        return;
+        /* Insert the entry */
+        AddMRUStringW(hList, pwszAppName);
+
+        /* Close MRU list */
+        FreeMRUList(hList);
     }
 
-    /* insert the entry */
-    result = AddMRUStringW(hList, szAppName);
-
-    /* close mru list */
-    FreeMRUList(hList);
-    /* create mru list key */
     RegCloseKey(hKey);
 }
 
 static VOID
-SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
+SetProgramAsDefaultHandler(LPCWSTR pwszFileName, LPCWSTR pwszAppName)
 {
     HKEY hKey;
     HKEY hAppKey;
     DWORD dwDisposition;
-    WCHAR szBuffer[100];
+    WCHAR wszBuf[100];
     DWORD dwSize;
     BOOL result;
-    const WCHAR * pFileExt;
-    WCHAR * pFileName;
+    LPCWSTR pwszExt;
+    LPCWSTR pwszAppFileName;
 
-    /* extract file extension */
-    pFileExt = wcsrchr(szFileName, L'.');
-    if (!pFileExt)
+    /* Extract file extension */
+    pwszExt = wcsrchr(pwszFileName, L'.');
+    if (!pwszExt)
         return;
 
-    /* create file extension key */
-    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pFileExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
+    /* Create file extension key */
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
         return;
 
-    if (dwDisposition & REG_CREATED_NEW_KEY)
+    if (dwDisposition == REG_CREATED_NEW_KEY)
     {
-        /* a new entry was created create the prog key id */
-        wcscpy(szBuffer, &pFileExt[1]);
-        wcscat(szBuffer, L"_auto_file");
-        if (RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+        /* A new entry was created create the prog key id */
+        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s_auto_file", pwszExt + 1);
+        if (RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)wszBuf, (wcslen(wszBuf) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return;
@@ -355,38 +404,36 @@ SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
     }
     else
     {
-        /* entry already exists fetch prog key id */
-        dwSize = sizeof(szBuffer);
-        if (RegGetValueW(hKey, NULL, NULL, RRF_RT_REG_SZ, NULL, szBuffer, &dwSize) != ERROR_SUCCESS)
+        /* Entry already exists fetch prog key id */
+        dwSize = sizeof(wszBuf);
+        if (RegGetValueW(hKey, NULL, NULL, RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) != ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return;
         }
     }
-    /* close file extension key */
+
+    /* Close file extension key */
     RegCloseKey(hKey);
 
-    /* create prog id key */
-    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
+    /* Create prog id key */
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
         return;
 
-
-    /* check if there already verbs existing for that app */
-    pFileName = wcsrchr(szAppName, L'\\');
-    wcscpy(szBuffer, L"Classes\\Applications\\");
-    wcscat(szBuffer, pFileName);
-    wcscat(szBuffer, L"\\shell");
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ, &hAppKey) == ERROR_SUCCESS)
+    /* Check if there already verbs existing for that app */
+    pwszAppFileName = wcsrchr(pwszAppName, L'\\');
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Classes\\Applications\\%s\\shell", pwszAppFileName);
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hAppKey) == ERROR_SUCCESS)
     {
-        /* copy static verbs from Classes\Applications key */
-        HKEY hTemp;
-        if (RegCreateKeyExW(hKey, L"shell", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &hTemp, &dwDisposition) == ERROR_SUCCESS)
+        /* Copy static verbs from Classes\Applications key */
+        HKEY hDestKey;
+        if (RegCreateKeyExW(hKey, L"shell", 0, NULL, 0, KEY_WRITE, NULL, &hDestKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            result = RegCopyTreeW(hAppKey, NULL, hTemp);
-            RegCloseKey(hTemp);
+            result = RegCopyTreeW(hAppKey, NULL, hDestKey);
+            RegCloseKey(hDestKey);
             if (result == ERROR_SUCCESS)
             {
-                /* copied all subkeys, we are done */
+                /* Copied all subkeys, we are done */
                 RegCloseKey(hKey);
                 RegCloseKey(hAppKey);
                 return;
@@ -394,55 +441,54 @@ SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
         }
         RegCloseKey(hAppKey);
     }
-    /* write standard static shell extension */
-    WriteStaticShellExtensionKey(hKey, L"open", szAppName);
+
+    /* Write standard static shell extension */
+    WriteStaticShellExtensionKey(hKey, L"open", pwszAppName);
     RegCloseKey(hKey);
 }
 
 static VOID
 BrowseForApplication(HWND hwndDlg)
 {
-    WCHAR szBuffer[64] = {0};
-    WCHAR szFilter[256] = {0};
-    WCHAR szPath[MAX_PATH];
+    WCHAR wszTitle[64];
+    WCHAR wszFilter[256];
+    WCHAR wszPath[MAX_PATH];
     OPENFILENAMEW ofn;
     OPEN_WITH_CONTEXT Context;
-    INT count;
+    INT iCount;
 
-    /* load resource open with */
-    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-    {
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-        ofn.lpstrTitle = szBuffer;
-        ofn.nMaxFileTitle = wcslen(szBuffer);
-    }
-
+    /* Initialize OPENFILENAMEW structure */
     ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
     ofn.lStructSize  = sizeof(OPENFILENAMEW);
     ofn.hInstance = shell32_hInstance;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-    ofn.nMaxFile = (sizeof(szPath) / sizeof(WCHAR));
-    ofn.lpstrFile = szPath;
+    ofn.nMaxFile = (sizeof(wszPath) / sizeof(WCHAR));
+    ofn.lpstrFile = wszPath;
 
-    /* load the filter resource string */
-    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH_FILTER, szFilter, sizeof(szFilter) / sizeof(WCHAR)))
+    /* Init title */
+    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszTitle, sizeof(wszTitle) / sizeof(WCHAR)))
     {
-        szFilter[(sizeof(szFilter)/sizeof(WCHAR))-1] = 0;
-        ofn.lpstrFilter = szFilter;
+        ofn.lpstrTitle = wszTitle;
+        ofn.nMaxFileTitle = wcslen(wszTitle);
     }
-    ZeroMemory(szPath, sizeof(szPath));
 
-    /* call openfilename */
+    /* Init the filter string */
+    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH_FILTER, wszFilter, sizeof(wszFilter) / sizeof(WCHAR)))
+        ofn.lpstrFilter = wszFilter;
+    ZeroMemory(wszPath, sizeof(wszPath));
+
+    /* Create OpenFile dialog */
     if (!GetOpenFileNameW(&ofn))
         return;
 
-    /* setup context for insert proc */
+    /* Setup context for insert proc */
     ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
     Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
-    count = SendMessage(Context.hDlgCtrl, LB_GETCOUNT, 0, 0);
-    InsertOpenWithItem(&Context, szPath);
-    /* select new item */
-    SendMessage(Context.hDlgCtrl, LB_SETCURSEL, count, 0);
+    iCount = SendMessage(Context.hDlgCtrl, LB_GETCOUNT, 0, 0);
+    InsertOpenWithItem(&Context, wszPath);
+
+    /* Select new item */
+    SendMessage(Context.hDlgCtrl, LB_SETCURSEL, iCount, 0);
 }
 
 static POPEN_ITEM_CONTEXT
@@ -464,48 +510,39 @@ GetCurrentOpenItemContext(HWND hwndDlg)
 }
 
 static VOID
-ExecuteOpenItem(POPEN_ITEM_CONTEXT pItemContext, LPCWSTR FileName)
+ExecuteOpenItem(POPEN_ITEM_CONTEXT pItemContext, LPCWSTR pwszPath)
 {
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
-    WCHAR szPath[(MAX_PATH * 2)];
+    WCHAR wszBuf[MAX_PATH * 2 + 8];
 
     /* setup path with argument */
     ZeroMemory(&si, sizeof(STARTUPINFOW));
     si.cb = sizeof(STARTUPINFOW);
-    wcscpy(szPath, pItemContext->szAppName);
-    wcscat(szPath, L" ");
-    wcscat(szPath, FileName);
 
-    ERR("path %s\n", debugstr_w(szPath));
+    /* Build the command line. Don't use applcation name as first parameter of
+       CreateProcessW, because it have to be an absolute path. */
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"\"%s\" \"%s\"", pItemContext->szAppName, pwszPath);
 
-    if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    /* Start the application now */
+    TRACE("AppName %ls Path %ls\n", pItemContext->szAppName, pwszPath);
+    if (CreateProcessW(NULL, wszBuf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
-        SHAddToRecentDocs(SHARD_PATHW, FileName);
+        SHAddToRecentDocs(SHARD_PATHW, pwszPath);
     }
 }
 
 static INT_PTR CALLBACK
 OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    LPMEASUREITEMSTRUCT lpmis;
-    LPDRAWITEMSTRUCT lpdis;
-    INT index;
-    WCHAR szBuffer[MAX_PATH + 30] = { 0 };
-    OPENASINFO *poainfo;
-    TEXTMETRIC mt;
-    COLORREF preColor, preBkColor;
-    POPEN_ITEM_CONTEXT pItemContext;
-    LONG YOffset;
-    OPEN_WITH_CONTEXT Context;
-
-    poainfo = (OPENASINFO*) GetWindowLongPtr(hwndDlg, DWLP_USER);
-
     switch(uMsg)
     {
         case WM_INITDIALOG:
+        {
+            OPENASINFO *poainfo;
+
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
             poainfo = (OPENASINFO*)lParam;
             if (!(poainfo->oaifInFlags & OAIF_ALLOW_REGISTRATION))
@@ -516,23 +553,28 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ShowWindow(GetDlgItem(hwndDlg, 14003), SW_HIDE);
             if (poainfo->pcszFile)
             {
-                szBuffer[0] = L'\0';
-                GetDlgItemTextW(hwndDlg, 14001, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]));
-                index = wcslen(szBuffer);
-                if (index + wcslen(poainfo->pcszFile) + 1 < sizeof(szBuffer) / sizeof(szBuffer[0]))
-                    wcscat(szBuffer, poainfo->pcszFile);
-                szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                SetDlgItemTextW(hwndDlg, 14001, szBuffer);
+                WCHAR wszBuf[MAX_PATH];
+                UINT cchBuf;
+                OPEN_WITH_CONTEXT Context;
+
+                cchBuf = GetDlgItemTextW(hwndDlg, 14001, wszBuf, sizeof(wszBuf) / sizeof(wszBuf[0]));
+                StringCchCopyW(wszBuf, _countof(wszBuf) - cchBuf, poainfo->pcszFile);
+                SetDlgItemTextW(hwndDlg, 14001, wszBuf);
+
                 ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
                 Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
                 LoadOpenWithItems(&Context, poainfo->pcszFile);
+
                 SendMessage(Context.hDlgCtrl, LB_SETCURSEL, 0, 0);
             }
             return TRUE;
+        }
         case WM_MEASUREITEM:
-            lpmis = (LPMEASUREITEMSTRUCT) lParam;
+        {
+            LPMEASUREITEMSTRUCT lpmis = (LPMEASUREITEMSTRUCT)lParam;
             lpmis->itemHeight = 64;
             return TRUE;
+        }
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
@@ -544,16 +586,21 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         InvalidateRect((HWND)lParam, NULL, TRUE); // FIXME USE UPDATE RECT
                     break;
                 case 14005: /* ok */
+                {
+                    POPEN_ITEM_CONTEXT pItemContext;
+                    
                     pItemContext = GetCurrentOpenItemContext(hwndDlg);
                     if (pItemContext)
                     {
+                        OPENASINFO *poainfo = (OPENASINFO*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
                         /* store settings in HKCU path */
                         StoreNewSettings(poainfo->pcszFile, pItemContext->szAppName);
 
                         if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
                         {
                             /* set programm as default handler */
-                            SetProgrammAsDefaultHandler(poainfo->pcszFile, pItemContext->szAppName);
+                            SetProgramAsDefaultHandler(poainfo->pcszFile, pItemContext->szAppName);
                         }
 
                         if (poainfo->oaifInFlags & OAIF_EXEC)
@@ -562,6 +609,7 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     FreeListItems(hwndDlg);
                     DestroyWindow(hwndDlg);
                     return TRUE;
+                }
                 case 14006: /* cancel */
                     FreeListItems(hwndDlg);
                     DestroyWindow(hwndDlg);
@@ -571,7 +619,15 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
         case WM_DRAWITEM:
-            lpdis = (LPDRAWITEMSTRUCT) lParam;
+        {
+            LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
+            TEXTMETRIC mt;
+            COLORREF preColor, preBkColor;
+            LONG cyOffset;
+            POPEN_ITEM_CONTEXT pItemContext;
+            INT Index;
+            WCHAR wszBuf[MAX_PATH];
+
             if ((int)lpdis->itemID == -1)
                 break;
 
@@ -579,10 +635,10 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case ODA_SELECT:
                 case ODA_DRAWENTIRE:
-                    index = SendMessageW(lpdis->hwndItem, LB_GETCURSEL, 0, 0);
+                    Index = SendMessageW(lpdis->hwndItem, LB_GETCURSEL, 0, 0);
                     pItemContext = (POPEN_ITEM_CONTEXT)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM) 0);
 
-                    if ((int)lpdis->itemID == index)
+                    if ((int)lpdis->itemID == Index)
                     {
                         /* paint focused item with standard background colour */
                         HBRUSH hBrush;
@@ -601,26 +657,27 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         preBkColor = SetBkColor(lpdis->hDC, RGB(255, 255, 255));
                     }
 
-                    SendMessageW(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM) szBuffer);
+                    SendMessageW(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)wszBuf);
                     /* paint the icon */
                     DrawIconEx(lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, pItemContext->hIcon, 0, 0, 0, NULL, DI_NORMAL);
                     /* get text size */
                     GetTextMetrics(lpdis->hDC, &mt);
                     /* paint app name */
-                    YOffset = lpdis->rcItem.top + mt.tmHeight / 2;
-                    TextOutW(lpdis->hDC, 45, YOffset, szBuffer, wcslen(szBuffer));
+                    cyOffset = lpdis->rcItem.top + mt.tmHeight / 2;
+                    TextOutW(lpdis->hDC, 45, cyOffset, wszBuf, wcslen(wszBuf));
                     /* paint manufacturer description */
-                    YOffset += mt.tmHeight + 2;
+                    cyOffset += mt.tmHeight + 2;
                     preColor = SetTextColor(lpdis->hDC, RGB(192, 192, 192));
                     if (pItemContext->szManufacturer[0])
-                        TextOutW(lpdis->hDC, 45, YOffset, pItemContext->szManufacturer, wcslen(pItemContext->szManufacturer));
+                        TextOutW(lpdis->hDC, 45, cyOffset, pItemContext->szManufacturer, wcslen(pItemContext->szManufacturer));
                     else
-                        TextOutW(lpdis->hDC, 45, YOffset, pItemContext->szAppName, wcslen(pItemContext->szAppName));
+                        TextOutW(lpdis->hDC, 45, cyOffset, pItemContext->szAppName, wcslen(pItemContext->szAppName));
                     SetTextColor(lpdis->hDC, preColor);
                     SetBkColor(lpdis->hDC, preBkColor);
                     break;
             }
             break;
+        }
         case WM_CLOSE:
             FreeListItems(hwndDlg);
             DestroyWindow(hwndDlg);
@@ -631,72 +688,43 @@ OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-static VOID
-FreeMenuItemContext(HMENU hMenu)
-{
-    INT Count;
-    INT Index;
-    MENUITEMINFOW mii;
-
-    /* get item count */
-    Count = GetMenuItemCount(hMenu);
-    if (Count == -1)
-        return;
-
-    /* setup menuitem info */
-    ZeroMemory(&mii, sizeof(mii));
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_DATA | MIIM_FTYPE;
-
-    for(Index = 0; Index < Count; Index++)
-    {
-        if (GetMenuItemInfoW(hMenu, Index, TRUE, &mii))
-        {
-            if ((mii.fType & MFT_SEPARATOR) || mii.dwItemData == 0)
-                continue;
-            HeapFree(GetProcessHeap(), 0, (LPVOID)mii.dwItemData);
-        }
-    }
-}
-
 HRESULT WINAPI
 COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
-    MENUITEMINFOW mii;
+    HRESULT hr = E_FAIL;
 
-    ERR("This %p wId %x count %u verb %x\n", this, wId, count, LOWORD(lpici->lpVerb));
+    TRACE("This %p idFirst %u idLast %u idCmd %u\n", this, m_idCmdFirst, m_idCmdLast, m_idCmdFirst + LOWORD(lpici->lpVerb));
 
-    if (HIWORD(lpici->lpVerb) != 0 || LOWORD(lpici->lpVerb) > wId)
-        return E_FAIL;
-
-    if (wId == LOWORD(lpici->lpVerb))
+    if (HIWORD(lpici->lpVerb) == 0 && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
     {
-        OPENASINFO info;
-
-        info.pcszFile = szPath;
-        info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
-        info.pcszClass = NULL;
-        FreeMenuItemContext(hSubMenu);
-        return SHOpenWithDialog(lpici->hwnd, &info);
-    }
-
-    /* retrieve menu item info */
-    ZeroMemory(&mii, sizeof(mii));
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_DATA | MIIM_FTYPE;
-
-    if (GetMenuItemInfoW(hSubMenu, LOWORD(lpici->lpVerb), TRUE, &mii))
-    {
-        POPEN_ITEM_CONTEXT pItemContext = (POPEN_ITEM_CONTEXT)mii.dwItemData;
-        if (pItemContext)
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdLast)
         {
-            /* launch item with specified app */
-            ExecuteOpenItem(pItemContext, szPath);
+            OPENASINFO info;
+
+            info.pcszFile = m_wszPath;
+            info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
+            info.pcszClass = NULL;
+            hr = SHOpenWithDialog(lpici->hwnd, &info);
+        }
+        else
+        {
+            /* retrieve menu item info */
+            MENUITEMINFOW mii;
+            ZeroMemory(&mii, sizeof(mii));
+            mii.cbSize = sizeof(mii);
+            mii.fMask = MIIM_DATA | MIIM_FTYPE;
+
+            if (GetMenuItemInfoW(m_hSubMenu, LOWORD(lpici->lpVerb), TRUE, &mii) && mii.dwItemData)
+            {
+                /* launch item with specified app */
+                POPEN_ITEM_CONTEXT pItemContext = (POPEN_ITEM_CONTEXT)mii.dwItemData;
+                ExecuteOpenItem(pItemContext, m_wszPath);
+                hr = S_OK;
+            }
         }
     }
-    /* free menu item context */
-    FreeMenuItemContext(hSubMenu);
-    return S_OK;
+
+    return hr;
 }
 
 HRESULT WINAPI
@@ -720,117 +748,107 @@ HRESULT WINAPI COpenWithMenu::HandleMenuMsg(
 }
 
 VOID
-GetManufacturer(WCHAR * szAppName, POPEN_ITEM_CONTEXT pContext)
+GetManufacturer(LPCWSTR pwszAppName, POPEN_ITEM_CONTEXT pContext)
 {
-    UINT VerSize;
-    DWORD DummyHandle;
+    UINT cbSize;
     LPVOID pBuf;
-    WORD lang = 0;
-    WORD code = 0;
-    LPLANGANDCODEPAGE lplangcode;
-    WCHAR szBuffer[100];
-    WCHAR * pResult;
-    BOOL bResult;
+    WORD wLang = 0, wCode = 0;
+    LPLANGANDCODEPAGE lpLangCode;
+    WCHAR wszBuf[100];
+    WCHAR *pResult;
 
-    static const WCHAR wFormat[] = L"\\StringFileInfo\\%04x%04x\\CompanyName";
-    static const WCHAR wTranslation[] = L"VarFileInfo\\Translation";
+    /* Clear manufacturer */
+    pContext->szManufacturer[0] = 0;
 
     /* query version info size */
-    VerSize = GetFileVersionInfoSizeW(szAppName, &DummyHandle);
-    if (!VerSize)
-    {
-        pContext->szManufacturer[0] = 0;
+    cbSize = GetFileVersionInfoSizeW(pwszAppName, NULL);
+    if (!cbSize)
         return;
-    }
 
     /* allocate buffer */
-    pBuf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, VerSize);
+    pBuf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbSize);
     if (!pBuf)
-    {
-        pContext->szManufacturer[0] = 0;
         return;
-    }
 
     /* query version info */
-    if(!GetFileVersionInfoW(szAppName, 0, VerSize, pBuf))
+    if(!GetFileVersionInfoW(pwszAppName, 0, cbSize, pBuf))
     {
-        pContext->szManufacturer[0] = 0;
         HeapFree(GetProcessHeap(), 0, pBuf);
         return;
     }
 
     /* query lang code */
-    if(VerQueryValueW(pBuf, const_cast<LPWSTR>(wTranslation), (LPVOID *)&lplangcode, &VerSize))
+    if(VerQueryValueW(pBuf, L"VarFileInfo\\Translation", (LPVOID*)&lpLangCode, &cbSize))
     {
-        /* FIXME find language from current locale / if not available,
+        /* FIXME: find language from current locale / if not available,
          * default to english
          * for now default to first available language
          */
-        lang = lplangcode->lang;
-        code = lplangcode->code;
+        wLang = lpLangCode->lang;
+        wCode = lpLangCode->code;
     }
-    /* set up format */
-    swprintf(szBuffer, wFormat, lang, code);
-    /* query manufacturer */
-    pResult = NULL;
-    bResult = VerQueryValueW(pBuf, szBuffer, (LPVOID *)&pResult, &VerSize);
 
-    if (VerSize && bResult && pResult)
-        wcscpy(pContext->szManufacturer, pResult);
-    else
-        pContext->szManufacturer[0] = 0;
+    /* Query manufacturer */
+    swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\CompanyName", wLang, wCode);
+
+    if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cbSize))
+        StringCbCopyNW(pContext->szManufacturer, sizeof(pContext->szManufacturer), pResult, cbSize);
     HeapFree(GetProcessHeap(), 0, pBuf);
 }
 
 static VOID
-InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
+InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszAppName)
 {
-    MENUITEMINFOW mii;
     POPEN_ITEM_CONTEXT pItemContext;
-    LRESULT index;
     WCHAR *pwszExt;
-    WCHAR Buffer[_MAX_FNAME];
+    WCHAR wszFileName[_MAX_FNAME];
 
     pItemContext = (OPEN_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), 0, sizeof(OPEN_ITEM_CONTEXT));
     if (!pItemContext)
         return;
 
-    /* store app path */
-    wcscpy(pItemContext->szAppName, szAppName);
-    /* extract path name */
-    _wsplitpath(szAppName, NULL, NULL, Buffer, NULL);
-    pwszExt = wcsrchr(Buffer, '.');
+    /* Store app path and icon */
+    wcscpy(pItemContext->szAppName, pwszAppName);
+    pItemContext->hIcon = ExtractIconW(shell32_hInstance, pwszAppName, 0);
+    pItemContext->szManufacturer[0] = 0;
+
+    /* Extract path name */
+    _wsplitpath(pwszAppName, NULL, NULL, wszFileName, NULL);
+
+    /* Build application name from filename. FIXME: do it properly */
+    pwszExt = wcsrchr(wszFileName, '.');
     if (pwszExt)
         pwszExt[0] = L'\0';
-    Buffer[0] = towupper(Buffer[0]);
+    wszFileName[0] = towupper(wszFileName[0]);
 
+    /* Add item to the list */
     if (pContext->bMenu)
     {
+        MENUITEMINFOW mii;
+
         ZeroMemory(&mii, sizeof(mii));
         mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
+        mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA | MIIM_CHECKMARKS;
         mii.fType = MFT_STRING; //MFT_OWNERDRAW;
         mii.fState = MFS_ENABLED;
-        mii.wID = pContext->idCmdFirst;
-        mii.dwTypeData = Buffer;
-        mii.cch = wcslen(Buffer);
+        mii.wID = pContext->idCmd;
+        mii.dwTypeData = wszFileName;
+        mii.cch = wcslen(wszFileName);
         mii.dwItemData = (ULONG_PTR)pItemContext;
-        wcscpy(pItemContext->szManufacturer, Buffer);
+        mii.hbmpChecked = mii.hbmpUnchecked = IconToBitmap(pItemContext->hIcon);
+
         if (InsertMenuItemW(pContext->hMenu, -1, TRUE, &mii))
-        {
-            pContext->idCmdFirst++;
-            pContext->Count++;
-        }
+            pContext->idCmd++;
     }
     else
     {
-        /* get default icon */
-        pItemContext->hIcon = ExtractIconW(shell32_hInstance, szAppName, 0);
+        LRESULT Index;
+
         /* get manufacturer */
-        GetManufacturer(pItemContext->szAppName, pItemContext);
-        index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)Buffer);
-        if (index != LB_ERR)
-            SendMessageW(pContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pItemContext);
+        GetManufacturer(pwszAppName, pItemContext);
+        Index = SendMessageW(pContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)wszFileName);
+        if (Index != LB_ERR)
+            SendMessageW(pContext->hDlgCtrl, LB_SETITEMDATA, Index, (LPARAM)pItemContext);
     }
 }
 
@@ -843,18 +861,18 @@ AddItemFromProgIDList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 static HANDLE
 OpenMRUList(HKEY hKey)
 {
-    CREATEMRULISTW info;
+    CREATEMRULISTW Info;
 
     /* initialize mru list info */
-    info.cbSize = sizeof(info);
-    info.nMaxItems = 32;
-    info.dwFlags = MRU_STRING;
-    info.hKey = hKey;
-    info.lpszSubKey = L"OpenWithList";
-    info.lpfnCompare = NULL;
+    Info.cbSize = sizeof(Info);
+    Info.nMaxItems = 32;
+    Info.dwFlags = MRU_STRING;
+    Info.hKey = hKey;
+    Info.lpszSubKey = L"OpenWithList";
+    Info.lpfnCompare = NULL;
 
     /* load list */
-    return CreateMRUListW(&info);
+    return CreateMRUListW(&Info);
 }
 
 static VOID
@@ -862,7 +880,7 @@ AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 {
     HANDLE hList;
     int nItem, nCount, nResult;
-    WCHAR szBuffer[MAX_PATH];
+    WCHAR wszBuf[MAX_PATH];
 
     /* open mru list */
     hList = OpenMRUList(hKey);
@@ -877,14 +895,13 @@ AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 
     for(nItem = 0; nItem < nCount; nItem++)
     {
-        nResult = EnumMRUListW(hList, nItem, szBuffer, MAX_PATH);
+        nResult = EnumMRUListW(hList, nItem, wszBuf, _countof(wszBuf));
         if (nResult <= 0)
             continue;
-        /* make sure its zero terminated */
-        szBuffer[min(MAX_PATH-1, nResult)] = '\0';
+
         /* insert item */
-        if (!HideApplicationFromList(szBuffer))
-            InsertOpenWithItem(pContext, szBuffer);
+        if (!IsAppHidden(wszBuf))
+            InsertOpenWithItem(pContext, wszBuf);
     }
 
     /* free the mru list */
@@ -892,83 +909,70 @@ AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 }
 
 static VOID
-LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
+LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszExt)
 {
     HKEY hKey;
     HKEY hSubKey;
-    WCHAR szBuffer[MAX_PATH+10];
-    WCHAR szResult[100];
+    WCHAR wszBuf[MAX_PATH], wszBuf2[MAX_PATH];
     DWORD dwSize;
 
-    static const WCHAR szOpenWithList[] = L"OpenWithList";
-    static const WCHAR szOpenWithProgIds[] = L"OpenWithProgIDs";
-    static const WCHAR szPerceivedType[] = L"PerceivedType";
-    static const WCHAR szSysFileAssoc[] = L"SystemFileAssociations\\%s";
-
-    /* check if extension exists */
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szExt, 0, KEY_READ | KEY_WRITE, &hKey) != ERROR_SUCCESS)
+    /* Check if extension exists */
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return;
 
     if (RegGetValueW(hKey, NULL, L"NoOpen", RRF_RT_REG_SZ, NULL, NULL, &dwSize) == ERROR_SUCCESS)
     {
-        /* display warning dialog */
-        pContext->NoOpen = TRUE;
+        /* Display warning dialog */
+        pContext->bNoOpen = TRUE;
     }
 
-    /* check if there is a directly available execute key */
-    if (RegOpenKeyExW(hKey, L"shell\\open\\command", 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
+    /* Check if there is a directly available execute key */
+    dwSize = sizeof(wszBuf);
+    if (RegGetValueW(hKey, L"shell\\open\\command", NULL, RRF_RT_REG_SZ, NULL, (PVOID)wszBuf, &dwSize) == ERROR_SUCCESS)
     {
-        DWORD dwBuffer = sizeof(szBuffer);
-
-        if (RegGetValueW(hSubKey, NULL, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szBuffer, &dwBuffer) == ERROR_SUCCESS)
+        WCHAR *pwszSpace = wcsrchr(wszBuf, L' ');
+        if (pwszSpace)
         {
-            WCHAR * pszSpace = wcsrchr(szBuffer, ' ');
-            if (pszSpace)
-            {
-                /* erase %1 or extra arguments */
-                *pszSpace = 0; // FIXME: what about '"'
-            }
-            if(!HideApplicationFromList(szBuffer))
-                InsertOpenWithItem(pContext, szBuffer);
+            /* Erase %1 or extra arguments */
+            *pwszSpace = 0; // FIXME: what about '"'
         }
-        RegCloseKey(hSubKey);
+        if(!IsAppHidden(wszBuf))
+            InsertOpenWithItem(pContext, wszBuf);
     }
 
-    /* load items from HKCR\Ext\OpenWithList */
-    if (RegOpenKeyExW(hKey, szOpenWithList, 0, KEY_READ | KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+    /* Load items from HKCR\Ext\OpenWithList */
+    if (RegOpenKeyExW(hKey, L"OpenWithList", 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hKey);
         RegCloseKey(hSubKey);
     }
 
-    /* load items from HKCR\Ext\OpenWithProgIDs */
-    if (RegOpenKeyExW(hKey, szOpenWithProgIds, 0, KEY_READ | KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+    /* Load items from HKCR\Ext\OpenWithProgIDs */
+    if (RegOpenKeyExW(hKey, L"OpenWithProgIDs", 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
     {
         AddItemFromProgIDList(pContext, hSubKey);
         RegCloseKey(hSubKey);
     }
 
-    /* load items from SystemFileAssociations\Ext key */
-    swprintf(szResult, szSysFileAssoc, szExt);
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szResult, 0, KEY_READ | KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
+    /* Load items from SystemFileAssociations\Ext key */
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"SystemFileAssociations\\%s", pwszExt);
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hSubKey);
         RegCloseKey(hSubKey);
     }
 
-    /* load additional items from referenced PerceivedType*/
-    dwSize = sizeof(szBuffer);
-    if (RegGetValueW(hKey, NULL, szPerceivedType, RRF_RT_REG_SZ, NULL, szBuffer, &dwSize) != ERROR_SUCCESS)
+    /* Load additional items from referenced PerceivedType*/
+    dwSize = sizeof(wszBuf);
+    if (RegGetValueW(hKey, NULL, L"PerceivedType", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return;
     }
     RegCloseKey(hKey);
 
-    /* terminate it explictely */
-    szBuffer[29] = 0;
-    swprintf(szResult, szSysFileAssoc, szBuffer);
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szResult, 0, KEY_READ | KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
+    StringCbPrintfW(wszBuf2, sizeof(wszBuf2), L"SystemFileAssociations\\%s", wszBuf);
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf2, 0, KEY_READ | KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hSubKey);
         RegCloseKey(hSubKey);
@@ -976,25 +980,26 @@ LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
 }
 
 static VOID
-LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, const WCHAR * szExt)
+LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, LPCWSTR pwszExt)
 {
-    WCHAR szBuffer[MAX_PATH];
+    WCHAR wszBuf[MAX_PATH];
     HKEY hKey;
 
-    static const WCHAR szOpenWithProgIDs[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s\\OpenWithProgIDs";
-    static const WCHAR szOpenWithList[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s";
-
-    /* handle first progid lists */
-    swprintf(szBuffer, szOpenWithProgIDs, szExt);
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    /* Handle ProgId lists first */
+    StringCbPrintfW(wszBuf, sizeof(wszBuf),
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s\\OpenWithProgIDs",
+                    pwszExt);
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, wszBuf, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         AddItemFromProgIDList(pContext, hKey);
         RegCloseKey(hKey);
     }
 
-    /* now handle mru lists */
-    swprintf(szBuffer, szOpenWithList, szExt);
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, szBuffer, 0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    /* Now handle MRU lists */
+    StringCbPrintfW(wszBuf, sizeof(wszBuf),
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s",
+                    pwszExt);
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, wszBuf, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hKey);
         RegCloseKey(hKey);
@@ -1013,7 +1018,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     LPCITEMIDLIST pidlFolder2;
     LPCITEMIDLIST pidlChild;
     LPCITEMIDLIST pidl;
-    LPWSTR pszExt;
+    LPCWSTR pwszExt;
     
     TRACE("This %p\n", this);
 
@@ -1059,7 +1064,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
         return E_FAIL;
     }
 
-    if (!SHGetPathFromIDListW(pidl, szPath))
+    if (!SHGetPathFromIDListW(pidl, m_wszPath))
     {
         IID *iid = _ILGetGUIDPointer(pidl);
         SHFree((void*)pidl);
@@ -1068,15 +1073,14 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     }
 
     SHFree((void*)pidl);
-    TRACE("szPath %s\n", debugstr_w(szPath));
+    TRACE("szPath %s\n", debugstr_w(m_wszPath));
 
-    pszExt = wcsrchr(szPath, L'.');
-
-    if (pszExt)
+    pwszExt = wcsrchr(m_wszPath, L'.');
+    if (pwszExt)
     {
-        if (!_wcsicmp(pszExt, L".exe") || !_wcsicmp(pszExt, L".lnk"))
+        if (!_wcsicmp(pwszExt, L".exe") || !_wcsicmp(pwszExt, L".lnk"))
         {
-            TRACE("path is a executable or shortcut\n");
+            TRACE("file is a executable or shortcut\n");
             return E_FAIL;
         }
     }
@@ -1103,7 +1107,7 @@ SHOpenWithDialog(HWND hwndParent,
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
 
-    while (GetMessage(&msg, NULL, 0, 0) != 0 && IsWindow(hwnd))
+    while (GetMessage(&msg, NULL, 0, 0) && IsWindow(hwnd))
     {
         if (!IsDialogMessage(hwnd, &msg))
         {

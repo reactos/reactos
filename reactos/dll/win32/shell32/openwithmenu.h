@@ -29,11 +29,9 @@ class COpenWithMenu :
     public IShellExtInit
 {
     private:
-        LONG  wId;
-        BOOL NoOpen;
-        UINT count;
-        WCHAR szPath[MAX_PATH];
-        HMENU hSubMenu;
+        UINT m_idCmdFirst, m_idCmdLast;
+        WCHAR m_wszPath[MAX_PATH];
+        HMENU m_hSubMenu;
 
     public:
         COpenWithMenu();
