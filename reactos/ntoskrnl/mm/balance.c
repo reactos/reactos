@@ -132,17 +132,20 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
    return(STATUS_SUCCESS);
 }
 
-VOID
+ULONG
 NTAPI
-MiTrimMemoryConsumer(ULONG Consumer)
+MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
 {
-    LONG Target = 0;
+    LONG Target = InitialTarget;
     ULONG NrFreedPages = 0;
     NTSTATUS Status;
 
     /* Make sure we can trim this consumer */
     if (!MiMemoryConsumers[Consumer].Trim)
-        return;
+    {
+        /* Return the unmodified initial target */
+        return InitialTarget;
+    }
 
     if (MiMemoryConsumers[Consumer].PagesUsed > MiMemoryConsumers[Consumer].PagesTarget)
     {
@@ -157,8 +160,12 @@ MiTrimMemoryConsumer(ULONG Consumer)
 
     if (Target)
     {
-        /* Swap at least MiMinimumPagesPerRun */
-        Target = max(Target, MiMinimumPagesPerRun);
+        if (!InitialTarget)
+        {
+            /* If there was no initial target,
+             * swap at least MiMinimumPagesPerRun */
+            Target = max(Target, MiMinimumPagesPerRun);
+        }
 
         /* Now swap the pages out */
         Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
@@ -169,6 +176,20 @@ MiTrimMemoryConsumer(ULONG Consumer)
         {
             KeBugCheck(MEMORY_MANAGEMENT);
         }
+
+        /* Update the target */
+        if (NrFreedPages < Target)
+            Target -= NrFreedPages;
+        else
+            Target = 0;
+
+        /* Return the remaining pages needed to meet the target */
+        return Target;
+    }
+    else
+    {
+        /* Initial target is zero and we don't have anything else to add */
+        return 0;
     }
 }
 
@@ -348,16 +369,26 @@ MiBalancerThread(PVOID Unused)
 
       if (Status == STATUS_WAIT_0 || Status == STATUS_WAIT_1)
       {
-          for (i = 0; i < MC_MAXIMUM; i++)
-          {
-              MiTrimMemoryConsumer(i);
-          }
+          ULONG InitialTarget = 0;
 
-          if (MmAvailablePages < MiMinimumAvailablePages)
+          do
           {
-              /* This is really bad... */
-              DPRINT1("Balancer failed to resolve low memory condition! Complete memory exhaustion is imminent!\n");
-          }
+              ULONG OldTarget = InitialTarget;
+
+              /* Trim each consumer */
+              for (i = 0; i < MC_MAXIMUM; i++)
+              {
+                  InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
+              }
+
+              /* No pages left to swap! */
+              if (InitialTarget != 0 &&
+                  InitialTarget == OldTarget)
+              {
+                  /* Game over */
+                  KeBugCheck(NO_PAGES_AVAILABLE);
+              }
+          } while (InitialTarget != 0);
       }
       else
       {
