@@ -10,7 +10,7 @@
 
 #include "mouhid.h"
 
-static USHORT MouHid_ButtonDownFlags[] = 
+static USHORT MouHid_ButtonUpFlags[] = 
 {
     MOUSE_LEFT_BUTTON_DOWN,
     MOUSE_RIGHT_BUTTON_DOWN,
@@ -19,7 +19,7 @@ static USHORT MouHid_ButtonDownFlags[] =
     MOUSE_BUTTON_5_DOWN
 };
 
-static USHORT MouHid_ButtonUpFlags[] = 
+static USHORT MouHid_ButtonDownFlags[] = 
 {
     MOUSE_LEFT_BUTTON_UP,
     MOUSE_RIGHT_BUTTON_UP,
@@ -41,12 +41,12 @@ MouHid_GetButtonMove(
     *LastY = 0;
 
     /* get scaled usage value x */
-    Status =  HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_X, (PLONG)&LastX, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+    Status =  HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_X, (PLONG)LastX, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
     /* FIXME handle error */
     ASSERT(Status == HIDP_STATUS_SUCCESS);
 
     /* get scaled usage value y */
-    Status =  HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_Y, (PLONG)&LastY, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+    Status =  HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_Y, (PLONG)LastY, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
     /* FIXME handle error */
     ASSERT(Status == HIDP_STATUS_SUCCESS);
 
@@ -225,7 +225,7 @@ MouHid_ReadCompletion(
         }
     }
 
-    DPRINT1("[MOUHID] LastX %lu LastY %lu Flags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
+    DPRINT1("[MOUHID] LastX %ld LastY %ld Flags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
 
     /* dispatch mouse action */
     MouHid_DispatchInputData(DeviceExtension, &MouseInputData);
@@ -411,6 +411,8 @@ MouHid_DeviceControl(
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT1("[MOUHID] DeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -750,6 +752,7 @@ MouHid_Pnp(
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DPRINT1("[MOUHID] IRP_MJ_PNP Request: %x\n", IoStack->MinorFunction);
 
     if (IoStack->MinorFunction == IRP_MN_STOP_DEVICE || IoStack->MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE || IoStack->MinorFunction == IRP_MN_QUERY_STOP_DEVICE || IoStack->MinorFunction == IRP_MN_CANCEL_STOP_DEVICE)
     {
@@ -896,7 +899,6 @@ MouHid_Unload(
     IN PDRIVER_OBJECT DriverObject)
 {
     UNIMPLEMENTED
-    ASSERT(FALSE);
 }
 
 
