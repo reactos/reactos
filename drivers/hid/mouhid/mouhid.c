@@ -29,6 +29,35 @@ static USHORT MouHid_ButtonUpFlags[] =
 };
 
 VOID
+MouHid_GetButtonMove(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PLONG LastX,
+    OUT PLONG LastY)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* init result */
+    *LastX = 0;
+    *LastY = 0;
+
+    /* get scaled usage value x */
+    Status =  HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_X, (PLONG)&LastX, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+    /* FIXME handle error */
+    ASSERT(Status == HIDP_STATUS_SUCCESS);
+
+    /* get scaled usage value y */
+    Status =  HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_Y, (PLONG)&LastY, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+    /* FIXME handle error */
+    ASSERT(Status == HIDP_STATUS_SUCCESS);
+
+}
+
+
+VOID
 MouHid_GetButtonFlags(
     IN PDEVICE_OBJECT DeviceObject,
     OUT PUSHORT ButtonFlags)
@@ -146,6 +175,9 @@ MouHid_ReadCompletion(
 {
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
     USHORT ButtonFlags;
+    LONG UsageValue;
+    NTSTATUS Status;
+    LONG LastX, LastY;
     MOUSE_INPUT_DATA MouseInputData;
 
     /* get device extension */
@@ -154,14 +186,34 @@ MouHid_ReadCompletion(
     /* get mouse change flags */
     MouHid_GetButtonFlags(DeviceObject, &ButtonFlags);
 
-    /* FIXME detect mouse move change */
-    /* FIXME detect mouse wheel change */
+    /* get mouse change */
+    MouHid_GetButtonMove(DeviceObject, &LastX, &LastY);
 
     /* init input data */
     RtlZeroMemory(&MouseInputData, sizeof(MOUSE_INPUT_DATA));
 
     /* init input data */
     MouseInputData.ButtonFlags = ButtonFlags;
+    MouseInputData.LastX = LastX;
+    MouseInputData.LastY = LastY;
+
+    /* detect mouse wheel change */
+    if (DeviceExtension->MouseIdentifier == WHEELMOUSE_HID_HARDWARE)
+    {
+        /* get usage */
+        UsageValue = 0;
+        Status = HidP_GetScaledUsageValue(HidP_Input, HID_USAGE_PAGE_GENERIC, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_GENERIC_WHEEL, &UsageValue, DeviceExtension->PreparsedData, DeviceExtension->Report, DeviceExtension->ReportLength);
+        if (Status == HIDP_STATUS_SUCCESS)
+        {
+            /* store wheel status */
+            MouseInputData.ButtonFlags |= MOUSE_WHEEL;
+            MouseInputData.ButtonData = (USHORT)UsageValue; /* FIXME */
+        }
+        else
+        {
+            DPRINT1("[MOUHID] failed to get wheel status with %x\n", Status);
+        }
+    }
 
     /* dispatch mouse action */
     MouHid_DispatchInputData(DeviceObject, &MouseInputData);
