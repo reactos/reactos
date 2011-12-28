@@ -8,6 +8,7 @@
 #include <debug.h>
 #include <ntddmou.h>
 #include <kbdmou.h>
+#include <debug.h>
 
 
 typedef struct
@@ -25,7 +26,7 @@ typedef struct
     //
     // event 
     //
-    KEVENT Event;
+    KEVENT ReadCompletionEvent;
 
     //
     // device object for class callback
@@ -97,9 +98,19 @@ typedef struct
     //
     PFILE_OBJECT FileObject;
 
+    //
+    // report read is active
+    //
+    UCHAR ReadReportActive;
+
+    //
+    // stop reading flag
+    //
+    UCHAR StopReadReport;
+
 }MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
 
 
 NTSTATUS
 MouHid_InitiateRead(
-    IN PDEVICE_OBJECT DeviceObject);
+    IN PMOUHID_DEVICE_EXTENSION DeviceExtension);

@@ -30,15 +30,11 @@ static USHORT MouHid_ButtonUpFlags[] =
 
 VOID
 MouHid_GetButtonMove(
-    IN PDEVICE_OBJECT DeviceObject,
+    IN PMOUHID_DEVICE_EXTENSION DeviceExtension,
     OUT PLONG LastX,
     OUT PLONG LastY)
 {
-    PMOUHID_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
-
-    /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* init result */
     *LastX = 0;
@@ -59,18 +55,14 @@ MouHid_GetButtonMove(
 
 VOID
 MouHid_GetButtonFlags(
-    IN PDEVICE_OBJECT DeviceObject,
+    IN PMOUHID_DEVICE_EXTENSION DeviceExtension,
     OUT PUSHORT ButtonFlags)
 {
-    PMOUHID_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     USAGE Usage;
     ULONG Index;
     PUSAGE TempList;
     ULONG CurrentUsageListLength;
-
-    /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* init flags */
     *ButtonFlags = 0;
@@ -142,15 +134,14 @@ MouHid_GetButtonFlags(
 
 VOID
 MouHid_DispatchInputData(
-    IN PDEVICE_OBJECT DeviceObject,
+    IN PMOUHID_DEVICE_EXTENSION DeviceExtension,
     IN PMOUSE_INPUT_DATA InputData)
 {
-    PMOUHID_DEVICE_EXTENSION DeviceExtension;
     KIRQL OldIrql;
     ULONG InputDataConsumed;
 
-    /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    if (!DeviceExtension->ClassService)
+        return;
 
     /* sanity check */
     ASSERT(DeviceExtension->ClassService);
@@ -181,13 +172,32 @@ MouHid_ReadCompletion(
     MOUSE_INPUT_DATA MouseInputData;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)Context;
+
+    if (Irp->IoStatus.Status == STATUS_PRIVILEGE_NOT_HELD ||
+        Irp->IoStatus.Status == STATUS_DEVICE_NOT_CONNECTED ||
+        Irp->IoStatus.Status == STATUS_CANCELLED ||
+        DeviceExtension->StopReadReport)
+    {
+        /* failed to read or should be stopped*/
+        DPRINT1("[MOUHID] ReadCompletion terminating read Status %x\n", Irp->IoStatus.Status);
+
+        /* report no longer active */
+        DeviceExtension->ReadReportActive = FALSE;
+
+        /* request stopping of the report cycle */
+        DeviceExtension->StopReadReport = FALSE;
+
+        /* signal completion event */
+        KeSetEvent(&DeviceExtension->ReadCompletionEvent, 0, 0);
+        return STATUS_MORE_PROCESSING_REQUIRED;
+    }
 
     /* get mouse change flags */
-    MouHid_GetButtonFlags(DeviceObject, &ButtonFlags);
+    MouHid_GetButtonFlags(DeviceExtension, &ButtonFlags);
 
     /* get mouse change */
-    MouHid_GetButtonMove(DeviceObject, &LastX, &LastY);
+    MouHid_GetButtonMove(DeviceExtension, &LastX, &LastY);
 
     /* init input data */
     RtlZeroMemory(&MouseInputData, sizeof(MOUSE_INPUT_DATA));
@@ -215,11 +225,13 @@ MouHid_ReadCompletion(
         }
     }
 
+    DPRINT1("[MOUHID] LastX %lu LastY %lu Flags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
+
     /* dispatch mouse action */
-    MouHid_DispatchInputData(DeviceObject, &MouseInputData);
+    MouHid_DispatchInputData(DeviceExtension, &MouseInputData);
 
     /* re-init read */
-    MouHid_InitiateRead(DeviceObject);
+    MouHid_InitiateRead(DeviceExtension);
 
     /* stop completion */
     return STATUS_MORE_PROCESSING_REQUIRED;
@@ -227,14 +239,10 @@ MouHid_ReadCompletion(
 
 NTSTATUS
 MouHid_InitiateRead(
-    IN PDEVICE_OBJECT DeviceObject)
+    IN PMOUHID_DEVICE_EXTENSION DeviceExtension)
 {
-    PMOUHID_DEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
-
-    /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* re-use irp */
     IoReuseIrp(DeviceExtension->Irp, STATUS_SUCCESS);
@@ -254,6 +262,9 @@ MouHid_InitiateRead(
 
     /* set completion routine */
     IoSetCompletionRoutine(DeviceExtension->Irp, MouHid_ReadCompletion, DeviceExtension, TRUE, TRUE, TRUE);
+
+    /* read is active */
+    DeviceExtension->ReadReportActive = TRUE;
 
     /* start the read */
     Status = IoCallDriver(DeviceExtension->NextDeviceObject, DeviceExtension->Irp);
@@ -323,18 +334,23 @@ MouHid_Create(
     if (DeviceExtension->FileObject == NULL)
     {
          /* did the caller specify correct attributes */
-         if (IoStack->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY)
+         ASSERT(IoStack->Parameters.Create.SecurityContext);
+         if (IoStack->Parameters.Create.SecurityContext->DesiredAccess)
          {
              /* store file object */
              DeviceExtension->FileObject = IoStack->FileObject;
 
+             /* reset event */
+             KeResetEvent(&DeviceExtension->ReadCompletionEvent);
+
              /* initiating read */
-             Status = MouHid_InitiateRead(DeviceObject);
-         }
-         else
-         {
-             /* wrong mode */
-             DPRINT1("MOUHID: wrong attributes: %x\n", IoStack->Parameters.Create.FileAttributes);
+             Status = MouHid_InitiateRead(DeviceExtension);
+             DPRINT1("[MOUHID] MouHid_InitiateRead: status %x\n", Status);
+             if (Status == STATUS_PENDING)
+             {
+                 /* report irp is pending */
+                 Status = STATUS_SUCCESS;
+             }
          }
     }
 
@@ -356,7 +372,21 @@ MouHid_Close(
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    /* FIXME: cancel irp */
+    DPRINT("[MOUHID] IRP_MJ_CLOSE ReadReportActive %x\n", DeviceExtension->ReadReportActive);
+
+    if (DeviceExtension->ReadReportActive)
+    {
+        /* request stopping of the report cycle */
+        DeviceExtension->StopReadReport = TRUE;
+
+        /* wait until the reports have been read */
+        KeWaitForSingleObject(&DeviceExtension->ReadCompletionEvent, Executive, KernelMode, FALSE, NULL);
+
+        /* cancel irp */
+        IoCancelIrp(DeviceExtension->Irp);
+    }
+
+    DPRINT("[MOUHID] IRP_MJ_CLOSE ReadReportActive %x\n", DeviceExtension->ReadReportActive);
 
     /* remove file object */
     DeviceExtension->FileObject = NULL;
@@ -572,22 +602,25 @@ MouHid_StartDevice(
     if (!NT_SUCCESS(Status))
     {
         /* failed to query collection information */
+        DPRINT1("[MOUHID] failed to obtain collection information with %x\n", Status);
         return Status;
     }
 
     /* lets allocate space for preparsed data */
     PreparsedData = ExAllocatePool(NonPagedPool, Information.DescriptorSize);
-    if (PreparsedData)
+    if (!PreparsedData)
     {
         /* no memory */
+        DPRINT1("[MOUHID] no memory size %u\n", Information.DescriptorSize);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* now obtain the preparsed data */
-    Status = MouHid_SubmitRequest(DeviceObject, IOCTL_HID_GET_DRIVER_CONFIG, 0, NULL, Information.DescriptorSize, PreparsedData);
+    Status = MouHid_SubmitRequest(DeviceObject, IOCTL_HID_GET_COLLECTION_DESCRIPTOR, 0, NULL, Information.DescriptorSize, PreparsedData);
     if (!NT_SUCCESS(Status))
     {
         /* failed to get preparsed data */
+        DPRINT1("[MOUHID] failed to obtain collection information with %x\n", Status);
         ExFreePool(PreparsedData);
         return Status;
     }
@@ -597,9 +630,12 @@ MouHid_StartDevice(
     if (!NT_SUCCESS(Status))
     {
         /* failed to get capabilities */
+        DPRINT1("[MOUHID] failed to obtain caps with %x\n", Status);
         ExFreePool(PreparsedData);
         return Status;
     }
+
+    DPRINT1("[MOUHID] Usage %x UsagePage %x\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
 
     /* verify capabilities */
     if (Capabilities.Usage != HID_USAGE_GENERIC_POINTER && Capabilities.Usage != HID_USAGE_GENERIC_MOUSE || Capabilities.UsagePage != HID_USAGE_PAGE_GENERIC)
@@ -615,12 +651,17 @@ MouHid_StartDevice(
     DeviceExtension->Report = (PUCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
     ASSERT(DeviceExtension->Report);
     RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
+
+    /* build mdl */
     DeviceExtension->ReportMDL = IoAllocateMdl(DeviceExtension->Report, DeviceExtension->ReportLength, FALSE, FALSE, NULL);
     ASSERT(DeviceExtension->ReportMDL);
 
+    /* init mdl */
+    MmBuildMdlForNonPagedPool(DeviceExtension->ReportMDL);
 
     /* get max number of buttons */
     Buttons = HidP_MaxUsageListLength(HidP_Input, HID_USAGE_PAGE_BUTTON, PreparsedData);
+    DPRINT1("[MOUHID] Buttons %lu\n", Buttons);
     ASSERT(Buttons > 0);
 
     /* now allocate an array for those buttons */
@@ -662,6 +703,7 @@ MouHid_StartDevice(
         /* mouse has wheel support */
         DeviceExtension->MouseIdentifier = WHEELMOUSE_HID_HARDWARE;
         DeviceExtension->WheelUsagePage = ValueCaps.UsagePage;
+        DPRINT1("[MOUHID] mouse wheel support detected\n", Status);
     }
     else
     {
@@ -673,6 +715,7 @@ MouHid_StartDevice(
             /* wheel support */
             DeviceExtension->MouseIdentifier = WHEELMOUSE_HID_HARDWARE;
             DeviceExtension->WheelUsagePage = ValueCaps.UsagePage;
+            DPRINT1("[MOUHID] mouse wheel support detected with z-axis\n", Status);
         }
     }
 
@@ -827,7 +870,7 @@ MouHid_AddDevice(
     DeviceExtension->MouseIdentifier = MOUSE_HID_HARDWARE;
     DeviceExtension->WheelUsagePage = 0;
     DeviceExtension->NextDeviceObject = NextDeviceObject;
-    KeInitializeEvent(&DeviceExtension->Event, NotificationEvent, FALSE);
+    KeInitializeEvent(&DeviceExtension->ReadCompletionEvent, NotificationEvent, FALSE);
     DeviceExtension->Irp = IoAllocateIrp(NextDeviceObject->StackSize, FALSE);
 
     /* FIXME handle allocation error */
