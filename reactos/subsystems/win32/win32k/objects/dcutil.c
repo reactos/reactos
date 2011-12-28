@@ -20,7 +20,7 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
     oldColor = pdcattr->crBackgroundClr;
     pdcattr->crBackgroundClr = color;
     pdcattr->ulBackgroundClr = (ULONG)color;
-    pdcattr->ulDirty_ &= ~(DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL); // Clear Flag if set.
+    pdcattr->ulDirty_ |= DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL; // Clear Flag if set.
     hBrush = pdcattr->hbrush;
     DC_UnlockDc(dc);
     NtGdiSelectBrush(hDC, hBrush);
