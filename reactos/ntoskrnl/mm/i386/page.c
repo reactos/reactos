@@ -305,7 +305,6 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
             }
             InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
-            RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
             return (PULONG)MiAddressToPte(Address);
         }
         InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
@@ -372,6 +371,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
+
     /*
      * Atomically disable the present bit and get the old value.
      */
@@ -380,12 +380,9 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_PRESENT, Pte));
 
-    if(Pte & PA_PRESENT)
-        MiFlushTlb(Pt, Address);
-    else
-        MmUnmapPageTable(Pt);
+    MiFlushTlb(Pt, Address);
 
-    WasValid = (PAGE_MASK(Pte) != 0);
+    WasValid = (Pte & PA_PRESENT);
     if (!WasValid)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -457,7 +454,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
      */
     Pte = InterlockedExchangePte(Pt, 0);
 
-    WasValid = (PAGE_MASK(Pte) != 0);
+    WasValid = (Pte & PA_PRESENT);
     if (WasValid)
     {
         /* Flush the TLB since we transitioned this PTE
@@ -532,7 +529,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
      * are invalid translations, so the processor won't cache them */
     MmUnmapPageTable(Pt);
 
-    if(!(Pte & 0x800))
+    if (Pte & PA_PRESENT)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
@@ -580,7 +577,6 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
     }
 
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -591,7 +587,11 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_DIRTY, Pte));
 
-    if (Pte & PA_DIRTY)
+    if (!(Pte & PA_PRESENT))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    else if (Pte & PA_DIRTY)
     {
         MiFlushTlb(Pt, Address);
     }
@@ -624,7 +624,12 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     {
         Pte = *Pt;
     } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_DIRTY, Pte));
-    if (!(Pte & PA_DIRTY))
+
+    if (!(Pte & PA_PRESENT))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    else if (!(Pte & PA_DIRTY))
     {
         MiFlushTlb(Pt, Address);
     }
@@ -676,7 +681,7 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     ULONG Entry;
     Entry = MmGetPageEntryForProcess(Process, Address);
-    return !(Entry & PA_PRESENT) && (Entry & 0x800) && Entry != 0;
+    return !(Entry & PA_PRESENT) && Entry != 0;
 }
 
 NTSTATUS
@@ -710,7 +715,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
     Pte = InterlockedExchangePte(Pt, SwapEntry << 1);
-    if(PAGE_MASK(Pte))
+    if (Pte != 0)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
@@ -814,8 +819,9 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         oldPdeOffset = PdeOffset;
 
         Pte = InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
+
         /* There should not be anything valid here */
-        if (PAGE_MASK(Pte) != 0)
+        if (Pte != 0)
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
@@ -928,7 +934,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     }
     Pte = InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
 
-    if(!PAGE_MASK(Pte))
+    if (!(Pte & PA_PRESENT))
     {
         DPRINT1("Invalid Pte %lx\n", Pte);
         KeBugCheck(MEMORY_MANAGEMENT);
