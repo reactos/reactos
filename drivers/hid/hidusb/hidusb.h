@@ -19,11 +19,6 @@ typedef struct
     KEVENT Event;
 
     //
-    // list for pending requests
-    //
-    LIST_ENTRY PendingRequests;
-
-    //
     // device descriptor
     //
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
@@ -49,3 +44,18 @@ typedef struct
     PHID_DESCRIPTOR HidDescriptor;
 }HID_USB_DEVICE_EXTENSION, *PHID_USB_DEVICE_EXTENSION;
 
+NTSTATUS
+Hid_GetDescriptor(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN USHORT UrbFunction,
+    IN USHORT UrbLength,
+    IN OUT PVOID *UrbBuffer,
+    IN OUT PULONG UrbBufferLength,
+    IN UCHAR DescriptorType, 
+    IN UCHAR Index,
+    IN USHORT LanguageIndex);
+
+NTSTATUS
+Hid_DispatchUrb(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PURB Urb);
