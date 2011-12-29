@@ -12,6 +12,7 @@
 
 static USHORT MouHid_ButtonUpFlags[] = 
 {
+    0xFF, /* unused */
     MOUSE_LEFT_BUTTON_DOWN,
     MOUSE_RIGHT_BUTTON_DOWN,
     MOUSE_MIDDLE_BUTTON_DOWN,
@@ -21,6 +22,7 @@ static USHORT MouHid_ButtonUpFlags[] =
 
 static USHORT MouHid_ButtonDownFlags[] = 
 {
+    0xFF, /* unused */
     MOUSE_LEFT_BUTTON_UP,
     MOUSE_RIGHT_BUTTON_UP,
     MOUSE_MIDDLE_BUTTON_UP,
@@ -400,7 +402,7 @@ MouHid_Close(
 
 NTSTATUS
 NTAPI
-MouHid_DeviceControl(
+MouHid_InternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -412,7 +414,7 @@ MouHid_DeviceControl(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("[MOUHID] DeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+    DPRINT1("[MOUHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -424,6 +426,7 @@ MouHid_DeviceControl(
          if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUSE_ATTRIBUTES))
          {
              /* invalid request */
+             DPRINT1("[MOUHID] IOCTL_MOUSE_QUERY_ATTRIBUTES Buffer too small\n");
              Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
              IoCompleteRequest(Irp, IO_NO_INCREMENT);
              return STATUS_BUFFER_TOO_SMALL;
@@ -443,6 +446,11 @@ MouHid_DeviceControl(
 
          /* queue length */
          Attributes->InputDataQueueLength = 2;
+
+         DPRINT1("[MOUHID] MouseIdentifier %x\n", Attributes->MouseIdentifier);
+         DPRINT1("[MOUHID] NumberOfButtons %x\n", Attributes->NumberOfButtons);
+         DPRINT1("[MOUHID] SampleRate %x\n", Attributes->SampleRate);
+         DPRINT1("[MOUHID] InputDataQueueLength %x\n", Attributes->InputDataQueueLength);
 
          /* complete request */
          Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
@@ -504,6 +512,7 @@ MouHid_DeviceControl(
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
+    DPRINT1("[MOUHID] Unknown DeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
     /* unknown request not supported */
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -512,7 +521,7 @@ MouHid_DeviceControl(
 
 NTSTATUS
 NTAPI
-MouHid_InternalDeviceControl(
+MouHid_DeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
@@ -535,7 +544,6 @@ MouHid_Power(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
-    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -738,6 +746,32 @@ MouHid_StartDeviceCompletion(
 
 NTSTATUS
 NTAPI
+MouHid_Flush(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* skip current stack location */
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    /* change request to hid flush queue request */
+    IoStack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_FLUSH_QUEUE;
+
+    /* call device */
+    return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+}
+
+NTSTATUS
+NTAPI
 MouHid_Pnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
@@ -915,6 +949,7 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = MouHid_AddDevice;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = MouHid_Create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = MouHid_Close;
+    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = MouHid_Flush;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = MouHid_DeviceControl;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = MouHid_InternalDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_POWER] = MouHid_Power;
