@@ -216,7 +216,7 @@ GetProfiles(HWND hwndDlg)
                                         pProfileData->dwProfileCount * sizeof(PROFILE));
     if (pProfileData->pProfiles == NULL)
     {
-        HeapFree(GetProcessHeap(), 0, pProfileData);
+        HeapFree(pProfileData, 0, GetProcessHeap());
         return FALSE;
     }
 
