@@ -207,7 +207,10 @@ GetProfiles(HWND hwndDlg)
         return FALSE;
 
     if (!GetProfileCount(&pProfileData->dwProfileCount))
+    {
+        HeapFree(pProfileData, 0, GetProcessHeap());
         return FALSE;
+    }
 
     pProfileData->pProfiles = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                         pProfileData->dwProfileCount * sizeof(PROFILE));
