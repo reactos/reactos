@@ -620,7 +620,7 @@ CUSBQueue::TransferDescriptorCompletionCallback(
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, PreviousEndpointDescriptor;
     NTSTATUS Status;
 
-    DPRINT1("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
+    DPRINT("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
 
     //
     // find transfer descriptor in control list

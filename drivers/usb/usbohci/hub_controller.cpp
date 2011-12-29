@@ -1634,6 +1634,12 @@ CHubController::HandleClassInterface(
     DPRINT1("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
     DPRINT1("Index %x\n", Urb->UrbControlVendorClassRequest.Index);
 
+    if (Urb->UrbControlVendorClassRequest.TransferBufferLength == 0)
+    {
+        DPRINT1("Invalid request length\n");
+        return STATUS_SUCCESS;
+    }
+
     //
     // initialize setup packet
     //
