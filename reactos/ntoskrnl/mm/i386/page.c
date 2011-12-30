@@ -529,7 +529,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
      * are invalid translations, so the processor won't cache them */
     MmUnmapPageTable(Pt);
 
-    if (Pte & PA_PRESENT)
+    if ((Pte & PA_PRESENT) || !(Pte & 0x800))
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
@@ -681,7 +681,7 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     ULONG Entry;
     Entry = MmGetPageEntryForProcess(Process, Address);
-    return !(Entry & PA_PRESENT) && Entry != 0;
+    return !(Entry & PA_PRESENT) && (Entry & 0x800);
 }
 
 NTSTATUS
