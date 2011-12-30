@@ -2,6 +2,7 @@
 spec2def(hidclass.sys hidclass.spec)
 
 list(APPEND SOURCE
+    fdo.c
     hidclass.c
     hidclass.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hidclass.def)

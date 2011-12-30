@@ -1,0 +1,472 @@
+/*
+ * PROJECT:     ReactOS Universal Serial Bus Human Interface Device Driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/hid/hidclass/fdo.c
+ * PURPOSE:     HID Class Driver
+ * PROGRAMMERS:
+ *              Michael Martin (michael.martin@reactos.org)
+ *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ */
+#include "precomp.h"
+
+NTSTATUS
+NTAPI
+HidClassFDO_QueryCapabilitiesCompletionRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    //
+    // set event
+    //
+    KeSetEvent((PRKEVENT)Context, 0, FALSE);
+
+    //
+    // completion is done in the HidClassFDO_QueryCapabilities routine
+    //
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+HidClassFDO_QueryCapabilities(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PDEVICE_CAPABILITIES Capabilities)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // init event
+    //
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    //
+    // now allocte the irp
+    //
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // get next stack location
+    //
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    //
+    // init stack location
+    //
+    IoStack->MajorFunction = IRP_MJ_PNP;
+    IoStack->MinorFunction = IRP_MN_QUERY_CAPABILITIES;
+    IoStack->Parameters.DeviceCapabilities.Capabilities = Capabilities;
+
+    //
+    // set completion routine
+    //
+    IoSetCompletionRoutine(Irp, HidClassFDO_QueryCapabilitiesCompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
+
+    //
+    // init capabilities
+    //
+    RtlZeroMemory(Capabilities, sizeof(DEVICE_CAPABILITIES));
+    Capabilities->Size = sizeof(DEVICE_CAPABILITIES);
+    Capabilities->Version = 1; // FIXME hardcoded constant
+    Capabilities->Address = MAXULONG;
+    Capabilities->UINumber = MAXULONG;
+
+    //
+    // pnp irps have default completion code
+    //
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+
+    //
+    // call lower  device
+    //
+    Status = IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        //
+        // wait for completion
+        //
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+    }
+
+    //
+    // get status
+    //
+    Status = Irp->IoStatus.Status;
+
+    //
+    // complete request
+    //
+    IoFreeIrp(Irp);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+HidClassFDO_DispatchRequestSynchronousCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    //
+    // signal event
+    //
+    KeSetEvent((PRKEVENT)Context, 0, FALSE);
+
+    //
+    // done
+    //
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
+NTSTATUS
+HidClassFDO_DispatchRequestSynchronous(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    KEVENT Event;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    //
+    // init event
+    //
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // set completion routine
+    //
+    IoSetCompletionRoutine(Irp, HidClassFDO_DispatchRequestSynchronousCompletion, &Event, TRUE, TRUE, TRUE);
+
+    ASSERT(Irp->CurrentLocation > 0);
+    //
+    // create stack location
+    //
+    IoSetNextIrpStackLocation(Irp);
+
+    //
+    // get next stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // store device object
+    //
+    IoStack->DeviceObject = DeviceObject;
+
+
+
+    //
+    // call driver
+    //
+    DPRINT1("IoStack MajorFunction %x MinorFunction %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
+    Status = FDODeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction](DeviceObject, Irp);
+
+    //
+    // wait for the request to finish
+    //
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+        //
+        // update status
+        //
+        Status = Irp->IoStatus.Status;
+    }
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
+HidClassFDO_GetDescriptors(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    PIRP Irp;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // lets allocate irp
+    //
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // get stack location
+    //
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    //
+    // init stack location
+    //
+    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_GET_DEVICE_DESCRIPTOR;
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = sizeof(HID_DESCRIPTOR);
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = 0;
+    IoStack->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
+    Irp->UserBuffer = &FDODeviceExtension->HidDescriptor;
+
+    //
+    // send request
+    //
+    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get device descriptor
+        //
+        DPRINT1("[HIDCLASS] IOCTL_HID_GET_DEVICE_DESCRIPTOR failed with %x\n", Status);
+        IoFreeIrp(Irp);
+        return Status;
+    }
+
+    //
+    // lets get device attributes
+    //
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_GET_DEVICE_ATTRIBUTES;
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = sizeof(HID_DEVICE_ATTRIBUTES);
+    Irp->UserBuffer = &FDODeviceExtension->Attributes;
+
+    //
+    // send request
+    //
+    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get device descriptor
+        //
+        DPRINT1("[HIDCLASS] IOCTL_HID_GET_DEVICE_ATTRIBUTES failed with %x\n", Status);
+        IoFreeIrp(Irp);
+        return Status;
+    }
+
+    //
+    // sanity checks
+    //
+    ASSERT(FDODeviceExtension->HidDescriptor.bLength == sizeof(HID_DESCRIPTOR));
+    ASSERT(FDODeviceExtension->HidDescriptor.bNumDescriptors > 0);
+    ASSERT(FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength > 0);
+    ASSERT(FDODeviceExtension->HidDescriptor.DescriptorList[0].bReportType == HID_REPORT_DESCRIPTOR_TYPE);
+
+
+    //
+    // now allocate space for the report descriptor
+    //
+    FDODeviceExtension->ReportDescriptor = (PUCHAR)ExAllocatePool(NonPagedPool, FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength);
+    if (!FDODeviceExtension->ReportDescriptor)
+    {
+        //
+        // not enough memory
+        //
+        IoFreeIrp(Irp);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // init stack location
+    //
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_GET_REPORT_DESCRIPTOR;
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength;
+    Irp->UserBuffer = FDODeviceExtension->ReportDescriptor;
+
+    //
+    // send request
+    //
+    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get device descriptor
+        //
+        DPRINT1("[HIDCLASS] IOCTL_HID_GET_REPORT_DESCRIPTOR failed with %x\n", Status);
+        IoFreeIrp(Irp);
+        return Status;
+    }
+
+    //
+    // completed successfully
+    //
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+HidClassFDO_StartDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // query capabilities
+    //
+    Status = HidClassFDO_QueryCapabilities(DeviceObject, &FDODeviceExtension->Capabilities);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // lets start the lower device too
+    //
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+    Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // lets get the descriptors
+    //
+    Status = HidClassFDO_GetDescriptors(DeviceObject);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // now get the the collection description
+    //
+    Status = HidP_GetCollectionDescription(FDODeviceExtension->ReportDescriptor, FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength, NonPagedPool, &FDODeviceExtension->DeviceDescription);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // complete request
+    //
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+HidClassFDO_RemoveDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+HidClassFDO_DeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+HidClassFDO_PnP(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // get current irp stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    switch(IoStack->MinorFunction)
+    {
+        case IRP_MN_START_DEVICE:
+        {
+             return HidClassFDO_StartDevice(DeviceObject, Irp);
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        {
+             return HidClassFDO_RemoveDevice(DeviceObject, Irp);
+        }
+        case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // set status to succes
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward to lower device
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+        }
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        {
+            //
+            // set status to succes
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward to lower device
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+        }
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+        {
+             return HidClassFDO_DeviceRelations(DeviceObject, Irp);
+        }
+        default:
+        {
+            //
+            // dispatch to lower device
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+        }
+    }
+}
