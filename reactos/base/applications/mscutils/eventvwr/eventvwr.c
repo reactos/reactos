@@ -555,12 +555,12 @@ QueryEventMessages(LPWSTR lpMachineName,
     /* If we have at least 1000 records show the waiting dialog */
     if (dwTotalRecords > 1000)
     {
-        CreateThread(NULL,
-                     0,
-                     ShowStatusMessageThread,
-                     (LPVOID)&hwndDlg,
-                     0,
-                     NULL);
+        CloseHandle(CreateThread(NULL,
+                                 0,
+                                 ShowStatusMessageThread,
+                                 (LPVOID)&hwndDlg,
+                                 0,
+                                 NULL));
     }
 
     while (dwCurrentRecord < dwTotalRecords)
