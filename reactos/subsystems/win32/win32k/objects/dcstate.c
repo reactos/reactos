@@ -24,7 +24,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     /* The VisRectRegion field needs to be set to a valid state */
 
     /* Mark some fields as dirty */
-    pdcDst->pdcattr->ulDirty_ |= 0x0012001f; // Note: Use if, To is FALSE....
+    pdcDst->pdcattr->ulDirty_ |= (DIRTY_FILL|DIRTY_LINE|DIRTY_TEXT|DIRTY_BACKGROUND|DIRTY_CHARSET|DC_ICM_NOT_CALIBRATED|DC_ICM_NOT_SET); // Note: Use if, To is FALSE....
 
     /* Copy DC level */
     pdcDst->dclevel.pColorSpace     = pdcSrc->dclevel.pColorSpace;
