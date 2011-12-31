@@ -145,7 +145,7 @@ HidClassFDO_DispatchRequestSynchronous(
     IN PIRP Irp)
 {
     KEVENT Event;
-    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
 
@@ -157,8 +157,7 @@ HidClassFDO_DispatchRequestSynchronous(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
-    ASSERT(FDODeviceExtension->Common.IsFDO);
+    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // set completion routine
@@ -187,7 +186,7 @@ HidClassFDO_DispatchRequestSynchronous(
     // call driver
     //
     DPRINT1("IoStack MajorFunction %x MinorFunction %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
-    Status = FDODeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction](DeviceObject, Irp);
+    Status = CommonDeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction](DeviceObject, Irp);
 
     //
     // wait for the request to finish
@@ -393,13 +392,132 @@ HidClassFDO_RemoveDevice(
 }
 
 NTSTATUS
+HidClassFDO_CopyDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PDEVICE_RELATIONS *OutRelations)
+{
+    PDEVICE_RELATIONS DeviceRelations;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    ULONG Index;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // allocate result
+    //
+    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations.Count-1) * sizeof(PDEVICE_OBJECT));
+    if (!DeviceRelations)
+    {
+        //
+        // no memory
+        //
+        *OutRelations = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // copy device objects
+    //
+    for(Index = 0; Index < FDODeviceExtension->DeviceRelations.Count; Index++)
+    {
+        //
+        // reference pdo
+        //
+        ObReferenceObject(FDODeviceExtension->DeviceRelations.Objects[Index]);
+
+        //
+        // store object
+        //
+        DeviceRelations->Objects[Index] = FDODeviceExtension->DeviceRelations.Objects[Index];
+    }
+
+    //
+    // set object count
+    //
+    DeviceRelations->Count = FDODeviceExtension->DeviceRelations.Count;
+
+
+    //
+    // store result
+    //
+    *OutRelations = DeviceRelations;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 HidClassFDO_DeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    PDEVICE_RELATIONS DeviceRelations;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // get current irp stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // check relations type
+    //
+    if (IoStack->Parameters.QueryDeviceRelations.Type != BusRelations)
+    {
+        //
+        // only bus relations are handled
+        //
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject, Irp);
+    }
+
+    if (FDODeviceExtension->DeviceRelations.Count == 0)
+    {
+        //
+        // time to create the pdos
+        //
+        Status = HidClassPDO_CreatePDO(DeviceObject);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed
+            //
+            DPRINT1("[HIDCLASS] HidClassPDO_CreatePDO failed with %x\n", Status);
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
+        //
+        // sanity check
+        //
+        ASSERT(FDODeviceExtension->DeviceRelations.Count > 0);
+    }
+
+    //
+    // now copy device relations
+    //
+    Status = HidClassFDO_CopyDeviceRelations(DeviceObject, &DeviceRelations);
+    //
+    // store result
+    //
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+
+    //
+    // complete request
+    //
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
 
 NTSTATUS

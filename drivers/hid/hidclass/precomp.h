@@ -4,7 +4,11 @@
 #include <ntddk.h>
 #include <hidport.h>
 #include <hidpddi.h>
+#include <stdio.h>
+#include <initguid.h>
+#include <wdmguid.h>
 #include <debug.h>
+
 
 
 typedef struct
@@ -21,11 +25,22 @@ typedef struct
 
 typedef struct
 {
+    //
+    // hid device extension
+    //
     HID_DEVICE_EXTENSION HidDeviceExtension;
+
+    //
+    // if it is a pdo
+    //
     BOOLEAN IsFDO;
+
+    //
+    // driver extension
+    //
+    PHIDCLASS_DRIVER_EXTENSION DriverExtension;
+
 }HIDCLASS_COMMON_DEVICE_EXTENSION, *PHIDCLASS_COMMON_DEVICE_EXTENSION;
-
-
 
 typedef struct
 {
@@ -33,11 +48,6 @@ typedef struct
     // parts shared by fdo and pdo
     //
     HIDCLASS_COMMON_DEVICE_EXTENSION Common;
-
-    //
-    // driver extension
-    //
-    PHIDCLASS_DRIVER_EXTENSION DriverExtension;
 
     //
     // device capabilities
@@ -64,7 +74,41 @@ typedef struct
     //
     HIDP_DEVICE_DESC DeviceDescription;
 
+    //
+    // device relations
+    //
+    DEVICE_RELATIONS DeviceRelations;
+
 }HIDCLASS_FDO_EXTENSION, *PHIDCLASS_FDO_EXTENSION;
+
+typedef struct
+{
+    //
+    // parts shared by fdo and pdo
+    //
+    HIDCLASS_COMMON_DEVICE_EXTENSION Common;
+
+    //
+    // device descriptor
+    //
+    HID_DEVICE_ATTRIBUTES Attributes;
+
+    //
+    // device capabilities
+    //
+    DEVICE_CAPABILITIES Capabilities;
+
+    //
+    // device description
+    //
+    HIDP_DEVICE_DESC DeviceDescription;
+
+    //
+    // collection index
+    //
+    ULONG CollectionIndex;
+
+}HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
 
 /* fdo.c */
@@ -73,3 +117,20 @@ HidClassFDO_PnP(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
+NTSTATUS
+HidClassFDO_DispatchRequestSynchronous(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+/* pdo.c */
+NTSTATUS
+HidClassPDO_CreatePDO(
+    IN PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+HidClassPDO_PnP(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+
+/* eof */

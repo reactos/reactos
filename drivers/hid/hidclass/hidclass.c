@@ -83,7 +83,7 @@ HidClassAddDevice(
     FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = (PVOID)((ULONG_PTR)FDODeviceExtension + sizeof(HIDCLASS_FDO_EXTENSION));
     FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = IoAttachDeviceToDeviceStack(NewDeviceObject, PhysicalDeviceObject);
     FDODeviceExtension->Common.IsFDO = TRUE;
-    FDODeviceExtension->DriverExtension = DriverExtension;
+    FDODeviceExtension->Common.DriverExtension = DriverExtension;
 
     /* sanity check */
     ASSERT(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject);
@@ -170,9 +170,105 @@ HidClass_DeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
+    PHID_COLLECTION_INFORMATION CollectionInformation;
+    PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(CommonDeviceExtension->IsFDO == FALSE);
+    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)CommonDeviceExtension;
+
+    //
+    // get stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch(IoStack->Parameters.DeviceIoControl.IoControlCode)
+    {
+        case IOCTL_HID_GET_COLLECTION_INFORMATION:
+        {
+            //
+            // check if output buffer is big enough
+            //
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(HID_COLLECTION_INFORMATION))
+            {
+                //
+                // invalid buffer size
+                //
+                Irp->IoStatus.Status = STATUS_INVALID_BUFFER_SIZE;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_BUFFER_SIZE;
+            }
+
+            //
+            // get output buffer
+            //
+            CollectionInformation = (PHID_COLLECTION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+            ASSERT(CollectionInformation);
+
+            //
+            // init result buffer
+            //
+            CollectionInformation->DescriptorSize = PDODeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength; //FIXME which collection is to be retrieved for composite devices / multi collection devices?
+            CollectionInformation->Polled = CommonDeviceExtension->DriverExtension->DevicesArePolled;
+            CollectionInformation->VendorID = PDODeviceExtension->Attributes.VendorID;
+            CollectionInformation->ProductID = PDODeviceExtension->Attributes.ProductID;
+            CollectionInformation->VersionNumber = PDODeviceExtension->Attributes.VersionNumber;
+
+            //
+            // complete request
+            //
+            Irp->IoStatus.Information = sizeof(HID_COLLECTION_INFORMATION);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
+        case IOCTL_HID_GET_COLLECTION_DESCRIPTOR:
+        {
+            //
+            // FIXME: which collection to use for composite / multi collection devices...
+            //
+
+            //
+            // check if output buffer is big enough
+            //
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < PDODeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength)
+            {
+                //
+                // invalid buffer size
+                //
+                Irp->IoStatus.Status = STATUS_INVALID_BUFFER_SIZE;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_BUFFER_SIZE;
+            }
+
+            //
+            // copy result
+            //
+            ASSERT(Irp->UserBuffer);
+            RtlCopyMemory(Irp->UserBuffer, PDODeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedData, PDODeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength);
+
+            //
+            // complete request
+            //
+            Irp->IoStatus.Information = PDODeviceExtension->DeviceDescription.CollectionDesc[0].PreparsedDataLength;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
+        default:
+        {
+            DPRINT1("[HIDCLASS] DeviceControl IoControlCode 0x%x not implemented\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+            ASSERT(FALSE);
+            Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_NOT_IMPLEMENTED;
+        }
+    }
 }
 
 NTSTATUS
@@ -212,14 +308,22 @@ HidClass_PnP(
     CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
-    // FIXME: support PDO
+    // check type of device object
     //
-    ASSERT(CommonDeviceExtension->IsFDO == TRUE);
-
-    //
-    // handle request
-    //
-    return HidClassFDO_PnP(DeviceObject, Irp);
+    if (CommonDeviceExtension->IsFDO)
+    {
+        //
+        // handle request
+        //
+        return HidClassFDO_PnP(DeviceObject, Irp);
+    }
+    else
+    {
+        //
+        // handle request
+        //
+        return HidClassPDO_PnP(DeviceObject, Irp);
+    }
 }
 
 NTSTATUS
