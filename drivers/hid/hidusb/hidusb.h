@@ -44,6 +44,26 @@ typedef struct
     PHID_DESCRIPTOR HidDescriptor;
 }HID_USB_DEVICE_EXTENSION, *PHID_USB_DEVICE_EXTENSION;
 
+typedef struct
+{
+    //
+    // request irp
+    //
+    PIRP Irp;
+
+    //
+    // work item
+    //
+    PIO_WORKITEM WorkItem;
+
+    //
+    // device object
+    //
+    PDEVICE_OBJECT DeviceObject;
+
+}HID_USB_RESET_CONTEXT, *PHID_USB_RESET_CONTEXT;
+
+
 NTSTATUS
 Hid_GetDescriptor(
     IN PDEVICE_OBJECT DeviceObject,
