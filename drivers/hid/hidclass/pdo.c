@@ -120,12 +120,12 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // store hardware ids
     //
-    Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Attributes.VendorID, PDODeviceExtension->Attributes.ProductID, PDODeviceExtension->Attributes.VersionNumber) + 1;
-    Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Attributes.VendorID, PDODeviceExtension->Attributes.ProductID) + 1;
+    Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
+    Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
 
-    if (PDODeviceExtension->DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].UsagePage == HID_USAGE_PAGE_GENERIC)
+    if (PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].UsagePage == HID_USAGE_PAGE_GENERIC)
     {
-        switch(PDODeviceExtension->DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].Usage)
+        switch(PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].Usage)
         {
             case HID_USAGE_GENERIC_POINTER:
             case HID_USAGE_GENERIC_MOUSE:
@@ -156,7 +156,7 @@ HidClassPDO_HandleQueryHardwareId(
                 break;
         }
     }
-    else if (PDODeviceExtension->DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].UsagePage == HID_USAGE_PAGE_CONSUMER && PDODeviceExtension->DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].Usage == HID_USAGE_CONSUMERCTRL)
+    else if (PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].UsagePage == HID_USAGE_PAGE_CONSUMER && PDODeviceExtension->Common.DeviceDescription.CollectionDesc[PDODeviceExtension->CollectionIndex].Usage == HID_USAGE_CONSUMERCTRL)
     {
         //
         // Consumer Audio Control
@@ -545,15 +545,15 @@ HidClassPDO_CreatePDO(
     PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
     PDODeviceExtension->Common.IsFDO = FALSE;
     PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
-    RtlCopyMemory(&PDODeviceExtension->Attributes, &FDODeviceExtension->Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
-    RtlCopyMemory(&PDODeviceExtension->DeviceDescription, &FDODeviceExtension->DeviceDescription, sizeof(HIDP_DEVICE_DESC));
+    RtlCopyMemory(&PDODeviceExtension->Common.Attributes, &FDODeviceExtension->Common.Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
+    RtlCopyMemory(&PDODeviceExtension->Common.DeviceDescription, &FDODeviceExtension->Common.DeviceDescription, sizeof(HIDP_DEVICE_DESC));
     RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
 
     //
     // FIXME: support composite devices
     //
     PDODeviceExtension->CollectionIndex = 0;
-    ASSERT(PDODeviceExtension->DeviceDescription.CollectionDescLength == 1);
+    ASSERT(PDODeviceExtension->Common.DeviceDescription.CollectionDescLength == 1);
 
     //
     // store in device relations struct

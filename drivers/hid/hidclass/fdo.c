@@ -268,7 +268,7 @@ HidClassFDO_GetDescriptors(
     //
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_GET_DEVICE_ATTRIBUTES;
     IoStack->Parameters.DeviceIoControl.OutputBufferLength = sizeof(HID_DEVICE_ATTRIBUTES);
-    Irp->UserBuffer = &FDODeviceExtension->Attributes;
+    Irp->UserBuffer = &FDODeviceExtension->Common.Attributes;
 
     //
     // send request
@@ -357,7 +357,7 @@ HidClassFDO_StartDevice(
     //
     // lets start the lower device too
     //
-    IoCopyCurrentIrpStackLocationToNext(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
     Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
     ASSERT(Status == STATUS_SUCCESS);
 
@@ -370,7 +370,7 @@ HidClassFDO_StartDevice(
     //
     // now get the the collection description
     //
-    Status = HidP_GetCollectionDescription(FDODeviceExtension->ReportDescriptor, FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength, NonPagedPool, &FDODeviceExtension->DeviceDescription);
+    Status = HidP_GetCollectionDescription(FDODeviceExtension->ReportDescriptor, FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength, NonPagedPool, &FDODeviceExtension->Common.DeviceDescription);
     ASSERT(Status == STATUS_SUCCESS);
 
     //

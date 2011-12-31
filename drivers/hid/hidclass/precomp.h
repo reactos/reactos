@@ -9,8 +9,6 @@
 #include <wdmguid.h>
 #include <debug.h>
 
-
-
 typedef struct
 {
     PDRIVER_OBJECT DriverObject;
@@ -40,6 +38,17 @@ typedef struct
     //
     PHIDCLASS_DRIVER_EXTENSION DriverExtension;
 
+    //
+    // device description
+    //
+    HIDP_DEVICE_DESC DeviceDescription;
+
+    //
+    // hid attributes
+    //
+    HID_DEVICE_ATTRIBUTES Attributes;
+
+
 }HIDCLASS_COMMON_DEVICE_EXTENSION, *PHIDCLASS_COMMON_DEVICE_EXTENSION;
 
 typedef struct
@@ -60,19 +69,9 @@ typedef struct
     HID_DESCRIPTOR HidDescriptor;
 
     //
-    // hid attributes
-    //
-    HID_DEVICE_ATTRIBUTES Attributes;
-
-    //
     // report descriptor
     //
     PUCHAR ReportDescriptor;
-
-    //
-    // device description
-    //
-    HIDP_DEVICE_DESC DeviceDescription;
 
     //
     // device relations
@@ -89,19 +88,9 @@ typedef struct
     HIDCLASS_COMMON_DEVICE_EXTENSION Common;
 
     //
-    // device descriptor
-    //
-    HID_DEVICE_ATTRIBUTES Attributes;
-
-    //
     // device capabilities
     //
     DEVICE_CAPABILITIES Capabilities;
-
-    //
-    // device description
-    //
-    HIDP_DEVICE_DESC DeviceDescription;
 
     //
     // collection index
@@ -114,6 +103,58 @@ typedef struct
     UNICODE_STRING DeviceInterface;
 }HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
+typedef struct __HIDCLASS_FILEOP_CONTEXT__
+{
+    //
+    // device extension
+    //
+    PHIDCLASS_PDO_DEVICE_EXTENSION DeviceExtension;
+
+    //
+    // spin lock
+    //
+    KSPIN_LOCK Lock;
+
+    //
+    // read irp pending list
+    //
+    LIST_ENTRY ReadPendingIrpListHead;
+
+    //
+    // completed irp list
+    //
+    LIST_ENTRY IrpCompletedListHead;
+
+}HIDCLASS_FILEOP_CONTEXT, *PHIDCLASS_FILEOP_CONTEXT;
+
+typedef struct
+{
+    //
+    // original request
+    //
+    PIRP OriginalIrp;
+
+    //
+    // file op
+    //
+    PHIDCLASS_FILEOP_CONTEXT FileOp;
+
+    //
+    // buffer for reading report
+    //
+    PVOID InputReportBuffer;
+
+    //
+    // buffer length
+    //
+    ULONG InputReportBufferLength;
+
+    //
+    // work item
+    //
+    PIO_WORKITEM CompletionWorkItem;
+
+}HIDCLASS_IRP_CONTEXT, *PHIDCLASS_IRP_CONTEXT;
 
 /* fdo.c */
 NTSTATUS
