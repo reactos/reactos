@@ -128,6 +128,8 @@ HidClass_Create(
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -139,6 +141,8 @@ HidClass_Close(
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -150,6 +154,8 @@ HidClass_Read(
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -161,6 +167,8 @@ HidClass_Write(
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 

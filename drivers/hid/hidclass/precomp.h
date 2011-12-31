@@ -2,10 +2,10 @@
 
 #define _HIDPI_NO_FUNCTION_MACROS_
 #include <ntddk.h>
+#include <initguid.h>
 #include <hidport.h>
 #include <hidpddi.h>
 #include <stdio.h>
-#include <initguid.h>
 #include <wdmguid.h>
 #include <debug.h>
 
@@ -108,6 +108,10 @@ typedef struct
     //
     ULONG CollectionIndex;
 
+    //
+    // device interface 
+    //
+    UNICODE_STRING DeviceInterface;
 }HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
 

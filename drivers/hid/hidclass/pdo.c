@@ -422,13 +422,27 @@ HidClassPDO_PnP(
         }
         case IRP_MN_START_DEVICE:
         {
-            DPRINT1("[HIDCLASS] PDO PnP not implemented %x\n", IoStack->MinorFunction);
-            ASSERT(FALSE);
+            //
+            // FIXME: support polled devices
+            //
+            ASSERT(PDODeviceExtension->Common.DriverExtension->DevicesArePolled == FALSE);
 
             //
-            // do nothing
+            // now register the device interface
             //
-            Status = Irp->IoStatus.Status;
+            Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject, &GUID_DEVINTERFACE_HID, NULL, &PDODeviceExtension->DeviceInterface);
+            if (NT_SUCCESS(Status))
+            {
+                //
+                // enable device interface
+                //
+                Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
+            }
+            ASSERT(Status == STATUS_SUCCESS);
+
+            //
+            // break
+            //
             break;
         }
         case IRP_MN_REMOVE_DEVICE:
@@ -528,7 +542,7 @@ HidClassPDO_CreatePDO(
     //
     PDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension;
     PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
-    PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = NULL;
+    PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
     PDODeviceExtension->Common.IsFDO = FALSE;
     PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
     RtlCopyMemory(&PDODeviceExtension->Attributes, &FDODeviceExtension->Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
