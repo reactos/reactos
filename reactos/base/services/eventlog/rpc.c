@@ -243,11 +243,8 @@ NTSTATUS ElfrNumberOfRecords(
            lpLogFile->Header.OldestRecordNumber,
            lpLogFile->Header.CurrentRecordNumber);
 
-    if (lpLogFile->Header.OldestRecordNumber == 0)
-        *NumberOfRecords = 0;
-    else
-        *NumberOfRecords = lpLogFile->Header.CurrentRecordNumber -
-                           lpLogFile->Header.OldestRecordNumber;
+    *NumberOfRecords = lpLogFile->Header.CurrentRecordNumber -
+                       lpLogFile->Header.OldestRecordNumber;
 
     return STATUS_SUCCESS;
 }
@@ -271,8 +268,8 @@ NTSTATUS ElfrOldestRecord(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *OldestRecordNumber = 0;
     *OldestRecordNumber = LogfGetOldestRecord(lpLogHandle->LogFile);
+
     return STATUS_SUCCESS;
 }
 

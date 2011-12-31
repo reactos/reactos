@@ -34,6 +34,7 @@ BOOL LogfInitializeNew(PLOGFILE LogFile)
     LogFile->Header.MajorVersion = MAJORVER;
     LogFile->Header.MinorVersion = MINORVER;
     LogFile->Header.CurrentRecordNumber = 1;
+    LogFile->Header.OldestRecordNumber = 1;
     /* FIXME: Read MaxSize from registry for this LogFile.
        But for now limit EventLog size to just under 5K. */
     LogFile->Header.MaxSize = 5000;
@@ -985,9 +986,6 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     }
 
     LogFile->Header.CurrentRecordNumber++;
-
-    if (LogFile->Header.OldestRecordNumber == 0)
-        LogFile->Header.OldestRecordNumber = 1;
 
     if (WriteOffSet == LogFile->Header.EndOffset)
     {
