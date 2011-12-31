@@ -48,9 +48,10 @@ InfpGetSubstitutionString(PINFCACHE Inf,
 
     if (Inf->LanguageId != 0)
     {
-        swprintf(StringLangId,
-                 L"Strings.%04hx",
-                 Inf->LanguageId);
+        _snwprintf(StringLangId,
+                   13,
+                   L"Strings.%04hx",
+                   Inf->LanguageId);
 
         Status = InfpFindFirstLine(Inf,
                                    StringLangId,
@@ -58,9 +59,10 @@ InfpGetSubstitutionString(PINFCACHE Inf,
                                    &Context);
         if (Status != INF_STATUS_SUCCESS)
         {
-            swprintf(StringLangId,
-                     L"Strings.%04hx",
-                     MAKELANGID(PRIMARYLANGID(Inf->LanguageId), SUBLANG_NEUTRAL));
+            _snwprintf(StringLangId,
+                       13,
+                       L"Strings.%04hx",
+                       MAKELANGID(PRIMARYLANGID(Inf->LanguageId), SUBLANG_NEUTRAL));
 
             Status = InfpFindFirstLine(Inf,
                                        StringLangId,
