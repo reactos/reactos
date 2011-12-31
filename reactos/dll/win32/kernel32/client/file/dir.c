@@ -342,6 +342,12 @@ OpenTemplateDir:
           }
           else
           {
+            if (Status == STATUS_EAS_NOT_SUPPORTED)
+            {
+                /* Extended attributes are not supported, so, this is OK */
+                /* FIXME: Would deserve a deeper look, comparing with Windows */
+                Status = STATUS_SUCCESS;
+            }
             /* failure or no extended attributes present, break the loop */
             break;
           }
