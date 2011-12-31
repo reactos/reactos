@@ -175,5 +175,11 @@ else()
 endif()
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
-add_target_compile_definitions(libcntpr NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)
+add_target_compile_definitions(libcntpr 
+    NO_RTL_INLINES
+    _NTSYSTEM_
+    _NTDLLBUILD_
+    _LIBCNT_
+    __CRT__NO_INLINE
+    CRTDLL)
 add_dependencies(libcntpr psdk asm)
