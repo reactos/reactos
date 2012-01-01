@@ -849,6 +849,7 @@
 ;@ stdcall RtlReleaseMemoryStream
 @ stdcall RtlReleasePebLock()
 @ stdcall RtlReleasePrivilege(ptr)
+@ stdcall RtlReleaseRelativeName(ptr)
 @ stdcall RtlReleaseResource(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockShared(ptr)
