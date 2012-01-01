@@ -323,3 +323,7 @@ BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
                        IN PVOID Context,
                        OUT BOOLEAN *StopEnumeration);
 
+VOID
+WINAPI
+BaseMarkFileForDelete(IN HANDLE FileHandle,
+                      IN ULONG FileAttributes);

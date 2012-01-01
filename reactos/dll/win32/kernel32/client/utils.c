@@ -828,6 +828,51 @@ AreFileApisANSI(VOID)
 }
 
 /*
+ * @implemented
+ */
+VOID
+WINAPI
+BaseMarkFileForDelete(IN HANDLE FileHandle,
+                      IN ULONG FileAttributes)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileBasicInfo;
+    FILE_DISPOSITION_INFORMATION FileDispositionInfo;
+
+    /* If no attributes were given, get them */
+    if (!FileAttributes)
+    {
+        FileBasicInfo.FileAttributes = 0;
+        NtQueryInformationFile(FileHandle,
+                               &IoStatusBlock,
+                               &FileBasicInfo,
+                               sizeof(FileBasicInfo),
+                               FileBasicInformation);
+        FileAttributes = FileBasicInfo.FileAttributes;
+    }
+
+    /* If file is marked as RO, reset its attributes */
+    if (FileAttributes & FILE_ATTRIBUTE_READONLY)
+    {
+        RtlZeroMemory(&FileBasicInfo, sizeof(FileBasicInfo));
+        FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+        NtSetInformationFile(FileHandle,
+                             &IoStatusBlock,
+                             &FileBasicInfo,
+                             sizeof(FileBasicInfo),
+                             FileBasicInformation);
+    }
+
+    /* Finally, mark the file for deletion */
+    FileDispositionInfo.DeleteFile = TRUE;
+    NtSetInformationFile(FileHandle,
+                         &IoStatusBlock,
+                         &FileDispositionInfo,
+                         sizeof(FileDispositionInfo),
+                         FileDispositionInformation);
+}
+
+/*
  * @unimplemented
  */
 BOOL
