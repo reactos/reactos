@@ -2508,6 +2508,16 @@ RtlDosPathNameToNtPathName_U(
 );
 
 NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDosPathNameToRelativeNtPathName_U(
+    IN PCWSTR DosName,
+    OUT PUNICODE_STRING NtName,
+    OUT PCWSTR * PartName,
+    OUT PRTL_RELATIVE_NAME_U RelativeName
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlExpandEnvironmentStrings_U(
@@ -2539,14 +2549,14 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlIsDosDeviceName_U(
-    IN PWSTR Name
+    IN PCWSTR Name
 );
 
 NTSYSAPI
 ULONG
 NTAPI
 RtlIsDosDeviceName_Ustr(
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 

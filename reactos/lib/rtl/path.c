@@ -43,7 +43,7 @@ const UNICODE_STRING RtlpDosNULDevice = RTL_CONSTANT_STRING(L"NUL");
 
 ULONG
 NTAPI
-RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
+RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
 {
     UNICODE_STRING PathCopy;
     PWCHAR Start, End;
@@ -851,7 +851,7 @@ RtlDetermineDosPathNameType_U(IN PCWSTR Path)
  */
 ULONG
 NTAPI
-RtlIsDosDeviceName_U(IN PWSTR Path)
+RtlIsDosDeviceName_U(IN PCWSTR Path)
 {
     UNICODE_STRING PathString;
     NTSTATUS Status;
@@ -1418,7 +1418,7 @@ RtlDosPathNameToNtPathName_U_WithStatus(IN PCWSTR DosName,
  */
 BOOLEAN
 NTAPI
-RtlDosPathNameToRelativeNtPathName_U(IN PWSTR DosName,
+RtlDosPathNameToRelativeNtPathName_U(IN PCWSTR DosName,
                                      OUT PUNICODE_STRING NtName,
                                      OUT PCWSTR *PartName,
                                      OUT PRTL_RELATIVE_NAME_U RelativeName)
@@ -1437,7 +1437,7 @@ RtlDosPathNameToRelativeNtPathName_U(IN PWSTR DosName,
  */
 NTSTATUS
 NTAPI
-RtlDosPathNameToRelativeNtPathName_U_WithStatus(IN PWSTR DosName,
+RtlDosPathNameToRelativeNtPathName_U_WithStatus(IN PCWSTR DosName,
                                                 OUT PUNICODE_STRING NtName,
                                                 OUT PCWSTR *PartName,
                                                 OUT PRTL_RELATIVE_NAME_U RelativeName)
